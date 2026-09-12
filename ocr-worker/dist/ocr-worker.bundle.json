@@ -65,8 +65,8 @@
     },
     {
       "path": "src/transcribe.mjs",
-      "bytes": 14336,
-      "sha256": "e272dea58363e63dcdf834f1a467eaa1fe5d6220c56a2c7f8111dfac8e0a2df3"
+      "bytes": 14452,
+      "sha256": "993c3544568b6e0512a57c5a6d724f99f393fe14afc9235068f722b9dd349569"
     }
   ],
   "vendoredInputs": [],

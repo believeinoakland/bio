@@ -33,9 +33,10 @@
  *     estate that mints one is `meeting-agenda`, which needs line-anchored file
  *     numbers, `Subject:`/`Recommendation:` blocks and an agenda heading —
  *     **and the real page is a RESOLUTION, not an agenda, so it yields none.
- *     That is asserted below rather than worked around.** D-313 measured why
- *     there is no second real page to reach for: the image-only class is rare
- *     and clumped, and two harvests of 1,377 pages returned ZERO of it. So the
+ *     That is asserted below rather than worked around, and the gap is filed as
+ *     D-321.** D-313 measured why there is no second real page to reach for: the
+ *     image-only class is rare and clumped, and two harvests of 1,377 pages
+ *     hours apart returned ZERO of it. So the
  *     `reading_refs` arm draws agenda text as PIXELS and sends them through the
  *     SAME real engine over the SAME real wire. **What is synthetic is the ink,
  *     never the engine, the renderer, the binding or the chain** — and the arm
@@ -51,7 +52,7 @@
  * CPDF-16 measured that NEITHER local model passes the noise control, so no
  * agreement figure may be read as accuracy at all. This suite quotes none.**
  *
- * NEGATIVE CONTROL: RUN by `node test/ocr-member-e2e.control.mjs`, which arms each arm ALONE with the others held open, declares before each what MUST fail and what MUST NOT, and restores every file by `cp` from a per-arm pristine copy verified by sha256 AND by byte comparison (`cmp`) with the byte count printed and floored — never by `git checkout --`, which restores to HEAD and would silently discard this session's own uncommitted work (CLAUDE.md, measured twice in two days). THREE ARMS, and they are the three the queue row names, each armed on the REAL member so what fails is this path and not a stub's: (1) STRIP THE `text_source` MARKER — the member stops naming its engine, so the wire records no chain -> the suite must FAIL naming an OCR'd document indistinguishable from a published text layer, and the index/projection/export arms must all go red; (2) DROP THE CONFIDENCE FLOOR — the member reports a garbled region's own low engine confidence but no floor, so a best guess reaches the record -> the floor arm must FAIL; (3) COLLAPSE THE CHAIN TO ONE LABEL — the member answers a single `ocr` step with no `pixels` before it and the plane's chain builder is made to accept a string -> the chain arms must FAIL. Plus the fleet gates' own arms, declared in `fleetbundles.test.mjs`.
+ * NEGATIVE CONTROL: RUN 2026-09-12 by `node test/ocr-member-e2e.control.mjs`. THREE ARMS — the three the QUEUE ROW names — each armed ALONE on the REAL path (real plane, real binding, real engine, real scanned page), each rebuilding the member's committed artifact, each declared before arming, each restored by `cp` from a per-arm pristine copy verified by sha256 AND by `cmp` with byte counts printed and floored — never by `git checkout --`, which restores to HEAD and would silently discard uncommitted work (CLAUDE.md, measured twice in two days). BASELINE 63 pass / 0 fail / exit 0 / foot reached. (1) STRIP THE `text_source` MARKER — the member stops naming what performed the derivation, so the plane has nothing to compose a chain from -> **35/28**: the chain arms, the PROJECTION, the INDEX and the EXPORT distinguishability arms all red, and the MUST-NOT held (the text-layer document's own arms never touch the member and stayed green); (2) DROP THE CONFIDENCE FLOOR — the member stops reporting the floor its instance is configured with, so a region the engine could barely read reaches the record as a best guess -> **62/1**, the section-9 floor arm, and only it; (3) COLLAPSE THE CHAIN TO ONE LABEL — the wire records a single `ocr` step with no `pixels` before it (deliberately NOT a literal string: `checkChain` refuses that outright and the arm would then prove the type check rather than the rule) -> **55/8**, every arm asserting the chain names EACH step, in the acquire path AND in the export, **while the index and the terminal-step projection stayed GREEN as declared — they read only the LAST step and structurally cannot see this collapse, which is worth knowing about what those two surfaces can and cannot tell you**. 3 arms run, 0 not as declared, every restore byte-identical, tree re-green at 63/0. Arm (3) mutates `bio-plane/src/index.mjs`, which this item does not own; it is copied aside and restored under verification, on `nc-cpdf10.mjs`'s precedent. The fleet gates' own arms are declared in `fleetbundles.test.mjs`, and the member's six in `ocr-worker/test/ocr-worker.test.mjs`.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -213,6 +214,15 @@ const mf = new Miniflare({ workers: [planeDef(true), ocrWorkerDef()] });
    badly", and a test reaching both through one switch could not tell a reader
    which it had proved (`textchain.test.mjs`'s own reasoning, kept). */
 const mfBare = new Miniflare({ workers: [planeDef(false)] });
+/* AND A THIRD: the same plane and the same member, with the member configured
+   with a CONFIDENCE FLOOR so high that nothing this engine reads clears it. The
+   member's default is a stated `null` — no threshold on this engine's confidence
+   has been MEASURED, and inventing one would be a number the engine did not
+   produce being used to discard text — so a group that HAS measured one sets it,
+   and this instance is that group. It exists to drive rule 4 on the real path:
+   a region below the floor must yield NO TEXT, never a best guess. */
+const mfFloored = new Miniflare({ workers: [
+  planeDef(true), ocrWorkerDef({ bindings: { OCR_CONFIDENCE_FLOOR: "0.999999" } })] });
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const api = async (q, init) => (await (await mf.dispatchFetch(`http://x/api/?${q}`, init)).json());
@@ -290,9 +300,9 @@ console.log("\n--- 2 · what the ACQUIRE path records about the transcription, a
      Tier 2 (`PDF_WORKER`) only — the Tier-3 seam lives on the ACQUIRE path
      alone. So a scan captured BEFORE an instance installs this member can never
      be re-read as text through an op; it must be re-acquired. That is D-115's
-     class one tier further on, it is filed as its own debt row rather than fixed
-     here (this item's claim excludes `bio-plane/src/**`, and the wire is the
-     consumer that was built complete against the declared contract), and it is
+     class one tier further on, it is filed as **D-319** rather than fixed here
+     (this item's claim excludes `bio-plane/src/**`, and whether that op gains
+     the seam automatically or opt-in is a decision, not a patch), and it is
      PINNED here because a gap nothing asserts is a gap the next reader has to
      re-discover. The text pins on this page live in the MEMBER's own suite,
      where the engine's output is read directly. */
@@ -470,10 +480,33 @@ console.log("\n--- 8 · ATTESTATION: A MEMBER ACT, REFUSED TO A MACHINE CREDENTI
     outside.ceiling?.ceiling, "C");
 }
 
+console.log("\n--- 9 · THE FLOOR: a region the engine itself could barely read yields NO TEXT, never a best guess ---");
+{
+  /* RULE 4, driven on the real path rather than on a stub. The member reports
+     the floor its instance is configured with; the discard is `textchain.mjs`'s
+     `applyConfidenceFloor`, which DELETES the text rather than flagging it —
+     "a best guess sitting in a field beside its own warning is one careless join
+     away from being read as content".
+     THE FLOOR HERE IS 0.999999, which no line of a real scan clears, so the
+     whole page is floored and the document comes back UNREAD. That is the point
+     and not an edge case: the record's answer to "we could not read this" is
+     silence with a reason, never the engine's best attempt. */
+  const floored = (await (await mfFloored.dispatchFetch("http://x/api/?op=acquire&token=mem-e2e",
+    { method: "POST", body: JSON.stringify({ locator: "https://oakland.legistar.com/scan.pdf",
+                                             authority: "City Clerk" }) })).json()).document;
+  t("the member ran — the floored instance still reached the engine", !!floored, true);
+  t("NOTHING was claimed about what the page says", floored.reading.found, false);
+  t("and it is not filed as a read document: no text survived the floor",
+    floored.reading.read_from_text, false);
+  t("while the SAME page through the SAME member with no measured floor DID read — so the difference is the floor and nothing else",
+    [real.reading.read_from_text, real.reading.text_tier], [true, 3]);
+}
+
 footReached = true;
 } finally {
   await mf.dispose();
   await mfBare.dispose();
+  await mfFloored.dispose();
 }
 
 console.log(`\nocr-member-e2e: ${pass} passed, ${fail} failed`);

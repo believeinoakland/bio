@@ -5691,3 +5691,147 @@ the comment's *reason* changes, because it cited this fence.
 **PROPOSED 2026-09-10.** RECORD is the owner and is the proposer's own area.
 CONTENT, FRAMEWORK, RETRIEVAL and DIST are not consumers of I3's case-membership
 shape (measured above). **CONDUCT takes the version bump and the RESOLUTION.**
+
+---
+
+## IC-78 · A NEW INTERFACE, I9: plane → ocr-worker, the THIRD fleet service binding — the Tier-3 OCR path arrives as a member, and it is the first fleet member that is NOT a one-part upload · PROPOSED 2026-09-12 (CPDF-10, enacting DEC-35's default on CPDF-15's GO) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** **I9, NEW** — registered PROVISIONAL at 0.1.0 in `INTERFACES.md`
+- **Proposer:** CONTENT-PDF, worker `agent-accf1711f80abb70c`, 2026-09-12, from QUEUE CPDF-10
+- **Owner to land it:** `CONTENT-PDF` (the code); `DIST` releases it
+- **Consumers affected:** the plane (`RECORD` owns the calling side — **the call site
+  ALREADY EXISTS and is unchanged by this**); `DIST` (DS-1 installs the fleet, DS-4
+  deploys it — **and this member asks DIST for something neither sibling did**)
+- **The ids were MINTED with `node tools/mintid.mjs IC --count 2`** (floor IC-75).
+
+### 1 · PROPOSED
+
+### WHAT CHANGES, AND THE SURPRISING ANSWER IS: NOT THE SHAPE
+
+**No shape moves.** `bio-plane/src/index.mjs`'s `ocrTextFromMember` has stated the
+producer contract in full since CPDF-10 built the consumer against a stub; D-252 added
+the page-wise merge and CPDF-13 (IC-73) added the calibration join. This item builds the
+PRODUCER and consumes that contract exactly. **Zero lines of `bio-plane/src/` changed,
+which is the measured evidence the contract did not have to bend to fit its first
+implementation** — and a contract that moves to fit its first implementation is not one.
+
+What is new is that the relationship now EXISTS and therefore needs a registry entry
+(`PARALLELISM.md`: an interface that is not here does not exist). The entry is I9 rather
+than a paragraph under I6 for I8's own reason: the direction of trust is different, and
+here it is different by being NARROWER. `pdf-worker` is a pure function of bytes;
+`agent-worker` calls back; this one is handed a sha and a page list, answers, and holds
+no route to the record at all.
+
+### THE ONE THING THAT ASKS SOMETHING OF ANOTHER AREA
+
+**This member is a THREE-PART UPLOAD and neither sibling is.** Workers FORBID compiling
+wasm at runtime — CPDF-15 measured that by being refused on a deployed Worker — so
+`tesseract-core.wasm` (1,839,004 B) must arrive as a module the platform compiled at
+upload time. `eng.traineddata` (4,113,088 B) rides the same way rather than being fetched
+from R2, so the model's exact bytes are hashed by the same guard that hashes the source:
+the `cap` this member reports is a measurement OF those bytes, and a model fetched at
+runtime is bytes nothing pins.
+
+**MEASURED CONSUMER IMPACT, and it is one area and one thing:**
+
+- **`RECORD` / the plane: ZERO.** The call site, the merge, the chain composition, the
+  refusals and the calibration join all pre-date this member and are untouched.
+  `bio-plane/wrangler.jsonc` gains ONE service-binding line, INERT until DIST deploys —
+  exactly how `PDF_WORKER` and `AGENT_WORKER` shipped. An instance without the binding
+  behaves exactly as it does today: the document is NAMED as wanting OCR and stays
+  honestly unread (D-115). **Driven, not asserted**: `ocr-member-e2e.test.mjs` runs the
+  same real page through a plane with NO member bound and pins that answer.
+- **`FRAMEWORK`: ZERO.** The I2 text shape a Tier-3 producer emits is the shape Tier 1
+  and Tier 2 emit; no fourth text shape exists (D-164's rule, and CPDF-10 said so when
+  it wrote the seam).
+- **`DIST`: ONE THING, and it is a real ask.** `newgroup` must learn to upload a fleet
+  member as MORE THAN ONE PART — an `ESModule`, a `CompiledWasm` and a `Data` part,
+  named by the specifiers the committed bundle imports. `ocr-worker/wrangler.jsonc`
+  carries the `rules` that express it for `wrangler`; the installer is a Worker and
+  cannot run `wrangler`, which is the same forcing fact that produced FL-9's committed
+  bundles in the first place. **DELEGATED to DIST** (D-115/D-116, DS-1/DS-4). Until it
+  lands, the member is landed, guarded, tested and undeployed — which is where I6 and I8
+  each sat, and is stated here rather than discovered later.
+
+### WHAT A CONSUMER MUST NOT ASSUME, stated because both are new
+
+- **`source.space` IS ON THE WIRE AND MUST BE READ.** Region rects are `"image-px"` —
+  pixels of the frame that was OCR'd, the space they are VERIFIABLE in against
+  `source.image.pixels_sha256`. `extentCovers` does containment and does NOT read
+  `space`, so an attestation over a region must be made in the space the region was
+  reported in. A consumer that mixes spaces gets a containment answer that is wrong and
+  looks right.
+- **`grain` IS ON THE WIRE AND IT IS `line`.** The plane composes a page's text by
+  joining region texts with a NEWLINE, so a region's grain IS a line's grain in the
+  record. MEASURED 2026-09-12: at `word` grain every OCR'd document becomes one word per
+  line, which makes `meeting-agenda`'s definitive signal (a file number ALONE ON A LINE)
+  trivially satisfiable by any number-shaped word and its phrase signals unreachable. A
+  consumer doing a line-anchored read of OCR'd text should check `grain`.
+
+### 2 · RESPONSES
+
+*(awaited — `RECORD` and `DIST`; `FRAMEWORK` is dormant and CONDUCT answers on its
+behalf IN WRITING per the protocol's step 3)*
+
+---
+
+## IC-79 · THE FLEET BUNDLE MANIFEST GAINS AN `assets` ARM — a member's UPLOAD PARTS are hashed by the same guard that hashes its source, and a swapped language model is STALENESS · PROPOSED 2026-09-12 (CPDF-10, extending FL-9/IC-68) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I4 (plane → installer, the release artifact) + I6/I8/I9 context — the
+  same surface IC-68 and IC-70 extended
+- **Proposer:** CONTENT-PDF, worker `agent-accf1711f80abb70c`, 2026-09-12, from QUEUE CPDF-10
+- **Owner to land it:** `CONTENT-PDF` for the arm; `FLEET` owns `fleet-bundle.mjs`'s
+  area and is dormant — CONDUCT answers on its behalf IN WRITING per step 3
+- **Consumers affected:** `DIST` (`newgroup` fetches and verifies per-member assets);
+  `FLEET` (the guard's own file)
+
+### 1 · PROPOSED
+
+### WHAT CHANGES, precisely
+
+`dist/<member>.bundle.json` gains ONE optional key, and only for a member that declares
+`bundle.assets` in its `fleet-member.json`:
+
+```
+{ member, artifact, sha256, bytes, recipe, inputs, vendoredInputs,
++ assets: [ { path: "assets/tesseract-core.wasm", bytes: 1839004, sha256: "3822dc6e…" },
++           { path: "assets/eng.traineddata",     bytes: 4113088, sha256: "7d4322bd…" } ],
+  lock }
+```
+
+`verifyStatic` gains three findings over it: a declared asset whose bytes MOVED, a
+declared asset that is MISSING, and — the asymmetric one — an asset the member DECLARES
+that the manifest does not RECORD, plus its mirror.
+
+### WHY, AND IT IS FL-9's OWN DEFECT ONE DIRECTORY OVER
+
+An upload part is declared `bundle.external`, which means **esbuild never sees it and it
+appears in NO input list**. Without this arm the staleness guard would cover every line
+of `ocr-worker`'s source and NONE of the 5.95 MB that decides what its output says — and
+that member's stated transcription fidelity is a measurement OF those exact bytes, so a
+model swapped underneath it makes a `cap` already written into the record a claim about
+something else. FL-9's sentence is *"a stale artifact FAILS instead of shipping"*; this
+is the same sentence about the parts an artifact cannot swallow.
+
+The MISSING case is treated as staleness rather than tolerated, and that differs
+deliberately from a vendored dependency: a vendored input is legitimately absent in a
+fresh checkout, and an upload part is COMMITTED, so absent means the member cannot be
+installed or reproduced.
+
+### MEASURED CONSUMER IMPACT
+
+- **`pdf-worker` and `agent-worker`: ZERO, and it is asserted rather than assumed.** The
+  key is emitted ONLY for a member that declares assets, so both committed manifests are
+  BYTE-UNCHANGED — `fleetbundles.test.mjs` asserts `assets === undefined` for both, and
+  the byte-identity arm for both members passes untouched.
+- **`DIST`: the installer gains a list it can act on.** The parts a member needs, with a
+  sha256 each, in the file the installer already reads to verify the bundle. That is
+  strictly more than it had; nothing it reads today moved.
+- **The guard's own arms:** four new ones on a SYNTHETIC member in a temp directory
+  (swap / vanish / declared-but-unrecorded / recorded-but-undeclared), each armed and
+  each required to go RED, with restores verified by content and sha256 — the section-4
+  discipline this suite already applies to every other arm.
+
+### 2 · RESPONSES
+
+*(awaited — `DIST`; `FLEET` is dormant and CONDUCT answers on its behalf IN WRITING)*

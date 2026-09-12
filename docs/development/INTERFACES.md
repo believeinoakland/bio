@@ -1236,3 +1236,152 @@ be about what STABLE means, not about what the code does.
 - **The re-read.** The shape above is written from the code as it stands at FL-2. When
   FL-3 lands, whoever lands it re-reads this entry against the code and either confirms
   it to 1.0.0/STABLE or amends it through `INTERFACE-CHANGES.md`.
+
+---
+
+## I9 — plane → ocr-worker (the third fleet service binding)
+
+- **ID:** I9
+- **Owner:** `CONTENT-PDF` (the code); `DIST` releases it
+- **Version:** 0.1.0 — **PROVISIONAL**, on I8's precedent and for I8's stated reason:
+  registered here at the member's first commit rather than after it, because
+  `PARALLELISM.md` forbids building against an unregistered contract, and kept
+  PROVISIONAL because two of the conditions below are still open. **The unusual thing
+  about this entry, and it is worth saying plainly: the SHAPE was registered long
+  before this member existed.** `bio-plane/src/index.mjs`'s `ocrTextFromMember` states
+  the producer contract in full — CPDF-10 built the consumer complete against a stub,
+  D-252 added the merge, CPDF-13 added the calibration join — so this entry is
+  RE-READ FROM CODE on both sides from the day it is written, which is the condition
+  I6 and I8 each took a week to reach. **CONDUCT takes the version bump.**
+- **Consumers:** the plane (`RECORD` owns the calling side; the call site is the
+  acquire path's Tier-3 branch); `DIST` (installing and deploying a THREE-member fleet,
+  DS-1/DS-4, D-115/D-116)
+- **Status:** PROVISIONAL
+
+### What it is
+
+The **third** member of the function-specific Worker fleet, and the NARROWEST of the
+three. `pdf-worker` (I6) is a pure function of bytes; `agent-worker` (I8) holds a run
+and calls the plane BACK. This one is I6's shape with less: it is handed a capture sha
+and a page list, it reads the bytes from R2 itself, it answers, and it holds no route
+to the record at all.
+
+It exists because DEC-35 ruled the in-account path the DEFAULT for Tier-3 OCR and ruled
+the plane and `pdf-worker` OUT by bundle size, DEC-42 named wasm tesseract as the
+engine, CPDF-14 returned NO-GO on the Moondream candidates (a rectangle that comes back
+about half the time cannot anchor a claim), and CPDF-15 MEASURED the remaining candidate
+on the deployed runtime and returned GO.
+
+### The shape
+
+**Transport: a SERVICE BINDING, and in ONE direction only.** The plane reaches the
+member on `env.OCR_WORKER`. There is no binding back, no `PLANE` service, no credential:
+this member cannot call the plane and holds nothing that would let it.
+
+**In:** `POST /transcribe`
+
+    { capture_sha: <64 lowercase hex>,
+      store:       <namespace token>,
+      pages:       [<0-based page number>, …] }
+
+The member reads `${store}/captures/${capture_sha}` from its own `CAPTURES` READ binding
+(I1 §2, the same load-bearing dependency I6 promoted). `pages` is the set the plane's
+`tier3Pages` selected — the pages Tier 1 marked `no_text_layer` — and it is a HINT the
+plane re-checks on the way back, because a hint the consumer trusts is a contract
+enforced at the wrong end.
+
+**Out:** the contract `ocrTextFromMember` already refuses on, unchanged by this member:
+
+    { ok: true,
+      engine: "tesseract-wasm", version: "0.11.0", model: "tessdata_fast/eng",
+      cap: "C",                      // the MEASURED fidelity letter, never a default
+      measured_by: "<pointer to MEASUREMENTS.md>",
+      confidence_floor: <0..1> | null,   // null = no threshold has been MEASURED
+      grain: "line",                 // the grain of a region, and therefore of a LINE
+      pages: [ { page, regions: [ { text,
+                                    source: { kind:"pdf-page", ref, page, rect,
+                                              space:"image-px", image:{…} },
+                                    confidence: "none" | { value, basis:"engine" } } ] } ],
+      deferred: [<page>, …],         // named, never silently dropped
+      image: { width, height, frame_bytes, route, upright, rotate_deg, dpi,
+               pixels_sha256 },
+      notes: [ … ] }
+
+A refusal is a **200 carrying `ok:false`** with a `reason` from the member's own declared
+table and a `why`. That is deliberate and it mirrors the plane's own reading order: the
+plane reads the STATUS before the body, because parsing the body of a 500 throws and
+turns *"the member failed on this document"* into *"the member could not be reached"* —
+two different findings, and only one of them is about the document.
+
+**Also `GET /version`** — `{ ok, name, version, engine, engine_version, model,
+engine_loaded }`. Fleet rule 4, plus one thing neither sibling needs: **which ENGINE
+answered**, because this member's output is the only fleet output the record GRADES.
+`engine_loaded` is asked rather than assumed — a member deployed without its wasm part
+initialises perfectly and then cannot transcribe anything.
+
+### Three things that are new to the fleet with this member
+
+**1. IT IS NOT A ONE-PART UPLOAD, AND THAT IS A PLATFORM FACT.** Workers forbid
+compiling wasm at runtime, so `tesseract-core.wasm` must arrive as a module the platform
+compiled at upload time; no bundler makes that one part. `eng.traineddata` rides the same
+way rather than being fetched from R2, so the model's exact bytes are hashed by the same
+guard that hashes the source. `fleet-member.json`'s `bundle.assets` declares them and
+FL-9's guard hashes them into the committed manifest, so a model swapped underneath this
+member is STALENESS and FAILS. **DIST's installer must learn to upload a member with
+parts** — that is the one thing this entry asks of I4 and it is DELEGATED.
+
+**2. THE ANCHOR'S COORDINATE SPACE IS STATED ON THE WIRE.** `source.space` is
+`"image-px"`: pixels of the frame that was OCR'd, which is the space the anchor is
+VERIFIABLE in — re-render the page by the same route, index those pixels, and
+`source.image.pixels_sha256` says whether they are the same pixels. Converting to PDF
+user space would need the page's own `/Rotate` unwound, and a rect that points at the
+wrong place is worse than one that says which space it is in. **A consumer comparing two
+rects must compare the spaces first**; `extentCovers` does containment and does not read
+`space`, so an attestation over a region must be made in the same space the region was
+reported in.
+
+**3. THE MEMBER REPORTS A MEASURED FIDELITY AND MAY NOT REPORT ANYTHING ELSE.** `cap`
+and `measured_by` are required by the plane and refused if absent. This is the first
+fleet member whose output the record grades, so it is the first one that could make the
+record claim more than it can support.
+
+### What it must NOT do (fleet rules 2/3, inherited from I6 and I8)
+
+- **Write anything, by any route.** No `STORE` (Durable Object) binding, no `PUBLISHED`,
+  `CAPTURES` READ and nothing else — the narrowest of the three members. Asserted
+  BEHAVIOURALLY (the bucket is byte-identical after a call, over a non-empty corpus) and
+  by a SOURCE SCAN over the member's own sources, with the generated vendor glue
+  EXCLUDED and separately accounted for rather than waved past.
+- **Hold a credential.** It has none and is handed none.
+- **Be reached by anything but the plane.** No member-facing surface, no token classes.
+  The plane's op layer is the authorisation boundary — the same sentence as I6's and
+  I8's, and the same boundary.
+- **Assume a whole document.** ONE PAGE PER INVOCATION. A request naming several pages
+  is CHUNKED and the rest NAMED; a page whose RGBA frame exceeds the largest frame
+  MEASURED to complete (61.3 MB) is REFUSED before anything is allocated. Whole-document
+  invocation is UNMEASURED — CPDF-15 says so in its own row — and an unmeasured loop
+  inside a memory ceiling returns half a document with no way to tell.
+
+### The memory bound, and how it is expressed
+
+**As a WORKLOAD SIZE and never as a share of 128 MB.** D-312: the platform's
+`memoryUsageBytes` reads 132–240 MB on invocations the platform itself marks `success`,
+so any percentage computed from it is a wrong answer carrying full confidence. CPDF-15
+located the ceiling the way this project locates every ceiling, BY BEING REFUSED: RGBA
+frames of 33.7 / 48.5 / 61.3 MB complete, a 75.7 MB frame is KILLED (`exceededMemory`,
+reproduced), and 134.6 MB is refused in-isolate as a catchable `RangeError`.
+
+### Open before it can go STABLE (→ 1.0.0)
+
+- **A DIST deploy** of the member, its two upload parts, and the plane's `OCR_WORKER`
+  binding — and the installer learning to install a member that is not one part
+  (D-115/D-116). Until then the binding config is landed and the path is dark on any
+  live instance, exactly as I6's and I8's were. DELEGATED to DIST.
+- **The read-time seam (D-319).** The Tier-3 branch exists on `op=acquire` only, so a
+  scan captured before an instance installs this member cannot be re-read as text
+  through an op. Whether `op=pdfstructure` gains the seam, and whether it is opt-in, is
+  a decision rather than a patch.
+- **The route coverage (D-320).** `passthrough-dct` — the publisher's own JPEG, the
+  route with the strongest provenance — cannot be decoded in-isolate and is REFUSED BY
+  NAME. What share of the image-only class that is has never been measured.
+

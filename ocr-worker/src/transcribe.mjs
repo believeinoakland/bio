@@ -107,7 +107,8 @@ export async function transcribeOnePage(bytes, page, { psm = null, confidenceFlo
      built here. Saying so is the whole treatment — CPDF-15's own row records
      "no in-isolate PDF decode" as what it could not see, and this is that gap
      arriving where it actually bites. A page in this class stays honestly
-     unread. */
+     unread. Filed as D-320, with the share of the image-only class this costs
+     stated as UNMEASURED rather than guessed at. */
   if (rendered.mediaType !== "image/png")
     return { ok: false, reason: "PIXELS_UNREADABLE", detail: REFUSALS.PIXELS_UNREADABLE, page,
              route: rendered.route, mediaType: rendered.mediaType,

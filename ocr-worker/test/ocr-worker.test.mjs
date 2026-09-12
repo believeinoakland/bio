@@ -39,24 +39,7 @@
  * renderer shares a line with it. If the fixture ever changes, that value is
  * RE-DERIVED from the independent decoder, never from a failing run's "got".
  *
- * NEGATIVE CONTROL: RUN by `node test/ocr-worker.control.mjs`, which arms each
- * arm ALONE with the others held open, declares before each what MUST fail and
- * what MUST NOT, and verifies every restore by sha256 AND by byte comparison
- * (`cmp`) against a per-arm pristine copy whose byte count it prints and floors.
- * SIX ARMS, and the results are recorded in the driver beside each declaration —
- * (a) the PNG round-trip decoder drops its scanline filter check, so a filtered
- * container is reconstructed as a plausible frame -> the independent-digest arm
- * must FAIL and the refusal arm must FAIL; (b) `chooseChunk` loops the whole
- * page list instead of taking one -> the ONE-PAGE-PER-INVOCATION arms must FAIL
- * (this is the memory bound, and a member that quietly loops is the failure that
- * returns half a document with no way to tell); (c) the measured frame bound is
- * raised past the killed figure -> the over-bound refusal arm must FAIL; (d) the
- * confidence basis is reported as something a model self-reported rather than
- * `engine` -> the basis arm must FAIL and the plane's own `checkConfidence` must
- * refuse it; (e) the anchor's rect is dropped from a region -> the anchor arms
- * must FAIL and `checkAnchor` must refuse it; (f) OVER-STRICTNESS — a real but
- * irrelevant field added to the member's answer must leave every arm GREEN,
- * because a suite that fails on any change at all is a suite nobody can edit.
+ * NEGATIVE CONTROL: RUN 2026-09-12 by `node test/ocr-worker.control.mjs`, SIX ARMS, each armed ALONE with the others held open, each REBUILDING the committed artifact (a mutation nobody rebuilds arms nothing — the suite boots the artifact), each declared before arming and each restored by `cp` from a per-arm pristine copy verified by sha256 AND by `cmp` with the byte count printed and floored — never by `git checkout --`, which restores to HEAD and would silently discard uncommitted work (CLAUDE.md, measured twice in two days). BASELINE 70 pass / 0 fail / exit 0 / foot reached, before each arm and after the last. (a) the PNG reader stops stripping the scanline FILTER BYTE, so every row's samples shift by one byte -> **69/1: the INDEPENDENT-digest arm alone, and THE TEXT PINS HELD, which is a finding about the arm rather than about the subject and is kept rather than smoothed — a UNIFORM horizontal shift of the whole raster does not change what the page SAYS, so the text this suite quotes is BLIND to it and only the Pillow-derived digest sees it. The digest arm is the load-bearing one here, exactly as FL-9 measured the input-hash arm being load-bearing over byte-identity**; (b) `chooseChunk` stops naming what it deferred -> **67/3**, the ONE-PAGE-PER-INVOCATION arms, because a member that quietly drops pages returns half a document with no way to tell; (c) the measured frame bound is raised past the figure that was KILLED -> **66/4**, the over-bound refusal arms; (d) the confidence basis is reported as a model's self-report rather than `engine` -> **68/2**, the basis arm and the plane's own imported `checkConfidence`, which refuses by BASIS and never by value; (e) the anchor's rect is dropped from every region -> **67/3**, the anchor arms and the plane's own imported `checkAnchor` — **and its FIRST run reported `-1 pass, -1 fail, foot NOT REACHED`: a `TypeError` on an unguarded `r.source.rect.length` ENDED THE MODULE through no assertion at all, and only the foot sentinel turned that silence into a red. That is this repository's most expensive control defect met in this item's own instrument; the reads are now null-tolerant and the arm re-run**; (f) OVER-STRICTNESS, a real but irrelevant field on the member's wire answer -> **70/0, the baseline exactly**, because a suite that fails on any change at all is a suite nobody can edit. 6 arms run, 0 not as declared on the final run, tree restored byte-identical and re-green at 70/0.
  */
 import "../../bio-plane/test/sandbox.mjs";  /* D-186: owns $TMPDIR for this process */
 
@@ -303,11 +286,15 @@ let real = null;
   t("and it is page 0", body.pages[0].page, 0);
 
   const regions = body.pages[0].regions;
-  /* A FLOOR, NOT AN EQUALITY. The word count is the engine's; pinning it exactly
-     would make this suite fail on an engine bump that is a decision somebody
-     else gets to make. 300 is well under the 406 words CPDF-15 measured this
-     engine returning on this page at ONE distinct geometry over three runs. */
-  t("it transcribed a real page's worth of words (floor, not an equality)", regions.length >= 300, true);
+  /* FLOORS, NOT EQUALITIES. The counts are the engine's; pinning them exactly
+     would make this suite fail on an engine bump that is somebody else's
+     decision to make. The grain is LINES (see `REGION_GRAIN`), and the character
+     floor is the one that matters: CPDF-15's human ground truth for this page is
+     2,687 characters, so 2,000 says a real page's worth of text came back and
+     not a fragment. Both figures are PRINTED beside the arm so a drift is
+     visible even while the floor holds. */
+  t("it transcribed a real page's worth of text (floors, not equalities)",
+    [regions.length >= 30, regions.reduce((n, r) => n + r.text.length, 0) >= 2000], [true, true]);
   console.log(`        ${regions.length} region(s) · ${regions.reduce((n, r) => n + r.text.length, 0)} character(s)`);
 
   /* EVERY region carries an anchor the RECORD's own validator accepts. This is
@@ -318,17 +305,27 @@ let real = null;
      member cannot pass its own private idea of a valid anchor. */
   t("every region's anchor is accepted by the PLANE's own validator, not by a local idea of one",
     regions.filter((r) => checkAnchor(r.source) != null).length, 0);
+  /* NULL-TOLERANT, AND IT IS A CORRECTION RATHER THAN CAUTION. Control arm (e)
+     drops the rect from every region and this line read `r.source.rect.length`
+     directly: the TypeError ENDED THE MODULE through no assertion at all, the
+     tally never printed, and only the foot sentinel turned a silence into a red
+     (`-1 pass, -1 fail`). That is this repository's most expensive control
+     defect, met here in this item's own instrument and recorded rather than
+     smoothed. Every indexed read below goes through a guard. */
+  const rectOf = (r) => (r && r.source && Array.isArray(r.source.rect) ? r.source.rect : null);
   t("every anchor names this page and a real rectangle",
-    regions.filter((r) => r.source.page !== 0 || r.source.rect.length !== 4).length, 0);
+    regions.filter((r) => r.source?.page !== 0 || (rectOf(r) || []).length !== 4).length, 0);
   /* THE SPACE IS STATED. A rect whose coordinate system is left to be inferred
      is a rect that will eventually be compared against one in another system. */
   t("and every anchor STATES the space its rectangle is in, plus the image it indexes",
-    [...new Set(regions.map((r) => r.source.space))], ["image-px"]);
+    [...new Set(regions.map((r) => r.source?.space))], ["image-px"]);
   t("the image the anchors index is the one the renderer produced, by DIGEST — so a reader can be pointed at the exact pixels",
-    [...new Set(regions.map((r) => r.source.image.pixels_sha256))], [IND_UPRIGHT_SHA]);
+    [...new Set(regions.map((r) => r.source?.image?.pixels_sha256))], [IND_UPRIGHT_SHA]);
   t("every rectangle lies inside that image",
     regions.filter((r) => {
-      const [x0, y0, x1, y1] = r.source.rect, im = r.source.image;
+      const rect = rectOf(r), im = r.source?.image;
+      if (!rect || !im) return true;      /* no rect is a FAILURE of this arm, never a skip */
+      const [x0, y0, x1, y1] = rect;
       return !(x0 >= 0 && y0 >= 0 && x1 <= im.width && y1 <= im.height && x1 > x0 && y1 > y0);
     }).length, 0);
 
