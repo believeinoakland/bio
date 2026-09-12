@@ -672,9 +672,30 @@ const REGISTER_FLOOR = {
      keeps catching and there is none of it here. ONE KEY SET, grepped before and
      after writing: `^  arms:` matches TWICE in this file, once here and once in
      `FLEET_FLOOR`, which is the documented expected state. */
-  arms: 928,
-  classified: 172,
-  corpus: 173,
+  /* MOVED 2026-09-12 by D-322, from the figure a green `--strict` run PRINTED on
+     this branch AFTER the suite was committed (`arms 936/928 · classified
+     173/172 · corpus 174/173 · GREW by 8`), never summed by hand and never added
+     to the number already here. The pre-commit run printed the CONTAMINATED
+     figures beside the reproducible ones and refused to let them be quoted
+     (D-238) — the floor is moved from the committed reading, at `3481696`, where
+     `provenance` reads 189 of 189 items in the commit at HEAD. THE WHOLE MOVE IS
+     THIS ITEM'S OWN and is accounted for exactly: one new suite,
+     `test/d322-floor-gate-witness.test.mjs`, whose `NEGATIVE CONTROL:`
+     declaration states EIGHT arms as enumerated segments — (1) the gate neutered
+     in the real committed floor, (2) the noise clause dropped alone, (3)
+     over-strictness, (4) the gate's OWN over-strictness (a gate that refuses
+     everything), (5) a neutered mutation so the ARM-NEVER-ARMED guard is itself
+     proven, (6) REACH, the committed floor truncated, (7) the per-arm copy
+     blanked so the copy-is-the-subject guard is measured, (8) the arm that armed
+     somewhere else, recorded rather than smoothed. So corpus +1, classified +1,
+     arms +8, and **the pre-move floor carried ZERO slack** (928/928 · 172/172 ·
+     173/173 on this branch's own baseline at `6406c5a`, measured before a byte
+     was written — the same zero-slack reading D-318 recorded, two items running).
+     ONE KEY SET, grepped before and after writing: `^  arms:` matches TWICE in
+     this file, once here and once in `FLEET_FLOOR`, the documented state. */
+  arms: 936,
+  classified: 173,
+  corpus: 174,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
