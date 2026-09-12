@@ -2881,3 +2881,41 @@ concurrency: checked over the register. D-315 is live on `ocr-composed-probe.mjs
 `ocr-worker/`, `fleet-bundle.mjs`, `fleetbundles.test.mjs`, `resolveversion.test.mjs` or
 `bio-plane/wrangler.jsonc`. FL-9/FL-10's FLEET claims are released.
 released: 2026-09-12 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 179/179 · 11,032 (the record figure reproduced exactly after `npm ci` in `ocr-worker/` — the loud skip read correctly), `coverage --strict` exit 0 read unpiped (REGISTER_FLOOR 923/171/172, FLEET_FLOOR 3/6/7/68, both by print), UI harness exit 0, `mintid --audit` 0 breaks. The live-verify is DIST's next cut per IC-78.
+
+## CLAIM 2026-09-12 CONTENT-PDF (D-318 — D-315's fix gets a witness the battery RUNS: a discovered suite that drives both guards over a temp-dir copy)
+session: d318-guard-witness (worktree `agent-a1918ff7b25266f17`, branch `worktree-agent-a1918ff7b25266f17`)
+opened: 2026-09-12
+paths:
+  - `bio-plane/test/d315-guard-witness.test.mjs` — **NEW**, and it is this item's whole
+    deliverable: a BATTERY-DISCOVERED suite that copies the floor and both probes into a temp
+    dir (the shape both probes' own `--controls` arms already use), mutates the COPY, and drives
+    both guards with `--guard-only`. It carries the D-282 stdio flush import, the D-186 sandbox
+    import, and its own `NEGATIVE CONTROL:` declaration.
+  - `bio-plane/test/d315-guard-controls.mjs` — **HEADER COMMENT ONLY**, one paragraph pointing at
+    the new discovered suite and saying what each of the two instruments can see that the other
+    cannot. No arm, no assertion, no behaviour touched.
+  - `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR` ONLY**, moved from the figures a green
+    `--strict` run PRINTED, with the reason at the site. **ONE `arms:` KEY**, grepped before and
+    after writing (this file records six keep-both merges that left duplicates).
+  - `docs/development/DEBT.md` — the **D-318 row's disposition ONLY**.
+  - `docs/development/MEASUREMENTS.md` — **APPEND ONLY**: this item's row.
+  - `docs/development/CLAIMS.md` — this block.
+  **READ, NEVER EDITED**: `bio-plane/test/ocr-composed-probe.mjs` and
+  `bio-plane/test/cpdf15-tesseract-runtime.probe.mjs` — the two guard regions are this item's
+  SUBJECT and must not move: an item that closes "the fix has no witness" by editing the fix
+  would be measuring its own hand. **`bio-plane/test/ocr-measure-probe.mjs`** — CPDF-9's floor;
+  the new suite mutates only a COPY of it, never the committed file, and asserts as much by
+  sha256 at its foot. Also read, never edited: `bio-plane/test/ocr-moondream-probe.mjs`,
+  `bio-plane/test/cpdf16-floor-controls.mjs`, `bio-plane/scripts/battery.mjs`,
+  `bio-plane/scripts/control-register.mjs`, `bio-plane/test/hygiene.test.mjs`.
+  **NOT** `bio-plane/test/ocr-measure-probe.mjs` (see above — the floor stays byte-identical and
+  the suite proves it). **NOT** `bio-plane/src/**` — this item writes no product code and changes
+  no plane behaviour. **NOT** `ocr-worker/**` (just landed with CPDF-10). **NOT**
+  `docs/development/QUEUE.md` or `DECISIONS.md` (CONDUCT's sole ground). **NOT** `newgroup/**`,
+  **NOT** `civicos-ui/**`, **NOT** `bio-plane/dist/**`, **NOT** `pdf-worker/**`, **NOT**
+  `agent-worker/**`, **NOT** any version bump.
+concurrency: checked over the register 2026-09-12. Every CONTENT-PDF block above this one
+(CPDF-10, D-315, CPDF-16, CPDF-15) is RELEASED. No live claim names either probe,
+`ocr-measure-probe.mjs`, `d315-guard-controls.mjs`, or `bio-plane/scripts/coverage.mjs`.
+DIST and FLEET push frequently — the `REGISTER_FLOOR` key is the one collision risk and the
+resolution rule is written at its site: COLLAPSE TO ONE SET and re-read the printed figures.

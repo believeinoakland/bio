@@ -9714,3 +9714,95 @@ version is `0.56.0` at both of its declaring sites, which is the authority DS-2 
 not a bump; `resolveversion.test.mjs`'s live site count moves 6 -> 8 with the third
 member. The live verification — the member and its two upload parts actually deployed,
 and `/version` answering from the account — is DIST's next cut and is NOT claimed here.
+
+## 2026-09-12 · D-318 — D-315's DIGEST PINS GET A WITNESS THE BATTERY RUNS, and the deciding figure is that the other closure option puts it nowhere the battery reaches (worktree `agent-a1918ff7b25266f17`)
+
+**Instrument:** `bio-plane/test/d315-guard-witness.test.mjs` (NEW, battery-discovered),
+driven with `node scripts/battery.mjs`, `node scripts/battery.mjs d315-guard-witness`,
+`node scripts/coverage.mjs --strict` and `node civicos-ui/test/run.mjs`. Nothing deployed,
+nothing bumped, no account touched, no network reached: every arm is a local file copy and a
+`--guard-only` spawn, which exits before any upload path in either probe.
+
+**The gap, re-measured rather than taken from the row.** D-318 says both probes'
+`--controls` suites passed identically before and after D-315's fix. Confirmed at the
+mechanism rather than at the figure: each table's `metric` arm mutates
+`(1 - dist / gt.length) * 100` to `(1 - dist / Math.max(1, gt.length)) * 100`, which
+REMOVES the pinned substring, so it is caught by presence alone and says nothing about the
+digest. Neither probe is a `*.test.mjs`, so `scripts/battery.mjs` (readdir +
+`endsWith(".test.mjs")`) discovers neither.
+
+**WHICH CLOSURE, AND THE OTHER PATH'S COST.** Option (b), the discovered suite. The
+deciding measurement is not preference: option (a) would move the witness from ONE hand-run
+instrument into TWO other hand-run instruments, and CPDF-15's `--controls` cannot reach its
+first arm without `npm install tesseract-wasm` and a model fetch over the network. (a)'s own
+cost, stated rather than declined: four lines per probe, no interface change, each probe's
+control table left self-sufficient for a hand reader, and the guard exercised through the
+probe's own arm harness rather than a sibling's.
+
+| figure | baseline (`3366611`) | final | delta |
+| --- | --- | --- | --- |
+| battery | **179/179 suites · 11,032 assertions · exit 0** | **180/180 · 11,060 · exit 0** | **+1 suite, +28 assertions, attributed PER SUITE by diffing the two runs and not by subtraction — and the prediction was WRONG, which is why the rule is to diff.** `d315-guard-witness.test.mjs` **+25** (this item's own); `hygiene.test.mjs` 685 -> 687 (**+2**: its two PER-SUITE derived censuses each gain a row for the new suite — `… exits deterministically` and `… imports test/sandbox.mjs`); `planning-hygiene.test.mjs` 234 -> 235 (**+1**: the D-322 row this item raises). Nothing unattributed; no other suite moved by one assertion |
+| `coverage --strict`, `$?` unpiped | exit 0 · register `928/923` would have read `923/923` | exit 0 · register **928/928 · 172/172 · 173/173** | floor MOVED from the print; **zero slack before and zero after** |
+| `civicos-ui/test/run.mjs` from the repo root | exit 0 | exit 0 | 0 |
+| the new suite alone | n/a | **25 pass, 0 fail, exit 0, < 1 s** | — |
+
+**The briefed baseline was exactly right and is recorded as such** — 179/179 · 11,032,
+reproduced to the assertion after `npm ci` in `bio-plane/`, `ocr-worker/` and `pdf-worker/`.
+The practice is to trust the measurement rather than the streak, and here the measurement
+agreed.
+
+**THE REGRESSION, DRIVEN IN BOTH DIRECTIONS.** Reverting one guard's statement-digest pin to
+the pre-D-315 substring form — `if (m.found !== m.pin)` becomes
+`if (!FLOOR_SRC.includes(m.expr))`, one line, the anchor asserted to occur exactly once
+before the write — takes the suite to **21 pass / 4 FAIL, exit 1**, each failure reading
+`got {"exit":0,"named":false} want {"exit":4,"named":true}` and naming the reverted guard,
+while the OTHER guard still passes all four superstring arms. Armed in `ocr-composed-probe.mjs`
+alone and in `cpdf15-tesseract-runtime.probe.mjs` alone, so neither guard is witnessed only
+through the other. `node scripts/battery.mjs d315-guard-witness` under the first arm:
+`FAIL d315-guard-witness.test.mjs 673ms 21 pass, 4 FAIL` · `0/1 suites green` · exit 1 —
+**the battery discovering it and reporting it red, which is the accepts-when driven rather
+than argued.**
+
+**Five control arms, each ALONE, every restore verified by sha256 AND `cmp` against a
+uniquely-named per-arm pristine copy with the byte count printed:** (1) cpdf14 pin reverted
+-> 21/4 exit 1 naming `cpdf14`, restored `67432ead…` 64,798 B; (2) cpdf15 pin reverted ->
+21/4 exit 1 naming `cpdf15`, restored `e36a7241…` 84,655 B; (3) over-strictness, nothing
+armed -> 25/0 exit 0 with all three subject files byte-identical, and the full battery green;
+(4) the mutation itself neutered (`* 100` -> `* 100`) -> 23/2 with
+`THREW: ARM NEVER ARMED: the edit produced byte-identical source`, so an arm that did not arm
+is a finding rather than a pass, restored `0ba94fe3…` 17,958 B; (5) REACH, the committed floor
+blanked -> the corpus assertion fires as
+`the floor is a real file, not an empty one (0 B, floor 10000) got false want true`, 6/19
+exit 1, **and the printed digest is `e3b0c442…`, the sha256 of the empty string — the exact
+receipt WORKER.md keeps for two harnesses that once reported a restore clean over an empty
+manifest.** All five as declared. Third arm of D-318's brief (the new controls-table arm) is
+N/A by construction: no controls table was widened.
+
+**THE CLASS SWEEP, mechanised.** The class is *a defence whose only witness is an instrument
+nothing runs automatically*. Corpus printed: **288 `.mjs` in `bio-plane/test/` = 173
+battery-discovered suites + 115 non-discovered, 3 of them infrastructure.** Of the 112
+remaining, **49 have a same-stem discovered sibling, 33 are named by some discovered suite,
+30 are ORPHANS** — and all 30 were READ rather than scored: 27 are one-off measurement
+probes, diagnostics, scratch Worker fixtures or class sweeps (a one-off measurement cannot
+silently regress), two are DELIBERATE closures stating their reason at the site, and **one,
+`cpdf16-floor-controls.mjs`, is the same class one instrument over** — D-314's blank/noise
+gate in the floor is pinned by nothing, filed as **D-322**. `ref-variance.control.mjs` is
+named as borderline and deliberately not counted.
+
+**WHAT THE MATCHERS CANNOT SEE, stated at both sites.** The sweep matches a driver's FILENAME
+as a literal in discovered suite text, so a discovered suite asserting the same SUBJECT
+without naming the driver reads as an orphan; it walked only `bio-plane/test/`, not
+`civicos-ui/test/` or the three members' test directories; and it cannot tell a defence from
+a measurement — that split was a hand judgement over 30 file heads and is recorded as one.
+The new suite drives `--guard-only`, so it says nothing about the measurement, upload or
+account code after the comparability block; it runs CPDF-15 without `--engine`, so the engine
+pins (exit 5) stay CPDF-15's own arm; it cannot see a floor edit that leaves every pinned
+byte in place; and because it mutates a COPY it cannot detect a guard that read the floor by
+an absolute path instead of `HERE` — the baseline would still pass and the mutation arms
+would fail, the safe direction but not detection.
+
+**NEITHER GUARD WAS EDITED, and that is the point rather than a restraint** — an item closing
+"the fix has no witness" by touching the fix would be measuring its own hand. Both probe
+files are byte-identical to `3366611` (`67432ead…`, `e36a7241…`), as is `ocr-measure-probe.mjs`
+(`71518864…`); the suite's own foot measures that claim on every run by sha256 and by `cmp`
+rather than asserting it.
