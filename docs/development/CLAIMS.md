@@ -2740,3 +2740,34 @@ paths:
 concurrency: checked over the register. CPDF-10 is live on the fleet-member ground, disjoint
 from every path above. No live claim names `ocr-measure-probe.mjs`.
 released: 2026-09-11 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 174/174 · 10,808 (+1 attributed to planning-hygiene on D-315), `coverage --strict` exit 0 read unpiped (floor 909/168/169 unmoved), UI harness exit 0, `mintid --audit` 0 breaks. D-305 and D-314 closed; D-315 stands as the probes-side residue.
+
+## CLAIM 2026-09-12 FLEET (FL-6 — the Claude-account cascade at runtime: member → project → instance, resolved in the fleet member, absence STATED per level)
+session: FLEET area session (worktree `bio-worktrees/FLEET`, branch `fleet-session`)
+opened: 2026-09-12
+paths:
+  - `agent-worker/src/cascade.mjs` — NEW, the resolver: ONE expression of the order and of the
+    per-level judgement (absent/empty is UNSET, a published value is REVOKED — consuming the ONE
+    denylist, `PUBLISHED_TOKEN_HASHES`/`sha256hex` imported from `bio-plane/src/tokens.mjs` as a
+    cross-tree build input the FL-9 guard hashes like `pdf-worker`'s three).
+  - `agent-worker/src/index.mjs` — the `/run` cascade wiring and the honesty notes it supersedes
+    ONLY (`judgement_note` says the account "is FL-6's cascade and is not resolved here" — after
+    this it IS, and the note must say what remains instead). **NOT** `src/harness.mjs`,
+    **NOT** `src/subsession.mjs`.
+  - `agent-worker/test/cascade.test.mjs` + `agent-worker/test/cascade.control.mjs` — NEW, the
+    suite `battery.mjs cascade` selects and its NC driver.
+  - `agent-worker/test/agent-worker.test.mjs` — ONLY assertions the cascade supersedes (module
+    roster, /run response shape), corrected with dated reasons, never exempted.
+  - `agent-worker/dist/*` — REBUILT (the FL-9 guard demands it the moment `src` moves) and the
+    manifest with it.
+  - `bio-plane/test/fleetbundles.test.mjs` — section 2a's agent-worker input-roster assertions
+    ONLY (three modules become four plus a cross-tree input; the assertion is a pin and moves
+    with dated reasons).
+  - `docs/development/IS-BUILD-PLAN.md` — FL-6's OWN row only, the landed note (FL-4's precedent).
+  **NOT** `bio-plane/src/**` (tokens.mjs is READ as a build input, never edited — the instance
+  rule and its suite are DS-3's pins), **NOT** `pdf-worker/**`, **NOT** any third-member path
+  (CPDF-10 is live on that ground), **NOT** `docs/development/QUEUE.md`.
+concurrency: checked over the register 2026-09-12. CPDF-10 (live, third fleet member) — no
+  overlap: its ground is a NEW member directory and CPDF paths; no live claim names
+  `agent-worker/**`. RECORD's live claims (CASE-6, D-310) name `store.mjs`/UI ground — disjoint.
+DEC-43: read and NOT triggered — FL-6 deploys nothing and configures no fallback instance; the
+  ruling binds a deployment step this item does not contain.
