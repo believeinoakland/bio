@@ -105,13 +105,25 @@
  *
  * COMPARABILITY IS ENFORCED, NOT CLAIMED, and it is enforced over FIVE things.
  * CPDF-9's ground truth (by digest), its `norm`/`levenshteinPairs` and its four
- * metric expressions (asserted literally present), and CPDF-11's ladder recipe (by
- * digest) — CPDF-14's set. Plus, new here and necessary because this item's
- * subject is a piece of vendor code rather than a hosted model: THE ENGINE ITSELF
- * IS PINNED BY DIGEST — the wasm core, the JS glue and the traineddata — because
- * "tesseract" is not a version and a figure from a different build is not
- * comparable with this row. Every floor exit is code 4; the engine exit is code 5;
- * all of them fire BEFORE a byte is uploaded anywhere.
+ * metric expressions, and CPDF-11's ladder recipe (by digest) — CPDF-14's set.
+ * Plus, new here and necessary because this item's subject is a piece of vendor
+ * code rather than a hosted model: THE ENGINE ITSELF IS PINNED BY DIGEST — the
+ * wasm core, the JS glue and the traineddata — because "tesseract" is not a
+ * version and a figure from a different build is not comparable with this row.
+ * Every floor exit is code 4; the engine exit is code 5; all of them fire BEFORE
+ * a byte is uploaded anywhere.
+ *
+ * D-315 (2026-09-12) CLOSED A HOLE IN THAT FIRST SET, AND IT WAS THIS GUARD'S
+ * OWN: the four metric expressions were "asserted literally present" by
+ * `.includes`, so a SUPERSTRING mutation — `* 100` becoming `* 100.0` — passed
+ * silently over a genuinely moved expression (measured by CPDF-16's arm, not
+ * reasoned). They are now pinned the way the ground truth always was: the
+ * STATEMENT carrying each expression is digested and must be BYTE-IDENTICAL,
+ * each must occur EXACTLY ONCE (a duplicate disarms every first-occurrence
+ * mutation arm), and `norm`/`levenshteinPairs` — imported and RUN here, and
+ * until now pinned by nothing — are digest-pinned too. The exit codes, the
+ * refusal shape and the `--controls` arm table are unchanged: D-315 is a change
+ * of DETECTION, not of interface.
  *
  * NOTHING IS FUNDED, AND THE ACCOUNT IS PINNED FIRST. The scratch Worker is
  * uploaded under this item's own slug, used, DELETED, and the deletion verified
@@ -184,6 +196,18 @@ const isoAt = (t) => new Date(t).toISOString().replace(/\.\d+Z$/, "Z");
  * printed next to them WITHOUT any expression-level guard noticing. */
 const PIN_GT = "17dff6b39a5dfff3010246825537173b928befbeaa94fef6df7afaa94015c37b";      // norm(GT_PAGE2), 2,687 chars
 const PIN_LADDER = "34796b3003bc32f0a87aa40bb109bcf3c9b806242a9378c42849b8db4bec6d10";  // CPDF-11's rung recipe, 2,068 chars
+/* D-315's class sweep, and it is a hole the four expression pins never covered:
+ * `norm()` and `levenshteinPairs()` are not merely READ out of the floor, they
+ * are IMPORTED AND EXECUTED to produce every number this probe prints — and they
+ * carried no identity check at all. `norm` was only INDIRECTLY constrained (a
+ * mutation that changes `norm(GT_PAGE2)` trips PIN_GT; one that does not — a
+ * `.replace()` for a character the ground truth happens not to contain — was
+ * invisible), and `levenshteinPairs` was not constrained in any direction, while
+ * every distance, pairing and therefore every digit column comes out of it.
+ * Measured 2026-09-12 from the committed floor, over the same grabbed bytes the
+ * import runs. */
+const PIN_NORM = "94cf0d4397807d11a40c64eca33687ac6f090d0de9bae7a8512ab264db432f9e";    // the floor's norm(), 97 chars as grabbed (105 B UTF-8 — it carries curly quotes)
+const PIN_LEV = "7f6520500a0ef8a682ec0dba014a120a2cfe42b4d9612d89784487acd29ee6e4";     // the floor's levenshteinPairs(), 771 chars as grabbed
 /* The ENGINE pins, new in this item: the exact bytes that were deployed. */
 const PIN_WASM = "3822dc6ee83d507f2bd2f83b97a3dd5dabf3ea71a9836d951602c9054615137e";   // tesseract-wasm@0.11.0 dist/tesseract-core.wasm (SIMD build), 1,839,004 B
 const PIN_LIB = "ed6b39d775484081affa3d21bf491f705673c2a3fd616b2f7bce9020ed8eba13";    // tesseract-wasm@0.11.0 dist/lib.js (vendor, PRE-patch), 97,684 B
@@ -324,22 +348,90 @@ const FLOOR_SRC = readFileSync(join(HERE, "ocr-measure-probe.mjs"), "utf8");
 const MOON_SRC = readFileSync(join(HERE, "ocr-moondream-probe.mjs"), "utf8");
 const grab = (src, re, what) => { const m = re.exec(src); if (!m) stop(`${what} is gone.`); return m[1]; };
 
+/* D-315: EXACTLY ONCE, ASSERTED RATHER THAN OBSERVED. CPDF-16 measured by hand
+ * that each pinned literal occurs once in the floor and STATED the measurement
+ * as un-mechanised; this is the mechanism. A duplicate is not cosmetic: every
+ * mutation arm over these files — this probe's own `--controls`, CPDF-14's, and
+ * `cpdf16-floor-controls.mjs` — rewrites the FIRST occurrence with
+ * `String.replace(from, to)`, so a second copy silently disarms the arm while
+ * the run still prints AS DECLARED. The non-greedy `grab` regexes take the first
+ * match for the same reason. */
+const occurrences = (src, needle) => src.split(needle).length - 1;
+const once = (src, where, needle, what) => {
+  const n = occurrences(src, needle);
+  if (n === 0) stop(`${what} is gone from ${where}.`);
+  if (n !== 1) {
+    stop(`${what} occurs ${n} times in ${where}; EXACTLY ONE occurrence is the pin, because every ` +
+      `mutation arm over this file rewrites the first occurrence only and a duplicate disarms it silently.`);
+  }
+};
+for (const [src, where, anchor, what] of [
+  [FLOOR_SRC, "ocr-measure-probe.mjs", "const GT_PAGE2 = `", "the ground truth's declaration"],
+  [FLOOR_SRC, "ocr-measure-probe.mjs", "const norm = (s) =>", "the norm() normaliser's declaration"],
+  [FLOOR_SRC, "ocr-measure-probe.mjs", "function levenshteinPairs(a, b) {", "levenshteinPairs()'s declaration"],
+]) once(src, where, anchor, what);
+
 const GT_PAGE2 = grab(FLOOR_SRC, /const GT_PAGE2 = `([\s\S]*?)`;/, "the GT_PAGE2 ground truth");
 const NORM_SRC = grab(FLOOR_SRC, /(const norm = \(s\) =>[\s\S]*?;\n)/, "the norm() normaliser");
 const LEV_SRC = grab(FLOOR_SRC, /(function levenshteinPairs\(a, b\) \{[\s\S]*?\n\})/, "levenshteinPairs()");
-/* The four metric expressions, asserted LITERALLY present in the floor's own
-   score() before they are used here. CPDF-11's and CPDF-14's guarantee, unchanged
-   — and deliberately NOT extended, because D-305's fifth expression belongs to
-   whoever next moves the floor, not to a probe measuring against it. */
+/* THE FOUR METRIC EXPRESSIONS, PINNED BY THE BYTES OF THE STATEMENT THAT CARRIES
+ * THEM. D-315, and the whole reason that row exists. Still deliberately the FOUR
+ * and not D-305's fifth: the fifth expression belongs to whoever next moves the
+ * floor, not to a probe measuring against it.
+ *
+ * WHAT WAS WRONG HERE, MEASURED RATHER THAN REASONED (CPDF-16's `nc3-expr` arm,
+ * first run, 2026-09-11): this was `FLOOR_SRC.includes(expr)` — SUBSTRING
+ * PRESENCE — and a superstring still contains its own substring. `* 100` mutated
+ * to `* 100.0` in the REAL floor left BOTH landed guards at exit 0 over a
+ * genuinely moved expression. `* 100.5`, or `.length - 1` appended to any of the
+ * three digit expressions, hides in exactly the same place: the pin refused
+ * DELETION and REWRITING but not EXTENSION. The ground-truth and ladder pins were
+ * always immune, because a digest sees every byte — so the fix is to give the
+ * expressions the same discipline rather than a longer literal.
+ *
+ * WHAT IT IS NOW, in order, and each step is load-bearing:
+ *   1. presence, unchanged — a REMOVED expression is still named as gone, so the
+ *      old detection is KEPT rather than traded away for the new one;
+ *   2. EXACTLY ONE occurrence (see `once` above);
+ *   3. the single source LINE carrying the expression, trimmed, digested, and
+ *      compared against a pin measured from the committed floor.
+ * "The expression is present" has become "the expression's statement is
+ * BYTE-IDENTICAL".
+ *
+ * WHY THE LINE AND NOT THE FUNCTION: `score()` has to stay open to ADDITIVE
+ * lines — D-305's fifth expression landed as exactly that edit class and moved
+ * none of these four — so a digest over the whole function would refuse the one
+ * edit the floor is allowed. A line-scoped digest sees every byte of the
+ * statement it pins and nothing else.
+ *
+ * WHAT THIS PIN STILL CANNOT SEE, stated because a matcher's reach is the thing
+ * the next reader cannot re-derive: a change on a DIFFERENT line that moves
+ * these numbers (`dist` or `pairs` rebound upstream) — which is why `norm()` and
+ * `levenshteinPairs()`, the two regions this probe IMPORTS AND RUNS, are digest-
+ * pinned below as well; and re-indentation of a pinned line, deliberately
+ * outside the pin, because the statement is trimmed before it is digested and
+ * indentation is not the metric.
+ *
+ * ONE CONSEQUENCE FOR THE LEGAL EDIT CLASS, and it is deliberate: an additive
+ * line that RE-SPELLS one of these four expressions verbatim is now refused by
+ * step 2. Write the new column against its own spelling — D-305's fifth
+ * expression already did — or move the pin in the same turn. */
 const METRIC_EXPRS = [
-  "(1 - dist / gt.length) * 100",
-  "pairs.filter(([g]) => g && /[0-9]/.test(g)).length",
-  "pairs.filter(([g, o]) => g && /[0-9]/.test(g) && g !== o).length",
-  "pairs.filter(([g, o]) => o && /[0-9]/.test(o) && (!g || !/[0-9]/.test(g))).length",
+  { what: "char accuracy", expr: "(1 - dist / gt.length) * 100",
+    pin: "ff03ab0c3519142926e122a6f9a68ac97846dc5493cbb6d6178c7efa347a8d0c" },
+  { what: "GT digit total", expr: "pairs.filter(([g]) => g && /[0-9]/.test(g)).length",
+    pin: "ab8ab627691245f647ce2ae8aa44ee8fefc6fd3dc627844ff3059291f3856e3f" },
+  { what: "digit errors", expr: "pairs.filter(([g, o]) => g && /[0-9]/.test(g) && g !== o).length",
+    pin: "308ec3e3f14fe2fb064d396ffb569287507c5c22bdf8a0f6fb36f28248fa3337" },
+  { what: "digits MINTED", expr: "pairs.filter(([g, o]) => o && /[0-9]/.test(o) && (!g || !/[0-9]/.test(g))).length",
+    pin: "8457c947e8010cc278cfa8388ce42538bb98c0230a5d3d96a5a8351fb5c0539b" },
 ];
-for (const e of METRIC_EXPRS) {
-  if (!FLOOR_SRC.includes(e)) stop(`the floor's scoring expression ${JSON.stringify(e)} is gone from ocr-measure-probe.mjs.`);
-}
+const metricStatement = ({ what, expr }) => {
+  if (!FLOOR_SRC.includes(expr)) stop(`the floor's scoring expression ${JSON.stringify(expr)} is gone from ocr-measure-probe.mjs.`);
+  once(FLOOR_SRC, "ocr-measure-probe.mjs", expr, `the floor's ${what} expression ${JSON.stringify(expr)}`);
+  return FLOOR_SRC.split("\n").find((l) => l.includes(expr)).trim();
+};
+const METRIC_PINS = METRIC_EXPRS.map((e) => ({ ...e, stmt: metricStatement(e), found: sha(metricStatement(e)) }));
 const { norm, levenshteinPairs } = await import(
   "data:text/javascript," + encodeURIComponent(`${NORM_SRC}\n${LEV_SRC}\nexport { norm, levenshteinPairs };`));
 
@@ -348,6 +440,8 @@ const LADDER_PY = grab(MOON_SRC, /execFileSync\("python3", \["-c", `([\s\S]*?)`,
 
 const GT_DIGEST = sha(norm(GT_PAGE2));
 const LADDER_DIGEST = sha(LADDER_PY);
+const NORM_DIGEST = sha(NORM_SRC);
+const LEV_DIGEST = sha(LEV_SRC);
 
 /** The engine pins, checked wherever the engine is (a real install, or an NC2
  *  arm's copy). Returns the three digests so the report can print them. */
@@ -373,6 +467,9 @@ function checkEnginePins(dir, { enforce = true } = {}) {
 if (DIGESTS) {
   console.log(`PIN_GT     = "${GT_DIGEST}"   (norm(GT_PAGE2), ${norm(GT_PAGE2).length} chars)`);
   console.log(`PIN_LADDER = "${LADDER_DIGEST}"   (CPDF-11 rung recipe, ${LADDER_PY.length} chars)`);
+  console.log(`PIN_NORM   = "${NORM_DIGEST}"   (the floor's norm(), ${NORM_SRC.length} B as grabbed)`);
+  console.log(`PIN_LEV    = "${LEV_DIGEST}"   (the floor's levenshteinPairs(), ${LEV_SRC.length} B as grabbed)`);
+  for (const m of METRIC_PINS) console.log(`  metric ${JSON.stringify(m.what)} pin = "${m.found}"   (${m.stmt.length} B: ${JSON.stringify(m.stmt)})`);
   if (ENGINE_DIR) {
     const e = checkEnginePins(ENGINE_DIR, { enforce: false });
     console.log(`PIN_WASM   = "${e.wasm.digest}"   (${ENGINE_PKG} tesseract-core.wasm, ${e.wasm.bytes} B)`);
@@ -385,8 +482,23 @@ if (DIGESTS) {
 }
 if (GT_DIGEST !== PIN_GT) stop(`the floor's GROUND TRUTH has moved (pinned ${PIN_GT.slice(0, 16)}…, found ${GT_DIGEST.slice(0, 16)}…).`);
 if (LADDER_DIGEST !== PIN_LADDER) stop(`CPDF-11's LADDER RECIPE has moved (pinned ${PIN_LADDER.slice(0, 16)}…, found ${LADDER_DIGEST.slice(0, 16)}…).`);
+if (NORM_DIGEST !== PIN_NORM) stop(`the floor's norm() NORMALISER has moved (pinned ${PIN_NORM.slice(0, 16)}…, found ${NORM_DIGEST.slice(0, 16)}…) — this probe imports and RUNS it, so every number below would be computed by different code.`);
+if (LEV_DIGEST !== PIN_LEV) stop(`the floor's levenshteinPairs() has moved (pinned ${PIN_LEV.slice(0, 16)}…, found ${LEV_DIGEST.slice(0, 16)}…) — this probe imports and RUNS it, so every distance and digit column below would be computed by different code.`);
+/* D-315: the four expression pins, enforced BY DIGEST and no longer by presence
+   alone. The message names the expression AND says which failure this is, because
+   "still present but the statement moved" is precisely the superstring case that
+   walked through the old check. */
+for (const m of METRIC_PINS) {
+  if (m.found !== m.pin) {
+    stop(`the floor's ${m.what} STATEMENT has moved — the pinned expression ${JSON.stringify(m.expr)} is still ` +
+      `PRESENT, so this is an EXTENSION or a rewrite around it, which is exactly D-315's blind side ` +
+      `(pinned ${m.pin.slice(0, 16)}…, found ${m.found.slice(0, 16)}…; statement now ${JSON.stringify(m.stmt)}).`);
+  }
+}
 console.log(`comparability: ground truth ${norm(GT_PAGE2).length} normalised chars, digest pinned; ` +
-  `all four floor metric expressions present; CPDF-11's ladder recipe pinned and read, not copied`);
+  `all four floor metric expressions BYTE-IDENTICAL by statement digest and each occurring exactly once (D-315); ` +
+  `norm() and levenshteinPairs() digest-pinned before they are run; ` +
+  `CPDF-11's ladder recipe pinned and read, not copied`);
 
 if (GUARD_ONLY) {
   if (ENGINE_DIR) {

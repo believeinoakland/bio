@@ -9474,3 +9474,105 @@ which this item's claim deliberately excludes.
 **What this instrument cannot see, stated:** one ground-truth page; two local models of one
 engine; the noise gate is one noise page at one dimension set; the driver exercises the
 scoring and gate code on constructed inputs — only the full run exercises the engine.
+
+## 2026-09-12 · D-315 — the comparability guards' expression pin moves from SUBSTRING PRESENCE to BYTE IDENTITY, and the sweep found two more regions pinned by nothing (worktree `agent-a853636fda19082d6`)
+
+**Instruments.** `bio-plane/test/d315-guard-controls.mjs` (NEW, this item's driver — not a
+`*.test.mjs`, so the battery's discovery rule never picks it up; it mutates the committed
+floor in place and needs a quiet tree), driving `bio-plane/test/ocr-composed-probe.mjs
+--guard-only` (CPDF-14) and `bio-plane/test/cpdf15-tesseract-runtime.probe.mjs --guard-only`
+(CPDF-15). Subject: `bio-plane/test/ocr-measure-probe.mjs`, 20,630 B, sha256
+`7151886480c71bd20c0c0414f2cc83f7d852e4d086de20519404208195209205` — READ-ONLY for this item
+and byte-unchanged at the end (`git diff` empty, and the driver's own foot re-checks it).
+
+**THE DEFECT REPRODUCED BEFORE IT WAS FIXED, which is the measurement that makes the rest of
+this row worth reading.** The same driver was run against the guards exactly as committed at
+`cebf564`, extracted with `git show` into a scratch tree beside the same floor: **10 arms,
+7 NOT AS DECLARED.** All four superstring arms left BOTH guards at exit 0, including
+`* 100` → `* 100.0`, which is byte-for-byte the mutation CPDF-16 measured. Only `baseline`,
+`nc2-removing` and `post-restore` were as declared — that is, the pre-fix guards could see
+exactly the class they were written for and nothing else.
+
+| arm | mutation | pre-fix (`cebf564`) | post-fix |
+|---|---|---|---|
+| `baseline` | none | both exit 0 · AS DECLARED | both exit 0 · AS DECLARED |
+| `nc1-super-characc` | `* 100` → `* 100.0` | **both exit 0 · NOT AS DECLARED** | both exit 4 · AS DECLARED |
+| `nc1-super-digtotal` | `.length;` → `.length - 0;` | **both exit 0 · NOT AS DECLARED** | both exit 4 · AS DECLARED |
+| `nc1-super-digerr` | `.length;` → `.length - 0;` | **both exit 0 · NOT AS DECLARED** | both exit 4 · AS DECLARED |
+| `nc1-super-minted` | `.length;` → `.length - 0;` | **both exit 0 · NOT AS DECLARED** | both exit 4 · AS DECLARED |
+| `nc2-removing` | denominator → `Math.max(1, gt.length)` | both exit 4, named GONE · AS DECLARED | both exit 4, named GONE · AS DECLARED |
+| `nc4-duplicate` | a 2nd verbatim copy of a pinned expression on its own new line | **both exit 0 · NOT AS DECLARED** | both exit 4, named "occurs 2 times" · AS DECLARED |
+| `nc5-lev` | `levenshteinPairs()` cost term `1` → `2` | **both exit 0 · NOT AS DECLARED** | both exit 4, named `levenshteinPairs()` · AS DECLARED |
+| `nc6-norm` | `norm()` + a `.replace` PIN_GT cannot see | **both exit 0 · NOT AS DECLARED** | both exit 4, named `norm()` · AS DECLARED |
+| `post-restore` | none | both exit 0, sha matches · AS DECLARED | both exit 0, sha matches · AS DECLARED |
+
+**FOOT: pre-fix 10 arms / 7 not as declared, exit 1. Post-fix 10 arms / 0 not as declared,
+exit 0.** Every arm ALONE, others held open; every restore verified by sha256 **AND** `cmp`
+against a uniquely-named per-arm pristine copy, byte count printed and floored at 10,000; each
+arm additionally refuses to start unless the floor's digest is the pre-run one, so a driver
+that died mid-arm cannot be mistaken for one that finished.
+
+**What the pin is now, and the four figures it carries.** Presence is asserted first
+(unchanged, so a REMOVED expression is still named as gone), then EXACTLY ONE occurrence, then
+the sha256 of the single trimmed source LINE carrying the expression:
+
+| metric | statement | chars | sha256 |
+|---|---|---|---|
+| char accuracy | `console.log(\`  [${label}] GT ${gt.length} chars; edits ${dist}; char accuracy ${((1 - dist / gt.length) * 100).toFixed(2)}%\`);` | 126 | `ff03ab0c3519142926e122a6f9a68ac97846dc5493cbb6d6178c7efa347a8d0c` |
+| GT digit total | `const digTotal = pairs.filter(([g]) => g && /[0-9]/.test(g)).length;` | 68 | `ab8ab627691245f647ce2ae8aa44ee8fefc6fd3dc627844ff3059291f3856e3f` |
+| digit errors | `const digErr = pairs.filter(([g, o]) => g && /[0-9]/.test(g) && g !== o).length;` | 80 | `308ec3e3f14fe2fb064d396ffb569287507c5c22bdf8a0f6fb36f28248fa3337` |
+| digits MINTED | `const minted = pairs.filter(([g, o]) => o && /[0-9]/.test(o) && (!g \|\| !/[0-9]/.test(g))).length;` | 97 | `8457c947e8010cc278cfa8388ce42538bb98c0230a5d3d96a5a8351fb5c0539b` |
+
+Both probes print these from the file under `--digests` and both reproduced the same four
+digests independently, which is what makes them measured rather than transcribed.
+
+**THE SWEEP, AND IT WIDENED THE ROW.** D-315 named the four expression pins. The class is
+"a guard that reads bytes out of another file and checks something weaker than their
+identity", and asking it of the whole guard region found two more sites — worse ones, because
+they are not READ but **IMPORTED AND EXECUTED**: `norm()` and `levenshteinPairs()` are pulled
+out of the floor with a regex and run to produce every number both probes print, and neither
+carried an identity check. `norm` was constrained only INDIRECTLY, through `PIN_GT`, and only
+for mutations that change `norm(GT_PAGE2)` — `nc6-norm` is a `.replace()` for a character the
+ground truth does not contain, and it passed silently. `levenshteinPairs` was constrained in
+no direction at all. Both are now digest-pinned (`norm()` 97 chars,
+`94cf0d4397807d11a40c64eca33687ac6f090d0de9bae7a8512ab264db432f9e`; `levenshteinPairs()` 771
+chars, `7f6520500a0ef8a682ec0dba014a120a2cfe42b4d9612d89784487acd29ee6e4`), in both probes.
+
+**CPDF-16's un-mechanised measurement, mechanised, and it was TRUE when measured.** Each of
+the four pinned expressions occurs exactly once in the floor; so do all five `grab` anchors
+(`const GT_PAGE2 = \``, `const norm = (s) =>`, `function levenshteinPairs(a, b) {`,
+`const OCR_PROMPT =`, `const REFUSAL = "`) and CPDF-11's `rung("rung3", 0.25, blur=2.0)`.
+The assertion now runs on every guard invocation. `nc4-duplicate` is what makes it
+load-bearing rather than decorative: it adds a second verbatim copy on a NEW line, so every
+pinned statement's own bytes are untouched and all six digests still match — the exactly-once
+assertion is the only thing in either probe that can see it.
+
+**WHAT THESE PINS CANNOT SEE, stated, because a matcher's reach is what the next reader cannot
+re-derive.** (1) A change on a DIFFERENT line that moves the numbers — `dist` or `pairs`
+rebound upstream of the pinned statements; the two import-and-run pins close the largest part
+of this and it is not closed in general. (2) Re-indentation of a pinned line: deliberately
+outside the pin, because the statement is trimmed before it is digested and indentation is not
+the metric. (3) The floor's FIFTH expression (D-305's `disagree`) is still pinned by neither
+probe — deliberate and unchanged, as CPDF-15's comment says: it belongs to whoever next moves
+the floor. (4) A regression of D-315 itself is invisible to every automatic gate — filed as
+**D-318**, because neither probe's own `--controls` arm table arms a superstring and this
+item's brief froze those tables.
+
+**One consequence for the legal edit class, deliberate and recorded here so it is not
+discovered by surprise:** an ADDITIVE line that RE-SPELLS one of the four expressions verbatim
+is now refused by the exactly-once assertion. D-305's fifth expression did not do this, so
+nothing committed is affected; a future sixth column must either spell its expression
+differently or move the pin in the same turn. The refusal names the count and the reason.
+
+**Gates, this worktree, on `cebf564`.** Baseline measured before any edit: battery **175/175
+suites green · 10,821 assertions · 161.8 s**, `node scripts/coverage.mjs --strict` exit 0
+read unpiped (`REGISTER FLOOR arms 914/909 · classified 169/168 · corpus 170/169`),
+`node civicos-ui/test/run.mjs` from the repo root exit 0, CPDF-14 `--controls` 4/4, CPDF-15
+`--controls` 5/5. **The briefed figure was stale and measuring found it: CPDF-16 landed at
+174/174 · 10,808, and `da3d4f1` (DS-2) added the suite and the thirteen assertions between.**
+
+**What this measurement CANNOT see, beyond the pins' own reach:** the driver runs both guards
+through `--guard-only`, which is the comparability block and nothing after it, so it says
+nothing about either probe's measurement, upload or account code — deliberately, because those
+paths cost money and reach the network. No model was run, nothing was uploaded, no Worker was
+created, and no plane behaviour changed.

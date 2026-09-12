@@ -637,9 +637,15 @@ const REGISTER_FLOOR = {
      in a commit, from a `--strict` run that then read 909/168/169 itself.
      ONE KEY SET, grepped before writing (2 matches for `^  arms:` in this file,
      the other being FLEET's `arms: 58` — a different table). */
-  arms: 909,
-  classified: 168,
-  corpus: 169,
+  /* MOVED 2026-09-12 by CONDUCT #9 at D-315's integration, from the merged run's
+     OWN print (arms 920/909 · classified 170/168 · corpus 171/169 · GREW by 11):
+     the slack accumulated across the FL-6 and DS-2/DS-3 landings (which added
+     suites without moving this floor — the seventh-instance stale-floor pattern,
+     noted for FLEET and DIST) plus D-315's own new arms. Read from output, never
+     summed by hand. ONE KEY SET, grepped before writing. */
+  arms: 920,
+  classified: 170,
+  corpus: 171,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
