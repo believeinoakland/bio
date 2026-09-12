@@ -7,6 +7,25 @@
  * (`scripts/battery.mjs`: readdir + `endsWith(".test.mjs")`) never picks it up —
  * it mutates a COMMITTED file in place and needs a quiet tree.
  *
+ * >>> D-318 (2026-09-12): THAT NON-DISCOVERY WAS THE HOLE, AND IT IS CLOSED
+ * BESIDE THIS FILE RATHER THAN BY MOVING IT. Because this driver is the only
+ * instrument that can tell the digest pins from the pre-D-315 `.includes` pins —
+ * both probes' own `--controls` `metric` arms mutate the char-accuracy
+ * DENOMINATOR, which REMOVES the pinned substring and so passed identically
+ * before and after D-315's fix — a revert of the pins left every automatic gate
+ * green. `test/d315-guard-witness.test.mjs` is now the battery-discovered
+ * witness: the same arms, driven over a TEMP-DIR COPY the way both probes'
+ * `--controls` already do, so it is safe to run inside a battery.
+ *
+ * THE TWO ARE NOT DUPLICATES AND NEITHER REPLACES THE OTHER. The discovered
+ * suite proves the guards refuse a MUTATED COPY, on every run, automatically.
+ * THIS driver proves they refuse the REAL COMMITTED FLOOR when it is mutated —
+ * the path a careless edit actually takes, and the one a copy cannot stand in
+ * for — which is exactly why it must stay out of the battery: a suite that edits
+ * a committed file races every other suite in the run and leaves the tree dirty
+ * if it dies mid-arm. Run this one by hand on a quiet tree; the battery runs the
+ * other one for you.
+ *
  * WHY IT EXISTS. CPDF-16's `nc3-expr` arm mutated the floor's char-accuracy
  * expression to a SUPERSTRING (`* 100` -> `* 100.0`) in the real file and BOTH
  * landed guards exited 0 over a genuinely moved expression, because
