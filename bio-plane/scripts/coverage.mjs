@@ -636,16 +636,29 @@ const REGISTER_FLOOR = {
      TOO HIGH, failing every honest run afterwards. Moved after the suite landed
      in a commit, from a `--strict` run that then read 909/168/169 itself.
      ONE KEY SET, grepped before writing (2 matches for `^  arms:` in this file,
-     the other being FLEET's `arms: 58` — a different table). */
+     the other being FLEET's — a different table). */
   /* MOVED 2026-09-12 by CONDUCT #9 at D-315's integration, from the merged run's
      OWN print (arms 920/909 · classified 170/168 · corpus 171/169 · GREW by 11):
      the slack accumulated across the FL-6 and DS-2/DS-3 landings (which added
      suites without moving this floor — the seventh-instance stale-floor pattern,
      noted for FLEET and DIST) plus D-315's own new arms. Read from output, never
      summed by hand. ONE KEY SET, grepped before writing. */
-  arms: 920,
-  classified: 170,
-  corpus: 171,
+  /* MOVED AGAIN 2026-09-12 by CPDF-10 AT ITS OWN MERGE, and **COLLAPSED TO ONE
+     KEY SET DELIBERATELY** — `WORKER.md` records keep-both merges leaving
+     duplicate `arms:` keys here SIX times, valid JavaScript where the last
+     silently wins and once the last was the LOWEST. Both sides of this conflict
+     had moved the same key and the figures below are re-read from a green
+     `--strict` run on the MERGED tree, never from either side's number:
+     CPDF-10's branch printed 917/170/171 against the pre-merge floor of
+     909/168/169 (five of those eight arms already slack at `cebf564` — DS-2
+     landed `resolveversion.test.mjs` without moving this key), CONDUCT's
+     integration of D-315 printed 920/170/171, and the merged tree prints the
+     figure set below. This item's own contribution inside it is three arms
+     (`bio-plane/test/ocr-member-e2e.test.mjs`, one suite). CONDUCT re-reads all
+     three on the merged tree — it is NAMED in this item's report for that. */
+  arms: 923,
+  classified: 171,
+  corpus: 172,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
@@ -738,9 +751,22 @@ const FLEET_FLOOR = {
      invalidate rather than leaving it for the next reader to find again — the
      sixth consecutive item to find a hand-carried floor stale by measuring it.
      Named in the report so CONDUCT can re-read it on the merged tree. */
-  members: 2,
-  surfaceOps: 4,
-  suites: 5,
+  /* MOVED 2026-09-12 by CPDF-10: 2 -> 3 members, 4 -> 6 surface ops, 5 -> 6
+     suites, from the figures a green `--strict` run PRINTED on this branch
+     (`FLEET  3 members beside the plane · 6/6 surface ops reached · 6/6 SUITES
+     declaring a negative control · 64 arms`). The third member is `ocr-worker`,
+     the Tier-3 OCR path; its two surface ops are `transcribe` and `version` and
+     its one suite is `ocr-worker/test/ocr-worker.test.mjs`. Named in the report
+     so CONDUCT re-reads all four on the merged tree. */
+  members: 3,
+  surfaceOps: 6,
+  /* 6 -> 7 AT CPDF-10's OWN MERGE, and this one is NOT this item's: FL-6 landed
+     `agent-worker/test/cascade.test.mjs` on `main` without moving this key, so
+     the merged tree printed `7/7 SUITES declaring a negative control` against a
+     floor of 6. A floor with slack is not one, and it is moved here rather than
+     left for the next reader — the same reasoning VF-5 and FL-9 each recorded
+     when they moved a figure they had not invalidated. */
+  suites: 7,
   /* RESTORED AT INTEGRATION 2026-08-09 by CONDUCT. This key was DROPPED by my own
      conflict resolution on the D-277 merge, and the loss was SILENT: with no `arms`
      the comparison reads `48 < undefined`, which is false, so `--strict` stayed at
@@ -760,7 +786,21 @@ const FLEET_FLOOR = {
      consecutive item here to find a hand-carried floor stale by measuring it. `members`,
      `surfaceOps` and `suites` are UNMOVED at 2 / 4 / 5. Named in FL-9's report so CONDUCT
      re-reads it on the merged tree. */
-  arms: 58,
+  /* MOVED 2026-09-12 by CPDF-10: 58 -> 64 arms, from the same printed run as the
+     three figures above (`64 arms · GREW by 6 arm(s)`). The six are
+     `ocr-worker.test.mjs`'s, and unlike the last two moves of this key THIS ONE
+     IS NOT SLACK BEING SWEPT UP: the fleet's other five suites are unchanged by
+     this item and still state 58 between them, so the ratchet was exactly right
+     when this item found it — measured, and said either way, because the
+     practice is to trust the measurement rather than the streak.
+     THEN 64 -> 68 AT THIS ITEM'S MERGE, and that step has a DIFFERENT cause:
+     FL-6 landed `agent-worker/test/cascade.test.mjs` (four arms) on `main`
+     without moving this key, so the merged tree printed `68 arms · GREW by 4`.
+     This item did not invalidate those four and moves them anyway, for the
+     reason VF-5 and FL-9 each recorded when they did the same. Read from the
+     merged tree's own print, never summed by hand. **ONE `arms:` KEY IN THIS
+     TABLE, grepped after writing.** */
+  arms: 68,
 };
 
 function discoverFleet() {

@@ -74,3 +74,13 @@
 # source is exactly the hazard this line closes (M0-15: `git stash -u` is
 # repository-wide, not per-worktree).
 .nc-fleetbundles/
+
+# CPDF-10's TWO pens, named for their item for the same reason every one above
+# them is. This item's drivers arm sources in TWO trees (`ocr-worker/src/` and,
+# for the queue row's chain-collapse arm, `bio-plane/src/`) and each REBUILDS the
+# member's committed artifact between arms, so an interrupted run leaves both a
+# pristine copy and a half-built artifact behind. An untracked scratch file left
+# in a worktree has already been swept into another item's walk, and `git stash
+# -u` is repository-wide rather than per-worktree (M0-15).
+.cpdf10-pen/
+.cpdf10-e2e-pen/

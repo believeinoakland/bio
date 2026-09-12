@@ -87,9 +87,28 @@
   // that has not installed the fleet is unaffected. Deploying the member and
   // teaching the installer to install a THREE-member fleet is DIST's (DS-1/DS-4,
   // D-115/D-116) — a slot-less area cannot deploy a Worker.
+  // OCR_WORKER (I9, CPDF-10). The THIRD fleet member and the Tier-3 OCR path:
+  // wasm tesseract over a page turned into pixels, for the image-only documents
+  // Tier 1 and Tier 2 can decode NOTHING from. It is the NARROWEST relationship
+  // of the three — the plane calls it, it answers, and it structurally cannot
+  // reach the record (no STORE binding, no PUBLISHED, `CAPTURES` read only), so
+  // this line is the whole of it in one direction and there is no other.
+  //
+  // A THREE-PART UPLOAD, and that is a PLATFORM fact rather than a build choice:
+  // Workers forbid compiling wasm at runtime, so the engine core must arrive as
+  // a module the platform compiled at upload time. `ocr-worker/wrangler.jsonc`'s
+  // `rules` carry that half; `newgroup` learning to install a member with parts
+  // is DIST's (D-115/D-116).
+  //
+  // INERT UNTIL DIST DEPLOYS THE MEMBER, exactly as PDF_WORKER and AGENT_WORKER
+  // shipped. `index.mjs` reads this binding on ONE branch — a document with no
+  // text layer at all — and an instance without it says so in the record rather
+  // than filing an empty document (D-115). Nothing else changes for an instance
+  // that has not installed the fleet.
   "services": [
     { "binding": "PDF_WORKER",   "service": "pdf-worker" },
     { "binding": "AGENT_WORKER", "service": "agent-worker" },
+    { "binding": "OCR_WORKER",   "service": "ocr-worker" },
     { "binding": "SELF",         "service": "bio-plane" }
   ],
 

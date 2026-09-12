@@ -9576,3 +9576,141 @@ through `--guard-only`, which is the comparability block and nothing after it, s
 nothing about either probe's measurement, upload or account code — deliberately, because those
 paths cost money and reach the network. No model was run, nothing was uploaded, no Worker was
 created, and no plane behaviour changed.
+## 2026-09-12 · CPDF-10 — THE THIRD FLEET MEMBER RUNS, IN WORKERD, ON A REAL SCANNED OAKLAND PAGE (worktree `agent-accf1711f80abb70c`)
+
+**Instrument:** `ocr-worker/test/ocr-worker.test.mjs` (the member, booted from its
+COMMITTED bundle plus its two upload parts under miniflare/workerd) and
+`bio-plane/test/ocr-member-e2e.test.mjs` (the plane, the real service binding and the
+same member). Both are battery-resident and hermetic: no network, no deploy, nothing
+uploaded to any account. **Every figure below is an observation of a local workerd run
+and NONE of them is a platform billing figure** — a Worker cannot time itself (D-56), so
+no millisecond of compute is claimed here and CPDF-15's platform-observed cpu_ms stands
+as the only such figure for this engine.
+
+**THE ENGINE'S OWN BYTES REPRODUCED CPDF-15's PINS EXACTLY, from a fresh install and a
+fresh fetch on 2026-09-12** — and this is the comparability fact that lets this member
+inherit that verdict at all:
+
+| what | sha256 | bytes | CPDF-15's pin |
+|---|---|---|---|
+| `tesseract-wasm@0.11.0` `dist/tesseract-core.wasm` (SIMD) | `3822dc6e…5137e` | 1,839,004 | IDENTICAL |
+| `tesseract-wasm@0.11.0` `dist/lib.js` (vendor, PRE-patch) | `ed6b39d7…8eba13` | 97,684 | IDENTICAL |
+| `tessdata_fast` `eng.traineddata` | `7d4322bd…70b2` | 4,113,088 | IDENTICAL |
+
+**THE RUN OF RECORD — the real page, in-isolate, end to end.**
+`pdf-worker/test/fixtures/scan-ccitt-g4-page.pdf` (page 2 of Oakland Legistar attachment
+15721260, the page CPDF-9 ground-truthed and CPDF-15 measured this engine on), acquired
+through the plane with the member bound:
+
+- Route `decoded-ccitt-g4`, upright, `/Rotate 270` applied, **2550 x 3300 px at 300 dpi**,
+  RGBA frame **33,660,000 B** — inside the 61.3 MB CPDF-15 measured completing and well
+  under the 75.7 MB it measured being KILLED. **Expressed as a workload size and never as
+  a share of 128 MB (D-312).**
+- **37 line regions, 2,696 characters** at line grain; **406 word boxes** at word grain,
+  which is CPDF-15's 406/406/406 figure REPRODUCED by a different harness on a different
+  runtime.
+- The pixels the anchors index digest to `ac4eb57f…9efbc` — **the value an INDEPENDENT
+  decoder produced** (Pillow/libtiff through pypdf 6.14.2, run 2026-08-08 for CPDF-12).
+  This member's own PNG reader reproduces it byte for byte, so the round trip is checked
+  against something that shares no line with it.
+- The reading comes back `text_tier: 3` with the chain
+  `pixels -> ocr(tesseract-wasm 0.11.0)`, both steps at `cap: C` with `measured_by`
+  pointing at CPDF-15's row and `calibration: null` (this store holds no calibration of
+  this engine — the honest pre-CPDF-13 shape, asserted rather than assumed).
+- **PINS, NOT A SCORE:** `$50,000` and `lowest responsible` come back as the page says
+  them, where CPDF-11 measured a generative model MINTING `$10,000` and
+  `least responsible` on this exact document while refusing nothing. **n = 1 page.**
+
+**WHAT THIS DOES NOT MEASURE, and it is the same boundary CPDF-15 drew:** accuracy. The
+fidelity this member reports is CPDF-15's measurement — ONE human-ground-truthed page,
+ONE engine version, ONE model. **D-314 applies wherever an agreement figure appears:
+agreement with the local floor is NOT accuracy, and CPDF-16 measured that NEITHER local
+model passes the noise control, so no agreement figure may be read as accuracy at all.
+This item quotes none.**
+
+**THE CONTROL EVERY ENGINE MUST PASS, re-run here on the member:** a blank page and a
+seeded uniform-noise page both come back `NOTHING_TRANSCRIBED` — the engine returns no
+anchorable region. CPDF-15 measured the same self-refusal on the deployed runtime while
+the LOCAL floor engine invented 9,968 characters on the same control (D-314).
+
+**THE GRAIN DECISION, MEASURED.** The plane composes a page's text by joining region
+texts with a NEWLINE, so a region's grain is a LINE's grain in the record. At `word`
+grain every OCR'd document becomes one word per line: `meeting-agenda`'s definitive
+signal — a file number ALONE ON A LINE, chosen because "HTML never carries them alone on
+a line" — becomes trivially satisfiable by any number-shaped word, and its phrase signals
+(`Roll Call`, `Subject:` and its value) become UNREACHABLE because no two words share a
+line. Driven both ways; the member ships `line`.
+
+**THE REFUSALS, DRIVEN RATHER THAN DESCRIBED.** A 5000x5000 page (a 100,000,000 B frame)
+is refused `FRAME_OVER_MEASURED_BOUND` before anything is allocated, naming the 61.3 MB
+figure and never a percentage. A three-page request answers ONE page and NAMES the other
+two. A page with a real text layer is refused by the renderer (`PAGE_HAS_TEXT_LAYER`) and
+passed through by name. A `passthrough-dct` page is refused `PIXELS_UNREADABLE` with the
+route named — no JPEG decoder exists in-isolate (D-320).
+
+**WRITES NOTHING, MEASURED TWO WAYS.** The `CAPTURES` bucket is byte-identical after
+every call, over a non-empty corpus of five objects; and a source scan over the member's
+own five sources finds no R2 write call, with the generated vendor glue EXCLUDED and
+SEPARATELY accounted for. **The naive scan over the bundle came back RED and it was the
+MATCHER that was wrong, not the subject:** the two `.delete(` calls are emscripten
+destructors on the engine's own C++ handles, one more is a JS `Set`, and the glue's `env`
+is emscripten's fake POSIX environment (`var env={"USER":"web_user",…}`) rather than a
+Workers binding. Recorded rather than smoothed, and the arms are narrowed to the question
+that was being asked.
+
+**NEGATIVE CONTROLS: NINE ARMS, each ALONE, 0 not as declared on the final runs.**
+Six on the member (`ocr-worker/test/ocr-worker.control.mjs`, baseline 70/0) and the queue
+row's three on the real end-to-end path (`bio-plane/test/ocr-member-e2e.control.mjs`,
+baseline 63/0). Every arm REBUILDS the committed artifact, because the suites boot the
+artifact and a mutation nobody rebuilds arms nothing. Every restore by `cp` from a
+per-arm pristine copy, verified by sha256 AND `cmp`, byte counts printed and floored —
+**never `git checkout --`**, which restores to HEAD (CLAUDE.md, measured twice in two
+days). The row's three: strip the `text_source` marker -> **35/28**, the chain, the
+projection, the index and the export all red, the text-layer document untouched; drop the
+confidence floor -> **62/1**, exactly the floor arm; collapse the chain to one label ->
+**55/8**, every chain arm in the acquire path and the export, **while the index and the
+terminal-step projection stayed GREEN as declared — they read only the LAST step and
+structurally cannot see that collapse.**
+
+**TWO ARMS FOUND SOMETHING, AND BOTH ARE KEPT.** (1) Shifting the PNG raster by one byte
+per row failed the INDEPENDENT-digest arm and left the TEXT PINS GREEN: a uniform
+horizontal translation does not change what a page SAYS, so the quoted text is blind to
+it and only the Pillow-derived digest sees it — the digest arm is the load-bearing one,
+the same shape FL-9 measured for its input-hash arm over byte-identity. (2) Dropping the
+anchor's rect first reported `-1 pass, -1 fail, foot NOT REACHED`: a `TypeError` on an
+unguarded `r.source.rect.length` ended the module through no assertion at all, and only
+the foot sentinel turned that silence into a red. The suite's reads are now null-tolerant
+and the arm was re-run.
+
+**GATES.** BASELINE, measured on a clean tree at `cebf564` before anything moved:
+**175/175 suites green · 10,821 assertions**, `--strict` exit 0, UI harness exit 0,
+`plancheck` 0 fail / 0 warn. PRE-MERGE FINAL on this branch: **177/177 · 10,991**, and the
++170 is fully attributed by diffing the two runs per suite — `fleetbundles` +31,
+`hygiene` +3, `planning-hygiene` +3 (the three new debt rows), and the two new suites at
+63 and 70. POST-MERGE FIGURE OF RECORD, after `origin/main` moved seven commits under
+this item (D-315 integrated, FL-6's cascade, DS-3): **179/179 suites green · 11,032
+assertions · fleet 3 members, 7 suites, 3 members ACTUALLY RAN (no skip — this member has
+no runtime dependency, so its suite and its byte-identity arm can never go dark on a
+fresh checkout)**; `coverage.mjs --strict` exit 0 read UNPIPED; UI harness exit 0 from
+the repo root; `plancheck` clean but for UNPUSHED.
+
+**FOUR FLOOR FIGURES MOVED, EACH TO A NUMBER A GREEN RUN PRINTED, AND ONLY ONE OF THE
+FOUR IS THIS ITEM'S OWN.** `FLEET_FLOOR` 2/4/5/58 -> 3/6/7/68 and `REGISTER_FLOOR`
+909/168/169 -> 923/171/172. This item's own contribution is three members' worth of one
+member (`ocr-worker`, its two surface ops and its one suite's six arms) plus three
+register arms. The rest was ALREADY SLACK and this item did not invalidate it: DS-2
+landed `resolveversion.test.mjs` without moving `REGISTER_FLOOR` (measured at `cebf564`:
+the register printed 914/169/170 against a floor of 909/168/169), and FL-6 landed
+`agent-worker/test/cascade.test.mjs` without moving `FLEET_FLOOR`'s suites or arms. **A
+floor with slack is not one** — so both moved, which makes this the eighth consecutive
+item here to find a hand-carried floor stale by measuring it. **`REGISTER_FLOOR` was a
+MERGE CONFLICT** — this branch had moved it to 917 and CONDUCT to 920 at D-315's
+integration — and it was **COLLAPSED TO ONE KEY SET** and re-read from the merged tree,
+which is the resolution `WORKER.md` names after six keep-both merges left duplicate
+`arms:` keys in that file.
+
+**NOTHING DEPLOYED, NOTHING BUMPED, NOTHING SIGNED, NO ACCOUNT TOUCHED.** The member's
+version is `0.56.0` at both of its declaring sites, which is the authority DS-2 set and
+not a bump; `resolveversion.test.mjs`'s live site count moves 6 -> 8 with the third
+member. The live verification — the member and its two upload parts actually deployed,
+and `/version` answering from the account — is DIST's next cut and is NOT claimed here.
