@@ -208,8 +208,8 @@
     },
     {
       "path": "src/sshsig.mjs",
-      "bytes": 13172,
-      "sha256": "c874fc657219c61010e863d36906e8168b08e499828aac3e3a8e33887b1e3eec"
+      "bytes": 14401,
+      "sha256": "edff9afb0da2087241c8d86e4f44ddd14ef5a382d4c3c806e612ad32d283d448"
     },
     {
       "path": "src/store.mjs",
