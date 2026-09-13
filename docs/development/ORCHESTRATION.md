@@ -376,3 +376,14 @@ every tick and treats any delivered signal as an accelerator. Sessions follow th
    its watchers give it — it compares the session list, the process table, and the record's
    declared states, and re-drives any session whose awaited state has landed. Signals get
    lost; the tick re-derives; that is the whole design.
+
+6. **A hung TURN is a hang the other rules cannot see, and silence must itself alarm**
+   (added 2026-09-13, paid for with ~31 hours of DS-4). DIST's turn hung inside a wait
+   with its process alive and healthy-looking, so no wait-shaped process existed for a
+   rule-3 check to find — and a message to a session mid-turn only QUEUES, so the
+   re-drive channel is exactly what a hung turn holds hostage. Two consequences, both
+   enacted: the LEAD runs a NO-PROGRESS alarm beside its push-watch (origin/main
+   unmoved for hours while a lane is open is a wake-up, not a quiet day), and the
+   recovery for a wedged turn is the OPERATOR'S interrupt — the queued message then
+   fires as the kickoff, so the re-drive should be written and queued BEFORE asking for
+   the interrupt, making the click the only human step.
