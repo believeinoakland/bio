@@ -64,7 +64,12 @@ tag (every surface) → prompt (text or voice)
 - **INTERPRET shows its reading** (DEC-27: *"this is what I read as the question, these
   as claims, these as the people and bodies named"*). Clarification is bounded — one
   question, not an interview; if still ambiguous, degrade to FIND and show what was found.
-- **An ANSWER names its level.** The four-level rule (CLAUDE.md) binds the assistant
+- **An ANSWER names its level.** The four-level rule (`CLAUDE.md`; the framework's own
+  statement of it is Part II §14.3 of
+  `docs/architecture/BIO_Content_Framework_v0_10.md`, which cites THESE lines as the
+  design that requires an answer to name its level — pointer added 2026-09-14, CPDF-17,
+  because citing CLAUDE.md alone left this bullet's own authority invisible from here)
+  binds the assistant
   hardest of anything, because it is the component most likely to say "there is nothing":
   *no meaning derived* / *nothing extracted* / *no document held* / *not found outside* are
   four different answers, and "I found nothing" without a level is the overclaim the

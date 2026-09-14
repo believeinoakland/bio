@@ -3739,3 +3739,91 @@ instruments the archive move narrowed. Nothing is owed to a future actor by this
 handoff acts that belong to CONDUCT (the `landed:` line, and the `QUEUE.md` locator lines for a
 plan that is now in the archive) are named in the worker's report with their exact text, because
 a note in a released claim is not an item.
+
+
+## CLAIM 2026-09-14 CONTENT-PDF (CPDF-17 — four stale self-descriptions corrected in place; comments and prose only, and the boundary is MEASURED rather than promised)
+session: CONTENT-PDF worker (worktree `.claude/worktrees/agent-a0fd74b23da98f6e5`, branch `worktree-agent-a0fd74b23da98f6e5`)
+opened: 2026-09-14
+authority: QUEUE.md's `### CPDF-17` row. Part II §16.4 of
+  `docs/architecture/BIO_Content_Framework_v0_10.md` carries the evidence for what is true now.
+paths:
+  - `bio-plane/src/index.mjs` — **TWO COMMENT BLOCKS ONLY, BY REGION.** (a) the `/* CPDF-10 —
+    TIER 3 … */` block immediately above `if (i2text && needsTier3(i2text))` (:5055-5063), whose
+    sentence *"the binding does not exist yet — so the branch that would call it is present,
+    narrow and UNTAKEN"* has been false since CPDF-10 (`698a07b`) and release 0.58.0
+    (`e67e275`). (b) the CPDF-13/D-253 calibration block's cost paragraph inside the `r.ok`
+    arm (:5100-5107), whose clause *"an instance with no OCR member — which is every instance
+    today"* is false for the same reason. **NOT one executable line of this file**, **NOT** the
+    tier-1 or tier-2 spans, **NOT** `needsTier3`/`tier3Pages`/`ocrTextFromMember`, **NOT** the
+    `else` at :5178-5181, **NOT** any other span.
+  - `bio-plane/src/schema.mjs` — **TWO WHOLE-LINE `--` COMMENT BLOCKS ONLY, BY REGION**, each
+    gaining a pointer to Part II and nothing else. (a) the `NO extent COLUMN` paragraph above
+    `CREATE TABLE … inquiry_basis_versions` (:1989-1993). (b) the `CPDF-10: the TRANSCRIPTION
+    PROVENANCE PROJECTION` paragraph above `CREATE TABLE … reading_text_source` (:2446-2461).
+    **NOT** a single DDL line, **NOT** an INLINE `-- …` column comment anywhere (the
+    comment-stripped-diff instrument deliberately does not strip those, so an inline edit would
+    read as an executable change — this item makes none), **NOT** the `host_governor` block,
+    **NOT** any other span. NO SEMICOLON is introduced inside any `--` comment (PL-1).
+  - `docprofile/doctypes/registry.mjs` — **THE FILE HEADER COMMENT ONLY** (:1-16): *"Only ONE
+    real type is registered today"* against three registered (`meeting_calendar`,
+    `meeting_agenda`, `generic`). **NOT** the imports, **NOT** the `types.register(…)` calls,
+    **NOT** `doctypeFor`, **NOT** the `meeting_agenda` comment below it.
+  - `bio-plane/src/airun.mjs` — **THE `THE FOUR LEVELS` COMMENT BLOCK ONLY** (:94-98), which
+    cites `CLAUDE.md` alone; it gains the Part II §14.3 pointer. **NOT** `OBSERVATION_LEVELS`'
+    keys, values or ORDER (`skilldoctrine.test.mjs` ARM E3 and `agent-worker`'s LEVELS pin both
+    turn on that order), **NOT** `OBSERVATION_STATES`, **NOT** `DEFINITIVE_STATES`, **NOT** any
+    other span.
+  - `docs/development/ASSISTANT-PILOT.md` — **THE "An ANSWER names its level" BULLET ONLY**
+    (:67-72), same pointer. **NOT** the pilot's scope, fences or build steps.
+  - `docs/development/CLAIMS.md` — this block.
+  - **FORESEEN GENERATED ARTIFACTS, regenerated and never authored:**
+    `bio-plane/dist/bio-plane.bundled.mjs` + `bio-plane/dist/bio-plane.bundle.json` via
+    `node bio-plane/scripts/build-plane.mjs` — FL-10 / D-298's guard requires the committed
+    plane artifact to be a byte-identical fresh build of `src/`, and it fires on a COMMENT
+    change like any other. `civicos-ui/app.html` — **the flattened docprofile block between
+    `/*__DOCPROFILE_START__*/` and `/*__DOCPROFILE_END__*/` ONLY**, re-flattened by
+    `tools/bundle-docprofile.mjs`, because `check-semantics.mjs` (run by
+    `civicos-ui/test/run.mjs`) refuses ANY difference between app.html's copy and the package —
+    and app.html:4636 carries the identical stale sentence today. Neither is a deploy, a
+    version bump or a tag. **NOT** `bio-plane/dist/SECRETS.txt`, **NOT** `release/**`, **NOT**
+    any other span of `app.html`.
+  **READ, NEVER EDITED**: `docs/architecture/BIO_Content_Framework_v0_10.md`,
+  `docs/development/QUEUE.md`, `docs/development/DECISIONS.md`, `CLAUDE.md`,
+  `bio-plane/wrangler.jsonc`, `release/RELEASE.json`, `ocr-worker/**`, `pdf-worker/**`,
+  `agent-worker/**`, `bio-plane/test/**`, `civicos-ui/test/**`.
+  **NOT** `newgroup/**`, **NOT** any version bump, **NOT** `docs/development/QUEUE.md`,
+  `DECISIONS.md` or `CLAUDE.md` (not this worker's to edit). NO DEPLOY, NO LIVE CALL.
+concurrency: checked over the register 2026-09-14 — the three blocks with no top-level
+  `released:` line (FL-10, FL-6, D-297) are all in fact RELEASED, two of them by an inline
+  `### RELEASED …` heading (`3607b3b`, `56ed70b`) and D-297 by a `released:` line that sits
+  at the FILE END rather than inside its own block. No live claim names any path here. That
+  three of 59 blocks defeat a mechanical "has a `released:` line" scan is reported to CONDUCT
+  as a record-hygiene finding, not worked around.
+note on the THREE BLANK LINES above this block -- keep them, and the reason is measured:
+  the corpus indexer joins a matched line under 200 characters with the next three lines
+  before extracting. The preceding block's last line was the final line of this file, so
+  appending a claim right after it made the generated index attach THIS CLAIM'S HEADER to
+  the entry above -- one area's claim glued onto another area's record. Three blanks stop
+  the join, and the index then regenerates byte-identically. A WORKAROUND at this site
+  only: any append after a short final line does the same, so the next claim hits it too.
+  Reported to CONDUCT as an item. (This paragraph names no id and quotes no marker word on
+  purpose -- an earlier draft of it was itself harvested into the index it describes.)
+released: 2026-09-14 by the CONTENT-PDF worker at the close of CPDF-17. The four sites read
+  true against the tree and each carries its dated reason in place. THE COMMENTS-ONLY
+  BOUNDARY IS MEASURED, NOT PROMISED: all four touched sources AND the 2.7 MB generated plane
+  bundle are byte-identical to `origin/main` once comments are stripped, and the instrument
+  proving it was itself armed against one-token executable changes in all five files (6 arms
+  FAIL as declared) plus an over-strictness arm (comment-only lines in all five, PASS). Two
+  instrument defects were found by running it rather than trusting it and are recorded in its
+  own header: a misplaced `--no-index` made the first draft report EMPTY over anything at all,
+  and running the whole-line `--` pass BEFORE esbuild deleted a JS block-comment terminator in
+  the bundle whose prose began with `--`, binary-searched to the one line. FL-10's guard FIRED
+  on all four sources and `dist/` was rebuilt exactly as it instructs (nothing bumped, nothing
+  deployed); `civicos-ui/app.html`'s flattened docprofile block was re-flattened for the same
+  reason, its diff 21 added / 8 removed lines and every one a comment. Gates on the REBASED
+  tree: battery 187/187 · 11,324 against a TRUE BASELINE of 187/187 · 11,324 re-measured in a
+  pristine worktree at `b0eddbf` — zero delta, as a comments-only item should have, measured
+  rather than subtracted; `coverage --strict` exit 0 read unpiped; UI harness exit 0;
+  `plancheck` clean but for UNPUSHED. The citation drive resolves all four Part II sections;
+  its Part I arm FAILS on four line citations, which is the truthful result and REC-81's
+  ground — it is not left implied and appears as an item in this worker's report.

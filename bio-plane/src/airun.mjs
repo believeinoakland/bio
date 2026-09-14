@@ -95,7 +95,14 @@ import { AI_RUN_CHECKS } from "../checks/bio-checks.mjs";
    anything goes looking it "may need to search meaning, content, documents, AND
    the open internet, in any order". A log entry names which level it is about,
    because "sparse is the normal condition at every level" and an absence at one
-   level is not evidence of absence at the next. */
+   level is not evidence of absence at the next.
+
+   POINTER ADDED 2026-09-14 (CPDF-17): the FRAMEWORK'S statement of the same rule
+   is Part II §14.3 of docs/architecture/BIO_Content_Framework_v0_10.md, and that
+   section names THIS object — `OBSERVATION_LEVELS`, by file and line — as the one
+   place the say-which obligation is enforced today, for this one consumer. Citing
+   only CLAUDE.md left the framework side of that pairing invisible from here.
+   CLAUDE.md remains the standing instruction and is not superseded. */
 export const OBSERVATION_LEVELS = {
   meaning:  "the framework layer: findings, legs, connections",
   content:  "extracted content within documents (DEC-23: content is the unit)",

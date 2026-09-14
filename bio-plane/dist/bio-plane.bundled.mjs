@@ -1999,6 +1999,30 @@ CREATE INDEX IF NOT EXISTS ai_run_log_terminal ON ai_run_log(run, terminal);
 -- reader would take its absence for "the whole document was meant" rather than
 -- "this record cannot say". When D-164 lands, the column arrives with a writer.
 --
+-- CITATION RE-POINTED 2026-09-14 (CPDF-17). THE AUTHORITY ON THIS ABSENCE IS NOW
+-- PART II of docs/architecture/BIO_Content_Framework_v0_10.md, and it is cited by
+-- SECTION rather than by line so it cannot go stale the way a line number does:
+-- section 15's "content-extent primitive" row, which grades the whole primitive
+-- DESIGNED-not-built and PARKED, and section 17's REFER-document and REFER-content
+-- rows, both of which quote THESE FIVE LINES as the standing evidence that a basis
+-- leg cannot record an extent. It is here because a paragraph that states an
+-- absence and points nowhere leaves the next reader to re-derive whether the
+-- absence is still real.
+--
+-- AND BY SECTION FOR A MEASURED REASON, NOT A STYLISTIC ONE. The four remaining
+-- LINE citations elsewhere in this file -- the ones spelled as the framework
+-- prefix followed by a bare line number -- are EARLY BY EXACTLY 84 LINES as of
+-- the front-matter landing, and they FAIL SILENTLY: the line still exists and now
+-- carries unrelated prose, so a reader who follows one is misinformed rather than
+-- stopped. Measured at this item's rebase, not assumed. Converting those four --
+-- and the seven like them elsewhere in bio-plane/src -- is REC-81, queued behind
+-- this item precisely so two comment-only workers never hold one region. The
+-- numbers are DELIBERATELY NOT REPEATED in this paragraph: REC-81 enumerates its
+-- sites by grepping for that exact spelling, and quoting them here would mint
+-- four sites that are not citations at all. The two Part II pointers this item
+-- adds cannot decay the way a line number does, which is the argument for the
+-- form and the reason CORPUS-STANDARD.md now rules it.
+--
 -- BOTH TABLES CARRY bundle_id AND BOTH ARE IN op=purge's TABLES LIST (D-113).
 -- A whole-store purge reporting scope ALL while an inquiry's alternative
 -- accounts survived is the silent leftover that list exists to prevent, and
@@ -2466,6 +2490,18 @@ CREATE INDEX IF NOT EXISTS text_attestations_bundle ON text_attestations(bundle_
 -- Legistar attachments). terminal_step names the last thing that touched it.
 -- derivation_cap is the weakest link over the chain's derivation steps and is
 -- NULL when no step carries a measured fidelity -- undetermined, stated.
+--
+-- CITATION RE-POINTED 2026-09-14 (CPDF-17). PART II section 15 of
+-- docs/architecture/BIO_Content_Framework_v0_10.md inventories this projection as
+-- the "transcription chain" form of content and is the authority on it, cited by
+-- SECTION and not by line. It records what is BUILT here and, in the same row,
+-- what is NOT, which this header does not say and a reader should not have to
+-- discover: the ai(function, version) step is a legal shape of the chain that
+-- nothing in the tree emits, a chain is per CAPTURE with page-scoped parts only
+-- for a MIXED document (D-252), and the OCR member's per-line region provenance
+-- reaches the reading while no edge reads it. For why the form is a SECTION and
+-- not a line, and for the four Part I line citations in this file that are now
+-- 84 lines early and REC-81's to convert, see the no-extent block above.
 CREATE TABLE IF NOT EXISTS reading_text_source (
   capture_sha    TEXT PRIMARY KEY,
   bundle_id      TEXT NOT NULL,

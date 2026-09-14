@@ -5052,15 +5052,32 @@ export default {
                   }
                 }
               }
-              /* CPDF-10 — TIER 3, AND WHAT IT DOES TODAY IS SAY SO.
+              /* CPDF-10 — TIER 3, AND WHICH BRANCH RUNS IS A FACT ABOUT THE
+                 INSTANCE, NOT ABOUT THE FLEET.
                  The document reached a text surface and that surface reports
                  pages it recovered NOTHING for: a scan. This is the seam an OCR
-                 producer plugs into (CPDF-12's fleet member), and the binding
-                 does not exist yet — so the branch that would call it is
-                 present, narrow and UNTAKEN, while the branch that runs is the
-                 honest one: the document is NAMED as wanting OCR and is left
-                 unread rather than being quietly filed as an empty document.
-                 D-115's rule for an un-fleeted instance, one tier further on. */
+                 producer plugs into, AND THE PRODUCER EXISTS — `ocr-worker` is
+                 the third fleet member (CPDF-10, `698a07b`), bound as
+                 `OCR_WORKER` in `wrangler.jsonc`, shipped and deployed in
+                 release 0.58.0 (`e67e275`). So on the project's own instance
+                 this branch is TAKEN. On an instance with no OCR member the
+                 `else` below runs and is equally honest: the document is NAMED
+                 as wanting OCR and is left unread rather than being quietly
+                 filed as an empty document — D-115's rule for an un-fleeted
+                 instance, one tier further on. Both branches are true; neither
+                 is the placeholder.
+
+                 CORRECTED 2026-09-14 (CPDF-17). This block used to say "the
+                 binding does not exist yet — so the branch that would call it
+                 is present, narrow and UNTAKEN". That was true when D-252 wrote
+                 the merge against a stub producer and FALSE from CPDF-10's
+                 landing onward, and a comment describing a mechanism that no
+                 longer exists is the record overclaiming (D-334's
+                 posture-string precedent, and D-106's class). The verified
+                 state of this branch — driven against the tree rather than
+                 copied from this comment — is Part II §16.4 of
+                 `docs/architecture/BIO_Content_Framework_v0_10.md`, which is
+                 the authority if this text and the tree ever disagree again. */
               if (i2text && needsTier3(i2text)) {
                 /* D-252: WHICH pages, established before the member is called
                    and kept for the merge. The list travels in the request so a
@@ -5101,8 +5118,21 @@ export default {
                          MADE A NETWORK CALL, and it is taken HERE rather than
                          once per acquire on purpose. A capture with a text
                          layer never reaches this line, so an instance with no
-                         OCR member — which is every instance today — pays
-                         nothing at all for this feature on the capture path.
+                         OCR member pays nothing at all for this feature on the
+                         capture path.
+
+                         CORRECTED 2026-09-14 (CPDF-17): that sentence used to
+                         read "an instance with no OCR member — WHICH IS EVERY
+                         INSTANCE TODAY". The clause has been false since
+                         CPDF-10 (`698a07b`) and release 0.58.0 (`e67e275`) —
+                         the project's own instance HAS the member and reaches
+                         this line, and a sovereign group's does not until Bob
+                         releases the installer's fleet. The COST ARGUMENT is
+                         unchanged and still holds for the un-fleeted instance;
+                         only the false claim about how many instances that is
+                         has gone. Part II §16.4 of
+                         `docs/architecture/BIO_Content_Framework_v0_10.md`
+                         carries the verified state.
 
                          IT FAILS OPEN TO NULL, NEVER TO A GUESS. A store that
                          does not answer, an engine with no calibration, or a
