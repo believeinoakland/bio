@@ -1560,9 +1560,29 @@ the bytes' provenance was established (Part I §8.1's sense of grade). The conte
 minimum over the chain's steps, because every derivation step weakens and none strengthens.
 A leg citing the content may claim no more than the weaker of the two. Where a step's
 fidelity was never measured the cap is undetermined and is *stated* as such, never resolved
-into a letter (Part I's invariant 5, in a column). OCR never raises a capture grade; a
-member's attestation over an extent raises what a leg citing *that extent* may claim, and
-nothing outside it inherits it.
+into a letter (Part I's invariant 5, in a column). OCR never raises a capture grade.
+
+**"Every derivation step weakens" is a rule about machines transforming a machine's output,
+and it is the reason a human is the route up, not an exception to it.** A derivation step
+works on the previous step's output, so it cannot recover what that output lost — an AI
+that cleans a garbled OCR line produced more readable text, not more reliable text. A person
+reading the page IMAGE does something else: Bob's case is a hundred-year-old property title,
+a photocopy of a mimeograph, its terms in cursive no OCR or vision model can read, that a
+person can. That reading is not a step downstream of the machine's failure; it is a new
+transcription from the source, and its fidelity is bounded by the person's competence and
+honesty rather than by any measurement — which is exactly why the record treats it as an
+AUTHORED act and not a derivation. Today that act is **attestation**: a member states that
+text matches the page over a stated extent, and what a leg citing that extent may claim
+rises to B (the ceiling for an earned act; A is the record's own byte proof and is never
+reached by a person's word), and nothing outside the extent inherits it. What the record
+does not yet have is the case where the person SUPPLIES the text rather than confirming a
+machine's — member transcription, which DEC-23 names among the extraction methods and no
+step kind implements; it is doctrine item 5.2 of the D-164 design-space study, and the
+recommendation there is Bob's framing: the transcription is authored text whose fidelity is
+undetermined and stated until a second member attests it, so fidelity rises through people
+and never through a machine's confidence in itself. Where reading ends and INTERPRETING
+begins — what an archaic term means — is the meaning axis (§14.3), derived over the
+transcription and graded on its own.
 
 ### 14.3 The three axes and the four-level search
 
@@ -1595,10 +1615,20 @@ documents has not finished.**
 The machine may **EXTRACT** — document → content, and resolve what it names to the registry
 — and this is the role that makes everything else addressable (DEC-24). Its work is
 labelled and graded as machine work: machine-read text is never presented as publisher text
-(DEC-4, structural and not a convention); a machine-proposed connection is a HUNCH until a
-member earns or attests it. What the machine may never do is fixed by the attestation
-fence: a machine credential cannot attest text, and no machine credential performs an
-attested act. The member does the concluding.
+(DEC-4, structural and not a convention), and a machine-proposed connection carries the
+grade the record can EARN for it from how it was established (Part I §8.1) — the source's
+own link between two captured documents earns A; the same identifier in both, an ordinance
+number or a meeting id, earns B; a name or a date in common is C, plausible and flagged for a
+member to confirm; and the machine never mints D. **An explicit link or an explicit textual
+reference is therefore not a hunch; it is an earned connection of grade A or B.** A HUNCH, in
+Bob's own definition (DEC-15), is a suspicion AUTHORED with no captured basis — temporary
+declared bias that lets the graph be traversed before the evidence exists, and debt that
+must be cleared before anything is published. DEC-24's summary sentence ("a machine-proposed
+connection is a HUNCH until earned") reads loosely because the record earns most machine
+connections at the moment it proposes them; only a proposal the record cannot ground is
+held at the hunch's grade and labelled so. What the machine may never do is fixed by the
+attestation fence: a machine credential cannot attest text, and no machine credential
+performs an attested act. The member does the concluding.
 
 ### 14.5 Where it stands
 
@@ -1624,7 +1654,7 @@ and the table shows it form by form.
 | **member text attestation** | a person says this text matches the page image, over a stated extent | region · page · document (PDF-shaped) | it is verification OF text, not citable content | BUILT — the only built form with a positional extent |
 | **calibration** | a dated fidelity measurement of a named engine and version; `cap` or an honest NULL | — (not content; content's staleness rule) | — | BUILT as a construct; no real probe yet |
 | **structured dataset** | an information bundle's data file, hashed whole | whole file | at the file only | BUILT — the pre-DEC-23 sense of "content" |
-| **structure shape (interface I2)** | what a container yields at acquire: per-page text, paragraphs, links in four partitions, the evidentiary envelope (tracked changes, comments, formulas, hidden rows) | page · paragraph · cell | not stored — recoverable only by re-running the structure op, which stops at tier 2 | BUILT as a wire shape |
+| **structure shape (interface I2)** | what a container yields at acquire — PDF, XLSX, DOCX, PPTX: per-page text, paragraphs, cells, shapes, links in four partitions, the evidentiary envelope (tracked changes, comments, formulas beside values, hidden rows, columns, sheets and slides) | page · paragraph · cell · shape | not stored — recoverable only by re-running the structure op, which stops at tier 2 | BUILT as a wire shape |
 | **element reference (interface IC-1)** | an address INSIDE a document: `pdf-page` (page + rect), `sheet-cell`, `slide-shape`, `doc-para`, `dom`; a required kind and a required human form | below the document | **emitted by four extractors, consumed by no edge** | BUILT — emitted; `dom` has no producer |
 | **subresources and the render companion** | a page's stylesheets and images as their own captures; a derived rendition that says it is derived | — | no; a rendition, not content | BUILT |
 | **rendition and evidentiary digests** | per-region sameness judgments over HTML | region — but the boundary is not stored as an extent | no | BUILT |
@@ -1652,6 +1682,21 @@ computed only when the stack was identified with certainty.
 text. A reader that is absent, cannot run, or finds nothing yields a *failed reading*,
 recorded as such with the reason — never an emptied document, never backfilled with
 invented entities. References are carried as they appear and are not resolved here.
+
+**The office formats.** Spreadsheets (XLSX), word-processing documents (DOCX) and slide
+decks (PPTX) are read, end to end, since 2026-08-10 (COFF-1 through COFF-7, the CONTENT-OFFICE
+area; `docs/development/OFFICE-FORMATS.md` is the design and carries its own built status).
+One dependency-free reader opens the shared container; each format's entry produces the
+text, the outbound and internal links, and an element reference for every piece — a cell,
+a paragraph, a shape — and, because Bob ruled these public documents' revision history IS
+evidence (DEC-5), the **evidentiary envelope**: formulas beside their cached values, tracked
+changes with author and date, comments, speaker notes, hidden rows, columns, sheets and
+slides, and the file's core properties. The text bound was measured on a census of 43,282
+city assets rather than picked; legacy binary formats (0.32% of assets) and ODF (zero found)
+are deliberately not built, each with its trigger recorded. What the office path does NOT do
+yet: it extracts no TABLE as a table and no IMAGE as content (§15), only the meeting-agenda
+reader mints a reference over its text, and — as for every other format — nothing an edge
+can point at is minted from the element references it emits.
 
 **The non-text path, in three tiers.** A PDF or an office container may need its text
 produced before anything can read it, and the intent layer runs over text from anywhere:

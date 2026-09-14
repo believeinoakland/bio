@@ -153,7 +153,11 @@ a re-grade of content-grain legs, which the earned-basis registry already recomp
 ### 5.2 Is a member's transcription a derivation or a verification?
 **Question.** DEC-23 lists "member transcription" among extraction methods. A member typing what
 a scan says: a weakening derivation step (like OCR — the chain's cap is min over steps), or a
-verification (like attestation — the only route to the top)?
+verification (like attestation — the only route to the top)? Bob's case, 2026-09-14: a
+hundred-year-old property title, a photocopy of a mimeograph, its terms in cursive that no OCR
+or vision model reads and a person can — fidelity RISING through a human act, and the system
+must support it, with the caveat he named: the transcription's validity rests on the person's
+correctness.
 **Provisional.** Neither exists: `STEP_KINDS` has no member-transcription step and `attesttext`
 attests EXISTING text; a member cannot enter text today.
 **Why ambiguous.** A member is not an engine with a calibration, so a derivation step has no

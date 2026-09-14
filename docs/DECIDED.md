@@ -95,7 +95,7 @@ authority is the file named, never this one.
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 (Bob, DEC-21) — R2's CONCLUSION stands; its MECHANISM does not.** > *"A capture is the act of reading a document in.  
   `docs/development/research/RECONCILED.md:183`
 - **DEC-23** — RULED | | machine extraction by recognisers, format entries and fleet members (§16) | BUILT | | the AI EXTRACT role — an assistant extracting on a member's objective | DESIGNED; excluded from the pilot by name; no item | | the content OBJECT — something an edge can point at that is smaller than a document | ABSENT…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1607`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1637`
 - **DEC-23** · 2026-08-03 — RULED by DEC-23: content — a piece of information extracted from a document, up to and including the whole document — is the unit the record points at.  
   `docs/development/DEBT.md:133`
 - **DEC-24** — WHAT IS ALREADY RULED, so this entry only adds what is missing:** - **DEC-24 — the boundary**: *"the machine may do the LOOKING; the member does the CONCLUDING"*, with FOUR roles on the path verbs: **EXTRACT** (document → content), **PURSUE** (find material bearing on an unsupported claim, supporting AND cutting…  
