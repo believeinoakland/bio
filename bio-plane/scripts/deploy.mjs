@@ -273,41 +273,55 @@ const api = `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scrip
    namespace. There is deliberately NO migrations field: the class already
    exists, and re-sending new_sqlite_classes at a live store is how a record
    gets endangered. */
+
+/* D-202 CLOSED HERE, 2026-09-14: the binding list DERIVES from wrangler.jsonc
+   with the slug substituted (D-292), instead of living as a second hand-carried
+   copy in this file — the two had no mechanism keeping them equal and measured
+   unequal for a month (biosmoke7: zero service bindings against four declared).
+   The derivation is `derive-bindings.mjs`, pure and battery-driven; it refuses
+   any config binding class it does not carry, so the deletion-through-omission
+   this file was bitten by cannot recur silently.
+   BEHAVIOURAL CHANGE, MADE DELIBERATELY AND WITH THE OWNERS TOLD (delegations
+   to RECORD and CAPTURE in CLAIMS.md, 2026-09-14): the first deploy through
+   this derivation SENDS the config's service bindings — SELF arms REC-26's
+   monitor cadence and CAP-3's archive fallback on the deployed instance, and
+   the fleet bindings arm the plane's Tier-3 paths. The targets are
+   pre-flighted below so a missing worker is OUR refusal, not code 10143. */
+import { deriveBindings, serviceTargets } from "./derive-bindings.mjs";
+import { stripJsonc } from "../../tools/jsonc.mjs";
+const wranglerCfg = JSON.parse(stripJsonc(
+  readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8")));
 const meta = {
   main_module: "index.mjs",
-  compatibility_date: "2026-07-01",
-  compatibility_flags: ["nodejs_compat"],
-  bindings: [
-    { type: "plain_text", name: "VERSION", text: version },
-    /* The agent's instance component, so a third party can throttle one
-       operator instead of a provider. Bound at deploy from the slug because a
-       worker cannot learn its own name; found live on 2026-07-30 advertising
-       "instance unnamed" through two releases. */
-    { type: "plain_text", name: "INSTANCE_NAME", text: slug },
-    { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
-    { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
-    /* DS-3 — the account cascade's third level, sent ONLY when the operator has
-       put it in the environment. `keep_bindings` below keeps `secret_text`, so a
-       value already on the instance SURVIVES a deploy that does not carry one:
-       the ordinary case is an operator who set it once, and a deploy from a
-       machine without it must not silently DELETE the instance's Claude account
-       — that is D-202's binding-deletion class, which this script has already
-       been bitten by once.
-       The value is read from the environment and never printed, here or
-       anywhere: it is confirmed by USING it, which is FL-6's runtime path. */
-    ...(process.env.INSTANCE_CLAUDE_TOKEN
-      ? [{ type: "secret_text", name: "INSTANCE_CLAUDE_TOKEN", text: process.env.INSTANCE_CLAUDE_TOKEN }]
-      : []),
-  ],
-  /* `service` is here for the reason D-201 exists: a binding class this script
-     neither SENDS nor KEEPS is silently DELETED on every deploy. D-202 measured
-     the consequence on the live plane — `wrangler.jsonc` declares PDF_WORKER and
-     SELF, and biosmoke7 has NEITHER, because every deploy has gone through this
-     script. Keeping them is the protective half and changes nothing today (there
-     are none live to keep); SENDING them is a behavioural change that would arm
-     the monitoring consumers, and it is deliberately NOT made here. See D-202. */
+  compatibility_date: wranglerCfg.compatibility_date,
+  compatibility_flags: wranglerCfg.compatibility_flags || [],
+  /* DS-3's cascade token still rides the environment, never printed, and a
+     deploy without it neither sets nor clears the instance's Claude account
+     (keep_bindings: secret_text). */
+  bindings: deriveBindings(wranglerCfg, {
+    slug, version,
+    instanceClaudeToken: process.env.INSTANCE_CLAUDE_TOKEN || undefined,
+  }),
   keep_bindings: ["secret_text", "durable_object_namespace", "service"],
 };
+
+/* Pre-flight every derived service target (except the self-reference, which
+   this very PUT creates) so the refusal names the missing worker. */
+for (const target of serviceTargets(meta.bindings, slug)) {
+  const r = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scripts/${target}/settings`,
+    { headers: { authorization: `Bearer ${TOKEN}` } });
+  if (r.status === 404) {
+    console.error(`REFUSED [BINDING_TARGET_MISSING]: the derived bindings target worker "${target}",`);
+    console.error(`which does not exist on this account. Deploy the fleet member first`);
+    console.error(`(node tools/deploy-fleet.mjs ${target} --instance ${slug}), then deploy the plane.`);
+    process.exit(1);
+  }
+  if (!r.ok) {
+    console.error(`REFUSED [PREFLIGHT_UNREADABLE]: could not establish whether service target "${target}" exists (HTTP ${r.status}); an unverified target is not a verified one.`);
+    process.exit(1);
+  }
+}
 
 async function deployed() {
   const r = await fetch(api, { headers: { authorization: `Bearer ${TOKEN}`, accept: "application/javascript+module" } });

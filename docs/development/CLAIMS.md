@@ -3390,3 +3390,24 @@ paths:
   `sshsig.mjs`'s statement function, **NOT** any member version bump.
 concurrency: checked over the register 2026-09-14 — DIST-2/DIST-4/DIST-3 claims above are
 released; no live claim names these paths. FLEET has a watcher armed and answers IC-82 as owner.
+
+### AMENDMENT 2026-09-14, MID-ITEM (D-297 claim) — TWO FILES ADDED, and D-202's half LANDS AHEAD of the IC-gated remainder
+paths added: `bio-plane/scripts/derive-bindings.mjs` (NEW — the derivation is a pure module
+because deploy.mjs acts on import and an untestable derivation is a hand-carried list wearing
+a function's name) and `bio-plane/test/deploybindings.test.mjs` (NEW, battery-discovered).
+D-202's half is complete and lands NOW — it never depended on IC-82; the D-297 remainder
+(assembler `/2`, manifest enrichment, newgroup fleet install) stays open behind the IC's
+resolution, and carries FLEET's stated condition: **COPY, NEVER DEFAULT** — the assembler
+copies `compat`/`type` from each member's own config and REFUSES a member whose config does
+not state them (ocr-worker's deliberate `[]` is a stated fact, not the refusal case).
+
+### DELEGATION 2026-09-14 DIST (D-202) -> RECORD: **THE NEXT PLANE DEPLOY ARMS YOUR MONITORING CONSUMER — deliberately, and this is the telling**
+`deploy.mjs` now derives its bindings from `wrangler.jsonc` (slug substituted, D-292), so the
+next deploy of any plane instance through it SENDS the config's service bindings — including
+`SELF`, which makes `#monitorConfigured()` true and arms REC-26's monitor cadence on that
+instance for the first time outside a harness. On biosmoke7 the daemon credential is already
+bound and live (DIST-4's remediation), so the first armed tick spends the SCOPED class, not
+the root of trust. Nothing deploys today; the arming happens at the next release's deploy and
+this delegation is the advance telling DIST-NEXT.md said the change must carry.
+
+### DELEGATION 2026-09-14 DIST (D-202) -> CAPTURE: **THE SAME DEPLOY ARMS CAP-3's ARCHIVE FALLBACK** — same mechanism, same timing, same advance telling as the RECORD delegation above; recorded separately because the consumer is yours and a shared notice is how one owner misses it.
