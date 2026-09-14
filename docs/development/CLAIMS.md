@@ -3827,3 +3827,20 @@ released: 2026-09-14 by the CONTENT-PDF worker at the close of CPDF-17. The four
   `plancheck` clean but for UNPUSHED. The citation drive resolves all four Part II sections;
   its Part I arm FAILS on four line citations, which is the truthful result and REC-81's
   ground — it is not left implied and appears as an item in this worker's report.
+
+
+
+## CLAIM 2026-09-14 SKILL (SK-6 — `ASSISTANT-PILOT.md` gets front matter; the LAST document owing it)
+
+session: worker for queue item SK-6, worktree-isolated, spawned by CONDUCT #10.
+worktree: `.claude/worktrees/agent-a25f97e7cabc42e53`, branch
+  `worktree-agent-a25f97e7cabc42e53`, fast-forwarded to `main` at `8017dac` (the tree with
+  CPDF-17 merged) before anything was measured.
+paths:
+- `docs/development/ASSISTANT-PILOT.md` — front matter per `CORPUS-STANDARD.md` §3.
+- `docs/architecture/CORPUS-STANDARD.md` — §5's governed table gains the row at its END;
+  the "Not yet governed" table's last row is struck, which empties that table; Status
+  `as of` and, if a heading moved, a `--write` regeneration.
+- `docs/development/CLAIMS.md` — this entry.
+not claimed and not touched: `QUEUE.md`, `CLAUDE.md`, `DECISIONS.md`,
+  `bio-plane/src/airun.mjs`, and everything the SKILL kickoff lists as another area's.
