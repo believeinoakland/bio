@@ -1714,7 +1714,12 @@ shared Drive link serves a client-rendered application shell whose bytes carry n
 endpoints, which yield DOCX, XLSX, PPTX or PDF that the format axis already reads, or the
 static HTML of "publish to the web". Supporting them is therefore a CAPTURE-side act — a
 host-stack handler that recognises a Drive address and acquires the export, recording the
-Drive file id and the export format as the hop's facts — not a new format. Whether it is
+Drive file id and the export format as the hop's facts — not a new format. What happens
+today when a source links to a Sheet: the link is recorded in the deferred partition; acquiring
+the Sheet's own address stores the shell, which the client-rendered handler recognises and
+reports as a shell that cannot be evidence (D-64, D-55); acquiring the EXPORT address by hand
+works now — the plane follows the redirect, detects the spreadsheet by its bytes, and reads it
+fully with an honest hop. The gap is the one step of recognition between the two. Whether it is
 worth building is a measurement: how many of the city's links point at Drive. That census has
 not been run; it is routed. OpenDocument (`.odt`, `.ods`, `.odp`) is designed for and
 deliberately not built: zero were found among 43,282 city assets.
