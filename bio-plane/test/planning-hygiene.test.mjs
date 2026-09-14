@@ -9,6 +9,18 @@
    THE SUBJECT — the harness pinned the very refusal codes its arm was about to test, and
    spelled an `op=` token that op-claims then read as a real claim. Recorded at their
    sites in the control, not smoothed. */
+/* NEGATIVE CONTROL (M0-26, run 2026-09-14, worktree agent-a64d514be75dea71a), on the
+   DISCOVERY CORPUS this item had to widen, each arm ALONE and restored by cp-back
+   verified sha256 and `cmp` at 17,291 bytes. BASELINE 244 pass 0 fail, corpus 76 docs /
+   2 headings. (A) an unregistered `## Order of work` in a live design doc -> 243 pass,
+   1 FAIL on the orphan arm, corpus 77/3 — this is the half the widening must not cost,
+   and it did not. (B) revert the widening to a plain `allDocs()` -> 243 pass, 1 FAIL on
+   the discovery floor at 1 of 1, corpus 75/1 — the exact state measured live at f3b63c4
+   when `CONFORMANCE-AND-INTAKE-ARC.md` was archived, over an entirely correct tree.
+   (C) over-strictness, nothing armed -> 244 pass, 0 fail. **The finding is (B): a
+   registered file leaving `docs/development/` silently narrowed a walk while every
+   other figure read right, and the repair is that a REGISTERED file is in the corpus by
+   construction — lowering the floor would have recorded the loss instead of fixing it.** */
 /* NEGATIVE CONTROL: (run 2026-07-31) strip the M7 token from open DEBT row D-50 (cell -> "open") -> 2 fail (the D-50 row + the aggregate); AND strip the BUILT(FW-3) marker from CONSTRUCTS "The plan" Step 1 -> 2 fail (the Step 1 item + the aggregate); each restored, 154 pass 0 fail. */
 /* Planning-drift hygiene: the M0-6 gate, on D-113's precedent.
  *
