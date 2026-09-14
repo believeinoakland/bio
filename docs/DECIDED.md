@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-706 rulings across 67 documents.
+708 rulings across 67 documents.
 
 ## DEC-
 
@@ -1231,6 +1231,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:3401`
 - **2026-09-14** — AMENDED MID-ITEM, 2026-09-14: `bio-plane/dist/bio-plane.bundled.mjs` and `bio-plane/dist/bio-plane.bundle.json` — **REGENERATED, not authored**, by `node bio-plane/scripts/build-plane.mjs`.  
   `docs/development/CLAIMS.md:3410`
+- **2026-09-14** — AMENDED MID-ITEM, 2026-09-14: `bio-plane/test/d334-monitor-credential.control.sh` (NEW) — the three-arm negative-control runner, committed BESIDE its suite on the `battery-provenance.control.sh` / `coverage-provenance.control.sh` precedent, so the next session re-runs every arm in one step instead of re-deriving…  
+  `docs/development/CLAIMS.md:3419`
+- **2026-09-14** — AMENDED MID-ITEM, 2026-09-14: `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR` ONLY**, the standing stale-floor pattern with the reason at the site.  
+  `docs/development/CLAIMS.md:3425`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  

@@ -3422,3 +3422,12 @@ concurrency: checked over the register 2026-09-14 — DIST-4's claim above is RE
     session re-runs every arm in one step instead of re-deriving how to break the subject
     (VERIFICATION.md step 2's own reason). It is not a battery suite and the runner does not
     discover it.
+  - AMENDED MID-ITEM, 2026-09-14: `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR` ONLY**,
+    the standing stale-floor pattern with the reason at the site. Moved 942/174/175 ->
+    947/176/177 from the figures a green `--strict` run PRINTED on the COMMITTED tree at
+    `3607dda`, ONE KEY SET (grepped: `^  arms:` matches twice, here and in `FLEET_FLOOR`, the
+    documented state). **THE FLOOR ARRIVED ALREADY STALE BY 2/1/1 AND THAT IS MEASURED, NOT
+    INFERRED**: the same script run on the PRISTINE baseline worktree at `02c5eb6` — before a
+    byte of this item existed — printed `arms 944/942 · classified 175/174 · corpus 176/175 ·
+    GREW by 2`. This item's own share is the remaining 3/1/1, one new suite declaring three
+    arms. `FLEET_FLOOR` UNMOVED and none owed. **NOT** any other part of this file.
