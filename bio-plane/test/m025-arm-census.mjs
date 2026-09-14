@@ -349,7 +349,17 @@ function runDriver(d) {
      here. `null` on either side is UNKNOWN and never a verdict: an unreadable
      declaration and a declaration of none are different claims. */
   const declared = (() => { try { return readDeclaredArms(readFileSync(abs, "utf8")); } catch { return null; } })();
-  const tallyOk = tallyHonoured(declared, arms);
+  /* A DRIVER THAT DID NOT RUN TO COMPLETION HAS NO MEASURED TALLY, AND THE FIRST
+     FULL RUN OF THIS COMPARISON PROVED IT THE HARD WAY. `fieldread.control.mjs`
+     hit the per-driver timeout mid-run — it runs the WHOLE BATTERY inside each of
+     its arms — and was SIGTERMed after announcing ten of its twelve. The
+     comparison then read `DECLARES 12 · ANNOUNCED 10` and scored it decay, which
+     is a manufactured finding about a driver whose declaration is fine: the
+     announcements were simply truncated by the kill. This census's own header
+     already says it "says nothing about drivers it could not run", and that rule
+     now binds the tally too — a count from a partial run is not a measurement. */
+  const completed = !(r.error || r.signal);
+  const tallyOk = completed ? tallyHonoured(declared, arms) : null;
 
   return { ...d, ms, status: r.status, signal: r.signal, verdict, arms, leftDirty, dirtyNow,
            armLines, preflightLines, declared, tallyOk,

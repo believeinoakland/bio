@@ -314,9 +314,23 @@ const TALLY_RE = new RegExp(String.raw`\b(\d{1,2}|${Object.keys(WORDS).join("|")
    60-LINE WINDOW that truncated a declaration straddling it. A driver's prose
    about ANOTHER driver's arm count would be a false read, so only the head is
    consulted and the matched phrase is carried back for the reader to judge. */
+/* A USAGE EXAMPLE IS NOT A DECLARATION, AND THE FIRST RUN OF THIS READER PROVED
+   IT. Almost every driver opens with an invocation block:
+
+       node test/calibration.control.mjs regrade    # one arm alone
+
+   and `one arm` there is an instruction to the reader, not a count of the
+   driver's arms. Read as one, it reported `calibration.control.mjs` as declaring
+   ONE arm against four announced — a manufactured finding, which is worse than a
+   missed one here, because this estate's rule is that a surprising result is a
+   finding about the arm and a false one costs a real investigation. Lines that
+   invoke the driver are dropped before the tally is read. */
+const isUsageLine = (l) => /\bnode\s+\S*\.(?:mjs|js)\b/.test(l);
+
 export function readDeclaredArms(driverSrc) {
   const at = driverSrc.indexOf("\nimport ");
-  const head = driverSrc.slice(0, at > 0 ? at : Math.min(driverSrc.length, 6000));
+  const head = driverSrc.slice(0, at > 0 ? at : Math.min(driverSrc.length, 6000))
+    .split("\n").filter((l) => !isUsageLine(l)).join("\n");
   const m = TALLY_RE.exec(head);
   if (!m) return null;
   const n = WORDS[m[1].toLowerCase()] ?? Number(m[1]);
