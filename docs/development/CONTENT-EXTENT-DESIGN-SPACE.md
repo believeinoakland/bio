@@ -5,7 +5,7 @@
 **Place in the system** · A level-2 design serving `BIO_Content_Framework_v0_10.md` Part II §18, piece 1 (D-164), and through it construct 4 of `BIO_System_Design.md` §3. It touches interfaces I5 and I3 (RECORD's) and I2 (FRAMEWORK's, dormant), and its §3 doctrine list is what goes to Bob before any mechanism is chosen.
 
 **Incomplete sections** ·
-- §3 and §5 — seven doctrine items are open with Bob (5.8 is RULED); §5 carries each in the shape he rules on, for the sitting after his Part II review.
+- §5 — all eight items answered by Bob on 2026-09-14 (5.5 as direction confirmed against the record rather than a ruling); the mechanism (§6) is updated to them and the IC on I5/I3 follows.
 - §4 and §6 — the mechanism is decided provisionally (option (c)); the IC on I5/I3 and the queue items are written after Bob confirms Part II.
 
 **Contents**
@@ -147,9 +147,12 @@ computable today (§1.9), and it is what every leg earns now.
 connection established by a different paragraph; "only page 3's" makes every content-grain leg
 weaker on connection than the document it sits in until readings carry position (I2).
 **Alternative.** Page-scoped earning, undetermined (stated) until position exists.
-**Recommendation.** The provisional now; page-scoped earning becomes the rule the day
-`reading_refs` carries position, and the record says which rule graded a leg. Reversing costs
-a re-grade of content-grain legs, which the earned-basis registry already recomputes.
+**RULED 2026-09-14 by Bob:** a citation that points at the sentence, paragraph or section
+answering the question refers ONLY to that portion of the document — "just as an HTML highlight
+link refers to specific content in that document." So a content-grain leg earns, on every axis,
+only from what is IN its portion. Consequence for the mechanism: until readings carry position
+(I2), a content-grain leg's connection grade is UNDETERMINED and stated, never borrowed from the
+whole document; the provisional above (whole-document earning) is withdrawn.
 
 ### 5.2 Is a member's transcription a derivation or a verification?
 **Question.** DEC-23 lists "member transcription" among extraction methods. A member typing what
@@ -167,10 +170,11 @@ nothing to verify against.
 **Alternative.** (a) a derivation step `member(handle)` with cap undetermined, attestable
 afterwards like any text; (b) member-typed text IS an attestation over an image region with the
 text as its payload.
-**Recommendation.** (a): the member's typing is authored text with the provenance of an authored
-act, its cap undetermined and stated, and a SECOND member's attestation is what raises it — the
-same shape as everything else here, with no member ever grading their own act. Reversing costs
-one step kind and its check.
+**RULED 2026-09-14 by Bob:** "there should be a direct means for a member to select a section
+of a document and type in their transcription of that content." The capability is ruled; its
+grading runs under this recommendation as the provisional: the member's typing is authored text
+with the provenance of an authored act, its cap undetermined and stated, and a SECOND member's
+attestation is what raises it — no member ever grading their own act.
 
 ### 5.3 Is `unstated` a legal extent?
 **Question.** Every leg today points at a whole document without saying so. Under any option
@@ -183,8 +187,11 @@ is doctrine-consistent — but it makes the honest answer to "where in the docum
 member can pick to avoid answering.
 **Alternative.** No `unstated`: a leg must name an extent, legacy legs are migrated to
 `document` with a dated note.
-**Recommendation.** The provisional. Reversing costs a migration of legacy legs that rewrites
-history the record says it never rewrites.
+**RULED 2026-09-14 by Bob:** "citations that just refer to the document, well, just refer to the
+whole document. But there should be a means for a member to make that reference more specific."
+So `unstated` is NOT adopted: a citation with no stated part means the whole document and reads
+`document`; a member may NARROW an existing citation to a portion by an authored act (a new basis
+version, the old retained — the same shape as 5.8). The provisional above is withdrawn.
 
 ### 5.4 D-161: the determining reference pair, or all supporting mentions?
 **Question.** A connection between two documents through an entity is derived from resolutions;
@@ -194,9 +201,15 @@ mention?
 **Provisional.** The determining pair (the study's recommendation; nothing is computable until
 I2 carries position).
 **Alternative.** All mentions, as a join.
-**Recommendation.** The determining pair as the connection's anchor, all mentions reachable by
-a query — the pair is what a reader follows to check the connection. Reversing costs nothing
-until the column exists.
+**RULED 2026-09-14 by Bob:** both documents DO refer to the ordinance — that is how each was
+identified — so the connection points at the specific reference in each; and, as in 5.3, a member
+may make the reference more specific. "Forgets", defined for the record: each side's resolution
+keeps the reference text AS IT APPEARED ("Ordinance 13579", "Ord. No. 13,579") but no position,
+because readings carry none; and the derived connection row keys on (capture A, capture B,
+entity) with the strongest grade, dropping WHICH reference variant established it — recoverable
+by a join, not held on the row. The mechanism: the connection carries the determining reference
+pair (recoverable today), gains position when readings do (I2), and a member may narrow either
+end.
 
 ### 5.5 What is the CLAIM object, and what is its standard of proof?
 **Question.** Part II §18 piece 6. The framework has said since v0.1 that nothing models a
@@ -209,9 +222,17 @@ cite whether or not a claim exists.
 (`BIO_Case_Making_v0_1.md`); Part I §12.2 argued a claim needs a standard of proof and is
 therefore doctrine. Both may be true and the object still unnecessary.
 **Alternative.** A claim object with a standard of proof per audience.
-**Recommendation.** Bring Bob the question with the case-making pass's argument beside it;
-the mechanism does not wait (content is minted for citation, not for claims). Reversing costs
-one table if the object is later wanted.
+**Bob, 2026-09-14 (direction, confirmed against the record below):** "the burden of proof
+varies based on the type of work being published, which itself depends on the role of the
+member, project, or group." The record agrees in this shape: the standard attaches to the
+PRODUCTION (a case is a production of a project, DEC-72, and records the standard of evidence it
+was held to); the project sets the bar (`required_strength`, strictest wins); and what a
+production must satisfy is what its AUDIENCE needs (the eight audiences = the professional roles,
+Bob's own ruling of 2026-09-13; `AUDIENCES.md` §10's output acts). One correction offered: the bar
+is set by the project and the production's audience, not by an individual member's role. So NO
+separate claim object is needed for the standard of proof to vary; the provisional stands, and the
+research owed is the catalogue of standards by audience and output act — Program B's publication
+surfaces.
 
 ### 5.6 D-184: may a firsthand observation be CONTENT with no capture behind it?
 **Question.** Bob's reporter who attended the meeting. Is their observation content (an extent
@@ -224,8 +245,14 @@ a "document" to say what they saw.
 **Alternative.** A member-authored INFORMATION bundle whose capture IS the authored act,
 provenance = the member's attestation, grade D by construction, designed together with D-194's
 lead (the same member knowledge, before and after the search).
-**Recommendation.** The alternative, designed with D-194 as Part II §18 piece 5 says. Reversing
-costs nothing now; the mechanism treats it as a document like any other.
+**RULED 2026-09-14 by Bob:** "absolutely, a member's own eyewitness knowledge can be evidence —
+though it stands on the trust held by that member. But if that evidence is material to a
+published case, then that member must in some way be identified. Their actual name should be
+used unless they're a protected whistleblower." So: firsthand observation IS content, authored,
+graded as testimony (D) on the member's trust; and a PUBLICATION rule follows that touches
+membership — a case whose finding rests materially on a member's observation names that member
+by their actual name, with a protected-whistleblower exception — which interacts with cover and
+handle (Membership v2 §3) and the publication fence, and is designed in Program B with D-194.
 
 ### 5.7 DEC-24's boundary: may an AI extractor WRITE content rows?
 **Question.** A content row is an address, not a connection, so arguably not a hunch. An AI
@@ -235,8 +262,9 @@ machine credential mint content rows (option (c)'s later extractor writer)?
 or by the plane's own extraction at promote.
 **Alternative.** A machine-minted row is legal, labelled `minted_by: machine`, never attested,
 and cited only by a member's act.
-**Recommendation.** The alternative, once the member-minted path exists — it is exactly
-DEC-24's EXTRACT, labelled as machine work, binding nothing. Reversing costs a column.
+**RULED 2026-09-14 by Bob:** "yes, an assistant may mark passages as citable on its own." The
+mechanism runs under DEC-24's rule 3: every row it mints is labelled machine-minted, it never
+attests one, and a passage becomes part of a finding only when a member cites it.
 
 ### 5.8 May the record move an authored edge's target to a newer capture without a member's act?
 **Question.** Bob, 2026-09-14: a document is updated after content was found in it; should the
@@ -286,8 +314,12 @@ rewritable, which breaks any edge holding a minted id unless the id is content-a
 which point it is (c) with more rows; (b) four copies of one extent grammar is D-164's "built
 three times and drifts" by construction, and cannot answer "which passages mention X" at all.
 
-**What waits on Bob before the IC is proposed:** nothing in the mechanism; the §5 items shape
-the check catalogue's target grammar (5.3), the connection population (5.1, 5.4) and two later
-writers (5.2, 5.7), and each runs under its provisional. **What waits on his review of Part
+**Updated to Bob's rulings of 2026-09-14:** a leg's portion is its whole referent (5.1) — a
+content-grain leg's connection grade is undetermined and stated until readings carry position;
+no `unstated` (5.3) — a citation with no part reads `document`, and a member may narrow it by a
+new basis version; the connection carries the determining reference pair (5.4); member
+transcription is a member-facing act to build (5.2); machine-minted rows are legal and labelled
+(5.7); firsthand observation is authored content of grade D whose publication names the member
+(5.6, designed in Program B). Nothing in the mechanism waits on Bob any longer. **What waits on his review of Part
 II:** the understanding the mechanism rests on, in his stated order — so the IC on I5 and I3
 is written the day he confirms it, not before.

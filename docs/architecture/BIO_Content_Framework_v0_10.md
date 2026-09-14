@@ -1645,6 +1645,22 @@ re-anchoring; accepting it is a member's act that writes a new basis version and
 old. A leg is what a member stood behind, and nothing the machine learns later changes that
 silently.
 
+Five more rulings of the same day, each folded here because it governs an edge or a writer.
+**A citation that points at a portion refers only to that portion** — like a highlight link
+into a web page — so a content-grain leg earns, on every axis, only from what is in its portion;
+until readings record where a reference was read, such a leg's connection grade is
+undetermined and stated, never borrowed from the whole document. **A citation that names no
+portion means the whole document**, and a member may narrow it later by an authored act.
+**A connection points at the specific reference in each document** that established it, and a
+member may narrow either end. **A member may select a portion of a document and type their
+transcription of it** — an authored act whose fidelity is undetermined until a second member
+attests it. **The assistant may mark passages as citable on its own**, every such row labelled
+as machine work, never attested by it, and part of a finding only when a member cites it. And
+**a member's firsthand observation is evidence** — authored content standing on that member's
+trust, graded as testimony — with a publication rule that reaches membership: a case resting
+materially on it names the member by their actual name unless they are a protected
+whistleblower (designed with the member's lead, §18 piece 5).
+
 ### 14.5 Where it stands
 
 | | status |
@@ -1850,8 +1866,8 @@ The pieces to be designed, named here and designed nowhere in this document:
 | 2 | **content-grain search** | the compiler's stage C, after the uncapped reads are capped; whether extracted text is indexed at all | the architect |
 | 3 | **the general observation log** | every look, including the ones that returned nothing; shared across the three axes; the investigative run's log as the precedent; the completeness statement as its first publisher | the architect |
 | 4 | **extraction breadth** | readers beyond three (a type is written from a measured page); tables and images as content; the AI EXTRACT role; read-time re-extraction to tier 3; the per-page tier-2 rule; the external OCR tier | the architect; the external tier's funding is Bob's (DEC-74, open) |
-| 5 | **homes for the member's lead and firsthand observation** | D-194 and D-184, designed together | DOCTRINE — Bob's |
-| 6 | **the claim object** | the standard of proof — the design conversation Part I §12.2 already named. It cannot be built before piece 1, and piece 1 is hollow without it | DOCTRINE — Bob's |
+| 5 | **homes for the member's lead and firsthand observation** | D-194 and D-184, designed together. RULED 2026-09-14: the observation is evidence, authored, grade D on the member's trust; a published case resting materially on it names the member by actual name unless a protected whistleblower — the naming rule interacts with cover and handle and is designed in Program B | the architect, under the ruling |
+| 6 | **the claim object** | Bob's direction of 2026-09-14, confirmed against the record: the burden of proof attaches to the PRODUCTION and is set by the project's bar and the audience's needs, so no separate claim object is required for it to vary; the research owed is the catalogue of standards by audience and output act | the architect; Program B |
 
 Two rulings to carry into every option for piece 1. An authored edge is never re-pointed to a
 newer capture without a member's act (§14.4) — so the content row's identity includes the

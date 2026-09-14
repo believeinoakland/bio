@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-787 rulings across 73 documents.
+793 rulings across 73 documents.
 
 ## DEC-
 
@@ -95,11 +95,13 @@ authority is the file named, never this one.
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 (Bob, DEC-21) — R2's CONCLUSION stands; its MECHANISM does not.** > *"A capture is the act of reading a document in.  
   `docs/development/research/RECONCILED.md:183`
 - **DEC-23** — RULED | | machine extraction by recognisers, format entries and fleet members (§16) | BUILT | | the AI EXTRACT role — an assistant extracting on a member's objective | DESIGNED; excluded from the pilot by name; no item | | the content OBJECT — something an edge can point at that is smaller than a document | ABSENT…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1652`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1668`
 - **DEC-23** · 2026-08-03 — RULED by DEC-23: content — a piece of information extracted from a document, up to and including the whole document — is the unit the record points at.  
   `docs/development/DEBT.md:133`
 - **DEC-24** — WHAT IS ALREADY RULED, so this entry only adds what is missing:** - **DEC-24 — the boundary**: *"the machine may do the LOOKING; the member does the CONCLUDING"*, with FOUR roles on the path verbs: **EXTRACT** (document → content), **PURSUE** (find material bearing on an unsupported claim, supporting AND cutting…  
   `docs/archive/ledgers/DECISIONS-2026-08.md:3396`
+- **DEC-24** · 2026-09-14 — RULED 2026-09-14 by Bob:** "yes, an assistant may mark passages as citable on its own." The mechanism runs under DEC-24's rule 3: every row it mints is labelled machine-minted, it never attests one, and a passage becomes part of a finding only when a member cites it.  
+  `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:265`
 - **DEC-27** · 2026-08-03 — RULED 2026-08-03 by Bob (DEC-27). **Both a construct and a surface.** The tag instantiates everywhere, like the ACT; the expanded dialog is S12, with its own states.  
   `docs/architecture/BIO_Interaction_Constructs_v0_1.md:493`
 - **DEC-27** — ATTRIBUTION — CORRECTED (SWEEP C6).** v2 said a requested capture is attributable to the instance's ordinary capture path *"rather than to an agent."* DEC-27(b) says the opposite and wins: the record states BOTH — *"the assistant captured this, at Anna's request."* Here: **the daemon captured this, at the…  
@@ -374,6 +376,8 @@ authority is the file named, never this one.
   `docs/architecture/BIO_Declared_Bias_v0_1.md:357`
 - **D-190** · 2026-08-08 — AMENDED INTO THIS CLAIM 2026-08-08, same session, before any handoff**) — the diagnostic that established two properties of the platform the item could not assume: that a Worker cannot fetch another Worker on this account's own `*.workers.dev` name, and that a fresh script is not attributable by name OR tag on the…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2546`
+- **D-194** · 2026-09-14 — RULED 2026-09-14: the observation is evidence, authored, grade D on the member's trust; a published case resting materially on it names the member by actual name unless a protected whistleblower — the naming rule interacts with cover and handle and is designed in Program B | the architect, under the ruling |  
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1869`
 - **D-197** — (g) HAD TO BE CORRECTED MID-RUN AND IS REPORTED, NOT SMOOTHED**: the first sweep-neutering arm stayed 46/46 GREEN because with all guards removed there is no `.answered` anywhere and a whole-file region equals a scoped one — it measured nothing.  
   `docs/archive/ledgers/QUEUE-2026-08.md:2109`
 - **D-206** — D-206 RIDER DECIDED IN FAVOUR OF CARRYING THE DISTINCTION:** an optional `code` on the finding plus a derived `tallyDetail` beside `tally`, with `tally` not moving by one byte and `tallyDetail` absent when nothing carried a code; reasoning recorded in the code at BOTH sites, and settled by CLAUDE.md itself —…  
@@ -1050,7 +1054,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - was DECIDED — but its contrast partner was wrong, and the table below is > corrected to three rows rather than two.  
   `docs/architecture/BIO_Content_Framework_v0_10.md:1324`
 - **2026-09-14** — RULED by Bob, 2026-09-14: a link to a Google Drive file KEEPS THE LINK, and the harvest is the OpenDocument export, from which the content is extracted.** So the record holds the Drive address as the citation of where the document lives, the ODF bytes as the capture with an honest hop (export address, format,…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1736`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1752`
 - **2026-08-01** — [RULED 2026-08-01: the subject vocabulary is the registry's, and the malformedness rule is the constraint](#ruled-2026-08-01-the-subject-vocabulary-is-the-registrys-and-the-malformedness-rule-is-the-constraint)  
   `docs/architecture/BIO_Declared_Bias_v0_1.md:22`
 - **2026-08-01** — [RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT](#ruled-2026-08-01-a-hunch-is-temporary-declared-bias-and-it-is-hunch-debt) - [The bias acknowledgement, authored at export](#the-bias-acknowledgement-authored-at-export) - [Differential traversal and the cross-group…  
@@ -1379,10 +1383,18 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLIENT-RENDERED.md:58`
 - RULED: third-party output is attributed to the third party Bob's ruling puts the question the right way round.  
   `docs/development/CLIENT-RENDERED.md:141`
-- §3 and §5 — seven doctrine items are open with Bob (5.8 is RULED); §5 carries each in the shape he rules on, for the sitting after his Part II review. - §4 and §6 — the mechanism is decided provisionally (option (c)); the IC on I5/I3 and the queue items are written after Bob confirms Part II. **Contents**  
-  `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:8`
+- **2026-09-14** — RULED 2026-09-14 by Bob:** a citation that points at the sentence, paragraph or section answering the question refers ONLY to that portion of the document — "just as an HTML highlight link refers to specific content in that document." So a content-grain leg earns, on every axis, only from what is IN its portion.  
+  `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:150`
+- **2026-09-14** — RULED 2026-09-14 by Bob:** "there should be a direct means for a member to select a section of a document and type in their transcription of that content." The capability is ruled; its grading runs under this recommendation as the provisional: the member's typing is authored text with the provenance of an authored…  
+  `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:173`
+- **2026-09-14** — RULED 2026-09-14 by Bob:** "citations that just refer to the document, well, just refer to the whole document.  
+  `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:190`
+- **2026-09-14** — RULED 2026-09-14 by Bob:** both documents DO refer to the ordinance — that is how each was identified — so the connection points at the specific reference in each; and, as in 5.3, a member may make the reference more specific. "Forgets", defined for the record: each side's resolution keeps the reference text AS IT…  
+  `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:204`
+- **2026-09-14** — RULED 2026-09-14 by Bob:** "absolutely, a member's own eyewitness knowledge can be evidence — though it stands on the trust held by that member.  
+  `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:248`
 - **2026-09-14** — RULED 2026-09-14 by Bob:** *"the record never moves an authored edge's target without a member's act, even when the passage is byte-identical."* The recommendation below is therefore the mechanism, and the proposal is the whole of it.  
-  `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:254`
+  `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:282`
 - approved."* Nothing is built and the watch item itself is WITHDRAWN as premise-rejected, not merely unmeasurable.  
   `docs/development/DECISIONS.md:189`
 - CONCEDED — semantically each ground IS a claim: the same proposition asserted on a distinct basis.** What the grounds shape refuses is not claim-plurality; it is separate OBJECT IDENTITY for each claim inside the finding.  
