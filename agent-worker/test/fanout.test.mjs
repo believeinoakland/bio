@@ -60,7 +60,13 @@ import {
    `{ ok: true, rows: [] }` for any argument, which is why its 172 assertions
    were green over a call the real plane refuses. */
 import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
-import { MEANING_ARM } from "../src/harness.mjs";
+/* D-323/D-324: the mock's `op=suggest` branch, DERIVED from the plane's own
+   name grammar, kind set, level set and placeholder predicate. This suite's own
+   mock used to answer `{ wrote: true }` for ANY name, kind, level and
+   description, which is why its two `level-empty:<level>` assertions below were
+   green over a candidate the deployed plane refuses BASIS_REFUSED / C-25.2. */
+import { suggestBranch, WIRE_CHECKS } from "./plane-suggest.mjs";
+import { MEANING_ARM, REPORTING_LEVEL } from "../src/harness.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -522,10 +528,7 @@ export default {
       return Response.json({ ok: true, result: { terminated: true, bound: (body && body.bound) || null } });
     if (op === "capturerequest")
       return Response.json({ ok: true, result: { request: "REQ-1", state: "queued" } });
-    if (op === "suggest") {
-      S.suggested.push({ name: (body && body.name) || null, kind: (body && body.kind) || null });
-      return Response.json({ ok: true, result: { wrote: true, version: (body && body.name) || null } });
-    }
+    ${suggestBranch({ f10: false })}
     return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
   },
 };
@@ -640,11 +643,22 @@ console.log("\n--- B3 · IS-9(a): A DOCUMENT-RETURNING SUB-SESSION IS REFUSED, A
      it reached the working set, §9's empty-level kind would have been written for
      `content` off a report the parent never accepted — a contract violation
      MANUFACTURING a claim about the world. */
+  /* THE NAMES ARE THE WIRE'S, AND THE OLD SPELLING WAS WRONG RATHER THAN MERELY
+     OLD (D-323, 2026-09-13). This assertion read
+     `["level-empty:document", "level-empty:internet", "level-empty:meaning"]`
+     — a COLON, which `VERSION_NAME_RE` has never admitted, and the log's
+     singular `document`, which `SUGGEST_LEVELS` has never held. Both were green
+     ONLY because this suite's mock wrote whatever it was handed; the deployed
+     plane refuses the first BASIS_REFUSED / C-25.2 and the second
+     SUGGEST_EMPTY_LEVEL_UNSTATED / C-27.6. Derived from `REPORTING_LEVEL` rather
+     than re-typed, so a respelling fails here instead of landing. */
   t("§9's empty-level kind was written for the three levels that honoured the contract",
     st.suggested.map((s) => s.name).sort(),
-    ["level-empty:document", "level-empty:internet", "level-empty:meaning"]);
+    ["document", "internet", "meaning"].map((l) => `level-empty-${REPORTING_LEVEL[l]}`).sort());
   t("and NOT for the refused level — undetermined is not an absence",
-    st.suggested.some((s) => s.name === "level-empty:content"), false);
+    st.suggested.some((s) => s.name === `level-empty-${REPORTING_LEVEL.content}`), false);
+  t("and nothing was written under the OLD colon form, which the wire refuses",
+    st.suggested.some((s) => String(s.name).includes(":")), false);
   t("nothing the refused return carried reached the plane",
     st.log.filter((l) => /%PDF/.test(JSON.stringify(l.body ?? null))).length, 0);
   await mf.dispose();
@@ -702,7 +716,14 @@ console.log("\n--- B6 · THE PARENT HOLDS THE ONLY WRITE ---");
   const mf = newMf();
   const out = await (await runOp(mf, { ...base, judgements: [
     { targets: [] }, { reports: goodReturns },
-    { candidates: [{ kind: "new-version", name: "v1", description: "what the reports support" }] }, {},
+    /* D-324: the kind read `new-version` until 2026-09-13 and the spelling was
+       WRONG, not merely old. §9 holds five kinds and `new-version` is none of
+       them; a deployed plane answers SUGGEST_UNKNOWN_KIND / C-27.3 and publishes
+       the closed set. The fixture passed only against a mock that accepted any
+       kind, so this arm's whole landing half had never been exercised with a
+       kind the endpoint would take. `basis-version` is §9's main output and is
+       what a composing run actually proposes. */
+    { candidates: [{ kind: "basis-version", name: "v1", description: "what the reports support" }] }, {},
   ] })).json();
   const st = await mockState(mf);
   const mutating = st.log.filter((l) => PLANE_OPS[l.op]?.mutating);
@@ -713,10 +734,59 @@ console.log("\n--- B6 · THE PARENT HOLDS THE ONLY WRITE ---");
     [...new Set(mutating.map((l) => l.op))].filter((op) => SUBSESSION_OPS.includes(op)), []);
   /* The composed version AND the one level that reported an absence — §9's kind
      rides the same write path, which is the point of it being a kind. */
+  /* Same correction as B3's, one arm over: the colon form is the wire's refusal,
+     not a name. D-323. */
   t("the version landed, written by the parent", st.suggested.map((s) => s.name),
-    ["v1", "level-empty:content"]);
+    ["v1", `level-empty-${REPORTING_LEVEL.content}`]);
   t("no contract handed out carried a credential to write with",
     JSON.stringify(out.fanout?.contracts ?? []).includes("aik-"), false);
+  await mf.dispose();
+}
+
+console.log("\n--- B6b · D-324: THE MOCK REFUSES A KIND THE RECORD DOES NOT HOLD ---");
+/* THIS ARM EXISTS BECAUSE THE NEGATIVE CONTROL FOUND THIS SUITE COULD NOT SEE
+   ITS OWN FIXTURE WIDEN. `wire-vocabulary.control.mjs` arm W-E restores the
+   PERMISSIVE mock — the pre-2026-09-13 branch that wrote whatever it was handed
+   — and measured `harness.test.mjs` at 202/12 and this suite at **176/0**: every
+   candidate this file submits is already LEGAL, so a mock that accepts
+   everything and a mock that accepts the legal thing are indistinguishable from
+   inside it. A suite that cannot fail when its double is widened is not pinning
+   its double. So one candidate here is ILLEGAL ON PURPOSE, and the arm asserts
+   the mock REFUSED it in the plane's own words — which only a mock holding the
+   catalogue can do. */
+{
+  const mf = newMf();
+  const out = await (await runOp(mf, { ...base, judgements: [
+    { targets: [] }, { reports: goodReturns },
+    /* THE LEGAL ONE FIRST, DELIBERATELY. A refused candidate routes to `adjust`
+       and, unanswered, is DROPPED — and the run then closes rather than working
+       the rest of the queue, so an illegal candidate placed first would leave
+       the legal one unsubmitted and this arm could not tell "the mock refused
+       the right one" from "the mock refused everything". Measured, not
+       reasoned: with the order reversed the sibling assertion below reads
+       `got []`. */
+    { candidates: [{ kind: "basis-version", name: "v0", description: "what the reports support" },
+                   { kind: "new-version", name: "v1", description: "what the reports support" }] }, {},
+    /* the adjust row: the model cannot answer a closed-set refusal, so the
+       candidate is DROPPED — F10's other half, over a REAL refusal rather than
+       a staged one. */
+    {},
+  ] })).json();
+  const st = await mockState(mf);
+  t("the run still completed — a refused candidate is not a crash", out.ok, true);
+  t("the refusal is on the wire in the PLANE's words", out.refusals?.[0]?.code ?? null, "SUGGEST_UNKNOWN_KIND");
+  t("carrying the catalogue's own C-number", out.refusals?.[0]?.plane?.check ?? null,
+    WIRE_CHECKS.SUGGEST_UNKNOWN_KIND.check);
+  t("and the catalogue's canned translation, to the byte", out.refusals?.[0]?.plane?.translation ?? null,
+    WIRE_CHECKS.SUGGEST_UNKNOWN_KIND.translation);
+  t("the illegal candidate did NOT land",
+    st.suggested.some((s) => s.name === "v1"), false);
+  /* AND THE LEGAL SIBLING SUBMITTED BEFORE IT DID, so this is the mock refusing
+     the right thing rather than refusing everything — the arm that stops a mock
+     being "corrected" into a fixture that says no to everything, which is the
+     same defect as saying yes to everything pointed the other way. */
+  t("while the legal candidate ahead of it in the queue LANDED",
+    st.suggested.map((s) => s.name), ["v0"]);
   await mf.dispose();
 }
 

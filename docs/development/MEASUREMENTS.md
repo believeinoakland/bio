@@ -10083,3 +10083,163 @@ it. The scratch roster keeps the member rows this run and earlier probes created
 does not remove them BY DESIGN** (*"the roster itself survives, because membership is identity
 and not derived from captured documents"*), stated so a later reader does not read seven member
 rows in scratch as residue this item left.
+
+## M-9 · 2026-09-13 · D-323 + D-324 — THE EMPTY-RUN INSTRUMENT'S OWN OBJECT, MEASURED AGAINST THE PLANE'S VALIDATION EXPRESSIONS RATHER THAN A MOCK (worktree `agent-a92ada478a7a4e8f6`)
+
+**Instrument:** `agent-worker/test/wire-vocabulary.test.mjs` (NEW, battery-discovered) — it
+imports `VERSION_NAME_RE`, `SUGGEST_KINDS`, `SUGGEST_LEVELS` and `isBoilerplate` from
+`bio-plane/checks/bio-checks.mjs`, `reportsAs` from `bio-plane/src/skilldoctrine.mjs` and
+`OBSERVATION_LEVELS` from `bio-plane/src/airun.mjs`, and evaluates them on the candidate
+`emptyLevelCandidates` actually composes. **No mock, no network, no deployed plane.** The
+controls are `agent-worker/test/wire-vocabulary.control.mjs`. **NO LIVE CALL WAS MADE**: VF-4's
+M-8 figures at 0.57.0 are the ground and were not re-derived.
+
+### THE PRE-FIX MEASUREMENT — three refusals, not one, on the same object
+
+Run against `agent-worker/src/harness.mjs` exactly as it stood at `46752bd`, driving the
+composed candidate through the imported expressions:
+
+| level reported `LOOKED_ABSENT` | composed name | composed `level` | composed `description` | refused by |
+| --- | --- | --- | --- | --- |
+| meaning | `level-empty:meaning` | `meaning` | `null` | **C-25.2**, **C-27.12** |
+| content | `level-empty:content` | `content` | `null` | **C-25.2**, **C-27.12** |
+| document | `level-empty:document` | `document` | `null` | **C-25.2**, **C-27.6**, **C-27.12** |
+| internet | `level-empty:internet` | `internet` | `null` | **C-25.2**, **C-27.12** |
+
+**ALL FOUR OF VF-1's OWED CONTROL 7 OBJECTS WERE UNWRITABLE, AND D-323 NAMED ONE OF THE THREE
+CAUSES.** The two the live run could not see:
+
+- **C-27.6 / `SUGGEST_EMPTY_LEVEL_UNSTATED`, at a DIFFERENT check several screens EARLIER than
+  C-25.2.** A run writes its observation log in `OBSERVATION_LEVELS`' spelling and a suggestion
+  in `SUGGEST_LEVELS`', and the two disagree on one member — `document` against `documents`.
+  The plane already publishes the bridge (`reportsAs()`, whose own comment says *"the two
+  disagree on one member"*) and `emptyLevelCandidates` neither called nor reproduced it.
+  **VF-4's live run composed candidates for `content` and `internet` only, so it never reached
+  this level — and fixing only the colon would have left one level of four still unwritable,
+  failing at a different check.**
+- **C-27.12 / `SUGGEST_BOILERPLATE`, unconditionally.** M-8 recorded this as *"a report carrying
+  only `summary`"*. Driven against the contract it is not conditional at all: `description` is
+  not a key of `REPORT_KEYS`, and `checkReport` REFUSES any report that carries one
+  (`REPORT_UNKNOWN_FIELD`, driven). So `r.description` read `undefined` on **every**
+  contract-honouring report.
+
+### THE POST-FIX MEASUREMENT
+
+Same instrument, same expressions, `harness.mjs` carrying the fix: **all four candidates refused
+by NOTHING the wire holds.** Names `level-empty-meaning`, `level-empty-content`,
+`level-empty-documents`, `level-empty-internet`; `level` the plane's spelling; `description`
+composed by the table from the level and the observation-log address, with the model's `summary`
+APPENDED when present and never substituted (five filler summaries — `n/a`, `TBD`, whitespace,
+`<level summary>`, `none` — driven, none of them able to make the candidate filler).
+`VERSION_NAME_RE` is **byte-unchanged**; the assertion that it still refuses a colon is IN the
+suite, so a later widening is visible rather than silent.
+
+### THE NEGATIVE CONTROLS — 5 arms, ALL FIVE AS DECLARED
+
+Figures are `wire-vocabulary / harness / fanout`, each `pass/fail`. Every armed restore verified
+by sha256 **AND** `cmp` **AND** size against a uniquely-named per-arm pristine copy, byte count
+printed, floored at 1,000 B.
+
+| arm | what was armed | measured | verdict |
+| --- | --- | --- | --- |
+| W-A | nothing (the baseline row, which is what tells five-arms-broken from five-arms-working) | **83/0 · 214/0 · 182/0** | as declared |
+| W-B | the colon restored in `harness.mjs` — the exact pre-fix name | **65/18 · 211/3 · 180/2**, **C-25.2 named in the output**, F10 and dedup HELD | as declared |
+| W-C | `kind` swapped for `new-version`, D-324's own fixture spelling | **69/14 · 210/4 · 180/2**, **C-27.3 named**, the NAME arms HELD | as declared |
+| W-D | nothing — the over-strictness direction, run as its own arm | **83/0**, ten legal names, five kinds, four levels, a legal `basis-version` candidate, all green | as declared |
+| W-E | the PERMISSIVE mock restored (the pre-fix branch that wrote whatever it was handed) | **83/0 · 202/12 · 177/5** | as declared |
+
+**W-E FOUND ITS OWN GAP ON ITS FIRST RUN AND THE GAP IS THE USEFUL PART.** `fanout.test.mjs`
+came back **176 pass / 0 fail with the mock fully widened** — every candidate it submitted was
+already LEGAL, so a mock that accepts everything and one that accepts the legal thing are
+indistinguishable from inside it. **A suite that cannot fail when its double is widened is not
+pinning its double.** Arm `B6b` was added to that file (one deliberately illegal candidate, the
+catalogue's own refusal asserted) and the same control arm now reads 177/5. The first reading is
+recorded rather than smoothed. `wire-vocabulary.test.mjs` holds at 83/0 under W-E exactly as
+declared — it passes through no mock, which is why the item builds both halves.
+
+### THE CLASS SWEEP, AND WHAT THE MATCHER CANNOT SEE
+
+The class is *a value the member MINTS for the wire that the wire's own grammar refuses*. Corpus
+swept: every `.mjs`, `.md`, `.html` and `.json` outside `node_modules` and `docs/archive/**` for
+`level-empty:` and for `new-version`. **Live spellings remaining: ZERO.** What the sweep found
+and deliberately left: `release/agent-worker.bundled.mjs` (DIST's signed 0.57.0 artifact — the
+build that HAS the defect, correct to leave), `bio-plane/test/vf4-*.mjs` (measurements of
+record — dated header notes added, not one byte of either measurement changed), and
+`new-version-arrived-from-another-team`, a FINDING kind in an unrelated vocabulary that the
+literal matcher hits and that is read and left alone. **What the matcher cannot see:** a value
+composed at runtime from parts (it matches literals and template heads, not concatenation a
+suite performs), a member-minted value in a file type outside those four extensions, and any
+wire value whose grammar lives somewhere other than `bio-checks.mjs`.
+
+**WHAT THIS MEASUREMENT CANNOT SAY.** It closes the VOCABULARY and not the endpoint. Nothing
+here evaluates the run's existence, the viewer gate, leg reachability, the strength pair, the
+independence trace, the substance comparison or `promote`'s frontmatter grammar — those need a
+store, and the live answer needs a deployed plane. **A green here is not evidence that a real
+`op=suggest` would write**, and the first deployed CHECK run is what will confirm it end to end.
+
+### THE FINDING THE ITEM DID NOT GO LOOKING FOR — TWO CONTROL ARMS HAD STOPPED ARMING ON `main`, BOTH KILLED BY THE SAME LANDED FIX
+
+Re-running the two control drivers whose subjects this item touched — owed, because a
+correction can stale a patch anchor — found **two arms reporting `THE ARM DID NOT ARM` before
+this item changed anything they quote**, and **D-323 caused neither**:
+`agent-worker/src/index.mjs` last moved at `f5ed2bf` (FL-6) and `git diff 46752bd HEAD --
+agent-worker/src/index.mjs` is EMPTY.
+
+- **`harness.control.mjs` H8** (query-never-load: the op set pinned, floor AND ceiling) quoted
+  `rows: "legs"`. **D-276 changed that call site to `rows: MEANING_ARM`** — which is D-276's
+  entire point, since `"legs"` is an arm the plane's compiler does not hold — and did not move
+  the arm with it. Old anchor occurrences in the tree: **zero**.
+- **`fanout.control.mjs` F4b** (both halves down — the arm whose whole job is to prove the
+  strongest value-level assertion in `fanout.test.mjs` CAN fail) quoted the pre-`planeAnswer`
+  spawn shape. **D-276 routed that answer through `planeAnswer(...)`.** Old anchor occurrences:
+  **zero**. This one half-armed and self-reported, so the driver exited 1 on every run since.
+
+Both re-anchored on the lines as they now read, with the finding kept at each site rather than
+quietly repaired, and re-run ALONE: H8 **213/1 · 111/2, pinned-set arms FAILED, write arms
+held — AS DECLARED**; F4b **161 pass / 21 FAIL, the value-level `statements_sha` arms failing —
+AS DECLARED**. Whole drivers then green: `harness.control.mjs` **19 arms, 19 as declared**;
+`fanout.control.mjs` **10 arms, 10 as declared**.
+
+**THE CLASS, AND IT IS THE THIRD INSTANCE THIS ESTATE HAS RECORDED** (walkfloor's `stripper`
+arm, FL-5's own H8 re-anchor, and now D-276's two): **a landed fix must move the control arms
+that QUOTE the lines it changed**, and an arm whose find-string no longer exists proves nothing
+while looking exactly like a pass. It is visible at all only because both harnesses treat
+`did not arm` as a finding instead of counting the green run underneath it. What this sweep
+could NOT see: it re-ran only the two drivers whose subjects this item touched, so an arm staled
+by D-276 in a driver this item had no reason to run is still out there — the honest scope is two
+drivers, not the estate.
+
+### THE BATTERY DELTA, ATTRIBUTED BY DIFFING TWO RUNS PER SUITE — NEVER BY SUBTRACTION
+
+**Own baseline, measured in this worktree at `46752bd` after `npm ci` in `bio-plane/`,
+`ocr-worker/` and `pdf-worker/`: `181/181 suites green · 11,081 assertions · exit 0`.** The
+brief and the VF-4 landing line both carried **11,080**; this worktree measured **11,081**, and
+the measurement is trusted over the brief — one assertion, named rather than smoothed.
+
+**Final, on the committed tree at `8bb6119`: `182/182 suites green · 11,172 assertions ·
+exit 0`, provenance `185 of 185 discovered item(s) are in the commit at HEAD`.**
+
+Attributed by re-running the true baseline in a **scratch `git worktree` at `46752bd`** (never
+`git stash` — `refs/stash` is repository-wide across sixty checkouts) and diffing the two
+per-suite lists mechanically. **Exactly three rows moved and two appeared:**
+
+| suite | baseline | final | attributed to |
+| --- | --- | --- | --- |
+| `agent-worker/wire-vocabulary.test.mjs` | — | **83** | this item (NEW) |
+| `agent-worker/fanout.test.mjs` | 175 | **182** | this item: **+7** — B6b's six, plus B3's no-colon arm |
+| `agent-worker/harness.test.mjs` | 213 | **214** | this item: **+1** — B6's no-colon arm |
+| `fleetbundles.test.mjs` | 81 | 87 | **NOT this item** — the scratch tree had no `ocr-worker/node_modules`, so that member's byte-identity arms degrade there. It reads 87 in BOTH of this worktree's runs |
+| `ocr-worker/ocr-worker.test.mjs` | SKIPPED | 70 | **NOT this item** — the same missing install, the loud skip working exactly as designed |
+
+**+91 assertions and +1 suite, all of it this item's**, and the two rows that are not are named
+rather than folded in. **Two figures deliberately did NOT move and both are worth recording:**
+`planning-hygiene.test.mjs` held at **238** — this item CLOSES two debt rows rather than opening
+them — and `hygiene.test.mjs` held at **689**, because its per-suite censuses walk
+`bio-plane/test/` and the suite added here is a FLEET suite. An item adding a PLANE suite would
+have moved that figure by two; this one does not, measured rather than assumed.
+
+`node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED: **exit 0**, with
+`REGISTER FLOOR arms 936/936 · classified 173/173 · corpus 174/174` UNMOVED and `FLEET 3
+members · 6/6 surface ops · 8/8 SUITES declaring a negative control · 73 arms` against a floor
+moved in the same turn to 8 suites / 73 arms. `node civicos-ui/test/run.mjs` from the REPO
+ROOT, exit read unpiped: **exit 0, all harnesses green.**

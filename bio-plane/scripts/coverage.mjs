@@ -803,7 +803,19 @@ const FLEET_FLOOR = {
      floor of 6. A floor with slack is not one, and it is moved here rather than
      left for the next reader — the same reasoning VF-5 and FL-9 each recorded
      when they moved a figure they had not invalidated. */
-  suites: 7,
+  /* MOVED 2026-09-13 by D-323: 7 -> 8, from the figure a green `--strict` run
+     PRINTED on this branch AFTER the commit (`FLEET  3 members beside the plane
+     · 6/6 surface ops reached · 8/8 SUITES declaring a negative control · 73
+     arms`), with provenance `190 of 190 discovered item(s) are in the commit at
+     HEAD (f217895)`. **Read after the commit deliberately**: the pre-commit
+     print named `agent-worker/test/wire-vocabulary.test.mjs` as NOT IN ANY
+     COMMIT and refused to let its figures be quoted, which is D-238 doing its
+     job. The eighth suite is that file — the empty-run instrument's candidate
+     driven through the plane's own validation expressions with no mock in it.
+     **THE FLOOR WAS EXACTLY RIGHT WHEN THIS ITEM FOUND IT: zero slack** on both
+     keys, measured and said either way, because the practice is to trust the
+     measurement and not the streak of stale floors this comment records. */
+  suites: 8,
   /* RESTORED AT INTEGRATION 2026-08-09 by CONDUCT. This key was DROPPED by my own
      conflict resolution on the D-277 merge, and the loss was SILENT: with no `arms`
      the comparison reads `48 < undefined`, which is false, so `--strict` stayed at
@@ -837,7 +849,18 @@ const FLEET_FLOOR = {
      reason VF-5 and FL-9 each recorded when they did the same. Read from the
      merged tree's own print, never summed by hand. **ONE `arms:` KEY IN THIS
      TABLE, grepped after writing.** */
-  arms: 68,
+  /* MOVED 2026-09-13 by D-323: 68 -> 73 arms, from the same post-commit printed
+     run as `suites` above (`73 arms · GREW by 5 arm(s)`). The five are
+     `wire-vocabulary.test.mjs`'s: baseline, the colon restored, a kind §9 does
+     not hold, over-strictness, and the permissive mock restored. **NOT SLACK
+     BEING SWEPT UP, and that is measured rather than assumed:** the fleet's
+     other seven suites are unchanged in arm COUNT by this item — their arms were
+     re-declared, not added to — and still state 68 between them, so the ratchet
+     was carrying nothing when this item arrived. Said plainly because five of
+     the last eight moves of this key were sweeping up somebody else's slack and
+     a reader is entitled to know which kind this one is. **ONE `arms:` KEY IN
+     THIS TABLE, grepped after writing.** */
+  arms: 73,
 };
 
 function discoverFleet() {
