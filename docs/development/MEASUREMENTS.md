@@ -10714,3 +10714,7 @@ a METADATA deploy (new VERSION var, first armed bindings) that the skip made imp
 `/version` sat at 0.57.0 while the rollout gate waited for a build never sent. The skip now
 requires byte-identity AND the target version already serving; bytes-only proceeds as a
 metadata deploy, with the reason printed.
+
+## 2026-09-14 · REC-80 — workerd's compound-SELECT ceiling, moved from a code comment into the record (instrument: `bio-plane/src/query.mjs`, `MAX_COMPOUND = 4`; measured 2026-07-25 by the retrieval item, recorded here by CONDUCT at REC-80's integration)
+
+**workerd refuses a compound SELECT of more than five terms.** `query.mjs` chains facet and predicate arms in groups of at most four (`MAX_COMPOUND = 4`), nesting longer chains through a subquery that starts the count again; the six-facet sidebar measured 283 ms before folding. Until today this substrate constraint lived only in the comment above the constant — a measurement a design document could not cite. It is recorded as MEASURED 2026-07-25 on the runtime of that day and NOT re-measured on 2026-09-14; a later runtime may lift it, and the constant is the place to re-measure.

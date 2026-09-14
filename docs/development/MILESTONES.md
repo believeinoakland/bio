@@ -641,13 +641,13 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | ~~no scheduler exists~~ BUILT 2026-08-01 — one DO alarm, FIVE consumers | RECORD | M1 · landed |
 | **captured content is not indexed** | RECORD | M5 |
 | **capture-byte custody at scale** | RECORD | M6 |
-| UI-PLAN U9–U14 | UI | M8 |
-| the task inbox has no surface (D-98 shipped) | UI | M8 |
-| project participation + governance have no surface (S-12 §7) | UI | M8 |
+| UI-PLAN U9–U14 → **the residue is rowed as UI-60 (2026-09-14): U13, U14, expertise/licences, verified export, the doorbell; U9–U12 BUILT per UI-58's measured Status on `UI-PLAN.md`** | UI | M8 |
+| ~~the task inbox has no surface (D-98 shipped)~~ BUILT — measured 2026-09-14 by UI-58 against `civicos-ui/` (the queue surface, M8's first rung) | UI | M8 · landed |
+| ~~project participation + governance have no surface (S-12 §7)~~ BUILT — measured 2026-09-14 by UI-58 | UI | M8 · landed |
 | expertise/licences have no surface | UI | M8 |
 | verified export has no surface (§8) | UI · RECORD | M8 |
-| sever / reinstate / retire have no rung | UI | M8 |
-| the UI hand-composes query syntax where `op=searchfields` exists | UI | M8 |
+| ~~sever / reinstate / retire have no rung~~ BUILT — measured 2026-09-14 by UI-58 | UI | M8 · landed |
+| ~~the UI hand-composes query syntax where `op=searchfields` exists~~ CLOSED — measured 2026-09-14 by UI-58 (the drift is gone; the doorbell is not, see UI-60) | UI | M8 · landed |
 
 **The case-making pass, 2026-08-01.** Twenty-seven rows arrived from the sixteen-file
 research study with no placement, which this table's own preamble forbids. Placed here;
