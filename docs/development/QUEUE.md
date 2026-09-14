@@ -925,7 +925,7 @@ is the defect wearing a disguise.
 | **DIST** | DS-3 | the account cascade config (instance-level token; minting is a MEMBER act) | DS-1 |
 | ~~DIST~~ **DONE** | DS-4 | the gated deploy, then hand to VF-4 — 0.57.0 cut+signed at `ba05e9c`, deployed and SERVING account-wide (plane + agent-worker + ocr-worker with both upload parts + pdf-worker, all `/version` 0.57.0). DEC-43 re-read: biosmoke7 monitors on the ADMIN_TOKEN fallback, so this WAS a fallback-instance deployment; the fallback stays per the ruling, read recorded in the release-note commit `39730b1`. Deploy by the outgoing DIST (stand-down `14c5470`); independently re-verified by DIST #2 from the account: plane bytes byte-identical to the signed manifest (2,715,828 B), ocr parts byte-identical, member main modules wrangler-rebuilt from source per agent-worker's own THE-SOURCE-DEPLOYS ruling | **done 2026-09-13 — VF-4 unblocked** |
 | FLEET | FL-6 | the Claude-account cascade at runtime | **DS-3** |
-| VERIFY | VF-4 | live verification in scratch — a full CHECK run against a concluded inquiry | **SK-4 and DS-4** |
+| VERIFY | VF-4 | live verification in scratch — a full CHECK run against a concluded inquiry | **RUNNING 2026-09-13** — deps SK-4 (`f4483e6`) and DS-4 (`4d34882`) verified in the tree by CONDUCT, 0.57.0 serving account-wide per DS-4's re-verified release note; spawned Opus 5, worktree-isolated. Falsify: a live worker holds an `agent-*` worktree probing scratch; if none does, this reads unblocked-and-queued. **The plan's LAST row: when this lands verified, the IS build is done end to end.** |
 
 **THE CRITICAL PATH IS DIST'S, NOT CONDUCT'S, AND THAT IS THE ONE THING WORTH CARRYING OUT
 OF THIS TABLE.** Four of the nine are `DS-` rows, and DIST runs as its own session
