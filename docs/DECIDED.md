@@ -565,7 +565,7 @@ authority is the file named, never this one.
 - **C-2.8** — input this item deletes, CORRECTED (never exempted) with the dated reason at the site; (b) `checkInquiryPublished`'s C-2.8 case block, same; (c) ONE NEW FAMILY `CASE_DOC_CHECKS` — the case document's gate — with its own C-number taken from the catalog's own allocation.  
   `docs/development/CLAIMS.md:2089`
 - **C-2.8** — PROPOSED → RESPONSES (silence is not consent) → RESOLUTION (dormant consumer: CONDUCT answers in writing) → CHANGING → CHANGED → SETTLED.  
-  `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:68`
+  `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:69`
 - **C-6.3** · 2026-08-01 — CORRECTED 2026-08-01: an earlier version of this line said `supersedes` is already in `REL_VOCAB`, as if the mechanism existed.  
   `docs/architecture/BIO_Case_Making_v0_1.md:523`
 - **C-7.1** — `bio-plane/test/check-firing.test.mjs` (this item's own suite — the C-7.1 `proves()` block replaced by a pointer, the retirement block widened to be keyed by retired id, the header's SUPERSEDED note and `NEGATIVE CONTROL:` line extended).  

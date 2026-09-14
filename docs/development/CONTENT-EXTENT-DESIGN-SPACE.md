@@ -24,6 +24,7 @@
   - [5.5 What is the CLAIM object, and what is its standard of proof?](#55-what-is-the-claim-object-and-what-is-its-standard-of-proof)
   - [5.6 D-184: may a firsthand observation be CONTENT with no capture behind it?](#56-d-184-may-a-firsthand-observation-be-content-with-no-capture-behind-it)
   - [5.7 DEC-24's boundary: may an AI extractor WRITE content rows?](#57-dec-24s-boundary-may-an-ai-extractor-write-content-rows)
+  - [5.8 May the record move an authored edge's target to a newer capture without a member's act?](#58-may-the-record-move-an-authored-edges-target-to-a-newer-capture-without-a-members-act)
 - [6. The mechanism — decided provisionally by BOB #10, 2026-09-14](#6-the-mechanism-decided-provisionally-by-bob-10-2026-09-14)
 
 ---
@@ -236,6 +237,32 @@ or by the plane's own extraction at promote.
 and cited only by a member's act.
 **Recommendation.** The alternative, once the member-minted path exists — it is exactly
 DEC-24's EXTRACT, labelled as machine work, binding nothing. Reversing costs a column.
+
+### 5.8 May the record move an authored edge's target to a newer capture without a member's act?
+**Question.** Bob, 2026-09-14: a document is updated after content was found in it; should the
+system put effort into updating links that refer to the earlier version? A leg points at bytes
+("these bytes, this URL, this time"); the monitor captures the new bytes as a NEW capture; the
+change layers (Part I §6) say what changed. Nothing re-points an edge today.
+**Provisional.** Never moved. An edge keeps the capture it was authored against.
+**Why ambiguous.** Legs rot (an inquiry pinned to a superseded agenda while the current one sits
+unconnected); content found only in the new version is invisible to the pinned inquiry; CHECK
+wants to re-test findings against what the body says NOW. Against: a leg is an authored act
+("I rest this on THIS passage of THESE bytes"); the publisher may have altered exactly the cited
+passage and a silent re-point launders it; the new chain is a different chain so the grade could
+move under the member; a published citation cannot move at all (DEC-19).
+**Alternative.** Automatic re-pointing when the cited extent is byte-identical in the new capture.
+**Recommendation.** The record PROPOSES and the member AUTHORS: (i) a derived relation between
+content rows across captures, earned like a connection — byte-identical extent A, identical text
+at a new position B, similar text C and flagged (Part I §8's temporal connection applied to
+content; the reason the content id is `hash(capture, extent, chain)` — a new capture is a new
+row, "the same passage" is a relation between rows); (ii) a proposal on the inquiry ("cites the
+capture of 3 March; updated 1 September; the passage is carried forward unchanged (A)") whose
+acceptance is a member's act writing a NEW basis version against the new capture, the old
+retained, through the versions mechanism; declining is recorded; (iii) content found only in the
+new version is the content axis's frontier, not a link problem — extracted, connected, and the
+member informed once at the act (DEC-69). Reversing costs nothing: automatic re-pointing can be
+added to (ii) later as a member-set preference; the reverse — removing it once legs have moved
+silently — cannot be undone.
 
 ## 6. The mechanism — decided provisionally by BOB #10, 2026-09-14
 
