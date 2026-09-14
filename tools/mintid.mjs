@@ -180,14 +180,26 @@ const QUEUE_CORPUS = [
   "docs/development/QUEUE.md",
   "docs/development/MILESTONES.md",
   "docs/development/UI-PLAN.md",
+  /* MOVED, NOT REMOVED, 2026-09-14 (M0-26): the plan closed at 43/43 and went to
+     `docs/archive/IS-BUILD-PLAN.md`. */
+  "docs/archive/IS-BUILD-PLAN.md",
   /* `PLAN.md` was here and is now `docs/archive/PLAN.md`, reached by the directory
      entry above. Removed rather than repointed: a second path to a file the
      directory already yields is a place for the two to disagree later.
-     `IS-BUILD-PLAN.md` left the same way on 2026-09-14 (M0-26): the plan closed
-     at 43/43 and moved to `docs/archive/IS-BUILD-PLAN.md`, which the directory
-     entry above already yields. Its TRACK TABLE ROWS — the `| <NS>-<n> |` shape
-     PL, FL, SK, VF, DS and four of UI allocate in — are therefore still read,
-     and the floors were measured identical either side of the move. */
+     **THAT PRECEDENT DOES NOT TRANSFER TO `IS-BUILD-PLAN.md`, AND THE SUITE PROVED
+     IT RATHER THAN THE READER SPOTTING IT.** M0-26 removed the entry on the
+     reasoning above and `mintid.test.mjs` went red on three arms: **only
+     `corpusFloor` expands a directory entry (`expandCorpus`, line ~368); the two
+     other readers of this list — `allocations()` and `unregisteredNamespaces()` —
+     iterate `spec.corpus`/`QUEUE_CORPUS` RAW**, so `readFileSync` on
+     `"docs/archive/"` throws and the whole directory is silently skipped. Removing
+     `PLAN.md` cost those two readers nothing because `PLAN.md` ALLOCATES NOTHING
+     (measured, and stated in the reach comment below); `IS-BUILD-PLAN.md` carries
+     the ONLY `| <NS>-<n> |` TRACK TABLE ROWS in the corpus — PL, FL, SK, VF, DS and
+     four of UI — so dropping its named path scored all five families zero while the
+     id FLOORS stayed identical, because the floors are the one figure the directory
+     entry does reach. A named path beside the directory entry is therefore REQUIRED
+     here, not redundant, until every reader expands alike. */
 ];
 
 /* A QUEUE ITEM'S ALLOCATION SITE, AND THERE ARE EXACTLY TWO SHAPES — MEASURED, not

@@ -445,11 +445,13 @@ section("the register cannot fall behind — an unregistered prefix is FOUND, no
   writeFileSync(join(nsRepo, "docs/development/QUEUE.md"),
     "### REC-1 · done\n### ZZZ-4 · queued\nprose mentioning ZZZ-9 and INFO-2026-0001 and RFC-7231\n");
   /* CORRECTED 2026-09-14 (M0-26), NEVER EXEMPTED: the track-row fixture used to sit at
-     `docs/development/IS-BUILD-PLAN.md`, which `QUEUE_CORPUS` named by path. The plan
-     closed at 43/43 and moved to `docs/archive/`, and the path entry was REMOVED rather
-     than repointed (the `PLAN.md` precedent at its site), so the fixture must now be
-     reached the way the real file is — through the `docs/archive/` DIRECTORY entry. The
-     question this arm asks is unchanged: does the TABLE-ROW allocation shape get found. */
+     `docs/development/IS-BUILD-PLAN.md`; the plan closed at 43/43 and moved to
+     `docs/archive/IS-BUILD-PLAN.md`, so the fixture follows the path `QUEUE_CORPUS`
+     names. **IT IS A NAMED PATH AND NOT THE `docs/archive/` DIRECTORY ENTRY, AND THIS
+     SUITE IS WHY**: M0-26 first removed the named path on the `PLAN.md` precedent, and
+     these three arms went red — `unregisteredNamespaces()` iterates `QUEUE_CORPUS` RAW,
+     so a directory entry is a `readFileSync` that throws and is skipped. The question
+     this arm asks is unchanged: does the TABLE-ROW allocation shape get found. */
   writeFileSync(join(nsRepo, "docs/archive/IS-BUILD-PLAN.md"), "| QQ-2 | a track row |\n");
   const u = unregisteredNamespaces({ repo: nsRepo });
   console.log(`  scratch queue: prefixes ${JSON.stringify(u.prefixes)}`);

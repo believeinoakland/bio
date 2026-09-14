@@ -224,7 +224,23 @@ console.log("\n--- no unregistered 'Order of work' list escapes the check ---");
   const governed = new Set(ORDER_OF_WORK.map((o) => `${o.file}::${o.heading}`));
   const exempt = new Set(EXEMPT_ORDER_OF_WORK.map((o) => `${o.file}::${o.heading}`));
   const found = [];
+  /* CORRECTED 2026-09-14 (M0-26), NEVER EXEMPTED, AND THE FLOOR IS NOT LOWERED.
+     `allDocs()` walks `docs/development/` and `docs/architecture/` only. When
+     `CONFORMANCE-AND-INTAKE-ARC.md` was archived — closed history, on this very
+     registry's own recorded reason — its "5. Order of work" heading left the walk
+     and the reproducible count fell 2 -> 1, reddening a floor of 2 over an entirely
+     correct tree. Lowering the floor would have been the wrong repair: the walk had
+     stopped seeing a heading this file still governs. **A REGISTERED FILE IS PART OF
+     THE DISCOVERY CORPUS BY CONSTRUCTION**, wherever it lives — anything else lets a
+     registry entry and the walk that polices it drift apart, which is the D-113 class
+     this guard exists for. Only files the two registries NAME are added; no other
+     archived document enters, so the orphan arm's meaning is unchanged. */
   const DOCS = allDocs();
+  for (const o of [...ORDER_OF_WORK, ...EXEMPT_ORDER_OF_WORK]) {
+    if (DOCS.some((d) => d.file === o.file)) continue;
+    try { DOCS.push({ file: o.file, body: readFileSync(o.file, "utf8") }); }
+    catch { /* the staleness arm below reports a registry entry with no file */ }
+  }
   for (const { file, body } of DOCS) {
     for (const m of body.matchAll(/^#{2,3}\s+((?:\d+\.\s*)?Order of work)\b.*$/gim))
       found.push({ file, heading: m[1].trim() });
