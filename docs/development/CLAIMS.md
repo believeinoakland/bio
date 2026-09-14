@@ -3411,3 +3411,5 @@ the root of trust. Nothing deploys today; the arming happens at the next release
 this delegation is the advance telling DIST-NEXT.md said the change must carry.
 
 ### DELEGATION 2026-09-14 DIST (D-202) -> CAPTURE: **THE SAME DEPLOY ARMS CAP-3's ARCHIVE FALLBACK** — same mechanism, same timing, same advance telling as the RECORD delegation above; recorded separately because the consumer is yours and a shared notice is how one owner misses it.
+
+### AMENDMENT 2026-09-14, MID-ITEM (D-297 claim) — ONE PATH ADDED: `docs/development/DEBT.md`, the D-202 row's disposition ONLY, closed by the landing above.
