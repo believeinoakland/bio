@@ -10208,3 +10208,38 @@ while looking exactly like a pass. It is visible at all only because both harnes
 could NOT see: it re-ran only the two drivers whose subjects this item touched, so an arm staled
 by D-276 in a driver this item had no reason to run is still out there — the honest scope is two
 drivers, not the estate.
+
+### THE BATTERY DELTA, ATTRIBUTED BY DIFFING TWO RUNS PER SUITE — NEVER BY SUBTRACTION
+
+**Own baseline, measured in this worktree at `46752bd` after `npm ci` in `bio-plane/`,
+`ocr-worker/` and `pdf-worker/`: `181/181 suites green · 11,081 assertions · exit 0`.** The
+brief and the VF-4 landing line both carried **11,080**; this worktree measured **11,081**, and
+the measurement is trusted over the brief — one assertion, named rather than smoothed.
+
+**Final, on the committed tree at `8bb6119`: `182/182 suites green · 11,172 assertions ·
+exit 0`, provenance `185 of 185 discovered item(s) are in the commit at HEAD`.**
+
+Attributed by re-running the true baseline in a **scratch `git worktree` at `46752bd`** (never
+`git stash` — `refs/stash` is repository-wide across sixty checkouts) and diffing the two
+per-suite lists mechanically. **Exactly three rows moved and two appeared:**
+
+| suite | baseline | final | attributed to |
+| --- | --- | --- | --- |
+| `agent-worker/wire-vocabulary.test.mjs` | — | **83** | this item (NEW) |
+| `agent-worker/fanout.test.mjs` | 175 | **182** | this item: **+7** — B6b's six, plus B3's no-colon arm |
+| `agent-worker/harness.test.mjs` | 213 | **214** | this item: **+1** — B6's no-colon arm |
+| `fleetbundles.test.mjs` | 81 | 87 | **NOT this item** — the scratch tree had no `ocr-worker/node_modules`, so that member's byte-identity arms degrade there. It reads 87 in BOTH of this worktree's runs |
+| `ocr-worker/ocr-worker.test.mjs` | SKIPPED | 70 | **NOT this item** — the same missing install, the loud skip working exactly as designed |
+
+**+91 assertions and +1 suite, all of it this item's**, and the two rows that are not are named
+rather than folded in. **Two figures deliberately did NOT move and both are worth recording:**
+`planning-hygiene.test.mjs` held at **238** — this item CLOSES two debt rows rather than opening
+them — and `hygiene.test.mjs` held at **689**, because its per-suite censuses walk
+`bio-plane/test/` and the suite added here is a FLEET suite. An item adding a PLANE suite would
+have moved that figure by two; this one does not, measured rather than assumed.
+
+`node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED: **exit 0**, with
+`REGISTER FLOOR arms 936/936 · classified 173/173 · corpus 174/174` UNMOVED and `FLEET 3
+members · 6/6 surface ops · 8/8 SUITES declaring a negative control · 73 arms` against a floor
+moved in the same turn to 8 suites / 73 arms. `node civicos-ui/test/run.mjs` from the REPO
+ROOT, exit read unpiped: **exit 0, all harnesses green.**
