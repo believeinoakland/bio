@@ -249,7 +249,7 @@ authority is the file named, never this one.
 - **D-55** · 2026-07-30 — SUPERSEDED 2026-07-30 by Bob's authority rulings; see `AUTHORITY-AND-TRUST.md`.** Two things changed.  
   `docs/development/CLIENT-RENDERED.md:130`
 - **D-60** · 2026-07-30 — RULED by Bob 2026-07-30 on the measurement in D-60: two fetches of a Legistar page three seconds apart differ by 31% of their bytes, all of it ASP.NET postback state, with the other 68.6% identical.  
-  `docs/development/UI-PLAN.md:317`
+  `docs/development/UI-PLAN.md:350`
 - **D-68** · 2026-08-01 — Suggested activation order — SUPERSEDED 2026-08-01.** The version below is kept as history: *promote RECORD (M1's scheduler) and FRAMEWORK (D-68), CONTENT-PDF finishes CPDF-2 and goes dormant.* All three happened; the queue drained to 44 done and 0 runnable.  
   `docs/development/MILESTONES.md:560`
 - **D-72** · 2026-07-30 — RULED by Bob: BIO's contribution should "improve the grade of connections overall".  
@@ -287,7 +287,7 @@ authority is the file named, never this one.
 - **D-98** — and the RULED routing order, with every cited precedent verified present before the claim was written; D-98 is now a build task.  
   `docs/development/CIVICOS_UI_STATE.md:121`
 - **D-98** — authority undetermined at capture `[OBLIGATION]` (D-98, RULED: created automatically) - monitor tick: source modified `[FINDING]` · source removed (404/410) `[FINDING]` - source unreachable, and distinguishably: governed by our own pacing `[CONDITION]` (D-104) - duplicate document detected `[FINDING]` (D-60)  
-  `docs/development/NOTIFICATIONS.md:159`
+  `docs/development/NOTIFICATIONS.md:184`
 - **D-102** · 2026-07-30 — RULED 2026-07-30: the installer wizard must PROMPT the operator for an installation name at setup, and that name becomes the INSTANCE_NAME component of the UA string.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:65`
 - **D-102** · 2026-08-10 — AMENDED 2026-08-10: THE DEFECT WAS RECORDED AND NEVER ENACTED, WHICH IS A DIFFERENT AND WORSE FINDING THAN UNKNOWN.** `agent-worker/wrangler.jsonc:47-50` states it in its own comment — *"for an INSTALLED instance the plane's worker name is per instance (the instance name IS the worker name, D-102), so this…  
@@ -528,7 +528,7 @@ authority is the file named, never this one.
   `docs/development/kickoffs/RECORD.md:404`
 - **IC-75** — Superseded act-list pins in OTHER suites, CORRECTED with dated reasons and never exempted** — the set is MEASURED from the battery delta rather than guessed, and every one is named in an amendment to this claim before it is edited. - `docs/development/INTERFACE-CHANGES.md` — the appended **IC-75** row (I3), filed…  
   `docs/development/CLAIMS.md:2486`
-- **IC-82** — QUEUE row flips and IC-82's SETTLED are CONDUCT's.  
+- **IC-82** · 2026-09-14 — QUEUE row flips and IC-82's SETTLED are CONDUCT's. ## CLAIM 2026-09-14 UI (UI-58 — UI's three designs get front matter, and each joins CORPUS-STANDARD.md §5's governed table; prose only) session: UI worker (worktree `.claude/worktrees/agent-aa9d6654d50d38861`, branch `worktree-agent-aa9d6654d50d38861`)  
   `docs/development/CLAIMS.md:3506`
 ## C-
 
@@ -1502,9 +1502,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - PARTLY SUPERSEDED by the four-level correction above — kept because one half of it stands and the other half is the mistake worth seeing.** WHAT STANDS: **an AI overview built on route 1 today would be reading titles, frontmatter  
   `docs/development/STORE-AS-CACHE.md:615`
 - **2026-07-30** — RULED by Bob, 2026-07-30, and it governs every rung.  
-  `docs/development/UI-PLAN.md:236`
+  `docs/development/UI-PLAN.md:269`
 - **2026-07-29** — RULED by Bob, 2026-07-29. Continuing a capture must know what has already been captured; parts may have to be obtained from the host again, and that is refilling the cache rather than rewriting the record.  
-  `docs/development/UI-PLAN.md:300`
+  `docs/development/UI-PLAN.md:333`
 - not the rule, so the fixture was CORRECTED rather than the assertion relaxed (standing lesson: superseded rules in tests are corrected, never exempted).  
   `docs/development/VERIFICATION.md:95`
 - **2026-07-27** — Bulk release, S-11 step 5: BOB DECIDED IN THE 2026-07-27 SESSION THAT IT WILL BE BUILT.** His use case: a collection of 20 or 100 job applications of interest to a project, where per-document release is tedium without protection.  

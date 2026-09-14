@@ -1,5 +1,38 @@
 # CivicOS Layer 3 UI: the development plan of record
 
+**Status** · The UI area's plan of record, written 2026-07-28 at Bob's direction and amended 2026-07-31 (session BOB) with the measured plane-versus-UI inventory. PARTIALLY COMPLETE, AND OVERTAKEN BY ITS OWN AREA RATHER THAN BY EVENTS: UI-1 through UI-57 landed against `QUEUE.md`'s rows, not against this file's rungs, and nothing came back to mark them — so the body is accurate as a statement of INTENT and stale as a statement of STATE. **The ladder, rung by rung, as of 2026-09-14.** U1 foundation, U2 the record's surfaces, U3 the document page, U4 opening the document verified, U5 the release flow, U6 liveness and staleness, U7 capture fidelity, U8 the Add surface — all **[BUILT]**, and the body marks these eight. **U9 triage and case-building [BUILT]** (UI-2 the dispose act, UI-20 which its own row calls *"the never-built U9 half"*, UI-22's refusal residues) though the body still files it under REMAINING. **U10 the crucial path [BUILT]** (UI-6's attestation act; `openAttestDialog` and `op=attest` in `app.html`, and the release block's own comment records that the co-attestation surface its deleted sentence apologised for now exists). **U11 members and keys, PART-BUILT** — the roster, capabilities and invitations **[BUILT]** (UI-7) and project participation and governance **[BUILT]** (UI-16, with the ten `project*` reads and acts on `SURFACES["project"]`), while key fingerprints are **[ABSENT]** (the word occurs three times in `app.html`, every one a glossary entry or a comment) and the doorbell is **[ABSENT]** (`op=inbox`/`inboxget`/`inboxresolve`/`knock` are named nowhere but a mock-classification table). **U12 the published surface [BUILT]** (UI-18, UI-29, UI-35, UI-36, UI-37, UI-56, UI-57, with print first-class in the `@media print` block). **U13 phones [GESTURED]** — two `@media (max-width:680px)` blocks give a viewing shell; no parity rung exists and Bob's phone test is unrecorded. **U14 the hardening pass [ABSENT]** — two `aria-` attributes in 18,736 lines, no keyboard or screen-reader audit, no pagination or virtualization, no recorded token rotation. **Eleven rungs BUILT, one part-built, one GESTURED, one ABSENT; the body marks eight.** Of the six unsurfaced families this file measured, four are now **[BUILT]** — the task inbox (UI-1, UI-14, UI-45), project participation and governance, the citation lifecycle `sever`/`reinstate`/`retire` (`ACT_FLOW` entries), and selection-as-a-lease (UI-25) — and two are **[ABSENT]**: expertise and licences (zero occurrences of the word anywhere under `civicos-ui/`) and verified export (`op=export`/`exportlog` reached by nothing). Of the two drifts, the `op=searchfields` drift is CLOSED (UI-21) and the doorbell conflation stands. Of the six new capabilities, two are **[BUILT]** (undetermined as a display primitive, link verdicts and the five partitions) and four **[ABSENT]** (PDF structure and text, the archive-fallback display, source reachability, governor state). The body's three-row op-count table is a 2026-07-31 reading and is NOT re-measured here. as of 2026-09-14.
+
+**Place in the system** · A level-2 plan serving construct 12 of `BIO_System_Design.md` §3 — member surfaces and the interaction constructs — whose level-1 home is `docs/architecture/BIO_Interaction_Constructs_v0_1.md`: that document owns the QUEUE and ACT constructs and this one plans the surfaces that host them. It is the governing document of the UI area (`kickoffs/UI.md`, "What this area owns"), takes Bob's standing UX principles from `UI-KICKOFF.md`, hands its ladder placement to `MILESTONES.md` M8, and is logged against by `docs/development/CIVICOS_UI_STATE.md`. `QUEUE.md`'s UI rows supersede its REMAINING list item by item: where the two disagree, the queue is the authority on what was BUILT and this file is the authority on what the PLAN was.
+
+**Incomplete sections** ·
+- §REMAINING — U9, U10 and U12 are marked remaining and are built; U11 is one rung covering four capabilities of which two are built and two absent. Nothing here was returned to after UI-1 through UI-57 landed against `QUEUE.md` rows.
+- §The plane has moved — the count table (85 ops declared, 63 member-reachable, 18 reached by the UI) is a 2026-07-31 measurement, has not been re-taken, and names no instrument, so it cannot be re-run from this file.
+- §Families that shipped — four of the six families are built and no entry says so.
+- §Two drifts — the `op=searchfields` drift was closed by UI-21 and the entry still reads as live; the doorbell half is still true.
+- §New capability the plane now supports — two of six are built; the section carries no per-item state.
+- §Development is PAUSED for consolidation — STALE AND LOAD-BEARING. It forbids new capability until CONSTRUCTS Step 0 is done; Step 0 is still open in `MILESTONES.md`'s gap table and fifty-seven UI items added capability continuously from 2026-08-01, so a reader who follows this section concludes the wrong thing about what may be built.
+- §The capture architecture — describes `docprofile/` as the UI's; the package is at the repository root and `bio-plane/src/index.mjs` imports from it.
+- §Standing dependencies — dated 2026-07-29/30, no entry carries a disposition, and at least one is contradicted by the debt register: *"the profile architecture exists in the UI and not yet in the plane (D-60, D-63)"* against D-60's own amendment of 2026-08-06, *"the PLANE HAS ADOPTED docprofile"*.
+- §Next session kickoff — names U9 as the next rung; U9 is built.
+
+**Contents**
+- [How to read this](#how-to-read-this)
+- [The ladder](#the-ladder)
+  - [DONE](#done)
+  - [REMAINING](#remaining)
+- [The plane has moved. Inventory and gap, measured 2026-07-31 (session BOB)](#the-plane-has-moved-inventory-and-gap-measured-2026-07-31-session-bob)
+  - [Families that shipped with no UI and no rung](#families-that-shipped-with-no-ui-and-no-rung)
+  - [Two drifts, not gaps](#two-drifts-not-gaps)
+  - [New capability the plane now supports and the UI has never been designed against](#new-capability-the-plane-now-supports-and-the-ui-has-never-been-designed-against)
+  - [What this means for the ladder](#what-this-means-for-the-ladder)
+- [Who this is for](#who-this-is-for)
+- [Development is PAUSED for consolidation](#development-is-paused-for-consolidation)
+- [The capture architecture](#the-capture-architecture)
+- [Standing dependencies and risks](#standing-dependencies-and-risks)
+- [Next session kickoff](#next-session-kickoff)
+
+---
+
 Written 2026-07-28 at Bob's direction. This is the plan; CIVICOS_UI_STATE.md
 is the session log recording how each rung actually went; UI-KICKOFF.md
 holds Bob's standing UX principles, which govern every rung here. When a
