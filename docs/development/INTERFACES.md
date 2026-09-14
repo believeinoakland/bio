@@ -751,7 +751,7 @@ grades (`a_grade`, `b_grade`) by the §8.1 rank — framework §8.2's "a progres
 inherits the weakest connection grade along its chain" in its two-node case — and
 `established` derives from that weaker grade, so a connection resting on a C at either end
 is NEVER established. `asserted_by` is THREE-VALUED (`system`/`source`/`member`) and is NOT
-the grade (framework:554): `op=connect` writes only `system` (the framework inferred it);
+the grade (framework §8.1): `op=connect` writes only `system` (the framework inferred it);
 `source` and `member` are reserved for slice B. DERIVED and carrying BOTH ends' bundle ids,
 so a per-bundle purge (EITHER end matches) and a whole-store purge both clear it — it is
 deleted EXPLICITLY in both arms (it has no single `bundle_id`, so it is NOT in `TABLES`).

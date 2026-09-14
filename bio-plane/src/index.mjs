@@ -4910,16 +4910,22 @@ export default {
         };
       }
 
+      /* 2026-09-14, REC-81: every citation into the content framework in this file
+         names a SECTION rather than a line. The line numbers they carried went stale
+         the moment the framework gained front matter — 89 lines, measured — and
+         CORPUS-STANDARD.md §4.6 rules that a citation into a design document names
+         the SECTION. */
+
       /* CONSTRUCTS Step 3 (FW-5): the plane READS the document. The doctype
          resolved above (docType) declares a reader — parse(ctx) -> reading:
-         entities[] + document facts (framework:480). Run it over the SAME captured
+         entities[] + document facts (framework §7). Run it over the SAME captured
          text FW-3 already read back, and carry the reading on the acquire document
          so op=promote can persist it beside the register row (the reading is
          per-capture, written when the capture is promoted — never here, because no
          intake path writes live state).
 
          "A reading that finds nothing is a failed reader, never an emptied
-         document" (framework:489). A reader that is absent, that could not run
+         document" (framework §7). A reader that is absent, that could not run
          (the bytes were not read as text), or that found nothing is recorded
          HONESTLY as a failed/empty reading — found:false, no entities — never
          backfilled with invented entities to make it look productive. That
@@ -5308,7 +5314,7 @@ export default {
              document facts. A new sibling field, additive to I1. op=promote
              derives it from data/provenance.json and persists it into the
              `readings` table indexed by entity reference; a failed/empty reading
-             is carried honestly (found:false), never fabricated (framework:489). */
+             is carried honestly (found:false), never fabricated (framework §7). */
           reading,
           /* D-97: authority mirrors verdict / verdict_basis / verdict_at
              rather than inventing a shape. The determination when one was

@@ -170,9 +170,15 @@ export const REOPENABLE_FROM = [...DISPOSITIONS];
  * reading, and a parser standing on the store's WORDING rather than on its
  * DATA. Published, the wording is free to change again. */
 
+/* 2026-09-14, REC-81: every citation into the content framework in this file
+ * names a SECTION rather than a line. The line numbers they carried went stale
+ * the moment the framework gained front matter — 89 lines, measured — and
+ * CORPUS-STANDARD.md §4.6 rules that a citation into a design document names
+ * the SECTION. */
+
 /* The union kind vocabulary, reconciled across the two doctrines this one axis
  * serves (D-83): safeguard 4's four SUBJECT kinds, plus the framework's entity
- * kinds (framework:248). Closed and validated at createEntity(), so introducing
+ * kinds (framework §3). Closed and validated at createEntity(), so introducing
  * a kind outside it is a loud refusal rather than a silent new vocabulary —
  * the spirit of safeguard 4, where introducing a new SUBJECT is a reviewed
  * act. Ordered as the two doctrines contribute them, and the order is what a
