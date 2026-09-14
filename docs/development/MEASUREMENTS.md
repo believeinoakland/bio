@@ -10431,3 +10431,47 @@ commit` — the new suite was UNTRACKED, so its arms were counted into the headl
 from the reproducible figure. **A floor set from that number would have been permanently too high
 and would eventually have been switched off**, which is precisely the payload D-238 names. The
 figures below are read from the run AFTER the commit.
+
+### THE NEGATIVE CONTROLS, EACH ARMED ALONE, RESTORES VERIFIED BY sha256 **AND** `cmp`
+
+**AGAINST THE CENSUS** (`_m025/nc-census.mjs`, 2 arms, 2/2 as declared) —
+`agent-worker/src/index.mjs` pristine at 65,934 bytes, sha256 `97e79bf85a2489a5…`, floored:
+
+1. **THE ARM THIS ITEM EXISTS FOR.** The `meaningRead` call — *D-276's own line, the one whose
+   movement killed H8* — re-formatted IN PLACE: two spaces removed from inside an object literal,
+   **behaviour identical to the byte**, only the quoted bytes moved. The census reported
+   `harness.control.mjs  DID-NOT-ARM  exit=1  <<< 2 STALE LINE(S)`, `drivers with a STALE arm: 1`,
+   census exit 1. **Never a pass.** Restore: 65,934 bytes, sha256 EQUAL, cmp IDENTICAL.
+2. **OVER-STRICTNESS.** The same driver untouched: `ALL-ARMED exit=0 arms=19`, stale 0, census
+   exit 0.
+
+**AGAINST THE BATTERY-SIDE WITNESS** (`test/m025-anchor-witness.control.mjs`, 6 arms, **6/6 as
+declared**, exit 0, and its foot re-checks that every file it touched is back to its committed
+bytes):
+
+- **A0 BASELINE** — nothing patched: 12/0, exit 0, no arm fails. *Not decoration: it is what tells
+  five-arms-broken from five-arms-working.*
+- **A1 THE D-276 CLASS, on the line D-276 moved** — the same behaviour-neutral re-format: **A4
+  alone falls**, naming the driver and the anchor; the reach floors, A5, A6 and every extractor
+  arm hold.
+- **A2 OVER-STRICTNESS** — a comment added to a subject well away from every anchor: 12/0, nothing
+  fails.
+- **A3 THE REACH ARM** — the extractor neutered so it reads no anchor at all: **A3 falls while A4
+  and A5 report TRIUMPHANT EMPTY LISTS**, which is exactly why the corpus is floored and printed
+  rather than assumed.
+- **A4 MULTIPLICITY** — a second copy of an anchored line planted in its subject: **A5** falls
+  naming the driver and the file; A4 does NOT, because the anchor still exists and the two must be
+  distinguishable.
+- **A5 THE NAMING'S OWN STALENESS** — one of the two deliberate `query.mjs` occurrences re-spelled:
+  **A6** falls. *Its first spelling DID NOT ARM and the driver said so rather than reporting a
+  green run — the instrument catching its own author, which is the one thing it must never get
+  wrong about itself.*
+
+**AND THE ESTATE RAN A CONTROL THIS ITEM DID NOT WRITE.** `d280-strengthbar.control.mjs`'s arms
+(A), (C) and (E) were RE-ANCHORED onto the surviving predicate in `#routeTask`, on the reasoning
+that it was the same predicate in a new shape. **They armed, and the driver's own declaration
+brought them back NOT AS DECLARED** — arm (A) took down the ROUTING assertions while its declared
+bar assertions stayed green, because `ce2fe34` (CASE-2) had *deleted* `#requiredStrengthFor`
+outright rather than moving it. The three are now RETIRED with the reason at the site, and what is
+no longer covered is stated there rather than implied. **A re-anchor that merely ARMS is not a
+repair: it has to reproduce the DECLARED defect, and only running it can say whether it does.**
