@@ -1,5 +1,46 @@
 # Link fidelity: the partitions, the cascade, and the connections between captures
 
+**Status** · DRAFT, not ratified (its own words), written 2026-07-28 and REORDERED 2026-07-30 when Bob ruled monitoring across the interval the PRIMARY contemporaneity route and identical-byte bracketing an opportunistic bonus; the sections marked RATIFIED are settled. Mixed state, measured against `bio-plane/src` at plane 0.58.0. Steps 1-4 of the order of work are [BUILT]: the `links` table with its two keys (`schema.mjs:391-415`), append-only `link_verdicts` (`:421-432`), read-time resolution reached through `op=links` and answered by `Store#resolveLinks` (`store.mjs:25106`), `links_to` in `REL_VOCAB` (`bio-checks.mjs:1380`) projected by `projectLinks` (`store.mjs:25195`), and the four wrappers with no live `href` surviving in a companion (`subresources.mjs:666-676`), which the viewer resolves. Steps 5-8 are [DESIGNED-not-built]: no cross-bundle duplicate sweep exists anywhere, there is no `objective` object type (`OBJECT_TYPES` is information / inquiry / project / action / bias), nothing plants a cascade candidate, and nothing re-verdicts a link when its target lands. The volatile-region digest this document specifies is [BUILT] in `docprofile` and only partly adopted by the plane (D-60). as of 2026-09-14.
+
+**Place in the system** · A level-2 design serving construct 2, **intake, capture and provenance**, whose level-1 home is `BIO_Intake_Doctrine_v1_1.md` (`BIO_System_Design.md` §3 names it there). It is the citation-and-connection half of capture: it owns the link partitions, the three-valued contemporaneity verdict, the chrome question and the cascade design. It depends on `AUTHORITY-AND-TRUST.md` for transitive trust; `ARCHIVE-FALLBACK.md` supplies its PRIMARY contemporaneity route produced by a third party; `CAPTURE-SCALING.md` owns the asset-recurrence machinery its chrome section reaches for. Its cascade half is the largest unbuilt design CAPTURE owns, and D-163/D-164 (an edge that points INSIDE a document) sit one construct over in `BIO_Content_Framework_v0_10.md` Part II.
+
+**Incomplete sections** ·
+- §The work, in order — steps 5 to 8 are [DESIGNED-not-built]. Step 5's cross-bundle duplicate check does not exist in any form: `checkRegisterIntegrity` buckets within ONE bundle's provenance register, and no store-wide sweep was ever written (measured 2026-08-06, recorded as D-220's correction to D-60). Step 6's `objective` object type does not exist. Step 7 has no planter. Step 8 has neither the reverse re-verdict nor a member-promotion op from an observed `links_to` to a member-asserted `cites`.
+- §Cascade capture PLANTS — the whole cascade design and its five subsections are [DESIGNED-not-built]: the gathering-request fields, the version-pinned objective object, the generation and per-domain bounds, and the store-level idempotence that keeps C-18.3's ring-once rule true once cascade exists. Nothing in `bio-plane/src` plants, and the word "cascade" there refers to the credential cascade and the publication cascade, which are unrelated.
+- §Chrome — `site_chrome(host, observed_at, fingerprint, links[])` was never built. What exists is a `chrome` boolean per link on `links` plus recurrence over `site_assets` / `site_asset_refs`, so chrome is recorded per PAGE and not once per host, and the nav-change-as-evidence query this section justifies the table with is still unanswerable.
+- §Volatile regions — the module is not at `civicos-ui/volatile.mjs`; that path never existed (D-60's own correction). It is `docprofile`'s `digests` / `compare`, and the plane has adopted it only in `op=acquire`'s write path and in audit's INTRA-bundle duplicate arm. Monitoring and `resolveLinks`' bracket arm still compare raw hashes, so on the ASP.NET pages this section measures, the bracket arm still cannot fire.
+- §Open questions — both are still open, and the first is answered in FACT rather than by design: no cross-bundle check exists anywhere to weigh against store-level idempotence, and the second asks about an object type nothing has built.
+
+**Contents**
+- [Why this is not a small question about hyperlinks](#why-this-is-not-a-small-question-about-hyperlinks)
+- [The partitions](#the-partitions)
+- [The observation that decides the wrapper design](#the-observation-that-decides-the-wrapper-design)
+- [The wrappers](#the-wrappers)
+- [Cascade capture PLANTS, it does not fetch](#cascade-capture-plants-it-does-not-fetch)
+  - [What the ratification fence already buys](#what-the-ratification-fence-already-buys)
+  - [Cascade inverts the F5 threat model](#cascade-inverts-the-f5-threat-model)
+  - [Gathering request fields cascade needs](#gathering-request-fields-cascade-needs)
+  - [The objective is an object, and the decision is a judgement](#the-objective-is-an-object-and-the-decision-is-a-judgement)
+  - [Re-encounter appends a reason, it is not a no-op](#re-encounter-appends-a-reason-it-is-not-a-no-op)
+  - [Bounds cascade needs that do not exist yet](#bounds-cascade-needs-that-do-not-exist-yet)
+  - [The self-corroboration hazard](#the-self-corroboration-hazard)
+- [Links and citations](#links-and-citations)
+  - [Numerous and typed, not deliberate and few](#numerous-and-typed-not-deliberate-and-few)
+  - [Why it still needs its own relation](#why-it-still-needs-its-own-relation)
+  - [Chrome: rendering and connection are different problems](#chrome-rendering-and-connection-are-different-problems)
+  - [Where each lives](#where-each-lives)
+  - [Version rigor is available, not mandatory](#version-rigor-is-available-not-mandatory)
+- [The three-valued verdict](#the-three-valued-verdict)
+  - [What can establish contemporaneity, strongest first](#what-can-establish-contemporaneity-strongest-first)
+  - [Volatile regions: classified, and never put to a member](#volatile-regions-classified-and-never-put-to-a-member)
+  - [A re-capture of a document the record already holds is the NORMAL case](#a-re-capture-of-a-document-the-record-already-holds-is-the-normal-case)
+- [The work, in order](#the-work-in-order)
+- [Settled in the 2026-07-28 session](#settled-in-the-2026-07-28-session)
+- [Later rulings that bear on this document](#later-rulings-that-bear-on-this-document)
+- [Open questions](#open-questions)
+
+---
+
 DRAFT, not ratified. Written 2026-07-28 at Bob's direction during the 0.36.0
 capture-fidelity session, revised the same session after reading the existing
 gathering and ratification machinery. Sections marked IMPLEMENTED landed in

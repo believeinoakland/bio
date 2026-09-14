@@ -16,12 +16,12 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-741 rulings across 71 documents.
+761 rulings across 71 documents.
 
 ## DEC-
 
-- **DEC-1** · 2026-07-31 — RULED, 2026-07-31: the allowlist is NOT a viable mechanism, and the reason is ## structural rather than tactical Bob, answering DEC-1: **"We expect Oakland to view us as hostile to the  
-  `docs/development/SOURCE-ACCESS.md:195`
+- **DEC-1** · 2026-07-31 — RULED, 2026-07-31: the allowlist is NOT a viable mechanism, and the reason is structural rather than tactical Bob, answering DEC-1: **"We expect Oakland to view us as hostile to the administration's interests.  
+  `docs/development/SOURCE-ACCESS.md:218`
 - **DEC-4** · 2026-08-01 — RULED 2026-08-01 (DEC-4), overturning the recommendation that scanned PDFs stay honestly unreadable.  
   `docs/development/DEBT.md:118`
 - **DEC-5** · 2026-08-01 — RULED 2026-08-01 (DEC-5), and the ruling INVERTS the framing: these are public documents, there is no reason to redact anything from a public record, and who edited a document and when IS evidence — it demonstrates the actions of people and departments.  
@@ -140,12 +140,14 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:2702`
 - **DEC-40** — DEC-40's determination 4 is CORRECTED BY THIS ENTRY**: I wrote *"an imported published case is A FINDING"*, which inherited the singular assumption.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:2542`
+- **DEC-42** · 2026-08-04 — [Workers Paid is an optimisation, never a requirement — SUPERSEDED 2026-08-04 (DEC-42)](#workers-paid-is-an-optimisation-never-a-requirement-superseded-2026-08-04-dec-42) - [Order of work](#order-of-work) - [Open questions](#open-questions)  
+  `docs/development/CAPTURE-SCALING.md:25`
 - **DEC-42** · 2026-08-04 — Workers Paid is an optimisation, never a requirement — SUPERSEDED 2026-08-04 (DEC-42) > **SUPERSEDED by DEC-42, 2026-08-04.  
-  `docs/development/CAPTURE-SCALING.md:276`
+  `docs/development/CAPTURE-SCALING.md:304`
 - **DEC-42** · 2026-08-04 — SUPERSEDED by DEC-42, 2026-08-04. Workers Paid IS a requirement.** The section > below is kept unedited because its reasoning is still right about the thing it was > protecting; what changed is a PREMISE, and the premise was never measured until now. >  
-  `docs/development/CAPTURE-SCALING.md:278`
+  `docs/development/CAPTURE-SCALING.md:306`
 - **DEC-42** · 2026-08-04 — SUPERSEDED IN ITS PREMISE 2026-08-04 (DEC-42): Workers Paid IS now a > requirement**, so the collision this section resolves no longer exists in either > direction.  
-  `docs/development/CLIENT-RENDERED.md:146`
+  `docs/development/CLIENT-RENDERED.md:172`
 - **DEC-42** · 2026-08-04 — CORRECTED 2026-08-04 by session BOB (DEC-42): "Workers Paid is an optimisation, never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
   `docs/development/kickoffs/CAPTURE.md:280`
 - **DEC-44** — plus this item's NEGATIVE CONTROL arms folded into the file's own `NEGATIVE CONTROL:` line, and block 5's DEC-44 sweep CORRECTED to descend into the manifest JSON string it could not see through), civicos-ui/app.html (ONLY the `__PUBLISHED_CASE__` region's INDEX functions `pubManifestOf`/`pubList` — the per-finding…  
@@ -159,7 +161,7 @@ authority is the file named, never this one.
 - **DEC-46** · 2026-08-04 — AMENDED 2026-08-04 by DEC-46 (b), and it changes the first step:** import lands in a > **NEW PROJECT PER DISTINCT SOURCE BIAS**, states that it is doing so and why, and **may > NOT merge an imported lens into an existing project** — a lens is the frame a finding > was produced under, and merging two frames silently…  
   `docs/development/MILESTONES.md:319`
 - **DEC-47** · 2026-08-07 — AMENDED 2026-08-07 (Bob; DECISIONS.md DEC-47 (access-parity amendment), IS-SWEEP-2026-08-07.md §4c) — the paragraph above is retained as the historical record but is superseded IN PART.** For PUBLICLY AVAILABLE documents fetched as part of the workflow, the member-browser UA (the UA the member's browser was using…  
-  `docs/development/SOURCE-ACCESS.md:30`
+  `docs/development/SOURCE-ACCESS.md:53`
 - **DEC-49** · 2026-08-07 — `civicos-ui/test/refusal-codes.control.mjs` (NEW — AMENDED INTO THIS CLAIM 2026-08-07, same session, before any handoff)** — the seven negative-control arms RUN against the REAL tree, each armed, restored, and the restore verified BY HASH, BY CONTENT and by RE-RUNNING.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2350`
 - **DEC-49** · 2026-08-08 — Seven superseded pins CORRECTED, never exempted**, each carrying why the old value was right when written (affordances x5, conclude, reopen, divide, inquiryground, citeinquiry).  
@@ -195,7 +197,7 @@ authority is the file named, never this one.
 - **DEC-52** · 2026-08-07 — `[BOB-4 — RULED 2026-08-07, PROVISIONAL]`** — DEC-52's remaining yes/no: Bob's mechanical-standing principle recorded on DEC-52, pending his confirmation; the sidebar approval remains the act of record for the constitutive fields (§14a). 8.  
   `docs/development/INVESTIGATIVE-SESSION.md:1185`
 - **DEC-52** · 2026-08-07 — IN RESERVE with a named trigger, not adopted pre-emptively *(AMENDED 2026-08-07: for publicly available documents fetched as part of the workflow, the member-browser UA is now PERMITTED by ruling — see the amendment note above; DEC-52, IS-SWEEP §4c)*.  
-  `docs/development/SOURCE-ACCESS.md:256`
+  `docs/development/SOURCE-ACCESS.md:278`
 - **DEC-53** — "Why do we want to count the number of times that a user approves a candidate?  
   `docs/development/QUEUE.md:586`
 - **DEC-55** — The earlier provisional (sidebar approval as the act of record) is SUPERSEDED as a gate; the sidebar remains a visibility and bulk-review surface, not a required approval. **What the ruling carries with it, from standing doctrine:** the record names the machine principal on every such act (DEC-55 det 4 / D-199.4 —…  
@@ -250,8 +252,16 @@ authority is the file named, never this one.
   `docs/archive/ledgers/DEBT-closed-2026-08.md:18`
 - **D-50** · 2026-07-26 — SUPERSEDED — closed by 0.28.0 (PLAN S-12 item 6); the residue is D-50 · open, S-12 step 6 |  
   `docs/development/DEBT.md:14`
+- **D-52** — §RULED: undetermined authority goes to a todo list — the task record is [BUILT] and is transport-agnostic as this section requires; what does not exist is any transport at all (D-52, no notification channel), so the load-bearing *"might later BE email"* parenthesis has never been tested against a second surface.  
+  `docs/development/AUTHORITY-AND-TRUST.md:10`
+- **D-55** — It is upstream of two of CAPTURE's other designs: `ARCHIVE-FALLBACK.md` consumes its transitive-trust ruling and `CLIENT-RENDERED.md` records that its three-valued ruling SUPERSEDED D-55's block on rendered capture.  
+  `docs/development/AUTHORITY-AND-TRUST.md:5`
+- **D-55** — [RULED: undetermined authority goes to a todo list, like an inbox](#ruled-undetermined-authority-goes-to-a-todo-list-like-an-inbox) - [RULED: an alternative source counts as a re-fetch, for MONITORING](#ruled-an-alternative-source-counts-as-a-re-fetch-for-monitoring) - [What D-55 becomes](#what-d-55-becomes) -…  
+  `docs/development/AUTHORITY-AND-TRUST.md:19`
+- **D-55** · 2026-07-31 — [RULED: an alternative source counts as a re-fetch, for MONITORING](#ruled-an-alternative-source-counts-as-a-re-fetch-for-monitoring) - [What D-55 becomes](#what-d-55-becomes) - [RULED 2026-07-31: what publication actually requires](#ruled-2026-07-31-what-publication-actually-requires)  
+  `docs/development/AUTHORITY-AND-TRUST.md:20`
 - **D-55** · 2026-07-30 — SUPERSEDED 2026-07-30 by Bob's authority rulings; see `AUTHORITY-AND-TRUST.md`.** Two things changed.  
-  `docs/development/CLIENT-RENDERED.md:130`
+  `docs/development/CLIENT-RENDERED.md:156`
 - **D-60** · 2026-07-30 — RULED by Bob 2026-07-30 on the measurement in D-60: two fetches of a Legistar page three seconds apart differ by 31% of their bytes, all of it ASP.NET postback state, with the other 68.6% identical.  
   `docs/development/UI-PLAN.md:350`
 - **D-68** · 2026-08-01 — Suggested activation order — SUPERSEDED 2026-08-01.** The version below is kept as history: *promote RECORD (M1's scheduler) and FRAMEWORK (D-68), CONTENT-PDF finishes CPDF-2 and goes dormant.* All three happened; the queue drained to 44 done and 0 runnable.  
@@ -576,6 +586,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/DEBT-closed-2026-08.md:62`
 - **C-18.5** — C-18.5's pattern copied field-for-field, the routing is the RULED order, and the tests are the both-ways C-18.5 tests with TASK fixtures.  
   `docs/development/INBOX-GRAMMAR.md:147`
+- **C-18.9** · 2026-07-30 — RULED sections are settled and are not re-litigated.  
+  `docs/development/AUTHORITY-AND-TRUST.md:3`
 - **C-18.9** — conformant); C-18.9 implements the RULED publication fence and refused an undetermined document at verified in a both-ways test.  
   `docs/development/CIVICOS_UI_STATE.md:184`
 - **C-19.1** — resolves each queued capture through `register`, applies the RULED routing order (`#routeTask`, `:6754-6780`), runs the C-19.1 grammar, writes or FOLDS a task | `tasks` rows; `created`/`folded`/`refused`/`waiting` lists | **OBLIGATION** (member task) | **YES** |  
@@ -868,8 +880,10 @@ authority is the file named, never this one.
   `docs/archive/research/MACHINE-PROCESSES.md:96`
 - **CAP-4** — — DECIDED, queued CAP-4 | M2 |  
   `docs/archive/research/PROCESS-CATALOGUE.md:262`
+- **CAP-4** · 2026-07-31 — §Order of work — item 6's status line reads *"DECIDED 2026-07-31 and QUEUED as CAP-4"* and CAP-4 has LANDED: `reuse_verdicts` carries both producers (POSTHOC and RATIFY) with the four outcomes, and refinements (a) to (d) are built as decided.  
+  `docs/development/CAPTURE-SCALING.md:8`
 - **CAP-4** · 2026-07-31 — DECIDED 2026-07-31 and QUEUED as CAP-4.** Post-hoc reuse verification from `site_assets`, which is free, and re-fetch of reused parts at ratification. **Provenance, recorded honestly.** Bob confirmed on 2026-07-31 that the ADJACENT  
-  `docs/development/CAPTURE-SCALING.md:360`
+  `docs/development/CAPTURE-SCALING.md:388`
 - **CAP-4** · 2026-07-31 — DECIDED 2026-07-31 under Bob's delegation and queued as CAP-4**; the mandatory-ness is this project's decision rather than a ruling of his, and is labelled that way · D-54 (the installer does not detect the Workers plan) · D-63 / D-66  
   `docs/development/MILESTONES.md:147`
 - **CAP-4** — M2 · DECIDED, queued CAP-4 | | CAPTURE-SCALING open · freshness window, recurrence threshold | CAPTURE | M2 (measurement first) | | ARCHIVE-FALLBACK · per-document cadence by volatility | RECORD · CAPTURE | M1 | | ARCHIVE-FALLBACK · Memento rather than Wayback | RECORD | M6 |  
@@ -1187,32 +1201,46 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/archive/research/SB-OUTPUT.md:1195`
 - old rule and were CORRECTED rather than exempted. **7.2 LOST ITS ADMINISTRATOR BYPASS, AND NOTHING HAD EVER EXERCISED IT.** `projectInvite` carried `|| this.#isAdminMember(by)` and no test drove that  
   `docs/BIO_DATAPLANE_STATE.md:552`
+- §RULED: authority is three-valued — its first clause, *"where the determination can be made mechanically, authority is assigned during capture"*, is [ABSENT].  
+  `docs/development/AUTHORITY-AND-TRUST.md:9`
+- [RULED: the renderer is immaterial. Authority follows the DATA.](#ruled-the-renderer-is-immaterial-authority-follows-the-data) - [RULED: authority is three-valued, and undetermined is a task](#ruled-authority-is-three-valued-and-undetermined-is-a-task) - [RULED: an authority-undetermined capture cannot be…  
+  `docs/development/AUTHORITY-AND-TRUST.md:15`
+- [RULED: authority is three-valued, and undetermined is a task](#ruled-authority-is-three-valued-and-undetermined-is-a-task) - [RULED: an authority-undetermined capture cannot be PUBLISHED](#ruled-an-authority-undetermined-capture-cannot-be-published) - [RULED: transitive trust is accepted, with disclosure and…  
+  `docs/development/AUTHORITY-AND-TRUST.md:16`
+- [RULED: an authority-undetermined capture cannot be PUBLISHED](#ruled-an-authority-undetermined-capture-cannot-be-published) - [RULED: transitive trust is accepted, with disclosure and adjustment](#ruled-transitive-trust-is-accepted-with-disclosure-and-adjustment) - [RULED: undetermined authority goes to a todo…  
+  `docs/development/AUTHORITY-AND-TRUST.md:17`
+- [RULED: transitive trust is accepted, with disclosure and adjustment](#ruled-transitive-trust-is-accepted-with-disclosure-and-adjustment) - [RULED: undetermined authority goes to a todo list, like an inbox](#ruled-undetermined-authority-goes-to-a-todo-list-like-an-inbox) - [RULED: an alternative source counts as a…  
+  `docs/development/AUTHORITY-AND-TRUST.md:18`
+- **2026-07-31** — [RULED 2026-07-31: what publication actually requires](#ruled-2026-07-31-what-publication-actually-requires) ---  
+  `docs/development/AUTHORITY-AND-TRUST.md:22`
 - Sections marked RULED are his and are not to be re-litigated.  
-  `docs/development/AUTHORITY-AND-TRUST.md:4`
+  `docs/development/AUTHORITY-AND-TRUST.md:27`
 - **2026-07-30** — RULED: the renderer is immaterial. Authority follows the DATA. Bob, 2026-07-30. Sometimes what is being rendered is GIS data, a CAD drawing, or a paper posted to a hosting platform, and the rendering is genuinely executed by  
-  `docs/development/AUTHORITY-AND-TRUST.md:19`
+  `docs/development/AUTHORITY-AND-TRUST.md:42`
 - **2026-07-30** — RULED: authority is three-valued, and undetermined is a task Bob, 2026-07-30.  
-  `docs/development/AUTHORITY-AND-TRUST.md:46`
+  `docs/development/AUTHORITY-AND-TRUST.md:69`
 - **2026-07-30** — RULED: an authority-undetermined capture cannot be PUBLISHED Bob, 2026-07-30.  
-  `docs/development/AUTHORITY-AND-TRUST.md:74`
+  `docs/development/AUTHORITY-AND-TRUST.md:97`
 - **2026-07-30** — RULED: transitive trust is accepted, with disclosure and adjustment Bob, 2026-07-30.  
-  `docs/development/AUTHORITY-AND-TRUST.md:86`
+  `docs/development/AUTHORITY-AND-TRUST.md:109`
 - **2026-07-30** — RULED: undetermined authority goes to a todo list, like an inbox Bob, 2026-07-30.  
-  `docs/development/AUTHORITY-AND-TRUST.md:122`
+  `docs/development/AUTHORITY-AND-TRUST.md:145`
 - **2026-07-30** — RULED: an alternative source counts as a re-fetch, for MONITORING Bob, 2026-07-30.  
-  `docs/development/AUTHORITY-AND-TRUST.md:154`
+  `docs/development/AUTHORITY-AND-TRUST.md:177`
 - **2026-07-31** — RULED 2026-07-31: what publication actually requires Bob, 2026-07-31: "A capture can be published if there are no undetermined authority links in the provenance.  
-  `docs/development/AUTHORITY-AND-TRUST.md:193`
+  `docs/development/AUTHORITY-AND-TRUST.md:216`
+- §Job one: stop re-fetching — its freshness rule is SUPERSEDED by what shipped.  
+  `docs/development/CAPTURE-SCALING.md:9`
 - **2026-07-31** — STATUS CORRECTED 2026-07-31 (session BOB).  
-  `docs/development/CAPTURE-SCALING.md:5`
+  `docs/development/CAPTURE-SCALING.md:33`
 - RULED by Bob: a reused asset IS allowed in a capture that will be ratified as evidence.  
-  `docs/development/CAPTURE-SCALING.md:82`
+  `docs/development/CAPTURE-SCALING.md:110`
 - RULED by Bob. When a bundle is promoted to evidence, every reused part is re-fetched and compared. Not advisory, not conditional. The case for advisory was that a source can go dark between capture and  
-  `docs/development/CAPTURE-SCALING.md:195`
+  `docs/development/CAPTURE-SCALING.md:223`
 - RULED by Bob: he is willing to put his own account on Workers Paid, and is cautious about making it a requirement for production instances. That caution is correct and it is load-bearing for the whole project.  
-  `docs/development/CAPTURE-SCALING.md:309`
+  `docs/development/CAPTURE-SCALING.md:337`
 - **2026-07-31** — "RULED" and "open question" about one thing is how a settled decision comes to be doubted later, and Bob doubted it on 2026-07-31 for exactly this reason.  
-  `docs/development/CAPTURE-SCALING.md:423`
+  `docs/development/CAPTURE-SCALING.md:451`
 - BOB'S THREE RULINGS AT THE END OF THE SESSION, AND THE MEASUREMENT THAT SETTLED THEM.  
   `docs/development/CIVICOS_UI_STATE.md:350`
 - and a document REPLACED or WITHDRAWN are events; a body being renamed is a notice; a document ARRIVING and a meeting being scheduled are routine, because those are the normal course of business.  
@@ -1297,14 +1325,24 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:3607`
 - not foreseen from the brief: front matter carries uppercase ruling markers (`SUPERSEDED` in `OFFICE-FORMATS.md`'s Status) and shifts the line numbers the index cites in `DOCUMENT-PROFILES.md`, so `plancheck` went RED on the stale index until it was regenerated — measured, 1 fail, and the only fail in the whole gate.  
   `docs/development/CLAIMS.md:3608`
-- RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
+- `docs/DECIDED.md` — REGENERATED, not authored, by `node tools/decided.mjs`.  
+  `docs/development/CLAIMS.md:3661`
+- **2026-09-14** — AMENDED MID-ITEM, 2026-09-14: TWO MULTI-LINE HEADINGS COLLAPSED ONTO ONE LINE, the only body bytes this item moves.  
+  `docs/development/CLAIMS.md:3662`
+- §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
+- [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
+  `docs/development/CLIENT-RENDERED.md:17`
+- [RULED: third-party output is attributed to the third party](#ruled-third-party-output-is-attributed-to-the-third-party) - [There is no collision: rendering is available on the free tier](#there-is-no-collision-rendering-is-available-on-the-free-tier) - [What Workers Paid actually buys, for this…  
+  `docs/development/CLIENT-RENDERED.md:21`
+- RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
+  `docs/development/CLIENT-RENDERED.md:35`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  
-  `docs/development/CLIENT-RENDERED.md:30`
+  `docs/development/CLIENT-RENDERED.md:56`
 - RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.** His argument, which is correct and which I had backwards: the HTML/CSS rendering  
-  `docs/development/CLIENT-RENDERED.md:32`
+  `docs/development/CLIENT-RENDERED.md:58`
 - RULED: third-party output is attributed to the third party Bob's ruling puts the question the right way round.  
-  `docs/development/CLIENT-RENDERED.md:115`
+  `docs/development/CLIENT-RENDERED.md:141`
 - approved."* Nothing is built and the watch item itself is WITHDRAWN as premise-rejected, not merely unmeasurable.  
   `docs/development/DECISIONS.md:189`
 - CONCEDED — semantically each ground IS a claim: the same proposition asserted on a distinct basis.** What the grounds shape refuses is not claim-plurality; it is separate OBJECT IDENTITY for each claim inside the finding.  
@@ -1418,13 +1456,13 @@ Settled in prose without an id allocated. Cite them by file and line.
 - ONE INSTRUMENT WAS CORRECTED IN PLACE AND IT WAS NOT THIS ITEM'S.** `ai-session-wire.test.mjs` ARM S5 asserts *the surface renders nothing the record did not publish*, over every function in the AI-session block.  
   `docs/development/kickoffs/UI.md:335`
 - **2026-07-28** — RULED by Bob, 2026-07-28: source addresses are NOT exempt from the canonical-identity rule.  
-  `docs/development/LINK-FIDELITY.md:258`
+  `docs/development/LINK-FIDELITY.md:299`
 - **2026-07-30** — RULED by Bob, 2026-07-30, REORDERED against the earlier draft.  
-  `docs/development/LINK-FIDELITY.md:460`
+  `docs/development/LINK-FIDELITY.md:501`
 - **2026-07-30** — RULED by Bob, 2026-07-30, and it is a ruling about who the system is FOR.  
-  `docs/development/LINK-FIDELITY.md:497`
+  `docs/development/LINK-FIDELITY.md:538`
 - **2026-07-30** — RULED by Bob, 2026-07-30. Once monitoring is enabled, the system looks at a document again on a schedule, and the ordinary outcome of looking is "unchanged", which means identical bytes and therefore the same content-addressed capture. This is a regular occurrence and not an exception, and the correct handling…  
-  `docs/development/LINK-FIDELITY.md:550`
+  `docs/development/LINK-FIDELITY.md:591`
 - are the RULED numbers from `AUTHORITY-AND-TRUST.md`, recorded here so they have one home and are not restated inline.  
   `docs/development/MEASUREMENTS.md:450`
 - WHAT THE MEASUREMENT DECIDED, and the reasoning, so nobody re-derives it.** Finding 1 kills the normalised-label index ON ITS OWN: keying the whole label and looking a name up answers **nothing** on the only real document we hold.  
@@ -1515,10 +1553,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/research/RECONCILED.md:1641`
 - **2026-08-03** — Q13 · SETTLED 2026-08-03 by the design pass this question asked for (session BOB).** **THE ANSWER: within a class, LONGEST-WAITING FIRST, stated on the surface — as the RULE, not a proxy.** The candidate orderings are bounded and each of the others fails on a standing rule:  
   `docs/development/research/RECONCILED.md:1664`
+- **2026-07-31** — [RULED, 2026-07-31: the allowlist is NOT a viable mechanism, and the reason is structural rather than tactical](#ruled-2026-07-31-the-allowlist-is-not-a-viable-mechanism-and-the-reason-is-structural-rather-than-tactical)  
+  `docs/development/SOURCE-ACCESS.md:22`
 - **2026-07-30** — Refinement, RULED 2026-07-30 (Bob): delegating the operator's OWN browser user-agent to their OWN instance is a legitimate act, not disguise.** The distinction is authorship.  
-  `docs/development/SOURCE-ACCESS.md:14`
+  `docs/development/SOURCE-ACCESS.md:37`
 - **2026-08-01** — CORRECTED 2026-08-01. This paragraph originally read "the adversary posture is now a standing expectation", which drifted from what Bob actually said and inverted its direction.** He said we expect to be VIEWED as hostile. That is a statement about how we may be PERCEIVED and a fact to plan around; it is not a…  
-  `docs/development/SOURCE-ACCESS.md:206`
+  `docs/development/SOURCE-ACCESS.md:228`
 - **2026-08-04** — The doctrinal hazard to design against from the start — CORRECTED 2026-08-04, and the correction matters because the first version of this paragraph named the wrong construct.** This document first said an objective-shaped capture set *"is a bias whether or not it is  
   `docs/development/STORE-AS-CACHE.md:394`
 - PARTLY SUPERSEDED by the four-level correction above — kept because one half of it stands and the other half is the mistake worth seeing.** WHAT STANDS: **an AI overview built on route 1 today would be reading titles, frontmatter  

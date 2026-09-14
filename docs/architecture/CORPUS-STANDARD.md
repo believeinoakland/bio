@@ -165,6 +165,13 @@ joins the table in the same commit that gives it front matter.
 | `docs/development/UI-PLAN.md` | 2 | `BIO_Interaction_Constructs_v0_1.md` (§3 construct 12) | 2026-09-14 |
 | `docs/development/UI-KICKOFF.md` | 2 | `BIO_Interaction_Constructs_v0_1.md` (§3 construct 12) | 2026-09-14 |
 | `docs/development/NOTIFICATIONS.md` | 2 | `BIO_Interaction_Constructs_v0_1.md` (§3 construct 12; also serves construct 10) | 2026-09-14 |
+| `docs/development/AUTHORITY-AND-TRUST.md` | 2 | `BIO_Membership_Architecture_v2.md` (§3 construct 1); its capture-side rulings serve `BIO_Intake_Doctrine_v1_1.md` | 2026-09-14 |
+| `docs/development/LINK-FIDELITY.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
+| `docs/development/ARCHIVE-FALLBACK.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
+| `docs/development/SOURCE-ACCESS.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
+| `docs/development/CAPTURE-SCALING.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
+| `docs/development/CAPTURE-FIDELITY.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
+| `docs/development/CLIENT-RENDERED.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
 
 ### Not yet governed — design documents that owe front matter
 
@@ -176,8 +183,6 @@ Incomplete fields need the owner's judgment.
 | --- | --- | --- |
 | `docs/development/IS-BUILD-PLAN.md` | CONDUCT | complete (43/43 rows) — a closed plan, candidate for the archive rather than for front matter |
 | `docs/development/ASSISTANT-PILOT.md` | SKILL | the assistant pilot design |
-| `docs/development/AUTHORITY-AND-TRUST.md` | CAPTURE | the 2026-07-30 rulings on authority |
-| `docs/development/LINK-FIDELITY.md`, `ARCHIVE-FALLBACK.md`, `SOURCE-ACCESS.md`, `CAPTURE-SCALING.md`, `CAPTURE-FIDELITY.md`, `CLIENT-RENDERED.md` | CAPTURE | capture designs |
 | `docs/development/INBOX-GRAMMAR.md`, `CONFORMANCE-AND-INTAKE-ARC.md`, `PROCESS-INVENTORY.md`, `PRACTICE-SURVEY.md`, `FINDINGS-WORKPLAN.md`, `RETRIEVAL-PROBE.md` | CONDUCT | designs and studies; some are closed history and belong in the archive |
 
 ## 6. What this standard does not govern, and why

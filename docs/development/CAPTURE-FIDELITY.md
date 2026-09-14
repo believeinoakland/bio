@@ -1,5 +1,19 @@
-# Capture fidelity for HTML sources (design, 2026-07-28; implementation is the
-# next plane release)
+# Capture fidelity for HTML sources
+
+**Status** · The 0.36.0 subresource-capture design, written 2026-07-28, and [BUILT] in full — this document's original title said implementation was "the next plane release" and it was. Measured against `bio-plane/src` at plane 0.58.0: `subresources.mjs` (1,198 lines) parses the references, fetches each under the same public-https rule, content-addresses every one as its own capture, and emits the render companion with `about:capture#<sha256>` placeholders (`:82`) and a manifest the viewer resolves against verified bytes; grade stays B and WACZ/Grade A is still not claimed. It has been OUTGROWN rather than superseded, and two of its three sections describe a narrower machine than the one that runs: the appetite, the ceiling and the fetch policy have all moved (see the list below, and `CAPTURE-SCALING.md` for what moved them). Complete as the record of the shape that shipped; stale in its figures. as of 2026-09-14.
+
+**Place in the system** · A level-2 design serving construct 2, **intake, capture and provenance**, whose level-1 home is `BIO_Intake_Doctrine_v1_1.md` (`BIO_System_Design.md` §3 names the construct and its designs). It is the narrowest of CAPTURE's designs and the only one built in a single release: it answers Bob's requirement that a captured HTML page render as a credible rendition of what it was. `CAPTURE-SCALING.md` is its successor and owns everything about how much may be fetched; `LINK-FIDELITY.md` owns the wrappers that share the companion with these placeholders; `BIO_Content_Framework_v0_10.md` Part I §5 owns fidelity levels and calls the companion a RENDITION rather than content.
+
+**Incomplete sections** ·
+- §Sizing — its figures are stale. The appetite is `SUBRESOURCE_CAP = 400` (`subresources.mjs:50`), not the cap of ~40 recorded here, and the binding ceiling is no longer a constant at all: it is a calibrated observation (`capture_limits`) with resumable sessions (`capture_sessions`) for what will not fit in one invocation, both of them `CAPTURE-SCALING.md`'s work and neither anticipated here. "Release: 0.36.0" dates the section; the plane is at 0.58.0.
+- §The shape — item 1's *"scripts are fetched and stored (they are part of what was served)"* is narrowed by what shipped: `fetchPolicy` (`subresources.mjs:610-623`) refuses cross-origin script, image and media as THIRD_PARTY. And a part may now not be fetched in this capture at all, because it was REUSED from the site asset record — which the manifest states per part and this section does not mention.
+
+**Contents**
+- [The doctrine's constraints, which this design keeps](#the-doctrines-constraints-which-this-design-keeps)
+- [The shape](#the-shape)
+- [Sizing](#sizing)
+
+---
 
 Bob's requirement: when an HTML page is captured, its CSS and other supporting
 files must be captured with it, so rendering the capture is a credible
