@@ -5,7 +5,7 @@
 **Place in the system** · This document governs the FORM of the design corpus, not its content. It sits beside `README.md` (the catalog of documents) and above every document in `docs/architecture/` and the design documents it lists in §5, all of which must satisfy it. `BIO_System_Design.md` is the level-0 document this standard requires to exist; `tools/corpuscheck.mjs` is its enforcement; `tools/plancheck.mjs` runs that enforcement before every push.
 
 **Incomplete sections** ·
-- §5 — the design documents under `docs/development/` are listed but only two are governed yet; the rest join the governed table as each is retrofitted (an act per owner, routed through the queue).
+- §5 — the design documents under `docs/development/` are listed and six are governed as of 2026-09-14; the rest join the governed table as each is retrofitted (an act per owner, routed through the queue). CONDUCT's group is done, BOB's, RECORD's, CAPTURE's, UI's, SKILL's and FRAMEWORK's are not.
 - §6 — whether the ledgers (`DECISIONS.md`, `DEBT.md`, `QUEUE.md`, `MEASUREMENTS.md`) should carry a variant of this front matter is not decided; they are append-only registers with their own hygiene checks and are deliberately outside this standard for now.
 
 **Contents**
@@ -153,6 +153,10 @@ joins the table in the same commit that gives it front matter.
 | --- | --- | --- | --- |
 | `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 | 2026-09-14 |
 | `docs/development/MULTI-INSTANCE-ISOLATION.md` | 2 | `BIO_System_Design.md` §distribution | 2026-09-14 |
+| `docs/development/INBOX-GRAMMAR.md` | 2 | construct 14 has no level-1 document (`BIO_System_Design.md` §3) | 2026-09-14 |
+| `docs/development/PRACTICE-SURVEY.md` | 2 | `BIO_Interaction_Constructs_v0_1.md` | 2026-09-14 |
+| `docs/development/FINDINGS-WORKPLAN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part I §12 | 2026-09-14 |
+| `docs/development/RETRIEVAL-PROBE.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §14.2–14.3 | 2026-09-14 |
 
 ### Not yet governed — design documents that owe front matter
 
@@ -164,7 +168,6 @@ Incomplete fields need the owner's judgment.
 | --- | --- | --- |
 | `docs/development/STORE-AS-CACHE.md` | BOB | retrieval design; Part II §14.2–14.3 carry its tables |
 | `docs/development/INVESTIGATIVE-SESSION.md` | BOB | DEC-60/61/62 reasoning; the IS build plan's source |
-| `docs/development/IS-BUILD-PLAN.md` | CONDUCT | complete (43/43 rows) — a closed plan, candidate for the archive rather than for front matter |
 | `docs/development/RETRIEVAL-SUBSTRATE.md` | RECORD | the FTS5-in-the-DO specification |
 | `docs/development/DOCUMENT-PROFILES.md` | FRAMEWORK | docprofile's own design |
 | `docs/development/UI-PLAN.md`, `UI-KICKOFF.md` | UI | the UI plan of record and Bob's UX principles |
@@ -173,8 +176,16 @@ Incomplete fields need the owner's judgment.
 | `docs/development/LINK-FIDELITY.md`, `ARCHIVE-FALLBACK.md`, `SOURCE-ACCESS.md`, `CAPTURE-SCALING.md`, `CAPTURE-FIDELITY.md`, `CLIENT-RENDERED.md` | CAPTURE | capture designs |
 | `docs/development/SCHEDULER.md`, `NOTIFICATIONS.md` | RECORD / UI | the alarm model and the queue content |
 | `docs/development/OFFICE-FORMATS.md` | CONTENT-OFFICE | the format axis |
-| `docs/development/INBOX-GRAMMAR.md`, `CONFORMANCE-AND-INTAKE-ARC.md`, `PROCESS-INVENTORY.md`, `PRACTICE-SURVEY.md`, `FINDINGS-WORKPLAN.md`, `RETRIEVAL-PROBE.md` | CONDUCT | designs and studies; some are closed history and belong in the archive |
 | `docs/development/research/*.md` | BOB | the case-making research set; parked with DEC-33 |
+
+**CONDUCT's seven are dispositioned, 2026-09-14 (M0-26), and the row is gone rather than ticked.** Four are
+governed above. Three were CLOSED HISTORY by the queue row's criterion — every item they plan landed or
+superseded, and nothing current builds against them — and went to `docs/archive/` with every reader repointed
+in the same commit: `IS-BUILD-PLAN.md` (43/43; `coverage.mjs`, `owed-controls.test.mjs` and
+`connections-sidebar.test.mjs` read it from disk and followed it), `CONFORMANCE-AND-INTAKE-ARC.md` (closed by
+`planning-hygiene.test.mjs`'s own standing exemption) and `PROCESS-INVENTORY.md` (a dated 2026-08-01 snapshot).
+**The archive is outside this standard (§6), so an archived document owes no front matter** — which is why a
+closed document leaves this list without ever joining the governed table.
 
 ## 6. What this standard does not govern, and why
 

@@ -1,5 +1,29 @@
 # Practice survey: what comparable tools do, and what members will arrive expecting
 
+**Status** · An outside-in SURVEY, written 2026-08-01 by session BOB for the case-making design (D-127) and the queue construct: what comparable tools do, what a member who has used them will arrive expecting, which of those shapes BIO should adopt and which it must deliberately violate. **A survey, not a design and not a measurement** — every statement about another tool is an OUTSIDE CLAIM, vendor or community documentation, labelled with its source per CLAUDE.md, and none of it says how users actually behave. Complete as a survey at its own date and **never re-run**: the vendor claims are as of 2026-08-01 and are not re-checked here. **Part of its "deliberately violate" list is BUILT as doctrine** — four of SK-3's five standing prohibitions are taken verbatim from items 2 to 5 of this document's list of ten, as a LOOKUP against it rather than as a restatement: `bio-plane/src/skilldoctrine.mjs` exports this file's path as `SURVEY_SOURCE` and `bio-plane/test/skillprohibitions.test.mjs` asserts that the four name it; the ADOPT list is design input that surfaces have taken up piecemeal and whose adoption is not tracked anywhere. as of 2026-09-14.
+
+**Place in the system** · A level-2 survey serving construct 12, **Member surfaces and the interaction constructs**, whose level-1 home is `docs/architecture/BIO_Interaction_Constructs_v0_1.md` — which cites this document by name for the boundary of the prefill rule — and construct 8, **Intent and inquiry**, for whose reasoning record `BIO_Case_Making_v0_1.md` it was written. It is also the SOURCE OF RECORD for SK-3 under construct 11, the assistant and the AI roles, which `BIO_System_Design.md` §3 states has **no level-1 document**; that is why a prohibition set in shipped plane code points at a level-2 survey and not at a construct document. What depends on it: `skilldoctrine.mjs` (the prohibition bodies), `skillprohibitions.test.mjs`, `kickoffs/SKILL.md` (design sources), `NOTIFICATIONS.md`, and `DEBT.md` D-129, which this survey found. Nothing supersedes it; `docs/development/research/RECONCILED.md` resolves the thirteen-pass research corpus this belongs to and does not resolve this file.
+
+**Incomplete sections** ·
+- §What would falsify the recommendations above — none of the three cheap tests has been run or recorded, and nothing measures the conditions they name. The section states falsifiers; it is not a result.
+- §ADOPT — no adoption status is carried per item. Which of the ten conventions a surface actually took up is not stated here and is not stated anywhere else either, so "adopted" cannot be read off this document.
+- §1 / §2 / §3 / §4 / §5 / §6 — every vendor and community claim in the six survey sections is dated 2026-08-01 and none has been re-checked since. A vendor's documentation is a claim rather than a measurement (CLAUDE.md) and these claims are now more than six weeks old.
+- §Where the survey found NO precedent — the four gaps are named and none is costed. The section says what cannot be borrowed and says nothing about what designing each would take.
+
+**Contents**
+- [1 · Evidence research and annotation](#1-evidence-research-and-annotation)
+- [2 · Investigative case management and link analysis](#2-investigative-case-management-and-link-analysis)
+- [3 · E-discovery and legal-claim support](#3-e-discovery-and-legal-claim-support)
+- [4 · Issue and obligation tracking with deadlines and assignment](#4-issue-and-obligation-tracking-with-deadlines-and-assignment)
+- [5 · Notification and inbox systems that aggregate rather than flood](#5-notification-and-inbox-systems-that-aggregate-rather-than-flood)
+- [6 · Public-facing evidence publication](#6-public-facing-evidence-publication)
+- [ADOPT — conventions members already know, and BIO should not re-teach](#adopt-conventions-members-already-know-and-bio-should-not-re-teach)
+- [DELIBERATELY VIOLATE — where the familiar shape breaks doctrine](#deliberately-violate-where-the-familiar-shape-breaks-doctrine)
+- [Where the survey found NO precedent](#where-the-survey-found-no-precedent)
+- [What would falsify the recommendations above](#what-would-falsify-the-recommendations-above)
+
+---
+
 Written 2026-08-01 as an outside-in research pass for the case-making design
 (`architecture/BIO_Case_Making_v0_1.md`, D-127) and the queue construct
 (`architecture/BIO_Interaction_Constructs_v0_1.md` v0.2, `NOTIFICATIONS.md`).

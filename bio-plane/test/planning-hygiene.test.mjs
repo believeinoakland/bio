@@ -169,7 +169,13 @@ const ORDER_OF_WORK = [
    fabricate a ledger the doc never kept, so they are exempt WITH A REASON rather
    than red-lit — a judgment recorded, not guessed. */
 const EXEMPT_ORDER_OF_WORK = [
-  { file: join(DEV, "CONFORMANCE-AND-INTAKE-ARC.md"), heading: "5. Order of work",
+  /* MOVED 2026-09-14 (M0-26) from `docs/development/` to `docs/archive/` — this
+     exemption's own reason is what established the document as closed history, so
+     the file went where closed history goes. `allDocs()` does not walk the archive,
+     so the discovery guard no longer SEES this heading; the staleness check below
+     still reads the file by path, which is why the entry is repointed rather than
+     deleted: an exemption whose reason is still true stays on the record. */
+  { file: join(REPO, "docs/archive/CONFORMANCE-AND-INTAKE-ARC.md"), heading: "5. Order of work",
     reason: "closed migration architecture; all eight steps executed and superseded by the live plane" },
 ];
 

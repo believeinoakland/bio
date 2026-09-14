@@ -1121,8 +1121,12 @@ const OWED_OUTSTANDING = 3;   // 2, 4 and 5 — all three PL-16's, W9/M10.
    generous direction's mirror image, and just as wrong. The anchor is the file
    that IS the authority for the placement: a tree with no `IS-BUILD-PLAN.md` has
    no VF-1 to keep a ledger for. The table is still PRINTED either way; only the
-   assertions are conditioned, and the report says which it did. */
-const OWED_ANCHOR = "docs/development/IS-BUILD-PLAN.md";
+   assertions are conditioned, and the report says which it did.
+   THE ANCHOR MOVED 2026-09-14 (M0-26): the plan closed at 43/43 and is now
+   `docs/archive/IS-BUILD-PLAN.md`. It is still the authority for VF-1's placement
+   — a closed plan is where a landed row's scope lives — so the anchor follows the
+   file rather than being dropped, and the three OUTSTANDING rows stay outstanding. */
+const OWED_ANCHOR = "docs/archive/IS-BUILD-PLAN.md";
 const owedInScope = readText(join(REPO, OWED_ANCHOR)) !== "";
 const owedRows = OWED_CONTROLS.map((r) => {
   if (!r.suite) return { ...r, state: "OUTSTANDING" };

@@ -1,5 +1,25 @@
 # RETRIEVAL PROBE: Conversion Plan probe 1, answered with actuals
 
+**Status** · Probe 1 of the Conversion Plan, MEASURED 2026-07-24 on the real workerd SQLite the deployed Durable Object runs: FTS5 versus a scan versus an exported index, held to one fixed matching rule, three-way agreement proved before any figure was trusted. A MEASUREMENT record, not a design and not a plan — it ships no op and the plane is unchanged by it. **Complete as a measurement, and its recommendation was ADOPTED**: FTS5 inside the Durable Object is what was built, and `RETRIEVAL-SUBSTRATE.md` is the specification that consumed it. **Its five design questions are SUPERSEDED** by that document, which the section itself says. Nothing here has been re-measured since 2026-07-24, so every figure describes the probe's corpora on that day and none of them describes what the built retrieval path costs now. as of 2026-09-14.
+
+**Place in the system** · A level-2 measurement serving construct 9, **Retrieval — the store as a read-through cache**, of `docs/architecture/BIO_System_Design.md` §3, whose level-1 authority is `BIO_Content_Framework_v0_10.md` Part II §14.2–14.3 (the adopted tables) with `STORE-AS-CACHE.md` and `RETRIEVAL-SUBSTRATE.md` as its level-2 designs. `RETRIEVAL-SUBSTRATE.md` names this document as its companion and rests on its probe-1 actuals; `docs/architecture/README.md` points a reader here for the actuals behind the specification; `docs/BIO_DATAPLANE_STATE.md` points at its design questions as open, which they are not. It depends on nothing. Its own harness, `bio-plane/test/retrieval-probe.mjs` (`npm run probe:retrieval`), is deliberately outside the battery and this document is its only description.
+
+**Incomplete sections** ·
+- §Design questions — SUPERSEDED IN FULL by `RETRIEVAL-SUBSTRATE.md`, as the section's own opening paragraph states. All five are answered there; they are kept here as the dated record of what was open when the measurement was taken, and a reader must not take them as live.
+- §Actuals — measured 2026-07-24 against biosmoke7's 30 real bundles and synthetic corpora at 5,000 and 20,000 documents. Never re-measured against the FTS5 path that was actually built, so no figure here describes the deployed retrieval; Conversion Plan step 6's benchmark on the deployed plane against the plan's prediction table is still owed, and the prediction table itself is not in the corpus (`DEBT.md` D-28).
+- §Reproducing — stale in its closing line. "The battery stays at its measured 52 seconds" has not been true for weeks: the battery is 187 suites and over 200 seconds as of 2026-09-14. The harness and the `npm run probe:retrieval` script are both present and runnable; only the figure beside them is wrong.
+
+**Contents**
+- [The blocker that was in the way is gone](#the-blocker-that-was-in-the-way-is-gone)
+- [What was measured, and how agreement was made meaningful](#what-was-measured-and-how-agreement-was-made-meaningful)
+- [Actuals](#actuals)
+- [What the numbers say](#what-the-numbers-say)
+- [Recommendation: FTS5 inside the Durable Object](#recommendation-fts5-inside-the-durable-object)
+- [Design questions, since answered](#design-questions-since-answered)
+- [Reproducing](#reproducing)
+
+---
+
 FTS5 virtual tables versus an exported index, measured on the real workerd
 SQLite the deployed Durable Object runs, not argued about. This is the
 measurement S-8 could not make because it ran before FTS5 existed to compare,

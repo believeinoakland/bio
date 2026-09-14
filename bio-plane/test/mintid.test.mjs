@@ -441,9 +441,16 @@ section("the register cannot fall behind — an unregistered prefix is FOUND, no
 {
   const nsRepo = join(SANDBOX, "nsrepo");
   mkdirSync(join(nsRepo, "docs/development"), { recursive: true });
+  mkdirSync(join(nsRepo, "docs/archive"), { recursive: true });
   writeFileSync(join(nsRepo, "docs/development/QUEUE.md"),
     "### REC-1 · done\n### ZZZ-4 · queued\nprose mentioning ZZZ-9 and INFO-2026-0001 and RFC-7231\n");
-  writeFileSync(join(nsRepo, "docs/development/IS-BUILD-PLAN.md"), "| QQ-2 | a track row |\n");
+  /* CORRECTED 2026-09-14 (M0-26), NEVER EXEMPTED: the track-row fixture used to sit at
+     `docs/development/IS-BUILD-PLAN.md`, which `QUEUE_CORPUS` named by path. The plan
+     closed at 43/43 and moved to `docs/archive/`, and the path entry was REMOVED rather
+     than repointed (the `PLAN.md` precedent at its site), so the fixture must now be
+     reached the way the real file is — through the `docs/archive/` DIRECTORY entry. The
+     question this arm asks is unchanged: does the TABLE-ROW allocation shape get found. */
+  writeFileSync(join(nsRepo, "docs/archive/IS-BUILD-PLAN.md"), "| QQ-2 | a track row |\n");
   const u = unregisteredNamespaces({ repo: nsRepo });
   console.log(`  scratch queue: prefixes ${JSON.stringify(u.prefixes)}`);
   t("an unregistered prefix allocating at a queue site is FOUND, in both shapes",

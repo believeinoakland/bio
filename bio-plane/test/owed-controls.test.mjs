@@ -144,7 +144,11 @@ t("A8 the outstanding ones are 2, 4 and 5 — PL-16's three, W9/M10",
   outstanding.map((r) => `${r.n}:${r.item}`), ["2:PL-16", "4:PL-16", "5:PL-16"]);
 /* A9 IS THE ONE THAT WILL FAIL WHEN PL-16 LANDS AND NOBODY PLACES ITS THREE, and
    that is its purpose. It reads the plan's own row rather than a copy of it. */
-const planRow = readFileSync(join(REPO, "docs/development/IS-BUILD-PLAN.md"), "utf8")
+/* The plan closed at 43/43 and moved to `docs/archive/` on 2026-09-14 (M0-26). The
+   anchor follows the FILE, not the directory: a closed plan is still the authority
+   for the scope of the rows it placed, and VF-1's three outstanding controls are
+   outstanding either side of the move. */
+const planRow = readFileSync(join(REPO, "docs/archive/IS-BUILD-PLAN.md"), "utf8")
   .split("\n").find((l) => l.startsWith("| VF-1 |")) || "";
 t("A9 the plan's VF-1 row still places 2, 4 and 5 on PL-16",
   [/\(2\) DEC-44's two-finding case → PL-16/.test(planRow),
@@ -232,7 +236,7 @@ const drive = ({ files = {}, anchor = false, strict = false } = {}) => {
   put("bio-plane/src/index.mjs", opsSrc);
   put("bio-plane/checks/bio-checks.mjs", checksSrc);
   put("bio-plane/test/tracked.test.mjs", planeSuite(5));
-  if (anchor) put("docs/development/IS-BUILD-PLAN.md", "| VF-1 | the scratch row |\n");
+  if (anchor) put("docs/archive/IS-BUILD-PLAN.md", "| VF-1 | the scratch row |\n");
   for (const [rel, body] of Object.entries(files)) put(rel, body);
   const r = spawnSync(process.execPath, ["scripts/coverage.mjs", ...(strict ? ["--strict"] : [])],
     { cwd: join(repo, "bio-plane"), encoding: "utf8", timeout: 60_000 });
@@ -319,7 +323,7 @@ const LEDGER_SUITES = {
   const { out, code } = drive({ files: { ...MEMBER, "member-a/test/m.test.mjs": fleetSuite() } });
   t("B6 with no IS-BUILD-PLAN.md the ledger asserts nothing", /OWED CONTROLS:/.test(out), false);
   t("B6b and it SAYS that is why, rather than reading as four clean rows",
-    /NOT ASSERTED HERE \(no docs\/development\/IS-BUILD-PLAN\.md/.test(out), true);
+    /NOT ASSERTED HERE \(no docs\/archive\/IS-BUILD-PLAN\.md/.test(out), true);
   t("B6c the table is still printed — a ledger that hides is not a ledger",
     /OWED CONTROLS \(VF-1\)/.test(out) && /DEC-44's two-finding case/.test(out), true);
   t("B6d the run is otherwise ordinary", code === 0 || code === 1, true);

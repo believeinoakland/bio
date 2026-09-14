@@ -10714,3 +10714,38 @@ a METADATA deploy (new VERSION var, first armed bindings) that the skip made imp
 `/version` sat at 0.57.0 while the rollout gate waited for a build never sent. The skip now
 requires byte-identity AND the target version already serving; bytes-only proceeds as a
 metadata deploy, with the reason printed.
+
+## 2026-09-14 · M0-26 — three design documents archived, and the id floors measured either side (instrument: `node tools/mintid.mjs --list`, run on a quiet tree before the first `git mv` and again after all three moves plus the `QUEUE_CORPUS` edit)
+
+**Every floor in all 21 namespaces is IDENTICAL across the move**, which is the only thing
+the archive's own rule asks for and the reason archiving is not lossy:
+
+    C 44 · D 335 · DEC 74 · IC 82 · M 12 · REC 81 · UI 58 · CPDF 17 · COFF 8 · CAP 6
+    FW 16 · FL 10 · PL 20 · SK 6 · IS 9 · VF 7 · M0 26 · DIST 4 · DS 4 · CASE 6 · I 9
+
+What DID move, and neither is a floor: three namespaces changed the FILE their floor is
+attributed to — `IS` and `DS` from `docs/archive/IS-SWEEP-2026-08-07.md` and
+`docs/archive/ledgers/CLAIMS-2026-08.md` to `docs/archive/IS-BUILD-PLAN.md`, and `M0` from
+`docs/development/QUEUE.md` to `docs/archive/README.md` — the same ids in a file that moved
+or grew, reached through the `docs/archive/` DIRECTORY entry rather than by a named path.
+And the per-namespace `ref(s) read` counts rose across the board, because this item's own
+prose in `CLAIMS.md`, `docs/archive/README.md` and four front matters mentions ids
+(`D-127`, `DEC-72`, `VF-1`, `PL-16`, `SK-3`, `M0-26`, `D-98`, `D-28`). **A mention is not an
+allocation and the floors prove it**: none of those pushed a floor, which is the property
+`mintid`'s own `allocPattern` exists to give.
+
+**`IS-BUILD-PLAN.md` was on `docs/archive/README.md`'s do-not-move list and moved anyway.**
+It is the first file to leave that list, and the rule was rewritten rather than quietly
+broken: what the list forbids is moving a file and leaving a READER behind. Its three disk
+readers — `bio-plane/scripts/coverage.mjs` (`OWED_ANCHOR`),
+`bio-plane/test/owed-controls.test.mjs` and `civicos-ui/test/connections-sidebar.test.mjs` —
+went with it in the same commit, and `tools/mintid.mjs`'s `QUEUE_CORPUS` entry was REMOVED
+rather than repointed, on the `PLAN.md` precedent recorded at that site in 2026-08-10.
+
+**Baseline for this item, measured on this worktree after `npm ci` in all three workspaces
+and BEFORE any edit: battery 187/187 suites green · 11,323 assertions · 204.5s, exit 0.**
+The brief predicted ~186/186 · ~11,284 — stale by one suite and 39 assertions, reported
+rather than assumed. `coverage.mjs --strict` exit 0 unpiped; the printed register read
+`arms 953/949 · classified 178/177 · corpus 179/178 · GREW by 4`, i.e. **`REGISTER_FLOOR`
+was already 4/1/1 slack on the pristine tree before this item existed** — not this item's
+to move and named here so the next reader does not attribute it.

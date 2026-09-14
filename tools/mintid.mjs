@@ -179,11 +179,15 @@ const QUEUE_CORPUS = [
   "docs/archive/",                 /* see expandCorpus: a floor may never fall because a doc moved */
   "docs/development/QUEUE.md",
   "docs/development/MILESTONES.md",
-  "docs/development/IS-BUILD-PLAN.md",
   "docs/development/UI-PLAN.md",
   /* `PLAN.md` was here and is now `docs/archive/PLAN.md`, reached by the directory
      entry above. Removed rather than repointed: a second path to a file the
-     directory already yields is a place for the two to disagree later. */
+     directory already yields is a place for the two to disagree later.
+     `IS-BUILD-PLAN.md` left the same way on 2026-09-14 (M0-26): the plan closed
+     at 43/43 and moved to `docs/archive/IS-BUILD-PLAN.md`, which the directory
+     entry above already yields. Its TRACK TABLE ROWS — the `| <NS>-<n> |` shape
+     PL, FL, SK, VF, DS and four of UI allocate in — are therefore still read,
+     and the floors were measured identical either side of the move. */
 ];
 
 /* A QUEUE ITEM'S ALLOCATION SITE, AND THERE ARE EXACTLY TWO SHAPES — MEASURED, not

@@ -1,5 +1,26 @@
 # The task inbox: field grammar and routing, derived before it is built
 
+**Status** · The C-19.1 CONTRACT for `data/inbox.json` — its field grammar, its routing order and its producer/consumer transport — written 2026-07-30 by thread CAPTURE as groundwork for D-98, every bound derived from a Bob ruling in `AUTHORITY-AND-TRUST.md` or from the C-18.5 grammar the F5 threat model already settled, which is the point of it. **It is BUILT and live, and the title's "derived before it is built" is now historical**: the grammar is `checkInboxGrammar` in `bio-plane/checks/bio-checks.mjs` (run by the gate at ratification AND by the plane at the write), the tasks array is the `inbox` table in `schema.mjs`, the producer/consumer split is `taskenqueue`/`taskdrain`, and `tasks`/`taskforward`/`taskresolve` are member ops. Complete as a contract. **The document has not been revised since the build**, so the four places where what shipped went past or beyond what is written here are named in Incomplete sections rather than left to be inferred. as of 2026-09-14.
+
+**Place in the system** · A level-2 contract serving construct 14, **Scheduler and operations**, of `docs/architecture/BIO_System_Design.md` §3. That construct has **no level-1 document** — §3's home cell for row 14 is the bracket `[SCHEDULER.md, INBOX-GRAMMAR.md]` itself — so this file and `SCHEDULER.md` are the construct's only description and there is no level-1 authority above them to fold a ruling into; that gap is stated here rather than papered over with an invented home. It is downstream of construct 2 (intake, capture and provenance): a capture whose `authority_state` is `undetermined` (D-97) is what puts a task here, and the F5 posture it inherits is `AUTHORITY-AND-TRUST.md`'s. What depends on it: `bio-checks.mjs` C-19.1 is its enforcement and names it; `kickoffs/CAPTURE.md` reads it as the contract D-98 was built against; `CIVICOS_UI_STATE.md` describes the surface over it. Nothing supersedes it.
+
+**Incomplete sections** ·
+- §RULED 2026-07-30 — STALE in its closing paragraph. It leaves the transport shape open ("the consumer's choice between a Cloudflare Queue and a durable table drained on a schedule, decided when D-98 is built"); D-98 chose the durable table inside the Durable Object (`schema.mjs`, "D-98: the task inbox, and the queue that makes auto-creation safe") and the document never recorded the choice.
+- §The task grammar — the word "proposed" in the heading is stale, and the `history[]` row is narrower than what shipped: the built `TASK_EVENT_ENUM` carries a fourth event, `folded`, for the idempotent re-capture fold this document describes in prose and does not name in the table.
+- §Routing — the built resolution order has a hop this document does not describe. `store.mjs` falls back to the owner of a bundle that CITES the referred bundle before it falls back to a group admin, and it names `unassigned` with `assignee_role: group-admin` when there is no administrator at all.
+- §What this unblocks — written when D-98 was the next session's item 2. It describes a build that has since happened, and its "the one open question above" now points at nothing open.
+
+**Contents**
+- [Why this is a grammar problem, not just a table](#why-this-is-a-grammar-problem-not-just-a-table)
+- [The file](#the-file)
+- [The task grammar (proposed C-19.1, mirroring C-18.5 field-for-field)](#the-task-grammar-proposed-c-191-mirroring-c-185-field-for-field)
+- [Routing, exactly as RULED](#routing-exactly-as-ruled)
+- [What the write path enforces, and where](#what-the-write-path-enforces-and-where)
+- [RULED 2026-07-30: auto-create at capture, through a queue](#ruled-2026-07-30-auto-create-at-capture-through-a-queue)
+- [What this unblocks](#what-this-unblocks)
+
+---
+
 Written 2026-07-30, thread CAPTURE, as groundwork for D-98. This is a
 CONTRACT, not a design proposal: every bound below is derived from a decision
 already made, either a Bob ruling in `AUTHORITY-AND-TRUST.md` or an existing
