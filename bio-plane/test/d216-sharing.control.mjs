@@ -30,8 +30,67 @@
  *     while the guard arms fail. That is the demonstration that the guard, and
  *     not the equality, is doing the work.
  *
- * BASELINE, whole probe, measured before any arm: 38 pass, 0 fail.
- */
+ * BASELINE, whole probe, measured before any arm: 40 pass, 0 fail.
+ *
+ * ========================================================================
+ * THE BASELINE WAS CORRECTED FROM 38 TO 40 ON 2026-09-13 UNDER D-330, AND THE
+ * REASON IS NOT THE ONE THE FIGURE LOOKS LIKE. This driver was found RED by
+ * M0-25's arm-liveness census and re-measured here on an unmodified tree before
+ * anything was touched: `36 pass, 4 fail`, so it printed *"baseline is not
+ * green; every arm below would be uninterpretable"* and stopped — the driver
+ * behaving exactly correctly, and the reason all three arms below had gone
+ * unmeasured for however long the drift had stood. TWO INDEPENDENT DRIFTS were
+ * summed inside that one figure and only measuring them apart separated them:
+ *
+ *   +2 THE PROBE GREW. `82ea2b7` (REC-72, 2026-08-08) added two assertions to
+ *      `d216-sharing.probe.mjs` — the curated act it caused, driven, plus its
+ *      over-strictness arm — and did not move this number. The probe's whole
+ *      tally went 38 -> 40 and nothing failed for it.
+ *   -4 FOUR DECLARATIONS IN THE PROBE WENT STALE against subjects that
+ *      LEGITIMATELY MOVED, and they are corrected AT THEIR OWN SITES with what
+ *      moved and when: `ce2fe34` (CASE-2, DEC-72/IC-65) removed the cross-citer
+ *      bar composition and `#requiredStrengthFor` with it (three arms), and
+ *      `7ab3117` (PL-13/IS-3) minted the two notification slugs the probe had
+ *      deliberately pinned ABSENT (one arm). NONE IS A PLANE DEFECT.
+ *
+ * A FIGURE THAT MOVED FOR TWO REASONS AT ONCE IS WHY THIS DRIVER'S BASELINE GATE
+ * IS WORTH ITS COST: a driver that had simply re-declared 36/4 to make itself run
+ * would have buried a correct +2 and four wrong declarations under one number
+ * nobody could take apart afterwards.
+ *
+ * WHAT THIS DRIVER'S `declare()` CAN AND CANNOT SEE, stated because the run that
+ * followed the correction exercised it: `mustFail` is a SUBSET test and
+ * `mustNotFail` a disjointness test, so an arm may bring down MORE assertions
+ * than it names and still read AS DECLARED. Arm 2 does exactly that — it declares
+ * four and fells five, the fifth being the third-project over-strictness arm,
+ * which is genuinely downstream of the same read. That is a deliberate looseness
+ * rather than a miss: these arms are about WHICH assertions are load-bearing, and
+ * pinning an exact count would turn every legitimate new assertion in the probe
+ * into a false failure here — the drift this driver has just been repaired from.
+ * The exact tallies are PRINTED on every run, so a reader sees the counts this
+ * prose does not pin.
+ *
+ * FIRST RUN WITH A GREEN BASELINE, 2026-09-13: ALL THREE ARMS AS DECLARED,
+ * polarity green at 40/0, every restore verified by sha256 AND by full content
+ * comparison. No arm needed re-anchoring — all three anchors still occur EXACTLY
+ * ONCE in `src/store.mjs`, counted against the committed blob before the run.
+ *
+ * NEGATIVE CONTROL for the D-330 corrections themselves, RUN 2026-09-13, armed
+ * ALONE, restore verified by sha256 AND `cmp`, recorded so the next session
+ * re-runs it in one step rather than re-deriving how to break it:
+ *   (1b) RE-STALE ONE corrected declaration in the PROBE — put arm E(5)'s
+ *        notification-slug expectation back from `[true, true]` to
+ *        `[false, false]`. MUST: the probe goes 39/1 failing that assertion AND
+ *        NOTHING ELSE, and THIS DRIVER stops at its baseline gate with
+ *        `baseline is not green`, exit 1, having armed nothing. MEASURED:
+ *        exactly that — one failure by name, the gate holding, zero arms fired.
+ *        That second half is the point: a probe one assertion wrong disarms all
+ *        three controls here, which is how four stale declarations bought
+ *        themselves an unmeasured driver in the first place.
+ *   (2)  OVER-STRICTNESS: the untouched tree leaves this driver at exit 0, three
+ *        arms as declared, the probe at 40/0, and all three files byte-identical.
+ *        MEASURED: identical on every count.
+ * ======================================================================== */
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
