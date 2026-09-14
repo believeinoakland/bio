@@ -236,10 +236,14 @@ function uploadForm(meta, source) {
    MONITOR_TOKEN here — and nothing else — would make every tick SELECT a token the
    plane then refuses, while `#monitorConfigured()` stayed true: an armed alarm
    firing 401s forever, which is worse than the ADMIN_TOKEN it replaced. The scoped
-   credential is the right end state and is a DELEGATION to RECORD in CLAIMS.md
-   (2026-08-04 DIST → RECORD); it must land in the plane FIRST. Until then the
-   daemon runs on the ADMIN_TOKEN the installer already binds, which is exactly
-   what the plane falls back to. */
+   credential was a DELEGATION to RECORD (2026-08-04 DIST → RECORD) that landed as
+   REC-33: classify() now recognises DAEMON_TOKEN as the daemon class, reaching
+   exactly two ops, and #monitorToken() prefers it. So the constraint above is
+   satisfied in the required order and BOTH upload paths bind DAEMON_TOKEN below
+   (DIST-2). The ADMIN_TOKEN fallback remains in the plane until DEC-43's
+   retirement conditions are measured (DIST-4's count); an instance that never
+   updates keeps monitoring on ADMIN_TOKEN, which is exactly the population that
+   report exists to name. */
 const selfBinding = (slug) => ({ type: "service", name: "SELF", service: slug });
 
 /* `opts.noSelf` exists for ONE reason: an install PUT names a service binding to
@@ -263,6 +267,16 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       { type: "secret_text", name: "ADMIN_TOKEN", text: secrets.boot },
       { type: "secret_text", name: "MEMBER_TOKEN", text: secrets.member },
       { type: "secret_text", name: "PROBE_TOKEN", text: secrets.probe },
+      /* DIST-2 (REC-33's follow-on): the scoped monitoring credential. The
+         plane's #monitorToken() is DAEMON_TOKEN || ADMIN_TOKEN and classify()
+         already recognises the class — DIST-1's ordering constraint is
+         satisfied in this direction, so binding it here narrows the daemon
+         from the root-of-trust ADMIN_TOKEN to a credential that can reach
+         exactly two ops. Deliberately NOT on the success panel: no human ever
+         spends this value — the plane spends it over SELF — and a credential
+         displayed is a credential that can leak for no gain. The ADMIN_TOKEN
+         fallback stays until DEC-43's retirement conditions are measured. */
+      { type: "secret_text", name: "DAEMON_TOKEN", text: secrets.daemon },
       { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
       { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
       ...(opts.noSelf ? [] : [selfBinding(slug)]),
@@ -308,6 +322,19 @@ async function uploadUpdate(token, acct, slug, withR2, release) {
          INSTANCE_NAME case there is nothing cosmetic about it: an instance
          without this binding never re-checks a source it was asked to monitor. */
       selfBinding(slug),
+      /* DIST-2: bound on UPDATE as well, same healing shape as SELF above — an
+         instance installed before the daemon class existed has no DAEMON_TOKEN
+         and keep_bindings cannot create what was never there, so without this
+         line that instance monitors on the root-of-trust ADMIN_TOKEN forever
+         (DEC-43's silent licence, and DIST-4's report is what will count who
+         is still doing it). A FRESH value on every update is deliberate and
+         harmless: nothing outside the worker's own env ever holds this
+         credential, so there is no holder to invalidate. The three group
+         passwords still travel ONLY by keep_bindings below — this metadata
+         cannot restate values it never sees. An explicit binding replacing the
+         kept one of the same name is the API's contract; the next gated real
+         update run is where that is read back rather than trusted. */
+      { type: "secret_text", name: "DAEMON_TOKEN", text: rand(32) },
     ],
     /* `service` is deliberately NOT in keep_bindings: the line above binds it
        explicitly, and an explicit binding is what heals the older copies that
@@ -494,7 +521,7 @@ async function runInstall(emit, code, saved) {
   const release = await selectRelease(emit);
 
   emit.step("gen", "Generating your credentials");
-  const secrets = { boot: rand(32), member: rand(32), probe: rand(32) };
+  const secrets = { boot: rand(32), member: rand(32), probe: rand(32), daemon: rand(32) };
   emit.ok("gen");
 
   emit.step("install", "Installing the software into your account");

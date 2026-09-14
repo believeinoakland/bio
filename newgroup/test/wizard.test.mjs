@@ -10,6 +10,8 @@
  *   - an update keeps the instance's bindings and carries no migration
  *   - a state mismatch stops everything before the token endpoint is touched
  *   - both upload paths bind SELF, so a deployed instance's monitoring is armed
+ *   - both upload paths bind DAEMON_TOKEN (DIST-2), so monitoring runs scoped
+ *     rather than on the ADMIN_TOKEN fallback, and the value is never displayed
  *
  * NEGATIVE CONTROL: delete the `selfBinding(slug)` line from `uploadUpdate`'s
  * bindings in src/index.mjs -> the update block fails on "SELF bound on update
@@ -20,6 +22,16 @@
  * 98 passed, 5 failed (both install SELF assertions, plus the whole degrade
  * block, because there is no longer anything for Cloudflare to refuse).
  * BOTH RUN 2026-08-04, restored 103/103 green after each.
+ *
+ * NEGATIVE CONTROL (DIST-2): delete the `DAEMON_TOKEN` line from
+ * `uploadUpdate`'s bindings -> 103 passed, 2 failed, the first failure naming
+ * oak-watch, the already-installed instance that would never receive the
+ * credential (the arm this item exists for). Delete the `DAEMON_TOKEN` line
+ * from `uploadInstall` instead -> 101 passed, 4 failed (four secrets, distinct
+ * count, the retry count, and the panel assertion failing BY NAME with
+ * "DAEMON_TOKEN missing" rather than throwing — D-93 guarded inside a control).
+ * BOTH RUN 2026-09-14, `newgroup/src/index.mjs` restored byte-identically after
+ * each (sha256 a0f6cf1b…, verified by hash both times).
  */
 import worker, { CFG, ARMED_SIGNERS } from "../src/index.mjs";
 import { RELEASE_VERSION } from "../src/release.mjs";
@@ -186,10 +198,20 @@ console.log("\n--- install: the whole conversation ---");
   t("INSTANCE_NAME is bound from the slug",
     meta.bindings.find((b) => b.name === "INSTANCE_NAME")?.text, "oak-watch");
   const secrets = meta.bindings.filter((b) => b.type === "secret_text");
-  t("three secrets set", secrets.map((s) => s.name).sort(), ["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"]);
+  /* Was "three secrets set" until DIST-2: REC-33 gave the plane a daemon
+     class, and the installer now binds its credential so monitoring runs
+     scoped instead of on the root-of-trust ADMIN_TOKEN fallback. */
+  t("four secrets set (DAEMON_TOKEN joined at DIST-2)", secrets.map((s) => s.name).sort(),
+    ["ADMIN_TOKEN", "DAEMON_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"]);
   t("secrets are long", secrets.every((s) => s.text.length >= 40), true);
-  t("secrets are distinct", new Set(secrets.map((s) => s.text)).size, 3);
+  t("secrets are distinct", new Set(secrets.map((s) => s.text)).size, 4);
   t("no secret is a published value", secrets.some((s) => s.text === PUBLISHED), false);
+  /* DIST-2: the daemon credential is the one secret NO human ever spends —
+     the plane spends it over SELF — so the success panel must not display it.
+     A credential displayed is a credential that can leak for no gain. */
+  t("the daemon credential is not on the success page",
+    (() => { const v = secrets.find((s) => s.name === "DAEMON_TOKEN")?.text;
+      return v ? body.includes(v) : "DAEMON_TOKEN missing"; })(), false);
   /* REC-26: without this binding the plane's #monitorConfigured() is false and
      both monitoring consumers hold no alarm — the instance never re-checks a
      document it was asked to monitor. The target is the instance's OWN worker,
@@ -295,7 +317,7 @@ console.log("\n--- install: a refused SELF binding costs the monitoring, never t
     [retry.bindings.some((b) => b.type === "durable_object_namespace"),
      retry.bindings.filter((b) => b.type === "secret_text").length,
      retry.bindings.filter((b) => b.type === "r2_bucket").length,
-     "migrations" in retry], [true, 3, 2, true]);
+     "migrations" in retry], [true, 4, 2, true]);
   t("the group still gets a working copy", body.includes("out-boot"), true);
   t("the page says what was left out and how to get it", body.includes("was refused by Cloudflare"), true);
   t("no token in output", body.includes(TOK), false);
@@ -421,7 +443,21 @@ console.log("\n--- update: keeps everything, carries no migration ---");
      install left out, with no action from the operator. */
   t("INSTANCE_NAME bound on update too, healing unnamed copies",
     meta.bindings.find((b) => b.name === "INSTANCE_NAME")?.text, "oak-watch");
-  t("no new secrets generated", meta.bindings.some((b) => b.type === "secret_text"), false);
+  /* CORRECTED at DIST-2, not exempted. This line read `no new secrets
+     generated` (no secret_text in the update metadata at all) and that was
+     the right rule while every secret was a GROUP PASSWORD an update must
+     never touch. It became wrong when REC-33 gave the plane a daemon class:
+     an instance installed before DAEMON_TOKEN existed can receive it ONLY
+     through an update — keep_bindings inherits, and there is nothing to
+     inherit (the SELF-binding lesson, arriving as a secret). The old rule's
+     true core survives as the narrower assertion below: the update still
+     restates NO password, because it never sees their values. A fresh daemon
+     value each update is deliberate — nothing outside the worker's env holds
+     it, so there is no holder to invalidate. */
+  t("DAEMON_TOKEN bound on update too — oak-watch installed before the daemon class existed and ONLY an update can deliver it",
+    meta.bindings.find((b) => b.name === "DAEMON_TOKEN")?.type, "secret_text");
+  t("the update supplies NO password — the three group secrets still travel only by keep_bindings",
+    meta.bindings.filter((b) => b.type === "secret_text").map((b) => b.name), ["DAEMON_TOKEN"]);
   /* REC-26, and this is the assertion the whole update half exists for: every
      copy installed before the SELF binding existed is running with its
      monitoring consumers dormant RIGHT NOW. Nothing reaches those instances

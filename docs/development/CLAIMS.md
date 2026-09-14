@@ -3245,3 +3245,12 @@ paths:
   `docs/development/QUEUE.md` (CONDUCT's; the DIST-2 row flip is CONDUCT's at integration),
   **NOT** any deploy — the row says NO DEPLOY, the install/update run is gated to Bob.
 concurrency: checked over the register 2026-09-14 — no live claim names `newgroup/**`.
+released: 2026-09-14 by DIST #2 — landed with the full gate GREEN on the merged tree: battery
+182/183 (1 skipped, 11,113 assertions), coverage --strict exit 0, UI harnesses green, newgroup
+embed 15/15 + wizard 105/105 with `npm test` exit 0 read unpiped. Both NC arms run and recorded
+in the suite header (update arm: 2 failures, the first NAMING oak-watch — the accepts-when arm;
+install arm: 4 failures including the panel assertion failing by name instead of throwing),
+`index.mjs` restored byte-identically after each, verified by hash. `docs/DECIDED.md`
+regenerated (701 rulings). The DIST-2 QUEUE row flip is CONDUCT's at integration. NO DEPLOY
+performed; the next real install/update run is gated to Bob and is where the explicit-binding-
+replaces-kept-secret API contract gets read back rather than trusted.
