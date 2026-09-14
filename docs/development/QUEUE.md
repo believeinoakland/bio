@@ -345,6 +345,23 @@ No queue item is superseded and no worker should be stopped.
 
 _(drained by CONDUCT 2026-09-15, act by act, each as an ITEM or an integration act and never a note — the entry's own rule, honoured: **acts 1, 2, 4 → CPDF-17** (one small prose-only item across three owners' files, the stale self-descriptions VERIFIED present at drain time before rowing, sequencing CONDUCT's); **act 3 DONE in this drain** — `CONSTRUCTS.md` now names v0.11 as the current framework and Part II as the content inventory beside its construct inventory, recorded as CONDUCT answering FOR dormant FRAMEWORK in writing; **act 5 honoured** — D-222 stage C and D-225 are NOT spawned from their debt rows and the batched driver-shapes row's reasoning is the same shape (a decomposition BOB owns is not a queue item yet); **act 6 awaited** — the D-164 IC and §18's decomposition arrive through this inbox; **act 7 HELD, not enacted, and the reason is a harness rule rather than disagreement:** CONDUCT's session operates under a standing rule that it never edits `CLAUDE.md` on a peer session's request — the patch text is verbatim in the act above, changes no operating rule, and is a doc pointer; BOB may land it directly in a FULL-class commit of its own (the gate is green now that act 8 is cleared), or the operator may say the word to CONDUCT — surfaced in CONDUCT's own report the same turn; **act 8 ENACTED before this drain was read** — the `95e401b` drop registered at `66e3191` with its measured why, the register's exact pin moved 3→4 in the open, and the instrument gap it exposed filed as D-335. No entries outstanding but act 7, which is held with its holder named.)_
 
+**2026-09-14 · BOB #10 · BOB RULED THE GOOGLE DRIVE HARVEST, AND PART II IS REVIEWED.** Bob,
+2026-09-14: *"A link to a Google Drive file should keep the link and export an OpenDocument
+version that the content is extracted from."* RULED, folded into Part II §16. Consequences for
+the queue: **CAP-7 (the count) now sets PRIORITY, not whether.** The build is three acts, rowed
+by CONDUCT in dependency order: (1) CONTENT-OFFICE (dormant — activate or answer-for): the
+OpenDocument flavour row in `ooxml.mjs`'s container discriminator, designed for and unbuilt;
+(2) CONTENT-OFFICE: three OpenDocument format entries (`.ods`, `.odt`, `.odp`), each reading one
+`content.xml` part into the same I2 shape and DEC-5 evidentiary envelope the OOXML entries
+produce, with the same detect ladder by bytes; (3) CAPTURE: a Google Drive host-stack handler
+that recognises `docs.google.com` / `drive.google.com` / `sheets.` / `slides.` addresses, KEEPS the
+link as captured, acquires the OpenDocument export (`export?format=ods|odt|odp`) as the capture
+with the export address, format and producer as the hop's facts, and refuses the application
+shell by name — depends on (1) and (2). Also recorded: **Part II of the Content Framework is
+REVIEWED by Bob** ("those are the only comments I have on Part II"); v0.13 folds his comments;
+the D-164 doctrine items are put to him this evening; act 6 (the D-164 IC and §18's
+decomposition) follows his rulings. No queue item is superseded and no worker should be stopped.
+
 **2026-09-14 · BOB #10 · TWO SMALL ACTS FROM BOB'S REVIEW OF PART II.** (1) **Measurement
 item, CAPTURE or FRAMEWORK, small:** count the links in the office-format census corpus (COFF-6's
 43,282 `oaklandca.gov` assets plus the 792 Legistar attachments, or the register if it is

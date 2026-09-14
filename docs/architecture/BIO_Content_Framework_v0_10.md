@@ -1,11 +1,11 @@
 # BIO Content Framework
 
-**Status** · The content framework, in two parts. **Part I (§§1–13)** — the extraction substrate: recognisers, regions and digests, change layers, content types, connections and their grade, progressions, identifier spaces, intent, declared bias, provenance of judgments — ARCHITECTURE APPROVED by Bob at v0.10 on 2026-07-30 and unchanged since. **Part II (§§14–19)** — content as the unit the record points at: role and model, the forms of content, the extraction process as built, organization and access, the central gap stated once, and who defers to this document — added 2026-09-15 as v0.11 and rewritten for readability at v0.12 (2026-09-14: design first, status in tables, evidence in Appendix A), **DRAFT awaiting Bob's review**; it rules nothing new and proposes no design, and §18 names the six pieces still to be designed. The file keeps its `v0_10` name so `framework:LINE` citations in code and record resolve; **this front matter shifted every body line by the length of this block once, on 2026-09-14 — a citation written before that date points that many lines early; the fix is to cite the section (`CORPUS-STANDARD.md` §4.6)**. Part I complete and approved at its level; Part II a draft with an explicit frontier. as of 2026-09-14.
+**Status** · The content framework, in two parts. **Part I (§§1–13)** — the extraction substrate: recognisers, regions and digests, change layers, content types, connections and their grade, progressions, identifier spaces, intent, declared bias, provenance of judgments — ARCHITECTURE APPROVED by Bob at v0.10 on 2026-07-30 and unchanged since. **Part II (§§14–19)** — content as the unit the record points at: role and model, the forms of content, the extraction process as built, organization and access, the central gap stated once, and who defers to this document — added 2026-09-15 as v0.11, rewritten for readability at v0.12 and **REVIEWED BY BOB on 2026-09-14** — his comments (fidelity rising through a person's act; an explicit link is not a hunch; the office and Google Drive formats named; an authored edge never re-pointed) are folded in at v0.12–v0.13, and he closed the review with "those are the only comments I have on Part II"; it rules nothing new of its own, and §18 names the six pieces still to be designed. The file keeps its `v0_10` name so `framework:LINE` citations in code and record resolve; **this front matter shifted every body line by the length of this block once, on 2026-09-14 — a citation written before that date points that many lines early; the fix is to cite the section (`CORPUS-STANDARD.md` §4.6)**. Part I complete and approved at its level; Part II a draft with an explicit frontier. as of 2026-09-14.
 
 **Place in the system** · The single authoritative content design and the home of constructs 4, 5 and 6 of `BIO_System_Design.md` §3 (content — the heart of the system; document profile and the extraction substrate; meaning). `CONSTRUCTS.md` is the inventory and evidence beneath Part I; `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` is the design-space study for Part II §18's first piece; `STORE-AS-CACHE.md`'s three-axis and four-level tables are adopted in §14.2–14.3; `CLAUDE.md`'s content section points here; DEBT D-164 and INTERFACES I2 cite it. It does not own retrieval, the investigative session, the bias doctrine, the interface contracts, or any ruling.
 
 **Incomplete sections** ·
-- §14 — Part II is DRAFT awaiting Bob's review (all of §§14–19); §14.6's "PARKED" is stale since Bob reopened D-164 on 2026-09-15.
+- §14.5 — the AI EXTRACT role is designed as a role and absent as an item; the content object is absent (D-164, reopened, §18).
 - §16 — the closing table's ABSENT row: table and image extraction, the AI EXTRACT role, read-time re-extraction to tier 3 (D-319), the per-page tier-2 rule (D-283), the content-axis frontier.
 - §18 — six pieces "named here, designed nowhere in this document": the content object and extent-carrying edge (D-164); content-grain search; the general observation log; extraction breadth; homes for the member's lead and firsthand observation (doctrine, Bob's); the claim object (doctrine, Bob's).
 - §19 — two owners' acts remain rowed (CPDF-17): the schema comments that should cite Part II, and the stale self-descriptions in the plane and the type registry.
@@ -80,7 +80,7 @@
 
 ---
 
-**Version 0.12 — 2026-09-14 — Part I (§§1–13) ARCHITECTURE APPROVED by Bob at v0.10 and unchanged line for line; Part II (§§14–19 and Appendix A) the content design, DRAFT awaiting Bob's review — rewritten at v0.12 as a readable design document after Bob found the v0.11 text unreadable; nothing it asserts changed. The file keeps its `v0_10` name so that `framework:LINE` citations resolve by section.**
+**Version 0.13 — 2026-09-14 — Part I (§§1–13) ARCHITECTURE APPROVED by Bob at v0.10 and unchanged line for line; Part II (§§14–19 and Appendix A) the content design, REVIEWED by Bob on 2026-09-14 with his comments folded in. The file keeps its `v0_10` name; citations into it name the section.**
 
 Status: this is the framework document Bob called for after observing that the
 development work had diffused across many elements at once. It supersedes nothing
@@ -94,6 +94,12 @@ to render is worse than no diagram: it leaves a block of syntax where an explana
 should be.
 
 Changelog:
+- v0.13, 2026-09-14. Bob reviewed Part II and closed the review. Folded: a person's reading is
+  the route fidelity rises (§14.2); an explicit link or textual reference is an earned
+  connection, not a hunch (§14.4); the office formats named and Google Drive stated (§16);
+  RULED: an authored edge is never re-pointed to a newer capture without a member's act
+  (§14.4, §18); RULED: a link to a Google Drive file keeps the link and the harvest is the
+  OpenDocument export, from which content is extracted (§16).
 - v0.12, 2026-09-14. Bob: Part II "appears to be a changelog. It's not readable nor
   informative." Rewritten as a design document: each section states the design first in
   plain language, the status marks sit in one table per section, the content model gains a
@@ -1727,9 +1733,15 @@ so the hop records the export format and Google as the producer (D-251's sense).
 and OOXML are both open ISO standards and preserve the same evidence (formulas beside values,
 hidden sheets, comments, tracked changes, notes); the axis reads OOXML today and reads
 OpenDocument once one flavour row is added to the container reader, designed for and not
-built. The handler's default is the OOXML export, with the PDF export beside it as a rendition
-companion; preferring OpenDocument for the archive's longevity (M6) is Bob's call and costs
-that one row. Whether it is
+built. **RULED by Bob, 2026-09-14: a link to a Google Drive file KEEPS THE LINK, and the harvest is
+the OpenDocument export, from which the content is extracted.** So the record holds the Drive
+address as the citation of where the document lives, the ODF bytes as the capture with an
+honest hop (export address, format, Google as producer, time), and the content extracted from
+those bytes. Building it is two acts on the format axis: the OpenDocument flavour row in the
+container reader, and the three OpenDocument readers (`.ods`, `.odt`, `.odp` — one `content.xml`
+part each, smaller than their OOXML counterparts) producing the same I2 shape and evidentiary
+envelope; and one on the capture side: the Drive host-stack handler that recognises the address
+and acquires the export instead of the shell. CAP-7's count now sets priority, not whether. Whether it is
 worth building is a measurement: how many of the city's links point at Drive. That census has
 not been run; it is routed. OpenDocument (`.odt`, `.ods`, `.odp`) is designed for and
 deliberately not built: zero were found among 43,282 city assets.

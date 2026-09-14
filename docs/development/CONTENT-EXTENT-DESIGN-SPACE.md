@@ -130,8 +130,8 @@ Shared across all three: (i) the extent grammar must be IC-1's arms unified with
 
 ## 5. The doctrine items, in the shape Bob rules on
 
-Prepared 2026-09-14 by BOB #10 for the sitting after Bob reviews Part II; none is asked before
-that, and none blocks work — each carries the provisional the mechanism (§6) runs under. The
+Prepared 2026-09-14 by BOB #10; Bob closed his review of Part II the same day and the seven
+open items were put to him in the BOB session that evening; none blocks work — each carries the provisional the mechanism (§6) runs under. The
 shape is `kickoffs/README.md`'s: what runs provisionally, why it is ambiguous, the alternative,
 the recommendation, what reversing costs. `node tools/decided.mjs` was run on every item
 (2026-09-14) and finds none of them ruled.
