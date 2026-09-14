@@ -23,6 +23,16 @@
  * block, because there is no longer anything for Cloudflare to refuse).
  * BOTH RUN 2026-08-04, restored 103/103 green after each.
  *
+ * NEGATIVE CONTROL (D-297/IC-82): force the fleet-signature verdict true in
+ * `installFleet` -> 129 passed, 2 failed: the dropped-member block watches a
+ * member install under a signature that covers a different set, and the
+ * signature sentence vanishes. Swallow the /2 statement refusal and substitute
+ * a hand-built /1-style payload instead -> 130 passed, 1 failed — the
+ * /2-refusal sentence arm — while the member still does NOT install, because
+ * the signature layer beneath catches the substituted payload: the defences
+ * are layered and the arm shows which one answered. BOTH RUN 2026-09-14,
+ * restored byte-identically (sha256-verified), 131/131 green.
+ *
  * NEGATIVE CONTROL (DIST-3): change `establishPlan`'s 100328 arm to return
  * "paid" (ACCEPT the Free answer — the exact defect DEC-42's row names) ->
  * 112 passed, 5 failed, and the load-bearing failure NAMES free-town as the
@@ -46,6 +56,7 @@
  * each (sha256 a0f6cf1b…, verified by hash both times).
  */
 import worker, { CFG, ARMED_SIGNERS } from "../src/index.mjs";
+import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
 import { RELEASE_VERSION } from "../src/release.mjs";
 
 let pass = 0, fail = 0;
@@ -748,6 +759,163 @@ console.log("\n--- release signing: armed, a signature from another purpose is r
    The failure this guards against is not a crash. It is an update that uploads
    the same version over itself and reports "Updated to X", which reads as work
    done. Observed live 2026-07-24 (DEBT D-10). */
+
+/* ---- IC-82 / D-297: the installer installs the FLEET ----------------------
+   The statement is rebuilt from the manifest by the SAME shared function the
+   assembler used (imported above, never re-implemented), signed here with the
+   suite's own armed key. Every arm below drives the geometry BOB named at the
+   gate: a manifest without the /2 upload facts, a dropped member, a foreign
+   plane, and a mid-fleet failure must each land on the exact honest sentence,
+   and only a verified fleet may touch the account. */
+console.log("\n--- fleet: members install under the fleet signature ---");
+
+const shaBytes = async (bytes) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))]
+  .map((b) => b.toString(16).padStart(2, "0")).join("");
+const memberSrc = "export default { fetch(){ return new Response('member'); } };";
+const memberSha = await shaHex(memberSrc);
+const wasmBytes = new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]);
+const wasmSha = await shaBytes(wasmBytes);
+const FLEET_VER = bump(RELEASE_VERSION);
+const memberEntry = {
+  member: "probe-member", asset: "probe-member.bundled.mjs",
+  sha256: memberSha, bytes: memberSrc.length,
+  compat: { date: "2026-07-01", flags: [] },
+  services: [{ binding: "PLANE", service: "bio-plane" }],
+  parts: [{ path: "assets/x.wasm", type: "CompiledWasm", sha256: wasmSha, bytes: wasmBytes.length }],
+};
+const fleetManifest = (members, extra = {}) => ({
+  version: FLEET_VER, sha256: repoSha2, bytes: repoSrc2.length,
+  asset: "bio-plane.bundled.mjs", sig: goodSig, fleet: members, ...extra,
+});
+const signFleet = async (members) => signAsset(
+  new TextEncoder().encode(fleetStatement({ version: FLEET_VER,
+    plane: { sha256: repoSha2, bytes: repoSrc2.length, asset: "bio-plane.bundled.mjs" },
+    members })), NS_FLEET);
+
+const fleetRoutes = (slug, sub) => [
+  { m: (u) => u.endsWith("/release/probe-member.bundled.mjs"), f: () => new Response(memberSrc) },
+  { m: (u) => u.endsWith("/release/probe-member/assets/x.wasm"), f: () => new Response(wasmBytes) },
+  { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
+  { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "FL", name: "Fleet Town" }]) },
+  { m: (u) => u.includes(`/scripts/${slug}/settings`), f: () => cferr("not found", 404) },
+  { m: (u, mth) => u.endsWith("/scripts/bio-plan-probe") && mth === "PUT", f: () => cfok({}) },
+  { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "DELETE", f: () => cfok({}) },
+  { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
+  { m: (u, mth) => u.endsWith(`/scripts/${slug}`) && mth === "PUT", f: () => cfok({}) },
+  { m: (u, mth) => u.endsWith("/scripts/probe-member") && mth === "PUT", f: () => cfok({}) },
+  { m: (u, mth) => u.endsWith(`/scripts/${slug}/subdomain`) && mth === "POST", f: () => cfok({}) },
+  { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: sub }) },
+  { m: (u) => u.startsWith(`https://${slug}.${sub}.workers.dev/`),
+    f: () => jres({ ok: true, bindings: { STORE: true } }) },
+];
+
+{
+  armWith(relPubLine);
+  const fleetSig = await signFleet([memberEntry]);
+  const { cookie, state } = await begin("fleet-town");
+  const calls = script([
+    ...REL({ manifest: () => jres(fleetManifest([memberEntry], { fleetSig })),
+             asset: () => new Response(repoSrc2) }),
+    ...fleetRoutes("fleet-town", "flt"),
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  const mput = calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/probe-member"));
+  t("the member was uploaded", !!mput, true);
+  const mm = mput ? await metadataOf(mput) : { bindings: [] };
+  t("compat COPIED from the signed manifest — date stated, empty flags spelled as absence of the key",
+    [mm.compatibility_date, "compatibility_flags" in mm], ["2026-07-01", false]);
+  t("the PLANE service binding is templated to THIS instance's slug (D-292)",
+    mm.bindings.find((b) => b.name === "PLANE")?.service, "fleet-town");
+  t("the member carries the release version",
+    mm.bindings.find((b) => b.name === "VERSION")?.text, FLEET_VER);
+  t("the wasm part is uploaded under its manifest path with its STATED module type",
+    (mput.init.body.get("assets/x.wasm"))?.type, "application/wasm");
+  t("the page says all members installed, by name",
+    body.includes("capability workers installed") && body.includes("probe-member"), true);
+}
+
+console.log("\n--- fleet: a manifest without the /2 upload facts refuses by name ---");
+{
+  armWith(relPubLine);
+  const stripped = { ...memberEntry }; delete stripped.compat;
+  const fleetSig = await signFleet([memberEntry]); /* any sig — the statement refuses first */
+  const { cookie, state } = await begin("bare-fleet");
+  const calls = script([
+    ...REL({ manifest: () => jres(fleetManifest([stripped], { fleetSig })),
+             asset: () => new Response(repoSrc2) }),
+    ...fleetRoutes("bare-fleet", "bf"),
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  t("no member reached the account",
+    calls.some((c) => c.method === "PUT" && c.u.endsWith("/scripts/probe-member")), false);
+  t("the page says the manifest does not state how members are uploaded",
+    body.includes("does not state how they are uploaded"), true);
+  t("the plane itself installed normally",
+    calls.some((c) => c.method === "PUT" && c.u.endsWith("/scripts/bare-fleet")), true);
+}
+
+console.log("\n--- fleet: a DROPPED member invalidates the set signature ---");
+{
+  armWith(relPubLine);
+  const second = { ...memberEntry, member: "other-member", asset: "other-member.bundled.mjs", parts: [] };
+  const fleetSig = await signFleet([memberEntry, second]);   /* signed over TWO */
+  const { cookie, state } = await begin("drop-town");
+  const calls = script([
+    ...REL({ manifest: () => jres(fleetManifest([memberEntry], { fleetSig })),  /* serves ONE */
+             asset: () => new Response(repoSrc2) }),
+    ...fleetRoutes("drop-town", "dt"),
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  t("dropping a member kills the whole fleet's signature — nothing installs",
+    calls.some((c) => c.method === "PUT" && c.u.endsWith("/scripts/probe-member")), false);
+  t("and the page says the signature did not verify",
+    body.includes("fleet signature did not verify"), true);
+}
+
+console.log("\n--- fleet: one failing member degrades ALONE, and is named ---");
+{
+  armWith(relPubLine);
+  const second = { ...memberEntry, member: "other-member", asset: "other-member.bundled.mjs",
+                   sha256: await shaHex("nope"), parts: [] };  /* asset will 404 */
+  const fleetSig = await signFleet([memberEntry, second]);
+  const { cookie, state } = await begin("half-town");
+  const calls = script([
+    ...REL({ manifest: () => jres(fleetManifest([memberEntry, second], { fleetSig })),
+             asset: () => new Response(repoSrc2) }),
+    { m: (u) => u.endsWith("/release/other-member.bundled.mjs"), f: () => new Response("gone", { status: 404 }) },
+    ...fleetRoutes("half-town", "ht"),
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  t("the healthy member still installed",
+    calls.some((c) => c.method === "PUT" && c.u.endsWith("/scripts/probe-member")), true);
+  t("the failed one is NAMED with its reason and the retry path",
+    body.includes("other-member") && body.includes("left out") && body.includes("next update retries"), true);
+}
+
+console.log("\n--- fleet: the update path installs members too — the healing half ---");
+{
+  armWith(relPubLine);
+  const fleetSig = await signFleet([memberEntry]);
+  const { cookie, state } = await begin("heal-town", "update");
+  const calls = script([
+    ...REL({ manifest: () => jres(fleetManifest([memberEntry], { fleetSig })),
+             asset: () => new Response(repoSrc2) }),
+    { m: (u) => u.endsWith("/release/probe-member.bundled.mjs"), f: () => new Response(memberSrc) },
+    { m: (u) => u.endsWith("/release/probe-member/assets/x.wasm"), f: () => new Response(wasmBytes) },
+    { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
+    { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "H", name: "Heal" }]) },
+    { m: (u) => u.includes("/scripts/heal-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/scripts/heal-town") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/scripts/probe-member") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "hl" }) },
+    { m: (u) => u.includes("heal-town.hl.workers.dev/api/?op=bootstrap"), f: midUpdate("0.1.0", FLEET_VER) },
+  ]);
+  await (await callback(`code=C&state=${state}`, cookie)).text();
+  t("an update installs the members a copy never had — keep_bindings cannot create what was never there",
+    calls.some((c) => c.method === "PUT" && c.u.endsWith("/scripts/probe-member")), true);
+}
+
 console.log("\n--- update: replacing a version with itself is not a success ---");
 {
   disarm();

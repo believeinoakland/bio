@@ -27,7 +27,7 @@ import { WIZARD_HTML, UPDATE_HTML, PAGE_CSS } from "./ui.mjs";
 import { RELEASE_SOURCE, RELEASE_VERSION } from "./release.mjs";
 /* One verifier, shared with the plane. The installer and the instance
    agree on what a valid signature is because they run the same code. */
-import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
+import { verifySshsig, NS_RELEASE, NS_FLEET, fleetStatement } from "../../bio-plane/src/sshsig.mjs";
 
 export const CFG = {
   CLIENT_ID: "1c2fdba3fc71cf88d26fcd7b90df95de",
@@ -105,8 +105,12 @@ async function fetchRepoAsset(man) {
    and why, in words a person can act on. */
 async function selectRelease(emit) {
   emit.step("rel", "Checking the public repository for the newest release");
+  /* The manifest travels with the selection (IC-82): the fleet half reads
+     `fleet[]`/`fleetSig` from it. null means the repository was unreachable —
+     a STATED absence the fleet step reports, never rounds to "no members". */
+  let man = null;
   try {
-    const man = await fetchRepoManifest();
+    man = await fetchRepoManifest();
     if (vcmp(man.version, RELEASE_VERSION) > 0) {
       const source = await fetchRepoAsset(man);
       emit.ok("rel", "The repository has " + man.version + ", newer than the built-in "
@@ -114,10 +118,12 @@ async function selectRelease(emit) {
         + (ARMED_SIGNERS.length
             ? "It carries a valid signature from a key this installer trusts, so that is what installs."
             : "Its integrity checked out, so that is what installs."));
-      return { version: String(man.version), source, from: "repository" };
+      return { version: String(man.version), source, from: "repository", man };
     }
     emit.ok("rel", "The built-in release (" + RELEASE_VERSION + ") is current.");
+    return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in", man };
   } catch (e) {
+    man = null;
     const fallback = " The installer's own built-in release (" + RELEASE_VERSION
       + ") installs instead, which is safe. This is worth mentioning to Believe in Oakland.";
     emit.ok("rel",
@@ -132,7 +138,7 @@ async function selectRelease(emit) {
         : "The public repository was not reachable just now, so the built-in release ("
           + RELEASE_VERSION + ") is used. That is fine.");
   }
-  return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in" };
+  return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in", man };
 }
 
 /* ------------------------------------------------------------------ utils */
@@ -376,6 +382,136 @@ async function uploadUpdate(token, acct, slug, withR2, release) {
     { method: "PUT", body: uploadForm(meta, release.source) });
 }
 
+
+/* ---------------------------------------------------- the fleet (IC-82/D-297) */
+
+/* A part's module type maps to the upload content type. COPY-NEVER-DEFAULT on
+   the verifier side too: a type this map does not know refuses that member by
+   name rather than guessing — an inferred loader is the 3607b5c defect
+   arriving inside a group's account. */
+const PART_MIME = { CompiledWasm: "application/wasm", Data: "application/octet-stream",
+                    Text: "text/plain", ESModule: "application/javascript+module" };
+
+async function fetchVerified(url, wantSha, what) {
+  const r = await fetch(url, { redirect: "follow", headers: relHeaders });
+  if (!r.ok) throw new Error(what + " http " + r.status);
+  const bytes = new Uint8Array(await r.arrayBuffer());
+  const got = hex(await crypto.subtle.digest("SHA-256", bytes));
+  if (got !== wantSha) throw new Error(what + " failed its integrity check");
+  return bytes;
+}
+
+async function uploadMember(token, acct, slug, m, version, bundle, partBytes) {
+  const meta = {
+    main_module: "index.mjs",
+    /* COPIED from the signed manifest, which copied it from the member's own
+       config at cut time (IC-82). Nothing here is defaulted. */
+    compatibility_date: m.compat.date,
+    ...(m.compat.flags.length ? { compatibility_flags: m.compat.flags } : {}),
+    bindings: [
+      { type: "plain_text", name: "VERSION", text: version },
+      /* D-292: the manifest carries the phantom exactly as the config wrote
+         it, and the SLUG is substituted here — the same selfBinding shape the
+         plane's own install has used since 2026-08-05. The slug never arrives
+         over the network; it is the name the group chose. */
+      ...(m.services || []).map((sv) => ({ type: "service", name: sv.binding,
+        service: sv.service === "bio-plane" ? slug : sv.service })),
+    ],
+  };
+  const fd = new FormData();
+  fd.append("metadata", new Blob([JSON.stringify(meta)], { type: "application/json" }));
+  fd.append("index.mjs", new Blob([bundle], { type: "application/javascript+module" }), "index.mjs");
+  for (const p of m.parts || []) {
+    fd.append(p.path, new Blob([partBytes[p.path]], { type: PART_MIME[p.type] }), p.path);
+  }
+  return cf(token, `/accounts/${acct}/workers/scripts/${m.member}`, { method: "PUT", body: fd });
+}
+
+/* Install (or refresh — the PUT is the same act) every member the release
+   names. DEGRADES PER MEMBER, never fails the install: a group's plane must
+   not be lost over a member it can add at the next update, and what was left
+   out is SAID (D-115's "quietly doing less" is the defect; the cure is the
+   saying, not the refusing). */
+async function installFleet(emit, token, acct, slug, release) {
+  emit.step("fleet", "Installing the capability workers beside your copy");
+  const man = release.man;
+  if (!man) {
+    emit.ok("fleet", "The public repository was not reachable, so no capability workers were "
+      + "installed this time. Your copy works without them; the next update adds them.");
+    return;
+  }
+  if (!Array.isArray(man.fleet) || man.fleet.length === 0 || !man.fleetSig) {
+    emit.ok("fleet", "This release names no capability workers, so there was nothing further "
+      + "to install. Said explicitly rather than assumed: absence of members in the manifest "
+      + "is a fact about the release, not about your copy.");
+    return;
+  }
+  if (!ARMED_SIGNERS.length) {
+    emit.ok("fleet", "This installer carries no signing key, so the capability workers "
+      + "(which install only under a verified fleet signature) were left out. The plane "
+      + "itself installed normally.");
+    return;
+  }
+  /* The statement is REBUILT from the manifest by the same function that
+     produced it at the cut — producer/verifier agreement, and the /2 facts
+     (compat, part types) are required by construction: a manifest stripped of
+     them, or a pre-/2 manifest, refuses BY NAME right here. */
+  let payload;
+  try {
+    payload = fleetStatement({ version: man.version,
+      plane: { sha256: man.sha256, bytes: man.bytes, asset: man.asset || "bio-plane.bundled.mjs" },
+      members: man.fleet });
+  } catch (e) {
+    emit.ok("fleet", "The release names capability workers but its manifest does not state "
+      + "how they are uploaded (" + String(e.message).replace(/^REFUSED \[[A-Z_]+\]: /, "")
+      + ") — so none were installed. The plane itself installed normally; a corrected "
+      + "release fixes this at the next update.");
+    return;
+  }
+  const v = await verifySshsig(man.fleetSig, new TextEncoder().encode(payload), NS_FLEET, ARMED_SIGNERS);
+  if (!v.ok) {
+    emit.ok("fleet", "The fleet signature did not verify (" + (v.reason || "invalid") + "), so no "
+      + "capability workers were installed. The plane itself installed normally and is safe.");
+    return;
+  }
+  /* The pairing: the signed statement names the plane these members were built
+     against, and it must be the plane THIS act just installed. */
+  const planeSha = hex(await crypto.subtle.digest("SHA-256", enc.encode(release.source)));
+  if (planeSha !== man.sha256) {
+    emit.ok("fleet", "The fleet is signed against a different plane than the one just "
+      + "installed (the installer used its built-in copy), so no capability workers were "
+      + "installed. The next update, fetching both halves together, adds them.");
+    return;
+  }
+  const done = [], left = [];
+  for (const m of man.fleet) {
+    try {
+      const badType = (m.parts || []).find((pp) => !PART_MIME[pp.type]);
+      if (badType) throw new Error("part " + badType.path + " has module type '" + badType.type
+        + "' this installer does not know — refusing to guess a loader");
+      const bundle = await fetchVerified(CFG.RELEASE_LATEST + "/" + m.asset, m.sha256, m.member);
+      const partBytes = {};
+      for (const pp of m.parts || []) {
+        partBytes[pp.path] = await fetchVerified(
+          CFG.RELEASE_LATEST + "/" + m.member + "/" + pp.path, pp.sha256, m.member + " " + pp.path);
+      }
+      await uploadMember(token, acct, slug, m, String(man.version), bundle, partBytes);
+      done.push(m.member);
+    } catch (e) {
+      left.push({ member: m.member, why: String(e && e.message || e) });
+    }
+  }
+  if (left.length === 0) {
+    emit.ok("fleet", "All " + done.length + " capability workers installed and verified: "
+      + done.join(", ") + ".");
+  } else {
+    emit.ok("fleet", (done.length ? done.length + " capability worker(s) installed (" + done.join(", ") + "); " : "")
+      + left.length + " left out: "
+      + left.map((l) => l.member + " (" + l.why + ")").join("; ")
+      + ". Your copy works without them; the next update retries exactly this step.");
+  }
+}
+
 async function ensureSubdomain(token, acct, slug) {
   let sub = null;
   try { sub = (await cf(token, `/accounts/${acct}/workers/subdomain`))?.subdomain || null; }
@@ -616,6 +752,10 @@ async function runInstall(emit, code, saved) {
       + e.message + ")");
   }
 
+  /* IC-82/D-297: the fleet rides the same act. Per-member degradation lives
+     inside installFleet — it never fails the install. */
+  await installFleet(emit, token, acct.id, slug, release);
+
   emit.step("addr", "Turning on your web address");
   let base;
   try {
@@ -739,6 +879,11 @@ async function runUpdate(emit, code, saved) {
       "Your copy is still running the version it had before. Nothing about it changed.",
       "Detail: " + e.message);
   }
+
+  /* The update path installs OR refreshes the members — the PUT is the same
+     act, and this is what heals a copy installed before the fleet existed
+     (the SELF-binding precedent, now for whole workers). */
+  await installFleet(emit, token, acct.id, slug, release);
 
   emit.step("addr", "Finding your copy's address");
   let base = null;
