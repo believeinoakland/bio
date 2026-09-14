@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-695 rulings across 67 documents.
+697 rulings across 67 documents.
 
 ## DEC-
 
@@ -1357,6 +1357,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/MEASUREMENTS.md:8573`
 - sentences in append-only history and a SETTLED IC. **THE GUARDED COLUMN WAS INVERTED ON THIS ESTATE — MEASURED, NOT INFERRED.** Until today `walkfloor.mjs` graded a floor site by a regex asking whether the file CARRYING the floor imports  
   `docs/development/MEASUREMENTS.md:8616`
+- THE MECHANIZATION, DECIDED — AND THE DECLINED OPTION PRICED **IT CAN BE DONE STATICALLY, FOR A MEASURED FRACTION, AND THE FRACTION IS PRINTED ON EVERY RUN RATHER THAN CLAIMED.** `bio-plane/test/m025-arm-anchor-witness.test.mjs` is battery-discovered,  
+  `docs/development/MEASUREMENTS.md:10335`
+- RECORD · open |` and the gate's token set is `M\d+|DOCTRINE|ACCEPTED|WATCH|SUPERSEDED| NOT OURS|BOB's`.  
+  `docs/development/MEASUREMENTS.md:10418`
 - **2026-08-01** — CORRECTED 2026-08-01 — this hole is CLOSED and the paragraph below is kept as the > reasoning that closed it.** One reconciling Durable Object alarm now serves FIVE > consumers (selection-sweep, task-drain, archive-monitor, connection-derive, > overdue-scan), three of which landed within a week of the decision.  
   `docs/development/MILESTONES.md:117`
 - Bob already RULED the doctrine** — content > produced by a third-party script, if it is ever evidence, is recorded as produced by > THAT party and not by the hosting site.  

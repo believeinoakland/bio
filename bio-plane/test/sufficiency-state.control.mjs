@@ -116,6 +116,17 @@
  *       fail, and CORRECTS them with a note saying why the old expectation was
  *       right when it was written. It is not an exemption and must not become
  *       one.
+ *
+ *       **2026-09-13, M0-25: THE PREDICTION ABOVE CAME TRUE AND NOTHING SAW IT.**
+ *       `7844e16` (PL-19) landed DEC-65's shape (b) at exactly this site. The
+ *       SUITE was corrected with it — arm 7's two failing assertions today are
+ *       PL-19's own, naming the licence and the single asking site — but THE
+ *       ARM'S ANCHOR WAS NOT MOVED, so from PL-19 until this census the arm
+ *       reported `ARM DID NOT ARM` and the prediction resolved into silence.
+ *       Re-anchored at the arm (the reason is written there); re-run ALONE,
+ *       `37 pass, 2 fail`, AS DECLARED. The old expectation was right when it was
+ *       written and is superseded rather than exempted — which is what the
+ *       paragraph above asked for and is now, late, recorded.
  * ====================================================================
  */
 import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } from "node:fs";
@@ -156,8 +167,34 @@ const ARMS = [
   { id: "6-over-strictness", what: "the value RE-SPELLED — correct work in a spelling the suite did not anticipate MUST PASS",
     patches: [[CHECKS, "export const SUFFICIENCY_UNCLAIMED = 'none:independent-sufficiency';",
                "export const SUFFICIENCY_UNCLAIMED = 'none:no-independent-sufficiency-claim';"]] },
+  /* RE-ANCHORED 2026-09-13 BY M0-25's ARM-LIVENESS CENSUS, AND THE FINDING IS
+     KEPT AT THE SITE RATHER THAN QUIETLY REPAIRED — THIS ARM HAD STOPPED ARMING
+     ON `main`, AND THE ITEM THAT KILLED IT IS THE ONE THIS ARM WAS WRITTEN TO
+     GREET. The anchor was `    if (typeof g.asserted_by !== 'string' || ...) {`,
+     the spelling C-25.6's guard had when this arm was written. **`7844e16`
+     (PL-19, DEC-65 shape (b) — the single-part licence, at the check AND the
+     guard) changed that line IN PLACE**: the predicate gained a `!noClaim &&`
+     conjunct and moved onto a continuation line, so the quote matched ZERO times
+     from PL-19 until this census. Measured with `git log -S` on the old anchor —
+     introduced at `e939cdd` (PL-1), gone at `7844e16` — and the old anchor occurs
+     zero times in the tree found here.
+
+     WHY THIS ONE IS THE SHARPEST INSTANCE IN THE ESTATE, and it is why the
+     finding is kept rather than summarised: the header block above ALREADY
+     PREDICTED this exact commit. It says, in as many words, that "the item that
+     lands DEC-65's shape (b) will see these two fail, and CORRECTS them with a
+     note saying why the old expectation was right when it was written. It is not
+     an exemption and must not become one." PL-19 landed DEC-65's shape (b) — and
+     the arm did not fail, because a dead arm cannot fail. **A prediction written
+     into a driver nothing runs is not a mechanism, and this is the receipt.**
+     The same class as D-276 killing `harness.control.mjs` H8 and
+     `fanout.control.mjs` F4b, which is what M0-25 exists for.
+
+     Re-anchored on the line as it now reads, spanning both lines of the
+     conjunction so no single-line re-indent can silently halve it; asserted to
+     occur exactly once before it was written. */
   { id: "7-wire-it-into-c-25-6", what: "the NEXT item's change, for one run: C-25.6 consumes the state",
-    patches: [[CHECKS, "    if (typeof g.asserted_by !== 'string' || g.asserted_by.trim() === '' || isMachineIdentity(g.asserted_by)) {",
+    patches: [[CHECKS, "    if (!noClaim\n        && (typeof g.asserted_by !== 'string' || g.asserted_by.trim() === '' || isMachineIdentity(g.asserted_by))) {",
                "    if (!isSufficiencyClaimed(g.asserted_by)) {"]] },
 ];
 

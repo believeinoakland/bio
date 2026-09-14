@@ -108,11 +108,23 @@ const ARMS = [
   {
     id: "baseline",
     what: "NO EDIT AT ALL — the row that distinguishes five-arms-broken from five-arms-working",
+    /* 32 -> 34, 2026-09-13 BY M0-25, AND THE OLD EXPECTATION WAS RIGHT WHEN IT WAS
+       WRITTEN — it is SUPERSEDED, never exempted. M0-25 lands two files that walk a
+       directory with a discovery primitive in code: `test/m025-arm-census.mjs` (the
+       arm-liveness census, NAMED in hygiene's unguarded list — it runs the control
+       drivers and floors on nothing) and `test/m025-arm-anchor-witness.test.mjs`
+       (the battery-side half, which DOES floor and therefore asks
+       `scripts/provenance.mjs`, so it enters the census on the GUARDED side).
+       Hygiene's reach floor moved 32 -> 34 in the same turn, from the figure that
+       run PRINTED. **This pin is the class M0-25 exists for, one step over: a
+       control driver quoting a FIGURE rather than a line, going stale the same way
+       and for the same reason.** It is corrected here rather than loosened to a
+       `>=`, because an exact pin is what makes the `neuter` arm below a delta. */
     expect: "hygiene GREEN (0 fail) and walkfloor GREEN (0 fail). The census must print "
-          + "`32 file(s)` — the figure D-301 measured and moved the REACH floor onto. "
+          + "`34 file(s)` — D-301's own 32 plus M0-25's two walking instruments. "
           + "If this row is red, every other row in this table is uninterpretable.",
     file: null, patch: null,
-    ok: (r) => r.hygiene.fail === 0 && r.walkfloor.fail === 0 && /class census: 32 file\(s\)/.test(r.hygiene.out),
+    ok: (r) => r.hygiene.fail === 0 && r.walkfloor.fail === 0 && /class census: 34 file\(s\)/.test(r.hygiene.out),
   },
   {
     id: "realwalk",
@@ -147,13 +159,18 @@ const ARMS = [
     id: "fixture",
     what: "THE ARM THIS ITEM EXISTS FOR — a WALKING FIXTURE in a template literal and in a "
         + "string must NOT be enumerated",
-    expect: "MUST **PASS**, both suites GREEN, and the census must still print `32 file(s)` — "
+    /* 32 -> 34, 2026-09-13 BY M0-25 — the same supersession as the baseline arm
+       above, same cause (two new walking instruments), and the same reason for
+       keeping it EXACT rather than loosening it to a `>=`: this arm's whole claim
+       is that the fixture is ABSENT FROM THE CORPUS, and only an exact figure can
+       say so. */
+    expect: "MUST **PASS**, both suites GREEN, and the census must still print `34 file(s)` — "
           + "the probe is not merely graded harmless, it is ABSENT FROM THE CORPUS. The "
           + "fixture is written from scratch and is NOT the one on the allowlist: reusing "
           + "`walkfigure.test.mjs`'s library would test that one file rather than the class.",
     newFile: join(PLANE, "test", "d301-fixture.probe.mjs"),
     body: FIXTURE_PROBE,
-    ok: (r) => r.hygiene.fail === 0 && r.walkfloor.fail === 0 && /class census: 32 file\(s\)/.test(r.hygiene.out),
+    ok: (r) => r.hygiene.fail === 0 && r.walkfloor.fail === 0 && /class census: 34 file\(s\)/.test(r.hygiene.out),
   },
   {
     id: "before",
@@ -180,7 +197,7 @@ const ARMS = [
     id: "neuter",
     what: "NEUTER THE READER — make the census's lexer blank EVERYTHING, so it sees no code at all",
     expect: "MUST FAIL as a DELTA WITH THE CORPUS PRINTED: the REACH arm goes red at "
-          + "`0 walking file(s), floor 32` and the stale-list arm goes red naming all nine "
+          + "`0 walking file(s), floor 34` and the stale-list arm goes red naming all nine "
           + "entries at once. D-265's arm, re-proven on the moved matcher. A detector that "
           + "finds nothing passes every clean corpus, so without this row the `fixture` arm "
           + "above is satisfied for free — a census that looked at nothing would also report "
@@ -194,7 +211,12 @@ const ARMS = [
       ? s.replace("export const stripToCode = (src) => strip(src, { keepInterpolations: true });",
                   "export const stripToCode = (src) => src.replace(/[^\\n]/g, \" \");")
       : null,
-    ok: (r) => r.hygiene.fail > 0 && r.walkfloor.fail > 0 && /0 walking file\(s\), floor 32/.test(r.hygiene.out),
+    /* `floor 32` -> `floor 34`, 2026-09-13 BY M0-25: hygiene's REACH floor moved
+       with the corpus, from the figure that run PRINTED, so the message this arm
+       reads for now names 34. The ARM is unchanged — a lexer blinded to everything
+       must still report ZERO walking files against a non-zero floor, which is the
+       delta this row exists to produce. */
+    ok: (r) => r.hygiene.fail > 0 && r.walkfloor.fail > 0 && /0 walking file\(s\), floor 34/.test(r.hygiene.out),
   },
 ];
 

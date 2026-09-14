@@ -295,9 +295,25 @@ arm("H", "THE `cases` ROW COMMITTED FROM A REQUEST RATHER THAN FROM THE SIGNED D
   + "committed-from-bytes arms MUST fail. **EVERY ACT-SIDE ARM IN §2–§6 MUST STAY GREEN, WHICH IS "
   + "THE POINT**: the ceremony goes on refusing correctly while the record commits an attribution "
   + "no signature covers, and a reader cannot tell the two apart.",
-  [["index", `      const caseProject = caseId && typeof ratifiedFm.case_project === "string"\n`
-           + `        && ratifiedFm.case_project !== "null" ? ratifiedFm.case_project : null;`,
-             `      const caseProject = caseId ? "PROJ-ARMED-CASE2-CONTROL-H" : null;`]],
+  /* RE-ANCHORED 2026-09-13 BY M0-25's ARM-LIVENESS CENSUS, AND THE FINDING IS KEPT:
+     THIS ARM HAD STOPPED ARMING ON `main`, AND IT CHANGED FILES WHEN IT DIED.
+     It quoted `const caseProject = caseId && typeof ratifiedFm.case_project === …`
+     in `src/index.mjs` — CASE-2's spelling, written at `ce2fe34`. **`808342f`
+     (case-5b) moved the ratify commit out of the control plane and into the store's
+     signing ceremony**, where the same read is now
+     `const project = typeof fm.case_project === "string" && fm.case_project !== "null" ? … : null`
+     on the SIGNED document's frontmatter. So the anchor did not merely move lines,
+     it moved MODULES — `caseProject` now occurs exactly once in `src/index.mjs` and
+     that once is a name inside a comment's field list, which is why a matcher
+     looking for the identifier would have reported the arm healthy. Only counting
+     the ARM'S OWN QUOTE can see this. Measured: old anchor zero occurrences, new
+     anchor exactly one, both against the committed blob.
+     The arm is unchanged in meaning — the attribution is taken from something other
+     than the signed bytes, so the record commits a project no signature covers —
+     and it now names `store` because that is where the read lives. */
+  [["store", `      const project = typeof fm.case_project === "string" && fm.case_project !== "null"\n`
+           + `        ? fm.case_project.trim() : null;`,
+             `      const project = "PROJ-ARMED-CASE2-CONTROL-H";`]],
   [{ name: OWN,
      mustFail: ["THE `cases` ROW IS WRITTEN, AND IT NAMES THE PUBLISHING PROJECT"],
      mustNotFail: ["A PUBLICATION NAMING NO PROJECT IS REFUSED BY NAME",

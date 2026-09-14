@@ -10243,3 +10243,191 @@ have moved that figure by two; this one does not, measured rather than assumed.
 members · 6/6 surface ops · 8/8 SUITES declaring a negative control · 73 arms` against a floor
 moved in the same turn to 8 suites / 73 arms. `node civicos-ui/test/run.mjs` from the REPO
 ROOT, exit read unpiped: **exit 0, all harnesses green.**
+
+## M-11 · 2026-09-13 · M0-25 — THE ARM-LIVENESS CENSUS: every control driver in the estate run whole, and the class that killed two arms silently turns out to have killed thirteen (worktree `agent-af1219fd05eadf256`)
+
+**WHY THERE IS A MEASUREMENT HERE AT ALL.** D-323 re-ran the only two control drivers its own
+subject touched and found BOTH carrying arms that no longer armed — `harness.control.mjs` H8 and
+`fanout.control.mjs` F4b, each killed by D-276 changing the LINE THE ARM QUOTES without moving the
+arm's copy of it, one of them the arm whose whole job is proving `fanout`'s strongest assertion CAN
+fail. **Nothing in this estate runs the control drivers**, so the only way either was ever going to
+surface was an item happening to touch its subject. This is what happened when something finally
+ran all of them.
+
+### THE REACH, AS A FIGURE
+
+| | |
+| --- | --- |
+| test directories looked in | **6** — `agent-worker/test`, `bio-plane/test`, `civicos-ui/test`, `newgroup/test`, `ocr-worker/test`, `pdf-worker/test` |
+| drivers by the convention `*.control.mjs` | **83** at the start of the item, **84** after it (it lands one) — 5 / 64 / 11 / 0 / 1 / 2 across those six |
+| what the convention MISSES | **4**, every one run anyway |
+| total in the census | **87** at the start, **88** after |
+| drivers RUN | **88** (87 in the two runs of record plus the one this item added) |
+| arms ANNOUNCED | **331**, over the **46** drivers whose announcement shape the matcher reads — **42 report `arms: ?`, printed as unknown and NEVER as zero** |
+| drivers with a STALE arm | **8** |
+| stale ARMS re-anchored | **13** |
+
+**WHAT THE CONVENTION MISSES, AND IT IS NOT A QUIBBLE.** Two drivers are spelled
+`*-controls.mjs` (`cpdf16-floor-controls.mjs`, `d315-guard-controls.mjs`) and two more carry their
+arm tables behind a `--controls` FLAG rather than in a filename at all
+(`ocr-composed-probe.mjs`, `cpdf15-tesseract-runtime.probe.mjs`). **A filename convention cannot
+see a driver whose driver-ness is an argument.** `newgroup/test` holds two `.test.mjs` and no
+driver of either kind; it is named here so its zero reads as a measurement rather than an omission.
+
+**WHAT COULD NOT BE EXERCISED, NAMED RATHER THAN SKIPPED.** CPDF-15's `--controls` was run
+WITHOUT `--engine`, so its ENGINE pins were not exercised: they need an npm install of
+`tesseract-wasm` plus a model fetched over the network, which is not a thing this lane may do.
+The rest of that driver's table ran.
+
+### THE EIGHT DRIVERS WITH DEAD ANCHORS, EACH WITH THE COMMIT THAT STALED IT
+
+| driver | arm(s) | staling commit | what moved |
+| --- | --- | --- | --- |
+| `agent-worker.control.mjs` | V2 | **never armed** + `7ab8d4c` (CPDF-10) | see below — the worst of the eight |
+| `sufficiency-state.control.mjs` | 7 | `7844e16` (PL-19) | the guard gained a `!noClaim &&` conjunct and a continuation line |
+| `casepin.control.mjs` | a, b, c, d, e | `808342f` (case-5b), `7e10ca9` (CASE-4) | the pin became an upsert; `current_state === "published"` became the case relation; a SELECT gained `, role` |
+| `casesign.control.mjs` | d | `d720333` (D-309) | **two spaces of indentation, and nothing else** |
+| `caseproduction.control.mjs` | H | `808342f` (case-5b) | the read moved MODULE, from `index.mjs` to `store.mjs` |
+| `current.control.mjs` | 5 | **never armed** | the quoted line has never existed anywhere in `bio-plane/src` |
+| `d280-strengthbar.control.mjs` | A, C | `ce2fe34` (CASE-2) | a `for … continue` became a `.find(…)` and `citerId` became `pid` |
+| `run-conditions.control.mjs` | 3 | `bb7b026` (REC-69) | a statement grew a sibling and became a block |
+
+### THE FOUR FINDINGS THE BRIEF DID NOT PREDICT
+
+**(1) TWO ARMS HAD NEVER ARMED SINCE THE DAY THEY WERE WRITTEN, AND ONE OF THEM WAS ITSELF A
+RE-ANCHORING.** `agent-worker.control.mjs`'s V2 carries a comment recording that D-276 re-anchored
+it on 2026-08-09 onto `  members:     2,`. `git log -S 'members:     '` over that file's entire
+history answers **nothing** — the padded spelling has never existed; the line it replaced was
+`  members: 2,` with one space. The 2026-08-09 repair was written from a DESCRIPTION of the line
+rather than from the line, and the arm has reported `THE ARM DID NOT ARM` on every run since the
+moment it was supposedly fixed. `current.control.mjs` arm 5 is the same shape: its anchor,
+`if (!runRow || runRow.context_type !== "project") continue;`, has never occurred anywhere in
+`bio-plane/src` at any commit. **A re-anchoring that is not COUNTED against the file is not a
+repair, and nothing in this estate required the count.** That is now what the battery-side witness
+requires.
+
+**(2) A DEAD ANCHOR BLINDS EVERY ARM BEHIND IT.** Roughly half this estate's drivers THROW on a
+zero match rather than recording it and continuing. `casepin.control.mjs` had FOUR stale anchors
+and only ONE was visible: `edit()` threw at arm (a), so arms (c), (d) and (e) were never reached
+and the driver reported 2 of its 6 arm announcements. Both shapes are defensible and the
+difference was never a decision, which is why it is filed as `design` (D-331) with a recommendation
+rather than as a defect.
+
+**(3) A SECOND STALENESS SURFACE, INVISIBLE TO ANY STATIC CHECK.** A driver can quote its own
+SUITE'S ASSERTION LABEL instead of its subject's source line. `aicredential.control.mjs` quoted
+`every one of the 26 ops no member reaches…` against a label the suite composes as
+`${beyond.length}`; the count moved 26 -> 28 and **the two sites failed in opposite directions** —
+the `mustFail` use printed `** WRONG`, the `mustNotFail` use went silently vacuous. A label
+composed at run time exists in no file, so nothing static can check it. Filed as D-329.
+
+**(4) THE CENSUS FOUND ITS OWN MATCHER WRONG, FOUR TIMES, IN BOTH DIRECTIONS.** Two spellings of
+"did not arm" were missing (`ARM NEEDLE not unique … found 0 occurrence(s)` and
+`ARM REFUSED TO ARM BLIND: '…' occurs 0 times`), and both THROW out of the driver so nothing in
+the run's prose said "did not arm" at all — **four stale drivers would have been scored as four
+clean passes had the census trusted its phrase table.** The only reason they were seen is the
+design choice that a NON-ZERO EXIT with no recognised phrase is reported `UNCLASSIFIED` and read
+by a human, never scored as either outcome. In the other direction it manufactured two findings:
+`query.control.mjs`'s clean bill of health (`arms that never armed: 0`) read as its opposite, and
+`dec65-strength-reach.control.mjs`'s DECLARATION of an arm against "the suite's own
+arm-did-not-arm guard" read as a verdict. Both were caught by the exit code disagreeing with the
+verdict. All four corrections are at the matcher's site.
+
+### THE MECHANIZATION, DECIDED — AND THE DECLINED OPTION PRICED
+
+**IT CAN BE DONE STATICALLY, FOR A MEASURED FRACTION, AND THE FRACTION IS PRINTED ON EVERY RUN
+RATHER THAN CLAIMED.** `bio-plane/test/m025-arm-anchor-witness.test.mjs` is battery-discovered,
+runs in under a second, and reads **156 literal anchors from 37 of 87 graded drivers (43%)**
+against a **419-file candidate subject corpus**, asserting that no anchor has gone to ZERO and that
+none is ambiguous in every file that holds it. **It found a dead anchor the RUNTIME census could
+not reach** — `casepin.control.mjs` arm (d)'s, behind arm (a)'s throw — which is the argument for
+it in one line.
+
+**THE DECLINED OPTION, PRICED.** The alternative was a `--dry-anchors` mode on every driver, with
+a battery suite spawning all 88 for their self-reported anchor tables. It reaches **100%** of arms
+rather than 43%, including every anchor built by interpolation, which is exactly the half the
+static reader is blind to. Against that: it is an edit to 88 files written by dozens of items over
+two months with **no shared arm harness between them** — they report an unarmed arm in at least
+thirteen spellings, so there is no `arm()` to change once; **each of those 88 edits is a new place
+for the SAME staleness to live one level up**, since a `--dry-anchors` table that stops matching
+its own arm table is this defect wearing a third costume; and spawning 88 node processes is not a
+sub-second battery suite. **The declined option becomes the right one the day this estate grows a
+shared arm harness, and that is recorded as the trigger rather than held as a preference.**
+
+**AND THE CENSUS STAYS PERIODIC, WHICH IS NOT A CONCESSION.** The two instruments see different
+things and neither subsumes the other. The census RUNS the arms, so it sees an arm that arms
+correctly and then measures nothing (`aicredential`, `severedhomes`, `strengthpair`, `suggest`,
+`provenance-floor` all reported arms NOT AS DECLARED), a driver whose baseline is red on a clean
+tree (`d216-sharing`, 36/4 against a declared 38/0), and every anchor the static reader cannot
+extract. The witness runs on every battery and sees the D-276 class the day it is created. The
+census costs about an hour of machine time; the witness costs under a second.
+
+### WHAT THE STATIC WITNESS CANNOT SEE, STATED BECAUSE A MATCHER'S REACH IS THE THING THE NEXT READER CANNOT RE-DERIVE
+
+- **Anchors that are not LITERAL.** Interpolated, computed, or built from a RegExp. The **51
+  drivers it extracts nothing from are PRINTED BY NAME on every run**, so the blind half is a
+  list rather than a silence.
+- **It does not resolve an arm's SUBJECT.** Resolving `file: COVERAGE` to a path means constant-
+  folding the driver, and this suite does not run the driver. So the claim it makes is weaker than
+  "exactly once in its subject": the anchor occurs somewhere a driver could be quoting, and in no
+  file more than once unless some other file holds it exactly once. **A real duplicate in the true
+  subject is invisible whenever another file happens to hold the same line once** — the runtime
+  census sees that, because each driver's own guard counts in the file it is about to write.
+- **It cannot see an arm that arms and then asserts the wrong thing**, an arm deleted from a
+  table, or a driver quoting a composed assertion label (D-329).
+- The cross-file homonym is real and was measured: `pdf-worker.control.mjs`'s anchor is unique in
+  its own Worker's `index.mjs` and appears four times in the plane's. Failing on that would be a
+  fence tighter than its rule, so the rule is "no file holds it exactly once", not "some file holds
+  it twice".
+
+### THE INSTRUMENT'S OWN HAZARD, MEASURED AND FIXED
+
+`fieldread.control.mjs` runs THE WHOLE BATTERY inside one of its arms, so ten arms is ten
+batteries and it passed a 1500-second timeout while perfectly healthy. `spawnSync`'s timeout
+SIGTERMs it, and **a driver killed between ARM and RESTORE leaves its patch on disk**: it left
+`bio-plane/src/query.mjs` carrying a D-255 tripwire, and the next driver then measured a tree
+nobody meant to hand it. The census's own after-each-driver tracked-file diff caught it — that
+check exists precisely because "every driver restores" is a claim and claims get measured. The run
+was **stopped, the residue restored, the restore VERIFIED by sha256 against the HEAD blob with the
+byte count floored (5 paths, all EQUAL), and the remaining drivers re-run**. The census now STOPS
+at the first dirty-tree event rather than filling a report with worthless rows, and the resumed
+run's discarded rows are named.
+
+### THE GATES, AND THE DELTA ATTRIBUTED PER SUITE RATHER THAN BY SUBTRACTION
+
+Baseline on this worktree, taken after `npm ci` in `bio-plane/`, `ocr-worker/` and `pdf-worker/`:
+**182/182 suites · 11,172 assertions · exit 0** — the briefed figure EXACTLY, which is recorded
+because the practice is to trust the measurement rather than the streak, and this time the streak
+was right.
+
+Final: **183/183 suites · 11,188 assertions · exit 0.** The two per-suite lists were diffed
+mechanically and **every one of the +16 is accounted for**:
+
+| suite | baseline | final | attributed to |
+| --- | --- | --- | --- |
+| `m025-arm-anchor-witness.test.mjs` | — | **12** | this item (NEW) |
+| `hygiene.test.mjs` | 689 | **690** | this item: **+1** — its per-suite censuses walk `bio-plane/test/` and gain one row for the new suite |
+| `planning-hygiene.test.mjs` | 238 | **241** | this item: **+3** — it asserts a disposition token PER DEBT ROW and this item opens three |
+
+**TWO FAILURES ON THE FIRST FINAL RUN, BOTH RECORDED RATHER THAN SMOOTHED, AND BOTH THE ESTATE
+CATCHING THE CENSUS.** (1) `check-firing.test.mjs` went red naming
+`civicos-ui/test/.rec79-control-pristine/arm-1--bio-checks.mjs` — **a PRISTINE COPY a control
+driver leaves behind, which the census's own run had created by running that driver, and which
+`check-firing`'s producer sweep reads as a second producer of a retired check.** A driver's
+residue is not inert: it enters another suite's corpus. Swept, and green. (2)
+`planning-hygiene.test.mjs` named `D-330` for carrying no disposition token — the row had been
+written `| RECORD · open |` and the gate's token set is `M\d+|DOCTRINE|ACCEPTED|WATCH|SUPERSEDED|
+NOT OURS|BOB's`. Corrected to `M2`. **A gate this item did not know about caught a row this item
+wrote, one hour after it was written**, which is the whole argument for the mechanization above
+stated by something other than this item.
+
+`node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED: **exit 0**.
+`node civicos-ui/test/run.mjs` from the REPO ROOT, exit read unpiped: **exit 0, all harnesses
+green.**
+
+**THE FLOOR IS MOVED FROM THE POST-COMMIT PRINT, NOT THE PRE-COMMIT ONE, AND D-238 IS WHY.** The
+pre-commit run printed `REGISTER FLOOR arms 936/936 · classified 173/173 · corpus 174/174` while
+also reporting `942 register arms were counted above; 936 of them come from suites that are in the
+commit` — the new suite was UNTRACKED, so its arms were counted into the headline and excluded
+from the reproducible figure. **A floor set from that number would have been permanently too high
+and would eventually have been switched off**, which is precisely the payload D-238 names. The
+figures below are read from the run AFTER the commit.
