@@ -261,19 +261,47 @@ const renderServices = (services) => [...(services || [])]
    so a member with none is STATED rather than omitted — absent and empty must
    not look alike, here as everywhere else in this statement. */
 const renderParts = (parts) => [...(parts || [])]
-  .map((p) => `${p.path}:${p.sha256}:${p.bytes}`)
+  .map((p) => {
+    /* IC-82 / FLEET's condition, COPY NEVER DEFAULT, enforced in the ONE
+       function both the assembler and the installer run: a part whose module
+       type is unstated cannot enter the statement, so neither side can sign
+       or accept a fleet whose upload facts were guessed. The 3607b5c defect
+       (wasm with no loader) is what an inferred type re-creates. */
+    if (typeof p.type !== "string" || !p.type) {
+      throw new Error(`REFUSED [PART_TYPE_UNSTATED]: part ${p.path} carries no module type; a guessed type is the 3607b5c defect re-created at install (IC-82).`);
+    }
+    return `${p.path}:${p.type}:${p.sha256}:${p.bytes}`;
+  })
   .sort()
   .join(",");
 
+/* `bio-release-fleet/2` (IC-82): the statement carries each member's UPLOAD
+   FACTS — compatibility date + flags, and each part's module type — so a
+   flipped flag or a mistyped part cannot survive under a good signature. A /1
+   statement, or a manifest stripped of these facts, REFUSES here by name on
+   BOTH sides (this function is the producer's serialiser AND the verifier's
+   rebuild), which is the fail-closed geometry the change was accepted with.
+   `flags=-` renders an EMPTY flag list — ocr-worker's deliberate, measured
+   absence of nodejs_compat — distinctly from nothing at all, because absent
+   and empty must not look alike, here as everywhere in this statement. */
 export const fleetStatement = ({ version, plane, members }) =>
-  `${NS_FLEET}/1\n`
+  `${NS_FLEET}/2\n`
   + `version ${version}\n`
   + `plane ${plane.sha256} ${plane.bytes} ${plane.asset}\n`
   + [...members]
       .sort((a, b) => (a.member < b.member ? -1 : a.member > b.member ? 1 : 0))
-      .map((m) => `member ${m.member} ${m.sha256} ${m.bytes} ${m.asset}`
-        + ` services=${renderServices(m.services)}`
-        + ` parts=${renderParts(m.parts)}`)
+      .map((m) => {
+        if (!m.compat || typeof m.compat.date !== "string" || !m.compat.date) {
+          throw new Error(`REFUSED [MEMBER_COMPAT_UNSTATED]: member ${m.member} carries no compatibility_date; a defaulted date is the installer-guessing defect one layer up (IC-82, FLEET's copy-never-default condition).`);
+        }
+        if (!Array.isArray(m.compat.flags)) {
+          throw new Error(`REFUSED [MEMBER_FLAGS_UNSTATED]: member ${m.member} carries no flags list; an empty list is a STATED fact and must arrive as [], never as absence (IC-82).`);
+        }
+        return `member ${m.member} ${m.sha256} ${m.bytes} ${m.asset}`
+          + ` compat=${m.compat.date}+${m.compat.flags.length ? [...m.compat.flags].sort().join(",") : "-"}`
+          + ` services=${renderServices(m.services)}`
+          + ` parts=${renderParts(m.parts)}`;
+      })
       .join("\n")
   + "\n";
 

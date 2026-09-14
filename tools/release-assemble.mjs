@@ -180,10 +180,38 @@ for (const m of all) {
      The installer substitutes the instance slug at upload, so the slug is never
      a value that arrived over the network. */
   const wrangler = join(m.abs, "wrangler.jsonc");
-  const services = existsSync(wrangler)
-    ? (parseJsonc(readFileSync(wrangler, "utf8"), `${m.name}/wrangler.jsonc`).services || [])
-        .map((s) => ({ binding: s.binding, service: s.service }))
-    : [];
+  const wcfg = existsSync(wrangler)
+    ? parseJsonc(readFileSync(wrangler, "utf8"), `${m.name}/wrangler.jsonc`)
+    : null;
+  const services = (wcfg?.services || []).map((s) => ({ binding: s.binding, service: s.service }));
+  /* IC-82, under FLEET's copy-never-default condition: the member's UPLOAD
+     FACTS are COPIED from its own config at cut time, and a member whose
+     config does not state them REFUSES assembly — a default supplied here is
+     the installer-guessing defect one layer up, wearing the signature it
+     should have been refused by. An ABSENT flags key is wrangler's own
+     spelling of the empty list (ocr-worker's deliberate, commented state) and
+     is copied as the stated []; an absent compatibility_date is the gap. */
+  let compat = null;
+  if (m.name !== "bio-plane") {
+    if (!wcfg || typeof wcfg.compatibility_date !== "string" || !wcfg.compatibility_date) {
+      die("MEMBER_COMPAT_UNSTATED",
+        `${m.name}'s wrangler.jsonc states no compatibility_date, and IC-82 forbids defaulting one.`,
+        "The manifest COPIES upload facts from the member's own config. State the date there\n"
+        + "(FLEET's file, FLEET's truth), then assemble again.");
+    }
+    compat = { date: wcfg.compatibility_date, flags: wcfg.compatibility_flags || [] };
+  }
+  /* Each part's module type, from the member's own `rules` — the very rules
+     3607b5c had to fix. A part no rule covers refuses; extension inference is
+     the defect IC-82 exists to keep out of group accounts. */
+  const globToRe = (g) => new RegExp("^" + g.replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*\*\//g, "(?:.*/)?").replace(/\*\*/g, ".*").replace(/\*/g, "[^/]*") + "$");
+  const typeOfPart = (rel) => {
+    for (const r of wcfg?.rules || []) {
+      if ((r.globs || []).some((g) => globToRe(g).test(rel))) return r.type;
+    }
+    return null;
+  };
   /* THE MEMBER'S OTHER UPLOAD PARTS. `ocr-worker` (CPDF-10 / IC-78) ships a
      tesseract wasm core and a language model beside its bundle — declared
      `external` so esbuild does not inline them, and `assets` so FL-9's guard
@@ -215,14 +243,22 @@ for (const m of all) {
         `  manifest: ${declared.sha256}\n  on disk : ${sha256(bytes)}\n`
         + "The engine or model underneath this member changed without a rebuild.");
     }
-    parts.push({ path: rel, sha256: sha256(bytes), bytes: bytes.length, from: abs });
+    const ptype = typeOfPart(rel);
+    if (!ptype) {
+      die("MEMBER_PART_UNTYPED",
+        `${m.name}'s part ${rel} matches no module rule in its wrangler.jsonc, and IC-82 forbids inferring one.`,
+        "The part's module type is what 3607b5c had to fix at deploy; state the rule in the\n"
+        + "member's own config (FLEET's file), then assemble again.");
+    }
+    parts.push({ path: rel, type: ptype, sha256: sha256(bytes), bytes: bytes.length, from: abs });
   }
   if (parts.length) {
     console.log(`       + ${parts.length} upload part(s): `
       + parts.map((x) => `${x.path} (${x.bytes} B)`).join(", "));
   }
   entries.push({ member: m.name, asset: `${m.name}.bundled.mjs`, sha256: sha256(committed),
-                 bytes: committed.length, from: join(m.abs, m.bundle.outfile), services, parts });
+                 bytes: committed.length, from: join(m.abs, m.bundle.outfile), services, parts,
+                 ...(compat ? { compat } : {}) });
   console.log(`guard: ${m.name} fresh — ${built.bytes.length} B, sha256 ${sha256(committed).slice(0, 16)}…`);
 }
 
@@ -412,9 +448,9 @@ const out = {
   asset: "bio-plane.bundled.mjs",
   sig: planeSig,              // the PLANE signature, verified above over THIS asset
   signer: existing.signer,
-  fleet: fleetEntries.map(({ member, asset, sha256: s, bytes, services, parts }) =>
-    ({ member, asset, sha256: s, bytes, services,
-       parts: (parts || []).map(({ path, sha256: ps, bytes: pb }) => ({ path, sha256: ps, bytes: pb })) })),
+  fleet: fleetEntries.map(({ member, asset, sha256: s, bytes, compat, services, parts }) =>
+    ({ member, asset, sha256: s, bytes, compat, services,
+       parts: (parts || []).map(({ path, type, sha256: ps, bytes: pb }) => ({ path, type, sha256: ps, bytes: pb })) })),
   fleetSig,
 };
 writeFileSync(join(RELEASE_DIR, "RELEASE.json"), JSON.stringify(out, null, 2) + "\n");

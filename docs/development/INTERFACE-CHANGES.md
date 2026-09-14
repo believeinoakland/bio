@@ -5977,3 +5977,18 @@ themselves are additive; the statement bump is what gets versioned. All three co
 are on the row: DIST proposing, FLEET's AGREE with the copy-never-default condition
 (`0b704cf`), CONTENT-PDF answered for above with its measurement. `INTERFACES.md` bumped
 in the same act. D-297's build is UNGATED by this resolution.
+
+### IC-82 ADDENDUM · 2026-09-14, DIST #2, AT ENACTMENT — **THE IN-PLACE PREMISE WAS FALSIFIED BY THE FIRST DRY-RUN, AND THE ENACTMENT MOVES TO THE ALTERNATIVE THE ENTRY NAMED**
+
+The accepted recommendation ("in place at 0.57.0, every asset byte-identical") rested on a
+premise the assembler's own freshness guard falsified the moment it ran: **`agent-worker`'s
+committed bundle has moved since the 0.57.0 cut** (manifest: `5464ec8a…`, 53,258 B; tree,
+proved fresh: `bce5043b…`, 57,379 B — FL-6's cascade landed into the member after `ba05e9c`).
+Re-signing at 0.57.0 would therefore publish a SECOND, DIFFERENT 0.57.0 for that member —
+the immutability class `VERSION_ALREADY_RELEASED` refuses for the plane, arriving one asset
+over — and keeping the OLD bundle in the manifest would refuse the freshness guard instead,
+correctly. So the format change rides a REAL version: **0.58.0, the full release ceremony**,
+which the entry offered as the COUNTER shape and nobody preferred only on cost. The format
+halves of the ACCEPTED change are untouched; this addendum changes only the vehicle. The
+premise's failure is recorded here rather than worked around because a record that quietly
+adjusts its own accepted reasoning is the drift class this file exists to prevent.
