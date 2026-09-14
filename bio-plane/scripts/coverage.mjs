@@ -758,7 +758,10 @@ const REGISTER_FLOOR = {
      ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file,
      here and in `FLEET_FLOOR`, the documented state. `FLEET_FLOOR` is UNMOVED
      and none is owed — this item adds no fleet member and no fleet suite. */
-  arms: 957,
+  /* MOVED 2026-09-14 by CONDUCT #10 at the D-329+D-331+D-333 MERGE (957 -> 958): the merged run's
+     own print read `arms 958/957` — the +1 is BOB's corpuscheck.test.mjs landing beside the item,
+     invisible to the branch that set 957. One key set, read from the print after the commit (D-238). */
+  arms: 958,
   classified: 178,
   corpus: 179,
 };
