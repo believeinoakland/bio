@@ -1,4 +1,13 @@
 #!/usr/bin/env node
+/* DATED NOTE, 2026-09-13, ADDED BY D-323 — NOTHING BELOW IS EDITED. This is a
+   MEASUREMENT OF RECORD and the candidate shapes it probes are the ones VF-4
+   handed the live plane at 0.57.0. D-323/D-324 landed the same day: the harness
+   now mints `level-empty-<reporting level>`, so the `level-empty:content` shape
+   this file probes is the PRE-FIX one and is kept as the exhibit. Re-running it
+   still measures what the deployed plane does with that spelling, which is the
+   question it was written to answer. The local equivalent, driven against the
+   plane's own expressions with no network, is
+   `agent-worker/test/wire-vocabulary.test.mjs` (W8). */
 /* VF-4 diagnostic: seed scratch, open a run, and print `op=suggest`'s FULL
    answer for each candidate shape. Scratch only; sweeps at exit. */
 import { createHash } from "node:crypto";

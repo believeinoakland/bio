@@ -1,5 +1,25 @@
 #!/usr/bin/env node
-/* VF-4 — LIVE VERIFICATION IN SCRATCH. The IS build plan's closing row.
+/* DATED NOTE, 2026-09-13, ADDED BY D-323 — READ THIS BEFORE RE-RUNNING.
+ *
+ * **NOTHING BELOW IS EDITED. This file is a MEASUREMENT OF RECORD and a
+ * measurement is not rewritten when the world it measured moves.** What has
+ * moved: D-323/D-324 landed the same day, and `emptyLevelCandidates` in
+ * `agent-worker/src/harness.mjs` now mints `level-empty-<reporting level>` —
+ * a dash, and `SUGGEST_LEVELS`' spelling — instead of `level-empty:<log level>`.
+ *
+ * SO TWO PINS IN PHASE 4b ARE NOW STALE AS PREDICTIONS AND EXACT AS HISTORY:
+ * the assertion at 4b-ii that the landed table names its candidates
+ * `level-empty:<level>`, and the refusal it then reads back
+ * (`BASIS_REFUSED` / C-25.2 on `level-empty:content`). Re-run against a tree
+ * carrying the fix and that arm will report the NEW name and NO refusal — which
+ * is the fix working, not a regression. **Whoever re-runs this owns the choice**
+ * between re-pinning the arm to the new spelling (and saying so, dated, here)
+ * and retiring the arm to `agent-worker/test/wire-vocabulary.test.mjs`, which
+ * now drives the same question locally against the plane's own expressions and
+ * carries the before/after in its W8 block. The figures recorded in
+ * MEASUREMENTS.md M-8 stand exactly as measured at 0.57.0.
+ *
+ * VF-4 — LIVE VERIFICATION IN SCRATCH. The IS build plan's closing row.
  *
  * WHAT THIS DRIVES, AND WHERE. A full CHECK-mode run against a CONCLUDED
  * inquiry, in the live instance's OWN `scratch` namespace — a different Durable

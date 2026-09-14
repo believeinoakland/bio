@@ -3049,3 +3049,56 @@ The one collision that would matter is a second session sharing the scratch name
 will purge each other"), and the probe measures scratch's starting state and prints it, so a
 foreign occupant is visible rather than assumed absent.
 released: 2026-09-13 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 181/181 · 11,080, `coverage --strict` exit 0 read unpiped, UI harness exit 0, `mintid --audit` 0 breaks. VF-4 done — the IS build plan is COMPLETE; D-323+D-324 enqueued as one item, D-325 filed on the confinement finding.
+
+## CLAIM 2026-09-13 FLEET (D-323 + D-324 — ONE VOCABULARY, ONE GROUND: the empty-run instrument's own object made writable through the plane's REAL grammar, and the mocks stop answering a wire that does not exist)
+
+The fix is taken AT THE HARNESS, not at the grammar — so this claim names **NO path under
+`bio-plane/src/**` or `bio-plane/checks/**`.** Those are READ (imported by the new suite and by
+the shared mock instrument, which is the whole point: the expectation is DERIVED from the
+plane and never re-typed) and are not edited. **No IC is filed and none is owed**: no wire
+string another area builds against moves. The member's minted `name`/`level` values move, and
+they move from a spelling the deployed plane has ALWAYS REFUSED — so no record anywhere holds
+the old spelling and there is nothing to migrate (VF-4 measured `wrote: false`, M-8).
+opened: 2026-09-13
+paths:
+  - `agent-worker/src/harness.mjs` — **ONE function, `emptyLevelCandidates`**, plus the
+    `SUGGEST_LEVEL_OF` map it reads. Nothing else in the file; `CONTROL_FLOW`, `nextStep`,
+    `stepLog`, `canonical`, `adjustedFrom` and the budget helpers are untouched.
+  - `agent-worker/dist/agent-worker.bundled.mjs` and `agent-worker/dist/agent-worker.bundle.json`
+    — **REGENERATED, never hand-edited**, by `npm run build` in `agent-worker/`. Claimed
+    because FL-9's gate (`bio-plane/test/fleetbundles.test.mjs`) asserts the committed artifact
+    is byte-identical to a fresh build of its source, so a source edit that does not rebuild
+    FAILS the battery. `release/**` is NOT claimed and is NOT touched — that is DIST's.
+  - `agent-worker/test/plane-suggest.mjs` (NEW) — the plane mock's `op=suggest` branch,
+    DERIVED from `VERSION_NAME_RE`, `SUGGEST_KINDS`, `SUGGEST_LEVELS`, `BOILERPLATE_FORMS`
+    and `SUGGEST_CHECKS` in the plane's own catalog. `plane-meaning.mjs` (D-276) is the
+    precedent and the shape is deliberately the same. NOT a `.test.mjs`: a shared instrument.
+  - `agent-worker/test/wire-vocabulary.test.mjs` (NEW) — the suite that drives
+    `emptyLevelCandidates`' composed candidate through the plane's REAL validation
+    expressions, imported, with no mock anywhere in it.
+  - `agent-worker/test/harness.test.mjs` — the suggest branch of its plane mock replaced by
+    the shared instrument; B4/B5's `new-version` fixtures CORRECTED to `basis-version` with
+    the reason at the site; B6's colon-form assertion CORRECTED; A7 gains the level-spelling
+    and description arms.
+  - `agent-worker/test/fanout.test.mjs` — the same, at its two colon-form sites and its
+    `new-version` fixture.
+  - `agent-worker/test/harness.control.mjs`, `agent-worker/test/fanout.control.mjs` — ONLY if
+    an arm's patch anchor moved under the corrections above. An arm that stops arming is a
+    finding and is reported, never quietly re-anchored.
+  - `docs/development/DEBT.md` — the D-323 and D-324 dispositions.
+  - `docs/development/MEASUREMENTS.md` — ONE appended section.
+  - `docs/development/CLAIMS.md` — this block.
+  **READ, NEVER EDITED**: `bio-plane/src/**`, `bio-plane/checks/**`, `bio-plane/test/vf4-*.mjs`
+  (VF-4's six files are the measurement of record — a pinned live answer this fix makes stale
+  earns a DATED note in the file's header and never a rewritten measurement),
+  `docs/development/QUEUE.md` (CONDUCT's sole ground), `release/**`, `newgroup/**`.
+concurrency: checked over the register 2026-09-13 — the two blocks above (DIST #2, VERIFY) are
+both RELEASED, and no live claim names `agent-worker/**`.
+  - ADDED MID-ITEM, 2026-09-13: `bio-plane/test/vf4-live-scratch.mjs` and
+    `bio-plane/test/vf4-suggestprobe.mjs` — **HEADER NOTES ONLY, DATED, and not one byte of
+    either measurement touched.** VF-4's six files are the measurement of record; this fix makes
+    two of their pinned live answers stale as PREDICTIONS while leaving them exact as HISTORY,
+    and the standing rule for that is a dated note in the header, never a rewritten measurement.
+    The notes name the moved spelling, say which arm will now read differently and why that is
+    the fix working rather than a regression, and hand the re-pin/retire choice to whoever
+    re-runs them. MEASUREMENTS.md M-8's figures are untouched.

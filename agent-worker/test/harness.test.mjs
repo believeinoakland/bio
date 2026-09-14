@@ -73,7 +73,15 @@ import {
    and still can — what it may no longer do is stage a SUCCESS for an arm the
    record does not hold. */
 import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
-import { MEANING_ARM } from "../src/harness.mjs";
+/* D-323/D-324: the mock's `op=suggest` branch, DERIVED from the plane's own name
+   grammar, kind set, level set and placeholder predicate — the same treatment
+   `plane-meaning.mjs` gave `op=meaningrows` and for the same measured reason.
+   This suite's mock used to answer `{ wrote: true }` for ANY name, ANY kind and
+   ANY level, so B6's `level-empty:<level>` assertion and B4/B5/B8/B9's
+   `new-version` fixtures were all green over submissions a deployed plane
+   refuses (VF-4, live at 0.57.0, MEASUREMENTS M-8). */
+import { suggestBranch, WIRE_CHECKS } from "./plane-suggest.mjs";
+import { MEANING_ARM, REPORTING_LEVEL } from "../src/harness.mjs";
 /* FL-8 / IC-67 — THE PLANE'S STATUS KEYING, TAKEN FROM THE PLANE INSTEAD OF
    REPRODUCED HERE, AND THE CORRECTION IS A MEASURED DEFECT RATHER THAN A TIDY-UP.
    The mock's `airunclose` branch computed the run's status by hand as
@@ -404,9 +412,17 @@ console.log("\n--- A7 · §9's empty-level kind is DERIVED BY THE TABLE (VF-1's 
   for (const st of ["NEVER_LOOKED", "LOOKED_INDETERMINATE", "PRESENT", "partial"])
     t(`'${st}' does NOT produce an empty-level claim`,
       emptyLevelCandidates({ reports: [{ level: "meaning", state: st, observed_at: "x" }] }, "I"), []);
+  /* CORRECTED 2026-09-13 (D-323): the candidate's `level` is the spelling a
+     SUGGESTION is written in (`SUGGEST_LEVELS`), not the spelling the run's
+     observation log uses (`OBSERVATION_LEVELS`), and the two disagree on one
+     member. This arm compared the candidate against the LOG's vocabulary, which
+     is why nothing saw that the document-level candidate was refused
+     `SUGGEST_EMPTY_LEVEL_UNSTATED` / C-27.6 by every deployed plane. The
+     one-per-level claim the arm is actually about is unchanged and is now
+     asserted over the wire's four. */
   t("all four empty produce four candidates, one per level — absence at one level is not absence at the next",
     emptyLevelCandidates({ reports: LEVELS.map((l) => ({ level: l, state: "LOOKED_ABSENT", observed_at: "x" })) }, "I")
-      .map((c) => c.level), LEVELS);
+      .map((c) => c.level), LEVELS.map((l) => REPORTING_LEVEL[l]));
   t("no reports at all produce nothing (an unrun search is not an absence)",
     emptyLevelCandidates({ reports: [] }, "I"), []);
   t("and a malformed state carries nothing", emptyLevelCandidates({}, "I"), []);
@@ -613,37 +629,7 @@ export default {
     if (op === "capturerequest")
       return Response.json({ ok: true, result: { request: "REQ-" + S.log.length, state: "queued" } });
 
-    if (op === "suggest") {
-      const sub = canon(body || {});
-      const prior = S.refusals.get(sub);
-      if (prior) {
-        /* F10, THE PLANE'S HALF: the stored refusal comes back WITHOUT the
-           checks being re-run, and the counter climbs. Nothing else moves. */
-        prior.repeats += 1;
-        return Response.json({ ok: true, result: { ...prior.payload, repeated: true, evaluated: false,
-                                                   wrote: false, repeats: prior.repeats } });
-      }
-      /* PL-3's CHECK 5 — NO BOILERPLATE — reproduced as a PREDICATE ON THE FIELD
-         rather than on the version's name, and that distinction is load-bearing
-         for the F10 arm. The first spelling of this mock refused by NAME, so a
-         submission whose description had been properly rewritten was refused
-         again for a reason the adjustment could never answer; the arm then
-         measured "an adjustment that changed nothing useful" while claiming to
-         measure "an adjustment". Refusing on the offending FIELD is what makes
-         the adjusted submission genuinely acceptable, which is the case F10
-         exists for. */
-      const refuseAs = (CFG.boilerplate || []).includes(String((body && body.description) ?? ""))
-        ? "SUGGEST_BOILERPLATE"
-        : (CFG.refuse || {})[String((body && body.name) || "")];
-      if (refuseAs) {
-        const payload = { ok: false, code: refuseAs, reason: refuseAs, check: "C-27.13",
-          translation: "A machine composes a reading and does not assert its structure.", wrote: false };
-        S.refusals.set(sub, { payload, repeats: 0 });
-        return Response.json({ ok: true, result: { ...payload, repeated: false, evaluated: true } });
-      }
-      S.suggested.push({ name: (body && body.name) || null, kind: (body && body.kind) || null, canon: sub });
-      return Response.json({ ok: true, result: { wrote: true, version: (body && body.name) || null } });
-    }
+    ${suggestBranch({ f10: true })}
     return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
   },
 };
@@ -847,7 +833,13 @@ console.log("\n--- B3 · A BUDGET EXHAUSTION WRITES `runtime-ceiling-reached` --
 
 console.log("\n--- B4 · F10 — A REFUSAL IS FOLLOWED BY AN ADJUSTED SUBMISSION IN THE TRACE ---");
 {
-  const mf = newMf({ mode: "check", maxPasses: 1, budget: wide, boilerplate: ["TBD"] });
+  /* `boilerplate: ["TBD"]` WAS STAGED HERE AND IS GONE ON PURPOSE (2026-09-13,
+     D-324). The mock now runs the plane's OWN `isBoilerplate` over the
+     description, and `tbd` is in the plane's own `BOILERPLATE_FORMS` — so this
+     arm's refusal is now EARNED from the record's predicate rather than handed
+     to the mock by the fixture, which is the difference between measuring F10
+     and measuring a staged string. */
+  const mf = newMf({ mode: "check", maxPasses: 1, budget: wide });
   const res = await runOp(mf, {
     ...base,
     /* THE JUDGEMENT LIST GAINED A SLOT AT FL-5 AND THE OLD SHAPE WAS WRONG
@@ -860,9 +852,17 @@ console.log("\n--- B4 · F10 — A REFUSAL IS FOLLOWED BY AN ADJUSTED SUBMISSION
     judgements: [
       { targets: [] },                                                   /* plan */
       { reports: [] },                                                   /* collect */
-      { candidates: [{ kind: "new-version", name: "v1", description: "TBD" }] }, /* compose */
+      /* D-324: the kind read `new-version` until 2026-09-13, and §9 holds no such
+         kind — a deployed plane answers SUGGEST_UNKNOWN_KIND / C-27.3 and
+         publishes the closed set it holds. The old spelling was WRONG rather
+         than merely old: it passed only against a mock that accepted any kind,
+         so F10's LANDING half had never once been exercised with a kind the real
+         endpoint would take. `TBD` stays exactly as it was — it is in the plane's
+         OWN `BOILERPLATE_FORMS`, so the refusal below is now EARNED from the
+         plane's own predicate instead of staged by this fixture. */
+      { candidates: [{ kind: "basis-version", name: "v1", description: "TBD" }] }, /* compose */
       {},                                                                /* dedup */
-      { submission: { kind: "new-version", name: "v1", description: "what changed, and why, in full" } }, /* adjust */
+      { submission: { kind: "basis-version", name: "v1", description: "what changed, and why, in full" } }, /* adjust */
     ],
   });
   const out = await res.json();
@@ -873,10 +873,19 @@ console.log("\n--- B4 · F10 — A REFUSAL IS FOLLOWED BY AN ADJUSTED SUBMISSION
   t("there is NO submit>submit edge carrying a refusal — no verbatim retry", out.verbatim_resubmits, 0);
   t("exactly one adjustment was made", out.adjusted, 1);
   t("the refusal is on the wire, in the PLANE's words", out.refusals[0]?.code ?? null, "SUGGEST_BOILERPLATE");
-  t("with the plane's C-number unchanged", out.refusals[0]?.plane?.check ?? null, "C-27.13");
+  /* CORRECTED 2026-09-13 (D-324), and the old pair was a DEFECT IN THE FIXTURE
+     rather than a stale expectation. The mock answered EVERY staged refusal with
+     C-27.13's number and C-27.13's translation whatever code it was asked for —
+     so a `SUGGEST_BOILERPLATE` refusal arrived wearing `SUGGEST_UNWRITABLE_STATE`'s
+     C-number and its words, and this arm asserted the plane's refusal was
+     "unchanged, to the byte" over bytes the plane has never sent. Both are now
+     READ OUT OF THE CATALOG BY CODE (`plane-suggest.mjs`), so the two cannot
+     come apart again. */
+  t("with the plane's C-number unchanged", out.refusals[0]?.plane?.check ?? null,
+    WIRE_CHECKS.SUGGEST_BOILERPLATE.check);
   t("and the plane's canned translation unchanged, to the byte",
     out.refusals[0]?.plane?.translation ?? null,
-    "A machine composes a reading and does not assert its structure.");
+    WIRE_CHECKS.SUGGEST_BOILERPLATE.translation);
 
   const st = await mockState(mf);
   const submits = st.log.filter((l) => l.op === "suggest");
@@ -897,12 +906,19 @@ console.log("\n--- B5 · F10's other half: an unanswerable refusal DROPS the can
     judgements: [
       { targets: [] },
       { reports: [] },                                                   /* collect — FL-5's row */
-      { candidates: [{ kind: "new-version", name: "v1", description: "d" }] },
+      /* D-324 as in B4; and the description grew from `"d"` to a real sentence
+         because `promote`'s document gate refuses a version whose description is
+         under C-25.1's floor — a rule the old mock did not hold either. Neither
+         change touches what this arm measures: the refusal is still the STAGED
+         one, and it is still unanswerable by any adjustment. */
+      { candidates: [{ kind: "basis-version", name: "v1",
+                       description: "the reading this run composed, as it stands" }] },
       {},
       /* THE MODEL HANDS BACK THE SAME SUBMISSION — which is what happens when
          the refusal names an act a machine cannot perform (DEC-65's measured
          case: a machine may not assert a version's structure). */
-      { submission: { kind: "new-version", name: "v1", description: "d" } },
+      { submission: { kind: "basis-version", name: "v1",
+                      description: "the reading this run composed, as it stands" } },
     ],
   })).json();
   const edges = (out.trace || []).map((x) => `${x.step}>${x.to}`);
@@ -942,8 +958,21 @@ console.log("\n--- B6 · THE EMPTY RUN (VF-1's owed control 7): proposes NOTHING
   t("no legged version was proposed", st.suggested.filter((s) => s.kind !== "level-empty"), []);
   t("but FOUR level-empty suggestions were written — one per level",
     st.suggested.map((s) => s.kind), ["level-empty", "level-empty", "level-empty", "level-empty"]);
-  t("each names its level", st.suggested.map((s) => s.name),
-    LEVELS.map((l) => `level-empty:${l}`));
+  /* D-323 — THE COLON FORM WAS WRONG, NOT MERELY OLD, AND THIS ARM IS THE ONE THE
+     ITEM EXISTS FOR. It read ``LEVELS.map((l) => `level-empty:${l}`)`` and passed
+     only because this suite's mock wrote whatever it was handed. `VERSION_NAME_RE`
+     is `/^[a-z0-9][a-z0-9 ._-]{0,63}$/i` and admits NO colon, so a deployed plane
+     refused all four of VF-1's owed control 7 objects — `BASIS_REFUSED`, finding
+     C-25.2, `wrote: false`, measured live at 0.57.0 (MEASUREMENTS M-8). The level
+     half moved with it: a run writes its log in `OBSERVATION_LEVELS`' spelling
+     (`document`) and a suggestion in `SUGGEST_LEVELS`' (`documents`), which is a
+     SECOND refusal — `SUGGEST_EMPTY_LEVEL_UNSTATED` / C-27.6 — at an earlier
+     check that no live run ever reached. Derived from `REPORTING_LEVEL` rather
+     than re-typed, so a respelling on either side fails here. */
+  t("each names its level, in the spelling the WIRE holds", st.suggested.map((s) => s.name),
+    LEVELS.map((l) => `level-empty-${REPORTING_LEVEL[l]}`));
+  t("and not one of them carries the colon the version grammar refuses",
+    st.suggested.filter((s) => String(s.name).includes(":")), []);
   t("and each carries the observation-log address that establishes it",
     st.log.filter((l) => l.op === "suggest").every((l) => typeof l.body.observed_at === "string" && l.body.observed_at), true);
   t("the run is therefore COUNTABLE: an empty run and a silent failure are different objects",
@@ -1019,7 +1048,15 @@ console.log("\n--- B8 · DEDUP-BEFORE-WRITE, observed at the plane ---");
     ...base,
     judgements: [{ targets: [] },
                  { reports: [] },                                        /* collect — FL-5's row */
-                 { candidates: [{ kind: "new-version", name: "v1" }, { kind: "new-version", name: "v3" }] },
+                 /* D-324 plus C-25.1: the kind is §9's, and each candidate now
+                    carries a description, because `promote` refuses a version
+                    without one and the old mock held neither rule. Dedup is what
+                    this arm measures and it keys on the NAME, which has not
+                    moved. */
+                 { candidates: [{ kind: "basis-version", name: "v1",
+                                  description: "the reading the record already holds" },
+                                { kind: "basis-version", name: "v3",
+                                  description: "a reading the record does not hold yet" }] },
                  {}],
   })).json();
   const st = await mockState(mf);
@@ -1076,8 +1113,10 @@ console.log("\n--- B9 · VERSIONS ARE WRITTEN AS FORMED, NEVER BATCHED ---");
     ...base,
     judgements: [{ targets: [] },
                  { reports: [] },                                        /* collect — FL-5's row */
-                 { candidates: [{ kind: "new-version", name: "a" }, { kind: "new-version", name: "b" },
-                                { kind: "new-version", name: "c" }] },
+                 /* D-324 plus C-25.1, as in B8. */
+                 { candidates: [{ kind: "basis-version", name: "a", description: "the first reading, in full" },
+                                { kind: "basis-version", name: "b", description: "the second reading, in full" },
+                                { kind: "basis-version", name: "c", description: "the third reading, in full" }] },
                  {}],
   })).json();
   const st = await mockState(mf);
