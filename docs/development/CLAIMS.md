@@ -2963,3 +2963,38 @@ concurrency: checked over the register 2026-09-12. Every CONTENT-PDF block above
 DIST and FLEET push frequently — the `REGISTER_FLOOR` key is the one collision risk and the
 resolution rule is written at its site: COLLAPSE TO ONE SET and re-read the printed figures.
 released: 2026-09-12 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 181/181 · 11,078 (+18 attributed), `coverage --strict` exit 0 read unpiped (floor 936/173/174 by print), UI harness exit 0, `mintid --audit` 0 breaks. D-322 closed; the class swept to zero across six test dirs.
+
+## CLAIM 2026-09-13 DIST (DS-4 deploy half — release 0.57.0 CUT at `ba05e9c` goes to the account, serves, and is read back; then the row lands and VF-4 is handed)
+session: DIST #2 (worktree `.claude/worktrees/dist-ds2`, branch `dist-ds2`) — the VISIBLE
+successor to the headless DIST session, spawned at Bob's direction 2026-09-13 after the
+predecessor wedged twice on the critical path. Gate context: the stand-down gate could not
+clear by the outgoing session's own act (headless, no operator interrupt — the rule-6 lesson
+at `a7ffe90`); the leading BOB session ruled PROCEED on the measured evidence (no
+deploy/wrangler process in flight; outgoing landed nothing since `ba05e9c`; its queued first
+instruction is DO NOT DEPLOY) with this claim pushed BEFORE any account-touching act as the
+condition. The process check re-runs immediately before each deploy invocation.
+opened: 2026-09-13
+paths:
+  - `docs/development/CLAIMS.md` — this block.
+  - `docs/development/QUEUE.md` — **the DS-4 row of `## IS BUILD PLAN — STATUS` ONLY**, marked
+    done in SK-4's done-row shape (never `| DS-4 |` in the first cell — mintid's allocation
+    shape). QUEUE.md is CONDUCT's sole ground and this one row is the kickoff's explicit
+    instruction from Bob, stated here so the exception is a record and not a habit.
+  - **THE ACCOUNT, not a path**: release 0.57.0's four artifacts deployed to
+    `20b533579290b9b93168345edd3b7f72` — plane `bio-plane.bundled.mjs` → `biosmoke7` via
+    `scripts/deploy.mjs` (baton read from the remote; waits for serve), members
+    `agent-worker`, `ocr-worker` (+2 upload parts per IC-78), `pdf-worker` via
+    `tools/deploy-fleet.mjs --instance biosmoke7`. Bytes verified by reading back; the serve
+    answer must name 0.57.0 before anything is believed.
+  **READ, NEVER EDITED**: `release/**` (the signed manifest and artifacts are `ba05e9c`'s and
+  deploy AS THEY ARE — a byte changed here is a different release), `bio-plane/scripts/deploy.mjs`,
+  `tools/deploy-fleet.mjs`, `docs/development/DECISIONS.md` (DEC-43 re-read; the read is
+  recorded in the deploy commit message, which is this release's note surface — `release/`
+  carries no note file). **NOT** any version bump, **NOT** `bio-plane/src/**`, **NOT**
+  `newgroup/**` (no installer act here; installer releases are gated to Bob), **NOT** any tag
+  the cut did not already make.
+concurrency: checked over the register 2026-09-13 — no live DIST claim; every block above is
+released. The outgoing DIST session holds no claim here and its queued stand-down forbids it
+deploying; the one collision that matters (two deploys, one account) is guarded by the
+process check re-run at the moment of each invocation, and both sessions' bytes are in any
+case the SAME signed release.
