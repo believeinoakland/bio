@@ -10176,3 +10176,35 @@ here evaluates the run's existence, the viewer gate, leg reachability, the stren
 independence trace, the substance comparison or `promote`'s frontmatter grammar — those need a
 store, and the live answer needs a deployed plane. **A green here is not evidence that a real
 `op=suggest` would write**, and the first deployed CHECK run is what will confirm it end to end.
+
+### THE FINDING THE ITEM DID NOT GO LOOKING FOR — TWO CONTROL ARMS HAD STOPPED ARMING ON `main`, BOTH KILLED BY THE SAME LANDED FIX
+
+Re-running the two control drivers whose subjects this item touched — owed, because a
+correction can stale a patch anchor — found **two arms reporting `THE ARM DID NOT ARM` before
+this item changed anything they quote**, and **D-323 caused neither**:
+`agent-worker/src/index.mjs` last moved at `f5ed2bf` (FL-6) and `git diff 46752bd HEAD --
+agent-worker/src/index.mjs` is EMPTY.
+
+- **`harness.control.mjs` H8** (query-never-load: the op set pinned, floor AND ceiling) quoted
+  `rows: "legs"`. **D-276 changed that call site to `rows: MEANING_ARM`** — which is D-276's
+  entire point, since `"legs"` is an arm the plane's compiler does not hold — and did not move
+  the arm with it. Old anchor occurrences in the tree: **zero**.
+- **`fanout.control.mjs` F4b** (both halves down — the arm whose whole job is to prove the
+  strongest value-level assertion in `fanout.test.mjs` CAN fail) quoted the pre-`planeAnswer`
+  spawn shape. **D-276 routed that answer through `planeAnswer(...)`.** Old anchor occurrences:
+  **zero**. This one half-armed and self-reported, so the driver exited 1 on every run since.
+
+Both re-anchored on the lines as they now read, with the finding kept at each site rather than
+quietly repaired, and re-run ALONE: H8 **213/1 · 111/2, pinned-set arms FAILED, write arms
+held — AS DECLARED**; F4b **161 pass / 21 FAIL, the value-level `statements_sha` arms failing —
+AS DECLARED**. Whole drivers then green: `harness.control.mjs` **19 arms, 19 as declared**;
+`fanout.control.mjs` **10 arms, 10 as declared**.
+
+**THE CLASS, AND IT IS THE THIRD INSTANCE THIS ESTATE HAS RECORDED** (walkfloor's `stripper`
+arm, FL-5's own H8 re-anchor, and now D-276's two): **a landed fix must move the control arms
+that QUOTE the lines it changed**, and an arm whose find-string no longer exists proves nothing
+while looking exactly like a pass. It is visible at all only because both harnesses treat
+`did not arm` as a finding instead of counting the green run underneath it. What this sweep
+could NOT see: it re-ran only the two drivers whose subjects this item touched, so an arm staled
+by D-276 in a driver this item had no reason to run is still out there — the honest scope is two
+drivers, not the estate.

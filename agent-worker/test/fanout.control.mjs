@@ -304,14 +304,26 @@ arm({
     const p2 = patch(SUB, `  if (Object.prototype.hasOwnProperty.call(payload, "bias"))`,
                           `  if (false && Object.prototype.hasOwnProperty.call(payload, "bias"))`);
     const o3 = takeOriginal(DRIVER);
+    /* RE-ANCHORED 2026-09-13 (by D-323, which found it), AND THE FINDING IS KEPT
+       RATHER THAN QUIETLY REPAIRED: THIS HALF OF THE ARM HAD STOPPED ARMING ON
+       `main`, AND NOT BECAUSE OF THE ITEM THAT FOUND IT. D-276 routed the spawn
+       answer through `planeAnswer(...)` so a REFUSED spawn is named rather than
+       re-worded as a missing payload — and this patch string, which still spelled
+       the pre-`planeAnswer` shape (`if (!p.reached)`, `p.body?.result`), was not
+       moved with it. Measured: `agent-worker/src/index.mjs` last moved at
+       `f5ed2bf` (FL-6), D-323 touched it not at all, and the old anchor occurs
+       ZERO times in the tree D-323 found. So F4b — the arm whose whole job is to
+       prove the strongest value-level assertion in `fanout.test.mjs` CAN fail —
+       had been half-armed and self-reporting as a finding ever since. The SECOND
+       instance of this exact class found in one turn (see `harness.control.mjs`
+       H8) and the same lesson: a landed fix must move the control arms that
+       quote the lines it changed. */
     const p3 = patch(DRIVER,
-      `        const p = await call("airunspawn", { run: runId, half: "search" });
-        if (!p.reached) return { silent: p };
-        const payload = (p.body?.result ?? p.body ?? {}).payload ?? null;`,
-      `        const p = await call("airunspawn", { run: runId, half: "compose" });
-        if (!p.reached) return { silent: p };
-        const _leaked = (p.body?.result ?? p.body ?? {});
-        const payload = _leaked.payload ? { ..._leaked.payload, bias: _leaked.bias } : null;`);
+      `        const p = planeAnswer(await call("airunspawn", { run: runId, half: "search" }), "airunspawn");
+        if (p.silent) return { silent: p.silent };`,
+      `        const p = planeAnswer(await call("airunspawn", { run: runId, half: "compose" }), "airunspawn");
+        if (p.silent) return { silent: p.silent };
+        if (p.result && p.result.bias) p.result.payload = { ...(p.result.payload || {}), bias: p.result.bias };`);
     const r = (p2.armed && p3.armed) ? runFanout() : { ran: false, pass: 0, fail: -1, failed: [], out: "" };
     restore(o3);
     restore(o2);

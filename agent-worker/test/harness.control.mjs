@@ -490,9 +490,24 @@ arm({
      naming the op it routed both through one `meaningRead` helper — which is what
      the "named in exactly one place" arm is actually protecting. The arm now
      inserts the second reader at the new site. */
-  find: `        const got = await meaningRead(call, { rows: "legs", limit: 1, ids: [address] });`,
+  /* RE-ANCHORED 2026-09-13 (by D-323, which found it), AND THE FINDING IS KEPT
+     RATHER THAN QUIETLY REPAIRED: THIS ARM HAD STOPPED ARMING ON `main`, AND NOT
+     BECAUSE OF THE ITEM THAT FOUND IT. D-276 changed this call site from the
+     literal `rows: "legs"` to `rows: MEANING_ARM` — which is the whole point of
+     D-276, since `"legs"` is an arm the plane's compiler does not hold — and the
+     patch string here was not moved with it. Measured: `agent-worker/src/index.mjs`
+     last moved at `f5ed2bf` (FL-6), D-323 touched it not at all, and the old
+     anchor occurs ZERO times in the tree D-323 found. So from D-276 until now
+     this arm reported `THE ARM DID NOT ARM` — visible only because this harness
+     treats that as a finding instead of counting the green run underneath it.
+     Re-anchored on the line as it now reads. **This is the third time in this
+     estate that a landed fix has left a control arm's patch string behind**
+     (walkfloor's `stripper`, FL-5's H8 before this, and now D-276's) and the
+     lesson is the same one: an arm whose find-string no longer exists proves
+     nothing while looking exactly like a pass. */
+  find: `        const got = await meaningRead(call, { rows: MEANING_ARM, limit: 1, ids: [address] });`,
   replace: `        await call("meaningquery", { q: address });
-        const got = await meaningRead(call, { rows: "legs", limit: 1, ids: [address] });`,
+        const got = await meaningRead(call, { rows: MEANING_ARM, limit: 1, ids: [address] });`,
   run: () => {
     const rh = runHarness();
     const rm = runMember();
