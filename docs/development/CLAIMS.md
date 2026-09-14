@@ -3302,3 +3302,29 @@ names it `daemon-revoked` and counts it as BROKEN, never as fallback and never a
 FIX is plane ground and therefore not DIST's: `#monitorToken()` should skip a non-live
 DAEMON_TOKEN (one liveToken call at selection), or the refusal should be surfaced. Low
 likelihood (requires a committed token value), stated rather than sat on.
+
+### AMENDMENT 2026-09-14, MID-ITEM (DIST-4) — **THE FIRST REAL RUN PRODUCED A NUMBER AND A FINDING, AND TWO THINGS JOIN THE CLAIM**
+paths added: `docs/development/MEASUREMENTS.md` — APPEND ONLY, this item's rows. Live acts
+added, under the STANDING smoke-instance authority (Bob 2026-08-10): read-only `op=selftest`
+probes of `biosmoke7` through the report tool, and ONE reversible credential act — minting and
+binding a DAEMON_TOKEN secret on `biosmoke7` via the API (the installer's own DIST-2 act,
+performed the deploy.mjs-managed way), value held nowhere and never printed, reversal = delete
+the secret. THE FINDING THE FIRST RUN PRODUCED: the real fleet's DEC-43 population is exactly
+`biosmoke7`, and it is OUTSIDE DIST-2's healing path — the smoke instance is deploy.mjs-managed,
+and deploy.mjs sends a hardcoded binding list (D-202's still-open half), so no installer update
+will ever deliver its daemon credential. Deploy-managed instances need the credential bound the
+way their other secrets are bound: by the operator's tooling. Recorded here and in MEASUREMENTS.
+released: 2026-09-14 by DIST #2 — landed with the gate GREEN class FULL: battery 184/184 ·
+11,213 assertions with ALL THREE fleet members run (ocr-worker was DARK in the first two runs
+for want of its own `npm ci` — the fresh-worktree trap, third-member edition, hit and read
+correctly), coverage --strict exit 0, UI green, plancheck 0/0, every exit read unpiped. Two
+instrument corrections mid-item, reported in the suite header rather than smoothed: the hand
+arms' first firing CRASHED the suite instead of failing it (four null-unsafe assertions — D-93
+inside a control), and the header's first draft carried PREDICTED arm counts written before
+the arms ran (5/25 vs the measured 4/23). One hygiene rule learned: a suite must END on an
+unconditional process.exit. THE ITEM'S REAL PRODUCT IS TWO NUMBERS IN MEASUREMENTS.md: the
+fleet's first-ever posture reading (1 of 1 on the fallback — biosmoke7 itself, which
+deploy.mjs manages and DIST-2's installer path can therefore never heal), and the reading
+after the reversible smoke-authority remediation (DAEMON_TOKEN minted and bound via the API,
+value held nowhere): DEC-43's measured count is ZERO, live, from the instance's own
+liveToken-checked answer. The DIST-4 QUEUE row flip is CONDUCT's at integration.

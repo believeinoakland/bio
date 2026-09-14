@@ -10608,3 +10608,25 @@ can read; filed as **D-333**. And the `d216` control's `declare()` is a SUBSET t
 fell more assertions than it names and still read AS DECLARED — arm 2 does exactly that (declares
 four, fells five). Deliberate looseness, now stated at the site rather than left for the next reader
 to discover from a count.
+
+## 2026-09-14 · DIST-4 — the fleet's monitoring posture, measured live for the first time (instrument: `tools/fleet-posture.mjs`, reading `op=selftest` over the member credential)
+
+**BEFORE, 08:14 UTC: `1 of 1` instances on the ADMIN_TOKEN fallback — the DEC-43 population
+was the smoke instance itself.** `biosmoke7` (the entire real fleet today) answered
+`bindings.DAEMON_TOKEN: "not configured"` at version 0.57.0; report complete, no absences.
+The number carried a FINDING: biosmoke7 is deploy.mjs-managed, not installer-managed, and
+deploy.mjs sends a hardcoded binding list (D-202's still-open half) — so DIST-2's update-path
+healing can NEVER deliver its daemon credential. Deploy-managed instances need the secret
+bound by the operator's tooling, the way their other secrets got there.
+
+**AFTER, 08:16 UTC: `0` — DEC-43's measured count is ZERO, live.** A DAEMON_TOKEN was minted
+and bound on `biosmoke7` via the API under the standing smoke-instance authority (the
+installer's own DIST-2 act performed the deploy-managed way; value held nowhere, never
+printed, reversal = delete the secret). The instance's own next selftest answered
+`DAEMON_TOKEN: true` — liveToken-checked by the plane, not inferred from the PUT's success.
+Reading of DEC-43's conditions as they now stand: (1) DIST-2 landed — MET; (2) "one update
+cycle" — VACUOUS for the current fleet, which contains zero installer-managed instances
+(stated, not skipped); (3) measured count zero — MET at this timestamp, by this instrument.
+Retiring the fallback is still not automatic: condition (2) exists for the INSTALLED fleet
+DIST-2 protects, and the first real group install re-opens the count. The instrument is the
+answer to re-measuring: one command, exit 0 only on a complete answer.
