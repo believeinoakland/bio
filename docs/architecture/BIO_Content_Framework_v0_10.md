@@ -1719,7 +1719,17 @@ today when a source links to a Sheet: the link is recorded in the deferred parti
 the Sheet's own address stores the shell, which the client-rendered handler recognises and
 reports as a shell that cannot be evidence (D-64, D-55); acquiring the EXPORT address by hand
 works now — the plane follows the redirect, detects the spreadsheet by its bytes, and reads it
-fully with an honest hop. The gap is the one step of recognition between the two. Whether it is
+fully with an honest hop. The gap is the one step of recognition between the two. Google's
+export endpoint offers the open formats too — OpenDocument (`.odt`, `.ods`, `.odp`), CSV and
+TSV, PDF, HTML, plain text — without a credential when the file is shared with anyone who has
+the link or published; every export is Google's CONVERSION at fetch time, none is the original,
+so the hop records the export format and Google as the producer (D-251's sense). OpenDocument
+and OOXML are both open ISO standards and preserve the same evidence (formulas beside values,
+hidden sheets, comments, tracked changes, notes); the axis reads OOXML today and reads
+OpenDocument once one flavour row is added to the container reader, designed for and not
+built. The handler's default is the OOXML export, with the PDF export beside it as a rendition
+companion; preferring OpenDocument for the archive's longevity (M6) is Bob's call and costs
+that one row. Whether it is
 worth building is a measurement: how many of the city's links point at Drive. That census has
 not been run; it is routed. OpenDocument (`.odt`, `.ods`, `.odp`) is designed for and
 deliberately not built: zero were found among 43,282 city assets.
