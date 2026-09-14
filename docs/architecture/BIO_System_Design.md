@@ -6,7 +6,7 @@
 
 **Incomplete sections** ·
 - §3 — the STATE column of every row is one session's reading against the record on 2026-09-14 and awaits Bob's review; the CONTENT row's state is the reason this document exists and is the first row to check.
-- §4 — no diagram yet; the construct relationships are stated in prose and in §3's "relates to" column. A UML class diagram (the settled notation for structure) is owed once the inventory is confirmed, validated with `tools/mermaid-check.mjs` before it lands.
+- §4 — the class diagram shows the 14 constructs that have relationships drawn; construct 10 (standing intent and monitoring) is folded into Capture and Operations there and is not a separate class until Bob confirms the inventory.
 - §5 — the capability ladder is summarised by pointer; per-milestone state is not restated here because `MILESTONES.md` is its authority and a copy would drift.
 - §6 — the runtime shape names what is deployed on the project's instance; a sovereign group's instance differs (no fleet until Bob's gate, D-297) and the differences are listed, not designed.
 
@@ -114,7 +114,97 @@ grade is a third; DEC-21 shows both on one leg and CPDF-10 forbids a third scale
 **every layer may be sparse, and absence at one level is not evidence of absence at the
 next** (Part II §14.3).
 
-A class diagram of these relationships is owed (Incomplete sections).
+The same relationships as a UML class diagram (the settled notation for structure; edges
+read as "depends on / feeds", labelled with the act; validated against the mermaid parser
+with `tools/mermaid-check.mjs` before landing):
+
+```mermaid
+classDiagram
+  direction TB
+  class Membership {
+    +cover and handle
+    +administrators, capabilities
+    +project participation
+  }
+  class Capture {
+    +provenance chain
+    +capture grade
+    +standing intent
+  }
+  class Record {
+    +bundle, states, checks
+    +invariants I-1..I-20
+  }
+  class Content {
+    +extent
+    +extraction method
+    +derivation cap
+  }
+  class Extraction {
+    +recognisers, digests
+    +transcription chain
+    +three tiers
+  }
+  class Meaning {
+    +entities, resolutions
+    +connections, grade
+    +progressions
+  }
+  class DeclaredBias {
+    +statements, bundles
+    +bias debt, hunch debt
+  }
+  class Inquiry {
+    +legs, earned grades
+    +finding, falsifier
+    +case as production
+  }
+  class Retrieval {
+    +three axes
+    +four-level search
+  }
+  class Assistant {
+    +FIND PURSUE EXTRACT CHECK
+    +never attests
+  }
+  class Surfaces {
+    +QUEUE, ACT
+    +rung ladder
+  }
+  class Publication {
+    +one-way, editions
+    +audiences, fence
+  }
+  class Distribution {
+    +installer, releases
+    +fleet, isolation
+  }
+  class Operations {
+    +reconciling alarm
+    +audit
+  }
+  Membership --> Record : attributes every act
+  Capture --> Record : admits with provenance
+  Record --> Content : holds documents content is extracted from
+  Extraction --> Content : produces
+  Content --> Meaning : derived over
+  DeclaredBias --> Meaning : shares the subject registry
+  Content --> Inquiry : legs rest on
+  Meaning --> Inquiry : legs earn grade from
+  DeclaredBias --> Inquiry : states what the member brings
+  Retrieval --> Content : searches and grows
+  Retrieval --> Meaning : searches and grows
+  Retrieval --> Record : searches and grows
+  Assistant --> Retrieval : looks through
+  Assistant --> Capture : requests capture
+  Surfaces --> Inquiry : member authors each rung
+  Surfaces --> Capture : release is the first rung
+  Inquiry --> Publication : case is stood behind
+  Publication --> Membership : owner-gated
+  Distribution --> Record : installs the instance that holds it
+  Distribution --> Extraction : deploys the fleet
+  Operations --> Capture : keeps the record current
+```
 
 ## 5. The capability ladder as the completeness map
 
