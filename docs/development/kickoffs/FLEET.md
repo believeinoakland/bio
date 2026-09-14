@@ -89,3 +89,17 @@ The area's law gained two measured facts from FL-9 — carry them, do not redisc
 Open in this area after FL-9: **FL-6** (Claude-account cascade) still waits on DIST's
 DS-3; DIST's release-format half (D-297) consumes FL-9's artifacts and is DIST's ground.
 The stale `tools/deploy-fleet.mjs` header is delegated to DIST in FL-9's landed row.
+
+## State, 2026-09-12 → 2026-09-14 — read this before believing any status row
+
+**FL-10 and FL-6 are both LANDED AND LIVE, whatever `QUEUE.md` says.** FL-10 (the plane's
+bundle guard): `3607b3b` + the floor move, released in CLAIMS with the full acceptance
+evidence 2026-09-10; the guard has since caught DS-3's manifest refresh and correctly
+passed DIST's tree-shaken `sshsig` change — it is WORKING IN PRODUCTION. FL-6 (the
+cascade): `f5ed2bf` + `ca1b0ee`, 2026-09-12. **The FL-10 QUEUE row still read `queued` on
+2026-09-14 because flipping it is CONDUCT's and the handoff note in the CLAIMS release
+was a NOTE, which nothing drains** — it cost a reconciliation re-drive from BOB #9, and
+the correction was to answer with the commits rather than re-run landed work. IC-70 and
+IC-79 both await CONDUCT's RESOLUTION. The fleet is THREE members (ocr-worker joined,
+CPDF-10), all guarded, serving 0.57.0 account-wide; FLEET's IS-build-plan share is
+complete; nothing is schedulable in this area until a new delegation or FL item arrives.
