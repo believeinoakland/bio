@@ -41691,7 +41691,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  binding and no daemon credential means no wake, no alarm and no behaviour
    *  change on an instance that has not wired this. */
   #captureRequestConfigured() {
-    return !!(this.env && this.env.SELF && typeof this.env.SELF.fetch === "function" && this.#monitorToken());
+    return !!(this.env && this.env.SELF && typeof this.env.SELF.fetch === "function" && this.#monitorTokenBound());
   }
   #captureRequestPending() {
     if (!this.#captureRequestConfigured()) return 0;
@@ -42112,7 +42112,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  assertion about a value the sender could still differ from, which is the
    *  "checked one thing, sent another" gap in its smallest form. */
   async #fireCaptureRequest(q) {
-    const token = this.#monitorToken();
+    const token = await this.#monitorToken();
+    if (!token) return { ok: false, reason: _Store.MONITOR_NO_LIVE_CREDENTIAL };
     try {
       const res = await this.env.SELF.fetch(
         new Request(`https://self/api/?op=acquire&token=${encodeURIComponent(token)}`, {
@@ -44949,11 +44950,64 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
      everywhere and something can prove it. Neither is scratch-confined, because
      monitoring writes the REAL record's reachability — which is why PROBE_TOKEN
      was never the answer here. */
-  #monitorToken() {
-    return this.env && (this.env.DAEMON_TOKEN || this.env.ADMIN_TOKEN) || null;
+  /* D-334 — SELECTION NOW ASKS THE GATE'S OWN QUESTION, because presence was the
+       bug and the two questions had drifted apart.
+  
+       WHAT WAS WRONG. This was `DAEMON_TOKEN || ADMIN_TOKEN` — a PRESENCE test —
+       while `classify()` (index.mjs) admits a class only when `liveToken()` passes.
+       `tokens.mjs` makes publication revocation, so an instance whose daemon value
+       had ever been committed to this repository SELECTED the dead credential on
+       every tick, was REFUSED on every tick, and never reached the fallback:
+       monitoring armed, firing 401s forever. That is exactly the shape DIST-1
+       refused when it kept `ADMIN_TOKEN` as the fallback in the first place, and
+       the denylist reintroduced it through a door nobody was watching. Found by
+       DIST-4 from READING, not from a live failure (the DIST -> RECORD delegation,
+       CLAIMS.md 2026-09-14); the likelihood is low and the shape is not.
+  
+       THE RULE, INVERTED RATHER THAN LISTED. It is not "skip a dead DAEMON_TOKEN".
+       It is **spend only a credential the gate would admit** — so ADMIN_TOKEN is
+       asked the same question, because a denylisted ADMIN_TOKEN on an instance
+       with no daemon binding is the identical defect one name over, and a fix that
+       closed only the reported half would leave the class open.
+  
+       ONE PREDICATE, AND DELIBERATELY THE GATE'S OWN. `liveToken` is imported
+       rather than re-derived: a second local answer to "is this credential usable"
+       would age separately from `classify()`'s, which is REC-46's whole finding.
+  
+       WHAT THIS DOES NOT DO, AND IT IS HALF THE ITEM. It does not make the dead
+       binding invisible. `op=selftest` still reports `bindings.DAEMON_TOKEN:false`
+       for a bound-but-revoked value, `livefire` still fails on a published binding
+       by NAME, and `tools/fleet-posture.mjs` still reads that `false` as
+       `daemon-revoked` and counts it BROKEN. Monitoring keeps running on the
+       fallback AND the report keeps saying the operator's daemon credential is
+       dead. Healing a symptom into silence is the D-106 class and is refused here.
+  
+       ASYNC, AND WHY THE PRESENCE TEST SURVIVES BESIDE IT. `liveToken` hashes, so
+       it cannot be awaited from `#monitorConfigured()`/`#captureRequestConfigured()`
+       — those are read by the scheduler's SYNCHRONOUS `due`/`wake` closures, and
+       making that seam async to answer a credential question would be a large
+       change to REC-1's reconciler for no gain. So the two questions are separated
+       rather than merged: `#monitorTokenBound()` answers "is monitoring WIRED at
+       all" (presence, byte-for-byte the old arming behaviour — an instance with no
+       SELF binding and no credential still holds no alarm), and `#monitorToken()`
+       answers "which credential do I SPEND", liveness-checked, awaited at each of
+       the three fire sites. */
+  #monitorTokenBound() {
+    return !!(this.env && (this.env.DAEMON_TOKEN || this.env.ADMIN_TOKEN));
   }
+  async #monitorToken() {
+    const env = this.env;
+    if (!env) return null;
+    if (typeof env.DAEMON_TOKEN === "string" && env.DAEMON_TOKEN.length > 0 && await liveToken(env.DAEMON_TOKEN)) return env.DAEMON_TOKEN;
+    if (typeof env.ADMIN_TOKEN === "string" && env.ADMIN_TOKEN.length > 0 && await liveToken(env.ADMIN_TOKEN)) return env.ADMIN_TOKEN;
+    return null;
+  }
+  /* The stated reason a tick has nothing to spend. It is a SENTENCE rather than
+     a bare code because its reader is an operator looking at a tick report, and
+     the one thing they must not conclude is that the tick found no work. */
+  static MONITOR_NO_LIVE_CREDENTIAL = "no LIVE monitoring credential: every bound credential is absent or denylisted (tokens.mjs \u2014 publication is revocation), so this tick spent nothing rather than firing a request the gate would refuse; rotate DAEMON_TOKEN or ADMIN_TOKEN";
   #monitorConfigured() {
-    return !!(this.env && this.env.SELF && typeof this.env.SELF.fetch === "function" && this.#monitorToken());
+    return !!(this.env && this.env.SELF && typeof this.env.SELF.fetch === "function" && this.#monitorTokenBound());
   }
   /* The smallest consecutive-failure count from which a document could still
      reach EITHER arm: the count arm at `failures`, or the age arm at `minForAge`
@@ -45242,7 +45296,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
      judgement") all run once, in one path that cannot drift. This consumer
      supplies only a bundle id — every judgement in the tick is op=monitor's. */
   async #fireMonitorTick(bundleId) {
-    const token = this.#monitorToken();
+    const token = await this.#monitorToken();
+    if (!token) return { ok: false, reason: _Store.MONITOR_NO_LIVE_CREDENTIAL };
     try {
       const res = await this.env.SELF.fetch(
         new Request(`https://self/api/?op=monitor&token=${encodeURIComponent(token)}`, {
@@ -45264,7 +45319,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
      archive hop from the record IT fetched, which is exactly why the invocation
      names only the document address. */
   async #fireArchiveFallback(address) {
-    const token = this.#monitorToken();
+    const token = await this.#monitorToken();
+    if (!token) return { ok: false, reason: _Store.MONITOR_NO_LIVE_CREDENTIAL };
     try {
       const res = await this.env.SELF.fetch(
         new Request(`https://self/api/?op=acquire&token=${encodeURIComponent(token)}`, {

@@ -26,11 +26,27 @@
  * POSTURES, and why "clean" is not among them:
  *   daemon          bindings.DAEMON_TOKEN === true  — scoped monitoring.
  *   admin-fallback  === "not configured"            — DEC-43's population, NAMED.
- *   daemon-revoked  === false                       — bound but dead: the token is
- *                   denylisted, #monitorToken() still SELECTS it, classify()
- *                   refuses it, and monitoring 401s forever instead of falling
- *                   back. BROKEN, not fallback, not clean. The fix is plane
- *                   ground — see the 2026-09-14 DIST -> RECORD delegation.
+ *   daemon-revoked  === false                       — bound but dead: the value is
+ *                   denylisted (tokens.mjs — publication is revocation), so the
+ *                   credential the operator bound authenticates nothing. BROKEN,
+ *                   not fallback, not clean.
+ *                   **UPDATED BY D-334, and the update is a CORRECTION rather
+ *                   than a softening.** This paragraph used to read "…
+ *                   #monitorToken() still SELECTS it, classify() refuses it, and
+ *                   monitoring 401s forever instead of falling back", which was
+ *                   true when DIST-4 wrote it and is not true now: D-334 made
+ *                   `#monitorToken()` ask `liveToken()` before selecting, so the
+ *                   ticks are carried by the ADMIN_TOKEN fallback. A report that
+ *                   describes a mechanism which no longer exists is the record
+ *                   overclaiming, which is why the sentence moved.
+ *                   **THE POSTURE AND ITS BROKEN COUNT DID NOT MOVE, and that is
+ *                   the other half of D-334.** Monitoring running is not the
+ *                   credential being fixed: the instance is spending the
+ *                   root-of-trust ADMIN_TOKEN (DEC-43's own concern) on a posture
+ *                   its operator did not choose, and the daemon credential they
+ *                   DID choose is dead. Healing the symptom into a clean report
+ *                   is the D-106 class. It stays BROKEN until the value is
+ *                   rotated.
  *   unreachable     no HTTP answer — a stated absence, never counted clean.
  *   refused         answered but did not present bindings (bad token, refusal)
  *                   — a stated absence, never counted clean.
@@ -105,7 +121,7 @@ export async function fleetPosture(instances, { fetchImpl = fetch } = {}) {
              states the credential posture, and only that. */
           row.detail = "monitoring, when armed, spends the root-of-trust ADMIN_TOKEN — DEC-43's population";
         if (row.posture === "daemon-revoked")
-          row.detail = "DAEMON_TOKEN bound but NOT LIVE: #monitorToken() selects it, classify() refuses it — monitoring is BROKEN (armed alarm firing 401s), not on fallback";
+          row.detail = "DAEMON_TOKEN bound but NOT LIVE: the value is denylisted, so the credential this operator bound is BROKEN and authenticates nothing. Since D-334 the ticks are carried by the ADMIN_TOKEN fallback — monitoring RUNS, and it runs on the root-of-trust credential, which is not the posture that was chosen. Rotate DAEMON_TOKEN";
         if (row.posture === "refused")
           row.detail = "selftest answered but bindings.DAEMON_TOKEN was not a recognised shape";
       }

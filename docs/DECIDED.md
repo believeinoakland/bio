@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-702 rulings across 67 documents.
+706 rulings across 67 documents.
 
 ## DEC-
 
@@ -620,6 +620,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-2026-08.md:1041`
 - **REC-33** — THREE PINS CORRECTED WITH DATED REASONS, NEVER EXEMPTED, and two of them were WEAKER THAN THEY LOOKED. queue-conditions' prefix pin matched two hand-typed literals and checked they agreed — the best a proof-by-parsing can do, and still weaker than not having a copy; it now asserts that NEITHER file spells a prefix…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1788`
+- **REC-33** — `daemon-token.test.mjs` holds at 56 (one assertion CORRECTED in place, not added): its REC-33 pin matched the literal text of `#monitorToken()`, and that literal text WAS the defect, so the pin was holding the defect in place by name.  
+  `docs/development/MEASUREMENTS.md:10651`
 - **REC-35** — MOCKS CORRECTED IN THE SAME TURN, dated, never exempted: cite-act (`select`), release-flow (`select`, `release`), document-structure (`resolutions`, `connections`, `captureprogressions`, `entity`; `links` left FLAT because it genuinely is).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1122`
 - **REC-35** — Delegations routed: REC-35, REC-36; the refusal-probe RULED a standing DEC-8 reading by CONDUCT; the wording tension recorded as D-174.  
@@ -1223,6 +1225,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:3236`
 - `docs/DECIDED.md` regenerated (701 rulings).  
   `docs/development/CLAIMS.md:3253`
+- **2026-09-14** — AMENDED MID-ITEM, 2026-09-14: `bio-plane/test/daemon-token.test.mjs` — **ONE assertion CORRECTED, never exempted** (:165), and the amendment is owed because the correction was not foreseeable from the brief.  
+  `docs/development/CLAIMS.md:3400`
+- CORRECTED, never exempted** (:165), and the amendment is owed because the correction was not foreseeable from the brief.  
+  `docs/development/CLAIMS.md:3401`
+- **2026-09-14** — AMENDED MID-ITEM, 2026-09-14: `bio-plane/dist/bio-plane.bundled.mjs` and `bio-plane/dist/bio-plane.bundle.json` — **REGENERATED, not authored**, by `node bio-plane/scripts/build-plane.mjs`.  
+  `docs/development/CLAIMS.md:3410`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  

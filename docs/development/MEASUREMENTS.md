@@ -10630,3 +10630,69 @@ cycle" — VACUOUS for the current fleet, which contains zero installer-managed 
 Retiring the fallback is still not automatic: condition (2) exists for the INSTALLED fleet
 DIST-2 protects, and the first real group install re-opens the count. The instrument is the
 answer to re-measuring: one command, exit 0 only on a complete answer.
+
+## 2026-09-14 · D-334 — a bound-but-revoked monitoring credential: the fallback, the honesty constraint, and one arm that came back wrong
+
+**THE BASELINE WAS MEASURED TWICE, AND THE FIRST ONE WAS THROWN AWAY — the discard is the
+first measurement worth recording.** The item's own baseline run was started in the working
+tree and then CONTAMINATED by this item's own edits landing mid-run: `scheduler.test.mjs`
+came back `38 pass / 10 FAIL`, which read exactly like a real regression. It was not. Between
+two of the edits the tree briefly held an `async #monitorToken()` whose three call sites had
+not yet been awaited, so a PROMISE — always truthy — was URL-encoded into the credential
+parameter and every self-call 401'd. **A battery run against a tree being edited is not a
+baseline, and it fails in the shape most likely to be believed.** The true baseline was taken
+on a PRISTINE scratch worktree checked out at `02c5eb6` with its own `npm ci` in `bio-plane/`,
+`ocr-worker/` and `pdf-worker/` (`agent-worker` has no installable lockfile in either tree, so
+the two trees match): **184/184 suites green · 11,214 assertions · 184.9s · exit 0, read
+unpiped.** The brief predicted ~11,213; the measurement is 11,214 and the measurement stands.
+
+**THE DELTA IS ONE SUITE AND IT IS ATTRIBUTED BY DIFFING RUNS, NEVER BY SUBTRACTION.**
+`bio-plane/test/d334-monitor-credential.test.mjs` is new and contributes 45 assertions.
+`daemon-token.test.mjs` holds at 56 (one assertion CORRECTED in place, not added): its REC-33
+pin matched the literal text of `#monitorToken()`, and that literal text WAS the defect, so
+the pin was holding the defect in place by name. It now asserts the ORDER and the RETENTION
+structurally. Every other suite's per-suite count is unchanged between the two runs.
+
+**THE THREE NEGATIVE-CONTROL ARMS, declared before arming, each armed ALONE, others held
+open, restores verified by sha256 AND `cmp` against uniquely-named per-arm pristine copies
+with a printed byte count and a floor.** Baseline row present in every arm: 45/45 green before
+each arm and after each restore.
+
+| arm | what was broken | declared | measured |
+| --- | --- | --- | --- |
+| 1 — the arm this item exists for | `#monitorToken()` restored to presence-only `DAEMON_TOKEN \|\| ADMIN_TOKEN` | the RUNS arms (A, D) FAIL; the NAMED arms (B) do NOT, because the report is independent of selection; C does not | **35 pass / 10 FAIL.** The fallback never fires, the archived bytes never land, the tick's failure is the gate's `NOT_AUTHENTICATED`, and the `\|\|` sweep plus three structural pins bite. B: 0. C: 0. **AS DECLARED.** |
+| 2 — over-strictness | selection made to refuse a LIVE `DAEMON_TOKEN` and always take the fallback | arm C FAILS; A, B, D do not | **42 pass / 3 FAIL**, all arm C's — its fallback is itself denylisted, so the capture could only have been made under the daemon credential. A/B/D: 0. **AS DECLARED.** |
+| 3 — the honesty arm | the fix LEFT IN PLACE and the symptom healed into silence: `op=selftest` made to report a bound-but-dead daemon binding as `"not configured"` | arm B FAILS; A, C, D do NOT, because monitoring still runs — which is why silent healing is dangerous rather than obvious | **41 pass / 4 FAIL**, all four arm B's: selftest stops saying `false`, fleet-posture reads `admin-fallback`, `brokenCount` drops to 0. A/C/D: 0. **AS DECLARED.** |
+
+**ONE ARM CAME BACK WRONG AND IS RECORDED RATHER THAN SMOOTHED.** Arm 1's FIRST firing left
+the assertion *"no failure mentions a refusal or an unauthenticated answer"* GREEN over a
+fully broken subject. It was a hand-spelled `/401|unauthenticated|refus/i`, and the gate's
+real answer is the DEC-49 code `NOT_AUTHENTICATED` — which contains "AUTHENTICATED" and not
+"UNAUTHENTICATED". **A matcher grading a guessed spelling read the defect as clean**, which is
+the "invert, do not lengthen a list" finding arriving through a one-character gap. Both such
+assertions now ask `ADMISSION_CHECKS` which codes exist rather than guessing; arm 1 re-run
+against the corrected suite went from **8 failures to 10**. The eight-failure figure would
+have been recorded as a good control had the arm not been re-read.
+
+**A SECOND INSTRUMENT FINDING, same class, caught by the same arm.** The class sweep's first
+firing scored TWO offenders — both of them COMMENT text, including the rewritten
+`#monitorToken()`'s own explanation, which quotes the broken expression verbatim to say it is
+gone. That is the *"a check that caught its own correction"* trap, exactly. The sweep now
+strips comments with a block state machine rather than a per-line regex.
+
+**THE CLASS SWEEP'S CORPUS AND ITS REACH, printed by the suite every run:** 4 source files,
+37,158 lines, 29 executable token-binding reads, **0 presence-`||` credential SELECTIONS** and
+**1 boolean-coerced arming predicate** (`store.mjs` `#monitorTokenBound()`, a deliberate
+closure — it answers "is monitoring WIRED" for REC-1's synchronous scheduler seam and is
+`!!`-coerced so it can never BE a token; its caller count is pinned at 2). **WHAT THE SWEEP
+CANNOT SEE, stated:** it recognises the `||` spelling of presence-selection, not the same
+choice written as an `if`/`else` or a ternary, and not a binding reached through a computed
+property name (`env[n]`, which `livefire.mjs` legitimately uses for its published-value
+audit). It is a FLOOR on the class; the behavioural arms carry the weight.
+
+**THE ONE PRESENCE-ONLY SELECTION IN THE PLANE WAS THE ONE REPORTED.** Every other credential
+read in `src/` — 13 sites at `02c5eb6` — is a liveness-checked comparison (`classify()`), a
+liveness report (`op=selftest`, `bootstrapConfigured`), a presence guard immediately followed
+by `liveToken` (the bootstrap claim), a fingerprint, or `livefire`'s own denylist audit. The
+fix nonetheless closes `ADMIN_TOKEN` as well as `DAEMON_TOKEN`, because a denylisted admin
+binding on an instance with no daemon binding is the identical defect one name over.

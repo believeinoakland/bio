@@ -162,8 +162,36 @@ t("viewerPredicate recognises class:daemon (without it the class authenticates a
    viewerPredicate("class:member").scope, viewerPredicate("class:probe").scope,
    viewerPredicate("member:carol").scope, viewerPredicate("class:nobody").scope],
   ["member", "member", "member", "member", "participant", "DENY"]);
-t("#monitorToken reads DAEMON_TOKEN FIRST with the ADMIN_TOKEN fallback RETAINED",
-  /return \(this\.env && \(this\.env\.DAEMON_TOKEN \|\| this\.env\.ADMIN_TOKEN\)\) \|\| null;/.test(STORE_SRC), true);
+/* PIN CORRECTED 2026-09-14 (D-334), never exempted — and it went stale in
+   EXACTLY the way the REC-46 correction fifteen lines above warns about, which
+   is why that warning is now recorded twice in one file. The old assertion
+   matched the LITERAL expression
+   `return (this.env && (this.env.DAEMON_TOKEN || this.env.ADMIN_TOKEN)) || null;`
+   — a pin on the SPELLING of the selection rather than on what it selects. And
+   that spelling WAS the D-334 defect: choosing by PRESENCE while `classify()`
+   admits by LIVENESS, so a denylisted DAEMON_TOKEN was selected on every tick,
+   refused on every tick, and the fallback was never reached. So the old pin was
+   not merely brittle; it was holding the defect in place by name.
+   THE SENTENCE IT HAS ALWAYS CLAIMED IS UNCHANGED AND IS STILL REC-33's RULING:
+   DAEMON_TOKEN first, ADMIN_TOKEN RETAINED as the fallback so an instance
+   installed before this class existed keeps monitoring. What changed is that
+   both are now asked `liveToken()` before either is spent. This therefore
+   asserts the ORDER and the RETENTION structurally rather than by text, and the
+   BEHAVIOUR is driven end to end in test/d334-monitor-credential.test.mjs —
+   arm A (a dead daemon binding falls back and monitoring RUNS) and arm C (a
+   live daemon binding is still preferred, proved against a dead fallback). */
+t("#monitorToken reads DAEMON_TOKEN FIRST with the ADMIN_TOKEN fallback RETAINED "
+  + "(D-334: both are now asked liveToken before either is spent)",
+  (() => {
+    const m = /async #monitorToken\(\) \{([\s\S]*?)\n  \}/.exec(STORE_SRC);
+    if (!m) return "no async #monitorToken() found in store.mjs";
+    const body = m[1];
+    const d = body.indexOf("DAEMON_TOKEN"), a = body.indexOf("ADMIN_TOKEN");
+    return [d !== -1, a !== -1, d >= 0 && a >= 0 && d < a,
+            /await liveToken\(env\.DAEMON_TOKEN\)/.test(body),
+            /await liveToken\(env\.ADMIN_TOKEN\)/.test(body)];
+  })(),
+  [true, true, true, true, true]);
 t("livefire's token-hygiene sweep knows the new binding's name",
   /names = \["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN", "DAEMON_TOKEN"\]/.test(LIVEFIRE_SRC), true);
 
