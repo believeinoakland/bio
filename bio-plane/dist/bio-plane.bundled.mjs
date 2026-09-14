@@ -653,9 +653,13 @@ CREATE TABLE IF NOT EXISTS reuse_verdicts (
 );
 CREATE INDEX IF NOT EXISTS reuse_verdicts_bundle ON reuse_verdicts(bundle_id);
 CREATE INDEX IF NOT EXISTS reuse_verdicts_pair ON reuse_verdicts(source_capture, address_norm);
+-- 2026-09-14, REC-81: every citation into the content framework in this file names a
+-- SECTION rather than a line. The line numbers they carried went stale the moment the
+-- framework gained front matter -- 89 lines, measured -- and CORPUS-STANDARD.md
+-- section 4.6 rules that a citation into a design document names the SECTION.
 -- CONSTRUCTS Step 3 (FW-5): READINGS ARE PERSISTED. A reading is what a content
 -- type's parse() found in a captured document -- its entities plus document-level
--- facts (BIO_Content_Framework_v0_10.md:480). op=acquire runs the resolved
+-- facts (BIO_Content_Framework_v0_10.md \xA77). op=acquire runs the resolved
 -- doctype's reader over the captured text and carries the reading on the acquire
 -- document; op=promote DERIVES it from data/provenance.json and persists it here,
 -- in the SAME transaction that writes the register row and the refs projection it
@@ -663,7 +667,7 @@ CREATE INDEX IF NOT EXISTS reuse_verdicts_pair ON reuse_verdicts(source_capture,
 -- the document rather than a second place to state it. One row per captured
 -- document, keyed by the capture identity (register.capture_sha, I1 section 1).
 -- found is 0 for a FAILED or EMPTY reading, recorded HONESTLY as such: a reader
--- that finds nothing is a failed reader, never an emptied document (framework:489),
+-- that finds nothing is a failed reader, never an emptied document (framework \xA77),
 -- so an empty reading is a fact about the reader and is never backfilled with
 -- invented entities. reading holds the whole reading as JSON. DERIVED from the
 -- corpus, so a whole-store purge clears it (D-113).
@@ -776,9 +780,9 @@ CREATE INDEX IF NOT EXISTS reading_ref_terms_bundle ON reading_ref_terms(bundle_
 -- (BIO_Declared_Bias_v0_1.md safeguard 4) and the framework's entity axis
 -- (BIO_Content_Framework_v0_10.md section 8) are the SAME construct, and the live
 -- risk D-83 names is building them twice. An ENTITY is a thing the case is about
--- which OUTLIVES any document that mentions it (framework:247) and, in the doctrine,
+-- which OUTLIVES any document that mentions it (framework \xA73) and, in the doctrine,
 -- a SUBJECT a bias statement addresses (safeguard 4). It is RESOLVED across
--- documents, not extracted from one (framework:251); that resolution -- matching a
+-- documents, not extracted from one (framework \xA73); that resolution -- matching a
 -- reading_refs reference (FW-5) to an entry here -- is the NEXT slice, not this one.
 --
 -- kind: safeguard 4 names four SUBJECT kinds (source, institution, office,
@@ -943,7 +947,7 @@ CREATE INDEX IF NOT EXISTS resolutions_bundle ON resolutions(bundle_id);
 -- established -- the section-8.1 rule that an equality costing nothing is not evidence,
 -- enforced structurally at both ends.
 --
--- asserted_by is THREE-VALUED and is NOT the grade (framework:554 -- the author says WHO
+-- asserted_by is THREE-VALUED and is NOT the grade (framework \xA78.1 -- the author says WHO
 -- claims the connection, the grade says WHAT would be needed to CHECK it). Domain:
 --   'system' -- the framework INFERRED the connection from the two resolutions (what
 --              op=connect writes: the rule is the system's, even if an underlying
@@ -2009,17 +2013,22 @@ CREATE INDEX IF NOT EXISTS ai_run_log_terminal ON ai_run_log(run, terminal);
 -- absence and points nowhere leaves the next reader to re-derive whether the
 -- absence is still real.
 --
--- AND BY SECTION FOR A MEASURED REASON, NOT A STYLISTIC ONE. The four remaining
--- LINE citations elsewhere in this file -- the ones spelled as the framework
--- prefix followed by a bare line number -- are EARLY BY EXACTLY 84 LINES as of
--- the front-matter landing, and they FAIL SILENTLY: the line still exists and now
--- carries unrelated prose, so a reader who follows one is misinformed rather than
--- stopped. Measured at this item's rebase, not assumed. Converting those four --
--- and the seven like them elsewhere in bio-plane/src -- is REC-81, queued behind
--- this item precisely so two comment-only workers never hold one region. The
--- numbers are DELIBERATELY NOT REPEATED in this paragraph: REC-81 enumerates its
--- sites by grepping for that exact spelling, and quoting them here would mint
--- four sites that are not citations at all. The two Part II pointers this item
+-- AND BY SECTION FOR A MEASURED REASON, NOT A STYLISTIC ONE. The LINE citations
+-- that stood elsewhere in this file -- the ones spelled as the framework prefix
+-- followed by a bare line number -- were EARLY BY 89 LINES, and they FAILED
+-- SILENTLY: the line still existed and carried unrelated prose, so a reader who
+-- followed one was misinformed rather than stopped. REC-81 converted every one of
+-- them to a SECTION citation on 2026-09-14, here and at the seven sites elsewhere
+-- in bio-plane/src and INTERFACES.md, so none is left to enumerate.
+--
+-- THE OFFSET IS 89, AND THIS PARAGRAPH FIRST CARRIED 84. The wrong figure is named
+-- rather than quietly swapped, because a hand-carried number going stale is this
+-- project's most-repeated finding and a silent correction teaches nobody. Measured
+-- 2026-09-14 by REC-81 against the pre-front-matter text at 3f5e833: EVERY Part I
+-- heading moved by exactly 89 lines (section 1 from 98 to 187, section 3 from 230
+-- to 319, section 7 from 476 to 565, section 8.1 from 535 to 624), and an alignment
+-- sweep over the first 300 body lines matched 283 of them at +89 against 11 at +84,
+-- which is the rate at which blank lines agree by accident. The two Part II pointers this item
 -- adds cannot decay the way a line number does, which is the argument for the
 -- form and the reason CORPUS-STANDARD.md now rules it.
 --
@@ -2500,8 +2509,8 @@ CREATE INDEX IF NOT EXISTS text_attestations_bundle ON text_attestations(bundle_
 -- nothing in the tree emits, a chain is per CAPTURE with page-scoped parts only
 -- for a MIXED document (D-252), and the OCR member's per-line region provenance
 -- reaches the reading while no edge reads it. For why the form is a SECTION and
--- not a line, and for the four Part I line citations in this file that are now
--- 84 lines early and REC-81's to convert, see the no-extent block above.
+-- not a line, and for the Part I citations in this file that REC-81 converted to
+-- sections on 2026-09-14, see the no-extent block above.
 CREATE TABLE IF NOT EXISTS reading_text_source (
   capture_sha    TEXT PRIMARY KEY,
   bundle_id      TEXT NOT NULL,
@@ -30442,9 +30451,14 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    * RESOLVING a reading_refs reference (FW-5) to an entry here, and declaring the
    * resolution METHOD as the connection grade (framework 8.1), is the NEXT slice and
    * is deliberately not built here. This slice is the registry itself. */
+  /* 2026-09-14, REC-81: every citation into the content framework in this file
+     names a SECTION rather than a line. The line numbers they carried went stale
+     the moment the framework gained front matter — 89 lines, measured — and
+     CORPUS-STANDARD.md §4.6 rules that a citation into a design document names
+     the SECTION. */
   /* The union kind vocabulary, reconciled across the two doctrines this one axis
      serves (D-83): safeguard 4's four SUBJECT kinds, plus the framework's entity
-     kinds (framework:248). Closed and validated at the write path, so introducing a
+     kinds (framework §3). Closed and validated at the write path, so introducing a
      kind outside it is a loud refusal rather than a silent new vocabulary -- the
      spirit of safeguard 4, where introducing a new SUBJECT is a reviewed act.
      REC-35: the ARRAY moved to affordances.mjs (DISPOSITIONS' arrangement, and
@@ -31370,7 +31384,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
   }
   /* The read-side view of a connection: established and needs_confirmation are surfaced
      from the WEAKER grade so a connection resting on a C at either end is never read back
-     as established, and asserted_by is surfaced DISTINCT from grade (framework:554). */
+     as established, and asserted_by is surfaced DISTINCT from grade (framework §8.1). */
   #connectionView(r) {
     return {
       a_capture_sha: r.a_capture_sha,
@@ -50542,7 +50556,7 @@ var index_default = {
              document facts. A new sibling field, additive to I1. op=promote
              derives it from data/provenance.json and persists it into the
              `readings` table indexed by entity reference; a failed/empty reading
-             is carried honestly (found:false), never fabricated (framework:489). */
+             is carried honestly (found:false), never fabricated (framework §7). */
           reading,
           /* D-97: authority mirrors verdict / verdict_basis / verdict_at
              rather than inventing a shape. The determination when one was

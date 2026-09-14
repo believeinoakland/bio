@@ -12019,9 +12019,15 @@ export class Store extends DurableObject {
    * resolution METHOD as the connection grade (framework 8.1), is the NEXT slice and
    * is deliberately not built here. This slice is the registry itself. */
 
+  /* 2026-09-14, REC-81: every citation into the content framework in this file
+     names a SECTION rather than a line. The line numbers they carried went stale
+     the moment the framework gained front matter — 89 lines, measured — and
+     CORPUS-STANDARD.md §4.6 rules that a citation into a design document names
+     the SECTION. */
+
   /* The union kind vocabulary, reconciled across the two doctrines this one axis
      serves (D-83): safeguard 4's four SUBJECT kinds, plus the framework's entity
-     kinds (framework:248). Closed and validated at the write path, so introducing a
+     kinds (framework §3). Closed and validated at the write path, so introducing a
      kind outside it is a loud refusal rather than a silent new vocabulary -- the
      spirit of safeguard 4, where introducing a new SUBJECT is a reviewed act.
      REC-35: the ARRAY moved to affordances.mjs (DISPOSITIONS' arrangement, and
@@ -12794,7 +12800,7 @@ export class Store extends DurableObject {
 
   /* The read-side view of a connection: established and needs_confirmation are surfaced
      from the WEAKER grade so a connection resting on a C at either end is never read back
-     as established, and asserted_by is surfaced DISTINCT from grade (framework:554). */
+     as established, and asserted_by is surfaced DISTINCT from grade (framework §8.1). */
   #connectionView(r) {
     return { a_capture_sha: r.a_capture_sha, b_capture_sha: r.b_capture_sha, entity_id: r.entity_id,
              a_bundle_id: r.a_bundle_id, b_bundle_id: r.b_bundle_id,
