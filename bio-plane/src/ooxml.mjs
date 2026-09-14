@@ -14,7 +14,9 @@
  *   - [Content_Types].xml parsing and FLAVOUR DISCRIMINATION — what separates
  *     a `.docx` from an arbitrary ZIP a public body might also publish.
  *     Magic bytes FIRST, then the container's own parts; a declared
- *     Content-Type or a filename extension NEVER decides (I7);
+ *     Content-Type or a filename extension NEVER decides (I7). TWO part-maps
+ *     now live under that one rule: OPC's `[Content_Types].xml` (docx/xlsx/
+ *     pptx) and OpenDocument's first-and-stored `mimetype` (odt/ods/odp);
  *   - the uniform `_rels/*.rels` walker (`TargetMode="External"` → outbound),
  *     shared by all three formats;
  *   - `docProps/core.xml` metadata extraction (creator, lastModifiedBy,
@@ -29,10 +31,17 @@
  * CRC mismatch, an unparseable XML part — and never throws on malformed input,
  * never silently returns a partial presented as whole.
  *
- * ODF is DESIGNED FOR, not built: the flavour table is a PARAMETER
- * (`discriminate(bytes, contentType, flavours)`), so an ODF part-map is one
- * more table entry, not a rewrite. This module ASSERTS nothing about meaning
- * (that stays FRAMEWORK's, through I2) and WRITES nothing.
+ * ODF IS NOW BUILT AT THIS TIER (COFF-9, 2026-09-14), and the sentence that
+ * stood here for six weeks — "ODF is DESIGNED FOR, not built" — is CORRECTED
+ * rather than deleted, because the claim it made was the design bet and the
+ * bet paid: the flavour table really was a PARAMETER
+ * (`discriminate(bytes, contentType, flavours)`), so the ODF part-map arrived
+ * as `ODF_FLAVOURS` beside `OOXML_FLAVOURS` and a branch where the function
+ * had ALREADY decided there is no `[Content_Types].xml` — not a rewrite. What
+ * is built is the FLAVOUR only: there is still no ODF registry entry, no
+ * `registerFormat` call and no I2 emission (COFF-10's), so I7 is untouched by
+ * this act. This module ASSERTS nothing about meaning (that stays FRAMEWORK's,
+ * through I2) and WRITES nothing.
  *
  * Registry entries (COFF-3/4/5) build their I7 `detect`/`parts`/`structure`/
  * `text` on top of these primitives; this module is below the registry and
@@ -360,53 +369,152 @@ export function partContentType(name, types) {
 }
 
 /* ------------------------------------------------------------------ *
- * Flavour discrimination — docx / xlsx / pptx vs an arbitrary ZIP
+ * Flavour discrimination — docx / xlsx / pptx / odt / ods / odp vs an
+ * arbitrary ZIP
  * ------------------------------------------------------------------ */
 
-/* The flavour table IS the part-map parameter: each row names the main part's
- * declared content type and where the main part conventionally lives. ODF
- * (odt/ods/odp — same container, `mimetype` + `META-INF/manifest.xml` instead
- * of `[Content_Types].xml`) is DESIGNED FOR by this parameterisation and by
- * `discriminate` taking the table as an argument; the ODF rows are NOT built
- * here (COFF queue, later). */
+/* THE TABLE IS THE PART-MAP PARAMETER, and as of COFF-9 it carries TWO kinds
+ * of row. `partMap` says WHICH DECLARATION a row is read out of, because the
+ * two families declare themselves in different places inside the identical
+ * ZIP container:
+ *
+ *   partMap:"opc"  (docx/xlsx/pptx) — `[Content_Types].xml` declares the main
+ *                  part's content type; the row names that type and where the
+ *                  main part conventionally lives.
+ *   partMap:"odf"  (odt/ods/odp)    — a first-and-stored `mimetype` member
+ *                  carries the media type verbatim; the row names that media
+ *                  type and the main part (`content.xml` for all three).
+ *
+ * A row with NO `partMap` is read as "opc". That is deliberate back-compat: a
+ * caller-supplied table written against the pre-COFF-9 shape (one is in this
+ * module's suite, discriminating a `.vsdx`) keeps working unchanged.
+ *
+ * `OOXML_FLAVOURS` remains EXACTLY the three OOXML rows — the ODF rows are a
+ * separate table, and `CONTAINER_FLAVOURS` is the union `discriminate`
+ * defaults to. Keeping them separate is what lets a caller ask a narrower
+ * question (and lets the suite prove the pre-item OOXML outcomes are
+ * reproducible byte-for-byte by passing `OOXML_FLAVOURS` explicitly). */
 export const OOXML_FLAVOURS = [
   {
+    partMap: "opc",
     flavour: "docx",
     mainContentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
     conventionalMainPart: "word/document.xml",
   },
   {
+    partMap: "opc",
     flavour: "xlsx",
     mainContentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
     conventionalMainPart: "xl/workbook.xml",
   },
   {
+    partMap: "opc",
     flavour: "pptx",
     mainContentType: "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml",
     conventionalMainPart: "ppt/presentation.xml",
   },
 ];
 
-/** Which OOXML flavour, if any, this container is — MAGIC BYTES PLUS PARTS,
+/* ------------------------------------------------------------------ *
+ * The OpenDocument part-map (COFF-9) — same container, other declaration
+ * ------------------------------------------------------------------ */
+
+/* WHY ODF IS BUILT HERE AT ALL, since COFF-6 measured ZERO native ODF assets
+ * in a 43,282-key population and ruled DO NOT BUILD (MEASUREMENTS.md,
+ * 2026-08-03). That measurement is UNREVISED and still true: native ODF is
+ * absent from the wild we sampled. What changed is the SOURCE. Bob ruled on
+ * 2026-09-14 that a Google Drive link KEEPS THE LINK and extracts from the
+ * OpenDocument EXPORT, which makes ODF the HARVEST format rather than a
+ * published one. The rows are warranted by the ruling, not by the census.
+ *
+ * ODF AS ACTUALLY BUILT (OpenDocument 1.2 part 3 §3.3, and MEASURED against a
+ * real producer on 2026-09-14 — see MEASUREMENTS.md): the same ZIP container,
+ * but
+ *
+ *   - the FIRST member of the archive is `mimetype`, STORED (method 0) with
+ *     no extra field, whose bytes are EXACTLY the media type and nothing
+ *     else. That placement is not decoration — it puts the media type at a
+ *     fixed offset near the head of the file, which is the entire reason an
+ *     ODF package is sniffable without a directory walk;
+ *   - `META-INF/manifest.xml` lists the parts (ODF's answer to
+ *     `[Content_Types].xml`);
+ *   - `content.xml` is the main part, for all three flavours.
+ *
+ * THE MIMETYPE VALUE IS THE DISCRIMINATOR — NOT THE FILE LIST. A ZIP carrying
+ * `META-INF/manifest.xml` and `content.xml` under any other media type is not
+ * an odt/ods/odp and is said to be `undetermined`, never rounded into a
+ * flavour because its part names look familiar. */
+export const ODF_MIMETYPE_PART = "mimetype";
+export const ODF_MANIFEST_PART = "META-INF/manifest.xml";
+
+/* MEASURED 2026-09-14: the three conforming values are 39, 46 and 47 bytes
+ * (LibreOffice 26.8.0.3 output, MEASUREMENTS.md). This bound — 2.7x the
+ * longest — exists so a container declaring a 500 MB member named `mimetype`
+ * cannot make us inflate and decode it to settle a 47-byte question. Over it
+ * is a STATED undetermined naming the declared size, never a truncated value
+ * silently compared. */
+export const ODF_MIMETYPE_MAX_BYTES = 128;
+
+export const ODF_FLAVOURS = [
+  {
+    partMap: "odf",
+    flavour: "odt",
+    mimetype: "application/vnd.oasis.opendocument.text",
+    conventionalMainPart: "content.xml",
+  },
+  {
+    partMap: "odf",
+    flavour: "ods",
+    mimetype: "application/vnd.oasis.opendocument.spreadsheet",
+    conventionalMainPart: "content.xml",
+  },
+  {
+    partMap: "odf",
+    flavour: "odp",
+    mimetype: "application/vnd.oasis.opendocument.presentation",
+    conventionalMainPart: "content.xml",
+  },
+];
+
+/** The table `discriminate()` uses when a caller names none: both part-maps,
+ *  OPC first. Order matters only in that a container carrying BOTH
+ *  `[Content_Types].xml` and a `mimetype` member is read as OPC — see the
+ *  precedence note in `discriminate`. */
+export const CONTAINER_FLAVOURS = [...OOXML_FLAVOURS, ...ODF_FLAVOURS];
+
+/** Which office flavour, if any, this container is — MAGIC BYTES PLUS PARTS,
  *  never the caller-declared content type and never a filename extension
  *  (neither is even an input to the determination; `contentType` is carried
  *  into `signals` purely as corroborating-or-contradicted context, I7).
  *
  *  Returns:
- *    { ok:true,  format:"docx"|"xlsx"|"pptx", mainPart, confidence:"high", signals }
- *    { ok:true,  format:"zip",  signals }            — a real ZIP, NOT OOXML
+ *    { ok:true,  format:"docx"|"xlsx"|"pptx"|"odt"|"ods"|"odp",
+ *                mainPart, confidence:"high", signals }
+ *    { ok:true,  format:"zip",  signals }            — a real ZIP, NOT office
  *    { ok:true,  format:"undetermined", why, signals } — a ZIP whose flavour
  *        cannot be honestly discriminated (unreadable/absent-but-declared
- *        parts, an OPC package of an unrecognised type). STATED, never guessed.
+ *        parts, an OPC package of an unrecognised type, an ODF-shaped package
+ *        whose mimetype we do not know or whose placement is non-conforming).
+ *        STATED, never guessed.
  *    { ok:false, why, signals }                      — not a readable ZIP at
  *        all (no magic, truncated central directory, zip64, …).
  *
- *  The discrimination requires BOTH halves: the [Content_Types].xml
- *  declaration of a flavour's main content type AND that declared part
- *  actually present in the central directory. A declaration whose part is
+ *  The discrimination requires BOTH halves, and that rule is the same on both
+ *  part-maps: the DECLARATION (OPC's `[Content_Types].xml` entry for a
+ *  flavour's main content type, or ODF's `mimetype` member) AND the declared
+ *  part actually present in the central directory. A declaration whose part is
  *  missing is `undetermined: declared_main_part_absent` — bytes contradicting
- *  a claim are surfaced, not smoothed over. */
-export async function discriminate(bytes, contentType = null, flavours = OOXML_FLAVOURS) {
+ *  a claim are surfaced, not smoothed over.
+ *
+ *  A ZIP carrying NEITHER part map is `format:"zip"` — a POSITIVE
+ *  determination, unchanged by COFF-9. (The COFF-9 queue row asks for
+ *  "undetermined on a ZIP with neither part map"; what it is buying is "never
+ *  a flavour", and `zip` already delivers that while saying MORE than
+ *  undetermined does. Turning a determined answer into an undetermined one
+ *  would make the record claim LESS than the bytes support and would move a
+ *  pinned COFF-2 outcome, so the existing determination stands and the suite
+ *  asserts both halves: still `zip`, and never an ODF flavour.) */
+export async function discriminate(bytes, contentType = null, flavours = CONTAINER_FLAVOURS) {
   const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   const signals = [];
   if (contentType) signals.push(`declared-content-type:${contentType} (not used for the determination)`);
@@ -427,12 +535,32 @@ export async function discriminate(bytes, contentType = null, flavours = OOXML_F
   }
   signals.push(`container:zip entries=${container.count}`);
 
+  /* The table is partitioned by part-map, never merged: the OPC loop below
+   * sees only OPC rows and the ODF branch only ODF rows, so neither family
+   * can borrow the other's evidence. A row with no `partMap` is OPC (the
+   * pre-COFF-9 shape). */
+  const opcRows = [];
+  const odfRows = [];
+  for (const f of flavours) ((f.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f);
+
   const ctEntry = container.byName.get(CONTENT_TYPES_PART);
   if (!ctEntry) {
-    /* No [Content_Types].xml → not an OPC package at all: an arbitrary ZIP a
-     * body might publish. This is a POSITIVE determination, not an
-     * undetermined — and it stands whatever the declared content type or the
-     * filename claimed. */
+    /* No [Content_Types].xml → not an OPC package. Before that becomes a
+     * plain-ZIP verdict, the OTHER part-map gets its turn: ODF declares
+     * itself with a `mimetype` member, not with a content-type map.
+     *
+     * PRECEDENCE, pinned: OPC is tried FIRST and this branch is only reached
+     * once `[Content_Types].xml` is known absent, so a container carrying
+     * BOTH declarations is read as OPC. No conforming package carries both,
+     * and doing it this way is what keeps every pre-COFF-9 OOXML outcome
+     * byte-identical — `discriminateOdf` cannot run on, or push a signal
+     * into, any container that has a content-type map.
+     *
+     * It returns null — pushing NOTHING — for a container with no `mimetype`
+     * member at all, so a ZIP with neither part map reaches the plain-ZIP
+     * determination below with exactly the result object it always had. */
+    const odf = odfRows.length ? await discriminateOdf(b, container, odfRows, signals) : null;
+    if (odf) return odf;
     signals.push(`part:${CONTENT_TYPES_PART} absent → plain ZIP`);
     return { ok: true, format: "zip", signals };
   }
@@ -449,7 +577,7 @@ export async function discriminate(bytes, contentType = null, flavours = OOXML_F
   }
   signals.push(`part:${CONTENT_TYPES_PART} parsed (${types.defaults.size} defaults, ${types.overrides.size} overrides)`);
 
-  for (const f of flavours) {
+  for (const f of opcRows) {
     /* The declaration half: any part whose computed content type is this
      * flavour's main type. Overrides carry it in practice; defaults are
      * checked too so a default-typed package is not missed. */
@@ -480,6 +608,123 @@ export async function discriminate(bytes, contentType = null, flavours = OOXML_F
    * never guessed into a flavour. */
   signals.push("opc:no known main content type");
   return { ok: true, format: "undetermined", why: "opc_main_part_unrecognized", signals };
+}
+
+/** The ODF half of `discriminate` (COFF-9). Called ONLY where `discriminate`
+ *  has already established there is no `[Content_Types].xml`.
+ *
+ *  Returns a `discriminate`-shaped result, or NULL when the container carries
+ *  no ODF evidence whatsoever (no `mimetype` member) — in which case it has
+ *  pushed no signal and the caller makes its own plain-ZIP determination,
+ *  identical to the pre-COFF-9 one.
+ *
+ *  ---------------------------------------------------------------- PINNED
+ *  THE DECISION THE COFF-9 ROW ASKS FOR, made here with its reason: a
+ *  `mimetype` member that is PRESENT BUT NOT FIRST, or PRESENT BUT
+ *  COMPRESSED, is REFUSED into a stated `undetermined`. It is never accepted
+ *  as a flavour, and it is never silently ignored either — the container came
+ *  in carrying ODF's own signature part, and saying nothing about that would
+ *  be the silent outcome the row forbids.
+ *
+ *  WHY REFUSE rather than accept:
+ *
+ *   1. The rule is the FORMAT'S, not ours. OpenDocument 1.2 part 3 §3.3 says
+ *      the `mimetype` stream SHALL be first and SHALL be stored uncompressed.
+ *      A fence that matches the spec is not a fence tighter than its rule.
+ *   2. FIRST-AND-STORED IS WHAT MAKES THE SIGNAL WORTH ANYTHING. It is the
+ *      reason the media type sits at a fixed offset near the head of the file
+ *      and the reason the format is sniffable at all. Drop the placement
+ *      requirement and the determination rests on nothing but a filename
+ *      occurring somewhere inside an archive — a weaker basis than the OPC
+ *      side is held to, which demands a declaration AND the part it names.
+ *   3. MEASURED, so the refusal is known to cost nothing observed: every one
+ *      of the three real producer packages measured on 2026-09-14 has
+ *      `mimetype` first, stored, at local-header offset 0, with a zero-length
+ *      extra field (MEASUREMENTS.md). Google Drive's export — the source
+ *      Bob's ruling actually points this at — is a conforming producer.
+ *   4. It is the CHEAPLY REVERSIBLE direction. A refusal is stated, named and
+ *      visible in `signals`; widening it later takes one measurement of a
+ *      real non-conforming producer and a comment saying which one. Accepting
+ *      first and discovering later that we flavoured something that was not
+ *      an ODF document is the direction that puts an overclaim in the record.
+ *
+ *  WHAT THIS CHECK CANNOT SEE, stated rather than implied: it does not read
+ *  the local header's EXTRA FIELD, which §3.3 also requires to be empty. The
+ *  value is verified by length and CRC-32 through `readPart` either way, so
+ *  an extra field cannot corrupt the comparison — it would only mean a
+ *  package that is non-conforming in a way we accept. Named here so the next
+ *  reader knows it is a deliberate gap and not an oversight.
+ *  ------------------------------------------------------------------------
+ */
+async function discriminateOdf(bytes, container, rows, signals) {
+  const mimeEntry = container.byName.get(ODF_MIMETYPE_PART)
+    ?? container.entries.find((e) => normalizePartName(e.name) === ODF_MIMETYPE_PART);
+  if (!mimeEntry) return null; // no ODF evidence at all — not this branch's business
+
+  /* FIRST means first in the archive, checked two ways because the ZIP format
+   * does not require the central directory's order to match the members'
+   * physical order: the mimetype must head the central directory AND no other
+   * member may lie earlier in the file. */
+  let earliest = Infinity;
+  for (const e of container.entries) if (e.localHeaderOffset < earliest) earliest = e.localHeaderOffset;
+  if (container.entries[0] !== mimeEntry || mimeEntry.localHeaderOffset !== earliest) {
+    signals.push(`odf:${ODF_MIMETYPE_PART} present but NOT the first archive member`
+      + ` (central-directory index ${container.entries.indexOf(mimeEntry)},`
+      + ` local-header offset ${mimeEntry.localHeaderOffset}, earliest ${earliest})`);
+    return { ok: true, format: "undetermined", why: "odf_mimetype_not_first", signals };
+  }
+  if (mimeEntry.method !== 0) {
+    signals.push(`odf:${ODF_MIMETYPE_PART} is first but COMPRESSED (method ${mimeEntry.method}, ODF requires stored)`);
+    return { ok: true, format: "undetermined", why: "odf_mimetype_not_stored", signals };
+  }
+  if (mimeEntry.uncompressedSize > ODF_MIMETYPE_MAX_BYTES) {
+    signals.push(`odf:${ODF_MIMETYPE_PART} declares ${mimeEntry.uncompressedSize} bytes,`
+      + ` over ODF_MIMETYPE_MAX_BYTES=${ODF_MIMETYPE_MAX_BYTES}`);
+    return { ok: true, format: "undetermined", why: "odf_mimetype_oversized", signals };
+  }
+
+  const read = await readPart(bytes, container, ODF_MIMETYPE_PART);
+  if (!read.ok) {
+    signals.push(`odf:${ODF_MIMETYPE_PART} unreadable (${read.why})`);
+    return { ok: true, format: "undetermined", why: `odf_mimetype_unreadable:${read.why}`, signals };
+  }
+
+  /* EXACT comparison, never trimmed. §3.3 says the stream's content IS the
+   * media type and nothing else, and the value is the whole discriminator —
+   * so a trailing newline is a non-conforming producer to be NAMED, not a
+   * difference to be absorbed. `undetermined` carries the value it actually
+   * read, which is what makes such a producer diagnosable in one look. */
+  const declared = UTF8.decode(read.bytes);
+  const row = rows.find((f) => f.mimetype === declared);
+  if (!row) {
+    /* The part names may look exactly like an ODF package's — this is the
+     * negative control the row names — and it still is not one. Undetermined
+     * rather than "zip", for the same reason .vsdx is: a first-and-stored
+     * `mimetype` IS positive evidence of a media-type-declaring container
+     * (an EPUB is the obvious other one), and rounding it to "zip" would
+     * erase that evidence. */
+    signals.push(`odf:${ODF_MIMETYPE_PART}=${JSON.stringify(declared)} is no known OpenDocument media type`);
+    return { ok: true, format: "undetermined", why: "odf_mimetype_unrecognized", signals };
+  }
+  signals.push(`odf:${ODF_MIMETYPE_PART} ${declared} (first member, stored)`);
+
+  /* The parts half — the same both-halves rule the OPC branch applies. */
+  const manifestPresent = container.byName.has(ODF_MANIFEST_PART)
+    || container.entries.some((e) => normalizePartName(e.name) === ODF_MANIFEST_PART);
+  if (!manifestPresent) {
+    signals.push(`odf:${ODF_MANIFEST_PART} ABSENT`);
+    return { ok: true, format: "undetermined", why: "odf_manifest_absent", flavourDeclared: row.flavour, signals };
+  }
+  const main = normalizePartName(row.conventionalMainPart);
+  const mainPresent = container.byName.has(main)
+    || container.entries.some((e) => normalizePartName(e.name) === main);
+  if (!mainPresent) {
+    signals.push(`odf:mimetype declares ${row.flavour}, but ${main} is ABSENT`);
+    return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: row.flavour, signals };
+  }
+
+  signals.push(`part:${ODF_MANIFEST_PART} present`, `part:${main} present`);
+  return { ok: true, format: row.flavour, mainPart: main, confidence: "high", signals };
 }
 
 /* ------------------------------------------------------------------ *

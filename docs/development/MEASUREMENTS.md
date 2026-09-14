@@ -10896,3 +10896,62 @@ one costs a real investigation. The 75 unreadable drivers are NAMED individually
 battery, never scored zero. The one real decay the narrowing gives up —
 `harness.control.mjs`, "ALL TEN ARMS" against 19 announced — is named in D-343 so the
 withdrawal loses nothing.
+
+## 2026-09-14 · COFF-9 — how a REAL producer lays out an ODF package, and the brief that said none could be produced (instruments: LibreOffice 26.8.0.3 headless, then `bio-plane/src/ooxml.mjs`'s own central-directory walk)
+
+**THE BRIEF'S PREMISE WAS FALSE AND THAT IS THE FIRST MEASUREMENT.** The COFF-9 spawn brief
+stated *"no office suite exists on this machine"* and instructed that the ODF fixtures be
+built in the suite and the limitation declared. Measured instead of accepted:
+`command -v soffice` answers `/opt/homebrew/bin/soffice`, `/Applications/LibreOffice.app`
+exists, and `soffice --version` reports **LibreOffice 26.8.0.3**
+(`bce0998afefdbc355585ca324285661a2170ba77`). So the ODF layout COFF-9 discriminates on is
+a MEASUREMENT of a real producer rather than a reading of the spec, and the hand-built
+fixtures in `bio-plane/test/ooxml.test.mjs` are verified against it rather than only
+against OpenDocument 1.2 part 3 §3.3.
+
+**Method.** Three packages produced headless into a scratch profile — `.odt` from a text
+file, `.ods` from a CSV, `.odp` from a flat-ODF (`.fodp`) source, since Impress has no
+import filter for plain text. Each was then read back through `readContainer` /`readPart`
+from `ooxml.mjs` itself, so the numbers come through the same walk the discriminator uses
+rather than through a second ZIP reader that could disagree with it.
+
+| | `.odt` | `.ods` | `.odp` |
+| --- | --- | --- | --- |
+| container size (bytes) | 8,669 | 8,121 | 8,792 |
+| central-directory entries | 9 | 9 | 8 |
+| FIRST central-directory entry | `mimetype` | `mimetype` | `mimetype` |
+| its compression method | **0 (STORED)** | **0 (STORED)** | **0 (STORED)** |
+| its local-header offset | **0** | **0** | **0** |
+| its local-header extra-field length | **0** | **0** | **0** |
+| `mimetype` byte length | **39** | **46** | **47** |
+| trailing whitespace in the value | none | none | none |
+| `META-INF/manifest.xml` present | yes | yes | yes |
+| `content.xml` present | yes | yes | yes |
+| `[Content_Types].xml` present | no | no | no |
+
+- **Every conformance rule COFF-9 enforces is honoured by the real producer.** `mimetype`
+  first, stored, at offset 0, with an empty extra field and the media type and nothing
+  else. That is what makes REFUSING a non-first or compressed `mimetype` a fence with no
+  measured cost, and it is the evidence the pinned decision at `discriminateOdf` rests on.
+- **The three conforming values are 39 / 46 / 47 bytes**, which is where
+  `ODF_MIMETYPE_MAX_BYTES = 128` comes from: 2.7x the longest, so a container declaring a
+  huge member named `mimetype` is refused by a bound rather than inflated and decoded to
+  settle a 47-byte question.
+- **`mimetype` is first but NOT second, third or fourth**: the entry order after it differs
+  between Writer/Calc (`manifest.rdf`, `Configurations2/`, `Thumbnails/thumbnail.png`, …)
+  and Impress (`Configurations2/` first, `META-INF/manifest.xml` LAST). So position is a
+  property of the FIRST member only, and any rule about where the manifest sits would have
+  been wrong — the discriminator requires the manifest to be PRESENT and says nothing about
+  where.
+- **PRE-ITEM, `discriminate()` answered `format:"zip"` on all three real files** — measured
+  against a pristine `git worktree add` of `origin/main` at `2f16a94`, not assumed. That is
+  exactly the gap COFF-9 closes; post-item the same three answer `odt` / `ods` / `odp` with
+  `mainPart:"content.xml"` and `confidence:"high"`.
+
+**STATED LIMITS, because one producer is not the world.** One producer, one version, one
+platform (macOS arm64), three documents, all machine-generated from trivial sources. **Google
+Drive's ODF export — the source Bob's 2026-09-14 ruling actually points this at — was NOT
+reachable from this session and is NOT measured here**; CAP-8 will meet it first and should
+re-measure this table against a real Drive export rather than inherit it. COFF-6's census
+(2026-08-03: ODF is ZERO in 43,282 oaklandca.gov assets) is UNREVISED and still stands — it
+was about NATIVE ODF in the wild, and nothing here contradicts it.
