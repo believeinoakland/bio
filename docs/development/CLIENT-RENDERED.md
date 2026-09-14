@@ -1,5 +1,31 @@
 # Capturing client-rendered content
 
+**Status** · DRAFT, not ratified (its own words), written 2026-07-29 after 0.42.0 found that `oaklandca.opengov.com` serves a shell holding almost nothing. [DESIGNED-not-built], and still blocked. Measured against `bio-plane/src` at plane 0.58.0 (grepped 2026-09-14): nothing renders anything — no Browser Rendering binding, no `render.*` fields, no rendered capture, no grade or method vocabulary for one. The only built part is DETECTION: `docprofile`'s `client_rendered` recogniser, which goes first in the registry and carries a member-facing warning that what was collected is the frame and not the figures. D-64 is open and BLOCKED on D-55, whose surviving case — a third party's script output as evidence in its own right — needs the per-origin sub-document attribution that is [ABSENT]. Two of its sections are superseded in place and say so in the body: D-55 by `AUTHORITY-AND-TRUST.md`'s three-valued ruling, and the free-tier premise by DEC-42. as of 2026-09-14.
+
+**Place in the system** · A level-2 design serving construct 2, **intake, capture and provenance**, whose level-1 home is `BIO_Intake_Doctrine_v1_1.md` (`BIO_System_Design.md` §3 names it there). It is the one capture design whose subject the plane cannot do at all, and the gap it names is a coverage gap rather than a refinement: modern government transparency portals are routinely shells. It is downstream of `AUTHORITY-AND-TRUST.md`, which unblocked it in doctrine, and of DEC-42, which removed its free-tier premise; D-191 bears on it directly, because a rendered capture offered as evidence of what a page LOOKED like is the composite whose temporal spread the record does not state.
+
+**Incomplete sections** ·
+- §Therefore: a pair, not a replacement / §What must be recorded on a rendered capture — [DESIGNED-not-built] in full. Nothing produces the second artifact, and none of the `render.*` fields listed — engine, viewport, wait condition, elapsed, requests, `third_party_executed`, `render.of` — exists in any schema or any provenance document.
+- §The grade: RULED — the grade is RULED and nothing implements it. There is no grade or method vocabulary for a rendered capture in the check catalog, which this document's own open questions say must be settled before any code writes one into a record.
+- §There is no collision — superseded in its premise by DEC-42 and marked as such in the body: Workers Paid IS a requirement, the installer refuses a Free account (D-185), and the free-tier figures here are history rather than a configuration anything runs under.
+- §What this changes in what is already built — written against 0.42.0 and not re-checked since. Subresource capture, link partitioning and the site asset record have all moved (`CAPTURE-FIDELITY.md`, `LINK-FIDELITY.md`, `CAPTURE-SCALING.md`), and none of the four claims here can be checked against a rendered document because none exists.
+- §Open questions for ratification — all four are still open. The fourth has a counterpart it did not have when it was written: CAP-3's monitoring consumer is now the first actor that fires captures unattended, so "whether an unattended sweep may capture a client-rendered source at all" is a live question rather than a hypothetical one.
+
+**Contents**
+- [The ruling this proceeds from](#the-ruling-this-proceeds-from)
+- [What is broken today, measured](#what-is-broken-today-measured)
+- [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs)
+- [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded)
+- [Therefore: a pair, not a replacement](#therefore-a-pair-not-a-replacement)
+- [What must be recorded on a rendered capture](#what-must-be-recorded-on-a-rendered-capture)
+  - [RULED: third-party output is attributed to the third party](#ruled-third-party-output-is-attributed-to-the-third-party)
+- [There is no collision: rendering is available on the free tier](#there-is-no-collision-rendering-is-available-on-the-free-tier)
+- [What Workers Paid actually buys, for this project](#what-workers-paid-actually-buys-for-this-project)
+- [What this changes in what is already built](#what-this-changes-in-what-is-already-built)
+- [Open questions for ratification](#open-questions-for-ratification)
+
+---
+
 DRAFT, not ratified. Written 2026-07-29 after 0.42.0 found that
 oaklandca.opengov.com serves a shell with zero anchors in its HTML, so a capture
 of it holds almost nothing.

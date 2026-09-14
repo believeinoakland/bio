@@ -1,5 +1,33 @@
 # Capture scaling: shared site assets, resumable ticks, and the ceiling
 
+**Status** · Written 2026-07-28 from figures measured against live pages at 0.37.0, and already corrected once: on 2026-07-31 its header still read *"Nothing here is built yet"* when five of six order-of-work items had shipped, which is why this document carries per-item status at all. Measured again against `bio-plane/src` at plane 0.58.0, **all six items are now [BUILT]** — item 6 (CAP-4) landed as `reuse_verdicts` (`schema.mjs:609-640`) with the free POSTHOC detection phase, the RATIFY phase's plain GET, and all four outcomes including `not_attempted` — so item 6's own status line is now the stale one. The measurements stand. What is unbuilt here is not an item but a MEASUREMENT: the freshness window and the recurrence threshold are constants CHOSEN in code (`reuseDecision`, `subresources.mjs:596`, 24 h and `minDocuments: 2`), which is the `SUBRESOURCE_CAP = 45` mistake this document names by name. as of 2026-09-14.
+
+**Place in the system** · A level-2 design serving construct 2, **intake, capture and provenance**, whose level-1 home is `BIO_Intake_Doctrine_v1_1.md` (`BIO_System_Design.md` §3 names it there). It owns the three things that make capture survive a real corpus — the per-site asset record, resumable sessions, and the empirically calibrated ceiling — and it is the substrate `CAPTURE-FIDELITY.md`'s subresource capture now runs on. Its recurrence signal is what `LINK-FIDELITY.md`'s chrome section reaches for; its composite-capture consequence is D-191 (a capture assembled from reused parts has a temporal spread the record does not state); and DEC-42 supersedes its free-tier premise while D-185 keeps the frugality.
+
+**Incomplete sections** ·
+- §Order of work — item 6's status line reads *"DECIDED 2026-07-31 and QUEUED as CAP-4"* and CAP-4 has LANDED: `reuse_verdicts` carries both producers (POSTHOC and RATIFY) with the four outcomes, and refinements (a) to (d) are built as decided. The line should be read as history.
+- §Job one: stop re-fetching — its freshness rule is SUPERSEDED by what shipped. It proposes reusing only assets whose `stable_since` is older than the window; `reuseDecision` (`subresources.mjs:582-608`) gates on RECENCY OF FETCH instead, with stability demoted to a secondary signal, because the stability gate measured live as reusing nothing at all on a fresh instance — the week when the ceiling hurts most. The `reused_from` / `reused_fetched_at` / `fetched_this_capture` manifest shape is built as written.
+- §The per-site asset record — the column list drawn here is not the table that exists. `site_assets` (`schema.mjs:315-328`) carries `last_fetched`, `kind` and `changes`, which are what the reuse decision reads, and it has no `capture_count` or `distinct_documents`: the distinct-document count moved into `site_asset_refs`, one row per (asset, document), so a re-capture cannot double-count it.
+- §Open questions — both remaining questions are unmeasured while the code has already picked both constants, which is exactly the failure this document diagnoses; neither the freshness window nor the recurrence threshold has been measured against fifteen or more captures of one host.
+- §Workers Paid is an optimisation — superseded in premise by DEC-42 and marked as such in the body. Its free-tier figures are history: no supported instance runs under them and the installer refuses a Free account (D-185).
+
+**Contents**
+- [The three problems are one structure](#the-three-problems-are-one-structure)
+- [What is already shared, and what is not](#what-is-already-shared-and-what-is-not)
+- [The per-site asset record](#the-per-site-asset-record)
+  - [Job one: stop re-fetching](#job-one-stop-re-fetching)
+  - [Checking that a reused asset is still the same](#checking-that-a-reused-asset-is-still-the-same)
+  - [Job two: detect chrome without semantic HTML](#job-two-detect-chrome-without-semantic-html)
+  - [Job three: nav change as evidence](#job-three-nav-change-as-evidence)
+- [Resumable capture across ticks](#resumable-capture-across-ticks)
+- [Re-fetch at ratification is mandatory](#re-fetch-at-ratification-is-mandatory)
+- [Sensing the ceiling](#sensing-the-ceiling)
+- [Workers Paid is an optimisation, never a requirement — SUPERSEDED 2026-08-04 (DEC-42)](#workers-paid-is-an-optimisation-never-a-requirement-superseded-2026-08-04-dec-42)
+- [Order of work](#order-of-work)
+- [Open questions](#open-questions)
+
+---
+
 Written 2026-07-28 after 0.37.0 measured the real limits against live pages.
 
 **STATUS CORRECTED 2026-07-31 (session BOB). The header said "Nothing here is built

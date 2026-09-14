@@ -1,5 +1,31 @@
 # The archive fallback: what a web archive can and cannot attest
 
+**Status** · The design for what a web archive can and cannot attest, written 2026-07-30 and corrected 2026-07-31 by measurement through the plane's own egress (D-105); the three corrections it carries inline are load-bearing and stand. **Its preamble's "Design, not built" is stale.** [BUILT] at plane 0.58.0: the CDX query, row selection and the empty-digest and non-200 exclusions (`cdx.mjs`), the archive arm of `op=acquire` with a two-hop grade-C chain built from the CDX record the call itself fetched (`index.mjs:4254-4341`, `:5349-5359`), the eligibility fence in one place (`archiveSelect`, `index.mjs:168-175`), the 24/min governor override taken from THEIR figure, and — since CAP-3 — the monitoring consumer that finally invokes all of it, one entry on the single reconciling Durable Object alarm (`store.mjs:27474-27660`), INERT unless the instance is wired with `env.SELF` and a daemon token. [ABSENT]: the Memento interface and the WARC interchange this document argues for, and the per-document cadence its scaling answer rests on. The rate ceilings remain THEIRS and deliberately unverified (D-111). as of 2026-09-14.
+
+**Place in the system** · A level-2 design serving construct 2, **intake, capture and provenance**, whose level-1 home is `BIO_Intake_Doctrine_v1_1.md` (`BIO_System_Design.md` §3 names it there). It consumes `AUTHORITY-AND-TRUST.md`'s transitive-trust ruling and its three-valued authority, which is why an archive capture is left UNDETERMINED rather than attributed to the Internet Archive. It supplies `LINK-FIDELITY.md`'s PRIMARY contemporaneity route produced by somebody else, on the sources where our own bracket arm can never fire. `SOURCE-ACCESS.md`'s 2026-07-31 ruling promotes it from a backstop to the primary resilience mechanism, the allowlist arm being closed.
+
+**Incomplete sections** ·
+- §preamble — *"Design, not built"* is STALE. The decision half and the capture half shipped in 0.51.0 and 0.52.0, were live-verified, and CAP-3 has since built the consumer that fires them.
+- §Build to Memento, not to Wayback — [ABSENT]. The plane queries Wayback's own CDX endpoint directly (`cdx.mjs:142`) and reads the Memento headers only to record them inside the provenance hop, so the hostage-to-one-organisation risk this section exists to avoid is the state that shipped.
+- §WARC as interchange, not as store — [ABSENT]. Nothing in the tree reads or writes WARC in either direction, and the second direction — a BIO instance that can be verified, mirrored and outlived by tooling that already exists — is the one this section calls the important one.
+- §Why volume is mostly not the constraint — per-document cadence derived from observed volatility is [ABSENT]. The monitoring tick is one global hourly cadence over a batch of fifty (`store.mjs:27507-27508`), which is the global cadence this section argues against by name.
+- §Outreach: drafted, NOT sent — still unsent, and its stated trigger has already fired: it says to revisit *"once the allowlist question with the City is settled"*, and the allowlist ask was CLOSED on 2026-07-31 (`SOURCE-ACCESS.md`), so nothing is waiting on anything and no actor is named.
+
+**Contents**
+- [What the Wayback Machine actually establishes](#what-the-wayback-machine-actually-establishes)
+  - [And what it does not](#and-what-it-does-not)
+  - [The part that is better than expected](#the-part-that-is-better-than-expected)
+- [Shape on the capture](#shape-on-the-capture)
+- [Same document, two sources](#same-document-two-sources)
+- [Build to Memento, not to Wayback](#build-to-memento-not-to-wayback)
+- [WARC as interchange, not as store](#warc-as-interchange-not-as-store)
+- [Rate limits: THIRD-PARTY FIGURES, not ours](#rate-limits-third-party-figures-not-ours)
+  - [The scaling problem a per-instance governor cannot solve](#the-scaling-problem-a-per-instance-governor-cannot-solve)
+  - [Why volume is mostly not the constraint](#why-volume-is-mostly-not-the-constraint)
+- [Outreach: drafted, NOT sent](#outreach-drafted-not-sent)
+
+---
+
 Written 2026-07-30. Design, not built. Consumes the rulings in
 `AUTHORITY-AND-TRUST.md`, particularly that transitive trust is accepted with
 disclosure and grade adjustment.

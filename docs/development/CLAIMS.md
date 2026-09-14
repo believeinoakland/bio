@@ -3504,3 +3504,37 @@ byte-identical skip vs metadata deploys — MEASUREMENTS row). The newgroup WORK
 NOT performed: installer releases are gated to Bob, and the live 0.57.0-embedded installer
 reads only the plane keys of the new manifest (additive-in-fact, IC-82's measurement), so
 nothing breaks while he decides. QUEUE row flips and IC-82's SETTLED are CONDUCT's.
+
+## CLAIM 2026-09-14 CAPTURE (CAP-6 — front matter for CAPTURE's seven design documents)
+session: worker for CAP-6, Opus 5, worktree-isolated, spawned by CONDUCT #10
+worktree: `/Users/sparky/ClaudeCodeBIO/bio/.claude/worktrees/agent-a97ef16d17d0c26e2`
+branch: `worktree-agent-a97ef16d17d0c26e2` (base `3cac8c6`)
+paths:
+  - `docs/development/AUTHORITY-AND-TRUST.md` — front matter only (the four fields + `---`); body untouched
+  - `docs/development/LINK-FIDELITY.md` — front matter only; body untouched
+  - `docs/development/ARCHIVE-FALLBACK.md` — front matter only; body untouched
+  - `docs/development/SOURCE-ACCESS.md` — front matter only; body untouched
+  - `docs/development/CAPTURE-SCALING.md` — front matter only; body untouched
+  - `docs/development/CAPTURE-FIDELITY.md` — front matter only; body untouched
+  - `docs/development/CLIENT-RENDERED.md` — front matter only; body untouched
+  - `docs/architecture/CORPUS-STANDARD.md` — **§5's governed table ROWS ONLY** (seven rows appended at the END of the table, where a parallel merge resolves mechanically), the matching seven rows struck from §5's "Not yet governed" table, and its own Status `as of` bumped to 2026-09-14 with Contents regenerated if a heading moves. **NOT** §1–§4, **NOT** §6–§7.
+  - `docs/DECIDED.md` — REGENERATED, not authored, by `node tools/decided.mjs`. Owed and not foreseen from the brief: the front matter quotes the ruling-marker words `decided.mjs` indexes (spelled here in lower case on purpose, so this claim does not itself enter the index) and shifts every line number in eight governed files, so `plancheck`'s staleness arm goes red without it (measured: 730 -> 748 rulings, and every changed row but the count line names one of the eight files, so the drift is entirely this item's).
+  - AMENDED MID-ITEM, 2026-09-14: TWO MULTI-LINE HEADINGS COLLAPSED ONTO ONE LINE, the only body bytes this item moves. `CAPTURE-FIDELITY.md`'s title was TWO `# ` lines, which ends the front-matter block before it begins — corpuscheck cannot parse the file at all until they are one line, so this is required rather than tidy; the dropped parenthetical ("design, 2026-07-28; implementation is the next plane release") is carried into the Status and was stale in its second half. `SOURCE-ACCESS.md`'s `## RULED, 2026-07-31: the allowlist ...` was two `## ` lines, which the generated Contents would have carried as two half-entries; collapsing it is not required and is done because a Contents that indexes half a heading fails the purpose §3 gives it.
+  - `docs/development/CLAIMS.md` — this claim and its release
+NOT MINE: `bio-plane/**` (nothing in `src` moves), `docs/development/QUEUE.md`, `CLAUDE.md`,
+`docs/development/DECISIONS.md`, `DEBT.md`, every other governed document.
+released: 2026-09-14 by the CAP-6 worker on branch `worktree-agent-a97ef16d17d0c26e2`.
+All seven CAPTURE designs carry front matter to `CORPUS-STANDARD.md` §3's grammar and sit in
+§5's governed table, appended at its END; the two CAPTURE rows are gone from "Not yet governed".
+`corpuscheck` 27 governed document(s), 0 fail, exit 0 read unpiped. `gates.mjs` GREEN, class DOCS:
+19/19 plane suites, 1,118 assertions, four UI suites green, `plancheck --local` 0 fail 0 warn.
+Three negative-control arms run and recorded, each ALONE on `CAPTURE-FIDELITY.md`, restored by
+`cp`-back verified by sha256 AND `cmp` (never a checkout), the subject byte-identical at
+9f60ed29... after every arm and the final tree passing. Arm 1 HAD TO BE RE-ARMED and that is the
+item's own finding: the first attempt pushed the Status date to 2026-09-01 against a file whose
+OWN last commit day is 2026-07-28, so it was never behind anything and corpuscheck correctly
+passed; re-armed at 2026-07-27 it fails naming the file. NOTHING IS OWED TO A FUTURE ACTOR BY
+THIS RELEASE. Two matters for CONDUCT are stated as ACTS in the worker's report, not here, and
+neither is a precondition for merging this: re-counting `CORPUS-STANDARD.md`'s own front-matter
+bullet for §5 once the parallel retrofit acts have all merged, and three ledger rows this item
+measured as stale (D-109, D-60's remaining arms, and the ruling count carried in `CLAUDE.md`).

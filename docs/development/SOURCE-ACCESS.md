@@ -1,5 +1,28 @@
 # Source access: why oaklandca.gov refused us, measured
 
+**Status** · A measurement record and the rulings that followed it, rewritten 2026-07-30 to replace a version whose central claim was wrong, amended 2026-08-07 (DEC-47's access-parity amendment) and closed on its allowlist arm 2026-07-31. The measurements are the reason the document exists and they stand. [BUILT] at plane 0.58.0: the one legible user-agent, now composed in `checks/bio-checks.mjs` as `civicosUserAgent` with `index.mjs:122` delegating to it (PL-4), the resolving contact URL that D-94's nine-rung ladder proved load-bearing, the per-host governor, and — since PL-4/BOB-3 — the member-browser UA delegation this document's body still frames as held in reserve: permitted for publicly available documents, read only from a `capture_requests` row the drain has already judged and never from a request body (`index.mjs:122-129`, `schema.mjs:2245`). [ABSENT]: egress diversity, which is the point of D-120 — a member-driven capture path now exists and its fetches still leave from Cloudflare's shared egress. The 2026-07-31 allowlist ruling is settled and the ask is CLOSED, not held. as of 2026-09-14.
+
+**Place in the system** · A level-2 design serving construct 2, **intake, capture and provenance**, whose level-1 home is `BIO_Intake_Doctrine_v1_1.md` (`BIO_System_Design.md` §3 names it there). It owns one question for the whole system — on what terms a source admits this instance — and it is where the measurements behind D-94, D-100 and D-120 live; `MEASUREMENTS.md` holds the full ladder. Its 2026-07-31 ruling is what promotes `ARCHIVE-FALLBACK.md` to the primary resilience mechanism and what puts member-driven egress beside it, and the doctrine it defends — BIO does not disguise its requests — is `CLAUDE.md`'s stance applied to the wire.
+
+**Incomplete sections** ·
+- §What is reachable now — a 2026-07-30 table, never re-measured. Admission still rests on `CivicOS` not being recognised by Akamai's bot directory, which this document says plainly is not a position; the table is therefore a fact about that day and not a statement about today.
+- §The fix, and why it is not durable — the site it names is stale: the string is no longer composed in `bio-plane/src/userAgent()` but in `checks/bio-checks.mjs`, so the Durable Object's capture-request drain can check the agent it is about to cause to be sent rather than a second copy of it (PL-4) — which is this section's own "two bare tokens that did not agree" defect closed one layer down.
+- §Open — stale as a list of open items: two of its three were answered in the update written the same day, and the third, telling the City, was CLOSED by the ruling at the foot of this document.
+- §the allowlist is NOT a viable mechanism — its "What this promotes" list is stale in both limbs. Item 1 says the archive fallback is *"built, live-verified, and IDLE. Nothing invokes it (QUEUE `CAP-3`)"* and CAP-3 has since landed the monitoring consumer that invokes it. Item 2, egress diversity, is still not built (D-120), though the member-driven capture path and its UA delegation now exist — so what is missing is the EGRESS, not the path.
+
+**Contents**
+- [The measurement](#the-measurement)
+- [Corroborating evidence from before the measurement](#corroborating-evidence-from-before-the-measurement)
+- [What is in front of the site](#what-is-in-front-of-the-site)
+- [Two findings about the City, recorded as facts and not as claims](#two-findings-about-the-city-recorded-as-facts-and-not-as-claims)
+- [What is reachable now](#what-is-reachable-now)
+- [The fix, and why it is not durable](#the-fix-and-why-it-is-not-durable)
+- [Open](#open)
+- [Update, 2026-07-30, same day: the component that matters, measured](#update-2026-07-30-same-day-the-component-that-matters-measured)
+- [RULED, 2026-07-31: the allowlist is NOT a viable mechanism, and the reason is structural rather than tactical](#ruled-2026-07-31-the-allowlist-is-not-a-viable-mechanism-and-the-reason-is-structural-rather-than-tactical)
+
+---
+
 Rewritten 2026-07-30. **The previous version of this document was wrong in its
 central claim**, and it is replaced rather than amended so that nobody reads the
 old framing and acts on it. It recorded that `www.oaklandca.gov` refuses the
@@ -192,8 +215,7 @@ back-to-back pair, which is burst-shaped rather than categorical; the per-host
 governor shipped in 0.47.0 in response. What remains open is the first item,
 telling the City, and it now carries a measured, specific ask.
 
-## RULED, 2026-07-31: the allowlist is NOT a viable mechanism, and the reason is
-## structural rather than tactical
+## RULED, 2026-07-31: the allowlist is NOT a viable mechanism, and the reason is structural rather than tactical
 
 Bob, answering DEC-1: **"We expect Oakland to view us as hostile to the
 administration's interests. Besides, every CivicOS instance, and there could be a

@@ -153,6 +153,13 @@ joins the table in the same commit that gives it front matter.
 | --- | --- | --- | --- |
 | `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 | 2026-09-14 |
 | `docs/development/MULTI-INSTANCE-ISOLATION.md` | 2 | `BIO_System_Design.md` §distribution | 2026-09-14 |
+| `docs/development/AUTHORITY-AND-TRUST.md` | 2 | `BIO_Membership_Architecture_v2.md` (§3 construct 1); its capture-side rulings serve `BIO_Intake_Doctrine_v1_1.md` | 2026-09-14 |
+| `docs/development/LINK-FIDELITY.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
+| `docs/development/ARCHIVE-FALLBACK.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
+| `docs/development/SOURCE-ACCESS.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
+| `docs/development/CAPTURE-SCALING.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
+| `docs/development/CAPTURE-FIDELITY.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
+| `docs/development/CLIENT-RENDERED.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
 
 ### Not yet governed — design documents that owe front matter
 
@@ -169,8 +176,6 @@ Incomplete fields need the owner's judgment.
 | `docs/development/DOCUMENT-PROFILES.md` | FRAMEWORK | docprofile's own design |
 | `docs/development/UI-PLAN.md`, `UI-KICKOFF.md` | UI | the UI plan of record and Bob's UX principles |
 | `docs/development/ASSISTANT-PILOT.md` | SKILL | the assistant pilot design |
-| `docs/development/AUTHORITY-AND-TRUST.md` | CAPTURE | the 2026-07-30 rulings on authority |
-| `docs/development/LINK-FIDELITY.md`, `ARCHIVE-FALLBACK.md`, `SOURCE-ACCESS.md`, `CAPTURE-SCALING.md`, `CAPTURE-FIDELITY.md`, `CLIENT-RENDERED.md` | CAPTURE | capture designs |
 | `docs/development/SCHEDULER.md`, `NOTIFICATIONS.md` | RECORD / UI | the alarm model and the queue content |
 | `docs/development/OFFICE-FORMATS.md` | CONTENT-OFFICE | the format axis |
 | `docs/development/INBOX-GRAMMAR.md`, `CONFORMANCE-AND-INTAKE-ARC.md`, `PROCESS-INVENTORY.md`, `PRACTICE-SURVEY.md`, `FINDINGS-WORKPLAN.md`, `RETRIEVAL-PROBE.md` | CONDUCT | designs and studies; some are closed history and belong in the archive |
