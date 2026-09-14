@@ -3504,3 +3504,42 @@ byte-identical skip vs metadata deploys — MEASUREMENTS row). The newgroup WORK
 NOT performed: installer releases are gated to Bob, and the live 0.57.0-embedded installer
 reads only the plane keys of the new manifest (additive-in-fact, IC-82's measurement), so
 nothing breaks while he decides. QUEUE row flips and IC-82's SETTLED are CONDUCT's.
+
+## CLAIM 2026-09-14 M0 (D-329+D-331+D-333 — the three driver-estate decay shapes M0-25's census cannot see: composed labels, the throw's blast radius, and tally decay)
+session: M0 background-lane worker (worktree `.claude/worktrees/agent-ad7860e15dfeb0a6d`, branch `worktree-agent-ad7860e15dfeb0a6d`)
+opened: 2026-09-14
+authority: QUEUE.md's `### D-329+D-331+D-333` row, and the three DEBT rows it names as the authorities (D-329, D-331, D-333).
+paths:
+  - `bio-plane/test/m025-arm-anchor-witness.test.mjs` — EXTENDED, not rewritten. The existing
+    A1-A6 / S1-S6 arms and the header's reach statement stay; what is added is the LABEL-QUOTE
+    half (D-329: a driver's `must*:`/`expect*:` fragment evaluated against the way the SUITE
+    COMPOSES the label, so a fragment that quotes a rendered count is caught by name) and the
+    tally half (D-333: a driver's DECLARED arm tally read through the estate's own
+    `control-register.mjs` grammar and compared with what its arm table actually holds).
+  - `bio-plane/test/m025-arm-census.mjs` — EXTENDED: declared-vs-measured arm tallies on the
+    runs it already makes (D-333), and the preflight report the throwing drivers now print
+    read into the census's classification (D-331). Its existing verdicts, matcher unions,
+    dirty-tree stop and exit rule are UNCHANGED.
+  - `bio-plane/test/casepin.control.mjs`, `bio-plane/test/casesign.control.mjs`,
+    `bio-plane/test/caseproduction.control.mjs` — D-331's three named throwing drivers: the
+    ANCHOR PREFLIGHT the row recommends (validate every arm's anchor and report the WHOLE set
+    before arming anything), so one dead anchor can no longer blind the arms behind it. The
+    throw is KEPT — a half-armed tree is still never measured; what changes is that the whole
+    anchor set is reported first. No arm's meaning, edit, subject or declaration moves.
+  - `bio-plane/test/m025-anchor-witness.control.mjs` — APPENDED arms only (the new halves'
+    negative controls); no existing arm edited.
+  - `docs/development/DEBT.md` — **the D-329, D-331 and D-333 rows' dispositions only**,
+    nothing else, no new row unless a residue is found (id via `tools/mintid.mjs D`).
+  - `docs/development/MEASUREMENTS.md` — APPEND ONLY, this item's figures and arm results.
+  - `docs/development/CLAIMS.md` — this block.
+  - `docs/development/VERIFICATION.md` — ONLY if the driver law changes (the D-331 ruling), and
+    then only the sentence that states it.
+  **NOT** `bio-plane/src/**`, **NOT** `bio-plane/dist/**`, **NOT** `docs/development/QUEUE.md`
+  (CONDUCT's sole ground), **NOT** `DECISIONS.md`, **NOT** `CLAUDE.md`, **NOT** `newgroup/**`,
+  **NOT** any version bump, tag or deploy. NO LIVE CALL.
+concurrency: checked over the register 2026-09-14 — the three claims still open are FL-10
+  (`bio-plane/test/fleetbundles.control.mjs`, `bio-plane/dist/**`, build scripts), FL-6
+  (`agent-worker/**`, `bio-plane/test/fleetbundles.test.mjs`) and D-297 (`newgroup/**`,
+  `release/**`, `bio-plane/scripts/deploy.mjs`, `sshsig.mjs`). **Every path above is disjoint
+  from all three**: no live claim names `m025-*`, `casepin/casesign/caseproduction.control.mjs`,
+  or the three DEBT rows.

@@ -83,6 +83,48 @@
  *     driver composes and then patches. Those anchors correctly match nothing in
  *     the committed estate and would read as findings, so they are NAMED below
  *     with the reason, the same shape `hygiene.test.mjs` uses for its walks.
+ *
+ * ========================================================================
+ * EXTENDED 2026-09-14 BY D-329 + D-333. TWO MORE DECAY SHAPES, AND THE FIRST
+ * OF THEM OVERTURNS ITS OWN DEBT ROW'S CONCLUSION.
+ * ========================================================================
+ *
+ * Everything above is about an ANCHOR — a line of SOURCE a driver quotes. Two
+ * other things a driver holds decay independently of any anchor, and M0-25's
+ * census found both after this suite was written.
+ *
+ * **THE LABEL HALF (D-329), AND THE ROW SAID IT WAS IMPOSSIBLE.** A driver also
+ * quotes the SUITE'S OWN ASSERTION NAMES — the `mustFail` / `mustNotFail`
+ * fragments it expects among the failing assertions. D-329's row concluded that
+ * *"an assertion label composed at run time exists in no file, so no static
+ * instrument can see it and only a periodic census can."* **That is true of the
+ * RENDERED label and false of the TEMPLATE**, which sits in the suite in plain
+ * sight. `composedSpan()` in `scripts/armdecay.mjs` is the predicate: a fragment
+ * that resolves against a template ONLY BY EATING AN INTERPOLATION SLOT is a
+ * fragment quoting a rendered value, and the gap it ate is that value. Arms L1
+ * to L4 below run it over the estate every battery. The row is closed on the
+ * strength of the measurement, not of the argument: the historical 26-ops
+ * fragment is caught by name with `gap: "26"`, and the hand repair that replaced
+ * it — quoting only the invariant part — passes, which is the over-strictness
+ * direction and is arm (8) of the control.
+ *
+ * **THE LABEL EXTRACTION IS AN INVERSION, AND MEASUREMENT FORCED IT.** A matcher
+ * keyed on the property name `mustFail:` reads 140 quotes from 9 drivers **and
+ * cannot see `aicredential.control.mjs` at all** — D-329's own exhibit passes its
+ * fragments as POSITIONAL ARGUMENTS to `arm(title, edits, mustFail, mustNotFail)`.
+ * Asking instead what a LABEL IS (prose, one line, no statement punctuation, as
+ * against an anchor, which is code) reads 2,640 from 87 of 88. A list of key
+ * spellings would have gone stale at the first driver that did not use one, and
+ * the first driver that did not use one was the one the row was about.
+ *
+ * **THE TALLY HALF (D-333) IS HERE ONLY AS ITS READER.** A driver's DECLARED arm
+ * count — *"five arms plus a baseline"* — is a claim about a RUN, so nothing
+ * static can falsify it; D-330 found two drivers whose anchors were all live and
+ * whose expectations were false. The comparison therefore belongs to the census,
+ * which runs the drivers, and it is asserted there. What this suite owes is that
+ * the READER is honest: arm T1 floors its reach and NAMES every driver it cannot
+ * read, so a tally-reader narrowed to nothing cannot report a clean estate. The
+ * same null-never-zero rule `control-register.mjs` states for its own grammar.
  */
 
 import "./stdio.mjs";
@@ -90,6 +132,9 @@ import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join, relative, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readGitProvenance, classifyDiscovered, repoPath } from "../scripts/provenance.mjs";
+import { readLabelQuotes, isLabelQuote, templatePairs, indexPairs, composedSpan,
+         readDeclaredArms, tallyHonoured, stripComments,
+         MIN_SIDE, MAX_GAP } from "../scripts/armdecay.mjs";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
@@ -374,6 +419,120 @@ console.log("\n--- the extractor itself, driven (a detector that finds nothing p
   t("S6 and reports ZERO for one that was changed in place (the D-276 shape, driven)",
     count("  const answer = compute(input, { strict: FALSE });"), 0);
 }
+
+/* ==================================================================== D-329
+   THE LABEL HALF. A driver quotes the SUITE'S assertion names as well as its
+   subject's source, and a name the suite COMPOSES moves under the quote. See
+   this file's header for why the row's "no static instrument can see it" was
+   true of the rendered label and false of the template. */
+console.log("\n--- D-329 · the labels a driver quotes, evaluated the way the SUITE composes them ---");
+
+/* THE LIVE CORPUS FOR A LABEL EXCLUDES `docs/`, AND IT IS THE CONTROL THAT SAYS
+   SO. An assertion's NAME lives in a suite; the RECORD quotes the defects it
+   records, and `DEBT.md`'s own D-329 row carries the stale fragment verbatim.
+   With `docs/` in, this check reads that row, scores the defect "present", and
+   goes green over a fully armed subject — measured, because that is exactly how
+   the first draft of arm (7) failed. The ANCHOR half above keeps `docs/` IN and
+   must: two of `register-grammar.control.mjs`'s arms quote `VERIFICATION.md`. */
+const labelCorpus = [...corpus].filter(([p]) => !p.startsWith("docs/"));
+
+const pairIndex = indexPairs(
+  labelCorpus.reduce((acc, [p, text]) => (text.includes("`") ? templatePairs(text, p, acc) : acc), []));
+
+const labelQuotes = [];
+const labelSilent = [];
+for (const d of graded) {
+  const got = readLabelQuotes(readFileSync(join(REPO, d), "utf8"));
+  if (!got.length) { labelSilent.push(d); continue; }
+  for (const lit of got) labelQuotes.push({ driver: d, lit });
+}
+
+const composed = [];
+for (const q of labelQuotes) {
+  const sp = composedSpan(q.lit, pairIndex);
+  if (!sp) continue;
+  /* THE CONFIRMATION, AND IT IS WHAT MAKES THE PREDICATE USABLE. Six fragments
+     in this estate span a template's shoulders AND sit verbatim in a file — a
+     driver quoting another driver's printed line, an install command whose
+     version number also appears interpolated elsewhere. A fragment that is
+     literally present is not a rendered value, so it is NOT scored, and the six
+     are what the over-strictness arm (8) of the control holds in place. */
+  if (labelCorpus.some(([, text]) => text.includes(q.lit))) continue;
+  composed.push({ ...q, sp });
+}
+
+const labelReach = ((graded.length - labelSilent.length) / graded.length * 100).toFixed(0);
+console.log(`  label quotes: ${labelQuotes.length} read from ${graded.length - labelSilent.length} of ${graded.length} drivers (${labelReach}%)`);
+console.log(`  composed templates: ${pairIndex.length} distinct interpolation shoulder-pair(s) over ${labelCorpus.length} non-doc candidate file(s)`);
+console.log(`                      (shoulders ${MIN_SIDE} chars each side; a rendered value is at most ${MAX_GAP} chars — both FLOORS AGAINST NOISE, both measured)`);
+if (labelSilent.length) {
+  console.log(`  ${labelSilent.length} driver(s) yield NO label quote — named, never silently scored:`);
+  for (const d of labelSilent) console.log(`      ${d}`);
+}
+
+t(`L1 the label extractor reaches the estate rather than a corner of it (${labelQuotes.length} quote(s) from ${graded.length - labelSilent.length} driver(s), floors 800 and 40)`,
+  [labelQuotes.length >= 800, graded.length - labelSilent.length >= 40], [true, true]);
+t(`L2 there are composed labels in the estate AT ALL to be wrong about — a predicate with nothing to match passes every corpus (${pairIndex.length} shoulder-pair(s), floor 400)`,
+  pairIndex.length >= 400, true);
+t(`L3 NO DRIVER QUOTES A RENDERED VALUE — a fragment that resolves against a suite's label ONLY by eating its \`\${…}\` slot will go stale the moment the value moves (${composed.length} found)`,
+  composed.map((c) => `${c.driver} quotes ${JSON.stringify(c.lit.length > 80 ? c.lit.slice(0, 80) + "…" : c.lit)}`
+    + ` — composed in ${c.sp.path} with the rendered value ${JSON.stringify(c.sp.gap)} in the slot`), []);
+
+/* THE RULE D-329 ASKED TO BE MADE EXPLICIT, stated as an assertion rather than
+   as prose so it is enforced rather than remembered: a driver quotes the
+   INVARIANT part of an assertion name. `L3` is that rule; `L4` is the receipt
+   that the predicate can still tell the two apart, driven on the estate's own
+   historical instance rather than on a fixture. */
+{
+  const HIST_HEAD = "every one of the 26", HIST_TAIL = " ops no member reaches is refused at the mint, by name";
+  const INVARIANT = HIST_TAIL.trim();
+  t("L4 the predicate, driven on D-329's OWN historical instance: the fragment carrying the rendered count is caught, and the hand repair that quotes only the invariant part is NOT",
+    [!!composedSpan(HIST_HEAD + HIST_TAIL, pairIndex), !!composedSpan(INVARIANT, pairIndex)], [true, false]);
+}
+
+/* The extractor itself, over a fixture with a known answer — the arm that
+   catches a label matcher narrowed to nothing or widened into the anchor set. */
+console.log("\n--- the label extractor and the span predicate, driven over a fixture ---");
+{
+  const SUITE_FIXTURE = 't(`the register holds ${rows.length} rows and every one of them is backed`, a, b);';
+  const idx = indexPairs(templatePairs(SUITE_FIXTURE, "fixture.mjs", []));
+  t("S7 a rendered fragment of that label SPANS the slot, and the gap is the rendered value",
+    (composedSpan("the register holds 41 rows and every one of them is backed", idx) || {}).gap, "41");
+  t("S8 while the invariant tail of the SAME label spans nothing (the over-strictness direction: the correct spelling must pass)",
+    composedSpan("rows and every one of them is backed", idx), null);
+  t("S9 the label shape accepts an assertion name and REFUSES a source anchor — prose against code, not a list of key names",
+    [isLabelQuote("A PUBLICATION NAMING NO PROJECT IS REFUSED BY NAME"),
+     isLabelQuote("  if (to !== null && this.#caseRelationOf(target).member)"),
+     isLabelQuote("short one")],
+    [true, false, false]);
+  t("S10 and a driver's own COMMENTARY is not its code — a driver quoting the defect it fixed must not be scored as holding it",
+    readLabelQuotes('/* he quoted "every one of the 26 ops that nobody reaches at all" here */\nconst x = 1;').length, 0);
+}
+
+/* ==================================================================== D-333
+   THE TALLY READER. The comparison is the census's — a tally is a claim about a
+   RUN — but the reader is shared, so its reach is floored and its blind half
+   NAMED here, on every battery. */
+console.log("\n--- D-333 · the arm tally each driver DECLARES about itself (the census holds it against the run) ---");
+const declared = [], tallyBlind = [];
+for (const d of graded) {
+  const r = readDeclaredArms(readFileSync(join(REPO, d), "utf8"));
+  if (r) declared.push({ driver: d, ...r }); else tallyBlind.push(d);
+}
+console.log(`  declared tallies read: ${declared.length} of ${graded.length} driver(s) (${(declared.length / graded.length * 100).toFixed(0)}%)`);
+console.log(`  ${tallyBlind.length} driver(s) declare no arm count this reader can see — reported UNKNOWN, NEVER zero:`);
+for (const d of tallyBlind) console.log(`      ${d}`);
+t(`T1 the tally reader reaches a real fraction of the estate and names the rest (${declared.length} readable, floor 30)`,
+  declared.length >= 30, true);
+t("T2 and it is null-never-zero, driven: a driver stating no count reads as UNREADABLE rather than as a declaration of none",
+  [readDeclaredArms("/* a driver with no count at all */\nimport x from 'y';"),
+   (readDeclaredArms("/* five arms plus a baseline */\nimport x from 'y';") || {}).n,
+   (readDeclaredArms("/* five arms plus a baseline */\nimport x from 'y';") || {}).plusBaseline],
+  [null, 5, true]);
+t("T3 the baseline is an ANNOUNCEMENT and not a declared arm, so a driver that runs one may announce exactly one more than it declares — and nothing else",
+  [tallyHonoured({ n: 5, plusBaseline: true }, 6), tallyHonoured({ n: 5, plusBaseline: true }, 5),
+   tallyHonoured({ n: 5, plusBaseline: true }, 7), tallyHonoured({ n: 5, plusBaseline: false }, 6)],
+  [true, true, false, false]);
 
 console.log(`\n--- m025-arm-anchor-witness.test.mjs: ${pass} pass, ${fail} fail ---`);
 process.exit(fail ? 1 : 0);
