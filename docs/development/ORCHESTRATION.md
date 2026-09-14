@@ -386,4 +386,11 @@ every tick and treats any delivered signal as an accelerator. Sessions follow th
    unmoved for hours while a lane is open is a wake-up, not a quiet day), and the
    recovery for a wedged turn is the OPERATOR'S interrupt — the queued message then
    fires as the kickoff, so the re-drive should be written and queued BEFORE asking for
-   the interrupt, making the click the only human step.
+   the interrupt, making the click the only human step. **And the interrupt does not
+   exist for a HEADLESS session** (2026-09-13, the same incident's second lesson): the
+   app deliberately hides programmatically-created sessions, so the operator cannot
+   open one to stop it, and a wedged headless turn is unrecoverable by anyone — its
+   replacement gate then clears on the LEAD'S evidence-based ruling (no colliding
+   process at the moment of truth, the lane claimed first), not on the zombie's own
+   stand-down. Visibility is therefore a LIVENESS property: a session anyone might
+   need to interrupt is spawned through a chip the operator clicks, never headless.
