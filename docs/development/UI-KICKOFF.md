@@ -1,5 +1,30 @@
 # UI-KICKOFF: the Layer 3 design phase
 
+**Status** · Bob's standing brief for the Layer 3 design phase, written 2026-07-27 and updated 2026-07-28 in its own header, carrying two blocks of Bob's words VERBATIM — the UX principles of 2026-07-28 and the refinements distilled the same day — plus the state-semantics architecture agreed with him. PARTIALLY COMPLETE, AND IT IS TWO DOCUMENTS IN ONE COAT: the PRINCIPLES are current and the shipped surface follows them; the PHASE DESCRIPTION around them is historical and describes a project state that ended on 2026-07-28. **Are the principles the ones the shipped surface follows, as of 2026-09-14? Yes, and they are enforced rather than remembered** — capability-shaped absence is asserted (UI-8's absent-not-greyed rule, driven in `civicos-ui/test/`), refusals are rendered in the plane's own words with no surface-authored fallback (UI-30, UI-39, UI-40, UI-41, UI-54), the semantics table is the single source of state presentation with `check-semantics.mjs` failing the build on a missed or invented plane state (UI-10, UI-51), identity is server-stamped, the privacy fence is spatial, and "inform once, never nag" was made a standing sweep by DEC-69 and UI-55. **Where it diverges, by item:** the mission sentence *"DESIGN THE UI LAYER. Design, not build"* is superseded — the phase moved to build on 2026-07-28 and fifty-seven UI items have landed since; the named deliverable `docs/architecture/BIO_UI_Design_v0_1.md` was NEVER WRITTEN and no file of that name exists in the repository, its six numbered parts having been answered instead by `BIO_Interaction_Constructs_v0_1.md` (constructs), `UI-PLAN.md` (the surface inventory and the build-stack choice, settled as one served page) and `research/RECONCILED.md`; "Where the project stands" names plane 0.35.0 against a live 0.58.0; the audience order and the working rules are Bob's and stand; and *"Do not invent foundation capabilities"* stands and is now structural, since `surface-registry.test.mjs` fails the build on a surface naming an op the plane does not publish. **Devices:** the first-release phone position — a viewing MVP if that is what time fits — is what shipped; the surface has a responsive shell and no parity rung. as of 2026-09-14.
+
+**Place in the system** · A level-2 brief serving construct 12 of `BIO_System_Design.md` §3 (member surfaces and the interaction constructs), whose level-1 home is `docs/architecture/BIO_Interaction_Constructs_v0_1.md`. It is the constraint side of the pair `kickoffs/UI.md` sends a session to: `UI-PLAN.md` says what to build and in what order, this file says what every rung must be true to, and where they disagree this one governs because its content is Bob's. Its state-semantics ruling is enacted in `civicos-ui/app.html`'s SEMANTICS table and enforced by `civicos-ui/check-semantics.mjs`; its "refusals teach" constraint is what DEC-49's translation discipline generalised; its UX principles are quoted, not paraphrased, and are not a worker's to edit.
+
+**Incomplete sections** ·
+- §Where the project stands — a 2026-07-27 snapshot: plane 0.35.0, "LAYER 3 THE UI IS NEXT". The plane is 0.58.0 and Layer 3 has been building since 2026-07-28.
+- §The mission — *"Design, not build. The first arc produces a design the group can react to, not screens"* is superseded by the file's own 2026-07-28 update and by everything landed since; the boundary rule under it (do not invent foundation capabilities) is not superseded and is enforced.
+- §The first arc's deliverable — names one document, `docs/architecture/BIO_UI_Design_v0_1.md`, which was never written and does not exist; its six parts landed in three other documents. The section is kept as the statement of what was asked for, and says nothing about where the answers went.
+- §Working rules — written for a session that fetched the tree over HTTPS with no credentials and pushed a deliverable if a token was attached; sessions now work in a git worktree with `.env` carried in (`CLAUDE.md`, `kickoffs/UI.md`). Bob's own half — he edits no files, every point carries its context, never re-confirm directed work — stands.
+
+*Four sections are deliberately NOT in that list and their absence is a finding rather than an oversight: §Who this is for, §Constraints that are law, §Bob's UX principles and §Refinements from Bob are COMPLETE, CURRENT, and quoted record. A worker rewording them is the defect.*
+
+**Contents**
+- [Where the project stands](#where-the-project-stands)
+- [The mission, and its boundary](#the-mission-and-its-boundary)
+- [Who this is for](#who-this-is-for)
+- [Constraints that are law, not taste](#constraints-that-are-law-not-taste)
+- [The first arc's deliverable](#the-first-arcs-deliverable)
+- [Working rules (Bob's standing protocol, restated so this file suffices)](#working-rules-bobs-standing-protocol-restated-so-this-file-suffices)
+- [Bob's UX principles (stated 2026-07-28, verbatim, standing)](#bobs-ux-principles-stated-2026-07-28-verbatim-standing)
+- [Refinements from Bob, 2026-07-28 (distilled from discussion, standing)](#refinements-from-bob-2026-07-28-distilled-from-discussion-standing)
+- [The state-semantics table (agreed 2026-07-28, standing architecture)](#the-state-semantics-table-agreed-2026-07-28-standing-architecture)
+
+---
+
 Written July 27, 2026, the day the foundation ladder (S-1 through S-12)
 closed. This is the standing brief for UI design sessions. A session started
 with "read UI-KICKOFF.md and begin" reads this file, follows the session-start

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-740 rulings across 71 documents.
+741 rulings across 71 documents.
 
 ## DEC-
 
@@ -253,7 +253,7 @@ authority is the file named, never this one.
 - **D-55** · 2026-07-30 — SUPERSEDED 2026-07-30 by Bob's authority rulings; see `AUTHORITY-AND-TRUST.md`.** Two things changed.  
   `docs/development/CLIENT-RENDERED.md:130`
 - **D-60** · 2026-07-30 — RULED by Bob 2026-07-30 on the measurement in D-60: two fetches of a Legistar page three seconds apart differ by 31% of their bytes, all of it ASP.NET postback state, with the other 68.6% identical.  
-  `docs/development/UI-PLAN.md:317`
+  `docs/development/UI-PLAN.md:350`
 - **D-68** · 2026-08-01 — Suggested activation order — SUPERSEDED 2026-08-01.** The version below is kept as history: *promote RECORD (M1's scheduler) and FRAMEWORK (D-68), CONTENT-PDF finishes CPDF-2 and goes dormant.* All three happened; the queue drained to 44 done and 0 runnable.  
   `docs/development/MILESTONES.md:560`
 - **D-72** · 2026-07-30 — RULED by Bob: BIO's contribution should "improve the grade of connections overall".  
@@ -291,7 +291,7 @@ authority is the file named, never this one.
 - **D-98** — and the RULED routing order, with every cited precedent verified present before the claim was written; D-98 is now a build task.  
   `docs/development/CIVICOS_UI_STATE.md:121`
 - **D-98** — authority undetermined at capture `[OBLIGATION]` (D-98, RULED: created automatically) - monitor tick: source modified `[FINDING]` · source removed (404/410) `[FINDING]` - source unreachable, and distinguishably: governed by our own pacing `[CONDITION]` (D-104) - duplicate document detected `[FINDING]` (D-60)  
-  `docs/development/NOTIFICATIONS.md:159`
+  `docs/development/NOTIFICATIONS.md:184`
 - **D-102** · 2026-07-30 — RULED 2026-07-30: the installer wizard must PROMPT the operator for an installation name at setup, and that name becomes the INSTANCE_NAME component of the UA string.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:65`
 - **D-102** · 2026-08-10 — AMENDED 2026-08-10: THE DEFECT WAS RECORDED AND NEVER ENACTED, WHICH IS A DIFFERENT AND WORSE FINDING THAN UNKNOWN.** `agent-worker/wrangler.jsonc:47-50` states it in its own comment — *"for an INSTALLED instance the plane's worker name is per instance (the instance name IS the worker name, D-102), so this…  
@@ -836,6 +836,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:2280`
 - **UI-49** — THE OTHER THREE THINGS THE BRIEF ASKED FOR, EACH DECIDED AND RECORDED AT THE SITE.** - **The observation-log surface: RE-TAKEN, not inherited.** Of UI-49's four grounds, **ground 4 has EXPIRED** (`aiRunLog` now clamps to `AI_RUN_LOG_LIMIT_DEFAULT`/`_MAX` and publishes `limit` and `truncated`, on the ABSENT answer…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4580`
+- **UI-58** · 2026-09-14 — n (baseline measured at HEAD in a scratch worktree: 0 fail, 20 governed documents, decided index current — so the `docs/DECIDED.md` staleness this item hit was ITS OWN and is regenerated in the same commit, four rows moved by the one-time line offset §4.6 predicts).  
+  `docs/development/CLAIMS.md:3647`
 ## FW-
 
 - **FW-1** · 2026-08-03 — RESPONSES · 2026-08-03 · to the proposal AS AMENDED (including `doc-para`) - **FRAMEWORK: `AGREE` — answered on its behalf by CONDUCT, in writing, per protocol step 3.** FRAMEWORK is dormant (its FW-1…FW-10 run is done and its slot released; no  
@@ -1522,9 +1524,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - PARTLY SUPERSEDED by the four-level correction above — kept because one half of it stands and the other half is the mistake worth seeing.** WHAT STANDS: **an AI overview built on route 1 today would be reading titles, frontmatter  
   `docs/development/STORE-AS-CACHE.md:667`
 - **2026-07-30** — RULED by Bob, 2026-07-30, and it governs every rung.  
-  `docs/development/UI-PLAN.md:236`
+  `docs/development/UI-PLAN.md:269`
 - **2026-07-29** — RULED by Bob, 2026-07-29. Continuing a capture must know what has already been captured; parts may have to be obtained from the host again, and that is refilling the cache rather than rewriting the record.  
-  `docs/development/UI-PLAN.md:300`
+  `docs/development/UI-PLAN.md:333`
 - not the rule, so the fixture was CORRECTED rather than the assertion relaxed (standing lesson: superseded rules in tests are corrected, never exempted).  
   `docs/development/VERIFICATION.md:95`
 - **2026-07-27** — Bulk release, S-11 step 5: BOB DECIDED IN THE 2026-07-27 SESSION THAT IT WILL BE BUILT.** His use case: a collection of 20 or 100 job applications of interest to a project, where per-document release is tedium without protection.  

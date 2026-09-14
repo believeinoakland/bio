@@ -162,6 +162,9 @@ joins the table in the same commit that gives it front matter.
 | `docs/development/SCHEDULER.md` | 2 | `BIO_Technical_Architecture_Decisions_v10.md` §10.7 (construct 14 names no level-1 home) | 2026-09-14 |
 | `docs/development/DOCUMENT-PROFILES.md` | 2 | `BIO_Content_Framework_v0_10.md` Part I | 2026-09-14 |
 | `docs/development/OFFICE-FORMATS.md` | 2 | `BIO_Content_Framework_v0_10.md` Part I | 2026-09-14 |
+| `docs/development/UI-PLAN.md` | 2 | `BIO_Interaction_Constructs_v0_1.md` (§3 construct 12) | 2026-09-14 |
+| `docs/development/UI-KICKOFF.md` | 2 | `BIO_Interaction_Constructs_v0_1.md` (§3 construct 12) | 2026-09-14 |
+| `docs/development/NOTIFICATIONS.md` | 2 | `BIO_Interaction_Constructs_v0_1.md` (§3 construct 12; also serves construct 10) | 2026-09-14 |
 
 ### Not yet governed — design documents that owe front matter
 
@@ -172,11 +175,9 @@ Incomplete fields need the owner's judgment.
 | document | owner | note |
 | --- | --- | --- |
 | `docs/development/IS-BUILD-PLAN.md` | CONDUCT | complete (43/43 rows) — a closed plan, candidate for the archive rather than for front matter |
-| `docs/development/UI-PLAN.md`, `UI-KICKOFF.md` | UI | the UI plan of record and Bob's UX principles |
 | `docs/development/ASSISTANT-PILOT.md` | SKILL | the assistant pilot design |
 | `docs/development/AUTHORITY-AND-TRUST.md` | CAPTURE | the 2026-07-30 rulings on authority |
 | `docs/development/LINK-FIDELITY.md`, `ARCHIVE-FALLBACK.md`, `SOURCE-ACCESS.md`, `CAPTURE-SCALING.md`, `CAPTURE-FIDELITY.md`, `CLIENT-RENDERED.md` | CAPTURE | capture designs |
-| `docs/development/NOTIFICATIONS.md` | UI | the queue content (`SCHEDULER.md`, the alarm model, was retrofitted by REC-80 and is governed above) |
 | `docs/development/INBOX-GRAMMAR.md`, `CONFORMANCE-AND-INTAKE-ARC.md`, `PROCESS-INVENTORY.md`, `PRACTICE-SURVEY.md`, `FINDINGS-WORKPLAN.md`, `RETRIEVAL-PROBE.md` | CONDUCT | designs and studies; some are closed history and belong in the archive |
 
 ## 6. What this standard does not govern, and why
