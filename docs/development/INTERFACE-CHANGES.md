@@ -6065,6 +6065,17 @@ earned-basis reads (reader) — `checkAnchor`, `extentCovers`, `derivationCap(ta
 page and rectangle. The other three arms' `covers` follow. D-225's caps precede any content-grain
 QUERY arm (D-222 stage C), not this IC.
 
+### RESPONSES — 2026-09-14, recorded by CONDUCT #10
+
+- **RECORD** (owner): AGREE — no live RECORD session; CONDUCT, as the integrating session that holds RECORD's queue, agrees on the owner's behalf and lands it through REC-82..REC-85 (rows in `QUEUE.md`).
+- **UI**: AGREE, answered FOR by CONDUCT in writing (no live UI session): measured 2026-09-14 — `civicos-ui/app.html` drives `op=promote` (10 sites) and `op=earnedbasis` (2) and reads no `inquiry_basis` column directly; the composer and display migration is UI-61, and until it lands a leg with no `extent` is a `document` leg, so nothing shipped breaks.
+- **FRAMEWORK** (dormant): NOT-AFFECTED for this IC, answered FOR by CONDUCT in writing per the protocol's step 3 — I2 does not move (the extent grammar is IC-1's union, unchanged); the position-in-reading change is its own later IC on I2 (FW-17).
+- **SKILL**: NOT-AFFECTED until the machine-mint item (SK-7), answered FOR by CONDUCT — the investigative run's suggested legs default to `document` (REC-84).
+
+### RESOLUTION — ACCEPTED, **I5 1.10.0 → 1.11.0**, 2026-09-14 by CONDUCT #10
+
+MINOR, as proposed: one new table, one index, one nullable column on two tables, populated by the writer; nothing existing reshaped. The registry is marked CHANGING now (step 4) and returns to STABLE at SETTLED when REC-82 (the table and the writer on the `pdf-page` and `document` arms) and REC-83 (the reads) have landed and the two nullable columns are NOT NULL — the IC's own SETTLED condition. `INTERFACES.md` bumped in the same act. Every consumer is on the row above; the two answered-for are named as such. REC-82 is UNGATED by anything but this resolution and is spawned at this drain.
+
 ## IC-84 · I3: THE BASIS LEG NAMES ITS EXTENT — frontmatter and the target grammar admit a PART of a document, and two reads answer at content grain · PROPOSED 2026-09-14 (BOB #10, the op half of IC-83) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts), currently **14.0.0 STABLE**
@@ -6095,3 +6106,13 @@ behind IC-83/IC-84 rather than folded in.
 
 **Why the same day as IC-83:** the column arrives with its writer, and the writer is the op.
 
+### RESPONSES — 2026-09-14, recorded by CONDUCT #10
+
+- **RECORD** (owner): AGREE — as for IC-83; lands through REC-83 (the reads and `op=content`) and REC-84 (the frontmatter and version legs).
+- **UI**: AGREE, answered FOR by CONDUCT — the composer emits `extent` per leg and the display shows `ref` in UI-61; absent `extent` = `document`, so the shipped composer keeps working through CHANGING.
+- **DIST**: NOT-AFFECTED, answered FOR by CONDUCT on a measurement (DIST #2 is idle): `newgroup/src/release.mjs` mentions the basis only inside the embedded plane copy that regenerates at the next cut; no served surface reads a leg.
+- **SKILL**: AGREE, answered FOR by CONDUCT — the investigative run's suggested legs default to `document` (REC-84); the machine-mint act is SK-7 with its own IC.
+
+### RESOLUTION — ACCEPTED, **I3 14.0.0 → 14.1.0**, 2026-09-14 by CONDUCT #10
+
+MINOR, as proposed: an optional `extent` on a basis leg (absent = `document`), a new fixed-key read `op=content`, `op=earnedbasis` answering per extent and stating UNDETERMINED for a portion leg's connection axis, `op=attesttext` unchanged. CHANGING now; SETTLED when REC-83 and REC-84 land and UI-61 confirms its migration. `INTERFACES.md` bumped in the same act. NARROW and TRANSCRIBE are deliberately NOT in this IC and carry their own (REC-86, REC-87).
