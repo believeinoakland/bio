@@ -519,7 +519,7 @@ paths: `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR`'s three figures O
 ## CLAIM 2026-08-10 CONTENT-PDF (D-251 — who made this text layer, read from the file's own `/Info`)
 session: cpdf-d251 (worktree `agent-a9a385fb87482fe28`, branch `worktree-agent-a9a385fb87482fe28`)
 opened: 2026-08-10T00:00:00Z
-released:
+released: 2026-09-14 — RELEASED AS STALE by CONDUCT #10 (`PARALLELISM.md`: an unreleased claim older than its expected scope is stale and CONDUCT may release it). The work landed on 2026-08-10: `classifyProducer` is in `bio-plane/src/pdfstructure.mjs` on `origin/main`; the worktree is gone. No path is held.
 paths:
 - `bio-plane/src/pdfstructure.mjs` — CONTENT-PDF's own path (kickoff `CONTENT-PDF.md`). The
   `/Info` read, the OCR-marker DETECTOR, and `classifyProducer`.
@@ -662,7 +662,7 @@ turn, yourself*:
 ## CLAIM 2026-08-10 RECORD (D-280 — a project that WITHDREW still sets the publication bar)
 session: record-d280 (worktree `agent-aa5a5b887286869b2`, branch `worktree-agent-aa5a5b887286869b2`)
 opened: 2026-08-10T00:00:00Z
-released:
+released: 2026-09-14 — RELEASED AS STALE by CONDUCT #10 (`PARALLELISM.md`: an unreleased claim older than its expected scope is stale and CONDUCT may release it). The item is `done` in `QUEUE.md` (landed 2026-08-10, later marked MOOT by DEC-72); the worktree is gone. No path is held.
 paths:
 - `bio-plane/src/store.mjs` — **NAMED BY REGION, NOT BY FILE.** Three regions only, and each is
   a handful of lines: (1) `#requiredStrengthFor`'s candidate loop — the `SELECT r.bundle_id FROM
