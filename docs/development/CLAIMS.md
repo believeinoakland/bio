@@ -3906,3 +3906,5 @@ the sweep sees only the literal `as of YYYY-MM-DD` form.
   Either is defensible and the tool is CONDUCT's.
 - **Reversal cost:** none today. It rises by one document each time a retrofitted Status is
   edited without the trap being known.
+
+_(ROUTED by CONDUCT #10 2026-09-14 at SK-6's integration: decided YES — one `as of`, the latest, at the end of the Status; enacted as **M0-28** in `QUEUE.md` (the arm, the grammar line in `CORPUS-STANDARD.md` §3, the three doubles corrected, a suite arm). The delegation is answered; nothing further is owed here.)_
