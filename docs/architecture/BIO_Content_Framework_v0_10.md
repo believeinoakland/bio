@@ -1657,9 +1657,15 @@ transcription of it** — an authored act whose fidelity is undetermined until a
 attests it. **The assistant may mark passages as citable on its own**, every such row labelled
 as machine work, never attested by it, and part of a finding only when a member cites it. And
 **a member's firsthand observation is evidence** — authored content standing on that member's
-trust, graded as testimony — with a publication rule that reaches membership: a case resting
-materially on it names the member by their actual name unless they are a protected
-whistleblower (designed with the member's lead, §18 piece 5).
+trust, graded as testimony. **Its attribution in a published case is the attesting member's
+choice** among four levels — the group, the project, the member's cover, or the member by name —
+and a source who spoke off the record to preserve their anonymity is valid; the record carries the
+chosen level with the act (designed with the member's lead, §18 piece 5). **Specificity of
+reference is worked for, not merely permitted:** where an edge points at a whole document, the
+assistant, a member, or another means tries to find the specific passages; where the target
+mentions the entity more than once, only the passages ON-POINT to the point being made at the
+referring end are referred to — a machine's proposal of relevance is labelled machine work, the
+member's choice is the authored act.
 
 ### 14.5 Where it stands
 
@@ -1866,7 +1872,7 @@ The pieces to be designed, named here and designed nowhere in this document:
 | 2 | **content-grain search** | the compiler's stage C, after the uncapped reads are capped; whether extracted text is indexed at all | the architect |
 | 3 | **the general observation log** | every look, including the ones that returned nothing; shared across the three axes; the investigative run's log as the precedent; the completeness statement as its first publisher | the architect |
 | 4 | **extraction breadth** | readers beyond three (a type is written from a measured page); tables and images as content; the AI EXTRACT role; read-time re-extraction to tier 3; the per-page tier-2 rule; the external OCR tier | the architect; the external tier's funding is Bob's (DEC-74, open) |
-| 5 | **homes for the member's lead and firsthand observation** | D-194 and D-184, designed together. RULED 2026-09-14: the observation is evidence, authored, grade D on the member's trust; a published case resting materially on it names the member by actual name unless a protected whistleblower — the naming rule interacts with cover and handle and is designed in Program B | the architect, under the ruling |
+| 5 | **homes for the member's lead and firsthand observation** | D-194 and D-184, designed together. RULED 2026-09-14: the observation is evidence, authored, grade D on the member's trust; its attribution in a published case is the attesting member's choice among the group, the project, the member's cover, or the member by name, and an off-the-record source's anonymity is valid — designed in Program B | the architect, under the ruling |
 | 6 | **the claim object** | Bob's direction of 2026-09-14, confirmed against the record: the burden of proof attaches to the PRODUCTION and is set by the project's bar and the audience's needs, so no separate claim object is required for it to vary; the research owed is the catalogue of standards by audience and output act | the architect; Program B |
 
 Two rulings to carry into every option for piece 1. An authored edge is never re-pointed to a
