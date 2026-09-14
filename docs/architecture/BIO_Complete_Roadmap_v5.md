@@ -1,5 +1,78 @@
 # Believe in Oakland
 
+**Status** · The mission of record: values, operational principles, the fifteen design requirements, the seven-category UX, the trust hierarchy and the original implementation roadmap. Self-described as "Working Document — April 2026 (v5, July 20, 2026: status annotation layer against the P2 development ladder; the plan text of v4 is unchanged)"; no approval or ratification is stated in the document — its authority is that every later document derives its constraints from it. Completeness is split by its own 2026-08-10 banner: **§§1–12 are current doctrine; §§13–15 are history**, and the v5 status annotation measures against the retired substrate. Read it first if you are new, and read the banner before the roadmap sections. as of 2026-09-14.
+
+**Place in the system** · The top of the mission level (`BIO_System_Design.md` §2): the Design Requirements govern it on conflict, the Technical Architecture Decisions govern it on technology, the State Rules govern it on the data store, and the Functional Architecture extends its §9. It owns no construct; it owns the values and the stance every construct serves.
+
+**Incomplete sections** ·
+- §preamble — the v5 status annotation layer is stale: it measures against the retired substrate's tree, endpoint and client, and names a ladder file that is not in the repository; `docs/development/MILESTONES.md` is the live ladder.
+- §Companion documents — lists `.docx` filenames whose originals were removed on 2026-07-24, one companion absent from the repository, and omits Membership, Intake Doctrine, Content Framework, Declared Bias and Case-making; `README.md` and `BIO_System_Design.md` are the current catalog and map.
+- §7 — the communication and publishing platform architecture describes a phase (website, forum, directory) that "remains genuinely not started"; its platform summary names a hosting vendor the 2026-08-10 sweep removed from `BIO_Communications_Platforms.md`, so the two disagree.
+- §9 — Skills 7 (Compliance Evaluation) and 8 (Escalation Protocol) "remain unbuilt as named skills"; the Focus/Project vocabulary of §§9–10 is superseded by the INQUIRY collapse (DEC-72; `BIO_Case_Making_v0_1.md`).
+- §11 — the "no-transitive-trust rule" note was revised: transitive trust is accepted so long as it is disclosed (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30).
+- §12 — "Platform (resolved, v4)" describes the retired local-first client; the plane replaced it and the UI is built as constructs (`BIO_Interaction_Constructs_v0_1.md`).
+- §13 — the sewer-fund time-sensitive items are dated and declared history by the banner.
+- §14 — the implementation roadmap's phases and week estimates are history; Phase 1 describes the retired build.
+- §15 — "This list is v4's and is preserved as the record of what v4 believed"; the open design questions were not re-annotated after July 20.
+
+**Contents**
+- [Civic Operating System](#civic-operating-system)
+  - [Complete Roadmap and Architecture Document](#complete-roadmap-and-architecture-document)
+- [Companion documents](#companion-documents)
+- [1. Origin: the Oakland sewer fund investigation](#1-origin-the-oakland-sewer-fund-investigation)
+  - [CPRA Request 26-3028](#cpra-request-26-3028)
+  - [Research documents produced](#research-documents-produced)
+- [2. Strategic pivot: from campaign to civic OS](#2-strategic-pivot-from-campaign-to-civic-os)
+- [3. Name, identity, and preamble](#3-name-identity-and-preamble)
+- [4. Core values (4, finalized)](#4-core-values-4-finalized)
+- [5. Operational principles (8, finalized)](#5-operational-principles-8-finalized)
+- [6. Design requirements (15, finalized)](#6-design-requirements-15-finalized)
+    - [Architecture](#architecture)
+    - [Quality and publishing](#quality-and-publishing)
+    - [Escalation](#escalation)
+    - [Communication and access](#communication-and-access)
+    - [Onboarding](#onboarding)
+    - [Tools](#tools)
+    - [Resilience](#resilience)
+    - [Evolution](#evolution)
+- [7. Communication and publishing platform architecture](#7-communication-and-publishing-platform-architecture)
+- [8. Evidence package design and risk tiering](#8-evidence-package-design-and-risk-tiering)
+- [9. AI skill architecture (8 skills)](#9-ai-skill-architecture-8-skills)
+    - [Skill 1: Context/Landscape](#skill-1-contextlandscape)
+    - [Skill 2: Data Archive](#skill-2-data-archive)
+    - [Skill 3: Data Extraction](#skill-3-data-extraction)
+    - [Skill 4: Legal/Policy Lookup](#skill-4-legalpolicy-lookup)
+    - [Skill 5: Monitoring/Watchdog](#skill-5-monitoringwatchdog)
+    - [Skill 6: Government Compliance Analysis (added)](#skill-6-government-compliance-analysis-added)
+    - [Skill 7: Compliance Evaluation](#skill-7-compliance-evaluation)
+    - [Skill 8: Escalation Protocol](#skill-8-escalation-protocol)
+- [10. Group workflow architecture (5 phases)](#10-group-workflow-architecture-5-phases)
+- [11. Trust hierarchy and inter-group awareness](#11-trust-hierarchy-and-inter-group-awareness)
+  - [Five trust levels](#five-trust-levels)
+  - [Inter-group awareness](#inter-group-awareness)
+- [12. User experience and interface design](#12-user-experience-and-interface-design)
+  - [Seven categories](#seven-categories)
+  - [Key UX design principles](#key-ux-design-principles)
+- [13. Sewer fund campaign: time-sensitive items](#13-sewer-fund-campaign-time-sensitive-items)
+    - [Immediate](#immediate)
+    - [Near-term](#near-term)
+    - [Medium-term](#medium-term)
+- [14. Implementation roadmap and critical path](#14-implementation-roadmap-and-critical-path)
+  - [Phase 1: Foundation (immediate)](#phase-1-foundation-immediate)
+  - [Phase 2: Infrastructure (weeks 2-3)](#phase-2-infrastructure-weeks-2-3)
+  - [Phase 3: Starter kit (weeks 3-4)](#phase-3-starter-kit-weeks-3-4)
+  - [Phase 4: Additional skills (weeks 4-8)](#phase-4-additional-skills-weeks-4-8)
+  - [Phase 5: Scale (ongoing)](#phase-5-scale-ongoing)
+- [15. Pending items and open questions](#15-pending-items-and-open-questions)
+  - [Not yet started](#not-yet-started)
+  - [Open design questions](#open-design-questions)
+  - [Resolved since v3](#resolved-since-v3)
+  - [Decisions made, documented, and awaiting implementation](#decisions-made-documented-and-awaiting-implementation)
+- [Appendix A: key officials and institutional actors](#appendix-a-key-officials-and-institutional-actors)
+- [Appendix B: legal framework summary](#appendix-b-legal-framework-summary)
+
+---
+
 > **Editorial note, July 27, 2026 (Bob's directive):** the construct formerly
 > named **Problem** is renamed **Focus** throughout, which conveys its purpose
 > non-judgmentally. Machine literals shown here use the target vocabulary
@@ -139,41 +212,6 @@ mapping, and the Mechanical Verification Law. If any text in this
 roadmap or the Technical Architecture Decisions document conflicts with
 it on data-store matters, the State Rules & Consistency specification
 governs.
-
-# Contents
-
--   Origin: the Oakland sewer fund investigation
-
--   Strategic pivot: from campaign to civic OS
-
--   Name, identity, and preamble
-
--   Core values (4, finalized)
-
--   Operational principles (8, finalized)
-
--   Design requirements (15, finalized)
-
--   Communication and publishing platform architecture
-
--   Evidence package design and risk tiering
-
--   AI skill architecture (8 skills)
-
--   Group workflow architecture (5 phases)
-
--   Trust hierarchy and inter-group awareness
-
--   User experience and interface design
-
--   Sewer fund campaign: time-sensitive items
-
--   Implementation roadmap and critical path
-
--   Pending items and open questions
-
-Appendix A: key officials and institutional actors Appendix B: legal
-framework summary
 
 # 1. Origin: the Oakland sewer fund investigation
 

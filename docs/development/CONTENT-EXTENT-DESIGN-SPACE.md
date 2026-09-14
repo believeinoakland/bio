@@ -1,6 +1,25 @@
 # D-164 design space — the content object and the extent-carrying edge
 
-**Status: design-space study, 2026-09-15, written by BOB. Options and constraints, NOT a decision.**
+**Status** · A design-space study, 2026-09-15, by session BOB: the fixed constraints, three options for the content object and the extent-carrying edge, doctrine (Bob's) separated from mechanism (the architect's), and a dependency sketch of the build. Options and constraints, NOT a decision; the author's lean (option (c), the hybrid) is recorded as a lean. Complete as a study at `origin/main` `51d128a`; the design step that consumes it is the successor BOB's and has not begun. as of 2026-09-14.
+
+**Place in the system** · A level-2 design serving `BIO_Content_Framework_v0_10.md` Part II §18, piece 1 (D-164), and through it construct 4 of `BIO_System_Design.md` §3. It touches interfaces I5 and I3 (RECORD's) and I2 (FRAMEWORK's, dormant), and its §3 doctrine list is what goes to Bob before any mechanism is chosen.
+
+**Incomplete sections** ·
+- §3 — every doctrine item is open with Bob; nothing here is ruled.
+- §4 — a dependency sketch, deliberately unscoped; the IC on I5/I3 and the queue items are not written.
+
+**Contents**
+- [1. The fixed constraints](#1-the-fixed-constraints)
+- [2. The design options](#2-the-design-options)
+  - [(a) First-class content object](#a-first-class-content-object)
+  - [(b) Extent on the edge](#b-extent-on-the-edge)
+  - [(c) Hybrid — a content row minted lazily on first edge](#c-hybrid-a-content-row-minted-lazily-on-first-edge)
+- [3. Doctrine (Bob's) vs mechanism (the architect's)](#3-doctrine-bobs-vs-mechanism-the-architects)
+- [4. Build shape (dependency sketch, no scoping)](#4-build-shape-dependency-sketch-no-scoping)
+
+---
+
+**Basis and lean: design-space study, 2026-09-15, written by BOB. Options and constraints, NOT a decision.**
 Basis: `origin/main` `51d128a` for code; `docs/architecture/BIO_Content_Framework_v0_10.md`
 Part II (§§14–19) for the content design this prepares — §18 names this piece. Bob reopened
 the D-164 thread on 2026-09-15 (DEBT D-164 row). The design step that consumes this study is

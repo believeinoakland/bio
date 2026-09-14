@@ -1,3 +1,34 @@
+# BIO Membership Architecture v1 — SUPERSEDED
+
+**Status** · **SUPERSEDED BY v2 on July 26, 2026 — do not work from this file.** Internally "v1.4, July 24, 2026 … Specified by Bob Krause in session, July 24, 2026"; no ratification is stated. Kept for the record because supersession is never silent, and because §7.7 here states the OPPOSITE of v2 on who removes a project participant — acting on this file's version would be a real access-control defect. The supersession banner was added 2026-08-10 because a reader opening the file directly got no warning. as of 2026-09-14.
+
+**Place in the system** · The historical predecessor of `BIO_Membership_Architecture_v2.md`, which carries forward §§2, 3, 6, 8 and 9 unchanged and reverses or extends the rest (its change table lists every difference). Nothing in the build works from this document; it matters only as the record of what was decided on July 24 before the July 26 reversal.
+
+**Incomplete sections** ·
+- §whole document — superseded by v2.
+- §1 — expertise "declared" only; v2 adds administrator confirmation.
+- §5 — `administer` here covers project participation; v2 says it does not.
+- §7 — single owner, unconstrained project names, administrator removes participants (§7.7); v2 makes names instance-unique, ownership a set, and removal the owners' act, and adds ownership process, deactivation, fork and the all-owners-inactive case.
+- §9 — the root-of-trust debt, unchanged and still open (DEC-2 deferred).
+- §10 — the `owner_handle` column and `expertise (list)` are rejected by v2.
+- §11 — four pre-ship items; v2 has ten.
+
+**Contents**
+- [BIO Membership Architecture](#bio-membership-architecture)
+  - [1. Why membership exists](#1-why-membership-exists)
+  - [2. What membership is NOT](#2-what-membership-is-not)
+  - [3. Cover and handle](#3-cover-and-handle)
+  - [4. Administrators](#4-administrators)
+  - [5. Capabilities](#5-capabilities)
+  - [6. Invitations](#6-invitations)
+  - [7. Projects](#7-projects)
+  - [8. Secure verified export](#8-secure-verified-export)
+  - [9. Architecture debt: the root of trust is unmodelled](#9-architecture-debt-the-root-of-trust-is-unmodelled)
+  - [10. Data model sketch](#10-data-model-sketch)
+  - [11. What must be true before this ships](#11-what-must-be-true-before-this-ships)
+
+---
+
 > # ⚠ SUPERSEDED BY v2, July 26 2026. DO NOT WORK FROM THIS FILE.
 >
 > **Banner added 2026-08-10 (session BOB), moving into this file what

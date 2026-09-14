@@ -1,5 +1,39 @@
 # BIO interaction constructs — v0.2 (v0.1 derivation retained below)
 
+**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. as of 2026-09-14.
+
+**Place in the system** · Owns construct 12 of `BIO_System_Design.md` §3 (member surfaces): it governs M8 (`docs/development/MILESTONES.md`; the UI area's governing design per `QUEUE.md`), hands queue content to `docs/development/NOTIFICATIONS.md`, and its pre-flight rule (DEC-8) is what the assistant construct and every act surface rest on. Distinct from `CONSTRUCTS.md`, the content inventory — the name collision is stated in the document.
+
+**Incomplete sections** ·
+- §RULED 2026-08-01: the pre-flight is plane-sourced — names `op=publishpreflight` as the first dry-run; the op is deferred with REC-15 behind DEC-33.
+- §What would falsify this — the test is defined, its outcome unrecorded.
+- §Why constructs rather than surfaces and §The attention layer is not a peer of the acts — v0.1's seven-peer framing, collapsed by revision 0.2 above.
+- §T · TASK — "no surface at all" was measured 2026-07-31; the D-86 quotation was corrected 2026-08-05.
+- §A · ATTESTATION — "This also makes `terminal` stale" was NARROWED by FW-14; kept as reasoning.
+- §P · THE ASSISTANT — the letter collides with §P · PROPOSAL; "the expanded dialog is S12" points at a surface spec not in this file.
+- §What this changes about how M8 is built — v0.1's build order T→J→B→S→P→A is superseded by the queue-first order MILESTONES M8 carries.
+
+**Contents**
+- [Revision 0.2, 2026-07-31: the count came down, and here is the tradeoff](#revision-02-2026-07-31-the-count-came-down-and-here-is-the-tradeoff)
+  - [The conflation that produced too many](#the-conflation-that-produced-too-many)
+  - [Where FEWER costs something, which is the other half of the tradeoff](#where-fewer-costs-something-which-is-the-other-half-of-the-tradeoff)
+  - [The revised set: TWO constructs, one ladder, one primitive](#the-revised-set-two-constructs-one-ladder-one-primitive)
+  - [RULED 2026-08-01: the pre-flight is plane-sourced — publication by default, dry-run when the refusal needs unseen state](#ruled-2026-08-01-the-pre-flight-is-plane-sourced-publication-by-default-dry-run-when-the-refusal-needs-unseen-state)
+  - [What would falsify this](#what-would-falsify-this)
+- [Why constructs rather than surfaces](#why-constructs-rather-than-surfaces)
+- [The attention layer is not a peer of the acts](#the-attention-layer-is-not-a-peer-of-the-acts)
+- [T · TASK — an obligation with an assignee, and sometimes a clock](#t-task-an-obligation-with-an-assignee-and-sometimes-a-clock)
+- [B · BALLOT — a multi-party act with computed arithmetic](#b-ballot-a-multi-party-act-with-computed-arithmetic)
+- [P · PROPOSAL — a derived finding awaiting an authored act](#p-proposal-a-derived-finding-awaiting-an-authored-act)
+- [J · JUSTIFIED TRANSITION — a state change carrying authored text that becomes evidence](#j-justified-transition-a-state-change-carrying-authored-text-that-becomes-evidence)
+- [A · ATTESTATION — the signed act that cannot be undone SILENTLY](#a-attestation-the-signed-act-that-cannot-be-undone-silently)
+- [S · SELECTION-SCOPED ACTION — how any act goes bulk, safely](#s-selection-scoped-action-how-any-act-goes-bulk-safely)
+- [P · THE ASSISTANT — one way in, on every surface](#p-the-assistant-one-way-in-on-every-surface)
+- [U · UNDETERMINED — a display primitive, not an act](#u-undetermined-a-display-primitive-not-an-act)
+- [What this changes about how M8 is built](#what-this-changes-about-how-m8-is-built)
+
+---
+
 Written 2026-07-31 (session BOB) at Bob's direction: *"it's important that we define
 and create the proper UI constructs… a tasks construct that supports that action-flow
 may be something that users will feel familiar with… perhaps there are other such

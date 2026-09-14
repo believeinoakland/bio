@@ -86,7 +86,8 @@ own premise, and a new milestone is a cheap thing to add.
 project can state what its tests actually cover rather than that they pass.
 
 **Acceptance:** every open debt row carries a disposition; every design-doc
-order-of-work item carries a status; `npm run test:coverage` reports the floor and
+order-of-work item carries a status; every governed design document carries current
+front matter (`tools/corpuscheck.mjs`, inside `plancheck` since 2026-09-14); `npm run test:coverage` reports the floor and
 `npm run test:battery` runs every suite; no forward-looking item exists outside
 `QUEUE.md` and this ladder.
 

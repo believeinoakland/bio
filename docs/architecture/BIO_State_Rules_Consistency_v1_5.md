@@ -1,5 +1,63 @@
 # Believe in Oakland
 
+**Status** · The data-store rules every implementation writes against: the id grammar, bundle anatomy, the universal frontmatter core, per-type schemas and state machines, the closed relationship vocabulary, cascade semantics, the invariant set I-1…I-20, the violation-to-repair mapping and the Mechanical Verification Law. "Working Document, v1.5, July 2026", "Ratified July 20, 2026 on the operator's word." Partially complete and partly historical, by its own 2026-08-10 banner: **the store this document describes is not the store that was built** — read §1, §2.4 and §2.6 as history; everything from §3 on is SHAPE and RULES, which transferred to the plane's `schema.mjs`, `store.mjs` and `bio-checks.mjs`. Amended in place three times (v1.5a vocabulary, the bias cross-reference, DEC-72's `published` amendment of 2026-09-10). Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane state is the system, and the check catalog is the authority for the edge set. as of 2026-09-14.
+
+**Place in the system** · Owns construct 3 of `BIO_System_Design.md` §3 (the record): bundle shape and the rules the plane checks. `BIO_Intake_Doctrine_v1_1.md` defers to it for shape; `BIO_Membership_Architecture_v2.md` builds on its §4.3 and §5.1–5.3; the intake provenance register and I-18 realise the intake doctrine inside it. README calls it "the most operationally load-bearing document in the corpus."
+
+**Incomplete sections** ·
+- §1 — the folder layout is the retired substrate's; history per the banner.
+- §2 — the state/record split and description-as-truth transferred; §2.4 convergent promotion, §2.5's gated deletion mechanics and §2.6 the pending-package queue are history, and the PENDING/PROMOTING transients no longer exist.
+- §4.2 — the Focus machine is legacy: nothing produces those states; the live machine is `inquiry`, which §4 does not describe, nor `bias`.
+- §4.3 — lacks the project-name-uniqueness annotation Membership v2 §11 requires.
+- §4 — `published` left the inquiry lifecycle by the 2026-09-10 amendment (DEC-72 / CASE-4); the body text of the state machines is unrevised.
+- §5.1 — the vocabulary text lacks `corroborates`; corrected only by the v1.5a amendment.
+- §6 — I-18 is staged ("mechanically any named identity outside the closed surface-and-AI set") despite per-member credentials in Membership v2; I-19 is drafted with no check; I-16/I-17 are stated over the retired queue and manifests.
+- §8 — C-18.2 "recorded and deliberately not entered"; the "three call sites" are the retired runtime.
+- §9 and §10 — obligations "binding on the bundle skill", a superseded implementation.
+- §footer — reads "Spec version 1.3, July 11, 2026"; stale.
+
+**Contents**
+- [State Rules & Consistency Specification](#state-rules-consistency-specification)
+  - [0. Status and scope](#0-status-and-scope)
+  - [1. Store layout and canonical naming](#1-store-layout-and-canonical-naming)
+    - [1.1 Root layout](#11-root-layout)
+    - [1.2 Canonical ID grammar](#12-canonical-id-grammar)
+    - [1.3 Naming rules for files](#13-naming-rules-for-files)
+  - [2. Bundle anatomy](#2-bundle-anatomy)
+    - [2.1 The state/record split](#21-the-staterecord-split)
+    - [2.2 Format assignment](#22-format-assignment)
+    - [2.3 Description-as-truth](#23-description-as-truth)
+    - [2.4 History and convergent promotion](#24-history-and-convergent-promotion)
+    - [2.5 Accretive store and gated deletion](#25-accretive-store-and-gated-deletion)
+    - [2.6 The pending-package queue](#26-the-pending-package-queue)
+  - [3. Universal frontmatter core](#3-universal-frontmatter-core)
+    - [3.1 Core fields](#31-core-fields)
+    - [3.2 The dual-audience encoding](#32-the-dual-audience-encoding)
+    - [3.3 Drift defense (field and heading contract)](#33-drift-defense-field-and-heading-contract)
+    - [3.4 State history](#34-state-history)
+  - [4. Per-type schemas and state machines](#4-per-type-schemas-and-state-machines)
+    - [4.1 Information](#41-information)
+    - [4.2 Focus](#42-focus)
+    - [4.3 Project](#43-project)
+    - [4.4 Action](#44-action)
+    - [4.5 Work Product (in-bundle derived view)](#45-work-product-in-bundle-derived-view)
+    - [4.6 Annotation (in-bundle record)](#46-annotation-in-bundle-record)
+  - [5. Reference model and write coherence](#5-reference-model-and-write-coherence)
+    - [5.1 Typed edges](#51-typed-edges)
+    - [5.2 Direction and ownership](#52-direction-and-ownership)
+    - [5.3 Substrate independence](#53-substrate-independence)
+    - [5.4 Cascade semantics](#54-cascade-semantics)
+    - [5.5 Multi-writer coherence (added v1.1)](#55-multi-writer-coherence-added-v11)
+  - [6. Invariant set](#6-invariant-set)
+  - [7. Violation-to-repair mapping](#7-violation-to-repair-mapping)
+  - [8. The Mechanical Verification Law](#8-the-mechanical-verification-law)
+  - [9. Write protocol obligations (summary binding on the bundle skill)](#9-write-protocol-obligations-summary-binding-on-the-bundle-skill)
+  - [10. Deviations from Alpha Pipeline, recorded](#10-deviations-from-alpha-pipeline-recorded)
+  - [Cross-reference: declared bias and workproduct_state (July 27, 2026)](#cross-reference-declared-bias-and-workproduct_state-july-27-2026)
+  - [Amendment: `published` leaves the INQUIRY state machine (2026-09-10, DEC-72 / CASE-4)](#amendment-published-leaves-the-inquiry-state-machine-2026-09-10-dec-72-case-4)
+
+---
+
 > **Editorial note, July 27, 2026 (Bob's directive):** the construct formerly
 > named **Problem** is renamed **Focus** throughout, which conveys its purpose
 > non-judgmentally. Machine literals shown here use the target vocabulary
@@ -1499,7 +1557,6 @@ pre-delivery gate.
 *Spec version 1.3, July 11, 2026. Companion to
 BIO_Technical_Architecture_Decisions v8 and
 BIO_Bundle_Skill_Composite_Design v1.5. Supersedes v1.2.*
-
 
 ## Cross-reference: declared bias and workproduct_state (July 27, 2026)
 

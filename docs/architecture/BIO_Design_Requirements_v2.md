@@ -1,3 +1,46 @@
+# BIO Design Requirements
+
+**Status** · The fifteen design requirements in eight categories, each derived from the core values; "the system fails if any requirement is violated." Self-described as "Consolidated Version — April 2026 (v2, June 2026)"; the June revision was editorial ("No requirement was added, removed, or substantively changed"); no ratification is stated and none is needed — the Roadmap calls them "15, finalized" and every architecture document cites them by number. Complete at its level. One dated addendum (July 27, 2026, declared bias) follows the body and its middle clause is SUPERSEDED by DEC-20. as of 2026-09-14.
+
+**Place in the system** · The engineering baseline of the mission level (`BIO_System_Design.md` §2): "If any text in this roadmap conflicts with the Design Requirements document, the Design Requirements document governs", and the Technical Architecture Decisions defer to it likewise. Requirements 1, 2, 13 and 14 are cited by name across the corpus; Requirement 1's "at least two individuals" is realised as Membership v2's two-administrator floor; Requirement 6 fixes the naming policy the whole corpus follows.
+
+**Incomplete sections** ·
+- §4 and §12 — both name a compliance skill that "remain[s] unbuilt as named skills" (`BIO_Complete_Roadmap_v5.md` banner).
+- §9 and §10 — the multi-platform and directory requirements rest on a phase that has not started; the platform analysis behind them carries "revisit as platforms change" (`BIO_Communications_Platforms.md`).
+- §11 — the starter materials are listed under "not yet started" in the Roadmap's pending items.
+- §15 — "The mechanism for establishing consensus will be defined through practice"; still an open question.
+- §Revision note — the July 27, 2026 addendum that follows it: its declared-bias addendum's middle clause is SUPERSEDED (DEC-20): only an uncleared HUNCH refuses publication.
+
+**Contents**
+- [Architecture](#architecture)
+    - [1. Fully distributed. No hierarchy, no headquarters, no central authority.](#1-fully-distributed-no-hierarchy-no-headquarters-no-central-authority)
+    - [2. The system works at every scale without modification.](#2-the-system-works-at-every-scale-without-modification)
+    - [3. Groups form and dissolve freely without permission, registration, or announcement.](#3-groups-form-and-dissolve-freely-without-permission-registration-or-announcement)
+- [Quality and Publishing](#quality-and-publishing)
+    - [4. Quality is enforced by publishing standards and reproducibility, not by gatekeepers.](#4-quality-is-enforced-by-publishing-standards-and-reproducibility-not-by-gatekeepers)
+    - [5. Each group maintains its own accepted body of work.](#5-each-group-maintains-its-own-accepted-body-of-work)
+    - [6. Every published work product includes standardized metadata.](#6-every-published-work-product-includes-standardized-metadata)
+- [Escalation](#escalation)
+    - [7. The escalation protocol operates on defined stages with documented trigger conditions.](#7-the-escalation-protocol-operates-on-defined-stages-with-documented-trigger-conditions)
+    - [8. Evidence is separated from legal strategy. Available actions are classified by risk.](#8-evidence-is-separated-from-legal-strategy-available-actions-are-classified-by-risk)
+- [Communication and Access](#communication-and-access)
+    - [9. The system operates across multiple platforms. No single platform is essential.](#9-the-system-operates-across-multiple-platforms-no-single-platform-is-essential)
+    - [10. believeinoakland.org serves as the public directory and gateway.](#10-believeinoaklandorg-serves-as-the-public-directory-and-gateway)
+- [Onboarding](#onboarding)
+    - [11. Starter materials are publicly available and sufficient for immediate participation.](#11-starter-materials-are-publicly-available-and-sufficient-for-immediate-participation)
+- [Tools](#tools)
+    - [12. AI tools and other resources may be developed to support operations. All tools are advisory, transparent, and optional.](#12-ai-tools-and-other-resources-may-be-developed-to-support-operations-all-tools-are-advisory-transparent-and-optional)
+- [Resilience](#resilience)
+    - [13. The system is designed to function under active opposition.](#13-the-system-is-designed-to-function-under-active-opposition)
+    - [14. No single point of failure exists in the system.](#14-no-single-point-of-failure-exists-in-the-system)
+- [Evolution](#evolution)
+    - [15. The system evolves through documented practice and broad consensus.](#15-the-system-evolves-through-documented-practice-and-broad-consensus)
+- [Reference: Core Values](#reference-core-values)
+- [Reference: Operational Principles](#reference-operational-principles)
+- [Revision note](#revision-note)
+
+---
+
 **Believe in Oakland**
 
 **Design Requirements**
@@ -401,7 +444,6 @@ inventory (see BIO_Functional_Architecture and BIO_Complete_Roadmap v3),
 the example tools in Requirement 12 now also mention a government
 compliance analysis skill. No requirement was added, removed, or
 substantively changed.*
-
 
 *Addendum, July 27, 2026 (Bob's direction, recorded as a requirement so no
 future revision treats it as optional): BIO legitimizes bias as a declared,

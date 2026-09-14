@@ -1,5 +1,38 @@
 # Believe in Oakland
 
+**Status** · The design of the composite bundle skill that was the store's single write authority on the retired substrate. "Working Document, v1.7, July 2026" (its footer still says v1.6 and names older companions — the stamps disagree); no approval by Bob is stated. **Superseded implementation, inherited format**: "The RUNTIME here … was replaced by the Cloudflare plane. The BUNDLE FORMAT, the promotion semantics, and the C-series check catalog this document specifies are what the plane implements and must continue to satisfy." Read it for the format and the checks, not for the runtime; every mechanism below that moves files is history. as of 2026-09-14.
+
+**Place in the system** · Companion to construct 3 of `BIO_System_Design.md` §3 (the record): it sits under `BIO_State_Rules_Consistency_v1_5.md` (which governs data-store rules) and `BIO_Technical_Architecture_Decisions_v10.md` (which governs architecture and defers to it for the skill's structure). Its live consumer is the check catalog, `bio-plane/checks/bio-checks.mjs`, hash-verified and RUN by the gate; the retired runtime's build record is in `docs/archive/architecture/`.
+
+**Incomplete sections** ·
+- §0 — the revision history moved to the archive; the footer's version and companion stamps contradict the header.
+- §1 — inherited (single write authority, drift defense, the Mechanical Verification Law, constrained repair) except "Substrate reality … a folder store … no server and no locking primitive", which the plane superseded.
+- §2 — the component inventory of a source tree that no longer exists; the `FOCUS`/`PROBLEM` rename is unlanded in it.
+- §3 — the axiomatic/derivative discipline is doctrine; the three promotion implementations and the conformance harness are retired.
+- §4 and §5 — INHERITED FORMAT (frontmatter contract, forbidden aliases, `state_history` rule, heading constants, per-type machines, the four operations); the in-place promotion modes and the endpoint ping are retired.
+- §6 and §7 — the loading matrix and products A–D are the retired runtime; only "the harness executes the DEPLOYED source itself" survives as a rule.
+- §8 — inherited promotion semantics (manifest fields, `skill_version`, I-20, the divergence ladder, determinism); the `.pending` files, chat packaging, PWA and daemon surfaces and dual-mode endpoint are retired.
+- §9 — the check-codebase decision is live (plain ES modules, zero dependencies, additive versioned catalog); "Product B embeds checks.js" and the TypeScript glue are stale; the catalog version named here is far behind the live one.
+- §10 — rationale retained; the deviations naming the endpoint and chat packaging describe retired mechanisms.
+- §11 — the executed July build order is history; its open items ("I-10's age check is deferred…", "Remaining operator items", "Pending decisions") record no outcome.
+
+**Contents**
+- [Bundle Skill Composite Design](#bundle-skill-composite-design)
+  - [0. Purpose and governing documents](#0-purpose-and-governing-documents)
+  - [1. Requirements the design must satisfy](#1-requirements-the-design-must-satisfy)
+  - [2. Component inventory and folder structure](#2-component-inventory-and-folder-structure)
+  - [3. Component taxonomy](#3-component-taxonomy)
+  - [4. The core component](#4-the-core-component)
+  - [5. Type and operation components](#5-type-and-operation-components)
+  - [6. Loading matrix](#6-loading-matrix)
+  - [7. Products, one per execution surface](#7-products-one-per-execution-surface)
+  - [8. Write-delivery paths, the queue, concurrency, and the endpoint](#8-write-delivery-paths-the-queue-concurrency-and-the-endpoint)
+  - [9. The check codebase decision](#9-the-check-codebase-decision)
+  - [10. Adopted and deviated, recorded](#10-adopted-and-deviated-recorded)
+  - [11. Build order: executed](#11-build-order-executed)
+
+---
+
 > **Editorial note, July 27, 2026 (Bob's directive):** the construct formerly
 > named **Problem** is renamed **Focus** throughout, which conveys its purpose
 > non-judgmentally. Machine literals shown here use the target vocabulary

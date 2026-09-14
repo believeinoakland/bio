@@ -1,6 +1,23 @@
 # Multi-instance-per-account isolation — the plan, PLANNED NOT BUILT
 
-**Status: audit + plan, 2026-09-15, written by BOB at Bob's direction. Nothing here is built
+**Status** · An audit and plan, 2026-09-15, by session BOB at Bob's direction: what collides when several BIO instances share one Cloudflare account (buckets, fleet script names, the members' missing R2 binding, the freshness check, the central UI's fixed pointer), the cleanliness verdict, the lane map and interfaces crossed, the ordering constraints, and Bob's sequencing. **Planned, not built; no lane engaged.** Complete as a plan at `origin/main` `51d128a`, with Bob's steer folded in (shared stateless workers are acceptable if partitioning is structural). as of 2026-09-14.
+
+**Place in the system** · A level-2 design serving construct 15 of `BIO_System_Design.md` §3 (distribution) and §6 (the runtime shape). It crosses I6, I8 and I9 (the fleet interfaces) and the installer↔plane binding contract; DIST #2 holds its lane on it until the member surfaces are designed.
+
+**Incomplete sections** ·
+- §Lane map and interfaces — no IC has been proposed; the per-request instance identity for a shared `agent-worker` is named as the hard case and not designed.
+- §Sequencing (Bob's) — waits on the member-surface design; nothing here is scheduled.
+
+**Contents**
+- [What collides, and what does not](#what-collides-and-what-does-not)
+- [Cleanliness verdict](#cleanliness-verdict)
+- [Lane map and interfaces](#lane-map-and-interfaces)
+- [Ordering constraints](#ordering-constraints)
+- [Sequencing (Bob's)](#sequencing-bobs)
+
+---
+
+**Basis: audit + plan, 2026-09-15, written by BOB at Bob's direction. Nothing here is built
 and no lane is engaged.** Bob, 2026-09-14/15: fix per-group isolation in the installer and
 operating environment so several BIO instances can live in ONE Cloudflare account; make the
 evidence-bucket names group-relative and find every other single-instance naming

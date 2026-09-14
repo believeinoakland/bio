@@ -1,5 +1,29 @@
 # **Believe in Oakland**
 
+**Status** · The platform analysis behind BIO's communication and publishing recommendations: design principles, three functions (cross-group discussion, work-product publishing, the directory) with recommendations and costs, a comparison table, the resilience architecture, evidence-package risk tiers and six next steps. "Working Document — April 2026"; no version number and no approval are stated. Complete at its level as an April 2026 selection; `README.md` calls it "operational selection, revisit as platforms change." The caveat: it predates the plane entirely — no store, no UI, no Worker — and its six next steps are undated with no completion recorded. as of 2026-09-14.
+
+**Place in the system** · Owns the platform half of construct 13 of `BIO_System_Design.md` §3 (publication, audiences and communications): the Roadmap makes it the authoritative source for its §7 and for evidence-package risk classification, and Design Requirement 9 restates its selection. Kept because Requirement 13 makes individual-level blocking and moderation a requirement rather than a preference.
+
+**Incomplete sections** ·
+- §Function 2 — the default recommendation is stated by property after the 2026-08-10 vendor sweep; the Roadmap's summary of this document still names a vendor, so the two disagree.
+- §Function 3 — the directory as a static site with export and a submission form; whether the built Worker-served public surface serves this function is not stated anywhere found.
+- §Platform Comparison Summary — April 2026 prices.
+- §Immediate Next Steps — six steps, none dated or marked done; the directory domain was not yet serving when last measured.
+- §Evidence Package Publication and Risk Classification — still authoritative, but the tiering has also entered the store design and this document does not cross-reference it.
+
+**Contents**
+- [Design Principles for Platform Selection](#design-principles-for-platform-selection)
+- [Three Distinct Functions](#three-distinct-functions)
+  - [Function 1: Cross-Group Discussion and Discovery](#function-1-cross-group-discussion-and-discovery)
+  - [Function 2: Work Product Publishing](#function-2-work-product-publishing)
+  - [Function 3: The Directory (Index of All Published Work)](#function-3-the-directory-index-of-all-published-work)
+- [Platform Comparison Summary](#platform-comparison-summary)
+- [Resilience Architecture](#resilience-architecture)
+- [Evidence Package Publication and Risk Classification](#evidence-package-publication-and-risk-classification)
+- [Immediate Next Steps](#immediate-next-steps)
+
+---
+
 **Communication and Publishing Platform Recommendations**
 
 Working Document --- April 2026

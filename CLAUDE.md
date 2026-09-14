@@ -90,9 +90,21 @@ Three consequences that keep being lost and are therefore stated as rules:
   extracted may mean the document was never read; no document may mean nobody looked.
   Saying which of those is true is a first-class obligation, not a diagnostic detail.
 
-The design work sits in `docs/development/STORE-AS-CACHE.md` (the three axes and the
-four-level search); the ruling that content is the unit the record points at is DEC-23;
-the primitive that lets an edge point at content is D-164.
+The design work sits in `docs/architecture/BIO_Content_Framework_v0_10.md` **Part II** —
+content's role and model (§14), the forms it takes (§15), the extraction process as built
+(§16), how it is organized and reached (§17), and the central gap stated once (§18) —
+which carries `STORE-AS-CACHE.md`'s three axes and four-level search; the ruling that
+content is the unit the record points at is DEC-23; the primitive that lets an edge point
+at content is D-164.
+
+**The design corpus is held to a standard, and every design document carries FRONT MATTER
+that says what it is, where it sits, what it lacks, and what it contains** — Bob,
+2026-09-14, after the content construct sat undesigned for 46 days in a document that never
+said what it lacked. `docs/architecture/BIO_System_Design.md` places every major construct
+and names its home document; `docs/architecture/CORPUS-STANDARD.md` is the standard;
+`node tools/corpuscheck.mjs` enforces it and `plancheck` runs it. **A landing that changes a
+construct updates its home document's front matter in the same commit**, and a citation
+into a design document names the SECTION, not a line.
 
 **The stance, and it is doctrine.** BIO is defined through doctrine and nothing in it
 resembles "stick it to the man". The objective is BETTER GOVERNMENT, pursued through

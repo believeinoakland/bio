@@ -182,6 +182,15 @@ PROVISIONAL entries in `INTERFACES.md`, appends to `DEBT.md` and `MEASUREMENTS.m
 the `BOB INBOX`, and any kickoff its own change superseded. **What it may not:** the
 queue body below the inbox, and any area's code.
 
+**4. Keep the design corpus honest about itself** (Bob, 2026-09-14; `docs/architecture/
+CORPUS-STANDARD.md`). A design document this session writes or changes carries front
+matter — Status with `as of <date>`, Place in the system, an EXPLICIT Incomplete sections
+list, a generated Contents (`node tools/corpuscheck.mjs --write <file>`) — and a ruling
+Bob makes about a construct is FOLDED INTO the construct's home document, not only recorded
+in `DECISIONS.md`. A new major construct gets a home document and a row in
+`BIO_System_Design.md` §3 in the same landing. `plancheck` runs the checker; the reviewer
+(Bob, reading as someone who has not lived in the repo) judges the honesty.
+
 **Report what was DONE and what was DECIDED. Never report tactical STATE.** An
 outstanding item, a dirty tree, a stale claim, a warning nobody has cleared: fix it,
 or route it through the channel that owns it, or leave it unsaid. Surfacing it to Bob

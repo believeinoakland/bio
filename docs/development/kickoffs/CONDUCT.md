@@ -453,6 +453,16 @@ defect it is.
    kept. The trailer costs a line and puts you at the keystroke where you have to finish
    the sentence *"the branch's 70 lines are correctly superseded because…"*. **An
    unfinishable sentence is the finding.**
+
+   **AND SINCE 2026-09-14 IT RUNS `tools/corpuscheck.mjs`: every design document in
+   `docs/architecture/` (and every design listed in `CORPUS-STANDARD.md` §5) must carry
+   current front matter — Status with `as of YYYY-MM-DD` no earlier than the file's last
+   commit, Place in the system, an explicit Incomplete sections list, and a generated
+   Contents that matches the headings.** When an integration lands a change to a construct,
+   its home document's front matter moves in the same commit (`CORPUS-STANDARD.md` §4);
+   when a worker's diff touches a governed document's headings, `node tools/corpuscheck.mjs
+   --write <file>` regenerates the Contents. A red here is not noise to wave through: it is
+   a document about to answer the next session with last month's completeness.
 7. **Escalate to Bob ONLY genuine decisions** (doctrine, priority, risk he
    carries, effects on people outside the project). You write no area code; a
    turn that edits an area's code has stopped being CONDUCT — enqueue it and

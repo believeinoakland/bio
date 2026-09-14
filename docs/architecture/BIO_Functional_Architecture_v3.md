@@ -1,5 +1,51 @@
 # Believe in Oakland
 
+**Status** · The three concurrent functional layers — Information, Analysis, Action — with every function a group needs mapped to a layer, the eight AI skills, and where human judgment is required. Self-described as "Working Document — April 2026 (v3, July 20, 2026: daemon realization and escalation-ladder annotations added …; the functional analysis itself is unchanged)"; no approval is stated; the July 27 addition is "Bob's framing, recorded as the shape of the whole system." The functional analysis is complete at its level and every question it left open carries a resolution note; the v3 annotation layer describes the retired substrate's realisation and is history. as of 2026-09-14.
+
+**Place in the system** · Extends §9 of `BIO_Complete_Roadmap_v5.md` and is the source of the eight-skill inventory; its open questions are answered by `BIO_Technical_Architecture_Decisions_v10.md` and its data rules by `BIO_State_Rules_Consistency_v1_5.md`. It fixes where human judgment is required per layer, which the interaction constructs and the assistant's fences inherit (`BIO_System_Design.md` §3 rows 11–12).
+
+**Incomplete sections** ·
+- §preamble — the v3 annotation layer (July 20, 2026) describes the retired substrate's daemon and endpoint as the Monitoring Skill's realisation; periodic work now runs on one reconciling Durable Object alarm (`docs/development/SCHEDULER.md`). Not re-annotated.
+- §Layer 1: Information — the infrastructure note names the composite bundle skill as the single write authority; that runtime is superseded (`BIO_Bundle_Skill_Composite_Design_v1_7.md`, inherited format only).
+- §Layer 2: Analysis — the cross-reference resolution note persists findings "as a Focus object"; Focus collapsed into the INQUIRY (DEC-72; `BIO_Case_Making_v0_1.md`).
+- §Layer 3: Action — the Compliance and Escalation skills remain unbuilt as named skills; the Communicate function's forum, directory and subreddit phase has not started.
+- §Trust signals throughout the stack — "no transitive trust" was revised to transitive-trust-when-disclosed (`docs/development/AUTHORITY-AND-TRUST.md`).
+- §The three-layer workflow (added July 27, 2026) — says "the UI, which still needs to be designed"; the interaction constructs were written 2026-07-31 and the UI is built as constructs; the section neither points to them nor reconciles its layer names with the three functional layers above.
+
+**Contents**
+- [Three-Layer Functional Architecture](#three-layer-functional-architecture)
+- [The three layers](#the-three-layers)
+- [Layer 1: Information](#layer-1-information)
+  - [Function 1: Discover](#function-1-discover)
+  - [Function 2: Retrieve and extract](#function-2-retrieve-and-extract)
+  - [Function 3: Archive](#function-3-archive)
+  - [Function 4: Monitor and notify](#function-4-monitor-and-notify)
+  - [Skills that power Layer 1](#skills-that-power-layer-1)
+- [Layer 2: Analysis](#layer-2-analysis)
+  - [Function 1: Compare actions to standards](#function-1-compare-actions-to-standards)
+  - [Function 2: Cross-reference multiple sources](#function-2-cross-reference-multiple-sources)
+  - [Function 3: Classify findings](#function-3-classify-findings)
+  - [Function 4: Evaluate significance (human judgment)](#function-4-evaluate-significance-human-judgment)
+  - [Analysis outputs](#analysis-outputs)
+  - [Skills that power Layer 2](#skills-that-power-layer-2)
+- [Layer 3: Action](#layer-3-action)
+  - [Function 1: Document](#function-1-document)
+  - [Function 2: Evaluate and publish](#function-2-evaluate-and-publish)
+  - [Function 3: Escalate](#function-3-escalate)
+  - [Function 4: Communicate](#function-4-communicate)
+  - [Function 5: Track toward resolution](#function-5-track-toward-resolution)
+  - [Skills that power Layer 3](#skills-that-power-layer-3)
+- [Cross-cutting concerns](#cross-cutting-concerns)
+  - [Search across heterogeneous sources](#search-across-heterogeneous-sources)
+  - [Data transformation pipeline](#data-transformation-pipeline)
+  - [Change detection across source types](#change-detection-across-source-types)
+  - [Trust signals throughout the stack](#trust-signals-throughout-the-stack)
+  - [The eighth skill: Government Compliance Analysis](#the-eighth-skill-government-compliance-analysis)
+- [Updated skill inventory (8 skills)](#updated-skill-inventory-8-skills)
+  - [The three-layer workflow (added July 27, 2026)](#the-three-layer-workflow-added-july-27-2026)
+
+---
+
 > **Editorial note, July 27, 2026 (Bob's directive):** the construct formerly
 > named **Problem** is renamed **Focus** throughout, which conveys its purpose
 > non-judgmentally. Machine literals shown here use the target vocabulary
@@ -543,7 +589,6 @@ BIO_State_Rules_Consistency).
 
 **believeinoakland.org** \| Working Document \| April 2026, rev. July
 2026
-
 
 ## The three-layer workflow (added July 27, 2026)
 

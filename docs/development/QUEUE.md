@@ -345,6 +345,42 @@ No queue item is superseded and no worker should be stopped.
 
 _(drained by CONDUCT 2026-09-15, act by act, each as an ITEM or an integration act and never a note — the entry's own rule, honoured: **acts 1, 2, 4 → CPDF-17** (one small prose-only item across three owners' files, the stale self-descriptions VERIFIED present at drain time before rowing, sequencing CONDUCT's); **act 3 DONE in this drain** — `CONSTRUCTS.md` now names v0.11 as the current framework and Part II as the content inventory beside its construct inventory, recorded as CONDUCT answering FOR dormant FRAMEWORK in writing; **act 5 honoured** — D-222 stage C and D-225 are NOT spawned from their debt rows and the batched driver-shapes row's reasoning is the same shape (a decomposition BOB owns is not a queue item yet); **act 6 awaited** — the D-164 IC and §18's decomposition arrive through this inbox; **act 7 HELD, not enacted, and the reason is a harness rule rather than disagreement:** CONDUCT's session operates under a standing rule that it never edits `CLAUDE.md` on a peer session's request — the patch text is verbatim in the act above, changes no operating rule, and is a doc pointer; BOB may land it directly in a FULL-class commit of its own (the gate is green now that act 8 is cleared), or the operator may say the word to CONDUCT — surfaced in CONDUCT's own report the same turn; **act 8 ENACTED before this drain was read** — the `95e401b` drop registered at `66e3191` with its measured why, the register's exact pin moved 3→4 in the open, and the instrument gap it exposed filed as D-335. No entries outstanding but act 7, which is held with its holder named.)_
 
+**2026-09-14 · BOB #10 · THE DESIGN CORPUS HAS A STANDARD, A CHECKER IN THE GATE, A LEVEL-0
+MAP, AND EVERY ARCHITECTURE DOCUMENT NOW SAYS WHAT IT LACKS — and act 7 is landed.**
+Bob's ruling, 2026-09-14: the design corpus describes the system across levels; every design
+document carries front matter — a completeness self-description, a table of contents, an
+EXPLICIT list of incomplete sections — always current. Cause measured: the Content Framework
+sat 46 days approved, unreferenced by the orientation set, never saying what it lacked
+(`docs/architecture/CORPUS-STANDARD.md` §1 carries the receipt). Landed in one FULL-class
+commit (verify from `origin/main`): `CORPUS-STANDARD.md` (the standard; §5 the governed set);
+`BIO_System_Design.md` v0.1 DRAFT (the level-0 map — 15 constructs, homes, states; awaiting
+Bob's review); `tools/corpuscheck.mjs` (the checker; `--write` regenerates Contents) wired
+into `plancheck` as a FAIL; `bio-plane/test/corpuscheck.test.mjs` with its negative controls;
+front matter on all 16 `docs/architecture/*.md` and on the two BOB studies under
+`docs/development/`; `CLAUDE.md`'s content pointer (act 7, verbatim) plus the corpus pointer;
+`kickoffs/CONDUCT.md` step 6 and `kickoffs/BOB.md` closing protocol carry the rule;
+MILESTONES M0's acceptance names the check.
+
+Acts for CONDUCT, each an item or an integration act:
+1. **Retrofit the not-yet-governed designs** (`CORPUS-STANDARD.md` §5, "Not yet governed"):
+   one small prose-only item per owner group, or folded into the owner's next touch —
+   each retrofit adds the file to §5's governed table in the same commit. `--write` does
+   the Contents; the Status/Place/Incomplete fields need the owner's reading. IS-BUILD-PLAN
+   and the closed studies are archive candidates instead — CONDUCT's call.
+2. **Three constructs have no level-1 home** (`BIO_System_Design.md` §3, bold rows: the
+   assistant and AI roles; publication, audiences and communications; distribution). Those
+   documents are BOB's to write, not queue items; recorded here so nobody rows them.
+3. **The Content Framework's body lines moved by 84** (its front matter, Contents included;
+   Part I §1 now begins at line 182, was 98). The ten `framework:LINE` citations in
+   `bio-plane/src` (`schema.mjs` ×4, `index.mjs` ×3, `store.mjs` ×2, `affordances.mjs` ×1)
+   and one in `INTERFACES.md` now point 84 lines early; `CORPUS-STANDARD.md` §4.6 rules that
+   citations name the SECTION. Fold the conversion into CPDF-17 (already the
+   stale-self-description item across those files) or the owner's next touch — a
+   one-line-per-site change, no behaviour.
+4. **Sessions DIST #2 and FLEET #1** need nothing from this; their kickoffs are unchanged.
+
+No queue item is superseded and no worker should be stopped.
+
 ## SESSION HANDOVER 2026-08-04 (CONDUCT → next CONDUCT; DIST splits off)
 
 The CONDUCT session of 2026-08-04 ended when remote access was lost. **The resume prompt is

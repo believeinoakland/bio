@@ -455,6 +455,32 @@ if (conduct && inbox && !/INBOX/.test(conduct))
      + `        mentions it, so nothing drains it. A mechanism that is not in the loop the\n`
      + `        reader actually runs is not a mechanism.`);
 
+/* ------------------------------------------- 6. THE DESIGN CORPUS SAYS WHAT IT LACKS
+
+   Bob, 2026-09-14: every design document carries front matter — a completeness
+   self-description, a table of contents, and an EXPLICIT list of incomplete sections —
+   and that front matter is always current. The receipt is the Content Framework: approved
+   2026-07-30, then 46 days unreferenced by the orientation set and never saying what it
+   lacked, while the construct it owned went undesigned. `tools/corpuscheck.mjs` is the
+   enforcement (docs/architecture/CORPUS-STANDARD.md is the standard); a governed document
+   that drifts FAILS here, the way a stale DECIDED index does, because a front matter that
+   is allowed to rot answers a reader with last month's completeness. */
+
+{
+  const { governed, checkFile } = await import("./corpuscheck.mjs").catch(() => ({}));
+  if (!governed) {
+    warn(`corpuscheck.mjs could not be loaded — the design corpus front matter is UNVERIFIED this run.`);
+  } else {
+    let n = 0, bad = 0;
+    for (const p of governed()) {
+      const r = checkFile(p, { git: !LOCAL_ONLY });
+      n++;
+      for (const f of r.fails) { bad++; fail(`CORPUS — ${f}`); }
+    }
+    notes.push(`design corpus: ${n} governed document(s), ${bad} front-matter failure(s)`);
+  }
+}
+
 /* ------------------------------------------------------------- report */
 
 for (const n of notes) console.log(`  note  ${n}`);

@@ -1,5 +1,21 @@
 # Architecture
 
+**Status** · The catalog of the design corpus: one entry per document with what it is for and its status, the publication note of July 24, 2026, and the note on what is referenced but not here. Current as of the corpus at `origin/main` on 2026-09-14; complete at its level — every document in this directory has an entry. Since 2026-09-14 the corpus is held to `CORPUS-STANDARD.md`, and `BIO_System_Design.md` places the constructs the documents describe. as of 2026-09-14.
+
+**Place in the system** · The index of `docs/architecture/`. `BIO_System_Design.md` is the level-0 map (constructs and their homes); this file is the catalog (documents and their status); `CORPUS-STANDARD.md` is the form both are held to. A reader new to the repository reads the Roadmap first, then the system design, then the construct they need.
+
+**Incomplete sections** · None — every `.md` in this directory has an entry below, checked against the directory listing on 2026-09-14.
+
+**Contents**
+- [Mission and objectives](#mission-and-objectives)
+- [Requirements](#requirements)
+- [Architecture](#architecture)
+- [Design and doctrine](#design-and-doctrine)
+- [The corpus itself](#the-corpus-itself)
+- [A note on what is not here](#a-note-on-what-is-not-here)
+
+---
+
 The doctrine corpus: what BIO is, what it must do, and how it is built.
 Committed to the public repository on July 24, 2026 so that a working
 session can read everything it needs with no credentials and nothing
@@ -29,7 +45,7 @@ whole undertaking. Read this first if you are new.
 
 ## Requirements
 
-**BIO_Design_Requirements_v2** — fourteen requirements in eight
+**BIO_Design_Requirements_v2** — fifteen requirements in eight
 categories, each derived from the values, and the system fails if any is
 violated. Load-bearing throughout the rest of the corpus: Requirement 1
 (fully distributed, administrators as custodians rather than authorities),
@@ -39,6 +55,14 @@ Requirement 14 (no single point of failure) are cited by name in the
 architecture documents and in review.
 
 ## Architecture
+
+**BIO_System_Design** — the level-0 map, v0.1 DRAFT (2026-09-14, awaiting Bob's
+review): the purpose and the path, the system in one view, every major construct
+with its importance, relationships, home document and state, the capability ladder
+as the completeness map, the runtime shape, and the doctrine spine. Read it after
+the Roadmap and before any construct's document; three constructs it names have no
+home document yet (the assistant, publication, distribution), stated there rather
+than left to be noticed.
 
 **BIO_Functional_Architecture_v3** — the three concurrent layers,
 Information, Analysis, and Action, with every function a group needs mapped
@@ -102,6 +126,20 @@ question every new group asks and because Requirement 13 makes
 individual-level blocking and moderation a requirement rather than a
 preference.
 
+## The corpus itself
+
+**CORPUS-STANDARD** — the standard every design document is held to since
+2026-09-14 (Bob's ruling): the levels of the corpus, the front matter every
+document carries (Status with completeness and `as of` date, Place in the system,
+an explicit Incomplete sections list, a generated Contents), the rules that keep it
+current, and the governed set. `node tools/corpuscheck.mjs` enforces it and
+`plancheck` runs it.
+
+**CONSTRUCTS** — the 2026-07-30 inventory of the document-profile and content
+constructs, their consumers, overlaps and the FW build plan; the evidence beneath
+Part I of the Content Framework. An inventory at a date: read its plan section's
+BUILT markers, not its tables, for what is true now.
+
 ## A note on what is not here
 
 **The Conversion Plan is referenced but is NOT in this repository.** Six
@@ -131,8 +169,6 @@ anymore: `bio-plane/checks/bio-checks.mjs` carries it, hash-verified, and
 `plane-gate/1.0` RUNS it rather than reimplementing it. That note is kept in
 outline only so a reader of an older revision can see the gap closed rather than
 wonder whether it was quietly dropped.
-
-
 
 **Added July 27, 2026:** `BIO_Declared_Bias_v0_1.md` joins the corpus as a
 first-class architecture document: bias as a declared, justified construct,

@@ -1,5 +1,31 @@
 # BIO Membership Architecture
 
+**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." as of 2026-09-14.
+
+**Place in the system** · Owns construct 1 of `BIO_System_Design.md` §3 (membership and authority). It supersedes one decision of `BIO_Technical_Architecture_Decisions_v10.md` §10 (per-member tokens) and depends on `BIO_State_Rules_Consistency_v1_5.md` §4.3 (the project object) and §5.1–5.3 (the relationship vocabulary and edge ownership). It adds accountability and access control, not integrity; the store schema realises it.
+
+**Incomplete sections** ·
+- §9 — the root of trust is "recorded rather than fixed"; open as DEC-2 (deferred, with its trigger).
+- §10 — a data-model "sketch"; "Concrete DDL belongs with the implementation."
+- §11 — two cross-document obligations are unenacted: the Technical Architecture §10 annotation pointing here, and the project-name-uniqueness annotation on State Rules §4.3; the list also numbers two items "8."
+- §7 — DEC-72 clause 5 adds an owner-only act (publish) absent here, and D-310/D-311 record that the affordance surface does not yet publish owner-gated publish or the roster acts.
+- §7 — the hierarchy is stated in Focus terms "until the rename arc lands"; the live state machine is `inquiry` and the catalog marks `focus` legacy.
+
+**Contents**
+- [1. Why membership exists](#1-why-membership-exists)
+- [2. What membership is NOT](#2-what-membership-is-not)
+- [3. Cover and handle](#3-cover-and-handle)
+- [4. Administrators](#4-administrators)
+- [5. Capabilities](#5-capabilities)
+- [6. Invitations](#6-invitations)
+- [7. Projects](#7-projects)
+- [8. Secure verified export](#8-secure-verified-export)
+- [9. Architecture debt: the root of trust is unmodelled](#9-architecture-debt-the-root-of-trust-is-unmodelled)
+- [10. Data model sketch](#10-data-model-sketch)
+- [11. What must be true before this ships](#11-what-must-be-true-before-this-ships)
+
+---
+
 > **Editorial note, July 27, 2026 (Bob's directive):** the construct formerly
 > named **Problem** is renamed **Focus** throughout, which conveys its purpose
 > non-judgmentally. Machine literals shown here use the target vocabulary

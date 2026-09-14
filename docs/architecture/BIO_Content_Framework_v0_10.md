@@ -1,5 +1,89 @@
 # BIO Content Framework
 
+**Status** · The content framework, in two parts. **Part I (§§1–13)** — the extraction substrate: recognisers, regions and digests, change layers, content types, connections and their grade, progressions, identifier spaces, intent, declared bias, provenance of judgments — ARCHITECTURE APPROVED by Bob at v0.10 on 2026-07-30 and unchanged since. **Part II (§§14–19)** — content as the unit the record points at: role and model, the forms of content, the extraction process as built, organization and access, the central gap stated once, and who defers to this document — added 2026-09-15 as v0.11, **DRAFT awaiting Bob's review**; it rules nothing new and proposes no design, and §18 names the six pieces still to be designed. The file keeps its `v0_10` name so `framework:LINE` citations in code and record resolve; **this front matter shifted every body line by the length of this block once, on 2026-09-14 — a citation written before that date points that many lines early; the fix is to cite the section (`CORPUS-STANDARD.md` §4.6)**. Part I complete and approved at its level; Part II a draft with an explicit frontier. as of 2026-09-14.
+
+**Place in the system** · The single authoritative content design and the home of constructs 4, 5 and 6 of `BIO_System_Design.md` §3 (content — the heart of the system; document profile and the extraction substrate; meaning). `CONSTRUCTS.md` is the inventory and evidence beneath Part I; `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` is the design-space study for Part II §18's first piece; `STORE-AS-CACHE.md`'s three-axis and four-level tables are adopted in §14.2–14.3; `CLAUDE.md`'s content section points here; DEBT D-164 and INTERFACES I2 cite it. It does not own retrieval, the investigative session, the bias doctrine, the interface contracts, or any ruling.
+
+**Incomplete sections** ·
+- §14 — Part II is DRAFT awaiting Bob's review (all of §§14–19); §14.6's "PARKED" is stale since Bob reopened D-164 on 2026-09-15.
+- §16.7 — self-marked absences: table and image extraction, the AI EXTRACT role, read-time re-extraction to tier 3 (D-319), per-page Tier-2 and `text_tier` rules (D-283, D-284), the content-axis frontier.
+- §18 — six pieces "named here, designed nowhere in this document": the content object and extent-carrying edge (D-164); content-grain search; the general observation log; extraction breadth; homes for the member's lead and firsthand observation (doctrine, Bob's); the claim object (doctrine, Bob's).
+- §19 — the to-do table of pointers is partly performed: `CLAUDE.md`, DEBT D-164, INTERFACES I2, `STORE-AS-CACHE.md`, README and CONSTRUCTS done; the `schema.mjs`, `index.mjs` and `registry.mjs` self-descriptions are CPDF-17's; the table names a `v0_11` file that does not exist.
+- §11 — seven declared bends; the first (documents that are not pages) has partly arrived with the non-text path and the OCR member, and Part I's text is frozen by design, so the bend is not updated in place.
+- §1.1 — "entities that outlive documents" named as the primary missing capability; the entity axis is since built at document grain (Part II §15).
+- §12.2 and §13.1 — "What is deliberately not modelled yet" and "What is missing" are self-marked; the claim object has been absent since v0.1.
+
+**Contents**
+  - [1. Why this document exists, and what it is FOR](#1-why-this-document-exists-and-what-it-is-for)
+  - [1.1 What this is FOR: case development](#11-what-this-is-for-case-development)
+    - [Two directions, and where they must meet](#two-directions-and-where-they-must-meet)
+    - [The two success measures](#the-two-success-measures)
+  - [2. Invariants](#2-invariants)
+  - [3. The core objects](#3-the-core-objects)
+  - [4. One extension shape: the RECOGNISER](#4-one-extension-shape-the-recogniser)
+    - [The axes we know about](#the-axes-we-know-about)
+  - [5. A document's anatomy: regions and digests](#5-a-documents-anatomy-regions-and-digests)
+  - [6. Change: layers, and one entry point](#6-change-layers-and-one-entry-point)
+  - [7. Content types: what a document contains, and what its changes mean](#7-content-types-what-a-document-contains-and-what-its-changes-mean)
+  - [8. Connections: referential and temporal, as DATA](#8-connections-referential-and-temporal-as-data)
+  - [8.1 Connection GRADE](#81-connection-grade)
+    - [The connection table](#the-connection-table)
+  - [9. The cost of absorbing the next surprise](#9-the-cost-of-absorbing-the-next-surprise)
+  - [8.2 Progressions: the many shapes a happening takes](#82-progressions-the-many-shapes-a-happening-takes)
+    - [The missing predecessor](#the-missing-predecessor)
+    - [The progression table](#the-progression-table)
+    - [Legitimate skips need an exception document](#legitimate-skips-need-an-exception-document)
+    - [Junction checks](#junction-checks)
+    - [Progressions are threaded by entities](#progressions-are-threaded-by-entities)
+  - [8.3 Identifier spaces, and where grade collapses](#83-identifier-spaces-and-where-grade-collapses)
+  - [9.1 The workload this is meant to remove](#91-the-workload-this-is-meant-to-remove)
+  - [12. Intent: goals, objectives, aspirations, and the discovery loop](#12-intent-goals-objectives-aspirations-and-the-discovery-loop)
+    - [Three things, and they behave differently](#three-things-and-they-behave-differently)
+    - [This is not a new hierarchy](#this-is-not-a-new-hierarchy)
+    - [Satisfaction conditions: the meeting point](#satisfaction-conditions-the-meeting-point)
+    - [The discovery loop: "everything discovered along the way"](#the-discovery-loop-everything-discovered-along-the-way)
+    - [An assistant may open a focus unattended](#an-assistant-may-open-a-focus-unattended)
+  - [12.1 Aspirations are scoped](#121-aspirations-are-scoped)
+  - [12.2 The pursuit record](#122-the-pursuit-record)
+    - [What is deliberately not modelled yet](#what-is-deliberately-not-modelled-yet)
+  - [13. Declared bias, and where it meets this framework](#13-declared-bias-and-where-it-meets-this-framework)
+    - [The subject registry and the entity axis are the same construct](#the-subject-registry-and-the-entity-axis-are-the-same-construct)
+    - [An assistant working unattended works under a lens](#an-assistant-working-unattended-works-under-a-lens)
+    - [Bias debt and the ageing machinery are the same shape](#bias-debt-and-the-ageing-machinery-are-the-same-shape)
+  - [13.1 Evidence accrues to bias statements](#131-evidence-accrues-to-bias-statements)
+    - [The inverse of bias debt](#the-inverse-of-bias-debt)
+    - [A statement may carry a measurable form](#a-statement-may-carry-a-measurable-form)
+    - [Decay is loud and never blocking](#decay-is-loud-and-never-blocking)
+    - [This is the legitimate form of what a verdict would be](#this-is-the-legitimate-form-of-what-a-verdict-would-be)
+    - [And it settles the monitoring question](#and-it-settles-the-monitoring-question)
+    - [Where bias enters this framework's own judgments](#where-bias-enters-this-frameworks-own-judgments)
+    - [What is missing](#what-is-missing)
+  - [10. Provenance of judgments, so learning can revise](#10-provenance-of-judgments-so-learning-can-revise)
+  - [11. Where this framework will bend](#11-where-this-framework-will-bend)
+- [PART II · CONTENT AS THE UNIT](#part-ii-content-as-the-unit)
+    - [Terminology: this document's "content" and DEC-23's "content" are two words](#terminology-this-documents-content-and-dec-23s-content-are-two-words)
+  - [14. Content's role and model](#14-contents-role-and-model)
+    - [14.1 The ruling](#141-the-ruling)
+    - [14.2 The three layers and their verbs](#142-the-three-layers-and-their-verbs)
+    - [14.3 The four-level search, and "a search that returns documents has not finished"](#143-the-four-level-search-and-a-search-that-returns-documents-has-not-finished)
+    - [14.4 Content's two intrinsic properties: EXTENT and EXTRACTION METHOD](#144-contents-two-intrinsic-properties-extent-and-extraction-method)
+    - [14.5 The machine may EXTRACT](#145-the-machine-may-extract)
+    - [14.6 Status, stated once](#146-status-stated-once)
+  - [15. The forms of content](#15-the-forms-of-content)
+  - [16. The extraction process as built](#16-the-extraction-process-as-built)
+    - [16.1 Identify](#161-identify)
+    - [16.2 Read — the text path](#162-read-the-text-path)
+    - [16.3 The L2→L3 wire — the non-text path, three tiers](#163-the-l2l3-wire-the-non-text-path-three-tiers)
+    - [16.4 Tier 3, the current state — VERIFIED against the tree, not copied from the comment](#164-tier-3-the-current-state-verified-against-the-tree-not-copied-from-the-comment)
+    - [16.5 The chain, composed as the wire walks](#165-the-chain-composed-as-the-wire-walks)
+    - [16.6 Promote-time projection](#166-promote-time-projection)
+    - [16.7 What is specified, what is delegated, what is absent](#167-what-is-specified-what-is-delegated-what-is-absent)
+  - [17. Organization and access](#17-organization-and-access)
+  - [18. The central gap, stated once](#18-the-central-gap-stated-once)
+  - [19. Where this document is the authority, and who defers to it](#19-where-this-document-is-the-authority-and-who-defers-to-it)
+
+---
+
 **Version 0.11 — 2026-09-15 — Part I (§§1–13) ARCHITECTURE APPROVED by Bob at v0.10 and unchanged line for line; Part II (§§14–19) DRAFT, the post-2026-07-30 content doctrine folded in so that this document is the single authoritative content design — awaiting Bob's review. The v0.11 changelog entry stands at the head of Part II, and the file keeps its `v0_10` name so that every `framework:LINE` citation in the code and the record stays exact.**
 
 Status: this is the framework document Bob called for after observing that the

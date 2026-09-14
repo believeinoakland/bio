@@ -1,5 +1,35 @@
 # BIO Declared Bias, v0.1 DRAFT
 
+**Status** · The doctrine of bias as a declared, justified, first-class construct: three statement kinds, bundles and adoption, the subject registry and the masking safeguards, bias debt versus HUNCH DEBT, the authored acknowledgement at export, differential traversal and the cross-group rerun. Titled "v0.1 DRAFT, drafted July 27, 2026, from Bob's proposal"; its header's "nothing here is ratified doctrine, no check exists, no code implements it" is now false — it carries three RULED markers (DEC-6 and DEC-15 of 2026-08-01, DEC-46 of 2026-08-04, built by REC-47), one AMENDED (DEC-20) and one STRUCK sentence (D-188), and the plane carries `object_type: bias`, `op=biasmanifest` and the acknowledgement. Partially complete: a v0.1 body with dated rulings layered in place and a header never re-dated. Read the "READ THIS FIRST" banner in the hunch section before anything else — bias debt and HUNCH DEBT mean opposite things for publication and the body once said otherwise. as of 2026-09-14.
+
+**Place in the system** · Owns construct 7 of `BIO_System_Design.md` §3 (declared bias) and the subject-registry requirement, which D-83 makes the same construct as the Content Framework's entity axis. `BIO_Content_Framework_v0_10.md` §13 defers to it; `BIO_Interaction_Constructs_v0_1.md` consumes it for the TASK clock; `BIO_Case_Making_v0_1.md` for hunch debt on plan premises.
+
+**Incomplete sections** ·
+- §header — "no check exists, no code implements it" is stale; the bias type, the manifest op and the acknowledgement exist.
+- §Statement anatomy — the subject lists are superseded; both defer to the registry vocabulary (RULED 2026-08-01).
+- §Bias bundles and adoption — "The manifest waits on `object_type: bias` (D-84)"; the plane now carries both while the debt row still reads open — one record is stale.
+- §Integration with the epistemics ladder — the mechanical binding is a stated prerequisite; no ruling, no op.
+- §Bias debt, and HUNCH DEBT — says `op=publishpreflight` "exists"; it is deferred with REC-15 behind DEC-33; the sequencing paragraph predates PL-12.
+- §Differential traversal and the cross-group rerun and §Sequencing — regrade and rerun are prose only; "Not a build order"; no op exists.
+
+**Contents**
+- [Why this exists](#why-this-exists)
+- [The construct](#the-construct)
+  - [Statement kinds, a closed set of three](#statement-kinds-a-closed-set-of-three)
+  - [The malformedness rule (the discipline that keeps this honest)](#the-malformedness-rule-the-discipline-that-keeps-this-honest)
+  - [Statement anatomy](#statement-anatomy)
+- [Bias bundles and adoption](#bias-bundles-and-adoption)
+  - [RULED 2026-08-01: the subject vocabulary is the registry's, and the malformedness rule is the constraint](#ruled-2026-08-01-the-subject-vocabulary-is-the-registrys-and-the-malformedness-rule-is-the-constraint)
+- [Integration with the epistemics ladder](#integration-with-the-epistemics-ladder)
+- [Bias debt, and HUNCH DEBT](#bias-debt-and-hunch-debt)
+  - [RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT](#ruled-2026-08-01-a-hunch-is-temporary-declared-bias-and-it-is-hunch-debt)
+- [The bias acknowledgement, authored at export](#the-bias-acknowledgement-authored-at-export)
+- [Differential traversal and the cross-group rerun](#differential-traversal-and-the-cross-group-rerun)
+- [The two-audience choice, made knowingly](#the-two-audience-choice-made-knowingly)
+- [Sequencing](#sequencing)
+
+---
+
 Drafted July 27, 2026, from Bob's proposal in the 2026-07-27 trust session and
 the construct discipline agreed there. DRAFT means under discussion: nothing
 here is ratified doctrine, no check exists, no code implements it. It is

@@ -1,5 +1,64 @@
 # Case-making: the design pass
 
+**Status** · The record of the case-making design pass: the frame in Bob's words, the observations, the collapse of focus/finding/case into one recursive INQUIRY, naming and division, what a CLAIM is, the action plan, and the R1–R4 resolutions the adversarial pass forced. "Opened 2026-08-01 (session BOB) as the D-127 design pass Bob directed … Nothing here is settled unless it says so." Its 2026-08-10 status correction rules the file non-authoritative: the collapse HAS SHIPPED, and "what is authoritative is no longer this file. It is the plane, and the rulings the pass produced — DEC-15 through DEC-32 and the R1–R4 resolutions." Superseded as design authority (by the plane, `docs/development/DECISIONS.md`, and DEC-72 for the case section); complete as the reasoning record. Read it for WHY; several body sentences are now false as written (below). as of 2026-09-14.
+
+**Place in the system** · The reasoning behind construct 8 of `BIO_System_Design.md` §3 (intent and inquiry): "CASE-MAKING is undesigned, and it is what the whole system is for" (D-127). Its rulings feed M9 and M10; `BIO_Interaction_Constructs_v0_1.md` takes FINDING as case-making's substrate from it; the thread itself is paused behind DEC-33 until Bob reopens it.
+
+**Incomplete sections** ·
+- §Naming: three names for three phases, and the type name question — DEC-72 rules a case is a PRODUCTION of a project, not a phase; the open → concluded → published states are superseded.
+- §Division: one inquiry becomes two or more — items 3 and 5 were written for case-as-phase; re-read under DEC-72.
+- §What a CLAIM is, and why it is a field rather than an object — "`inquiry_basis` does not exist in the schema" is false; "Awaiting Bob" and "DEC-32 remains open" are stale (decided 2026-08-04); the contradiction question is open.
+- §THE ACTION PLAN — "not yet in the review document"; S11's backward question (D-165) deferred; DEC-25 deferred with its provisional; "Ten surfaces are specified today" is dated.
+- §R1 — the residual laundering hazard is D-159, open · WATCH.
+- §Open questions this pass must answer — the heading is duplicated in one line; of eight questions only Q7 is marked answered though Q1, Q2 and Q4 were answered in the body; never reconciled.
+
+**Contents**
+- [The frame, in Bob's words](#the-frame-in-bobs-words)
+- [Observations, offered as input to the pass](#observations-offered-as-input-to-the-pass)
+  - [1. The constructs conflate the WORK with the OUTPUT, and the substrate already has the fence](#1-the-constructs-conflate-the-work-with-the-output-and-the-substrate-already-has-the-fence)
+  - [2. `action` IS the impact substrate, and it exists](#2-action-is-the-impact-substrate-and-it-exists)
+  - [3. Audience difference is probably RENDERING, and the sharp version is claim strength](#3-audience-difference-is-probably-rendering-and-the-sharp-version-is-claim-strength)
+  - [4. CORRECTED — the administrator is not an inverted threat model, and the threat is symmetric](#4-corrected-the-administrator-is-not-an-inverted-threat-model-and-the-threat-is-symmetric)
+  - [4a. "Less narrative" is a design constraint, and it cuts against how such tools usually work](#4a-less-narrative-is-a-design-constraint-and-it-cuts-against-how-such-tools-usually-work)
+  - [5. A caution about designing for four audiences at once](#5-a-caution-about-designing-for-four-audiences-at-once)
+- [Are focus / project / action / case the right constructs? — asked and answered](#are-focus-project-action-case-the-right-constructs-asked-and-answered)
+  - [The test](#the-test)
+  - [What is right, and why each earns its place](#what-is-right-and-why-each-earns-its-place)
+  - [What is missing](#what-is-missing)
+  - [On adding constructs, having just argued for fewer](#on-adding-constructs-having-just-argued-for-fewer)
+- [Is a case anything other than a published finding? — Bob, 2026-08-01](#is-a-case-anything-other-than-a-published-finding-bob-2026-08-01)
+  - [Why it cannot be a state on a finding](#why-it-cannot-be-a-state-on-a-finding)
+  - [What follows for the gate, and it parallels something already built](#what-follows-for-the-gate-and-it-parallels-something-already-built)
+  - [The remaining distinction, smaller but real](#the-remaining-distinction-smaller-but-real)
+- [THEY COLLAPSE. Focus, finding and case are one recursive object — Bob, 2026-08-01](#they-collapse-focus-finding-and-case-are-one-recursive-object-bob-2026-08-01)
+  - [Every defence reduces to a STATE or a FIELD, not a type](#every-defence-reduces-to-a-state-or-a-field-not-a-type)
+  - [What the collapse BUYS, which is not only tidiness](#what-the-collapse-buys-which-is-not-only-tidiness)
+  - [What must NOT be lost in the collapse](#what-must-not-be-lost-in-the-collapse)
+  - [What does NOT collapse](#what-does-not-collapse)
+  - [The god-object risk, WITHDRAWN as stated and narrowed to what is real](#the-god-object-risk-withdrawn-as-stated-and-narrowed-to-what-is-real)
+- [Naming: three names for three phases, and the type name question](#naming-three-names-for-three-phases-and-the-type-name-question)
+- [Division: one inquiry becomes two or more](#division-one-inquiry-becomes-two-or-more)
+- [What a CLAIM is, and why it is a field rather than an object — 2026-08-03](#what-a-claim-is-and-why-it-is-a-field-rather-than-an-object-2026-08-03)
+  - [Can one finding hold SEVERAL claims? Not today, and the alternative is already expressible](#can-one-finding-hold-several-claims-not-today-and-the-alternative-is-already-expressible)
+- [THE ACTION PLAN — mapped 2026-08-03, not yet in the review document](#the-action-plan-mapped-2026-08-03-not-yet-in-the-review-document)
+  - [1 · What a plan answers, and why it is not an inquiry](#1-what-a-plan-answers-and-why-it-is-not-an-inquiry)
+  - [2 · The object question, and the argument that settles it](#2-the-object-question-and-the-argument-that-settles-it)
+  - [3 · Structure — borrow the progression vocabulary, do NOT borrow the progression object](#3-structure-borrow-the-progression-vocabulary-do-not-borrow-the-progression-object)
+  - [4 · Variation by user type is already expressible, and lands in the right place](#4-variation-by-user-type-is-already-expressible-and-lands-in-the-right-place)
+  - [5 · Where the machine helps, within DEC-24's boundary and adding no exception to it](#5-where-the-machine-helps-within-dec-24s-boundary-and-adding-no-exception-to-it)
+  - [6 · The surface — S11, and the journey gains a stage](#6-the-surface-s11-and-the-journey-gains-a-stage)
+  - [6a · PLANNING FROM WHAT IS NOT YET ESTABLISHED — agreed, and it is not a concession](#6a-planning-from-what-is-not-yet-established-agreed-and-it-is-not-a-concession)
+  - [6b · THE TWO HARD PARTS, SCOPED DOWN — 2026-08-03](#6b-the-two-hard-parts-scoped-down-2026-08-03)
+  - [7 · ONE QUESTION THIS MAP DOES NOT ANSWER, and it is Bob's](#7-one-question-this-map-does-not-answer-and-it-is-bobs)
+- [Resolutions forced by the adversarial pass, 2026-08-01](#resolutions-forced-by-the-adversarial-pass-2026-08-01)
+  - [R1 · An UNDETERMINED leg leaves the chain UNRATED. It does not floor it and is never ignored.](#r1-an-undetermined-leg-leaves-the-chain-unrated-it-does-not-floor-it-and-is-never-ignored)
+  - [R2 · Capture grade and connection grade are TWO scales and must never be composed into one number](#r2-capture-grade-and-connection-grade-are-two-scales-and-must-never-be-composed-into-one-number)
+  - [R3 · The collapse deletes the system's only cycle guard, and must replace it explicitly](#r3-the-collapse-deletes-the-systems-only-cycle-guard-and-must-replace-it-explicitly)
+  - [R4 · Division must cost at least what severance costs](#r4-division-must-cost-at-least-what-severance-costs)
+- [Open questions this pass must answer## Open questions this pass must answer](#open-questions-this-pass-must-answer-open-questions-this-pass-must-answer)
+
+---
+
 **A RECORD OF THE PASS.** Opened 2026-08-01 (session BOB) as the D-127 design pass Bob
 directed: his framing as he gives it, and the observations and questions it raised.
 Nothing here is settled unless it says so.
@@ -427,8 +486,6 @@ risk of any state machine, not of this one.
 > same object in a later phase does not. `docs/archive/CASE-AS-PRODUCTION.md` is the
 > design; DEC-72 is the ruling.
 
-
-
 **RULED by Bob, 2026-08-01: `inquiry` early (NOT `focus`), `finding` once it concludes,
 `case` once published.** Same object, different phases, different names.
 
@@ -595,7 +652,6 @@ the design: COUNT THE FALSIFIERS. One proposition, one falsifier, several indepe
 → plurality inside one finding (DEC-32's shape, whatever the surface calls the parts).
 Different propositions → different falsifiers → separate inquiries, composed by recursion,
 rendered together. DEC-32 remains open.**
-
 
 ## THE ACTION PLAN — mapped 2026-08-03, not yet in the review document
 

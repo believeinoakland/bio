@@ -1,5 +1,30 @@
 # The evolving set of constructs: an inventory, and what needs reconciling
 
+**Status** · A dated inventory of the document-profile and content constructs — where each lives, what consumes it, eight overlaps and conflicts, the connection-table brief, and a ten-step consumer-driven plan. "Written 2026-07-30, at Bob's direction, after he asked whether the development work had become too diffused"; "It is not a design document. It is the inventory that has to exist before a design document can be written honestly." One RULED marker (Bob, 2026-07-30, Step 0's scope). Completeness: an inventory at a date — the tables are the 2026-07-30 measurement and were not re-measured as the FW steps landed; read the plan section's BUILT markers, not the tables, for what is true. as of 2026-09-14.
+
+**Place in the system** · The evidence beneath construct 5 of `BIO_System_Design.md` §3 (document profile and extraction substrate): "The FRAMEWORK it argues for is `BIO_Content_Framework_v0_10.md`", and since 2026-09-15 it names v0.11 and Part II as the content inventory beside its own. Its steps are the FW-series build ids in `docs/development/MILESTONES.md`; Step 4 is the shared subject registry with `BIO_Declared_Bias_v0_1.md`.
+
+**Incomplete sections** ·
+- §Inventory — a 2026-07-30 snapshot; verified changed since: `profileRecord` is now stamped at acquire, `TYPE_CONFIDENCE` is gone, and `docprofile/monitoring.mjs` no longer exists. Other rows not re-audited.
+- §What overlaps or conflicts — items 1–8 were Step 0's scope and are BUILT (FW-2); the section carries no resolution marks.
+- §The connection table — "deliberately NOT being coded yet"; shape sketch only; Step 5 unscheduled.
+- §The plan — steps 5, 5a, 6, 8, 8a, 8b and 9 unscheduled as of 2026-07-31; Step 7's "a Focus, which Bob has not ruled on" predates DEC-10; Step 8b's focus/problem vocabulary predates the inquiry collapse.
+
+**Contents**
+- [Purpose of this document](#purpose-of-this-document)
+- [Inventory](#inventory)
+  - [Layer 1 constructs: how a document was built](#layer-1-constructs-how-a-document-was-built)
+  - [Layer 2/3 constructs: whether and how much a document differs](#layer-23-constructs-whether-and-how-much-a-document-differs)
+  - [Layer 4/5 constructs: what a document is and what its changes mean](#layer-45-constructs-what-a-document-is-and-what-its-changes-mean)
+  - [Layer 6 constructs: meaning across content and across time](#layer-6-constructs-meaning-across-content-and-across-time)
+  - [Monitoring constructs](#monitoring-constructs)
+  - [Plane-side constructs these must eventually meet](#plane-side-constructs-these-must-eventually-meet)
+- [What overlaps or conflicts, and must be reconciled before more is built](#what-overlaps-or-conflicts-and-must-be-reconciled-before-more-is-built)
+- [The connection table](#the-connection-table)
+- [The plan: bottom up, and each step has a consumer](#the-plan-bottom-up-and-each-step-has-a-consumer)
+
+---
+
 Written 2026-07-30, at Bob's direction, after he asked whether the development work
 had become too diffused. It had. The evidence, measured rather than felt:
 

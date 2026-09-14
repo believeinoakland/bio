@@ -1,5 +1,79 @@
 # Believe in Oakland
 
+**Status** · The technology decisions that answer the functional architecture's open questions — object model, bundle, work products, evaluation and trust, sessions and AI, information-layer decisions, UX, stack, deployment and integrity models. Self-described as "Working Document — v10, July 2026"; individual decisions cite "the operator's word"; no document-level approval is stated. Its own banner rules its completeness: "THIS IS THE ARGUMENT, NOT THE SYSTEM" — written against a substrate retired in July 2026, so "where a decision below is expressed as a general rule, it is live; where it named a mechanism, the mechanism is in the archive." Partially complete: the rules transferred, the mechanisms did not, and several sections are superseded by later documents (below). Where it disagrees with `docs/BIO_DATAPLANE_STATE.md` about what exists, the dataplane state is the system. as of 2026-09-14.
+
+**Place in the system** · Owns the technology-decision level: it governs the Roadmap on technology and architecture and defers to the Design Requirements, the State Rules and the Intake Doctrine. `BIO_Membership_Architecture_v2.md` supersedes its §10 decision against per-member tokens; `docs/development/AUTHORITY-AND-TRUST.md` revises its no-transitive-trust rule. Its Mechanical Verification Law and interruption model (§10.7) are what the plane implements today (`BIO_System_Design.md` §3 rows 14–15).
+
+**Incomplete sections** ·
+- §0 — the companion-status table and the references cite State Rules v1.4, Bundle Skill v1.6, Intake Doctrine v1.0 and Roadmap v4; the corpus is at v1.5, v1.7, v1.1 and v5.
+- §2 and §7.5 — the six-object model with Focus and Project, and Focuses as a graph, are superseded by the INQUIRY collapse (DEC-72; `BIO_Case_Making_v0_1.md`); the document's own Focus note records only the rename.
+- §3 — "the composite bundle skill is the single write authority" describes a superseded implementation; the format and checks it fixed are inherited (`BIO_Bundle_Skill_Composite_Design_v1_7.md`).
+- §5 — "No transitive trust" is REVISED: accepted so long as it is disclosed in the provenance chain (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30); not annotated here.
+- §6 — sessions and execution modes are priced against a June 2026 billing change and no ruling or dataplane entry carries the Session abstraction.
+- §7.7 — attestation in production is described "from the runtime that first ran this"; the M3' asymmetry is stated as future.
+- §8 — the UX architecture describes the retired local-first client; §8.4 says the Phase 1 client has been replaced by `civicos-ui` and the surfaces are built as constructs; not re-decided here.
+- §9 — the technology stack (static PWA, IndexedDB, "Backend: None") is the retired substrate; the built plane is a Worker and a Durable Object.
+- §10.1, §10.4, §10.5, §10.6 — continuity without a server, the per-member-token decision (superseded by Membership v2), the secret-management tiers, and a `VERSIONS.json` that does not exist all name retired mechanisms.
+- §10.7 — the interruption model's RULE survives and is the plane's; its mechanisms (the promotion queue, the 5-minute trigger, doorbells) are retired.
+- §11 — the prototype sequence describes the retired Phase 1 build.
+- §12 — all six specialist sub-questions remain open as stated; "permitted use" still gates headless dispatch.
+
+**Contents**
+- [Technical Architecture Decisions](#technical-architecture-decisions)
+- [0. Purpose, status, and how to read this](#0-purpose-status-and-how-to-read-this)
+- [1. Governing constraints and design philosophy](#1-governing-constraints-and-design-philosophy)
+- [2. The object model](#2-the-object-model)
+- [3. The bundle](#3-the-bundle)
+  - [The composite bundle skill is the single write authority](#the-composite-bundle-skill-is-the-single-write-authority)
+- [4. Work products](#4-work-products)
+  - [Properties](#properties)
+  - [Focusing vs. distribution](#focusing-vs-distribution)
+  - [Source-grounding (not self-containment)](#source-grounding-not-self-containment)
+  - [Internal vs. external readiness](#internal-vs-external-readiness)
+  - [Flow directions](#flow-directions)
+- [5. Evaluation and trust](#5-evaluation-and-trust)
+  - [Two evaluation functions](#two-evaluation-functions)
+  - [No transitive trust](#no-transitive-trust)
+  - [Distribution risk tiering](#distribution-risk-tiering)
+- [6. Sessions and AI integration](#6-sessions-and-ai-integration)
+  - [The Session abstraction](#the-session-abstraction)
+  - [Three execution modes and their cost physics](#three-execution-modes-and-their-cost-physics)
+  - [Anchored, actionable annotations](#anchored-actionable-annotations)
+  - [Provider abstraction and onboarding](#provider-abstraction-and-onboarding)
+- [7. Information- and analysis-layer decisions](#7-information--and-analysis-layer-decisions)
+  - [7.1 Extraction output](#71-extraction-output)
+  - [7.2 Snapshots of dynamic sources](#72-snapshots-of-dynamic-sources)
+  - [7.3 Search orchestration and de-duplication](#73-search-orchestration-and-de-duplication)
+  - [7.4 Change detection](#74-change-detection)
+  - [7.5 Focuses as a graph](#75-focuses-as-a-graph)
+  - [7.6 The gathering contract (added v10)](#76-the-gathering-contract-added-v10)
+  - [7.7 Attestation in production (added v10)](#77-attestation-in-production-added-v10)
+- [8. UX architecture](#8-ux-architecture)
+  - [8.1 Surfaces and journeys](#81-surfaces-and-journeys)
+  - [8.2 Key surface notes](#82-key-surface-notes)
+  - [8.3 Configurable extension surfaces](#83-configurable-extension-surfaces)
+  - [8.4 What the first client established (added v9, rewritten 2026-08-10)](#84-what-the-first-client-established-added-v9-rewritten-2026-08-10)
+- [9. Technology stack](#9-technology-stack)
+- [10. Decentralized continuity, integrity, and resource discipline](#10-decentralized-continuity-integrity-and-resource-discipline)
+  - [10.1 Continuity without a server](#101-continuity-without-a-server)
+  - [10.2 Integrity rules](#102-integrity-rules)
+  - [10.3 Resource and token discipline](#103-resource-and-token-discipline)
+  - [10.4 Constrained endpoints (added v5)](#104-constrained-endpoints-added-v5)
+  - [10.5 Secret management (added v7)](#105-secret-management-added-v7)
+  - [10.6 Tree version coherence (added v9)](#106-tree-version-coherence-added-v9)
+  - [10.7 The interruption model (added v10)](#107-the-interruption-model-added-v10)
+  - [10.8 Daemon concurrency (added v10)](#108-daemon-concurrency-added-v10)
+  - [10.9 Index integrity: fail-closed (added v10)](#109-index-integrity-fail-closed-added-v10)
+  - [10.10 The manifest contract (added v10)](#1010-the-manifest-contract-added-v10)
+  - [10.11 Promotion gate posture (added v10)](#1011-promotion-gate-posture-added-v10)
+- [11. Recommended prototype sequence (sewer fund strawman)](#11-recommended-prototype-sequence-sewer-fund-strawman)
+- [12. Open sub-questions for specialists](#12-open-sub-questions-for-specialists)
+- [References](#references)
+  - [Declared bias (decision, July 27, 2026)](#declared-bias-decision-july-27-2026)
+  - [Focus, formerly Problem (decision, July 27, 2026)](#focus-formerly-problem-decision-july-27-2026)
+
+---
+
 > **Editorial note, July 27, 2026 (Bob's directive):** the construct formerly
 > named **Problem** is renamed **Focus** throughout, which conveys its purpose
 > non-judgmentally. Machine literals shown here use the target vocabulary
@@ -1602,7 +1676,6 @@ External sources consulted (June 2026):
 
 -   PDF data-extraction tools 2026:
     > <https://www.lido.app/blog/best-pdf-data-extraction-tools>
-
 
 ## Declared bias (decision, July 27, 2026)
 

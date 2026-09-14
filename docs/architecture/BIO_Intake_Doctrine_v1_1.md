@@ -1,3 +1,46 @@
+# BIO Intake Doctrine
+
+**Status** · How material enters the record: admission requires provenance never relevance; the intake contract; capture grades; member-original records; independent verifiability; the distribution container; standing intent (named requests and ratified sweeps); release from hold and redaction; naming and criticality; the escalation ladder; the ratification and disposition patterns; creation authority. "Working Document, v1.1, July 2026", "Ratified July 18, 2026 on the operator's word, from draft 0.7", v1.1 minted July 20 — and it carries a v1.2 revision note of July 27, so the content is at v1.2 under a v1.1 header. Partially complete by design: "Sections accrete as the work forces each decision; a section absent here is a decision not yet forced", with §10 open and a named list of sections not yet forced. The caveat: its actor model names a daemon that ran on the retired substrate and is gone; the rules stand, the actor is now the plane's scheduler. as of 2026-09-14.
+
+**Place in the system** · Owns construct 2 of `BIO_System_Design.md` §3 (intake, capture and provenance) and half of construct 10 (standing intent): "the State Rules specification governs bundle shape; this doctrine governs admission to the store." `BIO_State_Rules_Consistency_v1_5.md` realises it as the intake provenance register, I-18's ratification fence and drafted I-19; `BIO_Membership_Architecture_v2.md` §1 borrows its who-issued/how-captured split; the plane's C-18 rules and the sweep floor cite it.
+
+**Incomplete sections** ·
+- §header — says v1.1 while carrying the v1.2 revision note of July 27, 2026.
+- §1 and §5 — "draft position".
+- §1a — the incident procedure is "drafted if ever forced"; the chooses-not-to-hold case is "still deferred".
+- §2 — landing "through the pending queue" is the retired substrate.
+- §3 — the checker advisory is pending; DEC-39's attest-fence wording, which this section is said to take, is not referenced here.
+- §3c — bag ingestion "built when the first bag is produced or consumed".
+- §4 and §4a — daemon-centred; the retention posture "deferred until forced"; "today the client authenticates the group, not the person" predates Membership v2 §6.
+- §6 and §9 — the daemon rung and the endpoint version are the retired runtime.
+- §8 — the collected-to-retired edge is "deliberately left unforced".
+- §10 — "open, with decision criteria … Decided at first sweep ratification".
+- §Sections not yet forced — member intake, received work products, extraction standards, the acquisition second draft.
+
+**Contents**
+- [0. Status and ratification](#0-status-and-ratification)
+- [Revision history](#revision-history)
+- [Revision history (drafts 0.1 through 0.7)](#revision-history-drafts-01-through-07)
+- [1. What the store admits (D1, draft position)](#1-what-the-store-admits-d1-draft-position)
+- [1a. Admission requires provenance, never relevance](#1a-admission-requires-provenance-never-relevance)
+- [2. The intake contract (D2)](#2-the-intake-contract-d2)
+- [3. Capture grades (D3)](#3-capture-grades-d3)
+- [3a. Member-original records (added draft 0.3)](#3a-member-original-records-added-draft-03)
+- [3b. Independent verifiability (added draft 0.4)](#3b-independent-verifiability-added-draft-04)
+- [3c. The distribution container (added draft 0.5)](#3c-the-distribution-container-added-draft-05)
+- [4. Standing intent: named requests and ratified sweeps (D5, first half)](#4-standing-intent-named-requests-and-ratified-sweeps-d5-first-half)
+- [4a. Release from hold, and redaction (added draft 0.5)](#4a-release-from-hold-and-redaction-added-draft-05)
+- [5. Naming and criticality (D4, draft position)](#5-naming-and-criticality-d4-draft-position)
+- [6. The escalation ladder and blanket direction (added v1.1)](#6-the-escalation-ladder-and-blanket-direction-added-v11)
+- [7. The ratification pattern as practiced (added v1.1)](#7-the-ratification-pattern-as-practiced-added-v11)
+- [8. The disposition pattern (added v1.1)](#8-the-disposition-pattern-added-v11)
+- [9. Creation authority boundaries (added v1.1)](#9-creation-authority-boundaries-added-v11)
+- [10. Staging versus expunge (added v1.1; open, with decision criteria)](#10-staging-versus-expunge-added-v11-open-with-decision-criteria)
+- [Sections not yet forced](#sections-not-yet-forced)
+  - [Cross-reference: declared bias (July 27, 2026)](#cross-reference-declared-bias-july-27-2026)
+
+---
+
 Believe in Oakland
 
 **Intake Doctrine**
@@ -623,7 +666,6 @@ posture makes this concrete; drafted when the first one arrives);
 extraction and normalization standards per document type (M2', with the
 Data Extraction skill); the acquisition doctrine's second draft shaped
 by the Cityside collaboration (original M4 exit).
-
 
 ## Cross-reference: declared bias (July 27, 2026)
 
