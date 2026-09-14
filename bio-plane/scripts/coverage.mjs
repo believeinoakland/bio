@@ -736,9 +736,13 @@ const REGISTER_FLOOR = {
      once here and once in `FLEET_FLOOR`, the documented state. `FLEET_FLOOR` is
      UNMOVED and none is owed — this item adds no fleet member and no fleet suite,
      and its own suite is a PLANE suite. */
-  arms: 947,
-  classified: 176,
-  corpus: 177,
+  /* MOVED 2026-09-14 by CONDUCT #9 at D-334's integration, from the merged run's
+     print (949/947 · 177/176 · 178/177 · GREW by 2): the slack is DIST's newest
+     suite landing beside D-334's, each blind to the other — the stale-floor
+     pattern's routine instance, collapsed at the merge as always. */
+  arms: 949,
+  classified: 177,
+  corpus: 178,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

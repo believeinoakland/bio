@@ -3491,3 +3491,4 @@ concurrency: checked over the register 2026-09-14 — DIST-4's claim above is RE
     byte of this item existed — printed `arms 944/942 · classified 175/174 · corpus 176/175 ·
     GREW by 2`. This item's own share is the remaining 3/1/1, one new suite declaring three
     arms. `FLEET_FLOOR` UNMOVED and none owed. **NOT** any other part of this file.
+released: 2026-09-14 by CONDUCT #9 at integration — merged on `main` at `2f562d0` and verified on the MERGED tree after FL-10's guard fired at the merge and the bundle was rebuilt at the cause: battery 186/186 · 11,283, `coverage --strict` exit 0 read unpiped (floor 949/177/178 by print), UI harness exit 0, `mintid --audit` 0 breaks. D-334 closed with the class, not the instance.
