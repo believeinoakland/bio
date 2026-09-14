@@ -32,9 +32,18 @@
   //     fidelity OF THOSE BYTES.
   // `fleet-member.json`'s `bundle.assets` is where that list is declared for the
   // guard; these rules are how wrangler carries them.
+  // GLOBS ARE `**/` AND NOT `assets/`, CORRECTED 2026-09-13 BY THE FIRST REAL
+  // DEPLOY (DS-4). wrangler matches a module rule against the import path as
+  // resolved from `base_dir`, which DEFAULTS TO THE DIRECTORY OF `main` — here
+  // `dist/`. The bundle imports `../assets/tesseract-core.wasm`, so the pattern
+  // `assets/*.wasm` never matched it. Worse than not matching: a rule of a given
+  // type WITHOUT `fallthrough` DISABLES wrangler's built-in rule of that type, so
+  // declaring `assets/*.wasm` left wasm with NO working loader at all — strictly
+  // worse than declaring nothing. wrangler said both things itself and the deploy
+  // refused; the intent recorded above is unchanged, this is how it is spelled.
   "rules": [
-    { "type": "CompiledWasm", "globs": ["assets/*.wasm"] },
-    { "type": "Data", "globs": ["assets/*.traineddata"] }
+    { "type": "CompiledWasm", "globs": ["**/*.wasm"] },
+    { "type": "Data", "globs": ["**/*.traineddata"] }
   ],
 
   // DS-2 / D-116: ONE version across the plane and every member. This site and
