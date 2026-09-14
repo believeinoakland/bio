@@ -1,5 +1,11 @@
 // src/harness.mjs
 var LEVELS = ["meaning", "content", "document", "internet"];
+var REPORTING_LEVEL = Object.freeze({
+  meaning: "meaning",
+  content: "content",
+  document: "documents",
+  internet: "internet"
+});
 var MODES = {
   check: {
     deployed: true,
@@ -105,16 +111,63 @@ function emptyLevelCandidates(state, target) {
   for (const level of LEVELS) {
     const r = reports.find((x) => x && x.level === level);
     if (!r || r.state !== "LOOKED_ABSENT") continue;
+    const reported = REPORTING_LEVEL[level];
     out.push({
       kind: "level-empty",
       target: target ?? null,
-      level,
+      /* THE PLANE'S SPELLING, NOT THE LOG'S — see `REPORTING_LEVEL` above. */
+      level: reported,
       /* THE ADDRESS OF THE SEARCH THAT ESTABLISHES IT. The report carries where
          in the observation log it was written; a level-empty with no address is
          the one shape a later reader cannot check, and PL-3 refuses it. */
       observed_at: r.observed_at ?? null,
-      name: `level-empty:${level}`,
-      description: r.description ?? null
+      /* D-323 — THE SEPARATOR IS A DASH, AND IT WAS A COLON UNTIL 2026-09-13.
+         `VERSION_NAME_RE` is `/^[a-z0-9][a-z0-9 ._-]{0,63}$/i` and has NO COLON
+         in it, so `level-empty:<level>` — the name THIS FUNCTION mints, the
+         object §15's empty-run instrument exists to count — was refused by every
+         deployed plane, `BASIS_REFUSED` / C-25.2, `wrote: false`. Measured live
+         at 0.57.0 by VF-4 (MEASUREMENTS M-8) and re-measured here against the
+         grammar itself. So VF-1's owed control 7 could not be true of a real
+         run: the honest empty-handed run was indistinguishable from exactly the
+         silent failure the kind exists to rule out.
+         THE OTHER FIX WAS AVAILABLE AND ITS COST IS WHY IT WAS DECLINED. Widening
+         `VERSION_NAME_RE` to admit `:` would have made this name legal without
+         touching this line — every name legal today still passes, so nothing
+         breaks — but it LOOSENS A PUBLISHED GRAMMAR on the record's own
+         addresses, permanently, for one instrument's convenience, and it does it
+         in the one character this project already spends on IDENTITY
+         (`token:admin`, `class:ai`, `log:11`): a reading could then be NAMED
+         like a principal. It is also an I3 wire change owing an IC. Against
+         that, the separator costs one line here plus the suites that pinned the
+         old spelling — and NOTHING ELSE, because the colon form has never once
+         been written: no record anywhere holds it, so there is no migration and
+         no reader to break. A grammar is widened when the record needs the
+         character, never when one caller mints one the record refuses. */
+      name: `level-empty-${reported}`,
+      /* D-323's THIRD HALF — `description` IS NOT A FIELD A REPORT HAS.
+         This line read `r.description ?? null`, and `checkReport` REFUSES any
+         report carrying `description`: `REPORT_KEYS` is an EXACT key set —
+         `level, state, observed_at, summary, citations, governed, condition` —
+         and everything absent from it is refused BY NAME. So on every
+         contract-honouring report this read `undefined`, every empty-level
+         candidate carried `description: null`, and PL-3 refused all four of them
+         `SUGGEST_BOILERPLATE` / C-27.12. VF-4 recorded this as a report-shape
+         finding (*"a report carrying only summary"*); it is unconditional, and
+         driving the contract is what showed that.
+         COMPOSED RATHER THAN REFUSED, and the argument is §9's own. The kind is
+         derived by the TABLE and never by the model precisely because the one
+         case the instrument exists to catch — a run that found nothing and said
+         nothing — is the case a judgement is least likely to fire on. A harness
+         that refused loudly here would emit NOTHING whenever the model omitted a
+         prose field, which reinstates that silence one field lower down. So the
+         table composes the description too, out of what the table KNOWS: which
+         level, and where the search that establishes it is written. That is an
+         honest account of what changed and why — §6 rule 1's standard — and it
+         overclaims nothing, because every word of it is a fact the report
+         carried. The model's own `summary` is APPENDED when it has one and is
+         never substituted for the composed sentence: a model that writes "n/a"
+         must not be able to turn the instrument's own object back into filler. */
+      description: `this run searched the ${reported} level of ${String(target ?? "this question")} and found nothing supportable there; the search that establishes it is written in the run's observation log at ${String(r.observed_at ?? "(no address)")}.` + (typeof r.summary === "string" && r.summary.trim() ? ` The sub-session reported: ${r.summary.trim()}` : "")
     });
   }
   return out;

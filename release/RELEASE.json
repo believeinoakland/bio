@@ -1,5 +1,5 @@
 {
-  "version": "0.57.0",
+  "version": "0.58.0",
   "sha256": "72fce1e9156163ad5a04cff68d0dae405e051548fc85fef4d6228ea7fcd28f4c",
   "bytes": 2715828,
   "asset": "bio-plane.bundled.mjs",
@@ -9,8 +9,14 @@
     {
       "member": "agent-worker",
       "asset": "agent-worker.bundled.mjs",
-      "sha256": "5464ec8a143b6dc2da8f735290e99e227596302fcbcca3ecab2c991c08efa145",
-      "bytes": 53258,
+      "sha256": "bce5043b433716c9895853b2ee74326d0113cbbd69342bacb4a1e3840aa0e44a",
+      "bytes": 57379,
+      "compat": {
+        "date": "2026-07-01",
+        "flags": [
+          "nodejs_compat"
+        ]
+      },
       "services": [
         {
           "binding": "PLANE",
@@ -24,15 +30,21 @@
       "asset": "ocr-worker.bundled.mjs",
       "sha256": "c56ebbf216acae46b4a2ab0993f3885f8fb2ddcc933c7ca5eb3919845c3ca04e",
       "bytes": 166471,
+      "compat": {
+        "date": "2026-07-01",
+        "flags": []
+      },
       "services": [],
       "parts": [
         {
           "path": "assets/tesseract-core.wasm",
+          "type": "CompiledWasm",
           "sha256": "3822dc6ee83d507f2bd2f83b97a3dd5dabf3ea71a9836d951602c9054615137e",
           "bytes": 1839004
         },
         {
           "path": "assets/eng.traineddata",
+          "type": "Data",
           "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2",
           "bytes": 4113088
         }
@@ -43,9 +55,15 @@
       "asset": "pdf-worker.bundled.mjs",
       "sha256": "642a9b78fc745ed6390ccc04e773ef26b733d7c840fa7b791a3a00f5beca862d",
       "bytes": 2427807,
+      "compat": {
+        "date": "2026-07-01",
+        "flags": [
+          "nodejs_compat"
+        ]
+      },
       "services": [],
       "parts": []
     }
   ],
-  "fleetSig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgZ/MROikF5l7mZsPu6RjBplzPIE\n+MnhLexf4vLes3dWUAAAARYmlvLXJlbGVhc2UtZmxlZXQAAAAAAAAABnNoYTUxMgAAAFMA\nAAALc3NoLWVkMjU1MTkAAABA8waREWOh6v7Eic1hIl22kVf5529fSn4lhrn73enR6jdOVx\nxh8GrCulrtwLEkvCvOzgAZJGM3ZSEW9Kgw2jNeCQ==\n-----END SSH SIGNATURE-----\n"
+  "fleetSig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgZ/MROikF5l7mZsPu6RjBplzPIE\n+MnhLexf4vLes3dWUAAAARYmlvLXJlbGVhc2UtZmxlZXQAAAAAAAAABnNoYTUxMgAAAFMA\nAAALc3NoLWVkMjU1MTkAAABAoca+HCgDNBFauA1H5RUgR3myvaQwFFGPPIDzirI3onTu0I\n0VbI5X9ZuSQ7wBT0xzMdgK3Mg++XtzDGmrzlTaAQ==\n-----END SSH SIGNATURE-----\n"
 }
