@@ -2998,3 +2998,11 @@ released. The outgoing DIST session holds no claim here and its queued stand-dow
 deploying; the one collision that matters (two deploys, one account) is guarded by the
 process check re-run at the moment of each invocation, and both sessions' bytes are in any
 case the SAME signed release.
+released: 2026-09-13 by DIST #2 — no new deploy was needed: the outgoing DIST completed the
+deploy, serve-wait and fleet rollout before standing down (`14c5470`, measured there and
+INDEPENDENTLY re-verified here from the account: all four `/version` answer 0.57.0; plane
+bytes read back byte-identical to the signed manifest, 2,715,828 B; ocr-worker's two upload
+parts byte-identical; member main modules are wrangler builds from source per their own
+ruling). The account was never touched twice — the process check read quiet at every point
+and the only account acts this session performed were READS. DS-4 row landed in QUEUE.md;
+DEC-43 read recorded at `39730b1`. Gate GREEN class DOCS; VF-4 handed to the leading BOB.

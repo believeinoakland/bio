@@ -923,7 +923,7 @@ is the defect wearing a disguise.
 | **DIST** | DS-1 | D-115 — the installer installs the FLEET | FL-2 (landed) |
 | **DIST** | DS-2 | D-116 — version authority spans the fleet | DS-1 |
 | **DIST** | DS-3 | the account cascade config (instance-level token; minting is a MEMBER act) | DS-1 |
-| **DIST** | DS-4 | the gated deploy, then hand to VF-4 | DS-1, DS-2, FL-2 |
+| ~~DIST~~ **DONE** | DS-4 | the gated deploy, then hand to VF-4 — 0.57.0 cut+signed at `ba05e9c`, deployed and SERVING account-wide (plane + agent-worker + ocr-worker with both upload parts + pdf-worker, all `/version` 0.57.0). DEC-43 re-read: biosmoke7 monitors on the ADMIN_TOKEN fallback, so this WAS a fallback-instance deployment; the fallback stays per the ruling, read recorded in the release-note commit `39730b1`. Deploy by the outgoing DIST (stand-down `14c5470`); independently re-verified by DIST #2 from the account: plane bytes byte-identical to the signed manifest (2,715,828 B), ocr parts byte-identical, member main modules wrangler-rebuilt from source per agent-worker's own THE-SOURCE-DEPLOYS ruling | **done 2026-09-13 — VF-4 unblocked** |
 | FLEET | FL-6 | the Claude-account cascade at runtime | **DS-3** |
 | VERIFY | VF-4 | live verification in scratch — a full CHECK run against a concluded inquiry | **SK-4 and DS-4** |
 
