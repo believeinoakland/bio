@@ -6081,7 +6081,7 @@ and C-25.10 keep the bundle-id target grammar and ADD the extent grammar (one ch
 per arm, called from the op and the store); a content id whose row does not exist is refused.
 (2) `op=promote`: mints or finds the content row per leg (the writer of IC-83). (3) `op=earnedbasis`
 answers the per-extent ceiling and states UNDETERMINED for the connection axis of a portion leg.
-(4) NEW read `op=content` (fixed-key, by `content_id`; member and read classes): the row, its
+(4) a NEW fixed-key read op named `content` (not yet in the dispatch table — it enters `PLANNED_OPS` with the item that builds it;, by `content_id`; member and read classes): the row, its
 `ref`, its chain and cap, its `stale` flag, and the attestations covering it — no predicate, no
 paging (D-222's fixed-key rule; the query arm is stage C, later). (5) `op=attesttext` unchanged;
 its read-back already emits the `pdf-page` form.
