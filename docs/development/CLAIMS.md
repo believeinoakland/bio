@@ -3328,3 +3328,29 @@ deploy.mjs manages and DIST-2's installer path can therefore never heal), and th
 after the reversible smoke-authority remediation (DAEMON_TOKEN minted and bound via the API,
 value held nowhere): DEC-43's measured count is ZERO, live, from the instance's own
 liveToken-checked answer. The DIST-4 QUEUE row flip is CONDUCT's at integration.
+
+## CLAIM 2026-09-14 DIST (DIST-3 — the installer REQUIRES Workers Paid, established by PROVOKING the platform, and REFUSES rather than half-installing; DEC-42's item 1)
+session: DIST #2 (worktree `.claude/worktrees/dist-ds2`, branch `dist-ds2`)
+opened: 2026-09-14
+paths:
+  - `newgroup/src/index.mjs` — `establishPlan()`: PUT a throwaway probe script
+    (`bio-plan-probe`) with `limits.cpu_ms` set and READ THE ANSWER — code 100328 is Free,
+    success is Paid (the exact provocation the BOB session measured 2026-07-31 and
+    `free-tier-fleet-probe.mjs` reproduces; a plan FIELD is a claim, the refusal is a
+    measurement) — then delete the probe. A new `plan` step in `runInstall` between the
+    name-freshness check and bucket creation, so the refusal lands BEFORE anything of the
+    instance exists. Three outcomes, all stated: paid → proceed; free → the named refusal
+    (what is missing, what it costs — $0+card → $5+card, R2 already bills past free — and
+    what to do); unverifiable → an honest refusal that names the verification failure and
+    that nothing was created. The UPDATE path gets NO probe: an update must never grow a new
+    refusal against an already-installed instance (the R2 arm's own doctrine).
+  - `newgroup/test/wizard.test.mjs` — probe routes added to every install-path block; a new
+    Free-plan block (refusal by name before any creation, with bucket/upload routes present
+    so the NC arm can half-install and be caught); order + provocation + deletion assertions
+    on the paid path; a no-probe-on-update assertion; header NC lines updated with run
+    results.
+  - `docs/development/CLAIMS.md` — this block.
+  **NOT** `bio-plane/**`, **NOT** `release/**`, **NOT** any version bump, **NOT**
+  `docs/development/QUEUE.md`. NO DEPLOY; no real install/update run (gated to Bob).
+concurrency: checked over the register 2026-09-14 — the DIST-2 and DIST-4 claims above are
+released; no other live claim names `newgroup/**`.
