@@ -1349,8 +1349,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CAPTURE.md:239`
 - never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
   `docs/development/kickoffs/CAPTURE.md:281`
-- checked" — when you close it, those assertions are CORRECTED, never exempted. ### CASE-6 — the closing item, and its `accepts-when` is a CONDITION not a memory It carries the arc's definition of done: **in the SAME TURN it lands**, (1)  
-  `docs/development/kickoffs/CONDUCT-NEXT.md:60`
+- I chained `plancheck && commit && push` and pushed past a STALE DECIDED once (3289753) and past a red I could not read once** — the chain-that-cannot-check, the failure `CONDUCT.md` already names twice.  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:96`
 - **2026-07-31** — CORRECTED 2026-07-31 by session BOB: item (3) of the plan below is SUPERSEDED by the function-specific Worker topology decision.  
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  

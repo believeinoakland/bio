@@ -847,7 +847,7 @@ accepts-when: (on the deploy landing) both first activations measured and record
 NEGATIVE CONTROL: (on running) the watch itself must be falsifiable — assert the tick DID run (a cadence that silently never fires must read as a failure of the arming, not as a quiet pass), and the archive fallback driven at least once in scratch.
 added: 2026-09-14 · CONDUCT (two advance tellings converted to one item at IC-82's integration; the tellings stay in CLAIMS.md as the record of who told whom)
 
-### CPDF-17 · running — spawned 2026-09-15 by CONDUCT #9, Opus 5, worktree-isolated, background lane (holds no slot). Falsify rather than believe: a live worker holds an `agent-*` worktree with comment-only commits across the three files; if none does, this row reads `queued`. **The 2026-09-15 inbox's acts 1, 2 and 4 as ONE small item: three files, three owners, all prose-level, no behaviour — an owed act is a row, and 'at next touch' is a note wearing a schedule.**
+### CPDF-17 · queued — **its first spawn was STOPPED four minutes in at CONDUCT #9's replacement (2026-09-15, Bob's direction, context budget): no commit had been made and its claim never reached main, so nothing is inherited and no release is owed — CONDUCT #10 respawns it fresh. The 2026-09-15 inbox's acts 1, 2 and 4 as ONE small item: three files, three owners, all prose-level, no behaviour — an owed act is a row, and 'at next touch' is a note wearing a schedule.**
 milestone: M2 — stale self-description, D-106's class
 interface: none — comments and a registry's prose only; no shape, no op, no behaviour moves
 depends-on: none (CPDF-10 `698a07b` and release 0.58.0 `e67e275` are the facts the prose lags; Part II of `docs/architecture/BIO_Content_Framework_v0_10.md` §16.4 carries the evidence)
