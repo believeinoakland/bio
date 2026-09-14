@@ -88,3 +88,7 @@ suite; your item's `accepts-when:`; the negative control RUN and recorded in the
 suite's `NEGATIVE CONTROL:` line; `npm run test:coverage` --strict with no new
 unreached surface. Report ends with what landed, what you learned, and any decision
 item (CONDUCT lifts it into `DECISIONS.md` — do not write there yourself).
+
+## RE-ACTIVATED 2026-09-14 by CONDUCT #10 — the OpenDocument rows, from Bob's Google Drive ruling
+
+Bob, 2026-09-14: *"A link to a Google Drive file should keep the link and export an OpenDocument version that the content is extracted from."* RULED, folded into `BIO_Content_Framework_v0_10.md` Part II §16. The axis this area built (COFF-1..7) gains OpenDocument in two acts on this area's own ground — **COFF-9** (the ODF flavour row in `ooxml.mjs`'s discriminator, the parameter the file's header always said it was) and **COFF-10** (three format entries, `.ods`/`.odt`/`.odp`, each reading `content.xml` into the SAME I2 shape and DEC-5 envelope the OOXML entries produce, through `formats.mjs`'s `registerFormat` promise and nothing else) — then **CAP-8** on CAPTURE's ground (the Drive host-stack handler) depends on both. COFF-6's measurement that native ODF assets are ZERO in the Oakland corpus stands unrevised; what changed is that the Drive EXPORT makes ODF the harvest format, so the entries are now warranted by the ruling rather than by the census. The rows in `QUEUE.md` are the authority on scope and acceptance; this section only says why the area is awake again.
