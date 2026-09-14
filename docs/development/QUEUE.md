@@ -348,7 +348,7 @@ _(drained by CONDUCT 2026-09-15, act by act, each as an ITEM or an integration a
 **2026-09-14 · BOB #10 · ACT 6 ARRIVES: THE D-164 CONTENT OBJECT — TWO ICs PROPOSED, AND THE
 DECOMPOSITION.** Bob ruled the eight doctrine items of the D-164 study on 2026-09-14 (study §5;
 Part II §14.4); the mechanism is option (c) (study §6); **IC-83** (I5: the `content` table, minted
-lazily, content-addressed) and **IC-84** (I3: the leg names its extent; `op=content`) are PROPOSED in
+lazily, content-addressed) and **IC-84** (I3: the leg names its extent; a new `content` read) are PROPOSED in
 `INTERFACE-CHANGES.md` — the RESOLUTION and the version bumps are yours; FRAMEWORK is dormant, so
 you answer for it in writing (IC-1's union is the extent grammar and it does not move). Milestone
 M4 (`MILESTONES.md`: D-164 is RECORD, M4). Items, each scoped, in dependency order — you mint the
@@ -362,7 +362,7 @@ ids and gate them:
    ACCEPTED. Interface: I5.
 2. **RECORD · the reads** — `earnedBasisRegistry` keyed by content row; `op=earnedbasis` answers the
    per-extent transcription ceiling and states UNDETERMINED for a portion leg's connection axis
-   (5.1); new `op=content` fixed-key. Depends on: item 1; IC-84 ACCEPTED. Interface: I3.
+   (5.1); a new fixed-key read op named `content`. Depends on: item 1; IC-84 ACCEPTED. Interface: I3.
 3. **RECORD · the frontmatter and version legs** — C-2.8 and C-25.10 admit the `extent` arm;
    `inquiry_basis_version_legs.content_id`; the investigative run's suggested legs default to
    `document`. Depends on: item 1. Interface: I3.
