@@ -210,6 +210,16 @@ entity) with the strongest grade, dropping WHICH reference variant established i
 by a join, not held on the row. The mechanism: the connection carries the determining reference
 pair (recoverable today), gains position when readings do (I2), and a member may narrow either
 end.
+**RULED 2026-09-14 by Bob, second pass — specificity is WORKED FOR, not merely permitted:** when a
+reference is at document grain, "the assistant, human or some other means should try to find those
+specific reference passages to improve the specificity of reference"; and when the second document
+mentions the ordinance more than once, the assistant or member refers "only to those passages that
+are on-point with regard to the point being made at the referring point in the first document."
+Consequences: the connection's reference pair is the ON-POINT pair, chosen, not merely the
+strongest-graded mention; a document-grain edge is a standing invitation to refine, and the
+assistant's FIND/EXTRACT may PROPOSE candidate passages for it (5.7), the member choosing which are
+on-point (NARROW, REC-86); relevance is a judgment — a machine's proposal of it is labelled machine
+work, a member's choice is the authored act.
 
 ### 5.5 What is the CLAIM object, and what is its standard of proof?
 **Question.** Part II §18 piece 6. The framework has said since v0.1 that nothing models a
@@ -232,7 +242,7 @@ Bob's own ruling of 2026-09-13; `AUDIENCES.md` §10's output acts). One correcti
 is set by the project and the production's audience, not by an individual member's role. So NO
 separate claim object is needed for the standard of proof to vary; the provisional stands, and the
 research owed is the catalogue of standards by audience and output act — Program B's publication
-surfaces.
+surfaces. **Bob, 2026-09-14: "Okay" — the correction accepted.**
 
 ### 5.6 D-184: may a firsthand observation be CONTENT with no capture behind it?
 **Question.** Bob's reporter who attended the meeting. Is their observation content (an extent
@@ -253,6 +263,15 @@ graded as testimony (D) on the member's trust; and a PUBLICATION rule follows th
 membership — a case whose finding rests materially on a member's observation names that member
 by their actual name, with a protected-whistleblower exception — which interacts with cover and
 handle (Membership v2 §3) and the publication fence, and is designed in Program B with D-194.
+**AMENDED 2026-09-14 by Bob, the same day:** "A source may have agreed to speak off the record to
+preserve their anonymity, which is also valid. A member may also express an opinion, which could be
+attributed in a published case to the group, the project, to the member's cover, or to the member by
+name. The choice of that attribution should be made by the attesting member." So the naming rule
+above is SUPERSEDED: attribution of a member's material contribution — observation or opinion — in a
+published case is the ATTESTING MEMBER's choice among four levels (the group · the project · the
+member's cover · the member by name), and a source's anonymity is valid. The record carries the
+chosen level with the act; the interaction with cover and handle resolves in favour of member
+choice, with the cover as one of the four.
 
 ### 5.7 DEC-24's boundary: may an AI extractor WRITE content rows?
 **Question.** A content row is an address, not a connection, so arguably not a hunch. An AI

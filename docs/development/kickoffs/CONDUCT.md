@@ -485,3 +485,7 @@ integrated is a zombie — stop it, its worktree holds nothing); re-list and put
 zero into the handoff. A stand-down that leaves a live task is the map diverging from the
 world — the failure every instrument here exists to refuse — and it was committed on
 2026-09-10 by a session whose handoff said "nothing is owed to a worker" while one waited.
+
+## AN ISOLATED WORKER BRANCHES FROM `origin/main`, NOT FROM THE MAIN CHECKOUT'S HEAD. PUSH BEFORE YOU SPAWN A DEPENDENT ITEM.
+
+**Measured twice on 2026-09-14 by CONDUCT #10.** The spawn surface creates the worker's worktree from the REMOTE-tracking main, so a merge that sits only in the main checkout is invisible to a worker spawned a minute later. REC-81 started on a tree without CPDF-17's merge (it found the truth when `git diff origin/main` disagreed with `git diff HEAD`, restored six files and re-measured); COFF-10 started on a tree without COFF-9's merge and STOPPED at its first premise check, reading the brief's landing record as fabricated — correctly, from where it stood. **"Spawn first, then integrate" is right for INDEPENDENT items; for an item that depends on the one you are integrating, the order is merge → gate → PUSH → spawn**, and the brief tells the worker to `git fetch` and verify the dependency's symbol is in its tree before claiming. A worker that finds its dependency absent stops and says so — that is the LIVENESS rule 2 shape, and it is the worker being right, not the brief.

@@ -11324,22 +11324,49 @@ function partContentType(name, types2) {
 }
 var OOXML_FLAVOURS = [
   {
+    partMap: "opc",
     flavour: "docx",
     mainContentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
     conventionalMainPart: "word/document.xml"
   },
   {
+    partMap: "opc",
     flavour: "xlsx",
     mainContentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
     conventionalMainPart: "xl/workbook.xml"
   },
   {
+    partMap: "opc",
     flavour: "pptx",
     mainContentType: "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml",
     conventionalMainPart: "ppt/presentation.xml"
   }
 ];
-async function discriminate(bytes, contentType = null, flavours = OOXML_FLAVOURS) {
+var ODF_MIMETYPE_PART = "mimetype";
+var ODF_MANIFEST_PART = "META-INF/manifest.xml";
+var ODF_MIMETYPE_MAX_BYTES = 128;
+var ODF_FLAVOURS = [
+  {
+    partMap: "odf",
+    flavour: "odt",
+    mimetype: "application/vnd.oasis.opendocument.text",
+    conventionalMainPart: "content.xml"
+  },
+  {
+    partMap: "odf",
+    flavour: "ods",
+    mimetype: "application/vnd.oasis.opendocument.spreadsheet",
+    conventionalMainPart: "content.xml"
+  },
+  {
+    partMap: "odf",
+    flavour: "odp",
+    mimetype: "application/vnd.oasis.opendocument.presentation",
+    conventionalMainPart: "content.xml"
+  }
+];
+var CONTAINER_FLAVOURS = [...OOXML_FLAVOURS, ...ODF_FLAVOURS];
+async function discriminate(bytes, contentType = null, flavours = CONTAINER_FLAVOURS) {
   const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   const signals = [];
   if (contentType) signals.push(`declared-content-type:${contentType} (not used for the determination)`);
@@ -11354,8 +11381,13 @@ async function discriminate(bytes, contentType = null, flavours = OOXML_FLAVOURS
     return { ok: false, why: container.why, signals };
   }
   signals.push(`container:zip entries=${container.count}`);
+  const opcRows = [];
+  const odfRows = [];
+  for (const f2 of flavours) ((f2.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f2);
   const ctEntry = container.byName.get(CONTENT_TYPES_PART);
   if (!ctEntry) {
+    const odf = odfRows.length ? await discriminateOdf(b, container, odfRows, signals) : null;
+    if (odf) return odf;
     signals.push(`part:${CONTENT_TYPES_PART} absent \u2192 plain ZIP`);
     return { ok: true, format: "zip", signals };
   }
@@ -11370,7 +11402,7 @@ async function discriminate(bytes, contentType = null, flavours = OOXML_FLAVOURS
     return { ok: true, format: "undetermined", why: "content_types_unparseable", signals };
   }
   signals.push(`part:${CONTENT_TYPES_PART} parsed (${types2.defaults.size} defaults, ${types2.overrides.size} overrides)`);
-  for (const f2 of flavours) {
+  for (const f2 of opcRows) {
     let declared = null;
     for (const [part, ct] of types2.overrides) {
       if (ct === f2.mainContentType) {
@@ -11393,6 +11425,49 @@ async function discriminate(bytes, contentType = null, flavours = OOXML_FLAVOURS
   }
   signals.push("opc:no known main content type");
   return { ok: true, format: "undetermined", why: "opc_main_part_unrecognized", signals };
+}
+async function discriminateOdf(bytes, container, rows, signals) {
+  const mimeEntry = container.byName.get(ODF_MIMETYPE_PART) ?? container.entries.find((e) => normalizePartName(e.name) === ODF_MIMETYPE_PART);
+  if (!mimeEntry) return null;
+  let earliest = Infinity;
+  for (const e of container.entries) if (e.localHeaderOffset < earliest) earliest = e.localHeaderOffset;
+  if (container.entries[0] !== mimeEntry || mimeEntry.localHeaderOffset !== earliest) {
+    signals.push(`odf:${ODF_MIMETYPE_PART} present but NOT the first archive member (central-directory index ${container.entries.indexOf(mimeEntry)}, local-header offset ${mimeEntry.localHeaderOffset}, earliest ${earliest})`);
+    return { ok: true, format: "undetermined", why: "odf_mimetype_not_first", signals };
+  }
+  if (mimeEntry.method !== 0) {
+    signals.push(`odf:${ODF_MIMETYPE_PART} is first but COMPRESSED (method ${mimeEntry.method}, ODF requires stored)`);
+    return { ok: true, format: "undetermined", why: "odf_mimetype_not_stored", signals };
+  }
+  if (mimeEntry.uncompressedSize > ODF_MIMETYPE_MAX_BYTES) {
+    signals.push(`odf:${ODF_MIMETYPE_PART} declares ${mimeEntry.uncompressedSize} bytes, over ODF_MIMETYPE_MAX_BYTES=${ODF_MIMETYPE_MAX_BYTES}`);
+    return { ok: true, format: "undetermined", why: "odf_mimetype_oversized", signals };
+  }
+  const read = await readPart(bytes, container, ODF_MIMETYPE_PART);
+  if (!read.ok) {
+    signals.push(`odf:${ODF_MIMETYPE_PART} unreadable (${read.why})`);
+    return { ok: true, format: "undetermined", why: `odf_mimetype_unreadable:${read.why}`, signals };
+  }
+  const declared = UTF8.decode(read.bytes);
+  const row = rows.find((f2) => f2.mimetype === declared);
+  if (!row) {
+    signals.push(`odf:${ODF_MIMETYPE_PART}=${JSON.stringify(declared)} is no known OpenDocument media type`);
+    return { ok: true, format: "undetermined", why: "odf_mimetype_unrecognized", signals };
+  }
+  signals.push(`odf:${ODF_MIMETYPE_PART} ${declared} (first member, stored)`);
+  const manifestPresent = container.byName.has(ODF_MANIFEST_PART) || container.entries.some((e) => normalizePartName(e.name) === ODF_MANIFEST_PART);
+  if (!manifestPresent) {
+    signals.push(`odf:${ODF_MANIFEST_PART} ABSENT`);
+    return { ok: true, format: "undetermined", why: "odf_manifest_absent", flavourDeclared: row.flavour, signals };
+  }
+  const main = normalizePartName(row.conventionalMainPart);
+  const mainPresent = container.byName.has(main) || container.entries.some((e) => normalizePartName(e.name) === main);
+  if (!mainPresent) {
+    signals.push(`odf:mimetype declares ${row.flavour}, but ${main} is ABSENT`);
+    return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: row.flavour, signals };
+  }
+  signals.push(`part:${ODF_MANIFEST_PART} present`, `part:${main} present`);
+  return { ok: true, format: row.flavour, mainPart: main, confidence: "high", signals };
 }
 function relsPartFor(partName = null) {
   if (partName == null || partName === "") return "_rels/.rels";

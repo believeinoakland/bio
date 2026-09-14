@@ -761,7 +761,8 @@ const REGISTER_FLOOR = {
   /* MOVED 2026-09-14 by CONDUCT #10 at the D-329+D-331+D-333 MERGE (957 -> 958): the merged run's
      own print read `arms 958/957` — the +1 is BOB's corpuscheck.test.mjs landing beside the item,
      invisible to the branch that set 957. One key set, read from the print after the commit (D-238). */
-  arms: 958,
+  /* MOVED 2026-09-14 by CONDUCT #10 at COFF-9's merge (958 -> 959): the merged run's own print read `arms 959/958`; the +1 is COFF-9's ooxml suite arm. One key set, read from the print after the commit (D-238). */
+  arms: 959,
   classified: 178,
   corpus: 179,
 };
