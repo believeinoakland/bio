@@ -3220,3 +3220,28 @@ concurrency: checked over the register 2026-09-13 — M0-25's block above is REL
     the last NC arm. Attribution READS its subjects. No plane defect was found; had one been, the
     row would have been filed and the fix left as its own item.
 released: 2026-09-13 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 183/183 · 11,189 (+1 predicted and measured), `coverage --strict` exit 0 read unpiped (no floor owed), UI harness exit 0, `mintid --audit` 0 breaks. D-330 closed; D-333 stands; D-332 recorded burned.
+
+## CLAIM 2026-09-14 DIST (DIST-2 — the installer binds DAEMON_TOKEN in BOTH upload paths; REC-33's follow-on, and the first gate on DEC-43's fallback retirement)
+session: DIST #2 (worktree `.claude/worktrees/dist-ds2`, branch `dist-ds2`)
+opened: 2026-09-14
+paths:
+  - `newgroup/src/index.mjs` — the secrets object gains `daemon`; `uploadInstall` binds
+    `DAEMON_TOKEN` beside the three existing secrets; `uploadUpdate` binds a fresh
+    `DAEMON_TOKEN` explicitly (keep_bindings inherits, and an instance installed before the
+    class existed has nothing to inherit — the SELF-binding precedent exactly). The success
+    panel does NOT display it: no human ever spends this credential, the plane spends it
+    over SELF.
+  - `newgroup/test/wizard.test.mjs` — the install block's three-secrets assertions become
+    four; the retry block's secret count moves 3 → 4; the update block's "no new secrets
+    generated" is CORRECTED (not exempted) — its true core (passwords travel only by
+    keep_bindings, never restated) survives as a narrower assertion beside the new
+    DAEMON_TOKEN-on-update one, whose failure names the already-installed instance;
+    header's load-bearing list and NEGATIVE CONTROL lines updated with run results.
+  - `docs/development/CLAIMS.md` — this block.
+  **READ, NEVER EDITED**: `bio-plane/src/index.mjs` (classify's daemon arm :1970),
+  `bio-plane/src/store.mjs` (`#monitorToken()` :27514 — DAEMON_TOKEN || ADMIN_TOKEN, the
+  fallback DEC-43 keeps until DIST-4's count), `newgroup/src/release.mjs`.
+  **NOT** `bio-plane/**`, **NOT** `release/**`, **NOT** any version bump, **NOT**
+  `docs/development/QUEUE.md` (CONDUCT's; the DIST-2 row flip is CONDUCT's at integration),
+  **NOT** any deploy — the row says NO DEPLOY, the install/update run is gated to Bob.
+concurrency: checked over the register 2026-09-14 — no live claim names `newgroup/**`.
