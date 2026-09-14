@@ -6108,11 +6108,11 @@ behind IC-83/IC-84 rather than folded in.
 
 ### RESPONSES — 2026-09-14, recorded by CONDUCT #10
 
-- **RECORD** (owner): AGREE — as for IC-83; lands through REC-83 (the reads and `op=content`) and REC-84 (the frontmatter and version legs).
+- **RECORD** (owner): AGREE — as for IC-83; lands through REC-83 (the reads and `content read`) and REC-84 (the frontmatter and version legs).
 - **UI**: AGREE, answered FOR by CONDUCT — the composer emits `extent` per leg and the display shows `ref` in UI-61; absent `extent` = `document`, so the shipped composer keeps working through CHANGING.
 - **DIST**: NOT-AFFECTED, answered FOR by CONDUCT on a measurement (DIST #2 is idle): `newgroup/src/release.mjs` mentions the basis only inside the embedded plane copy that regenerates at the next cut; no served surface reads a leg.
 - **SKILL**: AGREE, answered FOR by CONDUCT — the investigative run's suggested legs default to `document` (REC-84); the machine-mint act is SK-7 with its own IC.
 
 ### RESOLUTION — ACCEPTED, **I3 14.0.0 → 14.1.0**, 2026-09-14 by CONDUCT #10
 
-MINOR, as proposed: an optional `extent` on a basis leg (absent = `document`), a new fixed-key read `op=content`, `op=earnedbasis` answering per extent and stating UNDETERMINED for a portion leg's connection axis, `op=attesttext` unchanged. CHANGING now; SETTLED when REC-83 and REC-84 land and UI-61 confirms its migration. `INTERFACES.md` bumped in the same act. NARROW and TRANSCRIBE are deliberately NOT in this IC and carry their own (REC-86, REC-87).
+MINOR, as proposed: an optional `extent` on a basis leg (absent = `document`), a new fixed-key read `content read`, `op=earnedbasis` answering per extent and stating UNDETERMINED for a portion leg's connection axis, `op=attesttext` unchanged. CHANGING now; SETTLED when REC-83 and REC-84 land and UI-61 confirms its migration. `INTERFACES.md` bumped in the same act. NARROW and TRANSCRIBE are deliberately NOT in this IC and carry their own (REC-86, REC-87).
