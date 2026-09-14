@@ -186,6 +186,13 @@ number" into a corpus file**; the tool caught its own debt row poisoning its own
 
 - **Claim your paths in `docs/development/CLAIMS.md` BEFORE editing.**
 - **Do not edit another area's paths.** Append a DELEGATION and continue.
+- **Never leave an owed act in a release note, a claim's prose, or your report alone**
+  (added 2026-09-14; FL-10's handoff line sat in a release note nothing drains and cost
+  a measured >3h false stall). If your landing obliges a future actor to do something —
+  flip a row, resolve an IC, run a follow-up — it goes in a DELEGATION or your report's
+  own "for CONDUCT" list, stated as an ACT with its actor, and you name it even if it
+  feels implied. A note is not an item, and a note in a region nothing drains is not
+  even a note.
 - **Do not deploy, do not bump a version, do not cut a tag** — that is DIST's.
   `newgroup/**` is out of bounds without an explicit instruction.
 - **Never block on Bob.** Ship a provisional and record the decision in the shape

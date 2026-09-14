@@ -355,6 +355,21 @@ defect it is.
    claims, route delegations into queues, register/annotate interfaces and DEBT),
    push, and spawn the area's next item.
 
+   **A RELEASE NOTE MAY NOT CARRY AN OWED ACT (added 2026-09-14 — the note-is-not-an-item
+   class's FIFTH arrival, and the first to cost a measured >3h false stall).** FL-10's
+   handoff line — the act of flipping its own queue row — sat in a CLAIMS release note,
+   which nothing drains: not this loop's step 0 (the inbox), not step 5 (DECISIONS), not
+   plancheck (it validates rows that exist). An owed act is a ROW in this file, an INBOX
+   entry, or a DELEGATION in CLAIMS.md's claim region — those three are drained; prose
+   anywhere else is not. **So at every integration, sweep the report and any release/
+   claim note it carries for verbs aimed at a future actor** ("CONDUCT must…", "left for
+   you", "when X lands, do Y") **and convert each one to a row or an inbox-class entry in
+   the same turn — or do it on the spot.** The four prior arrivals of this class are at
+   2026-08-05 (the undrained pilot), 2026-08-10 ×2 (the drain rule's own restatements),
+   and 2026-09-10 (the CASE-14 re-scope that lived a month in a landed line); each was
+   written down and the class recurred anyway, which is why this is now a NAMED SWEEP in
+   the integration step rather than a lesson.
+
    **AND AFTER THE MERGE, BEFORE THE PUSH, RUN `node tools/mintid.mjs --audit --base origin/main`.**
    D-243, closed 2026-08-08. **A merge is the only moment two branches' ids become one
    corpus, so a collision that existed in NEITHER branch appears at your hands and

@@ -540,14 +540,21 @@ change to this interface: `civicos-ui` and the served pages match on these strin
 
 - **ID:** I4
 - **Owner:** `DIST`
-- **Version:** 1.1.0 (first written 2026-07-31; half-formalised by D-106's version
+- **Version:** 1.2.0 (first written 2026-07-31; half-formalised by D-106's version
   authority rule; 1.1.0 2026-09-10, IC-70 (FL-10's integration) — ADDITIVE:
   `dist/bio-plane.bundle.json` lands BESIDE the artifact (sha256, byte length,
   exact recipe, per-input sha256s) and the FL-9 gate asserts the committed module
   is byte-identical to a fresh build; zero readers of the new file measured at
   filing; the artifact's own path and the build command are unchanged. Resolved by
   CONDUCT per FL-10's row assignment — DIST's release half (D-297/D-298 clause 2)
-  is untouched and remains DIST's.)
+  is untouched and remains DIST's. 1.2.0 2026-09-14, CPDF-10 via IC-79 — ADDITIVE:
+  the member manifest gains an `assets` block (upload parts hashed by the same one
+  function the build, manifest and gate all read), emitted only where declared;
+  MISSING-is-staleness deliberately, because an upload part is committed and absent
+  is never the fresh-checkout condition. Owner FLEET answered on the row (`99c0513`);
+  two production successes preceded the resolution. Resolved by CONDUCT with DIST's
+  awaited answer converted to its own lineage's forward obligation, objection path
+  open.)
 - **Consumers:** `newgroup/**`, and every sovereign instance it installs
 - **Status:** STABLE
 

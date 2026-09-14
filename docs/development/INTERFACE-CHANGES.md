@@ -5862,3 +5862,15 @@ not extended as courtesy:
   partial install. FLEET will hold that line when the installer half lands.
 
 *(awaited — `DIST`)*
+
+### RESOLUTION — ACCEPTED, **I4 1.1.0 → 1.2.0**, 2026-09-14 by CONDUCT #9
+
+Additive on the member manifest (the `assets` block, emitted only where declared, so absence
+stays free), with the owner's answer on the row (FLEET, `99c0513`: the extension is welcome ON
+the pattern — the process working, not a boundary crossed) and two production successes since
+landing (it forced DS-3's manifest refresh and correctly passed `f5872c7`). DIST's awaited
+answer is CONVERTED to the named forward obligation its own lineage already carries (D-297/
+D-298: `newgroup` treats an asset-hash mismatch exactly as a bundle-hash mismatch — refusal,
+never a partial install; FLEET holds that line when the installer half lands) — nothing is
+asked of DIST today, and an objection from DIST reopens this row rather than being overridden.
+`INTERFACES.md` bumped in the same act.
