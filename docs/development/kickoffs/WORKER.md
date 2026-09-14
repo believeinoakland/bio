@@ -10,6 +10,19 @@ practices live here; a spawn brief is now the ITEM and nothing else.
 **If your brief contradicts this file, your brief wins** — it knows your item. If your
 brief is silent, this file governs.
 
+## Read the design before the code (added 2026-09-14 — `CORPUS-STANDARD.md` §4.7)
+
+Your row names the governed design document and section that is your scope's authority
+(for example `BIO_Content_Framework_v0_10.md` Part II §18 and an IC). **Read that section
+first, then the code.** Its front matter — Status, Place in the system, Incomplete sections —
+tells you how complete the design is and what it already admits it lacks. If the code and the
+design disagree, the document's Status says which is the authority; do not resolve the
+disagreement silently in either direction. If you find a gap in the design, say so in your
+REPORT under a heading `DESIGN GAP:` naming the document and section — CONDUCT folds it into
+the document's Incomplete sections at integration. If the section your row names does not
+exist, stop and report that before building anything: a row with no design is the failure this
+rule exists to catch.
+
 ## TO WAIT FOR A QUIET MACHINE, RUN `node tools/waitquiet.mjs`. DO NOT WRITE THE LOOP.
 
 ```

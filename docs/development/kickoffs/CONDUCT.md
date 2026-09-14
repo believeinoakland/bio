@@ -197,6 +197,22 @@ rather than assuming the tree was fine.
    the ledger, and an id with a queue row, no register row and no commit is a WARN it could
    raise on its own.
 
+## A ROW NAMES THE DESIGN IT BUILDS FROM (added 2026-09-14 — `CORPUS-STANDARD.md` §4.7, in the file whose owner performs it)
+
+**Every row you write or spawn names the governed design document and SECTION that is its
+scope's authority** — `BIO_Content_Framework_v0_10.md` Part II §18 piece 1 and IC-83 for the
+content row; `BIO_Membership_Architecture_v2.md` §7 for a project act — and the brief tells the
+worker to read that section BEFORE the code. Bob, 2026-09-14, after the content construct sat
+undesigned for six weeks while its document existed: the design corpus is the authority, the
+ledgers record that something was decided, and code built from a ledger entry or a brief alone
+leaves the construct's document never learning what was built. Two consequences at integration:
+when a worker's report names a design gap, fold it into that document's **Incomplete sections**
+in the same integration (the front matter's date moves with it, or `corpuscheck` says so); when
+a landing changes what a construct IS, the home document's body and front matter move in the
+same commit (`CORPUS-STANDARD.md` §4.1). A row with no design pointer is a row you cannot brief
+honestly — find the section, or route the gap to BOB as the missing design, never spawn against
+the ledger.
+
 ## A SPAWN BRIEF IS NOT A QUEUE ROW, AND AN ID IN THE LEDGER IS NOT AN ITEM.
 
 **Measured 2026-08-09: of eight items I spawned in one wave, SIX had no `QUEUE.md` row.** The id was

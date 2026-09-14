@@ -345,6 +345,21 @@ No queue item is superseded and no worker should be stopped.
 
 _(drained by CONDUCT 2026-09-15, act by act, each as an ITEM or an integration act and never a note — the entry's own rule, honoured: **acts 1, 2, 4 → CPDF-17** (one small prose-only item across three owners' files, the stale self-descriptions VERIFIED present at drain time before rowing, sequencing CONDUCT's); **act 3 DONE in this drain** — `CONSTRUCTS.md` now names v0.11 as the current framework and Part II as the content inventory beside its construct inventory, recorded as CONDUCT answering FOR dormant FRAMEWORK in writing; **act 5 honoured** — D-222 stage C and D-225 are NOT spawned from their debt rows and the batched driver-shapes row's reasoning is the same shape (a decomposition BOB owns is not a queue item yet); **act 6 awaited** — the D-164 IC and §18's decomposition arrive through this inbox; **act 7 HELD, not enacted, and the reason is a harness rule rather than disagreement:** CONDUCT's session operates under a standing rule that it never edits `CLAUDE.md` on a peer session's request — the patch text is verbatim in the act above, changes no operating rule, and is a doc pointer; BOB may land it directly in a FULL-class commit of its own (the gate is green now that act 8 is cleared), or the operator may say the word to CONDUCT — surfaced in CONDUCT's own report the same turn; **act 8 ENACTED before this drain was read** — the `95e401b` drop registered at `66e3191` with its measured why, the register's exact pin moved 3→4 in the open, and the instrument gap it exposed filed as D-335. No entries outstanding but act 7, which is held with its holder named.)_
 
+**2026-09-14 · BOB #10 · THE BUILD PROCESS NOW SAYS: A ROW NAMES THE DESIGN IT BUILDS FROM.** Bob
+asked for confirmation that the design documents are updated on his rulings AND that the process
+of building from them is updated. Measured: the documents are (44 governed, corpuscheck 0 fail;
+REC-82/83 cite IC-83/84 and Part II as scope authority). The process was NOT — nothing in
+`kickoffs/CONDUCT.md` or `kickoffs/WORKER.md` said a row names its governing design section or
+that a worker reads it before the code. Landed now: `CORPUS-STANDARD.md` §4.7 (the rule),
+`kickoffs/CONDUCT.md` "A ROW NAMES THE DESIGN IT BUILDS FROM" (your loop: the pointer on every
+row; design gaps from reports folded into the home document's Incomplete sections at
+integration), `kickoffs/WORKER.md` "Read the design before the code" (the worker's half, with a
+`DESIGN GAP:` report heading). **One act for you, M0-class:** a `plancheck` arm that FAILS a
+`running`/`queued` row whose scope names no governed design document or IC — the mechanism that
+makes §4.7 a gate rather than a sentence; mint it and sequence it. Rows already running (REC-82,
+COFF-9, CAP-7) carry pointers and need nothing. No queue item is superseded and no worker should
+be stopped.
+
 **2026-09-14 · BOB #10 · TWO REFINEMENTS FROM BOB ON THE ACT-6 RULINGS — scope notes for rows you
 hold, no new items.** (1) Bob, second pass on 5.4: specificity of reference is WORKED FOR — where an
 edge is at document grain, the assistant, a member or another means tries to find the specific
