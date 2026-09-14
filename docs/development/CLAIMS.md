@@ -3413,3 +3413,15 @@ this delegation is the advance telling DIST-NEXT.md said the change must carry.
 ### DELEGATION 2026-09-14 DIST (D-202) -> CAPTURE: **THE SAME DEPLOY ARMS CAP-3's ARCHIVE FALLBACK** — same mechanism, same timing, same advance telling as the RECORD delegation above; recorded separately because the consumer is yours and a shared notice is how one owner misses it.
 
 ### AMENDMENT 2026-09-14, MID-ITEM (D-297 claim) — ONE PATH ADDED: `docs/development/DEBT.md`, the D-202 row's disposition ONLY, closed by the landing above.
+released: 2026-09-14 by DIST #2 — D-297 and the IC-82 enactment are LANDED AND SERVING:
+statement /2 (shared, refusing the unstated on both sides), assembler copy-never-default,
+newgroup installs the fleet on install AND update (wizard 131/131, both NC arms in the
+header), release 0.58.0 cut+signed (four signature NCs run; the one vacuous arm STATED with
+its reason — plane bytes identical across versions), deployed and byte-verified with all four
+/version answering 0.58.0, biosmoke7's four service bindings ARMED and read back with SELF
+slug-substituted, daemon posture retained (DEC-43 count still zero), audit at D-200's
+pre-existing 10 and nothing new. One live-found deploy defect fixed in the act (the
+byte-identical skip vs metadata deploys — MEASUREMENTS row). The newgroup WORKER deploy is
+NOT performed: installer releases are gated to Bob, and the live 0.57.0-embedded installer
+reads only the plane keys of the new manifest (additive-in-fact, IC-82's measurement), so
+nothing breaks while he decides. QUEUE row flips and IC-82's SETTLED are CONDUCT's.
