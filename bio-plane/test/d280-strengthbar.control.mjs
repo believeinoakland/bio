@@ -163,34 +163,42 @@ for (const n of ["d280-strengthbar.test.mjs", "severedhomes.test.mjs"]) {
 
 const OWN = "d280-strengthbar.test.mjs", D267 = "severedhomes.test.mjs";
 
-/* ============ (A) THE DRIVEN SITE'S CONFIRMATION, REVERTED ================ */
-
-arm("A", "THE DEFECT ITSELF, PUT BACK. `#requiredStrengthFor` stops confirming its candidates, which "
-  + "is D-280 site (a) exactly: a project whose ONLY citing relation is `status: severed` sets the "
-  + "publication bar on the document it left. "
-  + "DECLARED: the headline bar arm and the strictest-per-axis arm MUST fail. Every OVER-STRICTNESS "
-  + "arm MUST stay green, and so must routing and restson — which is what makes this arm measure the "
-  + "bar read rather than the predicate, and what stops a fix at one site reading as a fix at three.",
-  [["store", `      if (kinds.every((k) => this.#refEdgeSevered(citerId, bundleId, k || null))) continue;`,
-              `      /* ARMED (D-280 control A): the confirmation removed. */`]],
-  [{ name: OWN,
-     mustFail: ["THE DEFECT, DRIVEN", "STRICTEST-PER-AXIS STILL COMPOSES",
-                "the withdrawn project is not named ANYWHERE",
-                /* Declared after the first run: this arm deletes the call site,
-                   so this suite's own structural arms come down too. */
-                "it is CONSUMED by six call sites",
-                "the driven site really consults the predicate"],
-     mustNotFail: ["LIVE, and the bar stands", "THE OBLIGATION GOES TO THE OWNER",
-                   "each one now CARRIES ITS STATUS", "a project that STILL CITES sets the bar"] },
-   /* CORRECTED AFTER THE FIRST RUN, and the arm was right while this line was
-      wrong. It DELETES a call site, so D-267's EXACT caller pin must come down
-      with it; declaring severedhomes wholly green was impossible by
-      construction. Its BEHAVIOURAL arms must still hold, which is what keeps
-      this an arm about the bar read rather than about the count. */
-   { name: D267, mustFail: ["STRUCTURAL: the severance rule has ONE definition"],
-     mustNotFail: ["THE DEFECT, CLOSED", "OVER-STRICTNESS", "NOT WALKED IS NOT DELETED"] }]);
-
-/* ============ (B) THE ROUTING SITE'S CONFIRMATION, REVERTED =============== */
+/* ===========================================================================
+ * ARMS (A), (C) AND (E) ARE RETIRED, 2026-09-13, BY M0-25's ARM-LIVENESS CENSUS
+ * — AND THEY ARE RETIRED BECAUSE THEIR SUBJECT WAS DELETED, NOT BECAUSE THEY
+ * WERE INCONVENIENT. This is a supersession with its reason on the record, never
+ * an exemption.
+ *
+ * All three armed `#requiredStrengthFor` — (A) removed its confirmation, (C)
+ * widened ALL-severed to ANY-severed inside it, (E) replaced its call to
+ * `#refEdgeSevered` with a faithful inline copy. **`ce2fe34` (CASE-2) REMOVED
+ * `#requiredStrengthFor` ENTIRELY.** Four mentions of the name survive in
+ * `src/store.mjs` and every one is a COMMENT explaining what replaced it; the
+ * method is gone, and this suite's own sibling `severedhomes.test.mjs` says so
+ * in an assertion label it has been printing ever since: *"It was SIX until
+ * CASE-2 removed `#requiredStrengthFor`."* **The estate's own instrument had been
+ * announcing the deletion on every battery, and the three arms it invalidated
+ * went on reporting nothing.**
+ *
+ * HOW THIS WAS ESTABLISHED, because it was NOT established on the first attempt
+ * and the wrong turn is worth more than the right one. M0-25 first RE-ANCHORED
+ * all three onto the surviving `[...citeEdges].find(([pid, kinds]) => …)` in
+ * `#routeTask`, on the reasoning that the predicate was the same predicate in a
+ * new shape. **The arms then armed and came back NOT AS DECLARED — arm (A)
+ * brought down the ROUTING assertions while its declared bar assertions stayed
+ * green.** That is arm (B)'s site, not arm (A)'s, and the driver's own
+ * declaration is what caught it: an arm that comes back other than declared is a
+ * finding about the ARM. A re-anchor that merely ARMS is not a repair; it has to
+ * reproduce the declared defect, and only running it can say whether it does.
+ *
+ * WHAT IS NOT CLAIMED HERE. D-280's site (a) — the bar read — is no longer
+ * covered by any arm in this driver, and that is a REAL LOSS rather than a
+ * tidy-up: arms (B), (C2) and (D) cover routing, the shared predicate and the
+ * `restingOn` publication, and nothing now covers whatever took over the
+ * composition CASE-2 moved. Designing that arm means deciding what the bar read
+ * IS now, which is a judgement about CASE's semantics and belongs to whoever owns
+ * them. It is filed rather than guessed.
+ * ======================================================================== */
 
 arm("B", "SITE (b) PUT BACK, ALONE. `#routeTask` takes the FIRST citing project by id without asking "
   + "whether it withdrew, so the obligation is addressed to the owner of a project that left. "
@@ -208,24 +216,6 @@ arm("B", "SITE (b) PUT BACK, ALONE. `#routeTask` takes the FIRST citing project 
    { name: D267, mustFail: ["STRUCTURAL: the severance rule has ONE definition"],
      mustNotFail: ["THE DEFECT, CLOSED", "OVER-STRICTNESS", "NOT WALKED IS NOT DELETED"] }]);
 
-/* == (C) OVER-STRICTNESS AT THE SITE — ANY SEVERED EDGE INSTEAD OF ALL ===== */
-
-arm("C", "**THE ARM THIS ITEM EXISTS FOR, HALF ONE.** ANY severed edge withdraws the citer instead of "
-  + "ALL of them. This is the plausible, well-meant reading of the rule and it is the direction that "
-  + "silently drops a bar somebody still means: a project whose `relates_to` is withdrawn while its "
-  + "`cites` stands is not a project that withdrew. "
-  + "DECLARED: the other-relation over-strictness arm MUST fail. The HEADLINE MUST STAY GREEN — a "
-  + "fence tighter than its rule still refuses the case it was built for, which is precisely why "
-  + "over-strictness needs its own arm and cannot be read off the headline.",
-  [["store", `kinds.every((k) => this.#refEdgeSevered(citerId, bundleId, k || null))`,
-              `kinds.some((k) => this.#refEdgeSevered(citerId, bundleId, k || null))`]],
-  [{ name: OWN,
-     mustFail: ["a severed `relates_to` beside a CONFIRMED `cites`"],
-     mustNotFail: ["THE DEFECT, DRIVEN", "STRICTEST-PER-AXIS STILL COMPOSES",
-                   "a reference with NO `status:` key"] },
-   { name: D267, mustFail: [], mustNotFail: [""] }]);
-
-/* == (C2) OVER-STRICTNESS AT THE PREDICATE — ABSENCE AND SPELLING ========== */
 
 arm("C2", "**THE ARM THIS ITEM EXISTS FOR, HALF TWO**, and it reaches the SHARED predicate rather "
   + "than this item's own site. `#refEdgeSevered` starts defaulting an ABSENT status to `severed` "
@@ -238,6 +228,23 @@ arm("C2", "**THE ARM THIS ITEM EXISTS FOR, HALF TWO**, and it reaches the SHARED
   [["store", `    return !!entry && entry.status === "severed";   // unrecorded is LIVE`,
               `    return !!entry && String(entry.status ?? "severed").trim().toLowerCase() === "severed";`]],
   [{ name: OWN,
+     /* THESE THREE FRAGMENTS ARE STALE AND ARE LEFT LOUD, 2026-09-13, M0-25.
+        The ANCHOR is live — `#refEdgeSevered` is still there and this arm still
+        widens it — but the three assertion NAMES it expects to fall no longer
+        exist: `ce2fe34` (CASE-2) rewrote this suite's §3 into a §4 whose headline
+        is "D-280's HEADLINE QUESTION CANNOT BE ASKED ANY MORE: the bar of a
+        FINDING is refused BY NAME". So the arm reports `** WRONG: expected an
+        assertion naming … to FAIL and none did` on every run, which is the driver
+        telling the truth about itself.
+        **IT IS NOT PATCHED HERE ON PURPOSE.** Quoting whatever §4 now calls these
+        cases would be guessing at which of CASE-2's assertions inherit the
+        over-strictness question, and a re-declaration that merely stops the
+        complaint is the same defect as a re-anchor that merely arms — this item
+        met that exact trap at arms (A)/(C)/(E) above and the driver caught it.
+        Filed as DEBT (the NOT-AS-DECLARED class the census surfaced across six
+        drivers); closing it means deciding what §4 asserts about an absent,
+        capitalised or padded status, which belongs to whoever owns those
+        semantics. D-267's half of this arm still holds and still fires. */
      mustFail: ["a reference with NO `status:` key", "`status: Severed`, capitalised",
                 "the RIGHT word with trailing whitespace"],
      mustNotFail: ["THE DEFECT, DRIVEN", "STRICTEST-PER-AXIS STILL COMPOSES"] },
@@ -258,34 +265,6 @@ arm("D", "SITE (d) PUT BACK. `restingOn` stops attaching the status, so the read
      mustNotFail: ["THE DEFECT, DRIVEN", "LIVE, and the bar stands", "THE OBLIGATION GOES TO THE OWNER",
                    "BOTH dependents are still LISTED"] },
    /* CORRECTED AFTER THE FIRST RUN, same reason as (A). */
-   { name: D267, mustFail: ["STRUCTURAL: the severance rule has ONE definition"],
-     mustNotFail: ["THE DEFECT, CLOSED", "OVER-STRICTNESS", "NOT WALKED IS NOT DELETED"] }]);
-
-/* ============ (E) THE SHARED PREDICATE IS SHARED ========================== */
-
-arm("E", "A FAITHFUL COPY OF THE RULE, INLINE. `#requiredStrengthFor` stops calling `#refEdgeSevered` "
-  + "and re-reads the citing document's `references[]` itself — byte-for-byte the same behaviour, so "
-  + "the rule has two implementations again. "
-  + "DECLARED: the STRUCTURAL arms in BOTH suites MUST fail — D-267's caller count is the tripwire "
-  + "this item corrected from three to six, and an arm that removes a call site has to bring it down "
-  + "or the correction was decoration — and NO BEHAVIOURAL ARM MAY FAIL, ANYWHERE. **That is the "
-  + "whole point.** D-267 exists because a rule with four inline implementations grew a fifth reader "
-  + "that did not know the rule existed, and no behavioural arm in this estate could have caught it.",
-  [["store", `      if (kinds.every((k) => this.#refEdgeSevered(citerId, bundleId, k || null))) continue;`,
-              `      if (kinds.every((k) => {   /* ARMED (D-280 control E): a faithful inline copy */
-        const rel = k || null;
-        const cmd = this.#one(\`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'\`, citerId);
-        if (!cmd || cmd.content === null) return false;
-        const crefs = parseFrontmatter(cmd.content).data?.references;
-        const centry = (Array.isArray(crefs) ? crefs : [])
-          .find((x) => x && x.target === bundleId && (rel === null || x.rel === rel));
-        return !!centry && centry.status === "severed";
-      })) continue;`]],
-  [{ name: OWN,
-     mustFail: ["it is CONSUMED by six call sites", "the driven site really consults the predicate"],
-     mustNotFail: ["THE DEFECT, DRIVEN", "STRICTEST-PER-AXIS STILL COMPOSES",
-                   "LIVE, and the bar stands", "THE OBLIGATION GOES TO THE OWNER",
-                   "each one now CARRIES ITS STATUS"] },
    { name: D267, mustFail: ["STRUCTURAL: the severance rule has ONE definition"],
      mustNotFail: ["THE DEFECT, CLOSED", "OVER-STRICTNESS", "NOT WALKED IS NOT DELETED"] }]);
 

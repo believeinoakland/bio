@@ -84,3 +84,17 @@
 # -u` is repository-wide rather than per-worktree (M0-15).
 .cpdf10-pen/
 .cpdf10-e2e-pen/
+
+# M0-25's ARM-LIVENESS CENSUS: its per-driver logs and its own harness pen. The
+# census RUNS every control driver in the estate and captures each one's whole
+# output to a file (never a pipe — D-282), so a full run leaves ~88 logs behind;
+# `.m025-anchor-harness/` is the pen the battery-side witness's own control driver
+# copies pristine sources into. **This entry is not tidiness and it was earned in
+# the same run it describes:** `check-firing.test.mjs` went RED on this item's own
+# final battery because the census had run `refusal-codes.control.mjs`, which left
+# `civicos-ui/test/.rec79-control-pristine/` behind, and check-firing's producer
+# sweep read those pristine copies as a SECOND producer of a retired check. A
+# driver's residue is not inert — it enters another suite's corpus — and a census
+# that runs every driver makes that a certainty rather than a risk.
+_m025/
+.m025-anchor-harness/

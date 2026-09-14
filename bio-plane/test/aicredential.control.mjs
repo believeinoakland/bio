@@ -137,7 +137,19 @@ arm("(1) **DEC-55.5's SECOND HALF, AND IT HAS NEVER BEEN RUN IN THIS PROJECT.** 
      one thing twice. */
   ["an `ai` credential calling op=versionaccept is refused BY NAME at the gate",
    "op=publish likewise",
-   "every one of the 26 ops no member reaches is refused at the mint, by name"]);
+   /* M0-25, 2026-09-13: THE NUMBER IS OUT OF THIS FRAGMENT ON PURPOSE. It read
+     "every one of the 26 ops …", and the SUITE composes that label as
+     `every one of the ${beyond.length} ops …` — `beyond` is derived from the OPS
+     table, so the text moves whenever the plane gains an op no member reaches. It
+     moved 26 -> 28 (`caseflags` at `7e10ca9`, CASE-4; `casedocument` at `808342f`,
+     case-5b) and BOTH sites here went stale in OPPOSITE DIRECTIONS: the `mustFail`
+     use below printed `** WRONG: expected an assertion naming … to FAIL and none
+     did`, which is how M0-25's census found it, while the `mustNotFail` use went
+     SILENTLY VACUOUS — a fragment that can never match can never be violated, so
+     that guard proved nothing and said nothing. Quoting only the INVARIANT part is
+     the estate's "invert, do not lengthen a list" rule applied to a quotation: a
+     fragment that carries a computed value goes stale the moment the value moves. */
+   "ops no member reaches is refused at the mint, by name"]);
 
 /* ============ (2) THE SCOPE IS READ FROM THE RECORD ====================== */
 
@@ -162,7 +174,19 @@ arm("(3) PL-4's DELEGATED CONSTRAINT — THE FENCE IS A SHAPE. Make the member-r
   + "row state.",
   [["index", `  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member");`,
               `  return true;`]],
-  ["every one of the 26 ops no member reaches is refused at the mint, by name"],
+  [/* M0-25, 2026-09-13: THE NUMBER IS OUT OF THIS FRAGMENT ON PURPOSE. It read
+     "every one of the 26 ops …", and the SUITE composes that label as
+     `every one of the ${beyond.length} ops …` — `beyond` is derived from the OPS
+     table, so the text moves whenever the plane gains an op no member reaches. It
+     moved 26 -> 28 (`caseflags` at `7e10ca9`, CASE-4; `casedocument` at `808342f`,
+     case-5b) and BOTH sites here went stale in OPPOSITE DIRECTIONS: the `mustFail`
+     use below printed `** WRONG: expected an assertion naming … to FAIL and none
+     did`, which is how M0-25's census found it, while the `mustNotFail` use went
+     SILENTLY VACUOUS — a fragment that can never match can never be violated, so
+     that guard proved nothing and said nothing. Quoting only the INVARIANT part is
+     the estate's "invert, do not lengthen a list" rule applied to a quotation: a
+     fragment that carries a computed value goes stale the moment the value moves. */
+   "ops no member reaches is refused at the mint, by name"],
   ["a signed-in member mints",
    "an `ai` credential calling op=versionaccept is refused BY NAME at the gate"]);
 

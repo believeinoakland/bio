@@ -169,9 +169,24 @@ const ARMS = {
             + "Every member still lands in its case, so the happy path is untouched — what goes is the "
             + "property that makes the freeze mean anything, since a finding revised after publication "
             + "would then be resolved into the case at whatever version it happens to hold now",
+     /* RE-ANCHORED 2026-09-13 BY M0-25's ARM-LIVENESS CENSUS, AND THE FINDING IS
+        KEPT: **THIS ARM HAD STOPPED ARMING ON `main`, ON WHITESPACE ALONE.** The
+        anchor carried TEN leading spaces, the indentation this clause had when
+        case-5b wrote it (`808342f`). `d720333` (D-309, "a finding may serve many
+        cases") moved the query into `#pinnedCaseEditionsOf` and re-indented it to
+        EIGHT. Nothing about the statement changed — same columns, same predicate,
+        same bound parameters — and the arm has matched zero times ever since,
+        which made `edit()` THROW and took arms (e) and (f) down with it unrun.
+        Measured: the 8-space form occurs exactly once in `src/store.mjs`, the
+        10-space form zero times; `git log -S` names `808342f` as its author and
+        `d720333` as the commit that removed it.
+        **THE POINT WORTH CARRYING: two spaces disarmed a control.** The OR-ing
+        form is kept exactly as it was — the header above records why deleting the
+        clause instead measured a SQL error rather than the plane — so only the
+        indentation moved. */
        apply: () => edit(STORE,
-         "          WHERE m.bundle_id=? AND m.version_sha=?\n",
-         "          WHERE m.bundle_id=? AND (m.version_sha=? OR 1=1)\n") },
+         "        WHERE m.bundle_id=? AND m.version_sha=?\n",
+         "        WHERE m.bundle_id=? AND (m.version_sha=? OR 1=1)\n") },
 };
 
 const want = process.argv[2];

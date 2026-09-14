@@ -59,11 +59,37 @@ const edit = (file, needle, replacement) => {
   writeFileSync(file, src.replace(needle, replacement));
 };
 
-const PIN_WRITE =
-  "        this.sql.exec(\n"
-+ "          `UPDATE published_case_members SET version_sha=?\n"
-+ "           WHERE case_id=? AND edition=? AND bundle_id=? AND version_sha IS NULL`,\n"
-+ "          bundleSha, caseId, ed, bundleId);";
+/* RE-ANCHORED 2026-09-13 BY M0-25's ARM-LIVENESS CENSUS, AND THE FINDINGS ARE KEPT
+   AT THE SITE RATHER THAN QUIETLY REPAIRED. **FOUR OF THIS DRIVER'S SIX ARMS HAD
+   STOPPED ARMING ON A GREEN `main`, AND ONLY ONE OF THEM WAS VISIBLE**, because
+   `edit()` THROWS on a zero-match and the throw happened at arm (a) — so arms (c),
+   (d) and (e) were never reached and their staleness was hidden behind the first
+   one. **A DEAD ANCHOR IS NOT A LOCAL FAILURE; IT BLINDS EVERY ARM BEHIND IT.**
+   That is the single most useful thing this census measured about driver shape.
+
+   TWO COMMITS DID IT, neither of them wrong and neither of them aware:
+
+   - `808342f` (case-5b, "the case-level signing ceremony, and then the deletion it
+     was the precondition for") replaced CASE-3's per-member pin UPDATE with ONE
+     upsert writing all N pins from the SIGNED case document in a single act. The
+     `UPDATE published_case_members SET version_sha=? … WHERE … version_sha IS NULL`
+     this constant held (written at `e8f6c85`, CASE-3) is gone. Arms (a) and (b).
+   - `7e10ca9` (CASE-4 / DEC-72) ended `published` as a lifecycle state and replaced
+     `current_state === "published"` with the ONE case-relation predicate
+     `this.#caseRelationOf(target).member`. Arms (c) and (d).
+   - Arm (e)'s SELECT gained a `, role` column in the same era.
+
+   Each new anchor was COUNTED against the file before it was written (exactly one
+   occurrence each, measured against the committed blob rather than the working
+   tree). What the ARMS MEAN is preserved; only the shape they are written in moved.
+
+   ARM (a) UNDER THE NEW MECHANISM. Its declared state is *"exactly the state the
+   tree was in BEFORE this item — CASE-1's column existed and nothing on earth
+   filled it"*. Deleting the whole upsert would now delete the ROSTER too, which is
+   more than the arm claims and would fail for the wrong reason. Binding `null` in
+   place of the signed document's value is the same state, minimally: the row is
+   written, the column is there, and nothing fills it. */
+const PIN_WRITE = "          id, ed, i, m, r.version_sha ?? null, r.role ?? null);";
 
 const ARMS = {
   baseline: { files: [], label: "nothing armed — what distinguishes five-arms-working from five-arms-broken",
@@ -73,26 +99,50 @@ const ARMS = {
        label: "(a) THE FREEZE NEVER HAPPENS: delete the pin write from publish() entirely. This is exactly "
             + "the state the tree was in BEFORE this item — CASE-1's column existed and nothing on earth "
             + "filled it — so this arm measures the size of the hole the item closed",
-       apply: () => edit(STORE, PIN_WRITE, "        /* ARMED AWAY: the pin write */") },
+       apply: () => edit(STORE, PIN_WRITE, "          id, ed, i, m, null /* ARMED AWAY: the pin */, r.role ?? null);") },
 
   b: { files: [STORE],
        label: "(b) THE PIN IS MUTATED IN PLACE — THE ARM THIS ITEM EXISTS FOR. Drop `AND version_sha IS "
             + "NULL`, so every ratification re-pins and edition 2's hash overwrites the hash edition 1 was "
             + "frozen at. The case then says what the finding says NOW rather than what it said when it was "
             + "published, which is the overclaim the whole clause is against",
+     /* ARM (b) RE-ANCHORED 2026-09-13 BY M0-25, AND IT MOVED UP A LEVEL BECAUSE
+        THE PREDICATE IT NAMED IS GONE — which is the finding, not a workaround.
+        (b) dropped `AND version_sha IS NULL` from CASE-3's per-member pin so that
+        "every ratification re-pins". Under `808342f` (case-5b) that statement does
+        not exist; the pins are one upsert keyed `(case_id, EDITION, bundle_id)`, so
+        a later edition cannot reach an earlier edition's row at all — **the defect
+        (b) was written against is now closed BY CONSTRUCTION, and it was closed in
+        the same commit that killed the arm, with neither half recorded.** This
+        driver's own header had already MEASURED the old predicate as unreachable
+        and added arm (f) for the route that is reachable; case-5b then deleted the
+        unreachable predicate outright.
+        THE WRITE-ONCE GUARD DID NOT DISAPPEAR — IT MOVED TO THE CEREMONY. The
+        signature write is `UPDATE case_documents SET … WHERE … AND sig_armored IS
+        NULL`: the same shape, one level up, and it is what makes re-ratifying a
+        signed edition impossible. Drop it and a second ratification of an edition
+        already on the record runs the roster upsert again, whose
+        `DO UPDATE SET version_sha=excluded.version_sha` re-pins every member —
+        which is (b)'s declared defect exactly, now at the site that can produce it.
+        The arm is CORRECTED rather than exempted, and the old expectation is on the
+        record above as right when it was written. */
        apply: () => edit(STORE,
-         "           WHERE case_id=? AND edition=? AND bundle_id=? AND version_sha IS NULL`,",
-         "           WHERE case_id=? AND edition=? AND bundle_id=?`,") },
+         "           ratified_at=? WHERE case_id=? AND edition=? AND sig_armored IS NULL`,",
+         "           ratified_at=? WHERE case_id=? AND edition=?`,") },
 
   c: { files: [STORE],
        label: "(c) THE MINT IS NOT ENFORCED: remove the PUBLISHED_CANNOT_MOVE_VERSION arm, so an edit "
             + "touching a published version LANDS instead of being routed to a new edition. The door goes "
             + "back to standing open while its two neighbours stay shut",
+     /* ARM (c) RE-ANCHORED 2026-09-13 BY M0-25. Staling commit `7e10ca9` (CASE-4 /
+        DEC-72): `published` stopped being an inquiry lifecycle state, and the five
+        guards that asked the STATE WORD were collapsed onto ONE predicate,
+        `this.#caseRelationOf(target).member`. The fence is the same fence and the
+        arm is the same arm — `false &&` in front of it — only the question it asks
+        is now spelled as the case RELATION rather than the state. */
        apply: () => edit(STORE,
-         '    if (to !== null && b.current_state === "published")\n'
-       + '      return refuse("PUBLISHED_CANNOT_MOVE_VERSION",',
-         '    if (false && to !== null && b.current_state === "published")\n'
-       + '      return refuse("PUBLISHED_CANNOT_MOVE_VERSION",') },
+         '    if (to !== null && this.#caseRelationOf(target).member)',
+         '    if (false && to !== null && this.#caseRelationOf(target).member)') },
 
   d: { files: [STORE],
        label: "(d) OVER-STRICTNESS — the direction a control usually forgets. Widen the fence from the four "
@@ -100,18 +150,26 @@ const ARMS = {
             + "deletes) and `current` (a PROJECT's stance, written on the project). Nothing about a published "
             + "finding's claims has moved in either case, so this is a rule wider than the ruling it "
             + "enforces — an undeclared interface change wearing the costume of caution",
+     /* ARM (d) RE-ANCHORED 2026-09-13 BY M0-25, same cause as (c) (`7e10ca9`,
+        CASE-4). The over-strictness direction is unchanged: drop `to !== null` and
+        the fence widens from the four acts that MOVE a state to all six. */
        apply: () => edit(STORE,
-         '    if (to !== null && b.current_state === "published")',
-         '    if (b.current_state === "published")') },
+         '    if (to !== null && this.#caseRelationOf(target).member)',
+         '    if (this.#caseRelationOf(target).member)') },
 
   e: { files: [STORE],
        label: "(e) THE FREEZE IS WRITTEN AND NO READER CAN SEE IT: drop `version_sha` from "
             + "#caseEditionState's roster SELECT. The pin is still committed, so arm (a) would not catch "
             + "this — a freeze nobody can read is not one a reader can rely on, and that is a separate "
             + "failure from not freezing at all",
+     /* ARM (e) RE-ANCHORED 2026-09-13 BY M0-25 — the smallest of the four and the
+        one that shows the class best: the SELECT gained a `, role` column and this
+        anchor was not moved with it. Nothing about the arm changed; a column was
+        added to a list. **This is the whole D-276 class in one line, and it sat
+        behind arm (a)'s throw where nothing could see it.** */
        apply: () => edit(STORE,
-         "      `SELECT ord, bundle_id, version_sha FROM published_case_members",
-         "      `SELECT ord, bundle_id, NULL AS version_sha FROM published_case_members") },
+         "      `SELECT ord, bundle_id, version_sha, role FROM published_case_members",
+         "      `SELECT ord, bundle_id, NULL AS version_sha, role FROM published_case_members") },
 
   /* ARM (f) EXISTS BECAUSE ARM (b) MEASURED SOMETHING OTHER THAN WHAT IT WAS
      WRITTEN TO MEASURE, and the two are kept side by side rather than the weaker
@@ -135,11 +193,15 @@ const ARMS = {
             + "READ. Serve each member's pin from the finding's LATEST published edition instead of from "
             + "the frozen membership row, so edition 1 starts answering with edition 2's hash. Nothing is "
             + "written and the case still silently becomes a claim about the present",
+     /* ARM (f) RE-ANCHORED 2026-09-13 BY M0-25, and it is the FIFTH stale anchor in
+        this one driver — found only after (a) stopped throwing, which is exactly
+        D-331's point. Same cause as arm (e): the roster SELECT gained a `, role`
+        column and neither arm's quote moved with it. */
        apply: () => edit(STORE,
-         "      `SELECT ord, bundle_id, version_sha FROM published_case_members",
+         "      `SELECT ord, bundle_id, version_sha, role FROM published_case_members",
          "      `SELECT ord, bundle_id, (SELECT pb.bundle_sha FROM published_bundles pb\n"
        + "          WHERE pb.bundle_id=published_case_members.bundle_id\n"
-       + "          ORDER BY pb.edition DESC LIMIT 1) AS version_sha FROM published_case_members") },
+       + "          ORDER BY pb.edition DESC LIMIT 1) AS version_sha, role FROM published_case_members") },
 };
 
 const want = process.argv[2];

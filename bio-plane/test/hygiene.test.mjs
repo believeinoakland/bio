@@ -2048,6 +2048,27 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        and `netstat`, not from the directory. Guarding it would be true and
        useless, which is `ref-variance-probe.mjs`'s reason exactly. */
     "bio-plane/test/d249-port.probe.mjs",         // its own test/ census, printed as context, read by no assertion
+    /* ADDED 2026-09-13 by M0-25's item, AND THE RATCHET WORKED AGAIN — the census
+       named this walk on the first driver run of the arm-liveness census, before
+       anyone read the diff, and it was the only thing standing between a green
+       battery and a red one. It cost more than a naming: the first census run was
+       CONTAMINATED by it, because every driver that runs `hygiene.test.mjs` as part
+       of an arm read `688 pass, 1 fail` and refused to arm against a tree that was
+       not whole. The run was thrown away and re-taken. Recorded because "a new walk
+       is a decision" is usually a paperwork cost, and this is the run where it was
+       a measurement cost.
+       WHY IT IS NAMED AND NOT GUARDED: `test/m025-arm-census.mjs` walks the six
+       `test/` directories to ENUMERATE CONTROL DRIVERS AND RUN THEM. Nothing it
+       prints is a floor — no assertion anywhere reads its figure, and the battery
+       does not discover it, so it cannot fail a run. A phantom `*.control.mjs`
+       deposited by a concurrent worktree would be RUN and REPORTED, which is the
+       safe direction: more scrutiny, not less, and a driver that is not in the
+       commit shows up in the census's own per-driver list where a reader sees it.
+       The instrument that DOES floor on this same walk —
+       `test/m025-arm-anchor-witness.test.mjs`, the battery-side half — asks
+       provenance and appears in the GUARDED list above, which is the line that
+       makes this naming a category judgement rather than a convenience. */
+    "bio-plane/test/m025-arm-census.mjs",         // runs the control drivers; reports a census, floors on nothing
     /* `bio-plane/test/walkfigure.test.mjs` STOOD HERE FROM D-265 UNTIL 2026-09-10
        AND D-301 REMOVED IT — BY MEASURING, NOT BY DECIDING. D-265's entry said the
        file CONTAINS NO WALK AT ALL: its only discovery primitive is the word
@@ -2094,8 +2115,17 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      stops walking fails HERE, by name, with the corpus printed, and costs the next
      worker one re-measured number and a reason — which is what this estate asks
      for every other figure. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 32)`,
-    census.length >= 32, true);
+  /* MOVED 2026-09-13 BY M0-25: 32 -> 34, from the figure this run PRINTED on the
+     line above (`class census: 34 file(s)`), never by adding this item's +2 to the
+     number in the file. The two are M0-25's own instruments —
+     `test/m025-arm-census.mjs` (named below) and `test/m025-arm-anchor-witness.test.mjs`
+     (guarded, so it enters the census on the guarded side). Left at 32 the floor
+     would carry two slack on the day it was written, and the block above argues at
+     length why THIS floor is the one where slack is not tolerable: it guards a
+     matcher whose failure mode is over-blinding, and a slack floor is blind to
+     exactly that. */
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 34)`,
+    census.length >= 34, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,

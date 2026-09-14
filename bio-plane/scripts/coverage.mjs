@@ -693,9 +693,29 @@ const REGISTER_FLOOR = {
      was written — the same zero-slack reading D-318 recorded, two items running).
      ONE KEY SET, grepped before and after writing: `^  arms:` matches TWICE in
      this file, once here and once in `FLEET_FLOOR`, the documented state. */
-  arms: 936,
-  classified: 173,
-  corpus: 174,
+  /* MOVED 2026-09-13 BY M0-25: 936 -> 942 / 173 -> 174 / 174 -> 175, ALL THREE IN
+     THE SAME TURN, every one read off the figure THIS ITEM'S OWN GREEN `--strict`
+     RUN PRINTED — `REGISTER FLOOR arms 942/936 · classified 174/173 · corpus
+     (suites read) 175/174 · GREW by 6 arm(s)` — and never by adding this item's
+     claimed delta to the number above. The +1 corpus and +1 classified are
+     `test/m025-arm-anchor-witness.test.mjs`, the battery-side arm-anchor check;
+     its declaration reads as 6 arms.
+     **READ AFTER THE COMMIT, AND THE PRE-COMMIT RUN IS WHY THAT SENTENCE IS HERE
+     RATHER THAN ASSUMED.** With the new suite still UNTRACKED, the same script
+     printed `arms 936/936 · classified 173/173 · corpus 174/174` in the headline
+     while reporting, four lines down, `942 register arms were counted above; 936
+     of them come from suites that are in the commit`. A floor set from the
+     contaminated figure would have been permanently too high, would have failed
+     every honest run afterwards, and would have been switched off — which is the
+     payload D-238 names, arriving exactly as written. The figures here come from
+     the run at `65a8e63`, with the suite in the commit.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file,
+     once here and once in `FLEET_FLOOR`, the documented state. `FLEET_FLOOR` is
+     UNMOVED and none is owed — this item adds no fleet member and no fleet
+     suite, and its own suite is a PLANE suite. */
+  arms: 942,
+  classified: 174,
+  corpus: 175,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

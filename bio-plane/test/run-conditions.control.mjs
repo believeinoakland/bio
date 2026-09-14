@@ -159,8 +159,22 @@ const ARMS = [
   { n: 3, what: "NEUTER THE STORED-VS-PUBLISHED WALK — the reader scan finds nothing, and REACH must "
               + "fail AS A DELTA with the corpus size printed rather than sweeping an empty corpus",
     file: "test/run-conditions.test.mjs",
-    from: "    if (/FROM\\s+ai_runs/.test(body)) hits.push(marks[i].name);",
-    to:   "    if (false && /FROM\\s+ai_runs/.test(body)) hits.push(marks[i].name); /* NC-REC74-ARM3 */",
+    /* RE-ANCHORED 2026-09-13 BY M0-25's ARM-LIVENESS CENSUS, AND THE FINDING IS
+       KEPT: THIS ARM HAD STOPPED ARMING ON `main`, AND IT WAS ITS OWN AREA'S NEXT
+       ITEM THAT KILLED IT. `bb7b026` (REC-69, "op=airuns replayed onto main") gave
+       the reader scan a second job — it now also STORES each matching body, so the
+       single statement became a block:
+       `{ hits.push(marks[i].name); bodies.set(marks[i].name, body); }`.
+       The predicate is untouched; a statement grew a sibling. The anchor was not
+       moved with it, so from REC-69 until this census arm 3 reported
+       `ABORTED: anchor occurs 0 times` and the two reach arms it exists to fell
+       were never driven. Written at `a3af6bb` (REC-74), gone at `bb7b026`;
+       measured with `git log -S` on the old anchor, zero occurrences in the tree
+       the census found. The new anchor was counted (exactly one) before it was
+       written, and the ARMED form keeps `false &&` in front of the SAME predicate
+       so the arm neuters the scan and nothing else. */
+    from: "    if (/FROM\\s+ai_runs/.test(body)) { hits.push(marks[i].name); bodies.set(marks[i].name, body); }",
+    to:   "    if (false && /FROM\\s+ai_runs/.test(body)) { hits.push(marks[i].name); bodies.set(marks[i].name, body); } /* NC-REC74-ARM3 */",
     marker: "NC-REC74-ARM3",
     suites: ["run-conditions"],
     expect: (r) => r["run-conditions"].fail > 0

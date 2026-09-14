@@ -357,7 +357,7 @@ arm({
 
 arm({
   id: "V2", subject: "THE FLOOR — a whole member DIRECTORY vanishing",
-  what: "FLEET_FLOOR.members is raised to 3, standing in for a member directory that is gone entirely (the case the undeclared-Worker gate structurally cannot see)",
+  what: "FLEET_FLOOR.members is raised one above the discovered count (3 -> 4 as of CPDF-10's third member), standing in for a member directory that is gone entirely (the case the undeclared-Worker gate structurally cannot see)",
   mustFail: "`--strict` must exit non-zero naming FLEET FLOOR — a count with no floor is not a ratchet",
   mustNot: "the undeclared-Worker gate, which has nothing to say about a directory that is not there",
   file: COVERAGE,
@@ -372,11 +372,30 @@ arm({
      visible at all is the harness's rule that an arm which did not arm is a
      FINDING and never a pass. Anchored on the shortest span that is still
      unambiguous. */
-  find: `  members:     2,`,
-  replace: `  members:     3,`,
+  /* RE-ANCHORED AGAIN 2026-09-13 BY M0-25's ARM-LIVENESS CENSUS, AND THE FINDING
+     IS WORSE THAN THE ONE ABOVE RATHER THAN A REPEAT OF IT: **D-276's OWN
+     RE-ANCHORING NEVER ARMED EITHER.** The block above records the arm being
+     re-anchored on `  members:     2,` — five spaces, aligned with the block's
+     other keys. `git log -S` over this file's whole history answers NOTHING for
+     the padded spelling (`members:     `, zero commits), and the line it replaced
+     was `  members: 2,` with ONE space. So the 2026-08-09 re-anchor was written
+     from a DESCRIPTION of the line rather than from the line, and the arm has
+     reported `THE ARM DID NOT ARM` on every run since the moment it was supposedly
+     repaired. **A re-anchoring that is not verified against the file is not a
+     repair; it is the same defect with a fresh date on it** — and that is the one
+     failure mode the pattern this estate uses could not see, because the repair
+     and the proof lived in the same hand.
+     The value has ALSO moved since: `7ab8d4c` (CPDF-10) raised `members` from 2
+     to 3 when `ocr-worker` became the third fleet member, so even the un-padded
+     anchor would now be stale. Two independent causes, both named.
+     Anchored on the line as the file actually holds it, counted before it was
+     written (`  members: 3,` occurs exactly once), and the arm's assertion moved
+     with it: the floor gate now reads 3 discovered against a floor of 4. */
+  find: `  members: 3,`,
+  replace: `  members: 4,`,
   run: () => {
     const r = runCoverageStrict();
-    const floor = /FLEET FLOOR: 2 fleet member\(s\) discovered, floor is 3/.test(r.out);
+    const floor = /FLEET FLOOR: 3 fleet member\(s\) discovered, floor is 4/.test(r.out);
     const unaccountedQuiet = !/UNACCOUNTED/.test(r.out);
     return {
       observed: `exit ${r.code} · floor gate ${floor ? "FIRED" : "did NOT fire"} · undeclared-Worker gate ${unaccountedQuiet ? "silent (as declared)" : "also fired"}`,

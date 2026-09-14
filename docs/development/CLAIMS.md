@@ -3112,3 +3112,66 @@ both RELEASED, and no live claim names `agent-worker/**`.
     `plancheck` requires of any turn that rules on anything; the diff is this item's own three
     lines and the count.
 released: 2026-09-13 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 182/182 · 11,172 (the worker's figure exact), `coverage --strict` exit 0 read unpiped (FLEET_FLOOR 3/6/8/73 and REGISTER_FLOOR 936/173/174 by print), UI harness exit 0, `mintid --audit` 0 breaks. D-323 and D-324 closed; the D-276-staled-arms residue is M0-25, an item.
+
+## CLAIM 2026-09-13 M0-25 (the arm-liveness census — every control driver run whole)
+session: m025-arm-liveness (worktree agent-af1219fd05eadf256, branch worktree-agent-af1219fd05eadf256)
+opened: 2026-09-13T00:00:00Z
+paths:
+  - `bio-plane/test/m025-arm-census.mjs` (NEW) — the census instrument. Deliberately NOT a
+    `.test.mjs`: it RUNS the control drivers, and the drivers edit real sources, so a file the
+    battery discovered would mutate `src/` underneath every suite running beside it. The
+    precedent is every driver it runs.
+  - **The control drivers it re-anchors, NAMED INDIVIDUALLY as the census finds them and added
+    to this block mid-item** — a re-anchoring quotes a subject, it never edits one. No driver is
+    claimed speculatively.
+  - `docs/development/DEBT.md` — this item's dispositions, if any.
+  - `docs/development/MEASUREMENTS.md` — ONE appended section (the census figures).
+  - `docs/development/CLAIMS.md` — this block.
+  **READ, NEVER EDITED**: every driver's SUBJECT (`bio-plane/src/**`, `agent-worker/src/**`,
+  `civicos-ui/app.html`, `ocr-worker/**`, `pdf-worker/**`, `bio-plane/checks/**`) — the census
+  re-anchors the QUOTE, never the quoted line; `docs/development/QUEUE.md` (CONDUCT's sole
+  ground); `release/**`; `newgroup/**` (DIST's, and its two suites are outside the
+  `*.control.mjs` convention anyway — stated in the census's reach).
+concurrency: checked over the register 2026-09-13 — the D-323/D-324 block above is RELEASED and
+  no live claim names any `*.control.mjs`.
+  - ADDED MID-ITEM, 2026-09-13, as the census found them — **each is a re-anchoring that
+    QUOTES its subject and edits no subject**:
+    `agent-worker/test/agent-worker.control.mjs` (arm V2's anchor into `bio-plane/scripts/coverage.mjs`)
+    and `bio-plane/test/sufficiency-state.control.mjs` (arm 7's anchor into `bio-plane/checks/bio-checks.mjs`).
+  - ADDED MID-ITEM, 2026-09-13: `bio-plane/test/m025-arm-anchor-witness.test.mjs` (NEW) — the
+    battery-side half of the decision, and the only NEW `.test.mjs` this item lands.
+  - ADDED MID-ITEM, 2026-09-13: `bio-plane/test/hygiene.test.mjs` — **the D-268 class-census
+    NAMED list (one entry, for `m025-arm-census.mjs`) and the reach floor that entry invalidates
+    (32 -> 34, from the figure the run PRINTED), and nothing else in the file.** Not foreseen at
+    claim time: the census instrument's own directory walk is caught by the walk->floor ratchet,
+    which fired on the first driver run and CONTAMINATED it — every driver that runs hygiene as
+    part of an arm read `688 pass, 1 fail` and refused to arm. The run was discarded and re-taken.
+  - ADDED MID-ITEM, 2026-09-13, as the census's SECOND (clean) run found them — every one a
+    re-anchoring that QUOTES its subject and edits no subject, each new anchor COUNTED against
+    the committed blob before it was written, each staling commit named at the site:
+    `bio-plane/test/casepin.control.mjs` (FOUR arms — a, b, c, d — plus e; `808342f` case-5b and
+    `7e10ca9` CASE-4), `bio-plane/test/casesign.control.mjs` (arm d, two spaces of indentation,
+    `d720333` D-309), `bio-plane/test/caseproduction.control.mjs` (arm H, which changed MODULE:
+    `808342f`), `bio-plane/test/current.control.mjs` (arm 5 — an anchor that NEVER EXISTED),
+    `bio-plane/test/d280-strengthbar.control.mjs` (arms A and C, `ce2fe34` CASE-2),
+    `bio-plane/test/run-conditions.control.mjs` (arm 3, `bb7b026` REC-69),
+    `bio-plane/test/aicredential.control.mjs` (a stale EXPECTATION rather than a stale anchor —
+    two sites quoting a suite label composed as `${beyond.length}`, 26 -> 28),
+    `bio-plane/test/d301-census.control.mjs` (THREE figure-pins, and this one is THIS ITEM'S OWN
+    DELTA rather than a pre-existing staleness: the class census reads 34 and its reach floor
+    moved 32 -> 34 because M0-25 lands two walking instruments).
+  - ADDED MID-ITEM, 2026-09-13: `bio-plane/test/m025-anchor-witness.control.mjs` (NEW) — the
+    negative-control driver the battery-side witness declares. NOT a `.test.mjs`: it edits real
+    sources.
+  - ADDED MID-ITEM, 2026-09-13: `bio-plane/scripts/coverage.mjs` — **the three `REGISTER_FLOOR`
+    keys this item invalidated and nothing else**, `arms 936 -> 942`, `classified 173 -> 174`,
+    `corpus 174 -> 175`, each read off the figure a green `--strict` run PRINTED **after** the
+    commit (the pre-commit print reported 942 counted against 936 reproducible, because the new
+    suite was untracked — D-238 refusing a contaminated figure, exactly as written). ONE `arms:`
+    key per table, grepped after writing (2 matches in the file, the documented state).
+    `FLEET_FLOOR` untouched and none owed: this item's suite is a PLANE suite.
+  - ADDED MID-ITEM, 2026-09-13: `.gitignore` — ONE block, for the census's per-driver logs and
+    the witness driver's pen. Earned in the run it describes: a control driver's leftover
+    pristine copies were read by `check-firing.test.mjs` as a second producer of a retired check.
+  - ADDED MID-ITEM, 2026-09-13: `docs/DECIDED.md` — REGENERATED by `node tools/decided.mjs`,
+    which `plancheck` requires of any turn that rules on anything.

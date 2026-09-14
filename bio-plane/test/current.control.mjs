@@ -263,10 +263,30 @@ arm("5", "THE TEAM IS READ, NEVER INFERRED. `#findingsVersionFromAnotherTeam` st
   + "from *attributes at all*.",
   [["store", `           FROM inquiry_basis_versions WHERE bundle_id=? AND run IS NOT NULL AND run <> ''`,
              `           FROM inquiry_basis_versions WHERE bundle_id=?`],
-   ["store", `        if (!runRow || runRow.context_type !== "project") continue;
-        const src = String(runRow.context_id ?? "").trim();`,
-             `        const src = String((runRow && runRow.context_type === "project" && runRow.context_id)
-                          || (drawing[0] && drawing[0].id) || "").trim();`]],
+   /* RE-ANCHORED 2026-09-13 BY M0-25's ARM-LIVENESS CENSUS, AND THE FINDING IS
+      SHARPER THAN "THE LINE MOVED": **THIS ANCHOR NEVER EXISTED.** It quoted
+      `        if (!runRow || runRow.context_type !== "project") continue;` — and
+      `git log -S 'context_type !== "project"'` over the WHOLE history of
+      `bio-plane/src` answers NOTHING. The arm was written from a DESCRIPTION of
+      the code rather than from the code, so it has reported zero matches from the
+      day it was written, and the census is the first thing that ever ran it.
+      **It is the second instance of that shape in this one census** — the other
+      is `agent-worker.control.mjs`'s V2, whose 2026-08-09 re-anchor used a padded
+      spelling the file has never held. A re-anchoring that is not COUNTED against
+      the file is not a repair.
+      WHAT THE ARM MEANS, re-expressed against the site that exists. REC-74 wrote
+      the team read as a MEMBERSHIP TEST over the projects already drawn — the
+      match happens in the predicate and the projection is the row's own key —
+      so "stop requiring the run's context to be a PROJECT and fall back to the
+      first project drawing on the question" is: drop `context_type='project'`
+      from the predicate and `|| drawing[0]` after it. Asserted to occur exactly
+      once, and the patched source re-parsed, before this was written. */
+   ["store", `        const from = drawing.find((p) => this.#one(
+          \`SELECT run FROM ai_runs WHERE run=? AND context_type='project' AND context_id=?\`,
+          v.run, p.id));`,
+             `        const from = drawing.find((p) => this.#one(
+          \`SELECT run FROM ai_runs WHERE run=? AND context_id=?\`,
+          v.run, p.id)) || drawing[0];`]],
   ["TWO items and not three"],
   []);
 
@@ -291,10 +311,24 @@ arm("7", "THE DISPOSITION PUBLICATION MUST BE A MEASUREMENT OF THE ACT AND NOT A
   + "DECLARED: the undispositionable arms MUST fail. The arms about the two proposal kinds MUST "
   + "stay green, because those were already true — which is what proves the publication is not "
   + "trivially true either.",
-  [["store", `    return { available: false, op: null, keyed_on: KEYED_ON, key: null,
-             reason: "no_disposition_identity",`,
-             `    return { available: true, op: "proposedispose", keyed_on: KEYED_ON, key: null,
-             reason: "no_disposition_identity",`]],
+  /* RE-ANCHORED 2026-09-13 BY M0-25 — the SECOND dead anchor in this driver, and
+     it was invisible until arm 5's was fixed, because `edit()` throws (D-331).
+     Staling commit `63a329d` (record: D-266, "the widened disposition key for
+     STANCE-SCOPED kinds", IC-60): every return in `#dispositionOf` gained a
+     `scope:` key and the `no_disposition_identity` guard this arm quoted was
+     replaced by the scope guard, `reason: "no_project_scope"`. Written at
+     `7ab3117` (PL-13), gone at `63a329d`; the old quote occurs zero times.
+     The arm is unchanged in meaning — the LAST `available: false` guard before the
+     success return is flipped to advertise the act on an item that carries no key,
+     which is the live defect UI-45 found one surface over. Counted (exactly one)
+     before it was written, and the arm was RE-RUN to confirm it behaves as
+     declared rather than merely arming. */
+  [["store", `      return { available: false, op: null, scope: "project", keyed_on: SCOPED_ON, key: null,
+               finding: fid, projects: [],
+               reason: "no_project_scope",`,
+             `      return { available: true, op: "proposedispose", scope: "project", keyed_on: SCOPED_ON, key: null,
+               finding: fid, projects: [],
+               reason: "no_project_scope",`]],
   ["NEITHER of this item's two kinds is dispositionable"],
   ["DRIVEN — the pair the plane publishes as `keyed_on` is the pair the act ACCEPTS"]);
 
