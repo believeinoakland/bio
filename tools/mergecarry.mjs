@@ -154,6 +154,25 @@ export const KNOWN_HISTORICAL_DROPS = [
        + "until it is done`, while the battery prints `2 member(s) actually RAN` and no `DARK:` "
        + "at all. The work was done and the ledger still asks for it. Leaves this list when "
        + "D-232's disposition is corrected." },
+  { merge: "95e401b", path: "bio-plane/dist/bio-plane.bundle.json",
+    why: "D-334 x release 0.58.0, 2026-09-14, CONDUCT #9. A GENERATED manifest, and the drop "
+       + "is benign AND correct rather than a repair owed: DIST cut 0.58.0 (db7589b) from a "
+       + "plane source WITHOUT D-334 (its store.mjs input 1,869,260 B, sha 514bb504...), while "
+       + "the integration side had already rebuilt the bundle on the merged source carrying "
+       + "D-334 (store.mjs 1,874,385 B, sha 2416ee7b...; f974291, itself forced by FL-10's "
+       + "guard firing at the D-334 merge). The merge kept the integration side's manifest "
+       + "whole, so DIST's describes a source tree that no longer existed after the merge. "
+       + "MEASURED on the merged tree at 95e401b, `fleetbundles.test.mjs` 87/87 exit 0 "
+       + "unpiped: the surviving manifest is byte-identical to a fresh build of the merged "
+       + "source — the guard that exists for exactly this question answered it. `release/**` "
+       + "is untouched and still carries the SIGNED 0.58.0 artifact (72fce1e9...); dist/ and "
+       + "release/ diverging after a cut is D-298's truthful state, not a defect. WHY IT WAS "
+       + "UNREGISTERED: the corpus arm grades origin/main, which cannot see an unpushed "
+       + "merge, and plancheck's origin/main..HEAD carry check read 0 DROPPED before the "
+       + "push - the two instruments disagree about a same-end drop on a GENERATED file, "
+       + "and that gap is the finding this row leaves behind (the honest fix is a "
+       + "Dropped-from-branch trailer at merge time, which this merge did not carry). "
+       + "Stays here as the receipt; nothing to repair." },
 ];
 
 export function git(args, { repo, allowFail = false } = {}) {

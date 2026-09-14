@@ -385,8 +385,14 @@ section("the historical register, graded in BOTH directions over the REAL corpus
   t("the corpus is non-empty and large enough to mean something (>= 150 merges)", h.merges >= 150, true);
   t("no UNREGISTERED drop sits in main's history", h.fresh, []);
   t("no registered drop has quietly stopped being one", h.stale, []);
-  t("...and the register is the three the sweep found, not a longer list",
-    KNOWN_HISTORICAL_DROPS.length, 3);
+  /* CORRECTED 2026-09-14 (CONDUCT #9), 3 -> 4, never exempted: the pin exists so this list
+     cannot become an exemption list, and it did its job — the fourth row (95e401b, the
+     generated plane manifest at the D-334 x 0.58.0 merge) was found by THIS arm going red
+     on origin/main, measured on the merged tree (fleetbundles 87/87: the surviving manifest
+     is byte-identical to a fresh build), and registered with its why. The pin stays EXACT
+     rather than relaxed to a floor, so the next row has to move it in the open too. */
+  t("...and the register is the FOUR the sweeps found, not a longer list",
+    KNOWN_HISTORICAL_DROPS.length, 4);
   /* THE FALSE-POSITIVE CLAIM, AS A NUMBER RATHER THAN A PROMISE. Three findings over the
      whole of main's history is what earns this check its place in the gate; a check that
      cried wolf on a tenth of merges would be switched off within a week. */
