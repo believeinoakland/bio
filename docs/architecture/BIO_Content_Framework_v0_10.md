@@ -1,14 +1,14 @@
 # BIO Content Framework
 
-**Status** · The content framework, in two parts. **Part I (§§1–13)** — the extraction substrate: recognisers, regions and digests, change layers, content types, connections and their grade, progressions, identifier spaces, intent, declared bias, provenance of judgments — ARCHITECTURE APPROVED by Bob at v0.10 on 2026-07-30 and unchanged since. **Part II (§§14–19)** — content as the unit the record points at: role and model, the forms of content, the extraction process as built, organization and access, the central gap stated once, and who defers to this document — added 2026-09-15 as v0.11, **DRAFT awaiting Bob's review**; it rules nothing new and proposes no design, and §18 names the six pieces still to be designed. The file keeps its `v0_10` name so `framework:LINE` citations in code and record resolve; **this front matter shifted every body line by the length of this block once, on 2026-09-14 — a citation written before that date points that many lines early; the fix is to cite the section (`CORPUS-STANDARD.md` §4.6)**. Part I complete and approved at its level; Part II a draft with an explicit frontier. as of 2026-09-14.
+**Status** · The content framework, in two parts. **Part I (§§1–13)** — the extraction substrate: recognisers, regions and digests, change layers, content types, connections and their grade, progressions, identifier spaces, intent, declared bias, provenance of judgments — ARCHITECTURE APPROVED by Bob at v0.10 on 2026-07-30 and unchanged since. **Part II (§§14–19)** — content as the unit the record points at: role and model, the forms of content, the extraction process as built, organization and access, the central gap stated once, and who defers to this document — added 2026-09-15 as v0.11 and rewritten for readability at v0.12 (2026-09-14: design first, status in tables, evidence in Appendix A), **DRAFT awaiting Bob's review**; it rules nothing new and proposes no design, and §18 names the six pieces still to be designed. The file keeps its `v0_10` name so `framework:LINE` citations in code and record resolve; **this front matter shifted every body line by the length of this block once, on 2026-09-14 — a citation written before that date points that many lines early; the fix is to cite the section (`CORPUS-STANDARD.md` §4.6)**. Part I complete and approved at its level; Part II a draft with an explicit frontier. as of 2026-09-14.
 
 **Place in the system** · The single authoritative content design and the home of constructs 4, 5 and 6 of `BIO_System_Design.md` §3 (content — the heart of the system; document profile and the extraction substrate; meaning). `CONSTRUCTS.md` is the inventory and evidence beneath Part I; `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` is the design-space study for Part II §18's first piece; `STORE-AS-CACHE.md`'s three-axis and four-level tables are adopted in §14.2–14.3; `CLAUDE.md`'s content section points here; DEBT D-164 and INTERFACES I2 cite it. It does not own retrieval, the investigative session, the bias doctrine, the interface contracts, or any ruling.
 
 **Incomplete sections** ·
 - §14 — Part II is DRAFT awaiting Bob's review (all of §§14–19); §14.6's "PARKED" is stale since Bob reopened D-164 on 2026-09-15.
-- §16.7 — self-marked absences: table and image extraction, the AI EXTRACT role, read-time re-extraction to tier 3 (D-319), per-page Tier-2 and `text_tier` rules (D-283, D-284), the content-axis frontier.
+- §16 — the closing table's ABSENT row: table and image extraction, the AI EXTRACT role, read-time re-extraction to tier 3 (D-319), the per-page tier-2 rule (D-283), the content-axis frontier.
 - §18 — six pieces "named here, designed nowhere in this document": the content object and extent-carrying edge (D-164); content-grain search; the general observation log; extraction breadth; homes for the member's lead and firsthand observation (doctrine, Bob's); the claim object (doctrine, Bob's).
-- §19 — the to-do table of pointers is partly performed: `CLAUDE.md`, DEBT D-164, INTERFACES I2, `STORE-AS-CACHE.md`, README and CONSTRUCTS done; the `schema.mjs`, `index.mjs` and `registry.mjs` self-descriptions are CPDF-17's; the table names a `v0_11` file that does not exist.
+- §19 — two owners' acts remain rowed (CPDF-17): the schema comments that should cite Part II, and the stale self-descriptions in the plane and the type registry.
 - §11 — seven declared bends; the first (documents that are not pages) has partly arrived with the non-text path and the OCR member, and Part I's text is frozen by design, so the bend is not updated in place.
 - §1.1 — "entities that outlive documents" named as the primary missing capability; the entity axis is since built at document grain (Part II §15).
 - §12.2 and §13.1 — "What is deliberately not modelled yet" and "What is missing" are self-marked; the claim object has been absent since v0.1.
@@ -61,30 +61,26 @@
   - [10. Provenance of judgments, so learning can revise](#10-provenance-of-judgments-so-learning-can-revise)
   - [11. Where this framework will bend](#11-where-this-framework-will-bend)
 - [PART II · CONTENT AS THE UNIT](#part-ii-content-as-the-unit)
-    - [Terminology: this document's "content" and DEC-23's "content" are two words](#terminology-this-documents-content-and-dec-23s-content-are-two-words)
-  - [14. Content's role and model](#14-contents-role-and-model)
-    - [14.1 The ruling](#141-the-ruling)
-    - [14.2 The three layers and their verbs](#142-the-three-layers-and-their-verbs)
-    - [14.3 The four-level search, and "a search that returns documents has not finished"](#143-the-four-level-search-and-a-search-that-returns-documents-has-not-finished)
-    - [14.4 Content's two intrinsic properties: EXTENT and EXTRACTION METHOD](#144-contents-two-intrinsic-properties-extent-and-extraction-method)
-    - [14.5 The machine may EXTRACT](#145-the-machine-may-extract)
-    - [14.6 Status, stated once](#146-status-stated-once)
-  - [15. The forms of content](#15-the-forms-of-content)
-  - [16. The extraction process as built](#16-the-extraction-process-as-built)
-    - [16.1 Identify](#161-identify)
-    - [16.2 Read — the text path](#162-read-the-text-path)
-    - [16.3 The L2→L3 wire — the non-text path, three tiers](#163-the-l2l3-wire-the-non-text-path-three-tiers)
-    - [16.4 Tier 3, the current state — VERIFIED against the tree, not copied from the comment](#164-tier-3-the-current-state-verified-against-the-tree-not-copied-from-the-comment)
-    - [16.5 The chain, composed as the wire walks](#165-the-chain-composed-as-the-wire-walks)
-    - [16.6 Promote-time projection](#166-promote-time-projection)
-    - [16.7 What is specified, what is delegated, what is absent](#167-what-is-specified-what-is-delegated-what-is-absent)
-  - [17. Organization and access](#17-organization-and-access)
-  - [18. The central gap, stated once](#18-the-central-gap-stated-once)
+  - [14. What content is, and how the record models it](#14-what-content-is-and-how-the-record-models-it)
+    - [14.1 The definition](#141-the-definition)
+    - [14.2 The model](#142-the-model)
+    - [14.3 The three axes and the four-level search](#143-the-three-axes-and-the-four-level-search)
+    - [14.4 Who may do what](#144-who-may-do-what)
+    - [14.5 Where it stands](#145-where-it-stands)
+  - [15. The forms content takes today](#15-the-forms-content-takes-today)
+  - [16. How content is extracted today](#16-how-content-is-extracted-today)
+  - [17. How content is organized and reached](#17-how-content-is-organized-and-reached)
+  - [18. The central gap, and the six pieces to design](#18-the-central-gap-and-the-six-pieces-to-design)
   - [19. Where this document is the authority, and who defers to it](#19-where-this-document-is-the-authority-and-who-defers-to-it)
+  - [Appendix A · The evidence, as measured at `origin/main` `51d128a`](#appendix-a-the-evidence-as-measured-at-originmain-51d128a)
+    - [A.1 The rulings](#a1-the-rulings)
+    - [A.2 The forms (§15), by file](#a2-the-forms-15-by-file)
+    - [A.3 The extraction path (§16), by file](#a3-the-extraction-path-16-by-file)
+    - [A.4 Organization and access (§17), by file](#a4-organization-and-access-17-by-file)
 
 ---
 
-**Version 0.11 — 2026-09-15 — Part I (§§1–13) ARCHITECTURE APPROVED by Bob at v0.10 and unchanged line for line; Part II (§§14–19) DRAFT, the post-2026-07-30 content doctrine folded in so that this document is the single authoritative content design — awaiting Bob's review. The v0.11 changelog entry stands at the head of Part II, and the file keeps its `v0_10` name so that every `framework:LINE` citation in the code and the record stays exact.**
+**Version 0.12 — 2026-09-14 — Part I (§§1–13) ARCHITECTURE APPROVED by Bob at v0.10 and unchanged line for line; Part II (§§14–19 and Appendix A) the content design, DRAFT awaiting Bob's review — rewritten at v0.12 as a readable design document after Bob found the v0.11 text unreadable; nothing it asserts changed. The file keeps its `v0_10` name so that `framework:LINE` citations resolve by section.**
 
 Status: this is the framework document Bob called for after observing that the
 development work had diffused across many elements at once. It supersedes nothing
@@ -98,6 +94,15 @@ to render is worse than no diagram: it leaves a block of syntax where an explana
 should be.
 
 Changelog:
+- v0.12, 2026-09-14. Bob: Part II "appears to be a changelog. It's not readable nor
+  informative." Rewritten as a design document: each section states the design first in
+  plain language, the status marks sit in one table per section, the content model gains a
+  UML class diagram, and every file-and-line citation moves to Appendix A. No assertion
+  changed; the v0.11 changelog paragraph that opened Part II is folded here.
+- v0.11, 2026-09-15. Adds Part II (§§14–19), the content doctrine ruled between 2026-08-03
+  and 2026-09-14 (DEC-23, DEC-24, DEC-4 as amended, D-164) and the extraction path as built,
+  folded into this document so it is the single authoritative content design. Part I
+  unchanged line for line. DRAFT awaiting Bob's review.
 - v0.10, 2026-07-30. Bob settled the open question by pointing at the principle already
   written: the measure never edits the statement. A measure that may not edit a
   statement certainly may not BLOCK work resting on it, so decay is loud and never
@@ -1449,625 +1454,392 @@ the response is a registry entry and not a rewrite.
 
 # PART II · CONTENT AS THE UNIT
 
-**Changelog — v0.11, 2026-09-15.** Adds Part II (§§14–19) and changes nothing in §§1–13,
-which are now Part I and keep every line number they had at v0.10, so the `framework:LINE`
-citations in the code and the record stay exact. Between 2026-08-03 and 2026-09-14 the
-doctrine about what the record POINTS AT was ruled (DEC-23: content is the unit, a document
-its widest extent), the machine's role in producing it was ruled (DEC-24: EXTRACT), the OCR
-ruling was amended (DEC-4), and a real extraction path was built (FW-15, CPDF-9/10/13,
-D-252, the `ocr-worker` fleet member in 0.58.0) — while the doctrine itself was carried
-loose in `CLAUDE.md`, two ledgers, `STORE-AS-CACHE.md`, `INTERFACES.md` and schema comments,
-and Bob had to restate it session after session. Part II folds it here: §14 the role and
-model, §15 an inventory of the forms content takes, §16 the extraction process as built
-(with the Tier-3 state VERIFIED against the tree rather than copied from a stale comment),
-§17 an access inventory, §18 the central gap stated once, §19 who defers to this document.
-Every construct is marked [BUILT] / [DESIGNED-not-built] / [GESTURED] / [ABSENT] and cited
-to a file and line at `origin/main` `51d128a`. The terminology note below reconciles this
-document's "content TYPE" (a recogniser axis, §4/§7) with DEC-23's "content" (the unit the
-record points at). Part II proposes no design; §18 names what must be designed. The
-preamble's "supersedes nothing yet" is Part I's 2026-07-30 statement and stands for Part I;
-§19 states Part II's. No diagram is added, so the preamble's "all six" stays true. Part II
-rules nothing new; the ruling index (`tools/decided.mjs`, a floor that indexes marker
-words) nonetheless gains pointers to §14's restatements of DEC-23 and DEC-24 and was
-regenerated in the landing commit, and the landing ran the FULL gate rather than the docs
-profile because the `CLAUDE.md` pointer sits outside `docs/`. Written at Bob's
-direction of 2026-09-15 that content be understood, architected and inventoried before its
-missing pieces are designed — which is the direction that REOPENS the thread the record
-shows as parked on him (§14.6, §18).
+Part II is the content design. It says what content IS, how the record models it, the
+forms it takes today, how it is extracted, how it can be reached, and what remains to be
+designed — in that order, each stated once. Part I above is the substrate the content sits
+on and is unchanged. A build session that needs the file and line behind a claim finds it
+in Appendix A; the body is written for the reader who has to understand the design, not
+build from it. Rewritten to that end at v0.12 (2026-09-14) after Bob found the v0.11 text
+unreadable; nothing it asserts changed.
 
-Added at v0.11, 2026-09-15. Part I (§§1–13) is the substrate design Bob approved on
-2026-07-30 and is unchanged above. Between 2026-08-03 and 2026-09-14 the doctrine about
-what the record POINTS AT was ruled (DEC-23), the machine's role in producing it was ruled
-(DEC-24), the OCR ruling was overturned and then amended (DEC-4), and a real extraction
-path was built (FW-15, CPDF-9/10/13, D-252, the `ocr-worker` fleet member) — while the
-doctrine itself was carried loose in `CLAUDE.md`, two ledgers, `STORE-AS-CACHE.md`,
-`INTERFACES.md` and schema comments, and Bob had to restate it session after session.
-`CLAUDE.md`'s own words, in the section it wrote for the purpose: *"a point that must be
-re-made is a point the record failed to carry."* Part II folds the doctrine here so that
-this document is the single authoritative content design.
+Four status marks are used, always in a table's status column and never inline: **BUILT**
+(in `main`, driven by the battery), **DESIGNED** (ruled or specified, no code), **GESTURED**
+(named as wanted, neither specified nor built), **ABSENT** (nothing names it, or the record
+says it does not exist).
 
-Part II adds no design of its own. §§14–17 state what is ruled and what is built; §18
-names what remains to be designed; §19 says who defers to this document. Every construct
-below carries one of four marks:
+One word needs disambiguating before anything else. Part I uses "content type" for a
+recogniser axis — *what kind of document is this?* (meeting calendar, agenda, generic). Part
+II uses bare "content" in DEC-23's sense — *a piece of information extracted from a
+document, up to and including the whole document*. The two are never the same thing: one
+classifies documents, the other is a unit of address. Part II always writes the qualifier
+for the first and never for the second. Likewise, "L3 content" and "L7 claim" below refer to
+the ownership ladder (bytes, structure, content, intent, record, retrieval, claim), not to
+Part I §6's change layers, which share the L-numbers and nothing else.
 
-- **[BUILT]** — in `main` at `51d128a` (`origin/main`, 2026-09-14), driven by the battery,
-  with the file and line named.
-- **[DESIGNED-not-built]** — ruled or specified in a record the repository holds, with no
-  code behind it.
-- **[GESTURED]** — named in a document as a thing wanted, with neither a specification nor
-  code.
-- **[ABSENT]** — nothing in the record names it, or the record says in so many words that
-  it does not exist.
+## 14. What content is, and how the record models it
 
-Line numbers are as measured at `51d128a`. `store.mjs` is 29,465 lines and `index.mjs`
-7,390; where an older record cites a line that has since moved, Part II cites the current
-line and says so.
+### 14.1 The definition
 
-### Terminology: this document's "content" and DEC-23's "content" are two words
+**Content is the unit the record points at, and a whole document is simply its widest
+extent.** Bob ruled this on 2026-08-03 (DEC-23), reversing the provisional that had run
+until then, under which a leg, a citation and a connection each addressed a whole capture.
+In his words: *"a target can be a document — but it can also be a piece of content extracted
+from a document… a piece of content can be broad enough that it refers to the entire
+document."* The reason was already in the stack: the ownership ladder runs structure →
+content → intent, so content was the named layer between bytes-with-shape and meaning, and
+*"pointing at a 300-page PDF is not pointing."*
 
-Part I uses "content" in one sense and DEC-23 in another. Under one word they read as the
-same thing, and they are not; Part II reconciles them here rather than leave it to a reader.
+Three sentences follow from it and are rules (they are also in `CLAUDE.md`, the file every
+session loads): **documents are what is HARVESTED; content is what is EXTRACTED; meaning
+derives from both, and neither one alone.** A store full of captured documents nobody has
+read is a pile of noise with good provenance. Finding the document is the cheap half.
 
-| term | means | where it comes from | in Part II |
-| --- | --- | --- | --- |
-| **content TYPE** | a recogniser axis answering "what IS this document?" — meeting calendar, meeting agenda, generic | Part I §4 (the `types` registry, framework:341-344); §7 (a content type is a recogniser plus `parse` / `assess` / `connections`, framework:478-482) | always written with the qualifier; never bare "content" |
-| **CONTENT** | *"a piece of information extracted from a document, up to and including the whole document"* — the UNIT the record points at, carrying its own EXTENT and EXTRACTION METHOD | DEC-23, `docs/archive/ledgers/DECISIONS-2026-08.md:1609-1613`; `CLAUDE.md`, "CONTENT IS THE UNIT, AND A DOCUMENT IS NOT THE ANSWER" | bare "content" means this and only this |
-| **READING** | what we believe a capture CONTAINS: entities with stable keys and named facts, plus document facts | Part I §3, framework:243-245 | ONE FORM content takes (§15), not content's definition |
+### 14.2 The model
 
-So: a content TYPE is a PROFILE judgment about a document (§3's second object); CONTENT is
-a thing the record points at; a READING is one of the forms content takes. The two senses
-were never in conflict — one classifies documents, the other is a unit of address — but
-they must not share a bare word.
+A document — a capture, identified by its bytes — is extracted into one or more pieces of
+content. Each piece carries two intrinsic facts: its **extent** (which part of the document)
+and its **extraction method** (how the text was produced — the publisher's own text layer, a
+machine reading, OCR, a member's transcription). A member may **attest** that a piece of
+content matches the page over a stated extent; that is verification, not extraction, and it
+is the only route to the top of the grade ladder. The record's **edges** — a leg grounding
+an inquiry, a citation, a connection between two documents through an entity — point at
+content. A **reading** is what the machine believes a whole capture contains (entities,
+facts) and is one of the forms content takes, not content's definition.
 
-Two layer numberings also coexist and are not one ladder. Part I's §6 numbers the CHANGE
-layers L1–L6 (L1 which stack, L2 any byte different, … L6 what does it connect to;
-framework:421-428), and `INTERFACES.md:369-371` cites that numbering. DEC-23 cites a
-different one: the ownership ladder in `docs/archive/research/LAYERS.md` (L1 bytes, L2
-structure :90, L3 content :84, L4 intent :78, L5 record, L6 retrieval, L7 claim :68), and
-D-164's title *"L3 CONTENT is a named layer with no object"* and its *"twin, L7"* use that
-ladder. `STORE-AS-CACHE.md:632-635` collided with it once and renamed its own layers rather
-than renumber. Part II writes the ownership ladder as "L3 content" / "L7 claim" with the
-noun attached, and never uses a bare L-number.
+```mermaid
+classDiagram
+  direction LR
+  class Document {
+    capture_sha
+    capture grade
+    provenance chain
+  }
+  class Content {
+    extent
+    extraction method
+    derivation cap
+  }
+  class Extent {
+    kind: document | page | region | cell | paragraph | shape
+    ref: human form
+  }
+  class ExtractionChain {
+    steps: layer | pixels | ocr(engine) | ai(function)
+    cap = min over steps
+  }
+  class Attestation {
+    attestor: member
+    extent
+    chain as it stood
+  }
+  class Reading {
+    entities, facts
+    found or failed
+  }
+  class Leg
+  class Citation
+  class Connection
+  class Inquiry
+  class Entity
+  Document "1" *-- "1..*" Content : is extracted into
+  Content --> Extent : has
+  Content --> ExtractionChain : produced by
+  Attestation --> Content : verifies, over an extent
+  Reading --> Document : what a capture contains
+  Leg --> Content : rests on
+  Leg --> Inquiry : or on another inquiry
+  Inquiry "1" *-- "0..*" Leg : is grounded by
+  Citation --> Content : points at
+  Connection --> Content : relates two
+  Connection --> Entity : through
+```
 
-## 14. Content's role and model
+**Two graded facts, and neither is the other.** The document's **capture grade** says how
+the bytes' provenance was established (Part I §8.1's sense of grade). The content's
+**derivation cap** says the strongest fidelity its extraction chain can support — the
+minimum over the chain's steps, because every derivation step weakens and none strengthens.
+A leg citing the content may claim no more than the weaker of the two. Where a step's
+fidelity was never measured the cap is undetermined and is *stated* as such, never resolved
+into a letter (Part I's invariant 5, in a column). OCR never raises a capture grade; a
+member's attestation over an extent raises what a leg citing *that extent* may claim, and
+nothing outside it inherits it.
 
-### 14.1 The ruling
+### 14.3 The three axes and the four-level search
 
-RULED by Bob, 2026-08-03, DEC-23 (`docs/archive/ledgers/DECISIONS-2026-08.md:1593-1638`).
-The question (:1596-1597): is CONTENT — a piece of information extracted from a document —
-a first-class thing the record can point at, and the target of a leg, a citation and a
-connection? The provisional that had been running (:1600-1602): DOCUMENT-level addressing.
-*"A leg, a citation and a connection each address a whole capture or bundle; `readings`,
-`reading_refs` and `resolutions` already hold sub-document material, and nothing can point
-at any of it."*
+The store is a **read-through cache at three altitudes**, and the same pattern repeats at
+each: a question, a repair, a frontier, and a set of honest states.
 
-The response (:1609-1613): **"CONTENT IS THE UNIT THE RECORD POINTS AT, and a whole
-document is simply its widest extent."** Bob's words: *"a target can be a document - but it
-can also be a piece of content extracted from a document… we should be using the word
-'content' to refer to a piece of information extracted from a document, and a piece of
-content can be broad enough that it refers to the entire document."*
-
-And the reason the stack already contained (:1614-1618): the ownership ladder runs L2
-STRUCTURE → L3 CONTENT → L4 INTENT, so content was already named as the layer between
-bytes-with-shape and meaning, and *"Nothing can be connected, cited or reasoned over until
-the thing being pointed at is smaller than a filing cabinet — pointing at a 300-page PDF is
-not pointing."*
-
-`CLAUDE.md` carries the ruling in the one file every session loads, as three sentences
-that are now rules: **documents are what is HARVESTED; content is what is EXTRACTED;
-meaning derives from both, and neither one alone.** It also records why it is there — Bob
-had to say it repeatedly — which is the failure Part II exists to end. Enacted 2026-08-03
-(`5318b53`, DECISIONS-2026-08.md:1638): REC-11 and REC-18 carry "a leg points at CONTENT"
-as a named provisional, the target staying an INFO-/INQ- id *"until D-164's parked
-content-extent primitive resumes; no second reference vocabulary meanwhile."*
-
-### 14.2 The three layers and their verbs
-
-`STORE-AS-CACHE.md:523-536` corrects an earlier six-layer stack into **one pattern at
-three altitudes**, and its table is the model Part II adopts. [DESIGNED-not-built] as a
-model; each cell's build state is in the table.
-
-| | DOCUMENT axis | CONTENT axis | MEANING axis |
-| --- | --- | --- | --- |
-| the question (:530) | do we hold the bytes? | have we extracted what is IN the bytes? | have we resolved and connected what was extracted? |
-| a miss repairs by (:531) | **FETCH** — external | **EXTRACT** — compute over bytes held | **DERIVE** — compute over content held |
-| who can repair it (:533) | only the outside world | us, alone | us, alone |
-| read-through today (:534) | partly: `op=acquire`, the archive fallback [BUILT] | partly: PDF tiering, escalation to the pdf-worker [BUILT, §16] | yes, unnamed: REC-5's `connection_dirty` sweep [BUILT] |
-| its frontier (:535) | `deferred` links, derived [BUILT] + member leads [ABSENT, D-194] | documents held but unextracted, or extracted at a tier below what is now available [ABSENT — nothing enumerates it; §16.7] | `connection_dirty` [BUILT] |
-| its four states (:536) | NEVER_LOOKED / LOOKED_ABSENT / LOOKED_INDETERMINATE / PRESENT | NOT_EXTRACTED / PARTIAL / EXTRACTED / UNEXTRACTABLE | UNRESOLVED / RESOLVED / UNDETERMINED |
-
-Three things the document draws out of the table (:538-557), each grounded: D-129's split
-IS the content axis's state model, with CPDF-5's measured buckets (fully 29%, partial 21%,
-tier-2 required 36%, OCR-only 14%) as that column counted; the meaning axis already does
-read-through without calling it that; and **the content axis has a cache-invalidation key
-the other two do not — THE ENGINE VERSION** — which is why the CALIBRATION construct
-(D-183, now built, §15) is *"the content axis's staleness rule"* and the one place where
-re-deriving from bytes already held is a legitimate, non-costs-nothing improvement
-(:551-557).
-
-Two consequences recorded there bind Part II. *"A missing-information report must name its
-axis"* (:572-575): "we have nothing on Y" is three different claims and the member's next
-move differs in each. And *"the OBSERVATION record is shared across all three axes"*
-(:564-567) — *"extracted at tier 1 on this date under this engine"* is the same shape of
-fact as *"fetched and unchanged"* — which §17 returns to, because that record is [ABSENT].
-
-Against Part I §3: the DOCUMENT axis is CAPTURE; the CONTENT axis is READING widened to
-every extracted form; the MEANING axis is ENTITY resolution and OBSERVATION. Part I's
-pipeline (capture → profile → reading → observation, framework:276-278) is the three verbs
-read left to right, and nothing in Part I is displaced — what the table adds is that each
-altitude has its OWN frontier, its own states, and its own repair.
-
-### 14.3 The four-level search, and "a search that returns documents has not finished"
-
-RULED by Bob, 2026-08-04, carried as the load-bearing correction in
-`STORE-AS-CACHE.md:577-611`. The text it corrects had called the document axis "plumbing"
-and assumed the lower levels were complete. Bob (:583-587): *"Be careful about assuming that
-when an AI goes looking for something that the set of meaning, content, and documents are
-complete. Making that assumption will short-circuit the exploration and discovery processes
-from which new material is found. In the end, all FOUR levels (meaning, content, documents,
-the internet) may need to be searched in order to find what's needed."*
-
-| level (:594-599) | searched by | what a miss here means |
-| --- | --- | --- |
-| MEANING | the meaning-layer reads (route 2) | nothing has been derived — which may only mean nothing was extracted |
-| **CONTENT** | extraction over bytes held | nothing was extracted — which may only mean the document was never read |
-| DOCUMENTS | the query compiler (route 1) | we hold nothing — which may only mean nobody looked |
-| THE INTERNET | acquisition, and the member's own shoe leather | it is not there, or we have not found where it is |
-
-Content is level 2, and the column reads downward as one sentence: **absence at any level
-is not evidence of absence at the next** (:601-604). The three rules `CLAUDE.md` states from
-it — *a search that returns documents has not finished*; *never assume the lower levels are
-complete*; *sparse is the normal condition at every level*, so that **saying which** of the
-four absences is true *"is a first-class obligation, not a diagnostic detail"* — are Part
-I's invariant 5 (uncertainty is carried, not resolved) and invariant 9 (the negative result
-is a finding) applied to retrieval. And one process runs all four levels (Bob, :606-611):
-*"it's this same searching process… that causes content to be identified from documents and
-content connections made."* Extraction is not a stage that completes and hands on; it is
-the search running at a second altitude.
-
-Where the say-which obligation is enforced today: the investigative session's run log
-carries a LEVEL on every entry — `airun.mjs:99-104`, where `OBSERVATION_LEVELS.content`
-reads *"extracted content within documents (DEC-23: content is the unit)"* [BUILT, for that
-one consumer]; the assistant pilot's design requires an answer to name its level
-(`ASSISTANT-PILOT.md:67-72`) [DESIGNED-not-built]; a general observation log does not exist
-(§17, the OBSERVE rows) [ABSENT].
-
-### 14.4 Content's two intrinsic properties: EXTENT and EXTRACTION METHOD
-
-DEC-23's consequent shape (DECISIONS-2026-08.md:1631-1636), recorded *"so a build session
-does not re-derive it"*:
-
-> a leg points at CONTENT or at another inquiry; a connection relates two pieces of
-> CONTENT; a citation points at CONTENT. Content carries its EXTENT (which part of the
-> document) and HOW IT WAS EXTRACTED (publisher text layer, machine reading, OCR, member
-> transcription) — the second is never hidden, per DEC-4: machine-produced text must never
-> be indistinguishable from publisher text. Capture grade stays a property of the DOCUMENT;
-> how content was extracted is its own fact.
-
-Both properties have doctrine behind them older than the ruling.
-
-- **EXTENT.** A whole document is content's widest extent (:1609). The forms that carry a
-  positional extent today are the member attestation (`text_attestations.extent_kind`
-  region | page | document, `schema.mjs:2436-2438`) and the derivation steps of a MIXED
-  document's chain (`extent: {kind:'pages', pages:[…]}`, D-252,
-  `docs/archive/ledgers/DEBT-closed-2026-08.md:109`). The forms every EDGE uses carry none
-  (§17).
-- **EXTRACTION METHOD.** DEC-4's determinations (DECISIONS-2026-08.md:121-127): *"OCR TEXT
-  IS DERIVED FROM PIXELS AND MUST NEVER BE INDISTINGUISHABLE FROM TEXT THE PUBLISHER
-  WROTE"* — *"structural and not a convention"*; *"A member reading a figure must be able
-  to tell whether the document said it or a machine guessed it."* CPDF-10 generalised the
-  discriminator from a token to a CHAIN (`textchain.mjs:27-37`, rule 1: a chain, never a
-  token), and CPDF-9 established that a publisher's text LAYER is itself somebody's
-  transcription (`schema.mjs:2456-2459`: ABBYY FineReader in 3 of 14 recent Legistar
-  attachments), so `layer` is a derivation step like any other rather than the absence of
-  one (`index.mjs:5211-5222`).
-
-**Capture grade is the document's; extraction method is content's own fact.** DEC-4 fixed
-the corollary before DEC-23 named the object: *"OCR NEVER RAISES A CAPTURE GRADE"*
-(:132-135). CPDF-10's scope carries the rest: *"Transcription fidelity BOUNDS the capture
-axis (weakest link of byte provenance and fidelity) — no third scale, no new machinery"*
-(`QUEUE.md:873`). So a piece of content has two graded facts about it and neither is the
-other: the DOCUMENT's capture grade (how the bytes' provenance was established — Part I
-§8.1's sense of "grade"), and the CONTENT's derivation cap (the strongest fidelity letter
-its chain can support, the minimum over derivation steps, `textchain.mjs:39-45`); a leg
-citing it can claim no more than the weaker. Where a step carries no measured fidelity the
-cap is NULL and *"undetermined, stated"* (`schema.mjs:2460-2461`), which is Part I's
-invariant 5 in a column.
-
-### 14.5 The machine may EXTRACT
-
-RULED by Bob, 2026-08-03, DEC-24 (DECISIONS-2026-08.md:1640-1698): **the machine may do the
-LOOKING; the member does the CONCLUDING.** Four roles placed on the path verbs, and the first
-is this part's (:1665-1666):
-
-> **EXTRACT** (discovering) — document → CONTENT (DEC-23), and resolve what it names to
-> registry entries. This is the role that makes everything else addressable.
-
-The boundary in four rules (:1682-1695) constrains EXTRACT specifically through rule 3:
-*"Machine work is labelled and graded as machine work… Machine-read text is never presented
-as publisher text (DEC-4); a machine-proposed connection is a HUNCH — declared bias carrying
-debt — until earned or attested by a member."* That is §14.4's extraction method stated from
-the machine's side. What EXTRACT may never do is fixed by the attestation fence: a machine
-credential cannot attest text (C-35.10, `bio-checks.mjs:8990-8997`; `schema.mjs:2425-2427`,
-the `attestor` column *"is a MEMBER ID and never a machine stamp"*), and *"no machine
-credential performs the attested act"* (rule 4, :1694-1695). Part I's invariant 8 —
-derived things inform, authored acts bind — is the general form.
-
-Status. The extraction the plane performs at acquire (§16) IS machine extraction and is
-[BUILT]; it is performed by recognisers, format entries and fleet members, not by an AI. The
-AI EXTRACT role as DEC-24 means it — an assistant extracting content on a member's
-objective — is [DESIGNED-not-built]: the assistant pilot excludes it by name
-(`ASSISTANT-PILOT.md:143-144`, *"No PURSUE/EXTRACT/CHECK — those are DEC-24 roles with their
-own scopes"*), DEC-24 itself says *"NOT DESIGNED HERE, and deliberately: which model performs
-which role"* (:1696-1698), and no queue item carries it.
-
-### 14.6 Status, stated once
-
-**The conceptual model is ruled. The content OBJECT is unbuilt.** D-164
-(`docs/development/DEBT.md:133`): *"L3 CONTENT is a named layer with no object… Extraction
-EXISTS (`readings` keyed by capture, `reading_refs` giving each in-document reference a
-kind/key/label, `resolutions` keyed `(capture_sha, ref, entity_id)` and graded) and no edge
-in the system can point at any of it: legs, citations and connections all address a whole
-capture or bundle."* Its disposition is *"M4 - open · the content-extent primitive;
-D-161/D-163/D-123 fold into it"* (`MILESTONES.md:709` carries the same row under RECORD),
-and it is PARKED: *"S11's state inventory and D-164's content-extent design stay PARKED with
-Bob's paused thread, deliberately not queued"* (`QUEUE.md:132`); *"Do NOT reopen the paused
-thread… D-164's content-extent design are PARKED until Bob reopens them"*
-(`kickoffs/BOB.md:66-68`). `schema.mjs:1989-1993` states it in the table that would carry
-it: *"NO extent COLUMN, and it is stated rather than left to be noticed. D-164 is UNLANDED:
-legs address WHOLE BUNDLES today. A nullable extent column nothing writes would be the
-record advertising a precision it does not have."* §18 names what that leaves to be
-designed.
-
-## 15. The forms of content
-
-Content takes several FORMS in the record today, and the honest inventory is that every
-built form is a PROJECTION keyed by the CAPTURE — none is an object with an identity of its
-own that an edge could hold. The table is exhaustive over what the tree holds at
-`51d128a`. "What's missing" is measured against §14.4's two properties (extent, extraction
-method) and against DEC-23's requirement that an edge can point at it.
-
-One correction to the brief that produced this section, so nobody hunts for a ghost: the
-doctype readers live in `docprofile/doctypes/`, not `bio-plane/src/doctypes/` (which does
-not exist). Three are registered (`docprofile/doctypes/registry.mjs:24-30`:
-`meeting_calendar`, `meeting_agenda`, `generic`); the file's own header at :8-15 still
-reads *"Only ONE real type is registered today"*, which was true before FW-15 added
-`meeting_agenda` (:25-29) and is stale. Over text a non-HTML container produced, only
-`meeting-agenda` mints a reference — *"`generic` returns `match:false` by construction;
-`meeting-calendar` reads HTML"* (D-321, `DEBT.md:270`).
-
-| form | defined where | status | supporting schema / ops / checks | what's missing |
+| axis | the question | a miss repairs by | who can repair it | its states |
 | --- | --- | --- | --- | --- |
-| **reading** — what a capture CONTAINS (Part I §3) | `schema.mjs:655-672` (`readings`: `capture_sha` PK, `bundle_id`, `content_type`, `reader_version`, `found`, `entity_count`, `reading` JSON, `at`); produced `index.mjs:4943-4972` (HTML path) and `:5201-5238` (the wire); written `store.mjs:10795-10827` | [BUILT] | `op=reading` (`index.mjs:815`; `store.readingFor` `:11072-11083`, by capture sha); schema rule at `:658-661`: *found is 0 for a FAILED or EMPTY reading… never backfilled with invented entities*, citing framework:489; replaced whole on re-promotion (`store.mjs:10806-10819`) | Whole-document extent only. `reading` is an opaque JSON blob — *"nothing inside a reading is reachable except what `reading_refs`/`reading_ref_terms` already project out"* (D-222 (v), `DEBT.md:176`). An entity carries `key`/`kind`/`label`/`facts` (`index.mjs:4935-4942`), never WHERE in the document it was read. `text_tier` is a document-level summary of a per-page fact (D-284, `DEBT.md:242`). |
-| **entity reference** — a raw source-assigned `kind:key` a reading carries | `schema.mjs:674-692` (`reading_refs`: PK `(capture_sha, ref)`; `ref_kind`, `ref_key`, `label`; index on `ref`); *"keyed by the reference AS IT APPEARS… NOT a canonical entity id"* (:675-678); written `store.mjs:10828-10841` | [BUILT] | `op=readingref` (`index.mjs:816`: *which documents' readings carry a raw entity reference*); the thing `resolutions` keys on (`schema.mjs:886-899`) | No position: the row says a document carries `meeting:2101`, not on which page or in which item. It is the anchor `resolutions` hold and `connections` discard (D-161, `DEBT.md:130`). |
-| **term index** — every normalised term of a reference's label, ref and key | `schema.mjs:693-766` (`reading_ref_terms`: PK `(capture_sha, ref, src, term)`, `src` ∈ label / ref / key, with `src` in the key so a name is never satisfied by a MIX of two strings :743-751); REC-36 measured 305 rows for one 33-page agenda (:701-710); written `store.mjs:10842-10853` | [BUILT] | `op=readingname` (`index.mjs:817-842`): one call answers the A/B/C tiers of Part I §8.1 by indexed lookup; *"it establishes nothing: it offers CANDIDATES"* (:820-822) | Returns DOCUMENTS as candidates, never passages. Same absence of position as the row above, one projection further out. |
-| **transcription chain** — `text_source`, how the text was produced | `textchain.mjs:1-70` (the rule module; *"holds NO engine"* :4-9); the step vocabulary `pixels → ocr(engine, version) → ai(function, version) → attested(member, date, extent)` (:31-32) plus `layer` (`index.mjs:5211-5222`, `layerChainFor` :2562); I2 2.0.0 records the break from string to chain (`INTERFACES.md:337-344`); built as the wire walks (`index.mjs:5001-5007`, `:5195-5196`) | [BUILT] | projection `reading_text_source` (`schema.mjs:2446-2470`: `transcribed`, `terminal_step`, `engines`, `derivation_cap`, `steps`, `chain`, `calibrations`), written `store.mjs:10880-10900`; refusals C-35.1–C-35.9 and C-35.12 (`bio-checks.mjs:8915-9020`); reads `op=textprovenance`, `op=textattest` (`index.mjs:864-865`), `store.transcribedDocuments` (`:11116`) | The `ai(function, version)` step is a legal shape rule 2 was written for (:39-45) and NOTHING in the tree emits one — [DESIGNED-not-built] for that step. A chain is per CAPTURE; page-scoped parts exist only for a mixed document (D-252). Region-grain provenance below the page (the OCR member's per-line `source:{kind:"pdf-page",page,rect}`, `index.mjs:2788-2790`) reaches the reading and no edge reads it. |
-| **member text attestation** — a person says this text matches the page image, over a stated extent | `schema.mjs:2431-2444` (`text_attestations`: PK `(capture_sha, attestor, extent_kind, extent_page, extent_rect)`; `extent_kind` region \| page \| document; `chain` as it stood; `attestor` a member id never a machine stamp :2425-2427); `textchain.mjs:61-70`: attestation is a VERIFICATION step, not a derivation — the only route to the top | [BUILT] | `op=attesttext` (`index.mjs:866`, member/admin only, mutating; *"TWO FENCES ON PURPOSE"* :854-863); `store.attestText` (`:10919`); `store.attestationsFor` (`:10954-10992`) with `gradeCeiling` (`:10987`) answering what a leg citing a target region may claim; C-35.10 machine refused, C-35.11 extent required (`bio-checks.mjs:8990-9005`) | The ONLY built form with a positional extent (region read back as `{kind:"pdf-page", page, rect}`, `store.mjs:10974-10977`) — and it is verification OF text, not citable content. Its extent grammar is PDF-shaped (page + rect); a `sheet-cell` or `doc-para` attestation has no arm. Stale, not deleted, when the chain moves (`:10980-10984`). |
-| **calibration** — a dated fidelity measurement of a named engine+version | `schema.mjs:2641-2652` (`calibrations`: `CAL-n`, `engine`, `version`, `at`, `cap` or NULL *"a REAL ANSWER, NOT A GAP"* :2637-2640, `probe_id`, `probe_inputs`, `scores`, `measured_by`, `replaced_by` set once); construct `bio-plane/src/calibration.mjs`; CPDF-13 (`QUEUE.md:894-924`); a chain step MAY name its calibration (IC-73, `INTERFACES.md:324-328`), joined at `index.mjs:5094-5128` | [BUILT — as a construct] | `op=calibrations` (`index.mjs:896`); C-42 family (`bio-checks.mjs:9022+`); C-35.12 refuses a reference present and unreadable; the asymmetric drift handler (worse raises an obligation, better raises nothing) | Not content — content's staleness rule (§14.2). *"nothing here runs a REAL fidelity probe — every calibration in the suite is synthetic"* (`QUEUE.md:924`); the live OCR chain carries `calibration: null` STATED (`QUEUE.md:878`); layer steps attach none by design (:924). |
-| **structured dataset** — an information bundle's data file | `data/dataset.json`; C-2.7 (`bio-checks.mjs:1314-1321`): `content_hash` must equal the canonicalised dataset, `verified` requires it (:1327-1328); `hash: content_hash` in `query.mjs:65` | [BUILT — as a hashed bundle file] | the bundle checks; `op=search` on `hash:` | The pre-DEC-23 sense of "content": a whole file with a hash. No row-, cell- or field-level address; no extraction method recorded (who produced the dataset is not a chain step); no relation to `readings`. Nothing points INTO it. |
-| **I2 structure shape** — what a container yields at acquire | `INTERFACES.md:301-349` (2.0.0 STABLE): `text.document` / `text.pages[]` / `text.paragraphs[]` (:316-322, :368-375); `links[]` in four partitions (`subresources.mjs:660`: anchor, intra, deferred, refused); `text.undetermined` markers (`encrypted`, `no_text_layer`, `over_envelope`, :460-470); the `evidentiary` envelope, IC-2 (:316-323: tracked changes with author/date, comments, formulas beside values, hidden rows/columns/sheets, docProps); `producer` (D-251, :329-336); `tier` | [BUILT — as a WIRE shape] | producers CONTENT-PDF (`pdfstructure.mjs`), CONTENT-OFFICE (`formats.mjs`, `ooxml.mjs`, `docx.mjs`, `formats-xlsx.mjs`, `pptx.mjs`; COFF-1..7 done, `QUEUE.md:880`), pdf-worker tier 2; consumer `docprofile/readtext.mjs:101` (`readText`) | Not STORED. `op=promote` persists the READING derived from it and its projections (`store.mjs:10795-10856`); nothing writes `text.pages[]` or the evidentiary envelope to a table. So per-page text and the IC-2 extras exist at acquire and are recoverable only by re-running `op=pdfstructure` — which stops at tier 2 (D-319, `DEBT.md:268`). Tier-1 text is *"a flat per-page string with no table/row geometry"* (:381-388). |
-| **subresources and the render companion** — a page's stylesheets and images, and the derived artifact that lets a capture be shown | `subresources.mjs:1-33`: every fetched thing is its own content-addressed capture; the companion rewrites references to `about:capture#<sha256>`, removes executable paths, *"says in its own first line that it is derived"*; `site_assets` (`schema.mjs:315-321`) with chrome detection by reference count (:311-314); fidelity levels (Part I §5) | [BUILT] | the viewer's substitution; the `rewrite` manifest (:21-25) | A companion is a RENDITION of a document, not content: no extent grammar, no reader targets it. IC-1's `dom` arm (`INTERFACES.md:312`) is in the union and NO producer in `bio-plane/src` emits `kind:"dom"` (grepped) — [DESIGNED-not-built]. |
-| **rendition and evidentiary digests** — per-region sameness judgments over HTML (Part I §5) | `index.mjs:4897-4911`: `profile.digests` with a `basis`; *"undetermined"* when the stack is not certain (:4905-4910) | [BUILT] | the stack handlers' boundaries (`docprofile/`) | A digest is a fact about a DOCUMENT's sameness, listed because it is the only per-REGION judgment (evidentiary / presentational / mechanical) the plane makes — and the boundary a handler declares is not stored as an extent anything can cite. |
-| **element reference** — an address INSIDE a document | IC-1's tagged union (`INTERFACES.md:311-316`): `source: {kind:"pdf-page"\|"sheet-cell"\|"slide-shape"\|"doc-para"\|"dom", ref, …per-kind fields} \| null`, a REQUIRED `kind` and a REQUIRED human `ref`; the fork and its resolution in D-123 (`DEBT.md:92`) | [BUILT — EMITTED] | emitters: `pdf-page` by the OCR member's regions (`index.mjs:2788-2790`) and the attestation read-back (`store.mjs:10976`); `sheet-cell` (`formats-xlsx.mjs:148-152`); `slide-shape` (`pptx.mjs:127-132`); `doc-para` (`docx.mjs:97-105`) | CONSUMED by no edge. It is exactly the address DEC-23 needs, and the only column holding one is `text_attestations` (page + rect, PDF only). §18's headline. |
-| **the entity axis** — registry, aliases, declared relations, resolutions, connections | `schema.mjs:794-802` (`entities`), `:811-820` (`entity_aliases`), `:838-849` (`entity_relations`, constitutive, *"DELIBERATELY NO GRADE COLUMN"* :828-836), `:886-900` (`resolutions`: PK `(capture_sha, ref, entity_id)`, grade A/B/C/D, `established` derived, `raised_from`), `:961-969` (`connections`: keyed `(a_capture_sha, b_capture_sha, entity_id)`, `asserted_by` three-valued :939-949); built ONCE with the bias doctrine's subject registry (:767-775; Part I §13) | [BUILT] | `op=entity`/`entitybyalias` (`index.mjs:914-915`); `op=resolve` (A/B/C — *"never D, which the machine never mints"*) / `resolvetestify` / `resolutions` / `concerns` (:926-929); `op=connect` / `connections` (:939-940); `op=thread` / `instance` (:949-950); grade as a filter via `resolutions_grade` (`schema.mjs:901-918`) | Grain is the CAPTURE throughout: a resolution anchors to a REF with no position; a connection collapses to *"the STRONGEST grade each capture resolved to the entity at"* and drops even the ref (D-161); *"every document that concerns this ENTITY"* (:854-856) returns documents. Growth is k(k−1)/2 per entity, bounded by REC-66 (D-224, `DEBT.md:178`). |
-| **the content-extent primitive** — the object and the edge that carries it | DEC-23's consequent shape (DECISIONS-2026-08.md:1631-1636); D-164 (`DEBT.md:133`); `MILESTONES.md:709`; `schema.mjs:1989-1993` | [DESIGNED-not-built] — ruled, PARKED | none | Everything: the object, its identity, the extent grammar across containers, the edge, the writer. One paragraph of shape exists and no more. |
-| **the AI EXTRACT role** | DEC-24 (DECISIONS-2026-08.md:1665-1666, :1696-1698) | [DESIGNED-not-built] as a role; [ABSENT] as an item | none; excluded from the pilot (`ASSISTANT-PILOT.md:143`) | Which model, which scope, how candidates are presented — DEC-24 says these are *"later work"*; no item names them. |
-| **tables** | `INTERFACES.md:381-388`: *"Tier-1 text is a flat per-page string with no table/row geometry… Positional/structured text is a FUTURE, doctype-driven ASK"*; IC-2 carries formulas beside values for spreadsheets — cell grain, not table grain (:316-320); Part I §11 (framework:1336-1339): *"a PDF's evidentiary region is a page range or a table"* | [GESTURED] | none | No table object, no table extraction, no debt row scoped to it. |
-| **images** | DEC-4 (DECISIONS-2026-08.md:104-119) rules image-only pages are READ — text FROM images, built (§16). An IMAGE as content — a figure, a map, a signature, a photograph cited as itself — the closest built thing is the OCR member's rendered page with a pixels digest (`QUEUE.md:878`) and CPDF-12's routes, of which the strongest-provenance one (`passthrough-dct`, the publisher's own JPEG bytes) is the one the member must DECLINE (D-320, `DEBT.md:269`); Part I §11 names *"scanned images"* | [GESTURED] | none as content | No image object, no way to cite a region of a page as an image rather than as text read off it; the DCT/CCITT share of the image-only class is unmeasured (D-320). |
+| **document** | do we hold the bytes? | FETCH, from the outside world | only the outside world | never looked · looked, absent · looked, indeterminate · present |
+| **content** | have we extracted what is IN the bytes? | EXTRACT, over bytes we hold | us, alone | not extracted · partial · extracted · unextractable |
+| **meaning** | have we resolved and connected what was extracted? | DERIVE, over content we hold | us, alone | unresolved · resolved · undetermined |
 
-Read down the status column and the shape of the estate is plain: every EXTRACTION is
-built or specified; every ADDRESS is emitted; and no ADDRESSABLE OBJECT exists for any of
-it. That is D-164 in one table.
+The content axis is the one with a cache-invalidation key the others lack: **the engine
+version.** Re-extracting bytes we already hold under a better engine is the one place where
+re-deriving is a legitimate improvement rather than a costs-nothing equality — which is why
+CALIBRATION (a dated fidelity measurement of a named engine) is the content axis's staleness
+rule.
 
-## 16. The extraction process as built
+Bob's correction of 2026-08-04 governs how any of this is searched: **all four levels —
+meaning, content, documents, and the open internet — may need to be searched, in any order,
+because absence at one level is not evidence of absence at the next.** Nothing derived may
+only mean nothing was extracted; nothing extracted may only mean the document was never
+read; no document may only mean nobody looked. Saying *which* of those is true is a
+first-class obligation. And it is one process: the same searching that grows the document
+set is what identifies content within documents and connects it. **A search that returns
+documents has not finished.**
 
-The path from bytes to a stored reading, as `op=acquire` (`index.mjs:676`) and
-`op=promote` (`:592`) run it at `51d128a`. FW-15 — the L2→L3 wire — landed 2026-08-03
-(`QUEUE.md:1618`, `:930`). Everything below is [BUILT] unless marked.
+### 14.4 Who may do what
 
-### 16.1 Identify
+The machine may **EXTRACT** — document → content, and resolve what it names to the registry
+— and this is the role that makes everything else addressable (DEC-24). Its work is
+labelled and graded as machine work: machine-read text is never presented as publisher text
+(DEC-4, structural and not a convention); a machine-proposed connection is a HUNCH until a
+member earns or attests it. What the machine may never do is fixed by the attestation
+fence: a machine credential cannot attest text, and no machine credential performs an
+attested act. The member does the concluding.
 
-`docprofile.identify(ctx)` (`docprofile/index.mjs:248-256`) recognises the host STACK and
-always returns a handler — an unrecognised document *"gets the conservative one rather than
-an error"* (:247) with `confidence: NONE` and a `why` (:251-253). `doctypeFor(ctx)`
-(`docprofile/doctypes/registry.mjs:36-39`) recognises the content TYPE over the same shared
-registry engine (`makeRegistry`, :23; Part I §4's claim that a third axis is a third
-registry, :1-6). The profile records which handler spoke and how sure it was
-(`profileRecord`, `docprofile/index.mjs:258-265`; Part I §10), and the digests are
-determined only when the stack was identified with certainty (`index.mjs:4897-4911`).
+### 14.5 Where it stands
 
-### 16.2 Read — the text path
+| | status |
+| --- | --- |
+| the definition and the model (DEC-23, DEC-24, DEC-4) | RULED |
+| machine extraction by recognisers, format entries and fleet members (§16) | BUILT |
+| the AI EXTRACT role — an assistant extracting on a member's objective | DESIGNED; excluded from the pilot by name; no item |
+| the content OBJECT — something an edge can point at that is smaller than a document | ABSENT (D-164, reopened 2026-09-15; §18) |
 
-For a document read as text at intake, the plane runs the doctype's `parse(ctx)` over the
-same captured text (`index.mjs:4913-4934`, citing framework:480 and framework:489). The
-rules the code states (:4921-4934): *"A reading that finds nothing is a failed reader, never
-an emptied document"* — a reader that is absent, could not run, or found nothing is recorded
-as `found:false` with the reason on `basis`, *"never backfilled with invented entities"*;
-references are carried *"AS THEY APPEAR"* and NOT resolved. Document facts are *"what the
-reader said, never invented"* (:4949-4952). A reader that throws yields a failed reading
-(:4964-4972); a type with no reader yields an honest no-reading (:4973-4980).
+## 15. The forms content takes today
 
-### 16.3 The L2→L3 wire — the non-text path, three tiers
+Every form the record holds today is a **projection keyed by the capture**. None is an
+object with an identity of its own that an edge could hold. That single sentence is D-164,
+and the table shows it form by form.
 
-For a PDF or an office container the FORMAT axis (COFF-1's `getFormat` registry) may know
-how to produce TEXT, and *"the intent layer runs over TEXT from anywhere"*
-(`index.mjs:4982-4989`): `readText` (`docprofile/readtext.mjs:87-112`) takes I2's text
-field and runs identify/doctypeFor/parse over it, refusing to read where the text is
-undetermined (:104-112, *"a reading over text nobody decoded would be an invented one"*).
-
-| tier | where | predicate | what it does | cites |
+| form | what it is | its grain | can an edge point at it? | status |
 | --- | --- | --- | --- | --- |
-| **1** | in-plane | always, when the format entry has `text()` or `structure()` | the office shape via `entry.text(parts)`; the PDF shape via `entry.structure(bytes)` whose I2 object carries the text | `index.mjs:5009-5028` |
-| **2** | `env.PDF_WORKER` (I6) | `needsTier2(text)`: `undetermined > chars` — and a scan does NOT escalate, because *"Tier 2 has nothing to tell it"* | the member decodes the same bytes with pdf.js; the Tier-1 `producer` marker is carried forward, never re-derived (D-251) | `:2470-2481`, `:5029-5052`, `:5037-5048` |
-| **3** | `env.OCR_WORKER` (I9) | `needsTier3(text)`: any `no_text_layer` marker, unless `encrypted` | page list from `tier3Pages`; `POST /transcribe` with `capture_sha`, `store`, `pages`; status read before body; calibration joined; answer fenced by `ocrTextFromMember`; merged PAGE-WISE; chain composed from parts | `:2602-2606`, `:2630`, `:5064-5182` |
+| **reading** | what a capture CONTAINS: entities with stable keys, named facts, document facts; `found` is false for a failed or empty reader, never backfilled | whole document | no | BUILT |
+| **entity reference** | a raw `kind:key` a reading carries, as it appears in the document, not yet resolved | whole document — no position | no | BUILT |
+| **term index** | every normalised term of a reference's label, ref and key, so a name is never satisfied by a mix of two strings | whole document | no; returns documents as candidates | BUILT |
+| **transcription chain** | how the text was produced: `pixels → ocr(engine, version) → …`, `layer` as a step like any other; the cap is the minimum over steps | per capture; per page only for a mixed document | no | BUILT (the `ai(function)` step is DESIGNED — nothing emits it) |
+| **member text attestation** | a person says this text matches the page image, over a stated extent | region · page · document (PDF-shaped) | it is verification OF text, not citable content | BUILT — the only built form with a positional extent |
+| **calibration** | a dated fidelity measurement of a named engine and version; `cap` or an honest NULL | — (not content; content's staleness rule) | — | BUILT as a construct; no real probe yet |
+| **structured dataset** | an information bundle's data file, hashed whole | whole file | at the file only | BUILT — the pre-DEC-23 sense of "content" |
+| **structure shape (interface I2)** | what a container yields at acquire: per-page text, paragraphs, links in four partitions, the evidentiary envelope (tracked changes, comments, formulas, hidden rows) | page · paragraph · cell | not stored — recoverable only by re-running the structure op, which stops at tier 2 | BUILT as a wire shape |
+| **element reference (interface IC-1)** | an address INSIDE a document: `pdf-page` (page + rect), `sheet-cell`, `slide-shape`, `doc-para`, `dom`; a required kind and a required human form | below the document | **emitted by four extractors, consumed by no edge** | BUILT — emitted; `dom` has no producer |
+| **subresources and the render companion** | a page's stylesheets and images as their own captures; a derived rendition that says it is derived | — | no; a rendition, not content | BUILT |
+| **rendition and evidentiary digests** | per-region sameness judgments over HTML | region — but the boundary is not stored as an extent | no | BUILT |
+| **the entity axis** | registry, aliases, constitutive relations, graded resolutions, connections | capture throughout — a connection discards even the reference it was resolved from | at the document | BUILT |
+| **the content-extent primitive** | the object and the edge that carries it | any | this IS the missing thing | DESIGNED — one paragraph of shape (DEC-23); D-164 |
+| **the AI EXTRACT role** | an assistant proposing content worth citing | — | — | DESIGNED as a role; ABSENT as an item |
+| **tables** | a table as content | — | — | GESTURED |
+| **images** | a figure, map, signature or photograph cited as itself, not as text read off it | — | — | GESTURED |
 
-Two open rows sit on tiers 2 and 3 and are stated at the predicate: D-283 (`DEBT.md:241`)
-— the Tier-2 escalation still assigns the member's whole answer over the document, and it
-must NOT be fixed the way D-252 fixed Tier 3, because Tier 2's purpose is to decode BETTER;
-what is unbounded is text loss, unmeasured; and D-284 (`:242`) — `text_tier` is a
-document-level summary of a per-page fact, with the chain as the authority.
+Read down the two right-hand columns and the shape of the estate is plain: **every
+extraction is built or specified, every address is emitted, and no addressable object
+exists for any of it.**
 
-### 16.4 Tier 3, the current state — VERIFIED against the tree, not copied from the comment
+## 16. How content is extracted today
 
-The task that produced this section asked whether `index.mjs`'s tier-3 branch is connected
-and taken, or whether its "untaken / no engine deployed" comments are stale. **They are
-stale, and the branch is connected and taken on the project's own instance.** The evidence,
-in the order it landed:
+The path from bytes to a stored reading runs at acquire and is persisted at promote.
+Everything in this section is BUILT unless the table at the end says otherwise.
 
-1. **The consumer was built first, against a stub.** CPDF-10 wrote `ocrTextFromMember`
-   (`index.mjs:2847-2856`) as the producer contract — engine and version REQUIRED, a
-   MEASURED `cap` and `measured_by` REQUIRED, refused otherwise — and D-252 (closed
-   2026-08-09, `DEBT-closed-2026-08.md:109`) added the page-wise merge while *"the PRODUCER
-   still does not exist"*. The comments at `index.mjs:5055-5063` (*"the binding does not
-   exist yet — so the branch that would call it is present, narrow and UNTAKEN"*) and
-   `:5102-5105` (*"an instance with no OCR member — which is every instance today"*) date
-   from that period.
-2. **The producer landed 2026-09-12.** CPDF-10's landed line (`QUEUE.md:871-878`, commit
-   `698a07b`): *"THE THIRD FLEET MEMBER EXISTS AND RUNS, AND ZERO LINES OF `bio-plane/src/`
-   CHANGED"*. `ocr-worker/src/index.mjs:1-19` — `tesseract-wasm` (`tessengine.mjs:35`,
-   `ENGINE_NAME`), ~5.95 MB of wasm and language model that *"must never enter the plane's
-   module graph"*; reads captured bytes from R2 itself, renders one page through CPDF-12's
-   renderer, answers per-line regions each carrying its image rect. The run of record:
-   *"a real Oakland scan through the real plane, real binding, real engine, in-isolate —
-   `text_tier: 3`, chain `pixels → ocr(tesseract-wasm 0.11.0)`, both steps cap C with
-   `measured_by` naming CPDF-15 and `calibration: null` STATED"*. The engine was chosen by
-   measurement, not preference: Moondream default NO-GO (CPDF-12), Moondream composed NO-GO
-   on the anchor itself (CPDF-14, `QUEUE.md:761`: *"A rectangle that comes back about half
-   the time cannot anchor a claim"*), tesseract-wasm GO on the deployed runtime (CPDF-15:
-   *"34.7% of the Paid ceiling, 99.89% chars, zero minted at every rung"*, `:871`).
-3. **The binding is declared.** `bio-plane/wrangler.jsonc:111`: `{ "binding":
-   "OCR_WORKER", "service": "ocr-worker" }`, with the comment at :90-107 — the narrowest
-   relationship of the three members (no STORE binding, no PUBLISHED, `CAPTURES` read
-   only), a three-part upload because Workers forbid compiling wasm at runtime, *"INERT
-   UNTIL DIST DEPLOYS THE MEMBER"*. IC-78 registers it as **I9, PROVISIONAL 0.1.0**
-   (`INTERFACE-CHANGES.md:5697-5723`; *"No shape moves"*).
-4. **The member is released and deployed.** `release/RELEASE.json:2` is 0.58.0; `:29-51`
-   lists `ocr-worker` as a fleet member with its two parts (`tesseract-core.wasm`
-   1,839,004 B; `eng.traineddata` 4,113,088 B), signed. DS-4 (`QUEUE.md:984`): 0.57.0
-   *"deployed and SERVING account-wide (plane + agent-worker + ocr-worker with both upload
-   parts + pdf-worker, all `/version` 0.57.0)"*; and commit `e67e275`: *"0.58.0 DEPLOYED
-   AND VERIFIED… All four workers serve 0.58.0, byte-verified… the three fleet bindings
-   beside it — read back from the account."* CPDF-10's own landed-line caveat — *"NOT
-   claimed, said out loud: the live-verify — the member actually deployed… is DIST's next
-   cut"* (`QUEUE.md:878`) — was written 2026-09-12 and overtaken by those two deploys.
+**Identify.** The document profile recognises the host stack and always returns a handler
+— an unrecognised document gets the conservative one, with a stated confidence of none and
+a reason. A second registry recognises the content TYPE over the same engine. Digests are
+computed only when the stack was identified with certainty.
 
-So on the project's instance the branch at `index.mjs:5076-5177` runs; the `else` at
-`:5178-5181` (*"no OCR engine is installed in this instance, so nothing is claimed about
-what it says"*) is the branch a SOVEREIGN group's instance runs today, because the
-installer that would give a group the three-member fleet is built and verified (D-297,
-CLOSED 2026-09-14, `DEBT.md:255`) and its deployment is Bob's gate: *"no group receives the
-fleet until he clicks."* Both branches are honest; only the comment is wrong. The stale
-comments are the D-106 class (a thing describing itself wrongly) and are in §19's to-do,
-not fixed here.
+**Read.** For a document readable as text, the content type's reader runs over the captured
+text. A reader that is absent, cannot run, or finds nothing yields a *failed reading*,
+recorded as such with the reason — never an emptied document, never backfilled with
+invented entities. References are carried as they appear and are not resolved here.
 
-**The limits filed WITH the landing, so they cannot be mistaken for silence:**
+**The non-text path, in three tiers.** A PDF or an office container may need its text
+produced before anything can read it, and the intent layer runs over text from anywhere:
 
-- **D-319** (`DEBT.md:268`) — the seam is on `op=acquire` ONLY. `op=pdfstructure`, the
-  read-time op, escalates to `PDF_WORKER` and stops; driven on the same real scan, acquire
-  answers `text_tier: 3` and pdfstructure answers Tier 1 with `no_text_layer`. So *"an
-  instance that installs the fleet later has no route to the text of everything it captured
-  before, short of re-acquiring"*, and *"the honest `tier3_candidate` flag the acquire path
-  sets has no op that acts on it."* Closing it is a decision (opt-in `&ocr=1` on a read?),
-  pinned in `ocr-member-e2e.test.mjs` so it cannot quietly close or widen.
-- **D-320** (`:269`) — the pass-through JPEG route (`passthrough-dct`, the publisher's own
-  bytes, the strongest provenance) cannot be transcribed in-isolate (no canvas, no JPEG
-  decoder; tesseract needs RGBA) and is REFUSED by name (`PIXELS_UNREADABLE`); the share
-  of the image-only class that is DCT versus CCITT is unmeasured.
-- **D-321** (`:270`) — the `reading_refs` join over REAL OCR'd text is driven with
-  SYNTHETIC INK, because the one real image-only page in the corpus is a resolution that
-  correctly yields `generic` with zero entities, and D-313 measured the class as rare and
-  clumped (two harvests of 1,377 pages returned zero of it).
-- One page per invocation; whole-document invocation UNMEASURED (`QUEUE.md:871`).
-- **DEC-74** (`DECISIONS.md:1090-1118`) stays OPEN with Bob — the EXTERNAL escalation tier,
-  never funded without his word (DEC-35). Its `provisional:` line (*"CPDF-10 is BLOCKED and
-  nothing is built"*, :1108) predates CPDF-15's GO and the landing, and is overtaken on
-  that point only; the funding question it asks is not.
-
-### 16.5 The chain, composed as the wire walks
-
-The chain *"starts empty and is null until a text surface answers, so a document that never
-reached one carries NO chain rather than a chain claiming a layer it does not have"*
-(`index.mjs:5001-5007`). Tier 3 sets its own (the member names its engine); a mixed
-document's chain is the concatenation of its parts, each derivation step carrying `extent:
-{kind:'pages', pages:[…]}`, and its document-level `derivation_cap` is UNDETERMINED rather
-than the engine's letter — *"because a text layer's fidelity is `null` and letting an OCR
-pass's `C` stand for the whole document would RESOLVE THAT NULL INTO A LETTER"* (D-252;
-`index.mjs:5146-5169`; `mergedChain`). Anything else came from the document's own text
-layer and records `layerChainFor` (:5195-5196), which D-251 extends to `layer → ocr(<product>)`
-when the file's own `/Info` names OCR software (:5186-5194). The calibration a step rests on
-is joined at :5094-5128 and *"FAILS OPEN TO NULL, NEVER TO A GUESS"*.
-
-**The four rules** (`textchain.mjs:24-59`), each a refusal in `bio-checks.mjs` and an arm in
-the suite:
-
-1. **A chain, never a token** (:27-37; C-35.1, C-35.5). `"ocr"` as a label loses which
-   engine, and *"an engine is what a calibration is OF… A chain that collapses is a chain
-   that cannot be audited."*
-2. **Every derivation step weakens, never strengthens** (:39-45; C-35.6). The chain's cap is
-   the MINIMUM over derivation steps, computed by the module rather than declared by a
-   caller; *"an AI that cleans a garbled line produced more READABLE text, not more RELIABLE
-   text."*
-3. **Confidence where the engine supplies it, `none` stated otherwise, pseudo-confidence
-   forbidden** (:47-54; C-35.7, C-35.8) — refused by BASIS, not by value range, *"because a
-   self-reported 0.99 and a computed 0.99 are the same bytes."*
-4. **A region below the floor reads `undetermined`, never a best guess** (:56-59), and its
-   text is DISCARDED, not carried beside a flag.
-
-**Attestation is verification, not derivation** (`textchain.mjs:61-70`). Rule 2 says every
-step weakens; member attestation is the only route to the top (DEC-4's doctrine); the
-resolution is not an exception but a category: `attested` is a VERIFICATION step, outside
-`derivationCap`, scoped to its extent, and *"a leg citing outside the attested extent does
-not inherit it"* (`QUEUE.md:873`; `store.mjs:10945-10947`). It is a member's act refusable
-to a machine (§14.5).
-
-### 16.6 Promote-time projection
-
-The reading rides the acquire document in `data/provenance.json` and is persisted only when
-the capture is PROMOTED — *"never here, because no intake path writes live state"*
-(`index.mjs:4916-4919`). `store.#writeReadings` (`store.mjs:10787-10856`), inside the
-promote transaction: for each document with a `capture.sha256` and a `reading`, DELETE this
-capture's `reading_refs`, `reading_ref_terms` and `reading_text_source` (:10810-10818) so
-*"a revised reader never leaves stale references behind"* and *"a revised reading that no
-longer names OCR must not leave a row saying this document was OCR'd"*; then write
-`readings` (:10820-10827), one `reading_refs` row per entity with the ref *"exactly as the
-reading carries it"* (:10828-10841), and the term rows under each `src` (:10842-10853).
-
-`store.#writeTextSource` (`:10880-10900`) projects the chain into columns, and its first
-line is the rule: `if (checkChain(chain)) return;` — **no row for an absent chain, no row
-for a malformed one.** The comment (:10868-10879) states why this is doctrine and not a
-default: *"Absence of a row means 'this document's text provenance was never recorded',
-which is a different fact from 'this document's text was not transcribed' (`transcribed =
-0`). Writing a zero row for an unrecorded chain would collapse the two, and CLAUDE.md's
-sparse-at-every-level rule is exactly that no absence may stand in for another."* A
-malformed chain is refused at `op=acquire` and at `op=attesttext`'s own door, and the store
-does not smooth it into a row that looks derived.
-
-### 16.7 What is specified, what is delegated, what is absent
-
-| | what | where |
-| --- | --- | --- |
-| **specified by the plane** | the wire's order and its predicates; the chain grammar and its four rules; the OCR producer contract (`index.mjs:2781-2790`, `:2847-2856`); the page-wise merge (`:2691`); the promote-time projection; the attestation grammar and its two fences | [BUILT] |
-| **delegated to doctype readers** | what a document CONTAINS: `parse(ctx)` returns `entities[]` + facts, and the plane records what the reader said, never inventing (`index.mjs:4949-4952`). Three readers exist (`registry.mjs:24-30`); over container text only `meeting-agenda` mints a reference (D-321) | [BUILT — three readers] |
-| **delegated to format entries and members** | what TEXT a container yields (COFF-1's registry; `pdfstructure.mjs`; `pdf-worker` tier 2; `ocr-worker` tier 3) | [BUILT] |
-| **absent** | an extraction step for tables or images (§15); an AI EXTRACT role (§14.5); a read-time re-extraction reaching tier 3 (D-319); a per-page rule for Tier-2 replacement (D-283) and a per-page `text_tier` (D-284); an enumeration of the content-axis frontier — *"documents held but unextracted, or extracted at a tier below what is now available"* (`STORE-AS-CACHE.md:535`) — the nearest thing being `tier3_candidate` on a reading, which *"has no op that acts on it"* (D-319) | [ABSENT] |
-
-## 17. Organization and access
-
-The two retrieval routes, as D-222 measured them (`DEBT.md:176`) and `STORE-AS-CACHE.md`
-names them: **route 1**, the query compiler over bundle rows — `query.mjs` `FIELDS`
-(`:47-99`, 34 filterable fields) and `FTS_COLUMNS` (`:349`: `title`, `body`, `meta`,
-`locator`, `authority`); **route 2**, the meaning tables, reached by fixed-key ops. D-222's
-finding, re-verified here: route 1 carries SCALAR summaries of the meaning layer onto the
-bundle row (`query.mjs:80-82`: `inquiry_capture_strength`, `inquiry_connection_strength`,
-`inquiry_basis_count`), so *"the meaning layer is visible as a number and unreachable as a
-structure"*. Since D-222 was written, its option A landed: the MEANING arm
-(`query.mjs:101-103`, `:241-283`) and `op=meaningrows` (`index.mjs:429`; stamped beside
-`op=search` at `:6610-6617`, failing closed on an absent viewer stamp) reach `inquiry_basis`
-(the `leg:` selector, `:250-276`) and `resolutions` (`resolves:` and `concerns:`,
-`:277-282`) — and nothing else.
-
-Grain, in the table below: **document** = a capture or bundle; **reference** = a raw
-`kind:key` in a reading, or its resolution to an entity; **content** = an extent inside a
-document, DEC-23's unit.
-
-| capability × grain | status | mechanism | what's missing |
+| tier | where | when | what it does |
 | --- | --- | --- | --- |
-| **ADD · document** | [BUILT] | `op=acquire` (`index.mjs:676`) → the register, *"the trust root"* (`schema.mjs:84-92`, `capture_sha` PK) → `op=promote` (`:592`); `links` (`:392-409`) with two keys — `address_norm` for the resource and `citation_norm` keeping the FRAGMENT *"because scientific and legal practice cite ELEMENTS and BIO citations support element references"* (:396-405); the `deferred` partition as the DERIVED frontier (`subresources.mjs:653-677`) | The AUTHORED frontier. D-194 (`DEBT.md:153`): *"A tip is not a URL"*; nothing holds *"there should be a contract between X and Y — look for it"*, and nothing holds the outcome when the looking fails. [ABSENT] |
-| **ADD · reference** | [BUILT] | `readings` / `reading_refs` / `reading_ref_terms` / `reading_text_source` written in the promote transaction (`store.mjs:10795-10900`), replaced whole on re-promotion; `resolutions` by `op=resolve` (A/B/C) and `op=resolvetestify` (D) (`index.mjs:918-929`); `connections` by `op=connect` and the `connection_dirty` sweep | Nothing records WHERE a reference was read; nothing records that a reading was ATTEMPTED and found nothing at a stated tier (the content-axis observation). |
-| **ADD · content** | [ABSENT] | no table has a content row. `text_attestations` (`schema.mjs:2431-2444`) is the only positional record and it is a verification over text, not content. | The content object and its writer (D-164). |
-| **SEARCH · document** | [BUILT] | `op=search` compiled from `FIELDS` (`query.mjs:47-99`) and `FTS_COLUMNS` (`:349`); `SORTABLE` (`:353-354`); D-15's single compilation point; `op=searchfields` publishes the vocabulary (`index.mjs:433`) | Full-text search over EXTRACTED text: `readings.reading` is an opaque JSON blob (D-222 (v)) and I2's `text.pages[]` is not stored (§15). Nothing read for Part II establishes that a container's extracted text reaches the `body` column; D-222 (v) establishes that the reading's JSON does not. |
-| **SEARCH · reference / meaning** | [BUILT, partial] | the MEANING arm: `leg:` over `inquiry_basis` with sub-selectors `source` / `role` / `axis` / `grade` / `ground` / `target` (`query.mjs:250-276`), `resolves:` / `concerns:` over `resolutions` (`:277-282`), vocabularies imported from the check catalogue never listed (:243-249); `op=meaningrows` at meaning grain; `resolutions_grade` index (`schema.mjs:901-918`) so D-222 (ii)'s *"flagged C set"* is enumerable | `connections`, `readings`, `reading_refs`, `reading_ref_terms` unreachable by the compiler — `schema.mjs:912-917`: *"NO INDEX ON connections(grade), stated rather than left… no arm in this compiler reads it"*. Reached only by FIXED-KEY ops: `op=reading` (capture sha, `store.mjs:11072-11074`), `op=readingref` (a raw ref string), `op=readingname` (a registered subject), `op=concerns` (entity id), `op=connections` (entity or capture, `:12944`), `op=instance` (`(progression_key, entity_id)`) — *"No predicate, no projection choice, no sort, no paging"* (D-222 (i)). D-225 (`DEBT.md:179`): `concerns`, `resolutionsForCapture`, `connectionsFor` UNCAPPED — the row cites `store.mjs:8451/8438/8605`; the three reads now sit at `:12712` (`documentsConcerning`), `:12685` (`resolutionsForCapture`) and `:12944` (`connectionsFor`). D-222's staged recommendation (*"A then C"*, `INVESTIGATIVE-SESSION.md` §14c) has landed A; C is [DESIGNED-not-built]. |
-| **SEARCH · content** | [ABSENT] | none. The term index answers *"which documents' readings carry this reference"* (`schema.mjs:680-681`); `attestationsFor` is by capture sha (`store.mjs:10954`) | *"Which passages mention X"*, *"every leg citing page 14"*, *"every OCR'd region below cap C"* are unaskable. |
-| **REFER · document** (an edge pointing at) | [BUILT] | `refs` keyed `(bundle_id, target_id, kind)`, bundle → bundle (`schema.mjs:76-81`); `inquiry_basis.target_id` — *"an INFO- or an INQ-/PROB-/FOCUS- bundle"* (`:1242`); basis versions — *"NO extent COLUMN… D-164 is UNLANDED: legs address WHOLE BUNDLES today"* (`:1989-1993`); `links.citation_norm` keeps a fragment (`:398-405`) | D-163 (`DEBT.md:132`): *"A citation cannot point INSIDE a document"* — the across-documents half at whole-document granularity is all that exists. The one sub-document address stored on any edge is the SOURCE's URL fragment in `links`, not ours. |
-| **REFER · reference** | [BUILT at capture grain; anchor discarded] | `resolutions` hold the anchor `(capture_sha, ref, entity_id)` (`schema.mjs:886-899`); `connections` are keyed `(a_capture_sha, b_capture_sha, entity_id)` (`:961-969`) and `deriveConnections` (`store.mjs:12856`) *"collapses them to the STRONGEST grade each capture resolved to the entity at"* (D-161, `DEBT.md:130`) | The connection *"throws the anchor away"*: following one lands a reader on a whole document. D-161's open design question — the DETERMINING ref pair, or all supporting mentions — is unanswered. |
-| **REFER · content** | [ABSENT] | the element reference is EMITTED (§15) and consumed by no edge. `gradeCeiling` / `attestationsFor` (`store.mjs:10954-10992`, `:10987`) accept a `target` region and answer what a leg citing THAT region may claim — the only place a leg's target REGION is spoken of, and the leg itself cannot record one (`schema.mjs:1989-1993`) | D-164, entire. |
-| **CONSUME · document** | [BUILT] | the bundle page; the render companion with verified-bytes substitution (`subresources.mjs:11-25`); fidelity `faithful` / `degraded` / `insufficient` (Part I §5) | — |
-| **CONSUME · reference / meaning** | [BUILT] | the fixed-key reads above; `op=textprovenance` / `op=textattest` (`index.mjs:864-865`) show a document's chain and attestations; earned basis; the strength scalars on the bundle row (`query.mjs:80-82`) | D-222's *"false sense of coverage"*: a caller filters by a finding's strength and never reaches the legs that produced it. |
-| **CONSUME · content** | [PARTLY BUILT] | a member can attest a REGION (`op=attesttext`, `index.mjs:866`); `attestationsFor` returns extents; the assistant pilot's FIND (`ASSISTANT-PILOT.md:58`, build step 4 at `:170`) is designed to run read ops and *name the level searched* | No surface shows a passage AS content. FIND is [DESIGNED-not-built] and reads only; EXTRACT is excluded from the pilot (`:143`); no egress (`:147-149`) — the assistant *"may TELL the member the fourth level exists and is theirs."* |
-| **OBSERVE · document** (record that a look happened) | [ABSENT] as a general record | Part I §6's confirmations are *"built, plane has not adopted it"* (framework:794-795); `STORE-AS-CACHE.md:646`: **OBSERVATIONS — *"every LOOK, including the ones that returned nothing new" — MISSING: "the zero-payload record (WARC `revisit` shape) and the empty-search record"***; the design decision at `:653-660` — the record and the observation log are SEPARATE with different lifecycles, *"what makes absence recordable without polluting the record"* | The log itself. D-196 (`DEBT.md:151`) ties it to the completeness statement: *"an observation log nobody publishes is bookkeeping, and a completeness statement with nothing behind it is Blair & Maron"*. |
-| **OBSERVE · content** | [ABSENT] | the content-axis states NOT_EXTRACTED / PARTIAL / EXTRACTED / UNEXTRACTABLE (`STORE-AS-CACHE.md:536`) are named and stored nowhere; a reading's `basis` string and `tier3_candidate` flag (`index.mjs:5236-5237`) are the only trace | *"extracted at tier 1 on this date under this engine"* as a fact the record holds (`:564-567`). |
-| **OBSERVE · the one built consumer** | [BUILT — for the investigative session only] | `ai_run_log` (`schema.mjs:1898-1911`: `run`, `seq`, `at`, `level`, `subject`, `state`, `governed`, `condition`, `bound`, `terminal`, `detail`); `OBSERVATION_LEVELS` (`airun.mjs:99-104`) and `OBSERVATION_STATES` (`:109-115`, D-129's vocabulary); `DEFINITIVE_STATES` (`:117-123`) so C-22.2/C-22.3 refuse a definitive state on a governed row — *"a governed refusal and a client-rendered shell are both facts about OUR run"* | It is the session's log, keyed by `run`, not the record's. It carries the SHAPE the general log needs (level × subject × state × governed) and is not that log. |
-| **OBSERVE · member lead / firsthand observation** | [ABSENT] | D-194 (`DEBT.md:153`): a lead has no home and an empty search is not recorded — *"the frontier is entirely DERIVED, and a derived frontier inherits the corpus's blind spots exactly"*; RFC 2308's rule that a negative answer needs an AUTHORITY behind it, and *"A member's authored lead IS that authority"*. D-184 (`:150`): a member's firsthand observation has no home as a basis leg — C-2.8 admits *"information or another inquiry, nothing else"*; the honest path today (author a witness statement, capture it, cite that) *"exists and is unnamed"* | Both. D-194: *"the same member knowledge is unrepresentable both BEFORE the search and AFTER it, and the two should be designed together."* Doctrine (Bob's), paired with DEC-39's fence wording and REC-11's leg surface. |
+| 1 | in the plane | always, when the format entry can produce text or structure | the office shape from the container's parts; the PDF shape whose structure carries the text |
+| 2 | the `pdf-worker` fleet member | when tier 1's text is more undetermined than determined — and never for a scan, which tier 2 cannot help | decodes the same bytes with a second engine; carries tier 1's producer marker forward rather than re-deriving it |
+| 3 | the `ocr-worker` fleet member | when a page has no text layer, unless the file is encrypted | renders one page, transcribes it, answers per-line regions each carrying its image rectangle; the plane merges page-wise and composes the chain from the parts |
 
-## 18. The central gap, stated once
+Tier 3 is **connected and taken on the project's own instance** as of release 0.58.0 — a
+real Oakland scan runs through the real member with a chain of `pixels → ocr(tesseract-wasm
+0.11.0)` and both steps capped at C with the measurement named. The engine was chosen by
+measurement, not preference: two vision-model routes were NO-GO (one because the region
+anchor itself did not reproduce), tesseract-wasm was GO on the deployed runtime. A sovereign
+group's instance has no OCR member until the fleet is deployed to it, and takes the honest
+branch that claims nothing about a scan's text. Some code comments still describe tier 3 as
+untaken; they are stale and rowed for correction.
 
-**The address exists. No edge carries it.** IC-1's element reference is a tagged union with
-a required kind and a required human form, and five container arms (`INTERFACES.md:311-316`);
-four of the five are EMITTED by the extractors that know them (`formats-xlsx.mjs:148-152`,
-`pptx.mjs:127-132`, `docx.mjs:97-105`, `index.mjs:2788-2790`). Every edge in the record —
-`refs` (`schema.mjs:76-81`), `inquiry_basis.target_id` (`:1242`), the basis versions
-(`:1989-1993`), `connections` (`:961-969`) — addresses a bundle or a capture, and the schema
-says so in the places a column would go. That is D-164 (`DEBT.md:133`), which SUPERSEDES the
-three rows that saw it from three sides — D-161 (a connection discards the anchor
-`resolutions` holds), D-163 (a citation cannot point inside a document), D-123 (I2's
-reference was PDF-shaped) — because *"they must be solved ONCE, as an addressable content
-extent, or the primitive gets built three times and drifts."* It is PARKED pending Bob
-reopening the paused thread (`QUEUE.md:132`; `kickoffs/BOB.md:66-68`).
+**The chain, composed as the path walks.** The chain starts null and stays null until a text
+surface answers, so a document that never reached one carries no chain rather than one
+claiming a layer it lacks. A mixed document's chain is the concatenation of its parts, each
+step scoped to its pages, and its document-level cap is *undetermined* — because letting an
+OCR pass's letter stand for pages the text layer produced would resolve a null into a
+letter. Four rules govern every chain, each enforced by a refusal in the check catalog:
 
-**Its twin is the CLAIM.** Part I has said since v0.1 that nothing here models a claim
-(framework:280-283: *"Nothing in this document models a claim yet, and the case-building
-rungs will need one"*; §11, framework:1352-1355; §12.2, framework:1071-1078: *"a claim needs
-a standard of proof attached and that is doctrine rather than architecture"*). The ownership
-ladder names it L7 with owner NONE (`LAYERS.md:68`, `:143`). DEC-23 found the two absences
-are one (`DECISIONS-2026-08.md:1619-1626`): *"L3 (content) is a second one, and nobody
-noticed… The two absences fail together: a claim that could cite a passage is exactly what
-neither layer can express."*
+1. **A chain, never a token.** "ocr" as a label loses which engine, and an engine is what a
+   calibration is OF.
+2. **Every derivation step weakens, never strengthens.** The cap is computed by the module,
+   never declared by a caller; an AI that cleans a garbled line produced more readable text,
+   not more reliable text.
+3. **Confidence where the engine supplies it, `none` stated otherwise; pseudo-confidence is
+   refused by basis**, because a self-reported 0.99 and a computed 0.99 are the same bytes.
+4. **A region below the floor reads undetermined, never a best guess**, and its text is
+   discarded rather than carried beside a flag.
 
-Everything else Part II marks [ABSENT] or [DESIGNED-not-built] is downstream of those two.
-**The pieces to be DESIGNED** — named here, designed nowhere in this document:
+**Attestation is verification, not derivation.** It sits outside the cap arithmetic, is
+scoped to its extent, and is a member's act — refused to any machine credential.
 
-1. **The content object and the extent-carrying edge.** D-164; DEC-23's one-paragraph
-   shape (:1631-1636); the extent grammar across containers (IC-1's five kinds plus D-252's
-   page sets); what a leg, a citation and a connection point at; the writer that
-   `schema.mjs:1989-1993` says must arrive with the column. Bob's to reopen.
-2. **Content-grain search.** D-222's stage C (`INVESTIGATIVE-SESSION.md` §14c —
-   *"recommendation D, staged as A then C; do not re-grade"*); D-225's caps landing first;
-   whether extracted text is indexed at all (§17, SEARCH · document).
-3. **The general observation log.** `STORE-AS-CACHE.md:646`, `:653-660`; shared across the
-   three axes (`:564-567`); `ai_run_log`'s shape as the precedent; D-196's completeness
-   statement as its first publisher.
-4. **Extraction breadth.** Readers beyond three (Part I §4's rule that a type is written
-   from a measured page holds — `registry.mjs:8-15`); tables and images as content (§15);
-   the AI EXTRACT role (DEC-24); read-time re-extraction reaching tier 3 (D-319); the Tier-2
-   per-page rule (D-283); DEC-74's external tier, Bob's.
-5. **Homes for the member's lead and firsthand observation.** D-194 and D-184, designed
-   together — DOCTRINE, Bob's, paired with DEC-39 and REC-11.
-6. **The claim object.** The standard of proof — DOCTRINE, Bob's, the next design
-   conversation Part I §12.2 already named. It cannot be built before item 1 and item 1 is
-   hollow without it.
+**Promote-time projection.** The reading rides the acquire document and is persisted only
+when the capture is promoted, inside the promote transaction: the capture's previous
+references, terms and text-source row are deleted first, so a revised reader never leaves a
+stale reference behind, and a revised reading that no longer names OCR never leaves a row
+saying the document was OCR'd. The text-source projection writes **no row for an absent or
+malformed chain**, because "this document's text provenance was never recorded" and "this
+document's text was not transcribed" are different facts, and no absence may stand in for
+another.
+
+**What is specified, delegated, and absent:**
+
+| | status |
+| --- | --- |
+| the path's order and predicates; the chain grammar and its four rules; the OCR producer contract; the page-wise merge; the promote-time projection; the attestation grammar and its two fences | BUILT, specified by the plane |
+| what a document CONTAINS — delegated to content-type readers; three exist, and over container text only the meeting-agenda reader mints a reference | BUILT, three readers |
+| what TEXT a container yields — delegated to format entries and the two fleet members | BUILT |
+| extraction of tables or images; the AI EXTRACT role; read-time re-extraction reaching tier 3 (an instance that installs the fleet later has no route to the text of what it captured before, short of re-acquiring); a per-page rule for tier-2 replacement; an enumeration of the content-axis frontier — documents held but unextracted, or extracted below what is now available | ABSENT |
+
+## 17. How content is organized and reached
+
+Two retrieval routes exist. **Route 1** is the query compiler over bundle rows — thirty-four
+filterable fields, full text over the bundle's own columns, one compilation point. **Route
+2** is the meaning tables, reached by fixed-key operations. Route 1 carries scalar summaries
+of the meaning layer onto the bundle row (a strength number, a leg count), so *the meaning
+layer is visible as a number and unreachable as a structure* — except that the compiler's
+MEANING arm now reaches legs and resolutions, and nothing else.
+
+| capability | at document grain | at reference or meaning grain | at content grain |
+| --- | --- | --- | --- |
+| **ADD** | BUILT — acquire → the register (the trust root) → promote; the deferred-link frontier is derived. The AUTHORED frontier — a member's lead, *"there should be a contract between X and Y — look for it"* — has no home (D-194) | BUILT — readings, references, terms and the chain written at promote; resolutions and connections by their ops. Nothing records WHERE a reference was read, nor that a reading was attempted and found nothing | ABSENT — no table has a content row |
+| **SEARCH** | BUILT — the compiler. Full text over EXTRACTED text is not established: the reading is an opaque blob and per-page text is not stored | BUILT, partial — the MEANING arm reaches legs (by source, role, axis, grade, ground, target) and resolutions; readings, references, terms and connections are reachable only by fixed key, with no predicate, projection, sort or paging | ABSENT — *"which passages mention X"*, *"every leg citing page 14"*, *"every OCR'd region below cap C"* are unaskable |
+| **REFER** (an edge points at) | BUILT — bundle to bundle; legs and citations address whole bundles; the one sub-document address any edge stores is the SOURCE's URL fragment, not ours | BUILT at capture grain — a resolution holds its reference; a connection collapses to the strongest grade per capture and throws the reference away, so following one lands the reader on a whole document (D-161) | ABSENT — the element reference is emitted and consumed by no edge (D-164, entire) |
+| **CONSUME** | BUILT — the bundle page; the render companion with verified-bytes substitution | BUILT — the fixed-key reads; a document's chain and attestations; earned basis | PARTLY BUILT — a member can attest a region and see attested extents; no surface shows a passage AS content; the assistant's FIND is designed to name the level it searched, and reads only |
+| **OBSERVE** (record that a look happened) | ABSENT — the observation log, including looks that returned nothing new; designed as separate from the record with its own lifecycle | BUILT for one consumer — the investigative run's log carries level × subject × state × governed, and is the shape the general log needs | ABSENT — the content-axis states are named and stored nowhere; a reading's basis string and a `tier3_candidate` flag are the only trace |
+
+A member's **firsthand observation** — the reporter who attended the meeting — has no home
+as a basis leg either (D-184); the honest path today (author a witness statement, capture
+it, cite that) exists and is unnamed. The lead and the observation are the same member
+knowledge, unrepresentable before the search and after it, and are designed together.
+
+## 18. The central gap, and the six pieces to design
+
+**The address exists. No edge carries it.** The element reference is a tagged union with a
+required kind and a required human form, in five container arms; four of the five are
+emitted by the extractors that know them. Every edge in the record — a citation, a leg, a
+basis version, a connection — addresses a bundle or a capture, and the schema says so in the
+places a column would go, on purpose: *a nullable extent column nothing writes would be the
+record advertising a precision it does not have.* That is D-164, which supersedes the three
+rows that saw the same gap from three sides (a connection discards its anchor; a citation
+cannot point inside a document; the reference was PDF-shaped), because the primitive must be
+solved once or it gets built three times and drifts. Bob reopened it on 2026-09-15.
+
+**Its twin is the claim.** Nothing in this framework has modelled a claim since v0.1; the
+ownership ladder names L7 with no owner; a claim needs a standard of proof, which is
+doctrine. DEC-23 found the two absences are one: *a claim that could cite a passage is
+exactly what neither layer can express.* Everything else Part II marks ABSENT or DESIGNED is
+downstream of these two.
+
+The pieces to be designed, named here and designed nowhere in this document:
+
+| # | piece | what it is | whose |
+| --- | --- | --- | --- |
+| 1 | **the content object and the extent-carrying edge** | the object, its identity, the extent grammar across containers (the five kinds plus page sets), what a leg, a citation and a connection point at, and the writer that arrives with the column. The design-space study is `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md`: three options, the fixed constraints, and the doctrine questions separated from the mechanism | mechanism: the architect; the doctrine questions in the study's §3: Bob |
+| 2 | **content-grain search** | the compiler's stage C, after the uncapped reads are capped; whether extracted text is indexed at all | the architect |
+| 3 | **the general observation log** | every look, including the ones that returned nothing; shared across the three axes; the investigative run's log as the precedent; the completeness statement as its first publisher | the architect |
+| 4 | **extraction breadth** | readers beyond three (a type is written from a measured page); tables and images as content; the AI EXTRACT role; read-time re-extraction to tier 3; the per-page tier-2 rule; the external OCR tier | the architect; the external tier's funding is Bob's (DEC-74, open) |
+| 5 | **homes for the member's lead and firsthand observation** | D-194 and D-184, designed together | DOCTRINE — Bob's |
+| 6 | **the claim object** | the standard of proof — the design conversation Part I §12.2 already named. It cannot be built before piece 1, and piece 1 is hollow without it | DOCTRINE — Bob's |
+
+One dependency to carry into every option for piece 1: content-grain **connections** are
+impossible until readings record *where* a reference was read, which is a change to the
+structure interface (I2) on the framework's side.
 
 ## 19. Where this document is the authority, and who defers to it
 
-**From v0.11 this document is the single authoritative content design.** Part I is the
-substrate — recognisers, regions and digests, change layers, content types, connections and
-grade, progressions, intent, declared bias, provenance of judgments — approved by Bob on
-2026-07-30. Part II is the content doctrine ruled between 2026-08-03 and 2026-09-14, stated
-once with its build status. A session asking what content IS, what forms it takes, how it is
-extracted, how it can be reached, and what is missing reads this document and follows its
-citations out; it does not reconstruct the answer from the ledgers.
+From v0.11 this document is the single authoritative content design. Part I is the
+substrate, approved by Bob on 2026-07-30. Part II is the content doctrine ruled between
+2026-08-03 and 2026-09-14, stated once with its build status. A session asking what content
+is, what forms it takes, how it is extracted, how it can be reached and what is missing
+reads this document and follows its citations out (Appendix A); it does not reconstruct the
+answer from the ledgers. Part II rules nothing new: every ruling stays in the ledger it was
+ruled in and is cited from here.
 
-Part II rules nothing new. The ruling index still gains pointers to §14's restatements of
-DEC-23 and DEC-24 — it is a floor that indexes marker words, and it was regenerated in the
-landing commit — and the landing ran the FULL gate, not the docs profile, because the
-`CLAUDE.md` pointer sits outside `docs/`. What Part II changes is where the doctrine LIVES, and the
-documents that currently carry it loose should point here. **This is a to-do for a session
-with the paths claimed, not performed by this draft:**
+The documents that carried the doctrine loose now point here: `CLAUDE.md`'s content
+section, DEBT's D-164 row, the structure interface's status, the retrieval research, the
+architecture README and the constructs inventory. Two remain as owners' acts, rowed: the
+schema comments that should cite Part II rather than Part I, and the stale self-descriptions
+in the plane and the type registry (CPDF-17). What this document does NOT own, and says so:
+the retrieval design (`STORE-AS-CACHE.md`), the investigative session, the declared-bias
+doctrine, the interface contracts, and every ruling.
 
-| carries the doctrine today | what it should do |
+## Appendix A · The evidence, as measured at `origin/main` `51d128a`
+
+The body above states the design; this appendix carries the file-and-line evidence behind
+it, measured on 2026-09-14 against `51d128a` (`store.mjs` 29,465 lines, `index.mjs` 7,390).
+A line number here is a measurement at that sha and will drift; cite the section above,
+not the line. The builder who needs the exact site reads this table; nobody else needs to.
+
+### A.1 The rulings
+
+| claim in the body | where it is ruled |
 | --- | --- |
-| `CLAUDE.md`, "CONTENT IS THE UNIT, AND A DOCUMENT IS NOT THE ANSWER" | keep the three rules verbatim (it is the file every session loads); replace its closing pointer — *"the design work sits in `STORE-AS-CACHE.md`… DEC-23… D-164"* — with a pointer to Part II, keeping DEC-23 and D-164 as the rulings behind it |
-| DEC-23, DEC-24, DEC-4 in `docs/archive/ledgers/DECISIONS-2026-08.md` | the archive is closed history and is not edited; `docs/DECIDED.md` (generated) already indexes them. No action beyond this document citing them by line |
-| D-164 in `docs/development/DEBT.md:133` (and D-161, D-163, D-123 which fold into it) | append *"design authority: `BIO_Content_Framework_v0_11.md` Part II §14/§18"* to the disposition so the row points at the design and the design at the row |
-| `INTERFACES.md` I2 (`:301-349`) | add one line under Status: the forms I2 carries are inventoried in Part II §15, and the unconsumed element reference is §18's headline |
-| `STORE-AS-CACHE.md` (`:523-611`, `:641-660`) | its three-axis table and four-level ladder are adopted verbatim in §14.2–14.3; mark those sections as CARRIED by this document and leave the rest as the retrieval design it is |
-| `schema.mjs` comments that cite `framework:489`, `framework:247`, `framework:251`, `framework:554`, `framework 8.1` (`:658-661`, `:767-775`, `:858`, `:939`) | line-numbered citations into Part I still resolve (Part I is unchanged); `:1989-1993` (no extent column) and `:2446-2461` (the projection) should cite §15/§17 |
-| `index.mjs:5055-5063`, `:5102-5105`; `docprofile/doctypes/registry.mjs:8-15` | STALE self-description (§16.4, §15): the tier-3 branch is taken on the project's instance and three types are registered. D-106's class; correct in the turn a CONTENT-PDF or FRAMEWORK claim next touches those files |
-| `MILESTONES.md:709`; `QUEUE.md:132`; `kickoffs/BOB.md:66-68` | the parked state stands; when Bob reopens the thread, §18's list is the scope |
-| `docs/architecture/README.md`, `CONSTRUCTS.md` | list v0.11 as the current framework and this Part II as the content inventory beside CONSTRUCTS' construct inventory |
-| `ASSISTANT-PILOT.md:67-72`; `airun.mjs:94-104` | both cite `CLAUDE.md`'s four levels; a pointer to §14.3 is sufficient |
+| content is the unit; a whole document is its widest extent; the consequent shape (leg, connection, citation point at content; content carries extent and method; capture grade stays the document's) | DEC-23, `docs/archive/ledgers/DECISIONS-2026-08.md:1593-1638`; enacted `5318b53` as REC-11/REC-18 provisionals |
+| the machine may EXTRACT; the member concludes; machine work is labelled; no machine credential performs an attested act | DEC-24, `DECISIONS-2026-08.md:1640-1698` |
+| OCR text never indistinguishable from publisher text; OCR never raises a capture grade; an OCR citation carries its image region | DEC-4, `DECISIONS-2026-08.md:104-135` |
+| fidelity bounds the capture axis as its weakest link, no third scale | CPDF-10's scope, `QUEUE.md:873`; `textchain.mjs:92-99`, `:797-806` |
+| the three axes and the four-level search | `STORE-AS-CACHE.md:523-611` (Bob, 2026-08-04) |
+| a chain, never a token; every step weakens; confidence by basis; below the floor reads undetermined; attestation is verification | `textchain.mjs:24-70` |
+| "no extent column, stated rather than left to be noticed" | `schema.mjs:1989-1993`; restated `bio-checks.mjs:6843-6847` |
+| D-164 supersedes D-161, D-163, D-123 | `DEBT.md:133`; `MILESTONES.md:709` |
 
-What this document does NOT own, and says so: the retrieval design (`STORE-AS-CACHE.md`),
-the investigative session (`INVESTIGATIVE-SESSION.md`), the declared-bias doctrine
-(`BIO_Declared_Bias_v0_1.md`, Part I §13), the interface contracts themselves
-(`INTERFACES.md`), and every ruling — which stays in the ledger it was ruled in and is cited
-from here rather than restated as authority.
+### A.2 The forms (§15), by file
+
+| form | schema | producer | reader / op | checks |
+| --- | --- | --- | --- | --- |
+| reading | `schema.mjs:655-672` | `index.mjs:4943-4972` (HTML), `:5201-5238` (the wire); `store.mjs:10795-10827` | `op=reading` `index.mjs:815`; `store.readingFor` `:11072-11083` | rule at `schema.mjs:658-661` |
+| entity reference | `schema.mjs:674-692` | `store.mjs:10828-10841` | `op=readingref` `index.mjs:816` | — |
+| term index | `schema.mjs:693-766` | `store.mjs:10842-10853` | `op=readingname` `index.mjs:817-842` | — |
+| transcription chain | projection `schema.mjs:2446-2470`; `store.mjs:10880-10900` | built as the wire walks `index.mjs:5001-5007`, `:5195-5196`; `layerChainFor` `:2562` | `op=textprovenance`, `op=textattest` `index.mjs:864-865`; `store.transcribedDocuments` `:11116` | C-35.1–C-35.9, C-35.12 `bio-checks.mjs:8915-9020` |
+| member text attestation | `schema.mjs:2431-2444` (`attestor` a member id, `:2425-2427`) | `op=attesttext` `index.mjs:866`; `store.attestText` `:10919` | `store.attestationsFor` `:10954-10992`; `gradeCeiling` `:10987`; `extentCovers` `textchain.mjs:727-744` | C-35.10 machine refused `bio-checks.mjs:8990-8997`; C-35.11 extent required `:8999-9005` |
+| calibration | `schema.mjs:2641-2652`; `calibration.mjs` | CPDF-13 `QUEUE.md:894-924`; joined `index.mjs:5094-5128` | `op=calibrations` `index.mjs:896` | C-42 family `bio-checks.mjs:9022+` |
+| structured dataset | `data/dataset.json` | — | `hash:` in `query.mjs:65` | C-2.7 `bio-checks.mjs:1314-1328` |
+| I2 structure shape | `INTERFACES.md:301-349` (2.0.0) | `pdfstructure.mjs`; `formats.mjs`, `ooxml.mjs`, `docx.mjs`, `formats-xlsx.mjs`, `pptx.mjs`; pdf-worker | `docprofile/readtext.mjs:101` | not stored; `op=pdfstructure` stops at tier 2 (D-319) |
+| element reference IC-1 | `INTERFACES.md:311-316` | `pdf-page` `index.mjs:2788-2790`, `store.mjs:10976`; `sheet-cell` `formats-xlsx.mjs:148-152`; `slide-shape` `pptx.mjs:127-132`; `doc-para` `docx.mjs:97-105`; `dom` none (grepped) | none | `checkAnchor` `textchain.mjs:648-666` accepts only `pdf-page`; regions without one dropped `index.mjs:2859-2870` |
+| subresources / companion | `site_assets` `schema.mjs:315-321` | `subresources.mjs:1-33` | the viewer's substitution | — |
+| digests | — | `index.mjs:4897-4911` | — | — |
+| entity axis | `schema.mjs:794-802`, `:811-820`, `:838-849`, `:886-900`, `:961-969`; grade index `:901-918` | `deriveConnections` `store.mjs:12856-12890` | `op=entity`/`entitybyalias` `index.mjs:914-915`; `op=resolve`/`resolvetestify`/`resolutions`/`concerns` `:926-929`; `op=connect`/`connections` `:939-940`; `op=thread`/`instance` `:949-950` | REC-66 bounds growth (D-224) |
+
+### A.3 The extraction path (§16), by file
+
+| step | where |
+| --- | --- |
+| identify | `docprofile/index.mjs:248-265`; `docprofile/doctypes/registry.mjs:24-39`; digests only when certain `index.mjs:4897-4911` |
+| read | `index.mjs:4913-4980` (failed reader, never emptied document; facts never invented) |
+| the non-text path | `readText` `docprofile/readtext.mjs:87-112`; tier 1 `index.mjs:5009-5028`; tier 2 `needsTier2` `:2470-2481`, `:5029-5052`; tier 3 `needsTier3` `:2602-2606`, `tier3Pages` `:2630`, the branch `:5064-5182` |
+| tier 3 producer and its verification | `ocrTextFromMember` `index.mjs:2847-2856`; `ocr-worker/src/index.mjs:1-19`, `tessengine.mjs:35`; binding `bio-plane/wrangler.jsonc:90-111` (I9, IC-78 `INTERFACE-CHANGES.md:5697-5723`); release `release/RELEASE.json:2,29-51`; deploys DS-4 `QUEUE.md:984`, `e67e275`; the landed line `QUEUE.md:871-878`, `698a07b`; CPDF-12/14/15 verdicts `QUEUE.md:761`, `:871` |
+| stale self-descriptions (CPDF-17) | `index.mjs:5055-5063`, `:5102-5105`; `docprofile/doctypes/registry.mjs:8-15` |
+| the chain as the wire walks | `index.mjs:5001-5007`, `:5146-5169` (`mergedChain`), `:5186-5196`; calibration join `:5094-5128` fails open to null |
+| promote-time projection | `store.#writeReadings` `store.mjs:10787-10856`; `store.#writeTextSource` `:10868-10900` |
+| the limits filed with tier 3 | D-319 `DEBT.md:268`; D-320 `:269`; D-321 `:270`; D-283 `:241`; D-284 `:242`; DEC-74 `DECISIONS.md:1090-1118` |
+
+### A.4 Organization and access (§17), by file
+
+| capability | where |
+| --- | --- |
+| route 1 | `query.mjs:47-99` (`FIELDS`), `:349` (`FTS_COLUMNS`), `:353-354`; strength scalars `:80-82`; `op=searchfields` `index.mjs:433` |
+| the MEANING arm (D-222 option A) | `query.mjs:101-103`, `:241-283`; `op=meaningrows` `index.mjs:429`, stamped `:6610-6617` |
+| fixed-key reads, uncapped (D-225) | `documentsConcerning` `store.mjs:12712`; `resolutionsForCapture` `:12685`; `connectionsFor` `:12944` |
+| refs and legs at bundle grain | `schema.mjs:76-81`; `:1242`; `:1989-1993`; `links.citation_norm` `:396-405` |
+| the observation record | `STORE-AS-CACHE.md:564-567`, `:646`, `:653-675`; `ai_run_log` `schema.mjs:1898-1911`; `OBSERVATION_LEVELS` `airun.mjs:99-123`; D-196 `DEBT.md:151`; D-194 `:153`; D-184 `:150` |
+| the assistant's FIND | `ASSISTANT-PILOT.md:58`, `:143-149`, `:170` |
+| D-222's staging and D-225's caps | `INVESTIGATIVE-SESSION.md` §14c; `DEBT.md:176`, `:179` |

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-762 rulings across 71 documents.
+759 rulings across 71 documents.
 
 ## DEC-
 
@@ -73,9 +73,9 @@ authority is the file named, never this one.
 - **DEC-19** — Carrying DEC-19 AS AMENDED (publishing is THE irreversible act; correction always moves FORWARD — a new edition as a separate document with every published edition standing, a withdrawal as another attested act with both standing; nothing is ever unpublished), DEC-33 (the ceremony is deferred; publication runs…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1190`
 - **DEC-20** · 2026-08-05 — CORRECTED 2026-08-05 (DEC-20, D-188).** This read *"and it may not advance or be > ratified until the debt is settled"*, and listed *blocking a state transition* among > the shared properties.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1238`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1243`
 - **DEC-20** · 2026-08-05 — CORRECTED 2026-08-05 (DEC-20, D-188, DEC-46 (d)).  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1309`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1314`
 - **DEC-20** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-20). The blanket rule above is REPLACED: only a HUNCH blocks publication.** *"Not all bias needs to be cleared before a piece is published. The only bias type that must be clear before publication is hunches."* And, in the same review: *"Bias is public and accompanies every published case  
   `docs/architecture/BIO_Declared_Bias_v0_1.md:283`
 - **DEC-20** · 2026-09-14 — One dated addendum (July 27, 2026, declared bias) follows the body and its middle clause is SUPERSEDED by DEC-20. as of 2026-09-14.  
@@ -94,14 +94,10 @@ authority is the file named, never this one.
   `docs/architecture/BIO_Case_Making_v0_1.md:996`
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 (Bob, DEC-21) — R2's CONCLUSION stands; its MECHANISM does not.** > *"A capture is the act of reading a document in.  
   `docs/development/research/RECONCILED.md:183`
-- **DEC-23** · 2026-08-03 — RULED by Bob, 2026-08-03, DEC-23 (`docs/archive/ledgers/DECISIONS-2026-08.md:1593-1638`).  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1536`
-- **DEC-23** — the archive is closed history and is not edited; `docs/DECIDED.md` (generated) already indexes them.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:2059`
+- **DEC-23** — RULED | | machine extraction by recognisers, format entries and fleet members (§16) | BUILT | | the AI EXTRACT role — an assistant extracting on a member's objective | DESIGNED; excluded from the pilot by name; no item | | the content OBJECT — something an edge can point at that is smaller than a document | ABSENT…  
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1607`
 - **DEC-23** · 2026-08-03 — RULED by DEC-23: content — a piece of information extracted from a document, up to and including the whole document — is the unit the record points at.  
   `docs/development/DEBT.md:133`
-- **DEC-24** · 2026-08-03 — RULED by Bob, 2026-08-03, DEC-24 (DECISIONS-2026-08.md:1640-1698): **the machine may do the LOOKING; the member does the CONCLUDING.** Four roles placed on the path verbs, and the first is this part's (:1665-1666):  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1679`
 - **DEC-24** — WHAT IS ALREADY RULED, so this entry only adds what is missing:** - **DEC-24 — the boundary**: *"the machine may do the LOOKING; the member does the CONCLUDING"*, with FOUR roles on the path verbs: **EXTRACT** (document → content), **PURSUE** (find material bearing on an unsupported claim, supporting AND cutting…  
   `docs/archive/ledgers/DECISIONS-2026-08.md:3396`
 - **DEC-27** · 2026-08-03 — RULED 2026-08-03 by Bob (DEC-27). **Both a construct and a surface.** The tag instantiates everywhere, like the ACT; the expanded dialog is S12, with its own states.  
@@ -1008,25 +1004,23 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-07-30** — " note was revised: transitive trust is accepted so long as it is disclosed (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30). - §12 — "Platform (resolved, v4)" describes the retired local-first client; the plane replaced it and the UI is built as constructs (`BIO_Interaction_Constructs_v0_1.md`). - §13…  
   `docs/architecture/BIO_Complete_Roadmap_v5.md:12`
 - §12.1 is CORRECTED — a member-scoped aspiration is not a declared bias — and §13 integrates the doctrine properly.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:116`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:121`
 - **2026-07-30** — RULED by Bob, 2026-07-30. **BIO exists to support members in all aspects of case development.** Every construct in this document is instrumental to that and none is an end in itself. A capture nobody can build a case on is waste, however faithfully it was hashed.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:222`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:227`
 - **2026-07-30** — RULED by Bob, 2026-07-30. The meeting chain — scheduled meeting, agenda, attendance, minutes — is ONE form of connected data and not the general case. His example of another: a mention of a need, a budget request, a budget approval, an RFP, responses to it, a contract award, a signed contract with terms, and onward…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:722`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:727`
 - **2026-07-30** — RULED by Bob, 2026-07-30. The system must support humans and their AI assistants defining goals at a high level, turning them into objectives and aspirations, and working to achieve the goals **and everything discovered along the way**.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:889`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:894`
 - **2026-07-30** — RULED by Bob, 2026-07-30. This level of support is central to what a member should expect from BIO, and it is safe for a specific structural reason: **a focus is informative, advisory and supportive of a project's development. It commits nobody.** Its states are `surfaced → elevated → deferred → dismissed`, and…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:995`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1000`
 - **2026-07-30** — RULED by Bob, 2026-07-30. The record carries `surfaced_by: agent` either way; the ruling is that the surface has to communicate it too. This is not a discount applied to the question. A good question stands on its merits whoever asked it, and a member weighing one needs to know that  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1028`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1033`
 - **2026-07-30** — RULED by Bob, 2026-07-30: an aspiration may be scoped at the group, the project, or the member level. | scope | whose commitment | what it shapes | changing it |  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1044`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1049`
 - **2026-07-30** — RULED by Bob, 2026-07-30, and for two reasons that are stronger than tolerance: - **We may not realise that they contradict.** The contradiction is the discovery.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1060`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1065`
 - was DECIDED — but its contrast partner was wrong, and the table below is > corrected to three rows rather than two.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1313`
-- **2026-08-04** — RULED by Bob, 2026-08-04, carried as the load-bearing correction in `STORE-AS-CACHE.md:577-611`.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1602`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1318`
 - **2026-08-01** — [RULED 2026-08-01: the subject vocabulary is the registry's, and the malformedness rule is the constraint](#ruled-2026-08-01-the-subject-vocabulary-is-the-registrys-and-the-malformedness-rule-is-the-constraint)  
   `docs/architecture/BIO_Declared_Bias_v0_1.md:22`
 - **2026-08-01** — [RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT](#ruled-2026-08-01-a-hunch-is-temporary-declared-bias-and-it-is-hunch-debt) - [The bias acknowledgement, authored at export](#the-bias-acknowledgement-authored-at-export) - [Differential traversal and the cross-group…  
