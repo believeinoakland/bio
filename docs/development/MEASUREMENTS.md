@@ -10475,3 +10475,136 @@ bar assertions stayed green, because `ce2fe34` (CASE-2) had *deleted* `#required
 outright rather than moving it. The three are now RETIRED with the reason at the site, and what is
 no longer covered is stated there rather than implied. **A re-anchor that merely ARMS is not a
 repair: it has to reproduce the DECLARED defect, and only running it can say whether it does.**
+
+## M-12 · 2026-09-13 · D-330 — TWO RED HAND-RUN INSTRUMENTS ATTRIBUTED, AND THE ANSWER IS THAT EVERY ONE OF THE SEVEN FAILURES IS A DECLARATION THAT WENT FALSE WHILE ITS ANCHOR STAYED PERFECTLY ALIVE (worktree `agent-adbc8324f27ca8a2a`)
+
+**Instrument, tree and method.** `main` at `a2a0718`; `bio-plane/src/store.mjs` 29,390 lines /
+1,869,260 bytes, sha256 `514bb504…`. `npm ci` in `bio-plane/`, `ocr-worker/` and `pdf-worker/`
+before any figure was taken. Every driver run WHOLE, on a quiet tree, exits read UNPIPED.
+
+**THE BASELINE, MEASURED RATHER THAN INHERITED — and it came back exactly as briefed, which is
+reported because the practice is to trust the measurement and not the streak.** Battery
+**183/183 suites · 11,188 assertions · 181.4s · exit 0**. `d216-sharing.probe` **36 pass / 4 fail**,
+the figure `DEBT.md`'s D-330 row records, to the assertion.
+
+**AND ONE FIGURE THE BRIEF HAD WRONG.** The row names TWO not-as-declared arms in
+`dec65-strength-reach.control.mjs`. **There are THREE.** Arm (5) returns `-1 pass, -1 fail` — the
+driver's missing-tally sentinel — and the row does not mention it. A brief's figure being
+incomplete is exactly what re-measuring is for.
+
+| driver / arm | declared | measured | cause | commit |
+|---|---|---|---|---|
+| `d216` probe · the composed bar | `["project", [A,B], "A", "B"]` | `[null, [], null, null]` | SUBJECT MOVED — the cross-citer composition removed under DEC-72 | `ce2fe34` |
+| `d216` probe · the bar's over-strictness arm | composed pair unmoved | `[[], null, null]` | SUBJECT MOVED — same removal | `ce2fe34` |
+| `d216` probe · arm E(6)'s composition site | `[true, true]` | `[false, false]` | SUBJECT DELETED — `#requiredStrengthFor` is gone and the anchor matched nothing | `ce2fe34` |
+| `d216` probe · arm E(5)'s notification slugs | `[false, false]` (ABSENT) | `[true, true]` | SUBJECT MOVED — PL-13 minted both | `7ab3117` |
+| `d216` control · BASELINE | `38 pass, 0 fail` | `36 pass, 4 fail` | +2 probe growth AND -4 false declarations, summed | `82ea2b7` + the four above |
+| `dec65` arm (3) | `25 pass, 2 fail` | `22 pass, 5 fail` | SUBJECT MOVED — the desync's REACH grew | `63a329d` |
+| `dec65` arm (4) | `23 pass, 4 fail` | `24 pass, 3 fail` | SUBJECT MOVED — the harm assertion left the arithmetic | `fc55b62` |
+| `dec65` arm (5) | `25 pass, 2 fail` | `-1 pass, -1 fail` | SUBJECT BECAME THE MAINLINE, and separately could no longer LOAD | `7c94b43` + `a3a2116` |
+
+**NOT ONE IS A PLANE DEFECT, AND NOT ONE IS A STALE ANCHOR.** All nine anchors across both drivers
+were counted against the committed blobs before the run and **every one occurs exactly once**.
+
+### THE BISECT, because arm (3)'s cause was not guessable and was not guessed
+
+Arm (3) removes the scanner's regex arm, so every `/` reads as division. The question the
+declaration answered — *do the CLOSURE and the PROPERTY VOCABULARY survive that?* — was walked over
+**all 36 revisions of `src/store.mjs` since the driver was written**, with the recogniser held fixed
+at the suite's own current bytes (SLICED from the suite, never hand-copied: a hand copy agrees for
+free). The runaway **starts at the same construct in every tree measured** — `#reevalRaisedBy`,
+~line 2966. What moved is how far it runs:
+
+| rev | store lines | methods seen | closure | property vocabulary | declaration holds |
+| --- | --- | --- | --- | --- | --- |
+| `eb3e1d4` (the driver's own tree) | 24,468 | 392 | 8 | 47 | YES |
+| … 18 revisions, unbroken … | | | | | YES |
+| `0110ffe` | 25,862 | 403 | 8 | 47 | **YES** |
+| `63a329d` | 26,145 | **289** | **1** | **0** | **NO** |
+| … 15 revisions, unbroken … | | | | | NO |
+| `dad57cd` (HEAD) | 29,391 | 354 | 1 | 0 | NO |
+
+At `0110ffe` the runaway swallows **14** method marks and **not one is in the arithmetic**, so the
+declaration was RIGHT ABOUT THE TREE IT MEASURED. At `63a329d` it swallows **128**, including
+`#strengthWalk`, `#axisResult`, `#groundResult` and `#weakestOf` — the whole closure. The boundary
+is clean; no revision between them differs.
+
+**AND THE INSTRUMENT IS STRONGER THAN ITS OLD DECLARATION SAID.** The header recorded that the
+desync check and the call-site roster were *"the ONLY two things standing between a broken scanner
+and a result that reads perfectly clean."* Three more guards now fire, and the two that fire
+hardest are the FLOORS — a floor catching an empty corpus, which is the job floors are floored for.
+
+### THE TRAP THE E(6) CORRECTION HAD TO WALK AROUND
+
+`ce2fe34`'s replacement site **quotes the removed rule verbatim** — *"WHERE TWO PROJECTS CITE ONE
+INQUIRY, the STRICTEST declared bar wins"* — inside the supersession table explaining that it is
+gone. **Re-anchoring the old assertion onto the new site would have gone green over prose asserting
+the opposite of what the assertion claims.** That is this estate's own named failure (a check that
+caught its own correction because the correction quoted the token it was correcting), met live. The
+arm is RE-AIMED instead: `#requiredStrengthFor` is pinned at **zero declarations in comment-stripped
+source** (4 mentions raw, all prose), `#projectBar` at exactly one, and the site's statement quoted
+from words only the REPLACEMENT carries.
+
+### NEGATIVE CONTROLS — 3 arms, each ALONE, restores by sha256 AND `cmp`
+
+- **(1a) RE-STALE `dec65` arm (4)** to `fail: 4`. Driver exits 1 naming `(declared 23/4)`; the other
+  five arms byte-for-byte their unarmed tallies. **AS DECLARED.**
+- **(1b) RE-STALE the `d216` probe's slug assertion** to `[false, false]`. Probe 39/1, **exactly one
+  failure, by name**; the control driver stops at its baseline gate and **arms nothing**. AS
+  DECLARED — and that second half is the item in one line: *a probe one assertion wrong disarms all
+  three controls behind it*, which is how four stale declarations bought an unmeasured driver.
+- **(2) OVER-STRICTNESS.** Untouched tree: both drivers exit 0, every tally identical to baseline,
+  all three files byte-identical to their pre-NC digests. **AS DECLARED.**
+- **(3) A REAL DEFECT'S INDEPENDENT REPRODUCTION: VACUOUS BY OUTCOME, AND STATED RATHER THAN
+  SKIPPED.** No plane defect was found, so the arm has no subject. The one DRIVEN finding that does
+  exist — arm (5) cannot load — was nonetheless reproduced **without the driver**, by hand:
+  `git worktree add --detach <tmp> 4b3f7a7`, copy today's suite in, `node
+  test/dec65-strength-reach.test.mjs` → `ERR_MODULE_NOT_FOUND: test/stdio.mjs`, exit 1, zero
+  assertions. So the finding does not rest on the instrument being right about itself.
+
+**THE NC HARNESS'S OWN FIRST ARM FAILED, AND IT IS THE SHARPEST THING HERE.** Arm (1a) came back NOT
+AS DECLARED over a driver that was behaving perfectly: the harness indexed the driver's `RESULT`
+lines **positionally**, and retiring arm (5) removed a line, so arm (4) moved from index 3 to index 4
+and the comparison excluded the wrong row. **A positional index into an instrument's output is the
+same staleness class this entire item is about, met inside the item's own control**, on the first
+run, by the control catching its author. Keyed by the driver's own `(n)` headers since.
+
+### FINAL STATE
+
+Both drivers **GREEN**, exit 0. `d216-sharing.probe` **40 pass / 0 fail** (38 + REC-72's two);
+`d216-sharing.control` **3 arms as declared, 0 not** — its three arms had not fired once in over a
+month, and all three reproduce their declared defects exactly, so nothing was hiding behind the red
+baseline. `dec65-strength-reach.control` **every arm as declared, every restore verified by sha256
+AND `cmp`**. Battery **183/183 · 11,189 · exit 0 read UNPIPED**. `coverage --strict` exit 0 read
+unpiped, **no floor owed or moved** (`REGISTER_FLOOR` 942/174/175, `FLEET_FLOOR` 3/6/8/73, all
+unchanged — no `.test.mjs` was touched). `civicos-ui/test/run.mjs` from the repo root, exit 0.
+
+**THE +1 WAS PREDICTED BEFORE IT WAS MEASURED, AND ATTRIBUTED PER SUITE BY RE-RUNNING THE TRUE
+BASELINE RATHER THAN BY SUBTRACTION.** `planning-hygiene.test.mjs` 241 -> 242: it asserts one row
+per DEBT row, and this item files exactly one (D-333). Nothing else in the battery moved.
+
+**AND THE GATE CAUGHT THIS ITEM'S OWN DEFECT, WHICH IS WHY THE FIRST FINAL RUN IS REPORTED HERE
+RATHER THAN QUIETLY REPLACED.** D-330's disposition was first written starting `| **resolved …`,
+and `planning-hygiene`'s token predicate requires the status cell to BEGIN with the token — the `**`
+broke it. The run read **182/183 · 11,187**, `planning-hygiene` 240 pass / 2 FAIL, naming D-330 by
+its own D-number. Fixed by moving the emphasis one character; the suite names the row rather than
+only a count, which is what made a one-character defect a ten-second diagnosis.
+
+**A SECOND BATTERY RUN WAS DISCARDED BEFORE THAT, AND FOR THIS ITEM'S OWN REASON.** Docs were edited
+while it was running — `DECIDED.md`, `DEBT.md`, `MEASUREMENTS.md`, `CLAIMS.md`, all of them read by
+suites in the same run. A corpus figure is not stable while a battery runs against the same
+checkout, so the run was thrown away and re-taken on a quiet tree rather than reported. D-238's rule
+about contaminated figures, applied to the session that wrote it down.
+
+**AND THE HARNESS EXIT WAS READ UNPIPED, WHICH MATTERED.** The failing run's *background wrapper*
+reported `exited with code 0` while the battery itself reported `BATTERY_EXIT=1`. Reading the
+wrapper would have recorded a green gate over a red battery — the 2026-08-04 `cmd | tail` defect in
+a new costume.
+
+**WHAT THIS COULD NOT SEE.** Nothing in the estate still RUNS either driver — that is unchanged and
+is D-330's own point. The expectation half of driver decay is structurally invisible to M0-25's
+static witness, because a declared tally is a claim about a RUN and exists in no file the witness
+can read; filed as **D-333**. And the `d216` control's `declare()` is a SUBSET test, so an arm may
+fell more assertions than it names and still read AS DECLARED — arm 2 does exactly that (declares
+four, fells five). Deliberate looseness, now stated at the site rather than left for the next reader
+to discover from a count.

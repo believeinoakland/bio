@@ -40,9 +40,28 @@
  *        refusal — an absence of refusal over the ops that exist. An unbuilt op
  *        could still introduce one, which is exactly what arm E's `projects[]`
  *        composition warns about.
- *   (iv) IT DOES NOT MEASURE THE NOTIFICATION. §7's two FINDING-class slugs are
- *        PL-13's to mint and do not exist yet; this probe asserts they are
- *        ABSENT rather than pretending to test them.
+ *   (iv) IT DOES NOT MEASURE THE NOTIFICATION. §7's two FINDING-class slugs were
+ *        PL-13's to mint. CORRECTED 2026-09-13 (D-330): `7ab3117` (PL-13/IS-3)
+ *        MINTED BOTH, so arm E(5) now pins them PRESENT rather than absent. The
+ *        blind spot itself is UNCHANGED and is why the note stays — this probe
+ *        asserts the slugs EXIST in `queuestate.mjs` and still does not drive a
+ *        notification end to end.
+ *
+ * ============================================================================
+ * DECLARATIONS CORRECTED 2026-09-13 UNDER D-330, and every one is the same
+ * finding in a different costume: a hand-run instrument's EXPECTATIONS decay
+ * exactly as its ANCHORS do, and nothing in the estate runs either. This probe
+ * read 36 pass / 4 fail on a green `main` (M0-25's census found it; measured
+ * again here, on an unmodified tree, before a byte was changed). ALL FOUR ARE
+ * SUBJECTS THAT LEGITIMATELY MOVED, none is a plane defect, and each correction
+ * says what moved and when at its own site:
+ *   · arm A's two bar arms and arm E(6) — `ce2fe34` (CASE-2, DEC-72 / IC-65)
+ *     removed the cross-citer composition and `#requiredStrengthFor` with it.
+ *   · arm E(5) — `7ab3117` (PL-13 / IS-3) minted the two notification slugs this
+ *     probe had deliberately pinned ABSENT.
+ * The BASELINE the negative-control driver quotes moved for a SECOND, separate
+ * reason and is corrected there rather than here: `82ea2b7` (REC-72) ADDED two
+ * assertions to this probe without moving the driver's `38 pass, 0 fail`.
  *
  * NEGATIVE CONTROLS ARE INLINE AND RUN ON EVERY PASS — they are not a separate
  * harness, because every assertion here is a read rather than an edit to a real
@@ -228,13 +247,19 @@ const A = "PROJ-2026-3000-oversight", B = "PROJ-2026-3000-budget",
          question without joining any edge set this probe measures a delta over. */
       E = "PROJ-2026-3000-actor";
 /* THE TWO BARS ARE CROSSED ON PURPOSE. A declares capture A / connection C; B
-   declares capture C / connection B. `#requiredStrengthFor` takes the STRICTEST
-   PER AXIS across every citing project, and BASIS_GRADES is strongest-first, so
-   the only correct composition takes CAPTURE FROM A AND CONNECTION FROM B — an
-   answer NO single-project walk can produce. The first draft of this fixture gave
-   both strictest axes to ONE project and the arm passed while proving nothing
-   about composition; corrected, and recorded because it is the vacuity failure
-   this item was warned about arriving inside its own instrument. */
+   declares capture C / connection B. The first draft of this fixture gave both
+   strictest axes to ONE project and the arm passed while proving nothing;
+   corrected, and recorded because it is the vacuity failure this item was warned
+   about arriving inside its own instrument.
+   WHY THE CROSSING STILL EARNS ITS PLACE AFTER CASE-2 (note added 2026-09-13,
+   D-330). It was originally crossed so that a COMPOSED answer had to take one
+   axis from each project — a shape no single-project read could fake.
+   `ce2fe34` removed that composition (DEC-72/IC-65) and the bar became a
+   per-project property, so the crossing now does a different and equally
+   load-bearing job: the two projects' answers differ ON BOTH AXES IN OPPOSITE
+   DIRECTIONS, so a read that handed one project's standard to the other's work
+   cannot pass by coincidence. Uncrossed bars would make that confusion
+   invisible. */
 await mustPromote(A, projectMd(A, { bar: { capture: "A", connection: "C" } }), "project");
 await mustPromote(B, projectMd(B, { bar: { capture: "C", connection: "B" } }), "project");
 await mustPromote(C, projectMd(C), "project");
@@ -378,30 +403,67 @@ console.log("\n--- A. THE EDGE: is it real, what is it called, is it many-to-one
   t("and the `refs` PROJECTION grew by exactly TWO — the edge is in the table, not only in the bytes",
     refs1 - refs0, 2);
 
-  /* THE PLANE WALKS IT MANY-TO-ONE, and this is the arm that proves the store
-     genuinely composes over BOTH projects rather than picking one. Project A
-     declares capture C / connection C; project B declares capture A / connection
-     B. `#requiredStrengthFor` takes the STRICTEST PER AXIS across every citing
-     project — so a correct answer must take one axis from EACH project, which no
-     single-project read could produce. */
-  const bar = await GET(`op=strengthbarof&token=${RUTH}&target=${encodeURIComponent(INQ)}`);
-  m("the composed bar", { source: bar?.bar?.source, capture: bar?.bar?.capture,
-                          connection: bar?.bar?.connection, projects: bar?.bar?.projects });
-  t("THE PLANE READS BOTH PROJECTS AT ONCE: the bar names them BOTH and takes CAPTURE FROM A AND "
-  + "CONNECTION FROM B (strictest per axis over CROSSED declarations) — an answer no single-project "
-  + "walk could produce, which is what makes the edge genuinely many-to-one",
-    [bar?.bar?.source, (bar?.bar?.projects ?? []).slice().sort(), bar?.bar?.capture, bar?.bar?.connection],
-    ["project", [B, A].sort(), "A", "B"]);
-  /* NEGATIVE CONTROL for the arm above, run: the composition must be a FUNCTION
-     of the projects and not a constant. C cites nothing, so citing it in would
-     have to move the bar if the walk is real — and it must NOT move it here,
-     because C declares no bar at all. That is the over-strictness direction. */
+  /* ========== CORRECTED 2026-09-13 (D-330). THE SUBJECT MOVED; THE DECLARATION
+     IS MOVED WITH IT AND NEVER EXEMPTED. ======================================
+     WHAT THESE TWO ARMS USED TO ASSERT, and it was right about the tree it
+     measured: `op=strengthbarof&target=<inquiry>` answered a bar COMPOSED across
+     every citing project, strictest per axis, so the crossed declarations
+     (A: capture A / connection C; B: capture C / connection B) produced
+     `capture A, connection B` — an answer no single-project read could give. The
+     over-strictness arm beside it added a third citing project declaring NO bar
+     and required the composed pair not to move.
+
+     WHAT MOVED, AND WHEN. `ce2fe34` (CASE-2, 2026-08-10, under DEC-72 and
+     registered as IC-65) REMOVED `#requiredStrengthFor` and the cross-citer walk
+     with it. Bob's ruling at the site: *"The bar — that is, the standard of
+     evidence — is a property of a project, not an inquiry or claim."* The op now
+     REFUSES the `target` arm by name — `BAR_IS_A_PROJECT_PROPERTY` — and answers
+     only `&project=` and `&group=`. `target` still REACHES the method
+     deliberately, so a withdrawn arm is refused with its reason rather than
+     404ing at the router.
+
+     WHY THE ARMS ARE CORRECTED RATHER THAN RETIRED. The many-to-one fact they
+     were the witness for is still witnessed, three assertions up: `op=backlinks`
+     names both projects and the `refs` projection grows by exactly two. What
+     these two arms uniquely still hold is the OTHER half — that the two projects
+     are DISTINGUISHABLE and each is answered its OWN crossed declaration, which
+     is the shape that replaced the composition; plus the over-strictness
+     direction, now pointed at the thing DEC-72 is most likely to be got wrong
+     about: a project declaring no bar must be told so, not handed somebody
+     else's. A retired arm here would leave the replacement unwitnessed.
+
+     WHAT IS GENUINELY LOST AND IS NOT CLAIMED BACK: nothing in this probe now
+     drives a cross-project COMPOSITION, because there is none to drive. That is
+     a property of the model today, recorded in arm E(6) below, not a gap here. */
+  const barT = await GET(`op=strengthbarof&token=${RUTH}&target=${encodeURIComponent(INQ)}`);
+  m("op=strengthbarof on the FINDING arm — what the plane answers since CASE-2",
+    { ok: barT?.ok, reason: barT?.reason ?? null });
+  const barA = await GET(`op=strengthbarof&token=${RUTH}&project=${encodeURIComponent(A)}`);
+  const barB = await GET(`op=strengthbarof&token=${RUTH}&project=${encodeURIComponent(B)}`);
+  m("each project's own bar", { A: { capture: barA?.bar?.capture, connection: barA?.bar?.connection },
+                                B: { capture: barB?.bar?.capture, connection: barB?.bar?.connection } });
+  t("THE BAR IS REFUSED ON THE SHARED QUESTION AND ANSWERED PER PROJECT: the two projects are "
+  + "DISTINGUISHABLE through the plane and each is told its OWN crossed declaration (A capture A / "
+  + "connection C, B capture C / connection B) — so a read that silently answered one project's "
+  + "standard for the other's work would fail here, which is what DEC-72 puts at stake",
+    [barT?.ok, barT?.reason,
+     [barA?.bar?.source, barA?.bar?.capture, barA?.bar?.connection],
+     [barB?.bar?.source, barB?.bar?.capture, barB?.bar?.connection]],
+    [false, "BAR_IS_A_PROJECT_PROPERTY",
+     ["project", "A", "C"], ["project", "C", "B"]]);
+  /* THE OVER-STRICTNESS DIRECTION, re-pointed at what DEC-72 actually risks. C
+     cites the question and declares NO bar. Under the removed composition the
+     danger was that citing moved a composed pair; under the replacement it is
+     that an ABSENT bar quietly reads as somebody else's, or as a bar of zero.
+     The site's own words: *"An absent bar is not a bar of zero."* */
   await mustPromote(C, projectMd(C, { refs: [INQ] }), "project", await shaOf(C));
-  const bar2 = await GET(`op=strengthbarof&token=${RUTH}&target=${encodeURIComponent(INQ)}`);
-  t("OVER-STRICTNESS ARM: a THIRD citing project that declares NO bar joins the edge set and does NOT "
-  + "move the composed pair — the walk composes declarations, not citations",
-    [(bar2?.bar?.projects ?? []).slice().sort(), bar2?.bar?.capture, bar2?.bar?.connection],
-    [[B, A].sort(), "A", "B"]);
+  const barC = await GET(`op=strengthbarof&token=${RUTH}&project=${encodeURIComponent(C)}`);
+  t("OVER-STRICTNESS ARM: a THIRD citing project that declares NO bar is told its bar is ABSENT and "
+  + "is handed NEITHER a neighbour's declaration NOR a bar of zero — and A's own bar is unmoved by "
+  + "C joining the edge set, so a bar is a project's own property and citation does not touch it",
+    [barC?.ok, barC?.bar?.declared, barC?.bar?.source, barC?.bar?.capture, barC?.bar?.connection,
+     (await GET(`op=strengthbarof&token=${RUTH}&project=${encodeURIComponent(A)}`))?.bar?.capture],
+    [true, false, "none", null, null, "A"]);
   const rows2 = ((await backlinksOf(INQ))?.backlinks ?? []).filter((r) => r.from_type === "project");
   t("and the edge set itself DID grow to three, so the previous arm is about the bar and not about the "
   + "edge — the two are measured separately",
@@ -594,25 +656,71 @@ console.log("\n--- E. does anything REQUIRE one shared stance? (the arm that cou
   + "not mean per-project-must-differ",
     (await stanceOf(A))?.version === (await stanceOf(D))?.version, true);
 
-  /* (5) THE NOTIFICATION §7 REQUIRES DOES NOT EXIST YET, and this probe says so
-     rather than pretending to test it. Asserted as ABSENT so PL-13 cannot be
-     reported as partially done. */
+  /* (5) ========== CORRECTED 2026-09-13 (D-330). THE ABSENCE ENDED. ==========
+     WHAT THIS ARM USED TO ASSERT, and why it was written that way: §7's two
+     notification slugs did not exist, and this probe asserted them ABSENT so
+     that nobody could read a green probe as evidence that PL-13's notification
+     half was built. It was an honest "not yet", pinned so it could not rot into
+     an implied yes.
+     WHAT MOVED, AND WHEN: `7ab3117` (PL-13 / IS-3, 2026-08-10) MINTED BOTH —
+     `stance-changed-here-not-elsewhere` and
+     `new-version-arrived-from-another-team` — which is the item this probe was
+     run to unblock doing exactly what the probe said was outstanding.
+     THE ARM IS CORRECTED, NOT DELETED, AND IT FLIPS RATHER THAN LOOSENS: it now
+     pins the two slugs PRESENT. Deleting it would leave nothing to notice their
+     removal, and an instrument still asserting an absence its own item ended is
+     an instrument lying about its subject. The full slug names are quoted (not
+     the prefixes the old arm matched) so a slug renamed to something merely
+     prefix-compatible is caught. */
   const q = readFileSync(SRC("queuestate.mjs"), "utf8");
-  t("§7's TWO NOTIFICATION SLUGS ARE NOT MINTED YET — asserted ABSENT so nobody reads this probe as "
-  + "evidence that PL-13's notification half is built",
-    [/stance-changed/.test(q), /new-version-arrived/.test(q)], [false, false]);
+  t("§7's TWO NOTIFICATION SLUGS ARE MINTED — PL-13 built the notification half this probe recorded "
+  + "as outstanding, and the arm is flipped rather than dropped so their disappearance is still a "
+  + "failure somebody sees",
+    [/stance-changed-here-not-elsewhere/.test(q), /new-version-arrived-from-another-team/.test(q)],
+    [true, true]);
 
-  /* (6) AND THE ONE PLACE THE MODEL *DOES* COMPOSE ACROSS PROJECTS, named
-     because it is the closest thing to a counter-example and it points the other
-     way: `#requiredStrengthFor` composes STRICTEST-WINS over every citing
-     project rather than answering per project. That is a deliberate choice
-     recorded at the site, and it is about the BAR (a floor two teams must both
-     clear) and not about the STANCE (what one team reads the evidence to say). */
-  const site = STORE_SRC.slice(STORE_SRC.indexOf("#requiredStrengthFor(bundleId, fm)") - 1400,
-                               STORE_SRC.indexOf("#requiredStrengthFor(bundleId, fm)"));
-  t("THE ONE CROSS-PROJECT COMPOSITION IN THE MODEL IS THE BAR, NOT THE STANCE — and the site says so "
-  + "in its own words, so this is a recorded decision rather than an accident",
-    [/WHERE TWO PROJECTS CITE ONE INQUIRY/.test(site), /STRICTEST/.test(site)], [true, true]);
+  /* (6) ========== CORRECTED 2026-09-13 (D-330). THE SUBJECT WAS DELETED, NOT
+     MOVED, AND THE ARM IS RE-AIMED AT WHAT REPLACED IT. ======================
+     WHAT THIS ARM USED TO ASSERT: the model composed across projects in exactly
+     ONE place — `#requiredStrengthFor`, strictest-wins over every citing project
+     — and the arm named it because it was the closest thing to a counter-example
+     to D-216's answer and pointed the other way (it was about the BAR, a floor
+     two teams must both clear, and not about the STANCE).
+     WHAT MOVED, AND WHEN: `ce2fe34` (CASE-2, 2026-08-10, DEC-72/IC-65) DELETED
+     `#requiredStrengthFor` outright. The old anchor `#requiredStrengthFor(bundleId, fm)`
+     then matched nothing, and `String.slice(-1401, -1)` silently handed the arm
+     THE LAST 1400 BYTES OF THE FILE — a window with no relation to the subject.
+     Found by M0-25's arm-liveness census and attributed here; the same deletion
+     retired three arms in `d280-strengthbar.control.mjs` on the same day.
+     THE TRAP THIS CORRECTION HAD TO AVOID, recorded because it is this estate's
+     own named failure mode (a check that caught its own correction because the
+     correction quoted the token it was correcting): the REPLACEMENT site QUOTES
+     the removed rule verbatim — *"WHERE TWO PROJECTS CITE ONE INQUIRY, the
+     STRICTEST declared bar wins"* — inside the supersession table explaining
+     that it is gone. Re-anchoring the OLD assertion onto the NEW site would have
+     gone green over prose announcing the opposite of what it claims. So the arm
+     is re-aimed rather than re-anchored, and it pins the ABSENCE structurally:
+     `#requiredStrengthFor` survives ONLY as prose (zero declarations in
+     comment-stripped source), the replacement `#projectBar` is declared exactly
+     once, and the site states the removal in words only the NEW text contains.
+     THE ANSWER TO D-216 IS STRENGTHENED, NOT WEAKENED: the one cross-project
+     composition that was the nearest counter-example no longer exists at all. */
+  const stripped = STORE_SRC.replace(/\/\*[\s\S]*?\*\//g, "")
+    .split("\n").filter((l) => !/^\s*\/\//.test(l)).join("\n");
+  const barSite = STORE_SRC.slice(Math.max(0, STORE_SRC.indexOf("#projectBar(projectId) {") - 3000),
+                                  STORE_SRC.indexOf("#projectBar(projectId) {"));
+  m("`#requiredStrengthFor` mentions — raw vs comment-stripped",
+    [STORE_SRC.split("#requiredStrengthFor").length - 1, stripped.split("#requiredStrengthFor").length - 1]);
+  t("THERE IS NO CROSS-PROJECT COMPOSITION IN THE MODEL AT ALL ANY MORE — `#requiredStrengthFor` "
+  + "survives only as PROSE explaining its own removal (zero declarations in comment-stripped "
+  + "source), the per-project `#projectBar` that replaced it is declared exactly ONCE and takes ONE "
+  + "project id, and the site says so in words only the replacement carries. The closest thing to a "
+  + "counter-example to D-216's answer is GONE, which points the same way harder",
+    [stripped.split("#requiredStrengthFor").length - 1,
+     (stripped.match(/^  #projectBar\(projectId\) \{/gm) || []).length,
+     /THIS REPLACES `#requiredStrengthFor`, WHICH IS REMOVED/.test(barSite),
+     /THE CROSS-CITER WALK\. Nothing composes across projects\./.test(barSite)],
+    [0, 1, true, true]);
 }
 
 console.log("\n--- MEASURED VALUES (carried to MEASUREMENTS.md; never pinned here) ---");
