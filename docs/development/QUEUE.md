@@ -1078,7 +1078,7 @@ does not cut releases, deploy, or touch `newgroup/**`, `release/**`, `deploy.mjs
 plane version or tags. **The build plan's whole DS track (DS-1..DS-4) is DIST's lane, not
 CONDUCT's** — recorded on the plan-status row below so nobody schedules it here.
 
-### DIST-2 · queued
+### DIST-2 · done — **RAN BY DIST #2; landed `681cbbe` (+ index fix `6c8bdf9`), flipped by CONDUCT at integration 2026-09-14 from the CLAIMS release evidence: the installer binds `DAEMON_TOKEN` in BOTH upload paths (REC-33's follow-on, the first gate on DEC-43's fallback retirement). Full gate green on the merged tree (battery 182/183 with the one loud member skip · 11,113; strict exit 0; UI green; newgroup embed 15/15 + wizard 105/105 unpiped), both NC arms run and recorded with byte-identical restores. NO DEPLOY — the next real install/update run is gated to Bob. The owed act arrived STATED WITH ITS ACTOR in the release note, which is the 2026-09-14 rule already working on its first day.**
 milestone: M1
 scope: **The installer binds DAEMON_TOKEN (REC-33's follow-on).** newgroup generates a DAEMON_TOKEN and binds it in BOTH uploadInstall and uploadUpdate (the SELF-binding precedent DIST-1 established; the update path so already-installed instances receive it). DIST-1's constraint is now satisfied in this direction — the plane classifies the class (REC-33 landed) BEFORE the installer binds it. The ADMIN_TOKEN fallback stays until DEC-43 rules on its retirement. NO DEPLOY: land tested code; the install/update run is gated to Bob.
 behind-interface: I4
