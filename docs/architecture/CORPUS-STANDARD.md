@@ -5,7 +5,7 @@
 **Place in the system** · This document governs the FORM of the design corpus, not its content. It sits beside `README.md` (the catalog of documents) and above every document in `docs/architecture/` and the design documents it lists in §5, all of which must satisfy it. `BIO_System_Design.md` is the level-0 document this standard requires to exist; `tools/corpuscheck.mjs` is its enforcement; `tools/plancheck.mjs` runs that enforcement before every push.
 
 **Incomplete sections** ·
-- §5 — the design documents under `docs/development/` are listed and the governed table grows as each is retrofitted (an act per owner, routed through the queue); the "Not yet governed" table below is the live frontier and is the only place the remainder is counted, deliberately, because a count carried in this prose goes stale the moment an owner lands a retrofit.
+- §5 — the design documents under `docs/development/` are listed and the governed table grows as each is retrofitted (an act per owner, routed through the queue); the "Not yet governed" table below is the live frontier and is the only place the remainder is counted, deliberately, because a count carried in this prose goes stale the moment an owner lands a retrofit. **That table is EMPTY as of 2026-09-14** — SK-6 landed the last retrofit — so §5 is complete for the corpus as it stands today and incomplete only in the sense that it grows: the section is kept on this list because a new design document arrives owing front matter and the frontier reopens with it.
 - §6 — whether the ledgers (`DECISIONS.md`, `DEBT.md`, `QUEUE.md`, `MEASUREMENTS.md`) should carry a variant of this front matter is not decided; they are append-only registers with their own hygiene checks and are deliberately outside this standard for now.
 
 **Contents**
@@ -182,6 +182,7 @@ joins the table in the same commit that gives it front matter.
 | `docs/development/PRACTICE-SURVEY.md` | 2 | `BIO_Interaction_Constructs_v0_1.md` | 2026-09-14 |
 | `docs/development/FINDINGS-WORKPLAN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part I §12 | 2026-09-14 |
 | `docs/development/RETRIEVAL-PROBE.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §14.2–14.3 | 2026-09-14 |
+| `docs/development/ASSISTANT-PILOT.md` | 2 | construct 11 has no level-1 document (`BIO_System_Design.md` §3) | 2026-09-14 |
 
 ### Not yet governed — design documents that owe front matter
 
@@ -189,9 +190,20 @@ Listed so the frontier is explicit. Each joins §5's table when its owner retrof
 CONDUCT sequences the acts. The `--write` half is mechanical; the Status, Place and
 Incomplete fields need the owner's judgment.
 
+**THE TABLE IS EMPTY AS OF 2026-09-14, AND THE EMPTY TABLE IS KEPT RATHER THAN DELETED.**
+SK-6 retrofitted the last row — the assistant pilot design, SKILL's, now the final row of
+§5's governed table above — so every design document this standard reaches carries front
+matter. The heading and the header row stay because this is the frontier's register and a
+register with nothing in it still says something: the next design document written under
+`docs/development/` is owed front matter before it can be governed, and it is LISTED HERE
+until its owner writes it. `bio-plane/test/corpuscheck.test.mjs` reads this sub-heading and
+asserts that no row below it is governed; that arm is honest over an empty table and says so
+in its own name, and it regains its teeth the moment a row returns. **No path is named in
+this section in prose**, deliberately: the arm harvests backticked `docs/…md` paths from
+everything under this heading, so a path mentioned here in passing would be read as a row.
+
 | document | owner | note |
 | --- | --- | --- |
-| `docs/development/ASSISTANT-PILOT.md` | SKILL | the assistant pilot design |
 
 **CONDUCT's seven are dispositioned, 2026-09-14 (M0-26), and the row is gone rather than ticked.** Four are
 governed above. Three were CLOSED HISTORY by the queue row's criterion — every item they plan landed or
