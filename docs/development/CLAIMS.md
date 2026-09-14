@@ -3219,3 +3219,4 @@ concurrency: checked over the register 2026-09-13 — M0-25's block above is REL
     not asserted: `src/store.mjs` carries sha256 `514bb504…` before the first driver run and after
     the last NC arm. Attribution READS its subjects. No plane defect was found; had one been, the
     row would have been filed and the fix left as its own item.
+released: 2026-09-13 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 183/183 · 11,189 (+1 predicted and measured), `coverage --strict` exit 0 read unpiped (no floor owed), UI harness exit 0, `mintid --audit` 0 breaks. D-330 closed; D-333 stands; D-332 recorded burned.
