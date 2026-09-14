@@ -3844,3 +3844,65 @@ paths:
 - `docs/development/CLAIMS.md` — this entry.
 not claimed and not touched: `QUEUE.md`, `CLAUDE.md`, `DECISIONS.md`,
   `bio-plane/src/airun.mjs`, and everything the SKILL kickoff lists as another area's.
+released: 2026-09-14 by the SKILL worker at the close of SK-6. `ASSISTANT-PILOT.md` carries
+  front matter per `CORPUS-STANDARD.md` §3 — 8 incomplete sections declared, each with the
+  evidence that produced it, and the sharpest one is the document's own title: it is not the
+  first AI integration that was BUILT, the investigative session is, and `BIO_System_Design.md`
+  §3 row 11 already said so. Place names the construct's missing level-1 home rather than
+  inventing one, quoting §3's own bold cell. §5's governed table gains the row at its END and
+  the "Not yet governed" table loses its last one; the sub-heading and the header row are KEPT,
+  `bio-plane/test/corpuscheck.test.mjs` reads that sub-heading, and both of its not-yet arms
+  PASS honestly over the empty table (38 pass, 0 fail). No stale row was left behind to keep an
+  arm alive. GATES on the committed tree: `corpuscheck` **44 governed document(s), 0 fail**,
+  exit 0 read UNPIPED and re-run AFTER the commits so the staleness arm could actually bite
+  (M0-26's bound); `gates.mjs` **GREEN, class DOCS**, exit 0 — 19/19 doc-facing plane suites,
+  1,124 assertions, 28.6s, plus analyst-vocabulary 57/57, member-respect 428/428,
+  connections-sidebar 47/47, preauth-vocabulary 70/70; `plancheck --local` 0 fail 0 warn, its
+  own corpus note reading 44 governed / 0 front-matter failures. NEGATIVE CONTROLS: four arms,
+  each armed ALONE on the retrofitted file with every other defence open, restored by cp-back
+  (never `git checkout --`) verified by sha256 AND `cmp` with the byte count printed against a
+  21,358-byte floor of 10,000 — (0) baseline, nothing armed: 0 fail, exit 0; (1) Status `as of`
+  pushed to 2026-09-13, one day behind the file's last commit day: FAILS naming the file; (2)
+  `## 3 · The wizard` renamed without `--write`: FAILS on the Contents divergence at entry 3;
+  (3) an Incomplete bullet naming `§The nonexistent section this arm invents`: FAILS naming that
+  section; (4) over-strictness, the final file unarmed: 0 fail, exit 0. All restores
+  byte-identical, sha256 `35ea1eeb…`. **ARM 1 CAME BACK GREEN THE FIRST TIME AND THE FINDING IS
+  RECORDED RATHER THAN SMOOTHED:** the arm had armed (the file differed), but the checker `exec`s
+  the FIRST `as of` in a Status and this Status carried two — the arm patched the trailing one.
+  Both read the same date so nothing was wrong on the day, yet the file was being judged on a
+  date an editor would not think to bump. The mid-sentence date was removed (`c562993`), the arm
+  re-armed, and it FAILS as declared. Swept for the class over all 44 governed documents, reading
+  the Status segment exactly as the checker parses it: 3 carry more than one `as of` and all 3 are
+  benign (both dates equal, each judged on its latest). What the sweep cannot see: a date written
+  in any form other than the literal `as of YYYY-MM-DD`. Commits `dd9a78d` and `c562993` on
+  `worktree-agent-a25f97e7cabc42e53`; not pushed, not merged.
+
+
+
+## DELEGATION 2026-09-14 SKILL (SK-6) -> CONDUCT: **A STATUS MAY CARRY TWO `as of` DATES AND ONLY THE FIRST IS JUDGED — THREE GOVERNED DOCUMENTS DO, ALL BENIGN TODAY**
+
+**ACT, with its actor named: CONDUCT decides whether `corpuscheck` should refuse a Status
+carrying more than one `as of YYYY-MM-DD`, and routes it if so.** `tools/corpuscheck.mjs` is
+not this area's path, so the change is not made here.
+
+**The measurement, taken while running SK-6's own ARM 1 and the reason that arm first came back
+green.** `checkFile` does `/as of (\d{4}-\d{2}-\d{2})/.exec(fm.status)` — the FIRST match in the
+Status wins, and the closing date the §3 grammar asks for is usually the LAST thing in that
+field. So a Status with two dates is judged on the one a reader is least likely to think of as
+the date, and bumping the visible trailing one changes nothing the checker reads. Swept over the
+whole governed set, parsing the Status segment exactly as the checker does: **3 of 44 carry more
+than one — `docs/development/UI-PLAN.md`, `docs/development/UI-KICKOFF.md`,
+`docs/development/NOTIFICATIONS.md` — and all 3 are BENIGN**, both dates equal, each judged on
+its latest. **There is no live defect to fix; there is a trap that fires the next time one of
+those three is edited by somebody who bumps the date they can see.** The blind spot is stated:
+the sweep sees only the literal `as of YYYY-MM-DD` form.
+
+- **This is PRACTICE-SURVEY's own defect wearing equal dates.** `corpuscheck.test.mjs`'s header
+  records it as a baseline arm that came back RED over an honest tree, where the two dates
+  DIFFERED and the earlier one won. Here they agree, so nothing fails and nothing is visible.
+- **Recommendation, and the reason it is a recommendation rather than a landing:** one arm in
+  `checkFile` refusing a second `as of` in the Status would close it structurally and cost every
+  owner one sentence. The alternative is to leave it, since it is latent rather than live.
+  Either is defensible and the tool is CONDUCT's.
+- **Reversal cost:** none today. It rises by one document each time a retrofitted Status is
+  edited without the trap being known.
