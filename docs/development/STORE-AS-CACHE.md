@@ -1,5 +1,57 @@
 # The store as a read-through cache — research, and what it changes
 
+**Status** · Research note, 2026-08-04, session BOB at Bob's direction: a survey of archival and caching systems (Software Heritage, WARC, Memento, DNS RFC 2308, LOCKSS, Cloudflare) measured against BIO's own mechanisms, concluding "read-through acquisition over a write-once archive — a cache in mechanism, an archive in policy." It carries no DEC ruling of its own; it records Bob's two same-day corrections as authoritative text — the three-axis model (DOCUMENT / CONTENT / MEANING with FETCH / EXTRACT / DERIVE) and the four-level search — and marks its own "Where AI actually sits" PARTLY SUPERSEDED and its bias framing CORRECTED and withdrawn. Complete as research; its build recommendations (observation log, authored frontier, harvest-rate gate, planning) are unbuilt, and its two adopted tables now live with build status in `BIO_Content_Framework_v0_10.md` Part II §14.2–14.3. The caveat: "nothing here is built" is still true of the observation log and the frontier's authored half, while the route-2 hole it measured has since been partly closed (D-222 option A, PL-8) — read its retrieval-route claims against the framework, not as current measurement. as of 2026-09-14.
+
+**Place in the system** · Level-2 design serving `BIO_System_Design.md` §3 row 9 (retrieval — the store as a read-through cache), which has no level-1 home: Part II §14.2–14.3 of `BIO_Content_Framework_v0_10.md` carry the adopted tables and are the authority to cite; row 4 (content) lists it in brackets. `INVESTIGATIVE-SESSION.md` §3 and §14b.2, the D-222/D-223/D-194/D-190 debt rows and `CLAUDE.md`'s four-level rules depend on it; Part II §14.2–14.3 (model), §17 (OBSERVE rows) and §18 (content-grain search) supersede parts of it; `RETRIEVAL-SUBSTRATE.md` owns the FTS5 substrate it does not address.
+
+**Incomplete sections** ·
+- §THE MODEL, REBUILT ON THREE AXES — CARRIED with per-cell build marks by framework Part II §14.2; this copy has no build status, and D-183's CALIBRATION, named here as the content axis's staleness rule, is since CLOSED (CPDF-13).
+- §FOUR LEVELS, SEARCHED IN ANY ORDER — carried by Part II §14.3 as a RULED correction; the "say which absence" obligation is enforced only for the investigative run log and nowhere general.
+- §Where AI actually sits — self-marked PARTLY SUPERSEDED; D-222 option A landed (the MEANING arm reaches `inquiry_basis` and `resolutions`); `readings`, `reading_refs`, `connections` still fixed-key only; stage C is inside Part II §18's scope, not queued.
+- §ABSENCE AS DATA — widening D-129 to four states plus `partial` is still a debt row; no state column exists in the schema.
+- §A ZERO-PAYLOAD PROVENANCE RECORD — the OBSERVATION record and last-verified field are [ABSENT] per Part II §17; the one built consumer is the IS run's `ai_run_log`.
+- §THE FRONTIER HAS TWO SOURCES — the authored lead has no home (D-194 open, paired with D-184); the empty-search record is not written.
+- §The genuinely new capability — objective-driven PLANNING unbuilt; the harvest-rate gate under "What must be MEASURED" never run; D-190's ceiling partly measured (FL-1).
+- §What the platform permits — vendor claims dated 2026-08-04, unrefreshed.
+- §Four findings that bear on things BIO has already built — the "new debt row" promises (temporal spread, rendered-HTML attacks) are not traced to D-numbers here.
+- §THE EARLIER SIX-LAYER TABLE — kept as history; its layer names were renamed to avoid the L3/L7 collision Part II's terminology note records.
+- §What to do, in order — item 7 says D-164 "stays PARKED until Bob reopens it"; D-164 was REOPENED 2026-09-15.
+
+**Contents**
+- [The finding that should govern the whole reframing](#the-finding-that-should-govern-the-whole-reframing)
+- [BIO already has most of a cache, under other names](#bio-already-has-most-of-a-cache-under-other-names)
+- [What the research says works — three properties, and BIO has one and a half](#what-the-research-says-works-three-properties-and-bio-has-one-and-a-half)
+  - [1. Two-layer identity: intrinsic bytes id + a separate OBSERVATION record](#1-two-layer-identity-intrinsic-bytes-id-a-separate-observation-record)
+  - [2. A ZERO-PAYLOAD PROVENANCE RECORD — the primitive BIO is missing](#2-a-zero-payload-provenance-record-the-primitive-bio-is-missing)
+  - [3. ABSENCE AS DATA — and BIO's version has fewer states than it needs](#3-absence-as-data-and-bios-version-has-fewer-states-than-it-needs)
+- [The acquisition side: what the caching literature says, and the one exact precedent](#the-acquisition-side-what-the-caching-literature-says-and-the-one-exact-precedent)
+  - [Cloudflare already made this substitution, and documented why](#cloudflare-already-made-this-substitution-and-documented-why)
+  - [DNS is the only system that fully separates the four states — and its authority rule is BIO's doctrine](#dns-is-the-only-system-that-fully-separates-the-four-states-and-its-authority-rule-is-bios-doctrine)
+  - [HTTP deliberately gave up the field BIO needs, so BIO must invent it](#http-deliberately-gave-up-the-field-bio-needs-so-bio-must-invent-it)
+  - [Content addressing removes the invalidation obligation, NOT the capacity obligation](#content-addressing-removes-the-invalidation-obligation-not-the-capacity-obligation)
+  - [Bounding the objective-driven fetcher — and the gate it must pass](#bounding-the-objective-driven-fetcher-and-the-gate-it-must-pass)
+  - [Two rules from the security literature that apply to addressing](#two-rules-from-the-security-literature-that-apply-to-addressing)
+- [Four findings that bear on things BIO has already built](#four-findings-that-bear-on-things-bio-has-already-built)
+- [What the platform permits — Cloudflare, all VENDOR CLAIMS, retrieved 2026-08-04](#what-the-platform-permits-cloudflare-all-vendor-claims-retrieved-2026-08-04)
+- [Where the metaphor must NOT be imported, stated as rules](#where-the-metaphor-must-not-be-imported-stated-as-rules)
+- [The genuinely new capability: acquisition driven by an OBJECTIVE](#the-genuinely-new-capability-acquisition-driven-by-an-objective)
+  - [THE FRONTIER HAS TWO SOURCES, AND THE SECOND IS THE VALUABLE ONE](#the-frontier-has-two-sources-and-the-second-is-the-valuable-one)
+  - ["INDIRECT" MEANS CONTEXT SUGGESTING WHERE ELSE TO LOOK — so the fetch plan is a PROPOSAL](#indirect-means-context-suggesting-where-else-to-look-so-the-fetch-plan-is-a-proposal)
+- [What to do, in order](#what-to-do-in-order)
+- [THE MODEL, REBUILT ON THREE AXES — Bob's correction, 2026-08-04](#the-model-rebuilt-on-three-axes-bobs-correction-2026-08-04)
+  - [The correction: this is ONE PATTERN AT THREE ALTITUDES, not six stacked layers](#the-correction-this-is-one-pattern-at-three-altitudes-not-six-stacked-layers)
+  - [What this changes about the build order](#what-this-changes-about-the-build-order)
+  - [FOUR LEVELS, SEARCHED IN ANY ORDER — Bob's correction to the section below](#four-levels-searched-in-any-order-bobs-correction-to-the-section-below)
+  - [Where AI actually sits, given the above](#where-ai-actually-sits-given-the-above)
+- [THE EARLIER SIX-LAYER TABLE — document-axis only, kept as the acquisition half](#the-earlier-six-layer-table-document-axis-only-kept-as-the-acquisition-half)
+  - [The one architectural decision the whole thing rests on](#the-one-architectural-decision-the-whole-thing-rests-on)
+  - [What each new piece must carry, so a build session is not inventing shapes](#what-each-new-piece-must-carry-so-a-build-session-is-not-inventing-shapes)
+  - [What must be MEASURED before any of it is built](#what-must-be-measured-before-any-of-it-is-built)
+  - [The order to build in](#the-order-to-build-in)
+- [The one-line version, for a reader who reads nothing else](#the-one-line-version-for-a-reader-who-reads-nothing-else)
+
+---
+
 Research, 2026-08-04 (session BOB), at Bob's direction. His framing:
 
 > *"An instance's data store should be viewed (and used) as a read-through cache of

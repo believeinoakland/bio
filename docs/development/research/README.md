@@ -1,5 +1,20 @@
 # The case-making research study — what to read, and in what order
 
+**Status** · The reading guide to the case-making research study — thirteen passes, 2026-08-01/02, written by session BOB and last revised 2026-08-10 when the closed passes moved to `docs/archive/research/`. It carries no ruling of its own; it points at DEC-13/DEC-14 and at D-156/D-153 for the AUDIENCES vocabulary trap. Complete as a guide to a dated study, and PARKED with the rest of the set behind DEC-33: the case-making build it introduces is DONE — every RECONCILED §3 item is `done` in `QUEUE.md` except REC-15 and UI-17 (blocked by DEC-33), the CASE arc landed, and the IS build plan is 43/43. Its "six open questions became three" sentence is stale. Caveat: the reading order names the archived passes by bare filename; they live under `docs/archive/research/`. as of 2026-09-14.
+
+**Place in the system** · Serves construct 8 (intent and inquiry) of `BIO_System_Design.md` §3; its level-1 home is `BIO_Case_Making_v0_1.md`, with the rulings in `DECISIONS.md`. The directory it explains holds this guide, `RECONCILED.md` (the design), `DATA-MODEL.md` (the model's source, cited from code) and `review-document.html` — the source of the published review document at the artifact URL in `kickoffs/BOB.md`, a RENDERING never authoritative over RECONCILED. Superseded in its build claims by `QUEUE.md`.
+
+**Incomplete sections** ·
+- §The review document — "six open questions became three" is stale: RECONCILED §4 records Q1–Q13 settled and Q14 carried to DEC-31/DEC-32; the source-size figure predates the committed file.
+- §Reading order — `BUILD-ORDER.md`, `PROBLEM-DOMAIN.md`, `CRITIQUE.md`, `COMPLETENESS-AUDIT.md` are archived; step 2's "do not take an item from here" warning is moot, every item is `done` or DEC-33-blocked.
+
+**Contents**
+- [The review document](#the-review-document)
+- [Reading order](#reading-order)
+- [Two things that will mislead a reader who does not know them](#two-things-that-will-mislead-a-reader-who-does-not-know-them)
+
+---
+
 Thirteen passes between 2026-08-01 and 2026-08-02, ~1.1 MB.
 
 > **MOVED 2026-08-10: the closed passes now live in `docs/archive/research/`**, with

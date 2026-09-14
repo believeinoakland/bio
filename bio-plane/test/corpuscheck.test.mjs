@@ -147,7 +147,15 @@ section("the governed set is what the standard says, no more");
   const g = governed();
   t("every docs/architecture/*.md is governed", g.includes("docs/architecture/BIO_Content_Framework_v0_10.md") && g.includes("docs/architecture/README.md"), true);
   t("the standard's §5 table rows are governed", g.includes("docs/development/CONTENT-EXTENT-DESIGN-SPACE.md"), true);
-  t("not-yet-governed rows are NOT governed (the sub-heading ends the table)", g.includes("docs/development/STORE-AS-CACHE.md"), false);
+  /* Corrected 2026-09-14: this arm first named STORE-AS-CACHE.md as its example of a not-yet-governed
+     row, and the same day's retrofit governed it — a hard-coded example rots as owners retrofit. The
+     arm now reads the "Not yet governed" table itself and asserts NONE of its rows is governed, so it
+     stays true as the table drains and still catches the sub-heading regression it was written for. */
+  const std = readFileSync(join(ROOT, "docs/architecture/CORPUS-STANDARD.md"), "utf8");
+  const notYet = (std.split(/^### Not yet governed/m)[1] || "").split(/^## /m)[0];
+  const notYetPaths = [...notYet.matchAll(/`(docs\/[^`*]+\.md)`/g)].map((m) => m[1]);
+  t("not-yet-governed rows are NOT governed (the sub-heading ends the table)", notYetPaths.filter((p) => g.includes(p)), []);
+  t("the not-yet table was read (arm has teeth while rows remain)", notYetPaths.length > 0 || /Not yet governed/.test(std), true);
   t("the standard governs itself", g.includes("docs/architecture/CORPUS-STANDARD.md"), true);
   const real = g.map((p) => ({ p, f: checkFile(p, { git: false }).fails }));
   t(`the real corpus is compliant (${g.length} governed documents, git date check aside)`, real.filter((r) => r.f.length).map((r) => r.p), []);

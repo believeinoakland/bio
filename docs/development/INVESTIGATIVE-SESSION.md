@@ -1,5 +1,66 @@
 # The investigative session — proactive AI claim formulation
 
+**Status** · The design for the investigative session — a skilled AI run that reads an inquiry, searches evidence across four levels, and writes SUGGESTED basis versions a member accepts or rejects — by Bob with session BOB, 2026-08-05, rewritten twice that day, v3 on 2026-08-07 absorbing the IS sweep. It carries the reasoning for DEC-60 (proactive claim formulation), DEC-61 (device-local transcripts) and DEC-62 (pursue and investigate are one session), inline `[BOB-2/3/4]` rulings of 2026-08-07 and four SETTLED delegations; §16 lists fifteen withdrawn positions and §18's hold sentence is struck as SUPERSEDED. Complete as design and superseded by the build: `IS-BUILD-PLAN.md` decomposed §18 into 43 rows and `QUEUE.md`'s IS BUILD PLAN status records COMPLETE 2026-09-13. The caveat: the preconditions the text still calls open — D-222, D-216, D-218, the `[BOB-4]` provisional — have since landed, been answered or been overtaken (DEC-52 final, DEC-72's reshaping of the published case), so its "what is NOT settled" list is history. as of 2026-09-14.
+
+**Place in the system** · Level-2 design serving `BIO_System_Design.md` §3 row 8 (intent and inquiry; home `BIO_Content_Framework_v0_10.md` Part I §12 and `BIO_Case_Making_v0_1.md`) and row 11 (the assistant), which has no level-1 document — this design and `ASSISTANT-PILOT.md` are the nearest thing to one, per that row's stated gap. `IS-BUILD-PLAN.md`, `kickoffs/SKILL.md`, `agent-worker`, `airun.mjs` and the DEC-60/61/62 enactments depend on it; the landed plan rows, DEC-52 final, DEC-72 and Part II §14.3/§17 supersede parts of it.
+
+**Incomplete sections** ·
+- §14c — options graded 2026-08-06; option A LANDED (PL-8, the MEANING arm) while D-222's debt row still reads open; stage C (content-grain search) sits in Part II §18, not queued.
+- §THE READ SURFACE HAS A HOLE — the two-route measurement is partly stale; D-164, the "second precondition", REOPENED 2026-09-15 and still unbuilt, so versions still compose document-grain legs.
+- §What the session sees — the bias object is BUILT (PL-12) and D-220's version join landed (PL-10); the text still says UNBUILDABLE TODAY.
+- §The fence — `capture_requests` BUILT (PL-4); the `[BOB-4]` provisional is superseded by DEC-52 final (§19's F9 says so; the paragraph is not rewritten).
+- §Which Claude account — DS-3 and FL-6 (cascade config and runtime) are closed rows; D-218 MEASURED 2026-08-08 — the text still says "to MEASURE".
+- §Running sessions are visible in context — UI-38 absorbed the surface; F11's live budget display is a named gap.
+- §The pursue session and the daemon — the connections sidebar is BUILT (UI-44, DEC-52 final); the "remains open" clause is stale.
+- §14b — the pre-write checks landed plane-side (PL-3) and F10's denied-means-adjust row landed (FL-3); §14b.2 still frames D-222 as a precondition.
+- §Published cases — IS-8/PL-16 RESHAPED by DEC-72 (a case is a production, CASE-1..6); the "no case-level bar" assumption is overtaken; DEC-33's ceremony still deferred.
+- §What is NOT settled — items 3, 3a, 7, 8 and 9 all since answered or landed; the list is history.
+- §Decomposition — every IS-n superseded by a named PL/FL row and all 43 landed; the C-number allocation promise is discharged in `bio-checks.mjs`, not recorded here.
+- §The final Claude Code comparison — F10 built (FL-3), F9 never rewritten, F11 open.
+- §What a SUGGESTION is — the five kinds are built (PL-3); D-324 (VF-4) found `new-version` is not one of the five, unrecorded here.
+
+**Contents**
+- [0 · Vocabulary — four words this document had been using loosely (D-226)](#0-vocabulary-four-words-this-document-had-been-using-loosely-d-226)
+- [1 · Why — settled, kept short](#1-why-settled-kept-short)
+- [2 · The objective — and the first deployed mode](#2-the-objective-and-the-first-deployed-mode)
+- [3 · What the session sees, and what it may write](#3-what-the-session-sees-and-what-it-may-write)
+- [4 · The fence: THE AI HOLDS NO OP THAT ACCEPTS](#4-the-fence-the-ai-holds-no-op-that-accepts)
+- [5 · How the legs come together — and why this is not a schema problem](#5-how-the-legs-come-together-and-why-this-is-not-a-schema-problem)
+- [6 · VERSIONS — the mechanism](#6-versions-the-mechanism)
+- [7 · CURRENT belongs to the project's relationship with the inquiry](#7-current-belongs-to-the-projects-relationship-with-the-inquiry)
+- [8 · The inquiry's QUESTION is a first-class object](#8-the-inquirys-question-is-a-first-class-object)
+- [9 · What a SUGGESTION is](#9-what-a-suggestion-is)
+- [10 · The two modes — one piece of work, two ways in](#10-the-two-modes-one-piece-of-work-two-ways-in)
+- [11 · The RUN is an object](#11-the-run-is-an-object)
+- [12 · Strength](#12-strength)
+- [13 · Published cases](#13-published-cases)
+- [14 · Bias — a FENCE first, and a requirement on the skill second](#14-bias-a-fence-first-and-a-requirement-on-the-skill-second)
+- [14a · INTEGRATION — how the AI attaches to the workflow](#14a-integration-how-the-ai-attaches-to-the-workflow)
+  - [Which Claude account — a cascade, and it decides sovereignty too](#which-claude-account-a-cascade-and-it-decides-sovereignty-too)
+  - [Running sessions are visible in context — and this is CROSS-CUTTING](#running-sessions-are-visible-in-context-and-this-is-cross-cutting)
+  - [The pursue session and the daemon — request, wait, post-process](#the-pursue-session-and-the-daemon-request-wait-post-process)
+  - [Evidence search may be a SUB-SESSION](#evidence-search-may-be-a-sub-session)
+  - [What Claude Code's model maps onto, in one table](#what-claude-codes-model-maps-onto-in-one-table)
+- [14b · THE RUN'S ARCHITECTURE — derived from Claude Code, grounded in what exists](#14b-the-runs-architecture-derived-from-claude-code-grounded-in-what-exists)
+  - [1 · CONTEXT ECONOMY — the largest gap in the design as written, and it was absent](#1-context-economy-the-largest-gap-in-the-design-as-written-and-it-was-absent)
+  - [2 · THE READ SURFACE HAS A HOLE, and it is exactly where the session lives](#2-the-read-surface-has-a-hole-and-it-is-exactly-where-the-session-lives)
+  - [3 · RESUMABILITY IS ALREADY BUILT, and joining it is a documented step](#3-resumability-is-already-built-and-joining-it-is-a-documented-step)
+  - [4 · WHAT IS SCRIPTED AND WHAT IS JUDGED](#4-what-is-scripted-and-what-is-judged)
+  - [5 · THE RUN VERIFIES ITS OWN WORK BEFORE PROPOSING — and the checks are the PLANE'S](#5-the-run-verifies-its-own-work-before-proposing-and-the-checks-are-the-planes)
+  - [6 · A RUN IS BOUNDED, AND THE BOUND IS RECORDED](#6-a-run-is-bounded-and-the-bound-is-recorded)
+  - [7 · PARTIAL RESULTS SURVIVE](#7-partial-results-survive)
+- [14c · D-222 — THE OPTIONS, GRADED](#14c-d-222-the-options-graded)
+  - [What must hold, whichever option wins](#what-must-hold-whichever-option-wins)
+  - [The options](#the-options)
+  - [RECOMMENDATION — **D, staged as A then C**](#recommendation-d-staged-as-a-then-c)
+- [15 · Instruments — measure from the first run](#15-instruments-measure-from-the-first-run)
+- [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn)
+- [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2)
+- [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted)
+- [19 · The final Claude Code comparison (2026-08-07)](#19-the-final-claude-code-comparison-2026-08-07)
+
+---
+
 **Bob, 2026-08-05, session BOB.** Ruled as DEC-60. This document carries the reasoning;
 the decision entry carries the verdict. The transcript-retention ruling is DEC-61; the
 pursue/investigate merge is DEC-62 — both were lifted into the register on 2026-08-07,

@@ -1,5 +1,67 @@
 # The data model: as built, and exactly what `inquiry` requires
 
+**Status** · A research pass written 2026-08-01 by session BOB (last edited 2026-08-08): Part 1 measures the schema as built at commit `8aca2ba` (52 tables, `op=purge`, the four dead relations), Part 2 costs out what the `inquiry` type requires against `BIO_Case_Making_v0_1.md`, Part 3 draws the resulting model. It rests on DEC-15 and DEC-28 and is corrected by RECONCILED R1/R2 (no `#weakerGrade` reuse; the grade axis on the leg — `grade_axis` now exists). Complete as a dated study and superseded by the build: `inquiry_basis`, `inquiry_exclusions`, `INQ-`, C-21.1 and `checkInquiryExtension` are in the plane and REC-10..REC-27 are `done`. PARKED behind DEC-33 with the set. Caveat: every line number is as of `8aca2ba`; `schema.mjs` now declares 76 tables, and DEC-72's case-as-production objects postdate Part 3. as of 2026-09-14.
+
+**Place in the system** · Serves construct 8 (and the record, construct 3) of `BIO_System_Design.md` §3; level-1 home `BIO_Case_Making_v0_1.md`, rulings in `DECISIONS.md`. Code still cites it by section — `schema.mjs` (§2.4.4's one deliberate divergence), `bio-checks.mjs` and `store.mjs` (§2.7) and four suites — so it stays live. RECONCILED §1 supersedes its strength model; the built schema and `BIO_DATAPLANE_STATE.md` supersede Parts 1 and 3.
+
+**Incomplete sections** ·
+- §1.2 There are 52 tables — count and the five-table hygiene gap superseded: 76 tables in `schema.mjs`, REC-27 closed D-137.
+- §1.6 — `supersedes` gained producers and C-6.1 requirements (REC-16, REC-17).
+- §2.3 The type — the strength PAIR and `grade_axis` (RECONCILED R2, DEC-21) are absent; the `published` terminal was overturned by DEC-12 editions.
+- §2.5 What is DERIVED rather than stored — the single-scalar `min` is refused by R1/R2; UNRATED and inert-leg semantics (DEC-18) not reflected.
+- §2.6 Where a requirement can be met two ways — D1 settled by DEC-15 as a lifecycle; D6's `surfaced` alias built as recommended.
+- §2.9 What is UNVERIFIED — all four items ruled (DEC-15, DEC-28, FW-13, REC-10); "QUEUE.md has nothing queued" and "no M9" are stale.
+- §PART 3 — the diagram predates `grade_axis`, editions, and DEC-72's case tables.
+
+**Contents**
+  - [0. Method, and what "authoritative" means here](#0-method-and-what-authoritative-means-here)
+- [PART 1 — AS BUILT](#part-1-as-built)
+  - [1.1 The shape in one paragraph](#11-the-shape-in-one-paragraph)
+  - [1.2 There are 52 tables, not 44](#12-there-are-52-tables-not-44)
+  - [1.3 The table catalogue](#13-the-table-catalogue)
+    - [The record spine](#the-record-spine)
+    - [Auth, identity, governance](#auth-identity-governance)
+    - [The published projection (behind the two-bucket fence)](#the-published-projection-behind-the-two-bucket-fence)
+    - [Public intake (the knock)](#public-intake-the-knock)
+    - [Capture machinery](#capture-machinery)
+    - [The task inbox](#the-task-inbox)
+    - [The framework's intent layer (CONSTRUCTS steps 3–5)](#the-frameworks-intent-layer-constructs-steps-35)
+    - [Selections](#selections)
+  - [1.4 `op=purge`, exactly](#14-oppurge-exactly)
+  - [1.5 The object types](#15-the-object-types)
+    - [Universal frontmatter — every type](#universal-frontmatter-every-type)
+    - [Per type](#per-type)
+  - [1.6 `REL_VOCAB`, and the four relations nothing produces](#16-rel_vocab-and-the-four-relations-nothing-produces)
+- [PART 2 — WHAT `inquiry` REQUIRES](#part-2-what-inquiry-requires)
+  - [2.0 The requirements, restated as obligations the model must discharge](#20-the-requirements-restated-as-obligations-the-model-must-discharge)
+  - [2.1 What already exists and is reusable unchanged](#21-what-already-exists-and-is-reusable-unchanged)
+  - [2.2 What does not exist, including two structures that will collide with it](#22-what-does-not-exist-including-two-structures-that-will-collide-with-it)
+  - [2.3 The type](#23-the-type)
+  - [2.4 The tables and columns](#24-the-tables-and-columns)
+    - [2.4.1 Projection columns on `bundles` — derived, additive, nullable](#241-projection-columns-on-bundles-derived-additive-nullable)
+    - [2.4.2 `inquiry_basis` — the one genuinely new table](#242-inquiry_basis-the-one-genuinely-new-table)
+    - [2.4.3 `inquiry_exclusions`](#243-inquiry_exclusions)
+    - [2.4.4 What needs NO new table](#244-what-needs-no-new-table)
+    - [2.4.5 Purge and hygiene consequences](#245-purge-and-hygiene-consequences)
+  - [2.5 What is DERIVED rather than stored](#25-what-is-derived-rather-than-stored)
+  - [2.6 Where a requirement can be met two ways](#26-where-a-requirement-can-be-met-two-ways)
+    - [D1 — where does a basis leg's grade come from?](#d1-where-does-a-basis-legs-grade-come-from)
+    - [D2 — is strength stored or derived?](#d2-is-strength-stored-or-derived)
+    - [D3 — exclusions: a table, or `fm_json`?](#d3-exclusions-a-table-or-fm_json)
+    - [D4 — basis: extend `refs`, or a new table?](#d4-basis-extend-refs-or-a-new-table)
+    - [D5 — division: a table, or an authored block?](#d5-division-a-table-or-an-authored-block)
+    - [D6 — the rename: a new `INQ-` prefix, or reuse `FOCUS-`?](#d6-the-rename-a-new-inq--prefix-or-reuse-focus-)
+  - [2.7 The migration, under append-only, as the concept's THIRD name](#27-the-migration-under-append-only-as-the-concepts-third-name)
+    - [The mapping is written four times, in code that does not share it](#the-mapping-is-written-four-times-in-code-that-does-not-share-it)
+    - [Three more type tables, and one guarantee that does not exist](#three-more-type-tables-and-one-guarantee-that-does-not-exist)
+    - [What a type rename does NOT touch](#what-a-type-rename-does-not-touch)
+    - [The change list](#the-change-list)
+  - [2.8 The checks that must change](#28-the-checks-that-must-change)
+  - [2.9 What is UNVERIFIED, and what this lands on elsewhere](#29-what-is-unverified-and-what-this-lands-on-elsewhere)
+- [PART 3 — the model after `inquiry` lands](#part-3-the-model-after-inquiry-lands)
+
+---
+
 Written 2026-08-01 (research pass, no area claimed — this file creates one document and
 edits nothing else). **Every claim about the code names its file and line.** Anything not
 verified in this pass is marked **UNVERIFIED**. Line numbers are as of the working tree at

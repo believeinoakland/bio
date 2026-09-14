@@ -1,5 +1,42 @@
 # RECONCILED — the single statement of the case-making design
 
+**Status** · The single statement of the case-making design, written 2026-08-01 by session BOB and amended in place through 2026-08-03: it resolves 38 contradictions across the study, applies R1–R4 passage by passage, re-derives the 35-item build order and ranks 14 open questions. It rests on Bob's rulings DEC-12 through DEC-22 and DEC-28 through DEC-31 (each marked in place), is amended by DEC-18 and DEC-21, and its §3 build order is DONE — every item `done` in `QUEUE.md` except REC-15 and UI-17, blocked by DEC-33, the deferral under which this whole set is PARKED. Complete as a design record; superseded in part by DEC-72 (a CASE is a production of a project) which §0 does not know. Caveat: the file says SUSPEND in some fifty places and means UNRATED (its own §1.1 amendment), and it cites the archived storyboards by line. as of 2026-09-14.
+
+**Place in the system** · Owns the reasoning behind construct 8 of `BIO_System_Design.md` §3 and touches 12 (surfaces) and 13 (publication); level-1 home `BIO_Case_Making_v0_1.md`, rulings in `DECISIONS.md`. `QUEUE.md`'s REC/UI items and `review-document.html` depend on it; DEC-72, `BIO_DATAPLANE_STATE.md` and DEC-33's deferral (REC-15, UI-17, UI-17a) supersede parts of §0 and §3.
+
+**Incomplete sections** ·
+- §0 · THE DESIGN — predates DEC-72 (case as production, the project bar) and DEC-12 editions ("whether a published bundle may be REVISED is not decided" is decided).
+- §1.1 · R1 — body text says SUSPEND throughout; the canonical word is UNRATED per its own amendment.
+- §2.1 · DOCTRINE — D-1, D-6 and their "NOT RESOLVED" verdicts are settled by DEC-12 and DEC-17; not rewritten in place.
+- §3 · THE BUILD ORDER — every item `queued`/`blocked` here is `done` in `QUEUE.md` except REC-15 and UI-17 (DEC-33).
+- §4 · OPEN QUESTIONS — "DEC-32, still open" is stale: DEC-32 is `answered`; the only open entry is DEC-74.
+- §5 · WHERE I STOPPED — the five stopping points have all since been ruled.
+
+**Contents**
+- [§0 · THE DESIGN, AS IT NOW STANDS](#0-the-design-as-it-now-stands)
+- [§1 · THE FOUR RESOLUTIONS, APPLIED PASSAGE BY PASSAGE](#1-the-four-resolutions-applied-passage-by-passage)
+  - [1.1 · R1 — an undetermined leg SUSPENDS the chain; `#weakerGrade` must not be reused](#11-r1-an-undetermined-leg-suspends-the-chain-weakergrade-must-not-be-reused)
+  - [1.2 · R2 — capture grade and connection grade are TWO scales](#12-r2-capture-grade-and-connection-grade-are-two-scales)
+  - [1.3 · R3 — the basis graph is a DAG, enforced at write, with a depth bound](#13-r3-the-basis-graph-is-a-dag-enforced-at-write-with-a-depth-bound)
+  - [1.4 · R4 — division must cost at least what severance costs](#14-r4-division-must-cost-at-least-what-severance-costs)
+- [§2 · THE CONTRADICTION REGISTER](#2-the-contradiction-register)
+  - [2.1 · DOCTRINE](#21-doctrine)
+  - [2.2 · CORRECTNESS](#22-correctness)
+  - [2.3 · USABILITY](#23-usability)
+  - [2.4 · Found in this pass, beyond CRITIQUE.md](#24-found-in-this-pass-beyond-critiquemd)
+- [§3 · THE BUILD ORDER, RE-DERIVED](#3-the-build-order-re-derived)
+  - [3.1 · CHANGED BY R1–R4 — eleven items](#31-changed-by-r1r4-eleven-items)
+  - [3.2 · CHANGED BY INTER-FILE CONTRADICTIONS, not by R1–R4 — six items](#32-changed-by-inter-file-contradictions-not-by-r1r4-six-items)
+  - [3.3 · UNCHANGED — eighteen items, checked and carried forward verbatim](#33-unchanged-eighteen-items-checked-and-carried-forward-verbatim)
+  - [3.4 · THE CRITICAL PATH, RE-CHECKED](#34-the-critical-path-re-checked)
+- [§4 · OPEN QUESTIONS — ONE LIST, DE-DUPLICATED, RANKED BY WHAT EACH BLOCKS](#4-open-questions-one-list-de-duplicated-ranked-by-what-each-blocks)
+  - [Tier 1 — blocks a build item that is otherwise ready](#tier-1-blocks-a-build-item-that-is-otherwise-ready)
+  - [Tier 2 — blocks a design decision, not an item](#tier-2-blocks-a-design-decision-not-an-item)
+  - [Tier 3 — recorded, blocking nothing now](#tier-3-recorded-blocking-nothing-now)
+- [§5 · WHERE I STOPPED, AND WHY](#5-where-i-stopped-and-why)
+
+---
+
 Written 2026-08-01. **This file resolves the research corpus; it does not summarise it.**
 
 Fourteen files in `docs/development/research/` plus `docs/development/PROCESS-INVENTORY.md`
