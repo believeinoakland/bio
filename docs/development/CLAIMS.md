@@ -3354,3 +3354,14 @@ paths:
   `docs/development/QUEUE.md`. NO DEPLOY; no real install/update run (gated to Bob).
 concurrency: checked over the register 2026-09-14 — the DIST-2 and DIST-4 claims above are
 released; no other live claim names `newgroup/**`.
+released: 2026-09-14 by DIST #2 — landed with gate GREEN class FULL (battery 184/184 · 11,213,
+all three members run, coverage --strict exit 0, UI green) and newgroup `npm test` exit 0
+unpiped (embed 15/15, wizard 117/117). The row's NC run in BOTH strengths and recorded in the
+suite header: ACCEPTING the Free answer half-installs free-town and the suite names it with
+the damage counted (want [0,0] got [2,1]); merely DELETING the check fails SAFE — the
+unverifiable-plan refusal catches it, which is the guard's fail-closed geometry working. One
+assertion corrected, not exempted ("nothing was uploaded" → "the instance itself was never
+uploaded", since the probe legitimately PUTs its throwaway). The update path carries NO probe —
+an update never grows a new refusal. NO real install run (gated to Bob); the probe's live
+behaviour against a real Free account is verified at the next gated install, stated not
+assumed. DIST-3 row flip is CONDUCT's at integration.

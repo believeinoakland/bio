@@ -203,6 +203,34 @@ async function scriptExists(token, acct, slug) {
   catch (e) { if (e.status === 404) return false; throw e; }
 }
 
+/* DIST-3 / DEC-42: Workers Paid IS a requirement, and the plan is established
+   by PROVOKING the platform, never by reading a plan field — a field is a
+   claim, a refusal is a measurement (the 2026-07-31 BOB session measured the
+   provocation and free-tier-fleet-probe.mjs reproduces it). A PUT carrying
+   `limits.cpu_ms` is refused on Free with code 100328 and accepted on Paid.
+   The probe script is a throwaway with a fixed recognisable name, deleted on
+   the spot; a fixed name means a re-run converges on any leftover instead of
+   accumulating strays. Three honest answers and no fourth: "free", "paid",
+   or "unknown" with the reason — an unverified plan is not a verified one. */
+const PLAN_PROBE = "bio-plan-probe";
+async function establishPlan(token, acct) {
+  const meta = { main_module: "index.mjs", compatibility_date: "2026-07-01",
+                 limits: { cpu_ms: 50000 } };
+  const src = 'export default { async fetch() { return new Response("bio plan probe"); } };';
+  try {
+    await cf(token, `/accounts/${acct}/workers/scripts/${PLAN_PROBE}`,
+      { method: "PUT", body: uploadForm(meta, src) });
+  } catch (e) {
+    if (e.code === 100328) return { plan: "free" };
+    return { plan: "unknown", detail: e.message };
+  }
+  let leftover = false;
+  try { await cf(token, `/accounts/${acct}/workers/scripts/${PLAN_PROBE}?force=true`,
+    { method: "DELETE" }); }
+  catch { leftover = true; /* stated to the operator, not swallowed */ }
+  return { plan: "paid", leftover };
+}
+
 /* Both buckets or neither: the fence is a pair. "Already exists" counts as
    created, so a re-run after a mid-flight failure converges instead of
    failing on its own earlier success. */
@@ -498,6 +526,44 @@ async function runInstall(emit, code, saved) {
       "The check for an existing copy failed, so to be safe nothing was created.",
       "Detail: " + e.message);
   }
+
+  /* DIST-3 / DEC-42: the plan check comes BEFORE the first thing this flow
+     creates (the buckets, one step down), so a Free-plan account is refused
+     while there is genuinely nothing to clean up. Refusing IS the fix: the
+     D-106 failure this guards is a group getting something quietly different
+     from every description of it — a copy that looks installed and degrades
+     under load it was told it could carry. */
+  emit.step("plan", "Checking your account's Workers plan");
+  let planAnswer;
+  try { planAnswer = await establishPlan(token, acct.id); }
+  catch (e) { planAnswer = { plan: "unknown", detail: e.message }; }
+  if (planAnswer.plan === "free") {
+    emit.no("plan");
+    return emit.fail("The Workers Paid plan is needed first",
+      "Your copy runs on Cloudflare Workers, and the work it does — reading captured documents, "
+      + "assembling evidence, answering members — needs the processing allowance that comes with "
+      + "Cloudflare's Workers Paid plan ($5/month). Your account already has a payment method for "
+      + "the storage this installer sets up, so this is $5 a month on a card Cloudflare already "
+      + "has, not a new kind of commitment. Installing without it would hand you a copy that looks "
+      + "right and quietly fails under real work, which is worse than this message. "
+      + "Nothing was installed, so there is nothing to clean up.",
+      "To continue: sign in at dash.cloudflare.com with this same account, open Workers & Pages, "
+      + "choose Plans, enable Workers Paid, then come back here and run the installer again.");
+  }
+  if (planAnswer.plan === "unknown") {
+    emit.no("plan");
+    return emit.fail("Could not verify your account's Workers plan",
+      "The check that establishes your plan did not get a readable answer, and an unverified "
+      + "plan is not a verified one — installing anyway could hand you a copy that quietly "
+      + "degrades. Nothing was installed, so there is nothing to clean up.",
+      "This is usually temporary: run the installer again in a minute. (Cloudflare said: "
+      + planAnswer.detail + ")");
+  }
+  emit.ok("plan", "Workers Paid confirmed"
+    + (planAnswer.leftover
+        ? ". One cleanup note: the tiny probe script \"" + PLAN_PROBE + "\" could not be deleted "
+          + "automatically — it is harmless, and you can remove it from Workers & Pages any time."
+        : ""));
 
   /* Evidence storage is part of what a group's copy IS: captured documents,
      web pages, and their timestamp certificates live there. Real groups are

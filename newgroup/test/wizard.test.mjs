@@ -23,6 +23,18 @@
  * block, because there is no longer anything for Cloudflare to refuse).
  * BOTH RUN 2026-08-04, restored 103/103 green after each.
  *
+ * NEGATIVE CONTROL (DIST-3): change `establishPlan`'s 100328 arm to return
+ * "paid" (ACCEPT the Free answer — the exact defect DEC-42's row names) ->
+ * 112 passed, 5 failed, and the load-bearing failure NAMES free-town as the
+ * half-installed instance with the damage counted: want [0,0] got [2,1], two
+ * buckets and the script actually created past the refusal that should have
+ * stopped them. A WEAKER arm was run first and is recorded because its result
+ * teaches something: merely DELETING the 100328 check (not accepting it) ->
+ * 114 passed, 3 failed with free-town still protected — the unverifiable-plan
+ * refusal catches what the Free check no longer does, so the guard fails
+ * SAFE rather than open. BOTH RUN 2026-09-14, restored byte-identically after
+ * each (sha256-verified), 117/117 green.
+ *
  * NEGATIVE CONTROL (DIST-2): delete the `DAEMON_TOKEN` line from
  * `uploadUpdate`'s bindings -> 103 passed, 2 failed, the first failure naming
  * oak-watch, the already-installed instance that would never receive the
@@ -168,6 +180,8 @@ console.log("\n--- install: the whole conversation ---");
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A1", name: "Oak Watch" }]) },
     { m: (u) => u.includes("/workers/scripts/oak-watch/settings"), f: () => cferr("not found", 404) },
+    { m: (u, mth) => u.endsWith("/scripts/bio-plan-probe") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "DELETE", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/scripts/oak-watch") && mth === "PUT", f: () => cfok({ id: "oak-watch" }) },
     { m: (u, mth) => u.endsWith("/workers/scripts/oak-watch/subdomain") && mth === "POST", f: () => cfok({}) },
@@ -224,6 +238,17 @@ console.log("\n--- install: the whole conversation ---");
     meta.bindings.filter((b) => b.type === "r2_bucket").map((b) => b.bucket_name).sort(),
     ["bio-captures", "bio-published"]);
   t("both buckets were created", calls.filter((c) => c.u.endsWith("/r2/buckets")).length, 2);
+  /* DIST-3 / DEC-42: the plan is established by PROVOKING the platform — the
+     probe upload carries limits.cpu_ms, which Free refuses with 100328 — and
+     never by reading a plan field. The probe precedes the first creation and
+     its throwaway is deleted on the spot. */
+  const probePut = calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/bio-plan-probe"));
+  t("the plan was PROVOKED, not read from a field: the probe upload carries limits.cpu_ms",
+    (await metadataOf(probePut))?.limits?.cpu_ms > 0, true);
+  t("the probe throwaway was deleted",
+    calls.some((c) => c.method === "DELETE" && c.u.includes("/scripts/bio-plan-probe")), true);
+  t("the probe ran BEFORE the first thing the install creates",
+    calls.indexOf(probePut) < calls.indexOf(calls.find((c) => c.u.endsWith("/r2/buckets"))), true);
 
   t("verification hit the new address", calls.some((c) => c.u.includes("oak-watch.oakwatch.workers.dev/api/?op=selftest")), true);
   t("the page shows the address", body.includes("https://oak-watch.oakwatch.workers.dev"), true);
@@ -243,6 +268,8 @@ console.log("\n--- install: address asleep, credentials still handed over ---");
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A1", name: "Slow Town" }]) },
     { m: (u) => u.includes("/workers/scripts/slow-town/settings"), f: () => cferr("not found", 404) },
+    { m: (u, mth) => u.endsWith("/scripts/bio-plan-probe") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "DELETE", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/workers/scripts/slow-town") && mth === "PUT", f: () => cfok({ id: "slow-town" }) },
     { m: (u, mth) => u.endsWith("/workers/scripts/slow-town/subdomain") && mth === "POST", f: () => cfok({}) },
@@ -270,11 +297,18 @@ console.log("\n--- install: no card means a friendly stop, and nothing installed
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A2", name: "Small" }]) },
     { m: (u) => u.includes("/scripts/small-group/settings"), f: () => cferr("not found", 404) },
+    { m: (u, mth) => u.endsWith("/scripts/bio-plan-probe") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "DELETE", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST",
       f: () => cferr("Please enable R2 by adding a payment method", 403) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
-  t("nothing was uploaded", calls.some((c) => c.method === "PUT"), false);
+  /* Was "no PUT at all" until DIST-3: the plan probe legitimately PUTs (and
+     deletes) its throwaway before this refusal. The assertion's true core is
+     that the INSTANCE was never uploaded, so it narrows to the instance's
+     own script rather than being exempted. */
+  t("the instance itself was never uploaded",
+    calls.some((c) => c.method === "PUT" && c.u.endsWith("/scripts/small-group")), false);
   t("the stop explains itself as a setting, not a failure", body.includes("One Cloudflare setting is needed first"), true);
   t("it names the exact next step", body.includes("add a card or PayPal"), true);
   t("it says nothing needs cleaning up", body.includes("nothing to clean up"), true);
@@ -295,6 +329,8 @@ console.log("\n--- install: a refused SELF binding costs the monitoring, never t
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A4", name: "Shy" }]) },
     { m: (u) => u.includes("/scripts/shy-town/settings"), f: () => cferr("not found", 404) },
+    { m: (u, mth) => u.endsWith("/scripts/bio-plan-probe") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "DELETE", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/shy-town") && mth === "PUT",
       f: async (u, init) => {
@@ -353,6 +389,8 @@ console.log("\n--- release: a newer verified repository copy installs ---");
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A7", name: "Fresh" }]) },
     { m: (u) => u.includes("/scripts/fresh-town/settings"), f: () => cferr("not found", 404) },
+    { m: (u, mth) => u.endsWith("/scripts/bio-plan-probe") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "DELETE", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/fresh-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/fresh-town/subdomain") && mth === "POST", f: () => cfok({}) },
@@ -378,6 +416,8 @@ console.log("\n--- release: a copy that fails verification is never installed --
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A8", name: "Wary" }]) },
     { m: (u) => u.includes("/scripts/wary-town/settings"), f: () => cferr("not found", 404) },
+    { m: (u, mth) => u.endsWith("/scripts/bio-plan-probe") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "DELETE", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/wary-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/wary-town/subdomain") && mth === "POST", f: () => cfok({}) },
@@ -402,6 +442,8 @@ console.log("\n--- release: a current built-in is stated as current ---");
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "A9", name: "Even" }]) },
     { m: (u) => u.includes("/scripts/even-town/settings"), f: () => cferr("not found", 404) },
+    { m: (u, mth) => u.endsWith("/scripts/bio-plan-probe") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "DELETE", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/even-town") && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/scripts/even-town/subdomain") && mth === "POST", f: () => cfok({}) },
@@ -411,6 +453,59 @@ console.log("\n--- release: a current built-in is stated as current ---");
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("equal versions use the built-in without fetching the asset", body.includes("is current"), true);
+  globalThis.fetch = realFetch;
+}
+
+/* ---- DIST-3: a Free-plan account is refused BY NAME, before anything exists.
+   The bucket and upload routes below are deliberately PRESENT and answerable:
+   a guard that stops consulting the probe's answer would sail through them and
+   half-install free-town, and the zero-calls assertions would fail naming it —
+   that is this block's negative-control geometry, not an oversight. ---- */
+console.log("\n--- install: Workers Free is refused by name, nothing created ---");
+{
+  const { cookie, state } = await begin("free-town");
+  const calls = script([
+    { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
+    { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "F1", name: "Free Town" }]) },
+    { m: (u) => u.includes("/scripts/free-town/settings"), f: () => cferr("not found", 404) },
+    { m: (u, mth) => u.endsWith("/scripts/bio-plan-probe") && mth === "PUT",
+      f: () => cferr("CPU limits are not supported for the Free plan.", 400, 100328) },
+    { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/scripts/free-town") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "ft" }) },
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  t("the refusal names the Workers Paid plan", body.includes("Workers Paid plan is needed"), true);
+  t("it names the cost", body.includes("$5/month"), true);
+  t("it names what to do", body.includes("dash.cloudflare.com") && body.includes("enable Workers Paid"), true);
+  t("it says nothing was installed", body.includes("Nothing was installed"), true);
+  t("REFUSED BEFORE ANYTHING WAS CREATED — free-town would otherwise be the half-installed instance: no bucket, no script",
+    [calls.filter((c) => c.u.endsWith("/r2/buckets") && c.method === "POST").length,
+     calls.filter((c) => c.method === "PUT" && c.u.endsWith("/scripts/free-town")).length], [0, 0]);
+  globalThis.fetch = realFetch;
+}
+
+/* ---- DIST-3: an UNVERIFIABLE plan refuses too — an unverified plan is not a
+   verified one, and undetermined is stated, never rounded to paid. ---- */
+console.log("\n--- install: unverifiable plan is an honest refusal, nothing created ---");
+{
+  const { cookie, state } = await begin("hazy-town");
+  const calls = script([
+    { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
+    { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "H1", name: "Hazy Town" }]) },
+    { m: (u) => u.includes("/scripts/hazy-town/settings"), f: () => cferr("not found", 404) },
+    { m: (u, mth) => u.endsWith("/scripts/bio-plan-probe") && mth === "PUT",
+      f: () => cferr("internal error", 500, 7000) },
+    { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/scripts/hazy-town") && mth === "PUT", f: () => cfok({}) },
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  t("the refusal says the plan could not be VERIFIED, not that it is Free",
+    body.includes("Could not verify") && !body.includes("Workers Paid plan is needed"), true);
+  t("it carries Cloudflare's own words", body.includes("internal error"), true);
+  t("nothing was created here either",
+    [calls.filter((c) => c.u.endsWith("/r2/buckets") && c.method === "POST").length,
+     calls.filter((c) => c.method === "PUT" && c.u.endsWith("/scripts/hazy-town")).length], [0, 0]);
   globalThis.fetch = realFetch;
 }
 
@@ -433,6 +528,11 @@ console.log("\n--- update: keeps everything, carries no migration ---");
   const meta = await metadataOf(put);
   t("keep_bindings preserves secrets and the store",
     meta.keep_bindings.slice().sort(), ["durable_object_namespace", "secret_text"]);
+  /* DIST-3: the plan probe is an INSTALL act. An update must never grow a new
+     refusal against an already-installed instance — the same doctrine as the
+     storage arm above ("an update must never be refused over storage"). */
+  t("no plan probe on update — an update never grows a new refusal",
+    calls.some((c) => c.u.includes("bio-plan-probe")), false);
   t("storage is bound explicitly, healing older copies",
     meta.bindings.filter((b) => b.type === "r2_bucket").map((b) => b.name).sort(), ["CAPTURES", "PUBLISHED"]);
   t("no migrations on update", "migrations" in meta, false);
@@ -579,6 +679,8 @@ async function installWith(slug, sub, manifestExtra, src) {
     { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
     { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "S1", name: "Signed" }]) },
     { m: (u) => u.includes(`/scripts/${slug}/settings`), f: () => cferr("not found", 404) },
+    { m: (u, mth) => u.endsWith("/scripts/bio-plan-probe") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "DELETE", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith(`/scripts/${slug}`) && mth === "PUT", f: () => cfok({}) },
     { m: (u, mth) => u.endsWith(`/scripts/${slug}/subdomain`) && mth === "POST", f: () => cfok({}) },
