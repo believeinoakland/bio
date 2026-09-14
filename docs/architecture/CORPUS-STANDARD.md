@@ -142,6 +142,12 @@ What each field is FOR, so the prose is written to the purpose rather than to th
    forever. A citation into a design document names the SECTION (`framework §7`,
    `Part II §18`), and a line number, where one is kept for precision, is dated to a
    sha. The framework's Status records the one-time offset its front matter introduced.
+   The same rule runs the other way: **a design document citing CODE names the SYMBOL**
+   (the function, the op, the check number, the table) **and dates any line number to a
+   sha** — the framework's Appendix A is the pattern: a measurement at a named sha, never a
+   claim about the present tree. A line number with no sha is a hand-carried number, this
+   project's most-repeated finding (CPDF-17 moved four files' lines the day the appendix
+   landed).
 
 ## 5. Governed documents outside docs/architecture
 
