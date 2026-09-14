@@ -5874,3 +5874,53 @@ D-298: `newgroup` treats an asset-hash mismatch exactly as a bundle-hash mismatc
 never a partial install; FLEET holds that line when the installer half lands) — nothing is
 asked of DIST today, and an objection from DIST reopens this row rather than being overridden.
 `INTERFACES.md` bumped in the same act.
+
+## IC-82 · I4: THE RELEASE MANIFEST LEARNS HOW EACH MEMBER IS UPLOADED — per-member `compat` (date + flags) and per-part module `type` enter `RELEASE.json` AND the signed fleet statement (`NS_FLEET/2`), so the installer can install the fleet without guessing a single runtime fact · PROPOSED 2026-09-14 (DIST #2, D-297 / DS-1's installer half) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** **I4** (plane → installer, the release artifact), **1.0.0 STABLE**, owner `DIST`.
+- **Proposer:** DIST #2 (session worktree `dist-ds2`), 2026-09-14. Id minted through
+  `tools/mintid.mjs` (IC-82), the shared-ledger allocator — the IC-64 lesson's instrument.
+- **Consumers to answer:** `FLEET` (owner of the members and their configs — the truth this
+  change copies into the manifest), `CONTENT-PDF` (owner of I6's code; ocr-worker's parts are
+  the forcing case), `DIST` (owner, proposing). CONDUCT resolves.
+
+### The change, in one sentence
+
+Each `fleet[]` entry in `RELEASE.json` gains `compat: { date, flags }` copied from the member's
+own `wrangler.jsonc`, each `parts[]` entry gains `type` (`CompiledWasm` / `Data` / …) copied from
+the member's module rules, and `fleetStatement` moves `bio-release-fleet/1` → `/2` to carry both —
+so everything an installer must know to upload a member is stated by the release and covered by
+`fleetSig`, never inferred.
+
+### The forcing measurement, 2026-09-14
+
+The members do NOT share one upload shape: `agent-worker` and `pdf-worker` carry
+`nodejs_compat`, **`ocr-worker` carries no flags at all**, and its two upload parts need the
+`CompiledWasm` / `Data` module types whose absence was exactly the deploy defect `3607b5c` fixed
+three days ago ("its own rule left wasm with NO loader at all"). An installer that infers compat
+from a shared constant or part types from file extensions re-creates that defect class inside
+every group's account — a flipped flag or a mistyped part changes runtime behaviour, which is why
+both belong INSIDE the signed statement, not beside it.
+
+### What the installer half then builds against this (stated so consumers see the whole move)
+
+`newgroup` fetches each member asset (+ parts) from the same release channel it already uses,
+verifies each `sha256` AND `fleetSig` over the statement REBUILT from the manifest (the
+producer/verifier agreement `fleetStatement` exists for), uploads each member with its `services`
+templated from the instance slug (the `selfBinding` shape, D-292's rule), and **degrades
+per-member the way `noSelf` degrades**: an install is never refused over a member it can add
+later, and what was left out is SAID. `bindings: []` on the installer itself is untouched.
+
+### The one open question, with the proposer's recommendation
+
+Enrich the manifest **in place at 0.57.0** (every asset byte-identical, statement `/2`, re-signed)
+rather than cutting 0.58.0: a version is a promise about BYTES and no byte changes; the statement
+version distinguishes the formats; and the change is additive IN FACT for the one live consumer —
+the deployed installer reads `version` / `sha256` / `asset` / `sig` and touches neither `fleet[]`
+nor `fleetSig` (measured at `newgroup/src/index.mjs`, `fetchRepoManifest`/`fetchRepoAsset`).
+COUNTER with 0.58.0 if a manifest re-signed at the same version reads as two promises under one
+number to any consumer this proposer cannot see.
+
+### RESPONSES
+
+(awaiting FLEET, CONTENT-PDF)

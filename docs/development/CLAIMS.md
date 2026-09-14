@@ -3365,3 +3365,28 @@ uploaded", since the probe legitimately PUTs its throwaway). The update path car
 an update never grows a new refusal. NO real install run (gated to Bob); the probe's live
 behaviour against a real Free account is verified at the next gated install, stated not
 assumed. DIST-3 row flip is CONDUCT's at integration.
+
+## CLAIM 2026-09-14 DIST (D-297 — DS-1's installer half: the installer installs the FLEET; IC-82 filed; D-202's deploy.mjs half folded in as the same drift class)
+session: DIST #2 (worktree `.claude/worktrees/dist-ds2`, branch `dist-ds2`)
+opened: 2026-09-14
+paths:
+  - `docs/development/INTERFACE-CHANGES.md` — IC-82 PROPOSED (append-only entry above).
+  - `tools/release-assemble.mjs` — emits `compat` per member and `type` per part, statement `/2`
+    (BUILT ONLY AFTER IC-82 RESOLVES; listed so the claim is honest about where this goes).
+  - `bio-plane/src/sshsig.mjs` — `fleetStatement` `/2` (same condition; the one shared statement
+    function, per its own header).
+  - `newgroup/src/index.mjs`, `newgroup/test/wizard.test.mjs` — the fleet install/update half
+    (same condition).
+  - `bio-plane/scripts/deploy.mjs` — **D-202's open half, DIST's own ground, no IC needed**:
+    the hardcoded binding list becomes a derivation from `bio-plane/wrangler.jsonc` WITH the
+    instance slug substituted (D-292's rule — the deploy half of the same never-guess-config
+    principle IC-82 applies to the release). Arming SELF/PDF_WORKER/AGENT_WORKER on the smoke
+    instance happens at the NEXT deploy, deliberately, with RECORD and CAPTURE told (their
+    monitoring consumers arm) — delegations below at landing.
+  - `docs/development/CLAIMS.md` — this block.
+  - `release/**` — RELEASE.json enrichment + fleetSig re-sign, ONLY per IC-82's resolution.
+  **NOT** `agent-worker/**`, `ocr-worker/**`, `pdf-worker/**` (FLEET/CONTENT-PDF ground — the
+  manifest COPIES their configs, never edits them), **NOT** `bio-plane/src/**` beyond
+  `sshsig.mjs`'s statement function, **NOT** any member version bump.
+concurrency: checked over the register 2026-09-14 — DIST-2/DIST-4/DIST-3 claims above are
+released; no live claim names these paths. FLEET has a watcher armed and answers IC-82 as owner.
