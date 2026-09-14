@@ -4077,3 +4077,43 @@ ACTOR BY THIS NOTE**: the two findings this item stopped at are ROWS — **D-337
 arm C, attributed against a pristine worktree before filing) and **D-343** (three declared
 tallies the new instrument found, deliberately unfixed because they sit in other claims) — and
 both are in `DEBT.md` with what closing them takes. **D-336 is BURNED** and recorded as such.
+
+
+
+## CLAIM 2026-09-14 RECORD (REC-82 — the `content` row on the `pdf-page` and `document` arms: table, writer, backfill, `stale`, purge, hygiene, catalogue)
+
+Session: RECORD worker for REC-82, spawned by CONDUCT #10, Opus 5.
+Worktree: `.claude/worktrees/agent-a3157d0e1e806990f` · branch `worktree-agent-a3157d0e1e806990f`.
+Contract: IC-83 (ACCEPTED 2026-09-14, I5 1.10.0 -> 1.11.0, CHANGING until REC-82 + REC-83 land).
+
+Paths claimed BY REGION, never whole files:
+
+- **`bio-plane/src/schema.mjs`** — the NEW `content` table and its two indexes, placed
+  immediately BEFORE the `host_governor` block; the two new nullable columns
+  `inquiry_basis.content_id` and `inquiry_basis_version_legs.content_id` (each one line
+  plus its comment inside the existing CREATE TABLE literal). Nothing else in the file.
+- **`bio-plane/src/store.mjs`** — (a) the content writer and its helpers (a new region
+  near the transcription reads); (b) the `inquiry_basis` projection inside `promote`'s
+  transaction (the INSERT gains `content_id`); (c) the basis refusal arm in `promote`
+  that runs the content checks before anything lands; (d) `purge`'s `TABLES` array (one
+  name added, which covers BOTH arms); (e) the migration ADD COLUMN registry (two rows);
+  (f) `#stats` if the purge report names the new table. NOT `earnedBasisRegistry` (REC-83),
+  NOT the capture/link/task/reachability functions (CAPTURE's).
+- **`bio-plane/src/index.mjs`** — ONLY if the op layer must route a new refusal shape.
+  (Measured at the close: it did not; the refusal rides `op=promote`'s existing
+  `BASIS_REFUSED` envelope. No edit made.)
+- **`bio-plane/checks/bio-checks.mjs`** — the NEW `CONTENT_EXTENT_CHECKS` family
+  (C-45.x, minted `node tools/mintid.mjs C` -> C-45), the canonical-extent reader and
+  the synchronous SHA-256 the content address needs. `checkInquiryBasis` is NOT reshaped:
+  the content arm is a separate exported function the same two gates call.
+- **`bio-plane/test/content-extent.test.mjs`** (new), `bio-plane/test/nc-rec82.mjs` (new,
+  the negative-control driver), and the `NEGATIVE CONTROL:` declaration in the new suite.
+  `bio-plane/test/hygiene.test.mjs` only if its D-113 census needs the new table named.
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` only, ONE key set, moved to the
+  figures this item's own green `--strict` run PRINTED.
+- **`docs/development/DEBT.md`**, **`docs/development/MEASUREMENTS.md`**,
+  **`docs/development/CLAIMS.md`** (this block), **`docs/development/INTERFACES.md`** and
+  **`docs/development/INTERFACE-CHANGES.md`** only if the landing moves what IC-83 says.
+
+Concurrency: COFF-9 is live on `src/ooxml.mjs` only — disjoint from every path above.
+

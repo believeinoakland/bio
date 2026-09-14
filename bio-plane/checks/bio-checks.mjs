@@ -9454,3 +9454,387 @@ export function checkCaseDocument(fm, ctx = {}) {
   }
   return findings;
 }
+
+/* ============================================================================
+ * C-45 · THE CONTENT-EXTENT FAMILY — an edge that points at a PART of a
+ * document, and the four ways the record could come to point at nothing.
+ * ============================================================================
+ *
+ * REC-82, landing IC-83 under DEC-23 / D-164 and Bob's rulings of 2026-09-14
+ * (`CONTENT-EXTENT-DESIGN-SPACE.md` §5.1-5.8, the mechanism §6 option (c)).
+ * The construct is the `content` table in `schema.mjs`, whose header carries
+ * the full argument; this is the refusal catalogue and the one implementation
+ * of the extent grammar that both gates run.
+ *
+ * WHY THE GRAMMAR LIVES HERE AND NOT IN `textchain.mjs`. `textchain.mjs` owns
+ * the ATTESTATION extent (document|page|region) and it owns it correctly, but
+ * an attestation's extent is a verification's scope and a content extent is an
+ * ADDRESS — the same five arms IC-1 already emits, of which `pdf-page` is the
+ * one both constructs share. Putting the address grammar in the transcription
+ * module would make a content row's legality depend on a transcription's
+ * vocabulary; putting it in `store.mjs` would put it where the CHECKER cannot
+ * reach it, and then the write path and the gate would hold two answers. This
+ * file is the layer both already import, which is where C-35's own constant
+ * ended up for exactly the same reason (see EARNED_CAPTURE_CEILING above).
+ *
+ * THE FAMILY IS FOUR CONDITIONS AND THEY ARE FOUR DIFFERENT FACTS, which is
+ * why they are four codes and not one "bad extent":
+ *
+ *   C-45.1  the extent names a page the capture does not have — a citation
+ *           into a document that cannot contain it
+ *   C-45.2  there is no extraction chain over the extent — an address into
+ *           text whose provenance the record never recorded
+ *   C-45.3  the kind is unknown or the fields are unparseable — and an extent
+ *           nobody can evaluate COVERS NOTHING AND MINTS NOTHING, never "all
+ *           of it" (extentCovers' own default, one construct along)
+ *   C-45.4  `dom` — REFUSED BY NAME while no producer exists
+ *
+ * There is deliberately NO code here for the machine-credential fence: a
+ * machine credential MAY mint a content row (Bob, 5.7, under DEC-24 rule 3 —
+ * every row it mints is labelled and it never attests one) and the attestation
+ * refusal it must still meet is C-35.10, UNCHANGED. Minting a fifth code for a
+ * rule that already has one is how a vocabulary comes to hold two answers.
+ *
+ * C-45 minted with `node tools/mintid.mjs C` (floor C-44) — never measured
+ * free by hand.
+ * ========================================================================= */
+
+/** IC-1's five arms, unified with attestation's document|page|region. The
+ *  WRITER lands on two of them (REC-82); the other three are REC-85's `covers`
+ *  and are named here so that landing is a writer rather than a migration.
+ *
+ *  `landed` is what this plane can evaluate TODAY. A kind that is named and not
+ *  landed is refused as C-45.3 with its own sentence, which is a different fact
+ *  from a kind nobody has ever heard of — and the member who trips it is
+ *  usually right that the passage exists. */
+export const CONTENT_EXTENT_KINDS = {
+  document:      { landed: true,  human: 'the whole document' },
+  'pdf-page':    { landed: true,  human: 'a page of a PDF' },
+  'sheet-cell':  { landed: false, human: 'a cell of a spreadsheet' },
+  'slide-shape': { landed: false, human: 'a shape on a slide' },
+  'doc-para':    { landed: false, human: 'a paragraph of a document' },
+};
+
+/** `dom` is NOT in the map above and that is the point: it is refused BY NAME
+ *  rather than falling through the unknown-kind arm, because the two are
+ *  different facts and a member citing a web page is not confused. The day
+ *  CONTENT-HTML produces one, this constant goes and a row joins the map. */
+export const CONTENT_EXTENT_KIND_NO_PRODUCER = 'dom';
+
+export const CONTENT_EXTENT_CHECKS = {
+  CONTENT_EXTENT_OUT_OF_RANGE: {
+    check: 'C-45.1',
+    where: 'checks/bio-checks.mjs checkContentExtent > is-content-extent',
+    translation: 'This citation points at a page the document does not have. A reference nobody '
+      + 'can follow is worse than no reference: it looks like evidence and resolves to nothing. '
+      + 'Check the page number against the document as this record holds it — pages are counted '
+      + 'from the first page of the captured file, which is not always the number printed on it.',
+  },
+  CONTENT_EXTENT_NO_CHAIN: {
+    check: 'C-45.2',
+    where: 'checks/bio-checks.mjs checkContentExtent > is-content-extent',
+    translation: 'Nothing in this record says where the text of this part of the document came '
+      + 'from. Pointing at a passage means pointing at text somebody or something produced, and '
+      + 'until this document has been read there is no passage to point at — only bytes nobody '
+      + 'has opened. Capture or read the document first, then cite the part of it you mean.',
+  },
+  CONTENT_EXTENT_UNREADABLE: {
+    check: 'C-45.3',
+    where: 'checks/bio-checks.mjs checkContentExtent > is-content-extent',
+    translation: 'This record cannot tell what part of the document this citation means. An '
+      + 'address it cannot evaluate is treated as pointing at nothing rather than at everything — '
+      + 'the generous reading would quietly let one checked paragraph stand behind a whole report.',
+  },
+  CONTENT_EXTENT_NO_PRODUCER: {
+    check: 'C-45.4',
+    where: 'checks/bio-checks.mjs checkContentExtent > is-content-extent',
+    translation: 'Citing a region of a web page is not something this record can do yet. Nothing '
+      + 'in it produces the addresses that would make such a citation checkable, so accepting one '
+      + 'would record a pointer that resolves to nothing and looks exactly like one that works. '
+      + 'Cite the captured page as a whole for now.',
+  },
+};
+
+function contentRefusal(key, detail) {
+  /* DEC-49: the code is a STRING LITERAL at every call site below, never a
+     variable, so the guard can see it — src/textchain.mjs's precedent. */
+  const row = CONTENT_EXTENT_CHECKS[key];
+  return { ok: false, code: key, check: row.check, translation: row.translation, detail };
+}
+
+/** Read a basis leg's extent out of the RESTRICTED frontmatter grammar.
+ *
+ *  THE GRAMMAR CANNOT CARRY A NESTED OBJECT (parseFrontmatter above: an array
+ *  element's properties are SCALARS at four spaces), so the extent arrives as
+ *  flat scalars on the leg — `extent_kind`, `extent_page`, `extent_rect` as an
+ *  inline array, `extent_ref` — exactly as REC-14's `completeness` /
+ *  `completeness_excluded` and REC-16's `division` / `division_apportionment`
+ *  splits were forced by the same grammar. This function is the ONE place that
+ *  reading happens.
+ *
+ *  AN ABSENT `extent_kind` IS `document` AND NEVER `unstated` (Bob, 5.3):
+ *  "citations that just refer to the document, well, just refer to the whole
+ *  document". So every leg has an extent and there is ONE target vocabulary.
+ *  The member who wants to be more specific NARROWS by an authored act.
+ *
+ *  WHAT THIS FUNCTION IS NOT: it is not the C-2.8 grammar arm that refuses a
+ *  malformed spelling at the gate, and it is not the version-leg reader. Both
+ *  are REC-84's, and a leg whose extent fields this reader cannot make sense of
+ *  is refused HERE as C-45.3 rather than being read generously — so nothing
+ *  waits on REC-84 to be safe. */
+export function legExtent(leg) {
+  const l = leg && typeof leg === 'object' ? leg : {};
+  const kindRaw = l.extent_kind;
+  const kind = (kindRaw === undefined || kindRaw === null || kindRaw === '')
+    ? 'document' : kindRaw;
+  const out = { kind };
+  if (typeof l.extent_ref === 'string' && l.extent_ref.trim()) out.ref = l.extent_ref.trim();
+  if (kind === 'pdf-page') {
+    if (l.extent_page !== undefined && l.extent_page !== null) out.page = l.extent_page;
+    if (l.extent_rect !== undefined && l.extent_rect !== null) out.rect = l.extent_rect;
+  }
+  /* The three unlanded arms carry their own fields through UNREAD, so REC-85
+     adds a reader rather than a shape. Carried as `fields` so that a leg naming
+     `extent_cell` today is refused by C-45.3 for being an unlanded arm and not
+     silently stripped to a document reference — the direction that matters. */
+  if (kind === 'sheet-cell' || kind === 'slide-shape' || kind === 'doc-para')
+    out.fields = { sheet: l.extent_sheet ?? null, cell: l.extent_cell ?? null,
+                   slide: l.extent_slide ?? null, shape: l.extent_shape ?? null,
+                   para: l.extent_para ?? null, run: l.extent_run ?? null };
+  return out;
+}
+
+/** The CANONICAL form of an extent — the bytes the content address is taken
+ *  over. Two members who mean the same passage must produce the same string or
+ *  the dedup-by-construction property is a claim rather than a mechanism, so:
+ *  the fields are fixed per arm, absent is null rather than missing, a rect is
+ *  NORMALISED (a PDF rect is not guaranteed lower-left-first, and an inverted
+ *  spelling of one region would otherwise mint a second row for it — the same
+ *  hazard `normRect` in textchain.mjs exists for, in the other direction), and
+ *  the human `ref` is NOT part of it: two members will word "page 14, top half"
+ *  differently and they are still citing one passage. */
+export function canonicalExtent(extent) {
+  const e = extent && typeof extent === 'object' ? extent : {};
+  if (e.kind === 'document') return canonicalJson({ kind: 'document' });
+  if (e.kind === 'pdf-page') {
+    const ok = Array.isArray(e.rect) && e.rect.length === 4
+      && e.rect.every((n) => typeof n === 'number' && Number.isFinite(n));
+    const r = ok
+      ? [Math.min(e.rect[0], e.rect[2]), Math.min(e.rect[1], e.rect[3]),
+         Math.max(e.rect[0], e.rect[2]), Math.max(e.rect[1], e.rect[3])]
+      : null;
+    return canonicalJson({ kind: 'pdf-page', page: Number.isInteger(e.page) ? e.page : null, rect: r });
+  }
+  return canonicalJson({ kind: e.kind ?? null, fields: e.fields ?? null });
+}
+
+/** The human form IC-1 requires, DERIVED when the member did not author one —
+ *  composed FROM the extent, so it cannot describe an extent other than the one
+ *  it was given. That is `describeChain`'s rule applied here, and the reason
+ *  `ref` is NOT NULL on the row without forcing a member to write it. */
+export function describeExtent(extent) {
+  const e = extent && typeof extent === 'object' ? extent : {};
+  if (typeof e.ref === 'string' && e.ref.trim()) return e.ref.trim();
+  if (e.kind === 'document') return 'the whole document';
+  if (e.kind === 'pdf-page') {
+    /* Pages are 0-based in the record (I2's own shape) and 1-based to a reader.
+       Stated in the sentence rather than left to be discovered, because a
+       member checking a citation against a printed page is the whole audience
+       for this string. */
+    const human = Number.isInteger(e.page) ? e.page + 1 : null;
+    if (human == null) return 'a page of this document';
+    return Array.isArray(e.rect) && e.rect.length === 4
+      ? `page ${human}, a region of it` : `page ${human}`;
+  }
+  const row = CONTENT_EXTENT_KINDS[e.kind];
+  return row ? row.human : 'a part of this document the record cannot name';
+}
+
+/** THE ONE CHECKER. Both gates run it: `store.mjs`'s op=promote write path and,
+ *  through it, the catalogue — the `checkInquiryBasis` / `checkGatheringGrammar`
+ *  precedent, and for their reason (two implementations of one rule is the
+ *  drift this repository has measured five times).
+ *
+ *  `ctx` is what only the STORE can answer about a capture and is never
+ *  invented here: `{ chain, pageCount }`. `chain` null means the record holds
+ *  no transcription chain for the capture; `pageCount` null means the record
+ *  holds no page set for it, which is UNDETERMINED AND STATED and is NOT a
+ *  refusal — see the `page_count` note in schema.mjs.
+ *
+ *  ORDER MATTERS AND IT IS THE ATTESTATION CHECKER'S ORDER: the KIND is judged
+ *  before the FIELDS, so a `dom` extent is refused for being `dom` rather than
+ *  for the shape of a rect it should never have been composing.
+ *
+ *  Returns a refusal or null. */
+export function checkContentExtent(extent, ctx = {}) {
+  /* DEC-49 REGION is-content-extent */
+  const e = extent && typeof extent === 'object' ? extent : null;
+  if (!e)
+    return contentRefusal('CONTENT_EXTENT_UNREADABLE',
+      `no extent was supplied and none could be read from the leg`);
+  if (e.kind === CONTENT_EXTENT_KIND_NO_PRODUCER)
+    return contentRefusal('CONTENT_EXTENT_NO_PRODUCER',
+      `extent kind 'dom' names a region of an HTML document. Nothing in this plane produces a `
+      + `dom address yet (CONTENT-HTML), so a row minted against one would be an address into a `
+      + `grammar no producer writes and no reader can evaluate`);
+  const row = CONTENT_EXTENT_KINDS[e.kind];
+  if (!row)
+    return contentRefusal('CONTENT_EXTENT_UNREADABLE',
+      `extent kind '${String(e.kind).slice(0, 40)}' is not one of: `
+      + `${Object.keys(CONTENT_EXTENT_KINDS).join(', ')}`);
+  if (!row.landed)
+    return contentRefusal('CONTENT_EXTENT_UNREADABLE',
+      `extent kind '${e.kind}' (${row.human}) is named in the grammar and this plane cannot yet `
+      + `evaluate what it covers, so it mints nothing. The pdf-page and document arms landed with `
+      + `REC-82 and the other three follow with REC-85`);
+  if (e.kind === 'pdf-page') {
+    if (!Number.isInteger(e.page) || e.page < 0)
+      return contentRefusal('CONTENT_EXTENT_UNREADABLE',
+        `a pdf-page extent names which page, as a 0-based integer. This one names `
+        + `'${String(e.page).slice(0, 40)}'`);
+    if (e.rect !== undefined && e.rect !== null
+        && !(Array.isArray(e.rect) && e.rect.length === 4
+             && e.rect.every((n) => typeof n === 'number' && Number.isFinite(n))))
+      return contentRefusal('CONTENT_EXTENT_UNREADABLE',
+        `a pdf-page extent's rect is four finite numbers or absent. A rect that is present and `
+        + `unreadable is worse than none, because it looks like a region somebody chose`);
+    /* THE PAGE SET. Checked only where the record HOLDS one — an absent page
+       count is undetermined and stated on the row, never a refusal, because a
+       gate that refused every page citation on a document whose page set this
+       plane never recorded would pressure a member into citing the whole
+       document instead, which claims MORE and not less. D-344 is the row that
+       closes the gap by persisting I2's page count at acquire. */
+    if (Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
+      return contentRefusal('CONTENT_EXTENT_OUT_OF_RANGE',
+        `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the `
+        + `extent names page ${e.page}`);
+  }
+  /* THE CHAIN, LAST, AND IT IS A FACT ABOUT THE CAPTURE RATHER THAN THE EXTENT.
+     A content row is an address into TEXT somebody or something produced, and a
+     capture nobody has read holds no text to address. A DOCUMENT extent is
+     exempt and that exemption is load-bearing rather than a softening: a whole
+     document is a referent that exists the moment the bytes do — it IS the
+     document, and DEC-23 says a document is content too — so refusing it would
+     make the one universally-legal citation illegal on every unread capture and
+     would break every legacy leg's backfill. The over-strictness arm in the
+     suite is exactly this case. */
+  if (e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))
+    return contentRefusal('CONTENT_EXTENT_NO_CHAIN',
+      `this record holds no extraction chain for the capture this leg cites, so there is no `
+      + `transcription over ${describeExtent(e)} for the citation to point at`);
+  /* END DEC-49 REGION is-content-extent */
+  return null;
+}
+
+/* --------------------------------------------------------------------------
+ * The content ADDRESS.
+ * --------------------------------------------------------------------------
+ *
+ * `promote` is SYNCHRONOUS — the whole write happens inside
+ * `ctx.storage.transactionSync` — and `crypto.subtle.digest` is not. So the
+ * content address needs a SYNCHRONOUS SHA-256, and this is it.
+ *
+ * WHY NOT A CHEAP NON-CRYPTOGRAPHIC MIX. `content_id` is a PRIMARY KEY whose
+ * whole purpose is that two citers of one passage collide and two citers of
+ * different passages do not. A 32- or 64-bit mix would make the SECOND half of
+ * that a probability rather than a property, and a collision there merges two
+ * different passages into one row — an address silently pointing at the wrong
+ * part of a document, which is this record's worst failure class.
+ *
+ * WHY NOT MAKE `promote` ASYNC. It is the plane's one write path and its
+ * transaction is what makes a promotion atomic; turning it async to hash a
+ * string would be a structural change to the store's core in service of a
+ * digest. The suite DRIVES this implementation against `crypto.subtle` over the
+ * real inputs rather than trusting it — an agreement that costs nothing to
+ * produce is not evidence, and a hand-rolled digest is exactly the shape that
+ * agrees with itself.
+ */
+const SHA256_K = new Uint32Array([
+  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]);
+
+/** Synchronous SHA-256 over a UTF-8 string, lowercase hex. DRIVEN against
+ *  `crypto.subtle.digest` in `test/content-extent.test.mjs` rather than trusted. */
+export function sha256HexSync(str) {
+  const bytes = new TextEncoder().encode(String(str));
+  const bitLen = bytes.length * 8;
+  /* ceil((len + 1 + 8) / 64) blocks. Written as a rounding-up divide and NOT as
+     `((len + 9) >> 6) + 1`, which is the spelling this function shipped with for
+     ten minutes: that form adds a SPURIOUS EMPTY BLOCK whenever len + 9 is an
+     exact multiple of 64 (len ≡ 55 mod 64), which is valid-looking padding that
+     is not SHA-256's, and it agreed with itself perfectly. It was caught in the
+     first run of the arm that drives this against `crypto.subtle` over a length
+     sweep — which is the whole argument for that arm existing, and the reason
+     the sweep pins 55/56/63/64/65 by name rather than hashing "abc". */
+  const withPad = new Uint8Array(((bytes.length + 9 + 63) >> 6) << 6);
+  withPad.set(bytes);
+  withPad[bytes.length] = 0x80;
+  const dv = new DataView(withPad.buffer);
+  /* The length is 64 bits big-endian. A JS number is exact to 2^53, so the high
+     word is written from a float divide rather than a shift — `<<` truncates to
+     32 bits and would silently mis-pad anything over 512 MB. Nothing here
+     hashes an input that large, and the arithmetic is written correctly anyway
+     because a digest that is right only for small inputs is a trap. */
+  dv.setUint32(withPad.length - 8, Math.floor(bitLen / 0x100000000));
+  dv.setUint32(withPad.length - 4, bitLen >>> 0);
+  const h = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+                             0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
+  const w = new Uint32Array(64);
+  const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+  for (let off = 0; off < withPad.length; off += 64) {
+    for (let i = 0; i < 16; i++) w[i] = dv.getUint32(off + i * 4);
+    for (let i = 16; i < 64; i++) {
+      const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+      const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+    }
+    let a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], ff = h[5], g = h[6], hh = h[7];
+    for (let i = 0; i < 64; i++) {
+      const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+      const ch = (e & ff) ^ (~e & g);
+      const t1 = (hh + S1 + ch + SHA256_K[i] + w[i]) >>> 0;
+      const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const t2 = (S0 + maj) >>> 0;
+      hh = g; g = ff; ff = e; e = (d + t1) >>> 0;
+      d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+    }
+    h[0] = (h[0] + a) >>> 0; h[1] = (h[1] + b) >>> 0; h[2] = (h[2] + c) >>> 0;
+    h[3] = (h[3] + d) >>> 0; h[4] = (h[4] + e) >>> 0; h[5] = (h[5] + ff) >>> 0;
+    h[6] = (h[6] + g) >>> 0; h[7] = (h[7] + hh) >>> 0;
+  }
+  let out = '';
+  for (const v of h) out += v.toString(16).padStart(8, '0');
+  return out;
+}
+
+/** THE CONTENT ADDRESS — `hash(capture_sha, canonical extent, chain)`, IC-83's
+ *  own formula and the whole of the dedup-by-construction property.
+ *
+ *  THE CHAIN IS IN THE ADDRESS ON PURPOSE (Bob, 5.8, and the id is the reason
+ *  he gives): a re-extraction produces a DIFFERENT chain over the same bytes,
+ *  which is a different transcription of the same passage — so it is a new row
+ *  and "the same passage" is a RELATION between rows, never a rewrite of one.
+ *  The old row stays and goes `stale`, and the authored edge that holds it
+ *  still resolves and says so. An address that quietly followed the newest
+ *  chain would move an authored citation without a member's act, which is
+ *  exactly what Bob ruled the record never does.
+ *
+ *  A NULL CHAIN HASHES AS `null` AND NOT AS AN EMPTY ARRAY: "no chain was
+ *  recorded" and "a chain was recorded and is empty" are two different facts
+ *  about the record (writeTextSource's own distinction), and collapsing them
+ *  here would merge two rows that mean different things. */
+export function contentIdFor(captureSha, extent, chain) {
+  return sha256HexSync(canonicalJson({
+    v: 1,
+    capture_sha: String(captureSha ?? ''),
+    extent: canonicalExtent(extent),
+    chain: chain == null ? null : canonicalJson(chain),
+  }));
+}

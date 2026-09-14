@@ -1257,6 +1257,16 @@ CREATE TABLE IF NOT EXISTS inquiry_basis (
   note         TEXT,
   at           TEXT,
   ground       TEXT,            -- REC-42: the OR branch this leg belongs to. NULL = the implicit single ground (AND)
+  -- REC-82 / IC-83 / DEC-23: WHAT PART OF THE DOCUMENT THIS LEG RESTS ON. The
+  -- content row is the leg's REFERENT and the bundle its CONTAINER, so
+  -- target_id above does NOT move -- the compiler still joins through
+  -- bundle_id as it does everywhere (D-222 rule). NULLABLE while I5 is
+  -- CHANGING at 1.11.0, and NOT NULL is the IC's own SETTLED condition rather
+  -- than this landing's: a leg promoted before REC-82 existed named no extent,
+  -- and it is BACKFILLED to its document-extent row on first read rather than
+  -- migrated, because the id is a hash and the row is therefore derivable at
+  -- any time from the capture it cites (no allocator, so no backfill pass).
+  content_id   TEXT,
   PRIMARY KEY (bundle_id, ord)
 );
 CREATE INDEX IF NOT EXISTS inquiry_basis_target ON inquiry_basis(target_id);
@@ -2108,6 +2118,14 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (
   note         TEXT,
   at           TEXT,
   ground       TEXT NOT NULL,    -- the branch of the argument. NOT NULL: the partition is TOTAL on a version
+  -- REC-82 / IC-83: the version leg's referent, on inquiry_basis.content_id's
+  -- exact terms. THE COLUMN ARRIVES HERE AND ITS WRITER DOES NOT: REC-82 lands
+  -- the writer on the LIVE basis only, and the version-leg grammar that lets a
+  -- version leg NAME an extent is REC-84. So this column reads NULL on every
+  -- row this plane currently writes, and that is the honest state rather than a
+  -- gap -- a version leg minted with no stated extent is a whole-document
+  -- reference (5.3, no unstated) and REC-84 is what makes it say so.
+  content_id   TEXT,
   PRIMARY KEY (bundle_id, name, ord)
 );
 -- The reverse index inquiry_basis_target is for, one level up: "which VERSIONS
@@ -2765,6 +2783,83 @@ CREATE TABLE IF NOT EXISTS calibration_signals (
 );
 CREATE INDEX IF NOT EXISTS calibration_signals_engine
   ON calibration_signals(engine, consumed_at, probe_by_ms);
+
+-- =========================================================================
+-- REC-82 / IC-83 / DEC-23 / D-164 -- CONTENT: A REFERENCE TO A PART OF A
+-- DOCUMENT, UP TO AND INCLUDING THE WHOLE DOCUMENT.
+--
+-- Bob's definition, ruled as DEC-23: documents are what is HARVESTED, content
+-- is what is EXTRACTED, and meaning derives from both. Until this table every
+-- edge in the record addressed a BUNDLE -- so a leg citing one paragraph of a
+-- 300-page budget book and a leg citing the whole book were the same row, and
+-- the address IC-1 already emits was consumed by no edge at all (D-164).
+--
+-- CONTENT-ADDRESSED, AND THAT IS THE WHOLE MECHANISM (the design study's option
+-- (c)). content_id = sha256(capture_sha, the CANONICAL extent, the chain as it
+-- stood at mint), so two members who cite the same passage of the same bytes
+-- under the same transcription get ONE row BY CONSTRUCTION. There is no
+-- allocator, no dedup pass and nothing to reconcile -- and, the other half of
+-- the same property, a leg can name a row before it exists, because the id is
+-- derivable from the citation alone.
+--
+-- ROWS ARE FIRST-CLASS, NEVER DERIVED. An edge depends on one, so a row is NOT
+-- rewritten by re-promotion and is NEVER DELETED when the capture is re-read:
+-- a better engine moves the chain, which makes the row a reference to a
+-- transcription that no longer stands, and the honest record of that is
+-- stale=1 with the row and its edges still resolving and SAYING SO. Deleting it
+-- would break an authored citation to make a projection tidy. This is
+-- text_attestations' own stale rule (CPDF-10) applied one construct along, and
+-- it is D-183's asymmetric rule: nothing re-grades on its own.
+--
+-- WHY A DERIVED TABLE IS STILL PURGED. It is not derived -- but it carries
+-- bundle_id, so it rides op=purge's TABLES list and clears in BOTH arms
+-- (D-113). A whole-store purge reporting scope ALL while content rows stood
+-- would leave addresses into documents nobody holds, and a later bundle
+-- allocated a colliding id would inherit somebody else's citations.
+--
+-- THE EXTENT GRAMMAR IS IC-1'S, UNIFIED WITH ATTESTATION'S, AND NOT A THIRD
+-- ONE. extent_kind is IC-1's five arms (document | pdf-page | sheet-cell |
+-- slide-shape | doc-para) read together with textchain.mjs's EXTENT_KINDS
+-- (document | page | region) -- one vocabulary, one checker, one covers() per
+-- arm, because D-164's lesson is that solving one problem twice produces two
+-- answers that disagree. dom is REFUSED BY NAME (C-45.4) until CONTENT-HTML
+-- produces one: a kind nothing can evaluate must not quietly read as covering
+-- anything. REC-82 lands the WRITER on the pdf-page and document arms only --
+-- the other three arms' covers is REC-85 -- and the column admits them now so
+-- that landing is a writer and not a migration.
+--
+-- page_count IS THE STORED PAGE SET, AND IT IS WHY THE OUT-OF-RANGE REFUSAL CAN
+-- FIRE AT ALL. IC-83 requires the page count be stored on mint. Nothing in this
+-- plane persists a capture page count today (the design study says so in its
+-- own words: "needs a stored page count -- absent today"), so this column holds
+-- what the record COULD see when the row was minted: the page set D-252's
+-- scoped derivation steps name, unioned with the pages any attestation covers.
+-- NULL means the record held no page set for that capture at mint -- which is
+-- UNDETERMINED and STATED, never a permission and never a refusal: refusing
+-- every page citation on a document whose page set the record does not know
+-- would be a fence tighter than its rule. D-344 is the row that closes the gap
+-- by persisting I2's page count at acquire, which is CAPTURE's path.
+CREATE TABLE IF NOT EXISTS content (
+  content_id     TEXT PRIMARY KEY,  -- sha256 over capture_sha + canonical extent + chain
+  capture_sha    TEXT NOT NULL,     -- the document. The register's trust root
+  bundle_id      TEXT NOT NULL,     -- purge, and the compiler's join (D-222)
+  extent_kind    TEXT NOT NULL,     -- document | pdf-page | sheet-cell | slide-shape | doc-para
+  extent         TEXT NOT NULL,     -- the per-arm fields as canonical JSON
+  ref            TEXT NOT NULL,     -- IC-1's REQUIRED human form, e.g. page 14, top half
+  chain          TEXT,              -- the transcription chain over the extent, as it stood at mint
+  derivation_cap TEXT,              -- min over the chain's derivation steps over THIS extent. NULL = undetermined, STATED
+  page_count     INTEGER,           -- the page set the record held at mint. NULL = undetermined, STATED
+  minted_by      TEXT NOT NULL,     -- a member id, 'plane', or a machine credential (5.7, DEC-24 rule 3)
+  at             TEXT NOT NULL,
+  stale          INTEGER NOT NULL DEFAULT 0  -- the capture's chain moved since mint. The row and its edges still resolve
+);
+-- The two reads this table exists to answer, and neither may be a scan. By
+-- CAPTURE: which passages of this document has anybody cited (the content axis
+-- of the four-level search), and the read that marks rows stale when a capture
+-- is re-read. By BUNDLE: purge's per-bundle arm, and the compiler's join.
+CREATE INDEX IF NOT EXISTS content_capture ON content(capture_sha);
+CREATE INDEX IF NOT EXISTS content_bundle ON content(bundle_id);
+-- =========================================================================
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
