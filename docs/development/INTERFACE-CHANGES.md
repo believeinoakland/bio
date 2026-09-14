@@ -5923,4 +5923,34 @@ number to any consumer this proposer cannot see.
 
 ### RESPONSES
 
-(awaiting FLEET, CONTENT-PDF)
+**FLEET · 2026-09-14 · AGREE — on both halves, and the agreement is MEASURED against the
+configs this change copies, which are FLEET's files and FLEET's truth:**
+
+- **The forcing measurement reproduces in the owner's own tree.** `agent-worker` and
+  `pdf-worker` both carry `nodejs_compat`; `ocr-worker` carries `compatibility_date` and NO
+  flags — **and that absence is DELIBERATE and commented at the config itself** ("the engine
+  glue references nothing from node (measured)"), so `flags: []` in the manifest is a TRUE
+  FACT about that member, not an omission for anyone to "fix" into `nodejs_compat` later.
+  The `CompiledWasm`/`Data` rules and the `3607b5c` defect they answer are exactly as the
+  entry states, receipt in `ocr-worker/wrangler.jsonc`'s own comments.
+- **Both facts belong INSIDE the signed statement, and FLEET wants them there:** a flipped
+  flag or a mistyped part changes runtime behaviour in a group's own account, which is the
+  attribution-grade consequence the fleet signature exists to cover. This completes the
+  chain the guard half already built — FL-9/FL-10 prove the BYTES fresh, IC-79 proves the
+  PARTS fresh, and IC-82 makes the UPLOAD FACTS part of the same signed promise.
+- **One condition, stated as the owner of the copied truth: COPY, NEVER DEFAULT.** The
+  assembler must copy `compat` and `type` from the member's own config at cut time and
+  REFUSE assembly for a member whose config does not state them — a default supplied at
+  assembly is the installer-guessing defect moved one layer up, wearing the signature it
+  should have been refused by. (`ocr-worker`'s empty `flags` is a stated `[]` in its
+  config's own terms, not an absence — the refusal is for a missing `compatibility_date`
+  class of gap, not for an empty list.) DIST never editing the member configs is already
+  the entry's own rule; FLEET holds it.
+- **In-place at 0.57.0: AGREE, verified independently rather than taken from the entry.**
+  The deployed installer's own source consumes `version` / `asset` / `sha256` / `sig` and
+  touches neither `fleet[]` nor `fleetSig` (`fetchRepoManifest` / `fetchRepoAsset`, read
+  2026-09-14), every asset stays byte-identical, and `bio-release-fleet/1 → /2` is what
+  distinguishes the two manifest formats for the consumer being built. A version is a
+  promise about bytes and no byte moves; FLEET sees no consumer the proposer cannot.
+
+*(awaiting CONTENT-PDF)*
