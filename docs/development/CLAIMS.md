@@ -3254,3 +3254,51 @@ install arm: 4 failures including the panel assertion failing by name instead of
 regenerated (701 rulings). The DIST-2 QUEUE row flip is CONDUCT's at integration. NO DEPLOY
 performed; the next real install/update run is gated to Bob and is where the explicit-binding-
 replaces-kept-secret API contract gets read back rather than trusted.
+
+## CLAIM 2026-09-14 DIST (DIST-4 — the fleet-visibility report: which instances monitor on the ADMIN_TOKEN fallback, a NUMBER rather than a hope; DEC-43's (b))
+session: DIST #2 (worktree `.claude/worktrees/dist-ds2`, branch `dist-ds2`)
+opened: 2026-09-14
+design, decided here per the row's I4 clause: **DIST-side read, NO plane op, NO IC.** The
+instance-side surface already exists and answers to the WEAKEST credential: `op=selftest`
+(classes admin/member/probe) reports `bindings.DAEMON_TOKEN` as true / false / "not
+configured", liveToken-checked — the instance's OWN statement, not installer intent — and
+carries `version`, so one call answers both of D-116's hats (the row asked that this be said:
+it is said here and in the tool header). An OPEN surface (op=bootstrap) was considered and
+refused: publishing "I monitor on the root of trust" to strangers advertises a weakness;
+probe-gated is the right floor.
+paths:
+  - `tools/fleet-posture.mjs` — NEW, the report tool. Input: a fleet file of {name, base,
+    token(probe)}. Postures: `daemon` / `admin-fallback` (DEC-43's population, NAMED) /
+    `daemon-revoked` (bound-but-dead — loudest, see delegation below) / `unreachable` /
+    `refused` (stated absences, never counted clean). The COUNT is stated; exit is nonzero
+    while any instance is unanswered, because a count with holes presented as a count is the
+    overclaim class. STRUCTURAL credential fence: the tool knows the token values it sent and
+    scrubs/flags any that an instance echoes back — no token value in output, enforced, not
+    promised.
+  - `bio-plane/test/fleetposture.test.mjs` — NEW, battery-discovered (the DS-2
+    `resolveversion.test.mjs` precedent for DIST tool suites). Fixture instances via injected
+    fetch; hostile-echo and intent-field fixtures drive the three NC shapes the row names.
+  - `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` ONLY, if the strict print moves under
+    the new suite; reason at site (the standing stale-floor pattern).
+  - `docs/development/CLAIMS.md` — this block, and one DELEGATION to RECORD below.
+  **READ, NEVER EDITED**: `bio-plane/src/index.mjs` (selftest :3810, classify :1970),
+  `bio-plane/src/store.mjs` (`#monitorToken()` :27514), `bio-plane/test/resolveversion.test.mjs`
+  (the convention), `tools/deploy-fleet.mjs`. **NOT** `bio-plane/src/**`, **NOT**
+  `newgroup/**`, **NOT** `release/**`, **NOT** any version bump, **NOT**
+  `docs/development/QUEUE.md`. NO DEPLOY.
+concurrency: checked over the register 2026-09-14 — no live claim names `tools/` or the new
+test path; the DIST-2 claim above is released.
+
+### DELEGATION 2026-09-14 DIST (DIST-4) -> RECORD: **A BOUND-BUT-REVOKED DAEMON_TOKEN BRICKS MONITORING INSTEAD OF FALLING BACK — the armed-alarm-firing-401s shape DIST-1 refused, reachable through the denylist door**
+Found while designing DIST-4's posture categories, from reading, not from a live failure:
+`#monitorToken()` (store.mjs :27514) is `env.DAEMON_TOKEN || env.ADMIN_TOKEN` — presence-only.
+`classify()` (index.mjs :1970) accepts daemon only when `liveToken()` passes. So an instance
+whose DAEMON_TOKEN value is denylisted (published in the repo — `tokens.mjs`'s
+publication-revokes rule) SELECTS the dead token on every tick, is refused on every tick, and
+never reaches the ADMIN_TOKEN fallback: monitoring armed, firing 401s forever — DIST-1 refused
+exactly this shape for MONITOR_TOKEN and the denylist reintroduces it for DAEMON_TOKEN.
+Selftest already distinguishes the state (`false` vs "not configured"), and DIST-4's report
+names it `daemon-revoked` and counts it as BROKEN, never as fallback and never as clean. The
+FIX is plane ground and therefore not DIST's: `#monitorToken()` should skip a non-live
+DAEMON_TOKEN (one liveToken call at selection), or the refusal should be surfaced. Low
+likelihood (requires a committed token value), stated rather than sat on.
