@@ -3574,3 +3574,18 @@ paths added:
 also recorded here rather than only in the report: **D-336 is BURNED** — `tools/mintid.mjs D` was
 called twice in one turn and the first id was never read back off the tool's output. Recorded,
 not reused (D-332's precedent). The id in use is **D-337**.
+released: 2026-09-14 by the M0 background-lane worker — landed on branch `worktree-agent-ad7860e15dfeb0a6d`,
+NOT pushed and NOT merged; CONDUCT integrates. All three shapes CLOSED at their sites with the
+declined option priced in each row: D-329 by a static predicate that overturns the row's own
+"no static instrument can see it", D-331 by the anchor preflight the row itself recommended with
+record-and-continue declined and priced, D-333 by the census holding every readable declaration
+against its own run. Gates on the final tree: battery **187/187 · 11,337** (own baseline
+**187/187 · 11,324** on a pristine `origin/main` worktree at `b0eddbf`; the +13 attributed per
+suite by diffing two full runs — witness +12, planning-hygiene +1), `coverage --strict` exit 0
+read UNPIPED with `REGISTER_FLOOR` moved to the printed **957/178/179** (it arrived stale by
+4/1/1, measured on the pristine worktree), UI harness exit 0 from the repo root, `plancheck` clean
+but for UNPUSHED. Thirteen control arms run, thirteen as declared. **NOTHING IS OWED TO A FUTURE
+ACTOR BY THIS NOTE**: the two findings this item stopped at are ROWS — **D-337** (caseproduction
+arm C, attributed against a pristine worktree before filing) and **D-343** (three declared
+tallies the new instrument found, deliberately unfixed because they sit in other claims) — and
+both are in `DEBT.md` with what closing them takes. **D-336 is BURNED** and recorded as such.

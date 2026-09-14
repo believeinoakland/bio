@@ -307,7 +307,15 @@ export function readLabelQuotes(driverSrc) {
 const WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9,
   ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16,
   seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20 };
-const TALLY_RE = new RegExp(String.raw`\b(\d{1,2}|${Object.keys(WORDS).join("|")})\s+arms?\b`, "i");
+/* A COUNT FOLLOWED BY A MANNER ADVERBIAL IS NOT A TALLY, IT IS A METHOD.
+   *"one arm at a time"*, *"one arm alone"* — these say HOW the arms are run, not
+   HOW MANY there are, and they are the residue the paragraph rule below does not
+   catch because a driver's opening sentence often states its method. The
+   exclusion is on the grammatical role (a manner head after the noun), not on a
+   list of driver spellings: the same five heads would have to be written for any
+   new driver that means the same thing. */
+const TALLY_RE = new RegExp(
+  String.raw`\b(\d{1,2}|${Object.keys(WORDS).join("|")})\s+arms?\b(?!\s*(?:at a time|alone|apart|each\b|per\b))`, "i");
 
 /* THE HEAD IS WHERE A DRIVER DESCRIBES ITSELF, and the window ends at the first
    `import` rather than at a line count — D-233's measured defect was a FIXED
@@ -327,11 +335,37 @@ const TALLY_RE = new RegExp(String.raw`\b(\d{1,2}|${Object.keys(WORDS).join("|")
    invoke the driver are dropped before the tally is read. */
 const isUsageLine = (l) => /\bnode\s+\S*\.(?:mjs|js)\b/.test(l);
 
+/* A RULE IS NOT A DECLARATION EITHER, AND THIS ONE WAS MEASURED OVER THE WHOLE
+   ESTATE RATHER THAN GUESSED. Every driver's head carries a block of shared
+   discipline — *"EACH ARM IS ARMED ALONE"*, *"ONE ARM AT A TIME"*, *"the baseline
+   is an arm"* — and reading a count out of it produced eight false findings in
+   one run: `owed-controls` scored ONE against nine announced, `pagepixels` ONE
+   against seven, `producer-provenance` ONE against three. Every false read was a
+   sentence about how arms are RUN, never about how many there are.
+
+   So the tally is read ONLY from the driver's FIRST head paragraph — the one that
+   names the driver — and never from the rules that follow. That is where a driver
+   describes itself (`CASE-3's NEGATIVE CONTROL DRIVER — six arms plus a
+   baseline`), and it is the same "a declaration is a paragraph" extent rule
+   `control-register.mjs` arrived at for its own grammar, for the same reason. */
+function firstHeadParagraph(head) {
+  const lines = head.split("\n");
+  const out = [];
+  let started = false;
+  for (const l of lines) {
+    const bare = l.replace(/^\s*(?:\/\*+|\/\/+|\*(?!\/))\s?/, "").trimEnd();
+    if (!bare.trim()) { if (started) break; continue; }
+    started = true;
+    out.push(bare);
+  }
+  return out.join("\n");
+}
+
 export function readDeclaredArms(driverSrc) {
   const at = driverSrc.indexOf("\nimport ");
   const head = driverSrc.slice(0, at > 0 ? at : Math.min(driverSrc.length, 6000))
     .split("\n").filter((l) => !isUsageLine(l)).join("\n");
-  const m = TALLY_RE.exec(head);
+  const m = TALLY_RE.exec(firstHeadParagraph(head));
   if (!m) return null;
   const n = WORDS[m[1].toLowerCase()] ?? Number(m[1]);
   if (!Number.isFinite(n)) return null;

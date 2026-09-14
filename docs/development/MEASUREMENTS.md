@@ -10796,3 +10796,52 @@ contamination looks exactly like real damage: symlinking `node_modules` into the
 worktree made esbuild write the resolved path into `pdf-worker`'s bundle, failing FL-10's
 byte-identity guard (3 assertions), and the rebuild run to diagnose it then failed 2 more. The
 true state was green both times.
+
+### THE CENSUS RUN OF RECORD, 2026-09-14, AND THE EIGHT FALSE FINDINGS IT PRODUCED BEFORE IT PRODUCED THREE REAL ONES
+
+Two passes in a dedicated worktree at this item's own commit, because a driver edits real
+sources while it runs.
+
+| | pass 1 | pass 2 (resume) | together |
+| --- | --- | --- | --- |
+| drivers found | 88 | 88 | 88 |
+| drivers RUN | 32 | 52 | **52 distinct**, 36 unreached |
+| arms announced | 130 over 18 readable | 215 over 30 readable | — |
+| drivers with a STALE arm | **0** | **0** | **0** |
+| anchor preflights reported | 3 | 0 (none of the three in this slice) | 3 of 3 adopters |
+
+**PASS 1 STOPPED EXACTLY WHERE THE INSTRUMENT SAYS IT SHOULD.** `fieldread.control.mjs` runs
+the WHOLE BATTERY inside each of its arms, hit the 1800 s per-driver timeout, was SIGTERMed
+mid-arm and left `src/store.mjs` and `src/query.mjs` modified — so the census STOPPED rather
+than filling a report with results measured against somebody else's patch, and named the 56 it
+had not reached. The residue was restored from the committed blobs and the restore MEASURED:
+store 1,874,385 B sha256 `2416ee7b…`, query 84,055 B sha256 `3489c598…`, both MATCH by sha256
+and IDENTICAL by `cmp`. The resume then ran the remainder with `--only`, which is the protocol
+the census's own header sets out.
+
+**THE TALLY COMPARISON'S FIRST THIRTEEN FINDINGS WERE FIVE REAL AND EIGHT MANUFACTURED, AND
+THE EIGHT ARE THE USEFUL HALF.** Every false one was a sentence about how arms are RUN rather
+than how many there are:
+
+| false reading | what the matcher was actually reading |
+| --- | --- |
+| `calibration` 1 vs 4 | the command-line USAGE EXAMPLE — `node test/calibration.control.mjs regrade # one arm alone` |
+| `owed-controls` 1 vs 9, `pagepixels` 1 vs 7, `producer-provenance` 1 vs 3, `ocr-member-e2e` 1 vs 3 | the shared discipline block — `ONE ARM AT A TIME`, a manner adverbial |
+| `fieldread` 12 vs 10 | a driver SIGTERMed at the timeout: its announcements were TRUNCATED, not short |
+| `refusal-partition` 6 vs 10, `version-predecessor` 6 vs 8 | unverified — a count deep in the head, nobody has checked whether it is a self-description |
+
+Fixed at the cause: a usage line is dropped before the tally is read, a count wearing a manner
+adverbial (`at a time`, `alone`, `apart`, `each`, `per`) is refused, the tally is taken only
+from the driver's FIRST head paragraph — the sentence where a driver names itself, which is
+`control-register.mjs`'s own "a declaration is a paragraph" extent rule arrived at again for
+the same reason — and a driver that did not run to completion has NO measured tally.
+
+**REACH 46 -> 13 of 88 (52% -> 15%), AND THE TRADE IS DELIBERATE.** On the estate as landed
+every finding the narrowed reader produces is REAL, each checked by hand: `caseflip` declares
+five plus a baseline and announces 7, `caselifecycle` the same and announces 8, `fleetbundles`
+six plus a baseline and announces 13. A false finding is worse than a missed one here, because
+the standing rule is that a surprising result is a finding about the arm — so a manufactured
+one costs a real investigation. The 75 unreadable drivers are NAMED individually on every
+battery, never scored zero. The one real decay the narrowing gives up —
+`harness.control.mjs`, "ALL TEN ARMS" against 19 announced — is named in D-343 so the
+withdrawal loses nothing.

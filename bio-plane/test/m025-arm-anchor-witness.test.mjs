@@ -567,8 +567,21 @@ for (const d of graded) {
 console.log(`  declared tallies read: ${declared.length} of ${graded.length} driver(s) (${(declared.length / graded.length * 100).toFixed(0)}%)`);
 console.log(`  ${tallyBlind.length} driver(s) declare no arm count this reader can see — reported UNKNOWN, NEVER zero:`);
 for (const d of tallyBlind) console.log(`      ${d}`);
-t(`T1 the tally reader reaches a real fraction of the estate and names the rest (${declared.length} readable, floor 30)`,
-  declared.length >= 30, true);
+/* THE FLOOR FELL FROM 30 TO 10 AND THE REASON IS AT THE SITE, because a floor
+   that falls without one is slack. The first reader took any `N arm(s)` phrase
+   anywhere in a driver's head and reached 46 of 88 — and its first full census
+   pass produced EIGHT FALSE FINDINGS out of thirteen, every one of them a
+   sentence about how arms are RUN rather than how many there are: a command-line
+   usage example (`# one arm alone`), a shared discipline block (`ONE ARM AT A
+   TIME`), a manner adverbial. **A false finding is worse than a missed one here**
+   — this estate's rule is that a surprising result is a finding about the arm, so
+   a manufactured one costs a real investigation. The reader now takes the tally
+   only from the driver's FIRST head paragraph, the sentence where a driver names
+   itself, and refuses a count wearing a manner adverbial. Reach 46 -> 13 of 88
+   (15%), and on the estate as landed **every finding it produces is real, checked
+   by hand one at a time**. The 75 it cannot read are NAMED below, never zero. */
+t(`T1 the tally reader reaches a real fraction of the estate and names the rest (${declared.length} readable, floor 10)`,
+  declared.length >= 10, true);
 t("T2 and it is null-never-zero, driven: a driver stating no count reads as UNREADABLE rather than as a declaration of none",
   [readDeclaredArms("/* a driver with no count at all */\nimport x from 'y';"),
    (readDeclaredArms("/* five arms plus a baseline */\nimport x from 'y';") || {}).n,
