@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-735 rulings across 70 documents.
+740 rulings across 71 documents.
 
 ## DEC-
 
@@ -26,6 +26,8 @@ authority is the file named, never this one.
   `docs/development/DEBT.md:118`
 - **DEC-5** · 2026-08-01 — RULED 2026-08-01 (DEC-5), and the ruling INVERTS the framing: these are public documents, there is no reason to redact anything from a public record, and who edited a document and when IS evidence — it demonstrates the actions of people and departments.  
   `docs/development/DEBT.md:89`
+- **DEC-5** · 2026-07-31 — COMPLETE as the argument — every architectural claim it makes was exercised and none was overturned — and SUPERSEDED IN FOUR PLACES by things that happened after it: DEC-5 ruled the risk it raises, IC-1 landed the interface change it predicts in a shape it does not anticipate, and COFF-6's census answered both of…  
+  `docs/development/OFFICE-FORMATS.md:3`
 - **DEC-6** · 2026-08-01 — Titled "v0.1 DRAFT, drafted July 27, 2026, from Bob's proposal"; its header's "nothing here is ratified doctrine, no check exists, no code implements it" is now false — it carries three RULED markers (DEC-6 and DEC-15 of 2026-08-01, DEC-46 of 2026-08-04, built by REC-47), one AMENDED (DEC-20) and one STRUCK…  
   `docs/architecture/BIO_Declared_Bias_v0_1.md:3`
 - **DEC-6** · 2026-08-01 — RULED 2026-08-01: the subject vocabulary is the registry's, and the malformedness rule is the constraint **Every kind the SUBJECT REGISTRY carries is a legal subject for a bias statement.** Decided by session BOB (DEC-6), raised by FRAMEWORK from the FW-6 registry slice.  
@@ -536,7 +538,7 @@ authority is the file named, never this one.
   `docs/development/kickoffs/RECORD.md:404`
 - **IC-75** — Superseded act-list pins in OTHER suites, CORRECTED with dated reasons and never exempted** — the set is MEASURED from the battery delta rather than guessed, and every one is named in an amendment to this claim before it is edited. - `docs/development/INTERFACE-CHANGES.md` — the appended **IC-75** row (I3), filed…  
   `docs/development/CLAIMS.md:2486`
-- **IC-82** — QUEUE row flips and IC-82's SETTLED are CONDUCT's.  
+- **IC-82** · 2026-09-14 — QUEUE row flips and IC-82's SETTLED are CONDUCT's. ## CLAIM 2026-09-14 RECORD (REC-80 — RECORD's two designs get front matter: the FTS5-in-the-DO specification and the alarm model, read against the plane rather than against themselves) session: corpus-retrofit worker, one worktree for REC-80 + FW-16 + COFF-8…  
   `docs/development/CLAIMS.md:3506`
 ## C-
 
@@ -1285,6 +1287,14 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:3479`
 - **2026-09-14** — AMENDED MID-ITEM, 2026-09-14: `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR` ONLY**, the standing stale-floor pattern with the reason at the site.  
   `docs/development/CLAIMS.md:3485`
+- `docs/DECIDED.md` regenerated (734 rulings).  
+  `docs/development/CLAIMS.md:3549`
+- **2026-09-14** — AMENDED MID-ITEM, 2026-09-14 (applies to all three claims above, recorded once): `docs/DECIDED.md` — **REGENERATED, not authored**, by `node tools/decided.mjs`.  
+  `docs/development/CLAIMS.md:3606`
+- `docs/DECIDED.md` — **REGENERATED, not authored**, by `node tools/decided.mjs`.  
+  `docs/development/CLAIMS.md:3607`
+- not foreseen from the brief: front matter carries uppercase ruling markers (`SUPERSEDED` in `OFFICE-FORMATS.md`'s Status) and shifts the line numbers the index cites in `DOCUMENT-PROFILES.md`, so `plancheck` went RED on the stale index until it was regenerated — measured, 1 fail, and the only fail in the whole gate.  
+  `docs/development/CLAIMS.md:3608`
 - RULED by Bob: **the JS-supported rendered content is THE content**, not the raw sources that are the inputs of that rendering.  
   `docs/development/CLIENT-RENDERED.md:9`
 - The grade: RULED, and the argument is Bob's RULED by Bob: **a captured rendering that ran at the time the document was captured takes the SAME grade as the rest of the document.**  
@@ -1300,9 +1310,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-08-03** — RULED IN PART 2026-08-03 by Bob — THE ARITHMETIC IS SETTLED: *"The simple truth is that sometimes the weakest is the claim's strength, and other times it's not.  
   `docs/development/DECISIONS.md:549`
 - **2026-07-30** — RULED by Bob, 2026-07-30: `index` versus `record` changes monitoring's BEHAVIOUR, not just which normalisation rules apply. A Legistar calendar changing is the calendar working.  
-  `docs/development/DOCUMENT-PROFILES.md:144`
+  `docs/development/DOCUMENT-PROFILES.md:174`
 - **2026-07-30** — RULED by Bob, 2026-07-30. The layers run in this order because each is cheap relative to the next and each can settle the question outright. `docprofile/pipeline.mjs` is the driver and every result carries a `trail` recording where the reasoning stopped, because a verdict whose depth is invisible cannot be audited.  
-  `docs/development/DOCUMENT-PROFILES.md:201`
+  `docs/development/DOCUMENT-PROFILES.md:231`
 - the RULED routing chain, named so the fallback is auditable | | `status` | enum: `open`, `resolved`, `forwarded` | mirrors `GATH_STATUS_ENUM`'s closed-enum discipline | | `created` | ISO 8601 UTC instant | `ISO_TS_RE` verbatim | | `resolved_at` | optional ISO 8601 UTC instant | `ISO_TS_RE` verbatim |  
   `docs/development/INBOX-GRAMMAR.md:58`
 - Routing, exactly as RULED Bob: task for the **project manager**, falling back to a **group admin** where a project has no manager, **forwardable** to a member better placed to attest.  
