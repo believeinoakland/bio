@@ -63,9 +63,13 @@ depends-on, handed through the BOB INBOX in QUEUE.md. Bob, verbatim: "we're far 
 along in the definition of the requirements, journey, processes, UX, and data model that we
 can put all of this aside for a time and turn our focus elsewhere."
 
-**Do NOT reopen the paused thread.** Case-making, the study document, S11's state inventory
-and D-164's content-extent design are PARKED until Bob reopens them. The review document is
-current and published; leave it unless a decision this session takes belongs in its Part 4.
+**The paused thread, as of 2026-09-15:** Bob REOPENED its content half — D-164's
+content-extent design is no longer parked; its scope is
+`docs/architecture/BIO_Content_Framework_v0_10.md` Part II §18 (six pieces: four are design
+and this session's to decompose, D-184 and the claim object are doctrine and Bob's).
+Case-making, the study document and S11's state inventory REMAIN PARKED until Bob rules
+DEC-33's re-entry (put to him 2026-09-14, unanswered). The review document is current and
+published; leave it unless a decision this session takes belongs in its Part 4.
 
 YOUR FIRST JOB IS THE STANDING ONE: read DECISIONS.md and surface every `open` entry.
 **There is ONE: DEC-32.** Read it in place. Its ARITHMETIC is now RULED by Bob — legs

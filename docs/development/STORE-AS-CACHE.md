@@ -617,8 +617,14 @@ stands and the other half is the mistake worth seeing.**
 
 WHAT STANDS: **an AI overview built on route 1 today would be reading titles, frontmatter
 and five text columns and calling it understanding.** Content and meaning are behind
-route 2, which no query surface reaches, so the extraction and connection work is not a
-prerequisite in the scheduling sense — it is the SUBJECT MATTER.
+route 2 — which, since D-222's option A landed (the MEANING arm and `op=meaningrows`),
+the query compiler reaches for `inquiry_basis` and `resolutions` and for nothing else:
+`readings`, `reading_refs` and `connections` are still reachable only by fixed-key ops —
+so the extraction and connection work is not a prerequisite in the scheduling sense — it
+is the SUBJECT MATTER. *(2026-09-15: the three-axis table and the four-level ladder this
+document introduced are now CARRIED, with build status, by
+`docs/architecture/BIO_Content_Framework_v0_10.md` Part II §14.2–14.3 and §17; this
+document keeps the retrieval design.)*
 
 WHAT WAS WRONG: this first said the services *"rest on the MEANING axis, not the document
 axis"* and called the document axis *"plumbing"*. That framing assumes the lower levels

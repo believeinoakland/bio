@@ -301,6 +301,11 @@ is written here.
 ## I2 — content → framework (structure)
 
 - **ID:** I2
+- **Content inventory (2026-09-15):** the forms this interface carries — text, links,
+  the evidentiary envelope, the element-reference `source` union — are inventoried with
+  build status in `docs/architecture/BIO_Content_Framework_v0_10.md` Part II §15; that
+  the emitted element reference is consumed by NO edge is that document's §18 headline
+  (D-164).
 - **Owner:** `FRAMEWORK` (currently dormant)
 - **Version:** 2.0.0 (1.0.0 — **STABLE**, CONFIRMED by the consumer's owner FRAMEWORK
   (session framework-agent-2, FW-1) 2026-07-31. Supersedes the provisional 0.1.0

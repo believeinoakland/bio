@@ -75,6 +75,18 @@ in the corpus; sessions consult it constantly.
 escalation ladder that decides who does the work (daemon, session, human),
 and the handling of lawful-but-confidential discoveries.
 
+**BIO_Content_Framework_v0_10** — at v0.11 inside (2026-09-15) under the
+`v0_10` filename, so every `framework:LINE` citation in code and record
+stays exact. Part I (§§1–13), approved 2026-07-30, is the extraction
+substrate: recognisers, regions and digests, change layers, content types,
+connections and their grade, progressions, intent, declared bias. Part II
+(§§14–19) is the single authoritative content design — content as the unit
+the record points at (DEC-23), the forms content takes, the extraction
+process as built, how content is organized and reached, and the central gap
+(D-164) stated once — every construct marked built, designed, gestured or
+absent. Read it for what content IS before touching anything that points at
+a document.
+
 **BIO_Bundle_Skill_Composite_Design_v1_7** — the design of the bundle skill
 that was the store's single write authority. **Status: superseded
 implementation, inherited format.** The Cloudflare plane replaced that

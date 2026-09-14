@@ -706,7 +706,7 @@ together with `DEBT.md`).
 | D-161 a connection's passage anchors are thrown away | RECORD | M4 · design agreed in outline |
 | D-162 connections run through NAMED things; ideas cannot connect | FRAMEWORK | M4 · DOCTRINE (Bob) — a DEC at the entity axis |
 | D-163 a citation cannot point inside a document | RECORD | M4 · folds into D-123 |
-| D-164 L3 content has no object — the content-extent primitive | RECORD | M4 · D-161/D-163/D-123 fold into it |
+| D-164 L3 content has no object — the content-extent primitive | RECORD | M4 · D-161/D-163/D-123 fold into it; REOPENED 2026-09-15 by Bob — design authority `BIO_Content_Framework_v0_10.md` Part II §18 |
 | D-165 what each action kind requires is unmodelled | RECORD | M10 · deferred with a trigger |
 | D-166 the CPDF-5 corpus URLs went stale | CONTENT-PDF | M1 · re-locate the corpus |
 | D-167 Tier-1 text trips the `client_rendered` stack test | FRAMEWORK | M3 · next stack-axis item |

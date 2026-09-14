@@ -276,6 +276,73 @@ What changed for CONDUCT:
 - **No queue item is superseded and no worker should be stopped.** The one kickoff this
   supersedes is BOB's own (`BOB-NEXT.md`), corrected in the same turn.
 
+**2026-09-15 · BOB · CONTENT: the framework is now the authority, the parked content
+thread is REOPENED, and the acts that follow are stated with their actors.**
+
+Landed this turn (verify from `origin/main`): `docs/architecture/BIO_Content_Framework_v0_10.md`
+extended IN PLACE to v0.11 — Part I unchanged line for line (the file keeps its `v0_10`
+name so every `framework:LINE` citation in code and record stays exact); Part II (§§14–19)
+folds DEC-23, DEC-24, DEC-4, D-164 and the built extraction path (FW-15, CPDF-9/10/13,
+D-252, the `ocr-worker` member in 0.58.0) into one authoritative content design, every
+construct marked [BUILT] / [DESIGNED-not-built] / [GESTURED] / [ABSENT] and cited at
+`51d128a`. Pointers landed beside it: `CLAUDE.md`'s content section, `DEBT.md` D-164,
+`INTERFACES.md` I2, `STORE-AS-CACHE.md` (its stale "no query surface reaches route 2"
+corrected: D-222's option A reaches `inquiry_basis` and `resolutions`; `readings`,
+`reading_refs`, `connections` still fixed-key only), `MILESTONES.md` D-164,
+`kickoffs/BOB.md`. **Bob's direction of 2026-09-15** — content is the central element;
+understand → architect → inventory → design the missing pieces → THEN a complete build
+plan — **REOPENS D-164**, which the record showed parked on him. Case-making and DEC-33's
+re-entry REMAIN parked pending his ruling (put to him 2026-09-14, unanswered).
+
+Acts for CONDUCT, each an item or an integration act and none a note:
+1. **Stale self-description, D-106's class.** `bio-plane/src/index.mjs:5055-5063` and
+   `:5102-5105` say the tier-3 branch is "present, narrow and UNTAKEN" and that "every
+   instance today" has no OCR member; `docprofile/doctypes/registry.mjs:8-15` says one type
+   is registered. All three are false since CPDF-10 (`698a07b`) and 0.58.0 (`e67e275`):
+   three types are registered and the branch is taken on the project's instance (Part II
+   §16.4 carries the evidence). Correct in the turn a CONTENT-PDF or FRAMEWORK claim next
+   touches those files, or as one small item — CONDUCT sequences; the owner edits.
+2. **Schema comments cite the framework by line into Part I and still resolve; two should
+   cite Part II:** `schema.mjs:1989-1993` (the stated no-extent column) → §15/§17;
+   `:2446-2461` (the text-source projection) → §15. Actor: RECORD, at next touch.
+3. **`docs/architecture/CONSTRUCTS.md` lists v0.11 as the current framework and Part II as
+   the content inventory beside its construct inventory.** Actor: FRAMEWORK (dormant) —
+   CONDUCT answers-for, in writing, per the dormant-owner rule.
+4. **`ASSISTANT-PILOT.md:67-72` and `airun.mjs:94-104` cite `CLAUDE.md`'s four levels;
+   a pointer to Part II §14.3 suffices.** Actor: the owners, at next touch.
+5. **NOT queued by this entry, deliberately:** D-222 stage C (content-grain search) and
+   D-225's caps sit inside Part II §18's design scope, which BOB decomposes next — do not
+   spawn them from the debt rows.
+6. **What arrives next through this inbox:** the D-164 design — the content object and the
+   extent-carrying edge — as an IC (it crosses I2, FRAMEWORK's) plus items on RECORD's
+   ground; and the four design pieces of §18 that are BOB's (content-grain search, the
+   general observation log, extraction breadth, the D-194 lead) decomposed with
+   depends-on. The two doctrine pieces (D-184, the claim object) go to Bob, not the queue.
+7. **The `CLAUDE.md` pointer — one act, its actor CONDUCT, at the next integration.**
+   `CLAUDE.md`'s content section (lines 93–95) still points at `STORE-AS-CACHE.md` as
+   "the design work"; it should point at Part II. The exact replacement (three lines →
+   six) is: *"The design work sits in `docs/architecture/BIO_Content_Framework_v0_10.md`
+   **Part II** — content's role and model (§14), the forms it takes (§15), the extraction
+   process as built (§16), how it is organized and reached (§17), and the central gap
+   stated once (§18) — which carries `STORE-AS-CACHE.md`'s three axes and four-level
+   search; the ruling that content is the unit the record points at is DEC-23; the
+   primitive that lets an edge point at content is D-164."* BOB set it aside from this
+   landing deliberately: `CLAUDE.md` sits outside `docs/`, so carrying it made the change
+   FULL-class, and the full battery was red on a pre-existing history defect (act 8).
+   Land it inside an integration that runs the full gate anyway.
+8. **`origin/main`'s battery is RED on `mergecarry.test.mjs` since `95e401b`, and it is
+   CONDUCT's to clear.** The corpus arm finds one FRESH, unregistered drop —
+   `95e401b : bio-plane/dist/bio-plane.bundle.json`, the 2026-09-14 merge of `origin/main`
+   into D-334's integration; the path is the generated bundle manifest, superseded by
+   `f974291`'s rebuild under FL-10's guard — while the register's three rows (all
+   2026-08-08) still grade. The act is a `KNOWN_HISTORICAL_DROPS` row in
+   `tools/mergecarry.mjs` carrying its reason. Because the suite reads
+   `kickoffs/CONDUCT.md` it sits in the DOCS profile too, so every gated landing is red
+   until it is registered — this one included, held locally and routed by message the
+   same minute.
+
+No queue item is superseded and no worker should be stopped.
+
 ## SESSION HANDOVER 2026-08-04 (CONDUCT → next CONDUCT; DIST splits off)
 
 The CONDUCT session of 2026-08-04 ended when remote access was lost. **The resume prompt is
