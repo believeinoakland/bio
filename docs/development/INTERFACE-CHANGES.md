@@ -5953,4 +5953,27 @@ configs this change copies, which are FLEET's files and FLEET's truth:**
   distinguishes the two manifest formats for the consumer being built. A version is a
   promise about bytes and no byte moves; FLEET sees no consumer the proposer cannot.
 
-*(awaiting CONTENT-PDF)*
+**CONTENT-PDF — AGREE, ANSWERED FOR BY CONDUCT (the area is dormant; protocol step 3,
+recorded as CONDUCT answering FOR the area and never as the area agreeing), on a
+measurement taken before answering:** zero CONTENT-PDF code reads `RELEASE.json`, the
+fleet statement, or `fleetSig` (grepped over both members' `src/` and `scripts/`), so the
+area has no reader to break; and both member configs ALREADY STATE every truth the
+manifest will copy — `ocr-worker/wrangler.jsonc` carries `compatibility_date` and the
+explicit `CompiledWasm`/`Data` module rules (the very rules whose absence was `3607b5c`'s
+deploy defect), `pdf-worker`'s carries date and flags. The copy-never-default condition
+FLEET attached is precisely what protects this area: a member whose config went silent is
+refused at assembly rather than guessed at inside a group's account. The forcing case is
+welcome — ocr-worker's parts are exactly why the types belong inside the signature.
+
+### RESOLUTION — ACCEPTED, **I4 1.2.0 → 2.0.0**, 2026-09-14 by CONDUCT #9
+
+MAJOR, deliberately, on IC-3's settled reasoning even at measured-nil impact: the signed
+fleet statement moves `bio-release-fleet/1 → /2`, and a signed statement's format is a
+wire contract — a /1 verifier meeting a /2 release is a break by definition, whatever the
+measured population (which is: zero — FLEET independently verified the deployed installer
+consumes `version`/`asset`/`sha256`/`sig` and touches neither `fleet[]` nor `fleetSig`,
+so the /2 statement's first verifier is the consumer D-297 now builds). The manifest keys
+themselves are additive; the statement bump is what gets versioned. All three consumers
+are on the row: DIST proposing, FLEET's AGREE with the copy-never-default condition
+(`0b704cf`), CONTENT-PDF answered for above with its measurement. `INTERFACES.md` bumped
+in the same act. D-297's build is UNGATED by this resolution.

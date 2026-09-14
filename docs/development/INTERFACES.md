@@ -540,7 +540,7 @@ change to this interface: `civicos-ui` and the served pages match on these strin
 
 - **ID:** I4
 - **Owner:** `DIST`
-- **Version:** 1.2.0 (first written 2026-07-31; half-formalised by D-106's version
+- **Version:** 2.0.0 (first written 2026-07-31; half-formalised by D-106's version
   authority rule; 1.1.0 2026-09-10, IC-70 (FL-10's integration) — ADDITIVE:
   `dist/bio-plane.bundle.json` lands BESIDE the artifact (sha256, byte length,
   exact recipe, per-input sha256s) and the FL-9 gate asserts the committed module
@@ -554,7 +554,15 @@ change to this interface: `civicos-ui` and the served pages match on these strin
   is never the fresh-checkout condition. Owner FLEET answered on the row (`99c0513`);
   two production successes preceded the resolution. Resolved by CONDUCT with DIST's
   awaited answer converted to its own lineage's forward obligation, objection path
-  open.)
+  open. 2.0.0 2026-09-14, D-297 via IC-82 — BREAKING on the statement, additive
+  on the keys: each fleet[] entry gains compat {date, flags} and each parts[] entry
+  gains type, all COPIED from the member's own config at cut time (copy-never-default,
+  FLEET's owner condition — assembly REFUSES a member whose config does not state
+  them), and the signed fleet statement moves bio-release-fleet/1 → /2 to carry both.
+  A signed statement's format is a wire contract, so the bump is MAJOR at a measured
+  consumer population of zero (the deployed installer touches neither fleet[] nor
+  fleetSig — verified independently by FLEET). CONTENT-PDF answered for by CONDUCT on
+  a measurement; the /2 statement's first verifier is the D-297 installer half.)
 - **Consumers:** `newgroup/**`, and every sovereign instance it installs
 - **Status:** STABLE
 
