@@ -40,6 +40,7 @@
  * Run it:  node test/caseproduction.control.mjs [armId]
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, rmSync } from "node:fs";
+import { preflight } from "../scripts/armdecay.mjs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -104,7 +105,26 @@ function restoreAll(armId) {
   }
 }
 
+/* ------------------------------------------------- D-331 · ARMS ARE QUEUED NOW
+   2026-09-14. This driver used to ARM AND RUN at each call site, in file order,
+   and `edit()` THROWS on a zero-match anchor — so one dead anchor ended the
+   process and every arm after it went unrun and unreported. M0-25's census
+   measured exactly that on this driver's family, and D-331's ruling is that a
+   throwing driver VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING.
+
+   `arm()` now only REGISTERS. `runAll()` below counts every registered arm's
+   anchors in the file that arm will write, prints the whole table, and only then
+   runs them — in the same order, with the same edits, the same suites and the
+   same declarations. **The throw is kept**: nothing arms if an anchor belonging
+   to an arm this invocation would run is not live, because the alternative
+   (record the miss and carry on) measures the next arm against whatever the
+   failed patch left behind, and arms A and B here both write `store`. */
+const QUEUE = [];
 function arm(id, title, edits, suites, expectGreen = false) {
+  QUEUE.push({ id, title, edits, suites, expectGreen });
+}
+
+function runArm(id, title, edits, suites, expectGreen = false) {
   if (ONLY && ONLY !== id) return;
   armsRun++;
   console.log(`\n=== (${id}) ${title}`);
@@ -320,6 +340,17 @@ arm("H", "THE `cases` ROW COMMITTED FROM A REQUEST RATHER THAN FROM THE SIGNED D
                    "A JOINED PARTICIPANT WHO IS NOT AN OWNER IS REFUSED",
                    "THE SAME FINDING, THE SAME GRADES, THE SAME BAR",
                    "A LOAD-BEARING MEMBER BELOW THE PROJECT'S STANDARD IS REFUSED"] }]);
+
+/* ------------------------------------------------------------------- RUN ALL
+   The preflight first, over EVERY registered arm — the complete report is the
+   point — then the arms, in registration order. The refusal is scoped to the
+   arms this invocation will actually run, so a stale arm cannot stop a healthy
+   one being driven with `node test/caseproduction.control.mjs <id>`. */
+const willRun = QUEUE.filter((q) => !ONLY || ONLY === q.id).map((q) => q.id);
+preflight("caseproduction.control.mjs",
+  QUEUE.map((q) => ({ id: q.id, anchors: q.edits.map(([k, from]) => ({ file: F[k], needle: from })) })),
+  { fatalFor: willRun });
+for (const q of QUEUE) runArm(q.id, q.title, q.edits, q.suites, q.expectGreen);
 
 console.log(`\n==== ${armsRun} arm(s) run, ${armsWrong} NOT AS DECLARED.`);
 console.log("Every file restored and verified by sha256, by content and by cmp against BOTH a per-arm\n"

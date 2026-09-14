@@ -39,12 +39,45 @@
  *     spellings. A driver announcing its arms in a shape not in that union
  *     reports `arms: ?` — printed as unknown, NEVER as zero. WORKER.md's rule:
  *     a thing the matcher does not understand must be NAMED.
- *   - It cannot see an arm that arms CORRECTLY but tests the wrong thing, and it
- *     cannot see a driver whose arm table was silently shortened. It sees
- *     liveness of the anchors that are still declared.
+ *   - It cannot see an arm that arms CORRECTLY but tests the wrong thing. It CAN
+ *     now see an arm table that was silently shortened or grown — see D-333
+ *     below, added 2026-09-14; before that it saw only the liveness of the
+ *     anchors still declared.
  *   - It says nothing about drivers it could not run. A driver that needs an
  *     engine, a network fetch or a credential is reported as NOT-RUN WITH THE
  *     REASON, never skipped silently.
+ *
+ * ---------------------------------------------------------------------------
+ * EXTENDED 2026-09-14 — D-333 AND D-331, THE TWO SHAPES ONLY A RUN CAN SEE.
+ *
+ * **D-333 · DECLARED vs MEASURED.** A driver's ANCHORS can all be perfectly live
+ * while its declared arm COUNT is false: D-330 measured exactly that on two
+ * drivers, on a green `main`, and neither announced anything. A tally is a CLAIM
+ * ABOUT A RUN, so no static instrument can falsify it — **this census is the only
+ * instrument in the estate that HAS the run**, which is why the comparison lives
+ * here rather than in the battery-side witness. The declaration is read from the
+ * driver's own head by `scripts/armdecay.mjs`'s `readDeclaredArms`; the
+ * measurement is the arm announcements this census already counted. A mismatch
+ * is a finding and CARRIES THE EXIT CODE, because a number nobody can falsify
+ * trains every session to trust it (D-231). An UNKNOWN on either side does not:
+ * an unreadable declaration is a gap in the instrument, not a defect in the
+ * driver, and gating on it would turn the reach figure into a punishment.
+ *
+ * **D-331 · THE PREFLIGHT, AND WHAT THIS CENSUS MEASURED TO EARN IT.** Half this
+ * estate's drivers THROW on a zero-match anchor, and in a throwing driver the
+ * throw ends the process: `casepin.control.mjs` had FOUR dead anchors and
+ * reported ONE, because the throw fired at arm (a) and arms (c), (d) and (e)
+ * were never reached. The three throwing drivers this census named
+ * (`casepin`, `casesign`, `caseproduction`) now run a DRY PASS that counts every
+ * arm's quote in the file that arm will write and prints the WHOLE table before
+ * anything is armed. The throw is kept, so a half-armed tree is still never
+ * measured. Their tables are collected and reported below under ANCHOR
+ * PREFLIGHTS — and the preflight's own heading is EXCLUDED from the arm
+ * announcement tally, which is a finding about this matcher recorded at the site
+ * rather than smoothed: `--- ARM PREFLIGHT ·` matches the `--- ARM <id>`
+ * announcement shape, and left alone it would have added one to every
+ * preflighting driver's measured tally and failed all three under D-333 for this
+ * instrument's reason rather than for theirs.
  *
  * A TIMEOUT IS NOT A RESULT, IT IS A POISONED TREE — MEASURED ON THIS
  * INSTRUMENT'S OWN FIRST FULL RUN AND FIXED HERE RATHER THAN NOTED.
@@ -76,6 +109,7 @@ import { readdirSync, readFileSync, existsSync, mkdirSync, writeFileSync, append
 import { spawnSync } from "node:child_process";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readDeclaredArms, tallyHonoured } from "../scripts/armdecay.mjs";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const argv = process.argv.slice(2);
@@ -231,7 +265,15 @@ function runDriver(d) {
   const out = `${r.stdout || ""}${r.stderr || ""}`;
   const lines = out.split("\n");
 
-  const armLines = lines.filter((l) => ARM_ANNOUNCE.some((re) => re.test(l)));
+  /* D-331's PREFLIGHT TABLE IS NOT AN ARM ANNOUNCEMENT, AND THIS EXCLUSION IS A
+     FINDING ABOUT THIS MATCHER RATHER THAN A TIDY-UP. The preflight's own heading
+     is `--- ARM PREFLIGHT · <driver> ...`, which the second ARM_ANNOUNCE shape
+     (`--- ARM <id>`) reads as an arm — so adding the pass would have silently
+     added ONE to the measured tally of every driver that adopted it, and the
+     D-333 comparison directly below would then have failed three drivers for the
+     instrument's reason rather than for theirs. Caught by driving it. */
+  const preflightLines = lines.filter((l) => /ARM PREFLIGHT/i.test(l));
+  const armLines = lines.filter((l) => ARM_ANNOUNCE.some((re) => re.test(l)) && !/ARM PREFLIGHT/i.test(l));
 
   /* PROSE IS NOT A VERDICT, AND THIS TOO WAS MEASURED RATHER THAN ANTICIPATED.
      `dec65-strength-reach.control.mjs` was classified DID-NOT-ARM on a run where
@@ -299,8 +341,29 @@ function runDriver(d) {
   else if (r.status === 0) verdict = "ALL-ARMED";
   else verdict = "UNCLASSIFIED";   // non-zero exit, no recognised stale phrase
 
+  /* ------------------------------------------------------------------ D-333
+     THE DECLARED TALLY, HELD AGAINST THE RUN. A driver's arm count is a CLAIM
+     ABOUT A RUN — no static check can falsify it, which is why D-330 found two
+     drivers whose anchors were all live and whose expectations were false. This
+     census is the only instrument that HAS the run, so the comparison is made
+     here. `null` on either side is UNKNOWN and never a verdict: an unreadable
+     declaration and a declaration of none are different claims. */
+  const declared = (() => { try { return readDeclaredArms(readFileSync(abs, "utf8")); } catch { return null; } })();
+  /* A DRIVER THAT DID NOT RUN TO COMPLETION HAS NO MEASURED TALLY, AND THE FIRST
+     FULL RUN OF THIS COMPARISON PROVED IT THE HARD WAY. `fieldread.control.mjs`
+     hit the per-driver timeout mid-run — it runs the WHOLE BATTERY inside each of
+     its arms — and was SIGTERMed after announcing ten of its twelve. The
+     comparison then read `DECLARES 12 · ANNOUNCED 10` and scored it decay, which
+     is a manufactured finding about a driver whose declaration is fine: the
+     announcements were simply truncated by the kill. This census's own header
+     already says it "says nothing about drivers it could not run", and that rule
+     now binds the tally too — a count from a partial run is not a measurement. */
+  const completed = !(r.error || r.signal);
+  const tallyOk = completed ? tallyHonoured(declared, arms) : null;
+
   return { ...d, ms, status: r.status, signal: r.signal, verdict, arms, leftDirty, dirtyNow,
-           armLines, stale, prose, wrong, out, err: r.error ? String(r.error.message) : null };
+           armLines, preflightLines, declared, tallyOk,
+           stale, prose, wrong, out, err: r.error ? String(r.error.message) : null };
 }
 
 /* -------------------------------------------------------------------- REPORT */
@@ -366,7 +429,10 @@ for (const d of chosen) {
   results.push(r);
   if (!FROM_LOGS) writeFileSync(logPathFor(d), r.out);
   const armsTxt = r.arms === null ? "arms=?" : `arms=${r.arms}`;
-  console.log(`${String(r.verdict).padEnd(13)} exit=${String(r.status)} ${armsTxt.padEnd(9)} ${(r.ms / 1000).toFixed(1)}s${r.stale.length ? `  <<< ${r.stale.length} STALE LINE(S)` : ""}${r.leftDirty ? "  <<< LEFT THE TREE DIRTY" : ""}`);
+  const tallyTxt = r.declared === null ? "decl=?" : `decl=${r.declared.n}${r.declared.plusBaseline ? "+b" : ""}`;
+  console.log(`${String(r.verdict).padEnd(13)} exit=${String(r.status)} ${armsTxt.padEnd(9)} ${tallyTxt.padEnd(9)} ${(r.ms / 1000).toFixed(1)}s`
+    + `${r.tallyOk === false ? "  <<< TALLY NOT AS DECLARED" : ""}`
+    + `${r.stale.length ? `  <<< ${r.stale.length} STALE LINE(S)` : ""}${r.leftDirty ? "  <<< LEFT THE TREE DIRTY" : ""}`);
   appendFileSync(SUMMARY, `${r.verdict}\t${r.status}\t${r.arms ?? "?"}\t${(r.ms / 1000).toFixed(1)}s\t${d.rel}${d.args.length ? " " + d.args.join(" ") : ""}\n`);
   /* STOP AT THE FIRST DIRTY TREE. Everything measured after a driver dies
      mid-arm is measured against somebody else's patch, and a wrong result that
@@ -422,6 +488,48 @@ if (notRun.length) {
   for (const r of notRun) console.log(`  ${r.rel}: ${r.verdict}${r.err ? ` — ${r.err}` : ""} after ${(r.ms / 1000).toFixed(1)}s`);
 }
 
+/* ===================================================================== D-333
+   DECLARED vs MEASURED. The half M0-25's witness is structurally blind to: a
+   driver whose every anchor is perfectly live and whose NUMBER is false. A
+   mismatch is a FINDING and it is counted into this instrument's exit code,
+   because a figure nobody can falsify trains every session to trust it (D-231).
+   `?` on either side is UNKNOWN and is listed apart — never scored as agreement,
+   which would be the generous direction on a tally that is about to be a gate. */
+const tallyWrong = results.filter((r) => r.tallyOk === false);
+const tallyBlind = results.filter((r) => r.tallyOk === null);
+console.log(`\n${"-".repeat(78)}\nDECLARED vs MEASURED ARM TALLIES (D-333) — a driver states its arm count in its own`);
+console.log(`head; this census is the only instrument that has the RUN to hold it against. A`);
+console.log(`baseline is an ANNOUNCEMENT and not a declared arm, so "N arms plus a baseline" honours`);
+console.log(`N or N+1 and nothing else.`);
+if (!tallyWrong.length) console.log(`  none: every driver whose declaration AND announcements are both readable agrees with itself.`);
+for (const r of tallyWrong) {
+  console.log(`  <<< ${r.rel}`);
+  console.log(`      DECLARES ${r.declared.n}${r.declared.plusBaseline ? " plus a baseline" : ""} (\`${r.declared.phrase}\`) · ANNOUNCED ${r.arms}`);
+}
+if (tallyBlind.length) {
+  console.log(`\n  UNKNOWN on one side or both — NOT scored as agreement, named instead:`);
+  for (const r of tallyBlind) console.log(`      ${r.rel}  (declared ${r.declared === null ? "?" : r.declared.n} · announced ${r.arms ?? "?"})`);
+}
+
+/* ===================================================================== D-331
+   THE PREFLIGHT TABLES. A driver that validates every anchor before it arms
+   anything reports its WHOLE anchor set in one run, so a dead anchor can no
+   longer hide the arms behind it. Printed here so the census reader gets the set
+   rather than only the first casualty. */
+const preflighted = results.filter((r) => r.preflightLines && r.preflightLines.length);
+console.log(`\n${"-".repeat(78)}\nANCHOR PREFLIGHTS (D-331) — ${preflighted.length} driver(s) validated their whole anchor set`);
+console.log(`BEFORE arming. In a throwing driver without this pass, a zero-match anchor ends the run`);
+console.log(`and every arm behind it goes unmeasured AND unreported (casepin: 4 stale, 1 visible).`);
+for (const r of preflighted) {
+  const bad = r.preflightLines.filter((l) => /<<</.test(l));
+  /* The ROWS, not the heading. `--- ARM PREFLIGHT · <driver>` is the table's own
+     title and counting it read casepin as 7 anchors against a printed 6 — an
+     off-by-one in the instrument, caught by reading its output against the
+     driver's, and exactly the class of figure this estate keeps paying for. */
+  console.log(`  ${r.rel}: ${r.preflightLines.filter((l) => /ARM PREFLIGHT\s+\S+\s+(?:ok|<<<)/.test(l)).length} anchor(s), ${bad.length} NOT LIVE`);
+  for (const l of bad) console.log(`      ${l.trim()}`);
+}
+
 const unknownArms = results.filter((r) => r.arms === null);
 if (unknownArms.length) {
   console.log(`\n${"-".repeat(78)}\nARM COUNT UNREADABLE (announcement shape not in the matcher's union) — printed as`);
@@ -447,9 +555,17 @@ console.log(`  drivers found        : ${all.length}  (${conv.length} by conventi
 console.log(`  drivers RUN          : ${results.length}`);
 console.log(`  arms announced       : ${armsTotal}  (over ${results.length - unknownArms.length} drivers whose announcements this matcher reads; ${unknownArms.length} unreadable)`);
 console.log(`  drivers with a STALE arm : ${staleDrivers.length}`);
+console.log(`  declared tallies read : ${results.filter((r) => r.declared !== null).length} of ${results.length}  (the rest report UNKNOWN, never zero)`);
+console.log(`  tally NOT AS DECLARED : ${tallyWrong.length}   ·   tally unknown on one side: ${tallyBlind.length}`);
+console.log(`  anchor preflights     : ${preflighted.length} driver(s) reported their whole anchor set before arming`);
 for (const [k, v] of Object.entries(tally).sort()) console.log(`      ${k.padEnd(14)} ${v}`);
 console.log(`\nsummary written to ${SUMMARY}`);
 
 /* The census EXITS NON-ZERO on a stale arm. A census that always exits 0 is a
-   report, not a gate — and this item exists because nothing gated. */
-process.exit(staleDrivers.length ? 1 : 0);
+   report, not a gate — and this item exists because nothing gated.
+   EXTENDED 2026-09-14 (D-333): a declared tally the run contradicts is the same
+   kind of failure one level out — the anchors are live and the CLAIM is false —
+   so it carries the same exit. An UNKNOWN on either side does NOT, because an
+   unreadable declaration is a gap in this instrument and not a defect in the
+   driver, and gating on it would make the reach figure a punishment. */
+process.exit(staleDrivers.length || tallyWrong.length ? 1 : 0);

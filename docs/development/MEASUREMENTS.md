@@ -10766,3 +10766,133 @@ was invisible at `3cac8c6` and fired at `ad9fdae` with nothing but the commit be
 The prose was corrected to "date from 2026-08-01"; the bound is recorded in
 `bio-plane/test/corpuscheck.test.mjs`'s own `NEGATIVE CONTROL:` block so the next retrofit
 does not have to rediscover it.
+## 2026-09-14 · D-329+D-331+D-333 — the three driver-estate decay shapes, with the reach of each new check as a FIGURE (instruments: `bio-plane/test/m025-arm-anchor-witness.test.mjs`, `bio-plane/test/m025-arm-census.mjs`, `bio-plane/scripts/armdecay.mjs`, all on `origin/main` at `b0eddbf`)
+
+**THE LABEL HALF (D-329), AND THE ROW'S "no static instrument can see it" IS FALSIFIED BY
+MEASUREMENT RATHER THAN BY ARGUMENT.** A driver quotes the suite's assertion NAMES as well as
+its subject's source, and a name the suite composes moves under the quote. The row concluded
+that a run-time-composed label exists in no file; the RENDERED label does not, but the
+TEMPLATE does, and the defect has an exact static signature — the fragment resolves against
+the template only by consuming an interpolation slot.
+
+| figure | measured |
+| --- | --- |
+| label quotes read | **2,700 from 87 of 88 drivers (99%)** — the one silent driver NAMED on every run |
+| interpolation shoulder-pairs indexed | **1,728 distinct**, over **366** non-doc candidate files |
+| span candidates on a healthy estate | **6** |
+| of those, literally present and therefore NOT scored | **6** — so **0 findings** |
+| the historical instance, driven | caught, naming the driver, `aicredential.test.mjs` as composer, and `"26"` as the value in the slot |
+| the hand repair (invariant part only), driven | NOT caught — the over-strictness direction holds |
+| scan cost | ~0.3 s, inside a battery suite |
+
+**THE EXTRACTION IS AN INVERSION AND THE MEASUREMENT IS WHY.** A matcher keyed on the property
+name `mustFail:` reads **140 label quotes from 9 drivers** and **cannot see
+`aicredential.control.mjs` at all** — D-329's own exhibit passes its fragments as POSITIONAL
+arguments to `arm(title, edits, mustFail, mustNotFail)`. Asking instead what a LABEL IS (prose,
+one line, no statement punctuation) against what an ANCHOR is (code) reads **2,700 from 87**.
+A list of key spellings would have gone stale at the first driver that did not use one, and
+that driver was the one the row was written about.
+
+**TWO INSTRUMENT DEFECTS FOUND BY THIS ITEM'S OWN CONTROLS, both recorded rather than smoothed.**
+(1) With `docs/` in the label corpus the check reads **`DEBT.md`'s own D-329 row**, which quotes
+the stale fragment verbatim because that is what a debt row is for — it scored the defect
+"present" and went green over a fully armed subject. The label corpus now excludes `docs/`; the
+ANCHOR corpus keeps it and must, because two of `register-grammar.control.mjs`'s arms quote
+`VERIFICATION.md`. (2) `armdecay.mjs`'s own header spelled the example template in REAL
+BACKTICKS, so the module entered its own template index and arm L1 reported the defect as
+"composed in armdecay.mjs" rather than in the suite that composes it — a finding that names the
+instrument instead of the subject.
+
+**THE ANCHOR HALF GREW A BLIND SPOT THAT WAS ALWAYS THERE AND HAD NEVER BEEN ARMED AT.** The
+witness excludes every `*.control.mjs` from its corpus, correctly (a self-including corpus
+scored 96 anchors "duplicated" against this one's 3). But a control driver's subject is
+sometimes ANOTHER control driver, and those anchors then read ZERO. Adding this item's arms took
+A4 from 0 findings to **2, both false**. An anchor absent from every non-driver candidate is now
+re-counted against the other drivers — never its own file — and found there is reported LIVE in
+a printed list. Measured on the landed tree: **2 rescued of 163 anchors**, and arm A7 holds a
+ceiling of a tenth of the set so the rescue cannot become a blanket amnesty.
+
+**THE THROW'S BLAST RADIUS (D-331), PRICED.** The preflight counts every arm's quote in the file
+that arm will write before anything is armed: `casepin` **6** anchors, `casesign` **5**,
+`caseproduction` **8** — **19**, all live. Driven both ways: with TWO anchors staled (one
+belonging to arm (a), one shared by (e) and (f)), the preflight reports **all 6 rows, 3 not
+live**, names an arm BEHIND the first casualty, and refuses to arm; before the pass the same
+tree produced ONE casualty and died. The declined option is record-and-continue: it needs no new
+code, and it buys the complete report by measuring a tree patched by an arm that did not arm —
+in `casepin`, arms (a) and (b) both write `src/store.mjs`.
+
+**TALLY DECAY (D-333), AND THE INSTRUMENT FOUND DECAY ON ITS FIRST PASS.** Declared tallies are
+readable for **46 of 88 drivers (52%)**; the other 42 are NAMED individually on every battery and
+reported UNKNOWN, never zero. `control-register.mjs`'s existing grammar was measured first and
+rejected for this use: it yields a tally for **2 of 88**, because a control driver carries no
+`NEGATIVE CONTROL:` marker — it IS the control. On the first census pass
+**`casepin.control.mjs` declared "five arms plus a baseline" and announced SEVEN, with every one
+of its anchors live the whole time** — corrected at the site with the dated reason.
+
+**A THIRD INSTRUMENT RED ON A GREEN `main`, ATTRIBUTED BEFORE IT WAS FILED (D-337).**
+`caseproduction.control.mjs` arm (C) returns no tally and two `** WRONG` lines, identically on a
+PRISTINE `origin/main` worktree at `b0eddbf` with none of this item's changes — its subject is
+enforced in `store.mjs` AND as check `C-41.8`, so neutering one leaves the other to refuse the
+suite's own fixture at setup. **And a FOURTH, in the control driver this item extends**: arm A5
+declared `mustNot: A4` and returns [A4, A6], also identically on the pristine worktree — its
+patch necessarily consumes its own anchor, so A4 is a correct consequence and the DECLARATION was
+what went stale, at the re-anchoring that gave the arm its two-line spelling. Corrected, never
+exempted, and tightened rather than loosened: A4 must now fail with exactly that one anchor in
+its finding list.
+
+**BASELINE AND DELTA.** Own baseline on a pristine `origin/main` worktree at `b0eddbf` after
+`npm ci` in all three member installs: **187/187 suites green · 11,324 assertions · exit 0**.
+Two earlier baseline runs were DISCARDED as self-contaminated and are recorded because the
+contamination looks exactly like real damage: symlinking `node_modules` into the baseline
+worktree made esbuild write the resolved path into `pdf-worker`'s bundle, failing FL-10's
+byte-identity guard (3 assertions), and the rebuild run to diagnose it then failed 2 more. The
+true state was green both times.
+
+### THE CENSUS RUN OF RECORD, 2026-09-14, AND THE EIGHT FALSE FINDINGS IT PRODUCED BEFORE IT PRODUCED THREE REAL ONES
+
+Two passes in a dedicated worktree at this item's own commit, because a driver edits real
+sources while it runs.
+
+| | pass 1 | pass 2 (resume) | together |
+| --- | --- | --- | --- |
+| drivers found | 88 | 88 | 88 |
+| drivers RUN | 32 | 52 | **52 distinct**, 36 unreached |
+| arms announced | 130 over 18 readable | 215 over 30 readable | — |
+| drivers with a STALE arm | **0** | **0** | **0** |
+| anchor preflights reported | 3 | 0 (none of the three in this slice) | 3 of 3 adopters |
+
+**PASS 1 STOPPED EXACTLY WHERE THE INSTRUMENT SAYS IT SHOULD.** `fieldread.control.mjs` runs
+the WHOLE BATTERY inside each of its arms, hit the 1800 s per-driver timeout, was SIGTERMed
+mid-arm and left `src/store.mjs` and `src/query.mjs` modified — so the census STOPPED rather
+than filling a report with results measured against somebody else's patch, and named the 56 it
+had not reached. The residue was restored from the committed blobs and the restore MEASURED:
+store 1,874,385 B sha256 `2416ee7b…`, query 84,055 B sha256 `3489c598…`, both MATCH by sha256
+and IDENTICAL by `cmp`. The resume then ran the remainder with `--only`, which is the protocol
+the census's own header sets out.
+
+**THE TALLY COMPARISON'S FIRST THIRTEEN FINDINGS WERE FIVE REAL AND EIGHT MANUFACTURED, AND
+THE EIGHT ARE THE USEFUL HALF.** Every false one was a sentence about how arms are RUN rather
+than how many there are:
+
+| false reading | what the matcher was actually reading |
+| --- | --- |
+| `calibration` 1 vs 4 | the command-line USAGE EXAMPLE — `node test/calibration.control.mjs regrade # one arm alone` |
+| `owed-controls` 1 vs 9, `pagepixels` 1 vs 7, `producer-provenance` 1 vs 3, `ocr-member-e2e` 1 vs 3 | the shared discipline block — `ONE ARM AT A TIME`, a manner adverbial |
+| `fieldread` 12 vs 10 | a driver SIGTERMed at the timeout: its announcements were TRUNCATED, not short |
+| `refusal-partition` 6 vs 10, `version-predecessor` 6 vs 8 | unverified — a count deep in the head, nobody has checked whether it is a self-description |
+
+Fixed at the cause: a usage line is dropped before the tally is read, a count wearing a manner
+adverbial (`at a time`, `alone`, `apart`, `each`, `per`) is refused, the tally is taken only
+from the driver's FIRST head paragraph — the sentence where a driver names itself, which is
+`control-register.mjs`'s own "a declaration is a paragraph" extent rule arrived at again for
+the same reason — and a driver that did not run to completion has NO measured tally.
+
+**REACH 46 -> 13 of 88 (52% -> 15%), AND THE TRADE IS DELIBERATE.** On the estate as landed
+every finding the narrowed reader produces is REAL, each checked by hand: `caseflip` declares
+five plus a baseline and announces 7, `caselifecycle` the same and announces 8, `fleetbundles`
+six plus a baseline and announces 13. A false finding is worse than a missed one here, because
+the standing rule is that a surprising result is a finding about the arm — so a manufactured
+one costs a real investigation. The 75 unreadable drivers are NAMED individually on every
+battery, never scored zero. The one real decay the narrowing gives up —
+`harness.control.mjs`, "ALL TEN ARMS" against 19 announced — is named in D-343 so the
+withdrawal loses nothing.

@@ -52,6 +52,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { preflight } from "../scripts/armdecay.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
@@ -67,8 +68,20 @@ const FLOOR = 1000;                                /* a "restore" of a truncated
 
 /* ONE UNIQUE STRING REPLACEMENT PER EDIT, and it THROWS if the needle is absent
    or ambiguous. An arm that silently edited nothing is an arm that reports the
-   subject as unbreakable, which is the one wrong answer a control can give. */
+   subject as unbreakable, which is the one wrong answer a control can give.
+
+   D-331, 2026-09-14 — THE DRY MODE. M0-25's census measured this driver's shape
+   as one of the three that THROW on a zero-match anchor, which means one dead
+   anchor takes every arm behind it down unrun and unreported (this driver's own
+   arm (d) note records exactly that happening: a stale anchor "made `edit()`
+   THROW and took arms (e) and (f) down with it unrun"). With `DRY` set, `edit()`
+   RECORDS the (file, needle) pair and writes nothing, so every arm's own
+   `apply()` is run as a dry pass and the WHOLE anchor table is reported before a
+   byte moves. The throw is KEPT for the real pass: a half-armed tree is still
+   never measured. */
+let DRY = null;
 const edit = (file, needle, replacement) => {
+  if (DRY) { DRY.push({ file, needle }); return; }
   const src = readFileSync(file, "utf8");
   const n = src.split(needle).length - 1;
   if (n !== 1) throw new Error(`ARM NEEDLE not unique in ${file}: found ${n} occurrence(s)\n  ${needle.slice(0, 90)}`);
@@ -192,6 +205,20 @@ const ARMS = {
 const want = process.argv[2];
 const order = want ? [want] : Object.keys(ARMS);
 if (want && !ARMS[want]) { console.error(`no such arm: ${want}. Arms: ${Object.keys(ARMS).join(", ")}`); process.exit(2); }
+
+/* ---------------------------------------------------- D-331 · THE PREFLIGHT
+   Every arm's anchor counted in the file that arm will write, and the WHOLE
+   table printed, BEFORE anything is armed. The report covers every arm even when
+   one is selected on the command line; the refusal is scoped to the arms this
+   invocation runs, so a stale arm cannot stop a healthy one being driven. */
+const preflightArms = [];
+for (const name of Object.keys(ARMS)) {
+  DRY = [];
+  try { ARMS[name].apply(); } catch (e) { console.log(`  (arm ${name} could not be dry-run: ${e.message})`); }
+  preflightArms.push({ id: name, anchors: DRY });
+  DRY = null;
+}
+preflight("casesign.control.mjs", preflightArms.filter((a) => a.anchors.length), { fatalFor: order });
 
 mkdirSync(PEN, { recursive: true });
 const results = [];

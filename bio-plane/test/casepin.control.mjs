@@ -1,4 +1,4 @@
-/* CASE-3's NEGATIVE CONTROL DRIVER — five arms plus a baseline, re-runnable in
+/* CASE-3's NEGATIVE CONTROL DRIVER — six arms plus a baseline, re-runnable in
  * one step:
  *
  *     node test/casepin.control.mjs            # every arm, in order
@@ -24,13 +24,29 @@
  *
  * EACH ARM IS ARMED ALONE, with every other defence held open.
  *
- * WHAT THE FIVE ARMS ARE FOR, since a list of edits is not a list of questions:
+ * THE TALLY WAS CORRECTED 2026-09-14 (D-333), NEVER EXEMPTED, AND IT IS THE
+ * FIRST THING THE NEW INSTRUMENT FOUND. This header read "five arms plus a
+ * baseline" and the driver announces SEVEN — baseline plus (a) to (f). **Every
+ * anchor was live the whole time**, which is precisely D-333's point: the count
+ * decayed while nothing about the anchors did, so no static check and no
+ * re-anchoring pass could ever have seen it. It went wrong when arm (f) was
+ * added to this driver — its own note below records at length why (f) was added
+ * and says nothing about the header, which is the shape of this defect — and it
+ * sat wrong until `m025-arm-census.mjs` began holding a driver's declaration
+ * against its own run. The old number was right when it was written; it is
+ * corrected here rather than excused, because a declaration nobody reconciles is
+ * the record overclaiming.
+ *
+ * WHAT THE SIX ARMS ARE FOR, since a list of edits is not a list of questions:
  *   (a) and (e) ask whether the FREEZE is real — written, and readable.
  *   (b) asks the question this item exists for: if a pin can be moved off the
  *       hash it holds, does anything notice?
  *   (c) asks whether the MINT is enforced or merely documented.
  *   (d) asks the question a control usually forgets — whether the fence is
  *       WIDER than the rule it enforces.
+ *   (f) asks (b)'s question again BY THE ROUTE THAT IS ACTUALLY REACHABLE — the
+ *       READ rather than the write. It is kept beside (b) rather than replacing
+ *       it; the note at the arm says why.
  */
 
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
@@ -38,6 +54,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { preflight } from "../scripts/armdecay.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
@@ -51,8 +68,21 @@ const FLOOR = 1000;                                 /* a "restore" of a truncate
 
 /* ONE UNIQUE STRING REPLACEMENT PER EDIT, and it THROWS if the needle is absent
    or ambiguous. An arm that silently edited nothing is an arm that reports the
-   subject as unbreakable, which is the one wrong answer a control can give. */
+   subject as unbreakable, which is the one wrong answer a control can give.
+
+   D-331, 2026-09-14 — THE DRY MODE, AND IT IS THE WHOLE FIX. This driver's throw
+   is what made M0-25's census read 2 of 6 arm announcements while FOUR anchors
+   were dead: the throw fired at arm (a) and arms (c), (d), (e) — and later (f) —
+   were never reached, so their staleness was hidden behind the first one. **A
+   DEAD ANCHOR IS NOT A LOCAL FAILURE; IT BLINDS EVERY ARM BEHIND IT.**
+   With `DRY` set, `edit()` RECORDS the (file, needle) pair and writes nothing, so
+   every arm's own `apply()` can be run as a dry pass and the WHOLE anchor table
+   reported before a byte moves. The throw is KEPT for the real pass — a
+   half-armed tree is still never measured, which is the property this shape
+   exists for and the one record-and-continue gives up. */
+let DRY = null;
 const edit = (file, needle, replacement) => {
+  if (DRY) { DRY.push({ file, needle }); return; }
   const src = readFileSync(file, "utf8");
   const n = src.split(needle).length - 1;
   if (n !== 1) throw new Error(`ARM NEEDLE not unique in ${file}: found ${n} occurrence(s)\n  ${needle.slice(0, 90)}`);
@@ -92,7 +122,7 @@ const edit = (file, needle, replacement) => {
 const PIN_WRITE = "          id, ed, i, m, r.version_sha ?? null, r.role ?? null);";
 
 const ARMS = {
-  baseline: { files: [], label: "nothing armed — what distinguishes five-arms-working from five-arms-broken",
+  baseline: { files: [], label: "nothing armed — what distinguishes six-arms-working from six-arms-broken",
               apply: () => {} },
 
   a: { files: [STORE],
@@ -207,6 +237,21 @@ const ARMS = {
 const want = process.argv[2];
 const order = want ? [want] : Object.keys(ARMS);
 if (want && !ARMS[want]) { console.error(`no such arm: ${want}. Arms: ${Object.keys(ARMS).join(", ")}`); process.exit(2); }
+
+/* ---------------------------------------------------- D-331 · THE PREFLIGHT
+   Every arm's anchor is counted in the file that arm will write, and the WHOLE
+   table is printed, BEFORE anything is armed. The report covers every arm in the
+   table even when one is selected on the command line, because the complete
+   report is the point; the refusal is scoped to the arms this invocation will
+   actually run, so a stale arm cannot stop a healthy one from being driven. */
+const preflightArms = [];
+for (const name of Object.keys(ARMS)) {
+  DRY = [];
+  try { ARMS[name].apply(); } catch (e) { console.log(`  (arm ${name} could not be dry-run: ${e.message})`); }
+  preflightArms.push({ id: name, anchors: DRY });
+  DRY = null;
+}
+preflight("casepin.control.mjs", preflightArms.filter((a) => a.anchors.length), { fatalFor: order });
 
 mkdirSync(PEN, { recursive: true });
 const results = [];

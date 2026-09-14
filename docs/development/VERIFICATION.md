@@ -406,6 +406,36 @@ The suite is `bio-plane/test/owed-controls.test.mjs`; its nine arms are declared
 RUN by `bio-plane/test/owed-controls.control.mjs` (`node test/owed-controls.control.mjs`
 from `bio-plane/`).
 
+### A THROWING CONTROL DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING (D-331, 2026-09-14)
+
+**This is the estate's driver law, ruled here rather than left as a difference nobody decided.**
+Roughly half this estate's control drivers THROW when an arm's quote matches zero times; the
+other half RECORD the miss and continue. Both are defensible and the split was an accident —
+so M0-25's census measured what the split COSTS, and the number settles it: `casepin.control.mjs`
+had **four dead anchors and reported one**, because the throw fired at arm (a) and arms (c)
+through (f) were never reached. **A DEAD ANCHOR IS NOT A LOCAL FAILURE; IN A THROWING DRIVER IT
+BLINDS EVERY ARM BEHIND IT**, and the staleness of the hidden arms is invisible for as long as
+the first one stays dead.
+
+**THE RULE.** A driver that throws on a zero-match MUST, before it arms anything, count every
+arm's quote in the file that arm will write and PRINT THE WHOLE TABLE. `preflight()` in
+`bio-plane/scripts/armdecay.mjs` is the shared pass; `casepin`, `casesign` and
+`caseproduction.control.mjs` are the three that carry it today. **The throw is KEPT.** A
+half-armed tree is still never measured, which is the property the throwing shape exists for and
+the one record-and-continue gives up: in `casepin` arms (a) and (b) both write `src/store.mjs`,
+so an arm that is recorded-and-skipped leaves the next one measuring a tree nobody meant to hand
+it — the census's own dirty-tree stop, one level down. The refusal is scoped to the arms an
+invocation will actually run, so a complete report never costs the ability to drive a healthy arm
+beside a stale one.
+
+**AND A DRIVER'S DECLARED ARM COUNT IS HELD AGAINST ITS RUN (D-333).** A tally is a claim about a
+RUN, so no static check can falsify it — `m025-arm-census.mjs` reads each driver's declaration
+and compares it with the arm announcements it already counts, names a mismatch with both numbers,
+and carries it in its exit status. An UNKNOWN on either side is listed apart and does NOT gate:
+an unreadable declaration is a gap in the instrument, not a defect in the driver. A declared
+tally MAY remain a hard-coded literal — the defect was never the literal but that nothing
+reconciled it, and a tally derived from the driver's own baseline run agrees for free.
+
 ## Prose naming an op is a CLAIM about the dispatch table (M0-12)
 
 **REC-58 was a whole queue item spent establishing that a sentence was false**, and the

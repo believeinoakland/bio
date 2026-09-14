@@ -740,9 +740,27 @@ const REGISTER_FLOOR = {
      print (949/947 · 177/176 · 178/177 · GREW by 2): the slack is DIST's newest
      suite landing beside D-334's, each blind to the other — the stale-floor
      pattern's routine instance, collapsed at the merge as always. */
-  arms: 949,
-  classified: 177,
-  corpus: 178,
+  /* MOVED 2026-09-14 by the D-329+D-331+D-333 item (949 -> 957 · 177 -> 178 ·
+     178 -> 179), from the figures a green `--strict` run PRINTED on this item's
+     own COMMITTED tree (`arms 957/949 · classified 178/177 · corpus 179/178 ·
+     GREW by 8`) — never counted, never incremented by hand.
+     **THE FLOOR ARRIVED ALREADY STALE BY 4/1/1 AND THAT IS MEASURED, NOT
+     INFERRED**: the same script run on a PRISTINE `origin/main` worktree at
+     `b0eddbf`, before a byte of this item existed, printed
+     `arms 953/949 · classified 178/177 · corpus 179/178 · GREW by 4` — the
+     corpuscheck suite that landed with the corpus-standard work, blind to
+     D-334's landing and vice versa, the routine instance of this pattern. This
+     item's own share is the remaining **4 arms**, and none of the classified or
+     corpus movement: it adds NO suite, and the four arms are the ones its
+     extended `NEGATIVE CONTROL:` declaration states in
+     `m025-arm-anchor-witness.test.mjs` for the composed-label, preflight and
+     tally halves. Nothing FELL.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file,
+     here and in `FLEET_FLOOR`, the documented state. `FLEET_FLOOR` is UNMOVED
+     and none is owed — this item adds no fleet member and no fleet suite. */
+  arms: 957,
+  classified: 178,
+  corpus: 179,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

@@ -3993,3 +3993,87 @@ is owed to a future actor by this release. `bio-plane/test/**`'s four `framework
 occurrences are deliberately left — two are executable suite titles — and `newgroup/src/
 release.mjs` and `release/bio-plane.bundled.mjs` carry embedded copies that regenerate at a
 release; all three are named in the worker's report as class sites, not as owed acts.
+## CLAIM 2026-09-14 M0 (D-329+D-331+D-333 — the three driver-estate decay shapes M0-25's census cannot see: composed labels, the throw's blast radius, and tally decay)
+session: M0 background-lane worker (worktree `.claude/worktrees/agent-ad7860e15dfeb0a6d`, branch `worktree-agent-ad7860e15dfeb0a6d`)
+opened: 2026-09-14
+authority: QUEUE.md's `### D-329+D-331+D-333` row, and the three DEBT rows it names as the authorities (D-329, D-331, D-333).
+paths:
+  - `bio-plane/test/m025-arm-anchor-witness.test.mjs` — EXTENDED, not rewritten. The existing
+    A1-A6 / S1-S6 arms and the header's reach statement stay; what is added is the LABEL-QUOTE
+    half (D-329: a driver's `must*:`/`expect*:` fragment evaluated against the way the SUITE
+    COMPOSES the label, so a fragment that quotes a rendered count is caught by name) and the
+    tally half (D-333: a driver's DECLARED arm tally read through the estate's own
+    `control-register.mjs` grammar and compared with what its arm table actually holds).
+  - `bio-plane/test/m025-arm-census.mjs` — EXTENDED: declared-vs-measured arm tallies on the
+    runs it already makes (D-333), and the preflight report the throwing drivers now print
+    read into the census's classification (D-331). Its existing verdicts, matcher unions,
+    dirty-tree stop and exit rule are UNCHANGED.
+  - `bio-plane/test/casepin.control.mjs`, `bio-plane/test/casesign.control.mjs`,
+    `bio-plane/test/caseproduction.control.mjs` — D-331's three named throwing drivers: the
+    ANCHOR PREFLIGHT the row recommends (validate every arm's anchor and report the WHOLE set
+    before arming anything), so one dead anchor can no longer blind the arms behind it. The
+    throw is KEPT — a half-armed tree is still never measured; what changes is that the whole
+    anchor set is reported first. No arm's meaning, edit, subject or declaration moves.
+  - `bio-plane/test/m025-anchor-witness.control.mjs` — APPENDED arms only (the new halves'
+    negative controls); no existing arm edited.
+  - `docs/development/DEBT.md` — **the D-329, D-331 and D-333 rows' dispositions only**,
+    nothing else, no new row unless a residue is found (id via `tools/mintid.mjs D`).
+  - `docs/development/MEASUREMENTS.md` — APPEND ONLY, this item's figures and arm results.
+  - `docs/development/CLAIMS.md` — this block.
+  - `docs/development/VERIFICATION.md` — ONLY if the driver law changes (the D-331 ruling), and
+    then only the sentence that states it.
+  **NOT** `bio-plane/src/**`, **NOT** `bio-plane/dist/**`, **NOT** `docs/development/QUEUE.md`
+  (CONDUCT's sole ground), **NOT** `DECISIONS.md`, **NOT** `CLAUDE.md`, **NOT** `newgroup/**`,
+  **NOT** any version bump, tag or deploy. NO LIVE CALL.
+concurrency: checked over the register 2026-09-14 — the three claims still open are FL-10
+  (`bio-plane/test/fleetbundles.control.mjs`, `bio-plane/dist/**`, build scripts), FL-6
+  (`agent-worker/**`, `bio-plane/test/fleetbundles.test.mjs`) and D-297 (`newgroup/**`,
+  `release/**`, `bio-plane/scripts/deploy.mjs`, `sshsig.mjs`). **Every path above is disjoint
+  from all three**: no live claim names `m025-*`, `casepin/casesign/caseproduction.control.mjs`,
+  or the three DEBT rows.
+
+### AMENDMENT 2026-09-14, MID-ITEM (D-329+D-331+D-333 claim) — FOUR PATHS, each owed and none foreseeable from the brief
+paths added:
+  - **`bio-plane/scripts/armdecay.mjs` (NEW)** — the three shapes' shared instrument, in a module
+    of its own **on `control-register.mjs`'s own stated precedent**: *"so the battery can test
+    the instrument instead of trusting it"*. The witness and the census both consume it, and the
+    witness drives its predicates over fixtures with known answers (S7-S10, T2, T3). Putting the
+    logic in either instrument would have made the other one trust a copy.
+  - **`docs/development/VERIFICATION.md`** — ONE new subsection only, *"A THROWING CONTROL DRIVER
+    VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING"*, inserted above the M0-12 section. The
+    original claim reserved this "only if the driver law changes"; **it changed** — D-331 asked
+    for a ruling on one shape for the estate and the ruling is made, so it belongs in the file
+    that states what tested means here rather than only in the DEBT row. **NOT** any other
+    section, **NOT** the floor, **NOT** the register's figures.
+  - **`bio-plane/test/m025-anchor-witness.control.mjs`** — the original claim said APPENDED ARMS
+    ONLY, and **one existing arm's DECLARATION is corrected**, which is the amendment. A5 read
+    `mustNot: A4` and returns [A4, A6] — measured identically on a PRISTINE `origin/main`
+    worktree at `b0eddbf` with none of this item's changes, so it is a pre-existing red. Its
+    patch must mutate the very line its own `find` quotes, so A4 firing is IRREDUCIBLE and
+    correct; the declaration was right against the arm's ORIGINAL one-line spelling and nobody
+    revisited it when the arm was re-anchored onto the two-line span. Corrected with the dated
+    reason and TIGHTENED rather than loosened — A4 must now fail with EXACTLY this driver's own
+    anchor in its finding list, so a real death arriving beside it still fails. **NOT** its
+    edits, **NOT** any other arm.
+  - **`docs/DECIDED.md`** — REGENERATED, not authored, by `node tools/decided.mjs`. Owed by
+    CLAUDE.md's standing rule (*"Regenerate it in any turn that rules on anything — plancheck
+    fails on the drift"*) and by `plancheck`, which reported STALE the moment the three
+    dispositions landed. It is a generated index; no line is hand-written.
+also recorded here rather than only in the report: **D-336 is BURNED** — `tools/mintid.mjs D` was
+called twice in one turn and the first id was never read back off the tool's output. Recorded,
+not reused (D-332's precedent). The id in use is **D-337**.
+released: 2026-09-14 by the M0 background-lane worker — landed on branch `worktree-agent-ad7860e15dfeb0a6d`,
+NOT pushed and NOT merged; CONDUCT integrates. All three shapes CLOSED at their sites with the
+declined option priced in each row: D-329 by a static predicate that overturns the row's own
+"no static instrument can see it", D-331 by the anchor preflight the row itself recommended with
+record-and-continue declined and priced, D-333 by the census holding every readable declaration
+against its own run. Gates on the final tree: battery **187/187 · 11,337** (own baseline
+**187/187 · 11,324** on a pristine `origin/main` worktree at `b0eddbf`; the +13 attributed per
+suite by diffing two full runs — witness +12, planning-hygiene +1), `coverage --strict` exit 0
+read UNPIPED with `REGISTER_FLOOR` moved to the printed **957/178/179** (it arrived stale by
+4/1/1, measured on the pristine worktree), UI harness exit 0 from the repo root, `plancheck` clean
+but for UNPUSHED. Thirteen control arms run, thirteen as declared. **NOTHING IS OWED TO A FUTURE
+ACTOR BY THIS NOTE**: the two findings this item stopped at are ROWS — **D-337** (caseproduction
+arm C, attributed against a pristine worktree before filing) and **D-343** (three declared
+tallies the new instrument found, deliberately unfixed because they sit in other claims) — and
+both are in `DEBT.md` with what closing them takes. **D-336 is BURNED** and recorded as such.
