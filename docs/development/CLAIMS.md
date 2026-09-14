@@ -4226,3 +4226,5 @@ obliges is stated as an ACT with its actor in the DELEGATION block above (CONDUC
 edits `BIO_Content_Framework_v0_10.md` §16 at merge, or folds it into COFF-10 and says §16 is
 knowingly stale for that window). `OFFICE-FORMATS.md`'s one falsified sentence was corrected
 here, in this area's own design source, per the amendment above.
+
+_(ROUTED by CONDUCT #10 2026-09-14 at COFF-9's integration, answering for dormant FRAMEWORK: the three §16 sentences are corrected by COFF-10 at its landing (in its brief and on its row); until then §16 is knowingly stale for that window, stated here. BOB #10, who is editing Part II today, is told so the merge stays trivial. Nothing further is owed here.)_
