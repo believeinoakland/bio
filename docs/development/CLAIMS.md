@@ -3504,3 +3504,119 @@ byte-identical skip vs metadata deploys — MEASUREMENTS row). The newgroup WORK
 NOT performed: installer releases are gated to Bob, and the live 0.57.0-embedded installer
 reads only the plane keys of the new manifest (additive-in-fact, IC-82's measurement), so
 nothing breaks while he decides. QUEUE row flips and IC-82's SETTLED are CONDUCT's.
+
+## CLAIM 2026-09-14 RECORD (REC-80 — RECORD's two designs get front matter: the FTS5-in-the-DO specification and the alarm model, read against the plane rather than against themselves)
+session: corpus-retrofit worker, one worktree for REC-80 + FW-16 + COFF-8 (CONDUCT #10's
+  three-in-one spawn; disjoint files, one integration). Worktree
+  `.claude/worktrees/agent-a2c3750caa0d50a39`, branch `worktree-agent-a2c3750caa0d50a39`.
+opened: 2026-09-14
+paths:
+  - `docs/development/RETRIEVAL-SUBSTRATE.md` — FRONT MATTER ONLY (Status, Place in the
+    system, Incomplete sections, generated Contents), inserted between the title heading
+    and the body. **NOT one word of the body**, and no line of the probe's measured
+    tables is touched — the actuals stay exactly as measured on 2026-07-25 and the
+    front matter says what they are actuals OF.
+  - `docs/development/SCHEDULER.md` — the same four fields, body untouched.
+  - `docs/architecture/CORPUS-STANDARD.md` — §5's governed table gains the two rows, at
+    the END of the table where a parallel retrofit merges mechanically; §5's "Not yet
+    governed" table loses `RETRIEVAL-SUBSTRATE.md` and loses `SCHEDULER.md` from the
+    shared `SCHEDULER.md, NOTIFICATIONS.md` row (`NOTIFICATIONS.md` STAYS — it is UI's
+    and is not retrofitted here). Shared with FW-16 and COFF-8 below and with every
+    other retrofit worker running now.
+  - `docs/development/CLAIMS.md` — this block.
+  **READ, NEVER EDITED**: `bio-plane/src/store.mjs` (29,465 lines, measured with
+  `wc -l` on 2026-09-14, `grep -a` throughout — the SCHEDULER block's
+  `#schedConsumers` registry at :1980 and `bundles_fts` at :744), `bio-plane/src/query.mjs`
+  (1,450 lines), `bio-plane/src/index.mjs`, `bio-plane/src/calibration.mjs`,
+  `bio-plane/test/scheduler.test.mjs`, `docs/architecture/BIO_System_Design.md`,
+  `docs/development/DEBT.md`, `docs/development/QUEUE.md`.
+  **NOT** any `bio-plane/**` source, **NOT** `docs/development/QUEUE.md` (CONDUCT's sole
+  ground — the REC-80 row flip is CONDUCT's), **NOT** `DECISIONS.md`, **NOT** `DEBT.md`,
+  **NOT** `CLAUDE.md`. No id minted (`mintid` not called: the item allocates none).
+  NO DEPLOY, NO LIVE CALL, NO PUSH, NO MERGE.
+concurrency: checked over the register 2026-09-14 — three live claims (FL-10, FL-6,
+  D-297), none naming any path above. `docs/architecture/CORPUS-STANDARD.md` is the one
+  contended file: other retrofit workers hold their own worktrees and append their own
+  §5 rows, which is why the rows go at the END of the governed table.
+released: 2026-09-14 by the corpus-retrofit worker. Both documents carry front matter per
+`CORPUS-STANDARD.md` §3 and both are in §5's governed table; the governed set is 24
+documents and `node tools/corpuscheck.mjs` reports 0 fail, exit 0 read unpiped.
+`RETRIEVAL-SUBSTRATE.md` declares 6 incomplete sections, `SCHEDULER.md` 4. The three
+negative-control arms were run on `SCHEDULER.md`, each ALONE, each failing exactly once and
+naming the file, with the file restored by `cp`-back and verified by sha256 AND `cmp`
+(b957f650…, 12,717 B) after every arm; the over-strictness arm is the final tree at 0 fail.
+`node tools/gates.mjs` GREEN, class DOCS: 19/19 doc-facing suites, 1,118 assertions, UI
+harnesses green, `plancheck --local` 0 fail 0 warn. `docs/DECIDED.md` regenerated (734
+rulings). Nothing in `bio-plane/**` was touched and no id was minted.
+
+## CLAIM 2026-09-14 FRAMEWORK (FW-16 — `DOCUMENT-PROFILES.md` gets front matter; the area is DORMANT and CONDUCT answers-for, so this worker writes the Status/Place/Incomplete judgment)
+session: corpus-retrofit worker, one worktree for REC-80 + FW-16 + COFF-8. Worktree
+  `.claude/worktrees/agent-a2c3750caa0d50a39`, branch `worktree-agent-a2c3750caa0d50a39`.
+opened: 2026-09-14
+paths:
+  - `docs/development/DOCUMENT-PROFILES.md` — FRONT MATTER ONLY, body untouched. The
+    Incomplete list carries the correction D-60's own disposition column says this file
+    owes: its `§Known gaps` first bullet ("the plane has not adopted it… still compare
+    raw hashes") is STALE, and D-60 names this document by line as repeating it. The
+    stale sentence itself is NOT rewritten — the body is not mine to edit under a
+    front-matter item, and §3 of the standard puts the honest frontier in the front
+    matter, where a reader looks first.
+  - `docs/architecture/CORPUS-STANDARD.md` — one §5 governed row; the `DOCUMENT-PROFILES.md`
+    row leaves the "Not yet governed" table. Shared with REC-80 and COFF-8.
+  - `docs/development/CLAIMS.md` — this block.
+  **READ, NEVER EDITED**: `docprofile/**` in full (four stack handlers, three registered
+  doctypes, `pipeline.mjs`, `recogniser.mjs`, `events.mjs`),
+  `bio-plane/src/index.mjs` (the plane's own docprofile import and the `op=acquire`
+  profile stamp), `docs/architecture/BIO_Content_Framework_v0_10.md` Part II §15–§16,
+  `docs/development/DEBT.md` (D-60).
+  **NOT** `docprofile/doctypes/registry.mjs` — its stale "Only ONE real type" comment is
+  **CPDF-17's**, a worker running now, and this item does not touch it in any way.
+  **NOT** any other `docprofile/**` file, **NOT** `civicos-ui/**`, **NOT** `QUEUE.md`.
+concurrency: checked over the register 2026-09-14 — no live claim names
+  `docs/development/DOCUMENT-PROFILES.md`. CPDF-17 holds `docprofile/doctypes/registry.mjs`,
+  which is disjoint from every path here.
+released: 2026-09-14 by the corpus-retrofit worker. `DOCUMENT-PROFILES.md` carries front
+matter and is in §5's governed table, home `BIO_Content_Framework_v0_10.md` Part I; 5
+incomplete sections declared. The correction D-60's disposition column says this file owed
+is made: the plane HAS adopted docprofile, `op=audit`'s duplicate sweep is discharged
+(intra-bundle only), and monitoring plus `resolveLinks`' contemporaneity bracket are what
+remain — each verified against the tree on 2026-09-14 rather than copied from the row.
+`docprofile/doctypes/registry.mjs` was not opened for edit at any point. corpuscheck 0 fail
+over 24 documents, exit 0 unpiped; gates GREEN class DOCS.
+
+## CLAIM 2026-09-14 CONTENT-OFFICE (COFF-8 — `OFFICE-FORMATS.md` gets front matter; the axis is built end to end, so the honesty is in the document's own "Nothing here is built" line and in what the axis still does not extract)
+session: corpus-retrofit worker, one worktree for REC-80 + FW-16 + COFF-8. Worktree
+  `.claude/worktrees/agent-a2c3750caa0d50a39`, branch `worktree-agent-a2c3750caa0d50a39`.
+opened: 2026-09-14
+paths:
+  - `docs/development/OFFICE-FORMATS.md` — FRONT MATTER ONLY, body untouched. The
+    document's own preamble says "**Nothing here is built**", which was true on
+    2026-07-31 and is false today (COFF-1..7); the Status says so and the Incomplete
+    list names the line, rather than the body being rewritten under a front-matter item.
+  - `docs/architecture/CORPUS-STANDARD.md` — one §5 governed row; the `OFFICE-FORMATS.md`
+    row leaves the "Not yet governed" table. Shared with REC-80 and FW-16.
+  - `docs/development/CLAIMS.md` — this block.
+  **READ, NEVER EDITED**: `bio-plane/src/formats.mjs`, `ooxml.mjs`, `docx.mjs`,
+  `formats-xlsx.mjs`, `pptx.mjs`, `pdfstructure.mjs`; `docs/development/DEBT.md` (D-124's
+  two rows, D-70), `docs/development/INTERFACE-CHANGES.md` and `INTERFACES.md` (IC-1),
+  `docs/archive/ledgers/QUEUE-2026-08.md` (COFF-1..7 as landed).
+  **NOT** any `bio-plane/**` source, **NOT** `MEASUREMENTS.md`, **NOT** `QUEUE.md`.
+concurrency: checked over the register 2026-09-14 — no live claim names
+  `docs/development/OFFICE-FORMATS.md`.
+  - AMENDED MID-ITEM, 2026-09-14 (applies to all three claims above, recorded once):
+    `docs/DECIDED.md` — **REGENERATED, not authored**, by `node tools/decided.mjs`. Owed and
+    not foreseen from the brief: front matter carries uppercase ruling markers (`SUPERSEDED`
+    in `OFFICE-FORMATS.md`'s Status) and shifts the line numbers the index cites in
+    `DOCUMENT-PROFILES.md`, so `plancheck` went RED on the stale index until it was
+    regenerated — measured, 1 fail, and the only fail in the whole gate. The diff is 6
+    insertions / 4 deletions, every one attributable to this item: two line-number
+    corrections, one new DEC-5 POINTER entry from a Status line (the same shape the index
+    already carries for `BIO_Declared_Bias_v0_1.md:3`, and it points rather than rules), and
+    the trailing-quote entry the generator takes from the last line of `CLAIMS.md`. 731
+    rulings, 204.5 KB. **NOT** hand-edited in any part.
+released: 2026-09-14 by the corpus-retrofit worker. `OFFICE-FORMATS.md` carries front
+matter and is in §5's governed table, home `BIO_Content_Framework_v0_10.md` Part I; 8
+incomplete sections declared, the first of them the document's own "Nothing here is built"
+preamble. The other seven record what the built axis does not extract and what four
+sections have been superseded by since 2026-07-31 (DEC-5, IC-1, and COFF-6's two
+measurements). corpuscheck 0 fail over 24 documents, exit 0 unpiped; gates GREEN class DOCS.

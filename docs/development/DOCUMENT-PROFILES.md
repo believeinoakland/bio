@@ -1,5 +1,35 @@
 # Document profiles: recognising what kind of document this is
 
+**Status** · The DESIGN OF RECORD for document profiling, written 2026-07-30 at Bob's direction after per-variation handling had begun spreading through the capture path, and carrying two rulings Bob made that day (monitoring is a different contract per KIND; recognising change happens in LAYERS). [BUILT] as the `docprofile/` package: four stack handlers, the six-layer pipeline with its audit `trail`, the three digests and five verdicts, the content-type axis as a second `makeRegistry()` over the one recogniser engine, and `civicos-ui/test/docprofile.test.mjs` as its harness. COMPLETE as the model — nothing in the region/digest/verdict design has been superseded — and PARTIALLY STALE as a statement of REACH, in one specific and consequential way: its §Known gaps still says the plane has not adopted the package, and the plane adopted it (FW-3/FW-4, CONSTRUCTS Steps 1–2). `DEBT.md`'s D-60 names this document by line as repeating a claim D-60 itself has since corrected; that correction is made here, in the front matter, and the body is left as written. What genuinely remains of D-60 is two of its three sites, named below. as of 2026-09-14.
+
+**Place in the system** · A level-2 design serving construct 5 of `BIO_System_Design.md` §3, *document profile and the extraction substrate*, whose level-1 home is `BIO_Content_Framework_v0_10.md` **Part I** — this package is framework §4's recogniser-and-registry shape built twice, once per axis, and Part II §16.1 (*Identify*) is the step it performs in the extraction process as built. Through change detection it also serves construct 2 (intake and capture, the monitoring contract) and construct 6 (meaning, where its referential and temporal connections are emitted as different kinds). What depends on it: `bio-plane/src/index.mjs`, the FIRST plane consumer, which imports `identify`, `doctypeFor`, `profileRecord`, `digests`, `CONFIDENCE` and `readText` from `docprofile/registry.mjs` and stamps the profile at `op=acquire`; `civicos-ui/app.html`, which carries a flattened copy produced by `tools/bundle-docprofile.mjs` with `check-semantics.mjs` failing the build on any drift between the two; and `INTERFACES.md`'s digest definitions, which cite this document.
+
+**Incomplete sections** ·
+- §Known gaps — its FIRST bullet is stale and is the one correction this retrofit owes. Measured 2026-09-14 against the tree: the plane HAS adopted the package (the import above; `identify()` and `digests()` are called at `op=acquire`), and `op=audit`'s duplicate sweep is DISCHARGED — `checkRegisterIntegrity` buckets on `profile.digests.evidentiary` when `determined === true`, beside the raw arm, though INTRA-BUNDLE only and no cross-bundle sweep exists at all. What remains of D-60 is its other two sites, both STILL RAW: monitoring compares a freshly computed sha against the recorded one with no digest and no `compare()`, and `resolveLinks`' contemporaneity bracket keys on raw `capture_sha`, so on a viewstate-churning page every fetch mints a fresh row and the bracket is always null (D-59's "strongest arm can never fire"). `compare()` has NO caller anywhere in `bio-plane/src`. The bullet's other three gaps are all still true as written.
+- §Monitoring is a different contract per kind — the ruling is [BUILT] in the package and NOT REACHED by the instance. `CONTRACT.SUBSTANCE` / `MEMBERSHIP` / `UNMONITORABLE` is declared per doctype in `docprofile/doctypes/`, and grepping `bio-plane/src` for it on 2026-09-14 finds no consumer: the plane's monitoring tick does not ask what contract the document is under. So this section describes behaviour the LIBRARY offers, not behaviour the record exhibits, and the `unmonitorable` case it names as "the system lying quietly" is the case the plane currently cannot distinguish.
+- §Content type is a SEPARATE axis from the stack — written when the axis carried one measured type. THREE are registered today: `meeting_calendar`, `meeting_agenda` (FW-15, the second measured type and the first reached through text a non-HTML container produced), and the `generic` fallback. The section says nothing about how many types exist or what the second one cost to add, which is precisely the evidence for framework §4's uniformity claim and is recorded only in the source.
+- §What the measurements showed — the evidence base has not grown since the day this was written. Its own line says the table "is small… and it will grow"; 46 days on it is the same three sources, which is the same fact §Known gaps states as "only three stacks are measured". Read the architecture's confidence and the evidence's breadth separately.
+- §Where this runs — its conditional ("the plane should import it directly WHEN monitoring, `op=audit`'s duplicate sweep and `resolveLinks`' bracket arm adopt it") has been overtaken for one of the three and not for the other two; the sentence still reads as though none had happened.
+
+**Contents**
+- [The two requirements this serves](#the-two-requirements-this-serves)
+- [What the measurements showed](#what-the-measurements-showed)
+- [The model: three kinds of region](#the-model-three-kinds-of-region)
+- [Three digests, not one](#three-digests-not-one)
+- [Two rule shapes, and the boundary is the better one](#two-rule-shapes-and-the-boundary-is-the-better-one)
+- [The failure asymmetry, which governs every default](#the-failure-asymmetry-which-governs-every-default)
+- [Fidelity has levels](#fidelity-has-levels)
+- [The handlers today](#the-handlers-today)
+- [Monitoring is a different contract per kind](#monitoring-is-a-different-contract-per-kind)
+- [Recognising change happens in LAYERS](#recognising-change-happens-in-layers)
+- [Content type is a SEPARATE axis from the stack](#content-type-is-a-separate-axis-from-the-stack)
+- [The calendar, and the false positive that forced all of this](#the-calendar-and-the-false-positive-that-forced-all-of-this)
+- [Referential and temporal connections are different things](#referential-and-temporal-connections-are-different-things)
+- [Where this runs](#where-this-runs)
+- [Known gaps](#known-gaps)
+
+---
+
 Written 2026-07-30 at Bob's direction, after the incremental handling of each
 newly-discovered variation began spreading through the capture path in an
 unstructured way. This is the design of record for that structure. Implemented as

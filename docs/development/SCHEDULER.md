@@ -1,5 +1,25 @@
 # The scheduler: one reconciling Durable Object alarm
 
+**Status** · The DECISION RECORD for the plane's periodic work, decided and built 2026-07-31 by RECORD as REC-1 (milestone M1) and approved in the item rather than by a separate ruling. [BUILT] and live: the reconciling Durable Object alarm, the `#schedConsumers` registry, earliest-wake reconciliation, idle self-termination and the two producers are all in the SCHEDULER block of `bio-plane/src/store.mjs`, with `bio-plane/test/scheduler.test.mjs` as the accepts-when. COMPLETE as the decision it records — the fork it settled (one reconciling alarm, never a Worker cron, never a second alarm) has held through every consumer added since, and each new consumer joined exactly the way this file says. NOT complete as a description of the registry AS IT STANDS: two sections still say the registry holds "the two real consumers", and it holds ELEVEN, measured in the source on 2026-09-14. The mechanism is the authority; the counts in this prose are not, which is the very argument the file makes about CPDF-13. as of 2026-09-14.
+
+**Place in the system** · A level-2 design serving construct 14 of `BIO_System_Design.md` §3, *scheduler and operations*, and through it construct 2 (intake and capture) and construct 10 (standing intent and monitoring), whose clocks are consumers of this one alarm. **That row names no level-1 document that owns the construct**: it lists this file and `INBOX-GRAMMAR.md`, and points at `BIO_Technical_Architecture_Decisions_v10.md` §10.7, whose interruption model is the RULE the plane implements — recover by re-deriving outstanding conditions from durable state, never by trusting a signal — while §10.7's own mechanisms are retired (that document's front matter says so). This file is the WHY the next periodic consumer inherits, and it is cited by name in `store.mjs` at every site where a consumer was appended.
+
+**Incomplete sections** ·
+- §The mechanism — stale in its count. "The two real consumers are ALWAYS due when the alarm fires" described a registry of two on 2026-07-31; `#schedConsumers` holds ELEVEN real entries today (selection-sweep, task-drain, archive-monitor, connection-derive, overdue-scan, queue-renotify, monitor-cadence, ai-run-reap, capture-request-drain, ai-run-wake, calibration-reprobe — read from `store.mjs` on 2026-09-14), and most are INTERVAL consumers due only at their own anchored `next`, which is the other arm the same paragraph describes. The two producers it names are still the two producers; the always-due claim is now true of two entries out of eleven.
+- §The test seam — the same stale count, one sentence further: "unset → the registry is exactly the two real consumers" is false. Unset, the registry is the eleven real consumers and no probe; the seam itself is unchanged, still `SCHED_PROBE`-gated and still inert in production.
+- §I5 note — true of REC-1 and true of nothing since. Consumers appended later DO carry schema tables (`calibration_subjects`, `monitor_fired`, `monitor_tick_epoch`), so this section describes the schema footprint of the ITEM that created the scheduler, not the footprint of the scheduler as it stands, and a reader taking it for the latter would conclude the alarm owes `op=purge` nothing.
+- §The eleventh consumer — correct today, verified against the registry on 2026-09-14, and fragile in exactly the way the section itself diagnoses: it convicts CPDF-13 of pinning a count in prose and then pins its own. One more consumer makes "the eleventh entry" wrong, and nothing in the gate will notice.
+
+**Contents**
+- [The decision](#the-decision)
+- [Why the DO alarm and not a Worker cron](#why-the-do-alarm-and-not-a-worker-cron)
+- [The mechanism, and how the next consumer joins](#the-mechanism-and-how-the-next-consumer-joins)
+- [The eleventh consumer, and what it costs a group (CPDF-13, D-183)](#the-eleventh-consumer-and-what-it-costs-a-group-cpdf-13-d-183)
+- [The test seam](#the-test-seam)
+- [I5 note](#i5-note)
+
+---
+
 Decided and built 2026-07-31 (session record-agent-1, QUEUE.md REC-1, milestone
 M1). This is the WHY the next periodic consumer inherits; the mechanism lives at
 the top of the SCHEDULER block in `bio-plane/src/store.mjs`, and its accepts-when
