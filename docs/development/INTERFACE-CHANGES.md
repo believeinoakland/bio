@@ -5992,3 +5992,106 @@ which the entry offered as the COUNTER shape and nobody preferred only on cost. 
 halves of the ACCEPTED change are untouched; this addendum changes only the vehicle. The
 premise's failure is recorded here rather than worked around because a record that quietly
 adjusts its own accepted reasoning is the drift class this file exists to prevent.
+
+## IC-83 · I5: THE CONTENT ROW — a first-class `content` table, minted lazily on first edge, content-addressed, so a leg can point at a PART of a document · PROPOSED 2026-09-14 (BOB #10, enacting DEC-23 / D-164 under Bob's rulings of 2026-09-14) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I5 (the store schema), currently **1.10.0 STABLE**
+- **Proposer:** session BOB #10, 2026-09-14, from `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §6
+  (the mechanism, option (c)) under the doctrine Bob ruled the same day (§5.1–5.8), the design
+  being `BIO_Content_Framework_v0_10.md` Part II §18 piece 1
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `RECORD` (owner), `UI` (the composer emits the extent; the leg display
+  shows it), `FRAMEWORK` (dormant — CONDUCT answers for it in writing; the extent grammar is IC-1's
+  union, FRAMEWORK's), `SKILL` (the assistant will mint rows later, 5.7)
+- **Change class:** ADDITIVE — one new table, one new index, one nullable column on two existing
+  tables, populated by the writer; nothing existing changes shape → MINOR bump (1.11.0)
+
+**What.** A table `content`, placed BEFORE the `host_governor` block and added to `op=purge` in
+BOTH arms (it carries `bundle_id`), rows FIRST-CLASS (an edge depends on them: never rewritten by
+re-promotion, marked `stale` when the capture's chain moves, never deleted):
+
+    content_id      TEXT PRIMARY KEY   -- hash(capture_sha, canonical extent, chain) — content-addressed:
+                                       --   two citers of one passage get ONE row by construction; no allocator
+    capture_sha     TEXT NOT NULL      -- the document (the register's trust root)
+    bundle_id       TEXT NOT NULL      -- purge + the compiler's join
+    extent_kind     TEXT NOT NULL      -- document | pdf-page | sheet-cell | slide-shape | doc-para
+                                       --   (IC-1's union unified with attestation's document|page|region;
+                                       --    `dom` REFUSED by name until CONTENT-HTML produces it)
+    extent          TEXT NOT NULL      -- the per-arm fields as JSON (page+rect · sheet+cell · slide+shape · para+run)
+    ref             TEXT NOT NULL      -- IC-1's REQUIRED human form ("page 14, top half"; "Sheet2!B7")
+    chain           TEXT               -- the transcription chain covering the extent, as it stood at mint
+    derivation_cap  TEXT               -- min over the chain's derivation steps over this extent; NULL = undetermined, STATED
+    minted_by       TEXT NOT NULL      -- a member id, 'plane' (extraction at promote), or a machine credential (5.7)
+    at              TEXT NOT NULL
+    stale           INTEGER NOT NULL DEFAULT 0   -- the capture's chain moved since mint; the row and its edges resolve, and say so
+
+plus `inquiry_basis.content_id TEXT` and `inquiry_basis_version_legs.content_id TEXT` (nullable
+during CHANGING, NOT NULL at SETTLED), each a foreign key by convention to `content.content_id`.
+The bundle-grain `target_id` columns stay: the content row is the leg's REFERENT, the bundle its
+CONTAINER, and the compiler joins through `bundle_id` as it does everywhere (D-222 rule).
+
+**Rules the writer enforces (each a refusal in the catalogue and a control in the suite):**
+an extent outside its capture's page set is refused by name (needs the page count I2 already
+carries at acquire — stored on mint); an extent with no extraction chain is refused; an unknown or
+unparseable kind covers nothing and mints nothing; `dom` refused while no producer exists; a
+whole-document leg mints a `document`-extent row — so EVERY leg targets content and there is one
+target vocabulary (5.3: no `unstated`; a citation with no stated part means the whole document);
+a legacy leg is backfilled to its `document` row on first read, deterministically, because the id is
+a hash; re-extraction marks the row `stale`, never deletes it; a machine credential may mint
+(EXTRACT) and may never attest (C-35.10 unchanged); purge clears in both arms.
+
+**What a leg may now claim (5.1, portion-scoped).** `earnedBasisRegistry` keys by content row;
+the transcription ceiling is `gradeCeiling(chain, extent)` — an attestation covering the extent
+raises it to B, a page attestation does not cover a document-extent row; the CONNECTION grade of a
+non-`document` row is UNDETERMINED and stated until readings carry position (I2), never borrowed
+from the whole document; the leg's capture grade ≤ `captureBound` as today.
+
+**Why.** DEC-23 (content is the unit; a whole document its widest extent); D-164 (every edge
+addresses a bundle or a capture; the address IC-1 emits is consumed by no edge); `schema.mjs`'s own
+stated rule that the extent column arrives with its writer. Bob's rulings of 2026-09-14 fix the
+open doctrine: a portion citation refers only to its portion; no `unstated`; the connection carries
+the reference pair; the assistant may mint. The alternatives and why (c): the study's §2 and §6.
+
+**Consumers, and what changes for each.** RECORD: the table, the writer on `checkInquiryBasis`/
+promote, the reader `earnedBasisRegistry`, purge, hygiene, the catalogue. UI: the frontmatter
+composer emits `extent` per leg and the display shows `ref` and jumps the viewer to the page or
+cell (UI's item). FRAMEWORK: nothing moves on I2 for this IC; the position-in-reading change
+(`reading_refs` gains WHERE) is a LATER IC on I2 that 5.4's determining pair and content-grain
+connections depend on. SKILL: none until the machine-mint item.
+
+**Lands first, by design:** the `pdf-page` and `document` arms on the basis leg (writer) and the
+earned-basis reads (reader) — `checkAnchor`, `extentCovers`, `derivationCap(target)` and
+`gradeCeiling` already exist for `pdf-page`, and DEC-4 already requires an OCR citation to carry
+page and rectangle. The other three arms' `covers` follow. D-225's caps precede any content-grain
+QUERY arm (D-222 stage C), not this IC.
+
+## IC-84 · I3: THE BASIS LEG NAMES ITS EXTENT — frontmatter and the target grammar admit a PART of a document, and two reads answer at content grain · PROPOSED 2026-09-14 (BOB #10, the op half of IC-83) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts), currently **14.0.0 STABLE**
+- **Proposer:** session BOB #10, 2026-09-14, with IC-83
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (the composer and the leg display), `DIST` (served surfaces —
+  NOT-AFFECTED expected), `SKILL` (the investigative run writes suggested legs — its legs gain an
+  extent or default to `document`), `RECORD`
+- **Change class:** ADDITIVE → MINOR bump
+
+**What.** (1) `bundle.md` frontmatter: a basis leg gains an optional `extent` — one of IC-1's arms
+(`{kind: pdf-page, page, rect, ref}` etc.) or `{kind: document}`; absent = `document` (5.3). C-2.8
+and C-25.10 keep the bundle-id target grammar and ADD the extent grammar (one checker, one `covers`
+per arm, called from the op and the store); a content id whose row does not exist is refused.
+(2) `op=promote`: mints or finds the content row per leg (the writer of IC-83). (3) `op=earnedbasis`
+answers the per-extent ceiling and states UNDETERMINED for the connection axis of a portion leg.
+(4) NEW read `op=content` (fixed-key, by `content_id`; member and read classes): the row, its
+`ref`, its chain and cap, its `stale` flag, and the attestations covering it — no predicate, no
+paging (D-222's fixed-key rule; the query arm is stage C, later). (5) `op=attesttext` unchanged;
+its read-back already emits the `pdf-page` form.
+
+**Two authored acts Bob ruled that are NOT in this IC and get their own:** NARROW (5.3 — a member
+makes an existing citation more specific: a new basis version against a narrower content row, the
+old retained) and TRANSCRIBE (5.2 — a member selects a portion and types its text: a new step kind
+`member(handle)` with cap undetermined, attestable by a second member, refused to the transcriber's
+own attestation). Both need the composer's selection surface first (UI), so they are decomposed
+behind IC-83/IC-84 rather than folded in.
+
+**Why the same day as IC-83:** the column arrives with its writer, and the writer is the op.
+

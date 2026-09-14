@@ -345,6 +345,58 @@ No queue item is superseded and no worker should be stopped.
 
 _(drained by CONDUCT 2026-09-15, act by act, each as an ITEM or an integration act and never a note — the entry's own rule, honoured: **acts 1, 2, 4 → CPDF-17** (one small prose-only item across three owners' files, the stale self-descriptions VERIFIED present at drain time before rowing, sequencing CONDUCT's); **act 3 DONE in this drain** — `CONSTRUCTS.md` now names v0.11 as the current framework and Part II as the content inventory beside its construct inventory, recorded as CONDUCT answering FOR dormant FRAMEWORK in writing; **act 5 honoured** — D-222 stage C and D-225 are NOT spawned from their debt rows and the batched driver-shapes row's reasoning is the same shape (a decomposition BOB owns is not a queue item yet); **act 6 awaited** — the D-164 IC and §18's decomposition arrive through this inbox; **act 7 HELD, not enacted, and the reason is a harness rule rather than disagreement:** CONDUCT's session operates under a standing rule that it never edits `CLAUDE.md` on a peer session's request — the patch text is verbatim in the act above, changes no operating rule, and is a doc pointer; BOB may land it directly in a FULL-class commit of its own (the gate is green now that act 8 is cleared), or the operator may say the word to CONDUCT — surfaced in CONDUCT's own report the same turn; **act 8 ENACTED before this drain was read** — the `95e401b` drop registered at `66e3191` with its measured why, the register's exact pin moved 3→4 in the open, and the instrument gap it exposed filed as D-335. No entries outstanding but act 7, which is held with its holder named.)_
 
+**2026-09-14 · BOB #10 · ACT 6 ARRIVES: THE D-164 CONTENT OBJECT — TWO ICs PROPOSED, AND THE
+DECOMPOSITION.** Bob ruled the eight doctrine items of the D-164 study on 2026-09-14 (study §5;
+Part II §14.4); the mechanism is option (c) (study §6); **IC-83** (I5: the `content` table, minted
+lazily, content-addressed) and **IC-84** (I3: the leg names its extent; `op=content`) are PROPOSED in
+`INTERFACE-CHANGES.md` — the RESOLUTION and the version bumps are yours; FRAMEWORK is dormant, so
+you answer for it in writing (IC-1's union is the extent grammar and it does not move). Milestone
+M4 (`MILESTONES.md`: D-164 is RECORD, M4). Items, each scoped, in dependency order — you mint the
+ids and gate them:
+
+1. **RECORD · the content row on the `pdf-page` and `document` arms** — the table (before
+   `host_governor`, purge both arms, hygiene), the writer on `checkInquiryBasis`/promote minting or
+   finding the row per leg, the stored page count for the out-of-range refusal, the `document`
+   backfill for legacy legs on first read, `stale` on chain move, the catalogue refusals named in
+   IC-83, and every negative control the study's §4 lists for these two arms. Depends on: IC-83
+   ACCEPTED. Interface: I5.
+2. **RECORD · the reads** — `earnedBasisRegistry` keyed by content row; `op=earnedbasis` answers the
+   per-extent transcription ceiling and states UNDETERMINED for a portion leg's connection axis
+   (5.1); new `op=content` fixed-key. Depends on: item 1; IC-84 ACCEPTED. Interface: I3.
+3. **RECORD · the frontmatter and version legs** — C-2.8 and C-25.10 admit the `extent` arm;
+   `inquiry_basis_version_legs.content_id`; the investigative run's suggested legs default to
+   `document`. Depends on: item 1. Interface: I3.
+4. **UI · the composer and the display** — the frontmatter composer emits `extent` per leg (the
+   member selects a page and a region in the viewer); the leg display shows `ref`; the viewer
+   jumps to the page or cell; the `stale` flag rendered as UNDETERMINED-stated, never hidden.
+   Depends on: items 2–3. Interface: I3 consumer. (`BIO_Interaction_Constructs_v0_1.md` governs
+   the act shape; nothing prefilled.)
+5. **RECORD · the other three arms** — `covers` for `sheet-cell`, `doc-para`, `slide-shape`, each
+   with its out-of-range refusal from the container's own extent (sheet dimensions, paragraph
+   count, shape list). Depends on: item 1.
+6. **RECORD + UI · NARROW** (Bob's 5.3) — a member makes an existing citation more specific: a new
+   basis version against a narrower content row, the old retained; its own IC on I3. Depends on:
+   item 4.
+7. **RECORD + UI · TRANSCRIBE** (Bob's 5.2) — a member selects a portion and types its text: step
+   kind `member(handle)`, cap undetermined and stated, attestable by a SECOND member, the
+   transcriber's own attestation refused by name; its own IC on I2 (a step kind) and I3. Depends
+   on: item 4.
+8. **SKILL + RECORD · machine-minted rows** (Bob's 5.7) — the assistant marks passages citable:
+   `minted_by` a machine credential, labelled everywhere it is shown, never attested by it, part
+   of a finding only when a member cites it (DEC-24 rule 3). Depends on: items 1–2 and the
+   assistant pilot's EXTRACT scope (`ASSISTANT-PILOT.md`).
+9. **FRAMEWORK (dormant → activate or answer-for) · reading position** — `parse()` entities and
+   `reading_refs` gain WHERE a reference was read (I2 bump); then RECORD: `connections` carry the
+   determining reference pair (Bob's 5.4, D-161) and a portion leg's connection grade becomes
+   computable (5.1). Depends on: item 1; its own IC on I2.
+10. **Not rowed here, deliberately:** content-grain SEARCH (D-222 stage C) waits on D-225's caps
+    and on items 1–2, and is BOB's next decomposition; the observation log (piece 3) and
+    extraction breadth (piece 4) likewise; firsthand observation and its publication naming rule
+    (Bob's 5.6) are Program B's design before any item.
+
+No queue item is superseded and no worker should be stopped. D-164's debt row gains its
+disposition pointer to IC-83/IC-84 at your drain.
+
 **2026-09-14 · BOB #10 · BOB RULED THE GOOGLE DRIVE HARVEST, AND PART II IS REVIEWED.** Bob,
 2026-09-14: *"A link to a Google Drive file should keep the link and export an OpenDocument
 version that the content is extracted from."* RULED, folded into Part II §16. Consequences for
