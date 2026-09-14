@@ -3048,3 +3048,4 @@ The one collision that would matter is a second session sharing the scratch name
 (`.env`'s own warning: "do NOT share a scratch namespace between concurrent sessions, they
 will purge each other"), and the probe measures scratch's starting state and prints it, so a
 foreign occupant is visible rather than assumed absent.
+released: 2026-09-13 by CONDUCT #9 at integration — merged on `main` and verified on the MERGED tree: battery 181/181 · 11,080, `coverage --strict` exit 0 read unpiped, UI harness exit 0, `mintid --audit` 0 breaks. VF-4 done — the IS build plan is COMPLETE; D-323+D-324 enqueued as one item, D-325 filed on the confinement finding.
