@@ -3551,3 +3551,18 @@ FIRST `as of`. **It had passed minutes earlier only because the file was uncommi
 the date was being compared against its 2026-08-01 commit. That bound on the instrument
 belongs in the suite that drives it rather than in a report nobody re-reads, which is the
 only reason a path outside the claim is touched at all.
+released: 2026-09-14 by the M0-26 worker. Landed on branch `worktree-agent-a64d514be75dea71a`
+across four commits (`ad9fdae`, `f3b63c4`, `821ebf9`, `bb1a2ca`); NOT pushed and NOT merged —
+CONDUCT integrates. All seven documents are dispositioned: four retrofitted and rowed into
+`CORPUS-STANDARD.md` §5's governed table, three archived and indexed in `docs/archive/README.md`
+with every reader repointed in the archiving commit. Gates on the final tree: `node tools/gates.mjs`
+**GREEN, class FULL** — battery 187/187 · 11,323 assertions · 224.3s, `coverage --strict` exit 0
+read unpiped, UI harness exit 0, `plancheck --local` 0 fail 0 warn with *"design corpus: 24
+governed document(s), 0 front-matter failure(s)"*; bare `plancheck` fails on UNPUSHED alone.
+`corpuscheck` 0 fail over the whole governed set. `mintid --list` floors identical in all 21
+namespaces before and after the moves. Seven negative-control arms run and recorded at their
+sites, and two of them found real defects — one in this item's own front matter, two in
+instruments the archive move narrowed. Nothing is owed to a future actor by this release; the
+handoff acts that belong to CONDUCT (the `landed:` line, and the `QUEUE.md` locator lines for a
+plan that is now in the archive) are named in the worker's report with their exact text, because
+a note in a released claim is not an item.
