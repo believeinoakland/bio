@@ -21,12 +21,18 @@ produced knowledge nothing else would have: the Legistar viewstate measurement, 
 WordPress byte-identity, the relative calendar window. What went wrong is that
 discovery mode did its job and was never exited. This document exits it.
 
-**This document is the inventory and the evidence. The FRAMEWORK it argues for is
-`BIO_Content_Framework_v0_10.md`, written 2026-07-30 after Bob corrected the framing
-of this one: it is not that discovery has finished, but that discovery will continue
-for a long time and the framework's job is to make each new surprise cheap. That
-document's section 9 states the cost of absorbing each kind of new thing, and that
-table is its actual specification.**
+**This document is the CONSTRUCT inventory and the evidence. The FRAMEWORK it argues for is
+`BIO_Content_Framework_v0_10.md` — now at **v0.11** (2026-09-15; the file keeps its `v0_10`
+name so every `framework:LINE` citation stays exact), Part I written 2026-07-30 after Bob
+corrected the framing of this one: it is not that discovery has finished, but that discovery
+will continue for a long time and the framework's job is to make each new surprise cheap.
+Part I's section 9 states the cost of absorbing each kind of new thing, and that table is its
+actual specification. **Part II (§§14–19) is the CONTENT inventory that sits beside this
+construct inventory** — content's role and model, the forms it takes, the extraction process
+as built, how it is organized and reached, and the central gap stated once — every construct
+there marked BUILT / DESIGNED-not-built / GESTURED / ABSENT and cited at `51d128a`.**
+*(Framework-version and Part II pointer recorded 2026-09-15 by CONDUCT, answering FOR the
+dormant FRAMEWORK area in writing per the dormant-owner rule — the 2026-09-15 inbox's act 3.)*
 
 ## Purpose of this document
 
