@@ -3678,3 +3678,64 @@ THIS RELEASE. Two matters for CONDUCT are stated as ACTS in the worker's report,
 neither is a precondition for merging this: re-counting `CORPUS-STANDARD.md`'s own front-matter
 bullet for §5 once the parallel retrofit acts have all merged, and three ledger rows this item
 measured as stale (D-109, D-60's remaining arms, and the ruling count carried in `CLAUDE.md`).
+## CLAIM 2026-09-14 M0 (M0-26 — CONDUCT's group of the not-yet-governed designs: retrofit the live ones, ARCHIVE the closed ones, every pointer in the same commit)
+session: worker (worktree `.claude/worktrees/agent-a64d514be75dea71a`, branch `worktree-agent-a64d514be75dea71a`)
+opened: 2026-09-14
+verdicts, by `QUEUE.md` `### M0-26`'s criterion, each with its evidence in the report:
+**ARCHIVED** `IS-BUILD-PLAN.md` (43/43, QUEUE's `## IS BUILD PLAN — STATUS` header says COMPLETE
+2026-09-13), `CONFORMANCE-AND-INTAKE-ARC.md` (`planning-hygiene.test.mjs`'s own exemption
+reads *"closed migration architecture; all eight steps executed and superseded by the live
+plane"*), `PROCESS-INVENTORY.md` (a 2026-08-01 research snapshot; its six findings are landed
+or absorbed, two dated mentions only). **RETROFITTED** `INBOX-GRAMMAR.md` (live contract,
+C-19.1), `PRACTICE-SURVEY.md` (SK-3's `SURVEY_SOURCE` in shipped plane code), `RETRIEVAL-PROBE.md`
+(`RETRIEVAL-SUBSTRATE.md`'s companion and the actuals `architecture/README.md` points at),
+`FINDINGS-WORKPLAN.md` (**F9 is still open** — `INVESTIGATIVE-SESSION.md:1211` and
+`connections-sidebar.test.mjs` both say so, so not every item it plans has landed).
+paths:
+  - `docs/development/{INBOX-GRAMMAR,PRACTICE-SURVEY,FINDINGS-WORKPLAN,RETRIEVAL-PROBE}.md` — front matter.
+  - `docs/development/{IS-BUILD-PLAN,CONFORMANCE-AND-INTAKE-ARC,PROCESS-INVENTORY}.md` → `docs/archive/` (`git mv`).
+  - `docs/archive/README.md` — the three index rows, and the do-not-move list amended.
+  - `docs/architecture/CORPUS-STANDARD.md` — §5's governed table (four rows) and the two CONDUCT
+    rows removed from "Not yet governed"; Status `as of`.
+  - `docs/architecture/BIO_System_Design.md` — construct 8's home bracket only, the `IS-BUILD-PLAN.md` locator.
+  - POINTER MOVES ONLY, nothing else in these files: `tools/mintid.mjs` (`QUEUE_CORPUS`),
+    `bio-plane/scripts/coverage.mjs` (`OWED_ANCHOR`), `bio-plane/test/owed-controls.test.mjs`,
+    `bio-plane/test/mintid.test.mjs`, `bio-plane/test/planning-hygiene.test.mjs`
+    (`EXEMPT_ORDER_OF_WORK`), `civicos-ui/test/connections-sidebar.test.mjs`,
+    `docs/development/kickoffs/{SKILL,README,UI}.md`, `docs/development/VERIFICATION.md`.
+  - `docs/DECIDED.md` — regenerated (`node tools/decided.mjs`), never hand-edited.
+  - `docs/development/MEASUREMENTS.md` — the mintid floor before/after row.
+  - `docs/development/CLAIMS.md` — this block.
+  **READ, NEVER EDITED**: `docs/development/QUEUE.md`, `CLAUDE.md`, `docs/development/DECISIONS.md`
+  (the row says any pointer that must move in those three is CONDUCT's at integration, reported
+  with exact old and new text), `docs/development/INVESTIGATIVE-SESSION.md`,
+  `docs/development/research/**`. **NOT** `bio-plane/src/**`, **NOT** any bundle or `release/**`,
+  **NOT** `civicos-ui/app.html`, **NOT** `newgroup/**`. No deploy, no version bump, no push, no merge.
+concurrency: checked over the register 2026-09-14 — no live claim names `docs/architecture/CORPUS-STANDARD.md`,
+the seven documents, or the pointer files above.
+
+### AMENDMENT 2026-09-14 to the M0-26 claim above — ONE PATH ADDED, and the reason is the control's own finding
+`bio-plane/test/corpuscheck.test.mjs` — its `NEGATIVE CONTROL:` block ONLY, one added
+paragraph, no assertion touched. The three declared arms ran as declared against
+`docs/development/INBOX-GRAMMAR.md` at `ad9fdae`; the BASELINE arm came back RED and the
+defect was in this item's own `PRACTICE-SURVEY.md` Status, which said *"the vendor claims
+are as of 2026-08-01"* ahead of its trailing `as of 2026-09-14` — `corpuscheck` reads the
+FIRST `as of`. **It had passed minutes earlier only because the file was uncommitted**, so
+the date was being compared against its 2026-08-01 commit. That bound on the instrument
+belongs in the suite that drives it rather than in a report nobody re-reads, which is the
+only reason a path outside the claim is touched at all.
+released: 2026-09-14 by the M0-26 worker. Landed on branch `worktree-agent-a64d514be75dea71a`
+across four commits (`ad9fdae`, `f3b63c4`, `821ebf9`, `bb1a2ca`); NOT pushed and NOT merged —
+CONDUCT integrates. All seven documents are dispositioned: four retrofitted and rowed into
+`CORPUS-STANDARD.md` §5's governed table, three archived and indexed in `docs/archive/README.md`
+with every reader repointed in the archiving commit. Gates on the final tree: `node tools/gates.mjs`
+**GREEN, class FULL** — battery 187/187 · 11,323 assertions · 224.3s, `coverage --strict` exit 0
+read unpiped, UI harness exit 0, `plancheck --local` 0 fail 0 warn with *"design corpus: 24
+governed document(s), 0 front-matter failure(s)"*; bare `plancheck` fails on UNPUSHED alone.
+`corpuscheck` 0 fail over the whole governed set. `mintid --list` floors identical in all 21
+namespaces before and after the moves. Seven negative-control arms run and recorded at their
+sites, and two of them found real defects — one in this item's own front matter, two in
+instruments the archive move narrowed. Nothing is owed to a future actor by this release; the
+handoff acts that belong to CONDUCT (the `landed:` line, and the `QUEUE.md` locator lines for a
+plan that is now in the archive) are named in the worker's report with their exact text, because
+a note in a released claim is not an item.

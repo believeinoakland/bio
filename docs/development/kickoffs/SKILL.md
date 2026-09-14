@@ -2,16 +2,22 @@
 
 Activated 2026-08-10 by CONDUCT, into the slot UI-53 freed when its status was corrected
 from `running` to `done`. Read `CLAUDE.md` first, then this, then your item's row in
-`IS-BUILD-PLAN.md` (**the plan is the authority for SCOPE**; `QUEUE.md`'s SKILL section
-carries STATUS and dependency and nothing else). Before making a change another session
+`docs/archive/IS-BUILD-PLAN.md` (**the plan is the authority for SCOPE**; `QUEUE.md`'s
+SKILL section carries STATUS and dependency and nothing else). **The plan is in the
+ARCHIVE since 2026-09-14 (M0-26)** — it closed at 43/43 and closed history is not edited
+in place, which does not make it any less the authority for the scope of the rows it
+placed; `decided.mjs` and `mintid` both scan `docs/archive/**`. Before making a change another session
 must know about, read `ORCHESTRATION.md`, "COMMUNICATING A CHANGE". Before raising any
 question, run `node tools/decided.mjs "<the subject>"` — 610 rulings, and only 12% of them
 are in `DECISIONS.md`.
 
-Design sources, in authority order: `IS-BUILD-PLAN.md` §SK rows, `INVESTIGATIVE-SESSION.md`
-(§5 composition, §9's five kinds, §14 bias, §14b.4 the fence rule, §2 CHECK-first),
-`IS-SWEEP-2026-08-07.md` §3 (the PRACTICE-SURVEY prohibitions) and §4b.7,
-`PRACTICE-SURVEY.md` itself, and `DECIDED.md` for anything already ruled.
+Design sources, in authority order: `docs/archive/IS-BUILD-PLAN.md` §SK rows,
+`docs/development/INVESTIGATIVE-SESSION.md` (§5 composition, §9's five kinds, §14 bias,
+§14b.4 the fence rule, §2 CHECK-first), `docs/archive/IS-SWEEP-2026-08-07.md` §3 (the
+PRACTICE-SURVEY prohibitions) and §4b.7, `docs/development/PRACTICE-SURVEY.md` itself,
+and `docs/DECIDED.md` for anything already ruled. **Two of the five are in the archive
+and both are named at their real paths** — the sweep has been there since 2026-08-10 and
+was still cited bare here, which is the defect M0-26 found while moving the plan.
 
 ## The one thing that makes this area different, and it is not a style note
 
@@ -37,7 +43,8 @@ FL-3's table or in a C-number.** Write the judgement; cite the fence.
 C-number and belongs to the plane — SK-3 cites `PL-3`'s landed boilerplate check rather
 than adding one), **NOT** `civicos-ui/**`, **NOT** `agent-worker/**`, **NOT**
 `docs/development/QUEUE.md` (CONDUCT is its only writer), **NOT**
-`docs/development/IS-BUILD-PLAN.md`. Claim your paths in `CLAIMS.md` before editing.
+`docs/archive/IS-BUILD-PLAN.md` (and **NOT** anything else under `docs/archive/` — closed
+history is never edited in place). Claim your paths in `CLAIMS.md` before editing.
 
 ## The items, in order
 

@@ -52,6 +52,9 @@ source of Bob's published review).
 | `IS-SWEEP-2026-08-07.md` | the investigative-session sweep; its sequencing was enacted into `QUEUE.md` and superseded by `IS-BUILD-PLAN.md` |
 | `kickoffs/BOB-HANDOVER-2026-08-04.md` | a handover to a session that has since been replaced twice |
 | `kickoffs/CONDUCT-BOOTSTRAP.md` | the first CONDUCT bootstrap, superseded by `kickoffs/CONDUCT.md` |
+| `IS-BUILD-PLAN.md` | the investigative AI's build plan, 2026-08-07 — six tracks, forty-three rows, decomposed out of `INVESTIGATIVE-SESSION.md` v3 §18. **COMPLETE, and complete is why it is here**: `QUEUE.md`'s `## IS BUILD PLAN — STATUS` section records VF-4, the last row, landed and verified live on 2026-09-13, every row done, satisfied before scheduling, or superseded with its successor named. It OWNS the ids (`PL-`, `FL-`, `SK-`, `VF-`, `DS-` and four of `UI-`) as `| <ID> |` track rows, so `mintid` still reads its floors — through the directory entry above, measured identical either side of the move. **Three things READ it from disk and were repointed in the same commit**: `bio-plane/scripts/coverage.mjs` (`OWED_ANCHOR`, VF-1's owed-controls ledger), `bio-plane/test/owed-controls.test.mjs`, and `civicos-ui/test/connections-sidebar.test.mjs`. **Archived WITH ITS ONE RESIDUE STATED**: VF-1's owed controls 2, 4 and 5 are still OUTSTANDING and pinned in `coverage.mjs`, because PL-16 was reshaped by DEC-72 rather than landed |
+| `CONFORMANCE-AND-INTAKE-ARC.md` | the July 24, 2026 work plan for making the Cloudflare plane conformant and rebuilding the retired plane's acquisition tooling. Closed on the repository's OWN recorded judgment rather than a fresh one: `bio-plane/test/planning-hygiene.test.mjs` has carried it as an EXEMPT order-of-work list since the status-marker convention arrived, with the reason *"closed migration architecture; all eight steps executed and superseded by the live plane"*. That exemption is repointed here rather than deleted — a reason that is still true stays on the record, and the suite's own staleness check reads the file by path |
+| `PROCESS-INVENTORY.md` | the 2026-08-01 research pass mapping every process the system offers a user onto the path. A dated SNAPSHOT, and it says so: its instrument counted 108 declared ops and 34 the member UI reached, on that day. Its six findings are landed or absorbed — finding 3's never-built `cite` half is built (`civicos-ui/app.html` calls `op=cite`), finding 6's `to be named` placeholder counterparty is gone from the surface, findings 2 and 4 are D-127's. Nothing reads it; its two references are dated companion listings in `docs/development/research/`, the same shape those files already use for `LAYERS.md`, archived since 2026-08-10. **The sibling pass it was produced beside stayed LIVE** — `PRACTICE-SURVEY.md` is the lookup source SK-3's prohibition set names from shipped plane code, which is the whole of the difference |
 | `apps-script-README.md` | the Apps Script accelerator's notes. **That runtime no longer exists** — the plane is a Cloudflare Worker |
 | `CASE-AS-PRODUCTION.md` | DEC-72's design — a case is a production of a project. **BUILT, not abandoned**, which is why it reads differently from everything else in this table: CASE-1 … CASE-6 landed it between 2026-08-10 and 2026-09-10, its ruled-and-not-yet-built banner came down at CASE-6, and `docs/BIO_DATAPLANE_STATE.md` v33 is now the description of what RUNS. Archived here rather than deleted because `decided.mjs` and `mintid` both scan `docs/archive/**`, so every ruling in it stays findable. **It is archived WITH ITS ONE GAP STATED IN THE BANNER** — clause 6 (a finding serving many cases) is built in the format and on the surface and still refused by the plane, `DEBT.md` D-309 — because filing a design as finished with a clause unbuilt is the stale-document defect this project keeps paying for, and the honest way to archive it is to say so at the head |
 
@@ -116,7 +119,12 @@ of `DEBT.md` stay whole for the same kind of reason.
 ## Adding to the archive
 
 Move the file with `git mv`, add a row above saying what it was and why it closed, and
-**re-run `node tools/mintid.mjs --list` to confirm no floor fell.** Do not move anything
-that code reads from disk — today that is `DECISIONS.md`, `kickoffs/CONDUCT.md`,
-`IS-BUILD-PLAN.md` and `INVESTIGATIVE-SESSION.md` — and do not move a file `plancheck`
-names.
+**re-run `node tools/mintid.mjs --list` to confirm no floor fell.** Do not move a file
+`plancheck` names. Anything code READS FROM DISK — today that is `DECISIONS.md`,
+`kickoffs/CONDUCT.md` and `INVESTIGATIVE-SESSION.md` — may move only if **every reader
+is repointed in the same commit**, and the rule is written that way as of 2026-09-14
+because `IS-BUILD-PLAN.md` was on this list and moved anyway: M0-26 closed it against
+`QUEUE.md`'s criterion and carried its three disk readers with it. **The list is a warning
+about READERS, not a permanent exemption.** What it forbids is moving a file and leaving a
+reader behind — a silent break that neither `decided.mjs` nor `mintid` scanning this
+directory can undo, because they index the CONTENT and say nothing about a stale path.

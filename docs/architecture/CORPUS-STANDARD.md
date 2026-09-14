@@ -172,6 +172,10 @@ joins the table in the same commit that gives it front matter.
 | `docs/development/CAPTURE-SCALING.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
 | `docs/development/CAPTURE-FIDELITY.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
 | `docs/development/CLIENT-RENDERED.md` | 2 | `BIO_Intake_Doctrine_v1_1.md` (§3 construct 2) | 2026-09-14 |
+| `docs/development/INBOX-GRAMMAR.md` | 2 | construct 14 has no level-1 document (`BIO_System_Design.md` §3) | 2026-09-14 |
+| `docs/development/PRACTICE-SURVEY.md` | 2 | `BIO_Interaction_Constructs_v0_1.md` | 2026-09-14 |
+| `docs/development/FINDINGS-WORKPLAN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part I §12 | 2026-09-14 |
+| `docs/development/RETRIEVAL-PROBE.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §14.2–14.3 | 2026-09-14 |
 
 ### Not yet governed — design documents that owe front matter
 
@@ -181,9 +185,16 @@ Incomplete fields need the owner's judgment.
 
 | document | owner | note |
 | --- | --- | --- |
-| `docs/development/IS-BUILD-PLAN.md` | CONDUCT | complete (43/43 rows) — a closed plan, candidate for the archive rather than for front matter |
 | `docs/development/ASSISTANT-PILOT.md` | SKILL | the assistant pilot design |
-| `docs/development/INBOX-GRAMMAR.md`, `CONFORMANCE-AND-INTAKE-ARC.md`, `PROCESS-INVENTORY.md`, `PRACTICE-SURVEY.md`, `FINDINGS-WORKPLAN.md`, `RETRIEVAL-PROBE.md` | CONDUCT | designs and studies; some are closed history and belong in the archive |
+
+**CONDUCT's seven are dispositioned, 2026-09-14 (M0-26), and the row is gone rather than ticked.** Four are
+governed above. Three were CLOSED HISTORY by the queue row's criterion — every item they plan landed or
+superseded, and nothing current builds against them — and went to `docs/archive/` with every reader repointed
+in the same commit: `IS-BUILD-PLAN.md` (43/43; `coverage.mjs`, `owed-controls.test.mjs` and
+`connections-sidebar.test.mjs` read it from disk and followed it), `CONFORMANCE-AND-INTAKE-ARC.md` (closed by
+`planning-hygiene.test.mjs`'s own standing exemption) and `PROCESS-INVENTORY.md` (a dated 2026-08-01 snapshot).
+**The archive is outside this standard (§6), so an archived document owes no front matter** — which is why a
+closed document leaves this list without ever joining the governed table.
 
 ## 6. What this standard does not govern, and why
 

@@ -169,7 +169,10 @@ const U = ctx.__U;
 
 const APP = fs.readFileSync(new URL("../app.html", import.meta.url), "utf8");
 const STORE = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
-const PLAN = fs.readFileSync(new URL("../../docs/development/IS-BUILD-PLAN.md", import.meta.url), "utf8");
+/* M0-26, 2026-09-14: the plan closed at 43/43 and moved to `docs/archive/`. The pin
+   follows the file — the verdict this arm reads is the plan's own and is exactly as
+   binding in the archive, where nothing is edited in place. */
+const PLAN = fs.readFileSync(new URL("../../docs/archive/IS-BUILD-PLAN.md", import.meta.url), "utf8");
 const ISDOC = fs.readFileSync(new URL("../../docs/development/INVESTIGATIVE-SESSION.md", import.meta.url), "utf8");
 
 /* THE REGION. Every source-reading arm below reads THIS and nothing wider, and

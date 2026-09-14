@@ -9,6 +9,18 @@
    THE SUBJECT — the harness pinned the very refusal codes its arm was about to test, and
    spelled an `op=` token that op-claims then read as a real claim. Recorded at their
    sites in the control, not smoothed. */
+/* NEGATIVE CONTROL (M0-26, run 2026-09-14, worktree agent-a64d514be75dea71a), on the
+   DISCOVERY CORPUS this item had to widen, each arm ALONE and restored by cp-back
+   verified sha256 and `cmp` at 17,291 bytes. BASELINE 244 pass 0 fail, corpus 76 docs /
+   2 headings. (A) an unregistered `## Order of work` in a live design doc -> 243 pass,
+   1 FAIL on the orphan arm, corpus 77/3 — this is the half the widening must not cost,
+   and it did not. (B) revert the widening to a plain `allDocs()` -> 243 pass, 1 FAIL on
+   the discovery floor at 1 of 1, corpus 75/1 — the exact state measured live at f3b63c4
+   when `CONFORMANCE-AND-INTAKE-ARC.md` was archived, over an entirely correct tree.
+   (C) over-strictness, nothing armed -> 244 pass, 0 fail. **The finding is (B): a
+   registered file leaving `docs/development/` silently narrowed a walk while every
+   other figure read right, and the repair is that a REGISTERED file is in the corpus by
+   construction — lowering the floor would have recorded the loss instead of fixing it.** */
 /* NEGATIVE CONTROL: (run 2026-07-31) strip the M7 token from open DEBT row D-50 (cell -> "open") -> 2 fail (the D-50 row + the aggregate); AND strip the BUILT(FW-3) marker from CONSTRUCTS "The plan" Step 1 -> 2 fail (the Step 1 item + the aggregate); each restored, 154 pass 0 fail. */
 /* Planning-drift hygiene: the M0-6 gate, on D-113's precedent.
  *
@@ -169,7 +181,13 @@ const ORDER_OF_WORK = [
    fabricate a ledger the doc never kept, so they are exempt WITH A REASON rather
    than red-lit — a judgment recorded, not guessed. */
 const EXEMPT_ORDER_OF_WORK = [
-  { file: join(DEV, "CONFORMANCE-AND-INTAKE-ARC.md"), heading: "5. Order of work",
+  /* MOVED 2026-09-14 (M0-26) from `docs/development/` to `docs/archive/` — this
+     exemption's own reason is what established the document as closed history, so
+     the file went where closed history goes. `allDocs()` does not walk the archive,
+     so the discovery guard no longer SEES this heading; the staleness check below
+     still reads the file by path, which is why the entry is repointed rather than
+     deleted: an exemption whose reason is still true stays on the record. */
+  { file: join(REPO, "docs/archive/CONFORMANCE-AND-INTAKE-ARC.md"), heading: "5. Order of work",
     reason: "closed migration architecture; all eight steps executed and superseded by the live plane" },
 ];
 
@@ -218,7 +236,23 @@ console.log("\n--- no unregistered 'Order of work' list escapes the check ---");
   const governed = new Set(ORDER_OF_WORK.map((o) => `${o.file}::${o.heading}`));
   const exempt = new Set(EXEMPT_ORDER_OF_WORK.map((o) => `${o.file}::${o.heading}`));
   const found = [];
+  /* CORRECTED 2026-09-14 (M0-26), NEVER EXEMPTED, AND THE FLOOR IS NOT LOWERED.
+     `allDocs()` walks `docs/development/` and `docs/architecture/` only. When
+     `CONFORMANCE-AND-INTAKE-ARC.md` was archived — closed history, on this very
+     registry's own recorded reason — its "5. Order of work" heading left the walk
+     and the reproducible count fell 2 -> 1, reddening a floor of 2 over an entirely
+     correct tree. Lowering the floor would have been the wrong repair: the walk had
+     stopped seeing a heading this file still governs. **A REGISTERED FILE IS PART OF
+     THE DISCOVERY CORPUS BY CONSTRUCTION**, wherever it lives — anything else lets a
+     registry entry and the walk that polices it drift apart, which is the D-113 class
+     this guard exists for. Only files the two registries NAME are added; no other
+     archived document enters, so the orphan arm's meaning is unchanged. */
   const DOCS = allDocs();
+  for (const o of [...ORDER_OF_WORK, ...EXEMPT_ORDER_OF_WORK]) {
+    if (DOCS.some((d) => d.file === o.file)) continue;
+    try { DOCS.push({ file: o.file, body: readFileSync(o.file, "utf8") }); }
+    catch { /* the staleness arm below reports a registry entry with no file */ }
+  }
   for (const { file, body } of DOCS) {
     for (const m of body.matchAll(/^#{2,3}\s+((?:\d+\.\s*)?Order of work)\b.*$/gim))
       found.push({ file, heading: m[1].trim() });

@@ -366,7 +366,7 @@ Acts for CONDUCT, each an item or an integration act:
    one small prose-only item per owner group, or folded into the owner's next touch —
    each retrofit adds the file to §5's governed table in the same commit. `--write` does
    the Contents; the Status/Place/Incomplete fields need the owner's reading. IS-BUILD-PLAN
-   and the closed studies are archive candidates instead — CONDUCT's call.
+   and the closed studies are archive candidates instead — CONDUCT's call. **MADE 2026-09-14 (M0-26): `IS-BUILD-PLAN.md`, `CONFORMANCE-AND-INTAKE-ARC.md` and `PROCESS-INVENTORY.md` archived; the other four retrofitted — `FINDINGS-WORKPLAN.md` NOT closed, F9 is still open.**
 2. **Three constructs have no level-1 home** (`BIO_System_Design.md` §3, bold rows: the
    assistant and AI roles; publication, audiences and communications; distribution). Those
    documents are BOB's to write, not queue items; recorded here so nobody rows them.
@@ -476,7 +476,7 @@ Test-estate work spanning every area. CONDUCT spawns a worker per item with a cl
 the specific files. These are cheap, they touch no plane behaviour, and they raise the
 floor everything else is judged against.
 
-### M0-26 · running — spawned 2026-09-14 by CONDUCT #10, Opus 5, worktree-isolated, background lane (holds no slot). Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on these files; if none does, this row reads `queued`. — **CONDUCT's own group of the not-yet-governed designs: retrofit the live one, ARCHIVE the closed ones, and sweep every pointer in the same commit — the archive call is CONDUCT's and it is made here, by criterion rather than by list.**
+### M0-26 · done
 milestone: M0 (background lane, holds no slot) — the design corpus standard, Bob's 2026-09-14 ruling: `docs/architecture/CORPUS-STANDARD.md` §5 "Not yet governed"
 interface: none — front matter and one row in `CORPUS-STANDARD.md` §5's governed table; no shape, no op, no behaviour moves
 depends-on: none
@@ -484,6 +484,7 @@ scope: Seven documents `CORPUS-STANDARD.md` §5 assigns to CONDUCT. **The criter
 accepts-when: front matter per `CORPUS-STANDARD.md` §3's grammar on every file named in scope, each file ADDED to §5's governed table in the same commit (`CORPUS-STANDARD.md` is itself governed — bump its Status `as of` and regenerate its Contents if a heading moves); `node tools/corpuscheck.mjs` 0 fail over the WHOLE governed set; the Incomplete list HONEST per §6 — a section incomplete in fact and unmarked is the defect, "None" only with how it was established; `node tools/gates.mjs` green (class DOCS: the doc-facing suites plus `plancheck --local`); plancheck bare 0 fail after CONDUCT's push.
 NEGATIVE CONTROL: run and recorded, on one retrofitted file, each arm ALONE — (1) the Status `as of` date pushed behind the file's last commit day → corpuscheck FAILS naming the file; (2) one heading edited without `--write` → FAILS on the Contents divergence; (3) an Incomplete bullet naming a section the document does not have → FAILS; each restored by `cp`-back verified by hash (never `git checkout --`), and the final files pass byte-for-byte (over-strictness).
 added: 2026-09-14 · CONDUCT #10 (draining the 2026-09-14 BOB #10 inbox entry, act 1 — one prose-only item per owner group; the Status/Place/Incomplete judgment is the owner's, and for a DORMANT area CONDUCT answers-for in the row and the worker writes it)
+landed: `ad9fdae`..`99cc73b` (five commits), merged on `main`. **Verdicts by criterion, with evidence: ARCHIVED `IS-BUILD-PLAN.md` (complete, 43/43), `CONFORMANCE-AND-INTAKE-ARC.md` (planning-hygiene's own exemption already called it closed migration architecture), `PROCESS-INVENTORY.md` (a dated 2026-08-01 snapshot, findings landed or absorbed); RETROFITTED `INBOX-GRAMMAR.md` (the live C-19.1 contract), `PRACTICE-SURVEY.md` (`skilldoctrine.mjs` exports its path — four of five prohibitions are a verbatim lookup against it), `RETRIEVAL-PROBE.md` (a live design's companion), and `FINDINGS-WORKPLAN.md`, which the brief did not predict: NOT closed, F9 still open, pinned by `connections-sidebar.test.mjs` — archiving it would have hidden a live finding.** Every path-form reference moved in the archiving commit (mintid's corpus, coverage's `OWED_ANCHOR`, three suites, two kickoffs, the system design's locator); dated bare-name mentions left with their precedent named. mintid floors IDENTICAL in all 21 namespaces before and after, in MEASUREMENTS.md. **THE INSTRUMENTS, three findings, all corrected at the cause and none by lowering a floor:** (1) the retrofit's own BASELINE control arm came back RED over an honest tree — a freshly retrofitted document cannot fail corpuscheck's staleness arm until it is COMMITTED (the date is compared to `git log`), and `PRACTICE-SURVEY.md`'s Status carried an earlier `as of` that the checker exec'd first; bound recorded in `corpuscheck.test.mjs`'s own NC block; (2) removing `IS-BUILD-PLAN.md` from mintid's `QUEUE_CORPUS` on the `PLAN.md` precedent scored PL/FL/SK/VF/DS at ZERO allocations while every floor stayed identical — the precedent did not transfer (`allocations()` iterates the list raw), and the before/after floor measurement this item was told to run could not see it; (3) archiving a document with a registered heading took it out of planning-hygiene's discovery corpus (floor red 1-of-1 over a correct tree) — a registered file is now in the corpus by construction wherever it lives. Gates on the branch: FULL — battery 187/187 · 11,323 (own baseline 187/187 · 11,323: the brief's ~186/~11,284 was one suite stale, BOB's `corpuscheck.test.mjs`), strict exit 0, UI harness exit 0, plancheck --local 0/0. Seven NC arms. A class defect fixed in passing: `kickoffs/SKILL.md` cited the archived `IS-SWEEP-2026-08-07.md` bare. Slack noted, not moved: REGISTER_FLOOR 4/1/1 slack pre-existed this item on the pristine tree. Also reported: a background battery notification read "exit 0" because the wrapped command ended in `echo` — the piped-exit trap in a new costume.
 
 ### M0-27 · queued — **Stale BODY sentences the four retrofits marked in front matter but could not correct — the D-106 class, one prose item: `OFFICE-FORMATS.md` "Nothing here is built"; `SCHEDULER.md` "the two real consumers" (eleven); `DOCUMENT-PROFILES.md` §Known gaps "the plane has not adopted it"; `RETRIEVAL-SUBSTRATE.md` §Serialization's viewer predicate "returns true"; `UI-PLAN.md`'s "Development is PAUSED" section; `UI-KICKOFF.md`'s never-written `BIO_UI_Design_v0_1.md` deliverable; `NOTIFICATIONS.md`'s `per-item` weight; `AUTHORITY-AND-TRUST.md` and `ARCHIVE-FALLBACK.md` "not built" preambles; `SOURCE-ACCESS.md`'s IDLE fallback; `CAPTURE-FIDELITY.md`'s ~40 cap (400).**
 milestone: M2 — stale self-description, D-106's class (the retrofits' front matter is honest; the bodies beneath still say the old thing)
@@ -1128,7 +1129,7 @@ slot frees. *(Heading restored 2026-08-10 by CONDUCT.)*
 **UPDATED IN THE SAME TURN THE SK ROWS MERGED, DELIBERATELY.** This section exists because the plan's status was unreadable for three days; leaving it stale after closing the rows it tracks would be that failure recommitted by the person who diagnosed it. Read it as of `2cd9cb6`.
 
 **This section exists because the plan's status was UNREADABLE and its absence was
-mistaken for its emptiness.** `IS-BUILD-PLAN.md` (2026-08-07) holds the scope for six
+mistaken for its emptiness.** `docs/archive/IS-BUILD-PLAN.md` (2026-08-07; archived 2026-09-14 by M0-26, complete at 43/43) holds the scope for six
 tracks; the 2026-08-07 drain deliberately did NOT copy it here ("a notification, not a
 second copy") and promised **one pointer row per wave slot** instead. **Those pointer rows
 were never written** — no `PL-`, `FL-`, `SK-`, `VF-` or `DS-` row has ever existed in this
@@ -1146,7 +1147,7 @@ rows. **WHAT IS LEFT IS NINE:**
 
 **THE ID COLUMN IS DELIBERATELY NOT FIRST, AND THE REASON IS A REAL CONSTRAINT RATHER THAN
 A LAYOUT PREFERENCE.** `mintid`'s two allocation-site shapes are `### <ID> ·` (a QUEUE.md
-item heading) and `| <ID> |` (a track table row in `IS-BUILD-PLAN.md`) — **so writing these
+item heading) and `| <ID> |` (a track table row in `docs/archive/IS-BUILD-PLAN.md`) — **so writing these
 ids in either shape here would ALLOCATE them a second time**, and `plancheck` failed exactly
 that way on this section's first draft. That failure is correct and worth keeping: **the
 plan OWNS these ids and this file TRACKS them**, and two files opening one id is the
@@ -1207,7 +1208,7 @@ landed: `a3d28ac`, merged on `main`. **THE ENDING WAS ADDED, NOT THE COMMENT COR
 
 **REC-69 HOLDS RECORD'S SLOT AND IS BLOCKED ON A JUDGEMENT THAT IS NOT CONDUCT'S.** Its branch is green on itself and unmerged; what stops it is whether `aiRuns` is `PUBLISHES` or something the four roles do not yet name — a judgement about what the record publishes, which is RECORD's call. **Guessing it to get a green push is the overclaiming this project refuses**, so it stays open rather than being closed by the scheduler. Its stale path reservation was released; the item was not.
 
-The doctrine and judgement layer of `IS-BUILD-PLAN.md`, **constrained to what a skill may
+The doctrine and judgement layer of `docs/archive/IS-BUILD-PLAN.md`, **constrained to what a skill may
 legitimately hold — which is never a gate.** It owns skill/doctrine text and no plane
 paths, so it contends with neither RECORD nor UI: this is the one plan track that can take
 a slot without a claim collision on `store.mjs`.

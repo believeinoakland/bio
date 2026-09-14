@@ -39,7 +39,20 @@
  * (7) drop `allocPattern` from the `D` namespace -> the "a number in a SENTENCE
  * still raises the floor" section loses its strict floor and the "the gap it
  * will cost is NAMED rather than silent" arm FAILS, which is the arm that came
- * out of this tool catching its own documentation poisoning its own corpus.
+ * out of this tool catching its own documentation poisoning its own corpus;
+ * (8) ADDED 2026-09-14 (M0-26), and it is the arm this suite EARNED rather than
+ * was given — delete the `"docs/archive/IS-BUILD-PLAN.md"` line from
+ * `QUEUE_CORPUS` -> THREE arms FAIL (the scratch-repo track row, the live
+ * corpus read, and "the track families that allocate as TABLE ROWS are graded
+ * rather than scored zero"), because the `"docs/archive/"` DIRECTORY entry
+ * beside it is expanded by `corpusFloor` ALONE: `allocations()` and
+ * `unregisteredNamespaces()` iterate the list raw, so the directory is a
+ * `readFileSync` that throws and is skipped. **The id FLOORS stay identical
+ * with the line gone**, which is why a before/after floor measurement cannot
+ * see this and only the suite can. Run 2026-09-14 in worktree
+ * agent-a64d514be75dea71a, armed ALONE, restored by cp-back verified sha256 and
+ * `cmp` at 63,103 bytes: 74 pass, 3 FAIL as declared; over-strictness arm
+ * (nothing armed) 77 pass, 0 fail.
  * ARMS (8)-(13) ARE D-243's AND D-242's, added 2026-08-08. THE SUBJECT WIDENED: the
  * tool now DETECTS an id allocated without it, which M0-17 judged impossible for an
  * instrument. Half of that judgement held and half did not, and the arms are split the
@@ -441,9 +454,18 @@ section("the register cannot fall behind — an unregistered prefix is FOUND, no
 {
   const nsRepo = join(SANDBOX, "nsrepo");
   mkdirSync(join(nsRepo, "docs/development"), { recursive: true });
+  mkdirSync(join(nsRepo, "docs/archive"), { recursive: true });
   writeFileSync(join(nsRepo, "docs/development/QUEUE.md"),
     "### REC-1 · done\n### ZZZ-4 · queued\nprose mentioning ZZZ-9 and INFO-2026-0001 and RFC-7231\n");
-  writeFileSync(join(nsRepo, "docs/development/IS-BUILD-PLAN.md"), "| QQ-2 | a track row |\n");
+  /* CORRECTED 2026-09-14 (M0-26), NEVER EXEMPTED: the track-row fixture used to sit at
+     `docs/development/IS-BUILD-PLAN.md`; the plan closed at 43/43 and moved to
+     `docs/archive/IS-BUILD-PLAN.md`, so the fixture follows the path `QUEUE_CORPUS`
+     names. **IT IS A NAMED PATH AND NOT THE `docs/archive/` DIRECTORY ENTRY, AND THIS
+     SUITE IS WHY**: M0-26 first removed the named path on the `PLAN.md` precedent, and
+     these three arms went red — `unregisteredNamespaces()` iterates `QUEUE_CORPUS` RAW,
+     so a directory entry is a `readFileSync` that throws and is skipped. The question
+     this arm asks is unchanged: does the TABLE-ROW allocation shape get found. */
+  writeFileSync(join(nsRepo, "docs/archive/IS-BUILD-PLAN.md"), "| QQ-2 | a track row |\n");
   const u = unregisteredNamespaces({ repo: nsRepo });
   console.log(`  scratch queue: prefixes ${JSON.stringify(u.prefixes)}`);
   t("an unregistered prefix allocating at a queue site is FOUND, in both shapes",

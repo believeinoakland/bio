@@ -1,5 +1,21 @@
 # The findings catalogue and reconciliation work plan
 
+**Status** · The LEDGER of the 2026-08-07 investigative-session sweep: seven families of findings, their relations, the three execution waves and a dated status log. Written 2026-08-07 by session BOB at Bob's direction; the detail lives in `docs/archive/IS-SWEEP-2026-08-07.md` (cited as SWEEP §n) and this file is the register over it. **Waves 1, 2 and 3 are EXECUTED** and the log records them. **It is NOT closed history, and that is the reason it carries front matter rather than joining the archive**: finding F9 is still open — `INVESTIGATIVE-SESSION.md` still carries the superseded `[BOB-4 — RULED 2026-08-07, PROVISIONAL]` text in three places and names F9 as outstanding in its final-comparison section, and `civicos-ui/test/connections-sidebar.test.mjs` pins that staleness on purpose so the delegation cannot be quietly forgotten. Complete as a catalogue of what the sweep found; incomplete as a record of what has since happened to it. as of 2026-09-14.
+
+**Place in the system** · A level-2 work plan serving construct 8, **Intent and inquiry — from goal to case**, whose level-1 home is `BIO_Content_Framework_v0_10.md` Part I §12 with `BIO_Case_Making_v0_1.md` as the reasoning record; and construct 11, **the assistant and the AI roles**, which `docs/architecture/BIO_System_Design.md` §3 states has **no level-1 document** — its homes are rulings in the ledgers plus the level-2 designs, so a finding about the investigative session has no construct document to be folded into and that is why it is registered here. The design it reconciles is `INVESTIGATIVE-SESSION.md`; the sweep it catalogues is `docs/archive/IS-SWEEP-2026-08-07.md`; the plan that consumed its Families E and G is `docs/archive/IS-BUILD-PLAN.md`, which names them among its authorities. What depends on it: `civicos-ui/test/connections-sidebar.test.mjs` reads it as the authority for where F9 sits, and `MILESTONES.md` cites finding F8. Nothing supersedes it.
+
+**Incomplete sections** ·
+- §Status log — it stops on 2026-08-07. Families E and G were handed to CONDUCT and the log never records their execution, so what actually landed has to be read off `QUEUE.md` and `docs/archive/IS-BUILD-PLAN.md` instead of off this file. The log's own "Continuous" promise — that new findings get F-numbers here — has produced no entry since.
+- §The catalogue — F9 is OPEN. Measured 2026-09-14: `INVESTIGATIVE-SESSION.md` still carries the `[BOB-4]` provisional at three sites and still names F9 itself. Family E's ten items carry no status in this file at all; they are relations and ownership only.
+- §Execution waves — the three waves are marked executed in the Status log and the section itself was written before they ran, so it reads as a forward plan for work that is behind it. Nothing here says which wave a reader is in.
+
+**Contents**
+- [The catalogue — families, findings, relations](#the-catalogue-families-findings-relations)
+- [Execution waves](#execution-waves)
+- [Status log](#status-log)
+
+---
+
 **2026-08-07, session BOB, at Bob's direction: catalogue every finding from the sweeps, map
 their relations, and execute a parallelized reconciliation.** This session coordinates via
 sub-sessions; findings discovered during execution are added HERE and the plan adjusted.
