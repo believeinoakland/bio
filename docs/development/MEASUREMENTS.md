@@ -10696,3 +10696,21 @@ liveness report (`op=selftest`, `bootstrapConfigured`), a presence guard immedia
 by `liveToken` (the bootstrap claim), a fingerprint, or `livefire`'s own denylist audit. The
 fix nonetheless closes `ADMIN_TOKEN` as well as `DAEMON_TOKEN`, because a denylisted admin
 binding on an instance with no daemon binding is the identical defect one name over.
+## 2026-09-14 · D-297/IC-82 — release 0.58.0 deployed and verified from the account (instruments: `deploy.mjs` with the derive-bindings path, `deploy-fleet.mjs`, the account API read back, `tools/fleet-posture.mjs`)
+
+All four workers serve **0.58.0** (plane 4s to serve, members 5s/8s/4s). **The first armed
+deploy through `derive-bindings` sent what the config declares and the account reads it back:
+`SELF->biosmoke7` (slug substituted — the phantom did not survive to the account),
+`AGENT_WORKER`, `OCR_WORKER`, `PDF_WORKER`, beside the kept STORE/R2/token bindings.**
+DAEMON_TOKEN survived the deploy via keep_bindings: fleet-posture still answers `daemon`,
+DEC-43's count still ZERO — so the monitoring consumers REC-26/CAP-3, armed by this deploy
+per the D-202 delegations, spend the scoped credential from their first tick. `op=audit`:
+31 checked, 21 clean, tally `C-18.9: 10` — byte-for-byte D-200's pre-existing population,
+no new finding, shipped STATED exactly as 0.56.0 and 0.57.0 were.
+
+**One deploy defect found live and fixed in the act:** `deploy.mjs`'s byte-identical
+short-circuit skipped the PUT on a release whose plane bytes matched the previous version's —
+a METADATA deploy (new VERSION var, first armed bindings) that the skip made impossible;
+`/version` sat at 0.57.0 while the rollout gate waited for a build never sent. The skip now
+requires byte-identity AND the target version already serving; bytes-only proceeds as a
+metadata deploy, with the reason printed.

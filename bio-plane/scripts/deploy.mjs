@@ -344,9 +344,24 @@ const before = await deployed();
 console.log(`before: ${before ? before.slice(0, 16) + "\u2026" : "(unreadable)"}`);
 console.log(`signed: ${want.slice(0, 16)}\u2026  ${version}  ${source.length} bytes`);
 if (before === want) {
-  console.log("already byte-identical to the signed asset; nothing to do");
-  await confirmServing(version);
-  process.exit(0);
+  /* Bytes matching is HALF the question — found live on the 0.58.0 cut,
+     2026-09-14, the first release whose plane bytes were identical to the
+     previous version's. A deploy also carries METADATA (the VERSION var, the
+     derived bindings), and skipping on byte-identity alone left /version
+     answering 0.57.0 forever while the rollout gate waited for a build that
+     was never sent. Byte-identical + already SERVING the target version is
+     "nothing to do"; byte-identical alone is a metadata deploy and proceeds. */
+  const sub = await workersSubdomain();
+  let serving = null;
+  if (sub) {
+    try { serving = (await (await fetch(`https://${slug}.${sub}.workers.dev/version`)).text()).trim(); }
+    catch { /* unknown is not "already done" */ }
+  }
+  if (serving === version) {
+    console.log(`already byte-identical AND serving ${version}; nothing to do`);
+    process.exit(0);
+  }
+  console.log(`bytes are identical but the instance serves ${serving ?? "(unreadable)"} — a METADATA deploy proceeds (VERSION var, derived bindings).`);
 }
 
 for (let attempt = 1; attempt <= 4; attempt++) {

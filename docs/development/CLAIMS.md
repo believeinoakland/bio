@@ -3492,3 +3492,15 @@ concurrency: checked over the register 2026-09-14 — DIST-4's claim above is RE
     GREW by 2`. This item's own share is the remaining 3/1/1, one new suite declaring three
     arms. `FLEET_FLOOR` UNMOVED and none owed. **NOT** any other part of this file.
 released: 2026-09-14 by CONDUCT #9 at integration — merged on `main` at `2f562d0` and verified on the MERGED tree after FL-10's guard fired at the merge and the bundle was rebuilt at the cause: battery 186/186 · 11,283, `coverage --strict` exit 0 read unpiped (floor 949/177/178 by print), UI harness exit 0, `mintid --audit` 0 breaks. D-334 closed with the class, not the instance.
+released: 2026-09-14 by DIST #2 — D-297 and the IC-82 enactment are LANDED AND SERVING:
+statement /2 (shared, refusing the unstated on both sides), assembler copy-never-default,
+newgroup installs the fleet on install AND update (wizard 131/131, both NC arms in the
+header), release 0.58.0 cut+signed (four signature NCs run; the one vacuous arm STATED with
+its reason — plane bytes identical across versions), deployed and byte-verified with all four
+/version answering 0.58.0, biosmoke7's four service bindings ARMED and read back with SELF
+slug-substituted, daemon posture retained (DEC-43 count still zero), audit at D-200's
+pre-existing 10 and nothing new. One live-found deploy defect fixed in the act (the
+byte-identical skip vs metadata deploys — MEASUREMENTS row). The newgroup WORKER deploy is
+NOT performed: installer releases are gated to Bob, and the live 0.57.0-embedded installer
+reads only the plane keys of the new manifest (additive-in-fact, IC-82's measurement), so
+nothing breaks while he decides. QUEUE row flips and IC-82's SETTLED are CONDUCT's.
