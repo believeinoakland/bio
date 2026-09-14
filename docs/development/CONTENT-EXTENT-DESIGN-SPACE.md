@@ -1,12 +1,12 @@
 # D-164 design space — the content object and the extent-carrying edge
 
-**Status** · A design-space study, 2026-09-15, by session BOB: the fixed constraints, three options for the content object and the extent-carrying edge, doctrine (Bob's) separated from mechanism (the architect's), and a dependency sketch of the build. Options and constraints, NOT a decision; the author's lean (option (c), the hybrid) is recorded as a lean. Complete as a study at `origin/main` `51d128a`; the design step that consumes it is the successor BOB's and has not begun. as of 2026-09-14.
+**Status** · A design-space study, 2026-09-15, by session BOB: the fixed constraints, three options for the content object and the extent-carrying edge, doctrine (Bob's) separated from mechanism (the architect's), and a dependency sketch of the build. Options and constraints, NOT a decision; the author's lean (option (c), the hybrid) is recorded as a lean. Complete as a study at `origin/main` `51d128a`; §5 brings the doctrine items to Bob in the shape he rules on and §6 records the mechanism decided provisionally by BOB #10 under his standing delegation (option (c), the hybrid). as of 2026-09-14.
 
 **Place in the system** · A level-2 design serving `BIO_Content_Framework_v0_10.md` Part II §18, piece 1 (D-164), and through it construct 4 of `BIO_System_Design.md` §3. It touches interfaces I5 and I3 (RECORD's) and I2 (FRAMEWORK's, dormant), and its §3 doctrine list is what goes to Bob before any mechanism is chosen.
 
 **Incomplete sections** ·
-- §3 — every doctrine item is open with Bob; nothing here is ruled.
-- §4 — a dependency sketch, deliberately unscoped; the IC on I5/I3 and the queue items are not written.
+- §3 and §5 — every doctrine item is open with Bob; §5 carries each in the shape he rules on, for the sitting after his Part II review.
+- §4 and §6 — the mechanism is decided provisionally (option (c)); the IC on I5/I3 and the queue items are written after Bob confirms Part II.
 
 **Contents**
 - [1. The fixed constraints](#1-the-fixed-constraints)
@@ -16,6 +16,15 @@
   - [(c) Hybrid — a content row minted lazily on first edge](#c-hybrid-a-content-row-minted-lazily-on-first-edge)
 - [3. Doctrine (Bob's) vs mechanism (the architect's)](#3-doctrine-bobs-vs-mechanism-the-architects)
 - [4. Build shape (dependency sketch, no scoping)](#4-build-shape-dependency-sketch-no-scoping)
+- [5. The doctrine items, in the shape Bob rules on](#5-the-doctrine-items-in-the-shape-bob-rules-on)
+  - [5.1 May a content-grain leg claim MORE on the connection axis than a document-grain one?](#51-may-a-content-grain-leg-claim-more-on-the-connection-axis-than-a-document-grain-one)
+  - [5.2 Is a member's transcription a derivation or a verification?](#52-is-a-members-transcription-a-derivation-or-a-verification)
+  - [5.3 Is `unstated` a legal extent?](#53-is-unstated-a-legal-extent)
+  - [5.4 D-161: the determining reference pair, or all supporting mentions?](#54-d-161-the-determining-reference-pair-or-all-supporting-mentions)
+  - [5.5 What is the CLAIM object, and what is its standard of proof?](#55-what-is-the-claim-object-and-what-is-its-standard-of-proof)
+  - [5.6 D-184: may a firsthand observation be CONTENT with no capture behind it?](#56-d-184-may-a-firsthand-observation-be-content-with-no-capture-behind-it)
+  - [5.7 DEC-24's boundary: may an AI extractor WRITE content rows?](#57-dec-24s-boundary-may-an-ai-extractor-write-content-rows)
+- [6. The mechanism — decided provisionally by BOB #10, 2026-09-14](#6-the-mechanism-decided-provisionally-by-bob-10-2026-09-14)
 
 ---
 
@@ -117,3 +126,134 @@ Shared across all three: (i) the extent grammar must be IC-1's arms unified with
 **Then, in dependency order:** version legs (C-25.10) → `refs` with source+target (D-163) → per-arm `covers` for `sheet-cell`/`doc-para`/`slide-shape` → **FRAMEWORK prerequisite:** `parse()` entities carry `source`, `reading_refs` gains position (I2 bump) → `connections` determining pair (D-161) → UI: composer emits extents, leg display shows `ref`, viewer jumps to page/cell → query: arm-A vocabulary, then stage-C content rows → the content-axis observation record → the claim object (Bob's).
 
 **Negative controls the discipline demands** (each a named refusal and a driven arm): an extent outside its capture's page set refused by name (needs a stored page count — absent today, 1.15); an extent with no extraction chain refused; a non-`pdf-page` anchor on a transcription refused (`checkAnchor`, exists); an unknown/unparseable kind covers nothing and mints nothing; a `dom` extent refused while no producer exists; purge clears content rows in BOTH arms; an attested extent raises a leg's ceiling to B and an unattested one does not, and a page attestation does not cover a document-extent leg; the extent's cap is never stronger than the document's chain allows, and the leg's capture grade ≤ `captureBound`; re-extraction marks the row `stale`, never deletes it, and the leg still resolves; two citers of one extent → one row (a/c) or two rows equal on extent (b); a whole-document leg stays legal and reads `document`, never NULL; a legacy leg reads `unstated`, never `document`; C-2.8 refuses a content id whose row does not exist; a machine credential may mint an extraction-derived row (EXTRACT) and may not attest (C-35.10); `meaningrows`/stage C fail closed on an absent viewer stamp.
+
+## 5. The doctrine items, in the shape Bob rules on
+
+Prepared 2026-09-14 by BOB #10 for the sitting after Bob reviews Part II; none is asked before
+that, and none blocks work — each carries the provisional the mechanism (§6) runs under. The
+shape is `kickoffs/README.md`'s: what runs provisionally, why it is ambiguous, the alternative,
+the recommendation, what reversing costs. `node tools/decided.mjs` was run on every item
+(2026-09-14) and finds none of them ruled.
+
+### 5.1 May a content-grain leg claim MORE on the connection axis than a document-grain one?
+**Question.** A leg cites page 3 of a document. On the transcription axis the tree already lets
+it earn more than the document (an attested region reaches B where the document's cap is
+undetermined). On the connection axis: does that leg earn from ALL the document's resolutions,
+or only from references read ON page 3?
+**Provisional.** The whole document's — because readings carry no position, nothing else is
+computable today (§1.9), and it is what every leg earns now.
+**Why ambiguous.** "Earn from the whole document" lets a leg citing one paragraph borrow a
+connection established by a different paragraph; "only page 3's" makes every content-grain leg
+weaker on connection than the document it sits in until readings carry position (I2).
+**Alternative.** Page-scoped earning, undetermined (stated) until position exists.
+**Recommendation.** The provisional now; page-scoped earning becomes the rule the day
+`reading_refs` carries position, and the record says which rule graded a leg. Reversing costs
+a re-grade of content-grain legs, which the earned-basis registry already recomputes.
+
+### 5.2 Is a member's transcription a derivation or a verification?
+**Question.** DEC-23 lists "member transcription" among extraction methods. A member typing what
+a scan says: a weakening derivation step (like OCR — the chain's cap is min over steps), or a
+verification (like attestation — the only route to the top)?
+**Provisional.** Neither exists: `STEP_KINDS` has no member-transcription step and `attesttext`
+attests EXISTING text; a member cannot enter text today.
+**Why ambiguous.** A member is not an engine with a calibration, so a derivation step has no
+measured cap to carry; but a member typing is also not verifying a machine's output — there is
+nothing to verify against.
+**Alternative.** (a) a derivation step `member(handle)` with cap undetermined, attestable
+afterwards like any text; (b) member-typed text IS an attestation over an image region with the
+text as its payload.
+**Recommendation.** (a): the member's typing is authored text with the provenance of an authored
+act, its cap undetermined and stated, and a SECOND member's attestation is what raises it — the
+same shape as everything else here, with no member ever grading their own act. Reversing costs
+one step kind and its check.
+
+### 5.3 Is `unstated` a legal extent?
+**Question.** Every leg today points at a whole document without saying so. Under any option
+the extent column arrives with its writer (§1.6). A legacy leg, and a member who "cannot say
+where": do they read `document` (a claim), or `unstated` (an admission)?
+**Provisional.** `unstated` for every leg minted before the column exists; `document` only
+when a member chose it.
+**Why ambiguous.** D-129's split says an absence must never be read as a value, so `unstated`
+is doctrine-consistent — but it makes the honest answer to "where in the document?" a value a
+member can pick to avoid answering.
+**Alternative.** No `unstated`: a leg must name an extent, legacy legs are migrated to
+`document` with a dated note.
+**Recommendation.** The provisional. Reversing costs a migration of legacy legs that rewrites
+history the record says it never rewrites.
+
+### 5.4 D-161: the determining reference pair, or all supporting mentions?
+**Question.** A connection between two documents through an entity is derived from resolutions;
+today it collapses to the strongest grade per capture and discards the reference. At content
+grain, does a connection carry the ONE pair of references that determined its grade, or every
+mention?
+**Provisional.** The determining pair (the study's recommendation; nothing is computable until
+I2 carries position).
+**Alternative.** All mentions, as a join.
+**Recommendation.** The determining pair as the connection's anchor, all mentions reachable by
+a query — the pair is what a reader follows to check the connection. Reversing costs nothing
+until the column exists.
+
+### 5.5 What is the CLAIM object, and what is its standard of proof?
+**Question.** Part II §18 piece 6. The framework has said since v0.1 that nothing models a
+claim; DEC-23 found the content and claim absences fail together. Whether a content object
+without a claim is worth minting is Bob's, and a claim's standard of proof is doctrine.
+**Provisional.** No claim object; a FINDING (a concluded inquiry with a required falsifier and
+composed strength) is what the record has instead, and a content row is minted for what legs
+cite whether or not a claim exists.
+**Why ambiguous.** The case-making pass argued a claim is a FIELD of a finding, not an object
+(`BIO_Case_Making_v0_1.md`); Part I §12.2 argued a claim needs a standard of proof and is
+therefore doctrine. Both may be true and the object still unnecessary.
+**Alternative.** A claim object with a standard of proof per audience.
+**Recommendation.** Bring Bob the question with the case-making pass's argument beside it;
+the mechanism does not wait (content is minted for citation, not for claims). Reversing costs
+one table if the object is later wanted.
+
+### 5.6 D-184: may a firsthand observation be CONTENT with no capture behind it?
+**Question.** Bob's reporter who attended the meeting. Is their observation content (an extent
+of nothing), or does it stay the named honest path — author a witness statement, capture it,
+cite that?
+**Provisional.** The named honest path, unnamed in any surface today.
+**Why ambiguous.** Content with no capture has no provenance chain and therefore no capture
+grade, which is the record's one axis of trust; but the honest path forces a member to fabricate
+a "document" to say what they saw.
+**Alternative.** A member-authored INFORMATION bundle whose capture IS the authored act,
+provenance = the member's attestation, grade D by construction, designed together with D-194's
+lead (the same member knowledge, before and after the search).
+**Recommendation.** The alternative, designed with D-194 as Part II §18 piece 5 says. Reversing
+costs nothing now; the mechanism treats it as a document like any other.
+
+### 5.7 DEC-24's boundary: may an AI extractor WRITE content rows?
+**Question.** A content row is an address, not a connection, so arguably not a hunch. An AI
+proposing "this passage is worth citing" is the EXTRACT role DEC-24 leaves as later work. May a
+machine credential mint content rows (option (c)'s later extractor writer)?
+**Provisional.** No machine writer; content rows are minted by a member's edge (the lazy mint)
+or by the plane's own extraction at promote.
+**Alternative.** A machine-minted row is legal, labelled `minted_by: machine`, never attested,
+and cited only by a member's act.
+**Recommendation.** The alternative, once the member-minted path exists — it is exactly
+DEC-24's EXTRACT, labelled as machine work, binding nothing. Reversing costs a column.
+
+## 6. The mechanism — decided provisionally by BOB #10, 2026-09-14
+
+Under Bob's standing delegation (mechanism is the architect's), and carrying every §5 item as
+its provisional: **option (c), the hybrid.** A `content` table whose rows are minted lazily on
+first edge, content-addressed by `hash(capture_sha, canonical extent, chain)`; a whole-document
+leg mints a `document`-extent row so every leg has one target vocabulary; a legacy leg reads
+`unstated`; rows are first-class (an edge depends on them) and go `stale`, never deleted, when
+the chain moves; dedup is by construction, no allocator; the extent grammar is IC-1's five arms
+unified with attestation's `document|page|region` and D-252's page sets, one checker, one
+`covers` per arm; `dom` refused by name until a producer exists; the first landing is the
+`pdf-page` arm on the basis leg (writer) and the earned-basis registry (reader), because
+`checkAnchor`, `extentCovers`, `derivationCap(target)` and `gradeCeiling` already exist for it
+and DEC-4 already requires the OCR citation to carry page and rectangle.
+
+Why (c) over (a) and (b), in one line each: (a) a promote-time projection makes rows derived and
+rewritable, which breaks any edge holding a minted id unless the id is content-addressed — at
+which point it is (c) with more rows; (b) four copies of one extent grammar is D-164's "built
+three times and drifts" by construction, and cannot answer "which passages mention X" at all.
+
+**What waits on Bob before the IC is proposed:** nothing in the mechanism; the §5 items shape
+the check catalogue's target grammar (5.3), the connection population (5.1, 5.4) and two later
+writers (5.2, 5.7), and each runs under its provisional. **What waits on his review of Part
+II:** the understanding the mechanism rests on, in his stated order — so the IC on I5 and I3
+is written the day he confirms it, not before.
