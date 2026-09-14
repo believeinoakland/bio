@@ -713,9 +713,32 @@ const REGISTER_FLOOR = {
      once here and once in `FLEET_FLOOR`, the documented state. `FLEET_FLOOR` is
      UNMOVED and none is owed — this item adds no fleet member and no fleet
      suite, and its own suite is a PLANE suite. */
-  arms: 942,
-  classified: 174,
-  corpus: 175,
+  /* MOVED 2026-09-14 by D-334: 942 -> 947 / 174 -> 176 / 175 -> 177, ALL THREE IN
+     THE SAME TURN and every one READ FROM THE REPRODUCIBLE FIGURE a green
+     `--strict` run PRINTED on the COMMITTED tree at `3607dda`
+     (`arms 947/942 · classified 176/174 · corpus 177/175 · GREW by 5`) — never by
+     adding a claimed delta to the numbers above.
+     **PART OF THIS RISE PREDATES THIS ITEM, AND SAYING SO IS THE POINT.** Measured
+     on the PRISTINE baseline worktree at `02c5eb6`, before a byte of this item
+     existed, the same script already printed `arms 944/942 · classified 175/174 ·
+     corpus 176/175` — so the floor arrived at this item ALREADY STALE BY 2/1/1,
+     a residue of work that landed without moving it. This item's own share is the
+     remaining 3/1/1: ONE new suite, `test/d334-monitor-credential.test.mjs`, whose
+     `NEGATIVE CONTROL:` declaration states three arms, all three RUN and recorded
+     with their declared-and-measured figures in the suite header.
+     **READ AFTER THE COMMIT, for D-238's reason, and the pre-commit run is the
+     receipt:** with the suite still UNTRACKED the same script printed the
+     reproducible `arms 944 · classified 175 · corpus 176` while naming the
+     contaminated `arms 947 · classified 176 · corpus 177` as what it had actually
+     read. Those two figures swapped places once the suite was in the commit, which
+     is exactly why a floor is only ever taken from a committed tree.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file,
+     once here and once in `FLEET_FLOOR`, the documented state. `FLEET_FLOOR` is
+     UNMOVED and none is owed — this item adds no fleet member and no fleet suite,
+     and its own suite is a PLANE suite. */
+  arms: 947,
+  classified: 176,
+  corpus: 177,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

@@ -3413,3 +3413,81 @@ this delegation is the advance telling DIST-NEXT.md said the change must carry.
 ### DELEGATION 2026-09-14 DIST (D-202) -> CAPTURE: **THE SAME DEPLOY ARMS CAP-3's ARCHIVE FALLBACK** — same mechanism, same timing, same advance telling as the RECORD delegation above; recorded separately because the consumer is yours and a shared notice is how one owner misses it.
 
 ### AMENDMENT 2026-09-14, MID-ITEM (D-297 claim) — ONE PATH ADDED: `docs/development/DEBT.md`, the D-202 row's disposition ONLY, closed by the landing above.
+
+
+## CLAIM 2026-09-14 RECORD (D-334 — a bound-but-revoked DAEMON_TOKEN must not brick monitoring: selection asks the gate's own question, and the dead binding is still NAMED)
+session: RECORD worker (worktree `.claude/worktrees/agent-a9fbda2ff149b121c`, branch `worktree-agent-a9fbda2ff149b121c`)
+opened: 2026-09-14
+authority: **the DELEGATION 2026-09-14 DIST (DIST-4) -> RECORD above**, and QUEUE.md's `### D-334`.
+paths:
+  - `bio-plane/src/store.mjs` — **the `#monitorToken()` REGION ONLY**, the contiguous span from
+    its REC-33/DEC-37 comment block through `#monitorConfigured()` and
+    `#captureRequestConfigured()`'s one-line predicate (:24285) — selection becomes
+    liveness-checked through `liveToken`, presence keeps the sync "is monitoring WIRED"
+    question, and the three async fire sites (`#fireMonitorTick`, `#fireArchiveFallback`,
+    `#fireCaptureRequest`) await the selection and REFUSE BY NAME when nothing live remains
+    instead of spending a credential the gate will refuse. Plus the one `import { liveToken }`
+    line. **NOT** the scheduler registry, **NOT** `recordSourceOutcome`, **NOT** schema,
+    **NOT** the publish/case paths, **NOT** any other span of this file.
+  - `bio-plane/test/d334-monitor-credential.test.mjs` (NEW) — the suite: a denylisted
+    DAEMON_TOKEN beside a live ADMIN_TOKEN drives monitoring END TO END through the real ops
+    (the archive-monitoring suite's miniflare shape), the three NC arms, and the honesty arm
+    driving `fleetPosture` over the same instance's own `op=selftest` answer.
+  - `docs/development/DEBT.md` — the **D-334 row's disposition only**, nothing else.
+  - `docs/development/MEASUREMENTS.md` — APPEND ONLY, this item's figures and arm results.
+  - `docs/development/CLAIMS.md` — this block.
+  - **`tools/fleet-posture.mjs` — TWO STRINGS ONLY, AND COHERENCE IS WHY.** The header's
+    `daemon-revoked` posture paragraph (:29-33) and the row `detail` at :108 both assert the
+    MECHANISM *"#monitorToken() still SELECTS it, classify() refuses it, and monitoring 401s
+    forever instead of falling back"*. After this item that sentence is FALSE, and a report
+    that describes a mechanism which no longer exists is the record overclaiming — the one
+    defect class CLAUDE.md ranks worst. **The posture NAME, its BROKEN counting, the
+    `brokenCount` field and the word "BROKEN" in the detail are UNCHANGED**: the operator's
+    daemon credential is still dead and the report must still say so (silent healing is the
+    D-106 class). Only the sentence describing what the dead credential now COSTS moves.
+    **NOT** `postureOf`, **NOT** the counts, **NOT** the exit rule, **NOT** the scrub.
+  **READ, NEVER EDITED**: `bio-plane/src/index.mjs` (`classify()` :1970, selftest :3810 — the
+  published shape does NOT move, so no IC is owed), `bio-plane/src/tokens.mjs`,
+  `bio-plane/src/livefire.mjs`, `bio-plane/test/fleetposture.test.mjs`,
+  `bio-plane/test/daemon-token.test.mjs`, `bio-plane/test/archive-monitoring.test.mjs`.
+  **NOT** `bio-plane/src/schema.mjs`, **NOT** `newgroup/**`, **NOT** `release/**`, **NOT** any
+  version bump, **NOT** `docs/development/QUEUE.md` (CONDUCT's sole ground). NO DEPLOY, NO
+  LIVE CALL.
+concurrency: checked over the register 2026-09-14 — DIST-4's claim above is RELEASED; the live
+  DIST-3 claim names `newgroup/**` and `newgroup/test/wizard.test.mjs` only, disjoint from every
+  path here. No live claim names `bio-plane/src/store.mjs`, `tools/fleet-posture.mjs` or the new
+  test path.
+  - AMENDED MID-ITEM, 2026-09-14: `bio-plane/test/daemon-token.test.mjs` — **ONE assertion
+    CORRECTED, never exempted** (:165), and the amendment is owed because the correction was
+    not foreseeable from the brief. REC-33's pin matched the LITERAL expression
+    `return (this.env && (this.env.DAEMON_TOKEN || this.env.ADMIN_TOKEN)) || null;` — a pin on
+    the SPELLING of the selection, and that spelling was the D-334 defect, so the pin was
+    holding the defect in place by name. The sentence it claims (DAEMON first, ADMIN retained)
+    is UNCHANGED and still REC-33's ruling; it now asserts the ORDER and the RETENTION
+    structurally, with the dated reason at the site. This is the SECOND time this file has
+    taken this correction — REC-46 made the same one fifteen lines above, for the same reason.
+    **NOT** its other 55 assertions, **NOT** its NEGATIVE CONTROL header (a record of past runs).
+  - AMENDED MID-ITEM, 2026-09-14: `bio-plane/dist/bio-plane.bundled.mjs` and
+    `bio-plane/dist/bio-plane.bundle.json` — **REGENERATED, not authored**, by
+    `node bio-plane/scripts/build-plane.mjs`. Owed and not foreseen from the brief: the FL-10 /
+    D-298 gate in `fleetbundles.test.mjs` requires the committed plane artifact to be a
+    byte-identical fresh build of `src/`, so ANY `bio-plane/src/**` change carries this rebuild
+    in the same turn (4 assertions went red without it on the final battery, caught and fixed
+    before the run that is quoted). It is a build artifact, NOT a deploy, NOT a version bump
+    and NOT a tag — `build-plane.mjs` writes only these two files and re-runs no signing step.
+    **NOT** `bio-plane/dist/SECRETS.txt`, **NOT** `release/**`.
+  - AMENDED MID-ITEM, 2026-09-14: `bio-plane/test/d334-monitor-credential.control.sh` (NEW) —
+    the three-arm negative-control runner, committed BESIDE its suite on the
+    `battery-provenance.control.sh` / `coverage-provenance.control.sh` precedent, so the next
+    session re-runs every arm in one step instead of re-deriving how to break the subject
+    (VERIFICATION.md step 2's own reason). It is not a battery suite and the runner does not
+    discover it.
+  - AMENDED MID-ITEM, 2026-09-14: `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR` ONLY**,
+    the standing stale-floor pattern with the reason at the site. Moved 942/174/175 ->
+    947/176/177 from the figures a green `--strict` run PRINTED on the COMMITTED tree at
+    `3607dda`, ONE KEY SET (grepped: `^  arms:` matches twice, here and in `FLEET_FLOOR`, the
+    documented state). **THE FLOOR ARRIVED ALREADY STALE BY 2/1/1 AND THAT IS MEASURED, NOT
+    INFERRED**: the same script run on the PRISTINE baseline worktree at `02c5eb6` — before a
+    byte of this item existed — printed `arms 944/942 · classified 175/174 · corpus 176/175 ·
+    GREW by 2`. This item's own share is the remaining 3/1/1, one new suite declaring three
+    arms. `FLEET_FLOOR` UNMOVED and none owed. **NOT** any other part of this file.
