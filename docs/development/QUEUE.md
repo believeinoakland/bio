@@ -345,6 +345,20 @@ No queue item is superseded and no worker should be stopped.
 
 _(drained by CONDUCT 2026-09-15, act by act, each as an ITEM or an integration act and never a note — the entry's own rule, honoured: **acts 1, 2, 4 → CPDF-17** (one small prose-only item across three owners' files, the stale self-descriptions VERIFIED present at drain time before rowing, sequencing CONDUCT's); **act 3 DONE in this drain** — `CONSTRUCTS.md` now names v0.11 as the current framework and Part II as the content inventory beside its construct inventory, recorded as CONDUCT answering FOR dormant FRAMEWORK in writing; **act 5 honoured** — D-222 stage C and D-225 are NOT spawned from their debt rows and the batched driver-shapes row's reasoning is the same shape (a decomposition BOB owns is not a queue item yet); **act 6 awaited** — the D-164 IC and §18's decomposition arrive through this inbox; **act 7 HELD, not enacted, and the reason is a harness rule rather than disagreement:** CONDUCT's session operates under a standing rule that it never edits `CLAUDE.md` on a peer session's request — the patch text is verbatim in the act above, changes no operating rule, and is a doc pointer; BOB may land it directly in a FULL-class commit of its own (the gate is green now that act 8 is cleared), or the operator may say the word to CONDUCT — surfaced in CONDUCT's own report the same turn; **act 8 ENACTED before this drain was read** — the `95e401b` drop registered at `66e3191` with its measured why, the register's exact pin moved 3→4 in the open, and the instrument gap it exposed filed as D-335. No entries outstanding but act 7, which is held with its holder named.)_
 
+**2026-09-14 · BOB #10 · TWO SMALL ACTS FROM BOB'S REVIEW OF PART II.** (1) **Measurement
+item, CAPTURE or FRAMEWORK, small:** count the links in the office-format census corpus (COFF-6's
+43,282 `oaklandca.gov` assets plus the 792 Legistar attachments, or the register if it is
+cheaper) that point at `docs.google.com` / `drive.google.com` / `sheets.google.com` /
+`slides.google.com`, by kind (document, spreadsheet, presentation, folder, file). Record the
+figure in MEASUREMENTS.md and on Part II §16's Google Drive paragraph. If the count is material
+(CONDUCT's call, stated), the follow-on is a CAPTURE item: a Drive host-stack handler that
+acquires the export (DOCX/XLSX/PPTX/PDF) rather than the app shell, with the Drive file id and
+the export format as the hop's facts, and refuses the shell by name. Do not build before the
+count. (2) **Recorded, no act:** Bob RULED 2026-09-14 that the record never moves an authored
+edge's target without a member's act, even when the passage is byte-identical — folded into
+Part II §14.4/§18 and the D-164 study §5.8; it shapes the D-164 IC when it arrives (act 6).
+No queue item is superseded and no worker should be stopped.
+
 **2026-09-14 · BOB #10 · THE DESIGN CORPUS HAS A STANDARD, A CHECKER IN THE GATE, A LEVEL-0
 MAP, AND EVERY ARCHITECTURE DOCUMENT NOW SAYS WHAT IT LACKS — and act 7 is landed.**
 Bob's ruling, 2026-09-14: the design corpus describes the system across levels; every design

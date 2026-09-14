@@ -1630,6 +1630,15 @@ held at the hunch's grade and labelled so. What the machine may never do is fixe
 attestation fence: a machine credential cannot attest text, and no machine credential
 performs an attested act. The member does the concluding.
 
+One consequence is ruled and belongs here because it governs every edge: **the record never
+moves an authored edge's target without a member's act, even when the passage is
+byte-identical** (Bob, 2026-09-14). When a publisher updates a document the monitor captures
+the new bytes as a new capture; the record may DERIVE that a cited passage is carried forward
+(byte-identical A, same text at a new position B, similar text C) and PROPOSE the
+re-anchoring; accepting it is a member's act that writes a new basis version and keeps the
+old. A leg is what a member stood behind, and nothing the machine learns later changes that
+silently.
+
 ### 14.5 Where it stands
 
 | | status |
@@ -1697,6 +1706,18 @@ are deliberately not built, each with its trigger recorded. What the office path
 yet: it extracts no TABLE as a table and no IMAGE as content (§15), only the meeting-agenda
 reader mints a reference over its text, and — as for every other format — nothing an edge
 can point at is minted from the element references it emits.
+
+**Google Drive formats — not supported, and not yet measured.** Nothing in the record or the
+code names Google Docs, Sheets or Slides (grepped 2026-09-14). They are not file formats: a
+shared Drive link serves a client-rendered application shell whose bytes carry no document
+(Part I §6's UNWATCHABLE case), and the honest routes to the bytes are Google's export
+endpoints, which yield DOCX, XLSX, PPTX or PDF that the format axis already reads, or the
+static HTML of "publish to the web". Supporting them is therefore a CAPTURE-side act — a
+host-stack handler that recognises a Drive address and acquires the export, recording the
+Drive file id and the export format as the hop's facts — not a new format. Whether it is
+worth building is a measurement: how many of the city's links point at Drive. That census has
+not been run; it is routed. OpenDocument (`.odt`, `.ods`, `.odp`) is designed for and
+deliberately not built: zero were found among 43,282 city assets.
 
 **The non-text path, in three tiers.** A PDF or an office container may need its text
 produced before anything can read it, and the intent layer runs over text from anywhere:
@@ -1805,7 +1826,10 @@ The pieces to be designed, named here and designed nowhere in this document:
 | 5 | **homes for the member's lead and firsthand observation** | D-194 and D-184, designed together | DOCTRINE — Bob's |
 | 6 | **the claim object** | the standard of proof — the design conversation Part I §12.2 already named. It cannot be built before piece 1, and piece 1 is hollow without it | DOCTRINE — Bob's |
 
-One dependency to carry into every option for piece 1: content-grain **connections** are
+Two rulings to carry into every option for piece 1. An authored edge is never re-pointed to a
+newer capture without a member's act (§14.4) — so the content row's identity includes the
+capture, a new capture is a new row, and "the same passage across versions" is a derived
+relation between rows, proposed and never applied. And content-grain **connections** are
 impossible until readings record *where* a reference was read, which is a change to the
 structure interface (I2) on the framework's side.
 

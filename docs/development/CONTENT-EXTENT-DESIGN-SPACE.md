@@ -5,7 +5,7 @@
 **Place in the system** · A level-2 design serving `BIO_Content_Framework_v0_10.md` Part II §18, piece 1 (D-164), and through it construct 4 of `BIO_System_Design.md` §3. It touches interfaces I5 and I3 (RECORD's) and I2 (FRAMEWORK's, dormant), and its §3 doctrine list is what goes to Bob before any mechanism is chosen.
 
 **Incomplete sections** ·
-- §3 and §5 — every doctrine item is open with Bob; §5 carries each in the shape he rules on, for the sitting after his Part II review.
+- §3 and §5 — seven doctrine items are open with Bob (5.8 is RULED); §5 carries each in the shape he rules on, for the sitting after his Part II review.
 - §4 and §6 — the mechanism is decided provisionally (option (c)); the IC on I5/I3 and the queue items are written after Bob confirms Part II.
 
 **Contents**
@@ -251,6 +251,9 @@ wants to re-test findings against what the body says NOW. Against: a leg is an a
 passage and a silent re-point launders it; the new chain is a different chain so the grade could
 move under the member; a published citation cannot move at all (DEC-19).
 **Alternative.** Automatic re-pointing when the cited extent is byte-identical in the new capture.
+**RULED 2026-09-14 by Bob:** *"the record never moves an authored edge's target without a
+member's act, even when the passage is byte-identical."* The recommendation below is therefore
+the mechanism, and the proposal is the whole of it.
 **Recommendation.** The record PROPOSES and the member AUTHORS: (i) a derived relation between
 content rows across captures, earned like a connection — byte-identical extent A, identical text
 at a new position B, similar text C and flagged (Part I §8's temporal connection applied to
