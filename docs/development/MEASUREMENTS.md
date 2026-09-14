@@ -9910,3 +9910,176 @@ an absolute path instead of relative to itself.
 own foot on every run, by `git status`, and by the restore check after each of the four arms
 that mutated it; both landed probes are untouched; `cpdf16-floor-controls.mjs` gained a
 header paragraph and no arm.
+
+## M-8 · 2026-09-13 · VF-4 — THE FIRST LIVE CHECK RUN IN SCRATCH, and the plan's last row ends by finding that the empty-run instrument CANNOT WRITE ITS OBJECT on the deployed plane (worktree `agent-a0eaa1b5004a4e8eb`)
+
+**Instrument:** `bio-plane/test/vf4-live-scratch.mjs` (NEW, **non-discovered by design** —
+`scripts/battery.mjs` takes `test/*.test.mjs` and this one drives a deployed instance over the
+network), with `bio-plane/test/vf4-fixture.mjs` (the catalogue gate over the seed),
+`vf4-call.mjs`, `vf4-bindings.mjs`, `vf4-secretnames.mjs`, `vf4-suggestprobe.mjs`. Run by hand
+from the repo root: `node bio-plane/test/vf4-live-scratch.mjs`. **48 pass, 0 fail, exit 0.**
+Nothing deployed, bumped, signed, tagged or configured; no account setting touched; every
+account call a GET. Metering: no op used here is metered — the run is Worker requests and
+Durable Object reads and writes on an instance already deployed, and **no model turn was
+executed**.
+
+**WHICH BUILD ANSWERED, READ THREE WAYS AT THE START AND AGAIN AT THE EXIT.** *A deploy
+verified is not a build serving* is the rule and the 0.52.0/0.51.0 incident is why: the Worker
+isolate and the Durable-Object-routed path are different answers.
+
+| what was read | route | at start | at exit |
+| --- | --- | --- | --- |
+| `GET /version` on `biosmoke7` | Worker isolate | **0.57.0** | **0.57.0** |
+| `op=bootstrap` on `biosmoke7` | **through the Durable Object** | **0.57.0** (`service: bio-plane`) | **0.57.0** |
+| `GET /version` on `agent-worker` | Worker isolate | **0.57.0** | **0.57.0** |
+
+**No rollout moved under the run, so every figure below is attributable to ONE build: 0.57.0
+(`ba05e9c`), DS-4's release.** Account verified `20b533579290b9b93168345edd3b7f72` on every
+account call. `agent-worker`'s deployed bindings, read back from the account: `PLANE ->
+biosmoke7` (service), `VERSION 0.57.0` — so the fleet member probed here really does reach
+this instance.
+
+### THE RUN — what it did, in scratch, on the deployed plane
+
+| figure | value |
+| --- | --- |
+| namespace | `scratch` (a different Durable Object; its own member table, its own PUBLISHED prefix) |
+| scratch at start | **0 bundles, 0 of every derived counter** — the slate was clean and it was MEASURED, not assumed |
+| seed | 1 information bundle + 1 **concluded** inquiry, both **catalogue-clean before promotion** (local `checkBundle` gate) |
+| `op=audit` over the seed | `checked=2 clean=2 withErrors=0 offenders=[]` — a **non-empty** corpus, clean |
+| run object | `op=airunopen`, `mode: check`, context the concluded inquiry, 3 bounds, 15-minute lease — **`started: true`** |
+| the table walked | `gate-mode>resume resume>plan plan>fanout fanout>collect collect>compose compose>dedup dedup>submit submit>submit submit>adjust adjust>next-pass next-pass>close` |
+| steps · plane calls | **11 steps · 21 live plane calls** |
+| candidates | 3 (1 model-composed `basis-version`, 2 `level-empty` composed by the TABLE) |
+| written | **1** (`vf4 alternative reading`), read back through `op=basisversions` as `state: suggested`, `author: token:admin` |
+| refused | **1** — `BASIS_REFUSED` on `level-empty:content`; routed to `adjust`, dropped, **0 verbatim resubmits** |
+| observation log | **12 entries** = 11 ticks + `op=airunopen`'s own first entry, every one written by the PLANE |
+| the exit | `op=airunclose`, bound **`completed`**, HTTP 200 |
+| sweep | `op=purge&confirm=scratch` — **every derived counter back to 0**, measured on `op=stats` |
+| `op=audit` after the sweep | **`ok:true checked=0 clean=0 withErrors=0 tally={} offenders=[] total=0`** — CLEAN through the control plane |
+| the instance at exit | scratch residue **NONE**, `op=audit` clean — re-measured in a `finally`, so it holds for a failed arm too |
+
+**WHAT THE RUN WAS, EXACTLY, BECAUSE THE DISTINCTION IS THE ITEM'S MAIN LIMIT.** The
+DECISIONS are FL-3's landed control-flow table, **imported** from `agent-worker/src/harness.mjs`
+(`nextStep`, `applyJudgement`, `stepLog`, `emptyLevelCandidates`, `CONTROL_FLOW`, `FIRST_STEP`,
+`MODES`, `LEVELS`, `PLANE_OPS`) — never re-implemented — and the plane calls are live against
+`biosmoke7`'s scratch namespace. **What it is NOT is the deployed `agent-worker` isolate's own
+driver, or the `ai` credential class**, and the reason is the wall below rather than a choice.
+The deployed member's `/run` surface was nevertheless driven live to exactly where it stops:
+`NO_CREDENTIAL` (401), `BAD_CREDENTIAL_SHAPE` (400), `BAD_STORE` (400 — it refuses to GUESS a
+namespace), and `PLANE_REFUSED` (403) carrying the plane's own `NOT_AUTHENTICATED` / C-38.1 /
+canned translation **unchanged**.
+
+### THE WALL: a member session does not exist in the scratch namespace, so no `ai` credential can be minted there
+
+Driven in four halves, none of it reasoned from source alone:
+
+1. `op=memberadd` + `op=enroll` with `store=scratch` **work** — D-41 routes the invitation ops
+   to the scratch Durable Object. `op=memberlist` then reports the member **`status: active`**.
+2. `op=login` for that same member answers **`SIGN_IN_REFUSED`, no token issued.** `op=login`
+   and session RESOLUTION are both pinned to the **`bio`** Durable Object, deliberately and
+   with the reason at the site: *"Claiming and logging in are pinned to `bio` above, because an
+   instance has ONE identity and there is nothing to claim in a scratch namespace."* The
+   credential `enroll` wrote lives in scratch; `login` looks in `bio`. **A member enrolled in
+   scratch reads ACTIVE on `op=memberlist` and can never sign in.**
+3. `op=aicredentialmint` refuses **every** machine identity by name, driven under both:
+   `ADMIN_TOKEN` -> `AI_CREDENTIAL_MINT_NOT_A_MEMBER` / **C-29.1** / `who: token:admin`;
+   `MEMBER_TOKEN` -> the same, `who: token:member`.
+4. `op=conclude` refuses a machine identity too — **`MACHINE_CANNOT_CONCLUDE` / C-32.2** — so
+   the concluded inquiry is PROMOTED carrying the state, the `prior_state`, the
+   `state_history` transition, the conclusion, the falsifier and the `| Concluded |` Session
+   Log entry the op itself writes, and is held to the SAME catalogue (*"nothing concluded here
+   audits dirty"*) by the local gate and by `op=audit`. **The refusal is real and driven; the
+   DOCUMENT is composed, and that is stated rather than left to be discovered.**
+
+**The consequence, stated as the limit it is: VF-4 could not drive the deployed fleet member's
+driver under an `ai` credential, and no arm here should be read as evidence that it ran.**
+
+### THE TWO LIVE FINDINGS — both invisible to the suites, both the same class
+
+**(1) D-323, and it is the headline.** `emptyLevelCandidates` mints
+`name: "level-empty:" + level` — a COLON — and `VERSION_NAME_RE` in
+`bio-plane/checks/bio-checks.mjs` is `/^[a-z0-9][a-z0-9 ._-]{0,63}$/i`, which has **no colon**.
+Driven: the table's own composed candidate, handed to the live `op=suggest` **verbatim**, is
+refused **`BASIS_REFUSED`**, finding **C-25.2**, `wrote: false`. **OVER-STRICTNESS ARM RUN:**
+the identical candidate with the colon replaced by a dash **IS written** (`wrote: true`), so
+the defect is the NAME and not §9's empty-level kind. **§9's empty-level object is VF-1's owed
+control 7** — the instrument that makes an honest empty-handed run distinguishable from a
+silent failure — **so on the deployed plane the empty run is currently indistinguishable from
+the silent failure it exists to rule out.** Three suites assert the colon form LANDS
+(`agent-worker/test/harness.test.mjs` B6; `agent-worker/test/fanout.test.mjs` twice) against a
+MOCK plane whose `op=suggest` accepts any `name` and any `kind` and runs one boilerplate
+predicate.
+
+**(2) D-324.** `kind: "new-version"` is **not** one of §9's five kinds. Driven: the live plane
+answers `SUGGEST_UNKNOWN_KIND` / **C-27.3** and publishes the closed set it holds —
+`basis-version, sharpen-question, new-inquiry, level-empty, new-edition`.
+`agent-worker/test/harness.test.mjs` (B4, B5) and `agent-worker/test/fanout.test.mjs` compose
+candidates with `kind: "new-version"` and assert they LAND.
+
+**A third, smaller live finding, recorded because it cost a pass:** `emptyLevelCandidates`
+reads `r.description` off a sub-session REPORT, and a report carrying only `summary` produces a
+candidate with `description: null`, which PL-3 refuses live as `SUGGEST_BOILERPLATE` / C-27.12.
+The refusal is correct; the report shape is the thing to know.
+
+### THE TWO NEGATIVE CONTROLS THE ROW OWNS — one declared, one MEASURED THE OTHER WAY
+
+**NC 1 — *point the live run at the REAL namespace -> the scratch confinement refuses.* NOT
+DECLARED AS WRITTEN, and the reason is a measurement.** `scopeFor` refuses `store != scratch`
+for the **PROBE class only**, by decision and with the reason at the site. Four arms driven:
+
+- **6a** the deployed `/run` pointed at `store=bio` -> **refused, HTTP 403 `PLANE_REFUSED`**
+  carrying the plane's `NOT_AUTHENTICATED` / C-38.1. **That is the plane declining to resolve
+  the credential in `bio`, NOT the scratch confinement** — different fences, not collapsed.
+- **6b** `op=suggest` aimed straight at `store=bio` -> **refused, HTTP 401**.
+- **6c** the probe branch itself: **NOT DRIVABLE.** `biosmoke7` binds a live `PROBE_TOKEN`
+  (secret NAMES read from the account: `ADMIN_TOKEN`, `MEMBER_TOKEN`, `PROBE_TOKEN`), a secret
+  VALUE cannot be read back from Cloudflare, and setting one is a configuration act this item
+  is forbidden. The only probe value in the repository is the PUBLISHED one in
+  `bio-plane/dist/SECRETS.txt`, and it resolves to **no class at all** (HTTP 401) — which is
+  `tokens.mjs`'s revocation-by-publication working exactly as designed (D-298's *"the
+  mitigation this project designed for exactly this worked"*).
+- **6d, read-only, and it is the honest one:** the ADMIN class is **NOT confined** — asked for
+  `store=bio` the plane places the caller in `bio` (HTTP 200, `tokenClass: admin`), and asked
+  for `scratch` it places them in `scratch`. **So what kept this item off the real record was
+  the ITEM'S OWN DISCIPLINE — every mutating call named `store=scratch` — and not a plane
+  fence.** The no-write claim below therefore rests on the witness, which is evidence, and not
+  on a refusal that did not happen.
+
+**THE WITNESS, and it is the evidence that matters most.** The REAL namespace's counters, read
+before every arm that pointed at it and again after: `bundles 31, files 142, history 244,
+refs 10, register 88, indexed 31, aiRuns 0, aiRunBounds 0, aiRunLog 0, basisVersions 0,
+basisVersionLegs 0, suggestRefusals 0, captureRequests 0` -> **identical after. NOT ONE COUNTER
+MOVED.**
+
+**NC 2 — *skip the sweep -> `op=audit` fails on the residue.* MEASURED THE OTHER WAY, and the
+row's NC is aimed at the wrong instrument.** With the sweep skipped the residue is real and
+countable — `bundles 2, files 2, history 2, refs 1, indexed 2, aiRuns 1, aiRunBounds 3,
+aiRunLog 12, basisVersions 2, suggestRefusals 1` — and **`op=audit` answers CLEAN**
+(`checked=2 clean=2 withErrors=0 offenders=[]`). It is RIGHT to: `Store.auditPass` is a
+conformance pass over BUNDLES (`SELECT b.bundle_id ... FROM bundles`), a CHECK run's residue is
+rows in `basis_versions`, `ai_runs`, `ai_run_log` and `ai_run_bounds`, and a `suggested`
+version is a legal thing for a live record to hold. **The instrument that DOES see this residue
+is `op=stats`**, whose per-derived-table counters exist for exactly this (D-113, *"reported so a
+purge can PROVE it took them"*). The arm ARMED and the measurement is recorded rather than
+smoothed.
+
+**AND THE FIRST LIVE PASS PROVED WHY THAT MATTERS.** On VF-4's first attempt the seeded
+information bundle was malformed (no `source_status`, no Session Log entry) and `op=audit` DID
+go dirty — `withErrors=1`, `C-13.2` and `C-2.7`, offender `INFO-2026-9740-vf4-transfer-memo` —
+**so NC 2 passed for entirely the wrong reason: the fixture's own defects read as the run's
+residue.** `bio-plane/test/vf4-fixture.mjs` is the gate that closes it: it runs the plane's own
+`checkBundle` over both documents locally and THROWS unless both are clean, before anything is
+promoted.
+
+### What was deliberately NOT done
+
+No member was added to the real roster and no password was set anywhere — either would have
+unblocked the mint and both are writes to the real instance's identity. `op=claim` was not
+touched. `newgroup/**` was not touched. No fix was applied for D-323 or D-324: the choice
+between widening `VERSION_NAME_RE` and minting a separator the grammar already admits is
+RECORD's and FLEET's, and taking it from here would be a fence moved by the session that found
+it. The scratch roster keeps the member rows this run and earlier probes created — **`purge`
+does not remove them BY DESIGN** (*"the roster itself survives, because membership is identity
+and not derived from captured documents"*), stated so a later reader does not read seven member
+rows in scratch as residue this item left.

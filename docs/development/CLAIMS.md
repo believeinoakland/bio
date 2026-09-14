@@ -3006,3 +3006,45 @@ parts byte-identical; member main modules are wrangler builds from source per th
 ruling). The account was never touched twice — the process check read quiet at every point
 and the only account acts this session performed were READS. DS-4 row landed in QUEUE.md;
 DEC-43 read recorded at `39730b1`. Gate GREEN class DOCS; VF-4 handed to the leading BOB.
+
+## CLAIM 2026-09-13 VERIFY (VF-4 — LIVE VERIFICATION IN SCRATCH; the IS build plan's closing row)
+
+VF-4 is a MEASUREMENT ITEM, so this claim names NO source path at all. Nothing in
+`bio-plane/src/**`, `agent-worker/src/**`, `civicos-ui/**` or `newgroup/**` is edited; nothing
+is deployed, bumped, signed, tagged or configured; no account setting is touched. The account
+is READ (worker script list, binding NAMES, secret NAMES — never a secret value, which the
+Cloudflare API does not return) and the deployed instance is DRIVEN, in its own `scratch`
+namespace only.
+opened: 2026-09-13
+paths:
+  - `docs/development/CLAIMS.md` — this block.
+  - `docs/development/MEASUREMENTS.md` — ONE appended section (M-8) carrying the live figures
+    and the build that answered each of them.
+  - `docs/development/DEBT.md` — TWO appended rows, D-323 and D-324, for the two live
+    findings. ADDED TO THIS CLAIM MID-ITEM, after the findings existed: a measurement item
+    does not expect to raise debt, and raising it is the honest disposition when the live run
+    finds a mechanism that cannot do what the record says it does. Ids minted with
+    `node tools/mintid.mjs D` (D-323, D-324; floor 322, no collisions).
+  - `bio-plane/test/vf4-live-scratch.mjs` (the probe), `bio-plane/test/vf4-fixture.mjs` (the
+    catalogue gate over its seed), `bio-plane/test/vf4-call.mjs`,
+    `bio-plane/test/vf4-bindings.mjs`, `bio-plane/test/vf4-secretnames.mjs`,
+    `bio-plane/test/vf4-suggestprobe.mjs` (its helpers) —
+    **NON-DISCOVERED NAMES BY DESIGN.** `scripts/battery.mjs` discovers `test/*.test.mjs`;
+    these talk to a deployed instance over the network and write rows into it, so a suite
+    that carried them would make the battery depend on an account, a token and a live
+    rollout. They are run by hand, by VERIFY, and their figures go to MEASUREMENTS.md.
+  - **THE LIVE INSTANCE'S `scratch` NAMESPACE**, not a path: `biosmoke7`'s scratch Durable
+    Object (a different DO from the real record, with its own member table and its own
+    PUBLISHED prefix) is seeded, run against, and swept. `store=bio` is READ ONLY — twice, as
+    the before/after witness that no counter in the real record moved — and is POINTED AT by
+    the row's own negative control 1, which is a refusal this item DRIVES and RECORDS.
+  **READ, NEVER EDITED**: `docs/development/IS-BUILD-PLAN.md` (the VF-4 row's cell is the
+  plan's and is not editable from here — reported to CONDUCT instead), `docs/development/QUEUE.md`
+  (CONDUCT's sole ground — the VF-4 row is REPORTED, never touched), `agent-worker/src/**`,
+  `bio-plane/src/**`, `bio-plane/checks/**`.
+concurrency: checked over the register 2026-09-13 — the DIST #2 block immediately above is
+RELEASED and held no test path; no live claim names `bio-plane/test/**` or MEASUREMENTS.md.
+The one collision that would matter is a second session sharing the scratch namespace
+(`.env`'s own warning: "do NOT share a scratch namespace between concurrent sessions, they
+will purge each other"), and the probe measures scratch's starting state and prints it, so a
+foreign occupant is visible rather than assumed absent.
