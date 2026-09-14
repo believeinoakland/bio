@@ -3540,3 +3540,14 @@ paths:
   **NOT** `civicos-ui/app.html`, **NOT** `newgroup/**`. No deploy, no version bump, no push, no merge.
 concurrency: checked over the register 2026-09-14 — no live claim names `docs/architecture/CORPUS-STANDARD.md`,
 the seven documents, or the pointer files above.
+
+### AMENDMENT 2026-09-14 to the M0-26 claim above — ONE PATH ADDED, and the reason is the control's own finding
+`bio-plane/test/corpuscheck.test.mjs` — its `NEGATIVE CONTROL:` block ONLY, one added
+paragraph, no assertion touched. The three declared arms ran as declared against
+`docs/development/INBOX-GRAMMAR.md` at `ad9fdae`; the BASELINE arm came back RED and the
+defect was in this item's own `PRACTICE-SURVEY.md` Status, which said *"the vendor claims
+are as of 2026-08-01"* ahead of its trailing `as of 2026-09-14` — `corpuscheck` reads the
+FIRST `as of`. **It had passed minutes earlier only because the file was uncommitted**, so
+the date was being compared against its 2026-08-01 commit. That bound on the instrument
+belongs in the suite that drives it rather than in a report nobody re-reads, which is the
+only reason a path outside the claim is touched at all.

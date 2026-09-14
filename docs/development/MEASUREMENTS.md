@@ -10749,3 +10749,17 @@ rather than assumed. `coverage.mjs --strict` exit 0 unpiped; the printed registe
 `arms 953/949 · classified 178/177 · corpus 179/178 · GREW by 4`, i.e. **`REGISTER_FLOOR`
 was already 4/1/1 slack on the pristine tree before this item existed** — not this item's
 to move and named here so the next reader does not attribute it.
+
+**AND THE CONTROL'S BASELINE ARM CAME BACK RED OVER AN HONEST TREE, which is this item's
+sharpest finding and is about the INSTRUMENT.** `PRACTICE-SURVEY.md`'s new Status prose read
+*"the vendor claims are as of 2026-08-01"* before its trailing *"as of 2026-09-14"*, and
+`corpuscheck` `exec`s the FIRST `as of` in the Status — so the file declared itself current
+as of six weeks ago. **It had passed `corpuscheck` minutes earlier**: the date is compared
+against `git log -1 --format=%as`, the file was still UNCOMMITTED, and it was therefore being
+judged against its own 2026-08-01 commit, where `last > asOf` is false. **A freshly
+retrofitted document cannot fail the staleness arm until it is committed**, so a retrofit
+verified only pre-commit is verified less than it appears. Measured, not inferred: the arm
+was invisible at `3cac8c6` and fired at `ad9fdae` with nothing but the commit between them.
+The prose was corrected to "date from 2026-08-01"; the bound is recorded in
+`bio-plane/test/corpuscheck.test.mjs`'s own `NEGATIVE CONTROL:` block so the next retrofit
+does not have to rediscover it.

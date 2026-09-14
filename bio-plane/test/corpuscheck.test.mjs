@@ -18,6 +18,29 @@
  * in `governed()` -> the "not-yet-governed rows are NOT governed" arm FAILS, which is the
  * regression this suite's author hit while wiring it; (4) remove the corpuscheck block from
  * `tools/plancheck.mjs` -> the "mechanism is in the loop" arm FAILS.
+ *
+ * NEGATIVE CONTROL, THE OTHER DIRECTION — the checker armed against a REAL retrofitted
+ * document rather than a fixture. Run 2026-09-14 by M0-26 in worktree
+ * agent-a64d514be75dea71a, re-runnable in one step with
+ * `sh` the script recorded in that item's report, each arm ALONE against
+ * `docs/development/INBOX-GRAMMAR.md` with every other defence open, restored by cp-back
+ * (never `git checkout --`) verified by sha256 AND `cmp` with the byte count printed and a
+ * 2,000-byte floor: (1) Status `as of` pushed one day behind the file's last commit day ->
+ * FAILS naming that file; (2) `## The file` renamed without `--write` -> FAILS on the
+ * Contents divergence at entry 2; (3) an Incomplete bullet naming `§The plot against the
+ * record` -> FAILS naming that section; (4) over-strictness, nothing armed -> 0 fail.
+ * All four as declared, 12,155 bytes restored byte-identical on every arm.
+ *
+ * AND THE BASELINE ARM IS THE FINDING, which is why it is written here. It came back
+ * RED over an honest tree and the defect was in a document this very item had just
+ * written: `PRACTICE-SURVEY.md`'s Status prose said "the vendor claims are as of
+ * 2026-08-01" BEFORE its trailing "as of 2026-09-14", and the date check `exec`s the
+ * FIRST `as of` in the Status. **The same file had passed `corpuscheck` minutes earlier**,
+ * because the date is compared against `git log -1 --format=%as` and the file was still
+ * UNCOMMITTED, so it was being judged against its 2026-08-01 commit. **A freshly
+ * retrofitted document cannot fail the staleness arm until it is committed** — that is a
+ * real bound on this instrument, it is the reason the control was run after the commit
+ * rather than before, and a retrofit checked only pre-commit is checked less than it looks.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: the suite's temp fixtures live in a sandbox the battery sweeps */
