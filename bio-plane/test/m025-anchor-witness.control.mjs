@@ -231,8 +231,9 @@ arm({
   what: "one of the TWO `let raw = String(tok.value);` sites in `bio-plane/src/query.mjs` is re-spelled, so "
       + "`query.control.mjs`'s DELIBERATE two-occurrence closure is no longer double",
   mustFail: "A6, which says every named multiplicity is still there and still multiple — an exemption nobody "
-         + "is enforcing is the shape this estate refuses",
-  mustNot: "A5 (the entry is still NAMED, so it is still excluded from the unnamed list) or A4",
+         + "is enforcing is the shape this estate refuses. AND A4, for the reason stated below, with its "
+         + "finding list holding EXACTLY this driver's own anchor and nothing else",
+  mustNot: "A5 (the entry is still NAMED, so it is still excluded from the unnamed list)",
   /* THE ANCHOR IS THE SECOND SITE'S, TAKEN WITH ITS FOLLOWING LINE, AND THE FIRST
      SPELLING OF THIS ARM DID NOT ARM — reported by this driver as a FINDING rather
      than as a green run, which is the one thing it must never get wrong about
@@ -241,10 +242,252 @@ arm({
      bytes, counted before it was written. Only ONE of the two occurrences is
      re-spelled, which is the whole arm: the deliberate multiplicity `query.control.mjs`
      NAMES stops being multiple, and A6 must notice. */
+  /* DECLARATION CORRECTED 2026-09-14 (D-329+D-331+D-333 item), NEVER EXEMPTED,
+     AND THE ARM WAS RIGHT WHILE ITS DECLARATION WAS WRONG. It read `mustNot: A4`
+     and came back [A4, A6] — measured identically on a PRISTINE `origin/main`
+     worktree at `b0eddbf` with none of that item's changes present, so it is a
+     pre-existing red and not that item's. THE CAUSE IS IRREDUCIBLE: this arm's
+     job is to make one of two identical lines STOP BEING that line, and the line
+     it must mutate is the line its OWN `find` quotes — so the moment it arms, its
+     own anchor occurs zero times in `query.mjs` and A4 correctly says so. The
+     paragraph above records that this arm was RE-ANCHORED onto the two-line span
+     after its first spelling did not arm; the declaration was right against the
+     ORIGINAL spelling and nobody revisited it at the re-anchoring, which is
+     D-333's decay class one level out, inside a control driver.
+     It is corrected rather than loosened: A4 must fail AND its finding list must
+     hold EXACTLY this driver's own anchor, so a real death arriving beside it is
+     still a failure of the declaration. (The same self-consumption bit arm L1
+     below, where it WAS avoidable — an additive edit leaves the anchor intact —
+     and the contrast is why both notes are kept.) */
   edits: [[QUERY_SRC,
     `  let raw = String(tok.value);\n  let subName = null;`,
     `  let raw = String(tok.value); /* M0-25 arm */\n  let subName = null;`]],
-  expect: (r, f) => r.ran && f.includes("A6") && !f.includes("A5") && !f.includes("A4"),
+  expect: (r, f) => {
+    const got = (r.out.split("FAIL  A4")[1] || "").split("\n").find((l) => l.includes("got  ")) || "";
+    const onlyOwn = /m025-anchor-witness\.control\.mjs/.test(got)
+      && got.split("bio-plane/").length - 1 === 1;
+    console.log(`    A4's finding list holds ONLY this driver's own anchor: ${onlyOwn}`);
+    return r.ran && f.includes("A6") && f.includes("A4") && !f.includes("A5") && onlyOwn;
+  },
+});
+
+/* ==========================================================================
+   APPENDED 2026-09-14 BY D-329 + D-331 + D-333. No arm above is edited.
+
+   The arms above all drive the WITNESS. Two of the three shapes added by that
+   item are not the witness's: D-331's preflight lives in the throwing DRIVERS,
+   and D-333's declared-vs-measured comparison lives in the CENSUS, because a
+   tally is a claim about a RUN. So this section adds two more runners beside
+   `runWitness()` and drives each subject where it actually lives.
+   ========================================================================== */
+
+const AICRED_DRIVER = join(ROOT, "bio-plane/test/aicredential.control.mjs");
+const DECAY_MOD = join(ROOT, "bio-plane/scripts/armdecay.mjs");
+const CASEPIN_DRIVER = join(ROOT, "bio-plane/test/casepin.control.mjs");
+const CASESIGN_DRIVER = join(ROOT, "bio-plane/test/casesign.control.mjs");
+const STORE_SRC = join(ROOT, "bio-plane/src/store.mjs");
+const CENSUS = join(ROOT, "bio-plane/test/m025-arm-census.mjs");
+Object.assign(MIN_BYTES, { [AICRED_DRIVER]: 5_000, [DECAY_MOD]: 5_000, [CASEPIN_DRIVER]: 5_000,
+                           [CASESIGN_DRIVER]: 5_000, [STORE_SRC]: 500_000 });
+
+/* Run a driver for ONE arm and hand back what it printed. Captured to a FILE,
+   never a pipe (D-282), and a run that produced no recognisable foot reports
+   `ran: false` rather than an invented zero. */
+function runProcess(file, args, label) {
+  const outFile = join(WORK, `${label}-${Date.now()}-${Math.random().toString(36).slice(2)}.out`);
+  const r = spawnSync(process.execPath, [file, ...args], {
+    cwd: join(ROOT, "bio-plane"), encoding: "utf8", maxBuffer: 128 * 1024 * 1024,
+  });
+  const out = `${r.stdout || ""}${r.stderr || ""}`;
+  writeFileSync(outFile, out);
+  return { out, code: r.status };
+}
+
+/* The same declare-arm-restore shape as `arm()` above, for an arm whose subject
+   is a DRIVER or the CENSUS rather than the witness. Kept as its own function
+   rather than generalising `arm()`, because editing five working arms to add
+   two is how a control driver acquires the defect it exists to find. */
+function armOn({ id, subject, what, mustFail, mustNot, edits, run, expect }) {
+  if (only.length && !only.includes(id)) return;
+  armsRun++;
+  console.log(`\n=== ARM ${id} · ${subject}`);
+  console.log(`    WHAT IS BROKEN : ${what}`);
+  console.log(`    MUST FAIL      : ${mustFail}`);
+  console.log(`    MUST NOT FAIL  : ${mustNot}`);
+  const origs = [];
+  let armed = true;
+  for (const [file, find, replace] of edits) {
+    origs.push(takeOriginal(file, id));
+    const p = patch(file, find, replace);
+    if (!p.armed) {
+      console.log(`    >>> THE ARM DID NOT ARM: the patch for ${file.slice(ROOT.length)} matched ${p.hits} time(s), not once.`);
+      console.log(`        THIS IS A FINDING ABOUT THE ARM, not a green result. Nothing was measured.`);
+      findings.push(`${id}: never armed (patch matched ${p.hits} times in ${file.slice(ROOT.length)})`);
+      armed = false; break;
+    }
+  }
+  let r = null;
+  if (armed) { try { r = run(); } finally { for (const o of origs.reverse()) restore(o); } }
+  else { for (const o of origs.reverse()) restore(o); console.log(""); return; }
+  console.log(`    OBSERVED       : exit ${r.code}`);
+  const ok = expect(r);
+  if (ok) { asDeclared++; console.log(`    VERDICT        : AS DECLARED`); }
+  else {
+    console.log(`    VERDICT        : *** NOT AS DECLARED — A FINDING ABOUT THE ARM, recorded rather than smoothed ***`);
+    console.log(`    tail: ${r.out.split("\n").filter(Boolean).slice(-4).map((l) => l.trim()).join(" | ").slice(0, 300)}`);
+    findings.push(`${id}: not as declared (exit ${r.code})`);
+  }
+}
+
+/* ------------------------------------------------- D-329 · THE COMPOSED LABEL */
+
+arm({
+  id: "L1", subject: "D-329's OWN HISTORICAL DEFECT, PUT BACK — a driver quoting a RENDERED COUNT",
+  what: "`aicredential.control.mjs`'s `mustNotFail` fragment is restored to the spelling M0-25's census "
+      + "found it in: `every one of the 26 ops …`, where the SUITE composes the name as "
+      + "`every one of the ${beyond.length} ops …`. THIS IS THE SILENTLY VACUOUS DIRECTION — a fragment "
+      + "that can never match can never be violated, so that guard proved nothing and SAID nothing for a "
+      + "month, and no runtime signal was ever going to produce one. If a static check cannot see this, "
+      + "nothing can",
+  mustFail: "L3, the composed-label arm, NAMING aicredential.control.mjs, the suite that composes the label, "
+         + "and the rendered value `\"26\"` that sat in the slot",
+  mustNot: "L1, L2 or L4 (the reach floors and the predicate's own receipt are untouched), A4 or A5 (this is a "
+         + "LABEL, not a source anchor, and the two halves must stay distinguishable), or any S-arm",
+  /* THE EDIT IS ADDITIVE, AND THE FIRST SPELLING OF THIS ARM WAS NOT — RECORDED
+     RATHER THAN QUIETLY FIXED, because the failure is this estate's own
+     self-citation receipt in a new costume. The first version REPLACED the
+     invariant fragment with the stale one, and A4 then went red beside L3: this
+     driver's own edit-tuple anchor IS that fragment, so consuming it made the
+     anchor read zero and the anchor half fired on the arm itself. Adding the
+     stale fragment BESIDE the correct one leaves the anchor intact, which is
+     what isolates the label half from the anchor half — the thing this arm's
+     own declaration promises. */
+  edits: [[AICRED_DRIVER,
+    `   "ops no member reaches is refused at the mint, by name"],\n  ["a signed-in member mints",`,
+    `   "ops no member reaches is refused at the mint, by name"],\n`
+  + `  ["every one of the 26 ops no member reaches is refused at the mint, by name",\n`
+  + `   "a signed-in member mints",`]],
+  expect: (r, f) => r.ran && f.includes("L3") && !f.includes("L1") && !f.includes("L2") && !f.includes("L4")
+                 && !f.includes("A4") && !f.includes("A5") && !f.some((x) => x.startsWith("S"))
+                 /* THE FINDING MUST NAME THREE THINGS — the driver, the SUITE that composes
+                    the label, and the rendered value in the slot. Naming only two is how a
+                    finding sends the next reader to the wrong file, which this arm's first
+                    run did: it named `armdecay.mjs`, because that module's own header had
+                    spelled the example template in real backticks and so entered the index. */
+                 && /aicredential\.control\.mjs quotes[\s\S]{0,400}?composed in bio-plane\/test\/aicredential\.test\.mjs/
+                      .test(r.out.split("L3")[1] || "")
+                 && /the rendered value .{0,2}26/.test(r.out.split("L3")[1] || ""),
+});
+
+arm({
+  id: "L2", subject: "OVER-STRICTNESS — a CORRECT invariant quote in a spelling nobody anticipated must PASS",
+  what: "the same fragment is re-spelled to start MID-SEGMENT (`member reaches is refused at the mint, by "
+      + "name`) — still quoting only the invariant part, still resolving against the template, just not at a "
+      + "boundary the author of the check had in mind. A fence tighter than its rule is an undeclared "
+      + "interface change wearing the costume of caution",
+  mustFail: "NOTHING. This arm's whole content is that the witness stays silent over correct work",
+  mustNot: "any arm",
+  edits: [[AICRED_DRIVER,
+    `   "ops no member reaches is refused at the mint, by name"],\n  ["a signed-in member mints",`,
+    `   "ops no member reaches is refused at the mint, by name"],\n`
+  + `  ["member reaches is refused at the mint, by name",\n`
+  + `   "a signed-in member mints",`]],
+  expect: (r, f) => r.ran && r.fail === 0 && f.length === 0 && r.code === 0,
+});
+
+arm({
+  id: "L3", subject: "THE LABEL REACH ARM — a detector that reads no label passes every estate",
+  what: "`isLabelQuote` is neutered in `scripts/armdecay.mjs`, so the witness extracts NO label quote at all",
+  mustFail: "L1, the label reach floor, and S9, which drives the shape predicate on a fixture — and the point "
+         + "is what does NOT happen: L3 reports a TRIUMPHANT EMPTY LIST over an estate this run cannot see",
+  mustNot: "L2 (the template index is built from the corpus, not from the drivers, and must stay green so the "
+         + "two failures are distinguishable), A1-A6, or the anchor half's S-arms",
+  edits: [[DECAY_MOD,
+    `  return typeof s === "string" && s.length >= 20 && !s.includes("\${") && !s.includes("\\n")`,
+    `  return false && typeof s === "string" && s.length >= 20 && !s.includes("\${") && !s.includes("\\n")`]],
+  expect: (r, f) => r.ran && f.includes("L1") && f.includes("S9") && !f.includes("L3") && !f.includes("L2")
+                 && !f.includes("A4") && !f.includes("A5") && !f.includes("A6"),
+});
+
+/* ------------------------------------------------------- D-331 · THE PREFLIGHT */
+
+armOn({
+  id: "P1", subject: "THE ARM D-331 EXISTS FOR — TWO dead anchors, and the SECOND one must still be reported",
+  what: "TWO lines `casepin.control.mjs` quotes are changed IN PLACE in `src/store.mjs` — arm (a)'s pin write "
+      + "and the roster SELECT that arms (e) and (f) share. Before the preflight, `edit()` threw at arm (a) "
+      + "and arms (c) through (f) were never reached: the census measured 2 of 6 announcements while FOUR "
+      + "anchors were dead. THE WHOLE CLAIM OF THIS FIX IS THAT THE ARMS BEHIND THE FIRST CASUALTY ARE STILL "
+      + "REPORTED",
+  mustFail: "the driver, by REFUSING TO ARM — and its preflight table must name BOTH dead anchors, plus report "
+         + "the four live ones, in ONE run",
+  mustNot: "the driver must not arm anything, must not run the suite, and must leave the tree exactly as found",
+  edits: [
+    [STORE_SRC, `          id, ed, i, m, r.version_sha ?? null, r.role ?? null);`,
+                `          id, ed, i, m, r.version_sha ?? null, r.role ?? null );`],
+    [STORE_SRC, `      \`SELECT ord, bundle_id, version_sha, role FROM published_case_members`,
+                `      \`SELECT ord, bundle_id,  version_sha, role FROM published_case_members`],
+  ],
+  run: () => runProcess(CASEPIN_DRIVER, [], "P1"),
+  expect: (r) => {
+    const rows = (r.out.match(/ARM PREFLIGHT [a-z0-9]+\s+(?:ok|<<<)/g) || []);
+    const dead = (r.out.match(/ARM PREFLIGHT [a-z0-9]+\s+<<< /g) || []);
+    const namesBehind = /arm e: occurs 0 times/.test(r.out) || /arm f: occurs 0 times/.test(r.out);
+    console.log(`    preflight rows: ${rows.length} · NOT LIVE: ${dead.length} · names an arm BEHIND the first: ${namesBehind}`);
+    console.log(`    (before D-331 this run reported ONE casualty and died; the other five were never counted)`);
+    return r.code !== 0 && rows.length === 6 && dead.length === 3 && namesBehind
+      && /REFUSED TO ARM BLIND/.test(r.out) && /arm a: occurs 0 times/.test(r.out)
+      && !/=== ARM a ===/.test(r.out);
+  },
+});
+
+armOn({
+  id: "P2", subject: "OVER-STRICTNESS — a HEALTHY driver preflights clean and runs byte-for-byte as before",
+  what: "nothing. The preflight must be invisible to a driver whose anchors are all live: it reports the whole "
+      + "set, says so, and gets out of the way",
+  mustFail: "NOTHING",
+  mustNot: "the driver's baseline arm, its restore verification, or its exit status",
+  edits: [],
+  run: () => runProcess(CASEPIN_DRIVER, ["baseline"], "P2"),
+  expect: (r) => {
+    const rows = (r.out.match(/ARM PREFLIGHT [a-z0-9]+\s+(?:ok|<<<)/g) || []);
+    console.log(`    preflight rows: ${rows.length} · all live: ${/ALL 6 ANCHORS LIVE/.test(r.out)}`);
+    return r.code === 0 && rows.length === 6 && /ALL 6 ANCHORS LIVE/.test(r.out)
+      && /casepin: \d+ passed, 0 failed/.test(r.out);
+  },
+});
+
+/* --------------------------------------------------------- D-333 · THE TALLY */
+
+armOn({
+  id: "T1", subject: "TALLY DECAY — a declared arm count moved while every anchor stayed perfectly live",
+  what: "`casesign.control.mjs`'s head declaration is decayed from five arms to four. NOT ONE ANCHOR MOVES, "
+      + "which is the whole point of the row: this is invisible to the witness, to a re-anchoring pass, and "
+      + "to the driver's own run — it announces nothing until something holds the declaration against the run",
+  mustFail: "the census, by name — `TALLY NOT AS DECLARED` naming casesign with both numbers — and its exit "
+         + "status, because a figure nobody can falsify trains every session to trust it",
+  mustNot: "the driver itself (it arms and runs exactly as before — the anchors are untouched), and the census "
+         + "must not report a STALE ARM, since nothing about this arm is an anchor",
+  edits: [[CASESIGN_DRIVER,
+    `/* CASE-5b's NEGATIVE CONTROL DRIVER — five arms plus a baseline, re-runnable in`,
+    `/* CASE-5b's NEGATIVE CONTROL DRIVER — four arms plus a baseline, re-runnable in`]],
+  run: () => runProcess(CENSUS, ["--only", "casesign.control.mjs"], "T1"),
+  expect: (r) => {
+    const named = /casesign\.control\.mjs[\s\S]{0,200}?DECLARES 4 plus a baseline[\s\S]{0,80}?ANNOUNCED 6/.test(r.out);
+    console.log(`    census named it with both numbers: ${named} · reported a STALE ARM as well: ${/drivers with a STALE arm : [1-9]/.test(r.out)}`);
+    return r.code !== 0 && /TALLY NOT AS DECLARED/.test(r.out) && named
+      && /drivers with a STALE arm : 0/.test(r.out) && /tally NOT AS DECLARED : 1/.test(r.out);
+  },
+});
+
+armOn({
+  id: "T2", subject: "OVER-STRICTNESS — a driver whose declaration AGREES with its run must stay silent",
+  what: "nothing. `casepin` declares six arms plus a baseline and announces seven, which honours the rule",
+  mustFail: "NOTHING",
+  mustNot: "the census's tally section, its exit status, or the driver",
+  edits: [],
+  run: () => runProcess(CENSUS, ["--only", "casepin.control.mjs"], "T2"),
+  expect: (r) => r.code === 0 && !/TALLY NOT AS DECLARED/.test(r.out)
+    && /tally NOT AS DECLARED : 0/.test(r.out) && /declared tallies read : 1 of 1/.test(r.out),
 });
 
 /* ------------------------------------------------------------------- THE FOOT
@@ -262,7 +505,9 @@ console.log(`byte count printed and a per-file minimum guarded.`);
 {
   const dirty = spawnSync("git", ["status", "--porcelain", "--untracked-files=no"], { cwd: ROOT, encoding: "utf8" });
   const lines = (dirty.stdout || "").trim().split("\n").filter(Boolean);
-  const touched = [WITNESS, AGENT_SRC, FANOUT_SRC, QUERY_SRC].map((p) => p.slice(ROOT.length));
+  const touched = [WITNESS, AGENT_SRC, FANOUT_SRC, QUERY_SRC,
+                   AICRED_DRIVER, DECAY_MOD, CASEPIN_DRIVER, CASESIGN_DRIVER, STORE_SRC]
+    .map((p) => p.slice(ROOT.length));
   const stillDirty = lines.filter((l) => touched.some((p) => l.includes(p)));
   console.log(`tree: ${stillDirty.length ? `*** STILL MODIFIED: ${stillDirty.join(", ")}` : "every file this driver touched is back to its committed bytes"}`);
   if (stillDirty.length) process.exit(4);

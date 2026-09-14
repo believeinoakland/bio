@@ -10714,3 +10714,85 @@ a METADATA deploy (new VERSION var, first armed bindings) that the skip made imp
 `/version` sat at 0.57.0 while the rollout gate waited for a build never sent. The skip now
 requires byte-identity AND the target version already serving; bytes-only proceeds as a
 metadata deploy, with the reason printed.
+
+## 2026-09-14 · D-329+D-331+D-333 — the three driver-estate decay shapes, with the reach of each new check as a FIGURE (instruments: `bio-plane/test/m025-arm-anchor-witness.test.mjs`, `bio-plane/test/m025-arm-census.mjs`, `bio-plane/scripts/armdecay.mjs`, all on `origin/main` at `b0eddbf`)
+
+**THE LABEL HALF (D-329), AND THE ROW'S "no static instrument can see it" IS FALSIFIED BY
+MEASUREMENT RATHER THAN BY ARGUMENT.** A driver quotes the suite's assertion NAMES as well as
+its subject's source, and a name the suite composes moves under the quote. The row concluded
+that a run-time-composed label exists in no file; the RENDERED label does not, but the
+TEMPLATE does, and the defect has an exact static signature — the fragment resolves against
+the template only by consuming an interpolation slot.
+
+| figure | measured |
+| --- | --- |
+| label quotes read | **2,700 from 87 of 88 drivers (99%)** — the one silent driver NAMED on every run |
+| interpolation shoulder-pairs indexed | **1,728 distinct**, over **366** non-doc candidate files |
+| span candidates on a healthy estate | **6** |
+| of those, literally present and therefore NOT scored | **6** — so **0 findings** |
+| the historical instance, driven | caught, naming the driver, `aicredential.test.mjs` as composer, and `"26"` as the value in the slot |
+| the hand repair (invariant part only), driven | NOT caught — the over-strictness direction holds |
+| scan cost | ~0.3 s, inside a battery suite |
+
+**THE EXTRACTION IS AN INVERSION AND THE MEASUREMENT IS WHY.** A matcher keyed on the property
+name `mustFail:` reads **140 label quotes from 9 drivers** and **cannot see
+`aicredential.control.mjs` at all** — D-329's own exhibit passes its fragments as POSITIONAL
+arguments to `arm(title, edits, mustFail, mustNotFail)`. Asking instead what a LABEL IS (prose,
+one line, no statement punctuation) against what an ANCHOR is (code) reads **2,700 from 87**.
+A list of key spellings would have gone stale at the first driver that did not use one, and
+that driver was the one the row was written about.
+
+**TWO INSTRUMENT DEFECTS FOUND BY THIS ITEM'S OWN CONTROLS, both recorded rather than smoothed.**
+(1) With `docs/` in the label corpus the check reads **`DEBT.md`'s own D-329 row**, which quotes
+the stale fragment verbatim because that is what a debt row is for — it scored the defect
+"present" and went green over a fully armed subject. The label corpus now excludes `docs/`; the
+ANCHOR corpus keeps it and must, because two of `register-grammar.control.mjs`'s arms quote
+`VERIFICATION.md`. (2) `armdecay.mjs`'s own header spelled the example template in REAL
+BACKTICKS, so the module entered its own template index and arm L1 reported the defect as
+"composed in armdecay.mjs" rather than in the suite that composes it — a finding that names the
+instrument instead of the subject.
+
+**THE ANCHOR HALF GREW A BLIND SPOT THAT WAS ALWAYS THERE AND HAD NEVER BEEN ARMED AT.** The
+witness excludes every `*.control.mjs` from its corpus, correctly (a self-including corpus
+scored 96 anchors "duplicated" against this one's 3). But a control driver's subject is
+sometimes ANOTHER control driver, and those anchors then read ZERO. Adding this item's arms took
+A4 from 0 findings to **2, both false**. An anchor absent from every non-driver candidate is now
+re-counted against the other drivers — never its own file — and found there is reported LIVE in
+a printed list. Measured on the landed tree: **2 rescued of 163 anchors**, and arm A7 holds a
+ceiling of a tenth of the set so the rescue cannot become a blanket amnesty.
+
+**THE THROW'S BLAST RADIUS (D-331), PRICED.** The preflight counts every arm's quote in the file
+that arm will write before anything is armed: `casepin` **6** anchors, `casesign` **5**,
+`caseproduction` **8** — **19**, all live. Driven both ways: with TWO anchors staled (one
+belonging to arm (a), one shared by (e) and (f)), the preflight reports **all 6 rows, 3 not
+live**, names an arm BEHIND the first casualty, and refuses to arm; before the pass the same
+tree produced ONE casualty and died. The declined option is record-and-continue: it needs no new
+code, and it buys the complete report by measuring a tree patched by an arm that did not arm —
+in `casepin`, arms (a) and (b) both write `src/store.mjs`.
+
+**TALLY DECAY (D-333), AND THE INSTRUMENT FOUND DECAY ON ITS FIRST PASS.** Declared tallies are
+readable for **46 of 88 drivers (52%)**; the other 42 are NAMED individually on every battery and
+reported UNKNOWN, never zero. `control-register.mjs`'s existing grammar was measured first and
+rejected for this use: it yields a tally for **2 of 88**, because a control driver carries no
+`NEGATIVE CONTROL:` marker — it IS the control. On the first census pass
+**`casepin.control.mjs` declared "five arms plus a baseline" and announced SEVEN, with every one
+of its anchors live the whole time** — corrected at the site with the dated reason.
+
+**A THIRD INSTRUMENT RED ON A GREEN `main`, ATTRIBUTED BEFORE IT WAS FILED (D-337).**
+`caseproduction.control.mjs` arm (C) returns no tally and two `** WRONG` lines, identically on a
+PRISTINE `origin/main` worktree at `b0eddbf` with none of this item's changes — its subject is
+enforced in `store.mjs` AND as check `C-41.8`, so neutering one leaves the other to refuse the
+suite's own fixture at setup. **And a FOURTH, in the control driver this item extends**: arm A5
+declared `mustNot: A4` and returns [A4, A6], also identically on the pristine worktree — its
+patch necessarily consumes its own anchor, so A4 is a correct consequence and the DECLARATION was
+what went stale, at the re-anchoring that gave the arm its two-line spelling. Corrected, never
+exempted, and tightened rather than loosened: A4 must now fail with exactly that one anchor in
+its finding list.
+
+**BASELINE AND DELTA.** Own baseline on a pristine `origin/main` worktree at `b0eddbf` after
+`npm ci` in all three member installs: **187/187 suites green · 11,324 assertions · exit 0**.
+Two earlier baseline runs were DISCARDED as self-contaminated and are recorded because the
+contamination looks exactly like real damage: symlinking `node_modules` into the baseline
+worktree made esbuild write the resolved path into `pdf-worker`'s bundle, failing FL-10's
+byte-identity guard (3 assertions), and the rebuild run to diagnose it then failed 2 more. The
+true state was green both times.

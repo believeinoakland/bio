@@ -19,17 +19,25 @@
  * not to find, among the suite's failing assertions. `aicredential.control.mjs`
  * held two arms against a fragment reading "every one of the 26" + " ops no
  * member reaches is refused at the mint, by name", while the suite COMPOSES that
- * name as
+ * name from the same words with a substitution where the count sits — see
+ * `aicredential.test.mjs`, the `t(...)` whose label interpolates beyond.length.
  *
- *     `every one of the ${beyond.length} ops no member reaches is refused …`
+ * **TWO THINGS ARE DELIBERATELY NOT WRITTEN HERE, AND NEITHER IS FASTIDIOUSNESS.
+ * BOTH WERE MEASURED, ON THIS ITEM'S OWN NEGATIVE CONTROLS.**
  *
- * **THE TWO HALVES OF THE STALE FRAGMENT ARE DELIBERATELY NOT WRITTEN AS ONE
- * STRING ANYWHERE IN THIS FILE, AND THAT IS NOT FASTIDIOUSNESS.** This module
- * sits in `bio-plane/scripts/`, which is inside the very corpus the live check
- * searches; quoting the defect whole here would make it "literally present" and
- * this instrument would go green over its own negative control. That is the
- * estate's "a check that caught its own correction because the correction quoted
- * the token it was correcting" receipt, met head-on while writing the fix.
+ *   1. The stale fragment is never written as ONE string. This module sits in
+ *      `bio-plane/scripts/`, inside the very corpus the live check searches, so
+ *      quoting the defect whole would make it "literally present" and this
+ *      instrument would go green over its own control. That is the estate's "a
+ *      check that caught its own correction because the correction quoted the
+ *      token it was correcting" receipt, met head-on while writing the fix.
+ *   2. **The composed template is never written in BACKTICKS here either**, and
+ *      that one cost a control run to find. Spelled as a real template literal,
+ *      this comment entered the template index — and arm L1 then reported the
+ *      defect as "composed in armdecay.mjs" rather than in the suite that
+ *      actually composes it. A finding that names the INSTRUMENT instead of the
+ *      subject points the next reader at the wrong file, which is the record
+ *      overclaiming in miniature.
  *
  * The text moves whenever the plane gains an op no member reaches. It moved
  * 26 -> 28 and the two sites failed in OPPOSITE DIRECTIONS: the `mustFail` use

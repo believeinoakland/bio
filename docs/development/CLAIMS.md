@@ -3543,3 +3543,34 @@ concurrency: checked over the register 2026-09-14 — the three claims still ope
   `release/**`, `bio-plane/scripts/deploy.mjs`, `sshsig.mjs`). **Every path above is disjoint
   from all three**: no live claim names `m025-*`, `casepin/casesign/caseproduction.control.mjs`,
   or the three DEBT rows.
+
+### AMENDMENT 2026-09-14, MID-ITEM (D-329+D-331+D-333 claim) — FOUR PATHS, each owed and none foreseeable from the brief
+paths added:
+  - **`bio-plane/scripts/armdecay.mjs` (NEW)** — the three shapes' shared instrument, in a module
+    of its own **on `control-register.mjs`'s own stated precedent**: *"so the battery can test
+    the instrument instead of trusting it"*. The witness and the census both consume it, and the
+    witness drives its predicates over fixtures with known answers (S7-S10, T2, T3). Putting the
+    logic in either instrument would have made the other one trust a copy.
+  - **`docs/development/VERIFICATION.md`** — ONE new subsection only, *"A THROWING CONTROL DRIVER
+    VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING"*, inserted above the M0-12 section. The
+    original claim reserved this "only if the driver law changes"; **it changed** — D-331 asked
+    for a ruling on one shape for the estate and the ruling is made, so it belongs in the file
+    that states what tested means here rather than only in the DEBT row. **NOT** any other
+    section, **NOT** the floor, **NOT** the register's figures.
+  - **`bio-plane/test/m025-anchor-witness.control.mjs`** — the original claim said APPENDED ARMS
+    ONLY, and **one existing arm's DECLARATION is corrected**, which is the amendment. A5 read
+    `mustNot: A4` and returns [A4, A6] — measured identically on a PRISTINE `origin/main`
+    worktree at `b0eddbf` with none of this item's changes, so it is a pre-existing red. Its
+    patch must mutate the very line its own `find` quotes, so A4 firing is IRREDUCIBLE and
+    correct; the declaration was right against the arm's ORIGINAL one-line spelling and nobody
+    revisited it when the arm was re-anchored onto the two-line span. Corrected with the dated
+    reason and TIGHTENED rather than loosened — A4 must now fail with EXACTLY this driver's own
+    anchor in its finding list, so a real death arriving beside it still fails. **NOT** its
+    edits, **NOT** any other arm.
+  - **`docs/DECIDED.md`** — REGENERATED, not authored, by `node tools/decided.mjs`. Owed by
+    CLAUDE.md's standing rule (*"Regenerate it in any turn that rules on anything — plancheck
+    fails on the drift"*) and by `plancheck`, which reported STALE the moment the three
+    dispositions landed. It is a generated index; no line is hand-written.
+also recorded here rather than only in the report: **D-336 is BURNED** — `tools/mintid.mjs D` was
+called twice in one turn and the first id was never read back off the tool's output. Recorded,
+not reused (D-332's precedent). The id in use is **D-337**.

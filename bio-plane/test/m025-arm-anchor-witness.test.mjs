@@ -1,5 +1,7 @@
 /* NEGATIVE CONTROL: run 2026-09-13 under M0-25, each arm ALONE against the REAL tree with every other defence held open, restores verified by sha256 AND `cmp` against uniquely-named per-arm pristine copies with the byte count printed and floored — the driver is `test/m025-anchor-witness.control.mjs` and re-runs every arm in one step. (1) THE ARM THIS SUITE EXISTS FOR, and it is the D-276 class reproduced exactly: change a line IN PLACE in a subject a control driver quotes (`agent-worker/src/index.mjs`'s `MEANING_ARM` call site, the very line D-276 moved) so the driver's anchor now matches zero times -> arm A4 FAILS naming the driver, the anchor and the subject, while the driver's own file is untouched and every other arm holds. (2) THE OVER-STRICTNESS DIRECTION — re-spell the same line in a way the quote still matches (whitespace outside the anchor's span) -> NOTHING fails, because a fence tighter than its rule is an undeclared interface change wearing the costume of caution. (3) THE REACH ARM, because a detector that finds nothing passes every clean corpus: neuter the extractor so it reads no anchor at all -> the corpus floors FAIL (A1/A2/A3) while the zero-match arm A4 reports a triumphant empty list, which is exactly why the floors are asserted and printed rather than assumed. (4) THE MULTIPLICITY HALF — plant a SECOND copy of an anchored line in its subject so the anchor occurs twice -> A5 FAILS naming the driver and the file, which is the "anchor occurred twice" receipt WORKER.md records and which silently disarms a first-occurrence patch. (5) THE NAMED LIST'S OWN STALENESS — remove one deliberate multi-occurrence closure from its subject -> A6 FAILS naming the entry that has stopped being true, so a naming cannot outlive the thing it named. (6) THE BASELINE, and it is not decoration: nothing armed -> every arm green, which is what distinguishes five-arms-broken from five-arms-working.
  *
+ * NEGATIVE CONTROL — EXTENDED 2026-09-14 (D-329 + D-331 + D-333), seven arms added to the same driver, each ALONE, restores verified by sha256 AND `cmp`; all thirteen arms of the driver ran and twelve were as declared first time. (7) THE COMPOSED-LABEL ARM, and it is this item's reason to exist: put D-329's own historical defect back into `aicredential.control.mjs` — a `mustNotFail` fragment carrying the rendered count `26` against a label the suite composes -> L3 FAILS naming the driver, naming `aicredential.test.mjs` as the composer, and naming `"26"` as the value that sat in the slot, while A4, A5 and every S-arm stay green so the LABEL half and the ANCHOR half are measurably distinguishable. **THE EDIT IS ADDITIVE AND ITS FIRST SPELLING WAS NOT** — replacing the fragment consumed this driver's own edit-tuple anchor and A4 fired on the arm itself, which is the estate's self-citation receipt in a new costume. (8) THE OVER-STRICTNESS DIRECTION — the same fragment re-spelled to start MID-SEGMENT, still quoting only the invariant part -> NOTHING fails, because a fence tighter than its rule is an undeclared interface change wearing the costume of caution. (9) THE LABEL REACH ARM — neuter `isLabelQuote` so no label is read at all -> L1 and S9 FAIL while L3 reports a triumphant EMPTY LIST, which is exactly why the reach is floored and printed. (10) D-331's ARM, run against `casepin.control.mjs` rather than this suite: stale TWO anchors in `src/store.mjs`, one belonging to arm (a) and one shared by (e) and (f) -> the preflight reports ALL SIX rows with THREE not live and names an arm BEHIND the first casualty, and the driver refuses to arm anything. Before the preflight this run reported ONE casualty and died. (11) ITS OVER-STRICTNESS DIRECTION — a healthy `casepin` preflights all-live, runs its baseline arm green and exits 0. (12) D-333's ARM, run against the CENSUS: decay `casesign.control.mjs`'s head from five arms to four WITHOUT MOVING ONE ANCHOR -> the census reports `TALLY NOT AS DECLARED` naming casesign with both numbers and exits non-zero, while reporting ZERO stale arms — the two decay shapes stay separable. (13) ITS OVER-STRICTNESS DIRECTION — `casepin`, whose corrected declaration now agrees with its run, leaves the tally section silent and the census at exit 0. **ONE PRE-EXISTING ARM CORRECTED, NEVER EXEMPTED**: A5 declared `mustNot: A4` and returned [A4, A6], measured identically on a pristine `origin/main` worktree at `b0eddbf` — its patch necessarily consumes its own anchor, so A4 is a correct consequence; the declaration now requires A4 to fail with EXACTLY this driver's own anchor in its finding list.
+ *
  * m025-arm-anchor-witness.test.mjs — M0-25. THE ANCHOR-LIVENESS CHECK THE
  * BATTERY RUNS, AND WHAT IT DELIBERATELY DOES NOT CLAIM.
  *
@@ -345,13 +347,56 @@ t(`A3 the extractor actually read anchors, from more than one driver (${anchors.
   [anchors.length >= 100, graded.length - silentDrivers.length >= 20], [true, true]);
 
 console.log("\n--- every anchor still exists in something a driver could be quoting ---");
+
+/* A DRIVER'S SUBJECT IS SOMETIMES ANOTHER DRIVER, AND THIS SUITE WAS BLIND TO IT
+   UNTIL ITS OWN CONTROL PROVED IT — recorded here rather than smoothed, because
+   the blindness was in the instrument and it was found by paying for it.
+
+   The corpus above EXCLUDES every `*.control.mjs` file, and it must: an arm's
+   anchor sits in its own `find` AND its `replace`, so a self-including corpus
+   scored 96 anchors "duplicated" against this one's 3. But a negative-control
+   driver's subject is frequently ANOTHER control driver — D-329's own arms patch
+   `aicredential.control.mjs` to put the historical defect back — and those
+   anchors then live in a file this corpus cannot see, so they read as ZERO and
+   A4 reports a driver-on-driver arm as the D-276 class. Measured: adding those
+   arms took A4 from 0 findings to 2, both false.
+
+   THE FIX IS STRUCTURAL RATHER THAN A NAMED LIST, because a list of literals
+   goes stale the moment a sixth arm is written. An anchor that is absent from
+   every non-driver candidate is re-counted against the OTHER drivers — never its
+   own file, which is what the exclusion was always about. Found there, it is a
+   driver-on-driver arm and is LIVE; found nowhere, it is dead and A4 says so.
+   The rescued set is PRINTED in full, so a widening that starts swallowing real
+   deaths is visible rather than silent, and A7 floors it against the opposite
+   failure: a rescue rule that rescues everything. */
+const driverText = new Map();
+for (const d of graded) { try { driverText.set(d, readFileSync(join(REPO, d), "utf8")); } catch { /* named by the floor */ } }
+const onDriver = [];
+for (const a of anchors) {
+  if (a.hits !== 0) continue;
+  a.elsewhere = [];
+  for (const [p, text] of driverText) {
+    if (p === a.driver) continue;
+    const n = text.split(a.lit).length - 1;
+    if (n) a.elsewhere.push({ path: p, n });
+  }
+  if (a.elsewhere.length) onDriver.push(a);
+}
+if (onDriver.length) {
+  console.log(`  ${onDriver.length} anchor(s) are absent from every NON-driver candidate and present in another CONTROL`);
+  console.log(`  DRIVER — an arm whose subject is a driver. LIVE, and listed rather than counted silently:`);
+  for (const a of onDriver) console.log(`      ${a.driver} [${a.shape}] -> ${a.elsewhere.map((w) => `${w.path}×${w.n}`).join(", ")}`);
+}
+
 /* THE ARM THIS SUITE EXISTS FOR. A zero is unambiguous: the literal the driver
    will search for is in no candidate subject, so the arm cannot arm. This is the
    D-276 class and it is the half that cost a month. */
-const deadAnchors = anchors.filter((a) => a.hits === 0)
+const deadAnchors = anchors.filter((a) => a.hits === 0 && !onDriver.includes(a))
   .map((a) => `${a.driver} [${a.shape}] ${JSON.stringify(a.lit.length > 90 ? a.lit.slice(0, 90) + "…" : a.lit)}`);
 t(`A4 no arm's anchor has gone to ZERO — the D-276 class, which is a line CHANGED IN PLACE under a quote that was not moved with it (${deadAnchors.length} found)`,
   deadAnchors, []);
+t(`A7 and the driver-on-driver rescue has not become a blanket amnesty — it rescues a MINORITY of anchors and each is named above (${onDriver.length} rescued of ${anchors.length} anchor(s); ceiling: a tenth of the set)`,
+  onDriver.length * 10 <= anchors.length, true);
 
 console.log("\n--- and no anchor is ambiguous in its own subject, unless a driver says so ---");
 /* A first-occurrence patch over a doubled anchor silently arms the wrong site,
