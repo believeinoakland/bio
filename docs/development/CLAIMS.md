@@ -6316,3 +6316,118 @@ the figures a green `--strict` run PRINTED as REPRODUCIBLE with those suites in 
 the order that file's own comment block requires and the reason it is a second commit rather than an
 amendment.
 
+released: 2026-09-14 by the SK-7 worker (respawn), worktree `agent-aaa6f95fc9e50db99`, branch
+`worktree-agent-aaa6f95fc9e50db99`, two commits `9bc43d9` (the merge and the item) and the floor
+commit on top of it — **NOT pushed and NOT merged; CONDUCT takes the integration, the IC-88
+RESOLUTION, the interface bumps and the QUEUE row.**
+
+**GATES, every figure measured on this machine and none carried over from the dead worker's run.**
+BASELINE on a pristine scratch `git worktree add` of `origin/main` at `f38af22` — never `git stash`,
+which is repository-wide across every worktree — with `npm ci` in `bio-plane/`, `pdf-worker/` and
+`ocr-worker/` FIRST: **195/195 suites · 12,100 assertions · exit 0**, 324.8s. The spawn brief's
+figure was 195/195 · 12,100 and it was RIGHT, measured rather than trusted. FINAL on this branch:
+**196/196 suites · 12,151 assertions · exit 0**, 240.3s — one new suite, +51 assertions.
+`node scripts/coverage.mjs --strict` from `bio-plane/`, unpiped, **exit 0**, `REGISTER_FLOOR` moved
+1015→1021 / 186→187 / 187→188 from the REPRODUCIBLE figures a green run PRINTED at `9bc43d9` with
+`provenance: 204 of 204 discovered item(s) are in the commit` — never from the contaminated run.
+`node civicos-ui/test/run.mjs` from the repo root, unpiped, **exit 0**, all harnesses green
+(`content-extent` 58 pass, 0 fail, nine of them this item's). `node tools/plancheck.mjs --local`:
+**0 fail, 0 warn**. `op=audit` clean: `test/audit.test.mjs` green inside the battery above.
+
+**NEGATIVE CONTROL: SIX ARMS, ALL SIX AS DECLARED, re-run in full on the merged tree**, each armed
+ALONE with the others held open, every restore verified byte-identically by sha256 AND by content
+with a byte count printed (`src/store.mjs` 2,009,912 B · `checks/bio-checks.mjs` 668,310 B ·
+`civicos-ui/app.html` 1,228,519 B), never `git checkout --`.
+
+| arm | declared | actual | verdict |
+| --- | --- | --- | --- |
+| `baseline` | green, nothing armed | 45 pass / 0 fail | AS DECLARED |
+| `attest` (the pre-item body read restored) | 5 named failures | 39/6 — 5/5 present | AS DECLARED |
+| `label` (the `mint:` line dropped from `#contentStanding`) | 4 named failures | 41/4 — 4/4 present | AS DECLARED |
+| `finding` (the registry widened past the caller's ids) | 1 named failure | 44/1 — 1/1 present | AS DECLARED |
+| `overstrict` (the plane's own value classified as machine) | 2 named failures | 43/2 — 2/2 present | AS DECLARED |
+| `uilabel` — **NEW, the respawn's** (the label's call site removed from `legReferentHtml`) | 2 named failures, judged by the SURFACE suite | 56/2 — 2/2 present | AS DECLARED |
+
+Nothing was re-cut and no declaration was corrected this run. The row's declared control — *the
+machine credential attesting → refused by name; the label dropped from one surface → the vocabulary
+suite FAILS; over-strictness: member-minted rows unchanged* — is `attest`, `label` + `uilabel`, and
+`overstrict` respectively, and all four arms fired.
+
+**WHAT THE DEAD WORKER HAD DONE, and it is most of the item.** `op=contentmint` with the minter
+STAMPED SERVER-SIDE (a session stamps its member, an `ai` credential `class:ai/<tokenId>`, any other
+machine class `class:<cls>`, never the principal); `Store.#mintLabel` feeding all four content-row
+projections from one place; the four-state vocabulary in the catalogue, total over every possible
+`minted_by`, published through `vocabularies.content_mint_states`; the four totality guards
+(`rung-ladder`, `identity-claims`, `skillpack` ARM B2a, `m025-arm-anchor-witness`) answered at their
+sites; the suite; the control harness; IC-88; D-358; MEASUREMENTS. **And the item's real finding:**
+`op=attesttext` read its attestor from the REQUEST BODY, so C-35.10 fired only against a caller that
+incriminated itself — measured through a real minted `ai` credential, and RE-MEASURED by this worker
+against `origin/main` today, where it still held. Its four test callers are corrected, never
+exempted.
+
+**WHAT I HAD TO REDO OR FINISH.** The merge itself (seven conflicted files; `origin/main` had moved
+through REC-84, REC-85, CAP-8, CAP-9, FW-17, UI-61 and four IC resolutions) — merged rather than
+cherry-picked so `c2760e0`'s message survives as the record of the fence measurement. The FL-10
+bundle rebuild it died on (`npm run build`: 2,944,956 B, 46 first-party inputs). The four guard
+suites re-run green after the merge. All six control arms re-run. The full gate. `REGISTER_FLOOR`,
+which the claim named and `c2760e0` never touched. `docs/DECIDED.md` regenerated (888 rulings).
+
+**PREMISES OF ITS WORK I FOUND FALSE — four, and the first is the reportable one.**
+
+1. **"No surface in `civicos-ui/app.html` renders a content row at all."** Stated in the claim's
+   NOT-CLAIMED line, in IC-88's consumer list and RESPONSES, and in a MEASUREMENTS entry. Correct at
+   `3f92e5c`; **FALSE from UI-61**, which landed `legReferentHtml` — a renderer of a content row's
+   `standing`, the exact object this item labels. So the `mint` field was reaching a screen and being
+   dropped, and *labelled everywhere it is shown* was satisfied on the wire and broken on the page.
+   **Fixed by BUILDING the label, not by re-wording the claim**: `legMintLabelHtml` renders
+   `mint.says` verbatim on the plane's own `machine_work` predicate; only `machine_marked` is
+   labelled; nine arms in UI-61's suite; its §7 over-strictness digest byte-identical. The sixth
+   control arm exists for the same reason.
+2. **`D-358` carried no disposition token** (`DESIGN (SKILL, …)`), which `plancheck`'s NO DISPOSITION
+   arm refuses by name — the row could not be sorted out of the ledger into work. Corrected to
+   `DOCTRINE · SKILL`: what is missing is a RULING on the pilot's EXTRACT scope, not an
+   implementation.
+3. **The control declaration named an instrument that is not in the tree** —
+   `test/sk7-baseline-probe.mjs`, which does not exist. A declaration pointing at something the next
+   reader cannot run is D-238's own class arriving inside a negative control. Re-pointed at the
+   section that actually prints the digest.
+4. **The interface baseline moved**: IC-88 reads "I5 at 1.11.0 after IC-83"; I5 has been at 1.12.0
+   since IC-86's resolution. I3 is unmoved at 14.1.0. Recorded in the IC-88 ADDENDUM, not edited
+   above it.
+
+**DESIGN GAP, re-measured and unchanged, and it is what keeps this item at half.**
+`ASSISTANT-PILOT.md` §5 exclusion 1 excludes EXTRACT from the pilot BY NAME; its §§2–3 are
+[DESIGNED-not-built] in full; `agent-worker/` contains **0** occurrences of EXTRACT. There is no
+assistant-side EXTRACT act to build and none is invented. **The door, the label and the fence are
+built and are driven end to end through the ops with a real minted `ai` credential**; nothing calls
+them. D-358, and four statements in `BIO_Assistant_and_AI_Roles_v0_1.md` — the level-1 home that
+landed after this item was cut — are corrected to say so, including its §7.3 sentence *"The fence is
+unchanged and already in code"*, which stood for one day and was wrong about its first clause.
+
+**FOR CONDUCT — owed acts, with actors.**
+
+- **CONDUCT** — resolve **IC-88** and take the interface bumps. Two changes, stated apart: (1)
+  ADDITIVE (one op, one value class on `minted_by`, one `mint` field on four projections, one
+  vocabulary) — MINOR on I3 and I5 (**from 1.12.0, not 1.11.0**); (2) `op=attesttext` no longer reads
+  `member` from the request body — BREAKING for that op's request shape, with a MEASURED consumer
+  census of ZERO product callers (its only callers were four plane suites, all four exercising the
+  hole, all four corrected here). Whether (2) is MAJOR on I3 is CONDUCT's judgement on that census.
+- **CONDUCT** — flip `### SK-7` to `done` with its `landed:` line, and note that **SK-8 is
+  unblocked** (its row waits on SK-7).
+- **CONDUCT** — the merge into `main` is contended: four other live workers hold regions in
+  `store.mjs` / `index.mjs` / `bio-checks.mjs` (REC-89, REC-93, REC-97, CAP-12) and this item is the
+  fifth. Its regions are the `mintedBy` default in `promote`'s content loop, `#mintLabel` and its
+  four call sites, `mintContent`'s default, one OPS row, two server-side stamps, and one new
+  catalogue block. **It touches no extent arm, no `checkInquiryBasis`, and no leg writer.**
+- **CONDUCT or BOB** — **D-358 needs a ruling, not a builder.** The EXTRACT door has no caller
+  because `ASSISTANT-PILOT.md` §5 excludes EXTRACT from the pilot by name. Widening that scope is
+  Bob's or CONDUCT's; until it is widened, an SK item to call this door would be building against an
+  exclusion that still stands.
+- **UI** — the transcription-check surface is still owed (`ACTS_AWAITING_SURFACE`, `owed_by: "UI"`,
+  since 2026-08-08). When it is built it must **not** send `member` in the body; the plane stamps the
+  attestor now.
+- **Housekeeping, stated rather than hidden**: `.sk7-control-pristine/` remains in this worktree.
+  The run was clean and the pen should have been removed; the removal was refused by this session's
+  permission system. It is gitignored (`.gitignore:164`) and untracked, so it enters no walk and no
+  commit, but the next session in this worktree will find it.
+
