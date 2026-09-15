@@ -6453,3 +6453,272 @@ what is needed, at SKILL's next touch (SK-7's integration or SK-8's spawn), one 
   EXTRACT runs in the run — citing §7.3 — with the same comment saying why the old sentence
   was wrong. The §5 line of the front matter's Incomplete list updates in the same commit.
 released:
+## CLAIM 2026-09-14 CAPTURE (CAP-12 — the container extents I2 computes, persisted onto the reading at `op=acquire`)
+
+Session: CAPTURE worker, Opus 5, worktree-isolated, spawned by CONDUCT #11 after
+CAP-9 reached `origin/main` at `173bc66`.
+Worktree: `/Users/sparky/ClaudeCodeBIO/bio/.claude/worktrees/agent-aad6007ebb398cc38`
+Branch: `worktree-agent-aad6007ebb398cc38`
+Baseline: THIS worktree measured at `173bc66` BEFORE any edit, `git status --porcelain`
+empty (0 lines, printed), after `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/`
+(all exit 0) — the figure is recorded in the release line below, measured rather than
+inherited from the brief.
+
+**THE INTERFACE ANSWER, GIVEN BEFORE BUILDING as the row requires.** An IC is owed on
+**I1** and it is **IC-87's, AMENDED — no new IC is minted**, which is what IC-87's own
+RESOLUTION says of this item: *"CAP-12 (the container extents — sheets with dimensions,
+paragraph count, slides with shape lists, D-354) rides this entry's shape and is expected
+to AMEND it rather than mint anew."* The acquire document gains one further optional key
+inside `document.reading` (`container_extent`), in exactly the shape and with exactly the
+three-state absence rule IC-87 fixed for `page_count`. **I2 does NOT move**: every figure
+this item carries is already emitted by the six office entries' own `text()` results
+(`sheets[]`, `paragraphs[]`, `slides[]`, COFF-3/4/5 and COFF-10) and no producer is asked
+for anything new. **I5 does NOT move**: `readings.reading` already holds the reading as
+JSON keyed by the `capture_sha` the one reader looks up by, so there is no schema edit,
+for CAP-9's reason unchanged.
+
+**A BACKFILL IS NOT IN SCOPE, AND THAT IS MEASURED RATHER THAN ASSUMED.** CAP-9 measured
+the live record the same day: 31 bundles, **88** distinct `capture_sha`, and `op=reading`
+answers `found:false` for **all 88** (corroborated by `op=textprovenance` at `count:0`) —
+filed as `D-356`. A container-extent backfill would move exactly the same ZERO captures a
+page-count backfill would. Stated here rather than re-measured, and no live op was run for
+this item.
+
+EXACT PATHS CLAIMED, BY REGION:
+
+- `bio-plane/src/index.mjs` — **ONE REGION ONLY, CAP-9's**: `op=acquire`'s FW-15 reading
+  assembly. (a) the `let wired = null, wiredTier = null, pageCount = null;` declaration,
+  which gains `containerExtent`; (b) ONE block inside the office/format wire, immediately
+  before `readText()` is called, deriving the extent from the I2 text shape the entry
+  already returned; (c) ONE new line beside CAP-9's `reading.page_count = …`, after the
+  three reading branches close. **NOT** CAP-8's two `op=acquire` DEC-49 regions
+  (`is-drive-capture`, the export seam), **NOT** the PDF tier-2/tier-3 branches, **NOT**
+  any fetch, governor, hop or transport record.
+- `bio-plane/src/store.mjs` — **NAMED BY REGION, NOT BY FILE** (31,349 lines of shared
+  ground; `grep -a` only): (1) `#containerExtentForCapture`, which gains the `reading`
+  argument `#pageSetForCapture` already takes and answers from the stored figure — **its
+  ANSWER SHAPE does not move** (`{sheets, paragraphs, slides, held, empty_level, why}`);
+  (2) `contentContextFor`'s one-line call into it. **NOT `#persistedReading`, NOT
+  `#chainOfReading`, NOT `#pageSetForCapture`, NOT `mintContent`, NOT `checkContentExtent`,
+  NOT the `covers` arms, NOT `#contentPlanFor`, NOT `#markContentStale`, NOT `#writeReadings`**
+  — REC-89, REC-93, REC-97 and SK-7 are live on other regions of this file and this item
+  plus those four are the standing cap of five.
+- `bio-plane/test/capture-container-extent.test.mjs` — **NEW**. The suite, driven THROUGH
+  `op=acquire` → `op=promote` → `op=reading` / `op=content` against a miniflare fixture
+  serving a real XLSX, DOCX and PPTX assembled byte-by-byte with an independent crc32.
+- `bio-plane/test/nc-cap12.mjs` — **NEW**. The negative-control harness: each arm armed
+  ALONE, every restore verified by sha256 AND by content against a uniquely-named per-arm
+  pristine copy.
+- `bio-plane/scripts/coverage.mjs` — the ONE `REGISTER_FLOOR` key set only, moved to the
+  figures this item's own green POST-COMMIT `--strict` run PRINTS.
+- `docs/development/INTERFACE-CHANGES.md` — an **AMENDMENT block appended to IC-87**, not a
+  new IC row.
+- `docs/development/DEBT.md` — `D-354`'s disposition, and one new row (`D-359`) for the
+  producer-side gap this item measured and deliberately does not close.
+- `docs/development/MEASUREMENTS.md` — two appended sections.
+- `docs/DECIDED.md` — REGENERATED, never hand-edited (`node tools/decided.mjs`). Not
+  anticipated by this claim and stated rather than quietly taken: `plancheck --local` is
+  0 fail on a pristine `173bc66` and FAILED `STALE — docs/DECIDED.md does not match the
+  corpus it indexes` on this tree, because this item rules on things (D-354's disposition,
+  D-359, IC-87's amendment). The drift was measured as THIS item's rather than assumed
+  pre-existing. 893 rulings, 251.4 KB. `test/op-claims.test.mjs` is its one suite reader
+  and was re-run green (35/0) after the regeneration.
+- `docs/development/CLAIMS.md` — this block.
+- `.gitignore` — TWO pens, `.cap12-control-pristine/` and `.cap12-baseline/`, each named
+  rather than covered by a glob
+  (the file's own note at `.rec84-control-pristine/` rules that a glob would silently cover
+  a pen nobody declared).
+
+NOT CLAIMED, stated because a reader would reasonably expect them:
+
+- **`bio-plane/checks/bio-checks.mjs` — ONE COMMENT BLOCK, PROSE ONLY, AND NO REFUSAL IS
+  OWED.** C-45.1 and its three container predicates (`coversSheetCell`, `coversDocPara`,
+  `coversSlideShape`) exist, are correct and are already driven; this item makes them REACH
+  production and changes NO CODE in this file. Their own header fixes the shape this item
+  must produce —
+  `{sheets:[{name,rows,cols}]|null, paragraphs:<count>|null, slides:[{shapes:<count>}]|null}`,
+  every level independently nullable — and it is met rather than widened.
+  **What IS edited is the REC-85 comment block inside `checkContentExtent` — the lines that
+  say "WHAT THE RECORD HOLDS TODAY IS NOTHING … all three of these arms are LIVE AND UNFED",
+  which this landing makes FALSE at the check's own site.** Left standing it is D-106's class
+  exactly: a comment describing a mechanism that no longer exists, at the one place a reader
+  goes to learn what the plane refuses — and CPDF-17 spent a whole item on four of them the
+  same day. Corrected IN PLACE rather than deleted (COFF-9's precedent), with the half that
+  is still true (the INNER bound, D-359) named rather than silently dropped. **This is a
+  deliberate step past the brief's "`bio-checks.mjs` only if a refusal is owed", taken
+  because the brief also counts this worker among the standing cap of FIVE on that file, and
+  it is stated here and in the report so CONDUCT can reverse it at integration for the cost
+  of one comment.** The block sits INSIDE the `DEC-49 REGION is-content-extent` span, so
+  `regionLines` GROWS — a floor that fails only on a SHRINK, so no floor move is owed and
+  the figure was re-read from the green run. No code, no refusal, no `where`, no region
+  marker moved.
+- **`bio-plane/src/formats-xlsx.mjs`, `docx.mjs`, `pptx.mjs`, `odf.mjs` — NOT TOUCHED**, and
+  this is the item's one real finding rather than an omission. The row's phrase *"the
+  container extents the office entries already emit"* is true for ONE of the three levels
+  and not for the other two, **measured against the six entries' returns rather than
+  assumed**: `text()` emits the sheet LIST (names), the paragraph LIST (its length is the
+  count) and the slide LIST (its length is the count), and emits **no sheet `rows`/`cols`
+  and no per-slide shape count** — `walkSheetXml` and `walkSlide` COMPUTE both internally
+  and neither is returned, and `structure()` does not carry them either (`slides:
+  deck.length` is a scalar). D-354 was accurate here and said COMPUTE; the row's paraphrase
+  said emit. So this item feeds the SHEET, PARAGRAPH and SLIDE levels — which is every one
+  of the three arms' outer bound — and leaves the cell-within-a-sheet and
+  shape-within-a-slide halves UNDETERMINED AND STATED, which is exactly what
+  `coversSheetCell`'s own header says a sheet list with no dimensions must do. Emitting the
+  finer figures is a CONTENT-OFFICE act on an I2 producer and carries a real design
+  question this worker is not placed to settle silently (a sheet's USED RANGE is not its
+  capacity, so bounding a cell by it could refuse a legitimate citation of a cell that
+  exists and was empty at capture — a fence tighter than its rule). Filed as **`D-359`**
+  with its actor.
+- **`bio-plane/src/schema.mjs` — NOT TOUCHED AT ALL. NO TABLE, NO COLUMN**, for CAP-9's
+  reason, and REC-85's own inverted: `#containerExtentForCapture`'s header rules that a
+  container figure gets no column on `content` because it would be NULL for every row that
+  could be minted; that reasoning is about the `content` TABLE and is unchanged by this
+  item, which writes to the reading JSON and not to a column.
+- `bio-plane/test/content-extent-arms.test.mjs` (REC-85's, and its §6 still measures a
+  reading that carries NO container extent, so it does not move — the prose correction it
+  is owed is an ACT in this item's report with its actor), `civicos-ui/**`, `newgroup/**`,
+  `docs/development/QUEUE.md` (CONDUCT's sole writer),
+  `docs/architecture/BIO_Content_Framework_v0_10.md` (reported under `DESIGN GAP:` instead —
+  §15's structure-shape row and §16's closing sentence both name this gap as open).
+- `bio-plane/dist/**` is rebuilt by `npm run build` under FL-10's guard, not authored.
+
+**AMENDED AT THE BUILD, two additions, each stated rather than quietly taken:**
+
+- `bio-plane/test/cap12-pin.probe.mjs` — **NEW, and not anticipated by this claim.** The
+  over-strictness pin the row requires is a digest of the HTML and PDF acquire documents'
+  `reading` taken on a PRISTINE `origin/main` checkout, and a digest written by hand would
+  agree with its author for free. The probe is the instrument that produced it, committed so
+  the figure is re-derivable rather than asserted; it is a `.probe.mjs` and not a `.test.mjs`
+  (the `curated-producer.probe.mjs` precedent) so the battery does not discover it.
+- `bio-plane/dist/bio-plane.bundled.mjs` + `dist/bio-plane.bundle.json` — FL-10's guard fires
+  on any `src/` change and the bundle is rebuilt with `npm run build`. Nothing bumped, signed
+  or deployed.
+
+**ONE FINDING ABOUT THIS ITEM'S OWN WORK, recorded rather than smoothed.** The FIRST baseline
+run was VOID and was killed: it was started on this worktree (pristine at the time) and then
+`src/index.mjs` and `src/store.mjs` were edited WHILE IT RAN, so every suite the runner had not
+yet reached imported the edited source. The battery reads the tree it is running against
+continuously, not once at startup, and an in-flight edit silently mixes two trees into one
+tally. The baseline was re-measured on a separate pristine `origin/main` worktree
+(`.cap12-baseline/`, gitignored, inside this worktree rather than in the shared scratchpad)
+and that is the figure reported.
+
+released: 2026-09-14 by the CAP-12 worker — landed on `worktree-agent-aad6007ebb398cc38`, NOT pushed and
+NOT merged; CONDUCT integrates. **THIS RELEASE CARRIES NO OWED ACT IN PROSE** (D-342's grammar, and
+WORKER.md's rule that an owed act never lives in a note): everything this landing obliges a future actor
+to do is an ITEM or a DELEGATION with its actor named — **IC-87 is AMENDED in place** (no new IC, as its
+own RESOLUTION directed) and CONDUCT takes the bump decision and the RESOLUTION; **D-359** is a DEBT row
+with its disposition token and an actor (`CONTENT-OFFICE`) and is the DELEGATION at the foot of this file;
+**D-354 is CLOSED** in the same file; the `### CAP-12 · running` row in `QUEUE.md` is CONDUCT's to flip
+and this worker did not touch that file; the two stale design sentences and one stale suite header this
+landing falsifies are named in the report's `DESIGN GAP:` and `for CONDUCT` lists as ACTS with actors.
+
+**THE INTERFACE ANSWER, GIVEN BEFORE BUILDING as the row required** (it is at the head of this claim,
+written before the first edit): an IC IS owed, on **I1**, and it is **IC-87's AMENDMENT and not a new id**
+— which is what IC-87's own RESOLUTION says of this item. **I2 does not move** (every figure is already
+emitted by the six office entries' `text()` returns) and **I5 does not move**, which is why there is no
+schema edit in the diff.
+
+GATES on this branch, every exit status read UNPIPED: battery **196/196 suites · 12,133 assertions · exit
+0** against a PRISTINE `origin/main` baseline of **195/195 · 12,100** measured at `173bc66` on a separate
+scratch worktree with `git status --porcelain` empty — **the brief's figure was RIGHT and is recorded as
+measured, not inherited**. The **+33 is attributed PER SUITE by DIFFING the two full runs and never by
+subtraction**: `+29` `capture-container-extent.test.mjs` (new), `+3` `hygiene.test.mjs` (721 to 724 — its
+per-suite scans gaining a suite), `+1` `planning-hygiene.test.mjs` (285 to 286 — the debt row and the IC
+amendment); **191 suites unchanged, none FELL, and no existing suite was edited**. `node
+scripts/coverage.mjs --strict` run DIRECTLY from `bio-plane/`, `$?` unpiped, **exit 0**; checks **266/266
+named (100.0%)**; `node civicos-ui/test/run.mjs` from the REPO ROOT **exit 0**; `node tools/plancheck.mjs
+--local` **0 fail 0 warn** (it FAILED `STALE — docs/DECIDED.md` first, measured as this item's own drift
+against a 0-fail pristine tree, and `node tools/decided.mjs` regenerated it — 893 rulings, 251.4 KB);
+`node tools/corpuscheck.mjs` **50 governed documents, 0 fail**. Nothing was deployed, bumped, signed or
+tagged, and **NO LIVE TRAFFIC OF ANY KIND was taken** — the backfill population this item would have
+measured is the same ZERO CAP-9 measured the same day (D-356), so re-measuring it would have been a
+second opinion about one number.
+
+**REGISTER_FLOOR MOVED 1015 -> 1024 · 186 -> 187 · 187 -> 188**, ONE key set, all three in the same turn and every figure taken
+from the **POST-COMMIT** green `--strict` run's own REPRODUCIBLE print. **The PRE-commit run printed the
+floor's existing figures (`arms 1015/1015 · classified 186/186 · corpus 187/187`) with `contaminated: 1
+suite(s) no other checkout has` beside the higher ones** — D-238's rule working as written, and the reason
+the floor is moved after the commit and not before. `FLEET_FLOOR` unmoved (no fleet member, no fleet
+suite). FL-10's guard fired on the `src/` change and `npm run build` rebuilt
+`dist/bio-plane.bundled.mjs` (2,931,511 B, sha256 `6baa28db7510…`); `src/signpage.mjs` regenerated
+BYTE-IDENTICALLY every time, and a THIRD build after the `scripts/coverage.mjs` floor move produced the
+**same bundle bytes** — the check that the floor move is not a source change wearing a script's clothes.
+`coverage-provenance.test.mjs` re-run after the move: **29 pass, 0 fail**.
+
+**CONTROLS: NINE rows — a baseline and eight arms — in `test/nc-cap12.mjs`, re-runnable in one step
+(`node test/nc-cap12.mjs [arm]`), each armed ALONE with the others held open, every restore verified by
+sha256 AND by content against a UNIQUELY-NAMED per-arm pristine copy with a byte count printed and a
+20,000-byte minimum guarded (9 of 9 `byte-identically: YES`, 0 mismatch — `src/index.mjs` 529,262 B
+sha256 `8f030d481cb4…`, `src/store.mjs` 2,000,712 B sha256 `e9c5fe8250a5…`). EVERY ARM AS DECLARED,
+declared before arming:**
+
+| arm | declared MUST FAIL | actual |
+| --- | --- | --- |
+| `baseline` | nothing | **29 pass, 0 fail** — green, the row that distinguishes eight-arms-broken from eight-arms-working |
+| `dropsheets` (index.mjs: the sheet list never reaches the reading) | the workbook's acquire arm, its persisted arm, the D-359 arm, the C-45.1 refusal and its detail | **24/5**, 5/5 — **THE ARM THAT PROVES THE GAP WAS REAL** for this level: it reproduces exactly what the record held before this item, and C-45.1 then cannot fire on a freshly acquired workbook. The paragraph and slide arms STAYED GREEN |
+| `droppara` | the document's three arms | **26/3**, 3/3 — sheet and slide arms green |
+| `dropslides` | the deck's four arms | **25/4**, 4/4 — sheet and paragraph arms green |
+| `zero` (an entry's EMPTY list read as a held figure) | the never-a-zero arm | **28/1**, 1/1 — a workbook too large to read would otherwise be recorded as holding NO sheets, and every cell citation on it refused |
+| `notion` (`levels` declared as all three regardless) | the two arms that assert what a container itemises AT ALL | **27/2**, 2/2 — and **not one gate moved**, which is the finding this arm records: `levels` is a statement about what is ABSENT and bounds nothing |
+| `reader` (store.mjs: the stored figure ignored) | all four container refusals | **25/4**, 4/4 — and the acquire/persist arms STAYED GREEN, which separates a reader failure from `drop*`'s writer failure |
+| `overstrict` (store.mjs: five rows and columns invented per sheet) | the CELL half of the D-359 arm | **28/1**, 1/1 — every refusal and every in-range mint stayed green, so the arm broke correct work and nothing else |
+| `overstrict2` (store.mjs: five shapes invented per slide) | the SHAPE half of the D-359 arm | **28/1**, 1/1 — same, on the other predicate |
+
+**THREE FINDINGS ABOUT THIS ITEM'S OWN WORK, recorded rather than smoothed.**
+
+1. **`overstrict` came back NOT AS DECLARED on its first run (`1/2 declared, 1 failing`) and THE
+   DECLARATION WAS THE DEFECT** — it named both halves of the D-359 arm while the patch touches only
+   `coversSheetCell`'s figure. The subject was behaving exactly right. That is REC-85's own `canon`
+   finding reproduced one item later, and it is why the slide half is now `overstrict2` rather than a
+   second clause: **a mis-declared arm reads exactly like a partially-working subject.** Corrected at
+   the site in `nc-cap12.mjs` and re-run AS DECLARED.
+2. **THE FIRST BASELINE RUN WAS VOID AND WAS KILLED.** It was started on this worktree while pristine,
+   and `src/index.mjs` and `src/store.mjs` were then edited WHILE IT RAN — so every suite the runner had
+   not yet reached imported the edited source. **The battery reads the tree continuously, not once at
+   startup, and an in-flight edit silently mixes two trees into one tally.** The baseline was re-measured
+   on a separate pristine `origin/main` worktree and that is the figure above.
+3. **`CLAUDE.md`'s `npm ci` TRAP IS ONE PACKAGE SHORT OF THE INSTRUMENT, MEASURED.** The pristine
+   baseline's FIRST run — with `npm ci` in `bio-plane/` only, exactly as `CLAUDE.md`'s trap entry says —
+   read **194/195 green · 1 SKIPPED · 12,024** and **exited 0**, the skip line naming `ocr-worker`'s suite
+   as unable to resolve `miniflare`. The battery now runs 8 FLEET suites out of `pdf-worker/` and
+   `ocr-worker/`. Unlike the 2026-08-10 sighting, which failed loudly at ~14 green, **this one reads as a
+   healthy baseline and would have been recorded as one** — 76 assertions and a whole member's suite
+   short. Written up in `MEASUREMENTS.md`; the correction to `CLAUDE.md`'s own trap entry is an ACT for
+   CONDUCT in the report, not edited here.
+
+## DELEGATION 2026-09-14 CAPTURE (CAP-12) to CONTENT-OFFICE: **THE TWO INNER BOUNDS NO FORMAT ENTRY EMITS — A SHEET'S ROW AND COLUMN EXTENT, AND A SLIDE'S SHAPE COUNT — AND THE ROW IS `D-359`**
+
+CAP-12 closes D-354 at the OUTER bound of all three office arms: an unknown sheet NAME, a paragraph past
+the count and a slide past the deck are each refused C-45.1 by name on every office container the plane
+has read, driven end to end through `op=acquire` then `op=promote`. **It closes nothing at the inner
+bound**, and that is measured rather than asserted.
+
+**THE MEASUREMENT** (`MEASUREMENTS.md`, CAP-12's section, 2026-09-14 — every `text()` and `structure()`
+return in `formats-xlsx.mjs`, `docx.mjs`, `pptx.mjs` and `odf.mjs` read, not sampled):
+
+- `xlsxText` / `odsText` return `sheets: [{sheet, name, hidden, text, undetermined}]` — the NAME, **no
+  `rows`, no `cols`**. `walkSheetXml` computes the used range and returns it to neither caller.
+- `pptxText` / `odpText` return `slides: [{slide, ref, part, hidden, text}]` — **no shape count**.
+  `walkSlide` returns `shapes: <int>` and `pptxText` uses only `.text`.
+- `docxText` / `odtText` return `paragraphs[]`, whose LENGTH is the count — **this level is fully fed**,
+  which is why one of the three arms is complete and two are not.
+
+**THE ACT, with its actor:** `CONTENT-OFFICE` returns the figures its entries already compute. That is an
+ADDITIVE change to the I2 text shape, so it carries an IC on I2 with its consumers answered. **CAP-12's
+wire then carries them with NO edit** — it already reads `sheets[].rows`/`cols` and `slides[].shapes` and
+writes NULL only because nothing supplies them, and `coversSheetCell` / `coversSlideShape` already compare
+against them.
+
+**AND ONE DECISION TRAVELS WITH IT, which is why this was not taken here rather than merely not reached:
+a sheet's USED RANGE is not its capacity.** An XLSX sheet is 1,048,576 by 16,384 whatever the file fills,
+so bounding a cell by the walked range would refuse a legitimate citation of a cell that EXISTS and was
+empty at capture — a fence tighter than its rule, in the direction that pushes a member toward citing the
+whole document, which claims MORE. What a spreadsheet cell's bound MEANS has to be recorded before the
+figure is emitted, not after.
+
+**Interim law, and it is D-354's own narrowed rather than repealed:** an absent inner bound is
+UNDETERMINED and STATED — `#containerExtentForCapture` names it per capture in `empty_level`, citing
+D-359 — never a zero and never a refusal. `capture-container-extent.test.mjs` section 4 drives exactly the
+cost: `Summary!ZZ999999` of a real three-sheet workbook and shape 9,999 of a real slide both MINT today.

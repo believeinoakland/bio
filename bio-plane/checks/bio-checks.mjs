@@ -10312,21 +10312,35 @@ export function checkContentExtent(extent, ctx = {}) {
      a member into citing the WHOLE DOCUMENT instead, which claims MORE and not
      less. Undetermined, STATED, never a refusal for what nobody measured.
 
-     AND WHAT THE RECORD HOLDS TODAY IS NOTHING, MEASURED RATHER THAN ASSUMED.
-     I2 produces the sheet walk, the paragraph list and the shape sequence at
-     acquire (COFF-3/4/5, and COFF-10's three ODF entries), and NOTHING PERSISTS
-     ANY OF IT: a reading carries `entities`, `facts`, `text_source`, `text_tier`
-     and `text_container` and no structure, `docprofile/readtext.mjs` says in its
-     own words that it "returns what the recognisers said — never a persisted
-     shape", and no table in the schema holds a sheet, a paragraph or a shape.
-     Part II §15 states the same thing from the design side: the I2 structure is
-     "not stored — recoverable only by re-running the structure op". So all three
-     of these arms are LIVE AND UNFED — the seam is built, correct and driven,
-     and the figure that would fire it has to be persisted at acquire, which is
-     CAPTURE's path (the CAP-9 shape for D-345's page count) and is DELEGATED
-     rather than taken here. This comment is the honest statement of that, and
-     the store's `#containerExtentForCapture` names the empty level in the
-     answer it returns rather than returning a bare null.
+     AND THE RECORD NOW HOLDS THE OUTER BOUND OF ALL THREE, MEASURED RATHER
+     THAN ASSUMED (CAP-12 / D-354, 2026-09-14). `op=acquire` carries what the
+     six office entries itemise onto the reading it persists — the sheet LIST,
+     the paragraph COUNT and the slide LIST — so an unknown SHEET NAME, a
+     paragraph past the count and a slide past the deck are each refused here,
+     BY NAME, on every office container this plane has read. **The sentences
+     that stood here until CAP-12 said "WHAT THE RECORD HOLDS TODAY IS NOTHING
+     … all three of these arms are LIVE AND UNFED"; they recorded the gap, and
+     the gap closing is the news** — COFF-9's precedent for correcting a stale
+     self-description in place rather than deleting it, and the same correction
+     `#containerExtentForCapture` and `#pageSetForCapture` carry in the store.
+     Nothing in THIS file moved for it: the feed arrived and these predicates
+     began firing, which is exactly what D-354 predicted.
+
+     WHAT IS STILL UNFED IS THE INNER BOUND OF TWO OF THE THREE, AND IT IS
+     NAMED RATHER THAN LEFT TO BE INFERRED (D-359). No entry emits a sheet's
+     `rows`/`cols` or a slide's shape COUNT — `walkSheetXml` and `walkSlide`
+     compute both and return neither, measured against all six returns — so
+     `coversSheetCell` still answers nothing about a CELL inside a sheet the
+     workbook has, and `coversSlideShape` nothing about a SHAPE inside a slide
+     the deck has. That is exactly what the predicates' own header below says a
+     sheet list with no dimensions must do, it is skipped and never guessed,
+     and the store's `#containerExtentForCapture` NAMES it in the answer it
+     returns rather than leaving a bare null. Stated plainly because a
+     mechanism believed on the strength of its existence rather than its
+     behaviour is the defect this project meets most: the OUTER bound is fed
+     and driven end to end in `test/capture-container-extent.test.mjs`; the
+     INNER bound is not, and this comment is what keeps the next reader from
+     believing either half wrongly.
      ==================================================================== */
   if (e.kind === 'sheet-cell') {
     if (typeof e.sheet !== 'string' || !e.sheet.trim())

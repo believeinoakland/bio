@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-899 rulings across 81 documents.
+906 rulings across 81 documents.
 
 ## DEC-
 
@@ -502,11 +502,13 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:702`
 - **D-353** — D-353 RULED by CONDUCT (mechanism): the sweep joins the periodic census as its third shape — rowed as M0-33; the two pre-existing mode-(b) reds outside D-343 (`civicos-ui/test/refusal-partition.control.mjs` exit 1, 2 of 18 sub-checks, AND it leaves a ~4 MB `.rec79-control-pristine/` pen behind on a non-zero exit;…  
   `docs/development/QUEUE.md:751`
+- **D-354** — 0 fail on a pristine `173bc66` and FAILED `STALE — docs/DECIDED.md does not match the corpus it indexes` on this tree, because this item rules on things (D-354's disposition, D-359, IC-87's amendment).  
+  `docs/development/CLAIMS.md:6521`
 - **D-358** · 2026-09-14 — DECIDED 2026-09-14** (D-358 answered: the run, not the pilot).  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:10`
 - **D-358** · 2026-09-14 — RULED; **PLANE HALF BUILT 2026-09-14 (SK-7)** — `op=contentmint`, the four-state MINT LABEL on every content-row projection and on the leg surface, the attest fence made reachable; the ASSISTANT half unbuilt; D-358 ANSWERED at §7.3 — the caller is a RUN, not the pilot, whose exclusion is corrected rather than…  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:134`
-- **D-358** — SETTLED when a product caller exists for either op — the assistant's EXTRACT act (blocked: D-358) or UI's transcription-check surface — and confirms the shape live; CONDUCT writes it.  
+- **D-358** · 2026-09-14 — SETTLED when a product caller exists for either op — the assistant's EXTRACT act (blocked: D-358) or UI's transcription-check surface — and confirms the shape live; CONDUCT writes it. ### AMENDED at CAP-12's landing — 2026-09-14 (the second key this entry was written to carry; the version stays **1.5.0** and the…  
   `docs/development/INTERFACE-CHANGES.md:6738`
 - **D-358** · 2026-09-14 — THE ANSWER CHANGED THE SHAPE OF THIS ITEM AND IS ITS AUTHORITY: `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 — the exclusion is CORRECTED, NOT LIFTED.  
   `docs/development/QUEUE.md:1823`
@@ -616,6 +618,10 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1958`
 - **IC-85** · 2026-09-14 — CORRECTED 1.4.0 (IC-85, 2026-09-14): `via` lives on each HOP of `provenance_chain`, not at the top level of the acquire document — the plane has never emitted a top-level `via`, pinned by `drive.test.mjs`; this row stood here since 1.0.0 describing a field nobody wrote.** |  
   `docs/development/INTERFACES.md:170`
+- **IC-87** — IC-87's, AMENDED — no new IC is minted**, which is what IC-87's own RESOLUTION says of this item: *"CAP-12 (the container extents — sheets with dimensions, paragraph count, slides with shape lists, D-354) rides this entry's shape and is expected to AMEND it rather than mint anew."* The acquire document gains one…  
+  `docs/development/CLAIMS.md:6468`
+- **IC-87** — IC-87 is AMENDED in place** (no new IC, as its own RESOLUTION directed) and CONDUCT takes the bump decision and the RESOLUTION; **D-359** is a DEBT row with its disposition token and an actor (`CONTENT-OFFICE`) and is the DELEGATION at the foot of this file; **D-354 is CLOSED** in the same file; the `### CAP-12 ·…  
+  `docs/development/CLAIMS.md:6610`
 - **IC-88** · 2026-09-14 — One superseded leak-guard pin (`gate-reads.test.mjs`'s whole-key-set assertion on `op=list`) CORRECTED with a dated reason and two arms proving `limit` is viewer-independent while `total` is not — never exempted.  
   `docs/development/INTERFACES.md:508`
 ## C-
@@ -1010,6 +1016,8 @@ authority is the file named, never this one.
   `docs/development/INTERFACE-CHANGES.md:6295`
 - **CAP-12** — SETTLED when CAP-12 lands and the three office arms' C-45.1 is fed, or at the next DIST deploy serving the count live — whichever first; CONDUCT writes it.  
   `docs/development/INTERFACE-CHANGES.md:6565`
+- **CAP-12** · 2026-09-14 — AMENDED at CAP-12's landing — 2026-09-14 (the second key this entry was written to carry; the version stays **1.5.0** and the class stays ADDITIVE, and CONDUCT confirms or moves it at integration)  
+  `docs/development/INTERFACE-CHANGES.md:6740`
 ## CPDF-
 
 - **CPDF-2** — CPDF-2 is SUPERSEDED** by Bob's function-specific Worker topology (I6).  
@@ -1563,6 +1571,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:6324`
 - `docs/DECIDED.md` regenerated (888 rulings). **PREMISES OF ITS WORK I FOUND FALSE — four, and the first is the reportable one.**  
   `docs/development/CLAIMS.md:6377`
+- `docs/DECIDED.md` — REGENERATED, never hand-edited (`node tools/decided.mjs`).  
+  `docs/development/CLAIMS.md:6519`
+- AMENDED AT THE BUILD, two additions, each stated rather than quietly taken:** - `bio-plane/test/cap12-pin.probe.mjs` — **NEW, and not anticipated by this claim.** The over-strictness pin the row requires is a digest of the HTML and PDF acquire documents'  
+  `docs/development/CLAIMS.md:6586`
+- (it FAILED `STALE — docs/DECIDED.md` first, measured as this item's own drift against a 0-fail pristine tree, and `node tools/decided.mjs` regenerated it — 893 rulings, 251.4 KB); `node tools/corpuscheck.mjs` **50 governed documents, 0 fail**.  
+  `docs/development/CLAIMS.md:6632`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  

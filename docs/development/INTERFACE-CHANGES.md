@@ -6736,3 +6736,48 @@ moved.
 **RESPONSES, recorded by CONDUCT #11 at integration:** `RECORD` AGREE (owner of I5/I3 and the content region — the stamp and the label land in its ground and its four totality guards were answered at their sites). `SKILL` AGREE (owner and proposer). `UI` NOT-AFFECTED by measurement, **with one act owed and named**: when UI builds the transcription-check surface (`ACTS_AWAITING_SURFACE`, `owed_by: "UI"`, since 2026-08-08) it must NOT send `member` in the body — the plane stamps it — and a content-row surface renders `mint.says` verbatim and never `minted_by`; the respawn already built the label into UI-61's landed renderer, so the surface that exists is correct today. `CONTENT-PDF` NOT-AFFECTED, answered FOR by CONDUCT in writing (dormant; it produces structure and calls neither op). `FLEET` and `DIST` NOT-AFFECTED by measurement (no caller; DIST's embedded bundle regenerates at the next cut).
 
 SETTLED when a product caller exists for either op — the assistant's EXTRACT act (blocked: D-358) or UI's transcription-check surface — and confirms the shape live; CONDUCT writes it.
+
+### AMENDED at CAP-12's landing — 2026-09-14 (the second key this entry was written to carry; the version stays **1.5.0** and the class stays ADDITIVE, and CONDUCT confirms or moves it at integration)
+
+**This is the amendment this IC's own RESOLUTION anticipated** — *"CAP-12 … rides this entry's shape and is expected to AMEND it rather than mint anew"* — so no new IC is minted. It is recorded here, PROPOSED by CAPTURE, with every consumer named; the bump and the RESOLUTION are CONDUCT's, as always.
+
+**A SECOND optional key on `document.reading`, under the SAME three-state absence rule:**
+
+```
+  reading: {
+    …, page_count,                                   // IC-87 as resolved
++   container_extent: {                              // ABSENT when the format wire never ran
++     container: <the I2 container token> | null,    //   what the entry said it read
++     levels:    ["sheets"|"paragraphs"|"slides", …] //   the levels THIS container itemises at all
++     sheets:     [{ name, rows, cols }] | null,
++     paragraphs: <positive integer>      | null,
++     slides:     [{ shapes }]            | null,
++   } | null                                         // NULL when the wire ran and no entry itemised a container
+  }
+```
+
+| value | what it means | when |
+| --- | --- | --- |
+| an object | an office entry answered; `levels` names what this container itemises and each named level is the figure or NULL | an XLSX, DOCX, PPTX, ODS, ODT or ODP the FORMAT wire read |
+| `null` (key PRESENT) | the wire RAN and no entry itemised a container at all | a PDF (whose I2 text carries no sheet, paragraph or slide list); a primary the wire could not read |
+| key ABSENT | nothing ever tried to itemise a container | an HTML page read as text at intake — the wire never ran |
+
+**Value domains, and each is the rule rather than a preference.** `sheets` is a non-empty array or NULL, each entry `{name, rows, cols}` with `rows`/`cols` **NULL today** (no entry emits them — D-359). `paragraphs` is a POSITIVE INTEGER or NULL, **never 0**: every entry's over-the-size-bound branch returns an empty list with its guard marker beside it, and reading that as *"this document holds no paragraphs"* would be the record asserting a fact nobody established. `slides` is a non-empty array or NULL, each entry `{shapes}` with `shapes` **NULL today** for the same reason as `rows`/`cols`. `levels` is the discriminator that keeps a level a container has NO NOTION OF from being reported as a gap in it — a workbook has no paragraph count and never will, which is a different fact from a workbook whose sheets the record does not hold.
+
+**It is READ from I2 and never re-derived.** The six office entries already return the per-unit list named for what the unit IS (`sheets[]`, `paragraphs[]`, `slides[]`); this item counts and copies them. Recognition is by KEY PRESENCE on the I2 text shape rather than by a list of container names, so a seventh entry landing in the same shape is carried with no edit.
+
+**WHY IT IS STILL I1 AND NOT I2**, which is the same close call IC-87 argued and the same answer: no producer is asked for anything new, and filing it on I2 would bump an interface whose producers are unchanged. **I5 does not move**: no column, no table — the field rides `readings.reading`, the JSON the table already stores.
+
+### CONSUMERS, and what changes for each — all four MEASURED, not asserted
+
+- **RECORD** — the one consumer that reads it. `Store#containerExtentForCapture` gains the `reading` argument `#pageSetForCapture` already takes and answers from the stored figure; **its ANSWER SHAPE does not move** (`{sheets, paragraphs, slides, held, empty_level, why}`), so `checkContentExtent` and the three `covers` predicates are UNTOUCHED — exactly what D-354 predicted (*"Nothing on the RECORD side moves when it arrives"*). No `covers` arm, no `mintContent`, no check and no catalogue row changed.
+- **CONTENT-OFFICE** (dormant) — NOT-AFFECTED by this item, and it is the owner of the residue: the entries emit no sheet dimensions and no per-slide shape count, so the INNER half of two arms stays undetermined (**D-359**, filed with its actor). This item consumes what they already return and asks them for nothing.
+- **CONTENT-HTML / CONTENT-PDF** (dormant) — NOT-AFFECTED. A PDF's reading gains the key present-and-NULL and nothing else; pinned by a digest taken on a PRISTINE `173bc66` checkout.
+- **FRAMEWORK** (ACTIVE) — NOT-AFFECTED. `readings`' COLUMNS do not move; the extent rides the JSON blob the table already stores, and FW-17's `reading_refs` shares no ground with it.
+- **UI** — NOT-AFFECTED; measured: `civicos-ui` reads no `reading` field (the same measurement IC-87 took).
+
+### IMPACT, MEASURED RATHER THAN ASSERTED
+
+- The HTML acquire document's whole `reading` is **byte-identical** to this entry's own landing at `173bc66`, and a PDF's is byte-identical once the one new key is removed — both pinned in the suite by a sha256 taken on a pristine checkout with `test/cap12-pin.probe.mjs`, not by a hand-written list of expected strings.
+- Battery, coverage, UI harness and control figures are in `CLAIMS.md`'s CAP-12 release line.
+- On the project's own instance nothing changes shape: `op=reading` answers `found:false` for all 88 captures (D-356's measurement, taken the same day), so the field appears on the next acquire.

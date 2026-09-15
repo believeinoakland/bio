@@ -162,3 +162,14 @@ _m025/
 # hypothetical, since `coverage.mjs`'s fleet walk and the battery's discovery both read
 # directories rather than a list.
 .sk7-control-pristine/
+
+# CAP-12's control pen and its BASELINE checkout, each on its own line rather
+# than under a glob — the note at `.rec84-control-pristine/` rules that a glob
+# over `.*-control-pristine/` would silently cover a pen nobody declared, and the
+# same argument covers a baseline worktree. The driver keeps per-arm pristine
+# copies of `src/index.mjs` and `src/store.mjs` in the pen while it arms them; the
+# baseline checkout is a pristine `origin/main` worktree this item measures its
+# own baseline in, kept INSIDE this worktree because the shared scratchpad is not
+# isolated between sessions (WORKER.md) and `git stash` is repository-wide.
+.cap12-control-pristine/
+.cap12-baseline/

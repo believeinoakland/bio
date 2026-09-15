@@ -32113,60 +32113,85 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    *  `checkContentExtent` compare an address against, and the mirror of
    *  `#pageSetForCapture` one method up.
    *
-   *  NOTHING IN THIS PLANE PERSISTS ANY OF THE THREE, AND THAT IS MEASURED
-   *  RATHER THAN ASSUMED (2026-09-14, this item). I2 produces all of it at
-   *  acquire — `formats-xlsx.mjs` walks every sheet's rows and cells,
-   *  `docx.mjs` emits `paragraphs[]`, `pptx.mjs` tracks the shape sequence per
-   *  slide, and COFF-10's three ODF entries produce the same shape — and the
-   *  acquire path carries NONE of it onto the reading: a reading holds
-   *  `entities`, `facts`, `text_source`, `text_tier`, `text_container` and
-   *  nothing structural, `docprofile/readtext.mjs` says in its own words that it
-   *  "returns what the recognisers said — never a persisted shape", and no one
-   *  of the seventy-seven tables in `schema.mjs` holds a sheet, a paragraph or a
-   *  shape. The design says the same from its own side: Part II §15 lists the I2
-   *  structure shape as "not stored — recoverable only by re-running the
-   *  structure op, which stops at tier 2".
+   *  THE READING'S OWN CONTAINER EXTENT, AND IT IS THE ONLY SOURCE (CAP-12 /
+   *  D-354, 2026-09-14). `op=acquire`'s FW-15 wire now carries what the office
+   *  entries itemise onto the reading it persists — the sheet list, the
+   *  paragraph count, the slide list — so for every office container the plane
+   *  has read there IS a stored figure and it is the one answered from.
+   *  **The sentences that stood here until CAP-12 said "NOTHING IN THIS PLANE
+   *  PERSISTS ANY OF THE THREE … these three arms are BUILT AND UNFED"; they
+   *  recorded the gap, and the gap closing is the news** (COFF-9's precedent for
+   *  correcting a stale self-description in place rather than deleting it, which
+   *  `#pageSetForCapture` one method up followed for the same reason).
    *
-   *  SO THE HONEST ANSWER TODAY IS UNDETERMINED FOR ALL THREE, AND IT IS STATED
-   *  WITH THE EMPTY LEVEL NAMED rather than returned as a bare null. That is
-   *  `CLAUDE.md`'s sparse rule at this construct: absence at one level is not
-   *  evidence of absence at the next, and WHICH level was empty is part of the
-   *  answer. A reader of this object can say "the record never recorded this
-   *  workbook's sheets", which is a different fact from "this workbook has no
-   *  such sheet" — and the second is what the C-45.1 refusal means.
+   *  THERE IS NO DERIVED FALLBACK, AND THAT IS A DIFFERENCE FROM THE PAGE-SET
+   *  ARM RATHER THAN AN OMISSION. A page set can be inferred from what the
+   *  record has seen NAMED — a D-252 scoped chain, an attestation's extent — so
+   *  that method has a floor to fall back to. Nothing in this record ever names
+   *  a sheet, a paragraph or a shape except a content row minted from a member's
+   *  own citation, and deriving a container's extent from what members have
+   *  cited would let the first citation of `NoSuchSheet` define the workbook.
+   *  So the stored figure or nothing.
    *
-   *  WHY THIS IS NOT A REFUSAL, and it is the page-set arm's reason verbatim
+   *  WHAT IS STILL NOT HELD, STATED RATHER THAN LEFT TO BE INFERRED (D-359).
+   *  The entries emit the sheet LIST, the paragraph LIST and the slide LIST and
+   *  emit NO sheet `rows`/`cols` and NO per-slide shape count — `walkSheetXml`
+   *  and `walkSlide` compute both and return neither, measured against all six
+   *  returns. So the outer bound of each arm is fed (an unknown sheet name, a
+   *  paragraph past the count, a slide past the deck) and the two inner bounds
+   *  are UNDETERMINED AND STATED, which is exactly what `coversSheetCell`'s own
+   *  header says a sheet list with no dimensions must do: refuse an unknown
+   *  SHEET and say nothing about the cell.
+   *
+   *  EVERY ABSENCE IS STATED WITH THE EMPTY LEVEL NAMED rather than returned as
+   *  a bare null. That is `CLAUDE.md`'s sparse rule at this construct: absence at
+   *  one level is not evidence of absence at the next, and WHICH level was empty
+   *  is part of the answer. A reader of this object can say "the record never
+   *  recorded this workbook's sheets", which is a different fact from "this
+   *  workbook has no such sheet" — and the second is what C-45.1 means.
+   *
+   *  AND A LEVEL THE CONTAINER HAS NO NOTION OF IS NOT AN EMPTY LEVEL. A
+   *  workbook has no paragraph count and never will; reporting that as a gap
+   *  would be this method inventing an absence. `levels` on the stored figure
+   *  names what the entry itemises at all, and only those are reported on.
+   *
+   *  WHY A NULL IS NOT A REFUSAL, and it is the page-set arm's reason verbatim
    *  because it is the same reason: refusing every cell citation on a workbook
    *  whose sheets this plane never recorded would be a fence tighter than its
    *  rule, and it would push a member toward citing the WHOLE DOCUMENT instead —
-   *  which claims MORE, not less.
+   *  which claims MORE, not less. That governs every capture acquired BEFORE
+   *  CAP-12 (no backfill was taken — the population is the same zero D-356
+   *  measured), every container the entry could not itemise, and every
+   *  non-container capture.
    *
-   *  WHAT WOULD FILL IT, so this is a DELEGATION with a shape and not a
-   *  complaint: `op=acquire` persisting I2's structure summary beside the page
-   *  count D-345 already names, which is CAPTURE's path (the CAP-9 shape) and is
-   *  filed as a DELEGATION in `CLAIMS.md`. The moment it does, this method reads
-   *  it and all three arms fire with nothing else moving — the arms above are
-   *  live and driven today against a supplied context, and it is only the
-   *  PRODUCTION FEED that is absent. Stated plainly because a mechanism believed
-   *  on the strength of its existence rather than its behaviour is the defect
-   *  this project meets most: these three arms are BUILT AND UNFED, and this
-   *  comment is what keeps the next reader from believing otherwise.
-   *
-   *  NO COLUMN ON `content` RECORDS IT, DELIBERATELY, and the reasoning is
-   *  `page_count`'s own inverted. `page_count` varies per row and is worth
-   *  storing; a container figure that is NULL for every row that can ever be
-   *  minted until CAP-9 lands is not information, and `schema.mjs`'s own stated
-   *  rule is that the column arrives WITH ITS WRITER. Provisional, reversible at
-   *  the cost of one additive column and an IC-83 amendment — exactly what
-   *  `page_count` itself cost. */
-  #containerExtentForCapture(captureSha) {
+   *  NO COLUMN ON `content` RECORDS IT, and REC-85's reasoning for that is
+   *  UNCHANGED by this item: `page_count` varies per row and is worth storing;
+   *  a container figure is a fact about the capture, not about the extent, and
+   *  every row minted against one capture would carry the same copy.
+   *  `schema.mjs`'s own stated rule is that the column arrives WITH ITS WRITER,
+   *  and this item's writer writes to the reading. */
+  #containerExtentForCapture(captureSha, reading) {
+    const held = reading && typeof reading === "object" && reading.container_extent && typeof reading.container_extent === "object" ? reading.container_extent : null;
+    const sheets = held && Array.isArray(held.sheets) && held.sheets.length ? held.sheets : null;
+    const paragraphs = held && Number.isInteger(held.paragraphs) && held.paragraphs > 0 ? held.paragraphs : null;
+    const slides = held && Array.isArray(held.slides) && held.slides.length ? held.slides : null;
+    const notion = held && Array.isArray(held.levels) ? held.levels : [];
+    const missing = [];
+    if (notion.includes("sheets") && !sheets) missing.push("the workbook's sheet list");
+    if (notion.includes("paragraphs") && paragraphs === null) missing.push("the paragraph count");
+    if (notion.includes("slides") && !slides) missing.push("the deck's slide list");
+    if (sheets && !sheets.some((s) => Number.isInteger(s && s.rows) || Number.isInteger(s && s.cols)))
+      missing.push("every sheet's row and column extent (the entry emits sheet names and no dimensions \u2014 D-359), so an unknown SHEET is bounded and a cell within a known sheet is not");
+    if (slides && !slides.some((s) => Number.isInteger(s && s.shapes)))
+      missing.push("every slide's shape count (the entry emits the slide list and no shape counts \u2014 D-359), so a slide past the deck is bounded and a shape within a known slide is not");
+    if (!held) missing.push("the container's own extent \u2014 no sheet list, paragraph count or slide list was persisted for this capture");
     return {
-      sheets: null,
-      paragraphs: null,
-      slides: null,
-      held: false,
-      empty_level: "document structure \u2014 I2 produces this container's sheets, paragraph count and shape list at acquire and the record persists none of it (Part II \xA715: the structure shape is not stored, only recoverable by re-running the structure op)",
-      why: `nothing in this record says how many sheets, paragraphs or slides the capture ${String(captureSha).slice(0, 12)}\u2026 holds, so whether an address falls inside it is UNDETERMINED and is stated rather than guessed. It is not a refusal: refusing a citation for a bound nobody measured would push a member toward citing the whole document, which claims more and not less. Persisting it at acquire is CAPTURE's act (the CAP-9 shape for D-345's page count)`
+      sheets,
+      paragraphs,
+      slides,
+      held: !!(sheets || paragraphs !== null || slides),
+      empty_level: missing.length ? missing.join("; ") : null,
+      why: missing.length ? `this record does not hold ${missing.join("; ")} for the capture ${String(captureSha).slice(0, 12)}\u2026, so whether an address falls inside it is UNDETERMINED and is stated rather than guessed. It is not a refusal: refusing a citation for a bound nobody measured would push a member toward citing the whole document, which claims more and not less` : `the record holds this capture's container extent as the format entry itemised it at acquire (CAP-12), so an address outside it is refused by name and one inside it mints`
     };
   }
   /** Everything the checker needs about a capture, gathered in one place so the
@@ -32175,13 +32200,17 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    *  REC-85 added `container` beside `chain` and `pageCount` — the same kind of
    *  thing (a fact about the capture only the STORE can answer) resolved in the
    *  same place, so the write path and the gate cannot come to hold two answers
-   *  about what a document contains. */
+   *  about what a document contains.
+   *
+   *  CAP-12 hands the SAME parsed reading to all three, which is CAP-9's own
+   *  one-read rule extended to the third: asking for the `readings` row a second
+   *  time would be two answers to one question waiting to disagree. */
   contentContextFor(captureSha) {
     const reading = this.#persistedReading(captureSha);
     return {
       chain: this.#chainOfReading(reading),
       pageCount: this.#pageSetForCapture(captureSha, reading),
-      container: this.#containerExtentForCapture(captureSha)
+      container: this.#containerExtentForCapture(captureSha, reading)
     };
   }
   /** THE WHOLE BASIS'S REFERENTS, RESOLVED ONCE — the capture each leg is about
@@ -54607,7 +54636,7 @@ var index_default = {
           basis: `the ${docType.type.key} content type declares no reader, so this document has no reading`
         };
       } else {
-        let wired = null, wiredTier = null, pageCount = null;
+        let wired = null, wiredTier = null, pageCount = null, containerExtent = null;
         let chain2 = null, ocrNote = null;
         const fmt = profile.format && profile.format.format;
         if (!multipart && fmt && fmt !== "undetermined") {
@@ -54709,6 +54738,24 @@ var index_default = {
                   ocrNote = "this document has no text layer to read and no OCR engine is installed in this instance, so nothing is claimed about what it says";
                 }
               }
+              if (i2text) {
+                const has = (k) => Array.isArray(i2text[k]);
+                const held2 = (k) => has(k) && i2text[k].length ? i2text[k] : null;
+                if (has("sheets") || has("paragraphs") || has("slides")) {
+                  const sh = held2("sheets"), pa = held2("paragraphs"), sl = held2("slides");
+                  containerExtent = {
+                    container: typeof i2text.container === "string" ? i2text.container : null,
+                    levels: ["sheets", "paragraphs", "slides"].filter(has),
+                    sheets: sh ? sh.map((s) => ({
+                      name: s && typeof s.name === "string" ? s.name : null,
+                      rows: null,
+                      cols: null
+                    })) : null,
+                    paragraphs: pa ? pa.length : null,
+                    slides: sl ? sl.map(() => ({ shapes: null })) : null
+                  };
+                }
+              }
               if (i2text) wired = readText(i2text, {
                 headers: profHeaders,
                 locator: documentAddress,
@@ -54793,6 +54840,7 @@ var index_default = {
           };
         }
         reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
+        reading.container_extent = containerExtent;
       }
       return json({
         ok: true,
