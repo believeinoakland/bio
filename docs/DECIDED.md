@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-863 rulings across 82 documents.
+864 rulings across 82 documents.
 
 ## DEC-
 
@@ -1491,6 +1491,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:5051`
 - AMENDED AT THE BUILD, three additions, each stated rather than quietly taken:** - `bio-plane/src/schema.mjs` — **ONE `--` COMMENT BLOCK ONLY**, above `CREATE TABLE captured_locators`.  
   `docs/development/CLAIMS.md:5163`
+- AMENDED AT THE BUILD, two additions, each stated rather than quietly taken:** - `.gitignore` — **ONE PEN, `.cap9-control-pristine/`**, with its reason at the line. This claim did not anticipate it.  
+  `docs/development/CLAIMS.md:5336`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
