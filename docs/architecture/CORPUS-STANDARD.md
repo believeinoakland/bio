@@ -137,14 +137,6 @@ What each field is FOR, so the prose is written to the purpose rather than to th
    Contents change; the checker will say so.
 5. **The checker runs inside `plancheck`** — `node tools/plancheck.mjs` fails on any
    governed document that violates §3. Nothing here is advisory.
-7. **A queue row names the design it builds from — the governed document and section that is
-   its scope's authority** (`Part II §18 piece 1`, `IC-83`, `Membership v2 §7`), and the worker
-   reads that section before the code. A row whose design lives only in a ledger entry, an
-   inbox note or a brief is the D-164 failure arriving one level down: the code gets built and
-   the construct's document never learns it. Where the worker finds the design and the code
-   disagree, the document's front matter says which is the authority; where the worker finds a
-   gap in the design, it reports it to the document's Incomplete sections list through its
-   report, and CONDUCT folds it at integration.
 6. **Line-number citations into a governed document are a liability the citer carries.**
    Adding front matter shifts a document's lines once; ordinary editing shifts them
    forever. A citation into a design document names the SECTION (`framework §7`,
@@ -156,6 +148,15 @@ What each field is FOR, so the prose is written to the purpose rather than to th
    claim about the present tree. A line number with no sha is a hand-carried number, this
    project's most-repeated finding (CPDF-17 moved four files' lines the day the appendix
    landed).
+
+7. **A queue row names the design it builds from — the governed document and section that is
+   its scope's authority** (`Part II §18 piece 1`, `IC-83`, `Membership v2 §7`), and the worker
+   reads that section before the code. A row whose design lives only in a ledger entry, an
+   inbox note or a brief is the D-164 failure arriving one level down: the code gets built and
+   the construct's document never learns it. Where the worker finds the design and the code
+   disagree, the document's front matter says which is the authority; where the worker finds a
+   gap in the design, it reports it to the document's Incomplete sections list through its
+   report, and CONDUCT folds it at integration.
 
 ## 5. Governed documents outside docs/architecture
 

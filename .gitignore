@@ -111,3 +111,10 @@ _m025/
 # an untracked scratch file in a worktree has already been swept into another
 # item's walk (M0-15: `git stash -u` is repository-wide, not per-worktree).
 .cap7-pen/
+# M0-30's pen, named for its item for the same reason every one above it is. Its driver
+# (`bio-plane/test/rowdesign.control.mjs`) arms `QUEUE.md`, `tools/plancheck.mjs` and
+# `docs/architecture/CORPUS-STANDARD.md` and restores from pristine copies kept here. The
+# driver removes the pen on a clean run and KEEPS it on a red one, where the copies are
+# evidence; an interrupted run must not leave an untracked copy of a planning file where
+# the next walk can enrol it as a second authority.
+.m030-harness/
