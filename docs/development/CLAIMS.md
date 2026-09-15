@@ -9839,4 +9839,129 @@ on the same grounds, and the RULE — *a level with no writer says so in words a
 list* — is unchanged: it is now asserted over `internet`, the one level that still has none, with the
 converse asserted over all three that are built, so the arm goes red in both directions.
 
-released:
+released: 2026-09-15 by the REC-95 worker — **THE MEANING LEVEL OF THE OBSERVATION LOG IS BUILT AT §8 ROW 3: the three writers at the reader run, the resolution attempt and the connection derivation, each driven through its op, plus the bounded meaning-level frontier that distinguishes NOTHING DERIVED from NEVER RUN — all of it through REC-93's ONE append site, which this item neither duplicated nor modified, and adding NO table, NO column and NO refusal.** Landed on branch `worktree-agent-aa10d195065b703e8` at `317c39c` plus the floor/index commit named below, NOT pushed and NOT merged.
+
+**ANSWERING THE QUESTION THIS ROW WAS TOLD TO ANSWER PLAINLY: A READER RUN THAT FOUND NOTHING NOW LEAVES A TRACE, AND IT IS DRIVEN.** Before this landing, promoting a document whose reader found nobody wrote `found: false` on the reading and NOTHING ELSE — §2's table's own sentence, *the RESULT is on the reading; the LOOK is not recorded anywhere*. It now writes one `observation_log` row, `level = meaning`, `subject_kind = capture`, `state = LOOKED_ABSENT`, `authority_kind = derive`, carrying the reading as its referent; and `op=frontier&level=meaning` reports it in `looked` with `ran_and_found_nothing: true`, while a capture nothing has ever read appears in `never_looked` instead. Arms `C2`/`C3` drive exactly that pair end to end through `op=promote`. The same is true of the other two acts: an unresolved reference (`D2`) and a derivation that formed no pair (`E1`) each leave a `LOOKED_ABSENT` row where both previously left an empty set indistinguishable from never having run.
+
+**GATE FIGURES.** Own pristine baseline on a scratch `git worktree add` at `origin/main` `58b77ea`, `npm ci` in all THREE packages: **205/205 suites green · 12,769 assertions · exit 0**. **THE BRIEFED FIGURE WAS EXACTLY RIGHT and is confirmed rather than corrected** — eight workers in a row had corrected theirs, and the practice is to trust the measurement rather than the streak. Final on the committed tree: ****206/206 suites green · 12,829 assertions · exit 0** (206 suites, not 205: this item's own new suite)**. New suite `observation-meaning.test.mjs` **57 pass / 0 fail**. Per-suite attribution by RE-RUNNING, never by subtraction: `observation-log.test.mjs` 57→**58** (arm E5 now runs once for `internet` and E5b twice for the two built levels); `observation-content.test.mjs` **51/0 unchanged**; `derivation-bounds.test.mjs` **50/0** after its three ceilings moved; `fleetbundles.test.mjs` **87/0** after the mechanical `build-plane.mjs` rebuild. `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED: **exit 0**. `node civicos-ui/test/run.mjs` from the REPO ROOT, unpiped: **exit 0**, all harnesses green. `node tools/plancheck.mjs --local`: **0 fail, 0 warn**.
+
+**FLOORS AND CEILINGS MOVED — FOUR FIGURES, EVERY ONE FROM AN INSTRUMENT'S OWN PRINT AND NONE BY ADDING TO THE NUMBER IN THE FILE (D-238).** `REGISTER_FLOOR` **1087 → 1093 arms · 196 → 197 classified · 197 → 198 corpus**, taken from this item's own green POST-COMMIT `--strict` run (`GREW by 6`), deliberately after the commit because the PRE-commit run printed `contaminated: 1 suite(s) no other checkout has` and a floor moved over a phantom is permanently too high. ONE KEY SET, grepped after writing: `^  arms:` matches twice in `coverage.mjs`, once per distinct object. In `derivation-bounds.test.mjs`: the CLASS ratchet **34 → 35**, the CENSUS ceiling **104 → 105**, and the ungraded-truncation pin's seventh member becoming an **EIGHTH**. **ONE ARRIVAL ACCOUNTS FOR ALL THREE — `#frontierMeaning` — WITH NO DEPARTURE**, which is what makes it a measurement rather than three coincidences, and it is the identical pattern REC-94 recorded one level down. **Both `derivation-bounds` constants and `REGISTER_FLOOR` are properties of the MERGED source: CONDUCT re-reads all four rather than carrying these across.**
+
+**EVERY CONTROL ARM, DECLARED vs ACTUAL. Six arms, run in one step through `node test/nc-rec95.mjs`, each armed ALONE, each restore verified by sha256 AND `cmp` against a uniquely-named per-arm pristine copy with a byte count printed and a minimum guarded. EVERY RESTORE `byte-identically: YES` at 2,170,055 bytes, sha256 `46110f78aefb…`.**
+
+| arm | declared | actual | verdict |
+| --- | --- | --- | --- |
+| `baseline` | green | **57 pass, 0 fail, exit 0** | AS DECLARED |
+| `reader` | C1, C2, C4, C5 fail | **50 pass, 7 fail** — 4/4 declared present | AS DECLARED |
+| `resolution` | D1–D4, F3, G1 fail | **51 pass, 6 fail** — 6/6 present | AS DECLARED |
+| `derivation` | E1, E1b, E2, E3, F3, F5b fail | **51 pass, 6 fail** — 6/6 present | AS DECLARED *(after correction, below)* |
+| `empty` | 8 arms fail | **47 pass, 10 fail** — 8/8 present | AS DECLARED |
+| `cause` | G2, G5 fail | **55 pass, 2 fail** — 2/2 present | AS DECLARED *(after correction, below)* |
+
+**TWO DECLARATIONS CAME BACK WRONG ON THE FIRST RUN, AND IN BOTH CASES THE ARM WAS RIGHT AND THE DECLARATION WAS WRONG.** Corrected and recorded, never smoothed. **(i) `derivation` read 5/6.** `G1` was declared must-fail and stayed GREEN, correctly: G1 asserts that SOME subject was looked at and produced nothing, and with only the derivation writer removed the other two acts still supply such rows. G1 is an assertion about the LEVEL, so **no single-writer arm can take it** — a fact about the suite worth knowing. `F5b` failed undeclared, also correctly: with no entity rows there is no entity partition to be unfenced. **(ii) `cause` read 0/2, AND THIS IS THE MOST USEFUL RESULT IN THE ITEM.** The arm collapsed §5.1's three causes and BOTH declared assertions stayed green — **because `G2`'s fixture was a capture with no reading, which is genuinely cause (3) and reads `never_looked` with the rule intact AND with it collapsed.** A suite that only asks about subjects whose answer is the same under the defect is not testing the rule. `G2` was rebuilt around a genuinely PRE-LOG subject — a reference carrying a `resolutions` row written by `op=resolvetestify` (a member's grade-D path, which writes a resolution without a recogniser ATTEMPT to observe) and no observation — which the collapse must move from `pre_log` to `never_looked`; `G2a` was added as its converse so the arm goes red in both directions; and `G5`, the structural pin that was the ONLY instrument able to see the collapse while G2 was blind, was declared. **The control caught a blind assertion in this suite before it ever caught a defect in the subject.**
+
+**THE ORTHOGONAL OVER-STRICTNESS PAIR, DRIVEN SEPARATELY AND THIS IS THE ONE-APPEND-SITE CLAIM UNDER TEST.** With this item's reader-run writer removed (armed by hand, `store.mjs` restored and verified byte-identical — sha256 `46110f78aefb…`, 2,170,055 bytes, `cmp` clean), **`observation-content.test.mjs` stayed 51/0 and `observation-log.test.mjs` stayed 58/0**, both exit 0 and both green before the arm as well. That is what says the three writers are NOT entangled, measured rather than asserted.
+
+**THREE INSTRUMENT DEFECTS IN THIS ITEM'S OWN ARMS, FOUND BY RUNNING THEM.** (1) Arm `A6`'s first matcher graded the LITERAL `C-22.\d+` and went red on a correct implementation, because the writers' comments CITE the refusals they rely on — a classifier grading a literal and calling it a rule, which is the shape WORKER.md's sweep section names, arriving inside this suite's own instrument. Re-pointed at the property that matters: the writer must never CONSTRUCT a refusal. (2) The same arm then measured **half of `store.mjs`**, because `indexOf("#observeReaderRun")` finds the CALL SITE ~17,000 lines above the definition. It was RIGHT to go red; it had just stopped being about this item. Anchored on the definitions with a size guard so a span that collapses to nothing cannot pass by being empty. (3) Arm `C4`'s fixture lacked `read_from_text`, so the content level answered `LOOKED_INDETERMINATE` and the arm would have passed on a true pair of the WRONG fixture.
+
+**AND THE CONTROL REGISTER CAUGHT THIS ITEM'S OWN DECLARATION.** `coverage.mjs --strict` refused the first draft of `observation-meaning.test.mjs` as UNCLASSIFIED and exited 1: **an arm's own prose quoted the MARKER PHRASE**, and `readControl` reads a declaration until that phrase recurs, so the whole six-arm list was truncated after arm (a) and the register could not count it. **D-233 working exactly as built** — an uncountable declaration is NAMED rather than folded into the tally as zero. The arm was reworded and the note left in place; the instrument was not touched.
+
+**WHAT I COULD NOT DO, STATED PLAINLY.** (1) **§4.3's THIRD READER-RUN OUTCOME HAS NO PRODUCER** — *no reader is registered for this type*, `LOOKED_INDETERMINATE`. MEASURED, not assumed: the doctype registry's fallback type declares `fallback: true` and its `parse()` emits `{ entities: [], facts: {} }`, byte-for-byte what a registered reader finding nobody emits; only `readings.content_type` reaches the store, which is the doctype's KEY — a spelling the registry may rename, not the property; and the Durable Object does not import `docprofile` (every `store.mjs` import is from `bio-plane/src` or `bio-plane/checks`, measured on this tree), so reaching the registry from the writer is a new cross-package dependency for the DO and a larger decision than this row. **There is also no CONDITION word for it** in `queuestate.mjs`, and §4.3 says the state carries one. `found: false` is NOT pressed into service — it means the reader ran and found no ENTITIES, which IS this level's `LOOKED_ABSENT`, and collapsing them would file every document about nobody as a document nothing could read (REC-94's arm B8 pins the mirror image one level down). **The seam is PINNED** (`readerRunObservation`'s `readerRegistered`, absent treated as the weakest), on `contentAxisFor`'s `unitIndex` precedent, so the item that persists the fact lands into a contract rather than a sentence. Delegated. (2) **At two of three subject kinds §5.1's cause (3) is UNREACHABLE over the pre-log window** — the DESIGN GAP below, and a real limit rather than a shortfall. (3) **Nothing was live-verified against the real account** — no deploy, no scratch-namespace probe; everything here is miniflare and source. (4) **`MEASUREMENTS.md` was not written**: this item took no new measurement of the system beyond its own gate figures, which live here. `node tools/mintid.mjs M` was run and allocated **M-26 and M-27**, both UNUSED — recorded so neither is re-minted or read as free. (5) **`op=resolvetestify` writes no observation**, and that is a decision rather than an omission: testimony is a member's ASSERTION about a subject, not a look for one, so §4.3's *resolution attempt* does not cover it. It is what made the pre-log fixture honest. Raised below so it can be ruled rather than inherited.
+
+**KNOWN AND NOT MINE, AS THE BRIEF REQUIRED: `Store#frontier` ACCEPTS A `viewer` AND NEVER READS IT AT THE DOCUMENT LEVEL.** Re-confirmed on this tree rather than inherited from REC-94's report. **I touched the frontier and did NOT fix it in passing.** This item's meaning arm applies the fence the way `#frontierContent` does — `#bundleRedactor`, row-whole, failing CLOSED — so `op=frontier` now has THREE levels of which TWO are gated and one is not. It is REC-103's row.
+
+**`store.mjs` measured at the close: 33,979 lines** (33,104 at REC-94's close). `airun.mjs`: 1,421.
+
+**NO DECISION FOR BOB.** Every choice here was activation, sequencing, mechanism or scoping — mine to make, and the three that were closest to doctrine are recorded with their reasoning at their sites: the seventh subject kind (the alternative asserts a registry entry the record has just established does not exist), the unfenced entity partition (the alternative is a fence tighter than its rule while changing nothing a caller could not read one op over), and the refusal to produce §4.3's third outcome from a spelling (the alternative is the record claiming more than it can support). §4.6's provisional is untouched: all three writers carry `authority_kind = derive`, an authority the record can name, so nothing here reopens whether a member's own search is ever an observation.
+
+
+## DESIGN GAP 2026-09-15 REC-95 → `docs/development/OBSERVATION-LOG-DESIGN.md`
+
+All four are folded into the document's own **Incomplete sections** in this item's commit, per
+`CORPUS-STANDARD.md` and the queue row's accepts-when. Repeated here because the release line is
+the durable report and a gap that lives only in a front matter CONDUCT does not re-read is a gap
+in a region nothing drains.
+
+**§5.1 — IT NAMES AN EVIDENCE TABLE PER LEVEL AND DOES NOT SAY THAT AT SOME LEVELS THE EVIDENCE
+ONLY EXISTS WHERE THE ANSWER WAS YES.** This is the item's own finding and it is a real limit
+rather than a caveat. Cause (1) needs POSITIVE evidence that a look happened before the log carried
+the level. At the content level that evidence is **two-sided**: a `readings` row exists for every
+capture the extractor ran over, whatever it produced, so REC-94 can always separate a pre-log
+extraction from a never-extracted capture. **At two of the meaning level's three subject kinds it is
+ONE-SIDED, and the missing side is exactly the one §4.3 exists to record** — a resolution attempt
+that matched nothing writes no `resolutions` row and a derivation that found no connections writes
+no `connections` row. So for a REFERENCE or an ENTITY the evidence can confirm that a look happened
+and can **never** confirm that one did not: over the pre-log window **cause (3) is unreachable** and
+the honest answer is cause (2) naming both. Published on every frontier answer as
+`evidence_one_sided` rather than left to be discovered. **The remedy is not a better signal** — it
+is that from this landing forward the look leaves a row and the window stops growing. §5.1 should
+say which levels are which, because a reader who assumes all three resolve it the same way is wrong.
+
+**§4.3 — THE THIRD READER-RUN OUTCOME HAS NO PRODUCER, AND IT IS §4.2's D-375 ONE LEVEL UP.**
+Detailed in the release line above and in the document's front matter. Two halves are owed: the
+FIELD that says a reading came from the registry's FALLBACK doctype, and a CONDITION word for it —
+§4.3 says the state carries one and `queuestate.mjs`'s vocabulary has none, and this item coined
+none. Either the section gains a producer and a word, or it says the outcome is unreachable until
+one exists.
+
+**§3 / §4.3 — §4.3 SAYS *one row per resolution attempt over an ENTITY*, AND THE ATTEMPT THAT FAILS
+NAMES NO ENTITY.** The subject landed as a seventh `subject_kind`, `reference`, not in §3's list —
+exactly as REC-93's `unstated` is not. §3's column list and §4.3's sentence both need reconciling
+with it. **This is the same class of conflict REC-93 reported between §3 and §4.4**, arriving one
+section over: the design's column list and its prose describe the same table and have now disagreed
+twice.
+
+**§6 row 1 — THE FRONTIER'S WITHHOLDING NOW DIFFERS ACROSS THREE LEVELS, AND THE MEANING LEVEL'S
+ENTITY PARTITION IS DELIBERATELY UNFENCED.** Capture-subject and reference-subject rows are gated
+through `#bundleRedactor` (both name a document the group holds, failing CLOSED). Entity-subject
+rows are NOT: the subject registry is instance-wide and `op=concerns` and `op=connections` already
+serve an entity and the documents concerning it to any reader, redacting only the bundle
+back-reference. A fence here and nowhere else would be tighter than its rule while changing nothing
+a caller could not read one op over — and a fence tighter than its rule is not a safer fence. It is
+STATED on the answer and raised so it can be RULED rather than inherited. The DOCUMENT arm still
+applies no fence at all (REC-94's finding; REC-103's row, untouched here).
+
+## DELEGATION 2026-09-15 RECORD (REC-95) → CONDUCT: **SEVEN ACTS, EACH WITH ITS ACTOR**
+
+Stated as ACTS with actors, never left implied, because a note in a region nothing drains is not
+even a note (FL-10, a measured >3h false stall).
+
+1. **CONDUCT — RE-READ FOUR FIGURES ON THE MERGED TREE, never carry these across.**
+   `REGISTER_FLOOR` (1093 / 197 / 198) in `bio-plane/scripts/coverage.mjs`, and in
+   `bio-plane/test/derivation-bounds.test.mjs` the CLASS ratchet (35), the CENSUS ceiling (105) and
+   the eight-member ungraded-truncation pin. All four are properties of the MERGED source, as
+   REC-99 recorded and REC-94 obeyed on the first tree where it bit. **If you conflict in
+   `REGISTER_FLOOR`, COLLAPSE TO ONE SET** — keep-both merges have left duplicate `arms:` keys there
+   six times; `^  arms:` must match exactly twice in that file, once per distinct object.
+2. **CONDUCT — FLIP REC-95's QUEUE ROW**, and note that **REC-96 is now unblocked**: it waits on
+   items 1–3 and all three exist. What it needs is here — the completeness statement's `searched`
+   section is computed from the log at case signing over the case's subjects, and the meaning level
+   is the one that had nothing to compute from. Its negative control (*a case whose subjects were
+   never looked for at the content level says so in the signed document*) now has a meaning-level
+   twin that is answerable, and `MEANING_EVIDENCE_IS_ONE_SIDED` is the thing it must NOT flatten:
+   a case cannot claim *nobody looked* for a reference or an entity over the pre-log window.
+3. **CONDUCT — D-366 / REC-100 IS NOT CLOSED BY THIS ITEM, AND THE ROW'S OWN WORDING SAYS IT WOULD
+   BE.** C-22.10's carve-out for `authority_kind = run` is documented as closing *"when the run's
+   own writers carry referents, which is REC-95's meaning level"*. **This item's writers DO carry
+   referents** — a reading for the reader run, an entity for a matched resolution, the entity for a
+   derivation — but they write under `derive` and not under `run`, so **the `run` carve-out is
+   untouched and `op=airuntick` still accepts a caller-supplied `PRESENT` with no referent.**
+   Verified by grep on this tree rather than inherited. REC-100 still has its work; the sentence in
+   `bio-checks.mjs` that points at REC-95 should be corrected to point at REC-100's own scope.
+4. **CONDUCT (answering-for the design) — RULE ON THE UNFENCED ENTITY PARTITION**, §6 gap above. It
+   ships as stated with the reasoning at the site; it is a disclosure question and therefore yours
+   or Bob's rather than mine to settle silently.
+5. **CONDUCT — DECIDE WHETHER `op=resolvetestify` SHOULD WRITE AN OBSERVATION.** It writes a
+   `resolutions` row without going through the recogniser, so no resolution ATTEMPT occurs and this
+   item writes nothing for it. The reasoning: testimony is a member's ASSERTION about a subject, not
+   a look for one, and §4.3's act is *one row per resolution attempt*. **It is load-bearing in this
+   item's own suite** — arm `G2`'s pre-log fixture is built from exactly this property — so a later
+   item that quietly starts observing it will fail `G2` and should come and read this line rather
+   than adjust the arm.
+6. **CAPTURE (a later item) — PERSIST WHETHER A READING CAME FROM THE REGISTRY'S FALLBACK DOCTYPE**,
+   beside `content_type` where `index.mjs` already composes it (`docType.type.key`), exactly as CAP-9
+   persisted `page_count`. It closes §4.3's third outcome, and the seam it lands into is already
+   pinned by arm `B4`. A CONDITION word is owed with it.
+7. **RECORD (REC-103) — the document-level frontier's absent viewer fence is unchanged**, and
+   `op=frontier` now has three levels of which two are gated. Named here as well as in IC-95's own
+   block so it cannot be lost with either.

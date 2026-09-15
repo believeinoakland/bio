@@ -933,9 +933,27 @@ const REGISTER_FLOOR = {
      this one — every reading correct where it was taken and not one of them true of the
      result. The merged print is the only figure that is ever true of the merged tree. ONE
      KEY SET, grepped before writing. */
-  arms: 1087,
-  classified: 196,
-  corpus: 197,
+  /* MOVED 2026-09-15 by REC-95 (1087 -> 1093, 196 -> 197, 197 -> 198), ALL THREE IN THE
+     SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN POST-COMMIT
+     `--strict` RUN PRINTED as REPRODUCIBLE (`arms 1093/1087 · classified 197/196 ·
+     corpus 198/197 · GREW by 6`), never counted and never incremented by hand (D-238).
+     Taken AFTER the commit deliberately: the pre-commit run printed `contaminated: 1
+     suite(s) no other checkout has` and a floor moved while a phantom is present is
+     permanently too high, which is how a ratchet gets switched off.
+     THE CAUSE IS ONE NEW SUITE, `test/observation-meaning.test.mjs`, whose declaration
+     states SIX arms — so `corpus` and `classified` each rise by one and `arms` by six.
+     Nothing FELL.
+     AND THE REGISTER CAUGHT THIS ITEM'S OWN DECLARATION BEFORE IT COUNTED IT. The first
+     draft read UNCLASSIFIED and `--strict` exited 1: an arm's own prose quoted the
+     MARKER PHRASE, and `readControl` reads a declaration until that phrase recurs, so
+     the whole list was truncated after arm (a). D-233 working exactly as built — an
+     uncountable declaration is NAMED and never folded into the tally as zero. The arm
+     was reworded; the instrument was not touched.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and
+     in the fleet floor below, which is one occurrence per distinct object. */
+  arms: 1093,
+  classified: 197,
+  corpus: 198,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

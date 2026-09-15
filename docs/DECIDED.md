@@ -1627,6 +1627,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:8838`
 - TWO PRE-EXISTING DEFECTS FOUND ON THE WAY IN, BOTH CORRECTED RATHER THAN ROUTED.** **(1) `leg:grade>=B` HAS NEVER COMPILED AND HAS NEVER SAID SO.** Measured on `origin/main` at `6e88e35` before this item changed anything: a NAMED sub-field with a comparison compiled to `grade = 'GRADE>=B'` — an equality no row can…  
   `docs/development/CLAIMS.md:8980`
+- — arm `B9` ONLY, CORRECTED (never exempted) with a dated reason, because it pins `Object.keys(OBSERVATION_SUBJECT_KINDS)` EXACTLY and a seventh member is meant to bring its author here to say why.  
+  `docs/development/CLAIMS.md:9391`
+- STATED on the answer and raised so it can be RULED rather than inherited.  
+  `docs/development/CLAIMS.md:9521`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
