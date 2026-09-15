@@ -8141,3 +8141,48 @@ paths:
 item reaches them; no op, no check, no shape and no schema moves. **NOT `docs/development/QUEUE.md`**
 — CONDUCT's, sole writer; the acts this item owes it are stated in the release line and the report
 as ACTS with their actor rather than left implied.
+
+## CLAIM 2026-09-15 RECORD (REC-98 — CPDF-20's DELEGATION: the two `index.mjs` call sites the per-page tier-2 rule was landed, driven and PROVED unreached from)
+session: rec98-wire-per-page-tier2 (worktree agent-ad893de3cdf2d6690)
+opened: 2026-09-15T00:00:00Z
+paths: **claimed BY REGION, not by whole file.** The contended-file cap (`ORCHESTRATION.md`: eight
+workers, at most five touching `store.mjs` / `bio-checks.mjs` / `index.mjs`) was MEASURED on this
+tree before claiming — no other open claim in this file names `index.mjs`, so this is one of five,
+not the sixth.
+
+- `bio-plane/src/index.mjs` — **TWO REGIONS AND NOTHING ELSE**, exactly the two CPDF-20's
+  DELEGATION names: (1) the tier-2 escalation inside `if (op === "pdfstructure")`, between
+  `/*__REC98_TIER2_WIRE_STRUCTURE_START__*/` and its `_END__`; (2) the tier-2 escalation inside the
+  acquire assembly, between `/*__REC98_TIER2_WIRE_ACQUIRE_START__*/` and its `_END__`; plus the one
+  import line that names the three exports. **NOT** `needsTier2` (the routing half, closed on
+  purpose), **NOT** the tier-3 block, **NOT** any op table row.
+- `bio-plane/test/tier2-wire.test.mjs` (NEW) and `bio-plane/test/nc-rec98.mjs` (NEW, the
+  negative-control driver).
+- `bio-plane/dist/**` — the committed bundle, rebuilt by `npm run build` because the plane source
+  moved (FL-10 / D-298 guard).
+- `docs/development/DEBT.md` (D-283's disposition; one new row), `docs/development/CLAIMS.md`,
+  `docs/development/MEASUREMENTS.md` — append-only prose.
+- `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` ONLY, from this run's own print, ONE key set.
+
+**NOT `bio-plane/src/textchain.mjs`.** The rule is landed and driven by CPDF-20; this item is the
+wire and nothing in that file moves. **NOT** the extent arms, **NOT** the observation log.
+
+## CLAIM ADDENDUM 2026-09-15 RECORD (REC-98 — two more `index.mjs` regions, both forced by the wire rather than chosen)
+
+The claim above names the two call sites CPDF-20's DELEGATION names. **Landing them honestly
+took two more small regions of the SAME file, and they are named here rather than left inside
+"the call site" because a claim that grows silently is not a claim.** Both are in the acquire
+assembly and both exist for D-252's own stated reason — a finding computed and then dropped on
+the floor is the document-level answer standing in for a per-page fact all over again:
+
+- the `let chain = null, ocrNote = null` declaration, which gains `tier2note` — `ocrNote`'s
+  counterpart one tier down;
+- the two `basis:` compositions in the reading assembly (the wired branch and the
+  text-undetermined branch), each gaining one `tier2note` clause beside the existing `ocrNote`
+  one, kept SEPARATE from it because collapsing two findings loses the one a reader needs.
+
+**Still NOT claimed and still untouched:** `needsTier2` (the routing half, closed on purpose),
+the tier-3 block, `src/textchain.mjs`, the extent arms, the observation log, any op-table row.
+`nc-rec98.mjs` EDITS AND RESTORES `src/textchain.mjs` for one arm (A3, §5.2 as written reached
+through the wire) and lands nothing in it; the restore is verified by sha256 AND `cmp` like
+every other arm and the file is byte-identical after the run.

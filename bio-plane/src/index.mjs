@@ -106,7 +106,14 @@ import { layerChain, appendStep, describeChain, checkChain, checkAnchor,
             extent vocabulary it belongs to, for `checkAnchor`'s own stated
             reason — I2 already carries `source` for an element reference, and
             solving one problem twice produces two answers that disagree. */
-         readingSource } from "./textchain.mjs";
+         readingSource,
+         /* REC-98 / D-283: the per-page tier-1-vs-tier-2 rule. CPDF-20 landed it,
+            drove it over four real PDFs and PROVED it unreached — `npm run build`
+            produced a byte-identical `bio-plane.bundled.mjs` because nothing
+            imported these three names and esbuild shook them out. THIS LINE is
+            what makes the rule reach the plane; the two call sites below are the
+            wire CPDF-20's DELEGATION (CLAIMS.md 2026-09-14) names exactly. */
+         mergeTier2Text, tier2Note } from "./textchain.mjs";
 import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "./cdx.mjs";
 /* docprofile is READ here, never copied. This is the FIRST plane consumer of it
    (CONSTRUCTS Step 1 / FW-3): op=acquire calls identify() and doctypeFor() to
@@ -4327,6 +4334,36 @@ export default {
          plane (I3), not CONTENT-PDF's paths. It ships here as one turn with the
          member per the CPDF-6 item, and is flagged to CONDUCT as the CAPTURE/
          RECORD-owned surface a normal CONTENT-PDF turn would DELEGATE. */
+      /*__REC98_TIER2_WIRE_STRUCTURE_START__*/
+      /* REC-98 / D-283 — CALL SITE 1 OF 2. THE ASSIGNMENT HALF, PAGE BY PAGE.
+       *
+       * This block used to end `if (r.ok && t2 && t2.ok) return json(t2, 200)` —
+       * the member's whole answer handed back over Tier 1's, which is the
+       * WHOLESALE assignment D-283 names. Tier 1 and Tier 2 are both `layer`
+       * derivations of the same source under the same null cap, so nothing is
+       * OVERCLAIMED by the swap; what was unbounded is TEXT LOSS, because
+       * `needsTier2` is a DOCUMENT-level predicate deciding a PER-PAGE fact.
+       *
+       * The rule is `mergeTier2Text`'s and is NOT re-derived here: per page,
+       * Tier 2 replaces Tier 1 only when it has strictly FEWER undetermined
+       * characters (§5.2's award axis — Tier 1's own admission that it failed on
+       * that page) AND strictly MORE decoded characters (CPDF-20's one-directional
+       * guard, which can only ever WITHHOLD an award). CPDF-20 measured §5.2 as
+       * originally written and it FAILED §8's own control on real documents: both
+       * producers publish a field named `undetermined` and they count different
+       * things, so the first condition alone awarded Tier 2 145 of 203 census
+       * pages and DEGRADED 23 of them. With the guard: 122 pages moved, 0
+       * degraded, +186,242 characters.
+       *
+       * `needsTier2` is UNCHANGED and deliberately so — the routing half was
+       * closed on purpose; this is the assignment half.
+       *
+       * THE `tier` FIELD NOW ANSWERS A MERGE HONESTLY. It was assigned `1`
+       * unconditionally below and the escalated answer never reached that line;
+       * it is now the merge's own verdict, so a document where no page moved
+       * reads `tier: 1` with Tier 2 having been asked and having added nothing —
+       * which is what happened, rather than a `2` true of no page. */
+      let structureTier = 1;
       if (env.PDF_WORKER && needsTier2(structure.text)) {
         try {
           const r = await env.PDF_WORKER.fetch("https://pdf-worker/structure", {
@@ -4335,17 +4372,52 @@ export default {
             body: JSON.stringify({ capture_sha: sha, store: storeName }),
           });
           const t2 = await r.json();
-          if (r.ok && t2 && t2.ok) return json(t2, 200);
-          /* The member answered but could not help (not a PDF to it, an error):
-             keep Tier 1, and SAY the escalation was tried and did not add text. */
-          structure.notes = [...structure.notes, "tier2_no_improvement"];
+          if (r.ok && t2 && t2.ok) {
+            /* THE MEMBER'S OWN NOTES ARE CARRIED, NOT DROPPED, and this is a
+               finding the wholesale return used to deliver for free. The member
+               declines documents over its envelope by answering `ok:true` at
+               tier 1 with `tier2_declined_over_envelope` on its notes — so
+               returning `structure` instead of `t2` would have silently lost the
+               one sentence that says WHY nothing improved. Deduped against what
+               the plane already said so one finding does not acquire two homes. */
+            for (const n of (Array.isArray(t2.notes) ? t2.notes : []))
+              if (typeof n === "string" && !structure.notes.includes(n))
+                structure.notes = [...structure.notes, n];
+            const m = mergeTier2Text(structure.text, t2.text);
+            if (m.ok) {
+              /* D-251 PRESERVED THROUGH THE WIRE: who made the layer is a fact
+                 about the FILE, not about the tier that read it. The member
+                 returns the I2 shape with no `producer`, so the wholesale path
+                 (`m.text` IS the member's object) would drop the marker on
+                 exactly the documents most likely to carry one. The page-wise
+                 path keeps it by construction (`{...base}`); this line closes the
+                 wholesale one. Carried forward, never re-derived, and only when
+                 the member supplied none of its own. */
+              structure.text = (structure.text && structure.text.producer && !m.text.producer)
+                ? { ...m.text, producer: structure.text.producer } : m.text;
+              structureTier = m.replaced.length ? 2 : 1;
+              const n = tier2Note(m);
+              if (n) structure.notes = [...structure.notes, n];
+            } else {
+              /* The merge REFUSED — the Tier-1 reading has no page grain to merge
+                 on and already holds text. Tier 1 stands and the refusal says so
+                 in the record's own words, because refusing costs an unread
+                 document and accepting costs an overwritten one. */
+              structure.notes = [...structure.notes, m.why];
+            }
+          } else {
+            /* The member answered but could not help (not a PDF to it, an error):
+               keep Tier 1, and SAY the escalation was tried and did not add text. */
+            structure.notes = [...structure.notes, "tier2_no_improvement"];
+          }
         } catch (e) {
           /* Binding threw (member unavailable / rolling out, D-108 per member):
              degrade to Tier 1, named, never a platform error to the caller. */
           structure.notes = [...structure.notes, "tier2_unavailable"];
         }
       }
-      structure.tier = 1;
+      structure.tier = structureTier;
+      /*__REC98_TIER2_WIRE_STRUCTURE_END__*/
       return json(structure, 200);
     }
 
@@ -5511,7 +5583,14 @@ export default {
            that never reached one carries NO chain rather than a chain claiming
            a layer it does not have. `ocrNote` carries the Tier-3 finding for a
            document that wanted OCR and could not have it. */
-        let chain = null, ocrNote = null;
+        /* REC-98 / D-283: `tier2note` is `ocrNote`'s counterpart one tier down —
+           what the TIER-2 merge found, for a document whose text layer is a merge
+           of two decodes or whose Tier-2 escalation was refused. It rides beside
+           `ocrNote` for the reason D-252 gives for `ocrNote` itself: a finding
+           computed and then dropped on the floor is the document-level answer
+           standing in for a per-page fact all over again. `null` when there is
+           nothing to say, so a document no page moved on reads as it always did. */
+        let chain = null, ocrNote = null, tier2note = null;
         const fmt = profile.format && profile.format.format;
         if (!multipart && fmt && fmt !== "undetermined") {
           try {
@@ -5552,19 +5631,78 @@ export default {
                       });
                       const t2 = await r.json();
                       if (r.ok && t2 && t2.ok && t2.text) {
-                        /* D-251: WHO MADE THE LAYER IS A FACT ABOUT THE FILE,
-                           NOT ABOUT THE TIER THAT READ IT. The member decodes
-                           the same bytes with pdf.js and returns the I2 text
-                           shape without a `producer` field, so handing its
-                           answer through unchanged would DROP the marker on
-                           exactly the documents most likely to carry one — a
-                           scanned certified resolution is the class that both
-                           escalates and names ABBYY. Carried forward from the
-                           Tier-1 read, never re-derived, and only when the
-                           member did not supply one of its own. */
-                        i2text = (st.text && st.text.producer && !t2.text.producer)
-                          ? { ...t2.text, producer: st.text.producer } : t2.text;
-                        wiredTier = 2;
+                        /*__REC98_TIER2_WIRE_ACQUIRE_START__*/
+                        /* REC-98 / D-283 — CALL SITE 2 OF 2. This line was
+                           `i2text = t2.text` with the D-251 carry wrapped round
+                           it: the member's decode of EVERY page assigned over
+                           Tier 1's on the strength of a document-level predicate.
+                           Same defect, same shape and one tier down from D-252's
+                           `i2text = built.text` twelve lines below — which is why
+                           `mergeTier2Text` is deliberately `mergeTier3Text`'s
+                           shape with its comparison changed rather than a second
+                           mechanism invented for one job. */
+                        const m = mergeTier2Text(i2text, t2.text);
+                        if (m.ok) {
+                          const tier1Text = i2text;
+                          /* D-251, UNCHANGED IN EFFECT AND MOVED ONE LINE OUT.
+                             WHO MADE THE LAYER IS A FACT ABOUT THE FILE, NOT
+                             ABOUT THE TIER THAT READ IT. The member returns the
+                             I2 text shape without a `producer` field, so handing
+                             its answer through unchanged would DROP the marker on
+                             exactly the documents most likely to carry one — a
+                             scanned certified resolution is the class that both
+                             escalates and names ABBYY. The page-wise merge keeps
+                             it by construction; this closes the WHOLESALE branch
+                             `mergeTier2Text` takes for a document Tier 1 read
+                             nothing of, which is the same branch this line always
+                             served. Carried forward, never re-derived, and only
+                             when the member supplied none of its own. */
+                          i2text = (tier1Text && tier1Text.producer && !m.text.producer)
+                            ? { ...m.text, producer: tier1Text.producer } : m.text;
+                          /* TIER 2 ONLY IF TIER 2 ACTUALLY PRODUCED A PAGE. A
+                             document where the member answered and no page met
+                             the rule was read by Tier 1, and saying `2` would be
+                             the record claiming a derivation no page of it has. */
+                          if (m.replaced.length) wiredTier = 2;
+                          /* THE CHAIN RECORDS THE WINNER PER PAGE — the half of
+                             §5.2 that is not a merge, and the reason this needed
+                             the control plane rather than `textchain.mjs`. The
+                             parts mechanism is D-252's `mergedChain`, reused
+                             rather than re-invented: one part per stretch with
+                             its own provenance, each stamped with the pages it
+                             covers. Both parts are `layer` derivations of the
+                             same file, so both read the producer off the same
+                             document and differ only in `tier`.
+                             SET ONLY WHEN THE DOCUMENT IS ACTUALLY MIXED. With
+                             one part `mergedChain` returns that chain UNSCOPED,
+                             which is exactly what the tail's `layerChainFor`
+                             already produces — so a wholly-tier-1 and a
+                             wholly-tier-2 document record byte-for-byte what they
+                             recorded before this wire existed, and only a
+                             document that really is a merge gets a scoped chain.
+                             Leaving `chain` null here is what hands the unmixed
+                             cases back to that one existing site. */
+                          if (m.replaced.length && m.kept.length) {
+                            const merged = mergedChain([
+                              { pages: m.kept,     chain: layerChainFor(i2text, { tier: 1, container: fmt }) },
+                              { pages: m.replaced, chain: layerChainFor(i2text, { tier: 2, container: fmt }) },
+                            ]);
+                            /* A refusal from the chain builder records NO chain
+                               rather than filing merged text under one tier's
+                               provenance — D-252's rule, and the tail will then
+                               compose the unscoped chain as it always did. */
+                            if (Array.isArray(merged)) chain = merged;
+                          }
+                          tier2note = tier2Note(m);
+                        } else {
+                          /* REFUSED: no page grain to merge on and Tier 1 already
+                             holds text. Tier 1 stands, and the reason is CARRIED
+                             rather than computed and dropped on the floor —
+                             D-252's own correction, which found `ocrNote` doing
+                             exactly that one tier up. */
+                          tier2note = m.why;
+                        }
+                        /*__REC98_TIER2_WIRE_ACQUIRE_END__*/
                       }
                     } catch { /* member unavailable: Tier 1's honest answer stands */ }
                   }
@@ -5871,6 +6009,12 @@ export default {
                  `ocrNote` computed and then dropped on the floor, so the record
                  said nothing at all about the exhibits. Same class as the merge
                  above: the document-level answer stood in for a per-page fact. */
+              /* REC-98 / D-283: and the same sentence one tier down. A document
+                 whose text layer is a MERGE of two decodes says so on the basis
+                 the record keeps, rather than presenting a merge as one tier's
+                 reading. Kept a separate clause from `ocrNote` for D-252's own
+                 stated reason — collapsing them loses the one a reader needs. */
+              + (tier2note ? ` — ${tier2note}` : "")
               + (ocrNote ? ` — ${ocrNote}` : "")
               + (posNote ? ` — ${posNote}` : ""),
             ...(ocrNote ? { tier3_candidate: true } : {}),
@@ -5893,7 +6037,11 @@ export default {
                `wired.why` names a decode that was attempted and failed. Reading
                them as one would file a scanned budget book beside a broken font
                map, and only one of those is waiting on a capability. */
-            basis: ocrNote ? `${ocrNote} (${wired.why})` : wired.why,
+            /* REC-98 / D-283: the tier-2 merge's finding rides here too. A
+               document that stayed unread AND had a tier-2 escalation refused has
+               two different things to say and only one of them is `wired.why`. */
+            basis: [tier2note, ocrNote ? `${ocrNote} (${wired.why})` : wired.why]
+                     .filter(Boolean).join(" — "),
             ...(ocrNote ? { tier3_candidate: true } : {}),
           };
         } else {

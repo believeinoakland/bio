@@ -19216,6 +19216,85 @@ function readingPositionInExtent(position, extentKind, extent) {
   if (!isIndex(e.shape)) return true;
   return e.shape === p.shape;
 }
+var undeterminedChars = (page) => page && Array.isArray(page.undetermined) ? page.undetermined.reduce((n, m) => n + (m && Number.isFinite(m.count) ? m.count : 0), 0) : 0;
+var decodedChars = (page) => page && typeof page.text === "string" ? page.text.length : 0;
+function perPageTierWinner(p1, p2) {
+  if (!p2) return "tier1";
+  if (!p1) return "tier2";
+  const u1 = undeterminedChars(p1), u2 = undeterminedChars(p2);
+  const c1 = decodedChars(p1), c2 = decodedChars(p2);
+  return u2 < u1 && c2 > c1 ? "tier2" : "tier1";
+}
+function mergeTier2Text(base, t2) {
+  const basePages = base && Array.isArray(base.pages) ? base.pages : [];
+  const usable = basePages.filter((p) => p && Number.isInteger(p.page));
+  const t2Pages = t2 && Array.isArray(t2.pages) ? t2.pages : [];
+  if (!usable.length) {
+    const baseChars = base && base.counts && Number.isFinite(base.counts.chars) ? base.counts.chars : typeof (base && base.document) === "string" ? base.document.length : 0;
+    if (baseChars > 0)
+      return {
+        ok: false,
+        replaced: [],
+        kept: [],
+        perPageTier: null,
+        why: `this document's tier-1 reading has no per-page grain and already holds ${baseChars} decoded character(s), so a tier-2 decode was refused rather than allowed to replace text page by page it cannot be compared against`
+      };
+    return {
+      ok: true,
+      text: t2,
+      wholesale: true,
+      perPageTier: null,
+      replaced: t2Pages.map((p) => p.page).filter(Number.isInteger),
+      kept: []
+    };
+  }
+  const byPage = /* @__PURE__ */ new Map();
+  for (const p of t2Pages) if (p && Number.isInteger(p.page)) byPage.set(p.page, p);
+  const pages = [], undetermined = [], replaced = [], kept = [];
+  for (const b of usable) {
+    const cand = byPage.get(b.page) || null;
+    const winner = perPageTierWinner(b, cand);
+    if (winner === "tier2" && cand) {
+      replaced.push(b.page);
+      pages.push({
+        page: b.page,
+        text: typeof cand.text === "string" ? cand.text : "",
+        undetermined: Array.isArray(cand.undetermined) ? cand.undetermined : [],
+        tier: 2
+      });
+    } else {
+      kept.push(b.page);
+      pages.push({ ...b, tier: 1 });
+    }
+    for (const u of pages[pages.length - 1].undetermined || []) undetermined.push(u);
+  }
+  const document = pages.map((p) => p.text).filter((t) => typeof t === "string" && t.length).join("\n");
+  const text = {
+    ...base,
+    document,
+    pages,
+    undetermined,
+    counts: { chars: document.length, undetermined: undetermined.length }
+  };
+  return {
+    ok: true,
+    text,
+    wholesale: false,
+    replaced,
+    kept,
+    perPageTier: { tier1: kept, tier2: replaced }
+  };
+}
+function tier2Note(m) {
+  if (!m || !m.ok) return m && m.why ? m.why : null;
+  if (m.wholesale) return null;
+  const say = [];
+  if (m.replaced.length)
+    say.push(`${m.replaced.length} page(s) were re-read by the tier-2 decoder, which recovered text tier 1 could not map and more of it; the other ${m.kept.length} page(s) kept tier 1's reading`);
+  if (m.replaced.length && m.kept.length)
+    say.push(`this document's text layer is a merge of two decodes and its chain names the tier per page`);
+  return say.length ? say.join("; ") : null;
+}
 
 // src/cdx.mjs
 var EMPTY_BODY_DIGEST = "3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ";
@@ -55445,6 +55524,7 @@ var index_default = {
         }, 501);
       const structure = await pdfEntry.structure(bytes);
       if (!structure.ok) return json(structure, 422);
+      let structureTier = 1;
       if (env.PDF_WORKER && needsTier2(structure.text)) {
         try {
           const r = await env.PDF_WORKER.fetch("https://pdf-worker/structure", {
@@ -55453,13 +55533,27 @@ var index_default = {
             body: JSON.stringify({ capture_sha: sha, store: storeName })
           });
           const t2 = await r.json();
-          if (r.ok && t2 && t2.ok) return json(t2, 200);
-          structure.notes = [...structure.notes, "tier2_no_improvement"];
+          if (r.ok && t2 && t2.ok) {
+            for (const n of Array.isArray(t2.notes) ? t2.notes : [])
+              if (typeof n === "string" && !structure.notes.includes(n))
+                structure.notes = [...structure.notes, n];
+            const m = mergeTier2Text(structure.text, t2.text);
+            if (m.ok) {
+              structure.text = structure.text && structure.text.producer && !m.text.producer ? { ...m.text, producer: structure.text.producer } : m.text;
+              structureTier = m.replaced.length ? 2 : 1;
+              const n = tier2Note(m);
+              if (n) structure.notes = [...structure.notes, n];
+            } else {
+              structure.notes = [...structure.notes, m.why];
+            }
+          } else {
+            structure.notes = [...structure.notes, "tier2_no_improvement"];
+          }
         } catch (e) {
           structure.notes = [...structure.notes, "tier2_unavailable"];
         }
       }
-      structure.tier = 1;
+      structure.tier = structureTier;
       return json(structure, 200);
     }
     if (op === "archivelookup") {
@@ -56223,7 +56317,7 @@ var index_default = {
         };
       } else {
         let wired = null, wiredTier = null, pageCount = null, containerExtent = null;
-        let chain2 = null, ocrNote = null;
+        let chain2 = null, ocrNote = null, tier2note = null;
         const fmt = profile.format && profile.format.format;
         if (!multipart && fmt && fmt !== "undetermined") {
           try {
@@ -56254,8 +56348,22 @@ var index_default = {
                       });
                       const t2 = await r.json();
                       if (r.ok && t2 && t2.ok && t2.text) {
-                        i2text = st.text && st.text.producer && !t2.text.producer ? { ...t2.text, producer: st.text.producer } : t2.text;
-                        wiredTier = 2;
+                        const m = mergeTier2Text(i2text, t2.text);
+                        if (m.ok) {
+                          const tier1Text = i2text;
+                          i2text = tier1Text && tier1Text.producer && !m.text.producer ? { ...m.text, producer: tier1Text.producer } : m.text;
+                          if (m.replaced.length) wiredTier = 2;
+                          if (m.replaced.length && m.kept.length) {
+                            const merged = mergedChain([
+                              { pages: m.kept, chain: layerChainFor(i2text, { tier: 1, container: fmt }) },
+                              { pages: m.replaced, chain: layerChainFor(i2text, { tier: 2, container: fmt }) }
+                            ]);
+                            if (Array.isArray(merged)) chain2 = merged;
+                          }
+                          tier2note = tier2Note(m);
+                        } else {
+                          tier2note = m.why;
+                        }
                       }
                     } catch {
                     }
@@ -56384,7 +56492,7 @@ var index_default = {
             text_source: chain2,
             text_tier: wiredTier,
             text_container: fmt,
-            basis: (wired.parse_error ? `the ${wtype.key} reader could not parse the ${fmt} text-layer text (${wired.parse_error}), so nothing is claimed about its entities` : entities.length ? `read by the ${wtype.key} reader v${wtype.version} over ${fmt} ${describeChain(chain2)} (tier ${wiredTier}); ${wired.why}` : `the ${wtype.key} reader found no entities in this document's ${fmt} text-layer text (tier ${wiredTier}); recorded as an empty reading, never an emptied document`) + (ocrNote ? ` \u2014 ${ocrNote}` : "") + (posNote ? ` \u2014 ${posNote}` : ""),
+            basis: (wired.parse_error ? `the ${wtype.key} reader could not parse the ${fmt} text-layer text (${wired.parse_error}), so nothing is claimed about its entities` : entities.length ? `read by the ${wtype.key} reader v${wtype.version} over ${fmt} ${describeChain(chain2)} (tier ${wiredTier}); ${wired.why}` : `the ${wtype.key} reader found no entities in this document's ${fmt} text-layer text (tier ${wiredTier}); recorded as an empty reading, never an emptied document`) + (tier2note ? ` \u2014 ${tier2note}` : "") + (ocrNote ? ` \u2014 ${ocrNote}` : "") + (posNote ? ` \u2014 ${posNote}` : ""),
             ...ocrNote ? { tier3_candidate: true } : {},
             /* FW-17 / IC-86: the producer-side facts about position, carried on
                the reading so a later reader can tell an absent position that was
@@ -56410,7 +56518,10 @@ var index_default = {
                `wired.why` names a decode that was attempted and failed. Reading
                them as one would file a scanned budget book beside a broken font
                map, and only one of those is waiting on a capability. */
-            basis: ocrNote ? `${ocrNote} (${wired.why})` : wired.why,
+            /* REC-98 / D-283: the tier-2 merge's finding rides here too. A
+               document that stayed unread AND had a tier-2 escalation refused has
+               two different things to say and only one of them is `wired.why`. */
+            basis: [tier2note, ocrNote ? `${ocrNote} (${wired.why})` : wired.why].filter(Boolean).join(" \u2014 "),
             ...ocrNote ? { tier3_candidate: true } : {}
           };
         } else {

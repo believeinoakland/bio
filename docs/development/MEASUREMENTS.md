@@ -12843,3 +12843,101 @@ the subject, which is this estate's most common control result.**
 exit 0**, fleet 3 of 3 members actually RAN and **no member skipped by name** — the quiet failure
 `CLAUDE.md` warns about was checked for and absent. The brief's figure of 12,466 was **one
 assertion stale**; measured, reported, and the brief's suite count of 201 was exact.
+
+## 2026-09-15 · REC-98 — the per-page tier-2 rule REACHES the plane: the bundle delta that proves it, and the one page the routing half never hands it (instruments: `npm run build` on two trees, `bio-plane/test/tier2-wire.test.mjs`, `bio-plane/test/nc-rec98.mjs`)
+
+**THE BUNDLE DELTA IS THE PROOF, AND IT IS THE EXACT MIRROR OF CPDF-20's.** CPDF-20 landed
+`perPageTierWinner` / `mergeTier2Text` / `tier2Note`, rebuilt, and got a BYTE-IDENTICAL
+`dist/bio-plane.bundled.mjs` — which is what proved the rule landed and NOT WIRED, because
+nothing imported the exports and esbuild shook them out. Built on two trees today, same
+command, same machine:
+
+| tree | `dist/bio-plane.bundled.mjs` | sha256 |
+| --- | --- | --- |
+| pristine `git worktree add` at `6e88e35` (`origin/main`), three `npm ci` | **3,036,882 B** | `779e3f71216d1b2212008a6bc20b55497f6fa999726fa068a2cd56fcda573abf` |
+| this branch, the two call sites wired | **3,042,022 B** | `8d8bff203a489b01f698affd5d82ab5bf1e273e64265ba3a3cf87e5ca62aacb3` |
+
+**+5,140 bytes.** The rule is in the shipped artifact because something finally imports it.
+
+**MY OWN BASELINE, MEASURED ON A PRISTINE SCRATCH WORKTREE AND NOT INHERITED.** `6e88e35`,
+`npm ci` in `bio-plane/`, `pdf-worker/` AND `ocr-worker/`, then `npm run test:battery`:
+**201/201 suites green · 12,467 assertions · 362.2 s · exit 0**, `fleet: 3 members beside
+the plane · 8 suite(s) discovered · 3 member(s) actually RAN` — **no member skipped, read
+deliberately.** The brief's figure was `201/201 · 12,466`. **The suite total was exactly
+right and the assertion count was ONE low**; the measurement is recorded over the brief, as
+the standing instruction says, and the difference is one assertion somewhere in a 12,000-
+assertion battery rather than anything this item can attribute.
+
+**THE PER-PAGE MERGE THROUGH THE OPS, over CPDF-20's committed fixture with the REAL
+`pdf-worker` bundle under miniflare** (`op=pdfstructure` after `op=capture`; `op=acquire`
+over an `outboundService` serving the same bytes):
+
+| document | pages | `needsTier2` | tier per page, through the op | acquire chain |
+| --- | --- | --- | --- | --- |
+| `legistar-73545` | 7 | **yes** | `[2,2,2,2,2,2,1]` | **SCOPED, two parts** — `layer` tier 1 `extent:{kind:"pages",pages:[6]}`, `layer` tier 2 `pages:[0,1,2,3,4,5]` |
+| `legistar-73450` | 3 | no | `[1,1,1]` | UNSCOPED, one part, tier 1 — byte-identical in shape to before the wire |
+| `legistar-73550` | 3 | yes | `[2,2,2]` | UNSCOPED, one part, tier 2 — a document with ONE provenance is not dressed as a partition |
+| `legistar-73618` | 2 | **no** | `[1,1]` | UNSCOPED, one part, tier 1 |
+
+**AND THE FINDING THIS ITEM DID NOT EXPECT, WHICH NARROWS D-283's OWN CLAIM.**
+`legistar-73618` page 1 is the page that FALSIFIED `EXTRACTION-BREADTH-DESIGN.md` §5.2 —
+tier 1 decodes 709 characters with ONE unmapped code, tier 2 decodes 580, and §5.2 as
+written trades the 129-character difference for that one glyph. **Through the op that page
+is never at risk, because the document does not escalate at all:** `needsTier2` requires
+more undetermined REGIONS than decoded characters, and this document reads 1,925 characters
+against 1 marker. So the shipped guard saves the page IN THE RULE (driven below), and the
+routing half — unchanged by this item on purpose, since D-283 is the ASSIGNMENT half — never
+hands it to the rule. **Of the four committed fixtures, exactly ONE page is a
+rule-disagreement page and it lives in the ONE document the router declines.** The 23 census
+pages CPDF-20 measured as degraded-by-§5.2-as-written were measured page-wise over all 28
+partially-decodable documents WITHOUT the routing predicate, so the number of pages the
+guard saves THROUGH THE WIRE is the subset of those 23 living in documents `needsTier2`
+escalates — **not measured here, and not claimed.** Measuring it needs the census sample
+(`tier-pagewise.probe.mjs --census`, network) and is one command for whoever next runs it.
+
+**THE DEGRADATION CLASS IS STILL DRIVEN THROUGH THE OP**, on a document that does escalate:
+`legistar-73545` with a stub member returning the REAL recorded tier-2 decode of those exact
+bytes with ONE page (5) cut to 100 characters and its markers cleared — tier 1's 274
+characters, tier 2's 100, tier 2 flagging nothing. §5.2 as written awards it to tier 2 and
+loses 174 characters; the shipped rule keeps it, and the op returns `[2,2,2,2,2,1,1]` with
+page 5 carrying tier 1's own bytes. **THE FIRST DRAFT OF THAT ARM WAS WRONG AND IS RECORDED
+RATHER THAN SMOOTHED:** the stub first returned tier 1's own text on every page, the whole
+document came back tier 1, and "page 5 kept" passed while proving nothing — no page had
+anything to win with. The "nothing is left behind" assertion caught it.
+
+**CONTROL ARMS — `node bio-plane/test/nc-rec98.mjs`, 9 of 9 AS DECLARED**, declared before
+arming, each armed ALONE, each restored from a uniquely-named per-arm pristine copy verified
+by sha256 AND `cmp`. Subjects: `src/index.mjs` 556,298 B (floor 200,000) and — for A3 only —
+`src/textchain.mjs` 63,855 B (floor 20,000); both sha-MATCH pristine after every arm.
+
+| arm | what it breaks | declared | actual | failed by name |
+| --- | --- | --- | --- | --- |
+| BASELINE | nothing | PASS | PASS, 45 assertions (a real tally) | — |
+| **A1** | **call site 1 removed** (`op=pdfstructure` returns the member's answer whole) | FAIL | **FAIL 33/12** | yes — "one document, TWO tiers", "the tier is stated PER PAGE" |
+| **A2** | **call site 2 removed** (acquire assigns wholesale) | FAIL | **FAIL 41/4** | yes — "the chain is a SCOPED, mixed chain" |
+| A3 | §5.2 as written, reached through the wire | FAIL | FAIL 40/5 | yes — "page 5 is kept at tier 1" |
+| A4 | the tier not stamped on the answer | FAIL | FAIL 43/2 | yes |
+| A5 | the member's own notes dropped | FAIL | FAIL 44/1 | yes — "the decline reaches the caller" |
+| A6 | D-251's producer carry-forward dropped | FAIL | FAIL 44/1 | yes — the ENCRYPTED document, the only shape that reaches the wholesale branch |
+| A7 | fixture truncated (2 of 4 hidden) | FAIL | FAIL, at the manifest | yes, naming the missing file |
+| **A8** | **OVER-STRICTNESS** — the wire spelled differently at all three sites | **PASS** | **PASS 45/0** | — |
+
+**A1 AND A2 ARE SEPARATE ARMS ON PURPOSE AND THE SEPARATION EARNED ITSELF:** they fail on
+DISJOINT assertions (A1 the structure arms, A2 the chain arms), so a wire that landed one of
+two sites would have passed the other's arm completely.
+
+**ONE ARM CAUGHT THE SUITE RATHER THAN THE SUBJECT, AND IS RECORDED.** A1's first run
+reported `NO TALLY` — the suite reached no foot. With call site 1 removed the op hands back
+the MEMBER's object, which carries no `producer` at all, so `out.text.producer.ocr.engine`
+THREW and ended the module while the arm read as a bare exit 1. **A `TypeError` inside an
+assertion goes through no assertion at all**; the reads are optional-chained now and A1
+reports a real 33/12.
+
+**WHAT THE SUITE CANNOT SEE, STATED.** It drives two ops and not the frontier reads; it
+cannot see a document that reaches BOTH the tier-2 and the tier-3 merge (D-372 — no fixture,
+because the only such document in CPDF-20's census sample is a private individual's resume
+and was rightly not committed); and the merge's REFUSAL branch is driven at the merge but is
+**unreachable through either op today**, because `pdfstructure` emits a `pages[]` entry for
+every page it ordered and its one pageless return carries zero characters, which takes the
+WHOLESALE branch rather than the refusal. That branch is a guard against a future pageless
+text producer and is not asserted to be reachable.
