@@ -2126,12 +2126,20 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (
   at           TEXT,
   ground       TEXT NOT NULL,    -- the branch of the argument. NOT NULL: the partition is TOTAL on a version
   -- REC-82 / IC-83: the version leg's referent, on inquiry_basis.content_id's
-  -- exact terms. THE COLUMN ARRIVES HERE AND ITS WRITER DOES NOT: REC-82 lands
-  -- the writer on the LIVE basis only, and the version-leg grammar that lets a
-  -- version leg NAME an extent is REC-84. So this column reads NULL on every
-  -- row this plane currently writes, and that is the honest state rather than a
-  -- gap -- a version leg minted with no stated extent is a whole-document
-  -- reference (5.3, no unstated) and REC-84 is what makes it say so.
+  -- exact terms. The column arrived at REC-82 WITHOUT its writer, deliberately,
+  -- and REC-84 / IC-84 (2) IS THAT WRITER: promote mints or finds the row per
+  -- version leg through the SAME plan and the SAME content address the live
+  -- basis uses, so one passage cited by a version leg and by a basis leg is ONE
+  -- row by construction and there is no second allocator.
+  -- NULL IS STILL A FIRST-CLASS ANSWER AND IT IS THREE DIFFERENT FACTS, each
+  -- stated by the reads rather than collapsed. One, the leg rests on an INQUIRY
+  -- (no capture and no part to point at, DEC-21). Two, the record holds no bytes
+  -- of the information object. Three, the row is a REPLAY of a leg written under
+  -- rules that did not exist, for which nothing is minted retroactively.
+  -- A version leg with no stated extent is a WHOLE-DOCUMENT reference (Bob's
+  -- 5.3, no unstated) and mints the document-extent row, exactly as a basis leg
+  -- does. Part II section 14.4 is the doctrine and section 18 piece 1 the design.
+  -- NO SEMICOLON MAY APPEAR IN THIS COMMENT -- migrate splits the schema on it.
   content_id   TEXT,
   PRIMARY KEY (bundle_id, name, ord)
 );
@@ -3121,8 +3129,10 @@ __export(bio_checks_exports, {
   CHECK_RETIREMENTS: () => CHECK_RETIREMENTS,
   CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
   CONTENT_EXTENT_CHECKS: () => CONTENT_EXTENT_CHECKS,
+  CONTENT_EXTENT_DOCUMENT_ONLY: () => CONTENT_EXTENT_DOCUMENT_ONLY,
   CONTENT_EXTENT_KINDS: () => CONTENT_EXTENT_KINDS,
   CONTENT_EXTENT_KIND_NO_PRODUCER: () => CONTENT_EXTENT_KIND_NO_PRODUCER,
+  CONTENT_ID_RE: () => CONTENT_ID_RE,
   CORE_FIELDS: () => CORE_FIELDS,
   CORRESPONDENCE_DIRECTIONS: () => CORRESPONDENCE_DIRECTIONS,
   EARNED_CAPTURE_CEILING: () => EARNED_CAPTURE_CEILING,
@@ -3185,6 +3195,7 @@ __export(bio_checks_exports, {
   checkGatheringGrammar: () => checkGatheringGrammar,
   checkInboxGrammar: () => checkInboxGrammar,
   checkInquiryBasis: () => checkInquiryBasis,
+  checkLegExtentGrammar: () => checkLegExtentGrammar,
   civicosUserAgent: () => civicosUserAgent,
   classifyDivergence: () => classifyDivergence,
   completenessFields: () => completenessFields,
@@ -3204,7 +3215,9 @@ __export(bio_checks_exports, {
   isPublicHttpsLocator: () => isPublicHttpsLocator,
   isSufficiencyClaimed: () => isSufficiencyClaimed,
   isSufficiencyUnclaimed: () => isSufficiencyUnclaimed,
+  legContentId: () => legContentId,
   legExtent: () => legExtent,
+  legHasAuthoredExtent: () => legHasAuthoredExtent,
   normalizeRootKey: () => normalizeRootKey,
   normalizeType: () => normalizeType,
   parseAllowedSigners: () => parseAllowedSigners,
@@ -5027,6 +5040,43 @@ var EARNED_CAPTURE_CEILING = "B";
 var UNREACHABLE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) - 1] ?? null;
 var EARNED_SOURCE_AXIS = { resolution: "connection", capture: "capture" };
 var GROUND_LABEL_RE = /^[a-z0-9][a-z0-9 _-]{0,47}$/i;
+function checkLegExtentGrammar(leg, label, checkId, findings) {
+  const bad = checkContentExtent(legExtent(leg), CONTENT_EXTENT_DOCUMENT_ONLY);
+  if (bad)
+    findings.push(f(
+      checkId,
+      "error",
+      `${label} names an extent this record cannot evaluate: ${bad.detail}`,
+      [
+        "name one of the landed extent kinds \u2014 extent_kind: document, or extent_kind: pdf-page with extent_page",
+        "or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite"
+      ],
+      bad.code
+    ));
+  const cid = leg && typeof leg === "object" ? leg.content_id : void 0;
+  if (cid !== void 0 && cid !== null && cid !== "") {
+    if (typeof cid !== "string" || !CONTENT_ID_RE.test(cid.trim()))
+      findings.push(f(
+        checkId,
+        "error",
+        `${label}.content_id '${String(cid).slice(0, 40)}' is not a content id: a part of a document is named by the 64-character lowercase hexadecimal address this record mints for it, and nothing shorter or longer can be one`,
+        [
+          "copy the content id from the part as this record answers for it",
+          "or describe the part instead \u2014 extent_kind and its fields \u2014 and the record will find or mint the entry"
+        ]
+      ));
+    else if (legHasAuthoredExtent(leg))
+      findings.push(f(
+        checkId,
+        "error",
+        `${label} names BOTH a content_id and an extent: these are one fact written twice and they can disagree, which would leave the record holding two answers to what this leg rests on`,
+        [
+          "keep the content_id \u2014 it names the part exactly",
+          "or keep the extent fields and drop content_id \u2014 the record finds or mints the part they describe"
+        ]
+      ));
+  }
+}
 function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
   const legs = fm?.basis;
   basisVersionFindings(fm, findings);
@@ -5127,6 +5177,7 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
     if (leg.note !== void 0 && leg.note !== null && typeof leg.note !== "string") {
       findings.push(f("C-2.8", "error", `basis[${i}].note is not a string`));
     }
+    checkLegExtentGrammar(leg, `basis[${i}]`, "C-2.8", findings);
     checkEarnedLeg(leg, i, graded, targetType, earnedRegistry, findings);
     checkInheritedLeg(leg, i, graded, publishedRegistry, findings);
   }
@@ -8391,6 +8442,12 @@ function basisVersionFindings(fm, findings) {
         push("VERSION_LEG_NOT_CITABLE", `basis_version_legs[${li}] (version '${name}').grade_axis '${String(leg.grade_axis).slice(0, 40)}' is not one of: ${GRADE_AXES.join(", ")}`);
       if (leg.grade_source !== void 0 && leg.grade_source !== null && !GRADE_SOURCES.includes(leg.grade_source))
         push("VERSION_LEG_NOT_CITABLE", `basis_version_legs[${li}] (version '${name}').grade_source '${String(leg.grade_source).slice(0, 40)}' is not one of: ${GRADE_SOURCES.join(", ")}`);
+      checkLegExtentGrammar(
+        leg,
+        `basis_version_legs[${li}] (version '${name}')`,
+        BASIS_VERSION_CHECKS.VERSION_LEG_NOT_CITABLE.check,
+        findings
+      );
       const g = typeof leg.ground === "string" ? leg.ground.trim() : "";
       if (!g) {
         unlabelled++;
@@ -9790,6 +9847,21 @@ var CONTENT_EXTENT_CHECKS = {
     check: "C-45.4",
     where: "checks/bio-checks.mjs checkContentExtent > is-content-extent",
     translation: "Citing a region of a web page is not something this record can do yet. Nothing in it produces the addresses that would make such a citation checkable, so accepting one would record a pointer that resolves to nothing and looks exactly like one that works. Cite the captured page as a whole for now."
+  },
+  /* REC-84 / IC-84 (1): a leg may NAME the part it rests on, instead of
+     describing it. The two refusals below are the two ways that name can be
+     wrong, and both are facts only the store can establish — hence a store
+     `where` and a REGION, on VERSION_FROZEN's and VERSION_LEG_UNRESOLVED's own
+     precedent a few thousand lines up. */
+  CONTENT_ROW_UNKNOWN: {
+    check: "C-45.5",
+    where: "src/store.mjs #contentRowFor > is-content-row",
+    translation: "This citation names a specific part of a document, and this record holds no such part. That is not a typo the record can fix for you: the part is named by a code taken over the document, the passage and how its text was produced, so a code nothing answers to points at nothing at all. Cite the part by describing it \u2014 the page, the cell, the paragraph \u2014 and the record will find or create the entry for it."
+  },
+  CONTENT_ROW_NOT_THIS_TARGET: {
+    check: "C-45.6",
+    where: "src/store.mjs #contentRowFor > is-content-row",
+    translation: 'This citation rests on one document and names a part of a different one. A reference that says "this document, that passage" is two claims that do not meet, and a reader following it would be shown material the citation never meant.'
   }
 };
 function refusal(key, detail) {
@@ -9817,6 +9889,34 @@ function legExtent(leg) {
     };
   return out;
 }
+function legHasAuthoredExtent(leg) {
+  const l = leg && typeof leg === "object" ? leg : {};
+  for (const k of [
+    "extent_kind",
+    "extent_page",
+    "extent_rect",
+    "extent_ref",
+    "extent_sheet",
+    "extent_cell",
+    "extent_slide",
+    "extent_shape",
+    "extent_para",
+    "extent_run"
+  ]) {
+    const v = l[k];
+    if (v === void 0 || v === null || v === "") continue;
+    return true;
+  }
+  return false;
+}
+var CONTENT_ID_RE = /^[0-9a-f]{64}$/;
+function legContentId(leg) {
+  const v = leg && typeof leg === "object" ? leg.content_id : void 0;
+  if (typeof v !== "string") return null;
+  const t = v.trim();
+  return t === "" ? null : t;
+}
+var CONTENT_EXTENT_DOCUMENT_ONLY = Object.freeze({ known: false, chain: null, pageCount: null });
 function canonicalExtent(extent) {
   const e = extent && typeof extent === "object" ? extent : {};
   if (e.kind === "document") return canonicalJson({ kind: "document" });
@@ -9878,13 +9978,13 @@ function checkContentExtent(extent, ctx = {}) {
         "CONTENT_EXTENT_UNREADABLE",
         `a pdf-page extent's rect is four finite numbers or absent. A rect that is present and unreadable is worse than none, because it looks like a region somebody chose`
       );
-    if (Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
+    if (ctx.known !== false && Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
       return refusal(
         "CONTENT_EXTENT_OUT_OF_RANGE",
         `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the extent names page ${e.page}`
       );
   }
-  if (e.kind !== "document" && !(Array.isArray(ctx.chain) && ctx.chain.length))
+  if (ctx.known !== false && e.kind !== "document" && !(Array.isArray(ctx.chain) && ctx.chain.length))
     return refusal(
       "CONTENT_EXTENT_NO_CHAIN",
       `this record holds no extraction chain for the capture this leg cites, so there is no transcription over ${describeExtent(e)} for the citation to point at`
@@ -29733,9 +29833,38 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       const name = str(v.name);
       if (name === null) continue;
       const legs = [];
-      for (const l of legRows) {
+      for (let li = 0; li < legRows.length; li++) {
+        const l = legRows[li];
         if (!l || typeof l !== "object" || str(l.version) !== name) continue;
         legs.push({
+          /* REC-84: THE ROW'S INDEX IN `basis_version_legs[]`, carried so the
+             projection can look this leg up in the content plan `promote`
+             resolves over the RAW array. It is not a column and not part of the
+             composition — it is how the assembled view finds its own source row,
+             and deriving it a second time at the write would be two answers to
+             one question three hundred lines apart. */
+          src_ord: li,
+          /* REC-84 / IC-84 (1): WHAT THIS LEG RESTS ON, INSIDE the composition
+             the freeze compares — but emitted as its own line and ONLY when the
+             leg says something other than "the whole document".
+             BOTH HALVES ARE LOAD-BEARING. Inside, because narrowing a leg from
+             the whole document to one page changes what the reading rests on,
+             and a version whose referents could move in place would break the
+             one property a freeze exists to hold (C-25.11: two people comparing
+             a version must be comparing the same thing). Conditional, on PL-3's
+             `kind` precedent and for PL-3's exact reason: every version already
+             in the record was frozen against a composition with no such line, so
+             an unconditional one would change EVERY stored composition and make
+             the next promotion of any of them fail the freeze. An absent extent
+             and an explicit `extent_kind: document` are the same value (Bob's
+             5.3), so both emit nothing and one value still has one
+             representation. */
+          referent: (() => {
+            const cid = legContentId(l);
+            if (cid) return `id:${cid}`;
+            const ce = canonicalExtent(legExtent(l));
+            return ce === canonicalExtent({ kind: "document" }) ? null : ce;
+          })(),
           target_id: typeof l.target === "string" ? l.target : "",
           /* denormalised from the id prefix through the catalog's own map, so
              the walk never re-derives it — inquiry_basis' own discipline */
@@ -29779,7 +29908,13 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         `relationship	${c(typeof v.relationship === "string" ? v.relationship.trim().toLowerCase() : "")}`,
         `derived_from	${c(str(v.derived_from) === "null" ? null : str(v.derived_from))}`,
         ...grounds.map((g) => `ground	${c(g.ground)}	${c(g.asserted_by)}	${c(g.at)}	${c(g.statement)}`),
-        ...legs.map((l, k) => `leg	${k}	${c(l.target_id)}	${c(l.target_type)}	${c(l.role)}	${c(l.grade)}	${c(l.grade_axis)}	${c(l.grade_source)}	${c(l.note)}	${c(l.at)}	${c(l.ground)}`)
+        ...legs.map((l, k) => `leg	${k}	${c(l.target_id)}	${c(l.target_type)}	${c(l.role)}	${c(l.grade)}	${c(l.grade_axis)}	${c(l.grade_source)}	${c(l.note)}	${c(l.at)}	${c(l.ground)}`),
+        /* REC-84 — see `referent`'s own note above. Emitted AFTER the leg lines
+           rather than folded into them, which is the other half of keeping every
+           existing composition byte-identical: appending a field to the `leg`
+           line would move every stored composition whether or not any leg
+           carried a referent. */
+        ...legs.flatMap((l, k) => l.referent === null ? [] : [`leg_referent	${k}	${c(l.referent)}`])
       ].join("\n");
       out.push({
         name,
@@ -29955,46 +30090,29 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
             findings: errs.map((x) => ({
               check: x.check,
               detail: x.message,
+              /* REC-84 / DEC-49: A CODE ON A BASIS FINDING NOW TRAVELS
+                 WITH ITS CANNED TRANSLATION. `checkInquiryBasis`'s arms
+                 carried no code until the extent grammar joined it, and
+                 that grammar RELAYS the content-extent family's codes —
+                 which is what tells a member citing a web page (`dom`,
+                 refused by name) from one who mistyped a kind. Sending
+                 the code WITHOUT the translation is the exact condition
+                 DEC-49 ended, and `basisVersionFindings`' own mapping
+                 below paid for it once with `translation: undefined`
+                 reaching a member. Absent for every arm that carries no
+                 code, so nothing existing changes shape. */
+              ...x.code ? {
+                code: x.code,
+                translation: CONTENT_EXTENT_CHECKS[x.code]?.translation
+              } : {},
               ...x.repairs ? { repairs: x.repairs } : {}
             }))
           };
-        const cerrs = [];
-        const plan0 = this.#contentPlanFor(basisLegs);
-        for (let i = 0; i < basisLegs.length; i++) {
-          const leg = basisLegs[i];
-          if (typeof leg.target !== "string") continue;
-          const p = plan0.get(i);
-          if (!p) continue;
-          if (!p.isInfo) {
-            const e0 = p.extent;
-            if (e0.kind !== "document")
-              cerrs.push({
-                check: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_UNREADABLE.check,
-                code: "CONTENT_EXTENT_UNREADABLE",
-                translation: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_UNREADABLE.translation,
-                detail: `basis[${i}] names extent '${String(e0.kind).slice(0, 40)}' on '${leg.target}', which is an inquiry rather than a document. An inquiry has no bytes and no pages, so there is no part of it to point at (DEC-21)`
-              });
-            continue;
-          }
-          const sha = p.captureSha, ext = p.extent;
-          if (!sha) {
-            if (ext.kind !== "document")
-              cerrs.push({
-                check: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.check,
-                code: "CONTENT_EXTENT_NO_CHAIN",
-                translation: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.translation,
-                detail: `basis[${i}] cites ${describeExtent(ext)} of '${leg.target}', and this record holds no capture of that document at all` + (typeof leg.extent_capture === "string" && leg.extent_capture.trim() ? ` under the capture the leg names (${leg.extent_capture.trim().slice(0, 16)}\u2026)` : ``)
-              });
-            continue;
-          }
-          const bad = checkContentExtent(ext, p.ctx);
-          if (bad) cerrs.push({
-            check: bad.check,
-            code: bad.code,
-            translation: bad.translation,
-            detail: `basis[${i}]: ${bad.detail}`
-          });
-        }
+        const cerrs = this.#contentLegRefusals(
+          basisLegs,
+          this.#contentPlanFor(basisLegs),
+          (i) => `basis[${i}]`
+        );
         if (cerrs.length) return { ok: false, reason: "BASIS_REFUSED", findings: cerrs };
       }
       if (isInquiry && docFmW && !pkg.replay && typeof docFmW.subject_entity === "string" && docFmW.subject_entity.trim() !== "") {
@@ -30187,7 +30305,13 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
                  reaching a member, which is the exact condition
                  DEC-49 ended. Arm C could not see it because the code
                  is a variable here. */
-              translation: (BASIS_VERSION_CHECKS[x.code] ?? SUGGEST_CHECKS[x.code])?.translation,
+              /* REC-84 adds the THIRD registry, on the same terms and
+                 after the same measurement: a version leg's extent
+                 grammar relays a CONTENT_EXTENT code at C-25.10's
+                 number, and a lookup in two registries would send it
+                 out with `translation: undefined` — the condition this
+                 very line was written to end. */
+              translation: (BASIS_VERSION_CHECKS[x.code] ?? SUGGEST_CHECKS[x.code] ?? CONTENT_EXTENT_CHECKS[x.code])?.translation,
               ...x.repairs ? { repairs: x.repairs } : {}
             }))
           };
@@ -30212,6 +30336,13 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
                 }]
               };
           }
+        }
+        const vLegRows = Array.isArray(docFmW.basis_version_legs) ? docFmW.basis_version_legs : [];
+        if (vLegRows.length) {
+          const vplan = this.#contentPlanFor(vLegRows);
+          const verrs2 = this.#contentLegRefusals(vLegRows, vplan, (i) => `basis_version_legs[${i}] (version '${String(vLegRows[i]?.version ?? "").slice(0, 48)}')`);
+          if (verrs2.length)
+            return { ok: false, reason: "BASIS_VERSION_REFUSED", findings: verrs2 };
         }
         for (const v of offered) {
           const prior = this.#one(
@@ -30397,33 +30528,38 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         for (let i = 0; i < basisLegs.length; i++) {
           const leg = basisLegs[i];
           if (typeof leg.target !== "string") continue;
-          let legContentId = null, legCarried = false, legMinted = false;
+          let legRowId = null, legCarried = false, legMinted = false;
           const cp = contentPlan.get(i);
           if (cp && cp.isInfo) {
             const ext = cp.extent;
-            const carried = priorContent.get(`${leg.target}\0${canonicalExtent(ext)}`);
-            if (carried) {
-              legContentId = carried;
-              legCarried = true;
-            } else if (cp.captureSha) {
-              const mint = this.mintContent({
-                bundleId: leg.target,
-                captureSha: cp.captureSha,
-                extent: ext,
-                mintedBy: "plane",
-                at: meta.last_updated || null,
-                ctx: cp.ctx
-              });
-              if (mint.ok) {
-                legContentId = mint.content_id;
-                legMinted = mint.minted;
+            const namedRow = legContentId(leg);
+            if (namedRow) {
+              legRowId = namedRow;
+            } else {
+              const carried = priorContent.get(`${leg.target}\0${canonicalExtent(ext)}`);
+              if (carried) {
+                legRowId = carried;
+                legCarried = true;
+              } else if (cp.captureSha) {
+                const mint = this.mintContent({
+                  bundleId: leg.target,
+                  captureSha: cp.captureSha,
+                  extent: ext,
+                  mintedBy: "plane",
+                  at: meta.last_updated || null,
+                  ctx: cp.ctx
+                });
+                if (mint.ok) {
+                  legRowId = mint.content_id;
+                  legMinted = mint.minted;
+                }
               }
             }
-            if (legContentId)
+            if (legRowId)
               contentProjected.push({
                 ord: i,
                 target: leg.target,
-                content_id: legContentId,
+                content_id: legRowId,
                 extent_kind: ext.kind,
                 minted: legMinted,
                 carried: legCarried
@@ -30460,13 +30596,20 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
                the mint above — an inquiry leg, or an information object this
                record holds no bytes of. It is never a document-extent row
                invented to avoid the null. */
-            legContentId
+            legRowId
           );
         }
       }
       if (contentProjected.length) this.#contentStandings(contentProjected);
       this.sql.exec(`DELETE FROM inquiry_basis_version_legs WHERE bundle_id=?`, bundleId);
       this.sql.exec(`DELETE FROM inquiry_basis_versions WHERE bundle_id=?`, bundleId);
+      const vLegRowsAll = isInquiry && docFmW && Array.isArray(docFmW.basis_version_legs) ? docFmW.basis_version_legs : [];
+      const vPlan = vLegRowsAll.length ? this.#contentPlanFor(vLegRowsAll) : /* @__PURE__ */ new Map();
+      const vLegNamed = /* @__PURE__ */ new Map();
+      for (let li = 0; li < vLegRowsAll.length; li++) {
+        const nid = legContentId(vLegRowsAll[li]);
+        if (nid) vLegNamed.set(li, nid);
+      }
       if (isInquiry && docFmW) {
         for (const v of _Store.basisVersionsOf(docFmW)) {
           this.sql.exec(
@@ -30510,10 +30653,27 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
           for (let k = 0; k < v.legs.length; k++) {
             const l = v.legs[k];
             if (!l.target_id) continue;
+            let vContentId = null;
+            const vp = vPlan.get(l.src_ord);
+            if (vp && vp.isInfo) {
+              const namedId = vLegNamed.get(l.src_ord);
+              if (namedId) vContentId = namedId;
+              else if (vp.captureSha) {
+                const m = this.mintContent({
+                  bundleId: l.target_id,
+                  captureSha: vp.captureSha,
+                  extent: vp.extent,
+                  mintedBy: "plane",
+                  at: meta.last_updated || null,
+                  ctx: vp.ctx
+                });
+                if (m.ok) vContentId = m.content_id;
+              }
+            }
             this.sql.exec(
               `INSERT INTO inquiry_basis_version_legs
-                 (bundle_id,name,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+                 (bundle_id,name,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
               bundleId,
               v.name,
               k,
@@ -30525,7 +30685,13 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
               l.grade_source,
               l.note,
               l.at,
-              l.ground
+              l.ground,
+              /* NULL is a first-class answer and it is three different facts,
+                 each stated rather than invented: the leg rests on an INQUIRY
+                 (no capture, no part — DEC-21); the record holds no bytes of the
+                 information object; or a replayed leg the plane would now refuse.
+                 It is never a document-extent row minted to avoid the null. */
+              vContentId
             );
           }
         }
@@ -30707,7 +30873,34 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
            row still resolving and saying what it is. ADDITIVE: absent on a
            promotion with no content-bearing leg, and a caller reading only
            ok/bundleSha/rowVersion is unaffected. */
-        ...contentProjected.length ? { content: contentProjected } : {}
+        ...contentProjected.length ? { content: contentProjected } : {},
+        /* REC-84 / IC-84 (2): THE SAME SURFACE FOR THE VERSION LEGS, on REC-82's
+           precedent above and for REC-82's stated reason — a column no op can
+           see is a mechanism believed on its existence. `op=basisversions` is
+           NOT extended: IC-84's text names `op=promote`, `op=earnedbasis`, the
+           `content` read and `op=attesttext`, and widening a surface the IC does
+           not name is an undeclared interface change wearing the costume of
+           completeness. The writer's own op is where the writer answers for
+           itself.
+           *
+           * READ BACK OUT OF THE TABLE AND NEVER ASSEMBLED FROM THE VARIABLE
+           * THAT WAS INSERTED, and that is the whole value of this array. Built
+           * from the local, it would agree with the INSERT for free and would
+           * stay green with the column dropped from the statement — the
+           * blind-by-construction assertion this repository has measured
+           * repeatedly, and exactly what the control arm "disable the writer and
+           * the suite must name the NULL column" would have failed to catch. One
+           * set-based read after the projection, never one per leg. */
+        ...vLegRowsAll.length ? { version_content: this.#rows(
+          `SELECT name, ord, target_id, content_id FROM inquiry_basis_version_legs
+            WHERE bundle_id=? ORDER BY name, ord`,
+          bundleId
+        ).map((r) => ({
+          version: r.name,
+          ord: r.ord,
+          target: r.target_id,
+          content_id: r.content_id ?? null
+        })) } : {}
       };
     });
   }
@@ -31125,6 +31318,115 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       });
     }
     return plan;
+  }
+  /** REC-84 / IC-84 (1) — THE ROW A LEG NAMES OUTRIGHT, RESOLVED OR REFUSED BY
+   *  NAME. `content_id` on a leg is the precise half of the extent grammar: the
+   *  descriptive half says "page 14 of this document" and the record finds or
+   *  mints the row, while this half names the row itself.
+   *
+   *  BOTH REFUSALS ARE FACTS ONLY THE STORE CAN ESTABLISH, which is why they are
+   *  here and not in the catalogue — the C-25.10 / C-25.16 split, one construct
+   *  along. The catalogue has already refused a malformed id and a leg naming
+   *  both an id and an extent; what is left is whether the record HOLDS the row
+   *  and whether the row is about the document this leg rests on.
+   *
+   *  THE CAPTURE IS DELIBERATELY NOT COMPARED. A member may legitimately name a
+   *  row minted against an EARLIER capture of the same document — that is the
+   *  whole of why a `stale` row still resolves and says so (Bob's 5.8: the
+   *  record never re-points an authored edge). Refusing it would be a fence
+   *  tighter than its rule, in the direction that refuses correct work.
+   *
+   *  Returns `{ ok: true, content_id }` or a DEC-49 refusal. */
+  #contentRowFor(contentId, targetId, label) {
+    const id = typeof contentId === "string" ? contentId.trim() : "";
+    const row = this.#one(
+      `SELECT content_id, bundle_id, extent_kind, ref, stale FROM content WHERE content_id=?`,
+      id
+    );
+    if (!row)
+      return {
+        ok: false,
+        check: CONTENT_EXTENT_CHECKS.CONTENT_ROW_UNKNOWN.check,
+        code: "CONTENT_ROW_UNKNOWN",
+        translation: CONTENT_EXTENT_CHECKS.CONTENT_ROW_UNKNOWN.translation,
+        detail: `${label} names content_id '${id.slice(0, 16)}\u2026', and this record holds no such part. The id is an address taken over the document, the passage and the transcription chain, so nothing can be found for one nothing minted`
+      };
+    if (row.bundle_id !== targetId)
+      return {
+        ok: false,
+        check: CONTENT_EXTENT_CHECKS.CONTENT_ROW_NOT_THIS_TARGET.check,
+        code: "CONTENT_ROW_NOT_THIS_TARGET",
+        translation: CONTENT_EXTENT_CHECKS.CONTENT_ROW_NOT_THIS_TARGET.translation,
+        detail: `${label} rests on '${targetId}' and names a part of '${row.bundle_id}' (${row.ref}): the leg and the part it points at are about two different documents`
+      };
+    return { ok: true, content_id: row.content_id };
+  }
+  /** REC-84 — THE CONTENT REFUSALS OVER A SET OF LEGS, AT BOTH LEG GRAINS.
+   *
+   *  ONE PASS SERVES `basis[]` AND `basis_version_legs[]`, and that is the
+   *  item's own rule rather than tidiness: two copies of "which parts may this
+   *  leg point at" is D-164's own finding — the primitive built three times and
+   *  drifting — arriving inside the construct built to close it. The caller
+   *  supplies the legs, the plan `#contentPlanFor` already resolved for them,
+   *  and how to LABEL a leg; everything else is identical at both grains.
+   *
+   *  It returns findings and never throws, so the caller decides the envelope:
+   *  `BASIS_REFUSED` for `basis[]`, `BASIS_VERSION_REFUSED` for a version's.
+   *
+   *  THE ORDER IS THE CHECKER'S. A named row is resolved FIRST, because a leg
+   *  that names one has no extent to judge (the catalogue refuses both together);
+   *  then the target class, then the capture, then the extent. Every arm below
+   *  was REC-82's, moved here verbatim and re-labelled — the only new ones are
+   *  the two the named row can fail. */
+  #contentLegRefusals(legs, plan, label) {
+    const errs = [];
+    for (let i = 0; i < legs.length; i++) {
+      const leg = legs[i];
+      if (!leg || typeof leg.target !== "string") continue;
+      const p = plan.get(i);
+      if (!p) continue;
+      const named = legContentId(leg);
+      if (!p.isInfo) {
+        const e0 = p.extent;
+        if (e0.kind !== "document" || named)
+          errs.push({
+            check: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_UNREADABLE.check,
+            code: "CONTENT_EXTENT_UNREADABLE",
+            translation: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_UNREADABLE.translation,
+            detail: `${label(i)} names ${named ? `content_id '${named.slice(0, 16)}\u2026'` : `extent '${String(e0.kind).slice(0, 40)}'`} on '${leg.target}', which is an inquiry rather than a document. An inquiry has no bytes and no pages, so there is no part of it to point at (DEC-21)`
+          });
+        continue;
+      }
+      if (named) {
+        const got = this.#contentRowFor(named, leg.target, label(i));
+        if (!got.ok) errs.push({
+          check: got.check,
+          code: got.code,
+          translation: got.translation,
+          detail: got.detail
+        });
+        continue;
+      }
+      const sha = p.captureSha, ext = p.extent;
+      if (!sha) {
+        if (ext.kind !== "document")
+          errs.push({
+            check: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.check,
+            code: "CONTENT_EXTENT_NO_CHAIN",
+            translation: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.translation,
+            detail: `${label(i)} cites ${describeExtent(ext)} of '${leg.target}', and this record holds no capture of that document at all` + (typeof leg.extent_capture === "string" && leg.extent_capture.trim() ? ` under the capture the leg names (${leg.extent_capture.trim().slice(0, 16)}\u2026)` : ``)
+          });
+        continue;
+      }
+      const bad = checkContentExtent(ext, p.ctx);
+      if (bad) errs.push({
+        check: bad.check,
+        code: bad.code,
+        translation: bad.translation,
+        detail: `${label(i)}: ${bad.detail}`
+      });
+    }
+    return errs;
   }
   /** MINT OR FIND the content row a leg addresses, and return its id.
    *
@@ -43720,7 +44022,12 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       ...l.grade_axis === null ? [] : [`    grade_axis: ${q(l.grade_axis)}`],
       ...l.grade_source === null ? [] : [`    grade_source: ${q(l.grade_source)}`],
       ...l.note === null ? [] : [`    note: ${q(l.note)}`],
-      ...l.date === null ? [] : [`    date: ${q(l.date)}`]
+      ...l.date === null ? [] : [`    date: ${q(l.date)}`],
+      /* REC-84 — see `#suggestionPersisted`'s note. UNCONDITIONAL, unlike every
+         optional field above it: the run always cites whole documents, and a
+         line emitted only sometimes would make "the run said document" and "the
+         run said nothing" the same bytes again. */
+      `    extent_kind: ${q(l.extent_kind)}`
     ].join("\n"));
     let text = _Store.#appendFmRows(text0, "basis_versions", [vRow.join("\n")]);
     if (text !== null && gRows.length) text = _Store.#appendFmRows(text, "basis_version_grounds", gRows);
@@ -43929,7 +44236,29 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         grade_axis: opt(l?.grade_axis),
         grade_source: opt(l?.grade_source),
         note: opt(l?.note),
-        date: opt(l?.date)
+        date: opt(l?.date),
+        /* REC-84 / IC-84, and IC-83's own SKILL answer: THE INVESTIGATIVE RUN'S
+           SUGGESTED LEGS ARE `document` LEGS, AND THE VALUE IS A LITERAL RATHER
+           THAN A PARAMETER. There is no path through this function that writes
+           any other extent — the same shape `state: "suggested"` takes at the
+           write below, and for the same reason: a fence expressed as the ABSENCE
+           OF A VARIABLE cannot be got round by a caller.
+           *
+           * WHY WRITE IT AT ALL, when an absent extent already MEANS `document`
+           * (Bob's 5.3, no `unstated`). Because "the run cited the whole
+           * document" is a fact about what the run did, and leaving it to a
+           * default makes a machine's scope indistinguishable from a legacy
+           * leg's silence. The run may honestly cite a whole document; it may
+           * not be read later as having chosen a portion, nor as having said
+           * nothing. Stated, it is checkable at the bytes.
+           *
+           * AND THE RUN MAY NOT NARROW IT. A machine naming a PORTION is the
+           * machine-mint act (Bob's 5.7), which is SK-7 with its own IC — not
+           * this item, and not something a caller reaches by adding a field to a
+           * request. When SK-7 lands, this literal becomes the place the
+           * assistant's own extent arrives, refused or minted through exactly
+           * the arms `basis[]` already runs. */
+        extent_kind: "document"
       }))
     };
   }
@@ -43974,7 +44303,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         grade_axis: l.grade_axis,
         grade_source: l.grade_source,
         note: l.note,
-        date: l.date
+        date: l.date,
+        /* REC-84: carried so the candidate composition is computed over exactly
+           the shape the document will hold. An explicit `document` extent
+           contributes NO `leg_referent` line (it is the default value, one
+           representation for one value), so this leaves every stored
+           composition byte-identical — which is what the freeze needs and what
+           the over-strictness arm measures. */
+        extent_kind: l.extent_kind
       }))
     };
   }

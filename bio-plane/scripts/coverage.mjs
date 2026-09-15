@@ -777,9 +777,19 @@ const REGISTER_FLOOR = {
      ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
      `FLEET_FLOOR`, which is the documented state. `FLEET_FLOOR` is UNMOVED and none is owed
      — this item adds no fleet member and no fleet suite. */
-  /* MOVED 2026-09-14 by CONDUCT #10 at COFF-10's merge (967 -> 972 · 179 -> 180 · 180 -> 181): the merged run's own print read `arms 972/967 · classified 180/179 · corpus 181/180`; the +5 arms and +1 suite are COFF-10's `formats-odf.test.mjs`, which set 964 on a tree without REC-82's +8. One key set, read from the print after the commit (D-238). */
-  /* MOVED 2026-09-14 by CONDUCT #10 at M0-30's merge (972 -> 974): the merged run's own print read `arms 974/972`; the +2 is M0-30's planning-hygiene §4.7 declaration. One key set, read from the print after the commit (D-238). */
-  /* MOVED 2026-09-14 by M0-28 (974 -> 975): this item's own green `--strict` run, taken AFTER
+  /* ---- CONFLICT RESOLVED AT THE REC-83/M0-28 x REC-84 MERGE, 2026-09-14, AND THE
+     RESOLUTION IS THE ONE THIS FILE'S OWN HEADER DEMANDS: **COLLAPSED TO ONE KEY SET
+     AND THE FIGURES RE-READ FROM THE MERGED TREE'S OWN PRINT.** Keep-both has left
+     duplicate `arms:` keys here SIX separate times; both sides of this conflict happened
+     to carry the SAME three numbers (975/180/181) for DIFFERENT reasons, which is the
+     most dangerous shape of all — taking either side unchanged would have looked right
+     and been wrong, because on the merged tree the two items' arms ADD. The notes from
+     both sides are kept below, because each records a real move; only the VALUES are
+     re-measured. ----
+
+     MOVED 2026-09-14 by CONDUCT #10 at COFF-10's merge (967 -> 972 · 179 -> 180 · 180 -> 181): the merged run's own print read `arms 972/967 · classified 180/179 · corpus 181/180`; the +5 arms and +1 suite are COFF-10's `formats-odf.test.mjs`, which set 964 on a tree without REC-82's +8. One key set, read from the print after the commit (D-238).
+     MOVED 2026-09-14 by CONDUCT #10 at M0-30's merge (972 -> 974): the merged run's own print read `arms 974/972`; the +2 is M0-30's planning-hygiene 4.7 declaration. One key set, read from the print after the commit (D-238).
+     MOVED 2026-09-14 by M0-28 (974 -> 975): that item's own green `--strict` run, taken AFTER
      its commit `bdfcb86`, PRINTED `REGISTER FLOOR  arms 975/974 · classified 180/180 · corpus
      (suites read) 181/181 · GREW by 1 arm(s)` — read from the print, never incremented by hand.
      The cause is ONE new arm in an EXISTING suite: `corpuscheck.test.mjs`'s declaration gains

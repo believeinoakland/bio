@@ -79,6 +79,10 @@ const NOW = "2026-09-14T00:00:00Z";
 const LATER = "2026-09-14T01:00:00Z";
 const codes = (r) => (r.findings || []).map((f) => f.check).sort();
 const detail = (r) => (r.findings || []).map((f) => f.detail).join(" || ");
+/* REC-84: the WIRE CODE, beside the check number. A refusal now carries both —
+   the RULE that refused it and the NAME it was refused by — and the arms below
+   assert both rather than collapsing them. */
+const codeNames = (r) => [...new Set((r.findings || []).map((f) => f.code).filter(Boolean))].sort();
 
 /* ------------------------------------------------------------- documents */
 
@@ -282,21 +286,52 @@ const rNoChain = await refuseLeg("INQ-2026-8200-nochain", { kind: "pdf-page", pa
 t("(2) an extent with no extraction chain is REFUSED",
   [rNoChain.ok, codes(rNoChain)], [false, ["C-45.2"]]);
 
+/* ---------------------------------------------------------------------------
+ * CORRECTED 2026-09-14 BY REC-84, NEVER EXEMPTED, AND THE REASON IS THE RULE
+ * CHANGE ITSELF.
+ *
+ * Arms (3) and (4a-c) asserted a CHECK NUMBER of `C-45.x` for a MALFORMED
+ * EXTENT. When REC-82 wrote them that was the only gate that could judge one:
+ * the extent grammar ran at the WRITE and nowhere in the catalogue, so the
+ * store's own arm was the first and only thing to see a bad kind.
+ *
+ * IC-84 MOVED THE GATE. The extent grammar is now part of the LEG grammar —
+ * `checkInquiryBasis` (C-2.8) and `basisVersionFindings` (C-25.10) run it over
+ * one document's bytes, at the catalogue AND at the write, through the same
+ * `checkContentExtent` these arms exercise directly one block up. So a
+ * malformed extent is now refused by the LEG rule and never reaches the store's
+ * arm, and the number a member sees is the leg grammar's.
+ *
+ * WHAT IS NOT SUPERSEDED, and is why these arms are corrected rather than
+ * deleted: `dom` must still be refused BY NAME rather than as an unknown kind,
+ * and an unlanded arm by name rather than as a typo. That distinction is what
+ * arms (3) and (4b) exist for, and it now lives in the CODE — which travels on
+ * the finding, carries the canned translation, and is minted in exactly the
+ * place it always was. Each arm therefore asserts BOTH halves: the rule that
+ * refused it, and the name it was refused by.
+ *
+ * Every arm below was RUN in both shapes: red against REC-82's expectation on
+ * the REC-84 tree, green after correction, and `nc-rec84.mjs`'s `grammar` arm
+ * (which neuters the new gate) shows the store's own C-45 arms still standing
+ * behind it.
+ * ------------------------------------------------------------------------- */
 const rDom = await refuseLeg("INQ-2026-8200-dom", { kind: "dom" });
-t("(3) `dom` is REFUSED BY NAME while no producer exists — C-45.4, not the unknown-kind arm",
-  [rDom.ok, codes(rDom)], [false, ["C-45.4"]]);
+t("(3) `dom` is REFUSED BY NAME while no producer exists — the leg grammar's rule, the content family's name",
+  [rDom.ok, codes(rDom), codeNames(rDom)], [false, ["C-2.8"], ["CONTENT_EXTENT_NO_PRODUCER"]]);
+t("    and its canned translation travels with it, so the code is named to a member and not merely numbered",
+  (rDom.findings || [])[0]?.translation === CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_PRODUCER.translation, true);
 
 const rUnknown = await refuseLeg("INQ-2026-8200-unknown", { kind: "paragraph-ish" });
 t("(4a) an UNKNOWN kind covers nothing and mints nothing",
-  [rUnknown.ok, codes(rUnknown)], [false, ["C-45.3"]]);
+  [rUnknown.ok, codes(rUnknown), codeNames(rUnknown)], [false, ["C-2.8"], ["CONTENT_EXTENT_UNREADABLE"]]);
 const rUnlanded = await refuseLeg("INQ-2026-8200-cell", { kind: "sheet-cell", cell: "B7" });
 t("(4b) a kind named in the grammar whose `covers` has NOT landed is refused too (REC-85)",
-  [rUnlanded.ok, codes(rUnlanded)], [false, ["C-45.3"]]);
+  [rUnlanded.ok, codes(rUnlanded), codeNames(rUnlanded)], [false, ["C-2.8"], ["CONTENT_EXTENT_UNREADABLE"]]);
 t("     and it is refused for being unlanded rather than unknown",
   /named in the grammar and this plane cannot yet/.test(detail(rUnlanded)), true);
 const rNoPage = await refuseLeg("INQ-2026-8200-nopage", { kind: "pdf-page" });
 t("(4c) a pdf-page extent naming no page is unreadable, not page zero",
-  [rNoPage.ok, codes(rNoPage)], [false, ["C-45.3"]]);
+  [rNoPage.ok, codes(rNoPage), codeNames(rNoPage)], [false, ["C-2.8"], ["CONTENT_EXTENT_UNREADABLE"]]);
 
 t("no refused promotion minted anything", (await get("stats")).content, 2);
 

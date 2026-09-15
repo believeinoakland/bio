@@ -11238,3 +11238,53 @@ another name. Neither exists: `textchain.mjs` has no re-exporting wrapper, and t
 imports from it are the explicit named list at `store.mjs:253-255`, which does not include
 `captureBound`. It says nothing about `newgroup/` (the installer embeds a plane copy that
 regenerates at the next cut) or about the fleet members, none of which import `textchain.mjs`.
+
+
+## 2026-09-14 · REC-84, the basis leg's extent — the gate figures, and where the slack was
+
+Instruments: `npm run test:battery`, `node scripts/coverage.mjs --strict`,
+`node civicos-ui/test/run.mjs`, `node tools/plancheck.mjs --local`, all from the
+worktree `agent-ae95c3be71f5bd167`. Every exit status read UNPIPED.
+
+**The baseline was MEASURED AND THE BRIEF WAS RIGHT**, which is reported because
+the practice is to trust the measurement and not the streak: a pristine
+`git worktree add` of `origin/main` at `9a713f1`, with `npm ci` run in
+`bio-plane/`, `pdf-worker/` and `ocr-worker/` BEFORE anything was measured, read
+**188/188 suites green · 11,474 assertions · exit 0 · 212.9s**. The brief said
+"~188/188 · ~11,474". No stale figure found.
+
+**THE DEC-49 GUARD'S FLOORS WERE STALE BY MORE THAN THIS ITEM MOVED THEM, and
+the split is measured rather than asserted** — the pristine worktree above was
+used as the second tree, so the two figures are from two real runs and not from
+subtraction. `civicos-ui/check-refusal-codes.mjs`, floor / pristine `9a713f1` /
+REC-84's tree:
+
+| figure | floor | 9a713f1 | REC-84 | pre-existing slack | REC-84's |
+| --- | --- | --- | --- | --- | --- |
+| families | 19 | 20 | 20 | 1 | 0 |
+| rows | 185 | 189 | 191 | 4 | 2 |
+| census | 465 | 470 | 472 | 5 | 2 |
+| reach | 238 | 242 | 244 | 4 | 2 |
+| governedSites | 73 | 74 | 75 | 1 | 1 |
+| regions | 59 | 60 | 61 | 1 | 1 |
+| regionLines | 1657 | 1713 | 1745 | 56 | 32 |
+| codesChecked | 167 | 175 | 177 | 8 | 2 |
+| outcomeReturns | 84 | 84 | 86 | 0 | 2 |
+| refusalsJudged | 170 | 178 | 180 | 8 | 2 |
+| untranslated | 267 | 268 | 268 | 1 | 0 |
+
+Every figure but `outcomeReturns` was ALREADY above its floor before this item
+touched anything — REC-82 landed a whole DEC-49 family (`CONTENT_EXTENT_CHECKS`,
+four rows, one region) the same day and did not move them, which is the tax
+C-22's header names and the reason that header exists. `reachGap` is a CEILING
+and read **40 on BOTH trees**, unmoved: REC-84's two new codes arrive translated
+and never enter the gap. `bodyLines` is deliberately not ratcheted and is
+unmoved.
+
+**`REGISTER_FLOOR` in `bio-plane/scripts/coverage.mjs`** was `967 / 179 / 180`
+(arms / classified / corpus) — exactly what REC-82 set it to, no slack — and
+moves to the figures this item's own green `--strict` run printed as
+REPRODUCIBLE once its new suite was in the commit. The CONTAMINATED figures
+(`975 / 180 / 181` with one suite in no commit) were refused as a source, which
+is D-238's rule: a floor moved while a phantom is present is permanently too
+high and the gate then gets switched off.
