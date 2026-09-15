@@ -6317,9 +6317,13 @@ the order that file's own comment block requires and the reason it is a second c
 amendment.
 
 released: 2026-09-14 by the SK-7 worker (respawn), worktree `agent-aaa6f95fc9e50db99`, branch
-`worktree-agent-aaa6f95fc9e50db99`, two commits `9bc43d9` (the merge and the item) and the floor
-commit on top of it — **NOT pushed and NOT merged; CONDUCT takes the integration, the IC-88
-RESOLUTION, the interface bumps and the QUEUE row.**
+`worktree-agent-aaa6f95fc9e50db99`. THE WORK IS IN TWO COMMITS — `9bc43d9` (the merge with the dead
+worker's branch, and the item) and `31f2913` (the `REGISTER_FLOOR` move and this release line) —
+with a third, `6694ab6`, that is a PURE MERGE of `origin/main` at `f38af22` carrying nothing of this
+item's: the branch handed back sits on the tip the baseline was measured at, and its only conflict
+was the generated `docs/DECIDED.md`, resolved by regenerating it (890 rulings). **NOT pushed and NOT
+merged; CONDUCT takes the integration, the IC-88 RESOLUTION, the interface bumps and the QUEUE
+row.**
 
 **GATES, every figure measured on this machine and none carried over from the dead worker's run.**
 BASELINE on a pristine scratch `git worktree add` of `origin/main` at `f38af22` — never `git stash`,
