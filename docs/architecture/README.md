@@ -60,9 +60,28 @@ architecture documents and in review.
 review): the purpose and the path, the system in one view, every major construct
 with its importance, relationships, home document and state, the capability ladder
 as the completeness map, the runtime shape, and the doctrine spine. Read it after
-the Roadmap and before any construct's document; three constructs it names have no
-home document yet (the assistant, publication, distribution), stated there rather
-than left to be noticed.
+the Roadmap and before any construct's document; the three constructs it named
+homeless at v0.1 (the assistant, publication, distribution) received their documents
+on 2026-09-14, below.
+
+**BIO_Assistant_and_AI_Roles_v0_1** — the level-1 home of construct 11 (v0.1 DRAFT,
+2026-09-14, awaiting Bob's review): the four roles FIND / PURSUE / EXTRACT / CHECK,
+the rules stated once (the machine looks, the member concludes; no machine credential
+performs an attested act; an AI never travels on a member's token; transcripts never
+in the record), what is built (the investigative session, the credential cascade,
+the running-session surface), what is designed (the assistant pilot), and the frontier.
+
+**BIO_Publication_v0_1** — the level-1 home of construct 13 (v0.1 DRAFT, 2026-09-14,
+awaiting Bob's review): one-way publication, editions, the bar on the project, the
+fence on the provenance chain, bias public, the eight audiences and their output acts,
+attribution as the attesting member's choice, the ceremony deferred on DEC-33's
+trigger, and what is dishonest today.
+
+**BIO_Distribution_v0_1** — the level-1 home of construct 15 (v0.1 DRAFT, 2026-09-14,
+awaiting Bob's review): the sovereign instance and what its boundary buys, the signed
+release and its namespaces, the fleet as a membership rule, the installer's contract
+with the group's account, the deploy-to-serve ladder, and multi-instance isolation as
+planned.
 
 **BIO_Functional_Architecture_v3** — the three concurrent layers,
 Information, Analysis, and Action, with every function a group needs mapped

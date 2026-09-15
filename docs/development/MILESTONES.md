@@ -286,6 +286,7 @@ column, so captured bytes are never indexed and a group that captures 500 agenda
 packets can search its notes about them and not the packets · D-32 (the shipped
 retrieval path's remaining cost) · D-36 (the class of undocumented workerd ceilings).
 **Areas:** RECORD.
+**Design:** `docs/development/CONTENT-SEARCH-DESIGN.md` (2026-09-14) — one indexed unit per element reference, the `passage:` arm on the one compiler, truncation stated per unit and per capture, the answer naming its level and the content-axis state, the storage measurement before the index.
 **Depends on:** M2, for the text to exist. Nothing else — **the fence question this
 was waiting on is already answered by settled doctrine, 2026-07-31.** Indexing
 document text sits in exactly the position `source.locator` and `source.authority`
