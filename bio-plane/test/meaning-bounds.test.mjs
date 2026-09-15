@@ -64,7 +64,9 @@
      grades what a method PUBLISHES, so an honest envelope over an unbounded scan reads
      as bounded — D-227's open finding, reproduced here on a second op. That single
      surviving arm is the whole reason the SQL pin exists beside the roster verdict.
-   (2) A SECOND OP THE WALK CANNOT REACH — `ncOpaqueRead`, which scans `ai_run_log`, pushes
+   (2) A SECOND OP THE WALK CANNOT REACH — `ncOpaqueRead`, which scans the observation log
+   (`ai_run_log` when this arm was written; REC-93 folded it into `observations` on 2026-09-14,
+   so a re-run plants against THAT table — the arm's subject is the WALK and is unaffected), pushes
    the rows into a local through a `for…of` this reader cannot follow, publishes only a
    count, and IS dispatched. MEASURED: **2 fail, both REACH/OPAQUE arms, at 9 of 8 and
    naming `ncopaque->ncOpaqueRead`.** Every other arm stayed green, which is the point:
@@ -1156,7 +1158,17 @@ t("REC-70: and it is graded WITHOUT `ok: true` — this method still answers `fo
 t("REC-70 / D-227: the SQL BOUND itself, pinned off aiRunLog's own comment-stripped segment — "
 + "the scan carries `LIMIT ?` and asks for `cap + 1`. The published envelope cannot stand in for "
 + "this: D-227 measured an envelope staying honest over a scan whose LIMIT had been removed",
-  [/FROM ai_run_log WHERE run = \? ORDER BY seq LIMIT \?/.test(SEGMENTS.get("aiRunLog") || ""),
+  /* CORRECTED 2026-09-14 BY REC-93, AND THE RULE DID NOT CHANGE — only the table
+     this method reads did. `OBSERVATION-LOG-DESIGN.md` §4.4 folds `ai_run_log`
+     into `observations`, so `op=airunlog` now reads through the
+     `(authority_kind, authority, seq)` index. The pin still asserts exactly what
+     it always asserted: THE SCAN CARRIES `LIMIT ?` AND ASKS FOR `cap + 1`. The
+     old pattern was anchored on the old table name and would have gone quietly
+     FALSE against a method that is still perfectly bounded, which is a
+     declaration going stale while its subject stays alive (M-12's class) — so
+     it is corrected here, never exempted. */
+  [/FROM observations WHERE authority_kind = 'run' AND authority = \?\s+ORDER BY seq LIMIT \?/
+     .test(SEGMENTS.get("aiRunLog") || ""),
    /run,\s*cap \+ 1\)/.test(SEGMENTS.get("aiRunLog") || "")], [true, true]);
 t("REC-70: the cap comes from the plane's OWN figures and is not a literal at the call site — "
 + "`AI_RUN_LOG_LIMIT_DEFAULT`/`_MAX` are named constants, so the pair can be read and re-decided "

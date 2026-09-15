@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-886 rulings across 81 documents.
+888 rulings across 81 documents.
 
 ## DEC-
 
@@ -652,6 +652,10 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:5747`
 - **C-22** · 2026-08-09 — THREE SUPERSEDED PINS CORRECTED AND NONE EXEMPTED**, each with why the old one was right when written: `airun.test.mjs` ARM D1 (C-22 family SEVEN -> EIGHT), `leadslug.test.mjs`'s fixture (made legal through the real acts), `run-conditions.test.mjs` ARM W3 (`aiRunClose` classified as the thirteenth reader of `ai_runs`).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:5907`
+- **C-22** — CORRECTED, never exempted**, with the reason at the site: the family grew to TEN and, more to the point, CHANGED SUBJECT.  
+  `docs/development/CLAIMS.md:6274`
+- **C-22.9** — has now fired on three consecutive items — was CORRECTED, never exempted. - **C-22.9 `OBS_AUTHORITY_UNNAMED`** — a look the record cannot say WHY it made is not recorded.  
+  `docs/development/INTERFACE-CHANGES.md:6663`
 - **C-25** · 2026-08-08 — oved C-25.x -> C-26.x (PL-1 took C-25.1-C-25.18) and its interface entry moved IC-29 -> IC-30 (PL-1 took IC-29, already SETTLED).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2407`
 - **C-25** · 2026-08-08 — Two collisions resolved: C-25.x renumbered to C-26.x (PL-1 took the family in parallel) and IC-29 to IC-30 (already SETTLED).  

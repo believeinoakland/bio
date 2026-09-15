@@ -134,7 +134,18 @@ export class ProbeStore extends Store {
     const url = new URL(req.url);
     if (url.pathname === "/killrun") {
       const run = url.searchParams.get("run");
-      this.sql.exec("DELETE FROM ai_run_log WHERE run = ?", run);
+      /* CORRECTED 2026-09-14 BY REC-93, AND THE PROBE'S INTENT IS UNCHANGED:
+         kill the run and everything hanging off it. What moved is WHERE the run's
+         observation log lives — OBSERVATION-LOG-DESIGN.md §4.4 folds ai_run_log
+         into the general observations table and #migrate drops the old one, so
+         this line was deleting from a table that no longer exists. It threw
+         inside the Durable Object and came back as a NON-JSON 500 body, which
+         the suite's own .json() then failed to parse — so the failure surfaced
+         as "the suite threw before it finished: SyntaxError: Unexpected token
+         'E'" rather than as anything naming the table. Corrected here, never
+         exempted, and the sentence is kept because the NEXT reader of a
+         hand-written DELETE against a folded table will meet the same shape. */
+      this.sql.exec("DELETE FROM observations WHERE authority_kind = 'run' AND authority = ?", run);
       this.sql.exec("DELETE FROM ai_run_bounds WHERE run = ?", run);
       this.sql.exec("DELETE FROM ai_runs WHERE run = ?", run);
       const left = [...this.sql.exec("SELECT count(*) c FROM ai_runs WHERE run = ?", run)][0].c;

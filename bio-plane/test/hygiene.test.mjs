@@ -520,7 +520,21 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
   const schema = readFileSync(join(fileURLToPath(new URL("../src", import.meta.url)), "schema.mjs"), "utf8");
   const store = readFileSync(join(fileURLToPath(new URL("../src", import.meta.url)), "store.mjs"), "utf8");
 
-  const schemaTables = [...schema.matchAll(/CREATE TABLE IF NOT EXISTS\s+(\w+)/g)].map((m) => m[1]);
+  /* REC-93, 2026-09-14 — THE ANCHOR, WHICH THIS LINE WAS MISSING AND ITS
+     STORE-SIDE TWIN TWENTY LINES DOWN HAS HAD SINCE D-137.
+     D-137 closed "prose in a comment mints a phantom table" FOR store.mjs, by
+     anchoring the name to the opening paren. THE IDENTICAL SCAN OVER schema.mjs
+     WAS LEFT UNANCHORED, so the class was closed in one file and open in the
+     other — which is this repository's own finding about closing a class by
+     parsing one file, written three lines below in D-137's own words, and then
+     not applied to the line above it. It was not theoretical: REC-93 wrote a
+     schema comment explaining why a CREATE had been removed, the sentence
+     contained the phrase, and the D-113 purge census failed naming a table
+     called "would" — D-137's "does" arriving again in the other file.
+     The prose that caught it is DELIBERATELY LEFT IN schema.mjs rather than
+     reworded around, so this anchor has a live fixture in the corpus instead of
+     a rule nobody exercises. */
+  const schemaTables = [...schema.matchAll(/CREATE TABLE IF NOT EXISTS\s+(\w+)\s*\(/g)].map((m) => m[1]);
   t("schema.mjs declares tables to check", schemaTables.length > 0, true);
 
   /* D-137. Eight tables are created BY HAND in the DO constructor rather than in

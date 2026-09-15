@@ -6203,3 +6203,100 @@ entities or `at` would become a second author of it.
 until this runs:** a NULL `page_count` on a pre-CAP-9 capture means the page set was
 undetermined at mint and is STATED — never defaulted to a number, never a zero, and
 never a refusal.
+
+## CLAIM 2026-09-14 RECORD (REC-93 — the `observations` table, the ONE append site, the frontier view, the document-level writers, and the `ai_run_log` fold)
+
+Session: RECORD worker for REC-93, spawned by CONDUCT #11, Opus 5, worktree-isolated.
+Worktree: `.claude/worktrees/agent-a239cb7601fee3669` · branch `worktree-agent-a239cb7601fee3669`,
+a fresh checkout of `origin/main` at `f38af22`. **Row verified `running` on `origin/main` before
+any edit** — the prior worker on this item stopped correctly at exactly this check and is owed the
+credit; the flip is pushed and this worker re-read it rather than believing the brief.
+
+Contract: **IC-92 (I5 additive — the `observations` table)**, minted at spawn with
+`node tools/mintid.mjs IC` (floor IC-87, four held ids stepped over), filed PROPOSED in
+`INTERFACE-CHANGES.md`. **I3 is UNCHANGED IN SHAPE and is RECORDED as such**: `op=airunlog`'s
+envelope does not move, and that non-change is asserted by a digest pin rather than left as a
+claim. The new frontier read is a NEW op, which is additive to the OPS table and not a change to
+an existing contract.
+
+Design read first, front matter before section: `docs/development/OBSERVATION-LOG-DESIGN.md`
+(Status v0.1 DRAFT, Place level 2, **Incomplete §4.5 / §6 / §7**), then §3, §4.1, §4.4, §4.6, §5,
+§7, then the §8 decomposition row 1 that is this row's actual authority, then §9's controls.
+Also `BIO_Content_Framework_v0_10.md` Part II §17 (the OBSERVE row) and `STORE-AS-CACHE.md`.
+
+Paths claimed BY REGION, never whole files:
+
+- **`bio-plane/src/schema.mjs`** — ONE new region: the `observations` table and its three
+  indexes, placed **BEFORE the `host_governor` block** (the standing rule), with no backtick in
+  the literal and **no semicolon inside any `--` comment** (PL-1's trap). **NOT** `ai_run_log`'s
+  block, which is edited only to the extent the fold requires and is named below.
+- **`bio-plane/src/store.mjs`** — FIVE named regions and nothing else:
+  1. the **ONE append site** `#observe`, the single writer for `observations`, reading its
+     refusals out of `AI_RUN_CHECKS` through `airun.mjs` (C-22.1/22.2/22.6 generalised, never
+     re-typed at the site);
+  2. `#aiRunAppend` and `aiRunLog` — rewired onto the one site and the one table (the FOLD);
+     `op=airunlog`'s answer shape is not touched;
+  3. the **document-level writers**: at `op=acquire`, at the monitor's sweep, at ratify's
+     re-fetch, and at the archive fallback;
+  4. the **frontier view** and its bounded document-level read;
+  5. `purge`'s whole-store arm (one `DELETE FROM observations`) and the per-bundle arm's
+     STATED non-deletion, plus `stats()`'s counter.
+  **NOT** the three meaning-layer read caps (**REC-89**'s region), **NOT** `op=cite`'s extent
+  widening (**REC-97**'s), **NOT** `op=acquire`'s reading wire (**CAP-12**'s — this item writes
+  an observation beside that wire and does not touch it), **NOT** the machine-credential mint
+  path (**SK-7**'s). Those four plus this item are the standing cap of FIVE on
+  `store.mjs` / `index.mjs` / `bio-checks.mjs`.
+- **`bio-plane/src/airun.mjs`** — `checkObservation` GENERALISED to the whole-table entry (the
+  two new refusals below) with its run-log behaviour preserved; nothing else in the file.
+- **`bio-plane/checks/bio-checks.mjs`** — the **C-22 family ONLY**: two new rows, **C-22.9**
+  (`authority_kind` never absent) and **C-22.10** (`PRESENT` with no `result_ref`), and the
+  family header's count corrected in place from EIGHT to TEN. **NOT** any other family.
+- **`bio-plane/src/index.mjs`** — the **OPS table op lines ONLY** for the new frontier read.
+- **`bio-plane/test/observations.test.mjs`** — NEW, this item's suite.
+- **`bio-plane/test/nc-rec93.mjs`** — NEW, this item's negative-control driver.
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` ONLY, **ONE key set**, moved from this
+  item's own printed REPRODUCIBLE figures and never by adding to the number in the file.
+- **`docs/development/MEASUREMENTS.md`**, **`docs/development/DEBT.md`**,
+  **`docs/development/INTERFACE-CHANGES.md`** (the IC-92 row PROPOSED — the version bump and the
+  RESOLUTION are CONDUCT's), **`docs/development/CLAIMS.md`** (this block) — appends only.
+- **`docs/development/OBSERVATION-LOG-DESIGN.md`** — front matter ONLY, if this landing changes
+  the document's stated completeness (the accepts-when requires it in the same commit).
+
+NOT claimed and deliberately not written: `docs/development/QUEUE.md` (CONDUCT's, sole writer);
+`newgroup/**`; anything under `release/`.
+
+**THIS IS THE FOUNDATION ITEM FOR REC-94, REC-95 AND REC-96.** The append site is ONE and the
+vocabulary is the design's own, because three later items write into it.
+
+SIX PATHS ADDED TO THIS CLAIM AT THE CLOSE rather than taken silently, each FORCED BY A
+MECHANISM rather than chosen, and every one of them a gate that fired on this landing:
+
+- **`bio-plane/test/airun.test.mjs`** — ARM D1 only, the C-22 family's count. **CORRECTED,
+  never exempted**, with the reason at the site: the family grew to TEN and, more to the
+  point, CHANGED SUBJECT. That arm has now fired on three consecutive items.
+- **`bio-plane/test/hygiene.test.mjs`** — the schema-table harvest regex ONLY. It lacked
+  the `\s*\(` anchor its store-side twin has carried since D-137, so a comment in
+  `schema.mjs` explaining why a CREATE had been removed was parsed as a table named
+  `"would"` and failed the D-113 purge census. **The class was closed rather than the
+  prose reworded**, and the prose is deliberately left in place as the live fixture.
+- **`bio-plane/test/bounds.test.mjs`** — the roster figure (31 → 32, from the arm's own
+  failure output) and `op=frontier` DRIVEN in the PIN loop, plus a three-subject fixture.
+  The fixture is the finding: the arm's first run read `truncated: false` at a cap of ONE
+  because the suite's store held fewer than two document-level subjects, so **the arm
+  could not arm**.
+- **`bio-plane/test/derivation-bounds.test.mjs`** — the amplification CEILING (32 → 33)
+  and the by-name pin. This ratchet fired CORRECTLY: `Store#frontier` issues three
+  queries per row. It is admitted with the cost stated at the site rather than the number
+  nudged — the scan is `LIMIT`-bounded and the bound is published.
+- **`bio-plane/dist/bio-plane.bundled.mjs`** and **`bio-plane/dist/bio-plane.bundle.json`** —
+  rebuilt with `npm run build`, which FL-9's guard requires of any landing that touches
+  `src/`. Not a version bump, not a tag, not a deploy: those are DIST's and none was taken.
+- **`.gitignore`** — one line for this item's negative-control pen
+  (`.rec93-control-pristine/`), the `.rec85-` pattern exactly.
+
+And one path was added for a reason worth naming on its own:
+
+- **`tools/measure-office-corpus.py`** — a fourth mode, `sweepvolume`, for M-14. COFF-6's
+  own probe already holds this corpus's definition, so it GAINS A MODE rather than a
+  second tool standing beside it — CAP-7's choice on 2026-09-14, for the same reason.
+

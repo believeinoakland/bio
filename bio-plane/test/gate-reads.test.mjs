@@ -835,6 +835,24 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "answer, it is an answer that says a job is running and refuses to say where. No count of the "
       + "withheld is reported (op=backlinks' rule) — a count is exactly the disclosure that somebody is "
       + "investigating something you cannot see.",
+    /* REC-93 / IC-92, 2026-09-14 — THE FRONTIER, classified by the item that
+       adds it. `OBSERVATION-LOG-DESIGN.md` section 6 says it in one line:
+       *"a subject discloses a project's interest, so REC-36's withholding
+       applies row-whole across the fence."* */
+    frontier: "REC-93: the observation log's frontier — what this instance has looked for at a level "
+      + "and what came of it. It is `op=airunlog`'s disclosure WITHOUT the run id in front of it, and "
+      + "that is what makes it the sharper case of the two: a run read needs an address the caller "
+      + "already holds, while this one takes a level name anybody can type and answers with every "
+      + "subject the group has ever gone looking for. A list of addresses a project fetched, and of "
+      + "ones it looked for and did not find, IS the line of inquiry — the thing OBSERVATION-LOG-DESIGN "
+      + "section 6 says REC-36's withholding applies to ROW-WHOLE rather than by redacting a column, "
+      + "because a subject with its authority nulled still names what was looked for. "
+      + "It is stamped with the same fail-closed viewer as op=airun and op=airunlog, in the same list "
+      + "in index.mjs, so an absent stamp refuses rather than answers. "
+      + "NOTE what is NOT here and never will be, for the reason op=airunlog gives one entry up: a "
+      + "MEMBER'S OWN SEARCH is not in this table at all. Section 4.6's provisional keeps it out at the "
+      + "vocabulary — there is no `authority_kind` a member's ad hoc search could take — so the "
+      + "strongest form of this classification is again that the material does not exist here to leak.",
     airunlog: "IS-6: the observation log, gated on the same column and for the same reason as op=airun. "
       + "This one carries MORE than the run row does and is the sharper case: an entry's `subject` names "
       + "what the run went looking for, so a log a viewer could read for a project they were not invited "

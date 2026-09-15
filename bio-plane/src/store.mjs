@@ -234,6 +234,13 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
             which is the failure this repository has now measured six times. */
          RUN_CONTEXTS,
          checkObservation, checkCondition, checkBound, finishedBound,
+         /* REC-93 / IC-92: the observation log's three remaining vocabularies.
+            Imported for the reason RUN_CONTEXTS two lines up is imported — a hand
+            copy of a word list agrees with itself for free, which this repository
+            has now measured six times. `OBSERVATION_AUTHORITY_KINDS` in
+            particular is where §4.6's provisional is enforced: there is no value
+            in it a member's ad hoc search could take. */
+         OBSERVATION_ACTOR_CLASSES, OBSERVATION_AUTHORITY_KINDS, OBSERVATION_SUBJECT_KINDS,
          /* FL-8 / IC-67: WHAT BECAME OF THE RUN, decided in `airun.mjs` beside the
             three vocabularies it reads rather than as a ternary here. Imported for
             `finishedBound`'s reason exactly, one field over: this rule had two
@@ -452,6 +459,52 @@ export class Store extends DurableObject {
     }
 
     for (const s of bare.split(";")) { const t = s.trim(); if (t) this.sql.exec(t); }
+
+    /* ================================================================ *
+     * REC-93 / IC-92 — THE OBSERVATION LOG'S FOLD, and it runs ONCE per store.
+     *
+     * `OBSERVATION-LOG-DESIGN.md` §4.4: *"`ai_run_log`'s rows are rows of this
+     * table with `authority_kind = run` … Whether the old table is dropped or
+     * kept as a view is the landing's call; TWO WRITERS IS NOT."* This landing
+     * drops it, because a kept-but-dead table is a place for the two to drift
+     * back apart and nothing reads it once the reader moved.
+     *
+     * IT IS A DATA MOVE AND NOT AN APPEND, which is why it does not go through
+     * `#observe`. Those rows were written under the WEAKER RULE that existed
+     * when they were written — `ai_run_log` has no `result_ref` column at all —
+     * so putting them through today's refusals would refuse rows that are
+     * already in a coverage record. Re-judging history by a rule written after
+     * it is how a record loses the very evidence it was keeping.
+     *
+     * ORDER IS PRESERVED EXACTLY. `ORDER BY run, seq` on the read means every
+     * run's rows enter in their original sequence, so the store-wide `seq`
+     * SQLite assigns agrees with each run's own ordering — which is the whole
+     * of §4.4's *"the run's own ordering is the `seq` order within its
+     * authority"*, and what makes `op=airunlog`'s re-derived ordinal identical
+     * to the number it published before the fold.
+     *
+     * `subject_kind` IS `unstated` AND NOT A DERIVED KIND. The old table never
+     * recorded one. Deriving it from the level would be inventing a fact about
+     * rows already written, at the smallest possible scale and therefore the
+     * easiest to wave through.
+     *
+     * NOT RE-RUNNABLE AND NOT NEEDING TO BE: after the DROP the PRAGMA reports
+     * no columns and this block is skipped forever. A store created after this
+     * landing never had the table and skips it on its first boot. */
+    {
+      const old = [...this.sql.exec(`PRAGMA table_info(ai_run_log)`)];
+      if (old.length) {
+        this.sql.exec(
+          `INSERT INTO observations
+             (at, actor_class, actor, authority_kind, authority, level, subject_kind, subject,
+              state, governed, condition, bound, terminal, result_kind, result_ref, detail)
+           SELECT l.at, 'machine', r.principal_claude, 'run', l.run, l.level, 'unstated', l.subject,
+                  l.state, l.governed, l.condition, l.bound, l.terminal, NULL, NULL, l.detail
+             FROM ai_run_log l LEFT JOIN ai_runs r ON r.run = l.run
+            ORDER BY l.run, l.seq`);
+        this.sql.exec(`DROP TABLE ai_run_log`);
+      }
+    }
 
     {
       const old = [...this.sql.exec(`PRAGMA table_info(published_bundles_preeditions)`)];
@@ -18416,7 +18469,17 @@ export class Store extends DurableObject {
          operator can see how many runs are in flight without opening one. A
          COUNT AND NOTHING ELSE — what a run is looking into is not an operator
          surface, the same line queueState draws one row up. */
-      aiRuns: n("ai_runs"), aiRunBounds: n("ai_run_bounds"), aiRunLog: n("ai_run_log"),
+      aiRuns: n("ai_runs"), aiRunBounds: n("ai_run_bounds"),
+      /* REC-93 / IC-92: `aiRunLog` was a count of `ai_run_log`, which no longer
+         exists — `OBSERVATION-LOG-DESIGN.md` §4.4 folded it into `observations`
+         and `#migrate` drops it. The key is KEPT AND RE-AIMED at the folded rows
+         rather than removed, because `op=purge` publishes these counters as its
+         proof that it took what it says it took (D-113) and a key that vanishes
+         from that proof reads as a table nobody is checking. `observations` is
+         counted WHOLE beside it: the log is the coverage record and its size is
+         an operator fact, while what any single row was looking for is not. */
+      aiRunLog: this.#one(`SELECT count(*) c FROM observations WHERE authority_kind = 'run'`).c,
+      observations: n("observations"),
       /* PL-1 / IS-1: the inquiry's alternative accounts of its evidence and
          their legs, reported so a purge can PROVE it took them (D-113). A COUNT
          AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
@@ -19878,7 +19941,23 @@ export class Store extends DurableObject {
            nothing outlives the run it belongs to. A per-bundle purge leaves them:
            a run is not a file of the bundle it is about, and killing a run
            because one document went is a decision nobody made. */
-        this.sql.exec(`DELETE FROM ai_run_log`);
+        /* REC-93 / D-113. THE OBSERVATION LOG, and §7 is explicit that this
+           whole-store arm is the ONLY thing that ever deletes from it:
+           *"nothing is ever deleted from the log except by whole-store purge;
+           the edge rule is what keeps that affordable"*. The folded run log is
+           in here too, which is why the `DELETE FROM ai_run_log` that stood on
+           this line is GONE rather than kept beside it — the table it named no
+           longer exists after #migrate drops it, and a purge naming a dropped
+           table is an error at exactly the moment an operator is being told the
+           store is empty.
+           THE PER-BUNDLE ARM DELIBERATELY DOES NOT DO THIS, and that is §7's
+           other half rather than an omission: *"Purge of a bundle leaves its
+           observations. They are the coverage record, not derived from the
+           bundle."* A `result_ref` pointing at a capture this purge removed is
+           ANNOTATED at read time as purged (op=frontier does it) and never
+           rewritten — the look was still made, and erasing the record of it
+           because its result went is how a store forgets that it ever searched. */
+        this.sql.exec(`DELETE FROM observations`);
         this.sql.exec(`DELETE FROM ai_run_bounds`);
         this.sql.exec(`DELETE FROM ai_runs`);
         /* PL-3 / IS-4 / D-113. F10's stored refusals go with the corpus they are
@@ -23483,8 +23562,53 @@ export class Store extends DurableObject {
    * Links: what a document pointed at, and whether we hold that version
    * ------------------------------------------------------------------ */
 
-  recordCapturedLocator({ address, addressNorm, captureSha, retrieved, via = "direct", retrievalLocator = null }) {
+  recordCapturedLocator({ address, addressNorm, captureSha, retrieved, via = "direct", retrievalLocator = null,
+                          authorityKind = null, authority = null, actorClass = "plane", actor = null }) {
     if (!addressNorm || !captureSha) return { recorded: false };
+    /* ================================================================ *
+     * REC-93 — THE DOCUMENT-LEVEL OBSERVATION, AND §7'S EDGE-TRIGGERED RULE.
+     *
+     * `OBSERVATION-LOG-DESIGN.md` §4.1 puts the document-level writers at
+     * `op=acquire`, the monitor's sweep, ratify and the archive fallback. Three
+     * of those four reach the store THROUGH THIS METHOD, and `via` is what
+     * separates them — §4.1's own words: *"`subject_kind = address`, `via` in
+     * `detail`, so an archive capture and a direct capture of one address are
+     * two observations of one subject."* So the writer goes here rather than
+     * being copied to three call sites, which is what keeps the append site ONE.
+     *
+     * WHICH OF THE THREE DETAILS §4.1 NAMES — `new`, `unchanged`, `changed` — is
+     * READ FROM THE RECORD BEFORE THE UPSERT, never declared by the caller. A
+     * caller that tells us the bytes were unchanged is a caller we would be
+     * taking a coverage claim from for free, and an equality that costs nothing
+     * to produce is not evidence.
+     *
+     * §7'S EDGE-TRIGGERED RULE, AND ITS NUMBER IS MEASURED (M-14). *"First looks
+     * and transitions are logged; a steady-state revisit that finds the subject
+     * PRESENT and unchanged updates the frontier's cache and writes no row."*
+     * The cache is the `observations + 1` and `last_retrieved` the upsert below
+     * already maintained before this item existed — so the edge rule is not a
+     * new mechanism, it is the decision NOT to write a row beside one. M-14
+     * measured what that buys over the real census corpus: 15.14 rows/day
+     * against the naive rule's 43,283, a 2,859x reduction, with a 2,713-row peak
+     * day the table still absorbs comfortably. The naive rule was refuted by
+     * arithmetic (15.8 million rows a year over one city); what needed measuring
+     * was whether the edge rule is small in the REAL corpus, and it is. */
+    /* ONE AGGREGATE ROW, NOT A SCAN, and the shape is load-bearing rather than
+       a micro-optimisation. The decision needs exactly two facts — has this
+       address been retrieved through this source before, and were these the same
+       bytes — and the first draft read one row PER EXISTING CAPTURE to get them.
+       That made this method publish a row scan, which is how it joined
+       `meaning-bounds.test.mjs`'s OPAQUE roster: an op that scans rows, is
+       dispatched, and lands outside every bounded bucket is a blind spot rather
+       than a clean bill. The ratchet named it, and the honest answer was to stop
+       scanning rather than to widen the roster. */
+    const seen = this.#one(
+      `SELECT COUNT(*) AS n, SUM(CASE WHEN capture_sha = ? THEN 1 ELSE 0 END) AS same
+         FROM captured_locators WHERE address_norm = ? AND via = ?`,
+      captureSha, addressNorm, String(via || "direct")) || { n: 0, same: 0 };
+    const detail = Number(seen.n) === 0 ? "new"
+                 : Number(seen.same) > 0 ? "unchanged"
+                 : "changed";
     /* Widen the interval rather than replacing a date. Seeing the same bytes
        again later is not a duplicate, it is the observation that proves the
        target held still in between.
@@ -23504,7 +23628,44 @@ export class Store extends DurableObject {
          observations      = observations + 1`,
       addressNorm, address || addressNorm, captureSha, String(via || "direct"),
       retrievalLocator, retrieved, retrieved);
-    return { recorded: true, address_norm: addressNorm, via: String(via || "direct") };
+    /* THE EDGE. `unchanged` writes NO ROW — the counter above IS the record of
+       it, and that is the whole economy §7 buys. `new` and `changed` each write
+       one, because a first look and a transition are the two things a frontier
+       cannot be reconstructed without. */
+    let observed = null, wrote = false;
+    if (detail !== "unchanged") {
+      observed = this.#observe({
+        actorClass, actor,
+        /* The archive fallback and a direct acquire are DIFFERENT AUTHORITIES
+           for the same subject, which is D-96's split arriving in the log: an
+           archive observation and a direct one of one address are two rows. A
+           caller that named its own authority (the sweep does) keeps it. */
+        authorityKind: authorityKind || (String(via || "direct") === "direct" ? "acquire" : "link"),
+        authority,
+        level: "document", subjectKind: "address", subject: addressNorm,
+        state: "PRESENT", resultKind: "capture", resultRef: captureSha,
+        detail: `${detail} (via ${String(via || "direct")})`,
+      }, retrieved);
+      /* `wrote` IS THE OUTCOME AND NOT THE INTENT, and the distinction was found
+         by this item's own negative control rather than reasoned about. The
+         field below first read `detail !== "unchanged"` — the same expression
+         that DECIDES to write — so with the append removed entirely the answer
+         went on reporting `observation_written: true` while nothing was written,
+         and the control arm built to catch a missing writer could not see it.
+         A published field derived from the intent instead of the result is a
+         small instance of the defect this whole table exists to prevent: an
+         answer claiming more than it can support. It now reports what actually
+         happened, including the case where the append was REFUSED. */
+      wrote = observed === null;
+    }
+    return { recorded: true, address_norm: addressNorm, via: String(via || "direct"),
+             /* PUBLISHED rather than inferred: a caller can see which of the
+                three this look was, whether a row was actually written, and — if
+                one was attempted and refused — which refusal stopped it. "No row
+                was written" is then a stated outcome with a reason, rather than
+                a silence a reader has to interpret. */
+             observation: detail, observation_written: wrote,
+             observation_refused: observed || null };
   }
 
   /** The READ half of the above, added by REC-26. `observations` is not
@@ -26383,8 +26544,15 @@ export class Store extends DurableObject {
              LOOKED_INDETERMINATE, because OUR pacing holding a host is a fact
              about US and never about the source — writing "source unreachable"
              here is the exact thing D-104 exists to stop. */
-          this.#aiRunAppend(q.run, {
-            level: "document", subject: q.address, state: "LOOKED_INDETERMINATE",
+          /* REC-93: through the ONE append site, under the authority that
+             actually made the look. The vocabulary is UNCHANGED — D-104's split
+             still travels as `governed` with LOOKED_INDETERMINATE, because our
+             pacing holding a host is a fact about US and writing "source
+             unreachable" here is the exact thing D-104 exists to stop. */
+          this.#observe({
+            ...this.#lookAuthority(q),
+            level: "document", subjectKind: "address", subject: q.address,
+            state: "LOOKED_INDETERMINATE",
             governed: verdict.governed === true,
             condition: verdict.condition || null,
             detail: `${row.check} ${verdict.code}: ${verdict.detail}`,
@@ -26408,8 +26576,17 @@ export class Store extends DurableObject {
           /* PRESENT, and the detail is the ATTRIBUTION — so the run's own log
              carries the sentence naming both principals rather than a bare
              "captured". */
-          this.#aiRunAppend(q.run, {
-            level: "document", subject: q.address, state: "PRESENT", governed: false,
+          /* REC-93: PRESENT NOW CARRIES WHAT IT FOUND. `r.sha` was already in
+             hand at this line and was simply not recorded — C-22.10's refusal is
+             what turned that from a nicety into a requirement, and the sweep
+             authority could not have satisfied it otherwise. The detail stays
+             the ATTRIBUTION, so the log still carries the sentence naming both
+             principals rather than a bare "captured". */
+          this.#observe({
+            ...this.#lookAuthority(q),
+            level: "document", subjectKind: "address", subject: q.address,
+            state: "PRESENT", governed: false,
+            resultKind: "capture", resultRef: r.sha || null,
             detail: verdict.attribution.statement,
           }, at, 0);
           captured.push({ request: q.request, address: q.address, sha: r.sha || null,
@@ -26418,8 +26595,10 @@ export class Store extends DurableObject {
           this.sql.exec(
             `UPDATE capture_requests SET state='requested', code=?, detail=?, updated=? WHERE request=?`,
             "CAPTURE_FETCH_FAILED", String(r.reason || "").slice(0, 400), at, q.request);
-          this.#aiRunAppend(q.run, {
-            level: "document", subject: q.address, state: "LOOKED_INDETERMINATE", governed: false,
+          this.#observe({
+            ...this.#lookAuthority(q),
+            level: "document", subjectKind: "address", subject: q.address,
+            state: "LOOKED_INDETERMINATE", governed: false,
             detail: `the fetch did not land: ${String(r.reason || "").slice(0, 200)}`,
           }, at, 0);
           held.push({ request: q.request, address: q.address, host: q.host,
@@ -27250,31 +27429,296 @@ export class Store extends DurableObject {
 
   static #aiIso(ms) { return new Date(ms).toISOString().split(".")[0] + "Z"; }
 
-  /** Append ONE observation. The single write site for `ai_run_log`, which is
-   *  what makes C-22.6 a fence rather than a promise: an entry that names a
-   *  bundle is refused HERE, so there is no second door through which the log
-   *  could be filed into a document.
+  /* ==================================================================== *
+   * REC-93 / IC-92 — THE OBSERVATION LOG: ONE APPEND SITE, ONE TABLE.
+   *
+   * `OBSERVATION-LOG-DESIGN.md` §3 and §4. Everything that looks at anything
+   * writes HERE, and the design's four refusals are a fence rather than a
+   * promise precisely because there is no second door. That is not tidiness:
+   * C-22.6 (the log may never be filed into a bundle) is only enforceable if
+   * one function does the inserting, and REC-94, REC-95 and REC-96 are three
+   * more writers arriving into this same function on purpose.
+   *
+   * THE APPEND IS THE ONLY WRITE. There is no UPDATE and no DELETE anywhere in
+   * this file for `observations` except the whole-store purge — §3's first rule,
+   * "a log that can be rewritten is not evidence of anything".
+   * ==================================================================== */
+
+  /** WHOSE LOOK IS THIS? §4.1 rows 1 and 2, decided ONCE rather than at each of
+   *  the drain's three exits.
+   *
+   *  A capture request that carries a run is that RUN's look. A request that
+   *  carries none is the MONITOR'S SWEEP — *"`authority_kind = sweep`,
+   *  `authority` = the named request or ratified sweep"* — and the request id is
+   *  the authority, because it is the thing an operator can actually go and read.
+   *
+   *  **THIS CLOSES A DEFECT THE FOLD MADE VISIBLE RATHER THAN CREATED.** Before
+   *  REC-93 all three drain exits called `#aiRunAppend(q.run, …)` unconditionally,
+   *  so a capture request with no run wrote a log row keyed to `run = NULL` — a
+   *  row about a look that named nothing that made it. Nothing read it and
+   *  nothing could have noticed. C-22.9 refuses that by name now, which is the
+   *  general append site earning its keep on its first day. */
+  #lookAuthority(q) {
+    return q && q.run
+      ? { authorityKind: "run", authority: String(q.run), actorClass: "machine" }
+      : { authorityKind: "sweep", authority: q && q.request ? String(q.request) : null,
+          actorClass: "plane" };
+  }
+
+  /** APPEND ONE OBSERVATION. The single write site for `observations`.
    *
    *  Returns the refusal object on refusal and null on success, so callers can
    *  collect refusals per entry and still write the rest — §14b.7's partial
-   *  results survive, applied to the log itself. */
-  #aiRunAppend(run, entry, at, terminal = 0) {
+   *  results survive, applied to the log itself, and REC-93 keeps that property
+   *  because `op=airuntick` is built on it.
+   *
+   *  EVERY REFUSAL IS READ OUT OF THE MAP AND NONE IS TYPED HERE. `checkObservation`
+   *  in `airun.mjs` is pure and holds the whole judgement; this method's only job
+   *  is to put a judged row in. A C-number spelled at this site would be a second
+   *  copy of a rule, which is C-5's finding and the reason `checkCondition`
+   *  collapsed to one implementation in the first place. */
+  #observe({ actorClass = "plane", actor = null, authorityKind = null, authority = null,
+             level = "document", subjectKind = "unstated", subject = null,
+             state, governed = false, condition = null, bound = null,
+             resultKind = null, resultRef = null, detail = null, bundle = null } = {},
+           at = null, terminal = 0) {
+    /* The entry is handed to the pure checker in the SHAPE THE TABLE STORES —
+       snake_case, the column names — so that what was judged and what is written
+       are the same object and cannot drift into two spellings of one row. */
+    const entry = {
+      actor_class: actorClass, actor,
+      authority_kind: authorityKind, authority,
+      level, subject_kind: subjectKind, subject,
+      state, governed: governed === true, condition, bound,
+      result_kind: resultKind, result_ref: resultRef, detail, bundle,
+    };
     const bad = checkObservation(entry, QUEUE_CONDITION_KINDS);
     if (bad) return bad;
-    const next = (this.#one(`SELECT COALESCE(MAX(seq), 0) m FROM ai_run_log WHERE run = ?`, run) || { m: 0 }).m + 1;
+    const now = at || new Date().toISOString().split(".")[0] + "Z";
+    /* `seq` is assigned by SQLite as the rowid, which is store-wide and
+       monotonic — §3's requirement. It is not reused, because nothing deletes a
+       row: the only DELETE is the whole-store purge, after which the table is
+       empty and a reused number can collide with nothing. */
     this.sql.exec(
-      `INSERT INTO ai_run_log (run, seq, at, level, subject, state, governed, condition, bound, terminal, detail)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      run, next, at,
+      `INSERT INTO observations
+         (at, actor_class, actor, authority_kind, authority, level, subject_kind, subject,
+          state, governed, condition, bound, terminal, result_kind, result_ref, detail)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      now,
+      String(entry.actor_class),
+      entry.actor == null ? null : String(entry.actor),
+      String(entry.authority_kind),
+      entry.authority == null ? null : String(entry.authority),
       String(entry.level || "document"),
+      String(entry.subject_kind || "unstated"),
       entry.subject == null ? null : String(entry.subject),
       String(entry.state),
       entry.governed === true ? 1 : 0,
       entry.condition == null || entry.condition === "" ? null : String(entry.condition),
       entry.bound == null || entry.bound === "" ? null : String(entry.bound),
       terminal ? 1 : 0,
+      entry.result_kind == null || entry.result_kind === "" ? null : String(entry.result_kind),
+      entry.result_ref == null || entry.result_ref === "" ? null : String(entry.result_ref),
       entry.detail == null ? null : String(entry.detail));
     return null;
+  }
+
+  /** THE FRONTIER, §5 — *the observation log and the frontier are the same table
+   *  seen from two angles.* A frontier entry is a subject together with its
+   *  CURRENT state and the observation that last set it, so the frontier at any
+   *  level is the latest row per `(level, subject_kind, subject)`.
+   *
+   *  A VIEW AND NEVER A TABLE, and that is §5's word rather than an
+   *  implementation preference: a second table holding "the current state" is a
+   *  second place to state a fact (D-21), and it would be the one place the log
+   *  could disagree with itself. `observations_frontier` is indexed exactly
+   *  `(level, subject_kind, subject, seq)` so this is an index walk.
+   *
+   *  `NEVER_LOOKED` IS NOT IN HERE, and its absence is the point: it is a
+   *  subject with NO ROW, so it cannot be a row of this view. §5 says where those
+   *  subjects come from — the `deferred` link partition at the document level —
+   *  and `#frontierNeverLooked` below supplies them from there. Reading only this
+   *  view and concluding "we have looked at everything" is the exact
+   *  false-coverage inversion the log exists to prevent. */
+  #frontierLatest(level, { limit = 200, subjectKind = null } = {}) {
+    const args = [level];
+    let where = `o.level = ?`;
+    if (subjectKind) { where += ` AND o.subject_kind = ?`; args.push(subjectKind); }
+    return this.#rows(
+      `SELECT o.level, o.subject_kind, o.subject, o.state, o.governed, o.condition,
+              o.authority_kind, o.authority, o.actor_class, o.result_kind, o.result_ref,
+              o.detail, o.at, o.seq
+         FROM observations o
+         WHERE ${where}
+           AND o.seq = (SELECT MAX(i.seq) FROM observations i
+                         WHERE i.level = o.level AND i.subject_kind = o.subject_kind
+                           AND i.subject IS o.subject)
+         ORDER BY o.seq DESC
+         LIMIT ?`, ...args, limit);
+  }
+
+  /** §5: *`last_verified` is the latest `PRESENT` row's `at`; source unreachable
+   *  since is the earliest `LOOKED_INDETERMINATE` after it.* `STORE-AS-CACHE.md`
+   *  says HTTP obsoleted `last_verified` and that we must own it — this is where
+   *  it lives, DERIVED, rather than as a column anybody could set. */
+  #frontierVerification(level, subjectKind, subject) {
+    const present = this.#one(
+      `SELECT at, seq FROM observations
+        WHERE level = ? AND subject_kind = ? AND subject IS ? AND state = 'PRESENT'
+        ORDER BY seq DESC LIMIT 1`, level, subjectKind, subject);
+    const since = present ? this.#one(
+      `SELECT at FROM observations
+        WHERE level = ? AND subject_kind = ? AND subject IS ? AND state = 'LOOKED_INDETERMINATE'
+          AND seq > ? ORDER BY seq ASC LIMIT 1`, level, subjectKind, subject, present.seq) : null;
+    return { last_verified: present ? present.at : null,
+             unreachable_since: since ? since.at : null };
+  }
+
+  /** §5: the `NEVER_LOOKED` subjects at the DOCUMENT level, which are supplied by
+   *  the `deferred` link partition — *a subject with `NEVER_LOOKED` state and
+   *  `authority = link`* (§2's table, `subresources.mjs`).
+   *
+   *  BOUNDED LIKE EVERY OTHER COLLECTION READ (D-225/REC-70), and the bound is
+   *  PUBLISHED by the caller rather than inferred from the answer's length. */
+  #frontierNeverLooked(limit) {
+    /* THE `deferred` PARTITION AND NOT EVERY LINK, which is §5's own word and is
+       the difference between a frontier and a wish list. `subresources.mjs`
+       partitions a document's links into anchor / intra / deferred / refused;
+       `deferred` is precisely *"URLs discovered inside documents and NOT
+       FETCHED"* (§2's table), which is what makes each of them a subject nobody
+       has looked at. An `anchor` we already hold is not a never-looked subject,
+       and a `refused` one was decided against rather than overlooked. */
+    return this.#rows(
+      `SELECT DISTINCT l.address_norm AS subject, l.source_capture AS from_document
+         FROM links l
+        WHERE l.partition = 'deferred'
+          AND l.address_norm IS NOT NULL AND l.address_norm != ''
+          AND NOT EXISTS (SELECT 1 FROM observations o
+                           WHERE o.level = 'document' AND o.subject_kind = 'address'
+                             AND o.subject = l.address_norm)
+        ORDER BY l.address_norm
+        LIMIT ?`, limit);
+  }
+
+  static FRONTIER_LIMIT_DEFAULT = 200;
+  static FRONTIER_LIMIT_MAX = 2000;
+
+  /** op=frontier — WHAT HAVE WE LOOKED FOR AT THIS LEVEL, AND WHAT CAME OF IT.
+   *  §6's first reader: the candidate list for FETCH / EXTRACT / DERIVE.
+   *
+   *  THIS ITEM BUILDS THE DOCUMENT LEVEL ONLY (§8 row 1). The content level is
+   *  REC-94's and the meaning level REC-95's, and asking for either here is
+   *  answered with a STATED not-built rather than an empty list — an empty list
+   *  and "nobody built this yet" are exactly the two facts this whole table
+   *  exists to keep apart, and answering the second with the first inside the
+   *  log's own reader would be the joke writing itself.
+   *
+   *  BOUNDED, AND THE BOUND IS PUBLISHED ON EVERY ANSWER INCLUDING THE EMPTY ONE
+   *  (REC-70, REC-30): a reader that got nothing must not have to guess which
+   *  bound it would have been answered at. */
+  frontier({ level = "document", limit = null, viewer = null } = {}) {
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.FRONTIER_LIMIT_DEFAULT),
+                                     Store.FRONTIER_LIMIT_MAX));
+    if (level !== "document")
+      return { level, found: false, built: false, limit: cap, truncated: false,
+               looked: [], never_looked: [], tally: {},
+               note: `the ${level} level of the frontier is not built yet. This is NOT an empty `
+                   + `frontier: nothing has been written at this level because no writer exists, `
+                   + `which is a different fact from having looked and found nothing. The content `
+                   + `level is REC-94's and the meaning level REC-95's` };
+    const page = this.#frontierLatest("document", { limit: cap + 1, subjectKind: "address" });
+    const looked = page.slice(0, cap).map((r) => ({
+      subject: r.subject, subject_kind: r.subject_kind, state: r.state,
+      governed: r.governed === 1, condition: r.condition,
+      authority_kind: r.authority_kind, authority: r.authority,
+      actor_class: r.actor_class, result_kind: r.result_kind,
+      /* §7: a `result_ref` to a PURGED capture is ANNOTATED at read time and
+         NEVER rewritten. The log is the coverage record and is not derived from
+         the bundle, so the row stays true about the look that was made and the
+         answer says the bytes are gone. */
+      result_ref: r.result_ref,
+      /* `register` IS THE TABLE, and the spelling matters rather than being a
+         typo worth hiding: the register is the trust root keyed by
+         `capture_sha`, and it is what a whole-store purge empties. A `captures`
+         table does not exist — this line read that way first and the frontier
+         answered a 500 until it was driven, which is the difference between a
+         read that exists and a read that works. */
+      result_purged: r.result_kind === "capture" && r.result_ref
+        ? !this.#one(`SELECT 1 x FROM register WHERE capture_sha = ?`, r.result_ref)
+        : null,
+      detail: r.detail, at: r.at,
+      ...this.#frontierVerification("document", r.subject_kind, r.subject),
+    }));
+    const never = this.#frontierNeverLooked(cap + 1);
+    const tally = {};
+    for (const row of this.#rows(
+      `SELECT state, COUNT(*) n FROM observations WHERE level = 'document' GROUP BY state`))
+      tally[row.state] = row.n;
+    /* NEVER_LOOKED is reported as its own count and is NEVER folded into the
+       tally above, because it is the one state that is the ABSENCE of a row —
+       adding it to a GROUP BY over rows would be counting something that by
+       definition is not there. */
+    return { level: "document", found: true, built: true, limit: cap,
+             truncated: page.length > cap || never.length > cap,
+             looked, never_looked: never.slice(0, cap),
+             tally, never_looked_count: never.slice(0, cap).length,
+             note: "NEVER_LOOKED is the absence of a row and is reported apart from the tally: "
+                 + "these are addresses a document we hold points at that nothing has ever looked for" };
+  }
+
+  /** Append ONE run-log observation. **THE FOLD** (`OBSERVATION-LOG-DESIGN.md`
+   *  §4.4): `ai_run_log`'s rows ARE rows of `observations` with
+   *  `authority_kind = run`, `authority = <run>`, `actor_class = machine`. This
+   *  method is no longer a writer — it is the run's DOOR onto the one writer, and
+   *  that is what §4.4 means by *"two writers is not [the landing's call]"*.
+   *
+   *  ITS BEHAVIOUR DID NOT CHANGE AND THAT IS ASSERTED RATHER THAN CLAIMED:
+   *  every entry that was accepted before this landing is accepted now, the
+   *  refusal object comes back in the same shape, and `op=airunlog` answers
+   *  byte-identically over rows written before the fold. C-22.10 deliberately
+   *  does not fire on `run` for exactly this reason — see its catalogue row. */
+  #aiRunAppend(run, entry, at, terminal = 0, actor = null) {
+    return this.#observe({
+      actorClass: "machine",
+      /* WHO the machine was, PASSED IN BY THE CALLER RATHER THAN LOOKED UP
+         HERE, and the change of shape is a finding rather than a preference.
+         §4.4 says `actor` is *"the run's credential"*; `ai_runs` HAS NO SUCH
+         COLUMN — measured, not assumed — and the column that actually carries
+         the machine identity is `principal_claude`, IS-6's Claude principal.
+         Reported as a DESIGN GAP against §4.4.
+         THE FIRST DRAFT READ IT HERE, with `SELECT principal_claude FROM
+         ai_runs`, and `run-conditions.test.mjs` ARM W3 caught it BY NAME: that
+         made this method a THIRTEENTH reader of `ai_runs`, and ARM W9 then
+         refused the only role that could have fitted, because an ATTRIBUTES
+         reader must project nothing but the key. The arms were right twice over.
+         The honest fix was not a role but to stop reading: every caller already
+         holds the run row it is appending under, so the lookup was also one
+         EXTRA SELECT PER APPENDED ENTRY — `op=airuntick` appends N and was
+         paying N of them for a value it had in hand.
+         A CALLER THAT DOES NOT SAY WRITES NULL, and that is correct rather than
+         lossy: attributing a machine's look to the plane's own scheduler would
+         be a false attribution in the one field that says who looked. */
+      actor: actor || null,
+      authorityKind: "run",
+      authority: run == null ? null : String(run),
+      level: entry && entry.level ? entry.level : "document",
+      /* `unstated`, and it is the honest word rather than a derived one.
+         `ai_run_log` never recorded what KIND of subject a row was about, so
+         deriving one from the level would be the record claiming more than it
+         can support — see `OBSERVATION_SUBJECT_KINDS` in airun.mjs. */
+      subjectKind: "unstated",
+      subject: entry ? entry.subject : null,
+      state: entry ? entry.state : undefined,
+      governed: entry ? entry.governed === true : false,
+      condition: entry ? entry.condition : null,
+      bound: entry ? entry.bound : null,
+      resultKind: entry ? (entry.result_kind ?? null) : null,
+      resultRef: entry ? (entry.result_ref ?? null) : null,
+      detail: entry ? entry.detail : null,
+      /* C-22.6 travels through UNCHANGED: the bundle key is what the refusal
+         reads, and it is passed rather than dropped here. */
+      bundle: entry ? entry.bundle : null,
+    }, at, terminal);
   }
 
   /** What the run's SEARCH established overall, reduced from the log the run
@@ -27294,7 +27738,8 @@ export class Store extends DurableObject {
    *  because the run ran out of time afterwards. */
   #aiRunSearchState(run, stoppedByBound) {
     const seen = new Set(this.#rows(
-      `SELECT DISTINCT state FROM ai_run_log WHERE run = ? AND terminal = 0`, run).map((r) => r.state));
+      `SELECT DISTINCT state FROM observations
+        WHERE authority_kind = 'run' AND authority = ? AND terminal = 0`, run).map((r) => r.state));
     let s = seen.has("PRESENT") ? "PRESENT"
           : seen.has("partial") ? "partial"
           : seen.has("LOOKED_INDETERMINATE") ? "LOOKED_INDETERMINATE"
@@ -27352,7 +27797,9 @@ export class Store extends DurableObject {
     const stoppedByBound = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, bound);
     const state = this.#aiRunSearchState(run, stoppedByBound);
     const last = this.#one(
-      `SELECT level FROM ai_run_log WHERE run = ? AND terminal = 0 ORDER BY seq DESC LIMIT 1`, run);
+      `SELECT level FROM observations
+        WHERE authority_kind = 'run' AND authority = ? AND terminal = 0
+        ORDER BY seq DESC LIMIT 1`, run);
 
     return this.ctx.storage.transactionSync(() => {
       /* THE TERMINAL ENTRY FIRST, then the status. The order is deliberate: if
@@ -27712,7 +28159,10 @@ export class Store extends DurableObject {
     let appended = 0;
     this.ctx.storage.transactionSync(() => {
       for (const e of Array.isArray(log) ? log : []) {
-        const bad = this.#aiRunAppend(run, e, now, 0);
+        /* `row.principal_claude` is the run's machine identity and this method
+           already holds the row — see #aiRunAppend's note on why it is passed
+           rather than looked up. */
+        const bad = this.#aiRunAppend(run, e, now, 0, row.principal_claude || null);
         if (bad) refused.push(bad); else appended += 1;
       }
       for (const [k, v] of Object.entries(consume && typeof consume === "object" ? consume : {})) {
@@ -27991,6 +28441,13 @@ export class Store extends DurableObject {
            swallowing it is a wake that silently never happened: the answer
            NAMES it and the row stays unstamped, so a defect here is loud on
            every alarm instead of invisible on all of them. */
+        /* NO ACTOR, and the NULL is stated rather than filled. The wake
+           query projects `r.run, r.context_id` and nothing else, so this path
+           does not hold the run's principal — and widening that projection to
+           carry one would move ANOTHER reader's role in `run-conditions`'s
+           table for a field this row does not need. So the reaper's own wake
+           entry says "a machine looked and the record cannot say which", which
+           is true, instead of borrowing the plane's name for it. */
         const refusal = this.#aiRunAppend(r.run, {
           level: "internet",
           subject: r.context_id,
@@ -28597,11 +29054,30 @@ export class Store extends DurableObject {
        observations" and "here are its first 200". ASCENDING order is KEPT: this
        is not `op=exportlog`, whose administrator wants the newest export. §14b.7
        replays this log FROM THE START, so the cut must fall at the END. */
+    /* REC-93 — THE FOLD, READING THROUGH. `OBSERVATION-LOG-DESIGN.md` §4.4: the
+       run's log is now rows of `observations` under this run's authority, read
+       through the `(authority_kind, authority, seq)` index — which is why that
+       index exists, since without it the fold would turn a primary-key read into
+       a table scan and a fold would have become a regression.
+
+       **`seq` IS RE-DERIVED AS THE ORDINAL WITHIN THIS AUTHORITY, AND THAT IS
+       WHAT KEEPS I3 UNCHANGED IN SHAPE AND IN VALUE.** §3 makes `seq` STORE-WIDE
+       so that two looks at different levels have an order the table holds. §4.4
+       says *"the run's own ordering is the `seq` order within its authority"*.
+       Those two are only compatible at this read: the stored `seq` is store-wide,
+       and every existing consumer of this op was handed 1, 2, 3… per run. A
+       store-wide number here would be a SILENT VALUE CHANGE inside an unchanged
+       envelope — the worst shape an interface change can take, because no
+       consumer's schema check would catch it. The ordinal is the array index
+       because the rows are already `ORDER BY seq` ascending and the cut falls at
+       the END (§14b.7 replays from the start), so index + 1 is exact rather than
+       approximate. This is the digest-pinned property. */
     const page = this.#rows(
       `SELECT seq, at, level, subject, state, governed, condition, bound, terminal, detail
-       FROM ai_run_log WHERE run = ? ORDER BY seq LIMIT ?`, run, cap + 1);
+       FROM observations WHERE authority_kind = 'run' AND authority = ?
+       ORDER BY seq LIMIT ?`, run, cap + 1);
     const entries = page.slice(0, cap)
-      .map((e) => ({ ...e, governed: e.governed === 1, terminal: e.terminal === 1 }));
+      .map((e, i) => ({ ...e, seq: i + 1, governed: e.governed === 1, terminal: e.terminal === 1 }));
     return { run, found: true, status: row.status, entries,
              limit: cap, truncated: page.length > cap,
              stopped: row.stopped_bound
@@ -28745,6 +29221,7 @@ export class Store extends DurableObject {
   recordReuseVerdicts({ bundleId = null, verdicts = [], at = null } = {}) {
     const now = at || new Date().toISOString().split(".")[0] + "Z";
     let recorded = 0;
+    const refusals = [];
     for (const v of verdicts) {
       if (!v || !v.source_capture || !v.address_norm || !v.verdict) continue;
       this.sql.exec(
@@ -28754,8 +29231,42 @@ export class Store extends DurableObject {
         v.source_capture, bundleId, v.host || "", v.address_norm, v.verdict,
         v.reused_sha || "", v.observed_sha ?? null, v.basis || "", now);
       recorded++;
+      /* REC-93 — RATIFY'S DOCUMENT-LEVEL OBSERVATION, `OBSERVATION-LOG-DESIGN.md`
+         §4.1 row 3, which maps this method's existing verdict vocabulary onto the
+         log's and MINTS NO NEW WORDS:
+             confirmed   -> PRESENT, detail `unchanged`
+             changed     -> PRESENT, detail `changed`
+             unreachable -> LOOKED_INDETERMINATE
+             not_attempted -> NO ROW AT ALL.
+         **The last one is the interesting one and it is the design's own
+         reasoning rather than an optimisation:** *"a look not taken is
+         NEVER_LOOKED, and the budget that stopped it is recorded on the
+         ratification, where it already is."* NEVER_LOOKED is the absence of a
+         row, so writing one here would be recording a look that did not happen —
+         the record claiming more than it can support, in the table built to stop
+         exactly that. Anything outside this mapping also writes nothing rather
+         than being coerced into the nearest word. */
+      const mapped =
+        v.verdict === "confirmed"   ? { state: "PRESENT", detail: "unchanged", ref: v.reused_sha || null }
+      : v.verdict === "changed"     ? { state: "PRESENT", detail: "changed",
+                                        ref: v.observed_sha || v.reused_sha || null }
+      : v.verdict === "unreachable" ? { state: "LOOKED_INDETERMINATE", detail: "unreachable", ref: null }
+      : null;
+      if (mapped)
+        refusals.push(this.#observe({
+          actorClass: "plane",
+          authorityKind: "ratify", authority: bundleId || v.source_capture,
+          level: "document", subjectKind: "address", subject: v.address_norm,
+          state: mapped.state,
+          resultKind: mapped.ref ? "capture" : null, resultRef: mapped.ref,
+          detail: mapped.detail,
+        }, now));
     }
-    return { ok: true, bundleId, recorded, at: now };
+    return { ok: true, bundleId, recorded, at: now,
+             /* Refusals are COLLECTED and reported, never thrown: §14b.7's
+                partial-results rule applied to the log, the same property
+                `op=airuntick` depends on. A null entry is a row that landed. */
+             observation_refusals: refusals.filter(Boolean) };
   }
 
   /** CAP-4: read the reuse verdicts, newest first. By bundle (ratify verdicts) or
@@ -30930,6 +31441,12 @@ export class Store extends DurableObject {
         airun: () => this.aiRunRead({ run: url.searchParams.get("run"),
                                       viewer: url.searchParams.get("viewer") }),
         airunlog: () => this.aiRunLog({ run: url.searchParams.get("run"),
+                                        viewer: url.searchParams.get("viewer"),
+                                        limit: url.searchParams.get("limit") }),
+        /* REC-93: the frontier read, beside the log read it is a view over —
+           §5, *the observation log and the frontier are the same table seen from
+           two angles*. Bounded and the bound published, like its neighbour. */
+        frontier: () => this.frontier({ level: url.searchParams.get("level") || "document",
                                         viewer: url.searchParams.get("viewer"),
                                         limit: url.searchParams.get("limit") }),
         /* REC-69: the CONTEXT-keyed read, beside the three run-id-keyed ones.

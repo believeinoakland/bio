@@ -1957,21 +1957,22 @@ CREATE TABLE IF NOT EXISTS ai_run_bounds (
 -- 'governed' is D-104's split as a stored fact: 1 means OUR pacing held us,
 -- which is a fact about us and never about the source. C-22.2 refuses any
 -- definitive state on a governed row.
-CREATE TABLE IF NOT EXISTS ai_run_log (
-  run        TEXT NOT NULL,
-  seq        INTEGER NOT NULL,
-  at         TEXT NOT NULL,
-  level      TEXT NOT NULL,
-  subject    TEXT,
-  state      TEXT NOT NULL,
-  governed   INTEGER NOT NULL DEFAULT 0,
-  condition  TEXT,
-  bound      TEXT,
-  terminal   INTEGER NOT NULL DEFAULT 0,
-  detail     TEXT,
-  PRIMARY KEY (run, seq)
-);
-CREATE INDEX IF NOT EXISTS ai_run_log_terminal ON ai_run_log(run, terminal);
+-- REC-93 / IC-92, 2026-09-14: ai_run_log STOOD HERE AND IS NOW THE
+-- observations TABLE further down this file. OBSERVATION-LOG-DESIGN.md
+-- section 4.4 folds it: its rows are rows of that table with
+-- authority_kind = run, and store.mjs #migrate copies every existing row across
+-- and then DROPS the old table. The CREATE is removed rather than left standing
+-- because an idempotent create would rebuild an empty ai_run_log on the next
+-- boot and put the store straight back into the two-tables state section 4.4
+-- forbids -- one fact, two writers, which is the D-164 failure this design
+-- names. op=airunlog reads through unchanged, so I3 does not move.
+--
+-- THE WORDING OF THE LINE ABOVE IS LOAD-BEARING AND IS NOT A STYLE CHOICE: it
+-- first read "because CREATE TABLE IF NOT EXISTS would rebuild ...", and
+-- hygiene.test.mjs harvests table names out of this file by that exact literal,
+-- so the sentence DESCRIBING the removal was itself parsed as a table named
+-- "would" and failed the D-113 purge census. Measured, not reasoned -- the scan
+-- cannot tell prose from schema, so prose here does not spell the phrase.
 
 -- =========================================================================
 -- PL-1 / IS-1 -- BASIS VERSIONS (INVESTIGATIVE-SESSION.md section 6).
@@ -2915,6 +2916,88 @@ CREATE TABLE IF NOT EXISTS content (
 -- is re-read. By BUNDLE: purge's per-bundle arm, and the compiler's join.
 CREATE INDEX IF NOT EXISTS content_capture ON content(capture_sha);
 CREATE INDEX IF NOT EXISTS content_bundle ON content(bundle_id);
+-- =========================================================================
+
+-- =========================================================================
+-- REC-93 / IC-92 -- THE OBSERVATION LOG (OBSERVATION-LOG-DESIGN.md section 3).
+--
+-- AN OBSERVATION IS AN APPEND-ONLY EVENT ABOUT LOOKING. We fetched and it was
+-- unchanged. We fetched and it had changed. We looked and it was gone. We
+-- looked and could not tell. We searched for a thing a member named and found
+-- nothing. It is SEPARATE FROM THE RECORD and that separation is the one
+-- architectural decision STORE-AS-CACHE.md settles: the record is write-once,
+-- content-addressed and never evicts, so folding a failed look into it makes
+-- every failed look either a phantom capture or nothing at all. This table is
+-- what lets ABSENCE BE RECORDED rather than retried away, at the cost of one
+-- row and zero record bytes -- the WARC revisit economy.
+--
+-- ONE TABLE FOR EVERY LEVEL, and that is a decision rather than a convenience.
+-- A log per level is the D-164 failure (built three times, drifts) arriving in
+-- the coverage record, so internet, document, content and meaning share this
+-- shape. REC-94, REC-95 and REC-96 write into THIS table at THIS vocabulary.
+--
+-- WHAT IT IS NOT: a transcript (DEC-61 puts those device-local and out of the
+-- store entirely), a measurement of our own runtime (runtime_observations
+-- measures what WE cost and stays where it is), a capture (a look that produced
+-- bytes POINTS AT the capture through result_ref and is not one), or a member
+-- browsing (section 4.6 -- a member ad hoc search is never an observation, and
+-- that provisional is enforced by there being no writer for it).
+--
+-- THE STATE COLUMN IS DELIBERATELY NOT A SQL ENUM, and no CHECK constraint
+-- appears anywhere below. The refusal lives in code, in airun.mjs
+-- checkObservation, where it can NAME the legal values and say why -- ai_run_log
+-- above made the same choice for the same reason, and DEC-49 is what it is for:
+-- a SQLite constraint error refuses with a sentence nobody can translate.
+--
+-- THE FOLD. ai_run_log IS THIS TABLE. Its rows are rows here with
+-- authority_kind = run, and #migrate copies them across and drops the old table,
+-- because two writers for one fact is what section 4.4 forbids. op=airunlog
+-- reads through the (authority_kind, authority, seq) index and answers in its
+-- existing envelope, so I3 does not change shape.
+--
+-- seq IS STORE-WIDE and never reused, so the order of two looks at different
+-- levels is a fact the table holds rather than one a reader reconstructs. A run
+-- own ordering is the seq order WITHIN its authority.
+--
+-- NULLABILITY, and one column deviates from the design with its reason here
+-- rather than silently: section 3 writes subject as NOT NULL, but ai_run_log --
+-- the design own precedent and first consumer -- has always permitted a row with
+-- no subject, and section 4.4 requires those rows to fold in and read back
+-- UNCHANGED. A NOT NULL here would force the fold to INVENT a subject, which is
+-- the record claiming more than it can support. So the column is nullable in
+-- SQL and the requirement is enforced at the one append site, where it can name
+-- what is missing -- exactly the argument the state column already makes one
+-- paragraph up. Reported as a DESIGN GAP against section 3.
+CREATE TABLE IF NOT EXISTS observations (
+  seq            INTEGER PRIMARY KEY,  -- monotonic, store-wide, never reused
+  at             TEXT NOT NULL,
+  actor_class    TEXT NOT NULL,     -- plane | machine | member
+  actor          TEXT,              -- a machine credential or a member id. NULL is the plane own scheduler
+  authority_kind TEXT NOT NULL,     -- run | sweep | link | ratify | acquire | extract | derive | lead | objective
+  authority      TEXT,              -- the run id, the sweep request id, the document a link came from, the lead id
+  level          TEXT NOT NULL,     -- internet | document | content | meaning
+  subject_kind   TEXT NOT NULL,     -- address | capture | extent | entity | description | unstated
+  subject        TEXT,              -- the normalised address, the capture_sha, the canonical extent, the entity id, or a member words. See the nullability note above
+  state          TEXT NOT NULL,     -- LOOKED_ABSENT | LOOKED_INDETERMINATE | partial | PRESENT. NEVER_LOOKED is the ABSENCE of a row
+  governed       INTEGER NOT NULL DEFAULT 0,
+  condition      TEXT,              -- queuestate.mjs vocabulary, and no new words
+  bound          TEXT,              -- which bound stopped it, if one did
+  terminal       INTEGER NOT NULL DEFAULT 0,
+  result_kind    TEXT,              -- capture | content | entity | reading. What the look produced, if anything
+  result_ref     TEXT,              -- THE BACK-REFERENCE: the capture_sha, content_id, entity id
+  detail         TEXT               -- unchanged | changed | the reason | the reader name
+);
+-- The three reads this table exists to answer, and none of them may be a scan.
+-- THE FRONTIER (section 5) is the latest row per level/subject_kind/subject --
+-- a VIEW and never a second table -- so that index leads with exactly that key
+-- and ends on seq, which is what makes "the latest row per subject" an index
+-- walk. THE RUN READ-THROUGH is op=airunlog after the fold, and it is why the
+-- second index exists at all: without it the fold would turn a primary-key read
+-- into a table scan, which is how a fold quietly becomes a regression. THE
+-- TALLIES are the per-level counts a completeness statement is computed from.
+CREATE INDEX IF NOT EXISTS observations_frontier ON observations(level, subject_kind, subject, seq);
+CREATE INDEX IF NOT EXISTS observations_authority ON observations(authority_kind, authority, seq);
+CREATE INDEX IF NOT EXISTS observations_tally ON observations(level, state, seq);
 -- =========================================================================
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
