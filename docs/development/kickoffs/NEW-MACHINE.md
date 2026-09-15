@@ -5,6 +5,14 @@ stopping on token budget. **Its audience is the FIRST BOB SESSION on the new mac
 hands it over by pasting §7's block. Everything here was measured on the outgoing machine rather
 than recalled; where a figure could drift, the command that re-measures it is given instead.
 
+**HOW BOB WORKS, AND IT IS NOT A PREFERENCE — IT IS THE OPERATING MODEL.** Bob enters no shell
+commands, edits no files, and applies no diffs. **If something must be done on the machine, the
+session does it**; if it must be done repeatedly, the session scripts it; if it cannot be done
+from where the session is, the session says so plainly and names the SINGLE smallest act only he
+can take — a click, a clipboard copy, a decision — never a sequence and never a command dressed
+up as a suggestion. This governs every instruction below: where a command appears, it is for the
+SESSION to run, never for Bob to type.
+
 **Read in this order:** this file, then `docs/development/ESTATE-HOLD.md` (which machine may
 develop), then `CLAUDE.md`, then `docs/development/kickoffs/BOB.md`, then
 `docs/development/kickoffs/BOB-NEXT.md` — the outgoing session's handoff, whose §1 is the one
@@ -135,6 +143,44 @@ free; nothing depends on them. **Worker worktrees are created by CONDUCT's tooli
 push-watch on `origin/main`; an edge-triggered liveness tick; and a 3-hour no-progress alarm, whose
 job is not to detect a hang but to force a decision nobody has made.
 
+## 6a. THE BOOTSTRAP BLOCK — the FIRST thing pasted on a bare machine
+
+**§7's block assumes the repository exists. On a machine that has never held it, nothing does the
+cloning, so this block comes first** — pasted into a session opened in Bob's home folder, since the
+project directory does not exist yet. It sets the machine up and STOPS before any development.
+
+```
+Kickoff: BOOTSTRAP this project onto a NEW MACHINE under a new Claude account. Bob does not enter
+shell commands and does not edit files — you run everything, and when you need a secret you ask him
+to copy it to the clipboard and you read it with pbpaste, one at a time, never echoing a value.
+
+BUILD THE LAYOUT, which is a wrapper holding the clone beside a worktrees directory, because the
+effective Claude settings live in the wrapper rather than in the repo:
+  ~/ClaudeCodeBIO/bio            the clone
+  ~/ClaudeCodeBIO/bio-worktrees  one worktree per lane
+
+Clone https://github.com/believeinoakland/bio.git into ~/ClaudeCodeBIO/bio. If it asks for
+credentials, ask Bob for the GitHub token first and use it; never print it.
+
+THEN READ, before anything else: docs/development/kickoffs/NEW-MACHINE.md in full. It was written
+for you. Follow §4 exactly — the .env keys, the pbpaste flow, npm ci in bio-plane, pdf-worker AND
+ocr-worker, then the checks that prove the install really happened rather than symlinked, then
+plancheck and the full gate. Then do §9: write the account's memory seed and the permission
+settings, so this machine stops asking Bob for things the last one had settled.
+
+VERIFY BY THE POSITIVE ARTIFACT, never by the absence of an error: plancheck must print its notes
+(design-corpus, id-allocation, attribution), and a full gate is a pass only if it ends with
+"N/N suites green · M assertions passing" — a wrapper reports its own status, not the battery's.
+
+DO NOT DEVELOP, DO NOT SPAWN, DO NOT PUSH. Read docs/development/ESTATE-HOLD.md from origin/main.
+If it does not read RELEASED, STOP and tell Bob which machine still holds it. If it does read
+RELEASED, still stop here — §7's session claims it.
+
+Report to Bob in one short message: what you cloned, which credentials are in place and which are
+missing, the plancheck and gate results, whether the memory seed and settings were written, and
+whether the estate is free.
+```
+
 ## 7. THE PASTE BLOCK — hand this to the first BOB session on the new machine
 
 ```
@@ -175,6 +221,72 @@ tools/gates.mjs, then grep -q '^gates: GREEN', then push, chained with && and ne
 force-push. Verify from the REMOTE, not from your own tree. Bring Bob only doctrine, risk carrying
 his name, or effects on people outside the project.
 ```
+
+## 9. Seeding the new account — memory and settings
+
+**A new account starts with none of what the last one had learned about Bob or this project, and the
+loss is not evenly distributed.** Doctrine is safe: it is in `CLAUDE.md` and the design corpus, which
+the clone brings. What does NOT travel is the account's MEMORY and its PERMISSION SETTINGS, both of
+which live on the machine. Write both in the bootstrap session, before the first real turn.
+
+### 9.1 The permission settings
+
+Without these the new account stops Bob for routine commands, which `CLAUDE.md` names as making a
+session unusable at this level. **Write `~/ClaudeCodeBIO/.claude/settings.json`** — in the WRAPPER,
+not in the repo — with exactly this, which is what the outgoing machine ran and carries no secret:
+
+    {
+      "permissions": {
+        "defaultMode": "acceptEdits",
+        "allow": ["Read", "Grep", "Glob", "Bash", "Artifact", "WebFetch", "Write", "Edit"],
+        "deny": [
+          "Bash(git push --force:*)", "Bash(git push -f:*)", "Bash(git push --force-with-lease:*)",
+          "Bash(git reset --hard:*)", "Bash(git clean -fdx:*)", "Bash(rm -rf:*)",
+          "Bash(sudo:*)", "Bash(chmod 777:*)"
+        ],
+        "ask": [
+          "Bash(node scripts/deploy.mjs:*)", "Bash(node bio-plane/scripts/deploy.mjs:*)",
+          "Bash(npx wrangler deploy:*)"
+        ]
+      }
+    }
+
+**The `deny` list is the load-bearing half and it encodes losses this project has already paid for**
+— force-push, hard reset, `clean -fdx` and `rm -rf` are the four ways a session destroys another
+session's uncommitted work, and `CLAUDE.md`'s own trap section records `git checkout --` doing
+exactly that twice in two days. **The `ask` list is the gate on the three irreversible outward acts**:
+deploying the plane and deploying the installer are Bob's, and they stay his by being asked.
+
+### 9.2 The memory seed
+
+Write these into the new account's project memory, one file each with a one-line pointer in
+`MEMORY.md`. **They are working-style and project facts only.** Anything personal — other work Bob
+runs under the same account — is deliberately NOT here and must come from him, not from a shared
+repository.
+
+| memory | what it says |
+| --- | --- |
+| **how Bob works** | He enters no shell commands, edits no files, applies no diffs. Do it, script it, or name the one smallest act only he can take. Never return a settled question; when he hands a determination back, decide it, implement it, record it, and tell him what you chose. |
+| **the working directory is the wrapper** | Sessions run from `~/ClaudeCodeBIO`; the repo is `bio/`; the effective settings are the wrapper's `.claude/settings.json`. A worktree is a checkout of a COMMIT. |
+| **the persona** | GitHub `believeinoakland`, Cloudflare account `20b533579290b9b93168345edd3b7f72`. If a wrangler command ever reports a different account, stop and say so — a deploy would SUCCEED into the wrong one. |
+| **decide tactical work, don't ask** | Activation order, sequencing, mechanism, scoping and which item runs next are the session's, ruled by Bob 2026-07-31. Blocking on him is a productivity failure dressed as diligence. |
+| **publish or it never happened** | Sessions do not share a tree: commit, push, and verify from the REMOTE. Run `node tools/plancheck.mjs` before any handoff. |
+| **notation is settled** | UML `classDiagram` for structure, `stateDiagram-v2` for lifecycle, edges labelled with the act. Never mix, never hand-roll arrow semantics; two drafts were rejected for it. |
+| **the in-app browser cannot reach external origins** | It blocks pre-network on origin approval. Verify published artifacts by `WebFetch` and appearance through the local preview harness. |
+| **headless sessions are invisible to Bob** | The app hides programmatically created sessions, so he can neither see nor interrupt one. Every session he might need to reach is spawned through a chip he clicks (LIVENESS rule 6). |
+| **cross-session messages arrive stale** | A peer's report describes the tree at the moment it was written. Verify its premises from `origin/main` before acting on it. |
+| **quote heredocs with backticks** | An unquoted `<<EOF` lets the shell eat every backticked span in an edit script. Use `<<'EOF'`, and pass values through the environment. |
+| **the design corpus front-matter rule** | Every design document carries current Status / Place / Incomplete / Contents; `corpuscheck` enforces it inside `plancheck`; `BIO_System_Design.md` is the level-0 map. |
+
+**One more, and it is the newest:** *one machine develops at a time; `docs/development/ESTATE-HOLD.md`
+is the lock and `git push` is what makes it one.*
+
+### 9.3 What Bob still has to supply himself
+
+Two things this repository cannot carry and should not: **the credential VALUES** (§4), and **any
+context about work he does outside this project**. If he ran other work under the old account that
+shaped how a session should treat him, only he can restate it — a new account is a genuinely fresh
+reader, and the honest move is to ask him once rather than to infer it.
 
 ## 8. What will bite this machine first
 
