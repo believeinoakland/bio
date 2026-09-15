@@ -6076,6 +6076,11 @@ QUERY arm (D-222 stage C), not this IC.
 
 MINOR, as proposed: one new table, one index, one nullable column on two tables, populated by the writer; nothing existing reshaped. The registry is marked CHANGING now (step 4) and returns to STABLE at SETTLED when REC-82 (the table and the writer on the `pdf-page` and `document` arms) and REC-83 (the reads) have landed and the two nullable columns are NOT NULL — the IC's own SETTLED condition. `INTERFACES.md` bumped in the same act. Every consumer is on the row above; the two answered-for are named as such. REC-82 is UNGATED by anything but this resolution and is spawned at this drain.
 
+### AMENDED at REC-82's landing — 2026-09-14 by CONDUCT #10 (two facts the landing established; the version stays 1.11.0, still CHANGING)
+
+1. **`page_count INTEGER` is a column of `content`.** IC-83's Rules prose required it ("the page count I2 already carries at acquire — stored on mint") and its column list omitted it; the worker implemented the sentence and flagged the omission rather than widening. Recorded here as the column list's correction, not a change of shape. Its source is complete only where a reading persists a page count — D-345 / CAP-9.
+2. **A leg whose target is an INQUIRY has no capture and no part to point at (DEC-21), and a leg whose target information object the record holds no bytes of has nothing to address: `content_id` is legitimately NULL in both cases, STATED as which, and a leg naming a PART of an inquiry is refused.** IC-83's "every leg targets content" was written about the information arm; this is the rule for the other, decided by CONDUCT as mechanism (reversal costs one refusal arm). The reads (REC-83) state which NULL, never collapse them.
+
 ## IC-84 · I3: THE BASIS LEG NAMES ITS EXTENT — frontmatter and the target grammar admit a PART of a document, and two reads answer at content grain · PROPOSED 2026-09-14 (BOB #10, the op half of IC-83) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts), currently **14.0.0 STABLE**
