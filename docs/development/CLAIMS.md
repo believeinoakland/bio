@@ -6254,6 +6254,98 @@ Paths claimed BY REGION, never whole files:
 NOT claimed and deliberately not written: `docs/development/QUEUE.md` (CONDUCT's, sole
 writer) and IC-84's own SETTLED line.
 
+released: 2026-09-14 by the REC-97 worker — **`op=cite` CARRIES THE EXTENT END TO END AND THE
+SILENT DROP IS CLOSED; THE COMPOSER STILL DOES NOT EMIT ONE, AND THAT IS SAID PLAINLY RATHER
+THAN LEFT TO BE READ OUT OF A GREEN GATE.** Committed on `worktree-agent-a39cfbab2c77ec9e4`
+at `2e5d21f` (+ the floor commit beside it). NOT pushed, NOT merged.
+
+**DOES THE COMPOSER NOW EMIT `extent` END TO END THROUGH `op=cite`? NO — and the honest
+sentence is that THE ACT does, and the SURFACE does not yet send it.** `op=cite` accepts the
+flattened extent scalars or a `content_id`, splices them onto the leg it writes, mints the
+content row and reads back through `op=earnedbasis` with the member's own `ref` — driven
+through the op, not at the store. No UI surface sends one: UI-61 built no picker because the
+act dropped it, and this item did not build one either, because it is a UI item and not a
+line (a page set the record does not persist — D-354 — and a page canvas `app.html` does not
+have). That is the DELEGATION below, and it is an ACT with an actor rather than a note.
+**So IC-84's SETTLED is NOT owed by this landing alone**: its RESOLUTION recorded UI as
+answering *"the composer emits `extent` per leg"*, and that half is still outstanding.
+
+**THE GATE.** battery **196/196 suites · 12,152 assertions** against a pristine `173bc66`
+own-baseline of **195/195 · 12,100** — +1 suite, +52 assertions, attributed PER SUITE by
+re-running the baseline and never by subtraction: `cite-extent.test.mjs` +47 (new),
+`citeinquiry.test.mjs` 49 -> 50, `hygiene.test.mjs` 721 -> 724, `planning-hygiene.test.mjs`
+285 -> 286. `node scripts/coverage.mjs --strict` **exit 0, run DIRECTLY with `$?` read
+UNPIPED** — and CHECKS moved 266/270 named to **270/270 (100%)**: the four new C-numbers are
+named by an assertion and not only their codes, which is what `--strict` failed on first and
+is the C-20.1 class exactly. `node civicos-ui/test/run.mjs` from the REPO ROOT **exit 0**,
+with the DEC-49 guard reading `cite > is-cite-extent 64L (4 judged, 4 code(s) checked)`.
+`node tools/corpuscheck.mjs` 50 documents, 0 fail. `node tools/plancheck.mjs` clean but for
+UNPUBLISHED (expected: not pushed).
+
+**EVERY CONTROL ARM, DECLARED vs ACTUAL — seven, all RUN, all AS DECLARED, two of them after
+correcting THIS SUITE rather than the subject.** `node test/nc-rec97.mjs` from `bio-plane/`;
+every restore verified byte-identically by sha256 AND `cmp` against a uniquely-named per-arm
+pristine copy (`store.mjs` 2013017 B, `bio-checks.mjs` 665860 B, minimum guarded at 20000).
+
+| arm | declared | actual | verdict |
+| --- | --- | --- | --- |
+| `baseline` | green, and the row that tells seven-working from seven-broken | 46 pass, 0 fail | AS DECLARED |
+| `splice` (the item's own control — `#legExtentLines` returns []) | the end-to-end arms fail; every refusal arm and the byte-identity pin stay green | 36 pass, 10 fail; 6/6 declared | AS DECLARED |
+| `bag` (the dispatch passes `{}` — the pre-item plane) | the end-to-end arms fail AND `UNKNOWN_EXTENT_FIELD` fails, because a field that never arrives cannot be refused by name | 19 pass, 27 fail; 4/4 declared | AS DECLARED |
+| `unknown` (the UNKNOWN_EXTENT_FIELD refusal neutered) | the typo is dropped in silence and the leg lands | 40 pass, 6 fail; 2/2 declared | AS DECLARED — **after this arm corrected the suite**, see below |
+| `many` (the EXTENT_ON_MANY refusal neutered) | one member's one page lands on two legs | 42 pass, 4 fail; 2/2 declared | AS DECLARED |
+| `grammar` (`checkLegExtentGrammar` returns immediately at BOTH gates) | the catalogue-only facts fail; the store-gate arms stay green | 43 pass, 3 fail; 2/2 declared | AS DECLARED — **after this arm corrected the suite**, see below |
+| `overstrict` (the act refuses a cite naming NO part) | the absent-extent arms fail here AND in REC-37's `citeinquiry.test.mjs`; `cite.test.mjs` stays green | 37 pass, 9 fail; 4/4 declared; `citeinquiry` -1/-1 exit 1; `cite.test.mjs` 73 pass 0 fail | AS DECLARED |
+
+**THE TWO ARMS THAT CAME BACK WRONG, RECORDED RATHER THAN SMOOTHED, because in both cases the
+DEFECT WAS THE ASSERTION.** (1) `unknown` fired only 1 of 2 declared failures: the first
+fixture misspelled the REQUIRED field (`extent_pge` with no `extent_page`), so the grammar
+caught the now-missing page and the act still refused — the drop was invisible. A silent drop
+is only visible when everything ELSE about the citation is valid, so the fixture is now a
+complete legal `pdf-page` PLUS one unknown field. (2) `grammar` came back GREEN on every
+declared arm, and the reason is worth more than the arm: with the catalogue neutered, `dom`,
+an unknown kind and an unparseable page are STILL refused, with the SAME code, because the
+STORE calls the same checker itself — two gates, one function. What does NOT survive is what
+only the catalogue knows about a DOCUMENT (an id that is not shaped like one, a leg stating
+its referent twice), so those two assertions now pin the catalogue's own SENTENCE instead of
+the bare verdict, and the arm bites there. A third correction came from the `overstrict` arm:
+the suite dereferenced an empty leg list and DIED at `-1/-1` instead of naming what the arm
+broke; it is null-tolerant now (`citeinquiry.test.mjs`'s own recorded lesson) and reaches its
+foot.
+
+**THE BYTE-IDENTITY PIN IS A MEASUREMENT ON TWO TREES, not a claim.** A cite that names no
+part writes **1290 bytes, sha256 `0e034ff91db0f9d103896eada9ad82d928058d90090964df0c3ec2f74b8b8d6e`**
+on a pristine worktree of `origin/main` `173bc66` AND on this branch, over the `bundle.md` the
+act wrote with its two authored timestamps and the random selection handle normalised.
+Instrument: `bio-plane/test/rec97-noextent-digest.mjs`, a NON-suite so it runs on a tree that
+does not contain this item. **The third normalisation was found BY the instrument and not
+predicted** — the first cross-tree run differed with IDENTICAL byte counts (1313 each), which
+is what said the difference could not be this item's; the diff was one line, `Trigger:
+selection sel-…`.
+
+**FLOORS MOVED, ELEVEN, EVERY ONE FROM A FIGURE A GREEN RUN PRINTED ON THE COMMITTED TREE AND
+EVERY ONE WITH ITS PRE-EXISTING-SLACK SPLIT AT THE SITE**, measured against the same pristine
+`173bc66` worktree: `check-refusal-codes.mjs` — families 20 -> 22 (slack 2, mine 0), rows
+191 -> 205 (10, 4), census 474 -> 490 (12, 4), reach 244 -> 258 (10, 4), governedSites
+75 -> 81 (5, 1), regions 61 -> 67 (5, 1), regionLines 1745 -> 2035 (226, 64), codesChecked
+177 -> 201 (20, 4), outcomeReturns 86 -> 98 (8, 4), refusalsJudged 180 -> 203 (19, 4); and
+`coverage.mjs` REGISTER_FLOOR arms/classified/corpus 1015/186/187 -> 1022/187/188, where the
+pristine tree printed EXACTLY the old floor, so none of that move is slack. **`untranslated`
+and `reachGap` were deliberately NOT moved** — the first would fail the day somebody
+translates two codes, and the second is a ceiling that may only fall.
+
+**FOR CONDUCT, TWO THINGS THAT NEED A HUMAN MERGE RATHER THAN A FAST-FORWARD.** (1) This
+branch is built on `173bc66`; `origin/main` moved to `65d61c2` (SK-7) while it ran, and SK-7
+touched `src/store.mjs` (the `mintContent` region and the import block), `bio-checks.mjs`,
+`civicos-ui/app.html` (~6256) and `civicos-ui/test/content-extent.test.mjs` (a new section 9
+and its import line) — **measured: no overlap with any region this item touched**, but the
+import block in `store.mjs` and the two UI files will conflict on line position.
+(2) **SK-7 ALSO MOVED `REGISTER_FLOOR`'s ONE KEY SET on `origin/main`.** Neither figure is
+true of the merged tree: **COLLAPSE TO ONE SET and re-read the printed figures from a green
+run of the merge.** The same goes for `regionLines`, which is a property of the MERGED source
+and has moved at integration five times — and this item ADDED a governed region, so it is one
+of the five's exact shape.
+
 ### DELEGATION 2026-09-14 RECORD (REC-97) -> UI: **THE ACT NOW CARRIES THE EXTENT; THE COMPOSER'S PICKER IS THE LAST PIECE, AND IT IS A UI ITEM RATHER THAN A LINE**
 
 UI-61's DELEGATION to RECORD is DISCHARGED: `op=cite` accepts the flattened extent scalars

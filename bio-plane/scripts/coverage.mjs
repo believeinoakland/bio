@@ -853,9 +853,23 @@ const REGISTER_FLOOR = {
      new suite) on top of REC-85's 1010. The branch's own block (1001/184/185, cut at 980a9e5) was
      dropped at the merge and declared; this is the re-read the loop promises. One key set.
      Nothing FELL. FLEET_FLOOR unmoved. */
-  arms: 1015,
-  classified: 186,
-  corpus: 187,
+  /* MOVED 2026-09-14 by REC-97 (worktree agent-a39cfbab2c77ec9e4): 1015 -> 1022 / 186 -> 187 /
+     187 -> 188, ALL THREE IN THE SAME TURN and every one taken from the figure this item's own
+     green `--strict` run PRINTED as REPRODUCIBLE on its COMMITTED tree (`arms 1022/1015 ·
+     classified 187/186 · corpus 188/187 · GREW by 7 arm(s)`, provenance `204 of 204 discovered
+     item(s) are in the commit at HEAD (2e5d21f)`) — never counted and never added to the numbers
+     above. The cause is ONE new suite, `test/cite-extent.test.mjs`, whose `NEGATIVE CONTROL:`
+     declaration states SEVEN arms; every one was RUN and every one came back AS DECLARED
+     (`test/nc-rec97.mjs`). A PRISTINE `origin/main` at 173bc66 printed 1015/186/187 — exactly the
+     floor — so NONE of this move is pre-existing slack and all seven arms are REC-97's.
+     **CONDUCT: SK-7 MOVED THIS SAME KEY SET ON `origin/main` AT 65d61c2, WHICH THIS BRANCH IS NOT
+     BUILT ON.** Neither figure is true of the merged tree. COLLAPSE TO ONE SET and re-read the
+     printed figures from a green run of the merge — this block has been left with duplicate
+     `arms:` keys six times, valid JavaScript where the LAST key silently wins, and once the last
+     was the LOWEST. */
+  arms: 1022,
+  classified: 187,
+  corpus: 188,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
