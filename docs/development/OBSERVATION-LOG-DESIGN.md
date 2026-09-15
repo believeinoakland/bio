@@ -56,7 +56,16 @@ The content and meaning levels record NOTHING about looking today (Part II §17'
 
 ## 3. The one table
 
-`observations` — the run log's columns, generalised; one shape for every level, because a log per level is the D-164 failure (built three times, drifts) arriving in the coverage record:
+`observation_log` — the run log's columns, generalised; one shape for every level, because a log per
+level is the D-164 failure (built three times, drifts) arriving in the coverage record.
+
+**The name is `observation_log` and not `observations`, decided 2026-09-14 after CONDUCT measured the
+neighbourhood.** Two things in the schema already carry the bare word — `runtime_observations` (what
+the runtime was observed to COST, which is a fact about us) and `captured_locators.observations` (a
+COUNTER of fetches per address) — and a third named `observations` would put one word on three
+unrelated things, which is how a reader infers a relationship that is not there. The suffix is not
+invented either: `ai_run_log` is the table this one generalises (§4.4), so `observation_log` is the
+existing convention rather than a new one.
 
     seq            INTEGER PRIMARY KEY  -- monotonic, store-wide; never reused
     at             TEXT NOT NULL
@@ -168,7 +177,7 @@ Four items now, in dependency order, handed through the BOB INBOX (CONDUCT mints
 
 | # | owner | item | depends on | interface | design |
 | --- | --- | --- | --- | --- | --- |
-| 1 | RECORD | **the table, the refusals, the frontier view, the document-level writers, the run-log fold** — `observations` before `host_governor`, purge both arms, hygiene; C-22.1/22.2/22.6 at the one append site; the writers at acquire, the sweep (edge-triggered per §7, with the volume measurement recorded first), ratify and the archive fallback; the frontier view and its bounded read at the document level; `ai_run_log` folded, `op=airunlog` reading through unchanged; the negative controls | — | I5 (additive, an IC); I3 unchanged in shape and recorded as such | §3, §4.1, §4.4, §5, §7 |
+| 1 | RECORD | **the table, the refusals, the frontier view, the document-level writers, the run-log fold** — `observation_log` before `host_governor`, purge both arms, hygiene; C-22.1/22.2/22.6 at the one append site; the writers at acquire, the sweep (edge-triggered per §7, with the volume measurement recorded first), ratify and the archive fallback; the frontier view and its bounded read at the document level; `ai_run_log` folded, `op=airunlog` reading through unchanged; the negative controls | — | I5 (additive, an IC); I3 unchanged in shape and recorded as such | §3, §4.1, §4.4, §5, §7 |
 | 2 | RECORD | **the content-level writers and the content-axis frontier** — one row per extraction attempt per capture per tier at promote and at read-time re-extraction; the per-capture `indexed` state read; the bounded frontier read at content level (`tier3_candidate`, chain older than calibration) | item 1; pairs with `CONTENT-SEARCH-DESIGN.md` item 4 (one vocabulary) and `EXTRACTION-BREADTH-DESIGN.md` item 5 | I3 (the two reads, additive, an IC) | §4.2 |
 | 3 | RECORD | **the meaning-level writers** — the reader run, the resolution attempt, the connection derivation | item 1 | — | §4.3 |
 | 4 | RECORD | **the completeness statement's `searched` section** (D-196) — computed from the log at case signing over the case's subjects; published with the case; C-41.10's block gains it; the negative control (a case whose subjects were never looked for at the content level says so in the signed document) | items 1–3 | I3 (`bio-case-document/1` → an additive minor, an IC) | §6 |
