@@ -853,9 +853,20 @@ const REGISTER_FLOOR = {
      new suite) on top of REC-85's 1010. The branch's own block (1001/184/185, cut at 980a9e5) was
      dropped at the merge and declared; this is the re-read the loop promises. One key set.
      Nothing FELL. FLEET_FLOOR unmoved. */
-  arms: 1015,
-  classified: 186,
-  corpus: 187,
+  /* MOVED 2026-09-14 by CAP-12 (1015 -> 1024 · 186 -> 187 · 187 -> 188), from the figures this
+     item's own green POST-COMMIT `--strict` run PRINTED as REPRODUCIBLE at commit 0ed2243 —
+     never counted and never incremented by hand: `arms 1024/1015 · classified 187/186 · corpus
+     (suites read) 188/187 · GREW by 9 arm(s)`. The cause is ONE new suite,
+     `test/capture-container-extent.test.mjs`, whose `NEGATIVE CONTROL:` declaration states NINE
+     arms (a baseline and eight). **Every one of those arms was RUN** — `node test/nc-cap12.mjs`,
+     each armed alone with the others held open, 9 of 9 restores byte-identical, and all nine AS
+     DECLARED at the recorded run. The PRE-commit run printed the OLD figures with `contaminated:
+     1 suite(s) no other checkout has` beside the higher ones, which is D-238 working as written
+     and the reason this moved after the commit. ONE KEY SET (grepped: 1 match for `^  arms:` in
+     this block). Nothing FELL. FLEET_FLOOR unmoved — no fleet member and no fleet suite moved. */
+  arms: 1024,
+  classified: 187,
+  corpus: 188,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
