@@ -441,6 +441,18 @@ this section's first candidate for demotion to a note beside its check.
   **So read the SKIP COUNT and the SUITE TOTAL, never the exit status alone** — if a member
   is named as skipped, your baseline is not a baseline yet.
 
+  **AND *I RAN `npm ci`* IS NOT EVIDENCE THAT THE PACKAGES ARE INSTALLED, WHICH IS THE THIRD
+  FACE OF THIS TRAP AND THE QUIETEST.** Measured 2026-09-15 in this wave: with the volume at
+  **154 MiB free**, a worker's pristine baseline **SYMLINKED `node_modules` instead of
+  installing**; the bundler then resolved through the symlink into another tree, one suite
+  failed, and the baseline read 204/205 — **a contaminated baseline that looks exactly like a
+  red `main`**. A sibling hit `ENOSPC` during `npm ci` in the same window and recovered on a
+  re-run, which is the same cause wearing a louder symptom. **So before trusting a fresh
+  install, look at the disk (`df -h`) and confirm each `node_modules` is a REAL DIRECTORY
+  rather than a symlink** — `[ -L bio-plane/node_modules ]` answers it in one test, per
+  package. A baseline measured through a symlink is this section's own defect at one remove:
+  the number is wrong, the tree is fine, and nothing in the output says disk.
+
 - **A SESSION'S WORKING DIRECTORY CAN REVERT BETWEEN TURNS, AND THE FAILURE IT CAUSES
   DOES NOT LOOK LIKE A DIRECTORY PROBLEM.** Observed independently in two lanes on
   2026-09-15: CONDUCT's spawn of a flipped row failed because the session's working
