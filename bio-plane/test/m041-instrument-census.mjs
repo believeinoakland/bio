@@ -118,52 +118,74 @@ const git = (args) => {
    because that is code. Spawn arguments are the ONE exception and are read from
    the unblanked source deliberately, because a spawn's target IS a string — the
    two readers are separate functions so neither can be mistaken for the other. */
-export function stripToCode(src) {
-  let out = "";
-  let i = 0;
+export function stripToCode(src) { return codeMask(src).code; }
+
+/* **AND IT RETURNS A MASK, NOT ONLY A STRING, BECAUSE THE FIRST VERSION READ
+   IMPORTS LINE BY LINE AND A MULTI-LINE IMPORT CROSSES NO LINE IT COULD SEE.**
+   Measured on this file's own subject: `test/m025-arm-anchor-witness.test.mjs`
+   spells `import { …,\n  MIN_SIDE, MAX_GAP } from "../scripts/armdecay.mjs";`,
+   so the `from "…"` sits on a line carrying no `import` keyword — and
+   `scripts/armdecay.mjs`, `scripts/fleet-bundle.mjs` and `scripts/build-plane.mjs`
+   were scored CONVENTION-ONLY while a battery-discovered suite imports each.
+   THREE MORE FALSE GAPS, in an UNDECLARED blind spot: the header named an edge
+   in a variable and an edge built by concatenation, and said nothing about an
+   edge that merely wraps. A census that invents gaps produces a list nobody can
+   act on, so the reader is corrected rather than the blind spot documented.
+   `mask[i]` is 1 where `src[i]` is CODE — outside comments, string bodies, regex
+   bodies and template text — which lets a specifier be read from the RAW source
+   while the KEYWORD is required to be real code. */
+export function codeMask(src) {
   const n = src.length;
-  let prev = ""; /* last significant code char, to tell a regex from a divide */
+  const mask = new Uint8Array(n);
+  const out = new Array(n);
+  let i = 0, prev = "";
+  const blank = (j) => { out[j] = src[j] === "\n" ? "\n" : " "; mask[j] = 0; };
+  const keep = (j) => { out[j] = src[j]; mask[j] = 1; };
   while (i < n) {
     const c = src[i], d = src[i + 1];
-    if (c === "/" && d === "/") { while (i < n && src[i] !== "\n") { out += " "; i++; } continue; }
+    if (c === "/" && d === "/") { while (i < n && src[i] !== "\n") blank(i++); continue; }
     if (c === "/" && d === "*") {
-      out += "  "; i += 2;
-      while (i < n && !(src[i] === "*" && src[i + 1] === "/")) { out += src[i] === "\n" ? "\n" : " "; i++; }
-      out += "  "; i += 2; continue;
+      blank(i++); blank(i++);
+      while (i < n && !(src[i] === "*" && src[i + 1] === "/")) blank(i++);
+      if (i < n) { blank(i++); if (i < n) blank(i++); }
+      continue;
     }
     if (c === '"' || c === "'") {
-      out += " "; i++;
-      while (i < n && src[i] !== c) { if (src[i] === "\\") { out += " "; i++; } out += src[i] === "\n" ? "\n" : " "; i++; }
-      out += " "; i++; prev = "x"; continue;
+      blank(i++);
+      while (i < n && src[i] !== c) { if (src[i] === "\\" && i + 1 < n) blank(i++); if (i < n) blank(i++); }
+      if (i < n) blank(i++);
+      prev = "x"; continue;
     }
     if (c === "`") {
-      out += " "; i++;
+      blank(i++);
       while (i < n && src[i] !== "`") {
-        if (src[i] === "\\") { out += "  "; i += 2; continue; }
+        if (src[i] === "\\" && i + 1 < n) { blank(i++); blank(i++); continue; }
         if (src[i] === "$" && src[i + 1] === "{") {
-          out += "  "; i += 2;
+          blank(i++); blank(i++);
           let depth = 1;
           while (i < n && depth > 0) {
             if (src[i] === "{") depth++;
             else if (src[i] === "}") { depth--; if (!depth) break; }
-            out += src[i]; i++;
+            keep(i++);
           }
-          out += " "; i++; continue;
+          if (i < n) blank(i++);
+          continue;
         }
-        out += src[i] === "\n" ? "\n" : " "; i++;
+        blank(i++);
       }
-      out += " "; i++; prev = "x"; continue;
+      if (i < n) blank(i++);
+      prev = "x"; continue;
     }
     if (c === "/" && prev && !/[\w)\]]/.test(prev)) {
-      /* a regex literal: its text is not code */
-      out += " "; i++;
-      while (i < n && src[i] !== "/") { if (src[i] === "\\") { out += " "; i++; } out += src[i] === "\n" ? "\n" : " "; i++; }
-      out += " "; i++; prev = "x"; continue;
+      blank(i++);
+      while (i < n && src[i] !== "/") { if (src[i] === "\\" && i + 1 < n) blank(i++); if (i < n) blank(i++); }
+      if (i < n) blank(i++);
+      prev = "x"; continue;
     }
     if (/\S/.test(c)) prev = c;
-    out += c; i++;
+    keep(i++);
   }
-  return out;
+  return { code: out.join(""), mask };
 }
 
 /* ------------------------------------------------------------------ the edges */
@@ -171,24 +193,18 @@ export function stripToCode(src) {
 /* An IMPORT edge: `import … from "./x.mjs"` or `await import("./x.mjs")`, read
    out of CODE only. Relative specifiers only — a bare specifier is a package. */
 export function importEdges(src, fromRel) {
-  const code = stripToCode(src);
+  const { mask } = codeMask(src);
   const out = new Set();
-  const spec = /(?:\bfrom\s*|\bimport\s*\(\s*)(["'])([^"'\n]+)\1/g;
-  /* `stripToCode` blanks string bodies, so the specifiers are read from the raw
-     source and CONFIRMED against a code-side occurrence of the import keyword on
-     the same line — which is what keeps a module named in prose out of the set. */
-  const codeLines = new Set();
-  code.split("\n").forEach((l, ix) => { if (/\b(?:import|require)\b/.test(l)) codeLines.add(ix); });
-  const rawLines = src.split("\n");
-  for (let ix = 0; ix < rawLines.length; ix++) {
-    if (!codeLines.has(ix)) continue;
-    spec.lastIndex = 0;
-    let m;
-    while ((m = spec.exec(rawLines[ix]))) {
-      const p = m[2];
-      if (!p.startsWith(".")) continue;
-      out.add(normalise(fromRel, p));
-    }
+  /* the KEYWORD must be real code; the SPECIFIER is read from the raw source,
+     because a string body is blanked in the mask by construction. `[\s\S]*?`
+     between them is what lets a wrapped import be seen at all. */
+  const re = /\b(?:from|import\s*\()\s*(["'])([^"'\n]+)\1/g;
+  let m;
+  while ((m = re.exec(src))) {
+    if (!mask[m.index]) continue;              /* the `from` / `import(` is in a comment or a string */
+    const spec = m[2];
+    if (!spec.startsWith(".")) continue;        /* a bare specifier is a package */
+    out.add(normalise(fromRel, spec));
   }
   return out;
 }
@@ -484,7 +500,14 @@ function main() {
          loop", and the answer is measured below: nothing does. */
       if (row.isLoop) { conventionOnly++; console.log(`  LOOP          ${row.instrument}  ${by}  — a session is TOLD to run it; nothing composes it`); continue; }
       if (row.used) { usedN++; console.log(`  USED          ${row.instrument}  ${by}`); }
-      else if (row.testedOnly) { testedOnly++; console.log(`  TESTED ONLY   ${row.instrument}  ${by}  — a loop runs its SUITE; nothing invokes it`); }
+      /* "TESTED ONLY" is precise and the precision matters: the loop EXECUTES this
+         code, because a discovered suite imports it — so it is not dead and the
+         battery does prove it runs. What is absent is an invocation of it as a
+         GATE STEP of the loop's own. `scripts/fleet-bundle.mjs` is the sharpest
+         case: `fleetbundles.test.mjs` calls it to compute the hashes the freshness
+         guard compares, so it does real work on every battery — as that suite's
+         helper, never as a step anything else performs. */
+      else if (row.testedOnly) { testedOnly++; console.log(`  TESTED ONLY   ${row.instrument}  ${by}  — reached ONLY through a discovered suite: executed as that suite's subject or helper, never as a gate step of its own`); }
       else { conventionOnly++; console.log(`  CONVENTION    ${row.instrument}  ${by || "— reached by no entry loop"}`); }
     }
     console.log(`  ${usedN} used by a loop · ${testedOnly} TESTED ONLY · ${conventionOnly} convention-only · ${missing} missing`);
