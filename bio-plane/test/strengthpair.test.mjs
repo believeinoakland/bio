@@ -821,9 +821,21 @@ console.log("\n--- 10. the arithmetic is reached, never restated ---");
   t("and `versionStrength` composes nothing itself — it hands legs to the ONE walk and reports",
     [body.length > 500, /#strengthWalk\(inq, 0, bound, resolved\.legs\)/.test(body),
      /Math\.(min|max)/.test(body), /GRADE_RANK/.test(body)], [true, true, false, false]);
+  /* CORRECTED 2026-09-15 by REC-105, NEVER EXEMPTED. This pin spelled
+     `#strengthWalk`'s signature PARAMETER FOR PARAMETER, so REC-105's fifth
+     parameter (`captureBounds`, D-373) made it count ZERO and the pin failed
+     while the property it guards was untouched. A pin that goes blind when a
+     parameter is added is not guarding the seam, it is guarding a spelling. It
+     now counts the DECLARATION by its stable prefix and asserts the seam's own
+     line — and it additionally pins that the bound map is a SEPARATE parameter
+     from `legsOverride`, which is what keeps the version path structurally
+     unable to reach it (IC-102). */
   t("the seam it uses is PL-3's `legsOverride` parameter and not a second walk",
-    [count(s, "#strengthWalk(bundleId, depth, bound, legsOverride = null)"),
+    [count(s, "#strengthWalk(bundleId, depth, bound,"),
      count(s, "legsOverride ?? (this.basisFor(bundleId).legs ?? [])")], [1, 1]);
+  t("and REC-105's capture bound rides a SEPARATE parameter, so a version's legs cannot carry one",
+    [/#strengthWalk\(bundleId, depth, bound, legsOverride = null, captureBounds = null\)/.test(s),
+     /#strengthWalk\(inq, 0, bound, resolved\.legs\)/.test(s)], [true, true]);
   /* AND THE READER RE-RUN OVER A SOURCE THAT DOES RESTATE IT, required to find
      it — a walk over a corpus it cannot see reports one implementation
      triumphantly. */

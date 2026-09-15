@@ -13621,3 +13621,82 @@ one-method text walk can answer. D-369's own *CLOSING IT TAKES* — REC-66's **L
 assertion, a store driven past the ceiling asserting the query CANNOT return the rows — is still
 unbuilt for these shapes. The row is NARROWED to exactly that and stays open; **no residue is left
 inside it**, which is the D-227 failure D-365 was written to name.
+
+## M-28 · 2026-09-15 · REC-105 — THE CAPTURE AXIS HAS **THREE** READERS, NOT TWO, AND D-373's OWN CLASS STATEMENT NAMED TWO MEMBERS THAT ARE NOT IN IT (worktree `agent-ab0036215c20a9dd1`, `origin/main` at `065b013`)
+
+**The instruments**, both written for this item and both runnable in one command:
+`bio-plane/test/rec105-reader-census.mjs` (drives five document shapes through the ops on any
+checkout — it takes the `index.mjs` path as `argv[2]`, which is how the cross-checkout arm is
+taken) and `bio-plane/test/nc-rec105.mjs` (six negative-control arms). The live figures come
+from `bio-plane/test/rec88-instance-census.mjs`, REC-88's read-only probe, **reused unchanged
+because it already asks this item's question** — and RUN here rather than read out of IC-96,
+because two documents agreeing agree on as much as two digests of an empty body.
+
+### The battery, own baseline, measured before any edit
+
+| | suites | assertions | exit | skipped by name |
+| --- | --- | --- | --- | --- |
+| baseline, pristine `58b77ea`, after `npm ci` in all THREE packages | **205/205 green** | **12,769** | 0 | **0** · 3 fleet members RAN |
+
+The brief carried `205/205 · 12,769` and **it was right** — recorded because the practice is to
+trust the measurement rather than the streak, and eight items in a row correcting a briefed
+figure does not make the ninth wrong. The run's own `provenance:` line named HEAD `58b77ea`,
+checked against this worktree's — the `/tmp` collision rule, applied rather than quoted.
+
+### The three readers, and the cross-checkout arm
+
+Five document shapes, one leg each at the ceiling letter, driven on a pristine `origin/main`
+checkout at `065b013` and on the landing. Digests are of `op=inquirystrength`'s capture axis.
+
+| shape | pristine | landing | |
+| --- | --- | --- | --- |
+| captured clean, leg written, **later OCR'd at a measured fidelity** | `6ebfc73731637983` | `348a24bc519287d8` | **MOVED — the walk changed its answer where the registry bounds it** |
+| captured clean, leg written, **later re-read with NO measured fidelity** | `1de8089ee4ec2c6a` | `0557ea08dd542ec6` | **MOVED — graded to UNRATED, the leg named with its empty level** |
+| publisher-typed (read, no chain) | `413f988f0405bb16` | `413f988f0405bb16` | byte-identical |
+| an UNGRADED leg on an OCR'd document | `99fc3f2132d135fe` | `99fc3f2132d135fe` | byte-identical |
+| a document the record holds no bytes of | `688bf8d4e773bd00` | `688bf8d4e773bd00` | byte-identical |
+
+**THE THIRD READER, which is the finding the item was sent to look for.** D-373 was raised from
+a probe that compared ONE PAIR, so the pair is what the record knew about. Driven on the
+landing tree, a third surface answers a capture-axis grade: the projection CACHE
+`bundles.inquiry_capture_strength`, sought through `query.mjs`'s indexed `capture:` selector.
+It seeks `capture:B` for an inquiry whose walk now answers `C`. It is not a third COMPUTATION
+— it is the first one persisted, answering at a different TIME — and its staleness is a
+documented contract, but the PATH into it is new and is rowed as **D-379**.
+
+**AND D-373's CLASS STATEMENT NAMED TWO MEMBERS THAT ARE NOT IN THE CLASS.** It reads *"every
+consumer of `#strengthWalk` WITHOUT a `legsOverride` — `strengthOf` (`op=inquirystrength`,
+`op=strengthbarof`'s pair) and the queue-ancestor walk."* Grepped and driven:
+
+| named | actual |
+| --- | --- |
+| `op=strengthbarof`'s pair | **not in the class.** It answers `strengthBarOf` — the DECLARED bar for a group or project (REC-14/DEC-17). It computes no pair and calls `strengthOf` nowhere. |
+| the queue-ancestor walk | **not in the class.** `#queueAncestors` walks `inquiry_basis` edges for GROUPING, computes no grade, and shares only the `QUEUE_ANCESTOR_DEPTH` constant with the walk. |
+
+The real class is the **six** `strengthOf()` call sites, every one corrected by the single line
+in `strengthOf` and none of them edited: `op=inquirystrength`; the **publication bar gate**
+(`BELOW_PROJECT_STRENGTH` — a refusal where none stood before, which is what makes IC-102
+MAJOR); the pair **frozen into a signed case**; `op=inquiryground`'s before/after report;
+`op=reevaluations`' per-obligation strength block; and `#writeStrengthProjection`. The third
+`#strengthWalk` caller, `op=suggest`'s candidate pair, passes a `legsOverride` and is
+correctly outside — as is `#versionStrength`, which this item leaves unreachable rather than
+merely un-edited.
+
+### Consumer impact on the live instance, measured rather than estimated
+
+`test/rec88-instance-census.mjs`, read-only against store `bio`, 2026-09-15, build **0.58.0**
+serving: **31 bundles · 1 inquiry · 0 basis legs across it · 0 captures carrying a text chain
+anywhere in the store · 0 bundles whose ceiling moves.** So **ZERO derived answers move and
+ZERO cases become unpublishable today.** The census self-checks its parser against a synthetic
+basis block (3 legs / 2 capture legs / 0 movers) and exits rather than printing a zero it could
+not tell from a failure to look.
+
+### What these instruments cannot see, stated
+
+The census drives member-reachable ops on one store through miniflare. It cannot see a consumer
+outside this plane (`civicos-ui/`, the skillpack); it says nothing about a PUBLISHED case's
+frozen bytes, which DEC-12 freezes on purpose and this item must not move; and it could not read
+the AUTHORED letter back through any control-plane op at all — `/basis` and `/restson` are the
+DO-internal class and `op=earnedbasis`'s `legs` carry the leg's address and content row rather
+than its grade, so the authored letter in the table above is known by construction from the
+fixture and is labelled as such rather than printed as a measurement.

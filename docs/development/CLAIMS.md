@@ -9965,3 +9965,112 @@ even a note (FL-10, a measured >3h false stall).
 7. **RECORD (REC-103) — the document-level frontier's absent viewer fence is unchanged**, and
    `op=frontier` now has three levels of which two are gated. Named here as well as in IC-95's own
    block so it cannot be lost with either.
+
+## CLAIM 2026-09-15 RECORD (REC-105 — D-373 CLOSED BY CORRECTING THE SECOND READ: `#strengthWalk` resolves the capture-axis member's grade through `earnedBasisRegistry`, bounded, with the version path structurally untouched)
+session: REC-105 worker, spawned by CONDUCT #11. Worktree
+  `.claude/worktrees/agent-ab0036215c20a9dd1`, branch `worktree-agent-ab0036215c20a9dd1`,
+  base `origin/main` at `58b77ea`.
+opened: 2026-09-15
+authority: `QUEUE.md` `### REC-105 · running` (read verbatim on `origin/main` at `58b77ea`
+  before any edit; it reads `running`), under `BIO_Content_Framework_v0_10.md` Part II
+  Appendix A.1's ruling row — *"fidelity bounds the capture axis as its weakest link, no
+  third scale"* (DEC-4, CPDF-10) — and Part II §14. The drift is **D-373**, raised and
+  DRIVEN by REC-88; **IC-96's RESOLUTION** carries why it was accepted. The interface is I3
+  under **IC-102**, minted at spawn with `node tools/mintid.mjs IC`.
+**THE SHAPE IS NOT A REGRESSION AND THE CLAIM SAYS SO ONCE.** Before REC-88 the walk and the
+  registry agreed and BOTH were wrong. REC-88 corrected the registry. This item corrects the
+  SECOND read and reverts nothing.
+**CLAIMED BY REGION, NOT BY FILE.** Three other workers hold regions of `store.mjs` right now
+  (COFF-12's one comment, REC-91's promote writer and schema, REC-95's meaning-level writers).
+  What this item holds is `#strengthWalk` and nothing else.
+paths:
+  - `bio-plane/src/store.mjs` — **ONE REGION, named**: `#strengthWalk` — its signature, its
+    per-leg capture-axis member push, and the private helper that collects the walk's target
+    set for ONE bounded registry call. **NOT** `strengthOf`'s body beyond passing the
+    resolved map, **NOT** `#axisResult`, **NOT** `#groundResult`, **NOT** `#weakestOf`,
+    **NOT** `#namedMember`, **NOT** `earnedBasisRegistry` (READ ONLY — REC-88 corrected it
+    and this item consults it), **NOT** `#versionLegsAsMembers` (REC-12/REC-42's region and
+    the row's named boundary; it is left structurally unreachable by this change rather than
+    merely un-edited), **NOT** `basisFor`, **NOT** `#writeStrengthProjection`'s body.
+  - `bio-plane/test/inquirystrength.test.mjs` — **APPENDED SECTION ONLY**, driving exactly
+    D-373's probe shape through `op=inquirystrength` and `op=earnedbasis` in one test.
+  - `bio-plane/test/nc-rec105.mjs` — **NEW**, the negative-control driver, one arm per run.
+  - `bio-plane/test/rec105-reader-census.mjs` — **NEW**, the THIRD-READER sweep, driven
+    rather than asserted (the row: *a fact with two disagreeing readers usually has a third
+    nobody has probed*).
+  - `bio-plane/dist/bio-plane.bundled.mjs` and `bio-plane/dist/bio-plane.bundle.json` —
+    REBUILT with `npm run build`, never hand-edited (`fleetbundles.test.mjs`'s D-298 arm
+    obliges it for any change under `bio-plane/src/`). Derived; carries no decision.
+  - `docs/development/DEBT.md` — **D-373's row** (its disposition) and no other row.
+  - `docs/development/INTERFACE-CHANGES.md` — **IC-102 ONLY**, appended, filed PROPOSED with
+    the consumer impact MEASURED before building; plus nothing else in the file.
+  - `docs/development/MEASUREMENTS.md` — **M-28 only**, appended.
+  - `docs/architecture/BIO_Content_Framework_v0_10.md` — **Part II's FRONT MATTER only**, and
+    only the §14.4 bullet's closing sentence, which today names D-373 as the frontier. No
+    section body.
+  - `docs/development/CLAIMS.md` — this block.
+  - `.gitignore` — this item's control pen and pristine baseline checkout, each named rather
+    than globbed, appended at the file's end.
+  **READ, DRIVEN, AND NEVER EDITED**: `bio-plane/src/textchain.mjs` (`captureBound` is
+  CPDF-10's module and the rule; this item does not reach it), `bio-plane/checks/bio-checks.mjs`
+  (`checkEarnedLeg`, `EARNED_CAPTURE_CEILING` — the write side is REC-88's and is correct),
+  `bio-plane/src/query.mjs` (the `capture:` filter over the projection CACHE — the THIRD
+  reader this item's census found; it is a documented cache with a stated staleness contract
+  and is refreshed by `#writeStrengthProjection` at the next promote, so it is REPORTED and
+  NOT edited), `bio-plane/src/schema.mjs`, `bio-plane/src/index.mjs`,
+  `bio-plane/scripts/coverage.mjs`.
+  **NOT TOUCHED AND NAMED SO**: `docs/development/QUEUE.md` (CONDUCT is its sole writer —
+  this item's `landed:` line and IC-102's RESOLUTION and version bump are CONDUCT's acts and
+  are listed as ACTS in this item's report, never left here), `newgroup/**`, `civicos-ui/**`,
+  any version bump, tag or deploy.
+
+released: 2026-09-15 by the REC-105 worker — **D-373 CLOSED BY CORRECTING THE SECOND READ; REC-88 IS NOT REVERTED AND NO LETTER IS EVER RAISED.** Commit `dfb6724` on `worktree-agent-ab0036215c20a9dd1`, base `origin/main` at `065b013` (fast-forwarded from the briefed `58b77ea`; the delta was prose only). NOT pushed, NOT merged.
+  **THE GATES, all four, on the COMMITTED tree.** `npm run test:battery` **205/205 suites green · 12,796 assertions · exit 0**, provenance HEAD `dfb6724`, **0 suites skipped by name**, 3 fleet members actually RAN (`npm ci` in all THREE packages before measuring). `node scripts/coverage.mjs --strict` run DIRECTLY, `$?` read UNPIPED, **exit 0**. `node civicos-ui/test/run.mjs` from the repo root, unpiped, **exit 0**. `node tools/plancheck.mjs --local` **0 fail, 0 warn**.
+  **BASELINE, MEASURED ON A PRISTINE `58b77ea` BEFORE ANY EDIT: 205/205 · 12,769 · exit 0 — and the brief's figure was RIGHT.** Recorded because the practice is to trust the measurement rather than the streak: eight items correcting a briefed figure does not make the ninth wrong.
+  **ATTRIBUTED PER SUITE by diffing the two runs, never by subtraction, and the per-suite deltas sum EXACTLY to the headline (+27):** `inquirystrength` 48 -> 68 (+20, this item's section 8), `analystvocab` 107 -> 112 (+5), `strengthpair` 90 -> 91 (+1), `planning-hygiene` 300 -> 301 (+1, it counts corpus rows and this item added D-379). `dec65-strength-reach` and `op-claims` are unchanged in count, and both were RED and are corrected rather than grown.
+  **`REGISTER_FLOOR` READ AND NOT MOVED, from this item's own POST-COMMIT print (D-238): arms 1087/1087 · classified 196/196 · corpus 197/197** — the briefed figure, confirmed rather than copied, and NOT invalidated by this item. The `1 UNCLASSIFIED` is PRE-EXISTING: measured identically on a pristine checkout. **And this item's own declaration was INVISIBLE to the register until it was measured** — it was written `NEGATIVE CONTROL (section 8…)`, and `(` is not one of `MARKER_SEPARATORS`, so `findControlDeclarations` returned ONE declaration for the suite instead of two. Corrected to `NEGATIVE CONTROL:`; it then counted EIGHT arms for FIVE armed arms, because three FINDINGS written as `(1) (2) (3)` read as list items, so they were de-enumerated and it counts 5. Arms nobody counts and arms counted twice are the same defect in opposite directions. The suite's registered figure stays REC-34's 7 — the register records the LARGEST SINGLE DECLARATION per suite, its own documented property, now measured on this suite — which is why the floor does not move.
+  **EVERY CONTROL ARM, DECLARED vs ACTUAL, ALL SIX AS DECLARED** (`node test/nc-rec105.mjs <none|a|b|c|d|e>`, one command each; every restore verified byte-identical by sha256 AND `cmp` AND size against its OWN uniquely-named pristine copy, floored at 100 kB). BASELINE `none` 68/0/exit 0, present because a driver whose every arm reports one number cannot tell six-arms-broken from six-arms-working. (a) the registry consultation removed -> 61 pass, 7 FAIL, and the failure NAMES BOTH ANSWERS, labelled. (b) the ceiling applied as a VALUE not a CAP -> 61/7, and it bit HARDER than declared in the correct direction, moving the suite's own pre-existing fixtures. (c) the undetermined arm dropped -> 66/2. (d) the recursion drops the map -> 67/1, the ONLY arm section 8e catches. (e) OVER-STRICTNESS, the same rule in the registry's `BASIS_GRADES.indexOf` idiom -> 68/0/exit 0: correct work in an unanticipated spelling PASSES.
+  **THREE ARM DECLARATIONS CAME BACK WRONG AND ARE KEPT, NOT SMOOTHED.** Arm (a) was declared to break an assertion reading `inherited_from`/`through` and did not: that assertion names WHICH leg set the grade whatever letter is reached, and is blind to this break BY CONSTRUCTION. **Arm (b) was declared to break "a publisher-typed leg is byte-identical to the DO-internal derivation" and did not, and this is the one worth carrying**: that equality compares `op=inquirystrength` against the ungated `/strength` route and BOTH GO THROUGH `strengthOf()`, so a change to the arithmetic damages both sides equally and the equality survives. The costs-nothing rule in miniature, inside a pin that looks like strong evidence. Arm (c)'s first spelling DID NOT ARM AS DECLARED (a bare `return null;` left an object literal standing as an unconditional return; 51/17, breaking THREE of its four declared held-open assertions), which is exactly the signal the held-open half exists to give.
+  **A THIRD READER EXISTS. ESTABLISHED BY DRIVING, NOT ASSUMED, AND IT IS D-379.** `bundles.inquiry_capture_strength` — REC-12's projection CACHE, written by `#writeStrengthProjection` from `strengthOf()` and sought through `query.mjs`'s indexed `capture:` selector — answers the letter computed at each question's LAST PROMOTION. Driven on the landing tree: the cache seeks `capture:B` for an inquiry whose walk now answers `C`. It is not a third COMPUTATION, it is the first one persisted answering at a different TIME; its staleness is a documented contract, but the PATH into it is new, because a DOCUMENT being re-read — a machine's act, on another bundle — now moves it, and the stale value is the STRONGER letter. Rowed with both options and a recommendation, because the choice trades an unbounded fan-out inside `op=promote` against a sentence on the retrieval surface and is not a worker's.
+  **AND THE ROW'S OWN CLASS STATEMENT NAMED TWO MEMBERS THAT ARE NOT IN IT**, grepped and driven, because a class with a wrong member is how the next sweep misses a real one. `op=strengthbarof` answers `strengthBarOf`, the DECLARED BAR (REC-14/DEC-17), computes no pair and calls `strengthOf` nowhere; `#queueAncestors` walks `inquiry_basis` edges for GROUPING, computes no grade, and shares only the `QUEUE_ANCESTOR_DEPTH` constant. **The real class is the SIX `strengthOf()` call sites, every one corrected by ONE line and none of them edited**: `op=inquirystrength`, the **publication bar gate** (`BELOW_PROJECT_STRENGTH`, a REFUSAL where none stood before, which is what makes IC-102 MAJOR), the pair **frozen into a signed case**, `op=inquiryground`'s before/after report, `op=reevaluations`' strength block, and `#writeStrengthProjection`.
+  **WHAT THE SWEEP COULD NOT SEE, STATED.** The census drives member-reachable ops on one store through miniflare: it cannot see `civicos-ui/` or the skillpack, it says nothing about a PUBLISHED case's frozen bytes (DEC-12 freezes those on purpose and this item must not move them), and it could not read the AUTHORED letter back through ANY control-plane op — `/basis` and `/restson` are DO-internal and `op=earnedbasis`'s `legs` carry the leg's address, not its grade — so the authored letter is known by construction from the fixture and is labelled as such rather than printed as a measurement.
+  **MEASURED ON TWO CHECKOUTS** (`test/rec105-reader-census.mjs`, pristine `origin/main` `065b013` against the landing): OCR'd-at-C `6ebfc737` -> `348a24bc` (B -> C), unmeasured transcription `1de8089e` -> `0557ea08` (graded -> UNRATED and named); byte-identical on both sides for publisher-typed `413f988f`, an UNGRADED leg on an OCR'd document `99fc3f21`, and a document the record holds no bytes of `688bf8d4`. **LIVE CONSUMER IMPACT, measured here rather than copied from IC-96** (`test/rec88-instance-census.mjs`, read-only, store `bio`, build **0.58.0** serving): 31 bundles · 1 inquiry · 0 basis legs · 0 captures carrying a text chain, so **ZERO answers move and ZERO cases become unpublishable.**
+  **FOUR SUITES FOUND THEIR OWN BLINDNESS AND EVERY ONE WAS CORRECTED, NEVER EXEMPTED.** Three matchers had spelled `#strengthWalk`'s signature PARAMETER FOR PARAMETER, so adding a fifth parameter made `analystvocab` lift ZERO sentences from the method whose prose it classifies (its own floor caught it), made `dec65-strength-reach`'s comment-only arm NEVER ARM (it said so by name), and made `strengthpair`'s seam pin count zero. Each anchor is now the method name plus its first parameter. `analystvocab` additionally gained `#capturedAt` as a span, because this item's new member-facing sentence would otherwise have been printed at all five of D-269's channels from OUTSIDE the one instrument that classifies them — and going red there is what moved the sentence into vocabulary the member side already sanctions. **`op-claims` caught this item naming a nonexistent `versionsuggest` op in six places: no such op exists and the candidate pair is `op=suggest`** — and it is written here WITHOUT the `op=` prefix on purpose, because that checker reads the prefix and this very release line tripped it once. A blind spot found and left OPEN at the site: `analystvocab`'s lifter cannot tell a COMMENT's backticks from a template literal's, so comments inside the two lifted spans are backtick-free with the reason recorded there.
+  **A COST I INFLICTED ON OTHER LANES, reported because nothing else would report it.** I ran `pkill -f "scripts/battery.mjs"` to stop one stale run of my own. **That pattern is machine-wide and this machine is shared**: `waitquiet` had listed roughly six battery processes shortly before, and immediately after the kill the machine read QUIET. Any worker whose battery died without explanation in that window should re-run it. Worktrees observed running batteries earlier that day were `agent-aa10d195065b703e8`, `agent-a5b2e8e66fda4f115` and `agent-a05524ce4334542fc`, stated as CANDIDATES rather than as attribution. The correct tool was a task-scoped stop, and a session must never use a machine-wide `pkill` here.
+  **FOR CONDUCT, as ACTS with actors, never left as notes:** flip `### REC-105` to done with its `landed:` line (CONDUCT is QUEUE.md's sole writer); take **IC-102**'s RESOLUTION and the I3 version bump (**PROPOSED 16.0.0 -> 17.0.0, BREAKING**, on IC-25's rule and IC-96's precedent — a refusal where none stood before, at the publication bar); give **D-379** a queue row (RECORD, M4); and re-read `regionLines` / `REGISTER_FLOOR` on the MERGED tree, since this item touched a walk several parallel items also read.
+
+## CLAIM ADDENDUM 2026-09-15 RECORD (REC-105 — three paths added at the close, each FORCED BY A MECHANISM rather than chosen)
+session: REC-105 worker (worktree `agent-ab0036215c20a9dd1`). Appended rather than edited into
+  the block above, per this file's append-only rule. Checked before editing: no claim anywhere
+  in this file names `analystvocab.test.mjs`.
+  1. `bio-plane/test/analystvocab.test.mjs` — **TWO CHANGES, BOTH FORCED, AND THE SUITE FOUND
+     THEM RATHER THAN THE WORKER.** (i) Its `#strengthWalk` span anchor spelled the method's
+     signature PARAMETER FOR PARAMETER, so this item's fifth parameter made `liftMethod` return
+     null and the file lifted ZERO sentences from the method whose prose it exists to classify.
+     **The floor caught it** — ARM S's "the span was found at all" and §4a's `floor 4` both fired
+     on the first full run, which is `derivation-bounds.test.mjs` doing the same thing for REC-88
+     one wave earlier. The anchor is now the shortest prefix still unique in the file; CORRECTED,
+     never exempted, with the reason at the site. (ii) `#capturedAt` — the new site where this
+     item composes a member-facing `why` — is ADDED as a span, to ARM S's floors and required
+     tokens, to the machine-side lexicon region, to the runaway-anchor list and to §4a's corpus,
+     whose floor moves 4 -> 6 from the figure the instrument PRINTED (it lifts 11). Without this
+     a NEW sentence printed at all five of D-269's channels would have sat outside the one
+     instrument that classifies them. **It then went red on the new sentence and on three words
+     carried in by COMMENT BACKTICKS** — the lifter's regex cannot tell a comment's backticks
+     from a template literal's — so the sentence was reworded into vocabulary the member side
+     already sanctions and the comments inside both spans are backtick-free, with the blind spot
+     recorded at the site so the next writer does not reintroduce it. `analystvocab` 103 -> 112
+     assertions, green.
+  2. `docs/DECIDED.md` — REGENERATED with `node tools/decided.mjs`, not hand-edited. `plancheck`
+     fails on the drift and this item's prose changed. Derived; carries no decision.
+  3. `docs/development/DEBT.md` — **ONE MORE ROW than the original claim reserved: D-379**, the
+     THIRD READER this item was sent to look for and found by DRIVING rather than assuming. It is
+     a row rather than a sentence in this block because a finding left in a claim's prose reaches
+     nobody (WORKER.md, FL-10's measured >3h false stall).
+  **STILL NOT TOUCHED, and re-verified at the close**: `docs/development/QUEUE.md` (CONDUCT's sole
+  writer — REC-105's `landed:` line and IC-102's RESOLUTION and version bump are ACTS in this
+  item's report, not notes left here), `bio-plane/src/textchain.mjs`, `bio-plane/checks/bio-checks.mjs`,
+  `bio-plane/src/query.mjs` (the third reader — REPORTED and rowed, not edited),
+  `bio-plane/src/schema.mjs`, `bio-plane/src/index.mjs`, `bio-plane/scripts/coverage.mjs`
+  (`REGISTER_FLOOR` READ and NOT moved — this item adds no op and no check id), `newgroup/**`,
+  `civicos-ui/**`, any version bump, tag or deploy.

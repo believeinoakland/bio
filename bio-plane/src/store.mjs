@@ -20390,7 +20390,128 @@ export class Store extends DurableObject {
      right — a candidate reading of THIS question does not restate what the
      questions beneath it rest on. Null (every existing caller) reads the
      projection exactly as before. */
-  #strengthWalk(bundleId, depth, bound, legsOverride = null) {
+  /* REC-105 / D-373 · ONE LEG'S CAPTURE LETTER, RESOLVED AGAINST WHAT THE
+     RECORD CAN EARN FOR ITS TARGET. Static, pure, and given the registry's own
+     entry rather than reaching for it: the ARITHMETIC of the bound lives in
+     `captureBound` (CPDF-10's module) and the SENTENCE lives in
+     `earnedBasisRegistry`, so this function decides neither and only applies
+     what it was handed. Returns null when there is nothing to do, and a null
+     return is what keeps the untouched shapes byte-identical rather than
+     re-composed into an identical value — an equality produced by running the
+     same code twice costs nothing.
+
+     THREE CASES, AND THEY ARE THE SAME THREE `#versionLegsAsMembers` TAKES.
+     Reused deliberately rather than re-decided: two reads of one fact that
+     answer it differently is the defect this item exists to close, and writing
+     a second policy here would open a new one at a different site.
+
+       NO ENTRY      the record holds no registered capture of that document, so
+                     it states no ceiling. Nothing to bound by, and inventing one
+                     would be a fence tighter than its rule. Unchanged — and this
+                     shape is unreachable at the write anyway, because
+                     `checkEarnedLeg` already refuses a leg claiming a letter on
+                     a document the record holds no bytes of.
+       NULL GRADE    a transcription with no MEASURED fidelity. DEC-4 bounds the
+                     axis to nothing rather than to the byte ceiling, so the leg
+                     claims nothing and says why, naming the empty level. It is
+                     INERT (DEC-18) — present, named, not load-bearing — and it
+                     is not dropped and not invented.
+       A CEILING     the member's letter STANDS and is CAPPED, never raised. A
+                     letter at or under the ceiling comes back unchanged with no
+                     `why`, which is what makes publisher-typed text identical to
+                     the byte. */
+  static #capturedAt(stated, earned, targetId) {
+    if (!earned || earned.mode !== "ceiling") return null;
+    if (earned.grade == null)
+      return { grade: null,
+               why: earned.why
+                 ?? `what this document's capture can support is undetermined, so this leg claims nothing `
+                  + `on the capture axis` };
+    if (Store.#GRADE_RANK[stated] <= Store.#GRADE_RANK[earned.grade]) return null;
+    /* THE LETTERS ARE INTERPOLATED AND NEVER TYPED. hygiene.test.mjs detector
+       (B) refuses any module spelling the capture rule's own letters beside the
+       word it is a grade of, so that the letters have exactly ONE home and are
+       composed from the record rather than restated here. And no backticks in
+       this comment: this method's body is lifted into analystvocab's
+       member-facing corpus, for the reason recorded in #strengthWalk. */
+    return { grade: earned.grade,
+             why: `the record can support no more than ${earned.grade} for ${targetId}, so this leg `
+                + `is read at ${earned.grade} here and not at the ${stated} it carries. `
+                + `${earned.why ?? ""}`.trimEnd() };
+  }
+
+  /* REC-105 / D-373 · THE WALK'S WHOLE TARGET SET, COLLECTED ONCE SO THE
+     REGISTRY IS ASKED ONCE.
+     *
+     * It traverses the same edges `#strengthWalk` will traverse, under the SAME
+     * depth bound and with the same deliberate absence of a visited set, so the
+     * set it collects is exactly the set the walk will ask about — a narrower
+     * pre-pass would silently leave a leg unbounded and would look like this
+     * item working.
+     *
+     * THE SUBJECT IS NULL ON PURPOSE. `earnedBasisRegistry`'s CONNECTION arm is
+     * the only half that reads a subject entity; its CAPTURE arm — the only half
+     * this walk consults — is computed from `register` and `readings` alone and
+     * does not branch on one. Passing null therefore returns the SAME capture
+     * answer while skipping the resolution collapse entirely, which is both
+     * cheaper and more honest than inventing a subject for a walk that crosses
+     * several inquiries with several subjects of their own.
+     *
+     * AN EMPTY SET RETURNS NULL RATHER THAN AN EMPTY MAP, so an inquiry that
+     * rests on nothing takes the pre-item path exactly. */
+  #captureBoundsFor(bundleId, bound) {
+    const targets = new Set();
+    const visit = (id, depth) => {
+      if (depth > bound) return;
+      for (const leg of (this.basisFor(id).legs ?? [])) {
+        if (typeof leg.target_id !== "string" || !leg.target_id) continue;
+        if (normalizeType(leg.target_type) === "inquiry") { visit(leg.target_id, depth + 1); continue; }
+        targets.add(leg.target_id);
+      }
+    };
+    visit(bundleId, 0);
+    if (!targets.size) return null;
+    const reg = this.earnedBasisRegistry(null, [...targets]);
+    const cap = (reg && reg.earned && reg.earned.capture) || {};
+    return new Map(Object.entries(cap));
+  }
+
+  /* ===================== REC-105 / D-373 · THE FIFTH PARAMETER ==============
+   *
+   * `captureBounds` is a Map from a leg's TARGET to that target's entry in
+   * `earnedBasisRegistry`'s capture arm — the SAME function `op=earnedbasis`
+   * answers from, and the same one `#versionLegsAsMembers` has consulted since
+   * REC-88. Given null — which is what `#versionStrength` and
+   * `op=suggest` pass, because they do not build one — every line below
+   * behaves EXACTLY as it did before this item, to the byte.
+   *
+   * WHY THIS IS NOT A REGRESSION, said once and at the site. Before REC-88 this
+   * walk and that registry AGREED and BOTH WERE WRONG: a leg citing a document
+   * this plane had itself OCR'd at a measured fidelity could publish a capture
+   * letter stronger than that fidelity supports, which is DEC-4's own rule
+   * (framework Part II Appendix A.1, *"fidelity bounds the capture axis as its
+   * weakest link, no third scale"*) going unenforced. REC-88 corrected the
+   * registry and NAMED the residue as D-373. This corrects the second read.
+   * **Nothing is reverted here and no letter is ever raised** — `captureBound`
+   * never raises, this capping only ever lowers, and the untranscribed case is
+   * byte-identical by construction.
+   *
+   * WHY IT IS A PARAMETER RATHER THAN A CALL INSIDE THE LOOP. REC-88 named the
+   * boundary: the VERSION PATH IS UNTOUCHED, and it is REC-12/REC-42's region.
+   * A registry call made here would reach it through the recursion — a version
+   * overrides only the TOP level's legs and every sub-inquiry below reads its
+   * own stored basis — so the version's answer would have moved. Carrying the
+   * resolution on a parameter the version path does not pass makes that
+   * boundary STRUCTURAL rather than a promise in a comment: the version path
+   * cannot reach this code, which is a stronger statement than "it was not
+   * edited" and is the one the row asked for.
+   *
+   * AND IT IS ONE CALL FOR THE WHOLE WALK, NOT ONE PER LEG. `#captureBoundsFor`
+   * collects the walk's whole target set first and asks once — the shape
+   * `earnedBasisRegistry` was built in (bounded by the targets asked about, two
+   * indexed reads per call). D-373 named both options and this is the one it
+   * preferred. */
+  #strengthWalk(bundleId, depth, bound, legsOverride = null, captureBounds = null) {
     const legs = legsOverride ?? (this.basisFor(bundleId).legs ?? []);
     const members = { capture: [], connection: [] };
     const exhausted = { capture: [], connection: [] };
@@ -20436,11 +20557,27 @@ export class Store extends DurableObject {
            would be the record failing to hold its own past. */
         const noReferent = axis === "capture" && isInquiry;
         if (noReferent && !onAxis) continue;
+        const stated = onAxis && !noReferent ? (leg.grade ?? null) : null;
+        /* REC-105 / D-373 · THE CAPTURE AXIS ASKS THE REGISTRY. Only the
+           CAPTURE axis, only a leg that actually carries a letter on it, and
+           only when a caller built the map — the connection axis is untouched
+           here, because its earned answer is a VALUE the write already pins in
+           value mode, not a ceiling this read has to apply.
+           NO BACKTICKS IN A COMMENT INSIDE THIS METHOD'S BODY, and it is not a
+           style rule: analystvocab.test.mjs lifts this method's template
+           literals with a regex that cannot tell a comment's backticks from
+           code's, so a backticked identifier here enters the MEMBER-FACING
+           corpus and is classified as prose. Measured on this item's own first
+           full run, which went red on three such words. */
+        const resolved = captureBounds && axis === "capture" && stated != null
+          ? Store.#capturedAt(stated, captureBounds.get(leg.target_id), leg.target_id)
+          : null;
         members[axis].push({ ...site, via: "leg",
-          grade: onAxis && !noReferent ? (leg.grade ?? null) : null,
+          grade: resolved ? resolved.grade : stated,
           why: noReferent
             ? `the target is an inquiry, not a document, so a capture grade on this leg has no referent`
             : leg.grade == null ? `the leg carries no grade`
+            : resolved && resolved.why ? resolved.why
             : onAxis ? null
             : `the leg's grade is on the ${leg.grade_axis} axis` });
       }
@@ -20455,7 +20592,12 @@ export class Store extends DurableObject {
             why: `the walk reached its depth bound of ${bound} here` });
         continue;
       }
-      const sub = this.#strengthWalk(leg.target_id, depth + 1, bound);
+      /* THE MAP TRAVELS DOWN. A sub-inquiry's legs rest on documents too, and a
+         pair inherited from a level that did not ask the registry would carry
+         the uncorrected letter up through a corrected one — the same drift one
+         hop lower. The collector gathered the WHOLE walk's targets, so the
+         entry is already in hand and no second read happens here. */
+      const sub = this.#strengthWalk(leg.target_id, depth + 1, bound, null, captureBounds);
       for (const axis of Store.STRENGTH_AXES) {
         const s = sub[axis];
         if (s.state === "undetermined") {
@@ -20485,7 +20627,20 @@ export class Store extends DurableObject {
   strengthOf(bundleId) {
     if (!bundleId) return { ok: false, reason: "NO_ID", detail: "strength requires ?id=" };
     const bound = Store.QUEUE_ANCESTOR_DEPTH;
-    const pair = this.#strengthWalk(bundleId, 0, bound);
+    /* REC-105 / D-373: THE ONE PLACE THE RESOLUTION IS TURNED ON, and it is
+       this function rather than the walk because this function IS the class.
+       `strengthOf()` is what the six consumers that must be RIGHT go through —
+       `op=inquirystrength`, the publication bar gate, the pair frozen into a
+       signed case, `op=inquiryground`'s before/after report, `op=reevaluations`'
+       strength block, and `#writeStrengthProjection`, which writes the cache
+       behind `query.mjs`'s indexed `capture:` selector. Every one of them is
+       corrected by this line and none of them needed editing, which is what it
+       means for `strengthOf()` to have been the authority all along. The two
+       walk callers that are NOT in the class — `#versionStrength` and
+       `op=suggest`'s candidate pair — hand the walk their own legs and
+       do not come through here, so they are untouched structurally. */
+    const pair = this.#strengthWalk(bundleId, 0, bound, null,
+      this.#captureBoundsFor(bundleId, bound));
     return { ok: true, bundleId, depth_bound: bound,
              capture: pair.capture, connection: pair.connection };
   }

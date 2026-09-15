@@ -237,7 +237,26 @@ const SPANS = {
   groundResult: liftMethod(storeSrc, "static #groundResult(ground, members, exhausted)"),
   namedMember:  liftMethod(storeSrc, "static #namedMember(m)"),
   weakestOf:    liftMethod(storeSrc, "static #weakestOf(members)"),
-  strengthWalk: liftMethod(storeSrc, "#strengthWalk(bundleId, depth, bound, legsOverride = null)"),
+  /* CORRECTED 2026-09-15 by REC-105, NEVER EXEMPTED, and the old anchor was
+     WRONG rather than merely stale: it spelled `#strengthWalk`'s signature
+     PARAMETER FOR PARAMETER, so adding a fifth parameter made `liftMethod`
+     return null and this whole file lifted ZERO sentences from the method whose
+     prose it exists to classify. THE FLOOR CAUGHT IT — §4a's `floor 4` and ARM
+     S's own "the span was found at all" both fired on the same run, which is
+     the instrument working exactly as `derivation-bounds.test.mjs` did for
+     REC-88 one wave earlier. The anchor is now the shortest prefix that is
+     still unique in the file (the method name plus its first parameter), so a
+     later parameter cannot hide the method again; ARM S's runaway-span check
+     below is what keeps a shorter anchor honest. */
+  strengthWalk: liftMethod(storeSrc, "#strengthWalk(bundleId, depth, bound,"),
+  /* ADDED 2026-09-15 by REC-105, AND IT IS NOT AN EXTENSION FOR ITS OWN SAKE.
+     That item composes a member-facing `why` for a capture leg the record can
+     support no more than a weaker letter for, and it composes it HERE rather
+     than in `#strengthWalk` — so without this span a NEW sentence printed at
+     all five of D-269's channels would sit outside the one instrument that
+     classifies them. A sentence the sweep cannot see is the defect this file
+     exists to catch, arriving through the sweep's own blind spot. */
+  capturedAt:   liftMethod(storeSrc, "static #capturedAt(stated, earned, targetId)"),
   gradeRank:    liftField(storeSrc, "static #GRADE_RANK = Object.fromEntries("),
   depthBound:   liftField(storeSrc, "static QUEUE_ANCESTOR_DEPTH ="),
 };
@@ -250,11 +269,12 @@ section("ARM S", () => {
     namedMember: ["bundle_id", "target_id"],
     weakestOf: ["GRADE_RANK"],
     strengthWalk: ["why:", "STRENGTH_AXES"],
+    capturedAt: ["why:", "GRADE_RANK"],
     gradeRank: ["BASIS_GRADES"],
     depthBound: ["6"],
   };
   const FLOOR = { axisResult: 2000, groundResult: 400, namedMember: 300, weakestOf: 200,
-                  strengthWalk: 1500, gradeRank: 40, depthBound: 20 };
+                  strengthWalk: 1500, capturedAt: 400, gradeRank: 40, depthBound: 20 };
   for (const [k, span] of Object.entries(SPANS)) {
     ok(`ARM S: the span for ${k} was found at all`, typeof span === "string" && span.length > 0);
     if (typeof span !== "string") continue;
@@ -268,7 +288,7 @@ section("ARM S", () => {
      however plausible its bytes look, and this is the cheap check that sees it
      where a length floor cannot. */
   const ANCHORS = ["static #axisResult(", "static #groundResult(", "static #namedMember(",
-                   "static #weakestOf(", "#strengthWalk(bundleId"];
+                   "static #weakestOf(", "#strengthWalk(bundleId", "static #capturedAt("];
   for (const [k, span] of Object.entries(SPANS)) {
     if (typeof span !== "string") continue;
     const swallowed = ANCHORS.filter((a) => span.indexOf(a) > 0);
@@ -338,7 +358,9 @@ const words = (t) => (String(t).toLowerCase().match(WORD) || []);
    and must never be allowed to sanction its own vocabulary. */
 function machineLexicon() {
   const region = [SPANS.axisResult, SPANS.groundResult, SPANS.namedMember,
-                  SPANS.weakestOf, SPANS.strengthWalk].join("\n");
+                  SPANS.weakestOf, SPANS.strengthWalk,
+                  /* REC-105: the capture bound's own site, for the same reason it is a span. */
+                  SPANS.capturedAt].join("\n");
   const noStrings = region
     .replace(/`(?:[^`\\]|\\.)*`/g, " ")
     .replace(/"(?:[^"\\]|\\.)*"/g, " ")
@@ -620,12 +642,16 @@ section("§4 VERDICT", () => {
    Stated as such: this can see the words but cannot prove which branch renders
    each. The one that carries `detail` is driven in §3 instead. */
 section("§4a WHY SENTENCES", () => {
-  const span = SPANS.strengthWalk || "";
+  /* REC-105: BOTH SITES, because the leg-level `why` is now composed at two.
+     Joining the spans rather than adding a second section keeps ONE corpus and
+     ONE floor — a second section would have been a second place for a sentence
+     to be missing from. */
+  const span = `${SPANS.strengthWalk || ""}\n${SPANS.capturedAt || ""}`;
   /* Flatten: strip interpolations, then join every template literal so no `+`
      boundary can hide a phrase. Over-joining is the SAFE direction here — it
      can only add a false positive, which gets printed and argued with. */
   const lits = (span.match(/`(?:[^`\\]|\\.)*`/g) || []).map((s) => s.slice(1, -1).replace(/\$\{[^}]*\}/g, " "));
-  ok(`§4a REACH: ${lits.length} template literals lifted from \`#strengthWalk\` (floor 4)`, lits.length >= 4);
+  ok(`§4a REACH: ${lits.length} template literals lifted from \`#strengthWalk\` + \`#capturedAt\` (floor 6)`, lits.length >= 6);
   const joined = lits.join("");
   const hits = analystHits(joined);
   ok(`§4a: the leg-level \`why\` prose carries no analyst word either — found [${hits.map((h) => h.token).join(", ")}]`,

@@ -7770,3 +7770,114 @@ at one grade and the pin asserted the leg earned a stronger one, under a heading
 "the pre-item answer". **The pre-item answer WAS the overclaim.** The over-strictness half beside
 it is now stronger rather than weaker — a publisher-typed document hashes identically on a
 pristine checkout and on this tree, which is a cross-checkout identity and not a self-comparison.
+
+## IC-102 · I3: `op=inquirystrength`'s CAPTURE AXIS IS RESOLVED THROUGH `earnedBasisRegistry` — the derived capture letter can now be a WEAKER LETTER, or the leg can become INERT, for a leg resting on a document whose text a machine derived; and the publication bar can REFUSE a case it previously admitted · PROPOSED 2026-09-15 (REC-105, closing D-373) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane -> UI, the op contracts). Measured on this item's base
+  `origin/main` at `58b77ea`: **16.0.0** (IC-96 ACCEPTED, BREAKING). **Proposed as BREAKING —
+  16.0.0 -> 17.0.0**, on IC-25's settled rule and on IC-96's own precedent: *a refusal where
+  none stood before is a break WHATEVER the measured impact*, and this item puts one at the
+  publication bar. The measured impact on the live instance is again ZERO, and the zero is
+  recorded as EVIDENCE rather than offered as an argument for a smaller bump.
+- **Proposer:** RECORD, worker `agent-ab0036215c20a9dd1`, 2026-09-15, from QUEUE REC-105
+- **Owner to land it:** `RECORD` (owner and proposer)
+- **Consumers to answer:** `UI` (any surface rendering a derived capture letter, the inquiry
+  page's axis panel, the published case's axis panel), `SKILL` (the investigative run reads
+  the pair), `CASE` (the publication bar gate and the pair frozen into a signed case),
+  `DIST` (served surfaces), `RECORD`.
+
+**THIS IS NOT A REGRESSION AND THE ENTRY SAYS SO FIRST, because the shape is easy to misread.**
+Before REC-88 the ordinary strength walk and `earnedBasisRegistry` AGREED — **and both were
+wrong**, publishing a capture grade stronger than the transcription fidelity could support.
+REC-88 corrected the registry (IC-96, I3 16.0.0) and NAMED the residue: the walk still reads a
+leg's authored letter from the stored `inquiry_basis.grade` column. **So the drift IC-96 left is
+the distance between a CORRECTED read and an UNCORRECTED one, and this item corrects the second.
+Nothing about REC-88 is reverted and no letter is raised anywhere.**
+
+**THE RULE IS NOT NEW.** DEC-4, restated as CPDF-10 and carried by
+`BIO_Content_Framework_v0_10.md` Part II Appendix A.1's ruling row: *"fidelity bounds the capture
+axis as its weakest link, no third scale."* IC-96 made `earnedBasisRegistry` ask it. This item
+makes the read a MEMBER LOOKS AT ask the same function, so the two cannot answer differently.
+
+**WHAT CHANGES ON THE WIRE, exactly three shapes and no more.** For a capture-axis leg inside
+`op=inquirystrength`'s (and every other `strengthOf()` consumer's) answer:
+
+1. **THE REGISTRY STATES NO CEILING FOR THE TARGET** — the record holds no registered capture of
+   that document at all, so `earned.capture` has NO ENTRY. **BYTE-IDENTICAL to before this item.**
+   There is no ceiling to bound by, and inventing one would be a fence tighter than its rule. This
+   is also the shape the write already refuses for a graded leg ("the record holds no registered
+   capture for that document"), so it is unreachable at the write and reachable only through
+   append-only history.
+2. **THE REGISTRY STATES A CEILING** — the leg's authored letter is CAPPED at it, exactly as
+   `#versionLegsAsMembers` has capped a version's legs since REC-88. A letter at or below the
+   ceiling is **byte-identical**, `why` included; a letter ABOVE it falls to the ceiling and the
+   member carries a `why` naming what bound it. Since `checkEarnedLeg` refuses an over-ceiling
+   letter at the write, the only letters that actually move are those on documents RE-READ after
+   the leg was written — which is D-373's whole shape.
+3. **THE CEILING IS UNDETERMINED** (a transcription with no measured fidelity) — the member's
+   grade becomes `null` and the leg is INERT: named in `not_load_bearing` with the registry's own
+   sentence, which names the empty level. It is not dropped and it is not invented. **This is the
+   arm IC-96 already accepted in the version path**, reused rather than re-decided, so the two
+   reads of one fact cannot say different things about it.
+
+**THE CONSEQUENCE THAT IS A REFUSAL, AND IT IS WHY THIS IS MAJOR.** `strengthOf()` has SIX
+consumers in `store.mjs` and two of them are not reads:
+
+- **the publication bar gate** (`BELOW_PROJECT_STRENGTH`) compares a load-bearing finding's
+  derived pair against the project's declared bar. A case whose finding rests on a document this
+  plane OCR'd at C, in a project declaring `capture: B`, **is refused at `op=publish` where it
+  previously published.** That is a refusal where none stood before and it is the correct
+  direction — the alternative is publishing a case whose stated standard was met by a letter the
+  record will not accept if the member re-promotes.
+- **the pair FROZEN into a signed case** is taken from the same walk, so a case published AFTER
+  this lands freezes the bounded letter. **A case ALREADY published is not re-graded and must not
+  be** (DEC-12); §12's *"a frozen version's displayed arithmetic can honestly move beneath it"* is
+  what covers the difference, and `#versionLegsAsMembers` already publishes the authored letter
+  beside the effective one so a reader can see both.
+
+The other four are reads: `op=inquirystrength`, `op=inquiryground`'s before/after strength report,
+`op=reevaluations`' per-obligation `strength` block, and `#writeStrengthProjection`, which writes
+the projection CACHE behind `query.mjs`'s indexed `capture:` selector.
+
+**THE VERSION PATH IS UNTOUCHED, AND STRUCTURALLY RATHER THAN BY PROMISE.** `op=versionstrength`
+resolves its legs through `#versionLegsAsMembers` — which has consulted this registry since
+REC-88 — and hands them to the walk as a `legsOverride`. The resolution this item adds is carried
+on a SEPARATE parameter that `#versionStrength` does not pass, so the version path cannot reach
+the new code at all. That is REC-12/REC-42's region and REC-88 named the boundary deliberately.
+
+**THE CONSUMER IMPACT, MEASURED ON THE PROJECT INSTANCE'S OWN DATA BY THIS ITEM AND NOT COPIED
+FROM IC-96.** `bio-plane/test/rec88-instance-census.mjs` — REC-88's read-only probe, REUSED
+UNCHANGED because it already asks exactly this item's question — run against store `bio` on
+2026-09-15, build **0.58.0** serving: **31 bundles · 1 inquiry · 0 basis legs across it · 1
+inquiry bundle carrying NO basis block at all · 0 captures carrying a text chain anywhere in the
+store.** So **ZERO derived answers move and ZERO cases become unpublishable today.** The census
+SELF-CHECKS its parser against a synthetic basis block first (3 legs / 2 capture legs / 0 movers)
+and exits rather than printing a zero it could not have distinguished from a failure to look.
+**Two items measuring the same instance by the same instrument on the same day is a POINTER, not
+a second witness** — what makes this a measurement is that it was RUN here, against the account,
+rather than read out of IC-96.
+
+**MEASURED ON A FIXTURE, because the live zero proves nothing about the code.**
+`bio-plane/test/rec105-reader-census.mjs` drives five document shapes through the ops on a
+PRISTINE `origin/main` at `58b77ea` and, after the landing, on this tree. On the pristine tree the
+two reads DISAGREE exactly as D-373 says: registry `C` where the walk says `capture B` (digest
+`6ebfc73731637983`), and registry `null` where the walk says `capture B` (digest
+`1de8089ee4ec2c6a`). The over-strictness shapes — publisher-typed (`413f988f0405bb16`), an
+UNGRADED leg on an OCR'd document (`99fc3f2132d135fe`) and a document the record holds no bytes of
+(`688bf8d4e773bd00`) — are the ones that must hash the same on both checkouts.
+
+**WHAT THIS IC CORRECTS IN D-373's OWN CLASS STATEMENT, because a class with a wrong member is how
+the next sweep misses a real one.** D-373 states the class as *"every consumer of `#strengthWalk`
+WITHOUT a `legsOverride` — `strengthOf` (`op=inquirystrength`, `op=strengthbarof`'s pair) and the
+queue-ancestor walk."* **Two of those three are not in the class, driven and grepped rather than
+reasoned:** `op=strengthbarof` answers `strengthBarOf` — the DECLARED BAR for a group or project
+(REC-14/DEC-17) — and computes no pair and calls `strengthOf` nowhere; and `#queueAncestors` walks
+`inquiry_basis` edges for GROUPING, computes no grade, and shares only the `QUEUE_ANCESTOR_DEPTH`
+constant with the walk. The real class is the six `strengthOf()` call sites listed above. The
+third `#strengthWalk` caller, `op=suggest`'s candidate pair, DOES pass a `legsOverride` and
+is correctly outside.
+
+**REVERSAL, if this is rejected.** One line: have `strengthOf()` pass `null` where it now passes
+the resolved bound map. Every consumer then reads the stored letter exactly as it does today, the
+version path is unaffected either way, and D-373 reopens as the same row. That is precisely
+negative-control arm (a) and is therefore already measured rather than predicted.

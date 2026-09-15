@@ -344,10 +344,17 @@ t("RE-RUN over a source that DOES read the field, the same recogniser FINDS it �
 /* AND IT DOES NOT CITE PROSE. A sweep that reads its own comments would report
    a reader here, and this repository has already had a sweep arm fail by
    citing itself. */
+/* CORRECTED 2026-09-15 by REC-105, NEVER EXEMPTED: this anchor spelled
+   `#strengthWalk`'s signature PARAMETER FOR PARAMETER, so a fifth parameter
+   (`captureBounds`, D-373) made the replace match nothing and the arm NEVER
+   ARMED. The suite caught it by name on its own next line — "the comment-only
+   mutation applied" — which is the finding this file's own comment says an arm
+   that never armed is. The anchor is now the method name plus its first
+   parameter, which is unique in the file and cannot be broken by a later one. */
+const WALK_ANCHOR = `  #strengthWalk(bundleId, depth, bound,`;
 const COMMENTED = STORE_RAW.replace(
-  `  #strengthWalk(bundleId, depth, bound, legsOverride = null) {`,
-  `  /* nothing here reads asserted_by, and this comment says so */\n`
-  + `  #strengthWalk(bundleId, depth, bound, legsOverride = null) {`);
+  WALK_ANCHOR,
+  `  /* nothing here reads asserted_by, and this comment says so */\n` + WALK_ANCHOR);
 t("the comment-only mutation applied", COMMENTED !== STORE_RAW, true);
 t("naming the field in a COMMENT inside the arithmetic does NOT register as a reader — the "
   + "comment-stripping is load-bearing, not decoration",

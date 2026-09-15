@@ -1,4 +1,5 @@
 /* NEGATIVE CONTROL: (run 2026-08-04, rec34-agent, FOUR arms, each broken ALONE in src/store.mjs and restored byte-identically; 48 pass when whole) (a) THE ITEM'S OWN — ANSWER FROM THE CACHED COLUMNS: in inquiryStrength replace `const s = this.strengthOf(id);` with `const c = this.#one("SELECT inquiry_capture_strength AS cg, inquiry_capture_state AS cs, inquiry_connection_strength AS ng, inquiry_connection_state AS ns FROM bundles WHERE bundle_id=?", id); const ax = (a, gr, st) => ({ axis: a, state: st, grade: gr, determined: st === "graded", weakest: null, load_bearing: 0, population: 0, not_load_bearing: [], depth_bound: Store.QUEUE_ANCESTOR_DEPTH, detail: "" }); const s = { ok: true, depth_bound: Store.QUEUE_ANCESTOR_DEPTH, capture: ax("capture", c.cg, c.cs), connection: ax("connection", c.ng, c.ns) };` -> 17 assertions fail. THE STALE READ IS NAMED: block 3's "the op moves the INSTANT the leg beneath is raised" wants B and GETS C, while its sibling "the CACHE is genuinely stale (the column still answers capture:C)" still PASSES — which is what proves the two are different sources rather than one. The source assertions name the swap itself ("the op's own code calls the derivation" -> false; "names NONE of the five cached columns" -> lists four), both byte-equality assertions fail, every named leg reads null, the depth sentence and undetermined_at vanish, and block 6 has nothing left to redact. (b) THE PROSE SWEEP — `const prose = (v) => v;` in #redactAxis -> 3 fail, dave receiving PROJ-2026-0001-secret inside `detail`/`why` SENTENCES while every id FIELD is still correctly null (REC-14's measured leak shape reproduced), and the failure "one level up, the inherited answer names no secret either" is the id that appears in NO field of the answer at all — carried up from two levels down inside an inherited leg's `why`. (c) THE SUBJECT ROW — `if (!this.#viewerSees(id, viewer))` -> `if (false)` -> 5 fail: dave is handed the secret project's NOT_AN_INQUIRY answer with `object_type: "project"` and its id spelled out in the detail, hidden-vs-absent stops being byte-identical, the forged-viewer probe flips, and the unstamped read answers instead of failing closed. (d) THE FIELD REDACTION — `static #MEMBER_ID_FIELDS = [];` -> 5 fail, the same secret id standing in `weakest.target_id` and in both not_load_bearing lists while the prose is clean: the two defences are independently breakable and each is loud, which is why they are separate. */
+/* NEGATIVE CONTROL: section 8 (REC-105 / D-373) — RUN 2026-09-15 by the REC-105 worker, SIX arms, each armed ALONE in `src/store.mjs` and restored from its OWN uniquely-named pristine copy, every restore verified byte-identical by sha256 AND by `cmp` AND by size (2,149,389 bytes, sha256 80ddb449096ef564, floored at 100 kB). ONE COMMAND EACH: `node test/nc-rec105.mjs <none|a|b|c|d|e>` from `bio-plane/` — the driver holds the patch, the DECLARATION and the declared-vs-actual check, so the next session re-runs an arm in one step instead of re-deriving how to break the subject. BASELINE ARM `none` = 68 pass / 0 fail / exit 0, and it exists because a driver whose every arm reports one number cannot tell six-arms-broken from six-arms-working. (a) THE ITEM'S OWN — `#captureBoundsFor` returns null, so `strengthOf()` hands the walk no bound and every leg reports its stored letter as it did before this item (also IC-102's one-line reversal) -> 61 pass, 7 FAIL, AS DECLARED: the two reads disagree again and the failure NAMES BOTH ANSWERS, labelled — `want {"walk":"C","registry":"C"} got {"walk":"B","registry":"C"}` — because a failure naming one answer is one a reader cannot act on. (b) THE CEILING APPLIED AS A VALUE RATHER THAN AS A CAP (the `<=` short-circuit removed) -> 61 pass, 7 FAIL, AS DECLARED, and it bit HARDER than declared in the correct direction: raising a weaker authored letter to the ceiling moved this suite's OWN pre-existing fixtures in sections 1 and 3 as well as section 8's over-strictness arms. (c) THE UNDETERMINED ARM DROPPED (an unmeasured transcription falls through and keeps its authored letter) -> 66 pass, 2 FAIL, AS DECLARED, both in 8b. (d) THE RECURSION DROPS THE BOUND MAP -> 67 pass, 1 FAIL, AS DECLARED, and it is the ONLY arm 8e catches — without 8e this item would have had a hole that read as working. (e) OVER-STRICTNESS — the SAME rule written in the registry's own `BASIS_GRADES.indexOf` idiom instead of `#GRADE_RANK` -> 68 pass, 0 FAIL, exit 0: correct work in a spelling this item did not anticipate PASSES. THREE FINDINGS ABOUT THE ARMS THEMSELVES — recorded rather than smoothed, kept at each arm in the driver, and deliberately NOT written as an enumerated list, because `countArms` reads one and this declaration arms FIVE, so numbering them would put slack in a ratchet built to carry none (measured with the register itself: transitions 5, enumerations 8 before this wording). FINDING ONE: arm (a) was first declared to break “and the leg it is sent to check is the ACTUAL one” and did NOT: that assertion reads `inherited_from`/`through`, which name WHICH leg set the grade whatever LETTER is reached, so it is blind to this break BY CONSTRUCTION and belongs in the held-open half. FINDING TWO: arm (b) was first declared to break “a publisher-typed document's leg is byte-identical to the DO-internal derivation” and did NOT — and this is the useful one: that equality compares `op=inquirystrength` against the ungated `/strength` route and BOTH GO THROUGH `strengthOf()`, so a change to the arithmetic damages both sides equally and the equality survives. It is a real pin on the GATE and it is STRUCTURALLY BLIND to the derivation beneath it — the costs-nothing rule in miniature. The assertion that does see that break is “it carries NO new key”. FINDING THREE: arm (c)'s first spelling DID NOT ARM AS DECLARED: a bare `return null;` left the undetermined branch's object literal standing as an unconditional return, so every entry came back null — 51 pass / 17 fail, breaking THREE of its four declared held-open assertions, which is precisely the signal the held-open half exists to give. The arm was rewritten surgically and re-run. */
 /* REC-34: `op=inquirystrength` — the GATED control-plane read of REC-12's
  * derived pair. UI-11's delegation (measured: no op served the pair for a
  * WORKING inquiry) and UI-12's hard blocker (its live preview re-queries as a
@@ -470,6 +471,196 @@ console.log("\n--- 7. the cost shape, for UI-12's live preview (measured, not as
     + `preview re-queries per selection and pays this each time.`);
   t("the read is genuinely non-mutating: the op table says so and the cached column never moves",
     /inquirystrength: \{ classes: \["admin", "member", "probe"\],      mutating: false \}/.test(INDEX_SRC), true);
+}
+
+console.log("\n--- 8. REC-105 / D-373: the capture axis is resolved through `earnedBasisRegistry` ---");
+{
+  /* WHAT THIS SECTION IS FOR, and it is worth saying because the shape reads as
+     a regression at first glance and is not one. Before REC-88 this walk and
+     `earnedBasisRegistry` AGREED about a leg's capture letter — and BOTH WERE
+     WRONG, publishing a letter stronger than the transcription fidelity can
+     support, which is DEC-4 (framework Part II Appendix A.1: *fidelity bounds
+     the capture axis as its weakest link, no third scale*). REC-88 corrected
+     the registry and IC-96 carried the drift it left as D-373. THIS SECTION
+     DRIVES THE SECOND READ BEING CORRECTED. Nothing is reverted and no letter
+     is ever raised.
+
+     THE EQUALITY IS DRIVEN, NEVER ASSERTED — which is the trap this item's row
+     names by name. Showing the two reads agreeing on a document where they
+     would have agreed anyway costs nothing to produce and is not evidence. So
+     every arm below is a BEFORE and an AFTER over the SAME leg and the SAME
+     store: the leg is written while its document is publisher-typed, the two
+     reads agree at the ceiling, THE DOCUMENT IS THEN RE-READ, and the two reads
+     are asked again. The leg's own bytes never move — the record is append-only
+     and nothing rewrites a member's authored letter — so any change in the
+     answer is the RECORD's reading of it changing, which is the whole claim. */
+  /* THE RE-READ IS AN EDITION, NOT A SECOND CREATION, so each promotion names
+     the bundle sha it builds on — a second `base: null` against a live bundle is
+     refused EXISTS, which is the record refusing to lose its own history. */
+  const HEAD = new Map();
+  const provPromote = async (tok, id, text, chain) => {
+    const prov = JSON.stringify({ documents: [{
+      capture: { sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 },
+      reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW,
+                 entities: [], facts: {}, ...(chain === undefined ? {} : { text_source: chain }) } }] });
+    const r = await POST(`op=promote&token=${tok}`, {
+      bundleId: id, base: HEAD.get(id) ?? null, snapKey: `${id}-${sha(String(chain)).slice(0, 8)}`, author: "suite",
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
+              { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+      register: [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }],
+      meta: { object_type: "information", group: "believe-in-oakland", title: `Bundle ${id}`,
+              current_state: "collected", created: NOW, last_updated: LATER } });
+    if (!r.result?.ok) throw new Error(`provPromote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
+    HEAD.set(id, r.result.bundleSha);
+    return r.result;
+  };
+  const earnedCap = async (tok, inq, doc) => {
+    const r = (await GET(`op=earnedbasis&token=${tok}&id=${inq}`)).body.result;
+    return (r && r.earned && r.earned.capture ? r.earned.capture[doc] : null) ?? null;
+  };
+  const OCR_C = [{ step: "pixels" },
+    { step: "ocr", engine: "tesseract", version: "5.3.4", cap: "C", confidence: { basis: "none" } }];
+  const UNMEASURED = [{ step: "pixels" },
+    { step: "ocr", engine: "tesseract", version: "5.3.4", confidence: { basis: "none" } }];
+
+  /* ---- 8a. THE HEADLINE: the walk CHANGES ITS ANSWER where the registry bounds it. */
+  const D_OCR = "INFO-2026-0910-later-ocrd";
+  const I_OCR = "INQ-2026-0910-later-ocrd";
+  await provPromote(carol, D_OCR, infoMd(D_OCR), undefined);        /* read, NO chain */
+  const legOcr = [g(D_OCR, "B", "capture")];
+  await promote(carol, I_OCR, inquiryMd(I_OCR, { refs: [D_OCR], legs: legOcr }), "inquiry");
+
+  const beforeWalk = (await pair(carol, I_OCR)).body.result.capture;
+  const beforeReg = await earnedCap(carol, I_OCR, D_OCR);
+  t("BEFORE the re-read the two reads already agree, and the letter is the ceiling",
+    [beforeReg.grade, beforeWalk.state, beforeWalk.grade], ["B", "graded", "B"]);
+
+  /* THE ONLY ACT BETWEEN THE TWO MEASUREMENTS. The document's text is now
+     derived by a machine whose fidelity is MEASURED. The leg is not touched. */
+  await provPromote(carol, D_OCR, infoMd(D_OCR), OCR_C);
+
+  const afterWalk = (await pair(carol, I_OCR)).body.result.capture;
+  const afterReg = await earnedCap(carol, I_OCR, D_OCR);
+  t("the registry bound MOVED and says so by name",
+    [afterReg.grade, afterReg.bounded_by], ["C", "CAPTURE_BOUNDED_BY_FIDELITY"]);
+  /* THE ARM THE ROW ASKED FOR: the walk CHANGED its answer. An assertion that
+     only showed the two reads equal would have passed on the pristine tree for
+     the publisher-typed document below and proved nothing. */
+  t("AND THE WALK CHANGED ITS ANSWER — this is the item, and it is a CHANGE rather than an equality",
+    [beforeWalk.grade, afterWalk.grade], ["B", "C"]);
+  /* BOTH FIGURES, LABELLED, IN THE ASSERTION ITSELF — because the negative
+     control for this item removes the consultation and this is the assertion
+     that has to fail LOUDLY when it does. A failure naming one answer tells a
+     reader that something is wrong; a failure naming BOTH tells them WHAT is
+     wrong and which surface to go to, which is the difference between a report
+     they can act on and one they have to re-derive. */
+  t("the two reads agree AFTER the bound moved, which is D-373 closed",
+    { walk: afterWalk.grade, registry: afterReg.grade },
+    { walk: afterReg.grade, registry: afterReg.grade });
+  t("the leg's own AUTHORED letter is untouched — the record is append-only and nothing rewrote it",
+    (await doGet(`basis?id=${I_OCR}`)).legs.map((l) => l.grade), ["B"]);
+  t("the axis still names the leg that sets it, at the bounded letter",
+    [afterWalk.state, afterWalk.weakest?.target_id ?? null, afterWalk.weakest?.grade ?? null],
+    ["graded", D_OCR, "C"]);
+  t("and the member is told WHAT bound it, in the registry's own words rather than a second spelling",
+    [/no more than/.test(afterWalk.weakest?.why ?? ""),
+     /derived by a machine/.test(afterWalk.weakest?.why ?? "")], [true, true]);
+
+  /* ---- 8b. AN UNMEASURED TRANSCRIPTION IS UNDETERMINED, STATED, AND INERT. */
+  const D_UNM = "INFO-2026-0911-unmeasured";
+  const I_UNM = "INQ-2026-0911-unmeasured";
+  await provPromote(carol, D_UNM, infoMd(D_UNM), undefined);
+  await promote(carol, I_UNM, inquiryMd(I_UNM, { refs: [D_UNM], legs: [g(D_UNM, "B", "capture")] }), "inquiry");
+  const unmBefore = (await pair(carol, I_UNM)).body.result.capture;
+  await provPromote(carol, D_UNM, infoMd(D_UNM), UNMEASURED);
+  const unmAfter = (await pair(carol, I_UNM)).body.result.capture;
+  const unmReg = await earnedCap(carol, I_UNM, D_UNM);
+  t("the registry says UNDETERMINED with the empty level named",
+    [unmReg.grade, unmReg.determined, unmReg.undetermined_because],
+    [null, false, "CAPTURE_FIDELITY_UNMEASURED"]);
+  /* DEC-18 AND IC-96's OWN ARM, REUSED RATHER THAN RE-DECIDED. A leg the record
+     can support no letter for is INERT — present, NAMED, not load-bearing — and
+     it is not dropped and not invented. `#versionLegsAsMembers` has answered
+     this case exactly this way since REC-88, and two reads of one fact that
+     answer it differently is the defect this item exists to close. */
+  t("the walk moved from a graded axis to an UNRATED one and the leg is NAMED as not load-bearing",
+    [unmBefore.state, unmBefore.grade, unmAfter.state, unmAfter.grade,
+     unmAfter.not_load_bearing.map((m) => m.target_id)],
+    ["graded", "B", "unrated", null, [D_UNM]]);
+  t("and the empty level travels with it, so a member is told what to go and get",
+    [/UNMEASURED/.test(unmAfter.not_load_bearing[0]?.why ?? ""),
+     /measured fidelity/.test(unmAfter.not_load_bearing[0]?.why ?? "")], [true, true]);
+
+  /* ---- 8c. OVER-STRICTNESS: correct work in a shape this item did not set out
+     to change must answer EXACTLY as it did. On the live instance that is EVERY
+     leg there is — `test/rec88-instance-census.mjs` found 0 captures carrying a
+     transcription chain anywhere in store `bio` — so a change here would be a
+     change nobody asked for, reaching every member for no gain. */
+  const D_PUB = "INFO-2026-0912-publishertyped";
+  const I_PUB = "INQ-2026-0912-publishertyped";
+  await provPromote(carol, D_PUB, infoMd(D_PUB), undefined);
+  await promote(carol, I_PUB, inquiryMd(I_PUB, { refs: [D_PUB], legs: [g(D_PUB, "B", "capture")] }), "inquiry");
+  const pubWalk = (await pair(carol, I_PUB)).body.result.capture;
+  t("a publisher-typed document's leg is byte-identical to the DO-internal derivation, key for key",
+    JSON.stringify(pubWalk), JSON.stringify((await doGet(`strength?id=${I_PUB}`)).capture));
+  t("and it carries NO new key: no bound, no reason, nothing that says the record looked",
+    [pubWalk.grade, "bounded_by" in pubWalk, pubWalk.weakest?.why ?? null],
+    ["B", false, null]);
+  /* A LEG THAT CLAIMS NOTHING ON A DOCUMENT THE BOUND WOULD HAVE MOVED. The gate
+     does not pressure anyone into inventing an attribution (CLAUDE.md), so an
+     ungraded leg is legal, is inert by DEC-18, and this item must leave it
+     exactly where DEC-18 put it rather than promoting it to the ceiling. */
+  const I_BARE = "INQ-2026-0913-ungraded-on-ocrd";
+  await promote(carol, I_BARE, inquiryMd(I_BARE, { refs: [D_OCR], legs: [bare(D_OCR)] }), "inquiry");
+  const bareWalk = (await pair(carol, I_BARE)).body.result.capture;
+  t("an UNGRADED leg on the very document whose bound moved is inert and says the old reason",
+    [bareWalk.state, bareWalk.grade, bareWalk.not_load_bearing.map((m) => m.why)],
+    ["unrated", null, ["the leg carries no grade"]]);
+  /* THE DIRECTION THAT MATTERS MOST, and it is the one a careless cap gets
+     wrong: the earned entry is a CEILING, not a value. A member who states a
+     WEAKER letter is giving their own account of a poorer route and the record
+     must not overwrite it with the maximum — that would be the plane asserting
+     a ceiling as a measurement, which is the overclaiming direction. */
+  const I_WEAK = "INQ-2026-0914-weaker-than-ceiling";
+  await promote(carol, I_WEAK, inquiryMd(I_WEAK, { refs: [D_PUB], legs: [g(D_PUB, "C", "capture")] }), "inquiry");
+  const weakWalk = (await pair(carol, I_WEAK)).body.result.capture;
+  t("a leg stating a WEAKER letter than the ceiling keeps its own, and is not raised to the maximum",
+    [weakWalk.state, weakWalk.grade, weakWalk.weakest?.why ?? null], ["graded", "C", null]);
+
+  /* ---- 8e. THE RECURSION CARRIES THE BOUND, and this arm exists because
+     without it the item would have a hole that reads as working. A leg to
+     another inquiry contributes THAT inquiry's derived pair per axis. If the
+     bound map stopped at the top level, an inquiry resting on I_OCR would
+     inherit the UNCORRECTED letter while I_OCR itself answered the corrected
+     one — the same drift D-373 names, one hop down, inside a single answer. */
+  const I_PARENT = "INQ-2026-0915-rests-on-the-bounded-one";
+  await promote(carol, I_PARENT,
+    inquiryMd(I_PARENT, { refs: [I_OCR], legs: [bare(I_OCR)] }), "inquiry");
+  const parentWalk = (await pair(carol, I_PARENT)).body.result.capture;
+  t("an inquiry resting on the bounded one INHERITS the bounded letter, not the authored one",
+    [parentWalk.state, parentWalk.grade], ["graded", "C"]);
+  t("and the leg it is sent to check is the ACTUAL one, two levels down",
+    [parentWalk.weakest?.inherited_from ?? null, parentWalk.weakest?.through ?? null],
+    [I_OCR, D_OCR]);
+
+  /* ---- 8d. THE VERSION PATH IS UNTOUCHED, AND STRUCTURALLY RATHER THAN BY
+     PROMISE. REC-88 named the boundary and QUEUE REC-105 repeats it: the version
+     path is REC-12/REC-42's region. `#versionLegsAsMembers` has resolved a
+     version's legs through this same registry since REC-88 and hands them to the
+     walk as a `legsOverride`; the resolution this item adds rides a SEPARATE
+     parameter that `#versionStrength` does not pass, so the version path cannot
+     REACH the new code. These two pins are what make that a property of the
+     source rather than a sentence — a call added inside the walk, or a bounds
+     map handed to the version path, fails here by name. */
+  t("`strengthOf` is the ONLY caller that builds the bound map",
+    (STORE_SRC.match(/#captureBoundsFor\(/g) ?? []).length, 2);   /* the definition and the one call */
+  t("and the walk itself asks the registry NOWHERE — one call for the whole walk, never one per leg",
+    /#strengthWalk\(bundleId, depth, bound, legsOverride = null, captureBounds = null\) \{[\s\S]*?\n  \}/
+      .exec(STORE_SRC)?.[0].includes("earnedBasisRegistry("), false);
+  t("the version path's own walk call passes NO bound map, so it reads exactly as it did",
+    /#strengthWalk\(inq, 0, bound, resolved\.legs\)/.test(STORE_SRC), true);
+  t("and so does op=suggest's candidate pair",
+    /#strengthWalk\(target, 0, Store\.QUEUE_ANCESTOR_DEPTH, walkLegs\)/.test(STORE_SRC), true);
 }
 
 await mf.dispose();
