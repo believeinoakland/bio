@@ -344,6 +344,38 @@ wrong, or piles up unintegrated, costs a lot. Optimise for pieces that land
 green and meet every objective, policy and standard — the only throughput that
 counts.
 
+### Why integration is a ROLE and not a queue-flip
+
+Stated because the question recurs — *could a worker not merge its own branch?* —
+and because 2026-09-15 produced the receipts for the answer, which is narrower
+than "integration is hard". **A class of true statements exists that no branch
+can make and only the merge can.** Everything else an integrator does is
+bookkeeping a better tool could take; that class is not, and it is why one
+reader of the union exists.
+
+Two receipts from one wave of eight, and in both the sharp part is that NOTHING
+WAS WRONG ON ANY BRANCH:
+
+- **The shared floor file conflicted three times, with four honest readings —
+  1065, 1066, 1068, 1087 — every one correct on the tree where it was taken, and
+  the merged tree's figure a fifth number none of them could have known.** There
+  was no error to catch. There was a question none of them was positioned to
+  ask. Summing the deltas would have produced 1074 and installed permanent slack
+  in a ratchet whose entire purpose is having none (D-238's own case, arriving
+  three times in a day).
+- **Four workers minted the SAME measurement id, and each was free at the moment
+  it was minted.** The collision exists only in the union, and the union has
+  exactly one reader. It was found by counting headings after a third collision
+  surfaced one merge later — not by any branch noticing.
+
+The general form, which is what a session should carry away: **a fact about the
+union is not discoverable from any member of it.** A worker that verifies its
+own tree perfectly still cannot see a floor that moved, an id that was taken, an
+artifact built against a sibling's build, or a ledger row a sibling closed. So
+the integrator's real work is the questions only the merged tree can answer, and
+a session tempted to skip it should ask which of those four it is prepared to
+publish wrong.
+
 
 ## LIVENESS: STATE DRIVES, SIGNALS ONLY ACCELERATE
 
