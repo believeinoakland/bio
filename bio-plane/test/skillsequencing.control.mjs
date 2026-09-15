@@ -108,7 +108,12 @@ const ARMS = [
     id: "3",
     title: "THE ORDER REVERSED IN THE RECORD ONLY",
     file: DOCTRINE,
-    edit: (s) => s.replace('order: ["check", "investigate"],', 'order: ["investigate", "check"],'),
+    /* ANCHOR MOVED 2026-09-14 BY FLEET (SK-8's delegation): the recorded order
+       gained `extract` at the end, and `String.replace` over the OLD literal
+       would have matched nothing and armed nothing — a silent no-op reading as
+       an arm that held. The reversal keeps `extract` last so this arm still
+       measures exactly what it declared: index 0 moved in the record alone. */
+    edit: (s) => s.replace('order: ["check", "investigate", "extract"],', 'order: ["investigate", "check", "extract"],'),
     mustFail: ["ARM A3", "ARM A4", "ARM B4"],
     mustStayGreen: ["ARM A1", "ARM D1", "ARM C3"],
     why: "A3 and A4 are why the DOCUMENT is the expectation: each parses the first-deployed mode "

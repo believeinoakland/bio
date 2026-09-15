@@ -455,6 +455,53 @@ arm({
   },
 });
 
+/* ---- E-ARMS, APPENDED 2026-09-14 BY FLEET ON SK-8's DELEGATION: the extract
+ * row entered the table NOT deployed, and the record's `order` moved with it in
+ * the same commit. Both directions of that pairing are armed here, because the
+ * defect each guards against has one half in each tree and only a driver that
+ * runs BOTH suites can measure the agreement (F1's precedent). */
+arm({
+  id: "E1", subject: "THE EXTRACT ROW FLIPPED WITHOUT THE RECORD MOVING",
+  what: "`MODES.extract.deployed` is set to true — the EXTRACT role becomes drivable before §7.3(7)'s open question was ever answered",
+  mustFail: "this suite's NOT-deployed and closed-at-the-gate extract arms, AND skillsequencing ARM B4 across the tree (index 0 is no longer the only deployed mode)",
+  mustNot: "the CHECK arms, the investigate arms, skillsequencing ARM B3 (the SET is unchanged — only a flag moved)",
+  file: HARNESS,
+  find: `  extract:     { deployed: false,`,
+  replace: `  extract:     { deployed: true,`,
+  run: () => {
+    const r = runHarness();
+    const seq = runSeq();
+    const gate = anyFailed(r, /it is NOT deployed — §7\.3|extract run is CLOSED at the gate|NOT DEPLOYED YET/);
+    const seqB4 = anyFailed(seq, /ARM B4/);
+    const held = !anyFailed(r, /CHECK is deployed|investigate-fresh is NOT deployed|investigate run is CLOSED/) && !anyFailed(seq, /ARM B3/);
+    return {
+      observed: `harness ${r.pass}/${r.fail} · skillsequencing ${seq.pass}/${seq.fail} · extract gate arms ${gate ? "FAILED" : "did NOT fail"} · seq B4 ${seqB4 ? "FAILED" : "did NOT fail"} · check/investigate/B3 ${held ? "held" : "ALSO failed"}`,
+      asDeclared: r.ran && gate && seqB4 && held,
+    };
+  },
+});
+
+arm({
+  id: "E2", subject: "THE EXTRACT ROW REMOVED WHILE THE RECORD STILL NAMES IT — the other direction of the pairing",
+  what: "the `extract` row is deleted from `MODES` with `DEPLOYMENT_SEQUENCE.order` untouched",
+  mustFail: "this suite's row-EXISTS and NOT-DEPLOYED-YET arms (an unknown word again), AND skillsequencing ARM B3 (recorded, not in the table) and ARM B4 (the partition lost a member)",
+  mustNot: "the CHECK and investigate arms; the unknown-word arm must still hold, because that is exactly what extract has become",
+  file: HARNESS,
+  find: `  extract:     { deployed: false,`,
+  replace: `  extract_gone: { deployed: false,`,
+  run: () => {
+    const r = runHarness();
+    const seq = runSeq();
+    const gone = anyFailed(r, /an `extract` row EXISTS|NOT DEPLOYED YET/);
+    const seqB3 = anyFailed(seq, /ARM B3/);
+    const held = !anyFailed(r, /CHECK is deployed|investigate-fresh is NOT deployed|unknown word's refusal/);
+    return {
+      observed: `harness ${r.pass}/${r.fail} · skillsequencing ${seq.pass}/${seq.fail} · extract-row arms ${gone ? "FAILED" : "did NOT fail"} · seq B3 ${seqB3 ? "FAILED" : "did NOT fail"} · check/investigate/unknown ${held ? "held" : "ALSO failed"}`,
+      asDeclared: r.ran && gone && seqB3 && held,
+    };
+  },
+});
+
 arm({
   id: "H6", subject: "LOG-ALWAYS — the log is written whether or not the run succeeds",
   what: "the driver skips its tick on the terminal step, so the last thing a run did is never recorded",

@@ -51,6 +51,10 @@
    (G4) FL-8 — OVER-STRICTNESS, ARMED. Sweep `cancelled` and `completed` into `RUN_NEVER_STARTED` -> ARM H3 (the whole partition), ARM C4 (the member cancellation's status, deliberately left standing by FL-8) and ARM W3 (`finished` becomes the term with no producer) must fail; H1/H2 must HOLD, which is what shows this measures OVER-reach rather than the fix.
    (G5) FL-8 — THE MOCK DECIDES AGAIN. Put back the plane mock's hand-written status keying, in the exact spelling it carried from FL-3 until FL-8 -> A6c2 and B7's FL-8 arm must fail; A6c itself and both A6b directions must HOLD, and the plane must stay green.
    FL-8's FIVE ARMS RUN 2026-09-10 IN WORKTREE agent-a50bd4cc90737bcaf, baseline harness 213/0, airun 126/0, battery 167/167 · 10,279 on `main` before any edit. ALL FIVE AS DECLARED, each armed ALONE — G1 airun 122/4 + harness 212/1 · G2 airun 125/1 (exactly one) · G3 airun 124/2 · G4 airun 123/3 · G5 harness 211/2 + airun 126/0. **THE FINDING THAT PAID FOR G5 WAS FOUND BY MEASUREMENT AND NOT BY THE CONTROL: this suite's plane mock had been answering `stopped` for `mode-not-deployed` since FL-7 minted the ending, while the real plane answered `finished`. A mock that contradicts the plane makes every arm driven through it evidence about a plane that does not exist, and nothing compared the two.**
+   (E1) SK-8's DELEGATION (2026-09-14) — THE EXTRACT ROW FLIPPED WITHOUT THE RECORD MOVING. Set `MODES.extract.deployed = true` -> this suite's NOT-deployed and closed-at-the-gate extract arms must FAIL AND, across the tree, skillsequencing ARM B4 (index 0 is no longer the only deployed mode); the CHECK and investigate arms and skillsequencing ARM B3 must HOLD (the SET is unchanged — only a flag moved). MEASURED: harness 217/4 · skillsequencing 26/1, AS DECLARED.
+   (E2) THE OTHER DIRECTION OF THE PAIRING — the `extract` row REMOVED while `DEPLOYMENT_SEQUENCE.order` still names it -> this suite's row-EXISTS and NOT-DEPLOYED-YET arms must FAIL (extract is an unknown word again) AND skillsequencing ARM B3 (recorded, not in the table) and ARM B4 (the partition lost a member); the CHECK, investigate and unknown-word arms must HOLD. MEASURED: harness 217/4 · skillsequencing 25/2, AS DECLARED.
+   (E3) OVER-STRICTNESS — the landed state IS the arm: `extract` present and NOT deployed, `order` `["check","investigate","extract"]` -> harness 221/0, skillsequencing 27/0 (B3 and B4 GREEN with three modes in both rosters, which is the move arm (4) of skillsequencing's own declaration exists to make impossible to do silently), fleetbundles GREEN over the rebuilt member and plane bundles.
+   E1–E3 RUN 2026-09-14 IN WORKTREE bio-worktrees/FLEET, baseline harness 221/0 and skillsequencing 27/0 before each arm, every restore verified sha256 + cmp. The gate's `why` is DERIVED FROM THE TABLE since this landing, so "not deployed yet" (a known row) and "no mode this table knows" (an unknown word) are two stated facts — asserted in A6 in both directions, and read with `?.` so a deleted row FAILS an arm instead of killing the suite (the H2/H9 class, met again by design rather than by surprise).
    FULL PER-ARM DETAIL IS IN `test/harness.control.mjs`'s own header.
    D-276's five arms are NOT restated here and are NOT counted here: they belong to `test/agent-worker.control.mjs`, which drives THIS suite as well as its own, and they are enumerated once in `test/agent-worker.test.mjs`'s declaration. Naming them again here would inflate the fleet's arm count with a cross-reference — measured, at the moment of writing this sentence. **RE-MEASURED 2026-08-09 BY D-276: this suite's baseline moved 194/0 to 199/0** and the figures above went stale with it; under those arms this suite reads 192/7, 198/1 and 197/2 respectively.
  * ========================================================================= */
@@ -315,6 +319,27 @@ console.log("\n--- A6 · SK-4's gate is a ROW in this table, not a sentence in a
   t("the refusal cites VF-5/SK-4's sequencing", /VF-5\/SK-4/.test(gate("investigate").why), true);
   t("an unknown mode is closed too, never defaulted to CHECK", gate("wat").step, "close");
   t("an absent mode is closed too", gate(undefined).step, "close");
+
+  /* SK-8's DELEGATION, 2026-09-14 — THE EXTRACT ROW. SK-8 built the plane half
+     of the EXTRACT role and measured that this gate refused the word as UNKNOWN,
+     so nothing could drive one. The row lands NOT deployed (§7.3 point 7's
+     provisional NO on a standing EXTRACT run) and its whole value today is that
+     the refusal names a DIFFERENT fact: a known row not yet enabled, rather
+     than a word the table never held. Two absences, two sentences, both
+     asserted — and read with `?.` so a deleted row FAILS the arm instead of
+     killing the suite (the H2/H9 class). */
+  t("SK-8's delegation: an `extract` row EXISTS in the table", Object.prototype.hasOwnProperty.call(MODES, "extract"), true);
+  t("and it is NOT deployed — §7.3(7)'s provisional NO holds; flipping it is an edit under review, not this row",
+    MODES.extract?.deployed ?? null, false);
+  t("the row names its authority (§7.3)", /7\.3/.test(MODES.extract?.does ?? ""), true);
+  t("an extract run is CLOSED at the gate on the machine's word",
+    [gate("extract").step, gate("extract").bound], ["close", "mode-not-deployed"]);
+  t("and the refusal says NOT DEPLOYED YET — a known row, never an unknown word",
+    [/not deployed yet/.test(gate("extract").why), /no mode this table knows/.test(gate("extract").why)], [true, false]);
+  t("while an unknown word's refusal says the table does not know it — the two absences are different facts and both are stated",
+    [/no mode this table knows/.test(gate("wat").why), /not deployed yet/.test(gate("wat").why)], [true, false]);
+  t("the sentence is DERIVED from the table: it lists what is deployed now and what is not yet",
+    [/deployed now: check/.test(gate("extract").why), /not yet: .*extract/.test(gate("extract").why)], [true, true]);
   /* OVER-STRICTNESS, and it is the arm that keeps the correction honest: the fix
      must not have made `cancelled` unreachable or unmeaning. A member stopping a
      run is still `cancelled`, and the gate must never produce that word. */
