@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-886 rulings across 81 documents.
+896 rulings across 82 documents.
 
 ## DEC-
 
@@ -496,6 +496,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:668`
 - **D-353** — D-353 RULED by CONDUCT (mechanism): the sweep joins the periodic census as its third shape — rowed as M0-33; the two pre-existing mode-(b) reds outside D-343 (`civicos-ui/test/refusal-partition.control.mjs` exit 1, 2 of 18 sub-checks, AND it leaves a ~4 MB `.rec79-control-pristine/` pen behind on a non-zero exit;…  
   `docs/development/QUEUE.md:717`
+- **D-365** · 2026-09-14 — AMENDED MID-ITEM, 2026-09-14:** `docs/development/DEBT.md` gains **a SECOND row, `D-365`**, beside the D-225 disposition this claim opened with.  
+  `docs/development/CLAIMS.md:6254`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
@@ -536,6 +538,12 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-2026-08.md:189`
 - **IC-25** · 2026-08-07 — IC-25 taken to SETTLED by CONDUCT as MAJOR** (the worker correctly left the version to CONDUCT): the shape change is additive but the BEHAVIOUR change is a break, and unlike IC-20/22/24 the impact is not nil — it is measured, live and in front of a member.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2152`
+- **IC-25** · 2026-08-07 — under `IC-25` (SETTLED, I3 → 10.0.0). (b) The line numbers are stale by about three thousand lines — the real sites are `resolutionsForCapture` **:14113**, `documentsConcerning` **:14141**, `connectionsFor` **:14454** (`store.mjs` is 31,349 lines). The row beneath it, `D-222's staging and D-225's caps →…  
+  `docs/development/CLAIMS.md:6361`
+- **IC-25** · 2026-09-14 — the interface change is `IC-25`, SETTLED** (I3 8.1.0 → 9.0.0 → 10.0.0 — recorded as a BREAK, not additive, because a caller that received everything now receives the first 500).  
+  `docs/development/CONTENT-SEARCH-DESIGN.md:157`
+- **IC-25** · 2026-08-07 — ounds.test.mjs`'s roster (`op=resolutions`, `op=concerns`, `op=connections`, each with `&limit=`), and `IC-25` on I3 is SETTLED (8.1.0 → 9.0.0 → 10.0.0, recorded by CONDUCT 2026-08-07).  
+  `docs/development/DEBT.md:179`
 - **IC-26** · 2026-08-07 — IC-26 taken to SETTLED by CONDUCT as ADDITIVE; I3 10.0.0 -> 10.1.0.** **CONDUCT VERIFIED THE CORRECTION THIS ITEM MADE TO PL-8's HEADER rather than taking it on report**: `#writeReadings` carries no `object_type` gate in its body and its call site is unconditional, so a project bundle CAN carry resolution rows and…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2265`
 - **IC-26** · 2026-08-07 — IC-26 filed and taken to SETTLED by CONDUCT; I3 10.0.0 → 10.1.0, additive.**  
@@ -772,6 +780,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:2301`
 - **REC-57** — THE `op=list` RIDER: DECIDED KEEP, with the reasoning at the site and the TEST WRITTEN DOWN so it can be re-run if re-opened.** The discriminator is NOT "has an envelope" but two different defects — **HONESTY** (a bound applied must be published; `op=projection` violated it) and **BOUNDEDNESS** (a response must not…  
   `docs/archive/ledgers/QUEUE-2026-08.md:200`
+- **REC-57** · 2026-08-07 — (SETTLED, I3 8.1.0 → 9.0.0 → 10.0.0): `resolutionsForCapture` (`store.mjs:14113`), `documentsConcerning` (`:14141`) and `connectionsFor` (`:14454`) clamp to `#MEANING_LIMIT_DEFAULT` 500 / `_MAX` 5000 and publish `limit` AFTER clamping beside `truncated`, all three driven through `op=resolutions` / `op=concerns` /  
+  `docs/development/CLAIMS.md:6266`
 - **REC-57** · 2026-08-05 — a BARE ARRAY, which can carry no bound · PROPOSED 2026-08-05 (REC-57), then RESPONSES, ACCEPTED, CHANGING, CHANGED AND SETTLED 2026-08-07 (REC-59) — the one IC here whose steps were taken by two different sessions on two different days, which was the point of filing it rather than landing it  
   `docs/development/INTERFACE-CHANGES.md:1230`
 - **REC-58** · 2026-08-07 — CONDUCT CORRECTED THE I3 REGISTRY AT 8.1.0**, where the false nil-consumer-impact clause was still being read — the worker appended its correction at 9.0.0 and ROUTED the 8.1.0 half rather than editing a settled entry, which was the right call (REC-58's precedent).  
@@ -852,6 +862,10 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:5794`
 - **REC-86** — SETTLED when REC-86/REC-87 (the authored acts that consume the pair) confirm, or at the next I2 producer landing that emits `source` from a real page — whichever comes first; CONDUCT writes it.  
   `docs/development/INTERFACE-CHANGES.md:6431`
+- **REC-89** · 2026-09-14 — AMENDED 2026-09-14 by REC-89, and the amendment is about this document's own completeness rather than its mechanism: §7's decomposition row 1 (D-225's caps) WAS ALREADY BUILT when this document was written** — it landed at REC-60 on 2026-08-07 under `IC-25` — and the row was written as outstanding because `DEBT.md`…  
+  `docs/development/CONTENT-SEARCH-DESIGN.md:3`
+- **REC-89** · 2026-09-14 — SATISFIED ALREADY, CORRECTED 2026-09-14 (REC-89): the caps LANDED at REC-60 on 2026-08-07** — `resolutionsForCapture`, `documentsConcerning` and `connectionsFor` clamp to 500/5000 and publish `limit` after clamping beside `truncated`, `IC-25` on I3 is SETTLED, and all three are driven on `bounds.test.mjs`'s roster.  
+  `docs/development/CONTENT-SEARCH-DESIGN.md:52`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -1539,6 +1553,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:5503`
 - AMENDED AT THE BUILD, two additions, each stated rather than quietly taken:** - `.gitignore` — **ONE PEN, `.cap9-control-pristine/`**, with its reason at the line. This claim did not anticipate it.  
   `docs/development/CLAIMS.md:6074`
+- **2026-08-07** — is SETTLED (8.1.0 → 9.0.0 → 10.0.0, recorded by CONDUCT 2026-08-07).  
+  `docs/development/CLAIMS.md:6217`
+- **2026-09-14** — AMENDED MID-ITEM, 2026-09-14:** `docs/DECIDED.md` — **REGENERATED, never authored**, by `node tools/decided.mjs`, because this turn's edits move the line numbers the generated index cites and `plancheck` fails on the drift.  
+  `docs/development/CLAIMS.md:6261`
+- the way a superseded claim is CORRECTED rather than deleted (CLAUDE.md).  
+  `docs/development/CLAIMS.md:6387`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
