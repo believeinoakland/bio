@@ -9358,3 +9358,23 @@ released: 2026-09-15 by the REC-88 worker — **D-349 CLOSED BY ENFORCEMENT unde
   **OWED ACTS ARE IN THIS WORKER'S REPORT AS A "for CONDUCT" LIST WITH ACTORS, never left
   here alone** (FL-10's handoff line cost a measured >3h false stall sitting in a region
   nothing drains).
+
+## CLAIM 2026-09-15 M0 (M0-41 — THE INSTRUMENT CENSUS: which of this project's instruments are REQUIRED, and which merely EXIST)
+
+area: M0 (the background lane, holds no slot)
+session: the M0-41 worker, spawned by CONDUCT #11, worktree `agent-adffd6057e80cc06e`, branch `m041-instrument-census`
+design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY NAME by `tools/rowdesign.mjs`; read with `docs/development/ORCHESTRATION.md` §"Why integration is a ROLE and not a queue-flip", whose four-question table this row generalises.
+
+paths:
+- `docs/development/MEASUREMENTS.md` — **M-25, the census table itself, APPENDED.** The id was minted with `node tools/mintid.mjs M` (floor M-24, ledger `/…/bio/.git/bio-idalloc`), never read off the corpus and incremented — which is the defect this row catalogues and it caught CONDUCT #11 mid-sentence.
+- `bio-plane/test/m041-instrument-census.mjs` — **NEW, and deliberately NOT a `.test.mjs`.** The battery discovers `*.test.mjs` from the directory and `scripts/coverage.mjs`'s register reads the same corpus, so a suffix here would move four floors for a census that gates nothing. The precedent is exact and in this directory: `m025-arm-census.mjs`, M0-25's own census driver.
+- `bio-plane/test/m041-instrument-census.control.mjs` — **NEW**, the negative control driver. Edits real corpus files while it runs, restores by sha256 AND `cmp`, and lives inside this worktree rather than in the shared scratchpad.
+- `docs/development/CLAIMS.md` — this block.
+
+**NOT TOUCHED, AND ASSERTED RATHER THAN ASSUMED:**
+- **NO PLANE SOURCE MOVES.** Not one byte of `bio-plane/src/**`, `bio-plane/checks/**` or `bio-plane/scripts/**`. This row's deliverable is a TABLE, not a fix, and a sweep that stops to fix loses the census it was run for.
+- **`tools/**` — M0-39 IS LIVE ON IT RIGHT NOW**, together with `plancheck`'s arms. This row WRITES ABOUT `tools/mintid.mjs`, `tools/plancheck.mjs`, `tools/corpuscheck.mjs`, `tools/rowdesign.mjs`, `tools/mergecarry.mjs`, `tools/decided.mjs`, `tools/waitquiet.mjs`, `tools/bundle-docprofile.mjs` and `tools/gates.mjs` and EDITS NONE OF THEM. The census driver reads `mintid.mjs`'s `NAMESPACES` export and spawns its `--audit`; it imports nothing it could perturb.
+- **`bio-plane/test/derivation-bounds.test.mjs` — M0-38 is live on it.** Untouched, unread by this row's matcher except as one tracked path in a `git ls-files` corpus.
+- `docs/development/QUEUE.md` (CONDUCT's sole writing ground), `docs/development/DEBT.md`, `newgroup/**`, `civicos-ui/**`, `REGISTER_FLOOR`, `FLEET_FLOOR`. No version bump, no sign, no tag, no deploy.
+
+**WHY THE DELIVERABLE IS A TABLE AND NOT A FIX, recorded here because the temptation is the row's own subject.** Every finding below is a row that comes OUT of the census, and the worker writes none of them itself beyond naming what it found. Rows go to CONDUCT as ACTS WITH ACTORS in this worker's report, never left in this claim's prose alone — FL-10's handoff line sat in a release note nothing drains and cost a measured >3h false stall.
