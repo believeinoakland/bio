@@ -6570,8 +6570,11 @@ MINOR, as proposed: `document.reading.page_count` — one new optional key insid
 - **Interface:** I3 (plane → UI, the op contracts). **MEASURED AT THIS ITEM'S BASE `173bc66`
   as 14.1.0 CHANGING (IC-84); by the time this branch was finished `origin/main` had moved
   to `65d61c2` and I3 reads 15.0.0 — IC-88 (SK-7) landed BREAKING on `op=attesttext` and
-  additively added `op=contentmint` and the `mint` label. This item was built on 173bc66,
-  touches neither `op=attesttext` nor `contentmint`, and is additive over either number;
+  additively added a new content-mint op (`contentmint`, named WITHOUT the `op=` spelling on
+  purpose: it does not exist in THIS tree, and `op-claims.test.mjs` correctly refuses prose
+  naming an op the dispatch table does not hold — the guard caught this sentence and it is
+  corrected rather than exempted) and the `mint` label. This item was built on 173bc66,
+  touches neither `op=attesttext` nor that op, and is additive over either number;
   the bump CONDUCT takes is 15.0.0 → 15.1.0 rather than 14.1.0 → 14.2.0, and it is stated
   here rather than left for the resolver to notice.**
 - **Proposer:** RECORD, worker `agent-a39cfbab2c77ec9e4`, 2026-09-14, from QUEUE REC-97
