@@ -19974,7 +19974,24 @@ var EVENTS = {
      worth showing; items arriving is what a supplemental agenda is */
   item_pulled: { significance: SIGNIFICANCE.EVENT },
   item_changed: { significance: SIGNIFICANCE.NOTICE },
-  item_added: { significance: SIGNIFICANCE.ROUTINE }
+  item_added: { significance: SIGNIFICANCE.ROUTINE },
+  /* FW-18's three readers. Each row is here rather than inline because `event()`
+       throws on a type the catalogue does not hold, which is the mechanism that
+       stopped the three earlier types inventing their own strings.
+  
+       WHAT A PUBLISHED RECORD OF A PAST ACT CHANGING MEANS, and why these sit at
+       EVENT rather than NOTICE. `item_changed` (NOTICE) grades a change to what a
+       body says it WILL consider — an agenda is a forward-looking notice and it is
+       expected to move. The three below grade a change to what a body is recorded
+       as having ALREADY DONE, what staff already recommended, and what an
+       instrument of law already says. Those are the record's own subject: a member
+       who cited the recorded outcome of a vote, or the recommendation a report
+       made, has cited something that is not supposed to move afterwards. Grading
+       them as routine drift would be the record reassuring a member about the one
+       thing it exists to hold. */
+  outcome_changed: { significance: SIGNIFICANCE.EVENT },
+  recommendation_changed: { significance: SIGNIFICANCE.EVENT },
+  instrument_changed: { significance: SIGNIFICANCE.EVENT }
 };
 function event(type, detail) {
   const spec = EVENTS[type];
@@ -19996,6 +20013,24 @@ function bySeverity(events) {
 
 // ../docprofile/doctypes/index.mjs
 var CONTRACT = { SUBSTANCE: "substance", MEMBERSHIP: "membership", UNMONITORABLE: "unmonitorable" };
+function flatten(text) {
+  return String(text || "").replace(/\s+/g, " ");
+}
+function selfNaming(text, re) {
+  let n = 0;
+  for (const line of String(text || "").split(/\r?\n/)) if (re.test(line.trim())) n++;
+  return n;
+}
+var FURNITURE_RECURS = 3;
+function alsoSatisfies(ctx, selfKey) {
+  const f2 = ctx && typeof ctx.alsoSatisfies === "function" ? ctx.alsoSatisfies : null;
+  if (!f2) return [];
+  try {
+    return f2(selfKey) || [];
+  } catch {
+    return [];
+  }
+}
 function entity(key, kind, label, facts, source) {
   const e = { key: String(key), kind, label, facts: facts || {} };
   if (source) e.source = source;
@@ -20320,6 +20355,7 @@ var meeting_calendar_default = {
 // ../docprofile/doctypes/meeting-agenda.mjs
 var FILE_LINE = /^(\d{2}-\d{4})$/;
 var ITEM_LINE = /^\d+(?:\.\d+)*$/;
+var AGENDA_MASTHEAD = /^(?:Meeting\s+)?Agenda(?:\s*[-–—]\s*\S.*)?$/i;
 var FURNITURE = [
   /^Page \d+$/i,
   /^City of Oakland$/i,
@@ -20360,6 +20396,34 @@ var meeting_agenda_default = {
      before the body and whether each item still says what it said. Declared on
      the content type (CONSTRUCTS Step 0 #4). */
   contract: CONTRACT.MEMBERSHIP,
+  /** CORRECTED 2026-09-15 (FW-18), and the correction is a MEASURED DEFECT rather
+   *  than a tidy-up. This rule used to take `/\bAgenda\b/i` — the word ANYWHERE in
+   *  the text — as "an agenda heading", and on that basis it read TWO REAL SETS OF
+   *  OAKLAND MEETING MINUTES as `meeting_agenda` at CERTAIN confidence:
+   *
+   *    9569_M__Rules___Legislation_Committee_26-07-16_Meeting_Minutes.pdf and
+   *    9560_M___Concurrent_Meeting_..._City_Council_26-07-21_Meeting_Minutes.pdf,
+   *
+   *  both fetched and read through Tier-1 on 2026-09-15. Minutes carry the same
+   *  line-anchored file numbers and the same `Subject:`/`Recommendation:` blocks as
+   *  the agenda of the same meeting, so two of the three legs were already satisfied
+   *  structurally; the third was satisfied by the phrase `On The July 21, 2026 City
+   *  Council Agenda On Consent`, which appears against nearly every item. That is a
+   *  REFERENCE to an agenda read as MEMBERSHIP of the class — exactly the one defect
+   *  class all five of M0-32's own recogniser errors fell into, and the record
+   *  claiming more than it could support on a whole class of document.
+   *
+   *  THE FIX IS A RATE, NOT A LONGER LIST OF WORDS. A document's self-naming is in
+   *  its MASTHEAD and a masthead is page furniture: it recurs once per page (33
+   *  times over the 33 pages of the measured agenda). A reference occurs once or
+   *  twice. The minutes above carry 2 line-anchored `Agenda` lines — and both are the
+   *  wrapped tails of attachment titles, `Draft July 28, 2026 Cancelled Finance And
+   *  Management Committee` / `Agenda` — so even line anchoring alone would not have
+   *  saved this; the threshold is what does. `selfNaming` in ./index.mjs carries the
+   *  measurement.
+   *
+   *  THE LIKELY PATH IS KEPT AND WIDENED RATHER THAN NARROWED, because a one-page
+   *  agenda names itself once and a fence tighter than its rule is not a safer fence. */
   detect(ctx) {
     const t = String(ctx.text || "");
     const signals = [];
@@ -20367,11 +20431,14 @@ var meeting_agenda_default = {
     if (files.length) signals.push(`${files.length} legislation file number line(s)`);
     if (/\bSubject:/.test(t) && /\bRecommendation:/.test(t))
       signals.push("Subject:/Recommendation: item blocks");
-    if (/\bAgenda\b/i.test(t)) signals.push("an agenda heading");
+    const named = selfNaming(t, AGENDA_MASTHEAD);
+    const furniture = named >= FURNITURE_RECURS;
+    if (furniture) signals.push(`names itself as an agenda on ${named} lines, which is page furniture`);
+    else if (named) signals.push(`names itself as an agenda once (${named}), which a reference also does`);
     if (/Roll Call|Office of the City Clerk/i.test(t)) signals.push("meeting front matter");
-    if (files.length && signals.includes("Subject:/Recommendation: item blocks") && signals.includes("an agenda heading"))
+    if (files.length && signals.includes("Subject:/Recommendation: item blocks") && furniture)
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
-    if (signals.includes("an agenda heading") && signals.length >= 3)
+    if (named >= 1 && signals.length >= 3)
       return { match: true, confidence: CONFIDENCE.LIKELY, signals };
     return { match: false, confidence: CONFIDENCE.NONE };
   },
@@ -20467,7 +20534,13 @@ var meeting_agenda_default = {
       pendingSubject = null;
       pendingFrom = null;
     }
-    return { entities, body, date, at: ctx.at || null };
+    return {
+      entities,
+      body,
+      date,
+      also_satisfies: alsoSatisfies(ctx, "meeting_agenda"),
+      at: ctx.at || null
+    };
   },
   /** Given two parses of the same agenda address, what happened to the list. */
   assess(a, b) {
@@ -20508,6 +20581,722 @@ var meeting_agenda_default = {
       events,
       confirmed: { entries: b.entities.length, intact },
       why: events.length ? `${intact} of ${a.entities.length} items unchanged; ${d.gone.length} pulled, ${d.appeared.length} added, ${d.altered.length} altered` : `all ${b.entities.length} items on this agenda are unchanged`
+    };
+  }
+};
+
+// ../docprofile/doctypes/meeting-minutes.mjs
+var MINUTES_MASTHEAD = /^(?:Meeting\s+)?Minutes(?:\s*[-–—]\s*\S.*)?$/i;
+var MINUTES_FILE_LINE = /^(\d{2}-\d{4})$/;
+var MINUTES_ITEM_LINE = /^[1-9]\d*(?:\.\d+)*$/;
+var MOTION_MADE = /\bA motion was made by\b/i;
+var MOTION_RESULT = /\bThe motion (carried|failed)\b/i;
+var TALLY_LABEL = /\b(Aye|Ayes|Noe|Noes|No|Abstain|Abstained|Excused|Absent|Recused)\s*:/i;
+var CONVENED = /\bconvened\s+at\s+\d{1,2}:\d{2}\s*[AaPp]\.?\s*[Mm]\.?/i;
+var ADJOURNED = /\badjourned\b[^.]{0,80}?\bat\s+\d{1,2}:\d{2}\s*[AaPp]\.?[Mm]\.?/i;
+var ROSTER_LABEL = /^(Present|Absent|Excused|Abstained|Recused)$/i;
+var MINUTES_FURNITURE = [
+  /^Page \d+$/i,
+  /^City of Oakland$/i,
+  /^Printed on /i,
+  /^View Report$/i,
+  /^View Legislation$/i,
+  /^View (Attachment|Supplemental)\b/i,
+  /^Attachments:$/i,
+  /^Sponsors:$/i,
+  /^Office of the City Clerk$/i,
+  MINUTES_MASTHEAD,
+  /^[A-Z][a-z]+day, [A-Z][a-z]+ \d{1,2}, \d{4}$/,
+  /^[A-Z][a-z]+ \d{1,2}, \d{4}$/
+];
+var isMinutesFurniture = (l) => MINUTES_FURNITURE.some((re) => re.test(l));
+var MINUTES_MONTHS = {
+  january: 0,
+  february: 1,
+  march: 2,
+  april: 3,
+  may: 4,
+  june: 5,
+  july: 6,
+  august: 7,
+  september: 8,
+  october: 9,
+  november: 10,
+  december: 11
+};
+var minutesLongDate = (s) => {
+  const m = /([A-Za-z]+) (\d{1,2}), (\d{4})/.exec(String(s || ""));
+  if (!m) return null;
+  const mo = MINUTES_MONTHS[m[1].toLowerCase()];
+  if (mo == null) return null;
+  return new Date(Date.UTC(+m[3], mo, +m[2])).toISOString().slice(0, 10);
+};
+var clockOf = (s, re) => {
+  const m = re.exec(String(s || ""));
+  return m ? m[0] : null;
+};
+var meeting_minutes_default = {
+  key: "meeting_minutes",
+  label: "a set of meeting minutes",
+  version: 1,
+  /* A list of items, each with what happened to it, so what matters is MEMBERSHIP:
+     which matters the body took up and whether each still says what it said. Declared
+     on the content type (CONSTRUCTS Step 0 #4), not derived from the stack. */
+  contract: CONTRACT.MEMBERSHIP,
+  /** Is this a set of minutes?
+   *
+   *  FOUR INDEPENDENT EVIDENCE FAMILIES, on M0-32's own discipline: a class is what
+   *  makes a document that class IN PRINCIPLE, implemented as a threshold over
+   *  families, never as one literal. The families are (1) self-naming AS FURNITURE,
+   *  (2) outcome language, (3) the retrospective frame, (4) an attendance roster.
+   *
+   *  THE ONE THING THIS TYPE MUST NOT DO is what the registered agenda reader was
+   *  measured doing on these very documents: read a REFERENCE as MEMBERSHIP. Minutes
+   *  and agendas of the same meeting share their file-number lines, their `Subject:` /
+   *  `Recommendation:` blocks and their front matter, and each mentions the other in
+   *  prose. So NONE of the shared signals appears below, and family (1) is a RATE. */
+  detect(ctx) {
+    const t = String(ctx.text || "");
+    const flat = flatten(t);
+    const signals = [];
+    const named = selfNaming(t, MINUTES_MASTHEAD);
+    const furniture = named >= FURNITURE_RECURS;
+    if (furniture) signals.push(`names itself as minutes on ${named} lines, which is page furniture`);
+    else if (named) signals.push(`names itself as minutes once (${named}), which a reference also does`);
+    const motion = MOTION_MADE.test(flat) && MOTION_RESULT.test(flat);
+    if (motion) signals.push("motions made, seconded and carried or failed");
+    const tallies = (flat.match(new RegExp(TALLY_LABEL.source, "gi")) || []).length;
+    if (tallies >= 2) signals.push(`${tallies} roll-call vote tally label(s)`);
+    const outcome = motion || tallies >= 2;
+    const frame = CONVENED.test(flat) && ADJOURNED.test(flat);
+    if (frame) signals.push("a meeting that convened and adjourned at stated times");
+    const roster = selfNaming(t, ROSTER_LABEL) >= 2;
+    if (roster) signals.push("an attendance roster");
+    const others = [outcome, frame, roster].filter(Boolean).length;
+    if (furniture && others >= 1) return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
+    if (others >= 2) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+    return { match: false, confidence: CONFIDENCE.NONE };
+  },
+  /** What is in it: the meeting's own facts, and one entity per matter taken up,
+   *  keyed by the source-assigned file number and carrying WHAT HAPPENED TO IT.
+   *
+   *  FW-17 / IC-86 — THIS READER CAN SAY WHERE, on the same grounds the agenda reader
+   *  can and with the same limit. Every reference it emits is a file number that sat
+   *  ALONE ON ITS OWN LINE, so that line's offset IS the reference's offset and
+   *  `ctx.locate` turns it into the container part the producer put it on. What it
+   *  CANNOT say is the rectangle: Tier-1 text is a flat per-page string with no
+   *  geometry, so a `pdf-page` source arrives with `rect: null` and the page is the
+   *  honest maximum. A reader may emit ONLY a source `locate` gave it.
+   *
+   *  It positions the REFERENCE, not the outcome. The outcome is prose that follows
+   *  the file number and may cross a page break — in document A the furniture falls
+   *  between an item's description and its number — so recording the outcome's page
+   *  would make the address disagree with the thing addressed. The file number is what
+   *  an edge points at, so its position is the one recorded.
+   *
+   *  ONE DOCUMENT MAY BE MORE THAN ONE KIND (M0-32: 52 of 600), so `also_satisfies`
+   *  states what else this same text satisfies. It is a fact, not a hedge: an agenda
+   *  packet read as minutes should say it is also an agenda rather than let the single
+   *  verdict stand for the whole document. */
+  parse(ctx) {
+    const raw = String(ctx.text || "");
+    const lines = raw.split(/\r?\n/).map((l) => l.trim());
+    const offsets = [];
+    {
+      let last = 0;
+      const re = /\r?\n/g;
+      let m;
+      while ((m = re.exec(raw)) !== null) {
+        offsets.push(last);
+        last = m.index + m[0].length;
+      }
+      offsets.push(last);
+    }
+    const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
+    const flat = flatten(raw);
+    let date = null;
+    for (const l of lines.slice(0, 80))
+      if (/^[A-Za-z]+day, [A-Za-z]+ \d{1,2}, \d{4}$/.test(l)) {
+        date = minutesLongDate(l);
+        break;
+      }
+    let body = null;
+    {
+      const freq = /* @__PURE__ */ new Map();
+      for (const l of lines) if (l) freq.set(l, (freq.get(l) || 0) + 1);
+      for (let i = 0; i < Math.min(lines.length, 40) && !body; i++) {
+        const l = lines[i];
+        if (!l || l.length > 80) continue;
+        if (!/(Committee|City Council|Commission|Board|Authority)\s*$/.test(l)) continue;
+        if (/^(and|or|of|the)\b/i.test(l) || /^[a-z]/.test(l)) continue;
+        if (/^Councilmember/i.test(l) || isMinutesFurniture(l)) continue;
+        if ((freq.get(l) || 0) < FURNITURE_RECURS) continue;
+        let prev = null;
+        for (let j = i - 1; j >= 0 && j >= i - 3; j--) if (lines[j]) {
+          prev = lines[j];
+          break;
+        }
+        if (prev && !isMinutesFurniture(prev) && (freq.get(prev) || 0) >= FURNITURE_RECURS) continue;
+        body = l.replace(/^[*\s]+/, "").trim();
+      }
+    }
+    const body_why = body ? null : "no single line of this document names the body at the rate a running header does, so which body met is not stated here rather than guessed from one line";
+    const convened = clockOf(flat, CONVENED);
+    const adjourned = clockOf(flat, ADJOURNED);
+    let status = null;
+    for (const l of lines) {
+      const m = MINUTES_MASTHEAD.exec(l);
+      if (!m) continue;
+      status = /[-–—]\s*(\S.*)$/.exec(l) ? /[-–—]\s*(\S.*)$/.exec(l)[1].trim() : "unqualified";
+      break;
+    }
+    const roster = {};
+    for (let i = 0; i < lines.length; i++) {
+      const lab = ROSTER_LABEL.exec(lines[i]);
+      if (!lab) continue;
+      const above = lines[i - 1] || "";
+      if (!above || isMinutesFurniture(above) || ROSTER_LABEL.test(above)) continue;
+      const key = lab[1].toLowerCase();
+      if (!roster[key]) roster[key] = above;
+    }
+    const entities = [];
+    const seen = /* @__PURE__ */ new Set();
+    let pendingSubject = null, pendingFrom = null, pendingItem = null, expect = null;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line) continue;
+      if (MINUTES_ITEM_LINE.test(line) && !MINUTES_FILE_LINE.test(line)) {
+        pendingItem = line;
+        continue;
+      }
+      const lab = /^(Subject|From):\s*(.*)$/.exec(line);
+      if (lab) {
+        if (lab[2]) {
+          if (lab[1] === "Subject") pendingSubject = lab[2];
+          else pendingFrom = lab[2];
+          expect = null;
+        } else expect = lab[1];
+        continue;
+      }
+      if (expect) {
+        if (expect === "Subject") pendingSubject = line;
+        else pendingFrom = line;
+        expect = null;
+        continue;
+      }
+      const file = MINUTES_FILE_LINE.exec(line);
+      if (!file) continue;
+      const key = file[1];
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const item = pendingItem;
+      let heading = null;
+      for (let j = i - 1, hops = 0; j >= 0 && hops < 8; j--) {
+        const prev = lines[j];
+        if (!prev) continue;
+        hops++;
+        if (MINUTES_ITEM_LINE.test(prev)) continue;
+        if (isMinutesFurniture(prev) || MINUTES_FILE_LINE.test(prev)) {
+          if (MINUTES_FILE_LINE.test(prev)) break;
+          continue;
+        }
+        heading = prev;
+        break;
+      }
+      let end = lines.length;
+      for (let j = i + 1; j < lines.length; j++) if (MINUTES_FILE_LINE.test(lines[j])) {
+        end = j;
+        break;
+      }
+      const window = flatten(lines.slice(i + 1, end).join("\n"));
+      const mo = /\bA motion was made by\s+(.+?),\s*seconded by\s+(.+?),\s*that\s+this matter be\s+(.+?)\.\s*The motion\s+(carried|failed)\b/i.exec(window);
+      const di = /\bThis\s+([A-Z][\w ]{2,40}?)\s+be\s+([^.]{2,90})\./.exec(window);
+      let outcome = null, moved_by = null, seconded_by = null, result = null;
+      if (mo) {
+        moved_by = mo[1].trim();
+        seconded_by = mo[2].trim();
+        outcome = mo[3].trim();
+        result = mo[4].toLowerCase();
+      } else if (di) {
+        outcome = `${di[1].trim()} ${di[2].trim()}`.trim();
+      }
+      const vote = {};
+      for (const m of window.matchAll(/\b(Aye|Ayes|Noe|Noes|No|Abstain|Abstained|Excused|Absent|Recused|NO VOTE)\s*:\s*(.*?)(?=\b(?:Aye|Ayes|Noe|Noes|No|Abstain|Abstained|Excused|Absent|Recused|NO VOTE)\s*:|$)/gi)) {
+        const n = /(\d+)\s*-/.exec(m[2]);
+        if (n) vote[m[1].toLowerCase()] = Number(n[1]);
+      }
+      const label = pendingSubject || heading || `legislation ${key}`;
+      entities.push(entity(key, "legislation", String(label).slice(0, 160), {
+        subject: pendingSubject || null,
+        from: pendingFrom || null,
+        item: item || null,
+        /* What the body DID. Null is first-class and means THIS READER COULD NOT
+           SAY — an item listed with no recorded action, or an outcome in a shape
+           these two documents did not contain — never "nothing happened". */
+        outcome: outcome || null,
+        result: result || null,
+        moved_by,
+        seconded_by,
+        vote: Object.keys(vote).length ? vote : null
+      }, locate(offsets[i])));
+      pendingSubject = null;
+      pendingFrom = null;
+      pendingItem = null;
+    }
+    return {
+      entities,
+      body,
+      body_why,
+      date,
+      convened,
+      adjourned,
+      status,
+      attendance: Object.keys(roster).length ? roster : null,
+      also_satisfies: alsoSatisfies(ctx, "meeting_minutes"),
+      at: ctx.at || null
+    };
+  },
+  /** Given two parses of the same minutes address, what happened to the record. */
+  assess(a, b) {
+    if (!a.entities.length || !b.entities.length)
+      return {
+        meaningful: null,
+        significance: null,
+        events: [],
+        confirmed: null,
+        why: "the matters in these minutes could not be read this time, so nothing is claimed about them either way"
+      };
+    const d = diffEntities(a.entities, b.entities);
+    const events = [];
+    const HEAVY = /* @__PURE__ */ new Set(["outcome", "result", "vote", "moved_by", "seconded_by"]);
+    for (const alt of d.altered) {
+      const heavy = alt.moved.filter((m) => HEAVY.has(m.fact));
+      const light = alt.moved.filter((m) => !HEAVY.has(m.fact));
+      if (heavy.length)
+        events.push(event("outcome_changed", {
+          key: alt.entity.key,
+          label: alt.entity.label,
+          moved: heavy,
+          why: "what these minutes record the body as having done with this matter changed"
+        }));
+      if (light.length)
+        events.push(event("item_changed", {
+          key: alt.entity.key,
+          label: alt.entity.label,
+          moved: light,
+          why: "what these minutes say about this matter changed"
+        }));
+    }
+    for (const e of d.gone)
+      events.push(event("item_pulled", {
+        key: e.key,
+        label: e.label,
+        why: "a matter these minutes recorded is no longer in them"
+      }));
+    for (const e of d.appeared)
+      events.push(event("item_added", {
+        key: e.key,
+        label: e.label,
+        why: "a matter was added to these minutes"
+      }));
+    bySeverity(events);
+    const intact = a.entities.filter((e) => b.entities.some((x) => x.key === e.key && JSON.stringify(x.facts) === JSON.stringify(e.facts))).length;
+    return {
+      meaningful: isMeaningful(events),
+      significance: worstSignificance(events),
+      events,
+      confirmed: { entries: b.entities.length, intact },
+      why: events.length ? `${intact} of ${a.entities.length} matters unchanged; ${d.gone.length} gone, ${d.appeared.length} added, ${d.altered.length} altered` : `all ${b.entities.length} matters in these minutes are unchanged`
+    };
+  }
+};
+
+// ../docprofile/doctypes/staff-report.mjs
+var MEMO_LABEL = /\b(TO|FROM|SUBJECT|DATE)\s*:/gi;
+var REPORT_SECTIONS = [
+  /^RECOMMENDATION\b/i,
+  /^EXECUTIVE\s+SUMMARY\b/i,
+  /^(BACKGROUND|LEGISLATIVE\s+HISTORY|BACKGROUND\s*\/\s*LEGISLATIVE\s+HISTORY)\b/i,
+  /^ANALYSIS(\s+AND\s+POLICY\s+ALTERNATIVES)?\b/i,
+  /^FISCAL\s+IMPACT\b/i,
+  /^PUBLIC\s+OUTREACH\b/i,
+  /^COORDINATION\b/i,
+  /^SUSTAINABLE\s+OPPORTUNITIES\b/i,
+  /^ACTION\s+REQUESTED\b/i,
+  /^REASON\s+FOR\b/i
+];
+var HEADING_MAX = 64;
+var SIGNOFF = /\bRespectfully\s+submitted\b/i;
+var PREPARED = /\bPrepared\s+by\s*:/i;
+var REPORT_TITLE = /^(AGENDA|STAFF|INFORMATIONAL|CITY\s+ADMINISTRATOR'?S?)\s+REPORT\b/i;
+function memoHeader(flat) {
+  const hits = [...flat.matchAll(MEMO_LABEL)].map((m) => ({ i: m.index, k: m[1].toUpperCase() }));
+  for (let a = 0; a < hits.length; a++) {
+    if (hits[a].i > 2500) break;
+    const seen = /* @__PURE__ */ new Map();
+    for (let b = a; b < hits.length; b++) {
+      if (!seen.has(hits[b].k)) seen.set(hits[b].k, hits[b].i);
+      if (seen.size < 3) continue;
+      if (hits[b].i - hits[a].i > 250) break;
+      for (let c = b + 1; c < hits.length && hits[c].i - hits[a].i <= 250; c++)
+        if (!seen.has(hits[c].k)) seen.set(hits[c].k, hits[c].i);
+      const all = hits.map((h) => h.i);
+      const at = {};
+      for (const [k, i] of seen) {
+        const next = all.find((x) => x > i);
+        const rest = flat.slice(i, next != null ? Math.min(next, i + 200) : i + 160).replace(/^\s*\w+\s*:\s*/, "");
+        at[k.toLowerCase()] = rest.trim() || null;
+      }
+      return { fields: at, labels: seen.size, span: hits[b].i - hits[a].i, at: hits[a].i };
+    }
+  }
+  return null;
+}
+function reportSections(raw) {
+  const found = [];
+  for (const line of String(raw || "").split(/\r?\n/)) {
+    const l = line.trim();
+    if (!l || l.length > HEADING_MAX) continue;
+    for (let i = 0; i < REPORT_SECTIONS.length; i++)
+      if (REPORT_SECTIONS[i].test(l) && !found.includes(i)) found.push(i);
+  }
+  return found;
+}
+var INSTRUMENT_REF = /\b(Ordinance|Resolution)\s+No\.?\s*(\d{3,6})\b/gi;
+var FILE_REF = /\b(\d{2}-\d{4})\b/g;
+var CODE_REF = /\b(?:O\.?M\.?C\.?|Oakland\s+Municipal\s+Code)\s+(?:Section|Chapter)\s+([\d.]+[\w.]*)/gi;
+var staff_report_default = {
+  key: "staff_report",
+  label: "a staff report to a public body",
+  version: 1,
+  /* A narrative document making a case, not a list, so what matters is its SUBSTANCE.
+     Declared on the content type (CONSTRUCTS Step 0 #4). */
+  contract: CONTRACT.SUBSTANCE,
+  /** Is this a staff report?
+   *
+   *  FOUR INDEPENDENT FAMILIES on M0-32's discipline: (1) a memorandum header as a
+   *  block at the top, (2) the agenda-report template's sections as headings, (3) a
+   *  sign-off, (4) self-naming on a line of its own.
+   *
+   *  CERTAIN needs (1) AND (2), and that pair is what separates the measured document
+   *  from every other document in this item's pen: a staff report is BOTH addressed as
+   *  a memorandum AND sectioned by the template. Neither alone will do — the minutes
+   *  and the agenda each produce a memo-shaped label span somewhere, and `RECOMMENDATION`
+   *  appears as a heading in one set of minutes. */
+  detect(ctx) {
+    const t = String(ctx.text || "");
+    const flat = flatten(t);
+    const signals = [];
+    const memo = memoHeader(flat);
+    if (memo) signals.push(`a memorandum header of ${memo.labels} labels in ${memo.span} characters at the top`);
+    const secs = reportSections(t);
+    if (secs.length) signals.push(`${secs.length} agenda-report template section heading(s)`);
+    const signoff = SIGNOFF.test(flat) || PREPARED.test(flat);
+    if (signoff) signals.push("a staff sign-off");
+    const titled = String(t).split(/\r?\n/).some((l) => REPORT_TITLE.test(l.trim()));
+    if (titled) signals.push("names itself as a report on a line of its own");
+    if (memo && secs.length >= 3) return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
+    if (secs.length >= 3 && (signoff || titled)) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+    if (memo && signoff && titled) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+    return { match: false, confidence: CONFIDENCE.NONE };
+  },
+  /** What is in it: who addressed whom about what, what was recommended, and every
+   *  instrument and code section the report points at.
+   *
+   *  FW-17 / IC-86 — THIS READER CAN SAY WHERE, WITH A LIMIT IT MUST STATE. Its
+   *  references are cited INLINE in prose rather than alone on a line, so the
+   *  reference's own offset is the offset of the match — which is why every pattern
+   *  above is run over the RAW text with `\s+` standing in for a line break, never over
+   *  the flattened copy: a flattened offset addresses a string no container ever
+   *  emitted, and handing that to `ctx.locate` would produce a confident wrong page.
+   *  As everywhere on this path, `rect` is null because Tier-1 text has no geometry,
+   *  and a reader may emit ONLY a source `locate` gave it.
+   *
+   *  WHAT IT CANNOT PLACE: a citation this producer split mid-word (`R` / `ESOLUTION`
+   *  from a drop cap, measured in a real ordinance) is not matched at all, so it is
+   *  absent rather than mispositioned — the safe direction, and named here because a
+   *  reference this reader never saw must not read as one the document lacks. */
+  parse(ctx) {
+    const raw = String(ctx.text || "");
+    const flat = flatten(raw);
+    const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
+    const memo = memoHeader(flat);
+    const f2 = memo && memo.fields || {};
+    const secs = reportSections(raw);
+    let recommendation = null;
+    {
+      const lines = raw.split(/\r?\n/);
+      for (let i = 0; i < lines.length; i++) {
+        if (!/^RECOMMENDATION\b/i.test(lines[i].trim()) || lines[i].trim().length > HEADING_MAX) continue;
+        const body = [];
+        for (let j = i + 1; j < lines.length && body.join(" ").length < 600; j++) {
+          const l = lines[j].trim();
+          if (!l) continue;
+          if (l.length <= HEADING_MAX && REPORT_SECTIONS.some((re, k) => k !== 0 && re.test(l))) break;
+          body.push(l);
+        }
+        if (body.length) recommendation = flatten(body.join(" ")).slice(0, 600).trim();
+        break;
+      }
+      if (!recommendation) {
+        const m = /\bStaff\s+Recommends\s+That\b[^.]{0,500}\./i.exec(flat);
+        if (m) recommendation = m[0].trim();
+      }
+    }
+    const entities = [];
+    const seen = /* @__PURE__ */ new Set();
+    const take = (key, kind, label, facts, offset) => {
+      if (seen.has(key)) return;
+      seen.add(key);
+      entities.push(entity(key, kind, label, facts, locate(offset)));
+    };
+    for (const m of raw.matchAll(INSTRUMENT_REF))
+      take(
+        `${m[1].toLowerCase()}:${m[2]}`,
+        "instrument",
+        `${m[1][0].toUpperCase()}${m[1].slice(1).toLowerCase()} No. ${m[2]}`,
+        { instrument: m[1].toLowerCase(), number: m[2] },
+        m.index
+      );
+    for (const m of raw.matchAll(FILE_REF))
+      take(`file:${m[1]}`, "legislation", `legislation ${m[1]}`, { file: m[1] }, m.index);
+    for (const m of raw.matchAll(CODE_REF))
+      take(`omc:${m[1]}`, "code_section", `O.M.C. ${m[1]}`, { section: m[1] }, m.index);
+    return {
+      entities,
+      to: f2.to || null,
+      from: f2.from || null,
+      subject: f2.subject || null,
+      date: f2.date || null,
+      recommendation,
+      sections: secs.length,
+      signed_off: SIGNOFF.test(flat) || PREPARED.test(flat),
+      also_satisfies: alsoSatisfies(ctx, "staff_report"),
+      at: ctx.at || null
+    };
+  },
+  /** Given two parses of the same report address, what happened to it. */
+  assess(a, b) {
+    if (!a.entities.length && !b.entities.length && !a.recommendation && !b.recommendation)
+      return {
+        meaningful: null,
+        significance: null,
+        events: [],
+        confirmed: null,
+        why: "nothing could be read from this report this time, so nothing is claimed about it either way"
+      };
+    const events = [];
+    if (String(a.recommendation || "") !== String(b.recommendation || ""))
+      events.push(event("recommendation_changed", {
+        was: a.recommendation || null,
+        now: b.recommendation || null,
+        why: "what this report recommends the body do is not what it recommended before"
+      }));
+    for (const k of ["to", "from", "subject", "date"])
+      if (String(a[k] || "") !== String(b[k] || ""))
+        events.push(event("item_changed", {
+          key: k,
+          label: k,
+          moved: [{ fact: k, was: a[k], now: b[k] }],
+          why: `this report's ${k} changed`
+        }));
+    const d = diffEntities(a.entities || [], b.entities || []);
+    for (const e of d.gone)
+      events.push(event("item_pulled", {
+        key: e.key,
+        label: e.label,
+        why: "an instrument or code section this report pointed at is no longer cited in it"
+      }));
+    for (const e of d.appeared)
+      events.push(event("item_added", {
+        key: e.key,
+        label: e.label,
+        why: "this report now points at an instrument or code section it did not cite before"
+      }));
+    bySeverity(events);
+    return {
+      meaningful: isMeaningful(events),
+      significance: worstSignificance(events),
+      events,
+      confirmed: {
+        entries: (b.entities || []).length,
+        intact: (a.entities || []).filter((e) => (b.entities || []).some((x) => x.key === e.key)).length
+      },
+      why: events.length ? `${events.length} change(s): ${d.gone.length} citation(s) gone, ${d.appeared.length} added` + (String(a.recommendation || "") !== String(b.recommendation || "") ? ", and the recommendation moved" : "") : "this report says what it said, and points at the same instruments"
+    };
+  }
+};
+
+// ../docprofile/doctypes/regulation.mjs
+var ENACTING = /\b(?:DOES\s+(?:HEREBY\s+)?(?:ORDAIN|RESOLVE)|BE\s+IT\s+(?:FURTHER\s+)?(?:ORDAINED|RESOLVED)|IT\s+IS\s+(?:FURTHER\s+)?(?:ORDAINED|RESOLVED)|NOW,?\s+THEREFORE[^.]{0,160}?\b(?:ORDAINS?|RESOLVED?))\b/i;
+var RECITAL = /\bWHEREAS\b/gi;
+var CAPTION = /\b(ORDINANCE|RESOLUTION)\s+NO\.?\s*[_\s]*(\d{3,6})?\s*[_\s]*(?:C\.?\s?M\.?\s?S\.?)?/i;
+var CODIFYING = /\b(?:is\s+hereby\s+(?:amended|added|repealed|deleted)|hereby\s+(?:amended|repealed)|O\.?M\.?C\.?\s+(?:Section|Chapter)|Municipal\s+Code\s+(?:Section|Chapter))\b/gi;
+var REG_INSTRUMENT_REF = /\b(Ordinance|Resolution)\s+No\.?\s*(\d{3,6})\b/gi;
+var REG_CODE_REF = /\b(?:O\.?M\.?C\.?|Oakland\s+Municipal\s+Code)\s+(?:Section|Chapter)\s+([\d.]+[\w.]*)/gi;
+var CAPTION_ALL = /\b(ORDINANCE|RESOLUTION)\s+NO\.?\s*[_\s]*(\d{3,6})?\s*[_\s]*(?:C\.?\s?M\.?\s?S\.?)?/gi;
+var ENACTING_BODY = /\b(?:CITY\s+COUNCIL|COUNCIL\s+OF\s+THE\s+CITY|BOARD\s+OF\s+[A-Z]+|COMMISSION|AUTHORITY|CITY\s+OF\s+[A-Z]+)\b[^A-Za-z0-9]{0,40}$/;
+function ownCaption(flat) {
+  for (const m of flat.matchAll(CAPTION_ALL)) {
+    const before = flat.slice(Math.max(0, m.index - 120), m.index).toUpperCase();
+    if (ENACTING_BODY.test(before)) return m;
+  }
+  return null;
+}
+var regulation_default = {
+  key: "regulation",
+  label: "an ordinance or resolution",
+  version: 1,
+  /* An instrument is a text that says what it says; what matters is its SUBSTANCE.
+     Declared on the content type (CONSTRUCTS Step 0 #4). */
+  contract: CONTRACT.SUBSTANCE,
+  /** Is this an instrument of law?
+   *
+   *  FOUR FAMILIES: (1) the operative voice, (2) a recital chain, (3) the instrument's
+   *  caption, (4) codifying language. THE OPERATIVE VOICE IS REQUIRED FOR EVERY
+   *  MATCH — it is the one family a document that merely CITES an instrument does not
+   *  produce, and the measured minutes prove the point by carrying seven captions and
+   *  no enacting formula at all. */
+  detect(ctx) {
+    const t = String(ctx.text || "");
+    const flat = flatten(t);
+    const signals = [];
+    const enacting = ENACTING.test(flat);
+    if (enacting) signals.push("an enacting formula in the operative voice");
+    const recitals = (flat.match(RECITAL) || []).length;
+    if (recitals >= 2) signals.push(`a recital chain of ${recitals} WHEREAS clause(s)`);
+    const caption = CAPTION.test(flat);
+    if (caption) signals.push("an instrument caption");
+    const codify = (flat.match(CODIFYING) || []).length;
+    if (codify) signals.push(`${codify} codification phrase(s)`);
+    if (!enacting) return { match: false, confidence: CONFIDENCE.NONE };
+    if (recitals >= 2 || caption) return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
+    return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+  },
+  /** What is in it: which instrument it is, its own number when it has one, and every
+   *  instrument and code section it acts on.
+   *
+   *  FW-17 / IC-86 — THIS READER CAN SAY WHERE, with the same limit as the staff
+   *  report's: its references are cited inline, so every pattern is run over the RAW
+   *  text (with `\s+` standing in for a line break) and the match's own offset is what
+   *  `ctx.locate` is given. A flattened offset would address a string no container ever
+   *  emitted. `rect` is null — Tier-1 text has no geometry — and a reader may emit only
+   *  a source `locate` gave it.
+   *
+   *  WHAT IT CANNOT PLACE: a citation this producer split mid-word (document A's own
+   *  `R` / `ESOLUTION` drop cap) is not matched, so it is absent rather than
+   *  mispositioned. Absent-and-said is the safe direction; a confident wrong page is
+   *  not.
+   *
+   *  ONE THING IT DELIBERATELY DOES NOT DO: it does not decide whether the instrument
+   *  was ADOPTED. A proposed ordinance and an enacted one read the same at this grain,
+   *  and whether a body passed it is the minutes' business — which is why `enacted` is
+   *  not a fact here and `number` being null is reported as exactly what it is. */
+  parse(ctx) {
+    const raw = String(ctx.text || "");
+    const flat = flatten(raw);
+    const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
+    const cap = ownCaption(flat);
+    const number = cap && cap[2] ? cap[2] : null;
+    const instrument = cap ? cap[1].toLowerCase() : /\bORDAIN/i.test(flat) ? "ordinance" : null;
+    let title = null;
+    if (cap) {
+      const after = flat.slice(cap.index + cap[0].length, cap.index + cap[0].length + 2500);
+      for (const s of after.split(/(?<=\.)\s+/)) {
+        const t = s.trim();
+        if (t.length < 40) continue;
+        const letters = t.replace(/[^A-Za-z]/g, "");
+        if (!letters.length) continue;
+        if (t.replace(/[^A-Z]/g, "").length / letters.length < 0.85) continue;
+        title = t.replace(/^\s*INTRODUCED\s+BY\b[^\]]*\]\s*/i, "").replace(/\s+/g, " ").slice(0, 500);
+        break;
+      }
+    }
+    const recitals = (flat.match(RECITAL) || []).length;
+    const entities = [];
+    const seen = /* @__PURE__ */ new Set();
+    const take = (key, kind, label, facts, offset) => {
+      if (seen.has(key)) return;
+      seen.add(key);
+      entities.push(entity(key, kind, label, facts, locate(offset)));
+    };
+    const ownKey = number ? `${instrument}:${number}` : null;
+    for (const m of raw.matchAll(REG_INSTRUMENT_REF)) {
+      const key = `${m[1].toLowerCase()}:${m[2]}`;
+      if (key === ownKey) continue;
+      take(
+        key,
+        "instrument",
+        `${m[1][0].toUpperCase()}${m[1].slice(1).toLowerCase()} No. ${m[2]}`,
+        { instrument: m[1].toLowerCase(), number: m[2] },
+        m.index
+      );
+    }
+    for (const m of raw.matchAll(REG_CODE_REF))
+      take(`omc:${m[1]}`, "code_section", `O.M.C. ${m[1]}`, { section: m[1] }, m.index);
+    return {
+      entities,
+      instrument,
+      /* Null means THIS INSTRUMENT CARRIES NO NUMBER — document A's caption is
+         `ORDINANCE NO. ________ C.M.S.`, a proposed instrument awaiting one. It does
+         not mean the reader failed, and `number_why` says which. */
+      number,
+      number_why: number ? null : "this instrument's caption carries no number, which is what a proposed ordinance or resolution looks like before a body adopts it",
+      title,
+      recitals,
+      also_satisfies: alsoSatisfies(ctx, "regulation"),
+      at: ctx.at || null
+    };
+  },
+  /** Given two parses of the same instrument's address, what happened to it. */
+  assess(a, b) {
+    if (!a.instrument && !b.instrument && !(a.entities || []).length && !(b.entities || []).length)
+      return {
+        meaningful: null,
+        significance: null,
+        events: [],
+        confirmed: null,
+        why: "nothing could be read from this instrument this time, so nothing is claimed about it either way"
+      };
+    const events = [];
+    for (const k of ["instrument", "number", "title"])
+      if (String(a[k] || "") !== String(b[k] || ""))
+        events.push(event("instrument_changed", {
+          key: k,
+          was: a[k] || null,
+          now: b[k] || null,
+          why: `this instrument's ${k} is not what it was at this address`
+        }));
+    if (Number(a.recitals || 0) !== Number(b.recitals || 0))
+      events.push(event("instrument_changed", {
+        key: "recitals",
+        was: a.recitals,
+        now: b.recitals,
+        why: "the recitals establishing this instrument's grounds changed in number"
+      }));
+    const d = diffEntities(a.entities || [], b.entities || []);
+    for (const e of d.gone)
+      events.push(event("item_pulled", {
+        key: e.key,
+        label: e.label,
+        why: "an instrument or code section this one acted on is no longer named in it"
+      }));
+    for (const e of d.appeared)
+      events.push(event("item_added", {
+        key: e.key,
+        label: e.label,
+        why: "this instrument now names something it did not name before"
+      }));
+    bySeverity(events);
+    return {
+      meaningful: isMeaningful(events),
+      significance: worstSignificance(events),
+      events,
+      confirmed: {
+        entries: (b.entities || []).length,
+        intact: (a.entities || []).filter((e) => (b.entities || []).some((x) => x.key === e.key)).length
+      },
+      why: events.length ? `${events.length} change(s) to an instrument at the same address` : "this instrument says what it said, and acts on the same things"
     };
   }
 };
@@ -20556,11 +21345,35 @@ var generic_default = {
 // ../docprofile/doctypes/registry.mjs
 var types = makeRegistry();
 types.register(meeting_calendar_default);
+types.register(meeting_minutes_default);
 types.register(meeting_agenda_default);
+types.register(staff_report_default);
+types.register(regulation_default);
 types.register(generic_default);
 function doctypeFor(ctx) {
   const r = types.recognise(ctx);
-  return { type: r.member, confidence: r.confidence, signals: r.signals, considered: r.considered };
+  return {
+    type: r.member,
+    confidence: r.confidence,
+    signals: r.signals,
+    considered: r.considered,
+    also: alsoFor(ctx, r.member.key)
+  };
+}
+function alsoFor(ctx, selfKey) {
+  const out = [];
+  for (const m of types.all()) {
+    if (m.key === selfKey || m.fallback === true) continue;
+    let d;
+    try {
+      d = m.detect(ctx) || { match: false };
+    } catch (e) {
+      out.push({ key: m.key, confidence: null, signals: [], error: String(e && e.message || e) });
+      continue;
+    }
+    if (d.match) out.push({ key: m.key, confidence: d.confidence, signals: d.signals || [] });
+  }
+  return out;
 }
 
 // ../docprofile/readtext.mjs
@@ -20717,7 +21530,14 @@ function readText(supplied, ctx = {}) {
   const locate = makeLocator(flat.segments);
   if (typeof doctype.type.parse === "function") {
     try {
-      parsed = doctype.type.parse({ ...dctx, handler: stack.handler, at: ctx.at || null, locate }) || {};
+      const alsoSatisfies2 = () => (doctype.also || []).map((x) => x.key);
+      parsed = doctype.type.parse({
+        ...dctx,
+        handler: stack.handler,
+        at: ctx.at || null,
+        locate,
+        alsoSatisfies: alsoSatisfies2
+      }) || {};
     } catch (e) {
       parse_error = String(e && e.message || e);
     }

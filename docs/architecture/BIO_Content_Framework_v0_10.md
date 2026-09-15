@@ -1746,6 +1746,29 @@ yet: it extracts no TABLE as a table and no IMAGE as content (§15), only the me
 reader mints a reference over its text, and — as for every other format — nothing an edge
 can point at is minted from the element references it emits.
 
+**FW-18 WIDENED THE READERS, 2026-09-15, and the sentence above about "only the meeting-agenda
+reader" is now one of FOUR.** `EXTRACTION-BREADTH-DESIGN.md` §7 row 2, in M0-32's measured
+census order (`MEASUREMENTS.md` M-18): **meeting minutes**, the **staff report** and the
+**ordinance or resolution** are registered content types beside `meeting_calendar` and
+`meeting_agenda`, each written from a real Oakland document fetched and read through Tier-1,
+and each emitting its references with POSITION through FW-17's `ctx.locate`. The FOURTH class
+of the order, a **staff directory**, is NOT written, and the reason is a capture-tier
+measurement rather than a content-tier judgment: every directory this item could fetch was
+Tier-1 undecodable, so `readText` refuses the document and no content type is ever consulted —
+which is `DOCUMENT-PROFILES.md`'s own front matter to carry and is recorded there. **Two facts
+this section did not state and now must.** (1) THE REGISTRY CANNOT SAY A DOCUMENT IS TWO KINDS:
+`recognise` breaks on the first CERTAIN detection, while M0-32 measured 52 of 600 sampled
+documents satisfying more than one class — an Oakland agenda packet genuinely contains an
+agenda, its staff reports and its draft resolutions. `doctypes/registry.mjs` now answers this
+BESIDE the engine, with an additive pass that asks every type independently and changes no
+verdict, and a reader carries the answer into the reading's own facts. (2) THE AGENDA READER
+WAS WRONG ABOUT A WHOLE CLASS until this item: it took the word *Agenda* anywhere in the text
+as self-naming, and both real sets of Oakland minutes read as `meeting_agenda` at CERTAIN
+confidence because minutes say *on the July 21 City Council Agenda* of nearly every item. That
+is M0-32's one defect class — a REFERENCE read as MEMBERSHIP — and the correction is that
+self-naming is a RATE (a masthead is page furniture and recurs per page) rather than a
+presence.
+
 **Google Drive formats — not supported, and measured 2026-09-14.** Nothing in the record or the
 code names Google Docs, Sheets or Slides (grepped 2026-09-14). They are not file formats: a
 shared Drive link serves a client-rendered application shell whose bytes carry no document

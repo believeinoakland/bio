@@ -12990,3 +12990,133 @@ machine, which is evidence about the format as implemented and not a reading of 
 says nothing about OpenDocument, which fixes no maximum table size at all — the reason
 `odf.mjs` emits a NULL bound for `.ods` rather than borrowing this figure, and the reason the
 `odsborrowsgrid` control arm exists to stop a later session doing so quietly.
+
+## M-21 · 2026-09-15 · FW-18 — THE CONTENT TYPES BEYOND THREE, DRIVEN OVER REAL DOCUMENTS: **the registered `meeting_agenda` reader read BOTH real sets of Oakland meeting minutes as an agenda at CERTAIN confidence, and the fourth class of M0-32's order could not be reached at all because every directory in the corpus is Tier-1 undecodable** (worktree `agent-a188c62407d239d13`)
+
+**Instrument.** `bio-plane/src/pdfstructure.mjs`'s Tier-1 extraction and `docprofile/readtext.mjs`'s
+own `flattenText`/`readText` — the same path `op=acquire` runs — driven over documents fetched live
+from `oakland.legistar1.com` and `cao-94612.s3.amazonaws.com` on 2026-09-15. Every figure below is a
+count this session took; nothing is recalled. The suite that pins the outcome is
+`civicos-ui/test/doctype-breadth.test.mjs` and its seven control arms are `civicos-ui/test/nc-fw18.mjs`.
+
+**1 · THE LANDED DEFECT, measured before anything was written.** Two real sets of Oakland minutes —
+the \*Rules & Legislation Committee, 2026-07-16 (sha `2a3899ef8946…`, 198,543 bytes, 25 pages, 42,065
+characters decoded, 15 undetermined) and the Concurrent ORSA/City Council meeting, 2026-07-21 (sha
+`aae22e798866…`, 259,438 bytes, 37 pages, 59,049 characters, 35 undetermined) — both returned
+`meeting_agenda` at **CERTAIN** confidence from the registry as it stood on `origin/main`. The three
+signals it fired on: 41 (resp. 61) legislation file-number lines, `Subject:`/`Recommendation:` item
+blocks, and "an agenda heading". **Minutes and the agenda of the same meeting share the first two
+structurally**, and the third was satisfied by the phrase `On The July 21, 2026 City Council Agenda On
+Consent`, which appears against nearly every item. This is M0-32's ONE defect class — a REFERENCE to a
+kind read as MEMBERSHIP of it — landed in the plane against a whole document class rather than in a
+census instrument.
+
+**2 · SELF-NAMING SEPARATES BY RATE, NOT BY PRESENCE.** Line-anchored masthead counts over the three
+documents, whole:
+
+| document | pages | `Minutes`-masthead lines | `Agenda`-masthead lines | the word `Agenda` anywhere |
+| --- | --- | --- | --- | --- |
+| Rules Cttee minutes, 2026-07-16 | 25 | **25** | 2 | 20 |
+| Council minutes, 2026-07-21 | 37 | **37** | 0 | 11 |
+| Rules Cttee agenda, 2026-07-16 | 33 | 0 | **33** | 99 |
+
+A masthead recurs **once per page**; a reference occurs once or twice. **And the two stray `Agenda`
+lines in the first document survive line anchoring**: they are the wrapped tails of attachment titles
+(`Draft July 28, 2026 Cancelled Finance And Management Committee` / `Agenda`), so anchoring alone
+would not have fixed this and the THRESHOLD is what does. Implemented as `selfNaming` /
+`FURNITURE_RECURS = 3` in `docprofile/doctypes/index.mjs`.
+
+**3 · THE SAME CLASS IN THE OTHER DIRECTION, on the instrument side.** The Council's minutes carry
+**7 well-formed instrument captions** (`Ordinance No. 12187 C.M.S.` and others) — because minutes cite
+what a body adopted — and **0 enacting formulas** and **0 `WHEREAS` recitals**. A `regulation` matcher
+resting on the caption would have called that document an ordinance. The threshold therefore requires
+the OPERATIVE VOICE and the caption is never sufficient alone.
+
+**4 · TIER-1 TEXT IS NOT ONE SHAPE ACROSS PRODUCERS, and it changes how a matcher must be written.**
+Legistar emits clean lines. The City of Oakland's own published PDFs break words and phrases across
+line boundaries: a real ordinance opens `R\nESOLUTION \nN\nO\n.` from a drop cap and splits its own
+enacting formula (`…DOES ORDAIN AS\nFOLLOWS`); a board packet reads `P\nage 1`, `ben\nefit`,
+`te\nle-conference`. **A line-anchored phrase test finds none of these**, and looks exactly like a
+document that is not of the class. Phrases are matched over a whitespace-collapsed copy; line anchoring
+is kept only where the principle is genuinely about a line.
+
+**5 · THE DIRECTORY CLASS COULD NOT BE REACHED, and the reason is the capture tier.** M0-32's order puts
+a staff directory fourth (~395 items, the smallest class). Two walks:
+
+- **30 name-matched directory PDFs** from `s3://cao-94612` (`roster|contact-list|directory|phone-list|staff-list|membership`, under 3 MB): **0 of 30 decodable.** Every one returned 0–100 decoded characters against 1,204–33,189 undetermined markers — single-page scans and scanned booklets. `readText` refuses a document whose undetermined exceeds its decoded characters, so **no reading is attempted and no content type is ever consulted**.
+- **A fixed-seed walk of 300 bucket PDFs** (20 KB–4 MB): **45 decoded** (15%), of which **0** met a directory threshold, 2 met a staff-report threshold and 1 an ordinance threshold. At M0-32's own rate (~395 directories in a 29,626-item text-bearing stratum, 1.3%) the expectation over 45 decoded documents is **~0.6**, so this walk is CONSISTENT WITH RARITY and is NOT evidence the class is absent.
+
+**So the gap is a tier-3 gap wearing a content-type gap's clothes.** A directory reader written from a
+page nobody could read would be exactly the invented type the registry's own rule forbids. Recorded
+here, in `DOCUMENT-PROFILES.md`'s Incomplete sections, and in `docprofile/doctypes/registry.mjs` at the
+point where the type would have been registered.
+
+**6 · WHAT NAME-MATCHING IS WORTH, confirming M0-32 from the other end.** M0-32 measured that a
+name-only census recovers 13% of staff reports and 0% of directories. This item used name matching only
+to SOURCE a specimen and found the same thing: 0 of 30 name-matched "directory" documents were readable
+at all, while the two staff reports that were readable were found by BODY in a random walk. A filename
+is not evidence of a document's kind, and it is not much of a way to find one either.
+
+**7 · WHAT LANDED, AND WHAT THE READERS FOUND.** Five real documents, trimmed only in size, are the
+suite's fixture (`civicos-ui/test/fixtures/fw18-doctypes.json`, each carrying its source URL, the
+sha256 of the bytes read, and the whole document's page count). Driven end to end over the WHOLE
+documents:
+
+| document | type | conf | also | references | positioned |
+| --- | --- | --- | --- | --- | --- |
+| Rules Cttee minutes | `meeting_minutes` | certain | `meeting_agenda:likely` | 41 | **41/41** |
+| Council minutes | `meeting_minutes` | certain | — | 61 | **61/61** |
+| Rules Cttee agenda | `meeting_agenda` | certain | — | 41 | **41/41** |
+| Proposed ordinance (matter 37551) | `regulation` | certain | — | 16 | **16/16** |
+| Budget errata agenda report | `staff_report` | certain | `regulation:certain` | 2 | **2/2** |
+
+**The agenda→minutes progression closes from two readings rather than from one and an assumption:** the
+minutes and the agenda of the SAME meeting each emit 41 legislation file numbers, each with the page it
+was read on, and the two sets agree.
+
+**8 · THE MULTI-CLASS FINDING, LIVE.** Two of the five documents satisfy more than one class, which is
+M0-32's 52-in-600 (one in twelve) on a five-document sample. The budget errata staff report carries a
+whole resolution inside it — memorandum header, nine template sections and a sign-off, AND an
+`OAKLAND CITY COUNCIL / RESOLUTION NO. ____ C.M.S.` caption with six `WHEREAS` recitals and eleven
+operative clauses. **`makeRegistry().recognise` cannot report this**: it breaks on the first CERTAIN
+detection, so `considered` is truncated at whatever won. The registry answers beside the engine with an
+additive pass; the engine is untouched.
+
+**9 · THE READERS' OWN DEFECTS, found by DRIVING and recorded rather than smoothed.** Six, all caught by
+running a reader over a real document instead of reading it back, and **two of them were the very defect
+class this item exists to correct, made INSIDE the reader written to avoid it**:
+
+1. `regulation` took its own instrument number from the first well-formed caption anywhere in the text and reported `number: 83689` for a document whose own caption reads `ORDINANCE NO. ________ C.M.S.` — a number it merely cites.
+2. The fix for (1) — take the LAST caption before the enacting formula — reported `13314` instead, because the document's 25 recitals all cite prior ordinances by number and every one sits between the real caption and the enactment. What actually separates them is what sits IMMEDIATELY ABOVE: the enacting body's name.
+3. `meeting_minutes.detect`'s `convened` family never fired on either document because the pattern lacked `/i` and the documents are set in title case.
+4. `meeting_minutes.parse` reported `item: null` for every item of both documents: the agenda puts the item number immediately before the file number, the minutes put it at the head of the block.
+5. `item: "0"` for every matter following a recorded vote — the `0` under a `NO VOTE:` label read as an item number.
+6. `staff_report`'s memo header returned `to` as the whole block and `date` as `June 19, 2020 City Administrator Approval Date: RECOMMENDATION Staff Recommends…`, because each field was cut at a character count rather than at the next label.
+
+**And one that could not be fixed and is reported as an honest null instead.** The Council's minutes set
+the body's name across THREE lines (`* Concurrent Meeting of the Oakland` / `Redevelopment Successor
+Agency` / `and the City Council`), every one of them recurring 37 times, so recurrence cannot tell the
+tail of a wrapped name from a whole name. Three successive rules each produced a CONFIDENT WRONG BODY
+(`and the City Council`, then `Items, Reconsiderations, Pull Items Held In Committee`, then `Office Of
+The City Council`). The reader now declines and states why. The Rules Committee minutes still name their
+body, so the null is a real answer and not a broken path — and the suite asserts both.
+
+**10 · THE CONTROL ARM THAT WAS WRONG, AND WHAT IT FOUND.** The `ratefence` arm was declared as: restore
+the agenda's pre-FW-18 bare-word rule and the minutes must go back to reading as an agenda. **They did
+not** — they stayed `meeting_minutes` and the suite stayed green. The arm found a property neither the
+design nor the harness's author had separated: **the correction has TWO INDEPENDENT HALVES.**
+`recognise` breaks on the first CERTAIN, and `meeting_minutes` is registered ahead of `meeting_agenda`,
+so the ORDER alone decides every primary verdict and the rate fence governs only the `also` list and the
+confidence there. Re-declared at that level it fires — and on its first corrected run it fired **while
+the suite stayed green**, which was a finding about the SUITE: two assertions were added for it. A
+seventh arm (`defect`, two patches) arms both halves and is the only one that reproduces what `main`
+actually held. **Seven arms, all RUN, all as declared after that correction.**
+
+**What this measurement can and cannot see.** It is ONE publisher (the City of Oakland, through Legistar
+and one S3 bucket) and ONE producer's Tier-1 extraction. It says nothing about how these classes are
+published elsewhere, and a reader written from Oakland's house style will meet documents it does not
+recognise — which is why each type keeps a `likely` path that does not depend on the house style's
+strongest signal. It does not measure precision or recall of the new types over a population: that is a
+census, and it is M0-32's kind of work, not this item's. And **it cannot see a class whose documents do
+not decode**, which is finding 5 and is the honest limit of every content-type measurement taken over
+this corpus.
