@@ -870,9 +870,15 @@ const REGISTER_FLOOR = {
      because the suite then declared five arms and now declares six — which is the
      second reason the contaminated figure is never the one to move to: it is a
      snapshot of a tree still being written. Nothing FELL. */
-  arms: 1021,
-  classified: 187,
-  corpus: 188,
+  /* MOVED 2026-09-14 by CONDUCT #11 at CAP-12's integration (1021 -> 1030 · 187 -> 188 · 188 -> 189):
+     the MERGED run's own print read `arms 1030/1021 · classified 188/187 · corpus (suites read)
+     189/188 · GREW by 9 arm(s)` - CAP-12's container-extent suite (nine declared arms, one new
+     suite) on top of SK-7's 1021. The branch's own block (1024/187/188, its post-commit print on a
+     tree cut before SK-7 landed) was dropped at the merge and declared; this is the re-read the
+     loop promises. One key set. Nothing FELL. FLEET_FLOOR unmoved. */
+  arms: 1030,
+  classified: 188,
+  corpus: 189,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
