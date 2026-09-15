@@ -9499,21 +9499,68 @@ export function checkCaseDocument(fm, ctx = {}) {
  * free by hand.
  * ========================================================================= */
 
-/** IC-1's five arms, unified with attestation's document|page|region. The
- *  WRITER lands on two of them (REC-82); the other three are REC-85's `covers`
- *  and are named here so that landing is a writer rather than a migration.
+/** IC-1's five arms, unified with attestation's document|page|region. REC-82
+ *  landed the writer on two of them and REC-85 landed the other three, so the
+ *  prediction that made `landed` a FLAG rather than a rewrite held: the landing
+ *  was a writer and not a migration, because no row of the three kinds could
+ *  ever have existed to migrate.
  *
  *  `landed` is what this plane can evaluate TODAY. A kind that is named and not
  *  landed is refused as C-45.3 with its own sentence, which is a different fact
  *  from a kind nobody has ever heard of — and the member who trips it is
- *  usually right that the passage exists. */
+ *  usually right that the passage exists. The column is KEPT with every arm
+ *  true rather than deleted: `dom` joins this map the day CONTENT-HTML produces
+ *  one, and it will arrive unlanded for exactly one item's width.
+ *
+ *  THE THREE ARMS' FIELDS ARE THE PRODUCERS' OWN, never re-invented here —
+ *  `sheetCellRef` (`src/formats-xlsx.mjs`, shared with `.ods`), `docParaRef`
+ *  (`src/docx.mjs`, shared with `.odt`) and `slideShapeRef` (`src/pptx.mjs`,
+ *  shared with `.odp`) are the four COFF entries' one builder per arm. The
+ *  NUMBERING is theirs and it is NOT uniform, which is the single most
+ *  dangerous thing about this grammar and is therefore written down: `para` and
+ *  `shape` are 0-BASED, `slide` is 1-BASED (IC-1's own example: ref "slide 7",
+ *  slide 7), and a cell is A1 notation in which both halves are 1-based. This
+ *  file cannot IMPORT those builders — it imports nothing, on purpose, because
+ *  it is the layer the checker and the store both import — so the suite PINS
+ *  the derived human form against each producer's real output instead, which is
+ *  a measurement rather than a promise. */
 export const CONTENT_EXTENT_KINDS = {
   document:      { landed: true,  human: 'the whole document' },
   'pdf-page':    { landed: true,  human: 'a page of a PDF' },
-  'sheet-cell':  { landed: false, human: 'a cell of a spreadsheet' },
-  'slide-shape': { landed: false, human: 'a shape on a slide' },
-  'doc-para':    { landed: false, human: 'a paragraph of a document' },
+  'sheet-cell':  { landed: true,  human: 'a cell of a spreadsheet' },
+  'slide-shape': { landed: true,  human: 'a shape on a slide' },
+  'doc-para':    { landed: true,  human: 'a paragraph of a document' },
 };
+
+/** A CELL IN A1 NOTATION, as the container emits it and as a member may paste
+ *  it out of a spreadsheet. The `$` absolute markers are ADMITTED and then
+ *  normalised away by `canonicalExtent`, for `normRect`'s reason exactly: `B14`
+ *  and `$B$14` are one cell, and refusing the second — or minting a second row
+ *  for it — would be the record holding two addresses for one passage. Case is
+ *  admitted for the same reason and uppercased in the canonical form.
+ *
+ *  WHAT THIS BOUND IS AND IS NOT. Three letters and seven digits is a SHAPE
+ *  bound, not a format ceiling: XLSX stops at XFD1048576 and ODF does not stop
+ *  there, so enforcing one spreadsheet's limit on every container would be a
+ *  fence tighter than its rule — and the rule that matters, whether THIS
+ *  workbook holds that cell, is the container-extent arm below and is answered
+ *  from the document rather than from a standard. */
+export const CONTENT_EXTENT_A1_RE = /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}$/;
+
+/** A1 -> `{ col, row }`, both 1-BASED, over a cell this file has already
+ *  admitted. The column is base-26 bijective (A..Z, AA..AZ, ...), which is NOT
+ *  ordinary base 26 — there is no zero digit — and getting that wrong puts
+ *  column AA at 26 instead of 27, which would make the container-extent arm
+ *  refuse the last column of every wide sheet. The suite sweeps the boundaries
+ *  (Z/AA, ZZ/AAA) rather than trusting this sentence. */
+export function a1ToRowCol(cell) {
+  const t = String(cell == null ? '' : cell).replace(/\$/g, '').toUpperCase();
+  const m = /^([A-Z]{1,3})([1-9][0-9]{0,6})$/.exec(t);
+  if (!m) return null;
+  let col = 0;
+  for (const ch of m[1]) col = col * 26 + (ch.charCodeAt(0) - 64);
+  return { col, row: parseInt(m[2], 10) };
+}
 
 /** `dom` is NOT in the map above and that is the point: it is refused BY NAME
  *  rather than falling through the unknown-kind arm, because the two are
@@ -9525,10 +9572,21 @@ export const CONTENT_EXTENT_CHECKS = {
   CONTENT_EXTENT_OUT_OF_RANGE: {
     check: 'C-45.1',
     where: 'checks/bio-checks.mjs checkContentExtent > is-content-extent',
-    translation: 'This citation points at a page the document does not have. A reference nobody '
-      + 'can follow is worse than no reference: it looks like evidence and resolves to nothing. '
-      + 'Check the page number against the document as this record holds it — pages are counted '
-      + 'from the first page of the captured file, which is not always the number printed on it.',
+    /* WIDENED BY REC-85 AND NOT REPLACED, because the FACT did not change: this
+       code has always meant "the address falls outside the container's own
+       extent", and a page set is one container's extent. A spreadsheet's sheets
+       and their dimensions, a document's paragraph count and a deck's shape list
+       are the same fact about three more containers, so they are this code and
+       not a fifth one — minting a second code for a rule that already has one is
+       how a vocabulary comes to hold two answers, which is the argument this
+       family's own header makes about the machine-credential fence. */
+    translation: 'This citation points at a part of the document that is not there — a page, a '
+      + 'sheet or cell, a paragraph, or a slide or shape that falls outside what this record '
+      + 'holds of the document. A reference nobody can follow is worse than no reference: it '
+      + 'looks like evidence and resolves to nothing. Check the address against the document as '
+      + 'this record holds it — pages and paragraphs are counted from the start of the captured '
+      + 'file, which is not always the number printed on it, and a sheet or slide the file '
+      + 'renamed or removed is a real finding rather than a typo.',
   },
   CONTENT_EXTENT_NO_CHAIN: {
     check: 'C-45.2',
@@ -9603,14 +9661,41 @@ export function legExtent(leg) {
     if (l.extent_page !== undefined && l.extent_page !== null) out.page = l.extent_page;
     if (l.extent_rect !== undefined && l.extent_rect !== null) out.rect = l.extent_rect;
   }
-  /* The three unlanded arms carry their own fields through UNREAD, so REC-85
-     adds a reader rather than a shape. Carried as `fields` so that a leg naming
-     `extent_cell` today is refused by C-45.3 for being an unlanded arm and not
-     silently stripped to a document reference — the direction that matters. */
-  if (kind === 'sheet-cell' || kind === 'slide-shape' || kind === 'doc-para')
-    out.fields = { sheet: l.extent_sheet ?? null, cell: l.extent_cell ?? null,
-                   slide: l.extent_slide ?? null, shape: l.extent_shape ?? null,
-                   para: l.extent_para ?? null, run: l.extent_run ?? null };
+  /* REC-85: THE THREE ARMS' FIELDS ARE NOW READ PER ARM rather than carried
+     through in one six-key bag. REC-82 wrote that bag deliberately — an
+     unlanded arm had to reach `checkContentExtent` as SOMETHING so it could be
+     refused BY NAME instead of being silently stripped to a document reference
+     — and its prediction was that this landing "adds a reader rather than a
+     shape". That held, and the bag goes rather than staying beside the reader:
+     two spellings of one address are two addresses, and `canonicalExtent` takes
+     the content id over exactly these fields.
+
+     CHANGING THE CANONICAL FORM OF THESE THREE ARMS MIGRATES NOTHING, and that
+     is a fact about the record rather than an argument: every one of them was
+     refused as unlanded until this commit, so no row of any of these kinds can
+     exist to have been addressed the old way. The suite asserts the count is
+     zero on a real store rather than reasoning about it. `document` and
+     `pdf-page` are UNTOUCHED here and their canonical bytes are pinned by
+     digest against the pristine tree.
+
+     EACH ARM TAKES ONLY ITS OWN FIELDS. A leg naming `extent_cell` under
+     `extent_kind: doc-para` has said nothing about a paragraph, and carrying
+     the stray field would let it into the address; dropping it is what makes
+     `¶4` mean one thing. The stray field is not silently FORGIVEN either — it
+     is REC-84's `legHasAuthoredExtent`/`content_id` arm that judges what the
+     document said, and this function answers only what the leg MEANS. */
+  if (kind === 'sheet-cell') {
+    if (l.extent_sheet !== undefined && l.extent_sheet !== null) out.sheet = l.extent_sheet;
+    if (l.extent_cell !== undefined && l.extent_cell !== null) out.cell = l.extent_cell;
+  }
+  if (kind === 'slide-shape') {
+    if (l.extent_slide !== undefined && l.extent_slide !== null) out.slide = l.extent_slide;
+    if (l.extent_shape !== undefined && l.extent_shape !== null) out.shape = l.extent_shape;
+  }
+  if (kind === 'doc-para') {
+    if (l.extent_para !== undefined && l.extent_para !== null) out.para = l.extent_para;
+    if (l.extent_run !== undefined && l.extent_run !== null) out.run = l.extent_run;
+  }
   return out;
 }
 
@@ -9635,6 +9720,35 @@ export function canonicalExtent(extent) {
       : null;
     return canonicalJson({ kind: 'pdf-page', page: Number.isInteger(e.page) ? e.page : null, rect: r });
   }
+  /* REC-85 — THE THREE OFFICE ARMS, each over ITS OWN fields and no others, for
+     the reason the rect is normalised one branch up: two spellings of one
+     address must produce one string or the dedup-by-construction property is a
+     claim rather than a mechanism. A cell is normalised the way a rect is —
+     `$B$14`, `b14` and `B14` are ONE cell — and the sheet NAME is not, because
+     a workbook's sheet names are the container's own strings and this file has
+     no warrant to decide that two of them are the same one.
+
+     `run` and `shape` are IN the address and `ref` is not, which is the same
+     split `pdf-page` already makes: a finer field narrows what is being cited
+     and belongs in the id, while the human wording of it does not. */
+  if (e.kind === 'sheet-cell')
+    return canonicalJson({ kind: 'sheet-cell',
+      sheet: typeof e.sheet === 'string' && e.sheet.trim() ? e.sheet.trim() : null,
+      cell: typeof e.cell === 'string' && CONTENT_EXTENT_A1_RE.test(e.cell.trim())
+        ? e.cell.trim().replace(/\$/g, '').toUpperCase() : null });
+  if (e.kind === 'slide-shape')
+    return canonicalJson({ kind: 'slide-shape',
+      slide: Number.isInteger(e.slide) ? e.slide : null,
+      shape: Number.isInteger(e.shape) ? e.shape : null });
+  if (e.kind === 'doc-para')
+    return canonicalJson({ kind: 'doc-para',
+      para: Number.isInteger(e.para) ? e.para : null,
+      run: Number.isInteger(e.run) ? e.run : null });
+  /* AN EXTENT NOBODY CAN EVALUATE STILL GETS A CANONICAL FORM, because this
+     function is total and `checkContentExtent` is what refuses — but nothing
+     ever mints one, so this branch addresses no row. It is kept honest rather
+     than deleted: a kind added to the map and not to this function would
+     otherwise silently collapse into the `pdf-page` branch's neighbour. */
   return canonicalJson({ kind: e.kind ?? null, fields: e.fields ?? null });
 }
 
@@ -9656,6 +9770,32 @@ export function describeExtent(extent) {
     return Array.isArray(e.rect) && e.rect.length === 4
       ? `page ${human}, a region of it` : `page ${human}`;
   }
+  /* REC-85 — AND THE DERIVED FORM IS THE PRODUCER'S OWN `ref`, EXACTLY.
+     IC-1's rule is that the human form is produced by the container that knows
+     it, so the string this function composes when a member authored none is the
+     string `sheetCellRef` / `docParaRef` / `slideShapeRef` would have produced
+     for the same address — `Sheet1!B14`, `¶12`, `slide 7`. This file imports
+     nothing (it is the layer the checker and the store both import), so the
+     parity is not obtained by calling them; it is PINNED in the suite against
+     each producer's real output, which is a measurement and not a promise.
+
+     `run` AND `shape` ARE IN THE ADDRESS AND NOT IN THE SENTENCE, which is the
+     producers' own shape and IC-1's stated reason for it: "run boundaries are
+     producer artifacts; the paragraph is what a person is shown", and
+     `slideShapeRef(7, 3).ref` is "slide 7". So two rows citing two shapes of
+     one slide describe alike and address apart — under-describing, never
+     over-claiming, and a member who wants the finer wording authors
+     `extent_ref`, which wins over everything here. */
+  if (e.kind === 'sheet-cell') {
+    const sheet = typeof e.sheet === 'string' && e.sheet.trim() ? e.sheet.trim() : null;
+    const cell = typeof e.cell === 'string' && e.cell.trim() ? e.cell.trim() : null;
+    if (sheet && cell) return `${sheet}!${cell}`;
+    return 'a cell of this spreadsheet';
+  }
+  if (e.kind === 'doc-para')
+    return Number.isInteger(e.para) ? `\u00b6${e.para + 1}` : 'a paragraph of this document';
+  if (e.kind === 'slide-shape')
+    return Number.isInteger(e.slide) ? `slide ${e.slide}` : 'a shape in this deck';
   const row = CONTENT_EXTENT_KINDS[e.kind];
   return row ? row.human : 'a part of this document the record cannot name';
 }
@@ -9719,6 +9859,82 @@ export function checkContentExtent(extent, ctx = {}) {
         `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the `
         + `extent names page ${e.page}`);
   }
+  /* ==================================================================== *
+     REC-85 / IC-83 — THE OTHER THREE ARMS, each in two halves that answer two
+     different questions and must never be collapsed into one.
+
+     THE SHAPE half asks whether this is an ADDRESS AT ALL, and any caller can
+     answer it: a cell is A1 notation on a named sheet, a paragraph is a 0-based
+     ordinal, a slide is a 1-BASED ordinal (the producers' own numbering — see
+     CONTENT_EXTENT_KINDS' header; it is not uniform and pretending it were is
+     the mistake available here). A shape this file cannot read COVERS NOTHING
+     AND MINTS NOTHING — C-45.3, `extentCovers`' own default one construct along.
+
+     THE CONTAINER half asks whether THIS DOCUMENT HOLDS that address, and only
+     the record can answer it. It is checked EXACTLY WHERE THE RECORD HOLDS THE
+     CONTAINER'S EXTENT and is skipped, never guessed, where it does not — which
+     is the page-set arm's rule above, restated per arm because the reason is the
+     same one and it is the reason that matters: a gate that refused every cell
+     citation on a workbook whose sheets this plane never recorded would pressure
+     a member into citing the WHOLE DOCUMENT instead, which claims MORE and not
+     less. Undetermined, STATED, never a refusal for what nobody measured.
+
+     AND WHAT THE RECORD HOLDS TODAY IS NOTHING, MEASURED RATHER THAN ASSUMED.
+     I2 produces the sheet walk, the paragraph list and the shape sequence at
+     acquire (COFF-3/4/5, and COFF-10's three ODF entries), and NOTHING PERSISTS
+     ANY OF IT: a reading carries `entities`, `facts`, `text_source`, `text_tier`
+     and `text_container` and no structure, `docprofile/readtext.mjs` says in its
+     own words that it "returns what the recognisers said — never a persisted
+     shape", and no table in the schema holds a sheet, a paragraph or a shape.
+     Part II §15 states the same thing from the design side: the I2 structure is
+     "not stored — recoverable only by re-running the structure op". So all three
+     of these arms are LIVE AND UNFED — the seam is built, correct and driven,
+     and the figure that would fire it has to be persisted at acquire, which is
+     CAPTURE's path (the CAP-9 shape for D-345's page count) and is DELEGATED
+     rather than taken here. This comment is the honest statement of that, and
+     the store's `#containerExtentForCapture` names the empty level in the
+     answer it returns rather than returning a bare null.
+     ==================================================================== */
+  if (e.kind === 'sheet-cell') {
+    if (typeof e.sheet !== 'string' || !e.sheet.trim())
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `a sheet-cell extent names which sheet, as the workbook spells it. This one names `
+        + `'${String(e.sheet).slice(0, 40)}'`);
+    if (typeof e.cell !== 'string' || !CONTENT_EXTENT_A1_RE.test(e.cell.trim()))
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `a sheet-cell extent names which cell in A1 notation (B14, $B$14). This one names `
+        + `'${String(e.cell).slice(0, 40)}'`);
+    const outside = coversSheetCell(e, ctx.container);
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+  }
+  if (e.kind === 'doc-para') {
+    if (!Number.isInteger(e.para) || e.para < 0)
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `a doc-para extent names which paragraph, as a 0-based integer. This one names `
+        + `'${String(e.para).slice(0, 40)}'`);
+    if (e.run !== undefined && e.run !== null && !(Number.isInteger(e.run) && e.run >= 0))
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `a doc-para extent's run is a 0-based integer or absent. A run that is present and `
+        + `unreadable is worse than none, because it looks like a span somebody chose`);
+    const outside = coversDocPara(e, ctx.container);
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+  }
+  if (e.kind === 'slide-shape') {
+    /* 1-BASED, and it is the one place in this grammar where 0 is a refusal
+       rather than the first item. IC-1 fixed it that way ("ref: slide 7, slide
+       7") and `slideShapeRef` emits it that way, so admitting 0 here would let
+       two spellings of slide 1 exist and would mint two rows for one shape. */
+    if (!Number.isInteger(e.slide) || e.slide < 1)
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `a slide-shape extent names which slide, as a 1-based integer (slide 1 is the first). `
+        + `This one names '${String(e.slide).slice(0, 40)}'`);
+    if (e.shape !== undefined && e.shape !== null && !(Number.isInteger(e.shape) && e.shape >= 0))
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `a slide-shape extent's shape is a 0-based integer or absent. A shape that is present `
+        + `and unreadable is worse than none, because it looks like an element somebody chose`);
+    const outside = coversSlideShape(e, ctx.container);
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+  }
   /* THE CHAIN, LAST, AND IT IS A FACT ABOUT THE CAPTURE RATHER THAN THE EXTENT.
      A content row is an address into TEXT somebody or something produced, and a
      capture nobody has read holds no text to address. A DOCUMENT extent is
@@ -9733,6 +9949,91 @@ export function checkContentExtent(extent, ctx = {}) {
       `this record holds no extraction chain for the capture this leg cites, so there is no `
       + `transcription over ${describeExtent(e)} for the citation to point at`);
   /* END DEC-49 REGION is-content-extent */
+  return null;
+}
+
+/* ==========================================================================
+ * REC-85 — THE THREE CONTAINER-EXTENT PREDICATES.
+ * ==========================================================================
+ *
+ * One per arm, each the mirror of the page-set comparison inside
+ * `checkContentExtent` and each obeying its two rules: the figure comes from the
+ * RECORD and is never invented here, and an ABSENT figure is UNDETERMINED AND
+ * SKIPPED rather than refused. They are separate functions rather than three
+ * branches because each reads a different shape and each names a different
+ * sentence, and the store's resolver answers each of them independently — a
+ * capture may legitimately hold a sheet list and no dimensions.
+ *
+ * WHAT THE SHAPE IS, so the CAPTURE-side item that fills it has one target:
+ *
+ *   container = { sheets:     [{ name, rows, cols }] | null,
+ *                 paragraphs: <count> | null,
+ *                 slides:     [{ shapes: <count> }]  | null }
+ *
+ * EVERY LEVEL IS INDEPENDENTLY NULLABLE and every one of them means the same
+ * thing: the record does not hold it. A sheet list with no `rows`/`cols` refuses
+ * an unknown SHEET and says nothing about the cell, which is exactly right — the
+ * record can know a workbook's sheets without having walked their extents, and
+ * answering the second question from the first would be inventing a bound.
+ *
+ * THEY RETURN A SENTENCE OR NULL — NEVER A REFUSAL — AND THAT IS DEC-49'S RULE
+ * RATHER THAN A STYLE. The code must be a STRING LITERAL at its site inside the
+ * governed region a row's `where` names, because a code held anywhere the guard
+ * cannot see is how one shipped `translation: undefined` to a member. Minting
+ * C-45.1 in here would have put three of its four sites OUTSIDE
+ * `is-content-extent` while the row's `where` went on naming that region alone —
+ * the MULTI-SITE-CODE condition `civicos-ui/check-refusal-codes.mjs` documents
+ * at length and cannot close, joined voluntarily and for no gain. So these
+ * functions answer WHAT IS WRONG and `checkContentExtent` answers WHICH CODE
+ * THAT IS, which keeps all four C-45.1 sites inside the one span the row claims.
+ */
+
+/** A cell of a named sheet, against the workbook as the record holds it.
+ *  Returns the sentence naming what is outside, or null. */
+function coversSheetCell(e, container) {
+  const sheets = container && Array.isArray(container.sheets) ? container.sheets : null;
+  if (!sheets || !sheets.length) return null;
+  const want = String(e.sheet).trim();
+  const sheet = sheets.find((x) => x && typeof x.name === 'string' && x.name === want);
+  if (!sheet)
+    return `this capture's workbook holds ${sheets.length} sheet(s) `
+      + `(${sheets.map((x) => (x && typeof x.name === 'string' ? x.name : '?')).slice(0, 12).join(', ')}`
+      + `${sheets.length > 12 ? ', …' : ''}) and the extent names a sheet called '${want.slice(0, 40)}'`;
+  const at = a1ToRowCol(e.cell);
+  if (!at) return null;
+  if (Number.isInteger(sheet.rows) && sheet.rows > 0 && at.row > sheet.rows)
+    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) `
+      + `and the extent names row ${at.row}`;
+  if (Number.isInteger(sheet.cols) && sheet.cols > 0 && at.col > sheet.cols)
+    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the extent `
+      + `names column ${at.col}`;
+  return null;
+}
+
+/** A paragraph, against the paragraph count as the record holds it.
+ *  Returns the sentence naming what is outside, or null. */
+function coversDocPara(e, container) {
+  const n = container ? container.paragraphs : null;
+  if (!(Number.isInteger(n) && n > 0)) return null;
+  if (e.para >= n)
+    return `this capture's text holds ${n} paragraph(s) (0-${n - 1}) and the extent names `
+      + `paragraph ${e.para}`;
+  return null;
+}
+
+/** A shape on a slide, against the deck as the record holds it.
+ *  Returns the sentence naming what is outside, or null. */
+function coversSlideShape(e, container) {
+  const slides = container && Array.isArray(container.slides) ? container.slides : null;
+  if (!slides || !slides.length) return null;
+  if (e.slide > slides.length)
+    return `this capture's deck holds ${slides.length} slide(s) (1-${slides.length}) and the extent `
+      + `names slide ${e.slide}`;
+  const slide = slides[e.slide - 1];
+  const n = slide ? slide.shapes : null;
+  if (Number.isInteger(e.shape) && Number.isInteger(n) && n > 0 && e.shape >= n)
+    return `slide ${e.slide} of this capture holds ${n} shape(s) (0-${n - 1}) and the extent names `
+      + `shape ${e.shape}`;
   return null;
 }
 

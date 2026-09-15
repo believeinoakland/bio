@@ -11238,3 +11238,51 @@ another name. Neither exists: `textchain.mjs` has no re-exporting wrapper, and t
 imports from it are the explicit named list at `store.mjs:253-255`, which does not include
 `captureBound`. It says nothing about `newgroup/` (the installer embeds a plane copy that
 regenerates at the next cut) or about the fleet members, none of which import `textchain.mjs`.
+
+
+## M-REC85 · 2026-09-14 — WHAT THE RECORD HOLDS OF A CONTAINER'S OWN EXTENT: NOTHING, MEASURED FOUR WAYS
+
+**Instrument and why it was run.** REC-85 landed the `sheet-cell`, `doc-para` and `slide-shape`
+arms of the content-extent primitive (IC-83, D-164). Each arm's out-of-range refusal compares an
+address against the container's own extent — a workbook's sheets and their dimensions, a
+document's paragraph count, a deck's per-slide shape list — so the first question the item had to
+answer was whether the record holds any of it. It was measured rather than assumed, on
+`origin/main` at `3f92e5c`, and the answer is NO for all three.
+
+| what was asked | instrument | answer |
+| --- | --- | --- |
+| does the persisted reading carry any structure? | read `bio-plane/src/index.mjs`'s acquire path, every branch that builds `reading` | NO — `content_type`, `reader_version`, `read_from_text`, `found`, `entities`, `facts`, `at`, `text_source`, `text_tier`, `text_container`, `basis`, and nothing structural |
+| does the read-text entry point persist a shape? | `docprofile/readtext.mjs`, its own header | NO — *"returns what the recognisers said — never a persisted shape"* |
+| does any table hold a sheet, a paragraph or a shape? | `grep -o 'CREATE TABLE IF NOT EXISTS [a-z_]*' bio-plane/src/schema.mjs`, then grep the file for `paragraph`/`sheets`/`slides`/`shapes` | NO — **77 tables**, not one of them |
+| does the design already say so? | `BIO_Content_Framework_v0_10.md` Part II §15, the structure-shape row | YES — *"not stored — recoverable only by re-running the structure op, which stops at tier 2"*. REC-85 marked that row load-bearing rather than descriptive |
+
+**The producers all compute it**, which is what makes this a wiring gap and not a capability gap:
+`formats-xlsx.mjs` walks every sheet's rows and cells, `docx.mjs` emits `paragraphs[]`, `pptx.mjs`
+tracks the shape sequence per slide, and COFF-10's three ODF entries produce the same I2 shape.
+Nothing carries any of it past acquire. Filed as **D-354** and delegated to CAPTURE (the CAP-9
+shape, which already carries the page-count half as D-345).
+
+**The one record-held fact that is adjacent, named so the next actor does not re-derive it:**
+`reading.text_container` IS persisted (`xlsx` / `docx` / `pptx` / `pdf` / …). It could feed a
+COARSE container check — a `sheet-cell` address on a capture read as `docx` has no sheets at all.
+REC-85 did not build it: it is not what the row names, and `text_container` is NULL on every
+capture that never reached the format axis, so a fence on it would refuse correct work in exactly
+the over-strict direction this family refuses. A candidate for its own row, not a gap D-354 covers.
+
+## M-REC85b · 2026-09-14 — A CONTENDED BATTERY FLAKES; THE SAME SUITE PASSES ALONE
+
+**Measured while taking REC-85's baseline, and recorded because it changed what the baseline was
+believed to be.** Two full battery runs of the SAME commit (`3f92e5c`) an hour apart:
+
+| run | tree | result |
+| --- | --- | --- |
+| A | the item's own worktree, `npm ci` in all three members | **190/190 green · 11,713 assertions · 277.0s** |
+| B | a pristine detached `git worktree add` at `3f92e5c`, `npm ci` in `bio-plane/` ONLY | 188/190 · 1 skipped · 11,635 assertions · 244.7s |
+
+Run B's two deficits were both instrument, not tree, and both were checked rather than assumed:
+`ocr-worker/ocr-worker.test.mjs` SKIPPED because that member's own `npm ci` had not been run in the
+scratch checkout (the battery names the skip and says the member DID NOT RUN — it does not hide
+it); and `monitor-cadence.test.mjs` reported 2 FAIL at 6,263ms under **six concurrent batteries**
+on the machine, then **passed alone on the same pristine tree at 14,344ms**. A time-sensitive
+suite given less than half its uncontended wall clock. **The authoritative baseline is A's
+190/190 · 11,713**, which is also exactly the figure the spawn brief carried — measured, and right.

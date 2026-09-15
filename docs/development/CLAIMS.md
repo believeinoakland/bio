@@ -4807,3 +4807,115 @@ found and did NOT touch, because it is in nobody's claimed path: the LAST LINE o
 without its `D-` prefix and with every backticked span stripped out — which is
 `printf`/`-m` damage in the shape CLAUDE.md's own trap section describes. `plancheck`
 passes over it. It is named here so it is not lost.
+
+## CLAIM 2026-09-14 RECORD (REC-85 — the other three `covers` arms: `sheet-cell`, `doc-para`, `slide-shape`)
+
+Session: RECORD worker for REC-85, spawned by CONDUCT #11, Opus 5.
+Worktree: `.claude/worktrees/agent-ab9b57847595f1ea2` · branch `worktree-agent-ab9b57847595f1ea2`.
+Contract: IC-83 (I5 1.11.0, CHANGING) and IC-84 (I3 14.1.0, CHANGING) — **no new IC**: the
+three arms are IC-1's union, already in `CONTENT_EXTENT_KINDS` and named `landed: false`
+there by REC-82 so that this landing is a WRITER rather than a migration.
+Design read first: `BIO_Content_Framework_v0_10.md` Part II §15 (the forms) and §16 (the
+extraction path), front matter first; IC-83's "Rules the writer enforces" (the page-count
+refusal these mirror) and IC-84's leg grammar.
+
+Paths claimed BY REGION, never whole files:
+
+- **`bio-plane/checks/bio-checks.mjs`** — the **C-45 content-extent family ONLY**:
+  `CONTENT_EXTENT_KINDS` (the three `landed` flags), `legExtent`'s three unlanded arms,
+  `canonicalExtent`'s and `describeExtent`'s three arms, and the three new arms inside
+  `checkContentExtent`'s `DEC-49 REGION is-content-extent`. **NOT** `checkInquiryBasis`,
+  **NOT** `basisVersionFindings`, **NOT** `checkLegExtentGrammar` / `legHasAuthoredExtent` /
+  `CONTENT_ID_RE` / `CONTENT_EXTENT_DOCUMENT_ONLY` — those are REC-84's, committed on
+  `worktree-agent-ae95c3be71f5bd167` (`40f34e1`) and integrating ahead of this item.
+- **`bio-plane/src/store.mjs`** — the **REC-82 content-writer region ONLY**: `contentContextFor`
+  gains one resolved field, and one new private resolver beside `#pageSetForCapture`.
+  **NOT** `checkInquiryBasis`, **NOT** `basisVersionFindings`, **NOT** `earnedBasisRegistry`,
+  **NOT** `#contentStanding` / `#contentTarget` (REC-83's read region), **NOT** the
+  version-leg writer (REC-84's).
+- **`bio-plane/test/content-extent-arms.test.mjs`** — NEW, this item's suite.
+- **`bio-plane/test/nc-rec85.mjs`** — NEW, this item's negative-control driver.
+- **`bio-plane/test/content-extent.test.mjs`** — REC-82's suite: the TWO assertions at
+  (4b) that assert `sheet-cell` is refused as UNLANDED. They are **CORRECTED, never
+  exempted**, with the reason at the site: they were right when REC-82 landed and this
+  item is what makes them wrong.
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` ONLY, ONE key set, from this
+  item's own post-commit printed REPRODUCIBLE figures.
+- **`docs/development/DEBT.md`** and **`docs/development/MEASUREMENTS.md`** — appends only.
+- **`docs/development/CLAIMS.md`** — this block and one `## DELEGATION` to CAPTURE.
+
+NOT claimed and deliberately not written: `docs/development/QUEUE.md` (CONDUCT's, sole
+writer) and `docs/development/INTERFACE-CHANGES.md` (the version bump and the RESOLUTION
+are CONDUCT's — IC-83/IC-84 both say so in their own text).
+
+THREE PATHS ADDED TO THIS CLAIM AT THE CLOSE rather than taken silently, each forced by a
+mechanism rather than chosen: **`.gitignore`** — one line for this item's negative-control
+pen (`.rec85-control-pristine/`), the `.rec82-` / `.rec83-` pattern exactly, because an
+interrupted control run must not leave a 631 KB copy of `bio-checks.mjs` where the next walk
+enrols it as a source; **`bio-plane/test/rec85-arm-digest.mjs`** — the over-strictness
+instrument, a NON-suite (no `.test.mjs` suffix, so the battery does not collect it) holding
+the `pdf-page`/`document` sweep the suite pins by digest, which could not live in the suite
+itself because it has to be runnable against a PRISTINE worktree to produce the figure the
+suite then asserts; and **`docs/DECIDED.md`** — regenerated with `node tools/decided.mjs`,
+which `plancheck` requires of any turn whose corpus edits move the ruling index.
+
+released:
+
+
+## DELEGATION 2026-09-14 RECORD (REC-85) -> CAPTURE: **THE THREE CONTAINER-EXTENT ARMS ARE BUILT, DRIVEN AND UNFED — NOTHING PERSISTS A SHEET LIST, A PARAGRAPH COUNT OR A SHAPE LIST, AND WITHOUT ONE THE OUT-OF-RANGE REFUSAL CANNOT FIRE IN PRODUCTION**
+
+**What was measured, 2026-09-14, on `origin/main` at `3f92e5c`.** REC-85 landed the
+`sheet-cell`, `doc-para` and `slide-shape` arms of the content-extent primitive. Each has
+two halves: a SHAPE half (is this an address at all) which is fed by the leg and is live,
+and a CONTAINER half (does THIS document hold that address) which needs the container's own
+extent. **The record holds no container extent for any of the three, and this was measured
+four ways rather than assumed:**
+
+- the reading persisted at promote carries `content_type`, `reader_version`,
+  `read_from_text`, `found`, `entities`, `facts`, `at`, `text_source`, `text_tier`,
+  `text_container`, `basis` — **and nothing structural** (`index.mjs`, the acquire path);
+- `docprofile/readtext.mjs` says it in its own words: it *"returns what the recognisers
+  said — never a persisted shape"*;
+- **none of the 77 tables in `schema.mjs`** holds a sheet, a paragraph or a shape;
+- the design already said so and it is now marked load-bearing rather than descriptive:
+  Part II §15's structure-shape row reads *"not stored — recoverable only by re-running the
+  structure op, which stops at tier 2"*.
+
+**What this costs today, stated rather than left to be discovered.** A leg may cite
+`NoSuchSheet!ZZ9999999` of a real workbook and it MINTS — the suite drives exactly that and
+asserts it, because the alternative is worse: refusing a citation for a bound nobody
+measured pushes a member toward citing the WHOLE DOCUMENT, which claims MORE and not less
+(IC-83's own reasoning, and the page-set arm's rule verbatim). The absence is UNDETERMINED
+and STATED with the empty level NAMED — `#containerExtentForCapture` in `store.mjs` returns
+the statement rather than a bare null — so nothing here overclaims. **But the refusal has no
+production feed, and a mechanism believed on the strength of its existence rather than its
+behaviour is the defect this project meets most, so it is named here rather than left green.**
+
+**THE ACT, and it is CAPTURE's because it is on the acquire path.** `op=acquire` persists an
+I2 STRUCTURE SUMMARY beside the page count D-345 already names — the same shape, the same
+item, and CAP-9 is the row that closes the page-count half. The target shape is fixed by
+`checkContentExtent`'s own contract and needs no negotiation:
+
+    container = { sheets:     [{ name, rows, cols }] | null,
+                  paragraphs: <count> | null,
+                  slides:     [{ shapes: <count> }]  | null }
+
+**Every level is independently nullable and every null means the same thing: the record does
+not hold it.** A sheet list with no `rows`/`cols` is legitimate and useful on its own — it
+refuses an unknown SHEET and says nothing about the cell, which is exactly right, and the
+suite asserts that partial case. The producers already compute all of it:
+`formats-xlsx.mjs` walks every sheet's rows and cells, `docx.mjs` emits `paragraphs[]`,
+`pptx.mjs` tracks the shape sequence per slide, and COFF-10's three ODF entries produce the
+same shape. **Nothing on the RECORD side has to change when it arrives**: read it in
+`#containerExtentForCapture`, and all three arms begin firing with no other edit.
+
+**WHAT REC-85 DELIBERATELY DID NOT BUILD, and the reason, so CAPTURE is not surprised by a
+narrower gap than this note describes.** `reading.text_container` IS persisted — the record
+knows a capture was read as `xlsx` / `docx` / `pptx` / `pdf`. That is the ONE record-held
+fact that could feed a COARSE container check today (a `sheet-cell` address on a capture read
+as `docx` has no sheets at all). It was not built here for two reasons, both stated so the
+next actor can overturn them on evidence: it is not what REC-85's row names (a cell outside
+the sheet's DIMENSIONS), and `text_container` is null on captures that never reached the
+format axis, so a fence on it would refuse correct work on every such document — over-strict
+in exactly the direction this family refuses. **It is a real candidate for its own row and is
+named as one, not as a gap this delegation covers.**

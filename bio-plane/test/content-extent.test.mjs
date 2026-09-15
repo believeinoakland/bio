@@ -38,8 +38,11 @@
  *
  * WHAT IS DELIBERATELY NOT HERE. The reads (`earnedBasisRegistry` keyed by row,
  * the `content` read op) are REC-83's; the frontmatter and version-leg grammar
- * are REC-84's; the `sheet-cell` / `slide-shape` / `doc-para` `covers` arms are
- * REC-85's and are asserted here ONLY as refusals, which is what they are today.
+ * are REC-84's; the `sheet-cell` / `slide-shape` / `doc-para` arms are REC-85's
+ * and live in `content-extent-arms.test.mjs`. This paragraph used to end "and
+ * are asserted here ONLY as refusals, which is what they are today" — CORRECTED
+ * 2026-09-14 when REC-85 landed them, together with the (4b) pair below, whose
+ * correction carries its own reasoning at the site.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -289,11 +292,29 @@ t("(3) `dom` is REFUSED BY NAME while no producer exists — C-45.4, not the unk
 const rUnknown = await refuseLeg("INQ-2026-8200-unknown", { kind: "paragraph-ish" });
 t("(4a) an UNKNOWN kind covers nothing and mints nothing",
   [rUnknown.ok, codes(rUnknown)], [false, ["C-45.3"]]);
+/* CORRECTED 2026-09-14 BY REC-85, NEVER EXEMPTED, and the correction is the
+   whole reason this pair is kept rather than deleted. As REC-82 wrote it, this
+   leg (`sheet-cell` with a cell and no sheet) was refused because the ARM had
+   not landed — `CONTENT_EXTENT_KINDS['sheet-cell'].landed` was false — and the
+   assertion pinned that sentence by name so an unlanded arm could not be
+   silently admitted. REC-85 landed the arm, so the old assertion is now WRONG
+   ABOUT THE REASON while being right about the outcome, which is exactly the
+   shape a test has to be corrected out of rather than left to pass by accident.
+
+   The leg is STILL REFUSED and still as C-45.3 — it names a cell and no sheet,
+   which is not an address — and that is what this pair now pins: the same
+   fixture, the same code, the reason moved from "this plane cannot evaluate
+   this kind" to "this is not a well-formed cell address". Keeping the fixture
+   unchanged is deliberate: it measures that landing the arm did not turn an
+   incomplete address into an accepted one, which is the direction that would
+   have mattered. The arm's own in-range/out-of-range behaviour is
+   `content-extent-arms.test.mjs`, REC-85's suite. */
 const rUnlanded = await refuseLeg("INQ-2026-8200-cell", { kind: "sheet-cell", cell: "B7" });
-t("(4b) a kind named in the grammar whose `covers` has NOT landed is refused too (REC-85)",
+t("(4b) a LANDED arm still refuses an incomplete address — a cell with no sheet is not an address",
   [rUnlanded.ok, codes(rUnlanded)], [false, ["C-45.3"]]);
-t("     and it is refused for being unlanded rather than unknown",
-  /named in the grammar and this plane cannot yet/.test(detail(rUnlanded)), true);
+t("     and it is refused for naming no sheet rather than for being an unlanded kind (REC-85 landed it)",
+  [/names which sheet, as the workbook spells it/.test(detail(rUnlanded)),
+   /named in the grammar and this plane cannot yet/.test(detail(rUnlanded))], [true, false]);
 const rNoPage = await refuseLeg("INQ-2026-8200-nopage", { kind: "pdf-page" });
 t("(4c) a pdf-page extent naming no page is unreadable, not page zero",
   [rNoPage.ok, codes(rNoPage)], [false, ["C-45.3"]]);

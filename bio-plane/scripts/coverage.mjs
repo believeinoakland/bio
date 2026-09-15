@@ -793,9 +793,19 @@ const REGISTER_FLOOR = {
      suite) on top of M0-28's 975. The branch's own block (973/180/181, a tree without M0-30 and
      M0-28) was dropped at the merge and declared; this is the re-read the loop promises. One key
      set, grepped after writing. Nothing FELL. FLEET_FLOOR unmoved. */
-  arms: 981,
-  classified: 181,
-  corpus: 182,
+  /* MOVED 2026-09-14 by REC-85: 981 -> 989 / 181 -> 182 / 182 -> 183, ALL THREE IN THE
+     SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN `--strict` RUN
+     PRINTED AS REPRODUCIBLE AFTER THE COMMIT (`arms 989/981 · classified 182/181 ·
+     corpus 183/182 · GREW by 8 arm(s)`, with no `contaminated:` line beneath it) — never
+     counted, never added to the numbers above, and never read from the PRE-COMMIT run,
+     which printed the same numerals under a `contaminated: 1 suite(s) no other checkout
+     has` and was refused as a source exactly as REC-82's and REC-83's were. The cause is
+     one new suite, `test/content-extent-arms.test.mjs`, whose `NEGATIVE CONTROL:`
+     declaration states eight arms — the eight driven by `test/nc-rec85.mjs` — so `corpus`
+     and `classified` each rise by one and `arms` by eight. Nothing FELL. */
+  arms: 989,
+  classified: 182,
+  corpus: 183,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
