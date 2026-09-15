@@ -170,10 +170,21 @@ function runCensus() {
 function plancheckLocal() {
   const out = shq([process.execPath, join(REPO, "tools/plancheck.mjs"), "--local"]);
   const m = out.match(/plancheck:\s*(\d+) fail,\s*(\d+) warn/);
-  const fails = [...out.matchAll(/^\s*fail\s+([A-Z][A-Z \-]*[A-Z])/gm)].map((x) => x[1].trim());
+  /* `plancheck` prints `  FAIL  <message>` — UPPERCASE. The first version of this
+     line matched lowercase `fail` and read ZERO fail lines while the tally said
+     one, so `sawId` came back false having cost NOTHING to produce: an assertion
+     that could never have been honoured, which is the receipt this estate already
+     owns three times. The reader is corrected AND the impossibility is now
+     detectable — see `blind` below. */
+  const fails = [...out.matchAll(/^\s*FAIL\s+(.+)$/gm)].map((x) => x[1].trim());
+  const n = m ? Number(m[1]) : -1;
   return {
-    out, fail: m ? Number(m[1]) : -1, warn: m ? Number(m[2]) : -1,
+    out, fail: n, warn: m ? Number(m[2]) : -1,
     fails,
+    /* **THE GUARD THAT MAKES `sawId` WORTH READING.** If the tally says N>0 and
+       this reader extracted no lines, it is BLIND and `sawId: false` means
+       nothing. Reported as a finding rather than passed through. */
+    blind: n > 0 && fails.length === 0,
     /* the arms that would mean plancheck SAW the id bypass */
     sawId: fails.some((f) => /DUPLICATE ID|UNREGISTERED ID NAMESPACE/.test(f)),
   };
@@ -235,9 +246,11 @@ function commitArm({ tag, rel, anchor, replacement, expectId, declared, judge })
   if (headAfter !== headBefore)
     findings.push(`ARM ${tag}: HEAD NOT RESTORED — ${headBefore.slice(0, 12)} -> ${headAfter.slice(0, 12)}`);
   if (existsSync(a.pristine)) unlinkSync(a.pristine);
+  if (plan.blind)
+    findings.push(`ARM ${tag}: the plancheck fail-line reader extracted 0 lines while the tally said ${plan.fail} — BLIND, so \`sawId: false\` cost nothing to produce and proves nothing`);
   results.push({
     arm: tag, declared,
-    actual: `introduced ${armed.introduced} · NOT HELD ${armed.notHeld} · names ${expectId}: ${armed.namesId(expectId)} · plancheck ${plan.fail} fail [${plan.fails.join("; ") || "none"}] · plancheck SAW the id bypass: ${plan.sawId ? "YES" : "NO"} · HEAD restored: ${headAfter === headBefore ? "YES" : "NO"}`,
+    actual: `introduced ${armed.introduced} · NOT HELD ${armed.notHeld} · names ${expectId}: ${armed.namesId(expectId)} · plancheck ${plan.fail} fail [${plan.fails.join("; ") || "none"}]${plan.blind ? " *** READER BLIND ***" : ""} · plancheck SAW the id bypass: ${plan.sawId ? "YES" : "NO"} · HEAD restored: ${headAfter === headBefore ? "YES" : "NO"}`,
     pass: judge(armed, plan) && headAfter === headBefore,
   });
 }
