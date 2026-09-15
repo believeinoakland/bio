@@ -6563,3 +6563,119 @@ is lost by having chosen the read.
 ### RESOLUTION — ACCEPTED, **I1 1.4.0 → 1.5.0**, 2026-09-14 by CONDUCT #11
 
 MINOR, as proposed: `document.reading.page_count` — one new optional key inside an existing object, present-and-null when the wire ran and the producer answered nothing, ABSENT when nothing ever counted; no absence stands in for another and it is never a zero. Carried at ONE site in `op=acquire`'s FW-15 reading wire covering all three reading branches; a consumer that never reads it sees 1.4.0 exactly. **The registry gap this IC names is closed with the bump:** I1 §4's document-level table had never listed `reading` at all (undocumented since FW-5) — the row is added. CAP-12 (the container extents — sheets with dimensions, paragraph count, slides with shape lists, D-354) rides this entry's shape and is expected to AMEND it rather than mint anew. SETTLED when CAP-12 lands and the three office arms' C-45.1 is fed, or at the next DIST deploy serving the count live — whichever first; CONDUCT writes it.
+---
+
+## IC-90 · I3: `op=cite` CARRIES THE EXTENT — the one act that writes a basis leg stops dropping an `extent_kind` sent beside its seven parameters, and splices the flattened extent scalars (or a `content_id`) onto the leg · PROPOSED 2026-09-14 (REC-97, closing UI-61's DELEGATION and unblocking IC-84's SETTLED) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **MEASURED AT THIS ITEM'S BASE `173bc66`
+  as 14.1.0 CHANGING (IC-84); by the time this branch was finished `origin/main` had moved
+  to `65d61c2` and I3 reads 15.0.0 — IC-88 (SK-7) landed BREAKING on `op=attesttext` and
+  additively added `op=contentmint` and the `mint` label. This item was built on 173bc66,
+  touches neither `op=attesttext` nor `contentmint`, and is additive over either number;
+  the bump CONDUCT takes is 15.0.0 → 15.1.0 rather than 14.1.0 → 14.2.0, and it is stated
+  here rather than left for the resolver to notice.**
+- **Proposer:** RECORD, worker `agent-a39cfbab2c77ec9e4`, 2026-09-14, from QUEUE REC-97
+- **Owner to land it:** `RECORD` (owner and proposer)
+- **Consumers to answer:** `UI` (the composer is the only production caller), `SKILL`
+  (the investigative run writes suggested legs — through `op=promote`, not through this
+  act), `DIST` (served surfaces), `RECORD`
+- **Change class:** ADDITIVE → MINOR bump
+- **The id was MINTED with `node tools/mintid.mjs IC`** (floor IC-87; 88, 89 and 90 were
+  already held, and this worker took 90). **IC-91 was also taken by this worker and is
+  BURNED AND UNUSED** — a doubled `mintid` invocation while reading its output. A gap
+  costs nothing and the tool says so; it is named here rather than left as a silent hole.
+
+### WHAT IS WRONG TODAY, MEASURED BY UI-61 AND RE-MEASURED HERE
+
+`op=cite` is the ONE act that writes a basis leg. Its store handler destructured exactly
+seven named parameters — `project`, `handle`, `viewer`, `owner`, `note`, `author`, `role` —
+and **an `extent_kind` sent beside them was DROPPED IN SILENCE.** A member who chose a page
+got a leg resting on the WHOLE DOCUMENT, with nothing on the leg, in the receipt or in the
+record saying the choice went nowhere. That is the class of defect this project holds to be
+worse than a missing feature: the record holding something other than what a member did.
+
+Two consequences, both already written down by other items rather than argued here: UI-61
+could not build the composer's extent picker (a control whose value is silently discarded is
+present-and-refused wearing a worse costume), and **IC-84 cannot SETTLE**, because its
+RESOLUTION records UI as answering *"the composer emits `extent` per leg"* and the composer
+could not.
+
+### WHAT CHANGES
+
+**One op, additively.** `op=cite` accepts, beside its seven parameters, the flattened extent
+scalars REC-84's leg grammar already defines — `extent_kind`, `extent_page`, `extent_rect`,
+`extent_ref`, `extent_sheet`, `extent_cell`, `extent_slide`, `extent_shape`, `extent_para`,
+`extent_run` — **or** a `content_id` naming an already-minted part outright (IC-84's own
+AMENDMENT at REC-84's landing). They are spliced onto the leg it writes, so
+`checkLegExtentGrammar` judges them exactly as it judges a frontmatter-authored leg.
+
+**They arrive as a BAG and not as named scalars, and that is the interface's own shape
+rather than an implementation detail.** Adding an eighth, ninth and tenth `get()` would close
+today's spelling and leave the mechanism: a parameter nobody reads is a parameter nobody can
+refuse, so the eleventh field a surface sends would be dropped exactly the same way. Every
+parameter the extent grammar could own reaches the act whole, and **a field the act does not
+carry is REFUSED BY NAME** rather than ignored.
+
+**Four new refusals, all in the existing C-45 family** (REC-84's rule: a `*_CHECKS` family is
+a floor in the DEC-49 guard, and this family's subject is *the ways the record could come to
+point at nothing*): `UNKNOWN_EXTENT_FIELD` (C-45.7), `EXTENT_NOT_APPLICABLE` (C-45.8 — an
+extent on a CASE's citation edge, which has no leg to scope, refused exactly as `role` is),
+`EXTENT_ON_MANY` (C-45.9 — one extent across a selection that would write several legs: a
+part of a document is a part of ONE document, and writing one member's one page onto each
+would put claims in the record nobody made), `BAD_EXTENT_VALUE` (C-45.10 — a value the
+restricted frontmatter grammar cannot carry; BAD_NOTE's rule one field down). No new
+`mintid.mjs C` id: these are sub-numbers of an allocated family.
+
+**The grammar's own verdict rides `BASIS_REFUSED`**, `op=promote`'s name for exactly that
+verdict, on `suggest`'s recorded precedent — *"one function answering twice should not answer
+under two names."*
+
+**Additive per leg on the response:** a leg in `cite`'s receipt carries `extent` (and
+`content_id` where one was named) ONLY where the act wrote one. Absent, never null and never
+`"document"`, so a caller predating this change reads byte-identical JSON.
+
+### WHAT DOES NOT CHANGE, AND IT IS MEASURED RATHER THAN ASSERTED
+
+**A cite that names no part is BYTE-IDENTICAL.** Measured by digest on a pristine worktree of
+`173bc66` and on this branch, over the `bundle.md` the act wrote with its two authored
+timestamps and the random selection handle normalised: **1290 bytes, sha256
+`0e034ff91db0f9d103896eada9ad82d928058d90090964df0c3ec2f74b8b8d6e` on BOTH trees.** The
+instrument is `bio-plane/test/rec97-noextent-digest.mjs`, a NON-suite so it can run against a
+tree that does not contain this item, and the figure is pinned in
+`test/cite-extent.test.mjs` section 8 so it is re-measured every run. An absent extent IS the
+whole document (Bob's 5.3, §14.4, no `unstated`).
+
+### CONSUMER IMPACT, MEASURED
+
+`grep -rn 'op=cite\|"cite"' civicos-ui agent-worker bio-plane/src`, 2026-09-14:
+
+- **`civicos-ui/app.html` — THE ONLY PRODUCTION CALLER**, one call site (`actAsk("cite",
+  params)`), sending `project`, `handle`, `note` and — on the question arm — `role`. It sends
+  no extent today and is unaffected; the composer's stated sentence is CORRECTED by this
+  landing (the act now carries an extent; the PAGE PICKER is still absent and that is a UI
+  item, delegated back).
+- **`agent-worker` — ZERO callers.** Forty-seven matches for the string `cite`, none of them
+  an op call; the investigative run writes suggested legs through `op=promote`, which REC-84
+  already carried.
+- **`bio-plane/src/skilldoctrine.mjs`, `affordances.mjs`, `schema.mjs`** — prose only; the
+  `cite` row in `affordances.mjs` publishes the act's label and weight and names no
+  parameters.
+- **Suites:** `civicos-ui/test/cite-act.test.mjs` and `finder.test.mjs` drive the act with no
+  extent and are unaffected (both green). `civicos-ui/test/content-extent.test.mjs` carried
+  UI-61's deliberate pin *"`op=cite` still carries NO extent"* with the instruction to
+  revisit the day it did — **CORRECTED, never exempted**, and inverted to assert the new
+  behaviour plus the still-absent picker.
+
+### RESPONSES — awaited
+
+- **RECORD** (owner and proposer): AGREE.
+- **UI**, **SKILL**, **DIST**: not yet answered. CONDUCT resolves.
+
+### WHAT THIS DOES NOT DO, STATED SO THE FRONTIER IS NOT MISTAKEN FOR COMPLETENESS
+
+**THE COMPOSER DOES NOT YET EMIT AN EXTENT.** This IC widens the ACT end to end; no UI
+surface sends one, because the picker UI-61 did not build still does not exist and building
+it is a UI item rather than a line (a page set to choose from, and a page canvas for a
+rectangle — UI-61's own second finding). It is a DELEGATION to UI in `CLAIMS.md`, not a note.
+So IC-84's SETTLED, which CONDUCT writes, rests on this landing **plus** that UI item —
+and the honest sentence today is *the act carries it, the surface does not yet send it*.
