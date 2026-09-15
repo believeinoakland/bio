@@ -6452,7 +6452,34 @@ what is needed, at SKILL's next touch (SK-7's integration or SK-8's spawn), one 
   door). It should say: the pilot's credential mints nothing because it is read-only, and
   EXTRACT runs in the run — citing §7.3 — with the same comment saying why the old sentence
   was wrong. The §5 line of the front matter's Incomplete list updates in the same commit.
-released:
+released: 2026-09-14 by the SK-8 worker — worktree `agent-a7a1788f7e7a3b716`, branch
+  `worktree-agent-a7a1788f7e7a3b716`, commit `3accbe3` (the item) plus `<FLOOR>` (the
+  `REGISTER_FLOOR` move). **DONE AS ASKED, IN PLACE, NEVER EXEMPTED, and the correction note is at
+  the site.** `ASSISTANT-PILOT.md` §5 exclusion 1 now says the pilot's credential writes nothing
+  BECAUSE IT IS READ-ONLY — §4's own property and the one its §6 hazard table already named — and that
+  EXTRACT runs in DEC-62's RUN, citing `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 and naming the ops
+  that now do it. **The exclusion itself is UNCHANGED and stands: the pilot mints nothing.** The §5
+  line of the front matter's Incomplete list moved in the SAME commit and no longer calls exclusion 1
+  stale; it now says exclusion 3 still is (DEC-47 called "still open" when it is `answered`), which
+  is NOT this delegation's and is left named rather than quietly swept in.
+
+  **ONE THING THE DELEGATION DID NOT ASK FOR AND THE EDIT DOES, because the old sentence was wrong
+  in a SECOND way nobody had listed:** its CHECK clause read *"CHECK is sequenced first AFTER the
+  pilot (DEC-55)"*, which SK-4 made false on 2026-08-10 by landing with CHECK as the first deployed
+  mode while the pilot is still unbuilt. The front matter had recorded that staleness since SK-6;
+  the BODY had not. Corrected in the same sentence.
+
+  **AND THE REASON THE OLD SENTENCE MATTERED, written into the note rather than into a commit
+  message:** it gave the wrong REASON, not merely a stale one. Read as written — *those are DEC-24
+  roles with their own scopes* — it made lifting the exclusion look like a SCOPE DECISION ABOUT THE
+  PILOT, which is precisely the question D-358 sat open on for a day while SK-7's door had no caller.
+  The real defence was always the one §4 states. A reason that is not the real reason is worse here
+  than no reason at all, because it routes the next reader to the wrong decision-maker.
+
+  Gates on the branch: `corpuscheck` 50 governed / **0 fail** (it caught this landing's own first
+  draft — M0-28's rule fired on a second `as of` date introduced in `EXTRACTION-BREADTH-DESIGN.md`'s
+  Status, which is that item working eleven days after it landed). Full figures in the SK-8 release
+  line below.
 
 
 ## CLAIM 2026-09-14 SKILL+RECORD (SK-8 — AI-proposed readings: the `ai(function, version)` step EMITTED for the first time, by an EXTRACT run inside DEC-62's run object)
@@ -6503,4 +6530,216 @@ own finding is that a claim of "no surface renders this" goes stale, so it is ME
 than asserted); `agent-worker/**` (**and this is a finding, not an omission — see the release line**);
 `bio-plane/checks/bio-checks.mjs`; `QUEUE.md` (CONDUCT's).
 
+released: 2026-09-14 by the SK-8 worker — worktree `agent-a7a1788f7e7a3b716`, branch
+`worktree-agent-a7a1788f7e7a3b716`. **TWO COMMITS: `3accbe3` (the item) and `<FLOOR>` (the
+`REGISTER_FLOOR` move and this release line), in that order because that file's own comment block
+requires the floor to be read from a run taken AFTER the suite is in the commit.** NOT pushed and
+NOT merged; CONDUCT takes the integration, IC-93's resolution, the interface bumps and the QUEUE
+row. **BOB #11's DELEGATION to SKILL is RELEASED INSIDE ITS OWN BLOCK above**, done in place and
+never exempted.
+
+**WHAT LANDED.** `EXTRACTION-BREADTH-DESIGN.md` §4's THIRD production, inside DEC-62's run where
+`BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 placed it: **`op=extractpropose` emits the
+`ai(function, version)` step for the first time in this repository's history** — designed at
+CPDF-10, carried by I2 unchanged since, and emitted by nothing until now. `src/extractrun.mjs` is
+new and holds the role's vocabulary and four pure predicates; `proposed_readings` is one new table
+before `host_governor`, in both purge arms and counted in `op=stats`; `op=extractproposals` is the
+read, with §7.3 (6)'s minted-to-cited ratio beside the listing; `RUN_BOUNDS` gains `mints`, a ROW in
+the bounds table the run already had. **SK-7's door has a caller.**
+
+**THE FOUR DESIGN PROPERTIES, each held by a mechanism rather than by a sentence:**
+(1) **RULE 2** — the step goes through `textchain`'s `appendStep`, so a cap stronger than the
+capture's is refused `TEXT_CHAIN_STRENGTHENS` by the module that owns rule 2, verbatim. An absent
+cap is UNDETERMINED and STATED: no calibration of any propose-reading function exists.
+(2) **GRADED BY WHAT IT NAMES** — an identifier earns B, a name earns C, never A, and a caller that
+offers its own grade is refused BY NAME (DEC-24 rule 3).
+(3) **LABELLED** — through `Store.#mintLabel`, the same helper every content-row projection uses;
+the totality arm walks every surface recursively and NAMES one rather than counting.
+(4) **NEVER COVERAGE** — a proposal lives in its own table, so `readings`/`reading_refs` (which every
+earned tier reads) cannot count it BY CONSTRUCTION. The suite asserts the registered reader's
+reading is byte-for-byte unmoved and that `op=readingref` answers the reader's reference and not the
+machine's.
+
+**AND ONE THING THE DESIGN DID NOT SAY AND THE BUILD HAD TO DECIDE: THE `ai` STEP IS NOT ON THE
+MINTED CONTENT ROW'S CHAIN.** A content id is `hash(capture, extent, chain)`, which is exactly what
+lets a member's later citation of the same passage FIND the machine's row instead of minting a
+second — 5.7's third clause, and the whole mechanism by which a proposal ever becomes part of a
+finding. Appending the step there would change the id and the machine's proposal could never be
+cited by anybody. The machine did not transcribe the passage; the capture's chain is the passage's
+chain. The `ai` step belongs to the READING, which is what the machine actually derived. Recorded at
+`extractrun.mjs`'s header and in `schema.mjs`'s table comment, because it is the one thing a later
+reader would get wrong.
+
+**GATES.** BASELINE measured on this tree BEFORE any edit, with `npm ci` in `bio-plane/`,
+`pdf-worker/` AND `ocr-worker/` first (`agent-worker/` carries no dependencies — read off its
+`package.json`): **196/196 suites green · 12,151 assertions · exit 0**, 348.3s, **0 skipped**, the
+runner's own header reading `196 suites (188 plane · 8 fleet)`. **The spawn brief's figure was
+196/196 · 12,151 and it was RIGHT** — measured rather than trusted, and the SKIP COUNT read as well
+as the exit status (the 2026-09-14 addition to CLAUDE.md's fresh-worktree trap). FINAL on this
+branch: **197/197 suites green - 12,217 assertions - exit 0**, 225.2s, 0 skipped, the runner's header reading `197 suites (189 plane - 8 fleet)`. **THE DELTA IS ATTRIBUTED PER SUITE BY RE-RUNNING THE BASELINE AND DIFFING THE TWO RUNS' OWN PER-SUITE LINES, never by subtraction: `extractrun.test.mjs` NEW at 62, and `hygiene.test.mjs` 724 -> 728 (+4, its per-suite arms counting one more file). +66 total, and NO OTHER SUITE'S COUNT MOVED** -- which is itself the evidence that the ten guards were CORRECTED rather than added to: each of them changed an assertion's expected value and none of them grew one.. `node scripts/coverage.mjs --strict` run DIRECTLY from `bio-plane/`, `$?` read
+UNPIPED, **exit 0**; `REGISTER_FLOOR` moved **1021→1029 / 187→188 / 188→189** from the figures a
+green run PRINTED as REPRODUCIBLE at `3accbe3` with `provenance: 205 of 205 discovered item(s) are
+in the commit`. `node civicos-ui/test/run.mjs` from the REPO ROOT, unpiped, **exit 0**, all
+harnesses green. `node tools/plancheck.mjs --local`: **0 fail, 0 warn**. `node tools/corpuscheck.mjs`:
+50 governed, **0 fail**. `docs/DECIDED.md` regenerated (902 rulings).
+
+**TEN TOTALITY GUARDS WENT RED ON THE FIRST FULL RUN AND EVERY ONE WAS DOING ITS JOB.** Adding two
+ops, one bound and one table to this plane is caught by ten independent registers, none of which had
+to be told about SK-8 in advance: `affordances` · `airun` ARM V5 · `bounds` · `fleetbundles` ·
+`gate-reads` · `hygiene` · `identity-claims` · `machine-fences` · `run-conditions` ARM W3 ·
+`rung-ladder`. **Each answered at its own site, corrected and never exempted**, with its reason
+written beside it — `airun`'s ARM V5 in particular is the FL-7 precedent repeated exactly: an
+exhaustive SET going red on a sixth bound is the guard working, and what it demands is a reason,
+which §7.3 (5) supplies.
+
+**FLOORS MOVED, from printed figures and never by arithmetic:** `bounds.test.mjs`'s capped-op roster
+**31 → 32** (the walk PRINTED 32 against a pin of 31) and its driver census with it;
+`REGISTER_FLOOR` as above. **`regionLines` IS NOT TOUCHED** — this landing adds and modifies no
+`DEC-49 REGION` marker (measured: 0 occurrences in the diff), so CONDUCT has no region figure to
+re-read here.
+
+**THE MEASUREMENT WORTH CARRYING, AND IT IS A DEFECT THIS ITEM SHIPPED AND THEN CAUGHT IN ITSELF.**
+Classifying `op=extractproposals` in `gate-reads.test.mjs` means writing the sentence that says what
+the answer RANGES OVER — and the sentence could not be written truthfully. The minted-to-cited ratio
+beside the listing was counting machine-minted `content` rows **with no bundle predicate whenever a
+caller scoped by RUN**, so a number in the answer moved with documents in projects the caller was
+never invited to. **The instrument §7.3 (6) put there to catch manufacturing was itself an oracle.**
+The denominator is now built from the documents the scope actually names, each through
+`#viewerSees`, capped at 64 for D-36's reason with the cap PUBLISHED in the answer
+(`scope.documents`, `scope.documents_capped`) — because a fraction whose denominator a reader cannot
+see is a fraction they cannot judge. **A registry whose whole job is to make somebody write down
+what a read can see is what found it**, which is the argument for that suite existing at all.
+
+**NEGATIVE CONTROL: SIX ARMS, `test/nc-sk8.mjs`, re-runnable in one step.** Each armed ALONE with
+the others held open, declared BEFORE arming, every restore verified byte-identically by sha256 AND
+by content with a byte count printed and a minimum FLOORED UNDER THE SMALLER SUBJECT (`src/store.mjs`
+2,035,836 B · `src/extractrun.mjs` 21,251 B; the floor is 8,000 rather than a store-sized number,
+because a minimum only a megabyte file could clear guards one of two subjects). Never
+`git checkout --`.
+
+| arm | declared | actual | verdict |
+| --- | --- | --- | --- |
+| `baseline` | green, nothing armed | 61 pass / 0 fail | AS DECLARED |
+| `strengthen` (`proposalChain` concatenates instead of routing through `appendStep`) | 2 named failures | 59/2 — 2/2 present | AS DECLARED |
+| `label` (the `mint:` line dropped from the WRITE's answer only) | 2 named failures | 59/2 — 2/2 present | AS DECLARED |
+| `bound` (`#mintsBound` invents a default allowance) | 1 named failure | 60/1 — 1/1 present | AS DECLARED |
+| `coverage` (the proposal ALSO written into `reading_refs`) | 1 named failure | 60/1 — 1/1 present | AS DECLARED |
+| `overstrict` (a name-only proposal promoted C → B) | 3 named failures | 58/3 — 3/3 present | AS DECLARED |
+
+**ONE ARM CAME BACK WRONG BEFORE IT CAME BACK RIGHT, AND THE CORRECTION WENT TO THE SUBJECT RATHER
+THAN TO THE ASSERTION — which makes it a finding about the PRODUCT and not only about the arm.**
+`overstrict` promoted a name-only proposal from C to B and the assertion about the row's stated
+REASON **stayed GREEN**, because `proposedReadingGrade` wrote each branch's LETTER and its REASON as
+two independent literals. The record would have published **a B explained by *this proposal names
+only a NAME*** — a grade and the sentence saying what it rests on disagreeing, in the one function
+whose entire job is to say what a grade rests on — and nothing in this repository could have noticed.
+The function now decides the letter ONCE and interpolates it INTO its own sentence; the assertion
+reads the letter out of the reason; the arm's anchor follows the corrected shape; all three declared
+failures then occurred. **The arm also DID NOT ARM once in between (patch matched 0×), reported by
+the harness as a FINDING rather than retried** — which is what caught the stale anchor.
+
+**THE CLASS SWEEP, with what the matcher can and cannot see.** The class is *a VALUE and the PROSE
+explaining it written as two independent literals in one object*. Matcher: every `grade:` / `cap:` /
+`grade =` literal in `bio-plane/src/*.mjs` and `bio-plane/checks/*.mjs`, read by hand at each site.
+Corpus: 3 live sites found, all three classified, none silently scored zero.
+
+1. **`src/extractrun.mjs` `proposedReadingGrade` — DEFECT, FIXED** (the letter is now interpolated).
+2. **`src/store.mjs` `resolveTestify` (`grade: "D"` beside a `method` naming *"grade D"*) — SAME
+   CLASS, DELIBERATE CLOSURE.** The op IS the testimony tier: the letter is the op's identity and
+   not a computed grade, so no grader exists that could move one half. Left alone, and named.
+3. **`src/store.mjs` `#recogniseTier` — SAME CLASS, LIVE, AND NOT MINE.** Three branches each pair a
+   `grade` literal with a `method` prose literal describing that tier. It is WEAKER than the defect
+   above because the prose names the tier by DESCRIPTION and never by letter, so a promotion would
+   leave a misleading description rather than a self-contradicting sentence — but a promotion of B
+   to A would still leave *"source identifier in content"* attached to an A. **It is RECORD's
+   recogniser ground and REC-89 is live near it, so it is DELEGATED rather than edited.**
+
+**WHAT THE MATCHER CANNOT SEE**, stated because it is load-bearing: a letter decided in one function
+and written into prose in a DIFFERENT one (the two-file case); a letter already carried in a
+variable and embedded (which is the SAFE shape and the fix, so a hit there would be a false
+positive); anything in `civicos-ui/**`, which was not read for this class; and prose in comments.
+
+**MEASURED, NOT ASSUMED, and re-measured because SK-7's own equivalent claim went stale within a
+day:** `civicos-ui/**`, `agent-worker/**` and `newgroup/**` contain **0** occurrences of
+`extractpropose`, `extractproposals`, `proposed_readings` or `extractrun`. `agent-worker/src/`
+contains **0** occurrences of EXTRACT as a role (two hits, both inside a comment quoting CLAUDE.md —
+SK-7's figure, re-measured today and unchanged). `"mints"` appears as a string literal in neither
+`skillpack.mjs` nor `skilldoctrine.mjs`, which is what keeps both copied-term corpus arms green.
+`store.mjs` measured at **31,939 lines** on this branch (the figure is measured because CLAUDE.md
+records it going stale four times).
+
+**WHAT MY BRIEF DID NOT PREDICT.** (1) The brief told me to claim `agent-worker/`. **I did not, and
+that is a finding rather than an omission — see the DELEGATION to FLEET below.** (2) The brief
+warned about contention in `store.mjs`/`index.mjs`/`bio-checks.mjs` with a standing cap of five.
+**`bio-checks.mjs` IS NOT TOUCHED AT ALL** — every door refusal here is a `reason` refusal in
+`contentRead`'s shape on SK-7's measured precedent, so this item adds no `/_CHECKS$/` family to the
+most contended file on the board and the cap is effectively four there. (3) The brief did not
+predict that ten totality guards would fire, nor that one of them would find a real leak.
+
+**WHAT I COULD NOT DO, stated plainly.** No model runs. Nothing decides WHAT to propose. The plane
+half is driven end to end through the ops with a REAL minted `ai` credential inside a run a member
+opened — which is exactly the maturity the investigative session's own modes have, and is one step
+further than SK-7 (whose door had no caller at all) — but a reader must not take *the EXTRACT role
+is built* to mean *an assistant is proposing readings*. It means the record can now hold a proposed
+reading, bounded, graded, labelled and refused correctly when any of those fail.
+
+
+### DELEGATION 2026-09-14 SKILL+RECORD (SK-8) -> FLEET: **THE EXTRACT RUN CAN BE PRODUCED INTO AND NOTHING CAN DRIVE ONE — there is no `extract` row in the deployment gate, and adding one is a DEPLOYMENT act I refused to take in your lane**
+opened: 2026-09-14
+what I found, measured rather than inferred: `agent-worker/src/harness.mjs`'s `MODES` carries exactly
+  two rows — `check` (`deployed: true`) and `investigate` (`deployed: false`) — and `gate-mode` is
+  the FIRST row every run's control flow takes, refusing any mode not in that table with
+  `mode-not-deployed` (FL-7's word). The plane stores `ai_runs.mode` verbatim and judges nothing
+  about it, which is why SK-8 could land `EXTRACT_RUN_MODE = "extract"` as the PLANE's word in
+  `bio-plane/src/extractrun.mjs` and have `extractPropose` read it back — **but nothing in this
+  repository can DRIVE such a run**, because the fleet member would refuse to start it at its own
+  first gate.
+why I did not do it: three reasons, and the first is the one that decides it. (1) **Adding a row to
+  `MODES` is a DEPLOYMENT act**, not a plane act — the table's own header says flipping a flag there
+  is *"an EDIT TO THIS FILE under review, which is the point, because a mode that could be enabled
+  by a request parameter would be a gate the caller holds"*. (2) SK-4's `skillsequencing.test.mjs`
+  ARM B4 holds the recorded deployment ORDER against those flags IN BOTH DIRECTIONS — index 0 the
+  only deployed mode, every later index not — so a third row moves a pinned partition, and moving it
+  is a judgement about sequencing that belongs to whoever owns the sequence. (3) `agent-worker/` is
+  not SKILL's or RECORD's ground and my brief's instruction to claim it was written before the
+  measurement above existed; reaching in would be a worker deciding another area's deployment.
+what is needed: **one row in `MODES`, `extract: { deployed: false, does: … }`**, with SK-4's ARM B4
+  and BLOCK D updated in the SAME commit (they will go RED on the addition, which is deliberate and
+  is that arm's whole design), and the mode's `does` sentence naming §7.3. `deployed: false` is the
+  honest landing state and costs nothing: it says the mode EXISTS and is not yet driven, which is
+  exactly true, and it is what makes `gate-mode`'s refusal for it say *not deployed yet* rather than
+  *no such mode*. **Whether it is ever flipped to true is a separate act and is not this
+  delegation's** — §7.3 (7) leaves *may a project stand an EXTRACT run unattended* OPEN under the
+  provisional NO, and a deployed extract mode is the first thing that question would bite on.
+what it is NOT: it is not a request to build a model loop, and nothing here is blocked on it. The
+  plane half is driven end to end through the ops with a real minted `ai` credential, which is the
+  same maturity `check` has (VF-4 has never run live either).
+released:
+
+### DELEGATION 2026-09-14 SKILL+RECORD (SK-8) -> RECORD: **`#recogniseTier` PAIRS A GRADE LITERAL WITH A PROSE LITERAL THAT DESCRIBES IT, AND A PROMOTION WOULD LEAVE THE PROSE BEHIND — the class my own negative control found in my own code**
+opened: 2026-09-14
+what I found: the class is *a VALUE and the PROSE explaining it written as two independent literals
+  in one object*, and I found it **in my own function first** — `nc-sk8.mjs`'s `overstrict` arm
+  promoted a name-only proposal from C to B and the assertion about its stated REASON stayed GREEN,
+  because `proposedReadingGrade` wrote the letter and the sentence separately. The record would have
+  published a B explained by *this proposal names only a NAME*. Fixed in `extractrun.mjs` by deciding
+  the letter once and interpolating it into its own sentence.
+  **The class sweep over `bio-plane/src/*.mjs` and `bio-plane/checks/*.mjs` found three live sites.**
+  One is mine (fixed). One is `resolveTestify`'s `grade: "D"` beside a `method` naming *"grade D"* —
+  SAME CLASS, DELIBERATE CLOSURE, because that op IS the testimony tier and the letter is its
+  identity rather than a computed grade, so no grader exists that could move one half. **The third is
+  `#recogniseTier` (`bio-plane/src/store.mjs`), and it is live.** Its three branches each set a
+  `grade` literal beside a `method` prose literal describing that tier. It is WEAKER than the defect
+  I fixed — the prose names the tier by DESCRIPTION (*source identifier* / *source identifier in
+  content* / *correspondence*) and never by letter, so a promotion leaves a misleading description
+  rather than a self-contradicting sentence — but promoting B to A would still leave *"in content"*
+  attached to an A, which is the record describing a correspondence it did not make.
+why I did not fix it: it is RECORD's recogniser ground, REC-89 is live in neighbouring reads
+  (`concerns`, `connectionsFor`), and this is a quality correction rather than a defect that
+  overclaims today. Reaching in would widen a fifth concurrent claim on `store.mjs` for no urgency.
+what would close it: compose each branch's `method` from its own `grade` variable, as
+  `proposedReadingGrade` now does — one line per branch — so the tier's description cannot outlive
+  the tier. **And the arm that proves it: promote one branch's letter and assert the description
+  moves with it.** Without that arm the fix is unfalsifiable, which is exactly how the original got
+  written.
 released:

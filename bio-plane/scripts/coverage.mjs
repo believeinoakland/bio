@@ -870,9 +870,24 @@ const REGISTER_FLOOR = {
      because the suite then declared five arms and now declares six — which is the
      second reason the contaminated figure is never the one to move to: it is a
      snapshot of a tree still being written. Nothing FELL. */
-  arms: 1021,
-  classified: 187,
-  corpus: 188,
+  /* MOVED 2026-09-14 by SK-8: 1021 -> 1029 / 187 -> 188 / 188 -> 189, ALL THREE IN
+     THE SAME TURN, every one taken from the figure a green `--strict` run PRINTED
+     as REPRODUCIBLE at `3accbe3` — `REGISTER FLOOR  arms 1029/1021 · classified
+     188/187 · corpus (suites read) 189/188 · GREW by 8 arm(s)` beside
+     `provenance: 205 of 205 discovered item(s) are in the commit at HEAD
+     (3accbe3)`. Never counted, never incremented by hand, and never read off a
+     run holding an untracked suite. The cause is ONE new suite,
+     `test/extractrun.test.mjs`, whose `NEGATIVE CONTROL:` declaration states six
+     arms — so `corpus` and `classified` each rise by one and `arms` by six; the
+     other TWO arms are the ones this landing added to declarations that already
+     existed, which is why the delta is 8 and not 6 and why the figure is READ
+     rather than predicted. **A run taken before the commit printed 1021 with the
+     suite NAMED as untracked** (`NOT IN ANY COMMIT — this instrument COUNTED work
+     no other checkout can see`), which is the whole reason this is a SECOND commit
+     and is D-238 working exactly as intended. Nothing FELL. */
+  arms: 1029,
+  classified: 188,
+  corpus: 189,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
