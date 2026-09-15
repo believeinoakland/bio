@@ -369,12 +369,40 @@ WAS WRONG ON ANY BRANCH:
   surfaced one merge later — not by any branch noticing.
 
 The general form, which is what a session should carry away: **a fact about the
-union is not discoverable from any member of it.** A worker that verifies its
-own tree perfectly still cannot see a floor that moved, an id that was taken, an
-artifact built against a sibling's build, or a ledger row a sibling closed. So
-the integrator's real work is the questions only the merged tree can answer, and
-a session tempted to skip it should ask which of those four it is prepared to
-publish wrong.
+union is not discoverable from any member of it — BY DEFAULT, and not always.**
+It is false wherever a SHARED, ATOMIC ALLOCATOR exists and is actually used at
+the moment of allocation, and this repository holds one, so the exception is
+worth more than the rule: `tools/mintid.mjs` keeps its ledger under
+`git rev-parse --git-common-dir`, the ONE `.git` every worktree of this clone
+shares, and allocates by exclusive create. **An allocator that REFUSES beats a
+checker that REPORTS**, because check-then-act has no atomicity.
+
+So put the union facts to a four-part test rather than treating them alike —
+**is an allocator possible, does it exist, is it USED at the moment of
+allocation, and can the audit see a bypass?** Measured on 2026-09-15:
+
+| union fact | allocator possible? | exists? | used? | bypass visible? |
+| --- | --- | --- | --- | --- |
+| **an id that was taken** | yes | YES — 17 namespaces, `M` among them | **NO, and that is the whole defect** | **NO for `M`, by the tool's own admission** |
+| the shared floor's post-merge value | **no** — a property of the merged SOURCE, not a name to hand out | — | — | — |
+| an artifact built against a sibling's build | **no** — a function of the merged tree | — | — | — |
+| a ledger row a sibling closed | **no**, though branching from a fetched `origin/main` narrows it | — | — | — |
+
+The id row is the instructive one and it is not what it looks like. **Four
+workers took `M-21` while an exclusive allocator covering `M` sat in `tools/`**
+— each read the corpus floor by hand and computed the next number, which is
+correct on every branch and wrong in the union, exactly as this section's other
+receipt. And the collision could not be caught afterwards either, because `M`
+**declares no allocation site**, which `mintid --audit` says of itself in as
+many words: *what this cannot see — a collision inside `C` or `M`.* So the
+answer for ids is neither "add an integrator check" nor "build an allocator": it
+is **use the one that exists, and give `M` a recognisable allocation site so a
+bypass is visible.**
+
+That sharpens the question for a session tempted to skip integration. Three of
+the four cannot be made discoverable from a member at all; one can and already
+is. **Have you done the one?** — and if the answer is *I read the floor and
+added one*, the union already disagrees with you.
 
 
 ## LIVENESS: STATE DRIVES, SIGNALS ONLY ACCELERATE
