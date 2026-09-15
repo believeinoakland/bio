@@ -6256,8 +6256,13 @@ writer) and IC-84's own SETTLED line.
 
 released: 2026-09-14 by the REC-97 worker — **`op=cite` CARRIES THE EXTENT END TO END AND THE
 SILENT DROP IS CLOSED; THE COMPOSER STILL DOES NOT EMIT ONE, AND THAT IS SAID PLAINLY RATHER
-THAN LEFT TO BE READ OUT OF A GREEN GATE.** Committed on `worktree-agent-a39cfbab2c77ec9e4`
-at `2e5d21f` (+ the floor commit beside it). NOT pushed, NOT merged.
+THAN LEFT TO BE READ OUT OF A GREEN GATE.** **THE COMMIT LIST, CORRECTED
+RATHER THAN LEFT AS IT WAS FIRST WRITTEN** (SK-7 had to correct its own the same day — a
+release line written before the last commit names the wrong set): four commits on
+`worktree-agent-a39cfbab2c77ec9e4` — `2e5d21f` the item, `6358f6d` the eleven floors and this
+release line, `a7dc3bb` the `op-claims.test.mjs` correction (the IC-90 row named
+SK-7's not-yet-merged op in the `op=` spelling and the guard refused it, correctly), and the
+commit carrying this corrected sentence. NOT pushed, NOT merged.
 
 **DOES THE COMPOSER NOW EMIT `extent` END TO END THROUGH `op=cite`? NO — and the honest
 sentence is that THE ACT does, and the SURFACE does not yet send it.** `op=cite` accepts the
