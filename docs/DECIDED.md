@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-862 rulings across 82 documents.
+863 rulings across 82 documents.
 
 ## DEC-
 
@@ -826,6 +826,8 @@ authority is the file named, never this one.
   `docs/development/kickoffs/CONDUCT-NEXT.md:81`
 - **REC-83** — SETTLED when REC-83 and REC-84 land and UI-61 confirms the composer emits `extent`. - **IC-86 (I2, FW-17)** — minted, the worker writes the PROPOSED text; RESOLUTION and the I2 bump are yours; FRAMEWORK is the owner and is active for this one item.  
   `docs/development/kickoffs/CONDUCT-NEXT.md:84`
+- **REC-84** — landing invalidates were CORRECTED HERE, by this worker, rather than left as an act for CONDUCT** — the fixtures unchanged, the legs still refused, only the expected REASON moved, with the negative half asserted so the old sentence cannot quietly come back; plus REC-84's `unlanded` CONTROL ARM, whose patch anchor…  
+  `docs/development/CLAIMS.md:5263`
 - **REC-84** — Status stays CHANGING until REC-84 (the writer half) lands and UI-61 confirms the composer emits `extent`; SETTLED is CONDUCT's to write then.  
   `docs/development/INTERFACE-CHANGES.md:6127`
 - **REC-84** · 2026-09-14 — AMENDED 2026-09-14 by CONDUCT #11 at REC-84's landing — the WRITE half is BUILT; the grammar column gains the field its own refusal presupposed; still CHANGING REC-84 landed at `7087905`: the leg grammar at both grains (C-2.8, C-25.10, one checker), the version-leg `content_id` writer, `version_content[]` on…  

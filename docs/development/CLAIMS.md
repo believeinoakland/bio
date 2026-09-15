@@ -5256,9 +5256,55 @@ what this row names and it is NULL on every capture that never reached the forma
 fence on it would refuse correct work — named in the delegation as a candidate row, not as a
 gap D-354 covers.
 
-**NOTHING IS OWED TO A FUTURE ACTOR BY THIS NOTE.** Every act this landing obliges is stated
-as an ACT with its actor in the worker's REPORT — chiefly the four REC-84 assertions this
-landing invalidates, which CONDUCT must correct (never exempt) at integration.
+**RE-MEASURED ON THE MERGED TREE — `origin/main` MOVED TO `ce6e7cf` AND REC-84 LANDED ON IT
+WHILE THIS ITEM RAN**, so the brief's instruction applied and the item fast-forwarded and
+re-measured rather than reporting figures true of a tree that no longer exists. Ten
+conflicts, every one resolved by reading both sides. **The four REC-84 assertions this
+landing invalidates were CORRECTED HERE, by this worker, rather than left as an act for
+CONDUCT** — the fixtures unchanged, the legs still refused, only the expected REASON moved,
+with the negative half asserted so the old sentence cannot quietly come back; plus REC-84's
+`unlanded` CONTROL ARM, whose patch anchor this item deleted and which would have read
+`ARMED NO (matched 0x)` and green (re-cut to flip `sheet-cell` back to unlanded, the
+direction that now breaks correct work, so the `landed` gate stays under a control for the
+day `dom` needs it); plus one stale sentence in the plane itself — `checkLegExtentGrammar`'s
+guidance named a CLOSED LIST of two landed kinds and is now COMPOSED FROM THE MAP.
+
+**MERGED-TREE GATES, every exit read UNPIPED.** Battery **192/192 suites green · 11,839
+assertions · 0 skipped · 210.1s**. **The baseline is `origin/main` `ce6e7cf`'s OWN measured
+run — 191/191 · 11,771** — taken on a pristine detached worktree with all three member
+installs, so the +68 is attributed PER SUITE by diffing two full runs and never by
+subtraction: `content-extent-arms.test.mjs` **+64** (new), `hygiene.test.mjs` **+3**,
+`planning-hygiene.test.mjs` **+1**. `content-extent.test.mjs` and REC-84's
+`content-extent-leg.test.mjs` are UNCHANGED IN COUNT — the corrections moved values inside
+existing assertions, which is what correcting rather than deleting looks like in the tally.
+`coverage.mjs --strict` **exit 0**, and **CHECKS 256/256 named (0 never named)**.
+`REGISTER_FLOOR` moved to the MERGED tree's printed **997/183/184** — and this is the
+measurement worth keeping: **both sides of the conflict said 989**, REC-84 reaching it from
+981 with `content-extent-leg` (8 arms) and REC-85 reaching the same 989 from the same 981
+with `content-extent-arms` (8 arms), two DIFFERENT suites with identical arithmetic, so a
+keep-either resolution would have installed a floor eight arms and one suite low. That is
+the third occurrence of the hazard that block records. UI harness from the REPO ROOT **exit
+0**. `plancheck --local` **0 fail, 0 warn**. `dist/` rebuilt from the merged sources rather
+than merged as text.
+
+**BOTH CONTROL DRIVERS RE-RUN IN FULL ON THE MERGED TREE — ALL SIXTEEN ARMS AS DECLARED**
+(`nc-rec85` eight, `nc-rec84` eight), every restore verified byte-identically by sha256 AND
+`cmp`. **AND THE MERGE SURFACED TWO MORE FINDINGS, both recorded rather than smoothed.**
+(1) `overstrict` came back **2/3**: its third marker was `C-45.1`, and under REC-84's new
+CATALOGUE gate the armed refusal fires there and RELAYS at C-2.8 while carrying the content
+family's CODE through unchanged — **the C-NUMBER IS THE GATE AND THE CODE IS THE FACT**, the
+distinction REC-84 paid four red assertions for, so the markers now assert both. (2)
+`coverage.mjs --strict` went **red** with `1 never named: C-45.3` — the only thing in the
+whole battery naming that number was the TEXT of an assertion LABEL, and this item's own
+correction of that label removed it. It is now pinned as BEHAVIOUR (the checker's own verdict
+is C-45.3, the relay is C-2.8), because a label can be reworded by the next item without
+anyone noticing and a value cannot. **That is the C-20.1 class the check-naming gate exists
+to catch, catching this worker.**
+
+**NOTHING IS OWED TO A FUTURE ACTOR BY THIS NOTE.** The REC-84 collisions are DONE, not
+delegated. What remains for CONDUCT is stated as ACTS with actors in the worker's REPORT:
+flipping this row and IC-83/IC-84's status, and re-reading `REGISTER_FLOOR` if another item
+merges beside this one.
 
 
 ## DELEGATION 2026-09-14 RECORD (REC-85) -> CAPTURE: **THE THREE CONTAINER-EXTENT ARMS ARE BUILT, DRIVEN AND UNFED — NOTHING PERSISTS A SHEET LIST, A PARAGRAPH COUNT OR A SHAPE LIST, AND WITHOUT ONE THE OUT-OF-RANGE REFUSAL CANNOT FIRE IN PRODUCTION**
