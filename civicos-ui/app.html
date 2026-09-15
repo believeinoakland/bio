@@ -6256,7 +6256,7 @@ function legReferentHtml(r){
   if(!s) return "";
   const noun = EXTENT_KIND_WORD[s.extent_kind] || null;
   const jump = legJumpHtml(s);
-  const head = `<div class="subj-how" style="margin-top:6px"><b>rests on</b> &middot; ${esc(String(s.ref||""))}${noun?` <span style="color:var(--muted)">(${esc(noun)})</span>`:""}${jump}</div>`;
+  const head = `<div class="subj-how" style="margin-top:6px"><b>rests on</b> &middot; ${esc(String(s.ref||""))}${noun?` <span style="color:var(--muted)">(${esc(noun)})</span>`:""}${jump}</div>${legMintLabelHtml(s)}`;
   if(!s.stale) return head;
   /* C-14's PRIMITIVE, drawn with the plane's own sentence as the basis line. The
      retry line is `could_not_determine` because looking again is exactly what
@@ -6269,6 +6269,35 @@ function legReferentHtml(r){
         <div class="subj-how"><b>basis</b> &middot; ${esc(String(s.says||""))}</div>
         <div class="subj-how"><b>retry</b> &middot; ${esc(UNDET_RETRY.could_not_determine)}</div>
       </div>`;
+}
+/* SK-7 / framework Part II §14.4's 5.7 — WHO MARKED THIS PASSAGE CITABLE, and
+   the ruling's own words are *labelled everywhere it is shown*. This is the ONE
+   surface in the estate that shows a content row to a member, so "everywhere" is
+   here, and the plane half landing without this line would have been the label
+   existing on the wire and nowhere a person can read it.
+
+   THE PREDICATE IS THE PLANE'S (`mint.machine_work`) AND THE SENTENCE IS THE
+   PLANE'S (`mint.says`, rendered VERBATIM), for PL-17's reason stated one field
+   over at `sufficiency_claim_states`: a surface that reads `minted_by` itself and
+   matches on the prefix has rebuilt the predicate, and a surface that composes its
+   own wording has given the record a second answer to one question. `minted_by`
+   legitimately holds `class:ai/extractor`, and printing that at a member is the
+   exact defect the published vocabulary exists to stop.
+
+   ONLY MACHINE WORK IS LABELLED, and the silence on the other three states is a
+   decision rather than an omission. `plane_minted` is the mechanical referent of a
+   citation A MEMBER AUTHORED — announcing it as provenance would tell a member
+   about the record's own bookkeeping in the place reserved for what their citation
+   rests on. `member_marked` is the unremarkable case. `unstated` is every row
+   minted before this item, and stamping "the record does not say" across the whole
+   existing corpus would be this surface asserting a finding about rows nothing is
+   wrong with. A row carrying no `mint` at all — an older plane, or a read that
+   never composed one — renders exactly as it did before, which is what keeps the
+   over-strictness digest in `content-extent.test.mjs` §7 byte-identical. */
+function legMintLabelHtml(s){
+  const m = s && s.mint && typeof s.mint === "object" ? s.mint : null;
+  if(!m || !m.machine_work || !m.says) return "";
+  return `<div class="teach" style="margin:6px 0 0"><b>MARKED BY A MACHINE</b> &middot; ${esc(String(m.says))}</div>`;
 }
 /* THE JUMP. `pdf-page` is the one landed arm that names a place a reader can be
    taken to, and the page is 0-BASED IN THE RECORD and 1-BASED TO A READER (the

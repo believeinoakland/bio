@@ -85,6 +85,12 @@ import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, ACTION_BASIS_KIND
             copy of what "nobody claimed this" is called is the same drift every
             import in this list exists to close. */
          SUFFICIENCY_CLAIM_STATES,
+         /* SK-7: the four states of a content row's `minted_by`, imported from
+            the module that CLASSIFIES the value for the identical reason the
+            line above is — a surface holding its own copy of what "a machine
+            marked this citable" is called is the drift every import here
+            closes, and this one lands on a field 14.4 requires be labelled. */
+         CONTENT_MINT_STATES,
          normalizeType, vocabFor } from "../checks/bio-checks.mjs";
 
 /* The disposition set: the target states op=dispose may write. Every other
@@ -637,6 +643,23 @@ export const VOCABULARIES = {
      that reads the field itself and matches on the literal has rebuilt the
      predicate. Imported, never restated. */
   sufficiency_claim_states: SUFFICIENCY_CLAIM_STATES,
+  /* SK-7 / framework Part II 14.4 (Bob's 5.7) — WHO MARKED A PASSAGE AS
+     CITABLE, in words. Published for `sufficiency_claim_states`' reason exactly,
+     and the reason is measurable rather than stylistic: `content.minted_by`
+     holds an IDENTITY, and from this item that identity can be a machine
+     credential's `class:ai/<tokenId>` stamp. A surface with no vocabulary
+     renders the stored string, which is how `app.html`'s grounding receipt came
+     to print `Asserted by ${g.asserted_by}` verbatim one field over. So the
+     plane answers WHICH STATE the row is in and publishes the SENTENCE for it,
+     and no surface invents wording for a distinction 5.7 requires be shown.
+     A code->text map, not a list, for the same reason its neighbour is one: the
+     four states are not interchangeable words a surface picks between — each is
+     a different thing the record is saying about who marked this passage, and
+     the sentence IS the state's meaning. `contentMintState()` in the catalogue
+     turns a stored value into one of these keys, and a surface that matches on
+     the literal `minted_by` has rebuilt the predicate; every content-row
+     projection already carries the plane's own answer in its `mint` block. */
+  content_mint_states: CONTENT_MINT_STATES,
 };
 
 
@@ -846,6 +869,19 @@ export const RUNG_ABSENT = {
   airunopen:            { ground: "undetermined", is: "opens an AI run against the record" },
   airunclose:           { ground: "undetermined", is: "closes an AI run" },
   suggest:              { ground: "undetermined", is: "a machine PROPOSES a reading; §6 rule 4 makes it a proposal and never a settlement" },
+  /* SK-7, and it lands beside `suggest` directly above for the reason that one
+     does rather than beside `attesttext`: marking a passage citable PROPOSES an
+     address and settles nothing. The row is an offer — *this part of this
+     document is worth pointing at* — and it enters no case until a member's own
+     leg names it (framework Part II §14.4, Bob's 5.7). It is corrected FORWARD
+     by marking a different extent, never withdrawn: the row is first-class and
+     an edge may already depend on it, so `stale` marks and nothing deletes.
+     NOT `substrate`: a member (or an assistant on a member's objective) CHOOSES
+     to mark a passage, which is precisely what `substrate`'s ground says these
+     acts are not. NOT `observational`: nothing here records what was observed;
+     it records what somebody thought worth citing. So the honest ground is the
+     ladder's own gap — an act on the record, corrected forward, never signed. */
+  contentmint:          { ground: "undetermined", is: "marks a PART of a document as citable — an address the record can hold, proposed by a member or by a machine credential and part of a finding only when a member cites it (§14.4)" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -1487,6 +1523,15 @@ export const NON_ACTS = {
      for an information bundle holding no reading — a pre-flight disagreeing
      with the refusal it fronts, which is DEC-8's headline failure. */
   attesttext: "capture-directed: a member attesting that a capture's transcribed text matches the page image, over a stated extent (metadata published in capture_acts)",
+  /* SK-7 / framework Part II 14.4 (Bob's 5.7). NOT an object-directed act, and
+     NOT capture-directed either — the reason deliberately does not begin
+     "capture-directed:", because that prefix is what enrols an op in the
+     CAPTURE_ACTS block and this act's subject is a DOCUMENT AND AN EXTENT
+     rather than a capture sha. It mints an ADDRESS and writes no edge: nothing
+     points at the row until a member's own basis leg names the same passage, so
+     there is no bundle state for a surface to offer it against and an applies()
+     over `affordanceFacts` would have nothing to read. */
+  contentmint: "content-directed: marks a part of a document as citable, keyed by (document, extent); mints an address and no edge",
   /* Keyed by entity / capture / progression — the framework surface, not a
      bundle-state act. */
   entitycreate: "registry write, keyed by entity",

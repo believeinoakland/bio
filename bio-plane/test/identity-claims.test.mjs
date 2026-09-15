@@ -141,12 +141,29 @@ t("(b) NO comment claims a member-only constraint the code does not enforce",
    which only by accident; a set names the site. Each of these fails when a member is
    ADDED and when one is quietly REMOVED, which is the mechanical expiry M0-12's ledger
    technique exists for. */
-t("(c) DEC-52's ruled acts, exactly — the four sites where the machine MAY rule",
+/* CORRECTED 2026-09-14 (SK-7), AND THE CORRECTION IS THE PIN DOING ITS JOB.
+   This assertion read "DEC-52's ruled acts, exactly — the FOUR sites", which was
+   true when it was written and had quietly become a claim about DEC-52 rather
+   than about the MARKER. `RULED` is the marker's own verdict and it says *a
+   ruling permits a machine to write this field*; nothing in the instrument
+   binds that ruling to DEC-52, and SK-7 added the first site that is ruled by a
+   different one. The set grows by TWO — both lines of `op=contentmint`'s
+   server-side minter stamp — under framework Part II §14.4's EXTRACT role
+   (DEC-24: *the machine may do the looking, the member does the concluding*),
+   Bob's 5.7 of 2026-09-14: a machine credential MAY mark a passage as citable,
+   every such row is labelled as machine work, and what it may never do is
+   ATTEST, which is C-35.10's and lives at `op=attesttext` one stamp above. The
+   set stays PINNED BY NAME rather than being loosened to a count, and the DEC
+   list below now names which ruling covers which site, so a site moved from one
+   ruling to another fails here rather than passing on the word "RULED". */
+t("(c) the RULED sites, exactly — every field a ruling permits a machine to write, named",
   setOf("RULED"),
-  ["declaredBy@src/index.mjs", "declaredBy@src/index.mjs", "resolvedBy@src/index.mjs", "threadedBy@src/index.mjs"]);
+  ["declaredBy@src/index.mjs", "declaredBy@src/index.mjs", "mintedBy@src/index.mjs",
+   "mintedBy@src/index.mjs", "resolvedBy@src/index.mjs", "threadedBy@src/index.mjs"]);
 t("(c) and every RULED site names a DEC and carries the naming half the ruling rests on",
   sites.filter((s) => s.verdict === "RULED").map((s) => [s.markerDec, s.principalNamed]),
-  [["DEC-52", true], ["DEC-52", true], ["DEC-52", true], ["DEC-52", true]]);
+  [["DEC-24", true], ["DEC-24", true], ["DEC-52", true], ["DEC-52", true],
+   ["DEC-52", true], ["DEC-52", true]]);
 t("(c) a RULED site must NOT sit over a fenced op — a fence would contradict the ruling",
   sites.filter((s) => s.verdict === "RULED").every((s) => s.enforcedOps.length === 0), true);
 

@@ -226,6 +226,23 @@ const mfFloored = new Miniflare({ workers: [
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const api = async (q, init) => (await (await mf.dispatchFetch(`http://x/api/?${q}`, init)).json());
+/* SK-7: A SIGNED-IN MEMBER. From this item the plane stamps the attestor from
+   the credential that authenticated instead of reading it out of the request
+   body, so a machine credential cannot land an attestation at all and this
+   suite needs a real session for the act that must SUCCEED. Both members are
+   administrators because Membership Architecture 4.2/4.3 has no ordinary
+   members until two exist. */
+const session = async (memberId, role) => {
+  const add = (await api("op=memberadd&token=adm-e2e", { method: "POST",
+    body: JSON.stringify({ memberId, cover: `cover for ${memberId}`, role, capabilities: ["contribute"] }) })).result;
+  const en = (await api("op=enroll", { method: "POST",
+    body: JSON.stringify({ invite: add.invite, handle: memberId, password: `${memberId}-passphrase-1` }) })).result;
+  if (!en.ok) throw new Error(`enroll ${memberId}: ${JSON.stringify(en).slice(0, 300)}`);
+  const lg = (await api("op=login", { method: "POST",
+    body: JSON.stringify({ role: `member:${memberId}`, password: `${memberId}-passphrase-1` }) })).result;
+  if (!lg.token) throw new Error(`login ${memberId}: ${JSON.stringify(lg).slice(0, 300)}`);
+  return lg.token;
+};
 const acquire = async (path) => (await api("op=acquire&token=mem-e2e", { method: "POST",
   body: JSON.stringify({ locator: "https://oakland.legistar.com" + path, authority: "City Clerk" }) })).document;
 
@@ -433,15 +450,26 @@ console.log("\n--- 7 · DISTINGUISHABLE IN AN EXPORT — outside this instance, 
 
 console.log("\n--- 8 · ATTESTATION: A MEMBER ACT, REFUSED TO A MACHINE CREDENTIAL, SCOPED TO ITS EXTENT ---");
 {
-  const attest = (extent, member) => api("op=attesttext&token=mem-e2e", { method: "POST",
+  /* CORRECTED 2026-09-14 (SK-7). These arms used to pass a machine-shaped
+     ATTESTOR IN THE BODY through the MEMBER_TOKEN machine credential, and the
+     store read that body field — so the refusal fired only for a caller that
+     named itself a machine, and the SAME credential naming `bob` had its
+     attestation land in bob's name. The attestor is now stamped server-side, so
+     the credential is what is judged: the three refusal arms below are one
+     credential each, and the body they carry is irrelevant BY CONSTRUCTION
+     rather than by the suite's care. */
+  const attest = (extent, member, tok = "mem-e2e") => api(`op=attesttext&token=${tok}`, { method: "POST",
     body: JSON.stringify({ captureSha: real.capture.sha256, member, at: NOW, extent }) });
+  const BOB = await session("bob", "admin");
+  await session("gus", "admin");
   t("a MINTED machine credential cannot attest — nobody would hold the claim",
     (await attest({ kind: "document" }, "token:member")).result?.code, "TEXT_ATTEST_MACHINE");
-  t("nor a bare class word", (await attest({ kind: "document" }, "class:ai")).result?.code, "TEXT_ATTEST_MACHINE");
-  t("nor nobody at all — unattributed is not attested",
-    (await attest({ kind: "document" }, "")).result?.code, "TEXT_ATTEST_MACHINE");
+  t("AND NOT EVEN WHEN IT NAMES A REAL MEMBER IN THE BODY — the body is not read (SK-7)",
+    (await attest({ kind: "document" }, "bob")).result?.code, "TEXT_ATTEST_MACHINE");
+  t("nor the root-of-trust credential", (await attest({ kind: "document" }, "bob", "adm-e2e")).result?.code,
+    "TEXT_ATTEST_MACHINE");
   t("an UNSCOPED attestation is refused rather than read as covering the whole document",
-    (await attest(null, "bob")).result?.code, "TEXT_ATTEST_EXTENT");
+    (await attest(null, "bob", BOB)).result?.code, "TEXT_ATTEST_EXTENT");
 
   /* SCOPED, and scoped IN THE MEMBER'S OWN COORDINATE SPACE. The regions this
      member returns are anchored in the pixels of the frame that was OCR'd, so an
@@ -462,8 +490,11 @@ console.log("\n--- 8 · ATTESTATION: A MEMBER ACT, REFUSED TO A MACHINE CREDENTI
   const [cx0, cy0, cx1, cy1] = cited;
   const attestedRect = [cx0 - 20, cy0 - 20, cx1 + 20, cy1 + 20];
   const ok = await attest({ kind: "region", source: { kind: "pdf-page", ref: "p0", page: 0,
-                                                      rect: attestedRect } }, "bob");
+                                                      rect: attestedRect } }, "someone-else", BOB);
   t("a scoped attestation from a person lands", ok.result?.ok, true);
+  /* SK-7: and it is attributed to the SIGNED-IN member, never to the name the
+     body asked for — the body above deliberately names somebody else. */
+  t("attributed to the signed-in member, never to the name in the body", ok.result?.attestor, "bob");
   const inside = (await api(`op=textattest&token=mem-e2e&sha256=${real.capture.sha256}`
     + `&page=0&rect=${encodeURIComponent(JSON.stringify(cited))}`)).result;
   t("a leg citing a region INSIDE it takes the attested ceiling, superseding the derivation cap",

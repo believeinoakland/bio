@@ -6563,3 +6563,164 @@ is lost by having chosen the read.
 ### RESOLUTION — ACCEPTED, **I1 1.4.0 → 1.5.0**, 2026-09-14 by CONDUCT #11
 
 MINOR, as proposed: `document.reading.page_count` — one new optional key inside an existing object, present-and-null when the wire ran and the producer answered nothing, ABSENT when nothing ever counted; no absence stands in for another and it is never a zero. Carried at ONE site in `op=acquire`'s FW-15 reading wire covering all three reading branches; a consumer that never reads it sees 1.4.0 exactly. **The registry gap this IC names is closed with the bump:** I1 §4's document-level table had never listed `reading` at all (undocumented since FW-5) — the row is added. CAP-12 (the container extents — sheets with dimensions, paragraph count, slides with shape lists, D-354) rides this entry's shape and is expected to AMEND it rather than mint anew. SETTLED when CAP-12 lands and the three office arms' C-45.1 is fed, or at the next DIST deploy serving the count live — whichever first; CONDUCT writes it.
+---
+
+## IC-88 · I5/I3: WHO MARKED THIS PASSAGE — a machine credential may MINT a content row, every projection of one carries the plane's own MINT LABEL, and `op=attesttext`'s attestor stops being caller-supplied · PROPOSED 2026-09-14 (SK-7, enacting framework Part II §14.4's 5.7 under Bob's rulings of 2026-09-14) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I5 (the store schema) at **1.11.0** after IC-83, and I3 (the plane's op surface) at **14.1.0** after IC-84
+- **Proposer:** the SK-7 worker, 2026-09-14, from `BIO_Content_Framework_v0_10.md` Part II §14.4 —
+  Bob's ruling of 2026-09-14, folded there as 5.7: *"The assistant may mark passages as citable on
+  its own, every such row labelled as machine work, never attested by it, and part of a finding only
+  when a member cites it."* IC-83 already put `minted_by` on the row and named this item in its own
+  consumer list (*"SKILL — the assistant will mint rows later, 5.7"*).
+- **Owner to land it:** `SKILL` + `RECORD` (landed on `worktree-agent-ad8d378ba5fed22ee`)
+- **Consumers to answer:** `RECORD` (owner of I5/I3 and of the content region), `SKILL` (owner of the
+  assistant), `UI` (MEASURED: renders no content row today — `op=content` landed with REC-83 and has
+  no consumer in `civicos-ui/app.html`; and calls `op=attesttext` nowhere, so the second half below
+  is NOT-AFFECTED by measurement rather than by assumption), `CONTENT-PDF` (dormant — owner of
+  CPDF-10's attestation path, which the second half changes; CONDUCT answers for it in writing),
+  `FLEET`/`DIST` (MEASURED: no caller of `op=attesttext` in `agent-worker/` or `newgroup/`)
+- **Change class:** **TWO CHANGES, ONE ADDITIVE AND ONE BREAKING**, stated apart because collapsing
+  them would hide the second behind the first.
+  - **(1) ADDITIVE → MINOR.** One new op, one new value class on an existing column, one new field on
+    every content-row projection. Nothing existing changes shape.
+  - **(2) BREAKING for one op's request shape → MAJOR on I3 if CONDUCT judges the measured consumer
+    set to make it so, and the measurement is below.** `op=attesttext` no longer reads `member` from
+    the request body.
+
+**What (1) — THE MINT, AND THE LABEL.**
+
+A new op `contentmint` (classes `admin`/`member`/`probe`, mutating, `NEEDS` = `contribute`, in
+`SESSION_OPS` for member and admin). It takes `{ bundleId, extent, at? }` and mints or finds the
+content row addressing that part of that document, returning the row through `contentRow` so the
+answer is labelled by the same helper every other surface labels it with. `minted_by` is STAMPED
+SERVER-SIDE from the credential that authenticated and the body's is never read:
+
+    a session                 -> the signed-in member's id            ("ruth")
+    an `ai` credential        -> `class:ai/<tokenId>`                 ("class:ai/extractor")
+    any other machine class   -> `class:<cls>`                        ("class:member", "class:admin")
+
+The `ai` class reaches it exactly as FL-6's cascade already provides: `aiReachesAsMember` admits it
+because the row carries `member`, and a MUTATING op additionally has to be named in the `writes` the
+minting member declared — driven, refused by name (`AI_BEYOND_TASK_SCOPE`, C-29.x) when it is not.
+**THE STAMP IS THE CLASS AND NEVER THE PRINCIPAL:** a member-scoped credential's principal is
+`member:<id>`, which is NOT a machine identity by `isMachineIdentity`, so stamping it would label
+the assistant's own row as a member's.
+
+Every projection of a content row gains ONE new field, `mint`, composed in one place
+(`Store.#mintLabel`) and carried by all four surfaces that emit a row — `op=contentmint`,
+`op=content`, `earned.content` on `op=earnedbasis`, and `op=promote`'s `content[]` array:
+
+    mint: { by: <the stored minted_by>, state, machine_work: <boolean>, says: <the published sentence> }
+
+`state` is one of four, total over every possible `minted_by`, classified by `contentMintState` in
+`checks/bio-checks.mjs`: `plane` · `machine` · `member` · `unstated`. The four sentences are
+published through `vocabularies.content_mint_states` on `op=affordances`, so a surface renders
+`says` and invents no wording — `sufficiency_claim_states` (PL-17 / DEC-65) one field over, for its
+reason exactly, and the reason is measurable: `civicos-ui/app.html` renders `Asserted by
+${g.asserted_by}` VERBATIM today, so a column that can hold `class:ai/extractor` and no vocabulary is
+a surface printing a machine word at a member.
+
+**`plane` IS NOT `machine`, and that is the load-bearing distinction.** A row minted at
+`op=promote` is the mechanical referent of a citation A MEMBER AUTHORED; calling it machine work
+would label a member's own citation as the assistant's. `CONTENT_MINTED_BY_PLANE` is now the one
+literal for that value and `mintContent` defaults to it.
+
+Nothing about 5.7's third clause needed building: `earnedBasisRegistry` answers `earned.content`
+only over the content ids a CALLER names, and the callers that name them are bases of legs members
+authored — so a machine-minted row nobody cited is absent from every finding by construction, and
+the moment a member's leg names the same passage `mintContent`'s INSERT OR IGNORE finds THAT row
+(the id is `hash(capture, extent, chain)`) and the label travels into the finding with it. Both
+directions are driven, and the arm that widens the registry is one of this item's five controls.
+
+**What (2) — THE ATTESTOR, AND IT IS A CORRECTION RATHER THAN A DESIGN.**
+
+`op=attesttext` read its attestor from the request body. C-35.10 refuses a MACHINE IDENTITY, so the
+fence fired only when a caller VOLUNTEERED a machine-shaped name — which is the one thing a caller
+that wants to attest never does. **MEASURED through a real minted `ai` credential on `origin/main`
+at `3f92e5c`, not reasoned about:**
+
+    member: "class:ai"     -> refused, C-35.10          (the one spelling every suite drove)
+    member: "ruth"         -> ATTESTATION LANDED, attributed to ruth, who had said nothing
+    member: "member:ruth"  -> LANDED, at an attestor string no member has
+    and the MEMBER_TOKEN and ADMIN_TOKEN machine credentials did the same.
+
+CPDF-10 wrote *"TWO FENCES ON PURPOSE"* and `SESSION_OPS` carries `attesttext` with the reasoning
+*"the only route that produces a name the store will accept is a session"* — true of a session, and
+never enforced against a machine credential, because `SESSION_OPS` gates sessions only.
+`content-extent.test.mjs` recorded the belief that an op-level arm was impossible here; it was
+measured with a token that was not a credential at all, and that comment is corrected in this
+landing.
+
+So the attestor is now stamped server-side exactly as `op=lease`'s actor, `op=cite`'s `by` and the
+queue's `member` already are — `sessMember` for a session, `class:<cls>` for any machine credential —
+and the DO route reads it from the query string the control plane wrote, never from the body.
+C-35.10 is UNCHANGED and is now REACHED by every machine credential rather than only by one that
+incriminates itself.
+
+**MEASURED CONSUMER IMPACT of (2), by census rather than by belief:**
+
+| consumer | calls `op=attesttext`? | effect |
+| --- | --- | --- |
+| `civicos-ui/app.html` | **no** (0 occurrences) | none. The act is on `ACTS_AWAITING_SURFACE` with `owed_by: "UI"` and has no surface yet |
+| `agent-worker/` (the fleet) | **no** (0) | none |
+| `newgroup/` (the installer) | **no** — only the embedded plane bundle, which is a build artifact of these same sources | none; DIST rebuilds at its next cut |
+| `bio-plane/test/` | **yes, 4 suites** | ALL FOUR CORRECTED IN THIS COMMIT, never exempted: `textchain`, `ocr-member-e2e`, `content-reads` (each grew a real session for the act that must LAND, and their machine-credential arms now drive the credential instead of a body string) and `content-extent` (its stale comment) |
+
+**The honest summary of (2):** every caller in this repository that the change breaks was a TEST
+DRIVING THE HOLE. There is no product caller to migrate, which is why the correction is landable now
+rather than owed a deprecation window — and it is also why nobody noticed: the only thing exercising
+the op was exercising it wrongly.
+
+**RESPONSES**
+
+- `UI` — **NOT-AFFECTED, by measurement.** 0 occurrences of `op=attesttext` and no content-row
+  renderer in `app.html`. When UI builds the transcription-check surface (`ACTS_AWAITING_SURFACE`,
+  `owed_by: "UI"`, since 2026-08-08) it must NOT send `member` in the body; the plane stamps it.
+  When UI builds a content-row surface it renders `mint.says` verbatim and never `minted_by`.
+- `RECORD`, `SKILL`, `CONTENT-PDF`, `FLEET`, `DIST` — **to answer.** `CONTENT-PDF` is dormant and
+  CONDUCT answers for it in writing.
+
+### IC-88 ADDENDUM · 2026-09-14, THE SK-7 RESPAWN, BEFORE THE ROW LANDED — **ONE PREMISE OF THIS PROPOSAL WAS FALSIFIED BY A LANDING THAT ARRIVED WHILE ITS AUTHOR WAS GONE, AND THE HALF IT MADE MISSING IS BUILT IN THE SAME COMMIT**
+
+This IC was written on a tree cut at `3f92e5c`. Its author died on the operator's session limit
+before the item was reported, and by the time the respawn read it `origin/main` had moved through
+REC-84, REC-85, CAP-8, CAP-9, FW-17 and **UI-61**. Three of its statements are corrected here rather
+than edited above, so a reader of the original text can see what was true when.
+
+**1. THE UI PREMISE IS NOW FALSE, AND IT IS THE ONE THAT MATTERED.** The proposal's consumer list
+and its `UI` response both rest on *"MEASURED: renders no content row today — `op=content` landed
+with REC-83 and has no consumer in `civicos-ui/app.html`"*. That measurement was correct on
+`3f92e5c`. **UI-61 landed the consumer** (`legReferentHtml` in `civicos-ui/app.html`, driven by
+`civicos-ui/test/content-extent.test.mjs`): the leg display reads a content row's `standing` — the
+very object `#contentStanding` composes — and renders its `ref` and, when stale, its `says`. So from
+UI-61 there IS a surface showing a content row to a member, and this item's `mint` field was reaching
+it and being dropped. **A label that exists on the wire and on no screen does not satisfy *labelled
+everywhere it is shown*.**
+
+Corrected by BUILDING it, not by re-wording the IC. `legMintLabelHtml` in `civicos-ui/app.html`
+renders `mint.says` VERBATIM under a `MARKED BY A MACHINE` heading, gated on the plane's own
+`mint.machine_work` predicate and never on the `minted_by` string — the RESPONSES line above told UI
+to do exactly this, and the surface it was told to wait for already existed. **Only `machine_marked`
+is labelled**; `plane_minted`, `member_marked` and `unstated` render exactly as before, which is what
+keeps UI-61's own over-strictness digest (§7, pinned at `ce6e7cf`) byte-identical. Nine arms in
+`civicos-ui/test/content-extent.test.mjs` §8 drive it, including the one that only a surface reading
+the plane's predicate passes: a `machine_work: false` beside a machine-shaped `by`.
+
+So `UI` is **AFFECTED and ANSWERED IN THIS COMMIT** on the label half, and stays NOT-AFFECTED on the
+`op=attesttext` half — re-measured on the merged tree, `op=attesttext` still appears **0 times** in
+`civicos-ui/app.html` and **0 times** in `agent-worker/`. The transcription-check surface is still
+owed (`ACTS_AWAITING_SURFACE`, `owed_by: "UI"`) and must not send `member` in the body.
+
+**2. THE INTERFACE BASELINE MOVED.** The header reads *"I5 at 1.11.0 after IC-83"*. I5 is at
+**1.12.0** since IC-86's resolution (FW-17, reading position and the determining pair). I3 is
+unmoved at 14.1.0. The change class is unaffected — this item adds no column; `minted_by` is IC-83's
+and what is new is the VALUE CLASS it may now hold — but CONDUCT bumps from 1.12.0, not from 1.11.0.
+
+**3. THE CHANGE (2) MEASUREMENT WAS RE-TAKEN AND STILL HOLDS.** `op=attesttext` still reads its
+attestor from the request body on `origin/main` today (`store.mjs`'s `attestText` takes `pkg.member`;
+`SESSION_OPS`' *"the only route that produces a name the store will accept is a session"* comment and
+`index.mjs`'s *"TWO FENCES ON PURPOSE"* are both still there, and both are still true only of a
+session). **Nothing that landed between the two measurements closed it.** The
+correction in this commit is therefore against live behaviour and not against a tree that has since
+moved.
