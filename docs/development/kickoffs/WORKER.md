@@ -264,3 +264,42 @@ contents of a foreign battery are indistinguishable from the contents of yours.
 **The general form, which is this project's oldest shape wearing new clothes:** a shared,
 unqualified name is an identity nobody owns, so two different facts arrive under it and nothing
 fails loudly. Ask what the figure is a figure OF before you ask what it means.
+
+
+## KILL BY PID OR BY THE PROCESS GROUP YOU STARTED. NEVER BY A MACHINE-WIDE PATTERN ON A SHARED MACHINE.
+
+**Reported by the REC-105 worker against itself, 2026-09-15, with roughly six batteries live.**
+It ran `pkill -f "scripts/battery.mjs"` to stop ONE stale run of its own. **That pattern does not
+know whose battery it is.** Every worker on this machine runs exactly that script, and the
+machine read QUIET immediately afterwards.
+
+**The practice is one line: read the process table, take the PID you mean, kill that.** Or kill
+the process group you yourself started. **`pkill -f` matches across every worktree and every
+session and is never the right tool here** — the same reasoning as *kill the tree, not the leaf*
+in `kickoffs/CONDUCT.md`, one scope out: that rule is about killing too little, this is about
+killing far too much.
+
+**WHAT MAKES IT WORTH A SECTION RATHER THAN A WARNING IS THAT THE VICTIM CANNOT TELL.** A battery
+killed mid-run does not report a kill. **A compound command reports the WRAPPER's status — so a
+`&&` chain prints exit 0 over a battery that died at suite 165 of 205 with zero failures**, and
+a truncated run containing no failures is indistinguishable from a green one. The M0-38 worker
+caught exactly this **only because it read the battery's own `BATTERY EXIT=143` line instead of
+the wrapper's.** **Read the battery's own completion line and its own exit, never the wrapper's**,
+and if a run ends without its completion line, it did not finish no matter what the shell said.
+
+**If you kill something on a shared machine, SAY SO in your report and name the window.** REC-105
+did, and named three worktrees as candidates rather than as attribution — which is what let those
+runs be checked instead of trusted. **A kill you do not report is indistinguishable from a
+mysterious failure in somebody else's item.**
+
+## A SEARCH THAT FAILED CAN RETURN ITS OWN ERROR TEXT AS MATCHES.
+
+**Measured by BOB #11, 2026-09-15, while checking its own logs for the kill signature above.** A
+shell regex the local `grep` could not compile produced **five "matches" that were the tool's own
+error output** — a false positive that reads exactly like a finding, in a search run to establish
+that something was ABSENT. Re-run properly it returned a clean zero.
+
+**So a search is an instrument and gets the same treatment as one: check that it COMPILED before
+you believe what it found, and be most suspicious when a search for absence comes back with
+hits.** This is the *break only the thing you are testing* rule arriving in the SEARCH rather
+than in the control, and it is worse there, because nobody declares a control arm for a `grep`.
