@@ -185,6 +185,28 @@ export const OBSERVATION_SUBJECT_KINDS = {
   description: "a member's own words for something they could not name any other way",
   unstated:    "the writer did not record what kind of thing this was about, and the record "
              + "says so rather than guessing (the folded run log, and nothing new)",
+  /* THE SEVENTH, ADDED BY REC-95 AND STATED HERE RATHER THAN SMUGGLED, exactly
+     as `unstated` above is. It is NOT in design section 3's list either.
+
+     A RESOLUTION ATTEMPT'S SUBJECT IS A REFERENCE, AND IT CANNOT BE `entity`.
+     Section 4.3 says *"one row per resolution attempt over an entity"*, but the
+     attempt that FAILS names no entity — there is no registry entry, which is
+     precisely what it found out — and that failing attempt is the look the
+     section exists to record. Keying it on `entity` would write a row for every
+     success and NOTHING AT ALL for the case the section was written for; putting
+     a raw, unresolved `kind:key` in a column called `entity` would say the record
+     keeps a registry entry for a name it has just established it does not. Both
+     are the record claiming more than it can support, in the one direction this
+     whole table exists to refuse.
+
+     `observation-log.test.mjs`'s arm B9 pins this key set EXACTLY, and that pin
+     is what brought this item here to say so instead of letting a seventh member
+     arrive unremarked. It worked as designed; the arm is CORRECTED with its date
+     and its reason, never exempted. Reported as a DESIGN GAP against sections 3
+     and 4.3 rather than resolved silently. */
+  reference:   "a reference as a document's reading carries it — the raw, source-assigned "
+             + "kind:key, before any resolution to a canonical entity (D-83). The subject of a "
+             + "RESOLUTION attempt, whose whole point is that it may match no entity at all",
 };
 
 /* ===================================================================== *
@@ -476,6 +498,330 @@ function detailFor(tier, terminal, reading, outcome) {
   if (typeof reading.text_container === "string" && reading.text_container)
     parts.push(reading.text_container);
   return parts.join("; ");
+}
+
+/* ===================================================================== *
+ * REC-95 — THE MEANING LEVEL. `OBSERVATION-LOG-DESIGN.md` section 4.3 and
+ * section 8's row 3.
+ * ===================================================================== *
+ *
+ * *Where today `found: false` sits on the reading and the LOOK is unrecorded.*
+ * That sentence is the whole item. Section 2's table says it in the row it gives
+ * the reading: **the RESULT is on the reading; the LOOK is not recorded
+ * anywhere.** Until this region a reader that ran over a document and found
+ * nobody, a recogniser that tried a name against the registry and matched
+ * nothing, and a derivation that found no connections through a subject were all
+ * INDISTINGUISHABLE FROM NEVER HAVING HAPPENED — which is the one thing this
+ * table exists to make impossible, arriving at the level the design itself named
+ * as still open.
+ *
+ * THIS IS THE THIRD WRITER INTO ONE APPEND SITE and it adds no table, no column
+ * and no refusal. REC-93 built `observation_log` and `#observe`; REC-94 wrote
+ * the content level through it; this writes the meaning level through the same
+ * site, with the judgement HERE — pure, for this file's own stated reason, so a
+ * suite can hold the decision to the store's behaviour without workerd.
+ *
+ * THE THREE ACTS HAVE THREE SUBJECTS, AND THAT IS THE DECISION THIS REGION TURNS
+ * ON. The frontier is *the latest row per (level, subject_kind, subject)*
+ * (section 5), so two acts sharing a subject COLLAPSE INTO ONE ROW and the
+ * frontier answers one of the three questions for all three of them. The three
+ * subjects are therefore distinct, and each is the thing its act was about:
+ *
+ *   - THE READER RUN is about a CAPTURE. *Did anything read this document for
+ *     entities?* `subject_kind = capture`, the capture_sha.
+ *   - THE RESOLUTION ATTEMPT is about a REFERENCE. *Did anything try to match
+ *     this name against the registry?* `subject_kind = reference`, the seventh
+ *     member of `OBSERVATION_SUBJECT_KINDS`, added and stated above.
+ *   - THE CONNECTION DERIVATION is about an ENTITY. *Did anything derive the
+ *     connections among the documents that concern this subject?*
+ *     `subject_kind = entity`, the entity id.
+ *
+ * THE AUTHORITY IS `derive` FOR ALL THREE, and it is the kind REC-93 allocated
+ * for this item: *"a derivation over extracted content (REC-95)"*. What
+ * distinguishes the three at a read is the SUBJECT KIND and not a fourth
+ * authority word — REC-94's arrangement, where the authority is the bundle and
+ * the subject is the capture, and for its reason: two columns holding one fact
+ * is one fact written twice. */
+
+/* SECTION 5.1's THREE CAUSES AT THE MEANING LEVEL, AND THE KEYS ARE REC-94's
+   RATHER THAN A FOURTH SPELLING OF THEM. `MISSING_ROW_CAUSES` above is the
+   content level's. The causes are the DESIGN's and are the same three, so this
+   object is keyed identically and the suite asserts the two key sets are EQUAL —
+   a later level that invents a fourth key fails there rather than in review,
+   which is the arrangement CONDUCT ruled for the content axis applied to the
+   thing the content axis is read under.
+
+   THE SENTENCES DIFFER BECAUSE THE EVIDENCE DIFFERS. Section 5.1 names
+   `captured_locators` as the document level's pre-log evidence and REC-94 named
+   `readings` as the content level's; the meaning level has THREE subject kinds
+   and therefore three evidence tables — `readings`, `resolutions`,
+   `connections`. What matters about them is `MEANING_EVIDENCE_IS_ONE_SIDED`
+   below, because it is not what the design assumes. */
+export const MEANING_MISSING_ROW_CAUSES = {
+  pre_log:      "this subject was looked at BEFORE the observation log carried the meaning level, "
+              + "so the look is recorded in the table that holds what it produced -- a reading, a "
+              + "resolution, a connection -- and not here. It is not a subject nobody looked at",
+  purged:       "this subject entered the record before the earliest meaning-level row this log "
+              + "holds, so either the log did not yet carry this level for it or a whole-store "
+              + "purge cleared the rows that described it. Neither can be ruled out, and they are "
+              + "different facts",
+  never_looked: "the log carried this level over this subject's whole lifetime and was not purged "
+              + "since, AND the record holds no product of such a look -- so nobody has looked. "
+              + "This is the one cause that licenses a positive statement",
+};
+
+/** THE FINDING THIS LEVEL PAID FOR, AND IT IS A REAL LIMIT RATHER THAN A CAVEAT.
+ *
+ *  Section 5.1's order needs, at cause (1), POSITIVE EVIDENCE that a look
+ *  happened before the log carried the level. At the content level that evidence
+ *  is TWO-SIDED: a `readings` row exists for every capture the extractor ran
+ *  over, whatever it produced, so REC-94 can always tell a pre-log extraction
+ *  from a never-extracted capture.
+ *
+ *  **AT TWO OF THIS LEVEL'S THREE SUBJECT KINDS IT IS ONE-SIDED, AND THE MISSING
+ *  SIDE IS EXACTLY THE ONE SECTION 4.3 EXISTS TO RECORD.** A resolution attempt
+ *  that matched nothing writes no `resolutions` row. A derivation that found no
+ *  connections writes no `connections` row. So for a reference or an entity the
+ *  evidence table can confirm that a look HAPPENED and can never confirm that
+ *  one did not — which means a pre-log look that found NOTHING is, and stays,
+ *  indistinguishable from no look at all.
+ *
+ *  THE CONSEQUENCE IS STATED AND NOT SMOOTHED: over the pre-log window cause (3)
+ *  is UNREACHABLE for a reference or an entity, and the honest answer there is
+ *  cause (2) — undetermined, naming both. It is unreachable for a reason that is
+ *  this item's own subject, so the remedy is not a better signal: it is that from
+ *  this landing forward the look leaves a row and the window stops growing.
+ *  Reported as a DESIGN GAP against section 5.1, which names an evidence table
+ *  per level and does not say that at some levels the evidence exists only where
+ *  the answer was yes. */
+export const MEANING_EVIDENCE_IS_ONE_SIDED = {
+  capture:   false,   /* `readings` holds a row whether or not the reader found anything */
+  reference: true,    /* `resolutions` holds a row only where the recogniser MATCHED */
+  entity:    true,    /* `connections` holds a row only where a pair was DERIVED */
+};
+
+/** THE READER RUN — section 4.3's first act, as a function.
+ *
+ *  *One row per reader run per capture: `PRESENT` with the reference count in
+ *  `detail`, or `LOOKED_ABSENT` when the reader ran and found none — and those
+ *  are different from `no reader is registered for this type`, which is
+ *  `LOOKED_INDETERMINATE` with the condition.*
+ *
+ *  THE THIRD OUTCOME HAS NO PRODUCER ON THIS TREE AND IT IS STATED RATHER THAN
+ *  APPROXIMATED — the same shape as section 4.2's fourth outcome (D-375) one
+ *  level up, and MEASURED rather than assumed. *No reader is registered for this
+ *  type* is a fact about the DOCTYPE REGISTRY: the fallback type declares
+ *  `fallback: true` and its `parse()` emits `{ entities: [], facts: {} }`, which
+ *  is byte-for-byte what a registered reader that found nobody emits. The only
+ *  thing reaching the store is `readings.content_type`, which is the doctype's
+ *  KEY (`index.mjs` composes it as `docType.type.key`) — a SPELLING the registry
+ *  may rename, not the property. And the Durable Object does not import
+ *  `docprofile`: every `store.mjs` import is from `bio-plane/src` or
+ *  `bio-plane/checks`, measured on this tree, so reaching the registry from the
+ *  writer would be a new cross-package dependency for the DO and a larger
+ *  decision than this row.
+ *
+ *  SO THE SEAM IS PINNED AND THE FACT IS NOT INVENTED. `readerRegistered` takes
+ *  `true`, `false` or `null`; this function holds the rule about what each
+ *  LICENSES; the store passes `null` today and says why at the site. When one
+ *  field carries the fact — beside `content_type`, where `index.mjs` already
+ *  composes it, exactly as CAP-9 persisted `page_count` — the third outcome
+ *  arrives with no change here. `contentAxisFor`'s `unitIndex` seam is the
+ *  precedent and it is deliberate: an item that must land into this gets a
+ *  pinned contract rather than a sentence to interpret.
+ *
+ *  `found: false` IS NOT PRESSED INTO SERVICE FOR IT, and that refusal is the
+ *  one that matters. It means the reader ran and found no entities, which IS
+ *  this level's `LOOKED_ABSENT` and is a different fact from nobody having a
+ *  reader; collapsing them would file every document about nobody as a document
+ *  nothing could read. REC-94's arm B8 pins the mirror image at the content
+ *  level — `found: false` must not be read as *no text* — and the two refusals
+ *  point in opposite directions on purpose. */
+export function readerRunObservation(reading, captureSha, { readerRegistered = null } = {}) {
+  if (!reading || typeof reading !== "object")
+    return { row: null, why: "no reading was persisted for this capture, so no reader run happened "
+                           + "here to record. A look not taken is the ABSENCE of a row (section 5.1)" };
+  const sha = typeof captureSha === "string" && captureSha ? captureSha : null;
+  const entities = Array.isArray(reading.entities) ? reading.entities : [];
+  const n = entities.length;
+  const type = typeof reading.content_type === "string" && reading.content_type
+    ? reading.content_type : null;
+  const ver = Number.isInteger(reading.reader_version) ? reading.reader_version : null;
+  const who = `reader ${type || "of an unrecorded type"}${ver == null ? "" : ` v${ver}`}`;
+
+  /* THE THIRD OUTCOME, REACHABLE ONLY ON AN EXPLICIT `false`. An ABSENT answer
+     is NOT treated as `false`: a caller that did not say has not established
+     that no reader exists, and defaulting to the indeterminate would let a
+     reader reach *we could not read this type* by FORGETTING TO ASK. That is
+     REC-94's weakest-default rule pointed at this level — an unrecognised or
+     absent input takes the answer that claims least, and here claiming least is
+     to go on and judge the reading on its own evidence. */
+  if (readerRegistered === false)
+    return { row: { state: "LOOKED_INDETERMINATE", condition: null,
+                    resultKind: null, resultRef: null,
+                    detail: `no reader is registered for this document's type (${type || "unrecorded"}), `
+                          + `so nothing read it for entities. This is NOT a document that mentions `
+                          + `nobody -- it is a document nothing here can read for who it mentions` },
+             why: null };
+
+  /* SECTION 4.3's TWO PRODUCIBLE OUTCOMES. `found` is the reader's own word for
+     whether it found anything and the count is the evidence for it. They are
+     taken TOGETHER rather than either alone: a reading that sets `found` and
+     carries no entities, or carries entities and does not set `found`, has told
+     the record two things, and the reading that does not claim more than BOTH
+     support is the weaker one. */
+  const any = reading.found === true && n > 0;
+  if (!any)
+    return { row: { state: "LOOKED_ABSENT", condition: null,
+                    resultKind: "reading", resultRef: sha,
+                    detail: `${who} ran over this document and found no entity references`
+                          + (reading.found === true && n === 0
+                               ? "; the reading says it found something and carries an empty entity "
+                               + "list, and the empty list is what this record can actually point at"
+                               : n > 0
+                                 ? `; the reading carries ${n} reference(s) and does not say it found `
+                                 + `anything, so the weaker of the two is what is recorded`
+                                 : "")
+                          + ". This is a MEANING-level absence and says nothing about whether the "
+                          + "document's TEXT was extracted, which is the content level" },
+             why: null };
+
+  /* `PRESENT` CARRIES ITS REFERENT AND C-22.10 REQUIRES IT. What the look
+     produced is a READING, and a reading is keyed by the capture it is of, so
+     the capture_sha is the reference by which the thing produced is fetched —
+     REC-94's own words at the content level, over the same table. It is carried
+     on `LOOKED_ABSENT` too: a reader that ran and found nobody produced a
+     reading just as one that found somebody did, and leaving the referent off
+     only where the refusal cannot see it would let the fence decide the shape of
+     the record. */
+  return { row: { state: "PRESENT", condition: null,
+                  resultKind: "reading", resultRef: sha,
+                  detail: `${who} ran over this document and found ${n} entity reference(s)` },
+           why: null };
+}
+
+/** THE RESOLUTION ATTEMPT — section 4.3's second act.
+ *
+ *  ONE ROW PER REFERENCE THE RECOGNISER TRIED, and the unresolved one is the
+ *  point. `resolveReferences` already computes it and already throws it away: a
+ *  reference matching nothing is pushed onto an `unresolved` array, returned to
+ *  the caller and persisted NOWHERE, so *we tried this name against the registry
+ *  and it holds no such subject* has never outlived the request that found it.
+ *
+ *  THE GRADE TRAVELS IN `detail` AND NEVER IN THE STATE. A grade-C match IS a
+ *  match — the recogniser found a registry entry — and the record's own rule is
+ *  that C is *plausible, never established, flagged for a member to confirm*.
+ *  Demoting it to `LOOKED_INDETERMINATE` here would be a fence tighter than its
+ *  rule, which is an undeclared interface change wearing the costume of caution.
+ *  The state says a look found something; the grade says how much that is worth,
+ *  exactly as `resolutions` already does, and one vocabulary is not re-decided
+ *  in a second place. */
+export function resolutionObservation({ ref = null, matches = null, tier = null } = {}) {
+  const r = typeof ref === "string" && ref ? ref : null;
+  if (!r) return { row: null, why: "a resolution attempt is over a reference, and none was named" };
+  const hits = Array.isArray(matches) ? matches : [];
+  const tried = tier && typeof tier === "object" ? tier : null;
+
+  if (!hits.length)
+    return { row: { state: "LOOKED_ABSENT", condition: null,
+                    resultKind: null, resultRef: null,
+                    detail: `the recogniser tried '${r}' against the subject registry and matched no `
+                          + `entity`
+                          + (tried && typeof tried.considered === "string" && tried.considered
+                               ? `; it tried ${tried.considered}` : "")
+                          + `. The reference stands unresolved, and this record now says a look was `
+                          + `made -- which is the fact that used to end with the request` },
+             why: null };
+
+  /* THE REFERENT IS THE ENTITY THE LOOK FOUND, and here it is genuinely a
+     different thing from the subject: the subject is the reference we searched
+     BY, the referent is the registry entry we found. That is what C-22.10 asks
+     for, and it is why this act's referent is not the degenerate one.
+     WHERE SEVERAL ENTITIES MATCH ONE NAME the count is in `detail` and the
+     referent is the FIRST, with the ambiguity STATED rather than resolved here.
+     A genuinely ambiguous alias is something the registry keeps rather than
+     pretending away (`op=entitybyalias` returns every match), and a writer that
+     picked a winner would be making a judgement no one authorised. */
+  const first = hits[0] || {};
+  const eid = typeof first.entity_id === "string" && first.entity_id ? first.entity_id : null;
+  const grades = [...new Set(hits.map((m) => m && m.grade).filter((g) => typeof g === "string"))].sort();
+  return { row: { state: "PRESENT", condition: null,
+                  resultKind: "entity", resultRef: eid,
+                  detail: `the recogniser matched '${r}' to ${hits.length} registered entity(ies)`
+                        + (grades.length ? ` at grade(s) ${grades.join(",")}` : "")
+                        + (hits.length > 1
+                             ? `; the name is ambiguous across entities and every match is in the `
+                             + `resolutions table -- this row points at the first and does not `
+                             + `choose between them`
+                             : "") },
+           why: null };
+}
+
+/** THE CONNECTION DERIVATION — section 4.3's third act.
+ *
+ *  ONE ROW PER DERIVATION over one entity. **A derivation that produced nothing
+ *  is today indistinguishable from one that never ran**: `connections` gets no
+ *  row, the answer carries an empty array, and the request ends. That is
+ *  CLAUDE.md's standing sentence one level up — *no meaning derived may mean
+ *  nothing was extracted* — and saying which is a first-class obligation.
+ *
+ *  A TRUNCATED DERIVATION IS `partial`, AND THAT IS THE EXISTING VOCABULARY
+ *  DOING ITS JOB RATHER THAN A NEW WORD. D-129's set carries `partial` for
+ *  exactly *we looked and got part of it*, and a derivation cut by its pair bound
+ *  has written TRUE connections over the first N documents by capture_sha and not
+ *  over the rest. `PRESENT` there would be the false-coverage direction — *we
+ *  have the connections through this subject* about a subject we bounded — and
+ *  `LOOKED_ABSENT` on a cut scan that happened to write nothing would be worse,
+ *  because pairs that were never formed are not pairs that do not exist. So a
+ *  cut derivation is `partial` whatever it produced, and the bound is named. */
+export function derivationObservation({ entityId = null, count = null, documents = null,
+                                        truncated = false, entityKnown = null } = {}) {
+  const id = typeof entityId === "string" && entityId ? entityId : null;
+  if (!id) return { row: null, why: "a derivation is over one entity, and none was named" };
+  const n = Number.isInteger(count) ? count : 0;
+  const docs = Number.isInteger(documents) ? documents : null;
+  const ends = docs == null ? "an unrecorded number of" : String(docs);
+  /* AN UNREGISTERED SUBJECT IS STATED, NOT HIDDEN. `deriveConnections` proceeds
+     over an entity id the registry does not describe — the resolutions naming it
+     are real even when nothing has been declared about it — and a row that did
+     not say so would read as a derivation over a subject the record knows. */
+  const unregistered = entityKnown === false
+    ? "; this entity id is not in the subject registry, so the derivation ran over the resolutions "
+    + "that name it and nothing in the record describes it"
+    : "";
+
+  if (truncated === true)
+    return { row: { state: "partial", condition: null,
+                    resultKind: "entity", resultRef: id,
+                    detail: `the derivation over ${ends} document(s) concerning this entity was CUT `
+                          + `by its own bound and wrote ${n} connection(s). Every one is true and the `
+                          + `set is the first documents by capture_sha rather than all of them, so `
+                          + `this is part of the answer and not the answer${unregistered}` },
+             why: null };
+
+  if (n > 0)
+    return { row: { state: "PRESENT", condition: null,
+                    resultKind: "entity", resultRef: id,
+                    detail: `the derivation read ${ends} document(s) concerning this entity and wrote `
+                          + `${n} connection(s)${unregistered}` },
+             why: null };
+
+  /* THE ROW THIS ITEM EXISTS FOR. Nothing derived — and it now SAYS nothing was
+     derived, instead of leaving the identical silence that a derivation nobody
+     ran leaves. The reason travels because it is knowable and is the useful
+     half: a connection is a PAIR, so fewer than two documents means there was
+     nothing to form rather than nothing to find. */
+  return { row: { state: "LOOKED_ABSENT", condition: null,
+                  resultKind: "entity", resultRef: id,
+                  detail: `the derivation ran over ${ends} document(s) concerning this entity and `
+                        + `found no connection to write`
+                        + (docs != null && docs < 2
+                             ? `; a connection is a PAIR, and fewer than two documents concern this `
+                             + `subject, so there was no pair to form`
+                             : "")
+                        + `. This is a derivation that RAN and produced nothing, which is a different `
+                        + `fact from a subject nobody has derived over${unregistered}` },
+           why: null };
 }
 
 /* §14b.6's bounds, in its own enumeration: "a budget — fetches requested,

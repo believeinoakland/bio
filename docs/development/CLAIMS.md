@@ -9758,3 +9758,85 @@ released: 2026-09-15 by the M0-39 worker — **BOTH ARMS BUILT, DRIVEN AND GREEN
 **THE PHANTOM-RULING CLASS ARRIVED TWICE INSIDE THIS ITEM'S OWN PROSE AND WAS MEASURED BOTH TIMES RATHER THAN REASONED ABOUT.** `tools/decided.mjs` indexes nine marker words out of any file under `docs/`, so the `VERIFICATION.md` section quoting the attribution form three times minted three phantom rulings, and this claim block minted three more — found by writing them, regenerating, and reading the diff. Both were repaired at the source: the sections now DESCRIBE the form and the control driver builds every specimen from pieces at runtime. **`docs/DECIDED.md` ends at 935 rulings, exactly where it started, and the whole of its diff is the ONE row following REC-94's attribution repair.** Every defective specimen in `tools/attribution.mjs`, `tools/nc-m039.mjs` and this block is assembled or described and never spelled, because arm 2's corpus is this repository and a typed specimen would fail the gate it proves.
 
 **PATHS RELEASED:** every path in the CLAIM and its ADDENDUM above. **NOT TOUCHED:** `docs/development/MEASUREMENTS.md` (M0-41's), `bio-plane/test/derivation-bounds.test.mjs` (M0-38's), `bio-plane/src/**`, `bio-plane/checks/**`, `civicos-ui/**`, `newgroup/**`, `REGISTER_FLOOR`, and no version bump, tag, sign or deploy. **OWED ACTS ARE IN THIS WORKER'S REPORT AS A "for CONDUCT" LIST WITH ACTORS, never left here alone.**
+
+## CLAIM 2026-09-15 RECORD (REC-95 — the meaning-level writers: the reader run, the resolution attempt, the connection derivation)
+
+Session: RECORD worker for REC-95, spawned by CONDUCT #11, Opus 5, worktree-isolated, RECORD's dev slot.
+Branch `worktree-agent-aa10d195065b703e8`, from `origin/main` at `58b77ea`.
+
+**SCOPE: exactly `OBSERVATION-LOG-DESIGN.md` §8 row 3 — §4.3's three meaning-level acts.** This is
+the THIRD writer into REC-93's ONE append site (`#observe`), after REC-94's content level. It
+duplicates that site, does not modify it, and adds NO table, NO column and NO refusal.
+
+**CLAIMED BY REGION, NOT BY FILE. Three other workers hold regions of `store.mjs` right now**
+(COFF-12's one comment, REC-91's promote writer and schema, REC-105's `#strengthWalk`), plus the
+released REC-93/REC-94 regions. This item claims the MEANING-LEVEL WRITERS AND THEIR READER AND
+NOTHING ELSE:
+
+- **`bio-plane/src/store.mjs`** — ONE new region beside REC-94's content-level writer:
+  `#observeReaderRun` (called from `#writeReadings`, one line beside `#observeExtraction`),
+  `#observeResolutionAttempt` (called from `resolveReferences`), `#observeConnectionDerivation`
+  (called from `deriveConnections`), `#missingMeaningCause`, and `#frontierMeaning` plus the one
+  `level === "meaning"` branch in `frontier()`.
+  **NOT** `#observe` itself (REC-93's, and the whole point is that it is one site), **NOT**
+  `#observeExtraction` / `#missingContentCause` / `#frontierContent` (REC-94's, landed), **NOT**
+  `#frontierLatest` / `#frontierVerification` / `#frontierNeverLooked` / the document arm
+  (REC-93's), **NOT** `promote`'s own body, the schema, `#strengthWalk`, or any capture path.
+- **`bio-plane/src/airun.mjs`** — ONE new region beside REC-93's and REC-94's vocabularies: the
+  pure meaning-level judgement (`readerRunObservation`, `resolutionObservation`,
+  `derivationObservation`), `MEANING_MISSING_ROW_CAUSES`, and **a SEVENTH member of
+  `OBSERVATION_SUBJECT_KINDS`** — see the vocabulary note below.
+- **`bio-plane/test/observation-meaning.test.mjs`** (new) and **`bio-plane/test/nc-rec95.mjs`**
+  (new, the negative-control driver, modelled on `nc-rec94.mjs` without improvement).
+- **`bio-plane/test/observation-log.test.mjs`** — arm `B9` ONLY, CORRECTED (never exempted) with a
+  dated reason, because it pins `Object.keys(OBSERVATION_SUBJECT_KINDS)` EXACTLY and a seventh
+  member is meant to bring its author here to say why. That pin working as designed is a finding
+  about the instrument and is recorded as one.
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` ONLY, moved from this item's own
+  POST-COMMIT printed figures (D-238), never by adding to the number in the file.
+- **`docs/development/OBSERVATION-LOG-DESIGN.md`** — front matter only (Status / Incomplete
+  sections), in the same commit, per `CORPUS-STANDARD.md` and the queue row's accepts-when.
+- **`docs/development/CLAIMS.md`** — this block.
+
+**THE VOCABULARY, CHECKED THE WAY REC-94's RULING SAYS TO CHECK IT.** Measured at this item's
+spawn on `58b77ea`, not assumed: `grep -ra` over `bio-plane/{src,checks,test}`, `civicos-ui/`,
+`agent-worker/`, `newgroup/` and `tools/` for a meaning-level observation vocabulary returned ZERO
+hits, so **this item is the first lander at the meaning level and exports what it adds.**
+
+**NOT TOUCHED:** `docs/development/QUEUE.md`, `bio-plane/src/schema.mjs`, `bio-plane/src/index.mjs`,
+`bio-plane/checks/bio-checks.mjs`, `newgroup/**`, `civicos-ui/**`; no new op, no version bump, no
+tag, no sign, no deploy. **OWED ACTS GO IN THIS WORKER'S REPORT AS A "for CONDUCT" LIST WITH
+ACTORS**, never left in this block alone.
+
+**KNOWN AND NOT MINE:** `Store#frontier` accepts a `viewer` and never reads it at the DOCUMENT
+level (REC-94 measured it; REC-103's row). This item's meaning arm applies the fence the way
+`#frontierContent` does and does NOT reach into the document arm.
+
+## CLAIM ADDENDUM 2026-09-15 RECORD (REC-95 — three paths added at the close, each FORCED BY AN INSTRUMENT rather than chosen)
+
+Appended rather than rewriting the block above, and every one of these was taken because a GATE
+FAILED AND NAMED IT — none was a widening of scope by judgement.
+
+- **`bio-plane/test/derivation-bounds.test.mjs`** — THREE figures, each moved from THIS RUN'S OWN
+  PRINTED FAILURE OUTPUT and never by adding one to the number in the file (D-238): the CLASS
+  ratchet 34 → 35, the CENSUS ceiling 104 → 105, and the ungraded-truncation pin's seventh member
+  becoming an EIGHTH. **ONE arrival accounts for all three — `#frontierMeaning`** — with NO
+  departure, which is what makes it a measurement rather than three coincidences, and it is the
+  identical pattern REC-94 recorded one level down. Each carries its reason at the site, including
+  what would have been WRONG (dropping `#missingMeaningCause` to keep the count down: that read IS
+  §5.1). **Both constants are properties of the MERGED source — CONDUCT re-reads them.**
+- **`bio-plane/dist/bio-plane.bundled.mjs` and `bio-plane/dist/bio-plane.bundle.json`** — rebuilt
+  by `node scripts/build-plane.mjs` because FL-9's guard failed on staleness the moment `src`
+  moved. Mechanical, no hand edit, and the rebuild is what `fleetbundles.test.mjs` demands of any
+  source change.
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` only, already named in the block above,
+  moved from this item's own POST-COMMIT printed figures.
+
+**AND ONE CORRECTION INSIDE A PATH ALREADY CLAIMED**, recorded because it is a superseded test and
+not an exempted one: `observation-log.test.mjs`'s arm **E5** asserted that the MEANING level answers
+NOT BUILT. It was right until this landing. REC-94 had already corrected the same arm for `content`
+on the same grounds, and the RULE — *a level with no writer says so in words and never with an empty
+list* — is unchanged: it is now asserted over `internet`, the one level that still has none, with the
+converse asserted over all three that are built, so the arm goes red in both directions.
+
+released:

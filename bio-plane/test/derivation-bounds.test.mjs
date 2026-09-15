@@ -639,11 +639,39 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    documents a project holds to a viewer who may not see them — and a ratchet
    that pressures an item into removing a fence is a ratchet being read as a
    rule about numbers rather than about work. The figure moved; the fence stayed.
-   THE FIGURE IS TAKEN FROM THIS ARM'S OWN FAILURE OUTPUT (`34 methods derive
+   34 -> 35, 2026-09-15 by REC-95. THE ARRIVAL IS `#frontierMeaning`, the MEANING
+   level of the same reader, and it is the third time this one reader has moved
+   this ceiling — document (REC-93), content (REC-94), meaning (REC-95). It is
+   admitted on the same terms, STATED AGAIN rather than inherited, because "the
+   neighbouring method was allowed" is not an argument and "my own two siblings
+   were allowed" is a worse one.
+   WHAT IT CAUGHT: the per-row reads this level cannot avoid — the two in
+   `#frontierVerification` that both siblings already pay, plus the register read
+   that resolves a capture to the bundle REC-36's withholding is applied over,
+   plus ONE `#missingMeaningCause` per subject that has no row. The last is this
+   level's own cost and it is the one worth naming: §5.1 says a missing row has
+   three causes and they are different facts, and telling them apart takes a read
+   per subject. It is at most two indexed probes and an aggregate, and it is only
+   paid for subjects with NO observation.
+   WHY IT IS ADMITTED: the same property, measured and not assumed — every scan
+   is under the SAME published `FRONTIER_LIMIT_DEFAULT` 200 / `_MAX` 2000 that
+   both siblings use, so the cost is bounded by a figure the caller reads off the
+   answer. The honest cost is HIGHER than either sibling's and is stated rather
+   than hidden: this level walks THREE subject partitions rather than one, so at
+   the default cap it issues up to roughly three times the sibling's ~600 round
+   trips. If the frontier ever has to answer at 2000, this is the arm to fold
+   first, and it should be folded before either sibling.
+   WHAT WOULD HAVE BEEN WRONG: dropping `#missingMeaningCause` to keep the count
+   down. That read IS §5.1 — without it every subject with no row reads
+   never-looked, which is the defect the design was written to prevent and which
+   REC-94 shipped once and caught mid-run. A ratchet that pressures an item into
+   removing the rule it was sent to build is a ratchet being read as a rule about
+   numbers rather than about work. The figure moved; the order stayed.
+   THE FIGURE IS TAKEN FROM THIS ARM'S OWN FAILURE OUTPUT (`35 methods derive
    over an unbounded scan`), never by adding one to the number in the file. */
-const CLASS_MEASURED_2026_08_08 = 34;
+const CLASS_MEASURED_2026_08_08 = 35;
 console.log(`  RATCHET: ${CLASS.size} methods derive over an unbounded scan, `
-          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level)`);
+          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
 + "this over the figure measured on 2026-08-08 and fails here, with the roster printed above so the "
 + "failure names it",
@@ -745,7 +773,20 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    category M0-38 exists to grade or to name. REC-99 recorded on its own row that this constant
    is a property of the MERGED source exactly as `REGISTER_FLOOR` is; this is that rule being
    obeyed on the first tree where it bit. */
-const SCANNING_MEASURED_2026_09_15 = 104;
+/* MOVED 104 -> 105, 2026-09-15 by REC-95, AND THE ARRIVAL IS NAMED BY THE SAME METHOD THIS
+   BLOCK DEMANDS RATHER THAN BY TRUST. The roster this run PRINTED contains exactly one member
+   that `origin/main` at `58b77ea` does not — **`#frontierMeaning`**, REC-95's meaning-level
+   frontier read — and there is NO departure. It is the same method that moves the CLASS ceiling
+   34 -> 35 above and that the ungraded-truncation pin below now declares as an EIGHTH: **ONE
+   arrival accounting for all three movements**, which is what makes this a measurement rather
+   than three coincidences, and it is the identical pattern REC-94 recorded one level down.
+   **Counted honestly rather than exempted, and it belongs to D-369's SECOND set** — a method
+   that publishes a bound while legitimately holding an unbounded scan (the frontier is bounded
+   to the caller; the scans underneath it are not), the category M0-38 exists to grade or name.
+   REC-99 recorded that this constant is a property of the MERGED source exactly as
+   `REGISTER_FLOOR` is, and REC-94 obeyed that on the first tree where it bit; this is the
+   second. **CONDUCT must re-read it on the merged tree** rather than carrying 105 across. */
+const SCANNING_MEASURED_2026_09_15 = 105;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
@@ -846,8 +887,20 @@ t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures a
      so this declaration is a reading of the instrument's own output and not a guess. Same
      disposition as the other six: D-369's, not this suite's, and named here so it cannot arrive
      ungraded and invisible. */
-  ["#backfillLegContent:need", "#frontierContent:page", "biasInhale:bars",
-   "documentsNamingEntity:merged", "frontier:page", "queueFeed:dispAll", "queueFeed:items"]);
+  /* EIGHTH DECLARED 2026-09-15 by REC-95: `#frontierMeaning:rows`, the meaning-level twin of
+     `frontier:page` and `#frontierContent:page` already here, and the third member of one
+     reader's family. THE ARM WORKED EXACTLY AS WRITTEN — it FAILED rather than absorbing the
+     new figure, and its failure message named the arrival, so this declaration is a reading of
+     the instrument's own output and not a guess. Same disposition as the other seven: D-369's,
+     not this suite's, and named here so it cannot arrive ungraded and invisible.
+     WHY IT CANNOT BE GRADED, stated rather than left to the category: `truncated` at the
+     meaning level is `rows.length > cap || missing.length > cap`, and `missing` is assembled in
+     memory from THREE bounded reads — one per subject kind — so no single row source carries
+     the figure. Each of the four reads underneath it does carry a SQL `LIMIT`, which is what
+     the graded arm above would check if the figure were attributable to one of them. */
+  ["#backfillLegContent:need", "#frontierContent:page", "#frontierMeaning:rows",
+   "biasInhale:bars", "documentsNamingEntity:merged", "frontier:page",
+   "queueFeed:dispAll", "queueFeed:items"]);
 const noRowSources = CODE.replace(/#rows\(/g, "#norows(");
 t("REACH IS A DELTA (the truncation grader): over a copy of store.mjs with no `#rows(` in it, "
 + "every graded source becomes UNGRADEABLE and none is silently scored as compliant — the "

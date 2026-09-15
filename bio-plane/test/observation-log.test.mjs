@@ -210,10 +210,29 @@ t("B7: and the nine authorities §3 names are all present",
   ["acquire", "derive", "extract", "lead", "link", "objective", "ratify", "run", "sweep"]);
 t("B8: the actor classes are §5's three, which `surfaced_by` maps onto",
   Object.keys(OBSERVATION_ACTOR_CLASSES).sort(), ["machine", "member", "plane"]);
-t("B9: the subject kinds are §3's five plus `unstated`, which the FOLD needs and which "
-+ "says the true thing rather than deriving a kind for rows already written",
+/* CORRECTED 2026-09-15 by REC-95, NOT EXEMPTED, and the correction is why this
+   arm is written as an exact key set rather than as a floor.
+   IT READ `["address", "capture", "description", "entity", "extent", "unstated"]`
+   and that was right until this landing. It is now SEVEN: REC-95 added
+   `reference` as the subject of a RESOLUTION ATTEMPT (design §4.3's second act).
+   The old expectation was not wrong when written — it is superseded, and the
+   reason it is superseded is the thing worth recording: §4.3 says *"one row per
+   resolution attempt over an entity"*, but an attempt that FAILS names no
+   entity — there is no registry entry, which is exactly what it found out — and
+   that failing attempt is the look §4.3 exists to record. Keying it on `entity`
+   would have written a row for every success and NOTHING for the case the
+   section was written for; putting a raw unresolved `kind:key` into a column
+   called `entity` would say the record keeps a registry entry for a name it has
+   just established it does not.
+   THE PIN DID ITS JOB. It is the only instrument here that can see a member of
+   this vocabulary appear, and it brought REC-95's author to this line to say why
+   instead of letting a seventh spelling arrive unremarked. Keep it EXACT: a floor
+   would have passed silently and the whole value of the arm would be gone. */
+t("B9: the subject kinds are §3's five plus `unstated`, which the FOLD needs, plus "
++ "`reference` (REC-95), which a resolution attempt that matched NOTHING needs — each "
++ "added because the alternative was a kind the record cannot support",
   Object.keys(OBSERVATION_SUBJECT_KINDS).sort(),
-  ["address", "capture", "description", "entity", "extent", "unstated"]);
+  ["address", "capture", "description", "entity", "extent", "reference", "unstated"]);
 
 /* THE REFUSALS ARE HELD TO THE PURE FUNCTION, and that is `airun.mjs`'s own
    stated reason for existing rather than a convenience: *"It is PURE — no
@@ -436,16 +455,28 @@ console.log("\n--- E · the frontier is a view over the log (§5) ---");
      gained one, so this arm goes red again if `content` ever silently stops
      answering. An arm that could only ever have gone red by the feature ARRIVING
      is the shape that gets exempted; this one can go red both ways. */
-  for (const lvl of ["meaning", "internet"]) {
+  /* CORRECTED AGAIN 2026-09-15 BY REC-95, NEVER EXEMPTED, on exactly the grounds
+     REC-94's correction above states and for the next level down the list.
+     `meaning` was here because on 2026-09-14 it had no writer; REC-95 built it
+     (LOG §8 row 3), so the arm as written asserted that a level which now answers
+     must not answer. THE RULE IS UNCHANGED and is what the arm is about: *a level
+     with no writer says so in words and never with an empty list.* It is asserted
+     over the ONE level that still has none — `internet`, whose authored writer is
+     a member's LEAD and is Program B's, not a RECORD row (§4.5, D-194) — and the
+     CONVERSE is asserted over each level that has gained one, so this goes red
+     both ways: if a built level silently stops answering, and if the not-built
+     branch ever swallows one. An arm that could only go red by the feature
+     ARRIVING is the shape that gets exempted; this one cannot be. */
+  for (const lvl of ["internet"]) {
     const g = await GET(`op=frontier&token=${TOK}&level=${lvl}`);
     t(`E5: the ${lvl} level answers NOT BUILT rather than an empty frontier`,
       [g.built, (g.looked || []).length, typeof g.note === "string" && g.note.length > 40],
       [false, 0, true]);
   }
-  {
-    const g = await GET(`op=frontier&token=${TOK}&level=content`);
-    t("E5b: the CONTENT level is BUILT (REC-94) and says so — the converse of E5, so this arm "
-    + "fails if the content writer is ever removed as well as if the not-built branch swallows it",
+  for (const lvl of ["content", "meaning"]) {
+    const g = await GET(`op=frontier&token=${TOK}&level=${lvl}`);
+    t(`E5b: the ${lvl.toUpperCase()} level is BUILT and says so — the converse of E5, so this arm `
+    + `fails if that level's writer is ever removed as well as if the not-built branch swallows it`,
       [g.built, g.found, typeof g.note === "string" && g.note.length > 40],
       [true, true, true]);
   }

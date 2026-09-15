@@ -263,6 +263,20 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
             property, so it is imported rather than re-typed as a list of two
             state names that a sixth state would silently escape. */
          DEFINITIVE_STATES,
+         /* REC-95: THE MEANING LEVEL. The three acts of design section 4.3, each
+            as a PURE function that decides what one act's outcome IS, so this
+            file puts judged rows in and holds no second opinion about what a
+            reader run, a resolution attempt or a derivation means —
+            `contentObservationsFor`'s arrangement one level up, and
+            `checkObservation`'s at the append site.
+            `MEANING_MISSING_ROW_CAUSES` is section 5.1's three causes AT THIS
+            LEVEL and is keyed identically to `MISSING_ROW_CAUSES` above, so a
+            fourth spelling of one of the three fails the suite rather than
+            passing review. `MEANING_EVIDENCE_IS_ONE_SIDED` is this level's own
+            finding: at two of its three subject kinds the pre-log evidence exists
+            only where the answer was YES. */
+         MEANING_MISSING_ROW_CAUSES, MEANING_EVIDENCE_IS_ONE_SIDED,
+         readerRunObservation, resolutionObservation, derivationObservation,
          /* FL-8 / IC-67: WHAT BECAME OF THE RUN, decided in `airun.mjs` beside the
             three vocabularies it reads rather than as a ternary here. Imported for
             `finishedBound`'s reason exactly, one field over: this rule had two
@@ -11667,6 +11681,23 @@ export class Store extends DurableObject {
          * still writes an observation — we looked again, and this is what we
          * had. */
       this.#observeExtraction(bundleId, sha, reading, { author });
+      /* REC-95 — THE MEANING-LEVEL OBSERVATION, written HERE for the reason the
+       * content-level one above is written here, and kept a SEPARATE ROW from it
+       * on purpose.
+       *
+       * §4.3's first act: *one row per reader run per capture*. The line below is
+       * the whole of what used to be missing — §2's table says the RESULT is on
+       * the reading and *the LOOK is not recorded anywhere*, so a reader that ran
+       * over this document and found nobody left `found: false` and no trace that
+       * anything had ever looked. From here it leaves a row that says so.
+       *
+       * IT IS NOT `#observeExtraction` AND MUST NOT BE FOLDED INTO IT. That one
+       * answers *did we get this document's TEXT*; this answers *did anything
+       * READ that text for who it mentions*. They fire on the same event and a
+       * document can be whole at one level and empty at the other in either
+       * direction — which is exactly the four-level rule CLAUDE.md states:
+       * absence at one level is not evidence of absence at the next. */
+      this.#observeReaderRun(bundleId, sha, reading, { author });
       this.sql.exec(
         `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at)
          VALUES (?,?,?,?,?,?,?,?)`,
@@ -15055,6 +15086,27 @@ export class Store extends DurableObject {
     this.ctx.storage.transactionSync(() => {
       for (const rr of refs) {
         const matches = this.#recognise(rr, resolvedBy);
+        /* REC-95 — THE MEANING-LEVEL OBSERVATION, §4.3's second act: *one row per
+         * resolution attempt*. WRITTEN BEFORE THE BRANCH BELOW, and that position
+         * is the whole point rather than a tidiness: the branch is where an
+         * attempt that matched NOTHING has always been dropped. It is pushed onto
+         * `unresolved`, returned to the caller, and persisted nowhere — so *we
+         * tried this name against the subject registry and it holds no such
+         * subject* died with the request that discovered it, every time, since
+         * this op was written.
+         *
+         * INSIDE THE SAME TRANSACTION as `#recognise`'s own writes, so either the
+         * resolutions and their coverage record both land or neither does.
+         *
+         * WHAT THE RECOGNISER TRIED IS DERIVED FROM THE ROW AND NOT LISTED HERE:
+         * `#recogniseTier`'s cascade is exactly `ref`, then `ref_key`, then
+         * `label`, so the fields the row actually carries ARE what was tried, and
+         * a fourth tier added there needs no second list corrected here. */
+        const considered = [rr.ref ? "the composite key" : null,
+                            rr.ref_key ? "the source key" : null,
+                            rr.label ? "the name" : null].filter(Boolean).join(", ");
+        this.#observeResolutionAttempt(rr.capture_sha, rr.bundle_id, rr, matches,
+                                       considered ? { considered } : null, { resolvedBy });
         if (matches.length === 0) { unresolved.push({ ref: rr.ref, kind: rr.ref_kind, key: rr.ref_key, label: rr.label }); continue; }
         for (const m of matches) resolved.push(m);
       }
@@ -15453,6 +15505,27 @@ export class Store extends DurableObject {
        from a bounded read of a large one WITHOUT the plane doing a second unbounded count
        to tell them. `limit` is the pair cap AFTER clamping and `truncated` is whether the
        DERIVATION was cut -- not whether the array was sliced, because it never is. */
+    /* REC-95 — THE MEANING-LEVEL OBSERVATION, §4.3's third act: *one row per
+     * connection derivation*. AFTER the pair-writing transaction and before the
+     * answer, so the row states what the derivation ACTUALLY wrote rather than
+     * what it set out to write.
+     *
+     * THE ROW THAT MATTERS IS THE EMPTY ONE. A derivation that formed no pair
+     * wrote no `connections` row and returned an empty array, which is the exact
+     * evidence a derivation that NEVER RAN leaves — so *we have derived nothing
+     * through this subject* and *nobody has derived over this subject* were one
+     * answer. They are two now, and `op=frontier&level=meaning` is where the
+     * difference is read.
+     *
+     * IT FIRES ON BOTH DOORS. `op=connect` and the scheduled sweep
+     * (`#deriveConnectionsSweep`, which has no op and no caller identity) both
+     * reach here, both are derivations, and what differs is WHO — which is what
+     * `actor_class` carries. `entityKnown` is `!!ent` and is the same fact the
+     * answer publishes as `found`, read from the one variable so the row and the
+     * answer cannot disagree. */
+    this.#observeConnectionDerivation(entityId, {
+      count: connections.length, documents: ends.length, truncated,
+      entityKnown: !!ent, assertedBy });
     return { ok: true, entity_id: entityId, found: !!ent,
              entity: ent ? { entity_id: ent.entity_id, kind: ent.kind, label: ent.label } : null,
              documents: ends.length, document_limit: endsCap, resolution_rows: scan.length,
@@ -29159,6 +29232,413 @@ export class Store extends DurableObject {
     };
   }
 
+
+  /* ==================================================================== *
+   * REC-95 — THE MEANING-LEVEL WRITERS. `OBSERVATION-LOG-DESIGN.md`
+   * section 4.3 and section 8's row 3.
+   * ==================================================================== *
+   *
+   * THREE ACTS, THREE SUBJECTS, ONE APPEND SITE. Every method below turns one
+   * act into entries and hands them to `#observe` — REC-93's single writer for
+   * `observation_log`, which this item neither duplicates nor modifies. The
+   * JUDGEMENT is not made here either: `readerRunObservation`,
+   * `resolutionObservation` and `derivationObservation` in `airun.mjs` are pure
+   * and hold it, so a suite can hold the decision to this store's behaviour
+   * without workerd. Nothing below types a C-number.
+   *
+   * THIS ITEM ADDS NO TABLE, NO COLUMN AND NO REFUSAL. It adds one member to an
+   * existing vocabulary (`OBSERVATION_SUBJECT_KINDS.reference`) and says why at
+   * the site.
+   */
+
+  /** THE READER RUN. Section 4.3's first act, written inside promote's one
+   *  transaction beside the reading it is about.
+   *
+   *  WHY IT IS HERE AND NOT SOMEWHERE TIDIER: `#writeReadings` is the only place
+   *  in this plane where a capture's reading is persisted, and the row must be
+   *  written in the SAME transaction as that reading for the reason every
+   *  projection in that method is — either the store advances with its coverage
+   *  record or neither does.
+   *
+   *  IT IS BESIDE REC-94's CONTENT-LEVEL WRITER AND IS NOT THE SAME ROW. The two
+   *  fire on the same event and answer different questions, and keeping them
+   *  apart is the whole of what §4.2 and §4.3 are for: `#observeExtraction` says
+   *  whether we got this document's TEXT, this says whether anything READ that
+   *  text for who it mentions. A document can be fully extracted and mention
+   *  nobody; a document can mention plenty and have been extracted in part. The
+   *  one field that looks like it could serve both — `found: false` — belongs to
+   *  THIS level (REC-94's arm B8 pins that it is not used at the content one).
+   *
+   *  WHO LOOKED, DERIVED AND NEVER GUESSED: `contentMintState` is the record's
+   *  existing predicate and is CONSUMED rather than copied, exactly as
+   *  `#observeExtraction` consumes it. A promotion with no author is the plane's
+   *  own, which is what `actor_class = plane` means and why `actor` is NULL —
+   *  attributing a look to a member who did not make it is a false attribution
+   *  in the one field that says who looked. */
+  #observeReaderRun(bundleId, captureSha, reading, { author = null } = {}) {
+    const mint = contentMintState(author);
+    const actorClass = mint === "member_marked" ? "member"
+                     : mint === "machine_marked" ? "machine" : "plane";
+    const actor = actorClass === "plane" ? null : String(author);
+    /* `readerRegistered: null` IS A FACT ABOUT THIS BUILD, PASSED AS A VALUE AND
+       NOT ASSUMED INSIDE THE PURE FUNCTION. Section 4.3's third outcome — *no
+       reader is registered for this type*, `LOOKED_INDETERMINATE` — needs to know
+       whether the doctype that produced this reading was the REGISTRY'S FALLBACK,
+       and that fact does not reach this store: the fallback type emits
+       `{ entities: [], facts: {} }`, byte-for-byte what a registered reader that
+       found nobody emits, and the only thing persisted is `content_type`, which
+       is the doctype's KEY and a spelling the registry may rename. The property
+       (`fallback: true`) lives in `docprofile`, which this Durable Object does
+       not import — every `store.mjs` import is from `bio-plane/src` or
+       `bio-plane/checks`, measured on this tree, and adding a cross-package
+       dependency to the DO is a larger decision than this row.
+       So the seam is PINNED and the fact is not invented, which is exactly what
+       REC-94 did with `contentAxisFor`'s `unitIndex`. Delegated with the one
+       field that closes it named. */
+    const { row } = readerRunObservation(reading, captureSha, { readerRegistered: null });
+    if (!row) return { written: 0, refused: [], state: null };
+    const bad = this.#observe({
+      actorClass, actor,
+      authorityKind: "derive",
+      authority: bundleId == null ? null : String(bundleId),
+      level: "meaning",
+      subjectKind: "capture",
+      subject: captureSha,
+      state: row.state,
+      condition: row.condition,
+      resultKind: row.resultKind,
+      resultRef: row.resultRef,
+      detail: row.detail,
+    });
+    return { written: bad ? 0 : 1, refused: bad ? [bad] : [], state: bad ? null : row.state };
+  }
+
+  /** THE RESOLUTION ATTEMPT. Section 4.3's second act, one row per reference the
+   *  recogniser tried.
+   *
+   *  THE SUBJECT IS THE REFERENCE AND THE AUTHORITY IS THE CAPTURE, which are
+   *  two different facts and are exactly REC-94's arrangement one level up. The
+   *  design's indexes then make each a read: `(level, subject_kind, subject,
+   *  seq)` answers *what has this name been matched to*, and `(authority_kind,
+   *  authority, seq)` answers *what did resolving this document look for*.
+   *
+   *  THE UNRESOLVED ARM IS THE POINT AND IT ALREADY EXISTED — computed by
+   *  `resolveReferences`, pushed onto an `unresolved` array, returned to the
+   *  caller and persisted NOWHERE. This is the line that makes *we tried this
+   *  name against the registry and it holds no such subject* outlive the request
+   *  that discovered it. */
+  #observeResolutionAttempt(captureSha, bundleId, rr, matches, tier, { resolvedBy = null } = {}) {
+    const mint = contentMintState(resolvedBy);
+    const actorClass = mint === "member_marked" ? "member"
+                     : mint === "machine_marked" ? "machine" : "plane";
+    const actor = actorClass === "plane" ? null : String(resolvedBy);
+    const { row } = resolutionObservation({ ref: rr && rr.ref, matches, tier });
+    if (!row) return { written: 0, refused: [], state: null };
+    const bad = this.#observe({
+      actorClass, actor,
+      authorityKind: "derive",
+      /* THE CAPTURE IS THE AUTHORITY: the reason we looked for this name is that
+         a document we hold carried it. The bundle is one hop further out and is
+         reachable from the capture through `register`, so putting it here would
+         be the coarser of the two facts in the column that names the finer. */
+      authority: captureSha == null ? null : String(captureSha),
+      level: "meaning",
+      subjectKind: "reference",
+      subject: rr && rr.ref ? String(rr.ref) : null,
+      state: row.state,
+      condition: row.condition,
+      resultKind: row.resultKind,
+      resultRef: row.resultRef,
+      detail: row.detail,
+    });
+    return { written: bad ? 0 : 1, refused: bad ? [bad] : [], state: bad ? null : row.state };
+  }
+
+  /** THE CONNECTION DERIVATION. Section 4.3's third act, one row per derivation
+   *  over one entity.
+   *
+   *  IT FIRES ON BOTH DOORS AND THAT IS DELIBERATE. `deriveConnections` is
+   *  reached from `op=connect` and from the scheduled sweep
+   *  (`#deriveConnectionsSweep`, which has no op of its own and no caller
+   *  identity). Both are derivations and both belong in the coverage record;
+   *  what differs is WHO, and that is what `actor_class` is for.
+   *
+   *  `system` IS THE RECORD'S OWN WORD FOR AN UNATTRIBUTED DERIVATION and is
+   *  CONSUMED rather than re-decided here: it is `deriveConnections`' own
+   *  parameter default and it is what `connections.asserted_by` already stores
+   *  for both the sweep and an `op=connect` that named nobody. Mapping it to
+   *  `actor_class = plane` with a NULL actor is what keeps those two columns
+   *  agreeing; running it through `contentMintState` instead would classify it
+   *  `member_marked` and file the plane's own scheduler as a member called
+   *  "system", which is a false attribution in the one field that says who
+   *  looked. */
+  #observeConnectionDerivation(entityId, { count = null, documents = null, truncated = false,
+                                           entityKnown = null, assertedBy = null } = {}) {
+    const asserted = String(assertedBy || "system");
+    const mint = asserted === "system" ? "unstated" : contentMintState(asserted);
+    const actorClass = mint === "member_marked" ? "member"
+                     : mint === "machine_marked" ? "machine" : "plane";
+    const actor = actorClass === "plane" ? null : asserted;
+    const { row } = derivationObservation({ entityId, count, documents, truncated, entityKnown });
+    if (!row) return { written: 0, refused: [], state: null };
+    const bad = this.#observe({
+      actorClass, actor,
+      authorityKind: "derive",
+      /* THE AUTHORITY IS THE ENTITY THE DERIVATION WAS ASKED FOR, and here it
+         genuinely is the subject as well — a derivation over a subject is made
+         BECAUSE of that subject and nothing else names it. That is stated rather
+         than dressed up: the two columns agree because the fact is one fact, and
+         the alternative (leaving the authority null) is refused by C-22.9 and
+         would be refused rightly, since a look with no reason behind it is not
+         recordable. */
+      authority: entityId == null ? null : String(entityId),
+      level: "meaning",
+      subjectKind: "entity",
+      subject: entityId == null ? null : String(entityId),
+      state: row.state,
+      condition: row.condition,
+      resultKind: row.resultKind,
+      resultRef: row.resultRef,
+      detail: row.detail,
+    });
+    return { written: bad ? 0 : 1, refused: bad ? [bad] : [], state: bad ? null : row.state };
+  }
+
+  /** REC-95 — WHICH OF SECTION 5.1's THREE CAUSES EXPLAINS A MISSING
+   *  MEANING-LEVEL ROW, taken IN ORDER and never concluded from the first.
+   *
+   *  THE ORDER IS THE DESIGN'S; THE SIGNALS ARE THIS LEVEL'S; AND THE THING THIS
+   *  LEVEL ADDS IS THAT AT TWO OF ITS THREE SUBJECT KINDS THE PRE-LOG EVIDENCE
+   *  IS ONE-SIDED (`MEANING_EVIDENCE_IS_ONE_SIDED` in `airun.mjs`).
+   *
+   *  (1) PRE-LOG, the one cause with POSITIVE evidence: the table that holds what
+   *      such a look PRODUCES already has a row for this subject. `readings` for
+   *      a capture, `resolutions` for a reference, `connections` for an entity.
+   *  (2) PRE-LOG-OR-PURGED, an UNDETERMINED and not a finding: the subject
+   *      entered the record before the earliest meaning-level row this log holds,
+   *      so either the writer did not exist yet or a whole-store purge cleared
+   *      the rows that described it (section 7). A log with NO meaning-level rows
+   *      at all lands here too, because an empty table is equally the
+   *      never-written case and the purged one. **This is also where a reference
+   *      or an entity lands whose pre-log look found NOTHING**, because that look
+   *      left no artifact to be cause (1)'s evidence — which is precisely the
+   *      defect this item exists to stop, seen from the far side of its own
+   *      landing.
+   *  (3) NOBODY LOOKED — the log carried this level over the subject's whole
+   *      lifetime, was not purged since, AND the record holds no product of such
+   *      a look. **The only cause that licenses a positive statement**, and
+   *      reaching it takes work.
+   *
+   *  AN UNRECOGNISED SUBJECT KIND TAKES THE WEAKEST CAUSE, never the strongest.
+   *  A caller that asked about something this method does not understand has not
+   *  established (3), and defaulting to it would let a later reader reach the
+   *  positive statement by adding a fourth subject kind and forgetting to come
+   *  here — the same shape one argument over from the one being defended.
+   *
+   *  ONE READ PER CAUSE AND NO SCAN: the evidence probe is a primary-key or
+   *  indexed hit, and the earliest meaning-level `at` is an index walk on the
+   *  tally index. */
+  #missingMeaningCause(subjectKind, subject, enteredAt = null) {
+    const EVIDENCE = {
+      capture:   () => this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, subject),
+      reference: () => this.#one(`SELECT 1 x FROM resolutions WHERE ref = ? LIMIT 1`, subject),
+      entity:    () => this.#one(`SELECT 1 x FROM connections WHERE entity_id = ? LIMIT 1`, subject),
+    };
+    const probe = Object.prototype.hasOwnProperty.call(EVIDENCE, subjectKind)
+      ? EVIDENCE[subjectKind] : null;
+    if (!probe) return "purged";
+    if (probe()) return "pre_log";
+    const first = this.#one(
+      `SELECT MIN(at) AS at FROM observation_log WHERE level = 'meaning'`);
+    const firstAt = first && first.at ? String(first.at) : null;
+    if (!firstAt) return "purged";
+    const entered = typeof enteredAt === "string" && enteredAt ? enteredAt : null;
+    if (!entered) return "purged";
+    /* BOTH SIDES NORMALISED TO THE SECOND BEFORE THEY ARE COMPARED, AND THIS IS
+       REC-94's MEASURED DEFECT INHERITED RATHER THAN RE-PAID FOR. `registered`
+       and `entities.at` are full ISO timestamps WITH MILLISECONDS
+       (`new Date().toISOString()`); `observation_log.at` is the same value with
+       the fraction CUT, which is `#observe`'s own spelling. Compared as raw
+       strings those two precisions mis-sort inside a single second — `"…:15.900Z"`
+       is LESS than `"…:15Z"`, because `.` sorts below `Z` — so a subject that
+       entered in the same second as the log's first row reads as PREDATING it.
+       It fails in the SAFE direction (undetermined rather than a claim), which is
+       exactly why it would survive review.
+       A TIE ON THE SECOND GOES TO CAUSE (3), for REC-94's reason: the reader-run
+       writer runs INSIDE promote's transaction, so a capture registered in the
+       same second the writer first ran either got a row — and is not in this set
+       at all — or was promoted with no reading, which is genuinely nobody-looked. */
+    const sec = (v) => String(v).slice(0, 19);
+    return sec(entered) >= sec(firstAt) ? "never_looked" : "purged";
+  }
+
+  /** REC-95 — THE BOUNDED MEANING-LEVEL FRONTIER. Section 6's first reader at the
+   *  meaning level, and the half of this item's accepts-when that is a READ:
+   *  *the frontier view distinguishes "nothing derived" from "never run"*.
+   *
+   *  THOSE ARE NOW TWO DIFFERENT ANSWERS AND THEY WERE ONE. Before this landing a
+   *  subject with nothing derived and a subject nobody had derived over were the
+   *  same empty set, because the only evidence either left was the absence of a
+   *  `connections` row. A `LOOKED_ABSENT` row in `looked` is *we ran and there is
+   *  nothing*; a subject in `never_looked` is *nobody has run*; and a subject in
+   *  `missing_unexplained` is *this record cannot say which*, with the cause on
+   *  the row. Three answers, and section 5.1's order decides between the last two
+   *  rather than the emptiness deciding for itself.
+   *
+   *  THREE SUBJECT KINDS, READ AS THREE PARTITIONS. Each of section 4.3's acts
+   *  has its own subject, so the frontier at this level is three frontiers that
+   *  share a table — and they are kept apart in the answer rather than merged,
+   *  because *has anything read this document* and *has anything derived over
+   *  this subject* are different questions with different remedies and a member
+   *  choosing what to do next is choosing between them.
+   *
+   *  THE FENCE, AND WHERE IT DELIBERATELY DOES NOT REACH. Section 6: *a subject
+   *  discloses a project's interest, so REC-36's withholding applies row-whole
+   *  across the fence*. A CAPTURE and a REFERENCE both name a document this group
+   *  holds, so both are gated through `#bundleRedactor`, consumed rather than
+   *  re-written, failing CLOSED on an absent stamp — `#frontierContent`'s
+   *  arrangement exactly. An ENTITY is NOT gated, and that is a decision rather
+   *  than an omission: the subject registry is instance-wide and `op=concerns`
+   *  and `op=connections` already serve an entity and the documents concerning it
+   *  to any reader, redacting only the bundle back-reference. A fence here and
+   *  nowhere else would be tighter than its rule while changing nothing a caller
+   *  could not already read one op over — a fence tighter than its rule is not a
+   *  safer fence. STATED on the answer, and raised so it can be ruled rather than
+   *  inherited.
+   *
+   *  BOUNDED, AND THE BOUND IS PUBLISHED ON EVERY ANSWER INCLUDING THE EMPTY ONE,
+   *  using the same pair the other two levels use, because a second bound for one
+   *  reader's three levels is a second vocabulary for one fact. */
+  #frontierMeaning(cap, viewer = null) {
+    const visible = this.#bundleRedactor(viewer);
+    const captureSeen = (sha) => {
+      const owner = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, sha);
+      /* A capture the register does not hold cannot be attributed to a bundle, so
+         there is no bundle to gate on. WITHHELD rather than shown: a row whose
+         ownership this record cannot establish is exactly the row a fence must
+         not wave through. */
+      return owner ? visible(owner.bundle_id) !== null : false;
+    };
+    /* A REFERENCE IS GATED THROUGH THE CAPTURE THAT CARRIED IT, which is the row's
+       own AUTHORITY — so the gate asks about the document the look was made for
+       and not about some other document that happens to carry the same name. */
+    const rows = this.#frontierLatest("meaning", { limit: (cap + 1) * 3 });
+    const gated = rows.filter((r) => {
+      if (r.subject_kind === "capture") return captureSeen(r.subject);
+      if (r.subject_kind === "reference")
+        return r.authority ? captureSeen(r.authority) : false;
+      return true;   /* entity — see the header */
+    });
+    const view = (r) => ({
+      subject: r.subject, subject_kind: r.subject_kind, state: r.state,
+      governed: r.governed === 1, condition: r.condition,
+      authority_kind: r.authority_kind, authority: r.authority,
+      actor_class: r.actor_class, result_kind: r.result_kind, result_ref: r.result_ref,
+      detail: r.detail, at: r.at,
+      /* THE FACT THIS ITEM WAS WRITTEN FOR, said as a field rather than left for a
+         caller to derive from a state word: this look RAN and produced nothing.
+         `DEFINITIVE_STATES` is the set C-22.2 and C-22.3 already turn on, imported
+         and not re-typed, so a sixth state inherits this classification or fails
+         loudly instead of quietly escaping it. */
+      ran_and_found_nothing: r.state === "LOOKED_ABSENT",
+      ...this.#frontierVerification("meaning", r.subject_kind, r.subject),
+    });
+    const looked = gated.slice(0, cap).map(view);
+
+    /* THE SUBJECTS THAT EXIST AND HAVE NO ROW, one query per subject kind,
+       each bounded and each carrying the timestamp section 5.1's cause (2) is
+       decided on. They are SPLIT by cause and never named once. */
+    const missing = [];
+    for (const r of this.#rows(
+      `SELECT g.capture_sha AS subject, g.bundle_id AS bundle_id, g.registered AS entered
+         FROM register g
+        WHERE NOT EXISTS (SELECT 1 FROM observation_log o
+                           WHERE o.level = 'meaning' AND o.subject_kind = 'capture'
+                             AND o.subject = g.capture_sha)
+        ORDER BY g.capture_sha
+        LIMIT ?`, cap + 1))
+      if (visible(r.bundle_id) !== null)
+        missing.push({ subject: r.subject, subject_kind: "capture",
+                       missing_cause: this.#missingMeaningCause("capture", r.subject, r.entered) });
+    /* A REFERENCE'S "ENTERED THE RECORD" INSTANT IS THE EARLIEST REGISTRATION OF
+       ANY CAPTURE WHOSE READING CARRIES IT — `reading_refs` keeps no timestamp of
+       its own, and the earliest is the right one because a name is as old as the
+       oldest document that used it. Taken as a MIN inside the bounded scan rather
+       than as a lookup per row. */
+    for (const r of this.#rows(
+      `SELECT rr.ref AS subject, MIN(g.registered) AS entered, MIN(rr.bundle_id) AS bundle_id
+         FROM reading_refs rr LEFT JOIN register g ON g.capture_sha = rr.capture_sha
+        WHERE NOT EXISTS (SELECT 1 FROM observation_log o
+                           WHERE o.level = 'meaning' AND o.subject_kind = 'reference'
+                             AND o.subject = rr.ref)
+        GROUP BY rr.ref
+        ORDER BY rr.ref
+        LIMIT ?`, cap + 1))
+      if (visible(r.bundle_id) !== null)
+        missing.push({ subject: r.subject, subject_kind: "reference",
+                       missing_cause: this.#missingMeaningCause("reference", r.subject, r.entered) });
+    for (const r of this.#rows(
+      `SELECT e.entity_id AS subject, e.at AS entered
+         FROM entities e
+        WHERE NOT EXISTS (SELECT 1 FROM observation_log o
+                           WHERE o.level = 'meaning' AND o.subject_kind = 'entity'
+                             AND o.subject = e.entity_id)
+        ORDER BY e.entity_id
+        LIMIT ?`, cap + 1))
+      missing.push({ subject: r.subject, subject_kind: "entity",
+                     missing_cause: this.#missingMeaningCause("entity", r.subject, r.entered) });
+
+    const never = missing.filter((r) => r.missing_cause === "never_looked");
+    const unexplained = missing.filter((r) => r.missing_cause !== "never_looked");
+    const tally = {};
+    for (const row of this.#rows(
+      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'meaning' GROUP BY state`))
+      tally[row.state] = row.n;
+    /* THE TALLY BY SUBJECT KIND, because one number over three acts would answer
+       none of the three questions this level asks. It is a projection of `looked`
+       and never a second read, so the two cannot disagree. */
+    const by_subject_kind = {};
+    for (const r of looked) {
+      const k = r.subject_kind || "unstated";
+      by_subject_kind[k] = by_subject_kind[k] || { looked: 0, ran_and_found_nothing: 0 };
+      by_subject_kind[k].looked += 1;
+      if (r.ran_and_found_nothing) by_subject_kind[k].ran_and_found_nothing += 1;
+    }
+    return {
+      level: "meaning", found: true, built: true, limit: cap,
+      truncated: rows.length > cap || missing.length > cap,
+      looked,
+      never_looked: never.slice(0, cap),
+      never_looked_count: never.slice(0, cap).length,
+      /* NAMED, NEVER SILENTLY SCORED ZERO. Subjects with no meaning-level row
+         whose absence this record CANNOT explain as nobody-looked — the pre-log
+         corpus, anything a whole-store purge may have cleared, and (at a reference
+         or an entity) every pre-log look that found NOTHING, which left no
+         artifact for cause (1) to read. */
+      missing_unexplained: unexplained.slice(0, cap).map((r) => ({
+        subject: r.subject, subject_kind: r.subject_kind, missing_cause: r.missing_cause,
+        why: MEANING_MISSING_ROW_CAUSES[r.missing_cause] })),
+      missing_unexplained_count: unexplained.slice(0, cap).length,
+      missing_causes: MEANING_MISSING_ROW_CAUSES,
+      evidence_one_sided: MEANING_EVIDENCE_IS_ONE_SIDED,
+      tally, by_subject_kind,
+      note: "the three acts of section 4.3 have three subjects and are three partitions of one "
+          + "table: a CAPTURE (did anything read this document for entities), a REFERENCE (did "
+          + "anything try to match this name against the registry), an ENTITY (did anything derive "
+          + "the connections among the documents concerning this subject). A LOOKED_ABSENT row in "
+          + "`looked` is a look that RAN and produced nothing; a subject in `never_looked` is one "
+          + "nobody has looked at; and those were the same empty set before this level was "
+          + "written. NEVER_LOOKED is the absence of a row and is reported apart from the tally, "
+          + "read through section 5.1's THREE CAUSES in order — and at a reference or an entity "
+          + "the pre-log evidence is ONE-SIDED (`evidence_one_sided`), because a look that found "
+          + "nothing left no artifact, so a pre-log empty look reads UNDETERMINED and is named in "
+          + "`missing_unexplained` rather than counted as nobody-looked. The withholding fence "
+          + "applies to capture and reference subjects, which name a document this group holds; "
+          + "an ENTITY subject is not withheld, because the subject registry is instance-wide and "
+          + "op=concerns already serves it",
+    };
+  }
+
   /** op=frontier — WHAT HAVE WE LOOKED FOR AT THIS LEVEL, AND WHAT CAME OF IT.
    *  §6's first reader: the candidate list for FETCH / EXTRACT / DERIVE.
    *
@@ -29182,13 +29662,28 @@ export class Store extends DurableObject {
        state — and a single method computing both would be two readers wearing
        one name. */
     if (level === "content") return this.#frontierContent(cap, viewer);
+    /* REC-95: the meaning level is BUILT. Its own method, on the reason the
+       content arm gives: the three levels answer different shapes — the document
+       level has a deferred-link partition and a purge annotation, the content
+       level a re-extraction candidate list, the meaning level THREE subject-kind
+       partitions and a one-sided-evidence statement — and one method computing
+       all three would be three readers wearing one name. */
+    if (level === "meaning") return this.#frontierMeaning(cap, viewer);
     if (level !== "document")
       return { level, found: false, built: false, limit: cap, truncated: false,
                looked: [], never_looked: [], tally: {},
+               /* THE ONLY LEVEL STILL UNBUILT IS `internet`, and this answer is
+                  kept rather than deleted for exactly the reason REC-93 wrote it:
+                  an empty list and "nobody built this yet" are the two facts this
+                  whole table exists to keep apart, and answering the second with
+                  the first inside the log's own reader would be the joke writing
+                  itself. Its authored writer is a member's LEAD (§4.5, D-194) and
+                  is Program B's, not a RECORD row. */
                note: `the ${level} level of the frontier is not built yet. This is NOT an empty `
                    + `frontier: nothing has been written at this level because no writer exists, `
-                   + `which is a different fact from having looked and found nothing. The content `
-                   + `level is REC-94's and the meaning level REC-95's` };
+                   + `which is a different fact from having looked and found nothing. The document, `
+                   + `content and meaning levels are built (REC-93, REC-94, REC-95); the internet `
+                   + `level's authored writer is a member's LEAD and is Program B's (§4.5, D-194)` };
     const page = this.#frontierLatest("document", { limit: cap + 1, subjectKind: "address" });
     const looked = page.slice(0, cap).map((r) => ({
       subject: r.subject, subject_kind: r.subject_kind, state: r.state,
