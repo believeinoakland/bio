@@ -442,6 +442,7 @@ through a pipe a 2,000,000-byte child delivered 65,536 bytes and no tally; with 
 import it delivered all of it, every run.
 ---
 
+**STILL OPEN AFTER FIVE WEEKS, AND NOW AN ITEM: M0-36** (2026-09-15, CONDUCT #11). Re-measured today rather than inherited, and the narrower figure is the honest one: 53 UI suites call `process.exit`, **38 of them do not import the flush module**, and `civicos-ui/test/run.mjs:25` spawns every suite with `{stdio:"pipe"}` — so the mechanism is live exactly as this delegation described it. (A crude scan says 49 of 64; narrowing to suites that actually exit gives 38 of 53, and the row says to re-measure again before editing, because a five-week-old count is the kind of figure this project refuses to build on.) **Placed in the M0 background lane rather than on UI's slot**, CONDUCT answering for the placement: it is instrument integrity of the same kind M0 already fixed on the plane side, the lane holds no slot, so it costs UI nothing and waits on nobody. **This entry is why the sweep happened.** A delegation is a legitimate home for an owed act, but nothing drains this register on a schedule, and an act that sits in one for five weeks is the note-is-not-an-item class wearing a register entry.
 
 ## CLAIM 2026-08-10 SKILL (SK-2 — the investigative skill: composition judgement, description standard, search-completeness discipline)
 session: sk2-investigative-skill (worktree `agent-ab0c5fdce6f2627dc`)
@@ -502,6 +503,7 @@ fine is two rosters with no stated relationship. The paths are `bio-plane/src/ai
 and `bio-plane/checks/bio-checks.mjs`, both outside SKILL's claim, and a convergence is an
 INTERFACE change (`agent-worker` builds against the spawn payload) rather than a rename.
 
+**DISCHARGED — ANSWERED BY A BRIDGE RATHER THAN BY PICKING A SPELLING, and the choice is stated at the site** (verified 2026-09-15 by CONDUCT #11 against the tree). `skilldoctrine.mjs` carries `suggestLevelFor()`, which maps the log's spelling to the suggestion's (`SUGGEST_LEVELS.find(s => s === level || s === level + "s")`, returning null rather than guessing when no member matches), and its header says in as many words that the two vocabularies are reconciled AT THE SEAM rather than merged. Both closed vocabularies keep their own spelling and their own owner, the disagreement is named where a reader meets it, and a run no longer writes one word into its log and a different one into its suggestion without something in between that knows. Nothing further is owed.
 
 ## CLAIM 2026-08-10 SKILL (SK-2 — AMENDMENT: the coverage register's floor)
 session: sk2-investigative-skill (worktree `agent-ab0c5fdce6f2627dc`)
@@ -791,6 +793,8 @@ that neither prohibition is holding it there.
 
 ---
 
+**DISCHARGED BY ITS OWN TERMS — this was filed as a NOTICE and says so, and it already has the durable home a notice needs** (verified 2026-09-15 by CONDUCT #11). Both unreachable residues are stated in the landed doctrine's `does_not_reach` field and PRINTED by `skillprohibitions.test.mjs` on every run, which is what makes them published rather than implied. A rule the plane cannot check because it is a fact about a RENDERING is not a defect to row; naming what a check cannot reach, every run, is the honest form of it. No item owed, and none was asked for.
+
 ## CLAIM 2026-08-10 SKILL (SK-4 — CHECK deploys first: the sequencing RECORDED, the gate CITED)
 session: sk4-check-first (worktree `agent-a02138ebf5b27a79b`, branch
   `worktree-agent-a02138ebf5b27a79b`)
@@ -872,6 +876,9 @@ is right and correct the header comment that promises otherwise. **Either answer
 is not fine is the current state, where the comment and the code disagree and the code
 misattributes.** ARM D5 pins BOTH facts and will go RED on the fix, which is deliberate — the
 arm is to be updated in the same commit as the correction, and the finding then closes.
+
+**DISCHARGED — FL-7 LANDED THE CORRECTION** (verified 2026-09-15 by CONDUCT #11): `mode-not-deployed` is the plane's third `RUN_ENDINGS` term (`a3d28ac`, IC-62 ACCEPTED), `gate-mode` closes on it, and a machine refusal is no longer recorded under a word that says a member stopped the run. **ARM D5 went RED on the fix exactly as SK-4 designed it to, and was corrected with a dated reason rather than exempted** — which is the whole argument for choosing an arm that will break over a note that will rot, and it is worth keeping past the discharge.
+
 ## CLAIM 2026-08-10 UI (UI-55 — DEC-69's enacted audit: the sweep for nagging, second-guessing and forced modes)
 session: ui55-member-respect (worktree `agent-a7b57b507f367abe3`)
 opened: 2026-08-10T00:00:00Z
@@ -963,6 +970,8 @@ kickoff was CORRECT and is worth keeping as a receipt; only its tense is wrong.
 SK-4's judgement is worth recording as vindicated rather than merely superseded: it could not
 fix the defect (two areas), so it chose an arm that would go red over a note that would rot, and
 the arm is what carried the finding intact to the area that could close it.
+
+**DISCHARGED — the correction is IN the file it was about** (verified 2026-09-15 by CONDUCT #11): `kickoffs/SKILL.md` carries a dated `## CORRECTION 2026-08-10 (CONDUCT, from FL-7's delegation)` block immediately under item 2, stating that all three of that item's sentences are historical and why. The stale text is KEPT above it rather than edited away, which is this project's rule for a falsified sentence: what it recorded was a real gap, and the gap closing is the news.
 
 ## CLAIM 2026-08-10 RECORD (CASE-1 — DEC-72's case OBJECT: identity owned by a project, membership by version and role, editions per case)
 session: case1-case-object (worktree `agent-a1af1f1e654822176`)
@@ -6207,6 +6216,8 @@ entities or `at` would become a second author of it.
 until this runs:** a NULL `page_count` on a pre-CAP-9 capture means the page set was
 undetermined at mint and is STATED — never defaulted to a number, never a zero, and
 never a refusal.
+
+**DISCHARGED 2026-09-15 by CONDUCT #11 — into the ledger, which is the right home for an act whose measured population is ZERO.** `D-356` carries it in `DEBT.md`, filed as a row with a measured priority rather than a task with an assumed one, and the measurement is in `MEASUREMENTS.md` (CAP-9's section): 31 bundles, 88 distinct `capture_sha`, and **0 captures a backfill would move today**. **The second finding in that measurement is the larger one and it is recorded rather than left in this block:** the live record holds 88 captured documents and has read none of them. A backfill row with a population of zero is cheap to carry and honest to leave queued; a live record that has read nothing it captured is a fact about the project, and it belongs where facts about the project are kept.
 
 ## CLAIM 2026-09-14 SKILL+RECORD (SK-7 — the machine-minted content row: a machine credential MINTS, is LABELLED on every surface, may NEVER attest, and enters a finding only when a member cites it)
 
