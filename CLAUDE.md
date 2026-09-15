@@ -225,6 +225,23 @@ governor refusing is not the source failing. Two empty-body digests agreeing
 agree on nothing. A provenance hop a caller can hand us is one a caller can
 invent. All three are enforced structurally, not by convention.
 
+**A BLOCKER IS A CLAIM, AND NOTHING HERE AUDITS ONE.** Every instrument in this
+repository is pointed one way — at the record claiming more than it can support. The
+publication fence, undetermined-is-first-class, grade tracks directness, the
+costs-nothing rule, the negative control: all of them catch an overstatement of what we
+HAVE. **A statement of what we CANNOT do passes every one of them untouched, because
+nobody audits a reason for not building something** — and it costs real work in the
+direction that leaves no trace, since the work simply never happens. Two receipts, both
+2026-09-14. A debt row named an unmet precondition **38 days after its own remedy had
+shipped**, and a design rested on it and sequenced an item to build what already existed
+(REC-89; D-225 closed in fact by REC-60/IC-25). A worker's report named its blocker as
+*the record does not persist a page set*, when the page set had been persisted that same
+day and the real blocker was one missing canvas in one surface — the difference between a
+UI someone can build and a plane item nobody owed and nobody was going to write. So:
+**verify a blocker the way you verify a capability — grep the code it names, on the tree
+you are on, before you rest a decomposition, a deferral, a row or a refusal on it.** A
+blocker inherited from a ledger is a claim about the day it was written.
+
 **Undetermined is first-class and must be STATED.** Never invent an attribution
 to get past a gate. A gate that pressures someone into inventing one is a bug in
 the gate: that is why the publication fence moved off the content axis onto the
