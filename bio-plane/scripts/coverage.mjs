@@ -778,9 +778,24 @@ const REGISTER_FLOOR = {
      `FLEET_FLOOR`, which is the documented state. `FLEET_FLOOR` is UNMOVED and none is owed
      — this item adds no fleet member and no fleet suite. */
   /* MOVED 2026-09-14 by CONDUCT #10 at COFF-10's merge (967 -> 972 · 179 -> 180 · 180 -> 181): the merged run's own print read `arms 972/967 · classified 180/179 · corpus 181/180`; the +5 arms and +1 suite are COFF-10's `formats-odf.test.mjs`, which set 964 on a tree without REC-82's +8. One key set, read from the print after the commit (D-238). */
-  arms: 972,
-  classified: 180,
-  corpus: 181,
+  /* MOVED 2026-09-14 by CAP-8 (972 -> 979 · 180 -> 181 · 181 -> 182), ALL THREE IN THE
+     SAME TURN, every one taken from the figure THIS ITEM'S OWN GREEN `--strict` RUN
+     PRINTED AFTER ITS COMMIT (`arms 979/972 · classified 181/180 · corpus 182/181 ·
+     GREW by 7 arm(s)`) — never counted, never added to the numbers above, and never
+     read from the PRE-commit run, which reported `arms 979 · classified 181 · corpus 182
+     (contaminated: 1 suite(s) no other checkout has)` and named the untracked file. The
+     post-commit provenance line reads `198 of 198 discovered item(s) are in the commit at
+     HEAD (e310c51)`, so the counted figures ARE the reproducible ones (D-238).
+     THE CAUSE IS ONE NEW SUITE, `test/drive.test.mjs`, whose `NEGATIVE CONTROL:`
+     declaration states SEVEN rows — six arms plus a baseline, every one RUN by
+     `test/drive.control.mjs` and every restore verified by sha256 and by `cmp`. So
+     `corpus` and `classified` each rise by one and `arms` by seven. Nothing FELL.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and
+     in `FLEET_FLOOR`, which is the documented state. `FLEET_FLOOR` is UNMOVED and none is
+     owed — this item adds no fleet member and no fleet suite. */
+  arms: 979,
+  classified: 181,
+  corpus: 182,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
