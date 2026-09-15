@@ -11691,3 +11691,61 @@ credentials, same origin, returned non-zero for every other figure it asked for 
 bundles, 88 shas, and `op=registeraudit`'s `sound: true` over the same 88), so the
 calls reached the plane and were answered. An instrument that returned zero for
 everything would have been a finding about the instrument.
+
+## 2026-09-14 — CAP-12: WHAT THE SIX OFFICE ENTRIES ACTUALLY EMIT, AND WHAT THEY ONLY COMPUTE
+
+**Why it was taken.** CAP-12's row said its scope was to persist *"the container extents
+the office entries (COFF-3/4/5, COFF-10) already emit — sheets with dimensions, paragraph
+count, slides with shape lists"*. Before writing the wire that carries them, the six
+entries' RETURNS were read rather than the row believed — `CLAUDE.md`'s measure-do-not-assume
+rule applied to a brief. **The row's phrase is true for one of the three levels and not for
+the other two**, and D-354, which the row paraphrases, was accurate: it said the producers
+COMPUTE the figures, and only of `docx.mjs` did it say EMIT.
+
+**Instrument:** reading every `text()` and `structure()` return in `bio-plane/src/formats-xlsx.mjs`,
+`docx.mjs`, `pptx.mjs` and `odf.mjs` (the last carrying three entries), and the private
+walkers they call. Re-runnable in one command from the repo root:
+
+    grep -n "return {" bio-plane/src/formats-xlsx.mjs bio-plane/src/docx.mjs bio-plane/src/pptx.mjs bio-plane/src/odf.mjs
+
+| level | entry's `text()` returns | entry's `structure()` returns | computed internally and DROPPED |
+| --- | --- | --- | --- |
+| sheets (`xlsx`, `ods`) | `sheets: [{sheet, name, hidden, text, undetermined}]` — the NAME, no dimensions | `sheets: [{sheet, name, sheetId, state, hidden}]` — the same, no dimensions | `walkSheetXml` returns `rows: [{r, hidden, cells:[{cell,…}]}]`, from which the used range is derivable, and returns it to neither caller |
+| paragraphs (`docx`, `odt`) | `paragraphs: [{para, ref, text}]` — **the LENGTH is the count** | `paragraphs: <int>` | — nothing dropped; this level is fully emitted |
+| slides (`pptx`, `odp`) | `slides: [{slide, ref, part, hidden, text}]` — **the LENGTH is the count**, no shape count | `slides: <int>` (`deck.length`) — a scalar | `walkSlide` returns `shapes: <int>` per slide and `pptxText` uses only `.text` |
+
+**What this fixed in the landing rather than in prose.** CAP-12 feeds the SHEET, PARAGRAPH
+and SLIDE levels — which is the OUTER bound of all three of REC-85's arms, so an unknown
+sheet name, a paragraph past the count and a slide past the deck are each refused C-45.1
+by name — and writes NULL for the two inner bounds, undetermined and stated. Emitting them
+is an I2 producer change on CONTENT-OFFICE's files and carries a design question CAPTURE is
+not placed to settle silently: **a sheet's USED RANGE is not its capacity** (an XLSX sheet
+is 1,048,576 × 16,384 whatever the file fills), so bounding a cell by the walked range
+would refuse a legitimate citation of a cell that exists and was empty at capture. Filed as
+**D-359**.
+
+**What this instrument can and cannot see.** It reads the six entries registered in
+`formats.mjs` on `origin/main` at `173bc66` and nothing else: a format entry added later, a
+fleet member's own shape, and any figure produced outside an entry's return are all outside
+it. It reads RETURNS, so a field an entry sets on an object it hands to another module
+without returning would be invisible; none was found, and `parts()` — the only such
+hand-off — carries the container walk and not a dimension.
+
+## 2026-09-14 — CAP-12: THE BATTERY BASELINE, AND THE `npm ci` TRAP ONE PACKAGE FURTHER OUT
+
+**The figure.** `origin/main` at `173bc66`, measured on a pristine scratch worktree with
+`git status --porcelain` empty: **195/195 suites green · 12,100 assertions · exit 0**,
+253.5 s. CAP-12's brief carried exactly that figure and it is recorded as MEASURED rather
+than inherited — the practice is to trust the measurement, not the streak.
+
+**THE TRAP, MEASURED, AND IT IS `CLAUDE.md`'s OWN ONE PACKAGE FURTHER OUT.** The FIRST run
+of that baseline read **194/195 green · 1 SKIPPED · 12,024 assertions**, and the skip line
+said it plainly: *"ocr-worker's suite cannot resolve 'miniflare' — run `npm ci` in
+ocr-worker/. THE MEMBER'S SUITE DID NOT RUN."* `npm ci` had been run in `bio-plane/` only.
+`CLAUDE.md`'s trap entry says to install in `bio-plane/` before measuring anything in a new
+worktree; **the battery now runs 8 FLEET suites out of `pdf-worker/` and `ocr-worker/`, so
+the instruction is one package short of the instrument.** The difference is 76 assertions
+and one suite, and — unlike the 2026-08-10 sighting, which failed loudly at ~14 green — this
+one **exits 0 and reports 194/195 GREEN**, so it reads as a healthy baseline and would have
+been recorded as one. A second run after `npm ci` in all three packages produced the figure
+above. A worker measuring a baseline in a fresh worktree installs **all three**.

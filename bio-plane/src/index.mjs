@@ -5384,7 +5384,11 @@ export default {
            because it is the same kind of fact — what the FORMAT wire learned
            about this document on this pass — and it stays null until a producer
            that actually counts pages answers. */
-        let wired = null, wiredTier = null, pageCount = null;
+        /* CAP-12 / D-354: the CONTAINER'S OWN EXTENT rides here for the same
+           reason the page count does — it is a fact the FORMAT wire learned
+           about this document on this pass — and it stays null until an entry
+           that actually itemises a container answers. */
+        let wired = null, wiredTier = null, pageCount = null, containerExtent = null;
         /* CPDF-10: the chain this text's provenance will be recorded as, built
            up as the wire actually walks it rather than labelled at the end. It
            starts empty and is null until a text surface answers, so a document
@@ -5608,6 +5612,77 @@ export default {
                           + "in this instance, so nothing is claimed about what it says";
                 }
               }
+              /* CAP-12 / D-354 — THE CONTAINER'S OWN EXTENT, TAKEN OFF THE I2
+                 SHAPE THE ENTRY ALREADY RETURNED, at the one place `i2text` is
+                 final.
+                 *
+                 * REC-85 built the `sheet-cell` / `doc-para` / `slide-shape`
+                 * arms of C-45.1 with two halves each: a SHAPE half (is this an
+                 * address at all) that the leg feeds, and a CONTAINER half (does
+                 * THIS document hold it) that only the record can answer — and
+                 * nothing persisted a sheet, a paragraph or a shape, so the
+                 * second half was built, correct and UNFED. That is D-354, and
+                 * this is the feed.
+                 *
+                 * IT IS READ, NEVER RE-DERIVED. The six office entries
+                 * (COFF-3/4/5 and COFF-10's three ODF entries) already return a
+                 * per-unit list named for what the unit IS — `sheets[]`,
+                 * `paragraphs[]`, `slides[]` — and the figures below are those
+                 * lists, counted. Re-walking the container here would be a
+                 * second opinion about one number a few lines from the first.
+                 *
+                 * RECOGNISED BY SHAPE, NOT BY A LIST OF CONTAINER NAMES. A
+                 * seventh entry landing in the same I2 shape is fed by this code
+                 * with no edit, and a list of six spellings would go stale the
+                 * moment a seventh was written. A PDF's I2 text carries none of
+                 * the three keys and correctly yields nothing here.
+                 *
+                 * WHAT IS NOT HERE, AND IT IS STATED RATHER THAN LEFT TO BE
+                 * INFERRED (D-359). A sheet's `rows`/`cols` and a slide's shape
+                 * COUNT are computed inside `walkSheetXml` and `walkSlide` and
+                 * are NOT RETURNED by any entry — measured against all six
+                 * returns, not assumed. So the SHEET, PARAGRAPH and SLIDE levels
+                 * are fed (which is every arm's outer bound: an unknown sheet
+                 * name, a paragraph past the count, a slide past the deck) and
+                 * the cell-within-a-sheet and shape-within-a-slide halves stay
+                 * UNDETERMINED AND STATED — which is exactly what
+                 * `coversSheetCell`'s own header says a sheet list with no
+                 * dimensions must do. Emitting the finer figures is an I2
+                 * producer change and carries a real question (a sheet's USED
+                 * RANGE is not its capacity), so it is CONTENT-OFFICE's and is
+                 * rowed rather than guessed at here.
+                 *
+                 * AN EMPTY LIST IS NULL AND NEVER A ZERO. Every entry's
+                 * over-the-size-bound branch returns `sheets: []` /
+                 * `paragraphs: []` / `slides: []` with the guard marker beside
+                 * it, and reading that as "this workbook holds no sheets" would
+                 * be the record asserting a fact nobody established — the exact
+                 * inversion of CAP-9's "never a zero" rule, one construct
+                 * wider. */
+              /* AND THE LEVEL A CONTAINER HAS NO NOTION OF IS NOT A GAP IN IT.
+                 A workbook has no paragraph count and never will, which is a
+                 different fact from a workbook whose sheets this record does not
+                 hold — so `levels` names the levels THIS container itemises at
+                 all, taken from which keys the entry emitted rather than from a
+                 list of container names, and the store reports a missing level
+                 only against that. The KEY's presence is the notion; its
+                 LENGTH is whether the record holds it. */
+              if (i2text) {
+                const has = (k) => Array.isArray(i2text[k]);
+                const held = (k) => (has(k) && i2text[k].length ? i2text[k] : null);
+                if (has("sheets") || has("paragraphs") || has("slides")) {
+                  const sh = held("sheets"), pa = held("paragraphs"), sl = held("slides");
+                  containerExtent = {
+                    container: typeof i2text.container === "string" ? i2text.container : null,
+                    levels: ["sheets", "paragraphs", "slides"].filter(has),
+                    sheets: sh ? sh.map((s) => ({
+                      name: s && typeof s.name === "string" ? s.name : null,
+                      rows: null, cols: null })) : null,
+                    paragraphs: pa ? pa.length : null,
+                    slides: sl ? sl.map(() => ({ shapes: null })) : null,
+                  };
+                }
+              }
               if (i2text) wired = readText(i2text, { headers: profHeaders,
                 locator: documentAddress, content_type: ct || null, at: retrieved });
               /* The chain, at last, and only if a text surface actually
@@ -5747,6 +5822,24 @@ export default {
            * FRAMEWORK's). `#writeTextSource`'s columns exist because the chain
            * had to be filterable; this number does not. */
         reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
+        /* CAP-12 / D-354 — THE CONTAINER EXTENT, CARRIED ONTO THE READING THE
+           PLANE PERSISTS, at the same ONE site and under the same three-state
+           absence rule IC-87 fixed for `page_count` one line up.
+           *
+           * KEY ABSENT: nothing ever tried to itemise this document's container
+           * — an HTML page read as text at intake, where this wire never ran.
+           * PRESENT AND NULL: the wire RAN and no entry itemised a container at
+           * all — a PDF, whose I2 text carries no sheet, paragraph or slide
+           * list, and a primary the wire could not read. AN OBJECT: an entry
+           * answered, `levels` names what this container itemises and each named
+           * level is either the figure or NULL, undetermined and stated.
+           * No absence stands in for another, and none of them is a zero.
+           *
+           * WHY NOT A COLUMN: `readings.reading` already holds the reading as
+           * JSON keyed by the `capture_sha` the one reader (`contentContextFor`)
+           * looks up by, so a column would be a projection nothing filters —
+           * CAP-9's reasoning unchanged, on a table I5 assigns to FRAMEWORK. */
+        reading.container_extent = containerExtent;
       }
 
       /* The shape C-18.1 requires, assembled here so the caller does not have to
