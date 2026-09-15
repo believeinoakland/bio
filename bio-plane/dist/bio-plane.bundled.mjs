@@ -3183,6 +3183,8 @@ __export(bio_checks_exports, {
   CONTENT_EXTENT_KINDS: () => CONTENT_EXTENT_KINDS,
   CONTENT_EXTENT_KIND_NO_PRODUCER: () => CONTENT_EXTENT_KIND_NO_PRODUCER,
   CONTENT_ID_RE: () => CONTENT_ID_RE,
+  CONTENT_MINTED_BY_PLANE: () => CONTENT_MINTED_BY_PLANE,
+  CONTENT_MINT_STATES: () => CONTENT_MINT_STATES,
   CORE_FIELDS: () => CORE_FIELDS,
   CORRESPONDENCE_DIRECTIONS: () => CORRESPONDENCE_DIRECTIONS,
   DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS,
@@ -3254,6 +3256,7 @@ __export(bio_checks_exports, {
   completenessFields: () => completenessFields,
   consequenceState: () => consequenceState,
   contentIdFor: () => contentIdFor,
+  contentMintState: () => contentMintState,
   correspondenceFindings: () => correspondenceFindings,
   createSha256: () => createSha256,
   deriveInquiryTitle: () => deriveInquiryTitle,
@@ -3264,6 +3267,7 @@ __export(bio_checks_exports, {
   isBoilerplate: () => isBoilerplate,
   isCaseMemberBytes: () => isCaseMemberBytes,
   isMachineIdentity: () => isMachineIdentity,
+  isMachineMinted: () => isMachineMinted,
   isMachineStamp: () => isMachineStamp,
   isPublicHttpsLocator: () => isPublicHttpsLocator,
   isSufficiencyClaimed: () => isSufficiencyClaimed,
@@ -4296,6 +4300,23 @@ function isSufficiencyClaimed(assertedBy) {
 }
 function isSufficiencyUnclaimed(assertedBy) {
   return sufficiencyClaimState(assertedBy) === "unclaimed";
+}
+var CONTENT_MINTED_BY_PLANE = "plane";
+var CONTENT_MINT_STATES = {
+  member_marked: "a member marked this passage as citable, and the record holds their name and the date",
+  plane_minted: "this record minted this reference when a member first cited the passage in their own words \u2014 it is the address of what that member pointed at, and not a separate claim about the document",
+  machine_marked: "a machine credential marked this passage as citable. That is machine work, labelled as machine work: it can lay the passage beside the question and it can never attest that the text matches the page, and nothing here is part of a finding until a member cites it themselves",
+  unstated: "the record does not say who marked this passage as citable"
+};
+function contentMintState(mintedBy) {
+  const s = String(mintedBy ?? "").trim();
+  if (s.length === 0) return "unstated";
+  if (s.toLowerCase() === CONTENT_MINTED_BY_PLANE) return "plane_minted";
+  if (isMachineIdentity(s)) return "machine_marked";
+  return "member_marked";
+}
+function isMachineMinted(mintedBy) {
+  return contentMintState(mintedBy) === "machine_marked";
 }
 function checkAuthorityPublishable(ctx, findings) {
   const hist = Array.isArray(ctx.fm?.state_history) ? ctx.fm.state_history : [];
@@ -12768,7 +12789,24 @@ var VOCABULARIES = {
      catalogue is what turns a stored value into one of these keys; a surface
      that reads the field itself and matches on the literal has rebuilt the
      predicate. Imported, never restated. */
-  sufficiency_claim_states: SUFFICIENCY_CLAIM_STATES
+  sufficiency_claim_states: SUFFICIENCY_CLAIM_STATES,
+  /* SK-7 / framework Part II 14.4 (Bob's 5.7) — WHO MARKED A PASSAGE AS
+     CITABLE, in words. Published for `sufficiency_claim_states`' reason exactly,
+     and the reason is measurable rather than stylistic: `content.minted_by`
+     holds an IDENTITY, and from this item that identity can be a machine
+     credential's `class:ai/<tokenId>` stamp. A surface with no vocabulary
+     renders the stored string, which is how `app.html`'s grounding receipt came
+     to print `Asserted by ${g.asserted_by}` verbatim one field over. So the
+     plane answers WHICH STATE the row is in and publishes the SENTENCE for it,
+     and no surface invents wording for a distinction 5.7 requires be shown.
+     A code->text map, not a list, for the same reason its neighbour is one: the
+     four states are not interchangeable words a surface picks between — each is
+     a different thing the record is saying about who marked this passage, and
+     the sentence IS the state's meaning. `contentMintState()` in the catalogue
+     turns a stored value into one of these keys, and a surface that matches on
+     the literal `minted_by` has rebuilt the predicate; every content-row
+     projection already carries the plane's own answer in its `mint` block. */
+  content_mint_states: CONTENT_MINT_STATES
 };
 var RUNGS = {
   /* ---- irreversible. ONE op, and DEC-19 as amended names it. --------------
@@ -12977,7 +13015,20 @@ var RUNG_ABSENT = {
   thread: { ground: "undetermined", is: "threads real documents into a progression instance" },
   airunopen: { ground: "undetermined", is: "opens an AI run against the record" },
   airunclose: { ground: "undetermined", is: "closes an AI run" },
-  suggest: { ground: "undetermined", is: "a machine PROPOSES a reading; \xA76 rule 4 makes it a proposal and never a settlement" }
+  suggest: { ground: "undetermined", is: "a machine PROPOSES a reading; \xA76 rule 4 makes it a proposal and never a settlement" },
+  /* SK-7, and it lands beside `suggest` directly above for the reason that one
+     does rather than beside `attesttext`: marking a passage citable PROPOSES an
+     address and settles nothing. The row is an offer — *this part of this
+     document is worth pointing at* — and it enters no case until a member's own
+     leg names it (framework Part II §14.4, Bob's 5.7). It is corrected FORWARD
+     by marking a different extent, never withdrawn: the row is first-class and
+     an edge may already depend on it, so `stale` marks and nothing deletes.
+     NOT `substrate`: a member (or an assistant on a member's objective) CHOOSES
+     to mark a passage, which is precisely what `substrate`'s ground says these
+     acts are not. NOT `observational`: nothing here records what was observed;
+     it records what somebody thought worth citing. So the honest ground is the
+     ladder's own gap — an act on the record, corrected forward, never signed. */
+  contentmint: { ground: "undetermined", is: "marks a PART of a document as citable \u2014 an address the record can hold, proposed by a member or by a machine credential and part of a finding only when a member cites it (\xA714.4)" }
 };
 var CAPTURE_ACTS = [
   /* op=attest. The verb is "co-attest" because the group is not the only
@@ -31306,7 +31357,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
                   bundleId: leg.target,
                   captureSha: cp.captureSha,
                   extent: ext,
-                  mintedBy: "plane",
+                  mintedBy: CONTENT_MINTED_BY_PLANE,
                   at: meta.last_updated || null,
                   ctx: cp.ctx
                 });
@@ -32305,7 +32356,14 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    *
    *  Returns `{ ok: true, content_id, minted }` or the checker's refusal
    *  verbatim — the refusal is `checks/bio-checks.mjs`'s, never composed here. */
-  mintContent({ bundleId, captureSha, extent, mintedBy = "plane", at = null, ctx: given = null }) {
+  mintContent({
+    bundleId,
+    captureSha,
+    extent,
+    mintedBy = CONTENT_MINTED_BY_PLANE,
+    at = null,
+    ctx: given = null
+  }) {
     const ctx = given || this.contentContextFor(captureSha);
     const bad = checkContentExtent(extent, ctx);
     if (bad) return bad;
@@ -32339,6 +32397,94 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       );
     }
     return { ok: true, content_id: id, minted: !before };
+  }
+  /** SK-7 / framework Part II 14.4 (Bob's 5.7) — MARKING A PASSAGE AS CITABLE,
+   *  as an ACT a credential performs rather than as a side effect of promotion.
+   *
+   *  `op=contentmint`'s store half. Until this existed, the ONLY way a content
+   *  row came into being was `op=promote`'s projection — which means a passage
+   *  became addressable only at the instant a member had ALREADY cited it, and
+   *  *"the assistant may mark passages as citable on its own"* had nowhere to
+   *  land. This is that door, and it is a narrow one on purpose.
+   *
+   *  WHAT IT DOES NOT DO, and each absence is the ruling rather than an
+   *  unfinished edge:
+   *
+   *  (1) IT WRITES NO EDGE. A row minted here is an ADDRESS — *this part of
+   *      this document* — and nothing points at it. It reaches a finding only
+   *      when a member's own basis leg names the same passage, at which point
+   *      `mintContent`'s INSERT OR IGNORE FINDS this row (the id is
+   *      `hash(capture, extent, chain)`) and the member's citation carries the
+   *      machine's label with it. That is 5.7's third clause, and it is
+   *      structural: `earnedBasisRegistry` answers `earned.content` only over
+   *      ids a caller NAMED, and the callers that name them are bases of legs
+   *      members authored.
+   *  (2) IT GRANTS NOTHING ABOUT THE TEXT. Attesting stays C-35.10's, refused
+   *      to every machine credential, and this function does not go near it.
+   *  (3) IT MINTS NOTHING FOR AN INQUIRY. An inquiry is not a document (DEC-21)
+   *      and has no part to point at — IC-83's AMENDMENT 2, answered here as
+   *      the same named case the reads answer it as rather than as a shrug.
+   *
+   *  EVERY REFUSAL THE EXTENT CAN EARN IS `checkContentExtent`'s, returned
+   *  VERBATIM through `mintContent` — C-45.1 through C-45.4, unchanged, not
+   *  restated and not wrapped. What this function owns is only the three
+   *  questions `mintContent` cannot ask because it is handed a capture: is
+   *  there a minter, is the target a document, and does this record hold bytes
+   *  of it. Those three are `reason` refusals in `contentRead`'s shape rather
+   *  than DEC-49 catalogue rows — the guard harvests `/_CHECKS$/` families, and
+   *  a door's own shape refusal has never been one (REC-83's measurement, one
+   *  read over).
+   *
+   *  THE ANSWER COMES BACK THROUGH `contentRow`, so the row a minter is handed
+   *  is labelled by exactly the helper every other surface labels it with. A
+   *  second composition here would be the first place the label could drift. */
+  contentMint({ bundleId, extent, mintedBy, viewer = null, at = null }) {
+    if (typeof mintedBy !== "string" || !mintedBy.trim())
+      return {
+        ok: false,
+        reason: "NO_MINTER",
+        detail: `a content row records WHO marked the passage as citable, and this call carries nobody. The plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it \u2014 which is refused rather than filled in`
+      };
+    if (typeof bundleId !== "string" || !bundleId.trim())
+      return {
+        ok: false,
+        reason: "NO_TARGET",
+        detail: `marking a passage citable names the document the passage is in`
+      };
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId);
+    if (!b || !this.#viewerSees(bundleId, viewer))
+      return {
+        ok: false,
+        reason: "NO_SUCH_BUNDLE",
+        target: bundleId,
+        detail: `no document is addressed by ${bundleId} in this record`
+      };
+    const kind = normalizeType(b.object_type);
+    if (kind !== "information")
+      return {
+        ok: false,
+        reason: "NOT_A_DOCUMENT",
+        target: bundleId,
+        target_type: kind ?? null,
+        detail: `${bundleId} is not a document, so it has no part to point at. The content axis ranges over documents (DEC-21): an inquiry rests on things, it is not a thing with pages. This is stated rather than met with a document-extent row invented for it (IC-83 AMENDMENT 2)`
+      };
+    const sha = this.#captureForContent(bundleId);
+    if (!sha)
+      return {
+        ok: false,
+        reason: "NO_BYTES_HELD",
+        target: bundleId,
+        detail: `this record holds no capture of ${bundleId}, so there are no bytes for a content row to address. A content id is hash(capture, extent, chain) and there is no capture to hash. Absence here is a fact about what was captured and never evidence about what the document says (CLAUDE.md's sparse rule)`
+      };
+    const out = this.mintContent({
+      bundleId,
+      captureSha: sha,
+      extent: extent && typeof extent === "object" ? extent : { kind: "document" },
+      mintedBy: mintedBy.trim(),
+      at
+    });
+    if (!out.ok) return out;
+    return { ok: true, minted: out.minted, capture_sha: sha, ...this.contentRow(out.content_id) };
   }
   /** THE LEGACY BACKFILL — a leg promoted before this column existed, read for
    *  the first time.
@@ -32400,7 +32546,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       bundleId: leg.target_id,
       captureSha: sha,
       extent: { kind: "document" },
-      mintedBy: "plane"
+      mintedBy: CONTENT_MINTED_BY_PLANE
     });
     if (!out.ok) return out;
     this.sql.exec(
@@ -32424,7 +32570,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     const marks = ids.map(() => "?").join(",");
     const by = /* @__PURE__ */ new Map();
     const found = this.#rows(
-      `SELECT content_id, extent_kind, extent, stale FROM content
+      `SELECT content_id, extent_kind, extent, minted_by, stale FROM content
         WHERE content_id IN (${marks})`,
       ...ids
     );
@@ -32434,10 +32580,13 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       if (!row) {
         r.stale = false;
         r.says = null;
+        r.mint = null;
         continue;
       }
       r.extent_kind = row.extent_kind;
       r.stale = !!row.stale;
+      r.minted_by = row.minted_by;
+      r.mint = _Store.#mintLabel(row.minted_by);
       const ext = { kind: row.extent_kind, ...safeJson(row.extent) || {} };
       r.says = row.stale ? `this passage was cited as it stood under an earlier transcription of the document. The document has since been re-read and the text may have changed, so what the citation points at is ${describeExtent(ext)} of the capture as it was transcribed then \u2014 the record keeps it rather than moving it, because moving an authored citation is a member's act and not the record's` : `${describeExtent(ext)}, as this record holds it`;
     }
@@ -32483,6 +32632,40 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     );
     return n;
   }
+  /** SK-7 / framework Part II 14.4 (Bob's 5.7) — THE MINT LABEL, DERIVED IN ONE
+   *  PLACE AND PUT ON EVERY SURFACE THAT SHOWS A CONTENT ROW.
+   *
+   *  The ruling says *every such row labelled as machine work*, and "every" is
+   *  a totality claim about SURFACES, not a suggestion about one of them. There
+   *  are four places a content row reaches a caller — the fixed-key `content`
+   *  read, `earned.content` on `op=earnedbasis` and the write path's registry,
+   *  `promote`'s own `content[]` array, and `contentRow` (the resolution an edge
+   *  asks for) — and all four compose the block HERE rather than each deciding
+   *  for itself what a machine-minted row looks like. A second site composing a
+   *  second answer is the eleven-copies-of-one-predicate failure REC-46
+   *  measured, arriving at a LABEL instead of at a fence.
+   *
+   *  THE BLOCK IS PRESENT ON EVERY ROW, NOT ONLY ON MACHINE-MINTED ONES, and
+   *  that is deliberate in the direction that costs something. A key that
+   *  appears only when the answer is "machine" makes ABSENCE carry the meaning,
+   *  so a surface that never learned the key renders nothing at all and is
+   *  indistinguishable from a surface rendering "a member cited this" — which
+   *  is precisely the failure the label exists to prevent. `sufficiency_claim_
+   *  states` took the same shape one field over for the same reason.
+   *
+   *  `machine_work` IS THE PLANE'S OWN ANSWER, not a literal for a surface to
+   *  match. PL-17's words: *a surface that reads the field itself and matches on
+   *  the literal has rebuilt the predicate.* The sentence is the published one,
+   *  so a surface renders `says` and never composes its own. */
+  static #mintLabel(mintedBy) {
+    const state = contentMintState(mintedBy);
+    return {
+      by: mintedBy ?? null,
+      state,
+      machine_work: state === "machine_marked",
+      says: CONTENT_MINT_STATES[state]
+    };
+  }
   /** The content row behind an id, with the one sentence a reader needs about
    *  its standing. Deliberately NOT the `content` READ op and not the registry
    *  — those are REC-83's — but the resolution an edge needs to say what it
@@ -32502,6 +32685,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       chain: safeJson(r.chain),
       stale: !!r.stale,
       resolves: true,
+      mint: _Store.#mintLabel(r.minted_by),
       says: r.stale ? `this passage was cited as it stood under an earlier transcription of the document. The document has since been re-read and the text may have changed, so what the citation points at is ${describeExtent({ kind: r.extent_kind, ...safeJson(r.extent) || {} })} of the capture as it was transcribed then \u2014 the record keeps it rather than moving it, because moving an authored citation is a member's act and not the record's` : `${describeExtent({ kind: r.extent_kind, ...safeJson(r.extent) || {} })}, as this record holds it`
     };
   }
@@ -32657,6 +32841,13 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       minted_by: r.minted_by,
       at: r.at,
       stale: !!r.stale,
+      /* SK-7 / 14.4's 5.7: WHO MARKED THIS PASSAGE CITABLE, in words rather
+         than in the control plane's identity grammar. `minted_by` above is kept
+         byte-identical beside it — the label does not replace the field, it
+         says what the field MEANS, which is the only shape that lets a surface
+         stop rendering `class:ai` at a member without the record losing which
+         credential it was. */
+      mint: _Store.#mintLabel(r.minted_by),
       transcription,
       connection,
       /* THE CAPTURE AXIS IS NOT COPIED HERE, and that is a decision with a
@@ -49843,6 +50034,20 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           viewer: url.searchParams.get("viewer"),
           extras: [...url.searchParams.keys()]
         }),
+        /* SK-7 / framework Part II 14.4 (Bob's 5.7): MARKING A PASSAGE CITABLE.
+           `mintedBy` is taken from the QUERY STRING and never from the body,
+           and that is the whole fence at this door: the control plane stamps it
+           there from the credential that authenticated and a caller-supplied
+           one in the body is not read at all, so a machine credential cannot
+           post a member's name into the field that says who did this. GATED on
+           `viewer` like every write that names a bundle. */
+        contentmint: () => this.contentMint({
+          bundleId: (body || {}).bundleId,
+          extent: (body || {}).extent,
+          at: (body || {}).at || null,
+          mintedBy: url.searchParams.get("mintedBy"),
+          viewer: url.searchParams.get("viewer")
+        }),
         reusedparts: () => this.reusedParts(url.searchParams.get("id")),
         recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
         reuseverdicts: () => this.reuseVerdicts({
@@ -49881,7 +50086,19 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           url.searchParams.get("viewer"),
           url.searchParams.get("limit")
         ),
-        attesttext: () => this.attestText(body || {}),
+        /* SK-7: THE ATTESTOR COMES FROM THE QUERY STRING, WHERE THE CONTROL
+           PLANE STAMPED IT, AND THE BODY'S `member` IS NOT READ AT ALL. Before
+           this the attestor was taken from the body, so C-35.10 refused only a
+           caller that volunteered a machine-shaped name — measured through a
+           real minted `ai` credential, which attested in a member's name and had
+           the act LAND. `contentmint` beside it takes its minter the same way
+           and for the same reason. An absent stamp reaches `checkAttestation`
+           as an absent member and is refused there (*unattributed is not
+           attested*), so a route that skipped the stamp fails closed. */
+        attesttext: () => this.attestText({
+          ...body || {},
+          member: url.searchParams.get("attestor")
+        }),
         /* CPDF-13 / D-183 / D-253 — THE CALIBRATION SURFACE. Five ops, and the
                    split is the item's doctrine expressed as a capability boundary, the
                    way CPDF-10's three-way split above is.
@@ -51223,6 +51440,35 @@ var OPS = {
        passage exists in a project they were never invited to by guessing its
        address. NEEDS entry of null with a NON_ACTS row, op=earnedbasis' shape. */
   content: { classes: ["admin", "member", "probe"], mutating: false },
+  /* SK-7 / framework Part II §14.4 (Bob's 5.7): MARKING A PASSAGE AS CITABLE.
+       *"The assistant may mark passages as citable on its own, every such row
+       labelled as machine work, never attested by it, and part of a finding only
+       when a member cites it."*
+  
+       BEFORE THIS OP THERE WAS NO DOOR AT ALL. A content row came into being only
+       inside `op=promote`'s projection, which means a passage became addressable
+       at the instant a member had ALREADY cited it — so the EXTRACT role §14.4
+       gives the machine had nowhere to land, and `minted_by` (IC-83's column,
+       landed with REC-82) could only ever read `plane`.
+  
+       `probe` IS ADMITTED, and the cut is a different one from `attesttext`'s two
+       lines up rather than a looser one. EXTRACTING is what §14.4 says the machine
+       may do — *"document → content … the role that makes everything else
+       addressable"* — and the recognisers and fleet members that do it today are
+       probe-class by construction. ATTESTING is testimony and is refused to every
+       machine credential (C-35.10, UNCHANGED). The two acts sit on opposite sides
+       of the one fence this item is about, so they take opposite class cuts and
+       the reasoning is written out rather than inherited by proximity.
+  
+       `member` IS IN THE LIST AND THAT IS WHAT LETS AN AGENT REACH IT AT ALL —
+       `aiReachesAsMember` is the ONLY door for the `ai` class, so this row admits
+       no `ai` (no row does) and FL-6's cascade reaches it exactly when the member
+       who minted the credential named this op in its declared `writes`. Nothing
+       about the class list is special-cased for machines; the floor does it.
+  
+       THE MINTER IS STAMPED SERVER-SIDE below and the body's is never read, which
+       is the impostor rule at a field whose entire subject is who acted. */
+  contentmint: { classes: ["admin", "member", "probe"], mutating: true },
   dangling: { classes: ["admin", "member", "probe"], mutating: false },
   stats: { classes: ["admin", "member", "probe"], mutating: false },
   promote: { classes: ["admin", "member", "probe"], mutating: true },
@@ -51856,6 +52102,19 @@ var SESSION_OPS = {
        only route that produces a name the store will accept is a
        session, and the store refuses every other shape (C-35.10). */
     "attesttext",
+    /* SK-7 / framework Part II §14.4: MARKING A PASSAGE AS CITABLE is
+       a session op TOO, and the reason is the ruling's own list rather
+       than symmetry with the line above. §14.4: *"where an edge points
+       at a whole document, the assistant, A MEMBER, or another means
+       tries to find the specific passages"* — so a member doing by hand
+       what the assistant does on its own is the SAME act by a different
+       actor, and the record distinguishes them by who is stamped on the
+       row rather than by which of them is allowed to perform it. It is
+       NOT the act that changes a leg's target (REC-86's NARROW) and it
+       is not TRANSCRIBE (REC-87); it mints an address and writes no
+       edge. Unlike `attesttext` above, the machine route is open too —
+       that asymmetry IS this item. */
+    "contentmint",
     "inbox",
     "inboxget",
     "inboxresolve",
@@ -51901,6 +52160,7 @@ var SESSION_OPS = {
     "ratify",
     "caseratify",
     "attesttext",
+    "contentmint",
     "inbox",
     "inboxget",
     "inboxresolve",
@@ -51952,6 +52212,16 @@ var NEEDS = {
      `checkAttestation`, C-35.10), never by inventing a capability a group would
      have to be told about. */
   attesttext: "contribute",
+  /* SK-7: NO FIFTH CAPABILITY TOKEN, on `attesttext`'s reasoning immediately
+     above. Marking a passage as citable puts a row in the corpus and rides
+     `contribute` like every other corpus write — and a VIEW-ONLY member must
+     not, because a row minted here is a durable address the record then carries
+     with an author's name on it. What is special about this act is not a
+     permission either: it is that a machine credential MAY perform it (§14.4's
+     EXTRACT role) where it may never perform the one above, and that asymmetry
+     lives in the OPS class cut and in C-35.10, not in a capability a group
+     would have to be told about. */
+  contentmint: "contribute",
   monitor: "contribute",
   cite: "contribute",
   sever: "contribute",
@@ -55716,7 +55986,7 @@ var index_default = {
          reader (DEC-17) — only the names are withheld. */
       "strengthbarof"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? `member:${sessMember}` : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -55733,6 +56003,13 @@ var index_default = {
       );
     if (QUEUE_ACTIONS.includes(op))
       inner.searchParams.set("member", viaSession ? sessMember : "");
+    if (op === "attesttext")
+      inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "contentmint")
+      inner.searchParams.set(
+        "mintedBy",
+        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
     if (op === "select" || op === "selection" || op === "selectionlist" || op === "selectionrelease" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op))
       inner.searchParams.set("owner", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "provenancechain" || op === "provenanceroute")

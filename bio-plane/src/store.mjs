@@ -287,6 +287,15 @@ import { BIAS_CHECKS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER,
    reason every other DEC-49 family is — the C-number, the wire code and the
    canned translation are ONE ROW there and this file holds no second copy. */
 import { ROUTE_MARK_CHECKS } from "../checks/bio-checks.mjs";
+/* SK-7 / framework Part II 14.4 (Bob's 5.7): WHO MINTED A CONTENT ROW, read in
+   one place. The classifier and the sentences live in the catalogue beside
+   `SUFFICIENCY_CLAIM_STATES`, whose shape they take, for the reason every
+   vocabulary above is imported rather than copied — the label a member reads
+   and the predicate a consumer asks must be one row. `CONTENT_MINTED_BY_PLANE`
+   is the literal `mintContent` defaults to, taken from there so the stamp and
+   the reading of it cannot disagree. */
+import { CONTENT_MINT_STATES, CONTENT_MINTED_BY_PLANE,
+         contentMintState } from "../checks/bio-checks.mjs";
 /* CPDF-13: the calibration family, for the one refusal this file owns rather
    than `calibration.mjs` — `CAL_CANNOT_REGRADE`, which is a fact about this
    STORE's door and not about the shape of a measurement. Imported for the same
@@ -10694,7 +10703,7 @@ export class Store extends DurableObject {
               if (carried) { legRowId = carried; legCarried = true; }
               else if (cp.captureSha) {
                 const mint = this.mintContent({ bundleId: leg.target, captureSha: cp.captureSha,
-                  extent: ext, mintedBy: "plane", at: meta.last_updated || null, ctx: cp.ctx });
+                  extent: ext, mintedBy: CONTENT_MINTED_BY_PLANE, at: meta.last_updated || null, ctx: cp.ctx });
                 if (mint.ok) { legRowId = mint.content_id; legMinted = mint.minted; }
               }
             }
@@ -11858,7 +11867,8 @@ export class Store extends DurableObject {
    *
    *  Returns `{ ok: true, content_id, minted }` or the checker's refusal
    *  verbatim — the refusal is `checks/bio-checks.mjs`'s, never composed here. */
-  mintContent({ bundleId, captureSha, extent, mintedBy = "plane", at = null, ctx: given = null }) {
+  mintContent({ bundleId, captureSha, extent, mintedBy = CONTENT_MINTED_BY_PLANE,
+                at = null, ctx: given = null }) {
     /* The caller may hand in the context it already resolved (`#contentPlanFor`
        does, once for the whole basis). Asking again would be a second answer to
        a question already answered inside the same transaction. */
@@ -11885,6 +11895,96 @@ export class Store extends DurableObject {
         ctx.pageCount, mintedBy, at || new Date().toISOString());
     }
     return { ok: true, content_id: id, minted: !before };
+  }
+
+  /** SK-7 / framework Part II 14.4 (Bob's 5.7) — MARKING A PASSAGE AS CITABLE,
+   *  as an ACT a credential performs rather than as a side effect of promotion.
+   *
+   *  `op=contentmint`'s store half. Until this existed, the ONLY way a content
+   *  row came into being was `op=promote`'s projection — which means a passage
+   *  became addressable only at the instant a member had ALREADY cited it, and
+   *  *"the assistant may mark passages as citable on its own"* had nowhere to
+   *  land. This is that door, and it is a narrow one on purpose.
+   *
+   *  WHAT IT DOES NOT DO, and each absence is the ruling rather than an
+   *  unfinished edge:
+   *
+   *  (1) IT WRITES NO EDGE. A row minted here is an ADDRESS — *this part of
+   *      this document* — and nothing points at it. It reaches a finding only
+   *      when a member's own basis leg names the same passage, at which point
+   *      `mintContent`'s INSERT OR IGNORE FINDS this row (the id is
+   *      `hash(capture, extent, chain)`) and the member's citation carries the
+   *      machine's label with it. That is 5.7's third clause, and it is
+   *      structural: `earnedBasisRegistry` answers `earned.content` only over
+   *      ids a caller NAMED, and the callers that name them are bases of legs
+   *      members authored.
+   *  (2) IT GRANTS NOTHING ABOUT THE TEXT. Attesting stays C-35.10's, refused
+   *      to every machine credential, and this function does not go near it.
+   *  (3) IT MINTS NOTHING FOR AN INQUIRY. An inquiry is not a document (DEC-21)
+   *      and has no part to point at — IC-83's AMENDMENT 2, answered here as
+   *      the same named case the reads answer it as rather than as a shrug.
+   *
+   *  EVERY REFUSAL THE EXTENT CAN EARN IS `checkContentExtent`'s, returned
+   *  VERBATIM through `mintContent` — C-45.1 through C-45.4, unchanged, not
+   *  restated and not wrapped. What this function owns is only the three
+   *  questions `mintContent` cannot ask because it is handed a capture: is
+   *  there a minter, is the target a document, and does this record hold bytes
+   *  of it. Those three are `reason` refusals in `contentRead`'s shape rather
+   *  than DEC-49 catalogue rows — the guard harvests `/_CHECKS$/` families, and
+   *  a door's own shape refusal has never been one (REC-83's measurement, one
+   *  read over).
+   *
+   *  THE ANSWER COMES BACK THROUGH `contentRow`, so the row a minter is handed
+   *  is labelled by exactly the helper every other surface labels it with. A
+   *  second composition here would be the first place the label could drift. */
+  contentMint({ bundleId, extent, mintedBy, viewer = null, at = null }) {
+    /* FAIL CLOSED ON AN ABSENT MINTER. The control plane stamps this and a
+       caller cannot set it, so a blank here means the stamp did not run — and a
+       row whose `minted_by` is empty is a row the record cannot say anything
+       about, which is the one thing this whole item exists to prevent. It is
+       refused rather than defaulted to the plane's own value: defaulting would
+       attribute an act to the RECORD that the record did not perform. */
+    if (typeof mintedBy !== "string" || !mintedBy.trim())
+      return { ok: false, reason: "NO_MINTER",
+               detail: `a content row records WHO marked the passage as citable, and this call `
+                     + `carries nobody. The plane stamps that from the credential that asked, so an `
+                     + `empty one means the act arrived by a route that does not attribute it — `
+                     + `which is refused rather than filled in` };
+    if (typeof bundleId !== "string" || !bundleId.trim())
+      return { ok: false, reason: "NO_TARGET",
+               detail: `marking a passage citable names the document the passage is in` };
+    /* D-15 AT THIS DOOR, and it is asked BEFORE the object type so the two
+       refusals cannot be told apart by a caller guessing bundle ids. A bundle
+       the viewer may not see answers EXACTLY as one that does not exist —
+       `contentRead`'s own rule, and it matters more on a WRITE: minting is a
+       cheap oracle for "does this document exist in a project I was never
+       invited to" unless the gate runs first. Fails closed on an absent stamp,
+       because `viewerPredicate`'s deny arm is what makes a missing control-plane
+       stamp an outage rather than a leak. */
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId);
+    if (!b || !this.#viewerSees(bundleId, viewer))
+      return { ok: false, reason: "NO_SUCH_BUNDLE", target: bundleId,
+               detail: `no document is addressed by ${bundleId} in this record` };
+    const kind = normalizeType(b.object_type);
+    if (kind !== "information")
+      return { ok: false, reason: "NOT_A_DOCUMENT", target: bundleId, target_type: kind ?? null,
+               detail: `${bundleId} is not a document, so it has no part to point at. The content axis `
+                     + `ranges over documents (DEC-21): an inquiry rests on things, it is not a thing `
+                     + `with pages. This is stated rather than met with a document-extent row invented `
+                     + `for it (IC-83 AMENDMENT 2)` };
+    const sha = this.#captureForContent(bundleId);
+    if (!sha)
+      return { ok: false, reason: "NO_BYTES_HELD", target: bundleId,
+               detail: `this record holds no capture of ${bundleId}, so there are no bytes for a content `
+                     + `row to address. A content id is hash(capture, extent, chain) and there is no `
+                     + `capture to hash. Absence here is a fact about what was captured and never `
+                     + `evidence about what the document says (CLAUDE.md's sparse rule)` };
+    const out = this.mintContent({ bundleId, captureSha: sha,
+                                   extent: extent && typeof extent === "object" ? extent
+                                                                                : { kind: "document" },
+                                   mintedBy: mintedBy.trim(), at });
+    if (!out.ok) return out;
+    return { ok: true, minted: out.minted, capture_sha: sha, ...this.contentRow(out.content_id) };
   }
 
   /** THE LEGACY BACKFILL — a leg promoted before this column existed, read for
@@ -11939,7 +12039,8 @@ export class Store extends DurableObject {
                   + `content row to address. Absence here is a fact about what was captured and `
                   + `never evidence about what the document says (CLAUDE.md's sparse rule)` };
     const out = this.mintContent({ bundleId: leg.target_id, captureSha: sha,
-                                   extent: { kind: "document" }, mintedBy: "plane" });
+                                   extent: { kind: "document" },
+                                   mintedBy: CONTENT_MINTED_BY_PLANE });
     if (!out.ok) return out;
     this.sql.exec(`UPDATE inquiry_basis SET content_id=? WHERE bundle_id=? AND ord=?`,
       out.content_id, bundleId, ord);
@@ -11961,14 +12062,27 @@ export class Store extends DurableObject {
     /* Hoisted out of the for-header for the reason recorded at `promote`'s own
        prior-content read: a scan in a loop header reads as a scan per row. */
     const found = this.#rows(
-      `SELECT content_id, extent_kind, extent, stale FROM content
+      `SELECT content_id, extent_kind, extent, minted_by, stale FROM content
         WHERE content_id IN (${marks})`, ...ids);
     for (const r of found) by.set(r.content_id, r);
     for (const r of rows) {
       const row = by.get(r.content_id);
-      if (!row) { r.stale = false; r.says = null; continue; }
+      if (!row) { r.stale = false; r.says = null; r.mint = null; continue; }
       r.extent_kind = row.extent_kind;
       r.stale = !!row.stale;
+      /* SK-7 / 14.4's 5.7: THE LABEL ON `promote`'s OWN `content[]` ARRAY, and
+         this is the surface where it matters MOST rather than one more place to
+         put it. A leg that CARRIED its referent (the `carried` arm above) found
+         a row that already existed — and a row a MACHINE CREDENTIAL minted is
+         exactly the row a member's citation finds, because the id is
+         `hash(capture, extent, chain)` and `mintContent` is INSERT OR IGNORE.
+         So the answer a member gets back the moment they cite a passage the
+         assistant marked says, in this field, that the assistant marked it. It
+         is read here rather than assumed from `mintedBy` in the loop, because
+         the loop's `mintedBy` is what THIS promotion would have written and the
+         row's is what somebody actually wrote. */
+      r.minted_by = row.minted_by;
+      r.mint = Store.#mintLabel(row.minted_by);
       const ext = { kind: row.extent_kind, ...(safeJson(row.extent) || {}) };
       r.says = row.stale
         ? `this passage was cited as it stood under an earlier transcription of the document. `
@@ -12024,6 +12138,37 @@ export class Store extends DurableObject {
     return n;
   }
 
+  /** SK-7 / framework Part II 14.4 (Bob's 5.7) — THE MINT LABEL, DERIVED IN ONE
+   *  PLACE AND PUT ON EVERY SURFACE THAT SHOWS A CONTENT ROW.
+   *
+   *  The ruling says *every such row labelled as machine work*, and "every" is
+   *  a totality claim about SURFACES, not a suggestion about one of them. There
+   *  are four places a content row reaches a caller — the fixed-key `content`
+   *  read, `earned.content` on `op=earnedbasis` and the write path's registry,
+   *  `promote`'s own `content[]` array, and `contentRow` (the resolution an edge
+   *  asks for) — and all four compose the block HERE rather than each deciding
+   *  for itself what a machine-minted row looks like. A second site composing a
+   *  second answer is the eleven-copies-of-one-predicate failure REC-46
+   *  measured, arriving at a LABEL instead of at a fence.
+   *
+   *  THE BLOCK IS PRESENT ON EVERY ROW, NOT ONLY ON MACHINE-MINTED ONES, and
+   *  that is deliberate in the direction that costs something. A key that
+   *  appears only when the answer is "machine" makes ABSENCE carry the meaning,
+   *  so a surface that never learned the key renders nothing at all and is
+   *  indistinguishable from a surface rendering "a member cited this" — which
+   *  is precisely the failure the label exists to prevent. `sufficiency_claim_
+   *  states` took the same shape one field over for the same reason.
+   *
+   *  `machine_work` IS THE PLANE'S OWN ANSWER, not a literal for a surface to
+   *  match. PL-17's words: *a surface that reads the field itself and matches on
+   *  the literal has rebuilt the predicate.* The sentence is the published one,
+   *  so a surface renders `says` and never composes its own. */
+  static #mintLabel(mintedBy) {
+    const state = contentMintState(mintedBy);
+    return { by: mintedBy ?? null, state, machine_work: state === "machine_marked",
+             says: CONTENT_MINT_STATES[state] };
+  }
+
   /** The content row behind an id, with the one sentence a reader needs about
    *  its standing. Deliberately NOT the `content` READ op and not the registry
    *  — those are REC-83's — but the resolution an edge needs to say what it
@@ -12036,7 +12181,7 @@ export class Store extends DurableObject {
          FROM content WHERE content_id=?`, contentId);
     if (!r) return null;
     return { ...r, extent: safeJson(r.extent), chain: safeJson(r.chain), stale: !!r.stale,
-      resolves: true,
+      resolves: true, mint: Store.#mintLabel(r.minted_by),
       says: r.stale
         ? `this passage was cited as it stood under an earlier transcription of the document. `
           + `The document has since been re-read and the text may have changed, so what the `
@@ -12209,6 +12354,13 @@ export class Store extends DurableObject {
       extent_kind: r.extent_kind, extent, ref: r.ref, chain,
       derivation_cap: r.derivation_cap, page_count: r.page_count,
       minted_by: r.minted_by, at: r.at, stale: !!r.stale,
+      /* SK-7 / 14.4's 5.7: WHO MARKED THIS PASSAGE CITABLE, in words rather
+         than in the control plane's identity grammar. `minted_by` above is kept
+         byte-identical beside it — the label does not replace the field, it
+         says what the field MEANS, which is the only shape that lets a surface
+         stop rendering `class:ai` at a member without the record losing which
+         credential it was. */
+      mint: Store.#mintLabel(r.minted_by),
       transcription, connection,
       /* THE CAPTURE AXIS IS NOT COPIED HERE, and that is a decision with a
          reason. It is document-grain today (`earned.capture` is keyed by bundle
@@ -30511,6 +30663,18 @@ export class Store extends DurableObject {
         content: () => this.contentRead({ id: url.searchParams.get("id"),
                                           viewer: url.searchParams.get("viewer"),
                                           extras: [...url.searchParams.keys()] }),
+        /* SK-7 / framework Part II 14.4 (Bob's 5.7): MARKING A PASSAGE CITABLE.
+           `mintedBy` is taken from the QUERY STRING and never from the body,
+           and that is the whole fence at this door: the control plane stamps it
+           there from the credential that authenticated and a caller-supplied
+           one in the body is not read at all, so a machine credential cannot
+           post a member's name into the field that says who did this. GATED on
+           `viewer` like every write that names a bundle. */
+        contentmint: () => this.contentMint({ bundleId: (body || {}).bundleId,
+                                              extent: (body || {}).extent,
+                                              at: (body || {}).at || null,
+                                              mintedBy: url.searchParams.get("mintedBy"),
+                                              viewer: url.searchParams.get("viewer") }),
         reusedparts: () => this.reusedParts(url.searchParams.get("id")),
         recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
         reuseverdicts: () => this.reuseVerdicts({ bundleId: url.searchParams.get("bundle"),
@@ -30543,7 +30707,17 @@ export class Store extends DurableObject {
             : { page: Number(url.searchParams.get("page")),
                 rect: safeJson(url.searchParams.get("rect")) },
           url.searchParams.get("viewer"), url.searchParams.get("limit")),
-        attesttext: () => this.attestText(body || {}),
+        /* SK-7: THE ATTESTOR COMES FROM THE QUERY STRING, WHERE THE CONTROL
+           PLANE STAMPED IT, AND THE BODY'S `member` IS NOT READ AT ALL. Before
+           this the attestor was taken from the body, so C-35.10 refused only a
+           caller that volunteered a machine-shaped name — measured through a
+           real minted `ai` credential, which attested in a member's name and had
+           the act LAND. `contentmint` beside it takes its minter the same way
+           and for the same reason. An absent stamp reaches `checkAttestation`
+           as an absent member and is refused there (*unattributed is not
+           attested*), so a route that skipped the stamp fails closed. */
+        attesttext: () => this.attestText({ ...(body || {}),
+                                            member: url.searchParams.get("attestor") }),
         /* CPDF-13 / D-183 / D-253 — THE CALIBRATION SURFACE. Five ops, and the
            split is the item's doctrine expressed as a capability boundary, the
            way CPDF-10's three-way split above is.

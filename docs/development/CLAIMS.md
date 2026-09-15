@@ -6203,3 +6203,116 @@ entities or `at` would become a second author of it.
 until this runs:** a NULL `page_count` on a pre-CAP-9 capture means the page set was
 undetermined at mint and is STATED — never defaulted to a number, never a zero, and
 never a refusal.
+
+## CLAIM 2026-09-14 SKILL+RECORD (SK-7 — the machine-minted content row: a machine credential MINTS, is LABELLED on every surface, may NEVER attest, and enters a finding only when a member cites it)
+
+Session: SK-7 worker, spawned by CONDUCT #11, Opus 5, worktree-isolated.
+Worktree: `.claude/worktrees/agent-ad8d378ba5fed22ee` · branch `worktree-agent-ad8d378ba5fed22ee`.
+Cut from `origin/main` at `3f92e5c`; HEAD confirmed equal to `origin/main` before any edit.
+Design: `BIO_Content_Framework_v0_10.md` Part II §14.4 (Bob's 5.7 — *"The assistant may mark
+passages as citable on its own, every such row labelled as machine work, never attested by it,
+and part of a finding only when a member cites it"*) and §14.2; DEC-24 rule 3; IC-83
+(`minted_by` is already a column); C-35.10 (a machine may never attest); FL-6's `ai` class.
+
+**SCOPED ON SPAWN, and the scoping is CONDUCT #11's own caveat discharged.** The row said
+*"if the assistant pilot's EXTRACT scope is still unbuilt, say so on spawn and scope the item
+to what exists"*. It is unbuilt — see the `DESIGN GAP` in this worker's report and the
+release line below. **Only the PLANE half is built here.** The assistant-side act (a pilot
+EXTRACT run calling the mint) is NOT built and is not invented.
+
+Paths claimed BY REGION, never whole files:
+
+- **`bio-plane/checks/bio-checks.mjs`** — ONE new block: the MINT-PROVENANCE vocabulary
+  (`CONTENT_MINT_STATES`, `contentMintState`, `CONTENT_MINTED_BY_PLANE`), placed beside
+  `SUFFICIENCY_CLAIM_STATES`, whose shape it takes exactly. NOT `CONTENT_EXTENT_CHECKS`
+  (REC-82's, landed), NOT C-2.8 / C-25.10 (REC-84 is live on both), NOT `checkAttestation`'s
+  catalogue rows — C-35.10 is UNCHANGED and asserted unchanged.
+- **`bio-plane/src/store.mjs`** — BY REGION: (a) `mintContent`'s `mintedBy` default, so the
+  literal `"plane"` comes from the catalogue rather than from three typings; (b) the LABEL on
+  the content-row projections — `#contentStanding` (which feeds `op=content` and
+  `earned.content`), `contentRow`, and `promote`'s `content[]` array; (c) ONE new store
+  function `contentMint(…)` in REC-82's content region. **NOT** the extent arms (`covers`,
+  `#contentTarget`'s other kinds) — REC-85 is live on those; **NOT** `checkInquiryBasis`,
+  **NOT** `basisVersionFindings`, **NOT** the version-leg writer — REC-84 is live on all three.
+- **`bio-plane/src/index.mjs`** — (a) ONE new OPS row (`contentmint`) with its comment, its
+  `NEEDS` entry and its server-side minter stamp; (b) ONE new line in the authorship-stamp
+  block that stamps `attesttext`'s attestor SERVER-SIDE. **(b) was not foreseen when this
+  claim was written and is named rather than taken silently** — it is this item's own fence,
+  and it was added only after the hole was MEASURED through a real minted `ai` credential
+  (probe recorded in the report). FW-17's one line and CAP-8's region are untouched.
+- **`bio-plane/src/affordances.mjs`** — ONE `NON_ACTS`-or-`RUNGS` row for `contentmint` if the
+  totality guard demands one, and ONE `VOCABULARIES` entry publishing the mint-state map so a
+  surface never invents its own wording for it (PL-17 / `sufficiency_claim_states`' precedent
+  exactly). Nothing else in the file.
+- **`bio-plane/test/content-machine-mint.test.mjs`** (NEW) and **`bio-plane/test/nc-sk7.mjs`**
+  (NEW, the control driver — deliberately not a `.test.mjs`, because it edits real sources).
+- **CORRECTED, NEVER EXEMPTED** — the suites whose attest fixtures drove the hole:
+  `bio-plane/test/textchain.test.mjs`, `bio-plane/test/ocr-member-e2e.test.mjs`,
+  `bio-plane/test/content-extent.test.mjs`, `bio-plane/test/content-reads.test.mjs`. Each
+  correction carries a comment saying why the old assertion was wrong.
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` ONLY, ONE key set, from this
+  worker's own post-commit print.
+- **`docs/architecture/BIO_Content_Framework_v0_10.md`** — the §14.5 and §15 status ROWS for
+  the AI EXTRACT role and the content-extent primitive, and the front matter moved in the SAME
+  commit (the accepts-when's own condition). No body sentence of §14.4 is edited: the ruling
+  is Bob's and this landing does not restate it.
+- **`docs/development/INTERFACE-CHANGES.md`** — ONE new IC row for the two shape changes
+  (the `mint` block on every content-row projection; `attesttext`'s attestor now
+  server-stamped), with MEASURED consumer impact. CONDUCT takes the version bump and the
+  RESOLUTION.
+- **`docs/development/DEBT.md`** and **`docs/development/MEASUREMENTS.md`** — appends only.
+- **`docs/development/CLAIMS.md`** — this block.
+
+NOT CLAIMED, and each for a stated reason: `docs/development/QUEUE.md` (CONDUCT's, sole
+writer — the row flip and the `landed:` line are CONDUCT's acts and are named in the report);
+`civicos-ui/**` (MEASURED: no surface in `civicos-ui/app.html` renders a content row at all —
+`op=content` landed with REC-83 and has no consumer — so there is no surface label to add and
+none is invented); `newgroup/**`; anything under `agent-worker/`.
+
+### CLAIM ADDENDUM 2026-09-14 SKILL+RECORD (SK-7 — **THE RESPAWN CARRIES THIS CLAIM FORWARD UNDER A NEW AGENT ID, AND ONE OF THE NOT-CLAIMED LINES ABOVE HAS BEEN FALSIFIED BY A LANDING**)
+
+**The claim above was never released.** Its holder — the first SK-7 worker, worktree
+`agent-ad8d378ba5fed22ee` — died mid-item on the operator's session rate limit, leaving one commit
+`c2760e0`, a clean tree and no report. CONDUCT #11 returned the row to the queue and respawned it.
+This addendum is the carry-forward: **the block above is now held by the SK-7 worker (respawn),
+worktree `.claude/worktrees/agent-aaa6f95fc9e50db99`, branch `worktree-agent-aaa6f95fc9e50db99`,**
+and it is released at the foot of this block by that worker and not by its author. Every path the
+block names is still claimed on the same terms; nothing is re-scoped and nothing is dropped.
+
+**Cut and merge.** This worktree was a fresh checkout of `origin/main` at `173bc66`; `origin/main`
+moved to `f38af22` (docs only, the cohort's `running` flips) during the run and both are ancestors
+of what is committed. `origin/main` was merged INTO the dead worker's branch rather than the commit
+being cherry-picked, deliberately: `c2760e0`'s message is the durable record of the attest-fence
+measurement, and a cherry-pick would have re-authored it under a second worker's name and date.
+Seven files conflicted and each resolution is stated in the merge commit.
+
+**THREE PATHS ARE ADDED TO THIS CLAIM, and none of them was foreseen when the block above was
+written — because none of them existed, or none of them was reachable, on `3f92e5c`:**
+
+- **`civicos-ui/app.html` — BY SITE, and it directly contradicts the "NOT CLAIMED" line above.**
+  That line's measurement (*no surface renders a content row at all*) was correct when taken and is
+  now FALSE: **UI-61 landed `legReferentHtml`**, which reads a content row's `standing` — the object
+  this item puts the `mint` label on — and renders it to a member. So *labelled everywhere it is
+  shown* acquired a place to be shown. ONE new function (`legMintLabelHtml`) and ONE call site
+  inside `legReferentHtml`'s `head` template. **NOT** `__CATALOG__` (no vocabulary is mirrored here —
+  the sentence is rendered verbatim from the plane, so `check-semantics.mjs` has nothing new to
+  guard), **NOT** `SURFACES`, **NOT** any other marked region, **NOT** the CSS block (it reuses
+  `teach`). No live claim held this file.
+- **`civicos-ui/test/content-extent.test.mjs`** — UI-61's suite, its claim RELEASED: ONE new
+  section §8 APPENDED (nine arms) and ONE import widened to take `CONTENT_MINT_STATES` beside
+  `CONTENT_EXTENT_KINDS` from the catalogue. **No existing arm is edited and the §7 over-strictness
+  digest is untouched and still green.**
+- **`docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md`** — the level-1 home of construct 11,
+  which LANDED (BOB #11) after this claim was written and after `c2760e0` was cut. Four statements
+  in it become false at this landing and are corrected in the same commit per CORPUS-STANDARD §4.1:
+  the roles table's EXTRACT row, the status table's 5.7 row, the Incomplete-sections §7.3 bullet,
+  and — the sharp one — §7.3's sentence *"The fence is unchanged and already in code"*, which was
+  written one day before this item measured that the first clause of that fence did not hold.
+
+**AND ONE PATH THE CLAIM NAMED IS STILL OWED AT THE TIME OF WRITING:**
+`bio-plane/scripts/coverage.mjs`'s `REGISTER_FLOOR`. `c2760e0` never touched it — the dead worker
+added two suites and did not reach the floor. It is moved by this worker in a SECOND commit, from
+the figures a green `--strict` run PRINTED as REPRODUCIBLE with those suites in the commit, which is
+the order that file's own comment block requires and the reason it is a second commit rather than an
+amendment.
+

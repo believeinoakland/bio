@@ -301,6 +301,24 @@ const step = (r, i) => (Array.isArray(r?.text_source) ? r.text_source[i] : null)
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const api = async (q, init) => (await (await mf.dispatchFetch(`http://x/api/?${q}`, init)).json());
+/* SK-7: A SIGNED-IN MEMBER, because attesting is a member act and from this
+   item the plane stamps the attestor from the credential that authenticated
+   rather than reading it out of the body. A machine credential can no longer
+   land an attestation at all, so the suite needs a real session to drive the
+   acts that must SUCCEED — which is what CPDF-10's `SESSION_OPS` entry always
+   said and nothing enforced. Both members here are administrators because
+   Membership Architecture 4.2/4.3 has no ordinary members until two exist. */
+const session = async (memberId, role) => {
+  const add = (await api(`op=memberadd&token=adm-cpdf10`, { method: "POST",
+    body: JSON.stringify({ memberId, cover: `cover for ${memberId}`, role, capabilities: ["contribute"] }) })).result;
+  const en = (await api("op=enroll", { method: "POST",
+    body: JSON.stringify({ invite: add.invite, handle: memberId, password: `${memberId}-passphrase-1` }) })).result;
+  if (!en.ok) throw new Error(`enroll ${memberId}: ${JSON.stringify(en).slice(0, 300)}`);
+  const lg = (await api("op=login", { method: "POST",
+    body: JSON.stringify({ role: `member:${memberId}`, password: `${memberId}-passphrase-1` }) })).result;
+  if (!lg.token) throw new Error(`login ${memberId}: ${JSON.stringify(lg).slice(0, 300)}`);
+  return lg.token;
+};
 const acquire = async (path) => (await api("op=acquire&token=mem-cpdf10", { method: "POST",
   body: JSON.stringify({ locator: "https://oakland.legistar.com" + path, authority: "City Clerk" }) })).document;
 const acquireBare = async (path) => (await (await mfBare.dispatchFetch(
@@ -660,30 +678,68 @@ t("a region the engine itself could barely read yields no text — never a plaus
   belowFloor.reading.found, false);
 
 console.log("\n--- ATTESTATION: A MEMBER ACT, REFUSED TO A MACHINE CREDENTIAL ---");
+/* CORRECTED 2026-09-14 (SK-7), AND THE OLD ASSERTIONS WERE WRONG IN THE
+   DIRECTION THAT MATTERS — recorded rather than exempted.
+   *
+   * Every arm below used to drive `op=attesttext` with the MEMBER_TOKEN MACHINE
+   * CREDENTIAL and name the attestor IN THE BODY. The store read that body
+   * field, so C-35.10 fired only when the caller VOLUNTEERED a machine-shaped
+   * name — which is the one thing a caller wanting to attest never does. The
+   * same machine credential naming `bob` had its attestation LAND, attributed
+   * to bob, who had said nothing; so did a real minted `ai` credential naming a
+   * member, and so did the string `member:ruth`, which is nobody. This suite's
+   * own "a scoped attestation lands" arm was that hole passing as a feature.
+   * SK-7 stamps the attestor SERVER-SIDE from the credential that
+   * authenticated, so the fence is now reached by every machine credential
+   * instead of only by one that incriminates itself.
+   *
+   * WHAT CHANGED IN THE ARMS, each to the thing that is now true:
+   *   - a MACHINE CREDENTIAL is refused whatever it puts in the body, because
+   *     the body is not read. Driven for MEMBER_TOKEN and ADMIN_TOKEN, and the
+   *     refusal names the CLASS it was stamped as.
+   *   - the acts that must LAND run through a SESSION, which is the only route
+   *     that produces a name the store accepts — CPDF-10's own reasoning in
+   *     `SESSION_OPS`, now enforced rather than merely written down.
+   *   - the IMPOSTOR arm is new and is the rule's whole point: a session naming
+   *     somebody else attests as ITSELF. */
+const bobSession = await session("bob", "admin");
+const carlaSession = await session("carla", "admin");
 const attestBody = (extent, member) => ({ method: "POST",
   body: JSON.stringify({ captureSha: ocr.capture.sha256, member, at: NOW, extent }) });
 const machine = await api("op=attesttext&token=mem-cpdf10",
-  attestBody({ kind: "document" }, "token:member"));
-t("a machine stamp is REFUSED at the store", machine.result?.code ?? machine.reason, "TEXT_ATTEST_MACHINE");
-t("naming the credential", /token:member/.test(machine.result?.detail ?? ""), true);
-const classy = await api("op=attesttext&token=mem-cpdf10", attestBody({ kind: "document" }, "class:ai"));
-t("and so is an organisation class stamp", classy.result?.code, "TEXT_ATTEST_MACHINE");
-const nobody = await api("op=attesttext&token=mem-cpdf10", attestBody({ kind: "document" }, ""));
-t("an unattributed attestation is refused — unattributed is not attested", nobody.result?.code, "TEXT_ATTEST_MACHINE");
-const unscoped = await api("op=attesttext&token=mem-cpdf10", attestBody(null, "bob"));
+  attestBody({ kind: "document" }, "bob"));
+t("THE MEMBER_TOKEN MACHINE CREDENTIAL IS REFUSED EVEN WHEN IT NAMES A REAL MEMBER — "
++ "the body is not read, the credential is (SK-7)",
+  machine.result?.code ?? machine.reason, "TEXT_ATTEST_MACHINE");
+t("naming the credential it was stamped as, not the name it asked to borrow",
+  /class:member/.test(machine.result?.detail ?? ""), true);
+const classy = await api("op=attesttext&token=adm-cpdf10", attestBody({ kind: "document" }, "bob"));
+t("and so is the root-of-trust credential — being the root of trust is not being a person",
+  classy.result?.code, "TEXT_ATTEST_MACHINE");
+t("naming ITS class", /class:admin/.test(classy.result?.detail ?? ""), true);
+const unscoped = await api(`op=attesttext&token=${bobSession}`, attestBody(null, "bob"));
 t("an UNSCOPED attestation is refused rather than read as covering everything",
   unscoped.result?.code, "TEXT_ATTEST_EXTENT");
-const badRegion = await api("op=attesttext&token=mem-cpdf10",
+const badRegion = await api(`op=attesttext&token=${bobSession}`,
   attestBody({ kind: "region", source: { kind: "pdf-page", page: 0 } }, "bob"));
 t("a region extent with no rect is refused", badRegion.result?.code, "TEXT_ATTEST_EXTENT");
-const noReading = await api("op=attesttext&token=mem-cpdf10", { method: "POST",
+const noReading = await api(`op=attesttext&token=${bobSession}`, { method: "POST",
   body: JSON.stringify({ captureSha: "0".repeat(64), member: "bob", at: NOW, extent: { kind: "document" } }) });
 t("attesting to a document nobody has read is refused", noReading.result?.reason, "NO_READING");
 
 console.log("\n--- ATTESTATION IS SCOPED TO WHAT WAS ACTUALLY CHECKED ---");
-const ok1 = await api("op=attesttext&token=mem-cpdf10",
-  attestBody({ kind: "region", source: { kind: "pdf-page", ref: "p0", page: 0, rect: [72, 600, 540, 720] } }, "bob"));
+/* THROUGH A SESSION FROM HERE DOWN (SK-7): a machine credential can no longer
+   land one at all, which is the rule CPDF-10 wrote and nothing enforced. */
+const ok1 = await api(`op=attesttext&token=${bobSession}`,
+  attestBody({ kind: "region", source: { kind: "pdf-page", ref: "p0", page: 0, rect: [72, 600, 540, 720] } }, "someone-else"));
 t("a scoped attestation lands", ok1.result?.ok, true);
+/* THE IMPOSTOR ARM (SK-7), and it is new because until this item it would have
+   FAILED: the body above names `someone-else` and the record carries the
+   SIGNED-IN member. A caller who could name the attestor could put a stranger's
+   name on testimony the record keeps for as long as it lasts — the queue's own
+   `member` stamp has refused exactly that since REC-21, one field over. */
+t("AND IT IS ATTRIBUTED TO THE SIGNED-IN MEMBER, never to the name in the body",
+  ok1.result?.attestor, "bob");
 t("and says what it does NOT cover", /does not inherit it/.test(ok1.result?.why ?? ""), true);
 const inside = (await api(`op=textattest&token=mem-cpdf10&sha256=${ocr.capture.sha256}&page=0&rect=${encodeURIComponent("[100,650,200,700]")}`)).result;
 t("a leg INSIDE the attested region takes the attested ceiling",
@@ -707,7 +763,7 @@ console.log("\n--- THE BOUNDS: BOTH READS PUBLISH `limit` AND `truncated` (REC-6
    second fixture for one fact.
    THE BITE IS 1 AND THERE ARE 2 OF EACH, so `truncated` is a MEASUREMENT of
    something the walk actually cut, not a flag read off an empty list. */
-const ok2 = await api("op=attesttext&token=mem-cpdf10",
+const ok2 = await api(`op=attesttext&token=${carlaSession}`,
   attestBody({ kind: "page", page: 0 }, "carla"));
 t("FIXTURE ARMS THE TRAP: a second attestation exists, so a bite of 1 has something to cut",
   ok2.result?.ok, true);
