@@ -787,9 +787,15 @@ const REGISTER_FLOOR = {
      new suite, so `classified` and `corpus` are UNMOVED and none is owed. Nothing FELL.
      ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
      `FLEET_FLOOR`, which is the documented state; `FLEET_FLOOR` is unmoved. */
-  arms: 975,
-  classified: 180,
-  corpus: 181,
+  /* MOVED 2026-09-14 by CONDUCT #11 at REC-83's integration (975 -> 981 · 180 -> 181 · 181 -> 182):
+     the MERGED run's own print read `arms 981/975 · classified 181/180 · corpus (suites read)
+     182/181 · GREW by 6 arm(s)` - REC-83's `content-reads.test.mjs` (six declared arms, one new
+     suite) on top of M0-28's 975. The branch's own block (973/180/181, a tree without M0-30 and
+     M0-28) was dropped at the merge and declared; this is the re-read the loop promises. One key
+     set, grepped after writing. Nothing FELL. FLEET_FLOOR unmoved. */
+  arms: 981,
+  classified: 181,
+  corpus: 182,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

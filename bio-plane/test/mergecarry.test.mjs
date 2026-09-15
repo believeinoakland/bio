@@ -391,8 +391,12 @@ section("the historical register, graded in BOTH directions over the REAL corpus
      on origin/main, measured on the merged tree (fleetbundles 87/87: the surviving manifest
      is byte-identical to a fresh build), and registered with its why. The pin stays EXACT
      rather than relaxed to a floor, so the next row has to move it in the open too. */
-  t("...and the register is the FOUR the sweeps found, not a longer list",
-    KNOWN_HISTORICAL_DROPS.length, 4);
+  /* CORRECTED 2026-09-14 (CONDUCT #11), 4 -> 5, never exempted: the fifth row (cc8187d, REC-83's
+     merge) was found by THIS arm going red on the merged tree - a declared drop whose
+     `Dropped-from-branch:` line sat outside git's trailer block and so counted as undeclared,
+     pushed before the message could be amended. Registered with its why; the pin stays EXACT. */
+  t("...and the register is the FIVE the sweeps found, not a longer list",
+    KNOWN_HISTORICAL_DROPS.length, 5);
   /* THE FALSE-POSITIVE CLAIM, AS A NUMBER RATHER THAN A PROMISE. Three findings over the
      whole of main's history is what earns this check its place in the gate; a check that
      cried wolf on a tenth of merges would be switched off within a week. */
