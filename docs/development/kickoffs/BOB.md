@@ -235,6 +235,21 @@ quantity, name the producer of each side, and confirm from the CODE that both em
 the same by it, before a design rests a decision on their comparison.** A same-named field is
 the likeliest place this fails, because the name is what makes it look already checked.
 
+**8. RULES 5 AND 7 ARE WORLD-CLAIM CHECKS, AND HALF OF WHAT THIS SESSION GETS WRONG IS NOT A
+WORLD CLAIM** (2026-09-15, with CONDUCT #11, whose `kickoffs/CONDUCT.md` carries the general
+form). Both rules above send you to the artifact — grep the code the row names, confirm both
+producers emit the quantity — and a session that reads only those will conclude that checking
+IS measuring. It is not. **A claim about the WORLD is corrected by going to the artifact; a
+claim about a RULE is corrected by reading it against the rule it rests on**, and no
+measurement will ever flag a bad inference. Two of this session's own best corrections had no
+artifact to go to: an inference clause that read an absence as a definite value (caught by
+recognising D-129's shape in it), and an attribution that would have frozen a revisable
+decision as doctrine (caught by reading one phrase against a convention). **CONDUCT #11's tell
+is the usable one: ask what you would DO if you disagreed.** *Go look* means a world claim.
+*Argue* means a rule claim, and going to look will produce a number that settles nothing. The
+trap runs both ways — re-reading a stale debt row confirms it every time, and re-running a
+battery never sees a rule whose two sides cannot disagree.
+
 **Report what was DONE and what was DECIDED. Never report tactical STATE.** An
 outstanding item, a dirty tree, a stale claim, a warning nobody has cleared: fix it,
 or route it through the channel that owns it, or leave it unsaid. Surfacing it to Bob
