@@ -20,7 +20,11 @@
  * `tools/plancheck.mjs` -> the "mechanism is in the loop" arm FAILS; (5) delete the
  * `asOfAll.length > 1` push from `checkFile` -> the "a Status carrying two `as of` dates is
  * refused" arm FAILS, and only that one, because a Status judged on a date its own editor
- * never sees is judged on nothing.
+ * never sees is judged on nothing. Arm (5) and its over-strictness twins are re-run in ONE
+ * STEP with `node test/nc-m028.mjs` from `bio-plane/` (M0-28): six arms including the
+ * baseline, each armed ALONE against a REAL governed document with every other defence open,
+ * anchors validated before anything is armed, restored by cp-back from uniquely-named
+ * pristine copies verified by sha256 AND `cmp` AND a floored byte count.
  *
  * NEGATIVE CONTROL, THE OTHER DIRECTION — the checker armed against a REAL retrofitted
  * document rather than a fixture. Run 2026-09-14 by M0-26 in worktree

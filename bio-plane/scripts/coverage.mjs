@@ -779,7 +779,15 @@ const REGISTER_FLOOR = {
      — this item adds no fleet member and no fleet suite. */
   /* MOVED 2026-09-14 by CONDUCT #10 at COFF-10's merge (967 -> 972 · 179 -> 180 · 180 -> 181): the merged run's own print read `arms 972/967 · classified 180/179 · corpus 181/180`; the +5 arms and +1 suite are COFF-10's `formats-odf.test.mjs`, which set 964 on a tree without REC-82's +8. One key set, read from the print after the commit (D-238). */
   /* MOVED 2026-09-14 by CONDUCT #10 at M0-30's merge (972 -> 974): the merged run's own print read `arms 974/972`; the +2 is M0-30's planning-hygiene §4.7 declaration. One key set, read from the print after the commit (D-238). */
-  arms: 974,
+  /* MOVED 2026-09-14 by M0-28 (974 -> 975): this item's own green `--strict` run, taken AFTER
+     its commit `bdfcb86`, PRINTED `REGISTER FLOOR  arms 975/974 · classified 180/180 · corpus
+     (suites read) 181/181 · GREW by 1 arm(s)` — read from the print, never incremented by hand.
+     The cause is ONE new arm in an EXISTING suite: `corpuscheck.test.mjs`'s declaration gains
+     entry (5), the `asOfAll.length > 1` push disabled in `checkFile`, run and as declared. No
+     new suite, so `classified` and `corpus` are UNMOVED and none is owed. Nothing FELL.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
+     `FLEET_FLOOR`, which is the documented state; `FLEET_FLOOR` is unmoved. */
+  arms: 975,
   classified: 180,
   corpus: 181,
 };

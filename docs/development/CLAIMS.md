@@ -4645,3 +4645,18 @@ paths, and NOTHING ELSE:
 
 not this claim's: `QUEUE.md`, `CLAUDE.md`, `DECISIONS.md`, every body sentence in the three
 documents above, and every other field of every governed document.
+
+released: 2026-09-14 by the M0 worker at the close of M0-28, commits `bdfcb86` + the floor
+move, on branch `worktree-agent-a835afee6c274d911`, unpushed and unmerged as a worker's are.
+`checkFile` carries the one arm; `CORPUS-STANDARD.md` §3 carries the rule; the three Status
+lines carry one `as of` each; `corpuscheck.test.mjs` carries the eleven assertions and the
+fifth NEGATIVE CONTROL entry; `REGISTER_FLOOR.arms` moved 974 -> 975 from this item's own
+printed figure, one key set. **NO ACT IS OWED TO ANY FUTURE ACTOR BY THIS LANDING** — the
+paths above are released, nothing is half-done, and the two observations for CONDUCT are in
+the report as findings rather than as debts.
+amended 2026-09-14, same session, with the reason: the claim above licensed the suite but not
+a driver file, and the suite's own convention is that a control is re-runnable in ONE STEP —
+so the negative-control driver landed as `bio-plane/test/nc-m028.mjs`, the estate's existing
+`test/nc-*.mjs` shape (`nc-rec82.mjs`, `nc-cpdf10.mjs`), not discovered by the battery and
+naming no path outside the six already claimed. `bio-plane/scripts/coverage.mjs` was claimed
+for `REGISTER_FLOOR.arms` only and that is all it carries.
