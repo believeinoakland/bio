@@ -26,7 +26,7 @@
    (f) `fence` — neuter the viewer gate on the per-capture read. Declared MUST FAIL: section D's
        withholding arm. Declared MUST NOT FAIL: everything else, so the arm takes the fence and
        nothing else.
-   (g) `cause` — ADDED 2026-09-15 after Bob's ruling of the same day (`9954a9c`, design §5.1)
+   (g) `cause` — ADDED 2026-09-15 after the BOB #11 session's correction of the same day (`9954a9c`, design §5.1)
        landed on `origin/main` mid-run and this item's first draft was found to violate it. Make
        a missing content-level row read as never-extracted WHATEVER its cause. Declared MUST
        FAIL: §5.1's order arm and the weakest-default arm. This is the defect the design was
@@ -307,7 +307,7 @@ t("B11: and with NO page count it stays `partial` and SAYS WHY — whether those
            return [o.rows.map((r) => r.state), /undetermined/.test(o.rows[1].detail)]; })(),
   [["partial", "partial"], true]);
 
-/* CORRECTED 2026-09-15 AGAINST BOB'S RULING OF THE SAME DAY (`9954a9c`, design
+/* CORRECTED 2026-09-15 AGAINST THE BOB #11 SESSION'S CORRECTION OF THE SAME DAY (`9954a9c`, design
    §5.1), WHICH LANDED ON `origin/main` WHILE THIS ITEM WAS RUNNING. The arm as
    first written asserted that NO OBSERVATION means the never-extracted member,
    full stop — which is the defect the design was written to prevent, arriving

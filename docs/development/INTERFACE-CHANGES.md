@@ -7723,3 +7723,37 @@ pristine `6e88e35` before any edit); five negative-control arms, each ALONE, ALL
 every restore byte-identical by sha256 AND cmp, and ZERO held-open assertions also broken —
 which this item's harness CHECKS rather than describes, after REC-83's own run found an arm
 that broke its declared held-open half.
+
+### RESOLUTION — 2026-09-15, CONDUCT #11 · ACCEPTED, I3 15.4.0 → **16.0.0**, BREAKING
+
+**MAJOR on IC-25's settled rule: a refusal where none stood before is a break WHATEVER the
+measured impact.** The measured impact here is ZERO legs on the live instance, and the zero is
+recorded as evidence rather than used as an argument for a smaller bump.
+
+**RESPONSES, and how they were obtained, because the protocol asks for them and three of the
+four areas are dormant.** CONDUCT answers-for CAPTURE, SKILL and FRAMEWORK in writing under the
+dormant-owner rule; UI and DIST are live sessions and neither consumes this shape — the census
+below is what that claim rests on, and it was measured rather than assumed.
+
+- **The consumer census.** `earned.capture[].grade` is read by the plane's own checks and by the
+  strength reads. A read-only census against the live store found **31 bundles, one inquiry with
+  no basis block, and ZERO captures carrying a transcription chain anywhere**, so no member sees
+  a different answer today. **The census SELF-CHECKS its parser against a synthetic block and
+  EXITS rather than printing a zero** — a zero from an instrument that cannot tell "none" from
+  "I failed to look" is the unearned absence this project spent 2026-09-15 learning to refuse.
+- **It independently confirms CAP-9's finding** that the record holds 88 captured documents and
+  has read none of them. Two items measuring the same fact by different routes is why it is
+  stated here as a fact about the instance rather than as either item's claim.
+
+**WHAT THIS RESOLUTION DOES NOT CLAIM, and it is the half a reader would otherwise infer
+wrongly.** The ordinary strength walk (`op=inquirystrength`) reads the STORED grade and never
+asks the registry, so after this change the two reads can DISAGREE where before they agreed —
+consistently wrong, both answering the overclaim. **The net is a strict improvement plus a new
+drift**, filed as D-373 and rowed as REC-105. Publishing only the improvement would be the
+overclaim this interface change exists to close.
+
+**A PIN IN THIS LEDGER'S OWN §7 WAS MOVED AND NEVER EXEMPTED:** its fixture is a chain measured
+at one grade and the pin asserted the leg earned a stronger one, under a heading calling that
+"the pre-item answer". **The pre-item answer WAS the overclaim.** The over-strictness half beside
+it is now stronger rather than weaker — a publisher-typed document hashes identically on a
+pristine checkout and on this tree, which is a cross-checkout identity and not a self-comparison.

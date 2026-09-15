@@ -252,7 +252,7 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
             site: this file puts judged rows in and holds no second opinion about
             what a reading means. */
          CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED,
-         /* Bob's ruling of 2026-09-15 (`9954a9c`, design section 5.1): a subject
+         /* BOB #11's correction of 2026-09-15 (`9954a9c`, design section 5.1): a subject
             with no row has THREE causes and they are different facts. The
             vocabulary lives beside the states it qualifies. */
          MISSING_ROW_CAUSES,
@@ -28721,7 +28721,14 @@ export class Store extends DurableObject {
   /** REC-94 — WHICH OF SECTION 5.1's THREE CAUSES EXPLAINS A MISSING
    *  CONTENT-LEVEL ROW, taken IN ORDER and never concluded from the first.
    *
-   *  BOB'S RULING OF 2026-09-15 (`9954a9c`), applied at the content level.
+   *  BOB #11's CORRECTION OF 2026-09-15 (`9954a9c`), applied at the content level.
+   *  **THE ATTRIBUTION MATTERS AND IS NOT A FORMALITY.** In this corpus `RULED by Bob`
+   *  means DOCTRINE no session may revisit; a session's own name means MECHANISM a later
+   *  session MAY revisit on evidence. `9954a9c` is the BOB #11 SESSION's commit, correcting
+   *  its own design's inference rule under Bob's standing delegation — mechanism, not
+   *  doctrine. A mechanism decision wearing doctrine's attribution becomes UNREVISABLE IN
+   *  PRACTICE: the next reader works around the rule instead of correcting it, which is the
+   *  more expensive direction. Corrected 2026-09-15 by CONDUCT #11 on BOB #11's own routing.
    *  *A subject with no row has three possible causes and they are different
    *  facts.* The document level's pre-log evidence is `captured_locators`; the
    *  content level's is `readings`, which holds what a capture's extraction

@@ -238,8 +238,8 @@ export const CONTENT_AXIS_STATES = {
  *  for the same reason the four are: a later item must not re-spell it. */
 export const CONTENT_AXIS_UNDETERMINED = "undetermined";
 
-/* REC-94, CORRECTED 2026-09-15 AGAINST BOB'S RULING OF THE SAME DAY (commit
-   `9954a9c`, `OBSERVATION-LOG-DESIGN.md` section 5.1), WHICH LANDED ON
+/* REC-94, CORRECTED 2026-09-15 AGAINST THE BOB #11 SESSION'S CORRECTION OF THE
+   SAME DAY (commit `9954a9c`, `OBSERVATION-LOG-DESIGN.md` section 5.1), WHICH LANDED ON
    `origin/main` WHILE THIS ITEM WAS RUNNING AND WHICH THIS ITEM'S FIRST DRAFT
    VIOLATED.
 
@@ -247,7 +247,7 @@ export const CONTENT_AXIS_UNDETERMINED = "undetermined";
    facts*, so a reader takes them IN ORDER rather than concluding the first.
    The first draft of this item read a capture with no content-level row as
    never-extracted, full stop -- which is the defect the design was written to
-   prevent, arriving one level below where Bob found it: **an absence that took
+   prevent, arriving one level below where the BOB session found it: **an absence that took
    no work to produce, reported as a fact about the world.** Every capture
    promoted before this writer existed has no row and every one of them was
    read.

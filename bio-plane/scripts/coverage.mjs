@@ -925,9 +925,17 @@ const REGISTER_FLOOR = {
      from a branch's. REC-90's own branch figure was 1066, taken correctly on its own tree and
      already untrue of `origin/main` before the merge began — the conflict on this file was
      resolved to main's value as a placeholder and re-read here. ONE KEY SET, grepped. */
-  arms: 1082,
-  classified: 195,
-  corpus: 196,
+  /* MOVED 1082 -> 1087 · 195 -> 196 · 196 -> 197 at REC-88's INTEGRATION, 2026-09-15 by
+     CONDUCT #11, FROM THE MERGED RUN'S OWN POST-COMMIT PRINT — `arms 1087/1082 · classified
+     196/195 · corpus (suites read) 197/196 · GREW by 5 arm(s)`. THIRD move of the day, same
+     rule each time (D-238), and the day is the argument for the rule: eight branches landed
+     and four of them had honestly moved this figure on their own trees — 1065, 1066, 1068 and
+     this one — every reading correct where it was taken and not one of them true of the
+     result. The merged print is the only figure that is ever true of the merged tree. ONE
+     KEY SET, grepped before writing. */
+  arms: 1087,
+  classified: 196,
+  corpus: 197,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
