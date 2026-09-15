@@ -6713,7 +6713,7 @@ what is needed: **one row in `MODES`, `extract: { deployed: false, does: … }`*
 what it is NOT: it is not a request to build a model loop, and nothing here is blocked on it. The
   plane half is driven end to end through the ops with a real minted `ai` credential, which is the
   same maturity `check` has (VF-4 has never run live either).
-released:
+released: 2026-09-14 by FLEET (the owning area), picked up and LANDED as `3a9523b` + the floor-move commit beside it — verbatim to "what is needed": `extract: { deployed: false, does: … §7.3 }` in `MODES`, `DEPLOYMENT_SEQUENCE.order` moved in the SAME commit (ARM B3/B4 GREEN with three modes in both rosters), the gate's `why` derived from the table so "not deployed yet" and "no such mode" are two stated facts, and sequencing's arm-3 anchor moved so it still arms something. E1/E2 (both directions of the table↔record pairing) AS DECLARED: harness 217/4 + seq 26/1 · harness 217/4 + seq 25/2; baseline 221/0 · 27/0. Gates GREEN class FULL (200/201 · 12,395; UI green; plancheck 0/0); `--strict` exit 0 unpiped post-commit, provenance 209/209. NOT deployed, as you asked and as §7.3(7) requires; flipping it is a separate act nobody has taken.
 ## CLAIM 2026-09-14 CAPTURE (CAP-12 — the container extents I2 computes, persisted onto the reading at `op=acquire`)
 
 Session: CAPTURE worker, Opus 5, worktree-isolated, spawned by CONDUCT #11 after
@@ -7664,3 +7664,32 @@ that FL-10's guard exists to refuse.**
 `origin/main` since `0587e77`, and `QUEUE.md`'s `### SK-8` row carries no mid-run correction. So
 BOB.md's new rule 6 (*a correction to a design does not reach a running worker; it is owed at
 integration*) has **nothing owed against this row**, checked rather than assumed.
+
+## CLAIM 2026-09-14 FLEET (SK-8's DELEGATION picked up — the `extract` row enters the deployment gate, `deployed: false`, and the record moves with the table in the same commit)
+session: FLEET area session (worktree `bio-worktrees/FLEET`, branch `fleet-session`)
+opened: 2026-09-14
+authority: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 (the runtime is the RUN;
+  point 7's provisional NO on standing EXTRACT — which is why the row lands NOT deployed) and the
+  delegation above at line ~6686 (SK-8 → FLEET), whose "what is needed" this claim executes verbatim.
+paths:
+  - `agent-worker/src/harness.mjs` — the `MODES` table (ONE row appended, `extract`, `deployed: false`,
+    `does` naming §7.3) and the `gate-mode` branch's `why` ONLY, which stops hardcoding a two-mode
+    story and derives from the table, so a known-but-undeployed mode and an unknown word are stated
+    as the DIFFERENT facts they are. **NOT** the table's edges, **NOT** any other row, **NOT** the bound
+    (`mode-not-deployed` stays the plane's word for both).
+  - `bio-plane/src/skilldoctrine.mjs` — `DEPLOYMENT_SEQUENCE.order` ONLY (`extract` appended at the
+    end: index 0 unchanged, every later index still not deployed). SKILL's file, edited under the
+    licensed exception — the delegation asks for the record to move in the SAME commit as the table,
+    and SK-4's ARM B3 holds the two as one set in both directions; SK-7 and SK-8 both RELEASED.
+  - `bio-plane/test/skillsequencing.control.mjs` — arm 3's `find` anchor ONLY (it is the exact
+    two-mode literal; a replace that matches nothing there is a silent no-op, not a red).
+  - `bio-plane/test/skillsequencing.test.mjs` — the NC DECLARATION's arm (4) wording ONLY (a "third"
+    entry becomes a fourth); no assertion changes — B3/B4 are designed to go green once recorded.
+  - `agent-worker/test/harness.test.mjs` — A6 gains the extract arms; the NC declaration gains E1–E3.
+  - `agent-worker/test/harness.control.mjs` — APPENDED arms E1/E2 only.
+  - `agent-worker/dist/*` — REBUILT (the FL-9 guard demands it the moment `src` moves).
+  **NOT** `bio-plane/src/extractrun.mjs`, **NOT** `store.mjs`/`index.mjs`/`schema.mjs` (four live
+  RECORD/CAPTURE workers hold regions there), **NOT** `docs/development/QUEUE.md`.
+what this is NOT: it does not deploy extract. Flipping `deployed` is a separate reviewed act that
+  §7.3(7) leaves open; nothing here is that act.
+released: 2026-09-14, same turn — landed `3a9523b` (the change) + the floor-move commit; evidence on the delegation's own `released:` line above (SK-8 → FLEET), which this claim executed. FLEET_FLOOR.arms 73→76 moved to the post-commit printed figure (E1/E2/E3 are fleet-side arms). Both bundles rebuilt; fleetbundles GREEN over three members.

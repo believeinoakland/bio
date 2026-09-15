@@ -14,6 +14,21 @@ var MODES = {
   investigate: {
     deployed: false,
     does: "investigate fresh \u2014 enabled only after CHECK's first live run is verified (VF-5/SK-4)"
+  },
+  /* THE EXTRACT ROW, landed 2026-09-14 on SK-8's DELEGATION and NOT deployed.
+     SK-8 built the plane half — `op=extractpropose` inside DEC-62's run, under
+     the `mints` bound — and measured that nothing could DRIVE such a run,
+     because this gate refused the word as unknown. The row's existence is what
+     lets the refusal say "not deployed yet" instead of "no such mode", which
+     are different facts. `deployed: false` is the honest state and it costs
+     nothing: §7.3 point 7 leaves "may a project stand an EXTRACT run
+     unattended" OPEN under a provisional NO, and a deployed extract mode is the
+     first thing that question would bite on. Flipping this flag is a separate
+     act — an EDIT here under review, never a request parameter — and it is not
+     the act that added the row. */
+  extract: {
+    deployed: false,
+    does: "propose citable passages and readings over a SUBJECT a member named, under the run's `mints` bound, never attesting \u2014 \xA77.3 of docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md; not yet deployed, and a standing EXTRACT run is provisionally NO (\xA77.3 point 7)"
   }
 };
 var BUDGET_BOUNDS = ["fetches", "subsessions", "wallclock"];
@@ -203,13 +218,18 @@ function nextStep(state) {
   const row = CONTROL_FLOW[at];
   if (!row) return { step: "close", why: `'${at}' is not a row in this table`, bound: "completed" };
   if (at === "gate-mode") {
-    const mode = MODES[String(s.mode || "")];
-    if (!mode || !mode.deployed)
+    const key = String(s.mode || "");
+    const mode = MODES[key];
+    if (!mode || !mode.deployed) {
+      const deployed = Object.entries(MODES).filter(([, m]) => m.deployed).map(([k]) => k);
+      const waiting = Object.entries(MODES).filter(([, m]) => !m.deployed).map(([k]) => k);
+      const which = !mode ? `mode '${key || "(none)"}' is not deployed \u2014 it is no mode this table knows at all (the table holds: ${Object.keys(MODES).join(", ")})` : `mode '${key}' is not deployed yet \u2014 it is a row in this table (${mode.does}), and enabling it is an EDIT to this file under review, never a request parameter`;
       return {
         step: "close",
         bound: "mode-not-deployed",
-        why: `mode '${String(s.mode || "(none)")}' is not deployed. CHECK is the first deployed mode (\xA72); investigate-fresh enables only after CHECK's first live run is verified (VF-5/SK-4). This gate is a row in the control-flow table and never a sentence in the skill.`
+        why: `${which}. CHECK is the first deployed mode (\xA72); deployed now: ${deployed.join(", ")}; not yet: ${waiting.join(", ")}. investigate-fresh enables only after CHECK's first live run is verified (VF-5/SK-4). This gate is a row in the control-flow table and never a sentence in the skill.`
       };
+    }
     return { step: "resume", why: "the mode is deployed; read this run's own log before doing anything else" };
   }
   const stopped = stopBecause(s);

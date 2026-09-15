@@ -1062,7 +1062,18 @@ const FLEET_FLOOR = {
      the last eight moves of this key were sweeping up somebody else's slack and
      a reader is entitled to know which kind this one is. **ONE `arms:` KEY IN
      THIS TABLE, grepped after writing.** */
-  arms: 73,
+  /* MOVED 2026-09-14 by FLEET (SK-8's delegation, worktree bio-worktrees/FLEET):
+     73 -> 76 arms, from a green POST-COMMIT `--strict` run — `76 arms · floor
+     … 73 arm(s) · GREW by 3 arm(s)`, `provenance: 209 of 209 discovered item(s)
+     are in the commit at HEAD (3a9523b)`, exit 0 read unpiped. THE THREE ARE
+     THIS ITEM'S OWN AND NOT SLACK, measured: E1, E2 and E3 in
+     `agent-worker/test/harness.test.mjs`'s declaration (the extract row flipped
+     without the record; the row removed with the record still naming it; the
+     landed state as the over-strictness arm), each run from
+     `harness.control.mjs` with the tallies in the declaration. The other seven
+     fleet suites are unchanged in arm count. **ONE `arms:` KEY IN THIS TABLE,
+     grepped after writing.** */
+  arms: 76,
 };
 
 function discoverFleet() {

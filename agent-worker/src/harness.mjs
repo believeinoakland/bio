@@ -188,6 +188,21 @@ export const MODES = {
                  does: "read an EXISTING conclusion adversarially (DEC-24's CHECK role, §2)" },
   investigate: { deployed: false,
                  does: "investigate fresh — enabled only after CHECK's first live run is verified (VF-5/SK-4)" },
+  /* THE EXTRACT ROW, landed 2026-09-14 on SK-8's DELEGATION and NOT deployed.
+     SK-8 built the plane half — `op=extractpropose` inside DEC-62's run, under
+     the `mints` bound — and measured that nothing could DRIVE such a run,
+     because this gate refused the word as unknown. The row's existence is what
+     lets the refusal say "not deployed yet" instead of "no such mode", which
+     are different facts. `deployed: false` is the honest state and it costs
+     nothing: §7.3 point 7 leaves "may a project stand an EXTRACT run
+     unattended" OPEN under a provisional NO, and a deployed extract mode is the
+     first thing that question would bite on. Flipping this flag is a separate
+     act — an EDIT here under review, never a request parameter — and it is not
+     the act that added the row. */
+  extract:     { deployed: false,
+                 does: "propose citable passages and readings over a SUBJECT a member named, under the run's "
+                     + "`mints` bound, never attesting — §7.3 of docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md; "
+                     + "not yet deployed, and a standing EXTRACT run is provisionally NO (§7.3 point 7)" },
 };
 
 /* §14b.6's budget, in the plane's OWN bound names (`bio-plane/src/airun.mjs`
@@ -550,8 +565,9 @@ export function nextStep(state) {
   /* THE GATE FIRST, and before any bound is consulted: a mode that is not
      deployed must not even be able to report that it ran out of budget. */
   if (at === "gate-mode") {
-    const mode = MODES[String(s.mode || "")];
-    if (!mode || !mode.deployed)
+    const key = String(s.mode || "");
+    const mode = MODES[key];
+    if (!mode || !mode.deployed) {
       /* `mode-not-deployed`, NOT `cancelled`, AND THE CHANGE IS FL-7 (2026-08-10,
          IC-62) CORRECTING A MISATTRIBUTION THIS LINE USED TO MAKE. This branch
          closed on `cancelled` from FL-3 until FL-7 — and the plane defines
@@ -560,11 +576,28 @@ export function nextStep(state) {
          had been spent. The ending now names the machine that actually acted.
          The word is the plane's (`bio-plane/src/airun.mjs` RUN_ENDINGS) and is
          NOT minted here — a fleet member inventing an ending would be the
-         drift class DEC-8 closed. */
+         drift class DEC-8 closed.
+
+         THE SENTENCE IS DERIVED FROM THE TABLE SINCE 2026-09-14 (SK-8's
+         delegation), because the hand-written two-mode story it replaced would
+         have gone stale on the third row and every row after. Two absences are
+         two facts and both are stated: a mode this table KNOWS and has not
+         deployed says "not deployed yet" and names what it does; a word this
+         table does not hold says so. The bound is the same for both — no run
+         was started either way — and only the reason differs. */
+      const deployed = Object.entries(MODES).filter(([, m]) => m.deployed).map(([k]) => k);
+      const waiting = Object.entries(MODES).filter(([, m]) => !m.deployed).map(([k]) => k);
+      const which = !mode
+        ? `mode '${key || "(none)"}' is not deployed — it is no mode this table knows at all `
+          + `(the table holds: ${Object.keys(MODES).join(", ")})`
+        : `mode '${key}' is not deployed yet — it is a row in this table (${mode.does}), and enabling it `
+          + "is an EDIT to this file under review, never a request parameter";
       return { step: "close", bound: "mode-not-deployed",
-               why: `mode '${String(s.mode || "(none)")}' is not deployed. CHECK is the first deployed mode `
-                  + `(§2); investigate-fresh enables only after CHECK's first live run is verified (VF-5/SK-4). `
-                  + `This gate is a row in the control-flow table and never a sentence in the skill.` };
+               why: `${which}. CHECK is the first deployed mode (§2); deployed now: ${deployed.join(", ")}; `
+                  + `not yet: ${waiting.join(", ")}. investigate-fresh enables only after CHECK's first live run `
+                  + `is verified (VF-5/SK-4). This gate is a row in the control-flow table and never a sentence `
+                  + "in the skill." };
+    }
     return { step: "resume", why: "the mode is deployed; read this run's own log before doing anything else" };
   }
 

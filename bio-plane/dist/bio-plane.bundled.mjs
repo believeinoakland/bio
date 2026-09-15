@@ -22241,7 +22241,13 @@ var DEPLOYMENT_SEQUENCE = {
   /* THE SEQUENCING, AND THE POSITION IN THIS ARRAY IS THE CLAIM: index 0 is the
      mode that deploys first, and every later index is a mode that enables only
      after the one before it has been verified live. */
-  order: ["check", "investigate"],
+  /* `extract` APPENDED 2026-09-14 by FLEET on SK-8's delegation, IN THE SAME
+     COMMIT as the row entered `agent-worker/src/harness.mjs`'s `MODES` — which
+     is ARM B3's whole demand (the two rosters are ONE set, held in both
+     directions) and ARM B4's (index 0 stays the only deployed mode; every later
+     index, `extract` included, is not). The pack's digest moves with this line
+     by construction and nothing needs bumping by hand. */
+  order: ["check", "investigate", "extract"],
   first_deployed_mode: "check",
   /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser,
      because a session cannot verify its own copying by re-reading it. */
