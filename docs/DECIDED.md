@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-950 rulings across 83 documents.
+951 rulings across 83 documents.
 
 ## DEC-
 
@@ -1220,6 +1220,8 @@ authority is the file named, never this one.
   `docs/development/UI-PLAN.md:296`
 - **M0-29** · 2026-09-14 — `docs/DECIDED.md` REGENERATED, not authored**, by `node tools/decided.mjs` — 823 rulings, 230.6 KB.  
   `docs/development/CLAIMS.md:5401`
+- **M0-31** · 2026-09-15 — DECIDED 2026-09-15, the fork M0-31's measurement opened and this section left open for one day — one unit per SLIDE for a deck**, written as a `slide-shape` extent with the SHAPE OMITTED, which `covers()` already accepts as covering the whole slide (`textchain.mjs`).  
+  `docs/development/CONTENT-SEARCH-DESIGN.md:94`
 - **M0-32** · 2026-09-14 — THE RULING INDEX'S MARKER MATCHES THE INDEX'S OWN FILENAME, SO PROSE THAT MERELY NAMES `DECIDED.md` MINTS A RULING ROW — ATTRIBUTED TO WHATEVER ID WAS LAST MENTIONED.** Found by M0-32's worker (2026-09-14) while reading the instrument rather than its output, and CONFIRMED at integration: `tools/decided.mjs`'s…  
   `docs/development/DEBT.md:304`
 
