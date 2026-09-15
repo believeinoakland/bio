@@ -6613,18 +6613,18 @@ what a read can see is what found it**, which is the argument for that suite exi
 **NEGATIVE CONTROL: SIX ARMS, `test/nc-sk8.mjs`, re-runnable in one step.** Each armed ALONE with
 the others held open, declared BEFORE arming, every restore verified byte-identically by sha256 AND
 by content with a byte count printed and a minimum FLOORED UNDER THE SMALLER SUBJECT (`src/store.mjs`
-2,035,836 B · `src/extractrun.mjs` 21,251 B; the floor is 8,000 rather than a store-sized number,
+2,037,840 B sha256 3ea0f9838833... - `src/extractrun.mjs` 21,251 B sha256 2bf4d8045793...; the floor is 8,000 rather than a store-sized number,
 because a minimum only a megabyte file could clear guards one of two subjects). Never
 `git checkout --`.
 
 | arm | declared | actual | verdict |
 | --- | --- | --- | --- |
-| `baseline` | green, nothing armed | 61 pass / 0 fail | AS DECLARED |
-| `strengthen` (`proposalChain` concatenates instead of routing through `appendStep`) | 2 named failures | 59/2 — 2/2 present | AS DECLARED |
-| `label` (the `mint:` line dropped from the WRITE's answer only) | 2 named failures | 59/2 — 2/2 present | AS DECLARED |
-| `bound` (`#mintsBound` invents a default allowance) | 1 named failure | 60/1 — 1/1 present | AS DECLARED |
-| `coverage` (the proposal ALSO written into `reading_refs`) | 1 named failure | 60/1 — 1/1 present | AS DECLARED |
-| `overstrict` (a name-only proposal promoted C → B) | 3 named failures | 58/3 — 3/3 present | AS DECLARED |
+| `baseline` | green, nothing armed | 62 pass / 0 fail | AS DECLARED |
+| `strengthen` (`proposalChain` concatenates instead of routing through `appendStep`) | 2 named failures | 60/2 - 2/2 present | AS DECLARED |
+| `label` (the `mint:` line dropped from the WRITE's answer only) | 2 named failures | 60/2 - 2/2 present | AS DECLARED |
+| `bound` (`#mintsBound` invents a default allowance) | 1 named failure | 61/1 - 1/1 present | AS DECLARED |
+| `coverage` (the proposal ALSO written into `reading_refs`) | 1 named failure | 61/1 - 1/1 present | AS DECLARED |
+| `overstrict` (a name-only proposal promoted C → B) | 3 named failures | 59/3 - 3/3 present | AS DECLARED |
 
 **ONE ARM CAME BACK WRONG BEFORE IT CAME BACK RIGHT, AND THE CORRECTION WENT TO THE SUBJECT RATHER
 THAN TO THE ASSERTION — which makes it a finding about the PRODUCT and not only about the arm.**

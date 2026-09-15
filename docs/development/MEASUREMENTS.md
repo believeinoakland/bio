@@ -11867,9 +11867,8 @@ the commit — which is that file's own rule and the reason it is a second commi
 
 **NEGATIVE CONTROL: six arms, each armed ALONE with the others held open, every restore verified
 byte-identically by sha256 AND by content with a byte count printed and a minimum floored
-(`src/store.mjs` 2,035,836 B · `src/extractrun.mjs` 21,251 B), never `git checkout --`. ALL SIX AS
-DECLARED** — baseline 61/0 · strengthen 59/2 (2/2) · label 59/2 (2/2) · bound 60/1 (1/1) · coverage
-60/1 (1/1) · overstrict 58/3 (3/3).
+(`src/store.mjs` 2,037,840 B sha256 3ea0f9838833... - `src/extractrun.mjs` 21,251 B sha256
+2bf4d8045793...), never `git checkout --`. ALL SIX AS DECLARED.** **RE-RUN IN FULL ON THE COMMITTED TREE, and the re-run is the figure: an earlier pass was taken while the suite still stood at 61 assertions, and a control figure that is one behind its subject is a control figure about a tree nobody has. baseline 62/0 - strengthen 60/2 (2/2) - label 60/2 (2/2) - bound 61/1 (1/1) - coverage 61/1 (1/1) - overstrict 59/3 (3/3).**
 
 **ONE ARM CAME BACK WRONG BEFORE IT CAME BACK RIGHT, AND THE CORRECTION WENT TO THE SUBJECT.**
 `overstrict` promotes a name-only proposal from C to B, and the assertion about the row's stated
