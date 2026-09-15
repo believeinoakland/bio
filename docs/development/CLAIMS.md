@@ -8911,4 +8911,253 @@ concurrency: four workers hold other REGIONS of `store.mjs`/`index.mjs`/`bio-che
   implied. `query.mjs` is named by NO other live region in the brief. `REGISTER_FLOOR` and
   `MEANING_READ_CHECKS` are the two sites where a contended merge is expected; the collapse
   rule above is the instruction for the first and the family is append-only for the second.
-released:
+
+### CLAIM ADDENDUM 2026-09-15 RECORD (REC-90) — **THE PATHS ACTUALLY TOUCHED, against the ones claimed, because the difference is what a contended merge needs to know**
+
+Five paths were written that the opening claim did not name, each FORCED by a landed change
+rather than chosen, and each named here rather than left for a merge to discover:
+
+- **`bio-plane/test/airuns.test.mjs`** — the index sweep's CEILING and FLOOR (13 → 15) and its
+  exculpation block. Forced: two of this item's four new `content` indexes land on that roster.
+  **And it carries a correction that is a finding in its own right** — see the release line.
+- **`bio-plane/test/meaningquery.test.mjs`** — the arm-count pin (3 → 4) and the
+  ambiguous-bare-word pin. Forced: a fourth arm exists. Corrected, never exempted.
+- **`bio-plane/dist/bio-plane.bundled.mjs`, `bio-plane/dist/bio-plane.bundle.json`** — rebuilt
+  with `npm run build`, which `fleetbundles.test.mjs` requires of any change to a bundled source.
+  **No version bump, no signature, no tag, no deploy** — those are DIST's and none was taken.
+- **`docs/DECIDED.md`** — REGENERATED, never authored, because `plancheck` fails on the drift.
+  **IT MUST BE REGENERATED AGAIN AT INTEGRATION AND NEVER MERGED:** `origin/main` moved to
+  `b634db2` during this item and **M0-34 changed `tools/decided.mjs` itself (D-367)**, so this
+  file is the output of the PRE-D-367 generator. Merging it would install a stale index; running
+  `node tools/decided.mjs` on the merged tree costs nothing and is the only correct move.
+- **`bio-plane/checks/bio-checks.mjs` was NOT touched.** The claim reserved `MEANING_READ_CHECKS`
+  in case the arm earned a refusal row and it did not: every way this arm can be asked wrongly is
+  answered by the compiler's existing WIDENING behaviour (an unknown sub-field is DROPPED with a
+  warning, never compiled to a predicate that matches nothing), and inventing a refusal for a
+  question the language already answers would be a fence tighter than its rule. One less
+  contended file.
+
+released: 2026-09-15 by the REC-90 worker — **SEARCH §7 ROW 2 IS BUILT: the `content:` arm,
+`rows=content`, the three columns on `rows=leg`, and the four-level statement on every
+`op=meaningrows` answer. Landed on branch `worktree-agent-ac99401ee6695a599` in TWO commits,
+`076a03a` (the item) and `eaa34fe` (the floor move), NOT pushed and NOT merged.** Interface
+`IC-98` on I3, ADDITIVE, filed PROPOSED with a MEASURED consumer census — **`op=meaningrows` has
+ZERO production callers (`grep -rn meaningrows civicos-ui/` → no match, re-measured on this tree
+rather than inherited from the 2026-08-09 figure `query.mjs` records) and `op=searchfields`'s one
+caller, `civicos-ui/app.html`, reads exactly `fields`, `syntax` and `idsMax` and does not read
+`meaning` at all** — so every addition under `meaning.*` is invisible to the only surface that
+calls it. CONDUCT takes the bump and the RESOLUTION.
+
+**THE INDEX DECISION IS MEASURED, WHICH THE ROW REQUIRED, AND THE MEASUREMENT REVERSED ITSELF
+BETWEEN CORPUS SIZES.** `MEASUREMENTS.md` **M-21** carries every figure with its instrument,
+command, corpus size, synthetic proportions and blind spots; `test/content-index-probe.mjs` is
+the instrument, built on `meaning-index-probe.mjs`'s shape with the SQL DRIVEN out of `compile()`
+and every existing index DRIVEN out of `schema.mjs` AND `store.mjs`. **All six candidates ship.**
+The two that are not a tuning choice: `content:cited` / `content:uncited` is an EXISTS over
+`content_id` for every candidate row, and at 20,000 bundles / 40,002 content rows / 31,200 legs
+it read **31,614 ms and 27,293 ms unindexed against 9.0 ms and 11.9 ms indexed** — REC-66 /
+D-227's amplification class behind a member-callable read, where the op does not answer slowly, it
+times out. **THE NOISE FLOOR IS ITSELF MEASURED AND NAMED (20.5 %)**: `content:ocr` filters on a
+JSON parse that no candidate index can touch, so its swing between the two phases is pure
+variation and every other delta is read against it. **`content(extent_kind, bundle_id)` read
++1.6 % at 5,000 bundles and would have been REFUSED on `inquiry_basis_role`'s precedent; at
+20,000 it reads −48.5 % on the rare value.** The proportion is the quantity an index buys and one
+corpus size cannot see it — which is why two were measured and why the first run could decide
+nothing. The cost side is priced where it differs from the precedent: a content row is
+`INSERT OR IGNORE`'d ONCE and never rewritten (REC-82), unlike an `inquiry_basis` leg that every
+`op=promote` delete-then-inserts, so an index is cheaper on this table than on any other.
+
+**THE FOUR-LEVEL STATEMENT IS THE POINT OF THE ARM AND IT IS ON EVERY ANSWER, FOR EVERY ARM.**
+`level`, `scope`, `levels`, `says`. A zero from `content:` over five hundred captured packets
+nobody has cited is byte-identical to a zero over a corpus where the passages exist and say
+nothing about the subject — and the first is the ordinary state of every new instance. All four
+of Part II §14.3's levels are named every time, each COUNTED or **UNDETERMINED with the read that
+does answer it**, because a level omitted reads as a level with nothing in it. It is a THIRD
+statement on the same shape, through the same `#runQuery` and the same `viewerPredicate`:
+`gate.applied` reads **3, not 2**, and its tally is gated with the rows (the outsider's
+`scope.documents` is STRICTLY smaller than the participant's, asserted).
+
+**TWO PRE-EXISTING DEFECTS FOUND ON THE WAY IN, BOTH CORRECTED RATHER THAN ROUTED.**
+**(1) `leg:grade>=B` HAS NEVER COMPILED AND HAS NEVER SAID SO.** Measured on `origin/main` at
+`6e88e35` before this item changed anything: a NAMED sub-field with a comparison compiled to
+`grade = 'GRADE>=B'` — an equality no row can satisfy, with NO warning, on every arm, since PL-8.
+The split was `indexOf("=")` and `>=` contains one, so the left side came out `grade>`, which is
+neither a sub-field nor an identifier and fell PAST the warning arm that exists for exactly this.
+`meaningAtom`'s own comments twice choose to DROP an arm rather than compile one that matches
+nothing; this path did the forbidden thing silently. It is fixed here because §4.2's worked
+example (`content:chain=ocr content:cap<C`) cannot compile without it. **It WIDENS and refuses
+nothing new** — taken only when the name IS a sub-field of that arm, so `concerns:ENT<1` is still
+a bare entity value (driven, as the over-strictness arm).
+**(2) THE INDEX SWEEP IN `airuns.test.mjs` HAS CARRIED `inquiry_basis(grade_source)` AS A REAL
+GAP SINCE 2026-08-08 — *"nothing asks which legs got their grade from a resolution"* — AND THAT
+SENTENCE WAS ALREADY FALSE WHEN IT WAS WRITTEN.** PL-8's `leg:` arm landed **the day before**,
+and `leg:source=resolution` compiles to exactly that WHERE. The roster carried it for 38 days for
+the same reason the two new `content` indexes land on it: **the reader cannot see a WHERE composed
+from a registry** — this sweep's own DECLARED BLIND SPOT, in a second spelling, one construct over
+from the entry written to prevent it. A roster of *access paths no op asks for* listing three
+paths an op DOES ask for is the record claiming more than it can support, in the direction of a
+gap that is not there. The ceiling AND floor move 13 → 15 from the printed figure, and the
+exculpation now reads **the compiler's own registry** (`MEANING[arm].sub[*].col`, imported) rather
+than a list of names that would go stale the day a fifth arm lands, with the polarity arm beside
+it. **The matcher is deliberately NOT widened**, for the 2026-08-08 entry's own reason: it would
+also match an UPDATE's SET clause and would SHRINK the roster by hiding real gaps.
+
+**GATES, on the committed tree at `eaa34fe`.** Battery **202/202 suites · 12,584 assertions ·
+exit 0**, against **a baseline this worker measured itself on a pristine scratch `git worktree add`
+of `6e88e35` with `npm ci` in all THREE packages: 201/201 · 12,467 · exit 0, no member skipped by
+name.** **The brief's figure of 12,466 was one stale and the measurement is trusted over it.** The
+**+117** is attributed PER SUITE by re-running the baseline and diffing, never by subtraction:
+`content-arm.test.mjs` **+107** (new suite), `airuns` **+3** (two exculpation arms and the
+grade_source pin), `hygiene` **+3** (its three per-file checks over the new suite), `meaningread`
+**+3** (two gate arms plus one per-arm assertion a fourth arm adds to its walk), `query` **+1**
+(the seventh descriptor field). The five sum to exactly 117. `node scripts/coverage.mjs --strict`
+run DIRECTLY with `$?` read **UNPIPED: exit 0**. UI harness `node civicos-ui/test/run.mjs` from the
+REPO ROOT, exit read unpiped: **0**. `node tools/plancheck.mjs`: **clean but for UNPUSHED** — 2 commits
+when the gate was taken, 3 once this claim block landed as the third, and a release line that
+quoted its own commit count without saying which moment it was true of would be exactly the kind
+of hand-carried figure this repository keeps finding stale. `node tools/corpuscheck.mjs`: **50 governed documents, 0 fail.**
+
+**FLOORS MOVED: one, `REGISTER_FLOOR` 1059 → 1066 arms · 192 → 193 classified · 193 → 194 corpus,
+every figure from this branch's own POST-COMMIT `--strict` print** (`GREW by 7 arm(s)`, provenance
+`210 of 210 discovered item(s) are in the commit at HEAD (076a03a)`), never counted and never
+added to. **THE PRE-COMMIT RUN IS RECORDED AT THE SITE BECAUSE IT PROVES THE ORDER MATTERS:** with
+the new suite still UNTRACKED the same script printed 1059/192/193 as REPRODUCIBLE and
+1066/193/194 as CONTAMINATED, and a floor taken from the second would have been permanently too
+high. `FLEET_FLOOR` unmoved — this item adds no fleet member, surface op or fleet suite. The
+`airuns` sweep ceiling/floor 13 → 15 is the second ratchet moved and is described above.
+**No governed DEC-49 region was touched, so `regionLines` is not in play.**
+
+**SEVEN NEGATIVE-CONTROL ARMS, EVERY ONE RUN, ALL SEVEN AS DECLARED** — `test/nc-rec90.mjs`,
+re-runnable in one step, declared before arming in the suite's own `NEGATIVE CONTROL:` line. Each
+armed ALONE with the others held open; every restore verified against a UNIQUELY-NAMED per-arm
+pristine copy by sha256 AND by `cmp`, byte counts printed and a minimum guarded, `git checkout --`
+never used. `baseline` 107/0 green · `pred` 92/15 · `citeddrift` 106/1 · `nojoin` 104/3 ·
+`levelsblind` 106/1 · `gateloss` 69/38 · `qualified` 100/7. Restores: `query.mjs` 109,363 bytes
+sha256 `9f94c54927e8…` and `store.mjs` 2,096,015 bytes sha256 `348c0b0f349c…`, byte-identical
+every time.
+**ONE CAME BACK WRONG ON THE FIRST RUN AND IS RECORDED RATHER THAN SMOOTHED.** `citeddrift` was
+**GREEN (107/0)**, and the finding was about the ARM'S CORPUS and not about the plane: the arm
+makes the `cited` COLUMN ask only the live leg table, and **the fixture had no version legs at
+all**, so the full definition and the crippled one agreed FOR FREE — WORKER.md's *arms that could
+never have been honoured*. The fixture now promotes a basis VERSION whose only leg rests on a
+document no live leg cites, and the arm fails by name. That fixture also bought two assertions the
+suite did not have and could not have had: that a document cited ONLY by a recorded version IS
+cited, and that no live leg names it.
+**AND `gateloss` FAILS 38 RATHER THAN ITS 2 DECLARED, WHICH IS CORRECT AND IS THE POINT**: the
+D-15 throw fires, the op answers `ok:false`, and every ARMED corpus-floor assertion goes red with
+it — a suite whose fixture reads empty reports its own blindness instead of scoring zero.
+**The over-strictness direction is held open under every arm**: `concerns:ENT<1` still a bare
+entity value, `resolves:>=B` on the bare field untouched, `leg:ground=*` still presence,
+`content:kind=pdf-page` as well as `content:pdf-page`, `content:minted=mina` as a literal minter
+id beside the three class words, and `has:content`.
+
+**WHAT I COULD NOT DO, AND IT IS A FINDING RATHER THAN A GAP IN THE SUITE: REC-36's WITHHOLD RULE
+CANNOT BE STAGED FOR THIS ARM AT ALL.** `viewerPredicate`'s participant clause fences exactly one
+thing — `b.object_type <> 'project'` — and **every content row hangs off an `information` bundle**,
+because `contentMint` refuses a non-document target BY NAME (`NOT_A_DOCUMENT`, DEC-21) and
+`promote`'s projection only mints for information targets. **So there is no content row a
+participant gate can remove.** An assertion that one was withheld would have passed over an empty
+set — the failure this project has measured three times. It is MEASURED instead: two different
+members are driven through the same statement shape and shown to see the same content rows, the
+bundle types those rows hang off are asserted to be `information` and nothing else, and the gate is
+proved LIVE by the sibling `concerns` arm on the same call shape in `meaningread.test.mjs`. **This
+is not a hole this item opened and it is not a leak** — it is the shape of the existing fence, and
+it is stated so the next reader does not take a green gate assertion here for evidence.
+
+**WHAT ELSE THE CLASS SWEEP FOUND, AND WHAT IT COULD NOT SEE.** The class is *a question §4.2 names
+that the compiler cannot express*, and the sweep is the six sub-fields driven one by one: four of
+the six are NOT `column <cmp> ?`, and rather than lengthen a list of spellings the registry gained
+ONE mechanism (`sub.pred`, opt-in, parameterised) that admits all four — the three pre-existing arms
+declare none and compile through the untouched path, asserted structurally. **What the matcher
+cannot see, stated plainly:** the hostile-value pin proves the member's string never reaches the
+SQL for the five sub-fields that take a value, and it CANNOT prove it for a sub-field nobody has
+written yet; the index probe's proportions are reasoned from how content rows are minted and are
+NOT measured off a live corpus, because no instance has enough content rows to measure — the table
+landed 2026-09-14; and the `$[#-1]` JSON path is measured on `node:sqlite` and pinned separately
+THROUGH the op inside workerd, which is the only place that counts.
+
+**WHAT MY BRIEF DID NOT PREDICT.** (a) The four-level statement had to be built for EVERY arm and
+not only `content`, because a per-arm special case wearing a general name is worse than either —
+so each arm declares its `level` and the block is composed from it. (b) `op=searchfields`'s
+`meaning.<arm>.rows.columns` was UNDER-REPORTING: it published the arm's own table columns only, so
+`target_present` — a column every `rows=leg` row has carried since PL-9 — was missing from the
+vocabulary a surface builds its table from. Corrected and now DERIVED from the descriptor. (c) The
+two defects above. (d) `rows=content` inherits the WHOLE-SET rule (*a basis returned in part reads
+as a basis*) — the suite got this wrong first, asserting at the wrong grain; it is now asserted in
+its own right, because it is doctrine and not an accident.
+
+## DESIGN GAP 2026-09-15 REC-90 → `docs/development/CONTENT-SEARCH-DESIGN.md` §4.2
+
+**§4.2 asks the `content` table for a predicate on the chain's LAST STEP, and no column holds
+one.** `content.chain` stores the whole chain as canonical JSON (REC-82's writer:
+`JSON.stringify(ctx.chain)`), so `content:chain=ocr` compiles to
+`json_extract(chain, '$[#-1].step') = ?` — a read-time parse over every candidate row, which no
+ordinary index can serve.
+
+**THE DESIGN ALREADY KNOWS THIS IS WRONG, ONE SECTION EARLIER.** §4.1 gives `capture_text` a
+`chain_kind` COLUMN for the identical question, in its own words: *"the LAST step kind of the
+chain that produced this unit (layer | ocr | member), so 'every OCR'd unit' is a predicate and not
+a parse."* §4.2 asks the same question of `content` and gives it no such column. The two sections
+disagree about the same fact, and §4.2's side is the one that is built.
+
+**MEASURED, so the gap has a size** (`MEASUREMENTS.md` M-21): at 20,000 bundles / 40,002 content
+rows, `content:ocr` is **the slowest single-column filter on the table — 8.579 ms against
+2.3–5.4 ms for the five that are indexed — and it is the ONE query in the candidate set that no
+index improved** (−20.5 %, which is the measured noise floor itself).
+
+**WHY REC-90 BUILT THE PARSE RATHER THAN THE COLUMN.** A `chain_kind` column on `content` must be
+written at the MINT, and the mint path (`mintContent`, `contentMint`, `extractPropose`) is
+explicitly outside this item's claimed region — four other workers hold regions of the same files.
+It is also not a free change: content rows are NEVER rewritten by design, so a column added later
+is NULL for every existing row until a backfill derives it from the `chain` the row already
+carries (which is a pure function, so the backfill is deterministic — the same property
+`ensureLegContent` relies on).
+
+**THE TWO WAYS TO CLOSE IT, and the recommendation is the first.** (1) `content` gains
+`chain_kind`, written at the mint from the same `ctx.chain` the id is hashed over, with the
+read-time backfill the existing rows need; the arm's `pred` then becomes an ordinary column
+comparison and takes an index like its five siblings. (2) §4.2 records the parse and its measured
+cost as the decision, and says that the chain filter is unindexable by construction. **Option 1 is
+recommended** and it is small: one column, one line at one mint site, one backfill on read, and
+the arm's `chain` pred collapses to the default path. Option 2 costs nothing now and leaves the
+slowest filter on the table permanently unindexable, which is a real cost once a corpus has
+content rows in the tens of thousands.
+
+Recorded in the document's own Incomplete list and in the `schema.mjs` comment beside the
+`content` indexes, so a reader meeting either one meets the gap.
+
+## DELEGATION 2026-09-15 RECORD (REC-90) → CONDUCT: **FIVE ACTS, EACH WITH ITS ACTOR**
+
+1. **CONDUCT — RESOLVE `IC-98`** (I3, ADDITIVE, PROPOSED in `INTERFACE-CHANGES.md` with the
+   measured consumer census). The bump is CONDUCT's: I3 read **15.2.0** at this item's base
+   `6e88e35`, and this is additive over it. The row's own interface line minted the IC AT SPAWN
+   and the resolution was never the worker's.
+2. **CONDUCT — REGENERATE `docs/DECIDED.md` ON THE MERGED TREE, DO NOT MERGE THIS BRANCH'S COPY.**
+   `origin/main` moved to `b634db2` during this item and **M0-34 changed `tools/decided.mjs`
+   itself (D-367)**, so this branch's copy is the pre-D-367 generator's output. `node
+   tools/decided.mjs` on the merged tree is the whole act; `plancheck` fails on the drift either
+   way, so it cannot be forgotten silently — but it CAN be merged wrongly, which is why it is an
+   act here.
+3. **CONDUCT — RE-READ `REGISTER_FLOOR` AND THE `airuns` SWEEP CEILING ON THE MERGED TREE.** Two
+   ratchets moved on this branch (1059→1066/192→193/193→194, and 13→15). `origin/main` gained
+   `nc-m034.mjs` and `nc-rec99.mjs` and their declarations while this ran, so **neither side's
+   figure is true of the merged tree** and adding the deltas would be wrong in both directions —
+   the arithmetic that has been got wrong six times at that site. COLLAPSE TO ONE KEY SET and
+   re-read from a green post-merge `--strict` print.
+4. **RECORD (a future item) — CLOSE THE §4.2 CHAIN GAP**, per the DESIGN GAP above. It is a mint-path
+   change and therefore not this item's; recommendation and cost are stated there. Route it as a
+   row rather than leaving it in this block — a note in a region nothing drains is not even a note.
+5. **CONDUCT — REC-92 (SEARCH item 5) IS NOW UNBLOCKED on its REC-90 dependency.** Its row reads
+   *"waits on REC-90 and REC-91"*; REC-90's half is landed. REC-91 and REC-94 are its own
+   business and this act claims nothing about them.
+
+### DECISIONS FOR BOB 2026-09-15 (REC-90): **NONE**
+
+Every determination this item met was answerable from the repository or by measurement, and each
+is recorded at its site with the evidence: which candidates ship (measured, M-21), what `minted`'s
+three class words mean and that any other value is a literal minter id (§4.2's own vocabulary,
+with the id question kept askable), that `undetermined` is its own value on `cap` and on `chain`
+and that a comparison therefore does not reach it (CLAUDE.md's undetermined rule, driven both
+ways), that the four-level statement belongs on every arm rather than on `content` alone, and that
+the `chain` filter ships as a parse with the gap REPORTED rather than silently absorbed.
+

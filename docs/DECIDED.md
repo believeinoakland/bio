@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-952 rulings across 83 documents.
+955 rulings across 83 documents.
 
 ## DEC-
 
@@ -1224,6 +1224,10 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:5401`
 - **M0-32** · 2026-09-14 — THE RULING INDEX'S MARKER MATCHES THE INDEX'S OWN FILENAME, SO PROSE THAT MERELY NAMES `DECIDED.md` MINTS A RULING ROW — ATTRIBUTED TO WHATEVER ID WAS LAST MENTIONED.** Found by M0-32's worker (2026-09-14) while reading the instrument rather than its output, and CONFIRMED at integration: `tools/decided.mjs`'s…  
   `docs/development/DEBT.md:304`
+- **M0-34** — `docs/DECIDED.md`** — REGENERATED, never authored, because `plancheck` fails on the drift. **IT MUST BE REGENERATED AGAIN AT INTEGRATION AND NEVER MERGED:** `origin/main` moved to `b634db2` during this item and **M0-34 changed `tools/decided.mjs` itself (D-367)**, so this file is the output of the PRE-D-367 generator.  
+  `docs/development/CLAIMS.md:8042`
+- **M0-34** — CONDUCT — REGENERATE `docs/DECIDED.md` ON THE MERGED TREE, DO NOT MERGE THIS BRANCH'S COPY.** `origin/main` moved to `b634db2` during this item and **M0-34 changed `tools/decided.mjs` itself (D-367)**, so this branch's copy is the pre-D-367 generator's output.  
+  `docs/development/CLAIMS.md:8249`
 
 ## Rulings carrying no id
 
@@ -1663,6 +1667,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:7941`
 - `docs/DECIDED.md` — REGENERATED, never authored. **READ AND DRIVEN, NEVER EDITED**: `bio-plane/src/textchain.mjs` (`STEP_KINDS`, `derivationCap`, `describeChain`), `bio-plane/src/index.mjs` (the `meaningrows` op row and `RETRIEVAL_READS` — the op already exists and this item adds none), `civicos-ui/**`.  
   `docs/development/CLAIMS.md:8014`
+- TWO PRE-EXISTING DEFECTS FOUND ON THE WAY IN, BOTH CORRECTED RATHER THAN ROUTED.** **(1) `leg:grade>=B` HAS NEVER COMPILED AND HAS NEVER SAID SO.** Measured on `origin/main` at `6e88e35` before this item changed anything: a NAMED sub-field with a comparison compiled to `grade = 'GRADE>=B'` — an equality no row can…  
+  `docs/development/CLAIMS.md:8094`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
