@@ -9555,9 +9555,19 @@ export const CONTENT_EXTENT_CHECKS = {
   },
 };
 
-function contentRefusal(key, detail) {
-  /* DEC-49: the code is a STRING LITERAL at every call site below, never a
-     variable, so the guard can see it — src/textchain.mjs's precedent. */
+/** DEC-49's refusal helper for this family, and BOTH halves of its spelling are
+ *  load-bearing rather than style. The name is exactly `refusal` and the code is
+ *  a DOUBLE-QUOTED STRING LITERAL at every call site below — that pair is what
+ *  `civicos-ui/check-refusal-codes.mjs` matches when it asks whether a `where`
+ *  region actually contains the refusal it claims to. Spelled `contentRefusal`
+ *  with single quotes, as this function was first written, the eight rows were
+ *  invisible to the guard and the UI harness failed with "arm C judged NO
+ *  refusal inside the region `is-content-extent`" — the guard doing precisely
+ *  its job, since a code held where the guard cannot see it is how one shipped
+ *  `translation: undefined` to a member. This file otherwise quotes with single
+ *  quotes throughout; the eight call sites below are the deliberate exception,
+ *  and the reason is here rather than in a commit message. */
+function refusal(key, detail) {
   const row = CONTENT_EXTENT_CHECKS[key];
   return { ok: false, code: key, check: row.check, translation: row.translation, detail };
 }
@@ -9670,32 +9680,32 @@ export function checkContentExtent(extent, ctx = {}) {
   /* DEC-49 REGION is-content-extent */
   const e = extent && typeof extent === 'object' ? extent : null;
   if (!e)
-    return contentRefusal('CONTENT_EXTENT_UNREADABLE',
+    return refusal("CONTENT_EXTENT_UNREADABLE",
       `no extent was supplied and none could be read from the leg`);
   if (e.kind === CONTENT_EXTENT_KIND_NO_PRODUCER)
-    return contentRefusal('CONTENT_EXTENT_NO_PRODUCER',
+    return refusal("CONTENT_EXTENT_NO_PRODUCER",
       `extent kind 'dom' names a region of an HTML document. Nothing in this plane produces a `
       + `dom address yet (CONTENT-HTML), so a row minted against one would be an address into a `
       + `grammar no producer writes and no reader can evaluate`);
   const row = CONTENT_EXTENT_KINDS[e.kind];
   if (!row)
-    return contentRefusal('CONTENT_EXTENT_UNREADABLE',
+    return refusal("CONTENT_EXTENT_UNREADABLE",
       `extent kind '${String(e.kind).slice(0, 40)}' is not one of: `
       + `${Object.keys(CONTENT_EXTENT_KINDS).join(', ')}`);
   if (!row.landed)
-    return contentRefusal('CONTENT_EXTENT_UNREADABLE',
+    return refusal("CONTENT_EXTENT_UNREADABLE",
       `extent kind '${e.kind}' (${row.human}) is named in the grammar and this plane cannot yet `
       + `evaluate what it covers, so it mints nothing. The pdf-page and document arms landed with `
       + `REC-82 and the other three follow with REC-85`);
   if (e.kind === 'pdf-page') {
     if (!Number.isInteger(e.page) || e.page < 0)
-      return contentRefusal('CONTENT_EXTENT_UNREADABLE',
+      return refusal("CONTENT_EXTENT_UNREADABLE",
         `a pdf-page extent names which page, as a 0-based integer. This one names `
         + `'${String(e.page).slice(0, 40)}'`);
     if (e.rect !== undefined && e.rect !== null
         && !(Array.isArray(e.rect) && e.rect.length === 4
              && e.rect.every((n) => typeof n === 'number' && Number.isFinite(n))))
-      return contentRefusal('CONTENT_EXTENT_UNREADABLE',
+      return refusal("CONTENT_EXTENT_UNREADABLE",
         `a pdf-page extent's rect is four finite numbers or absent. A rect that is present and `
         + `unreadable is worse than none, because it looks like a region somebody chose`);
     /* THE PAGE SET. Checked only where the record HOLDS one — an absent page
@@ -9705,7 +9715,7 @@ export function checkContentExtent(extent, ctx = {}) {
        document instead, which claims MORE and not less. D-345 is the row that
        closes the gap by persisting I2's page count at acquire. */
     if (Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
-      return contentRefusal('CONTENT_EXTENT_OUT_OF_RANGE',
+      return refusal("CONTENT_EXTENT_OUT_OF_RANGE",
         `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the `
         + `extent names page ${e.page}`);
   }
@@ -9719,7 +9729,7 @@ export function checkContentExtent(extent, ctx = {}) {
      would break every legacy leg's backfill. The over-strictness arm in the
      suite is exactly this case. */
   if (e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))
-    return contentRefusal('CONTENT_EXTENT_NO_CHAIN',
+    return refusal("CONTENT_EXTENT_NO_CHAIN",
       `this record holds no extraction chain for the capture this leg cites, so there is no `
       + `transcription over ${describeExtent(e)} for the citation to point at`);
   /* END DEC-49 REGION is-content-extent */

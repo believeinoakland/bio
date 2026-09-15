@@ -762,9 +762,24 @@ const REGISTER_FLOOR = {
      own print read `arms 958/957` — the +1 is BOB's corpuscheck.test.mjs landing beside the item,
      invisible to the branch that set 957. One key set, read from the print after the commit (D-238). */
   /* MOVED 2026-09-14 by CONDUCT #10 at COFF-9's merge (958 -> 959): the merged run's own print read `arms 959/958`; the +1 is COFF-9's ooxml suite arm. One key set, read from the print after the commit (D-238). */
-  arms: 959,
-  classified: 178,
-  corpus: 179,
+  /* MOVED 2026-09-14 by REC-82 (959 -> 967 / 178 -> 179 / 179 -> 180), ALL THREE IN THE
+     SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN `--strict` RUN
+     PRINTED AS REPRODUCIBLE — `arms 967/959 · classified 179/178 · corpus 180/179 · GREW
+     by 8 arm(s)` — read AFTER the new files were in a commit, so these are the reproducible
+     figures and not the contaminated ones the pre-commit run reported under the same
+     numerals (D-238). Never counted and never added to the numbers above; the first
+     pre-commit run read `arms 959/959 … (contaminated: 1 suite(s) no other checkout has)`
+     and was correctly refused as a source for this move.
+     THE CAUSE IS ONE NEW SUITE, `test/content-extent.test.mjs`, whose `NEGATIVE CONTROL:`
+     declaration states EIGHT arms — seven defeat arms plus the baseline, all run by
+     `test/nc-rec82.mjs` and all AS DECLARED. So `corpus` and `classified` each rise by one
+     and `arms` by eight. Nothing FELL.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
+     `FLEET_FLOOR`, which is the documented state. `FLEET_FLOOR` is UNMOVED and none is owed
+     — this item adds no fleet member and no fleet suite. */
+  arms: 967,
+  classified: 179,
+  corpus: 180,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

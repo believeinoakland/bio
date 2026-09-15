@@ -108,9 +108,18 @@ const ARMS = {
     mustFail: ["the rows minted against the OLD chain now read stale",
                "the edge still RESOLVES and says the document has since been re-read"],
     mustPass: "nothing was deleted — the row count is unchanged (the arm asserts BOTH halves, and this half must survive)",
+    /* RE-ANCHORED 2026-09-14 after the derivation-bounds ratchet made
+       `#markContentStale` one set-based UPDATE instead of a select-and-loop. The
+       arm's original anchor was the per-row UPDATE inside that loop, and when
+       the loop went the anchor matched ZERO times — the harness reported
+       `ARMED NO (patch matched 0×)` and the arm read 59 pass / 0 fail, which is
+       indistinguishable from a subject that cannot be broken. AN ARM THAT DID
+       NOT ARM IS A FINDING, which is why the match count is printed and why the
+       verdict is computed rather than eyeballed; without it this arm would have
+       been recorded as green. */
     patch: () => arm(STORE,
-      "      this.sql.exec(`UPDATE content SET stale=1 WHERE content_id=?`, r.content_id);",
-      "      void r;"),
+      "    if (n) this.sql.exec(\n      `UPDATE content SET stale=1",
+      "    if (false) this.sql.exec(\n      `UPDATE content SET stale=1"),
   },
   address: {
     files: [CHECKS],
