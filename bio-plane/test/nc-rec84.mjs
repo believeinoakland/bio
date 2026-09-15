@@ -94,15 +94,34 @@ const ARMS = {
       "export function checkLegExtentGrammar(leg, label, checkId, findings) {",
       "export function checkLegExtentGrammar(leg, label, checkId, findings) {\n  if (true) return;"),
   },
+  /* RE-CUT 2026-09-14 BY REC-85, AND THE RE-CUT IS ITSELF THE FINDING. As REC-84
+     wrote it this arm flipped `sheet-cell` to `landed: true` to prove the
+     unlanded refusal could fail. REC-85 landed all three arms the same day, so
+     the patch's anchor no longer exists and the arm would have reported
+     `ARMED NO (patch matched 0x)` — which is the shape `nc-rec82.mjs`'s `stale`
+     arm recorded when a set-based rewrite moved its anchor, and the reason this
+     harness prints a match count rather than trusting the edit. An arm that did
+     not arm is a finding, so it is re-cut rather than left to read green.
+
+     THE SUBJECT IT NOW PROVES IS THE ONE THAT STILL EXISTS. `landed` did not
+     become decorative: the column is KEPT with every arm true precisely because
+     `dom` joins the map the day CONTENT-HTML produces one, and it will arrive
+     unlanded for exactly one item's width. So the arm flips `sheet-cell` back to
+     `landed: false` — the direction that now breaks correct work — and the
+     assertions that MUST fail are the ones saying all five are landed and that a
+     LANDED arm refuses an incomplete address for the right reason. That is the
+     over-strictness direction for this particular fence, and it keeps the
+     `landed` mechanism under a control instead of retiring one. */
   unlanded: {
     files: [CHECKS],
-    why: "flip `sheet-cell` to landed, so an arm REC-85 has not built is admitted and MINTS",
-    mustFail: ["AN UNLANDED KIND IS REFUSED BY NAME",
-               "the grammar names five kinds and exactly two of them are LANDED"],
-    mustPass: "every other refusal — the arm must admit exactly one kind and nothing else",
+    why: "flip `sheet-cell` back to UNLANDED, so a built arm is refused as un-evaluable and mints nothing — the `landed` gate still exists for `dom` and must stay under a control",
+    mustFail: ["the grammar names five kinds and ALL FIVE are now LANDED",
+               "a LANDED arm still refuses an incomplete address at the pure catalogue",
+               "AN INCOMPLETE ADDRESS IS REFUSED BY NAME AT THE OP AND NEVER MINTED"],
+    mustPass: "every other refusal — the arm must withdraw exactly one kind and nothing else",
     patch: () => arm(CHECKS,
-      "  'sheet-cell':  { landed: false, human: 'a cell of a spreadsheet' },",
-      "  'sheet-cell':  { landed: true, human: 'a cell of a spreadsheet' },"),
+      "  'sheet-cell':  { landed: true,  human: 'a cell of a spreadsheet' },",
+      "  'sheet-cell':  { landed: false, human: 'a cell of a spreadsheet' },"),
   },
   rowid: {
     files: [STORE],

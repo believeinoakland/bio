@@ -59,6 +59,15 @@
 # `.fw*` would cover it and would also be the small dishonesty this file's own
 # head warns about.
 .fw17-control-pristine/
+# REC-85's pen (`test/nc-rec85.mjs`), its own line for the same reason two items
+# on: the harness arms `checks/bio-checks.mjs`, and a copy of a 631 KB source
+# left untracked by an interrupted run is a SECOND `bio-checks.mjs` for the next
+# walk to enrol — and that is not hypothetical, since `check-firing.test.mjs`'s
+# producer sweep once read a leftover pristine copy as a second producer of a
+# retired check. Added to this item's CLAIMS block at the close rather than
+# taken silently: it was not foreseen when the claim was written, and it is the
+# mechanism doing its job.
+.rec85-control-pristine/
 # D-271's pen. Named for the item rather than the area because the item is a
 # plane item; the `.ui*` spelling above is an accident of which area needed a
 # pen first, not a rule about who may have one.

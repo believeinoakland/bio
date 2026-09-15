@@ -11563,11 +11563,86 @@ export class Store extends DurableObject {
     return max < 0 ? null : max + 1;
   }
 
+  /** REC-85 — THE CONTAINER'S OWN EXTENT, as the record holds it: the sheets of
+   *  a workbook, the paragraph count of a document, the shape list of a deck.
+   *  The three figures the `sheet-cell`, `doc-para` and `slide-shape` arms of
+   *  `checkContentExtent` compare an address against, and the mirror of
+   *  `#pageSetForCapture` one method up.
+   *
+   *  NOTHING IN THIS PLANE PERSISTS ANY OF THE THREE, AND THAT IS MEASURED
+   *  RATHER THAN ASSUMED (2026-09-14, this item). I2 produces all of it at
+   *  acquire — `formats-xlsx.mjs` walks every sheet's rows and cells,
+   *  `docx.mjs` emits `paragraphs[]`, `pptx.mjs` tracks the shape sequence per
+   *  slide, and COFF-10's three ODF entries produce the same shape — and the
+   *  acquire path carries NONE of it onto the reading: a reading holds
+   *  `entities`, `facts`, `text_source`, `text_tier`, `text_container` and
+   *  nothing structural, `docprofile/readtext.mjs` says in its own words that it
+   *  "returns what the recognisers said — never a persisted shape", and no one
+   *  of the seventy-seven tables in `schema.mjs` holds a sheet, a paragraph or a
+   *  shape. The design says the same from its own side: Part II §15 lists the I2
+   *  structure shape as "not stored — recoverable only by re-running the
+   *  structure op, which stops at tier 2".
+   *
+   *  SO THE HONEST ANSWER TODAY IS UNDETERMINED FOR ALL THREE, AND IT IS STATED
+   *  WITH THE EMPTY LEVEL NAMED rather than returned as a bare null. That is
+   *  `CLAUDE.md`'s sparse rule at this construct: absence at one level is not
+   *  evidence of absence at the next, and WHICH level was empty is part of the
+   *  answer. A reader of this object can say "the record never recorded this
+   *  workbook's sheets", which is a different fact from "this workbook has no
+   *  such sheet" — and the second is what the C-45.1 refusal means.
+   *
+   *  WHY THIS IS NOT A REFUSAL, and it is the page-set arm's reason verbatim
+   *  because it is the same reason: refusing every cell citation on a workbook
+   *  whose sheets this plane never recorded would be a fence tighter than its
+   *  rule, and it would push a member toward citing the WHOLE DOCUMENT instead —
+   *  which claims MORE, not less.
+   *
+   *  WHAT WOULD FILL IT, so this is a DELEGATION with a shape and not a
+   *  complaint: `op=acquire` persisting I2's structure summary beside the page
+   *  count D-345 already names, which is CAPTURE's path (the CAP-9 shape) and is
+   *  filed as a DELEGATION in `CLAIMS.md`. The moment it does, this method reads
+   *  it and all three arms fire with nothing else moving — the arms above are
+   *  live and driven today against a supplied context, and it is only the
+   *  PRODUCTION FEED that is absent. Stated plainly because a mechanism believed
+   *  on the strength of its existence rather than its behaviour is the defect
+   *  this project meets most: these three arms are BUILT AND UNFED, and this
+   *  comment is what keeps the next reader from believing otherwise.
+   *
+   *  NO COLUMN ON `content` RECORDS IT, DELIBERATELY, and the reasoning is
+   *  `page_count`'s own inverted. `page_count` varies per row and is worth
+   *  storing; a container figure that is NULL for every row that can ever be
+   *  minted until CAP-9 lands is not information, and `schema.mjs`'s own stated
+   *  rule is that the column arrives WITH ITS WRITER. Provisional, reversible at
+   *  the cost of one additive column and an IC-83 amendment — exactly what
+   *  `page_count` itself cost. */
+  #containerExtentForCapture(captureSha) {
+    return {
+      sheets: null, paragraphs: null, slides: null,
+      held: false,
+      empty_level: "document structure — I2 produces this container's sheets, paragraph count "
+                 + "and shape list at acquire and the record persists none of it (Part II §15: "
+                 + "the structure shape is not stored, only recoverable by re-running the "
+                 + "structure op)",
+      why: `nothing in this record says how many sheets, paragraphs or slides the capture `
+         + `${String(captureSha).slice(0, 12)}… holds, so whether an address falls inside it is `
+         + `UNDETERMINED and is stated rather than guessed. It is not a refusal: refusing a `
+         + `citation for a bound nobody measured would push a member toward citing the whole `
+         + `document, which claims more and not less. Persisting it at acquire is CAPTURE's act `
+         + `(the CAP-9 shape for D-345's page count)`,
+    };
+  }
+
   /** Everything the checker needs about a capture, gathered in one place so the
-   *  write path and any later caller ask the same question the same way. */
+   *  write path and any later caller ask the same question the same way.
+   *
+   *  REC-85 added `container` beside `chain` and `pageCount` — the same kind of
+   *  thing (a fact about the capture only the STORE can answer) resolved in the
+   *  same place, so the write path and the gate cannot come to hold two answers
+   *  about what a document contains. */
   contentContextFor(captureSha) {
     return { chain: this.#chainForCapture(captureSha),
-             pageCount: this.#pageSetForCapture(captureSha) };
+             pageCount: this.#pageSetForCapture(captureSha),
+             container: this.#containerExtentForCapture(captureSha) };
   }
 
   /** THE WHOLE BASIS'S REFERENTS, RESOLVED ONCE — the capture each leg is about
@@ -11604,7 +11679,14 @@ export class Store extends DurableObject {
       const sha = byTarget.get(key);
       if (sha != null && !byCapture.has(sha)) byCapture.set(sha, this.contentContextFor(sha));
       plan.set(i, { target: leg.target, isInfo, authored, captureSha: sha,
-                    ctx: sha == null ? { chain: null, pageCount: null } : byCapture.get(sha),
+                    /* REC-85: `container: null` and not the resolver's stated
+                       object, and the difference is the point — there is no
+                       CAPTURE here to have a container, which is a different
+                       fact from a capture whose container this record never
+                       recorded. The checker treats both as "skip the arm"; the
+                       reader of a plan can tell them apart. */
+                    ctx: sha == null ? { chain: null, pageCount: null, container: null }
+                                     : byCapture.get(sha),
                     extent: legExtent(leg) });
     }
     return plan;

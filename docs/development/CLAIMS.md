@@ -5742,3 +5742,256 @@ ancestor of this branch. Either the drop was intended and belongs in the registe
 guess. (4) **`civicos-ui/app.html`'s flattened docprofile embed was regenerated here** with
 `tools/bundle-docprofile.mjs`; if UI would rather own that regeneration, that is a boundary to
 rule on.
+
+## CLAIM 2026-09-14 RECORD (REC-85 — the other three `covers` arms: `sheet-cell`, `doc-para`, `slide-shape`)
+
+Session: RECORD worker for REC-85, spawned by CONDUCT #11, Opus 5.
+Worktree: `.claude/worktrees/agent-ab9b57847595f1ea2` · branch `worktree-agent-ab9b57847595f1ea2`.
+Contract: IC-83 (I5 1.11.0, CHANGING) and IC-84 (I3 14.1.0, CHANGING) — **no new IC**: the
+three arms are IC-1's union, already in `CONTENT_EXTENT_KINDS` and named `landed: false`
+there by REC-82 so that this landing is a WRITER rather than a migration.
+Design read first: `BIO_Content_Framework_v0_10.md` Part II §15 (the forms) and §16 (the
+extraction path), front matter first; IC-83's "Rules the writer enforces" (the page-count
+refusal these mirror) and IC-84's leg grammar.
+
+Paths claimed BY REGION, never whole files:
+
+- **`bio-plane/checks/bio-checks.mjs`** — the **C-45 content-extent family ONLY**:
+  `CONTENT_EXTENT_KINDS` (the three `landed` flags), `legExtent`'s three unlanded arms,
+  `canonicalExtent`'s and `describeExtent`'s three arms, and the three new arms inside
+  `checkContentExtent`'s `DEC-49 REGION is-content-extent`. **NOT** `checkInquiryBasis`,
+  **NOT** `basisVersionFindings`, **NOT** `checkLegExtentGrammar` / `legHasAuthoredExtent` /
+  `CONTENT_ID_RE` / `CONTENT_EXTENT_DOCUMENT_ONLY` — those are REC-84's, committed on
+  `worktree-agent-ae95c3be71f5bd167` (`40f34e1`) and integrating ahead of this item.
+- **`bio-plane/src/store.mjs`** — the **REC-82 content-writer region ONLY**: `contentContextFor`
+  gains one resolved field, and one new private resolver beside `#pageSetForCapture`.
+  **NOT** `checkInquiryBasis`, **NOT** `basisVersionFindings`, **NOT** `earnedBasisRegistry`,
+  **NOT** `#contentStanding` / `#contentTarget` (REC-83's read region), **NOT** the
+  version-leg writer (REC-84's).
+- **`bio-plane/test/content-extent-arms.test.mjs`** — NEW, this item's suite.
+- **`bio-plane/test/nc-rec85.mjs`** — NEW, this item's negative-control driver.
+- **`bio-plane/test/content-extent.test.mjs`** — REC-82's suite: the TWO assertions at
+  (4b) that assert `sheet-cell` is refused as UNLANDED. They are **CORRECTED, never
+  exempted**, with the reason at the site: they were right when REC-82 landed and this
+  item is what makes them wrong.
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` ONLY, ONE key set, from this
+  item's own post-commit printed REPRODUCIBLE figures.
+- **`docs/development/DEBT.md`** and **`docs/development/MEASUREMENTS.md`** — appends only.
+- **`docs/development/CLAIMS.md`** — this block and one `## DELEGATION` to CAPTURE.
+
+NOT claimed and deliberately not written: `docs/development/QUEUE.md` (CONDUCT's, sole
+writer) and `docs/development/INTERFACE-CHANGES.md` (the version bump and the RESOLUTION
+are CONDUCT's — IC-83/IC-84 both say so in their own text).
+
+THREE PATHS ADDED TO THIS CLAIM AT THE CLOSE rather than taken silently, each forced by a
+mechanism rather than chosen: **`.gitignore`** — one line for this item's negative-control
+pen (`.rec85-control-pristine/`), the `.rec82-` / `.rec83-` pattern exactly, because an
+interrupted control run must not leave a 631 KB copy of `bio-checks.mjs` where the next walk
+enrols it as a source; **`bio-plane/test/rec85-arm-digest.mjs`** — the over-strictness
+instrument, a NON-suite (no `.test.mjs` suffix, so the battery does not collect it) holding
+the `pdf-page`/`document` sweep the suite pins by digest, which could not live in the suite
+itself because it has to be runnable against a PRISTINE worktree to produce the figure the
+suite then asserts; and **`docs/DECIDED.md`** — regenerated with `node tools/decided.mjs`,
+which `plancheck` requires of any turn whose corpus edits move the ruling index.
+
+released: 2026-09-14 by the REC-85 worker — **all three arms landed and the item's real
+finding is that the figure the third of each arm compares against is persisted NOWHERE.**
+
+**WHAT LANDED.** `sheet-cell`, `doc-para` and `slide-shape` are `landed: true` in
+`CONTENT_EXTENT_KINDS`; `legExtent` reads each arm's OWN fields (the six-key `fields` bag
+REC-82 carried through UNREAD is gone — its own prediction was "a reader rather than a
+shape", and it held, because no row of these kinds could exist to migrate and the suite
+asserts that count is zero against a real store); `canonicalExtent` takes the address over
+fixed per-arm fields with `$B$14`/`b14`/`B14` normalised to ONE cell (`normRect`'s rule in
+A1 notation); `describeExtent` derives exactly the producer's own `ref`, PINNED in the suite
+against `sheetCellRef` / `docParaRef` / `slideShapeRef` themselves because `bio-checks.mjs`
+imports nothing and the parity had to be a measurement rather than a call. The SHAPE half of
+each arm refuses by name as C-45.3 through `op=promote`; the CONTAINER half refuses by name
+as C-45.1 — the SAME code as the page set because it is the same fact, so C-45.1's canned
+translation was WIDENED to every container rather than a fifth code minted.
+
+**THE FINDING, MEASURED FOUR WAYS AND FILED AS D-354 + a DELEGATION to CAPTURE above.**
+Nothing in this plane persists a container's extent: the reading carries no structure,
+`docprofile/readtext.mjs` says so in its own words, none of the 77 tables in `schema.mjs`
+holds a sheet/paragraph/shape, and Part II §15 already said the I2 structure is "not stored".
+So the three container arms are BUILT, CORRECT AND UNFED. `#containerExtentForCapture`
+answers all three levels NULL and NAMES THE EMPTY LEVEL; the arms are skipped, never guessed;
+and an impossible-but-well-formed address MINTS today — driven and asserted THROUGH THE OP,
+because refusing for a bound nobody measured pushes a member toward citing the whole
+document, which claims MORE. Per arm, the answer to "persisted or absent" is **ABSENT, all
+three**. The CAPTURE act has its shape fixed in the delegation; nothing on the RECORD side
+moves when it arrives.
+
+**GATES on the final tree, every exit read UNPIPED.** Battery **191/191 suites green ·
+11,780 assertions · 0 skipped · 200.8s**; own baseline **190/190 · 11,713** on this worktree
+at `3f92e5c` with all three member installs, which is EXACTLY the briefed figure — measured,
+and right. The +67 attributed PER SUITE by diffing two full runs rather than by subtraction:
+`content-extent-arms.test.mjs` **+63** (new), `hygiene.test.mjs` **+3** (its three per-suite
+arms applied to the new suite), `planning-hygiene.test.mjs` **+1** (D-354's disposition row);
+`content-extent.test.mjs` UNCHANGED at 59, which is the corrected (4b) pair costing nothing.
+`coverage.mjs --strict` run DIRECTLY from `bio-plane/`, `$?` read with nothing piped after
+it, **exit 0**, OPS **172 declared · 172 reached · 0 unreached**; **no new check and no new
+op, measured at the close** — the three arms reuse C-45.1 and C-45.3, so no control-plane
+assertion is owed. `REGISTER_FLOOR` moved to the printed REPRODUCIBLE **989/182/183** (ONE
+key set, grepped after writing; the PRE-COMMIT run printed the same numerals under
+`contaminated: 1 suite(s)` and was refused as a source, exactly as REC-82's and REC-83's
+were). UI harness from the REPO ROOT **exit 0**. `plancheck --local` **0 fail, 0 warn**.
+`corpuscheck` **0 fail, 44 governed documents**. FL-10 fired on `src/` and `checks/` and
+`dist/` was rebuilt (2,848,036 B, sha256 `7344b2440cafe2…`) — caught by
+`fleetbundles.test.mjs` going red at 83/4 mid-item rather than by remembering; nothing
+bumped, nothing deployed, no live instance touched, `op=audit` not run because no live
+instance was reached.
+
+**EIGHT CONTROL ARMS, all AS DECLARED on the final tree**, each armed ALONE with the others
+held open, every restore verified byte-identically by sha256 AND `cmp` (631,437 bytes,
+sha256 `cff3ac7f3928…` each time): `baseline` 63/0 GREEN (the row that tells eight-broken
+from eight-working) · `sheetcell` 59/4 (4/4) · `docpara` 61/2 (2/2) · `slideshape` 61/2 (2/2)
+· `a1` 61/2 (1/1) · `onebased` 61/2 (1/1) · `canon` 50/13 (7/7) · `overstrict` DID NOT REACH
+ITS FOOT, exit 1, 3/3 crash markers. **TWO CAME BACK WRONG ON THE FIRST RUN AND BOTH ARE
+RECORDED AT THEIR SITES RATHER THAN SMOOTHED.** `canon` read `3/7 declared, 6 failing`
+because it patched ONE canonical branch while the declaration named three — THE DECLARATION
+WAS THE DEFECT, and a mis-declared arm reads exactly like a partially-working subject; it now
+patches all three and reads 7/7. `overstrict` read `-1 pass, -1 fail`: it refuses the suite's
+own FIXTURES, `mustPromote` THROWS, and a throw goes through no assertion at all — **the
+third sighting of that shape in three consecutive items** (REC-82's `overstrict`, REC-83's
+`unwired`), so it is named as a class and the arm is now verified on what the crash SAYS
+(`mustThrow`), which is stronger than the four assertion failures first declared.
+
+**OVER-STRICTNESS, both directions.** `pdf-page` and `document` are BYTE-IDENTICAL to
+REC-82's landing across a **130-row sweep** (`test/rec85-arm-digest.mjs`, sha256
+`28875841782289e9…`) computed on a PRISTINE detached worktree at `3f92e5c` and recomputed on
+this tree — and the sweep deliberately includes two contexts carrying the `container` key
+this item ADDED, so it says specifically that adding it moved nothing there. Second
+direction: a well-formed cell, paragraph and shape are NOT refused by the pure catalogue,
+which holds no container and must not answer a question only the store can.
+
+**TWO DECISIONS TAKEN AS MECHANISM, both reversible, both recorded at their sites.** (1) NO
+COLUMN on `content` records the container extent — `page_count`'s reasoning inverted (a
+figure NULL on every row that can ever be minted until CAP-9 is not information, and
+`schema.mjs`'s rule is that the column arrives WITH ITS WRITER); reversal costs one additive
+column and an IC-83 amendment, which is exactly what `page_count` itself cost. (2) The three
+container predicates answer a SENTENCE and `checkContentExtent` answers WHICH CODE THAT IS,
+so all four C-45.1 sites stay inside the one `is-content-extent` region the row's `where`
+names — the first draft minted the code in the helpers, which passed the UI guard and would
+have joined the MULTI-SITE-CODE condition `check-refusal-codes.mjs` documents and cannot
+close, for no gain.
+
+**WHAT THIS WORKER DID NOT DO, stated plainly.** The transcription-axis `covers` — whether an
+ATTESTATION covers one of these addresses — is untouched and stays NULL for all three arms,
+because an attestation's extent vocabulary is `document|page|region` and has no cell,
+paragraph or shape in it; `#contentTarget`'s comment predicts REC-85 changes that and it does
+not, which is named for CONDUCT in the report. No live instance was reached, so `op=audit`
+was not run. And one adjacent fact found and deliberately NOT built on:
+`reading.text_container` IS persisted and could feed a COARSE container check, but it is not
+what this row names and it is NULL on every capture that never reached the format axis, so a
+fence on it would refuse correct work — named in the delegation as a candidate row, not as a
+gap D-354 covers.
+
+**RE-MEASURED ON THE MERGED TREE — `origin/main` MOVED TO `ce6e7cf` AND REC-84 LANDED ON IT
+WHILE THIS ITEM RAN**, so the brief's instruction applied and the item fast-forwarded and
+re-measured rather than reporting figures true of a tree that no longer exists. Ten
+conflicts, every one resolved by reading both sides. **The four REC-84 assertions this
+landing invalidates were CORRECTED HERE, by this worker, rather than left as an act for
+CONDUCT** — the fixtures unchanged, the legs still refused, only the expected REASON moved,
+with the negative half asserted so the old sentence cannot quietly come back; plus REC-84's
+`unlanded` CONTROL ARM, whose patch anchor this item deleted and which would have read
+`ARMED NO (matched 0x)` and green (re-cut to flip `sheet-cell` back to unlanded, the
+direction that now breaks correct work, so the `landed` gate stays under a control for the
+day `dom` needs it); plus one stale sentence in the plane itself — `checkLegExtentGrammar`'s
+guidance named a CLOSED LIST of two landed kinds and is now COMPOSED FROM THE MAP.
+
+**MERGED-TREE GATES, every exit read UNPIPED.** Battery **192/192 suites green · 11,839
+assertions · 0 skipped · 210.1s**. **The baseline is `origin/main` `ce6e7cf`'s OWN measured
+run — 191/191 · 11,771** — taken on a pristine detached worktree with all three member
+installs, so the +68 is attributed PER SUITE by diffing two full runs and never by
+subtraction: `content-extent-arms.test.mjs` **+64** (new), `hygiene.test.mjs` **+3**,
+`planning-hygiene.test.mjs` **+1**. `content-extent.test.mjs` and REC-84's
+`content-extent-leg.test.mjs` are UNCHANGED IN COUNT — the corrections moved values inside
+existing assertions, which is what correcting rather than deleting looks like in the tally.
+`coverage.mjs --strict` **exit 0**, and **CHECKS 256/256 named (0 never named)**.
+`REGISTER_FLOOR` moved to the MERGED tree's printed **997/183/184** — and this is the
+measurement worth keeping: **both sides of the conflict said 989**, REC-84 reaching it from
+981 with `content-extent-leg` (8 arms) and REC-85 reaching the same 989 from the same 981
+with `content-extent-arms` (8 arms), two DIFFERENT suites with identical arithmetic, so a
+keep-either resolution would have installed a floor eight arms and one suite low. That is
+the third occurrence of the hazard that block records. UI harness from the REPO ROOT **exit
+0**. `plancheck --local` **0 fail, 0 warn**. `dist/` rebuilt from the merged sources rather
+than merged as text.
+
+**BOTH CONTROL DRIVERS RE-RUN IN FULL ON THE MERGED TREE — ALL SIXTEEN ARMS AS DECLARED**
+(`nc-rec85` eight, `nc-rec84` eight), every restore verified byte-identically by sha256 AND
+`cmp`. **AND THE MERGE SURFACED TWO MORE FINDINGS, both recorded rather than smoothed.**
+(1) `overstrict` came back **2/3**: its third marker was `C-45.1`, and under REC-84's new
+CATALOGUE gate the armed refusal fires there and RELAYS at C-2.8 while carrying the content
+family's CODE through unchanged — **the C-NUMBER IS THE GATE AND THE CODE IS THE FACT**, the
+distinction REC-84 paid four red assertions for, so the markers now assert both. (2)
+`coverage.mjs --strict` went **red** with `1 never named: C-45.3` — the only thing in the
+whole battery naming that number was the TEXT of an assertion LABEL, and this item's own
+correction of that label removed it. It is now pinned as BEHAVIOUR (the checker's own verdict
+is C-45.3, the relay is C-2.8), because a label can be reworded by the next item without
+anyone noticing and a value cannot. **That is the C-20.1 class the check-naming gate exists
+to catch, catching this worker.**
+
+**NOTHING IS OWED TO A FUTURE ACTOR BY THIS NOTE.** The REC-84 collisions are DONE, not
+delegated. What remains for CONDUCT is stated as ACTS with actors in the worker's REPORT:
+flipping this row and IC-83/IC-84's status, and re-reading `REGISTER_FLOOR` if another item
+merges beside this one.
+
+
+## DELEGATION 2026-09-14 RECORD (REC-85) -> CAPTURE: **THE THREE CONTAINER-EXTENT ARMS ARE BUILT, DRIVEN AND UNFED — NOTHING PERSISTS A SHEET LIST, A PARAGRAPH COUNT OR A SHAPE LIST, AND WITHOUT ONE THE OUT-OF-RANGE REFUSAL CANNOT FIRE IN PRODUCTION**
+
+**What was measured, 2026-09-14, on `origin/main` at `3f92e5c`.** REC-85 landed the
+`sheet-cell`, `doc-para` and `slide-shape` arms of the content-extent primitive. Each has
+two halves: a SHAPE half (is this an address at all) which is fed by the leg and is live,
+and a CONTAINER half (does THIS document hold that address) which needs the container's own
+extent. **The record holds no container extent for any of the three, and this was measured
+four ways rather than assumed:**
+
+- the reading persisted at promote carries `content_type`, `reader_version`,
+  `read_from_text`, `found`, `entities`, `facts`, `at`, `text_source`, `text_tier`,
+  `text_container`, `basis` — **and nothing structural** (`index.mjs`, the acquire path);
+- `docprofile/readtext.mjs` says it in its own words: it *"returns what the recognisers
+  said — never a persisted shape"*;
+- **none of the 77 tables in `schema.mjs`** holds a sheet, a paragraph or a shape;
+- the design already said so and it is now marked load-bearing rather than descriptive:
+  Part II §15's structure-shape row reads *"not stored — recoverable only by re-running the
+  structure op, which stops at tier 2"*.
+
+**What this costs today, stated rather than left to be discovered.** A leg may cite
+`NoSuchSheet!ZZ9999999` of a real workbook and it MINTS — the suite drives exactly that and
+asserts it, because the alternative is worse: refusing a citation for a bound nobody
+measured pushes a member toward citing the WHOLE DOCUMENT, which claims MORE and not less
+(IC-83's own reasoning, and the page-set arm's rule verbatim). The absence is UNDETERMINED
+and STATED with the empty level NAMED — `#containerExtentForCapture` in `store.mjs` returns
+the statement rather than a bare null — so nothing here overclaims. **But the refusal has no
+production feed, and a mechanism believed on the strength of its existence rather than its
+behaviour is the defect this project meets most, so it is named here rather than left green.**
+
+**THE ACT, and it is CAPTURE's because it is on the acquire path.** `op=acquire` persists an
+I2 STRUCTURE SUMMARY beside the page count D-345 already names — the same shape, the same
+item, and CAP-9 is the row that closes the page-count half. The target shape is fixed by
+`checkContentExtent`'s own contract and needs no negotiation:
+
+    container = { sheets:     [{ name, rows, cols }] | null,
+                  paragraphs: <count> | null,
+                  slides:     [{ shapes: <count> }]  | null }
+
+**Every level is independently nullable and every null means the same thing: the record does
+not hold it.** A sheet list with no `rows`/`cols` is legitimate and useful on its own — it
+refuses an unknown SHEET and says nothing about the cell, which is exactly right, and the
+suite asserts that partial case. The producers already compute all of it:
+`formats-xlsx.mjs` walks every sheet's rows and cells, `docx.mjs` emits `paragraphs[]`,
+`pptx.mjs` tracks the shape sequence per slide, and COFF-10's three ODF entries produce the
+same shape. **Nothing on the RECORD side has to change when it arrives**: read it in
+`#containerExtentForCapture`, and all three arms begin firing with no other edit.
+
+**WHAT REC-85 DELIBERATELY DID NOT BUILD, and the reason, so CAPTURE is not surprised by a
+narrower gap than this note describes.** `reading.text_container` IS persisted — the record
+knows a capture was read as `xlsx` / `docx` / `pptx` / `pdf`. That is the ONE record-held
+fact that could feed a COARSE container check today (a `sheet-cell` address on a capture read
+as `docx` has no sheets at all). It was not built here for two reasons, both stated so the
+next actor can overturn them on evidence: it is not what REC-85's row names (a cell outside
+the sheet's DIMENSIONS), and `text_container` is null on captures that never reached the
+format axis, so a fence on it would refuse correct work on every such document — over-strict
+in exactly the direction this family refuses. **It is a real candidate for its own row and is
+named as one, not as a gap this delegation covers.**

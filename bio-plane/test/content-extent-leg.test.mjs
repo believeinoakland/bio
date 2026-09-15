@@ -212,10 +212,17 @@ t("the ground holds no content rows yet — nothing has cited anything", c0, 0);
    fixture has passed three times in this repository; the count is floored. */
 console.log(`  corpus: 2 captured documents (page sets 3 and 2) + 1 inquiry target; `
           + `extent kinds in the grammar: ${Object.keys(CONTENT_EXTENT_KINDS).join(", ")}`);
-t("the grammar names five kinds and exactly two of them are LANDED (the other three are REC-85's)",
+/* CORRECTED 2026-09-14 BY REC-85, NEVER EXEMPTED. This read "exactly two of them
+   are LANDED (the other three are REC-85's)" and was right on the day REC-84
+   landed; REC-85 landed the other three the same day, so the assertion became a
+   true statement about a tree that no longer exists. The TOTALITY is what was
+   worth asserting and it is kept — five kinds in the grammar, and this suite
+   states which are evaluable — so the correction is to the roster and not to the
+   shape of the check. */
+t("the grammar names five kinds and ALL FIVE are now LANDED (REC-82 two, REC-85 the other three)",
   [Object.keys(CONTENT_EXTENT_KINDS).length,
    Object.entries(CONTENT_EXTENT_KINDS).filter(([, v]) => v.landed).map(([k]) => k).sort()],
-  [5, ["document", "pdf-page"]]);
+  [5, ["doc-para", "document", "pdf-page", "sheet-cell", "slide-shape"]]);
 
 /* ===================== 1. THE FRONTMATTER GRAMMAR ======================= */
 
@@ -259,10 +266,21 @@ const pureBasis = (legs) => {
 t("a malformed extent kind is refused BY C-2.8 over one document's bytes, with no store in sight",
   pureBasis([{ target: DOC_A, role: "supports", extent_kind: "pdf-pge" }])
     .filter((x) => x.check === "C-2.8" && /cannot evaluate/.test(x.message)).length, 1);
-t("an UNLANDED arm is refused by name as unlanded rather than as unknown — a member citing a cell is not confused",
-  /named in the grammar and this plane cannot yet evaluate/.test(
-    pureBasis([{ target: DOC_A, role: "supports", extent_kind: "sheet-cell", extent_cell: "B14" }])
-      .map((x) => x.message).join(" ")), true);
+/* CORRECTED 2026-09-14 BY REC-85, NEVER EXEMPTED, and the FIXTURE IS UNCHANGED on
+   purpose. It asserted that `sheet-cell` is refused for being an UNLANDED KIND.
+   REC-85 landed the arm, so that sentence is now false — but the leg is still
+   refused, because it names a cell and no SHEET, which is not an address. Keeping
+   the same leg and moving only the expected REASON is what measures the thing
+   worth measuring: landing the arm did not turn an incomplete address into an
+   accepted one. The negative half is asserted too, so the old sentence cannot
+   quietly come back. */
+t("a LANDED arm still refuses an incomplete address at the pure catalogue — a cell with no sheet is not an address",
+  [/names which sheet, as the workbook spells it/.test(
+     pureBasis([{ target: DOC_A, role: "supports", extent_kind: "sheet-cell", extent_cell: "B14" }])
+       .map((x) => x.message).join(" ")),
+   /named in the grammar and this plane cannot yet evaluate/.test(
+     pureBasis([{ target: DOC_A, role: "supports", extent_kind: "sheet-cell", extent_cell: "B14" }])
+       .map((x) => x.message).join(" "))], [true, false]);
 t("`dom` is refused BY NAME while no producer exists, at the catalogue too",
   /Nothing in this plane produces a dom address yet/.test(
     pureBasis([{ target: DOC_A, role: "supports", extent_kind: "dom" }])
@@ -309,8 +327,15 @@ t("and nothing was minted for it", (await get("stats")).content, 0);
 const INQ_CELL = "INQ-2026-8400-cell";
 const rCell = await refusedPromote(INQ_CELL,
   inquiryMd(INQ_CELL, { refs: [DOC_A], legs: [{ target: DOC_A, kind: "sheet-cell", cell: "B14" }] }), "inquiry");
-t("AN UNLANDED KIND IS REFUSED BY NAME (C-45.3's sentence at C-2.8) AND NEVER MINTED — REC-85's arm, not silently accepted",
-  [rCell.ok, checks(rCell), /REC-85/.test(detail(rCell))], [false, ["C-2.8"], true]);
+/* CORRECTED 2026-09-14 BY REC-85, NEVER EXEMPTED — the op-side twin of the
+   correction above, same fixture, same refusal, new reason. It used to assert the
+   detail names REC-85 as the item that would land the arm; REC-85 landed it, so
+   that sentence is gone from the code and asserting it would be asserting a
+   promise instead of a rule. The REFUSAL and the NOT-MINTED half are the load
+   bearing parts and both are kept. */
+t("AN INCOMPLETE ADDRESS IS REFUSED BY NAME AT THE OP AND NEVER MINTED — a cell with no sheet, relayed at C-2.8",
+  [rCell.ok, checks(rCell), /names which sheet, as the workbook spells it/.test(detail(rCell))],
+  [false, ["C-2.8"], true]);
 t("still nothing minted: an extent nobody can evaluate covers nothing and mints nothing",
   (await get("stats")).content, 0);
 
