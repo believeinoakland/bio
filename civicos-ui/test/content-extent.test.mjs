@@ -379,15 +379,24 @@ ok("`op=cite` still carries NO extent — which is why the picker is absent and 
 /* ============================================================
    7. THE ARMS THIS PLANE CANNOT DRIVE, NAMED RATHER THAN SKIPPED
    ============================================================ */
-console.log("\n--- 6. IC-1's union: the arms REC-85 has not landed, named and not pretended ---");
+console.log("\n--- 6. IC-1's union: what this suite drove, what REC-85 landed, and that nothing is pretended ---");
 
 const landed = Object.entries(CONTENT_EXTENT_KINDS).filter(([, v]) => v.landed).map(([k]) => k).sort();
 const unlanded = Object.entries(CONTENT_EXTENT_KINDS).filter(([, v]) => !v.landed).map(([k]) => k).sort();
-eq("this suite DROVE exactly the arms the plane has landed", landed, ["document", "pdf-page"]);
-eq("and these are the arms it did NOT drive, because the plane refuses them today",
-  unlanded, ["doc-para", "sheet-cell", "slide-shape"]);
-ok("the surface already carries a member-facing noun for every unlanded arm, so REC-85's landing needs no edit here",
-  unlanded.every((k) => typeof U.EXTENT_KIND_WORD[k] === "string" && U.EXTENT_KIND_WORD[k].length > 0));
+/* CORRECTED 2026-09-14 by CONDUCT #11 at REC-85's integration, never exempted: as written (UI-61's
+   tree at ce6e7cf) the plane had landed `document` and `pdf-page` only, and the pin said so. REC-85
+   landed `sheet-cell`, `doc-para` and `slide-shape` the same day, so the pin went false on the merged
+   tree - the correct shape, not a defect in either item. What this suite DROVE is still the two arms
+   below; REC-85's three are driven by `bio-plane/test/content-extent-arms.test.mjs`, not pretended
+   here. The unlanded set is asserted EMPTY so the day a sixth arm is named-but-unlanded the suite
+   says so by name, and the noun check now covers every LANDED arm - the stronger claim. */
+const DRIVEN = ["document", "pdf-page"];
+ok("the arms this suite DROVE are landed arms (document, pdf-page)", DRIVEN.every((k) => landed.includes(k)));
+eq("every arm of IC-1's union is landed as of REC-85 - none refused as unlanded today",
+  unlanded, []);
+eq("the landed set is IC-1's whole union", landed, ["doc-para", "document", "pdf-page", "sheet-cell", "slide-shape"]);
+ok("the surface carries a member-facing noun for every LANDED arm, so REC-85's landing needed no edit here",
+  landed.every((k) => typeof U.EXTENT_KIND_WORD[k] === "string" && U.EXTENT_KIND_WORD[k].length > 0));
 eq("the surface's kind set IS the catalog's, which check-semantics.mjs guards in both directions",
   [...U.CONTENT_EXTENT_KINDS].sort(), Object.keys(CONTENT_EXTENT_KINDS).sort());
 /* A kind the surface has no noun for still renders the plane's `ref`, which is
