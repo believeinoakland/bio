@@ -11922,3 +11922,75 @@ op name, so a caller building the op name by concatenation or holding it in a va
 be invisible to it. `civicos-ui/app.html`'s own call site is `actAsk("cite", params)` — the
 quoted form — and `EDGE_ACTIONS` in `index.mjs` is the plane's own list; a fourth spelling
 would have to be written deliberately.
+
+## M-14 · 2026-09-14 · REC-93 — THE OBSERVATION LOG'S SWEEP-VOLUME MEASUREMENT: the edge-triggered rule writes **15.14 rows/day** where the naive rule writes **43,283**, a **2,859x** reduction, and the number the table must actually absorb is the **2,713-row peak day** rather than either mean (worktree `agent-a239cb7601fee3669`)
+
+`OBSERVATION-LOG-DESIGN.md`'s own **Incomplete §7** names this number as OWED: *"the
+sweep-volume measurement (rows per day at the monitor's cadence over the census corpus)
+is named and not taken; the edge-triggered rule in §7 is the design's answer to the
+growth it expects, and the number that confirms it is owed."* REC-93's queue row makes
+taking it a precondition of the edge-triggered rule landing. **It is taken here, and it
+CONFIRMS the design's rule** — which is worth saying plainly, because a measurement that
+agrees with the design it was owed to is still a measurement and not a formality.
+
+**The corpus is COFF-6's, unchanged and re-listed rather than inherited**: the public
+`cao-94612` bucket every `oaklandca.gov/files/assets/…` URL serves from. **43,283 keys,
+44 list requests**, which is M-13's figure to the key and confirms the population did not
+move between 2026-09-14's two independent listings.
+
+**Instrument.** `tools/measure-office-corpus.py sweepvolume [bucket] [window]` — COFF-6's
+own probe gains a fourth mode rather than a second tool standing beside it, the same
+choice CAP-7 made and for the same reason: this file already holds the corpus's
+definition. Python 3 stdlib only, anonymous `ListObjectsV2`, **no credential and no body
+downloaded** — one metadata pass, paced at 0.25 s. `npx wrangler whoami` is not relevant
+here and was not run: nothing in this mode touches a Cloudflare account.
+
+    python3 tools/measure-office-corpus.py sweepvolume cao-94612 90
+
+### The figures
+
+| rule | rows/day | rows/year |
+| --- | --- | --- |
+| **NAIVE** — one row per asset per daily sweep (what §7 says must not happen) | **43,283** | **15,798,295** |
+| **EDGE-TRIGGERED, FLOOR** — mean over the whole 2,859-day span | **15.14** | ~5,526 |
+| EDGE-TRIGGERED, FLOOR — mean over the last 90 days | **0.01** (1 write) | — |
+| EDGE-TRIGGERED, FLOOR — median of the 2,067 days that carry any write | **15** | — |
+| **EDGE-TRIGGERED — BUSIEST SINGLE DAY** | **2,713** | — |
+
+- `LastModified` window: **2018-10-31 .. 2026-08-28**, 2,859 days spanned.
+- **2,067 of those days carry a write; 792 (27.7%) write nothing at all.**
+- **naive / edge-floor = 2,859x.** The edge rule writes **0.0350%** of the naive volume.
+- Top days, and every one of them is a bulk upload rather than a cadence: 2018-10-31
+  (2,713), 2019-01-31 (1,212), 2018-11-26 (690), 2023-10-14 (638), 2022-03-08 (355).
+
+### What this instrument CAN AND CANNOT SEE, and it is why the figure is labelled a FLOOR
+
+It reads `LastModified`, which records only the LATEST write to a key. So:
+
+- **an asset rewritten twice on different days is counted ONCE**, on the later day. The
+  per-day figures are a **lower bound** on change volume, not an estimate of it.
+- **a key DELETED between two sweeps is invisible here entirely** — a listing shows what
+  exists, never what stopped existing. A disappearance writes a row under the edge rule,
+  so **that arm of the volume is NOT measured and is stated as unmeasured rather than
+  scored zero.**
+- **a rewrite producing BYTE-IDENTICAL content still moves `LastModified`**, so this floor
+  counts some writes the edge rule would correctly NOT log.
+
+The last two push in opposite directions. They are named rather than netted into one
+confident number.
+
+### What the number actually decides, which is not what it first looks like
+
+**The 90-day figure of 0.01 rows/day is the one to distrust, and the span mean of 15.14
+is the one to build against.** The corpus wrote once in the last 90 days; a sweep sized on
+that would be sized on a quiet quarter, and the same corpus wrote 2,713 rows in one day in
+2018. **So the edge rule is confirmed on the MEAN and the table is sized on the PEAK**: at
+15 rows/day the log is a rounding error against a store already holding captures, and at
+2,713 rows in a day it is still four orders of magnitude inside anything that would need a
+retention policy — which is precisely §7's claim that *"nothing is ever deleted from the
+log except by whole-store purge; the edge rule is what keeps that affordable."*
+
+**The naive rule is refuted by arithmetic and did not need this instrument** — 15.8 million
+rows a year over one city's assets. What needed measuring was whether the edge rule's
+volume is small in the REAL corpus rather than in principle, and it is: **2,859x smaller.**
+

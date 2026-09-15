@@ -504,7 +504,25 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    second authority for a fact the signature does not yet cover — the shape this
    record refuses — so the scan is the price of the pins being authored rather
    than projected, and it is paid over the smallest set in the store. */
-const CLASS_MEASURED_2026_08_08 = 32;
+/* 32 -> 33, 2026-09-14 by REC-93 (IC-92). THE ARRIVAL IS `frontier`, and this
+   ratchet fired on it correctly rather than pedantically, so the reason is
+   recorded here rather than the number being nudged.
+   WHAT IT ACTUALLY CAUGHT: `Store#frontier` loops over the rows its scan
+   returned and issues queries PER ROW — two in `#frontierVerification`
+   (`last_verified`, and the earliest LOOKED_INDETERMINATE after it) and one
+   against `register` to annotate a `result_ref` whose capture has been purged.
+   That is genuine amplification and the classifier is right to name it.
+   WHY IT IS ADMITTED RATHER THAN REWRITTEN: the scan underneath it is
+   `LIMIT`-bounded and the bound is PUBLISHED on every answer, including the
+   empty one — `FRONTIER_LIMIT_DEFAULT` 200, `_MAX` 2000, driven in
+   `bounds.test.mjs` where a cap of one provably bites. So the work is bounded by
+   a figure a caller can read, not by how much the instance has ever looked at,
+   which is the property this ratchet exists to protect. The honest cost is
+   stated rather than hidden: at the default cap this method issues up to ~600
+   round trips inside the DO, and if the frontier ever needs to answer at 2000
+   the three per-row reads should be folded into the scan first.
+   THE FIGURE IS TAKEN FROM THIS ARM'S OWN FAILURE OUTPUT, never by adding one. */
+const CLASS_MEASURED_2026_08_08 = 33;
 console.log(`  RATCHET: ${CLASS.size} methods derive over an unbounded scan, `
           + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
@@ -517,7 +535,13 @@ t("RATCHET: and a FLOOR beside it — the roster shrinking without this figure b
   CLASS.size >= CLASS_MEASURED_2026_08_08, true);
 t("RATCHET: the dispatched members are pinned BY NAME, not merely counted — a bare count of ten is "
 + "satisfied by ANY ten, and what a caller can reach is the half that matters",
-  CLASS_OPS, ["audit->auditPass", "biasmanifest->biasManifest", "export->exportManifest", "proposals->proposalsFeed",
+  CLASS_OPS, ["audit->auditPass", "biasmanifest->biasManifest", "export->exportManifest",
+              /* REC-93: the observation log's frontier read. Pinned BY NAME here
+                 and not merely counted, which is this arm's whole point — the
+                 ceiling moving by one says "something arrived", and only the
+                 name says WHAT. */
+              "frontier->frontier",
+              "proposals->proposalsFeed",
               "publishedcase->publishedCase", "queue->queueFeed", "readingname->documentsNamingEntity",
               "reevaluations->reevaluations", "select->selectionCreate", "selection->selectionResolve",
               "selectionrelease->selectionRelease"]);

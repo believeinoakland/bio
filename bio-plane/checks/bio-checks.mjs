@@ -6109,13 +6109,24 @@ export async function checkBundle(input, opts = {}) {
  * ===========================================================================
  *
  * C-22 — THE INVESTIGATIVE RUN'S REFUSALS (IS-6, INVESTIGATIVE-SESSION.md §11
- * and §14b.6). EIGHT C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE.
+ * and §14b.6). TEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE.
  *
  * SIX UNTIL 2026-08-08, when SK-1 added C-22.7 — the run's THIRD condition,
  * the skill version, refused at the open where the two principals already are.
  * SEVEN UNTIL 2026-08-09, when PL-18 added C-22.8 — DEC-63's gate, the one
  * refusal in this family that is about WHO IS ASKING rather than about what the
  * run object says.
+ * EIGHT UNTIL 2026-09-14, when REC-93 added C-22.9 and C-22.10 — and the family
+ * CHANGED SUBJECT rather than merely growing. `OBSERVATION-LOG-DESIGN.md` §4.4
+ * folds `ai_run_log` into the general `observations` table, so C-22.1, C-22.2,
+ * C-22.3 and C-22.6 stopped being THE RUN'S refusals and became THE TABLE'S,
+ * enforced at the one append site every level writes through. The two new rows
+ * are the two §3 adds: a look with no authority behind it is unrecordable, and a
+ * PRESENT that names nothing it found is a coverage claim with no evidence under
+ * it. They are in THIS family and not a new one for the reason the paragraph
+ * below already gives, which applies unchanged — a new `*_CHECKS` family is a
+ * floor in `civicos-ui/check-refusal-codes.mjs` that buys slack for everybody
+ * else's walk unless it is moved in the same turn.
  * The count is corrected in place rather than left standing: a header carrying
  * a number nobody re-measures is this repository's most-repeated finding, and
  * this file is where a reader comes to learn how many the family holds. C-22.7
@@ -6277,6 +6288,70 @@ export const AI_RUN_CHECKS = {
       + 'belongs to, and this account is not one of that project\'s participants. This is not about '
       + 'what the account is allowed to do in general — it is about which piece of work it is part '
       + 'of. Someone who owns that project can invite you to it.',
+  },
+  /* REC-93, 2026-09-14 — THE COLUMN THAT MAY NEVER BE ABSENT.
+     `OBSERVATION-LOG-DESIGN.md` §3: *"`authority_kind` is never NULL — a look
+     the record cannot say WHY it made is not recorded."* `STORE-AS-CACHE.md`
+     carries the rule it descends from, which is RFC 2308's: A NEGATIVE ANSWER
+     WITH NO AUTHORITY BEHIND IT IS NOT RECORDABLE. The whole value of this table
+     is that an absence becomes a stated fact instead of a retry, and an absence
+     nobody can attribute is not a fact anybody can weigh.
+
+     IT IS ALSO WHERE §4.6'S PROVISIONAL IS ENFORCED RATHER THAN MERELY WRITTEN
+     DOWN, and that is the part worth reading before changing this row. *A
+     member's ad hoc search, view or read is not an observation* — because the
+     record is what a legal process can reach, and a store that holds what its
+     members looked for is a different object from one that holds what a group
+     published. What stops that from being written is not a missing writer, which
+     any later item could supply without noticing: it is that there is NO
+     `authority_kind` A MEMBER'S SEARCH COULD TAKE. The alternative §4.6 declines
+     (`authority_kind = member`) is absent from `OBSERVATION_AUTHORITY_KINDS` on
+     purpose, so reversing the provisional costs one line in a vocabulary and no
+     schema change — which is exactly what §4.6 says reversal should cost, in the
+     one direction that stays reversible. A member who wants a search ON the
+     record states it as a LEAD (D-194), which carries a name BY CHOICE.
+
+     THE TEST IS MEMBERSHIP, NOT PRESENCE. A null check would pass the very value
+     the provisional exists to keep out. */
+  OBS_AUTHORITY_UNNAMED: {
+    check: 'C-22.9',
+    where: 'src/airun.mjs checkObservation, called from store.mjs #observe',
+    translation: 'That observation does not say why the look was made. '
+      + 'The record keeps what it looked for only when something can be named as the reason — '
+      + 'an investigation, a monitoring sweep, a link in a document, a ratification, or a '
+      + 'lead somebody wrote down. A look with no reason behind it is not recorded.',
+  },
+  /* REC-93, 2026-09-14 — THE WARC LESSON, AND THE FALSE-COVERAGE HAZARD FROM
+     THE OTHER DIRECTION. `OBSERVATION-LOG-DESIGN.md` §3: *"`PRESENT` with no
+     `result_ref` is refused — the WARC lesson: a revisit that omits what it
+     refers to silently loses which URL the bytes came from."*
+
+     WHY IT IS ITS OWN CODE AND NOT C-22.3's. C-22.3 refuses a PRESENT that the
+     EVIDENCE contradicts (a client-rendered shell read as coverage). This refuses
+     a PRESENT WITH NO EVIDENCE ATTACHED AT ALL. They are different facts with
+     different remedies — one is answered by re-reading the capture honestly, the
+     other by naming what the look produced — and DEC-49's rule is that a single
+     refusal covering both tells a member nothing they can act on.
+
+     IT DOES NOT FIRE ON `authority_kind = run`, AND THAT CARVE-OUT IS A MEASURED
+     CONFLICT BETWEEN TWO SECTIONS OF THE DESIGN rather than a convenience. §3
+     writes this refusal unconditionally; §4.4 requires every `ai_run_log` row to
+     fold into this table and read back through `op=airunlog` UNCHANGED. Both
+     cannot hold: `ai_run_log` HAS NO `result_ref` COLUMN, so no row ever written
+     to it can satisfy this, and `op=airuntick` accepts a caller-supplied
+     `PRESENT` today. Enforcing it over `run` would drop rows out of a coverage
+     record, or force the fold to invent a referent — and inventing one to get
+     past a gate is the failure CLAUDE.md names by name. The fold is therefore
+     admitted under the weaker rule it was written under, every other authority
+     carries the refusal, and the carve-out is a DEBT row rather than a shape:
+     it closes when the run's own writers carry referents (REC-95). */
+  OBS_PRESENT_NO_REFERENT: {
+    check: 'C-22.10',
+    where: 'src/airun.mjs checkObservation, called from store.mjs #observe',
+    translation: 'That observation says the thing is there without saying what was found. '
+      + 'A record that something is present has to point at what it found — the captured '
+      + 'document, the passage, the entity — or nobody can check it later, and a claim of '
+      + 'coverage that cannot be checked is worse than no claim at all.',
   },
 };
 

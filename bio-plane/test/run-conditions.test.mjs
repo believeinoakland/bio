@@ -342,6 +342,23 @@ const ROLE = {
      SQL projects any stored column beyond the key FAILS THERE, which is what
      makes the exemption from ARM P1 EARNED rather than granted. */
   "#findingsVersionFromAnotherTeam": "ATTRIBUTES",
+  /* REC-93 / IC-92, 2026-09-14 — A THIRTEENTH READER ARRIVED HERE AND THEN LEFT
+     AGAIN, and the round trip is worth the six lines because BOTH directions of
+     this table were proved by it in one turn.
+     `#aiRunAppend` briefly read `SELECT principal_claude FROM ai_runs` to stamp
+     the observation log's `actor` (OBSERVATION-LOG-DESIGN.md §4.4). ARM W3
+     caught the new reader BY NAME. It was then classified `ATTRIBUTES` — the
+     only role that could have fitted — and **ARM W9 refused that**, correctly:
+     an attributing reader must project NOTHING BUT THE KEY, and this one
+     projected a stored column. No role fitted, which is the table doing its
+     job rather than a gap in it.
+     So the method stopped reading instead: every caller already holds the run
+     row, so the actor is PASSED IN, and the lookup was also one extra SELECT per
+     appended entry. ARM W3b then caught the now-stale entry in this very table —
+     "a method deleted from the plane cannot keep a green cell alive here" — and
+     it was removed. Nothing is classified here now because nothing needs to be.
+     Kept as a comment because the next reader tempted to have a writer read a
+     row just to describe it meets the two arms that say no. */
 };
 
 const COLUMNS = runColumns(SCHEMA_SRC);

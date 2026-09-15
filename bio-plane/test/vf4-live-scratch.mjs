@@ -612,7 +612,8 @@ if (auditSawIt) {
 } else {
   note("NC2 AS MEASURED, NOT AS PREDICTED: `op=audit` is a CONFORMANCE PASS OVER BUNDLES "
     + "(store.mjs auditPass walks `SELECT b.bundle_id ... FROM bundles`), and a CHECK run's residue is "
-    + "NOT bundles — it is rows in `basis_versions`, `basis_version_legs`, `ai_runs`, `ai_run_log` and "
+    + "NOT bundles — it is rows in `basis_versions`, `basis_version_legs`, `ai_runs`, `observations` "
+    + "(REC-93 folded `ai_run_log` into it on 2026-09-14) and "
     + "`ai_run_bounds`. A `suggested` version is a legal, conformant thing for a live record to hold, so "
     + "the pass reports it clean and is RIGHT to. The instrument that DOES see this residue is `op=stats`, "
     + "whose per-derived-table counters exist for exactly this (D-113: 'reported so a purge can PROVE it "

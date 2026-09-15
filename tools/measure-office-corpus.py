@@ -772,6 +772,112 @@ def cmd_drivecontrol():
         sys.exit(1)
     print('\nPASS: every arm as declared.')
 
+
+# ---------------------------------------------------------------- REC-93
+# sweepvolume -- THE OBSERVATION LOG'S SWEEP-VOLUME MEASUREMENT.
+#
+# OBSERVATION-LOG-DESIGN.md section 7 states a rule and names the number that
+# would confirm it as OWED: "rows per day at the monitor's cadence over the
+# census corpus". The NAIVE rule (one observation row per asset per sweep) is
+# arithmetic and needs no instrument: 43,282 assets swept daily is 43,282 rows a
+# day. The EDGE-TRIGGERED rule's volume is an empirical question about this
+# corpus, and it is what this mode measures: how many of those assets actually
+# CHANGE on a given day, because under the edge rule an unchanged revisit writes
+# no row at all.
+#
+# WHAT IT READS, AND WHAT THAT CAN AND CANNOT SEE -- this paragraph is
+# load-bearing and is the reason the figure below is labelled a FLOOR.
+# It reads LastModified off the same public anonymous ListObjectsV2 the census
+# mode already uses: no credential, no body downloaded, one pass over the bucket.
+# LastModified records only the LATEST write to a key, so:
+#   * an asset rewritten twice on different days is counted ONCE, on the later
+#     day. The per-day figures are therefore a FLOOR on change volume and are
+#     labelled as one. They are not an estimate of the true rate; they are a
+#     lower bound the instrument can actually support.
+#   * a key DELETED between two sweeps is invisible here entirely -- a listing
+#     shows what exists, never what stopped existing. A disappearance writes a
+#     row under the edge rule, so that arm of the volume is NOT measured by this
+#     mode, and is STATED as unmeasured rather than scored zero.
+#   * a rewrite that produced BYTE-IDENTICAL content still moves LastModified,
+#     so this floor counts some writes the edge rule would correctly not log.
+# The last two push in opposite directions and are both named rather than netted
+# into one confident number.
+def cmd_sweepvolume(bucket='cao-94612', window=90):
+    import datetime
+    NS = '{http://s3.amazonaws.com/doc/2006-03-01/}'
+    token, rows, reqs = None, [], 0
+    while True:
+        q = {'list-type': '2', 'max-keys': '1000'}
+        if token:
+            q['continuation-token'] = token
+        with urllib.request.urlopen(
+                'https://' + bucket + '.s3.amazonaws.com/?' + urllib.parse.urlencode(q),
+                timeout=30) as resp:
+            root = ET.fromstring(resp.read())
+        reqs += 1
+        for c in root.findall(NS + 'Contents'):
+            rows.append((c.find(NS + 'Key').text,
+                         c.find(NS + 'LastModified').text))
+        tok = root.find(NS + 'NextContinuationToken')
+        if root.find(NS + 'IsTruncated').text != 'true' or tok is None:
+            break
+        token = tok.text
+        time.sleep(0.25)
+
+    n = len(rows)
+    if n == 0:
+        sys.exit('REFUSED: the listing is EMPTY. A volume figure over an empty '
+                 'corpus is the headline-over-nothing defect measured three '
+                 'times in this repository; no number is printed.')
+    days = collections.Counter(lm[:10] for _, lm in rows)
+    allday = sorted(days)
+    first, last = allday[0], allday[-1]
+    d0 = datetime.date.fromisoformat(first)
+    d1 = datetime.date.fromisoformat(last)
+    span = (d1 - d0).days + 1
+    recent = [d for d in allday
+              if (d1 - datetime.date.fromisoformat(d)).days < window]
+    rec_rows = sum(days[d] for d in recent)
+    counts = sorted(days.values())
+    edge_mean = n / float(span)
+    print('corpus       bucket=' + bucket + ' keys=' + str(n) +
+          ' requests=' + str(reqs))
+    print('window       LastModified ' + first + ' .. ' + last + '  (' +
+          str(span) + ' days spanned, ' + str(len(allday)) +
+          ' distinct days carry a write)')
+    print('')
+    print('NAIVE RULE   one row per asset per daily sweep = ' + str(n) +
+          ' rows/day = ' + format(n * 365, ',') +
+          ' rows/year   (arithmetic, not a measurement)')
+    print('')
+    print('EDGE RULE, FLOOR -- assets whose LastModified falls on a given day:')
+    print('  mean over the whole ' + str(span) + '-day span  = ' +
+          format(edge_mean, '.2f') + ' rows/day')
+    print('  mean over the last ' + str(window) + ' days       = ' +
+          format(rec_rows / float(min(window, span)), '.2f') +
+          ' rows/day  (' + str(rec_rows) + ' writes)')
+    print('  median of the ' + str(len(allday)) +
+          ' days that carry any write = ' +
+          str(counts[len(counts) // 2]) + ' rows/day')
+    print('  BUSIEST SINGLE DAY                 = ' + str(counts[-1]) +
+          ' rows  (the peak the table must absorb, not the mean)')
+    print('  days with ZERO writes in the span  = ' + str(span - len(allday)) +
+          ' (' + format((span - len(allday)) * 100.0 / span, '.1f') +
+          '% of days in the span write nothing)')
+    print('')
+    print('RATIO        naive / edge-floor over the span = ' +
+          format(n / edge_mean, '.0f') + 'x  -- the edge rule writes ' +
+          format(edge_mean * 100.0 / n, '.4f') + '% of the naive volume')
+    print('')
+    print('TOP DAYS (a peak is one bulk upload, not a cadence):')
+    for d, c in days.most_common(10):
+        print('  ' + d + '  ' + str(c))
+    print('')
+    print('NOT MEASURED BY THIS MODE, stated rather than scored zero: deletions '
+          '(a listing cannot see what stopped existing); second and later writes '
+          'to one key on different days (LastModified keeps only the latest); '
+          'and first looks, which are a one-off per subject and not a daily rate.')
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         sys.exit(__doc__ or 'usage: census <bucket> | analyze <dir> | control '
@@ -791,5 +897,8 @@ if __name__ == '__main__':
         cmd_drivederive(sys.argv[2] if len(sys.argv) > 2 else '.cap7-pen/drive-hits.jsonl')
     elif sys.argv[1] == 'drivecontrol':
         cmd_drivecontrol()
+    elif sys.argv[1] == 'sweepvolume':
+        cmd_sweepvolume(sys.argv[2] if len(sys.argv) > 2 else 'cao-94612',
+                        int(sys.argv[3]) if len(sys.argv) > 3 else 90)
     else:
         sys.exit('unknown mode ' + sys.argv[1])

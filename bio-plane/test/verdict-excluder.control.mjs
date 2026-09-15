@@ -236,14 +236,22 @@ const PROMOTED_GUARD = /^[ \t]*if \(!promoted\.answered\).*$\n/m;
 
 /* -------------- (5) A REFUSAL-SHAPED READ THE OLD EXCLUDER COUNTS AS A DEFECT
    The planted method is a REAL member of the class the walk grades: it scans
-   `ai_run_log` with NO `LIMIT`, publishes `entries`, and refuses in a spelling
-   the old excluder cannot see. Under the new excluder it is a refusal and is not
+   the observation log with NO `LIMIT`, publishes `entries`, and refuses in a
+   spelling the old excluder cannot see.
+   RE-AIMED 2026-09-14 BY REC-93, and the arm is unchanged in every respect that
+   matters. Both plants below read `ai_run_log`, which `OBSERVATION-LOG-DESIGN.md`
+   §4.4 folded into `observations` and `#migrate` DROPS. The walk these arms
+   exercise is a SOURCE walk, so a plant naming a table that no longer exists
+   would NOT have failed the arm — it would have gone on passing while planting
+   code the plane can no longer run, which is the quietest way for a control to
+   stop being about anything. The table name is corrected so a reader who plants
+   this by hand gets a method that actually executes. Under the new excluder it is a refusal and is not
    graded; under the old one it lands on the BARE roster and breaks the ceiling —
    over a method that is not a defect at all. */
 const PLANT_REFUSAL = [
   "  ncD240Read(input = {}) {",
   "    const run = String((input && input.run) || \"\");",
-  "    const entries = this.#rows(`SELECT seq FROM ai_run_log WHERE run = ?`, run);",
+  "    const entries = this.#rows(`SELECT seq FROM observation_log WHERE authority_kind = 'run' AND authority = ?`, run);",
   "    if (!entries.length) return { found: false, reason: \"NO_SUCH_RUN\", run, entries };",
   "    return { found: true, run };",
   "  }",
@@ -252,7 +260,7 @@ const PLANT_REFUSAL = [
 const PLANT_BOUNDED = [
   "  ncD240Read(input = {}) {",
   "    const cap = 50;",
-  "    const rows = this.#rows(`SELECT seq FROM ai_run_log ORDER BY seq LIMIT ?`, cap + 1);",
+  "    const rows = this.#rows(`SELECT seq FROM observation_log ORDER BY seq LIMIT ?`, cap + 1);",
   "    return { entries: rows.slice(0, cap), limit: cap, overflowed: rows.length > cap };",
   "  }",
   "",

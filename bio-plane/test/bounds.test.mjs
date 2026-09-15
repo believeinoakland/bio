@@ -455,8 +455,15 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
    bites. `op=calibrationdrift` is NOT on this roster and that is correct rather
    than a gap: its bound lives in the private `#calDriftFor`, which this walk
    reads at method grain and not at op grain, and its `limit`/`truncated` pair
-   reaches the answer regardless. */
-  OPS.size, 31);
+   reaches the answer regardless.
+   REC-93 / IC-92, 2026-09-14: 31 -> 32. One new capped read, `op=frontier`, the
+   observation log's document-level frontier (`OBSERVATION-LOG-DESIGN.md` §6 row
+   1). **The figure is taken from THIS ARM'S OWN FAILURE OUTPUT** (`want 31 /
+   got 32`) and not by adding one to the number above it, which is the only way
+   a roster figure stays a measurement rather than a running total. The op is
+   DRIVEN in the loop below, which is what the PIN arm demands of every capped
+   op and what stops a roster from growing into a list nobody exercises. */
+  OPS.size, 32);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -725,6 +732,28 @@ const R70_RUN = "RUN-2026-0807-bounds70";
       state: "PRESENT", detail: `REC-70 fixture observation ${i}` })) });
   if (ticked?.ticked !== true) throw new Error(`REC-70 fixture airuntick: ${JSON.stringify(ticked)}`);
 }
+/* REC-93 / IC-92, 2026-09-14 — THE FRONTIER'S OWN FIXTURE, AND IT IS HERE
+   BECAUSE THE ARM COULD NOT ARM WITHOUT IT. `op=frontier` joined this roster as a
+   new capped read, and its first run reported `truncated: false` at a cap of ONE:
+   the suite's store held FEWER THAN TWO document-level subjects, so a cap of one
+   could not bite and the arm was passing over a population it could not cut. An
+   arm that cannot arm is a finding, not a green light — the same shape
+   `airuns.test.mjs` recorded when `page.length (1) > cap (1)` was false either
+   way and its truncation flag could not be set.
+   THE RUN'S three log rows above do NOT serve: they fold in at `subject_kind =
+   unstated`, and the document-level frontier reads `address` subjects. So three
+   real document-level observations are written HERE through the real writer,
+   `recordCapturedLocator` — the acquire path's own site — rather than by hand,
+   because a fixture that inserts rows a writer would never produce arms the trap
+   for a shape production cannot reach. */
+for (const i of [1, 2, 3])
+  await doStub.recordCapturedLocator({
+    address: `https://example.gov/r93-frontier-${i}`,
+    addressNorm: `https://example.gov/r93-frontier-${i}`,
+    captureSha: sha(`r93-frontier-${i}`), retrieved: "2026-09-14T09:00:00Z" });
+t("FIXTURE ARMS THE TRAP: three document-level subjects exist, so op=frontier's cap of 1 cuts it",
+  (await GET(`op=frontier&token=mem-r57&level=document&limit=2000`)).looked?.length >= 3, true);
+
 t("FIXTURE ARMS THE TRAP: the REC-70 run's log holds THREE observations, so op=airunlog's cap of 1 cuts it",
   (await GET(`op=airunlog&token=mem-r57&run=${R70_RUN}&limit=5000`)).entries?.length, 3);
 
@@ -957,6 +986,25 @@ const DRIVEN = [
      a KEYED lookup whose answer is a list, not a query paged through a corpus.
      Its fixture is REC-70's run plus two more in the same inquiry, so a cap of
      one provably bites. */
+  /* REC-93 / IC-92, 2026-09-14: THE FRONTIER, a NEW capped read -- *what have we
+     looked for at this level, and what came of it* (`OBSERVATION-LOG-DESIGN.md`
+     section 6 row 1). It answers in `op=airunlog`'s vocabulary -- `limit` beside
+     `truncated` -- and mints no new spelling, because it is the same KIND of read
+     as its neighbours: a KEYED lookup (one level) whose answer is a list.
+     ITS 200/2000 PAIR IS ITS OWN RATHER THAN BORROWED, and that is a decision
+     rather than an oversight: the population here is every SUBJECT the instance
+     has ever looked at, which grows with the corpus and not with one run's ticks
+     or one inquiry's versions, so reusing `op=airunlog`'s 5000 would be a figure
+     carried across on the strength of the table name alone -- the mistake
+     `AI_RUNS_LIMIT_DEFAULT`'s own comment names, one method over.
+     THE `lost` SENTENCE IS THE POINT OF THIS ROW and is not decoration: a cut
+     this reader cannot see is a member told the record has finished looking. */
+  { op: "frontier", bite: 1, whole: 2000,
+    drive: (n) => GET(`op=frontier&token=mem-r57&level=document&limit=${n}`),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether this is EVERYTHING the instance has looked for at the document level or the first N -- "
+        + "and the frontier's whole purpose is to say WHICH absence is true, so a silent cut turns "
+        + "'nobody has looked at that' into a claim the record cannot support" },
   { op: "airuns", bite: 1, whole: 1000,
     drive: (n) => GET(`op=airuns&token=mem-r57&contextType=inquiry`
                     + `&contextId=INFO-2026-0001-r57&limit=${n}`),

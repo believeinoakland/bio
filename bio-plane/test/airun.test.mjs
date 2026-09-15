@@ -232,11 +232,26 @@ console.log("\n--- ARM D · DEC-49: a code with a canned translation, read from 
      about an account with different remedies. It is in this family for D1's
      standing reason: it is a fact about the run, and a new `*_CHECKS` family is
      a floor bought for one row. **THIS ARM FIRED ON PL-18's FIRST RUN AND THAT
-     IS THE ARM WORKING** — the number was corrected, never exempted. */
-  t("ARM D1: the C-22 family is EIGHT C-numbers — IS-6's six, SK-1's skill-version condition, and "
-    + "PL-18's project-membership gate",
+     IS THE ARM WORKING** — the number was corrected, never exempted.
+     CORRECTED A THIRD TIME 2026-09-14 BY REC-93, and this time the family
+     CHANGED SUBJECT rather than merely growing, which is why the arm's own
+     sentence is rewritten and not just its number. `OBSERVATION-LOG-DESIGN.md`
+     §4.4 folds `ai_run_log` into the general `observations` table, so C-22.1,
+     C-22.2, C-22.3 and C-22.6 stopped being THE RUN'S refusals and became THE
+     TABLE'S, enforced at the one append site every level writes through. The two
+     new rows are §3's two additions: C-22.9 (`OBS_AUTHORITY_UNNAMED` — a look the
+     record cannot say WHY it made is not recorded, RFC 2308's rule, and the place
+     §4.6's provisional is actually enforced) and C-22.10
+     (`OBS_PRESENT_NO_REFERENT` — a PRESENT that names nothing it found is a
+     coverage claim with no evidence under it, the WARC lesson). **THIS ARM FIRED
+     ON REC-93's FIRST RUN TOO, which is three for three**: the number was read
+     off the arm's own failure output and corrected, never exempted and never
+     computed by adding one. */
+  t("ARM D1: the C-22 family is TEN C-numbers — IS-6's six, SK-1's skill-version condition, and "
+    + "PL-18's project-membership gate, and REC-93's two for the folded observation log",
     codes.map((c) => AI_RUN_CHECKS[c].check).sort(),
-    ["C-22.1", "C-22.2", "C-22.3", "C-22.4", "C-22.5", "C-22.6", "C-22.7", "C-22.8"]);
+    ["C-22.1", "C-22.10", "C-22.2", "C-22.3", "C-22.4", "C-22.5", "C-22.6", "C-22.7",
+     "C-22.8", "C-22.9"]);
   t("ARM D2: every code carries a CANNED TRANSLATION — an untranslated code must not exist to be sent",
     codes.filter((c) => typeof AI_RUN_CHECKS[c].translation !== "string"
                      || AI_RUN_CHECKS[c].translation.length < 40), []);

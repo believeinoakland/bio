@@ -1113,6 +1113,15 @@ const OPS = {
   airunclose:         { classes: ["admin", "member", "probe"],      mutating: true  },
   airun:              { classes: ["admin", "member", "probe"],      mutating: false },
   airunlog:           { classes: ["admin", "member", "probe"],      mutating: false },
+  /* REC-93 / IC-92 — THE FRONTIER READ (`OBSERVATION-LOG-DESIGN.md` §6 row 1):
+     *what have we looked for at this level, and what came of it* — the candidate
+     list for FETCH / EXTRACT / DERIVE. A READ, so `mutating: false`.
+     THE CLASSES ARE THE RUN LOG'S, and that is deliberate rather than copied: §6
+     says *"a subject discloses a project's interest, so REC-36's withholding
+     applies row-whole across the fence"*. What a caller may SEE is decided by
+     the D-15 viewer stamp in the store, never by the class here — the same line
+     `airuns` draws two rows down. */
+  frontier:           { classes: ["admin", "member", "probe"],      mutating: false },
   /* REC-69 / UI-49's delegation: the CONTEXT-keyed read. Same classes as its
      three run-id-keyed siblings, because what a caller may see is decided by
      the D-15 viewer stamp in the store and never by the class here. */
@@ -7305,6 +7314,11 @@ export default {
            nonexistent run does — REC-25/REC-30's leak, one object over. The
            store fails closed on an absent stamp, like every op in this list. */
         || op === "airun" || op === "airunlog" || op === "airunspawn"
+        /* REC-93: the frontier's subjects are addresses a project went looking
+           for, which is the same disclosure a run is — §6 says REC-36's
+           withholding applies row-whole across the fence. Stamped here so the
+           store fails closed on an absent stamp, like every op in this list. */
+        || op === "frontier"
         /* REC-69: the same gate, keyed the other way round. Its three siblings
            take a RUN ID and answer about the context that run names; this one
            takes the CONTEXT and answers about the runs in it — so it is the

@@ -6898,3 +6898,136 @@ it is a UI item rather than a line (a page set to choose from, and a page canvas
 rectangle — UI-61's own second finding). It is a DELEGATION to UI in `CLAIMS.md`, not a note.
 So IC-84's SETTLED, which CONDUCT writes, rests on this landing **plus** that UI item —
 and the honest sentence today is *the act carries it, the surface does not yet send it*.
+
+## IC-92 · I5: THE OBSERVATION LOG — one `observations` table every level writes to, and `ai_run_log` FOLDS INTO IT · PROPOSED 2026-09-14 (REC-93, building `OBSERVATION-LOG-DESIGN.md` §8 row 1) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I5 (the store schema), currently **1.12.0 STABLE** (1.12.0 came from IC-86's resolution, FW-17, the same day)
+- **Proposer:** RECORD, worker `agent-a239cb7601fee3669`, 2026-09-14, from QUEUE REC-93
+- **Owner to land it:** `RECORD` (owner and proposer)
+- **Consumers to answer:** `RECORD` itself (the writers and both reads), `CAPTURE`
+  (`recordCapturedLocator` is in its acquire path and its answer gains three keys —
+  additive), `UI` (nothing consumes `op=frontier` yet; the member-facing surface is
+  Program B's and is explicitly NOT rowed in the design)
+- **Change class:** **ADDITIVE at the schema** — one new table and three indexes,
+  placed BEFORE the `host_governor` block, cleared by the whole-store purge arm and
+  deliberately LEFT by the per-bundle arm → MINOR bump (**1.13.0**)
+- **The id was MINTED with `node tools/mintid.mjs IC`** (floor IC-87; IC-88..IC-91
+  already held and stepped over).
+
+### I3 IS UNCHANGED IN SHAPE, AND THAT NON-CHANGE IS MEASURED RATHER THAN ASSERTED
+
+REC-93's row says *"I3 unchanged in shape and RECORDED as such"*, so it is recorded
+here with its evidence rather than as a sentence.
+
+`op=airunlog` now reads `observations` instead of `ai_run_log`. Its envelope does not
+move — same keys, same bound, same vocabularies travelling with the answer — and,
+more to the point, **its VALUES do not move either**. That was the real risk and it
+is not hypothetical: §3 makes `seq` STORE-WIDE, while `op=airunlog` has always
+published 1, 2, 3… per run. An unchanged envelope carrying changed numbers is the
+worst shape an interface change can take, because no consumer's schema check would
+ever catch it. The read therefore re-derives the ordinal within the authority.
+
+**The proof is a before/after comparison against the PRE-ITEM BUILD, not a digest
+this item computed and pinned against itself.** `bio-plane/test/rec93-fold-digest.mjs`
+boots the checkout at `f38af22` and this one from the same fixture, drives the same
+run through `op=airunopen` / `op=airuntick`, and compares the raw response text:
+
+    3,120 bytes · sha256 10bf6e28346b652793d7cd64d9ca56f5c09cea5a5da830641ea5f24be74a4a1a
+    IDENTICAL — before and after the fold
+
+A digest computed after the change proves only that the answer stopped moving; this
+one is the OLD behaviour's own answer. The suite re-checks the pin every run and
+also asserts it is not `e3b0c442…`, the sha256 of the empty string, which has been
+recorded twice in this repository as a "byte-identical" result over nothing.
+
+**The NEW op is `op=frontier`**, and a new op is additive to the OPS table rather
+than a change to an existing contract, so it does not move I3 by itself. It is
+gated on the same viewer stamp as `op=airun`/`op=airunlog`, for the reason §6 gives:
+a frontier subject discloses a project's interest, so REC-36's withholding applies
+row-whole across the fence.
+
+### WHAT THE TABLE IS, AND THE ONE RULE THAT MAKES IT WORTH A SCHEMA CHANGE
+
+`STORE-AS-CACHE.md` settles the architecture: THE RECORD AND THE OBSERVATION LOG ARE
+SEPARATE, WITH DIFFERENT LIFECYCLES. The record is write-once, content-addressed and
+never evicts, so folding a failed look into it makes every failed look either a
+phantom capture or nothing at all. This table is what lets **absence be RECORDED
+rather than retried away**, at the cost of one row and zero record bytes.
+
+**ONE TABLE FOR ALL FOUR LEVELS**, because a log per level is the D-164 failure
+(built three times, drifts) arriving in the coverage record. REC-94 (content),
+REC-95 (meaning) and REC-96 (the completeness statement) write into THIS table at
+THIS vocabulary — which is why REC-93 is the foundation item and why the append site
+is deliberately ONE function.
+
+### THE SCHEMA, AND THE THREE RULES I5's OWN ENTRY IMPOSES
+
+All three are honoured and each is asserted in `test/observation-log.test.mjs` §A:
+
+1. **BEFORE the `host_governor` block** — asserted by POSITION, not by eye.
+2. **No backtick in the literal** — asserted over this block specifically. A
+   balanced stray pair still parses, so `node --check` cannot see it.
+3. **Named in `op=purge`** — and here the two arms do OPPOSITE things on purpose,
+   which is the one place this row departs from the pattern every previous I5
+   addition followed. §7: *"Purge of a bundle LEAVES its observations. They are the
+   coverage record, not derived from the bundle."* The whole-store arm clears it
+   (D-113 applies as to every table); the per-bundle arm deliberately does not, and
+   a `result_ref` to a capture that purge removed is ANNOTATED at read time as
+   purged and never rewritten. Erasing the record of a look because its result went
+   is how a store forgets that it ever searched.
+
+Columns are §3's, verbatim, with **two deviations that are stated rather than
+smuggled** and both reported as DESIGN GAPs in REC-93's report:
+
+- **`subject` is NULLABLE** where §3 writes `NOT NULL`. §4.4 requires `ai_run_log`'s
+  rows to fold in and read back unchanged, and that table has always permitted a row
+  with no subject. A `NOT NULL` would force the fold to INVENT one.
+- **`subject_kind` gains a sixth value, `unstated`**, not in §3's list. `ai_run_log`
+  never recorded a subject's KIND, so every folded row would otherwise have to be
+  assigned one by DERIVING it from the level — a fact about rows already written,
+  invented after the fact. `unstated` says the true thing.
+
+### TWO NEW REFUSALS, C-22.9 AND C-22.10, IN THE EXISTING FAMILY
+
+The C-22 family CHANGED SUBJECT rather than merely growing: C-22.1, C-22.2, C-22.3
+and C-22.6 stopped being THE RUN's refusals and became THE TABLE's, enforced at the
+one append site every level writes through. They are in this family and not a new
+one because a new `*_CHECKS` family is a floor in `civicos-ui/check-refusal-codes.mjs`
+that buys slack for everybody else's walk. The family header's count was corrected
+in place from EIGHT to TEN, and `airun.test.mjs` ARM D1 — which pins that number and
+has now fired on three consecutive items — was CORRECTED, never exempted.
+
+- **C-22.9 `OBS_AUTHORITY_UNNAMED`** — a look the record cannot say WHY it made is
+  not recorded. RFC 2308's rule as `STORE-AS-CACHE.md` carries it. **It is also the
+  single place §4.6's provisional is ENFORCED**: a member's ad hoc search is never an
+  observation, and what stops it is not a missing writer (any later item could add
+  one without noticing the doctrine) but that there is NO `authority_kind` a member's
+  search could take. The alternative §4.6 declines (`authority_kind = member`) is
+  absent from the vocabulary on purpose, so reversing the provisional costs one line
+  and no schema change — exactly what §4.6 says reversal should cost.
+- **C-22.10 `OBS_PRESENT_NO_REFERENT`** — a `PRESENT` that names nothing it found is
+  a coverage claim with no evidence under it (the WARC lesson). **It does not fire on
+  `authority_kind = run`**, and that carve-out is a measured conflict between §3 and
+  §4.4 rather than a convenience: `ai_run_log` has no `result_ref` column, so no row
+  ever written to it can satisfy the rule, and `op=airuntick` accepts a
+  caller-supplied `PRESENT` today. Enforcing it over `run` would drop rows out of a
+  coverage record or force the fold to invent a referent. It is a DEBT row (D-366),
+  not a permanent shape, and closes when REC-95's writers carry referents.
+
+### WHAT A CONSUMER MUST DO
+
+**Nothing.** Every existing op answers as it did; `op=frontier` is new and optional;
+`recordCapturedLocator`'s answer gains three keys (`observation`,
+`observation_written`, `observation_refused`) and loses none.
+
+### WHAT REVERSING COSTS
+
+The table and its indexes drop cleanly and nothing else depends on them yet. The
+expensive half is the FOLD: `ai_run_log` is dropped after `#migrate` copies its rows
+across, so reverting after a store has booted on this build means re-deriving that
+table from `observations` where `authority_kind = 'run'` — mechanical, and lossless
+except for `subject_kind`, which the old table never held. **Reverting after REC-94,
+REC-95 or REC-96 have landed is a different question and should be assumed
+expensive**: they are three more writers into this vocabulary, which is the whole
+reason this item was sequenced first.
+

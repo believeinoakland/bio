@@ -129,6 +129,64 @@ export const OBSERVATION_STATES = {
    quietly escaping two checks that each hard-coded four names. */
 export const DEFINITIVE_STATES = new Set(["LOOKED_ABSENT", "PRESENT"]);
 
+/* REC-93 / IC-92 -- THE OBSERVATION LOG'S THREE REMAINING VOCABULARIES, added
+   when `OBSERVATION-LOG-DESIGN.md` generalised this file's run log into the one
+   `observations` table every level writes to. They live HERE, beside the levels
+   and the states, for the reason the header gives: this file is PURE, so a suite
+   can hold the decision to the store's behaviour without workerd.
+
+   THEY ARE DATA AND NOT SWITCHES. Nothing anywhere derives behaviour from a
+   key's spelling; the refusals below test MEMBERSHIP. That is what lets REC-94
+   (content), REC-95 (meaning) and REC-96 (the completeness statement) arrive as
+   writers into an existing vocabulary rather than as three more of them, which
+   is the D-164 failure the one-table decision exists to avoid. */
+
+/* WHO OR WHAT DID THE LOOKING. `STORE-AS-CACHE.md`'s frontier carries
+   `surfaced_by` (agent / human) and this is the column it maps onto (design
+   section 5) -- one word, not two spellings of one fact. */
+export const OBSERVATION_ACTOR_CLASSES = {
+  plane:   "the plane's own scheduler looked, with no member and no machine behind it",
+  machine: "a machine credential looked: a run, an agent, an unattended writer",
+  member:  "a member's authored act caused the look (a lead, an objective)",
+};
+
+/* WHY THE LOOK WAS MADE, AND IT IS THE COLUMN THAT MAY NEVER BE ABSENT.
+   RFC 2308's rule as `STORE-AS-CACHE.md` carries it: A NEGATIVE ANSWER WITH NO
+   AUTHORITY BEHIND IT IS NOT RECORDABLE. This is also where design section 4.6's
+   provisional is ENFORCED rather than merely written down -- a member's ad hoc
+   search names no authority, so there is no value here it could take and no
+   writer for it. The alternative that provisional declines (an `authority_kind`
+   of `member`) is deliberately ABSENT from this object: the column would take
+   the value at the schema, and what stops it is this vocabulary. */
+export const OBSERVATION_AUTHORITY_KINDS = {
+  run:       "an investigative run (the precedent this generalises; IS-6)",
+  sweep:     "the monitor's sweep, under a named request or a ratified cadence",
+  link:      "a link discovered inside a document we hold (the deferred partition)",
+  ratify:    "ratification's re-fetch of reused parts",
+  acquire:   "an acquisition, of a new address or a monitored one",
+  extract:   "an extraction attempt over a capture (REC-94)",
+  derive:    "a derivation over extracted content (REC-95)",
+  lead:      "a member's LEAD -- the authored act that puts a name behind a negative answer (D-194, Program B)",
+  objective: "a standing objective the instance is monitoring for",
+};
+
+/* WHAT THE SUBJECT IS. `unstated` is the sixth and it is NOT in design section
+   3's list: it is what the FOLD needs and it is stated rather than smuggled.
+   `ai_run_log` never recorded a subject's kind, so every row folded in from it
+   would otherwise have to be assigned one by DERIVING it from the level -- and a
+   derived kind on a row already written is the record claiming more than it can
+   support, at the exact scale this project's worst defect class arrives at.
+   `unstated` says the true thing: the kind was never recorded. */
+export const OBSERVATION_SUBJECT_KINDS = {
+  address:     "the web address a document was looked for at, in its normalised form",
+  capture:     "a document the record already holds, named by the fingerprint of its bytes",
+  extent:      "a particular passage inside a document — a page, a cell, a paragraph (IC-1)",
+  entity:      "a person, body or thing the record keeps a registry entry for",
+  description: "a member's own words for something they could not name any other way",
+  unstated:    "the writer did not record what kind of thing this was about, and the record "
+             + "says so rather than guessing (the folded run log, and nothing new)",
+};
+
 /* §14b.6's bounds, in its own enumeration: "a budget — fetches requested,
    sub-sessions spawned, wall time across resumptions". `lease` is the fifth and
    it is OURS rather than the design's: it is the heartbeat whose lapse is how a
@@ -406,11 +464,19 @@ function refusal(key, detail) {
   return { ok: false, code: key, check: row.check, translation: row.translation, detail };
 }
 
-/** C-22.1 / C-22.2 / C-22.3 / C-22.6 — one observation log entry.
+/** C-22.1 / C-22.2 / C-22.3 / C-22.6 / C-22.9 / C-22.10 — ONE OBSERVATION.
  *
  *  `conditionKinds` is passed IN rather than imported here, so the caller
  *  supplies the live vocabulary and this function cannot hold a stale copy of
- *  it. The store passes `queuestate.mjs`'s own object. */
+ *  it. The store passes `queuestate.mjs`'s own object.
+ *
+ *  GENERALISED BY REC-93 from "one ai_run_log entry" to "one row of the
+ *  observations table", which is the whole of `OBSERVATION-LOG-DESIGN.md`
+ *  section 4.4: the run's log FOLDS IN, so C-22.1, C-22.2 and C-22.6 stop being
+ *  the run's refusals and become the table's. The function did not move and its
+ *  run-log behaviour did not change -- every entry that passed before this
+ *  landing still passes, which is the property `op=airuntick`'s callers depend
+ *  on and the one the over-strictness arm measures. */
 export function checkObservation(entry, conditionKinds) {
   const e = entry && typeof entry === "object" ? entry : {};
 
@@ -421,6 +487,26 @@ export function checkObservation(entry, conditionKinds) {
     return refusal("AI_LOG_NOT_A_BUNDLE",
       `this entry names bundle '${String(e.bundle)}'; the observation log is its own object `
       + `(INVESTIGATIVE-SESSION.md §11) and bundle.md is written only on success`);
+
+  /* C-22.9 — REC-93. THE COLUMN THAT MAY NEVER BE ABSENT, and it is the one
+     refusal in this family that is about WHY WE LOOKED rather than about what we
+     found. `STORE-AS-CACHE.md` carries RFC 2308's rule: a negative answer with
+     no authority behind it is not recordable. A log that cannot say why it made
+     a look is a log whose absences nobody can weigh, and an unauthorised look
+     recorded anyway is design section 4.6's provisional broken at the one place
+     it is actually enforceable.
+
+     MEMBERSHIP, NOT PRESENCE. An `authority_kind` of `member` would satisfy a
+     null check and is exactly what section 4.6 declines, so the test is against
+     the vocabulary -- which is also what makes the provisional REVERSIBLE at the
+     cost of one line here rather than a schema change, as section 4.6 promises. */
+  const authorityKind = typeof e.authority_kind === "string" ? e.authority_kind : "";
+  if (!Object.prototype.hasOwnProperty.call(OBSERVATION_AUTHORITY_KINDS, authorityKind))
+    return refusal("OBS_AUTHORITY_UNNAMED",
+      `'${authorityKind || "(absent)"}' names no authority. A look is recorded when it carries an `
+      + `authority the record can name: ${Object.keys(OBSERVATION_AUTHORITY_KINDS).join(", ")}. `
+      + `A look with none is not a weaker observation, it is an unrecordable one (RFC 2308's rule as `
+      + `STORE-AS-CACHE.md carries it)`);
 
   const state = typeof e.state === "string" ? e.state : "";
   if (!Object.prototype.hasOwnProperty.call(OBSERVATION_STATES, state))
@@ -453,6 +539,32 @@ export function checkObservation(entry, conditionKinds) {
      control proves nothing about either — C-5's "a second copy of a rule is a
      second place for it to drift", measured here rather than argued. One
      function now, reached through two doors. */
+  /* C-22.10 — REC-93. THE WARC LESSON: a revisit that omits what it refers to
+     silently loses which URL the bytes came from. `PRESENT` is the one state
+     that asserts something EXISTS, and an assertion that exists with nothing to
+     point at is a coverage claim with no evidence under it -- the false-coverage
+     hazard C-22.3 refuses one shape of, arriving from the other direction.
+
+     THE CARVE-OUT FOR `run`, STATED HERE RATHER THAN DISCOVERED, and it is a
+     DESIGN GAP reported against section 3. Section 3 writes this refusal
+     unconditionally and section 4.4 requires `ai_run_log`'s rows to fold in and
+     read back UNCHANGED. Those two cannot both hold: `ai_run_log` HAS NO
+     `result_ref` COLUMN, so not one row ever written to it can satisfy this, and
+     `op=airuntick` accepts a caller-supplied `PRESENT` today. Enforcing it over
+     `run` would therefore either drop rows out of a coverage record or force the
+     fold to INVENT a referent, and inventing one to pass a gate is the failure
+     the standing rule names by name. So the fold is admitted UNDER THE WEAKER
+     RULE IT WAS WRITTEN UNDER and every other authority carries the refusal.
+     The carve-out is a DEBT row, not a permanent shape: it closes when the run's
+     own writers carry referents, which is REC-95's meaning level. */
+  if (state === "PRESENT" && authorityKind !== "run"
+      && (e.result_ref == null || String(e.result_ref) === ""))
+    return refusal("OBS_PRESENT_NO_REFERENT",
+      `a PRESENT observation under authority '${authorityKind}' names nothing it found. `
+      + `PRESENT asserts the subject IS there, so the row must point at what was produced `
+      + `(the capture_sha, the content id, the entity) -- a revisit that omits its referent `
+      + `loses which subject the bytes came from, which is the WARC lesson this refusal carries`);
+
   const badCondition = checkCondition(condition, conditionKinds);
   if (badCondition) return badCondition;
 

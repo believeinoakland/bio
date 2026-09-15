@@ -6951,3 +6951,158 @@ is. The existing `citeOntoInquiry()` guard on `extentBlock` is already correct.
   make it stale by omission in exactly the way the rule exists to prevent. The sentence added
   says what landed AND says plainly that **no composer emits an extent yet** — which is the
   half IC-84's own RESOLUTION reads the other way round.
+## CLAIM 2026-09-14 RECORD (REC-93 — the `observations` table, the ONE append site, the frontier view, the document-level writers, and the `ai_run_log` fold)
+
+Session: RECORD worker for REC-93, spawned by CONDUCT #11, Opus 5, worktree-isolated.
+Worktree: `.claude/worktrees/agent-a239cb7601fee3669` · branch `worktree-agent-a239cb7601fee3669`,
+a fresh checkout of `origin/main` at `f38af22`. **Row verified `running` on `origin/main` before
+any edit** — the prior worker on this item stopped correctly at exactly this check and is owed the
+credit; the flip is pushed and this worker re-read it rather than believing the brief.
+
+Contract: **IC-92 (I5 additive — the `observations` table)**, minted at spawn with
+`node tools/mintid.mjs IC` (floor IC-87, four held ids stepped over), filed PROPOSED in
+`INTERFACE-CHANGES.md`. **I3 is UNCHANGED IN SHAPE and is RECORDED as such**: `op=airunlog`'s
+envelope does not move, and that non-change is asserted by a digest pin rather than left as a
+claim. The new frontier read is a NEW op, which is additive to the OPS table and not a change to
+an existing contract.
+
+Design read first, front matter before section: `docs/development/OBSERVATION-LOG-DESIGN.md`
+(Status v0.1 DRAFT, Place level 2, **Incomplete §4.5 / §6 / §7**), then §3, §4.1, §4.4, §4.6, §5,
+§7, then the §8 decomposition row 1 that is this row's actual authority, then §9's controls.
+Also `BIO_Content_Framework_v0_10.md` Part II §17 (the OBSERVE row) and `STORE-AS-CACHE.md`.
+
+Paths claimed BY REGION, never whole files:
+
+- **`bio-plane/src/schema.mjs`** — ONE new region: the `observations` table and its three
+  indexes, placed **BEFORE the `host_governor` block** (the standing rule), with no backtick in
+  the literal and **no semicolon inside any `--` comment** (PL-1's trap). **NOT** `ai_run_log`'s
+  block, which is edited only to the extent the fold requires and is named below.
+- **`bio-plane/src/store.mjs`** — FIVE named regions and nothing else:
+  1. the **ONE append site** `#observe`, the single writer for `observations`, reading its
+     refusals out of `AI_RUN_CHECKS` through `airun.mjs` (C-22.1/22.2/22.6 generalised, never
+     re-typed at the site);
+  2. `#aiRunAppend` and `aiRunLog` — rewired onto the one site and the one table (the FOLD);
+     `op=airunlog`'s answer shape is not touched;
+  3. the **document-level writers**: at `op=acquire`, at the monitor's sweep, at ratify's
+     re-fetch, and at the archive fallback;
+  4. the **frontier view** and its bounded document-level read;
+  5. `purge`'s whole-store arm (one `DELETE FROM observations`) and the per-bundle arm's
+     STATED non-deletion, plus `stats()`'s counter.
+  **NOT** the three meaning-layer read caps (**REC-89**'s region), **NOT** `op=cite`'s extent
+  widening (**REC-97**'s), **NOT** `op=acquire`'s reading wire (**CAP-12**'s — this item writes
+  an observation beside that wire and does not touch it), **NOT** the machine-credential mint
+  path (**SK-7**'s). Those four plus this item are the standing cap of FIVE on
+  `store.mjs` / `index.mjs` / `bio-checks.mjs`.
+- **`bio-plane/src/airun.mjs`** — `checkObservation` GENERALISED to the whole-table entry (the
+  two new refusals below) with its run-log behaviour preserved; nothing else in the file.
+- **`bio-plane/checks/bio-checks.mjs`** — the **C-22 family ONLY**: two new rows, **C-22.9**
+  (`authority_kind` never absent) and **C-22.10** (`PRESENT` with no `result_ref`), and the
+  family header's count corrected in place from EIGHT to TEN. **NOT** any other family.
+- **`bio-plane/src/index.mjs`** — the **OPS table op lines ONLY** for the new frontier read.
+- **`bio-plane/test/observation-log.test.mjs`** — NEW, this item's suite.
+- **`bio-plane/test/nc-rec93.mjs`** — NEW, this item's negative-control driver.
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` ONLY, **ONE key set**, moved from this
+  item's own printed REPRODUCIBLE figures and never by adding to the number in the file.
+- **`docs/development/MEASUREMENTS.md`**, **`docs/development/DEBT.md`**,
+  **`docs/development/INTERFACE-CHANGES.md`** (the IC-92 row PROPOSED — the version bump and the
+  RESOLUTION are CONDUCT's), **`docs/development/CLAIMS.md`** (this block) — appends only.
+- **`docs/development/OBSERVATION-LOG-DESIGN.md`** — front matter ONLY, if this landing changes
+  the document's stated completeness (the accepts-when requires it in the same commit).
+
+NOT claimed and deliberately not written: `docs/development/QUEUE.md` (CONDUCT's, sole writer);
+`newgroup/**`; anything under `release/`.
+
+**THIS IS THE FOUNDATION ITEM FOR REC-94, REC-95 AND REC-96.** The append site is ONE and the
+vocabulary is the design's own, because three later items write into it.
+
+SIX PATHS ADDED TO THIS CLAIM AT THE CLOSE rather than taken silently, each FORCED BY A
+MECHANISM rather than chosen, and every one of them a gate that fired on this landing:
+
+- **`bio-plane/test/airun.test.mjs`** — ARM D1 only, the C-22 family's count. **CORRECTED,
+  never exempted**, with the reason at the site: the family grew to TEN and, more to the
+  point, CHANGED SUBJECT. That arm has now fired on three consecutive items.
+- **`bio-plane/test/hygiene.test.mjs`** — the schema-table harvest regex ONLY. It lacked
+  the `\s*\(` anchor its store-side twin has carried since D-137, so a comment in
+  `schema.mjs` explaining why a CREATE had been removed was parsed as a table named
+  `"would"` and failed the D-113 purge census. **The class was closed rather than the
+  prose reworded**, and the prose is deliberately left in place as the live fixture.
+- **`bio-plane/test/bounds.test.mjs`** — the roster figure (31 → 32, from the arm's own
+  failure output) and `op=frontier` DRIVEN in the PIN loop, plus a three-subject fixture.
+  The fixture is the finding: the arm's first run read `truncated: false` at a cap of ONE
+  because the suite's store held fewer than two document-level subjects, so **the arm
+  could not arm**.
+- **`bio-plane/test/derivation-bounds.test.mjs`** — the amplification CEILING (32 → 33)
+  and the by-name pin. This ratchet fired CORRECTLY: `Store#frontier` issues three
+  queries per row. It is admitted with the cost stated at the site rather than the number
+  nudged — the scan is `LIMIT`-bounded and the bound is published.
+- **`bio-plane/dist/bio-plane.bundled.mjs`** and **`bio-plane/dist/bio-plane.bundle.json`** —
+  rebuilt with `npm run build`, which FL-9's guard requires of any landing that touches
+  `src/`. Not a version bump, not a tag, not a deploy: those are DIST's and none was taken.
+- **`.gitignore`** — one line for this item's negative-control pen
+  (`.rec93-control-pristine/`), the `.rec85-` pattern exactly.
+
+And one path was added for a reason worth naming on its own:
+
+- **`tools/measure-office-corpus.py`** — a fourth mode, `sweepvolume`, for M-14. COFF-6's
+  own probe already holds this corpus's definition, so it GAINS A MODE rather than a
+  second tool standing beside it — CAP-7's choice on 2026-09-14, for the same reason.
+
+released: 2026-09-14 by the REC-93 worker — **the observation log is BUILT at §8 row 1: one table, one append site, one vocabulary, and `ai_run_log` is folded into it with `op=airunlog` proved byte-identical against the pre-item build itself rather than against a digest this item computed.** Landed on branch `worktree-agent-a239cb7601fee3669` at `92c8e59`, NOT pushed and NOT merged.
+
+**GATES, all four, on this branch.** `cd bio-plane && npm run test:battery` — **196/196 suites green · 12,167 assertions · exit 0**. **OWN BASELINE, measured on a pristine `git worktree add` at `f38af22` with all three packages installed: 195/195 · 12,100 · exit 0** — the brief's figure, confirmed rather than assumed. Delta is +1 suite and +67 assertions, all this item's. **The first baseline run read 194/195 with 1 SKIPPED and exit 0** because only `bio-plane/` had been installed in that scratch tree; `ocr-worker`'s suite was skipped BY NAME and the headline still looked healthy — CAP-12 measured the same shape the same day and `CLAUDE.md` now carries it. `node scripts/coverage.mjs --strict` run **DIRECTLY with `$?` read UNPIPED: exit 0**, 173 ops declared · 173 reached through the control plane · **0 unreached** (`op=frontier` among them). `node civicos-ui/test/run.mjs` from the **repo root**, unpiped: **exit 0** — and it earned its place: it caught `OBSERVATION_SUBJECT_KINDS.capture` reading *"a capture_sha"* as a TOKEN rather than a member-readable phrase while the whole plane battery was green. `node tools/plancheck.mjs --local` — **0 fail, 0 warn**.
+
+**THE TWO MEASUREMENTS CAME FIRST, before the mechanism they size.**
+
+**M-14, the sweep-volume measurement the design's own Incomplete §7 owed** — and it CONFIRMS the edge-triggered rule, which is worth stating plainly because a measurement that agrees with its design is still a measurement. Over COFF-6's census corpus (`cao-94612`, **43,283 keys, 44 list requests, anonymous `ListObjectsV2`, no credential and no body downloaded**): the naive rule writes **43,283 rows/day — 15,798,295 a year**; the edge rule writes **15.14 rows/day** over the 2,859-day span. **A 2,859x reduction — 0.0350% of the naive volume** — with **2,067 of 2,859 days carrying any write at all** and a **2,713-row busiest day**, which is what the table is actually sized on rather than either mean. **The 90-day figure of 0.01 rows/day is the one to distrust and is labelled so**: the corpus wrote once in the last quarter and 2,713 times in one day in 2018, so the rule is confirmed on the MEAN and the table sized on the PEAK. **The figure is a FLOOR and says why**: `LastModified` keeps only the latest write per key, a DELETED key is invisible to a listing entirely (and a disappearance writes a row under the edge rule, so that arm is **stated as unmeasured rather than scored zero**), and a byte-identical rewrite still moves the timestamp — the last two push in opposite directions and are named rather than netted. Instrument: `tools/measure-office-corpus.py sweepvolume`, a FOURTH MODE on COFF-6's own probe rather than a second tool beside it (CAP-7's choice, same day, same reason).
+
+**The §4.6 provisional ran AS WRITTEN and is cited here.** *A member's ad hoc search, view or read is not an observation* — DEC-61's analogy, because the record is what a legal process can reach. **It is enforced in the VOCABULARY, not by a missing writer**, and that is the whole of why it is a mechanism: a later item could add a writer without ever meeting the doctrine, but there is **NO `authority_kind` a member's search could take**. The alternative §4.6 declines (`authority_kind = member`) is absent from `OBSERVATION_AUTHORITY_KINDS` on purpose, so **reversing costs one line and no schema change** — exactly what §4.6 says reversal should cost, in the one direction that stays reversible. Driven, not asserted: `op=search` twice and `op=list` once, **row count unchanged**, with a companion arm proving the counter can see the table at all.
+
+**WHAT LANDED.** `observations` in `schema.mjs` **BEFORE the `host_governor` block** with §3's three indexes — the frontier key `(level, subject_kind, subject, seq)`, the run read-through `(authority_kind, authority, seq)` (which is why the fold does not turn a primary-key read into a table scan), and the tallies. **ONE APPEND SITE**, `Store#observe` — asserted STRUCTURALLY: exactly ONE `INSERT INTO observations` outside `#migrate`'s one-time copy, **ZERO `UPDATE`**, and exactly one `DELETE`, which is the whole-store purge arm. Every refusal is read out of `AI_RUN_CHECKS` and **none is typed at the site**. **C-22.1/22.2/22.3/22.6 generalised** from the run's refusals to the table's; **C-22.9** (`OBS_AUTHORITY_UNNAMED`) and **C-22.10** (`OBS_PRESENT_NO_REFERENT`) new; the family header corrected in place **EIGHT → TEN**. Document-level writers at **acquire and the archive fallback** (through `recordCapturedLocator`, which `via` already separates — §4.1's own sentence, so the writer went there rather than being copied to three call sites), **the monitor's sweep** at the three capture-request drain exits, and **ratify's re-fetch** with `confirmed→PRESENT unchanged`, `changed→PRESENT changed`, `unreachable→LOOKED_INDETERMINATE` and **`not_attempted` → NO ROW AT ALL**, because a look not taken is `NEVER_LOOKED` and `NEVER_LOOKED` is the absence of a row. **§7's edge rule.** **The frontier view** (`#frontierLatest`, a VIEW and never a table) and **`op=frontier`**, bounded 200/2000 with the bound published on every answer including the empty one; `last_verified` and *unreachable since* DERIVED per §5 and stored nowhere; a `result_ref` to a purged capture **ANNOTATED at read time and never rewritten**. The content and meaning levels answer **NOT BUILT in words rather than an empty list** — those are precisely the two facts the table exists to keep apart, and answering the second with the first inside the log's own reader would have been the joke writing itself.
+
+**A LATENT DEFECT THE FOLD MADE VISIBLE, closed in passing.** All three capture-request drain exits called `#aiRunAppend(q.run, …)` unconditionally, so **a capture request with no run wrote a log row keyed to `run = NULL`** — a row about a look that named nothing that made it. Nothing read it and nothing could have noticed. C-22.9 refuses that by name now, and those requests are the SWEEP's with the request id as the authority (§4.1 row 2).
+
+**THE FOLD, AND ITS PROOF IS A BEFORE/AFTER AGAINST THE REAL PRE-ITEM BUILD.** `seq` is store-wide in the new table and was 1,2,3 per run in the old one, so **an unchanged envelope could have carried changed numbers and no consumer's schema check would ever have caught it** — the worst shape an interface change can take. `test/rec93-fold-digest.mjs` boots **`f38af22`** and this build from one fixture and compares the raw response text: **3,120 bytes, sha256 `10bf6e28346b652793d7cd64d9ca56f5c09cea5a5da830641ea5f24be74a4a1a`, IDENTICAL**. A digest this item computed and pinned against itself would have proved only that the answer stopped moving AFTER the change. `test/rec93-migrate-probe.mjs` goes further and runs **`#migrate`'s copy for real** — a store written by the old build and re-opened by the new one over the SAME persisted bytes, which neither the digest instrument nor the suite can reach: byte-identical, **all three rows migrated**, the row with **NO SUBJECT preserved as NULL rather than invented into something**, per-run `seq` still 1,2,3, and **idempotent on a second boot with no row duplicated**.
+
+**TWO DEVIATIONS FROM §3 AND ONE FROM §4.4, EVERY ONE STATED AT ITS SITE AND IN THE DESIGN'S FRONT MATTER** (see DESIGN GAP below): `subject` is **nullable** in SQL; `subject_kind` gains **`unstated`**; **C-22.10 does not fire on `authority_kind = run`** — DEBT ROW **D-366**, the one thing this item could not close.
+
+**EVERY CONTROL ARM, DECLARED vs ACTUAL.** `node test/nc-rec93.mjs`, seven arms, each armed ALONE with every other defence held open, each declared BEFORE it ran, every mutation passing an anchor-occurs-exactly-once and bytes-really-changed guard, **every restore verified by sha256 AND by content against a uniquely-named per-arm pristine copy** with a byte count printed and a 10,000-byte minimum guarded. **Opening baseline 58 pass / 0 fail; closing baseline 58 pass / 0 fail.**
+
+| arm | declared MUST FAIL | actual |
+| --- | --- | --- |
+| `baseline` | nothing | **58 pass, 0 fail** — green at both ends, the row that distinguishes six-arms-broken from six-arms-working |
+| `writer` (remove the document-level writer) | the frontier's three, and the row count | **50/8**, 4/4 — the frontier says never-looked about a document the store holds, which is the §9 arm in its most dangerous direction |
+| `referent` (drop the back-reference) | the frontier arm, the first-look arm, the row count | **50/8**, 3/3 — and `B11` (C-22.10 against the pure checker) STAYED GREEN throughout, which is what says the fence still exists while the arm runs |
+| `authority` (neuter C-22.9) | the no-authority refusal | **57/1**, 1/1 — nothing else moved, so the arm took exactly the authority rule |
+| `bundle` (neuter C-22.6) | the bundle refusal | **57/1**, 1/1 — the fence proved a fence rather than a promise |
+| `edge` (write a row on an unchanged revisit) | the steady-state arm and the two-row total | **56/2**, 2/2 — while the CACHE arm stayed green, because the arm is about the row and not the counter |
+| `overstrict` (widen C-22.10 to every authority) | the run-PRESENT arm, the fold's append arm, the per-run `seq` arm | **53/5**, 3/3 — correct work in a spelling the fence did not anticipate, refused; a fence tighter than its rule is not a safer fence |
+
+**THREE ARMS CAME BACK OTHER THAN DECLARED ON THEIR FIRST RUN, AND ALL THREE WERE FINDINGS RATHER THAN NOISE — they are the most useful output of this item.** (1) **`writer` declared seven failures and produced four**, because `F1: a FIRST look writes one row and says so` **STAYED GREEN OVER A SUPPRESSED WRITE**: `observation_written` was computed from `detail !== "unchanged"` — THE SAME EXPRESSION THAT DECIDES TO WRITE — so the answer went on reporting `written: true` while nothing was written. **That is a real defect in this item's own code, found by its own control and fixed in the same turn**; the field now reports the OUTCOME, `F1` also asserts `observation_refused` is null, and a new `F1b` reads the field back against the row count. A published field derived from an intention rather than a result is the record claiming more than it can support, at the smallest scale. (2) **`referent` declared three and hit one**, because **a refused append and an absent append leave the store in the same state** — the arm proved the row was gone but not that C-22.10 removed it. The suite gained the assertion that closes the gap rather than the declaration being quietly trimmed. (3) **`overstrict` reported `pass = -1`**: with the run's entries refused, `entries[2]` was undefined and a bare `.governed` threw a **TypeError, which goes through no assertion at all** and ended the module while the tally read clean. WORKER.md's own receipt, reproduced here and fixed at the SUITE (`C4` is index-safe) rather than tolerated in the driver. **AND THEN TWO ARMS STOPPED ARMING** — this item's own `observation_written` fix moved the very lines `writer` and `edge` patched, and both reported `matched 0x` while the suite read a comfortable 58/0. **Without the harness's match-count guard that would have read as "the arm passes now."** Both are re-anchored with the receipt at the site.
+
+**WHAT THE OTHER GATES CAUGHT, AND EVERY ONE OF THEM FIRED CORRECTLY.** `hygiene`'s schema-table harvest **lacked the `\s*\(` anchor its store-side twin has carried since D-137**, so a comment explaining a removed `CREATE` was parsed as a table named `"would"` and failed the D-113 purge census — **the CLASS was closed rather than the prose reworded**, and the prose is deliberately left in place as the live fixture. `airun.test.mjs` ARM D1 (the C-22 count) fired for the **third consecutive item** and was CORRECTED, never exempted. `bounds` demanded the new capped op be DRIVEN and **its first run read `truncated: false` at a cap of ONE — the arm could not arm**, because the suite's store held fewer than two document-level subjects; three are now seeded through the real writer. `derivation-bounds`' amplification ceiling fired **correctly**: `Store#frontier` issues three queries per row, which is genuine amplification, and it is admitted **with the cost stated at the site** (up to ~600 round trips at the default cap) rather than the number nudged, because the scan is `LIMIT`-bounded and the bound is published. `meaning-bounds` caught `recordCapturedLocator` joining the **OPAQUE roster** — and the honest answer was to **stop scanning** rather than widen the roster, so it now reads ONE aggregate row instead of one row per existing capture; its D-227 SQL pin was corrected, never exempted. `gate-reads` demanded `op=frontier` be CLASSIFIED. `run-conditions` caught a **thirteenth `ai_runs` reader by name**, then **refused the only role that could have fitted it** (an `ATTRIBUTES` reader must project nothing but the key) — **both arms were right**, so the method stopped reading instead: the actor is passed in by callers that already hold the row, which also removed **one SELECT per appended entry**. ARM W3b then caught the now-stale entry in that same table and it was removed. `fleetbundles` required the committed plane bundle be rebuilt (FL-9's guard); `npm run build` was run — **no version bump, no tag, no deploy, none taken**.
+
+**THE CLASS SWEEP, ITS CORPUS AND WHAT IT COULD NOT SEE.** Class: every reference to the folded `ai_run_log` outside `src/`. Corpus: `bio-plane/{test,scripts,checks}`, `civicos-ui`, `agent-worker`, `newgroup`, `tools` — **19 hits, 4 of them LIVE SQL**. `versions.test.mjs`'s own `ProbeStore` deleted from the dropped table and **threw inside the Durable Object**, surfacing as `SyntaxError: Unexpected token 'E'` from the suite's own `.json()` — a failure naming nothing. `verdict-excluder.control.mjs` plants two synthetic methods against it; **those arms are SOURCE walks and would have gone on passing while planting code the plane can no longer run**, which is the quietest way for a control to stop being about anything. `vf4-live-scratch.mjs` and `meaning-bounds`' own declaration each carried a sentence that went false. All four corrected. **WHAT THE SWEEP COULD NOT SEE, AND IT MISSED SOMETHING ON THE FIRST PASS: the first run was capped at `head -10` and the cap was read as the corpus**, which is exactly how `versions.test.mjs` was missed until the battery found it. The matcher is a literal grep for the table name: it cannot see a reference assembled from concatenated strings, one spelled through a variable, or one in a file outside those six trees.
+
+**WHAT I COULD NOT DO, STATED PLAINLY.** (1) **C-22.10's `run` carve-out is open** — D-366, and it is the one thing this item could not close: a run can still record *we looked and it is there* with nothing to point at, and REC-96's completeness statement will publish that with a signed case. (2) **Nothing was live-verified against the real account** — no deploy, no scratch-namespace probe; everything here is miniflare and source. (3) **The content and meaning levels have no writer**; `op=frontier` says so in words, which is the honest half, but the frontier is one level of four. (4) **`origin/main` moved to `4ff14ad` while this item ran** and now carries SK-7, REC-84's addendum and UI-61 — **every figure above is true of `f38af22` plus this commit and of no other tree**; the merge is CONDUCT's, and `REGISTER_FLOOR` in particular must be RE-READ there.
+
+**`REGISTER_FLOOR` moved 1015 → 1022 · 186 → 187 · 187 → 188**, ONE KEY SET (grepped after writing: `^  arms:` matches twice in the file, here and in `FLEET_FLOOR`, which is unmoved), all three in the same turn, **every figure taken from this item's own green `--strict` run printed as REPRODUCIBLE AFTER the commit** — the same figures read BEFORE it said 1015/186/187, because the new suite was untracked and D-238's rule is that a floor moved over work no other checkout can see is permanently too high. Provenance line: `204 of 204 discovered item(s) are in the commit at HEAD (92c8e59)`. Cause: one new suite whose declaration states SEVEN arms. Nothing FELL. **`origin/main` already carries 1021/187/188 from SK-7, measured on a tree without this suite — 1021 and 1022 are each true of a tree the other is not, the merged figure is higher than either, and adding them would be wrong in both directions.**
+
+**`store.mjs` measured at the close: 31,866 lines** (`wc -l`), against 31,349 at `f38af22`.
+
+## DESIGN GAP 2026-09-14 REC-93 → `docs/development/OBSERVATION-LOG-DESIGN.md`
+
+All three are already written into the document's **Incomplete sections** front matter by this landing, and are restated here so CONDUCT does not have to re-derive them.
+
+- **§3 vs §4.4 — the two sections cannot both hold, and neither is wrong alone.** §3 writes `subject TEXT NOT NULL` and refuses `PRESENT` with no `result_ref`; §4.4 requires every `ai_run_log` row to fold in and read back UNCHANGED. `ai_run_log` permits a NULL subject and **has no `result_ref` column at all**, so both rules would force the fold to invent facts about rows already written. Resolved conservatively and stated at every site; **§3's column list and §4.4's fold need reconciling in the document**, which is the design's to do rather than the landing's.
+- **§3 has no `subject_kind` for a row whose kind was never recorded.** `unstated` was added, because deriving a kind from the level would be inventing a fact about rows already written.
+- **§4.4 names `actor` as "the run's credential"; `ai_runs` has no `credential` column.** The column that carries the machine identity is `principal_claude`. Measured, not assumed.
+
+## DELEGATION 2026-09-14 RECORD (REC-93) → CONDUCT: **FOUR ACTS, EACH WITH ITS ACTOR**
+
+1. **CONDUCT — resolve IC-92** (I5 1.12.0 → **1.13.0**, ADDITIVE) and take the version bump. The IC row is filed PROPOSED in `INTERFACE-CHANGES.md` with its consumer impact measured and the byte-identity evidence in it. **I3 is RECORDED as unchanged in shape AND in value**, with the instrument that proves it named.
+2. **CONDUCT — RE-READ `REGISTER_FLOOR` on the merged tree from a green `--strict` run.** This branch carries 1022/187/188; `origin/main` already carries 1021/187/188 from SK-7. **Neither is true of the merge and they must not be added.**
+3. **CONDUCT — flip REC-93's queue row**, and note that **REC-94, REC-95 and REC-96 are now unblocked**: the table, the vocabulary and the one append site they write into all exist. `OBSERVATION_AUTHORITY_KINDS` already carries `extract` (REC-94) and `derive` (REC-95); `op=frontier` already refuses their levels with a STATED not-built rather than an empty list, so each item's first act is a writer and not a schema change.
+4. **RECORD (a later item) — close D-366.** It is in `DEBT.md` with its cost and what closing it takes, and `nc-rec93.mjs`'s `overstrict` arm is the instrument that shows exactly which correct work the widened refusal would break today.
+
+**NO DECISION FOR BOB.** Every choice here was activation, sequencing, mechanism or scoping — mine to make. The one doctrine-adjacent question, §4.6's provisional, was **already decided by the design** and ran as written; this landing's contribution is that it is now enforced by a mechanism (an absent vocabulary entry) rather than by a missing writer, and that reversing it still costs one line.
+
