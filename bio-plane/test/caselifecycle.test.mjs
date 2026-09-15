@@ -680,9 +680,24 @@ console.log("\n--- 6. the flag is SET AND NEVER CLEARED: only an owning project'
   + "whole-corpus sweep — nothing else deletes one, so 'never cleared' is a property of the source "
   + "rather than a rule a later caller is trusted to respect",
     (STORE_SRC.match(/DELETE FROM case_revision_flags/g) || []).length, 0);
+  /* CORRECTED 2026-09-14 by REC-82, and the old assertion was WRONG rather than
+     superseded by a rule change. It read `/"case_revision_flags"\]/` — the name
+     followed by the array's CLOSING BRACKET — which asserts "this table is LAST
+     in `TABLES`", not "this table is IN `TABLES`". It passed only because
+     CASE-4 happened to append it last, and it went red the moment REC-82 added
+     `content` after it, while the property it exists to guard was never once at
+     risk. A membership test that is really a position test is a check nobody is
+     enforcing: the NEXT table appended would have flipped it again, and the
+     honest reading of the red would have been "somebody added a table", which
+     is the thing that is supposed to be allowed. Now it parses the array the
+     way `hygiene.test.mjs`'s own D-113 census does and asks the question it
+     meant to ask. */
+  const TABLES_ARR = /const TABLES\s*=\s*\[([\s\S]*?)\]/.exec(STORE_SRC);
+  t("the purge list is locatable in store.mjs — the parse this assertion rests on",
+    !!TABLES_ARR, true);
   t("and the table rides the purge list, so a scratch reset does not report scope ALL while a case "
   + "still reads as flagged (D-113)",
-    /"case_revision_flags"\]/.test(STORE_SRC), true);
+    /"case_revision_flags"/.test(TABLES_ARR ? TABLES_ARR[1] : ""), true);
 }
 
 /* ===================================================================== 7

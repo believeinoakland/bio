@@ -298,6 +298,15 @@ import { isCaseMemberBytes } from "../checks/bio-checks.mjs";
    DEC-49 import in this file exists — the catalogue holds the member-facing
    WORDS and this file holds none of them. */
 import { CASE_DERIVATION_CHECKS } from "../checks/bio-checks.mjs";
+/* REC-82 / IC-83 / DEC-23 / D-164: THE CONTENT-EXTENT CONSTRUCT, imported for
+   the reason `textchain.mjs` above is imported — the extent grammar, the
+   canonical form the content address is taken over and the four refusals have
+   ONE implementation, in the layer both the CHECKER and this file already
+   import, and this file holds no copy of any of them. A second reading of
+   "what part of a document does this leg mean" is D-164's own lesson arriving
+   inside the construct that exists to close it. */
+import { CONTENT_EXTENT_CHECKS, checkContentExtent, legExtent, canonicalExtent,
+         describeExtent, contentIdFor } from "../checks/bio-checks.mjs";
 
 /* D-309 / DEC-49, `src/airun.mjs`'s precedent exactly. THE CODE IS A STRING
    LITERAL AT ITS SITE and reaches the wire through here, because a code held in
@@ -670,6 +679,28 @@ export class Store extends DurableObject {
          A chain written before calibrations existed names none, which is exactly
          what NULL says and exactly what is true of it. */
       ["reading_text_source", "calibrations", "TEXT"],
+      /* REC-82 / IC-83: WHAT PART OF THE DOCUMENT A BASIS LEG RESTS ON. Additive
+         and nullable for the reason every column above is, and NULL here is a
+         state of the record rather than a missing value: a leg promoted before
+         this column existed named no extent, because no surface could carry one.
+         NO BACKFILL PASS RUNS, and that is a property of the design rather than
+         an omission — the content id is a HASH of (capture, extent, chain), so a
+         legacy leg's `document` row is derivable at any time from the target it
+         already names. It is minted on the leg's first read (`ensureLegContent`)
+         and on its next promotion, both deterministically and both to the SAME
+         id. A migration that wrote the column would be a second writer for a
+         value one function already answers, and it would have to choose a
+         capture for a leg nobody was looking at.
+         NOT NULL is IC-83's SETTLED condition and NOT this landing's: I5 is
+         CHANGING at 1.11.0 until REC-82 and REC-83 have both landed. */
+      ["inquiry_basis", "content_id", "TEXT"],
+      /* REC-82 / IC-83, and the column arrives WITHOUT its writer on purpose.
+         The version-leg grammar that lets a version leg name an extent is
+         REC-84, so every row this plane writes today reads NULL here. Landing
+         the column now is what makes REC-84 a writer rather than a migration —
+         the same reason the three unlanded extent arms are named in
+         CONTENT_EXTENT_KINDS rather than added later. */
+      ["inquiry_basis_version_legs", "content_id", "TEXT"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -9967,6 +9998,69 @@ export class Store extends DurableObject {
           return { ok: false, reason: "BASIS_REFUSED",
                    findings: errs.map((x) => ({ check: x.check, detail: x.message,
                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) };
+        /* REC-82 / IC-83: THE CONTENT EXTENT, refused at the write and BEFORE
+           anything lands, on `checkInquiryBasis`'s own terms and inside its own
+           guard — so a leg naming a part of a document the record cannot address
+           cannot be smuggled in through the write path any more than a malformed
+           leg can. The rule is ONE catalogue function (`checkContentExtent`), so
+           the gate and this door cannot hold two answers.
+           *
+           * IT RUNS AFTER THE LEG GRAMMAR AND NOT BEFORE. A leg whose TARGET is
+           * not a canonical bundle id has already been refused above, so this
+           * arm never resolves a capture for an id nothing could name — and a
+           * member with one broken leg gets the complaint about the leg rather
+           * than a second complaint about an extent they never wrote.
+           *
+           * THE REFUSAL RIDES `BASIS_REFUSED`. No new envelope and no new op:
+           * `op=promote` already publishes this shape, `civicos-ui` already
+           * renders it, and a second reason string for "your basis was refused"
+           * would be a vocabulary split serving nothing. The C-45 code and its
+           * canned translation travel WITH the finding (DEC-49), which is what
+           * makes the refusal named to the member rather than merely numbered. */
+        const cerrs = [];
+        const plan0 = this.#contentPlanFor(basisLegs);
+        for (let i = 0; i < basisLegs.length; i++) {
+          const leg = basisLegs[i];
+          if (typeof leg.target !== "string") continue;   // already refused above
+          const p = plan0.get(i);
+          if (!p) continue;
+          if (!p.isInfo) {
+            /* An inquiry leg has no capture and therefore no part to point at.
+               Refusing a member for NOT naming one would be a fence on a rule
+               that does not exist; refusing one who DID name a part of an
+               inquiry is the honest half, because there is no such thing. */
+            const e0 = p.extent;
+            if (e0.kind !== "document")
+              cerrs.push({ check: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_UNREADABLE.check,
+                code: "CONTENT_EXTENT_UNREADABLE",
+                translation: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_UNREADABLE.translation,
+                detail: `basis[${i}] names extent '${String(e0.kind).slice(0, 40)}' on `
+                      + `'${leg.target}', which is an inquiry rather than a document. An inquiry `
+                      + `has no bytes and no pages, so there is no part of it to point at (DEC-21)` });
+            continue;
+          }
+          const sha = p.captureSha, ext = p.extent;
+          if (!sha) {
+            /* NO CAPTURE HELD. A `document` leg is still perfectly legal — it
+               names the document, which is what it always named — so it passes
+               and its content_id stays NULL, stated. A leg naming a PART of a
+               document this record holds no bytes of is refused, because the
+               part cannot be shown to exist. */
+            if (ext.kind !== "document")
+              cerrs.push({ check: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.check,
+                code: "CONTENT_EXTENT_NO_CHAIN",
+                translation: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.translation,
+                detail: `basis[${i}] cites ${describeExtent(ext)} of '${leg.target}', and this `
+                      + `record holds no capture of that document at all`
+                      + (typeof leg.extent_capture === "string" && leg.extent_capture.trim()
+                          ? ` under the capture the leg names (${leg.extent_capture.trim().slice(0, 16)}…)` : ``) });
+            continue;
+          }
+          const bad = checkContentExtent(ext, p.ctx);
+          if (bad) cerrs.push({ check: bad.check, code: bad.code, translation: bad.translation,
+                                detail: `basis[${i}]: ${bad.detail}` });
+        }
+        if (cerrs.length) return { ok: false, reason: "BASIS_REFUSED", findings: cerrs };
       }
       /* REC-18: an inquiry naming a SUBJECT ENTITY that does not resolve in this
          store is refused, on op=promote's own supersedes-target precedent a few
@@ -10417,14 +10511,104 @@ export class Store extends DurableObject {
          own map so the walk never re-derives it. ord is the leg's position in
          basis[], which is what makes a leg ADDRESSABLE and lets one document
          be cited for two legs (D4 — the reason refs could not carry this). */
+      /* REC-82 / IC-83 — THE AUTHORED EDGE'S REFERENT, READ BEFORE THE DELETE,
+         on `supersededBefore`'s precedent twenty lines above and for a reason
+         that is not housekeeping.
+         *
+         * `inquiry_basis` is delete-then-insert re-projected on EVERY promotion.
+         * The content address is `hash(capture, extent, CHAIN)`, so a projection
+         * that re-minted from the LIVE chain would hand the leg a DIFFERENT row
+         * the first time anything re-read the document — and an unrelated
+         * revision promoted after a better OCR engine ran would silently move an
+         * authored citation onto a transcription the member never saw. Bob ruled
+         * 2026-09-14: *"the record never moves an authored edge's target without
+         * a member's act, even when the passage is byte-identical."* A resolver
+         * is exactly where that rule is lost without anybody deciding to lose it.
+         *
+         * SO THE PRIOR REFERENT IS CARRIED FORWARD when the leg still names the
+         * SAME target and the SAME extent — the two things a member authors. Key
+         * on (target, canonical extent) and NOT on `ord`: a member who reorders
+         * their basis has not re-pointed anything, and keying on position would
+         * move every leg below an insertion.
+         *
+         * A CHANGED EXTENT MINTS ANEW, and that is the other half of the same
+         * rule rather than an exception to it: narrowing a citation from the
+         * document to a paragraph is an AUTHORED ACT (5.3 — "there should be a
+         * means for a member to make that reference more specific"), so it is
+         * exactly the act that is allowed to move the referent. */
+      const priorContent = new Map();
+      /* The scan is HOISTED out of the for-header rather than inlined into it,
+         and it is not a style point: `derivation-bounds.test.mjs`'s reader
+         counts a scan that sits inside a loop's own header as a scan PER ROW,
+         so `for (const r of this.#rows(...))` self-classifies as amplifying and
+         put `promote` itself on REC-66's roster. One read, then one pass over
+         what it returned, is what this actually is. */
+      const priorRows = this.#rows(
+        `SELECT b.target_id AS t, b.content_id AS cid, c.extent AS ext
+           FROM inquiry_basis b LEFT JOIN content c ON c.content_id = b.content_id
+          WHERE b.bundle_id=? AND b.content_id IS NOT NULL`, bundleId);
+      for (const r of priorRows)
+        if (r.ext != null) priorContent.set(`${r.t}\u0000${r.ext}`, r.cid);
+      const contentProjected = [];
+      /* ONE resolution for the whole basis, on the refusal arm's own terms and
+         through the same method — see `#contentPlanFor`. */
+      const contentPlan = isInquiry ? this.#contentPlanFor(basisLegs) : new Map();
       this.sql.exec(`DELETE FROM inquiry_basis WHERE bundle_id=?`, bundleId);
       if (isInquiry) {
         for (let i = 0; i < basisLegs.length; i++) {
           const leg = basisLegs[i];
           if (typeof leg.target !== "string") continue; // replay of a malformed shape: unprojectable
+          /* REC-82 / IC-83: THE LEG'S REFERENT, minted or FOUND here — in the same
+             transaction and by the same projection pass as every other column,
+             so the row and the document cannot drift. Three things make this a
+             mint-or-find and not a projection, and each is deliberate:
+             *
+             * (1) THE CONTENT ROW IS NOT DELETED WITH THE PROJECTION. The line
+             *     above deletes every `inquiry_basis` row for this bundle and
+             *     rebuilds them, because they are a view of `basis[]`. Content
+             *     rows are NOT: an edge depends on one, so `mintContent` inserts
+             *     OR IGNOREs and a re-promotion finds exactly the row the first
+             *     promotion minted, keeping its `minted_by` and its `at` — which
+             *     record who first cited this passage and when, and are not
+             *     ours to move.
+             * (2) TWO CITERS OF ONE PASSAGE GET ONE ROW BY CONSTRUCTION, because
+             *     the id is `hash(capture, canonical extent, chain)` and not an
+             *     allocated number. There is no dedup pass here because there is
+             *     nothing to dedup.
+             * (3) A REFUSED EXTENT NEVER REACHES THIS LINE. The arm above ran
+             *     `checkContentExtent` over every leg before anything landed, so
+             *     a null here means the record holds no capture of the target
+             *     (or the target is an inquiry) — UNDETERMINED AND STATED, never
+             *     a row invented to fill a column.
+             *
+             * REPLAY REACHES HERE WITH THE ARM ABOVE SKIPPED, exactly as every
+             * other shape rule is skipped on replay: the record's own history
+             * must be holdable verbatim. A replayed leg whose extent this plane
+             * would now refuse therefore mints nothing and projects NULL, which
+             * is the honest reading of "this row was written under rules that
+             * did not exist" — never a row minted retroactively for it. */
+          let legContentId = null, legCarried = false, legMinted = false;
+          const cp = contentPlan.get(i);
+          if (cp && cp.isInfo) {
+            const ext = cp.extent;
+            const carried = priorContent.get(`${leg.target}\u0000${canonicalExtent(ext)}`);
+            if (carried) { legContentId = carried; legCarried = true; }
+            else if (cp.captureSha) {
+              const mint = this.mintContent({ bundleId: leg.target, captureSha: cp.captureSha,
+                extent: ext, mintedBy: "plane", at: meta.last_updated || null, ctx: cp.ctx });
+              if (mint.ok) { legContentId = mint.content_id; legMinted = mint.minted; }
+            }
+            /* The ROW is not read here. `contentRow` is a read, and a read inside
+               this loop is the amplification REC-66 / D-227's ratchet counts —
+               it is what kept `promote` itself on that roster. The ids are
+               collected and resolved in ONE set-based pass after the loop. */
+            if (legContentId)
+              contentProjected.push({ ord: i, target: leg.target, content_id: legContentId,
+                extent_kind: ext.kind, minted: legMinted, carried: legCarried });
+          }
           this.sql.exec(
-            `INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+            `INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
             bundleId, i, leg.target,
             /* '' rather than NULL on a replayed malformed shape, mirroring the
                refs projection's kind fallback: the columns are NOT NULL. */
@@ -10444,9 +10628,20 @@ export class Store extends DurableObject {
                already refused any label with no attributed `grounds[]` row, at
                this write and in the catalog, so a label that reaches here was
                asserted by a named member. */
-            typeof leg.ground === "string" && leg.ground.trim() ? leg.ground.trim() : null);
+            typeof leg.ground === "string" && leg.ground.trim() ? leg.ground.trim() : null,
+            /* REC-82: NULL is a first-class answer here and the reasons are on
+               the mint above — an inquiry leg, or an information object this
+               record holds no bytes of. It is never a document-extent row
+               invented to avoid the null. */
+            legContentId);
         }
       }
+      /* REC-82: and the STANDING of each referent, resolved in ONE pass over the
+         ids the loop collected rather than one read per leg — see the note at
+         the push above. `#contentStandings` is where the reads live, so this
+         function keeps exactly the shape the derivation-bounds roster measured
+         it at before this item. */
+      if (contentProjected.length) this.#contentStandings(contentProjected);
       /* PL-1 / IS-1: THE BASIS VERSIONS, projected WHOLE from basis_versions[],
          basis_version_grounds[] and basis_version_legs[] in this SAME
          transaction as inquiry_basis above and by the same delete-then-insert
@@ -10780,7 +10975,19 @@ export class Store extends DurableObject {
          member revising their own finding is never the act to refuse. */
       this.#flagCasesOnRevision(bundleId, base ?? null,
         new Date().toISOString().replace(/\.\d+Z$/, "Z"));
-      return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version, owner };
+      return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version, owner,
+        /* REC-82 / IC-83: WHAT THE WRITER DID WITH EACH LEG'S REFERENT, on the
+           write path's own surface. A mechanism believed on the strength of its
+           EXISTENCE rather than its behaviour is the defect this project meets
+           most, and a content row is invisible from every op that exists today
+           (the `content` read is REC-83's) — so without this a caller could not
+           tell a row that was MINTED from one that was FOUND, nor a citation
+           that stayed put across a re-extraction from one that moved. `carried`
+           is the authored edge holding its ground; `stale` and `says` are the
+           row still resolving and saying what it is. ADDITIVE: absent on a
+           promotion with no content-bearing leg, and a caller reading only
+           ok/bundleSha/rowVersion is unaffected. */
+        ...(contentProjected.length ? { content: contentProjected } : {}) };
     });
   }
 
@@ -10817,6 +11024,18 @@ export class Store extends DurableObject {
          what it names. */
       this.sql.exec(`DELETE FROM reading_text_source WHERE capture_sha=?`, sha);
       this.#writeTextSource(bundleId, sha, reading.text_source);
+      /* REC-82 / IC-83: A RE-EXTRACTION MARKS CONTENT ROWS STALE, NEVER DELETES
+         THEM — and it happens HERE, beside the projection rebuild above and in
+         the same transaction, for the same reason that one is here: the moment
+         the reading is replaced is the only moment the OLD chain and the NEW one
+         are both in hand. The row above is a PROJECTION and is rebuilt; a
+         content row is FIRST-CLASS, an authored edge holds it, and Bob ruled
+         2026-09-14 that the record never moves an authored edge's target without
+         a member's act. So it is marked and it still resolves, saying so.
+         Distinct from the lines above in the direction that matters: this one
+         must NOT be a delete-then-rebuild, and writing it as one is exactly how
+         the rule would be lost to a pattern the surrounding code establishes. */
+      this.#markContentStale(sha, Array.isArray(reading.text_source) ? reading.text_source : null);
       this.sql.exec(
         `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at)
          VALUES (?,?,?,?,?,?,?,?)`,
@@ -10989,6 +11208,395 @@ export class Store extends DurableObject {
     return { ok: true, capture_sha: captureSha, count: attestations.length,
              limit: cap, truncated: page.length > cap,
              chain, chain_says: describeChain(chain), attestations, ceiling };
+  }
+
+  /* ====================================================================== *
+   * REC-82 / IC-83 / DEC-23 / D-164 — THE CONTENT WRITER.
+   * ====================================================================== *
+   *
+   * A basis leg names a DOCUMENT and, from this item, a PART of it. The rows
+   * live in `content` (schema.mjs's header carries the full argument) and this
+   * region is the only thing in the plane that writes one.
+   *
+   * WHAT THIS REGION IS NOT. It is not the extent grammar (that is
+   * `checks/bio-checks.mjs`'s C-45 family, imported, because the CHECKER runs
+   * the same rule at the gate). It is not `earnedBasisRegistry` keyed by row,
+   * and it is not the `content` read — both REC-83's. It is not the
+   * frontmatter or version-leg grammar — REC-84's. It lands the `pdf-page` and
+   * `document` arms only; the other three arms' `covers` is REC-85's.
+   *
+   * MINT OR FIND, AND NEVER REWRITE. Every write below is `INSERT OR IGNORE`.
+   * That is not defensiveness about duplicates — it IS the first-class rule:
+   * an edge depends on the row, so a re-promotion of the same leg must find
+   * exactly what it found last time, and two members citing one passage must
+   * land on ONE row. Both follow from the id being a hash of (capture,
+   * canonical extent, chain) rather than an allocated number, and `OR IGNORE`
+   * is what keeps the second promotion from overwriting the first's `minted_by`
+   * and `at` — which are a record of WHO FIRST cited this passage and WHEN, and
+   * are not ours to move.
+   */
+
+  /** THE CAPTURE A LEG'S CONTENT ROW IS ABOUT, resolved deterministically.
+   *
+   *  A content row addresses BYTES, so it names a capture. A leg names a
+   *  BUNDLE, and a bundle may hold several captures (a document re-fetched
+   *  after it changed). Which one?
+   *
+   *  THE ANSWER MUST BE STABLE UNDER LATER CAPTURES, and that is a correctness
+   *  requirement rather than a preference. `inquiry_basis` is re-projected
+   *  delete-then-insert on EVERY promotion, so a resolver that answered "the
+   *  newest capture" would silently re-point an authored citation at bytes the
+   *  member never read, the first time an unrelated revision was promoted after
+   *  the monitor caught an update. Bob ruled 2026-09-14 that *"the record never
+   *  moves an authored edge's target without a member's act, even when the
+   *  passage is byte-identical"* (5.8), and a resolver is exactly the place that
+   *  rule would be lost without anyone deciding to lose it.
+   *
+   *  So: an AUTHORED capture wins (`extent_capture` on the leg — REC-84 makes it
+   *  first-class grammar; honoured here today so that landing is a grammar and
+   *  not a rewrite), and otherwise the EARLIEST capture the record holds for the
+   *  bundle, by (registered instant, sha) so ties break on bytes rather than on
+   *  row order. Earliest is stable under every later capture; newest is stable
+   *  under none.
+   *
+   *  BOTH PLACES A CAPTURE LANDS ARE ASKED, on `earnedBasisRegistry`'s own
+   *  terms: `register` holds what a promotion registered against a bundle's
+   *  files, `readings` holds what a captured document's provenance carried, and
+   *  a document intaken with a provenance document has only the second.
+   *
+   *  Returns null when the record holds no capture for the bundle — an
+   *  information object nobody has captured has no bytes to address, which is
+   *  UNDETERMINED and STATED (the leg's `content_id` stays NULL) and is never
+   *  invented into a row. */
+  #captureForContent(bundleId, authored = null) {
+    if (typeof authored === "string" && authored.trim()) {
+      const a = authored.trim();
+      const held = this.#one(
+        `SELECT capture_sha FROM (
+           SELECT capture_sha FROM register WHERE bundle_id=? AND capture_sha=?
+           UNION SELECT capture_sha FROM readings WHERE bundle_id=? AND capture_sha=?)`,
+        bundleId, a, bundleId, a);
+      /* AN AUTHORED CAPTURE THIS RECORD DOES NOT HOLD IS NOT SILENTLY REPLACED
+         by a resolved one. Returning the resolver's answer would mint a row
+         against bytes the member did not name, which is the same silent
+         re-point the resolver above is written to prevent — pointed the other
+         way. It answers null, the leg's content_id stays NULL, and the fact is
+         stated rather than papered over. */
+      return held ? held.capture_sha : null;
+    }
+    const row = this.#one(
+      `SELECT capture_sha, at FROM (
+         SELECT capture_sha, registered AS at FROM register WHERE bundle_id=?
+         UNION ALL
+         SELECT capture_sha, at AS at FROM readings WHERE bundle_id=?)
+       ORDER BY at IS NULL, at, capture_sha LIMIT 1`, bundleId, bundleId);
+    return row ? row.capture_sha : null;
+  }
+
+  /** The transcription chain the record holds for a capture, or null.
+   *  ONE source (`readings.reading.text_source`), the same one `attestText` and
+   *  `attestationsFor` read, so the chain a content row records and the chain a
+   *  ceiling is computed from cannot be two different chains. */
+  #chainForCapture(captureSha) {
+    const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, captureSha);
+    if (!row) return null;
+    const chain = (safeJson(row.reading) || {}).text_source ?? null;
+    return Array.isArray(chain) ? chain : null;
+  }
+
+  /** THE CAPTURE'S PAGE SET, as the record holds it — the figure the
+   *  out-of-range refusal (C-45.1) is checked against and the figure stored on
+   *  the row at mint, which is what IC-83 requires.
+   *
+   *  NOTHING IN THIS PLANE PERSISTS A PDF PAGE COUNT. I2 computes one at acquire
+   *  (`pdfstructure.mjs` returns `pages: doc.pageCount`) and the acquire path
+   *  does not carry it onto the reading, so there is no column to read — the
+   *  design study says so in its own words ("needs a stored page count — absent
+   *  today"). D-345 is the row that closes it, and closing it means op=acquire
+   *  persisting the figure, which is CAPTURE's path and not this item's.
+   *
+   *  SO THIS ANSWERS FROM WHAT THE RECORD ACTUALLY HOLDS, and says so: the
+   *  pages D-252's SCOPED derivation steps name, unioned with the pages any
+   *  attestation covers. A mixed document (a text-layer report with scanned
+   *  exhibits) has a real page set here. A document with one unscoped chain has
+   *  none, and the answer is NULL — UNDETERMINED AND STATED.
+   *
+   *  WHY NULL IS NOT A REFUSAL. Refusing every page citation on a document
+   *  whose page set this plane never recorded would be a fence tighter than its
+   *  rule, and it would push a member toward citing the WHOLE document instead
+   *  — which claims MORE, not less. The row records `page_count: NULL`, which
+   *  says exactly what was known when it was minted.
+   *
+   *  WHY MAX+1 AND NOT THE COUNT OF NAMED PAGES. The question the refusal asks
+   *  is "can this document contain page N", so the bound is the highest page
+   *  the record has ever seen named for this capture, plus one. Counting the
+   *  named pages would answer a different question and would refuse page 9 of a
+   *  document whose chain happened to scope only three pages — a fence tighter
+   *  than its rule again, in the direction that refuses correct work. */
+  #pageSetForCapture(captureSha) {
+    let max = -1;
+    /* The chain is an in-memory array whose length is the number of derivation
+       steps — a handful, and NOT a row scan. */
+    const chain = this.#chainForCapture(captureSha);
+    for (const step of Array.isArray(chain) ? chain : []) {
+      const e = step && typeof step === "object" ? step.extent : null;
+      if (!e || e.kind !== "pages" || !Array.isArray(e.pages)) continue;
+      for (const p of e.pages) if (Number.isInteger(p) && p > max) max = p;
+    }
+    /* THE ATTESTATIONS ARE AGGREGATED IN SQL AND NEVER WALKED, and that is
+       REC-66 / D-227's bound rather than tidiness: attestations per capture are
+       UNBOUNDED by design (`attestationsFor` bounds its own page for exactly
+       this reason — a diligent group working through a scanned budget book can
+       legitimately produce hundreds), so reading them into a loop here would put
+       an amplifying scan inside every promotion's transaction, on a Durable
+       Object with a CPU budget. `max()` is one row whatever the corpus holds,
+       and it is the only thing this function wanted from them. */
+    const m = this.#one(
+      `SELECT max(extent_page) AS hi FROM text_attestations
+        WHERE capture_sha=? AND extent_page IS NOT NULL`, captureSha);
+    if (m && Number.isInteger(m.hi) && m.hi > max) max = m.hi;
+    return max < 0 ? null : max + 1;
+  }
+
+  /** Everything the checker needs about a capture, gathered in one place so the
+   *  write path and any later caller ask the same question the same way. */
+  contentContextFor(captureSha) {
+    return { chain: this.#chainForCapture(captureSha),
+             pageCount: this.#pageSetForCapture(captureSha) };
+  }
+
+  /** THE WHOLE BASIS'S REFERENTS, RESOLVED ONCE — the capture each leg is about
+   *  and what the record holds of it, keyed by leg ordinal.
+   *
+   *  WHY THIS IS A METHOD AND NOT A LOOP INSIDE `promote`, and it is REC-66 /
+   *  D-227's roster rather than style. `promote`'s basis pass has to ask, per
+   *  leg, which capture the leg is about and what chain and page set the record
+   *  holds for it — reads inside a loop, which is the amplification the
+   *  derivation-bounds ratchet counts. Left inline, the ratchet's roster named
+   *  `promote` itself, which tells the next reader the plane's whole write path
+   *  amplifies and nothing about WHY. Named here, the roster names the content
+   *  writer, which is true and useful. The count moves either way (32 -> 33,
+   *  and the ceiling is moved in `derivation-bounds.test.mjs` from the figure
+   *  the run PRINTED); what is bought is that it moves onto the thing that
+   *  actually does the work.
+   *
+   *  AND IT IS RESOLVED ONCE RATHER THAN TWICE. The refusal arm and the
+   *  projection both need exactly this, and the first version of this item
+   *  resolved it separately in each — two answers to one question, three lines
+   *  apart, which is the drift this repository has measured five times. Both
+   *  memoised per TARGET and per CAPTURE, so a basis citing one document for
+   *  four legs (D4's legal shape) pays for one resolution and not four. */
+  #contentPlanFor(legs) {
+    const plan = new Map(), byTarget = new Map(), byCapture = new Map();
+    for (let i = 0; i < legs.length; i++) {
+      const leg = legs[i];
+      if (!leg || typeof leg.target !== "string") continue;
+      const isInfo = normalizeType(OBJECT_TYPES[leg.target.split("-")[0]]) === "information";
+      const authored = typeof leg.extent_capture === "string" ? leg.extent_capture : null;
+      const key = `${leg.target}\u0000${authored || ""}`;
+      if (!byTarget.has(key))
+        byTarget.set(key, isInfo ? this.#captureForContent(leg.target, authored) : null);
+      const sha = byTarget.get(key);
+      if (sha != null && !byCapture.has(sha)) byCapture.set(sha, this.contentContextFor(sha));
+      plan.set(i, { target: leg.target, isInfo, authored, captureSha: sha,
+                    ctx: sha == null ? { chain: null, pageCount: null } : byCapture.get(sha),
+                    extent: legExtent(leg) });
+    }
+    return plan;
+  }
+
+  /** MINT OR FIND the content row a leg addresses, and return its id.
+   *
+   *  `minted_by` is the ACTOR, carried through from the op rather than defaulted
+   *  here: a member id, `plane` for the plane's own extraction at promote, or a
+   *  machine credential (Bob, 5.7: an assistant may mark passages as citable,
+   *  under DEC-24 rule 3 — labelled, never attesting). THE FENCE IS NOT
+   *  DUPLICATED HERE: a machine may mint and may never attest, and the refusal
+   *  that says so is C-35.10 in `checkAttestation`, UNCHANGED. A second copy of
+   *  it at this door would be the eleven-copies-of-one-predicate failure REC-46
+   *  measured, and it would be a fence on the wrong act.
+   *
+   *  Returns `{ ok: true, content_id, minted }` or the checker's refusal
+   *  verbatim — the refusal is `checks/bio-checks.mjs`'s, never composed here. */
+  mintContent({ bundleId, captureSha, extent, mintedBy = "plane", at = null, ctx: given = null }) {
+    /* The caller may hand in the context it already resolved (`#contentPlanFor`
+       does, once for the whole basis). Asking again would be a second answer to
+       a question already answered inside the same transaction. */
+    const ctx = given || this.contentContextFor(captureSha);
+    const bad = checkContentExtent(extent, ctx);
+    if (bad) return bad;
+    const id = contentIdFor(captureSha, extent, ctx.chain);
+    const before = this.#one(`SELECT content_id FROM content WHERE content_id=?`, id);
+    if (!before) {
+      this.sql.exec(
+        `INSERT OR IGNORE INTO content
+           (content_id,capture_sha,bundle_id,extent_kind,extent,ref,chain,derivation_cap,
+            page_count,minted_by,at,stale)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,0)`,
+        id, captureSha, bundleId, extent.kind, canonicalExtent(extent), describeExtent(extent),
+        ctx.chain == null ? null : JSON.stringify(ctx.chain),
+        /* THE CAP IS ASKED ABOUT THE EXTENT, not about the document — D-252's
+           whole point, and `gradeCeiling`'s own reading. A leg citing the OCR'd
+           exhibit gets the engine's measured letter and a leg citing the
+           text-layer report gets undetermined, each about itself. NULL is
+           undetermined and STATED, never "fine". */
+        derivationCap(ctx.chain,
+          extent.kind === "pdf-page" ? { page: extent.page, rect: extent.rect ?? null } : null),
+        ctx.pageCount, mintedBy, at || new Date().toISOString());
+    }
+    return { ok: true, content_id: id, minted: !before };
+  }
+
+  /** THE LEGACY BACKFILL — a leg promoted before this column existed, read for
+   *  the first time.
+   *
+   *  DETERMINISTIC BECAUSE THE ID IS A HASH. There is no allocator, so "mint the
+   *  row this leg would have had" is a pure function of the target the leg
+   *  already names: the whole document (Bob, 5.3 — a citation with no stated
+   *  part means the whole document and reads `document`, never `unstated`), the
+   *  capture `#captureForContent` resolves, and the chain as it stands. Running
+   *  it twice, or in two sessions, or after a replay, produces the same id — so
+   *  this is a read that happens to write rather than a migration with a
+   *  direction.
+   *
+   *  IT WRITES THE COLUMN AS WELL AS THE ROW, so the second read is a lookup.
+   *  Not doing so would leave the projection permanently disagreeing with the
+   *  row it resolves to, which is the drift `inquiry_basis` is delete-then-
+   *  inserted to prevent.
+   *
+   *  THE HONEST NULLS, and each is a different fact stated rather than invented:
+   *  a leg whose target is an INQUIRY has no capture behind it at all (an
+   *  inquiry is not a document — DEC-21 — and IC-83's "every leg targets
+   *  content" is written about the information arm); a leg whose target
+   *  information object the record holds no bytes for has nothing to address.
+   *  Both answer null and say which. */
+  ensureLegContent(bundleId, ord) {
+    const leg = this.#one(
+      `SELECT bundle_id, ord, target_id, target_type, content_id
+         FROM inquiry_basis WHERE bundle_id=? AND ord=?`, bundleId, ord);
+    if (!leg) return { ok: false, reason: "NO_LEG",
+                       detail: `no basis leg ${ord} on ${bundleId}` };
+    if (leg.content_id)
+      return { ok: true, content_id: leg.content_id, minted: false, backfilled: false };
+    if (leg.target_type !== "information")
+      return { ok: true, content_id: null, minted: false, backfilled: false,
+               why: `basis[${ord}] rests on ${leg.target_id}, which is an inquiry rather than a `
+                  + `document. An inquiry has no capture and therefore no part to point at — the `
+                  + `content axis ranges over documents (DEC-21), and this is undetermined and `
+                  + `stated rather than a document-extent row invented for it` };
+    const sha = this.#captureForContent(leg.target_id);
+    if (!sha)
+      return { ok: true, content_id: null, minted: false, backfilled: false,
+               why: `this record holds no capture of ${leg.target_id}, so there are no bytes for a `
+                  + `content row to address. Absence here is a fact about what was captured and `
+                  + `never evidence about what the document says (CLAUDE.md's sparse rule)` };
+    const out = this.mintContent({ bundleId: leg.target_id, captureSha: sha,
+                                   extent: { kind: "document" }, mintedBy: "plane" });
+    if (!out.ok) return out;
+    this.sql.exec(`UPDATE inquiry_basis SET content_id=? WHERE bundle_id=? AND ord=?`,
+      out.content_id, bundleId, ord);
+    return { ...out, backfilled: true };
+  }
+
+  /** Fill in each projected referent's STANDING — is the transcription it was
+   *  minted against still the one the record holds, and what does the edge say
+   *  it points at — in ONE query over the ids, mutating the rows in place.
+   *
+   *  Set-based on purpose (REC-66 / D-227): a basis legitimately cites one
+   *  document for several legs (D4), and a read per leg inside `promote`'s
+   *  projection loop is the amplification the derivation-bounds ratchet counts.
+   *  The ids are already in hand, so there is nothing to scan for. */
+  #contentStandings(rows) {
+    const ids = [...new Set(rows.map((r) => r.content_id))];
+    const marks = ids.map(() => "?").join(",");
+    const by = new Map();
+    /* Hoisted out of the for-header for the reason recorded at `promote`'s own
+       prior-content read: a scan in a loop header reads as a scan per row. */
+    const found = this.#rows(
+      `SELECT content_id, extent_kind, extent, stale FROM content
+        WHERE content_id IN (${marks})`, ...ids);
+    for (const r of found) by.set(r.content_id, r);
+    for (const r of rows) {
+      const row = by.get(r.content_id);
+      if (!row) { r.stale = false; r.says = null; continue; }
+      r.extent_kind = row.extent_kind;
+      r.stale = !!row.stale;
+      const ext = { kind: row.extent_kind, ...(safeJson(row.extent) || {}) };
+      r.says = row.stale
+        ? `this passage was cited as it stood under an earlier transcription of the document. `
+          + `The document has since been re-read and the text may have changed, so what the `
+          + `citation points at is ${describeExtent(ext)} of the capture as it was transcribed `
+          + `then — the record keeps it rather than moving it, because moving an authored `
+          + `citation is a member's act and not the record's`
+        : `${describeExtent(ext)}, as this record holds it`;
+    }
+  }
+
+  /** RE-EXTRACTION MOVED THE CHAIN: mark, never delete.
+   *
+   *  Called from the reading write path, in the SAME transaction as the reading
+   *  it follows. A better engine re-reads a capture, the chain changes, and
+   *  every content row minted against the OLD chain is now a reference to a
+   *  transcription that no longer stands. That is a fact about the row, not a
+   *  reason to remove it: an authored edge holds it, and Bob ruled the record
+   *  never moves an authored edge without a member's act (5.8). So it is marked
+   *  `stale=1` and it and its edges still resolve — and SAY SO.
+   *
+   *  THE COMPARISON IS AGAINST THE STORED CHAIN AND NOT AGAINST THE ID. Rows
+   *  minted against the NEW chain hash differently and are simply not selected,
+   *  which is the content address doing the work; comparing ids would have to
+   *  re-derive every row's extent to know which id to expect.
+   *
+   *  A NULL ON EITHER SIDE IS NOT STALENESS, exactly as `attestationsFor` rules
+   *  it: an unrecorded chain is not a chain that moved, and saying "stale" there
+   *  would be inventing a comparison nobody made.
+   *
+   *  ONE-WAY. Nothing here ever sets `stale` back to 0 — a row that went stale
+   *  was minted against a transcription that happened, and un-staling it would
+   *  be the record deciding an old citation is current again. If the chain later
+   *  returns to exactly what it was, the row minted against THAT chain has that
+   *  id and is found, not resurrected. */
+  #markContentStale(captureSha, chain) {
+    const live = Array.isArray(chain) ? JSON.stringify(chain) : null;
+    if (live == null) return 0;
+    /* ONE STATEMENT, NOT A SELECT AND A LOOP, and REC-66 / D-227's bound is the
+       reason rather than brevity: content rows per capture are UNBOUNDED by
+       design — the whole point of the construct is that a group can cite as many
+       passages of one document as the document has — so reading them into a loop
+       of single-row UPDATEs would put an amplifying scan inside every
+       promotion's transaction, on a Durable Object with a CPU budget. The count
+       is taken first as an AGGREGATE, one row whatever the corpus holds, because
+       the caller wants to know what moved and `sql.exec` does not say. */
+    const n = this.#one(
+      `SELECT count(*) AS c FROM content
+        WHERE capture_sha=? AND chain IS NOT NULL AND chain<>? AND stale=0`, captureSha, live).c;
+    if (n) this.sql.exec(
+      `UPDATE content SET stale=1
+        WHERE capture_sha=? AND chain IS NOT NULL AND chain<>? AND stale=0`, captureSha, live);
+    return n;
+  }
+
+  /** The content row behind an id, with the one sentence a reader needs about
+   *  its standing. Deliberately NOT the `content` READ op and not the registry
+   *  — those are REC-83's — but the resolution an edge needs to say what it
+   *  points at, which is what makes "its edge still resolves saying so" a
+   *  behaviour rather than a claim. */
+  contentRow(contentId) {
+    const r = this.#one(
+      `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
+              derivation_cap, page_count, minted_by, at, stale
+         FROM content WHERE content_id=?`, contentId);
+    if (!r) return null;
+    return { ...r, extent: safeJson(r.extent), chain: safeJson(r.chain), stale: !!r.stale,
+      resolves: true,
+      says: r.stale
+        ? `this passage was cited as it stood under an earlier transcription of the document. `
+          + `The document has since been re-read and the text may have changed, so what the `
+          + `citation points at is ${describeExtent({ kind: r.extent_kind, ...(safeJson(r.extent) || {}) })} `
+          + `of the capture as it was transcribed then — the record keeps it rather than moving it, `
+          + `because moving an authored citation is a member's act and not the record's`
+        : `${describeExtent({ kind: r.extent_kind, ...(safeJson(r.extent) || {}) })}, as this record `
+          + `holds it` };
   }
 
   /* REC-36: the bounded backfill for the name index on a store that already
@@ -16724,6 +17332,18 @@ export class Store extends DurableObject {
          NOTHING ELSE — stats is an operator surface and whose attention is muted
          on what is not an operator's business. */
       queueState: n("queue_state"),
+      /* REC-82 / IC-83: the content rows — the parts of documents this record's
+         edges point at — reported so a purge can PROVE it took them (D-113)
+         rather than assert it, and so an operator can see the content axis's
+         depth beside the document count it has always been able to see. */
+      content: n("content"),
+      /* REC-82: and how many of them were minted against a transcription that
+         has since MOVED. Counted apart from the total and never folded into it:
+         a re-extraction marks rows stale and DELETES NONE, so the total alone
+         cannot distinguish "nothing was re-read" from "everything was" — which
+         is the one fact an operator needs before believing a content-grain
+         answer, and the one this count exists to make visible. */
+      contentStale: this.#one(`SELECT count(*) c FROM content WHERE stale=1`).c,
       /* IS-6: the investigative runs, their budgets and their observation logs,
          reported so a whole-store purge can PROVE it took them (D-113) and so an
          operator can see how many runs are in flight without opening one. A
@@ -17910,7 +18530,19 @@ export class Store extends DurableObject {
                        EVENTS rather than a projection, so nothing rebuilds it — which is
                        precisely why leaving it would be permanent rather than self-correcting.
                        hygiene.test.mjs holds this list against schema.mjs. */
-                    "case_revision_flags"];
+                    "case_revision_flags",
+                    /* REC-82 / IC-83 / D-113: the CONTENT rows. They are NOT derived — an
+                       authored edge depends on one, which is why re-promotion never rewrites
+                       them and a re-extraction marks them stale rather than deleting them —
+                       but they carry `bundle_id` (the DOCUMENT they address), so they ride
+                       this list and clear in BOTH arms. Per-bundle: purging a document while
+                       leaving addresses INTO it would leave citations resolving to pages of a
+                       file nobody holds, and a later bundle allocated a colliding id would
+                       inherit somebody else's passages. Whole-store: a scratch reset reporting
+                       scope ALL while the content axis still answered "these passages are
+                       cited" is the silent-leftover exactly. hygiene.test.mjs holds this list
+                       against schema.mjs. */
+                    "content"];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {

@@ -1264,6 +1264,16 @@ CREATE TABLE IF NOT EXISTS inquiry_basis (
   note         TEXT,
   at           TEXT,
   ground       TEXT,            -- REC-42: the OR branch this leg belongs to. NULL = the implicit single ground (AND)
+  -- REC-82 / IC-83 / DEC-23: WHAT PART OF THE DOCUMENT THIS LEG RESTS ON. The
+  -- content row is the leg's REFERENT and the bundle its CONTAINER, so
+  -- target_id above does NOT move -- the compiler still joins through
+  -- bundle_id as it does everywhere (D-222 rule). NULLABLE while I5 is
+  -- CHANGING at 1.11.0, and NOT NULL is the IC's own SETTLED condition rather
+  -- than this landing's: a leg promoted before REC-82 existed named no extent,
+  -- and it is BACKFILLED to its document-extent row on first read rather than
+  -- migrated, because the id is a hash and the row is therefore derivable at
+  -- any time from the capture it cites (no allocator, so no backfill pass).
+  content_id   TEXT,
   PRIMARY KEY (bundle_id, ord)
 );
 CREATE INDEX IF NOT EXISTS inquiry_basis_target ON inquiry_basis(target_id);
@@ -2115,6 +2125,14 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (
   note         TEXT,
   at           TEXT,
   ground       TEXT NOT NULL,    -- the branch of the argument. NOT NULL: the partition is TOTAL on a version
+  -- REC-82 / IC-83: the version leg's referent, on inquiry_basis.content_id's
+  -- exact terms. THE COLUMN ARRIVES HERE AND ITS WRITER DOES NOT: REC-82 lands
+  -- the writer on the LIVE basis only, and the version-leg grammar that lets a
+  -- version leg NAME an extent is REC-84. So this column reads NULL on every
+  -- row this plane currently writes, and that is the honest state rather than a
+  -- gap -- a version leg minted with no stated extent is a whole-document
+  -- reference (5.3, no unstated) and REC-84 is what makes it say so.
+  content_id   TEXT,
   PRIMARY KEY (bundle_id, name, ord)
 );
 -- The reverse index inquiry_basis_target is for, one level up: "which VERSIONS
@@ -2773,6 +2791,83 @@ CREATE TABLE IF NOT EXISTS calibration_signals (
 CREATE INDEX IF NOT EXISTS calibration_signals_engine
   ON calibration_signals(engine, consumed_at, probe_by_ms);
 
+-- =========================================================================
+-- REC-82 / IC-83 / DEC-23 / D-164 -- CONTENT: A REFERENCE TO A PART OF A
+-- DOCUMENT, UP TO AND INCLUDING THE WHOLE DOCUMENT.
+--
+-- Bob's definition, ruled as DEC-23: documents are what is HARVESTED, content
+-- is what is EXTRACTED, and meaning derives from both. Until this table every
+-- edge in the record addressed a BUNDLE -- so a leg citing one paragraph of a
+-- 300-page budget book and a leg citing the whole book were the same row, and
+-- the address IC-1 already emits was consumed by no edge at all (D-164).
+--
+-- CONTENT-ADDRESSED, AND THAT IS THE WHOLE MECHANISM (the design study's option
+-- (c)). content_id = sha256(capture_sha, the CANONICAL extent, the chain as it
+-- stood at mint), so two members who cite the same passage of the same bytes
+-- under the same transcription get ONE row BY CONSTRUCTION. There is no
+-- allocator, no dedup pass and nothing to reconcile -- and, the other half of
+-- the same property, a leg can name a row before it exists, because the id is
+-- derivable from the citation alone.
+--
+-- ROWS ARE FIRST-CLASS, NEVER DERIVED. An edge depends on one, so a row is NOT
+-- rewritten by re-promotion and is NEVER DELETED when the capture is re-read:
+-- a better engine moves the chain, which makes the row a reference to a
+-- transcription that no longer stands, and the honest record of that is
+-- stale=1 with the row and its edges still resolving and SAYING SO. Deleting it
+-- would break an authored citation to make a projection tidy. This is
+-- text_attestations' own stale rule (CPDF-10) applied one construct along, and
+-- it is D-183's asymmetric rule: nothing re-grades on its own.
+--
+-- WHY A DERIVED TABLE IS STILL PURGED. It is not derived -- but it carries
+-- bundle_id, so it rides op=purge's TABLES list and clears in BOTH arms
+-- (D-113). A whole-store purge reporting scope ALL while content rows stood
+-- would leave addresses into documents nobody holds, and a later bundle
+-- allocated a colliding id would inherit somebody else's citations.
+--
+-- THE EXTENT GRAMMAR IS IC-1'S, UNIFIED WITH ATTESTATION'S, AND NOT A THIRD
+-- ONE. extent_kind is IC-1's five arms (document | pdf-page | sheet-cell |
+-- slide-shape | doc-para) read together with textchain.mjs's EXTENT_KINDS
+-- (document | page | region) -- one vocabulary, one checker, one covers() per
+-- arm, because D-164's lesson is that solving one problem twice produces two
+-- answers that disagree. dom is REFUSED BY NAME (C-45.4) until CONTENT-HTML
+-- produces one: a kind nothing can evaluate must not quietly read as covering
+-- anything. REC-82 lands the WRITER on the pdf-page and document arms only --
+-- the other three arms' covers is REC-85 -- and the column admits them now so
+-- that landing is a writer and not a migration.
+--
+-- page_count IS THE STORED PAGE SET, AND IT IS WHY THE OUT-OF-RANGE REFUSAL CAN
+-- FIRE AT ALL. IC-83 requires the page count be stored on mint. Nothing in this
+-- plane persists a capture page count today (the design study says so in its
+-- own words: "needs a stored page count -- absent today"), so this column holds
+-- what the record COULD see when the row was minted: the page set D-252's
+-- scoped derivation steps name, unioned with the pages any attestation covers.
+-- NULL means the record held no page set for that capture at mint -- which is
+-- UNDETERMINED and STATED, never a permission and never a refusal: refusing
+-- every page citation on a document whose page set the record does not know
+-- would be a fence tighter than its rule. D-345 is the row that closes the gap
+-- by persisting I2's page count at acquire, which is CAPTURE's path.
+CREATE TABLE IF NOT EXISTS content (
+  content_id     TEXT PRIMARY KEY,  -- sha256 over capture_sha + canonical extent + chain
+  capture_sha    TEXT NOT NULL,     -- the document. The register's trust root
+  bundle_id      TEXT NOT NULL,     -- purge, and the compiler's join (D-222)
+  extent_kind    TEXT NOT NULL,     -- document | pdf-page | sheet-cell | slide-shape | doc-para
+  extent         TEXT NOT NULL,     -- the per-arm fields as canonical JSON
+  ref            TEXT NOT NULL,     -- IC-1's REQUIRED human form, e.g. page 14, top half
+  chain          TEXT,              -- the transcription chain over the extent, as it stood at mint
+  derivation_cap TEXT,              -- min over the chain's derivation steps over THIS extent. NULL = undetermined, STATED
+  page_count     INTEGER,           -- the page set the record held at mint. NULL = undetermined, STATED
+  minted_by      TEXT NOT NULL,     -- a member id, 'plane', or a machine credential (5.7, DEC-24 rule 3)
+  at             TEXT NOT NULL,
+  stale          INTEGER NOT NULL DEFAULT 0  -- the capture's chain moved since mint. The row and its edges still resolve
+);
+-- The two reads this table exists to answer, and neither may be a scan. By
+-- CAPTURE: which passages of this document has anybody cited (the content axis
+-- of the four-level search), and the read that marks rows stale when a capture
+-- is re-read. By BUNDLE: purge's per-bundle arm, and the compiler's join.
+CREATE INDEX IF NOT EXISTS content_capture ON content(capture_sha);
+CREATE INDEX IF NOT EXISTS content_bundle ON content(bundle_id);
+-- =========================================================================
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
@@ -3025,6 +3120,9 @@ __export(bio_checks_exports, {
   CASE_MEMBER_ROLES: () => CASE_MEMBER_ROLES,
   CHECK_RETIREMENTS: () => CHECK_RETIREMENTS,
   CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
+  CONTENT_EXTENT_CHECKS: () => CONTENT_EXTENT_CHECKS,
+  CONTENT_EXTENT_KINDS: () => CONTENT_EXTENT_KINDS,
+  CONTENT_EXTENT_KIND_NO_PRODUCER: () => CONTENT_EXTENT_KIND_NO_PRODUCER,
   CORE_FIELDS: () => CORE_FIELDS,
   CORRESPONDENCE_DIRECTIONS: () => CORRESPONDENCE_DIRECTIONS,
   EARNED_CAPTURE_CEILING: () => EARNED_CAPTURE_CEILING,
@@ -3077,11 +3175,13 @@ __export(bio_checks_exports, {
   b64ToBytes: () => b64ToBytes,
   basisVersionFindings: () => basisVersionFindings,
   biasAcknowledgementOf: () => biasAcknowledgementOf,
+  canonicalExtent: () => canonicalExtent,
   canonicalJson: () => canonicalJson,
   caseEditionClaimed: () => caseEditionClaimed,
   checkBiasExtension: () => checkBiasExtension,
   checkBundle: () => checkBundle,
   checkCaseDocument: () => checkCaseDocument,
+  checkContentExtent: () => checkContentExtent,
   checkGatheringGrammar: () => checkGatheringGrammar,
   checkInboxGrammar: () => checkInboxGrammar,
   checkInquiryBasis: () => checkInquiryBasis,
@@ -3089,9 +3189,11 @@ __export(bio_checks_exports, {
   classifyDivergence: () => classifyDivergence,
   completenessFields: () => completenessFields,
   consequenceState: () => consequenceState,
+  contentIdFor: () => contentIdFor,
   correspondenceFindings: () => correspondenceFindings,
   createSha256: () => createSha256,
   deriveInquiryTitle: () => deriveInquiryTitle,
+  describeExtent: () => describeExtent,
   divisionDisclosureFindings: () => divisionDisclosureFindings,
   ed25519Verify: () => ed25519Verify,
   inquiryQuestionOf: () => inquiryQuestionOf,
@@ -3102,6 +3204,7 @@ __export(bio_checks_exports, {
   isPublicHttpsLocator: () => isPublicHttpsLocator,
   isSufficiencyClaimed: () => isSufficiencyClaimed,
   isSufficiencyUnclaimed: () => isSufficiencyUnclaimed,
+  legExtent: () => legExtent,
   normalizeRootKey: () => normalizeRootKey,
   normalizeType: () => normalizeType,
   parseAllowedSigners: () => parseAllowedSigners,
@@ -3111,6 +3214,7 @@ __export(bio_checks_exports, {
   releaseMessage: () => releaseMessage,
   respondsToEdgeFindings: () => respondsToEdgeFindings,
   sectionText: () => sectionText,
+  sha256HexSync: () => sha256HexSync,
   signerKeysAt: () => signerKeysAt,
   sshsigSignedBlob: () => sshsigSignedBlob,
   sufficiencyClaimState: () => sufficiencyClaimState,
@@ -9657,6 +9761,267 @@ function checkCaseDocument(fm, ctx = {}) {
       findings.push(f("C-21.1", "error", `the bias acknowledgement is byte-identical to edition ${priorCase.edition}'s. An acknowledgement of the bias a case was produced under is AUTHORED at the moment of export and never carried forward (DEC-46): reprinting the last edition's sentence is evidence nobody looked. Declaring a bias never blocks publication (DEC-20)`));
   }
   return findings;
+}
+var CONTENT_EXTENT_KINDS = {
+  document: { landed: true, human: "the whole document" },
+  "pdf-page": { landed: true, human: "a page of a PDF" },
+  "sheet-cell": { landed: false, human: "a cell of a spreadsheet" },
+  "slide-shape": { landed: false, human: "a shape on a slide" },
+  "doc-para": { landed: false, human: "a paragraph of a document" }
+};
+var CONTENT_EXTENT_KIND_NO_PRODUCER = "dom";
+var CONTENT_EXTENT_CHECKS = {
+  CONTENT_EXTENT_OUT_OF_RANGE: {
+    check: "C-45.1",
+    where: "checks/bio-checks.mjs checkContentExtent > is-content-extent",
+    translation: "This citation points at a page the document does not have. A reference nobody can follow is worse than no reference: it looks like evidence and resolves to nothing. Check the page number against the document as this record holds it \u2014 pages are counted from the first page of the captured file, which is not always the number printed on it."
+  },
+  CONTENT_EXTENT_NO_CHAIN: {
+    check: "C-45.2",
+    where: "checks/bio-checks.mjs checkContentExtent > is-content-extent",
+    translation: "Nothing in this record says where the text of this part of the document came from. Pointing at a passage means pointing at text somebody or something produced, and until this document has been read there is no passage to point at \u2014 only bytes nobody has opened. Capture or read the document first, then cite the part of it you mean."
+  },
+  CONTENT_EXTENT_UNREADABLE: {
+    check: "C-45.3",
+    where: "checks/bio-checks.mjs checkContentExtent > is-content-extent",
+    translation: "This record cannot tell what part of the document this citation means. An address it cannot evaluate is treated as pointing at nothing rather than at everything \u2014 the generous reading would quietly let one checked paragraph stand behind a whole report."
+  },
+  CONTENT_EXTENT_NO_PRODUCER: {
+    check: "C-45.4",
+    where: "checks/bio-checks.mjs checkContentExtent > is-content-extent",
+    translation: "Citing a region of a web page is not something this record can do yet. Nothing in it produces the addresses that would make such a citation checkable, so accepting one would record a pointer that resolves to nothing and looks exactly like one that works. Cite the captured page as a whole for now."
+  }
+};
+function refusal(key, detail) {
+  const row = CONTENT_EXTENT_CHECKS[key];
+  return { ok: false, code: key, check: row.check, translation: row.translation, detail };
+}
+function legExtent(leg) {
+  const l = leg && typeof leg === "object" ? leg : {};
+  const kindRaw = l.extent_kind;
+  const kind = kindRaw === void 0 || kindRaw === null || kindRaw === "" ? "document" : kindRaw;
+  const out = { kind };
+  if (typeof l.extent_ref === "string" && l.extent_ref.trim()) out.ref = l.extent_ref.trim();
+  if (kind === "pdf-page") {
+    if (l.extent_page !== void 0 && l.extent_page !== null) out.page = l.extent_page;
+    if (l.extent_rect !== void 0 && l.extent_rect !== null) out.rect = l.extent_rect;
+  }
+  if (kind === "sheet-cell" || kind === "slide-shape" || kind === "doc-para")
+    out.fields = {
+      sheet: l.extent_sheet ?? null,
+      cell: l.extent_cell ?? null,
+      slide: l.extent_slide ?? null,
+      shape: l.extent_shape ?? null,
+      para: l.extent_para ?? null,
+      run: l.extent_run ?? null
+    };
+  return out;
+}
+function canonicalExtent(extent) {
+  const e = extent && typeof extent === "object" ? extent : {};
+  if (e.kind === "document") return canonicalJson({ kind: "document" });
+  if (e.kind === "pdf-page") {
+    const ok = Array.isArray(e.rect) && e.rect.length === 4 && e.rect.every((n) => typeof n === "number" && Number.isFinite(n));
+    const r = ok ? [
+      Math.min(e.rect[0], e.rect[2]),
+      Math.min(e.rect[1], e.rect[3]),
+      Math.max(e.rect[0], e.rect[2]),
+      Math.max(e.rect[1], e.rect[3])
+    ] : null;
+    return canonicalJson({ kind: "pdf-page", page: Number.isInteger(e.page) ? e.page : null, rect: r });
+  }
+  return canonicalJson({ kind: e.kind ?? null, fields: e.fields ?? null });
+}
+function describeExtent(extent) {
+  const e = extent && typeof extent === "object" ? extent : {};
+  if (typeof e.ref === "string" && e.ref.trim()) return e.ref.trim();
+  if (e.kind === "document") return "the whole document";
+  if (e.kind === "pdf-page") {
+    const human = Number.isInteger(e.page) ? e.page + 1 : null;
+    if (human == null) return "a page of this document";
+    return Array.isArray(e.rect) && e.rect.length === 4 ? `page ${human}, a region of it` : `page ${human}`;
+  }
+  const row = CONTENT_EXTENT_KINDS[e.kind];
+  return row ? row.human : "a part of this document the record cannot name";
+}
+function checkContentExtent(extent, ctx = {}) {
+  const e = extent && typeof extent === "object" ? extent : null;
+  if (!e)
+    return refusal(
+      "CONTENT_EXTENT_UNREADABLE",
+      `no extent was supplied and none could be read from the leg`
+    );
+  if (e.kind === CONTENT_EXTENT_KIND_NO_PRODUCER)
+    return refusal(
+      "CONTENT_EXTENT_NO_PRODUCER",
+      `extent kind 'dom' names a region of an HTML document. Nothing in this plane produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate`
+    );
+  const row = CONTENT_EXTENT_KINDS[e.kind];
+  if (!row)
+    return refusal(
+      "CONTENT_EXTENT_UNREADABLE",
+      `extent kind '${String(e.kind).slice(0, 40)}' is not one of: ${Object.keys(CONTENT_EXTENT_KINDS).join(", ")}`
+    );
+  if (!row.landed)
+    return refusal(
+      "CONTENT_EXTENT_UNREADABLE",
+      `extent kind '${e.kind}' (${row.human}) is named in the grammar and this plane cannot yet evaluate what it covers, so it mints nothing. The pdf-page and document arms landed with REC-82 and the other three follow with REC-85`
+    );
+  if (e.kind === "pdf-page") {
+    if (!Number.isInteger(e.page) || e.page < 0)
+      return refusal(
+        "CONTENT_EXTENT_UNREADABLE",
+        `a pdf-page extent names which page, as a 0-based integer. This one names '${String(e.page).slice(0, 40)}'`
+      );
+    if (e.rect !== void 0 && e.rect !== null && !(Array.isArray(e.rect) && e.rect.length === 4 && e.rect.every((n) => typeof n === "number" && Number.isFinite(n))))
+      return refusal(
+        "CONTENT_EXTENT_UNREADABLE",
+        `a pdf-page extent's rect is four finite numbers or absent. A rect that is present and unreadable is worse than none, because it looks like a region somebody chose`
+      );
+    if (Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
+      return refusal(
+        "CONTENT_EXTENT_OUT_OF_RANGE",
+        `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the extent names page ${e.page}`
+      );
+  }
+  if (e.kind !== "document" && !(Array.isArray(ctx.chain) && ctx.chain.length))
+    return refusal(
+      "CONTENT_EXTENT_NO_CHAIN",
+      `this record holds no extraction chain for the capture this leg cites, so there is no transcription over ${describeExtent(e)} for the citation to point at`
+    );
+  return null;
+}
+var SHA256_K = new Uint32Array([
+  1116352408,
+  1899447441,
+  3049323471,
+  3921009573,
+  961987163,
+  1508970993,
+  2453635748,
+  2870763221,
+  3624381080,
+  310598401,
+  607225278,
+  1426881987,
+  1925078388,
+  2162078206,
+  2614888103,
+  3248222580,
+  3835390401,
+  4022224774,
+  264347078,
+  604807628,
+  770255983,
+  1249150122,
+  1555081692,
+  1996064986,
+  2554220882,
+  2821834349,
+  2952996808,
+  3210313671,
+  3336571891,
+  3584528711,
+  113926993,
+  338241895,
+  666307205,
+  773529912,
+  1294757372,
+  1396182291,
+  1695183700,
+  1986661051,
+  2177026350,
+  2456956037,
+  2730485921,
+  2820302411,
+  3259730800,
+  3345764771,
+  3516065817,
+  3600352804,
+  4094571909,
+  275423344,
+  430227734,
+  506948616,
+  659060556,
+  883997877,
+  958139571,
+  1322822218,
+  1537002063,
+  1747873779,
+  1955562222,
+  2024104815,
+  2227730452,
+  2361852424,
+  2428436474,
+  2756734187,
+  3204031479,
+  3329325298
+]);
+function sha256HexSync(str) {
+  const bytes = new TextEncoder().encode(String(str));
+  const bitLen = bytes.length * 8;
+  const withPad = new Uint8Array(bytes.length + 9 + 63 >> 6 << 6);
+  withPad.set(bytes);
+  withPad[bytes.length] = 128;
+  const dv = new DataView(withPad.buffer);
+  dv.setUint32(withPad.length - 8, Math.floor(bitLen / 4294967296));
+  dv.setUint32(withPad.length - 4, bitLen >>> 0);
+  const h = new Uint32Array([
+    1779033703,
+    3144134277,
+    1013904242,
+    2773480762,
+    1359893119,
+    2600822924,
+    528734635,
+    1541459225
+  ]);
+  const w = new Uint32Array(64);
+  const rotr = (x, n) => x >>> n | x << 32 - n;
+  for (let off = 0; off < withPad.length; off += 64) {
+    for (let i = 0; i < 16; i++) w[i] = dv.getUint32(off + i * 4);
+    for (let i = 16; i < 64; i++) {
+      const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ w[i - 15] >>> 3;
+      const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ w[i - 2] >>> 10;
+      w[i] = w[i - 16] + s0 + w[i - 7] + s1 >>> 0;
+    }
+    let a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], ff = h[5], g = h[6], hh = h[7];
+    for (let i = 0; i < 64; i++) {
+      const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+      const ch = e & ff ^ ~e & g;
+      const t1 = hh + S1 + ch + SHA256_K[i] + w[i] >>> 0;
+      const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+      const maj = a & b ^ a & c ^ b & c;
+      const t2 = S0 + maj >>> 0;
+      hh = g;
+      g = ff;
+      ff = e;
+      e = d + t1 >>> 0;
+      d = c;
+      c = b;
+      b = a;
+      a = t1 + t2 >>> 0;
+    }
+    h[0] = h[0] + a >>> 0;
+    h[1] = h[1] + b >>> 0;
+    h[2] = h[2] + c >>> 0;
+    h[3] = h[3] + d >>> 0;
+    h[4] = h[4] + e >>> 0;
+    h[5] = h[5] + ff >>> 0;
+    h[6] = h[6] + g >>> 0;
+    h[7] = h[7] + hh >>> 0;
+  }
+  let out = "";
+  for (const v of h) out += v.toString(16).padStart(8, "0");
+  return out;
+}
+function contentIdFor(captureSha, extent, chain2) {
+  return sha256HexSync(canonicalJson({
+    v: 1,
+    capture_sha: String(captureSha ?? ""),
+    extent: canonicalExtent(extent),
+    chain: chain2 == null ? null : canonicalJson(chain2)
+  }));
 }
 
 // src/setup.mjs
@@ -16708,7 +17073,7 @@ function mergedChain(parts) {
   }
   return out;
 }
-function refusal(key, detail) {
+function refusal2(key, detail) {
   const row = TEXT_CHAIN_CHECKS[key];
   return { ok: false, code: key, check: row.check, translation: row.translation, detail };
 }
@@ -16723,30 +17088,30 @@ function weaker(a, b) {
 }
 function checkChain(chain2) {
   if (typeof chain2 === "string")
-    return refusal(
+    return refusal2(
       "TEXT_CHAIN_COLLAPSED",
       `text_source is '${chain2}', a single label. A transcription's provenance is a CHAIN \u2014 each step naming what performed it \u2014 because 'ocr' does not say which engine, and an engine is what a re-run and a calibration are OF`
     );
   if (!Array.isArray(chain2) || chain2.length === 0)
-    return refusal(
+    return refusal2(
       "TEXT_CHAIN_EMPTY",
       `a transcription must name at least one step that produced it; ${chain2 == null ? "nothing" : "an empty chain"} was given, and text with no stated provenance is indistinguishable from text a publisher typed`
     );
   for (const [i, step] of chain2.entries()) {
     if (!step || typeof step !== "object" || Array.isArray(step))
-      return refusal("TEXT_CHAIN_STEP_SHAPE", `step ${i} is not an object`);
+      return refusal2("TEXT_CHAIN_STEP_SHAPE", `step ${i} is not an object`);
     if (!Object.prototype.hasOwnProperty.call(STEP_KINDS, step.step))
-      return refusal(
+      return refusal2(
         "TEXT_CHAIN_STEP_UNKNOWN",
         `step ${i} is '${step.step == null ? "(absent)" : String(step.step)}', which is not one of ${Object.keys(STEP_KINDS).join(", ")}. A step nobody classified is neither a derivation nor a verification, and this record will not guess which`
       );
     if ((step.step === "ocr" || step.step === "ai") && !(typeof step.engine === "string" && step.engine))
-      return refusal(
+      return refusal2(
         "TEXT_CHAIN_STEP_UNNAMED",
         `the ${step.step} step names no engine. What performed a derivation is the fact the chain exists to carry \u2014 a calibration is OF an engine and a version, and neither can be recovered from the word '${step.step}'`
       );
     if (step.calibration != null && !(typeof step.calibration === "string" && step.calibration.trim()))
-      return refusal(
+      return refusal2(
         "TEXT_CHAIN_CAL_REF",
         `step ${i} names a calibration that is not a readable identifier (${JSON.stringify(step.calibration)}). A transcription names the MEASUREMENT its grade rests on so a superseded measurement can name exactly the transcriptions resting on it; a pointer nothing can resolve breaks that join while looking like it works`
       );
@@ -16762,7 +17127,7 @@ function appendStep(chain2, step) {
   if (role === "derivation") {
     const have = derivationCap(chain2);
     if (step.cap != null && have != null && rank(step.cap) != null && rank(step.cap) < rank(have))
-      return refusal(
+      return refusal2(
         "TEXT_CHAIN_STRENGTHENS",
         `this ${step.step} step claims fidelity ${step.cap}, stronger than the ${have} the chain already carries. A derivation can only weaken what it received: text that was cleaned is more READABLE, not more RELIABLE, and the hazard of this whole capability is output that looks better than its input`
       );
@@ -16843,17 +17208,17 @@ function describeChain(chain2) {
 function checkConfidence(confidence) {
   if (confidence === "none") return null;
   if (!confidence || typeof confidence !== "object")
-    return refusal(
+    return refusal2(
       "TEXT_CONFIDENCE_SHAPE",
       `a region's confidence is either the stated string 'none' or {value, basis}; an absent confidence is not the same claim as a stated absent one`
     );
   if (!Object.prototype.hasOwnProperty.call(CONFIDENCE_BASES, confidence.basis))
-    return refusal(
+    return refusal2(
       "TEXT_CONFIDENCE_PSEUDO",
       `confidence basis '${confidence.basis == null ? "(absent)" : String(confidence.basis)}' is not ${Object.keys(CONFIDENCE_BASES).join(" or ")}. A number a model reported about itself is not a calibrated confidence and may not be thresholded as one \u2014 it costs nothing to produce, which is exactly what makes it worthless as evidence`
     );
   if (confidence.basis === "engine" && !(typeof confidence.value === "number" && confidence.value >= 0 && confidence.value <= 1))
-    return refusal(
+    return refusal2(
       "TEXT_CONFIDENCE_SHAPE",
       `an engine-computed confidence carries a value in 0..1; got ${confidence.value == null ? "nothing" : JSON.stringify(confidence.value)}`
     );
@@ -16891,19 +17256,19 @@ function undeterminedRegion(region, why) {
 }
 function checkAnchor(source) {
   if (!source || typeof source !== "object")
-    return refusal(
+    return refusal2(
       "TEXT_ANCHOR_MISSING",
       `text produced by a machine carries the image region a reader can check it against; without one, nothing in the record can be verified against the pixels it came from`
     );
   if (source.kind !== "pdf-page")
-    return refusal(
+    return refusal2(
       "TEXT_ANCHOR_MISSING",
       `the anchor names kind '${String(source.kind)}'; a transcription's anchor is a pdf-page reference (I2 IC-1), because that is the arm carrying page and rect`
     );
   if (!Number.isInteger(source.page) || source.page < 0)
-    return refusal("TEXT_ANCHOR_MISSING", `the anchor names no page (0-based integer required)`);
+    return refusal2("TEXT_ANCHOR_MISSING", `the anchor names no page (0-based integer required)`);
   if (!Array.isArray(source.rect) || source.rect.length !== 4 || !source.rect.every((n) => typeof n === "number" && Number.isFinite(n)))
-    return refusal(
+    return refusal2(
       "TEXT_ANCHOR_MISSING",
       `the anchor names no rect; a page alone is not a region a reader can be pointed at`
     );
@@ -16912,28 +17277,28 @@ function checkAnchor(source) {
 function checkAttestation(att) {
   const a = att && typeof att === "object" ? att : {};
   if (isMachineIdentity(a.member))
-    return refusal(
+    return refusal2(
       "TEXT_ATTEST_MACHINE",
       `'${String(a.member)}' is a machine credential. Attesting is a person saying they checked this text against the image \u2014 an act with a name behind it. A machine cannot perform it, and recording one would put a claim on the record that nobody holds`
     );
   if (!(typeof a.member === "string" && a.member.trim()))
-    return refusal(
+    return refusal2(
       "TEXT_ATTEST_MACHINE",
       `an attestation names no member. Nobody said this, and unattributed is not the same as attested`
     );
   if (!(typeof a.at === "string" && a.at.trim()))
-    return refusal("TEXT_ATTEST_EXTENT", `an attestation carries the date it was made`);
+    return refusal2("TEXT_ATTEST_EXTENT", `an attestation carries the date it was made`);
   const e = a.extent;
   if (!e || typeof e !== "object" || !Object.prototype.hasOwnProperty.call(EXTENT_KINDS, e.kind))
-    return refusal(
+    return refusal2(
       "TEXT_ATTEST_EXTENT",
       `an attestation is scoped to what was actually checked \u2014 one of ${Object.keys(EXTENT_KINDS).join(", ")}. An unscoped attestation would be read as covering the whole document, which is the generous reading of a claim nobody made`
     );
   if (e.kind === "page" && !(Number.isInteger(e.page) && e.page >= 0))
-    return refusal("TEXT_ATTEST_EXTENT", `a page extent names which page (0-based)`);
+    return refusal2("TEXT_ATTEST_EXTENT", `a page extent names which page (0-based)`);
   if (e.kind === "region") {
     const bad = checkAnchor(e.source);
-    if (bad) return refusal(
+    if (bad) return refusal2(
       "TEXT_ATTEST_EXTENT",
       `a region extent names the region that was checked: ${bad.detail}`
     );
@@ -19226,31 +19591,31 @@ var RUN_CONTEXTS = {
   inquiry: "a question the group is working on, which any project may draw on",
   project: "a body of work with its own members, its own bar and its own lens"
 };
-function refusal2(key, detail) {
+function refusal3(key, detail) {
   const row = AI_RUN_CHECKS[key];
   return { ok: false, code: key, check: row.check, translation: row.translation, detail };
 }
 function checkObservation(entry, conditionKinds) {
   const e = entry && typeof entry === "object" ? entry : {};
   if (e.bundle != null && String(e.bundle) !== "")
-    return refusal2(
+    return refusal3(
       "AI_LOG_NOT_A_BUNDLE",
       `this entry names bundle '${String(e.bundle)}'; the observation log is its own object (INVESTIGATIVE-SESSION.md \xA711) and bundle.md is written only on success`
     );
   const state = typeof e.state === "string" ? e.state : "";
   if (!Object.prototype.hasOwnProperty.call(OBSERVATION_STATES, state))
-    return refusal2(
+    return refusal3(
       "AI_LOG_STATE_UNKNOWN",
       `'${state || "(absent)"}' is not one of ${Object.keys(OBSERVATION_STATES).join(", ")} (D-129)`
     );
   if (e.governed === true && DEFINITIVE_STATES.has(state))
-    return refusal2(
+    return refusal3(
       "AI_LOG_GOVERNED_ABSENCE",
       `a governed refusal cannot support '${state}': our governor holding a host is a fact about us, not about the source (D-104). LOOKED_INDETERMINATE is the only state a governed observation carries`
     );
   const condition = typeof e.condition === "string" && e.condition ? e.condition : null;
   if (condition === "client-rendered-shell" && state === "PRESENT")
-    return refusal2(
+    return refusal3(
       "AI_LOG_SHELL_PRESENT",
       "a client-rendered shell capture is LOOKED_INDETERMINATE and never PRESENT (\xA711, D-64): an evidentially empty capture that reads as coverage is the false-coverage hazard"
     );
@@ -19261,7 +19626,7 @@ function checkObservation(entry, conditionKinds) {
 function checkCondition(condition, conditionKinds) {
   if (condition == null || condition === "") return null;
   if (!Object.prototype.hasOwnProperty.call(conditionKinds || {}, String(condition)))
-    return refusal2(
+    return refusal3(
       "AI_RUN_CONDITION_UNKNOWN",
       `'${String(condition)}' is not in the record's condition vocabulary (queuestate.mjs)`
     );
@@ -19271,7 +19636,7 @@ function checkBound(bound) {
   const b = bound == null ? "" : String(bound);
   if (Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) return null;
   if (Object.prototype.hasOwnProperty.call(RUN_ENDINGS, b)) return null;
-  return refusal2(
+  return refusal3(
     "AI_RUN_BOUND_UNNAMED",
     `'${b || "(absent)"}' names no bound and no ending. Bounds: ${Object.keys(RUN_BOUNDS).join(", ")}; endings: ${Object.keys(RUN_ENDINGS).join(", ")} (\xA714b.6)`
   );
@@ -19332,7 +19697,7 @@ function projectGate({
       why: PROJECT_GATE_GROUNDS.PARTICIPANT,
       projects: all.length
     };
-  return refusal2(
+  return refusal3(
     "AI_RUN_NOT_PROJECT_MEMBER",
     `starting or continuing a run over ${label} is work inside the project it belongs to, and this account has joined none of them (DEC-63). This is not a capability: holding contribute would not change it, and an owner of that project inviting you would`
   );
@@ -19355,7 +19720,7 @@ function cadenceSentence(ms = CALIBRATION_CADENCE_MS) {
 }
 var DRIFT = { WORSE: "worse", BETTER: "better", SAME: "same", INCOMPARABLE: "incomparable" };
 var PROBE_REQUIRED = ["probe_id", "probe_inputs", "scores"];
-function refusal3(key, detail) {
+function refusal4(key, detail) {
   const row = CALIBRATION_CHECKS[key];
   return { ok: false, code: key, check: row.check, translation: row.translation, detail };
 }
@@ -19366,19 +19731,19 @@ function rank2(letter) {
 function checkCalibration(cal) {
   const c = cal && typeof cal === "object" && !Array.isArray(cal) ? cal : null;
   if (!c)
-    return refusal3("CAL_SHAPE", `a calibration is an object; got ${cal === null ? "null" : typeof cal}`);
+    return refusal4("CAL_SHAPE", `a calibration is an object; got ${cal === null ? "null" : typeof cal}`);
   if (!(typeof c.engine === "string" && c.engine.trim()) || !(typeof c.version === "string" && c.version.trim()))
-    return refusal3(
+    return refusal4(
       "CAL_UNNAMED",
       `a calibration names the ENGINE and the VERSION it measured. A measurement of "the OCR" is a measurement of nothing re-runnable: an external service retrains under an unchanged name (DEC-35's own argument against Textract), which is exactly why the pair is required and why neither half is enough alone`
     );
   if (!(typeof c.at === "string" && c.at.trim()))
-    return refusal3(
+    return refusal4(
       "CAL_UNDATED",
       `a calibration carries the date the probe RAN. A fidelity letter is a fact about an engine AT A DATE, and an undated one cannot be superseded, cannot be compared, and cannot tell a reader whether anybody has looked recently`
     );
   if (c.cap != null && rank2(c.cap) == null)
-    return refusal3(
+    return refusal4(
       "CAL_SHAPE",
       `cap '${String(c.cap)}' is not one of ${BASIS_GRADES.join(", ")}, and a calibration does not invent a scale of its own \u2014 transcription fidelity bounds the capture axis and there is no third one (DEC-4)`
     );
@@ -19386,13 +19751,13 @@ function checkCalibration(cal) {
     const v = c[field];
     const present = typeof v === "string" ? v.trim().length > 0 : v != null && typeof v === "object" ? Object.keys(v).length > 0 : false;
     if (!present)
-      return refusal3(
+      return refusal4(
         "CAL_NO_PROBE",
         `this calibration carries no ${field}, so no probe run stands behind it. A CALIBRATION IS A MEASUREMENT, NEVER A CLAIM: a changelog, a release note, a model card and a version bump all say an engine changed, and none of them says what it now scores. The record stores the probe, its inputs and its scores precisely so a later reader can disagree with the letter`
       );
   }
   if (!(typeof c.measured_by === "string" && c.measured_by.trim()))
-    return refusal3(
+    return refusal4(
       "CAL_NO_PROBE",
       `a calibration names what ran the probe. An unattributed measurement is one nobody can re-run`
     );
@@ -19468,16 +19833,16 @@ function nextProbeDue({ lastAt = null, signals = [], cadenceMs = CALIBRATION_CAD
 }
 function checkSignal(sig) {
   const s = sig && typeof sig === "object" && !Array.isArray(sig) ? sig : null;
-  if (!s) return refusal3("CAL_SIGNAL_SHAPE", `an announcement signal is an object`);
+  if (!s) return refusal4("CAL_SIGNAL_SHAPE", `an announcement signal is an object`);
   if (!(typeof s.engine === "string" && s.engine.trim()))
-    return refusal3("CAL_SIGNAL_SHAPE", `an announcement signal names the engine it is about`);
+    return refusal4("CAL_SIGNAL_SHAPE", `an announcement signal names the engine it is about`);
   if (!(typeof s.source === "string" && s.source.trim()))
-    return refusal3(
+    return refusal4(
       "CAL_SIGNAL_SHAPE",
       `an announcement signal names WHERE it was observed. It is somebody else's statement about their own product and the record keeps it as that`
     );
   if (s.cap !== void 0 || s.scores !== void 0)
-    return refusal3(
+    return refusal4(
       "CAL_SIGNAL_CLAIMS_MEASUREMENT",
       `this announcement carries a fidelity (cap or scores). A VENDOR'S DOCUMENTATION IS A CLAIM, NOT A MEASUREMENT: an announcement may SHORTEN the interval to the next probe and may do nothing else \u2014 it may never stand in for a probe, and it may never itself set or change a grade. Record the announcement, then run the probe`
     );
@@ -19823,19 +20188,19 @@ var LICENSES_NOTHING = Object.keys(OBSERVATION_STATES).filter((s) => !DEFINITIVE
 var JUDGEMENT_VERSION = `${JUDGEMENT_ID}@${JUDGEMENT_EDITION}`;
 
 // src/skillpack.mjs
-function refusal4(key, detail) {
+function refusal5(key, detail) {
   const row = AI_RUN_CHECKS[key];
   return { ok: false, code: key, check: row.check, translation: row.translation, detail };
 }
 function checkSkillVersion(version) {
   const v = typeof version === "string" ? version.trim() : "";
   if (!v)
-    return refusal4(
+    return refusal5(
       "AI_RUN_SKILL_VERSION_UNNAMED",
       "this run named no skill version. \xA711 records the conditions a run was formed under \u2014 the manifest in force, the standard pair, and the skill version it ran under \u2014 because a version is only interpretable against them"
     );
   if (!/^[^\s@]+@[^\s@]+$/.test(v))
-    return refusal4(
+    return refusal5(
       "AI_RUN_SKILL_VERSION_UNNAMED",
       `'${v.slice(0, 60)}' names no pack. A skill version is <pack>@<edition>, and a bare edition cannot be read once a second pack exists \u2014 it looks like an answer and identifies nothing`
     );
@@ -19843,7 +20208,7 @@ function checkSkillVersion(version) {
 }
 
 // src/store.mjs
-function refusal5(key, extra = {}) {
+function refusal6(key, extra = {}) {
   const row = CASE_DERIVATION_CHECKS[key];
   return { ok: false, reason: key, code: key, check: row.check, translation: row.translation, ...extra };
 }
@@ -20118,7 +20483,29 @@ var Store = class _Store extends DurableObject {
          reading's next projection and cannot disagree with the chain meanwhile.
          A chain written before calibrations existed names none, which is exactly
          what NULL says and exactly what is true of it. */
-      ["reading_text_source", "calibrations", "TEXT"]
+      ["reading_text_source", "calibrations", "TEXT"],
+      /* REC-82 / IC-83: WHAT PART OF THE DOCUMENT A BASIS LEG RESTS ON. Additive
+         and nullable for the reason every column above is, and NULL here is a
+         state of the record rather than a missing value: a leg promoted before
+         this column existed named no extent, because no surface could carry one.
+         NO BACKFILL PASS RUNS, and that is a property of the design rather than
+         an omission — the content id is a HASH of (capture, extent, chain), so a
+         legacy leg's `document` row is derivable at any time from the target it
+         already names. It is minted on the leg's first read (`ensureLegContent`)
+         and on its next promotion, both deterministically and both to the SAME
+         id. A migration that wrote the column would be a second writer for a
+         value one function already answers, and it would have to choose a
+         capture for a leg nobody was looking at.
+         NOT NULL is IC-83's SETTLED condition and NOT this landing's: I5 is
+         CHANGING at 1.11.0 until REC-82 and REC-83 have both landed. */
+      ["inquiry_basis", "content_id", "TEXT"],
+      /* REC-82 / IC-83, and the column arrives WITHOUT its writer on purpose.
+         The version-leg grammar that lets a version leg name an extent is
+         REC-84, so every row this plane writes today reads NULL here. Landing
+         the column now is what makes REC-84 a writer rather than a migration —
+         the same reason the three unlanded extent arms are named in
+         CONTENT_EXTENT_KINDS rather than added later. */
+      ["inquiry_basis_version_legs", "content_id", "TEXT"]
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -24635,13 +25022,13 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
     const distinct = [...new Set([...belongs.values()].flat())];
     const claimedInBytes = [...new Set(prepared.map((p) => typeof p.fm.case_id === "string" && p.fm.case_id !== "null" ? p.fm.case_id : null).filter(Boolean))];
     if (newCase && String(caseId ?? "").trim())
-      return refusal5("CASE_IDENTITY_AMBIGUOUS", {
+      return refusal6("CASE_IDENTITY_AMBIGUOUS", {
         cases: [String(caseId).trim()],
         members: [...belongs].map(([id, cs]) => ({ target: id, cases: cs })),
         detail: `this act both NAMES case ${String(caseId).trim()} and asks for a new case to be minted. Those are opposite instructions and the record will not choose between them: name the case to publish a further edition of it, or ask for a new one, not both.`
       });
     if (!newCase && !String(caseId ?? "").trim() && distinct.length > 1)
-      return refusal5("CASE_IDENTITY_AMBIGUOUS", {
+      return refusal6("CASE_IDENTITY_AMBIGUOUS", {
         cases: distinct.slice().sort(),
         members: [...belongs].map(([id, cs]) => ({ target: id, cases: cs })),
         detail: `these findings already serve ${distinct.length} published cases (${distinct.slice().sort().join(", ")}), and this act did not say which case it is publishing. A finding can serve many cases (DEC-72 clause 6), so membership no longer says which case this is: name the case to publish a further edition of it, or say so and a new case is minted. The record will not choose for you.`
@@ -27954,7 +28341,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    *  itself rather than saying anything, and it would let a caller grow the log
    *  without limit. */
   provenanceRouteAssess({ bundleId = "", author = null, viewer = null } = {}) {
-    const refusal6 = (code, detail, extra) => {
+    const refusal7 = (code, detail, extra) => {
       const row = ROUTE_MARK_CHECKS[code];
       return {
         ok: false,
@@ -27968,12 +28355,12 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     };
     const who = String(author ?? "").trim();
     if (!who)
-      return refusal6(
+      return refusal7(
         "ROUTE_MARK_NO_AUTHOR",
         "recording that a route cannot be shown is a named act: the record must show who assessed the evidence and found it did not support a route. A standing statement with nobody's name on it is not a statement. This refuses an act with NO principal, and deliberately not a machine one \u2014 op=provenancechain draws the same line and no other, and a stricter fence here would be this op ruling on DEC-52's ground as a side effect."
       );
     if (!bundleId)
-      return refusal6("ROUTE_MARK_NO_BUNDLE", "pass bundleId=<id>");
+      return refusal7("ROUTE_MARK_NO_BUNDLE", "pass bundleId=<id>");
     const gate = viewerPredicate(viewer);
     const seen = this.#one(
       `SELECT bundle_id, object_type, current_state FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
@@ -27981,13 +28368,13 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       ...gate.args
     );
     if (!seen)
-      return refusal6(
+      return refusal7(
         "ROUTE_MARK_NO_SUCH_BUNDLE",
         "no document of that name is in the record, or none this viewer may see \u2014 the two answer identically here, as they do on every read addressed to a bundle (REC-25/D-15).",
         { bundleId }
       );
     if (seen.object_type !== "information")
-      return refusal6(
+      return refusal7(
         "ROUTE_MARK_NOT_A_DOCUMENT",
         `this bundle is a ${String(seen.object_type).slice(0, 40)}, and only a captured document travelled a route to get into the record. Marking one would put a doubt on every question in the store, which says nothing about any of them.`,
         { bundleId, objectType: seen.object_type }
@@ -28662,6 +29049,44 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
               ...x.repairs ? { repairs: x.repairs } : {}
             }))
           };
+        const cerrs = [];
+        const plan0 = this.#contentPlanFor(basisLegs);
+        for (let i = 0; i < basisLegs.length; i++) {
+          const leg = basisLegs[i];
+          if (typeof leg.target !== "string") continue;
+          const p = plan0.get(i);
+          if (!p) continue;
+          if (!p.isInfo) {
+            const e0 = p.extent;
+            if (e0.kind !== "document")
+              cerrs.push({
+                check: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_UNREADABLE.check,
+                code: "CONTENT_EXTENT_UNREADABLE",
+                translation: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_UNREADABLE.translation,
+                detail: `basis[${i}] names extent '${String(e0.kind).slice(0, 40)}' on '${leg.target}', which is an inquiry rather than a document. An inquiry has no bytes and no pages, so there is no part of it to point at (DEC-21)`
+              });
+            continue;
+          }
+          const sha = p.captureSha, ext = p.extent;
+          if (!sha) {
+            if (ext.kind !== "document")
+              cerrs.push({
+                check: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.check,
+                code: "CONTENT_EXTENT_NO_CHAIN",
+                translation: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.translation,
+                detail: `basis[${i}] cites ${describeExtent(ext)} of '${leg.target}', and this record holds no capture of that document at all` + (typeof leg.extent_capture === "string" && leg.extent_capture.trim() ? ` under the capture the leg names (${leg.extent_capture.trim().slice(0, 16)}\u2026)` : ``)
+              });
+            continue;
+          }
+          const bad = checkContentExtent(ext, p.ctx);
+          if (bad) cerrs.push({
+            check: bad.check,
+            code: bad.code,
+            translation: bad.translation,
+            detail: `basis[${i}]: ${bad.detail}`
+          });
+        }
+        if (cerrs.length) return { ok: false, reason: "BASIS_REFUSED", findings: cerrs };
       }
       if (isInquiry && docFmW && !pkg.replay && typeof docFmW.subject_entity === "string" && docFmW.subject_entity.trim() !== "") {
         const se = docFmW.subject_entity.trim();
@@ -29047,14 +29472,57 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         bundleId
       ]))
         this.#writeSupersededBy(t);
+      const priorContent = /* @__PURE__ */ new Map();
+      const priorRows = this.#rows(
+        `SELECT b.target_id AS t, b.content_id AS cid, c.extent AS ext
+           FROM inquiry_basis b LEFT JOIN content c ON c.content_id = b.content_id
+          WHERE b.bundle_id=? AND b.content_id IS NOT NULL`,
+        bundleId
+      );
+      for (const r of priorRows)
+        if (r.ext != null) priorContent.set(`${r.t}\0${r.ext}`, r.cid);
+      const contentProjected = [];
+      const contentPlan = isInquiry ? this.#contentPlanFor(basisLegs) : /* @__PURE__ */ new Map();
       this.sql.exec(`DELETE FROM inquiry_basis WHERE bundle_id=?`, bundleId);
       if (isInquiry) {
         for (let i = 0; i < basisLegs.length; i++) {
           const leg = basisLegs[i];
           if (typeof leg.target !== "string") continue;
+          let legContentId = null, legCarried = false, legMinted = false;
+          const cp = contentPlan.get(i);
+          if (cp && cp.isInfo) {
+            const ext = cp.extent;
+            const carried = priorContent.get(`${leg.target}\0${canonicalExtent(ext)}`);
+            if (carried) {
+              legContentId = carried;
+              legCarried = true;
+            } else if (cp.captureSha) {
+              const mint = this.mintContent({
+                bundleId: leg.target,
+                captureSha: cp.captureSha,
+                extent: ext,
+                mintedBy: "plane",
+                at: meta.last_updated || null,
+                ctx: cp.ctx
+              });
+              if (mint.ok) {
+                legContentId = mint.content_id;
+                legMinted = mint.minted;
+              }
+            }
+            if (legContentId)
+              contentProjected.push({
+                ord: i,
+                target: leg.target,
+                content_id: legContentId,
+                extent_kind: ext.kind,
+                minted: legMinted,
+                carried: legCarried
+              });
+          }
           this.sql.exec(
-            `INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+            `INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
             bundleId,
             i,
             leg.target,
@@ -29078,10 +29546,16 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
                already refused any label with no attributed `grounds[]` row, at
                this write and in the catalog, so a label that reaches here was
                asserted by a named member. */
-            typeof leg.ground === "string" && leg.ground.trim() ? leg.ground.trim() : null
+            typeof leg.ground === "string" && leg.ground.trim() ? leg.ground.trim() : null,
+            /* REC-82: NULL is a first-class answer here and the reasons are on
+               the mint above — an inquiry leg, or an information object this
+               record holds no bytes of. It is never a document-extent row
+               invented to avoid the null. */
+            legContentId
           );
         }
       }
+      if (contentProjected.length) this.#contentStandings(contentProjected);
       this.sql.exec(`DELETE FROM inquiry_basis_version_legs WHERE bundle_id=?`, bundleId);
       this.sql.exec(`DELETE FROM inquiry_basis_versions WHERE bundle_id=?`, bundleId);
       if (isInquiry && docFmW) {
@@ -29307,7 +29781,25 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         base ?? null,
         (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z")
       );
-      return { ok: true, bundleId, bundleSha: after.bundle_sha, rowVersion: after.row_version, owner };
+      return {
+        ok: true,
+        bundleId,
+        bundleSha: after.bundle_sha,
+        rowVersion: after.row_version,
+        owner,
+        /* REC-82 / IC-83: WHAT THE WRITER DID WITH EACH LEG'S REFERENT, on the
+           write path's own surface. A mechanism believed on the strength of its
+           EXISTENCE rather than its behaviour is the defect this project meets
+           most, and a content row is invisible from every op that exists today
+           (the `content` read is REC-83's) — so without this a caller could not
+           tell a row that was MINTED from one that was FOUND, nor a citation
+           that stayed put across a re-extraction from one that moved. `carried`
+           is the authored edge holding its ground; `stale` and `says` are the
+           row still resolving and saying what it is. ADDITIVE: absent on a
+           promotion with no content-bearing leg, and a caller reading only
+           ok/bundleSha/rowVersion is unaffected. */
+        ...contentProjected.length ? { content: contentProjected } : {}
+      };
     });
   }
   /* CONSTRUCTS Step 3 (FW-5): persist a captured document's READING and index it
@@ -29337,6 +29829,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       this.sql.exec(`DELETE FROM reading_ref_terms WHERE capture_sha=?`, sha);
       this.sql.exec(`DELETE FROM reading_text_source WHERE capture_sha=?`, sha);
       this.#writeTextSource(bundleId, sha, reading.text_source);
+      this.#markContentStale(sha, Array.isArray(reading.text_source) ? reading.text_source : null);
       this.sql.exec(
         `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at)
          VALUES (?,?,?,?,?,?,?,?)`,
@@ -29533,6 +30026,406 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       chain_says: describeChain(chain2),
       attestations,
       ceiling
+    };
+  }
+  /* ====================================================================== *
+   * REC-82 / IC-83 / DEC-23 / D-164 — THE CONTENT WRITER.
+   * ====================================================================== *
+   *
+   * A basis leg names a DOCUMENT and, from this item, a PART of it. The rows
+   * live in `content` (schema.mjs's header carries the full argument) and this
+   * region is the only thing in the plane that writes one.
+   *
+   * WHAT THIS REGION IS NOT. It is not the extent grammar (that is
+   * `checks/bio-checks.mjs`'s C-45 family, imported, because the CHECKER runs
+   * the same rule at the gate). It is not `earnedBasisRegistry` keyed by row,
+   * and it is not the `content` read — both REC-83's. It is not the
+   * frontmatter or version-leg grammar — REC-84's. It lands the `pdf-page` and
+   * `document` arms only; the other three arms' `covers` is REC-85's.
+   *
+   * MINT OR FIND, AND NEVER REWRITE. Every write below is `INSERT OR IGNORE`.
+   * That is not defensiveness about duplicates — it IS the first-class rule:
+   * an edge depends on the row, so a re-promotion of the same leg must find
+   * exactly what it found last time, and two members citing one passage must
+   * land on ONE row. Both follow from the id being a hash of (capture,
+   * canonical extent, chain) rather than an allocated number, and `OR IGNORE`
+   * is what keeps the second promotion from overwriting the first's `minted_by`
+   * and `at` — which are a record of WHO FIRST cited this passage and WHEN, and
+   * are not ours to move.
+   */
+  /** THE CAPTURE A LEG'S CONTENT ROW IS ABOUT, resolved deterministically.
+   *
+   *  A content row addresses BYTES, so it names a capture. A leg names a
+   *  BUNDLE, and a bundle may hold several captures (a document re-fetched
+   *  after it changed). Which one?
+   *
+   *  THE ANSWER MUST BE STABLE UNDER LATER CAPTURES, and that is a correctness
+   *  requirement rather than a preference. `inquiry_basis` is re-projected
+   *  delete-then-insert on EVERY promotion, so a resolver that answered "the
+   *  newest capture" would silently re-point an authored citation at bytes the
+   *  member never read, the first time an unrelated revision was promoted after
+   *  the monitor caught an update. Bob ruled 2026-09-14 that *"the record never
+   *  moves an authored edge's target without a member's act, even when the
+   *  passage is byte-identical"* (5.8), and a resolver is exactly the place that
+   *  rule would be lost without anyone deciding to lose it.
+   *
+   *  So: an AUTHORED capture wins (`extent_capture` on the leg — REC-84 makes it
+   *  first-class grammar; honoured here today so that landing is a grammar and
+   *  not a rewrite), and otherwise the EARLIEST capture the record holds for the
+   *  bundle, by (registered instant, sha) so ties break on bytes rather than on
+   *  row order. Earliest is stable under every later capture; newest is stable
+   *  under none.
+   *
+   *  BOTH PLACES A CAPTURE LANDS ARE ASKED, on `earnedBasisRegistry`'s own
+   *  terms: `register` holds what a promotion registered against a bundle's
+   *  files, `readings` holds what a captured document's provenance carried, and
+   *  a document intaken with a provenance document has only the second.
+   *
+   *  Returns null when the record holds no capture for the bundle — an
+   *  information object nobody has captured has no bytes to address, which is
+   *  UNDETERMINED and STATED (the leg's `content_id` stays NULL) and is never
+   *  invented into a row. */
+  #captureForContent(bundleId, authored = null) {
+    if (typeof authored === "string" && authored.trim()) {
+      const a = authored.trim();
+      const held = this.#one(
+        `SELECT capture_sha FROM (
+           SELECT capture_sha FROM register WHERE bundle_id=? AND capture_sha=?
+           UNION SELECT capture_sha FROM readings WHERE bundle_id=? AND capture_sha=?)`,
+        bundleId,
+        a,
+        bundleId,
+        a
+      );
+      return held ? held.capture_sha : null;
+    }
+    const row = this.#one(
+      `SELECT capture_sha, at FROM (
+         SELECT capture_sha, registered AS at FROM register WHERE bundle_id=?
+         UNION ALL
+         SELECT capture_sha, at AS at FROM readings WHERE bundle_id=?)
+       ORDER BY at IS NULL, at, capture_sha LIMIT 1`,
+      bundleId,
+      bundleId
+    );
+    return row ? row.capture_sha : null;
+  }
+  /** The transcription chain the record holds for a capture, or null.
+   *  ONE source (`readings.reading.text_source`), the same one `attestText` and
+   *  `attestationsFor` read, so the chain a content row records and the chain a
+   *  ceiling is computed from cannot be two different chains. */
+  #chainForCapture(captureSha) {
+    const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, captureSha);
+    if (!row) return null;
+    const chain2 = (safeJson(row.reading) || {}).text_source ?? null;
+    return Array.isArray(chain2) ? chain2 : null;
+  }
+  /** THE CAPTURE'S PAGE SET, as the record holds it — the figure the
+   *  out-of-range refusal (C-45.1) is checked against and the figure stored on
+   *  the row at mint, which is what IC-83 requires.
+   *
+   *  NOTHING IN THIS PLANE PERSISTS A PDF PAGE COUNT. I2 computes one at acquire
+   *  (`pdfstructure.mjs` returns `pages: doc.pageCount`) and the acquire path
+   *  does not carry it onto the reading, so there is no column to read — the
+   *  design study says so in its own words ("needs a stored page count — absent
+   *  today"). D-345 is the row that closes it, and closing it means op=acquire
+   *  persisting the figure, which is CAPTURE's path and not this item's.
+   *
+   *  SO THIS ANSWERS FROM WHAT THE RECORD ACTUALLY HOLDS, and says so: the
+   *  pages D-252's SCOPED derivation steps name, unioned with the pages any
+   *  attestation covers. A mixed document (a text-layer report with scanned
+   *  exhibits) has a real page set here. A document with one unscoped chain has
+   *  none, and the answer is NULL — UNDETERMINED AND STATED.
+   *
+   *  WHY NULL IS NOT A REFUSAL. Refusing every page citation on a document
+   *  whose page set this plane never recorded would be a fence tighter than its
+   *  rule, and it would push a member toward citing the WHOLE document instead
+   *  — which claims MORE, not less. The row records `page_count: NULL`, which
+   *  says exactly what was known when it was minted.
+   *
+   *  WHY MAX+1 AND NOT THE COUNT OF NAMED PAGES. The question the refusal asks
+   *  is "can this document contain page N", so the bound is the highest page
+   *  the record has ever seen named for this capture, plus one. Counting the
+   *  named pages would answer a different question and would refuse page 9 of a
+   *  document whose chain happened to scope only three pages — a fence tighter
+   *  than its rule again, in the direction that refuses correct work. */
+  #pageSetForCapture(captureSha) {
+    let max = -1;
+    const chain2 = this.#chainForCapture(captureSha);
+    for (const step of Array.isArray(chain2) ? chain2 : []) {
+      const e = step && typeof step === "object" ? step.extent : null;
+      if (!e || e.kind !== "pages" || !Array.isArray(e.pages)) continue;
+      for (const p of e.pages) if (Number.isInteger(p) && p > max) max = p;
+    }
+    const m = this.#one(
+      `SELECT max(extent_page) AS hi FROM text_attestations
+        WHERE capture_sha=? AND extent_page IS NOT NULL`,
+      captureSha
+    );
+    if (m && Number.isInteger(m.hi) && m.hi > max) max = m.hi;
+    return max < 0 ? null : max + 1;
+  }
+  /** Everything the checker needs about a capture, gathered in one place so the
+   *  write path and any later caller ask the same question the same way. */
+  contentContextFor(captureSha) {
+    return {
+      chain: this.#chainForCapture(captureSha),
+      pageCount: this.#pageSetForCapture(captureSha)
+    };
+  }
+  /** THE WHOLE BASIS'S REFERENTS, RESOLVED ONCE — the capture each leg is about
+   *  and what the record holds of it, keyed by leg ordinal.
+   *
+   *  WHY THIS IS A METHOD AND NOT A LOOP INSIDE `promote`, and it is REC-66 /
+   *  D-227's roster rather than style. `promote`'s basis pass has to ask, per
+   *  leg, which capture the leg is about and what chain and page set the record
+   *  holds for it — reads inside a loop, which is the amplification the
+   *  derivation-bounds ratchet counts. Left inline, the ratchet's roster named
+   *  `promote` itself, which tells the next reader the plane's whole write path
+   *  amplifies and nothing about WHY. Named here, the roster names the content
+   *  writer, which is true and useful. The count moves either way (32 -> 33,
+   *  and the ceiling is moved in `derivation-bounds.test.mjs` from the figure
+   *  the run PRINTED); what is bought is that it moves onto the thing that
+   *  actually does the work.
+   *
+   *  AND IT IS RESOLVED ONCE RATHER THAN TWICE. The refusal arm and the
+   *  projection both need exactly this, and the first version of this item
+   *  resolved it separately in each — two answers to one question, three lines
+   *  apart, which is the drift this repository has measured five times. Both
+   *  memoised per TARGET and per CAPTURE, so a basis citing one document for
+   *  four legs (D4's legal shape) pays for one resolution and not four. */
+  #contentPlanFor(legs) {
+    const plan = /* @__PURE__ */ new Map(), byTarget = /* @__PURE__ */ new Map(), byCapture = /* @__PURE__ */ new Map();
+    for (let i = 0; i < legs.length; i++) {
+      const leg = legs[i];
+      if (!leg || typeof leg.target !== "string") continue;
+      const isInfo = normalizeType(OBJECT_TYPES[leg.target.split("-")[0]]) === "information";
+      const authored = typeof leg.extent_capture === "string" ? leg.extent_capture : null;
+      const key = `${leg.target}\0${authored || ""}`;
+      if (!byTarget.has(key))
+        byTarget.set(key, isInfo ? this.#captureForContent(leg.target, authored) : null);
+      const sha = byTarget.get(key);
+      if (sha != null && !byCapture.has(sha)) byCapture.set(sha, this.contentContextFor(sha));
+      plan.set(i, {
+        target: leg.target,
+        isInfo,
+        authored,
+        captureSha: sha,
+        ctx: sha == null ? { chain: null, pageCount: null } : byCapture.get(sha),
+        extent: legExtent(leg)
+      });
+    }
+    return plan;
+  }
+  /** MINT OR FIND the content row a leg addresses, and return its id.
+   *
+   *  `minted_by` is the ACTOR, carried through from the op rather than defaulted
+   *  here: a member id, `plane` for the plane's own extraction at promote, or a
+   *  machine credential (Bob, 5.7: an assistant may mark passages as citable,
+   *  under DEC-24 rule 3 — labelled, never attesting). THE FENCE IS NOT
+   *  DUPLICATED HERE: a machine may mint and may never attest, and the refusal
+   *  that says so is C-35.10 in `checkAttestation`, UNCHANGED. A second copy of
+   *  it at this door would be the eleven-copies-of-one-predicate failure REC-46
+   *  measured, and it would be a fence on the wrong act.
+   *
+   *  Returns `{ ok: true, content_id, minted }` or the checker's refusal
+   *  verbatim — the refusal is `checks/bio-checks.mjs`'s, never composed here. */
+  mintContent({ bundleId, captureSha, extent, mintedBy = "plane", at = null, ctx: given = null }) {
+    const ctx = given || this.contentContextFor(captureSha);
+    const bad = checkContentExtent(extent, ctx);
+    if (bad) return bad;
+    const id = contentIdFor(captureSha, extent, ctx.chain);
+    const before = this.#one(`SELECT content_id FROM content WHERE content_id=?`, id);
+    if (!before) {
+      this.sql.exec(
+        `INSERT OR IGNORE INTO content
+           (content_id,capture_sha,bundle_id,extent_kind,extent,ref,chain,derivation_cap,
+            page_count,minted_by,at,stale)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,0)`,
+        id,
+        captureSha,
+        bundleId,
+        extent.kind,
+        canonicalExtent(extent),
+        describeExtent(extent),
+        ctx.chain == null ? null : JSON.stringify(ctx.chain),
+        /* THE CAP IS ASKED ABOUT THE EXTENT, not about the document — D-252's
+           whole point, and `gradeCeiling`'s own reading. A leg citing the OCR'd
+           exhibit gets the engine's measured letter and a leg citing the
+           text-layer report gets undetermined, each about itself. NULL is
+           undetermined and STATED, never "fine". */
+        derivationCap(
+          ctx.chain,
+          extent.kind === "pdf-page" ? { page: extent.page, rect: extent.rect ?? null } : null
+        ),
+        ctx.pageCount,
+        mintedBy,
+        at || (/* @__PURE__ */ new Date()).toISOString()
+      );
+    }
+    return { ok: true, content_id: id, minted: !before };
+  }
+  /** THE LEGACY BACKFILL — a leg promoted before this column existed, read for
+   *  the first time.
+   *
+   *  DETERMINISTIC BECAUSE THE ID IS A HASH. There is no allocator, so "mint the
+   *  row this leg would have had" is a pure function of the target the leg
+   *  already names: the whole document (Bob, 5.3 — a citation with no stated
+   *  part means the whole document and reads `document`, never `unstated`), the
+   *  capture `#captureForContent` resolves, and the chain as it stands. Running
+   *  it twice, or in two sessions, or after a replay, produces the same id — so
+   *  this is a read that happens to write rather than a migration with a
+   *  direction.
+   *
+   *  IT WRITES THE COLUMN AS WELL AS THE ROW, so the second read is a lookup.
+   *  Not doing so would leave the projection permanently disagreeing with the
+   *  row it resolves to, which is the drift `inquiry_basis` is delete-then-
+   *  inserted to prevent.
+   *
+   *  THE HONEST NULLS, and each is a different fact stated rather than invented:
+   *  a leg whose target is an INQUIRY has no capture behind it at all (an
+   *  inquiry is not a document — DEC-21 — and IC-83's "every leg targets
+   *  content" is written about the information arm); a leg whose target
+   *  information object the record holds no bytes for has nothing to address.
+   *  Both answer null and say which. */
+  ensureLegContent(bundleId, ord) {
+    const leg = this.#one(
+      `SELECT bundle_id, ord, target_id, target_type, content_id
+         FROM inquiry_basis WHERE bundle_id=? AND ord=?`,
+      bundleId,
+      ord
+    );
+    if (!leg) return {
+      ok: false,
+      reason: "NO_LEG",
+      detail: `no basis leg ${ord} on ${bundleId}`
+    };
+    if (leg.content_id)
+      return { ok: true, content_id: leg.content_id, minted: false, backfilled: false };
+    if (leg.target_type !== "information")
+      return {
+        ok: true,
+        content_id: null,
+        minted: false,
+        backfilled: false,
+        why: `basis[${ord}] rests on ${leg.target_id}, which is an inquiry rather than a document. An inquiry has no capture and therefore no part to point at \u2014 the content axis ranges over documents (DEC-21), and this is undetermined and stated rather than a document-extent row invented for it`
+      };
+    const sha = this.#captureForContent(leg.target_id);
+    if (!sha)
+      return {
+        ok: true,
+        content_id: null,
+        minted: false,
+        backfilled: false,
+        why: `this record holds no capture of ${leg.target_id}, so there are no bytes for a content row to address. Absence here is a fact about what was captured and never evidence about what the document says (CLAUDE.md's sparse rule)`
+      };
+    const out = this.mintContent({
+      bundleId: leg.target_id,
+      captureSha: sha,
+      extent: { kind: "document" },
+      mintedBy: "plane"
+    });
+    if (!out.ok) return out;
+    this.sql.exec(
+      `UPDATE inquiry_basis SET content_id=? WHERE bundle_id=? AND ord=?`,
+      out.content_id,
+      bundleId,
+      ord
+    );
+    return { ...out, backfilled: true };
+  }
+  /** Fill in each projected referent's STANDING — is the transcription it was
+   *  minted against still the one the record holds, and what does the edge say
+   *  it points at — in ONE query over the ids, mutating the rows in place.
+   *
+   *  Set-based on purpose (REC-66 / D-227): a basis legitimately cites one
+   *  document for several legs (D4), and a read per leg inside `promote`'s
+   *  projection loop is the amplification the derivation-bounds ratchet counts.
+   *  The ids are already in hand, so there is nothing to scan for. */
+  #contentStandings(rows) {
+    const ids = [...new Set(rows.map((r) => r.content_id))];
+    const marks = ids.map(() => "?").join(",");
+    const by = /* @__PURE__ */ new Map();
+    const found = this.#rows(
+      `SELECT content_id, extent_kind, extent, stale FROM content
+        WHERE content_id IN (${marks})`,
+      ...ids
+    );
+    for (const r of found) by.set(r.content_id, r);
+    for (const r of rows) {
+      const row = by.get(r.content_id);
+      if (!row) {
+        r.stale = false;
+        r.says = null;
+        continue;
+      }
+      r.extent_kind = row.extent_kind;
+      r.stale = !!row.stale;
+      const ext = { kind: row.extent_kind, ...safeJson(row.extent) || {} };
+      r.says = row.stale ? `this passage was cited as it stood under an earlier transcription of the document. The document has since been re-read and the text may have changed, so what the citation points at is ${describeExtent(ext)} of the capture as it was transcribed then \u2014 the record keeps it rather than moving it, because moving an authored citation is a member's act and not the record's` : `${describeExtent(ext)}, as this record holds it`;
+    }
+  }
+  /** RE-EXTRACTION MOVED THE CHAIN: mark, never delete.
+   *
+   *  Called from the reading write path, in the SAME transaction as the reading
+   *  it follows. A better engine re-reads a capture, the chain changes, and
+   *  every content row minted against the OLD chain is now a reference to a
+   *  transcription that no longer stands. That is a fact about the row, not a
+   *  reason to remove it: an authored edge holds it, and Bob ruled the record
+   *  never moves an authored edge without a member's act (5.8). So it is marked
+   *  `stale=1` and it and its edges still resolve — and SAY SO.
+   *
+   *  THE COMPARISON IS AGAINST THE STORED CHAIN AND NOT AGAINST THE ID. Rows
+   *  minted against the NEW chain hash differently and are simply not selected,
+   *  which is the content address doing the work; comparing ids would have to
+   *  re-derive every row's extent to know which id to expect.
+   *
+   *  A NULL ON EITHER SIDE IS NOT STALENESS, exactly as `attestationsFor` rules
+   *  it: an unrecorded chain is not a chain that moved, and saying "stale" there
+   *  would be inventing a comparison nobody made.
+   *
+   *  ONE-WAY. Nothing here ever sets `stale` back to 0 — a row that went stale
+   *  was minted against a transcription that happened, and un-staling it would
+   *  be the record deciding an old citation is current again. If the chain later
+   *  returns to exactly what it was, the row minted against THAT chain has that
+   *  id and is found, not resurrected. */
+  #markContentStale(captureSha, chain2) {
+    const live = Array.isArray(chain2) ? JSON.stringify(chain2) : null;
+    if (live == null) return 0;
+    const n = this.#one(
+      `SELECT count(*) AS c FROM content
+        WHERE capture_sha=? AND chain IS NOT NULL AND chain<>? AND stale=0`,
+      captureSha,
+      live
+    ).c;
+    if (n) this.sql.exec(
+      `UPDATE content SET stale=1
+        WHERE capture_sha=? AND chain IS NOT NULL AND chain<>? AND stale=0`,
+      captureSha,
+      live
+    );
+    return n;
+  }
+  /** The content row behind an id, with the one sentence a reader needs about
+   *  its standing. Deliberately NOT the `content` READ op and not the registry
+   *  — those are REC-83's — but the resolution an edge needs to say what it
+   *  points at, which is what makes "its edge still resolves saying so" a
+   *  behaviour rather than a claim. */
+  contentRow(contentId) {
+    const r = this.#one(
+      `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
+              derivation_cap, page_count, minted_by, at, stale
+         FROM content WHERE content_id=?`,
+      contentId
+    );
+    if (!r) return null;
+    return {
+      ...r,
+      extent: safeJson(r.extent),
+      chain: safeJson(r.chain),
+      stale: !!r.stale,
+      resolves: true,
+      says: r.stale ? `this passage was cited as it stood under an earlier transcription of the document. The document has since been re-read and the text may have changed, so what the citation points at is ${describeExtent({ kind: r.extent_kind, ...safeJson(r.extent) || {} })} of the capture as it was transcribed then \u2014 the record keeps it rather than moving it, because moving an authored citation is a member's act and not the record's` : `${describeExtent({ kind: r.extent_kind, ...safeJson(r.extent) || {} })}, as this record holds it`
     };
   }
   /* REC-36: the bounded backfill for the name index on a store that already
@@ -34390,7 +35283,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, now);
     items.push(...fromAnotherTeam);
     items.push(...this.#queueConditions(viewer, now));
-    const refusal6 = (code, detail, extra) => {
+    const refusal7 = (code, detail, extra) => {
       const row = QUEUE_MINT_CHECKS[code];
       return {
         ok: false,
@@ -34404,19 +35297,19 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     };
     for (const it of items) {
       if (!_Store.QUEUE_CLASSES.includes(it.class))
-        return refusal6(
+        return refusal7(
           "NO_CLASS",
           `every queue item carries a class from ${_Store.QUEUE_CLASSES.join(" | ")}, and this one carries ${it.class === void 0 ? "none" : JSON.stringify(String(it.class).slice(0, 40))}. The feed is DERIVED rather than stored, so the constraint a column would have carried is enforced at the one place an item is minted.`,
           { id: it.id ?? null }
         );
       if (classOfKind(it.kind) === null)
-        return refusal6(
+        return refusal7(
           "NO_SUCH_KIND",
           `${it.kind === void 0 || it.kind === null || it.kind === "" ? "this item carries no kind at all" : `'${String(it.kind).slice(0, 60)}' is not a kind this record's catalogue names`}. The vocabulary is queuestate.mjs's three lists and nothing else \u2014 it is what op=queuemute refuses against, what op=affordances publishes, and what carries the sentence a member reads instead of the slug. A kind invented at a producer would reach a surface with no words to render it, and ids of the form N-<number> are a DESIGN DOCUMENT's numbering that no code has ever used.`,
           { id: it.id ?? null, kind: it.kind ?? null }
         );
       if (classOfKind(it.kind) !== it.class)
-        return refusal6(
+        return refusal7(
           "KIND_MISCLASSED",
           `'${String(it.kind).slice(0, 60)}' is catalogued as a ${classOfKind(it.kind)} and this item mints it as a ${it.class}. That is not a spelling mistake, it is a change of doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL MUTE or an AUTHORED RECORD ACT (D-125, DEC-16), so minting an obligation's kind as a condition would let one member silence a task the record believes reached a person, and minting a condition's kind as a finding would make a fact about our own machinery undismissable.`,
           {
@@ -35227,6 +36120,18 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
          NOTHING ELSE — stats is an operator surface and whose attention is muted
          on what is not an operator's business. */
       queueState: n("queue_state"),
+      /* REC-82 / IC-83: the content rows — the parts of documents this record's
+         edges point at — reported so a purge can PROVE it took them (D-113)
+         rather than assert it, and so an operator can see the content axis's
+         depth beside the document count it has always been able to see. */
+      content: n("content"),
+      /* REC-82: and how many of them were minted against a transcription that
+         has since MOVED. Counted apart from the total and never folded into it:
+         a re-extraction marks rows stale and DELETES NONE, so the total alone
+         cannot distinguish "nothing was re-read" from "everything was" — which
+         is the one fact an operator needs before believing a content-grain
+         answer, and the one this count exists to make visible. */
+      contentStale: this.#one(`SELECT count(*) c FROM content WHERE stale=1`).c,
       /* IS-6: the investigative runs, their budgets and their observation logs,
          reported so a whole-store purge can PROVE it took them (D-113) and so an
          operator can see how many runs are in flight without opening one. A
@@ -36228,7 +37133,19 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
          EVENTS rather than a projection, so nothing rebuilds it — which is
          precisely why leaving it would be permanent rather than self-correcting.
          hygiene.test.mjs holds this list against schema.mjs. */
-      "case_revision_flags"
+      "case_revision_flags",
+      /* REC-82 / IC-83 / D-113: the CONTENT rows. They are NOT derived — an
+         authored edge depends on one, which is why re-promotion never rewrites
+         them and a re-extraction marks them stale rather than deleting them —
+         but they carry `bundle_id` (the DOCUMENT they address), so they ride
+         this list and clear in BOTH arms. Per-bundle: purging a document while
+         leaving addresses INTO it would leave citations resolving to pages of a
+         file nobody holds, and a later bundle allocated a colliding id would
+         inherit somebody else's passages. Whole-store: a scratch reset reporting
+         scope ALL while the content axis still answered "these passages are
+         cited" is the silent-leftover exactly. hygiene.test.mjs holds this list
+         against schema.mjs. */
+      "content"
     ];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
@@ -40351,7 +41268,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
      formed, and the refusal itself when it is not, so the caller's `return` is
      the only place either verdict can be acted on. */
   #refusePairComposed(out) {
-    const refusal6 = (code, detail) => {
+    const refusal7 = (code, detail) => {
       const row = VERSION_STRENGTH_CHECKS[code];
       return {
         ok: false,
@@ -40365,30 +41282,30 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     if (!out || out.ok !== true) return null;
     for (const k of _Store.#PAIR_COMPOSED_KEYS)
       if (Object.prototype.hasOwnProperty.call(out, k))
-        return refusal6(
+        return refusal7(
           "VERSION_STRENGTH_COMPOSED",
           `this answer carries a top-level '${String(k).slice(0, 40)}', which can only be one figure standing for both axes. Strength is a PAIR over two populations \u2014 the capture axis and the connection axis \u2014 and there is no value that is both.`
         );
     const pair = out.pair;
     if (!pair || typeof pair !== "object")
-      return refusal6(
+      return refusal7(
         "VERSION_STRENGTH_COMPOSED",
         "this answer carries no pair at all, so whatever it reports is not the two measurements this record makes."
       );
     const keys = Object.keys(pair).sort();
     const want = [..._Store.STRENGTH_AXES].sort();
     if (keys.length !== want.length || keys.some((k, i) => k !== want[i]))
-      return refusal6(
+      return refusal7(
         "VERSION_STRENGTH_COMPOSED",
         `the pair holds ${JSON.stringify(keys)} where it must hold exactly ${JSON.stringify(want)}. Two populations, two answers, and nothing beside them that reads as a summary of both.`
       );
     if (typeof out.filter !== "string" || out.filter.trim().split(/\s+/).length < 5)
-      return refusal6(
+      return refusal7(
         "VERSION_STRENGTH_UNFILTERED",
         "this answer does not state which readings it was computed over. Every answer says so on its face \u2014 the record's own as plainly as a view somebody constructed \u2014 because absence of the line is exactly what makes the two indistinguishable."
       );
     if (!Array.isArray(out.state_set) || !out.state_set.length)
-      return refusal6(
+      return refusal7(
         "VERSION_STRENGTH_UNFILTERED",
         "this answer carries no machine-readable state set beside its sentence, so a consumer would have to parse prose to learn what it counted."
       );
@@ -40487,7 +41404,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  makes no version current. */
   versionStrength(a = {}) {
     const args = a || {};
-    const refusal6 = (code, detail, extra) => {
+    const refusal7 = (code, detail, extra) => {
       const row2 = VERSION_STRENGTH_CHECKS[code];
       return {
         ok: false,
@@ -40501,12 +41418,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     };
     const inq = String(args.id ?? "").trim();
     if (!inq)
-      return refusal6(
+      return refusal7(
         "VERSION_STRENGTH_NO_INQUIRY",
         "this answers for ONE question: pass id=<INQ-\u2026>. A strength belongs to a question's reading of its evidence, and there is no default question."
       );
     if (normalizeType(OBJECT_TYPES[inq.split("-")[0]]) !== "inquiry")
-      return refusal6(
+      return refusal7(
         "VERSION_STRENGTH_NOT_AN_INQUIRY",
         `${inq.slice(0, 60)} is not a question, so it holds no readings of evidence and has no strength to report.`,
         { inquiry: inq }
@@ -40514,14 +41431,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const rawStates = args.states == null || args.states === "" ? null : Array.isArray(args.states) ? args.states : String(args.states).split(",");
     const asked = rawStates ? rawStates.map((s) => String(s).trim()).filter(Boolean) : null;
     if (asked && asked.length > _Store.VERSION_STRENGTH_STATES_MAX)
-      return refusal6(
+      return refusal7(
         "VERSION_STRENGTH_TOO_MANY_STATES",
         `${asked.length} kinds of reading were named and this record has ${_Store.VERSION_STRENGTH_STATES_MAX}. The bound is published here rather than applied silently, so nothing is dropped without the caller being told.`,
         { inquiry: inq, limit: _Store.VERSION_STRENGTH_STATES_MAX }
       );
     const unknown = asked ? asked.filter((s) => !VERSION_MACHINE.legal.includes(s)) : [];
     if (unknown.length)
-      return refusal6(
+      return refusal7(
         "VERSION_STRENGTH_UNKNOWN_STATE",
         `'${unknown[0].slice(0, 40)}' is not one of the states a reading can be in: ${VERSION_MACHINE.legal.join(", ")}. The set is closed, because a strength that quietly counted readings in states nobody recognises is a number no reader could check.`,
         { inquiry: inq, unknown, legal: VERSION_MACHINE.legal }
@@ -40534,7 +41451,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       ...seen.args
     );
     if (!present)
-      return refusal6(
+      return refusal7(
         "VERSION_STRENGTH_NOT_AN_INQUIRY",
         "no question by that id is readable here, so there is no reading of it to measure.",
         { inquiry: inq }
@@ -40544,7 +41461,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const current = project ? this.#currentVersionOf(project, inq, args.viewer ?? null) : null;
     const name = wantVersion || (current ? current.version : "");
     if (!name)
-      return refusal6(
+      return refusal7(
         "VERSION_STRENGTH_NO_VERSION",
         project ? `${project.slice(0, 60)} has not said which reading of ${inq} it stands on, and there is no default reading. Name one explicitly to measure it.` : "name the reading to measure (version=<name>), or name the project asking (project=<PRJ-\u2026>) so the reading it stands on can be used. There is no default reading here.",
         { inquiry: inq, project: project || null }
@@ -40556,13 +41473,13 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       name
     );
     if (!row)
-      return refusal6(
+      return refusal7(
         "VERSION_STRENGTH_NO_SUCH_VERSION",
         `no reading named '${name.slice(0, 60)}' belongs to ${inq}.` + (current && current.version === name ? ` ${project.slice(0, 60)} points at it, so the pointer has outlived the reading it names.` : ``),
         { inquiry: inq, version: name }
       );
     if (!stateSet.includes(row.state))
-      return refusal6(
+      return refusal7(
         "VERSION_STRENGTH_STATE_EXCLUDED",
         `'${name.slice(0, 60)}' is ${row.state} and this answer counts ${stateSet.join(", ")}. Ask again naming ${row.state} among the states to see what it would come to \u2014 the answer will say on its face that it is a view you constructed and not what this record stands on.`,
         { inquiry: inq, version: name, version_state: row.state, state_set: stateSet }
@@ -41146,7 +42063,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
   /** op=suggest — the investigative session's ONE write (IS-4 / §4 group 2). */
   suggestVersion(a = {}) {
     const args = a || {};
-    const refusal6 = (code, detail, extra) => {
+    const refusal7 = (code, detail, extra) => {
       const row = SUGGEST_CHECKS[code];
       return {
         ok: false,
@@ -41161,19 +42078,19 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const str = (x) => typeof x === "string" && x.trim() !== "" ? x.trim() : null;
     const target = String(args.target ?? "").trim();
     if (!target)
-      return refusal6(
+      return refusal7(
         "SUGGEST_NO_TARGET",
         "a suggestion is a reading of ONE question's evidence: pass target=<INQ-\u2026>. There is no default question and there must not be one."
       );
     if (normalizeType(OBJECT_TYPES[target.split("-")[0]]) !== "inquiry")
-      return refusal6(
+      return refusal7(
         "SUGGEST_NOT_AN_INQUIRY",
         `${target.slice(0, 60)} is not an inquiry, so there is nothing under it for a version to be a version of.`,
         { target }
       );
     const kind = String(args.kind ?? "").trim();
     if (!Object.prototype.hasOwnProperty.call(SUGGEST_KINDS, kind))
-      return refusal6(
+      return refusal7(
         "SUGGEST_UNKNOWN_KIND",
         `'${kind.slice(0, 40) || "(none)"}' is not one of \xA79's kinds: ${Object.keys(SUGGEST_KINDS).join(", ")}. The set is closed because \xA715's empty-run instrument needs an object to count \u2014 without 'level-empty' a run that honestly found nothing is indistinguishable from a run that emitted nothing.`,
         { target, kinds: Object.keys(SUGGEST_KINDS) }
@@ -41186,7 +42103,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       ...gate.args
     );
     if (!b)
-      return refusal6(
+      return refusal7(
         "SUGGEST_NOT_AN_INQUIRY",
         "no question by that id is readable here, so there is nothing to add a reading to.",
         { target }
@@ -41194,14 +42111,14 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const run = String(args.run ?? "").trim();
     const runRow = run ? this.#one(`SELECT run, status, context_type, context_id FROM ai_runs WHERE run=?`, run) : null;
     if (!runRow)
-      return refusal6(
+      return refusal7(
         "SUGGEST_NO_RUN",
         run ? `no run named '${run.slice(0, 60)}' is open in this store, and a version is only interpretable against the conditions its run was formed under (\xA711).` : "pass run=<the run that composed this>: \xA711 requires every version to name the piece of work that produced it, because the bias in force, the declared standard and the claim set can all change at the drop of a hat.",
         { target, run: run || null }
       );
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
-      return refusal6(
+      return refusal7(
         "SUGGEST_NO_DOCUMENT",
         "this question has no readable file, so no reading can be added to it.",
         { target }
@@ -41212,14 +42129,14 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const name = String(args.name ?? "").trim();
     const nameWritten = _Store.#fmSafe(name);
     if (existing.some((r) => r && typeof r === "object" && String(r.name ?? "").trim() === nameWritten))
-      return refusal6(
+      return refusal7(
         "SUGGEST_NAME_TAKEN",
         `'${name.slice(0, 60)}' already names a reading of ${target}. \xA76 rule 2: a version name is unique WITHIN its inquiry, and derived_from reads by name.`,
         { target, name, known: existing.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) }
       );
     const legsIn = Array.isArray(args.legs) ? args.legs : [];
     if (legsIn.length > _Store.SUGGEST_LEGS_MAX)
-      return refusal6(
+      return refusal7(
         "SUGGEST_TOO_MANY_LEGS",
         `${legsIn.length} legs were submitted and a version may carry ${_Store.SUGGEST_LEGS_MAX}. The bound is PUBLISHED here rather than applied silently, so a caller splits the reading rather than guessing what fitted.`,
         { target, legs: legsIn.length, limit: _Store.SUGGEST_LEGS_MAX }
@@ -41227,7 +42144,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const level = str(args.level);
     const observedAt = str(args.observed_at);
     if (kind === "level-empty" && (!level || !SUGGEST_LEVELS.includes(level) || !observedAt))
-      return refusal6(
+      return refusal7(
         "SUGGEST_EMPTY_LEVEL_UNSTATED",
         `kind=level-empty carries level=<${SUGGEST_LEVELS.join("|")}> and observed_at=<the observation-log address of the search that establishes it>. Absence at one level is not evidence of absence at the next, and an unattributed empty answer is the one shape a later reader cannot check.`,
         { target, level, observed_at: observedAt, levels: SUGGEST_LEVELS }
@@ -41321,7 +42238,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       "affirmed"
     ].filter((k) => args[k] !== void 0 && args[k] !== null && args[k] !== "");
     if (forbidden.length)
-      return remember(refusal6(
+      return remember(refusal7(
         "SUGGEST_UNWRITABLE_STATE",
         `a suggestion is born in state 'suggested' and carries nothing else about what has been decided about it, and this submission set: ${forbidden.join(", ")}. Every one of those is a member act (\xA76 rule 4) reachable only through op=versionaccept and its five siblings.`,
         { target, name, fields: forbidden }
@@ -41333,7 +42250,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const declaredParts = [...new Set(declared)];
     const singlePart = declaredParts.length === 1 && declared.length === 1 && legsIn.length > 0;
     if ((declared.length || needsPartition) && (!who || isMachineIdentity(who) && !singlePart))
-      return remember(refusal6(
+      return remember(refusal7(
         "SUGGEST_UNWRITABLE_STATE",
         `this reading rests on ${legsIn.length} piece(s) of evidence arranged into ${declared.length || "no"} declared part(s), and the credential that submitted it is ${who ? "a machine" : "unnamed"}. A reading that rests on anything CARRIES the arrangement of what it rests on (C-25.5), and saying a part of an argument would carry the answer on its own is an authored judgment a named member signs for (C-25.6). A machine COMPOSES a reading and does not assert its structure \u2014 it may put everything it rests on into ONE part, where there is nothing to assert because there is no maximum to take, and it may still report that a level of the search is empty, which rests on nothing and asserts nothing.`,
         { target, name, legs: legsIn.length, branches: declared.length }
@@ -41347,7 +42264,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     for (let i = 0; i < legsIn.length; i++)
       if (legsIn[i] && legsIn[i].note !== void 0 && legsIn[i].note !== null && legsIn[i].note !== "" && isBoilerplate(legsIn[i].note)) filler.push(`the note on leg ${i}`);
     if (filler.length)
-      return remember(refusal6(
+      return remember(refusal7(
         "SUGGEST_BOILERPLATE",
         `${filler.join(", ")} carries filler rather than an account of anything. \xA76 rule 1 holds a version's description to a commit message's standard \u2014 what changed and why \u2014 because it is what survives a conversation that was deliberately not kept (\xA710).`,
         { target, name, fields: filler }
@@ -41374,7 +42291,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         unreachable.push({ ord: i, target: t, why: "the record has RETIRED it" });
     }
     if (unreachable.length)
-      return remember(refusal6(
+      return remember(refusal7(
         "SUGGEST_LEG_UNREACHABLE",
         `${unreachable.length} of ${legsIn.length} legs cannot be reached at the address given: ${unreachable.map((u) => `${u.target ?? "(none)"} \u2014 ${u.why}`).join("; ")}. A type check would have passed every one of these, which is D-168 exactly.`,
         { target, name, legs: unreachable }
@@ -41401,7 +42318,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const declaredLabels = [...new Set(declared)].sort();
     const partitionDisagrees = JSON.stringify(usedLabels) !== JSON.stringify(declaredLabels);
     if (pairError || axisBad(pair?.capture) || axisBad(pair?.connection) || partitionDisagrees)
-      return remember(refusal6(
+      return remember(refusal7(
         "SUGGEST_PAIR_DOES_NOT_COMPUTE",
         pairError ? `the arithmetic could not be run over this reading: ${pairError}` : partitionDisagrees ? `this reading declares [${declaredLabels.join(", ") || "none"}] as its separately sufficient parts and its legs sit in [${usedLabels.join(", ") || "none"}]. A version CARRIES its own structure (\xA73), so the two have to be the same set \u2014 otherwise the maximum is taken over a part nobody declared, or a declared part holds nothing.` : `the pair did not resolve on both axes: capture=${pair?.capture?.state ?? "(none)"}, connection=${pair?.connection?.state ?? "(none)"}.`,
         {
@@ -41416,13 +42333,13 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const originsComplete = ind.complete !== false;
     const shared = ind.shared;
     if (ind.checked && !ind.complete)
-      return remember(refusal6(
+      return remember(refusal7(
         "SUGGEST_COMPARISON_INCOMPLETE",
         `tracing the separately sufficient parts of this reading back to their upstream material reached the published bound of ${OMAX} per step, so independence is UNDETERMINED rather than established. D-129: not found and did not finish looking are different facts, and only one of them licenses putting this forward.`,
         { target, name, limit: OMAX, origins_complete: false }
       ));
     if (shared.length)
-      return remember(refusal6(
+      return remember(refusal7(
         "SUGGEST_BRANCHES_NOT_INDEPENDENT",
         `${shared.length} pair(s) of separately sufficient parts trace to the same upstream material: ${shared.map((s) => `'${s.a}' and '${s.b}' through ${s.through.join(", ")}`).join("; ")}. \xA712 takes the MAXIMUM across them, so treating them as separate overstates the finding \u2014 D-195. A named member may still affirm they are genuinely separate at the accept ceremony; a machine composing at volume may not.`,
         { target, name, shared }
@@ -41452,14 +42369,14 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       _Store.BASIS_VERSIONS_LIMIT_MAX + 1
     );
     if (held.length > _Store.BASIS_VERSIONS_LIMIT_MAX)
-      return remember(refusal6(
+      return remember(refusal7(
         "SUGGEST_COMPARISON_INCOMPLETE",
         `${target} holds more than ${_Store.BASIS_VERSIONS_LIMIT_MAX} readings, which is the bound this comparison publishes, so whether this one differs in substance from every existing one was not settled. A duplicate the comparison never reached would read exactly like a new reading.`,
         { target, name, limit: _Store.BASIS_VERSIONS_LIMIT_MAX }
       ));
     const twin = held.find((r) => substanceOf(r.composition) === mine);
     if (twin)
-      return remember(refusal6(
+      return remember(refusal7(
         "SUGGEST_NOT_DIFFERENT",
         `this reading is identical in substance to '${twin.name}', which ${target} already holds. \xA76 rule 8 is the write gate: a run adds its output as a new version ONLY IF it differs in substance from every existing one. Compared over the same canonical composition the freeze compares, with the name and the parentage excluded \u2014 those are how a reading is addressed, not what it says.`,
         { target, name, same_as: twin.name }
@@ -41509,7 +42426,7 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     if (text !== null && gRows.length) text = _Store.#appendFmRows(text, "basis_version_grounds", gRows);
     if (text !== null && lRows.length) text = _Store.#appendFmRows(text, "basis_version_legs", lRows);
     if (text === null)
-      return remember(refusal6(
+      return remember(refusal7(
         "SUGGEST_UNWRITABLE_DOCUMENT",
         "this question's version block is in a shape the restricted frontmatter grammar cannot be extended in place, so nothing was written. The grammar has no escapes and a guess would corrupt the document silently.",
         { target, name }
@@ -41830,7 +42747,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  reading carefully is a fence that grows a hole nobody notices. */
   captureRequest(a = {}) {
     const args = a || {};
-    const refusal6 = (code, detail, extra) => {
+    const refusal7 = (code, detail, extra) => {
       const row = CAPTURE_REQUEST_CHECKS[code];
       return {
         ok: false,
@@ -41845,14 +42762,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const run = String(args.run ?? "").trim();
     const runRow = run ? this.#one(`SELECT run, status, context_type, context_id, principal_plane, principal_claude FROM ai_runs WHERE run=?`, run) : null;
     if (!runRow || runRow.status !== "running")
-      return refusal6(
+      return refusal7(
         "CAPTURE_REQUEST_NO_RUN",
         run ? `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.` : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation (DEC-47), and a request naming no session names no authorisation.",
         { run: run || null }
       );
     const address = String(args.address ?? "").trim();
     if (!isPublicHttpsLocator(address))
-      return refusal6(
+      return refusal7(
         "CAPTURE_REQUEST_NOT_PUBLIC",
         `'${address.slice(0, 80) || "(none)"}' is not a public https locator. DEC-47 scopes what a session may reach to "areas that anybody can go through", and this address is not one on its face.`,
         { address: address || null }
@@ -41864,7 +42781,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       host = null;
     }
     if (!host)
-      return refusal6(
+      return refusal7(
         "CAPTURE_REQUEST_NOT_PUBLIC",
         "this address has no host this plane can read, and the per-host pacing DEC-47 requires is computed from one.",
         { address }
@@ -41877,7 +42794,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       ...gate.args
     ) : null;
     if (!b || normalizeType(b.object_type) !== "inquiry")
-      return refusal6(
+      return refusal7(
         "CAPTURE_REQUEST_NOT_AN_INQUIRY",
         `${target.slice(0, 60) || "(none)"} is not a question readable here. A requested capture is accountable to the question it was asked under, and a fetch belonging to nothing is a fetch nobody can account for afterwards.`,
         { target: target || null }
@@ -41890,13 +42807,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         ...gate.args
       );
       if (!lb || normalizeType(lb.object_type) !== "inquiry")
-        return refusal6(
+        return refusal7(
           "CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY",
           `${lead.slice(0, 60)} is not a question readable here. A lead says which OTHER question this evidence bears on, so it names a question or it names nothing \u2014 a document, a project or a bundle id nothing answers to would give the notification a home that cannot hold it.`,
           { lead_inquiry: lead }
         );
       if (lead === target)
-        return refusal6(
+        return refusal7(
           "CAPTURE_REQUEST_LEAD_IS_THE_TARGET",
           `this request names ${lead.slice(0, 60)} as both the question it was made under and the question the evidence bears on. That is ordinary evidence for this question, which needs no lead: a lead exists to give evidence for ANOTHER question a home (D-213), and one pointing back here would file a notification about this question saying evidence for a different one was found.`,
           { lead_inquiry: lead, target }
@@ -41904,7 +42821,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     }
     const brought = ["capture_sha", "sha256", "bytes", "content", "provenance_chain", "via", "retrieved"].filter((k) => args[k] !== void 0 && args[k] !== null && args[k] !== "");
     if (brought.length)
-      return refusal6(
+      return refusal7(
         "CAPTURE_REQUEST_CARRIES_A_CAPTURE",
         `this request carries ${brought.join(", ")}, and a request carries none of them. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60).`,
         { fields: brought }
@@ -42416,7 +43333,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     note = null,
     at = null
   } = {}) {
-    const refusal6 = (code, detail, extra) => {
+    const refusal7 = (code, detail, extra) => {
       const row = AI_CREDENTIAL_CHECKS[code];
       return {
         ok: false,
@@ -42432,20 +43349,20 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const id = String(tokenId ?? "").trim();
     const kind = String(principalKind ?? "").trim().toLowerCase();
     if (!who || isMachineIdentity(who))
-      return refusal6(
+      return refusal7(
         "AI_CREDENTIAL_MINT_NOT_A_MEMBER",
         who ? `'${String(who).slice(0, 60)}' is a machine identity, and minting an AI credential is a MEMBER act, never an AI act (D-199 (3)): if an agent can request a broader token, the scoping is theatre. This is REC-46's ONE predicate, so it catches token:ai without knowing that class exists.` : "no member is named on this act. An authority granted by nobody is an authority nobody can be asked about afterwards.",
         { who: who || null }
       );
     const principal = kind === "organisation" ? `${MACHINE_CLASS_PREFIX}ai` : kind === "member" ? `member:${String(principalMember ?? who).trim()}` : null;
     if (!principal || principal === "member:")
-      return refusal6(
+      return refusal7(
         "AI_CREDENTIAL_PRINCIPAL_UNSTATED",
         `principalKind was '${kind.slice(0, 40) || "(none)"}'. It is 'organisation' (the key acts for the group, nobody individual behind it) or 'member' (attributable to that member). They carry different accountability and the record states which, never the token's value.`,
         { principalKind: kind || null }
       );
     if (!id || this.#one(`SELECT token_id FROM ai_credentials WHERE token_id=?`, id))
-      return refusal6(
+      return refusal7(
         "AI_CREDENTIAL_IDENTITY_TAKEN",
         id ? `'${id.slice(0, 60)}' already names a credential on this instance. Acts cite the IDENTITY, so rebinding it would re-attribute work already done.` : "pass an identity for this credential: it is the name acts will cite, and a credential nothing can name is one nothing can revoke either.",
         { tokenId: id || null }
@@ -42472,7 +43389,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   /** op=aicredentialrevoke. Also a member act, and the reason is `revoked_by`
    *  rather than the risk — see C-29.4's note in the catalog. */
   aiCredentialRevoke({ who = null, tokenId = null, at = null } = {}) {
-    const refusal6 = (code, detail, extra) => {
+    const refusal7 = (code, detail, extra) => {
       const row2 = AI_CREDENTIAL_CHECKS[code];
       return {
         ok: false,
@@ -42487,14 +43404,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
     const id = String(tokenId ?? "").trim();
     if (!who || isMachineIdentity(who))
-      return refusal6(
+      return refusal7(
         "AI_CREDENTIAL_REVOKE_NOT_A_MEMBER",
         who ? `'${String(who).slice(0, 60)}' is a machine identity. The row carries revoked_by, and a machine name there would record the group withdrawing an authority nobody in the group decided to withdraw.` : "no member is named on this act, and a withdrawal nobody authored is not one.",
         { who: who || null }
       );
     const row = id ? this.#one(`SELECT * FROM ai_credentials WHERE token_id=?`, id) : null;
     if (!row)
-      return refusal6(
+      return refusal7(
         "AI_CREDENTIAL_UNKNOWN",
         `no credential on this instance is called '${id.slice(0, 60) || "(none)"}'. Nothing was withdrawn, and being told so is the point: believing an authority is gone when it is not is the worse of the two outcomes.`,
         { tokenId: id || null }
@@ -43660,14 +44577,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       const captured = done.filter((q) => q.state === "captured").length;
       const refused = done.length - captured;
       const bad = this.ctx.storage.transactionSync(() => {
-        const refusal6 = this.#aiRunAppend(r.run, {
+        const refusal7 = this.#aiRunAppend(r.run, {
           level: "internet",
           subject: r.context_id,
           state: this.#aiRunSearchState(r.run, false),
           governed: false,
           detail: `the daemon answered ${done.length} capture request(s) this run was waiting on (${captured} captured, ${refused} refused). The run is resumable: its own log carries what each request established, and \xA714b.7's resumed run reads it and continues rather than restarting`
         }, iso2, 0);
-        if (refusal6) return refusal6;
+        if (refusal7) return refusal7;
         this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ?`, until, r.run);
         for (const q of done)
           this.sql.exec(`UPDATE capture_requests SET run_woken_at = ? WHERE request = ?`, iso2, q.request);
@@ -43939,7 +44856,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     viewer = null,
     limit = null
   } = {}) {
-    const refusal6 = (code, detail) => {
+    const refusal7 = (code, detail) => {
       const row = AI_RUNS_CONTEXT_CHECKS[code];
       return {
         ok: false,
@@ -43954,17 +44871,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const type = contextType == null ? "" : String(contextType).trim().toLowerCase();
     const id = contextId == null ? "" : String(contextId).trim();
     if (!type)
-      return refusal6(
+      return refusal7(
         "AI_RUNS_NO_CONTEXT_TYPE",
         `op=airuns answers for ONE context and must be told which kind: contextType=${kinds.join("|")}. An inquiry and a project are different objects with different membership, so there is no default here that would not be answering about something you did not ask about.`
       );
     if (!kinds.includes(type))
-      return refusal6(
+      return refusal7(
         "AI_RUNS_UNKNOWN_CONTEXT_TYPE",
         `no work is attached to anything of the kind ${JSON.stringify(String(contextType).slice(0, 60))}. The kinds it is attached to: ${kinds.map((k) => `${k} (${RUN_CONTEXTS[k]})`).join("; ")}. Answered as a refusal rather than as an empty list, because an empty list here would say nothing is running in a place the record does not recognise.`
       );
     if (!id)
-      return refusal6(
+      return refusal7(
         "AI_RUNS_NO_CONTEXT_ID",
         `op=airuns named the kind ${JSON.stringify(type)} but not which one. The gate is compiled over the context's own id, so a blank id would ask about every context at once \u2014 a different question, not a wider answer.`
       );
@@ -48675,7 +49592,7 @@ function aiReachesAsMember(spec) {
   return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member");
 }
 function aiScopeDeclaration(writes) {
-  const refusal6 = (code, detail, extra) => {
+  const refusal7 = (code, detail, extra) => {
     const row = AI_CREDENTIAL_CHECKS[code];
     return { error: {
       reason: code,
@@ -48689,13 +49606,13 @@ function aiScopeDeclaration(writes) {
   const asked = Array.isArray(writes) ? writes.map((w) => String(w ?? "").trim()).filter(Boolean) : [];
   for (const op of asked) {
     if (!Object.prototype.hasOwnProperty.call(OPS, op))
-      return refusal6(
+      return refusal7(
         "AI_SCOPE_UNKNOWN_OP",
         `'${op.slice(0, 60)}' is not an operation this instance performs. A scope naming something nothing recognises would sit in the record looking like a permission and meaning nothing, which is exactly what declaring the scope on the record rather than in a settings row is for (D-199 (2)).`,
         { op }
       );
     if (!aiReachesAsMember(OPS[op]))
-      return refusal6(
+      return refusal7(
         "AI_SCOPE_BEYOND_MEMBER_REACH",
         `'${op.slice(0, 60)}' is not reachable by a member of this group, so it cannot be handed to an agent. This is a property of the operation and not a list of forbidden ones: the unattended worker's own verbs carry no member class by construction, so they are outside every scope anybody can author.`,
         { op, classes: Array.isArray(OPS[op].classes) ? OPS[op].classes : null }
@@ -48704,7 +49621,7 @@ function aiScopeDeclaration(writes) {
   return { writes: [...new Set(asked)].sort() };
 }
 function aiTaskScope(cred, op, spec) {
-  const refusal6 = (code, detail, extra) => {
+  const refusal7 = (code, detail, extra) => {
     const row = AI_CREDENTIAL_CHECKS[code];
     return { error: {
       reason: code,
@@ -48716,19 +49633,19 @@ function aiTaskScope(cred, op, spec) {
     } };
   };
   if (cred.revoked)
-    return refusal6(
+    return refusal7(
       "AI_CREDENTIAL_REVOKED",
       `credential '${String(cred.tokenId).slice(0, 60)}' was withdrawn on ${cred.revokedAt} by ${cred.revokedBy}. The entry and the date are kept rather than deleted, so what it did while it was live stays readable.`,
       { tokenId: cred.tokenId, revokedAt: cred.revokedAt }
     );
   if (!aiReachesAsMember(spec))
-    return refusal6(
+    return refusal7(
       "AI_BEYOND_TASK_SCOPE",
       `no member of this group reaches '${String(op).slice(0, 60)}', so no declared scope reaches it either. An agent is confined to what a member could do themselves, which is a property of the operation rather than a list kept anywhere.`,
       { op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes }
     );
   if (spec.mutating && !cred.writes.includes(op))
-    return refusal6(
+    return refusal7(
       "AI_BEYOND_TASK_SCOPE",
       `credential '${String(cred.tokenId).slice(0, 60)}' declares the task scope '${cred.taskScope}', whose writes are ${cred.writes.length ? cred.writes.join(", ") : "(none)"}. Widening it is an authored, dated act by a member on the record (D-199 (2)/(3)), not something the agent holding it can ask for.`,
       { op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes }

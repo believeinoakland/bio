@@ -4228,3 +4228,124 @@ knowingly stale for that window). `OFFICE-FORMATS.md`'s one falsified sentence w
 here, in this area's own design source, per the amendment above.
 
 _(ROUTED by CONDUCT #10 2026-09-14 at COFF-9's integration, answering for dormant FRAMEWORK: the three §16 sentences are corrected by COFF-10 at its landing (in its brief and on its row); until then §16 is knowingly stale for that window, stated here. BOB #10, who is editing Part II today, is told so the merge stays trivial. Nothing further is owed here.)_
+
+
+
+## CLAIM 2026-09-14 RECORD (REC-82 — the `content` row on the `pdf-page` and `document` arms: table, writer, backfill, `stale`, purge, hygiene, catalogue)
+
+Session: RECORD worker for REC-82, spawned by CONDUCT #10, Opus 5.
+Worktree: `.claude/worktrees/agent-a3157d0e1e806990f` · branch `worktree-agent-a3157d0e1e806990f`.
+Contract: IC-83 (ACCEPTED 2026-09-14, I5 1.10.0 -> 1.11.0, CHANGING until REC-82 + REC-83 land).
+
+Paths claimed BY REGION, never whole files:
+
+- **`bio-plane/src/schema.mjs`** — the NEW `content` table and its two indexes, placed
+  immediately BEFORE the `host_governor` block; the two new nullable columns
+  `inquiry_basis.content_id` and `inquiry_basis_version_legs.content_id` (each one line
+  plus its comment inside the existing CREATE TABLE literal). Nothing else in the file.
+- **`bio-plane/src/store.mjs`** — (a) the content writer and its helpers (a new region
+  near the transcription reads); (b) the `inquiry_basis` projection inside `promote`'s
+  transaction (the INSERT gains `content_id`); (c) the basis refusal arm in `promote`
+  that runs the content checks before anything lands; (d) `purge`'s `TABLES` array (one
+  name added, which covers BOTH arms); (e) the migration ADD COLUMN registry (two rows);
+  (f) `#stats` if the purge report names the new table. NOT `earnedBasisRegistry` (REC-83),
+  NOT the capture/link/task/reachability functions (CAPTURE's).
+- **`bio-plane/src/index.mjs`** — ONLY if the op layer must route a new refusal shape.
+  (Measured at the close: it did not; the refusal rides `op=promote`'s existing
+  `BASIS_REFUSED` envelope. No edit made.)
+- **`bio-plane/checks/bio-checks.mjs`** — the NEW `CONTENT_EXTENT_CHECKS` family
+  (C-45.x, minted `node tools/mintid.mjs C` -> C-45), the canonical-extent reader and
+  the synchronous SHA-256 the content address needs. `checkInquiryBasis` is NOT reshaped:
+  the content arm is a separate exported function the same two gates call.
+- **`bio-plane/test/content-extent.test.mjs`** (new), `bio-plane/test/nc-rec82.mjs` (new,
+  the negative-control driver), and the `NEGATIVE CONTROL:` declaration in the new suite.
+  `bio-plane/test/hygiene.test.mjs` only if its D-113 census needs the new table named.
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` only, ONE key set, moved to the
+  figures this item's own green `--strict` run PRINTED.
+- **`docs/development/DEBT.md`**, **`docs/development/MEASUREMENTS.md`**,
+  **`docs/development/CLAIMS.md`** (this block), **`docs/development/INTERFACES.md`** and
+  **`docs/development/INTERFACE-CHANGES.md`** only if the landing moves what IC-83 says.
+
+Concurrency: COFF-9 is live on `src/ooxml.mjs` only — disjoint from every path above.
+
+released: 2026-09-14 by the REC-82 worker — landed on branch
+`worktree-agent-a3157d0e1e806990f`, NOT pushed and NOT merged; CONDUCT integrates.
+IC-83's landing half is built on the `pdf-page` and `document` arms: the `content`
+table (before `host_governor`, two indexes, in `op=purge`'s `TABLES` so it clears in
+BOTH arms), the two NULLABLE `content_id` columns with their migration rows, the
+writer on `checkInquiryBasis`/promote, the C-45 refusal family (C-45.1 out of the
+page set · C-45.2 no extraction chain · C-45.3 unknown or unlanded kind · C-45.4
+`dom` by name), the `stale` sweep on re-extraction, and the deterministic backfill.
+**ONE COLUMN BEYOND IC-83's LISTED COLUMNS** — `page_count`, which IC-83's own Rules
+paragraph requires ("the page count … stored on mint") and its column list omits;
+named here and in the report so CONDUCT can decide whether the IC's text is amended
+or the column is read as already required by it. **NOTHING ELSE MOVED BEYOND THE IC.**
+`index.mjs` was claimed conditionally and NOT edited: the refusals ride `op=promote`'s
+existing `BASIS_REFUSED` envelope.
+
+Gates on the final tree, every exit read UNPIPED: battery **188/188 · 11,474 · 0
+skipped** (own baseline **187/187 · 11,410** on a pristine `origin/main` worktree at
+`d791aa7` with all three member installs — the first baseline read 186/187 · 11,334
+with `ocr-worker` SKIPPED for a missing install and was re-measured rather than
+reported); the +64 attributed PER SUITE by diffing two full runs, not by subtraction —
+`content-extent.test.mjs` +59, `hygiene.test.mjs` +3 (the new table joins its schema
+and D-113 censuses), `caselifecycle.test.mjs` +1, `planning-hygiene.test.mjs` +1
+(D-345's own named row). `coverage.mjs --strict` **exit 0** with `REGISTER_FLOOR`
+moved to the printed reproducible **967/179/180** (ONE key set; the pre-commit run
+read `959/959 … contaminated: 1 suite` and was refused as a source). UI harness from
+the repo root **exit 0**. `plancheck --local` **0 fail, 0 warn**. `corpuscheck` exit 0.
+FL-10 fired on all three bundled sources and `dist/` was rebuilt exactly as its
+message instructs; nothing bumped, nothing deployed, no live instance touched.
+
+Eight control arms declared in `content-extent.test.mjs`'s `NEGATIVE CONTROL:` line
+and run by `test/nc-rec82.mjs`; **all eight AS DECLARED on the final tree**, each armed
+ALONE and every restore verified byte-identically by sha256 AND `cmp`. Two came back
+wrong first and both are recorded at their sites rather than smoothed: `overstrict`
+read `-1 pass / -1 fail` because the suite used `mustPromote`, which THROWS instead of
+failing the named assertion; and `stale` reported `ARMED NO (patch matched 0×)` after
+the derivation-bounds work moved its anchor, reading 59/0 — indistinguishable from a
+subject that cannot be broken, and caught only by the printed match count.
+
+**NOTHING IS OWED TO A FUTURE ACTOR BY THIS NOTE.** The one act this landing obliges is
+stated as an ACT with its actor in the **DELEGATION block below** (CAPTURE persists I2's
+page count at acquire) and priced in **`DEBT.md` D-345**. The three follow-on items are
+already rows in `QUEUE.md` (REC-83 the reads, REC-84 the grammar, REC-85 the other three
+arms) and nothing here adds to them. **C-45** was minted with `tools/mintid.mjs` (floor
+C-44) and **D-345** likewise (floor D-344); neither was measured free by hand. Two
+regions CONDUCT should re-read on the merged tree: `REGISTER_FLOOR` in
+`bio-plane/scripts/coverage.mjs` (one key set, collapse any conflict and re-read the
+print) and the DEC-49 region `is-content-extent` in `bio-plane/checks/bio-checks.mjs`,
+whose `regionLines` is a property of the MERGED source. The front matter of
+`BIO_Content_Framework_v0_10.md` was corrected in the landing commit as CLAUDE.md
+requires — two bullets only, saying the content object is no longer absent and naming
+what of §18's first piece is still unbuilt — and BOB #10 is editing that file today, so
+the merge may want his eye on those two lines.
+
+
+## DELEGATION 2026-09-14 RECORD (REC-82) → CAPTURE: persist I2's page count at acquire, so the content row's out-of-range refusal reaches every PDF
+
+**The act, with its actor:** CAPTURE (or whoever next opens `op=acquire`'s path in
+`bio-plane/src/index.mjs`) carries I2's page count onto the `reading` object that
+`#writeReadings` persists — one field beside `text_source` / `text_tier` /
+`text_container`, from the `i2text.pages` array the acquire path already holds in a
+local (`pdfstructure.mjs` also returns `pages: doc.pageCount` from `structure()`).
+
+**Why REC-82 did not do it.** `op=acquire` is CAPTURE's op and the acquire path is
+CAPTURE's ground (`kickoffs/RECORD.md`: "CAPTURE owns the capture, link, task and
+reachability functions"). REC-82 claimed `store.mjs`'s writer and `schema.mjs`'s new
+table and did not reach into it.
+
+**What REC-82 did instead, so nothing is blocked.** `content.page_count` stores the
+page set the record ACTUALLY holds at mint — the union of the pages D-252's scoped
+derivation steps name and the pages any attestation covers — and NULL where it holds
+none, which is UNDETERMINED AND STATED on the row. C-45.1 (an extent outside the
+capture's page set) therefore fires on a MIXED document today and not on a document
+with one unscoped chain. The full reasoning, the cost and what closing it takes are
+in **`DEBT.md` D-345**, which is the row this delegation points at; this entry exists
+because a debt row is not an assignment and a note is not an item.
+
+**What changes when it lands:** `Store#pageSetForCapture` prefers the stored figure
+over the derived one, and the arm already in `test/content-extent.test.mjs` §4 —
+already driven, already armed by `nc-rec82.mjs oob` — starts covering every captured
+PDF instead of only the mixed ones. No interface moves: `content.page_count` is
+already the column, and IC-83 already names the rule.

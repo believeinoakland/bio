@@ -32,6 +32,12 @@
 # interrupted control run must not leave a copy of `pdfstructure.mjs` sitting
 # untracked where the next walk can enrol it as a source file.
 .d251-control-pristine/
+# REC-82's pen (`test/nc-rec82.mjs`), same rule and its own line for the same
+# reason: the harness arms `checks/bio-checks.mjs` and `src/store.mjs`, and an
+# interrupted run must not leave a copy of either sitting untracked where the
+# next walk — `coverage.mjs`'s fleet walk, or the battery's discovery — can
+# enrol it as a source file.
+.rec82-control-pristine/
 # D-271's pen. Named for the item rather than the area because the item is a
 # plane item; the `.ui*` spelling above is an accident of which area needed a
 # pen first, not a rule about who may have one.
