@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-932 rulings across 81 documents.
+934 rulings across 81 documents.
 
 ## DEC-
 
@@ -1096,6 +1096,10 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1693`
 - **COFF-9** · 2026-09-14 — — its ODF recommendation was honoured, overtaken, and then RE-WARRANTED FROM A DIFFERENT DIRECTION, and this bullet is CORRECTED on 2026-09-14 rather than left standing, because its last sentence became false the day COFF-9 landed.  
   `docs/development/OFFICE-FORMATS.md:11`
+- **COFF-11** · 2026-09-15 — (CORRECTED 2026-09-15 at BOB #11's check: the allocator DOES allocate `M`; the AUDIT cannot, because `M` declares no allocation site — so these four were a BYPASS of a working allocator, not a gap in it), so nothing refused the second use and the merge would have carried two `M-21` sections silently — the id…  
+  `docs/development/MEASUREMENTS.md:12947`
+- **COFF-11** · 2026-09-15 — CORRECTED 2026-09-15 at BOB #11's check, and the sentence is kept because getting it wrong changed a proposed fix: the allocator DOES allocate `M`; the AUDIT cannot, because `M` declares no allocation site.  
+  `docs/development/QUEUE.md:1754`
 ## PL-
 
 - **PL-1** · 2026-08-08 — FL-3's REPORT BACK, 2026-08-08 — (a) HELD, and the recommendation is AMENDED rather than declined.** FL-3 went to the checks, found the wrong C-number and the second site, and **raised a vocabulary question that is PL-1's rather than building past it: a machine's single-part ground row would carry `asserted_by:…  
@@ -1118,7 +1122,7 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:4395`
 - **PL-8** · 2026-08-07 — PL-8's two pins CORRECTED with dated reasons, never exempted.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:98`
-- **PL-8** — TWO PRE-EXISTING DEFECTS CORRECTED AT THEIR SITES RATHER THAN ROUTED.** (1) **`leg:grade>=B` HAS NEVER COMPILED AND NEVER SAID SO** — it became `grade = 'GRADE>=B'`, silently, on every arm since PL-8, because the parser looked for `=` and not `>=`; **§4.2's own worked example cannot compile without the fix**, and…  
+- **PL-8** · 2026-09-15 — TWO PRE-EXISTING DEFECTS CORRECTED AT THEIR SITES RATHER THAN ROUTED.** (1) **`leg:grade>=B` HAS NEVER COMPILED AND NEVER SAID SO** — it became `grade = 'GRADE>=B'`, silently, on every arm since PL-8, because the parser looked for `=` and not `>=`; **§4.2's own worked example cannot compile without the fix**, and…  
   `docs/development/QUEUE.md:1005`
 - **PL-9** · 2026-08-07 — `op=meaningrows` — the meaning layer answered at MEANING GRAIN · PROPOSED, RESPONSES, RESOLUTION, CHANGING, CHANGED AND SETTLED 2026-08-07 (PL-9, D-222 option C), ADDITIVE  
   `docs/development/INTERFACE-CHANGES.md:1495`
