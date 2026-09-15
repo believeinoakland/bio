@@ -693,6 +693,40 @@ it; it is whether the repair is a command or a judgement.
   nobody else has taken it, it is the pusher's, and a pusher who leaves a red `main` for
   someone else to notice has pushed a cost onto sessions that cannot see where it came from.
 
+## STATE HOW THE CHECK WOULD BE SATISFIED BY A LIAR BEFORE YOU STATE WHAT IT CHECKS.
+
+**BOB #11's formulation, 2026-09-15, after three checks written in one day were each designed
+against their own defeat — and it is the transferable practice from that day, so it is in the
+loop file rather than in three rows.** You write the `accepts-when` on every row. That line is
+where this rule bites, and it costs one sentence.
+
+**The three, and what each one's defeat looked like.** M0-37's register arm: *the mechanism
+cannot be satisfied by DOING NOTHING* — a `DELEGATION` block gains either a discharge or an
+explicit `open as of`, so silence is no longer a passing answer. M0-39's duplicate-id arm: the
+acceptance names the blanket date stamp, because carrying nine live blocks to green without
+reading the tree is that row's own defect one layer up. M0-39's attribution arm: acceptance is
+the arm PASSING over a corpus where both forms are correctly used and FAILING over one where the
+two have been swapped — **because a checker that cannot tell "all correct" from "all uniformly
+wrong" is measuring its own bookkeeping.**
+
+**The rule, in one line: for every acceptance criterion you write, ask what the cheapest way to
+make it green would be, and if that way does not also make the world right, say so IN the
+criterion.** Not in the report, not in a follow-up — in the criterion, where the worker meets it
+before starting and where the next reader meets it when judging whether it was met.
+
+**It applies to a worker's NEGATIVE CONTROLS in the same shape and for the same reason**
+(`kickoffs/WORKER.md` carries the arm-that-did-not-arm rule): an arm is a check on a check, and
+an arm that can be satisfied without arming is the identical defect one level up. This session
+saw a control come back GREEN over a subject that could never have honoured it, because the
+fixture had no version legs at all — the arm was not wrong, it was answering a question nobody
+had made askable.
+
+**Why it belongs to CONDUCT specifically.** A worker discovers the cheap defeat by running into
+it, which costs a run. You can name it while writing the row, which costs a sentence — and the
+worker then builds against a criterion that already knows how it could be faked. That is the
+same economics as flipping a row before the spawn: **do the cheap thing while you are the one
+who knows.**
+
 ## KILL THE TREE, NOT THE LEAF — OR THE LEAF COMES BACK AND THE NEXT READER MEASURES A FRESH ORPHAN RATHER THAN A SURVIVOR.
 
 **Measured 2026-09-14 by CONDUCT #11, found 3.5 hours later by BOB #11, and recorded here
