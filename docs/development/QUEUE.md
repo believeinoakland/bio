@@ -7,8 +7,22 @@ decompositions over rather than editing here (`ORCHESTRATION.md`).
 
 One section per area. An area is **ACTIVE** (holds a worker slot; max two at once) or
 **DORMANT** (pre-seeded, promoted when a slot frees). CONDUCT takes the top item whose
-status is `queued` and whose depends-on are all `done`, spawns a worker, and on
-landing marks it `done`.
+status is `queued` and whose depends-on are all `done`, **flips it to `running` with a
+spawn sentence — who spawned it, when, on which model, worktree-isolated, into which
+slot — gates and PUSHES that flip**, spawns the worker, and on landing marks it `done`
+with a `landed:` line.
+
+**The four statuses, stated because this preamble named only two of them for six weeks
+while the loop ran on four** (CPDF-20's worker found the gap, 2026-09-14): `queued` is
+runnable and unclaimed; **`running` means a live worker holds an `agent-*` worktree with
+a claim on the paths the row names — and every `running` row carries its own falsification
+rule saying exactly that, because a status is a claim about the world and a claim about
+the world is checkable**; `done` carries the landing shas and the report's findings;
+`superseded` keeps its id and names what replaced it (`ORCHESTRATION.md` rule 3).
+`blocked` appears where a row cannot run until something outside the queue moves, and
+says what. **A worker reads its own row from `origin/main` before it touches anything,
+and STOPS if the row does not read `running`** — which is how a cohort of eight spawned
+against unflipped rows cost minutes rather than a wave of colliding edits.
 
 **What changed in this rewrite**, so CONDUCT can read it fresh without reconstructing:
 
