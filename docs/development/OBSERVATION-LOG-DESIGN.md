@@ -1,6 +1,6 @@
 # The observation log — Part II §18 piece 3
 
-**Status** · v0.1 DRAFT design, written 2026-09-14 by session BOB #11 under Bob's standing delegation (mechanism is the architect's). Not yet reviewed by Bob. It rests on three things already settled: the architectural decision in `STORE-AS-CACHE.md` that THE RECORD AND THE OBSERVATION LOG ARE SEPARATE, WITH DIFFERENT LIFECYCLES; Bob's four-level correction of 2026-08-04 (Part II §14.3); and the investigative run's log (`INVESTIGATIVE-SESSION.md` §11), which is BUILT (`ai_run_log`) and is the precedent this generalises. One choice is doctrine-adjacent and is stated with its provisional and its reversal cost rather than decided silently: a member's unattributed search is never logged (§4.6). Complete as a design at its level; the authored half of the frontier (a member's LEAD, D-194) is designed in Program B and this document carries only the column it needs. **§8 ITEM 1 IS BUILT (REC-93, IC-92 on I5): the `observations` table, the ONE append site with C-22.1/22.2/22.3/22.6 generalised onto it plus two new refusals C-22.9 and C-22.10, the frontier view and its bounded document-level read (`op=frontier`), the document-level writers at acquire / the sweep / ratify / the archive fallback, §7's edge-triggered rule, and the `ai_run_log` FOLD with `op=airunlog` proved byte-identical against the pre-item build itself. Items 2, 3 and 4 are NOT built and are REC-94, REC-95 and REC-96.** as of 2026-09-14
+**Status** · v0.1 DRAFT design, written 2026-09-14 by session BOB #11 under Bob's standing delegation (mechanism is the architect's). Not yet reviewed by Bob. It rests on three things already settled: the architectural decision in `STORE-AS-CACHE.md` that THE RECORD AND THE OBSERVATION LOG ARE SEPARATE, WITH DIFFERENT LIFECYCLES; Bob's four-level correction of 2026-08-04 (Part II §14.3); and the investigative run's log (`INVESTIGATIVE-SESSION.md` §11), which is BUILT (`ai_run_log`) and is the precedent this generalises. One choice is doctrine-adjacent and is stated with its provisional and its reversal cost rather than decided silently: a member's unattributed search is never logged (§4.6). Complete as a design at its level; the authored half of the frontier (a member's LEAD, D-194) is designed in Program B and this document carries only the column it needs. **§8 ITEM 1 IS BUILT (REC-93, IC-92 on I5): the `observations` table, the ONE append site with C-22.1/22.2/22.3/22.6 generalised onto it plus two new refusals C-22.9 and C-22.10, the frontier view and its bounded document-level read (`op=frontier`), the document-level writers at acquire / the sweep / ratify / the archive fallback, §7's edge-triggered rule, and the `ai_run_log` FOLD with `op=airunlog` proved byte-identical against the pre-item build itself. Items 2, 3 and 4 are NOT built and are REC-94, REC-95 and REC-96.** as of 2026-09-15
 
 **Place in the system** · Level 2. Serves construct 9 (retrieval — the store as a read-through cache; `BIO_System_Design.md` §3 names no level-1 home, Part II §14.2–14.3 and §17's OBSERVE row carry the design) and construct 10 (standing intent and monitoring, `BIO_Intake_Doctrine_v1_1.md` §4). Depends on `STORE-AS-CACHE.md` ("The one architectural decision", "What each new piece must carry") and `INVESTIGATIVE-SESSION.md` §11 and §14b.6–7. Feeds `CONTENT-SEARCH-DESIGN.md` §4.4 (the content-axis tally a search answer carries), D-196 (the completeness statement gains a search record), D-194 and D-184 (Program B, piece 5: the lead and the firsthand observation plug into the `authority` column). Supersedes the run log's table as a separate shape: `ai_run_log` folds into this table (§4.4) and `op=airunlog` reads through unchanged.
 
@@ -23,6 +23,7 @@
   - [4.5 The internet level](#45-the-internet-level)
   - [4.6 What is never written — stated as a provisional, with its cost](#46-what-is-never-written-stated-as-a-provisional-with-its-cost)
 - [5. The frontier is a view over the log](#5-the-frontier-is-a-view-over-the-log)
+  - [5.1 What a missing row means, in order — and it is not one thing](#51-what-a-missing-row-means-in-order-and-it-is-not-one-thing)
 - [6. The readers](#6-the-readers)
 - [7. Lifecycle, purge and growth](#7-lifecycle-purge-and-growth)
 - [8. The decomposition](#8-the-decomposition)
@@ -38,7 +39,7 @@ It is not: a transcript (DEC-61 — those are device-local and never in the stor
 
 Three rules it inherits from the run log it generalises, each already a refusal in code:
 
-- **Absence uses D-129's vocabulary, widened by `partial`**: `NEVER_LOOKED` (no row — the absence of an observation is the one absence the log states by not existing) · `LOOKED_ABSENT` · `LOOKED_INDETERMINATE` · `PARTIAL` · `PRESENT`. Which absence is a stated fact, never a diagnostic detail.
+- **Absence uses D-129's vocabulary, widened by `partial`**: `NEVER_LOOKED` (no row, **and read under §5.1's order rather than inferred from the emptiness itself** — this design said for one day that the absence of an observation states itself, which is an inference rule turning *I see nothing* into a definite value, the defect CONDUCT #11 found in the queue's own falsification clause on 2026-09-15 and I had written one section over) · `LOOKED_ABSENT` · `LOOKED_INDETERMINATE` · `PARTIAL` · `PRESENT`. Which absence is a stated fact, never a diagnostic detail.
 - **"Source unreachable" and "our governor held us" are different facts** (D-104): `governed = 1` on a row is a fact about us, and a definitive state on a governed row is refused (C-22.2's rule, generalised).
 - **A client-rendered shell is `LOOKED_INDETERMINATE`, never `PRESENT`** (D-64): an evidentially empty capture that reads as coverage is the false-coverage hazard again.
 
@@ -78,7 +79,7 @@ existing convention rather than a new one.
     level          TEXT NOT NULL        -- internet | document | content | meaning
     subject_kind   TEXT NOT NULL        -- address | capture | extent | entity | description
     subject        TEXT NOT NULL        -- the address (normalised), the capture_sha, the canonical extent, the entity id, or a member's words
-    state          TEXT NOT NULL        -- LOOKED_ABSENT | LOOKED_INDETERMINATE | PARTIAL | PRESENT   (NEVER_LOOKED is the absence of a row)
+    state          TEXT NOT NULL        -- LOOKED_ABSENT | LOOKED_INDETERMINATE | PARTIAL | PRESENT   (NEVER_LOOKED is never STORED; it is read by §5.1's order)
     governed       INTEGER NOT NULL DEFAULT 0
     condition      TEXT                 -- queuestate.mjs's vocabulary
     bound          TEXT                 -- which bound stopped it, if one did
@@ -152,7 +153,13 @@ The look that produced nothing we hold: an acquisition attempt for an address th
 
 `STORE-AS-CACHE.md`: *the observation log and the frontier are the same table seen from two angles.* A frontier entry is a subject together with its current state and the observation that last set it; the four-state model is its state column. So the frontier at any level is the latest row per `(level, subject_kind, subject)` — a view, not a table — and:
 
-- `NEVER_LOOKED` is a subject with no row: the `deferred` link partition supplies those subjects at the document level (with `authority_kind = link` and the document they came from as the authority), and the content and meaning levels supply theirs from the captures and readings that exist without a corresponding look;
+### 5.1 What a missing row means, in order — and it is not one thing
+
+**A subject with no row has three possible causes and they are different facts**, so the frontier reads them in this order rather than concluding the first: (1) **the log did not yet exist for that subject** — every capture, reading and resolution the record held before this table landed was looked at by someone, and none of them has a row; a capture whose `first_retrieved` predates the log's first row was FETCHED and the look is recorded in `captured_locators`, not here, and the frontier says so rather than calling it never-looked. (2) **the subject was looked at and the row was purged** — a whole-store purge clears this table (§7), so an instance that purged has no rows and has not thereby become one that never looked. (3) **nobody looked** — which is the honest answer only when the record holds NOTHING ELSE about the subject: no capture, no reading, no counter. Where (1) or (2) cannot be excluded the frontier reads **UNDETERMINED and says which of the three it could not rule out**, because that is what this whole document exists to make possible; treating the empty set as a positive finding is the costs-nothing rule inverted — an absence that took no work to produce, reported as a fact about the world.
+
+This is the one place the design had the defect it was written to prevent, and it is corrected here rather than left for a builder to hit: the writer stores four states and **never stores `NEVER_LOOKED`**, and the reader derives it under this order.
+
+- `NEVER_LOOKED` is a subject with no row AND nothing else in the record, per §5.1: the `deferred` link partition supplies those subjects at the document level (with `authority_kind = link` and the document they came from as the authority), and the content and meaning levels supply theirs from the captures and readings that exist without a corresponding look;
 - `last_verified` is the latest `PRESENT` row's `at`; *source unreachable since* is the earliest `LOOKED_INDETERMINATE` after it;
 - `surfaced_by` (`agent` / `human`, the field the deferred partition already carries) maps onto `actor_class`;
 - a PLAN PROPOSAL (`STORE-AS-CACHE.md`, "The genuinely new capability") is derived FROM the view and is never itself an observation — it is a proposal awaiting an authored act (D-82, D-90).
@@ -191,6 +198,7 @@ Four items now, in dependency order, handed through the BOB INBOX (CONDUCT mints
 - a client-rendered shell capture writes `LOOKED_INDETERMINATE`; forcing `PRESENT` is refused by name;
 - a row with no `authority_kind` is refused; a member's `op=search` writes nothing (the row count is unchanged after any search);
 - the frontier view's `NEVER_LOOKED` set for a document with three deferred links has three subjects; fetch one and it has two;
+- **a capture the record held BEFORE the log's first row does not read `NEVER_LOOKED`** — it reads UNDETERMINED naming the pre-log cause, with `captured_locators` as the evidence it was fetched; break §5.1's order and the arm fails on the oldest capture in the fixture;
 - a steady-state sweep over N unchanged assets writes zero rows and increments N counters; change one asset and it writes one row;
 - `op=airunlog` answers byte-identically before and after the fold for a run written before it;
 - a case signed with the `searched` section carries the log's outcomes; alter the log after signing and the signed section does not move.
