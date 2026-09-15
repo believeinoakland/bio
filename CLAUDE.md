@@ -453,6 +453,22 @@ this section's first candidate for demotion to a note beside its check.
   package. A baseline measured through a symlink is this section's own defect at one remove:
   the number is wrong, the tree is fine, and nothing in the output says disk.
 
+- **A COMPOUND COMMAND REPORTS THE WRAPPER'S STATUS, AND A RUN THAT ENDS WITHOUT ITS OWN
+  COMPLETION LINE DID NOT FINISH — WHATEVER THE SHELL SAID.** The sibling of the
+  `cmd | tail` rule in *Verification discipline* and the same defect one step out: a `&&`
+  chain, a wrapper script or a `npm run` in front of the real work all report THEIR status,
+  so a battery killed mid-run can leave the wrapper exiting **0** while the battery's own
+  line reads **143**. Measured 2026-09-15, when a worker's final run was SIGTERM'd and it
+  caught that ONLY by reading the battery's own line. **The cause is deliberately not named
+  here, because it is many**: a machine-wide `pkill` from another session on this shared
+  machine (the practice that forbids it is `kickoffs/WORKER.md`'s — kill by PID from a
+  process table you read, or by the group you started, never by pattern), an OOM, a timeout,
+  a user interrupt, a crashed child. **So verify by the POSITIVE artifact rather than by the
+  absence of an error: a full run ends with `N/N suites green · M assertions passing`, and a
+  log without that line is not a passing run no matter what the exit status was.** This is
+  the same shape as reading `50 governed documents` rather than `0 fail` — a statement of
+  what was DONE beats an absence of complaint.
+
 - **A SESSION'S WORKING DIRECTORY CAN REVERT BETWEEN TURNS, AND THE FAILURE IT CAUSES
   DOES NOT LOOK LIKE A DIRECTORY PROBLEM.** Observed independently in two lanes on
   2026-09-15: CONDUCT's spawn of a flipped row failed because the session's working
