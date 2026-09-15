@@ -38,6 +38,12 @@
 # next walk — `coverage.mjs`'s fleet walk, or the battery's discovery — can
 # enrol it as a source file.
 .rec82-control-pristine/
+# REC-83's pen (`test/nc-rec83.mjs`), its own line for exactly REC-82's reason
+# one item later: the harness arms `src/store.mjs`, and a copy of a
+# million-byte source left untracked is a second `store.mjs` for the next walk
+# to enrol — which is not hypothetical here, since `coverage.mjs`'s fleet walk
+# and the battery's discovery both read directories rather than a list.
+.rec83-control-pristine/
 # D-271's pen. Named for the item rather than the area because the item is a
 # plane item; the `.ui*` spelling above is an accident of which area needed a
 # pen first, not a rule about who may have one.

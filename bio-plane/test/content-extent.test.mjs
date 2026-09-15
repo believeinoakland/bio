@@ -518,13 +518,19 @@ t("which is what makes the legacy backfill a pure function and not a migration",
    the leg's next projection mints the `document` row it should always have had,
    at the id `contentIdFor` answers for it, with no migration having run.
    *
-   * WHAT THIS DOES NOT DRIVE, STATED PLAINLY: the OTHER half of the backfill —
-   * `Store.ensureLegContent`, which does the same thing on FIRST READ rather
-   * than on next promotion — has no caller yet, because the reads are REC-83's.
-   * It is landed and its arithmetic is the same function asserted above, but its
-   * BEHAVIOUR is undriven in this battery, and a mechanism believed on its
-   * existence is the defect this project meets most. REC-83 wires it and drives
-   * it; this suite says so rather than leaving the gap to be discovered. */
+   * WHAT THIS DOES NOT DRIVE — AND THE GAP IS NOW CLOSED, WHICH IS RECORDED HERE
+   * RATHER THAN QUIETLY DELETED (CLAUDE.md: correct a superseded statement and
+   * say why the old one was wrong). This paragraph used to read "the OTHER half
+   * of the backfill — `Store.ensureLegContent`, which does the same thing on
+   * FIRST READ rather than on next promotion — has no caller yet, because the
+   * reads are REC-83's … its BEHAVIOUR is undriven in this battery". That was
+   * true when REC-82 landed and is FALSE as of REC-83, which wired the call
+   * into `op=earnedbasis`'s leg pass and drives it end to end in
+   * `test/content-reads.test.mjs` §5 — including the arm (`nc-rec83.mjs
+   * unwired`) that deletes the call and shows this battery going red by name.
+   * What THIS suite still does not drive is unchanged: it asserts the backfill's
+   * ARITHMETIC as a property (the id a legacy leg would get is the id its next
+   * promotion mints), and the read-path BEHAVIOUR is one file over. */
 const LEG_LATE = "INQ-2026-8200-late-capture";
 const DOC_LATE = "INFO-2026-8200-captured-later";
 await mustPromote(DOC_LATE, infoMd(DOC_LATE), "information");
