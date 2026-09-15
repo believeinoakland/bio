@@ -1181,7 +1181,7 @@ response: **CAPTURE GRADE IS ABOUT THE FETCH PATH; A CONVERSION IS A DERIVATION 
   Bob's 5.8 forbids.
 decided: 2026-09-14 · BOB #11, delegated by Bob the same day
 reasoning recorded in: this entry; folded into `BIO_Content_Framework_v0_10.md` Part II §16 (the
-  Drive paragraph) in the same commit.
+  Drive paragraph).
 for CONDUCT to enact: the `convert(producer, format)` step kind on I2 (its own IC, minted at
   spawn — FRAMEWORK dormant, answer-for), emitted by CAP-8's `driveHop` path ahead of `layer`
   with cap null; REC-88's `captureBound` reads it as any other step (no code beyond the kind);

@@ -1765,7 +1765,11 @@ table is a PARAMETER, and the bet paid. **RULED by Bob, 2026-09-14: a link to a 
 the OpenDocument export, from which the content is extracted.** So the record holds the Drive
 address as the citation of where the document lives, the ODF bytes as the capture with an
 honest hop (export address, format, Google as producer, time), and the content extracted from
-those bytes. Building it was two acts on the format axis, **and both are DONE as of 2026-09-14**:
+those bytes. **What the conversion is worth is DEC-4 applied, decided 2026-09-14 (DEC-75): the hop
+keeps capture grade B for the fetch path, and the conversion is a derivation step in the chain —
+`convert(google-export, <format>)` ahead of `layer`, cap undetermined and stated until calibrated —
+so a leg on a Drive export claims no more than that weakest link (REC-88's bound). No third scale,
+no new letter; a calibration of the export step raises it later without a migration.** Building it was two acts on the format axis, **and both are DONE as of 2026-09-14**:
 the OpenDocument flavour row in the container reader (COFF-9, `d791aa7` — `ODF_FLAVOURS` in
 `ooxml.mjs`, discriminating on the first-and-stored `mimetype`), and the three OpenDocument
 readers (`.ods`, `.odt`, `.odp` — one `content.xml` part each, smaller than their OOXML
