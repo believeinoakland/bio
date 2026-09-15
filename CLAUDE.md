@@ -204,6 +204,21 @@ passing, because every input the code generated was well-formed by construction:
 the suite was testing something else and nobody could have known without the
 control. A suite that does not fail when you break its subject is not a suite.
 
+**AND BREAK ONLY THE THING — A CONTROL WHOSE METHOD PERTURBS A SECOND VARIABLE PRODUCES A
+REFUTATION THAT LOOKS MORE CONFIDENT THAN THE FINDING IT REFUTES** (CONDUCT #11's general
+form, 2026-09-15, from a control run twice wrong in this session). Driving the claim that
+`plancheck` degrades to green when a predicate cannot load: making the predicate unloadable
+by RENAMING it dirties the tree, so the run failed on UNPUBLISHED and exited 1; `chmod 000`
+dirties it too, because git reports a file modified when it cannot read it. **Both produced a
+non-zero exit and a NAMED failure — which feels like evidence and is the signature of *cannot
+reproduce* — while the subject was never exercised at all.** Only `--local`, which skips the
+publication half, isolated the variable, and the defect then reproduced exactly: `0 fail,
+2 warn`, exit 0. **It is the arm-that-did-not-arm class with the sign flipped: not an arm that
+failed to fire, but one that fired at the wrong thing and reported success at refuting.** So
+when a control refutes a finding, check what ELSE your method changed before believing it —
+and record the method beside the result, because the next person re-driving it the obvious
+way gets the confident wrong answer.
+
 **Correct superseded tests, never exempt them.** If a rule changed, change the
 assertion and say in a comment why the old one was wrong. An exempted test is a
 rule nobody is enforcing and nobody remembers deleting.
