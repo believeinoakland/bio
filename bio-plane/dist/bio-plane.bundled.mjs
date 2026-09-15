@@ -14993,25 +14993,25 @@ function parseToUnicodeCMap(text) {
   return { map, width: width ?? 1 };
 }
 function parseBfrange(blk, map, seenWidth) {
-  const tokens = [];
+  const tokens2 = [];
   let i = 0;
   while (i < blk.length) {
     const c = blk[i];
     if (c === "<") {
       const j = blk.indexOf(">", i);
       if (j === -1) break;
-      tokens.push({ t: "hex", v: blk.slice(i + 1, j).replace(/[^0-9a-fA-F]/g, "") });
+      tokens2.push({ t: "hex", v: blk.slice(i + 1, j).replace(/[^0-9a-fA-F]/g, "") });
       i = j + 1;
     } else if (c === "[") {
       const j = blk.indexOf("]", i);
       if (j === -1) break;
       const arr = (blk.slice(i + 1, j).match(/<([0-9a-fA-F]*)>/g) || []).map((h) => h.replace(/[<>]/g, ""));
-      tokens.push({ t: "arr", v: arr });
+      tokens2.push({ t: "arr", v: arr });
       i = j + 1;
     } else i++;
   }
-  for (let k = 0; k + 2 < tokens.length; k += 3) {
-    const lo = tokens[k], hi = tokens[k + 1], dst = tokens[k + 2];
+  for (let k = 0; k + 2 < tokens2.length; k += 3) {
+    const lo = tokens2[k], hi = tokens2[k + 1], dst = tokens2[k + 2];
     if (lo.t !== "hex" || hi.t !== "hex") {
       k -= 2;
       k += 1;
@@ -16904,6 +16904,912 @@ var pptxEntry = {
   }
 };
 
+// src/odf.mjs
+var UTF85 = new TextDecoder("utf-8", { fatal: false });
+var ODF_ROWS = CONTAINER_FLAVOURS.filter((f2) => f2.partMap === "odf");
+function odfRow(flavour) {
+  const row = ODF_ROWS.find((f2) => f2.flavour === flavour);
+  if (!row) throw new Error(`odf.mjs: no partMap:"odf" row for "${flavour}" in ooxml.mjs`);
+  return row;
+}
+var ODT_ROW = odfRow("odt");
+var ODS_ROW = odfRow("ods");
+var ODP_ROW = odfRow("odp");
+var ODT_CONTENT_TYPE = ODT_ROW.mimetype;
+var ODS_CONTENT_TYPE = ODS_ROW.mimetype;
+var ODP_CONTENT_TYPE = ODP_ROW.mimetype;
+var CONTENT_PART = normalizePartName(ODT_ROW.conventionalMainPart);
+var META_PART = "meta.xml";
+function decodeEntities3(s) {
+  return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
+    if (e[0] === "#") {
+      const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
+    }
+    return { amp: "&", lt: "<", gt: ">", quot: "'" === e ? "'" : '"', apos: "'" }[e] ?? m;
+  });
+}
+function attrsOf4(raw) {
+  const attrs = {};
+  for (const a of String(raw || "").matchAll(/([\w.-]+(?::[\w.-]+)?)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
+    const local = a[1].includes(":") ? a[1].split(":").pop() : a[1];
+    attrs[local] = decodeEntities3(a[3] ?? a[4] ?? "");
+  }
+  return attrs;
+}
+var localOf3 = (n) => n.includes(":") ? n.split(":").pop() : n;
+var tokens = () => /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<\/?([\w.-]+(?::[\w.-]+)?)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/)?>/g;
+function elementsNested(xml, localName) {
+  const out = [];
+  const RE = tokens();
+  let m, depth = 0, start = -1, openAttrs = null;
+  while ((m = RE.exec(xml)) !== null) {
+    if (m[1] === void 0) continue;
+    if (localOf3(m[1]) !== localName) continue;
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (closing) {
+      depth--;
+      if (depth === 0 && start >= 0) {
+        out.push({ attrs: openAttrs, inner: xml.slice(start, m.index) });
+        start = -1;
+        openAttrs = null;
+      }
+      continue;
+    }
+    if (selfClosed) {
+      if (depth === 0) out.push({ attrs: attrsOf4(m[2]), inner: "" });
+      continue;
+    }
+    if (depth === 0) {
+      start = RE.lastIndex;
+      openAttrs = attrsOf4(m[2]);
+    }
+    depth++;
+  }
+  return out;
+}
+function stripElement(xml, localName) {
+  let out = "";
+  let cut = 0;
+  const RE = tokens();
+  let m, depth = 0, start = -1;
+  while ((m = RE.exec(xml)) !== null) {
+    if (m[1] === void 0) continue;
+    if (localOf3(m[1]) !== localName) continue;
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (selfClosed) {
+      if (depth === 0) {
+        out += xml.slice(cut, m.index);
+        cut = RE.lastIndex;
+      }
+      continue;
+    }
+    if (closing) {
+      depth--;
+      if (depth === 0 && start >= 0) {
+        cut = RE.lastIndex;
+        start = -1;
+      }
+      continue;
+    }
+    if (depth === 0) {
+      out += xml.slice(cut, m.index);
+      start = m.index;
+    }
+    depth++;
+  }
+  return out + xml.slice(cut);
+}
+function visibleText(xml) {
+  let out = "";
+  let prev = 0;
+  const RE = tokens();
+  let m;
+  while ((m = RE.exec(xml)) !== null) {
+    if (m.index > prev) out += decodeEntities3(xml.slice(prev, m.index));
+    prev = RE.lastIndex;
+    if (m[1] === void 0) continue;
+    if (m[0][1] === "/") continue;
+    const name = localOf3(m[1]);
+    if (name === "s") {
+      const c = parseInt(attrsOf4(m[2]).c ?? "1", 10);
+      out += " ".repeat(Number.isFinite(c) && c > 0 ? c : 1);
+    } else if (name === "tab") out += "	";
+    else if (name === "line-break") out += "\n";
+  }
+  if (xml.length > prev) out += decodeEntities3(xml.slice(prev));
+  return out;
+}
+function automaticStyles(xml) {
+  const tableDisplay = /* @__PURE__ */ new Map();
+  const pageVisible = /* @__PURE__ */ new Map();
+  for (const block of elementsNested(xml, "automatic-styles")) {
+    for (const st of elementsNested(block.inner, "style")) {
+      const name = st.attrs["name"];
+      if (!name) continue;
+      if (st.attrs.family === "table") {
+        for (const p of elementsNested(st.inner, "table-properties")) {
+          if (p.attrs.display != null) tableDisplay.set(name, p.attrs.display !== "false");
+        }
+      } else if (st.attrs.family === "drawing-page") {
+        for (const p of elementsNested(st.inner, "drawing-page-properties")) {
+          if (p.attrs.visibility != null) pageVisible.set(name, p.attrs.visibility !== "hidden");
+        }
+      }
+    }
+  }
+  return { tableDisplay, pageVisible };
+}
+function classifyUri4(uri) {
+  const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(uri || "");
+  const scheme = m ? m[1].toLowerCase() : null;
+  if (scheme === "http" || scheme === "https") return "deferred";
+  if (!scheme && uri) return "deferred";
+  return "refused";
+}
+function linkRecord(uri, source) {
+  if (typeof uri === "string" && uri.startsWith("#")) {
+    return {
+      partition: "anchor",
+      wrapper: linkWrapper.anchor(uri),
+      target: { fragment: uri, name: uri.slice(1) },
+      source
+    };
+  }
+  const partition = classifyUri4(uri);
+  return {
+    partition,
+    wrapper: partition === "deferred" ? linkWrapper.deferred(uri) : linkWrapper.refused(),
+    target: { url: uri },
+    source
+  };
+}
+function hrefsIn(xml) {
+  const out = [];
+  const RE = tokens();
+  let m;
+  while ((m = RE.exec(xml)) !== null) {
+    if (m[1] === void 0 || m[0][1] === "/") continue;
+    if (localOf3(m[1]) !== "a") continue;
+    const href = attrsOf4(m[2]).href;
+    if (href != null) out.push(href);
+  }
+  return out;
+}
+function readStoredMemberSync(bytes, container, name, maxBytes) {
+  const want = normalizePartName(name);
+  const entry = container.byName.get(want) ?? container.entries.find((e) => normalizePartName(e.name) === want);
+  if (!entry) return null;
+  if (entry.method !== 0) return null;
+  if (entry.uncompressedSize > maxBytes) return null;
+  const lh = entry.localHeaderOffset;
+  if (lh + 30 > bytes.length) return null;
+  const nameLen = bytes[lh + 26] | bytes[lh + 27] << 8;
+  const extraLen = bytes[lh + 28] | bytes[lh + 29] << 8;
+  const start = lh + 30 + nameLen + extraLen;
+  const end = start + entry.compressedSize;
+  if (end > bytes.length) return null;
+  const out = bytes.subarray(start, end);
+  if (out.length !== entry.uncompressedSize) return null;
+  if (crc32(out) !== entry.crc32) return null;
+  return UTF85.decode(out);
+}
+function detectOdf(row, bytes, contentType) {
+  if (bytes) {
+    if (!hasZipMagic(bytes)) return null;
+    const container = readContainer(bytes);
+    if (!container.ok) return null;
+    const first = container.entries[0];
+    if (!first || normalizePartName(first.name) !== ODF_MIMETYPE_PART) return null;
+    const declared = readStoredMemberSync(bytes, container, ODF_MIMETYPE_PART, ODF_MIMETYPE_MAX_BYTES);
+    if (declared !== row.mimetype) return null;
+    const main = normalizePartName(row.conventionalMainPart);
+    const present = container.byName.has(main) || container.entries.some((e) => normalizePartName(e.name) === main);
+    if (!present) return null;
+    return {
+      format: row.flavour,
+      confidence: "certain",
+      signals: [
+        "magic: PK\\x03\\x04 with a readable central directory",
+        `part: ${ODF_MIMETYPE_PART} is the FIRST member, STORED, CRC-verified`,
+        `odf:${ODF_MIMETYPE_PART}=${row.mimetype} (exact match, not trimmed)`,
+        `part: ${main} present`
+      ]
+    };
+  }
+  if (contentType === row.mimetype) {
+    return { format: row.flavour, confidence: "likely", signals: [`content type "${contentType}"`] };
+  }
+  return null;
+}
+async function odfParts(row, bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const d = await discriminate(b);
+  if (!d.ok) return { ok: false, container: row.flavour, why: d.why, signals: d.signals };
+  if (d.format !== row.flavour) {
+    const absent = d.why === "declared_main_part_absent";
+    return {
+      ok: false,
+      container: row.flavour,
+      why: d.format === "undetermined" ? d.why : `not_${row.flavour}:${d.format}`,
+      part: absent ? CONTENT_PART : null,
+      flavourDeclared: d.flavourDeclared ?? null,
+      signals: d.signals
+    };
+  }
+  const container = readContainer(b);
+  if (!container.ok) return { ok: false, container: row.flavour, why: container.why, signals: d.signals };
+  const undetermined = [];
+  const declared = declaredTextBytes(container, (n) => n === CONTENT_PART);
+  const guardR = sizeGuard(declared.total);
+  const guard = guardR.ok ? null : guardR;
+  let contentXml = null;
+  if (!guard) {
+    const read = await readPart(b, container, CONTENT_PART);
+    if (read.ok) contentXml = UTF85.decode(read.bytes);
+    else undetermined.push({ part: CONTENT_PART, why: read.why });
+  }
+  undetermined.push({
+    part: META_PART,
+    why: "outside_content_xml_not_read",
+    detail: "OpenDocument carries the core properties (creator, title, created/modified, revision) in meta.xml; this entry reads content.xml only, so NO core-properties item is emitted and its absence is not evidence the document carries none"
+  });
+  undetermined.push({
+    part: ODF_MANIFEST_PART,
+    why: "outside_content_xml_not_read",
+    detail: "OpenDocument lists embedded objects and images as separate package members in META-INF/manifest.xml; this entry reads content.xml only, so NO intra link is content-addressed and a zero intra count means NOT LOOKED, never NONE PRESENT"
+  });
+  return { ok: true, format: row.flavour, row, bytes: b, container, contentXml, declared, guard, undetermined };
+}
+function officeBody(contentXml, kind) {
+  if (contentXml == null) return null;
+  const body = elementsNested(contentXml, "body")[0];
+  if (!body) return null;
+  const inner = elementsNested(body.inner, kind)[0];
+  return inner ? inner.inner : null;
+}
+function envelopeUndetermined(parts) {
+  const out = [...parts.undetermined];
+  if (parts.guard) out.push({ part: CONTENT_PART, why: "over_size_bound", guard: parts.guard });
+  return out;
+}
+function envelopeOf(container, items, undetermined) {
+  const counts = {};
+  for (const it of items) counts[it.kind] = (counts[it.kind] ?? 0) + 1;
+  return {
+    container,
+    kinds: [...new Set(items.map((it) => it.kind))],
+    items,
+    undetermined,
+    counts
+  };
+}
+function countPartitions(links) {
+  const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
+  for (const l of links) counts[l.partition]++;
+  return counts;
+}
+var NO_INTRA_NOTE = "no intra link is emitted: embedded members live outside content.xml (stated in evidentiary.undetermined)";
+function walkTextBody(bodyXml) {
+  const paragraphs = [];
+  const hyperlinks = [];
+  const annotations = [];
+  const marks = [];
+  const openChanges = /* @__PURE__ */ new Map();
+  const served = stripElement(bodyXml, "tracked-changes");
+  const RE = tokens();
+  let m, prev = 0;
+  let para = -1;
+  let inPara = false;
+  let depthInPara = 0;
+  let skipDepth = 0;
+  let paraStart = -1;
+  const openStack = [];
+  while ((m = RE.exec(served)) !== null) {
+    if (m[1] === void 0) {
+      prev = RE.lastIndex;
+      continue;
+    }
+    const name = localOf3(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (skipDepth > 0) {
+      if (!closing && !selfClosed) skipDepth++;
+      else if (closing) skipDepth--;
+      prev = RE.lastIndex;
+      continue;
+    }
+    if (!closing && !selfClosed && name === "annotation") {
+      const rest = served.slice(m.index);
+      const ann = elementsNested(rest, "annotation")[0];
+      annotations.push({ attrs: attrsOf4(m[2]), inner: ann ? ann.inner : "", para: para >= 0 ? para : null });
+      skipDepth = 1;
+      prev = RE.lastIndex;
+      continue;
+    }
+    if (!closing && (name === "p" || name === "h")) {
+      if (!selfClosed) {
+        if (!inPara) {
+          para++;
+          inPara = true;
+          depthInPara = 1;
+          paraStart = RE.lastIndex;
+          openStack.length = 0;
+        } else depthInPara++;
+      } else {
+        if (!inPara) {
+          para++;
+          paragraphs.push({ para, text: "" });
+        }
+      }
+      prev = RE.lastIndex;
+      continue;
+    }
+    if (closing && (name === "p" || name === "h") && inPara) {
+      depthInPara--;
+      if (depthInPara === 0) {
+        const raw = served.slice(paraStart, m.index);
+        paragraphs.push({ para, text: visibleText(stripElement(raw, "annotation")) });
+        inPara = false;
+        paraStart = -1;
+      }
+      prev = RE.lastIndex;
+      continue;
+    }
+    const attrs = m[2] && m[2].includes("=") ? attrsOf4(m[2]) : {};
+    if (!closing && name === "a" && attrs.href != null) {
+      hyperlinks.push({ href: attrs.href, para: para >= 0 ? para : null });
+    } else if (name === "change-start" && attrs["change-id"] != null) {
+      openChanges.set(attrs["change-id"], { para: para >= 0 ? para : null });
+      marks.push({ id: attrs["change-id"], para: para >= 0 ? para : null });
+    } else if (name === "change" && attrs["change-id"] != null) {
+      marks.push({ id: attrs["change-id"], para: para >= 0 ? para : null });
+    }
+    prev = RE.lastIndex;
+  }
+  return { paragraphs, hyperlinks, annotations, marks, openChanges };
+}
+function insertedTextFor(bodyXml, id) {
+  const served = stripElement(bodyXml, "tracked-changes");
+  const startRe = new RegExp(`<(?:[\\w.-]+:)?change-start\\b[^>]*change-id="${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*/?>`);
+  const endRe = new RegExp(`<(?:[\\w.-]+:)?change-end\\b[^>]*change-id="${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*/?>`);
+  const s = served.match(startRe);
+  const e = served.match(endRe);
+  if (!s || !e || e.index < s.index) return null;
+  return visibleText(served.slice(s.index + s[0].length, e.index));
+}
+function parseTrackedChanges(bodyXml) {
+  const block = elementsNested(bodyXml, "tracked-changes")[0];
+  if (!block) return [];
+  const out = [];
+  for (const region of elementsNested(block.inner, "changed-region")) {
+    const id = region.attrs.id ?? null;
+    for (const [kind, change] of [["insertion", "insertion"], ["deletion", "deletion"]]) {
+      for (const el of elementsNested(region.inner, kind)) {
+        const info = elementsNested(el.inner, "change-info")[0];
+        const creator = info ? elementsNested(info.inner, "creator")[0] : null;
+        const date = info ? elementsNested(info.inner, "date")[0] : null;
+        out.push({
+          id,
+          change,
+          author: creator ? visibleText(creator.inner) : null,
+          // null, never invented
+          date: date ? visibleText(date.inner) : null,
+          /* A deletion's own paragraphs ARE the superseded wording. An
+             insertion's content is in the body, not here. */
+          superseded: change === "deletion" ? elementsNested(stripElement(el.inner, "change-info"), "p").map((p) => visibleText(p.inner)).join("\n") : null
+        });
+      }
+    }
+  }
+  return out;
+}
+function odtStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  const notes = [NO_INTRA_NOTE];
+  const links = [];
+  const items = [];
+  const body = officeBody(parts.contentXml, "text");
+  if (!body) {
+    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:text>: element references unavailable (stated)");
+  }
+  let paragraphs = null;
+  if (body) {
+    const walk = walkTextBody(body);
+    paragraphs = walk.paragraphs.length;
+    for (const h of walk.hyperlinks) {
+      links.push(linkRecord(h.href, h.para == null ? null : docParaRef(h.para)));
+    }
+    const markFor = /* @__PURE__ */ new Map();
+    for (const mk of walk.marks) if (!markFor.has(mk.id)) markFor.set(mk.id, mk.para);
+    for (const c of parseTrackedChanges(parts.contentXml)) {
+      const at = c.id != null ? markFor.get(c.id) : void 0;
+      const item = {
+        kind: "tracked-change",
+        change: c.change,
+        author: c.author,
+        date: c.date,
+        source: at == null ? null : docParaRef(at)
+      };
+      if (c.change === "deletion") item.superseded = c.superseded;
+      else item.text = c.id != null ? insertedTextFor(body, c.id) : null;
+      if (at === void 0) item.why = "change_region_unmarked_in_body";
+      items.push(item);
+    }
+    for (const a of walk.annotations) {
+      const creator = elementsNested(a.inner, "creator")[0];
+      const date = elementsNested(a.inner, "date")[0];
+      const initials = elementsNested(a.inner, "creator-initials")[0];
+      items.push({
+        kind: "comment",
+        id: a.attrs.name ?? null,
+        author: creator ? visibleText(creator.inner) : null,
+        date: date ? visibleText(date.inner) : null,
+        initials: initials ? visibleText(initials.inner) : null,
+        text: elementsNested(stripElement(a.inner, "change-info"), "p").map((p) => visibleText(p.inner)).join("\n"),
+        source: a.para == null ? null : docParaRef(a.para)
+      });
+    }
+  }
+  return {
+    ok: true,
+    container: "odt",
+    paragraphs,
+    // null = honestly unknown, the docx.mjs convention
+    links,
+    counts: countPartitions(links),
+    evidentiary: envelopeOf("odt", items, envelopeUndetermined(parts)),
+    notes
+  };
+}
+function odtText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  if (parts.guard) {
+    return {
+      ok: true,
+      container: "odt",
+      document: null,
+      paragraphs: [],
+      undetermined: [parts.guard],
+      // the marker VERBATIM, never a truncation
+      counts: { chars: 0, undetermined: 1 }
+    };
+  }
+  const body = officeBody(parts.contentXml, "text");
+  if (!body) {
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    return {
+      ok: true,
+      container: "odt",
+      document: null,
+      paragraphs: [],
+      undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_text_body" }],
+      counts: { chars: 0, undetermined: 1 }
+    };
+  }
+  const walk = walkTextBody(body);
+  const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `\xB6${p.para + 1}`, text: p.text }));
+  const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
+  return {
+    ok: true,
+    container: "odt",
+    document,
+    paragraphs,
+    undetermined: [],
+    counts: { chars: document.length, undetermined: 0 }
+  };
+}
+function columnName(i) {
+  let n = i, out = "";
+  do {
+    out = String.fromCharCode(65 + n % 26) + out;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return out;
+}
+function walkSheet(tableXml) {
+  const rows = [];
+  const hiddenRows = [];
+  const hiddenCols = [];
+  let colIndex = 0;
+  for (const col of elementsNested(tableXml, "table-column")) {
+    const rep = parseInt(col.attrs["number-columns-repeated"] ?? "1", 10);
+    const n = Number.isFinite(rep) && rep > 0 ? rep : 1;
+    const vis = col.attrs.visibility;
+    if (vis === "collapse" || vis === "filter") {
+      hiddenCols.push({ min: colIndex + 1, max: colIndex + n, visibility: vis });
+    }
+    colIndex += n;
+  }
+  let rowIndex = 0;
+  for (const row of elementsNested(tableXml, "table-row")) {
+    const rep = parseInt(row.attrs["number-rows-repeated"] ?? "1", 10);
+    const nRows = Number.isFinite(rep) && rep > 0 ? rep : 1;
+    const vis = row.attrs.visibility;
+    const cells = [];
+    let c = 0;
+    for (const cell of elementsNested(row.inner, "table-cell")) {
+      const crep = parseInt(cell.attrs["number-columns-repeated"] ?? "1", 10);
+      const nCols = Number.isFinite(crep) && crep > 0 ? crep : 1;
+      const carries = cell.attrs["value-type"] != null || cell.attrs.formula != null || cell.inner.trim() !== "";
+      const emit = carries ? nCols : 0;
+      for (let k = 0; k < emit; k++) {
+        cells.push({
+          col: c + k,
+          cell: `${columnName(c + k)}${rowIndex + 1}`,
+          valueType: cell.attrs["value-type"] ?? null,
+          value: cell.attrs.value ?? cell.attrs["string-value"] ?? cell.attrs["date-value"] ?? cell.attrs["time-value"] ?? cell.attrs["boolean-value"] ?? null,
+          formula: cell.attrs.formula ?? null,
+          /* The DISPLAYED form: ODF writes what the sheet shows as the cell's
+             `<text:p>` children, which is the analogue of xlsx's cached <v>. */
+          display: elementsNested(cell.inner, "p").map((p) => visibleText(p.inner)).join("\n"),
+          hrefs: hrefsIn(cell.inner)
+        });
+      }
+      c += nCols;
+    }
+    const materialise = cells.length ? nRows : 0;
+    for (let k = 0; k < materialise; k++) {
+      const r = rowIndex + k;
+      if (vis === "collapse" || vis === "filter") hiddenRows.push(r + 1);
+      rows.push({
+        r: r + 1,
+        hidden: vis === "collapse" || vis === "filter" ? vis : false,
+        cells: cells.map((cell) => ({ ...cell, cell: `${columnName(cell.col)}${r + 1}` }))
+      });
+    }
+    if (!materialise && (vis === "collapse" || vis === "filter")) {
+      for (let k = 0; k < nRows; k++) hiddenRows.push(rowIndex + k + 1);
+    }
+    rowIndex += nRows;
+  }
+  return { rows, hiddenRows, hiddenCols };
+}
+function sheetsOf(bodyXml, styles) {
+  return elementsNested(bodyXml, "table").map((tbl, index) => {
+    const styleName = tbl.attrs["style-name"] ?? null;
+    const fromElement = tbl.attrs.display != null ? tbl.attrs.display !== "false" : null;
+    const fromStyle = styleName != null && styles.tableDisplay.has(styleName) ? styles.tableDisplay.get(styleName) : null;
+    const displayed = fromElement ?? fromStyle ?? true;
+    return {
+      index,
+      name: tbl.attrs.name ?? `table${index + 1}`,
+      /* ODF identifies a table by NAME only — there is no numeric sheet id.
+         null is the FORMAT speaking, not a gap in this reader. */
+      sheetId: null,
+      /* ODF's visibility is a boolean, so there is no xlsx "veryHidden". */
+      state: displayed ? "visible" : "hidden",
+      hidden: displayed ? false : "hidden",
+      xml: tbl.inner
+    };
+  });
+}
+function odsStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  const notes = [NO_INTRA_NOTE];
+  const links = [];
+  const items = [];
+  const body = officeBody(parts.contentXml, "spreadsheet");
+  if (!body) {
+    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:spreadsheet>: element references unavailable (stated)");
+  }
+  if (parts.guard) notes.push("text_parts_over_bound");
+  const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: /* @__PURE__ */ new Map(), pageVisible: /* @__PURE__ */ new Map() };
+  const sheets = body ? sheetsOf(body, styles) : [];
+  for (const sheet of sheets) {
+    const walked = walkSheet(sheet.xml);
+    for (const row of walked.rows) {
+      for (const cell of row.cells) {
+        const ref = sheetCellRef(sheet.name, cell.cell);
+        for (const href of cell.hrefs) links.push(linkRecord(href, ref));
+        if (cell.formula != null) {
+          items.push({
+            kind: "formula",
+            source: ref,
+            formula: cell.formula,
+            value: cell.display !== "" ? cell.display : cell.value
+            // the cached result; null when the file carries none
+          });
+        }
+      }
+    }
+    if (walked.hiddenRows.length) {
+      items.push({
+        kind: "hidden-rows",
+        sheet: sheet.name,
+        rows: walked.hiddenRows,
+        count: walked.hiddenRows.length,
+        source: null
+      });
+    }
+    if (walked.hiddenCols.length) {
+      items.push({
+        kind: "hidden-cols",
+        sheet: sheet.name,
+        cols: walked.hiddenCols,
+        count: walked.hiddenCols.length,
+        source: null
+      });
+    }
+  }
+  for (const sheet of sheets) {
+    if (sheet.hidden) items.push({ kind: "hidden-sheet", sheet: sheet.name, state: sheet.state, source: null });
+  }
+  return {
+    ok: true,
+    container: "ods",
+    sheets: sheets.map((s) => ({ sheet: s.index, name: s.name, sheetId: s.sheetId, state: s.state, hidden: s.hidden })),
+    links,
+    counts: countPartitions(links),
+    evidentiary: envelopeOf("ods", items, envelopeUndetermined(parts)),
+    notes
+  };
+}
+function odsText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  if (parts.guard) {
+    return {
+      ok: true,
+      container: "ods",
+      document: null,
+      sheets: [],
+      undetermined: [parts.guard],
+      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
+    };
+  }
+  const body = officeBody(parts.contentXml, "spreadsheet");
+  if (!body) {
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    const marker = { sheet: null, cell: null, reason: stated?.why ?? "no_office_spreadsheet_body" };
+    return {
+      ok: true,
+      container: "ods",
+      document: null,
+      sheets: [],
+      undetermined: [marker],
+      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
+    };
+  }
+  const styles = automaticStyles(parts.contentXml);
+  const outSheets = [];
+  let cellCount = 0, formulaCount = 0;
+  for (const sheet of sheetsOf(body, styles)) {
+    const walked = walkSheet(sheet.xml);
+    const lines = [];
+    for (const row of walked.rows) {
+      const vals = [];
+      for (const c of row.cells) {
+        if (c.formula != null) formulaCount++;
+        const v = c.display !== "" ? c.display : c.value;
+        if (v == null || v === "") continue;
+        cellCount++;
+        vals.push(v);
+      }
+      if (vals.length) lines.push(vals.join("	"));
+    }
+    const text = lines.join("\n");
+    outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden, text, undetermined: [] });
+  }
+  const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
+  return {
+    ok: true,
+    container: "ods",
+    document,
+    sheets: outSheets,
+    undetermined: [],
+    counts: { chars: document.length, cells: cellCount, formulas: formulaCount, undetermined: 0 }
+  };
+}
+var ODP_SHAPE_TAGS = /* @__PURE__ */ new Set([
+  "frame",
+  "custom-shape",
+  "rect",
+  "ellipse",
+  "circle",
+  "line",
+  "polyline",
+  "polygon",
+  "path",
+  "connector",
+  "measure",
+  "caption",
+  "g",
+  "page-thumbnail",
+  "control",
+  "object",
+  "image"
+]);
+function walkPage(pageXml) {
+  const slideOnly = stripElement(pageXml, "notes");
+  const shapes = [];
+  const RE = tokens();
+  let m;
+  let index = -1;
+  const open = [];
+  while ((m = RE.exec(slideOnly)) !== null) {
+    if (m[1] === void 0) continue;
+    const name = localOf3(m[1]);
+    if (!ODP_SHAPE_TAGS.has(name)) continue;
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (closing) {
+      const o = open.pop();
+      if (o) shapes.push({ shape: o.index, inner: slideOnly.slice(o.start, m.index) });
+      continue;
+    }
+    index++;
+    if (selfClosed) {
+      shapes.push({ shape: index, inner: "" });
+      continue;
+    }
+    open.push({ index, start: RE.lastIndex });
+  }
+  shapes.sort((a, b) => a.shape - b.shape);
+  return {
+    count: index + 1,
+    shapes: shapes.map((s) => ({
+      shape: s.shape,
+      /* A group's text is the text of the shapes inside it, which are their
+         own entries; taking the group's inner markup would double-count it in
+         the slide's text, so a shape's OWN text is its `<draw:text-box>`
+         paragraphs only. */
+      text: elementsNested(s.inner, "text-box").map((tb) => elementsNested(tb.inner, "p").map((p) => visibleText(p.inner)).join("\n")).join("\n"),
+      hrefs: hrefsIn(s.inner)
+    }))
+  };
+}
+function notesTextOf(pageXml) {
+  const notes = elementsNested(pageXml, "notes")[0];
+  if (!notes) return null;
+  return elementsNested(notes.inner, "text-box").map((tb) => elementsNested(tb.inner, "p").map((p) => visibleText(p.inner)).join("\n")).filter((t) => t.length).join("\n");
+}
+function deckOf2(bodyXml, styles) {
+  return elementsNested(bodyXml, "page").map((page, i) => {
+    const styleName = page.attrs["style-name"] ?? null;
+    const fromElement = page.attrs.visibility != null ? page.attrs.visibility !== "hidden" : null;
+    const fromStyle = styleName != null && styles.pageVisible.has(styleName) ? styles.pageVisible.get(styleName) : null;
+    const visible = fromElement ?? fromStyle ?? true;
+    return { slide: i + 1, name: page.attrs.name ?? null, hidden: !visible, xml: page.inner };
+  });
+}
+function odpStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  const notes = [NO_INTRA_NOTE];
+  const links = [];
+  const items = [];
+  const body = officeBody(parts.contentXml, "presentation");
+  if (!body) {
+    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:presentation>: element references unavailable (stated)");
+  }
+  const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: /* @__PURE__ */ new Map(), pageVisible: /* @__PURE__ */ new Map() };
+  const deck = body ? deckOf2(body, styles) : null;
+  if (deck) {
+    for (const page of deck) {
+      const walked = walkPage(page.xml);
+      for (const s of walked.shapes) {
+        for (const href of s.hrefs) links.push(linkRecord(href, slideShapeRef(page.slide, s.shape)));
+      }
+      const nt = notesTextOf(page.xml);
+      if (nt != null && nt.length) {
+        items.push({
+          kind: "speaker-notes",
+          slide: page.slide,
+          part: CONTENT_PART,
+          text: nt,
+          source: slideShapeRef(page.slide)
+        });
+      }
+      if (page.hidden) {
+        items.push({
+          kind: "hidden-slide",
+          slide: page.slide,
+          part: CONTENT_PART,
+          source: slideShapeRef(page.slide)
+        });
+      }
+    }
+  }
+  return {
+    ok: true,
+    container: "odp",
+    slides: deck ? deck.length : null,
+    // null = honestly unknown
+    links,
+    counts: countPartitions(links),
+    evidentiary: envelopeOf("odp", items, envelopeUndetermined(parts)),
+    notes
+  };
+}
+function odpText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
+  }
+  if (parts.guard) {
+    return {
+      ok: true,
+      container: "odp",
+      document: null,
+      slides: [],
+      speakerNotes: [],
+      undetermined: [parts.guard],
+      counts: { chars: 0, notesChars: 0, undetermined: 1 }
+    };
+  }
+  const body = officeBody(parts.contentXml, "presentation");
+  if (!body) {
+    const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
+    return {
+      ok: true,
+      container: "odp",
+      document: null,
+      slides: [],
+      speakerNotes: [],
+      undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_presentation_body" }],
+      counts: { chars: 0, notesChars: 0, undetermined: 1 }
+    };
+  }
+  const styles = automaticStyles(parts.contentXml);
+  const slides = [];
+  const speakerNotes = [];
+  for (const page of deckOf2(body, styles)) {
+    const walked = walkPage(page.xml);
+    const text = walked.shapes.map((s) => s.text).filter((t) => t.length).join("\n");
+    slides.push({ slide: page.slide, ref: `slide ${page.slide}`, part: CONTENT_PART, hidden: page.hidden, text });
+    const nt = notesTextOf(page.xml);
+    if (nt != null && nt.length) {
+      speakerNotes.push({
+        slide: page.slide,
+        ref: `slide ${page.slide} (notes)`,
+        part: CONTENT_PART,
+        hidden: page.hidden,
+        text: nt
+      });
+    }
+  }
+  const document = slides.map((s) => s.text).filter((t) => t.length).join("\n");
+  const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
+  return {
+    ok: true,
+    container: "odp",
+    document,
+    slides,
+    speakerNotes,
+    undetermined: [],
+    counts: { chars: document.length, notesChars, undetermined: 0 }
+  };
+}
+function entryFor(row, structureOf, textOf2) {
+  return {
+    format: row.flavour,
+    detect: (bytes, contentType) => detectOdf(row, bytes, contentType),
+    parts: (bytes) => odfParts(row, bytes),
+    /* Accept either parts() output or raw bytes, exactly as the three OOXML
+       entries do, so detect→structure works uniformly at the registry seam
+       while a caller that already paid for parts() does not pay twice. */
+    structure: async (partsOrBytes) => structureOf(
+      partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await odfParts(row, partsOrBytes) : partsOrBytes
+    ),
+    text: async (partsOrBytes) => textOf2(
+      partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await odfParts(row, partsOrBytes) : partsOrBytes
+    )
+  };
+}
+var odtEntry = entryFor(ODT_ROW, odtStructure, odtText);
+var odsEntry = entryFor(ODS_ROW, odsStructure, odsText);
+var odpEntry = entryFor(ODP_ROW, odpStructure, odpText);
+
 // src/formats.mjs
 var REGISTRY = /* @__PURE__ */ new Map();
 function registerFormat(entry) {
@@ -17013,6 +17919,9 @@ registerFormat({
 registerFormat(docxEntry);
 registerFormat(xlsxEntry);
 registerFormat(pptxEntry);
+registerFormat(odtEntry);
+registerFormat(odsEntry);
+registerFormat(odpEntry);
 
 // src/textchain.mjs
 var STEP_KINDS = {
@@ -18994,10 +19903,10 @@ function tokenize(input) {
   }
   return out;
 }
-function parseTokens(tokens, implicitOp, ctx) {
+function parseTokens(tokens2, implicitOp, ctx) {
   let p = 0;
-  const peek = () => tokens[p];
-  const eat = () => tokens[p++];
+  const peek = () => tokens2[p];
+  const eat = () => tokens2[p++];
   const primary = () => {
     const t = peek();
     if (!t) return null;
@@ -40505,12 +41414,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         last_refusal_status: r.last_refusal_status
       };
     }
-    const tokens = Math.min(G.burstTokens, r.tokens + (now - r.refilled_at) / 6e4 * appetite);
-    if (tokens < 1) {
-      const retryIn = Math.ceil((1 - tokens) / appetite * 6e4);
+    const tokens2 = Math.min(G.burstTokens, r.tokens + (now - r.refilled_at) / 6e4 * appetite);
+    if (tokens2 < 1) {
+      const retryIn = Math.ceil((1 - tokens2) / appetite * 6e4);
       this.sql.exec(
         `UPDATE host_governor SET tokens = ?, refilled_at = ?, refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
-        tokens,
+        tokens2,
         now,
         new Date(now).toISOString(),
         host
@@ -40523,7 +41432,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const wait = sinceLast >= gapWanted ? 0 : Math.round(gapWanted - sinceLast);
     this.sql.exec(
       `UPDATE host_governor SET tokens = ?, refilled_at = ?, last_grant_at = ?, granted = granted + 1, updated_at = ? WHERE host = ?`,
-      tokens - 1,
+      tokens2 - 1,
       now,
       now + wait,
       new Date(now).toISOString(),

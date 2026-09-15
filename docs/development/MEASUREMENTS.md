@@ -10955,3 +10955,110 @@ reachable from this session and is NOT measured here**; CAP-8 will meet it first
 re-measure this table against a real Drive export rather than inherit it. COFF-6's census
 (2026-08-03: ODF is ZERO in 43,282 oaklandca.gov assets) is UNREVISED and still stands — it
 was about NATIVE ODF in the wild, and nothing here contradicts it.
+
+
+## 2026-09-14 · COFF-10 — what the three OpenDocument ENTRIES read out of a REAL producer's `content.xml`, and what one part cannot reach (instruments: LibreOffice 26.8.0.3 headless, then `bio-plane/src/odf.mjs`'s own entries through `formats.mjs`)
+
+COFF-9 measured the ODF PACKAGE (where `mimetype` sits, how big it is, that the manifest is
+present). This measures the DOCUMENT: what the three registry entries actually emit when a real
+producer's `content.xml` is handed to them, and — the part that matters more — which DEC-5
+extras one part genuinely cannot supply. The instrument is the shipped entries themselves, not a
+second reader that could disagree with them.
+
+**Method.** Three packages produced headless from flat-ODF (`.fodt` / `.fods` / `.fodp`) sources
+carrying the constructs under test, so the CONTENT is chosen and the CONTAINER is entirely
+LibreOffice's: `soffice --headless --convert-to odt|ods|odp`. Flat ODF was used for all three
+because Impress has no plain-text import filter and because a formula, a tracked change and a
+hidden sheet cannot be expressed in a `.txt` or `.csv` source at all. Each output was then read
+back through `odtEntry` / `odsEntry` / `odpEntry`.
+
+**PRE-ITEM, MEASURED against the pristine `origin/main` worktree at `d791aa7`, not assumed: the
+REGISTRY answered `undetermined` / `confidence:"none"` on all three real files, by bytes AND by
+content type**, while COFF-9's container tier in the same tree already answered `odt` / `ods` /
+`odp`. That gap — a container the plane can name and no entry that can read it — is exactly what
+this item closes. Post-item the registry answers the flavour with `confidence:"certain"`.
+
+| | `.odt` | `.ods` | `.odp` |
+| --- | --- | --- | --- |
+| container size (bytes) | 13,103 | 8,938 | 14,351 |
+| central-directory entries | 9 | 9 | 8 |
+| `content.xml` DECLARED uncompressed | 4,905 | 5,252 | 11,095 |
+| …as a share of the container | 37.4 % | 58.8 % | 77.3 % |
+| registry detect BY BYTES | `odt` / **certain** | `ods` / **certain** | `odp` / **certain** |
+| registry detect BY CONTENT TYPE | `odt` / likely | `ods` / likely | `odp` / likely |
+| unit count emitted | 4 paragraphs | 2 sheets | 3 slides |
+| link partitions | deferred 1 | (none in this file) | deferred 1 |
+| evidentiary kinds | `tracked-change` ×2, `comment` ×1 | `formula` ×1, `hidden-sheet` ×1 | `speaker-notes` ×1, `hidden-slide` ×1 |
+| `text.counts.chars` | 203 | 60 (9 cells, 1 formula) | 125 (+41 notes chars, held apart) |
+| evidentiary `undetermined` | `meta.xml`, `META-INF/manifest.xml` | same | same |
+
+- **THE SIZE ARGUMENT IN §16 IS CONFIRMED AND IS SMALLER THAN IT SOUNDS.** Part II §16 says the
+  OpenDocument readers are "one `content.xml` part each, smaller than their OOXML counterparts".
+  One part is right; *small* is not, and the metric is the reason. `content.xml` is 37–77 % of
+  the whole container's declared bytes — a single part, but the DOMINANT one — because
+  OpenDocument puts the body, the automatic styles, the tracked changes, the annotations AND the
+  speaker notes in it, where OOXML spreads the same material over a main part plus
+  `comments.xml` plus n worksheets or n slides plus n notesSlides. So COFF-6's bound applies to
+  ONE part here rather than a summed set, and the bound is the same 20 MiB of declared
+  uncompressed text-part bytes.
+
+- **EVERY DEC-5 EXTRA THE ODF SIBLINGS CARRY IN `content.xml` WAS FOUND AND READ.** Tracked
+  changes with author, date and the SUPERSEDED WORDING (`<text:tracked-changes>` +
+  `<office:change-info>`, the body's change-start/change-end/change marks locating them);
+  annotations as comments, inline in the paragraph they annotate; a formula beside its cached
+  value; hidden rows and columns; speaker notes nested in their own page; hidden slides. **Two
+  were NOT where the spec reading would have put them, and both would have been silently missed
+  without a real producer:** LibreOffice writes a hidden SHEET as `table:display="false"` on the
+  table's STYLE (never on `<table:table>`) and a hidden SLIDE as
+  `presentation:visibility="hidden"` on the page's DRAWING-PAGE STYLE — both in content.xml's own
+  `<office:automatic-styles>`, which is what makes them readable from one part at all. The
+  entries read both spellings, element and style, and the suite's over-strictness arm pins that.
+
+- **TWO DEC-5 EXTRAS ONE `content.xml` CANNOT SUPPLY, MEASURED AND STATED RATHER THAN DISCOVERED
+  LATER.** OpenDocument keeps the core properties (creator, title, created/modified, revision) in
+  `meta.xml` and embedded objects and images in separate members listed by
+  `META-INF/manifest.xml`. The OOXML entries emit a `core-properties` item and content-address
+  embeddings into the `intra` partition; these entries emit NEITHER. **That is the finding with
+  the sharpest consequence**: an absent `core-properties` item would otherwise read as "this
+  document names no author", and `intra: 0` as "this document embeds nothing". Both are carried
+  as NAMED markers (`{part, why:"outside_content_xml_not_read", detail}`) on every successful
+  read, and the fixture's `meta.xml` deliberately carries a creator the entries do not surface,
+  so the suite is asserting a real silence and not an empty one. `CLAUDE.md`: absence at one
+  level is not evidence of absence at the next, and saying which is true is a first-class
+  obligation.
+
+- **THE DETECT LADDER IS ONE STEP STRONGER THAN THE OOXML ENTRIES', AND THE REASON IS MEASURED.**
+  The three OOXML entries top out at `likely` from bytes, because their discriminating
+  declaration is inside a DEFLATED part and I7's `detect` is synchronous. ODF's discriminator —
+  the `mimetype` member — is required first and STORED, and all three real packages honour that
+  (COFF-9's table), so the entries read the value synchronously, CRC-verified, and compare it
+  exactly. They answer `certain`. **Reading part NAMES alone would not merely have been weaker,
+  it would have been WRONG: all three OpenDocument flavours have identical part names, so a
+  names-only ladder makes whichever entry registered first claim every ODF package.**
+
+- **`table:formula` is carried VERBATIM, OpenFormula prefix included** — the real file reads
+  `of:=SUM([.B2:.B3])` beside a cached `150`. It is not rewritten into A1/xlsx dialect: the
+  derivation is frequently the finding, and translating it would be this module inventing a
+  formula the file does not state. A first attempt at the fixture proved the point from the other
+  side — writing `of:=SUM(...)` into the FLAT source made LibreOffice re-prefix it to
+  `of:=of:=SUM(...)` and the cell evaluated to `Err:510`, which is what the file then honestly
+  said. The source was corrected to `=SUM(...)`; the episode is kept because it is a receipt that
+  the value shown is the producer's and not ours.
+
+**OVER-STRICTNESS, measured not eyeballed.** The three OOXML entries' full `detect` + `structure`
++ `text` outputs over a shared fixture set (6,519 serialised bytes, 3 entries, 6 links, 12
+evidentiary items — the corpus is printed and floored, because a digest over an empty object
+agrees for free) are **byte-identical between this tree and a pristine `git worktree add` of
+`origin/main` at `d791aa7`: sha256 `050ae28e36ca4be2b8bf5cb3e221a617e765c8841daad88831beba6cc2e5edeb`
+on both sides.** The only change this item makes to an OOXML source is the `export` keyword on
+`formats-xlsx.mjs`'s `sheetCellRef`, which the `.ods` entry imports rather than duplicating.
+
+**STATED LIMITS, because one producer is still not the world.** One producer, one version, one
+platform (macOS arm64), three documents, all machine-generated. **GOOGLE DRIVE'S OWN ODF EXPORT —
+the source Bob's 2026-09-14 ruling actually points these entries at — WAS NOT REACHABLE FROM THIS
+SESSION AND IS NOT MEASURED HERE**, exactly as COFF-9 recorded; CAP-8 meets it first and should
+re-measure this table against a real Drive export rather than inherit it. The real `.ods` carried
+no cell hyperlink (the flat source had none), so the `sheet-cell` link case is driven only by the
+hermetic fixture and not by producer output — named rather than glossed. COFF-6's census
+(2026-08-03: ODF is ZERO in 43,282 oaklandca.gov assets) is UNREVISED and still stands: it was
+about NATIVE ODF in the wild, and nothing here contradicts it.

@@ -47,6 +47,7 @@ import { extractPdfStructure } from "./pdfstructure.mjs";
 import { docxEntry } from "./docx.mjs";
 import { xlsxEntry } from "./formats-xlsx.mjs";
 import { pptxEntry } from "./pptx.mjs";
+import { odtEntry, odsEntry, odpEntry } from "./odf.mjs";
 
 /* Registration order is dispatch order within a pass: the first entry whose
    detect() answers wins that pass. Kept insertion-ordered by Map. */
@@ -208,3 +209,24 @@ registerFormat(xlsxEntry);
    evidentiary envelope (SPEAKER NOTES distinct from slide text, core
    properties). */
 registerFormat(pptxEntry);
+
+/* THE THREE OPENDOCUMENT ENTRIES (COFF-10, 2026-09-14) — `odf.mjs`, reading
+   COFF-9's `partMap:"odf"` discrimination and ONE `content.xml` part into the
+   SAME I2 shape and DEC-5 envelope the OOXML sibling of each kind produces:
+   `.odt` → docx.mjs's paragraphs and `doc-para` references, `.ods` →
+   formats-xlsx.mjs's sheets and `sheet-cell` references, `.odp` → pptx.mjs's
+   slides and `slide-shape` references. No new IC-1 union member; I7 is
+   CONFIRMED by three more entries in the existing shape, not changed.
+   Warranted by Bob's 2026-09-14 Drive ruling (a Drive link keeps the link and
+   the harvest is the OpenDocument export), not by the census — COFF-6's ZERO
+   native ODF assets in 43,282 keys stands unrevised.
+
+   THESE THREE CALLS ARE THE ENTIRE COST OF THE FORMAT, which is the D-70
+   property this registry exists to keep: `index.mjs` never learns the names
+   "odt", "ods" or "odp", and `formats-odf.test.mjs` asserts that by grepping
+   the source for them and finding none. Registration order matters only
+   within a pass, and these three cannot collide with each other — each
+   answers on its own `mimetype` value, compared exactly. */
+registerFormat(odtEntry);
+registerFormat(odsEntry);
+registerFormat(odpEntry);
