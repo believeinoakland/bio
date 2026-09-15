@@ -6203,3 +6203,27 @@ entities or `at` would become a second author of it.
 until this runs:** a NULL `page_count` on a pre-CAP-9 capture means the page set was
 undetermined at mint and is STATED — never defaulted to a number, never a zero, and
 never a refusal.
+
+## CLAIM 2026-09-14 M0 (M0-32 — the census of document classes over COFF-6's corpus; BREADTH §7 row 1, a measurement, nothing built)
+session: m032-class-census (worktree `agent-a97980a7817a40765`)
+opened: 2026-09-14T00:00:00Z
+paths: **by REGION, and nothing in the plane** —
+  - `tools/m032-class-census.py` — **NEW**, the census instrument. Named for the item per the
+    spawn brief. It does NOT re-define the corpus: it imports `_bucket_keys`, `_get` and the
+    Legistar matter shape from `tools/measure-office-corpus.py` (COFF-6's own probe, which
+    holds this corpus's definition and which CAP-7 extended rather than duplicated on
+    2026-09-14). **`tools/measure-office-corpus.py` is READ, never edited** — no claim on it.
+  - `docs/development/MEASUREMENTS.md` — ONE APPENDED `## M-nn` section only (the count per
+    class with instrument, command, corpus size and the unclassified tally). No existing
+    section edited. The id is minted with `node tools/mintid.mjs M`.
+  - `docs/development/EXTRACTION-BREADTH-DESIGN.md` — **two regions**: (1) §2's closing
+    paragraph, which gains the census order with its citation; (2) the front matter — the
+    `Incomplete sections` §2 bullet discharged and the Status `as of` bumped. **NOT** §3,
+    **NOT** §4, **NOT** §5, **NOT** §6, **NOT** §7's table, **NOT** §8.
+  - `docs/development/QUEUE.md` — **NOT CLAIMED.** The `### M0-32` row's `landed:` line is
+    CONDUCT's at integration.
+  **NOT** `bio-plane/src/store.mjs`, **NOT** `bio-plane/src/index.mjs`, **NOT**
+  `bio-plane/scripts/bio-checks.mjs` (REC-89 / REC-93 / REC-97 / CAP-12 / SK-7 hold regions in
+  those three; the standing cap of five is spent), **NOT** `docprofile/**` (this item registers
+  no content type — that is FW-18's, BREADTH §7 row 2), **NOT** `pdf-worker/**` (CPDF-20),
+  **NOT** any plane file: **no plane file moves for this item.**
