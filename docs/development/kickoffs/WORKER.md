@@ -237,3 +237,30 @@ not see**; what your brief did not predict; every delegation; any decision for B
 
 **State plainly what you could NOT do.** A partial item reported honestly is worth more
 than a complete one reported loosely, and a narrowed unknown is a legitimate result.
+
+
+## A LOG FILE UNDER `/tmp` WITH A GENERIC NAME IS NOT YOURS, AND ITS `provenance:` LINE IS THE ONLY THING THAT SAYS SO.
+
+**Measured 2026-09-15 by the REC-98 worker, and it is recorded here because it cost real time
+and would have cost a false bug report.** A battery redirected to `/tmp/final-battery.log` came
+back **198/202 with four suites FAILED — all four of which pass alone at exit 0.**
+
+**It was another session's run.** `/tmp` is shared across every worktree and every session on
+this machine, a generic filename collides, and the second writer wins. The log that came back
+was a real battery, honestly reported, of a tree that was not this worker's: its `provenance:`
+line named a DIFFERENT HEAD and listed a suite that has never existed in that worktree.
+
+**What makes this dangerous rather than merely annoying is that it looked exactly like damage
+the worker had done.** All four named suites are repository readers, and a worker that has just
+edited repository prose has every reason to believe it broke them. The obvious next move — start
+bisecting your own change — is wasted work against a subject that was never yours.
+
+**The practice, and it is two lines.** Write run logs into YOUR OWN WORKTREE or into a path
+carrying your worktree's name, never a bare `/tmp/<generic>.log`. And **before you believe any
+figure you did not watch print, read the log's `provenance:` line and check the HEAD against
+your own** — the line exists for exactly this, and it is the only discriminator, because the
+contents of a foreign battery are indistinguishable from the contents of yours.
+
+**The general form, which is this project's oldest shape wearing new clothes:** a shared,
+unqualified name is an identity nobody owns, so two different facts arrive under it and nothing
+fails loudly. Ask what the figure is a figure OF before you ask what it means.
