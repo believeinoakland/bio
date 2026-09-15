@@ -805,14 +805,19 @@ const REGISTER_FLOOR = {
      `NEGATIVE CONTROL:` declaration states eight arms; all eight are RUN by
      `test/nc-rec84.mjs` and all eight came back AS DECLARED.
 
-     THE VALUES BELOW ARE THE MERGED TREE'S, re-read from a green `--strict` run taken after
-     the merge commit — not either branch's, because on a merged tree neither branch's numbers
-     are true. Nothing FELL. ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in
-     this file, here and in `FLEET_FLOOR`, which is the documented state; `FLEET_FLOOR` is
+     THE VALUES BELOW ARE THE MERGED TREE'S AND NEITHER BRANCH'S, re-read from a green
+     `--strict` run taken AFTER the merge commit `40f34e1`, whose provenance line reports
+     199 of 199 discovered items in the commit: `REGISTER FLOOR  arms 989/975 · classified
+     182/180 · corpus (suites read) 183/181 · GREW by 14 arm(s)`. **This is the measurement
+     that proves the collapse was necessary**: both sides of the conflict said 975 and the
+     merged truth is 989. The +14 arms and +2 suites are REC-84's `content-extent-leg`
+     (8 arms) and REC-83's `content-reads` (6), each a suite the other branch did not have.
+     Nothing FELL. ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this
+     file, here and in `FLEET_FLOOR`, which is the documented state; `FLEET_FLOOR` is
      UNMOVED and none is owed, since neither item adds a fleet member or a fleet suite. */
-  arms: 975,
-  classified: 180,
-  corpus: 181,
+  arms: 989,
+  classified: 182,
+  corpus: 183,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
