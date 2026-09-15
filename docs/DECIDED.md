@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-953 rulings across 84 documents.
+954 rulings across 84 documents.
 
 ## DEC-
 
@@ -1865,6 +1865,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/MILESTONES.md:182`
 - PROPOSED → RESPONSES → RESOLUTION → CHANGING → CHANGED → SETTLED | | record a defect, a number, or a design | **`DEBT.md` / `MEASUREMENTS.md` / the design docs** | append-only; knowledge, and an INPUT to the queue, never a rival | | wake a session that is already mid-run | **a short nudge, pointing at what to…  
   `docs/development/ORCHESTRATION.md:98`
+- `DECIDED.md` within a minute and git DROPPED the duplicate as an identical patch, and that was not luck — a regeneration has exactly ONE correct output, so two sessions cannot disagree on content, only on ordering, which is the one thing git resolves unaided.  
+  `docs/development/ORCHESTRATION.md:406`
 - **2026-07-31** — CORRECTED 2026-07-31, and the correction is worth reading because the original was right for a premise that stopped holding.** The rule said "`ARCH` works in the MAIN checkout; area sessions work in worktrees", and its reason was that `ARCH` edits the cross-cutting registry — `CLAIMS.md`, `INTERFACES.md`, this…  
   `docs/development/PARALLELISM.md:226`
 - **2026-09-15** — THE FALSIFICATION RULE, CORRECTED 2026-09-15 (CONDUCT #11, on BOB #11's argument), and the correction is worth more than the clause it fixes.** Every `running` row carries a clause telling a reader how to check the status against the world.  

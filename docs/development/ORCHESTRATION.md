@@ -394,3 +394,25 @@ every tick and treats any delivered signal as an accelerator. Sessions follow th
    process at the moment of truth, the lane claimed first), not on the zombie's own
    stand-down. Visibility is therefore a LIVENESS property: a session anyone might
    need to interrupt is spawned through a chip the operator clicks, never headless.
+
+7. **A RED `main` IS REPAIRED BY WHOEVER SEES IT WHEN THE REPAIR IS DETERMINISTIC, AND
+   ROUTED TO THE PUSHER WHEN IT NEEDS JUDGEMENT** (2026-09-15, BOB #11 and CONDUCT #11,
+   from a case that settled it rather than from a preference; the loop's half is in
+   `kickoffs/CONDUCT.md` and this is its mirror, so one rule lives in the two files their
+   owners maintain). A red `main` is not one session's embarrassment: it fails the gate of
+   every worker that pulls it, on a defect none of them caused, and eight were live when
+   this arose. **The line is not who saw it first and not who pushed it — it is whether the
+   repair is a COMMAND or a JUDGEMENT.** The deciding case: both sessions regenerated
+   `DECIDED.md` within a minute and git DROPPED the duplicate as an identical patch, and
+   that was not luck — a regeneration has exactly ONE correct output, so two sessions cannot
+   disagree on content, only on ordering, which is the one thing git resolves unaided. A
+   hand-written repair has MANY correct outputs, so two sessions write different prose into
+   one region of an already-broken tree and the second hits a real conflict while the
+   workers wait. So: **regenerate an index, rebuild a bundle, re-run a generator, register a
+   drop the instrument itself dictates — on sight, whoever you are.** Anything needing a
+   choice goes to the pusher, who is closest to the intent. Two riders: **announce in the
+   same minute you START**, one line before the gate, because a duplicate on a deterministic
+   fix costs a skipped cherry-pick and a duplicate on a judgement call costs a conflict
+   nobody wanted; and **the pusher is never RELIEVED** — *whoever sees it* is permission,
+   not transfer, and a red `main` nobody claims is the wrong-status class arriving as a
+   repair nobody owes.
