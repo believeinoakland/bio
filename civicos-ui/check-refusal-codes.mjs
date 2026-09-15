@@ -445,7 +445,8 @@ const FLOOR = {
                        // Was 163 at REC-76, 105 at PL-15, 81 at PL-4, 70 at PL-3.
   /* D-309 2026-09-10: 437 -> 465. pristine tree printed 465, this item's 465 — so 28 of this move was PRE-EXISTING SLACK and 0 is D-309's. */
   /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): census 465 -> 472. PRISTINE `origin/main` at 9a713f1 printed 470, this item's tree 472 — so 5 of this move was PRE-EXISTING SLACK and 2 is REC-84's. */
-  census: 472,    /* MOVED 433 -> 437, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), from
+  /* RE-READ 2026-09-14 by REC-84 AFTER MERGING `origin/main` (commit 40f34e1): census 472 -> 474. The figure REC-84 set an hour earlier was true of its own branch and is not true of the merged tree — the merge with `origin/main` brought REC-83's content-grain reads, whose two new codes join the plane's census. Read off the merged tree's own green run, never incremented by hand. */
+  census: 474,    /* MOVED 433 -> 437, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), from
                           the figure this file PRINTED on a green run (`walk: UNION (the census) 437
                           codes over 27 files`) and never by adding to what was here.
                           **THREE OF THE FOUR ARE PRE-EXISTING SLACK AND ONE IS THIS ITEM'S.**
@@ -742,7 +743,8 @@ const FLOOR = {
   vocabularyTerms: 64, // + REC-69's TWO `RUN_CONTEXTS` terms (inquiry, project).
   /* D-309 2026-09-10: 248 -> 267. pristine tree printed 268, this item's 267 — so 20 of this move was PRE-EXISTING SLACK and -1 is D-309's. */
   /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): untranslated 267 -> 268. PRISTINE `origin/main` at 9a713f1 printed 268, this item's tree 268 — so 1 of this move was PRE-EXISTING SLACK and 0 is REC-84's. */
-  untranslated: 268,   /* MOVED 246 -> 248, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3),
+  /* RE-READ 2026-09-14 by REC-84 AFTER MERGING `origin/main` (commit 40f34e1): untranslated 268 -> 270. The figure REC-84 set an hour earlier was true of its own branch and is not true of the merged tree — the same two codes from the merge; they are NOT in reach of a surface, so `reachGap` is unmoved at its ceiling of 40 and this figure and that one move independently, which is the partition arm's whole point. Read off the merged tree's own green run, never incremented by hand. */
+  untranslated: 270,   /* MOVED 246 -> 248, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3),
                           from arm F's own printed partition (F1=2 F2=1 F3=18 F4=94 F5=6 F6=127,
                           summing to 248). **ALL OF THIS MOVE IS PRE-EXISTING SLACK AND NONE OF IT IS
                           THIS ITEM'S** — the partition summed to 248 against a floor of 246 with

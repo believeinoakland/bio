@@ -11288,3 +11288,33 @@ REPRODUCIBLE once its new suite was in the commit. The CONTAMINATED figures
 (`975 / 180 / 181` with one suite in no commit) were refused as a source, which
 is D-238's rule: a floor moved while a phantom is present is permanently too
 high and the gate then gets switched off.
+
+### RE-READ ON THE MERGED TREE, 2026-09-14 (REC-84 x REC-83/M0-28/COFF-10/M0-30, commit `40f34e1`)
+
+Every figure in the block above is TRUE OF REC-84's BRANCH and NOT of the tree
+anybody will merge, which is the receipt this repository has collected twice
+before (PL-11 and SK-1 each remeasured a whole floor block from its own tree,
+both were right where they stood, and both were wrong on the merge). Re-read
+from the merged tree's own green runs:
+
+| figure | branch | merged | why it moved |
+| --- | --- | --- | --- |
+| battery | 189/189 · 11,532 | **190/191 · 11,770** | +2 suites from main (`content-reads`, `formats-odf`); the one red is main's own, below |
+| `REGISTER_FLOOR` arms | 975 | **989** | +8 REC-84's `content-extent-leg`, +6 REC-83's `content-reads` |
+| `REGISTER_FLOOR` classified / corpus | 180 / 181 | **182 / 183** | one new suite each side |
+| guard `census` | 472 | **474** | REC-83's two new codes |
+| guard `untranslated` | 268 | **270** | the same two, and they are NOT in reach |
+| guard `reachGap` (CEILING) | 40 | **40** | unmoved on every tree measured |
+
+**BOTH SIDES OF THE `REGISTER_FLOOR` CONFLICT CARRIED 975/180/181 AND THE MERGED
+TRUTH IS 989/182/183.** That is the measurement that makes this file's standing
+instruction concrete: a keep-both here, or a take-either-side, installs 14 arms
+of slack in a ratchet whose whole purpose is to have none — and it would have
+looked correct to a reader comparing the two numbers, because they were equal.
+
+**ONE RED ON THE MERGED TREE IS NOT THIS ITEM'S AND IS MEASURED SO.**
+`mergecarry.test.mjs` names `cc8187d:bio-plane/scripts/coverage.mjs` as an
+unregistered drop in main's own history. Reproduced on a pristine
+`git worktree add` of `origin/main` holding none of REC-84's work: **57 pass / 1
+fail, exit 1, the identical path named.** D-335's class, and CONDUCT's to
+register.

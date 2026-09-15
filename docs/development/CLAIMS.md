@@ -4913,6 +4913,8 @@ released:
 
 
 
+
+
 ## CLAIM 2026-09-14 RECORD (REC-84 — the basis leg's `extent` in frontmatter, the C-2.8 / C-25.10 grammar arms, the version-leg `content_id` writer, and the suggested legs' `document` default)
 
 Session: RECORD worker for REC-84, spawned by CONDUCT #10, Opus 5.
@@ -5068,3 +5070,44 @@ in `src/store.mjs`, whose `regionLines` is a property of the MERGED source. The
 front matter of `BIO_Content_Framework_v0_10.md` was corrected in the landing
 commit as CLAUDE.md requires — the §14.5 and §18 bullets, which named REC-84 as
 still absent.
+
+
+## CLAIM ADDENDUM 2026-09-14 RECORD (REC-84 — the merge with `origin/main`, and the figures RE-READ on the merged tree)
+
+Appended rather than rewriting the release above, because that block's figures
+were TRUE OF THE BRANCH and the branch is no longer the tree anybody will merge.
+**`origin/main` moved onto this item's own ground while it ran** — REC-83 landed
+the content-grain READS (`cc8187d`), with M0-28, COFF-10 and M0-30 beside it —
+and both items had edited `src/store.mjs`, `test/content-extent.test.mjs`,
+`scripts/coverage.mjs`'s `REGISTER_FLOOR`, three planning documents and the
+content framework's front matter. The merge was therefore done HERE (`40f34e1`)
+rather than handed to CONDUCT blind, by a session that understands both halves of
+the content work. `src/store.mjs` and `test/content-extent.test.mjs` AUTO-MERGED
+and were verified by RUNNING the suites rather than by reading the diff.
+
+**THE CONFLICT WORTH READING IS `REGISTER_FLOOR`, and it is the six-times hazard
+in its most dangerous form: both sides carried the SAME three numbers
+(975/180/181) for entirely different reasons.** Taking either side unchanged
+would have looked right and been wrong, because on a merged tree the two items'
+arms ADD. Collapsed to ONE key set with both sides' notes kept, and the values
+re-read from the merged tree's own green run: **arms 989, classified 182, corpus
+183** (`GREW by 14`), the +14 being REC-84's `content-extent-leg` (8) and REC-83's
+`content-reads` (6), each a suite the other branch did not have. Two DEC-49 guard
+floors also moved again on the merged tree — `census` 472 -> 474 and
+`untranslated` 268 -> 270, both REC-83's codes; `reachGap` read 40, its ceiling,
+on every tree measured.
+
+Gates ON THE MERGED TREE, every exit read UNPIPED: battery **190/191 · 11,770**,
+`coverage.mjs --strict` **exit 0**, UI harness **exit 0**, the eight control arms
+re-run and **all eight AS DECLARED** with every restore byte-identical,
+`plancheck --local` clean.
+
+**THE ONE RED IS NOT THIS ITEM'S AND IS PROVEN SO RATHER THAN ASSERTED.**
+`mergecarry.test.mjs` fails naming ONE unregistered drop in main's own history —
+`cc8187d:bio-plane/scripts/coverage.mjs`, CONDUCT's merge of REC-83 taking one
+side of that same `REGISTER_FLOOR` whole. It was reproduced on a PRISTINE
+`git worktree add` of `origin/main` holding none of this item's work, where it
+fails identically (57 pass / 1 fail). It is **D-335's class exactly** — the row
+that says this instrument goes red only AFTER publication, on everyone's gate —
+and it fails for every checkout of main until the register row is written.
+**CONDUCT's act, named in the report's "for CONDUCT" list.**

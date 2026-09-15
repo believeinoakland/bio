@@ -803,9 +803,36 @@ const REGISTER_FLOOR = {
      suite) on top of M0-28's 975. The branch's own block (973/180/181, a tree without M0-30 and
      M0-28) was dropped at the merge and declared; this is the re-read the loop promises. One key
      set, grepped after writing. Nothing FELL. FLEET_FLOOR unmoved. */
-  arms: 981,
-  classified: 181,
-  corpus: 182,
+  /* MOVED 2026-09-14 by REC-84 (worktree agent-ae95c3be71f5bd167), on its OWN branch, from
+     967/179/180 to 975/180/181 — read off a green `--strict` run at `47ec7cb` where the
+     provenance line reported 197 of 197 discovered items in the commit. THE CONTAMINATED
+     FIGURES WERE REFUSED AS A SOURCE AND THE REFUSAL IS THE POINT (D-238): an earlier run,
+     before the new suite was committed, printed exactly the same three numbers marked
+     `contaminated: 1 suite(s) no other checkout has`. Identical, and still the wrong source.
+     REC-84's own cause is ONE new suite, `test/content-extent-leg.test.mjs`, whose
+     `NEGATIVE CONTROL:` declaration states eight arms; all eight are RUN by
+     `test/nc-rec84.mjs` and all eight came back AS DECLARED.
+
+     THE VALUES BELOW ARE THE MERGED TREE'S AND NEITHER BRANCH'S, re-read from a green
+     `--strict` run taken AFTER the merge commit `40f34e1`, whose provenance line reports
+     199 of 199 discovered items in the commit: `REGISTER FLOOR  arms 989/975 · classified
+     182/180 · corpus (suites read) 183/181 · GREW by 14 arm(s)`. **This is the measurement
+     that proves the collapse was necessary**: both sides of the conflict said 975 and the
+     merged truth is 989. The +14 arms and +2 suites are REC-84's `content-extent-leg`
+     (8 arms) and REC-83's `content-reads` (6), each a suite the other branch did not have.
+     Nothing FELL. ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this
+     file, here and in `FLEET_FLOOR`, which is the documented state; `FLEET_FLOOR` is
+     UNMOVED and none is owed, since neither item adds a fleet member or a fleet suite. */
+  /* ---- SECOND MERGE OF `origin/main` INTO REC-84, 2026-09-14, and the third time this
+     key has been resolved today. CONDUCT #11's note above moved main to 981/181/182 for
+     REC-83's `content-reads`; REC-84's note above moved its own branch to 989/182/183 for
+     the SAME suite PLUS `content-extent-leg`. The merged tree holds both, so 989/182/183
+     stands and 981/181/182 is a strict subset of it — COLLAPSED TO ONE KEY SET, both
+     notes kept, and the surviving values RE-VERIFIED by a green `--strict` run on this
+     merge rather than reasoned about. ---- */
+  arms: 989,
+  classified: 182,
+  corpus: 183,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
