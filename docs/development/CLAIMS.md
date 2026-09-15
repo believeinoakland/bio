@@ -6452,3 +6452,17 @@ what is needed, at SKILL's next touch (SK-7's integration or SK-8's spawn), one 
   EXTRACT runs in the run — citing §7.3 — with the same comment saying why the old sentence
   was wrong. The §5 line of the front matter's Incomplete list updates in the same commit.
 released:
+
+## CLAIM 2026-09-14 BOB #11 (the fresh-worktree trap corrected to three packages; the stale-ledger rule for designs)
+session: BOB #11 (worktree `bio-worktrees/BOB`, branch `bob-audit`)
+opened: 2026-09-14
+authority: CONDUCT #11's routing of CAP-12's measurement (it does not edit `CLAUDE.md` on a finding
+  alone); `kickoffs/BOB.md` is this role's own; the measurement is in `MEASUREMENTS.md` and was
+  re-verified here off the four `package.json` files and the battery runner's own skip path — which
+  is why the entry says the skip is NAMED and the exit status is the misleading part, rather than
+  repeating the report's word "silently".
+paths:
+  - `CLAUDE.md` — the fresh-worktree trap entry only (FULL-class gate, and it was run)
+  - `docs/development/kickoffs/BOB.md` — one new closing-protocol rule
+released: 2026-09-14 — both landed in one commit behind a green FULL gate; nothing else in either
+  file moved.

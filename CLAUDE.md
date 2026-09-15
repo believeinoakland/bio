@@ -327,16 +327,34 @@ plan without running; `--full` forces everything. The full set, when it is owed:
   that caught both. Writing the lesson in a commit message did not prevent the
   second occurrence, which is why it is here.
 
-- **A FRESH WORKTREE HAS NO `bio-plane/node_modules`, AND A BASELINE MEASURED BEFORE
-  `npm ci` IS A WRONG NUMBER CARRYING FULL CONFIDENCE.** Two workers hit this
+- **A FRESH WORKTREE HAS NO `node_modules` IN ANY OF THE THREE PACKAGES THAT HAVE
+  DEPENDENCIES, AND A BASELINE MEASURED BEFORE `npm ci` IS A WRONG NUMBER CARRYING FULL
+  CONFIDENCE.** Two workers hit this
   independently on 2026-08-10 and both reported it rather than working around it: one
   read `28/157 green` with 129 suites failing `ERR_MODULE_NOT_FOUND: miniflare`, the
   other `43 pass / 3 fail, exit 1` on the UI harness, whose suites drive the real plane
   through miniflare. The true baseline in both cases was green. **This is worse than an
   ordinary flake because it looks exactly like the damage your own change did** — the
   standing instruction to measure your own baseline and trust it over the brief points
-  the wrong way here unless you install first. Run `npm ci` in `bio-plane/` before you
-  measure anything in a new worktree.
+  the wrong way here unless you install first. **Run `npm ci` in `bio-plane/`, `pdf-worker/` AND
+  `ocr-worker/` before you measure anything in a new worktree** — three packages carry
+  dependencies and `agent-worker/` carries none (measured 2026-09-14 off the four
+  `package.json` files, not recalled). **The entry said `bio-plane/` alone for five weeks
+  and that was one package short of the instrument.**
+
+  **THE SECOND SIGHTING IS THE DANGEROUS ONE, AND IT LOOKS NOTHING LIKE THE FIRST.**
+  Measured 2026-09-14 (CAP-12's worker; `MEASUREMENTS.md` carries both arms with their
+  shas): a pristine worktree with `npm ci` in `bio-plane/` only ran the battery **green
+  but one, and EXITED 0** — a whole fleet member's suite and its assertions simply were
+  not in the total. The runner is not at fault and must not be "fixed": it SKIPS A MEMBER
+  BY NAME on purpose (VF-3/FL-2, so a fresh checkout gets a named skip rather than a red
+  `main`), and it printed the name. The hazard is that the HEADLINE and the EXIT STATUS
+  both read healthy, so a session scanning the tail — which is what the standing
+  instruction to trust your own baseline over the brief encourages — records a pass over a
+  battery that never ran a member. The 2026-08-10 sighting was loud (~14 green, a hundred
+  `ERR_MODULE_NOT_FOUND`) and therefore cheap; this one is quiet and therefore not.
+  **So read the SKIP COUNT and the SUITE TOTAL, never the exit status alone** — if a member
+  is named as skipped, your baseline is not a baseline yet.
 
 - **New schema tables go BEFORE the `host_governor` block** in `schema.mjs`.
   `hygiene.test.mjs` asserts the literal ends on a `);`.

@@ -1702,7 +1702,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - NOTATION IS SETTLED: classDiagram for structure, stateDiagram-v2 for lifecycle, edges labelled with the ACT.  
   `docs/development/kickoffs/BOB.md:105`
 - Report what was DONE and what was DECIDED.  
-  `docs/development/kickoffs/BOB.md:194`
+  `docs/development/kickoffs/BOB.md:206`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
   `docs/development/kickoffs/CAPTURE.md:99`
 - debt that can be avoided; superseded rules in tests are CORRECTED, never exempted.** All of these earned their place; the ledger has the receipts. ## Bob's rulings, already made.  
