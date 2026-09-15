@@ -652,6 +652,35 @@ Credentials are in `.env`; git is configured to push as the bio persona (see the
 recalled memory). Reserve gated actions — deploying the plane or the installer —
 for BOB.
 
+## KILL THE TREE, NOT THE LEAF — OR THE LEAF COMES BACK AND THE NEXT READER MEASURES A FRESH ORPHAN RATHER THAN A SURVIVOR.
+
+**Measured 2026-09-14 by CONDUCT #11, found 3.5 hours later by BOB #11, and recorded here
+because it existed nowhere but a transcript.** A worker wave left processes running past
+their agents. I reaped them by killing the CHILD processes I could see. Each parent
+respawned its child, so the reap looked successful at the moment I checked and the estate
+was fully repopulated by the time anybody looked again. **The fix is one word of ordering:
+kill the PARENT first, then anything it left behind.**
+
+**The part worth keeping is not the ordering — it is what the mistake hides.** An orphan
+that respawns is INDISTINGUISHABLE from an orphan nobody reaped: same command, same shape,
+same parent-less look. The only thing that separates them is ELAPSED TIME, which is the
+one property a `ps` snapshot does not carry. So a reap that failed this way reports as a
+reap that was never attempted, and the evidence of the attempt is destroyed by the
+attempt's own failure.
+
+**Check a reap by its age, not by its absence.** After killing, re-list and read the START
+TIME of anything still standing: a process younger than your kill is a respawn and your
+kill hit a leaf; a process older than your kill survived and needs a harder signal. A
+count of zero is good evidence; a count that recovered to the same number is the failure
+wearing success's clothes, and it is the same shape as every other wrong status this file
+records — two different facts that present identically, told apart only by the one reading
+nobody takes.
+
+**`node tools/waitquiet.mjs` reports what is running and is the honest instrument here**;
+`ListAgents` tells you which of your own agents the harness still considers live, which is
+a different question from which processes exist and should be asked as well as, never
+instead of.
+
 ## Standing down (added 2026-09-10 — ORCHESTRATION's LIVENESS rule 4, in the file whose owner performs it)
 
 **STAND-DOWN IS VERIFIED, NEVER ANNOUNCED.** Before the words "standing down": list every
