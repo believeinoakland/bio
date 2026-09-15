@@ -7151,3 +7151,126 @@ ADDITIVE on both, as proposed and as the registry's own rule scores it: two new 
 **ONE THING THIS RESOLUTION FIXES RATHER THAN RECORDS, because it was a leak and not a shape:** the proposal's own minted-to-cited ratio — the instrument §7.3 (6) put there to catch a machine manufacturing work nobody asked for — counted content rows with NO BUNDLE PREDICATE when scoped by run, making the anti-manufacturing instrument an oracle for projects the caller was never invited to. It was found by this item's own `gate-reads` guard, because classifying a new read means writing what its answer ranges over and that sentence could not be written truthfully. The denominator is the scope's own documents through `#viewerSees`, capped and published. **A guard that forces a sentence to be written is how a leak gets found before a member does.**
 
 **RAISED ON IC-2 RATHER THAN EDITED, and left for FRAMEWORK:** `textchain.mjs`'s `STEP_KINDS.ai.label` reads *"a model rewrote the text"*, and a proposed reading rewrites nothing — conservative in direction (it claims more transformation than occurred, not less) but inexact. SETTLED when a model actually runs behind `op=extractpropose` and the step's first real chain is inspected live; CONDUCT writes it.
+
+## IC-100 · I2: THE OFFICE ENTRIES' `text()` RETURNS THE CONTAINER'S **INNER** EXTENT — a sheet's bound and used range, a slide's shape count · PROPOSED 2026-09-15 (COFF-11, closing D-359's producer half) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I2 (what `structure()`/`text()` must emit), the TEXT shape only. `structure()`
+  is not touched by this item and neither is I7 (an entry's slot contract is unchanged — this
+  is what one entry RETURNS, not how it is registered).
+- **Proposer:** CONTENT-OFFICE, worker `agent-a173c7a4a6b96b92e`, 2026-09-15, from QUEUE COFF-11.
+  The area is dormant and CONDUCT answers-for on the row.
+- **Owner to land it:** `CONTENT-OFFICE` (owner and proposer) for the producer half;
+  **the consumer half is CAPTURE's and is DELEGATED** — see the measured impact below, which
+  is the part of this row that matters most.
+- **Consumers to answer:** `CAPTURE` (`op=acquire`'s FW-15 wire, `src/index.mjs`), `RECORD`
+  (`#containerExtentForCapture` in `src/store.mjs` and the three `covers` predicates in
+  `checks/bio-checks.mjs` — **all three already read these keys and none needs an edit**).
+- **Change class:** **ADDITIVE.** Six keys are added and none is removed, renamed or
+  re-typed; every existing key on every existing unit is byte-identical, which the three
+  format suites pin by whole-object comparison → MINOR bump (**CONDUCT's to take**).
+- **The id was MINTED with `node tools/mintid.mjs IC`** (floor IC-93; IC-94..IC-99 already held
+  and stepped over).
+
+### THE SHAPE
+
+`text()` on the two SPREADSHEET entries (`xlsxText`, `odsText`) — each `sheets[]` unit gains:
+
+    rows      : <int> | null     the BOUND — the grid this format makes ADDRESSABLE
+    cols      : <int> | null     (the figure `coversSheetCell` compares an address against)
+    usedRows  : <int> | null     the USED range — how far this workbook's cells actually reach
+    usedCols  : <int> | null
+
+`text()` on the two DECK entries (`pptxText`, `odpText`) — each `slides[]` unit gains:
+
+    shapes    : <int> | null     the slide's shape count, 0-based references 0..shapes-1
+
+The two WORD-PROCESSING entries (`docxText`, `odtText`) are **UNCHANGED**: `paragraphs[]`'s
+LENGTH is already the count, which is why that arm has been fully fed since CAP-12.
+
+### THE DECISION THIS ROW CARRIES, AND IT IS NOT A DETAIL OF THE SHAPE
+
+**THE BOUND IS THE CONTAINER'S CAPACITY — what the format makes it POSSIBLE to address — and
+never what the capture happened to FILL.**
+
+For a SLIDE the two coincide and there is no decision: a shape list is EXHAUSTIVE, there is no
+empty shape that exists, so shape 9,999 of a four-shape slide is not an empty shape, it is no
+shape. Refusing past the count refuses only the impossible.
+
+For a SHEET they do not coincide, and choosing the used range would have been a defect.
+`Summary!D500` on a sheet filled to row 12 names a cell that EXISTS in the workbook and was
+EMPTY at capture — and in this product an empty cell is routinely the finding ("the
+disclosure's Schedule B was left blank"). Refusing it is the record refusing a TRUE statement,
+and it does not stop the member citing: it pushes them up to the WHOLE DOCUMENT, which claims
+MORE and not less. That is the reason already ruled twice in this plane, at
+`#pageSetForCapture` and at `#containerExtentForCapture`, applied one construct further in.
+
+So `rows`/`cols` is the grid and `usedRows`/`usedCols` is emitted BESIDE it under its own name,
+because they are two different facts and a later reader must be able to tell "empty at capture"
+from "outside the grid" without either figure pretending to be the other.
+
+**AND A BOUND IS EMITTED ONLY WHERE THE FORMAT FIXES ONE.** OOXML fixes the grid and it was
+MEASURED rather than cited (`MEASUREMENTS.md` M-21: LibreOffice 26.8.0.3 kept `XFD1048576` and
+dropped `A1048577`, `XFE1` and `ZZ9999999` on an xlsx round-trip — the last being D-354's own
+example address, so the bound refuses something real). **OpenDocument fixes no maximum table
+size at all** — the grid is the producing application's and the file does not record it — so
+`.ods` emits `rows: null, cols: null` with its used range beside them. Undetermined is
+first-class and STATED; borrowing OOXML's figure would be this reader inventing a bound the
+format never fixed, and the `odsborrowsgrid` control arm exists to stop a later session doing
+it quietly.
+
+### THE CONSUMER IMPACT, **MEASURED**, AND IT FALSIFIES THE PREMISE THE ROW WAS WRITTEN ON
+
+COFF-11's brief, D-359's "CLOSING IT TAKES" and this item's QUEUE row all say the same thing:
+that `op=acquire`'s wire *"reads the I2 shape BY KEY PRESENCE, so a producer that starts
+returning a field is fed with no edit to the wire"* and *"CAP-12's wire then carries them with
+no edit — it reads `sheets[].rows`/`cols` and `slides[].shapes` already"*.
+
+**Measured on `origin/main` at `dc697b5`, that is TRUE of the LEVELS and FALSE of these six
+keys.** `src/index.mjs`'s FW-15 projection reads which LEVELS a container itemises by key
+presence — `const has = (k) => Array.isArray(i2text[k])` — and then builds the stored object
+with the inner figures as **literals**:
+
+    sheets: sh ? sh.map((s) => ({ name: …, rows: null, cols: null })) : null,
+    slides: sl ? sl.map(() => ({ shapes: null })) : null,
+
+`slides` does not even bind its element. So a producer emitting these keys is **not read**.
+
+The other two consumers were checked the same way and are genuinely ready:
+`#containerExtentForCapture` already tests `Number.isInteger(s.rows)` / `s.shapes`, and
+`coversSheetCell` / `coversSlideShape` already compare against them. **One file needs three
+lines and it is the one file this row's scope forbids**, so it is DELEGATED rather than taken
+(`CLAIMS.md`, 2026-09-15).
+
+**The sufficiency of that delegation is MEASURED, not predicted.** The three-line passthrough
+was applied as a temporary arm, the end-to-end suite run, and the file restored byte-identically
+(545,806 B, sha256 `991c44d1d87f…`, verified by sha256 AND `cmp`; `git status` clean on it).
+Under the arm exactly three assertions flipped and nothing else:
+
+- `A1048577` — one row past the measured grid — went from MINT to **refused C-45.1 BY NAME**:
+  *"sheet 'Summary' of this capture holds 1048576 row(s) (1-1048576) and the extent names row 1048577"*
+- shape 9,999 of a two-shape slide likewise: *"slide 1 of this capture holds 2 shape(s) (0-1) and the extent names shape 9999"*
+- and the suite's own "the RECORD still holds NULL for both" assertion, which exists to make
+  that state visible.
+
+`ZZ999999` (row 999,999) kept minting under the arm, which is the decision behaving exactly as
+designed: that cell is inside the grid, so it exists and was empty at capture.
+
+### WHAT A CONSUMER MUST NOT ASSUME, stated because the shape invites it
+
+- **A slide unit list is not positionally aligned with slide numbers.** `pptxText` pushes only
+  slides whose part could be READ, so an unreadable slide shortens the array while the surviving
+  units keep their true `slide` number. The existing wire maps positionally
+  (`sl.map(() => …)`); anything reading `shapes` should key on the unit's own `slide`.
+  Pre-existing and not introduced here, named so the delegated edit does not inherit it.
+- **`null` and `0` are different.** An UNREAD sheet emits its bound (it is still an XLSX sheet)
+  and a NULL used range (nothing walked it). A sheet with no cells emits a MEASURED `0`.
+- **`usedRows`/`usedCols` bound nothing.** No consumer should refuse against them; that is the
+  decision above, and `usedrangeasbound` is the control arm that breaks the suite if a later
+  session wires them in as a fence.
+
+### VERIFICATION AT THE PROPOSAL
+
+Battery green own-baseline (201/201 · 12,467 pristine → the same suites green after), the four
+suites pinned by whole-object comparison where the shape could regress, and **seven negative
+control arms plus a baseline, all AS DECLARED** (`bio-plane/test/nc-coff11.mjs`, results in each
+suite's `NEGATIVE CONTROL:` line), two of which arm the DECISION itself rather than the patch.

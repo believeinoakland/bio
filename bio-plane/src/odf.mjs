@@ -1105,7 +1105,41 @@ function odsText(parts) {
     /* A HIDDEN sheet's text IS extracted — the record holds what the file
        holds — and the flag is what keeps a reader from mistaking it for
        presented content (the xlsx precedent). */
-    outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden, text, undetermined: [] });
+    /* COFF-11 / IC-100 / D-359 — the sheet's own extent, in the two figures
+       `formats-xlsx.mjs` emits and with the SAME meaning, which is the whole
+       point of them being two: `usedRows`/`usedCols` is how far this sheet's
+       cells reach, and `rows`/`cols` is the BOUND the `sheet-cell` arm of
+       C-45.1 compares an address against.
+
+       AND THE BOUND IS NULL HERE, DELIBERATELY. OpenDocument fixes no maximum
+       table size — a `<table:table>` has no schema-level row or column limit
+       and the grid a member's application offers is that APPLICATION's, which
+       the file does not record. So `.ods` has no capacity to state, and the
+       alternatives are both worse: bounding by the USED range would refuse a
+       true citation of a cell that exists and was empty at capture (the
+       decision `formats-xlsx.mjs` records at length), and borrowing OOXML's
+       grid would be this reader inventing a bound the format never fixed.
+       NULL is undetermined-is-first-class at this construct — the store's
+       `#containerExtentForCapture` NAMES an absent level rather than reading
+       it as a zero — and it means an `.ods` cell inside a known sheet stays
+       unbounded and STATED. The used range is emitted anyway: it is the fact
+       this walk knows, and a bound is not the only thing worth knowing. */
+    /* Accumulated with a LOOP rather than `Math.max(...rows)`: a spread over a
+       large sheet's rows is an argument list the size of the sheet, and a real
+       workbook is exactly where that would be found. Taken from the CELLS, as
+       `walkSheetXml` does — `walkSheet` materialises a row only when it
+       carries cells, so a padding run never counts as reach. */
+    let usedRows = 0, usedCols = 0;
+    for (const row of walked.rows) {
+      if (!row.cells.length) continue;
+      if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
+      for (const c of row.cells) {
+        if (Number.isInteger(c.col) && c.col + 1 > usedCols) usedCols = c.col + 1;
+      }
+    }
+    outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden,
+      rows: null, cols: null, usedRows, usedCols,
+      text, undetermined: [] });
   }
   const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
   return {
@@ -1270,7 +1304,16 @@ function odpText(parts) {
   for (const page of deckOf(body, styles)) {
     const walked = walkPage(page.xml);
     const text = walked.shapes.map((s) => s.text).filter((t) => t.length).join("\n");
-    slides.push({ slide: page.slide, ref: `slide ${page.slide}`, part: CONTENT_PART, hidden: page.hidden, text });
+    /* COFF-11 / IC-100 / D-359 — the slide's shape COUNT, which `walkPage` has
+       always returned as `count` and this entry has always discarded. The
+       pptx.mjs decision applies verbatim and for the same reason: a shape list
+       is EXHAUSTIVE, so there is no used-range-versus-capacity question to
+       answer here and the count is both figures at once. `count` is the number
+       of shape OPENS in document order, nested included, which is the same
+       sequence `slideShapeRef` numbers against — so the bound and the
+       references it bounds are counted by one walk. */
+    slides.push({ slide: page.slide, ref: `slide ${page.slide}`, part: CONTENT_PART,
+      hidden: page.hidden, shapes: walked.count, text });
     const nt = notesTextOf(page.xml);
     if (nt != null && nt.length) {
       speakerNotes.push({ slide: page.slide, ref: `slide ${page.slide} (notes)`, part: CONTENT_PART,

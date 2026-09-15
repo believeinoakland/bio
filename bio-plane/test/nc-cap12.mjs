@@ -93,7 +93,12 @@ const ARMS = {
                "and each carries its container extent THROUGH THE OP",
                "a cell on a sheet the workbook does NOT have is REFUSED BY NAME",
                "and the refusal names the sheet list it was checked against",
-               "the inner bounds are NOT invented"],
+               /* CORRECTED 2026-09-15 by COFF-11: this label was SPLIT in the suite when the
+                  producers began emitting the inner figures, so the old spelling matched
+                  nothing and the arm read NOT AS DECLARED while the subject was behaving
+                  exactly right — the mis-declared-arm failure this harness's own header
+                  warns about, met a second time. Corrected, never exempted. */
+               "the RECORD still holds NULL for both"],
     mustPass: "every paragraph and slide assertion — three independent levels, and an arm that took all three down would not have shown that",
     patch: () => arm(INDEX,
       `                    sheets: sh ? sh.map((s) => ({
@@ -118,7 +123,12 @@ const ARMS = {
     mustFail: ["the deck's reading carries one entry per SLIDE the fixture was BUILT with",
                "and each carries its container extent THROUGH THE OP",
                "a slide past the deck is REFUSED BY NAME, 1-based bound stated",
-               "the inner bounds are NOT invented"],
+               /* CORRECTED 2026-09-15 by COFF-11: this label was SPLIT in the suite when the
+                  producers began emitting the inner figures, so the old spelling matched
+                  nothing and the arm read NOT AS DECLARED while the subject was behaving
+                  exactly right — the mis-declared-arm failure this harness's own header
+                  warns about, met a second time. Corrected, never exempted. */
+               "the RECORD still holds NULL for both"],
     mustPass: "every sheet and paragraph assertion",
     patch: () => arm(INDEX,
       "                    slides: sl ? sl.map(() => ({ shapes: null })) : null,",
@@ -166,7 +176,13 @@ const ARMS = {
        REC-85's `canon` finding reproduced one item later, and it is why the
        slide half is `overstrict2` and not a second clause here: a mis-declared
        arm reads exactly like a partially-working subject. */
-    mustFail: ["cell ZZ999999 of a sheet the workbook HAS mints"],
+    /* CORRECTED 2026-09-15 by COFF-11: inventing a five-row bound refuses BOTH the
+       empty-but-existing cell AND the genuinely impossible one, so the declaration names
+       two. The old declaration named one and the arm read "1/1 declared, 2 failing" —
+       under-declaring reads as a subject doing more than asked, which is the same defect
+       as over-declaring and just as invisible. */
+    mustFail: ["cell ZZ999999 of a sheet the workbook HAS mints",
+               "cell A1048577 — one row PAST the measured grid"],
     mustPass: "every refusal arm above and every in-range mint — the arm must break correct work and nothing else",
     patch: () => arm(STORE,
       `    const sheets = held && Array.isArray(held.sheets) && held.sheets.length ? held.sheets : null;`,
@@ -176,7 +192,9 @@ const ARMS = {
   overstrict2: {
     files: [STORE],
     why: "the over-strictness direction on the SLIDE arm's inner bound, armed separately because `coversSlideShape` is its own predicate reading its own shape",
-    mustFail: ["shape 9,999 of a slide the deck HAS mints"],
+    /* CORRECTED 2026-09-15 by COFF-11: the suite's label gained "still" when the reason
+       changed from "no entry emits it" to "the wire drops it". */
+    mustFail: ["shape 9,999 of a slide the deck HAS still MINTS"],
     mustPass: "the sheet arm's D-359 mint, and every refusal",
     patch: () => arm(STORE,
       `    const slides = held && Array.isArray(held.slides) && held.slides.length ? held.slides : null;`,

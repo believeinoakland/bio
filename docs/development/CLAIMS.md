@@ -8232,3 +8232,326 @@ released: 2026-09-15 by the REC-98 worker — **THE PER-PAGE TIER-2 RULE NOW REA
 **A LIVE REPRODUCTION OF THE SHARED-SCRATCHPAD HAZARD, AND IT NEARLY COST A FALSE RED.** A battery run redirected to `/tmp/final-battery.log` came back **198/202 with four suites FAILED** — `derivation-bounds`, `fleetbundles`, `hygiene`, `planning-hygiene`. All four passed alone at exit 0, which is what prompted a second look. **The log was ANOTHER SESSION'S RUN:** its own `provenance:` line read `HEAD (6e88e35)` when this worktree was already at `272bf50`, and it named `bio-plane/test/content-capture-bound.test.mjs` as untracked — a file that has never existed in this tree. `/tmp` is shared between sessions and a generic filename is a collision waiting to happen; **the `provenance:` line is what distinguished the two runs, and nothing else would have** — the four named suites are all repository readers, so the failure looked exactly like damage this item had done. WORKER.md's "keep every harness and scratch file INSIDE your own worktree" is right and now carries another receipt. Re-run inside this worktree: **202/202 · 12,516 · exit 0 · HEAD 272bf50 · 205 of 205 in the commit.** The two earlier logs were checked the same way and both ARE this worker's (the pristine baseline at 6e88e35 with nothing untracked; the pre-commit branch run with `tier2-wire.test.mjs` untracked at 45 pass).
 
 **BURNED IDS, named rather than left as a puzzle for the next reader of the ledger:** two `mintid.mjs D` allocations before `D-372` were made while reading the tool's own output and are UNUSED. The tool reported stepping over 369, 370 and 371; at least two of those three are this worker's. Gaps cost nothing by the tool's own statement.
+
+## CLAIM 2026-09-15 CONTENT-OFFICE (COFF-11 — the office entries return the inner-bound figures they already compute, and the decision about what a spreadsheet cell's bound MEANS travels with them; D-359)
+
+session: CONTENT-OFFICE worker for COFF-11, spawned by CONDUCT #11, Opus 5, worktree-isolated
+  (CONTENT-OFFICE is dormant; CONDUCT answers-for on the row).
+worktree: `.claude/worktrees/agent-a173c7a4a6b96b92e` · branch `worktree-agent-a173c7a4a6b96b92e`,
+  a fresh checkout of `origin/main` at `dc697b5`. **Row verified `running` on `origin/main` before
+  any edit**, and `6e88e35` confirmed an ancestor of HEAD.
+opened: 2026-09-15T00:00:00Z
+released: 2026-09-15 by the COFF-11 worker — **THE PRODUCER HALF OF D-359 IS LANDED AND THE
+  DECISION THAT TRAVELS WITH IT IS TAKEN; THE CONSUMER HALF IS DELEGATED BECAUSE THE ROW'S OWN
+  PREMISE ABOUT IT IS FALSE.** Nothing pushed, nothing merged, nothing deployed, no version bumped.
+
+  **THE DECISION, AND IT WAS THE ITEM'S REAL WORK: THE BOUND IS THE CONTAINER'S CAPACITY — what the
+  format makes it POSSIBLE to address — AND NEVER WHAT THE CAPTURE HAPPENED TO FILL.** For a SLIDE
+  there is no decision to take and saying why is half the value: a shape list is EXHAUSTIVE, there
+  is no empty shape that exists, so shape 9,999 of a four-shape slide is not an empty shape, it is
+  no shape — the walked count and the addressable count coincide and refusing past it refuses only
+  the impossible. For a SHEET they do not coincide, and choosing the used range would have been a
+  defect rather than a preference: `Summary!D500` on a sheet filled to row 12 names a cell that
+  EXISTS in the workbook and was EMPTY at capture, and in this product an empty cell is routinely
+  the finding ("the disclosure's Schedule B was left blank"). Refusing it is the record refusing a
+  TRUE statement — and it does not stop the citation, it pushes the member up to the WHOLE DOCUMENT,
+  which claims MORE and not less. That is this plane's own recorded reason at `#pageSetForCapture`
+  and `#containerExtentForCapture`, applied one construct further in. So `rows`/`cols` is the grid,
+  `usedRows`/`usedCols` is emitted BESIDE it under its own name, and "empty at capture" stays
+  distinguishable from "outside the grid" without either figure pretending to be the other.
+  **A BOUND IS EMITTED ONLY WHERE THE FORMAT FIXES ONE**: OOXML's grid was MEASURED, not cited
+  (`MEASUREMENTS.md` M-22 — LibreOffice 26.8.0.3 KEPT `XFD1048576` and DROPPED `A1048577`, `XFE1`
+  and `ZZ9999999`, the last being D-354's own example address, so the bound refuses something real);
+  OpenDocument fixes no maximum table size at all, so `.ods` emits an honestly NULL bound and says so
+  at the site — undetermined is first-class, and borrowing OOXML's figure would be this reader
+  inventing a bound the format never fixed.
+
+  **WHAT LANDED**: `xlsxText`/`odsText` emit `rows`/`cols`/`usedRows`/`usedCols` per sheet;
+  `pptxText`/`odpText` emit `shapes` per slide; `walkSheetXml` accumulates the used extent over the
+  cells it already walked. The two word-processing entries needed nothing. IC-100 filed PROPOSED on
+  I2 (ADDITIVE — six keys added, none removed, renamed or re-typed).
+
+  **AND THE PREMISE THIS ROW, D-359 AND THE BRIEF ALL RESTED ON IS FALSE, MEASURED AT `dc697b5`.**
+  All three say CAP-12's acquire wire *reads the I2 shape BY KEY PRESENCE, so a producer that starts
+  returning a field is fed with no edit*. That is TRUE of the LEVELS and FALSE of these six keys:
+  `src/index.mjs`'s FW-15 projection writes `rows: null, cols: null` and `shapes: null` as LITERALS
+  and `slides` does not even bind its element. `store.mjs` and `bio-checks.mjs` genuinely are ready
+  and need no edit to FIRE. One file needs three lines and it is the one file this row's scope
+  forbids, so it is DELEGATED rather than widened into, exactly as the row instructed. **This is
+  `CLAUDE.md`'s "a blocker is a claim" rule inverted — a CAPABILITY asserted in three agreeing
+  documents and contradicted by the code — and it was found by grepping the file the row named, on
+  the tree this worker is on, before resting anything on it.**
+
+  **THE DELEGATION'S SUFFICIENCY IS MEASURED, NOT PREDICTED.** The three-line passthrough was
+  applied as a temporary arm, the end-to-end suite run, and `src/index.mjs` restored
+  byte-identically (545,806 B, sha256 `991c44d1d87f…`, verified by sha256 AND `cmp`, `git status`
+  clean). **Exactly three assertions flipped and nothing else moved**: `A1048577` (one row past the
+  measured grid) went MINT → refused **C-45.1 BY NAME** — *"sheet 'Summary' of this capture holds
+  1048576 row(s) (1-1048576) and the extent names row 1048577"*; shape 9,999 of a two-shape slide
+  likewise — *"slide 1 of this capture holds 2 shape(s) (0-1) and the extent names shape 9999"*; and
+  the suite's own "the RECORD still holds NULL" assertion. `ZZ999999` KEPT MINTING under the arm,
+  correctly: row 999,999 is inside the grid, so that cell exists and was empty at capture — the
+  decision behaving as designed rather than a bound failing.
+
+  **GATE FIGURES.** Pristine baseline on a scratch `git worktree add` at `dc697b5` after `npm ci` in
+  all THREE packages: **201/201 suites green · 12,467 assertions · exit 0, ZERO suites skipped** (the
+  skip count was read, not the exit status — the quiet CLAUDE.md hazard). Final on this tree:
+  **201/201 · 12,499 · exit 0**. **+32, attributed PER SUITE by re-running the baseline and never by
+  subtraction**: `formats-xlsx` 75→88 (+13), `formats-odf` 130→140 (+10), `formats-pptx` 110→116
+  (+6), `capture-container-extent` 29→31 (+2), `planning-hygiene` 293→294 (+1, the new debt row).
+  `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED: **exit 0** — 176/176 ops,
+  272/272 checks, fleet 3 members / 6 ops / 8 suites / 76 arms. **NO FLOOR MOVED** and none was
+  invalidated: this item adds no op, no check and no control. `node civicos-ui/test/run.mjs` from the
+  REPO ROOT, exit read unpiped: **0, all harnesses green**. `node tools/plancheck.mjs`: **1 fail,
+  UNPUBLISHED only** (this commit), plus the standing WARN that the repo's own `main` is behind
+  `origin/main`, which is not this worktree. `node tools/corpuscheck.mjs`: 50 governed documents,
+  **0 fail**. `docs/DECIDED.md` REGENERATED (951 → 954 rulings).
+
+  **CONTROL ARMS — DECLARED vs ACTUAL, INCLUDING THE ONES THAT CAME BACK WRONG.**
+  *This item's own harness, `bio-plane/test/nc-coff11.mjs` — SEVEN arms and a baseline, each armed
+  ALONE, every restore byte-identical (`formats-xlsx.mjs` 33,691 B `c5855053f670…`, `pptx.mjs`
+  37,442 B `1708977ce689…`, `odf.mjs` 64,000 B `08f4709dde58…`):* baseline xlsx 88/0 · pptx 116/0 ·
+  odf 140/0 · e2e 31/0 GREEN; `dropxlsxbound` 4/4 (5 failing); `dropslideshapes` 5/5 (6);
+  `dropodpshapes` 2/2 (3); `dropxlsxboundunread` 1/1 (1); `usedrangeasbound` 4/4 (4);
+  `odsborrowsgrid` 3/3 (3) — **ALL SEVEN AS DECLARED** on the recorded run. Two of the seven arm the
+  DECISION rather than the patch, which is the only way a decision that travels with a patch is
+  enforced rather than described.
+  **TWO CAME BACK WRONG ON THE FIRST RUN AND BOTH WERE FINDINGS ABOUT THE INSTRUMENT, recorded at
+  their sites rather than smoothed.** (1) `dropxlsxbound` declared the DISAGREE assertion and it did
+  NOT fire: its first spelling (`rows === usedRows` expected false) is satisfied by a NULL bound too,
+  so the ASSERTION was too weak — strengthened to require both figures be integers, and it fires now.
+  An arm that finds an assertion too weak has done better than one that goes red. (2) Both xlsx arms
+  declared the UNREAD-SHEET bound, which neither patch reaches: `xlsxText` emits its sheet object at
+  TWO INDEPENDENT SITES, and a seventh arm now covers the second rather than leaving it covered by
+  nobody. **AND ONE SURPRISING GREEN, kept because it is the more useful result**: under
+  `usedrangeasbound` the END-TO-END suite stayed green at 31/0 — not the arm failing but the
+  measurement that the e2e suite cannot see this bound AT ALL today, because the wire drops the
+  figure before the store reads it. The decision is enforced by the producer suites alone until the
+  delegated edit lands.
+  *CAP-12's harness, `bio-plane/test/nc-cap12.mjs` — RE-RUN because this item changed its subject:*
+  three of its nine arms read NOT AS DECLARED on the first re-run **while every subject behaved
+  exactly right**, because this item split one assertion and renamed two labels and its declarations
+  are a SECOND COPY of those names that nothing makes fail when the original moves. Declarations
+  CORRECTED at their sites, never exempted; re-run: **all nine AS DECLARED**, every restore
+  byte-identical. That failure mode is now written into the suite's own header for the next editor.
+  *Over-strictness, the standing requirement:* correct work in spellings the walk did not
+  anticipate — a MULTI-LETTER column (`AA` = 27), a `<row>` declared with no cells (formatting only,
+  must not extend reach), cells out of document order — all PASS and are pinned; and every existing
+  key on every existing unit is byte-identical, held by whole-object pins in all three format suites.
+
+  **THE CLASS SWEEP, AND WHAT IT COULD NOT SEE.** The KIND is *a producer computes a figure, its
+  caller discards it, and a consumer's bound is left unfed*. Corpus: all six format entries'
+  `text()` and `structure()` returns, the three `covers` predicates, and the fleet's PDF producer.
+  **It found a THIRD instance on the arm with the most reach and it is filed as D-374**:
+  `pdf-worker/src/pagepixels.mjs` computes and RETURNS every page's `MediaBox` (walking up `Parent`
+  when the page lacks one), and `grep -rn 'mediaBox|media_box' bio-plane/src bio-plane/checks`
+  returns **ZERO** consumers — so a `pdf-page` extent's `rect` is bounded by NOTHING and
+  `[0,0,999999,999999]` of a Letter page mints. Filed rather than fixed: it crosses a service
+  boundary and belongs to three areas, none of them this one. **Two arms were checked by READING
+  rather than by matching and are reported clean for stated reasons** — `doc-para`'s optional `run`
+  sub-bound is unfed, but `walkBody` TRACKS a run index without ever accumulating a per-paragraph
+  COUNT, so nothing is discarded and closing it would mean widening `container.paragraphs` from a
+  scalar to a list (a larger change than this class, deliberately not rowed); and `dom` has no
+  producer at all, so it has nothing to drop. **What the matcher CANNOT see**: it matches on a
+  figure's own spelling and on each arm's bound in `checks/bio-checks.mjs`, so a producer that
+  computes a bound under a name nobody would guess and never returns it would be invisible to it.
+
+  **ONE HAZARD FOUND WHILE MEASURING AND NOT INTRODUCED HERE, carried into the DELEGATION**:
+  `pptxText` pushes only slides whose part could be READ, so an unreadable slide shortens `slides[]`
+  while surviving units keep their true `slide` number — and both the wire's `sl.map(...)` and
+  `coversSlideShape`'s `slides[e.slide - 1]` are POSITIONAL, so a shape count would be attributed to
+  the wrong slide. The unit carries its own `slide`; keying on that closes it at no cost.
+
+  **WHAT THIS ITEM DID NOT DO, STATED PLAINLY.** The accepts-when's first clause — *a cell outside
+  the chosen bound is refused C-45.1 BY NAME with the figure in the refusal* — is **NOT LIVE on this
+  tree**. It is MEASURED under the delegated arm and the suite drives the current state honestly
+  (`capture-container-extent.test.mjs` §4 asserts that the impossible address still MINTS, with the
+  reason and the delegation named at the site, written so the flip is a one-line correction). The
+  second clause — *a cell inside a real workbook that was empty at capture is ACCEPTED* — IS live and
+  driven. No backfill was taken and none was owed. D-359 is NOT closed: its producer half is.
+contract: **IC-100 (I2 additive — the office entries' `text()` gains the container's own INNER
+  extent)**, minted at spawn with `node tools/mintid.mjs IC` (floor IC-93, six held ids stepped
+  over), filed PROPOSED in `INTERFACE-CHANGES.md` with its consumer impact MEASURED rather than
+  inherited from the row — and the measurement FALSIFIES the row's own premise, which is why the
+  DELEGATION below exists.
+
+paths claimed BY REGION, never whole files:
+
+  - `bio-plane/src/formats-xlsx.mjs` — (1) `walkSheetXml`'s return, which gains a `used`
+    row/column extent accumulated over the cells it already walks (no cell parse added — the A1
+    reference it already carries is read with a new module-private `a1Col` helper beside
+    `sheetCellRef`); (2) `xlsxText`'s `outSheets.push` — the per-sheet object gains four keys and
+    loses none; (3) the two new grid constants and the decision comment above them. **NOT**
+    `xlsxStructure`, **NOT** `xlsxParts`, **NOT** `cellValue`, **NOT** the `xlsxEntry` object,
+    **NOT** `sheetCellRef`'s shape.
+  - `bio-plane/src/pptx.mjs` — `pptxText`'s slide loop ONLY: the single `walkSlide(xml)` call it
+    already makes is bound to a local instead of being dereferenced inline, and `slides.push`
+    gains `shapes`. **NOT** `walkSlide` itself (it already returns the figure), **NOT**
+    `pptxStructure`, **NOT** the speaker-notes units, **NOT** `deckOf`, **NOT** `pptxEntry`.
+  - `bio-plane/src/odf.mjs` — (1) `odsText`'s `outSheets.push` (the same four keys, the grid
+    bound honestly NULL for ODF and the reason at the site); (2) `odpText`'s `slides.push`, which
+    gains `shapes` from the `walkPage` call it already makes; (3) the two decision comments.
+    **NOT** `walkSheet`, **NOT** `walkPage`, **NOT** `odsStructure`, **NOT** `odpStructure`,
+    **NOT** `odtText`, **NOT** `entryFor`, **NOT** the flavour tables COFF-9 holds.
+  - `bio-plane/test/formats-xlsx.test.mjs`, `bio-plane/test/formats-pptx.test.mjs`,
+    `bio-plane/test/formats-odf.test.mjs` — a new section each, and each module's
+    `accepts-when` / `NEGATIVE CONTROL:` header lines EXTENDED with this item's arms. No existing
+    assertion edited or removed.
+  - `bio-plane/test/capture-container-extent.test.mjs` — CAP-12's suite, its claim RELEASED and
+    verified so over this register before editing. Its §4 assertions that a cell inside a known
+    sheet and a shape inside a known slide MINT are **CORRECTED, never exempted**, with the reason
+    dated at the site — they were right when CAP-12 wrote them and this item is what makes them
+    wrong. A new section drives the inner bound END TO END through `op=acquire` → `op=promote`.
+  - `bio-plane/dist/bio-plane.bundled.mjs` and `bio-plane/dist/bio-plane.bundle.json` — REBUILT by
+    `npm run build` from `bio-plane/`, never hand-edited, because FL-10's freshness guard names the
+    plane's bundle whenever a plane source moves. No version bumped, nothing signed, nothing
+    deployed.
+  - `docs/development/DEBT.md` — D-359's disposition column ONLY.
+  - `docs/development/INTERFACE-CHANGES.md` — the IC-100 row, appended.
+  - `docs/architecture/BIO_Content_Framework_v0_10.md` — the §15 **structure shape (interface I2)**
+    row and the **content-extent primitive** row (both carry D-359's sentence and both become false
+    with this landing), plus the front-matter bullet CLAUDE.md's 2026-09-14 rule requires of a
+    landing that changes a construct. No other body line.
+  - `docs/development/MEASUREMENTS.md` — ONE appended section: the XLSX grid measured against a
+    real producer on this machine rather than cited from a vendor's documentation.
+  - `docs/development/CLAIMS.md` — this block and the DELEGATION below.
+  - `docs/DECIDED.md` — GENERATED, never authored; regenerated with `node tools/decided.mjs` only
+    if `plancheck` reports drift.
+
+  **READ, NEVER EDITED**: `CLAUDE.md`, `kickoffs/WORKER.md`, `kickoffs/CONTENT-OFFICE.md`,
+  `docs/development/QUEUE.md`, `docs/development/OFFICE-FORMATS.md`, `docs/development/INTERFACES.md`.
+  **NOT** `bio-plane/src/index.mjs`, **NOT** `bio-plane/src/store.mjs`, **NOT**
+  `bio-plane/checks/bio-checks.mjs` — the standing cap on this row, honoured; what each of them
+  needs is in the DELEGATION below rather than taken. **NOT** `bio-plane/src/ooxml.mjs` (COFF-9
+  holds it by region and this item needs nothing in it — the walkers are not there), **NOT**
+  `bio-plane/src/docx.mjs`/`odtText` (the paragraph arm is already fed end to end), **NOT**
+  `bio-plane/src/formats.mjs`, **NOT** `newgroup/**`, **NOT** `civicos-ui/**`, **NOT** `release/**`,
+  **NOT** `docs/development/QUEUE.md`, **NOT** `DECISIONS.md`.
+
+concurrency: checked over this register on `origin/main` at `dc697b5` by parsing every `## CLAIM`
+  block for an absent `released:` line rather than by eye — **six unreleased claims**, and not one
+  names `bio-plane/src/formats-xlsx.mjs`, `bio-plane/src/pptx.mjs`, `bio-plane/src/odf.mjs` or
+  `bio-plane/test/capture-container-extent.test.mjs` except COFF-9, which names the first two in
+  its own **NOT** list. `bio-plane/dist/**` is named by three released-or-landed claims on the
+  same terms (rebuilt, never hand-edited) and is taken on those terms here.
+
+**THE DECISION THIS ITEM CARRIES, stated here as well as at the sites because the row says the
+decision is the work: THE BOUND IS THE CONTAINER'S CAPACITY — what the format makes it POSSIBLE to
+address — and never what the capture happened to FILL.** For a SLIDE the two coincide and there is
+no decision to take: a shape list is exhaustive, there is no such thing as an empty shape that
+exists, so shape 9,999 of a four-shape slide is IMPOSSIBLE and is refused. For a SHEET they do not
+coincide: a cell exists in the grid whether or not it holds a value, so `Summary!D500` of a sheet
+filled to row 12 is a TRUE statement about an EMPTY cell — and in this product an empty cell is
+routinely the finding ("the disclosure's Schedule B was left blank"). Refusing it would be the
+record refusing a true statement, and worse, it would push the member toward citing the WHOLE
+DOCUMENT, which claims MORE and not less — the reason already ruled twice in this plane, at
+`#pageSetForCapture` and at `#containerExtentForCapture`. So the sheet's BOUND is the grid and the
+sheet's USED RANGE is emitted BESIDE it under its own name, so no later reader can mistake one for
+the other and so "empty at capture" stays distinguishable from "outside the grid" without either
+figure pretending to be the other. **And the bound is only ever emitted where the FORMAT fixes
+one**: OOXML fixes the grid (measured, not cited — `MEASUREMENTS.md`), OpenDocument does not fix
+any maximum table size at all, so `.ods` emits its used range and an honestly NULL bound, which is
+`CLAUDE.md`'s undetermined-is-first-class at this construct rather than a gap in this reader.
+
+## DELEGATION 2026-09-15 CONTENT-OFFICE → CAPTURE (and one sentence of RECORD's) — THE ACQUIRE WIRE MUST READ THE INNER FIGURES THE OFFICE ENTRIES NOW EMIT (IC-100 / D-359's residue)
+
+**This exists because COFF-11's scope forbids `bio-plane/src/index.mjs`, `src/store.mjs` and
+`checks/bio-checks.mjs`, and the item measured that ONE of the three genuinely needs an edit.**
+The row's instruction on meeting that case was explicit — *STOP and append a DELEGATION rather
+than widening* — and it is followed.
+
+**THE PREMISE THE ROW WAS WRITTEN ON IS FALSE, AND IT IS FALSE IN THE DANGEROUS DIRECTION.**
+COFF-11's brief, D-359's "CLOSING IT TAKES" and the QUEUE row all state that CAP-12's acquire
+wire *reads the I2 shape BY KEY PRESENCE, so a producer that starts returning a field is fed
+with no edit to the wire*. Measured on `origin/main` at `dc697b5`: true of the LEVELS, FALSE of
+the inner figures. `src/index.mjs`'s FW-15 projection writes them as LITERALS —
+
+    sheets: sh ? sh.map((s) => ({ name: …, rows: null, cols: null })) : null,
+    slides: sl ? sl.map(() => ({ shapes: null })) : null,
+
+— and `slides` does not even bind its element. This is `CLAUDE.md`'s *a blocker is a claim* rule
+inverted: a CAPABILITY asserted in a debt row, a queue row and a spawn brief, believed on the
+strength of three agreeing documents, and contradicted by the code. It was found by grepping the
+file the row named, on the tree this worker is on, before resting anything on it.
+
+**WHAT IS NEEDED — one file, one expression, three lines:**
+
+    rows: Number.isInteger(s && s.rows) ? s.rows : null,
+    cols: Number.isInteger(s && s.cols) ? s.cols : null,
+    …
+    slides: sl ? sl.map((s) => ({ shapes: Number.isInteger(s && s.shapes) ? s.shapes : null })) : null,
+
+**ITS SUFFICIENCY IS MEASURED AND NOT PREDICTED.** COFF-11 applied exactly that as a temporary
+arm, ran `test/capture-container-extent.test.mjs`, and restored `src/index.mjs`
+byte-identically (545,806 B, sha256 `991c44d1d87fe41d6124ba92e1c163490e5b6f80dcb61ee09cae2d93ab851752`,
+verified by sha256 AND by `cmp`, and `git status` reports the file unmodified). Under the arm
+**exactly three assertions flipped and nothing else moved**:
+
+- cell `A1048577` — one row past the MEASURED grid — went from MINT to refused **C-45.1 BY
+  NAME**: *"sheet 'Summary' of this capture holds 1048576 row(s) (1-1048576) and the extent names
+  row 1048577"*;
+- shape 9,999 of a two-shape slide the same: *"slide 1 of this capture holds 2 shape(s) (0-1) and
+  the extent names shape 9999"*;
+- and the suite's own "the RECORD still holds NULL for both" assertion, which exists to make the
+  gap visible and is written so the flip is a one-line correction.
+
+`ZZ999999` kept minting under the arm, correctly: row 999,999 is INSIDE the grid, so that cell
+exists and was empty at capture — the decision behaving as designed rather than a bound failing.
+
+**Nothing else in `store.mjs` or `bio-checks.mjs` needs an edit to make the bound FIRE** — both
+already read these keys — but two SENTENCES in them become false on the day the wire lands and
+should move with it, which is the other half of this delegation:
+
+1. `store.mjs`, `#containerExtentForCapture`'s `missing` strings — *"the entry emits sheet names
+   and no dimensions — D-359"* and *"the entry emits the slide list and no shape counts"*. The
+   entry now emits both. The CONDITION stays right for `.ods` (OpenDocument fixes no grid, so
+   the bound is honestly null there) and the sentence must say THAT instead.
+2. `bio-checks.mjs`, the C-45.1 office-arms header — *"No entry emits a sheet's `rows`/`cols` or
+   a slide's shape COUNT"* — same correction, and it is the header that tells the next reader
+   which half of the arm is live.
+
+**ONE HAZARD FOR WHOEVER TAKES IT, found while measuring and NOT introduced by COFF-11.**
+`pptxText` pushes only slides whose part could be READ, so an unreadable slide shortens
+`slides[]` while the surviving units keep their true `slide` number — and both the wire's
+`sl.map(...)` and `coversSlideShape`'s `slides[e.slide - 1]` are POSITIONAL. On a deck with an
+unreadable slide the shape count would be attributed to the wrong slide. The unit carries its own
+`slide`, so keying on that rather than on position costs nothing and closes it.
+
+**ACTS OWED, with their actors, because a note is not an item:**
+
+- **CAPTURE** (or whoever holds `bio-plane/src/index.mjs` next): land the three-line passthrough,
+  correct the three assertions named above in `test/capture-container-extent.test.mjs` (they are
+  written to be corrected, with the reason already at the site), and key the slide map on `slide`
+  rather than position.
+- **RECORD**: correct the two stale sentences in `store.mjs` and `checks/bio-checks.mjs`.
+- **CONDUCT**: take IC-100's version bump and RESOLUTION; and **D-359 is NOT closed by COFF-11** —
+  its producer half is, its consumer half is this delegation, and the row's disposition says so.
+
+### AMENDMENT 2026-09-15, MID-ITEM — FOUR PATHS ADDED TO THE COFF-11 CLAIM, each forced by a mechanism rather than chosen
+
+- **`bio-plane/test/nc-coff11.mjs` — NEW.** This item's own negative-control harness: seven arms
+  and a baseline, re-runnable in one step, on the `nc-cap9.mjs` / `nc-cap12.mjs` pattern and named
+  the same way so neither the battery's discovery nor `coverage.mjs`'s fleet walk enrols a file that
+  EDITS REAL SOURCES while it runs. Two of its arms break the DECISION rather than the patch, which
+  is the only way a decision that travels with a patch can be enforced rather than described.
+- **`bio-plane/test/nc-cap12.mjs` — CAP-12's harness, its claim RELEASED and verified so over this
+  register before editing. THREE DECLARATIONS CORRECTED, never exempted**, each with the reason at
+  its site: this item SPLIT the suite assertion `the inner bounds are NOT invented` and RENAMED two
+  §4 labels, so three of CAP-12's `mustFail` spellings matched nothing and three arms reported
+  **NOT AS DECLARED while the subject was behaving exactly right** — the mis-declared-arm failure
+  that harness's own header warns about, met a second time one item later. Re-run after the
+  correction: all nine AS DECLARED. A stale declaration in a control harness is worse than a stale
+  comment, because it reads exactly like a partially-working subject.
+- **`.gitignore`** — one line for this item's control pen (`.coff11-control-pristine/`), named for
+  the item on the rule recorded at `.rec84-control-pristine/` (a glob over `.*-control-pristine/`
+  would silently cover a pen nobody declared), plus the working files this item measured FROM and
+  does not land: the LibreOffice grid probe, the scratch `git worktree` the pristine baseline was
+  taken in, and the four run logs.
+- **`docs/development/DEBT.md`** — the claim named D-359's disposition column ONLY. **ONE NEW ROW,
+  D-374, forced by the CLASS SWEEP** (`node tools/mintid.mjs D`, floor D-368, five held ids stepped
+  over). The sweep asked what KIND of defect D-359 is — *a producer computes a figure, its caller
+  discards it, a consumer's bound is left unfed* — and found a third instance on the arm with the
+  most reach: `pdf-worker/src/pagepixels.mjs` computes and RETURNS every page's `MediaBox`, nothing
+  in `bio-plane/src` or `bio-plane/checks` reads it (measured: zero matches), and a `pdf-page`
+  extent's `rect` is therefore bounded by nothing at all. Filed rather than fixed: it crosses a
+  service boundary and belongs to three areas, none of them this one.

@@ -12941,3 +12941,52 @@ and was rightly not committed); and the merge's REFUSAL branch is driven at the 
 every page it ordered and its one pageless return carries zero characters, which takes the
 WHOLESALE branch rather than the refusal. That branch is a guard against a future pageless
 text producer and is not asserted to be reachable.
+
+## M-22 · The XLSX grid, MEASURED against a real producer — 2026-09-15, COFF-11
+
+*(Filed by COFF-11 as `M-21` and RENUMBERED to `M-22` at integration, 2026-09-15 by CONDUCT #11: M0-34 took `M-21` the same day for D-367's phantom-ruling diff, and both landed in the same wave. **`M` is one of the two namespaces `mintid` does not grade**, so nothing refused the second use and the merge would have carried two `M-21` sections silently — the id collision is recorded here rather than quietly renumbered, because a reference written against the original number in any report or transcript now points at a different measurement.)*
+
+**Why this is here rather than cited.** COFF-11 had to choose what a `sheet-cell` extent's
+inner bound MEANS, and it chose the format's own CAPACITY over the capture's used range. That
+makes the grid's size load-bearing: a figure too LOW refuses a citation of a cell that exists,
+which is the record refusing a true statement, and a figure too HIGH mints an address no
+workbook can hold. `CLAUDE.md`'s rule is that a vendor's documentation is a CLAIM and not a
+measurement, and "1,048,576 × 16,384" is exactly the kind of number a session recalls with
+full confidence, so it was measured instead.
+
+**Instrument.** `.coff11-measure/gridprobe.mjs` (kept out of the tree — it is evidence, not an
+input) builds probe workbooks byte-by-byte with an independent crc32, each carrying `A1 =
+"anchor"` plus ONE probe cell, round-trips each through **LibreOffice 26.8.0.3**
+(`bce0998afefdbc355585ca324285661a2170ba77`, the same install COFF-9 measured on this machine)
+as `xlsx -> xlsx`, and reads `xl/worksheets/sheet1.xml` back out of the package LibreOffice
+wrote. A KEPT cell reference means a real producer accepted the address; a DROPPED one means it
+did not.
+
+| probe | anchor | probe cell | reading |
+| --- | --- | --- | --- |
+| BASELINE — `A1` only, no probe | KEPT | — | the instrument works |
+| `XFD1048576` — the claimed last cell | KEPT | **KEPT** | INSIDE the grid |
+| `A1048577` — one row past | KEPT | **DROPPED** | OUTSIDE — rows end at 1,048,576 |
+| `XFE1` — one column past | KEPT | **DROPPED** | OUTSIDE — columns end at 16,384 |
+| `ZZ9999999` — D-354's own example address | KEPT | **DROPPED** | OUTSIDE, on its ROW |
+
+**So `XLSX_GRID_ROWS = 1048576` and `XLSX_GRID_COLS = 16384` in `src/formats-xlsx.mjs` are
+measured figures**, and the last row is the one that matters for the decision: the address
+D-354 and D-359 both name as the measured cost of the unfed arm is genuinely impossible, so
+the capacity bound refuses something real rather than being a fence over nothing.
+
+**THE BASELINE ROW EARNED ITS PLACE ON THE FIRST RUN AND THAT IS THE REASON IT IS PRINTED
+HERE.** The probe's first draft read the package back by walking LOCAL zip headers and bailed
+out on the streamed-size flag (`0x08`) — which is exactly how LibreOffice writes its packages.
+Every arm returned 0 bytes of sheet XML, so **every probe read as DROPPED**, including
+`XFD1048576`, and the table would have said the grid was smaller than any of these addresses.
+The only line that contradicted it was the BASELINE row reporting `anchor=LOST` over a
+workbook with nothing to lose. A confident, entirely wrong measurement was one un-run control
+row away. The reader was corrected to walk the CENTRAL DIRECTORY and the table above is the
+corrected run.
+
+**What this measurement does NOT say.** It measures what **one** producer accepts on this
+machine, which is evidence about the format as implemented and not a reading of ECMA-376. It
+says nothing about OpenDocument, which fixes no maximum table size at all — the reason
+`odf.mjs` emits a NULL bound for `.ods` rather than borrowing this figure, and the reason the
+`odsborrowsgrid` control arm exists to stop a later session doing so quietly.

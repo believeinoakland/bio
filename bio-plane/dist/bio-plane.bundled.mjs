@@ -16816,6 +16816,15 @@ async function sha256Hex3(u8) {
 function sheetCellRef(sheet, cell) {
   return { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell };
 }
+var XLSX_GRID_ROWS = 1048576;
+var XLSX_GRID_COLS = 16384;
+function a1Col(ref) {
+  const m = /^\$?([A-Za-z]{1,3})\$?\d+$/.exec(String(ref ?? "").trim());
+  if (!m) return null;
+  let n = 0;
+  for (const ch of m[1].toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64);
+  return n;
+}
 function classifyUrl(url) {
   const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(url || "");
   const scheme = m ? m[1].toLowerCase() : null;
@@ -16940,7 +16949,16 @@ function walkSheetXml(xml) {
     location: h.attrs.location ?? null,
     display: h.attrs.display ?? null
   }));
-  return { rows, hiddenRows, hiddenCols, hyperlinks };
+  let usedRows = 0, usedCols = 0;
+  for (const row of rows) {
+    if (!row.cells.length) continue;
+    if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
+    for (const c of row.cells) {
+      const col = a1Col(c.cell);
+      if (col != null && col > usedCols) usedCols = col;
+    }
+  }
+  return { rows, hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols };
 }
 function cellValue(c, sharedStrings) {
   if (c.t === "s") {
@@ -17176,6 +17194,10 @@ function xlsxText(parts) {
         sheet: sheet.index,
         name: sheet.name,
         hidden: sheet.hidden,
+        rows: XLSX_GRID_ROWS,
+        cols: XLSX_GRID_COLS,
+        usedRows: null,
+        usedCols: null,
         text: "",
         undetermined: [marker]
       });
@@ -17201,7 +17223,17 @@ function xlsxText(parts) {
       if (vals.length) lines.push(vals.join("	"));
     }
     const text = lines.join("\n");
-    outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden, text, undetermined });
+    outSheets.push({
+      sheet: sheet.index,
+      name: sheet.name,
+      hidden: sheet.hidden,
+      rows: XLSX_GRID_ROWS,
+      cols: XLSX_GRID_COLS,
+      usedRows: walked.usedRows,
+      usedCols: walked.usedCols,
+      text,
+      undetermined
+    });
     for (const u of undetermined) allUndetermined.push(u);
   }
   const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
@@ -17734,7 +17766,15 @@ async function pptxText(parts) {
       const stated = parts.undetermined.find((u) => u.part === part);
       undetermined.push({ reason: "slide_unreadable", part, why: stated?.why ?? "unreadable" });
     } else {
-      slides.push({ slide, ref: slide != null ? `slide ${slide}` : null, part, hidden, text: walkSlide(xml).text });
+      const walked = walkSlide(xml);
+      slides.push({
+        slide,
+        ref: slide != null ? `slide ${slide}` : null,
+        part,
+        hidden,
+        shapes: walked.shapes,
+        text: walked.text
+      });
     }
     const notesPart = parts.notesOf.get(part) ?? null;
     if (!notesPart) continue;
@@ -18494,7 +18534,25 @@ function odsText(parts) {
       if (vals.length) lines.push(vals.join("	"));
     }
     const text = lines.join("\n");
-    outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden, text, undetermined: [] });
+    let usedRows = 0, usedCols = 0;
+    for (const row of walked.rows) {
+      if (!row.cells.length) continue;
+      if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
+      for (const c of row.cells) {
+        if (Number.isInteger(c.col) && c.col + 1 > usedCols) usedCols = c.col + 1;
+      }
+    }
+    outSheets.push({
+      sheet: sheet.index,
+      name: sheet.name,
+      hidden: sheet.hidden,
+      rows: null,
+      cols: null,
+      usedRows,
+      usedCols,
+      text,
+      undetermined: []
+    });
   }
   const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
   return {
@@ -18662,7 +18720,14 @@ function odpText(parts) {
   for (const page of deckOf2(body, styles)) {
     const walked = walkPage(page.xml);
     const text = walked.shapes.map((s) => s.text).filter((t) => t.length).join("\n");
-    slides.push({ slide: page.slide, ref: `slide ${page.slide}`, part: CONTENT_PART, hidden: page.hidden, text });
+    slides.push({
+      slide: page.slide,
+      ref: `slide ${page.slide}`,
+      part: CONTENT_PART,
+      hidden: page.hidden,
+      shapes: walked.count,
+      text
+    });
     const nt = notesTextOf(page.xml);
     if (nt != null && nt.length) {
       speakerNotes.push({

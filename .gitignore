@@ -198,3 +198,26 @@ _m025/
 # where the next walk can enrol it (M0-15: `git stash -u` is repository-wide,
 # not per-worktree).
 .m031-pen/
+# COFF-11's pen (`bio-plane/test/nc-coff11.mjs`), named for its item on the rule stated at
+# `.rec84-control-pristine/`: a glob over `.*-control-pristine/` would silently cover a pen
+# nobody declared. The harness arms the three office PRODUCERS — `src/formats-xlsx.mjs`,
+# `src/pptx.mjs` and `src/odf.mjs` — and keeps per-arm pristine copies here while it does.
+# An interrupted run leaves a copy behind, and an untracked copy of a plane source is exactly
+# what another item's producer sweep has already enrolled as a second author.
+.coff11-control-pristine/
+# COFF-11's own working files: the LibreOffice grid probe that turned a vendor's figure into
+# a measurement, its scratch workbooks, the logs its baseline and control runs were read
+# from, and the scratch `git worktree` the pristine baseline was measured in. None of them
+# is an input to anything; all of them are evidence that lives in the report and the release
+# line instead.
+.coff11-measure/
+.coff11-baseline.log
+.coff11-nc.log
+.coff11-nc-cap12.log
+.coff11-final.log
+.coff11-ui.log
+.coff11-coverage.log
+.coff11-plancheck.log
+.scratch-base/
+bio-plane/.coff11-arm-wire-pristine.mjs
+bio-plane/.coff11-arm-test-pristine.mjs

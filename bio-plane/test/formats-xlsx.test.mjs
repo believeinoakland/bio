@@ -27,6 +27,7 @@
  */
 /* NEGATIVE CONTROL: (1) collapse <f> into <v> — in src/formats-xlsx.mjs's formula-item emit, replace `formula: c.f` with `formula: c.v` -> the suite fails NAMING the formula/value distinction. RE-RUN 2026-08-03 against the conformed `evidentiary` envelope: 3 of 75 failed ("the formula is held BESIDE its cached value — TWO named fields, both present", "never collapsed: the formula is not the value", "the hidden sheet's cross-sheet formula is held too"); restored -> 75 pass 0 fail. (2) strip the hidden flag — in src/formats-xlsx.mjs's sheets mapping, replace `hidden: state === "visible" ? false : state` with `hidden: false` -> the suite fails on the hidden flag everywhere it is surfaced. RE-RUN 2026-08-03 against the conformed shape: 6 of 75 failed ("Reconciliation is FLAGGED hidden", "sheets carried with hidden flags", "the hidden SHEET is a first-class finding (source null — workbook-scoped, stated)", "and enumerates its kinds", "per-sheet units, hidden flags carried", "the hidden SHEET is still flagged (workbook.xml is not a text part)"); restored -> 75 pass 0 fail. */
 
+/* NEGATIVE CONTROL, COFF-11 (IC-100 / D-359) — SEVEN arms and a baseline, each armed ALONE with every other defence held open, re-runnable in one step with `node test/nc-coff11.mjs [arm]` from `bio-plane/`. RUN 2026-09-15, ALL SEVEN AS DECLARED, every restore verified byte-identically by sha256 AND by content with a byte count printed: `src/formats-xlsx.mjs` 33,691 B sha256 c5855053f670…, `src/pptx.mjs` 37,442 B sha256 1708977ce689…, `src/odf.mjs` 64,000 B sha256 08f4709dde58…. baseline xlsx 88/0 · pptx 116/0 · odf 140/0 · e2e 31/0 GREEN; dropxlsxbound 4/4 declared (5 failing across two suites); dropslideshapes 5/5 (6); dropodpshapes 2/2 (3); dropxlsxboundunread 1/1 (1); usedrangeasbound 4/4 (4); odsborrowsgrid 3/3 (3). TWO CAME BACK WRONG ON THE FIRST RUN AND ARE RECORDED AT THEIR SITES RATHER THAN SMOOTHED, and both were findings about the INSTRUMENT: (1) `dropxlsxbound` declared the DISAGREE assertion and it did NOT fire, because its first spelling (`rows === usedRows` expected false) is satisfied by a NULL bound too — the ASSERTION was too weak and was strengthened to require both figures be integers, which is the arm doing better than going red; (2) both xlsx arms declared the UNREAD-SHEET bound, which neither patch reaches — `xlsxText` emits the sheet object at TWO independent sites, and the seventh arm `dropxlsxboundunread` now covers the second rather than leaving it covered by nobody. AND ONE SURPRISING GREEN, kept because it is the more useful result: under `usedrangeasbound` the END-TO-END suite stayed green at 31/0 — not the arm failing but the measurement that the e2e suite cannot see this bound AT ALL today, because the acquire wire drops the producer's figure before the store reads it (D-359's residue, DELEGATED 2026-09-15). */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { deflateRawSync } from "node:zlib";
 import { createHash } from "node:crypto";
@@ -311,6 +312,99 @@ console.log("\n--- structure()/text() on a failed parts result: honest, never a 
    * reason} (docx.mjs as built), not the variant's undetermined-marker list. */
   const tx = await xlsxEntry.text(bad);
   t("text states it too", tx, { ok: false, container: "xlsx", reason: "not_xlsx:zip" });
+}
+
+/* ====================================================================== *
+ * COFF-11 / IC-100 / D-359 — THE SHEET'S OWN EXTENT, IN TWO FIGURES, AND
+ * THE DECISION THAT KEEPS THEM APART.
+ * ====================================================================== *
+ * `rows`/`cols` is the BOUND — the grid this format makes addressable, the
+ * figure `coversSheetCell` compares an address against. `usedRows`/`usedCols`
+ * is how far this workbook's cells actually REACH. They are two different
+ * facts and the whole decision is that the first is not the second: bounding
+ * a cell by the used range would refuse `Summary!D500` on a sheet filled to
+ * row 14 — a cell that EXISTS and was EMPTY at capture, which is the record
+ * refusing a TRUE statement and pushing the member up to the whole document.
+ *
+ * THE GRID FIGURES ARE MEASURED, NOT CITED (`MEASUREMENTS.md`, 2026-09-15):
+ * a real producer on this machine KEPT `XFD1048576` and DROPPED `A1048577`,
+ * `XFE1` and `ZZ9999999` on an xlsx round-trip. The last of those is the very
+ * address D-354 and D-359 name as the measured cost of the unfed arm, so the
+ * bound refuses something real rather than being a fence over nothing.       */
+console.log("\n--- COFF-11: the sheet's BOUND (the grid) and its USED range, which are not the same fact ---");
+{
+  const T = await xlsxEntry.text(await xlsxEntry.parts(WB));
+  const s1 = T.sheets.find((s) => s.name === "Summary");
+  t("every sheet carries the four extent keys — the shape is uniform or a consumer cannot read it by key presence",
+    T.sheets.every((s) => "rows" in s && "cols" in s && "usedRows" in s && "usedCols" in s), true);
+  t("the BOUND is the measured XLSX grid, identical on every sheet because it is a fact about the FORMAT",
+    T.sheets.map((s) => [s.rows, s.cols]), T.sheets.map(() => [1048576, 16384]));
+  /* The fixture's ground truth, written above in THIS file: SHEET1 declares
+     rows 1,2,3,5,9,14 and columns A and B. The assertion is not an equality
+     the code produced for itself. */
+  t("the USED range is what the cells reach — row 14 and column B, off the fixture's own rows",
+    [s1.usedRows, s1.usedCols], [14, 2]);
+  /* STRENGTHENED 2026-09-15, and the control is what found it. The first
+     spelling of this assertion was `s1.rows === s1.usedRows` expected false —
+     which a NULL bound also satisfies, so the `dropxlsxbound` arm took the
+     bound away and this assertion stayed GREEN. An assertion that a
+     broken subject passes is not an assertion; both figures must be INTEGERS
+     and they must differ, which is the claim the decision actually makes. */
+  t("and the two figures are both REAL and DISAGREE, which is the entire decision made visible",
+    [Number.isInteger(s1.rows) && Number.isInteger(s1.usedRows) && s1.rows !== s1.usedRows,
+     Number.isInteger(s1.cols) && Number.isInteger(s1.usedCols) && s1.cols !== s1.usedCols],
+    [true, true]);
+  /* An empty-but-existing cell is the case the decision exists for. D500 is
+     inside the grid and far outside the used range; under the bound this
+     entry emits it is ADDRESSABLE, which is what lets a member cite a blank
+     line on a disclosure form. */
+  t("D500 is inside the emitted BOUND (addressable — an empty cell is still a cell)",
+    [500 <= s1.rows, 4 <= s1.cols], [true, true]);
+  t("and outside the USED range, so the two answers are distinguishable from the emitted shape alone",
+    [500 <= s1.usedRows, 4 <= s1.usedCols], [false, false]);
+  t("ZZ9999999 — D-354's own example — is outside the BOUND on its ROW, so the bound is not a fence over nothing",
+    9999999 <= s1.rows, false);
+}
+
+console.log("\n--- COFF-11 OVER-STRICTNESS: correct work in spellings the walk did not anticipate ---");
+{
+  /* THE ARM THAT MUST PASS. A used-range accumulator is exactly the kind of
+     code that quietly reads only what its author pictured, so the spellings a
+     real producer writes and this walk did NOT have in mind are driven here:
+     a MULTI-LETTER column (everything past Z, which is most real sheets), a
+     row declared with NO cells (formatting only — a producer writes these and
+     counting one as reach would make the used range a statement about
+     styling), and a row whose cells are out of document order. */
+  const ODD = `<?xml version="1.0"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>`
+    + `<row r="2"><c r="B2" t="inlineStr"><is><t>b</t></is></c><c r="AA2" t="inlineStr"><is><t>aa</t></is></c></row>`
+    + `<row r="40"/>`                       /* declared, no cells: formatting only */
+    + `<row r="7"><c r="C7" t="inlineStr"><is><t>c</t></is></c></row>`
+    + `</sheetData></worksheet>`;
+  const T = await xlsxEntry.text(await xlsxEntry.parts(zip(workbookFiles({ sheet1: ODD }))));
+  const s1 = T.sheets.find((s) => s.name === "Summary");
+  t("a MULTI-LETTER column is measured, not truncated at Z — AA is column 27",
+    s1.usedCols, 27);
+  t("a row declared with NO cells does not extend the used range — reach is the CELLS, never the styling",
+    s1.usedRows, 7);
+  t("and the BOUND is unmoved by any of it, because it is a fact about the format and not about this sheet",
+    [s1.rows, s1.cols], [1048576, 16384]);
+}
+
+console.log("\n--- COFF-11: an UNREAD sheet keeps its bound and states a NULL used range, never a zero ---");
+{
+  /* A sheet whose part is missing: the workbook still names it, so it is
+     still an XLSX sheet and the grid still applies — but nothing walked it,
+     and a 0 here would say "this sheet holds nothing", which is the one thing
+     an unread sheet cannot say. */
+  const NO_SHEET2 = zip(workbookFiles().filter((f) => f.name !== "xl/worksheets/sheet2.xml"));
+  const T = await xlsxEntry.text(await xlsxEntry.parts(NO_SHEET2));
+  const s2 = T.sheets.find((s) => s.name === "Detail");
+  t("the unread sheet is still in the list with its stated undetermined",
+    [!!s2, s2.undetermined.length > 0], [true, true]);
+  t("its BOUND stands — an impossible address is impossible whether or not the part was read",
+    [s2.rows, s2.cols], [1048576, 16384]);
+  t("and its USED range is NULL, not 0 — undetermined is first-class and never a zero",
+    [s2.usedRows, s2.usedCols], [null, null]);
 }
 
 console.log(`\nformats-xlsx: ${pass} pass, ${fail} fail`);

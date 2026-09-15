@@ -159,6 +159,55 @@ export function sheetCellRef(sheet, cell) {
   return { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell };
 }
 
+/* ------------------------------------------------------------------ *
+ * COFF-11 / IC-100 / D-359 — A SHEET'S BOUND, AND THE DECISION IT CARRIES.
+ * ------------------------------------------------------------------ *
+ *
+ * THE BOUND IS THE GRID, NEVER THE USED RANGE, and that is a decision rather
+ * than a convenience. `walkSheetXml` can say exactly how far this workbook's
+ * cells reach, and feeding THAT to the `sheet-cell` arm of C-45.1 would refuse
+ * `Summary!D500` on a sheet filled to row 12 — a cell that EXISTS in the
+ * workbook and was EMPTY at capture. That is the record refusing a TRUE
+ * statement, and in this product an empty cell is routinely the finding
+ * ("the disclosure's Schedule B was left blank"). Worse, the refusal does not
+ * stop a member citing the document: it pushes them up to the WHOLE DOCUMENT,
+ * which claims MORE and not less — the reason already ruled twice in this
+ * plane, at the store's `#pageSetForCapture` and `#containerExtentForCapture`.
+ * So the bound refuses only the IMPOSSIBLE, and `NoSuchSheet!ZZ9999999` — the
+ * address D-354 and D-359 both cite as the measured cost of the unfed arm — is
+ * impossible on its ROW and is refused here.
+ *
+ * THE USED RANGE IS STILL EMITTED, BESIDE IT AND UNDER ITS OWN NAME
+ * (`usedRows`/`usedCols`), because the two facts are different and a later
+ * reader must be able to tell "empty at capture" from "outside the grid"
+ * without either figure pretending to be the other. Nothing consumes the used
+ * range today; it is emitted because this walk is the only place that knows it
+ * and re-walking the container to ask again would be a second opinion about
+ * one number (CAP-12's own rule at the acquire wire).
+ *
+ * THE FIGURES ARE THE FORMAT'S, MEASURED AGAINST A REAL PRODUCER ON THIS
+ * MACHINE rather than cited from a vendor's documentation — see
+ * `MEASUREMENTS.md`, 2026-09-15. `.ods` does NOT get a bound: OpenDocument
+ * fixes no maximum table size at all, so `odf.mjs` emits a NULL there and says
+ * so, which is undetermined-is-first-class at this construct and not a gap in
+ * that reader. */
+const XLSX_GRID_ROWS = 1048576;
+const XLSX_GRID_COLS = 16384;
+
+/** The 1-based column number of an A1 reference's column letters, or null.
+ *  `$B$14` and `B14` both answer 2 — the absolute markers are notation, not
+ *  address, exactly as `CONTENT_EXTENT_A1_RE` in the check catalog treats
+ *  them. Anything this cannot read is null and is SKIPPED by the caller,
+ *  never scored zero: a reference this helper does not understand must not
+ *  silently shrink a sheet's measured extent. */
+function a1Col(ref) {
+  const m = /^\$?([A-Za-z]{1,3})\$?\d+$/.exec(String(ref ?? "").trim());
+  if (!m) return null;
+  let n = 0;
+  for (const ch of m[1].toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64);
+  return n;
+}
+
 /* http/https are addresses the record may hold a capture of elsewhere:
  * deferred. Everything else a hyperlink rel can carry (mailto:, file:, ...)
  * is refused — the same partition rule HTML and PDF apply. */
@@ -321,7 +370,26 @@ function walkSheetXml(xml) {
     location: h.attrs.location ?? null,
     display: h.attrs.display ?? null,
   }));
-  return { rows, hiddenRows, hiddenCols, hyperlinks };
+  /* COFF-11 — THE USED EXTENT, accumulated over the cells this walk has
+     already read. It is taken from the CELLS and not from the `<row>`
+     elements: a producer may declare a row to carry formatting and put no
+     cell in it, and counting that as reach would make the used range a
+     statement about styling. A row whose `r` is unreadable, and a cell whose
+     A1 reference `a1Col` does not understand, are SKIPPED rather than scored
+     zero — the WORKER.md rule that a thing the matcher cannot classify is
+     named, not silently counted. A sheet with no cells at all measures 0/0,
+     which is a MEASURED zero (this sheet holds nothing) and is a different
+     fact from the NULL the bound carries when the format fixes no maximum. */
+  let usedRows = 0, usedCols = 0;
+  for (const row of rows) {
+    if (!row.cells.length) continue;
+    if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
+    for (const c of row.cells) {
+      const col = a1Col(c.cell);
+      if (col != null && col > usedCols) usedCols = col;
+    }
+  }
+  return { rows, hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols };
 }
 
 /** One cell's DISPLAYED value (the cached claim the published sheet shows).
@@ -561,7 +629,13 @@ function xlsxText(parts) {
   for (const sheet of sheets) {
     if (sheet.xml == null) {
       const marker = { sheet: sheet.index, cell: null, reason: sheet.why ?? "sheet_unreadable" };
+      /* COFF-11: the BOUND still stands — this is a sheet of an XLSX workbook
+         whether or not its part could be read, so an impossible address is
+         still impossible and is still refused. The USED range is NULL rather
+         than 0, because nothing walked it: a zero here would say "this sheet
+         holds nothing", which is the one thing an unread sheet cannot say. */
       outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden,
+        rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS, usedRows: null, usedCols: null,
         text: "", undetermined: [marker] });
       allUndetermined.push(marker);
       continue;
@@ -585,7 +659,15 @@ function xlsxText(parts) {
       if (vals.length) lines.push(vals.join("\t"));
     }
     const text = lines.join("\n");
-    outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden, text, undetermined });
+    /* COFF-11 / IC-100 — the sheet's own extent, in TWO figures that are two
+       different facts: `rows`/`cols` is the BOUND (the grid this format makes
+       addressable, which is what C-45.1's inner bound compares against), and
+       `usedRows`/`usedCols` is how far this workbook's cells actually reach.
+       See the decision block above `XLSX_GRID_ROWS`. */
+    outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden,
+      rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS,
+      usedRows: walked.usedRows, usedCols: walked.usedCols,
+      text, undetermined });
     for (const u of undetermined) allUndetermined.push(u);
   }
 

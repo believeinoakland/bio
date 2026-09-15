@@ -9,7 +9,24 @@
  * DECLARATION named both halves of the D-359 arm while the patch touches only the SHEET
  * predicate. THE DECLARATION WAS THE DEFECT and the subject was behaving exactly right. That is
  * REC-85's `canon` finding reproduced one item later, and it is the argument for splitting the
- * slide half into its own arm: a mis-declared arm reads exactly like a partially-working subject. */
+ * slide half into its own arm: a mis-declared arm reads exactly like a partially-working subject.
+ *
+ * RE-RUN 2026-09-15 by COFF-11 after it changed this suite, and the re-run is the point. COFF-11
+ * SPLIT the D-359 assertion and RENAMED two section-4 labels, so THREE of the declarations in
+ * `nc-cap12.mjs` matched nothing and three arms read NOT AS DECLARED while every subject behaved
+ * exactly right — the same mis-declared-arm failure this block already records, met a second time
+ * one item later and by a DIFFERENT route: a later item editing the suite rather than the author
+ * mis-stating the arm. Declarations CORRECTED at their sites (never exempted); all nine then AS
+ * DECLARED, every restore byte-identical (`src/index.mjs` 545,806 B sha256 991c44d1d87f… and
+ * `src/store.mjs` 2,088,831 B sha256 1503838c51f3…):
+ * baseline 31/0 GREEN · dropsheets 26/5 (5/5) · droppara 28/3 (3/3) · dropslides 27/4 (4/4) ·
+ * zero 30/1 (1/1) · notion 29/2 (2/2) · reader 27/4 (4/4) · overstrict 29/2 (2/2) ·
+ * overstrict2 30/1 (1/1).
+ *
+ * AND THE LESSON IS NOT ABOUT THOSE THREE LABELS. A control harness's declarations are a SECOND
+ * COPY of a suite's assertion names, and nothing in this repository makes the copy fail when the
+ * original moves — it fails as a WRONG VERDICT instead, which is the one failure mode that looks
+ * like the subject. Whoever next edits an assertion a `mustFail` names must re-run the harness. */
 
 /* CAP-12 / D-354 — THE CONTAINER'S OWN EXTENT, PERSISTED AT ACQUIRE.
  *
@@ -43,6 +60,7 @@
  *   KNOWN slide still mint. That is this item's honest boundary, asserted rather
  *   than described, and `nc-cap12.mjs`'s `overstrict` arm breaks it on purpose.
  */
+/* NEGATIVE CONTROL, COFF-11 (IC-100 / D-359) — SEVEN arms and a baseline, each armed ALONE with every other defence held open, re-runnable in one step with `node test/nc-coff11.mjs [arm]` from `bio-plane/`. RUN 2026-09-15, ALL SEVEN AS DECLARED, every restore verified byte-identically by sha256 AND by content with a byte count printed: `src/formats-xlsx.mjs` 33,691 B sha256 c5855053f670…, `src/pptx.mjs` 37,442 B sha256 1708977ce689…, `src/odf.mjs` 64,000 B sha256 08f4709dde58…. baseline xlsx 88/0 · pptx 116/0 · odf 140/0 · e2e 31/0 GREEN; dropxlsxbound 4/4 declared (5 failing across two suites); dropslideshapes 5/5 (6); dropodpshapes 2/2 (3); dropxlsxboundunread 1/1 (1); usedrangeasbound 4/4 (4); odsborrowsgrid 3/3 (3). TWO CAME BACK WRONG ON THE FIRST RUN AND ARE RECORDED AT THEIR SITES RATHER THAN SMOOTHED, and both were findings about the INSTRUMENT: (1) `dropxlsxbound` declared the DISAGREE assertion and it did NOT fire, because its first spelling (`rows === usedRows` expected false) is satisfied by a NULL bound too — the ASSERTION was too weak and was strengthened to require both figures be integers, which is the arm doing better than going red; (2) both xlsx arms declared the UNREAD-SHEET bound, which neither patch reaches — `xlsxText` emits the sheet object at TWO independent sites, and the seventh arm `dropxlsxboundunread` now covers the second rather than leaving it covered by nobody. AND ONE SURPRISING GREEN, kept because it is the more useful result: under `usedrangeasbound` the END-TO-END suite stayed green at 31/0 — not the arm failing but the measurement that the e2e suite cannot see this bound AT ALL today, because the acquire wire drops the producer's figure before the store reads it (D-359's residue, DELEGATED 2026-09-15). */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -354,9 +372,35 @@ t("    and the levels it has no notion of are NULL rather than zero",
    lvl(ext(doc), "sheets"), lvl(ext(deck), "paragraphs")],
   [null, null, null, null]);
 
-/* D-359, ASSERTED RATHER THAN DESCRIBED: what the entries do NOT emit. */
-t("the inner bounds are NOT invented — every sheet's rows/cols and every slide's shape "
-  + "count are NULL, because no entry emits them (D-359)",
+/* D-359, ASSERTED RATHER THAN DESCRIBED.
+ *
+ * CORRECTED 2026-09-15 by COFF-11, and the correction is the FINDING rather
+ * than housekeeping. CAP-12 wrote this assertion with the reason "because no
+ * entry emits them", and that reason WAS true when it was written. COFF-11
+ * landed the producer half — `xlsxText` now emits each sheet's `rows`/`cols`
+ * and `usedRows`/`usedCols`, `pptxText` each slide's `shapes`, and `odf.mjs`
+ * the same for `.ods`/`.odp` — and this assertion STILL PASSES UNCHANGED IN
+ * VALUE. **That is the measurement: the stored figure is null not because the
+ * producer is silent but because the ACQUIRE WIRE DROPS IT.**
+ * `index.mjs`'s FW-15 projection reads the LEVELS by key presence and then
+ * writes `rows: null, cols: null` and `shapes: null` as LITERALS, so a
+ * producer that starts returning a field is not read. D-359 and COFF-11's own
+ * brief both say the wire "carries them with no edit"; measured here, it does
+ * not. The remaining edit is three lines in a file this item may not touch and
+ * is filed as a DELEGATION in `CLAIMS.md` (2026-09-15).
+ *
+ * The assertion is therefore SPLIT: what the PRODUCERS now say, and what the
+ * RECORD still holds, so the two can never again be read off one line. */
+t("the PRODUCERS now emit the inner bounds — the entries return what they compute (COFF-11/IC-100)",
+  [(await (await import("../src/formats-xlsx.mjs")).xlsxEntry
+      .text(await (await import("../src/formats-xlsx.mjs")).xlsxEntry.parts(XLSX)))
+      .sheets.every((s) => Number.isInteger(s.rows) && Number.isInteger(s.cols)),
+   (await (await import("../src/pptx.mjs")).pptxEntry
+      .text(await (await import("../src/pptx.mjs")).pptxEntry.parts(PPTX)))
+      .slides.every((s) => Number.isInteger(s.shapes))],
+  [true, true]);
+t("and the RECORD still holds NULL for both — the acquire wire writes the literal and never reads "
+  + "the producer's figure (D-359's residue, measured 2026-09-15, DELEGATED)",
   [Array.isArray(ext(book)?.sheets)
      ? ext(book).sheets.every((s) => s && s.rows === null && s.cols === null) : null,
    Array.isArray(ext(deck)?.slides)
@@ -447,8 +491,8 @@ t("the three levels bound three different containers and never each other",
 
 /* =============== 4. D-359: THE INNER BOUNDS ARE NOT INVENTED =========== */
 
-console.log("\n--- 4. the inner bounds this record does NOT hold: a cell inside a KNOWN sheet, "
-          + "and a shape inside a KNOWN slide, still MINT (D-359 — over-strictness) ---");
+console.log("\n--- 4. the inner bounds: what MINTS correctly under COFF-11's decision, and what still "
+          + "mints because the acquire wire drops the figure the producers now emit (D-359) ---");
 
 /* `promote`, not `mustPromote`, DELIBERATELY: this is the arm an over-strict
    fence breaks, and a throw here would end the module while the tally read
@@ -456,15 +500,45 @@ console.log("\n--- 4. the inner bounds this record does NOT hold: a cell inside 
 const rWildCell = await promote("INQ-2026-9200-wildcell",
   inquiryMd("INQ-2026-9200-wildcell", { refs: [DOC_BOOK],
     legs: [{ target: DOC_BOOK, kind: "sheet-cell", sheet: SHEET_NAMES[0], cell: "ZZ999999" }] }), "inquiry");
-t("cell ZZ999999 of a sheet the workbook HAS mints: the entry emits no row or column "
-  + "extent, so nobody measured that bound and refusing it would be a fence tighter than its rule",
+/* CORRECTED 2026-09-15 by COFF-11. CAP-12's reason — "the entry emits no row
+   or column extent" — is now FALSE: the entry emits it (IC-100). The VALUE is
+   unchanged and the new reason is different in kind, so the label is rewritten
+   rather than left to mean something it no longer means.
+
+   AND ZZ999999 CHANGES CATEGORY RATHER THAN OUTCOME, which is the decision
+   COFF-11 carries made visible on the one address this suite already drove.
+   Row 999,999 is INSIDE the XLSX grid (1,048,576 rows, MEASURED — see
+   `MEASUREMENTS.md` 2026-09-15). Under the bound this item chose — the grid,
+   never the used range — that cell EXISTS and was EMPTY at capture, so minting
+   it is CORRECT and will stay correct when the wire lands. It stopped being a
+   cost of the gap the moment the decision was taken. The address that is
+   genuinely IMPOSSIBLE is driven immediately below it. */
+t("cell ZZ999999 of a sheet the workbook HAS mints — and under COFF-11's decision this is RIGHT, "
+  + "not a gap: row 999,999 is inside the grid, so the cell exists and was empty at capture",
   [rWildCell.ok !== false, rWildCell.content?.[0]?.extent_kind, rWildCell.content?.[0]?.minted],
+  [true, "sheet-cell", true]);
+/* THE ADDRESS THAT IS ACTUALLY IMPOSSIBLE — one row past the measured grid.
+   This is the cost that REMAINS open, and it is driven rather than described:
+   it mints TODAY because the acquire wire writes `rows: null` as a literal and
+   never reads the producer's figure. It is the arm that will flip to a C-45.1
+   refusal the moment the three-line wire edit lands (DELEGATED, `CLAIMS.md`
+   2026-09-15), and it is written so that flip is a one-line correction here. */
+const rImpossibleCell = await promote("INQ-2026-9200-impossiblecell",
+  inquiryMd("INQ-2026-9200-impossiblecell", { refs: [DOC_BOOK],
+    legs: [{ target: DOC_BOOK, kind: "sheet-cell", sheet: SHEET_NAMES[0], cell: "A1048577" }] }), "inquiry");
+t("cell A1048577 — one row PAST the measured grid, an address no XLSX can hold — still MINTS: "
+  + "the producer emits the bound and the acquire wire drops it (D-359's residue, DELEGATED)",
+  [rImpossibleCell.ok !== false, rImpossibleCell.content?.[0]?.extent_kind,
+   rImpossibleCell.content?.[0]?.minted],
   [true, "sheet-cell", true]);
 const rWildShape = await promote("INQ-2026-9200-wildshape",
   inquiryMd("INQ-2026-9200-wildshape", { refs: [DOC_DECK],
     legs: [{ target: DOC_DECK, kind: "slide-shape", slide: 1, shape: 9999 }] }), "inquiry");
-t("shape 9,999 of a slide the deck HAS mints, for the same reason — the shape count is "
-  + "computed by `walkSlide` and returned by no entry",
+/* CORRECTED for the same reason, and here there is no category change to make:
+   a slide's shape list is EXHAUSTIVE, so shape 9,999 of this deck's slide 1 is
+   impossible under any bound and minting it is the residual cost outright. */
+t("shape 9,999 of a slide the deck HAS still MINTS — `walkSlide`'s count now REACHES the entry "
+  + "(IC-100) and is dropped at the same wire, which is the other half of the same residue",
   [rWildShape.ok !== false, rWildShape.content?.[0]?.extent_kind, rWildShape.content?.[0]?.minted],
   [true, "slide-shape", true]);
 

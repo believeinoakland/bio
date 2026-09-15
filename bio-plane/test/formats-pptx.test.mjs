@@ -30,6 +30,7 @@
 /* NEGATIVE CONTROL: in src/pptx.mjs's pptxText, merge the notes into the slide text — change the `document` line to `const document = [...slides.map((s) => s.text), ...speakerNotes.map((s) => s.text)].filter((t) => t.length).join("\n");` — and the suite fails NAMING the distinction. RUN 2026-08-03: 2 of 95 failed ("speaker notes are NOWHERE in document — the deck as presented" and "document is the slide texts newline-joined — THE DECK AS PRESENTED"); restored -> 95 pass 0 fail. */
 /* NEGATIVE CONTROL (COFF-7, hidden slides): in src/pptx.mjs neuter the ONE funnel both attribute locations pass through — change `const declaresNotShown = (v) => v === "0" || v === "false";` to `const declaresNotShown = (v) => false;` — and the suite fails NAMING a hidden slide now indistinguishable from a visible one. RUN 2026-08-03: 8 of 110 failed ("ONE hidden-slide item — the hidden slide flagged, the visible slides NOT", "the envelope counts and names the kind", "the hidden slide's text unit is MARKED — and the visible units are not", "its speaker-notes unit carries the slide's mark too", plus the sldIdLst-location and reordered-declaration cases); restored -> 110 pass 0 fail. */
 
+/* NEGATIVE CONTROL, COFF-11 (IC-100 / D-359) — SEVEN arms and a baseline, each armed ALONE with every other defence held open, re-runnable in one step with `node test/nc-coff11.mjs [arm]` from `bio-plane/`. RUN 2026-09-15, ALL SEVEN AS DECLARED, every restore verified byte-identically by sha256 AND by content with a byte count printed: `src/formats-xlsx.mjs` 33,691 B sha256 c5855053f670…, `src/pptx.mjs` 37,442 B sha256 1708977ce689…, `src/odf.mjs` 64,000 B sha256 08f4709dde58…. baseline xlsx 88/0 · pptx 116/0 · odf 140/0 · e2e 31/0 GREEN; dropxlsxbound 4/4 declared (5 failing across two suites); dropslideshapes 5/5 (6); dropodpshapes 2/2 (3); dropxlsxboundunread 1/1 (1); usedrangeasbound 4/4 (4); odsborrowsgrid 3/3 (3). TWO CAME BACK WRONG ON THE FIRST RUN AND ARE RECORDED AT THEIR SITES RATHER THAN SMOOTHED, and both were findings about the INSTRUMENT: (1) `dropxlsxbound` declared the DISAGREE assertion and it did NOT fire, because its first spelling (`rows === usedRows` expected false) is satisfied by a NULL bound too — the ASSERTION was too weak and was strengthened to require both figures be integers, which is the arm doing better than going red; (2) both xlsx arms declared the UNREAD-SHEET bound, which neither patch reaches — `xlsxText` emits the sheet object at TWO independent sites, and the seventh arm `dropxlsxboundunread` now covers the second rather than leaving it covered by nobody. AND ONE SURPRISING GREEN, kept because it is the more useful result: under `usedrangeasbound` the END-TO-END suite stayed green at 31/0 — not the arm failing but the measurement that the e2e suite cannot see this bound AT ALL today, because the acquire wire drops the producer's figure before the store reads it (D-359's residue, DELEGATED 2026-09-15). */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { deflateRawSync } from "node:zlib";
 import { linkWrapper } from "../src/subresources.mjs";
@@ -308,9 +309,16 @@ const T = await entry.text(parts);
 {
   t("text ok", T.ok, true);
   /* CORRECTED for COFF-7: the unit gained the `hidden` mark (false on a
-   * visible slide) — the shape grew, the old pin was not wrong, just prior. */
-  t("slide units carry slide-shape refs, their part and the hidden mark (false: this deck hides nothing)",
-    T.slides[0], { slide: 1, ref: "slide 1", part: "ppt/slides/slide1.xml", hidden: false, text: S1_TEXT });
+   * visible slide) — the shape grew, the old pin was not wrong, just prior.
+   * CORRECTED AGAIN for COFF-11 / IC-100 (2026-09-15) and for the same
+   * reason: the unit gained `shapes`, the slide's shape COUNT, which
+   * `walkSlide` always returned and this entry always discarded (D-359). The
+   * old pin was RIGHT when it was written and is what made the gap visible;
+   * it is corrected rather than exempted, and it stays a WHOLE-OBJECT pin on
+   * purpose — a pin that listed only the keys it cared about would not have
+   * noticed this addition at all, which is the property worth keeping. */
+  t("slide units carry slide-shape refs, their part, the hidden mark (false: this deck hides nothing) and the shape count",
+    T.slides[0], { slide: 1, ref: "slide 1", part: "ppt/slides/slide1.xml", hidden: false, shapes: 2, text: S1_TEXT });
   t("slide 2's text: paragraphs newline-joined, runs concatenated", T.slides[1].text, S2_TEXT);
   t("slide 3's text: <a:br> is a line break within its paragraph", T.slides[2].text, S3_TEXT);
   t("document is the slide texts newline-joined — THE DECK AS PRESENTED", T.document, `${S1_TEXT}\n${S2_TEXT}\n${S3_TEXT}`);
@@ -525,6 +533,52 @@ console.log("\n--- the walker holds its own doctrine ---");
     slideShapeRef(2, 0), { kind: "slide-shape", ref: "slide 2", slide: 2, shape: 0 });
   t("entities in run text decode", walkSlide(`<p:sld ${P} ${A}><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>Beats &amp; Measures</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>`).text,
     "Beats & Measures");
+}
+
+/* ====================================================================== *
+ * COFF-11 / IC-100 / D-359 — THE SLIDE'S SHAPE COUNT ON THE UNIT.
+ * ====================================================================== *
+ * `walkSlide` has always returned `shapes`; `pptxText` has always thrown it
+ * away, which is why the `slide-shape` arm of C-45.1 could refuse a slide
+ * past the deck and say nothing about a shape past the slide.
+ *
+ * AND THERE IS NO USED-RANGE-VERSUS-CAPACITY DECISION HERE, which the
+ * spreadsheet arm needed and this one does not. A slide's shape list is
+ * EXHAUSTIVE: there is no empty shape that exists, so shape 9,999 of a
+ * two-shape slide is not an empty shape, it is no shape. The count is both
+ * the walked extent and the addressable extent, and refusing past it refuses
+ * only the impossible. The section below pins that equality rather than
+ * asserting it in prose, because the equality is the reason.               */
+console.log("\n--- COFF-11: the shape COUNT rides the slide unit (D-359's second half) ---");
+{
+  const T = await entry.text(parts);
+  t("every slide unit carries a shape count — read by KEY PRESENCE, so the key must be on all of them",
+    T.slides.every((s) => Number.isInteger(s.shapes)), true);
+  /* The walker is the ground truth and it is asserted independently above
+     ("its three shapes count (sp, graphicFrame, sp)"). The point here is that
+     the ENTRY now carries what the walker always knew. */
+  t("and the figure is the walker's, per slide, not a recount",
+    T.slides.map((s) => [s.slide, s.shapes]),
+    [[1, walkSlide(SLIDE1_XML).shapes], [2, walkSlide(SLIDE2_XML).shapes], [3, walkSlide(SLIDE3_XML).shapes]]);
+  t("slide 3's three shapes reach the unit — the graphicFrame counts, as the walker says it does",
+    T.slides.find((s) => s.slide === 3).shapes, 3);
+  /* The bound this figure feeds: shape 0..n-1 exist, n and beyond do not.
+     Stated as the arithmetic rather than left to the consumer to infer. */
+  const s2 = T.slides.find((s) => s.slide === 2);
+  t("shape 0 and shape n-1 are addressable; shape n is IMPOSSIBLE, which is what makes the bound honest",
+    [0 < s2.shapes, s2.shapes - 1 < s2.shapes, s2.shapes < s2.shapes], [true, true, false]);
+  /* Bob's M0-31 ruling (2026-09-15) makes the DECK's indexed unit the SLIDE,
+     written as a slide-shape extent with the shape OMITTED. This figure must
+     not disturb that, and the reason it cannot is that the shape bound only
+     applies when a shape is present — pinned here so a later reader does not
+     have to take the claim on trust. */
+  t("the unit still carries no shape of its own — a slide-grain reference is untouched by this figure",
+    T.slides.every((s) => !("shape" in s)), true);
+  /* Speaker notes are a DISTINCT unit list and are NOT what `slide-shape`
+     addresses, so they gain nothing here. Asserted so the absence is a
+     decision on the record rather than an oversight nobody noticed. */
+  t("speaker-notes units gain NO shape count — they are not what a slide-shape extent addresses",
+    T.speakerNotes.every((n) => !("shapes" in n)), true);
 }
 
 console.log(`\nformats-pptx: ${pass} pass, ${fail} fail`);

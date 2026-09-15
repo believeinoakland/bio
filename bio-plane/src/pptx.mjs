@@ -732,7 +732,27 @@ async function pptxText(parts) {
       const stated = parts.undetermined.find((u) => u.part === part);
       undetermined.push({ reason: "slide_unreadable", part, why: stated?.why ?? "unreadable" });
     } else {
-      slides.push({ slide, ref: slide != null ? `slide ${slide}` : null, part, hidden, text: walkSlide(xml).text });
+      /* COFF-11 / IC-100 / D-359 — THE SLIDE'S SHAPE COUNT, which `walkSlide`
+         has always returned and this entry has always discarded. ONE walk,
+         bound to a local: the figure and the text are two readings of one
+         parse, and calling `walkSlide` twice would be two answers to one
+         question waiting to disagree.
+
+         THERE IS NO USED-RANGE-VERSUS-CAPACITY DECISION HERE, AND SAYING WHY
+         IS THE POINT. A sheet needed one because a cell EXISTS in the grid
+         whether or not it holds a value, so the walked extent is not the
+         addressable extent. A slide's shape list is EXHAUSTIVE: there is no
+         empty shape that exists, so shape 9,999 of a four-shape slide is not
+         an empty shape, it is no shape — impossible, and refusing it refuses
+         only the impossible. The two figures coincide and the count is both.
+
+         IT CANNOT DISTURB THE SLIDE-GRAIN UNIT BOB RULED ON 2026-09-15 (M0-31,
+         `CONTENT-SEARCH-DESIGN.md` §4.1): that unit is a `slide-shape` extent
+         with the SHAPE OMITTED, and `coversSlideShape` bounds the shape only
+         when one is present. A deck-grain unit is untouched by this figure. */
+      const walked = walkSlide(xml);
+      slides.push({ slide, ref: slide != null ? `slide ${slide}` : null, part, hidden,
+        shapes: walked.shapes, text: walked.text });
     }
     const notesPart = parts.notesOf.get(part) ?? null;
     if (!notesPart) continue;

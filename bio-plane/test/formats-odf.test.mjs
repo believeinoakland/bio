@@ -37,6 +37,7 @@
  */
 /* NEGATIVE CONTROL: five arms, each armed ALONE with the others held open, plus a baseline row. (1) CONTENT.XML REMOVED, per entry — DRIVEN here rather than patched, because the required behaviour is a STATED absence and not a crash: `odfFixture(f, {omitContent:true})` must give `parts.ok === false` with `why === "declared_main_part_absent"` AND `part === "content.xml"` AND `flavourDeclared === f`, and structure()/text() must answer `ok:false` carrying that reason — never an empty structure. RUN 2026-09-14: passes. (2) WRONG FLAVOUR TO EACH ENTRY — also DRIVEN: handing the `.ods` package to the `.odt` entry must refuse by name (`not_odt:ods`), and so for all six cross pairs. RUN 2026-09-14: passes. (3) THE ARM'S OWN ARM — UNREGISTER ONE ENTRY: `unregisterFormat("ods")` then re-assert detection. MUST FAIL: the detect assertions for `.ods` by bytes and by content type. MUST NOT FAIL: `.odt` and `.odp`, which are independent entries. RUN 2026-09-14 in-process at the foot of this suite, restoring by `registerFormat` with the exact entry `unregisterFormat` returned — 2 of 2 armed assertions failed by name, 0 of the other two entries' 8 moved. (4) OVER-STRICTNESS, the OOXML entries: `docx`/`xlsx`/`pptx` structure+text over their own fixtures must be byte-identical to the pre-item run, captured from a pristine `origin/main` worktree at `d791aa7` and COMPARED by sha256, not eyeballed — this item exports `sheetCellRef` from `formats-xlsx.mjs`, and that export must move nothing. RUN 2026-09-14: identical, digest in MEASUREMENTS.md. (5) OVER-STRICTNESS, the spellings this item did not anticipate: `table:display="false"` written on the `<table:table>` ELEMENT rather than on its style, and `presentation:visibility="hidden"` written on `<draw:page>` rather than on its drawing-page style — both are correct OpenDocument a producer may emit, and both must be READ, not refused. RUN 2026-09-14: passes. */
 
+/* NEGATIVE CONTROL, COFF-11 (IC-100 / D-359) — SEVEN arms and a baseline, each armed ALONE with every other defence held open, re-runnable in one step with `node test/nc-coff11.mjs [arm]` from `bio-plane/`. RUN 2026-09-15, ALL SEVEN AS DECLARED, every restore verified byte-identically by sha256 AND by content with a byte count printed: `src/formats-xlsx.mjs` 33,691 B sha256 c5855053f670…, `src/pptx.mjs` 37,442 B sha256 1708977ce689…, `src/odf.mjs` 64,000 B sha256 08f4709dde58…. baseline xlsx 88/0 · pptx 116/0 · odf 140/0 · e2e 31/0 GREEN; dropxlsxbound 4/4 declared (5 failing across two suites); dropslideshapes 5/5 (6); dropodpshapes 2/2 (3); dropxlsxboundunread 1/1 (1); usedrangeasbound 4/4 (4); odsborrowsgrid 3/3 (3). TWO CAME BACK WRONG ON THE FIRST RUN AND ARE RECORDED AT THEIR SITES RATHER THAN SMOOTHED, and both were findings about the INSTRUMENT: (1) `dropxlsxbound` declared the DISAGREE assertion and it did NOT fire, because its first spelling (`rows === usedRows` expected false) is satisfied by a NULL bound too — the ASSERTION was too weak and was strengthened to require both figures be integers, which is the arm doing better than going red; (2) both xlsx arms declared the UNREAD-SHEET bound, which neither patch reaches — `xlsxText` emits the sheet object at TWO independent sites, and the seventh arm `dropxlsxboundunread` now covers the second rather than leaving it covered by nobody. AND ONE SURPRISING GREEN, kept because it is the more useful result: under `usedrangeasbound` the END-TO-END suite stayed green at 31/0 — not the arm failing but the measurement that the e2e suite cannot see this bound AT ALL today, because the acquire wire drops the producer's figure before the store reads it (D-359's residue, DELEGATED 2026-09-15). */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync } from "node:fs";
 import { deflateRawSync } from "node:zlib";
@@ -46,6 +47,11 @@ import {
   ODT_CONTENT_TYPE, ODS_CONTENT_TYPE, ODP_CONTENT_TYPE,
 } from "../src/odf.mjs";
 import { linkWrapper } from "../src/subresources.mjs";
+/* COFF-11: the cross-format roster pin at the foot of this suite needs the
+ * SIBLING spreadsheet entry, because the claim IC-100 rests on is that ONE
+ * consumer reads both containers by key presence. Imported here rather than
+ * asserted in prose in two files that could drift apart silently. */
+import { xlsxEntry } from "../src/formats-xlsx.mjs";
 import { ODF_FLAVOURS, MEASURED_OOXML_TEXT_BOUND_BYTES } from "../src/ooxml.mjs";
 
 let pass = 0, fail = 0;
@@ -661,6 +667,90 @@ console.log("\n--- NEGATIVE CONTROL arm (3), THE ARM'S OWN ARM: unregister one e
  * through no assertion at all and ends the module with the tally reading
  * clean, so this line is the proof the count above is a count of a complete
  * run. A missing tally is reported as -1, never 0. */
+/* ====================================================================== *
+ * COFF-11 / IC-100 / D-359 — THE INNER EXTENT ON THE ODF UNITS, AND THE
+ * PLACE THE TWO SPREADSHEET FORMATS HONESTLY DIVERGE.
+ * ====================================================================== *
+ * The `.odp` half is the pptx half verbatim: a shape list is EXHAUSTIVE, so
+ * the walked count IS the addressable count and there is no decision to take.
+ *
+ * The `.ods` half is where this item's decision bites in the OTHER direction
+ * from `formats-xlsx.mjs`. OOXML fixes a grid (measured, `MEASUREMENTS.md`
+ * 2026-09-15) so the xlsx entry can emit a BOUND that refuses only the
+ * impossible. **OpenDocument fixes no maximum table size at all** — the grid
+ * a member's application offers is that APPLICATION's and the file does not
+ * record it — so there is nothing here to state and the bound is NULL. The
+ * two rejected alternatives are what make that the right answer rather than a
+ * shrug: bounding by the USED range would refuse a true citation of a cell
+ * that exists and was empty at capture, and borrowing OOXML's grid would be
+ * this reader inventing a bound the format never fixed. The used range is
+ * emitted anyway, because it is the fact this walk knows.
+ *
+ * SO THE SUITE PINS AN ASYMMETRY ON PURPOSE. A later reader finding `.ods`
+ * with a null bound must be able to tell a DECISION from an omission, and the
+ * assertions below say which it is.                                        */
+console.log("\n--- COFF-11: .ods carries its USED range and an honestly NULL bound (OpenDocument fixes no grid) ---");
+{
+  const T = await ENTRY.ods.text(odfFixture("ods"));
+  t("every sheet carries all four extent keys — a consumer reads them by key presence, so absence is not an option",
+    T.sheets.every((s) => "rows" in s && "cols" in s && "usedRows" in s && "usedCols" in s), true);
+  t("the BOUND is NULL on every sheet — UNDETERMINED AND STATED, never a zero and never a borrowed grid",
+    T.sheets.map((s) => [s.rows, s.cols]), T.sheets.map(() => [null, null]));
+  /* The fixture's own ground truth, written above in THIS file:
+     `Appropriations` declares four `<table:table-row>` over two columns, and
+     `Reconciliation` one row of one cell. */
+  t("the USED range is what the cells reach, per sheet, off the fixture's own rows",
+    T.sheets.map((s) => [s.name, s.usedRows, s.usedCols]),
+    [["Appropriations", 4, 2], ["Reconciliation", 1, 1]]);
+  t("a null bound is NOT a null used range — the two absences are different facts and stay distinguishable",
+    T.sheets.every((s) => s.rows === null && Number.isInteger(s.usedRows)), true);
+}
+
+console.log("\n--- COFF-11: .odp carries the slide's shape COUNT, and needs no bound decision at all ---");
+{
+  const T = await ENTRY.odp.text(odfFixture("odp"));
+  t("every slide unit carries a shape count",
+    T.slides.every((s) => Number.isInteger(s.shapes)), true);
+  /* Ground truth from ODP_BODY above: slide 1 has two `<draw:frame>`, slides
+     2 and 3 one each. The notes frame on slide 1 is NOT one of them — the
+     walk strips `<presentation:notes>` before counting, which is the same
+     rule that keeps notes text out of the slide's text. */
+  t("and the figures are the deck's own — the notes frame on slide 1 is NOT a slide shape",
+    T.slides.map((s) => [s.slide, s.shapes]), [[1, 2], [2, 1], [3, 1]]);
+  t("the HIDDEN slide is counted like any other — extraction is not presentation (the standing rule)",
+    T.slides.find((s) => s.hidden).shapes, 1);
+  t("speaker-notes units gain NO shape count — they are not what a slide-shape extent addresses",
+    T.speakerNotes.every((n) => !("shapes" in n)), true);
+}
+
+console.log("\n--- COFF-11: the two spreadsheet entries agree on the SHAPE and differ only where the FORMATS differ ---");
+{
+  /* The cross-format pin. Both entries emit the same four keys, which is what
+     lets one consumer read both by key presence; the ONLY difference is
+     whether a bound exists to state, and that difference is a fact about
+     OOXML and OpenDocument rather than about these two readers. */
+  /* A MINIMAL xlsx package, assembled with THIS suite's own zip so the
+     comparison does not borrow the other suite's fixture (or its defects).
+     One sheet, two cells: enough to carry a `sheets[]` entry, and nothing
+     about the key roster depends on the content. */
+  const XM = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml";
+  const XLSX_FIXTURE = zip([
+    { name: "[Content_Types].xml", data: `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="${XM}"/></Types>` },
+    { name: "_rels/.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+    { name: "xl/workbook.xml", data: `<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Appropriations" sheetId="1" r:id="rId1"/></sheets></workbook>` },
+    { name: "xl/_rels/workbook.xml.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>` },
+    { name: "xl/worksheets/sheet1.xml", data: `<?xml version="1.0"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Department</t></is></c><c r="B1" t="inlineStr"><is><t>Amount</t></is></c></row></sheetData></worksheet>` },
+  ]);
+  const ods = await ENTRY.ods.text(odfFixture("ods"));
+  const xlsxText = await xlsxEntry.text(await xlsxEntry.parts(XLSX_FIXTURE));
+  const keys = (s) => ["rows", "cols", "usedRows", "usedCols"].filter((k) => k in s);
+  t("identical key rosters across the two spreadsheet containers",
+    [keys(ods.sheets[0]), keys(xlsxText.sheets[0])],
+    [["rows", "cols", "usedRows", "usedCols"], ["rows", "cols", "usedRows", "usedCols"]]);
+  t("and the ONLY divergence is the bound: xlsx states one, ods states that it has none",
+    [Number.isInteger(xlsxText.sheets[0].rows), ods.sheets[0].rows === null], [true, true]);
+}
+
 console.log(`\nformats-odf: ${pass} pass, ${fail} fail`);
 /* `process.exit`, not `process.exitCode`: hygiene.test.mjs requires the
  * explicit exit so a lingering handle can never turn a green run into a hang,
