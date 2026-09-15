@@ -389,6 +389,24 @@ plan without running; `--full` forces everything. The full set, when it is owed:
   **So read the SKIP COUNT and the SUITE TOTAL, never the exit status alone** — if a member
   is named as skipped, your baseline is not a baseline yet.
 
+- **A SESSION'S WORKING DIRECTORY CAN REVERT BETWEEN TURNS, AND THE FAILURE IT CAUSES
+  DOES NOT LOOK LIKE A DIRECTORY PROBLEM.** Observed independently in two lanes on
+  2026-09-15: CONDUCT's spawn of a flipped row failed because the session's working
+  directory had drifted from the repository to the WRAPPER above it, leaving rows reading
+  `running` with no worker — the wrong-status class arriving through the harness rather
+  than through anyone's mistake; and BOB's own directory moved between the worktree and
+  the wrapper repeatedly across one session. **The trigger is NOT established and is
+  stated as unknown rather than guessed** — what is established is that persistence
+  cannot be assumed. The wrapper is not a git repository, so what you get is a `git`
+  command failing in a way that reads as a broken checkout, or a tool resolving a
+  relative path against the wrong root and finding nothing.
+  **The mitigation costs one clause and works whatever the cause: anchor every command
+  with an explicit absolute `cd` to the tree you mean**, rather than relying on where the
+  last one left you. And the act that matters most is the one CONDUCT now performs — a
+  spawn or a flip is not done until it is VERIFIED to have taken, because an act that
+  silently did not happen is indistinguishable from one that did until somebody reads the
+  row and believes it.
+
 - **New schema tables go BEFORE the `host_governor` block** in `schema.mjs`.
   `hygiene.test.mjs` asserts the literal ends on a `);`.
 - **No backticks inside the schema or setup template literals.** A balanced
