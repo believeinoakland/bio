@@ -11691,3 +11691,133 @@ credentials, same origin, returned non-zero for every other figure it asked for 
 bundles, 88 shas, and `op=registeraudit`'s `sound: true` over the same 88), so the
 calls reached the plane and were answered. An instrument that returned zero for
 everything would have been a finding about the instrument.
+
+## 2026-09-14 · CPDF-20 / D-283 — two decodes of one layer, measured page by page, and the design's rule falsified
+
+**The item said the measurement precedes the rule. It does, and the measurement did not agree
+with the design.** `EXTRACTION-BREADTH-DESIGN.md` §5.2 states the per-page rule as *"the decode
+with fewer undetermined characters on that page wins; a tie keeps tier 1"*. Measured over real
+documents, that rule loses text on pages it was written to protect.
+
+### The instruments
+
+| what | command | hermetic? |
+| --- | --- | --- |
+| the measurement | `node bio-plane/test/tier-pagewise.probe.mjs` | yes — over the committed fixture |
+| the wide sample | `node bio-plane/test/tier-pagewise.probe.mjs --census` | **no** — Legistar Web API |
+| re-record tier 2 | `node bio-plane/test/tier-pagewise.probe.mjs --record` | no — needs `unpdf` |
+| drift check | `node bio-plane/test/tier-pagewise.probe.mjs --verify` | no — needs `unpdf` |
+| the rule, driven | `node bio-plane/test/tier-pagewise.test.mjs` | yes — in the battery |
+| the controls | `node bio-plane/test/nc-cpdf20.mjs` | yes |
+
+Tier 1 is `bio-plane/src/pdfstructure.mjs` (in-plane, pure JS). Tier 2 is `unpdf` 1.8.0 —
+pdf.js — reshaped into I2's text shape exactly as `pdf-worker/src/index.mjs` reshapes it, and
+resolved out of the **member's** install, because the plane does not and may not depend on it.
+
+### The corpus
+
+**The census sample, 2026-09-14:** the attachments of the 60 most recently modified Oakland
+Legistar matters — the same source CPDF-12's corpus probe draws from. 50 documents were
+readable by tier 1. **28 of the 50 (56%) are in D-283's class** — some pages read, some pages
+flagged. Those 28 carry **203 pages**, and every figure below is over those 203.
+
+**The committed fixture**, `bio-plane/test/fixtures/cpdf20/` — 4 documents, 939 KB, **15
+pages**, each serving a named arm; provenance, sha256 and arms in its `PROVENANCE.md`. It is
+the census finding in miniature and it reproduces every one of the numbers below in the same
+direction.
+
+### Finding 1 — the two tiers' undetermined counts are NOT COMMENSURABLE, and that is the whole result
+
+| | census sample | committed fixture |
+| --- | --- | --- |
+| pages measured | 203 | 15 |
+| pages on which **tier 2** reported ANY undetermined character | **0** | **0** |
+
+Not because tier 2 decodes perfectly. Because **tier 2 has no undetermined-character
+vocabulary at all**: it emits one `no_text_layer` marker with `count: 0` for a page pdf.js
+returned nothing for, and says nothing about characters pdf.js dropped inside a page it did
+return text for. Tier 1 counts every code its `/ToUnicode` cannot map.
+
+So `u2 < u1` is not a comparison of two measurements — it is a test of whether **tier 1**
+flagged the page. §5.2's rule reduces to *"tier 2 wins every page tier 1 flagged"*, however
+little tier 2 actually recovered. Filed as **D-361**, and asserted by the suite rather than
+merely recorded, so the day it stops being true a test goes red instead of the rule silently
+changing behaviour.
+
+### Finding 2 — §5.2 as written loses text on the exact page §8 requires it to keep
+
+Over the 203 census pages:
+
+| rule | pages to tier 2 | pages DEGRADED | characters lost | characters recovered | net |
+| --- | --- | --- | --- | --- | --- |
+| **C1** — §5.2 as written: fewer undetermined chars; tie keeps tier 1 | 145 | **23** | **−692** | +186,242 | +185,550 |
+| **C2** — and tier 2 must also have decoded strictly more characters | 122 | **0** | 0 | +186,242 | **+186,242** |
+
+The 23 degraded pages are pages where tier 1 decoded 700–2,300 characters and flagged **one to
+four** unmapped glyphs, and tier 2 decoded 20–130 characters fewer. §8's control says *"the
+per-page rule keeps a page tier 1 decoded well when tier 2 decoded it worse"* — **C1 does not
+keep them.** C2 recovers the same 186,242 characters and leaves nothing behind: the pages C2
+declines to move are pages where tier 2 had no more text to give (0 pages where tier 2 had more
+text and C2 kept tier 1).
+
+Two further candidate rules were measured and are recorded because they are why C2 was chosen
+over the obvious alternative: **C3** (award on decoded characters alone) and **C4** (fewer
+undetermined unless tier 1 decoded more) are behaviourally IDENTICAL to C2 on this corpus —
+122 pages, 0 degraded, +186,242. C2 ships anyway, because **C3 abandons §5.2's award axis** and
+D-283's own row warns that *"character count is exactly the instrument CPDF-9 argued against"*.
+In C2 the character count never promotes a page; it only ever refuses to demote one.
+
+### On the fixture, per page — the whole table, since it is small enough to print
+
+| document | page | tier 1 chars | tier 1 undet | tier 2 chars | tier 2 undet | C1 | C2 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| legistar-73450 | 0 | 1,807 | 0 | 1,733 | 0 | tier 1 | tier 1 |
+| legistar-73450 | 1 | 3,115 | 0 | 3,047 | 0 | tier 1 | tier 1 |
+| legistar-73450 | 2 | 1,129 | 0 | 1,071 | 0 | tier 1 | tier 1 |
+| legistar-73545 | 0 | 11 | 1,352 | 1,857 | 0 | tier 2 | tier 2 |
+| legistar-73545 | 1 | 15 | 1,879 | 2,578 | 0 | tier 2 | tier 2 |
+| legistar-73545 | 2 | 61 | 1,237 | 2,067 | 0 | tier 2 | tier 2 |
+| legistar-73545 | 3 | 113 | 1,464 | 2,757 | 0 | tier 2 | tier 2 |
+| legistar-73545 | 4 | 58 | 1,455 | 2,586 | 0 | tier 2 | tier 2 |
+| legistar-73545 | 5 | 274 | 373 | 848 | 0 | tier 2 | tier 2 |
+| legistar-73545 | 6 | 3,423 | 0 | 3,416 | 0 | tier 1 | tier 1 |
+| legistar-73550 | 0 | 65 | 1,523 | 1,499 | 0 | tier 2 | tier 2 |
+| legistar-73550 | 1 | 42 | 1,636 | 1,516 | 0 | tier 2 | tier 2 |
+| legistar-73550 | 2 | 18 | 423 | 433 | 0 | tier 2 | tier 2 |
+| legistar-73618 | 0 | 1,215 | 0 | 1,077 | 0 | tier 1 | tier 1 |
+| **legistar-73618** | **1** | **709** | **1** | **580** | **0** | **tier 2** | **tier 1** |
+
+The bold row is the design's falsification in one line, on a real public document: tier 1 read
+709 characters and admitted failing on **one** code; tier 2 read 580. §5.2 as written trades 129
+characters of real council text for that one glyph. `legistar-73545` is the other half of the
+result — one document, six pages to tier 2 and page 6 kept at tier 1, which is the mixed
+document the rule exists for and the reason the chain has to name a tier PER PAGE rather than
+per document.
+
+Fixture totals: C1 → 10 pages to tier 2, **1 degraded, −129 chars**. C2 → 9 pages, **0 degraded,
++15,484 chars**.
+
+### What this measurement cannot see, stated plainly
+
+- **It measures VOLUME, not fidelity.** It can say tier 2 produced more characters and that
+  tier 1 admitted failing; it cannot say the characters are right. Per-engine fidelity is
+  CPDF-13's calibration. The rule deliberately claims nothing about it — both tiers are `layer`
+  derivations under the **same null cap**, which is exactly why a swap between them overclaims
+  nothing and why this is a text-loss question rather than a grading one.
+- **It is one corpus, one publisher, one day.** 50 readable documents from Oakland Legistar.
+  A different publisher's PDF production chain could produce a different mix; the
+  incommensurability finding (D-361) is structural and would not change, but the 23/145 ratio
+  would.
+- **It says nothing about the wire.** The rule is not called by `index.mjs`; see the delegation.
+- **`tier2-recorded.json` is a RECORDING of `unpdf` 1.8.0.** A future upgrade could change
+  tier 2's output and this file would hide it — which is why `--verify` exists and is named in
+  the fixture's `PROVENANCE.md` as the thing to run on an upgrade.
+
+### Baseline for this item, measured rather than inherited
+
+`cd bio-plane && npm run test:battery` on a pristine `04ca7bd` worktree after `npm ci` in
+`bio-plane/`, `pdf-worker/` and `ocr-worker/`: **195/195 suites green · 12,100 assertions ·
+302.5 s · exit 0**. The brief's figure (195/195 · 12,100) was **exactly right**, and is recorded
+as confirmed rather than assumed — the practice is to trust the measurement, not the streak.
+Taken on a **contended machine**: `waitquiet` reported BUSY with three other batteries running
+throughout, and that is stated rather than smoothed.

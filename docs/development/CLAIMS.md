@@ -6203,3 +6203,118 @@ entities or `at` would become a second author of it.
 until this runs:** a NULL `page_count` on a pre-CAP-9 capture means the page set was
 undetermined at mint and is STATED — never defaulted to a number, never a zero, and
 never a refusal.
+
+## CLAIM 2026-09-14 CONTENT-PDF (CPDF-20 — D-283: the fixture, the page-wise measurement, and the per-page tier-1/tier-2 rule)
+session: cpdf20-per-page-tier-rule (worktree agent-ad64e9f5ea92a0502)
+opened: 2026-09-14T00:00:00Z
+paths: **claimed BY REGION, not by whole file.**
+
+- `bio-plane/test/fixtures/cpdf20/**` (NEW directory) — four public Oakland Legistar
+  council attachments drawn from the census sample, plus `PROVENANCE.md` naming where
+  each came from, its sha256, and which arm it serves. Public documents only; no
+  personal record is in this fixture (a "View Resume" attachment was the natural mixed
+  case by its numbers and was DELIBERATELY NOT TAKEN — it is a private individual's
+  resume, and a fixture is not the place for one; `legistar-73545` serves that arm).
+- `bio-plane/test/tier-pagewise.probe.mjs` (NEW) — the measurement instrument. A
+  `.probe.mjs` is not discovered by `battery.mjs` or `coverage.mjs`; it runs hermetic
+  over the committed fixture and, with `--census`, over the live Legistar sample.
+- `bio-plane/src/textchain.mjs` — the NEW region between `/*__CPDF20_PER_PAGE_START__*/`
+  and `/*__CPDF20_PER_PAGE_END__*/`, appended at the foot. Every export in it is new;
+  nothing outside it moved into it and no existing export changed.
+- `bio-plane/test/tier-pagewise.test.mjs` (NEW) and
+  `bio-plane/test/nc-cpdf20.mjs` (NEW, the negative-control driver).
+- `docs/development/MEASUREMENTS.md`, `docs/development/DEBT.md` (D-283's disposition,
+  the new D-361 row), `docs/development/CLAIMS.md` — append-only prose.
+- `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` ONLY, from this run's own print.
+
+**NOT `bio-plane/src/index.mjs`.** The rule's two call sites (`op=pdfstructure`'s
+read-time escalation and the acquire assembly) are RECORD's control plane, which the
+existing tier-2 call site's own DELEGATION NOTE already says in the source. The
+contended-file cap was MEASURED before deciding this, not inherited — see the
+DELEGATION appended below this block.
+
+## DELEGATION 2026-09-14 CONTENT-PDF (CPDF-20) → RECORD: **WIRE THE PER-PAGE TIER-2 MERGE INTO THE TWO `index.mjs` CALL SITES. THE RULE IS LANDED, DRIVEN AND UNREACHABLE.**
+
+CPDF-20 lands D-283's fixture, its page-wise measurement and the corrected per-page rule.
+**It does not wire it**, so the plane's behaviour is unchanged by that landing and this
+block is the act that changes it. Stated as an ACT with an actor because a note in a
+region nothing drains is not even a note (WORKER.md, 2026-09-14).
+
+### THE ACT, with its actor
+
+**`RECORD` replaces the two WHOLESALE tier-2 assignments in `bio-plane/src/index.mjs` with
+the page-wise merge.** Exactly this, and nothing else:
+
+1. **`op=pdfstructure`'s read-time escalation** (`index.mjs`, in the `if (env.PDF_WORKER &&
+   needsTier2(structure.text))` block — the branch that today does `return json(t2, 200)`
+   on a successful member answer). Instead of returning the member's answer whole:
+
+   ```
+   import { mergeTier2Text, tier2Note } from "./textchain.mjs";
+   const m = mergeTier2Text(structure.text, t2.text);
+   if (m.ok) { structure.text = m.text; structure.tier = m.replaced.length ? 2 : 1;
+               const n = tier2Note(m); if (n) structure.notes = [...structure.notes, n]; }
+   else       { structure.notes = [...structure.notes, m.why]; }   // tier 1 stands
+   ```
+
+2. **The acquire assembly** (`index.mjs`, the second `if (env.PDF_WORKER && needsTier2(i2text))`
+   site, where `i2text` is today assigned the member's text wholesale). Same call, same
+   shape, `i2text = m.ok ? m.text : i2text`.
+
+`needsTier2` itself is **UNCHANGED and must stay unchanged** — the routing half was closed
+on purpose and D-283 is explicitly the ASSIGNMENT half. Nothing else in the capture path
+moves.
+
+### WHAT IS ALREADY DONE, so this is a call and not a build
+
+- `perPageTierWinner`, `mergeTier2Text` and `tier2Note` are exported from
+  `bio-plane/src/textchain.mjs`, inside the marked `__CPDF20_PER_PAGE__` region.
+- They are driven over four real PDFs by `bio-plane/test/tier-pagewise.test.mjs`
+  (82 assertions) and controlled by `bio-plane/test/nc-cpdf20.mjs` (7 of 7 arms as
+  declared).
+- The merge returns `{ok, text, perPageTier, replaced, kept, why}` and REFUSES rather than
+  guessing when the base has no page grain to merge on.
+- `mergeTier2Text` is deliberately the same two-condition shape as `mergeTier3Text`, which
+  already lives in `index.mjs` twelve lines from one of these sites.
+
+### WHY CONTENT-PDF DID NOT TAKE THE CALL SITE ITSELF
+
+**The file's own source already says this is a delegation.** The existing tier-2 call site
+carries a comment, written when it shipped: *"DELEGATION NOTE: this call site lives in
+index.mjs, RECORD's control plane (I3), not CONTENT-PDF's paths... and is flagged to CONDUCT
+as the CAPTURE/RECORD-owned surface a normal CONTENT-PDF turn would DELEGATE."* A normal
+CONTENT-PDF turn is what this was.
+
+**And the contended-file cap was MEASURED before deciding, not inherited from a brief.**
+`ORCHESTRATION.md`: eight concurrent workers, of which **at most five** may touch
+`store.mjs`, `bio-checks.mjs` or `index.mjs`. Measured 2026-09-14 from `origin/main`
+(`04ca7bd`):
+
+- **8 rows read `running`** — M0-31, M0-32, REC-89, REC-93, REC-97, CPDF-20, CAP-12, SK-7.
+  That is the whole worker budget, already spent.
+- Of those, the rows whose own `scope:` lands in a contended plane file, attributed by
+  reading the code each scope names rather than by believing the row:
+  **REC-97** (`bio-checks.mjs` by name in its scope, plus `op=cite`), **CAP-12**
+  (`#containerExtentForCapture`, which greps to `store.mjs` AND `bio-checks.mjs`, at
+  `op=acquire`), **REC-89** (REC-57's envelope, which greps to `query.mjs` and `store.mjs`),
+  and **SK-7** (machine-minted content rows and every surface that labels them) — **3
+  attributed to a named symbol in a contended file, plus 1 strongly implied.**
+- `CLAIMS.md` on `origin/main` additionally holds **5 unreleased claim blocks** naming those
+  files (FL-10, FL-6, DIST D-297, COFF-9, and REC-84's addendum). **Live workers' claims are
+  NOT visible here** — they commit in their own worktrees and do not push — so this is a
+  floor on contention, never a ceiling.
+
+**So the cap sits at 4 of 5 on the evidence available, with a measurement that can only be
+an undercount.** Taking the last slot to edit `index.mjs` — for a rule whose design section
+this same item has just falsified — is the wrong risk for the wrong reason. The measurement
+and the rule land; the call is RECORD's, and it is one call in two places.
+
+### WHAT WIRING IT IS WORTH, so it can be prioritised rather than guessed
+
+Measured over the census sample (`MEASUREMENTS.md`, this date): **+186,242 characters
+recovered across 122 pages of 28 real council documents, with zero pages degraded.** Today
+those same 28 documents escalate wholesale or not at all, and 23 pages lose text when they
+do. The negative control that must be re-run after wiring is the same one:
+`node bio-plane/test/nc-cpdf20.mjs`, plus a driven assertion that `op=pdfstructure` returns
+a per-page `tier` — because "it runs" and "it is wired" are the two halves D-108 exists to
+keep apart, and this delegation is entirely about the second one.
