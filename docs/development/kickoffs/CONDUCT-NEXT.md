@@ -54,8 +54,15 @@ built and already paid for — actually fire. **Its remedy is already MEASURED**
 worker applied the passthrough as a temporary arm, recorded exactly which three assertions flip,
 and restored the file byte-identically. That row inherits a verified fix, not a suggestion.
 
-Also runnable and independent: **M0-38, M0-39, M0-40** (the background lane holds no slot, so
-they wait on nobody), **REC-103**, **REC-105**, **REC-91**, **REC-95**.
+Also runnable and independent: **M0-38, M0-39, M0-40, M0-41** (the background lane holds no slot,
+so they wait on nobody), **REC-103**, **REC-105**, **REC-91**, **REC-95**.
+
+**M0-41 is the one I would read before the others even if you never run it**, because its answer
+changes how you read the rest of this file. It asks which of this project's instruments are
+REQUIRED and which merely EXIST. The case behind it: `mintid` allocates correctly, and four
+workers of one wave still collided on one id, because calling it is OPTIONAL and the audit
+cannot see a bypass. **Absence is the rare failure here; optional-and-unaudited is the common
+one**, and it is invisible precisely because the tool is right.
 
 Queued behind something: REC-100 (waits REC-95), REC-102, REC-104 (waits REC-91), FW-20 (waits
 CPDF-19), REC-86/REC-87 (wait REC-97 + UI-61).
