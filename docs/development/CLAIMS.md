@@ -5257,3 +5257,149 @@ document's Status `as of`, which is CONDUCT's act to take together.
 
 **Also for CONDUCT, and NOT a design edit:** `docs/development/QUEUE.md`'s `### CAP-8 ·
 running` row is CONDUCT's to flip. This worker did not touch `QUEUE.md`.
+## CLAIM 2026-09-14 M0-29 (D-343 — four control drivers' declared arm tallies reconciled to their own runs; the four unverified candidates RUN and confirmed or struck; D-333 mode (c) measured once across the estate)
+session: M0-29 worker spawned by CONDUCT #11 (worktree `.claude/worktrees/agent-a0346165c5786ceeb`, branch `worktree-agent-a0346165c5786ceeb`), background lane, holds no slot.
+opened: 2026-09-14
+paths:
+  - `bio-plane/test/caseflip.control.mjs` — **THE HEAD DECLARATION ONLY** (D-343's `5+b` against 7
+    measured). No arm's meaning, edit, subject or anchor moves.
+  - `bio-plane/test/caselifecycle.control.mjs` — **THE HEAD DECLARATION ONLY** (`5+b` against 8).
+  - `bio-plane/test/fleetbundles.control.mjs` — **THE HEAD DECLARATION ONLY** (`6+b` against 13).
+    FL-9/FL-10 ground; both claims are RELEASED on the register (FL-10 by the inline
+    `### RELEASED` heading `3607b3b`).
+  - `agent-worker/test/harness.control.mjs` — **THE HEAD DECLARATION ONLY** (10 against 19).
+    FL-6 ground; FL-6's block has no top-level `released:` line but IS released
+    (`### RELEASED 2026-09-12 … landed as 56ed70b`), which the 2026-09-14 corpus-retrofit claim
+    already recorded as a record-hygiene finding. Checked before claiming, per this item's brief.
+  - `bio-plane/test/owed-controls.control.mjs`, `bio-plane/test/provenance-floor.control.mjs`,
+    `civicos-ui/test/provenance-floor.control.mjs`, `civicos-ui/test/refusal-partition.control.mjs`,
+    `civicos-ui/test/version-predecessor.control.mjs` — D-343's four unverified candidates
+    (`provenance-floor` is ambiguous between two files, so BOTH are read and run).
+    **HEAD DECLARATION ONLY, and only where the candidate is CONFIRMED**; a struck candidate is
+    left untouched and the reason recorded.
+  - `docs/development/DEBT.md` — **D-343's disposition only**, plus ONE new row if D-333 mode (c)
+    has instances (id via `node tools/mintid.mjs D`).
+  - `docs/development/MEASUREMENTS.md` — APPEND ONLY, this item's figures and arm results.
+  - `docs/development/CLAIMS.md` — this block.
+  - `bio-plane/test/m025-arm-anchor-witness.test.mjs`, `bio-plane/scripts/armdecay.mjs` — **ONLY
+    if the census itself needs a correction**, and then said so explicitly in the release line.
+  **READ, NEVER EDITED**: `bio-plane/test/m025-arm-census.mjs` (unless a census correction is
+  owed, above), `docs/development/VERIFICATION.md`, `docs/development/QUEUE.md`, `CLAUDE.md`.
+  **NOT** `bio-plane/src/**`, **NOT** `bio-plane/dist/**`, **NOT** `agent-worker/src/**`,
+  **NOT** `civicos-ui/app.html` or any UI source, **NOT** `docs/development/QUEUE.md`
+  (CONDUCT's sole ground), **NOT** `DECISIONS.md`, **NOT** `CLAUDE.md`, **NOT** `newgroup/**`,
+  **NOT** any version bump, tag or deploy. NO DEPLOY, NO LIVE CALL, NO PUSH, NO MERGE.
+concurrency: checked over the register on `origin/main` at `e9ba393` 2026-09-14 — the only blocks
+  without a top-level `released:` line are FL-6 and D-297, and both are in fact RELEASED (FL-6 by
+  an inline `### RELEASED` heading, D-297 by a `released:` line at the file end). No released
+  claim holds any path above. Six other workers are live on this machine in their own worktrees;
+  their claims are not on `origin/main` yet and are therefore invisible to this check, which is
+  stated rather than assumed away — every path above is a control DRIVER's head comment or a
+  ledger row, and the three `bio-plane/test/*.control.mjs` drivers are named by D-343 as the
+  item's own ground.
+
+### AMENDMENT 2026-09-14, MID-ITEM (M0-29) — FOUR PATHS, each owed and none foreseeable from the brief
+paths added:
+  - **The BASELINE ARM'S LABEL STRING** in `caseflip.control.mjs`, `caselifecycle.control.mjs` and
+    `fleetbundles.control.mjs` (`"nothing armed — what distinguishes five-arms-working from
+    five-arms-broken"`). The original claim said HEAD DECLARATION ONLY. **Each of these labels is
+    the SAME CLAIM as the head's tally, in the same stale number**, and it is PRINTED ON EVERY RUN
+    — so correcting the head and leaving the label is the half-fix that leaves the next reader
+    believing the wrong half. No arm's meaning, edit, subject or anchor moves; only the printed
+    text of the baseline row.
+  - **`bio-plane/test/owed-controls.control.mjs`** — D-343's first unverified candidate, CONFIRMED
+    by running it (9 announcing arms against a `six` written in two places). The correction is to
+    a METHOD sentence, which the census's reader deliberately does not read, so this driver was
+    never scored and is not gated — it is corrected anyway, because the sentence is about THIS
+    driver's own arms and its number was stale in exactly D-333's shape.
+  - **`bio-plane/test/m025-anchor-witness.control.mjs`** — ONE PROSE STRING in arm A2's `what:`,
+    which names `agent-worker/src/fanout.mjs`. **That file has never existed in this repository.**
+    The arm's real subject is `FANOUT_SRC` = `agent-worker/src/subsession.mjs`, which exists and
+    is live; only the description was false. Found by this item's mode-(c) sweep, and corrected
+    rather than adjudicated away because a wrong path in an arm's own description is the record
+    claiming more than it can support. **NOT** the arm's edits, expectation, id or subject, and
+    **NOT** any other arm. No live claim holds this file (the D-329+D-331+D-333 claim that last
+    touched it is released).
+  - **`tools/modec-sweep.mjs` (NEW)** — D-333 decay mode (c)'s measurement, which the row asks for
+    as a one-off and which is committed rather than thrown away: a sweep that is not in the tree is
+    not a mechanism, and the next actor would rebuild it. Read-only, run by hand, wired into NO
+    gate and NO battery (so no floor moves), carrying its own `--self-test` both-directions arm and
+    a DATED ADJUDICATION TABLE so the judgement D-333 says mode (c) requires is recorded rather
+    than re-derived. **It adds a file under `tools/`, which `m025-arm-anchor-witness.test.mjs`
+    reads as candidate-corpus** — that consequence is MEASURED by the full battery in this item
+    rather than assumed away, and reported either way.
+released: 2026-09-14 by the M0-29 worker — **D-343 CLOSED: the census reads 0 tally findings on the
+named drivers, DRIVEN, and it read 3 before.** `m025-arm-census.mjs` over the SAME ten drivers,
+before and after: BEFORE exit **1**, `tally NOT AS DECLARED : 3`; AFTER exit **0**,
+`tally NOT AS DECLARED : 0`, `declared tallies read 4 of 10`, 108 arms announced, 0 unreadable,
+0 drivers with a stale arm. **EVERY CONTROL ARM, DECLARED AGAINST ACTUAL** — the four named
+drivers, each run WHOLE before and after, announcement count against declaration:
+`caseflip.control.mjs` declared 5+b / announced **7** -> corrected 6+b, own run ALL-ARMED exit 0;
+`caselifecycle.control.mjs` 5+b / **8** -> 7+b, ALL-ARMED exit 0;
+`fleetbundles.control.mjs` 6+b / **13** -> 12+b, ALL-ARMED exit 0;
+`agent-worker/test/harness.control.mjs` ten (in a DATED results block) / **19** -> 19 declared at
+the head, ALL-ARMED exit 0. Plus `owed-controls.control.mjs` 9 announced (candidate CONFIRMED,
+`six` corrected in two sites) ALL-ARMED exit 0, and `m025-anchor-witness.control.mjs` 13 announced
+ALL-ARMED exit 0 after its arm-A2 path correction. **IN EVERY CASE THE ARMS WERE REAL AND THE
+DECLARATION WAS CORRECTED — nothing restored, nothing removed**, each old number kept at its site
+as right when it was written, dated (`casepin.control.mjs`'s precedent).
+**WHICH COMMIT MOVED EACH, and the answer is not the expected one: THREE OF THE FOUR WERE FALSE IN
+THEIR OWN LANDING COMMIT.** `caseflip` (`c6b9b51`) and `caselifecycle` (`7e10ca9`) have exactly ONE
+commit each — the extra arms were written after the head sentence, within the item.
+`fleetbundles` decayed twice: already false at `d83695b` (FL-9 landed EIGHT under a head saying
+six), widened by `3607b3b` (FL-10 APPENDED 6, 6b, 7, 8). Only `harness.control.mjs` decayed by
+appending, and its ten is KEPT rather than corrected because it is a true statement about a past
+run (2026-08-08); a NEW head declaration states the current nineteen in three named families,
+which also takes the shipped reader's reach up by one driver.
+**THE FOUR UNVERIFIED CANDIDATES, EACH RUN: ONE CONFIRMED, THREE STRUCK.** CONFIRMED —
+`owed-controls` 9 announced against a `six` written in two places about its OWN arms (a METHOD
+sentence the census correctly never scored; corrected anyway). STRUCK — `bio-plane`'s
+`provenance-floor` 14 announced against a declaration block enumerating (0)-(8) that is TRUE,
+because three of those arms declare their own sub-stages; **a driver that declares a multi-stage
+arm honestly breaks the one-announcement-per-declared-arm assumption**, which is the reusable
+finding here. STRUCK — `civicos-ui/refusal-partition`, which declares no tally at all and whose
+`six arms` recounts ANOTHER harness's incident. STRUCK — `civicos-ui/version-predecessor`, whose
+real declaration (*"Eight arms … FINAL: 8 arms, 8 as declared"*) AGREES with its 8 announcements.
+**D-333 MODE (c) MEASURED ONCE ACROSS THE ESTATE, FILED AS ITS OWN ROW D-353** (`mintid.mjs D`):
+89 drivers, 408 path literals, 683 tracked paths at HEAD -> **6 candidates, 0 UNADJUDICATED**,
+each hand-checked and recorded in a dated adjudication table inside `tools/modec-sweep.mjs` (NEW,
+read-only, wired into no gate, carrying a both-directions `--self-test`). **Three real mode-(c)
+instances exist and all three are already RETIRED with the loss stated** (`dec65` arm (5),
+`d280-strengthbar` (A)/(C)/(E), `case6`'s `FINDING_IN_ANOTHER_CASE`) — so the answer is zero OPEN
+instances, and D-353 is the GAP that nothing re-takes the measurement.
+**NEGATIVE CONTROL — two arms plus a baseline, FIRST RUN, 7 checks, 0 not as declared.** BASELINE
+both subjects unpatched: census exit 0, 0 findings. **N1** one reconciled declaration decayed by
+exactly one (`caseflip` six -> five), armed ALONE: census **exit 1**, 1 finding, NAMING the driver,
+printing BOTH numbers (`decl=5+b` vs `arms=7`), and the driver itself still ALL-ARMED exit 0.
+**N2 over-strictness** `accepts-without-reading.control.mjs` (3/3, never touched) reads 0 findings
+BEFORE and STILL 0 beside the armed neighbour. Restore by `cp`-back verified by sha256 AND full
+byte compare AND `cmp(1)`: 15,460 bytes (floor 4,000), `48a073365af7…`, MATCH / IDENTICAL / exit 0.
+**GATE FIGURES.** Battery **188/189 · 11,629 assertions · 270.5 s**; `coverage.mjs --strict`
+DIRECTLY from `bio-plane/`, `$?` UNPIPED, **exit 0**, REGISTER FLOOR **974/974 · 180/180 · 181/181**
+exact — no slack, no floor owed; `node civicos-ui/test/run.mjs` from the REPO ROOT, unpiped
+**exit 0**; `node tools/plancheck.mjs --local` **0 fail, 0 warn**; `m025-arm-anchor-witness.test.mjs`
+unmoved at **24 pass** (the new `tools/` file did not move its candidate corpus — measured, not
+assumed).
+**THE ONE RED IS `origin/main`'s, NOT THIS ITEM'S, AND IT IS ATTRIBUTED BY RE-RUNNING THE BASELINE
+RATHER THAN BY ARGUMENT.** `mergecarry.test.mjs` 57 pass / 1 fail: `no UNREGISTERED drop sits in
+main's history` got `["cc8187d:bio-plane/scripts/coverage.mjs"]`. `cc8187d` (the REC-83 merge) is
+NOT an ancestor of this HEAD and IS an ancestor of `origin/main`, which moved `e9ba393` ->
+`718e5e4` while this item ran; the suite reads the REF out of the SHARED `.git`. A pristine
+detached worktree at `e9ba393` with NONE of this item's changes gives the identical 57/1.
+**FOR CONDUCT, as ACTS with their actor** — (1) **CONDUCT** registers `cc8187d`'s drop of
+`bio-plane/scripts/coverage.mjs` in `tools/mergecarry.mjs`'s `KNOWN_HISTORICAL_DROPS` (or restores
+the file) and moves the pinned count 4 -> 5 with its why: `main` is RED on this gate right now.
+(2) **CONDUCT** flips M0-29's QUEUE row to `done` — `QUEUE.md` is CONDUCT's sole ground and was not
+touched here. (3) **CONDUCT or VERIFY** rules D-353: whether `tools/modec-sweep.mjs` joins the
+periodic census as a third shape, or mode (c) stays a judgement taken at attribution time — which
+is a defensible answer that must then be WRITTEN DOWN. (4) **Whoever owns REC-79** —
+`civicos-ui/test/refusal-partition.control.mjs` leaves `.rec79-control-pristine/` behind when its
+run exits non-zero (measured twice here, 4 MB of copies of `app.html`, `index.mjs` and
+`bio-checks.mjs`), and its arms 2/2b have been NOT AS DECLARED (declared 1, actual 0) on a green
+`main` since before this item; `bio-plane/test/provenance-floor.control.mjs` is likewise exit 1 at
+55 of 58 as declared (arms 2a, 3, 6-stage-1). Both were red on pristine `e9ba393` — mode (b), not
+tally, and outside D-343.
+amendment to the release above, 2026-09-14 (M0-29): **`docs/DECIDED.md` REGENERATED, not authored**,
+by `node tools/decided.mjs` — 823 rulings, 230.6 KB. Owed by CLAUDE.md's standing rule and by
+`plancheck`, which read STALE the moment D-343's disposition and the D-353 row landed. `plancheck
+--local` 1 fail -> **0 fail, 0 warn** after it; `corpuscheck` 44 governed documents, 0 fail.

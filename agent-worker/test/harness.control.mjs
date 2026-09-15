@@ -1,8 +1,25 @@
 #!/usr/bin/env node
-/* THE NEGATIVE CONTROL DRIVER for FL-3 (the run harness, IS-9). Deliberately NOT
- * a `.test.mjs`: it EDITS REAL SOURCES while it runs, and neither
- * `scripts/battery.mjs` nor the fleet walk must discover it (FL-2/PL-3/PL-4's
- * precedent).
+/* THE NEGATIVE CONTROL DRIVER for FL-3 (the run harness, IS-9) — NINETEEN ARMS
+ * IN THREE FAMILIES, no baseline row. Deliberately NOT a `.test.mjs`: it EDITS
+ * REAL SOURCES while it runs, and neither `scripts/battery.mjs` nor the fleet
+ * walk must discover it (FL-2/PL-3/PL-4's precedent).
+ *
+ * THE FAMILIES, so a reader can hold the count against the run without reading
+ * to the foot: **H1-H10** are FL-3's own arms (H10 is the over-strictness arm);
+ * **F1-F4** are FL-8's, on the launch gate's vocabulary; **G1-G5** are D-323 and
+ * D-324's, on a gate-refused run's STATUS. 19 announcements, driven.
+ *
+ * TALLY DECLARED HERE 2026-09-14 (M0-29, D-343), AND THE OLD SENTENCE IS KEPT
+ * RATHER THAN CORRECTED, BECAUSE IT WAS NEVER WRONG. The only arm count this
+ * file carried was in the RESULTS block below — *"ALL TEN ARMS AS DECLARED ON
+ * THE RECORDED PASS"* — and that sentence is a true statement about a PAST RUN
+ * on 2026-08-08, when ten arms were all there were. It reads as this driver's
+ * tally only because nothing else here stated one; the F and G families arrived
+ * after it, appended by later items (FL-8, then D-323+D-324), and appending arms
+ * to a driver whose only count sits inside a dated results block is how the two
+ * numbers came apart. So the RESULTS block keeps its ten, dated, and the
+ * DECLARATION is this paragraph. THE ARMS ARE REAL: all nineteen announce, and
+ * none is restored or removed.
  *
  *   node agent-worker/test/harness.control.mjs            all arms
  *   node agent-worker/test/harness.control.mjs H2 H9      named arms only
@@ -25,7 +42,10 @@
  *    FINDING ABOUT THE ARM**, not smoothed away.
  *
  * ===========================================================================
- * RESULTS — 2026-08-08, worktree agent-ad6e5ed43aac4a2ab. Baseline before every
+ * RESULTS — 2026-08-08, worktree agent-ad6e5ed43aac4a2ab, AND THE TEN BELOW IS
+ * THE TEN THAT EXISTED ON THAT DATE (M0-29, 2026-09-14: kept as right when it
+ * was written; the driver's current tally is the nineteen declared at the head).
+ * Baseline before every
  * arm: `harness.test.mjs` **194 pass / 0 fail**, `agent-worker.test.mjs`
  * **98 pass / 0 fail**, `coverage.mjs --strict` exit 0. Every figure below is
  * MEASURED. **ALL TEN ARMS AS DECLARED ON THE RECORDED PASS — but FOUR CAME

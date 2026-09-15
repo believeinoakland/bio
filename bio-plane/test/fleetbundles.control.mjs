@@ -1,5 +1,22 @@
-/* FL-9's NEGATIVE CONTROL DRIVER — six arms plus a baseline, re-runnable in one
- * step:
+/* FL-9's AND FL-10's NEGATIVE CONTROL DRIVER — twelve arms plus a baseline,
+ * re-runnable in one step:
+ *
+ * TALLY CORRECTED 2026-09-14 (M0-29, D-343). This line read *"six arms plus a
+ * baseline"* and the driver announces THIRTEEN. THIS ONE DECAYED IN TWO STEPS
+ * AND ONLY THE SECOND IS THE ONE THE RECORD ALREADY KNEW ABOUT:
+ *
+ *   - It was ALREADY FALSE IN ITS OWN LANDING COMMIT `d83695b` (FL-9), where the
+ *     table held EIGHT arms plus a baseline — the variants `1b`, `2-noinstall`
+ *     and `2b` were written during the item, after the head sentence, and the
+ *     six the sentence names are the six the item set out with.
+ *   - `3607b3b` (FL-10) then APPENDED `6`, `6b`, `7` and `8` — its own claim says
+ *     so in those words — taking the table to twelve arms plus a baseline.
+ *
+ * The count now names BOTH items, because a driver whose head names one item and
+ * whose arms serve two is the state that let the number drift unread. THE ARMS
+ * ARE REAL: every one has its own anchor, subject and declared must-fail /
+ * must-not pair, so the DECLARATION is corrected and no arm is restored or
+ * removed (`casepin.control.mjs` is D-333's worked precedent).
  *
  *     node test/fleetbundles.control.mjs          # every arm, in order
  *     node test/fleetbundles.control.mjs 2b       # one arm
@@ -132,7 +149,11 @@ const named = (r, ...needles) => needles.every((n) => r.out.includes(n));
 
 const ARMS = {
   baseline: {
-    label: "nothing armed — what distinguishes six-arms-working from six-arms-broken",
+    /* The count in this label is the SAME CLAIM as the head's tally and was stale the same way
+       (`six` against a table of twelve); corrected 2026-09-14 by M0-29 with the head, because
+       correcting one and leaving the other is the half-fix that makes the next reader believe
+       the wrong half. */
+    label: "nothing armed — what distinguishes twelve-arms-working from twelve-arms-broken",
     run: () => {
       const r = runSuite();
       console.log(`  -> BASELINE ${r.pass} pass, ${r.fail} fail, exit ${r.status}`);
