@@ -12666,3 +12666,58 @@ So the scan behind each of D-225's three reads can become unbounded again and **
 **AND THE SHARPER HALF, which is new.** `derivation-bounds.test.mjs` prints a census line; at baseline it reads `store.mjs 31350 lines, 467 method segments, **102 scanning UNBOUNDED**, 32 in the class, reaching 11 of 193 DISPATCHED ops`, and under **every** arm 3 it printed **103**. The walk COUNTED the newly-unbounded method and the suite stayed green, because that census carries no ratchet. **The instrument is not blind here — it is ungraded**, which is a cheaper fix than the live row-source assertion D-227's row asked for, and both are named and costed on D-365.
 
 **What this arm set can and cannot see, stated plainly.** It drives the three ops through the control plane with `&limit=`, so it measures the published envelope and the failure of the suites to defend the SQL bound. It does **not** measure memory or latency inside the Durable Object under an unbounded scan, and it does not reach `connectionGradeForContent` (FW-17's `content=` arm on `op=connections`), which takes the same bound at its own site and has no roster entry of its own — that arm was read, not driven, and is named here rather than scored.
+
+## 2026-09-15 · REC-99 — THE CENSUS GRADED: D-365's GREEN ARM RE-ARMED AND NOW RED BY NAME, AND THE ONE THING THE COUNT STILL CANNOT SEE (instrument: `bio-plane/test/derivation-bounds.test.mjs` with `bounds.test.mjs` and `meaning-bounds.test.mjs` beside it, driven by `bio-plane/test/nc-rec99.mjs`; worktree `agent-a21fbacbb34bfb1ec` on `origin/main` at `6e88e35`)
+
+**OWN BASELINE, MEASURED BEFORE ANY EDIT, ON A PRISTINE CHECKOUT AFTER `npm ci` IN ALL THREE
+PACKAGES** (`bio-plane/`, `pdf-worker/`, `ocr-worker/` — the three that carry dependencies):
+**201/201 suites green · 12,467 assertions · 369.3 s · exit 0**, with NO member named as
+skipped. The brief carried 12,466; mine reads **12,467**, one higher, and the measurement is
+trusted over the brief per the standing instruction. `derivation-bounds` **42/0**, `bounds`
+**167/0**, `meaning-bounds` **92/0** at that baseline.
+
+**THE BRIEFED CENSUS FIGURE WAS STALE BY ONE, AND THE ARRIVAL IS NAMED RATHER THAN THE NUMBER
+BEING NUDGED.** D-365 recorded `102 scanning UNBOUNDED` and that was correct at `68b5603`, the
+tree REC-89 measured. Today's `origin/main` reads **103**. The roster was re-derived by the
+suite's own walk over `git show 68b5603:bio-plane/src/store.mjs` and over the working tree and
+`comm`-ed: **exactly ONE arrival, NO departure, and the arrival is `frontier`** — REC-93's
+observation-log read, whose `observation_log` state census is a GROUP BY aggregate. It is the
+same method that moved the CLASS ceiling 32 → 33 the same day, counted honestly in both.
+
+**THE SIX ARMS** — each armed ALONE with every other held open, each asserting it ARMED (the
+patch must match EXACTLY ONCE; all six did), each restored from a PRISTINE copy named UNIQUELY
+PER ARM and verified by sha256 AND by `cmp`, **2,088,831 bytes on `store.mjs`, floored, 0 copies
+left behind, and a CLOSING baseline re-measured equal to the opening one.**
+
+| arm | declared | MEASURED |
+| --- | --- | --- |
+| (7) the ratchet's figure raised by one by hand, 103 → 104 | the CENSUS FLOOR fails, nothing else | **49/1**, census still printing 103 — the FLOOR alone. **This arm was impossible before this item: there was no figure to raise.** |
+| (8) `LIMIT ?` and its `cap + 1` removed from `resolutionsForCapture` — D-365's own arm | the truncation arm fails NAMING the read; the census ceiling fails; the siblings stay green | **derivation-bounds 46/4, census 104**, naming `["resolutionsForCapture:rows (no SQL LIMIT)"]`; **bounds 167/0, meaning-bounds 92/0 — FULLY GREEN.** D-365's finding reproduced exactly, with the verdict now graded |
+| (9) the same on `documentsConcerning` | as (8), naming that read | **46/4, census 104**, naming `["documentsConcerning:scan (no SQL LIMIT)"]`, siblings green |
+| (9b) the same on `connectionsFor`'s ENTITY arm | as (8), naming that read | **46/4, census 104**, naming `["connectionsFor:scan (no SQL LIMIT)"]`, siblings green — **and this arm found a DEFECT IN THE INSTRUMENT, see below** |
+| (10) `LIMIT ?`/`cap + 1` replaced by a LITERAL `LIMIT 5000` — the published cap is 500, the scan reads 5,000 | the truncation arm fails by name; **the census MUST NOT move** | **47/3, CENSUS UNMOVED AT 103, ceiling and floor both GREEN**, naming `["resolutionsForCapture:rows (SQL bound is not the published cap)"]` |
+| (11) over-strictness: the same correct read with the cap passed through an alias (`const window = cap + 1`) | nothing may fail | **50/0, everything green** |
+
+**THE ARM THAT FOUND THE INSTRUMENT WRONG RATHER THAN THE SUBJECT — the seventh such receipt in
+this estate, and the figures above are the SECOND run's.** On the first run arm (9b) read
+**47/3** instead of 46/4: the by-name pin asked only that the three reads appear in `graded`, and
+`connectionsFor` assigns `scan` in TWO branches, so the CAPTURE arm's surviving verdict satisfied
+the pin while the ENTITY arm was broken. **An arm satisfiable by the healthy half of the method it
+pins is not pinning it.** The pin now requires absence from `violations` as well; the reason is
+stated at the site, and the general form was taken rather than a special case for one method.
+Nothing rested on the weaker form — the violations arm caught and named it either way.
+
+**WHAT THE COUNT HALF STILL CANNOT SEE, MEASURED AND ROWED AS D-369 RATHER THAN NOTED.** Of 25
+`truncated` measurements in `store.mjs`, 19 are taken off a row source and are graded by name (20
+verdicts — `connectionsFor` contributes two). **Six are taken off an IN-MEMORY collection built
+after several reads** (`#backfillLegContent:need`, `biasInhale:bars`, `documentsNamingEntity:merged`,
+`frontier:page`, `queueFeed:dispAll`, `queueFeed:items`) and have no single `#rows(` to grade;
+they are PINNED BY NAME so a seventh must be declared, which is not the same as grading a bound.
+And **four methods publish a bound while legitimately holding an unbounded scan**
+(`documentsNamingEntity`, `queueFeed`, `frontier`, `biasManifest`), so the census figure could not
+move if one of them lost its paging `LIMIT` — the method is already counted. **No live instance of
+that exists on this tree** (the graded 19 and the already-unbounded four do not intersect,
+measured), which is why D-369 is a `gap` and not a `defect`.
+
+**FINAL:** `derivation-bounds` **50/0** (42 → 50, +8, every added assertion attributed to this
+item by re-running the true baseline rather than by subtraction), and no other suite's count moved.

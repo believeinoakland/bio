@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-954 rulings across 84 documents.
+961 rulings across 84 documents.
 
 ## DEC-
 
@@ -137,7 +137,7 @@ authority is the file named, never this one.
 - **DEC-34** · 2026-08-07 — `[BOB-2 — RULED NO 2026-08-07: current version only, no disclosure of hidden alternatives]` — resolved, so do not re-open it.  
   `docs/archive/ledgers/QUEUE-2026-08.md:297`
 - **DEC-34** · 2026-08-07 — — the container carries each included finding's current version with its ground partition, description, NAME in DEC-34's header, and DEC-54's policy pin; `[BOB-2 — RULED NO 2026-08-07: current version only, no disclosure of hidden alternatives]` — resolved. | **NC: DEC-44's** — publish a case of two findings with…  
-  `docs/development/INVESTIGATIVE-SESSION.md:1221`
+  `docs/development/INVESTIGATIVE-SESSION.md:1225`
 - **DEC-35** · 2026-08-04 — PLACEMENT RE-BASED BY DEC-35 (2026-08-04, superseding the 2026-08-03 service-first note): in-plane and pdf-worker stay RULED OUT by bundle size; the IN-ACCOUNT path is the DEFAULT and its engine is now TESSERACT AS A FLEET MEMBER pending CPDF-12's deployed probe (DEC-42: Moondream returned NO-GO on coordinates;…  
   `docs/development/QUEUE.md:1601`
 - **DEC-36** · 2026-08-04 — RULED 2026-08-04 (DEC-36): an INVISIBLE ancestor in the set is stated as an incompleteness and disclosed as nothing else.** D-15 §7.9 ("not its existence") and the truncation-honesty rule above pointed opposite ways on one bit, and Bob reconciled them BY SCOPE rather than one overriding the other: **D-15 governs…  
@@ -203,7 +203,7 @@ authority is the file named, never this one.
 - **DEC-52** · 2026-08-07 — RULED, 2026-08-07: robots.txt disallows do not bar capture of publicly available documents, and the member-browser UA from inquiry creation is permitted for these fetches (DEC-52; SOURCE-ACCESS.md amended).**  
   `docs/development/INVESTIGATIVE-SESSION.md:859`
 - **DEC-52** · 2026-08-07 — `[BOB-4 — RULED 2026-08-07, PROVISIONAL]`** — DEC-52's remaining yes/no: Bob's mechanical-standing principle recorded on DEC-52, pending his confirmation; the sidebar approval remains the act of record for the constitutive fields (§14a). 8.  
-  `docs/development/INVESTIGATIVE-SESSION.md:1185`
+  `docs/development/INVESTIGATIVE-SESSION.md:1189`
 - **DEC-52** · 2026-08-07 — IN RESERVE with a named trigger, not adopted pre-emptively *(AMENDED 2026-08-07: for publicly available documents fetched as part of the workflow, the member-browser UA is now PERMITTED by ruling — see the amendment note above; DEC-52, IS-SWEEP §4c)*.  
   `docs/development/SOURCE-ACCESS.md:285`
 - **DEC-53** — "Why do we want to count the number of times that a user approves a candidate?  
@@ -426,6 +426,10 @@ authority is the file named, never this one.
   `docs/development/STORE-AS-CACHE.md:9`
 - **D-222** — §Where AI actually sits — self-marked PARTLY SUPERSEDED; D-222 option A landed (the MEANING arm reaches `inquiry_basis` and `resolutions`); `readings`, `reading_refs`, `connections` still fixed-key only; stage C is inside Part II §18's scope, not queued.  
   `docs/development/STORE-AS-CACHE.md:10`
+- **D-225** · 2026-09-15 — CAPPED — this row read "uncapped (D-225)" until 2026-09-15 and is CORRECTED IN PLACE rather than deleted, because what it recorded was a real gap and the gap CLOSING is the news** | `documentsConcerning`, `resolutionsForCapture`, `connectionsFor` in `store.mjs`, named by SYMBOL and not by line (`CORPUS-STANDARD.md`…  
+  `docs/architecture/BIO_Content_Framework_v0_10.md:2015`
+- **D-225** · 2026-08-07 — Related finding, raised as D-225 on 2026-08-07 and since CLOSED — CORRECTED IN PLACE on 2026-09-15 by REC-99, never deleted, because the gap this paragraph recorded was real and the gap CLOSING is the news:** the existing meaning-layer reads — `concerns`, `resolutions`, `connections` — **WERE uncapped** on the day…  
+  `docs/development/INVESTIGATIVE-SESSION.md:1107`
 - **D-227** — `bio-plane/test/versions.test.mjs` — ONE superseded pin CORRECTED, and it was not predicted:** that suite's D-227 bound arm demanded exactly THREE `#rows(` inside a 4,600-character slice of `basisVersions`, which pinned the reader's TOPOLOGY rather than its rule, and this item's helper extraction moved it.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4788`
 - **D-227** — SETTLED. I3 10.0.0 → 10.1.0.** I5 NOT touched. Open against it: nothing. **Related and NOT closed by it: D-227** — these suites assert the statement carries its `LIMIT` and that the published cap is the applied cap, which is the HONESTY half; **an unbounded derivation feeding a bounded answer would still pass**,…  
@@ -530,6 +534,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:7828`
 - **D-367** · 2026-09-15 — D-367: `tools/decided.mjs`'s ruling MARKER matches the index's own filename, because `.` is a word boundary and `DECIDED.md` therefore satisfies `/\b(RULED|DECIDED|…)\b/` — so prose that merely NAMES the index mints a ruling row attributed to whatever id was last mentioned, and at least eight such rows are already…  
   `docs/development/QUEUE.md:764`
+- **D-369** — (it first failed STALE on `docs/DECIDED.md` and the drift was this item's own — see the addendum).  
+  `docs/development/CLAIMS.md:8026`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
@@ -856,6 +862,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-2026-08.md:359`
 - **REC-60** · 2026-08-07 — plied none — `op=resolutions`, `op=concerns`, `op=connections` · PROPOSED, RESPONSES, RESOLUTION, CHANGING, CHANGED AND SETTLED 2026-08-07 (REC-60, D-225)  
   `docs/development/INTERFACE-CHANGES.md:1420`
+- **REC-60** · 2026-08-07 — (SETTLED, I3 8.1.0 → 9.0.0 → 10.0.0): `resolutionsForCapture`, `documentsConcerning` and `connectionsFor` each clamp to 500 by default and 5,000 at the ceiling, and publish `limit` AFTER clamping beside `truncated`.  
+  `docs/development/INVESTIGATIVE-SESSION.md:1109`
 - **REC-64** · 2026-08-07 — enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED NOT ENACTED' table) for what enactment owes. enacted: 2026-08-07 · CONDUCT — **REC-64 queued**: every refusable condition carries an error code with a canned translation, and **an untranslated code FAILS THE HARNESS**, which the ruling…  
   `docs/archive/ledgers/DECISIONS-2026-08.md:3010`
 - **REC-64** · 2026-08-08 — BUILD-TIME vs RUNTIME DECIDED AND REASONED AT THE SITE: RUNTIME, from the checks module** — a baked map is a copy, **and a sovereign instance on an older surface would freeze the sentence at ITS build, so two instances would tell a member different things.** That is the distribution model deciding an implementation…  
@@ -922,6 +930,10 @@ authority is the file named, never this one.
   `docs/development/INTERFACE-CHANGES.md:7052`
 - **REC-97** · 2026-09-14 — alars (or a `content_id`) onto the leg · PROPOSED 2026-09-14 (REC-97, closing UI-61's DELEGATION and unblocking IC-84's SETTLED) — the version bump and the RESOLUTION are CONDUCT's  
   `docs/development/INTERFACE-CHANGES.md:6784`
+- **REC-99** · 2026-09-15 — ONE ROW OF APPENDIX A.4 WAS CORRECTED ON 2026-09-15 BY REC-99 and nothing else in this document moved**: the row calling the three fixed-key meaning-layer reads "uncapped (D-225)" had been false since REC-60 capped them on 2026-08-07 under IC-25, and it is corrected IN PLACE rather than deleted — the gap it…  
+  `docs/architecture/BIO_Content_Framework_v0_10.md:3`
+- **REC-99** · 2026-09-15 — CLAIM 2026-09-15 RECORD (REC-99 — the two stale "uncapped" sentences CORRECTED IN PLACE, and D-365's census GRADED so a removed SQL `LIMIT` fails BY NAME) session: rec99-worker (worktree agent-a21fbacbb34bfb1ec) opened: 2026-09-15T00:00:00Z paths:  
+  `docs/development/CLAIMS.md:7990`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -1661,6 +1673,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:7835`
 - the way a superseded claim is CORRECTED rather than deleted (CLAUDE.md).  
   `docs/development/CLAIMS.md:7961`
+- `docs/DECIDED.md`** — generated, never hand-edited.  
+  `docs/development/CLAIMS.md:8020`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -1784,13 +1798,13 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-08-07** — `[BOB-3 — RULED 2026-08-07 (SWEEP §4c)]` — robots.txt and "areas anybody can go through."** Measured: Oakland's robots.txt carries 82 Disallow rules of which **63 are Public Ethics Commission publications**, including sixteen years of annual reports.  
   `docs/development/INVESTIGATIVE-SESSION.md:853`
 - 16 · Positions taken and WITHDRAWN | withdrawn | why it fell | | --- | --- |  
-  `docs/development/INVESTIGATIVE-SESSION.md:1125`
+  `docs/development/INVESTIGATIVE-SESSION.md:1129`
 - **2026-08-07** — robots.txt, which is `[BOB-3 — RULED 2026-08-07: disallows do not bar capture of public documents]`** (§14a). 4. ~~Review burden.~~ **ANSWERED** — D-217a's derivation tree with the prune offer (§6.3a, prune hides per SWEEP §4b), plus the proposal rules: aggregate never multiply, age  
-  `docs/development/INVESTIGATIVE-SESSION.md:1176`
+  `docs/development/INVESTIGATIVE-SESSION.md:1180`
 - **2026-08-07** — `[BOB-2 — RULED NO 2026-08-07]`** — the published case carries the current version only, no disclosure of hidden alternatives (§13). 7.  
-  `docs/development/INVESTIGATIVE-SESSION.md:1183`
+  `docs/development/INVESTIGATIVE-SESSION.md:1187`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
-  `docs/development/INVESTIGATIVE-SESSION.md:1195`
+  `docs/development/INVESTIGATIVE-SESSION.md:1199`
 - RULED (ODF). Bring him consequences, never mechanism; `decided.mjs` and a grep BEFORE any question. ## PROGRAM B — THE MEMBER SURFACES (interactive with Bob; UX is paramount)  
   `docs/development/kickoffs/BOB-NEXT.md:71`
 - `DECIDED.md` regeneration is owed in any commit that adds marker words (RULED, CORRECTED, SUPERSEDED…); `corpuscheck --write <file>` after any heading change; the Status `as of` date must not be behind the file's last commit. - **Do not prefix a not-yet-built op as `op=<name>` in prose** — `op-claims.test.mjs`…  

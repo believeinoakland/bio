@@ -51,7 +51,49 @@
    (6) UNARM THE FIXTURE — `BIG_K = 3`, a quadratic subject too small for the bound to bite.
    MEASURED: **32/10.** The fixture arm fails first and every `truncated: true` arm with it,
    which is the proof that those arms are not passing at zero cost over a fixture that could
-   never have cut. */
+   never have cut.
+
+   ===== REC-99 / D-365, 2026-09-15 — THE ARMS FOR THE GRADED CENSUS. SIX arms, each armed
+   ALONE with every other held open, driven by `test/nc-rec99.mjs` (`cd bio-plane && node
+   test/nc-rec99.mjs`), every file restored from a PRISTINE copy named UNIQUELY PER ARM and
+   verified by sha256 AND by `cmp` (2,088,831 bytes on `store.mjs`, floored, 0 copies left
+   behind, and the CLOSING baseline re-measured equal to the opening one). Every arm asserts
+   it ARMED — the patch must match EXACTLY ONCE — and all six did.
+   BASELINE ROW FIRST: derivation-bounds **50/0, census 103** · bounds **167/0** ·
+   meaning-bounds **92/0**.
+   (7) THE RATCHET'S OWN FIGURE RAISED BY ONE BY HAND (103 -> 104). MEASURED: **49/1**, the
+   CENSUS FLOOR and nothing else, census still printing 103. **This is the arm that says the
+   census is GRADED rather than reported** — before this item the same edit was impossible to
+   make, because there was no figure to raise.
+   (8) `LIMIT ?` AND ITS `cap + 1` REMOVED FROM `resolutionsForCapture` — D-365's own arm.
+   MEASURED: **46/4, census 104**, and the failure NAMES THE READ:
+   `["resolutionsForCapture:rows (no SQL LIMIT)"]`. **The siblings stayed FULLY GREEN —
+   bounds 167/0, meaning-bounds 92/0 — which is D-365's measurement reproduced exactly**: the
+   envelope is honest over an unbounded scan and only this file can see it. The difference from
+   2026-09-14 is that the walk now FAILS on what it counts.
+   (9) THE SAME ON `documentsConcerning`. MEASURED: **46/4, census 104**, naming
+   `["documentsConcerning:scan (no SQL LIMIT)"]`, siblings green.
+   (9b) THE SAME ON `connectionsFor`'s ENTITY ARM. MEASURED: **46/4, census 104**, naming
+   `["connectionsFor:scan (no SQL LIMIT)"]`, siblings green. **AND THIS ARM FOUND A DEFECT IN
+   THE INSTRUMENT RATHER THAN CONFIRMING IT, which is why this row is the second run's:** on
+   the first run it read 47/3, because the by-name arm asked only that the three reads appear
+   in `graded` — and `connectionsFor` assigns `scan` in TWO branches, so the CAPTURE arm's
+   surviving verdict satisfied the pin while the ENTITY arm was broken. The arm now requires
+   absence from `violations` as well; the reason is stated at the site. The violations arm had
+   caught it either way, so nothing rested on the weaker form — but an arm satisfiable by the
+   healthy half of the method it pins is not pinning it.
+   (10) THE CAP THAT IS NOT THE PUBLISHED CAP — `LIMIT ?`/`cap + 1` replaced by a LITERAL
+   `LIMIT 5000`, so the envelope publishes 500 over a scan that read 5,000. MEASURED: **47/3,
+   AND THE CENSUS DID NOT MOVE — 103, ceiling and floor both GREEN** — with the failure naming
+   `["resolutionsForCapture:rows (SQL bound is not the published cap)"]`. **THIS IS THE ARM
+   THAT EARNS HALF (2) ITS PLACE**: the count half is structurally incapable of seeing this,
+   because the SQL is still bounded.
+   (11) OVER-STRICTNESS — the same correct read in a spelling the grader did not anticipate,
+   the cap passed through an alias (`const window = cap + 1`). MEASURED: **50/0, everything
+   green.** A grader that reds here would be tighter than its rule.
+   THE OVER-STRICTNESS ARM THE CENSUS CARRIES BY CONSTRUCTION, stated because it is easy to
+   miss: the 103 reads that were ALREADY unbounded and are declared so all PASS at baseline —
+   the ceiling grades ARRIVALS, never the standing roster. */
 /* REC-66 · D-224 / D-227 — THE BOUND ON THE DERIVATION, AND THE WALK FOR ITS CLASS.
  * ============================================================================
  *
@@ -545,6 +587,176 @@ t("RATCHET: the dispatched members are pinned BY NAME, not merely counted — a 
               "publishedcase->publishedCase", "queue->queueFeed", "readingname->documentsNamingEntity",
               "reevaluations->reevaluations", "select->selectionCreate", "selection->selectionResolve",
               "selectionrelease->selectionRelease"]);
+
+/* ================================================== THE CENSUS, GRADED (REC-99 · D-365).
+ *
+ * WHAT WAS WRONG, AND IT WAS NOT BLINDNESS. REC-89 measured it on 2026-09-14 and the
+ * measurement is D-365: drop ONLY the `LIMIT ?` and its `cap + 1` argument from
+ * `resolutionsForCapture`, from `documentsConcerning` or from `connectionsFor`'s entity arm —
+ * leaving `truncated`, the `slice(0, cap)` and the published `limit` exactly as they are — and
+ * **every bounds suite stayed FULLY GREEN, 0 failing assertions on every arm.** This file
+ * PRINTED the difference: the CORPUS line read `102 scanning UNBOUNDED` at baseline and `103`
+ * under each arm. **The walk COUNTED the newly-unbounded method and nothing failed, because
+ * that census carried no ratchet.** An instrument that prints a number nobody grades is not a
+ * weaker instrument than one that is blind; it is a MORE EXPENSIVE one, because it has already
+ * paid for the measurement and then throws away the verdict.
+ *
+ * SO THE CENSUS IS GRADED HERE, IN TWO HALVES THAT FAIL FOR DIFFERENT REASONS, and the second
+ * exists because the first has a blind spot this item MEASURED rather than assumed:
+ *
+ *   (1) THE COUNT — a ceiling and a floor on the printed figure, the same shape the class
+ *       ratchet above carries and for the same reasons. The roster is PRINTED by name, so a
+ *       failure of the ceiling is read against the previous run's roster and the arrival is
+ *       named rather than guessed at.
+ *   (2) THE TRUNCATION SOURCE, BY NAME — and this is the half that names the method WITHOUT a
+ *       roster diff. **A method that publishes `truncated` has made a CLAIM about the work it
+ *       did**, and the claim is only worth the row source it was measured over: if `truncated`
+ *       is read off `X.length > cap`, then the `#rows(` that assigned `X` must carry a SQL
+ *       `LIMIT` **and must be PASSED the cap** (the cap identifier, or a local assigned from
+ *       it, appearing in the ARGUMENTS and not merely inside the SQL text). That is an
+ *       INVERSION rather than a list of three method names: it grades every read that makes
+ *       the claim, including ones written after this line.
+ *
+ * WHY (2) IS NOT REDUNDANT, MEASURED ON THIS TREE AND NOT REASONED:
+ *   - **THE COUNT CANNOT SEE A CAP THAT IS NOT THE PUBLISHED CAP.** Replace `LIMIT ?` / `cap + 1`
+ *     with a literal `LIMIT 5000` and the SQL is still bounded, so the census does not move at
+ *     all — and the envelope now says 500 over a scan that read 5000. Negative control (10)
+ *     arms exactly that: the census stays at its figure, GREEN, and (2) fails naming the read.
+ *   - **THE COUNT IS A COUNT OF METHODS, so a method that ALREADY scans unbounded somewhere
+ *     else can lose its paging LIMIT without the figure moving.** Four methods publish a bound
+ *     and hold an unbounded scan today (`documentsNamingEntity`, `queueFeed`, `frontier`,
+ *     `biasManifest` — every one of them legitimately: an alias lookup on a unique key, a
+ *     GROUP BY aggregate, a dispositions table). None of the four is graded by (2) either,
+ *     which is stated below rather than left to be discovered.
+ *
+ * WHAT THIS CANNOT GRADE, NAMED HERE AND PINNED BELOW rather than silently scored zero. Six
+ * `truncated` measurements are taken over an IN-MEMORY collection — merged, filtered or
+ * assembled after several reads — so there is no single `#rows(` to grade. They are the same
+ * class one step further on and they are D-369, not this item: pinning the roster means a
+ * SEVENTH such shape must be declared here before it can pass.
+ */
+const SCANNING_NAMES = [...SEGMENTS].filter(([, b]) => scans(b).some((s) => !s.bounded))
+  .map(([n]) => n).sort();
+console.log(`  CENSUS ROSTER (${SCANNING_NAMES.length} methods scanning UNBOUNDED): ${SCANNING_NAMES.join(", ")}`);
+
+t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints — ONE reader, not "
++ "two. A ratchet over a second reader can hold while the printed census drifts, and then neither "
++ "number means anything",
+  SCANNING_NAMES.length, SCANNING);
+
+/* MEASURED 2026-09-15 BY REC-99 ON `origin/main` `6e88e35`, AND THE BRIEFED FIGURE WAS STALE BY
+   ONE, WHICH IS WHY THE ARRIVAL IS NAMED HERE RATHER THAN THE NUMBER BEING TAKEN ON TRUST.
+   D-365 recorded 102 on 2026-09-14 and that was right on the tree it was measured on
+   (`68b5603`). Today's figure is 103. **THE ARRIVAL IS `frontier`, MEASURED AND NOT INFERRED:**
+   this same walk was re-derived over `git show 68b5603:bio-plane/src/store.mjs` and over the
+   working tree, and `comm` over the two sorted rosters reports EXACTLY ONE ARRIVAL AND NO
+   DEPARTURE — the same instrument, and the same method, D-280 and CASE-2 used on the class
+   ratchet above. It is REC-93's observation-log read, which arrived the same day and is the
+   same method that moved the CLASS ceiling 32 -> 33; its `observation_log` state census is a
+   GROUP BY aggregate returning one row per state, so it is a real member of this census by the
+   walker's own definition and is counted honestly rather than exempted. */
+const SCANNING_MEASURED_2026_09_15 = 103;
+t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
++ "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
++ "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
++ "cared. The roster is printed above, so the failing run names the arrival",
+  SCANNING <= SCANNING_MEASURED_2026_09_15, true);
+t("CENSUS IS A FLOOR: the figure falling without somebody moving it means the READER stopped "
++ "seeing row sources, not that the plane got better — the same direction REC-60's shrunken 27 "
++ "fell in, unnoticed for two days",
+  SCANNING >= SCANNING_MEASURED_2026_09_15, true);
+
+/* ---- (2) THE TRUNCATION SOURCE. `truncated` is a CLAIM; this grades what it was measured over. */
+const TRUNC_RE = /\btruncated\b\s*[:=]\s*([A-Za-z_$][\w$]*)\s*\.\s*length\s*>\s*([A-Za-z_$][\w$]*)/g;
+/* The cap, and every local assigned FROM it — `const window = cap + 1` is the same cap by
+   another name, and an instrument that reads only the one spelling is the list-of-spellings
+   failure this file's own header was written against. Over-strictness arm (11) is that
+   spelling, and it must PASS. */
+const capIdentifiers = (body, capId) => {
+  const ids = new Set([capId]);
+  for (let round = 0; round < 4; round++) {
+    const before = ids.size;
+    const re = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([^;]*)/g; let m;
+    while ((m = re.exec(body))) if (mentions(m[2], ids)) ids.add(m[1]);
+    if (ids.size === before) break;
+  }
+  return ids;
+};
+/* Every `#rows(` that ASSIGNS this identifier — `const scan = this.#rows(` and the bare
+   `scan = this.#rows(` of a `let` declared above a branch both match, which is not incidental:
+   `connectionsFor` assigns its scan in TWO arms and a reader that saw only the `const` form
+   would grade the method on one of its two doors. */
+const rowSourceCalls = (body, id) => {
+  const out = []; const re = new RegExp(`\\b${id.replace(/\$/g, "\\$")}\\s*=\\s*this\\.#rows\\(`, "g");
+  let m; while ((m = re.exec(body))) out.push(body.slice(m.index, closeParen(body, m.index + m[0].length - 1)));
+  return out;
+};
+const truncationVerdicts = (code) => {
+  const graded = [], ungraded = [], violations = [];
+  for (const [name, body] of segments(code)) {
+    let m; TRUNC_RE.lastIndex = 0;
+    while ((m = TRUNC_RE.exec(body))) {
+      const [, src, capId] = m;
+      const calls = rowSourceCalls(body, src);
+      if (!calls.length) { ungraded.push(`${name}:${src}`); continue; }
+      const ids = capIdentifiers(body, capId);
+      for (const call of calls) {
+        const bounded = /\bLIMIT\b/i.test(call);
+        /* The cap must be PASSED, so only the arguments are read — a `cap` mentioned inside the
+           SQL text is not a bound the caller's figure controls. */
+        const args = call.lastIndexOf("`") > 0 ? call.slice(call.lastIndexOf("`")) : call;
+        if (bounded && mentions(args, ids)) graded.push(`${name}:${src}`);
+        else violations.push(`${name}:${src}${bounded ? " (SQL bound is not the published cap)" : " (no SQL LIMIT)"}`);
+      }
+    }
+  }
+  return { graded, ungraded, violations };
+};
+const TRUNCATION = truncationVerdicts(CODE);
+console.log(`  TRUNCATION SOURCES: ${TRUNCATION.graded.length} graded, `
+          + `${TRUNCATION.ungraded.length} ungradeable (named below), ${TRUNCATION.violations.length} in violation`);
+console.log(`    GRADED: ${TRUNCATION.graded.join(", ")}`);
+
+t("TRUNCATION SOURCE, BY NAME: every `truncated` measured off a row source was measured over a "
++ "source the SQL bounded AND the published cap controlled. THIS IS THE ARM D-365 EXISTS FOR — "
++ "removing `LIMIT ?` from any of REC-60's three fixed-key reads fails HERE, naming the read, "
++ "rather than being counted one line up",
+  TRUNCATION.violations, []);
+/* BOTH CONDITIONS, AND THE SECOND IS HERE BECAUSE ARM (9b) CAME BACK A SURPRISING GREEN ON THIS
+   ARM AND THE SURPRISE IS RECORDED RATHER THAN SMOOTHED. `connectionsFor` assigns `scan` in TWO
+   branches, so both verdicts are filed under the one name `connectionsFor:scan`: with the ENTITY
+   arm's `LIMIT` removed, the CAPTURE arm's surviving verdict still satisfied "is in `graded`",
+   and this assertion stayed green while the read was genuinely broken. The violations arm above
+   caught it and named it, so the item's own accept never rested on this arm — but an arm that
+   can be satisfied by the healthy half of the method it is pinning is not pinning it. Requiring
+   ABSENCE FROM `violations` as well closes it, and it is the general fix rather than a special
+   case for this one method: any method with two row sources behaves the same way. */
+t("TRUNCATION SOURCE: and REC-60's three reads are graded BY NAME rather than being anywhere in a "
++ "total, AND appear in no violation — a count of twenty is satisfied by ANY twenty, and a method "
++ "that assigns its scan in two branches is satisfied by its healthy branch unless both are asked. "
++ "These three are the reads D-225 was raised for and REC-60 capped on 2026-08-07 under IC-25",
+  ["resolutionsForCapture:rows", "documentsConcerning:scan", "connectionsFor:scan"]
+    .filter((x) => !TRUNCATION.graded.includes(x)
+                || TRUNCATION.violations.some((v) => v.startsWith(`${x} `))), []);
+/* A FLOOR on the grader's REACH, because a verdict of "0 violations" is exactly what a reader
+   that matched nothing also produces — the failure this file has met in every other walk it
+   carries. Measured 2026-09-15: 20 graded sources across 19 methods. */
+t("TRUNCATION SOURCE IS A FLOOR TOO: the grader reaches at least the 20 row sources measured on "
++ "2026-09-15. Zero violations over zero readings is how a walk congratulates itself, and this "
++ "estate has recorded that three times",
+  TRUNCATION.graded.length >= 20, true);
+t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures are measured over "
++ "an in-memory collection built from several reads, so no single row source can be graded. They "
++ "are D-369 and not this item; pinning them means a SEVENTH must be declared here before it can "
++ "pass, rather than arriving ungraded and invisible",
+  TRUNCATION.ungraded.sort(),
+  ["#backfillLegContent:need", "biasInhale:bars", "documentsNamingEntity:merged",
+   "frontier:page", "queueFeed:dispAll", "queueFeed:items"]);
+const noRowSources = CODE.replace(/#rows\(/g, "#norows(");
+t("REACH IS A DELTA (the truncation grader): over a copy of store.mjs with no `#rows(` in it, "
++ "every graded source becomes UNGRADEABLE and none is silently scored as compliant — the "
++ "direction that matters, since a reader that finds no row sources must not report a clean bill",
+  [truncationVerdicts(noRowSources).graded.length, TRUNCATION.graded.length > 0], [0, true]);
 
 /* ------------------------------------------------ REACH, AS DELTAS.
    A walk that matches nothing reports zero and passes forever. Each reader is re-run over a
