@@ -181,3 +181,11 @@ _m025/
 # producer sweep has already enrolled as a second author.
 .rec97-control-pristine/
 .rec93-control-pristine/
+# SK-8's pen (`bio-plane/test/nc-sk8.mjs`), its own line on the standing rule at
+# `.rec84-control-pristine/` above — a wildcard over `.*-control-pristine/` would
+# silently cover a pen nobody declared, so each one is named. The harness arms
+# `src/store.mjs` and `src/extractrun.mjs`, and a copy of either left untracked by an
+# interrupted run is a second source file for the next walk to enrol, which
+# `coverage.mjs`'s fleet walk and the battery's discovery both invite by reading
+# directories rather than a list.
+.sk8-control-pristine/

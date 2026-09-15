@@ -7040,3 +7040,94 @@ ADDITIVE, as proposed: one new table and three indexes, every level writing thro
 **RESPONSES, recorded by CONDUCT #11 at integration:** `RECORD` AGREE (owner; the writers and both reads land in its ground and its own gates fired on the item six times). `CAPTURE` NOT-AFFECTED, answered FOR by CONDUCT — the acquire-time writer is additive and the capture path's shape does not move. `SKILL` NOT-AFFECTED, answered FOR by CONDUCT — `op=airunlog` reads through unchanged, proved by digest rather than asserted. `UI` NOT-AFFECTED, answered FOR by CONDUCT, and its harness earned the answer rather than being waved through: it caught a vocabulary value that was a TOKEN rather than a PHRASE while the whole plane battery was green.
 
 **Two things are recorded as owed rather than settled here**, because an IC that hides them would be the registry lying by omission: **§3 and §4.4 of the design cannot both hold** (a `subject NOT NULL` rule against a folded table that permits a NULL subject and has no `result_ref` column), resolved conservatively at every site with the document's reconciliation owed to the design; and **D-366 is open** — a run can still record *we looked and it is there* with nothing to point at. SETTLED when REC-94, REC-95 and REC-96 have written into this table at the other two levels and the design's §3/§4.4 contradiction is reconciled; CONDUCT writes it.
+---
+
+## IC-93 · PROPOSED · 2026-09-14 · SK-8 — THE EXTRACT RUN'S PRODUCTIONS: two ops on I3, one table on I5, and the first producer of a step I2 has carried since CPDF-10
+
+**Interfaces: I3 (op contracts, RECORD's) and I5 (the store schema, RECORD's). ADDITIVE on both.
+I2 IS NOT CHANGED and is CONFIRMED instead — see the `IC-2 · CONFIRMED` entry below, which is an
+AMENDMENT to an existing IC rather than a new one, per SK-8's queue row.**
+
+**WHAT THIS IS.** `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 answered D-358 on 2026-09-14: the
+EXTRACT role runs in DEC-62's RUN, with **no new runtime, no new credential class and no new fence**.
+SK-8 builds `EXTRACTION-BREADTH-DESIGN.md` §4's third production — a proposed reading — inside that
+run. Nothing existing is reshaped.
+
+**THE CHANGE, stated as what a consumer would see.**
+
+- **I3, two new ops.** `op=extractpropose` (mutating; an act of a run — named in `AI_RUN_ACTIONS`,
+  refused by the STORE without a live EXTRACT run) and `op=extractproposals` (read; scoped to a run
+  or a document, refusing an unscoped listing by name). Both take the `contentmint` class cut and the
+  `contribute` capability, and both are gated on the server-side `viewer` stamp. `proposedBy` is
+  stamped server-side on `mintedBy`'s exact rule and a caller-supplied one is never read.
+- **I3, one field added to an existing answer, and it is the only one worth a consumer's attention:**
+  nothing else moves. No existing op's request or response shape changes.
+- **I5, one new table**, `proposed_readings`, before the `host_governor` block, in both purge arms
+  and counted in `op=stats` as `proposedReadings`. **No existing table gains or loses a column.**
+- **One new term in an existing published vocabulary:** `RUN_BOUNDS` gains `mints`. It is a ROW in a
+  table that already stores `allowed` and `consumed` per bound, which is what §7.3 (5) meant by *no
+  schema, no new vocabulary* — UI-38's field-name-blind renderer shows it with no edit.
+
+**MEASURED CONSUMER IMPACT — the census, taken 2026-09-14 on this tree and not recalled.**
+
+- `civicos-ui/**`: **0** occurrences of `extractpropose`, `extractproposals` or `proposed_readings`.
+  Nothing renders a proposed reading and none is invented. **NOT-AFFECTED, and this is a measurement
+  with a shelf life** — SK-7's own claim that "no surface renders a content row" was correct when
+  measured and FALSE within a day, so this is dated rather than asserted.
+- `agent-worker/**`: **0**. The fleet member calls neither op. **NOT-AFFECTED, with one act owed and
+  named below.**
+- `newgroup/**`: not examined for callers — it embeds a built plane artifact and calls no op by name.
+- Inside `bio-plane/`: the ops' only callers are SK-8's own suite and its control harness.
+- **`RUN_BOUNDS`'s consumers were measured rather than assumed**, because a bound roster is read in
+  five places: `airun.test.mjs` ARM V5 pins the SET EXACTLY and **goes RED by design** on any
+  addition (corrected in this landing, never exempted — FL-7's ARM V6 precedent, which went red the
+  same way when a third ENDING landed); `agent-worker/test/harness.test.mjs` asserts every bound the
+  harness names is one the plane declares, which a NEW plane bound cannot break; `skillpack.test.mjs`
+  and `skilldoctrine.test.mjs` harvest the keys into a copied-term corpus, and `mints` appears as a
+  string literal in neither module; `civicos-ui/check-refusal-codes.mjs` arm E reads it as a
+  DEC-49-shaped vocabulary and `mints` carries its sentence like every other row.
+
+**THE CHANGE CLASS.** ADDITIVE on I3 (two ops, no existing shape touched) and ADDITIVE on I5 (one
+table, no existing column touched) — **MINOR on both** by the registry's own rule. A consumer that
+ignores all of it sees the interface it saw yesterday.
+
+**CONSUMERS TO ANSWER:** `RECORD` (owner of I3 and I5), `UI` (not affected by measurement; the
+surface on which a run is requested and its productions reviewed is Program B's, §7.3 (7)), `FLEET`
+(not affected by measurement, **one act owed: an `extract` row in `agent-worker/src/harness.mjs`'s
+`MODES` is what would let a fleet member DRIVE such a run, and adding one is a deployment act in
+FLEET's lane pinned by SK-4's `skillsequencing.test.mjs` ARM B4 — SK-8 did not reach into it**),
+`DIST` (not affected), `CONTENT-PDF` and `FRAMEWORK` (not affected; both dormant — CONDUCT
+answers-for in writing).
+
+**CONDUCT takes the version bumps and the RESOLUTION.**
+
+### IC-2 · CONFIRMED by SK-8 (the `ai(function, version)` step's FIRST PRODUCER) · 2026-09-14
+
+**AN AMENDMENT TO IC-2, NOT A NEW IC, and SK-8's queue row says so explicitly** — the interface line
+reads *"I2 — the `ai(function)` step is DESIGNED (textchain's chain grammar); its first producer
+confirms at IC-2"*. This is the COFF-3 / COFF-5 pattern, run on a step kind instead of on the
+extraction envelope: a producer confirms a designed shape from its own as-built code, inventing no
+variant, and a drift would be a COUNTER here rather than a silent fork.
+
+**WHAT IS CONFIRMED, from as-built code.** `STEP_KINDS.ai` has been in `bio-plane/src/textchain.mjs`
+since CPDF-10, classified `derivation`, with `checkChain` refusing an `ai` step that names no
+performer (`TEXT_CHAIN_STEP_UNNAMED`) and `describeChain` rendering `engine (version)`. **Nothing
+emitted one until 2026-09-14.** `op=extractpropose` now does, through `appendStep`, and the shape it
+emits is the designed shape unchanged: `{ step: "ai", engine: <function>, version, cap }`.
+
+**THE ONE THING A READER WOULD OTHERWISE GET WRONG, stated rather than left to be discovered.** The
+design writes the step as `ai(function, version)` and the landed grammar carries the performer in
+**`engine`**, shared with the `ocr` step. **The producer uses `engine` and I2 is NOT reshaped** — a
+second field spelled `function` would be a shape change to an interface for a producer's
+convenience, which is what confirming rather than amending means. So `I2 STAYS AT 1.5.0` and this
+entry adds no version.
+
+**AND ONE INEXACTNESS IS RAISED RATHER THAN EDITED, because the word is I2's and I2 is FRAMEWORK's.**
+`STEP_KINDS.ai.label` reads *"a model rewrote the text"*, and a proposed reading rewrites nothing —
+it reads text the record already holds and proposes what that text NAMES. So `describeChain` over a
+proposal's basis says a model rewrote text that no model touched. **The direction is conservative**
+(it can only weaken what a reader believes about the text, never strengthen it), which is why it is
+not urgent and why SK-8 did not reach into another area's vocabulary to fix it. It is reported as a
+**DESIGN GAP** against `textchain.mjs`'s `STEP_KINDS` and is CONDUCT's to route: either the label
+widens to cover a model that READ rather than rewrote, or the `ai` kind splits, and both are I2
+decisions.

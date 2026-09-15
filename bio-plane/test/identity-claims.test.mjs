@@ -156,14 +156,26 @@ t("(b) NO comment claims a member-only constraint the code does not enforce",
    set stays PINNED BY NAME rather than being loosened to a count, and the DEC
    list below now names which ruling covers which site, so a site moved from one
    ruling to another fails here rather than passing on the word "RULED". */
+/* THE SET GREW BY ONE FIELD ON 2026-09-14 (SK-8) AND THE PIN IS CORRECTED
+   RATHER THAN LOOSENED, which is the whole point of pinning it by NAME: a second
+   field that a ruling permits a machine to write cannot arrive without somebody
+   naming the ruling here. `proposedBy` is `op=extractpropose`'s stamp — the
+   EXTRACT role's production, RULED by DEC-24 at
+   `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 (the run, not the pilot) and folded
+   into framework Part II §14.4 as Bob's 5.7 — and it joins `mintedBy` under the
+   SAME DEC because it is the same doctrine one act out: the machine does the
+   looking and marks what it found, and the member does the concluding by citing
+   it. It appears TWICE for the reason every field here does: the sweep reads the
+   comment block and the stamp line as two sites. */
 t("(c) the RULED sites, exactly — every field a ruling permits a machine to write, named",
   setOf("RULED"),
   ["declaredBy@src/index.mjs", "declaredBy@src/index.mjs", "mintedBy@src/index.mjs",
-   "mintedBy@src/index.mjs", "resolvedBy@src/index.mjs", "threadedBy@src/index.mjs"]);
+   "mintedBy@src/index.mjs", "proposedBy@src/index.mjs", "proposedBy@src/index.mjs",
+   "resolvedBy@src/index.mjs", "threadedBy@src/index.mjs"]);
 t("(c) and every RULED site names a DEC and carries the naming half the ruling rests on",
   sites.filter((s) => s.verdict === "RULED").map((s) => [s.markerDec, s.principalNamed]),
-  [["DEC-24", true], ["DEC-24", true], ["DEC-52", true], ["DEC-52", true],
-   ["DEC-52", true], ["DEC-52", true]]);
+  [["DEC-24", true], ["DEC-24", true], ["DEC-24", true], ["DEC-24", true],
+   ["DEC-52", true], ["DEC-52", true], ["DEC-52", true], ["DEC-52", true]]);
 t("(c) a RULED site must NOT sit over a fenced op — a fence would contradict the ruling",
   sites.filter((s) => s.verdict === "RULED").every((s) => s.enforcedOps.length === 0), true);
 

@@ -151,11 +151,27 @@ console.log("\n--- ARM V · D-129's vocabulary, D-104's split, §14b.6's bounds 
     [...DEFINITIVE_STATES].sort(), ["LOOKED_ABSENT", "PRESENT"]);
   t("ARM V4: the four levels CLAUDE.md names are the four the log records",
     Object.keys(OBSERVATION_LEVELS).sort(), ["content", "document", "internet", "meaning"]);
-  /* §14b.6 lists three; `lease` and `runtime` are the two this build adds, each
-     with its reason at the declaration. Asserted as a SET so a bound added
-     without a reason cannot slip in unnoticed. */
-  t("ARM V5: the bound vocabulary is §14b.6's three plus lease and runtime",
-    Object.keys(RUN_BOUNDS).sort(), ["fetches", "lease", "runtime", "subsessions", "wallclock"]);
+  /* §14b.6 lists three; `lease` and `runtime` are two this build adds, each with
+     its reason at the declaration. Asserted as a SET so a bound added without a
+     reason cannot slip in unnoticed.
+
+     ARM V5 CORRECTED 2026-09-14 BY SK-8, AND THE OLD SET WAS
+     ["fetches", "lease", "runtime", "subsessions", "wallclock"]. IT WAS RIGHT
+     WHEN WRITTEN, and it going red on a sixth bound is the guard WORKING rather
+     than the guard being wrong — exactly as ARM V6 below went red when FL-7
+     landed a third ENDING, and for the same reason: an exhaustive set is what
+     makes an addition impossible to make without supplying a reason. SK-8
+     supplies it. `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 (5) ruled that the
+     EXTRACT role's MINTS are a bound — *"a machine that may mint citable rows
+     without a bound produces a store of proposals nobody cited, each correctly
+     labelled, the whole unexamined"* — and ruled it as a ROW IN THIS TABLE
+     precisely so that no schema and no second vocabulary would be needed. The
+     entry is at `airun.mjs`'s declaration with its own reason and its own
+     tie-break note, which is what this arm exists to force. Corrected, never
+     exempted. */
+  t("ARM V5: the bound vocabulary is §14b.6's three, plus lease and runtime, plus §7.3 (5)'s mints",
+    Object.keys(RUN_BOUNDS).sort(),
+    ["fetches", "lease", "mints", "runtime", "subsessions", "wallclock"]);
   /* ARM V6 CORRECTED 2026-08-10 BY FL-7 (IC-62), AND THE OLD SET WAS
      ["cancelled", "completed"]. IT WAS RIGHT WHEN WRITTEN: two endings were all
      the record had, and asserting them EXHAUSTIVELY is exactly what makes a

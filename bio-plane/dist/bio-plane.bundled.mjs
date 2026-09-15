@@ -3005,6 +3005,77 @@ CREATE TABLE IF NOT EXISTS observation_log (
 CREATE INDEX IF NOT EXISTS observation_log_frontier ON observation_log(level, subject_kind, subject, seq);
 CREATE INDEX IF NOT EXISTS observation_log_authority ON observation_log(authority_kind, authority, seq);
 CREATE INDEX IF NOT EXISTS observation_log_tally ON observation_log(level, state, seq);
+-- SK-8 / EXTRACTION-BREADTH-DESIGN.md section 4's THIRD production row, placed by
+-- BIO_Assistant_and_AI_Roles_v0_1.md section 7.3: A PROPOSED READING -- entities
+-- and facts the registered readers did not find, proposed by an EXTRACT run
+-- inside DEC-62's run object, carrying the ai(function, version) step this
+-- record designed at CPDF-10 and nothing emitted until now.
+--
+-- WHY IT IS NOT readings / reading_refs, AND THE REASON IS STRUCTURAL RATHER
+-- THAN TIDINESS. Section 7.3 (6): an uncited machine-minted row is a PROPOSAL,
+-- "never counted as extraction coverage". Those three tables ARE the extraction
+-- coverage -- op=readingref, op=readingname, the recogniser and every earned
+-- connection tier read them -- so a machine's proposal written there would count
+-- as coverage BY CONSTRUCTION, and no label on top could undo a count that was
+-- already wrong. The separation is the mechanism, not a convention somebody has
+-- to remember. The corollary is the same reasoning inverted and it is in
+-- extractrun.mjs's header: the ai step is NOT on a minted content row's chain,
+-- because the content id is hash(capture, extent, chain) and changing it is
+-- exactly how a member's later citation would stop FINDING the machine's row.
+--
+-- chain IS THE PROPOSAL'S OWN CHAIN: the capture's chain with one ai step
+-- appended through textchain's appendStep, so rule 2 (every derivation weakens)
+-- is enforced by the module that owns it and TEXT_CHAIN_STRENGTHENS is the
+-- refusal a caller earns. cap is the chain's computed derivation cap and NULL
+-- means UNDETERMINED and STATED -- no calibration of any propose-reading
+-- function exists, so the honest step carries no letter.
+--
+-- earned is B or C and is COMPUTED from what the reference NAMES, never
+-- offered by the caller (DEC-24 rule 3 -- a caller that offers one is refused by
+-- name at the door). There is no route to A: A is what a reference the SOURCE
+-- assigned is worth, and a machine that read a string out of prose did not get
+-- one.
+--
+-- The three position columns are reading_refs' own, in IC-1's vocabulary and no
+-- other, moving together exactly as they do there: a row has all three or none,
+-- and NULL means THIS PROPOSAL CANNOT SAY WHERE rather than that the whole
+-- document was meant.
+--
+-- content_id is the passage this proposal made citable, present exactly when
+-- the run minted one through SK-7's door (op=contentmint's store half) -- which
+-- needs a readable position, since a passage with no extent is the whole
+-- document and minting that per reference would manufacture nothing useful.
+-- NULL is the ordinary case and is not a failure.
+--
+-- DERIVED-BUT-AUTHORED, and purge treats it as instance-scoped state: a
+-- per-bundle purge clears this document's proposals and a whole-store purge
+-- clears them all (D-113), because a proposal that outlived the document it
+-- points at would resolve to nothing.
+CREATE TABLE IF NOT EXISTS proposed_readings (
+  run          TEXT NOT NULL,     -- the ai_runs row this was produced inside. The bound lives there
+  capture_sha  TEXT NOT NULL,     -- the text that was read
+  bundle_id    TEXT NOT NULL,     -- purge, and the D-15 viewer join
+  ref          TEXT NOT NULL,     -- the reference AS IT APPEARS, reading_refs' own key
+  ref_kind     TEXT,              -- the source-assigned kind, when the proposal names an identifier
+  ref_key      TEXT,              -- and its key. Both present is what earns B
+  label        TEXT,              -- the name, when that is all the proposal has. Earns C
+  fn           TEXT NOT NULL,     -- the ai step's function: EXTRACT_FUNCTIONS' key, carried in step.engine
+  fn_version   TEXT NOT NULL,     -- and its version. A proposal nobody can re-run is one nobody can check
+  chain        TEXT NOT NULL,     -- the capture's chain with the ai step appended, canonical JSON
+  cap          TEXT,              -- the chain's derivation cap. NULL = undetermined, STATED
+  earned       TEXT NOT NULL,     -- B or C, COMPUTED from what the reference names. Never A
+  pos_kind     TEXT,              -- IC-1's discriminator: pdf-page | sheet-cell | slide-shape | doc-para
+  pos          TEXT,              -- the per-arm fields as canonical JSON, key-ordered
+  pos_ref      TEXT,              -- IC-1's REQUIRED human form, produced by the container that knows it
+  content_id   TEXT,              -- the passage this made citable, when one was minted. NULL is ordinary
+  proposed_by  TEXT NOT NULL,     -- the machine credential, stamped server-side. Never a caller's word
+  at           TEXT NOT NULL,
+  PRIMARY KEY (run, capture_sha, ref)
+);
+-- By BUNDLE: purge's per-bundle arm and the read a member asks of a document.
+-- By RUN: the run's own productions, which is what the bound is a bound ON.
+CREATE INDEX IF NOT EXISTS proposed_readings_bundle ON proposed_readings(bundle_id);
+CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
 -- =========================================================================
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
@@ -13212,7 +13283,20 @@ var RUNG_ABSENT = {
      acts are not. NOT `observational`: nothing here records what was observed;
      it records what somebody thought worth citing. So the honest ground is the
      ladder's own gap — an act on the record, corrected forward, never signed. */
-  contentmint: { ground: "undetermined", is: "marks a PART of a document as citable \u2014 an address the record can hold, proposed by a member or by a machine credential and part of a finding only when a member cites it (\xA714.4)" }
+  contentmint: { ground: "undetermined", is: "marks a PART of a document as citable \u2014 an address the record can hold, proposed by a member or by a machine credential and part of a finding only when a member cites it (\xA714.4)" },
+  /* SK-8 — `op=extractpropose`, and the ground is `contentmint`'s directly
+     above for its reason, which is the honest one rather than the convenient
+     one: no document assigns this act a rung, and the two that might are wrong
+     about it in opposite directions. NOT `substrate` — the whole of §7.3 (4) is
+     that a run works on a SUBJECT and an OBJECTIVE a member authored and then
+     CHOOSES what to propose, which is precisely what `substrate` says these
+     acts do not do. NOT `observational` — nothing here records what was
+     observed; the observation of where a run LOOKED is the run's log, and this
+     act records what the machine thought worth citing, which is a different
+     claim about the record. So the ground is the ladder's own gap, stated: an
+     act on the record, corrected forward (a proposal is never deleted — IC-83),
+     never signed by the thing that made it (C-35.10). */
+  extractpropose: { ground: "undetermined", is: "an EXTRACT run PROPOSES a reading \u2014 what the text this record already holds NAMES, carrying an ai(function, version) step, bounded by the run's `mints` allowance and part of a finding only when a member cites it (\xA77.3)" }
 };
 var CAPTURE_ACTS = [
   /* op=attest. The verb is "co-attest" because the group is not the only
@@ -21320,7 +21404,7 @@ function compile({
   const ast = parseTokens(tokenize(q), implicitOp === "or" ? "or" : "and", ctx);
   if (sort && sort in SORTABLE) ctx.sort = { field: sort, dir: /^d/i.test(dir || "") ? "DESC" : dir ? "ASC" : sort === "relevance" ? "ASC" : "DESC" };
   const gate = viewerPredicate(viewer);
-  const rank3 = rankExpr(ctx.textAtoms);
+  const rank4 = rankExpr(ctx.textAtoms);
   const set = setSql(ast);
   const widenable = implicitOp !== "or" && ast?.op === "and" && Array.isArray(ast.kids) && ast.kids.length > 1;
   const lim = Math.max(1, Math.min(LIMIT_MAX, Math.floor(Number(limit) || LIMIT_DEFAULT)));
@@ -21338,24 +21422,24 @@ function compile({
       parts.push(`scope(fid) AS (SELECT fid FROM hits)`);
     }
     const args = [...set.args, ...idArm ? idArm.args : []];
-    if (withRanked && rank3) {
+    if (withRanked && rank4) {
       parts.push(`ranked(fid, score, snip) AS (SELECT rowid AS fid, bm25(bundles_fts) AS score, snippet(bundles_fts, -1, '[', ']', '\u2026', ?) AS snip FROM bundles_fts WHERE bundles_fts MATCH ?)`);
-      args.push(Math.max(4, Math.min(64, Math.floor(snippetChars))), rank3);
+      args.push(Math.max(4, Math.min(64, Math.floor(snippetChars))), rank4);
     }
     return { sql: "WITH " + parts.join(",\n     "), args };
   };
-  const sortField = ctx.sort?.field || (rank3 ? "relevance" : "updated");
+  const sortField = ctx.sort?.field || (rank4 ? "relevance" : "updated");
   const sortDir = ctx.sort?.dir || (sortField === "relevance" ? "ASC" : "DESC");
   let order;
-  if (sortField === "relevance" && rank3) order = `COALESCE(r.score, 0) ${sortDir}, b.bundle_id ASC`;
+  if (sortField === "relevance" && rank4) order = `COALESCE(r.score, 0) ${sortDir}, b.bundle_id ASC`;
   else if (sortField === "relevance") order = `b.last_updated DESC, b.bundle_id ASC`;
   else {
     const col = `b.${SORTABLE[sortField]}`;
     order = `(${col} IS NULL) ASC, ${col} ${sortDir}, b.bundle_id ASC`;
   }
   const cols = PROVENANCE_COLS.map((c) => `b.${c}`).join(", ");
-  const joinRanked = rank3 ? ` LEFT JOIN ranked r ON r.fid = s.fid` : "";
-  const scored = rank3 ? `, r.score AS score, r.snip AS snippet` : `, NULL AS score, NULL AS snippet`;
+  const joinRanked = rank4 ? ` LEFT JOIN ranked r ON r.fid = s.fid` : "";
+  const scored = rank4 ? `, r.score AS score, r.snip AS snippet` : `, NULL AS score, NULL AS snippet`;
   const page = () => {
     const c = cte(true);
     return { sql: `${c.sql}
@@ -21456,7 +21540,7 @@ WHERE ${gate.sql}`,
     sort: { field: sortField, dir: sortDir },
     limit: lim,
     offset: off,
-    match: rank3,
+    match: rank4,
     terms: ctx.textAtoms.map((a) => a.value),
     widenable,
     /* D-222 option A: which meaning arms this query compiled, in order. */
@@ -21551,6 +21635,27 @@ var RUN_BOUNDS = {
   subsessions: "evidence sub-sessions spawned",
   wallclock: "wall time across resumptions, in milliseconds",
   runtime: "CPU or subrequest ceiling (D-54, D-56) \u2014 IS-9(d) builds its producer",
+  /* SK-8, AND IT IS A BOUND RATHER THAN A POLICY BECAUSE §7.3 (5) RULED IT ONE.
+       *"A machine that may mint citable rows without a bound produces a store of
+       proposals nobody cited — each correctly labelled, the whole unexamined"*,
+       which is exactly the failure `INVESTIGATIVE-SESSION.md` §15 named for
+       versions one layer up. So the EXTRACT role's productions are budgeted in the
+       table the run already has: **no schema, no new vocabulary**, which was the
+       answer's own test.
+  
+       IT IS A ROW HERE AND NOT A SECOND FENCE. `finishedBound` already terminates
+       a run whose consumed reaches its allowed, and `#aiRunTerminate` already
+       writes which bound stopped it and where — a run that ran out of mints ends
+       exactly as a run that ran out of fetches does, with no branch anywhere
+       asking which kind of bound it was.
+  
+       IT IS LAST IN DECLARATION ORDER BEFORE `lease`, WHICH IS A TIE-BREAK RULE
+       AND NOT AN OPINION: `finishedBound` sorts exhausted bounds by this object's
+       key order, so a run that exhausted both its fetches and its mints in one
+       tick reports FETCHES — the earlier, cheaper-to-explain cause. Putting mints
+       first would have renamed every such run's ending without changing anything
+       about it. */
+  mints: "passages a machine credential marked citable (\xA77.3 (5)) \u2014 the EXTRACT role's budget",
   lease: "the run stopped heartbeating and its lease lapsed: it died rather than finished"
 };
 var RUN_ENDINGS = {
@@ -22201,6 +22306,139 @@ function checkSkillVersion(version) {
       `'${v.slice(0, 60)}' names no pack. A skill version is <pack>@<edition>, and a bare edition cannot be read once a second pack exists \u2014 it looks like an answer and identifies nothing`
     );
   return null;
+}
+
+// src/extractrun.mjs
+var EXTRACT_RUN_MODE = "extract";
+var EXTRACT_FUNCTIONS = {
+  "propose-reading": "read the text this record already holds and propose what it names \u2014 entities and facts the registered readers did not find. It rewrites no text and produces no new transcription"
+};
+var PROPOSED_READING_CEILING = "B";
+var rank3 = (letter) => {
+  const i = BASIS_GRADES.indexOf(letter);
+  return i < 0 ? null : i;
+};
+var isNonEmptyString2 = (s) => typeof s === "string" && s.trim().length > 0;
+var no = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
+function checkExtractFunction(fn) {
+  if (!isNonEmptyString2(fn))
+    return no(
+      "NO_FUNCTION",
+      `an ai() step names WHAT performed the derivation, and this proposal names nothing. The chain exists to carry that fact: a calibration is OF a function and a version, and neither can be recovered from the word 'ai'`
+    );
+  if (!Object.prototype.hasOwnProperty.call(EXTRACT_FUNCTIONS, fn))
+    return no(
+      "UNKNOWN_FUNCTION",
+      `'${String(fn).slice(0, 60)}' is not one of the EXTRACT functions this repository emits (${Object.keys(EXTRACT_FUNCTIONS).join(", ")}). A function is in that roster when something produces it, so a name that is not there names no producer`,
+      { functions: Object.keys(EXTRACT_FUNCTIONS) }
+    );
+  return null;
+}
+function checkExtractVersion(version) {
+  if (!isNonEmptyString2(version))
+    return no(
+      "NO_FUNCTION_VERSION",
+      `an ai() step names a function AND a version. A proposal nobody can re-run against the same version is a proposal nobody can check, and the version is what a later calibration would be OF`
+    );
+  return null;
+}
+function proposedReadingGrade(entry) {
+  const e = entry && typeof entry === "object" ? entry : {};
+  if (isNonEmptyString2(e.refKind) && isNonEmptyString2(e.refKey)) {
+    const grade = "B";
+    return {
+      grade,
+      why: `earned ${grade}: this proposal names an identifier the document itself carries (${String(e.refKind).slice(0, 40)}:${String(e.refKey).slice(0, 60)}), read out of the text by a machine rather than taken from the source's own structure \u2014 which is what a registered reader's reference key is worth, and one letter below the A a source-assigned reference earns`
+    };
+  }
+  if (isNonEmptyString2(e.label)) {
+    const grade = "C";
+    return {
+      grade,
+      why: `earned ${grade}: this proposal names only a NAME, which is the weakest thing the framework grades \u2014 a document that mentions a subject by name carries no reference the source assigned`
+    };
+  }
+  return {
+    grade: null,
+    why: `earned nothing: this proposal names neither an identifier nor a name, so there is nothing to grade. Undetermined is stated rather than defaulted to the weakest letter, because a letter is a claim and there is no claim here`
+  };
+}
+function checkProposedRef(entry) {
+  const e = entry && typeof entry === "object" && !Array.isArray(entry) ? entry : null;
+  if (!e) return no("PROPOSAL_SHAPE", `a proposed reference is an object`);
+  if (e.grade !== void 0 || e.earned !== void 0)
+    return no(
+      "GRADE_OFFERED",
+      `this proposal offers its own grade. Grades here are COMPOSED from what a reference NAMES and never minted by the thing that produced it (DEC-24 rule 3): a machine grading its own reading is the one act this role may not perform. Send what you found and the record will say what it is worth`
+    );
+  if (!isNonEmptyString2(e.ref))
+    return no(
+      "PROPOSAL_NO_REF",
+      `a proposed reference carries the reference AS IT APPEARS \u2014 the raw string the reading names \u2014 which is what makes it joinable to everything the registered readers wrote`
+    );
+  const { grade } = proposedReadingGrade(e);
+  if (grade == null)
+    return no(
+      "PROPOSAL_NAMES_NOTHING",
+      `this proposal carries a reference string but names neither an identifier (a kind and a key) nor a name (a label). There is nothing for the record to grade, and a row that cannot be graded cannot become part of a finding`
+    );
+  if (rank3(grade) != null && rank3(grade) < rank3(PROPOSED_READING_CEILING))
+    return no(
+      "PROPOSAL_ABOVE_CEILING",
+      `a proposed reading earned ${grade}, which is stronger than the ${PROPOSED_READING_CEILING} a machine reading text may reach. A is what a reference the SOURCE assigned is worth and a machine that read a string out of prose did not get one`
+    );
+  if (e.source !== void 0 && e.source !== null && readingSource(e.source) == null)
+    return no(
+      "PROPOSAL_POSITION",
+      `this proposal states WHERE it read the reference and the address cannot be read in IC-1's element-reference vocabulary. An address nothing resolves is worse than the honest absence, because it looks like a binding and joins to nothing`
+    );
+  return null;
+}
+function proposalChain(captureChain, { fn, version, cap = null } = {}) {
+  const badFn = checkExtractFunction(fn);
+  if (badFn) return badFn;
+  const badVer = checkExtractVersion(version);
+  if (badVer) return badVer;
+  const badChain = checkChain(captureChain);
+  if (badChain)
+    return no(
+      "NO_CAPTURE_CHAIN",
+      `this capture's text carries no provenance chain, so there is nothing for an ai() step to extend. A proposed reading is a derivation OF the text this record holds, and a derivation of text with no stated provenance would be a claim resting on nothing`,
+      { chain_refusal: badChain }
+    );
+  if (cap != null && rank3(cap) == null)
+    return no(
+      "CAP_NOT_A_GRADE",
+      `'${String(cap).slice(0, 20)}' is not one of ${BASIS_GRADES.join(", ")}. A step's cap is the strongest transcription fidelity it can support and it is a MEASUREMENT \u2014 absent means undetermined and stated, never a letter chosen to get past this line`
+    );
+  const out = appendStep(captureChain, {
+    step: "ai",
+    engine: fn,
+    version: String(version).trim(),
+    cap: cap == null ? null : cap
+  });
+  if (!Array.isArray(out)) return { ok: false, ...out };
+  return { ok: true, chain: out, cap: derivationCap(out) };
+}
+function mintRatio({ minted = 0, cited = 0 } = {}) {
+  const m = Number.isFinite(Number(minted)) ? Math.max(0, Math.trunc(Number(minted))) : 0;
+  const c = Number.isFinite(Number(cited)) ? Math.max(0, Math.trunc(Number(cited))) : 0;
+  if (m === 0)
+    return {
+      minted: 0,
+      cited: c,
+      uncited: 0,
+      ratio: null,
+      says: `no machine credential has marked a passage citable in this scope, so there is nothing to measure. This is an absence and not a clean result`
+    };
+  const uncited = Math.max(0, m - c);
+  return {
+    minted: m,
+    cited: c,
+    uncited,
+    ratio: c / m,
+    says: `${c} of ${m} passage(s) a machine marked citable have been cited by a member. The other ${uncited} are PROPOSALS: the record keeps them, labels them, and counts none of them as extraction coverage. If this fraction never rises across runs, the assistant is manufacturing citable-looking passages`
+  };
 }
 
 // src/store.mjs
@@ -27031,14 +27269,14 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       };
     const bar = this.#projectBar(proj);
     if (bar.declared) {
-      const rank3 = (g) => BASIS_GRADES.indexOf(g);
+      const rank4 = (g) => BASIS_GRADES.indexOf(g);
       for (const m of loadBearing) {
         const pair = this.strengthOf(m.target);
         for (const axis of _Store.STRENGTH_AXES) {
           const want = bar[axis];
           if (!BASIS_GRADES.includes(want)) continue;
           const got = pair[axis];
-          if (got.grade === null || rank3(got.grade) > rank3(want))
+          if (got.grade === null || rank4(got.grade) > rank4(want))
             return {
               ok: false,
               reason: "BELOW_PROJECT_STRENGTH",
@@ -32897,6 +33135,424 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     if (!out.ok) return out;
     return { ok: true, minted: out.minted, capture_sha: sha, ...this.contentRow(out.content_id) };
   }
+  /* ====================================================================== *
+   * SK-8 REGION — THE EXTRACT RUN'S PRODUCTIONS, AND THE FIRST CALLER OF THE
+   * DOOR ABOVE.
+   * ====================================================================== *
+   *
+   * `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 answered D-358: EXTRACT runs in
+   * DEC-62's RUN — **no new runtime, no new credential class, no new fence** —
+   * and SK-7's `contentMint` one screen up is the door it walks through. This
+   * region is that walk, and it is deliberately thin: everything it refuses is
+   * refused by something that already existed, and the only NEW thing in it is
+   * the proposed reading itself.
+   *
+   * WHAT IT REUSES RATHER THAN RE-PROVING, each named so a reader can check it:
+   *
+   *   - the CREDENTIAL and the LABEL: `proposed_by` and `minted_by` are stamped
+   *     server-side in `index.mjs` by the same rule and in the same block, so a
+   *     caller cannot name itself. `Store.#mintLabel` composes the sentence.
+   *   - the VIEWER GATE: D-15, asked once per batch in the three questions
+   *     `contentMint` asks, failing closed on an absent stamp and answering
+   *     identically for a bundle that does not exist and one the viewer may not
+   *     see.
+   *   - the ATTESTATION FENCE: C-35.10, untouched and not mentioned again. The
+   *     machine mints and never attests; one fence, one place.
+   *   - RULE 2: `appendStep`, through `proposalChain`. TEXT_CHAIN_STRENGTHENS is
+   *     the refusal a caller earns and it is returned verbatim.
+   *   - the BOUND: `ai_run_bounds`, `finishedBound`, `#aiRunTerminate`. A run
+   *     that runs out of mints ends exactly as one that runs out of fetches.
+   *
+   * AND THE ONE THING IT WILL NOT DO: it does not start a run. The SUBJECT and
+   * the OBJECTIVE are the member's (DEC-24 rule 2) and a run begins on a
+   * member's act — `op=airunopen`, which a member performs. The refusal below
+   * for a caller with no run is that sentence from the other side.
+   */
+  /** THE `mints` BOUND'S ROW FOR A RUN, or null.
+   *
+   *  ASKED SEPARATELY FROM THE CONSUMPTION WRITE ON PURPOSE. §7.3 (5) makes
+   *  mints a bound, and a bound nobody declared is not a generous bound — it is
+   *  an UNBOUNDED one, which is the exact condition the ruling exists to
+   *  prevent. `finishedBound` only ever fires on a row with `allowed > 0`, so an
+   *  absent or zero row would let a run mint forever and never end, and the
+   *  run's own budget surface would render nothing at all. The answer is
+   *  therefore a REFUSAL at this door rather than a default allowance invented
+   *  here: a number chosen in code would be a measurement with no measurement
+   *  behind it, which CLAUDE.md names as this project's most-repeated failure. */
+  #mintsBound(run) {
+    return this.#one(
+      `SELECT allowed, consumed FROM ai_run_bounds WHERE run = ? AND bound = 'mints'`,
+      run
+    ) || null;
+  }
+  /** The per-arm fields of a reading POSITION, without kind and ref — which is
+   *  exactly the shape a content EXTENT takes. One function, because the two are
+   *  the same vocabulary (IC-1) seen from two tables, and spelling the fields out
+   *  at a call site is how they would come to differ. */
+  static #posFields(pos) {
+    const { kind, ref, ...rest } = pos;
+    return rest;
+  }
+  /** op=extractpropose — AN EXTRACT RUN PROPOSES A READING.
+   *
+   *  ONE CALL, THREE THINGS, AND THE ORDER IS THE DESIGN: every proposal is
+   *  CHECKED before anything is written, then the batch is written inside one
+   *  transaction, then the bound is consumed by what was ACTUALLY minted.
+   *  Checking first is what leaves a refused batch with nothing behind it;
+   *  consuming by what was written is what stops a refused proposal from
+   *  spending budget it never used.
+   *
+   *  THE MINT IS PER REFERENCE AND ONLY WHERE THERE IS A PLACE. A proposal that
+   *  says WHERE it read the reference (FW-17 / IC-86's position, in IC-1's
+   *  vocabulary) names an extent, and an extent is a passage — so the run mints
+   *  it through `mintContent` and the passage becomes citable, which is
+   *  `EXTRACTION-BREADTH-DESIGN.md` §4's FIRST production row arriving as a
+   *  consequence of its third. A proposal with NO position mints nothing: the
+   *  only extent available would be `document`, and minting the whole document
+   *  once per reference would manufacture rows addressing nothing in particular
+   *  — which is precisely what §7.3 (6)'s ratio exists to catch, so producing it
+   *  here would be building the disease and the thermometer in one commit.
+   *
+   *  THE CHAIN THE CONTENT ROW GETS IS THE CAPTURE'S, NOT THE PROPOSAL'S, and
+   *  the reason is in `extractrun.mjs`'s header: the content id is
+   *  `hash(capture, extent, chain)`, and that is exactly what lets a member's
+   *  later citation of the same passage FIND this row instead of minting a
+   *  second one. `mintContent` resolves the chain from the capture itself. */
+  extractPropose({
+    run,
+    bundleId,
+    fn,
+    version,
+    cap = null,
+    refs,
+    proposedBy,
+    viewer = null,
+    at = null
+  }) {
+    if (typeof proposedBy !== "string" || !proposedBy.trim())
+      return {
+        ok: false,
+        reason: "NO_PROPOSER",
+        detail: `a proposed reading records WHO proposed it. The plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it \u2014 which is refused rather than filled in`
+      };
+    if (typeof run !== "string" || !run.trim())
+      return {
+        ok: false,
+        reason: "NO_RUN",
+        detail: `EXTRACT runs in DEC-62's RUN and nowhere else: the run is the object that bounds this work, logs it, resumes it and checks it plane-side. A production outside one would be a second place a machine writes, and every fence would have to be re-proved there`
+      };
+    const runId = run.trim();
+    const r = this.#one(`SELECT status, mode FROM ai_runs WHERE run = ?`, runId);
+    if (!r)
+      return {
+        ok: false,
+        reason: "NO_SUCH_RUN",
+        run: runId,
+        detail: `no run is open under ${runId}. A run begins on a MEMBER's act (op=airunopen), naming the subject and the objective \u2014 both of which stay the member's (DEC-24 rule 2). The assistant may propose that a run would help; it may not start one`
+      };
+    if (r.status !== "running")
+      return {
+        ok: false,
+        reason: "RUN_NOT_RUNNING",
+        run: runId,
+        status: r.status,
+        detail: `this run has ended. Its log is closed and a later production does not reopen it \u2014 the conditions a run was formed under are what its work is interpretable against, and they stopped being current when it stopped`
+      };
+    if (String(r.mode || "") !== EXTRACT_RUN_MODE)
+      return {
+        ok: false,
+        reason: "NOT_AN_EXTRACT_RUN",
+        run: runId,
+        mode: r.mode ?? null,
+        detail: `this run was opened in mode '${r.mode == null ? "(none)" : String(r.mode)}' and a proposed reading is the EXTRACT role's production. A run's mode is one of the conditions it was formed under: it is read back, never widened by the work`
+      };
+    const bound = this.#mintsBound(runId);
+    if (!bound || !(Number(bound.allowed) > 0))
+      return {
+        ok: false,
+        reason: "NO_MINTS_BOUND",
+        run: runId,
+        detail: `this run declares no 'mints' bound, so its productions would be unbounded \u2014 and a machine that may mark passages citable without a bound produces a store of proposals nobody cited, each correctly labelled and the whole unexamined. The bound is declared at op=airunopen, by the member who opens the run`
+      };
+    if (Number(bound.consumed) >= Number(bound.allowed))
+      return {
+        ok: false,
+        reason: "MINTS_BOUND_REACHED",
+        run: runId,
+        allowed: Number(bound.allowed),
+        consumed: Number(bound.consumed),
+        detail: `this run has reached its 'mints' bound (${Number(bound.consumed)} of ${Number(bound.allowed)}). The next tick ends the run, and the log says which bound stopped it and where`
+      };
+    const list = Array.isArray(refs) ? refs : [];
+    if (list.length === 0)
+      return {
+        ok: false,
+        reason: "NO_PROPOSALS",
+        detail: `a proposed reading carries what the machine found. An EMPTY one is not a reading that found nothing \u2014 that is an observation about a LOOK, and it belongs in the run's log, where absence is first-class and says which of the four levels it was`
+      };
+    if (typeof bundleId !== "string" || !bundleId.trim())
+      return {
+        ok: false,
+        reason: "NO_TARGET",
+        detail: `a proposed reading names the document it was read from`
+      };
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId);
+    if (!b || !this.#viewerSees(bundleId, viewer))
+      return {
+        ok: false,
+        reason: "NO_SUCH_BUNDLE",
+        target: bundleId,
+        detail: `no document is addressed by ${bundleId} in this record`
+      };
+    if (normalizeType(b.object_type) !== "information")
+      return {
+        ok: false,
+        reason: "NOT_A_DOCUMENT",
+        target: bundleId,
+        target_type: normalizeType(b.object_type) ?? null,
+        detail: `${bundleId} is not a document, so there is no text to have read. The content axis ranges over documents (DEC-21)`
+      };
+    const sha = this.#captureForContent(bundleId);
+    if (!sha)
+      return {
+        ok: false,
+        reason: "NO_BYTES_HELD",
+        target: bundleId,
+        detail: `this record holds no capture of ${bundleId}, so there is no text a machine could have read. Absence here is a fact about what was captured and never evidence about what the document says`
+      };
+    const ctx = this.contentContextFor(sha);
+    const built = proposalChain(ctx.chain, { fn, version, cap });
+    if (!built.ok) return built;
+    const rows = [];
+    for (const [i, e] of list.entries()) {
+      const bad = checkProposedRef(e);
+      if (bad) return { ...bad, at_index: i };
+      const { grade, why } = proposedReadingGrade(e);
+      rows.push({
+        ref: String(e.ref).trim().slice(0, 400),
+        refKind: e.refKind == null ? null : String(e.refKind).slice(0, 100),
+        refKey: e.refKey == null ? null : String(e.refKey).slice(0, 200),
+        label: e.label == null ? null : String(e.label).slice(0, 400),
+        grade,
+        why,
+        pos: e.source == null ? null : readingSource(e.source)
+      });
+    }
+    const willMint = rows.filter((x) => x.pos != null).length;
+    if (Number(bound.consumed) + willMint > Number(bound.allowed))
+      return {
+        ok: false,
+        reason: "MINTS_BOUND_WOULD_EXCEED",
+        run: runId,
+        allowed: Number(bound.allowed),
+        consumed: Number(bound.consumed),
+        would_mint: willMint,
+        detail: `this batch would mark ${willMint} passage(s) citable and this run has ${Number(bound.allowed) - Number(bound.consumed)} left of its 'mints' bound. It is refused whole rather than truncated: a batch trimmed to fit would drop proposals the caller believes it filed`
+      };
+    const when = at || (/* @__PURE__ */ new Date()).toISOString();
+    const out = [];
+    let minted = 0;
+    this.ctx.storage.transactionSync(() => {
+      for (const x of rows) {
+        let contentId = null;
+        if (x.pos != null) {
+          const m = this.mintContent({
+            bundleId,
+            captureSha: sha,
+            extent: { kind: x.pos.kind, ..._Store.#posFields(x.pos) },
+            mintedBy: proposedBy.trim(),
+            at: when,
+            ctx
+          });
+          if (m.ok) {
+            contentId = m.content_id;
+            if (m.minted) minted += 1;
+          } else x.mint_refused = {
+            code: m.code || m.reason || null,
+            check: m.check || null,
+            detail: m.detail || null
+          };
+        }
+        this.sql.exec(
+          `INSERT INTO proposed_readings
+             (run, capture_sha, bundle_id, ref, ref_kind, ref_key, label, fn, fn_version,
+              chain, cap, earned, pos_kind, pos, pos_ref, content_id, proposed_by, at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+           ON CONFLICT(run, capture_sha, ref) DO NOTHING`,
+          runId,
+          sha,
+          bundleId,
+          x.ref,
+          x.refKind,
+          x.refKey,
+          x.label,
+          fn,
+          String(version).trim(),
+          JSON.stringify(built.chain),
+          built.cap,
+          x.grade,
+          x.pos ? x.pos.kind : null,
+          x.pos ? readingSourceJson(x.pos) : null,
+          x.pos ? x.pos.ref : null,
+          contentId,
+          proposedBy.trim(),
+          when
+        );
+        out.push({
+          ref: x.ref,
+          earned: x.grade,
+          earned_because: x.why,
+          content_id: contentId,
+          position: x.pos,
+          ...x.mint_refused ? { mint_refused: x.mint_refused } : {}
+        });
+      }
+      if (minted > 0)
+        this.sql.exec(
+          `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, 'mints', 0, ?)
+           ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`,
+          runId,
+          minted,
+          minted
+        );
+    });
+    const after = this.#mintsBound(runId);
+    return {
+      ok: true,
+      run: runId,
+      bundle_id: bundleId,
+      capture_sha: sha,
+      fn,
+      fn_version: String(version).trim(),
+      chain: built.chain,
+      cap: built.cap,
+      /* THE LABEL IS THE PLANE'S OWN SENTENCE AND IS NOT COMPOSED HERE.
+         PL-17's rule: a surface that matches on a literal has rebuilt the
+         predicate. This is the helper every content-row projection is
+         labelled by, asked about the same stamp. */
+      mint: _Store.#mintLabel(proposedBy.trim()),
+      proposed: out,
+      minted,
+      bound: after ? {
+        bound: "mints",
+        allowed: Number(after.allowed),
+        consumed: Number(after.consumed)
+      } : null,
+      says: `these readings are PROPOSALS. A machine read text this record already holds and said what it names. Nothing here is part of a finding until a MEMBER cites it, and none of it counts as extraction coverage`
+    };
+  }
+  /** op=extractproposals — WHAT AN EXTRACT RUN PROPOSED, AND THE RATIO.
+   *
+   *  §7.3 (6) names both halves of this read. The PROPOSALS are listed because a
+   *  row nobody lists is a row nobody reviews; the RATIO is beside them because
+   *  it is the instrument that catches manufacturing, and an instrument a caller
+   *  has to compute for itself is an instrument nobody runs.
+   *
+   *  THE RATIO IS OVER MACHINE-MINTED CONTENT ROWS AND NOT OVER PROPOSED
+   *  READINGS, and the difference is the question: §7.3 asks whether the
+   *  passages a machine marked CITABLE are ever cited. A proposed reading that
+   *  minted nothing made nothing citable and is not in the denominator.
+   *
+   *  `cited` IS READ OFF THE LEGS MEMBERS AUTHORED — `inquiry_basis.content_id`
+   *  and the version legs — which is the same join `earnedBasisRegistry` answers
+   *  over and is this record's own definition of a content row being part of a
+   *  finding (5.7's third clause). It is not a flag anybody sets. */
+  extractProposals({ run = null, bundleId = null, viewer = null, limit = 100 } = {}) {
+    const n = Math.max(1, Math.min(500, Number(limit) || 100));
+    const where = [], args = [];
+    const runId = run != null && String(run).trim() ? String(run).trim() : null;
+    const bundleArm = bundleId != null && String(bundleId).trim() ? String(bundleId).trim() : null;
+    if (runId) {
+      where.push("run = ?");
+      args.push(runId);
+    }
+    if (bundleArm) {
+      where.push("bundle_id = ?");
+      args.push(bundleArm);
+    }
+    if (where.length === 0)
+      return {
+        ok: false,
+        reason: "NO_SCOPE",
+        detail: `this read answers about a RUN or about a DOCUMENT. An unscoped listing of every proposal in the record would be a scan, and a number nobody can act on`
+      };
+    const rows = this.#rows(
+      `SELECT run, capture_sha, bundle_id, ref, ref_kind, ref_key, label, fn, fn_version,
+              chain, cap, earned, pos_kind, pos, pos_ref, content_id, proposed_by, at
+         FROM proposed_readings
+        WHERE ${where.join(" AND ")}
+        ORDER BY at DESC, ref ASC
+        LIMIT ?`,
+      ...args,
+      n
+    ).filter((x) => this.#viewerSees(x.bundle_id, viewer));
+    const listed = rows.map((x) => ({
+      run: x.run,
+      bundle_id: x.bundle_id,
+      capture_sha: x.capture_sha,
+      ref: x.ref,
+      ref_kind: x.ref_kind,
+      ref_key: x.ref_key,
+      label: x.label,
+      basis: {
+        fn: x.fn,
+        version: x.fn_version,
+        chain: safeJson(x.chain),
+        says: describeChain(safeJson(x.chain))
+      },
+      cap: x.cap,
+      earned: x.earned,
+      position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref),
+      content_id: x.content_id,
+      mint: _Store.#mintLabel(x.proposed_by),
+      at: x.at,
+      /* THE SENTENCE IS ON EVERY ROW AND NOT ONLY ON THE MACHINE ONES, for
+         `#mintLabel`'s own reason: a key present only in one case makes ABSENCE
+         carry the meaning, and a surface that never learned the key renders
+         nothing at all. Every row here is a machine's today; the shape does not
+         depend on that staying true. */
+      says: `a machine proposed this reading. It is not extraction coverage and it is not part of any finding \u2014 it becomes part of one when a MEMBER cites it, and not before`
+    }));
+    const scopeDocs = this.#rows(
+      `SELECT DISTINCT bundle_id FROM proposed_readings WHERE ${where.join(" AND ")} LIMIT 64`,
+      ...args
+    ).map((x) => x.bundle_id).filter((b) => this.#viewerSees(b, viewer));
+    const marks = scopeDocs.map(() => "?").join(",");
+    const mintedRow = scopeDocs.length ? this.#one(
+      `SELECT COUNT(*) AS n FROM content
+        WHERE minted_by LIKE ? AND bundle_id IN (${marks})`,
+      `${MACHINE_CLASS_PREFIX}%`,
+      ...scopeDocs
+    ) : null;
+    const citedRow = scopeDocs.length ? this.#one(
+      `SELECT COUNT(*) AS n FROM content c
+        WHERE c.minted_by LIKE ? AND c.bundle_id IN (${marks})
+          AND (EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.content_id = c.content_id)
+            OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl WHERE vl.content_id = c.content_id))`,
+      `${MACHINE_CLASS_PREFIX}%`,
+      ...scopeDocs
+    ) : null;
+    return {
+      ok: true,
+      scope: {
+        run: runId,
+        bundle_id: bundleArm,
+        /* WHAT THE RATIO IS OVER, published rather than
+           implied: a fraction whose denominator a reader
+           cannot see is a fraction they cannot judge. */
+        documents: scopeDocs.length,
+        documents_capped: scopeDocs.length >= 64
+      },
+      count: listed.length,
+      limit: n,
+      truncated: listed.length >= n,
+      proposals: listed,
+      instrument: mintRatio({
+        minted: mintedRow ? Number(mintedRow.n) : 0,
+        cited: citedRow ? Number(citedRow.n) : 0
+      })
+    };
+  }
   /** THE LEGACY BACKFILL — a leg promoted before this column existed, read for
    *  the first time.
    *
@@ -34963,7 +35619,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
      or weaker one is kept (idempotent, never a downgrade, never a duplicate row). Runs
      inside the caller's transaction. */
   #upsertResolution({ captureSha, bundleId, ref, entityId, grade, method, basis, resolvedBy }) {
-    const rank3 = _Store.#GRADE_RANK;
+    const rank4 = _Store.#GRADE_RANK;
     const at = (/* @__PURE__ */ new Date()).toISOString();
     const est = _Store.#isEstablished(grade) ? 1 : 0;
     const b = basis == null ? null : String(basis).slice(0, 400);
@@ -35006,7 +35662,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         at
       };
     }
-    if (rank3[grade] > (rank3[existing.grade] || 0)) {
+    if (rank4[grade] > (rank4[existing.grade] || 0)) {
       this.sql.exec(
         `UPDATE resolutions SET grade=?, method=?, basis=?, established=?, raised_from=?, resolved_by=?, at=?
           WHERE capture_sha=? AND ref=? AND entity_id=?`,
@@ -38636,8 +39292,8 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     }
     items.length = 0;
     items.push(...admitted);
-    const rank3 = (c) => _Store.QUEUE_CLASSES.indexOf(c);
-    items.sort((a, b) => rank3(a.class) - rank3(b.class) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    const rank4 = (c) => _Store.QUEUE_CLASSES.indexOf(c);
+    items.sort((a, b) => rank4(a.class) - rank4(b.class) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     const out = items.slice(0, cap);
     const dispCap = _Store.QUEUE_DISPOSED_MAX;
     const dispAll = [
@@ -39365,6 +40021,16 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
          is the one fact an operator needs before believing a content-grain
          answer, and the one this count exists to make visible. */
       contentStale: this.#one(`SELECT count(*) c FROM content WHERE stale=1`).c,
+      /* SK-8: the EXTRACT role's proposed readings, reported so a purge can
+         PROVE it took them (D-113) and — the part that is not housekeeping — so
+         an operator can see the assistant's production volume beside the content
+         axis it feeds, without opening one. A COUNT AND NOTHING ELSE: what a
+         machine proposed is not an operator surface, the same line `queueState`
+         and `aiRuns` draw. The minted-to-cited ratio §7.3 (6) asks for is NOT
+         here and is deliberately not: it is scoped to a run or a document
+         (`op=extractproposals`), and an instance-wide fraction would average
+         across projects that have nothing to do with each other. */
+      proposedReadings: n("proposed_readings"),
       /* IS-6: the investigative runs, their budgets and their observation logs,
          reported so a whole-store purge can PROVE it took them (D-113) and so an
          operator can see how many runs are in flight without opening one. A
@@ -40388,7 +41054,20 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
          scope ALL while the content axis still answered "these passages are
          cited" is the silent-leftover exactly. hygiene.test.mjs holds this list
          against schema.mjs. */
-      "content"
+      "content",
+      /* SK-8 / D-113: the PROPOSED READINGS. They ride both arms for the
+         reason `content` above does and for one more that is specific to
+         them: a proposal is a claim about what a DOCUMENT names, so a
+         proposal outliving its document would say what a file nobody holds
+         says — and unlike a content row, nothing downstream depends on one
+         (that is the whole meaning of "an uncited machine-minted row is a
+         PROPOSAL"), so there is no authored edge to protect by keeping it.
+         Whole-store: a scratch reset reporting scope ALL while the
+         assistant's proposals were still listed and still counted in the
+         minted-to-cited ratio is the silent-leftover exactly, and it would
+         corrupt the one instrument §7.3 (6) put there to catch
+         manufacturing. hygiene.test.mjs holds this list against schema.mjs. */
+      "proposed_readings"
     ];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
@@ -50858,6 +51537,31 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           mintedBy: url.searchParams.get("mintedBy"),
           viewer: url.searchParams.get("viewer")
         }),
+        /* SK-8 / BIO_Assistant_and_AI_Roles_v0_1.md §7.3: THE EXTRACT RUN'S
+           PRODUCTIONS. `proposedBy` is taken from the QUERY STRING and never
+           from the body, on `contentmint`'s rule one line up and for its
+           identical reason — the control plane stamps it from the credential
+           that authenticated, so a caller cannot post somebody else's name into
+           the field that says who proposed this. GATED on `viewer` like every
+           act that names a bundle: the read is gated too, because a proposal
+           about a document the viewer may not see is not a row. */
+        extractpropose: () => this.extractPropose({
+          run: (body || {}).run,
+          bundleId: (body || {}).bundleId,
+          fn: (body || {}).fn,
+          version: (body || {}).version,
+          cap: (body || {}).cap ?? null,
+          refs: (body || {}).refs,
+          at: (body || {}).at || null,
+          proposedBy: url.searchParams.get("proposedBy"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        extractproposals: () => this.extractProposals({
+          run: url.searchParams.get("run"),
+          bundleId: url.searchParams.get("bundle"),
+          limit: url.searchParams.get("limit"),
+          viewer: url.searchParams.get("viewer")
+        }),
         reusedparts: () => this.reusedParts(url.searchParams.get("id")),
         recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
         reuseverdicts: () => this.reuseVerdicts({
@@ -52305,6 +53009,25 @@ var OPS = {
        THE MINTER IS STAMPED SERVER-SIDE below and the body's is never read, which
        is the impostor rule at a field whose entire subject is who acted. */
   contentmint: { classes: ["admin", "member", "probe"], mutating: true },
+  /* SK-8 / `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 — THE EXTRACT RUN'S
+       PRODUCTIONS, and the class cut is the one directly above rather than a new
+       one. D-358's answer was that EXTRACT runs in DEC-62's RUN with **no new
+       runtime, no new credential class, no new fence**, so these two sit in
+       `contentmint`'s classes because the write performs `contentmint`'s act
+       inside a bounded object. The `ai` class reaches them through the DEC-55
+       floor exactly as it reaches that one — the credential's own declared
+       `writes` is what admits it, and nothing here is special-cased for machines.
+  
+       THE REAL NARROWING IS NOT IN THIS TABLE AND IS NOT IN A CLASS LIST: it is
+       the STORE's, where the run object is. `extractPropose` refuses a production
+       with no live EXTRACT run by name, and refuses one whose run declares no
+       `mints` bound — because a run begins on a member's act (§7.3 (4)) and its
+       productions are budgeted in the bounds table it already has (§7.3 (5)).
+       `extractpropose` is named in `AI_RUN_ACTIONS` to say what KIND of act it is;
+       that array gates nothing. The proposer is stamped server-side below and the
+       body's is never read. */
+  extractpropose: { classes: ["admin", "member", "probe"], mutating: true },
+  extractproposals: { classes: ["admin", "member", "probe"], mutating: false },
   dangling: { classes: ["admin", "member", "probe"], mutating: false },
   stats: { classes: ["admin", "member", "probe"], mutating: false },
   promote: { classes: ["admin", "member", "probe"], mutating: true },
@@ -52909,7 +53632,29 @@ var REGISTRY_ACTIONS = [
 ];
 var TASK_ACTIONS = ["taskforward", "taskresolve"];
 var QUEUE_ACTIONS = ["queuemute", "queuesnooze"];
-var AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose", "suggest", "capturerequest"];
+var AI_RUN_ACTIONS = [
+  "airunopen",
+  "airuntick",
+  "airunclose",
+  "suggest",
+  "capturerequest",
+  /* SK-8: the EXTRACT role's production is an ACT OF A RUN
+     (§7.3 (2)), and it is named here for the reason
+     `suggest` and `capturerequest` are — this array says
+     WHAT KIND OF ACT an op is and carries it into the
+     member and admin class sets as one entry rather than
+     two literals. IT IS NOT THE GATE, and that is worth
+     saying because a reader could take it for one: nothing
+     in this array checks that a run exists. The refusal for
+     a production with no live run is the STORE's
+     (`extractPropose`: NO_RUN, NO_SUCH_RUN,
+     RUN_NOT_RUNNING, NOT_AN_EXTRACT_RUN), where the run
+     object is, which is the only place that can see it.
+     The READ is deliberately absent: reading what a run
+     proposed is not a production, and a member reviews
+     proposals without holding a run at all. */
+  "extractpropose"
+];
 var RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
 var BIAS_ACTIONS = ["biasadopt"];
 var RECOGNISER_ACTIONS = ["resolve", "resolvetestify", "resolutions", "concerns"];
@@ -52960,6 +53705,12 @@ var SESSION_OPS = {
        edge. Unlike `attesttext` above, the machine route is open too —
        that asymmetry IS this item. */
     "contentmint",
+    /* SK-8: the READ half of the EXTRACT role. `extractpropose` is
+       NOT named here because it arrives through `AI_RUN_ACTIONS`
+       below, as an act of a run; this one is not an act of a run
+       and a member reviews proposals without holding one, so it
+       is named beside `contentmint`, whose act it reads back. */
+    "extractproposals",
     "inbox",
     "inboxget",
     "inboxresolve",
@@ -53006,6 +53757,12 @@ var SESSION_OPS = {
     "caseratify",
     "attesttext",
     "contentmint",
+    /* SK-8: the READ half of the EXTRACT role. `extractpropose` is
+       NOT named here because it arrives through `AI_RUN_ACTIONS`
+       below, as an act of a run; this one is not an act of a run
+       and a member reviews proposals without holding one, so it
+       is named beside `contentmint`, whose act it reads back. */
+    "extractproposals",
     "inbox",
     "inboxget",
     "inboxresolve",
@@ -53067,6 +53824,13 @@ var NEEDS = {
      lives in the OPS class cut and in C-35.10, not in a capability a group
      would have to be told about. */
   contentmint: "contribute",
+  /* SK-8: the same capability as the act they perform, for the reason written
+     against `contentmint` above — a proposal is CONTRIBUTING and it is never
+     publishing. Nothing either op writes is the group putting its name on
+     anything: an uncited machine-minted row is a PROPOSAL (§7.3 (6)), and the
+     act that makes one part of a finding is a member's citation. */
+  extractpropose: "contribute",
+  extractproposals: "contribute",
   monitor: "contribute",
   cite: "contribute",
   sever: "contribute",
@@ -56850,7 +57614,7 @@ var index_default = {
          reader (DEC-17) — only the names are withheld. */
       "strengthbarof"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? `member:${sessMember}` : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -56872,6 +57636,11 @@ var index_default = {
     if (op === "contentmint")
       inner.searchParams.set(
         "mintedBy",
+        viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+    if (op === "extractpropose")
+      inner.searchParams.set(
+        "proposedBy",
         viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
       );
     if (op === "select" || op === "selection" || op === "selectionlist" || op === "selectionrelease" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op))

@@ -456,14 +456,19 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
    than a gap: its bound lives in the private `#calDriftFor`, which this walk
    reads at method grain and not at op grain, and its `limit`/`truncated` pair
    reaches the answer regardless.
-   REC-93 / IC-92, 2026-09-14: 31 -> 32. One new capped read, `op=frontier`, the
+   REC-93 / IC-92, 2026-09-14: 31 -> 32; then **32 -> 33 AT SK-8's INTEGRATION, and the way that
+   figure was reached is the point**: REC-93 and SK-8 EACH moved this roster 31 -> 32 on their own
+   branches, each for its OWN new capped op and each correctly measured there — `op=frontier` for one
+   and the proposals read for the other. Both sides of the merge therefore said 32 and BOTH WERE WRONG
+   for the merged tree, which is the `REGISTER_FLOOR` collision arriving in a second file. CONDUCT took
+   NEITHER and re-ran the arm on the merged tree: `want 32 / got 33`. One new capped read, `op=frontier`, the
    observation log's document-level frontier (`OBSERVATION-LOG-DESIGN.md` §6 row
    1). **The figure is taken from THIS ARM'S OWN FAILURE OUTPUT** (`want 31 /
    got 32`) and not by adding one to the number above it, which is the only way
    a roster figure stays a measurement rather than a running total. The op is
    DRIVEN in the loop below, which is what the PIN arm demands of every capped
    op and what stops a roster from growing into a list nobody exercises. */
-  OPS.size, 32);
+  OPS.size, 33);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1184,9 +1189,21 @@ console.log("\n--- PIN: the ops driven are the ops the walk found ---");
    Building a second corpus here would be two fixtures for one fact — and this
    one would additionally make a suite that has never needed `ssh-keygen` depend
    on it, so a machine without it would lose every other arm in this file. */
+/* SK-8's `op=extractproposals` JOINS THIS SET ON `caseflags`' REASONING EXACTLY,
+   and the corpus is the reason rather than the convenience. To have more than one
+   proposed reading to page, this suite would need: a document with a capture and
+   a transcription chain, a registered reading over it, a member-minted `ai`
+   credential, a member-opened run in `extract` mode carrying a `mints` bound, and
+   several productions inside it — which is the whole of `test/extractrun.test.mjs`
+   §0 through §4. The bound IS DRIVEN THERE in this file's own loop shape: a bite
+   of 1 against a corpus of more than one, `limit` read back as the CLAMPED cap,
+   `truncated` TRUE on the bite and FALSE at the default bound, and an over-ask
+   answered at the ceiling. Building a second corpus here would be two fixtures for
+   one fact, and the second would rot first. */
 const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "suggest",
                                   "capturerequests", "capturerequestdrain", "versionstrength",
-                                  "textprovenance", "textattest", "caseflags"]);
+                                  "textprovenance", "textattest", "caseflags",
+                                  "extractproposals"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1328,6 +1345,16 @@ const answersByOp = new Map([
      of how many rows are in it. This suite's store holds no published case at
      all, and answering over it is the only corpus this particular pin needs. */
   ["caseflags", await GET("op=caseflags&limit=1")],
+  /* SK-8: driven HERE, for CPDF-10's and CASE-4's reason immediately above and
+     in their exact shape. The bite/`truncated` arms need a corpus of PROPOSED
+     READINGS, which needs a captured and read document, an `ai` credential, a
+     member-opened EXTRACT run and a `mints` bound — that corpus lives in
+     `test/extractrun.test.mjs` and the bound is driven there. The ARRAY-SHAPE pin
+     needs none of it, because what it asks is whether the op answers with a bare
+     array, and that is a property of the RETURN and not of how many rows are in
+     it. This suite's store holds no proposal at all; the op is SCOPED, so it is
+     asked about a document, and it answers the envelope either way. */
+  ["extractproposals", await GET("op=extractproposals&token=mem-r57&bundle=INFO-2026-0001-r57&limit=1")],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

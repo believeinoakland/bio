@@ -785,6 +785,17 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "answer is WITHHELD (NO_SUCH_CONTENT, byte-identical to an id that does not exist) rather than "
       + "the reference redacted, because the id is CONTENT-ADDRESSED and therefore computable by a "
       + "caller who never saw the row",
+    /* SK-8's read, classified by the item that adds it. It takes the ROW-FILTER
+       shape rather than `content`'s withhold-the-whole-answer one, and the
+       difference is the key: this read is scoped to a RUN or a DOCUMENT, so an
+       answer can legitimately contain rows about several documents and the
+       honest posture is to drop the ones the viewer may not see. The gate is
+       `#viewerSees` per row, and it fails closed on an absent stamp. */
+    extractproposals: "SK-8: what an EXTRACT run PROPOSED, scoped to a run or a document — GATED per "
+      + "ROW on `#viewerSees(bundle_id)`, because one run's productions may span documents in more "
+      + "than one project and a proposal about a document the viewer may not see is not a redacted "
+      + "row, it is not a row. The minted-to-cited ratio beside it is computed over the SAME scope, "
+      + "so the instrument cannot become an oracle for a corpus the caller cannot read",
     /* REC-36's read, classified by the item that adds it (2026-08-04,
        rec36-agent). It is the FIRST reading read to take the WITHHOLD-THE-ROW
        shape rather than the redact-the-reference one, and the distinction is
