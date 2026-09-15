@@ -779,9 +779,25 @@ const REGISTER_FLOOR = {
      — this item adds no fleet member and no fleet suite. */
   /* MOVED 2026-09-14 by CONDUCT #10 at COFF-10's merge (967 -> 972 · 179 -> 180 · 180 -> 181): the merged run's own print read `arms 972/967 · classified 180/179 · corpus 181/180`; the +5 arms and +1 suite are COFF-10's `formats-odf.test.mjs`, which set 964 on a tree without REC-82's +8. One key set, read from the print after the commit (D-238). */
   /* MOVED 2026-09-14 by CONDUCT #10 at M0-30's merge (972 -> 974): the merged run's own print read `arms 974/972`; the +2 is M0-30's planning-hygiene §4.7 declaration. One key set, read from the print after the commit (D-238). */
-  arms: 974,
-  classified: 180,
-  corpus: 181,
+  /* MOVED 2026-09-14 by FW-17 (974 -> 980 · 180 -> 181 · 181 -> 182), ALL THREE IN
+     THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN
+     `--strict` run PRINTED after the commit (`arms 980/974 · classified 181/180 ·
+     corpus 182/181 · GREW by 6`), never counted and never added to the numbers
+     above. The cause is ONE new suite, `test/reading-position.test.mjs`, whose
+     `NEGATIVE CONTROL:` declaration states six arms — the six run by
+     `test/nc-fw17.mjs` — so `corpus` and `classified` each rise by one and `arms`
+     by six. NOTHING FELL.
+     READ AFTER THE COMMIT AND NOT BEFORE, deliberately: the register counts
+     suites IN THE COMMIT (M0-18), so the pre-commit run of this same item printed
+     974/180/181 — exactly the floor — and moving it from that print would have
+     left the ratchet six arms slack while looking like a measurement.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file,
+     once here and once in `FLEET_FLOOR`, which is the documented state.
+     `FLEET_FLOOR` is UNMOVED and none is owed — this item adds no fleet member
+     and no fleet suite. */
+  arms: 980,
+  classified: 181,
+  corpus: 182,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
