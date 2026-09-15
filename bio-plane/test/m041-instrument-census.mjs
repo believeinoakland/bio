@@ -427,9 +427,27 @@ export function introducedIds(base = "origin/main") {
   const sec = out.split(/^3\. IDS INTRODUCED BY A DIFF/m)[1] || "";
   const body = sec.split(/^4\. THE REGISTER/m)[0] || "";
   const tally = body.match(/(\d+)\s+id\(s\)\s+introduced\s+·\s+HELD\s+(\d+)\s+·\s+NOT HELD\s+(\d+)\s+·\s+PRE-LEDGER\s+(\d+)/);
-  const named = [...body.matchAll(/\b(NOT HELD|HELD|PRE-LEDGER)\s+([A-Z][A-Z0-9]*-\d+)/g)]
-    .map((m) => ({ verdict: m[1], id: m[2] }));
-  const alsoNamed = [...body.matchAll(/^\s{4,}([A-Z][A-Z0-9]*-\d+)\b/gm)].map((m) => m[1]);
+  /* **THE LABELS ARE NOT THE TALLY WORDS, AND GRADING ONE SPELLING IS THIS
+     ESTATE'S MOST-REPEATED INSTRUMENT DEFECT — IT CAUGHT THIS FILE.** The tally
+     line counts `HELD / NOT HELD / PRE-LEDGER`; the lines that NAME the ids are
+     labelled `HELD`, `QUESTION` and `UNKNOWN`, because the tool's own ruling is
+     that an id the ledger does not hold is a QUESTION you ask the worker and
+     never a failure. A matcher looking for the literal `NOT HELD <id>` found the
+     count and none of the ids, and read as a clean sweep — caught by the control
+     arm reporting `names M0-9001: false` beside `NOT HELD 1`. Both spellings are
+     read here, and the map is written out so a third label cannot be added
+     silently. */
+  const LABEL = { "HELD": "HELD", "QUESTION": "NOT HELD", "UNKNOWN": "PRE-LEDGER" };
+  const named = [];
+  for (const m of body.matchAll(/^\s+(HELD|QUESTION|UNKNOWN)\s+(.+)$/gm)) {
+    for (const id of (m[2].match(/\b[A-Z][A-Z0-9]*-\d+\b/g) || []))
+      named.push({ verdict: LABEL[m[1]], id });
+  }
+  /* an id-shaped token on a labelled line this reader did not classify is NAMED,
+     never scored zero — a thing the matcher does not understand must be named. */
+  const unlabelled = [...body.matchAll(/^\s+([A-Z]+)\s+[A-Z][A-Z0-9]*-\d+/gm)]
+    .map((m) => m[1]).filter((w) => !(w in LABEL));
+  const alsoNamed = [...new Set(unlabelled)];
   return {
     raw: body.trim(),
     introduced: tally ? Number(tally[1]) : -1,   /* -1, never 0: unreadable and none are different claims */
