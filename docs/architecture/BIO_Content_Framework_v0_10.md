@@ -1674,7 +1674,7 @@ member's choice is the authored act.
 | the definition and the model (DEC-23, DEC-24, DEC-4) | RULED |
 | machine extraction by recognisers, format entries and fleet members (§16) | BUILT |
 | the AI EXTRACT role — an assistant extracting on a member's objective | DESIGNED; excluded from the pilot by name; no item |
-| the content OBJECT — something an edge can point at that is smaller than a document | ABSENT (D-164, reopened 2026-09-15; §18) |
+| the content OBJECT — something an edge can point at that is smaller than a document | BUILDING — the `content` table and its writer on the `pdf-page` and `document` arms landed 2026-09-14 (IC-83, REC-82); the reads, the frontmatter, the other arms and the member acts are rowed (§18 piece 1) |
 
 ## 15. The forms content takes today
 
@@ -1696,7 +1696,7 @@ and the table shows it form by form.
 | **subresources and the render companion** | a page's stylesheets and images as their own captures; a derived rendition that says it is derived | — | no; a rendition, not content | BUILT |
 | **rendition and evidentiary digests** | per-region sameness judgments over HTML | region — but the boundary is not stored as an extent | no | BUILT |
 | **the entity axis** | registry, aliases, constitutive relations, graded resolutions, connections | capture throughout — a connection discards even the reference it was resolved from | at the document | BUILT |
-| **the content-extent primitive** | the object and the edge that carries it | any | this IS the missing thing | DESIGNED — one paragraph of shape (DEC-23); D-164 |
+| **the content-extent primitive** | the object and the edge that carries it: the `content` table, first-class rows minted lazily on first edge and content-addressed by `hash(capture, extent, chain)`, `stale` one-way, purge both arms | document · page+rect today; cell · paragraph · shape rowed | YES, from 2026-09-14 — a basis leg holds a `content_id` | PARTLY BUILT — REC-82 (IC-83); reads and frontmatter REC-83/84; other arms REC-85; NARROW/TRANSCRIBE REC-86/87 |
 | **the AI EXTRACT role** | an assistant proposing content worth citing | — | — | DESIGNED as a role; ABSENT as an item |
 | **tables** | a table as content | — | — | GESTURED |
 | **images** | a figure, map, signature or photograph cited as itself, not as text read off it | — | — | GESTURED |
@@ -1878,7 +1878,14 @@ The pieces to be designed, named here and designed nowhere in this document:
 Two rulings to carry into every option for piece 1. An authored edge is never re-pointed to a
 newer capture without a member's act (§14.4) — so the content row's identity includes the
 capture, a new capture is a new row, and "the same passage across versions" is a derived
-relation between rows, proposed and never applied. And content-grain **connections** are
+relation between rows, proposed and never applied. **The same rule bit at the first landing,
+one level down:** the row's identity also includes the extraction CHAIN, so re-extracting a
+document under a better engine yields a new row for the same extent — and because the record
+re-projects a bundle's legs on every promotion, a naive projection would have silently moved
+every authored citation onto the new row at the first re-read, exactly the forbidden move. The
+landed writer carries the prior referent forward when target and extent match, marks it
+`stale`, and leaves the move to a member's act; the control that proves it can fail is in the
+suite (REC-82). And content-grain **connections** are
 impossible until readings record *where* a reference was read, which is a change to the
 structure interface (I2) on the framework's side.
 
