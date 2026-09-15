@@ -7300,6 +7300,19 @@ it is the reason this IC resolves now instead of waiting for the consumer.
 not live on any tree until COFF-12 lands the passthrough. Saying otherwise would be the
 overclaim this interface's own subject exists to prevent.
 
+> **LANDED 2026-09-15 by COFF-12** (worker `agent-a05524ce4334542fc`), and this paragraph is
+> kept above rather than rewritten because what it refused to claim was right to refuse.
+> The three-line passthrough is in `index.mjs`, D-359 is CLOSED, and the inner bound is live on
+> the tree and under no arm: `A1048577` and shape 9,999 are each refused C-45.1 BY NAME with the
+> figure in the refusal, `ZZ999999` still mints because it is inside the grid, and a real `.ods`
+> capture carries an honestly NULL bound through the wire with its used range measured beside it.
+> **The delegation's measured sufficiency held exactly** — the same three assertions flipped and
+> nothing else, which is what a measured delegation is worth. **One thing it did NOT predict and
+> COFF-12 found while landing it:** this wire's slide map was keyed on ARRAY POSITION, so a deck
+> with an unreadable slide mis-attributed every shape count after the gap. Named in the section
+> below at proposal, closed in the same edit, and now driven by a gapped-deck fixture and a
+> control arm (`slidesbyposition`) that no assertion in the battery could have replaced.
+
 **One decision travels with the contract and belongs here rather than only at the site: a
 container's bound is its CAPACITY, never the capture's used range.** A slide needs no decision —
 a shape list is exhaustive, so shape 9,999 of a four-shape slide is not an empty shape, it is no

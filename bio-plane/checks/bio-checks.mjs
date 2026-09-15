@@ -10513,21 +10513,40 @@ export function checkContentExtent(extent, ctx = {}) {
      Nothing in THIS file moved for it: the feed arrived and these predicates
      began firing, which is exactly what D-354 predicted.
 
-     WHAT IS STILL UNFED IS THE INNER BOUND OF TWO OF THE THREE, AND IT IS
-     NAMED RATHER THAN LEFT TO BE INFERRED (D-359). No entry emits a sheet's
-     `rows`/`cols` or a slide's shape COUNT — `walkSheetXml` and `walkSlide`
-     compute both and return neither, measured against all six returns — so
-     `coversSheetCell` still answers nothing about a CELL inside a sheet the
-     workbook has, and `coversSlideShape` nothing about a SHAPE inside a slide
-     the deck has. That is exactly what the predicates' own header below says a
-     sheet list with no dimensions must do, it is skipped and never guessed,
-     and the store's `#containerExtentForCapture` NAMES it in the answer it
-     returns rather than leaving a bare null. Stated plainly because a
-     mechanism believed on the strength of its existence rather than its
-     behaviour is the defect this project meets most: the OUTER bound is fed
-     and driven end to end in `test/capture-container-extent.test.mjs`; the
-     INNER bound is not, and this comment is what keeps the next reader from
-     believing either half wrongly.
+     AND THE INNER BOUND IS FED TOO, AS OF 2026-09-15 — CORRECTED IN PLACE BY
+     COFF-12, NOT DELETED, BECAUSE THE GAP IT RECORDED WAS REAL AND ITS CLOSING
+     IS THE NEWS (the same correction COFF-9 set the precedent for, and the one
+     CAP-12 made to the paragraph above it). This paragraph read "No entry emits
+     a sheet's `rows`/`cols` or a slide's shape COUNT — `walkSheetXml` and
+     `walkSlide` compute both and return neither", which was TRUE when D-359 was
+     filed and measured against all six returns. It closed in two acts on one
+     day: COFF-11 landed the producers (IC-100, I2 2.2.0 — each sheet's `rows`/
+     `cols` beside its `usedRows`/`usedCols`, each slide's `shapes`) and COFF-12
+     landed the acquire wire that had been writing those figures as LITERAL
+     NULLS. So `coversSheetCell` now answers about a CELL inside a sheet the
+     workbook has and `coversSlideShape` about a SHAPE inside a slide the deck
+     has, and **NOTHING IN THIS FILE MOVED FOR EITHER** — the predicates began
+     firing when the feed arrived, exactly as D-354 and D-359 both predicted.
+
+     THE BOUND IS THE CONTAINER'S CAPACITY AND NEVER THE CAPTURE'S USED RANGE,
+     and that decision is why `coversSheetCell` below compares against `rows`
+     and must never be pointed at `usedRows` (IC-100's RESOLUTION carries the
+     reasoning; COFF-11's `usedrangeasbound` arm breaks if anyone re-points it).
+     A cell EXISTS in the grid whether or not it held a value, and in this
+     product an empty cell is routinely the finding.
+
+     WHAT IS STILL ABSENT IS A FIGURE RATHER THAN A MECHANISM, and it is named
+     so this paragraph does not become the next stale reassurance. A `.ods`
+     workbook carries a NULL grid bound because OpenDocument fixes no maximum
+     table size — an honest statement, not a gap, and the cell arm is SKIPPED on
+     it rather than guessed. A capture acquired before this landing holds no
+     inner figure at all and is skipped the same way; no backfill was taken. In
+     both cases the store's `#containerExtentForCapture` NAMES the missing level
+     in the answer it returns rather than leaving a bare null, and skipping is
+     deliberate: refusing a citation for a bound nobody measured would push a
+     member toward citing the WHOLE DOCUMENT, which claims MORE and not less.
+     All four arms are driven end to end in
+     `test/capture-container-extent.test.mjs`.
      ==================================================================== */
   if (e.kind === 'sheet-cell') {
     if (typeof e.sheet !== 'string' || !e.sheet.trim())

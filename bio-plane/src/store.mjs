@@ -12109,17 +12109,31 @@ export class Store extends DurableObject {
     if (notion.includes("sheets") && !sheets) missing.push("the workbook's sheet list");
     if (notion.includes("paragraphs") && paragraphs === null) missing.push("the paragraph count");
     if (notion.includes("slides") && !slides) missing.push("the deck's slide list");
-    /* D-359, and it is reported as an ABSENT FIGURE rather than left silent: the
-       arm's outer bound is fed and its inner bound is not, so a reader is told
-       which half of the question this record can answer. */
+    /* D-359, and it is reported as an ABSENT FIGURE rather than left silent, so a
+       reader is told which half of the question this record can answer.
+
+       THE TWO SENTENCES BELOW ARE CORRECTED IN PLACE, 2026-09-15 BY COFF-12, AND
+       NOT DELETED. They read "the entry emits sheet names and no dimensions" and
+       "the entry emits the slide list and no shape counts", which was TRUE when
+       REC-85 and CAP-12 wrote them and measured it. It stopped being true in two
+       acts on 2026-09-15: COFF-11 landed the producers (IC-100, I2 2.2.0) and
+       COFF-12 landed the acquire wire that reads them. An absent inner figure is
+       now a fact about THIS CAPTURE rather than about the entry, and saying
+       otherwise would send a reader to fix a producer that is already correct —
+       which is exactly the cost this project keeps paying for a stale
+       self-description. NOT ONE LINE OF LOGIC MOVED FOR THIS: the conditions,
+       the predicates and the shape are byte-for-byte what REC-85 wrote, and the
+       three reasons an inner figure is legitimately absent are named instead. */
     if (sheets && !sheets.some((s) => Number.isInteger(s && s.rows) || Number.isInteger(s && s.cols)))
-      missing.push("every sheet's row and column extent (the entry emits sheet names and no "
-                 + "dimensions — D-359), so an unknown SHEET is bounded and a cell within a "
+      missing.push("every sheet's row and column extent (this capture was acquired before the "
+                 + "wire read that figure, or its format fixes no grid — OpenDocument sets no "
+                 + "maximum table size, so a .ods workbook states a NULL bound rather than "
+                 + "borrowing one — D-359), so an unknown SHEET is bounded and a cell within a "
                  + "known sheet is not");
     if (slides && !slides.some((s) => Number.isInteger(s && s.shapes)))
-      missing.push("every slide's shape count (the entry emits the slide list and no shape "
-                 + "counts — D-359), so a slide past the deck is bounded and a shape within a "
-                 + "known slide is not");
+      missing.push("every slide's shape count (this capture was acquired before the wire read "
+                 + "that figure, or no slide's part in it could be read — D-359), so a slide "
+                 + "past the deck is bounded and a shape within a known slide is not");
     if (!held) missing.push("the container's own extent — no sheet list, paragraph count or "
                           + "slide list was persisted for this capture");
     return {

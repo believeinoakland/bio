@@ -61,6 +61,7 @@
  *   than described, and `nc-cap12.mjs`'s `overstrict` arm breaks it on purpose.
  */
 /* NEGATIVE CONTROL, COFF-11 (IC-100 / D-359) — SEVEN arms and a baseline, each armed ALONE with every other defence held open, re-runnable in one step with `node test/nc-coff11.mjs [arm]` from `bio-plane/`. RUN 2026-09-15, ALL SEVEN AS DECLARED, every restore verified byte-identically by sha256 AND by content with a byte count printed: `src/formats-xlsx.mjs` 33,691 B sha256 c5855053f670…, `src/pptx.mjs` 37,442 B sha256 1708977ce689…, `src/odf.mjs` 64,000 B sha256 08f4709dde58…. baseline xlsx 88/0 · pptx 116/0 · odf 140/0 · e2e 31/0 GREEN; dropxlsxbound 4/4 declared (5 failing across two suites); dropslideshapes 5/5 (6); dropodpshapes 2/2 (3); dropxlsxboundunread 1/1 (1); usedrangeasbound 4/4 (4); odsborrowsgrid 3/3 (3). TWO CAME BACK WRONG ON THE FIRST RUN AND ARE RECORDED AT THEIR SITES RATHER THAN SMOOTHED, and both were findings about the INSTRUMENT: (1) `dropxlsxbound` declared the DISAGREE assertion and it did NOT fire, because its first spelling (`rows === usedRows` expected false) is satisfied by a NULL bound too — the ASSERTION was too weak and was strengthened to require both figures be integers, which is the arm doing better than going red; (2) both xlsx arms declared the UNREAD-SHEET bound, which neither patch reaches — `xlsxText` emits the sheet object at TWO independent sites, and the seventh arm `dropxlsxboundunread` now covers the second rather than leaving it covered by nobody. AND ONE SURPRISING GREEN, kept because it is the more useful result: under `usedrangeasbound` the END-TO-END suite stayed green at 31/0 — not the arm failing but the measurement that the e2e suite cannot see this bound AT ALL today, because the acquire wire drops the producer's figure before the store reads it (D-359's residue, DELEGATED 2026-09-15). */
+/* NEGATIVE CONTROL, COFF-12 (D-359's consumer half) - SIX arms and a baseline in `test/nc-coff12.mjs`, re-runnable in one step with `node test/nc-coff12.mjs [arm]` from `bio-plane/`. Each arm edits `src/index.mjs` ALONE with every other defence held OPEN, declares BEFORE it runs what MUST fail AND WHAT MUST NOT, and every restore is verified by sha256 AND by content against a UNIQUELY-NAMED per-arm pristine copy with a byte count printed and a 400 KB minimum guarded (never `git checkout --`). RUN 2026-09-15, ALL SIX AS DECLARED, `src/index.mjs` restored byte-identically every time at 562,707 B sha256 4f4c24a76c55...: baseline 47/0 GREEN; dropcellbound 4/4 declared (5 failing); dropslideshapes 5/5 (5); slidesbyposition 5/5 (5); borrowgrid 2/2 (2); usedasbound 4/4 (7) - and in EVERY arm **0 of the declared held-open assertions also broke**. THIS HARNESS CHECKS `mustNotFail` RATHER THAN DESCRIBING IT, which `nc-coff11.mjs` and `nc-cap12.mjs` do not: REC-83's own run had an arm break its declared held-open half with nothing but a human read to catch it, and an arm that takes the whole suite down proves nothing about its own subject. `slidesbyposition` is the arm worth reading - it restores the POSITIONAL slide map this wire carried from CAP-12 until today while LEAVING the passthrough intact, so it isolates the keying; nothing in this repository could see the defect it plants before this item's gapped-deck fixture existed. `borrowgrid` and `usedasbound` arm the DECISION rather than the patch (invent a grid OpenDocument never fixes; make the bound the used range), because a decision nothing can break is a decision nothing is enforcing. AND THE ITEM'S OWN FIRST SPELLING OF THE `.ods` ASSERTION WAS WRONG, kept at its site rather than smoothed: it read `?? "MISSING"`, and `null ?? "MISSING"` is `"MISSING"` - so a correctly carried NULL bound and a dropped key were the SAME observation, in the exact direction this item is about. CAP-12's OWN HARNESS WAS RE-RUN ON THIS TREE AND TWO OF ITS NINE ARMS HAD GONE DEAD: `dropsheets` and `dropslides` both read `ARMED NO, patch matched 0x` because their anchors quoted the literal-null lines this item replaced, and `overstrict`/`overstrict2` named assertion labels that moved with the flip. All four are CORRECTED IN PLACE with the reason at the site, never exempted, and `node test/nc-cap12.mjs` now reads **every arm AS DECLARED, all nine ARMED**. A control whose anchor has drifted fails silently in the direction that looks like success. */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -90,15 +91,24 @@ function zip(files) {
   for (const f of files) {
     const nameB = Buffer.from(f.name, "utf-8");
     const data = Buffer.isBuffer(f.data) ? f.data : Buffer.from(f.data, "utf-8");
-    const comp = deflateRawSync(data);
+    /* COFF-12: `store: true` writes the member UNCOMPRESSED (method 0). It is
+       here for ONE reason and not as a convenience — OpenDocument 1.2 part 3
+       requires the `mimetype` member to be FIRST and STORED, and `detectOdf`
+       reads it synchronously without inflating, so a deflated mimetype is a
+       package the ODF entries correctly refuse to claim. The same option in
+       `formats-odf.test.mjs` builds its fixtures this way; this suite needs it
+       to drive a REAL `.ods` capture through `op=acquire`. */
+    const stored = f.store === true;
+    const comp = stored ? data : deflateRawSync(data);
+    const method = stored ? 0 : 8;
     const crc = crc32(data);
     const local = Buffer.concat([
-      u32le(0x04034b50), u16le(20), u16le(0x0800), u16le(8), u16le(0), u16le(0x21),
+      u32le(0x04034b50), u16le(20), u16le(0x0800), u16le(method), u16le(0), u16le(0x21),
       u32le(crc), u32le(comp.length), u32le(data.length),
       u16le(nameB.length), u16le(0), nameB, comp,
     ]);
     const central = Buffer.concat([
-      u32le(0x02014b50), u16le(20), u16le(20), u16le(0x0800), u16le(8), u16le(0), u16le(0x21),
+      u32le(0x02014b50), u16le(20), u16le(20), u16le(0x0800), u16le(method), u16le(0), u16le(0x21),
       u32le(crc), u32le(comp.length), u32le(data.length),
       u16le(nameB.length), u16le(0), u16le(0), u16le(0), u16le(0), u32le(0), u32le(offset), nameB,
     ]);
@@ -188,6 +198,109 @@ const PPTX = zip([
   ...SLIDE_TITLES.map((_, i) => ({ name: `ppt/slides/_rels/slide${i + 1}.xml.rels`, data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>` })),
 ]);
 
+/* ========== THE GAPPED DECK — COFF-12's OWN FIXTURE, AND IT EXISTS TO PROVE
+ * THAT KEYING THE SLIDE MAP ON POSITION IS A DEFECT AND NOT A STYLE ==========
+ *
+ * THREE SLIDES ARE DECLARED in `<p:sldIdLst>` and all three are declared in
+ * `[Content_Types].xml` and in the presentation's rels — and the PART for
+ * slide 2 IS NOT IN THE ZIP. That is what an unreadable slide is in the wild
+ * (a truncated upload, a part the producer never wrote), and `pptx.mjs` handles
+ * it exactly as designed: `deckOf` still numbers the declared slots 1, 2, 3, and
+ * `pptxText` pushes an `undetermined` entry for slide 2 and OMITS it from
+ * `slides[]`, so the surviving units are slide 1 and slide 3 keeping their TRUE
+ * numbers.
+ *
+ * THE SHAPE COUNTS ARE THE FIXTURE'S OWN GROUND TRUTH AND THEY ARE DELIBERATELY
+ * DIFFERENT: slide 1 has TWO shapes and slide 3 has FOUR. Equal counts would
+ * have made a mis-attribution invisible — the arm would have passed over a
+ * defect, which is this project's most-repeated instrument failure — so the
+ * asymmetry is the measurement and not decoration.
+ *
+ * WHAT A POSITIONAL MAP DOES TO IT, which is what this fixture measures: the
+ * stored array becomes [{shapes:2}, {shapes:4}], length 2, so `coversSlideShape`
+ * (which reads `slides[e.slide - 1]`) BOUNDS SLIDE 2 BY SLIDE 3'S FOUR SHAPES
+ * and REFUSES SLIDE 3 as past a two-slide deck. Both directions are wrong at
+ * once: the record admits a citation of a shape on a slide it cannot read, and
+ * refuses a TRUE citation of a slide the deck has. Nothing in the battery could
+ * see either before this fixture existed. */
+const GAPPED_TITLES = ["MIDCYCLE OVERVIEW", "THE SLIDE THIS CAPTURE CANNOT READ",
+                       "GENERAL PURPOSE FUND RECONCILIATION"];
+const GAPPED_SHAPES = [2, null, 4];   // null = the part is absent; nothing to count
+const GAPPED_MISSING = 2;             // the 1-based slide whose part is omitted
+const slideXmlOfN = (title, n) => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld ${P} ${A} ${R}><p:cSld><p:spTree>
+<p:sp><p:txBody><a:p><a:r><a:t>${title}</a:t></a:r></a:p></p:txBody></p:sp>`
+  + Array.from({ length: n - 1 }, (_, k) =>
+      `<p:sp><p:txBody><a:p><a:r><a:t>Line ${k + 1}.</a:t></a:r></a:p></p:txBody></p:sp>`).join("")
+  + `</p:spTree></p:cSld></p:sld>`;
+const PPTX_GAPPED = zip([
+  { name: "[Content_Types].xml", data: `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/ppt/presentation.xml" ContentType="${PPTX_CT}.main+xml"/>`
+      + GAPPED_TITLES.map((_, i) => `<Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`).join("")
+      + `</Types>` },
+  { name: "_rels/.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/></Relationships>` },
+  { name: "ppt/presentation.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<p:presentation ${P} ${R}><p:sldIdLst>`
+      + GAPPED_TITLES.map((_, i) => `<p:sldId id="${256 + i}" r:id="rId${i + 2}"/>`).join("")
+      + `</p:sldIdLst></p:presentation>` },
+  { name: "ppt/_rels/presentation.xml.rels", data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+      + GAPPED_TITLES.map((_, i) => `<Relationship Id="rId${i + 2}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide${i + 1}.xml"/>`).join("")
+      + `</Relationships>` },
+  /* EVERY slide part EXCEPT the missing one — the omission is the fixture. */
+  ...GAPPED_TITLES.flatMap((title, i) => (i + 1 === GAPPED_MISSING ? [] : [
+    { name: `ppt/slides/slide${i + 1}.xml`, data: slideXmlOfN(title, GAPPED_SHAPES[i]) },
+    { name: `ppt/slides/_rels/slide${i + 1}.xml.rels`, data: `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>` },
+  ])),
+]);
+
+/* ========== A REAL `.ods` WORKBOOK — the accepts-when clause that says an
+ * HONESTLY NULL GRID BOUND MUST SURVIVE THIS WIRE ==========
+ *
+ * COFF-11 measured and drove the producer half of this: OpenDocument fixes no
+ * maximum table size at all — the grid belongs to the producing application and
+ * the file does not record it — so the entry emits `rows: null, cols: null`
+ * beside a MEASURED used range, and its `odsborrowsgrid` arm breaks if a later
+ * session borrows OOXML's figure.
+ *
+ * WHAT IS NEW HERE IS THE WIRE, and it is a different claim from the producer's.
+ * COFF-12 makes `op=acquire` READ these figures, and a passthrough that coerced
+ * — `Number(v) || null`, a `?? 0`, a borrowed default — would turn a stated
+ * UNDETERMINED into an invented bound at exactly the seam where nobody was
+ * looking. `coversSheetCell` REFUSES against whatever is stored, so an invented
+ * grid here would refuse real citations on every OpenDocument workbook this
+ * plane ever reads. The null is therefore asserted END TO END rather than
+ * trusted to the producer suite, which cannot see this file. */
+const ODS_CT = "application/vnd.oasis.opendocument.spreadsheet";
+const ODS_NS = [
+  'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"',
+  'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"',
+  'xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"',
+  'xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"',
+].join(" ");
+const ODS_SHEET_NAME = "Appropriations";
+/* THE USED RANGE IS THE FIXTURE'S OWN GROUND TRUTH: two rows of two cells,
+   written here and nowhere else, so the assertion is not an equality the code
+   under test produced for itself. */
+const ODS_USED_ROWS = 2, ODS_USED_COLS = 2;
+const odsCell = (v) => `<table:table-cell office:value-type="string"><text:p>${v}</text:p></table:table-cell>`;
+const ODS_CONTENT_XML = `<?xml version="1.0" encoding="UTF-8"?>`
+  + `<office:document-content ${ODS_NS} office:version="1.3">`
+  + `<office:automatic-styles/><office:body><office:spreadsheet>`
+  + `<table:table table:name="${ODS_SHEET_NAME}">`
+  + `<table:table-row>${odsCell("Department")}${odsCell("FY26 Adopted")}</table:table-row>`
+  + `<table:table-row>${odsCell("Police")}${odsCell("2200000")}</table:table-row>`
+  + `</table:table></office:spreadsheet></office:body></office:document-content>`;
+const ODS = zip([
+  /* FIRST and STORED — OpenDocument 1.2 part 3, and what the ODF discriminator
+     reads without inflating. A deflated mimetype is a package it refuses. */
+  { name: "mimetype", data: ODS_CT, store: true },
+  { name: "META-INF/manifest.xml", data: `<?xml version="1.0" encoding="UTF-8"?>`
+      + `<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">`
+      + `<manifest:file-entry manifest:full-path="/" manifest:version="1.2" manifest:media-type="${ODS_CT}"/>`
+      + `<manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>`
+      + `</manifest:manifest>` },
+  { name: "content.xml", data: ODS_CONTENT_XML },
+  { name: "styles.xml", data: `<?xml version="1.0"?><office:document-styles ${ODS_NS}/>` },
+]);
+
 /* ---- a tiny PDF assembler (CAP-9's own, kept for the over-strictness arm:
  * a PAGED document has no container extent and must acquire with the key
  * present and NULL) ---- */
@@ -222,6 +335,8 @@ const mf = new Miniflare({
     if (u.pathname === "/budget.xlsx") return bin(XLSX, XLSX_CT);
     if (u.pathname === "/report.docx") return bin(DOCX, DOCX_CT);
     if (u.pathname === "/deck.pptx") return bin(PPTX, PPTX_CT);
+    if (u.pathname === "/gapped.pptx") return bin(PPTX_GAPPED, PPTX_CT);
+    if (u.pathname === "/budget.ods") return bin(ODS, ODS_CT);
     if (u.pathname === "/one.pdf") return bin(PDF, "application/pdf");
     if (u.pathname === "/calendar.html") return bin(HTML, "text/html; charset=utf-8");
     return new Response("unscripted", { status: 500 });
@@ -399,12 +514,52 @@ t("the PRODUCERS now emit the inner bounds — the entries return what they comp
       .text(await (await import("../src/pptx.mjs")).pptxEntry.parts(PPTX)))
       .slides.every((s) => Number.isInteger(s.shapes))],
   [true, true]);
-t("and the RECORD still holds NULL for both — the acquire wire writes the literal and never reads "
-  + "the producer's figure (D-359's residue, measured 2026-09-15, DELEGATED)",
+/* CORRECTED 2026-09-15 by COFF-12, AND THE FLIP IS THE ITEM. This assertion read
+   "and the RECORD still holds NULL for both — the acquire wire writes the literal
+   and never reads the producer's figure", and it was TRUE and MEASURED when
+   COFF-11 wrote it. The wire now reads the figure, so the same assertion with the
+   same expected values would be pinning a defect that is gone. Its VALUE moves and
+   its label moves with it, which is the whole reason COFF-11 split this line in two:
+   what the producers say and what the record holds can never again be read off one
+   line, and this is the line that had to move.
+
+   IT IS THE PRODUCER'S OWN FIGURE AND NOT A FIGURE THIS WIRE CHOSE, which is the
+   claim a passthrough actually makes and the one an `Number.isInteger` check alone
+   would NOT catch. The entry is called directly here and the stored value compared
+   against what it returned — two independent paths over the same bytes, not this
+   suite agreeing with itself. The literal grid is pinned BESIDE that comparison
+   (MEASUREMENTS.md M-22: a real producer kept `XFD1048576` and dropped `A1048577`)
+   so that a producer and a wire drifting TOGETHER still fails here. */
+const xlsxSheetsOf = async (bytes) => {
+  const m = await import("../src/formats-xlsx.mjs");
+  return (await m.xlsxEntry.text(await m.xlsxEntry.parts(bytes))).sheets;
+};
+const pptxSlidesOf = async (bytes) => {
+  const m = await import("../src/pptx.mjs");
+  return (await m.pptxEntry.text(await m.pptxEntry.parts(bytes))).slides;
+};
+const producedSheets = await xlsxSheetsOf(XLSX);
+const producedSlides = await pptxSlidesOf(PPTX);
+t("and the RECORD NOW HOLDS THE PRODUCER'S OWN FIGURE — the acquire wire READS it "
+  + "(COFF-12, D-359's consumer half; this line read 'still holds NULL' until it landed)",
   [Array.isArray(ext(book)?.sheets)
-     ? ext(book).sheets.every((s) => s && s.rows === null && s.cols === null) : null,
+     ? ext(book).sheets.map((s) => [s.rows, s.cols]) : null,
    Array.isArray(ext(deck)?.slides)
-     ? ext(deck).slides.every((s) => s && s.shapes === null) : null],
+     ? ext(deck).slides.map((s) => s.shapes) : null],
+  [producedSheets.map((s) => [s.rows, s.cols]), producedSlides.map((s) => s.shapes)]);
+t("    and the grid it carries is the MEASURED OOXML grid, pinned so a producer and a wire "
+  + "drifting together still fail here (M-22)",
+  [ext(book)?.sheets?.every((s) => s.rows === 1048576 && s.cols === 16384) ?? null,
+   ext(book)?.sheets?.length ?? null],
+  [true, SHEET_NAMES.length]);
+/* THE USED RANGE TRAVELS BESIDE THE BOUND AND BOUNDS NOTHING (IC-100's decision).
+   Asserting it here is what makes "empty at capture" and "outside the grid" two
+   readable facts in the RECORD rather than only in the producer, and COFF-11's
+   `usedrangeasbound` arm is what breaks if anyone ever fences on it. */
+t("    the USED range is carried BESIDE the bound, under its own name, and DISAGREES with it "
+  + "— two different facts, neither pretending to be the other",
+  [ext(book)?.sheets?.every((s) => Number.isInteger(s.usedRows) && Number.isInteger(s.usedCols)) ?? null,
+   ext(book)?.sheets?.every((s) => s.usedRows < s.rows && s.usedCols < s.cols) ?? null],
   [true, true]);
 
 console.log("\n--- 2. op=promote then op=reading: the extents are PERSISTED and readable ---");
@@ -518,29 +673,197 @@ t("cell ZZ999999 of a sheet the workbook HAS mints — and under COFF-11's decis
   [rWildCell.ok !== false, rWildCell.content?.[0]?.extent_kind, rWildCell.content?.[0]?.minted],
   [true, "sheet-cell", true]);
 /* THE ADDRESS THAT IS ACTUALLY IMPOSSIBLE — one row past the measured grid.
-   This is the cost that REMAINS open, and it is driven rather than described:
-   it mints TODAY because the acquire wire writes `rows: null` as a literal and
-   never reads the producer's figure. It is the arm that will flip to a C-45.1
-   refusal the moment the three-line wire edit lands (DELEGATED, `CLAIMS.md`
-   2026-09-15), and it is written so that flip is a one-line correction here. */
+   CORRECTED 2026-09-15 by COFF-12, AND THIS IS THE ACCEPTS-WHEN CLAUSE COFF-11
+   COULD NOT MAKE LIVE. It read "still MINTS: the producer emits the bound and the
+   acquire wire drops it", measured under a TEMPORARY arm rather than predicted, and
+   COFF-11 recorded exactly this flip as the one its delegation would produce. The
+   wire landed; the flip is here, DRIVEN ON THIS TREE and under no arm at all.
+   The refusal is checked BY CODE AND BY SENTENCE — a C-45.1 whose detail did not
+   carry the figure would be a refusal a member could not act on, and the figure is
+   the only part of it that says which bound was applied. */
 const rImpossibleCell = await promote("INQ-2026-9200-impossiblecell",
   inquiryMd("INQ-2026-9200-impossiblecell", { refs: [DOC_BOOK],
     legs: [{ target: DOC_BOOK, kind: "sheet-cell", sheet: SHEET_NAMES[0], cell: "A1048577" }] }), "inquiry");
-t("cell A1048577 — one row PAST the measured grid, an address no XLSX can hold — still MINTS: "
-  + "the producer emits the bound and the acquire wire drops it (D-359's residue, DELEGATED)",
-  [rImpossibleCell.ok !== false, rImpossibleCell.content?.[0]?.extent_kind,
-   rImpossibleCell.content?.[0]?.minted],
-  [true, "sheet-cell", true]);
+t("cell A1048577 — one row PAST the measured grid, an address no XLSX can hold — is now REFUSED "
+  + "C-45.1 BY NAME (COFF-12; this line read 'still MINTS' until the acquire wire landed)",
+  [rImpossibleCell.ok, rImpossibleCell.reason, codes(rImpossibleCell)],
+  [false, "BASIS_REFUSED", ["C-45.1"]]);
+t("    and the refusal carries THE FIGURE it was checked against, and the sheet it names",
+  [new RegExp(`sheet '${SHEET_NAMES[0]}' of this capture holds 1048576 row\\(s\\) \\(1-1048576\\)`)
+     .test(detail(rImpossibleCell)),
+   /names row 1048577/.test(detail(rImpossibleCell))],
+  [true, true]);
 const rWildShape = await promote("INQ-2026-9200-wildshape",
   inquiryMd("INQ-2026-9200-wildshape", { refs: [DOC_DECK],
     legs: [{ target: DOC_DECK, kind: "slide-shape", slide: 1, shape: 9999 }] }), "inquiry");
-/* CORRECTED for the same reason, and here there is no category change to make:
-   a slide's shape list is EXHAUSTIVE, so shape 9,999 of this deck's slide 1 is
-   impossible under any bound and minting it is the residual cost outright. */
-t("shape 9,999 of a slide the deck HAS still MINTS — `walkSlide`'s count now REACHES the entry "
-  + "(IC-100) and is dropped at the same wire, which is the other half of the same residue",
-  [rWildShape.ok !== false, rWildShape.content?.[0]?.extent_kind, rWildShape.content?.[0]?.minted],
+/* CORRECTED 2026-09-15 by COFF-12, the other half of the same flip, and here there
+   was never a category question to settle: a slide's shape list is EXHAUSTIVE, so
+   shape 9,999 of this deck's slide 1 is impossible under ANY bound and refusing it
+   refuses only the impossible. This line read "still MINTS ... dropped at the same
+   wire"; the wire now reads it. */
+t("shape 9,999 of a slide the deck HAS is now REFUSED C-45.1 BY NAME (COFF-12; this line read "
+  + "'still MINTS' until the acquire wire landed)",
+  [rWildShape.ok, rWildShape.reason, codes(rWildShape)],
+  [false, "BASIS_REFUSED", ["C-45.1"]]);
+t("    and the refusal carries THE SLIDE'S OWN SHAPE COUNT, 0-based bound stated",
+  [new RegExp(`slide 1 of this capture holds ${producedSlides[0].shapes} shape\\(s\\) `
+            + `\\(0-${producedSlides[0].shapes - 1}\\)`).test(detail(rWildShape)),
+   /names shape 9999/.test(detail(rWildShape))],
+  [true, true]);
+/* THE INSIDE-THE-LIST DIRECTION, in the same breath, because a fence proved only by
+   what it REFUSES is a fence nobody has shown to be the right size. The LAST shape
+   of slide 1 is 0-based `shapes - 1` and must mint. */
+const rLastShape = await promote("INQ-2026-9200-lastshape",
+  inquiryMd("INQ-2026-9200-lastshape", { refs: [DOC_DECK],
+    legs: [{ target: DOC_DECK, kind: "slide-shape", slide: 1, shape: producedSlides[0].shapes - 1 }] }),
+  "inquiry");
+t("    and the LAST shape of that slide (0-based) still MINTS — the bound is inclusive and is "
+  + "not one shape tight",
+  [rLastShape.ok !== false, rLastShape.content?.[0]?.extent_kind, rLastShape.content?.[0]?.minted],
   [true, "slide-shape", true]);
+
+/* ===== 4b. THE SLIDE MAP IS KEYED ON `slide`, NOT ON POSITION (COFF-12) ===== */
+
+console.log("\n--- 4b. a deck with an UNREADABLE slide: the shape counts must follow the slide "
+          + "NUMBER and never the array position ---");
+
+const gapped = (await acquire("/gapped.pptx")).document;
+
+/* THE FIXTURE MUST ACTUALLY PRODUCE THE GAP, ASSERTED BEFORE ANYTHING IS
+   CONCLUDED FROM IT. An arm that never armed is a finding, and a "gapped" deck
+   whose slides all read would make every assertion below pass over a case that
+   never occurred — which is exactly the shape of the headline-over-an-empty-
+   corpus failure this repository has met three times. So the producer's own
+   answer is read first: it must hold ONE FEWER unit than the deck declares, the
+   survivors must keep their TRUE numbers, and the missing one must be STATED. */
+const gappedProduced = await pptxSlidesOf(PPTX_GAPPED);
+const gappedText = await (async () => {
+  const m = await import("../src/pptx.mjs");
+  return m.pptxEntry.text(await m.pptxEntry.parts(PPTX_GAPPED));
+})();
+console.log(`  corpus: 1 deck DECLARING ${GAPPED_TITLES.length} slides with the part for slide `
+          + `${GAPPED_MISSING} absent — the producer returns ${gappedProduced.length} unit(s), `
+          + `numbered ${gappedProduced.map((u) => u.slide).join(", ")}, with shape counts `
+          + `${gappedProduced.map((u) => u.shapes).join(", ")}`);
+t("the fixture ARMS: the entry omits the unreadable slide, STATES it, and the survivors keep "
+  + "their TRUE 1-based numbers — the pre-condition every assertion below rests on",
+  [gappedProduced.length, gappedProduced.map((u) => u.slide),
+   gappedProduced.map((u) => u.shapes),
+   gappedText.undetermined.some((u) => u.reason === "slide_unreadable")],
+  [GAPPED_TITLES.length - 1, [1, 3], [GAPPED_SHAPES[0], GAPPED_SHAPES[2]], true]);
+t("    and the two readable slides carry DIFFERENT shape counts — equal counts would make a "
+  + "mis-attribution invisible and this whole section vacuous",
+  gappedProduced[0].shapes !== gappedProduced[1].shapes, true);
+
+/* WHAT THE RECORD HOLDS. The stored array is indexed by SLIDE NUMBER, so the
+   unreadable slide occupies its own slot with a NULL count — UNDETERMINED AND
+   STATED, never a zero, because the deck HAS that slide and this capture could
+   not read it. A positional map would have stored [{shapes:2},{shapes:4}]. */
+t("the RECORD keys the shape counts on the SLIDE NUMBER: the unreadable slide holds its own "
+  + "slot with a NULL count, and slide 3's count is at slide 3",
+  [Array.isArray(ext(gapped)?.slides) ? ext(gapped).slides.length : null,
+   Array.isArray(ext(gapped)?.slides) ? ext(gapped).slides.map((x) => x && x.shapes) : null],
+  [GAPPED_TITLES.length, GAPPED_SHAPES]);
+
+const DOC_GAPPED = "INFO-2026-9200-gappeddeck";
+await mustPromote(DOC_GAPPED, infoMd(DOC_GAPPED), "information", { reading: gapped });
+
+/* THE FOUR CITATIONS THIS KEYING DECIDES, AND EACH IS WRONG THE OTHER WAY UNDER
+   A POSITIONAL MAP. They are driven as four separate legs rather than described,
+   because the whole defect is invisible to every other assertion in this file. */
+const rGapLastSlide = await promote("INQ-2026-9200-gap-lastslide",
+  inquiryMd("INQ-2026-9200-gap-lastslide", { refs: [DOC_GAPPED],
+    legs: [{ target: DOC_GAPPED, kind: "slide-shape", slide: GAPPED_TITLES.length }] }), "inquiry");
+t("(1) the LAST declared slide MINTS — the deck has it. Under a positional map the deck would "
+  + `read ${GAPPED_TITLES.length - 1} slides long and this TRUE citation would be REFUSED`,
+  [rGapLastSlide.ok !== false, rGapLastSlide.content?.[0]?.extent_kind,
+   rGapLastSlide.content?.[0]?.minted],
+  [true, "slide-shape", true]);
+
+const rGapLastShape = await promote("INQ-2026-9200-gap-lastshape",
+  inquiryMd("INQ-2026-9200-gap-lastshape", { refs: [DOC_GAPPED],
+    legs: [{ target: DOC_GAPPED, kind: "slide-shape", slide: GAPPED_TITLES.length,
+             shape: GAPPED_SHAPES[2] - 1 }] }), "inquiry");
+t(`(2) its LAST shape (0-based ${GAPPED_SHAPES[2] - 1} of ${GAPPED_SHAPES[2]}) MINTS — the count `
+  + "that bounds slide 3 is SLIDE 3's",
+  [rGapLastShape.ok !== false, rGapLastShape.content?.[0]?.minted], [true, true]);
+
+const rGapPastShape = await promote("INQ-2026-9200-gap-pastshape",
+  inquiryMd("INQ-2026-9200-gap-pastshape", { refs: [DOC_GAPPED],
+    legs: [{ target: DOC_GAPPED, kind: "slide-shape", slide: GAPPED_TITLES.length,
+             shape: GAPPED_SHAPES[2] }] }), "inquiry");
+t(`(3) one shape PAST it is REFUSED C-45.1 BY NAME, naming slide ${GAPPED_TITLES.length} and ITS `
+  + "own count — the figure in the refusal is what says which bound was applied",
+  [rGapPastShape.ok, codes(rGapPastShape),
+   new RegExp(`slide ${GAPPED_TITLES.length} of this capture holds ${GAPPED_SHAPES[2]} shape\\(s\\)`)
+     .test(detail(rGapPastShape))],
+  [false, ["C-45.1"], true]);
+
+/* THE UNREADABLE SLIDE ITSELF, AND IT IS THE ARM THAT SEPARATES THIS ITEM FROM A
+   TIDIER-LOOKING ONE. Its shape count is UNKNOWN, so no shape on it may be
+   refused: skipping is the record saying "I could not read that slide", and
+   refusing would be the record claiming a bound it never measured. A positional
+   map bounds it by slide 3's four shapes and refuses shape 4 outright. */
+const rGapUnreadable = await promote("INQ-2026-9200-gap-unreadable",
+  inquiryMd("INQ-2026-9200-gap-unreadable", { refs: [DOC_GAPPED],
+    legs: [{ target: DOC_GAPPED, kind: "slide-shape", slide: GAPPED_MISSING,
+             shape: GAPPED_SHAPES[2] }] }), "inquiry");
+t(`(4) a shape on the UNREADABLE slide ${GAPPED_MISSING} MINTS — its count is UNDETERMINED and is `
+  + "SKIPPED, never guessed. Under a positional map it is bounded by ANOTHER slide's count and "
+  + "this citation is refused against a figure that was never measured",
+  [rGapUnreadable.ok !== false, rGapUnreadable.content?.[0]?.extent_kind,
+   rGapUnreadable.content?.[0]?.minted],
+  [true, "slide-shape", true]);
+
+/* ===== 4c. `.ods`: AN HONESTLY NULL GRID BOUND SURVIVES THE WIRE (COFF-12) ===== */
+
+console.log("\n--- 4c. an OpenDocument workbook: OpenDocument fixes no maximum table size, so the "
+          + "grid bound is NULL — a STATEMENT, and the wire must not invent one ---");
+
+const odsbook = (await acquire("/budget.ods")).document;
+t("the ODF workbook acquires and the FORMAT axis recognised it",
+  [odsbook.profile.format.format, ext(odsbook)?.levels ?? null,
+   Array.isArray(ext(odsbook)?.sheets) ? ext(odsbook).sheets.map((x) => x && x.name) : null],
+  ["ods", ["sheets"], [ODS_SHEET_NAME]]);
+/* THE NULL IS THE ASSERTION. A passthrough that coerced — `Number(v) || null`, a
+   `?? 0`, an OOXML default borrowed because one was handy — would turn a stated
+   UNDETERMINED into a bound this wire invented, at the one seam where the
+   producer suite cannot see it. `coversSheetCell` REFUSES against whatever is
+   stored, so an invented grid here refuses real citations on every OpenDocument
+   workbook the plane ever reads. */
+/* THE FIRST SPELLING OF THIS ASSERTION WAS WRONG AND IS KEPT AS A FINDING RATHER
+   THAN SMOOTHED, because it failed in the exact direction this whole item is
+   about. It read `?? "MISSING"`, and `null ?? "MISSING"` is `"MISSING"` — so a
+   correctly carried NULL bound and a key the wire never wrote were the SAME
+   observation, and the arm could not have told an honest undetermined from a
+   dropped field. `lvl` is the discriminator this file already keeps for exactly
+   that reason (`k in o` against `??`), and it is used here. A control that cannot
+   distinguish its two outcomes is not a control. */
+t("its grid bound is NULL — PRESENT and null, not absent — and its USED range is MEASURED: two "
+  + "different facts, and the wire carried both without inventing the first",
+  [lvl(ext(odsbook)?.sheets?.[0], "rows"), lvl(ext(odsbook)?.sheets?.[0], "cols"),
+   lvl(ext(odsbook)?.sheets?.[0], "usedRows"), lvl(ext(odsbook)?.sheets?.[0], "usedCols")],
+  [null, null, ODS_USED_ROWS, ODS_USED_COLS]);
+
+const DOC_ODS = "INFO-2026-9200-odsbook";
+await mustPromote(DOC_ODS, infoMd(DOC_ODS), "information", { reading: odsbook });
+const rOdsWild = await promote("INQ-2026-9200-odswild",
+  inquiryMd("INQ-2026-9200-odswild", { refs: [DOC_ODS],
+    legs: [{ target: DOC_ODS, kind: "sheet-cell", sheet: ODS_SHEET_NAME, cell: "A1048577" }] }),
+  "inquiry");
+t("so the very address an XLSX REFUSES still MINTS here — the cell arm is SKIPPED on a format "
+  + "that fixes no grid, never bounded by a figure borrowed from another format",
+  [rOdsWild.ok !== false, rOdsWild.content?.[0]?.extent_kind, rOdsWild.content?.[0]?.minted],
+  [true, "sheet-cell", true]);
+/* AND THE OUTER BOUND IS STILL LIVE ON IT, which is what keeps "the grid is
+   undetermined" from being read as "nothing about this workbook is known". */
+const rOdsNoSheet = await promote("INQ-2026-9200-odsnosheet",
+  inquiryMd("INQ-2026-9200-odsnosheet", { refs: [DOC_ODS],
+    legs: [{ target: DOC_ODS, kind: "sheet-cell", sheet: "NoSuchSheet", cell: "A1" }] }), "inquiry");
+t("    while an unknown SHEET on the same workbook is still REFUSED C-45.1 BY NAME — the outer "
+  + "bound is fed and the inner one is honestly undetermined, and the two are independent",
+  [rOdsNoSheet.ok, codes(rOdsNoSheet), /names a sheet called 'NoSuchSheet'/.test(detail(rOdsNoSheet))],
+  [false, ["C-45.1"], true]);
 
 /* ========== 5. NULL IS NOT A REFUSAL, NOT A ZERO, AND STATES WHICH ====== */
 

@@ -34372,9 +34372,9 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     if (notion.includes("paragraphs") && paragraphs === null) missing.push("the paragraph count");
     if (notion.includes("slides") && !slides) missing.push("the deck's slide list");
     if (sheets && !sheets.some((s) => Number.isInteger(s && s.rows) || Number.isInteger(s && s.cols)))
-      missing.push("every sheet's row and column extent (the entry emits sheet names and no dimensions \u2014 D-359), so an unknown SHEET is bounded and a cell within a known sheet is not");
+      missing.push("every sheet's row and column extent (this capture was acquired before the wire read that figure, or its format fixes no grid \u2014 OpenDocument sets no maximum table size, so a .ods workbook states a NULL bound rather than borrowing one \u2014 D-359), so an unknown SHEET is bounded and a cell within a known sheet is not");
     if (slides && !slides.some((s) => Number.isInteger(s && s.shapes)))
-      missing.push("every slide's shape count (the entry emits the slide list and no shape counts \u2014 D-359), so a slide past the deck is bounded and a shape within a known slide is not");
+      missing.push("every slide's shape count (this capture was acquired before the wire read that figure, or no slide's part in it could be read \u2014 D-359), so a slide past the deck is bounded and a shape within a known slide is not");
     if (!held) missing.push("the container's own extent \u2014 no sheet list, paragraph count or slide list was persisted for this capture");
     return {
       sheets,
@@ -58357,16 +58357,30 @@ var index_default = {
                 const held2 = (k) => has(k) && i2text[k].length ? i2text[k] : null;
                 if (has("sheets") || has("paragraphs") || has("slides")) {
                   const sh = held2("sheets"), pa = held2("paragraphs"), sl = held2("slides");
+                  const int = (v) => Number.isInteger(v) ? v : null;
+                  const slideExtents = (units) => {
+                    let n = units.length;
+                    for (const u of units)
+                      if (u && Number.isInteger(u.slide) && u.slide > n) n = u.slide;
+                    const out = Array.from({ length: n }, () => ({ shapes: null }));
+                    for (const u of units) {
+                      if (!(u && Number.isInteger(u.slide) && u.slide >= 1)) continue;
+                      out[u.slide - 1] = { shapes: int(u.shapes) };
+                    }
+                    return out;
+                  };
                   containerExtent = {
                     container: typeof i2text.container === "string" ? i2text.container : null,
                     levels: ["sheets", "paragraphs", "slides"].filter(has),
                     sheets: sh ? sh.map((s) => ({
                       name: s && typeof s.name === "string" ? s.name : null,
-                      rows: null,
-                      cols: null
+                      rows: int(s && s.rows),
+                      cols: int(s && s.cols),
+                      usedRows: int(s && s.usedRows),
+                      usedCols: int(s && s.usedCols)
                     })) : null,
                     paragraphs: pa ? pa.length : null,
-                    slides: sl ? sl.map(() => ({ shapes: null })) : null
+                    slides: sl ? slideExtents(sl) : null
                   };
                 }
               }

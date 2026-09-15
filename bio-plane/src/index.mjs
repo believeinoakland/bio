@@ -5900,20 +5900,26 @@ export default {
                  * moment a seventh was written. A PDF's I2 text carries none of
                  * the three keys and correctly yields nothing here.
                  *
-                 * WHAT IS NOT HERE, AND IT IS STATED RATHER THAN LEFT TO BE
-                 * INFERRED (D-359). A sheet's `rows`/`cols` and a slide's shape
-                 * COUNT are computed inside `walkSheetXml` and `walkSlide` and
-                 * are NOT RETURNED by any entry — measured against all six
-                 * returns, not assumed. So the SHEET, PARAGRAPH and SLIDE levels
-                 * are fed (which is every arm's outer bound: an unknown sheet
-                 * name, a paragraph past the count, a slide past the deck) and
-                 * the cell-within-a-sheet and shape-within-a-slide halves stay
-                 * UNDETERMINED AND STATED — which is exactly what
-                 * `coversSheetCell`'s own header says a sheet list with no
-                 * dimensions must do. Emitting the finer figures is an I2
-                 * producer change and carries a real question (a sheet's USED
-                 * RANGE is not its capacity), so it is CONTENT-OFFICE's and is
-                 * rowed rather than guessed at here.
+                 * WHAT IS NOT HERE — CORRECTED IN PLACE 2026-09-15 BY COFF-12,
+                 * AND THE CORRECTION IS THE NEWS RATHER THAN HOUSEKEEPING. These
+                 * lines said the inner figures "are NOT RETURNED by any entry",
+                 * and that was TRUE when CAP-12 wrote it and measured against all
+                 * six returns. COFF-11 landed the producer half (IC-100, I2
+                 * 2.2.0) and COFF-12 the wire below, so the INNER bound of both
+                 * container arms is now fed too: a cell past the sheet's grid and
+                 * a shape past the slide's list are each refused C-45.1 BY NAME
+                 * with the figure in the refusal. The sentence is rewritten and
+                 * not deleted, because what it recorded was real and its closing
+                 * is what a later reader needs to see.
+                 *
+                 * WHAT IS STILL NOT HERE, so this block does not become the same
+                 * stale reassurance one item later: a DECK LENGTH. The entry
+                 * emits its readable slides and nothing that says how long the
+                 * deck is, so a deck whose trailing slides are unreadable is
+                 * recorded SHORTER than it is — see the keying note at the site.
+                 * And `.ods`/`.odp` carry an honestly NULL grid bound because
+                 * OpenDocument fixes no maximum table size; that null is a
+                 * STATEMENT and is not a gap in this wire.
                  *
                  * AN EMPTY LIST IS NULL AND NEVER A ZERO. Every entry's
                  * over-the-size-bound branch returns `sheets: []` /
@@ -5935,14 +5941,83 @@ export default {
                 const held = (k) => (has(k) && i2text[k].length ? i2text[k] : null);
                 if (has("sheets") || has("paragraphs") || has("slides")) {
                   const sh = held("sheets"), pa = held("paragraphs"), sl = held("slides");
+                  /* COFF-12 / IC-100 / D-359 — THE INNER FIGURES ARE READ FROM THE
+                     PRODUCER AND NO LONGER WRITTEN AS LITERALS. Until 2026-09-15 the
+                     three lines below read `rows: null, cols: null` and `shapes: null`
+                     and the slide map did not even BIND its element, so every figure
+                     COFF-11's entries emit arrived here and was discarded. The keys
+                     were fed and unread, which is the inverse of the gap D-359 was
+                     filed for and is why that row stayed open past its producer half.
+
+                     AN INTEGER OR NULL, NEVER A COERCION. `int` is deliberately not
+                     `Number(v) || null`: a producer that answered something other than
+                     an integer must land as UNDETERMINED AND STATED rather than as a
+                     figure this wire invented, because `coversSheetCell` and
+                     `coversSlideShape` REFUSE against whatever is stored here and a
+                     bound nobody measured is the one thing they must never be handed.
+                     `.ods` and `.odp` exercise this for real and not hypothetically:
+                     OpenDocument fixes no maximum table size, so `odsText` emits an
+                     honestly NULL grid bound beside a MEASURED used range, and that
+                     null must survive this wire exactly as it was emitted.
+
+                     `usedRows`/`usedCols` ARE CARRIED AND BOUND NOTHING. They are a
+                     different fact from the grid — "empty at capture" against "outside
+                     the grid" — and IC-100's decision is that only the grid fences. No
+                     predicate reads them and none may; COFF-11's `usedrangeasbound`
+                     arm is what breaks if a later session wires them in as a fence. */
+                  const int = (v) => (Number.isInteger(v) ? v : null);
+                  /* THE SLIDE MAP IS KEYED ON THE UNIT'S OWN `slide`, NEVER ON ITS
+                     POSITION, AND THIS IS A PRE-EXISTING DEFECT CORRECTED HERE RATHER
+                     THAN ONE THIS ITEM INTRODUCED (named in COFF-11's IC-100 so it
+                     would not be discovered twice). `pptxText` OMITS a slide whose part
+                     could not be read — it pushes an `undetermined` entry instead —
+                     while every surviving unit keeps its TRUE 1-based `slide` number.
+                     So on a deck whose slide 2 is unreadable the old `sl.map(() => …)`
+                     stored slide 3's shape count at index 1, and `coversSlideShape`
+                     reads `slides[e.slide - 1]`: it would have bounded slide 2 by slide
+                     3's shape count and refused slide 3 as past the deck. That is the
+                     record refusing a TRUE citation and admitting a false one, from one
+                     unreadable part — and nothing in the battery could see it, which is
+                     why this item's `slidesbyposition` arm exists.
+
+                     THE LENGTH NEVER TIGHTENS AGAINST WHAT THIS WIRE STORED BEFORE.
+                     It is `max(unit count, highest slide number)`: a unit with a NULL
+                     `slide` (a slide part outside the declared order — `deckOf` emits
+                     those) has no position to occupy, so keying alone could SHORTEN the
+                     array and make the deck's outer bound stricter than it was. A fence
+                     tighter than its rule is an undeclared interface change wearing the
+                     costume of caution, so the count still holds the floor.
+
+                     AN UNFILLED SLOT IS `shapes: null` — UNDETERMINED AND STATED, never
+                     a zero. The deck HAS that slide; this record could not read it, and
+                     `coversSlideShape` skips a null rather than refusing every shape on
+                     it. WHAT THIS STILL CANNOT SEE, stated rather than left to be found:
+                     a deck whose LAST slides are unreadable reports a deck SHORTER than
+                     it is, because the entry emits no deck length and the highest slide
+                     number this wire can see is the highest READABLE one. That
+                     under-reports in the refusing direction and is D-359's residue after
+                     this item; closing it is a producer change (a deck length on the I2
+                     text shape) and therefore another IC, not a line here. */
+                  const slideExtents = (units) => {
+                    let n = units.length;
+                    for (const u of units)
+                      if (u && Number.isInteger(u.slide) && u.slide > n) n = u.slide;
+                    const out = Array.from({ length: n }, () => ({ shapes: null }));
+                    for (const u of units) {
+                      if (!(u && Number.isInteger(u.slide) && u.slide >= 1)) continue;
+                      out[u.slide - 1] = { shapes: int(u.shapes) };
+                    }
+                    return out;
+                  };
                   containerExtent = {
                     container: typeof i2text.container === "string" ? i2text.container : null,
                     levels: ["sheets", "paragraphs", "slides"].filter(has),
                     sheets: sh ? sh.map((s) => ({
                       name: s && typeof s.name === "string" ? s.name : null,
-                      rows: null, cols: null })) : null,
+                      rows: int(s && s.rows), cols: int(s && s.cols),
+                      usedRows: int(s && s.usedRows), usedCols: int(s && s.usedCols) })) : null,
                     paragraphs: pa ? pa.length : null,
-                    slides: sl ? sl.map(() => ({ shapes: null })) : null,
+                    slides: sl ? slideExtents(sl) : null,
                   };
                 }
               }

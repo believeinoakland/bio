@@ -9424,3 +9424,201 @@ opened: 2026-09-15 · raised by M0-41's instrument census (`MEASUREMENTS.md` M-2
 **THE ACT, with its actor: FRAMEWORK derives `ORDER` from the doctype registry, or asserts that every registered doctype appears in it.** Either closes it; deriving is stronger because it cannot fall behind, and asserting is cheaper. **FW-18 added three doctypes on 2026-09-15 and the embed is correct today** — this is the case where correct-today and stays-correct are different properties.
 
 **Not rowed by CONDUCT: FRAMEWORK is dormant, so CONDUCT would answer-for it — but this is a small act at that area's next touch rather than an item worth a slot, and FW-20 is already queued on that ground.** Fold it in there or take it standalone.
+
+## CLAIM 2026-09-15 CONTENT-OFFICE (COFF-12 — the acquire wire READS the inner figures COFF-11's producers emit, and the slide map stops keying on POSITION; D-359's consumer half)
+
+session: CONTENT-OFFICE worker for COFF-12, spawned by CONDUCT #11, Opus 5, worktree-isolated
+  (CONTENT-OFFICE is dormant; CONDUCT answers-for on the row).
+worktree: `.claude/worktrees/agent-a05524ce4334542fc` · branch `coff12-acquire-wire-inner-bounds`,
+  a fresh checkout of `origin/main` at `58b77ea`. **Row verified `running` on `origin/main` before
+  any edit.**
+opened: 2026-09-15T00:00:00Z
+
+**PATHS, BY REGION, because four workers held regions of these files in the 2026-09-15 wave
+(REC-91, REC-95, REC-105 are named in this worker's brief as holding `store.mjs` right now):**
+
+- **`bio-plane/src/index.mjs`** — the **FW-15 container-extent projection ONLY**, the
+  `if (i2text) { … containerExtent = { … } }` block inside `op=acquire` (~:5933-5948) and the
+  comment immediately above it. No OPS row, no other op, no other wire. This is the three-line
+  passthrough IC-100's RESOLUTION measured and DELEGATED, plus the slide-map keying.
+- **`bio-plane/test/capture-container-extent.test.mjs`** — the whole file. CAP-12 authored it and
+  COFF-11 released it; nobody else holds it.
+- **`bio-plane/test/nc-coff12.mjs`** — NEW, this item's control harness.
+- **`bio-plane/src/store.mjs`** — **PROSE ONLY, AND THIS IS SAID PLAINLY BECAUSE THREE OTHER
+  WORKERS HOLD REGIONS OF THIS FILE RIGHT NOW: `#containerExtentForCapture`'s two `missing`
+  SENTENCES and the comment carrying their dated reason. NOT ONE LINE OF LOGIC**, not one
+  predicate, not one branch, no new field and no moved condition. A merge of this file may take
+  every other region wholesale; the only bytes this item changes are two stale self-descriptions
+  ("the entry emits sheet names and no dimensions") that stopped being true when COFF-11 landed.
+- **`bio-plane/checks/bio-checks.mjs`** — **PROSE ONLY, the same way**: the C-45.1 office-arms
+  header's paragraph beginning "WHAT IS STILL UNFED IS THE INNER BOUND OF TWO OF THE THREE".
+  No predicate, no refusal, no code, no region marker moves.
+- `docs/development/DEBT.md` (D-359's disposition), `docs/development/CLAIMS.md`,
+  `docs/development/INTERFACE-CHANGES.md` (IC-100's RESOLUTION gains the landing sentence only).
+
+**NOT CLAIMED and NOT TOUCHED:** `docs/development/QUEUE.md`, any format entry
+(`formats-xlsx.mjs`, `pptx.mjs`, `odf.mjs` — COFF-11's, landed and finished), `schema.mjs`,
+`newgroup/**`, `civicos-ui/**`, any version, tag, signature or deploy.
+
+**FL-10's guard WILL fire** — `index.mjs` is a bundled source, so `bio-plane/dist/**` moves with
+it by `npm run build` and never by hand. Nothing bumped, nothing deployed.
+
+
+released: 2026-09-15 by the COFF-12 worker — **D-359 IS CLOSED AND THE ACCEPTS-WHEN CLAUSE COFF-11
+COULD NOT MAKE LIVE IS NOW DRIVEN ON THIS TREE, UNDER NO ARM.** Landed on branch
+`coff12-acquire-wire-inner-bounds`, NOT pushed and NOT merged, nothing bumped, signed or deployed.
+
+**ANSWERING THE ROW'S QUESTION PLAINLY, BECAUSE IT IS THE ONE THING THIS LINE IS FOR: a cell
+outside the bound is refused C-45.1 BY NAME on THIS tree, not under a temporary arm.** Driven end
+to end through `op=acquire` -> `op=promote`: `Summary!A1048577` — one row past the measured OOXML
+grid — is refused with *"sheet 'Summary' of this capture holds 1048576 row(s) (1-1048576) and the
+extent names row 1048577"*, and shape 9,999 of a two-shape slide with *"slide 1 of this capture
+holds 2 shape(s) (0-1) and the extent names shape 9999"*. The FIGURE is asserted separately from
+the refusal, because a C-45.1 whose detail does not carry the bound is one a member cannot act on.
+**`ZZ999999` still MINTS and that is the decision behaving as designed** — row 999,999 is INSIDE
+the grid, so the cell exists and was empty at capture, and in this product an empty cell is
+routinely the finding; `usedasbound` is the arm that breaks the suite if anyone re-points the fence
+at the used range. **`.ods` still answers an honestly NULL grid bound**, driven through a REAL
+`.ods` capture at the WIRE and not only at the producer — OpenDocument fixes no maximum table size,
+the used range is measured beside the null, and the cell arm is SKIPPED rather than bounded by a
+figure borrowed from another format.
+
+**AND THE THIRD ACT WAS THE ONE NOBODY INTRODUCED, which is the part of this item worth the most.
+The wire's SLIDE MAP WAS KEYED ON ARRAY POSITION.** `pptxText` OMITS a slide whose part cannot be
+read while every surviving unit keeps its TRUE 1-based number, so on such a deck the stored array
+held slide 3's shape count at slide 2's index. `coversSlideShape` reads `slides[e.slide - 1]`, so
+the record **bounded a slide it could not read by ANOTHER slide's figure AND refused a TRUE
+citation of the last slide as past a deck it is inside** — wrong in both directions from one
+unreadable part, and **invisible to every assertion in the battery**. It is keyed on the unit's own
+`slide` now; an unfilled slot is `shapes: null`, undetermined and stated, never a zero; and the
+array length is `max(unit count, highest slide number)` **so the deck's outer bound never TIGHTENS
+against what this wire stored before** — a unit with a NULL `slide` (a part outside the declared
+order) would otherwise have shortened it, and a fence tighter than its rule is an undeclared
+interface change wearing the costume of caution. **RESIDUE, NAMED SO IT IS NOT DISCOVERED TWICE: a
+deck whose TRAILING slides are unreadable is still recorded SHORTER than it is**, because no entry
+emits a deck LENGTH and the highest slide number this wire can see is the highest READABLE one.
+That under-reports in the REFUSING direction. Closing it is a producer change on the I2 text shape
+and therefore another IC; it is NOT rowed and this sentence is the whole of what is known about it.
+
+**GATE FIGURES.** **Own pristine baseline, measured on this worktree at `58b77ea` BEFORE any edit
+and after `npm ci` in all THREE packages: 205/205 suites green · 12,769 assertions · exit 0, NO
+skip line, 3 fleet members actually RAN** — the brief said 205/205 · 12,769 and **it is exactly
+right**, reported as such because the practice is to trust the measurement and not the streak after
+eight corrections in a row. **Final on the branch: 205/205 suites green · 12,785 assertions · exit
+0 · 297.8s**, run TWICE — once before the design-document corrections and once after, with the same
+figure both times, so the prose landing moved no assertion. **The +16 is ATTRIBUTED PER SUITE BY
+RE-RUNNING THE TRUE BASELINE, never by subtraction**: `capture-container-extent.test.mjs` 31 -> 47,
+and **every other suite byte-for-byte identical in count** — `hygiene` did NOT move despite this
+item adding a file, and neither did `planning-hygiene` or `op-claims`. `node
+scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED: **exit 0** — OPS 177 declared /
+177 reached / 0 unreached, CHECKS 272/272 named, FLEET 3 members · 6/6 surface ops · 8/8 suites
+declaring a control · 76 arms. **`REGISTER_FLOOR` was READ AND NOT TOUCHED and it is MET EXACTLY:
+arms 1087/1087 · classified 196/196 · corpus 197/197**, which is the figure the brief carried; this
+item adds no op and no check, and `nc-coff12.mjs` is deliberately not a `.test.mjs` so it does not
+enter the corpus count. `node civicos-ui/test/run.mjs` from the REPO ROOT, exit read UNPIPED:
+**exit 0**, all harnesses green. `node tools/plancheck.mjs --local`: **0 fail, 0 warn** · corpuscheck
+50 governed, 0 fail · `docs/DECIDED.md` REGENERATED (935 -> 936 rulings; this item's D-359
+disposition is the new row) and committed, which `plancheck` requires of any turn that rules.
+
+**THE BASELINE INSTRUMENT ITSELF PRODUCED A FINDING AND IT IS RECORDED RATHER THAN SMOOTHED.** To
+attribute per suite the baseline was re-run on a **separate pristine `git worktree add` at
+`58b77ea`** (never `git stash`, which is repository-wide), with `node_modules` SYMLINKED in from
+this worktree to stay inside a disk that had 154 MiB free. That tree read **204/205 · 12,766**:
+`fleetbundles.test.mjs` failed three assertions on `pdf-worker`'s bundle identity. **That is the
+INSTRUMENT and not `origin/main`** — the bundler resolves through the symlink and does not produce
+the committed bytes — and the arithmetic proves the contamination is confined to that one suite:
+**12,766 + 3 = 12,769**, the true baseline measured on this worktree with real `node_modules`.
+Stated because a symlinked baseline looks exactly like a red `main`, and the next worker reaching
+for the same trick on a full disk should know what it costs.
+
+**CONTROL ARMS — SIX, EACH ALONE WITH EVERY OTHER DEFENCE HELD OPEN, ALL SIX AS DECLARED, and
+`src/index.mjs` restored byte-identically EVERY time (562,707 B, sha256 `4f4c24a76c55…`, verified by
+sha256 AND by `cmp` against a UNIQUELY-NAMED per-arm pristine copy with a 400 KB minimum guarded).**
+Declared vs actual: `baseline` green -> **47/0 GREEN**; `dropcellbound` 4 -> **4/4 (5 failing)**;
+`dropslideshapes` 5 -> **5/5 (5)**; `slidesbyposition` 5 -> **5/5 (5)**; `borrowgrid` 2 -> **2/2
+(2)**; `usedasbound` 4 -> **4/4 (7)**. **AND IN EVERY ARM 0 OF THE DECLARED HELD-OPEN ASSERTIONS
+ALSO BROKE.** `nc-coff12.mjs` **CHECKS `mustNotFail` rather than describing it**, which neither
+`nc-coff11.mjs` nor `nc-cap12.mjs` does: REC-83's own run had an arm break its declared held-open
+half with nothing but a human read to catch it, and an arm that takes the whole suite down proves
+nothing about its own subject. Two arms break the DECISION rather than the patch (`borrowgrid`
+invents a grid OpenDocument never fixes, one seam FURTHER ALONG than COFF-11's `odsborrowsgrid`
+could reach; `usedasbound` makes the bound the used range), because a decision nothing can break is
+a decision nothing is enforcing.
+
+**COFF-11's AND CAP-12's OWN HARNESSES WERE RE-RUN ON THIS TREE, AND CAP-12's HAD TWO DEAD ARMS.**
+`nc-coff11.mjs baseline`: xlsx 88/0 · pptx 116/0 · odf 140/0 · e2e 47/0, every producer suite green
+and untouched. `nc-cap12.mjs` read **`dropsheets` and `dropslides` both `ARMED NO, patch matched
+0x`** — their patches quoted the literal-null lines this item replaced, so **the two arms that
+prove the SHEET and SLIDE feeds are real had stopped testing anything, silently, in the direction
+that looks like success**. `overstrict`/`overstrict2` named assertion labels that moved with the
+flip, and **both arms' HARM moved too**: they no longer flip those assertions at all, they corrupt
+the FIGURE inside a refusal that still fires — which is only visible because the figure has its own
+sub-assertion. All four corrected IN PLACE with the reason at the site, never exempted;
+`nc-cap12.mjs` now reads **every arm AS DECLARED, all nine ARMED**. One further instrument note: a
+non-arming arm increments that harness's own `finding` counter TWICE (at `ARMED NO` and again at
+the verdict), so it reported "6 arm(s) NOT AS DECLARED" over 4 — it over-reports in the safe
+direction and the per-arm verdicts are printed, so it is NAMED here and not changed.
+
+**THIS ITEM'S OWN FIRST SPELLING OF AN ASSERTION WAS WRONG, kept at its site.** The `.ods` arm read
+`?? "MISSING"`, and `null ?? "MISSING"` is `"MISSING"` — so a correctly carried NULL bound and a key
+the wire never wrote were the SAME observation, **in the exact direction this whole item is about**.
+The file already keeps `lvl` (`k in o`, not `??`) as the discriminator for precisely that, and it is
+used now. A control that cannot distinguish its two outcomes is not a control.
+
+**FL-10's GUARD FIRED AS THE BRIEF SAID IT WOULD** — `src/index.mjs` is a bundled source, so
+`npm run build` was run as the instrument instructs: `dist/bio-plane.bundled.mjs` 3,141,627 B sha256
+`c26198b9e4f3…`, 50 first-party inputs, and a second build at the close produced the SAME sha,
+confirming the artifact was already current. **Nothing bumped, nothing signed, nothing deployed.**
+
+**PATHS RELEASED.** `bio-plane/src/index.mjs` (the FW-15 container-extent projection ONLY, plus the
+stale D-359 paragraph above it corrected in place), `bio-plane/test/capture-container-extent.test.mjs`,
+`bio-plane/test/nc-coff12.mjs` (NEW), `bio-plane/test/nc-cap12.mjs` (four arms corrected),
+`bio-plane/dist/**` (REBUILT by `build-plane.mjs`, never hand-edited), `.gitignore` (one line),
+`docs/architecture/BIO_Content_Framework_v0_10.md` (five prose sites), `docs/development/DEBT.md`
+(D-359 CLOSED), `docs/development/INTERFACE-CHANGES.md` (IC-100's landing note),
+`docs/DECIDED.md` (regenerated), `docs/development/CLAIMS.md`. **`bio-plane/src/store.mjs` and
+`bio-plane/checks/bio-checks.mjs` WERE TOUCHED FOR PROSE ONLY AND THIS IS THE LINE THAT MATTERS TO
+THE THREE WORKERS HOLDING REGIONS OF THEM (REC-91, REC-95, REC-105): not one line of logic, not one
+predicate, not one branch, no new field and no moved condition.** In `store.mjs` it is
+`#containerExtentForCapture`'s two `missing` SENTENCES and the comment carrying their dated reason;
+in `bio-checks.mjs` it is the C-45.1 office-arms header paragraph. Both said "the entry emits … no
+dimensions", which stopped being true when COFF-11 landed; both are corrected in place and never
+deleted, because what they recorded was real. A merge may take every other region of either file
+wholesale. **NOT TOUCHED:** `docs/development/QUEUE.md`, every format entry
+(`formats-xlsx.mjs`, `pptx.mjs`, `odf.mjs` — COFF-11's, finished), `schema.mjs`, `newgroup/**`,
+`civicos-ui/**`, `REGISTER_FLOOR`, and no version, tag, signature or deploy.
+
+**WHAT THIS ITEM COULD NOT DO, stated plainly.** The two corrected SENTENCES in `store.mjs` are
+returned on an object no read op surfaces — `#containerExtentForCapture`'s `empty_level`/`why` reach
+only `contentContextFor`'s internal callers — so their correctness is **NOT driven by an assertion**
+and rests on reading. The BEHAVIOUR they describe is driven (an `.ods` cell is skipped, a legacy
+capture mints), but the prose is not, and a later worker should not read "corrected" as "pinned".
+Nothing was live-verified against the instance: this item deploys nothing and the plane serving
+`bio` does not carry it.
+
+**OWED ACTS ARE IN THIS WORKER'S REPORT AS A "for CONDUCT" LIST WITH ACTORS, never left here alone**
+— FL-10's handoff line sat in a region nothing drains and cost a measured >3h false stall.
+
+## CLAIM ADDENDUM 2026-09-15 CONTENT-OFFICE (COFF-12 — three paths added at the close, each FORCED BY A MECHANISM rather than chosen)
+
+- **`bio-plane/test/nc-cap12.mjs`** — CAP-12's own control harness, and it is added because RUNNING
+  IT FOUND TWO OF ITS NINE ARMS DEAD. `dropsheets` and `dropslides` both read `ARMED NO, patch
+  matched 0x`: their patches quoted the literal-null lines this item replaced, so the two arms that
+  prove the SHEET and SLIDE feeds are real had stopped testing anything, silently, in the direction
+  that looks like success. `overstrict`/`overstrict2` named assertion labels that moved with the
+  flip, and BOTH arms' HARM ALSO MOVED — they no longer flip those assertions at all, they corrupt
+  the FIGURE inside a refusal that still fires. All four are corrected in place with the reason at
+  the site, never exempted, and the harness now reads **every arm AS DECLARED, all nine ARMED**.
+  This was not foreseen when the claim was written; it is the mechanism doing its job.
+- **`docs/architecture/BIO_Content_Framework_v0_10.md`** — FIVE prose sites, PROSE ONLY, no section
+  added, moved or renumbered. `CORPUS-STANDARD.md` §4.1 and `CLAUDE.md` both require the home
+  document to move in the SAME COMMIT as the landing that changes the construct, and this landing
+  makes five statements in it false: §15's structure-shape row and content-extent-primitive row,
+  §16's persistence paragraph, §14.5's bullet, and the front matter Status line — every one of them
+  saying either that the producers do not return the inner figures or that the acquire wire drops
+  them. Each is corrected IN PLACE with its date and reason, never deleted. FRAMEWORK is dormant
+  and CONDUCT answers-for; `corpuscheck` reads 50 governed, 0 fail before and after.
+- **`.gitignore`** — one entry on its OWN line, never a glob, per the standing rule at
+  `.rec84-control-pristine/`: `.coff12-control-pristine/` is this item's control pen, and an
+  interrupted arm leaving an untracked copy of `src/index.mjs` behind is exactly how a leftover
+  pristine copy once entered another suite's producer sweep as a second author.

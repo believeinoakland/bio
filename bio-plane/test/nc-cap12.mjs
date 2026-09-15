@@ -97,13 +97,31 @@ const ARMS = {
                   producers began emitting the inner figures, so the old spelling matched
                   nothing and the arm read NOT AS DECLARED while the subject was behaving
                   exactly right — the mis-declared-arm failure this harness's own header
-                  warns about, met a second time. Corrected, never exempted. */
-               "the RECORD still holds NULL for both"],
+                  warns about, met a second time. Corrected, never exempted.
+                  CORRECTED AGAIN 2026-09-15 by COFF-12: the same label moved a
+                  SECOND time when the acquire wire landed and the assertion
+                  stopped saying "still holds NULL" and started saying the record
+                  holds the producer's own figure. Twice in one day on one label
+                  is itself the finding — an arm that names an assertion by its
+                  PROSE is coupled to that prose, and this is what the coupling
+                  costs. */
+               "and the RECORD NOW HOLDS THE PRODUCER'S OWN FIGURE"],
     mustPass: "every paragraph and slide assertion — three independent levels, and an arm that took all three down would not have shown that",
+    /* ANCHOR CORRECTED 2026-09-15 by COFF-12, AND THE ARM READ `ARMED NO,
+       patch matched 0x` UNTIL IT WAS — which is the whole reason a harness
+       reports its match count rather than trusting a patch to land. This arm
+       quoted the three lines that wrote `rows: null, cols: null` as LITERALS,
+       and COFF-12 replaced them with the passthrough that reads the producer's
+       figure. The arm's SUBJECT is unchanged — drop the sheet LEVEL and the
+       sheet arm cannot fire — so the anchor is re-quoted and the arm corrected
+       rather than exempted. A control whose anchor has drifted is a control
+       nobody is running, and it fails SILENTLY in the direction that looks like
+       success: green suite, green battery, nothing tested. */
     patch: () => arm(INDEX,
       `                    sheets: sh ? sh.map((s) => ({
                       name: s && typeof s.name === "string" ? s.name : null,
-                      rows: null, cols: null })) : null,`,
+                      rows: int(s && s.rows), cols: int(s && s.cols),
+                      usedRows: int(s && s.usedRows), usedCols: int(s && s.usedCols) })) : null,`,
       `                    sheets: null,`),
   },
   droppara: {
@@ -127,11 +145,16 @@ const ARMS = {
                   producers began emitting the inner figures, so the old spelling matched
                   nothing and the arm read NOT AS DECLARED while the subject was behaving
                   exactly right — the mis-declared-arm failure this harness's own header
-                  warns about, met a second time. Corrected, never exempted. */
-               "the RECORD still holds NULL for both"],
+                  warns about, met a second time. Corrected, never exempted.
+                  CORRECTED AGAIN 2026-09-15 by COFF-12, for the same reason the
+                  sibling arm was — and its ANCHOR with it: this patch quoted
+                  `sl.map(() => ({ shapes: null }))`, the POSITIONAL map COFF-12
+                  replaced with one keyed on the unit's own `slide`. It read
+                  `ARMED NO, patch matched 0x`. */
+               "and the RECORD NOW HOLDS THE PRODUCER'S OWN FIGURE"],
     mustPass: "every sheet and paragraph assertion",
     patch: () => arm(INDEX,
-      "                    slides: sl ? sl.map(() => ({ shapes: null })) : null,",
+      "                    slides: sl ? slideExtents(sl) : null,",
       "                    slides: null,"),
   },
   zero: {
@@ -181,8 +204,23 @@ const ARMS = {
        two. The old declaration named one and the arm read "1/1 declared, 2 failing" —
        under-declaring reads as a subject doing more than asked, which is the same defect
        as over-declaring and just as invisible. */
+    /* CORRECTED AGAIN 2026-09-15 by COFF-12, and the correction is a REAL CHANGE
+       IN WHAT THIS ARM BREAKS rather than a relabelling. Before the acquire wire
+       landed, `A1048577` MINTED and inventing a five-row bound made it refuse —
+       so the arm's second declared failure was that whole assertion flipping.
+       The wire now refuses `A1048577` correctly against the MEASURED grid, so
+       the arm no longer flips that assertion at all: it changes the FIGURE in
+       the refusal from 1,048,576 to 5, and what fails is the sub-assertion that
+       reads the figure. That sub-assertion exists because a refusal whose detail
+       does not carry the bound is one a member cannot act on — and it turns out
+       to be the only thing standing between "refused" and "refused against a
+       number nobody measured". The third declared failure is new and is the
+       clearest statement of this arm's harm: the `.ods` workbook, whose grid is
+       honestly NULL, gets a five-row bound invented for it and a TRUE citation
+       on it is refused. */
     mustFail: ["cell ZZ999999 of a sheet the workbook HAS mints",
-               "cell A1048577 — one row PAST the measured grid"],
+               "and the refusal carries THE FIGURE it was checked against",
+               "so the very address an XLSX REFUSES still MINTS here"],
     mustPass: "every refusal arm above and every in-range mint — the arm must break correct work and nothing else",
     patch: () => arm(STORE,
       `    const sheets = held && Array.isArray(held.sheets) && held.sheets.length ? held.sheets : null;`,
@@ -193,8 +231,18 @@ const ARMS = {
     files: [STORE],
     why: "the over-strictness direction on the SLIDE arm's inner bound, armed separately because `coversSlideShape` is its own predicate reading its own shape",
     /* CORRECTED 2026-09-15 by COFF-11: the suite's label gained "still" when the reason
-       changed from "no entry emits it" to "the wire drops it". */
-    mustFail: ["shape 9,999 of a slide the deck HAS still MINTS"],
+       changed from "no entry emits it" to "the wire drops it".
+       CORRECTED AGAIN 2026-09-15 by COFF-12, and again the arm's HARM MOVED and
+       not only its label. Shape 9,999 is now refused correctly against the
+       slide's own measured count, so inventing five shapes no longer flips that
+       assertion — it corrupts the FIGURE in the refusal, and the sub-assertion
+       that reads the figure is what catches it. The second declared failure is
+       the gapped deck: a five-shape bound invented for every slide refuses a
+       TRUE citation of slide 3's fourth shape, which is exactly the harm this
+       direction exists to catch and which no assertion in this file could see
+       before COFF-12's fixture existed. */
+    mustFail: ["and the refusal carries THE SLIDE'S OWN SHAPE COUNT",
+               "(3) one shape PAST it is REFUSED C-45.1 BY NAME"],
     mustPass: "the sheet arm's D-359 mint, and every refusal",
     patch: () => arm(STORE,
       `    const slides = held && Array.isArray(held.slides) && held.slides.length ? held.slides : null;`,
