@@ -439,7 +439,14 @@ export const LEDGER_KINDS = ["DO-PATH", "NEVER"];
    because "a cross-item ratchet nobody listed" is the finding, not the edit. */
 export const PLANNED_OPS = [
   { op: "publishpreflight", why: "the publication pre-flight. DEC-33 DEFERRED it — publication runs through the operator for now — and QUEUE.md carries the deferred row. DEBT D-154/D-155 name its two refusals." },
-  { op: "content", why: "IC-84 (ACCEPTED 2026-09-14) proposes a fixed-key content read by content_id; REC-83 BUILDS it (QUEUE.md). Registered here at CONDUCT #10's act-6 drain so the rows, the IC and the study may name it before it exists; the entry EXPIRES at REC-83's landing, when this arm would fail on a PLANNED op that got built." },
+  /* `content` STOOD HERE AND WAS REMOVED BY REC-83, IN THE SAME COMMIT THAT
+     BUILT THE OP — which is the entry doing exactly what it was registered to
+     do. The row said its own expiry ("the entry EXPIRES at REC-83's landing,
+     when this arm would fail on a PLANNED op that got built"), and
+     `plannedStale()` is asserted EMPTY, so leaving it would have turned the
+     landing red rather than letting a stale registration sit. Kept as a comment
+     rather than deleted silently, because the NEXT worker registering a planned
+     op should see that one of them came back. */
   { op: "needs", why: "research/SB-CORE.md GAP-A3 PROPOSES it (or `whoami`) as the publisher of the NEEDS map. A proposal is not a claim that the op exists." },
 ];
 

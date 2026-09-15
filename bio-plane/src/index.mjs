@@ -587,6 +587,37 @@ const OPS = {
      op=inquirystrength's reasoning exactly, and the viewer is stamped
      server-side below. NEEDS entry of null with a NON_ACTS row, same shape. */
   earnedbasis: { classes: ["admin", "member", "probe"],          mutating: false },
+  /* REC-83 / IC-84 (4): THE FIXED-KEY CONTENT READ — one content row by
+     `content_id`: its extent, its human `ref`, the chain and cap it was minted
+     under, whether the transcription has since moved (`stale`), and the
+     attestations that COVER it.
+
+     MEMBER CLASS AND ABOVE, on op=textattest's reasoning exactly rather than by
+     resemblance: what a citation points at, and whether the text under it has
+     been checked, is a fact about the record that a view-only member weighing a
+     case needs precisely as a contributor does. A probe may ask, because "is
+     anything in this store cited at a grain nobody has attested" is a question
+     an operator should be able to answer without a session.
+
+     `mutating: false` AND IT WRITES NOTHING — unlike its sibling op=earnedbasis,
+     whose backfill arm is declared at its own site. This op resolves a row that
+     already exists and mints nothing: an id nothing has cited does not exist,
+     and answering NO_SUCH_CONTENT is the whole of what it does about that.
+
+     FIXED-KEY, AND THE REFUSAL IS PART OF THE CONTRACT (D-222): the
+     content-grain QUERY arm is stage C, behind D-225's caps. This op takes its
+     key and the server-stamped viewer and REFUSES every other parameter by
+     name — a predicate or a page is not ignored here, because a parameter
+     silently dropped is a filter the caller believes was applied.
+
+     `viewer` is stamped server-side below like every read that names a bundle;
+     the store fails closed on an absent stamp and answers a row the caller may
+     not see EXACTLY as one that does not exist. That matters more here than on
+     most reads: the id is a hash of a capture, an extent and a chain, so an
+     answer that distinguished hidden from absent would let a caller confirm a
+     passage exists in a project they were never invited to by guessing its
+     address. NEEDS entry of null with a NON_ACTS row, op=earnedbasis' shape. */
+  content:     { classes: ["admin", "member", "probe"],          mutating: false },
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
@@ -1763,6 +1794,16 @@ const NEEDS = {
      contributor does. Present rather than absent so REC-19's totality guard
      sees it; named in NON_ACTS with its reason. */
   earnedbasis:      null,
+  /* REC-83: NO CAPABILITY, on op=earnedbasis' reasoning exactly. Resolving what
+     a citation POINTS AT is reading the record; the acts that create or change
+     the thing resolved carry their own gates (op=promote's projection mints it,
+     op=attesttext attests it, REC-86's NARROW re-points a leg). A view-only
+     member weighing a case needs to see what a leg actually cites precisely as
+     a contributor does — and a fence here would mean a member could be shown a
+     citation and never be told what part of the document it names. Present
+     rather than absent so REC-19's totality guard SEES it, and named in
+     NON_ACTS with its reason. */
+  content:          null,
   /* REC-36: NO CAPABILITY, on op=earnedbasis' reasoning exactly. Asking which
      documents NAME a subject is reading the record; the write that acts on the
      answer is op=resolve, which carries its own gate and is where the capability
@@ -6673,6 +6714,15 @@ export default {
            as an absent one, and drops an invisible target with no id and no
            count. */
         || op === "earnedbasis"
+        /* REC-83 / IC-84 (4): the fixed-key content read. Its subject is a
+           content ROW and its answer names the BUNDLE the row's capture is
+           filed in, so it takes the same stamp for REC-30's reason exactly. It
+           matters more here than on most of this list: the id is
+           hash(capture, extent, chain), so a caller who can guess an address
+           must not be able to learn from the answer whether the passage exists
+           in a project they were never invited to. The store fails closed on an
+           absent stamp and answers an invisible row EXACTLY as an absent one. */
+        || op === "content"
         /* REC-54: its subject is a bundle and it reads that bundle's register
            before it rewrites it, so a document the caller may not see refuses
            NO_SUCH_BUNDLE identically to an absent one. The store fails closed on

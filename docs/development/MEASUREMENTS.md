@@ -10955,3 +10955,43 @@ reachable from this session and is NOT measured here**; CAP-8 will meet it first
 re-measure this table against a real Drive export rather than inherit it. COFF-6's census
 (2026-08-03: ODF is ZERO in 43,282 oaklandca.gov assets) is UNREVISED and still stands — it
 was about NATIVE ODF in the wild, and nothing here contradicts it.
+
+## 2026-09-14 · REC-83 — `captureBound` has ZERO callers in the plane, so DEC-4's "no third scale" bound is uncomputed (instrument: `grep -rn captureBound bio-plane/src bio-plane/checks bio-plane/scripts bio-plane/test`, on this item's worktree at `origin/main` 8f2023f)
+
+Measured while landing IC-84's reads, by going to read the bound before reusing it rather
+than reusing it on the strength of the IC's sentence.
+
+| site | what it is |
+| --- | --- |
+| `bio-plane/src/textchain.mjs:797` | the DEFINITION — `export function captureBound(chain, byteGrade = EARNED_CAPTURE_CEILING)` |
+| `bio-plane/src/textchain.mjs:92` | a COMMENT in the same file's header naming it |
+| `bio-plane/test/textchain.test.mjs:63` | the IMPORT into the unit suite |
+| `bio-plane/test/textchain.test.mjs:455,456,458,460` | FOUR assertions exercising it |
+
+**Zero call sites under `bio-plane/src/`.** The only consumer is the unit suite that tests
+it. `earnedBasisRegistry` — the one function `op=promote`, the ratification gate and
+`op=earnedbasis` all answer the capture axis from — sets `grade: EARNED_CAPTURE_CEILING`
+unconditionally for any bundle the record holds bytes of, and never asks what the
+transcription was measured at.
+
+**What the function would answer if asked**, from its own suite's four assertions:
+`captureBound(null, "B")` is `"B"` (an untranscribed capture passes the byte grade through);
+`captureBound(ocrChain, "B")` is `"C"` (a transcription bounds it by the weakest link);
+`captureBound([pixels cap A, ocr cap A], "D")` is `"D"` (it never RAISES); and an OCR chain
+with no measured cap answers `null` — undetermined, not "fine".
+
+**Why this is a measurement and not an opinion.** IC-83's own text says *"the leg's capture
+grade <= `captureBound` as today"*, which asserts the bound already holds. It does not.
+Recorded as **D-349** with what it costs and what closing it takes; the decision is doctrine
+(is the capture axis about the BYTES alone, or about the weakest link of bytes-and-fidelity
+as `textchain.mjs`'s header states?) and therefore not a worker's. REC-83 changed nothing
+here and added no second copy of the letter: its content-grain rows carry a POINTER to
+`earned.capture[bundle_id]` rather than a grade, precisely so that closing D-349 moves one
+value and not two.
+
+**What this instrument can and cannot see.** It is a literal-name grep over four
+directories, so it would miss a call reached through a dynamic property or a re-export under
+another name. Neither exists: `textchain.mjs` has no re-exporting wrapper, and the plane's
+imports from it are the explicit named list at `store.mjs:253-255`, which does not include
+`captureBound`. It says nothing about `newgroup/` (the installer embeds a plane copy that
+regenerates at the next cut) or about the fleet members, none of which import `textchain.mjs`.

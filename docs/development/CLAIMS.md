@@ -4349,3 +4349,77 @@ over the derived one, and the arm already in `test/content-extent.test.mjs` §4 
 already driven, already armed by `nc-rec82.mjs oob` — starts covering every captured
 PDF instead of only the mixed ones. No interface moves: `content.page_count` is
 already the column, and IC-83 already names the rule.
+
+
+
+## CLAIM 2026-09-14 RECORD (REC-83 — the reads: `earnedBasisRegistry` keyed by content row, `op=earnedbasis` per extent, the fixed-key `content` read, `ensureLegContent` wired)
+
+Session: RECORD worker for REC-83, spawned by CONDUCT #10, Opus 5.
+Worktree: `.claude/worktrees/agent-ab4376cc9dd8e78b9` · branch `worktree-agent-ab4376cc9dd8e78b9`.
+Contract: IC-84 (ACCEPTED 2026-09-14, I3 14.0.0 -> 14.1.0, CHANGING until REC-83 + REC-84 land),
+its (3) and (4); IC-83's "What a leg may now claim (5.1, portion-scoped)" and its AMENDMENT.
+
+Paths claimed BY REGION, never whole files:
+
+- **`bio-plane/src/store.mjs`** — (a) the EARNED-BASIS READ region: `earnedBasisRegistry`
+  gains a content-grain block and `earnedBasis` (the `op=earnedbasis` body) answers per
+  extent; (b) a NEW read `contentRead(contentId, …)` placed in the REC-82 content region,
+  beside `contentRow`; (c) the `ensureLegContent` CALL SITE, inside `earnedBasis`'s own leg
+  pass and nowhere else; (d) the DO dispatch entry for `content` in the `url.pathname`
+  route table. **NOT** `checkInquiryBasis`, **NOT** the version-leg writer, **NOT** the
+  frontmatter grammar — REC-84 is live on all three. NOT the content WRITER
+  (`mintContent`, `#contentPlanFor`, `#markContentStale`, the promote projection) — REC-82's,
+  landed, read-only to me.
+- **`bio-plane/src/index.mjs`** — ONE new line in the OPS table (`content`), its comment, and
+  its `viewer`-stamping entry if the read-stamp list is explicit. Nothing else.
+- **`bio-plane/src/affordances.mjs`** — ONE `NON_ACTS` row for `content` and its comment.
+  NOT foreseen when this claim was written and added to it at the close rather than taken
+  silently: `affordances.test.mjs` asserts a TOTALITY — every op in `NEEDS` is an ACT or is
+  named in `NON_ACTS` with a reason — so a new read op is not addable without this row. It
+  is the mechanism doing its job (REC-25's six ungated reads accumulated because nobody was
+  asked the question), and it is one line plus prose.
+- **`bio-plane/checks/bio-checks.mjs`** — ONLY if a check is owed (C via
+  `node tools/mintid.mjs C`). MEASURED AT THE CLOSE: **no check is owed and this file is
+  NOT touched.** The three refusals this item adds (`FIXED_KEY_ONLY`, `NO_SUCH_CONTENT`,
+  `NO_ID`) are READ refusals on `reason`, which is `op=earnedbasis`' own shape
+  (`NO_ID` / `NO_SUCH_BUNDLE` / `NOT_AN_INQUIRY`) and not the DEC-49 catalogue family —
+  the guard harvests `/_CHECKS$/` exports, and a read's `reason` has never been one. REC-84
+  is live on C-2.8 / C-25.10 in this file; nothing here goes near it.
+- **`bio-plane/scripts/op-claims.mjs`** — the `PLANNED_OPS` line for `content` ONLY (removed
+  in the same commit that builds the op; the arm fails on a PLANNED op that got built).
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` only, ONE key set, moved to the
+  figures this item's own green `--strict` run PRINTED.
+- **`bio-plane/test/content-reads.test.mjs`** (new), **`bio-plane/test/nc-rec83.mjs`** (new,
+  the control driver) and **`bio-plane/test/rec83-baseline-probe.mjs`** (new, the instrument
+  that MEASURES the over-strictness pin against a pristine tree), with the
+  `NEGATIVE CONTROL:` declaration in the new suite.
+  `bio-plane/test/content-extent.test.mjs` ONLY to correct its stated "`ensureLegContent`
+  has no caller yet" paragraph, which this item makes false (corrected, never exempted).
+  `bio-plane/test/gate-reads.test.mjs` — ONE entry in its `GATED` map, for the same reason
+  as the `NON_ACTS` row above: its read-op sweep is a TOTALITY and a new read op must be
+  classified by the item that adds it. Also not foreseen, also added here rather than taken
+  silently.
+- **`bio-plane/dist/bio-plane.bundled.mjs`** and **`bio-plane/dist/bio-plane.bundle.json`** —
+  REBUILT, not authored (FL-10 fired on `src/`; `npm run build` in `bio-plane/`). Nothing
+  bumped, nothing deployed.
+- **`.gitignore`** — one line for `.rec83-control-pristine/`, the control harness's pen,
+  on `.rec82-control-pristine/`'s precedent one line above it.
+- **`docs/architecture/BIO_Content_Framework_v0_10.md`** — TWO SENTENCES of FRONT MATTER
+  only (the §14.5 and §18 "Incomplete sections" bullets), which CLAUDE.md requires in the
+  same commit as a landing that changes a construct: they named "the READS keyed by content
+  row (REC-83)" as still absent, and this landing makes that false. **BOB #10 is editing
+  this file today** — the edit is deliberately two sentences inside the front-matter block
+  and touches no body line, and CONDUCT should put his eye on it at the merge (REC-82's
+  landing flagged the same hazard on the same block).
+- **`docs/development/CLAIMS.md`** (this block), **`docs/development/DEBT.md`** and
+  **`docs/development/MEASUREMENTS.md`** only if this landing owes a row, and
+  **`docs/development/INTERFACE-CHANGES.md`** only if the landing moves what IC-84 says.
+  **`docs/development/QUEUE.md` IS NOT CLAIMED** — it was in this block's first draft and
+  is withdrawn: CLAUDE.md names CONDUCT its SOLE writer, so REC-83's row flip and its
+  `landed:` line are CONDUCT's act and are named as such in this worker's report rather
+  than taken here.
+
+Concurrency, measured at claim time: REC-84 live on `store.mjs`'s `checkInquiryBasis` /
+C-2.8 / C-25.10 grammar and the version-leg writer, and on `bio-checks.mjs` — disjoint from
+every region above, which is why the regions are named by function and not by file. COFF-10
+on `formats.mjs`, M0-30 on `tools/plancheck.mjs`, CAP-7 on a script — all disjoint.
