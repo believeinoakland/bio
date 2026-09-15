@@ -203,6 +203,20 @@ row an item for work that exists, and **do not mint an interface change for a ch
 not exist**, which is `INTERFACE-CHANGES.md`'s own reasoning pointed the other way: filing one
 teaches the registry to lie in the direction nobody checks.
 
+**6. A CORRECTION TO A DESIGN DOES NOT REACH A WORKER THAT IS ALREADY RUNNING, AND PUSHING IT
+DOES NOT EITHER** (measured 2026-09-14, twice in one evening). A worker is a SUBAGENT of the
+session that spawned it, not a session: there is no message channel to it mid-run, and the only
+session-to-session channel is the one CONDUCT and this session use. Nor does `main` help — a
+worktree is a checkout of a COMMIT (`CLAUDE.md`), so a correction pushed after a worker started
+is on a commit that worker will never read. Its integrator has exactly two options, killing a
+long run to save one edit or performing the correction itself at integration, and the second is
+almost always right. **So when this session corrects a design whose row is RUNNING, it says so to
+CONDUCT explicitly and as an act OWED AT INTEGRATION** — not as a notification, which reads as
+already-handled. CONDUCT writes it onto the row with its actor, because a session can be replaced
+mid-flight and a correction owed by a session that ends is a correction nobody performs. The
+receipt: a table renamed in a design while its worker was building that table, where the rename
+reached the row rather than the worker and was paid at the merge.
+
 **Report what was DONE and what was DECIDED. Never report tactical STATE.** An
 outstanding item, a dirty tree, a stale claim, a warning nobody has cleared: fix it,
 or route it through the channel that owns it, or leave it unsaid. Surfacing it to Bob
