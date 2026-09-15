@@ -292,6 +292,38 @@ recalled. Everything you learn in that window about work already running is an i
 That is the same shape as the release-note sweep two sections down — an owed act must land in
 a place that is DRAINED, and the row you are about to flip is drained by you, this turn.
 
+## NEVER CHAIN `git push` BEHIND A PIPED `git rebase`. THE PIPE'S EXIT STATUS IS THE PIPE'S, AND I PUSHED A MID-REBASE HEAD.
+
+**Done by CONDUCT #11 on 2026-09-15, at REC-95's integration, hours after writing the
+exit-status trap into `kickoffs/WORKER.md` for somebody else.** The command was
+`git rebase origin/main 2>&1 | tail -1 && git push origin HEAD:main`. **The rebase CONFLICTED.
+`tail` exited 0. So `&&` fired, and `git push origin HEAD:main` published the detached HEAD the
+rebase had stopped at** — REC-95's own replayed commits, WITHOUT the integration commit that
+flips the row and regenerates the index.
+
+**`origin/main` then read `plancheck: 3 fail` for several minutes.** Nobody consumed it — BOB
+#11 had stopped and no other lane was live — **but that is luck, not a mitigation, and it is
+stated rather than counted as a near miss.**
+
+**THE RULE: run the rebase as its own command and READ ITS STATUS, then push as a separate
+command.** Never `| tail`, never `| grep`, never `| head` in front of a `&&` that does something
+irreversible — **a pipeline reports the LAST stage's status, so every filter you add to make the
+output readable also throws away the answer you were filtering for.** If you want the tail, run
+the command, capture it, then look at it.
+
+**AND THE CHECK I REACHED FOR AFTERWARDS WAS ALSO WRONG, WHICH IS WHY THIS SECTION EXISTS RATHER
+THAN A NOTE:** `git rev-parse -q --verify REBASE_HEAD` reported STILL IN REBASE over a rebase
+that had **completed**, because that ref SURVIVES completion. **A finished rebase and an
+unfinished one answer that question identically.** Ask `.git/rebase-merge` / `.git/rebase-apply`
+whether they exist, or ask `git status --porcelain` whether the tree is clean and
+`git branch --show-current` whether you are on a branch rather than detached — **a detached HEAD
+is the state that makes this dangerous, and it is the one thing worth checking before any push.**
+
+**The general form is this file's oldest lesson again and I walked into it while writing it
+down: a step that PUBLISHES and a step that MAKES IT TRUE are two steps.** Here the publish ran
+because a filter told it the make-it-true step had succeeded. **Every irreversible act needs the
+status of the thing it depends on, read directly, not the status of the last thing in the pipe.**
+
 ## THE FLIP IS NOT DONE UNTIL THE SPAWN SUCCEEDS. VERIFY IT, AND REVERT THE FLIP IF IT FAILS.
 
 **Measured 2026-09-15 by CONDUCT #11, on the wave immediately after the section below was
