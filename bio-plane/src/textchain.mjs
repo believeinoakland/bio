@@ -804,3 +804,154 @@ export function captureBound(chain, byteGrade = EARNED_CAPTURE_CEILING) {
   if (cap == null) return null;
   return weaker(byteGrade, cap);
 }
+
+/* ------------------------------------------------------------------ *
+ * FW-17 / IC-86 · READING POSITION — where a reference was read
+ * ------------------------------------------------------------------ */
+
+/** The arms of IC-1's element-reference union that a READING may carry.
+ *
+ *  FOUR, not five, and the missing one is the point: `dom` is in IC-1's union
+ *  and has NO PRODUCER anywhere in this tree, so it is refused by name rather
+ *  than admitted-and-unused. An arm the record accepts and nothing emits is a
+ *  precision the record advertises and does not have — the same rule
+ *  `schema.mjs` states about a nullable extent column with no writer, one level
+ *  up at the vocabulary instead of at the column. When CONTENT-HTML produces
+ *  it, the arm is added HERE and nowhere else. */
+export const READING_POSITION_KINDS = { "pdf-page": 1, "sheet-cell": 1, "slide-shape": 1, "doc-para": 1 };
+
+/** The arm named in IC-1 that deliberately has no producer, kept as a constant
+ *  so a refusal can NAME it rather than lumping it in with a typo. */
+export const READING_POSITION_UNPRODUCED = "dom";
+
+const isNonEmptyString = (s) => typeof s === "string" && s.trim().length > 0;
+const isIndex = (n) => Number.isInteger(n) && n >= 0;
+
+/** Normalise a reader's `source` to the canonical IC-1 shape, or null.
+ *
+ *  TOTAL, AND THE FAILURE DIRECTION IS NULL. Every malformed, unrecognised or
+ *  incomplete input answers null — the reading still writes and the position is
+ *  simply absent, which is the honest outcome and never a refusal that would
+ *  pressure a caller into inventing an address to get a reading recorded. That
+ *  is CLAUDE.md's rule about gates, applied at this boundary.
+ *
+ *  `ref` IS REQUIRED ON EVERY ARM and is IC-1's own load-bearing rule: the
+ *  human-readable form is produced by the container that knows it, because
+ *  deriving it downstream puts per-container knowledge in the wrong layer where
+ *  it drifts. A source with structure and no `ref` is therefore not a weaker
+ *  source — it is not one of these at all.
+ *
+ *  AND THE RESULT IS KEY-ORDERED. The object is rebuilt field by field in a
+ *  fixed order rather than spread from the input, so JSON.stringify over it is
+ *  canonical: two readings of the same place produce byte-identical `pos`
+ *  columns and compare equal without a parse. Spreading the caller's object
+ *  would make the serialisation depend on the order the reader happened to
+ *  write its literal in. */
+export function readingSource(source) {
+  if (!source || typeof source !== "object" || Array.isArray(source)) return null;
+  const kind = source.kind;
+  if (!isNonEmptyString(kind)) return null;
+  if (!Object.prototype.hasOwnProperty.call(READING_POSITION_KINDS, kind)) return null;
+  if (!isNonEmptyString(source.ref)) return null;
+  const ref = String(source.ref).slice(0, 200);
+  if (kind === "pdf-page") {
+    if (!isIndex(source.page)) return null;
+    /* rect is OPTIONAL and normally absent: Tier-1 and Tier-2 text is a flat
+       per-page string with no geometry, so the page is the honest maximum a
+       reading can carry. A malformed rect drops to null rather than refusing
+       the whole position — the page is still true. */
+    const rect = Array.isArray(source.rect) && source.rect.length === 4
+      && source.rect.every((n) => typeof n === "number" && Number.isFinite(n))
+      ? source.rect.map(Number) : null;
+    return { kind, ref, page: source.page, rect };
+  }
+  if (kind === "doc-para") {
+    if (!isIndex(source.para)) return null;
+    return { kind, ref, para: source.para, run: isIndex(source.run) ? source.run : null };
+  }
+  if (kind === "sheet-cell") {
+    if (!isNonEmptyString(source.sheet) || !isNonEmptyString(source.cell)) return null;
+    return { kind, ref, sheet: String(source.sheet).slice(0, 200), cell: String(source.cell).slice(0, 64) };
+  }
+  /* slide-shape */
+  if (!isIndex(source.slide) || !isIndex(source.shape)) return null;
+  return { kind, ref, slide: source.slide, shape: source.shape };
+}
+
+/** The canonical JSON for a reading position's per-arm fields — everything but
+ *  kind and ref, which the projection stores in their own columns. Null in,
+ *  null out. */
+export function readingSourceJson(source) {
+  const s = readingSource(source);
+  if (!s) return null;
+  const { kind, ref, ...rest } = s;
+  return JSON.stringify(rest);
+}
+
+/** Rebuild a reading position from the three projected columns. The inverse of
+ *  the writer, kept beside it so the two cannot drift. */
+export function readingSourceFromColumns(posKind, pos, posRef) {
+  if (!isNonEmptyString(posKind) || !isNonEmptyString(posRef) || typeof pos !== "string") return null;
+  let fields;
+  try { fields = JSON.parse(pos); } catch { return null; }
+  if (!fields || typeof fields !== "object") return null;
+  return readingSource({ kind: posKind, ref: posRef, ...fields });
+}
+
+/** Does a CONTENT ROW's extent contain the place a reference was READ?
+ *
+ *  THE DEFAULT IS NO, for extentCovers' own reason one construct over: the
+ *  failure that matters is a position nobody could evaluate quietly reading as
+ *  "inside", which is how a leg citing one page would come to earn a connection
+ *  established three hundred pages away. Every unparseable, unrecognised or
+ *  cross-container case answers false.
+ *
+ *  extentKind/extent are the content row's columns as REC-82 writes them
+ *  (IC-83): document with no fields, or one of IC-1's arms with the per-arm
+ *  fields JSON-decoded.
+ *
+ *  THE document ARM COVERS EVERYTHING IN ITS OWN CAPTURE and that is not a
+ *  loophole: Bob's 5.1 ruling is that a citation refers only to its portion, and
+ *  a document-extent row's portion IS the whole document (5.3 — a citation
+ *  naming no part means the whole document). The caller is responsible for
+ *  asking only about positions in the row's own capture. This function compares
+ *  PLACES, not documents.
+ *
+ *  A COARSER READING POSITION IS NOT COVERED BY A FINER EXTENT. A page-grained
+ *  reading (rect null, which is every reading a text tier produces today) is
+ *  NOT inside a region-grained extent: "somewhere on that page" is not "inside
+ *  that rectangle", and answering true would let a member's careful citation of
+ *  one paragraph earn from a reference read anywhere on the sheet. */
+export function readingPositionInExtent(position, extentKind, extent) {
+  const p = readingSource(position);
+  if (!p) return false;
+  if (!isNonEmptyString(extentKind)) return false;
+  if (extentKind === "document") return true;
+  if (extentKind !== p.kind) return false;
+  const e = extent && typeof extent === "object" && !Array.isArray(extent) ? extent : null;
+  if (!e) return false;
+  if (p.kind === "pdf-page") {
+    if (!isIndex(e.page) || e.page !== p.page) return false;
+    /* No rect on the extent: the whole page is the extent and the page matched. */
+    if (!Array.isArray(e.rect) || e.rect.length !== 4) return true;
+    /* A rect on the extent and none on the reading: NOT established to be
+       inside it. The honest no. */
+    if (!Array.isArray(p.rect) || p.rect.length !== 4) return false;
+    const [ax0, ay0, ax1, ay1] = normRect(e.rect);
+    const [bx0, by0, bx1, by1] = normRect(p.rect);
+    return bx0 >= ax0 && by0 >= ay0 && bx1 <= ax1 && by1 <= ay1;
+  }
+  if (p.kind === "doc-para") {
+    if (!isIndex(e.para) || e.para !== p.para) return false;
+    /* A run-grained extent needs a run-grained reading, the rect rule again. */
+    if (!isIndex(e.run)) return true;
+    return isIndex(p.run) && e.run === p.run;
+  }
+  if (p.kind === "sheet-cell")
+    return isNonEmptyString(e.sheet) && isNonEmptyString(e.cell)
+        && e.sheet === p.sheet && e.cell === p.cell;
+  /* slide-shape */
+  if (!isIndex(e.slide) || e.slide !== p.slide) return false;
+  if (!isIndex(e.shape)) return true;
+  return e.shape === p.shape;
+}

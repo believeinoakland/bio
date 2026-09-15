@@ -252,7 +252,13 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
    the reason nothing below re-derives any of it. */
 import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribed,
          terminalStep, describeChain, gradeCeiling, STEP_KINDS,
-         calibrationsOf } from "./textchain.mjs";
+         calibrationsOf,
+         /* FW-17 / IC-86 + D-161: reading POSITION and whether a position falls
+            inside a content row's extent. Imported for the reason everything
+            above it is — the extent vocabulary is ONE construct and a second
+            copy here is the drift D-164 names. */
+         readingSource, readingSourceJson, readingSourceFromColumns,
+         readingPositionInExtent } from "./textchain.mjs";
 /* CPDF-13 / D-183 / D-253: THE CALIBRATION CONSTRUCT, imported for exactly the
    reason `textchain.mjs` is imported above — the rules about what a measurement
    must carry, how two measurements compare and what each direction may cause
@@ -307,6 +313,10 @@ import { CASE_DERIVATION_CHECKS } from "../checks/bio-checks.mjs";
    inside the construct that exists to close it. */
 import { CONTENT_EXTENT_CHECKS, checkContentExtent, legExtent, canonicalExtent,
          describeExtent, contentIdFor } from "../checks/bio-checks.mjs";
+/* FW-17 / D-161: what a PORTION may earn from a connection's determining pair.
+   Its own family because the question is its own — the extent checks above ask
+   whether an address is legal, this asks whether a link REACHES an address. */
+import { CONNECTION_PAIR_CHECKS, checkConnectionPairCovers } from "../checks/bio-checks.mjs";
 
 /* D-309 / DEC-49, `src/airun.mjs`'s precedent exactly. THE CODE IS A STRING
    LITERAL AT ITS SITE and reaches the wire through here, because a code held in
@@ -701,6 +711,37 @@ export class Store extends DurableObject {
          the same reason the three unlanded extent arms are named in
          CONTENT_EXTENT_KINDS rather than added later. */
       ["inquiry_basis_version_legs", "content_id", "TEXT"],
+      /* FW-17 / IC-86: WHERE A REFERENCE WAS READ. Additive and nullable, and
+         ALTER rather than the DROP-and-rebuild the three derived tables above
+         get, because the distinction that list turns on does not apply: those
+         three gained a column that was part of the KEY, so old rows keyed the
+         old way were WRONG and could only be re-derived. These three are not in
+         the key — an old row is not wrong, it is a row whose reading carried no
+         position, which is exactly what NULL says here. Dropping the table would
+         throw away every reference index in the store to add a column that
+         changes nothing about what the existing rows mean, and the next
+         promotion rewrites them anyway (#writeReadings replaces per capture). */
+      ["reading_refs", "pos_kind", "TEXT"],
+      ["reading_refs", "pos", "TEXT"],
+      ["reading_refs", "pos_ref", "TEXT"],
+      /* FW-17 / D-161 / Bob's 5.4: THE DETERMINING REFERENCE PAIR on a
+         connection. Eight columns rather than a second table, because a
+         connection has exactly two ends and always exactly two — the row IS the
+         pair, and a join table would let a row exist with three. Nullable for
+         two DIFFERENT reasons that the reads must keep apart: a_ref/b_ref are
+         null only on a row derived before this landing (the next op=connect
+         fills them, deterministically, from the same resolutions that set the
+         grade), while the POSITION columns are null whenever the reading could
+         not say where — which is most readings today and is not a gap to be
+         backfilled. */
+      ["connections", "a_ref", "TEXT"],
+      ["connections", "a_pos_kind", "TEXT"],
+      ["connections", "a_pos", "TEXT"],
+      ["connections", "a_pos_ref", "TEXT"],
+      ["connections", "b_ref", "TEXT"],
+      ["connections", "b_pos_kind", "TEXT"],
+      ["connections", "b_pos", "TEXT"],
+      ["connections", "b_pos_ref", "TEXT"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -11051,13 +11092,28 @@ export class Store extends DurableObject {
            unresolved. */
         const ref = typeof e.ref === "string" && e.ref
           ? e.ref : `${e.kind == null ? "" : e.kind}:${e.key == null ? "" : e.key}`;
+        /* FW-17 / IC-86 — WHERE THIS REFERENCE WAS READ.
+           RE-NORMALISED HERE AND NOT TRUSTED, because this projection is
+           derived from `data/provenance.json` and a provenance document is
+           something a caller can AUTHOR. The intake path normalises what a
+           reader emitted; this normalises what a document CLAIMS a reader
+           emitted, and those are two different trust boundaries with one
+           function between them, which is the only arrangement in which they
+           cannot drift. An unrecognised kind, a missing human form, a `dom` arm
+           that no producer emits — every one of them lands as NULL, so the
+           reading writes and the position is simply absent.
+           ALL THREE COLUMNS MOVE TOGETHER: `readingSource` returns the whole
+           canonical object or nothing, so a row can never carry a kind with no
+           form or a form with no fields. */
+        const pos = readingSource(e.source);
         this.sql.exec(
-          `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label)
-           VALUES (?,?,?,?,?,?)`,
+          `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref)
+           VALUES (?,?,?,?,?,?,?,?,?)`,
           sha, bundleId, ref,
           e.kind == null ? null : String(e.kind),
           e.key == null ? null : String(e.key),
-          e.label == null ? null : String(e.label));
+          e.label == null ? null : String(e.label),
+          pos ? pos.kind : null, pos ? readingSourceJson(pos) : null, pos ? pos.ref : null);
         /* REC-36/REC-40: the name index, written in the SAME transaction as the
            row it projects, exactly as the row is a projection of the document
            (D-21). A string the reader did not carry produces no terms and no
@@ -12268,16 +12324,31 @@ export class Store extends DurableObject {
     if (typeof ref !== "string" || !ref)
       return { ok: true, ref: typeof ref === "string" ? ref : null, count: 0, documents: [] };
     const rows = this.#rows(
-      `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_kind, rr.ref_key, rr.label, r.content_type
+      `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_kind, rr.ref_key, rr.label,
+              rr.pos_kind, rr.pos, rr.pos_ref, r.content_type
          FROM reading_refs rr LEFT JOIN readings r ON r.capture_sha = rr.capture_sha
         WHERE rr.ref=? ORDER BY rr.bundle_id, rr.capture_sha`, ref);
     /* REC-30: the reverse index answers WHICH DOCUMENTS carry a reference — a
        fact about captures. The bundle back-reference is withheld where the
-       viewer may not see the bundle; `count` counts documents, not names. */
+       viewer may not see the bundle; `count` counts documents, not names.
+
+       FW-17 / IC-86: AND WHERE IN EACH DOCUMENT IT WAS READ, which is the
+       question this read has always implied and never answered — "which
+       documents carry this reference" landing a reader on a whole document is
+       D-161's defect seen from the reference side rather than the connection
+       side. `position` is null where the reading could not say, and that null is
+       a statement (the reading's own basis says whose absence it is), never an
+       assertion that the whole document was meant.
+
+       IT IS ALSO WHAT GIVES THE THREE COLUMNS A READER A CALLER CAN REACH.
+       Without this they would be read only by `deriveConnections` — true, but
+       internal, and a projection nothing outside the store can ask for is a
+       projection the next session cannot verify. */
     const keep = this.#bundleRedactor(viewer);
     return { ok: true, ref, count: rows.length,
              documents: rows.map((r) => ({ capture_sha: r.capture_sha, bundle_id: keep(r.bundle_id),
-               ref: r.ref, kind: r.ref_kind, key: r.ref_key, label: r.label, content_type: r.content_type })) };
+               ref: r.ref, kind: r.ref_kind, key: r.ref_key, label: r.label, content_type: r.content_type,
+               position: readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref) })) };
   }
 
   /** REC-36: THE REVERSE READ FOR A NAME-ONLY MENTION — every captured document
@@ -13408,13 +13479,33 @@ export class Store extends DurableObject {
 
   /* The read-side view of a connection: established and needs_confirmation are surfaced
      from the WEAKER grade so a connection resting on a C at either end is never read back
-     as established, and asserted_by is surfaced DISTINCT from grade (framework §8.1). */
+     as established, and asserted_by is surfaced DISTINCT from grade (framework §8.1).
+
+     FW-17 / D-161 / Bob's 5.4: AND IT CARRIES THE DETERMINING PAIR, because following a
+     connection landing the reader on a whole document is the defect D-161 names and it is
+     a defect of THIS VIEW as much as of the row. `determining_pair` is one object rather
+     than eight flat keys so that a consumer cannot read half of it, and `positioned` is
+     stated rather than left for a caller to infer from two nulls — "the record cannot say
+     where" is a finding and must survive into the answer as one. A row derived before this
+     landing has no pair at all and says so with `null`, which is a THIRD state and not the
+     same as a pair that cannot place itself. */
   #connectionView(r) {
+    const aPos = readingSourceFromColumns(r.a_pos_kind, r.a_pos, r.a_pos_ref);
+    const bPos = readingSourceFromColumns(r.b_pos_kind, r.b_pos, r.b_pos_ref);
     return { a_capture_sha: r.a_capture_sha, b_capture_sha: r.b_capture_sha, entity_id: r.entity_id,
              a_bundle_id: r.a_bundle_id, b_bundle_id: r.b_bundle_id,
              grade: r.grade, a_grade: r.a_grade, b_grade: r.b_grade,
              established: !!r.established, needs_confirmation: !Store.#isEstablished(r.grade),
-             asserted_by: r.asserted_by, basis: r.basis, at: r.at };
+             asserted_by: r.asserted_by, basis: r.basis, at: r.at,
+             determining_pair: (r.a_ref || r.b_ref)
+               ? { a_ref: r.a_ref || null, a_position: aPos,
+                   b_ref: r.b_ref || null, b_position: bPos,
+                   positioned: !!(aPos && bPos),
+                   why: aPos && bPos
+                     ? "both ends record where in their document the determining reference was read"
+                     : "the determining reference is recorded on both ends; where it was read is not, "
+                     + "so a citation of a PART of either document cannot yet earn from this connection" }
+               : null };
   }
 
   /* THE INVERSE OF THE QUADRATIC (REC-66). How many ENDS may be derived over before the
@@ -13479,8 +13570,15 @@ export class Store extends DurableObject {
        outer LIMIT bounds the ROWS those documents may return, because resolution rows per
        capture are small in practice and bounded by nothing in the schema. `+ 1` on each is
        how the answer learns that more existed, exactly as the meaning-layer reads do. */
+    /* FW-17 / D-161 / Bob's 5.4 — `ref` JOINS THE SCAN, and it is the whole of
+       the pair's first half. The reference the recogniser matched was always in
+       `resolutions`; this derivation simply never selected it, which is exactly
+       D-161's "the connection collapses to the strongest grade per capture and
+       discards the reference". Selecting one more column of a row the scan
+       already reads costs no extra read and no extra bound: the LIMITs, the
+       row budget and the partial-group drop below are untouched. */
     const scan = this.#rows(
-      `SELECT capture_sha, bundle_id, grade FROM resolutions
+      `SELECT capture_sha, bundle_id, grade, ref FROM resolutions
         WHERE entity_id=? AND capture_sha IN (
           SELECT capture_sha FROM resolutions WHERE entity_id=? GROUP BY capture_sha
            ORDER BY capture_sha LIMIT ?)
@@ -13502,11 +13600,40 @@ export class Store extends DurableObject {
     for (const r of rows) {
       const cur = byCapture.get(r.capture_sha);
       if (!cur || Store.#GRADE_RANK[r.grade] > Store.#GRADE_RANK[cur.grade])
-        byCapture.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: r.bundle_id, grade: r.grade });
+        /* FW-17: the DETERMINING reference travels with the grade it determined,
+           taken at the same comparison rather than looked up afterwards. That is
+           what makes "the pair that established this connection" true by
+           construction: whichever row wins the collapse is the row whose
+           reference is kept, so the pair and the grade cannot disagree. A later
+           lookup — "the strongest resolution's ref for this capture" — would be
+           a SECOND collapse that could tie-break differently. */
+        byCapture.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: r.bundle_id, grade: r.grade,
+                                       ref: typeof r.ref === "string" ? r.ref : null });
     }
     const distinct = [...byCapture.values()];
     const truncated = rowsCut || distinct.length > endsCap;
     const ends = distinct.length > endsCap ? distinct.slice(0, endsCap) : distinct;
+    /* FW-17 / IC-86 — THE POSITION HALF OF THE PAIR, resolved ONCE PER END and
+       never once per pair. The derivation is quadratic in the ends by nature
+       (REC-66's whole subject), so a lookup inside the pair loop would put a
+       store read on the quadratic — k(k-1)/2 reads at the 5000-pair ceiling is
+       4,950 where k is 100. Here it is k: one PRIMARY KEY hit on
+       (capture_sha, ref) per end, 100 at the ceiling, and the pair loop below
+       reads only from memory.
+       A LOOKUP THAT FINDS NOTHING IS THE NORMAL CASE AND NOT A FAILURE. Most
+       readings carry no position (IC-86's own statement: only a container that
+       itemised its text produces one), and a resolution whose reading was
+       re-promoted may name a reference the current reading no longer carries.
+       Both answer null, the pair still records its two REFERENCES, and the
+       portion-leg grade below says UNDETERMINED rather than guessing. */
+    for (const e of ends) {
+      e.pos = null;
+      if (!e.ref) continue;
+      const rr = this.#one(
+        `SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha=? AND ref=?`,
+        e.capture_sha, e.ref);
+      if (rr) e.pos = readingSourceFromColumns(rr.pos_kind, rr.pos, rr.pos_ref);
+    }
     const at = new Date().toISOString();
     const label = ent ? ent.label : entityId;
     const connections = [];
@@ -13519,23 +13646,49 @@ export class Store extends DurableObject {
           if (A.capture_sha > B.capture_sha) { const tmp = A; A = B; B = tmp; }
           const grade = Store.#weakerGrade(A.grade, B.grade);
           const est = Store.#isEstablished(grade) ? 1 : 0;
+          /* FW-17 / D-161 / Bob's 5.4 — THE BASIS NAMES THE PAIR, because the
+             pair is now a fact about this row and a basis that did not mention
+             it would be the row's own account disagreeing with its columns. And
+             it says which of the two halves it HAS: the references are
+             recoverable today, the positions only where a reading could say. */
+          const pairNote = (A.ref && B.ref)
+            ? `; the connection is through the reference ${A.ref} in A and ${B.ref} in B`
+              + (A.pos && B.pos
+                   ? ` (read at ${A.pos.ref} and ${B.pos.ref})`
+                   : A.pos || B.pos
+                     ? ` (read at ${(A.pos || B.pos).ref} on one end only; the other reading does not say where)`
+                     : ` (neither reading says where in its document the reference was read)`)
+            : `; which reference established it is not recorded on this row`;
           const basis = `both documents concern ${label} (${entityId}); grade is the weaker of the two ends `
-                      + `(${A.grade}, ${B.grade}) -> ${grade}`;
+                      + `(${A.grade}, ${B.grade}) -> ${grade}${pairNote}`;
+          const row = {
+            a_capture_sha: A.capture_sha, b_capture_sha: B.capture_sha, entity_id: entityId,
+            a_bundle_id: A.bundle_id, b_bundle_id: B.bundle_id, a_grade: A.grade, b_grade: B.grade,
+            grade, established: est, asserted_by: String(assertedBy || "system"),
+            basis: basis.slice(0, 400), at,
+            a_ref: A.ref, a_pos_kind: A.pos ? A.pos.kind : null,
+            a_pos: A.pos ? readingSourceJson(A.pos) : null, a_pos_ref: A.pos ? A.pos.ref : null,
+            b_ref: B.ref, b_pos_kind: B.pos ? B.pos.kind : null,
+            b_pos: B.pos ? readingSourceJson(B.pos) : null, b_pos_ref: B.pos ? B.pos.ref : null };
           this.sql.exec(
             `INSERT INTO connections
-               (a_capture_sha,b_capture_sha,entity_id,a_bundle_id,b_bundle_id,a_grade,b_grade,grade,established,asserted_by,basis,at)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+               (a_capture_sha,b_capture_sha,entity_id,a_bundle_id,b_bundle_id,a_grade,b_grade,grade,established,asserted_by,basis,at,
+                a_ref,a_pos_kind,a_pos,a_pos_ref,b_ref,b_pos_kind,b_pos,b_pos_ref)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
              ON CONFLICT(a_capture_sha,b_capture_sha,entity_id) DO UPDATE SET
                a_bundle_id=excluded.a_bundle_id, b_bundle_id=excluded.b_bundle_id,
                a_grade=excluded.a_grade, b_grade=excluded.b_grade, grade=excluded.grade,
                established=excluded.established, asserted_by=excluded.asserted_by,
-               basis=excluded.basis, at=excluded.at`,
-            A.capture_sha, B.capture_sha, entityId, A.bundle_id, B.bundle_id, A.grade, B.grade, grade, est,
-            String(assertedBy || "system"), basis.slice(0, 400), at);
-          connections.push(this.#connectionView({
-            a_capture_sha: A.capture_sha, b_capture_sha: B.capture_sha, entity_id: entityId,
-            a_bundle_id: A.bundle_id, b_bundle_id: B.bundle_id, a_grade: A.grade, b_grade: B.grade,
-            grade, established: est, asserted_by: String(assertedBy || "system"), basis: basis.slice(0, 400), at }));
+               basis=excluded.basis, at=excluded.at,
+               a_ref=excluded.a_ref, a_pos_kind=excluded.a_pos_kind,
+               a_pos=excluded.a_pos, a_pos_ref=excluded.a_pos_ref,
+               b_ref=excluded.b_ref, b_pos_kind=excluded.b_pos_kind,
+               b_pos=excluded.b_pos, b_pos_ref=excluded.b_pos_ref`,
+            row.a_capture_sha, row.b_capture_sha, row.entity_id, row.a_bundle_id, row.b_bundle_id,
+            row.a_grade, row.b_grade, row.grade, row.established, row.asserted_by, row.basis, row.at,
+            row.a_ref, row.a_pos_kind, row.a_pos, row.a_pos_ref,
+            row.b_ref, row.b_pos_kind, row.b_pos, row.b_pos_ref);
+          connections.push(this.#connectionView(row));
         }
       }
     });
@@ -13555,7 +13708,15 @@ export class Store extends DurableObject {
      subject) or by capture sha (every connection this document is an end of, either side).
      established and needs_confirmation come from the WEAKER grade, so a caller can never
      read a connection resting on a C as settled. */
-  connectionsFor({ entityId = null, captureSha = null, limit = null, viewer = null } = {}) {
+  connectionsFor({ entityId = null, captureSha = null, contentId = null, limit = null, viewer = null } = {}) {
+    /* FW-17: THE PORTION ARM, taken first because it answers a different question about
+       the same rows — not "which connections exist" but "which of them reach INTO this
+       part of this document" (Bob's 5.1). Delegated rather than inlined so the grade
+       computation stays one function with one set of refusals, and branched HERE rather
+       than in the dispatch table because that table is read positionally by the bounds
+       walk. */
+    if (typeof contentId === "string" && contentId.trim())
+      return this.connectionGradeForContent({ contentId, limit, viewer });
     /* REC-60 / D-225: BOUNDED, and this is the read the bound was raised for. The entity arm
        is one row per PAIR of captures concerning the subject — D-224's k(k-1)/2 — so the
        answer grows QUADRATICALLY in the size of the record about one subject, and the subject
@@ -13588,6 +13749,143 @@ export class Store extends DurableObject {
                ...this.#connectionView(r),
                a_bundle_id: keep(r.a_bundle_id), b_bundle_id: keep(r.b_bundle_id) })),
              limit: cap, truncated };
+  }
+
+  /* ============ FW-17 · A PORTION'S CONNECTION GRADE ============
+   *
+   * Bob, 2026-09-14 (CONTENT-EXTENT-DESIGN-SPACE.md 5.1): a citation that points at the
+   * sentence, paragraph or section answering the question refers ONLY to that portion of
+   * the document — "just as an HTML highlight link refers to specific content in that
+   * document" — so a content-grain leg earns, on every axis, only from what is IN its
+   * portion. Until readings carried position, that made a portion leg's connection grade
+   * UNDETERMINED and stated, which is what REC-83's read says today. This is the function
+   * that makes it COMPUTABLE, and computable is not the same as computed: every branch
+   * below that cannot establish containment answers UNDETERMINED and says which kind of
+   * cannot it is.
+   *
+   * THE GRADE IS NOT A NEW SCALE AND NOTHING HERE MINTS ONE. It is framework 8.1's grade,
+   * taken off the connection row the derivation already wrote — the weaker of the two
+   * ends, established only when both ends are A or B. What this function decides is
+   * MEMBERSHIP, not value: which of this capture's connections reach into this extent.
+   * The collapse over the survivors is the STRONGEST, the same collapse op=concerns,
+   * op=connect, op=thread and earnedBasisRegistry all make, reused so a portion's grade
+   * cannot drift from the grade its document appears at in the reverse index.
+   *
+   * THREE KINDS OF "NO", AND COLLAPSING THEM WOULD BE THE DEFECT. A connection whose row
+   * predates the pair writer records no reference at all; a connection whose pair is
+   * recorded but unplaced cannot be tested; a connection whose pair was read elsewhere in
+   * the document genuinely does not reach this portion. Only the third is an answer about
+   * the member's citation. The first two are answers about the RECORD, and a member who
+   * is told "no connection" when the truth is "this record has not read the document
+   * closely enough to say" has been told something false about their own case.
+   *
+   * THE DOCUMENT ARM TAKES NO POSITION TEST AT ALL, and that is doctrine rather than an
+   * optimisation. A document-extent row's portion IS the whole document (5.3 — a citation
+   * naming no part means the whole document), so every connection on that capture is
+   * inside it by definition and asking where the reference was read would answer a
+   * question nobody posed. It is also what keeps every document-grain answer in this
+   * record byte-identical to what it was before this item, which the suite pins. */
+  connectionGradeForContent({ contentId = null, limit = null, viewer = null } = {}) {
+    /* `reason` WITHOUT a `code`, matching `connectionsFor`'s own `NO_KEY` one method
+       up — and the difference from the catalogued refusals below is the DEC-49
+       distinction rather than an inconsistency. A caller who named no key has not
+       been refused an act; they have not asked a question yet, so there is nothing
+       to translate for a member. A `code` here would enter the guard's refusal
+       roster and owe a canned translation for "you did not pass a parameter".
+       Unreachable through the op (`connectionsFor` delegates only on a non-empty id)
+       and kept for a direct store caller, which the reads are. */
+    if (typeof contentId !== "string" || !contentId.trim())
+      return { ok: false, reason: "NO_CONTENT",
+               detail: "a portion's connection grade is asked about one content row, by its id (content=...)" };
+    const row = this.#one(
+      `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, stale FROM content WHERE content_id=?`,
+      contentId.trim());
+    /* DEC-49 REGION is-content-row-present — FW-17/C-49.3. */
+    if (!row) {
+      const r = CONNECTION_PAIR_CHECKS.CONNECTION_PAIR_NO_CONTENT;
+      return { ok: false, reason: "CONNECTION_PAIR_NO_CONTENT", code: "CONNECTION_PAIR_NO_CONTENT",
+               check: r.check, translation: r.translation, content_id: contentId.trim(),
+               detail: "this record holds no content row with that id, so there is no portion to grade" };
+    }
+    /* END DEC-49 REGION is-content-row-present */
+    /* `safeJson` and NOT a try/catch of this function's own: the swallowed-read
+       roster in `provenance-marker.test.mjs` is a ratchet, and the reason it can
+       be one is that this store has ONE remedy for "a column this store wrote as
+       JSON, read back". An unparseable extent lands as null and every branch
+       below treats null as COVERING NOTHING — the default-not-covering rule — so
+       the failure is published as an honest no rather than smoothed. */
+    const extent = safeJson(row.extent);
+    /* REC-60 / D-225's bound, taken on this read for the same reason: a capture concerning
+       a much-referenced subject is an end of quadratically many connections, and the read
+       that matters most is the one that returns the most. */
+    const cap = Math.max(1, Math.min(Number(limit) || Store.#MEANING_LIMIT_DEFAULT, Store.#MEANING_LIMIT_MAX));
+    const scan = this.#rows(
+      `SELECT * FROM connections WHERE a_capture_sha=? OR b_capture_sha=? ORDER BY grade, entity_id LIMIT ?`,
+      row.capture_sha, row.capture_sha, cap + 1);
+    const truncated = scan.length > cap;
+    const conns = truncated ? scan.slice(0, cap) : scan;
+    const keep = this.#bundleRedactor(viewer);
+    const whole = row.extent_kind === "document";
+    const reaching = [], undetermined = [], outside = [];
+    for (const c of conns) {
+      /* WHICH END IS OURS. A capture may be BOTH ends only of a self-connection, which the
+         canonical pair order (a < b) makes impossible, so this is exhaustive. */
+      const side = c.a_capture_sha === row.capture_sha ? "a" : "b";
+      const view = this.#connectionView(c);
+      const entry = { entity_id: c.entity_id, grade: c.grade, side,
+                      other_capture_sha: side === "a" ? c.b_capture_sha : c.a_capture_sha,
+                      other_bundle_id: keep(side === "a" ? c.b_bundle_id : c.a_bundle_id),
+                      determining_pair: view.determining_pair };
+      if (whole) { reaching.push({ ...entry, why: "this citation is of the whole document, so every "
+                                                + "connection the document has is inside it" }); continue; }
+      if (!view.determining_pair) {
+        undetermined.push({ ...entry, code: "CONNECTION_PAIR_NO_PAIR",
+          why: "this connection was derived before the record kept which reference established it, so "
+             + "whether that reference falls inside this part cannot be asked. Re-deriving the "
+             + "subject's connections records the pair" });
+        continue;
+      }
+      const bad = checkConnectionPairCovers(view.determining_pair, side, row.extent_kind, extent,
+                                            readingPositionInExtent);
+      if (!bad) { reaching.push({ ...entry, why: `the determining reference was read at `
+                                              + `${(side === "a" ? view.determining_pair.a_position
+                                                                : view.determining_pair.b_position).ref}, `
+                                              + `inside ${row.ref}` }); continue; }
+      (bad.code === "CONNECTION_PAIR_OUTSIDE_EXTENT" ? outside : undetermined)
+        .push({ ...entry, code: bad.code, check: bad.check, translation: bad.translation, why: bad.detail });
+    }
+    /* THE STRONGEST REACHING CONNECTION, and null when none reaches. `null` here is
+       UNDETERMINED and it is never the same as grade D: D is a member's testimony, an
+       absence is the record saying it cannot tell. The two must not share a rank, which is
+       #weakestOf's own recorded lesson one construct over. */
+    let grade = null;
+    for (const r2 of reaching)
+      if (grade == null || Store.#GRADE_RANK[r2.grade] > Store.#GRADE_RANK[grade]) grade = r2.grade;
+    return {
+      ok: true, content_id: row.content_id, capture_sha: row.capture_sha,
+      bundle_id: keep(row.bundle_id), extent_kind: row.extent_kind, ref: row.ref,
+      stale: !!row.stale,
+      connection_grade: grade,
+      established: grade == null ? false : Store.#isEstablished(grade),
+      needs_confirmation: grade == null ? false : !Store.#isEstablished(grade),
+      reaching, undetermined, outside,
+      counts: { connections: conns.length, reaching: reaching.length,
+                undetermined: undetermined.length, outside: outside.length },
+      limit: cap, truncated,
+      why: grade != null
+        ? `${reaching.length} connection(s) were established by a reference read inside ${row.ref}; the `
+          + `grade is the strongest of them (${grade}), which states how that connection was `
+          + `established and nothing about how credible either document is`
+        : conns.length === 0
+          ? `this document is an end of no connection, so there is nothing for ${row.ref} to earn from`
+          : undetermined.length
+            ? `no connection is established to reach ${row.ref}: ${undetermined.length} cannot be placed `
+              + `(the record does not hold where the determining reference was read) and ${outside.length} `
+              + `were established elsewhere in this document. UNDETERMINED is the answer and it is not `
+              + `the same as none — reading this document with positions is what would settle it`
+            : `all ${outside.length} of this document's connections were established by references read `
+              + `outside ${row.ref}, so none of them reaches this citation`,
+    };
   }
 
   /* The closed vocabulary of stage requiredness (framework 8.2): unless_exception is the
@@ -29398,8 +29696,20 @@ export class Store extends DurableObject {
           entityId: (body && body.entityId) || url.searchParams.get("id"),
           assertedBy: (body && body.assertedBy) || undefined,
           limit: (body && body.limit) || url.searchParams.get("limit") }),
+        /* FW-17: A THIRD KEY, `content=`, and the BRANCH IS INSIDE THE READ rather than
+           here. `id=` and `sha256=` ask WHICH connections exist through a subject or
+           around a document; `content=` asks what a PORTION of a document may earn from
+           them (Bob's 5.1) — the same table, the same bound, so a member holding a content
+           id should not have to know the answer lives under another op.
+           IT IS NOT A TERNARY IN THIS TABLE, and that is a measurement rather than a
+           preference: `meaning-bounds.test.mjs` reads this dispatch table POSITIONALLY,
+           matching `op: () => this.method(`, and a ternary here made `op=connections`
+           vanish from the bounds walk entirely — the op stopped being judged rather than
+           being judged wrong, which is REC-70's invisible-op hazard arriving by a new
+           route. The shape of this table is load-bearing for instruments that read it. */
         connections: () => this.connectionsFor({ entityId: url.searchParams.get("id"),
                                                  captureSha: url.searchParams.get("sha256"),
+                                                 contentId: url.searchParams.get("content"),
                                                  limit: url.searchParams.get("limit"),
                                                  viewer: url.searchParams.get("viewer") }),
         progressiondefine: () => this.defineProgression(body || {}),

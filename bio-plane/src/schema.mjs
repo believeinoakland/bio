@@ -683,6 +683,17 @@ CREATE INDEX IF NOT EXISTS readings_bundle ON readings(bundle_id);
 -- what makes "which documents' readings carry this reference" one indexed lookup,
 -- the reverse index Step 4 consumes. Also DERIVED from the corpus; a whole-store
 -- purge clears it (D-113).
+-- FW-17 / IC-86: WHERE THE REFERENCE WAS READ, in IC-1's element-reference
+-- vocabulary and no other. The three columns move together -- a row has all
+-- three or none -- so a half-written position can never read as a whole one.
+-- NULL IS A STATEMENT AND NOT A DEFAULT: it means THIS READING CANNOT SAY WHERE,
+-- never that the whole document was meant. A member's citation naming no part
+-- means the whole document (Bob, 2026-09-14, 5.3), and that is a member's act of
+-- citation, not a reader's silence -- collapsing the two would let a reader's
+-- shortcoming read as a member's choice. The reading's own basis says WHOSE
+-- absence it is, so the null is never bare.
+-- The column arrives WITH its writer (schema.mjs's own standing rule): the
+-- agenda reader emits a position and op=promote projects it in the same landing.
 CREATE TABLE IF NOT EXISTS reading_refs (
   capture_sha  TEXT NOT NULL,
   bundle_id    TEXT NOT NULL,
@@ -690,6 +701,9 @@ CREATE TABLE IF NOT EXISTS reading_refs (
   ref_kind     TEXT,
   ref_key      TEXT,
   label        TEXT,
+  pos_kind     TEXT,   -- IC-1's discriminator: pdf-page | sheet-cell | slide-shape | doc-para
+  pos          TEXT,   -- the per-arm fields as canonical JSON, key-ordered so two reads of one place compare equal
+  pos_ref      TEXT,   -- IC-1's REQUIRED human form, produced by the container that knows it
   PRIMARY KEY (capture_sha, ref)
 );
 CREATE INDEX IF NOT EXISTS reading_refs_ref ON reading_refs(ref);
@@ -962,6 +976,22 @@ CREATE INDEX IF NOT EXISTS resolutions_bundle ON resolutions(bundle_id);
 -- PROGRESSION INSTANCES -- an actual N-stage chain of real documents threaded by an
 -- entity, and weakest-grade inheritance along a chain longer than two -- are SLICE B;
 -- this table is the two-node base case only.
+-- FW-17 / D-161 / Bob's 5.4, 2026-09-14: THE DETERMINING REFERENCE PAIR.
+-- Both documents refer to the ordinance -- that is how each was identified -- so
+-- the connection points at the SPECIFIC REFERENCE IN EACH, and not at all the
+-- supporting mentions. The pair is the reference on each side that DETERMINED
+-- the grade: the strongest resolution of that capture to the entity, which is
+-- the same collapse op=concerns and op=connect already make, so the pair can
+-- never disagree with the grade beside it.
+-- Until FW-17 this row kept the two grades and threw the references away, which
+-- is what made following a connection land a reader on a whole document (D-161,
+-- Part II section 17's REFER row).
+-- THE POSITION HALF IS NULLABLE AND ITS ABSENCE IS THE POINT. a_ref/b_ref are
+-- recoverable from resolutions today; the POSITIONS come from reading_refs and
+-- exist only where the reader could say where (FW-17's first half, IC-86). A
+-- pair with no positions is a real pair that cannot place itself, and a portion
+-- leg asking it for a connection grade gets UNDETERMINED and STATED -- per pair,
+-- never assumed for the connection as a whole.
 CREATE TABLE IF NOT EXISTS connections (
   a_capture_sha TEXT NOT NULL,
   b_capture_sha TEXT NOT NULL,
@@ -975,6 +1005,14 @@ CREATE TABLE IF NOT EXISTS connections (
   asserted_by   TEXT NOT NULL,
   basis         TEXT,
   at            TEXT,
+  a_ref         TEXT,  -- the determining reference on end A, AS IT APPEARED (Ord. No. 13,579)
+  a_pos_kind    TEXT,  -- and WHERE it was read, in IC-1's vocabulary. NULL = the reading could not say
+  a_pos         TEXT,
+  a_pos_ref     TEXT,
+  b_ref         TEXT,  -- the same three facts for end B
+  b_pos_kind    TEXT,
+  b_pos         TEXT,
+  b_pos_ref     TEXT,
   PRIMARY KEY (a_capture_sha, b_capture_sha, entity_id)
 );
 CREATE INDEX IF NOT EXISTS connections_entity ON connections(entity_id);

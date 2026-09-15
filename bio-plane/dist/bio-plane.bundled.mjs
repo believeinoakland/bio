@@ -690,6 +690,17 @@ CREATE INDEX IF NOT EXISTS readings_bundle ON readings(bundle_id);
 -- what makes "which documents' readings carry this reference" one indexed lookup,
 -- the reverse index Step 4 consumes. Also DERIVED from the corpus; a whole-store
 -- purge clears it (D-113).
+-- FW-17 / IC-86: WHERE THE REFERENCE WAS READ, in IC-1's element-reference
+-- vocabulary and no other. The three columns move together -- a row has all
+-- three or none -- so a half-written position can never read as a whole one.
+-- NULL IS A STATEMENT AND NOT A DEFAULT: it means THIS READING CANNOT SAY WHERE,
+-- never that the whole document was meant. A member's citation naming no part
+-- means the whole document (Bob, 2026-09-14, 5.3), and that is a member's act of
+-- citation, not a reader's silence -- collapsing the two would let a reader's
+-- shortcoming read as a member's choice. The reading's own basis says WHOSE
+-- absence it is, so the null is never bare.
+-- The column arrives WITH its writer (schema.mjs's own standing rule): the
+-- agenda reader emits a position and op=promote projects it in the same landing.
 CREATE TABLE IF NOT EXISTS reading_refs (
   capture_sha  TEXT NOT NULL,
   bundle_id    TEXT NOT NULL,
@@ -697,6 +708,9 @@ CREATE TABLE IF NOT EXISTS reading_refs (
   ref_kind     TEXT,
   ref_key      TEXT,
   label        TEXT,
+  pos_kind     TEXT,   -- IC-1's discriminator: pdf-page | sheet-cell | slide-shape | doc-para
+  pos          TEXT,   -- the per-arm fields as canonical JSON, key-ordered so two reads of one place compare equal
+  pos_ref      TEXT,   -- IC-1's REQUIRED human form, produced by the container that knows it
   PRIMARY KEY (capture_sha, ref)
 );
 CREATE INDEX IF NOT EXISTS reading_refs_ref ON reading_refs(ref);
@@ -969,6 +983,22 @@ CREATE INDEX IF NOT EXISTS resolutions_bundle ON resolutions(bundle_id);
 -- PROGRESSION INSTANCES -- an actual N-stage chain of real documents threaded by an
 -- entity, and weakest-grade inheritance along a chain longer than two -- are SLICE B;
 -- this table is the two-node base case only.
+-- FW-17 / D-161 / Bob's 5.4, 2026-09-14: THE DETERMINING REFERENCE PAIR.
+-- Both documents refer to the ordinance -- that is how each was identified -- so
+-- the connection points at the SPECIFIC REFERENCE IN EACH, and not at all the
+-- supporting mentions. The pair is the reference on each side that DETERMINED
+-- the grade: the strongest resolution of that capture to the entity, which is
+-- the same collapse op=concerns and op=connect already make, so the pair can
+-- never disagree with the grade beside it.
+-- Until FW-17 this row kept the two grades and threw the references away, which
+-- is what made following a connection land a reader on a whole document (D-161,
+-- Part II section 17's REFER row).
+-- THE POSITION HALF IS NULLABLE AND ITS ABSENCE IS THE POINT. a_ref/b_ref are
+-- recoverable from resolutions today; the POSITIONS come from reading_refs and
+-- exist only where the reader could say where (FW-17's first half, IC-86). A
+-- pair with no positions is a real pair that cannot place itself, and a portion
+-- leg asking it for a connection grade gets UNDETERMINED and STATED -- per pair,
+-- never assumed for the connection as a whole.
 CREATE TABLE IF NOT EXISTS connections (
   a_capture_sha TEXT NOT NULL,
   b_capture_sha TEXT NOT NULL,
@@ -982,6 +1012,14 @@ CREATE TABLE IF NOT EXISTS connections (
   asserted_by   TEXT NOT NULL,
   basis         TEXT,
   at            TEXT,
+  a_ref         TEXT,  -- the determining reference on end A, AS IT APPEARED (Ord. No. 13,579)
+  a_pos_kind    TEXT,  -- and WHERE it was read, in IC-1's vocabulary. NULL = the reading could not say
+  a_pos         TEXT,
+  a_pos_ref     TEXT,
+  b_ref         TEXT,  -- the same three facts for end B
+  b_pos_kind    TEXT,
+  b_pos         TEXT,
+  b_pos_ref     TEXT,
   PRIMARY KEY (a_capture_sha, b_capture_sha, entity_id)
 );
 CREATE INDEX IF NOT EXISTS connections_entity ON connections(entity_id);
@@ -3120,6 +3158,7 @@ __export(bio_checks_exports, {
   CASE_MEMBER_ROLES: () => CASE_MEMBER_ROLES,
   CHECK_RETIREMENTS: () => CHECK_RETIREMENTS,
   CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
+  CONNECTION_PAIR_CHECKS: () => CONNECTION_PAIR_CHECKS,
   CONTENT_EXTENT_CHECKS: () => CONTENT_EXTENT_CHECKS,
   CONTENT_EXTENT_KINDS: () => CONTENT_EXTENT_KINDS,
   CONTENT_EXTENT_KIND_NO_PRODUCER: () => CONTENT_EXTENT_KIND_NO_PRODUCER,
@@ -3181,6 +3220,7 @@ __export(bio_checks_exports, {
   checkBiasExtension: () => checkBiasExtension,
   checkBundle: () => checkBundle,
   checkCaseDocument: () => checkCaseDocument,
+  checkConnectionPairCovers: () => checkConnectionPairCovers,
   checkContentExtent: () => checkContentExtent,
   checkGatheringGrammar: () => checkGatheringGrammar,
   checkInboxGrammar: () => checkInboxGrammar,
@@ -9793,7 +9833,7 @@ var CONTENT_EXTENT_CHECKS = {
   }
 };
 function refusal(key, detail) {
-  const row = CONTENT_EXTENT_CHECKS[key];
+  const row = CONTENT_EXTENT_CHECKS[key] || CONNECTION_PAIR_CHECKS[key];
   return { ok: false, code: key, check: row.check, translation: row.translation, detail };
 }
 function legExtent(leg) {
@@ -9888,6 +9928,63 @@ function checkContentExtent(extent, ctx = {}) {
     return refusal(
       "CONTENT_EXTENT_NO_CHAIN",
       `this record holds no extraction chain for the capture this leg cites, so there is no transcription over ${describeExtent(e)} for the citation to point at`
+    );
+  return null;
+}
+var CONNECTION_PAIR_CHECKS = {
+  /* THE FORGED PAIR. A pair whose recorded position is NOT inside the extent
+     being graded may not grade it — which sounds obvious and is exactly the
+     shortcut this record would otherwise take, because the pair is right there
+     on the row and its grade is already computed. Taking it would let a leg
+     citing page 3 earn a connection established on page 300 of the same
+     document, which is Bob's 5.1 ruling inverted. */
+  CONNECTION_PAIR_OUTSIDE_EXTENT: {
+    check: "C-49.1",
+    where: "checks/bio-checks.mjs checkConnectionPairCovers > is-connection-pair-covering",
+    translation: "This connection was established by a reference somewhere else in the document, not in the part you cited. A citation that points at a passage stands on what is IN that passage, so it cannot borrow a link the record found elsewhere in the same file. Cite the part where the reference actually appears, or cite the document as a whole and say so."
+  },
+  /* THE UNPLACEABLE PAIR. The connection has its two references and neither
+     reading recorded WHERE it read one, so whether the reference is inside the
+     cited part is not a hard question — it is an unanswerable one. This is the
+     state IC-86 exists to shrink and it will be the common state until every
+     producer itemises its text; it is a STATEMENT, and the closing is per pair
+     and never assumed for the connection as a whole. */
+  CONNECTION_PAIR_UNPLACED: {
+    check: "C-49.2",
+    where: "checks/bio-checks.mjs checkConnectionPairCovers > is-connection-pair-covering",
+    translation: "The record knows which reference links these two documents but not where in either document it was read, so it cannot say whether that reference falls inside the part you cited. This is stated rather than assumed either way: the connection is real and its reach into your citation is undetermined until the document is read with positions."
+  },
+  /* THE ABSENT ROW. Asked to grade a portion the record does not hold. Refused
+     rather than answered UNDETERMINED, because those are opposite findings: an
+     undetermined grade says the portion exists and its connections cannot be
+     placed, and answering that for an id nothing minted would confirm a passage
+     that was never addressed. */
+  CONNECTION_PAIR_NO_CONTENT: {
+    check: "C-49.3",
+    /* A REGION and not the whole function, which is DEC-49's own rule (a row's
+       `where` names the SMALLEST SPAN) and is also what the harness demanded:
+       the function's other early return, `NO_CONTENT`, is a caller who named no
+       key rather than a member who was refused, and a whole-function `where`
+       made this row appear to govern it — so the guard asked for either a
+       translation for "you passed no parameter" or a narrower span. The span is
+       the honest answer. */
+    where: "src/store.mjs connectionGradeForContent > is-content-row-present",
+    translation: "This record holds no passage with that address, so there is no part of a document whose connections could be weighed. A content address is minted when a citation first points at a passage \u2014 if you expected one here, the citation that would have made it has not been written yet."
+  }
+};
+function checkConnectionPairCovers(pair, side, extentKind, extent, covers) {
+  const p = pair && typeof pair === "object" ? pair : null;
+  const position = p ? side === "b" ? p.b_position : p.a_position : null;
+  const ref = p ? side === "b" ? p.b_ref : p.a_ref : null;
+  if (!position)
+    return refusal(
+      "CONNECTION_PAIR_UNPLACED",
+      `the determining reference on end ${side === "b" ? "B" : "A"}${ref ? ` (${ref})` : ""} carries no position, so whether it was read inside ${describeExtent({ kind: extentKind, ...extent || {} })} is undetermined`
+    );
+  if (typeof covers !== "function" || !covers(position, extentKind, extent))
+    return refusal(
+      "CONNECTION_PAIR_OUTSIDE_EXTENT",
+      `the determining reference on end ${side === "b" ? "B" : "A"}${ref ? ` (${ref})` : ""} was read at ${position.ref}, which is outside ${describeExtent({ kind: extentKind, ...extent || {} })}`
     );
   return null;
 }
@@ -18250,6 +18347,76 @@ function gradeCeiling(chain2, target, attestations = []) {
     why: cap == null ? `no step in this text's provenance carries a measured fidelity${target && Number.isInteger(target.page) ? ` for page ${target.page}` : ""}, so what it may support is undetermined \u2014 which is a statement, not a permission` : `bounded by the weakest step that produced it (${describeChain(chain2)})`
   };
 }
+var READING_POSITION_KINDS = { "pdf-page": 1, "sheet-cell": 1, "slide-shape": 1, "doc-para": 1 };
+var isNonEmptyString = (s) => typeof s === "string" && s.trim().length > 0;
+var isIndex = (n) => Number.isInteger(n) && n >= 0;
+function readingSource(source) {
+  if (!source || typeof source !== "object" || Array.isArray(source)) return null;
+  const kind = source.kind;
+  if (!isNonEmptyString(kind)) return null;
+  if (!Object.prototype.hasOwnProperty.call(READING_POSITION_KINDS, kind)) return null;
+  if (!isNonEmptyString(source.ref)) return null;
+  const ref = String(source.ref).slice(0, 200);
+  if (kind === "pdf-page") {
+    if (!isIndex(source.page)) return null;
+    const rect = Array.isArray(source.rect) && source.rect.length === 4 && source.rect.every((n) => typeof n === "number" && Number.isFinite(n)) ? source.rect.map(Number) : null;
+    return { kind, ref, page: source.page, rect };
+  }
+  if (kind === "doc-para") {
+    if (!isIndex(source.para)) return null;
+    return { kind, ref, para: source.para, run: isIndex(source.run) ? source.run : null };
+  }
+  if (kind === "sheet-cell") {
+    if (!isNonEmptyString(source.sheet) || !isNonEmptyString(source.cell)) return null;
+    return { kind, ref, sheet: String(source.sheet).slice(0, 200), cell: String(source.cell).slice(0, 64) };
+  }
+  if (!isIndex(source.slide) || !isIndex(source.shape)) return null;
+  return { kind, ref, slide: source.slide, shape: source.shape };
+}
+function readingSourceJson(source) {
+  const s = readingSource(source);
+  if (!s) return null;
+  const { kind, ref, ...rest } = s;
+  return JSON.stringify(rest);
+}
+function readingSourceFromColumns(posKind, pos, posRef) {
+  if (!isNonEmptyString(posKind) || !isNonEmptyString(posRef) || typeof pos !== "string") return null;
+  let fields;
+  try {
+    fields = JSON.parse(pos);
+  } catch {
+    return null;
+  }
+  if (!fields || typeof fields !== "object") return null;
+  return readingSource({ kind: posKind, ref: posRef, ...fields });
+}
+function readingPositionInExtent(position, extentKind, extent) {
+  const p = readingSource(position);
+  if (!p) return false;
+  if (!isNonEmptyString(extentKind)) return false;
+  if (extentKind === "document") return true;
+  if (extentKind !== p.kind) return false;
+  const e = extent && typeof extent === "object" && !Array.isArray(extent) ? extent : null;
+  if (!e) return false;
+  if (p.kind === "pdf-page") {
+    if (!isIndex(e.page) || e.page !== p.page) return false;
+    if (!Array.isArray(e.rect) || e.rect.length !== 4) return true;
+    if (!Array.isArray(p.rect) || p.rect.length !== 4) return false;
+    const [ax0, ay0, ax1, ay1] = normRect(e.rect);
+    const [bx0, by0, bx1, by1] = normRect(p.rect);
+    return bx0 >= ax0 && by0 >= ay0 && bx1 <= ax1 && by1 <= ay1;
+  }
+  if (p.kind === "doc-para") {
+    if (!isIndex(e.para) || e.para !== p.para) return false;
+    if (!isIndex(e.run)) return true;
+    return isIndex(p.run) && e.run === p.run;
+  }
+  if (p.kind === "sheet-cell")
+    return isNonEmptyString(e.sheet) && isNonEmptyString(e.cell) && e.sheet === p.sheet && e.cell === p.cell;
+  if (!isIndex(e.slide) || e.slide !== p.slide) return false;
+  if (!isIndex(e.shape)) return true;
+  return e.shape === p.shape;
+}
 
 // src/cdx.mjs
 var EMPTY_BODY_DIGEST = "3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ";
@@ -18886,8 +19053,10 @@ function bySeverity(events) {
 
 // ../docprofile/doctypes/index.mjs
 var CONTRACT = { SUBSTANCE: "substance", MEMBERSHIP: "membership", UNMONITORABLE: "unmonitorable" };
-function entity(key, kind, label, facts) {
-  return { key: String(key), kind, label, facts: facts || {} };
+function entity(key, kind, label, facts, source) {
+  const e = { key: String(key), kind, label, facts: facts || {} };
+  if (source) e.source = source;
+  return e;
 }
 var CONNECTION = { REFERENTIAL: "referential", TEMPORAL: "temporal" };
 function referential(from, to, relation, why) {
@@ -18954,7 +19123,40 @@ var meeting_calendar_default = {
     if (signals.length >= 2) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
     return { match: false, confidence: CONFIDENCE.NONE };
   },
-  /** What is in it: the window it shows, and one entity per meeting. */
+  /** What is in it: the window it shows, and one entity per meeting.
+   *
+   *  FW-17 / IC-86 — THIS READER CANNOT SAY WHERE A REFERENCE WAS READ, and it
+   *  says so here because IC-86 makes that a stated obligation rather than a
+   *  silence: a reader that emits no position and a reader that had none are
+   *  indistinguishable at the wire, so the one that cannot must declare it.
+   *  Every entity below is emitted with NO `source`, deliberately, and for three
+   *  reasons that are each sufficient on their own.
+   *
+   *  (1) NO ARM OF IC-1 HAS A PRODUCER FOR THIS CONTAINER. An HTML page's
+   *  element reference is IC-1's `dom` arm, and `dom` has no producer anywhere
+   *  in the tree and is refused by name until CONTENT-HTML emits it. Emitting
+   *  any other arm for an HTML page would be a second reference vocabulary —
+   *  precisely what IC-1's constraint forbids.
+   *
+   *  (2) THE OFFSETS THIS READER WORKS IN ARE NOT THE OFFSETS `ctx.locate`
+   *  ANSWERS. It reads `unescapeHtml(ctx.text)`, and unescaping SHORTENS the
+   *  string by four characters per `&amp;` and three per `&lt;` — so every
+   *  offset after the first entity reference is displaced by an amount that
+   *  depends on how many preceded it. It then narrows to the inside of `<main>`,
+   *  displacing them again. Handing either coordinate to `locate` would return a
+   *  confidently wrong page, which is worse than no page at all: a wrong address
+   *  is a claim, and an absent one is an admission.
+   *
+   *  (3) A CALENDAR REACHES THIS READER THROUGH THE ACQUIRE PATH'S OWN TEXT
+   *  READ-BACK — a bare decoded string, not I2's itemised text field — so there
+   *  is no segment map to consult even if (1) and (2) were solved. The map
+   *  exists only where a producer itemised the container, which for text today
+   *  means a PDF's pages and an office container's paragraphs.
+   *
+   *  What it would take to close this: CONTENT-HTML producing the `dom` arm, and
+   *  an offset-preserving unescape so a match's index in the working string maps
+   *  back to the served bytes. Both are that area's, neither is this item's, and
+   *  the absence is honest until they exist. */
   parse(ctx) {
     const raw = unescapeHtml(String(ctx.text || ""));
     const main = /<main\b[^>]*>([\s\S]*)<\/main>/i.exec(raw);
@@ -19231,10 +19433,39 @@ var meeting_agenda_default = {
     return { match: false, confidence: CONFIDENCE.NONE };
   },
   /** What is in it: the meeting's own facts, and one entity per item of
-   *  legislation, keyed by the source-assigned file number. */
+   *  legislation, keyed by the source-assigned file number.
+   *
+   *  FW-17 / IC-86 — THIS READER CAN SAY WHERE, and says so here because a
+   *  reader's silence and a reader's honest null are indistinguishable at the
+   *  wire. Every reference it emits is a file number that sat ALONE ON ITS OWN
+   *  LINE, so the offset of that line is exactly the offset of the reference,
+   *  and `ctx.locate` turns it into the page (or paragraph) the container put it
+   *  on. What it CANNOT say is the rectangle: Tier-1 text is a flat per-page
+   *  string with no geometry, so the `pdf-page` arm arrives with `rect: null`
+   *  and the page is the honest maximum.
+   *
+   *  It says where the REFERENCE was read, not where the item's description
+   *  was. The two differ: the measured document's page furniture falls BETWEEN
+   *  a description and its file number at a page break, so a Subject: block can
+   *  sit on page 11 and the number it belongs to on page 12. The file number is
+   *  the reference an edge points at and the connection is drawn through, so its
+   *  position is the one recorded; recording the description's would make the
+   *  address disagree with the thing addressed. */
   parse(ctx) {
     const raw = String(ctx.text || "");
     const lines = raw.split(/\r?\n/).map((l) => l.trim());
+    const offsets = [];
+    {
+      let last = 0;
+      const re = /\r?\n/g;
+      let m;
+      while ((m = re.exec(raw)) !== null) {
+        offsets.push(last);
+        last = m.index + m[0].length;
+      }
+      offsets.push(last);
+    }
+    const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
     let date = null, body = null;
     for (const l of lines.slice(0, 60)) {
       if (!date && /^[A-Za-z]+day, [A-Za-z]+ \d{1,2}, \d{4}$/.test(l)) date = parseLongDate(l);
@@ -19289,7 +19520,7 @@ var meeting_agenda_default = {
         subject: pendingSubject || null,
         from: pendingFrom || null,
         item: item || null
-      }));
+      }, locate(offsets[i])));
       pendingSubject = null;
       pendingFrom = null;
     }
@@ -19351,6 +19582,16 @@ var generic_default = {
   detect() {
     return { match: false, confidence: CONFIDENCE.NONE };
   },
+  /* FW-17 / IC-86 — THIS READER CANNOT SAY WHERE A REFERENCE WAS READ, for the
+     one reason that admits no fix: it reads no references. The generic type's
+     whole discipline is that it reports a substantive difference without
+     describing it, so it emits NO entities, and where a reference was read is
+     not a question it can be asked. Declared here rather than left implicit
+     because IC-86 obliges a reader that cannot say to say so, and "it has
+     nothing to position" is a materially different answer from "it had
+     something and could not place it" — which is what the calendar reader's own
+     header records. This one closes when a measured type is written for the
+     document, not before. */
   parse() {
     return { entities: [], facts: {} };
   },
@@ -19380,27 +19621,128 @@ function doctypeFor(ctx) {
 }
 
 // ../docprofile/readtext.mjs
+function pdfPageSource(page) {
+  return { kind: "pdf-page", ref: `p.${page + 1}`, page, rect: null };
+}
+function docParaSource(para, ref) {
+  return {
+    kind: "doc-para",
+    ref: typeof ref === "string" && ref ? ref : `\xB6${para + 1}`,
+    para,
+    run: null
+  };
+}
+function joinItemised(items, textOf2, sourceOf) {
+  const segments = [];
+  let text = "";
+  for (let i = 0; i < items.length; i++) {
+    const t = textOf2(items[i]);
+    if (!t || !t.length) continue;
+    if (text.length) text += "\n";
+    const start = text.length;
+    text += t;
+    const source = sourceOf(items[i], i);
+    if (source) segments.push({ start, end: text.length, source });
+  }
+  return { text, segments };
+}
 function flattenText(supplied) {
   if (typeof supplied === "string")
-    return { text: supplied, source: "string", chars: supplied.trim().length, undetermined: 0, reasons: [] };
+    return {
+      text: supplied,
+      source: "string",
+      chars: supplied.trim().length,
+      undetermined: 0,
+      reasons: [],
+      segments: [],
+      position_why: "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said"
+    };
   if (!supplied || typeof supplied !== "object")
-    return { text: "", source: null, chars: 0, undetermined: 0, reasons: [] };
-  let text = "", source = null;
+    return {
+      text: "",
+      source: null,
+      chars: 0,
+      undetermined: 0,
+      reasons: [],
+      segments: [],
+      position_why: "no text was supplied"
+    };
+  let text = "", source = null, segments = [], position_why = null;
   if (typeof supplied.document === "string" && supplied.document.length) {
     text = supplied.document;
     source = "document";
+    const pages = Array.isArray(supplied.pages) ? supplied.pages : null;
+    const paras = Array.isArray(supplied.paragraphs) ? supplied.paragraphs : null;
+    if (pages && pages.length) {
+      const j = joinItemised(
+        pages,
+        (p) => p && typeof p.text === "string" ? p.text : "",
+        (p) => p && Number.isInteger(p.page) ? pdfPageSource(p.page) : null
+      );
+      if (j.text === text) segments = j.segments;
+      else position_why = "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed";
+    } else if (paras && paras.length) {
+      const j = joinItemised(
+        paras,
+        (p) => p && typeof p.text === "string" ? p.text : "",
+        (p, i) => docParaSource(
+          Number.isInteger(p && p.para) ? p.para : i,
+          p && p.ref
+        )
+      );
+      if (j.text === text) segments = j.segments;
+      else position_why = "this producer's document text is not its paragraphs joined, so the paragraph a reference was read in cannot be established from it and is not guessed";
+    } else {
+      position_why = "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said";
+    }
   } else if (Array.isArray(supplied.pages) && supplied.pages.length) {
-    text = supplied.pages.map((p) => p && typeof p.text === "string" ? p.text : "").filter((t) => t.length).join("\n");
+    const j = joinItemised(
+      supplied.pages,
+      (p) => p && typeof p.text === "string" ? p.text : "",
+      (p) => p && Number.isInteger(p.page) ? pdfPageSource(p.page) : null
+    );
+    text = j.text;
+    segments = j.segments;
     source = "pages";
   } else if (Array.isArray(supplied.paragraphs) && supplied.paragraphs.length) {
-    text = supplied.paragraphs.map((p) => p && typeof p.text === "string" ? p.text : "").filter((t) => t.length).join("\n");
+    const j = joinItemised(
+      supplied.paragraphs,
+      (p) => p && typeof p.text === "string" ? p.text : "",
+      (p, i) => docParaSource(Number.isInteger(p && p.para) ? p.para : i, p && p.ref)
+    );
+    text = j.text;
+    segments = j.segments;
     source = "paragraphs";
   }
+  if (!segments.length && !position_why && source)
+    position_why = `this producer's ${source} carry no part index, so where in the document a reference was read cannot be said`;
   const c = supplied.counts;
   const markers = Array.isArray(supplied.undetermined) ? supplied.undetermined : [];
   const undetermined = c && typeof c.undetermined === "number" ? c.undetermined : markers.reduce((n, m) => n + (m && typeof m.count === "number" ? m.count : 1), 0);
   const reasons = [...new Set(markers.map((m) => m && m.reason).filter(Boolean))];
-  return { text, source, chars: text.trim().length, undetermined, reasons };
+  return {
+    text,
+    source,
+    chars: text.trim().length,
+    undetermined,
+    reasons,
+    segments,
+    position_why: segments.length ? null : position_why
+  };
+}
+function makeLocator(segments) {
+  const segs = Array.isArray(segments) ? segments : [];
+  return function locate(offset) {
+    if (!segs.length || typeof offset !== "number" || !Number.isFinite(offset) || offset < 0) return null;
+    let lo = 0, hi = segs.length - 1;
+    while (lo <= hi) {
+      const mid = lo + hi >> 1;
+      if (offset < segs[mid].start) hi = mid - 1;
+      else if (offset >= segs[mid].end) lo = mid + 1;
+      else return segs[mid].source;
+    }
+    return null;
+  };
 }
 function readText(supplied, ctx = {}) {
   const flat = flattenText(supplied);
@@ -19429,9 +19771,10 @@ function readText(supplied, ctx = {}) {
   const stack = identify(dctx);
   const doctype = doctypeFor({ ...dctx, handler: stack.handler, kind: stack.kind });
   let parsed = null, parse_error = null;
+  const locate = makeLocator(flat.segments);
   if (typeof doctype.type.parse === "function") {
     try {
-      parsed = doctype.type.parse({ ...dctx, handler: stack.handler, at: ctx.at || null }) || {};
+      parsed = doctype.type.parse({ ...dctx, handler: stack.handler, at: ctx.at || null, locate }) || {};
     } catch (e) {
       parse_error = String(e && e.message || e);
     }
@@ -19446,6 +19789,13 @@ function readText(supplied, ctx = {}) {
     undetermined: flat.undetermined,
     reasons: flat.reasons,
     text_from: flat.source,
+    /* FW-17: WHETHER POSITION WAS AVAILABLE AT ALL, so the caller can state the
+       absence on the reading's basis rather than leaving a null column looking
+       like a reader that did not bother. `position_parts` is the map's size —
+       a floor on what a reader could have said — and `position_why` is the
+       producer-side reason when there is none. */
+    position_parts: flat.segments.length,
+    position_why: flat.position_why || null,
     stack,
     doctype,
     parsed,
@@ -21414,7 +21764,38 @@ var Store = class _Store extends DurableObject {
          the column now is what makes REC-84 a writer rather than a migration —
          the same reason the three unlanded extent arms are named in
          CONTENT_EXTENT_KINDS rather than added later. */
-      ["inquiry_basis_version_legs", "content_id", "TEXT"]
+      ["inquiry_basis_version_legs", "content_id", "TEXT"],
+      /* FW-17 / IC-86: WHERE A REFERENCE WAS READ. Additive and nullable, and
+         ALTER rather than the DROP-and-rebuild the three derived tables above
+         get, because the distinction that list turns on does not apply: those
+         three gained a column that was part of the KEY, so old rows keyed the
+         old way were WRONG and could only be re-derived. These three are not in
+         the key — an old row is not wrong, it is a row whose reading carried no
+         position, which is exactly what NULL says here. Dropping the table would
+         throw away every reference index in the store to add a column that
+         changes nothing about what the existing rows mean, and the next
+         promotion rewrites them anyway (#writeReadings replaces per capture). */
+      ["reading_refs", "pos_kind", "TEXT"],
+      ["reading_refs", "pos", "TEXT"],
+      ["reading_refs", "pos_ref", "TEXT"],
+      /* FW-17 / D-161 / Bob's 5.4: THE DETERMINING REFERENCE PAIR on a
+         connection. Eight columns rather than a second table, because a
+         connection has exactly two ends and always exactly two — the row IS the
+         pair, and a join table would let a row exist with three. Nullable for
+         two DIFFERENT reasons that the reads must keep apart: a_ref/b_ref are
+         null only on a row derived before this landing (the next op=connect
+         fills them, deterministically, from the same resolutions that set the
+         grade), while the POSITION columns are null whenever the reading could
+         not say where — which is most readings today and is not a gap to be
+         backfilled. */
+      ["connections", "a_ref", "TEXT"],
+      ["connections", "a_pos_kind", "TEXT"],
+      ["connections", "a_pos", "TEXT"],
+      ["connections", "a_pos_ref", "TEXT"],
+      ["connections", "b_ref", "TEXT"],
+      ["connections", "b_pos_kind", "TEXT"],
+      ["connections", "b_pos", "TEXT"],
+      ["connections", "b_pos_ref", "TEXT"]
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -30754,15 +31135,19 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       for (const e of entities) {
         if (!e || e.key == null && e.kind == null) continue;
         const ref = typeof e.ref === "string" && e.ref ? e.ref : `${e.kind == null ? "" : e.kind}:${e.key == null ? "" : e.key}`;
+        const pos = readingSource(e.source);
         this.sql.exec(
-          `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label)
-           VALUES (?,?,?,?,?,?)`,
+          `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref)
+           VALUES (?,?,?,?,?,?,?,?,?)`,
           sha,
           bundleId,
           ref,
           e.kind == null ? null : String(e.kind),
           e.key == null ? null : String(e.key),
-          e.label == null ? null : String(e.label)
+          e.label == null ? null : String(e.label),
+          pos ? pos.kind : null,
+          pos ? readingSourceJson(pos) : null,
+          pos ? pos.ref : null
         );
         for (const [src, text] of _Store.#refTermSources({
           ref,
@@ -32041,7 +32426,8 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     if (typeof ref !== "string" || !ref)
       return { ok: true, ref: typeof ref === "string" ? ref : null, count: 0, documents: [] };
     const rows = this.#rows(
-      `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_kind, rr.ref_key, rr.label, r.content_type
+      `SELECT rr.capture_sha, rr.bundle_id, rr.ref, rr.ref_kind, rr.ref_key, rr.label,
+              rr.pos_kind, rr.pos, rr.pos_ref, r.content_type
          FROM reading_refs rr LEFT JOIN readings r ON r.capture_sha = rr.capture_sha
         WHERE rr.ref=? ORDER BY rr.bundle_id, rr.capture_sha`,
       ref
@@ -32058,7 +32444,8 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         kind: r.ref_kind,
         key: r.ref_key,
         label: r.label,
-        content_type: r.content_type
+        content_type: r.content_type,
+        position: readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref)
       }))
     };
   }
@@ -33260,9 +33647,20 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     return (_Store.#GRADE_RANK[g1] || 0) <= (_Store.#GRADE_RANK[g2] || 0) ? g1 : g2;
   }
   /* The read-side view of a connection: established and needs_confirmation are surfaced
-     from the WEAKER grade so a connection resting on a C at either end is never read back
-     as established, and asserted_by is surfaced DISTINCT from grade (framework §8.1). */
+       from the WEAKER grade so a connection resting on a C at either end is never read back
+       as established, and asserted_by is surfaced DISTINCT from grade (framework §8.1).
+  
+       FW-17 / D-161 / Bob's 5.4: AND IT CARRIES THE DETERMINING PAIR, because following a
+       connection landing the reader on a whole document is the defect D-161 names and it is
+       a defect of THIS VIEW as much as of the row. `determining_pair` is one object rather
+       than eight flat keys so that a consumer cannot read half of it, and `positioned` is
+       stated rather than left for a caller to infer from two nulls — "the record cannot say
+       where" is a finding and must survive into the answer as one. A row derived before this
+       landing has no pair at all and says so with `null`, which is a THIRD state and not the
+       same as a pair that cannot place itself. */
   #connectionView(r) {
+    const aPos = readingSourceFromColumns(r.a_pos_kind, r.a_pos, r.a_pos_ref);
+    const bPos = readingSourceFromColumns(r.b_pos_kind, r.b_pos, r.b_pos_ref);
     return {
       a_capture_sha: r.a_capture_sha,
       b_capture_sha: r.b_capture_sha,
@@ -33276,7 +33674,15 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       needs_confirmation: !_Store.#isEstablished(r.grade),
       asserted_by: r.asserted_by,
       basis: r.basis,
-      at: r.at
+      at: r.at,
+      determining_pair: r.a_ref || r.b_ref ? {
+        a_ref: r.a_ref || null,
+        a_position: aPos,
+        b_ref: r.b_ref || null,
+        b_position: bPos,
+        positioned: !!(aPos && bPos),
+        why: aPos && bPos ? "both ends record where in their document the determining reference was read" : "the determining reference is recorded on both ends; where it was read is not, so a citation of a PART of either document cannot yet earn from this connection"
+      } : null
     };
   }
   /* THE INVERSE OF THE QUADRATIC (REC-66). How many ENDS may be derived over before the
@@ -33336,7 +33742,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     const endsCap = _Store.#maxEndsForPairs(cap);
     const rowCap = _Store.#MEANING_LIMIT_MAX;
     const scan = this.#rows(
-      `SELECT capture_sha, bundle_id, grade FROM resolutions
+      `SELECT capture_sha, bundle_id, grade, ref FROM resolutions
         WHERE entity_id=? AND capture_sha IN (
           SELECT capture_sha FROM resolutions WHERE entity_id=? GROUP BY capture_sha
            ORDER BY capture_sha LIMIT ?)
@@ -33356,11 +33762,26 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     for (const r of rows) {
       const cur = byCapture.get(r.capture_sha);
       if (!cur || _Store.#GRADE_RANK[r.grade] > _Store.#GRADE_RANK[cur.grade])
-        byCapture.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: r.bundle_id, grade: r.grade });
+        byCapture.set(r.capture_sha, {
+          capture_sha: r.capture_sha,
+          bundle_id: r.bundle_id,
+          grade: r.grade,
+          ref: typeof r.ref === "string" ? r.ref : null
+        });
     }
     const distinct = [...byCapture.values()];
     const truncated = rowsCut || distinct.length > endsCap;
     const ends = distinct.length > endsCap ? distinct.slice(0, endsCap) : distinct;
+    for (const e of ends) {
+      e.pos = null;
+      if (!e.ref) continue;
+      const rr = this.#one(
+        `SELECT pos_kind, pos, pos_ref FROM reading_refs WHERE capture_sha=? AND ref=?`,
+        e.capture_sha,
+        e.ref
+      );
+      if (rr) e.pos = readingSourceFromColumns(rr.pos_kind, rr.pos, rr.pos_ref);
+    }
     const at = (/* @__PURE__ */ new Date()).toISOString();
     const label = ent ? ent.label : entityId;
     const connections = [];
@@ -33375,30 +33796,9 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
           }
           const grade = _Store.#weakerGrade(A.grade, B.grade);
           const est = _Store.#isEstablished(grade) ? 1 : 0;
-          const basis = `both documents concern ${label} (${entityId}); grade is the weaker of the two ends (${A.grade}, ${B.grade}) -> ${grade}`;
-          this.sql.exec(
-            `INSERT INTO connections
-               (a_capture_sha,b_capture_sha,entity_id,a_bundle_id,b_bundle_id,a_grade,b_grade,grade,established,asserted_by,basis,at)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
-             ON CONFLICT(a_capture_sha,b_capture_sha,entity_id) DO UPDATE SET
-               a_bundle_id=excluded.a_bundle_id, b_bundle_id=excluded.b_bundle_id,
-               a_grade=excluded.a_grade, b_grade=excluded.b_grade, grade=excluded.grade,
-               established=excluded.established, asserted_by=excluded.asserted_by,
-               basis=excluded.basis, at=excluded.at`,
-            A.capture_sha,
-            B.capture_sha,
-            entityId,
-            A.bundle_id,
-            B.bundle_id,
-            A.grade,
-            B.grade,
-            grade,
-            est,
-            String(assertedBy || "system"),
-            basis.slice(0, 400),
-            at
-          );
-          connections.push(this.#connectionView({
+          const pairNote = A.ref && B.ref ? `; the connection is through the reference ${A.ref} in A and ${B.ref} in B` + (A.pos && B.pos ? ` (read at ${A.pos.ref} and ${B.pos.ref})` : A.pos || B.pos ? ` (read at ${(A.pos || B.pos).ref} on one end only; the other reading does not say where)` : ` (neither reading says where in its document the reference was read)`) : `; which reference established it is not recorded on this row`;
+          const basis = `both documents concern ${label} (${entityId}); grade is the weaker of the two ends (${A.grade}, ${B.grade}) -> ${grade}${pairNote}`;
+          const row = {
             a_capture_sha: A.capture_sha,
             b_capture_sha: B.capture_sha,
             entity_id: entityId,
@@ -33410,8 +33810,52 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
             established: est,
             asserted_by: String(assertedBy || "system"),
             basis: basis.slice(0, 400),
-            at
-          }));
+            at,
+            a_ref: A.ref,
+            a_pos_kind: A.pos ? A.pos.kind : null,
+            a_pos: A.pos ? readingSourceJson(A.pos) : null,
+            a_pos_ref: A.pos ? A.pos.ref : null,
+            b_ref: B.ref,
+            b_pos_kind: B.pos ? B.pos.kind : null,
+            b_pos: B.pos ? readingSourceJson(B.pos) : null,
+            b_pos_ref: B.pos ? B.pos.ref : null
+          };
+          this.sql.exec(
+            `INSERT INTO connections
+               (a_capture_sha,b_capture_sha,entity_id,a_bundle_id,b_bundle_id,a_grade,b_grade,grade,established,asserted_by,basis,at,
+                a_ref,a_pos_kind,a_pos,a_pos_ref,b_ref,b_pos_kind,b_pos,b_pos_ref)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+             ON CONFLICT(a_capture_sha,b_capture_sha,entity_id) DO UPDATE SET
+               a_bundle_id=excluded.a_bundle_id, b_bundle_id=excluded.b_bundle_id,
+               a_grade=excluded.a_grade, b_grade=excluded.b_grade, grade=excluded.grade,
+               established=excluded.established, asserted_by=excluded.asserted_by,
+               basis=excluded.basis, at=excluded.at,
+               a_ref=excluded.a_ref, a_pos_kind=excluded.a_pos_kind,
+               a_pos=excluded.a_pos, a_pos_ref=excluded.a_pos_ref,
+               b_ref=excluded.b_ref, b_pos_kind=excluded.b_pos_kind,
+               b_pos=excluded.b_pos, b_pos_ref=excluded.b_pos_ref`,
+            row.a_capture_sha,
+            row.b_capture_sha,
+            row.entity_id,
+            row.a_bundle_id,
+            row.b_bundle_id,
+            row.a_grade,
+            row.b_grade,
+            row.grade,
+            row.established,
+            row.asserted_by,
+            row.basis,
+            row.at,
+            row.a_ref,
+            row.a_pos_kind,
+            row.a_pos,
+            row.a_pos_ref,
+            row.b_ref,
+            row.b_pos_kind,
+            row.b_pos,
+            row.b_pos_ref
+          );
+          connections.push(this.#connectionView(row));
         }
       }
     });
@@ -33433,7 +33877,9 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
      subject) or by capture sha (every connection this document is an end of, either side).
      established and needs_confirmation come from the WEAKER grade, so a caller can never
      read a connection resting on a C as settled. */
-  connectionsFor({ entityId = null, captureSha = null, limit = null, viewer = null } = {}) {
+  connectionsFor({ entityId = null, captureSha = null, contentId = null, limit = null, viewer = null } = {}) {
+    if (typeof contentId === "string" && contentId.trim())
+      return this.connectionGradeForContent({ contentId, limit, viewer });
     const cap = Math.max(1, Math.min(Number(limit) || _Store.#MEANING_LIMIT_DEFAULT, _Store.#MEANING_LIMIT_MAX));
     let scan;
     if (entityId) {
@@ -33467,6 +33913,140 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       })),
       limit: cap,
       truncated
+    };
+  }
+  /* ============ FW-17 · A PORTION'S CONNECTION GRADE ============
+   *
+   * Bob, 2026-09-14 (CONTENT-EXTENT-DESIGN-SPACE.md 5.1): a citation that points at the
+   * sentence, paragraph or section answering the question refers ONLY to that portion of
+   * the document — "just as an HTML highlight link refers to specific content in that
+   * document" — so a content-grain leg earns, on every axis, only from what is IN its
+   * portion. Until readings carried position, that made a portion leg's connection grade
+   * UNDETERMINED and stated, which is what REC-83's read says today. This is the function
+   * that makes it COMPUTABLE, and computable is not the same as computed: every branch
+   * below that cannot establish containment answers UNDETERMINED and says which kind of
+   * cannot it is.
+   *
+   * THE GRADE IS NOT A NEW SCALE AND NOTHING HERE MINTS ONE. It is framework 8.1's grade,
+   * taken off the connection row the derivation already wrote — the weaker of the two
+   * ends, established only when both ends are A or B. What this function decides is
+   * MEMBERSHIP, not value: which of this capture's connections reach into this extent.
+   * The collapse over the survivors is the STRONGEST, the same collapse op=concerns,
+   * op=connect, op=thread and earnedBasisRegistry all make, reused so a portion's grade
+   * cannot drift from the grade its document appears at in the reverse index.
+   *
+   * THREE KINDS OF "NO", AND COLLAPSING THEM WOULD BE THE DEFECT. A connection whose row
+   * predates the pair writer records no reference at all; a connection whose pair is
+   * recorded but unplaced cannot be tested; a connection whose pair was read elsewhere in
+   * the document genuinely does not reach this portion. Only the third is an answer about
+   * the member's citation. The first two are answers about the RECORD, and a member who
+   * is told "no connection" when the truth is "this record has not read the document
+   * closely enough to say" has been told something false about their own case.
+   *
+   * THE DOCUMENT ARM TAKES NO POSITION TEST AT ALL, and that is doctrine rather than an
+   * optimisation. A document-extent row's portion IS the whole document (5.3 — a citation
+   * naming no part means the whole document), so every connection on that capture is
+   * inside it by definition and asking where the reference was read would answer a
+   * question nobody posed. It is also what keeps every document-grain answer in this
+   * record byte-identical to what it was before this item, which the suite pins. */
+  connectionGradeForContent({ contentId = null, limit = null, viewer = null } = {}) {
+    if (typeof contentId !== "string" || !contentId.trim())
+      return {
+        ok: false,
+        reason: "NO_CONTENT",
+        detail: "a portion's connection grade is asked about one content row, by its id (content=...)"
+      };
+    const row = this.#one(
+      `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, stale FROM content WHERE content_id=?`,
+      contentId.trim()
+    );
+    if (!row) {
+      const r = CONNECTION_PAIR_CHECKS.CONNECTION_PAIR_NO_CONTENT;
+      return {
+        ok: false,
+        reason: "CONNECTION_PAIR_NO_CONTENT",
+        code: "CONNECTION_PAIR_NO_CONTENT",
+        check: r.check,
+        translation: r.translation,
+        content_id: contentId.trim(),
+        detail: "this record holds no content row with that id, so there is no portion to grade"
+      };
+    }
+    const extent = safeJson(row.extent);
+    const cap = Math.max(1, Math.min(Number(limit) || _Store.#MEANING_LIMIT_DEFAULT, _Store.#MEANING_LIMIT_MAX));
+    const scan = this.#rows(
+      `SELECT * FROM connections WHERE a_capture_sha=? OR b_capture_sha=? ORDER BY grade, entity_id LIMIT ?`,
+      row.capture_sha,
+      row.capture_sha,
+      cap + 1
+    );
+    const truncated = scan.length > cap;
+    const conns = truncated ? scan.slice(0, cap) : scan;
+    const keep = this.#bundleRedactor(viewer);
+    const whole = row.extent_kind === "document";
+    const reaching = [], undetermined = [], outside = [];
+    for (const c of conns) {
+      const side = c.a_capture_sha === row.capture_sha ? "a" : "b";
+      const view = this.#connectionView(c);
+      const entry = {
+        entity_id: c.entity_id,
+        grade: c.grade,
+        side,
+        other_capture_sha: side === "a" ? c.b_capture_sha : c.a_capture_sha,
+        other_bundle_id: keep(side === "a" ? c.b_bundle_id : c.a_bundle_id),
+        determining_pair: view.determining_pair
+      };
+      if (whole) {
+        reaching.push({ ...entry, why: "this citation is of the whole document, so every connection the document has is inside it" });
+        continue;
+      }
+      if (!view.determining_pair) {
+        undetermined.push({
+          ...entry,
+          code: "CONNECTION_PAIR_NO_PAIR",
+          why: "this connection was derived before the record kept which reference established it, so whether that reference falls inside this part cannot be asked. Re-deriving the subject's connections records the pair"
+        });
+        continue;
+      }
+      const bad = checkConnectionPairCovers(
+        view.determining_pair,
+        side,
+        row.extent_kind,
+        extent,
+        readingPositionInExtent
+      );
+      if (!bad) {
+        reaching.push({ ...entry, why: `the determining reference was read at ${(side === "a" ? view.determining_pair.a_position : view.determining_pair.b_position).ref}, inside ${row.ref}` });
+        continue;
+      }
+      (bad.code === "CONNECTION_PAIR_OUTSIDE_EXTENT" ? outside : undetermined).push({ ...entry, code: bad.code, check: bad.check, translation: bad.translation, why: bad.detail });
+    }
+    let grade = null;
+    for (const r2 of reaching)
+      if (grade == null || _Store.#GRADE_RANK[r2.grade] > _Store.#GRADE_RANK[grade]) grade = r2.grade;
+    return {
+      ok: true,
+      content_id: row.content_id,
+      capture_sha: row.capture_sha,
+      bundle_id: keep(row.bundle_id),
+      extent_kind: row.extent_kind,
+      ref: row.ref,
+      stale: !!row.stale,
+      connection_grade: grade,
+      established: grade == null ? false : _Store.#isEstablished(grade),
+      needs_confirmation: grade == null ? false : !_Store.#isEstablished(grade),
+      reaching,
+      undetermined,
+      outside,
+      counts: {
+        connections: conns.length,
+        reaching: reaching.length,
+        undetermined: undetermined.length,
+        outside: outside.length
+      },
+      limit: cap,
+      truncated,
+      why: grade != null ? `${reaching.length} connection(s) were established by a reference read inside ${row.ref}; the grade is the strongest of them (${grade}), which states how that connection was established and nothing about how credible either document is` : conns.length === 0 ? `this document is an end of no connection, so there is nothing for ${row.ref} to earn from` : undetermined.length ? `no connection is established to reach ${row.ref}: ${undetermined.length} cannot be placed (the record does not hold where the determining reference was read) and ${outside.length} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none \u2014 reading this document with positions is what would settle it` : `all ${outside.length} of this document's connections were established by references read outside ${row.ref}, so none of them reaches this citation`
     };
   }
   /* The closed vocabulary of stage requiredness (framework 8.2): unless_exception is the
@@ -48150,9 +48730,21 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           assertedBy: body && body.assertedBy || void 0,
           limit: body && body.limit || url.searchParams.get("limit")
         }),
+        /* FW-17: A THIRD KEY, `content=`, and the BRANCH IS INSIDE THE READ rather than
+           here. `id=` and `sha256=` ask WHICH connections exist through a subject or
+           around a document; `content=` asks what a PORTION of a document may earn from
+           them (Bob's 5.1) — the same table, the same bound, so a member holding a content
+           id should not have to know the answer lives under another op.
+           IT IS NOT A TERNARY IN THIS TABLE, and that is a measurement rather than a
+           preference: `meaning-bounds.test.mjs` reads this dispatch table POSITIONALLY,
+           matching `op: () => this.method(`, and a ternary here made `op=connections`
+           vanish from the bounds walk entirely — the op stopped being judged rather than
+           being judged wrong, which is REC-70's invisible-op hazard arriving by a new
+           route. The shape of this table is load-bearing for instruments that read it. */
         connections: () => this.connectionsFor({
           entityId: url.searchParams.get("id"),
           captureSha: url.searchParams.get("sha256"),
+          contentId: url.searchParams.get("content"),
           limit: url.searchParams.get("limit"),
           viewer: url.searchParams.get("viewer")
         }),
@@ -52218,7 +52810,16 @@ var index_default = {
         label: e && e.label != null ? e.label : null,
         facts: e && e.facts && typeof e.facts === "object" ? e.facts : {},
         /* The reference exactly as the reading carries it: kind:key, raw. */
-        ref: `${e && e.kind != null ? e.kind : ""}:${e && e.key != null ? e.key : ""}`
+        ref: `${e && e.kind != null ? e.kind : ""}:${e && e.key != null ? e.key : ""}`,
+        /* FW-17 / IC-86: WHERE the reference was read, in IC-1's union and no
+           other vocabulary. Validated here rather than trusted, for the reason
+           IC-1 states as its own load-bearing part — a required `kind`
+           discriminator turns a silent misread into a loud one, and this is the
+           boundary where a reader's answer becomes the record's. An unrecognised
+           kind, a missing human form or a missing per-arm field yields null: the
+           reading still writes and the position is absent, which is the honest
+           direction. NULL IS NEVER "the whole document was meant". */
+        source: readingSource(e && e.source)
       })).filter((e) => e.key != null || e.kind != null);
       let reading;
       const canRead = !!profileText && typeof docType.type.parse === "function";
@@ -52236,7 +52837,12 @@ var index_default = {
             entities,
             facts: facts || {},
             at: retrieved,
-            basis: entities.length ? `read by the ${docType.type.key} reader v${docType.type.version}` : `the ${docType.type.key} reader found no entities in this document; recorded as an empty reading, never an emptied document`
+            basis: entities.length ? `read by the ${docType.type.key} reader v${docType.type.version}${entities.some((e) => e.source) ? "" : " \u2014 no reference carries where it was read: this document was read as one undivided string, which names no part of a container to point at"}` : `the ${docType.type.key} reader found no entities in this document; recorded as an empty reading, never an emptied document`,
+            /* FW-17 / IC-86: the acquire path's own text read-back is a BARE
+               DECODED STRING with no itemisation, so there is no segment map and
+               no position to carry. Stated rather than left to a null column. */
+            position_parts: 0,
+            position_why: entities.some((e) => e.source) ? null : "the text was read back as one decoded string, which carries no container structure, so where in the document a reference was read cannot be said"
           };
         } catch (e) {
           reading = {
@@ -52380,6 +52986,8 @@ var index_default = {
           const wfacts = wrest && typeof wrest.facts === "object" && Object.keys(wrest).length === 1 ? wrest.facts : wrest;
           const entities = wired.parse_error ? [] : readEntities(wiredEntities);
           const wtype = wired.doctype.type;
+          const positioned = entities.filter((e) => e.source).length;
+          const posNote = !entities.length ? null : positioned === entities.length ? `every reference carries where it was read (${positioned} of ${entities.length})` : positioned ? `${positioned} of ${entities.length} references carry where they were read; the rest were read in stretches of text no part of the container claims, so their position is not stated` : `no reference carries where it was read \u2014 ${wired.position_why || "this reader does not say where"}`;
           reading = {
             content_type: wtype.key,
             reader_version: wtype.version ?? null,
@@ -52403,8 +53011,13 @@ var index_default = {
             text_source: chain2,
             text_tier: wiredTier,
             text_container: fmt,
-            basis: (wired.parse_error ? `the ${wtype.key} reader could not parse the ${fmt} text-layer text (${wired.parse_error}), so nothing is claimed about its entities` : entities.length ? `read by the ${wtype.key} reader v${wtype.version} over ${fmt} ${describeChain(chain2)} (tier ${wiredTier}); ${wired.why}` : `the ${wtype.key} reader found no entities in this document's ${fmt} text-layer text (tier ${wiredTier}); recorded as an empty reading, never an emptied document`) + (ocrNote ? ` \u2014 ${ocrNote}` : ""),
-            ...ocrNote ? { tier3_candidate: true } : {}
+            basis: (wired.parse_error ? `the ${wtype.key} reader could not parse the ${fmt} text-layer text (${wired.parse_error}), so nothing is claimed about its entities` : entities.length ? `read by the ${wtype.key} reader v${wtype.version} over ${fmt} ${describeChain(chain2)} (tier ${wiredTier}); ${wired.why}` : `the ${wtype.key} reader found no entities in this document's ${fmt} text-layer text (tier ${wiredTier}); recorded as an empty reading, never an emptied document`) + (ocrNote ? ` \u2014 ${ocrNote}` : "") + (posNote ? ` \u2014 ${posNote}` : ""),
+            ...ocrNote ? { tier3_candidate: true } : {},
+            /* FW-17 / IC-86: the producer-side facts about position, carried on
+               the reading so a later reader can tell an absent position that was
+               never available from one a reader declined to give. */
+            position_parts: wired.position_parts ?? 0,
+            position_why: positioned ? null : wired.position_why || null
           };
         } else if (wired) {
           reading = {

@@ -42,9 +42,32 @@ export const CONTRACT = { SUBSTANCE: "substance", MEMBERSHIP: "membership", UNMO
 /** An entity a content type found in a document. `key` must be stable across
  *  fetches: a position in a list is not a key, an id in a URL is. `facts` are the
  *  fields whose change might mean something, named so assess() can say WHICH
- *  moved rather than that the entity differs. */
-export function entity(key, kind, label, facts) {
-  return { key: String(key), kind, label, facts: facts || {} };
+ *  moved rather than that the entity differs.
+ *
+ *  FW-17 / IC-86 — `source`: WHERE IN THE DOCUMENT this reference was read, in
+ *  IC-1's element-reference union and no other vocabulary
+ *  (`pdf-page`/`sheet-cell`/`slide-shape`/`doc-para`; `dom` has no producer and
+ *  is not emitted). It is OPTIONAL and `null` is both legal and meaningful.
+ *
+ *  THE ONLY LEGITIMATE SOURCE OF THIS VALUE IS `ctx.locate(offset)`, which
+ *  `readtext.mjs` puts on the reader's context: the reader knows which OFFSET
+ *  of the text it read the reference at, and only the producer knows which page
+ *  or paragraph of the container that offset is in. A reader that composes a
+ *  `source` itself is inventing an address, which is the one thing an address
+ *  may never be.
+ *
+ *  AND A NULL IS NOT A DOCUMENT-GRAIN CLAIM. An absent position means THIS
+ *  READING CANNOT SAY WHERE — never "the whole document was meant". Bob's
+ *  ruling of 2026-09-14 (5.3) is that a citation naming no part means the whole
+ *  document, and that is a MEMBER'S act of citation; it is not a reader's
+ *  silence. Collapsing the two would let a reader's shortcoming read as a
+ *  member's choice, which is the record claiming more than it holds. */
+export function entity(key, kind, label, facts, source) {
+  const e = { key: String(key), kind, label, facts: facts || {} };
+  /* Carried only when the locator actually answered — an explicit `source: null`
+     and an absent `source` mean the same thing and the shape says so once. */
+  if (source) e.source = source;
+  return e;
 }
 
 /** Referential and temporal connections are different things and must not be

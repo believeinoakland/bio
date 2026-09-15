@@ -70,7 +70,40 @@ export default {
     return { match: false, confidence: CONFIDENCE.NONE };
   },
 
-  /** What is in it: the window it shows, and one entity per meeting. */
+  /** What is in it: the window it shows, and one entity per meeting.
+   *
+   *  FW-17 / IC-86 — THIS READER CANNOT SAY WHERE A REFERENCE WAS READ, and it
+   *  says so here because IC-86 makes that a stated obligation rather than a
+   *  silence: a reader that emits no position and a reader that had none are
+   *  indistinguishable at the wire, so the one that cannot must declare it.
+   *  Every entity below is emitted with NO `source`, deliberately, and for three
+   *  reasons that are each sufficient on their own.
+   *
+   *  (1) NO ARM OF IC-1 HAS A PRODUCER FOR THIS CONTAINER. An HTML page's
+   *  element reference is IC-1's `dom` arm, and `dom` has no producer anywhere
+   *  in the tree and is refused by name until CONTENT-HTML emits it. Emitting
+   *  any other arm for an HTML page would be a second reference vocabulary —
+   *  precisely what IC-1's constraint forbids.
+   *
+   *  (2) THE OFFSETS THIS READER WORKS IN ARE NOT THE OFFSETS `ctx.locate`
+   *  ANSWERS. It reads `unescapeHtml(ctx.text)`, and unescaping SHORTENS the
+   *  string by four characters per `&amp;` and three per `&lt;` — so every
+   *  offset after the first entity reference is displaced by an amount that
+   *  depends on how many preceded it. It then narrows to the inside of `<main>`,
+   *  displacing them again. Handing either coordinate to `locate` would return a
+   *  confidently wrong page, which is worse than no page at all: a wrong address
+   *  is a claim, and an absent one is an admission.
+   *
+   *  (3) A CALENDAR REACHES THIS READER THROUGH THE ACQUIRE PATH'S OWN TEXT
+   *  READ-BACK — a bare decoded string, not I2's itemised text field — so there
+   *  is no segment map to consult even if (1) and (2) were solved. The map
+   *  exists only where a producer itemised the container, which for text today
+   *  means a PDF's pages and an office container's paragraphs.
+   *
+   *  What it would take to close this: CONTENT-HTML producing the `dom` arm, and
+   *  an offset-preserving unescape so a match's index in the working string maps
+   *  back to the served bytes. Both are that area's, neither is this item's, and
+   *  the absence is honest until they exist. */
   parse(ctx) {
     const raw = unescapeHtml(String(ctx.text || ""));
     const main = /<main\b[^>]*>([\s\S]*)<\/main>/i.exec(raw);

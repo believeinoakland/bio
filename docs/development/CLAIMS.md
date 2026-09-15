@@ -4622,3 +4622,62 @@ matches their numbers; `docs/architecture/**` is not this claim's, so it is repo
 edited. (2) UI-59's scope names the surface ledger as `docs/CIVICOS_UI_STATE.md`; the file is
 `docs/development/CIVICOS_UI_STATE.md`. This claim is licensed for `design:` lines only, so the
 row's own text was left alone.
+
+
+
+## CLAIM 2026-09-14 FRAMEWORK (FW-17 — reading position on I2, and the determining reference pair on `connections`)
+
+Worker, worktree-isolated, branch `worktree-agent-a531b903306a7ed5d`, from `origin/main`
+`6a093bf` (REC-82 landed). Area FRAMEWORK, re-activated by CONDUCT #10 as a third dev area
+for the content track; the item is two halves that are ONE worker (the row's own words).
+
+**Paths, BY REGION.** Four workers are on `store.mjs` today, so the regions are named
+rather than the file.
+
+- `docprofile/**` — THE EMITTERS. `readtext.mjs` (`flattenText`'s segment map and
+  `readText`'s locator), `doctypes/index.mjs` (`entity()` gains an optional `source`),
+  `doctypes/meeting-agenda.mjs` and `doctypes/meeting-calendar.mjs` (`parse()` emits
+  position where the container's own text gives it), `doctypes/generic.mjs` (says in its
+  own header that it cannot). **`doctypes/registry.mjs` is NOT touched** — its header is
+  CPDF-17's.
+- `bio-plane/src/index.mjs` — the acquire path's `readEntities` only: the reading's
+  entities carry `source` through to `op=promote`. NOT the capture path (CAP-8's, live).
+- `bio-plane/src/store.mjs` — TWO REGIONS ONLY: (1) `#writeReadings`' `reading_refs`
+  INSERT (the position columns), (2) `deriveConnections` / `#connectionView` (the
+  determining pair) plus ONE new method for the portion-leg connection grade.
+  **NOT the earned-basis reads (REC-83's, live). NOT `checkInquiryBasis`'s grammar
+  (REC-84's, live). NOT the capture path (CAP-8's, live). NOT `#markContentStale` or
+  any other REC-82 content writer.**
+- `bio-plane/src/schema.mjs` — the new nullable columns on `reading_refs` and
+  `connections`, and their migration. Nothing else.
+- `bio-plane/checks/bio-checks.mjs` — the new refusals for this item only.
+- `bio-plane/src/affordances.mjs` — read only unless a connection kind moves; if none
+  moves this path is released untouched and the claim says so at the close.
+- `bio-plane/test/**` — this item's suite(s) and the suites whose counts this item moves.
+- `docs/development/INTERFACE-CHANGES.md` — IC-86 only (pre-minted at spawn).
+- `docs/development/CLAIMS.md`, `DEBT.md`, `MEASUREMENTS.md` — append-only.
+- `docs/development/INTERFACES.md` — I2's registry entry, if CONDUCT's resolution bumps it.
+- `.gitignore` — one line, this item's control pen, by the convention the file's own
+  head sets (a pen per item, never a widened glob).
+- **ADDED once building established it was owed: `civicos-ui/app.html` — the FLATTENED
+  DOCPROFILE EMBED ONLY, between its `__DOCPROFILE_START__`/`__DOCPROFILE_END__` markers,
+  regenerated with `tools/bundle-docprofile.mjs` and pasted, not hand-edited.** This is
+  UI's file and none of UI's surface is touched: the embed is a GENERATED copy of
+  `docprofile/**`, which is this area's, and `check-semantics.mjs` refuses any difference
+  between the two — so changing the package without regenerating the copy turns the UI
+  harness red for everyone. FL-10's shape one directory over. If UI would rather own the
+  regeneration, that is a DELEGATION to raise; leaving it stale was not an option.
+- **ADDED once building established it was owed, and it is GOVERNED:
+  `docs/architecture/BIO_Content_Framework_v0_10.md` — PART II ONLY** (§14.4, §14.5, §17's
+  capability table, §18's closing paragraph, and the front matter's Status and Incomplete
+  sections). This area owns `docs/architecture/BIO_Content_Framework_*`, and
+  CORPUS-STANDARD §4.1 obliges the home document to move in the same commit as the
+  construct: §17 said in so many words that *nothing records WHERE a reference was read*
+  and that a connection *throws the reference away*, and §18 closed on content-grain
+  connections being *impossible* until readings carry position. All three are false as of
+  this landing, and a governed document left saying them is the record overclaiming in the
+  one direction this project treats as worst. **PART I IS NOT TOUCHED**: it is
+  ARCHITECTURE APPROVED at v0.10 and frozen by design, which its own front matter states —
+  §3's READING and §8.1's connection GRADE are read as the authority here, not edited.
+
+Expect append-only merge noise on CLAIMS/DEBT; nothing here is a whole-file rewrite.

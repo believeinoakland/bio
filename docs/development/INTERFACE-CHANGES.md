@@ -6121,3 +6121,127 @@ behind IC-83/IC-84 rather than folded in.
 ### RESOLUTION — ACCEPTED, **I3 14.0.0 → 14.1.0**, 2026-09-14 by CONDUCT #10
 
 MINOR, as proposed: an optional `extent` on a basis leg (absent = `document`), a new fixed-key read `content read`, `op=earnedbasis` answering per extent and stating UNDETERMINED for a portion leg's connection axis, `op=attesttext` unchanged. CHANGING now; SETTLED when REC-83 and REC-84 land and UI-61 confirms its migration. `INTERFACES.md` bumped in the same act. NARROW and TRANSCRIBE are deliberately NOT in this IC and carry their own (REC-86, REC-87).
+
+---
+
+## IC-86 · I2: readings carry POSITION — `parse()` entities and `reading_refs` gain WHERE a reference was read, in IC-1's extent vocabulary · PROPOSED 2026-09-14 (FW-17)
+
+- **Interface:** I2 (content → framework, structure), currently **2.0.0 STABLE**
+- **Proposer:** session FW-17, 2026-09-14, from `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md`
+  §1.9 (the hard dependency) and §5.1/§5.4 as Bob ruled them, the design being
+  `BIO_Content_Framework_v0_10.md` Part I §7 (what `parse()` emits) and §8.1 (connection grade),
+  and Part II §18 piece 1's closing paragraph — *"content-grain connections are impossible until
+  readings record WHERE a reference was read, which is a change to the structure interface (I2)
+  on the framework's side."* This is that change.
+- **Owner to land it:** `FRAMEWORK` (the interface's owner and, for `parse()`, its producer of
+  readers — re-activated for FW-17)
+- **Consumers to answer:** `RECORD` (the `reading_refs` projection and everything derived from
+  it — resolutions, connections, the terms index), `CONTENT-PDF` (dormant), `CONTENT-OFFICE`
+  (dormant), `CONTENT-HTML` (dormant). CONDUCT answers for the dormant three in writing at
+  this item's integration, protocol step 3.
+- **Change class:** ADDITIVE → **MINOR bump (2.0.0 → 2.1.0)**. One optional field on an entity;
+  one optional field on the context a reader is given. A reader that emits neither, and a
+  consumer that reads neither, sees 2.0.0 exactly.
+
+### What
+
+**(1) An entity a content type emits MAY carry `source`, and it is IC-1's union unchanged.**
+
+    entity: { key, kind, label, facts, source? }
+
+    source: { kind: "pdf-page"   , ref: "p.7"       , page: 6, rect: [x0,y0,x1,y1]|null }
+          | { kind: "sheet-cell" , ref: "Sheet1!B14", sheet: "Sheet1", cell: "B14" }
+          | { kind: "slide-shape", ref: "slide 7"   , slide: 7, shape: 3 }
+          | { kind: "doc-para"   , ref: "¶142"      , para: 141, run: <int>|null }
+          | null
+
+No sixth arm, no new spelling, and `dom` stays refused while no producer emits it — IC-1's
+constraint recorded with its acceptance is that this union is D-164's per-container LEAF and
+*"no implementer forks a second reference vocabulary"*. `source` is OPTIONAL and `null` is a
+legal, meaningful value: **a reading without position still writes, and the absence is STATED
+rather than inferred.** A consumer may NEVER read an absent `source` as "the whole document was
+meant" — that is D-129's somevalue/novalue split and `schema.mjs`'s own rule at §1.6 of the
+study, and it is the whole reason the field is nullable rather than defaulted to `document`.
+
+**(2) A reader is GIVEN what it needs to answer, and cannot invent it.** `readText()` already
+flattens I2's `text.pages[]` / `text.paragraphs[]` into one string before a reader sees it, which
+DESTROYS the only position information the producer emitted. So the flatten keeps a SEGMENT MAP —
+each segment's `[start, end)` in the flat string and the IC-1 `source` of the container part it
+came from — and `readText` puts one function on the reader's `ctx`:
+
+    ctx.locate(offset) -> an IC-1 source | null
+
+`locate` is TOTAL and never throws: an offset outside every segment, a producer that emitted only
+`text.document` (no itemisation at all), or a bare string all return `null`, which the reader
+passes through as `source: null`. **A reader may only emit a `source` `locate` gave it**, which is
+the structural form of "never invent": the reader knows WHERE IN THE TEXT it read something; only
+the producer knows what part of the container that text came from.
+
+**(3) `rect` is `null` on every `pdf-page` source a reading produces, and that is honest rather
+than lazy.** I2's own Status section says it: Tier-1 text is a flat per-page string with no
+table or row geometry, and *"asserting layout the extractor cannot support would be exactly the
+invented-structure this project forbids."* The PAGE is in the bytes the producer emitted; the
+RECTANGLE is not. The union already admits `rect: null` on the link side (`source: {page, rect:
+[…]|null}`), so this is the arm as it stands and not a widening. A consumer that requires page+rect
+— `checkAnchor`, which takes ONLY `pdf-page` with both as a transcription anchor — is unaffected:
+it refuses a rect-less source today and goes on refusing it, and a reading's position is not
+offered as a transcription anchor.
+
+**(4) The projection: `reading_refs` gains three nullable columns**, written by the same
+`op=promote` projection that writes the row, from the entity's own `source`:
+
+    pos_kind TEXT   -- IC-1's discriminator, or NULL: this reading cannot say where
+    pos      TEXT   -- the per-arm fields as canonical JSON, or NULL
+    pos_ref  TEXT   -- IC-1's REQUIRED human form, or NULL
+
+All three move together — a row has all three or none — so a partially-written position can
+never read as a whole one. This is the I5 consequence of the I2 change and is described here
+because the column arrives with its writer; **the I5 registry bump it implies is CONDUCT's to
+take, and FW-17 names it as an owed act rather than assuming it.**
+
+### Why
+
+**D-161 and content-grain connections are blocked on exactly this and nothing else.** The study
+states it as the hard dependency (§1.9): `reading_refs` carries no position and `parse()` entities
+carry `key/kind/label/facts` only, so *"a content-grain connection is impossible under ANY option
+until readings carry WHERE a reference was read."* Bob ruled on 2026-09-14 (§5.4) that the
+connection points at the specific reference in each document, and on §5.1 that a citation into a
+portion refers ONLY to that portion — so until this lands, a portion leg's connection grade is
+UNDETERMINED and must be stated as such, which is what REC-83 states today. This change is what
+makes it computable, and computable is not the same as computed: a connection whose pair carries
+no position still reads UNDETERMINED for a portion leg, per pair, never assumed.
+
+**The alternative, and why not.** A reader could be handed the itemised `pages[]`/`paragraphs[]`
+and left to find its own position. That forks the flatten: every reader would re-implement
+offset-to-page, and the per-container knowledge would sit in the reader instead of at the seam —
+the same drift IC-1 rejected when it refused the pure-string form. One `locate` at the one entry
+point keeps per-container knowledge where the container is known.
+
+### Consumers, and what changes for each
+
+- **RECORD.** The three `reading_refs` columns and their migration; `#writeReadings` writes them
+  from the entity's `source`. Nothing existing reshapes — every current read of `reading_refs`
+  (`op=readingref`, the resolution join, the terms projection, the compiler's MEANING arm) names
+  its columns and is unaffected by three more. The `connections` determining pair is RECORD's
+  consumption of this change and lands in the same item (FW-17's second half), because a pair
+  the schema can hold and nothing writes would be the same false precision this change exists to
+  avoid.
+- **CONTENT-PDF** (dormant). NOT-AFFECTED as a producer: `text.pages[]` already carries the
+  0-based page index this maps from, and no PDF extractor changes. It is affected only if it later
+  wants to emit rects with per-page text, which is a further ADDITIVE change on its own.
+- **CONTENT-OFFICE** (dormant). NOT-AFFECTED as a producer: `text.paragraphs[]` already carries
+  `{para, ref}` and the mapping uses the producer's OWN `ref`, never a re-derived one. The
+  `sheet-cell` and `slide-shape` arms have no per-cell/per-shape text itemisation in the text
+  shape today, so a reading over an xlsx or pptx honestly answers `null` — named here so the
+  absence is a stated gap rather than an oversight.
+- **CONTENT-HTML** (dormant). NOT-AFFECTED: `dom` has no producer and stays refused by name.
+- **The readers themselves** (FRAMEWORK's own, and the sharp edge of this proposal): a reader
+  that cannot say where MUST say so IN ITS OWN HEADER rather than silently emitting `null`. That
+  is a documentation obligation this change creates and it is stated as part of the interface,
+  because a reader's silence and a reader's honest `null` are indistinguishable at the wire.
+
+### Status
+
+**PROPOSED, 2026-09-14.** FW-17 builds against this text and says so; CONDUCT resolves it at
+integration, answering in writing for the three dormant producers (protocol step 3). Any
+amendment building forced is written into this entry in the same commit, naming what moved.

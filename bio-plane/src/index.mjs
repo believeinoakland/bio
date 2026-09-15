@@ -85,7 +85,12 @@ import { detectFormat, getFormat } from "./formats.mjs";
    This file supplies no fidelity letters of its own beyond the two measured
    constants below, and holds no opinion about any engine. */
 import { layerChain, appendStep, describeChain, checkChain, checkAnchor,
-         checkConfidence, applyConfidenceFloor, mergedChain } from "./textchain.mjs";
+         checkConfidence, applyConfidenceFloor, mergedChain,
+         /* FW-17 / IC-86: the reading-position normaliser lives beside the
+            extent vocabulary it belongs to, for `checkAnchor`'s own stated
+            reason — I2 already carries `source` for an element reference, and
+            solving one problem twice produces two answers that disagree. */
+         readingSource } from "./textchain.mjs";
 import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "./cdx.mjs";
 /* docprofile is READ here, never copied. This is the FIRST plane consumer of it
    (CONSTRUCTS Step 1 / FW-3): op=acquire calls identify() and doctypeFor() to
@@ -4945,6 +4950,15 @@ export default {
         facts: e && e.facts && typeof e.facts === "object" ? e.facts : {},
         /* The reference exactly as the reading carries it: kind:key, raw. */
         ref: `${e && e.kind != null ? e.kind : ""}:${e && e.key != null ? e.key : ""}`,
+        /* FW-17 / IC-86: WHERE the reference was read, in IC-1's union and no
+           other vocabulary. Validated here rather than trusted, for the reason
+           IC-1 states as its own load-bearing part — a required `kind`
+           discriminator turns a silent misread into a loud one, and this is the
+           boundary where a reader's answer becomes the record's. An unrecognised
+           kind, a missing human form or a missing per-arm field yields null: the
+           reading still writes and the position is absent, which is the honest
+           direction. NULL IS NEVER "the whole document was meant". */
+        source: readingSource(e && e.source),
       })).filter((e) => e.key != null || e.kind != null);
       let reading;
       const canRead = !!profileText && typeof docType.type.parse === "function";
@@ -4965,7 +4979,16 @@ export default {
             entities, facts: facts || {}, at: retrieved,
             basis: entities.length
               ? `read by the ${docType.type.key} reader v${docType.type.version}`
+                + `${entities.some((e) => e.source) ? "" : " — no reference carries where it was read: this "
+                  + "document was read as one undivided string, which names no part of a container to point at"}`
               : `the ${docType.type.key} reader found no entities in this document; recorded as an empty reading, never an emptied document`,
+            /* FW-17 / IC-86: the acquire path's own text read-back is a BARE
+               DECODED STRING with no itemisation, so there is no segment map and
+               no position to carry. Stated rather than left to a null column. */
+            position_parts: 0,
+            position_why: entities.some((e) => e.source) ? null
+              : "the text was read back as one decoded string, which carries no container structure, so "
+              + "where in the document a reference was read cannot be said",
           };
         } catch (e) {
           /* A reader that THREW read nothing. A failed reading, stated, never a
@@ -5240,6 +5263,25 @@ export default {
             ? wrest.facts : wrest;
           const entities = wired.parse_error ? [] : readEntities(wiredEntities);
           const wtype = wired.doctype.type;
+          /* FW-17 / IC-86 — THE POSITION SENTENCE, and it is written whichever
+             way the answer came out. A reading whose references carry no
+             position must SAY SO: a null column that nobody explained reads as a
+             reader that did not bother, and a reader that could not say is a
+             different fact from a reader that was not asked. Three cases and
+             they are three different findings — the container itemised and the
+             reader placed every reference; the container itemised and the reader
+             placed some (a reference read in a stretch no part claims); the
+             container never itemised at all, which is the PRODUCER's absence and
+             carries the producer's own reason. */
+          const positioned = entities.filter((e) => e.source).length;
+          const posNote = !entities.length ? null
+            : positioned === entities.length
+              ? `every reference carries where it was read (${positioned} of ${entities.length})`
+              : positioned
+                ? `${positioned} of ${entities.length} references carry where they were read; the rest were `
+                  + `read in stretches of text no part of the container claims, so their position is not stated`
+                : `no reference carries where it was read — ${wired.position_why
+                    || "this reader does not say where"}`;
           reading = {
             content_type: wtype.key, reader_version: wtype.version ?? null,
             read_from_text: true, found: entities.length > 0,
@@ -5269,8 +5311,14 @@ export default {
                  `ocrNote` computed and then dropped on the floor, so the record
                  said nothing at all about the exhibits. Same class as the merge
                  above: the document-level answer stood in for a per-page fact. */
-              + (ocrNote ? ` — ${ocrNote}` : ""),
+              + (ocrNote ? ` — ${ocrNote}` : "")
+              + (posNote ? ` — ${posNote}` : ""),
             ...(ocrNote ? { tier3_candidate: true } : {}),
+            /* FW-17 / IC-86: the producer-side facts about position, carried on
+               the reading so a later reader can tell an absent position that was
+               never available from one a reader declined to give. */
+            position_parts: wired.position_parts ?? 0,
+            position_why: positioned ? null : (wired.position_why || null),
           };
         } else if (wired) {
           /* text-undetermined: a FAILED reading, recorded as such — the tier

@@ -15,6 +15,16 @@ export default {
      the stack that served it. */
   contract: CONTRACT.SUBSTANCE,
   detect() { return { match: false, confidence: CONFIDENCE.NONE }; },
+  /* FW-17 / IC-86 — THIS READER CANNOT SAY WHERE A REFERENCE WAS READ, for the
+     one reason that admits no fix: it reads no references. The generic type's
+     whole discipline is that it reports a substantive difference without
+     describing it, so it emits NO entities, and where a reference was read is
+     not a question it can be asked. Declared here rather than left implicit
+     because IC-86 obliges a reader that cannot say to say so, and "it has
+     nothing to position" is a materially different answer from "it had
+     something and could not place it" — which is what the calendar reader's own
+     header records. This one closes when a measured type is written for the
+     document, not before. */
   parse() { return { entities: [], facts: {} }; },
   /* The one deliberate place `meaningful` is NOT derived from event significance:
      with no type there are no graded events, but a substantive difference in an
