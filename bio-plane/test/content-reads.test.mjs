@@ -69,6 +69,31 @@ const post = async (op, body, tok = "mem-r83") => rP(await (await mf.dispatchFet
   `http://x/api/?op=${op}&token=${tok}`, { method: "POST", body: JSON.stringify(body) })).json());
 const get = async (op, qs = "", tok = "mem-r83") => rP(await (await mf.dispatchFetch(
   `http://x/api/?op=${op}&token=${tok}&${qs}`)).json());
+/* SK-7: A SIGNED-IN MEMBER, and why this suite grew one.
+   *
+   * REC-83 drove `op=attesttext` with the MEMBER_TOKEN machine credential and
+   * named the attestor in the BODY, because the store read it from there. That
+   * is the hole SK-7 measured: the same credential could put any member's name
+   * on testimony, and C-35.10 refused only a caller that named itself a
+   * machine. The attestor is now stamped from the credential that
+   * authenticated, so an attestation that must LAND needs a session — and the
+   * attestor this suite pins (`hollis`, `rosa`) is now the signed-in member
+   * rather than a string the fixture chose, which is a stronger pin and not a
+   * weaker one. The assertions below are otherwise UNCHANGED.
+   * Both members are administrators: 4.2/4.3 has no ordinary members until two
+   * exist, and this fixture needs exactly two. */
+const session = async (memberId, role = "admin") => {
+  const add = await post("memberadd", { memberId, cover: `cover for ${memberId}`, role,
+                                        capabilities: ["contribute"] }, "adm-r83");
+  const en = await post("enroll", { invite: add.invite, handle: memberId,
+                                    password: `${memberId}-passphrase-1` });
+  if (!en.ok) throw new Error(`enroll ${memberId}: ${JSON.stringify(en).slice(0, 300)}`);
+  const lg = await post("login", { role: `member:${memberId}`, password: `${memberId}-passphrase-1` });
+  if (!lg.token) throw new Error(`login ${memberId}: ${JSON.stringify(lg).slice(0, 300)}`);
+  return lg.token;
+};
+const HOLLIS = await session("hollis");
+const ROSA = await session("rosa");
 
 const NOW = "2026-09-14T00:00:00Z";
 const LATER = "2026-09-14T01:00:00Z";
@@ -219,7 +244,7 @@ t("with no attestation, BOTH rows are bounded by the derivation — the OCR pass
 
 /* A member checks ONE PAGE against the image. */
 const att1 = await post("attesttext",
-  { captureSha: SHA_DOC, member: "hollis", at: NOW, extent: { kind: "page", page: 1 } });
+  { captureSha: SHA_DOC, at: NOW, extent: { kind: "page", page: 1 } }, HOLLIS);
 t("a member attests PAGE 1 and the act lands", att1.ok, true);
 
 const eb1 = await get("earnedbasis", `id=${INQ}`);
@@ -237,7 +262,7 @@ t("AND THE `document` ROW IS NOT — a page attestation does not cover the whole
    above passes for the wrong reason unless a DOCUMENT attestation is shown to
    raise it. */
 const att2 = await post("attesttext",
-  { captureSha: SHA_DOC, member: "rosa", at: LATER, extent: { kind: "document" } });
+  { captureSha: SHA_DOC, at: LATER, extent: { kind: "document" } }, ROSA);
 t("a member attests the WHOLE DOCUMENT and the act lands", att2.ok, true);
 const eb2 = await get("earnedbasis", `id=${INQ}`);
 /* SPLIT IN TWO AFTER THE `docattest` ARM SAID SO, and the first draft is worth

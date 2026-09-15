@@ -4807,3 +4807,68 @@ found and did NOT touch, because it is in nobody's claimed path: the LAST LINE o
 without its `D-` prefix and with every backticked span stripped out — which is
 `printf`/`-m` damage in the shape CLAUDE.md's own trap section describes. `plancheck`
 passes over it. It is named here so it is not lost.
+
+## CLAIM 2026-09-14 SKILL+RECORD (SK-7 — the machine-minted content row: a machine credential MINTS, is LABELLED on every surface, may NEVER attest, and enters a finding only when a member cites it)
+
+Session: SK-7 worker, spawned by CONDUCT #11, Opus 5, worktree-isolated.
+Worktree: `.claude/worktrees/agent-ad8d378ba5fed22ee` · branch `worktree-agent-ad8d378ba5fed22ee`.
+Cut from `origin/main` at `3f92e5c`; HEAD confirmed equal to `origin/main` before any edit.
+Design: `BIO_Content_Framework_v0_10.md` Part II §14.4 (Bob's 5.7 — *"The assistant may mark
+passages as citable on its own, every such row labelled as machine work, never attested by it,
+and part of a finding only when a member cites it"*) and §14.2; DEC-24 rule 3; IC-83
+(`minted_by` is already a column); C-35.10 (a machine may never attest); FL-6's `ai` class.
+
+**SCOPED ON SPAWN, and the scoping is CONDUCT #11's own caveat discharged.** The row said
+*"if the assistant pilot's EXTRACT scope is still unbuilt, say so on spawn and scope the item
+to what exists"*. It is unbuilt — see the `DESIGN GAP` in this worker's report and the
+release line below. **Only the PLANE half is built here.** The assistant-side act (a pilot
+EXTRACT run calling the mint) is NOT built and is not invented.
+
+Paths claimed BY REGION, never whole files:
+
+- **`bio-plane/checks/bio-checks.mjs`** — ONE new block: the MINT-PROVENANCE vocabulary
+  (`CONTENT_MINT_STATES`, `contentMintState`, `CONTENT_MINTED_BY_PLANE`), placed beside
+  `SUFFICIENCY_CLAIM_STATES`, whose shape it takes exactly. NOT `CONTENT_EXTENT_CHECKS`
+  (REC-82's, landed), NOT C-2.8 / C-25.10 (REC-84 is live on both), NOT `checkAttestation`'s
+  catalogue rows — C-35.10 is UNCHANGED and asserted unchanged.
+- **`bio-plane/src/store.mjs`** — BY REGION: (a) `mintContent`'s `mintedBy` default, so the
+  literal `"plane"` comes from the catalogue rather than from three typings; (b) the LABEL on
+  the content-row projections — `#contentStanding` (which feeds `op=content` and
+  `earned.content`), `contentRow`, and `promote`'s `content[]` array; (c) ONE new store
+  function `contentMint(…)` in REC-82's content region. **NOT** the extent arms (`covers`,
+  `#contentTarget`'s other kinds) — REC-85 is live on those; **NOT** `checkInquiryBasis`,
+  **NOT** `basisVersionFindings`, **NOT** the version-leg writer — REC-84 is live on all three.
+- **`bio-plane/src/index.mjs`** — (a) ONE new OPS row (`contentmint`) with its comment, its
+  `NEEDS` entry and its server-side minter stamp; (b) ONE new line in the authorship-stamp
+  block that stamps `attesttext`'s attestor SERVER-SIDE. **(b) was not foreseen when this
+  claim was written and is named rather than taken silently** — it is this item's own fence,
+  and it was added only after the hole was MEASURED through a real minted `ai` credential
+  (probe recorded in the report). FW-17's one line and CAP-8's region are untouched.
+- **`bio-plane/src/affordances.mjs`** — ONE `NON_ACTS`-or-`RUNGS` row for `contentmint` if the
+  totality guard demands one, and ONE `VOCABULARIES` entry publishing the mint-state map so a
+  surface never invents its own wording for it (PL-17 / `sufficiency_claim_states`' precedent
+  exactly). Nothing else in the file.
+- **`bio-plane/test/content-machine-mint.test.mjs`** (NEW) and **`bio-plane/test/nc-sk7.mjs`**
+  (NEW, the control driver — deliberately not a `.test.mjs`, because it edits real sources).
+- **CORRECTED, NEVER EXEMPTED** — the suites whose attest fixtures drove the hole:
+  `bio-plane/test/textchain.test.mjs`, `bio-plane/test/ocr-member-e2e.test.mjs`,
+  `bio-plane/test/content-extent.test.mjs`, `bio-plane/test/content-reads.test.mjs`. Each
+  correction carries a comment saying why the old assertion was wrong.
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` ONLY, ONE key set, from this
+  worker's own post-commit print.
+- **`docs/architecture/BIO_Content_Framework_v0_10.md`** — the §14.5 and §15 status ROWS for
+  the AI EXTRACT role and the content-extent primitive, and the front matter moved in the SAME
+  commit (the accepts-when's own condition). No body sentence of §14.4 is edited: the ruling
+  is Bob's and this landing does not restate it.
+- **`docs/development/INTERFACE-CHANGES.md`** — ONE new IC row for the two shape changes
+  (the `mint` block on every content-row projection; `attesttext`'s attestor now
+  server-stamped), with MEASURED consumer impact. CONDUCT takes the version bump and the
+  RESOLUTION.
+- **`docs/development/DEBT.md`** and **`docs/development/MEASUREMENTS.md`** — appends only.
+- **`docs/development/CLAIMS.md`** — this block.
+
+NOT CLAIMED, and each for a stated reason: `docs/development/QUEUE.md` (CONDUCT's, sole
+writer — the row flip and the `landed:` line are CONDUCT's acts and are named in the report);
+`civicos-ui/**` (MEASURED: no surface in `civicos-ui/app.html` renders a content row at all —
+`op=content` landed with REC-83 and has no consumer — so there is no surface label to add and
+none is invented); `newgroup/**`; anything under `agent-worker/`.

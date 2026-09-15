@@ -124,3 +124,10 @@ _m025/
 # evidence; an interrupted run must not leave an untracked copy of a planning file where
 # the next walk can enrol it as a second authority.
 .m030-harness/
+# SK-7's pen (`bio-plane/test/nc-sk7.mjs`), its own line for exactly REC-82's and
+# REC-83's reason two items later: the harness arms `src/store.mjs`, `src/index.mjs`
+# and `checks/bio-checks.mjs`, and a copy of any of the three left untracked by an
+# interrupted run is a second source file for the next walk to enrol — which is not
+# hypothetical, since `coverage.mjs`'s fleet walk and the battery's discovery both read
+# directories rather than a list.
+.sk7-control-pristine/

@@ -1622,6 +1622,110 @@ export function isSufficiencyUnclaimed(assertedBy) {
   return sufficiencyClaimState(assertedBy) === 'unclaimed';
 }
 
+/* ===================================================================== *
+ * WHO MINTED THIS CONTENT ROW (SK-7, out of framework Part II 14.4 —
+ * Bob's ruling of 2026-09-14, folded there as 5.7).
+ *
+ * THE RULING, in its own words: *"The assistant may mark passages as citable
+ * on its own, every such row labelled as machine work, never attested by it,
+ * and part of a finding only when a member cites it."* Three obligations, and
+ * this block is the FIRST of them. The second is C-35.10, which is UNCHANGED
+ * and is asserted unchanged. The third is structural and is asserted where it
+ * is structural (`earnedBasisRegistry` answers `earned.content` only over the
+ * content ids a CALLER named, and the only caller that names them is a basis of
+ * legs a member authored).
+ *
+ * WHY A PUBLISHED STATE MAP RATHER THAN A BOOLEAN ON THE ROW, and the
+ * precedent is one field over rather than an argument from taste. PL-17 /
+ * DEC-65 met exactly this shape on `asserted_by`: the column holds an IDENTITY,
+ * a surface renders the identity verbatim, and the moment the field can hold a
+ * machine word the surface prints a machine word at a member. `content.minted_by`
+ * is that column again — it holds `plane`, a member handle, or a control-plane
+ * machine stamp — and `civicos-ui/app.html` renders `Asserted by ${…}` verbatim
+ * one field over TODAY. So the plane answers the QUESTION and publishes the
+ * SENTENCE, and the surface renders what it was given (DEC-49's rule reaching a
+ * published vocabulary's texts, `SUFFICIENCY_CLAIM_STATES`' own words).
+ *
+ * THE READING IS TOTAL, which is what makes "labelled everywhere" checkable:
+ * four states, every `minted_by` lands in exactly one, and `unstated` is a
+ * STATED answer rather than a gap (CLAUDE.md — undetermined is first-class).
+ *
+ * `plane` IS NOT `machine`, AND THAT DISTINCTION IS THE LOAD-BEARING ONE.
+ * A row minted at `op=promote` is the mechanical referent of a citation A
+ * MEMBER AUTHORED — the member named the passage in their own basis and the
+ * record minted the row to hold it, in the same transaction. Calling that
+ * "machine work" would label a member's own citation as the assistant's, which
+ * is the ruling read backwards and would put the label on the wrong act. What
+ * 5.7 is about is a row NOBODY cited: a machine credential marking a passage
+ * citable on its own initiative, which is why that state's sentence says out
+ * loud that no member has cited it yet.
+ * ===================================================================== */
+
+/** The minter a row carries when the RECORD ITSELF minted it, at the moment a
+ *  member's own citation first named the passage (`op=promote`'s projection).
+ *  ONE literal in ONE place: `mintContent`'s default, the classifier below and
+ *  every assertion read the same string, so the stamp and the reading of it
+ *  cannot drift — REC-46's finding taken before it has a chance to repeat. */
+export const CONTENT_MINTED_BY_PLANE = 'plane';
+
+/** The four states of a content row's `minted_by`, each carrying the sentence a
+ *  member reads INSTEAD OF the stored identity. Published through
+ *  `vocabularies.content_mint_states` so no surface invents its own wording for
+ *  a distinction the record now draws. */
+/*  THE KEYS ARE SPECIFIC, AND THE REASON IS A MEASUREMENT RATHER THAN TASTE.
+ *  The first draft spelled them `member` / `plane` / `machine` / `unstated`, and
+ *  `skillpack.test.mjs` ARM B2a went red: `src/skillpack.mjs` has carried
+ *  `const MACHINE_MODE = "machine"` since SK-2, and publishing a vocabulary
+ *  whose key is a single common word made that unrelated literal look like a
+ *  HAND COPY of a published term — which is exactly the defect that arm exists
+ *  to catch, arriving as a false positive because the key was too generic to
+ *  belong to anybody. The keys are now verbs of THIS act, which is what a
+ *  published vocabulary's keys should have been anyway, and `machine_marked`
+ *  reads beside `machine_stamped` one vocabulary over. */
+export const CONTENT_MINT_STATES = {
+  member_marked: 'a member marked this passage as citable, and the record holds their name and the date',
+  plane_minted: 'this record minted this reference when a member first cited the passage in their own words — '
+    + 'it is the address of what that member pointed at, and not a separate claim about the document',
+  machine_marked: 'a machine credential marked this passage as citable. That is machine work, labelled as machine '
+    + 'work: it can lay the passage beside the question and it can never attest that the text matches the '
+    + 'page, and nothing here is part of a finding until a member cites it themselves',
+  unstated: 'the record does not say who marked this passage as citable',
+};
+
+/** Read a content row's `minted_by` as ONE of the four states above.
+ *
+ *  THE ORDER OF THE ARMS IS LOAD-BEARING, and it is `sufficiencyClaimState`'s
+ *  order for its reason. Blank is answered first, because "nobody said" and "a
+ *  machine said" are different findings. The PLANE's own value is answered
+ *  BEFORE `isMachineIdentity`, so the record's mint on a member's behalf can
+ *  never be swallowed into `machine` by a later addition to the machine
+ *  prefixes — and the suite pins `isMachineIdentity(CONTENT_MINTED_BY_PLANE)
+ *  === false` besides, so a collision fails loudly instead of hiding behind
+ *  this ordering. Everything left is a name, which is a member. */
+export function contentMintState(mintedBy) {
+  const s = String(mintedBy ?? '').trim();
+  /*  `s.length === 0` AND NOT `s === ''`, WHICH IS NOT A STYLE CHOICE AND IS
+   *  NOT ARBITRARY. `test/sufficiency-state.control.mjs` anchors one of its arms
+   *  on the exact line `if (s === '') return 'unstated';` inside
+   *  `sufficiencyClaimState` a few dozen lines above, and an arm's anchor has to
+   *  match EXACTLY ONCE or the arm fires on the wrong site and proves nothing.
+   *  Writing the same line here made it match twice, and
+   *  `m025-arm-anchor-witness.test.mjs` said so by name. Re-spelled here rather
+   *  than re-anchored there: another item's control is not mine to edit, and the
+   *  collision is MINE because the second occurrence is the one that arrived. */
+  if (s.length === 0) return 'unstated';
+  if (s.toLowerCase() === CONTENT_MINTED_BY_PLANE) return 'plane_minted';
+  if (isMachineIdentity(s)) return 'machine_marked';
+  return 'member_marked';
+}
+
+/** Did a MACHINE CREDENTIAL mark this passage citable on its own? The one
+ *  predicate every consumer asks, so that 5.7's *labelled as machine work* is
+ *  answered in ONE place rather than by four sites agreeing on a prefix. */
+export function isMachineMinted(mintedBy) {
+  return contentMintState(mintedBy) === 'machine_marked';
+}
+
 /** C-18.1: intake provenance register shape, release authority, and the
  *  ratification fence (sweep intake lands at collected, never higher). */
 /** C-18.9: what a capture must establish before it may be PUBLISHED.

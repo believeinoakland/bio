@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-825 rulings across 73 documents.
+827 rulings across 73 documents.
 
 ## DEC-
 
@@ -94,7 +94,7 @@ authority is the file named, never this one.
   `docs/architecture/BIO_Case_Making_v0_1.md:996`
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 (Bob, DEC-21) — R2's CONCLUSION stands; its MECHANISM does not.** > *"A capture is the act of reading a document in.  
   `docs/development/research/RECONCILED.md:183`
-- **DEC-23** — RULED | | machine extraction by recognisers, format entries and fleet members (§16) | BUILT | | the AI EXTRACT role — an assistant extracting on a member's objective | DESIGNED; excluded from the pilot by name; no item | | the content OBJECT — something an edge can point at that is smaller than a document |…  
+- **DEC-23** · 2026-09-14 — RULED | | machine extraction by recognisers, format entries and fleet members (§16) | BUILT | | the AI EXTRACT role — an assistant extracting on a member's objective | **PARTLY BUILT** — the PLANE half landed 2026-09-14 (SK-7): a machine credential MINTS content rows (`op=contentmint`), every surface LABELS them as…  
   `docs/architecture/BIO_Content_Framework_v0_10.md:1674`
 - **DEC-23** · 2026-08-03 — RULED by DEC-23: content — a piece of information extracted from a document, up to and including the whole document — is the unit the record points at.  
   `docs/development/DEBT.md:133`
@@ -1415,6 +1415,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:4557`
 - `docs/DECIDED.md` — **GENERATED, never hand-edited, and added to this claim after the fact rather than silently**: the seven `design:` lines shift QUEUE.md's line numbers, the index cites rulings BY LINE, and `plancheck` failed STALE on the drift (CLAUDE.md: regenerate it in any turn that moves the corpus).  
   `docs/development/CLAIMS.md:4575`
+- CORRECTED, NEVER EXEMPTED** — the suites whose attest fixtures drove the hole: `bio-plane/test/textchain.test.mjs`, `bio-plane/test/ocr-member-e2e.test.mjs`, `bio-plane/test/content-extent.test.mjs`, `bio-plane/test/content-reads.test.mjs`.  
+  `docs/development/CLAIMS.md:4853`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -1515,6 +1517,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:5533`
 - during CHANGING, NOT NULL at SETTLED), each a foreign key by convention to `content.content_id`.  
   `docs/development/INTERFACE-CHANGES.md:6029`
+- ALL FOUR CORRECTED IN THIS COMMIT, never exempted: `textchain`, `ocr-member-e2e`, `content-reads` (each grew a real session for the act that must LAND, and their machine-credential arms now drive the credential instead of a body string) and `content-extent` (its stale comment) |  
+  `docs/development/INTERFACE-CHANGES.md:6231`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:189`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  

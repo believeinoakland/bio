@@ -11238,3 +11238,80 @@ another name. Neither exists: `textchain.mjs` has no re-exporting wrapper, and t
 imports from it are the explicit named list at `store.mjs:253-255`, which does not include
 `captureBound`. It says nothing about `newgroup/` (the installer embeds a plane copy that
 regenerates at the next cut) or about the fleet members, none of which import `textchain.mjs`.
+
+## 2026-09-14 — SK-7: A MACHINE CREDENTIAL COULD ATTEST, AND THE FENCE EVERYONE CITED WAS NEVER REACHED BY IT
+
+**Instrument:** a real `ai` credential minted through `op=aicredentialmint`, driving
+`op=attesttext` under `miniflare`, on a pristine checkout of `origin/main` at `3f92e5c`.
+Not a store-level call and not `checkAttestation` in isolation — **through the op**, which
+is the whole point, because both halves of the record's account of this fence were about
+the op.
+
+**What was measured.** `op=attesttext` took its attestor from the REQUEST BODY.
+`checkAttestation` refuses a machine IDENTITY (C-35.10), so it fired only when the caller
+volunteered one:
+
+| the credential | what it put in `member` | outcome |
+| --- | --- | --- |
+| `ai` (member-scoped, `writes: ["attesttext"]`) | `class:ai` | refused, C-35.10 |
+| `ai` | `ruth` (a real member) | **ATTESTATION LANDED, attestor `ruth`** |
+| `ai` | `member:ruth` | **LANDED**, attestor `member:ruth` — a string no member has |
+| `MEMBER_TOKEN` (machine) | `ruth` | **LANDED**, attestor `ruth` |
+| a signed-in session | `somebodyelse` | **LANDED, attestor `somebodyelse`** — the impostor case, and it did not need a machine credential at all |
+
+**Why nobody saw it, and this is the part worth keeping.** Three separate things in the
+record said the fence held, and each was true about something else. (1) CPDF-10's `SESSION_OPS`
+comment — *"the only route that produces a name the store will accept is a session"* — is true
+of a session and gates only sessions; a machine credential never passes through `SESSION_OPS`.
+(2) `index.mjs`' own note claims *"TWO FENCES ON PURPOSE"*; the second fence existed and the
+first did not apply, so there was one, and it was the one a caller controls the input to.
+(3) `content-extent.test.mjs` recorded that an op-level arm was impossible — *"driving it
+through op=attesttext with a machine token answers NOT_AUTHENTICATED before checkAttestation
+is ever reached"* — **measured with `ai-r82`, a string that is not a credential at all.** So
+the one measurement that would have found this was taken with an input that could not reach
+the door, and its result was written down as a property of the door.
+
+**Consumer census at the time of the measurement** (grep, literal, stated so the next reader
+can judge what it could not see): `op=attesttext` appears **0 times** in `civicos-ui/app.html`,
+**0 times** in `agent-worker/`, and in `newgroup/` only inside the embedded plane bundle, which
+is a build artifact of these same sources. Its only callers were **four plane test suites**, and
+all four were exercising the hole — three of them as FIXTURE SETUP, naming a member from a
+machine token to get an attestation on the board. **The op has no product caller at all**, which
+is both why this survived and why correcting it cost no deprecation window.
+
+**The fix, and what it is a copy of.** The attestor is now stamped server-side from the
+credential that authenticated — `sessMember` for a session, `class:<cls>` for any machine
+credential — which is the identical treatment `op=lease`'s actor, `op=cite`'s `by` and the
+queue's `member` have had since REC-21, whose own comment calls it *"the strictest instance of
+the impostor rule in this file, because the thing being written is not a claim about the record
+but a claim about a PERSON"*. That sentence was written about a notification preference. It was
+not applied to testimony.
+
+## 2026-09-14 — SK-7: THE MINT LABEL, AND THE SIZE OF THE SURFACE IT HAS TO COVER
+
+**Instrument:** `bio-plane/test/content-machine-mint.test.mjs` §3 — a recursive walk over the
+answers of every op that can emit a content row, harvesting every object that hands the caller
+`minted_by`, run against the final tree.
+
+**Corpus walked:** `{"op=contentmint":1,"op=content":1,"op=earnedbasis":4,"op=promote":2}` —
+**8 content-row objects across 4 surfaces**, 0 unlabelled. Plus **2 POINTERS** (a `content_id`
+and no `minted_by`), both on `op=earnedbasis`' basis legs, which the walk deliberately skips:
+a pointer carries no machine word for a member to read, and demanding a label there would be a
+fence tighter than its rule.
+
+**The predicate was corrected once and the correction is the measurement.** The walk first
+harvested every object carrying `content_id`, which swept in those two legs and reported the
+answer unlabelled. `minted_by` is the honest key: it IS the machine word (`class:ai/extractor`),
+so a caller handed it is exactly a caller who needs the sentence. **What the walk cannot see,
+stated:** a surface that renders a content row under key names of its own invention, and
+anything outside those four ops — including `civicos-ui/`, which **renders no content row at
+all today** (measured: `op=content` landed with REC-83 and has zero consumers in
+`civicos-ui/app.html`), so there was no UI label to add and none was invented.
+
+## 2026-09-14 — SK-7: baseline and final, measured on this machine
+
+**Baseline**, on a pristine scratch worktree of `origin/main` at `3f92e5c` with `npm ci` run in
+`bio-plane/`, `pdf-worker/` and `ocr-worker/` first (a baseline taken before the installs is a
+wrong number carrying full confidence): **190/190 suites green · 11,713 assertions · exit 0**,
+259.4s. **The spawn brief's figure was 190/190 · 11,713 and it was RIGHT** — measured rather
+than trusted, and reported either way per WORKER.md.

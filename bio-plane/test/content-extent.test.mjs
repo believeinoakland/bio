@@ -385,14 +385,23 @@ t("and the OLD document row is not deleted — nothing rewrites a first-class ro
 
 console.log("\n--- 8. a machine credential may MINT and may never ATTEST (C-35.10, unchanged) ---");
 
-/* THE FENCE IS ASSERTED WHERE IT LIVES, and the reason is a measurement rather
-   than a preference: driving it through `op=attesttext` with a machine token
-   answers `NOT_AUTHENTICATED` (C-38.1) from the credential layer BEFORE
-   `checkAttestation` is ever reached, so an op-level arm would be asserting the
-   token check and reporting it as the attestation fence. What REC-82 must show
-   is that C-35.10 is UNCHANGED and still refuses a machine identity by name —
-   so it is driven against the catalogue function that both the op and
-   `attestText` call, which is the only place the rule exists. */
+/* CORRECTED 2026-09-14 (SK-7), AND THE PARAGRAPH THIS REPLACES WAS WRONG IN A
+   WAY WORTH KEEPING. It read: *"driving it through op=attesttext with a machine
+   token answers NOT_AUTHENTICATED (C-38.1) from the credential layer BEFORE
+   checkAttestation is ever reached, so an op-level arm would be asserting the
+   token check and reporting it as the attestation fence."* That was measured
+   with `ai-r82` — a string that is not a credential at all, so of course it
+   answered NOT_AUTHENTICATED. With a REAL minted `ai` credential the op IS
+   reached, and SK-7 measured what happened there: the store took the attestor
+   from the request BODY, so C-35.10 fired only for a caller that named itself a
+   machine, and the same credential naming a member had its attestation LAND in
+   that member's name. The op-level arm was not impossible; it was never driven,
+   and the belief that it could not be driven is why.
+   SK-7 stamps the attestor server-side and drives every credential class
+   through the op in `content-machine-mint.test.mjs` §4. THIS suite keeps the
+   arm it should keep — C-35.10 asserted UNCHANGED against the catalogue
+   function both doors call, which is REC-82's own obligation and is a different
+   proposition from "the op enforces it". */
 /* A machine identity in the spelling the CONTROL PLANE actually mints
    (`MACHINE_AUTHOR_PREFIX`), taken from the catalogue rather than typed. A
    hand-typed one is how the first draft of this arm asserted nothing at all:
@@ -407,7 +416,13 @@ t("attesting as a machine identity is refused, by the code it has always been re
   [false, "TEXT_ATTEST_MACHINE", "C-35.10"]);
 t("and a member attesting the same extent is not",
   checkAttestation({ member: "hollis", at: NOW, extent: { kind: "page", page: 0 } }), null);
-t("the op layer refuses an unrecognised credential before it reaches the fence at all",
+/* AND THE ARM THIS ONE ALWAYS WAS, now labelled honestly (SK-7): `ai-r82` is
+   not a credential this plane holds, so what is measured here is the TOKEN
+   CHECK refusing an unrecognised string — which is worth asserting and is not
+   the attestation fence. The attestation fence at the op is driven in
+   `content-machine-mint.test.mjs` §4, through credentials that authenticate. */
+t("an UNRECOGNISED token is refused by the credential layer, before any store fence is reached — "
++ "this asserts C-38.1's door and NOT C-35.10, which the arm above asserts where it lives",
   await (async () => {
     const r = await post("attesttext",
       { captureSha: SHA_PAGED, member: `${MACHINE_AUTHOR_PREFIX}run-1`,

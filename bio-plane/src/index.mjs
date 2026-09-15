@@ -618,6 +618,35 @@ const OPS = {
      passage exists in a project they were never invited to by guessing its
      address. NEEDS entry of null with a NON_ACTS row, op=earnedbasis' shape. */
   content:     { classes: ["admin", "member", "probe"],          mutating: false },
+  /* SK-7 / framework Part II §14.4 (Bob's 5.7): MARKING A PASSAGE AS CITABLE.
+     *"The assistant may mark passages as citable on its own, every such row
+     labelled as machine work, never attested by it, and part of a finding only
+     when a member cites it."*
+
+     BEFORE THIS OP THERE WAS NO DOOR AT ALL. A content row came into being only
+     inside `op=promote`'s projection, which means a passage became addressable
+     at the instant a member had ALREADY cited it — so the EXTRACT role §14.4
+     gives the machine had nowhere to land, and `minted_by` (IC-83's column,
+     landed with REC-82) could only ever read `plane`.
+
+     `probe` IS ADMITTED, and the cut is a different one from `attesttext`'s two
+     lines up rather than a looser one. EXTRACTING is what §14.4 says the machine
+     may do — *"document → content … the role that makes everything else
+     addressable"* — and the recognisers and fleet members that do it today are
+     probe-class by construction. ATTESTING is testimony and is refused to every
+     machine credential (C-35.10, UNCHANGED). The two acts sit on opposite sides
+     of the one fence this item is about, so they take opposite class cuts and
+     the reasoning is written out rather than inherited by proximity.
+
+     `member` IS IN THE LIST AND THAT IS WHAT LETS AN AGENT REACH IT AT ALL —
+     `aiReachesAsMember` is the ONLY door for the `ai` class, so this row admits
+     no `ai` (no row does) and FL-6's cascade reaches it exactly when the member
+     who minted the credential named this op in its declared `writes`. Nothing
+     about the class list is special-cased for machines; the floor does it.
+
+     THE MINTER IS STAMPED SERVER-SIDE below and the body's is never read, which
+     is the impostor rule at a field whose entire subject is who acted. */
+  contentmint: { classes: ["admin", "member", "probe"],          mutating: true  },
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
@@ -1461,6 +1490,19 @@ const SESSION_OPS = {
                       only route that produces a name the store will accept is a
                       session, and the store refuses every other shape (C-35.10). */
                    "attesttext",
+                   /* SK-7 / framework Part II §14.4: MARKING A PASSAGE AS CITABLE is
+                      a session op TOO, and the reason is the ruling's own list rather
+                      than symmetry with the line above. §14.4: *"where an edge points
+                      at a whole document, the assistant, A MEMBER, or another means
+                      tries to find the specific passages"* — so a member doing by hand
+                      what the assistant does on its own is the SAME act by a different
+                      actor, and the record distinguishes them by who is stamped on the
+                      row rather than by which of them is allowed to perform it. It is
+                      NOT the act that changes a leg's target (REC-86's NARROW) and it
+                      is not TRANSCRIBE (REC-87); it mints an address and writes no
+                      edge. Unlike `attesttext` above, the machine route is open too —
+                      that asymmetry IS this item. */
+                   "contentmint",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1478,6 +1520,7 @@ const SESSION_OPS = {
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "caseratify",
                    "attesttext",
+                   "contentmint",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1526,6 +1569,16 @@ const NEEDS = {
      `checkAttestation`, C-35.10), never by inventing a capability a group would
      have to be told about. */
   attesttext:       "contribute",
+  /* SK-7: NO FIFTH CAPABILITY TOKEN, on `attesttext`'s reasoning immediately
+     above. Marking a passage as citable puts a row in the corpus and rides
+     `contribute` like every other corpus write — and a VIEW-ONLY member must
+     not, because a row minted here is a durable address the record then carries
+     with an author's name on it. What is special about this act is not a
+     permission either: it is that a machine credential MAY perform it (§14.4's
+     EXTRACT role) where it may never perform the one above, and that asymmetry
+     lives in the OPS class cut and in C-35.10, not in a capability a group
+     would have to be told about. */
+  contentmint:      "contribute",
   monitor:          "contribute",
   cite:             "contribute",
   sever:            "contribute",
@@ -6807,6 +6860,15 @@ export default {
            arriving at a WRITE rather than a read). The instance-wide shape names no project
            and is unaffected: it reaches the same store method and never consults the stamp. */
         || op === "proposedispose"
+        /* SK-7: marking a passage citable NAMES A DOCUMENT, so it takes the same
+           fail-closed stamp every op above does and for the same reason arriving
+           at a new door. A content id is `hash(capture, extent, chain)` and the
+           act answers whether the row was NEWLY minted, so without the gate a
+           caller could learn that a document exists in a project they were never
+           invited to by trying to mark a page of it — REC-25/REC-30's leak,
+           arriving at a WRITE. The store fails closed on an absent stamp and
+           answers an invisible bundle EXACTLY as an absent one. */
+        || op === "contentmint"
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -6896,6 +6958,74 @@ export default {
        muting cannot be used to probe for a project you were never invited to. */
     if (QUEUE_ACTIONS.includes(op))
       inner.searchParams.set("member", viaSession ? sessMember : "");
+    /* CPDF-10 / SK-7 — WHO ATTESTED, STAMPED BY THE SERVER, AND THIS IS A
+       CORRECTION OF A FENCE THAT DID NOT HOLD.
+       *
+       * THE MEASUREMENT, taken through a REAL minted `ai` credential rather
+       * than reasoned about: `op=attesttext` read its `member` from the request
+       * BODY. C-35.10 refuses a MACHINE IDENTITY, so it fired only when the
+       * caller volunteered one — and a caller who wants to attest does not
+       * volunteer one. An `ai` credential whose member had named `attesttext`
+       * in its declared `writes` posted `member: "ruth"` and THE ATTESTATION
+       * LANDED, attributed to ruth, who had said nothing. `member: "member:ruth"`
+       * landed too, at an attestor string no member has. The MEMBER_TOKEN
+       * machine credential did the same. Only `class:ai` was refused, which is
+       * the one spelling every suite drove.
+       *
+       * `content-extent.test.mjs` recorded the belief that an op-level arm was
+       * impossible here — *"driving it through op=attesttext with a machine
+       * token answers NOT_AUTHENTICATED before checkAttestation is ever
+       * reached"*. That was measured with a token that was not a credential at
+       * all. With a real one the op IS reached, and the fence was not there.
+       * The assertion is corrected at its site rather than exempted.
+       *
+       * SO IT IS STAMPED, exactly as the queue's `member` above is, and for the
+       * identical reason written there: the thing being written is not a claim
+       * about the record but a claim about a PERSON. The caller's own `member`
+       * was copied in the loop above and is overwritten here rather than
+       * honoured. A machine credential of ANY class stamps `class:<cls>`, which
+       * `isMachineIdentity` answers TRUE for, so C-35.10 refuses BY NAME at the
+       * store instead of being handed a name it cannot question — the second of
+       * CPDF-10's *two fences on purpose*, now actually load-bearing rather than
+       * reachable only by a caller who incriminates itself.
+       *
+       * THE `ai` CLASS STAMPS ITS CLASS AND NEVER ITS PRINCIPAL. A member-scoped
+       * credential's principal is `member:<id>`, which is NOT a machine identity
+       * by this record's own predicate — stamping it would walk the hole
+       * straight back in wearing a server-side stamp. The principal answers what
+       * a credential may SEE (D-199 (4)); it is not who acted. */
+    if (op === "attesttext")
+      inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* SK-7 / framework Part II §14.4 (Bob's 5.7) — WHO MARKED THIS PASSAGE AS
+       CITABLE, stamped by the server on the same rule as every authorship field
+       in this block. The body's own `mintedBy` is not read at the store at all
+       (the DO route takes it from the query string), so there is no second door.
+       A MACHINE CREDENTIAL STAMPS `class:<cls>` AND THAT IS THE LABEL'S WHOLE
+       SOURCE OF TRUTH: `contentMintState` reads the stamp through
+       `isMachineIdentity`, so the sentence a member is shown about a
+       machine-minted row is derived from the credential that authenticated and
+       from nothing a caller could write. The `ai` class stamps its CLASS and its
+       tokenId — `class:ai/<tokenId>` — for `op=airunopen`'s reason (an act
+       stays attributable to the named credential a member chose) while keeping
+       the `class:` prefix that makes it a machine identity. NEVER the principal:
+       `member:<id>` is not a machine identity, and stamping it would label the
+       assistant's own row as a member's.
+
+       IDENTITY-CLAIM: RULED DEC-24 — a machine credential MAY perform this act
+       and the ruling is framework Part II §14.4's EXTRACT role under DEC-24
+       (*the machine may do the looking, the member does the concluding*), folded
+       there as Bob's 5.7. So the member-actor words above describe WHO IS SHOWN
+       the label, never who may write the field, and there is deliberately no
+       fence on this op: what the machine may not do is ATTEST, which is
+       C-35.10's and sits at `op=attesttext` one stamp above. The naming half the
+       ruling rests on is the `class:<cls>` stamp this line writes — permission
+       is granted against a NAMED actor, and a row whose minter were anonymous
+       would be a row the label could say nothing about. */
+    if (op === "contentmint")
+      inner.searchParams.set("mintedBy",
+        viaSession ? sessMember
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* Ownership of a selection is the same server-side stamp. A selection is
        readable only by the credential that made it, and "only by the credential"
        is worth nothing if the caller names the credential. */
