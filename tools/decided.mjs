@@ -70,6 +70,16 @@
  *   - OVER-COLLECTION.  A line saying "this SUPERSEDED an earlier draft" is
  *     indexed as a ruling.  Deliberate and the safe direction: a spurious entry
  *     costs one line of reading, a missed one costs a re-litigated decision.
+ *
+ *     ONE INSTANCE OF IT WAS NOT DELIBERATE, AND IT IS CLOSED (D-367, M0-34,
+ *     2026-09-15).  `.` is a word boundary, so this file's OWN OUTPUT NAME —
+ *     `DECIDED.md` — satisfied the marker, and prose that merely NAMED the index
+ *     minted a ruling row attributed to whatever id it mentioned.  49 of 951 rows
+ *     were that.  The distinction a future reader needs is the one this bullet
+ *     draws: over-collecting a SENTENCE that uses a marker word loosely is the safe
+ *     direction and stays; collecting a FILENAME is not over-collection at all, it
+ *     is the index answering about ITSELF — the class named at `corpus()` below,
+ *     which is why the fix is one lookahead at `MARKER` and nothing wider.
  *   - A RULING WITH NO MARKER is invisible here.  The index is a floor on what
  *     has been settled, never a ceiling, and it says so in its own header so no
  *     reader mistakes silence for absence.  Same discipline as CLAIMS: absence at
@@ -103,8 +113,29 @@ const ROOTS = ["docs", "CLAUDE.md"];
 /* A ruling MARKER. Deliberately generous — see the over-collection note above.
    `\b` on both sides so `SUPERSEDED` matches and `SUPERSEDES` does not: the
    past tense is a record of a decision, the present tense is usually a rule
-   describing how supersession works. */
-const MARKER = /\b(RULED|DECIDED|AMENDED|CORRECTED|OVERTURNED|SETTLED|SUPERSEDED|WITHDRAWN|CONCEDED)\b/;
+   describing how supersession works.
+
+   `(?!\.md\b)` IS NOT TIDYING AND IT IS THE NARROWEST CLAUSE THAT CLOSES D-367.
+   **`.` IS A WORD BOUNDARY**, so `DECIDED.md` — THIS TOOL'S OWN OUTPUT FILE, named
+   56 times in the corpus this tool actually scans — satisfied the marker, and a
+   sentence that merely NAMED the index minted a ruling row attributed to whatever id
+   the sentence happened to mention.  MEASURED 2026-09-15 (M0-34) by diffing the index
+   against itself, never by counting: 951 rulings became 902, and every one of the 49
+   pointers that disappeared was a filename match — 0 were not.  Eight are the rows
+   D-367 names (D-293, D-311, IC-82, C-7.1, REC-85, UI-31, UI-58, UI-59) and three more
+   carry ids (D-354, CAP-7, M0-29).  It is worth one clause because the direction
+   is OVERCLAIMING — a phantom row hands a session a ruling that was never made, inside
+   the instrument `CLAUDE.md` tells every session to run BEFORE it raises a question —
+   and it is worth ONLY one clause because the over-collection above is DELIBERATE and
+   this index is a FLOOR: a marker narrowed past this defect would drop real rulings,
+   which is worse than the defect.  Two properties keep it narrow, both measured rather
+   than reasoned: `DECIDED.md` is the ONLY marker-plus-extension string anywhere in the
+   scanned corpus — one distinct string, every occurrence — so this closes the class and
+   not one instance; and because `exec` scans FORWARD, a line that names the file AND carries a
+   real marker keeps its ruling, now quoted at the real marker instead of at the
+   filename.  `--control` drives all four directions; `bio-plane/test/nc-m034.mjs`
+   drives them on disk through the CLI. */
+const MARKER = /\b(RULED|DECIDED|AMENDED|CORRECTED|OVERTURNED|SETTLED|SUPERSEDED|WITHDRAWN|CONCEDED)\b(?!\.md\b)/;
 
 /* An id in any of this project's namespaces, in the order a reader ranks them.
    DEC is the architect's own decision register and sorts first. */
@@ -253,7 +284,33 @@ function control() {
   console.log(`  ${ok ? "PASS" : "FAIL"}  removing one marker lowers the count (${real.length} -> ${neutered.length})`);
   const empty = scan([probe], () => "nothing here at all\n");
   console.log(`  ${empty.length === 0 ? "PASS" : "FAIL"}  a corpus with no rulings yields none (${empty.length})`);
-  return ok && empty.length === 0 ? 0 : 1;
+
+  /* D-367's four arms, added 2026-09-15 by M0-34 and driven in BOTH directions.  They
+     run the real `scan` over a synthetic reader, so nothing on disk moves and they cost
+     milliseconds; `bio-plane/test/nc-m034.mjs` is the same four planted on disk and read
+     back out of the GENERATED index, because what the defect produced was a row in a file
+     a session reads, and a store-level check is not evidence a reader was served.
+     THE FIRST ARM IS THE ONE THAT MATTERS: before the `(?!\.md\b)` clause it returned 1,
+     attributed to REC-85 — an id the sentence merely MENTIONS. */
+  const arm = (want, label, text, also = () => true) => {
+    const rows = scan([probe], () => text + "\n");
+    const good = rows.length === want && also(rows);
+    console.log(`  ${good ? "PASS" : "FAIL"}  ${label} (${rows.length}, want ${want})`);
+    return good;
+  };
+  const d367 = [
+    arm(0, "D-367: prose NAMING `DECIDED.md` beside an id is NOT a ruling",
+        "REC-85's claim added one path, `docs/DECIDED.md`, regenerated and never hand-edited."),
+    arm(1, "over-strictness: a ruling whose sentence carries a `.md` filename ELSEWHERE is still indexed",
+        "DEC-32 was RULED on 2026-08-01 and it lives in `docs/development/DECISIONS.md` today."),
+    arm(1, "over-strictness: a marker ENDING its sentence still counts",
+        "The scope of the archive scan was SETTLED. Nothing has reopened it since."),
+    arm(1, "over-strictness: a line that names the file AND rules keeps its ruling, quoted at the REAL marker",
+        "`docs/DECIDED.md` is generated, and CONDUCT RULED that the index is a floor and never a ceiling.",
+        (rows) => rows[0].text.includes("RULED")),
+  ].every(Boolean);
+
+  return ok && empty.length === 0 && d367 ? 0 : 1;
 }
 
 /* ------------------------------------------------------------------ main

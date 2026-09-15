@@ -12721,3 +12721,125 @@ measured), which is why D-369 is a `gap` and not a `defect`.
 
 **FINAL:** `derivation-bounds` **50/0** (42 → 50, +8, every added assertion attributed to this
 item by re-running the true baseline rather than by subtraction), and no other suite's count moved.
+
+## M-21 · 2026-09-15 · M0-34 — **D-367's PHANTOM RULINGS COUNTED BY DIFFING THE INDEX AGAINST ITSELF: 951 → 902, AND ALL 49 ROWS THAT DISAPPEARED ARE A FILENAME MATCH — 0 ARE NOT** (instruments: `tools/decided.mjs` before and after the one-clause change, `bio-plane/test/nc-m034.mjs`; worktree `agent-afc388ede4d357d33` on `origin/main` at `dc697b5`)
+
+**Why this is a diff and not a count, which is the whole method.** D-367's remedy removes rows
+from a generated index. A count can say 49 rows went; **only a diff can say WHICH 49**, and the
+question the record actually needs answered is not *how many* but *was any of them real* — because
+the index is a FLOOR by design and dropping a real ruling would be worse than the phantom the fix
+removes. So the committed index was copied aside before the tool changed, regenerated after, and
+the two were compared **row by row, keyed by the `file:line` pointer each row carries**, with every
+disappearance adjudicated against **the source line itself** rather than against its quote.
+
+**THE INSTRUMENT'S OWN QUESTION, asked of every removed row:** at that `file:line`, does the
+PRE-FIX marker regex match a string immediately followed by `.md`? If yes the row was the index
+answering about its own filename; if no, a real ruling was lost and the fix is too wide.
+
+| | old | new |
+| --- | --- | --- |
+| rulings | **951** | **902** |
+| documents | 83 | 83 |
+| size | 278,328 B (271.8 KB) | 266,077 B (256.0 KB) |
+
+| the diff, by pointer | count |
+| --- | --- |
+| pointers present in old, absent in new | **49** |
+| …of which the pre-fix marker matched a FILENAME | **49** |
+| …of which it did NOT (i.e. a real ruling lost) | **0** |
+| pointers present in new, absent in old | **0** |
+| pointers surviving with a CORRECTED quote | **1** |
+| pointers surviving with a byte-identical quote after the anchor moved | **2** |
+
+**The 49, itemised by what they carried** — 11 under a namespace id, 2 under a date alone, 36 under
+neither. The eleven: **D-293, D-311, D-354, IC-82, C-7.1, REC-85, UI-31, UI-58, UI-59, CAP-7,
+M0-29**. **All eight rows D-367 named are among them, and the three beyond it — D-354, CAP-7,
+M0-29 — are what the row's own "at least eight" left room for.** Every one of the 49 is a sentence
+about REGENERATING or STALING the index, never a ruling: *"`docs/DECIDED.md` — REGENERATED, not
+authored"*, *"`plancheck` now FAILS on a stale `docs/DECIDED.md`"*, *"and `docs/DECIDED.md` for
+anything already ruled."* Two of them are this defect's own paperwork — `QUEUE.md:721`, the
+NEGATIVE CONTROL line of the row that commissioned the fix, and `MEASUREMENTS.md:10594`.
+
+**ZERO ADDED POINTERS IS A RESULT, NOT AN ABSENCE.** `scan()` de-duplicates on the first 110
+characters of a quote, so removing rows can in principle UNMASK a later row that was being
+swallowed. It did not: no pointer appears in the new index that was not in the old. The fix
+subtracted an artifact and moved nothing else.
+
+**THE THREE ROWS THAT SURVIVED BY RE-ANCHORING, and they are why the clause is a lookahead rather
+than a line-level exclusion.** `exec` scans forward, so a line that names the file AND carries a
+real marker keeps its ruling and is now quoted at the real marker:
+
+- `docs/development/DEBT.md:304` — **D-367's own row**, previously quoted from the `DECIDED.md` in
+  its headline, now quoted from the `RULED` further in. The one CORRECTED quote in the diff.
+- `docs/development/QUEUE.md:714` and `docs/development/kickoffs/BOB-NEXT.md:100` — anchor moved
+  from `DECIDED` to `RULED`, quote **byte-identical**, because `statementAround` resolved to the
+  same sentence span from both positions. A revert that is behaviourally invisible unless you look
+  at the pointer as well as the text, which is why the comparison is keyed on both.
+
+### THE CLASS, MEASURED RATHER THAN ASSUMED — and it is closed, not merely this instance
+
+`grep -rhoE "\b(RULED|DECIDED|…)\.[A-Za-z]{1,5}\b" docs CLAUDE.md` over the whole scanned corpus
+returns **exactly one distinct string: `DECIDED.md`.** No other marker word is followed by an
+extension anywhere in it — so excluding `.md` closes the class rather than one instance, and the
+narrow clause is not a narrow fix. **The occurrence count depends on whether the generated index
+is itself in the sweep, and both figures are given rather than one:** on the pristine tree at
+`dc697b5`, **110 including `docs/DECIDED.md`** — of which **54 are the index's own, which is where
+D-367's "48 times inside the generated index" comes from** — and **56 excluding it**, which is the
+number that matters because `scan()` excludes the index by construction (the `p !== OUT` guard at
+`corpus()`). One distinct string either way, which is the finding; the count is a fact about the
+corpus, not about the class.
+
+**THE CENSUS IS WORDED SO IT CANNOT FALSIFY ITSELF, and that is a correction rather than a style
+choice.** The first draft of the sentence above illustrated the absence by SPELLING two examples
+of the thing it said did not exist. Regenerating put one of them straight into the index — the
+second example's extension is not `.md`, so the clause correctly let it through, and this
+paragraph would have become the corpus's only counter-example to its own claim. It is the
+*"sweep arm that failed by citing itself"* class, met head-on, and the fix is to name the pattern
+instead of writing specimens of it.
+
+**WHAT THIS MATCHER CANNOT SEE, stated plainly.** It answers about the corpus `decided.mjs`
+actually scans — `docs/**` and `CLAUDE.md`, `.md` and `.html`. A marker followed by some OTHER
+extension in a file type the scan does not read would be invisible to both the defect and this
+census. And the adjudication reads the source line as it stands TODAY: a row whose source line has
+since been edited would adjudicate against the new text, not the text that minted it — not a live
+risk here (all 49 adjudicated cleanly) but the honest bound on the method.
+
+### NEGATIVE CONTROL — `bio-plane/test/nc-m034.mjs`, 6 arms + BASE, 2026-09-15, all AS DECLARED first run, exit 0
+
+| arm | what it armed | declared | MEASURED |
+| --- | --- | --- | --- |
+| BASE | nothing | `--check` exit 0, `--control` exit 0 | **exit 0 / exit 0** |
+| A1 | the defect's exact sentence planted on disk in `MEASUREMENTS.md`, tool as committed | 0 rows | **0** |
+| A2 | the same plant AND the `(?!\.md\b)` clause removed | 1 row, attributed to an id the sentence merely MENTIONS | **1, attributed to REC-85** |
+| A3 | OVER-STRICTNESS: a real `RULED` sentence carrying `DECISIONS.md` elsewhere in it | 1 row | **1** |
+| A4 | OVER-STRICTNESS: a marker ENDING its sentence (`… was SETTLED.`) | 1 row | **1** |
+| A5 | OVER-STRICTNESS over the REAL corpus, nothing armed | 0 of 8 named rows quote the filename; index FLOORED >850 | **0 of 8; 902 rulings** |
+| A6 | THE CLAUSE'S OWN ARM: clause removed over the real corpus | all 8 named rows come back | **8 of 8** |
+
+Every restore verified by sha256 **and** `cmp` **and** a floored byte count — `MEASUREMENTS.md`
+881,669 B (floor 400,000), `docs/DECIDED.md` 266,077 B (floor 100,000), `tools/decided.mjs`
+20,419 B (floor 4,000). **Byte-identical on every arm: YES, 11 of 11 restores.** The tool's own
+`--control` carries the same four questions in memory (6 checks, exit 0) so they run after any
+future change to the pattern, which is what its header already instructs.
+
+**TWO FINDINGS ABOUT THE ARMS, recorded rather than smoothed — both were the INSTRUMENT wrong, not
+the subject, which is this estate's most common control result.**
+
+1. **The anchor the driver was first written against occurs THREE times, not once.** The obvious
+   anchor for A2/A6 is the clause `(?!\.md\b)` — but it appears in the regex AND in the two
+   comments that explain it, so an arm anchored on it would have mutated a COMMENT and reported a
+   green. Caught by the uniqueness assertion BEFORE anything was armed; the anchor is now the whole
+   regex tail, `CONCEDED)\b(?!\.md\b)/;`, asserted to occur exactly once. *An arm that did not arm
+   is a finding, and this one was prevented rather than paid for.*
+2. **A2 went RED over a working subject on its first run, and the DECLARATION was what was wrong.**
+   The plants were tagged `M0-34 nc plant alpha …`; the minted row came back attributed not to
+   REC-85 but to **M0-34 — the driver's own label** — because `ID.exec` takes the FIRST id in the
+   quoted sentence. The fixture was injecting the very attribution the arm was measuring. Corrected
+   rather than relaxed: the tag is now `NC`, a token in no namespace, leaving exactly one id in the
+   sentence so the claim is about the subject instead of about the fixture.
+
+**Gate figures for the item, all on this worktree.** Battery baseline on the pristine tree at
+`dc697b5` with `npm ci` in all THREE packages: **201/201 suites green · 12,467 assertions · 330.0s,
+exit 0**, fleet 3 of 3 members actually RAN and **no member skipped by name** — the quiet failure
+`CLAUDE.md` warns about was checked for and absent. The brief's figure of 12,466 was **one
+assertion stale**; measured, reported, and the brief's suite count of 201 was exact.

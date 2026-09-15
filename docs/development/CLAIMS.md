@@ -8036,3 +8036,108 @@ released: 2026-09-15 by the REC-99 worker — **BOTH HALVES LANDED. THE PROSE NO
 **AND THE OTHER HALF OF REC-89's DELEGATION WAS WRONG, WHICH IS REPORTED BECAUSE THE MEASUREMENT SAYS SO.** It reported the framework row's three line numbers "stale by about three thousand lines". They are not stale: re-measured at the appendix's OWN declared sha `51d128a`, `:12685`, `:12712` and `:12944` land EXACTLY on the three method signatures. The appendix preamble says a line number in it is a measurement at that sha and will drift; REC-89 measured them against the working tree instead. They are replaced by SYMBOLS anyway — `CORPUS-STANDARD.md` §4.6 — because a symbol does not drift at all, and the row now says why rather than implying they were broken. **The "uncapped" word was false in both places and that half of the delegation stands.**
 **WHAT THIS CANNOT SEE, STATED PLAINLY.** The grader reads `store.mjs` only and one method at a time, inherits every limit the file's header already declares (a bound in a helper, amplification inside SQL, a `WHERE` on a unique key reading as unbounded), and grades `truncated` ONLY where it is measured off a row source. **Six `truncated` figures are measured over an IN-MEMORY collection and are graded by NEITHER half** — they are pinned BY NAME so a seventh must be declared, which is not the same as grading a bound — and **four methods publish a bound while legitimately holding an unbounded scan** (`documentsNamingEntity`, `queueFeed`, `frontier`, `biasManifest`), so the count could not move if one of them lost its paging `LIMIT`. No live instance of that exists on this tree (the graded 19 and the already-unbounded four do not intersect, measured), so the residue is a `gap` and not a `defect`: **D-369, raised as its own row rather than left inside D-365 — which is exactly the D-227 failure D-365 was written to name.**
 **NO PLANE SOURCE MOVED.** `store.mjs` is byte-identical to `origin/main` at commit time, verified by sha256 after the last arm and again before committing; `index.mjs` and `bio-checks.mjs` were never opened for writing. The four workers holding regions of those files are unaffected.
+
+## CLAIM 2026-09-15 M0 (M0-34 — D-367: the ruling index's MARKER matched the index's OWN FILENAME, so prose that merely NAMED `DECIDED.md` minted a ruling row)
+session: worktree-agent-afc388ede4d357d33 (the M0 background lane, holds no slot)
+opened: 2026-09-15T00:00:00Z
+released: 2026-09-15 by the M0-34 worker — **D-367 CLOSED. `MARKER` gains ONE clause, `(?!\.md\b)`, and nothing else in the tool moves.**
+
+**THE DIFF'S OWN ANSWER, which is what this row asked for instead of a count.** The committed index
+was copied aside, regenerated, and compared **row by row keyed on the `file:line` pointer each row
+carries**, with every disappearance adjudicated **against the source line itself** rather than
+against its quote. **951 rulings → 902. 49 pointers disappeared; ALL 49 are a filename match and
+0 are not.** WHICH ROWS: all eight named controls are among them — **D-293 GONE · D-311 GONE ·
+IC-82 GONE · C-7.1 GONE · REC-85 GONE · UI-31 GONE · UI-58 GONE · UI-59 GONE, 8 of 8** — and the
+other 41 are the same artifact the row's own *"at least eight"* left room for: **3 more under a
+namespace id (D-354, CAP-7, M0-29), 2 under a date alone, 36 under neither.** DID ANYTHING ELSE GO:
+**no.** Zero rows that were not a filename match disappeared, and **zero pointers appear in the new
+index that were not in the old**, so nothing was unmasked by the 110-character dedup either. THREE
+rows survived by RE-ANCHORING rather than vanishing, which is why the clause is a lookahead and not
+a line-level exclusion — `exec` scans forward, so a line naming the file AND carrying a real marker
+keeps its ruling: `DEBT.md:304` (**D-367's own row**) is now quoted at the `RULED` further in
+instead of at the filename in its headline, and `QUEUE.md:714` and `kickoffs/BOB-NEXT.md:100`
+re-quote **byte-identically**. Accepts-when clause 1 driven directly: **0 rows in the committed
+index whose only marker is a filename**, over all 909.
+
+**THE CLASS, MEASURED, so this closes a class and not an instance.** `DECIDED.md` is the ONLY
+marker-plus-extension string anywhere in the scanned corpus — **one distinct string; 110
+occurrences on pristine `dc697b5` including the generated index (54 of them the index's own, which
+is where D-367's "48 times" came from) and 56 excluding it**, and `scan()` excludes it by
+construction. No second filename is waiting.
+
+**GATES on the branch, class FULL (`gates.mjs` classified it: `tools/decided.mjs` is a non-docs
+path), GREEN, exit 0.** Battery **201/201 suites · 12,467 assertions · 280.4 s** against an own
+pristine baseline at `dc697b5` of **201/201 · 12,467 · 330.0 s** — **identical, and that is the
+expected result**: `nc-m034.mjs` is deliberately not a `.test.mjs`, so no suite and no assertion
+moves. **The brief's 12,466 was one assertion stale; its 201 suites was exact.** Fleet **3 of 3
+members actually RAN and NO member was skipped by name** — the quiet `npm ci`-short failure
+`CLAUDE.md` warns of was checked for and absent (all three packages installed). `coverage.mjs
+--strict` run DIRECTLY, `$?` UNPIPED, **exit 0**: OPS 176/176 reached, CHECKS 272/272 named,
+REGISTER_FLOOR **arms 1059/1059 · classified 192/192 · corpus 193/193**, fleet 3/6/8/76 — **no
+floor moved and none was invalidated**, because nothing this item touched is in any register's
+corpus. UI harness from the repo root **48/48 green, exit 0**. `plancheck --local` **0 fail, 0
+warn**, with `decided index: current` in its own notes.
+
+**EVERY CONTROL ARM, declared vs actual — `bio-plane/test/nc-m034.mjs`, 6 arms + BASE + an anchor
+assertion, re-runnable in one step, 0 failing checks, exit 0.** BASE `--check` exit 0 / `--control`
+exit 0 → **AS DECLARED**. A1 the defect's exact sentence planted ON DISK in a real corpus file,
+tool as committed, declared 0 rows → **0, AS DECLARED**. A2 the same plant with the clause removed,
+declared 1 row attributed to an id the sentence merely MENTIONS → **1, attributed to REC-85, AS
+DECLARED** (the arm that proves the defect was real, driven both ways rather than argued). A3
+over-strictness, a real `RULED` sentence carrying `DECISIONS.md` elsewhere in it, declared 1 → **1**.
+A4 over-strictness, a marker ENDING its sentence (`… was SETTLED.`), declared 1 → **1**. A5
+over-strictness over the REAL corpus, declared 0 of 8 named rows quoting the filename and the index
+floored above 850 → **0 of 8; 902 rulings**. A6 the clause's own arm, clause removed over the real
+corpus, declared all 8 named rows return → **8 of 8**. **Restores: 11 of 11 byte-identical**, each
+by sha256 AND `cmp` AND a floored byte count (`MEASUREMENTS.md` 881,669 B floor 400,000;
+`docs/DECIDED.md` 266,077 B floor 100,000; `tools/decided.mjs` 20,419 B floor 4,000), never by
+`git checkout --`. Four of the same questions added in memory to the tool's own `--control`
+(6 checks, exit 0), which its header already instructs a reader to run after any pattern change.
+
+**THREE ARMS CAME BACK WRONG ABOUT THE INSTRUMENT RATHER THAN THE SUBJECT, and none is smoothed.**
+(1) The obvious anchor for A2/A6 — the clause `(?!\.md\b)` — occurs **THREE times** in the file
+(the regex plus the two comments explaining it), so an arm anchored on it would have mutated a
+COMMENT and reported a green; caught by the uniqueness assertion BEFORE anything armed, and the
+anchor is now the whole regex tail. (2) **A2 went RED over a working subject on its first run**: the
+plants were tagged `M0-34 …` and `ID.exec` takes the FIRST id in the sentence, so the fixture was
+injecting the very attribution the arm measured. The DECLARATION was what was wrong; **corrected,
+not relaxed** — the tag is now `NC`, a token in no namespace. (3) In the prose: the class-census
+sentence first illustrated the absence by SPELLING a specimen of the thing it said did not exist,
+and regenerating put it straight into the index — the *"sweep arm that failed by citing itself"*
+class, caught and reworded to name the pattern instead of writing one.
+
+**WHAT THE BRIEF DID NOT PREDICT.** The brief and D-367 both frame the artifact as *"at least
+eight"*; the diff says **49**, and the six-fold gap is itself the argument for diffing — a count of
+49 would have looked like a fix that overshot, and only the pointer-level adjudication shows every
+one of them is the same artifact. And the fix removes **two rows belonging to this defect's own
+paperwork** — `QUEUE.md:721`, the NEGATIVE CONTROL line of the row that commissioned it, and
+`MEASUREMENTS.md:10594` — while CORRECTING the quote on D-367's own ledger row.
+
+**SCOPE HELD: no plane source moved.** `bio-plane/src/store.mjs`, `src/index.mjs` and
+`checks/bio-checks.mjs` were not opened; no op, check, shape, schema or floor moved, and no
+interface changed, so no IC is owed. **ACTS OWED, stated with their actor rather than left implied:
+CONDUCT (1) flips `### M0-34` from `running` to `done` with this commit; (2) runs `node
+tools/plancheck.mjs` BARE after the push — the publication half is skipped by `--local`; (3)
+re-runs `node tools/decided.mjs` at integration if any merged commit edits corpus prose, since the
+index is generated and `plancheck` fails on the drift.** No decision for Bob.
+paths:
+- **`tools/decided.mjs`** — the `MARKER` literal and the comment that owns it: **ONE clause added**,
+  `(?!\.md\b)`, plus the failure-modes note that says why this one exclusion is the only one; and
+  four arms appended to the tool's own `control()`. Nothing in `corpus()`, `statementAround()`,
+  `scan()`, `render()` or the CLI moves.
+- **`docs/DECIDED.md`** — **GENERATED, never hand-edited**: regenerated by `node tools/decided.mjs`
+  in the SAME commit as the tool change, because `plancheck` FAILS on a stale index and the two
+  therefore cannot land apart.
+- **`bio-plane/test/nc-m034.mjs`** (NEW) — the re-runnable negative-control driver, at the estate's
+  `nc-*.mjs` shape. It is **not** a `.test.mjs`, and `scripts/battery.mjs` discovers suites with
+  `readdirSync(test).filter(f => f.endsWith(".test.mjs"))`, so no suite count moves.
+- **`docs/development/DEBT.md`** — D-367's **disposition cell only**. No other row is touched.
+- **`docs/development/MEASUREMENTS.md`** — one appended section: the one-time old-index/new-index
+  DIFF this row asks for, which is the evidence about which rows were phantom.
+- **`docs/development/CLAIMS.md`** — this block and its release line.
+
+**NOT any plane source.** `bio-plane/src/store.mjs`, `bio-plane/src/index.mjs` and
+`bio-plane/checks/bio-checks.mjs` are held in regions by four other workers and nothing in this
+item reaches them; no op, no check, no shape and no schema moves. **NOT `docs/development/QUEUE.md`**
+— CONDUCT's, sole writer; the acts this item owes it are stated in the release line and the report
+as ACTS with their actor rather than left implied.
