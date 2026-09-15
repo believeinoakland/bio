@@ -245,7 +245,7 @@ authority is the file named, never this one.
 - **DEC-72** — DEC-72's definition of done was met IN THE LANDING TURN — `BIO_DATAPLANE_STATE.md` at v33 on the case-as-production model, `CASE-AS-PRODUCTION.md` archived with its one unbuilt clause STATED in the banner (D-309), `DECIDED` regenerated.**  
   `docs/development/QUEUE.md:1301`
 - **DEC-74** · 2026-09-14 — DECIDED 2026-09-14 by BOB #11 at Bob's delegation: not funded.** The tesseract member at cap C is the tier-3 path; the external tier is reconsidered only when an image-only document is LOAD-BEARING in a real case and C is below that project's bar — a funding request with the document and the bar attached, brought…  
-  `docs/development/EXTRACTION-BREADTH-DESIGN.md:109`
+  `docs/development/EXTRACTION-BREADTH-DESIGN.md:121`
 ## D-
 
 - **D-10** · 2026-08-02 — SETTLED 2026-08-02 by the design pass this question asked for (session BOB).** Not doctrine: it is an application of the assembly rule already in `BIO_Interaction_Constructs_v0_1.md:258-268`, so it needed a design pass and not a ruling.  
@@ -1059,7 +1059,7 @@ authority is the file named, never this one.
 - **CPDF-20** · 2026-09-14 — MEASURED AND RULED 2026-09-14 by CPDF-20 — the fixture exists, the measurement is taken, and the rule is landed and driven but NOT WIRED.** The fixture D-283 said this repository did not have is `bio-plane/test/fixtures/cpdf20/` (four public Oakland council attachments, provenance and arms in its `PROVENANCE.md`);…  
   `docs/development/DEBT.md:248`
 - **CPDF-20** · 2026-09-14 — Decided, AND CORRECTED 2026-09-14 BY THE MEASUREMENT THIS SECTION ASKED FOR — the original rule is kept below because what it got wrong is the useful part.** As written: *the decode with fewer undetermined characters on that page wins; a tie keeps tier 1*.  
-  `docs/development/EXTRACTION-BREADTH-DESIGN.md:105`
+  `docs/development/EXTRACTION-BREADTH-DESIGN.md:117`
 ## COFF-
 
 - **COFF-1** · 2026-09-14 — nk to a Google Drive file should keep the link and export an OpenDocument version that the content is extracted from."* RULED, folded into `BIO_Content_Framework_v0_10.md` Part II §16.  

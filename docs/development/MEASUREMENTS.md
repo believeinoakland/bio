@@ -12124,3 +12124,188 @@ Fixture totals: C1 → 10 pages to tier 2, **1 degraded, −129 chars**. C2 → 
 as confirmed rather than assumed — the practice is to trust the measurement, not the streak.
 Taken on a **contended machine**: `waitquiet` reported BUSY with three other batteries running
 throughout, and that is stated rather than smoothed.
+## M-18 · 2026-09-14 · M0-32 — DOCUMENT CLASSES IN COFF-6's CENSUS CORPUS, COUNTED: **the order BREADTH §2 asked for is a PARTIAL order — {staff reports, minutes} are not separated from each other, both sit above ordinances/resolutions, which sits above directories** (worktree `agent-a97980a7817a40765`)
+
+The count that sets the order in which FW-18 writes content types
+(`EXTRACTION-BREADTH-DESIGN.md` §2, §7 row 1). **Nothing was built: no content type, no
+recogniser in `docprofile/`, no plane file touched.** §2 said the argument for minutes
+first is stated and the count decides; the count does not decide between the top two,
+which is itself the result and is why the argument survives.
+
+**The corpus is COFF-6's and is NOT re-defined here.** `tools/measure-office-corpus.py`
+holds its definition and CAP-7 extended that file rather than standing a second tool
+beside it (M-13). The census instrument IMPORTS the population from it — `_bucket_keys`,
+`_get`, and the Legistar matter shape — and edits nothing in it.
+
+| half | COFF-6, 2026-08-03 | CAP-7 / M-13, 2026-09-14 | M0-32, 2026-09-14 |
+| --- | --- | --- | --- |
+| `s3://cao-94612` keys | 43,282 | 43,283 | **43,283** |
+| Legistar attachments | 792 over 250 matters | 793 over 250 | **793 over 250** |
+| population | — | — | **44,076 items** |
+
+**Instrument.** `tools/m032-class-census.py`, Python 3 stdlib only, network paced at
+0.25 s, bodies streamed and deleted (peak disk one file).
+
+    node tools/mintid.mjs M                              # M-18
+    python3 tools/m032-class-census.py control           # 58 arms, exit 0
+    python3 tools/m032-class-census.py list              # the population
+    python3 tools/m032-class-census.py names             # the whole-corpus name census
+    python3 tools/m032-class-census.py bodies 600        # the body sample; 1,201 s
+    python3 tools/m032-class-census.py media 120         # bounds the image blind spot
+    python3 tools/m032-class-census.py derive            # every figure below, in a second
+
+### The strata, because a document census over a web bucket is not a census of documents
+
+The population is counted in full and **every stratum is NAMED; none is folded into a
+class and none is scored zero.**
+
+| stratum | count | classified? |
+| --- | --- | --- |
+| text-bearing (pdf, docx, xlsx, csv, html, rtf, odf, …) | **29,626** | yes |
+| media · image | 14,276 | no |
+| unknown media kind | 97 | no |
+| container · archive | 42 | no |
+| media · audio/video | 35 | no |
+
+**The image stratum is the largest blind spot and it is BOUNDED rather than waved at.**
+A 120-key fixed-seed sample of the 13,573 jpg/png/gif keys, read from the image header
+alone: **6.7% are page-shaped** (aspect 1.20–1.45, short side ≥ 900 px), so **at most
+~905 keys — about 2% of the corpus — could be scanned pages this census does not
+classify.** The heuristic cannot tell a scanned page from a tall poster, so that is an
+upper bound, not an estimate.
+
+### What a class IS, and why the count is not a list of spellings
+
+Each class is a **threshold over independent evidence families**, not a literal: an
+agenda is *prospective*, minutes are *retrospective*, a staff report is *addressed by
+staff to a body with a recommendation*, an ordinance/resolution *is the instrument*
+(enacting formula, recital chain, codification), a directory *is a roster with contact
+points* (a density, not a word). Every document's fired families are recorded, so every
+count is auditable back to its evidence. **`other` and UNCLASSIFIED are different facts
+and are never merged**: `other` means the text WAS read and no threshold was met;
+UNCLASSIFIED means no usable evidence was obtained, and it is reported BY REASON.
+
+### THE COUNT — body evidence, a 600-document fixed-seed sample of the text-bearing stratum
+
+| class | in sample | rate | scaled to 29,626 | ± 95% |
+| --- | --- | --- | --- | --- |
+| agenda *(already registered — a control)* | 70 | 11.7% | **3,456** | 761 |
+| staff_report | 61 | 10.2% | **3,012** | 716 |
+| minutes | 53 | 8.8% | **2,617** | 673 |
+| ordinance_res | 33 | 5.5% | **1,629** | 540 |
+| directory | 8 | 1.3% | **395** | 272 |
+
+Conservation, printed by the instrument and asserted by its controls:
+**named-class 111 + other 247 + multi-class 52 + unclassified 190 = 600.**
+
+- **MULTI-CLASS: 52 of 600**, counted ONCE and listed by combination — the largest are
+  `agenda + minutes` (16), `agenda + staff_report` (8), `agenda + ordinance_res` (7).
+  Oakland publishes agenda *packets*, and a packet genuinely is more than one thing.
+- **UNCLASSIFIED: 190 of 600 (31.7%), each reason NAMED** — 114 extracted bytes that are
+  not English (a custom font encoding, or a scan), 54 no text layer at all, 22 too short
+  to classify. **This is a fact about THIS instrument, which is a crude tier-1 reader
+  with no ToUnicode CMap support — it is NOT evidence about what the plane's own reader
+  can do, and must not be read as an OCR requirement.**
+- **`other`: 247 of 600.** Its contamination is bounded rather than assumed: by
+  function-word rate, **at most 33 of the 247 (13%)** could be a partly-decoded member of
+  some class hiding in the pile.
+
+### IS THE ORDER REAL? The paired comparison, because the counts come from ONE sample
+
+Independent confidence intervals overlap and settle nothing; only documents that are one
+class and **not** the other carry information.
+
+| comparison | discordant | difference | z | verdict |
+| --- | --- | --- | --- | --- |
+| agenda > staff_report | 54 vs 45 | 9 | 0.91 | **NOT separated** |
+| staff_report > minutes | 56 vs 48 | 8 | 0.78 | **NOT separated** |
+| minutes > ordinance_res | 49 vs 29 | 20 | 2.27 | **SEPARATED** |
+| ordinance_res > directory | 33 vs 8 | 25 | 3.95 | **SEPARATED** |
+
+**So the census establishes `{staff_report, minutes} > ordinance_res > directory` and
+does NOT order the top two.** Per §2's own rule — *minutes first unless the count says
+otherwise* — the count does not say otherwise, so **the structural argument stands and
+minutes is written first**, with staff reports second.
+
+### The whole-corpus NAME census, and why it does not set the order
+
+Evidence = the key path / attachment name alone, over all 44,076 items. It conserves:
+**single 7,752 + multi 111 + unclassified 36,213 = 44,076.** By class (any):
+agenda 3,810 · minutes 2,419 · staff_report 1,070 · ordinance_res 651 · directory 28;
+21,763 text-bearing items whose FILENAME asserts no kind, plus 14,450 in non-text strata.
+
+**Its recall was MEASURED against the body layer on the same 600 documents, not assumed** —
+and it is why the order comes from the bodies:
+
+| class | body | name | both | recall | precision |
+| --- | --- | --- | --- | --- | --- |
+| agenda | 70 | 68 | 35 | 50% | 51% |
+| minutes | 53 | 50 | 35 | 66% | 70% |
+| staff_report | 61 | 22 | 8 | **13%** | 36% |
+| ordinance_res | 33 | 19 | 9 | 27% | 47% |
+| directory | 8 | 0 | 0 | **0%** | n/a |
+
+A filename census would have ranked staff reports FOURTH and directories at 28. It is
+wrong by a factor of three on the class the body count puts at the top of the
+unregistered order.
+
+### Ground truth, and the instrument's own findings
+
+Legistar's publisher-declared `MatterTypeName` is the only class metadata in this corpus
+and is carried through as an independent check. Only **7** sampled attachments carry one
+(too few to conclude from, and said so rather than dressed up): 2 of 3 `Ordinance` /
+`City Resolution` rows the recogniser named agreed, 3 `City Resolution` rows it did not
+name at all. Consistent with an ordinance/resolution recall below 1.0, which the count
+above does not correct for.
+
+**Five defects were found in the recogniser by its own controls and by twelve
+hand-checked real documents, every one BEFORE the sample was drawn, and all five are the
+same class — a REFERENCE to a kind mistaken for MEMBERSHIP of it, or the reverse:**
+(1) a minutes fixture read as an agenda through a meeting block and numbered items,
+which are shared meeting evidence and not a tense; (2) an agenda's item *"Approval of
+the Minutes"* read as minutes, and a bare *"Agenda"* heading inside minutes read as an
+agenda — fixed by requiring the self-naming line to be a MASTHEAD and by scoping the
+disqualifier to words that MODIFY the kind word; (3) an agenda listing *"Resolution No.
+NNNNN C.M.S."* read as a resolution — an instrument NUMBER is a citation, so it no longer
+fires alone; (4) a scanned 2017 ordinance with 11 WHEREAS recitals missed because its
+enacting formula OCR'd to noise — a chain of four or more recitals is now the instrument
+itself; (5) *"Staff Reports and Attachments"* thrown away because `attach` appeared
+anywhere on the line. Each is now a standing arm in `control`.
+
+**Three defects in the reader itself, each caught by an instrument and none smoothed:**
+the first draft took every parenthesised byte-run in any stream containing `Tj` and
+produced **24.5 MB of binary garbage for one 40-page report** — refused, correctly, by
+the function-word test, which is the only reason nothing was mis-scored; the second draft
+expressed the same rule as one regex whose `TJ`-array alternation all matched a single
+ordinary byte, and **did not finish on the first real PDF in five minutes** (catastrophic
+backtracking; replaced by three linear scans and a bisect); and joining a kerned line's
+runs with a space turned `OAKLAND` into `O A K L A ND`, which no word-based family can
+see. **And one arm of the negative control asserted `rise + (held − rise) == held`,
+which is true for every possible value and therefore asserted nothing** — found by
+reading its own output, where `0 newly unclassified` sat beside 29 single-class agendas.
+It now asserts where the documents actually go.
+
+### NEGATIVE CONTROL — 58 arms, 0 failed, `control` exit 0
+
+The queue row's arm, driven per class ALONE on the REAL 600-document sample: with one
+class's matcher neutered, **that class reads ZERO**, the documents that were only that
+class **become `other` (29 · 29 · 37 · 11 · 5 respectively), NOTHING becomes
+unclassified** (a neutered matcher cannot make a document unreadable), exactly that many
+documents stop being classified while the rest keep another class, and **n and the
+three-bucket sum are unchanged: documents are CONSERVED.**
+
+> **A divergence from the row's literal wording, stated rather than smoothed.** The row
+> declared *"that class reads zero AND the unclassified tally rises by the same count"*.
+> It does not, and should not: the row assumes two buckets where this census has three.
+> A document that was READ and now meets no threshold is `other`, not unclassified —
+> folding it into "could not classify" would have hidden 247 documents behind the same
+> label as 54 that have no text layer at all, which is the exact failure the row's own
+> *"print what you could NOT classify, NAMED"* instruction exists to prevent. The
+> property the row is protecting — **conservation** — holds and is asserted directly.
+
+Over-strictness arms that must PASS and did: a brochure is forced into no class; a
+minutes document that never uses the word *minutes* is still recognised; an ordinance
+with no WHEREAS and no number is recognised by its enacting formula alone; a filename
+spelling the instrument never enumerated (`Agenda-Packet-FINAL_2024-05-13-183322_wmcf.pdf`)
+is read; a filename asserting no kind is refused; neutering one class changes no other
+class's verdict.
