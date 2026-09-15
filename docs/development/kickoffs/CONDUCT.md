@@ -292,6 +292,39 @@ recalled. Everything you learn in that window about work already running is an i
 That is the same shape as the release-note sweep two sections down — an owed act must land in
 a place that is DRAINED, and the row you are about to flip is drained by you, this turn.
 
+## THE FLIP IS NOT DONE UNTIL THE SPAWN SUCCEEDS. VERIFY IT, AND REVERT THE FLIP IF IT FAILS.
+
+**Measured 2026-09-15 by CONDUCT #11, on the wave immediately after the section below was
+followed correctly.** The rule above is right and was obeyed: seven rows flipped in one edit,
+gated, pushed, count read back — and then **all four spawns in the first batch FAILED**, because
+the session's working directory was the WRAPPER rather than the repository and the harness
+cannot create a worktree outside a git repository. **`origin/main` then carried seven rows
+claiming live workers that did not exist.**
+
+**It lasted about a minute and the fix was one `cd`. The ordering that produced it is the part
+worth keeping**, because the section below optimises for the opposite failure — a worker reading
+a stale `queued` row and stopping — and says nothing about the flip outliving a spawn that never
+happened.
+
+**So the rule has a second half: after spawning, CONFIRM the spawns started** (`ListAgents`, or
+the tool's own result — a failure is loud, but only if you read it). **If a spawn fails, revert
+the flip in the same minute and push, or the queue is lying about the world.** Do not leave it
+for the report.
+
+**AND THE CAUSE IS A STANDING HAZARD IN THIS HARNESS RATHER THAN A ONE-OFF SLIP: THE SESSION'S
+WORKING DIRECTORY REVERTS ON ITS OWN BETWEEN TURNS.** It drifted from the repository to the
+wrapper, was set back with a bare `cd`, and drifted again two turns later. **A `cd` inside a
+subshell — `(cd … && …)`, which is the safe form for everything else — does NOT set it**, so a
+session can run a hundred correct commands through subshells and still be outside the repository
+when the spawn tool asks. **Before a spawn, run a bare `cd` into the repository in its own
+command and let the environment line confirm it.** It costs one call and it is the difference
+between a wave starting and a queue lying.
+
+**The general form, and it is this file's oldest lesson in new clothes: a step that PUBLISHES a
+claim and a step that MAKES it true are two steps, and the gap between them is where every wrong
+status in this queue has lived.** Flipping before the spawn closed one direction of that gap. It
+opened the other, and this section is the other half.
+
 ## THE ROW'S STATUS IS PART OF THE ROW. FLIP IT TO `running` AND **PUSH** BEFORE THE SPAWN, NOT AFTER.
 
 **Measured 2026-09-14 by CONDUCT #11, and it cost eight spawns.** The section above fixed
