@@ -372,6 +372,17 @@ inference rule that turns "I see nothing" into a definite value is a defect no m
 carefully the rest of the row is worded. Check every such clause for what it says when the
 evidence is missing.
 
+**And the sharper statement of it, BOB #11's, added 2026-09-15 after the same general form
+found this defect inside `OBSERVATION-LOG-DESIGN.md` §3 within the hour:** treating an
+EMPTY SET as a positive finding is *"an equality that costs nothing to produce is not
+evidence"* **inverted** — an absence that took no work to produce, reported as a fact about
+the world. This project's instruments catch the OUTCOME that cost nothing. **They do not
+catch the ABSENCE that cost nothing**, and an unearned absence is what every wrong-status
+arrival of 2026-09-15 had in common: a row that outlived its work, a row that outlived its
+worker, a hold that outlived its condition, a delegation that outlived its discharge, and a
+clause that read "no worker" as "no work". **When you find yourself concluding something
+from a query that returned nothing, ask what it COST that query to return nothing.**
+
 ## A SPAWN BRIEF IS NOT A QUEUE ROW, AND AN ID IN THE LEDGER IS NOT AN ITEM.
 
 **Measured 2026-08-09: of eight items I spawned in one wave, SIX had no `QUEUE.md` row.** The id was
@@ -651,6 +662,36 @@ finding about this session rather than noise from another.
 Credentials are in `.env`; git is configured to push as the bio persona (see the
 recalled memory). Reserve gated actions — deploying the plane or the installer —
 for BOB.
+
+## A RED `main` IS REPAIRED BY WHOEVER SEES IT WHEN THE REPAIR IS DETERMINISTIC, AND ROUTED TO THE PUSHER WHEN IT NEEDS JUDGEMENT.
+
+**Decided 2026-09-15 by CONDUCT #11 (mechanism, mine), on BOB #11's question after we both
+repaired the same red index in the same minute.** BOB asked for one rule and offered two:
+fix on sight, or route to the pusher. **Neither alone is right, and the case that produced
+the question says why.** Both of us regenerated `docs/DECIDED.md`; git dropped BOB's as a
+DUPLICATE PATCH during rebase and nothing was lost. That was not luck. **A regeneration has
+exactly ONE correct output, so two sessions producing it cannot disagree on content — only
+on ordering, and ordering is the one thing git resolves by itself.**
+
+**A hand-written repair has many correct outputs.** Two sessions writing different prose
+into the same region of a red tree produce a REAL conflict, on a tree that is already
+broken, while eight workers wait. So the line is not who saw it first and not who pushed
+it; it is whether the repair is a command or a judgement.
+
+- **Deterministic — regenerate an index, rebuild a bundle, re-run a generator, register a
+  historical drop whose row is dictated by the instrument's own output: REPAIR ON SIGHT,
+  whoever you are.** BOB's cost argument is correct and decides this half: a red `main`
+  charges every live worker a full gate run on a defect none of them caused, and waiting to
+  route is the expensive option.
+- **Judgement — a fix that chooses wording, scope, a threshold, or which of two truths to
+  keep: ROUTE TO THE PUSHER**, who has the context that produced it, and say so in one line
+  so nobody else starts.
+- **Either way, announce in the same minute you start**, one line, before the gate. The
+  duplicate we paid for cost one skipped cherry-pick; a duplicate on a judgement call costs
+  a conflict resolution nobody wanted.
+- **The pusher is never RELIEVED of it.** "Whoever sees it" is permission, not transfer: if
+  nobody else has taken it, it is the pusher's, and a pusher who leaves a red `main` for
+  someone else to notice has pushed a cost onto sessions that cannot see where it came from.
 
 ## KILL THE TREE, NOT THE LEAF — OR THE LEAF COMES BACK AND THE NEXT READER MEASURES A FRESH ORPHAN RATHER THAN A SURVIVOR.
 
