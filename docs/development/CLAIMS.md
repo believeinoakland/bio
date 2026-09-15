@@ -5995,3 +5995,211 @@ the sheet's DIMENSIONS), and `text_container` is null on captures that never rea
 format axis, so a fence on it would refuse correct work on every such document — over-strict
 in exactly the direction this family refuses. **It is a real candidate for its own row and is
 named as one, not as a gap this delegation covers.**
+
+
+## CLAIM 2026-09-14 CAPTURE (CAP-9 — the page count I2 already carries, persisted onto the reading at `op=acquire`)
+
+Session: CAPTURE worker, Opus 5, worktree-isolated, spawned by CONDUCT #11 after
+CAP-8 reached `origin/main` at `980a9e5`.
+Worktree: `/Users/sparky/ClaudeCodeBIO/bio/.claude/worktrees/agent-aaa4d22253c340546`
+Branch: `worktree-agent-aaa4d22253c340546`
+Baseline: THIS worktree measured at `980a9e5` BEFORE any edit, `git status --porcelain`
+empty (0 lines, printed) — **192/192 suites green · 11,936 assertions · exit 0**. The
+brief's figure was RIGHT and is recorded as measured rather than inherited.
+
+**THE INTERFACE ANSWER, GIVEN BEFORE BUILDING as the row requires.** An IC **IS owed, on
+I1**, and it is ADDITIVE. The acquire document gains one key inside `document.reading`
+(`page_count`), and I1's own version history is four consecutive ADDITIVE MINOR bumps for
+exactly this act — 1.1.0 `document.profile` (FW-3), 1.2.0 `document.profile.digests`
+(FW-4), 1.3.0 `document.profile.format` (COFF-1), 1.4.0 the Drive hop (IC-85). I1's
+"what freezing this costs you" names the frontmatter field names and value domains in §4
+as protocol-bound, and the acquire document IS `bundle.md`'s frontmatter. `IC-87` is filed
+PROPOSED; CONDUCT takes the version bump and the RESOLUTION.
+**I2 does NOT move**, and that is a decision with a reason: `pdfstructure.mjs` has emitted
+`pages: <int>` since I2 1.0.0 and this item carries that existing field onto CAPTURE's own
+document — a new producer obligation would be a widening, and there is none.
+**I5 does NOT move either**, and that is the reason there is no schema edit below.
+
+EXACT PATHS CLAIMED, BY REGION:
+
+- `bio-plane/src/index.mjs` — **THREE SITES ONLY**, all inside `op=acquire`'s READING
+  ASSEMBLY (the FW-15 wire), and **NOT** CAP-8's two `op=acquire` regions (`is-drive-capture`
+  and the export seam), which are untouched: (a) the `let wired = null, wiredTier = null;`
+  declaration, which gains `pageCount`; (b) the two lines inside the PDF branch that read
+  `st.pages` off the structure object the format entry already produced; (c) ONE new line
+  after the three reading branches close, carrying the count onto `reading`. No fetch, no
+  governor, no hop, no transport record.
+- `bio-plane/src/store.mjs` — **NAMED BY REGION, NOT BY FILE** (30,924 lines of shared
+  ground; `grep -a` only): (1) `#chainForCapture` becomes `#persistedReading` +
+  `#chainOfReading` — ONE read of the `readings` row instead of two, because
+  `contentContextFor` wants two facts off it; (2) `#pageSetForCapture`'s doc comment and
+  its first three lines — the stored count is preferred and the derived union is the
+  fallback; (3) `contentContextFor`'s three-line body. **NOT `mintContent`, NOT
+  `#markContentStale`, NOT `#contentPlanFor`, NOT `#captureForContent`, NOT the `covers`
+  arms** — REC-85 and SK-7 are live on the content region.
+- `bio-plane/test/capture-pagecount.test.mjs` — **NEW**. The suite, driven THROUGH
+  `op=acquire` → `op=promote` → `op=reading` / `op=content` against a miniflare fixture
+  serving a three-page PDF, a PDF with no orderable pages, and an HTML page.
+- `bio-plane/test/nc-cap9.mjs` — **NEW**. The negative-control harness: five arms plus a
+  baseline, each armed ALONE, every restore verified by sha256 AND by content.
+- `bio-plane/scripts/coverage.mjs` — the ONE `REGISTER_FLOOR` key set only, moved to the
+  figures this item's own green post-commit run PRINTED.
+- `docs/development/INTERFACE-CHANGES.md` — `IC-87` appended, PROPOSED. Id minted with
+  `node tools/mintid.mjs IC`.
+- `docs/development/DEBT.md` — `D-345`'s disposition, and one new row for the backfill
+  this item deliberately does not take.
+- `docs/development/MEASUREMENTS.md` — one appended section.
+- `docs/development/CLAIMS.md` — this block.
+
+NOT CLAIMED, stated because a reader would reasonably expect them:
+
+- **`bio-plane/src/schema.mjs` — NOT TOUCHED AT ALL. NO TABLE, NO COLUMN**, and this is the
+  decision the brief anticipated the other way. `readings.reading` already holds the whole
+  reading as JSON, `readings` is keyed by `capture_sha`, and the ONE reader
+  (`contentContextFor`) looks up by exactly that key — so a column would be a projection
+  nothing filters, counts or asks for. `#writeTextSource`'s columns exist because the chain
+  had to be *filterable*; this number does not. It also keeps this item off a table I5
+  assigns to `FRAMEWORK` (ACTIVE, FW-17), and off I5 entirely.
+- **`bio-plane/src/store.mjs`'s `#writeReadings` — READ, NOT EDITED.** The brief named it as
+  a region to claim; it needs no change, because it persists `JSON.stringify(reading)`
+  wholesale and the new key rides it. Named here so the next reader knows it was looked at
+  rather than missed.
+- **`bio-plane/checks/bio-checks.mjs` — NOT TOUCHED.** C-45.1 exists and its guard is
+  already right; this item makes it REACH, and re-minting or widening it was never owed.
+- `bio-plane/src/pdfstructure.mjs` (it already returns `pages`), `civicos-ui/**`,
+  `newgroup/**`, `docs/development/QUEUE.md` (CONDUCT's sole writer),
+  `docs/architecture/BIO_Content_Framework_v0_10.md` (CONTENT's).
+- `bio-plane/dist/**` is rebuilt by `npm run build` under FL-10's guard, not authored.
+
+**AMENDED AT THE BUILD, two additions, each stated rather than quietly taken:**
+
+- `.gitignore` — **ONE PEN, `.cap9-control-pristine/`**, with its reason at the line.
+  This claim did not anticipate it. The control harness keeps per-arm pristine copies
+  of `src/index.mjs` and `src/store.mjs` there while it arms them, and the file's own
+  note at `.rec84-control-pristine/` rules that a glob over `.*-control-pristine/`
+  would silently cover a pen nobody declared — so each one is named. An interrupted
+  run would otherwise leave an untracked copy of a plane source where another item's
+  producer sweep has already enrolled one as a second author.
+- `bio-plane/dist/bio-plane.bundled.mjs` + `dist/bio-plane.bundle.json` — FL-10's guard
+  fires on any `src/` change and the bundle is rebuilt with `npm run build`. Nothing
+  bumped, signed or deployed.
+
+**ONE FINDING ABOUT THIS ITEM'S OWN WORK, recorded rather than smoothed.** Two id
+numbers were written into source comments and into this claim BEFORE they were minted
+— `D-352` and `IC-86`, both arrived at by reading the corpus floor and both wrong
+(`mintid` answered `D-356`, stepping over four held ids, and `IC-87`, stepping over
+one). Corrected in every site before any gate ran. **This is the exact failure
+`WORKER.md`'s id rule names — "seven items collided on an id in one day, every one
+having measured the number free and every one right when it looked" — reproduced here
+by a worker who had read the rule an hour earlier.** It is recorded because the rule's
+own receipt says vigilance was already tried; what caught it was running the tool.
+
+released: 2026-09-14 CAPTURE (CAP-9) — landed on `worktree-agent-aaa4d22253c340546`, NOT pushed and
+NOT merged; CONDUCT integrates. **THIS RELEASE CARRIES NO OWED ACT IN PROSE** (D-342's grammar, and
+WORKER.md's rule that an owed act never lives in a note): everything this landing obliges a future
+actor to do is an ITEM or a DELEGATION with its actor named — `IC-87` is PROPOSED in
+`INTERFACE-CHANGES.md` with every consumer named and CONDUCT takes the version bump and the
+RESOLUTION (and the registry gap the IC names: I1 §4's document table has never listed `reading`);
+`D-356` is a DEBT row with its disposition token and is the DELEGATION at the foot of this file;
+`D-345` is CLOSED in the same file; the `### CAP-9 · running` row in `QUEUE.md` is CONDUCT's to
+flip and this worker did not touch that file.
+
+**THE INTERFACE ANSWER, GIVEN BEFORE BUILDING as the row required** (it is at the head of this
+claim, written before the first edit): an IC **IS** owed, on **I1**, ADDITIVE, on the precedent of
+I1's own four ADDITIVE MINOR bumps for a new acquire-document field. **I2 does not move** (it has
+emitted `pages: <int>` since 1.0.0 — this item consumes it), and **I5 does not move**, which is why
+there is no schema edit in the diff.
+
+GATES on this branch, every exit status read UNPIPED: battery **193/193 suites · 11,962 assertions ·
+exit 0** against this worktree's own pristine baseline **192/192 · 11,936** measured at `980a9e5`
+BEFORE any edit with `git status --porcelain` empty (0 lines, printed) — the brief's figure was
+RIGHT and is recorded as measured, not inherited. **The +26 is attributed PER SUITE by DIFFING the
+two full runs and never by subtraction**: `+22` `capture-pagecount.test.mjs` (new), `+3`
+`hygiene.test.mjs` (712→715 — its per-suite scans gaining a suite), `+1`
+`planning-hygiene.test.mjs` (279→280 — the IC row and the debt row); **188 suites unchanged, none
+FELL, and no existing suite was edited**. `node scripts/coverage.mjs --strict` run DIRECTLY from
+`bio-plane/`, `$?` unpiped, **exit 0**; checks **263/263 named (100.0%)**; `node
+civicos-ui/test/run.mjs` from the REPO ROOT **exit 0**; `node tools/plancheck.mjs --local` **0 fail
+0 warn**; `node tools/corpuscheck.mjs` **50 governed documents, 0 fail**. Nothing was deployed,
+bumped, signed or tagged, and NO live write was made: the only live traffic was three READ-ONLY ops
+(`op=list`, `op=export`, `op=reading`, plus `op=textprovenance` and `op=registeraudit`) taken for
+D-356's population count, with no token printed.
+
+**REGISTER_FLOOR MOVED 996 → 1001 · 183 → 184 · 184 → 185**, ONE key set, all three in the same turn
+and every figure taken from the **POST-COMMIT** green `--strict` run's own REPRODUCIBLE print
+(`arms 1001/996 · classified 184/183 · corpus 185/184 · GREW by 5 arm(s)`), re-verified by a second
+green run reading `1001/1001 · 184/184 · 185/185`. **The PRE-commit run printed the floor's existing
+figures with `contaminated: 1 suite(s) no other checkout has` beside the higher ones** — D-238's
+rule working as written, and the reason the floor is moved after the commit and not before.
+`FLEET_FLOOR` unmoved (no fleet member, no fleet suite). `coverage-provenance.test.mjs` re-run
+after the move: 29 pass, 0 fail. FL-10's guard fired on the `src/` change and `npm run build`
+rebuilt `dist/bio-plane.bundled.mjs` (2,880,072 B, sha256 `2dc5dddabd6e…`); `src/signpage.mjs`
+regenerated byte-identically; a second build after the `scripts/coverage.mjs` edit produced the
+**same bytes**, which is the check that the floor move is not a source change wearing a script's
+clothes.
+
+**CONTROLS: six rows — five arms plus a baseline — in `test/nc-cap9.mjs`, re-runnable in one step
+(`node test/nc-cap9.mjs [arm]`), each armed ALONE with the others held open, every restore verified
+by sha256 AND by content against a UNIQUELY-NAMED per-arm pristine copy with a byte count printed
+and a 20,000-byte minimum guarded (6 of 6 `byte-identically: YES`, 0 mismatch). EVERY ARM AS
+DECLARED, declared before arming:**
+
+| arm | declared MUST FAIL | actual |
+| --- | --- | --- |
+| `baseline` | nothing | **22 pass, 0 fail** — green, the row that distinguishes five-arms-broken from five-arms-working |
+| `drop` (index.mjs: the count never reaches the reading) | the acquire arm, the persisted arm, the C-45.1 refusal | **17/5**, 3/3 declared present — **THE ARM THAT PROVES THE GAP WAS REAL**: it reproduces exactly what the record held before this item, and C-45.1 then cannot fire on a freshly acquired PDF |
+| `prefer` (store.mjs: the count is there and the reader ignores it) | the refusal, the row's stored count, the precedence arm | **17/5**, 3/3 — and the acquire/persist arms STAYED GREEN, which is what separates a reader failure from `drop`'s writer failure |
+| `overstrict` (store.mjs: answer 1 instead of null for an unknown page set) | the unknown-page-set mint, the stated-NULL row | **19/3**, 2/2 — every refusal arm stayed green, so the arm broke correct work and nothing else |
+| `derived` (store.mjs: neuter the D-252 scoped-chain union) | the mixed-document refusal and its detail | **20/2**, 2/2 — and every stored-count arm stayed green, because the stored figure is preferred and never reaches that code |
+
+**TWO FINDINGS ABOUT THIS ITEM'S OWN WORK, recorded rather than smoothed.** (1) The new suite did
+not dispose its Miniflare instance, and `hygiene.test.mjs` caught it on the FIRST full battery run
+(714 pass, **1 FAIL**, naming the file) — the run was void, this worker killed its own battery after
+confirming by `lsof` which of the two running batteries was its own, fixed it, and re-ran the whole
+set; hygiene then read 715 pass, 0 fail. A new suite is a new leak until the scan says otherwise, and
+the fix carries that sentence at the site. (2) Two ids were written into source comments and into
+this claim BEFORE being minted (`D-352`, `IC-86`, both read off the corpus floor and both wrong —
+`mintid` answered `D-356` and `IC-87`, stepping over five held ids between them), corrected in
+every site before any gate ran. That is WORKER.md's id rule reproduced by a worker who had read it
+an hour earlier, which is the argument for the tool over the vigilance.
+
+## DELEGATION 2026-09-14 CAPTURE (CAP-9) → RECORD: **THE PAGE-COUNT BACKFILL FOR CAPTURES ACQUIRED BEFORE THIS LANDING — POPULATION MEASURED AT ZERO ON THE PROJECT INSTANCE, AND THE ROW IS `D-356`**
+
+CAP-9 closes D-345 forward: `op=acquire` persists I2's page count onto the reading, so
+every capture from this landing on carries one and C-45.1 reaches it. **It closes
+nothing behind it.** A reading written before this commit has no `page_count` key,
+`#pageSetForCapture` falls back to the derived union, and for a wholly text-layer or
+wholly scanned document that union is empty — so a page leg on such a capture still
+mints with `page_count` NULL, deliberately not refused.
+
+**THE ACT, with its actor:** `RECORD` builds the backfill when the population stops
+being zero. It is not CAPTURE's: `readings` is FRAMEWORK's table by I5's ownership
+list, the write sits in RECORD's promote transaction, and this worker's claim says it
+touches neither.
+
+**THE COUNT, measured rather than estimated** (`MEASUREMENTS.md`, CAP-9's section,
+2026-09-14, three read-only ops against the project's own instance):
+
+- 31 bundles · **88** distinct `capture_sha` across every bundle's register
+- of those 88, captures with a persisted reading: **0**
+- readings carrying a transcription chain, whole store (`op=textprovenance`,
+  `truncated: false`): **0**
+- **captures a backfill would move today: 0**
+
+So this is filed as a row with a measured priority rather than a task with an assumed
+one. **The second finding in that measurement is the larger one and belongs to whoever
+picks this up: the live record holds 88 captured documents and has read none of them.**
+
+**WHAT THE BACKFILL COSTS WHEN THE POPULATION IS NOT ZERO**, so the next session does
+not have to re-derive it: the count cannot be recovered from the record — it is a fact
+about the BYTES — so each capture must be re-read from R2 and put back through
+`structure()`. That is a bounded, resumable batch pass in the shape
+`reindexNames`/`#backfillRefTerms` already has (a `limit`, a cursor, idempotent), NOT
+a migration and NOT a re-acquire. **It must write ONLY the count**: a reading is a
+projection of its acquire document, so a backfill that also rewrote the chain, the
+entities or `at` would become a second author of it.
+
+**Interim law, unchanged from D-345 and restated because it is what protects the record
+until this runs:** a NULL `page_count` on a pre-CAP-9 capture means the page set was
+undetermined at mint and is STATED — never defaulted to a number, never a zero, and
+never a refusal.

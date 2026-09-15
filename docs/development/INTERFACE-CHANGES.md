@@ -6429,3 +6429,126 @@ amendment building forced is written into this entry in the same commit, naming 
 ### RESOLUTION — ACCEPTED, **I2 2.0.0 → 2.1.0**, 2026-09-14 by CONDUCT #11
 
 MINOR, as proposed: one optional IC-1 `source` on a `parse()` entity and one total `ctx.locate(offset)` on the reader's context; a reader emitting neither and a consumer reading neither see 2.0.0 exactly. The constraint recorded with the acceptance stands as written: an ABSENT `source` means "this reading cannot say where" and NEVER "the whole document" — the whole document is a MEMBER's citation act (Bob's 5.3), not a reader's silence — and a reader may emit only a source `locate` gave it (never-invent, structural). Of the three registered readers one places (`meeting_agenda`, page with `rect` null), two declare in their own headers that they cannot and why, and the suite asserts the declaration against the source. **The I5 bump these columns imply is taken here as I5 1.11.0 → 1.12.0, ADDITIVE:** `reading_refs.pos_kind`/`pos`/`pos_ref` (nullable, all three together or none, re-normalised at the store) with `op=readingref` as their reader, and `connections`' eight determining-pair columns with `#connectionView`'s `determining_pair` and `connectionGradeForContent` (`op=connections&content=`) — C-49.1/.2/.3 the refusals. SETTLED when REC-86/REC-87 (the authored acts that consume the pair) confirm, or at the next I2 producer landing that emits `source` from a real page — whichever comes first; CONDUCT writes it.
+
+## IC-87 · I1: THE PERSISTED READING CARRIES THE PAGE COUNT I2 ALREADY REPORTS — `document.reading.page_count`, so the content row's out-of-range refusal reaches every PDF and not only a mixed document · PROPOSED 2026-09-14 (CAP-9, enacting IC-83's Rules and closing D-345) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I1 (bytes → content), currently **1.4.0 STABLE** (1.4.0 came from IC-85, CAP-8, the same day)
+- **Proposer:** CAPTURE, worker `agent-aaa4d22253c340546`, 2026-09-14, from QUEUE CAP-9
+- **Owner to land it:** `CAPTURE` (owner and proposer)
+- **Consumers to answer:** `CONTENT-HTML` (dormant), `CONTENT-PDF` (dormant),
+  `FRAMEWORK` (ACTIVE — FW-17 is live on `reading_refs`, and this touches no column
+  of it), `RECORD` (the consumer that MATTERS: `Store#contentContextFor` reads the
+  new field and `mintContent` stores it as `content.page_count`)
+- **Change class:** ADDITIVE — one new optional key inside an existing object; no
+  field renamed, reshaped or removed; every consumer that ignores it reads exactly
+  what it read before → MINOR bump (**1.5.0**)
+- **The id was MINTED with `node tools/mintid.mjs IC`** (floor IC-86; IC-86 already
+  held and stepped over).
+
+### WHY THIS IS AN IC AT ALL, STATED FIRST BECAUSE IT IS THE CLOSE CALL
+
+`document.reading` is a field I1's §4 table **does not list**. It was added by FW-5
+and its shape has been versioned on I2 ever since (`reading.text_source` is I2 1.2.0,
+1.3.0 and the 2.0.0 break), so a reader could argue this belongs to I2 and that I1
+never covered it. Filed on I1 anyway, for three reasons:
+
+1. **I1's own version history is four consecutive ADDITIVE MINOR bumps for exactly
+   this act** — 1.1.0 `document.profile` (FW-3), 1.2.0 `document.profile.digests`
+   (FW-4), 1.3.0 `document.profile.format` (COFF-1), 1.4.0 the Drive hop (IC-85).
+   A new key the acquire document carries is filed here and has been four times.
+2. **The acquire document IS `bundle.md`'s frontmatter**, and I1's "what freezing
+   this costs you" names *"the frontmatter field names and value domains in §4"* as
+   protocol-bound. A key inside an object the frontmatter carries is inside that.
+3. **I2 does not move and must not be made to look as though it did.**
+   `pdfstructure.mjs` has returned `pages: <int>` on the structure object since I2
+   1.0.0 — it is in the registry's own "The shape, as CONTENT-PDF emits it today"
+   block. This item consumes that field; it asks no producer for anything new. Filing
+   it on I2 would put a bump on an interface whose producers are unchanged, which is
+   the opposite error from not filing at all.
+
+**A REGISTRY GAP, NAMED RATHER THAN FIXED HERE:** I1 §4's "document top level" table
+lists `profile` and not `reading`, so the acquire document has carried an undocumented
+field since FW-5. This IC's registry edit is the place to close that, and CONDUCT
+takes it with the bump — CAP-9 states it rather than widening its own claim to
+`INTERFACES.md`'s §4 table.
+
+### WHAT CHANGES, precisely
+
+**One optional key on `document.reading`:**
+
+```
+  reading: {
+    content_type, reader_version, read_from_text, found, entities[], facts, at, basis,
+    text_source, text_tier, text_container,          // unchanged
++   page_count: <positive integer> | null            // ABSENT when the format wire never ran
+  }
+```
+
+| value | what it means | when |
+| --- | --- | --- |
+| a positive integer | the number of pages I2 reported for this document, verbatim (`structure().pages`, which is `doc.pageCount`) | a PDF the FORMAT wire read |
+| `null` (key PRESENT) | the wire RAN and the producer reported no count — the page tree could not be ordered, or the container has no pages | a container whose entry produces text but no page count; a PDF with no orderable pages |
+| key ABSENT | nothing ever tried to count this document's pages | an HTML page (read as text at intake, no wire), a multipart or unreadable primary |
+
+**The two absences are different facts and the record states which.** That is the
+sparse-at-every-level rule and the same distinction `#writeTextSource` already makes
+one field over, where *no row* and `transcribed: 0` may not stand in for one another.
+**And it is never a zero**: a zero would assert the document HAS no pages, which is a
+third fact and one nothing here established.
+
+**Value domain:** a positive integer or `null`. Never `0`, never a string, never a
+guess. It is READ from I2 and never re-derived — counting `text.pages[]` here would be
+a second opinion about one number three lines from the first.
+
+### WHY — and what it is worth
+
+IC-83's Rules mint a content row against *"the page count I2 already carries at
+acquire — stored on mint"*, and **nothing persisted one** (D-345, filed by REC-82 and
+delegated to CAPTURE because `op=acquire` is CAPTURE's path). `Store#pageSetForCapture`
+could therefore answer only from the pages a D-252 SCOPED derivation step or an
+attestation happened to name — which is a MIXED document (a text-layer report with
+scanned exhibits) and nothing else. **Every wholly text-layer and every wholly scanned
+PDF, which is the common case, had no page set at all**, so C-45.1 could not fire on it
+and a member could record a citation to page 9,000 of a three-page document with
+nothing saying so. With this field the refusal reaches every PDF the plane has read.
+
+### CONSUMERS, and what changes for each
+
+- **RECORD** — the one consumer that reads it. `Store#contentContextFor` prefers the
+  stored figure and falls back to the existing derived union; `mintContent` is
+  untouched and simply gets a better answer for `ctx.pageCount`, which it already
+  writes to `content.page_count`. **No RECORD code changed for this item**, which is
+  the measurement that makes this additive rather than a claim that it is.
+- **CONTENT-HTML / CONTENT-PDF** (dormant) — NOT-AFFECTED. They produce structure;
+  this consumes a field CONTENT-PDF has emitted since I2 1.0.0.
+- **FRAMEWORK** (ACTIVE) — NOT-AFFECTED. `readings`' COLUMNS do not move: the count
+  rides `readings.reading`, the JSON blob the table already stores. FW-17 is live on
+  `reading_refs` and shares no ground with this.
+- **UI** — NOT-AFFECTED; measured: `civicos-ui` reads no `reading` field.
+
+### THE ALTERNATIVE CONSIDERED AND REJECTED, because the brief expected it
+
+**A `readings.page_count` COLUMN, which would also have been an I5 change.** Rejected:
+`readings.reading` already holds the whole reading as JSON, `readings` is keyed by
+`capture_sha`, and the single reader looks up by exactly that key — so a column would
+be a projection nothing filters, counts or asks for. `#writeTextSource`'s columns exist
+because the chain had to be *filterable*; this number does not. It also keeps the item
+off a table I5's ownership list assigns to FRAMEWORK, and off I5 entirely. **Reversing
+this costs one `ALTER TABLE ... ADD COLUMN` in the existing idempotent migration list
+and one line in `#writeReadings`** — the value is on the reading either way, so no data
+is lost by having chosen the read.
+
+### IMPACT, MEASURED RATHER THAN ASSERTED
+
+- Whole battery **193/193 suites · 11,962 assertions · exit 0** on the landing branch,
+  against this worktree's own pristine baseline **192/192 · 11,936** at `980a9e5`,
+  attributed per suite by DIFFING the two runs and never by subtraction: `+22`
+  `capture-pagecount.test.mjs` (new), `+3` `hygiene.test.mjs` (712→715, its per-suite
+  scans gaining a suite), `+1` `planning-hygiene.test.mjs` (279→280, this IC row and
+  the debt row). 188 suites unchanged, **none fell**. **No existing suite was edited**:
+  the only suites that could have broken are the ones that drive `op=acquire` and
+  compare the whole acquire document, and `conformance.test.mjs` (C-18.1) tolerates the
+  extra key exactly as I1's 1.2.0 entry records it doing for `digests`.
+- On the project's own instance, `op=reading` answers `found:false` for all 88
+  captures in the register and `op=textprovenance` returns `count: 0` over the whole
+  store, so **no live reading changes shape**; the field appears on the next acquire.

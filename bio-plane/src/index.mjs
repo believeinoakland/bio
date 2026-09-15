@@ -5380,7 +5380,11 @@ export default {
            (needsTier2: Tier 1 got essentially nothing) when the binding
            exists. OCR is NOT here (CPDF-10): a document with no text layer
            stays honestly unread. */
-        let wired = null, wiredTier = null;
+        /* CAP-9 / D-345: the page count rides beside `wired`/`wiredTier`
+           because it is the same kind of fact — what the FORMAT wire learned
+           about this document on this pass — and it stays null until a producer
+           that actually counts pages answers. */
+        let wired = null, wiredTier = null, pageCount = null;
         /* CPDF-10: the chain this text's provenance will be recorded as, built
            up as the wire actually walks it rather than labelled at the end. It
            starts empty and is null until a text surface answers, so a document
@@ -5409,6 +5413,17 @@ export default {
                 const st = await entry.structure(wbytes);
                 if (st && st.ok) {
                   i2text = st.text || null; wiredTier = 1;
+                  /* CAP-9 / D-345: I2's OWN page count, taken at the one place
+                     I2 answers it. `structure()` returns `pages: doc.pageCount`
+                     (I2's top-level field, registry §"The shape"), and this
+                     path threw it away — so nothing in the plane persisted a
+                     page count and IC-83's "the page count I2 already carries
+                     at acquire" had no source. It is READ, never re-derived:
+                     counting `st.text.pages` here would be a second opinion
+                     about one number, three lines from the first. A count of
+                     zero is NOT a page count — it is a document with no pages
+                     the structure reader could order — and it stays null. */
+                  if (Number.isInteger(st.pages) && st.pages > 0) pageCount = st.pages;
                   if (env.PDF_WORKER && needsTier2(i2text)) {
                     try {
                       const r = await env.PDF_WORKER.fetch("https://pdf-worker/structure", {
@@ -5697,6 +5712,41 @@ export default {
             basis: `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}), so no reading was attempted`,
           };
         }
+        /* CAP-9 / D-345 — THE PAGE COUNT, CARRIED ONTO THE READING THE PLANE
+           PERSISTS, at ONE site for all three branches above.
+           *
+           * IC-83's Rules mint a content row against "the page count I2 already
+           * carries at acquire", and until this line nothing in this plane
+           * persisted one. `Store#pageSetForCapture` could therefore answer only
+           * from the pages a D-252 SCOPED chain or an attestation happened to
+           * name — a MIXED document and nothing else — so the out-of-range
+           * refusal (C-45.1) reached the rare case and missed every ordinary
+           * PDF. That is D-345, and this is the field that closes it.
+           *
+           * THE KEY IS PRESENT AND NULL RATHER THAN ABSENT, and the difference
+           * is the sparse-at-every-level rule rather than tidiness. An ABSENT
+           * key says nothing ever tried to count this document's pages (an HTML
+           * page, a multipart giant — the wire never ran); `null` says the wire
+           * DID run and the producer reported no count (an office container, a
+           * PDF whose page tree could not be ordered). No absence may stand in
+           * for another — the same rule `#writeTextSource` obeys one field over,
+           * where no row and `transcribed: 0` are different facts.
+           *
+           * AND IT IS NEVER A ZERO. Zero would say this document HAS no pages,
+           * which is a third fact and one nothing here established; `null` says
+           * the page set is undetermined, which is what the row then records and
+           * what `op=content` states back. Undetermined is first-class, and a
+           * refusal is not owed for it (D-345's interim law, and C-45.1's own
+           * guard).
+           *
+           * WHY IT IS NOT A COLUMN. `readings.reading` already holds the whole
+           * reading as JSON and `readings` is keyed by `capture_sha`, which is
+           * exactly the key the one reader (`contentContextFor`) looks up by —
+           * so a column would be a projection nothing filters, counts or asks
+           * for, on a table this area does not own (I5: `readings` is
+           * FRAMEWORK's). `#writeTextSource`'s columns exist because the chain
+           * had to be filterable; this number does not. */
+        reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
       }
 
       /* The shape C-18.1 requires, assembled here so the caller does not have to

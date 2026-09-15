@@ -31977,32 +31977,54 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     );
     return row ? row.capture_sha : null;
   }
+  /** THE PERSISTED READING for a capture, parsed, or null.
+   *
+   *  CAP-9 FOLDED TWO READS INTO ONE. `contentContextFor` wants two facts off
+   *  this row — the chain and (since D-345) the page count — and asking for the
+   *  row twice would be two answers to one question waiting to disagree, which
+   *  is the drift the comment on `#contentPlanFor` already names. One read,
+   *  parsed once, handed to both readers below. */
+  #persistedReading(captureSha) {
+    const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, captureSha);
+    return row ? safeJson(row.reading) || null : null;
+  }
   /** The transcription chain the record holds for a capture, or null.
    *  ONE source (`readings.reading.text_source`), the same one `attestText` and
    *  `attestationsFor` read, so the chain a content row records and the chain a
    *  ceiling is computed from cannot be two different chains. */
-  #chainForCapture(captureSha) {
-    const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, captureSha);
-    if (!row) return null;
-    const chain2 = (safeJson(row.reading) || {}).text_source ?? null;
+  #chainOfReading(reading) {
+    const chain2 = reading && typeof reading === "object" ? reading.text_source ?? null : null;
     return Array.isArray(chain2) ? chain2 : null;
   }
   /** THE CAPTURE'S PAGE SET, as the record holds it — the figure the
    *  out-of-range refusal (C-45.1) is checked against and the figure stored on
    *  the row at mint, which is what IC-83 requires.
    *
-   *  NOTHING IN THIS PLANE PERSISTS A PDF PAGE COUNT. I2 computes one at acquire
-   *  (`pdfstructure.mjs` returns `pages: doc.pageCount`) and the acquire path
-   *  does not carry it onto the reading, so there is no column to read — the
-   *  design study says so in its own words ("needs a stored page count — absent
-   *  today"). D-345 is the row that closes it, and closing it means op=acquire
-   *  persisting the figure, which is CAPTURE's path and not this item's.
+   *  THE READING'S OWN PAGE COUNT FIRST (CAP-9 / D-345, 2026-09-14). `op=acquire`
+   *  now carries I2's `pages` onto the reading it persists, so for every PDF the
+   *  plane has read there IS a stored figure and it is preferred. **The sentence
+   *  that stood here until CAP-9 said "NOTHING IN THIS PLANE PERSISTS A PDF PAGE
+   *  COUNT … there is no column to read"; it recorded the gap, and the gap
+   *  closing is the news** (COFF-9's precedent for correcting a stale
+   *  self-description in place rather than deleting it).
    *
-   *  SO THIS ANSWERS FROM WHAT THE RECORD ACTUALLY HOLDS, and says so: the
-   *  pages D-252's SCOPED derivation steps name, unioned with the pages any
-   *  attestation covers. A mixed document (a text-layer report with scanned
-   *  exhibits) has a real page set here. A document with one unscoped chain has
-   *  none, and the answer is NULL — UNDETERMINED AND STATED.
+   *  AND IT IS A COUNT, WHERE THE UNION BELOW IS A FLOOR. I2 reads the document's
+   *  own page tree, so the stored figure says how many pages this document HAS;
+   *  the union says only how many the record has ever seen NAMED. Preferring the
+   *  larger of the two would let one derivation step or attestation naming a page
+   *  the file does not contain silently widen the bound — the record believing a
+   *  claim about the document over the document. So the stored count wins
+   *  outright where it exists, and a disagreement stays visible instead of being
+   *  averaged away.
+   *
+   *  WHERE THERE IS NONE THIS ANSWERS FROM WHAT THE RECORD ACTUALLY HOLDS, and
+   *  says so: the pages D-252's SCOPED derivation steps name, unioned with the
+   *  pages any attestation covers. That is a capture acquired BEFORE this landing
+   *  (no backfill was taken — D-356), one whose producer reported no count, and
+   *  any document that is not a PDF. A mixed document (a text-layer report with
+   *  scanned exhibits) has a real page set here. A document with one unscoped
+   *  chain and no stored count has none, and the answer is NULL — UNDETERMINED
+   *  AND STATED.
    *
    *  WHY NULL IS NOT A REFUSAL. Refusing every page citation on a document
    *  whose page set this plane never recorded would be a fence tighter than its
@@ -32016,9 +32038,11 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    *  named pages would answer a different question and would refuse page 9 of a
    *  document whose chain happened to scope only three pages — a fence tighter
    *  than its rule again, in the direction that refuses correct work. */
-  #pageSetForCapture(captureSha) {
+  #pageSetForCapture(captureSha, reading) {
+    const stored = reading && typeof reading === "object" ? reading.page_count : void 0;
+    if (Number.isInteger(stored) && stored > 0) return stored;
     let max = -1;
-    const chain2 = this.#chainForCapture(captureSha);
+    const chain2 = this.#chainOfReading(reading);
     for (const step of Array.isArray(chain2) ? chain2 : []) {
       const e = step && typeof step === "object" ? step.extent : null;
       if (!e || e.kind !== "pages" || !Array.isArray(e.pages)) continue;
@@ -32102,9 +32126,10 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    *  same place, so the write path and the gate cannot come to hold two answers
    *  about what a document contains. */
   contentContextFor(captureSha) {
+    const reading = this.#persistedReading(captureSha);
     return {
-      chain: this.#chainForCapture(captureSha),
-      pageCount: this.#pageSetForCapture(captureSha),
+      chain: this.#chainOfReading(reading),
+      pageCount: this.#pageSetForCapture(captureSha, reading),
       container: this.#containerExtentForCapture(captureSha)
     };
   }
@@ -54312,7 +54337,7 @@ var index_default = {
           basis: `the ${docType.type.key} content type declares no reader, so this document has no reading`
         };
       } else {
-        let wired = null, wiredTier = null;
+        let wired = null, wiredTier = null, pageCount = null;
         let chain2 = null, ocrNote = null;
         const fmt = profile.format && profile.format.format;
         if (!multipart && fmt && fmt !== "undetermined") {
@@ -54334,6 +54359,7 @@ var index_default = {
                 if (st && st.ok) {
                   i2text = st.text || null;
                   wiredTier = 1;
+                  if (Number.isInteger(st.pages) && st.pages > 0) pageCount = st.pages;
                   if (env.PDF_WORKER && needsTier2(i2text)) {
                     try {
                       const r = await env.PDF_WORKER.fetch("https://pdf-worker/structure", {
@@ -54496,6 +54522,7 @@ var index_default = {
             basis: `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}), so no reading was attempted`
           };
         }
+        reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
       }
       return json({
         ok: true,

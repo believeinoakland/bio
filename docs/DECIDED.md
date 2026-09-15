@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-881 rulings across 81 documents.
+882 rulings across 81 documents.
 
 ## DEC-
 
@@ -1529,6 +1529,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:5430`
 - (`docs/DECIDED.md` regenerated — this claim's own Contract line added one ruling row, 860 → 861). **WHAT LANDED.** `civicos-ui/app.html`: `CONTENT_EXTENT_KINDS` + `EXTENT_KIND_WORD` beside the  
   `docs/development/CLAIMS.md:5503`
+- AMENDED AT THE BUILD, two additions, each stated rather than quietly taken:** - `.gitignore` — **ONE PEN, `.cap9-control-pristine/`**, with its reason at the line. This claim did not anticipate it.  
+  `docs/development/CLAIMS.md:6074`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  

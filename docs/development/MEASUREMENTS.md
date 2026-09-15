@@ -11631,3 +11631,63 @@ it); and `monitor-cadence.test.mjs` reported 2 FAIL at 6,263ms under **six concu
 on the machine, then **passed alone on the same pristine tree at 14,344ms**. A time-sensitive
 suite given less than half its uncontended wall clock. **The authoritative baseline is A's
 190/190 · 11,713**, which is also exactly the figure the spawn brief carried — measured, and right.
+## 2026-09-14 — CAP-9: HOW MANY CAPTURES A PAGE-COUNT BACKFILL WOULD MOVE ON THE PROJECT'S OWN INSTANCE — **ZERO**, and the second finding is why
+
+**Instrument.** Three read-only ops against the live instance named by `.env`'s
+`BIO_INSTANCE` (store `bio`, the real record — reads only, nothing written, nothing
+purged), driven from a throwaway script over `bio-plane/test/vf4-call.mjs`'s own
+credential loader so no token was printed: `op=list` (limit 500) → `op=export` per
+bundle → `op=reading` per distinct `capture_sha`; then `op=textprovenance`
+(limit 500) over the whole store as an independent second instrument. Run
+2026-09-14 from worktree `agent-aaa4d22253c340546`.
+
+**Why it was taken.** CAP-9's brief allows the backfill to be left out only if the
+population is stated with a measured count — *"measured on the project instance's own
+data is fine; a fixture count is not."* D-356 is the row it produced.
+
+| figure | value |
+| --- | --- |
+| bundles listed (`op=list`) | **31** |
+| distinct `capture_sha` across every bundle's register (`op=export`) | **88** |
+| register rows the plane's own audit reports (`op=registeraudit`) | 88 total · 58 live · 30 captured · 0 mismatched · 0 unbacked · `sound: true` |
+| of the 88, captures with a PERSISTED READING (`op=reading`) | **0** |
+| readings carrying a transcription chain, whole store (`op=textprovenance`) | **0** (`truncated: false`) |
+| **captures a page-count backfill would move** | **0** |
+
+**THE SECOND FINDING, which is larger than the first and is reported because it is
+what the measurement actually found.** The live record holds **88 captured documents
+and has READ none of them** — no `readings` row answers for any capture in any
+bundle's register, and no reading anywhere in the store carries a transcription chain.
+That is `CLAUDE.md`'s own sentence arriving as a number: *"a store full of captured
+PDFs, none of them read, is a pile of noise with good provenance."* It is not this
+item's to fix and it is not filed as a defect here — the reading wire (FW-15) and the
+content axis are BUILT and the corpus simply predates them — but it is the reason
+CAP-9's backfill count is zero, and a future session sizing content work should start
+from this row rather than from the bundle count.
+
+**WHAT THIS INSTRUMENT CAN AND CANNOT SEE**, stated because a zero is the easiest
+figure in the world to get for the wrong reason:
+
+- The `op=export` census enumerates captures through each bundle's REGISTER rows. A
+  capture intaken with a provenance document and never registered would be invisible
+  to it — `Store#captureForContent` names exactly that case (*"a document intaken with
+  a provenance document has only the second"*). **That blind spot is covered by the
+  second instrument**: `op=textprovenance` reads `reading_text_source`, which is keyed
+  by `capture_sha` with no bundle join, and it answers 0 over the whole store. A
+  reading with no chain could gain no page count anyway, because the count and the
+  chain come from the same wire on the same pass.
+- `reading_text_source` rows are written at promote and only since CPDF-10, so a
+  reading persisted BEFORE CPDF-10 and never re-promoted would be missing from the
+  second instrument. The first instrument covers that direction, and it reports 0
+  readings at all.
+- Neither instrument sees a SOVEREIGN group's instance. This figure is the project's
+  own record and is a statement about it alone; D-356's priority is set by it and its
+  content is not.
+- A zero here is a statement about TODAY. The population grows with every PDF acquired
+  before a backfill exists, which is why D-356 is open rather than closed.
+
+**Corroboration that the zero is not the instrument failing.** The same script, same
+credentials, same origin, returned non-zero for every other figure it asked for (31
+bundles, 88 shas, and `op=registeraudit`'s `sound: true` over the same 88), so the
+calls reached the plane and were answered. An instrument that returned zero for
+everything would have been a finding about the instrument.

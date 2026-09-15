@@ -148,3 +148,10 @@ _m025/
 # evidence; an interrupted run must not leave an untracked copy of a planning file where
 # the next walk can enrol it as a second authority.
 .m030-harness/
+# CAP-9's pen, named for its item because every one above it is and because a glob
+# over `.*-control-pristine/` would silently cover a pen nobody declared (the note
+# at `.rec84-control-pristine/`). `bio-plane/test/nc-cap9.mjs` keeps per-arm pristine
+# copies of `src/index.mjs` and `src/store.mjs` here while it arms them; an
+# interrupted run leaves a copy behind, and an untracked copy of a plane source is
+# exactly what another item's producer sweep has already enrolled as a second author.
+.cap9-control-pristine/

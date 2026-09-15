@@ -11498,14 +11498,24 @@ export class Store extends DurableObject {
     return row ? row.capture_sha : null;
   }
 
+  /** THE PERSISTED READING for a capture, parsed, or null.
+   *
+   *  CAP-9 FOLDED TWO READS INTO ONE. `contentContextFor` wants two facts off
+   *  this row — the chain and (since D-345) the page count — and asking for the
+   *  row twice would be two answers to one question waiting to disagree, which
+   *  is the drift the comment on `#contentPlanFor` already names. One read,
+   *  parsed once, handed to both readers below. */
+  #persistedReading(captureSha) {
+    const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, captureSha);
+    return row ? (safeJson(row.reading) || null) : null;
+  }
+
   /** The transcription chain the record holds for a capture, or null.
    *  ONE source (`readings.reading.text_source`), the same one `attestText` and
    *  `attestationsFor` read, so the chain a content row records and the chain a
    *  ceiling is computed from cannot be two different chains. */
-  #chainForCapture(captureSha) {
-    const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, captureSha);
-    if (!row) return null;
-    const chain = (safeJson(row.reading) || {}).text_source ?? null;
+  #chainOfReading(reading) {
+    const chain = reading && typeof reading === "object" ? reading.text_source ?? null : null;
     return Array.isArray(chain) ? chain : null;
   }
 
@@ -11513,18 +11523,31 @@ export class Store extends DurableObject {
    *  out-of-range refusal (C-45.1) is checked against and the figure stored on
    *  the row at mint, which is what IC-83 requires.
    *
-   *  NOTHING IN THIS PLANE PERSISTS A PDF PAGE COUNT. I2 computes one at acquire
-   *  (`pdfstructure.mjs` returns `pages: doc.pageCount`) and the acquire path
-   *  does not carry it onto the reading, so there is no column to read — the
-   *  design study says so in its own words ("needs a stored page count — absent
-   *  today"). D-345 is the row that closes it, and closing it means op=acquire
-   *  persisting the figure, which is CAPTURE's path and not this item's.
+   *  THE READING'S OWN PAGE COUNT FIRST (CAP-9 / D-345, 2026-09-14). `op=acquire`
+   *  now carries I2's `pages` onto the reading it persists, so for every PDF the
+   *  plane has read there IS a stored figure and it is preferred. **The sentence
+   *  that stood here until CAP-9 said "NOTHING IN THIS PLANE PERSISTS A PDF PAGE
+   *  COUNT … there is no column to read"; it recorded the gap, and the gap
+   *  closing is the news** (COFF-9's precedent for correcting a stale
+   *  self-description in place rather than deleting it).
    *
-   *  SO THIS ANSWERS FROM WHAT THE RECORD ACTUALLY HOLDS, and says so: the
-   *  pages D-252's SCOPED derivation steps name, unioned with the pages any
-   *  attestation covers. A mixed document (a text-layer report with scanned
-   *  exhibits) has a real page set here. A document with one unscoped chain has
-   *  none, and the answer is NULL — UNDETERMINED AND STATED.
+   *  AND IT IS A COUNT, WHERE THE UNION BELOW IS A FLOOR. I2 reads the document's
+   *  own page tree, so the stored figure says how many pages this document HAS;
+   *  the union says only how many the record has ever seen NAMED. Preferring the
+   *  larger of the two would let one derivation step or attestation naming a page
+   *  the file does not contain silently widen the bound — the record believing a
+   *  claim about the document over the document. So the stored count wins
+   *  outright where it exists, and a disagreement stays visible instead of being
+   *  averaged away.
+   *
+   *  WHERE THERE IS NONE THIS ANSWERS FROM WHAT THE RECORD ACTUALLY HOLDS, and
+   *  says so: the pages D-252's SCOPED derivation steps name, unioned with the
+   *  pages any attestation covers. That is a capture acquired BEFORE this landing
+   *  (no backfill was taken — D-356), one whose producer reported no count, and
+   *  any document that is not a PDF. A mixed document (a text-layer report with
+   *  scanned exhibits) has a real page set here. A document with one unscoped
+   *  chain and no stored count has none, and the answer is NULL — UNDETERMINED
+   *  AND STATED.
    *
    *  WHY NULL IS NOT A REFUSAL. Refusing every page citation on a document
    *  whose page set this plane never recorded would be a fence tighter than its
@@ -11538,11 +11561,16 @@ export class Store extends DurableObject {
    *  named pages would answer a different question and would refuse page 9 of a
    *  document whose chain happened to scope only three pages — a fence tighter
    *  than its rule again, in the direction that refuses correct work. */
-  #pageSetForCapture(captureSha) {
+  #pageSetForCapture(captureSha, reading) {
+    /* CAP-9: the stored figure, and it ends the question — including the SQL
+       aggregate below, which a capture whose reading carries a count never
+       pays for. */
+    const stored = reading && typeof reading === "object" ? reading.page_count : undefined;
+    if (Number.isInteger(stored) && stored > 0) return stored;
     let max = -1;
     /* The chain is an in-memory array whose length is the number of derivation
        steps — a handful, and NOT a row scan. */
-    const chain = this.#chainForCapture(captureSha);
+    const chain = this.#chainOfReading(reading);
     for (const step of Array.isArray(chain) ? chain : []) {
       const e = step && typeof step === "object" ? step.extent : null;
       if (!e || e.kind !== "pages" || !Array.isArray(e.pages)) continue;
@@ -11640,8 +11668,9 @@ export class Store extends DurableObject {
    *  same place, so the write path and the gate cannot come to hold two answers
    *  about what a document contains. */
   contentContextFor(captureSha) {
-    return { chain: this.#chainForCapture(captureSha),
-             pageCount: this.#pageSetForCapture(captureSha),
+    const reading = this.#persistedReading(captureSha);
+    return { chain: this.#chainOfReading(reading),
+             pageCount: this.#pageSetForCapture(captureSha, reading),
              container: this.#containerExtentForCapture(captureSha) };
   }
 
