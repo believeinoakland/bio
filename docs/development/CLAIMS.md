@@ -4257,6 +4257,18 @@ paths:
     set, grepped after writing. Added to this claim when the print moved, not before.
   - `.gitignore` — one entry, `.m030-harness/`, the control driver's pen. Same rule and same
     reason as every pen entry above it.
+  - `bio-plane/test/m025-arm-anchor-witness.test.mjs` — **AMENDED INTO THIS CLAIM MID-ITEM,
+    two lines of CORPUS ONLY** (`tools/` and `docs/architecture/**.md` added to the candidate
+    subject set) with the reason at the site. Not planned: this item's own driver made the
+    battery RED. Its anchors quote `tools/plancheck.mjs` and `CORPUS-STANDARD.md`, neither
+    directory was in the witness's corpus, and A4 reported two LIVE anchors as gone to zero.
+    That file's own comment records the identical false finding for `docs/development/` and
+    the identical repair, so this follows its precedent rather than inventing one. **The
+    alternative — re-spelling the driver's anchors so the extractor stops seeing them — was
+    refused: it dodges the detector and leaves the arm exactly as fragile.** No arm, floor or
+    assertion of that suite moves (24 pass before and after; corpus 391 -> 458 against a floor
+    of 300). The D-329+D-331+D-333 claim that owns the file is RELEASED and M0-29, which names
+    it, is `queued` and unspawned — CONDUCT should expect a trivial merge there.
   - `docs/development/QUEUE.md` — **`design:` POINTER LINES ONLY, one per open row that the
     arm fails, placed immediately after that row's `interface:` line.** Nothing else in this
     file: no status flip, no scope edit, no new row, no other line. `QUEUE.md` is CONDUCT's
@@ -4292,10 +4304,17 @@ own print, ONE key set). `node civicos-ui/test/run.mjs` from the repo root, **ex
 `node tools/gates.mjs` **GREEN · class FULL**. `plancheck --local` **0 fail 0 warn**.
 **Controls 25/25 as declared, FIRST RUN**, five arms plus a baseline, restores by sha256 AND
 `cmp` AND a floored byte count — declared in the suite's own `NEGATIVE CONTROL:` line.
-**One instrument defect, recorded rather than smoothed**: the driver's first cleanup removed the
-PEN DIRECTORY and took this session's baseline worktree and saved gate logs with it, on a clean
-run at exit 0; `git worktree prune` cleared the stale registration and the driver now removes
-only the copies it wrote.
+**THREE INSTRUMENT FINDINGS, each recorded rather than smoothed, and all three are about MY
+instruments rather than the subject.** (1) The driver's first cleanup removed the PEN DIRECTORY
+and took this session's baseline worktree and saved gate logs with it, on a clean run at exit 0;
+`git worktree prune` cleared the stale registration and the driver now removes only the copies it
+wrote. (2) The control register counted THREE arms in a declaration that states five, because two
+of them stated their outcome in prose where three used the arrow grammar; re-spelled, and the
+floor moved to the new print. (3) **The committed driver turned the battery RED, and the finding
+was the WITNESS rather than the driver**: `m025-arm-anchor-witness.test.mjs`'s A4 reported two
+live anchors as gone to zero because its candidate corpus reached neither `tools/` nor
+`docs/architecture/`; corpus widened on that file's own recorded precedent, 0 dead anchors, 0
+unnamed multiplicities, and the suite's own assertions unmoved at 24.
 **WHAT IS OWED TO A FUTURE ACTOR: nothing by this landing.** The two items CONDUCT may want are
 NOTICES, not debts, and both are in the report as acts with their actor: (1) `CORPUS-STANDARD.md`
 §4's numbered list is written 1,2,3,4,5,7,6 — the row-design rule is labelled 7 but sits SIXTH,
