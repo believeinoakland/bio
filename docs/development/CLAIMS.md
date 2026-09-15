@@ -6790,3 +6790,40 @@ commits — checked because the standing note about this project's `bio` persona
 and Cloudflare ACCOUNTS (push and deploy), not the git author identity, and changing the author here
 would have made these two commits the odd ones out in their own history. Nothing was pushed and
 nothing was deployed.
+
+### CLAIM ADDENDUM 2026-09-14 SKILL+RECORD (SK-8) — **`origin/main` MOVED 17 COMMITS DURING THIS ITEM AND THE `REGISTER_FLOOR` WILL CONFLICT. NEITHER SIDE'S FIGURE IS TRUE OF THE MERGED TREE.**
+Measured at the close, from the remote and not from this tree: this branch is based on `0587e77`
+and `origin/main` is at `61a6dd8` — **REC-97 and CAP-12 both landed and merged while this item ran**,
+and both touch ground this item touches.
+
+**THE ONE THING THAT MUST NOT BE RESOLVED BY TAKING A SIDE:**
+`bio-plane/scripts/coverage.mjs`'s `REGISTER_FLOOR`.
+
+| tree | arms | classified | corpus | measured against |
+| --- | --- | --- | --- | --- |
+| this branch | 1029 | 188 | 189 | `3accbe3`, a tree with NEITHER REC-97's nor CAP-12's suites |
+| `origin/main` `61a6dd8` | 1037 | 189 | 190 | a tree without `extractrun.test.mjs` |
+
+**BOTH ARE HONEST AND BOTH ARE WRONG ABOUT THE MERGE.** The merged figure is HIGHER than either,
+and it cannot be got by adding — that arithmetic is the exact mistake this file's own comment block
+records being made and corrected at the 2026-08-08 integration, where 581 was independently measured
+by two items and was true of neither tree. **CONDUCT re-reads all three numbers from a green
+`--strict` run ON THE MERGED TREE, with `provenance: N of N discovered item(s) are in the commit`
+beside them, and COLLAPSES TO ONE KEY SET** — a keep-both merge here leaves duplicate `arms:` keys,
+which is valid JavaScript where the LAST silently wins and has happened SIX times, once installing
+the LOWEST figure into a ratchet whose whole purpose is to have none.
+
+**THE OTHER CONTENDED GROUND, named so the merge is a merge and not a discovery.** `store.mjs` and
+`index.mjs` (REC-97 widened `op=cite` to carry the extent; CAP-12 widened `op=acquire`'s reading
+write) — **this item touches neither `op=cite` nor `op=acquire` and no leg writer, extent arm or
+`checkInquiryBasis`**, so the overlap should be textual rather than semantic. `bio-checks.mjs`
+(REC-97's and CAP-12's, **0 lines from this item**). `DEBT.md`, `CLAIMS.md`, `MEASUREMENTS.md`,
+`INTERFACE-CHANGES.md` (all three items append). `bio-plane/dist/**` — **regenerate with
+`npm run build` after the merge rather than resolving it; a hand-merged bundle is a stale artifact
+that FL-10's guard exists to refuse.**
+
+**AND ONE THING CHECKED AND CLEAR:** `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 and
+`EXTRACTION-BREADTH-DESIGN.md` §4 — this item's two design authorities — are UNCHANGED on
+`origin/main` since `0587e77`, and `QUEUE.md`'s `### SK-8` row carries no mid-run correction. So
+BOB.md's new rule 6 (*a correction to a design does not reach a running worker; it is owed at
+integration*) has **nothing owed against this row**, checked rather than assumed.
