@@ -191,6 +191,18 @@ in `DECISIONS.md`. A new major construct gets a home document and a row in
 `BIO_System_Design.md` §3 in the same landing. `plancheck` runs the checker; the reviewer
 (Bob, reading as someone who has not lived in the repo) judges the honesty.
 
+**5. A design that rests on a LEDGER ROW verifies the row against the CODE before citing it**
+(measured 2026-09-14, REC-89). `CONTENT-SEARCH-DESIGN.md` named D-225's uncapped reads as an
+unmet precondition and sequenced an item to close them; the worker found the caps had shipped
+five weeks earlier at REC-60 under IC-25, and the debt row had simply stayed `open` for 38 days
+after its own remedy landed. **A debt row is a claim about the day it was written, and a remedy
+ships without the row closing** — so a decomposition inherits the staleness of every ledger it
+cites, and inherits it with full confidence, because a row reads like a fact. The rule is cheap:
+before a design rests on a row, grep the code the row names. It runs the other way too — do not
+row an item for work that exists, and **do not mint an interface change for a change that does
+not exist**, which is `INTERFACE-CHANGES.md`'s own reasoning pointed the other way: filing one
+teaches the registry to lie in the direction nobody checks.
+
 **Report what was DONE and what was DECIDED. Never report tactical STATE.** An
 outstanding item, a dirty tree, a stale claim, a warning nobody has cleared: fix it,
 or route it through the channel that owns it, or leave it unsaid. Surfacing it to Bob
