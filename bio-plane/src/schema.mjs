@@ -452,11 +452,21 @@ CREATE INDEX IF NOT EXISTS link_verdicts_pair ON link_verdicts(source_capture, a
 -- direct one, not a repeat of it.
 --
 -- The address columns carry the DOCUMENT ADDRESS, the address the record
--- reasons about; retrieval_locator carries what was actually fetched. For a
--- direct capture they are the same string. For an archive capture the document
--- address is the CDX original field through our own normaliser and the
--- retrieval locator is the archive's replay address, and conflating them is
--- how a provenance difference gets reported as a change.
+-- reasons about; retrieval_locator carries what was actually fetched. For an
+-- archive capture the document address is the CDX original field through our own
+-- normaliser and the retrieval locator is the archive's replay address, and
+-- conflating them is how a provenance difference gets reported as a change.
+--
+-- CORRECTED 2026-09-14 BY CAP-8, AND THE OLD SENTENCE IS SAID RATHER THAN
+-- DELETED. This read "For a direct capture they are the same string", and that
+-- was true of every capture the plane could make until Bob ruled that a link to
+-- a Google Drive file KEEPS THE LINK while the harvest is the OpenDocument
+-- export. A Drive capture is via 'direct' -- we asked Google and Google answered
+-- us, with nobody in between -- and its two addresses differ anyway: the address
+-- columns hold the Drive link the source page carried, and retrieval_locator
+-- holds the export address the plane composed from the file id and the kind.
+-- So via no longer tells a reader whether the two are equal, and a reader that
+-- wants the document address must read it here rather than infer it. IC-85.
 CREATE TABLE IF NOT EXISTS captured_locators (
   address_norm      TEXT NOT NULL,
   address           TEXT NOT NULL,

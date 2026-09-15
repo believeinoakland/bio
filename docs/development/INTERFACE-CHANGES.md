@@ -6129,3 +6129,155 @@ REC-83 landed at `cc8187d`: `op=earnedbasis` per extent, the fixed-key `op=conte
 ### AMENDED 2026-09-14 by CONDUCT #11 at REC-84's landing — the WRITE half is BUILT; the grammar column gains the field its own refusal presupposed; still CHANGING
 
 REC-84 landed at `7087905`: the leg grammar at both grains (C-2.8, C-25.10, one checker), the version-leg `content_id` writer, `version_content[]` on `op=promote`, C-45.5/C-45.6. **Amendment to (1):** a basis leg — like a version leg — may carry an optional `content_id` (64 lowercase hex, the minter's own shape) naming an already-minted part outright, as an alternative to the flattened `extent_*` fields; (1)'s sentence "a content id whose row does not exist is refused" presupposed the field and the column of the grammar did not list it. CONDUCT reads the IC as having required it and states it here rather than treating the worker's landing as a widening. **Not moved, and named as debt:** no READ op serves a version leg's referent (`op=basisversions` was not widened because this IC does not name it) — D-350, RECORD's, with its interim law. Status stays CHANGING until UI-61 confirms the composer emits `extent`; SETTLED is CONDUCT's to write then, together with IC-83's NOT NULL move for the two `content_id` columns once the backfill has run (not yet rowed — rowed when UI-61 lands).
+---
+
+## IC-85 · I1: A **DIRECT** CAPTURE MAY NOW HAVE TWO ADDRESSES AND TWO HOPS — the Google Drive export enters as `via:"direct"` with the Drive link as the DOCUMENT address, the composed export address as the RETRIEVAL locator, and a second hop carrying the export address, the export format and Google as producer · PROPOSED 2026-09-14 (CAP-8, enacting Bob's Google Drive ruling of 2026-09-14) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I1 (bytes → content), currently **1.3.0 STABLE**
+- **Proposer:** CAPTURE, worker `agent-ac12c46e7df4b4d96`, 2026-09-14, from QUEUE CAP-8
+- **Owner to land it:** `CAPTURE` (owner and proposer)
+- **Consumers to answer:** `CONTENT-HTML` (dormant), `CONTENT-PDF` (dormant),
+  `FRAMEWORK` (dormant) — all three dormant, so CONDUCT answers on their behalf
+  IN WRITING per the protocol's step 3, recorded as CONDUCT answering FOR each
+  area and never as the area agreeing.
+- **The id was MINTED with `node tools/mintid.mjs IC`** (floor IC-84).
+
+### WHY THIS IS AN IC AT ALL, STATED FIRST BECAUSE IT IS THE CLOSE CALL
+
+**No field is renamed, reshaped or removed, and nothing a consumer reads today
+answers differently for any capture it has ever seen.** The honest reason this is
+filed rather than waved through is that I1 states two INVARIANTS in prose which
+this change makes false, and both of them are in the two places the registry's
+own "what you may NOT change without the protocol" paragraph names — §4's
+frontmatter field value domains and §5's `captured_locators`:
+
+1. **§4b** describes the chain as one hop, with *"An archive capture appends a
+   second, weaker hop"* as the sole exception. After CAP-8 a `via:"direct"`
+   capture may carry two hops. A consumer reading `chain.length === 1` as *"this
+   is a direct capture and the locator is the document address"* is now wrong.
+2. **§5** says of `retrieval_locator`: *"for a direct capture they are equal"*.
+   For a Drive capture they are not: `address`/`address_norm` hold the Drive link
+   and `retrieval_locator` holds the composed export address, with `via` still
+   `direct`. `schema.mjs`'s own column comment carries the same sentence and is
+   corrected in the same commit.
+3. **§4** says of `document.locator`: *"For an archive capture this is the replay
+   URL"*. It is now also the export address for a Drive capture.
+
+An invariant a consumer may reasonably have keyed on is a shape, whether or not it
+was ever a field. **A fence tighter than its rule is not a safer fence; a contract
+looser than its text is not a safe contract either.**
+
+### WHAT CHANGES, precisely
+
+**(a) `document.provenance_chain` may carry a second hop on a `via:"direct"`
+capture.** Hop 0 is unchanged, byte for byte. The second hop is built by
+`driveHop` in the new `bio-plane/src/drive.mjs`:
+
+```
+{ who:      "Google Drive (Google Drive export)",
+  asserts:  "these bytes are Google's ODT conversion, made at export time, of the
+             Drive document <id>, served for <export address> at <retrieved>. The
+             document itself lives at <drive address>, which is the address the
+             record keeps.",
+  evidence: "export address …; export format odt (application/vnd.oasis.opendocument.text);
+             producer Google Drive export; the export address was COMPOSED BY THIS
+             INSTANCE from the file id and the kind carried in <drive address>, and no
+             part of it was read from the request (D-112); …; confirmed from the bytes: …",
+  bound:    false,
+  unsigned_reason: "…the bytes are not the original file: they are Google's conversion
+                    performed at fetch time…",
+  via:      "direct",
++ export_address:  "<https://docs.google.com/document/d/<id>/export?format=odt>",
++ export_format:   "odt" | "ods" | "odp",
++ producer:        "Google Drive export",
++ drive_file_id:   "<id>",
++ drive_kind:      "document" | "spreadsheet" | "presentation",
++ document_address:"<the Drive link, verbatim>",
++ export_format_confirmed: true | false | null }
+```
+
+**THE THREE FACTS THE ITEM OWES — export address, export format, producer — ARE
+THE FIRST THREE NAMED KEYS.** They are in `asserts`/`evidence` as prose because a
+hop is read by people, and as fields because a consumer must not have to parse
+prose to answer *"what format is this and who produced it"*. **Extra keys on a hop
+are precedented, not novel:** `archiveHop` has carried `unsigned_reason` beyond
+I1 §4b's five fields since 0.52.0 and no consumer noticed.
+
+**(b) `captured_locators` for a Drive capture:** `address` = the Drive link
+**exactly as the caller supplied it**, `address_norm` = that link through
+`normalizeAddress`, `retrieval_locator` = the composed export address, `via` =
+`direct`. **The KEY `(address_norm, capture_sha, via)` is untouched.**
+
+**(c) `document.locator`** = the export address (what was fetched). Unchanged in
+meaning; newly reachable for a second reason.
+
+**That is the whole shape change.** `document.capture.*` — `sha256`, `bytes`,
+`content_type`, `method`, `grade`, `actor_class`, `transport` — is untouched.
+`profile`, `reading`, `authority_state`, `authority_basis`, `via`, `origin`,
+`parts`, `renditions` are untouched. **The register (§1) and `op=capture` (§3)
+are untouched.**
+
+### WHY, AND IT IS BOB'S RULING IN ONE SENTENCE
+
+*"A link to a Google Drive file should keep the link and export an OpenDocument
+version that the content is extracted from."* (2026-09-14, framework Part II §16.)
+Keeping the link and harvesting the export IS a two-address capture. D-96 already
+built that shape for the archive; CAP-8 uses it for a second reason rather than
+inventing a second mechanism, which is why the diff is small enough to argue about.
+
+### `via` DOES NOT GAIN A TERM, AND THAT IS A DECISION
+
+The obvious alternative was `via: "google-drive"`, which would have made every
+existing consumer's `via === "direct"` test skip Drive captures silently. **That
+is worse in the direction this project cares about**: the fetch IS direct — we
+asked Google and Google answered us, with no party in between — so a third term
+would assert a directness difference that did not happen, and the identity/bracket
+arm (`store.mjs resolveLinks`, `WHERE via = 'direct'`) would stop seeing Drive
+captures with nothing saying why. Grade tracks DIRECTNESS, never technique; the
+conversion is technique and it is disclosed on the hop. **`via` stays the closed
+two-term set it was.**
+
+### CONSUMER IMPACT, MEASURED ON THIS TREE
+
+- **`retrieval_locator` HAS NO READER — measured.** `grep -rn "retrieval_locator\|retrievalLocator"`
+  over `bio-plane/src`, `bio-plane/checks` and `civicos-ui` returns **9 hits, every
+  one a WRITE, a column declaration or a comment**. The identity/bracket arm that
+  §5 warns about (`resolveLinks`, `store.mjs`) selects `capture_sha,
+  first_retrieved, last_retrieved, observations` and **not** `retrieval_locator`,
+  so the split is invisible to it — and correctly so: two Drive exports of one
+  document hashing equal across an interval is a genuine bracket.
+- **`C-18.9`'s chain walk is UNAFFECTED.** It requires each hop to be an object
+  with a non-empty `who` and reads no other field; the Drive hop satisfies it.
+  Extra keys are ignored, exactly as `unsigned_reason` has been.
+- **`civicos-ui/**`: ZERO edits, measured** — `grep -rn "provenance_chain" civicos-ui/`
+  returns **0 hits**; the UI does not read chain hops field-by-field. `node
+  civicos-ui/test/run.mjs` from the repo root, exit 0, unchanged.
+- **Every existing battery assertion over the chain stays true**, including
+  `acquire.test.mjs`'s `provenance_chain.length === 1` (its locator is not a Drive
+  address) and `daemon-token.test.mjs`'s `=== 2` for the archive arm. **Nothing was
+  exempted and nothing was corrected**, because nothing became wrong.
+- **`pdf-worker/`, `ocr-worker/`, `newgroup/`: 0 hits** for `provenance_chain` or
+  `retrieval_locator`.
+
+### WHAT A CONSUMER MUST STOP ASSUMING, stated as the migration
+
+One sentence, and it is the whole migration: **a capture's DOCUMENT address is
+`captured_locators.address` (or the chain's `document_address`), never
+`document.locator`, and `via` does not tell you whether the two are equal.** A
+consumer that wants "the address this capture answers to" already had to read it
+from `captured_locators` to be right about archive captures; CAP-8 adds a second
+case to a rule it already had to follow.
+
+### THE ALTERNATIVE THAT WAS REJECTED, AND WHAT REVERSING THIS COSTS
+
+The alternative was to keep the Drive link as `document.locator` and put the
+export address only on the hop — no §5 change, no IC. **It was rejected because it
+would make `document.locator` a lie**: I1 defines it as the retrieval locator,
+what was actually fetched, and we did not fetch the Drive link. A record that
+names an address it did not fetch is the record claiming more than it can support,
+which `CLAUDE.md` ranks worse than a missing feature.
+
+**Reversing this costs:** deleting `src/drive.mjs`, two regions in `index.mjs`'s
+acquire path, one family in the check catalogue and two suites. No schema
+migration, no stored data reshaped, no other area's code. The captures already
+filed stay valid and stay readable; they would simply stop being produced.

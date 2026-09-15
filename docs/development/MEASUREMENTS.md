@@ -11318,3 +11318,100 @@ unregistered drop in main's own history. Reproduced on a pristine
 `git worktree add` of `origin/main` holding none of REC-84's work: **57 pass / 1
 fail, exit 1, the identical path named.** D-335's class, and CONDUCT's to
 register.
+
+## 2026-09-14 — CAP-8: THE GOOGLE DRIVE EXPORT, MEASURED AGAINST GOOGLE
+
+**Why this section exists.** COFF-9's flavour row and COFF-10's three entries were built and
+measured against **LibreOffice 26.8.0.3** output, and COFF-10's own claim says in as many words
+that *"Google Drive's own export is NOT reachable here and is NOT measured — CAP-8 meets it
+first."* This is that measurement. **Bob's ruling of 2026-09-14 makes the Drive export the
+harvest**, so the producer these entries actually face in production is Google, not LibreOffice,
+and until now nothing had ever put Google's bytes through them.
+
+**Instrument.** `op=acquire` into `store=scratch` on **biosmoke7**, serving **0.58.0**, account
+`20b533579290b9b93168345edd3b7f72` confirmed by `npx wrangler whoami` before the first fetch.
+Through the PLANE'S EGRESS, never this container's, because that is the egress the product uses
+and the one the governor paces. The export addresses were composed by `bio-plane/src/drive.mjs`'s
+own `readDriveAddress()` from the file id and the kind, exactly as the handler composes them; the
+bytes were read back out of the record with `op=capture` and measured by COFF-10's three entries.
+The namespace was SWEPT (`op=purge&scope=all&confirm=scratch`) after every run and `op=audit`
+answered clean before and after each sweep. Subjects are public third-party documents located by
+search — Oakland's own Drive links were NOT available to this session, because the census that
+would find them is CAP-7 and it had not landed.
+
+### 1 · THE COMPOSED EXPORT ADDRESS IS THE ONE GOOGLE ANSWERS
+
+`https://docs.google.com/<segment>/d/<file id>/export?format=<odt|ods|odp>` answered **200 with
+real OpenDocument bytes on all three editor kinds**, with no credential, for a file shared with
+anyone who has the link. This is the single fact the whole item rests on and it had never been
+checked against Google from this project.
+
+Each export **redirects** to a one-time `doc-XX-XX-{docstext,sheets,slides}.googleusercontent.com`
+address carrying an expiring token. **That is why the capture is NOT filed under `res.url`**: the
+post-redirect address names no document and no link would ever resolve to it.
+
+### 2 · DETECTION IS CERTAIN OVER GOOGLE'S BYTES, NOT ONLY OVER LIBREOFFICE'S
+
+All three detect **bytes-first with confidence `certain`**, on the same four signals COFF-9's
+discriminator emits for LibreOffice output:
+
+    magic: PK\x03\x04 with a readable central directory
+    part: mimetype is the FIRST member, STORED, CRC-verified
+    odf:mimetype=<exact media type> (exact match, not trimmed)
+    part: content.xml present
+
+**Google's export satisfies the first-and-stored `mimetype` convention exactly.** COFF-9's bet —
+that the flavour table is a PARAMETER and the discriminator is producer-independent — is confirmed
+against a second, unrelated producer. Google also declares the correct media type on the wire, so
+the declared type and the bytes AGREE here; the handler still refuses on the bytes first, because
+agreement measured on three documents is not a property.
+
+### 3 · THE THREE ENTRIES OVER REAL DRIVE BYTES
+
+| kind | package | `content.xml` declared-uncompressed | share | structure | text |
+| --- | --- | --- | --- | --- | --- |
+| `.odt` (Docs)   | 3,355,720 B | 423,424 B | **12.62 %** | 864 paragraphs · 531 links | 12,950 chars |
+| `.ods` (Sheets) |    39,516 B | 699,442 B | **1770.02 %** | 22 sheets · 1 link | 23,541 chars · 1,771 cells · 0 formulas |
+| `.odp` (Slides) | 2,778,048 B | 220,294 B | **7.93 %** | 37 slides · 1 link | 4,609 chars · 278 notes chars |
+
+All three: `structure()` ok, `text()` ok, zero `undetermined` beyond the two NAMED absences
+COFF-10 emits on every read (`meta.xml`, `META-INF/manifest.xml`).
+
+**THE 1770 % IS THE FINDING, and it vindicates COFF-6's choice of metric rather than contradicting
+it.** A 39.5 KB Sheets export inflates to 699 KB of `content.xml` — **17.7×**. COFF-6 replaced a
+container-size bound precisely because container size is a bad proxy in both directions, and this
+is the most extreme ratio the project has measured in the small-container direction. **A size
+guard keyed on the download would have admitted this at 39 KB and then inflated 699 KB**; the
+declared-uncompressed metric sees it before anything is inflated. Conversely the `.odt` is 3.3 MB
+of which only 12.6 % is text — the rest is images.
+
+**A Drive export can exceed the single-part bound.** A fourth Slides deck measured **21,532,070 B**
+and captured correctly as a MULTIPART capture (parts at the 8 MiB `PART` bound). Recorded because
+the handler's bytes-first shell check reads the first kibibyte OFF THE STREAM and therefore works
+on a multipart body too — which is not obvious and would otherwise have been assumed.
+
+### 4 · A GOOGLE DRIVE EXPORT IS **NOT BYTE-STABLE**, AND THIS IS THE MEASUREMENT THAT MATTERS MOST
+
+Three consecutive exports of the same UNCHANGED document, ~1.5 s apart, through the same egress:
+
+| kind | byte counts across 3 takes | distinct `capture_sha` | distinct `content.xml` digest |
+| --- | --- | --- | --- |
+| `.odt` | 3,355,720 · 3,355,719 · 3,355,720 | **3 of 3** | **3 of 3** |
+| `.ods` | 39,516 · 39,516 · 39,516 | **3 of 3** | **1 of 3 — STABLE** |
+
+**Every export is Google's CONVERSION AT FETCH TIME and the conversion is not reproducible.** The
+ZIP envelope differs on every request in both kinds (timestamps and member ordering), so
+`capture_sha` — the trust root, the identity of the bytes across the whole system — **differs on
+every re-fetch of a document that did not change.** For Sheets the instability is envelope-only
+and `content.xml` is byte-identical across all three takes; for Docs the SUBSTANCE part differs
+too, by one character, which is Google generating per-request automatic-style names.
+
+This was found by noticing a two-byte difference between two probe runs and then measuring it
+rather than dismissing it. **It is recorded as `D-351`.** Its consequences are stated there and
+not here, because a measurement and its consequence are different claims.
+
+**What this measurement CANNOT see, stated plainly:** four documents, one day, one egress, all
+third-party rather than Oakland's own. It establishes that the composed address works, that
+detection is certain, and that the export is unstable — it establishes nothing about how often
+Oakland links to Drive (CAP-7's census), nothing about rate ceilings (deliberately unprobed,
+D-111's rule), and nothing about documents shared more narrowly than "anyone with the link".
