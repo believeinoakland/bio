@@ -678,7 +678,20 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    same method that moved the CLASS ceiling 32 -> 33; its `observation_log` state census is a
    GROUP BY aggregate returning one row per state, so it is a real member of this census by the
    walker's own definition and is counted honestly rather than exempted. */
-const SCANNING_MEASURED_2026_09_15 = 103;
+/* MOVED 103 -> 104 AT REC-94's INTEGRATION, 2026-09-15 by CONDUCT #11, AND THE ARRIVAL IS
+   NAMED BY THE SAME METHOD THIS BLOCK DEMANDS RATHER THAN BY TRUST. The walk was re-derived
+   over a PRISTINE `git worktree add` at `origin/main` `2a18b4d` and over the merged tree, and
+   the two sorted rosters diff to EXACTLY ONE ARRIVAL AND NO DEPARTURE: **`#frontierContent`**,
+   REC-94's content-level frontier read. It is the same method that moved the CLASS ceiling
+   33 -> 34 and that the ungraded-truncation pin below now declares as a seventh — ONE arrival
+   accounting for all three movements, which is what makes this a measurement rather than three
+   coincidences. **It is counted honestly rather than exempted, and it belongs to D-369's SECOND
+   set — a method that publishes a bound while legitimately holding an unbounded scan** (the
+   frontier is bounded to the caller; the scan underneath it is not), which is precisely the
+   category M0-38 exists to grade or to name. REC-99 recorded on its own row that this constant
+   is a property of the MERGED source exactly as `REGISTER_FLOOR` is; this is that rule being
+   obeyed on the first tree where it bit. */
+const SCANNING_MEASURED_2026_09_15 = 104;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
@@ -773,8 +786,14 @@ t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures a
 + "are D-369 and not this item; pinning them means a SEVENTH must be declared here before it can "
 + "pass, rather than arriving ungraded and invisible",
   TRUNCATION.ungraded.sort(),
-  ["#backfillLegContent:need", "biasInhale:bars", "documentsNamingEntity:merged",
-   "frontier:page", "queueFeed:dispAll", "queueFeed:items"]);
+  /* SEVENTH DECLARED 2026-09-15 by CONDUCT #11 at REC-94's integration: `#frontierContent:page`,
+     the content-level twin of `frontier:page` already here. THE ARM WORKED EXACTLY AS WRITTEN —
+     it FAILED rather than absorbing the new figure, and its failure message named the arrival,
+     so this declaration is a reading of the instrument's own output and not a guess. Same
+     disposition as the other six: D-369's, not this suite's, and named here so it cannot arrive
+     ungraded and invisible. */
+  ["#backfillLegContent:need", "#frontierContent:page", "biasInhale:bars",
+   "documentsNamingEntity:merged", "frontier:page", "queueFeed:dispAll", "queueFeed:items"]);
 const noRowSources = CODE.replace(/#rows\(/g, "#norows(");
 t("REACH IS A DELTA (the truncation grader): over a copy of store.mjs with no `#rows(` in it, "
 + "every graded source becomes UNGRADEABLE and none is silently scored as compliant — the "

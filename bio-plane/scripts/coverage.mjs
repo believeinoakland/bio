@@ -908,9 +908,19 @@ const REGISTER_FLOOR = {
      arms, all NINE of them RUN by `test/nc-rec98.mjs` and all nine AS DECLARED.
      One key set. Nothing FELL. FLEET_FLOOR unmoved — this item adds no fleet
      member, no fleet suite and no fleet op. */
-  arms: 1068,
-  classified: 193,
-  corpus: 194,
+  /* MOVED 1068 -> 1075 · 193 -> 194 · 194 -> 195 at REC-94's INTEGRATION, 2026-09-15 by
+     CONDUCT #11, FROM THE MERGED RUN'S OWN POST-COMMIT PRINT — `arms 1075/1068 · classified
+     194/193 · corpus (suites read) 195/194 · GREW by 7 arm(s)` — and NEVER by adding two
+     branches' deltas, which is the whole of D-238 and the case it was written for arrived
+     here today. **BOTH SIDES OF THIS MERGE HAD HONESTLY MOVED THIS FIGURE AND NEITHER WAS
+     TRUE OF THE RESULT:** `origin/main` carried REC-98's 1068 and REC-94's branch carried its
+     own 1065, each read correctly from its own post-commit run, and the merged tree is 1075.
+     Adding the deltas would have produced 1074 and installed permanent slack in a ratchet
+     whose entire purpose is to have none. The conflict was resolved to main's value as a
+     PLACEHOLDER and re-read here from the print above. ONE KEY SET — grepped before writing. */
+  arms: 1075,
+  classified: 194,
+  corpus: 195,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

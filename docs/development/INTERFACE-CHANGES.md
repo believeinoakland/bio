@@ -7444,3 +7444,33 @@ one field that closes it named and delegated to CAPTURE. It is the overclaiming 
 at one narrow shape and is stated rather than approximated: the field that LOOKS like the
 answer, `found: false`, means something else entirely, and using it would file every
 document that mentions nobody as a document with no text.
+
+### RESOLUTION — 2026-09-15, CONDUCT #11 · ACCEPTED, I3 15.2.0 → **15.3.0**, ADDITIVE
+
+One read added, one read that answered `built: false` now answering, one vocabulary exported.
+Nothing removed, renamed or re-typed, so MINOR by IC-25's rule.
+
+**THE VOCABULARY DECISION IS THE PART THAT BELONGS IN THE CONTRACT RATHER THAN ONLY AT THE SITE,
+and it was taken on a measurement rather than a convention.** The worker checked at spawn whether
+the four content-axis members were spelled anywhere — plane, UI, fleet, installer, tools — and
+found ZERO. Being the first lander, it EXPORTED `CONTENT_AXIS_STATES` instead of writing the four
+strings where it needed them, and added a fifth constant for the UNDETERMINED that is deliberately
+NOT one of the four, so the absent case cannot be mistaken for a member. The control arm that
+makes a second spelling a build error **caught its own author twice, once inside a published
+string a surface could have matched on** — which is the argument for the arm, not against the
+author.
+
+**WHAT THIS RESOLUTION DOES NOT CLAIM.** The two middle content-axis states are unanswerable until
+REC-91's index exists, and the read says so rather than guessing; `op=frontier`'s content arm
+answers, but `Store#frontier` accepts a `viewer` and never reads it while `gate-reads` classifies
+the op as gated, which is a DISCLOSURE DEFECT in REC-93's region, measured and left for its owner
+rather than absorbed here.
+
+**AND A RULING LANDED ON THIS DESIGN AFTER THE ITEM WAS CUT, WHICH IS WHY THIS CONTRACT READS THE
+WAY IT DOES.** Bob's `9954a9c` settled that a missing row has three causes and that an absence
+does not state itself. The first draft of this read violated it, treating "no content-level row"
+as never-extracted — which on any existing instance would have offered documents the record HAD
+read as documents nobody had touched. The shipped read consults the pre-log evidence first,
+returns the never-extracted member only under the third cause, and **defaults an absent cause to
+the WEAKEST claim**. A consumer may rely on that ordering; it is part of this interface and not an
+implementation detail.
