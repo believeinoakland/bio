@@ -329,6 +329,49 @@ no tree was edited, no claim was taken, no id was minted, and the wave restarted
 practice held exactly where it was designed to — **a brief that tells a worker to falsify its own
 premise is what turned a silent eight-way no-op into a five-minute correction.**
 
+## THE SPAWN SENTENCE CARRIES A FALSIFICATION CLAUSE, AND THE CLAUSE MUST NOT ASK A READER TO CONCLUDE A VALUE FROM AN ABSENCE.
+
+**Corrected 2026-09-15 by CONDUCT #11 on BOB #11's argument, after the clause had been
+copied onto ten rows.** A status is a claim about the world, so every `running` row you
+write carries a clause telling the next reader how to CHECK it. The clause as first
+written said: *"a live worker holds an `agent-*` worktree with a claim on the paths its
+scope names; if none does, this row reads `queued`."* The first half is right and is the
+reason the clause exists. **The second half is wrong, and it is wrong in the expensive
+direction.**
+
+**An absence has two causes that are opposite facts.** Nobody ever started, so no work
+exists — or the worker FINISHED, committed and released, so the work exists on a branch
+and is waiting on you. A reader applying the old clause in the second case concludes the
+work was never done and respawns an item that is already built. **That is D-129 in this
+queue's own vocabulary** — *"`undetermined` conflates two different claims: WE DO NOT
+KNOW, and THERE IS POSITIVELY NONE"* — and `CLAUDE.md`'s standing rule is that
+undetermined is first-class and must be STATED, not resolved by whichever guess is
+convenient.
+
+**The clause to write from now on, and it is the row's own sentence rather than a pointer
+to this file:** *"Falsify rather than believe: a live worker holds an `agent-*` worktree
+with a claim on the paths its scope names; **if none does, this row is UNDETERMINED
+between `queued` and done-awaiting-integration — READ THE BRANCH (the preamble's
+falsification rule), and never conclude `queued` from the absence alone.**"* The
+preamble of `QUEUE.md` carries what to read and in what order: a `worktree-agent-*` branch
+with commits naming the item means the work exists; a `released:` line in the item's
+`CLAIMS.md` block means the worker finished on purpose; an OPEN claim beside a branch with
+commits is a THIRD state — it died mid-item, so take the branch rather than respawning
+from zero; and only with no branch and no claim does the row fall back to `queued`.
+
+**No fifth status was minted and that was decided rather than missed.** The window between
+a worker finishing and your merge is real and nothing occupies it. A word for it is
+arguable, but the clause was wrong in a way a new word would not have fixed — a reader
+applying a bad inference rule reaches a wrong answer whatever vocabulary is on hand — and
+this queue has just finished paying for a preamble that named two statuses while the loop
+ran on four. Revisit it when there is a second reason.
+
+**The general form, which is why this section is in the loop file and not only in the
+queue:** a falsification rule you write for someone else is an INFERENCE RULE, and an
+inference rule that turns "I see nothing" into a definite value is a defect no matter how
+carefully the rest of the row is worded. Check every such clause for what it says when the
+evidence is missing.
+
 ## A SPAWN BRIEF IS NOT A QUEUE ROW, AND AN ID IN THE LEDGER IS NOT AN ITEM.
 
 **Measured 2026-08-09: of eight items I spawned in one wave, SIX had no `QUEUE.md` row.** The id was
