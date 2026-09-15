@@ -7757,3 +7757,96 @@ at one grade and the pin asserted the leg earned a stronger one, under a heading
 "the pre-item answer". **The pre-item answer WAS the overclaim.** The over-strictness half beside
 it is now stronger rather than weaker — a publisher-typed document hashes identically on a
 pristine checkout and on this tree, which is a cross-checkout identity and not a self-comparison.
+
+## IC-104 · I5: `capture_text` AND `capture_text_fts` — THE CONTENT-GRAIN TEXT INDEX AND ITS PROMOTE-TIME WRITER · AND I1: `text_units` ON THE ACQUIRE DOCUMENT · PROPOSED 2026-09-15 (REC-91, building `CONTENT-SEARCH-DESIGN.md` §4.1 / §4.3 / §7 row 4) — the version bumps and the RESOLUTION are CONDUCT's
+
+- **Interfaces:** **I5** (the store schema) and **I1** (the acquire/promote wire).
+  **MEASURED AT THIS ITEM'S BASE `58b77ea` as I5 1.15.0** (IC-93 ACCEPTED, SK-8). Both
+  changes are ADDITIVE over that: no existing table, column, key or wire field is renamed,
+  reshaped or removed, and an answer this build produces for a document with no indexable
+  units is BYTE-IDENTICAL to the pre-item answer.
+- **Proposer:** RECORD, worker `agent-aabecaced11e00db1`, 2026-09-15, from QUEUE REC-91
+- **Owner to land it:** `RECORD` (owner and proposer). **The I1 half touches `index.mjs`,
+  whose FW-15 projection region is COFF-12's live claim; this item's emission is a SEPARATE
+  region (`__REC91_TEXT_UNITS_START__`) and touches not one line of it.**
+- **Consumers to answer:** `UI` (measured below — **nothing to do**), `RECORD` (REC-92's
+  `passage:` arm is the reader this exists for), `FRAMEWORK` (answers-for on the I2 read —
+  the units are taken off the I2 text shape and no producer changes), `DIST` (served
+  surfaces).
+- **Change class:** ADDITIVE → MINOR bump on each
+- **The id was MINTED with `node tools/mintid.mjs IC`** (floor IC-100; 101 and 102 were held
+  by other live worktrees and **IC-103 was taken by THIS worker and is BURNED AND UNUSED** —
+  the allocator was invoked once with its output piped to `tail`, which hid the `MINTED`
+  line, so it was called again. A gap costs nothing and the tool says so; it is named here
+  rather than left as a silent hole. **`M-31` was burned the same way in the same minute**
+  and M-32 is this item's measurement.)
+
+### WHAT IS ADDED
+
+**I5 — two tables and three triggers, all before `host_governor`:**
+
+- `capture_text` — one row per indexed unit of one capture's text under its CURRENT chain:
+  `capture_sha`, `bundle_id`, `extent_kind`, `extent` (canonical JSON — **the same bytes the
+  `content` table hashes over**), `ref`, `seq`, `text`, `truncated`, `chain_kind`.
+  `PRIMARY KEY (capture_sha, extent_kind, extent)` — the ADDRESS. Two indexes:
+  `capture_text_bundle` and `capture_text_chain_kind`.
+- `capture_text_fts` — FTS5 **external content** over `capture_text.text`, `unicode61`,
+  rowid aligned, so `snippet()` reads the base table rather than a second copy.
+- Three maintenance triggers (`_ai`, `_ad`, `_au`) in `#migrate`, because an external-content
+  index is NOT maintained by writes to its base table and a plain per-row `DELETE` on it
+  answers `SQLITE_CORRUPT_VTAB` (M-32).
+- `op=stats` gains `textUnits` and `textIndexOk`. **`textIndexOk` is FTS5's `integrity-check`
+  AT RANK 1** and not a row count — see M-32 §2 for why a count could not answer the question.
+- `op=contentaxis` gains `index: {...}` beside the existing `extraction: {...}`, in the same
+  shape. Without it the `truncated` flag and the bound that bit are written and unreadable.
+
+**I1 — one sibling field on the acquire document:**
+
+- `document.text_units[]` — `{ extent: {kind, …}, seq, text }`, emitted only when the
+  container has an indexing unit arm. **A SIBLING of `reading` and not a field ON it**, and
+  that is load-bearing: `readings.reading` is persisted whole as JSON, so a field on the
+  reading would store every byte of the text a second time in SQLite, and §3 chose its option
+  partly because "text is stored once".
+- `document.text_units_over_bound` — an integer, emitted only when non-zero, saying how many
+  units the wire's own budget dropped so the store can report `partial` rather than recording
+  a truncated capture as whole.
+
+### THE MEASURED CONSUMER CENSUS, taken on this tree rather than recalled
+
+- **`civicos-ui/app.html` copies the acquire document WHOLESALE** — `docFiles()` builds
+  `JSON.stringify({ documents: [doc] }, null, 1)` from whatever `op=acquire` returned. So the
+  new sibling reaches `data/provenance.json` **with no UI change at all**, which is why this
+  item files no DELEGATION to UI. Measured by reading the function, not inferred.
+- **`op=stats` has ZERO callers in `civicos-ui/`** — `grep -rn 'op=stats' civicos-ui/app.html
+  agent-worker/` → no match. The two new keys are invisible to every production surface.
+- **`op=contentaxis` has ZERO callers in `civicos-ui/`** — it landed yesterday (REC-94) and
+  its surface is unbuilt. The new `index` key is additive over an unread answer.
+- **A caller that does NOT carry `text_units`** — every caller that predates this landing, and
+  every capture already promoted — indexes nothing and the capture SAYS so. Nothing is
+  refused, nothing throws, and the promotion is byte-identical to what it was.
+
+### THE ONE THING A CONSUMER MUST KNOW, AND IT IS A LIMIT RATHER THAN A FIELD
+
+**`op=promote` refuses an inline bundle file over `INLINE_MAX` (1,048,576 B).** Routing a
+capture's text through `data/provenance.json` therefore has a ceiling that is NOT §4.3's
+2 MiB bound, and a capture over it would have had its **whole promotion refused** rather
+than its index truncated — measured at 2,460,076 B (M-32 §3). M-20's census holds real
+documents over the line. **The acquire wire therefore applies its own budget (524,288 B of
+text plus a 128 B envelope allowance per unit) and publishes what it dropped.** A consumer
+that composes `data/provenance.json` from something OTHER than the acquire answer — none
+exists today — must respect the same limit or the promote will refuse.
+
+### WHAT THIS DOES NOT CHANGE
+
+- **No producer changes.** `pptx.mjs` emits one text string per slide today and the deck's
+  unit is the SLIDE (Bob, 2026-09-15), written as a `slide-shape` extent with the shape
+  OMITTED, which `covers()` already accepts. No grammar change either.
+- **No refusal is added anywhere.** Nothing new can make a promote fail. The bound truncates
+  and STATES it; it never refuses.
+- **The `content` table is untouched.** A text hit is an ADDRESS and searching mints nothing
+  (§4.5); `contentIdFor(capture_sha, extent, chain)` is computable from an indexed unit
+  precisely because the extent written here is `canonicalExtent`'s output and nothing else.
+- **`op=airunlog`, `op=frontier` and the document level are unmoved.** The index writes under
+  `authority_kind = derive` where extraction writes under `extract`, and the two reads that
+  matter are now narrowed by authority so neither can answer with the other's row.
+

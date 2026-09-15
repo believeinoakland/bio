@@ -9358,3 +9358,239 @@ released: 2026-09-15 by the REC-88 worker — **D-349 CLOSED BY ENFORCEMENT unde
   **OWED ACTS ARE IN THIS WORKER'S REPORT AS A "for CONDUCT" LIST WITH ACTORS, never left
   here alone** (FL-10's handoff line cost a measured >3h false stall sitting in a region
   nothing drains).
+
+## CLAIM 2026-09-15 RECORD (REC-91 — SEARCH item 4: `capture_text` and `capture_text_fts`, the promote-time writer, the per-capture `indexed` observation)
+session: rec91-text-index (worktree agent-aabecaced11e00db1)
+opened: 2026-09-15T00:00:00Z
+paths: **CLAIMED BY REGION, because three other workers hold regions of these same two files
+  right now (COFF-12, REC-95, REC-105) and a claim by FILE would block all three for nothing.**
+  - `bio-plane/src/schema.mjs` — ONE new block appended immediately BEFORE the `host_governor`
+    block: `CREATE TABLE IF NOT EXISTS capture_text (...)` and its index. **NOT** any existing
+    table, **NOT** the `host_governor` block itself.
+  - `bio-plane/src/store.mjs` — THREE regions, each between named markers, and nothing else:
+    (1) `/*__REC91_FTS_DDL_START__*/` .. `__END__` in `#migrate`, beside the `bundles_fts`
+        creation — the FTS5 virtual table and its three maintenance triggers (they carry `;`
+        inside `BEGIN`/`END` and therefore cannot live in `schema.mjs`, whose `#migrate` splits
+        on `;`); (2) `/*__REC91_WRITER_START__*/` .. `__END__` — `#writeCaptureText` and the
+        `indexed` observation, plus the two call lines inside `#writeReadings` beside
+        `#writeTextSource` / `#observeExtraction`; (3) `/*__REC91_PURGE_START__*/` .. `__END__`
+        — `"capture_text"` added to the `TABLES` array and ONE `DELETE FROM capture_text_fts`
+        in the WHOLE-STORE arm, placed AFTER the `TABLES` loop (the ordering is load-bearing
+        and MEASURED: index-first corrupts the vtab). **NOT** `#strengthWalk` (REC-105),
+        **NOT** the meaning-level writers (REC-95), **NOT** `#writeText`/`bundles_fts`'s own
+        statements, **NOT** the `content` writers, **NOT** `contentAxis`'s fence, **NOT** any
+        projection.
+  - `bio-plane/src/index.mjs` — ONE new region `/*__REC91_TEXT_UNITS_START__*/` .. `__END__`
+    in the acquire wire, placed AFTER CAP-12's `containerExtent` block and touching not one
+    line of it. **NOT** the FW-15 projection's `rows`/`cols`/`shapes` lines, which are
+    COFF-12's live claim and this session did not read as its own.
+  - `bio-plane/src/airun.mjs` — ONE expression: `contentAxisFor`'s `unitIndex` default stays,
+    and nothing in that file moves. (In the event nothing moves here the path is dropped at
+    release; recorded so the intent is visible if it does.)
+  - `bio-plane/test/capture-text-index.test.mjs` (NEW), `bio-plane/test/nc-rec91.mjs` (NEW).
+  - `docs/development/INTERFACE-CHANGES.md` — ONE new IC block, appended.
+  - `docs/development/MEASUREMENTS.md` — ONE new `## M-` section, appended, id minted with
+    `node tools/mintid.mjs M`.
+  - `docs/development/CONTENT-SEARCH-DESIGN.md` — front matter only (Status / Incomplete
+    sections), if and only if this landing changes the document's stated completeness.
+  **NOT TOUCHED:** `docs/development/QUEUE.md` (CONDUCT's sole writer), `bio-plane/src/textchain.mjs`,
+  `bio-plane/src/pptx.mjs` (the deck fork is CLOSED — no producer change is owed),
+  `bio-plane/checks/bio-checks.mjs`, `REGISTER_FLOOR` except from this session's own POST-COMMIT
+  print (D-238), `newgroup/**`, `civicos-ui/**`, and no version bump, tag, sign or deploy.
+released: 2026-09-15 by the REC-91 worker — **SEARCH §7 row 4 IS BUILT: `capture_text` and
+  `capture_text_fts` exist, are written at promote for `pdf-page`, `doc-para` and `slide-shape`,
+  are REPLACED on a chain move, carry `truncated` per unit, are purged on BOTH arms, and the
+  per-capture `indexed` observation is written under its own `authority_kind = derive`. `IC-104`
+  PROPOSED on I5 (1.15.0 → additive) AND I1 (additive), consumer impact MEASURED. Measurement
+  `M-32`.**
+
+  **GATES, class FULL, GREEN on the second run** — the first was red at 203/206 and correctly so,
+  on three FLOORS this change moved, each resolved below rather than waived. Battery
+  **206/206 suites · 12,814 assertions · exit 0**, read unpiped; `node scripts/coverage.mjs
+  --strict` run DIRECTLY with `$?` read UNPIPED, **exit 0**; `node civicos-ui/test/run.mjs` from
+  the REPO ROOT, exit **0**; `node tools/plancheck.mjs --local` **0 fail, 0 warn**.
+  **BASELINE MEASURED ON THIS TREE BEFORE ONE PRODUCT BYTE MOVED: 205/205 · 12,769 · 0 skipped —
+  EXACTLY the figure this worker's brief carried, and said so.** Nine workers in a row had
+  corrected a briefed figure; this one measured it and it was right, which is the practice
+  working in the direction nobody reports. **The FIRST attempt at that baseline, in a separate
+  pristine `git worktree add`, came back RED with `SQLITE_CANTOPEN` and `SQLITE_IOERR_SHMSIZE`
+  across 30+ suites — NOT the tree: the machine's disk was at 100 % with 2.0 GiB free, 74
+  accumulated worktrees holding 32 GB, and five batteries running. It looks exactly like damage
+  your own change did.** Reported to CONDUCT as an ACT, below.
+
+  **WHAT LANDED.** `schema.mjs`: `capture_text` before `host_governor`, nine columns,
+  `PRIMARY KEY (capture_sha, extent_kind, extent)` — the ADDRESS — plus `capture_text_bundle`.
+  `store.mjs`: the FTS5 external-content table and THREE maintenance triggers in `#migrate`;
+  `#writeCaptureText` and `#observeIndexed` beside `#writeTextSource`; both purge arms;
+  `op=stats` gains `textUnits`/`textIndexOk`; `op=contentaxis` gains `index:` beside
+  `extraction:`. `index.mjs`: `document.text_units[]` and `document.text_units_over_bound`, in
+  their OWN region, AFTER CAP-12's container-extent block and touching not one line of it
+  (COFF-12's live claim). `airun.mjs`: `contentAxisFor` gains an `indexObserved` input and a
+  `unitsComplete == null` branch.
+
+  **THE FOUR THINGS THE ROW DID NOT PREDICT, and three of them would have shipped as silent
+  wrong answers.**
+  1. **`INSERT OR REPLACE` ORPHANS AN FTS INDEX ENTRY AND THE ORPHAN STILL MATCHES** (M-32 §1).
+     SQLite does not fire delete triggers for REPLACE conflict resolution, so the base table
+     stays perfect while a search answers out of text the record no longer holds. The writer
+     therefore deletes-then-plainly-INSERTs — which is §4.1's own rule, arrived at twice.
+     A plain per-row `DELETE` on the index is worse still: `SQLITE_CORRUPT_VTAB`.
+  2. **THE PURGE SWEEP'S ORDERING IS LOAD-BEARING.** Clearing the index BEFORE its base rows —
+     the natural spelling, beside `bundles_fts`'s own line — corrupts the vtab AND LEAVES THE
+     BASE ROWS. The `nopurge` control proved it does that in the product, not only in a probe.
+  3. **THE `indexed` STATE NEEDED ITS OWN AUTHORITY KIND.** There are now two kinds of
+     content-level row per capture, and the unqualified latest-row read would have started
+     answering `extraction:` with an index row — silently, every field populated. Both reads are
+     narrowed by authority now. The same class bit `#observeExtraction`'s re-extraction probe,
+     which began reporting every FIRST extraction as a RE-extraction; caught by REC-94's own
+     `C1b` arm going red.
+  4. **`contentAxisFor` NEEDED A NULL BRANCH.** A capture promoted before this writer existed —
+     every capture on every live instance — has extracted text and no index observation, and
+     reading that as `false` answered PARTIAL over a capture with no indexed units at all.
+
+  **DESIGN GAPs, reported against `CONTENT-SEARCH-DESIGN.md` and folded into its Incomplete
+  list in this commit.**
+  - **§4.3 — the 2 MiB per-capture bound CANNOT FIRE through the route §4.1 names.**
+    `op=promote` refuses an inline bundle file over `INLINE_MAX` = 1,048,576 B, and a 2.4 MiB
+    capture produced a 2,460,076 B `data/provenance.json`: **the whole promotion was REFUSED,
+    not truncated.** Left alone this item would have refused documents the record accepts today
+    (M-20's census: a PDF at 1,354,686 B of text, a docx at 1,187,253 B). The acquire wire now
+    carries its own budget — 524,288 B plus a **128 B envelope allowance per unit**, because
+    `civicos-ui/app.html` serialises with `JSON.stringify(doc, null, 1)` and M-20's worst docx
+    spends ~1.8 MB on 20,571 unit ENVELOPES while its words fit twice over — and it COUNTS what
+    it drops, so a truncated capture reads `partial` rather than whole.
+  - **§4.3 — bytes do not bound the UNIT COUNT**, and the section's CPU argument is true at page
+    grain and false at paragraph grain: M-20's own ladder puts that same worst docx, INSIDE the
+    byte bound, at 84.8 % of the 257 ms window. Not closed here: a second bound is a decision
+    about what a member's promote may cost, and §4.1 already names the remedy.
+  - **§3 / §4.1 — "text is stored once" does not hold for that route.** `data/provenance.json` is
+    a bundle FILE, so its bytes land in `files.content` AND in `history`: the text is stored in
+    `capture_text` at M-20's 1.998 B per text byte **and again in the bundle image**. The
+    alternative — a promote-package sibling outside the hashed image — costs edits in two areas
+    this item does not own and was NOT taken.
+  - **§4.1 — a deck's SPEAKER NOTES have no indexable unit, and they are the most candid text in
+    a deck.** DEC-5 forbids merging them with slide text; the only address that reaches a slide
+    is `slide-shape`, whose shape-omitted form is now THE SLIDE, so a notes unit would collide
+    with the slide's own primary key. The section resolves the deck's unit and says nothing
+    about the notes.
+
+  **CONTROL ARMS — EIGHT, `node test/nc-rec91.mjs [arm]`, ALL AS DECLARED at the recorded run,
+  every restore verified byte-identically by sha256 AND `cmp` with a byte count printed and a
+  10,000-byte minimum guarded (`src/store.mjs` 2,181,032 B sha256 `d540793d0e0e…`,
+  `src/index.mjs` 570,569 B sha256 `125726cce8c5…`), never `git checkout --`.**
+  `baseline` 41/0 GREEN · `nopurge` 4/4 (+ hygiene's D-113 census red at 752/1, as declared) ·
+  `nodelete` 2/2 · `replace` 3/3 (7 failing) · `noobs` 5/5 (6) · `armsopen` 1/1 ·
+  `overstrict` 3/3 (8) · `nowire` 6/6 (7).
+  **FIVE CAME BACK NOT AS DECLARED ON THE FIRST RUN AND EVERY ONE IS RECORDED AT ITS SITE
+  RATHER THAN SMOOTHED. Four were findings about the ARM or the SUITE; one was a defect in this
+  item's own instrument and is the most valuable result in the set:**
+  - **`replace` 2/3 — `op=stats`'s `textIndexed` was an equality that COSTS NOTHING.** It
+    reported `count(*) FROM capture_text_fts` beside the base count and called the parity "the
+    trigger discipline asserted rather than believed". **An external-content table answers
+    `count(*) ` out of its CONTENT table**, so the two figures were one figure read twice — the
+    costs-nothing rule inside the one instrument written to catch this exact corruption. The arm
+    planted a real orphan and the row stayed green. `op=stats` now reports **`textIndexOk` from
+    FTS5's `integrity-check` AT RANK 1**, which compares index against content and throws when
+    they disagree — measured to catch the orphan that **rank 0 passes over** (M-32 §2).
+  - `nopurge` — declared "leaves rows behind"; it **corrupts the store and the next promote
+    throws**. Worse than declared, and the strongest evidence in the set that the sweep's
+    ordering is load-bearing.
+  - `nodelete` — declared "a chain move ADDS units"; **the PRIMARY KEY refuses the write** and
+    the promotion fails with `SQLITE_CONSTRAINT_PRIMARYKEY`. A defence nobody had claimed, and
+    the reason `replace` (which defeats the key too) is a SEPARATE arm.
+  - `armsopen` — declared to move the state AND the reason; **only the REASON moves.** Two
+    genuinely different facts land on one state and only the sentence tells them apart, which is
+    why §4.3's member is `none (reason)` and not `none`, and why the suite asserts the sentence.
+  - `nowire` — **killed the suite**: a bare spread of an absent `text_units` threw a TypeError,
+    which goes through NO assertion at all, so the verdict read 4/6 while the suite never reached
+    the arms that would have answered. WORKER.md's own receipt, met again. The arm is null-safe
+    now and reaches its whole set.
+
+  **THREE FLOORS MOVED OR REFUSED, from the figures the instruments PRINTED.**
+  - `provenance-marker.test.mjs`'s swallowed-read ratchet **25 → 26**, with the reason AT THE
+    SITE: the new site is `textIndexOk`, and it is the class's REMEDY rather than an instance —
+    **the throw IS the measurement**, there is no non-throwing way to ask FTS5 whether an index
+    agrees with its content, and the catch converts the raise into a PUBLISHED boolean.
+  - `airuns.test.mjs`'s unfiltered-index CEILING **NOT moved, and an index was WITHDRAWN
+    instead.** `capture_text(chain_kind)` was declared for "every OCR'd unit", the sweep named it
+    on the roster of access paths no op asks for, and it was RIGHT: the reader is REC-92's
+    `passage:` arm and it does not exist. REC-12's rule — *an index nobody seeks on is cost with
+    no reader* — applies, at UNIT grain. Raising a ceiling on a promise is how a ceiling stops
+    meaning anything; REC-92 adds the index with its own measurement, as REC-90 did for
+    `content`.
+  - `fleetbundles.test.mjs`'s D-298 freshness guard: `npm run build` as the instrument
+    instructs, artifact committed. **Nothing bumped, signed, tagged or deployed.**
+  - `REGISTER_FLOOR` moved in a SEPARATE COMMIT from this session's own POST-COMMIT print
+    (D-238), never by adding to the number in the file.
+
+  **AND THE BACKTICK TRAP FIRED, which is worth one line because CLAUDE.md predicts it exactly.**
+  A schema comment quoting four filenames in backticks terminated the SCHEMA literal. **`node
+  --check` passed.** `npm run build` (esbuild) is what named it; `hygiene.test.mjs`'s
+  `no unescaped backtick inside it` guard is the designated instrument and would have caught it
+  too — the build was simply reached first. SQL comments quote nothing in backticks.
+
+  **WHAT THE INDEX CANNOT ANSWER YET, BY NAME — and this list is the point of the release line.**
+  1. **NO MEMBER CAN SEARCH IT.** There is no `passage:` arm and no `rows=passage`: those are
+     **REC-92**. Everything below the wire is built and NOTHING above it is. §8's first, third
+     and fifth controls are REC-92's to run and were not approximated here.
+  2. **A WORKBOOK IS NOT INDEXED AT ALL** — no `sheet-range` arm until
+     `EXTRACTION-BREADTH-DESIGN.md` §3.2. M-20 sized the gap: 288 workbooks, 72,651,441 bytes of
+     text, 1,056 sheets, **not one indexable unit**. The answer SAYS so, per capture.
+  3. **AN HTML PAGE IS NOT INDEXED** — no `dom` producer (Part II §15). Its text reaches
+     `bundles_fts` as it always did, which is the group's notes about it and not what it says.
+  4. **A DECK'S SPEAKER NOTES ARE NOT INDEXED** — no extent arm reaches them (DESIGN GAP above).
+  5. **A SLIDE UNIT IS AN EXTENT AND NEVER A READING POSITION** — `readingSource()` requires both
+     slide and shape — so **deck-grain CONNECTIONS wait on FW-17's axis** while deck-grain search
+     does not wait on anything. Stated up front by the row and true as built.
+  6. **EVERY CAPTURE ALREADY IN A LIVE STORE IS UNINDEXED AND ANSWERS UNDETERMINED**, not
+     `partial` and not `none`. Re-promoting is what settles it. Nothing backfills.
+  7. **A CAPTURE OVER ~512 KiB OF TEXT IS INDEXED IN PART**, and the bound that does it is the
+     wire's rather than the design's (DESIGN GAP above).
+  8. **`chain_kind` IS A COLUMN AND NOT A PREDICATE YET** — the index was withdrawn with REC-92.
+
+  **WHAT THIS ITEM COULD NOT DO.** It could not drive a capture to the STORE's 2 MiB bound —
+  nothing can send one — so that branch is exercised only by the `overstrict` control arm, which
+  is itself the finding. It could not drive a REAL PDF producer's `text.pages[]` to the wire: the
+  `pdf-page` arm goes through `op=promote` with an authored provenance document (the writer's real
+  input), while the DOCX and PPTX arms are end-to-end from `op=acquire`. And it could not verify
+  anything on a deployed Worker — every figure is miniflare-hosted workerd on one machine.
+
+  **FOR CONDUCT — ACTS, each with its actor, stated here AND in this worker's report because a
+  note in a region nothing drains is not even a note:**
+  1. **CONDUCT — resolve `IC-104`** and take the version bumps on I5 and I1. Filed PROPOSED with
+     the consumer census MEASURED on this tree (`civicos-ui/app.html` copies the acquire document
+     wholesale, so **UI has nothing to do**; `op=stats` and `op=contentaxis` have zero UI callers).
+  2. **CONDUCT — move `REGISTER_FLOOR`** only from the MERGED tree's own post-commit print, never
+     by adding this branch's figure to another's (D-238; four branches were each right and none
+     true of the union, one wave ago).
+  3. **CONDUCT — flip REC-91's queue row**, and note that **REC-92 is now unblocked**: both tables,
+     the writer, the canonical extent and the `indexed` observation it reads all exist.
+  4. **CONDUCT — REC-92 owes the `chain_kind` INDEX with its own measurement.** This item declared
+     it and withdrew it rather than raise a ceiling on a promise; the column is there, the access
+     path is not, and the sweep will name it the moment an index appears without a reader.
+  5. **CONDUCT / whoever owns the machine — THE DISK IS THE FLEET'S PROBLEM, NOT THIS ITEM'S.**
+     100 % full, 2.0 GiB free, **74 worktrees under `.claude/worktrees/` holding 32 GB**, and a
+     battery run in a fresh checkout came back RED with SQLite I/O errors that look exactly like a
+     worker's own damage. **A dead worktree named `rec91-baseline` is mine and can be reaped**;
+     this worker could not remove it (outside its isolation boundary) and says so rather than
+     leaving it unexplained.
+  6. **BOB — nothing.** Every decision here was mechanism and was taken, recorded and driven. The
+     one that came closest to his was routing the text through `data/provenance.json` rather than
+     through a promote-package sibling: the first needs no change from any caller and stores the
+     text twice; the second stores it once and costs edits in two areas this item does not own.
+     **Running provisionally: the first.** Reversing it costs one wire field, one store read, and
+     a client change in `civicos-ui` and `agent-worker`.
+
+  **PATHS RELEASED:** every path in the CLAIM above, **plus five taken at the close and named
+  rather than assumed**: `bio-plane/test/observation-content.test.mjs` (REC-94's D1 assertion was
+  SUPERSEDED — it enforced *we cannot say* over a plane that can — CORRECTED IN PLACE with the
+  reason, never exempted, and one row added); `bio-plane/test/provenance-marker.test.mjs` (the
+  ratchet, moved with its reason at the site); `bio-plane/dist/bio-plane.bundled.mjs` and
+  `bio-plane/dist/bio-plane.bundle.json` (rebuilt as the freshness guard instructs);
+  `.gitignore` (this item's control pen, its own line — a glob would silently cover a pen nobody
+  declared); `docs/DECIDED.md` (REGENERATED by `node tools/decided.mjs`, which plancheck requires
+  of any turn that rules — a generated index, no judgment).
+  **NOT TOUCHED:** `docs/development/QUEUE.md`, `bio-plane/src/textchain.mjs`,
+  `bio-plane/src/pptx.mjs`, `bio-plane/checks/bio-checks.mjs`, `civicos-ui/**`, `newgroup/**`,
+  `#strengthWalk` (REC-105), the meaning-level writers (REC-95), the FW-15 projection's
+  `rows`/`cols`/`shapes` lines (COFF-12), and no version bump, tag, sign or deploy.

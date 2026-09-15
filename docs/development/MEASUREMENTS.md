@@ -13335,3 +13335,116 @@ member-facing sentence read *"the strongest capture grade a leg on this document
 and the detector matched `"grade a"` — the ARTICLE, not the letter. The detector cannot tell
 them apart and a fence that is spelling-blind in the safe direction is the right fence, so
 the SENTENCE moved and the rule did not.
+
+## M-32 · 2026-09-15 · REC-91 — WHAT AN FTS5 EXTERNAL-CONTENT INDEX ACTUALLY DOES ON WORKERD, AND THE BOUND THAT REALLY BINDS THE TEXT INDEX: **a plain per-row `DELETE` on the index answers `SQLITE_CORRUPT_VTAB`; `INSERT OR REPLACE` on the base table ORPHANS the index entry and the orphan still MATCHES; `count(*)` on the index cannot see that orphan because it is read out of the CONTENT table; `integrity-check` at rank 1 can and rank 0 cannot; and §4.3's 2 MiB per-capture bound is UNREACHABLE because `op=promote` refuses an inline bundle file over 1,048,576 B first** (worktree `agent-aabecaced11e00db1`)
+
+Taken while BUILDING `CONTENT-SEARCH-DESIGN.md` §7 row 4 — `capture_text` and
+`capture_text_fts` — because every one of these is a property of the substrate
+the design names and not one of them is in the design. **Four of the five were
+found by a control arm or a probe rather than by reading**, and three would have
+shipped as silent wrong answers.
+
+**Instrument.** Four scratch probes under miniflare-hosted workerd (`miniflare`
+`^4.20260722.0`, node v26.5.0, darwin/arm64), each a Durable Object executing
+**§4.1's own DDL**, plus `bio-plane/test/nc-rec91.mjs`'s eight arms against the
+shipped code. The probes were scratch and are not committed; **what replaced them
+is `test/capture-text-index.test.mjs` §F, which extracts the `CREATE VIRTUAL
+TABLE` and the three `CREATE TRIGGER` statements OUT OF `src/store.mjs` by regex
+and executes those** — so the behaviour below is re-measured on every battery
+run, against the product's own DDL rather than against a copy of it.
+
+### 1 · The four substrate facts, each with the wrong belief it corrects
+
+| what was tried | what happened | the belief it corrects |
+| --- | --- | --- |
+| `DELETE FROM capture_text_fts WHERE rowid = ?` | **`SQLITE_CORRUPT_VTAB`** | that an external-content index is deleted from the way `bundles_fts` is. It is not: the documented route is the `'delete'` command, which is why the table carries TRIGGERS |
+| `DELETE FROM capture_text_fts` (unqualified) **before** its base rows, then the base rows | the index cleared, then **the BASE delete threw `SQLITE_CORRUPT_VTAB` and the base rows were LEFT** | that a purge may clear the index beside `bundles_fts`'s own line. Clearing index-first corrupts the table AND leaves the rows — worse than no sweep at all. The sweep must come AFTER |
+| `INSERT OR REPLACE INTO capture_text` over an existing address | the base table is correct and **the superseded row's index entry is ORPHANED and still MATCHES** | that `INSERT OR REPLACE` is a tidier way to write the same rows. SQLite does not fire delete triggers for REPLACE conflict resolution unless `recursive_triggers` is on, so the record answers a search out of text it no longer holds |
+| `PRAGMA recursive_triggers = ON` then the same REPLACE | the trigger fires and no orphan | that the pragma is the fix. It is *a* fix; delete-then-plain-INSERT is §4.1's own rule and needs no connection state, so that is what shipped |
+
+### 2 · THE INSTRUMENT THAT COULD NOT SEE THE DEFECT IT WAS WRITTEN FOR
+
+`op=stats` first reported `textIndexed: count(*) FROM capture_text_fts` beside
+the base count, on the reasoning that the two must agree and that asserting it
+would be asserting the trigger discipline. **They agree for free.**
+
+| with a deliberate orphan present | figure |
+| --- | --- |
+| `count(*) FROM capture_text` | 1 |
+| `count(*) FROM capture_text_fts` | **1** |
+| `... WHERE capture_text_fts MATCH '<the superseded term>'` | **1 — the orphan is there** |
+| `fts5vocab(capture_text_fts, 'instance')`, distinct docs | **2 — and this one can see it** |
+| `INSERT INTO capture_text_fts(capture_text_fts) VALUES('integrity-check')` | **ok — did NOT catch it** |
+| `INSERT INTO capture_text_fts(capture_text_fts, rank) VALUES('integrity-check', 1)` | **`SQLITE_CORRUPT_VTAB` — caught it** |
+
+An external-content table answers `count(*)` out of its CONTENT table, so the
+parity assertion was one figure read twice — **CLAUDE.md's costs-nothing rule
+inside the one instrument written to detect this exact corruption.** It was
+caught by `nc-rec91.mjs`'s `replace` arm coming back **2 of 3 declared** with a
+real orphan planted and the parity row still green. `op=stats` now reports
+`textIndexOk` from `integrity-check` **at rank 1**, which compares the index
+against the content table. **Rank 0 is not a weaker check of the same thing; it
+is a check of something else.**
+
+### 3 · The bound that really binds, and it is not the design's
+
+§4.3 sets a per-capture bound of **2,097,152 B** from M-20 and reasons that a
+capture at it costs 45.7 % of the CPU window. Both halves are true and neither is
+the binding constraint.
+
+| figure | value | where it comes from |
+| --- | --- | --- |
+| §4.3's per-capture bound | 2,097,152 B | M-20, applied in `#writeCaptureText` |
+| `INLINE_MAX`, the promote path's per-file limit | **1,048,576 B** | `store.mjs`, long-standing |
+| the `data/provenance.json` a 2.4 MiB capture produces | **2,460,076 B** | measured by this item's own bound arm — **`op=promote` REFUSED it** |
+| the acquire answer's own budget, shipped | 524,288 B | half of `INLINE_MAX`, for JSON escaping and the rest of the document |
+
+**Left alone this would have been a REGRESSION and not a new limit.** M-20's
+census holds a PDF with 1,354,686 B of text and a docx with 1,187,253 B; both
+promote today and **neither would have**, because the units ride in
+`data/provenance.json` and that file would have exceeded `INLINE_MAX`. An index
+that makes the record unable to FILE a document is the worst direction
+available. The wire therefore carries its own budget and **COUNTS what it drops**,
+so the capture is reported `partial` rather than recorded as whole.
+
+Two consequences, both stated rather than implied:
+
+- **§4.3's bound cannot fire through the route §4.1 names.** The store's branch
+  is reachable only by lowering the constant, which `nc-rec91.mjs`'s `overstrict`
+  arm does. A control arm reaching a branch the product's own route cannot is a
+  finding about the ROUTE.
+- **`data/provenance.json` is a bundle FILE**, so its bytes land in
+  `files.content` and in `history`. §3 chose option (iii) partly because "text is
+  stored once"; through this route it is stored **twice** — once in
+  `capture_text` at M-20's 1.998 B per text byte, and once more in the bundle
+  image. Reported as a DESIGN GAP against §3/§4.1.
+
+### 4 · CPU: the bound does not bound the unit count
+
+Not re-measured — **read off M-20's own ladder**, and recorded here because §4.3
+draws the opposite conclusion from the same table. §4.3: *"a promote at the bound
+at page grain is 45.7 % of the measured per-invocation CPU window, so the bound
+cannot by itself push a promote over the ceiling."* True at PAGE grain. M-20's
+worst docx is **20,571 units, 1,187,253 B — inside the byte bound — at 218 ms,
+84.8 % of the 257 ms window.** Bytes do not bound the unit count, and the unit
+count is the dominant term for a word-processing container. DESIGN GAP against
+§4.3; not closed here, because a second bound is a decision about what a member's
+promote may cost and §4.1 already names the remedy (chunk across ticks).
+
+### WHAT THIS CANNOT SEE
+
+- **Miniflare-hosted workerd on one machine**, not a deployed Durable Object.
+  What it measures is SQLite behaviour and trigger semantics, which is the same
+  engine; what it cannot see is the platform's own accounting.
+- **No figure here is a corpus figure.** M-20 is the corpus measurement and every
+  document-shaped number above is quoted FROM it rather than re-taken.
+- **Nothing here exercises `passage:`**, which does not exist (REC-92). Whether a
+  member searching a term inside a captured PDF finds it is unmeasured.
+- **The orphan arm was measured on a 1-row table.** Whether an orphan's cost
+  scales is not measured and does not need to be: one wrong answer is the defect.
+- **`recursive_triggers` was ON for part of one probe run and that invalidated a
+  later arm in the same run** — recorded because it is the shape of the finding
+  rather than a footnote: a connection-level pragma set by an earlier arm silently
+  made a later arm measure a different engine. The figures above are from the
+  runs where it was off, taken on freshly created tables.
+

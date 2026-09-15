@@ -509,7 +509,28 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
      NEITHER WORKER COULD HAVE SEEN THIS. CPDF-10 moved the figure to 24 on a
      tree without REC-74; REC-74 landed a swallow on a tree without this walk's
      new figure. The pair is what fires it, which is why it is resolved here. */
-  const CEILING = 25;
+  /* MOVED 25 -> 26 BY REC-91, 2026-09-15, FROM THE FIGURE THIS WALK PRINTED, and
+     the rule this ratchet states was honoured rather than waived: a rise needs
+     somebody to have LOOKED AT THE NEW ONE. Looked at, and it is one site —
+     `stats()`'s `textIndexOk`, which runs FTS5's `integrity-check` at rank 1
+     inside a try/catch.
+     WHY IT IS THE CLASS'S REMEDY AND NOT AN INSTANCE OF IT, on exactly the
+     grounds `safeJson` and `#standardForRun` are admitted above. The defect this
+     sweep is pointed at is a catch that turns something the plane could not
+     establish into a NORMAL-LOOKING ANSWER. **Here the THROW IS THE
+     MEASUREMENT**: FTS5 signals that an external-content index and its content
+     table disagree by raising `SQLITE_CORRUPT_VTAB`, so there is no non-throwing
+     way to ask the question at all, and the catch converts a raise into the
+     PUBLISHED boolean `textIndexOk: false`. Nothing is smoothed — the answer a
+     caller reads IS the failure, named, on an op whose whole purpose is letting a
+     purge and an operator prove what the store holds.
+     WHY IT IS A CATCH AT ALL: the alternative is letting it throw, which would
+     end `op=stats` with no answer — and `op=stats` is the read a whole-store
+     purge uses to prove it took the rows, so an index corruption would make the
+     one instrument that could report it unavailable. That is the worse
+     direction, and it is the same argument `safeJson`'s entry makes one
+     construct over. */
+  const CEILING = 26;
   t(`swallowed reads in store.mjs are at or below the ratchet (${found.length} of ${CEILING})`,
     found.length <= CEILING, true);
 

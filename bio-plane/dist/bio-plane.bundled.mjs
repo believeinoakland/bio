@@ -3142,6 +3142,89 @@ CREATE INDEX IF NOT EXISTS proposed_readings_bundle ON proposed_readings(bundle_
 CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
 -- =========================================================================
 
+-- REC-91 / CONTENT-SEARCH-DESIGN.md section 4.1 -- THE TEXT INDEX, one row per
+-- INDEXED UNIT of one capture's text under its CURRENT chain. This is the
+-- content level of the four-level search (Part II section 14.3): bundles_fts
+-- indexes the GROUP'S OWN NOTES about a document, and until this table existed
+-- nothing indexed what the document SAYS, so a group that captured five hundred
+-- agenda packets could search its notes about them and not the packets.
+--
+-- ONE UNIT PER ELEMENT REFERENCE, which is section 3's option (iii) and the
+-- reason this is a table rather than one more column feed into bundles_fts.
+-- Pouring document text into bundles_fts.body would truncate a 400-page packet
+-- at page ~40 against TEXT_CAP and would land a reader on a DOCUMENT -- the
+-- anchor found and then thrown away, which is D-161's failure one axis over.
+-- Here the unit's address IS a content extent, so a hit is a mintable row's
+-- identity without minting it (section 4.5, IC-83's lazy mint).
+--
+-- THE EXTENT IS THE SAME CANONICAL FORM THE content TABLE HASHES OVER, produced
+-- by canonicalExtent in bio-checks.mjs and never re-spelled here. That is what
+-- makes contentIdFor(capture_sha, extent, chain) computable AT HIT TIME, which
+-- is the whole of section 4.5: a search returns an ADDRESS a member may cite,
+-- and searching mints nothing.
+--
+-- chain_kind IS A COLUMN AND NOT A PARSE, so "every OCR'd unit" is a predicate.
+-- It holds the LAST step kind of the chain that produced this unit (layer, ocr,
+-- member). Section 4.2 asks the identical question of the content table, whose
+-- chain column holds the WHOLE chain as JSON, and that filter measured as the
+-- slowest on the table at M-21 -- so the column here is the same question
+-- answered the cheap way, and the difference is stated in SEARCH's own
+-- Incomplete list rather than left for a reader to notice.
+--
+-- truncated IS PER UNIT AND NEVER A SILENT PREFIX (M5's rule, section 2): a
+-- unit stored to the bound says so, and rows=passage carries the flag. The
+-- per-capture bound is a different metric and is NOT a column here at all -- it
+-- is the indexed observation, written per capture into observation_log, so that
+-- not extracted, extracted but over the bound, and extracted and indexed are one
+-- vocabulary in one place (section 4.3).
+--
+-- WHAT HAS NO UNIT ARM AND IS THEREFORE ABSENT RATHER THAN EMPTY: a WORKBOOK
+-- (a cell is not a passage and a sheet-range does not exist until
+-- EXTRACTION-BREADTH section 3.2 lands -- 288 workbooks in M-20's census hold
+-- 72,651,441 bytes of text over 1,056 sheets and not one indexable unit), and
+-- HTML (no dom producer, Part II section 15). Neither is scored zero: the
+-- capture's indexed observation says none with the reason.
+--
+-- DERIVED, AND PURGED ON BOTH ARMS. It carries bundle_id -- the document this
+-- text is of -- so it rides purge's TABLES list. Text is a PROJECTION and is
+-- re-derived rather than versioned (section 4.1): when the chain moves, the
+-- capture's previous rows are DELETED and rewritten, so a revised chain never
+-- leaves a unit claiming an engine that did not produce it. A content row is
+-- the opposite and is never rewritten -- an authored edge holds it, and a
+-- re-extraction marks it stale (REC-82).
+CREATE TABLE IF NOT EXISTS capture_text (
+  capture_sha  TEXT    NOT NULL,   -- the document. The register's trust root
+  bundle_id    TEXT    NOT NULL,   -- the join every query arm makes (section 2)
+  extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape. sheet-range when EXTRACTION-BREADTH 3.2 lands
+  extent       TEXT    NOT NULL,   -- canonicalExtent's output. The SAME bytes the content address is taken over
+  ref          TEXT    NOT NULL,   -- IC-1's required human form, from describeExtent
+  seq          INTEGER NOT NULL,   -- reading order within the capture, so a partial index is a PREFIX and says so
+  text         TEXT    NOT NULL,   -- the unit's text, capped per unit at TEXT_CAP (section 4.3)
+  truncated    INTEGER NOT NULL DEFAULT 0,
+  chain_kind   TEXT    NOT NULL,   -- the chain's LAST step kind, so an engine is a predicate
+  PRIMARY KEY (capture_sha, extent_kind, extent)
+);
+-- By BUNDLE: the join every arm makes, and purge's per-bundle arm.
+CREATE INDEX IF NOT EXISTS capture_text_bundle ON capture_text(bundle_id);
+-- AND NOT BY CHAIN KIND, WHICH THIS ITEM DECLARED AND THEN WITHDREW ON THE
+-- REPOSITORY'S OWN RULE. "Every OCR'd unit below cap C" is one of the three
+-- questions Part II section 17 names as unanswerable, and it is a predicate only
+-- if such an index exists -- so one was written here. The airuns suite sweep
+-- then named it on the roster of ACCESS PATHS NO OP ASKS FOR, correctly: the op
+-- that would read it is REC-92's passage: arm and it does not exist. REC-12's
+-- rule is already recorded a few hundred lines up in store.mjs for three
+-- other columns -- *an index nobody seeks on is cost with no reader* -- and the
+-- index's cost here is per UNIT rather than per bundle, which is the grain that
+-- made this whole table worth measuring.
+-- THE HONEST MOVE IS TO LET THE READER BRING IT. The alternative was to raise
+-- that sweep's CEILING by one on a promise, and a ceiling raised for a reader
+-- that might arrive is a ceiling that stops meaning anything. M-21's 31.6
+-- SECONDS against 9 ms is a real measurement of a DIFFERENT table's column under
+-- a query that exists; quoting it for a query nobody has written would be
+-- borrowing evidence rather than having it. REC-92 adds the index with its own
+-- measurement, the way REC-90 did for the content table.
+-- =========================================================================
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
@@ -23003,7 +23086,9 @@ function contentAxisFor({
   unitIndex = false,
   unitsComplete = null,
   reason = null,
-  missingCause = null
+  missingCause = null,
+  indexObserved = null,
+  indexReason = null
 } = {}) {
   if (observed == null || observed === "NEVER_LOOKED") {
     const cause = Object.prototype.hasOwnProperty.call(MISSING_ROW_CAUSES, missingCause) ? missingCause : "purged";
@@ -23032,6 +23117,18 @@ function contentAxisFor({
       state: CONTENT_AXIS_UNDETERMINED,
       determined: false,
       why: `this capture's text WAS extracted (${observed}), so it is neither not_extracted nor indexed_none \u2014 but whether it is indexed_full or indexed_partial is a fact about the per-unit text index, and no unit index exists in this build (CONTENT-SEARCH-DESIGN.md section 4.1, REC-91). Stated as undetermined rather than answered from the extraction alone`
+    };
+  if (indexObserved === "LOOKED_ABSENT" || indexObserved === "LOOKED_INDETERMINATE")
+    return {
+      state: "indexed_none",
+      determined: true,
+      why: indexReason ? `${CONTENT_AXIS_STATES.indexed_none}: ${indexReason}` : CONTENT_AXIS_STATES.indexed_none
+    };
+  if (unitsComplete == null)
+    return {
+      state: CONTENT_AXIS_UNDETERMINED,
+      determined: false,
+      why: `this capture's text WAS extracted (${observed}) and the per-unit text index exists, but this record holds no index observation for this capture \u2014 so whether its passages are indexed is UNDETERMINED rather than partial. A capture promoted before the index writer existed is in exactly that position, and re-promoting it is what settles the question`
     };
   return unitsComplete === true && observed === "PRESENT" ? { state: "indexed_full", determined: true, why: CONTENT_AXIS_STATES.indexed_full } : { state: "indexed_partial", determined: true, why: CONTENT_AXIS_STATES.indexed_partial };
 }
@@ -23937,6 +24034,9 @@ function refusal6(key, extra = {}) {
 var EMPTY_STRING_SHA2 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 var INLINE_MAX = 1024 * 1024;
 var TASK_KINDS = ["authority-undetermined"];
+var CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
+var CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
+var CAPTURE_TEXT_UNIT_CONTAINERS = /* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp"]);
 var SOURCE_OUTCOMES = ["success", "source_refused", "fetch_failed", "governed"];
 var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 var boundedSubject = (v) => String(v == null ? "" : v).replace(/[\r\n\t]+/g, " ").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
@@ -24303,6 +24403,28 @@ var Store = class _Store extends DurableObject {
     this.sql.exec(
       `CREATE VIRTUAL TABLE IF NOT EXISTS bundles_fts USING fts5(
          ${FTS_COLUMNS.join(", ")}, tokenize='unicode61')`
+    );
+    this.sql.exec(
+      `CREATE VIRTUAL TABLE IF NOT EXISTS capture_text_fts USING fts5(
+         text, content='capture_text', content_rowid='rowid', tokenize='unicode61')`
+    );
+    this.sql.exec(
+      `CREATE TRIGGER IF NOT EXISTS capture_text_ai AFTER INSERT ON capture_text BEGIN
+         INSERT INTO capture_text_fts(rowid, text) VALUES (new.rowid, new.text);
+       END`
+    );
+    this.sql.exec(
+      `CREATE TRIGGER IF NOT EXISTS capture_text_ad AFTER DELETE ON capture_text BEGIN
+         INSERT INTO capture_text_fts(capture_text_fts, rowid, text)
+           VALUES ('delete', old.rowid, old.text);
+       END`
+    );
+    this.sql.exec(
+      `CREATE TRIGGER IF NOT EXISTS capture_text_au AFTER UPDATE ON capture_text BEGIN
+         INSERT INTO capture_text_fts(capture_text_fts, rowid, text)
+           VALUES ('delete', old.rowid, old.text);
+         INSERT INTO capture_text_fts(rowid, text) VALUES (new.rowid, new.text);
+       END`
     );
     this.sql.exec(`CREATE UNIQUE INDEX IF NOT EXISTS members_handle ON members(handle) WHERE handle IS NOT NULL`);
     this.sql.exec(
@@ -33934,6 +34056,20 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       this.sql.exec(`DELETE FROM reading_text_source WHERE capture_sha=?`, sha);
       this.#writeTextSource(bundleId, sha, reading.text_source);
       this.#markContentStale(sha, Array.isArray(reading.text_source) ? reading.text_source : null);
+      const textUnits = Array.isArray(doc && doc.text_units) ? doc.text_units : null;
+      const indexed = this.#writeCaptureText(bundleId, sha, textUnits, reading.text_source);
+      if (Number.isInteger(doc && doc.text_units_over_bound) && doc.text_units_over_bound > 0) {
+        indexed.over_bound += doc.text_units_over_bound;
+        indexed.offered += doc.text_units_over_bound;
+      }
+      const container = typeof reading.text_container === "string" ? reading.text_container : null;
+      const armed = CAPTURE_TEXT_UNIT_CONTAINERS.has(container);
+      this.#observeIndexed(bundleId, sha, indexed, {
+        author,
+        hadText: reading.read_from_text === true,
+        unitArm: armed,
+        armReason: armed ? null : container ? `a ${container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage and \`sheet-range\` waits on EXTRACTION-BREADTH section 3.2; HTML has no \`dom\` producer)` : "this record does not hold which container this capture is, so it has no unit arm to name"
+      });
       this.#observeExtraction(bundleId, sha, reading, { author });
       this.sql.exec(
         `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at)
@@ -34022,6 +34158,231 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       cals.length ? JSON.stringify(cals) : null
     );
   }
+  /*__REC91_WRITER_START__*/
+  /** REC-91 / `CONTENT-SEARCH-DESIGN.md` section 4.1 and 4.3 -- THE CONTENT-GRAIN
+   *  TEXT INDEX, WRITTEN AT PROMOTE, INSIDE PROMOTE'S ONE TRANSACTION.
+   *
+   *  WHERE IT SITS AND WHY. Beside `#writeTextSource` above and
+   *  `#observeExtraction` below, in `#writeReadings`, because this is the one
+   *  moment in this plane where a capture's reading is persisted -- and because
+   *  the rule section 4.1 states is the rule every projection in that method
+   *  already follows: **the capture's previous text rows are DELETED FIRST**, so
+   *  a revised chain never leaves a unit claiming an engine that did not produce
+   *  it. Text is a PROJECTION and is re-derived rather than versioned. A content
+   *  row is the opposite and is REC-82's line, a few lines away: an authored
+   *  edge holds one, so a re-extraction MARKS it stale and never rewrites it.
+   *  The two lines look alike and mean opposite things, which is exactly why
+   *  this one says so.
+   *
+   *  THE DELETE IS ALSO WHAT KEEPS THE FTS INDEX TRUE, and that is MEASURED
+   *  rather than assumed -- see the DDL region in `#migrate`. `INSERT OR
+   *  REPLACE` here would leave the superseded text MATCHING, because SQLite does
+   *  not fire delete triggers for REPLACE conflict resolution. So the two
+   *  statements below are delete-then-plain-INSERT and must stay that way.
+   *
+   *  THE UNITS ARE READ, NEVER RE-DERIVED. They arrive on the acquire document's
+   *  `text_units` (I1's additive sibling, emitted at the one place `i2text` is
+   *  final) in the SAME `data/provenance.json` this method already reads the
+   *  reading out of. This file re-walks no container and holds no second opinion
+   *  about what a page or a paragraph is -- the producers already answer that,
+   *  and `canonicalExtent` / `describeExtent` answer what its address and its
+   *  human form are.
+   *
+   *  AND THE EXTENT IS THE CONTENT ADDRESS, WHICH IS THE WHOLE POINT. Two
+   *  spellings of one passage must produce one string or section 4.5's "a hit is
+   *  a mintable row's identity" is a claim rather than a mechanism, so the
+   *  extent written here is `canonicalExtent`'s output and nothing else. For a
+   *  PDF page that means **`rect: null`, which is the record's own spelling for
+   *  THE WHOLE PAGE** -- not a literal rectangle. Section 4.1's phrase is *"the
+   *  page's full rectangle"*, and writing a literal rect would compute a
+   *  DIFFERENT `contentIdFor` from the one a member citing page 14 produces, so
+   *  the hit and the citation would address one passage under two ids. The
+   *  degenerate `rect` is what makes them one, and `describeExtent` already
+   *  reads it as *"page 14"* rather than *"page 14, a region of it"*.
+   *
+   *  The same reasoning one container over is Bob's ruling of 2026-09-15: a
+   *  deck's unit is ONE PER SLIDE, written as a `slide-shape` extent with the
+   *  SHAPE OMITTED, which `covers()` accepts as covering the whole slide. **What
+   *  a slide-grain unit CANNOT be, stated here rather than found later: a
+   *  reading POSITION.** `readingSource()` requires both `slide` and `shape`, so
+   *  deck-grain SEARCH ships complete while deck-grain CONNECTIONS wait on
+   *  `pptx.mjs` emitting per-shape text -- FW-17's axis, not this one.
+   *
+   *  TWO BOUNDS, BOTH FROM M-20 AND NEITHER INVENTED HERE (section 4.3):
+   *
+   *   - PER UNIT, `CAPTURE_TEXT_UNIT_CAP` (131,072 B). Over M-20's 148,413 units
+   *     the largest was 21,224 B, so the cap is 6.2x the largest unit that
+   *     census produced and is never approached -- it is a guard, not a policy.
+   *     A unit over it is stored TO it with `truncated = 1`, never a silent
+   *     prefix (M5's rule, and section 2 carries it as a constraint).
+   *   - PER CAPTURE, `CAPTURE_TEXT_CAPTURE_BOUND` (2,097,152 B) across a
+   *     capture's units. It admits 100 % of M-20's measured 1,000-PDF sample
+   *     fully, with 54.8 % headroom over the worst document in it. Over the
+   *     bound the capture is indexed TO the bound IN READING ORDER and its
+   *     `indexed` observation reads `partial` -- which is why `seq` exists and
+   *     why the units are sorted before they are written: a partial index must
+   *     be a PREFIX a reader can reason about, not an arbitrary subset.
+   *
+   *  Returns what it did, for the observation below and for the caller's own
+   *  surface. It refuses nothing and can fail no promotion: a document whose
+   *  container has no unit arm is a document with no units, which is a STATED
+   *  absence and not an error. */
+  #writeCaptureText(bundleId, captureSha, units, chain2) {
+    this.sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);
+    const chainKind = terminalStep(chain2) || "layer";
+    const list = Array.isArray(units) ? units : [];
+    const ordered = list.filter((u) => u && typeof u === "object" && typeof u.text === "string" && u.text.length).map((u, i) => ({
+      extent: u.extent,
+      text: u.text,
+      seq: Number.isInteger(u.seq) ? u.seq : i
+    })).sort((a, b) => a.seq - b.seq);
+    let bytes = 0, written = 0, truncatedUnits = 0, overBound = 0, unaddressable = 0;
+    const seen = /* @__PURE__ */ new Set();
+    for (const u of ordered) {
+      const kind = u.extent && typeof u.extent === "object" && typeof u.extent.kind === "string" ? u.extent.kind : null;
+      if (!kind) {
+        unaddressable++;
+        continue;
+      }
+      const extent = canonicalExtent(u.extent);
+      if (seen.has(extent)) {
+        unaddressable++;
+        continue;
+      }
+      seen.add(extent);
+      const full = u.text;
+      const capped = full.length > CAPTURE_TEXT_UNIT_CAP ? full.slice(0, CAPTURE_TEXT_UNIT_CAP) : full;
+      const size = new TextEncoder().encode(capped).length;
+      if (bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) {
+        overBound++;
+        continue;
+      }
+      bytes += size;
+      if (capped.length < full.length) truncatedUnits++;
+      this.sql.exec(
+        `INSERT INTO capture_text
+           (capture_sha,bundle_id,extent_kind,extent,ref,seq,text,truncated,chain_kind)
+         VALUES (?,?,?,?,?,?,?,?,?)`,
+        captureSha,
+        bundleId,
+        kind,
+        extent,
+        describeExtent(u.extent),
+        u.seq,
+        capped,
+        capped.length < full.length ? 1 : 0,
+        chainKind
+      );
+      written++;
+    }
+    return {
+      written,
+      bytes,
+      truncated: truncatedUnits,
+      over_bound: overBound,
+      unaddressable,
+      offered: ordered.length,
+      chain_kind: chainKind
+    };
+  }
+  /** REC-91 / section 4.3 -- THE PER-CAPTURE `indexed` STATE, WRITTEN AS A
+   *  CONTENT-AXIS OBSERVATION AND NOT AS A COLUMN OF ITS OWN.
+   *
+   *  Section 4.3's words, and its reason is the one CLAUDE.md's sparse rule
+   *  gives: *not extracted*, *extracted but over the bound* and *extracted and
+   *  indexed* must be ONE VOCABULARY IN ONE PLACE, or a member reading an empty
+   *  answer cannot tell which absence is true. So this goes through REC-93's ONE
+   *  append site, in the same transaction as the units it describes.
+   *
+   *  `authority_kind = derive` AND THAT IS LOAD-BEARING RATHER THAN A LABEL.
+   *  `#observeExtraction` writes under `extract`; indexing is a DERIVATION over
+   *  what extraction produced, and they are two different looks at one subject.
+   *  Keeping them apart BY AUTHORITY is what lets `contentAxis` go on reading
+   *  *what extraction established* and *what the index holds* as two facts --
+   *  the invariant that method already states in its own words, and which one
+   *  shared row would have collapsed on this item's first day.
+   *
+   *  NO NEW CONDITION WORD IS COINED. `queuestate.mjs`'s vocabulary is closed
+   *  and names nothing for *over the index bound* or *no unit arm for this
+   *  container*, and widening a write's vocabulary from inside this item would
+   *  be one item's blast radius becoming another's. The fact travels in `bound`
+   *  -- the column whose whole job is *which bound stopped it* -- and in
+   *  `detail`.
+   *
+   *  THE FOUR STATES, each the honest one rather than the convenient one:
+   *
+   *   - every unit indexed        -> `PRESENT` (section 4.3's `full`)
+   *   - indexed to the bound      -> `partial`, `bound` naming the figure
+   *   - text, but no unit arm     -> `LOOKED_INDETERMINATE`, `bound` naming the
+   *     container's own limit. **NOT `LOOKED_ABSENT`**: a workbook's text exists
+   *     and this record simply cannot address a passage of it yet, so *we looked
+   *     and there is nothing* would be a FALSE ABSENCE at the one level the
+   *     four-level search exists to keep honest.
+   *   - no text at all            -> `LOOKED_ABSENT`, and the REASON is already
+   *     on the extraction row beside it rather than restated here.
+   *
+   *  `result_kind: "reading"` / `result_ref: <capture_sha>` is the SAME referent
+   *  `#observeExtraction`'s own rows carry, and it is that rather than
+   *  `"content"` on purpose: C-22.10 requires a `PRESENT` row to point at what
+   *  it produced, the units are fetched by `capture_sha`, and `"content"` would
+   *  invite a reader to look up a content row that was deliberately NOT minted
+   *  (section 4.5 -- searching mints nothing, and neither does indexing). */
+  #observeIndexed(bundleId, captureSha, result, {
+    author = null,
+    hadText = false,
+    unitArm = true,
+    armReason = null
+  } = {}) {
+    const mint = contentMintState(author);
+    const actorClass = mint === "member_marked" ? "member" : mint === "machine_marked" ? "machine" : "plane";
+    const actor = actorClass === "plane" ? null : String(author);
+    const r = result || {
+      written: 0,
+      bytes: 0,
+      truncated: 0,
+      over_bound: 0,
+      unaddressable: 0,
+      offered: 0
+    };
+    let state, bound = null, detail;
+    if (!hadText) {
+      state = "LOOKED_ABSENT";
+      detail = "no text was extracted from this capture, so there is nothing to index. WHY there is no text is on this capture's extraction observation, not on this one";
+    } else if (!unitArm) {
+      state = "LOOKED_INDETERMINATE";
+      bound = armReason || "this container has no indexing unit arm";
+      detail = `text was extracted and this record cannot address a passage of it: ${bound}. That is not an absence of text and must not be read as one`;
+    } else if (r.over_bound > 0) {
+      state = "partial";
+      bound = `the per-capture text bound, ${CAPTURE_TEXT_CAPTURE_BOUND} B (CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20) or the acquire answer's own budget, whichever bit first -- the second is the smaller and is what the promote path's inline-file limit forces`;
+      detail = `${r.written} of ${r.offered} unit(s) indexed in reading order, ${r.bytes} B; ${r.over_bound} unit(s) past the bound are NOT indexed`;
+    } else if (r.written > 0) {
+      state = "PRESENT";
+      detail = `${r.written} unit(s) indexed, ${r.bytes} B`;
+    } else {
+      state = "LOOKED_ABSENT";
+      detail = "this container has an indexing unit arm and produced no unit carrying text (M-20 measured 26.3 % of PDF pages recovering nothing at all), so the record holds no addressable passage of it";
+    }
+    if (r.truncated > 0)
+      detail += `; ${r.truncated} unit(s) stored to the per-unit cap and flagged truncated`;
+    if (r.unaddressable > 0)
+      detail += `; ${r.unaddressable} unit(s) offered an address this record could not index separately (an unnamed or duplicate extent) and are NOT indexed`;
+    return this.#observe({
+      actorClass,
+      actor,
+      authorityKind: "derive",
+      authority: bundleId == null ? null : String(bundleId),
+      level: "content",
+      subjectKind: "capture",
+      subject: captureSha,
+      state,
+      bound,
+      resultKind: state === "PRESENT" || state === "partial" ? "reading" : null,
+      resultRef: state === "PRESENT" || state === "partial" ? captureSha : null,
+      detail
+    });
+  }
+  /*__REC91_WRITER_END__*/
   /* CPDF-10: RECORD A MEMBER'S ATTESTATION that a document's text matches the
    * image of the page, over a stated extent.
    *
@@ -41575,6 +41936,39 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       refs: n("refs"),
       register: n("register"),
       indexed: n("bundles_fts"),
+      /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX, reported for exactly the
+         reason every other row on this list is -- so a purge can PROVE it took
+         the rows rather than assert it.
+         *
+         * AND THE SECOND FIGURE IS NOT A COUNT, WHICH IS A CORRECTION THIS
+         * ITEM'S OWN NEGATIVE CONTROL FORCED. The first draft reported
+         * `textIndexed: n("capture_text_fts")` beside the base count, on the
+         * reasoning that the two must agree and that a suite asserting it would
+         * be asserting the trigger discipline. **They agree for free.** An
+         * FTS5 EXTERNAL-CONTENT table answers `count(*)` OUT OF ITS CONTENT
+         * TABLE, so the figure was the base count read a second time — measured
+         * on workerd: with a deliberately ORPHANED index entry present, base and
+         * "index" both read 1 while the orphaned term still MATCHED. That is
+         * CLAUDE.md's costs-nothing rule exactly, in an instrument written to
+         * detect the one thing it could not see, and the `replace` control arm
+         * is what caught it: the arm planted a real orphan and the parity
+         * assertion stayed green.
+         *
+         * WHAT IS REPORTED INSTEAD IS A REAL QUESTION WITH A REAL ANSWER. FTS5's
+         * `integrity-check` AT RANK 1 verifies the index AGAINST THE CONTENT
+         * TABLE and throws `SQLITE_CORRUPT_VTAB` when they disagree — measured,
+         * and measured to catch the same orphan plain `integrity-check` (rank 0)
+         * passes over. It costs a walk of the index, which is why it belongs on
+         * an admin read taken deliberately and not on a member path. */
+      textUnits: n("capture_text"),
+      textIndexOk: (() => {
+        try {
+          this.sql.exec(`INSERT INTO capture_text_fts(capture_text_fts, rank) VALUES('integrity-check', 1)`);
+          return true;
+        } catch {
+          return false;
+        }
+      })(),
       selections: n("selections"),
       selectionItems: n("selection_items"),
       /* Reported so a purge can prove it took them, and so an operator can see
@@ -42693,7 +43087,34 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
          minted-to-cited ratio is the silent-leftover exactly, and it would
          corrupt the one instrument §7.3 (6) put there to catch
          manufacturing. hygiene.test.mjs holds this list against schema.mjs. */
-      "proposed_readings"
+      "proposed_readings",
+      /*__REC91_PURGE_START__*/
+      /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX. It is a
+         PROJECTION of a capture's extracted text -- re-derivable
+         from the bytes and the chain, which is precisely why it is
+         not `content`'s neighbour in the keep-it column -- and it
+         carries `bundle_id` (the DOCUMENT the text is of), so it
+         rides this list and clears in BOTH arms.
+         Per-bundle: purging a document while leaving its indexed
+         passages would let `passage:` return text from a file
+         nobody holds, and a later bundle allocated a colliding id
+         would inherit somebody else's text -- the same hazard the
+         `content` entry above names, one level down and WORSE,
+         because these rows hold the words themselves rather than
+         an address.
+         Whole-store: a scratch reset reporting scope ALL while a
+         search still answered out of the purged corpus is the
+         D-113 silent-leftover in the one surface a member reads
+         absence from.
+         **THE FTS INDEX GOES WITH IT AND NEEDS NO ENTRY HERE**:
+         `capture_text_fts` is EXTERNAL CONTENT maintained by the
+         triggers created in `#migrate`, so every row deleted
+         through this list takes its index entry with it, in both
+         arms, by construction. The explicit sweep below is a
+         belt-and-braces over the whole-store arm only, and its
+         PLACEMENT is load-bearing -- see it. hygiene.test.mjs
+         holds this list against schema.mjs. */
+      "capture_text"
     ];
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
@@ -42715,6 +43136,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       } else {
         this.sql.exec(`DELETE FROM bundles_fts`);
         for (const t of TABLES) this.sql.exec(`DELETE FROM ${t}`);
+        this.sql.exec(`DELETE FROM capture_text_fts`);
         this.sql.exec(`DELETE FROM bundles`);
         this.sql.exec(`DELETE FROM published_edges`);
         this.sql.exec(`DELETE FROM selection_items`);
@@ -49767,6 +50189,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const before = this.#one(
       `SELECT seq FROM observation_log
         WHERE level = 'content' AND subject_kind = 'capture' AND subject = ?
+          AND authority_kind = 'extract'
         ORDER BY seq DESC LIMIT 1`,
       captureSha
     );
@@ -49862,12 +50285,33 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  literal it learned separately — PL-17's rule, and the reason this is a
    *  mechanism rather than three documents agreeing in prose.
    *
-   *  `unitIndex: false` IS A FACT ABOUT THIS BUILD, MEASURED AT THE SITE. The
-   *  per-unit text index is `capture_text` and it is REC-91's; it does not exist
-   *  on this tree. It is passed as a value rather than assumed inside the pure
+   *  `unitIndex` WAS `false` HERE AND IS NOW `true`, AND THE CORRECTION IS
+   *  RECORDED RATHER THAN THE OLD SENTENCE DELETED, because what it predicted is
+   *  what happened and that is worth one paragraph. REC-94 wrote *"it does not
+   *  exist on this tree... passed as a value rather than assumed inside the pure
    *  function so that REC-91's landing changes ONE expression here and no
-   *  judgement anywhere — and so that the day it lands, a reader can see what
-   *  this answer was waiting on. */
+   *  judgement anywhere"*. REC-91 landed `capture_text` and `capture_text_fts`,
+   *  and the arrangement held: the pure function's rule did not move.
+   *
+   *  WHAT IT COST MORE THAN ONE EXPRESSION, stated because the prediction was
+   *  not wrong so much as one fact short. Two things had to move with it, and
+   *  neither is a judgement this method makes:
+   *
+   *   1. `unitsComplete` is now READ, off the capture's own `indexed`
+   *      observation, and `null` — no index observation at all — is a THIRD
+   *      answer rather than a weak `false`. Every capture promoted before
+   *      REC-91's writer existed is in exactly that position, and reading it as
+   *      `false` would have answered the PARTIAL member of the content-axis
+   *      vocabulary over a capture with no
+   *      indexed units at all.
+   *   2. The extraction read below is now NAMED BY AUTHORITY. There are two
+   *      kinds of content-level row per capture from this item onward and the
+   *      unqualified latest-row read would have started answering `extraction:`
+   *      with an index row.
+   *
+   *  The invariant this method already stated — the extraction axis and the
+   *  index axis are kept apart — is what both of those protect, and it is now
+   *  enforced by the queries rather than by there being only one kind of row. */
   contentAxis({ captureSha = null, viewer = null } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.trim() : "";
     if (!sha)
@@ -49895,12 +50339,33 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       `SELECT state, condition, detail, authority_kind, authority, actor_class, actor, at, seq
          FROM observation_log
         WHERE level = 'content' AND subject_kind = 'capture' AND subject = ?
+          AND authority_kind = 'extract'
+        ORDER BY seq DESC LIMIT 1`,
+      sha
+    );
+    const indexRow = this.#one(
+      `SELECT state, bound, detail, actor_class, actor, at, seq FROM observation_log
+        WHERE level = 'content' AND subject_kind = 'capture' AND subject = ?
+          AND authority_kind = 'derive'
         ORDER BY seq DESC LIMIT 1`,
       sha
     );
     const axis = contentAxisFor({
       observed: latest ? latest.state : null,
-      unitIndex: false,
+      /* THE MECHANISM EXISTS FROM THIS ITEM ONWARD — `capture_text` and
+         `capture_text_fts` are in the schema — so this is `true` unconditionally
+         and the per-capture question moves entirely into `unitsComplete`. */
+      unitIndex: true,
+      unitsComplete: indexRow ? indexRow.state === "PRESENT" : null,
+      /* THE INDEX'S OWN STATE AND ITS OWN REASON, passed rather than reduced to
+         the boolean above, because two of its values are not degrees of
+         indexing at all — see `contentAxisFor`. `bound` first and `detail`
+         second: `bound` is the column whose whole job is naming WHICH BOUND
+         stopped it, and it is the more useful half of the sentence when there
+         is one. */
+      indexObserved: indexRow ? indexRow.state : null,
+      indexReason: indexRow ? indexRow.bound || indexRow.detail || null : null,
+      /*__REC91_AXIS_READ_END__*/
       reason: latest ? latest.condition || latest.detail || null : null,
       /* COMPUTED ONLY WHEN THERE IS AN ABSENCE TO EXPLAIN. Asking otherwise would
          pay two reads to qualify a row that is right there. */
@@ -49932,6 +50397,31 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         actor: latest.actor,
         at: latest.at,
         seq: latest.seq
+      } : null,
+      /* REC-91 — AND THE INDEX'S OWN ROW, PUBLISHED BESIDE IT AND IN ITS SHAPE.
+         `indexed` above is the STATE; this is the observation that set it, and
+         it carries the two facts the state cannot: WHICH BOUND bit, and how many
+         units were stored to the per-unit cap and flagged `truncated`.
+         WITHOUT IT THOSE FACTS ARE WRITTEN AND UNREADABLE. `capture_text.truncated`
+         is a column no op reads until REC-92's `rows=passage`, and the bound is a
+         fact about the WRITE that no count of the surviving rows could recover —
+         so a capture indexed to a bound would look, from every surface that
+         exists, exactly like one that fitted. A mechanism believed on the
+         strength of its EXISTENCE rather than its behaviour is the defect this
+         project meets most, and a flag nothing publishes is that defect with the
+         flag set correctly.
+         NULL WHEN THERE IS NO INDEX ROW, which is every capture promoted before
+         this writer existed — the same absence `indexed` reports as undetermined,
+         and reported the same way here rather than as an empty object. */
+      index: indexRow ? {
+        state: indexRow.state,
+        bound: indexRow.bound,
+        detail: indexRow.detail,
+        authority_kind: "derive",
+        actor_class: indexRow.actor_class,
+        actor: indexRow.actor,
+        at: indexRow.at,
+        seq: indexRow.seq
       } : null,
       undetermined_value: CONTENT_AXIS_UNDETERMINED,
       vocabulary: CONTENT_AXIS_STATES,
@@ -50069,13 +50559,35 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     };
     const page = this.#frontierLatest("content", { limit: cap + 1, subjectKind: "capture" });
     const drift = this.#calDriftFor(null);
+    const indexState = /* @__PURE__ */ new Map();
+    {
+      const subjects = [...new Set(page.map((r) => r.subject).filter((v) => typeof v === "string" && v))];
+      if (subjects.length) {
+        const marks = subjects.map(() => "?").join(",");
+        for (const r of this.#rows(
+          `SELECT subject, state, bound, detail FROM observation_log
+            WHERE seq IN (SELECT MAX(seq) FROM observation_log
+                           WHERE level = 'content' AND subject_kind = 'capture'
+                             AND authority_kind = 'derive' AND subject IN (${marks})
+                           GROUP BY subject)`,
+          ...subjects
+        ))
+          indexState.set(r.subject, { state: r.state, bound: r.bound, detail: r.detail });
+      }
+    }
     const drifted2 = /* @__PURE__ */ new Map();
     for (const o of Array.isArray(drift) ? drift : [])
       if (o && o.capture_sha) drifted2.set(o.capture_sha, o.superseded_calibration || null);
     const looked = page.slice(0, cap).filter((r) => seen(r.subject)).map((r) => {
       const axis = contentAxisFor({
+        /* REC-91: the mechanism exists; what this record knows about THIS
+           capture is the `derive` row, absent for every capture promoted before
+           the writer existed — which is UNDETERMINED and not `partial`. */
         observed: r.state,
-        unitIndex: false,
+        unitIndex: true,
+        unitsComplete: indexState.has(r.subject) ? indexState.get(r.subject).state === "PRESENT" : null,
+        indexObserved: indexState.has(r.subject) ? indexState.get(r.subject).state : null,
+        indexReason: indexState.has(r.subject) ? indexState.get(r.subject).bound || indexState.get(r.subject).detail || null : null,
         reason: r.condition || r.detail || null
       });
       const belowFleet = !DEFINITIVE_STATES.has(r.state);
@@ -54654,6 +55166,8 @@ async function governedFetch(env, stub, target, purpose, delegated = null) {
   }
   return { res };
 }
+var ACQUIRE_TEXT_UNITS_BUDGET = 512 * 1024;
+var ACQUIRE_TEXT_UNIT_ENVELOPE = 128;
 var OPS = {
   //  op          class allowed              mutating
   selftest: { classes: ["admin", "member", "probe"], mutating: false },
@@ -58190,6 +58704,7 @@ var index_default = {
         source: readingSource(e && e.source)
       })).filter((e) => e.key != null || e.kind != null);
       let reading;
+      let textUnits = null, textUnitsOverBound = 0;
       const canRead = !!profileText && typeof docType.type.parse === "function";
       if (canRead) {
         try {
@@ -58370,6 +58885,34 @@ var index_default = {
                   };
                 }
               }
+              if (i2text) {
+                const arm = (list, kind, fields) => (Array.isArray(list) ? list : []).map((u, i) => u && typeof u === "object" && typeof u.text === "string" && u.text.length ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null).filter(Boolean);
+                const units = Array.isArray(i2text.pages) ? arm(
+                  i2text.pages,
+                  "pdf-page",
+                  (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null })
+                ) : Array.isArray(i2text.paragraphs) ? arm(
+                  i2text.paragraphs,
+                  "doc-para",
+                  (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null })
+                ) : Array.isArray(i2text.slides) ? arm(
+                  i2text.slides,
+                  "slide-shape",
+                  (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null })
+                ) : null;
+                let budget = ACQUIRE_TEXT_UNITS_BUDGET, kept = [], dropped = 0;
+                for (const u of units || []) {
+                  const size = new TextEncoder().encode(u.text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
+                  if (size > budget) {
+                    dropped++;
+                    continue;
+                  }
+                  budget -= size;
+                  kept.push(u);
+                }
+                textUnits = kept.length ? kept : null;
+                textUnitsOverBound = dropped;
+              }
               if (i2text) wired = readText(i2text, {
                 headers: profHeaders,
                 locator: documentAddress,
@@ -58478,6 +59021,41 @@ var index_default = {
              `readings` table indexed by entity reference; a failed/empty reading
              is carried honestly (found:false), never fabricated (framework §7). */
           reading,
+          /*__REC91_TEXT_UNITS_WIRE_START__*/
+          /* REC-91 / `CONTENT-SEARCH-DESIGN.md` section 4.1 -- THE INDEXABLE
+             UNITS OF THIS DOCUMENT'S TEXT. A new sibling field, ADDITIVE to I1
+             in `reading`'s and `profile`'s own shape: `op=promote` derives the
+             content-grain text index from `data/provenance.json` exactly as it
+             already derives `readings` and `reading_refs` from it, and a caller
+             that copies the acquire document wholesale -- which is the shape
+             C-18.1 requires and every caller already builds -- carries this with
+             no change of its own.
+             *
+             * A SIBLING OF `reading` AND NOT A FIELD ON IT, and that is the one
+             * shape decision here. `readings.reading` is persisted WHOLE as
+             * JSON, so a `reading.text_units` would store every byte of the
+             * document's text in the `readings` table AND AGAIN in
+             * `capture_text` -- and section 3's chosen option is option (iii)
+             * precisely because "text is stored once". As a sibling the store
+             * consumes it into `capture_text` and the reading persists exactly
+             * as it did before this landing, gaining not one byte.
+             *
+             * WHAT THIS DOES COST, MEASURED AND REPORTED RATHER THAN LEFT TO BE
+             * FOUND: `data/provenance.json` is a bundle FILE, so its bytes land
+             * in `files.content` and in `history` -- which means the text IS
+             * stored a second time, in the one place section 3 says it is not.
+             * It is the only route that needs no change from any caller, and the
+             * alternative (a promote-package sibling outside the bundle image)
+             * costs edits in two areas this item does not own. Reported as a
+             * DESIGN GAP against section 3 / section 4.1 with the figure, not
+             * closed here by widening the scope. */
+          ...textUnits ? { text_units: textUnits } : {},
+          /* WHAT THE WIRE'S OWN BUDGET DROPPED, so the store can say `partial`
+             rather than recording a truncated capture as a whole one. Emitted
+             only when it is non-zero, so a document nothing was dropped from
+             carries exactly the keys it carried before. */
+          ...textUnitsOverBound ? { text_units_over_bound: textUnitsOverBound } : {},
+          /*__REC91_TEXT_UNITS_WIRE_END__*/
           /* D-97: authority mirrors verdict / verdict_basis / verdict_at
              rather than inventing a shape. The determination when one was
              made; the STATE always; the basis in BOTH cases, dated, because
