@@ -217,6 +217,24 @@ mid-flight and a correction owed by a session that ends is a correction nobody p
 receipt: a table renamed in a design while its worker was building that table, where the rename
 reached the row rather than the worker and was paid at the merge.
 
+**7. A DESIGN THAT SPECIFIES A COMPARISON NAMES THE QUANTITY AND PROVES BOTH SIDES EMIT IT,
+MEANING THE SAME THING** (measured 2026-09-14, CPDF-20, and it is this session's own defect).
+`EXTRACTION-BREADTH-DESIGN.md` §5.2 ruled that where two decodes of one page compete, *the decode
+with fewer undetermined characters wins*. The measurement falsified it: the two producers both
+publish a field called `undetermined`, and they COUNT DIFFERENT THINGS — the plane's own reader
+marks undetermined characters inside decoded text, while the fleet member's array holds
+page-level markers for pages it could not produce at all. So the comparison never compared:
+it reduced to *did tier 1 flag this page*, awarded the other decode 145 pages of 203, and on 23
+of those the decode it discarded had produced MORE text — the exact page `EXTRACTION-BREADTH`
+§8's own negative control requires the rule to KEEP. **The rule I broke was already in
+`CLAUDE.md` and I had read it that morning**: an equality that costs nothing to produce is not
+evidence, and two digests of an empty body agree on nothing. It is stated here because its
+design-time form is not obvious from its test-time form — in a suite it catches a check that
+cannot fail, and in a DESIGN it catches a rule whose two sides cannot disagree. **So: name the
+quantity, name the producer of each side, and confirm from the CODE that both emit it and mean
+the same by it, before a design rests a decision on their comparison.** A same-named field is
+the likeliest place this fails, because the name is what makes it look already checked.
+
 **Report what was DONE and what was DECIDED. Never report tactical STATE.** An
 outstanding item, a dirty tree, a stale claim, a warning nobody has cleared: fix it,
 or route it through the channel that owns it, or leave it unsaid. Surfacing it to Bob
