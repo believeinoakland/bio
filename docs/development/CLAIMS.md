@@ -9161,3 +9161,200 @@ and that a comparison therefore does not reach it (CLAUDE.md's undetermined rule
 ways), that the four-level statement belongs on every arm rather than on `content` alone, and that
 the `chain` filter ships as a parse with the gap REPORTED rather than silently absorbed.
 
+## CLAIM 2026-09-15 RECORD (REC-88 — DEC-4 ENFORCED ON THE CAPTURE AXIS: `earnedBasisRegistry`'s capture arm calls `captureBound`, `checkEarnedLeg` compares against the result, and an OCR'd document's leg can no longer claim a letter stronger than its measured fidelity)
+session: REC-88 worker, spawned by CONDUCT #11. Worktree
+  `.claude/worktrees/agent-a3674358b28837982`, branch `worktree-agent-a3674358b28837982`,
+  base `origin/main` at `6e88e35`.
+opened: 2026-09-15
+authority: `QUEUE.md` `### REC-88 · running` (read verbatim on `origin/main` at `6e88e35`
+  before any edit; it reads `running`), under `BIO_Content_Framework_v0_10.md` Part II
+  Appendix A.1's ruling row — *"fidelity bounds the capture axis as its weakest link, no
+  third scale"* (DEC-4, CPDF-10) — and `BIO_System_Design.md`'s capture-grade row. The gap
+  is D-349. The interface is I3 under **IC-96**, minted at spawn with `node tools/mintid.mjs IC`.
+**CLAIMED BY REGION, NOT BY FILE.** Four workers hold other regions of the two contended
+  sources (REC-90, REC-94, REC-98 and this one). What this item holds is THE CAPTURE ARM
+  and nothing else.
+paths:
+  - `bio-plane/src/store.mjs` — **THREE REGIONS, each named**:
+    (1) `earnedBasisRegistry`'s CAPTURE ARM — the `register ∪ readings` read that fills
+        `out.earned.capture[bundle_id]`, and only that block. **NOT** the connection arm
+        above it, **NOT** the `earned.content` line below it, **NOT** `#contentEarned`,
+        **NOT** `#contentStanding`, **NOT** `#backfillLegContent`, **NOT** `earnedBasis`'s
+        leg pass, **NOT** the mint path, **NOT** the observation log.
+    (2) the CAPTURE ARM of `#versionLegsAsMembers` — the `const c = earnedCap[r.target_id]`
+        block only. **FORCED BY THE MECHANISM, NOT CHOSEN**: its existing sentence for a
+        missing letter is *"the record holds no captured bytes for X"*, and after this item
+        a bundle the record DOES hold bytes for can answer with no letter (an unmeasured
+        transcription), which would make that sentence FALSE. A record that says something
+        false about itself is the defect this project weighs heaviest, so the two cases are
+        separated at the site. The connection arm beside it is untouched.
+    (3) `#contentStanding`'s `capture:` explainer — the two sentences that cite IC-83's
+        *"the leg's capture grade <= `captureBound` as today"* as a description of what
+        holds. It no longer describes aspiration, so the words move with the code. **The
+        value is unchanged and no second copy of the letter appears on a content row** —
+        that is REC-83's rule and this item keeps it exactly.
+  - `bio-plane/checks/bio-checks.mjs` — `checkEarnedLeg` ONLY, and inside it only the
+    earned-entry lookup and the `mode === 'ceiling'` comparison (the new UNDETERMINED arm
+    goes in before the generic `!earned.grade` branch, which today says *"the record holds
+    no registered capture for that document"* and would be false for the new case). **NOT**
+    `checkInquiryBasis`'s grammar, **NOT** `checkInheritedLeg`, **NOT** the extent grammar
+    REC-84 landed, **NOT** `EARNED_CAPTURE_CEILING`'s value or its declaration.
+  - `bio-plane/test/content-capture-bound.test.mjs` — **NEW**, this item's through-the-op
+    suite (`op=promote` carries the leg, `op=earnedbasis` reads it back).
+  - `bio-plane/test/nc-rec88.mjs` — **NEW**, the negative-control driver, one arm per run.
+  - `bio-plane/test/rec88-instance-census.mjs` — **NEW**, the read-only consumer-impact
+    probe against the project instance (`rec83-baseline-probe.mjs`'s precedent).
+  - `bio-plane/test/content-reads.test.mjs` — **§7's PIN ONLY**, MOVED with its reason at
+    the site and never exempted. The fixture's document is OCR'd at C, so the pre-item
+    answer of `grade: "B"` was the very overclaim this item closes; the moved pin is the
+    item's headline demonstration and a publisher-typed companion is added beside it so
+    the section keeps an untouched over-strictness arm. No other section.
+  - `bio-plane/test/textchain.test.mjs` — **READ AND KEPT, NOT EDITED**: `captureBound`'s
+    four assertions stay exactly as they are (the row: *delete nothing*).
+  - `docs/development/DEBT.md` — **D-349's row** (its disposition) and ONE NEW ROW for the
+    residual this item MEASURED and did not close. No other row.
+  - `docs/development/INTERFACE-CHANGES.md` — **IC-96 ONLY**, appended, at CHANGING; plus
+    the one sentence inside IC-84's own entry that this item's landing falsifies.
+  - `docs/development/MEASUREMENTS.md` — this item's figures only, appended.
+  - `docs/architecture/BIO_Content_Framework_v0_10.md` — **Part II's FRONT MATTER only**,
+    and only if the construct's stated completeness moves (the row requires it in the same
+    commit). No section body.
+  - `docs/development/CLAIMS.md` — this block.
+  **READ, DRIVEN, AND NEVER EDITED**: `bio-plane/src/textchain.mjs` (`captureBound` :797,
+  `derivationCap` :462, `isTranscribed` :518, `weaker` :316, `STEP_KINDS` :126 — CPDF-10's
+  module is the RULE and this item is its first caller, so not one byte of it moves),
+  `bio-plane/src/schema.mjs` (`reading_text_source` — the projection the bound is read
+  from), `bio-plane/src/index.mjs`, `bio-plane/scripts/coverage.mjs`.
+  **NOT TOUCHED AND NAMED SO**: `docs/development/QUEUE.md` (CONDUCT is its sole writer —
+  this item's `landed:` line is CONDUCT's act and is listed in the report's "for CONDUCT"),
+  `newgroup/**`, `civicos-ui/**`, any version bump, tag or deploy.
+
+## CLAIM ADDENDUM 2026-09-15 RECORD (REC-88 — four paths added at the close, each FORCED BY A MECHANISM rather than chosen)
+session: REC-88 worker (worktree `agent-a3674358b28837982`). Appended rather than edited
+  into the block above, per this file's append-only rule.
+  1. `bio-plane/dist/bio-plane.bundled.mjs` and `bio-plane/dist/bio-plane.bundle.json` —
+     REBUILT with `npm run build`, not hand-edited. `fleetbundles.test.mjs`'s D-298 arm
+     refuses a committed artifact that is not a fresh build of its sources, so ANY change
+     under `bio-plane/src/` obliges this in the same commit. It is a derived artifact and
+     carries no decision. **No version was bumped, nothing was signed, nothing deployed** —
+     that is DIST's and this item did none of it.
+  2. `.gitignore` — two lines and their reason, for this item's control pen
+     (`.rec88-control-pristine/`) and its pristine `origin/main` baseline checkout
+     (`.pristine-rec88/`), each named rather than globbed on the standing rule at
+     `.rec84-control-pristine/`. Append-only at the file's end; no existing entry touched.
+  3. `bio-plane/test/rec88-residual-probe.mjs` — **NEW**, and it exists because a blocker is
+     a claim: this item was about to write a debt row asserting that `op=inquirystrength`
+     reports the authored letter rather than the bound, and CLAUDE.md requires that be
+     driven on the tree in hand before anything rests on it. It was, and it is (D-373).
+  4. `docs/architecture/BIO_Content_Framework_v0_10.md` — Part II's front matter only, as
+     the original claim reserved: the §14.4 bullet gains the capture-axis landing and the
+     residual it does not reach. **No section body moved.** §16's Drive paragraph was READ
+     and left alone — its sentence *"a leg on a Drive export claims no more than that
+     weakest link (REC-88's bound)"* was checked against this landing and is TRUE rather
+     than falsified, so correcting it would have been churn.
+  **STILL NOT TOUCHED, and re-verified at the close**: `docs/development/QUEUE.md` (CONDUCT's
+  sole writer — REC-88's `landed:` line is an ACT in this item's report, not a note left
+  here), `bio-plane/src/textchain.mjs` (ARMED and RESTORED byte-identically by NC arm (d),
+  sha256 5eee2702fd16… before and after — driving a module is not editing it), `newgroup/**`,
+  `civicos-ui/**`, `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` READ and NOT moved —
+  this item adds no op and no check id), `docs/architecture/BIO_System_Design.md` (its
+  capture-grade row states the DOCTRINE, which did not move; the code caught up to it).
+released: 2026-09-15 by the REC-88 worker — **D-349 CLOSED BY ENFORCEMENT under IC-96 on I3 (PROPOSED BREAKING, 15.2.0 → 16.0.0; CONDUCT takes the bump and the RESOLUTION), with ONE RESIDUE NAMED AS ITS OWN ROW rather than as a clause: D-373.**
+  **THE GATE, on the final tree and on a machine made quiet with `waitquiet` first.**
+  Battery **202/202 suites green · 12,505 assertions · 216.1s · exit 0**, 3 fleet members
+  actually RAN and NO member skipped by name (the quiet failure CLAUDE.md warns about was
+  checked for, not assumed). **My own baseline, measured on this worktree at `6e88e35`
+  BEFORE any edit and after `npm ci` in all three packages: 201/201 · 12,467 · exit 0** —
+  the brief said 201/201 · 12,466, so the suite total was right and the assertion count was
+  ONE low; reported because the practice is to trust the measurement and not the streak.
+  Delta **+1 suite / +38 assertions**, attributed per suite by re-running, never by
+  subtraction: `content-capture-bound` +33 (NEW), `hygiene` +3 (its per-file walk enrols
+  this item's new files), `content-reads` +1 (69 → 70, one structural direction assertion
+  added beside the moved pin), `op-claims` +1 (its corpus grew by this item's files).
+  `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read UNPIPED: **exit 0**,
+  **176 declared / 176 reached / 0 unreached**, fleet 3 members · 6/6 surface ops · 8/8
+  suites declaring a control · 76 arms, every floor UNMOVED (this item adds no op and no
+  check id, so `REGISTER_FLOOR` was READ and not touched). `node civicos-ui/test/run.mjs`
+  from the REPO ROOT, exit read UNPIPED: **exit 0**. `node tools/plancheck.mjs`: clean but
+  for UNPUBLISHED, which is this worker not pushing.
+  **CONTROL ARMS — FIVE, EACH ALONE, EVERY OTHER DEFENCE HELD OPEN, ALL FIVE AS DECLARED
+  (declared vs actual):** `baseline` declared green → **33/0 green**; `nobound` (the
+  bound computed and thrown away — D-349 restored) declared 10 failures → **18/15, 10/10
+  declared present**; `nocheck` (the ceiling comparison neutered) declared 5 → **28/5, 5/5**;
+  `undetpass` (an undetermined fidelity passing the byte grade through) declared 6 →
+  **25/8, 6/6**; `raise` (fidelity setting the letter outright, so a chain measured at A
+  would RAISE the capture axis) declared 7 → **21/12, 7/7**. **ZERO held-open assertions
+  also broken in any arm**, and this harness CHECKS that rather than describing it — REC-83's
+  own run found an arm that broke its declared held-open half and nothing but a human read
+  caught it. Every restore verified by sha256 AND by `cmp` against uniquely-named per-arm
+  pristine copies with byte counts printed and a minimum guarded: `store.mjs` 2,100,373 B
+  sha256 `7c65fb86a28a…` (twice), `bio-checks.mjs` 682,013 B `b077e691eeb6…`,
+  `textchain.mjs` 63,855 B `5eee2702fd16…`. **`src/textchain.mjs` was ARMED AND RESTORED
+  BYTE-IDENTICALLY and this item EDITS NOT ONE BYTE OF IT** — `captureBound`'s four
+  assertions in `textchain.test.mjs` stand untouched at 197 pass, as the row required.
+  **THREE RESULTS CAME BACK OTHER THAN DECLARED AND ALL THREE ARE AT THEIR SITES:** (1) the
+  census-equivalence arm fails under three arms and was in no declaration — it is an
+  INDEPENDENT second opinion and listing it as expected would turn a cross-check into a
+  restatement; (2) the suite could not see its own refusals on its first run, because
+  `op=promote` reshapes a finding and DROPS `severity` — the refusals were happening and
+  the instrument was blind; (3) section 7 measured the wrong refusal twice before it
+  measured its subject (C-25.3 and C-30.6, both the plane being right and the fixture wrong).
+  **THE MEASURED COUNT OF EXISTING LEGS WHOSE CAPTURE GRADE MOVES: ZERO — and the zero is
+  evidence, not an absence.** `test/rec88-instance-census.mjs`, READ-ONLY against store `bio`
+  (build serving 0.58.0): **31 bundles · 1 inquiry · that inquiry carrying NO basis block ·
+  0 captures with a transcription chain anywhere in the store · 0 bundles whose ceiling
+  moves · 0 legs whose stated grade moves.** The census self-checks its own parser against a
+  synthetic basis block (3 legs / 2 capture legs / 0 movers) and EXITS rather than printing a
+  zero if that fails, because a probe that can see nothing answers 0 exactly as an empty
+  store does. It independently confirms CAP-9's 2026-09-14 finding that the live record
+  holds 88 captured documents and has READ NONE OF THEM. **WHAT A MEMBER SEES TODAY,
+  therefore: nothing changes on this instance.** What a member sees on an instance that HAS
+  read its documents: a leg on an OCR'd-at-C document is refused at B by name with the
+  engine's measured fidelity in the sentence and accepted at C; a leg on an unmeasured
+  transcription reads UNDETERMINED with the empty level NAMED and is refused for CLAIMING a
+  letter, never for being unmeasured — stating no grade lands.
+  **THE IC-84 §7 PIN IS MOVED, WITH ITS REASON AT THE SITE, AND NEVER EXEMPTED. What moved
+  and why it is correct:** the pin read `{mode:"ceiling", grade:"B", …}` under the heading
+  "the pre-item answer", and its fixture `DOC` carries `scopedChain([0,1,2])` — a tesseract
+  5.3.4 pass measured at **C** over every page. **The pre-item answer was the overclaim this
+  item closes**, so the pin was pinning the defect. It now reads `grade: "C"` with
+  `bounded_by`, its digest moved `b626e0d83af4cee6…` → `e369111fa99a879d…`, and the
+  connection digest beside it is UNTOUCHED because this item does not touch that axis. The
+  over-strictness half the section exists for is now STRONGER than it was: a publisher-typed
+  document's capture entry hashes to `2aac4721c679dd6d…` on a pristine `origin/main` at
+  `6e88e35` AND on this tree — a CROSS-CHECKOUT identity, measured by
+  `test/rec88-baseline-probe.mjs` run against two source trees, not this tree agreeing with
+  itself. Three other assertions moved with it, each with its reason at the site.
+  **TWO FLOORS MET, NEITHER MOVED, AND ONE OF THEM IS THE FINDING OF THIS ITEM.**
+  `derivation-bounds.test.mjs`'s FLOOR fired on this item's first draft: hoisting the capture
+  arm's scan out of its `for` header into a `const` — the same query, the same rows, the same
+  work — removed `earnedBasisRegistry` from the unbounded-scan roster, **33 → 32**, diffed
+  method by method rather than inferred from the count. The classifier reads amplification off
+  a loop whose ITERABLE is a row source, so it is blind to a scan assigned to a local first.
+  **The shape was restored rather than the figure moved**, with the reason at the call site,
+  and the instrument's blind spot is in `MEASUREMENTS.md` with both rosters. `hygiene.test.mjs`
+  detector (B) then caught a new member-facing sentence spelling `"grade a"` — the ARTICLE,
+  not the letter — and the SENTENCE moved rather than the rule. `op-claims.test.mjs` caught
+  this item's own comment naming a non-existent op and the comment moved rather than being
+  exempted.
+  **WHAT THIS ITEM DID NOT DO, stated plainly rather than left to be discovered: D-373.**
+  `op=inquirystrength`'s ordinary walk reads the STORED `inquiry_basis.grade` and never asks
+  the registry, so a leg written before this landing reports the STRONGER letter there while
+  `op=earnedbasis` reports the bound. **DRIVEN, not inferred** (`test/rec88-residual-probe.mjs`:
+  registry `C`, `op=inquirystrength` `capture B`) because a blocker is a claim and nothing here
+  audits one. Before this item both reads said B and AGREED — consistently, and consistently
+  wrong by DEC-4's own doctrine — so the net is a strict improvement PLUS A NEW DRIFT, and
+  saying only the first half would be the overclaim this item exists to close. It is
+  REC-12/REC-42's region, not this item's claim, and it wants a queue row. The VERSION path is
+  NOT in the class and must not be "fixed": `#versionLegsAsMembers` already resolves the
+  effective grade from the registry, and this item corrected its undetermined arm and DROVE
+  that correction through `op=versionstrength` (section 7) rather than believing it on its
+  existence.
+  **PATHS RELEASED:** every path in the CLAIM and its ADDENDUM above, plus `docs/DECIDED.md`
+  (REGENERATED by `node tools/decided.mjs`, which `plancheck` requires of any turn that rules —
+  it dropped D-349's ROUTED row and gained IC-96's correction; a generated index, no
+  judgment). **NOT TOUCHED:** `docs/development/QUEUE.md`, `bio-plane/src/textchain.mjs`,
+  `newgroup/**`, `civicos-ui/**`, `REGISTER_FLOOR`, and no version bump, tag, sign or deploy.
+  **OWED ACTS ARE IN THIS WORKER'S REPORT AS A "for CONDUCT" LIST WITH ACTORS, never left
+  here alone** (FL-10's handoff line cost a measured >3h false stall sitting in a region
+  nothing drains).

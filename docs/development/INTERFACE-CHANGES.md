@@ -6044,7 +6044,7 @@ a hash; re-extraction marks the row `stale`, never deletes it; a machine credent
 the transcription ceiling is `gradeCeiling(chain, extent)` — an attestation covering the extent
 raises it to B, a page attestation does not cover a document-extent row; the CONNECTION grade of a
 non-`document` row is UNDETERMINED and stated until readings carry position (I2), never borrowed
-from the whole document; the leg's capture grade ≤ `captureBound` as today.
+from the whole document; the leg's capture grade ≤ `captureBound` as today. **CORRECTED 2026-09-15 by REC-88 (IC-96), because that last clause was ASPIRATIONAL WHEN IT WAS WRITTEN AND IS NOW TRUE.** `captureBound` had ZERO callers under `src/` when this sentence was drafted (D-349, measured by REC-83 the day after), so the bound it names was computed by nothing and a leg citing a document this plane OCR'd at C could be written at capture grade B. It now holds in fact: `earnedBasisRegistry`'s capture arm calls it per capture and `checkEarnedLeg` compares against the result. The clause is kept in its original words rather than rewritten, with the correction beside it, because what a reader of this IC most needs to know is that the sentence described an intention and for how long.
 
 **Why.** DEC-23 (content is the unit; a whole document its widest extent); D-164 (every edge
 addresses a bundle or a capture; the address IC-1 emits is consumed by no edge); `schema.mjs`'s own
@@ -7603,3 +7603,123 @@ read-time JSON parse, while §4.1 gives `capture_text` a `chain_kind` COLUMN for
 question and says why. Measured: it is the slowest filter on the table and the one query no index
 improved. It shipped as the parse because the mint path is outside the item's region, not because
 the parse is right.
+
+## IC-96 · I3: THE CAPTURE AXIS IS BOUNDED BY TRANSCRIPTION FIDELITY — `earned.capture[<bundle>].grade` can now be a WEAKER LETTER or NULL for a document whose text a machine derived, and a leg's earned capture grade can therefore FALL for legs that already exist · PROPOSED 2026-09-15 (REC-88, closing D-349 by enforcement) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane -> UI, the op contracts). Measured on this item's base
+  `origin/main` at `6e88e35`: **15.2.0** (IC-93 ACCEPTED). **Proposed as BREAKING —
+  15.2.0 -> 16.0.0** — and the reason is contract identity rather than pain caused:
+  `earned.capture[<bundle>].grade` has been a non-null `BASIS_GRADES` letter for every
+  bundle the record holds bytes of since REC-18, and it can now be a WEAKER letter or
+  `null`. A consumer that reads the letter without checking for null, or that assumes the
+  letter it read yesterday is the letter it reads today for the same bundle, is a consumer
+  this change reaches. **CONDUCT takes the bump.**
+- **Proposer:** RECORD, worker `agent-a3674358b28837982`, 2026-09-15, from QUEUE REC-88
+- **Owner to land it:** `RECORD` (owner and proposer)
+- **Consumers to answer:** `UI` (any surface rendering an earned capture letter or filling
+  a leg in from `op=earnedbasis`), `SKILL` (the investigative run composes legs whose grades
+  arrive from the registry), `CAPTURE` (CAP-10/CAP-11 land the Drive-export step and its
+  calibration and read this bound), `DIST` (served surfaces), `RECORD`.
+
+**THE RULE IS NOT NEW AND THAT IS THE POINT.** DEC-4, restated as CPDF-10 and carried by
+`BIO_Content_Framework_v0_10.md` Part II Appendix A.1 and `BIO_System_Design.md`'s
+capture-grade row: *"fidelity bounds the capture axis as its weakest link, no third
+scale."* `textchain.mjs`'s `captureBound` has been that rule in code since CPDF-10 and was
+**called by nothing under `src/`** until this item (D-349, measured 2026-09-14 by REC-83).
+So this IC changes no doctrine, invents no scale and adds no column — it makes an answer
+the record already owed start being given.
+
+**WHAT CHANGES ON THE WIRE, exactly three shapes and no more.** For a bundle in
+`earned.capture`:
+
+1. **UNTRANSCRIBED** (publisher-typed text, or a capture the record has never read):
+   **BYTE-IDENTICAL to before this item**, keys and key order included, and that identity is
+   MEASURED across two checkouts rather than asserted — `test/rec88-baseline-probe.mjs` run
+   against a pristine `origin/main` at `6e88e35` and against the landing prints the same
+   digest `2aac4721c679dd6d…`. No new key appears. Most of a real corpus is in this shape.
+2. **A MEASURED FIDELITY WEAKER THAN THE BYTE CEILING:** `grade` becomes that letter and the
+   entry gains ONE key, `bounded_by: "CAPTURE_BOUNDED_BY_FIDELITY"`, with `why` naming the
+   byte grade it would have been and the fidelity that bound it. Measured: an OCR'd-at-C
+   document moved `B` -> `C`, digest `608b1e79…` -> `21faff6c…`.
+3. **A TRANSCRIPTION WITH NO MEASURED FIDELITY:** `grade` becomes `null` and the entry gains
+   `determined: false`, `undetermined_because: "CAPTURE_FIDELITY_UNMEASURED"` and
+   `empty_level` NAMING which level is empty. Measured: `B` -> `null`, digest `971e9700…`
+   -> `b23a22e1…`. **THE ENTRY IS STILL PRESENT**, and that is load-bearing: an ABSENT entry
+   means the record holds no bytes for the document, a PRESENT entry with a null grade means
+   it holds the bytes and cannot say what the text derived from them is worth. Collapsing the
+   two would tell a member to go capture a document the record already has.
+
+A fidelity measured STRONGER than the byte ceiling raises nothing and adds no key — the rule
+is a MINIMUM, driven in both directions.
+
+**THE WRITE SIDE.** `checkEarnedLeg` compares the leg's stated letter against the bound, as
+it always has; what moved is what the record admits it can earn, so the same line that could
+only ever refuse a grade A now refuses a B on a document OCR'd at C. A NEW arm sits ahead of
+its generic branch for the undetermined case, because that branch's sentence — *"the record
+holds no registered capture for that document"* — would have been FALSE there and falsely
+actionable. **A leg is refused for CLAIMING A LETTER, never for being unmeasured**: a leg
+stating no capture grade at all lands, suspends the axis and names it, which is the gate not
+pressuring anyone into inventing an attribution.
+
+**THE CONSUMER IMPACT, MEASURED ON THE PROJECT INSTANCE'S OWN DATA AND NOT ESTIMATED.**
+`bio-plane/test/rec88-instance-census.mjs`, read-only against store `bio` on 2026-09-15:
+**31 bundles · 1 inquiry · that inquiry carrying NO basis block · 0 captures with a
+transcription chain anywhere in the store · so ZERO existing legs move and ZERO bundles'
+ceilings move.** The census's own parser was self-checked against a synthetic basis block
+first (3 legs / 2 capture legs / 0 movers) so the zero is a fact about the instance and not
+about the instrument. It independently confirms CAP-9's 2026-09-14 finding that the live
+record holds 88 captured documents and has read none of them.
+
+**THE MIGRATION STORY, AND IT IS THAT NOTHING IS REWRITTEN.** A leg's stored `grade` is a
+member's AUTHORED statement and the record is append-only, so no pass rewrites one. The
+re-grade is DERIVED ON READ, which is the posture `calibrationDrift` already takes for the
+same class of fact and for the same two reasons: a stored verdict goes stale in both
+directions, and the member decides rather than the plane. Concretely, for a leg written
+before this landing on a document later found to be OCR'd:
+
+- `op=earnedbasis` reports the bound immediately, so the surface a composer fills a leg from
+  tells the truth;
+- the next `op=promote` of that inquiry REFUSES the stale letter and names the new bound and
+  the engine's measured fidelity, so the correction is a member's act with a date rather
+  than a silent server rewrite;
+- a FROZEN published version is not re-graded and must not be — `#versionLegsAsMembers`
+  already resolves the EFFECTIVE grade from this registry and publishes the authored letter
+  beside it, which is §12's *"a frozen version's displayed arithmetic can honestly move
+  beneath it"* working as designed. REC-88 corrected that method's undetermined arm in the
+  same commit, because its single sentence for a missing letter would otherwise have said
+  *"the record holds no captured bytes"* about a document the record holds bytes of.
+
+**WHAT THIS IC DOES NOT CLOSE, STATED HERE AND NOT ONLY IN A DEBT ROW — D-373.**
+`op=inquirystrength`'s ordinary walk reads a leg's letter from the stored
+`inquiry_basis.grade` column and never asks this registry, so for a leg written before the
+landing the two reads DISAGREE and the one a member looks at is the stronger. DRIVEN, not
+inferred (`bio-plane/test/rec88-residual-probe.mjs`): registry `C`, `op=inquirystrength`
+`capture B`. Before this item both surfaces answered B and agreed — consistently, and
+consistently wrong by DEC-4's own doctrine — so the net is a strict improvement plus a NEW
+DRIFT between two reads. Saying only the first half would be the overclaim this project
+weighs heaviest. Fixing it means resolving the effective grade inside a RECURSIVE walk,
+which is REC-12/REC-42's region and its own item. **Until it lands, `op=earnedbasis` is the
+AUTHORITY on what a leg earns on the capture axis.**
+
+**DEC-75 AND CAP-10, and this item was told not to make CAP-10's landing harder.** A Google
+Drive export's chain will carry `convert(producer, format)` with cap UNDETERMINED (CAP-10
+lands the step KIND, CAP-11 its calibration). `captureBound` reads it AS ANY OTHER DERIVATION
+STEP and this item adds NO CODE for it: a leg on a Drive export will claim UNDETERMINED on
+the capture axis, stated, until a calibration raises it — which is shape 3 above, already
+built and already driven. **The suite names no `convert` step**: its undetermined arms are
+written against the general shape (any derivation step carrying no measured cap), so CAP-10's
+step inherits them without an edit and nothing here has to be unwritten first. A suite that
+hard-coded a step name would have owed CAP-10 a correction.
+
+**REVERSAL, if this is rejected.** One line: return the capture arm's per-capture
+`captureBound(chain, EARNED_CAPTURE_CEILING)` to `EARNED_CAPTURE_CEILING`, which is exactly
+negative-control arm (b) `nobound` and is therefore already measured — it restores the
+pre-item answer for every shape and leaves the publisher-typed digest untouched. The write
+side then refuses nothing new, because it compares against whatever the registry supplies.
+D-349 would reopen as the same row.
+
+**MEASURED:** battery green on this item's own baseline (201/201 · 12,467 measured on a
+pristine `6e88e35` before any edit); five negative-control arms, each ALONE, ALL AS DECLARED,
+every restore byte-identical by sha256 AND cmp, and ZERO held-open assertions also broken —
+which this item's harness CHECKS rather than describes, after REC-83's own run found an arm
+that broke its declared held-open half.

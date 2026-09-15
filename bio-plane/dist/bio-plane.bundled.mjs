@@ -5640,6 +5640,19 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   const earned = registry.earned && registry.earned[wantAxis] ? registry.earned[wantAxis][leg.target] : null;
+  if (earned && earned.mode === "ceiling" && earned.grade == null) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ""}`,
+      [
+        `state NO capture grade on basis[${i}] \u2014 an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on`,
+        "or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns",
+        "or state this leg as testimony (grade D, with an author and a date) if it is a member's own account"
+      ]
+    ));
+    return;
+  }
   if (!earned || !earned.grade) {
     findings.push(f(
       "C-2.8",
@@ -19305,6 +19318,12 @@ function gradeCeiling(chain2, target, attestations = []) {
     by: [],
     why: cap == null ? `no step in this text's provenance carries a measured fidelity${target && Number.isInteger(target.page) ? ` for page ${target.page}` : ""}, so what it may support is undetermined \u2014 which is a statement, not a permission` : `bounded by the weakest step that produced it (${describeChain(chain2)})`
   };
+}
+function captureBound(chain2, byteGrade = EARNED_CAPTURE_CEILING) {
+  if (!isTranscribed(chain2)) return byteGrade;
+  const cap = derivationCap(chain2);
+  if (cap == null) return null;
+  return weaker(byteGrade, cap);
 }
 var READING_POSITION_KINDS = { "pdf-page": 1, "sheet-cell": 1, "slide-shape": 1, "doc-para": 1 };
 var isNonEmptyString = (s) => typeof s === "string" && s.trim().length > 0;
@@ -35470,16 +35489,26 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       transcription,
       connection,
       /* THE CAPTURE AXIS IS NOT COPIED HERE, and that is a decision with a
-         reason. It is document-grain today (`earned.capture` is keyed by bundle
-         and states a CEILING for a document the record holds bytes of), it is
-         unchanged by this item — IC-83's words are "the leg's capture grade <=
-         `captureBound` as today" — and the caller already has it in this same
-         envelope under the row's own `bundle_id`. Restating the letter here
-         would be a second copy of a value one field away. */
+         reason. It is document-grain (`earned.capture` is keyed by bundle and
+         states a CEILING for a document the record holds bytes of) and the
+         caller already has it in this same envelope under the row's own
+         `bundle_id`. Restating the letter here would be a second copy of a value
+         one field away.
+         *
+         * REC-88 / D-349 CORRECTS WHAT THIS BLOCK SAID, AND THE VALUE STILL DOES
+         * NOT MOVE. REC-83 wrote "it is unchanged by this item — IC-83's words
+         * are 'the leg's capture grade <= captureBound as today'", and that
+         * sentence described a bound NOTHING COMPUTED: `captureBound` had no
+         * caller anywhere in `src/`. It has one now, in `earnedBasisRegistry`'s
+         * capture arm, so the ceiling this block points at is bounded by
+         * transcription fidelity as DEC-4 always ruled. What has NOT changed is
+         * this decision: still ONE value, still keyed by bundle, still no second
+         * copy on a content row — which is precisely what REC-83 preserved so
+         * that closing D-349 would move one value and not two. */
       capture: {
         grain: "document",
         from: `earned.capture[${r.bundle_id}]`,
-        why: `the capture axis is about the BYTES and the bytes are the whole document's \u2014 there is no per-portion capture grade in this record and inventing one would be a third scale (DEC-4). It is unchanged by content grain and is answered once, for the document, under earned.capture`
+        why: `the capture axis is answered once, for the DOCUMENT, and never per portion: there is no per-portion capture grade in this record and inventing one would be a third scale (DEC-4). What that one answer states is the weakest link of how the BYTES arrived and what any machine transcription of this document's text is measured at \u2014 so a portion of an OCR'd document is bounded exactly as the document is, under earned.capture`
       },
       /* An attestation this read did not reach cannot have raised anything, so
          the ceiling above is safe — and a ceiling that is safe because a read
@@ -38231,35 +38260,80 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         e.mode = "value", e.why = `${id} resolves to ${subjectEntity}${ent ? ` (${ent.label})` : ""} at grade ${e.grade} \u2014 the strongest of the ${e.captures} capture(s) of that document the recogniser matched to this subject. Grade states HOW it was matched (framework 8.1) and nothing about how credible the document is.`;
     }
     const marks = ids.map(() => "?").join(",");
+    const perBundle = /* @__PURE__ */ new Map();
     for (const r of this.#rows(
-      `SELECT bundle_id, count(*) AS n FROM (
+      `SELECT u.bundle_id AS bundle_id, u.capture_sha AS capture_sha, ts.chain AS chain FROM (
          SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${marks})
          UNION
          SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${marks})
-       ) GROUP BY bundle_id`,
+       ) u LEFT JOIN reading_text_source ts ON ts.capture_sha = u.capture_sha`,
       ...ids,
       ...ids
     )) {
-      if (!r.n) continue;
-      out.earned.capture[r.bundle_id] = {
-        /* mode 'ceiling', and the difference from the connection axis is not a
-           softening — it is the record being honest about what it holds. There
-           is no per-document capture grade column anywhere in this schema, so
-           the record cannot say "this document's capture is worth C"; what it
-           CAN say is that it holds bytes for the document and what the strongest
-           capture this plane produces is worth. A leg may not claim more than
-           that (which is what makes grade A unreachable rather than merely
-           discouraged); a weaker letter is the member's account of a poorer
-           route and stays theirs. */
+      if (!r.bundle_id) continue;
+      if (!perBundle.has(r.bundle_id))
+        perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0 });
+      const e = perBundle.get(r.bundle_id);
+      e.n++;
+      const chain2 = safeJson(r.chain);
+      const b = captureBound(chain2, EARNED_CAPTURE_CEILING);
+      if (isTranscribed(chain2)) e.transcribed++;
+      if (b == null) continue;
+      e.bound = e.bound == null ? b : BASIS_GRADES.indexOf(b) < BASIS_GRADES.indexOf(e.bound) ? b : e.bound;
+    }
+    for (const [bundleId, e] of perBundle) {
+      if (!e.n) continue;
+      const captureWord = `${bundleId} holds ${e.n} capture(s) in the record`;
+      const ceiling = `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which this plane cannot produce and does not claim (CAPTURE-FIDELITY.md).`;
+      if (!e.transcribed) {
+        out.earned.capture[bundleId] = {
+          /* mode 'ceiling', and the difference from the connection axis is not a
+             softening — it is the record being honest about what it holds. There
+             is no per-document capture grade column anywhere in this schema, so
+             the record cannot say "this document's capture is worth C"; what it
+             CAN say is that it holds bytes for the document and what the strongest
+             capture this plane produces is worth. A leg may not claim more than
+             that (which is what makes grade A unreachable rather than merely
+             discouraged); a weaker letter is the member's account of a poorer
+             route and stays theirs. */
+          mode: "ceiling",
+          grade: EARNED_CAPTURE_CEILING,
+          captures: e.n,
+          why: `${captureWord}, so the strongest capture grade it can earn is ${EARNED_CAPTURE_CEILING} \u2014 the bytes as this instance fetched them, hashed at receipt.`,
+          ceiling
+        };
+        continue;
+      }
+      if (e.bound == null) {
+        out.earned.capture[bundleId] = {
+          mode: "ceiling",
+          grade: null,
+          captures: e.n,
+          determined: false,
+          undetermined_because: "CAPTURE_FIDELITY_UNMEASURED",
+          empty_level: "transcription fidelity \u2014 this document's text was derived by a machine and no step in that derivation carries a measured fidelity (MEASUREMENTS.md, per engine, per version)",
+          why: `${captureWord}, but every transcription of its text is UNMEASURED: no step in the provenance of this document's text carries a measured fidelity, so what a leg resting on that text may claim about how it was captured is undetermined. That is a statement, not a permission \u2014 DEC-4 bounds the capture axis by transcription fidelity as its weakest link, so an unmeasured derivation bounds it to nothing rather than to ${EARNED_CAPTURE_CEILING}. A leg may state NO capture grade, which suspends the axis and names it; it may not state a letter this record cannot support.`,
+          ceiling
+        };
+        continue;
+      }
+      if (e.bound === EARNED_CAPTURE_CEILING) {
+        out.earned.capture[bundleId] = {
+          mode: "ceiling",
+          grade: EARNED_CAPTURE_CEILING,
+          captures: e.n,
+          why: `${captureWord}, so the strongest capture grade it can earn is ${EARNED_CAPTURE_CEILING} \u2014 the bytes as this instance fetched them, hashed at receipt.`,
+          ceiling
+        };
+        continue;
+      }
+      out.earned.capture[bundleId] = {
         mode: "ceiling",
-        grade: EARNED_CAPTURE_CEILING,
-        captures: r.n,
-        why: `${r.bundle_id} holds ${r.n} capture(s) in the record, so the strongest capture grade it can earn is ${EARNED_CAPTURE_CEILING} \u2014 the bytes as this instance fetched them, hashed at receipt.`,
-        /* The unreachable letter is DERIVED, never typed (REC-48): it is the rank
-           immediately above EARNED_CAPTURE_CEILING in the same BASIS_GRADES array
-           checkEarnedLeg compares this leg against, so the sentence a member reads
-           and the refusal that enforces it cannot say different things. */
-        ceiling: `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which this plane cannot produce and does not claim (CAPTURE-FIDELITY.md).`
+        grade: e.bound,
+        captures: e.n,
+        bounded_by: "CAPTURE_BOUNDED_BY_FIDELITY",
+        why: `${captureWord}, and the bytes as this instance fetched them would be worth ${EARNED_CAPTURE_CEILING} \u2014 but this document's TEXT was derived by a machine and that derivation is measured at ${e.bound}. The capture axis is bounded by the weakest link of byte provenance and transcription fidelity, with no third scale (DEC-4), so the strongest capture grade this document can earn is ${e.bound}. Transcription never RAISES a capture grade, and it is not a separate measurement a member can cite instead.`,
+        ceiling
       };
     }
     if (Array.isArray(contentIds) && contentIds.length)
@@ -46938,6 +47012,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         return inert(`the record has earned nothing connecting ${r.target_id} to this question's subject, so this leg is present and not yet load-bearing`, "ungraded");
       }
       const c = earnedCap[r.target_id];
+      if (c && c.grade == null && c.undetermined_because)
+        return inert(c.why, "ungraded");
       if (!c || !c.grade)
         return inert(`the record holds no captured bytes for ${r.target_id}, so there is nothing here to measure how it was captured`, "ungraded");
       if (!authored)

@@ -3551,6 +3551,39 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   }
   const earned = registry.earned && registry.earned[wantAxis]
     ? registry.earned[wantAxis][leg.target] : null;
+  /* REC-88 / D-349 · THE UNDETERMINED BOUND, AND IT IS A DIFFERENT FACT FROM AN
+     ABSENT ENTRY — which is why it is judged BEFORE the branch below.
+     *
+     * The capture axis is bounded by the weakest link of byte provenance and
+     * transcription fidelity, with no third scale (DEC-4, framework Part II
+     * Appendix A.1). A document whose text a machine derived, where no step of
+     * that derivation carries a measured fidelity, has a bound of UNDETERMINED
+     * — `captureBound` answers null rather than passing the byte grade through,
+     * deliberately, so an unmeasured engine's output cannot ride a direct
+     * capture's B.
+     *
+     * THE ENTRY IS PRESENT WITH A NULL GRADE AND THE BRANCH BELOW WOULD SAY THE
+     * WRONG THING. Its sentence is "the record holds no registered capture for
+     * that document: there are no bytes here" — false here, and falsely
+     * actionable: it would send a member to go capture a document the record
+     * already holds, when what is missing is a FIDELITY MEASUREMENT of a
+     * transcription it already has. The record naming the wrong empty level is
+     * the failure CLAUDE.md's "sparse is the normal condition at every level"
+     * paragraph exists about.
+     *
+     * AND THE LEG IS NOT REFUSED FOR BEING UNMEASURED — it is refused for
+     * CLAIMING A LETTER. An unmeasured transcription is undetermined and
+     * STATED; a leg stating no capture grade at all is legal, suspends the axis
+     * and names it, and never reaches this function at all (the `graded` guard
+     * above returns first). That is the gate not pressuring anyone into
+     * inventing an attribution. */
+  if (earned && earned.mode === 'ceiling' && earned.grade == null) {
+    findings.push(f('C-2.8', 'error', `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ''}`,
+      [`state NO capture grade on basis[${i}] — an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on`,
+       'or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns',
+       'or state this leg as testimony (grade D, with an author and a date) if it is a member\'s own account']));
+    return;
+  }
   if (!earned || !earned.grade) {
     findings.push(f('C-2.8', 'error', src === 'resolution'
       ? `basis[${i}] states an EARNED resolution grade of ${leg.grade} for ${leg.target}, but the record holds no A/B/C resolution of that document to ${registry.subject_entity}: nothing was earned here. The recogniser never mints a D, so a document known to concern the subject only by a member's testimony earns nothing either — that leg is testimony and says so`
@@ -3575,7 +3608,19 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
        doctrine), and a weaker grade is admitted as the member's account of a
        poorer route. The residual — that B-or-weaker is still authored — is
        stated as debt rather than hidden behind a comparison that looks stricter
-       than the record can support. */
+       than the record can support.
+     *
+     * REC-88 / D-349: THE COMPARISON BELOW DID NOT CHANGE AND ITS REACH DID.
+     * Until this item the ceiling was `EARNED_CAPTURE_CEILING` for every
+     * document the record held bytes of, so this arm could only ever refuse a
+     * grade A. The registry now bounds that ceiling by TRANSCRIPTION FIDELITY
+     * (DEC-4's weakest link, computed by `captureBound` and by nothing here),
+     * so the very same line now refuses a B on a document this plane OCR'd at
+     * C. That is the point: the rule was always "no leg may claim more than the
+     * record can earn", and what moved is what the record admits it can earn.
+     * `earned.why` carries the reason and is composed where the bound is
+     * computed, so the sentence a member reads names the engine's measured
+     * fidelity rather than this file guessing at it. */
   if (earned.mode === 'ceiling') {
     if (BASIS_GRADES.indexOf(leg.grade) < BASIS_GRADES.indexOf(earned.grade)) {
       findings.push(f('C-2.8', 'error', `basis[${i}] states a capture grade of ${leg.grade} for ${leg.target}, which is STRONGER than the ${earned.grade} the record can earn for it. ${earned.why} ${earned.ceiling ?? ''}`,

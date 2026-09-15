@@ -13232,3 +13232,106 @@ is cheaper on `content` than on any other table in this store.
   **DESIGN GAP against `CONTENT-SEARCH-DESIGN.md` §4.2**, which asks `content` for a
   last-step predicate while §4.1 gives `capture_text` a `chain_kind` COLUMN for
   exactly that question, *"so 'every OCR'd unit' is a predicate and not a parse"*.
+
+## 2026-09-15 · REC-88 — DEC-4's CAPTURE BOUND, ENFORCED: what MOVES, measured on two checkouts and on the project instance's own data
+
+**Instruments, all three named so a reader can re-run any of them.**
+(1) `bio-plane/test/rec88-baseline-probe.mjs` — three documents through `op=earnedbasis`,
+run against a PRISTINE `origin/main` at `6e88e35` (a second checkout with its own
+`npm ci`) and against the landing, printing each `earned.capture` entry and its sha256.
+(2) `bio-plane/test/rec88-instance-census.mjs` — READ-ONLY against the live instance named
+by `.env`'s `BIO_INSTANCE`, store `bio` (the real record; nothing written, nothing purged),
+over `op=textprovenance`, `op=list` and `op=file`, through `test/vf4-call.mjs`'s own
+credential loader and redactor so no token was printed.
+(3) `bio-plane/test/rec88-residual-probe.mjs` — one leg driven through the shape that
+produces the residual, printing what two reads say about it side by side.
+
+### (1) WHAT THE BOUND MOVES — the same fixture on two source trees
+
+| document's text | pristine `6e88e35` | this landing | digest, pristine -> landing |
+| --- | --- | --- | --- |
+| publisher-typed (read, no chain) | `B` | `B` | `2aac4721c679dd6d…` -> **unchanged** |
+| OCR'd, tesseract 5.3.4, measured **C** | `B` | **`C`** + `bounded_by` | `608b1e79…` -> `21faff6c…` |
+| OCR'd, moondream 2b, **no measured cap** | `B` | **`null`** + empty level named | `971e9700…` -> `b23a22e1…` |
+
+**The middle row IS D-349 in one line:** before this item the record answered that a leg
+citing a document it had itself OCR'd at C could earn capture grade B — one letter stronger
+than DEC-4's own doctrine allows. **The bottom row is the one worth pausing on:** the
+pristine tree granted **B to text a 2b vision model produced with no measured fidelity at
+all**, which is precisely the hazard `textchain.mjs`'s header was written about (CPDF-11
+measured Moondream at 75 dpi turning $50,000 into $10,000 in prose "indistinguishable from
+a clean run", refusing nothing). The top row is the over-strictness control and it is a
+CROSS-CHECKOUT identity, not this tree agreeing with itself.
+
+### (2) CONSUMER IMPACT ON THE PROJECT'S OWN INSTANCE — **ZERO**, and the second finding is why
+
+| figure | value |
+| --- | --- |
+| bundles (`op=list`, limit 500) | **31** |
+| of which inquiries | **1** |
+| basis legs across those inquiries | **0** (the one inquiry carries no `basis:` block) |
+| captures carrying a transcription chain, whole store (`op=textprovenance`, limit 500) | **0** · `truncated: false` |
+| bundles whose `earned.capture` ceiling moves | **0** |
+| **existing legs whose capture grade moves** | **0** |
+
+**THE ZERO IS EVIDENCE AND NOT AN ABSENCE, because the instrument was controlled first.**
+A probe that can see nothing answers 0 exactly as a store with nothing in it does, so the
+census runs its own parser over a SYNTHETIC frontmatter carrying three legs — two of them
+`grade_source: capture` — before it reads anything, and exits rather than printing a zero if
+that parser does not count `3/2/0`. It printed `PARSER SELF-CHECK … PASS`.
+
+**THE SECOND FINDING, which is the same one CAP-9 reported on 2026-09-14 and is here
+INDEPENDENTLY RE-MEASURED through a different op:** the live record holds captured documents
+and has **read none of them** — no reading anywhere in store `bio` carries a transcription
+chain. So this item's enforcement is real and its present population is empty, and both
+halves have to be said. It becomes reachable the moment CPDF-12's engine writes a chain.
+
+**What this census cannot see, stated:** any bundle past the limit it asked for (`truncated`
+is printed and was false), any leg in an inquiry whose `bundle.md` it could not read (none),
+and any document never read at all — which carries no `reading_text_source` row, is
+untranscribed by construction, and is unmoved by this item.
+
+### (3) THE RESIDUAL THIS ITEM DID NOT CLOSE — D-373, driven rather than asserted
+
+One document captured and read with NO chain; a leg written on it at capture grade B
+(legal); the document then RE-READ with an OCR pass measured at C. Two reads, same leg,
+same instant:
+
+| read | answer |
+| --- | --- |
+| `op=earnedbasis` | `grade: "C"`, `bounded_by: "CAPTURE_BOUNDED_BY_FIDELITY"` |
+| `op=inquirystrength` | `capture: { state: "graded", grade: "B" }`, detail *"capture B — no stronger than the weakest capture it rests on"* |
+
+`#strengthWalk` reads the STORED `inquiry_basis.grade` and never asks the registry. Before
+this item both reads said B and agreed — consistently wrong; now one is right and they
+drift. Recorded as D-373 rather than as a sentence in a release note.
+
+### (4) AN INSTRUMENT BLIND SPOT, FOUND BY A FLOOR RATHER THAN BY A CEILING — and this is the finding a reader should carry away
+
+`derivation-bounds.test.mjs` classifies methods that amplify work over an unbounded scan and
+pins the roster with a CEILING and a FLOOR. The first draft of this item hoisted the capture
+arm's scan out of its `for` header into a `const` — **the same query, the same rows, the same
+work** — and the FLOOR fired:
+
+| roster | pristine `6e88e35` | first draft | after the correction |
+| --- | --- | --- | --- |
+| methods in the class | **33** | **32** | **33** |
+| the difference | — | `earnedBasisRegistry` DEPARTED | restored |
+
+Diffed method-by-method, not inferred from the count. **The classifier reads amplification
+off a loop whose iterable IS a row source, so it is sensitive to that spelling**: a scan
+assigned to a local first is invisible to it, and a method can leave the roster while
+behaving identically. That is exactly the failure the floor's own comment names — *"the
+roster shrinking without this figure being moved means the READER lost sight of methods, not
+that the plane got better"* — and it fired on a change that was not trying to hide anything.
+**The correction was to keep the shape the instrument can see, not to move its figure**, and
+the reason is written at the call site in `store.mjs`. The blind spot itself is not closed
+and is not this item's to close: a sweep that spelled its scan as a local would score zero
+and read as clean. Owner M0, named in REC-88's report as an ACT.
+
+**The other floor this item met and did not move:** `hygiene.test.mjs` detector (B) refuses
+any module spelling the capture rule's letters beside the word "grade", in any case. A new
+member-facing sentence read *"the strongest capture grade a leg on this document can earn"*
+and the detector matched `"grade a"` — the ARTICLE, not the letter. The detector cannot tell
+them apart and a fence that is spelling-blind in the safe direction is the right fence, so
+the SENTENCE moved and the rule did not.

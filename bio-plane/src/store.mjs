@@ -287,6 +287,15 @@ import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribe
             about a chain and a chain has ONE home -- the same boundary the
             header above draws for `cap` and for `calibrationsOf`. */
          tiersEvidenced,
+         /* REC-88 / D-349: DEC-4's own rule, and this is its FIRST CALLER. It
+            stood exported and uncalled from CPDF-10 until now, which is what
+            made IC-83's *"the leg's capture grade <= captureBound as today"* a
+            sentence about a bound nothing computed. Imported rather than
+            reimplemented for the reason every other name on this list is: the
+            weakest-link arithmetic, the never-raises direction and the
+            undetermined-is-null direction have ONE home, and a second copy in
+            this file is exactly the drift `textchain.mjs`'s header forbids. */
+         captureBound,
          /* FW-17 / IC-86 + D-161: reading POSITION and whether a position falls
             inside a content row's extent. Imported for the reason everything
             above it is — the extent vocabulary is ONE construct and a second
@@ -13189,17 +13198,28 @@ export class Store extends DurableObject {
       mint: Store.#mintLabel(r.minted_by),
       transcription, connection,
       /* THE CAPTURE AXIS IS NOT COPIED HERE, and that is a decision with a
-         reason. It is document-grain today (`earned.capture` is keyed by bundle
-         and states a CEILING for a document the record holds bytes of), it is
-         unchanged by this item — IC-83's words are "the leg's capture grade <=
-         `captureBound` as today" — and the caller already has it in this same
-         envelope under the row's own `bundle_id`. Restating the letter here
-         would be a second copy of a value one field away. */
+         reason. It is document-grain (`earned.capture` is keyed by bundle and
+         states a CEILING for a document the record holds bytes of) and the
+         caller already has it in this same envelope under the row's own
+         `bundle_id`. Restating the letter here would be a second copy of a value
+         one field away.
+         *
+         * REC-88 / D-349 CORRECTS WHAT THIS BLOCK SAID, AND THE VALUE STILL DOES
+         * NOT MOVE. REC-83 wrote "it is unchanged by this item — IC-83's words
+         * are 'the leg's capture grade <= captureBound as today'", and that
+         * sentence described a bound NOTHING COMPUTED: `captureBound` had no
+         * caller anywhere in `src/`. It has one now, in `earnedBasisRegistry`'s
+         * capture arm, so the ceiling this block points at is bounded by
+         * transcription fidelity as DEC-4 always ruled. What has NOT changed is
+         * this decision: still ONE value, still keyed by bundle, still no second
+         * copy on a content row — which is precisely what REC-83 preserved so
+         * that closing D-349 would move one value and not two. */
       capture: { grain: "document", from: `earned.capture[${r.bundle_id}]`,
-        why: `the capture axis is about the BYTES and the bytes are the whole document's — there is no `
+        why: `the capture axis is answered once, for the DOCUMENT, and never per portion: there is no `
            + `per-portion capture grade in this record and inventing one would be a third scale `
-           + `(DEC-4). It is unchanged by content grain and is answered once, for the document, `
-           + `under earned.capture` },
+           + `(DEC-4). What that one answer states is the weakest link of how the BYTES arrived and `
+           + `what any machine transcription of this document's text is measured at — so a portion of an `
+           + `OCR'd document is bounded exactly as the document is, under earned.capture` },
       /* An attestation this read did not reach cannot have raised anything, so
          the ceiling above is safe — and a ceiling that is safe because a read
          was cut is still a ceiling the reader must be told about. */
@@ -15876,35 +15896,170 @@ export class Store extends DurableObject {
        op=acquire has both; one intaken with a provenance document has only the
        second. The union is what "the record holds bytes for this document"
        actually means. */
+    /* ================= REC-88 / D-349 · THE FIDELITY BOUND ================
+     *
+     * THE CHAIN TRAVELS WITH THE CAPTURE, IN THE SAME READ. The union above is
+     * unchanged in WHAT it enumerates — one row per distinct (bundle, capture)
+     * — and gains a LEFT JOIN onto `reading_text_source`, the projection that
+     * already holds every capture's chain. So this is still ONE indexed read
+     * and this function is still the two-reads-per-call shape it was built in;
+     * what moved is that the rows come back per capture and the count is taken
+     * here instead of by `GROUP BY`. `count(*)` over the same union and a
+     * length over the same rows are the same number by construction, and the
+     * §7 pin asserts it stayed 1 where it was 1.
+     *
+     * A LEFT join, deliberately: a capture the record holds bytes of but has
+     * never READ has no row there, and that is not a missing fact — it is an
+     * UNTRANSCRIBED capture, which `captureBound(null, …)` already answers for
+     * by passing the byte grade through. An INNER join would have silently
+     * dropped every unread capture out of the capture axis, which is most of
+     * the corpus (CAP-9 measured 88 captured documents and 0 readings on this
+     * project's own instance) — the fence-tighter-than-its-rule failure, and it
+     * would have read as this item working. */
+    /* THE SCAN STAYS IN THE `for` HEADER, AND THAT IS NOT A STYLE CHOICE — IT
+       IS A MEASURED ONE. The first draft of this item hoisted it to a `const`
+       and read the rows out of that, which is the same query, the same rows and
+       the same work. `derivation-bounds.test.mjs`'s FLOOR then fired: its
+       classifier reads amplification off a loop whose iterable IS a row source,
+       so hoisting removed `earnedBasisRegistry` from the unbounded-scan roster
+       (33 -> 32) while the method's behaviour was identical. A roster that
+       shrinks because the READER lost sight of a method is exactly what that
+       floor exists to catch, and the correct response is to keep the shape the
+       instrument can see rather than to move its figure. The blind spot itself
+       — that the matcher is sensitive to this spelling — is recorded in
+       MEASUREMENTS.md with both rosters diffed. */
+    const perBundle = new Map();
     for (const r of this.#rows(
-      `SELECT bundle_id, count(*) AS n FROM (
+      `SELECT u.bundle_id AS bundle_id, u.capture_sha AS capture_sha, ts.chain AS chain FROM (
          SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${marks})
          UNION
          SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${marks})
-       ) GROUP BY bundle_id`, ...ids, ...ids)) {
-      if (!r.n) continue;
-      out.earned.capture[r.bundle_id] = {
-        /* mode 'ceiling', and the difference from the connection axis is not a
-           softening — it is the record being honest about what it holds. There
-           is no per-document capture grade column anywhere in this schema, so
-           the record cannot say "this document's capture is worth C"; what it
-           CAN say is that it holds bytes for the document and what the strongest
-           capture this plane produces is worth. A leg may not claim more than
-           that (which is what makes grade A unreachable rather than merely
-           discouraged); a weaker letter is the member's account of a poorer
-           route and stays theirs. */
-        mode: "ceiling",
-        grade: EARNED_CAPTURE_CEILING, captures: r.n,
-        why: `${r.bundle_id} holds ${r.n} capture(s) in the record, so the strongest capture grade it can `
-           + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as this instance fetched them, hashed at `
-           + `receipt.`,
-        /* The unreachable letter is DERIVED, never typed (REC-48): it is the rank
-           immediately above EARNED_CAPTURE_CEILING in the same BASIS_GRADES array
-           checkEarnedLeg compares this leg against, so the sentence a member reads
-           and the refusal that enforces it cannot say different things. */
-        ceiling: `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it `
-               + `needs a chain-of-custody web archive, which this plane cannot produce and does not `
-               + `claim (CAPTURE-FIDELITY.md).` };
+       ) u LEFT JOIN reading_text_source ts ON ts.capture_sha = u.capture_sha`, ...ids, ...ids)) {
+      if (!r.bundle_id) continue;
+      if (!perBundle.has(r.bundle_id))
+        perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0 });
+      const e = perBundle.get(r.bundle_id);
+      e.n++;
+      /* THE RULE ITSELF IS `captureBound`'S AND IS NOT RESTATED HERE. It is
+         handed the capture's chain and the BYTE grade, and it answers the
+         weakest link of the two — a letter, or null for UNDETERMINED. This file
+         does not know that an OCR step weakens and an attestation does not, it
+         does not know that an unmeasured transcription is null rather than
+         "fine", and it must not learn: DEC-4's arithmetic has one home. */
+      const chain = safeJson(r.chain);
+      const b = captureBound(chain, EARNED_CAPTURE_CEILING);
+      if (isTranscribed(chain)) e.transcribed++;
+      if (b == null) continue;          /* undetermined contributes no letter; `e.bound` stays null unless another capture supplies one */
+      /* THE STRONGEST OVER THE DOCUMENT'S CAPTURES, which is the collapse this
+         same function already makes on the connection axis ("the strongest
+         resolution of that document's CAPTURES") — reused so the two axes
+         cannot drift about what a document with several captures means.
+         `mode: 'ceiling'` decides the direction on its own: the entry states
+         the MAXIMUM any leg may claim, so a document one of whose captures
+         genuinely supports B must not be refused a B because a second, weaker
+         capture of the same document exists. That would be a fence tighter than
+         its rule. Every capture's own bound is still visible to a reader
+         through `op=textprovenance`, which publishes the chain per capture. */
+      e.bound = e.bound == null ? b
+        : (BASIS_GRADES.indexOf(b) < BASIS_GRADES.indexOf(e.bound) ? b : e.bound);
+    }
+    for (const [bundleId, e] of perBundle) {
+      if (!e.n) continue;
+      const captureWord = `${bundleId} holds ${e.n} capture(s) in the record`;
+      /* The unreachable letter is DERIVED, never typed (REC-48): it is the rank
+         immediately above EARNED_CAPTURE_CEILING in the same BASIS_GRADES array
+         checkEarnedLeg compares this leg against, so the sentence a member reads
+         and the refusal that enforces it cannot say different things. */
+      const ceiling = `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it `
+                    + `needs a chain-of-custody web archive, which this plane cannot produce and does not `
+                    + `claim (CAPTURE-FIDELITY.md).`;
+      /* CASE 1 — NOTHING TRANSCRIBED THIS DOCUMENT'S TEXT, so there is no
+         fidelity to bound the bytes by and the answer is the one this record
+         has given since REC-18, BYTE FOR BYTE. That identity is not caution: a
+         leg on publisher-typed text must not move because the record learned to
+         ask a question whose answer for it is "no change", and IC-84's §7
+         over-strictness arm pins exactly that. No new key appears here. */
+      if (!e.transcribed) {
+        out.earned.capture[bundleId] = {
+          /* mode 'ceiling', and the difference from the connection axis is not a
+             softening — it is the record being honest about what it holds. There
+             is no per-document capture grade column anywhere in this schema, so
+             the record cannot say "this document's capture is worth C"; what it
+             CAN say is that it holds bytes for the document and what the strongest
+             capture this plane produces is worth. A leg may not claim more than
+             that (which is what makes grade A unreachable rather than merely
+             discouraged); a weaker letter is the member's account of a poorer
+             route and stays theirs. */
+          mode: "ceiling",
+          grade: EARNED_CAPTURE_CEILING, captures: e.n,
+          why: `${captureWord}, so the strongest capture grade it can `
+             + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as this instance fetched them, hashed at `
+             + `receipt.`,
+          ceiling };
+        continue;
+      }
+      /* CASE 2 — EVERY TRANSCRIPTION OF THIS DOCUMENT IS UNMEASURED, so the
+         bound is UNDETERMINED and the axis says so. THE ENTRY IS STILL PRESENT
+         WITH A NULL GRADE, and that distinction is the whole of DEC-49's rule
+         applied to a grade: an ABSENT entry means "the record holds no bytes for
+         this document", a PRESENT entry with a null grade means "the record
+         holds the bytes and cannot say what the text derived from them is worth".
+         Collapsing the two would tell a member to go capture a document the
+         record already has. The empty level is NAMED rather than described,
+         because a member who is told what is missing can go and get it. */
+      if (e.bound == null) {
+        out.earned.capture[bundleId] = {
+          mode: "ceiling", grade: null, captures: e.n,
+          determined: false,
+          undetermined_because: "CAPTURE_FIDELITY_UNMEASURED",
+          empty_level: "transcription fidelity — this document's text was derived by a machine and no "
+                     + "step in that derivation carries a measured fidelity (MEASUREMENTS.md, per engine, "
+                     + "per version)",
+          why: `${captureWord}, but every transcription of its text is UNMEASURED: no step in the `
+             + `provenance of this document's text carries a measured fidelity, so what a leg resting on `
+             + `that text may claim about how it was captured is undetermined. That is a statement, not a `
+             + `permission — DEC-4 bounds the capture axis by transcription fidelity as its weakest link, `
+             + `so an unmeasured derivation bounds it to nothing rather than to ${EARNED_CAPTURE_CEILING}. `
+             + `A leg may state NO capture grade, which suspends the axis and names it; it may not state a `
+             + `letter this record cannot support.`,
+          ceiling };
+        continue;
+      }
+      /* CASE 3 — A MEASURED FIDELITY, AND IT IS THE CEILING NOW. When the
+         weakest link is the BYTES the letter is unchanged and the entry is
+         byte-identical to case 1 by construction (`captureBound` never raises,
+         so `bound === EARNED_CAPTURE_CEILING` means fidelity did not bind) —
+         which is why a document OCR'd at B earns exactly what it earned before
+         and gains no key. When the weakest link is the FIDELITY the letter
+         falls, and only then does the entry say so. */
+      if (e.bound === EARNED_CAPTURE_CEILING) {
+        out.earned.capture[bundleId] = {
+          mode: "ceiling",
+          grade: EARNED_CAPTURE_CEILING, captures: e.n,
+          why: `${captureWord}, so the strongest capture grade it can `
+             + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as this instance fetched them, hashed at `
+             + `receipt.`,
+          ceiling };
+        continue;
+      }
+      out.earned.capture[bundleId] = {
+        mode: "ceiling", grade: e.bound, captures: e.n,
+        bounded_by: "CAPTURE_BOUNDED_BY_FIDELITY",
+        why: `${captureWord}, and the bytes as this instance fetched them would be worth `
+           + `${EARNED_CAPTURE_CEILING} — but this document's TEXT was derived by a machine and that `
+           + `derivation is measured at ${e.bound}. The capture axis is bounded by the weakest link of `
+           /* THE WORDING AVOIDS "grade a", and deliberately: `hygiene.test.mjs`
+              detector (B) refuses any module spelling the capture rule's own
+              letters beside the word "grade", in any case — so that the letters
+              have exactly one home and are composed from the constant rather
+              than typed. It cannot tell the ARTICLE "a" from the GRADE "A", and
+              a fence that is spelling-blind in the safe direction is the right
+              fence; this sentence moves rather than the rule. Caught by the
+              suite on this item's own first full run. */
+           + `byte provenance and transcription fidelity, with no third scale (DEC-4), so the strongest `
+           + `capture grade this document can earn is ${e.bound}. Transcription never RAISES a capture `
+           + `grade, and it is not a separate measurement a member can cite instead.`,
+        ceiling };
     }
     /* REC-83 / IC-84 (3): THE SAME REGISTRY, AT CONTENT GRAIN. Keyed by content
        row, added only when the caller named rows — so the answer every existing
@@ -25401,6 +25556,19 @@ export class Store extends DurableObject {
          letter stands and is CAPPED — never raised to the ceiling, which would
          be the record asserting a maximum as a measurement. */
       const c = earnedCap[r.target_id];
+      /* REC-88 / D-349: TWO EMPTY LEVELS, AND THEY ARE DIFFERENT FACTS. This
+         arm had one sentence for a missing letter — "the record holds no
+         captured bytes" — and that was complete while the only way to have no
+         letter was to have no bytes. It is not any more: a document whose text
+         a machine derived with no MEASURED fidelity now earns a PRESENT entry
+         with a null grade (DEC-4's bound is undetermined, stated), and telling
+         a member to go capture a document the record already holds would name
+         the wrong empty level. The registry decided which case this is and
+         carries the code and the sentence; this file asks rather than
+         re-deriving, so the strength surface and the write-path refusal cannot
+         say different things about one leg. */
+      if (c && c.grade == null && c.undetermined_because)
+        return inert(c.why, "ungraded");
       if (!c || !c.grade)
         return inert(`the record holds no captured bytes for ${r.target_id}, so there is nothing here `
                      + `to measure how it was captured`, "ungraded");

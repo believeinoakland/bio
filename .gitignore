@@ -239,3 +239,19 @@ bio-plane/.coff11-arm-test-pristine.mjs
 # (WORKER.md) and because `git stash` is repository-wide across every checkout.
 .rec94-control-pristine/
 .rec94-baseline/
+
+# REC-88's control pen and its PRISTINE baseline checkout, each on its own line
+# rather than under a glob - the standing rule at `.rec84-control-pristine/` is
+# that a wildcard over `.*-control-pristine/` would silently cover a pen nobody
+# declared, and CAP-12's note extends that argument to a baseline worktree.
+# `bio-plane/test/nc-rec88.mjs` keeps per-arm pristine copies of `src/store.mjs`,
+# `checks/bio-checks.mjs` AND `src/textchain.mjs` in the pen while it arms them;
+# `.pristine-rec88/` is a pristine `origin/main` (6e88e35) checkout that
+# `test/rec88-baseline-probe.mjs` runs against so the over-strictness digest is a
+# CROSS-CHECKOUT measurement rather than this tree agreeing with itself. Both live
+# INSIDE this worktree because the shared scratchpad is not isolated between
+# sessions (WORKER.md) and stashing is repository-wide. An untracked copy of a
+# plane source left behind by an interrupted arm is exactly what another item's
+# producer sweep has already enrolled as a second author.
+.rec88-control-pristine/
+.pristine-rec88/

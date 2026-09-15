@@ -323,8 +323,20 @@ console.log("\n--- 2b. the capture axis is DOCUMENT-GRAIN and unchanged — answ
 t("every content row points at the document's capture entry rather than restating a letter",
   Object.values(eb2.earned.content).map((c) => [c.capture.grain, c.capture.from]),
   [["document", `earned.capture[${DOC}]`], ["document", `earned.capture[${DOC}]`]]);
-t("and the document-grain capture ceiling is exactly what it has always been",
-  [eb2.earned.capture[DOC].mode, eb2.earned.capture[DOC].grade], ["ceiling", "B"]);
+/* CORRECTED BY REC-88 / D-349 — AND THE OLD ASSERTION WAS WRONG ABOUT THE
+   RECORD, NOT MERELY STALE. It read `["ceiling", "B"]` and was labelled "exactly
+   what it has always been". What it had always been was an OVERCLAIM: `DOC`'s
+   chain is `scopedChain([0,1,2])`, a tesseract 5.3.4 OCR pass measured at C over
+   every page, and the record was answering that a leg on it could earn B — one
+   letter stronger than DEC-4's own doctrine allows, because `captureBound` had
+   no caller (D-349). The ceiling is now C, which is the weakest link of byte
+   provenance (B) and transcription fidelity (C), with no third scale. The claim
+   this line exists to make — that the axis is document-GRAIN and answered once —
+   is unchanged and is what it now asserts, alongside the letter that is true. */
+t("and the document-grain capture ceiling is the weakest link of bytes and fidelity, answered once",
+  [eb2.earned.capture[DOC].mode, eb2.earned.capture[DOC].grade,
+   eb2.earned.capture[DOC].bounded_by],
+  ["ceiling", "C", "CAPTURE_BOUNDED_BY_FIDELITY"]);
 
 /* ===================== 3. THE FIXED-KEY `content` READ ================== */
 
@@ -561,10 +573,41 @@ const PRE_ITEM_EARNED_FOR_A_DOCUMENT_LEG = {
        + `1 capture(s) of that document the recogniser matched to this subject. Grade states HOW it `
        + `was matched (framework 8.1) and nothing about how credible the document is.`,
   },
+  /* ============ MOVED BY REC-88 / D-349, AND HERE IS WHY IT MOVED ==========
+   *
+   * IT IS NOT EXEMPTED AND IT IS NOT SLACK. This literal read
+   * `{ mode: "ceiling", grade: "B", … }` and its heading called it "the pre-item
+   * answer". THE PRE-ITEM ANSWER WAS AN OVERCLAIM, and this fixture is the
+   * clearest possible instance of it: `DOC`'s chain is `scopedChain([0,1,2])` —
+   * a tesseract 5.3.4 OCR pass measured at C over all three pages — and the
+   * record was answering that a leg citing it could earn a capture grade of B.
+   * DEC-4 rules that transcription fidelity BOUNDS the capture axis as its
+   * weakest link with no third scale, `textchain.mjs`'s `captureBound` is that
+   * rule in code, and until REC-88 it had ZERO CALLERS under `src/` (D-349). So
+   * the pin was pinning the defect.
+   *
+   * WHAT REPLACES IT IS A MEASUREMENT, NOT A HAND EDIT. `test/rec88-baseline-probe.mjs`
+   * builds three documents — publisher-typed, OCR'd-at-C, and an UNMEASURED
+   * transcription — and prints each one's `earned.capture` entry and digest. Run
+   * against the PRISTINE pre-item tree (`origin/main` at 6e88e35) it prints B
+   * for all three, including the unmeasured Moondream chain. Run against this
+   * tree it prints B, C and a null grade with the empty level named — and the
+   * PUBLISHER-TYPED digest is BYTE-IDENTICAL across the two trees
+   * (2aac4721c679dd6d…), which is the over-strictness direction this section
+   * exists for, now measured on two checkouts rather than asserted on one.
+   * `content-capture-bound.test.mjs` §5 pins that cross-tree digest.
+   *
+   * WHAT THIS SECTION STILL GUARDS, unchanged: the CONNECTION entry, which this
+   * item does not touch and whose pristine digest below is untouched. */
   capture: {
-    mode: "ceiling", grade: "B", captures: 1,
-    why: `${DOC} holds 1 capture(s) in the record, so the strongest capture grade it can earn is B — `
-       + `the bytes as this instance fetched them, hashed at receipt.`,
+    mode: "ceiling", grade: "C", captures: 1,
+    bounded_by: "CAPTURE_BOUNDED_BY_FIDELITY",
+    why: `${DOC} holds 1 capture(s) in the record, and the bytes as this instance fetched them would be `
+       + `worth B — but this document's TEXT was derived by a machine and that derivation is measured at `
+       + `C. The capture axis is bounded by the weakest link of byte provenance and transcription `
+       + `fidelity, with no third scale (DEC-4), so the strongest capture grade this document can earn `
+       + `is C. Transcription never RAISES a capture grade, and it is not a separate measurement a `
+       + `member can cite instead.`,
     ceiling: `Grade A is not reachable on the capture axis at all: it needs a chain-of-custody web `
            + `archive, which this plane cannot produce and does not claim (CAPTURE-FIDELITY.md).`,
   },
@@ -576,7 +619,13 @@ const PRE_ITEM_EARNED_FOR_A_DOCUMENT_LEG = {
    re-run `node test/rec83-baseline-probe.mjs <pristine>/src/index.mjs` and
    compare two hex strings instead of two paragraphs. */
 const PRISTINE_CONNECTION_DIGEST = "6a4289680a5b368b01414259b6ee7f6c17633e846a0d8ff74d6ec00ca0a3fe47";
-const PRISTINE_CAPTURE_DIGEST = "b626e0d83af4cee6607d9d70cd3478fa8072ab74a6a089cfde54f55f4bbf6070";
+/* MOVED BY REC-88 (see the block above for why the old figure was wrong rather
+   than stale). This is no longer a PRE-ITEM digest and is not called one: it is
+   what an OCR'd-at-C document's capture entry hashes to once DEC-4's bound is
+   actually asked, printed by this suite's own run on 2026-09-15. The pre-item
+   figure it replaces was b626e0d83af4cee6…, and that value is kept here in prose
+   so a reader bisecting this line lands on the reason and not on a mystery. */
+const BOUNDED_CAPTURE_DIGEST = "e369111fa99a879d4f3fff0ea477452ffe02d502c8a76e166ca468912dc37b38";
 {
   const conn = { ...eb2.earned.connection[DOC] };
   delete conn.capture_sha;   /* the fixture's own sha, not a claim about grade */
@@ -584,10 +633,16 @@ const PRISTINE_CAPTURE_DIGEST = "b626e0d83af4cee6607d9d70cd3478fa8072ab74a6a089c
     conn, PRE_ITEM_EARNED_FOR_A_DOCUMENT_LEG.connection);
   t("and byte-for-byte against the digest the PROBE printed on the pristine tree — key order included",
     sha(JSON.stringify(conn)), PRISTINE_CONNECTION_DIGEST);
-  t("the CAPTURE entry likewise, against its own pristine digest",
-    sha(JSON.stringify(eb2.earned.capture[DOC])), PRISTINE_CAPTURE_DIGEST);
-  t("the CAPTURE entry a document leg earns is unchanged, field for field",
+  t("the CAPTURE entry is BOUNDED BY FIDELITY and hashes to the bounded digest (REC-88)",
+    sha(JSON.stringify(eb2.earned.capture[DOC])), BOUNDED_CAPTURE_DIGEST);
+  t("the CAPTURE entry a document leg earns states C, the weakest link, field for field",
     eb2.earned.capture[DOC], PRE_ITEM_EARNED_FOR_A_DOCUMENT_LEG.capture);
+  /* THE DIRECTION, ASSERTED STRUCTURALLY RATHER THAN BY THE LETTER: whatever the
+     fixture's measured fidelity, the answer may never be STRONGER than the byte
+     ceiling. `captureBound` never raises, and a change that made it raise would
+     pass both pins above if it also moved them. */
+  t("and it is never STRONGER than the byte-provenance ceiling, whatever the fidelity is",
+    ["A", "B"].indexOf(eb2.earned.capture[DOC].grade) === 0, false);
   t("and the answer still carries exactly the pre-item top-level keys, plus this item's two",
     Object.keys(eb2).sort(),
     ["asked", "bundleId", "detail", "earned", "legs", "ok",
@@ -606,8 +661,17 @@ const PRISTINE_CAPTURE_DIGEST = "b626e0d83af4cee6607d9d70cd3478fa8072ab74a6a089c
   const r = await get("earnedbasis", `id=${INQ_NOLEGS}&targets=${DOC}`);
   t("an inquiry with no legs asked about a candidate target carries NO content block",
     [r.ok, Object.keys(r.earned).sort(), r.legs], [true, ["capture", "connection"], []]);
-  t("and its document-grain answer is the same one the pre-item read gave",
-    [r.earned.capture[DOC].grade, r.earned.connection[DOC].grade], ["B", "A"]);
+  /* CORRECTED BY REC-88: the capture letter here was "B" and, like the §7 pin
+     above, that was the overclaim rather than the baseline — `DOC` is OCR'd at C.
+     WHAT THIS ASSERTION IS ACTUALLY FOR is unchanged and is the reason it still
+     stands: a caller that asks nothing about content must get the SAME
+     document-grain answer as the caller that does, so the two grains cannot
+     disagree. It is therefore compared against the §7 pin rather than against a
+     second literal, which is what made the old pair drift-prone in the first
+     place. */
+  t("and its document-grain answer is the same one the leg-carrying read gave, both axes",
+    [r.earned.capture[DOC], r.earned.connection[DOC].grade],
+    [PRE_ITEM_EARNED_FOR_A_DOCUMENT_LEG.capture, "A"]);
 }
 
 /* ===================== 8. STALENESS AT CONTENT GRAIN ==================== */
