@@ -104,3 +104,10 @@
 # that runs every driver makes that a certainty rather than a risk.
 _m025/
 .m025-anchor-harness/
+
+# CAP-7's pen, named for its item for the same reason every one above it is. The
+# Drive-link count streams ~1.4 GB of Oakland assets through this directory and
+# deletes each file after reading it; an interrupted run leaves bytes behind, and
+# an untracked scratch file in a worktree has already been swept into another
+# item's walk (M0-15: `git stash -u` is repository-wide, not per-worktree).
+.cap7-pen/

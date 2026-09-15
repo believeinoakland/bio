@@ -4470,3 +4470,61 @@ the +2 hygiene delta is that same per-suite census counting the new file.
 here is DISCHARGED — all three sentences corrected in place with the dated reason, and nothing else
 in that document touched. Everything CONDUCT should record is in this worker's report, stated as
 acts with their actors.
+
+
+
+## CLAIM 2026-09-14 CAPTURE (CAP-7 — the Google Drive link count over COFF-6's census corpus; a measurement, nothing built)
+
+session: measurement worker for queue item CAP-7, worktree-isolated, spawned by CONDUCT #10.
+worktree: `.claude/worktrees/agent-a455f510b4ade59b9`, branch
+  `worktree-agent-a455f510b4ade59b9`, at `main` `30f2edf` (`git log HEAD..origin/main`
+  empty — already current, nothing to fast-forward) before anything was measured.
+paths:
+- `docs/development/MEASUREMENTS.md` — one new dated entry, appended at the END.
+- `docs/architecture/BIO_Content_Framework_v0_10.md` — Part II §16's "Google Drive
+  formats" paragraph only: "not yet measured" replaced by the dated figure; the Status
+  `as of` bumped to 2026-09-14. No heading moves, so no `--write` regeneration is
+  expected; if one is needed it is taken with `tools/corpuscheck.mjs --write`.
+- `tools/measure-office-corpus.py` — the COFF-6 instrument gains two modes,
+  `drivelinks` and `drivecontrol`. Existing modes are not touched.
+- `.gitignore` — one entry for this item's pen, `.cap7-pen/`, the same shape every pen
+  above it has.
+- `docs/development/CLAIMS.md` — this entry.
+- `docs/DECIDED.md` — REGENERATED, never hand-edited (`node tools/decided.mjs`), because
+  this landing moves it twice: this block's own closing line about whose call materiality
+  is gets indexed as a CAP-7 entry, and Part II §16's Drive paragraph growing shifts D-194's cited
+  line by +4. `plancheck` fails on the drift and CLAUDE.md requires the regeneration in the
+  same turn; it is a generated index rather than another area's prose.
+not claimed and not touched: `QUEUE.md`, `DECISIONS.md`, `CLAUDE.md`, `MILESTONES.md`,
+  `bio-plane/src/**`, `bio-plane/checks/**`, `newgroup/**`. **Materiality is CONDUCT's
+  ruling and is not stated here.** Nothing is built: no handler, no host-stack entry,
+  no schema.
+released: 2026-09-14 by the CAPTURE measurement worker at the close of CAP-7. **The count
+  is 50 Drive links — 22 distinct targets in 16 documents — over a re-listed census of
+  43,283 `oaklandca.gov` asset keys plus 793 Legistar attachments: 16 Docs, 16 `/file/d/`,
+  12 Sheets, 6 other, ZERO Slides, ZERO folders, ZERO `/open?id=`. By WHERE, every one of
+  the 50 is inside a document's BODY and not one is an asset or a Legistar attachment in
+  its own right** (0 of 43,283 keys; 0 of 793 attachments, and 0 of the 793 are of the
+  hyperlink kind at all). Four are in OOXML office bodies (3 of them real `.rels`
+  hyperlinks, census of 762 files / 1.29 GB) and 46 in PDF bodies (12 of 1,000 sampled
+  PDFs — a SAMPLE, 3.6 % of 27,783, because the PDF half is 133.6 GB); html/htm (62) and
+  csv (166) censuses found zero. Recorded as **M-13** in `MEASUREMENTS.md` with the
+  instrument, both commands and the blind spots; Part II §16's Drive paragraph carries the
+  dated figure and no longer says the census has not been run. Population re-listed from
+  the PUBLIC source, not read from any instance's register, and no credential was used or
+  needed — `s3://cao-94612` and `webapi.legistar.com` are both anonymous reads; `npx
+  wrangler whoami` reported `20b533579290b9b93168345edd3b7f72` as the standing guard. The
+  live record's write path was never touched and no scratch namespace was entered. GATES on
+  the committed tree: `corpuscheck` **44 governed document(s), 0 fail**, exit 0 unpiped and
+  byte-identical to the pre-edit baseline (no heading moved, so no `--write`);
+  `node tools/gates.mjs` **GREEN, class FULL** — battery **187/187 · 11,329 assertions**,
+  `coverage.mjs --strict` exit 0 run directly (171/171 ops reached, 0 unreached), UI harness
+  exit 0 from the repo root, `plancheck --local` 0 fail 0 warn. NEGATIVE CONTROL
+  `drivecontrol`, 45 assertions, exit 0, six arms including over-strictness (197 non-Drive
+  google links seen and refused on the REAL corpus, not only on fixtures). **The control
+  found a real defect in the instrument on its first run and it is recorded rather than
+  smoothed:** a `.rels` part that would not parse read as ZERO links while every other arm
+  was green — the structural OOXML row would have said 0 instead of 3 — fixed with a
+  raw-bytes fallback and kept as permanent arm 6. **MATERIALITY IS NOT RULED HERE and is
+  CONDUCT's on the CAP-7 row.** Nothing was built: no handler, no host-stack entry, no
+  schema. Nothing is owed to a future actor by this claim.

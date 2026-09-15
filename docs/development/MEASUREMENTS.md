@@ -11062,3 +11062,140 @@ no cell hyperlink (the flat source had none), so the `sheet-cell` link case is d
 hermetic fixture and not by producer output — named rather than glossed. COFF-6's census
 (2026-08-03: ODF is ZERO in 43,282 oaklandca.gov assets) is UNREVISED and still stands: it was
 about NATIVE ODF in the wild, and nothing here contradicts it.
+## M-13 · 2026-09-14 · CAP-7 — GOOGLE DRIVE LINKS IN COFF-6's CENSUS CORPUS, COUNTED: **50 links, 22 distinct targets, 16 documents — every one of them inside a document's BODY and not one of them an asset in its own right** (worktree `agent-a455f510b4ade59b9`)
+
+The measurement that gates whether a Drive host-stack handler is worth building.
+**Nothing was built: no handler, no host-stack entry, no schema — and materiality is
+CONDUCT's ruling, not stated here.** Part II §16's Drive paragraph said the census had
+not been run; this is the census.
+
+**Which population, and why it is the one COFF-6 measured.** RE-LISTED FROM THE SOURCE,
+not read out of an instance's register — no BIO instance holds this corpus, so a register
+read would have measured a different population and said so falsely. COFF-6's listing
+needs no credential of ours and never did: `s3://cao-94612` answers public anonymous
+`ListObjectsV2` (every `oaklandca.gov/files/assets/…` URL serves from it) and
+`webapi.legistar.com/v1/oakland` is a public read API. **The brief's expectation that
+`.env` would carry the listing credential is wrong about this corpus** — no token was
+used, and none exists that would change the result. `npx wrangler whoami` was run anyway
+as the standing account guard and reported `20b533579290b9b93168345edd3b7f72`
+(Biocloudflare@neologic.com's Account), as required.
+
+| half | COFF-6, 2026-08-03 | CAP-7, 2026-09-14 | same population? |
+| --- | --- | --- | --- |
+| oaklandca.gov assets | 43,282 keys | **43,283 keys**, 44 list requests | YES, +1 key in 42 days |
+| Legistar attachments | 792 over 250 matters | **793 over 250 matters** | SHAPE yes, DRAW no — see below |
+
+**What differs, stated rather than smoothed.** (1) The Legistar half is COFF-6's SHAPE
+(the 200 most-recently-modified matters plus 25 introduced in each of 2015-H1 and
+2016-H1) but necessarily a DIFFERENT DRAW: "most recently modified" on 2026-09-14 is not
+the same 200 matters it was on 2026-08-03. The 2015/2016 half is reproducible exactly.
+(2) The bucket's `LastModified` range now runs 2018-10-31 .. **2026-08-28**, where COFF-6
+recorded 2018-10-31 .. 2025-06-17; with the key count up by one, that is re-uploads over
+existing keys rather than growth.
+
+**Instrument.** `tools/measure-office-corpus.py` — COFF-6's own probe, which already
+holds this corpus's definition, gains three modes rather than a second tool standing
+beside it. Python 3 stdlib only (`zipfile`, `zlib`, `xml.etree`, `urllib`); network paced
+at 0.25 s; bodies are streamed and deleted after reading, so peak disk is one file.
+
+    node tools/mintid.mjs M                                  # M-13
+    python3 tools/measure-office-corpus.py drivecontrol      # the negative control, 45 assertions, exit 0
+    python3 tools/measure-office-corpus.py drivelinks 1000    # the census + the PDF sample; ~43 min, writes .cap7-pen/drive-hits.jsonl
+    python3 tools/measure-office-corpus.py drivederive        # every derived figure below, from that log, in a second
+
+**What is counted.** A link is ONE URL OCCURRENCE whose parsed hostname is EXACTLY
+`docs.google.com`, `drive.google.com`, `sheets.google.com` or `slides.google.com`. The
+KIND is read from the URL shape — `/document/`, `/spreadsheets/`, `/presentation/`,
+`/drive/folders/`, `/file/d/`, `/open?id=`, else `other`. The WHERE is the item's own
+split: a link that IS an asset (a bucket key, or a Legistar attachment's own hyperlink)
+against a link inside a captured body.
+
+### The figure
+
+| where | occurrences | distinct targets | source documents | population read |
+| --- | --- | --- | --- | --- |
+| **asset** · bucket key | **0** | 0 | 0 | 43,283 keys — CENSUS |
+| **asset** · Legistar attachment hyperlink | **0** | 0 | 0 | 793 attachments — and **0 of the 793 are of the hyperlink kind at all** (`MatterAttachmentIsHyperlink` false on every one); Legistar still emits nothing but uploaded PDFs, as COFF-6 found |
+| **body** · html/htm page | **0** | 0 | 0 | 62 pages, 3,893,294 B — CENSUS |
+| **body** · csv | **0** | 0 | 0 | 166 files, 90,402,768 B — CENSUS |
+| **body** · OOXML office document | **4** | 3 | 4 | 762 files, 1,291,490,061 B — CENSUS |
+| **body** · PDF | **46** | 20 | 12 | 1,000 files, 5,306,456,862 B — **SAMPLE, 3.6 % of 27,783** |
+| **ALL** | **50** | **22** | **16** | |
+
+| kind | occurrences | distinct targets |
+| --- | --- | --- |
+| document (Docs) | 16 | 7 |
+| file (`/file/d/`) | 16 | 7 |
+| spreadsheet (Sheets) | 12 | 3 |
+| other | 6 | 5 |
+| presentation (Slides) | **0** | 0 |
+| folder | **0** | 0 |
+| open-id (`/open?id=`) | **0** | 0 |
+| **TOTAL** | **50** | **22** |
+
+**Read the three columns as three different facts.** 50 occurrences, 22 distinct
+targets and 16 source documents are not the same number and only the last two bound the
+work: one BPAC agenda packet carries 11 of the 50 on its own, and the top four documents
+carry 29 between them. **50 is already the DE-DUPLICATED figure** — the raw extractor
+rows sum to 53 because the OOXML body is read twice, once for `.rels` hyperlinks and once
+for URLs printed in the text, and 3 of the 4 OOXML links are seen by both. Those 3 are
+real clickable hyperlinks; the 4th (a Google Form) is printed text only.
+
+**Where they are.** All 16 are `documents/` assets, mostly bicycle-and-pedestrian and
+environmental-justice material: `June-2024-BPAC-Meeting-Agenda-With-Attachments.pdf` (11),
+`November-2023-BPAC-Meeting-Agenda-revised.pdf` (7), `PAAC-12-7-20-Agenda-Packet.pdf` (6),
+`FINAL_EONI_PLAN_2021.2.16.pdf` (5). The full list with each link is in the hit log the
+command above writes.
+
+**THE PDF HALF IS A SAMPLE AND THE EXTRAPOLATION IS LABELLED AS ONE.** 12 of 1,000 sampled
+PDFs carry at least one Drive link. Point estimate over the 27,783-PDF population:
+**333 PDFs**; Wilson 95 % interval **[191, 579]**. It is a sample and not a census because
+the PDF half of this corpus is **133.6 GB** and a census of it is ~6.4 h of transfer
+against a politely-paced public bucket; the OOXML half (1.29 GB), the html/htm half and
+the csv half ARE censuses, and the asset halves are censuses. Seed 20260914, so the draw
+is reproducible — and it was: **the run was executed twice and both runs returned 53 raw /
+50 de-duplicated with an identical by-kind split.**
+
+**WHAT THE MATCHER CANNOT SEE, and this is the load-bearing paragraph.** (a) The 26,783
+PDFs NOT sampled — 96.4 % of the PDF population by count and 98.9 % of the corpus by
+bytes. (b) Any URL inside a PDF stream filtered with anything but Flate, or held as a hex
+or non-UTF-16LE wide string. (c) Any URL inside the 139 legacy OLE2 `.doc`/`.xls`/`.ppt`
+assets — no OLE2 reader exists here, which is COFF-6's own recorded deferral. (d) Any URL
+inside an image, a video, or a `.zip` member (42 keys). (e) Any link written without an
+`http(s)` scheme. (f) **A shortened or redirected link that RESOLVES to Drive** — a
+`bit.ly`, a `goo.gl`, or a city vanity URL — because this counts targets as written and
+follows nothing. Every one of these biases the figure in the same direction: **50 is a
+FLOOR, never a ceiling.**
+
+**A second figure the run produced and it is worth keeping: 197 google-family links were
+SEEN AND REFUSED** across the same bodies (`www.google.com/maps`, `/search`,
+`fonts.googleapis.com`, `sites.google.com`, `goo.gl`). That is the over-strictness arm
+firing on real data rather than on a fixture: the matcher is looking at this corpus's
+google links and rejecting the ones that are not Drive, at a ratio of roughly 4 to 1.
+
+**NEGATIVE CONTROL (run 2026-09-14, `drivecontrol`, 45 assertions, exit 0 read unpiped).**
+Six arms over planted fixtures, each body type driven separately: (1) a fixture carrying a
+KNOWN count of every kind returns exactly that count in html `href`/`src`, in OOXML
+`.rels`, in OOXML text parts, in a raw PDF object, in a Flate-compressed PDF stream, and
+in a Legistar attachment record; (2) a fixture with NO Drive links returns ZERO in every
+body type; (3) four Drive URLs in shapes the kind list does not know (`/uc?export=`,
+`/forms/d/e/`, `/a/<domain>/`, a bare `docs.google.com/`) land in `other` and are never
+smuggled into a kind; (4) OVER-STRICTNESS — seven non-Drive google links including
+`sites.google.com` and the lookalike host `drive.google.com.example.org` are NOT counted;
+(5) the fixtures are asserted NON-EMPTY and all seven kinds asserted covered, because a
+headline that passes over an empty corpus has passed three times in this project;
+(6) a MALFORMED `.rels` must not read as zero links.
+
+**ARM 6 EXISTS BECAUSE THE CONTROL FOUND A REAL DEFECT ON ITS FIRST RUN, and the finding
+is recorded rather than smoothed.** The `.rels` arm came back **0 of 14** while every
+other arm was green. The cause was in the INSTRUMENT, not the fixture alone: a single raw
+`&` in a `Target` made `ET.fromstring` refuse the whole part, and `urls_in_ooxml` treated
+a ParseError as "this part has no links". A malformed `.rels` in the wild would have
+scored zero **while the run looked clean** — the exact shape of this project's
+most-repeated failure. The matcher now falls back to reading `Target`/`TargetMode` out of
+the raw bytes, and the malformed fixture is kept as a permanent arm. Had this not been
+caught, the OOXML structural row would have read 0 instead of 3.
+
+**What this entry does NOT say.** Whether 50 links, 22 targets and 16 documents — with an
+estimated 191–579 PDFs corpus-wide carrying at least one — is MATERIAL enough to build a
+Drive host-stack handler. That is CONDUCT's ruling on CAP-7's row.
