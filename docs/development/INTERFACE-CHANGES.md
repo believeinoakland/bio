@@ -7881,3 +7881,35 @@ is correctly outside.
 the resolved bound map. Every consumer then reads the stored letter exactly as it does today, the
 version path is unaffected either way, and D-373 reopens as the same row. That is precisely
 negative-control arm (a) and is therefore already measured rather than predicted.
+
+### RESOLUTION — 2026-09-15, CONDUCT #11 · ACCEPTED, I3 16.0.0 → **17.0.0**, BREAKING
+
+MAJOR on IC-25's rule and IC-96's own precedent: a refusal where none stood before is a break
+whatever the measured impact. **The measured impact is ZERO on the live instance — 31 bundles, 0
+basis legs, 0 transcription chains, measured here rather than copied from IC-96 — and that zero
+is recorded as EVIDENCE, never as an argument for a smaller bump.**
+
+**THE SHAPE IS EASY TO MISREAD AS A REGRESSION AND THE RESOLUTION SAYS SO IN ITS OWN WORDS.**
+Before IC-96 the ordinary walk and `earnedBasisRegistry` AGREED — and both were wrong, publishing
+a capture grade stronger than the transcription fidelity could support. IC-96 corrected the
+registry. **So the drift this closes was never damage: it was the distance between a corrected
+read and an uncorrected one, and it closes by correcting the SECOND and reverting NOTHING.**
+
+**ONE LINE REACHED SIX CONSUMERS, none of them edited** — the op, the publication bar gate, the
+pair frozen into a signed case, `op=inquiryground`'s report, `op=reevaluations`' strength block
+and the projection cache's writer — **because `strengthOf()` was the authority all along.** The
+VERSION path is structurally unreachable from the change (`#versionStrength` and `op=suggest`
+pass no map) and stays REC-12/REC-42's, pinned in two suites rather than asserted.
+
+**WHAT THIS RESOLUTION DOES NOT CLAIM, and it is the half a reader would otherwise infer
+wrongly: A THIRD READER EXISTS.** The projection cache `bundles.inquiry_capture_strength`, sought
+through `query.mjs`'s indexed `capture:` selector, answers the letter computed at each question's
+LAST PROMOTION. **It is not a third COMPUTATION — the first one persisted, and answers at a
+different TIME.** Its staleness is a documented contract; what is NEW is the PATH into it, since
+a document re-read now moves the registry's answer while the cache keeps the stronger letter.
+**Found by PROBING on the landing tree rather than assumed**, and rowed as REC-108 with both
+options and a recommendation.
+
+**One doctrine-adjacent choice is recorded as FOLLOWING rather than opening:** an unmeasured
+bound makes the leg INERT rather than poisoning the axis, which is IC-96's already-accepted arm
+in the version path reused, not a new question put to anyone.
