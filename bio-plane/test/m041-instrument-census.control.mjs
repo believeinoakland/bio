@@ -45,10 +45,24 @@
  *   (2) PLANTED BYPASS, GRADED NAMESPACE — a hand-picked `M0-` id the ledger never
  *       issued, written into `QUEUE.md` as a real item heading and COMMITTED.
  *         MUST FAIL:    the census's section C reports NOT HELD >= 1 and NAMES it.
- *         MUST NOT:     `plancheck --local` must STILL PASS at 0 fail — and that
- *                       half is the FINDING, not the control. The loop every
- *                       session is told to run cannot see a bypass that
- *                       `mintid --audit --base` sees immediately.
+ *         MUST NOT:     no ID arm of `plancheck --local` fires — and that half is
+ *                       the FINDING, not the control. The loop every session is
+ *                       told to run cannot see a bypass `mintid --audit --base`
+ *                       sees immediately.
+ *       **THIS ARM'S DECLARATION WAS CORRECTED AFTER ITS FIRST RUN, AND THE
+ *       CORRECTION IS THE MORE USEFUL HALF.** It originally declared `plancheck`
+ *       would read `0 fail`. It read `1 fail` — not because plancheck saw the
+ *       planted id, but because EDITING A CORPUS FILE STALES `docs/DECIDED.md`
+ *       and a different arm fired. A count cannot tell those apart, so the arm
+ *       now classifies WHICH arms failed and asserts on the ID arms by name. An
+ *       arm that trips a different arm of the instrument it is measuring proves
+ *       nothing about the arm it was aimed at.
+ *       **AND THE SAME RUN CAUGHT THIS CONTROL'S OWN MATCHER GRADING ONE
+ *       SPELLING**: it reported `NOT HELD 1 · names M0-9001: false`, because
+ *       `mintid` prints the tally as `NOT HELD` and LABELS the ids `QUESTION`
+ *       ("ASK, do not fail"). The count was right and every id was invisible —
+ *       this estate's most-repeated instrument defect, inside the instrument
+ *       written to catalogue it.
  *
  *   (3) PLANTED BYPASS, UNGRADED NAMESPACE — the worked example this project
  *       already owns. A hand-picked `M-` id written into `MEASUREMENTS.md` and
@@ -145,10 +159,24 @@ function runCensus() {
   };
 }
 
+/* **WHICH ARM OF plancheck FIRED IS THE WHOLE QUESTION, NOT A DETAIL.** The first
+   run of this control declared that `plancheck --local` would still pass over a
+   planted id and it FAILED — and a bare `1 fail` cannot tell "plancheck caught
+   the id bypass" from "plancheck caught something else my arm also broke". It was
+   the second: editing a corpus file staled `docs/DECIDED.md`, and plancheck's
+   decided-index arm fired. An arm that trips a DIFFERENT arm of the instrument it
+   is measuring proves nothing about the arm it was aimed at, so the failure TEXT
+   is captured and classified here rather than counted. */
 function plancheckLocal() {
   const out = shq([process.execPath, join(REPO, "tools/plancheck.mjs"), "--local"]);
   const m = out.match(/plancheck:\s*(\d+) fail,\s*(\d+) warn/);
-  return { out, fail: m ? Number(m[1]) : -1, warn: m ? Number(m[2]) : -1 };
+  const fails = [...out.matchAll(/^\s*fail\s+([A-Z][A-Z \-]*[A-Z])/gm)].map((x) => x[1].trim());
+  return {
+    out, fail: m ? Number(m[1]) : -1, warn: m ? Number(m[2]) : -1,
+    fails,
+    /* the arms that would mean plancheck SAW the id bypass */
+    sawId: fails.some((f) => /DUPLICATE ID|UNREGISTERED ID NAMESPACE/.test(f)),
+  };
 }
 
 /* ------------------------------------------------------------------- the run */
@@ -209,7 +237,7 @@ function commitArm({ tag, rel, anchor, replacement, expectId, declared, judge })
   if (existsSync(a.pristine)) unlinkSync(a.pristine);
   results.push({
     arm: tag, declared,
-    actual: `introduced ${armed.introduced} · NOT HELD ${armed.notHeld} · names ${expectId}: ${armed.namesId(expectId)} · plancheck ${plan.fail} fail, ${plan.warn} warn · HEAD restored: ${headAfter === headBefore ? "YES" : "NO"}`,
+    actual: `introduced ${armed.introduced} · NOT HELD ${armed.notHeld} · names ${expectId}: ${armed.namesId(expectId)} · plancheck ${plan.fail} fail [${plan.fails.join("; ") || "none"}] · plancheck SAW the id bypass: ${plan.sawId ? "YES" : "NO"} · HEAD restored: ${headAfter === headBefore ? "YES" : "NO"}`,
     pass: judge(armed, plan) && headAfter === headBefore,
   });
 }
@@ -220,8 +248,8 @@ commitArm({
   anchor: "### M0-41 · running",
   replacement: "### M0-9001 · queued — M0-41 CONTROL ARM, a hand-picked id the ledger never issued; reverted in the same run\nmilestone: M0\ndesign: `docs/development/VERIFICATION.md`\n\n### M0-41 · running",
   expectId: "M0-9001",
-  declared: "census names M0-9001 NOT HELD; plancheck --local STILL PASSES (0 fail) and that half is the finding",
-  judge: (a, p) => a.notHeld >= 1 && a.namesId("M0-9001") && p.fail === 0,
+  declared: "census names M0-9001 NOT HELD; plancheck --local does NOT see the id bypass (no DUPLICATE ID / UNREGISTERED NAMESPACE arm fires) and that half is the finding. CORRECTED after the first run: the original declaration said plancheck would read 0 fail, which conflated 'plancheck cannot see the id' with 'my arm broke nothing else' — editing a corpus file stales docs/DECIDED.md and fires a DIFFERENT arm. The question is WHICH arm, never HOW MANY.",
+  judge: (a, p) => a.notHeld >= 1 && a.namesId("M0-9001") && p.sawId === false,
 });
 
 commitArm({
@@ -231,7 +259,7 @@ commitArm({
   replacement: "# Measurements\n\n### M-9002 · M0-41 CONTROL ARM — a hand-picked measurement id the ledger never issued; reverted in the same run\n",
   expectId: "M-9002",
   declared: "the census MUST NOT find it — M declares no allocation site — and MUST name M as UNAUDITABLE. A GREEN HERE IS THE DEFECT, NOT THE PASS",
-  judge: (a) => !a.namesId("M-9002") && /UNAUDITABLE\s+M\s/.test(a.out),
+  judge: (a, p) => !a.namesId("M-9002") && /UNAUDITABLE\s+M\s/.test(a.out) && p.sawId === false,
 });
 
 /* ------------------------------------------------------------------- report */
