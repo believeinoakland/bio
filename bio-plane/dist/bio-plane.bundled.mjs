@@ -10036,6 +10036,49 @@ var CONTENT_EXTENT_CHECKS = {
     check: "C-45.6",
     where: "src/store.mjs #contentRowFor > is-content-row",
     translation: 'This citation rests on one document and names a part of a different one. A reference that says "this document, that passage" is two claims that do not meet, and a reader following it would be shown material the citation never meant.'
+  },
+  /* REC-97 / IC-90 — THE FOUR WAYS THE ACT THAT WRITES A LEG CAN BE HANDED AN
+       EXTENT IT MUST NOT WRITE, and every one of them exists because the
+       alternative was already measured: until this item `op=cite` destructured
+       seven named parameters and an `extent_kind` sent beside them WAS DROPPED IN
+       SILENCE, so a member who chose a page got a leg resting on the whole
+       document with nothing anywhere saying the choice went nowhere. A parameter
+       nobody reads is a parameter nobody can refuse, and a silent drop is the
+       D-21 class: a field authored in one place and honoured nowhere.
+  
+       THEY ARE IN THIS FAMILY AND NOT A NEW ONE, on REC-84's own rule two rows up
+       (SK-1's floor rule) and on the same substantive ground: this family's
+       subject is *the ways the record could come to point at nothing*, and an act
+       that writes a leg the member did not describe is the widest of them. No new
+       `node tools/mintid.mjs C` id: these are sub-numbers of an allocated family,
+       exactly as C-45.5 and C-45.6 were.
+  
+       WHAT IS NOT HERE, DELIBERATELY. A leg whose extent is MALFORMED or names an
+       unlanded kind is refused through `checkLegExtentGrammar` — REC-84's ONE
+       checker, which this act ROUTES ITS COMPOSED LEG THROUGH and re-implements
+       nothing of — and comes back under `BASIS_REFUSED`, which is `op=promote`'s
+       own name for exactly that verdict. `suggest` set that precedent in words:
+       *"one function answering twice should not answer under two names."* A fifth
+       code here would be a second name for a refusal the record already has. */
+  UNKNOWN_EXTENT_FIELD: {
+    check: "C-45.7",
+    where: "src/store.mjs cite > is-cite-extent",
+    translation: "Part of what was sent with this citation names a field this act does not carry, so the record cannot tell what part of the document you meant. It is refused rather than ignored: a field that is accepted and quietly dropped leaves you with a citation that looks like the one you made and is not. The fields this act does take are listed beside the refusal."
+  },
+  EXTENT_NOT_APPLICABLE: {
+    check: "C-45.8",
+    where: "src/store.mjs cite > is-cite-extent",
+    translation: "Which part of a document a citation rests on is something a QUESTION's basis records, and the thing citing here is a case. A case's citation names the document and has nowhere to put a page or a passage, so this one would be dropped rather than recorded \u2014 and a field stated in one place and honoured nowhere is how a record and the pages built from it drift apart."
+  },
+  EXTENT_ON_MANY: {
+    check: "C-45.9",
+    where: "src/store.mjs cite > is-cite-extent",
+    translation: "A part of a document is a part of ONE document, and this citation would write a leg for several. Writing the same page or passage onto each of them would put claims in the record you never made \u2014 you named one part once. Cite the one document you mean this part of, and cite the rest separately."
+  },
+  BAD_EXTENT_VALUE: {
+    check: "C-45.10",
+    where: "src/store.mjs cite > is-cite-extent",
+    translation: "One of the values describing which part of the document you mean cannot be written into the record as it stands \u2014 it is empty, too long, or contains a quotation mark, a backslash, a line break or a comment mark, and those characters would silently reshape the document rather than appear in it. It is declined instead of mangled."
   }
 };
 function refusal(key, detail) {
@@ -29007,7 +29050,8 @@ ${lines.join("\n")}
     owner = null,
     note = "",
     author = null,
-    role = null
+    role = null,
+    extent = null
   } = {}) {
     const sel = this.selectionResolve({ handle, viewer, owner, weight: "report" });
     if (!sel.ok) return sel;
@@ -29129,6 +29173,105 @@ ${lines.join("\n")}
         drift: sel.drift,
         detail: "these targets already carry a SEVERED cites edge, which is a recorded decision to cut the dependency, not the absence of one. Citing neither reverses it silently nor skips past it. Reinstating a severance is a separate action that records its own reason."
       };
+    const EXTENT_PARAMS = {
+      /* The act's parameter vocabulary, and the TYPE each wire scalar must take
+         to survive a round trip through the restricted frontmatter grammar.
+         `int` and `nums` are coerced ONLY when the spelling permits it; a value
+         that does not parse is passed through UNCHANGED so the catalogue's own
+         sentence refuses it ("a pdf-page extent names which page, as a 0-based
+         integer. This one names 'x'") rather than a worse one written here. */
+      extent_kind: "text",
+      extent_ref: "text",
+      extent_page: "int",
+      extent_rect: "nums",
+      extent_sheet: "text",
+      extent_cell: "text",
+      extent_slide: "int",
+      extent_shape: "int",
+      extent_para: "int",
+      extent_run: "int",
+      content_id: "text"
+    };
+    const bag = extent && typeof extent === "object" ? extent : {};
+    const unknownFields = Object.keys(bag).filter((k) => !(k in EXTENT_PARAMS)).sort();
+    if (unknownFields.length)
+      return {
+        ok: false,
+        reason: "UNKNOWN_EXTENT_FIELD",
+        project,
+        handle,
+        drift: sel.drift,
+        got: unknownFields,
+        fields: Object.keys(EXTENT_PARAMS),
+        detail: `this call names ${unknownFields.map((k) => `'${k}'`).join(", ")}, which this act does not carry, so the record cannot tell what part of the document was meant. It is REFUSED rather than ignored: a field accepted and quietly dropped leaves a citation that looks like the one you made and is not. The fields this act takes are: ${Object.keys(EXTENT_PARAMS).join(", ")}.`
+      };
+    const authored = Object.keys(bag).filter((k) => String(bag[k] ?? "").trim() !== "").sort();
+    if (authored.length && !ontoInquiry)
+      return {
+        ok: false,
+        reason: "EXTENT_NOT_APPLICABLE",
+        project,
+        handle,
+        got: authored,
+        drift: sel.drift,
+        detail: "which part of a document a citation rests on is recorded on a leg of a QUESTION's basis, and this citing object is a case. A case's citation edge names the document and has no slot for a page or a passage, so this extent would be dropped rather than recorded \u2014 refused instead, for the reason a role is refused here: a field stated in one place and honoured nowhere is how the record and its projections drift apart."
+      };
+    if (authored.length && add.length > 1)
+      return {
+        ok: false,
+        reason: "EXTENT_ON_MANY",
+        project,
+        handle,
+        offenders: add.slice().sort(),
+        drift: sel.drift,
+        detail: `a part of a document is a part of ONE document, and this call would write ${add.length} legs. Writing the same page or passage onto each of them would put claims in the record that nobody made \u2014 the extent was named once. Cite the one document this part belongs to, and cite the rest separately.`
+      };
+    const legFields = {};
+    for (const k of authored) {
+      const raw = String(bag[k]).trim();
+      if (raw.length > 200 || /["\\\r\n#]/.test(raw))
+        return {
+          ok: false,
+          reason: "BAD_EXTENT_VALUE",
+          project,
+          handle,
+          field: k,
+          drift: sel.drift,
+          detail: `'${k}' cannot be written into the record as it stands: a value describing which part of a document is at most 200 characters and cannot contain a quotation mark, a backslash, a line break or a comment mark. Those characters would reshape the document rather than appear in it.`
+        };
+      const t = EXTENT_PARAMS[k];
+      if (t === "int" && /^\d+$/.test(raw)) legFields[k] = parseInt(raw, 10);
+      else if (t === "nums") {
+        const parts = raw.replace(/^\[|\]$/g, "").split(",").map((s) => s.trim());
+        const nums = parts.map((s) => /^-?\d+(\.\d+)?$/.test(s) ? parseFloat(s) : NaN);
+        legFields[k] = nums.every((n) => Number.isFinite(n)) ? nums : raw;
+      } else legFields[k] = raw;
+    }
+    if (authored.length) {
+      const ef = [];
+      checkLegExtentGrammar(
+        legFields,
+        "the part of the document this citation names",
+        "C-2.8",
+        ef
+      );
+      const exErrs = ef.filter((x) => x.severity === "error");
+      if (exErrs.length)
+        return {
+          ok: false,
+          reason: "BASIS_REFUSED",
+          project,
+          handle,
+          drift: sel.drift,
+          findings: exErrs.map((x) => ({
+            check: x.check,
+            code: x.code ?? null,
+            detail: x.message,
+            repairs: x.repairs ?? []
+          })),
+          detail: "the part of the document this citation names is refused by the SAME catalog function op=promote runs at the write, so nothing was written. A citation that names no part means the whole document, which is always a legal thing to cite."
+        };
+    }
     const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
     if (!sel.members.length)
       return {
@@ -29152,7 +29295,14 @@ ${lines.join("\n")}
         severed: [],
         bundleSha: p.bundle_sha,
         rowVersion: null,
-        detail: "every member of the selection was already cited; nothing was written"
+        /* REC-97: AND WHEN AN EXTENT WAS NAMED, SAY THAT IT WENT NOWHERE.
+           Nothing was written, so nothing overclaims — but a member who
+           named a page and reads "already cited" would otherwise have no
+           way to know their part was not recorded, which is the silent
+           drop wearing a success costume. Narrowing an existing citation
+           to a passage is its own authored act (Bob's 5.3) and is not
+           this one. The no-extent answer is UNCHANGED, byte for byte. */
+        detail: "every member of the selection was already cited; nothing was written" + (authored.length ? ". The part of the document this call named was written NOWHERE, because no leg was written at all: making an existing citation more specific is a separate authored act on this record's own plan." : "")
       };
     let spliced = null, filled = [];
     if (!ontoInquiry) {
@@ -29179,8 +29329,9 @@ ${lines.join("\n")}
           grade_axis: "connection",
           grade_source: "resolution",
           note: nt,
-          why: earned.why
-        } : { target, role: rl, note: nt, why: null };
+          why: earned.why,
+          ...legFields
+        } : { target, role: rl, note: nt, why: null, ...legFields };
       });
       const newRefs = add.filter((t) => !referenced.has(t)).map((target) => ({ rel: "cites", target, status: "confirmed", note: nt }));
       const withRefs = newRefs.length ? _Store.#spliceReferences(liveMd.content, newRefs) : liveMd.content;
@@ -29291,6 +29442,13 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
          registry's own `why` for a filled one and an explicit null for an
          undetermined one. A surface renders this; it never composes it,
          and there is no grade control anywhere in the flow. */
+      /* REC-97: AND THE EXTENT THE ACT WROTE, PER LEG, from the leg the
+         act actually composed rather than from the parameters it was
+         sent. A receipt echoing the request proves nothing (an equality
+         that costs nothing to produce is not evidence); this is the
+         record's own answer to "what does this leg now rest on", and it
+         is ABSENT — not null, not "document" — for every leg that names
+         no part, so a caller predating this item is unaffected. */
       ...ontoInquiry ? {
         citingObjectType: "inquiry",
         role: rl,
@@ -29300,7 +29458,11 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
           grade: l.grade ?? null,
           grade_axis: l.grade_axis ?? null,
           grade_source: l.grade_source ?? null,
-          why: l.why ?? null
+          why: l.why ?? null,
+          ...Object.keys(legFields).length ? {
+            extent: legExtent(l),
+            ...l.content_id ? { content_id: l.content_id } : {}
+          } : {}
         })),
         gradesFilled: filled.filter((l) => l.grade).length,
         gradesUndetermined: filled.filter((l) => !l.grade).length
@@ -29581,6 +29743,27 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    * APPEND ONLY: nothing here rewrites or removes a leg the document already
    * carries, so an earlier statement about the question's basis cannot be edited
    * out by an act that was only ever meant to add one. */
+  /** REC-97 / IC-90 — the extent lines a composed leg contributes to the basis
+   *  block, or none. Separate from `#spliceBasis` only so the rendering rule has
+   *  one home and one set of assertions; it is not general-purpose and is called
+   *  from exactly one place. Returns [] for every leg written before this item
+   *  and for every leg that names no part, which is what makes the whole corpus
+   *  splice byte-identically. */
+  static #legExtentLines(l) {
+    const keys = Object.keys(l).filter((k) => k.startsWith("extent_") || k === "content_id");
+    if (!keys.length) return [];
+    const order = (k) => k === "extent_kind" ? 0 : k === "content_id" ? 2 : 1;
+    keys.sort((a, b) => order(a) - order(b) || (a < b ? -1 : a > b ? 1 : 0));
+    const out = [];
+    for (const k of keys) {
+      const v = l[k];
+      if (v === void 0 || v === null || v === "") continue;
+      if (typeof v === "number") out.push(`    ${k}: ${v}`);
+      else if (Array.isArray(v)) out.push(`    ${k}: [${v.join(", ")}]`);
+      else out.push(`    ${k}: "${String(v)}"`);
+    }
+    return out;
+  }
   static #spliceBasis(text, legs) {
     if (!legs.length) return text;
     const lines = text.split("\n");
@@ -29593,7 +29776,28 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       ...l.grade ? [`    grade: ${l.grade}`] : [],
       ...l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : [],
       ...l.grade_source ? [`    grade_source: ${l.grade_source}`] : [],
-      ...l.note ? [`    note: "${l.note}"`] : []
+      ...l.note ? [`    note: "${l.note}"`] : [],
+      /* REC-97 / IC-90 — THE EXTENT, AND IT IS DISCOVERED ON THE LEG RATHER THAN
+               READ OFF A LIST. A second copy of "which fields is an extent made of"
+               is D-164's own lesson arriving inside the construct built to close it,
+               and the list has already moved twice in one day (REC-84 wrote four
+               fields, REC-85 added six). So: any key the leg carries that the extent
+               grammar owns is rendered, and a field that arm gains tomorrow needs no
+               edit here. ORDER IS FIXED so the bytes are deterministic — `kind`
+               first because it decides which other fields mean anything, then the
+               rest alphabetically, then `content_id`, which names the part outright.
+      
+               QUOTING IS BY TYPE AND BOTH HALVES ARE LOAD-BEARING. A number is bare
+               and an inline array is bare, because `parseScalar` reads them back as a
+               number and an array — and `checkContentExtent` requires exactly those.
+               A STRING IS ALWAYS QUOTED, even where it would survive unquoted: a
+               sheet literally named `12`, or a content id that happened to be 64
+               decimal digits, would otherwise parse back as an INTEGER and be
+               silently treated as "no sheet" / "no content id" — the same silent drop
+               this item exists to end, one layer down. The values are fenced at the
+               act (no quote, backslash, newline or comment mark), so the quoting
+               cannot be broken from outside. */
+      ..._Store.#legExtentLines(l)
     ].join("\n"));
     let bi = -1;
     for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) {
@@ -50694,7 +50898,25 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           /* REC-37: the basis leg's ROLE, read only on the inquiry arm and
              REFUSED rather than dropped on the other. Absent stays null so a
              case-arm caller that never heard of it is byte-identical. */
-          role: url.searchParams.get("role")
+          role: url.searchParams.get("role"),
+          /* REC-97 / IC-90 — WHAT PART OF THE DOCUMENT THE LEG RESTS ON, AND IT
+             ARRIVES AS A BAG RATHER THAN AS NAMED SCALARS. That is the whole
+             shape of the defect this item closes, so it is stated here at the
+             site rather than in a commit message: seven `get()` calls and
+             nothing else is EXACTLY what dropped an `extent_kind` sent beside
+             them IN SILENCE (UI-61 measured it and could not build the picker
+             because of it), and adding an eighth, ninth and tenth `get()` would
+             close today's spelling while leaving the mechanism — a parameter
+             nobody reads is a parameter nobody can refuse, so the eleventh
+             field a member's surface sends would be dropped exactly the same
+             way. So every parameter the leg-extent grammar could own arrives
+             WHOLE and the ACT decides, by name, which ones it carries.
+             `content_id` is in the bag for the same reason and is the same
+             fact in the precise spelling (IC-84's AMENDMENT at REC-84's
+             landing). A caller that sends none of them hands `cite` an empty
+             object, which is `absent` — and absent IS `document` (Bob's 5.3),
+             so every existing caller is byte-identical. */
+          extent: Object.fromEntries([...url.searchParams].filter(([k]) => k === "content_id" || k.startsWith("extent_")))
         }),
         /* The first STATE-CHANGING actions to refer to a selection, and the
            first callers of selectionResolve's refusing arm. Weight is not read

@@ -11875,3 +11875,50 @@ and one suite, and — unlike the 2026-08-10 sighting, which failed loudly at ~1
 one **exits 0 and reports 194/195 GREEN**, so it reads as a healthy baseline and would have
 been recorded as one. A second run after `npm ci` in all three packages produced the figure
 above. A worker measuring a baseline in a fresh worktree installs **all three**.
+
+## 2026-09-14 · REC-97 — `op=cite`'s extent: a no-extent cite is byte-identical, measured on two trees
+
+**INSTRUMENT** `bio-plane/test/rec97-noextent-digest.mjs` — a NON-suite (no `.test.mjs`
+suffix, so the battery does not collect it and the fleet walk does not enrol it), self-
+contained so it can be copied into a checkout that does not contain this item. It promotes
+one captured document and one question, cites through `op=cite` with a role and a note and
+no extent of any kind, reads the question's `bundle.md` back through `op=image`, and prints
+the byte count and sha256 of it.
+
+**THE FIGURE, ON BOTH TREES**
+
+| tree | bytes | sha256 (timestamps and selection handle normalised) |
+| --- | --- | --- |
+| pristine worktree of `origin/main` `173bc66` | 1290 | `0e034ff91db0f9d103896eada9ad82d928058d90090964df0c3ec2f74b8b8d6e` |
+| this branch, `op=cite` widened | 1290 | `0e034ff91db0f9d103896eada9ad82d928058d90090964df0c3ec2f74b8b8d6e` |
+
+Identical. It is pinned in `test/cite-extent.test.mjs` section 8 with the byte count beside
+it, so it is re-measured on every battery rather than believed.
+
+**WHAT IS NORMALISED AND WHY THE THIRD ONE IS THE INTERESTING ONE.** Two ISO timestamps
+(`last_updated` and the Session Log heading) are authored by `new Date()` inside the act. The
+third is the **SELECTION HANDLE**, minted at random per run and named in the Session Log
+entry — and it was found BY THE INSTRUMENT rather than predicted. The first cross-tree run
+came back with two DIFFERENT digests and **identical byte counts (1313 each)**, which is what
+said the difference could not be this item's; the diff was one line, `Trigger: selection
+sel-…`. Normalising a value neither tree controls is the difference between a pin on the act
+and a pin on a random number. Nothing else is normalised: a digest that agrees for free is
+not evidence.
+
+**WHAT IT CANNOT SEE.** One act, one shape of document, one arm. It says nothing about a cite
+onto a CASE (whose bytes this item also leaves alone, asserted separately in the suite rather
+than digested), and nothing about a document whose basis block was already populated.
+
+## 2026-09-14 · REC-97 — the consumer census for `op=cite`, and it is one caller
+
+`grep -rn 'op=cite\|"cite"' civicos-ui agent-worker bio-plane/src`: **`civicos-ui/app.html`
+is the ONLY production caller**, at one call site. `agent-worker` has ZERO — forty-seven
+matches on the string `cite`, not one of them an op call; the investigative run writes
+suggested legs through `op=promote`. Three plane sources mention it in prose only. Three
+suites drive it (`cite-act.test.mjs`, `finder.test.mjs`, `content-extent.test.mjs`).
+
+**What the matcher can and cannot see:** it matches the query-string spelling and the quoted
+op name, so a caller building the op name by concatenation or holding it in a variable would
+be invisible to it. `civicos-ui/app.html`'s own call site is `actAsk("cite", params)` — the
+quoted form — and `EDGE_ACTIONS` in `index.mjs` is the plane's own list; a fourth spelling
+would have to be written deliberately.

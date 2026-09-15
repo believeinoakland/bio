@@ -6735,3 +6735,219 @@ paths:
   - `docs/development/kickoffs/BOB.md` — one new closing-protocol rule
 released: 2026-09-14 — both landed in one commit behind a green FULL gate; nothing else in either
   file moved.
+## CLAIM 2026-09-14 RECORD (REC-97 — `op=cite` carries the extent: the act that writes a basis leg stops dropping `extent_kind` in silence)
+
+Session: RECORD worker for REC-97, spawned by CONDUCT #11, Opus 5.
+Worktree: `.claude/worktrees/agent-a39cfbab2c77ec9e4` · branch `worktree-agent-a39cfbab2c77ec9e4`.
+Contract: **IC-90 on I3, MINTED AT SPAWN with `node tools/mintid.mjs IC` and filed PROPOSED
+in `INTERFACE-CHANGES.md`** — `op=cite` gains the optional flattened extent scalars and
+`content_id` beside its seven parameters (ADDITIVE → MINOR). IC-84 (I3 14.1.0, CHANGING,
+twice AMENDED) is the design this serves; its SETTLED is CONDUCT's to write on this landing
+plus UI-61's re-confirmation.
+Design read first: IC-84 as RESOLVED and twice AMENDED; `BIO_Content_Framework_v0_10.md`
+Part II §14.4 (an absent extent IS the whole document; a portion refers only to its portion);
+`BIO_Interaction_Constructs_v0_1.md` and DEC-69 (the member's selection is the act, nothing
+prefilled).
+
+Paths claimed BY REGION, never whole files:
+
+- **`bio-plane/src/store.mjs`** — the `op=cite` HANDLER and its splice ONLY: the `cite:`
+  entry in the DO's dispatch table, `cite()`'s parameter list, the NEW
+  `DEC-49 REGION is-cite-extent` inside it, the leg composition in its inquiry arm, and
+  `#spliceBasis`'s rendered keys. **NOT** `checkInquiryBasis`, **NOT** `mintContent` /
+  `ensureLegContent` / `#contentRowFor` / `#contentLegRefusals`, **NOT** the `covers` arms,
+  **NOT** `#contentTarget` / `#contentStanding` (REC-83's region), **NOT** `sever` /
+  `reinstate` / `linkproject`.
+- **`bio-plane/src/index.mjs`** — the `cite` OPS row ONLY, if it needs one at all (the
+  control plane copies every caller parameter through by construction; measured before
+  editing).
+- **`bio-plane/checks/bio-checks.mjs`** — the **C-45 family's rows ONLY**: four new rows in
+  `CONTENT_EXTENT_CHECKS` for the four conditions this act can refuse, each with its
+  `where` naming `src/store.mjs cite > is-cite-extent`. **NOT** `checkLegExtentGrammar`
+  itself (REC-84's ONE checker — this item ROUTES the act's leg through it and
+  re-implements no grammar), **NOT** `checkContentExtent`, **NOT** `legExtent`.
+- **`bio-plane/test/cite-extent.test.mjs`** — NEW, this item's suite.
+- **`bio-plane/test/nc-rec97.mjs`** — NEW, this item's negative-control driver.
+- **`civicos-ui/app.html`** — the `extentBlock` SENTENCE ONLY, inside the cite composer,
+  and the comment above it. One region, no control added: the picker UI-61 did not build
+  is a UI item and is DELEGATED back, not taken here.
+- **`civicos-ui/test/content-extent.test.mjs`** — section 5's routing pin ONLY (the
+  assertion that `op=cite` carries no extent), **CORRECTED to assert the new behaviour and
+  never exempted**, with the reason at the site.
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` ONLY, ONE key set, from this
+  item's own printed REPRODUCIBLE figures; **`civicos-ui/check-refusal-codes.mjs`** —
+  the `FLOOR` table only, same rule.
+- **`docs/development/INTERFACE-CHANGES.md`** — the NEW `## IC-90` block only (PROPOSED;
+  the version bump and the RESOLUTION are CONDUCT's and are not written here).
+- **`docs/development/DEBT.md`**, **`docs/development/MEASUREMENTS.md`** — appends only.
+- **`docs/development/CLAIMS.md`** — this block, and a `## DELEGATION` to UI.
+
+NOT claimed and deliberately not written: `docs/development/QUEUE.md` (CONDUCT's, sole
+writer) and IC-84's own SETTLED line.
+
+released: 2026-09-14 by the REC-97 worker — **`op=cite` CARRIES THE EXTENT END TO END AND THE
+SILENT DROP IS CLOSED; THE COMPOSER STILL DOES NOT EMIT ONE, AND THAT IS SAID PLAINLY RATHER
+THAN LEFT TO BE READ OUT OF A GREEN GATE.** **THE COMMIT LIST, CORRECTED
+RATHER THAN LEFT AS IT WAS FIRST WRITTEN** (SK-7 had to correct its own the same day — a
+release line written before the last commit names the wrong set): four commits on
+`worktree-agent-a39cfbab2c77ec9e4` — `2e5d21f` the item, `6358f6d` the eleven floors and this
+release line, `a7dc3bb` the `op-claims.test.mjs` correction (the IC-90 row named
+SK-7's not-yet-merged op in the `op=` spelling and the guard refused it, correctly), and the
+commit carrying this corrected sentence. NOT pushed, NOT merged.
+
+**DOES THE COMPOSER NOW EMIT `extent` END TO END THROUGH `op=cite`? NO — and the honest
+sentence is that THE ACT does, and the SURFACE does not yet send it.** `op=cite` accepts the
+flattened extent scalars or a `content_id`, splices them onto the leg it writes, mints the
+content row and reads back through `op=earnedbasis` with the member's own `ref` — driven
+through the op, not at the store. No UI surface sends one: UI-61 built no picker because the
+act dropped it, and this item did not build one either, because it is a UI item and not a
+line (a page set the record does not persist — D-354 — and a page canvas `app.html` does not
+have). That is the DELEGATION below, and it is an ACT with an actor rather than a note.
+**So IC-84's SETTLED is NOT owed by this landing alone**: its RESOLUTION recorded UI as
+answering *"the composer emits `extent` per leg"*, and that half is still outstanding.
+
+**THE GATE.** battery **196/196 suites · 12,152 assertions** against a pristine `173bc66`
+own-baseline of **195/195 · 12,100** — +1 suite, +52 assertions, attributed PER SUITE by
+re-running the baseline and never by subtraction: `cite-extent.test.mjs` +47 (new),
+`citeinquiry.test.mjs` 49 -> 50, `hygiene.test.mjs` 721 -> 724, `planning-hygiene.test.mjs`
+285 -> 286. `node scripts/coverage.mjs --strict` **exit 0, run DIRECTLY with `$?` read
+UNPIPED** — and CHECKS moved 266/270 named to **270/270 (100%)**: the four new C-numbers are
+named by an assertion and not only their codes, which is what `--strict` failed on first and
+is the C-20.1 class exactly. `node civicos-ui/test/run.mjs` from the REPO ROOT **exit 0**,
+with the DEC-49 guard reading `cite > is-cite-extent 64L (4 judged, 4 code(s) checked)`.
+`node tools/corpuscheck.mjs` 50 documents, 0 fail. `node tools/plancheck.mjs` clean but for
+UNPUBLISHED (expected: not pushed).
+
+**EVERY CONTROL ARM, DECLARED vs ACTUAL — seven, all RUN, all AS DECLARED, two of them after
+correcting THIS SUITE rather than the subject.** `node test/nc-rec97.mjs` from `bio-plane/`;
+every restore verified byte-identically by sha256 AND `cmp` against a uniquely-named per-arm
+pristine copy (`store.mjs` 2013017 B, `bio-checks.mjs` 665860 B, minimum guarded at 20000).
+
+| arm | declared | actual | verdict |
+| --- | --- | --- | --- |
+| `baseline` | green, and the row that tells seven-working from seven-broken | 46 pass, 0 fail | AS DECLARED |
+| `splice` (the item's own control — `#legExtentLines` returns []) | the end-to-end arms fail; every refusal arm and the byte-identity pin stay green | 36 pass, 10 fail; 6/6 declared | AS DECLARED |
+| `bag` (the dispatch passes `{}` — the pre-item plane) | the end-to-end arms fail AND `UNKNOWN_EXTENT_FIELD` fails, because a field that never arrives cannot be refused by name | 19 pass, 27 fail; 4/4 declared | AS DECLARED |
+| `unknown` (the UNKNOWN_EXTENT_FIELD refusal neutered) | the typo is dropped in silence and the leg lands | 40 pass, 6 fail; 2/2 declared | AS DECLARED — **after this arm corrected the suite**, see below |
+| `many` (the EXTENT_ON_MANY refusal neutered) | one member's one page lands on two legs | 42 pass, 4 fail; 2/2 declared | AS DECLARED |
+| `grammar` (`checkLegExtentGrammar` returns immediately at BOTH gates) | the catalogue-only facts fail; the store-gate arms stay green | 43 pass, 3 fail; 2/2 declared | AS DECLARED — **after this arm corrected the suite**, see below |
+| `overstrict` (the act refuses a cite naming NO part) | the absent-extent arms fail here AND in REC-37's `citeinquiry.test.mjs`; `cite.test.mjs` stays green | 37 pass, 9 fail; 4/4 declared; `citeinquiry` -1/-1 exit 1; `cite.test.mjs` 73 pass 0 fail | AS DECLARED |
+
+**THE TWO ARMS THAT CAME BACK WRONG, RECORDED RATHER THAN SMOOTHED, because in both cases the
+DEFECT WAS THE ASSERTION.** (1) `unknown` fired only 1 of 2 declared failures: the first
+fixture misspelled the REQUIRED field (`extent_pge` with no `extent_page`), so the grammar
+caught the now-missing page and the act still refused — the drop was invisible. A silent drop
+is only visible when everything ELSE about the citation is valid, so the fixture is now a
+complete legal `pdf-page` PLUS one unknown field. (2) `grammar` came back GREEN on every
+declared arm, and the reason is worth more than the arm: with the catalogue neutered, `dom`,
+an unknown kind and an unparseable page are STILL refused, with the SAME code, because the
+STORE calls the same checker itself — two gates, one function. What does NOT survive is what
+only the catalogue knows about a DOCUMENT (an id that is not shaped like one, a leg stating
+its referent twice), so those two assertions now pin the catalogue's own SENTENCE instead of
+the bare verdict, and the arm bites there. A third correction came from the `overstrict` arm:
+the suite dereferenced an empty leg list and DIED at `-1/-1` instead of naming what the arm
+broke; it is null-tolerant now (`citeinquiry.test.mjs`'s own recorded lesson) and reaches its
+foot.
+
+**THE BYTE-IDENTITY PIN IS A MEASUREMENT ON TWO TREES, not a claim.** A cite that names no
+part writes **1290 bytes, sha256 `0e034ff91db0f9d103896eada9ad82d928058d90090964df0c3ec2f74b8b8d6e`**
+on a pristine worktree of `origin/main` `173bc66` AND on this branch, over the `bundle.md` the
+act wrote with its two authored timestamps and the random selection handle normalised.
+Instrument: `bio-plane/test/rec97-noextent-digest.mjs`, a NON-suite so it runs on a tree that
+does not contain this item. **The third normalisation was found BY the instrument and not
+predicted** — the first cross-tree run differed with IDENTICAL byte counts (1313 each), which
+is what said the difference could not be this item's; the diff was one line, `Trigger:
+selection sel-…`.
+
+**FLOORS MOVED, ELEVEN, EVERY ONE FROM A FIGURE A GREEN RUN PRINTED ON THE COMMITTED TREE AND
+EVERY ONE WITH ITS PRE-EXISTING-SLACK SPLIT AT THE SITE**, measured against the same pristine
+`173bc66` worktree: `check-refusal-codes.mjs` — families 20 -> 22 (slack 2, mine 0), rows
+191 -> 205 (10, 4), census 474 -> 490 (12, 4), reach 244 -> 258 (10, 4), governedSites
+75 -> 81 (5, 1), regions 61 -> 67 (5, 1), regionLines 1745 -> 2035 (226, 64), codesChecked
+177 -> 201 (20, 4), outcomeReturns 86 -> 98 (8, 4), refusalsJudged 180 -> 203 (19, 4); and
+`coverage.mjs` REGISTER_FLOOR arms/classified/corpus 1015/186/187 -> 1022/187/188, where the
+pristine tree printed EXACTLY the old floor, so none of that move is slack. **`untranslated`
+and `reachGap` were deliberately NOT moved** — the first would fail the day somebody
+translates two codes, and the second is a ceiling that may only fall.
+
+**FOR CONDUCT, TWO THINGS THAT NEED A HUMAN MERGE RATHER THAN A FAST-FORWARD.** (1) This
+branch is built on `173bc66`; `origin/main` moved to `65d61c2` (SK-7) while it ran, and SK-7
+touched `src/store.mjs` (the `mintContent` region and the import block), `bio-checks.mjs`,
+`civicos-ui/app.html` (~6256) and `civicos-ui/test/content-extent.test.mjs` (a new section 9
+and its import line) — **measured: no overlap with any region this item touched**, but the
+import block in `store.mjs` and the two UI files will conflict on line position.
+(2) **SK-7 ALSO MOVED `REGISTER_FLOOR`'s ONE KEY SET on `origin/main`.** Neither figure is
+true of the merged tree: **COLLAPSE TO ONE SET and re-read the printed figures from a green
+run of the merge.** The same goes for `regionLines`, which is a property of the MERGED source
+and has moved at integration five times — and this item ADDED a governed region, so it is one
+of the five's exact shape.
+
+### DELEGATION 2026-09-14 RECORD (REC-97) -> UI: **THE ACT NOW CARRIES THE EXTENT; THE COMPOSER'S PICKER IS THE LAST PIECE, AND IT IS A UI ITEM RATHER THAN A LINE**
+
+UI-61's DELEGATION to RECORD is DISCHARGED: `op=cite` accepts the flattened extent scalars
+(`extent_kind`, `extent_page`, `extent_rect`, `extent_ref`, `extent_sheet`, `extent_cell`,
+`extent_slide`, `extent_shape`, `extent_para`, `extent_run`) or a `content_id`, splices them
+onto the leg it writes, and **refuses BY NAME** every field it does not carry. Driven end to
+end through the op in `bio-plane/test/cite-extent.test.mjs`: a page cited through `op=cite`
+lands in the document's own bytes, mints a content row, and reads back through
+`op=earnedbasis` with the member's own `ref`. All four portion arms work, not only
+`pdf-page`. IC-90, PROPOSED on I3.
+
+**WHAT REC-97 DID ON THE SURFACE, AND IT IS THE ONE LINE THE ROW ALLOWED.** The composer's
+`extentBlock` sentence said *"The record's citation act carries no part-of-a-document yet"*.
+That became FALSE at this landing, so it is CORRECTED to say the act now carries one and
+**this page does not yet offer a way to pick one**. The comment above it is corrected with
+it. `civicos-ui/test/content-extent.test.mjs`'s routing pin — which UI-61 deliberately wrote
+to FAIL on this day — is INVERTED, never exempted, and now asserts both halves: the act
+carries the extent, and the composer still offers no control.
+
+**WHAT IS ASKED OF UI, and the row said to delegate it if it was more than a line — it is.**
+Build the picker. UI-61 measured why it is an item rather than a line and that measurement
+stands: a page chooser needs the document's own page set (which the record does not persist
+yet — CAP-9/CAP-12, D-354) and a rectangle needs a page canvas `app.html` does not have
+(`openArtifact` hands a blob URL to the browser's own PDF viewer). What is already built and
+waiting: the leg display renders every arm of IC-1's union from the plane's own `ref`, the
+`stale` pane, the page jump, and `content-extent.control.mjs`'s `prefilled` arm pins the rule
+the control must be built to (DEC-69: nothing forced, nothing prefilled).
+
+**THE ACT'S OWN GRAMMAR, so the picker can be built against it rather than guessed at.** Send
+only what the member chose; send nothing for the whole document (absent IS `document`, Bob's
+5.3). An empty-valued field is NOT an authored extent and is accepted, so a control that
+always sends its keys is safe. One extent per CALL: the act refuses `EXTENT_ON_MANY` where a
+selection would write several legs, so the picker belongs to a single-document citation.
+A value carrying a quote, a backslash, a newline or a `#` is refused `BAD_EXTENT_VALUE`, and
+one over 200 characters with it. `extent_rect` is `x,y,x,y` (four numbers, brackets
+optional). Every refusal carries the plane's own sentence and, where the catalogue fired, its
+repairs — `citeRefusalHtml` already renders them.
+
+**AND `EXTENT_NOT_APPLICABLE` IS WHY THE REGION STAYS ON THE QUESTION ARM.** A case's
+citation edge has no leg, so an extent sent on that arm is refused by name exactly as `role`
+is. The existing `citeOntoInquiry()` guard on `extentBlock` is already correct.
+
+## CLAIM ADDENDUM 2026-09-14 RECORD (REC-97 — four paths added at the close, each forced by a mechanism rather than chosen)
+
+- **`bio-plane/test/citeinquiry.test.mjs`** — ONE assertion, REC-37's, which pinned the DO
+  dispatch's parameter roster as *"project, handle, viewer, owner, note, author, role"*. It
+  was RIGHT when REC-37 wrote it and is what made the silent drop possible; it is
+  **CORRECTED, never exempted**, with the reason at the site, and SPLIT so the claim it
+  exists to hold — *no grade is a parameter of this act at all* — is stated in its own
+  assertion rather than carried implicitly by a list. The suite goes 49 → 50 assertions.
+- **`bio-plane/dist/bio-plane.bundled.mjs`** and **`bio-plane/dist/bio-plane.bundle.json`** —
+  rebuilt with `npm run build` and committed. Not a choice: FL-10's staleness guard in
+  `fleetbundles.test.mjs` went red naming both changed sources and printing the remedy
+  (*"Run `npm run build` in bio-plane/ and commit the artifact with the change"*), which is
+  the guard doing exactly its job. This is NOT a version bump, a signature or a deploy —
+  those are DIST's and none was taken (CAP-9's worker committed the same two paths on the
+  same terms three items ago).
+- **`.gitignore`** — one line for this item's negative-control pen (`.rec97-control-pristine/`),
+  named for the item on the rule recorded at `.rec84-control-pristine/`: a glob over
+  `.*-control-pristine/` would silently cover a pen nobody declared.
+- **`docs/DECIDED.md`** — regenerated with `node tools/decided.mjs`, which `plancheck`
+  requires of any turn whose corpus edits move the ruling index.
+- **`docs/architecture/BIO_Content_Framework_v0_10.md`** — the FRONT MATTER bullet for §14.5
+  ONLY, and no body line. CLAUDE.md's 2026-09-14 rule is not optional: *a landing that
+  changes a construct updates its home document's front matter in the same commit*, and that
+  bullet already narrates REC-82 → REC-85 landing by landing, so leaving this one out would
+  make it stale by omission in exactly the way the rule exists to prevent. The sentence added
+  says what landed AND says plainly that **no composer emits an extent yet** — which is the
+  half IC-84's own RESOLUTION reads the other way round.

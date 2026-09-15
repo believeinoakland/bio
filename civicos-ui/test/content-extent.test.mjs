@@ -367,14 +367,30 @@ ok("it offers no kind chooser either, and says why rather than showing an inert 
   !/<select/i.test(extentBlock) && !/name="cx-extent"/i.test(extentBlock));
 ok("it is on the QUESTION arm only — a case's citation edge has no basis leg to scope",
   /citeOntoInquiry\(\)/.test(extentBlock));
-/* THE MEASURED FACT THE REGION RESTS ON, re-measured HERE rather than quoted, so
-   the day `op=cite` gains an extent this assertion FAILS and the region is
-   revisited instead of going quietly stale. */
+/* THE MEASURED FACT THE REGION RESTS ON, re-measured HERE rather than quoted.
+   CORRECTED 2026-09-14 BY REC-97, NEVER EXEMPTED. As UI-61 wrote it this
+   asserted that `op=cite` carries NO extent, with the note "if this fails,
+   op=cite now carries an extent: build the picker and delete the
+   absent-and-says-so region". **IT DID FAIL, and the old assertion was right
+   when it was written and is wrong now** — REC-97 / IC-90 widened the act, which
+   is the landing UI-61's own DELEGATION asked for. The assertion is INVERTED
+   rather than deleted, because the fact it pins is still the fact the region
+   rests on: the region says what it says BECAUSE of what the act carries, and a
+   pin that stopped measuring the act would let the sentence go stale in the
+   other direction. The picker is NOT built here — that is a UI item (a page set
+   and a page canvas, UI-61's second finding), delegated back — and the two
+   assertions below say exactly that, so neither half can drift silently. */
 const store = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
-const citeRouting = /cite: \(\) => this\.cite\(\{[\s\S]*?\}\),/.exec(store)?.[0] || "";
-ok("`op=cite` still carries NO extent — which is why the picker is absent and says so",
-  citeRouting.length > 0 && !/extent/.test(citeRouting),
-  "if this fails, op=cite now carries an extent: build the picker and delete the absent-and-says-so region");
+const citeRouting = /cite: \(\) => this\.cite\(\{[\s\S]*?\n {8}\}\),/.exec(store)?.[0] || "";
+ok("`op=cite` NOW CARRIES the extent — the silent drop UI-61 measured is closed (REC-97)",
+  citeRouting.length > 0 && /extent/.test(citeRouting),
+  "if this fails, op=cite has stopped carrying an extent and the composer's sentence is false again");
+ok("and it takes it as a BAG, so a field the act does not carry is refusable rather than dropped",
+  /extent_|content_id/.test(citeRouting) && /searchParams/.test(citeRouting),
+  "the defect was seven named get()s; an eighth get() would close one spelling and leave the mechanism");
+ok("the composer STILL offers no control, and now says the page is what is missing rather than the act",
+  /does not yet offer a way to pick one/.test(extentBlock) && !/<input/i.test(extentBlock),
+  "if this fails the picker was built here — delete the absent-and-says-so region with it");
 
 /* ============================================================
    7. THE ARMS THIS PLANE CANNOT DRIVE, NAMED RATHER THAN SKIPPED

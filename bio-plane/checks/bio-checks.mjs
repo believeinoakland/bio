@@ -9794,8 +9794,10 @@ export function checkCaseDocument(fm, ctx = {}) {
  * file is the layer both already import, which is where C-35's own constant
  * ended up for exactly the same reason (see EARNED_CAPTURE_CEILING above).
  *
- * THE FAMILY IS SIX CONDITIONS AND THEY ARE SIX DIFFERENT FACTS, which is
- * why they are six codes and not one "bad extent":
+ * THE FAMILY IS TEN CONDITIONS AND THEY ARE TEN DIFFERENT FACTS, which is
+ * why they are ten codes and not one "bad extent" (SIX until REC-97 widened
+ * `op=cite`; the four it added are the ways the ACT can be handed an extent it
+ * must not write, and each carries its own repair):
  *
  *   C-45.1  the extent names a page the capture does not have — a citation
  *           into a document that cannot contain it
@@ -9808,6 +9810,14 @@ export function checkCaseDocument(fm, ctx = {}) {
  *   C-45.5  the leg NAMES a content id and this record holds no such row
  *   C-45.6  the leg names a content id whose row addresses a DIFFERENT
  *           document from the one the leg rests on
+ *   C-45.7  the ACT was sent an extent field it does not carry — refused BY
+ *           NAME, because a parameter nobody reads is a parameter nobody can
+ *           refuse and the silent drop is the defect REC-97 closed
+ *   C-45.8  an extent on a CASE's citation edge, which has no leg to scope it
+ *   C-45.9  one extent across a selection that would write SEVERAL legs — a
+ *           part of a document is a part of ONE document
+ *   C-45.10 an extent VALUE the restricted frontmatter grammar cannot carry
+ *           (BAD_NOTE's rule, one field down)
  *
  * REC-84 ADDED THE LAST TWO AND MINTED NO NEW FAMILY, on SK-1's measured rule
  * that a `*_CHECKS` family is a FLOOR in `civicos-ui/check-refusal-codes.mjs`
@@ -9973,6 +9983,63 @@ export const CONTENT_EXTENT_CHECKS = {
     translation: 'This citation rests on one document and names a part of a different one. A '
       + 'reference that says "this document, that passage" is two claims that do not meet, and a '
       + 'reader following it would be shown material the citation never meant.',
+  },
+  /* REC-97 / IC-90 — THE FOUR WAYS THE ACT THAT WRITES A LEG CAN BE HANDED AN
+     EXTENT IT MUST NOT WRITE, and every one of them exists because the
+     alternative was already measured: until this item `op=cite` destructured
+     seven named parameters and an `extent_kind` sent beside them WAS DROPPED IN
+     SILENCE, so a member who chose a page got a leg resting on the whole
+     document with nothing anywhere saying the choice went nowhere. A parameter
+     nobody reads is a parameter nobody can refuse, and a silent drop is the
+     D-21 class: a field authored in one place and honoured nowhere.
+
+     THEY ARE IN THIS FAMILY AND NOT A NEW ONE, on REC-84's own rule two rows up
+     (SK-1's floor rule) and on the same substantive ground: this family's
+     subject is *the ways the record could come to point at nothing*, and an act
+     that writes a leg the member did not describe is the widest of them. No new
+     `node tools/mintid.mjs C` id: these are sub-numbers of an allocated family,
+     exactly as C-45.5 and C-45.6 were.
+
+     WHAT IS NOT HERE, DELIBERATELY. A leg whose extent is MALFORMED or names an
+     unlanded kind is refused through `checkLegExtentGrammar` — REC-84's ONE
+     checker, which this act ROUTES ITS COMPOSED LEG THROUGH and re-implements
+     nothing of — and comes back under `BASIS_REFUSED`, which is `op=promote`'s
+     own name for exactly that verdict. `suggest` set that precedent in words:
+     *"one function answering twice should not answer under two names."* A fifth
+     code here would be a second name for a refusal the record already has. */
+  UNKNOWN_EXTENT_FIELD: {
+    check: 'C-45.7',
+    where: 'src/store.mjs cite > is-cite-extent',
+    translation: 'Part of what was sent with this citation names a field this act does not '
+      + 'carry, so the record cannot tell what part of the document you meant. It is refused '
+      + 'rather than ignored: a field that is accepted and quietly dropped leaves you with a '
+      + 'citation that looks like the one you made and is not. The fields this act does take '
+      + 'are listed beside the refusal.',
+  },
+  EXTENT_NOT_APPLICABLE: {
+    check: 'C-45.8',
+    where: 'src/store.mjs cite > is-cite-extent',
+    translation: 'Which part of a document a citation rests on is something a QUESTION\'s basis '
+      + 'records, and the thing citing here is a case. A case\'s citation names the document and '
+      + 'has nowhere to put a page or a passage, so this one would be dropped rather than '
+      + 'recorded — and a field stated in one place and honoured nowhere is how a record and the '
+      + 'pages built from it drift apart.',
+  },
+  EXTENT_ON_MANY: {
+    check: 'C-45.9',
+    where: 'src/store.mjs cite > is-cite-extent',
+    translation: 'A part of a document is a part of ONE document, and this citation would write '
+      + 'a leg for several. Writing the same page or passage onto each of them would put claims '
+      + 'in the record you never made — you named one part once. Cite the one document you mean '
+      + 'this part of, and cite the rest separately.',
+  },
+  BAD_EXTENT_VALUE: {
+    check: 'C-45.10',
+    where: 'src/store.mjs cite > is-cite-extent',
+    translation: 'One of the values describing which part of the document you mean cannot be '
+      + 'written into the record as it stands — it is empty, too long, or contains a quotation '
+      + 'mark, a backslash, a line break or a comment mark, and those characters would silently '
+      + 'reshape the document rather than appear in it. It is declined instead of mangled.',
   },
 };
 

@@ -356,10 +356,26 @@ t("it reports each leg with the registry's OWN sentence for a filled one and an 
   [3, "A", true, null]);
 t("every leg carries the role the member stated, and no other",
   docLegsNow.map((l) => l.role), ["supports", "supports", "supports"]);
-t("NO GRADE IS A PARAMETER OF THIS ACT AT ALL: the DO dispatch reads project, handle, viewer, owner, note, author, role",
-  (/cite: \(\) => this\.cite\(\{[\s\S]*?\n        \}\),/.exec(STORE_SRC)[0]
-    .match(/^\s+([a-z]+):/gm) || []).map((x) => x.trim().replace(":", "")).sort(),
-  ["author", "handle", "note", "owner", "project", "role", "viewer"]);
+/* CORRECTED 2026-09-14 BY REC-97, NEVER EXEMPTED. As REC-37 wrote it this listed
+   SEVEN parameters, and the seven were the whole of what the dispatch read —
+   which is precisely why an `extent_kind` sent beside them was DROPPED IN
+   SILENCE, the defect REC-97 closed (IC-90 on I3). The eighth, `extent`, is a
+   BAG of every extent parameter the caller sent, so the act can refuse a field
+   it does not carry BY NAME instead of the control plane deciding by omission
+   which member gestures exist.
+   THE ASSERTION'S OWN SUBJECT IS UNCHANGED AND IS WHAT MATTERS HERE: **no grade
+   is a parameter of this act at all.** It is a TOTALITY over the dispatch's
+   parameter names rather than a list of the ones this suite cares about, so it
+   is the assertion that notices a grade control arriving — and it noticed this
+   widening, which is the shape working. The roster is corrected; the claim is
+   re-stated below it so a future reader cannot mistake the list for the point. */
+const citeParams = (/cite: \(\) => this\.cite\(\{[\s\S]*?\n        \}\),/.exec(STORE_SRC)[0]
+  .match(/^\s+([a-z_]+):/gm) || []).map((x) => x.trim().replace(":", "")).sort();
+t("THE DO dispatch reads project, handle, viewer, owner, note, author, role and (REC-97) extent",
+  citeParams,
+  ["author", "extent", "handle", "note", "owner", "project", "role", "viewer"]);
+t("NO GRADE IS A PARAMETER OF THIS ACT AT ALL — the claim the roster above exists to hold",
+  citeParams.filter((p) => /grade/.test(p)), []);
 
 /* ===================== 5. IT LANDED THROUGH THE DOCUMENT ================= */
 console.log("\n--- 5. D-21: the leg is in the DOCUMENT, and the table is its projection ---");
