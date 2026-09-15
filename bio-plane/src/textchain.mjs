@@ -131,20 +131,20 @@ export const STEP_KINDS = {
      enacted resolutions carry somebody else's machine OCR as their text layer.
      The record has been reading those as authored text. It now says what they
      are. */
-  layer:    { role: "derivation", label: "the document's own text layer" },
+  layer:    { role: "derivation", label: "the document's own text layer", tier: "step" },
   /* A page turned into pixels — rendered, or (CPDF-12's observation, to be
      verified across the corpus) EXTRACTED, where a scanned page is one
      full-page embedded image and rasterising it would be work nobody needs. */
-  pixels:   { role: "derivation", label: "the page as pixels" },
+  pixels:   { role: "derivation", label: "the page as pixels", tier: 3 },
   /* An OCR engine over those pixels. Names engine and version, because that
      pair is what a calibration is of and what a re-run would need. */
-  ocr:      { role: "derivation", label: "optical character recognition" },
+  ocr:      { role: "derivation", label: "optical character recognition", tier: 3 },
   /* A model that rewrote the text — cleaning, joining, correcting. THE STEP
      THIS WHOLE MODULE IS MOST AFRAID OF, and rule 2 is pointed at it. */
-  ai:       { role: "derivation", label: "a model rewrote the text" },
+  ai:       { role: "derivation", label: "a model rewrote the text", tier: null },
   /* A member checked the text against the image and said so, over a stated
      extent. Not a derivation: see the header. */
-  attested: { role: "verification", label: "a member checked it against the image" },
+  attested: { role: "verification", label: "a member checked it against the image", tier: null },
 };
 
 /** The BASES a per-region confidence number may have, and this enum IS the
@@ -517,6 +517,97 @@ export function derivationCap(chain, target = null) {
  *  transcription that we have been reading as authored text. */
 export function isTranscribed(chain) {
   return !checkChain(chain) && chain.some((s) => STEP_KINDS[s.step].role === "derivation");
+}
+
+/** REC-94 — WHICH EXTRACTION TIERS DOES THIS CHAIN EVIDENCE, AND OVER WHAT?
+ *
+ *  `OBSERVATION-LOG-DESIGN.md` §4.2 asks for *one row per extraction attempt per
+ *  capture per tier*, so the content-level writer has to be able to say which
+ *  tiers a persisted reading is evidence of. The chain is the only record of
+ *  that: a tier that ran left a step, and a tier that did not run left nothing —
+ *  which is the design's own rule that a look not taken is `NEVER_LOOKED` and
+ *  `NEVER_LOOKED` is the ABSENCE of a row, arriving one level down.
+ *
+ *  THE TIER IS A PROPERTY OF THE STEP KIND, DECLARED IN `STEP_KINDS`, AND THIS
+ *  FUNCTION MATCHES NO STEP NAME. That is the inversion this module already
+ *  makes for `role` and it is made for the same reason: a list of spellings goes
+ *  stale the moment a sixth kind is written. Three declared values and each says
+ *  a different true thing —
+ *
+ *    `tier: "step"`  the STEP names its own tier, because the kind spans several
+ *                    (a `layer` decode is tier 1 or tier 2 and only the step can
+ *                    say which);
+ *    `tier: <int>`   the KIND is the tier (pixels and ocr ARE tier 3 — there is
+ *                    no tier-3 route that is not an engine over pixels);
+ *    `tier: null`    the kind is deliberately NOT a rung on this ladder. `ai` is
+ *                    a derivation and `attested` is a verification, and neither
+ *                    is a way of getting text OUT of a document — folding either
+ *                    into a tier would make SK-8's proposed reading look like a
+ *                    fourth extraction tier, which it is not.
+ *
+ *  AND A KIND THAT DECLARED NOTHING IS NAMED, NEVER SCORED ZERO. A sixth step
+ *  kind added without a `tier` key comes back in `unclassified` and the caller
+ *  must state it. A thing the matcher does not understand must be NAMED — a
+ *  silent zero here would be a tier the frontier cannot see, which is exactly
+ *  the false-coverage failure the observation log exists to prevent.
+ *
+ *  `covers` IS THE STEP'S EXTENT (D-252), so a MIXED document — a text-layer
+ *  report with scanned exhibits — answers two tiers, each over its own pages,
+ *  and the writer can say `partial` about each rather than PRESENT about the
+ *  document. A malformed chain answers the empty set on `derivationCap`'s
+ *  precedent, because a reader asking what a broken chain evidences should get
+ *  "nothing this record can name", which is true. */
+export function tiersEvidenced(chain) {
+  if (checkChain(chain)) return { tiers: [], unclassified: [] };
+  const byTier = new Map();
+  const unclassified = [];
+  for (const s of chain) {
+    const kind = STEP_KINDS[s.step];
+    /* The KEY's presence is the declaration; its VALUE is the answer. `null` is
+       a declared answer and `undefined` is no answer at all, and collapsing the
+       two is how a kind nobody classified would read as a kind deliberately off
+       the ladder. */
+    if (!Object.prototype.hasOwnProperty.call(kind, "tier")) {
+      if (!unclassified.includes(s.step)) unclassified.push(s.step);
+      continue;
+    }
+    if (kind.tier === null) continue;
+    const t = kind.tier === "step"
+      ? (Number.isInteger(s.tier) ? s.tier : null)
+      : kind.tier;
+    /* A `layer` step whose own `tier` is absent is a tier THIS RECORD DID NOT
+       RECORD, and it is carried as `null` rather than dropped: the extraction
+       happened and the rung it happened on is undetermined, which is a fact to
+       state and not one to discard. */
+    const key = t == null ? "unrecorded" : t;
+    const prev = byTier.get(key);
+    const covers = extentOf(s);
+    byTier.set(key, { tier: t, steps: [...(prev ? prev.steps : []), s.step],
+                      /* "all" beats a page list: if ANY step of this tier was
+                         unscoped, the tier covered the document. Two scoped
+                         steps of one tier union their pages. */
+                      covers: prev ? unionExtent(prev.covers, covers) : covers });
+  }
+  /* IN THE ORDER THE ATTEMPTS HAPPENED, WHICH IS THE CHAIN'S ORDER, AND NOT
+     SORTED BY TIER NUMBER. A Map keeps insertion order, and the chain is a
+     record of WHAT HAPPENED in sequence -- the page became pixels and an engine
+     read them, after the layer decode had already had its go. The content-level
+     writer walks these CUMULATIVELY, so an order that is not the order of events
+     would make each row say the state after a tier that had not run yet. Sorting
+     would also be right today by accident (escalation runs 1 -> 2 -> 3) and
+     wrong the first time a chain is composed in any other order, which is the
+     class of correctness this repository keeps paying for. */
+  return { tiers: [...byTier.values()], unclassified };
+}
+
+/* Union of two step extents in `extentOf`'s own vocabulary. `all` absorbs
+   everything; `unreadable` absorbs a page list, because an extent this record
+   cannot parse must never narrow to the part of it that happened to parse —
+   `extentCovers`' default-to-not-covering rule pointed the other way. */
+function unionExtent(a, b) {
+  if (a === "all" || b === "all") return "all";
+  if (a === "unreadable" || b === "unreadable") return "unreadable";
+  return [...new Set([...a, ...b])].sort((x, y) => x - y);
 }
 
 /** Was a machine the last thing to touch this text? The question a projection

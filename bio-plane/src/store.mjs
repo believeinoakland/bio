@@ -241,6 +241,24 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
             particular is where §4.6's provisional is enforced: there is no value
             in it a member's ad hoc search could take. */
          OBSERVATION_ACTOR_CLASSES, OBSERVATION_AUTHORITY_KINDS, OBSERVATION_SUBJECT_KINDS,
+         /* REC-94 / IC-95: the content axis. ONE CONSTANT, and importing it is
+            the whole of the mechanism CONDUCT ruled on 2026-09-14 -- REC-92 and
+            CPDF-19 import this same object, so a fourth spelling of
+            a fourth spelling of any member cannot be written without failing the
+            build -- the arm is ABSOLUTE and counts comments too, so this sentence
+            names no member either.
+            `contentAxisFor` and `contentObservationsFor` are pure and hold the
+            whole judgement, exactly as `checkObservation` does for the append
+            site: this file puts judged rows in and holds no second opinion about
+            what a reading means. */
+         CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED,
+         contentAxisFor, contentObservationsFor,
+         /* REC-94: the set C-22.2 and C-22.3 already turn on. The content-level
+            frontier asks "is this capture below what the fleet can now do" and
+            the answer is "its latest state is not definitive" — the SAME
+            property, so it is imported rather than re-typed as a list of two
+            state names that a sixth state would silently escape. */
+         DEFINITIVE_STATES,
          /* FL-8 / IC-67: WHAT BECAME OF THE RUN, decided in `airun.mjs` beside the
             three vocabularies it reads rather than as a ternary here. Imported for
             `finishedBound`'s reason exactly, one field over: this rule had two
@@ -260,6 +278,11 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
 import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribed,
          terminalStep, describeChain, gradeCeiling, STEP_KINDS,
          calibrationsOf,
+         /* REC-94: WHICH TIERS A CHAIN EVIDENCES, read off the step kinds' own
+            declared tier. It lives in `textchain.mjs` because it is a question
+            about a chain and a chain has ONE home -- the same boundary the
+            header above draws for `cap` and for `calibrationsOf`. */
+         tiersEvidenced,
          /* FW-17 / IC-86 + D-161: reading POSITION and whether a position falls
             inside a content row's extent. Imported for the reason everything
             above it is — the extent vocabulary is ONE construct and a second
@@ -11373,7 +11396,12 @@ export class Store extends DurableObject {
          entity-reference index can never be a revision behind the document they
          describe. A reading indexed by its raw entity references is the reverse
          index Step 4 resolves entities across documents with. */
-      this.#writeReadings(bundleId, files);
+      /* REC-94: `author` is threaded in for the content-level observation's
+         `actor`. It is the control plane's SERVER-SIDE stamp from the
+         authenticated session (the comment on `ownerMemberId` below states the
+         rule), so it is the one value here that says WHO caused this look
+         without a caller being able to name themselves something else. */
+      this.#writeReadings(bundleId, files, author);
 
       /* 7.1: the creator of a project is its sole initial owner, written in the
          SAME transaction as the project itself so a project cannot exist
@@ -11462,7 +11490,7 @@ export class Store extends DurableObject {
      capture's reading and its reference rows, so a revised reader never leaves
      stale references behind. Every reference is stored AS IT APPEARS — the raw
      kind:key — and is NEVER resolved to a canonical entity (Step 4 / D-83). */
-  #writeReadings(bundleId, files) {
+  #writeReadings(bundleId, files, author = null) {
     const prov = files.find((f) => f.path === "data/provenance.json");
     if (!prov || typeof prov.text !== "string") return;
     let docs;
@@ -11499,6 +11527,27 @@ export class Store extends DurableObject {
          must NOT be a delete-then-rebuild, and writing it as one is exactly how
          the rule would be lost to a pattern the surrounding code establishes. */
       this.#markContentStale(sha, Array.isArray(reading.text_source) ? reading.text_source : null);
+      /* REC-94 / IC-95 — THE CONTENT-LEVEL OBSERVATION, written HERE, in
+         promote's one transaction, beside the reading it is about and beside the
+         stale mark it is not.
+         *
+         * WHY HERE. `OBSERVATION-LOG-DESIGN.md` section 4.2's writer is "at
+         * promote", and this is the only place in this plane where a capture's
+         * reading is persisted. The row must be written in the SAME transaction
+         * as the reading for the reason every projection in this method is:
+         * either the store advances with its coverage record or neither does.
+         * A coverage record that can be a revision behind the corpus it
+         * describes is the one kind of staleness this table cannot carry,
+         * because its whole value is saying WHICH ABSENCE IS TRUE.
+         *
+         * IT IS NOT THE STALE MARK AND MUST NOT BE FOLDED INTO IT. The line
+         * above is REC-82's, about content rows a member's edge points at; this
+         * is about whether we ever got the text at all. They fire on the same
+         * event and answer different questions, and the direction that matters
+         * is that a re-promotion carrying the SAME chain stales nothing and
+         * still writes an observation — we looked again, and this is what we
+         * had. */
+      this.#observeExtraction(bundleId, sha, reading, { author });
       this.sql.exec(
         `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at)
          VALUES (?,?,?,?,?,?,?,?)`,
@@ -28312,6 +28361,181 @@ export class Store extends DurableObject {
     return null;
   }
 
+  /** REC-94 / IC-95 — THE CONTENT-LEVEL WRITER. `OBSERVATION-LOG-DESIGN.md`
+   *  section 4.2, and section 8's row 2.
+   *
+   *  ONE ROW PER EXTRACTION ATTEMPT PER CAPTURE PER TIER, THROUGH REC-93'S ONE
+   *  APPEND SITE, WHICH THIS METHOD DOES NOT DUPLICATE AND DOES NOT MODIFY.
+   *  `#observe` is the single writer for `observation_log` and every refusal it
+   *  applies is read out of the map; this method's whole job is to turn a
+   *  persisted reading into the entries the design's table names, and even THAT
+   *  judgement is not made here — `contentObservationsFor` in `airun.mjs` is
+   *  pure and holds it, so a suite can hold the decision to this store's
+   *  behaviour without workerd. Nothing below types a C-number.
+   *
+   *  THE AUTHORITY IS THE BUNDLE, AND THE SUBJECT IS THE CAPTURE. Those are two
+   *  different facts and the design's indexes make each a read: `(level,
+   *  subject_kind, subject, seq)` answers *what has this document's text been
+   *  through*, and `(authority_kind, authority, seq)` answers *what did this
+   *  promotion extract*. The authority is never the capture, which would make
+   *  the two columns one fact written twice.
+   *
+   *  WHO LOOKED, DERIVED AND NEVER GUESSED. `contentMintState` is the record's
+   *  existing predicate for reading a principal as member / machine / the plane
+   *  and it is CONSUMED rather than copied — a second opinion about what a
+   *  machine identity looks like is the eleven-copies-of-one-predicate failure
+   *  REC-46 measured. A promotion with no author is the plane's own, which is
+   *  what `actor_class = plane` means and why `actor` is then NULL: attributing
+   *  a look to a member who did not make it is a false attribution in the one
+   *  field that says who looked.
+   *
+   *  THIS IS ALSO THE DOOR A READ-TIME RE-EXTRACTION COMES THROUGH (D-319,
+   *  `EXTRACTION-BREADTH-DESIGN.md` section 5.1). That seam is CPDF-19's and
+   *  does not exist on this tree — verified by grep rather than inherited from a
+   *  ledger: the read-time structure op stops at tier 2 and there is no call
+   *  site. What section 5.1 requires of the WRITER is here and driven: a new
+   *  chain arriving for a capture that already has rows writes a NEW row under
+   *  `authority_kind = extract` with the member who asked as `actor`, which is
+   *  exactly what a re-promotion with a moved chain does today. `reextraction`
+   *  is therefore DERIVED from the store — has this capture been extracted
+   *  before — and not passed in by a caller, so the second row says so whether
+   *  or not the caller thought to mention it. */
+  #observeExtraction(bundleId, captureSha, reading, { author = null } = {}) {
+    const mint = contentMintState(author);
+    const actorClass = mint === "member_marked" ? "member"
+                     : mint === "machine_marked" ? "machine" : "plane";
+    const actor = actorClass === "plane" ? null : String(author);
+    /* DERIVED, NOT DECLARED: one bounded indexed read on the frontier key. A
+       capture that already has a content-level row has been extracted before, so
+       this attempt is a RE-extraction, and the log says which without anybody
+       having to remember to say it. */
+    const before = this.#one(
+      `SELECT seq FROM observation_log
+        WHERE level = 'content' AND subject_kind = 'capture' AND subject = ?
+        ORDER BY seq DESC LIMIT 1`, captureSha);
+    const { rows, unclassified } = contentObservationsFor(reading, captureSha, tiersEvidenced);
+    const written = [], refused = [];
+    for (const r of rows) {
+      const bad = this.#observe({
+        actorClass, actor,
+        authorityKind: "extract",
+        authority: bundleId == null ? null : String(bundleId),
+        level: "content",
+        subjectKind: "capture",
+        subject: captureSha,
+        state: r.state,
+        condition: r.condition,
+        resultKind: r.resultKind,
+        resultRef: r.resultRef,
+        detail: (before ? "re-extraction; " : "first extraction; ") + r.detail,
+      });
+      if (bad) refused.push(bad); else written.push(r.state);
+    }
+    /* A STEP KIND NOBODY CLASSIFIED IS NAMED, NEVER SCORED ZERO. If a sixth
+       chain step arrives without declaring whether it is an extraction tier, the
+       tier it contributed is invisible to every row above — so it is carried out
+       of here and stated, rather than the answer quietly being one row short.
+       WORKER.md's rule: a thing the matcher does not understand must be NAMED. */
+    return { written: written.length, states: written, refused,
+             reextraction: !!before, unclassified };
+  }
+
+  /** REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS STATE. Section 4.2's *"the
+   *  `indexed` state `CONTENT-SEARCH-DESIGN.md` section 4.3 needs … is this row
+   *  read through the index's own predicate"*, and section 6's second reader.
+   *
+   *  A FIXED-KEY READ AND NOT A COLLECTION: one capture, one answer, two indexed
+   *  reads, no scan and therefore no bound to publish. The aggregate over a
+   *  bundle set that `CONTENT-SEARCH-DESIGN.md` section 4.4's envelope carries is
+   *  REC-92's, and it composes FROM this rather than re-deriving it.
+   *
+   *  THE VOCABULARY IS THE IMPORTED CONSTANT AND NO MEMBER IS SPELLED HERE.
+   *  `contentAxisFor` returns one, and it is published WITH the whole vocabulary
+   *  and its sentences, so a surface renders the answer rather than matching a
+   *  literal it learned separately — PL-17's rule, and the reason this is a
+   *  mechanism rather than three documents agreeing in prose.
+   *
+   *  `unitIndex: false` IS A FACT ABOUT THIS BUILD, MEASURED AT THE SITE. The
+   *  per-unit text index is `capture_text` and it is REC-91's; it does not exist
+   *  on this tree. It is passed as a value rather than assumed inside the pure
+   *  function so that REC-91's landing changes ONE expression here and no
+   *  judgement anywhere — and so that the day it lands, a reader can see what
+   *  this answer was waiting on. */
+  contentAxis({ captureSha = null, viewer = null } = {}) {
+    const sha = typeof captureSha === "string" ? captureSha.trim() : "";
+    if (!sha)
+      return { found: false, vocabulary: CONTENT_AXIS_STATES,
+               undetermined_value: CONTENT_AXIS_UNDETERMINED,
+               note: "a content-axis read names one capture by its sha256" };
+    /* THE CAPTURE IS LOOKED UP FIRST, because "this record does not hold that
+       capture" and "this record holds it and nobody has read it" are two
+       different answers and only the second is what the vocabulary's
+       never-extracted member means. The
+       register is the trust root keyed by `capture_sha` — the same table
+       `op=frontier`'s purge annotation reads, and NOT a `captures` table, which
+       does not exist (REC-93 paid for that line with a 500). */
+    const owner = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, sha);
+    /* THE SAME FENCE AS THE FRONTIER'S CONTENT ARM, and answered the same way:
+       a capture in a bundle this viewer may not see is ABSENT, byte-identically
+       to one this record does not hold. REC-25/REC-30's rule — a read that
+       distinguishes "not yours" from "does not exist" has told the caller the
+       thing it was refusing to tell them. Fails CLOSED on an absent stamp,
+       because `viewerPredicate` does. */
+    const held = owner && this.#bundleRedactor(viewer)(owner.bundle_id) !== null ? owner : null;
+    /* THE FENCE RETURNS BEFORE THE LOG IS READ AT ALL, and the ordering is the
+       fix rather than a tidiness.
+       THE FIRST DRAFT READ THE OBSERVATION FIRST AND FELL THROUGH ON
+       `!held && !latest` — so a capture the viewer could not see but that HAD
+       been extracted answered `found: true` with its extraction state, its
+       actor, and the PROJECT BUNDLE ID as the authority. The fence was present,
+       it was gating the register lookup, and it leaked everything the read
+       exists to disclose. CAUGHT BY THIS ITEM'S OWN ARM D5b, which asserts the
+       withheld answer is byte-identical to the not-held one rather than merely
+       asserting `capture_held` is false — and `capture_held` WAS false on the
+       leaking answer, so an arm testing only that flag would have passed.
+       A fence that refuses one field of an answer it otherwise returns is not a
+       fence; REC-30's rule is that the row is withheld WHOLE. */
+    if (!held)
+      return { found: false, capture_sha: sha, capture_held: false,
+               vocabulary: CONTENT_AXIS_STATES,
+               undetermined_value: CONTENT_AXIS_UNDETERMINED,
+               note: "this record holds no capture with that fingerprint, so there is nothing to "
+                   /* COMPOSED FROM THE CONSTANT AND NEVER TYPED, because this sentence is
+                      PUBLISHED and a surface could match on it -- which is exactly the second
+                      spelling the ruling forbids, arriving in a string rather than in code. */
+                   + `say about its content axis. That is NOT '${Object.keys(CONTENT_AXIS_STATES)[3]}', `
+                   + `which is a statement about a document the record DOES hold and has never read` };
+    const latest = this.#one(
+      `SELECT state, condition, detail, authority_kind, authority, actor_class, actor, at, seq
+         FROM observation_log
+        WHERE level = 'content' AND subject_kind = 'capture' AND subject = ?
+        ORDER BY seq DESC LIMIT 1`, sha);
+    const axis = contentAxisFor({
+      observed: latest ? latest.state : null,
+      unitIndex: false,
+      reason: latest ? (latest.condition || latest.detail || null) : null,
+    });
+    return {
+      found: true, capture_sha: sha, capture_held: !!held,
+      bundle_id: held ? held.bundle_id : null,
+      indexed: axis.state, determined: axis.determined, why: axis.why,
+      /* THE EXTRACTION AXIS AND THE INDEX AXIS ARE KEPT APART, and that is the
+         sparse-at-every-level rule one construct down. The observation says what
+         EXTRACTION established; `indexed` says what the SEARCH INDEX holds. They
+         look like one fact today only because one of them does not exist yet,
+         and collapsing them now would make REC-91's landing read as a change to
+         what extraction found. */
+      extraction: latest
+        ? { state: latest.state, condition: latest.condition, detail: latest.detail,
+            authority_kind: latest.authority_kind, authority: latest.authority,
+            actor_class: latest.actor_class, actor: latest.actor, at: latest.at, seq: latest.seq }
+        : null,
+      undetermined_value: CONTENT_AXIS_UNDETERMINED,
+      vocabulary: CONTENT_AXIS_STATES,
+      states: Object.keys(OBSERVATION_STATES),
+    };
+  }
+
   /** THE FRONTIER, §5 — *the observation log and the frontier are the same table
    *  seen from two angles.* A frontier entry is a subject together with its
    *  CURRENT state and the observation that last set it, so the frontier at any
@@ -28392,6 +28616,155 @@ export class Store extends DurableObject {
   static FRONTIER_LIMIT_DEFAULT = 200;
   static FRONTIER_LIMIT_MAX = 2000;
 
+  /** REC-94 / IC-95 — THE BOUNDED CONTENT-LEVEL FRONTIER. Section 4.2's closing
+   *  paragraph and section 6's first reader, at the content level:
+   *
+   *    *every capture whose latest content-level state is below what the fleet
+   *     can now do (a `tier3_candidate`; a chain whose engine is older than its
+   *     calibration) — is the candidate list for re-extraction, and it is what
+   *     makes D-319's opt-in re-read a choice a member can make FROM A LIST
+   *     rather than a fact they must remember.*
+   *
+   *  THE CANDIDATE LIST IS DERIVED FROM THE LOG AND FROM `#calDriftFor`, AND
+   *  NEITHER RULE IS COPIED HERE. The first half is the observation's own state:
+   *  a capture whose latest content-level row is `partial` (text over part of
+   *  it) or `LOOKED_INDETERMINATE` (no text could be produced — no engine was
+   *  bound, or the decode failed) is by definition below what a better-equipped
+   *  instance could do. That is a PROPERTY and not a list of spellings: a sixth
+   *  outcome added to section 4.2's table is a candidate exactly when it is not
+   *  a definitive PRESENT, so `DEFINITIVE_STATES` decides it and this method
+   *  names no state. The second half — *a chain whose engine is older than its
+   *  calibration* — is ALREADY BUILT and is CONSUMED: `#calDriftFor(null)` is
+   *  CPDF-13's drift join, `op=calibrationdrift`'s own source, bounded at birth
+   *  and the one home of the direction rule. A second implementation of "which
+   *  transcriptions rest on a superseded measurement" is the failure REC-46
+   *  measured, and it would be a second implementation that could disagree with
+   *  the op a member actually reads.
+   *
+   *  `NEVER_LOOKED` AT THIS LEVEL IS A CAPTURE THE RECORD HOLDS AND NOBODY HAS
+   *  READ, which section 5 says is supplied by *the captures and readings that
+   *  exist without a corresponding look*. It is the never-extracted set, and it
+   *  is reported APART from the tally for the reason the document arm gives: it
+   *  is the one state that is the ABSENCE of a row, so counting it in a GROUP BY
+   *  over rows would be counting something that by definition is not there.
+   *
+   *  BOUNDED, AND THE BOUND IS PUBLISHED ON EVERY ANSWER INCLUDING THE EMPTY ONE
+   *  — the same pair the document arm uses, because a second bound for one
+   *  reader's two levels is a second vocabulary for one fact. */
+  #frontierContent(cap, viewer = null) {
+    /* REC-36's WITHHOLDING, ROW-WHOLE, AND IT IS APPLIED HERE RATHER THAN
+       ASSUMED FROM THE OP'S CLASS LIST. Design section 6: *"a subject discloses
+       a project's interest, so REC-36's withholding applies row-whole across the
+       fence"*. At this level the subject is a CAPTURE, which belongs to a
+       bundle, so `#bundleRedactor` is the predicate and it is CONSUMED rather
+       than a second gate written here — `calibrationDrift`'s precedent exactly,
+       and it fails CLOSED on an absent stamp.
+       ROW-WHOLE AND WITH NO COUNT OF WHAT WAS WITHHELD, because that count is
+       the leak (REC-30). The published `limit` is the bound the read was taken
+       at and is NOT a claim about how many rows existed. */
+    const visible = this.#bundleRedactor(viewer);
+    const seen = (sha) => {
+      const owner = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, sha);
+      /* A capture the register does not hold cannot be attributed to a bundle,
+         so there is no bundle to gate on. It is WITHHELD rather than shown: a
+         row whose ownership this record cannot establish is exactly the row a
+         fence must not wave through, and the observation still exists for a
+         reader who can name the capture directly. */
+      return owner ? visible(owner.bundle_id) !== null : false;
+    };
+    const page = this.#frontierLatest("content", { limit: cap + 1, subjectKind: "capture" });
+    /* ONE CALL, NOT ONE PER ROW. The drift join is bounded at birth and its
+       result is a SET; asking it per row would put an amplifying scan inside a
+       bounded read, which is exactly what `test/derivation-bounds.test.mjs`
+       exists to refuse and what it caught in the first draft of `#calDriftFor`
+       itself. */
+    const drift = this.#calDriftFor(null);
+    /* IT RETURNS A FLAT ARRAY OF OBLIGATIONS WITH `truncated` HUNG OFF IT, one
+       per (capture, superseded calibration) pair — read from the function rather
+       than assumed from its name, because a shape guessed here would be a wrong
+       candidate list that looked right. */
+    const drifted = new Map();
+    for (const o of (Array.isArray(drift) ? drift : []))
+      if (o && o.capture_sha) drifted.set(o.capture_sha, o.superseded_calibration || null);
+    const looked = page.slice(0, cap).filter((r) => seen(r.subject)).map((r) => {
+      const axis = contentAxisFor({
+        observed: r.state, unitIndex: false,
+        reason: r.condition || r.detail || null,
+      });
+      /* THE PROPERTY, NOT A LIST. A definitive PRESENT is what the fleet can
+         already do; anything else is below it. `DEFINITIVE_STATES` is the set
+         C-22.2 and C-22.3 already turn on, imported and not re-typed, so a sixth
+         state inherits this classification or fails loudly rather than quietly
+         escaping it. */
+      const belowFleet = !DEFINITIVE_STATES.has(r.state);
+      const calDrift = drifted.has(r.subject);
+      return {
+        subject: r.subject, subject_kind: r.subject_kind, state: r.state,
+        governed: r.governed === 1, condition: r.condition,
+        authority_kind: r.authority_kind, authority: r.authority,
+        actor_class: r.actor_class, result_kind: r.result_kind, result_ref: r.result_ref,
+        detail: r.detail, at: r.at,
+        indexed: axis.state, indexed_determined: axis.determined, indexed_why: axis.why,
+        /* WHY IT IS A CANDIDATE, AND NOT MERELY THAT IT IS. Two different
+           remedies sit behind these two reasons — one needs an engine bound to
+           this instance, the other needs a re-run under a calibration that has
+           already moved — and a member choosing from this list is choosing
+           between those. Collapsing them to a boolean would hand them a list
+           they cannot act on. */
+        tier3_candidate: belowFleet,
+        calibration_drifted: calDrift,
+        calibration_id: calDrift ? drifted.get(r.subject) : null,
+        recandidate: belowFleet || calDrift,
+        ...this.#frontierVerification("content", r.subject_kind, r.subject),
+      };
+    });
+    /* THE NEVER-EXTRACTED SET: a capture the register holds with no content-level
+       row at all. It is the content level's `NEVER_LOOKED`, and it is the one
+       number in this answer that says WHICH ABSENCE IS TRUE — a search that
+       found nothing over these captures found nothing because nobody has read
+       them, which is a different fact from having read them and found nothing
+       (CLAUDE.md's sparse-at-every-level rule, made mechanical). */
+    const never = this.#rows(
+      `SELECT DISTINCT g.capture_sha AS subject, g.bundle_id AS bundle_id
+         FROM register g
+        WHERE NOT EXISTS (SELECT 1 FROM observation_log o
+                           WHERE o.level = 'content' AND o.subject_kind = 'capture'
+                             AND o.subject = g.capture_sha)
+        ORDER BY g.capture_sha
+        LIMIT ?`, cap + 1).filter((r) => visible(r.bundle_id) !== null);
+    const tally = {};
+    for (const row of this.#rows(
+      `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content' GROUP BY state`))
+      tally[row.state] = row.n;
+    const candidates = looked.filter((r) => r.recandidate);
+    return {
+      level: "content", found: true, built: true, limit: cap,
+      truncated: page.length > cap || never.length > cap,
+      looked, never_looked: never.slice(0, cap),
+      never_looked_count: never.slice(0, cap).length,
+      tally,
+      /* The candidate list is a PROJECTION of `looked` and never a second read,
+         so the two can never disagree about which captures are on it — and it is
+         bounded by `looked`'s own bound rather than carrying a second one. */
+      recandidates: candidates.map((r) => ({
+        subject: r.subject, state: r.state, indexed: r.indexed,
+        tier3_candidate: r.tier3_candidate, calibration_drifted: r.calibration_drifted,
+        calibration_id: r.calibration_id, detail: r.detail })),
+      recandidate_count: candidates.length,
+      calibration_drift_truncated: !!(drift && drift.truncated),
+      vocabulary: CONTENT_AXIS_STATES,
+      undetermined_value: CONTENT_AXIS_UNDETERMINED,
+      note: "NEVER_LOOKED at the content level is a capture this record holds that nothing has "
+          + "ever tried to extract, and it is reported apart from the tally because it is the "
+          + "absence of a row. The re-extraction candidate list is every capture whose latest "
+          + "content-level state is not a definitive PRESENT, plus every capture whose "
+          + "transcription rests on a calibration a worse measurement has superseded. The "
+          + "per-capture indexed state reads UNDETERMINED wherever text WAS extracted, because "
+          + "the per-unit text index it would be read through is REC-91's and does not exist in "
+          + "this build",
+    };
+  }
+
   /** op=frontier — WHAT HAVE WE LOOKED FOR AT THIS LEVEL, AND WHAT CAME OF IT.
    *  §6's first reader: the candidate list for FETCH / EXTRACT / DERIVE.
    *
@@ -28408,6 +28781,13 @@ export class Store extends DurableObject {
   frontier({ level = "document", limit = null, viewer = null } = {}) {
     const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.FRONTIER_LIMIT_DEFAULT),
                                      Store.FRONTIER_LIMIT_MAX));
+    /* REC-94: the content level is BUILT. The arm is its own method rather than
+       a branch inside this one, because the two levels answer different shapes —
+       the document level has a deferred-link partition and a purge annotation,
+       the content level has a re-extraction candidate list and a content-axis
+       state — and a single method computing both would be two readers wearing
+       one name. */
+    if (level === "content") return this.#frontierContent(cap, viewer);
     if (level !== "document")
       return { level, found: false, built: false, limit: cap, truncated: false,
                looked: [], never_looked: [], tally: {},
@@ -32281,6 +32661,13 @@ export class Store extends DurableObject {
         frontier: () => this.frontier({ level: url.searchParams.get("level") || "document",
                                         viewer: url.searchParams.get("viewer"),
                                         limit: url.searchParams.get("limit") }),
+        /* REC-94 / IC-95: the per-capture content-axis read (section 4.2, section
+           6 row 2). A FIXED-KEY read of one capture, so it carries no bound and
+           publishes none — the collection read at this level is op=frontier
+           above, and giving a one-row read a limit would be a second bound for a
+           reader that has no page. */
+        contentaxis: () => this.contentAxis({ captureSha: url.searchParams.get("captureSha"),
+                                              viewer: url.searchParams.get("viewer") }),
         /* REC-69: the CONTEXT-keyed read, beside the three run-id-keyed ones.
            `viewer` is the control plane's server-side stamp exactly as it is for
            its three siblings — a caller that could name the viewer could read

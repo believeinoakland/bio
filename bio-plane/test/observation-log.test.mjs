@@ -425,11 +425,29 @@ console.log("\n--- E · the frontier is a view over the log (§5) ---");
      the exact confusion this whole table exists to end — "we looked and found
      nothing" against "nobody built this yet" — arriving inside the log's own
      reader. */
-  for (const lvl of ["content", "meaning", "internet"]) {
+  /* CORRECTED 2026-09-15 BY REC-94, NEVER EXEMPTED, AND THE REASON THE OLD
+     ASSERTION WAS WRONG IS THE USEFUL PART: `content` was in this list because
+     on 2026-09-14 the content level HAD no writer. REC-94 built it (LOG §8 row
+     2), so the arm as written asserted that a level which now answers must not
+     answer — a test pinning the absence of a feature rather than the rule behind
+     it. The RULE is *a level with no writer says so in words and never with an
+     empty list*, and the rule is unchanged: it is now asserted over the two
+     levels that still have none, and the CONVERSE is asserted over the one that
+     gained one, so this arm goes red again if `content` ever silently stops
+     answering. An arm that could only ever have gone red by the feature ARRIVING
+     is the shape that gets exempted; this one can go red both ways. */
+  for (const lvl of ["meaning", "internet"]) {
     const g = await GET(`op=frontier&token=${TOK}&level=${lvl}`);
     t(`E5: the ${lvl} level answers NOT BUILT rather than an empty frontier`,
       [g.built, (g.looked || []).length, typeof g.note === "string" && g.note.length > 40],
       [false, 0, true]);
+  }
+  {
+    const g = await GET(`op=frontier&token=${TOK}&level=content`);
+    t("E5b: the CONTENT level is BUILT (REC-94) and says so — the converse of E5, so this arm "
+    + "fails if the content writer is ever removed as well as if the not-built branch swallows it",
+      [g.built, g.found, typeof g.note === "string" && g.note.length > 40],
+      [true, true, true]);
   }
 }
 

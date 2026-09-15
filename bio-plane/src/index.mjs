@@ -1148,6 +1148,15 @@ const OPS = {
      the D-15 viewer stamp in the store, never by the class here — the same line
      `airuns` draws two rows down. */
   frontier:           { classes: ["admin", "member", "probe"],      mutating: false },
+  /* REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS READ (`OBSERVATION-LOG-DESIGN.md`
+     section 4.2, section 6 row 2): *which of the four content-axis states is this
+     capture in, and why*. A READ, so `mutating: false`.
+     THE CLASSES AND THE GATE ARE `frontier`'S, for the reason section 6 gives one
+     row up: this answers whether a particular document's text was ever extracted,
+     which discloses that this project holds that document at all — the same
+     disclosure a frontier subject makes, one capture at a time. The viewer stamp
+     below decides what a caller may see; the class list here never does. */
+  contentaxis:        { classes: ["admin", "member", "probe"],      mutating: false },
   /* REC-69 / UI-49's delegation: the CONTEXT-keyed read. Same classes as its
      three run-id-keyed siblings, because what a caller may see is decided by
      the D-15 viewer stamp in the store and never by the class here. */
@@ -7520,7 +7529,7 @@ export default {
            for, which is the same disclosure a run is — §6 says REC-36's
            withholding applies row-whole across the fence. Stamped here so the
            store fails closed on an absent stamp, like every op in this list. */
-        || op === "frontier"
+        || op === "frontier" || op === "contentaxis"
         /* REC-69: the same gate, keyed the other way round. Its three siblings
            take a RUN ID and answer about the context that run names; this one
            takes the CONTEXT and answers about the runs in it — so it is the

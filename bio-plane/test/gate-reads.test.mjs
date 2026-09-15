@@ -864,6 +864,24 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "MEMBER'S OWN SEARCH is not in this table at all. Section 4.6's provisional keeps it out at the "
       + "vocabulary — there is no `authority_kind` a member's ad hoc search could take — so the "
       + "strongest form of this classification is again that the material does not exist here to leak.",
+    /* REC-94 / IC-95, 2026-09-15 — THE PER-CAPTURE CONTENT AXIS, classified by
+       the item that adds it, and it is `frontier`'s disclosure one capture at a
+       time. */
+    contentaxis: "REC-94: the content axis of ONE capture — has this document's text ever been "
+      + "extracted, how much of it, and if not then why not. The disclosure is the same one "
+      + "op=frontier makes and it arrives by a narrower door: an answer of anything other than "
+      + "`capture not held` tells the caller THIS RECORD HOLDS THIS DOCUMENT, and which documents a "
+      + "group holds is the line of inquiry section 6 says REC-36's withholding applies to. So the "
+      + "read resolves the capture to its bundle and runs `#bundleRedactor` over it, and a capture in "
+      + "a bundle this viewer may not see answers BYTE-IDENTICALLY to one this record does not hold "
+      + "(REC-25/REC-30: a read that distinguishes 'not yours' from 'does not exist' has told the "
+      + "caller the thing it was refusing to tell them). It is stamped with the same fail-closed "
+      + "viewer as op=frontier, in the same list in index.mjs. "
+      + "AND THE GATE IS DRIVEN RATHER THAN DECLARED — `observation-content.test.mjs` arm D asks for "
+      + "a real capture with a viewer who cannot see its bundle and asserts the answer is the "
+      + "not-held one, because REC-94 measured `Store#frontier` accepting a `viewer` it never reads "
+      + "and a classification here saying it was gated. A fence named in this file and absent from "
+      + "the store is exactly the defect this file is least able to see.",
     airunlog: "IS-6: the observation log, gated on the same column and for the same reason as op=airun. "
       + "This one carries MORE than the run row does and is the sharper case: an entry's `subject` names "
       + "what the run went looking for, so a log a viewer could read for a project they were not invited "

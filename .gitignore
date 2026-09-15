@@ -230,3 +230,12 @@ bio-plane/.coff11-arm-test-pristine.mjs
 # the battery's discovery both read directories rather than a list — and an
 # interrupted control run would leave one behind.
 .fw18-pen/
+
+# REC-94's pen (`bio-plane/test/nc-rec94.mjs`) and its pristine baseline worktree,
+# each on its OWN line for the reason the note at `.rec84-control-pristine/` gives:
+# a glob over `.*-control-pristine/` would silently cover a pen nobody declared.
+# `.rec94-baseline/` is a `git worktree add` of the spawn commit, kept INSIDE this
+# worktree because the shared scratchpad is not isolated between sessions
+# (WORKER.md) and because `git stash` is repository-wide across every checkout.
+.rec94-control-pristine/
+.rec94-baseline/

@@ -8674,3 +8674,97 @@ released: 2026-09-15 by the FW-18 worker — **THREE of the four measured classe
 **IDS, AND A SELF-INFLICTED FINDING WORTH THE LINE.** `node tools/mintid.mjs D` was run twice in one turn by this worker, allocating D-376 and D-377 where one was needed. The first instinct was to record D-377 as BURNED in this release line — **and that written sentence FAILED `mintid.test.mjs`'s own arm `no live floor is driven by prose (["D"])`**, floor 377 against a highest real allocation of 376. It is precisely the trap `mintid`'s header records against itself — *never write a worked example naming a number into a corpus file; the tool caught its own debt row poisoning its own floor* — and the burn notice was that worked example wearing an apology. **The id was not burned in the end; it was USED**, for a real second finding this item produced and would otherwise have left in a claim's prose alone (D-377, the plane's committed bundle). D-376 is the directory row. The lesson, stated because it is a fourth sighting of the same class: an id that is allocated and unwritten has NO honest resting place in prose — either write its row or do not name the number. No IC was minted: nothing this item landed changes a shape another area builds against — `doctypeFor`'s `also` is a new field beside unchanged ones, the plane's profile stamp reads named fields (verified in `index.mjs`), and `parse()`'s extra document facts travel through the existing `wfacts` path with no plane edit.
 
 **NO DECISION FOR BOB. NO DESIGN GAP.** §2's rule held exactly as written and its table was followed without amendment; §7 row 2's scope was the item and three of its four rows are done. One QUESTION is left for the record rather than for Bob, and it is named in `DOCUMENT-PROFILES.md`'s Incomplete list rather than decided here: **whether `makeRegistry().recognise` should be able to report a multi-class document itself**, instead of each axis answering beside it. It touches the STACK axis too, so it is not FRAMEWORK's alone.
+
+## CLAIM 2026-09-15 RECORD (REC-94 — the content-level writers, the per-capture content-axis read, and the bounded content-level frontier)
+
+Session: RECORD worker for REC-94, spawned by CONDUCT #11, Opus 5, worktree-isolated, RECORD's dev slot.
+Worktree: `.claude/worktrees/agent-aca2a5e9a42abc8fa` · branch `worktree-agent-aca2a5e9a42abc8fa`,
+a fresh checkout of `origin/main` at `6e88e35`. **Row verified `running` on `origin/main` before any
+edit**, and HEAD verified equal to `origin/main` rather than read off the brief.
+
+Contract: **IC-95 (I3 additive — the two content-level reads)**, minted at spawn with
+`node tools/mintid.mjs IC` (floor IC-93, IC-94 already held and stepped over), filed PROPOSED in
+`INTERFACE-CHANGES.md`. **I5 does not move**: this item adds no table and no column — it is the
+second writer into REC-93's `observation_log` at a level that table was built to carry.
+
+Design read first, front matter before section: `docs/development/OBSERVATION-LOG-DESIGN.md`
+(Status v0.1 DRAFT, Place level 2, **Incomplete §4.5 / §6 / §7 / §3-vs-§4.4 / §4.4**), then §4.2, its
+§8 decomposition row 2 that is this row's actual authority, and §9's controls; then
+`CONTENT-SEARCH-DESIGN.md` §4.1/§4.3/§4.4 (the content-axis vocabulary and the unit index that is
+REC-91's, not mine) and `EXTRACTION-BREADTH-DESIGN.md` §5.1 (D-319, whose seam is CPDF-19's).
+**IC-92 read as RESOLVED**, including the two things it records as OWED rather than settled.
+
+Paths claimed BY REGION, never whole files:
+
+- **`bio-plane/src/airun.mjs`** — ONE new region beside REC-93's observation vocabularies: the
+  **content-axis constant** and the pure derivation that reads a persisted reading into
+  content-level observations. **NOT** `checkObservation`, `checkCondition` or `checkBound`, whose
+  behaviour this item does not touch.
+- **`bio-plane/src/textchain.mjs`** — the **tier a chain step evidences**, declared as a property of
+  `STEP_KINDS` and read back by one new pure export. **NOT** the cap, the merge, the confidence
+  floor or the attestation grammar.
+- **`bio-plane/src/store.mjs`** — THREE named regions and nothing else:
+  1. the **content-level writer**, called from `#writeReadings` inside `promote`'s one transaction
+     and re-callable by a read-time re-extraction — **through REC-93's ONE append site `#observe`,
+     which is NOT duplicated and NOT modified**;
+  2. the **per-capture content-axis read**;
+  3. `frontier()`'s **content arm** — the bounded content-level frontier, consuming
+     `#calDriftFor` rather than copying its rule.
+  **NOT** the document-level writers or `#frontierNeverLooked` (**REC-93**'s, landed), **NOT** the
+  extent arms (**REC-85**'s), **NOT** `op=cite` (**REC-97**'s), **NOT** the three meaning-layer read
+  caps (**REC-89**'s), **NOT** `#markContentStale` or `mintContent` (**REC-82/SK-7**'s — this item
+  writes an observation BESIDE the stale mark and does not touch it).
+- **`bio-plane/src/index.mjs`** — the **OPS table op lines ONLY** for the new per-capture read, and
+  the `level` value passed through to `frontier`. **NOT** the acquire reading wire (**CAP-12**'s).
+- **`bio-plane/checks/bio-checks.mjs`** — only if a refusal proves owed; named here so the region is
+  claimed rather than taken silently, and reported as unused if none is added.
+- **`bio-plane/test/observation-content.test.mjs`** — NEW, this item's suite.
+- **`bio-plane/test/nc-rec94.mjs`** — NEW, this item's negative-control driver.
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` ONLY, **ONE key set**, moved from this
+  item's own printed REPRODUCIBLE figures and never by adding to the number in the file.
+- **`docs/development/INTERFACE-CHANGES.md`** (the IC-95 row PROPOSED — the version bump and the
+  RESOLUTION are CONDUCT's), **`docs/development/CLAIMS.md`** (this block),
+  **`docs/development/DEBT.md`** and **`docs/development/MEASUREMENTS.md`** — appends only.
+- **`docs/development/OBSERVATION-LOG-DESIGN.md`** — front matter ONLY, if this landing changes the
+  document's stated completeness (the accepts-when requires it in the same commit).
+- **`.gitignore`** — two lines for this item's pen and its pristine baseline worktree, each on its
+  own line on the rule at `.rec84-control-pristine/`.
+
+NOT claimed and deliberately not written: `docs/development/QUEUE.md` (CONDUCT's, sole writer);
+`newgroup/**`; anything under `release/`; `bio-plane/dist/**` unless FL-9's guard requires the
+rebuild, which is named at the close if it does.
+
+**THE SHARED VOCABULARY.** REC-92, REC-94 and CPDF-19 read or write ONE content-axis state.
+Measured on this tree at spawn rather than assumed: `grep -a` for `indexed_full|indexed_partial|
+indexed_none|not_extracted` over `bio-plane/{src,checks,test}`, `civicos-ui/` and `agent-worker/`
+returns **ZERO hits**, so REC-93 did NOT export it and **this item is the first lander and EXPORTS
+it**. It is one constant, imported by every reader and writer, and the suites pin the CONSTANT.
+
+**FOUR WORKERS HOLD OTHER REGIONS of `store.mjs` / `index.mjs` / `bio-checks.mjs`** — REC-90,
+REC-98, REC-88 and this item — which is the standing cap of five.
+
+FIVE PATHS ADDED TO THIS CLAIM AT THE CLOSE rather than taken silently, each FORCED BY A
+MECHANISM rather than chosen, and every one of them a gate that fired on this landing:
+
+- **`bio-plane/test/observation-log.test.mjs`** — ARM E5 ONLY. **CORRECTED, never exempted**,
+  with the reason at the site: it asserted that the CONTENT level answers NOT BUILT, which was
+  true on 2026-09-14 and is this item's subject. The RULE it encodes — *a level with no writer
+  says so in words and never with an empty list* — is unchanged and now runs over the two levels
+  that still have none; a new `E5b` asserts the CONVERSE over the level that gained one, so the
+  arm can go red in BOTH directions rather than only by the feature arriving.
+- **`bio-plane/test/derivation-bounds.test.mjs`** — the amplification CEILING (33 → 34) and the
+  roster line. It fired CORRECTLY on `#frontierContent`: three queries per row. Admitted **with
+  the cost stated at the site** rather than the number nudged, on the same terms REC-93 admitted
+  `frontier` on and re-argued rather than inherited. **What would have been wrong is dropping the
+  per-row `register` read to keep the count down — that read IS the fence.**
+- **`bio-plane/test/gate-reads.test.mjs`** — the classification for the new read ONLY. Its own
+  entry records that the gate is DRIVEN rather than declared, naming why.
+- **`bio-plane/test/hygiene.test.mjs`** — **NOT edited.** It caught this item's suite exiting on
+  `process.exit(1)` under a condition instead of on its own result, which leaves the GREEN path to
+  node's default. Fixed in the SUITE. Named here because the gate fired.
+- **`bio-plane/dist/bio-plane.bundled.mjs`** and **`bio-plane/dist/bio-plane.bundle.json`** —
+  rebuilt with `npm run build`, which FL-9's guard requires of any landing that touches `src/`.
+  Not a version bump, not a tag, not a deploy: those are DIST's and none was taken.
+- **`docs/DECIDED.md`** — REGENERATED with `node tools/decided.mjs`, which `plancheck` requires of
+  any turn that rules on anything. This turn's IC row and debt row carry ruling markers. A
+  mechanical regeneration, not an edit.

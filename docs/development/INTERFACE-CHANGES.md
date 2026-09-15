@@ -7310,3 +7310,137 @@ up to the whole document, which claims MORE. Both figures are therefore carried,
 names. The OOXML grid was MEASURED against a real producer (M-22) rather than cited, and
 OpenDocument fixes no maximum table size at all, so `.ods` emits an honestly NULL bound with a
 control arm that breaks if anyone later borrows the OOXML figure.
+
+## IC-95 · I3: THE CONTENT AXIS — one new read (`op=contentaxis`), `op=frontier` gains a WORKING `level=content`, and ONE EXPORTED CONSTANT three items share · PROPOSED 2026-09-15 (REC-94, building `OBSERVATION-LOG-DESIGN.md` §8 row 2) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (the op contracts), RECORD's own.
+- **Proposer:** RECORD, worker `agent-aca2a5e9a42abc8fa`, 2026-09-15, from QUEUE REC-94.
+- **Owner to land it:** `RECORD` (owner and proposer).
+- **Consumers to answer:** `RECORD` itself (the writer and both reads), `UI` (nothing
+  consumes `op=frontier` or `op=contentaxis` yet — the member-facing surface is Program
+  B's and is explicitly NOT rowed in the design), `SKILL` and `FLEET` (not affected by
+  measurement, below), `CONTENT-PDF` (**affected in the direction that helps**: CPDF-19
+  is sequenced behind this row and the two reads are what it was waiting for).
+- **Change class:** **ADDITIVE on I3** — one new op, and one existing op answering a
+  parameter value it previously refused BY NAME. No existing request or response shape
+  changes. → MINOR bump.
+- **I5 DOES NOT MOVE.** No table, no column, no index. This item is the SECOND WRITER
+  into REC-93's `observation_log` at a level that table was built to carry, which is what
+  the one-table decision was for — and it is worth recording that the decomposition's
+  claim held in practice: REC-94's first act was a writer and not a schema change,
+  exactly as IC-92's resolution predicted.
+- **The id was MINTED with `node tools/mintid.mjs IC`** (floor IC-93; IC-94 already held
+  and stepped over).
+
+### THE CHANGE, STATED AS WHAT A CONSUMER WOULD SEE
+
+**One new op, `op=contentaxis`.** A FIXED-KEY read: it names one capture by its sha256
+and answers which of the content-axis states that capture is in, why, and — kept
+deliberately apart — what the EXTRACTION established. It is `mutating: false`, carries
+the same classes as `op=frontier` and `op=airunlog`, and is stamped with the same
+fail-closed server-side `viewer`. A new op is additive to the OPS table rather than a
+change to an existing contract.
+
+**`op=frontier&level=content` now ANSWERS.** Until this item it returned
+`built: false` with a sentence saying the content level had no writer — REC-93 wrote
+that branch deliberately, because *an empty list and "nobody built this yet" are exactly
+the two facts this table exists to keep apart*. It now returns `built: true` with
+`looked`, `never_looked`, `tally`, and a `recandidates` list. **A consumer that only
+ever asked for `level=document` sees nothing move.** A consumer that asked for
+`level=content` and read `built` — which is the only correct way to have read that
+answer — now gets rows where it got a sentence.
+
+**`op=frontier`'s CONTENT arm is VIEWER-GATED and the document arm is NOT.** That is
+stated here rather than smoothed, because it is a difference a consumer can see and
+because it is a FINDING about the landed state rather than a choice this item made — see
+the section below.
+
+### THE SHARED VOCABULARY IS PART OF THIS INTERFACE, AND IT IS A MECHANISM
+
+CONDUCT ruled on 2026-09-14, at BOB #11's raising, that REC-92, REC-94 and CPDF-19 all
+read or write ONE content-axis state (`CONTENT-SEARCH-DESIGN.md` §4.4) and that it must
+be **ONE EXPORTED CONSTANT in the plane beside the observation writer, imported by every
+reader and writer, with the suites pinning the CONSTANT and never a literal** — so that a
+divergent spelling is a build error rather than a review finding.
+
+**MEASURED AT THIS ITEM'S SPAWN rather than assumed:** `grep -a` for the four members
+over `bio-plane/{src,checks,test}`, `civicos-ui/` and `agent-worker/` on `6e88e35`
+returned **ZERO hits**. REC-93 did not export it. **REC-94 IS THE FIRST LANDER AND
+EXPORTS IT**, as `CONTENT_AXIS_STATES` in `bio-plane/src/airun.mjs`, beside REC-93's
+observation vocabularies and for the reason that file's header gives: it is PURE, so a
+suite can hold the decision to the store's behaviour without workerd.
+
+**THE MECHANISM IS ENFORCED AND DRIVEN, not declared.** `observation-content.test.mjs`
+arm A2 walks every source file that could hold one and fails if any member appears as a
+literal outside its own constant — **comments included**, because a walk that strips
+comments first is a walk with a second thing to get wrong. It has a REACH row beside it
+(the same walk over `airun.mjs` finds all four), so it cannot pass over a corpus it never
+read. **It caught its own author twice**: prose in `store.mjs` and in the suite itself
+named members, and one of those was a PUBLISHED string a surface could have matched on,
+which is the fourth spelling arriving in an answer rather than in code. The
+negative-control arm `spelling` plants a member into `store.mjs` and the suite fails BY
+NAME — **and that arm changes no behaviour at all, which is the point: the defect it
+plants is one no behavioural arm anywhere could see.**
+
+**A FIFTH CONSTANT, `CONTENT_AXIS_UNDETERMINED`, is exported beside the four and is
+deliberately NOT one of them.** §4.4's states are a claim about an INDEX, and the index
+is `capture_text` — REC-91's, unbuilt. Answering *none of this capture's text is indexed*
+while no unit index exists would state a fact about a mechanism the record has no notion
+of. So a capture whose text WAS extracted answers UNDETERMINED and names what it is
+waiting on. **Two of the four ARE answerable today and are answered**: no observation at
+all, and an observation saying no text could be produced.
+
+### WHAT A CONSUMER MUST DO
+
+**Nothing.** Every existing op answers as it did. `op=contentaxis` is new and optional;
+`op=frontier`'s content level went from a stated not-built to an answer, which is the
+direction its own note invited.
+
+**REC-92 and CPDF-19 must IMPORT the constant and say so in their release lines**, per
+the ruling. `contentAxisFor`'s `unitIndex` parameter is the seam REC-91 lands into and
+**its contract is already pinned** (arm B14), so that item has something to build against
+rather than a sentence to interpret.
+
+### MEASURED CONSUMER IMPACT — the census, taken 2026-09-15 on this tree and not recalled
+
+- `civicos-ui/**`: **0** occurrences of `contentaxis`, and 0 of the four vocabulary
+  members. Nothing renders a content-axis state and none is invented. **NOT-AFFECTED, and
+  this is a measurement with a shelf life** — SK-7's own claim of this shape was correct
+  when measured and false within a day, so it is dated rather than asserted.
+- `agent-worker/**`: **0**. The fleet member calls neither read. **NOT-AFFECTED.**
+- `newgroup/**`: not examined for callers — it embeds a built plane artifact and calls no
+  op by name.
+- Inside `bio-plane/`: the new op's only callers are REC-94's own suite and its control
+  harness; `op=frontier`'s content arm gains `observation-content.test.mjs` and the
+  corrected arm in `observation-log.test.mjs`.
+
+### WHAT REVERSING COSTS
+
+The op drops cleanly and `frontier`'s content arm returns to its stated not-built
+sentence; nothing persisted changes shape, because **nothing was added to the schema**.
+The rows this item wrote stay in `observation_log` and remain readable — they are rows of
+a table that already existed, at a vocabulary that already existed. **The expensive half
+is the CONSTANT**: once REC-92 and CPDF-19 import it, removing it means three items
+re-spelling one vocabulary, which is the exact failure the ruling exists to prevent. That
+is a reason to move it carefully, not a reason not to have landed it.
+
+### TWO THINGS RECORDED AS OWED RATHER THAN SETTLED
+
+**(1) `Store#frontier` ACCEPTS A `viewer` AND NEVER READS IT.** Measured on `6e88e35`,
+not inferred: the method destructures `viewer` in its signature and the identifier does
+not occur again in its body. `op=frontier` is in `index.mjs`'s server-side stamp list and
+`gate-reads.test.mjs`'s classification for it says *"It is stamped with the same
+fail-closed viewer as op=airun and op=airunlog … so an absent stamp refuses rather than
+answers"* — **and the store does not act on the stamp.** That is REC-93's region and
+REC-94 did not reach into it; the CONTENT arm this item adds IS gated, so the two levels
+of one op now differ, which is why it is recorded here rather than only in a report. **It
+is a disclosure defect, not an overclaim**: the addresses a group looked for reach any
+caller holding any session token, which is the material §6 says REC-36's withholding
+applies to row-whole. Delegated with its actor.
+
+**(2) §4.2's FOURTH OUTCOME HAS NO PRODUCER** — `LOOKED_ABSENT`, *the document has no
+text*, needs a character count the persisted reading does not carry. **D-375**, with the
+one field that closes it named and delegated to CAPTURE. It is the overclaiming direction
+at one narrow shape and is stated rather than approximated: the field that LOOKS like the
+answer, `found: false`, means something else entirely, and using it would file every
+document that mentions nobody as a document with no text.

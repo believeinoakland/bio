@@ -187,6 +187,246 @@ export const OBSERVATION_SUBJECT_KINDS = {
              + "says so rather than guessing (the folded run log, and nothing new)",
 };
 
+/* ===================================================================== *
+ * REC-94 / IC-95 — THE CONTENT AXIS, AND IT IS ONE CONSTANT BECAUSE THREE
+ * ITEMS READ IT.
+ * ===================================================================== *
+ *
+ * RULED 2026-09-14 by CONDUCT #11 at BOB #11's raising, and the ruling is that
+ * this is a MECHANISM rather than a convention. REC-92 (the `passage:` answer's
+ * `scope` tally), REC-94 (this item — the content-level writers and the
+ * per-capture state) and CPDF-19 (D-319's read-time re-extraction, which MOVES a
+ * capture between these states) all read or write ONE content-axis state. Three
+ * items spelling one vocabulary across three weeks is the id-collision shape one
+ * level up, and the vigilance fix for that is already known to fail — so the set
+ * is ONE EXPORTED CONSTANT, imported by every reader and every writer, and the
+ * suites pin the CONSTANT rather than any member's spelling. A divergent
+ * spelling is then a build error and not a review finding.
+ *
+ * MEASURED AT THIS ITEM'S SPAWN, not assumed: `grep -a` for the four members
+ * over `bio-plane/{src,checks,test}`, `civicos-ui/` and `agent-worker/` returned
+ * ZERO hits on `6e88e35`, so REC-93 did not export it and REC-94 is the first
+ * lander. CONDUCT folds the landed spelling into `CONTENT-SEARCH-DESIGN.md`
+ * §4.4, `OBSERVATION-LOG-DESIGN.md` §4.2 and `EXTRACTION-BREADTH-DESIGN.md`
+ * §5.1 at this integration.
+ *
+ * IT LIVES HERE, beside the observation vocabularies, for the reason this file's
+ * header gives and REC-93 restates: this module is PURE, so a suite can hold the
+ * decision to the store's behaviour without workerd — and because the state is
+ * READ OFF the observation log, which makes it one of the log's vocabularies
+ * rather than the search surface's. */
+export const CONTENT_AXIS_STATES = {
+  indexed_full:    "every unit of this capture's text is indexed under its current chain",
+  indexed_partial: "part of this capture's text is indexed: it ran over the per-capture bound, or "
+                 + "only some of its pages could be read",
+  indexed_none:    "none of this capture's text is indexed, and the record says WHY — there was no "
+                 + "text to extract, or this container has no unit arm",
+  not_extracted:   "nobody has tried to extract this capture's text. This is the ABSENCE of an "
+                 + "observation and not a finding about the document (D-129's NEVER_LOOKED at the "
+                 + "content level)",
+};
+
+/** The fifth answer, and it is deliberately NOT a member of the four above.
+ *
+ *  `CONTENT-SEARCH-DESIGN.md` §4.4's four states are a claim about an INDEX, and
+ *  the index is `capture_text` — REC-91's, unbuilt. Answering `indexed_none`
+ *  while no unit index exists would say *we looked and nothing is indexed* about
+ *  a mechanism the record has no notion of, which is the record claiming more
+ *  than it can support in the one direction this whole construct exists to
+ *  refuse. So a capture whose text WAS extracted answers UNDETERMINED until
+ *  REC-91 lands, and says which of the four it is waiting on. It is a constant
+ *  for the same reason the four are: a later item must not re-spell it. */
+export const CONTENT_AXIS_UNDETERMINED = "undetermined";
+
+/** The per-capture content-axis state, computed in ONE place.
+ *
+ *  `observed` is the state of the capture's LATEST content-level observation, or
+ *  null when it has none. `unitIndex` says whether the per-unit text index
+ *  EXISTS AS A MECHANISM at all — not whether this capture has rows in it, which
+ *  is the distinction that decides between `indexed_none` and UNDETERMINED.
+ *
+ *  THE ONE ARM THAT IS ANSWERABLE TODAY IN BOTH DIRECTIONS is the pair at the
+ *  ends: no observation is `not_extracted`, and an observation that says no text
+ *  could be produced is `indexed_none` — because a capture with no extracted
+ *  text has no units to index whatever index exists, and the REASON is already
+ *  on the row as its condition. Everything between them needs REC-91. */
+export function contentAxisFor({ observed = null, unitIndex = false,
+                                 unitsComplete = null, reason = null } = {}) {
+  if (observed == null || observed === "NEVER_LOOKED")
+    return { state: "not_extracted", determined: true,
+             why: CONTENT_AXIS_STATES.not_extracted };
+  if (observed === "LOOKED_ABSENT" || observed === "LOOKED_INDETERMINATE")
+    return { state: "indexed_none", determined: true,
+             why: reason ? `${CONTENT_AXIS_STATES.indexed_none}: ${reason}`
+                         : CONTENT_AXIS_STATES.indexed_none };
+  if (!unitIndex)
+    return { state: CONTENT_AXIS_UNDETERMINED, determined: false,
+             why: `this capture's text WAS extracted (${observed}), so it is neither `
+                + `not_extracted nor indexed_none — but whether it is indexed_full or `
+                + `indexed_partial is a fact about the per-unit text index, and no unit index `
+                + `exists in this build (CONTENT-SEARCH-DESIGN.md section 4.1, REC-91). `
+                + `Stated as undetermined rather than answered from the extraction alone` };
+  return unitsComplete === true && observed === "PRESENT"
+    ? { state: "indexed_full", determined: true, why: CONTENT_AXIS_STATES.indexed_full }
+    : { state: "indexed_partial", determined: true, why: CONTENT_AXIS_STATES.indexed_partial };
+}
+
+/** REC-94 — ONE PERSISTED READING READ INTO CONTENT-LEVEL OBSERVATIONS.
+ *
+ *  `OBSERVATION-LOG-DESIGN.md` §4.2's outcome table, as a function, so the store
+ *  puts judged rows in and holds no second opinion about what a reading means —
+ *  `checkObservation`'s arrangement exactly, and for the same reason.
+ *
+ *  ONE ROW PER TIER THE READING EVIDENCES. §4.2 asks for one row per extraction
+ *  attempt per capture per tier, and the chain is the only record of which tiers
+ *  ran: `tiersEvidenced` reads them off the step kinds' declared tier rather
+ *  than off any list of step names. A tier that did NOT run leaves no step and
+ *  therefore no row, which is the design's own rule — a look not taken is
+ *  `NEVER_LOOKED` and `NEVER_LOOKED` is the absence of a row — arriving at the
+ *  content level.
+ *
+ *  THE FOURTH ROW OF §4.2's TABLE HAS NO PRODUCER HERE, AND THAT IS STATED
+ *  RATHER THAN APPROXIMATED. *The document has no text (a scan, and tier 3 read
+ *  nothing above the floor)* is `LOOKED_ABSENT`, and telling it apart from *text
+ *  was produced* needs a CHARACTER COUNT. The persisted reading carries none —
+ *  measured on this tree, not assumed: `readings.reading` holds `found`,
+ *  `entities`, `basis`, the chain, the tier and the page count, and no count of
+ *  the text. `found: false` is NOT that fact and must not be used as it: it
+ *  means the reader found no ENTITIES in text it read perfectly well, which is a
+ *  MEANING-level absence (REC-95) and not a content-level one. Emitting
+ *  `LOOKED_ABSENT` off `found: false` would file every document that mentions
+ *  nobody as a document with no text. Reported as a DESIGN GAP and delegated.
+ *
+ *  `found: false` THEREFORE PRODUCES `PRESENT` AT THIS LEVEL, and that is the
+ *  content axis meaning what it says: text was extracted. What the text SAYS is
+ *  the next level up. */
+export function contentObservationsFor(reading, captureSha, tiersOf) {
+  if (!reading || typeof reading !== "object")
+    return { rows: [], unclassified: [], why: "no reading was persisted for this capture" };
+  const sha = typeof captureSha === "string" && captureSha ? captureSha : null;
+  const chain = Array.isArray(reading.text_source) ? reading.text_source : null;
+  const { tiers, unclassified } = tiersOf(chain);
+  const terminal = chain && chain.length ? chain[chain.length - 1].step : null;
+  /* D-252's mixed document: pages this reading could not read at all. It is the
+     one flag on the reading that says *there is more text in here than we got*,
+     and it is what turns an otherwise whole-document PRESENT into `partial`. */
+  const shortfall = reading.tier3_candidate === true;
+
+  if (reading.read_from_text !== true) {
+    /* §4.2 row 3 — no text possible. The condition is the record's existing
+       word for it and no new vocabulary is coined: `text-undetermined` is
+       `queuestate.mjs`'s *"no text layer, CID fonts, or over the envelope"*,
+       which is exactly this branch's three causes plus the office bound. */
+    return { rows: [{ tier: tiers.length ? tiers[tiers.length - 1].tier : null,
+                      state: "LOOKED_INDETERMINATE", condition: "text-undetermined",
+                      resultKind: null, resultRef: null,
+                      detail: detailFor(null, terminal, reading, "no text could be produced") }],
+             unclassified, why: null };
+  }
+
+  /* §4.2 rows 1 and 2 — text was produced, and the question per tier is whether
+     it was produced over the WHOLE document. A tier whose steps are scoped
+     (D-252) covered only those pages; an unscoped tier covered the document,
+     unless the reading itself says pages were left unread. */
+  /* CUMULATIVE, AND THAT IS THE DECISION THIS FUNCTION TURNS ON.
+     One row per tier is section 4.2's ask, and the frontier is *the latest row
+     per (level, subject_kind, subject)* (section 5) -- so if each row carried
+     only ITS OWN tier's coverage, a MIXED document read whole by two tiers would
+     leave `partial` as its latest row and the frontier would say the record got
+     part of a document it got all of. That is an understatement rather than an
+     overclaim, which is the safer direction, but it is still the record saying
+     something untrue and it would put a finished document on the re-extraction
+     candidate list for ever.
+     So each row states THE CAPTURE'S STATE AFTER THAT ATTEMPT, and the row's
+     `detail` names which tier the attempt was and what that tier alone covered.
+     Both facts are kept, the log reads as a genuine append-only history -- this
+     is what we had after tier 1; this is what we had after tier 3 -- and the
+     latest row is true of the capture. */
+  let so_far = null;
+  const rows = (tiers.length ? tiers : [{ tier: null, covers: "all", steps: [] }]).map((t) => {
+    so_far = so_far == null ? t.covers : unionCovers(so_far, t.covers);
+    const whole = coversWholeDocument(so_far, reading) && !shortfall;
+    return { tier: t.tier, state: whole ? "PRESENT" : "partial",
+             condition: null,
+             /* THE BACK-REFERENCE, and C-22.10 requires it on PRESENT. What the
+                look PRODUCED is a reading, and a reading is keyed by the capture
+                it is of, so the capture_sha is the reference by which the thing
+                produced is fetched. It is carried on `partial` too: a partial
+                extraction produced a reading just as a whole one did, and
+                leaving the reference off only where the refusal cannot see it
+                would make the fence decide the shape of the record. */
+             resultKind: "reading", resultRef: sha,
+             detail: detailFor(t, terminal, reading,
+                               whole ? "text over the whole document"
+                                     : (so_far === "all"
+                                          ? "text over the document, with pages it could not read"
+                                          : "text over part of the document")) };
+  });
+  return { rows, unclassified, why: null };
+}
+
+/* DID THE ATTEMPTS SO FAR COVER THE WHOLE DOCUMENT, and it takes a page count
+   to answer for a SCOPED chain.
+   An UNSCOPED step covered the document by construction, so `all` is the easy
+   half. The hard half is D-252's mixed document, whose steps each name their
+   pages: the union of [0,1,2] and [3,4,5] is six pages, and whether six pages is
+   the whole document is a fact this function cannot invent. CAP-9 / D-345
+   persisted `page_count` ONTO THE READING for exactly this class of question, so
+   it is read from there — and where it is absent the answer is NO, not YES.
+   THE DIRECTION IS THE POINT. Guessing YES would say *we have the whole
+   document* off a page set nobody counted, which is a coverage claim with
+   nothing under it — the failure the whole log exists to refuse. Guessing NO
+   understates: a fully-read document sits on the re-extraction candidate list
+   until somebody counts its pages, which costs a member one look at a list and
+   costs the record nothing. `page_count: null` is CAP-9's own STATED
+   undetermined and is treated as absent rather than as zero. */
+function coversWholeDocument(covers, reading) {
+  if (covers === "all") return true;
+  if (!Array.isArray(covers) || !covers.length) return false;
+  const n = reading.page_count;
+  if (!Number.isInteger(n) || n <= 0) return false;
+  const seen = new Set(covers);
+  for (let i = 0; i < n; i++) if (!seen.has(i)) return false;
+  return true;
+}
+
+/* The union of what two attempts covered, in `extentOf`'s vocabulary. It is a
+   SECOND spelling of `unionExtent` in `textchain.mjs` only in the sense that two
+   modules both know what "all" means; it is written here rather than imported
+   because this file is deliberately free of the chain module -- and the rule it
+   applies is the one that matters in the opposite direction from the chain's:
+   an extent this record cannot read never NARROWS the union to the part that
+   parsed, because a coverage claim resting on an unreadable extent is the
+   false-coverage hazard the whole log exists to refuse. */
+function unionCovers(a, b) {
+  if (a === "all" || b === "all") return "all";
+  if (a === "unreadable" || b === "unreadable") return "unreadable";
+  return [...new Set([...a, ...b])].sort((x, y) => x - y);
+}
+
+/* The `detail` column, composed from the row rather than written beside it, so
+   it cannot describe a row other than the one it is on — `describeChain`'s rule.
+   §4.2 asks for *the tier and the chain's last step*, and the shortfall sentence
+   is added where the reading carries one because *we got some of it* and *we got
+   all of it* are the two facts this level exists to keep apart. */
+function detailFor(tier, terminal, reading, outcome) {
+  const parts = [outcome];
+  parts.push(tier && tier.tier != null ? `tier ${tier.tier}`
+             : tier ? "tier not recorded on the chain" : "no tier recorded");
+  if (terminal) parts.push(`last step ${terminal}`);
+  if (tier && Array.isArray(tier.covers) && tier.covers.length)
+    parts.push(`this tier covered pages ${tier.covers.join(",")}`);
+  if (tier && Array.isArray(tier.covers) && tier.covers.length
+      && !Number.isInteger(reading.page_count))
+    parts.push("and this record does not hold a page count for this document, so whether those "
+             + "are ALL of its pages is undetermined rather than assumed (CAP-9 / D-345)");
+  if (reading.tier3_candidate === true)
+    parts.push("this document has pages no engine bound to this instance could read");
+  if (typeof reading.text_container === "string" && reading.text_container)
+    parts.push(reading.text_container);
+  return parts.join("; ");
+}
+
 /* §14b.6's bounds, in its own enumeration: "a budget — fetches requested,
    sub-sessions spawned, wall time across resumptions". `lease` is the fifth and
    it is OURS rather than the design's: it is the heartbeat whose lapse is how a

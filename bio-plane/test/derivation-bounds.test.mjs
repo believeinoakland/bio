@@ -563,10 +563,33 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    stated rather than hidden: at the default cap this method issues up to ~600
    round trips inside the DO, and if the frontier ever needs to answer at 2000
    the three per-row reads should be folded into the scan first.
-   THE FIGURE IS TAKEN FROM THIS ARM'S OWN FAILURE OUTPUT, never by adding one. */
-const CLASS_MEASURED_2026_08_08 = 33;
+   THE FIGURE IS TAKEN FROM THIS ARM'S OWN FAILURE OUTPUT, never by adding one.
+
+   33 -> 34, 2026-09-15 by REC-94 (IC-95). THE ARRIVAL IS `#frontierContent`, the
+   content level of the same reader, and the ratchet fired on it for the same
+   reason and is admitted on the same terms — stated again rather than inherited,
+   because "the neighbouring method was allowed" is not an argument.
+   WHAT IT CAUGHT: three queries per row — the two in `#frontierVerification`
+   that `frontier` already pays, plus one against `register` that resolves the
+   capture to the bundle REC-36's withholding is applied over. It is three and
+   not four because the drift join is asked ONCE for the whole answer and never
+   per row; `#calDriftFor` is itself bounded at birth, by this arm's own doing.
+   WHY IT IS ADMITTED: the same property, measured and not assumed — the scan is
+   the SAME `#frontierLatest` under the SAME published `FRONTIER_LIMIT_DEFAULT`
+   200 / `_MAX` 2000, so the cost is bounded by a figure the caller reads off the
+   answer. The honest cost is the same ~600 round trips at the default cap, and
+   the same remedy applies first if this ever has to answer at 2000: fold the
+   three per-row reads into the scan.
+   WHAT WOULD HAVE BEEN WRONG: dropping the register read to keep the count down.
+   That read is the fence — without it the content frontier discloses which
+   documents a project holds to a viewer who may not see them — and a ratchet
+   that pressures an item into removing a fence is a ratchet being read as a
+   rule about numbers rather than about work. The figure moved; the fence stayed.
+   THE FIGURE IS TAKEN FROM THIS ARM'S OWN FAILURE OUTPUT (`34 methods derive
+   over an unbounded scan`), never by adding one to the number in the file. */
+const CLASS_MEASURED_2026_08_08 = 34;
 console.log(`  RATCHET: ${CLASS.size} methods derive over an unbounded scan, `
-          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only)`);
+          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
 + "this over the figure measured on 2026-08-08 and fails here, with the roster printed above so the "
 + "failure names it",
