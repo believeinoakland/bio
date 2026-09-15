@@ -693,6 +693,41 @@ it; it is whether the repair is a command or a judgement.
   nobody else has taken it, it is the pusher's, and a pusher who leaves a red `main` for
   someone else to notice has pushed a cost onto sessions that cannot see where it came from.
 
+## A CLAIM ABOUT THE WORLD IS CORRECTED BY GOING TO THE ARTIFACT. A CLAIM ABOUT A RULE IS CORRECTED BY READING IT AGAINST THE RULE IT RESTS ON.
+
+**BOB #11's correction of a generalisation I had made too strong, 2026-09-15 — and the way it
+arrived is the best argument for it, because BOB checked the record instead of its memory of a
+day we had both just lived through.**
+
+I had written that every correction landing that day came from someone going to the artifact,
+and that not one came from reading more carefully. **That is false, and two of the day's
+corrections are the counter-examples.** The falsification-clause defect was found by reading the
+clause and recognising D-129's shape in it — an absence with two causes that are opposite facts
+— with nothing run and nothing measured, because **there was no measurement available to take:
+the defect was in the INFERENCE.** The attribution hazard was found by reading a commit subject
+and noticing that one phrase has two true readings with different consequences in this corpus —
+again a convention checked against a convention, not a fact checked against the world.
+
+**So the useful rule is two rules, and knowing which one you are holding is the whole of it.**
+
+- **A claim about the WORLD** — this figure, this file's contents, this tool's behaviour, this
+  row's status, whether a delegation was discharged — **is settled by the artifact and by
+  nothing else.** Re-reading will never catch a stale debt row, and several documents agreeing
+  is not evidence (`CLAUDE.md`).
+- **A claim about a RULE** — an inference, a convention, an attribution, a definition, what a
+  status MEANS — **is settled by reading it against the rule it rests on.** No measurement will
+  ever catch a bad inference rule, because the rule is wrong in every world.
+
+**Confusing them costs in both directions, and the cheap tell is what you would DO if you
+disagreed.** If the answer is *go look*, it is a world-claim. If the answer is *argue*, it is a
+rule-claim, and going to look will produce a number that settles nothing.
+
+**This session's own error is the clean illustration of both halves in one place.** The premise
+that `mintid` does not allocate `M` was a WORLD-claim and only the tool could settle it —
+reading the sentence again, in any of the six places it appeared, would have confirmed it every
+time. The clause that premise produced, telling a reader to conclude a value from an absence,
+was a RULE-claim and only reading could settle it — no run of anything would have flagged it.
+
 ## STATE HOW THE CHECK WOULD BE SATISFIED BY A LIAR BEFORE YOU STATE WHAT IT CHECKS.
 
 **BOB #11's formulation, 2026-09-15, after three checks written in one day were each designed

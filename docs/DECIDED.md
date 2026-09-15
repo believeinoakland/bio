@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-934 rulings across 81 documents.
+935 rulings across 82 documents.
 
 ## DEC-
 
@@ -1775,6 +1775,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CAPTURE.md:239`
 - never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
   `docs/development/kickoffs/CAPTURE.md:281`
+- A CLAIM ABOUT THE WORLD IS CORRECTED BY GOING TO THE ARTIFACT.  
+  `docs/development/kickoffs/CONDUCT.md:696`
 - **2026-07-31** — CORRECTED 2026-07-31 by session BOB: item (3) of the plan below is SUPERSEDED by the function-specific Worker topology decision.  
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
