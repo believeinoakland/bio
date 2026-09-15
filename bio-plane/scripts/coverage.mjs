@@ -849,11 +849,14 @@ const REGISTER_FLOOR = {
      DIFFERENT SUITES. A keep-either resolution would have installed a floor eight arms and
      one suite low on a tree holding both. The values below are the MERGED TREE'S, re-read
      from a green `--strict` run taken AFTER this merge commit and never computed by adding
-     the two branches' deltas together. ONE KEY SET, grepped after writing; `FLEET_FLOOR`
+     the two branches' deltas together: `REGISTER FLOOR  arms 997/989 · classified 183/182 ·
+     corpus (suites read) 184/183 · GREW by 8 arm(s)`, with NO `contaminated:` line beneath
+     it — 997 and not the 989 both sides claimed, which is the measurement that proves the
+     collapse was necessary. Nothing FELL. ONE KEY SET, grepped after writing; `FLEET_FLOOR`
      UNMOVED, since neither item adds a fleet member or a fleet suite. ---- */
-  arms: 989,
-  classified: 182,
-  corpus: 183,
+  arms: 997,
+  classified: 183,
+  corpus: 184,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
