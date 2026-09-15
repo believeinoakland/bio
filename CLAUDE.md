@@ -400,12 +400,26 @@ plan without running; `--full` forces everything. The full set, when it is owed:
   cannot be assumed. The wrapper is not a git repository, so what you get is a `git`
   command failing in a way that reads as a broken checkout, or a tool resolving a
   relative path against the wrong root and finding nothing.
-  **The mitigation costs one clause and works whatever the cause: anchor every command
-  with an explicit absolute `cd` to the tree you mean**, rather than relying on where the
-  last one left you. And the act that matters most is the one CONDUCT now performs — a
+  **The mitigation has two halves and the first one alone is NOT enough.** For your own
+  shell commands, anchor each with an explicit absolute `cd` to the tree you mean rather
+  than relying on where the last one left you — that is necessary and it is what one lane
+  did silently all session. **But CONDUCT #11 measured the half that bites: a `cd` inside a
+  SUBSHELL — the safe form for everything else — does NOT set what the TOOLS see**, so a
+  session can run a hundred correct commands and still be outside the repository when a
+  spawn or worktree tool asks. A bare `cd` in its own command does set it. **The authority
+  is the environment line the harness prints, not your last `pwd`** — read it, and treat a
+  tool that creates or resolves paths as asking a different question from your shell. And the act that matters most is the one CONDUCT now performs — a
   spawn or a flip is not done until it is VERIFIED to have taken, because an act that
   silently did not happen is indistinguishable from one that did until somebody reads the
-  row and believes it.
+  row and believes it. **The receipt: four spawns failed this way at once and `origin/main`
+  carried seven rows claiming live workers that did not exist**, minutes after the session
+  that published them had landed the rule about exactly that. The general form is worth
+  more than the trap — **a step that PUBLISHES a claim and a step that MAKES it true are
+  two steps, and the gap between them is where every wrong status in this project has
+  lived** (CONDUCT #11, 2026-09-15): publishing first protects the reader who would act on
+  a stale value, and leaves the reader who acts on a value that never became true. Close
+  both ends — confirm the act took, and revert the publication in the same minute if it
+  did not.
 
 - **New schema tables go BEFORE the `host_governor` block** in `schema.mjs`.
   `hygiene.test.mjs` asserts the literal ends on a `);`.
