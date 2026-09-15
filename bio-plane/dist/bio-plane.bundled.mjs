@@ -22632,18 +22632,34 @@ var CONTENT_AXIS_STATES = {
   not_extracted: "nobody has tried to extract this capture's text. This is the ABSENCE of an observation and not a finding about the document (D-129's NEVER_LOOKED at the content level)"
 };
 var CONTENT_AXIS_UNDETERMINED = "undetermined";
+var MISSING_ROW_CAUSES = {
+  pre_log: "this capture was extracted BEFORE the observation log carried the content level, so the look is recorded in the readings table and not here. It is not a capture nobody read",
+  purged: "this capture predates the earliest content-level row this log holds, so either the log did not yet exist for it or a whole-store purge cleared the rows that described it. Neither can be ruled out, and they are different facts",
+  never_looked: "the log existed and was not purged over this capture's lifetime, and the record holds nothing else about its text -- so nobody has tried to extract it. This is the one cause that licenses a positive statement"
+};
 function contentAxisFor({
   observed = null,
   unitIndex = false,
   unitsComplete = null,
-  reason = null
+  reason = null,
+  missingCause = null
 } = {}) {
-  if (observed == null || observed === "NEVER_LOOKED")
+  if (observed == null || observed === "NEVER_LOOKED") {
+    const cause = Object.prototype.hasOwnProperty.call(MISSING_ROW_CAUSES, missingCause) ? missingCause : "purged";
+    if (cause === "never_looked")
+      return {
+        state: "not_extracted",
+        determined: true,
+        missing_cause: cause,
+        why: `${CONTENT_AXIS_STATES.not_extracted} -- ${MISSING_ROW_CAUSES.never_looked}`
+      };
     return {
-      state: "not_extracted",
-      determined: true,
-      why: CONTENT_AXIS_STATES.not_extracted
+      state: CONTENT_AXIS_UNDETERMINED,
+      determined: false,
+      missing_cause: cause,
+      why: `this capture has no content-level observation, and that is NOT by itself a finding that nobody read it (OBSERVATION-LOG-DESIGN.md section 5.1): ${MISSING_ROW_CAUSES[cause]}`
     };
+  }
   if (observed === "LOOKED_ABSENT" || observed === "LOOKED_INDETERMINATE")
     return {
       state: "indexed_none",
@@ -49282,6 +49298,48 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       unclassified
     };
   }
+  /** REC-94 — WHICH OF SECTION 5.1's THREE CAUSES EXPLAINS A MISSING
+   *  CONTENT-LEVEL ROW, taken IN ORDER and never concluded from the first.
+   *
+   *  BOB'S RULING OF 2026-09-15 (`9954a9c`), applied at the content level.
+   *  *A subject with no row has three possible causes and they are different
+   *  facts.* The document level's pre-log evidence is `captured_locators`; the
+   *  content level's is `readings`, which holds what a capture's extraction
+   *  produced and predates this log entirely.
+   *
+   *  (1) PRE-LOG, and it is the one cause with POSITIVE evidence rather than an
+   *      inability to exclude: a `readings` row for this capture says the text
+   *      WAS extracted and the look is recorded there. Every capture promoted
+   *      before this item's writer existed is in exactly that position, which is
+   *      why this is not a theoretical case — it is the whole existing corpus.
+   *  (2) PRE-LOG-OR-PURGED, which is an UNDETERMINED and not a finding: the
+   *      capture was registered before the earliest content-level row this log
+   *      holds, so either the writer did not exist yet or a whole-store purge
+   *      cleared the rows that described it (section 7). Those are different
+   *      facts and neither can be ruled out. A log with NO content-level rows at
+   *      all lands here too, because an empty table is equally the never-written
+   *      case and the purged one.
+   *  (3) NOBODY LOOKED — the log existed over this capture's whole lifetime and
+   *      was not purged since, AND the record holds nothing else about its text.
+   *      **This is the only cause that licenses a positive statement**, and
+   *      reaching it takes work: an absence that took no work to produce,
+   *      reported as a fact about the world, is the costs-nothing rule inverted.
+   *
+   *  ONE READ PER CAUSE AND NO SCAN. The earliest content-level `at` is an index
+   *  walk on the tally index; the `readings` probe is a primary-key read. */
+  #missingContentCause(captureSha, registeredAt = null) {
+    if (this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha))
+      return "pre_log";
+    const first = this.#one(
+      `SELECT MIN(at) AS at FROM observation_log WHERE level = 'content'`
+    );
+    const firstAt = first && first.at ? String(first.at) : null;
+    if (!firstAt) return "purged";
+    const reg = typeof registeredAt === "string" && registeredAt ? registeredAt : null;
+    if (!reg) return "purged";
+    const sec = (v) => String(v).slice(0, 19);
+    return sec(reg) >= sec(firstAt) ? "never_looked" : "purged";
+  }
   /** REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS STATE. Section 4.2's *"the
    *  `indexed` state `CONTENT-SEARCH-DESIGN.md` section 4.3 needs … is this row
    *  read through the index's own predicate"*, and section 6's second reader.
@@ -49312,7 +49370,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         undetermined_value: CONTENT_AXIS_UNDETERMINED,
         note: "a content-axis read names one capture by its sha256"
       };
-    const owner = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, sha);
+    const owner = this.#one(
+      `SELECT bundle_id, registered FROM register WHERE capture_sha = ? LIMIT 1`,
+      sha
+    );
     const held = owner && this.#bundleRedactor(viewer)(owner.bundle_id) !== null ? owner : null;
     if (!held)
       return {
@@ -49333,12 +49394,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const axis = contentAxisFor({
       observed: latest ? latest.state : null,
       unitIndex: false,
-      reason: latest ? latest.condition || latest.detail || null : null
+      reason: latest ? latest.condition || latest.detail || null : null,
+      /* COMPUTED ONLY WHEN THERE IS AN ABSENCE TO EXPLAIN. Asking otherwise would
+         pay two reads to qualify a row that is right there. */
+      missingCause: latest ? null : this.#missingContentCause(sha, held.registered)
     });
     return {
       found: true,
       capture_sha: sha,
       capture_held: !!held,
+      missing_cause: axis.missing_cause ?? null,
+      missing_causes: MISSING_ROW_CAUSES,
       bundle_id: held ? held.bundle_id : null,
       indexed: axis.state,
       determined: axis.determined,
@@ -49536,8 +49602,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         ...this.#frontierVerification("content", r.subject_kind, r.subject)
       };
     });
-    const never = this.#rows(
-      `SELECT DISTINCT g.capture_sha AS subject, g.bundle_id AS bundle_id
+    const missing = this.#rows(
+      `SELECT DISTINCT g.capture_sha AS subject, g.bundle_id AS bundle_id, g.registered AS registered
          FROM register g
         WHERE NOT EXISTS (SELECT 1 FROM observation_log o
                            WHERE o.level = 'content' AND o.subject_kind = 'capture'
@@ -49545,7 +49611,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         ORDER BY g.capture_sha
         LIMIT ?`,
       cap + 1
-    ).filter((r) => visible(r.bundle_id) !== null);
+    ).filter((r) => visible(r.bundle_id) !== null).map((r) => ({ ...r, missing_cause: this.#missingContentCause(r.subject, r.registered) }));
+    const never = missing.filter((r) => r.missing_cause === "never_looked");
+    const unexplained = missing.filter((r) => r.missing_cause !== "never_looked");
     const tally = {};
     for (const row of this.#rows(
       `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content' GROUP BY state`
@@ -49557,10 +49625,21 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       found: true,
       built: true,
       limit: cap,
-      truncated: page.length > cap || never.length > cap,
+      truncated: page.length > cap || missing.length > cap,
       looked,
       never_looked: never.slice(0, cap),
       never_looked_count: never.slice(0, cap).length,
+      /* NAMED, NEVER SILENTLY SCORED ZERO. These are captures with no
+         content-level row whose absence this record CANNOT explain as
+         nobody-looked — the pre-log corpus, and anything a whole-store purge may
+         have cleared. */
+      missing_unexplained: unexplained.slice(0, cap).map((r) => ({
+        subject: r.subject,
+        missing_cause: r.missing_cause,
+        why: MISSING_ROW_CAUSES[r.missing_cause]
+      })),
+      missing_unexplained_count: unexplained.slice(0, cap).length,
+      missing_causes: MISSING_ROW_CAUSES,
       tally,
       /* The candidate list is a PROJECTION of `looked` and never a second read,
          so the two can never disagree about which captures are on it — and it is
@@ -49578,7 +49657,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       calibration_drift_truncated: !!(drift && drift.truncated),
       vocabulary: CONTENT_AXIS_STATES,
       undetermined_value: CONTENT_AXIS_UNDETERMINED,
-      note: "NEVER_LOOKED at the content level is a capture this record holds that nothing has ever tried to extract, and it is reported apart from the tally because it is the absence of a row. The re-extraction candidate list is every capture whose latest content-level state is not a definitive PRESENT, plus every capture whose transcription rests on a calibration a worse measurement has superseded. The per-capture indexed state reads UNDETERMINED wherever text WAS extracted, because the per-unit text index it would be read through is REC-91's and does not exist in this build"
+      note: "NEVER_LOOKED at the content level is a capture this record holds that nothing has ever tried to extract, and it is reported apart from the tally because it is the absence of a row \u2014 and a missing row is read through section 5.1's THREE CAUSES in order, so a capture extracted before this log carried the content level is NOT in that set and is named in `missing_unexplained` with its cause instead. The re-extraction candidate list is every capture whose latest content-level state is not a definitive PRESENT, plus every capture whose transcription rests on a calibration a worse measurement has superseded. The per-capture indexed state reads UNDETERMINED wherever text WAS extracted, because the per-unit text index it would be read through is REC-91's and does not exist in this build"
     };
   }
   /** op=frontier — WHAT HAVE WE LOOKED FOR AT THIS LEVEL, AND WHAT CAME OF IT.

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-955 rulings across 83 documents.
+956 rulings across 83 documents.
 
 ## DEC-
 
@@ -1667,6 +1667,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:8091`
 - CORRECTED, never exempted**, with the reason at the site: the RULE is *a level with no writer says so in words and never with an empty list*, it now runs over the two levels that still have none, and a new `E5b` asserts the CONVERSE over the level that gained one, **so the arm can go red in both directions instead…  
   `docs/development/CLAIMS.md:8093`
+- CORRECTED BEFORE LANDING, and the correction is a mechanism rather than a caveat.** The content level's pre-log evidence is the **`readings` table**, exactly as §5.1 names `captured_locators` for the document level.  
+  `docs/development/CLAIMS.md:8130`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  

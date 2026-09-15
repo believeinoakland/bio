@@ -15,7 +15,7 @@
  * each with its receipt in WORKER.md:
  *   - ONE ARM AT A TIME, every other defence held OPEN.
  *   - A BASELINE ROW that arms nothing. It is the only row that distinguishes
- *     five-arms-broken from five-arms-working.
+ *     six-arms-broken from six-arms-working.
  *   - EVERY ARM DECLARES, BEFORE IT RUNS, what MUST fail and what MUST NOT.
  *   - EVERY ARM REPORTS WHETHER IT ARMED. A match count that is not exactly 1
  *     is a FINDING, never a retry.
@@ -105,7 +105,7 @@ function arm(file, find, replace) {
 
 const ARMS = {
   baseline: {
-    files: [], why: "nothing armed — the row that distinguishes five-arms-broken from five-arms-working",
+    files: [], why: "nothing armed — the row that distinguishes six-arms-broken from six-arms-working",
     mustFail: [], mustPass: "everything", patch: () => ({ armed: true, matches: 0 }),
   },
 
@@ -202,6 +202,30 @@ const ARMS = {
       "  contentAxis({ captureSha = null, viewer = null } = {}) {",
       `  /* ARMED: ${Object.keys(CONTENT_AXIS_STATES)[1]} */\n`
       + "  contentAxis({ captureSha = null, viewer = null } = {}) {"),
+  },
+
+  /* BOB'S RULING OF 2026-09-15, AND THE ONLY ARM HERE THAT EXISTS BECAUSE THIS
+     ITEM SHIPPED THE DEFECT ONCE. Design §5.1: *a subject with no row has three
+     possible causes and they are different facts*, and only the one that
+     excludes the other two licenses the positive statement. This arm collapses
+     the three, which is exactly what the first draft of `contentAxisFor` did —
+     and on any existing instance the result is a list of documents the record
+     HAD read, offered as documents nobody has touched.
+     IT IS A ONE-CONDITION PATCH because the rule is one condition. That is the
+     uncomfortable part and it is why the arm is here rather than trusted to
+     review: the defect is a missing QUESTION rather than a wrong answer, and
+     nothing about the code looks wrong with it applied. */
+  cause: {
+    files: [AIRUN],
+    why: "let a missing content-level row read as never-extracted whatever its cause — collapsing "
+       + "design section 5.1's three causes into the one that makes a claim",
+    mustFail: ["B12: §5.1's ORDER",
+               "B12b: AND AN ABSENT OR UNRECOGNISED CAUSE IS TREATED AS THE WEAKEST"],
+    mustPass: "every arm about a capture that HAS an observation — this arm can only change what "
+            + "an ABSENCE is read as, and if a present row moves then the arm took something else",
+    patch: () => arm(AIRUN,
+      '    if (cause === "never_looked")',
+      '    if (cause !== "__never__")'),
   },
 
   /* THE FENCE. §6: *a subject discloses a project's interest, so REC-36's

@@ -252,6 +252,10 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
             site: this file puts judged rows in and holds no second opinion about
             what a reading means. */
          CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED,
+         /* Bob's ruling of 2026-09-15 (`9954a9c`, design section 5.1): a subject
+            with no row has THREE causes and they are different facts. The
+            vocabulary lives beside the states it qualifies. */
+         MISSING_ROW_CAUSES,
          contentAxisFor, contentObservationsFor,
          /* REC-94: the set C-22.2 and C-22.3 already turn on. The content-level
             frontier asks "is this capture below what the fleet can now do" and
@@ -28440,6 +28444,71 @@ export class Store extends DurableObject {
              reextraction: !!before, unclassified };
   }
 
+  /** REC-94 — WHICH OF SECTION 5.1's THREE CAUSES EXPLAINS A MISSING
+   *  CONTENT-LEVEL ROW, taken IN ORDER and never concluded from the first.
+   *
+   *  BOB'S RULING OF 2026-09-15 (`9954a9c`), applied at the content level.
+   *  *A subject with no row has three possible causes and they are different
+   *  facts.* The document level's pre-log evidence is `captured_locators`; the
+   *  content level's is `readings`, which holds what a capture's extraction
+   *  produced and predates this log entirely.
+   *
+   *  (1) PRE-LOG, and it is the one cause with POSITIVE evidence rather than an
+   *      inability to exclude: a `readings` row for this capture says the text
+   *      WAS extracted and the look is recorded there. Every capture promoted
+   *      before this item's writer existed is in exactly that position, which is
+   *      why this is not a theoretical case — it is the whole existing corpus.
+   *  (2) PRE-LOG-OR-PURGED, which is an UNDETERMINED and not a finding: the
+   *      capture was registered before the earliest content-level row this log
+   *      holds, so either the writer did not exist yet or a whole-store purge
+   *      cleared the rows that described it (section 7). Those are different
+   *      facts and neither can be ruled out. A log with NO content-level rows at
+   *      all lands here too, because an empty table is equally the never-written
+   *      case and the purged one.
+   *  (3) NOBODY LOOKED — the log existed over this capture's whole lifetime and
+   *      was not purged since, AND the record holds nothing else about its text.
+   *      **This is the only cause that licenses a positive statement**, and
+   *      reaching it takes work: an absence that took no work to produce,
+   *      reported as a fact about the world, is the costs-nothing rule inverted.
+   *
+   *  ONE READ PER CAUSE AND NO SCAN. The earliest content-level `at` is an index
+   *  walk on the tally index; the `readings` probe is a primary-key read. */
+  #missingContentCause(captureSha, registeredAt = null) {
+    if (this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha))
+      return "pre_log";
+    const first = this.#one(
+      `SELECT MIN(at) AS at FROM observation_log WHERE level = 'content'`);
+    const firstAt = first && first.at ? String(first.at) : null;
+    /* NO CONTENT ROW ANYWHERE: cause (1) and cause (2) are both live — an empty
+       table is equally the never-written case and the purged one — and the
+       answer says so rather than picking. */
+    if (!firstAt) return "purged";
+    const reg = typeof registeredAt === "string" && registeredAt ? registeredAt : null;
+    if (!reg) return "purged";
+    /* BOTH SIDES NORMALISED TO THE SECOND BEFORE THEY ARE COMPARED, AND THIS WAS
+       A REAL DEFECT IN THIS METHOD'S FIRST DRAFT rather than a precaution.
+       `register.registered` is a full ISO timestamp WITH MILLISECONDS
+       (`new Date().toISOString()`); `observation_log.at` is the same value with
+       the fraction CUT (`…split(".")[0] + "Z"`), which is `#observe`'s own
+       spelling. Compared as raw strings those two precisions mis-sort inside a
+       single second — `"…:15.900Z"` is LESS than `"…:15Z"`, because `.` sorts
+       below `Z` — so a capture registered in the same second as the log's first
+       row was being read as PREDATING it. This item's own suite caught it: the
+       never-extracted arm went red over a capture registered after every row in
+       the table.
+       The direction it failed in was the safe one (undetermined rather than a
+       claim), which is exactly why it would have survived review: it produced a
+       more cautious answer for a wrong reason, on an instance where nothing
+       would ever have looked odd.
+       A TIE ON THE SECOND GOES TO CAUSE (3), and that is reasoned rather than
+       convenient: the content writer runs INSIDE promote's transaction, so a
+       capture promoted in the same second the writer first ran either got a row
+       — and is therefore not in this set at all — or was promoted with no
+       reading, which is genuinely nobody-looked. */
+    const sec = (v) => String(v).slice(0, 19);
+    return sec(reg) >= sec(firstAt) ? "never_looked" : "purged";
+  }
+
   /** REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS STATE. Section 4.2's *"the
    *  `indexed` state `CONTENT-SEARCH-DESIGN.md` section 4.3 needs … is this row
    *  read through the index's own predicate"*, and section 6's second reader.
@@ -28474,7 +28543,8 @@ export class Store extends DurableObject {
        register is the trust root keyed by `capture_sha` — the same table
        `op=frontier`'s purge annotation reads, and NOT a `captures` table, which
        does not exist (REC-93 paid for that line with a 500). */
-    const owner = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, sha);
+    const owner = this.#one(
+      `SELECT bundle_id, registered FROM register WHERE capture_sha = ? LIMIT 1`, sha);
     /* THE SAME FENCE AS THE FRONTIER'S CONTENT ARM, and answered the same way:
        a capture in a bundle this viewer may not see is ABSENT, byte-identically
        to one this record does not hold. REC-25/REC-30's rule — a read that
@@ -28514,9 +28584,14 @@ export class Store extends DurableObject {
       observed: latest ? latest.state : null,
       unitIndex: false,
       reason: latest ? (latest.condition || latest.detail || null) : null,
+      /* COMPUTED ONLY WHEN THERE IS AN ABSENCE TO EXPLAIN. Asking otherwise would
+         pay two reads to qualify a row that is right there. */
+      missingCause: latest ? null : this.#missingContentCause(sha, held.registered),
     });
     return {
       found: true, capture_sha: sha, capture_held: !!held,
+      missing_cause: axis.missing_cause ?? null,
+      missing_causes: MISSING_ROW_CAUSES,
       bundle_id: held ? held.bundle_id : null,
       indexed: axis.state, determined: axis.determined, why: axis.why,
       /* THE EXTRACTION AXIS AND THE INDEX AXIS ARE KEPT APART, and that is the
@@ -28724,14 +28799,27 @@ export class Store extends DurableObject {
        found nothing over these captures found nothing because nobody has read
        them, which is a different fact from having read them and found nothing
        (CLAUDE.md's sparse-at-every-level rule, made mechanical). */
-    const never = this.#rows(
-      `SELECT DISTINCT g.capture_sha AS subject, g.bundle_id AS bundle_id
+    const missing = this.#rows(
+      `SELECT DISTINCT g.capture_sha AS subject, g.bundle_id AS bundle_id, g.registered AS registered
          FROM register g
         WHERE NOT EXISTS (SELECT 1 FROM observation_log o
                            WHERE o.level = 'content' AND o.subject_kind = 'capture'
                              AND o.subject = g.capture_sha)
         ORDER BY g.capture_sha
-        LIMIT ?`, cap + 1).filter((r) => visible(r.bundle_id) !== null);
+        LIMIT ?`, cap + 1).filter((r) => visible(r.bundle_id) !== null)
+      .map((r) => ({ ...r, missing_cause: this.#missingContentCause(r.subject, r.registered) }));
+    /* SECTION 5.1, AND THE SET IS SPLIT RATHER THAN NAMED ONCE. Bob's ruling of
+       2026-09-15: a subject with no row has three causes and they are different
+       facts, so only the one that excludes the other two is reported as
+       NEVER_LOOKED. The first draft of this read put every row here and called
+       them all never-extracted — which, on any existing instance, would have
+       been a list of documents the record HAD read being offered as documents
+       nobody had touched. The other two are carried in their own list with the
+       cause on each row, because a reader who cannot act on them still has to
+       know they exist: a frontier that quietly dropped them would understate
+       what this instance cannot say about itself. */
+    const never = missing.filter((r) => r.missing_cause === "never_looked");
+    const unexplained = missing.filter((r) => r.missing_cause !== "never_looked");
     const tally = {};
     for (const row of this.#rows(
       `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content' GROUP BY state`))
@@ -28739,9 +28827,18 @@ export class Store extends DurableObject {
     const candidates = looked.filter((r) => r.recandidate);
     return {
       level: "content", found: true, built: true, limit: cap,
-      truncated: page.length > cap || never.length > cap,
+      truncated: page.length > cap || missing.length > cap,
       looked, never_looked: never.slice(0, cap),
       never_looked_count: never.slice(0, cap).length,
+      /* NAMED, NEVER SILENTLY SCORED ZERO. These are captures with no
+         content-level row whose absence this record CANNOT explain as
+         nobody-looked — the pre-log corpus, and anything a whole-store purge may
+         have cleared. */
+      missing_unexplained: unexplained.slice(0, cap).map((r) => ({
+        subject: r.subject, missing_cause: r.missing_cause,
+        why: MISSING_ROW_CAUSES[r.missing_cause] })),
+      missing_unexplained_count: unexplained.slice(0, cap).length,
+      missing_causes: MISSING_ROW_CAUSES,
       tally,
       /* The candidate list is a PROJECTION of `looked` and never a second read,
          so the two can never disagree about which captures are on it — and it is
@@ -28756,7 +28853,9 @@ export class Store extends DurableObject {
       undetermined_value: CONTENT_AXIS_UNDETERMINED,
       note: "NEVER_LOOKED at the content level is a capture this record holds that nothing has "
           + "ever tried to extract, and it is reported apart from the tally because it is the "
-          + "absence of a row. The re-extraction candidate list is every capture whose latest "
+          + "absence of a row — and a missing row is read through section 5.1's THREE CAUSES in "
+          + "order, so a capture extracted before this log carried the content level is NOT in "
+          + "that set and is named in `missing_unexplained` with its cause instead. The re-extraction candidate list is every capture whose latest "
           + "content-level state is not a definitive PRESENT, plus every capture whose "
           + "transcription rests on a calibration a worse measurement has superseded. The "
           + "per-capture indexed state reads UNDETERMINED wherever text WAS extracted, because "

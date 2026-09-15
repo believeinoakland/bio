@@ -5,8 +5,8 @@
    bytes-really-changed guard, and every restore verified by sha256 AND by `cmp` against a PRISTINE
    copy named UNIQUELY PER ARM with a byte count printed and a minimum guarded. An opening AND a
    closing BASELINE row bracket the run, because a harness that reported the same answer for every
-   arm INCLUDING the baseline is on record in this repository, and without a baseline row five reds
-   read exactly like five arms working.
+   arm INCLUDING the baseline is on record in this repository, and without a baseline row six reds
+   read exactly like six arms working.
    (a) `baseline` — nothing armed. Declared: everything green. It is the row that distinguishes
        five-arms-broken from five-arms-working.
    (b) `writer` — OBSERVATION-LOG-DESIGN.md §9, this item's own row: REMOVE THE PROMOTE-TIME
@@ -26,6 +26,12 @@
    (f) `fence` — neuter the viewer gate on the per-capture read. Declared MUST FAIL: section D's
        withholding arm. Declared MUST NOT FAIL: everything else, so the arm takes the fence and
        nothing else.
+   (g) `cause` — ADDED 2026-09-15 after Bob's ruling of the same day (`9954a9c`, design §5.1)
+       landed on `origin/main` mid-run and this item's first draft was found to violate it. Make
+       a missing content-level row read as never-extracted WHATEVER its cause. Declared MUST
+       FAIL: §5.1's order arm and the weakest-default arm. This is the defect the design was
+       written to prevent, and the arm exists because this item shipped it once already: an
+       absence that took no work to produce, reported as a fact about the world.
    THE ACTUAL RESULTS OF EVERY ARM ARE IN `CLAIMS.md`'s release line for REC-94, including the
    ones that came back other than declared.
    WHAT THESE ARMS CANNOT SEE: they are all local to this plane's own source. Nothing here
@@ -301,14 +307,39 @@ t("B11: and with NO page count it stays `partial` and SAYS WHY — whether those
            return [o.rows.map((r) => r.state), /undetermined/.test(o.rows[1].detail)]; })(),
   [["partial", "partial"], true]);
 
-t("B12: the content axis at its two ANSWERABLE ends — no observation at all is the not-extracted "
-+ "member, and an observation saying no text could be produced is the none member, with the "
-+ "reason carried",
-  (() => { const none = contentAxisFor({ observed: null });
-           const ind = contentAxisFor({ observed: "LOOKED_INDETERMINATE", reason: "a scan" });
-           return [none.state, none.determined, ind.state, ind.determined,
-                   /a scan/.test(ind.why)]; })(),
-  [MEMBERS[3], true, MEMBERS[2], true, true]);
+/* CORRECTED 2026-09-15 AGAINST BOB'S RULING OF THE SAME DAY (`9954a9c`, design
+   §5.1), WHICH LANDED ON `origin/main` WHILE THIS ITEM WAS RUNNING. The arm as
+   first written asserted that NO OBSERVATION means the never-extracted member,
+   full stop — which is the defect the design was written to prevent, arriving
+   one level below where Bob found it. A missing row has THREE causes and they
+   are different facts, so the arm now asserts the ORDER instead of the shortcut,
+   and the member it used to assert is reachable only under cause (3). */
+t("B12: §5.1's ORDER — a missing row is read for its CAUSE and never concluded from. Cause (3), "
++ "which excludes the other two, is the not-extracted member; cause (1) and cause (2) read "
++ "UNDETERMINED and NAME what could not be ruled out. Treating the empty set as a positive "
++ "finding is the costs-nothing rule inverted",
+  (() => { const three = contentAxisFor({ observed: null, missingCause: "never_looked" });
+           const one   = contentAxisFor({ observed: null, missingCause: "pre_log" });
+           const two   = contentAxisFor({ observed: null, missingCause: "purged" });
+           return [[three.state, three.determined], [one.state, one.determined],
+                   [two.state, two.determined],
+                   /readings table/.test(one.why)]; })(),
+  [[MEMBERS[3], true], [CONTENT_AXIS_UNDETERMINED, false],
+   [CONTENT_AXIS_UNDETERMINED, false], true]);
+
+t("B12b: AND AN ABSENT OR UNRECOGNISED CAUSE IS TREATED AS THE WEAKEST, never the strongest — a "
++ "caller that did not say which cause applies has not established cause (3), and defaulting to "
++ "it would let a later reader reach the positive statement by FORGETTING TO ASK",
+  [contentAxisFor({ observed: null }).state,
+   contentAxisFor({ observed: null, missingCause: "made-up" }).state,
+   contentAxisFor({ observed: null }).determined],
+  [CONTENT_AXIS_UNDETERMINED, CONTENT_AXIS_UNDETERMINED, false]);
+
+t("B12c: an observation saying no text could be produced is the none member, with the reason "
++ "carried — this half of the old arm was right and is kept",
+  (() => { const ind = contentAxisFor({ observed: "LOOKED_INDETERMINATE", reason: "a scan" });
+           return [ind.state, ind.determined, /a scan/.test(ind.why)]; })(),
+  [MEMBERS[2], true, true]);
 
 t("B13: and the MIDDLE of the vocabulary reads UNDETERMINED in this build, stated rather than "
 + "answered — the per-unit text index it would be read through is REC-91's `capture_text` and "
@@ -465,10 +496,32 @@ console.log("\n--- D · op=contentaxis, and the withholding that is DRIVEN rathe
 {
   const a = await GET(`op=contentaxis&token=${TOK}&captureSha=${SHA_UNREAD}`);
   t("D2: a capture the record HOLDS that nothing has read is the not-extracted member — "
-  + "DETERMINED rather than undetermined, because 'nobody looked' is an ANSWER and not a gap in "
-  + "the answer",
-    [a.found, a.capture_held, a.indexed, a.determined, a.extraction],
-    [true, true, MEMBERS[3], true, null]);
+  + "DETERMINED rather than undetermined, because under cause (3) 'nobody looked' is an ANSWER "
+  + "and not a gap in the answer. The CAUSE is published beside it, so a reader can see which of "
+  + "§5.1's three this rests on rather than taking the state on trust",
+    [a.found, a.capture_held, a.indexed, a.determined, a.extraction, a.missing_cause],
+    [true, true, MEMBERS[3], true, null, "never_looked"]);
+}
+
+/* §5.1's CAUSE (1) IS THE ONE THIS SUITE CANNOT BUILD, AND THAT IS STATED RATHER
+   THAN FAKED. A capture with a READING and NO OBSERVATION is what every capture
+   on every existing instance looks like — promoted before this item's writer
+   existed — and producing one here would take either a delete door on an
+   append-only log (the last thing this table should grow) or a boot of the
+   pre-item build. The RULE is asserted in B12, where it lives; the store's own
+   classifier is asserted below in the one direction this suite CAN reach. */
+{
+  const held = await GET(`op=contentaxis&token=${TOK}&captureSha=${SHA_WHOLE}`);
+  t("D2b: a capture that HAS an observation is never asked for a cause at all — the classifier "
+  + "runs only where there is an absence to explain, so `missing_cause` is null on an answered "
+  + "row and is not a field a reader has to interpret twice",
+    held.missing_cause, null);
+  t("D2c: WHAT THIS SUITE CANNOT DRIVE, NAMED: a store holding a reading with no observation — "
+  + "§5.1's cause (1), and the state of every capture on every instance that predates this "
+  + "landing. It needs a pre-item build or a delete on an append-only table. The cause "
+  + "vocabulary is PUBLISHED on the answer, so a reader can at least see that the three exist "
+  + "and that the state they are reading rests on one of them",
+    Object.keys(held.missing_causes || {}).length, 3);
 }
 
 {
@@ -537,6 +590,17 @@ console.log("\n--- E · op=frontier at the content level: bounded, and the re-ex
   + "extract — the content level's own NEVER_LOOKED, and the number that says WHICH absence is "
   + "true when a content search comes back empty",
     (f.never_looked || []).map((r) => r.subject).includes(SHA_UNREAD), true);
+
+  t("E3b: §5.1 — and the set is SPLIT BY CAUSE rather than named once. Only cause (3) is in "
+  + "`never_looked`; captures whose absence this record cannot explain are carried in their own "
+  + "list WITH the cause on each row, so a reader who cannot act on them still knows they exist. "
+  + "The answer publishes the cause vocabulary as it publishes the state vocabulary, and the two "
+  + "lists are DISJOINT — a subject in both would be the split not having happened",
+    [Array.isArray(f.missing_unexplained), typeof f.missing_unexplained_count === "number",
+     Object.keys(f.missing_causes || {}).length,
+     (f.never_looked || []).every((r) => !(f.missing_unexplained || [])
+       .map((u) => u.subject).includes(r.subject))],
+    [true, true, 3, true]);
 
   t("E4: the candidate list names the document we got HALF of and does NOT name the one we got — "
   + "both directions, because a candidate list that names everything is not a list",

@@ -238,6 +238,38 @@ export const CONTENT_AXIS_STATES = {
  *  for the same reason the four are: a later item must not re-spell it. */
 export const CONTENT_AXIS_UNDETERMINED = "undetermined";
 
+/* REC-94, CORRECTED 2026-09-15 AGAINST BOB'S RULING OF THE SAME DAY (commit
+   `9954a9c`, `OBSERVATION-LOG-DESIGN.md` section 5.1), WHICH LANDED ON
+   `origin/main` WHILE THIS ITEM WAS RUNNING AND WHICH THIS ITEM'S FIRST DRAFT
+   VIOLATED.
+
+   *A subject with no row has three possible causes and they are different
+   facts*, so a reader takes them IN ORDER rather than concluding the first.
+   The first draft of this item read a capture with no content-level row as
+   never-extracted, full stop -- which is the defect the design was written to
+   prevent, arriving one level below where Bob found it: **an absence that took
+   no work to produce, reported as a fact about the world.** Every capture
+   promoted before this writer existed has no row and every one of them was
+   read.
+
+   THE ORDER IS THE DESIGN'S AND THE SIGNALS ARE THIS LEVEL'S. Section 5.1 names
+   `captured_locators` as the document level's pre-log evidence; the content
+   level's is the `readings` table, which holds what a capture's extraction
+   produced and predates this log entirely. The store computes which cause
+   applies and passes it in; this function holds the rule about what each cause
+   LICENSES, so the two cannot drift. */
+export const MISSING_ROW_CAUSES = {
+  pre_log:      "this capture was extracted BEFORE the observation log carried the content level, "
+              + "so the look is recorded in the readings table and not here. It is not a capture "
+              + "nobody read",
+  purged:       "this capture predates the earliest content-level row this log holds, so either the "
+              + "log did not yet exist for it or a whole-store purge cleared the rows that "
+              + "described it. Neither can be ruled out, and they are different facts",
+  never_looked: "the log existed and was not purged over this capture's lifetime, and the record "
+              + "holds nothing else about its text -- so nobody has tried to extract it. This is "
+              + "the one cause that licenses a positive statement",
+};
+
 /** The per-capture content-axis state, computed in ONE place.
  *
  *  `observed` is the state of the capture's LATEST content-level observation, or
@@ -251,10 +283,29 @@ export const CONTENT_AXIS_UNDETERMINED = "undetermined";
  *  text has no units to index whatever index exists, and the REASON is already
  *  on the row as its condition. Everything between them needs REC-91. */
 export function contentAxisFor({ observed = null, unitIndex = false,
-                                 unitsComplete = null, reason = null } = {}) {
-  if (observed == null || observed === "NEVER_LOOKED")
-    return { state: "not_extracted", determined: true,
-             why: CONTENT_AXIS_STATES.not_extracted };
+                                 unitsComplete = null, reason = null,
+                                 missingCause = null } = {}) {
+  if (observed == null || observed === "NEVER_LOOKED") {
+    /* Section 5.1's ORDER, and the never-extracted member is returned ONLY under
+       cause (3). Under (1) and (2) the honest answer is UNDETERMINED NAMING
+       WHICH CAUSE COULD NOT BE RULED OUT -- which is what this whole document
+       exists to make possible, and the opposite of concluding a value from an
+       absence.
+       AN UNRECOGNISED OR ABSENT CAUSE IS TREATED AS THE WEAKEST, never the
+       strongest. A caller that did not say which cause applies has not
+       established (3), and defaulting to it would let a later reader reach the
+       positive statement by FORGETTING TO ASK -- the same shape one argument
+       over from the one being corrected here. */
+    const cause = Object.prototype.hasOwnProperty.call(MISSING_ROW_CAUSES, missingCause)
+      ? missingCause : "purged";
+    if (cause === "never_looked")
+      return { state: "not_extracted", determined: true, missing_cause: cause,
+               why: `${CONTENT_AXIS_STATES.not_extracted} -- ${MISSING_ROW_CAUSES.never_looked}` };
+    return { state: CONTENT_AXIS_UNDETERMINED, determined: false, missing_cause: cause,
+             why: `this capture has no content-level observation, and that is NOT by itself a `
+                + `finding that nobody read it (OBSERVATION-LOG-DESIGN.md section 5.1): `
+                + `${MISSING_ROW_CAUSES[cause]}` };
+  }
   if (observed === "LOOKED_ABSENT" || observed === "LOOKED_INDETERMINATE")
     return { state: "indexed_none", determined: true,
              why: reason ? `${CONTENT_AXIS_STATES.indexed_none}: ${reason}`
