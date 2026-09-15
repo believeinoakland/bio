@@ -38,11 +38,19 @@
 # next walk — `coverage.mjs`'s fleet walk, or the battery's discovery — can
 # enrol it as a source file.
 .rec82-control-pristine/
-# REC-84's pen (`test/nc-rec84.mjs`), on exactly REC-82's line above and for
-# exactly its reason: the same two sources are armed, and an interrupted run
+# REC-83's pen (`test/nc-rec83.mjs`), its own line for exactly REC-82's reason
+# one item later: the harness arms `src/store.mjs`, and a copy of a
+# million-byte source left untracked is a second `store.mjs` for the next walk
+# to enrol — which is not hypothetical here, since `coverage.mjs`'s fleet walk
+# and the battery's discovery both read directories rather than a list.
+.rec83-control-pristine/
+# REC-84's pen (`test/nc-rec84.mjs`), on exactly the two lines above and for
+# exactly their reason: the same two sources are armed, and an interrupted run
 # must not leave a copy of either sitting untracked where the next walk can
 # enrol it as a source file. Its own line rather than a glob, because a glob
 # over `.rec*-control-pristine/` would silently cover a pen nobody declared.
+# KEEP-BOTH at the REC-83 x REC-84 merge, 2026-09-14: two items each added their
+# own pen to the same anchor and the two are independent, so both lines stand.
 .rec84-control-pristine/
 # D-271's pen. Named for the item rather than the area because the item is a
 # plane item; the `.ui*` spelling above is an accident of which area needed a
@@ -110,3 +118,17 @@
 # that runs every driver makes that a certainty rather than a risk.
 _m025/
 .m025-anchor-harness/
+
+# CAP-7's pen, named for its item for the same reason every one above it is. The
+# Drive-link count streams ~1.4 GB of Oakland assets through this directory and
+# deletes each file after reading it; an interrupted run leaves bytes behind, and
+# an untracked scratch file in a worktree has already been swept into another
+# item's walk (M0-15: `git stash -u` is repository-wide, not per-worktree).
+.cap7-pen/
+# M0-30's pen, named for its item for the same reason every one above it is. Its driver
+# (`bio-plane/test/rowdesign.control.mjs`) arms `QUEUE.md`, `tools/plancheck.mjs` and
+# `docs/architecture/CORPUS-STANDARD.md` and restores from pristine copies kept here. The
+# driver removes the pen on a clean run and KEEPS it on a red one, where the copies are
+# evidence; an interrupted run must not leave an untracked copy of a planning file where
+# the next walk can enrol it as a second authority.
+.m030-harness/

@@ -777,26 +777,39 @@ const REGISTER_FLOOR = {
      ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
      `FLEET_FLOOR`, which is the documented state. `FLEET_FLOOR` is UNMOVED and none is owed
      — this item adds no fleet member and no fleet suite. */
-  /* MOVED 2026-09-14 by REC-84 (worktree agent-ae95c3be71f5bd167): arms 967 -> 975,
-     classified 179 -> 180, corpus 180 -> 181, EVERY FIGURE READ OFF THIS SCRIPT'S OWN
-     GREEN `--strict` RUN as REPRODUCIBLE (`arms 975/967 · classified 180/179 · corpus
-     (suites read) 181/180 · GREW by 8 arm(s)`) and never by adding to the numbers above.
+  /* ---- CONFLICT RESOLVED AT THE REC-83/M0-28 x REC-84 MERGE, 2026-09-14, AND THE
+     RESOLUTION IS THE ONE THIS FILE'S OWN HEADER DEMANDS: **COLLAPSED TO ONE KEY SET
+     AND THE FIGURES RE-READ FROM THE MERGED TREE'S OWN PRINT.** Keep-both has left
+     duplicate `arms:` keys here SIX separate times; both sides of this conflict happened
+     to carry the SAME three numbers (975/180/181) for DIFFERENT reasons, which is the
+     most dangerous shape of all — taking either side unchanged would have looked right
+     and been wrong, because on the merged tree the two items' arms ADD. The notes from
+     both sides are kept below, because each records a real move; only the VALUES are
+     re-measured. ----
 
-     THE CONTAMINATED FIGURES WERE REFUSED AS A SOURCE AND THE REFUSAL IS THE POINT
-     (D-238). An earlier run of this same script, before the new suite was in a commit,
-     printed exactly the same three numbers as CONTAMINATED with `1 suite(s) no other
-     checkout has`. They were identical and they were still the wrong source: a floor
-     moved while a phantom is present is permanently too high, and the figures above were
-     re-read from a run at `47ec7cb` where the provenance line reports 197 of 197
-     discovered items in the commit.
+     MOVED 2026-09-14 by CONDUCT #10 at COFF-10's merge (967 -> 972 · 179 -> 180 · 180 -> 181): the merged run's own print read `arms 972/967 · classified 180/179 · corpus 181/180`; the +5 arms and +1 suite are COFF-10's `formats-odf.test.mjs`, which set 964 on a tree without REC-82's +8. One key set, read from the print after the commit (D-238).
+     MOVED 2026-09-14 by CONDUCT #10 at M0-30's merge (972 -> 974): the merged run's own print read `arms 974/972`; the +2 is M0-30's planning-hygiene 4.7 declaration. One key set, read from the print after the commit (D-238).
+     MOVED 2026-09-14 by M0-28 (974 -> 975): that item's own green `--strict` run, taken AFTER
+     its commit `bdfcb86`, PRINTED `REGISTER FLOOR  arms 975/974 · classified 180/180 · corpus
+     (suites read) 181/181 · GREW by 1 arm(s)`. The cause is ONE new arm in an EXISTING suite:
+     `corpuscheck.test.mjs`'s declaration gains entry (5). No new suite, so `classified` and
+     `corpus` did not move for it.
 
-     NO PRE-EXISTING SLACK FOUND — the three figures sat exactly where REC-82 left them,
-     which is the second consecutive item in this arc for which that is true. The cause of
-     the whole move is ONE new suite, `test/content-extent-leg.test.mjs`, whose
+     MOVED 2026-09-14 by REC-84 (worktree agent-ae95c3be71f5bd167), on its OWN branch, from
+     967/179/180 to 975/180/181 — read off a green `--strict` run at `47ec7cb` where the
+     provenance line reported 197 of 197 discovered items in the commit. THE CONTAMINATED
+     FIGURES WERE REFUSED AS A SOURCE AND THE REFUSAL IS THE POINT (D-238): an earlier run,
+     before the new suite was committed, printed exactly the same three numbers marked
+     `contaminated: 1 suite(s) no other checkout has`. Identical, and still the wrong source.
+     REC-84's own cause is ONE new suite, `test/content-extent-leg.test.mjs`, whose
      `NEGATIVE CONTROL:` declaration states eight arms; all eight are RUN by
-     `test/nc-rec84.mjs` and all eight came back AS DECLARED. Nothing FELL.
-     ONE KEY SET, grepped after writing. `FLEET_FLOOR` is UNMOVED and none is owed: this
-     item adds no fleet member and no fleet suite. */
+     `test/nc-rec84.mjs` and all eight came back AS DECLARED.
+
+     THE VALUES BELOW ARE THE MERGED TREE'S, re-read from a green `--strict` run taken after
+     the merge commit — not either branch's, because on a merged tree neither branch's numbers
+     are true. Nothing FELL. ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in
+     this file, here and in `FLEET_FLOOR`, which is the documented state; `FLEET_FLOOR` is
+     UNMOVED and none is owed, since neither item adds a fleet member or a fleet suite. */
   arms: 975,
   classified: 180,
   corpus: 181,

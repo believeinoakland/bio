@@ -11751,8 +11751,15 @@ export class Store extends DurableObject {
                        detail: `no basis leg ${ord} on ${bundleId}` };
     if (leg.content_id)
       return { ok: true, content_id: leg.content_id, minted: false, backfilled: false };
+    /* REC-83: THE CASE IS NAMED, NOT ONLY DESCRIBED. IC-83's AMENDMENT 2 says
+       the reads must state WHICH of the two legitimate nulls they met and never
+       collapse them, and a reader that has to pattern-match an English sentence
+       to tell them apart is a reader that will collapse them. The code is
+       decided HERE because this is where the distinction is made; every read
+       carries it rather than re-deriving it from `target_type`. */
     if (leg.target_type !== "information")
       return { ok: true, content_id: null, minted: false, backfilled: false,
+               null_case: "INQUIRY_TARGET",
                why: `basis[${ord}] rests on ${leg.target_id}, which is an inquiry rather than a `
                   + `document. An inquiry has no capture and therefore no part to point at — the `
                   + `content axis ranges over documents (DEC-21), and this is undetermined and `
@@ -11760,6 +11767,7 @@ export class Store extends DurableObject {
     const sha = this.#captureForContent(leg.target_id);
     if (!sha)
       return { ok: true, content_id: null, minted: false, backfilled: false,
+               null_case: "NO_BYTES_HELD",
                why: `this record holds no capture of ${leg.target_id}, so there are no bytes for a `
                   + `content row to address. Absence here is a fact about what was captured and `
                   + `never evidence about what the document says (CLAUDE.md's sparse rule)` };
@@ -11871,6 +11879,357 @@ export class Store extends DurableObject {
         : `${describeExtent({ kind: r.extent_kind, ...(safeJson(r.extent) || {}) })}, as this record `
           + `holds it` };
   }
+  /* ====================================================================== *
+   * REC-83 / IC-84 (3) and (4) — THE READS AT CONTENT GRAIN.
+   * ====================================================================== *
+   *
+   * REC-82 landed the row and its writer. This region is the other half: what
+   * a leg pointing at a PART of a document may CLAIM, and the fixed-key read
+   * that resolves one row.
+   *
+   * THE ONE DOCTRINE THIS REGION EXISTS TO HOLD (Bob, 2026-09-14, the D-164
+   * study 5.1, folded into framework Part II 14.4): a citation that points at
+   * the sentence, paragraph or section answering the question refers ONLY to
+   * that portion of the document. So a content-grain leg earns, on every axis,
+   * only from what is IN its portion — and because readings carry no POSITION
+   * (`reading_refs` has no WHERE column; I2's change is FW-17), the record
+   * cannot say whether any resolution of the document was established inside
+   * the portion. That is UNDETERMINED, and it is STATED rather than filled in
+   * from the whole document. The provisional the study carried before Bob ruled
+   * — whole-document earning — is withdrawn, and answering a portion's
+   * connection axis from the document is the failure this region's control arm
+   * is armed against.
+   *
+   * WHICH LEVEL WAS EMPTY IS PART OF THE ANSWER, not a diagnostic beside it
+   * (CLAUDE.md, "sparse is the normal condition at every level"): a portion's
+   * connection is undetermined because POSITION is absent, which is a different
+   * fact from a document that resolves to nothing at all, and the two are named
+   * apart wherever this region answers.
+   *
+   * WHAT IS NOT HERE. The transcription CEILING is `gradeCeiling`'s, the
+   * coverage rule is `extentCovers`', the cap is `derivationCap`'s — all three
+   * in `textchain.mjs`, all three already asked per TARGET (D-252), and this
+   * region restates none of them. The writer is REC-82's above. The frontmatter
+   * and version-leg grammar are REC-84's. */
+
+  /** THE TARGET a content row presents to `textchain.mjs` — the same shape
+   *  `mintContent` hands `derivationCap`, derived in ONE place so the ceiling a
+   *  reader is told and the cap the row was minted with cannot be about two
+   *  different regions.
+   *
+   *  `document` answers `{}` DELIBERATELY, and it is the rule rather than a
+   *  degenerate case: `extentCovers` returns true for a `document` attestation
+   *  whatever the target, and false for a `page` or `region` attestation whose
+   *  target carries no integer page. So A PAGE ATTESTATION DOES NOT COVER A
+   *  `document` ROW — IC-83's sentence, obtained from the coverage rule that
+   *  already existed instead of from a second test written here.
+   *
+   *  A kind this plane cannot yet evaluate (`sheet-cell`, `slide-shape`,
+   *  `doc-para` — REC-85's `covers` arms) answers NULL, meaning "no target this
+   *  module can name". Answering `{}` for it would hand a portion the whole
+   *  document's cap, which is the overclaim this whole item is about. */
+  static #contentTarget(kind, extent) {
+    if (kind === "document") return {};
+    if (kind === "pdf-page")
+      return { page: Number.isInteger(extent && extent.page) ? extent.page : null,
+               rect: Array.isArray(extent && extent.rect) ? extent.rect : null };
+    return null;
+  }
+
+  /** THE ATTESTATIONS OVER A SET OF CAPTURES, in ONE bounded read.
+   *
+   *  BOUNDED FOR `attestationsFor`'s REASON EXACTLY, restated because the
+   *  objection is the same one and it is not good enough here either: an extent
+   *  is per REGION, so a diligent group working through a scanned budget book
+   *  can legitimately produce hundreds over one document. An unbounded read
+   *  whose bound is an argument about how people will behave is the shape the
+   *  ratchet exists to refuse. The cap is the same constant, multiplied by the
+   *  number of captures asked about and clamped, and TRUNCATION IS STATED on
+   *  every row it could have affected rather than silently narrowing a ceiling
+   *  — an attestation this read did not see is an attestation that cannot raise
+   *  anything, which fails in the safe direction and must still SAY SO. */
+  #attestationsOver(captures) {
+    const ids = [...new Set((Array.isArray(captures) ? captures : [])
+      .filter((c) => typeof c === "string" && c))];
+    const by = new Map();
+    if (!ids.length) return { by, truncated: false };
+    const marks = ids.map(() => "?").join(",");
+    const cap = Math.min(Store.TEXT_SOURCE_LIMIT_DEFAULT * ids.length, Store.TEXT_SOURCE_LIMIT_MAX);
+    const page = this.#rows(
+      `SELECT capture_sha, attestor, at, extent_kind, extent_page, extent_rect, chain
+         FROM text_attestations WHERE capture_sha IN (${marks})
+        ORDER BY capture_sha, at, attestor LIMIT ?`, ...ids, cap + 1);
+    for (const a of page.slice(0, cap)) {
+      if (!by.has(a.capture_sha)) by.set(a.capture_sha, []);
+      by.get(a.capture_sha).push(a);
+    }
+    return { by, truncated: page.length > cap };
+  }
+
+  /* The wire form of a stored attestation row, in ONE place. `attestationsFor`
+     composes the same three arms and a second spelling of them here is the
+     eleven-copies failure in miniature — this one is private and set-based
+     because its caller already holds the rows. */
+  static #attestationShape(a) {
+    return a.extent_kind === "document" ? { kind: "document" }
+         : a.extent_kind === "page" ? { kind: "page", page: a.extent_page }
+         : { kind: "region", source: { kind: "pdf-page", ref: `p${a.extent_page}`,
+                                       page: a.extent_page, rect: safeJson(a.extent_rect) } };
+  }
+
+  /** ONE ROW'S STANDING: its ceiling on the transcription axis, its position on
+   *  the connection axis, and the sentence that says which.
+   *
+   *  THE ATTESTATIONS ARE JUDGED AGAINST THE ROW'S OWN CHAIN, not against the
+   *  live one, and the rule is `attestationsFor`'s verbatim: an attestation
+   *  whose chain differs from the transcription in hand is STALE and does not
+   *  raise anything; a NULL on either side is NOT staleness, because an
+   *  unrecorded chain is not a chain that moved and saying "stale" there would
+   *  be inventing a comparison nobody made. The row's chain is the right one to
+   *  compare against because the row IS what the member cited — an attestation
+   *  made against a transcription the citation never saw did not check the text
+   *  the citation points at. */
+  #contentStanding(r, atts, connectionByBundle) {
+    const extent = { kind: r.extent_kind, ...(safeJson(r.extent) || {}) };
+    const chain = safeJson(r.chain);
+    const target = Store.#contentTarget(r.extent_kind, extent);
+    const covering = (atts.by.get(r.capture_sha) || [])
+      .filter((a) => !(a.chain != null && r.chain != null && a.chain !== r.chain))
+      .map((a) => ({ member: a.attestor, at: a.at, extent: Store.#attestationShape(a) }));
+    /* THE CEILING IS `gradeCeiling`'S ANSWER VERBATIM. It already filters to the
+       attestations that COVER the target and already falls back to the cap
+       asked about that target, so there is nothing for this method to decide —
+       which is the point: one rule, one implementation, and the refusal at the
+       gate and the sentence a member reads cannot disagree. */
+    const transcription = target == null
+      ? { ceiling: null, determinant: null, by: [],
+          why: `this plane cannot yet evaluate what a ${r.extent_kind} extent covers, so what a leg `
+             + `citing it may claim on the transcription axis is undetermined — stated, and never `
+             + `resolved into the whole document's ceiling` }
+      : gradeCeiling(chain, target, covering);
+    const doc = connectionByBundle && connectionByBundle[r.bundle_id]
+      ? connectionByBundle[r.bundle_id] : null;
+    /* THE CONNECTION AXIS, AND THIS IS THE RULING (Bob 5.1). A `document` row's
+       portion IS the document, so it earns exactly what the document earns —
+       from the same map, never recomputed. Any other row is a PORTION, and
+       until readings carry position the record cannot say whether the
+       resolution was established inside it. The document's grade is
+       deliberately NOT repeated on a portion row: it is one field away under
+       `earned.connection[bundle_id]` for anyone who wants the DOCUMENT's
+       answer, and putting it on the portion is precisely the borrow the ruling
+       forbids, wearing a label. */
+    const connection = r.extent_kind === "document"
+      ? (doc ? { determined: true, grain: "document", ...doc }
+             : { determined: false, grain: "document", grade: null,
+                 undetermined_because: "NO_RESOLUTION",
+                 empty_level: "connection — no captured resolution of this document to the subject",
+                 why: `no capture of this document resolves to this inquiry's subject at A, B or C, so `
+                    + `this row earns nothing on the connection axis. The honest leg is testimony `
+                    + `(grade D, with an author and a date) or no grade at all. Absence here is a fact `
+                    + `about what the recogniser matched, never evidence about what the document says` })
+      : { determined: false, grain: "portion", grade: null,
+          undetermined_because: "READING_POSITION_ABSENT",
+          empty_level: "position within the reading — `reading_refs` records THAT a reference was read "
+                     + "in this document and not WHERE it was read (I2, FW-17)",
+          why: `this leg cites ${describeExtent(extent)} and refers only to that portion (Bob, `
+             + `2026-09-14). Readings carry no position, so the record cannot say whether any `
+             + `resolution of this document to the subject was established inside it — which is `
+             + `undetermined and stated, never borrowed from the whole document. The document-grain `
+             + `answer is under earned.connection for ${r.bundle_id}, and it is the DOCUMENT's, not `
+             + `this portion's` };
+    return {
+      content_id: r.content_id, bundle_id: r.bundle_id, capture_sha: r.capture_sha,
+      extent_kind: r.extent_kind, extent, ref: r.ref, chain,
+      derivation_cap: r.derivation_cap, page_count: r.page_count,
+      minted_by: r.minted_by, at: r.at, stale: !!r.stale,
+      transcription, connection,
+      /* THE CAPTURE AXIS IS NOT COPIED HERE, and that is a decision with a
+         reason. It is document-grain today (`earned.capture` is keyed by bundle
+         and states a CEILING for a document the record holds bytes of), it is
+         unchanged by this item — IC-83's words are "the leg's capture grade <=
+         `captureBound` as today" — and the caller already has it in this same
+         envelope under the row's own `bundle_id`. Restating the letter here
+         would be a second copy of a value one field away. */
+      capture: { grain: "document", from: `earned.capture[${r.bundle_id}]`,
+        why: `the capture axis is about the BYTES and the bytes are the whole document's — there is no `
+           + `per-portion capture grade in this record and inventing one would be a third scale `
+           + `(DEC-4). It is unchanged by content grain and is answered once, for the document, `
+           + `under earned.capture` },
+      /* An attestation this read did not reach cannot have raised anything, so
+         the ceiling above is safe — and a ceiling that is safe because a read
+         was cut is still a ceiling the reader must be told about. */
+      ...(atts.truncated ? { attestations_truncated: true } : {}),
+      says: r.stale
+        ? `this passage was cited as it stood under an earlier transcription of the document. The `
+        + `document has since been re-read, so what the citation points at is ${describeExtent(extent)} `
+        + `of the capture as it was transcribed then — the record keeps it rather than moving it`
+        : `${describeExtent(extent)}, as this record holds it`,
+    };
+  }
+
+  /** WHAT EACH CONTENT ROW EARNS, for a set of ids, in a FIXED number of reads.
+   *
+   *  SET-BASED, and it is REC-66 / D-227's bound rather than tidiness — the
+   *  same reason `#contentStandings` above is set-based. A basis legitimately
+   *  cites one document for several legs (D4's shape), and a read per leg here
+   *  would put an amplifying scan behind a read any member can call. Two reads
+   *  whatever the basis holds: the rows, and the attestations over their
+   *  captures.
+   *
+   *  `connectionByBundle` is the registry's OWN `earned.connection` map, passed
+   *  in rather than recomputed: a second computation of what a document earns
+   *  is the drift this repository has measured five times, and the whole reason
+   *  `earnedBasisRegistry` is one function with three consumers. */
+  #contentEarned(contentIds, connectionByBundle = {}) {
+    const ids = [...new Set((Array.isArray(contentIds) ? contentIds : [])
+      .filter((c) => typeof c === "string" && c))].slice(0, Store.CONTENT_EARNED_MAX);
+    const out = {};
+    if (!ids.length) return out;
+    const marks = ids.map(() => "?").join(",");
+    const rows = this.#rows(
+      `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
+              derivation_cap, page_count, minted_by, at, stale
+         FROM content WHERE content_id IN (${marks}) LIMIT ?`, ...ids, ids.length);
+    if (!rows.length) return out;
+    const atts = this.#attestationsOver(rows.map((r) => r.capture_sha));
+    for (const r of rows) out[r.content_id] = this.#contentStanding(r, atts, connectionByBundle);
+    return out;
+  }
+
+  /** IC-84 (4)'s other half — THE LEGACY BACKFILL, WIRED.
+   *
+   *  REC-82 landed `ensureLegContent` as a pure function with NO CALLER and
+   *  said so in its own suite rather than leaving the gap to be found. This is
+   *  the caller: the first read that asks what a leg earns mints the
+   *  `document` row a leg written before the column existed should always have
+   *  had. Deterministic because the id is a hash, so it is a read that happens
+   *  to write rather than a migration with a direction — running it twice, in
+   *  two sessions, or after a replay produces the same id.
+   *
+   *  ONE TRANSACTION FOR THE WHOLE BASIS, not one per leg.
+   *
+   *  THE TWO LEGITIMATE NULLS COME BACK AS THEMSELVES AND ARE CARRIED, NEVER
+   *  COLLAPSED (IC-83's AMENDMENT 2): an inquiry target has no capture and no
+   *  part to point at (DEC-21), and a target the record holds no bytes of has
+   *  nothing to address. `ensureLegContent` answers each with its own `why`,
+   *  and this pass puts that sentence on the leg so every read that meets the
+   *  null states WHICH it is.
+   *
+   *  BOUNDED, AND THE BOUND IS STATED IN THE ANSWER. A basis's leg count is
+   *  unbounded by the schema and `ensureLegContent` does a small fixed number
+   *  of reads per leg, so an unbounded backfill behind a member-callable read
+   *  is REC-66's amplification arriving at a new door. It is capped, and a read
+   *  that hit the cap says so and leaves the rest for the next read — safe
+   *  precisely because the id is a pure function of the leg.
+   *
+   *  WHAT THE INSTRUMENT CANNOT SEE, stated because it matters: the
+   *  derivation-bounds walk counts `this.sql.exec(` and `#rows(` INSIDE a
+   *  tainted loop, and `this.ensureLegContent(...)` is a method call it cannot
+   *  follow. This loop would NOT appear on that roster even unbounded. The
+   *  bound is here because the amplification is real, not because the walk
+   *  asked for it. */
+  #backfillLegContent(bundleId, legs) {
+    const need = legs.filter((l) => !l.content_id);
+    const run = need.slice(0, Store.LEG_BACKFILL_MAX);
+    if (!run.length) return { ran: 0, truncated: false };
+    const outcomes = new Map();
+    this.ctx.storage.transactionSync(() => {
+      for (const l of run) outcomes.set(l.ord, this.ensureLegContent(bundleId, l.ord));
+    });
+    for (const l of run) {
+      const o = outcomes.get(l.ord);
+      if (!o || !o.ok) { l.why_no_content = o && o.detail ? o.detail : null; continue; }
+      if (o.content_id) { l.content_id = o.content_id; l.backfilled = !!o.backfilled; }
+      else { l.null_case = o.null_case || null; l.why_no_content = o.why || null; }
+    }
+    return { ran: run.length, truncated: need.length > run.length };
+  }
+
+  /** IC-84 (4) — THE FIXED-KEY `content` READ.
+   *
+   *  ONE KEY, ONE ROW, AND NOTHING ELSE IS ACCEPTED. D-222 puts the
+   *  content-grain QUERY arm in stage C, behind D-225's caps, and this op is
+   *  deliberately not a down payment on it: a read that quietly accepted a
+   *  predicate would be a query surface nobody capped, arriving by the door
+   *  marked "resolution".
+   *
+   *  THE REFUSAL IS INVERTED RATHER THAN LISTED, and that is WORKER.md's rule
+   *  about classifiers: a denylist of predicate spellings (`q`, `where`,
+   *  `limit`, `cursor`, …) goes stale the moment a fourth is invented, and a
+   *  sweep over three literals reads as complete. So the op declares the ONLY
+   *  parameters it understands — its key, and the viewer the control plane
+   *  stamps — and refuses everything else BY NAME, whatever it is called.
+   *
+   *  D-15: viewer-gated on the row's own bundle and fails closed on an absent
+   *  viewer, like every read that can name a bundle. A content row the viewer
+   *  may not see answers EXACTLY as one that does not exist — the id is the
+   *  hash of a capture, an extent and a chain, so an answer that distinguished
+   *  "hidden" from "absent" would let a caller confirm a passage exists in a
+   *  project they were never invited to by guessing its address. */
+  contentRead({ id, viewer = null, extras = [] } = {}) {
+    const unknown = [...new Set((Array.isArray(extras) ? extras : [])
+      .filter((k) => !Store.CONTENT_READ_PARAMS.has(k)))].sort();
+    if (unknown.length)
+      return { ok: false, reason: "FIXED_KEY_ONLY", rejected: unknown,
+               detail: `the content read is FIXED-KEY: it resolves ONE row by content_id and takes no `
+                     + `predicate and no paging (D-222 puts the content-grain query arm in stage C, `
+                     + `behind D-225's caps). This call carried ${unknown.join(", ")}, which it `
+                     + `refuses rather than ignores — a parameter silently dropped is a filter the `
+                     + `caller believes was applied` };
+    if (typeof id !== "string" || !id)
+      return { ok: false, reason: "NO_ID", detail: "content requires ?id=<content_id>" };
+    const r = this.#one(
+      `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
+              derivation_cap, page_count, minted_by, at, stale
+         FROM content WHERE content_id=?`, id);
+    /* ABSENT AND INVISIBLE ARE ONE ANSWER. The row is read first because the
+       gate needs its bundle, and the two refusals are byte-identical so what
+       comes back cannot tell them apart. */
+    if (!r || !this.#viewerSees(r.bundle_id, viewer))
+      return { ok: false, reason: "NO_SUCH_CONTENT", target: id,
+               detail: `no content row is addressed by this id in this record. A content id is `
+                     + `hash(capture, canonical extent, chain) — it is minted when a leg first cites `
+                     + `the passage, so an id nothing has cited does not exist yet` };
+    const atts = this.#attestationsOver([r.capture_sha]);
+    const standing = this.#contentStanding(r, atts, {});
+    /* THE ATTESTATIONS COVERING THIS ROW, and only those (IC-84's words). The
+       coverage rule is `extentCovers`', asked here for the same target the
+       ceiling above was computed over, so the list a member reads and the
+       letter the gate enforces are about one extent. An attestation over
+       another page of the same document is NOT in `covering`, which is the
+       whole content-grain point: it did not check this text. */
+    const target = Store.#contentTarget(r.extent_kind, standing.extent);
+    const all = (atts.by.get(r.capture_sha) || []).map((a) => ({
+      attestor: a.attestor, at: a.at, extent: Store.#attestationShape(a),
+      stale: (a.chain != null && r.chain != null && a.chain !== r.chain) }));
+    const covering = target == null ? []
+      : all.filter((a) => !a.stale && extentCovers(a.extent, target));
+    const { connection, capture, ...row } = standing;
+    return {
+      ok: true, ...row,
+      /* THE CONNECTION AXIS IS NAMED AS ABSENT RATHER THAN OMITTED. It is a
+         fact about an INQUIRY's subject — what this document resolves TO — and
+         this read names no inquiry. `op=earnedbasis` is where it is answered,
+         per leg; a connection grade minted here with no subject to earn it
+         against would be exactly the invented attribution CLAUDE.md forbids. */
+      connection: { determined: false,
+        grain: r.extent_kind === "document" ? "document" : "portion",
+        grade: null, undetermined_because: "NO_SUBJECT_IN_THIS_READ",
+        empty_level: "the question — a connection grade is earned against an inquiry's subject entity, "
+                   + "and this read resolves a ROW rather than a LEG",
+        why: `ask op=earnedbasis with the inquiry whose leg cites this row: a connection is what the `
+           + `record earns between THIS document and THAT question's subject, and it has no value `
+           + `independent of a question` },
+      capture,
+      attestations: { covering, all, count: all.length,
+        ...(atts.truncated ? { truncated: true } : {}),
+        why: `an attestation raises this row's ceiling only if its extent COVERS this row's extent `
+           + `(textchain's extentCovers) AND it was made against the transcription this row was `
+           + `minted under. A page attestation does not cover a whole-document row, and an `
+           + `attestation over another page does not cover this one` },
+    };
+  }
+
 
   /* REC-36: the bounded backfill for the name index on a store that already
      holds readings. The terms derive from columns `reading_refs` already
@@ -14044,7 +14403,23 @@ export class Store extends DurableObject {
    *  Bounded by the TARGETS asked about (a basis, or a caller's list) and not by
    *  the corpus, and it runs two indexed reads per call rather than a probe per
    *  leg — publishedRegistryFor's shape and for its reason. */
-  earnedBasisRegistry(subjectEntity, targetIds = []) {
+  /*  REC-83 / IC-84 (3) — THE THIRD ARGUMENT, AND WHY THE ANSWER STAYS
+   *  BYTE-IDENTICAL WITHOUT IT. `contentIds` is the set of content rows the
+   *  caller's legs point at. Given none — which is every existing caller: the
+   *  write path (`earnedRegistryForDoc`), the ratification gate, and the two
+   *  internal registry reads — this function returns EXACTLY what it returned
+   *  before this item, with no `earned.content` key at all. That is not
+   *  caution: a document-grain leg's earned basis must not move because the
+   *  record learned to answer at a finer grain, and the over-strictness arm of
+   *  this item's control set asserts it against a figure measured on the
+   *  pristine tree.
+   *
+   *  THE CONTENT BLOCK IS DERIVED FROM `earned.connection`, NOT BESIDE IT. A
+   *  `document` row earns what its document earns, taken from the map this
+   *  function just built rather than recomputed — so the two grains cannot
+   *  disagree, which is the same reason this is ONE function with three
+   *  consumers in the first place. */
+  earnedBasisRegistry(subjectEntity, targetIds = [], contentIds = []) {
     const ids = [...new Set((Array.isArray(targetIds) ? targetIds : [])
       .filter((t) => typeof t === "string" && t))];
     const ent = subjectEntity
@@ -14140,6 +14515,12 @@ export class Store extends DurableObject {
                + `needs a chain-of-custody web archive, which this plane cannot produce and does not `
                + `claim (CAPTURE-FIDELITY.md).` };
     }
+    /* REC-83 / IC-84 (3): THE SAME REGISTRY, AT CONTENT GRAIN. Keyed by content
+       row, added only when the caller named rows — so the answer every existing
+       consumer gets is unchanged, and a `document`-extent row's connection is
+       the document's own entry above rather than a second computation of it. */
+    if (Array.isArray(contentIds) && contentIds.length)
+      out.earned.content = this.#contentEarned(contentIds, out.earned.connection);
     return out;
   }
 
@@ -22239,8 +22620,98 @@ export class Store extends DurableObject {
           .map((r) => r.target_id);
     const visible = asked.filter((t) => this.#viewerSees(t, viewer));
     const withheld = visible.length !== asked.length;
-    const reg = this.earnedBasisRegistry(b.inquiry_subject_entity || null, visible);
+    /* ================= REC-83 / IC-84 (3) · THE LEG PASS ==================
+     *
+     * The registry above answers per DOCUMENT, which is the question a member
+     * asks BEFORE writing a leg ("what would this target earn me?"). This pass
+     * answers the other question, which only exists now that a leg can name a
+     * PART: what does the leg I ALREADY WROTE earn, given the extent it names?
+     *
+     * IT RUNS EVEN WHEN `targets` WAS GIVEN, because the legs are a fact about
+     * the inquiry and not about the caller's list — a surface filling in a new
+     * leg still wants to see what the existing ones stand on.
+     *
+     * THE READ IS NOT CAPPED, AND THAT IS A DECISION THE INSTRUMENT MADE ME
+     * MAKE RATHER THAN A DEFAULT. The first draft put `LIMIT ?` on it at
+     * `CONTENT_EARNED_MAX`. `test/bounds.test.mjs`'s walk then found a
+     * THIRTY-SECOND capped op and named `earnedbasis` as capped-but-undriven —
+     * which was the right answer to the wrong design. This read is over exactly
+     * the population the `asked` read three lines up already enumerates
+     * UNCAPPED: the same table, the same bundle, one row per leg. Capping one
+     * and not the other would publish two different populations in one answer
+     * and silently omit legs whose targets are listed — the drift this method's
+     * own comments warn about, installed by a bound nobody asked for. A basis is
+     * bounded by what a member authored in one document, and the answer says so
+     * by listing it whole. What IS bounded is the BACKFILL below, because it
+     * WRITES.
+     *
+     * WHAT THE OTHER INSTRUMENT SEES, stated because the two disagree about
+     * this line: `derivation-bounds.test.mjs` seeds its taint on an unbounded
+     * `#rows` and then looks for amplification INSIDE a loop over it — another
+     * loop, a `this.sql.exec(`, or another `#rows(`. There is none here (the
+     * backfill's writes are behind a method call the walk cannot follow, and
+     * they are bounded on their own terms), so this read does not put
+     * `earnedBasis` on that roster either. Both figures were re-measured after
+     * the cap came off and both are unmoved.
+     *
+     * D-15, THE SAME POSTURE ONE OBJECT DOWN: a leg whose target the viewer may
+     * not see is DROPPED, and the fact that something was dropped is stated with
+     * no id and no count — op=backlinks' posture, which this op already takes
+     * for `asked`. */
+    const legRows = this.#rows(
+      `SELECT ord, target_id, target_type, content_id FROM inquiry_basis
+        WHERE bundle_id=? ORDER BY ord`, id);
+    const legsVisible = legRows.filter((l) => this.#viewerSees(l.target_id, viewer));
+    const legsWithheld = legsVisible.length !== legRows.length;
+    const legs = legsVisible.map((l) => ({ ord: l.ord, target: l.target_id,
+                                           target_type: l.target_type, content_id: l.content_id }));
+    /* IC-84 (4): THE BACKFILL, WIRED HERE AND NOWHERE ELSE.
+     *
+     * A READ THAT WRITES, DELIBERATELY AND DECLARED. `op=earnedbasis` is
+     * `mutating: false` in the OPS table and stays so, and the reason is not
+     * convenience — index.mjs's own doctrine is that *"a mutating arm hiding
+     * inside a non-mutating op would pass the gate that exists to stop exactly
+     * that"*. This is not that arm. Nothing here is an ACT: the row minted is
+     * `hash(capture, canonical extent, chain)` over rows the record already
+     * holds, so its value is fixed before this call and running it twice, in
+     * two sessions, or after a replay produces the same id. It changes no state
+     * a caller could have caused differently and grants nobody anything —
+     * which is why IC-83 could rule *"a legacy leg is backfilled to its
+     * `document` row on first read"* in the first place. Flipping the op to
+     * `mutating: true` would be the alternative and it is WORSE than the
+     * problem: SESSION_OPS would then gate a read the shipped composer already
+     * calls, an undeclared interface change on I3 wearing the costume of
+     * caution. THE REVERSAL, if this reading is rejected, is one line — delete
+     * this call and let `op=promote`'s projection mint the row at the leg's
+     * next promotion, which it already does and which
+     * `content-extent.test.mjs` already drives. */
+    const backfill = this.#backfillLegContent(id, legs);
+    const reg = this.earnedBasisRegistry(b.inquiry_subject_entity || null, visible,
+      legs.map((l) => l.content_id).filter(Boolean));
+    /* THE TWO LEGITIMATE NULLS, STATED AS WHICH AND NEVER COLLAPSED (IC-83's
+       AMENDMENT 2). A leg whose target is an INQUIRY has no capture and no part
+       to point at (DEC-21); a leg whose target information object this record
+       holds no bytes of has nothing to address. Both are `content_id: NULL` and
+       they are DIFFERENT FACTS — one is about what kind of thing was cited, the
+       other about what this record has captured — so the discriminator comes
+       from `ensureLegContent`, which is where the distinction is decided, and
+       is carried here rather than re-derived. A leg still NULL with no case
+       named is one the bound above did not reach, and that is said too. */
+    for (const l of legs) {
+      if (l.content_id) continue;
+      if (!l.null_case && !l.why_no_content) {
+        l.null_case = "NOT_YET_RESOLVED";
+        l.why_no_content = `this read's backfill bound (${Store.LEG_BACKFILL_MAX} legs) stopped before `
+          + `this leg. Nothing is wrong with it — ask again and the next read continues, because the `
+          + `content id is a pure function of the leg and needs no cursor`;
+      }
+    }
     return { ok: true, bundleId: id, ...reg, asked: visible,
+             legs,
+             /* The bound, published rather than left to be inferred from a
+                short list — REC-60's rule about an answer that was cut. */
+             ...(backfill.truncated ? { backfill_truncated: true } : {}),
+             ...(legsWithheld ? { legs_out_of_view: true } : {}),
              /* Stated, never silently shortened — and with no id and no count,
                 because the count IS the leak (op=backlinks' posture). */
              ...(withheld ? { out_of_view: true } : {}),
@@ -26310,6 +26781,37 @@ export class Store extends DurableObject {
      documents are both "enough to work with on a screen, far short of a dump". */
   static TEXT_SOURCE_LIMIT_DEFAULT = 200;
   static TEXT_SOURCE_LIMIT_MAX = 5000;
+
+  /* REC-83 / IC-84 — THE CONTENT-GRAIN READS' THREE BOUNDS.
+   *
+   * `CONTENT_READ_PARAMS` is not a bound at all but the op's whole grammar, and
+   * it is here beside the bounds because it is the same kind of statement: what
+   * this surface will and will not accept, in ONE place a reader can check.
+   * `op=content` is FIXED-KEY (D-222 stage C is where the query arm lives), so
+   * it understands exactly its key and the viewer the control plane stamps —
+   * and refuses every other parameter BY NAME. Declared as the ACCEPTED set
+   * rather than as a list of predicate spellings on WORKER.md's rule: a
+   * denylist of `q`/`where`/`limit`/`cursor` is complete only until a fifth
+   * spelling is invented, and would read as a complete sweep while it went
+   * stale. Adding a parameter to this op means adding it HERE, which is
+   * exactly the review the fixed-key rule wants.
+   *
+   * `CONTENT_EARNED_MAX` bounds how many content rows one `op=earnedbasis`
+   * answer resolves standings for. 200 is `op=earnedbasis`'s OWN target slice,
+   * reused rather than minted: a basis with more than 200 legs is not a shape
+   * this record has, and the two numbers being one number is what keeps the
+   * targets asked about and the rows answered for from drifting apart.
+   *
+   * `LEG_BACKFILL_MAX` bounds how many legacy legs one read backfills. It is
+   * SMALLER than the other two on purpose: the backfill WRITES, a write behind
+   * a member-callable read is the amplification REC-66 / D-227 bounds, and the
+   * work is safely resumable because `ensureLegContent` is a pure function of
+   * the leg — a read that stops at the cap says so and the next read continues
+   * from where it stopped, with no cursor to mint and no state to keep. */
+  static CONTENT_READ_PARAMS = new Set(["id", "viewer"]);
+  static CONTENT_EARNED_MAX = 200;
+  static LEG_BACKFILL_MAX = 50;
+
   static AI_RUN_LOG_LIMIT_DEFAULT = 200;
   static AI_RUN_LOG_LIMIT_MAX = 5000;
 
@@ -29584,6 +30086,18 @@ export class Store extends DurableObject {
         earnedbasis: () => this.earnedBasis({ id: url.searchParams.get("id"),
                                               targets: url.searchParams.get("targets"),
                                               viewer: url.searchParams.get("viewer") }),
+        /* REC-83 / IC-84 (4): THE FIXED-KEY CONTENT READ. One key, one row —
+           `extras` hands the store EVERY parameter name that arrived so the op
+           can refuse a predicate or a page by name rather than ignoring it. The
+           control plane strips `op` and `token` and forwards the rest, so what
+           this list holds is exactly what the caller sent plus the viewer the
+           control plane stamped; `Store.CONTENT_READ_PARAMS` is the accepted
+           set and everything else is refused. GATED like every read that names
+           a bundle: the store fails closed on an absent `viewer` and answers an
+           invisible row exactly as an absent one. */
+        content: () => this.contentRead({ id: url.searchParams.get("id"),
+                                          viewer: url.searchParams.get("viewer"),
+                                          extras: [...url.searchParams.keys()] }),
         reusedparts: () => this.reusedParts(url.searchParams.get("id")),
         recordreuseverdicts: () => this.recordReuseVerdicts(body || {}),
         reuseverdicts: () => this.reuseVerdicts({ bundleId: url.searchParams.get("bundle"),

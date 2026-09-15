@@ -212,6 +212,21 @@ const corpusPaths = [
      corpus that assumed it was would have reported those two as stale. Measured, not
      anticipated: they were the first two false findings this extractor produced. */
   ...walk(join(REPO, "docs/development")).filter((p) => p.endsWith(".md")),
+  /* WIDENED 2026-09-14 (M0-30), on the SAME precedent and found the same way — by a driver
+     whose arms this corpus could not see. `rowdesign.control.mjs` arms the §4.7 row-design
+     check, so two of its anchors quote `tools/plancheck.mjs` (a section header) and
+     `docs/architecture/CORPUS-STANDARD.md` (a row of §5's governed table). Both anchors are
+     LIVE and exactly-once in their real subjects, and A4 reported both as GONE TO ZERO — the
+     third and fourth false findings this extractor has produced, and all four have the one
+     cause: the corpus was narrower than the estate's arms. **The repair is the corpus, never
+     the driver.** Re-spelling an anchor so the extractor stops seeing it would dodge the
+     detector while leaving the arm exactly as fragile, which is the defect wearing a disguise.
+     `tools/` is where this project's instruments live (`plancheck`, `mintid`, `mergecarry`,
+     `corpuscheck`, `rowdesign`) and every one of them is a legitimate subject for an arm;
+     `docs/architecture/` is the governed design corpus, and a check whose subject is a
+     STANDARD is armed by editing that standard. */
+  ...walk(join(REPO, "tools")),
+  ...walk(join(REPO, "docs/architecture")).filter((p) => p.endsWith(".md")),
 ].filter((p) => !IS_DRIVER(p));
 
 const corpus = new Map();

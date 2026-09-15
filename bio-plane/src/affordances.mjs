@@ -1632,6 +1632,17 @@ export const NON_ACTS = {
      is never itself an act. No surface renders an "earnedbasis" button beside a
      bundle; UI-20's cite flow reads it to fill a leg in. */
   earnedbasis: "read: what the record earns for a candidate basis leg — consulted while composing a citation, never an act on an object",
+  /* REC-83 / IC-84. A READ keyed by CONTENT ID, and the reason it is not an act
+     is the same one op=reading's is, one grain finer: it RESOLVES a referent —
+     what this citation points at, what the text under it rests on, who has
+     checked it — and resolving is what a surface does before rendering, not
+     something a member does TO an object. The acts on a content row are
+     elsewhere and each has its own door: minting is op=promote's projection,
+     attesting is op=attesttext, and NARROWING a citation (REC-86) is an
+     authored act on the INQUIRY. No surface renders a "content" button beside a
+     bundle; UI-61 reads it to show a leg's `ref` and jump the viewer to the
+     page. */
+  content: "read: one content row by content_id — the extent a citation points at, its chain and cap, whether the transcription has moved, and the attestations covering it; the referent a leg resolves through, never an act on an object",
   /* REC-36. Keyed by ENTITY, like the registry writes above it: the question is
      "which captured documents name this subject", not "what may be done to this
      bundle". It offers candidates a member picks a resolve out of; the ACT is

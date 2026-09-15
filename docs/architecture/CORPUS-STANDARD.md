@@ -83,7 +83,7 @@ heading, exactly these four fields in this order, closed by a `---` line:
 **Status** · <what this document is; version and date as it states them; who approved
 or ruled it and when; its completeness in plain words — complete at its level, partially
 complete, draft, superseded (by what); the one caveat a reader who has not lived in the
-repo needs; and the words "as of YYYY-MM-DD">
+repo needs; and, ONCE and LAST, the words "as of YYYY-MM-DD">
 
 **Place in the system** · <which construct or level this document owns; which documents
 depend on it and which supersede parts of it; why it matters>
@@ -107,7 +107,13 @@ What each field is FOR, so the prose is written to the purpose rather than to th
   and it must carry `as of YYYY-MM-DD`. The checker refuses a Status whose date is
   earlier than the file's last commit: **a body edit that leaves the front matter behind
   is exactly the staleness this standard exists to catch**, and the cost of compliance is
-  one date.
+  one date. **That date appears EXACTLY ONCE, is the LATEST, and sits at the END of the
+  Status** — the checker reads the FIRST `as of` and refuses a second, because a Status with
+  two is judged on the date a reader is least likely to think of as the date while the
+  trailing one they do bump is read by nothing (M0-28, from SK-6's sweep: three governed
+  documents carried two, benign only because the two were equal); a date written any other
+  way — "measured 2026-08-01" — is not an `as of` and is untouched, so the Status may still
+  say when a measurement was taken.
 - **Place in the system** answers *"why would I read this, and what else must I read?"*
   It names the construct or level owned, the documents that depend on this one, and the
   documents that supersede parts of it. A level-2 document names its level-1 home.
@@ -137,14 +143,6 @@ What each field is FOR, so the prose is written to the purpose rather than to th
    Contents change; the checker will say so.
 5. **The checker runs inside `plancheck`** — `node tools/plancheck.mjs` fails on any
    governed document that violates §3. Nothing here is advisory.
-7. **A queue row names the design it builds from — the governed document and section that is
-   its scope's authority** (`Part II §18 piece 1`, `IC-83`, `Membership v2 §7`), and the worker
-   reads that section before the code. A row whose design lives only in a ledger entry, an
-   inbox note or a brief is the D-164 failure arriving one level down: the code gets built and
-   the construct's document never learns it. Where the worker finds the design and the code
-   disagree, the document's front matter says which is the authority; where the worker finds a
-   gap in the design, it reports it to the document's Incomplete sections list through its
-   report, and CONDUCT folds it at integration.
 6. **Line-number citations into a governed document are a liability the citer carries.**
    Adding front matter shifts a document's lines once; ordinary editing shifts them
    forever. A citation into a design document names the SECTION (`framework §7`,
@@ -156,6 +154,15 @@ What each field is FOR, so the prose is written to the purpose rather than to th
    claim about the present tree. A line number with no sha is a hand-carried number, this
    project's most-repeated finding (CPDF-17 moved four files' lines the day the appendix
    landed).
+
+7. **A queue row names the design it builds from — the governed document and section that is
+   its scope's authority** (`Part II §18 piece 1`, `IC-83`, `Membership v2 §7`), and the worker
+   reads that section before the code. A row whose design lives only in a ledger entry, an
+   inbox note or a brief is the D-164 failure arriving one level down: the code gets built and
+   the construct's document never learns it. Where the worker finds the design and the code
+   disagree, the document's front matter says which is the authority; where the worker finds a
+   gap in the design, it reports it to the document's Incomplete sections list through its
+   report, and CONDUCT folds it at integration.
 
 ## 5. Governed documents outside docs/architecture
 

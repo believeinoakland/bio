@@ -4349,6 +4349,466 @@ over the derived one, and the arm already in `test/content-extent.test.mjs` §4 
 already driven, already armed by `nc-rec82.mjs oob` — starts covering every captured
 PDF instead of only the mixed ones. No interface moves: `content.page_count` is
 already the column, and IC-83 already names the rule.
+## CLAIM 2026-09-14 CONTENT-OFFICE (COFF-10 — the three OpenDocument registry entries, `.ods` / `.odt` / `.odp`)
+
+Session: CONTENT-OFFICE worker, Opus 5, spawned by CONDUCT #10 after COFF-9 reached
+`origin/main` at `d791aa7`.
+Worktree: `/Users/sparky/ClaudeCodeBIO/bio/.claude/worktrees/agent-a3ef28cc916b7cee7`
+Branch: `worktree-agent-a3ef28cc916b7cee7`
+Pristine baseline worktree (measurement only, never edited):
+`/Users/sparky/ClaudeCodeBIO/bio/.claude/worktrees/agent-a3ef28cc916b7cee7-baseline` at `d791aa7`.
+
+EXACT PATHS CLAIMED:
+
+- `bio-plane/src/formats.mjs` — THREE `registerFormat(...)` calls and their comments, appended
+  after the existing `pptxEntry` registration. Nothing else in the file moves.
+- `bio-plane/src/odf.mjs` — NEW. The three OpenDocument entry modules in one file (one
+  container grammar, three part-maps), exporting `odtEntry` / `odsEntry` / `odpEntry` and the
+  three media-type constants. The OOXML siblings' envelope builders are REUSED by importing
+  their reference constructors (`docParaRef` from `docx.mjs`, `slideShapeRef` from `pptx.mjs`)
+  and the ONE `linkWrapper` from `subresources.mjs`.
+- `bio-plane/src/formats-xlsx.mjs` — **AMENDED at the build, and the amendment is stated rather
+  than quietly taken.** This claim first said the file would NOT be touched, on the theory that
+  the `.ods` entry could construct the `sheet-cell` reference to the same shape. That is
+  DUPLICATION, which is exactly what the item's brief says not to do and how two producers of one
+  IC-1 arm drift apart. The change is ONE `export` keyword on the existing `sheetCellRef`, no
+  behaviour, and over-strictness arm (4) measures the three OOXML entries' outputs byte-identical
+  across it rather than asserting that it is harmless.
+- `bio-plane/src/ooxml.mjs` — NOT claimed for behaviour. Read-only except for its header
+  paragraph's one falsified sentence ("What is built is the FLAVOUR only: there is still no ODF
+  registry entry, no `registerFormat` call and no I2 emission (COFF-10's)"), corrected in place
+  with the dated reason. No function, constant or branch in that file changes.
+- `bio-plane/test/formats-odf.test.mjs` — NEW suite, its `NEGATIVE CONTROL:` line (D-344: the
+  marker followed IMMEDIATELY by a colon), and its `test:` script in `bio-plane/package.json`.
+- `bio-plane/dist/bio-plane.bundled.mjs` and `bio-plane/dist/bio-plane.bundle.json` — rebuilt
+  because the sources above are bundled and FL-10's guard fails a stale artifact. Nothing
+  bumped, signed or deployed.
+- `docs/architecture/BIO_Content_Framework_v0_10.md` — Part II §16, THREE SENTENCES ONLY,
+  quoted here so the diff is verifiable and BOB #10's concurrent edits merge trivially:
+  (1) "the axis reads OOXML today and reads OpenDocument once one flavour row is added to the
+  container reader, designed for and not built."
+  (2) "Building it is two acts on the format axis: the OpenDocument flavour row in the
+  container reader, and the three OpenDocument readers (`.ods`, `.odt`, `.odp` — one
+  `content.xml` part each, smaller than their OOXML counterparts) producing the same I2 shape
+  and evidentiary envelope; and one on the capture side: ..."
+  (3) "OpenDocument (`.odt`, `.ods`, `.odp`) is designed for and deliberately not built: zero
+  were found among 43,282 city assets."
+  Plus the Status line's `as of` date if it reads lower than 2026-09-14. A FRAMEWORK delegation
+  routed to this item by CONDUCT #10; NOTHING else in that document is touched.
+- `docs/development/OFFICE-FORMATS.md` — the ODF bullet's `[DESIGNED-not-built]` clause only,
+  which that bullet's own last sentence says is COFF-10's to finish.
+- `docs/development/CLAIMS.md` (this block), `docs/development/MEASUREMENTS.md` (one appended
+  COFF-10 section), `docs/development/DEBT.md` (only if this item opens a row).
+- `docs/DECIDED.md` — REGENERATED, not hand-edited (`node tools/decided.mjs`), because the §16
+  and OFFICE-FORMATS corrections carry marker words and `plancheck` fails on the drift. Added to
+  this claim at the build; it is a generated artifact, so a merge conflict here is resolved by
+  re-running the tool and never by picking a side.
+
+NOT TOUCHED, stated because REC-82 is live on them: `bio-plane/src/schema.mjs`,
+`bio-plane/src/store.mjs`, `bio-plane/src/index.mjs`. The item's own acceptance asserts
+`index.mjs` never learns the three format names, so that disjointness is driven, not promised.
+
+ADDED AT THE CLOSE, because a claim that does not name a path it edited is worse than no claim:
+`bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` ONLY (959/178/179 → 964/179/180), moved from
+the figure this item's own green run PRINTED AFTER THE COMMIT, one key set, `^  arms:` grepped to
+2 matches afterwards. `FLEET_FLOOR` is UNMOVED and none is owed.
+
+released: 2026-09-14 CONTENT-OFFICE (COFF-10) — landed on branch
+`worktree-agent-a3ef28cc916b7cee7`, NOT pushed and NOT merged; CONDUCT integrates.
+**`.odt`, `.ods` and `.odp` are registry entries.** `bio-plane/src/odf.mjs`, three
+`registerFormat` calls in `formats.mjs` and NOTHING anywhere else — the D-70 property DRIVEN by
+grepping `index.mjs` for the three names and finding none. Each dispatches on COFF-9's
+`partMap:"odf"` result and reads ONE `content.xml` into the SAME I2 shape and DEC-5 envelope its
+OOXML sibling produces, with IC-1's `doc-para` / `sheet-cell` / `slide-shape` references built by
+IMPORTING the siblings' own constructors. **NO new union member was needed, so NO IC was filed and
+I7 is CONFIRMED by three more entries rather than changed.**
+**The detect ladder is one step stronger than the OOXML entries' and the reason is measured**: ODF's
+`mimetype` is required first and STORED, so a synchronous `detect` reads the VALUE (CRC-verified,
+compared exactly) and answers `certain`. A names-only ladder would have been WRONG, not merely
+weak — all three flavours have identical part names.
+**THE TWO DEC-5 EXTRAS ONE `content.xml` CANNOT SUPPLY ARE NAMED ON EVERY SUCCESSFUL READ**, which
+is this item's sharpest line: core properties live in `meta.xml` and embedded objects in
+`META-INF/manifest.xml`, so no `core-properties` item and no `intra` link is emitted and both
+absences are carried as `{part, why:"outside_content_xml_not_read", detail}` — an absent item
+would otherwise read as "this document names no author" and `intra: 0` as "this document embeds
+nothing". The fixture's `meta.xml` deliberately carries a creator the entries do not surface.
+**MEASURED against LibreOffice 26.8.0.3, and two constructs were NOT where a spec reading would
+have put them**: a hidden SHEET is `table:display="false"` on the table's STYLE and a hidden SLIDE
+is `presentation:visibility="hidden"` on the page's DRAWING-PAGE STYLE, both in content.xml's own
+automatic styles — which is what makes them readable from one part at all. Pre-item, against a
+pristine `origin/main` worktree at `d791aa7`, the REGISTRY answered `undetermined`/`none` on all
+three real files while the container tier already answered the flavour; that gap is what closed.
+**Google Drive's own export is NOT reachable here and is NOT measured** — CAP-8 meets it first.
+GATES: battery **188/188 · 11,542** against this session's own pristine baseline **187/187 ·
+11,410**, the delta attributed by diffing two full runs per suite and closing exactly (+130 the new
+suite, +2 hygiene's own per-suite census; no other suite moved by one assertion).
+`node scripts/coverage.mjs --strict` run DIRECTLY from `bio-plane/`, `$?` unpiped, **exit 0**,
+REGISTER FLOOR `arms 964/964 · classified 179/179 · corpus 180/180` after the move.
+`node civicos-ui/test/run.mjs` from the repo root **exit 0**. `node tools/plancheck.mjs --local`
+**0 fail 0 warn**. `node tools/corpuscheck.mjs` 44 governed documents **0 fail**. FL-10's guard
+FIRED as briefed and `npm run build` rebuilt `dist/bio-plane.bundled.mjs` (2,760,995 B, sha256
+`817e0a8f…`); `src/signpage.mjs` regenerated BYTE-IDENTICALLY and is not in the diff. Nothing
+bumped, signed or deployed.
+CONTROLS, five arms plus a baseline row: (1) content.xml removed → the absence named BY PART on
+all three, structure and text `ok:false` and never an empty structure; (2) wrong flavour → refused
+by name on all six cross pairs, plus a DOCX package and a plain ZIP; (3) the arm's own arm —
+`unregisterFormat("ods")` → its two detect assertions fail by name and the other two entries are
+UNMOVED, restored and the restore MEASURED; (4) over-strictness on the OOXML entries → outputs
+byte-identical to the pristine tree, **sha256 `050ae28e36ca4be2b8bf5cb3e221a617e765c8841daad88831beba6cc2e5edeb`
+on both sides**, corpus printed and FLOORED at 2,000 bytes because a digest over an empty object
+agrees for free; (5) over-strictness on spellings this item did not anticipate → hiddenness on the
+ELEMENT rather than the style, `text:s`/`tab`/`line-break`, and `number-columns-repeated` advancing
+the cell address, all READ.
+TWO FINDINGS ABOUT THIS ITEM'S OWN WORK, recorded rather than smoothed. (a) **A shared module-level
+`/g` regex HUNG the first run.** `docx.mjs` and `pptx.mjs` each hold one and reset `lastIndex` at
+the top of their single walk, which is safe because neither walk calls anything that walks. Every
+walk here NESTS, so the inner call's reset rewound the outer loop and it never terminated. Closed
+by a factory, with the reason at the site. (b) **`hygiene.test.mjs` caught the new suite ending on
+`process.exitCode` instead of `process.exit`** on its first battery run — the rule working, and
+the +2 hygiene delta is that same per-suite census counting the new file.
+**WHAT IS OWED TO A FUTURE ACTOR: nothing by this landing.** The §16 delegation CONDUCT routed
+here is DISCHARGED — all three sentences corrected in place with the dated reason, and nothing else
+in that document touched. Everything CONDUCT should record is in this worker's report, stated as
+acts with their actors.
+
+
+
+## CLAIM 2026-09-14 CAPTURE (CAP-7 — the Google Drive link count over COFF-6's census corpus; a measurement, nothing built)
+
+session: measurement worker for queue item CAP-7, worktree-isolated, spawned by CONDUCT #10.
+worktree: `.claude/worktrees/agent-a455f510b4ade59b9`, branch
+  `worktree-agent-a455f510b4ade59b9`, at `main` `30f2edf` (`git log HEAD..origin/main`
+  empty — already current, nothing to fast-forward) before anything was measured.
+paths:
+- `docs/development/MEASUREMENTS.md` — one new dated entry, appended at the END.
+- `docs/architecture/BIO_Content_Framework_v0_10.md` — Part II §16's "Google Drive
+  formats" paragraph only: "not yet measured" replaced by the dated figure; the Status
+  `as of` bumped to 2026-09-14. No heading moves, so no `--write` regeneration is
+  expected; if one is needed it is taken with `tools/corpuscheck.mjs --write`.
+- `tools/measure-office-corpus.py` — the COFF-6 instrument gains two modes,
+  `drivelinks` and `drivecontrol`. Existing modes are not touched.
+- `.gitignore` — one entry for this item's pen, `.cap7-pen/`, the same shape every pen
+  above it has.
+- `docs/development/CLAIMS.md` — this entry.
+- `docs/DECIDED.md` — REGENERATED, never hand-edited (`node tools/decided.mjs`), because
+  this landing moves it twice: this block's own closing line about whose call materiality
+  is gets indexed as a CAP-7 entry, and Part II §16's Drive paragraph growing shifts D-194's cited
+  line by +4. `plancheck` fails on the drift and CLAUDE.md requires the regeneration in the
+  same turn; it is a generated index rather than another area's prose.
+not claimed and not touched: `QUEUE.md`, `DECISIONS.md`, `CLAUDE.md`, `MILESTONES.md`,
+  `bio-plane/src/**`, `bio-plane/checks/**`, `newgroup/**`. **Materiality is CONDUCT's
+  ruling and is not stated here.** Nothing is built: no handler, no host-stack entry,
+  no schema.
+released: 2026-09-14 by the CAPTURE measurement worker at the close of CAP-7. **The count
+  is 50 Drive links — 22 distinct targets in 16 documents — over a re-listed census of
+  43,283 `oaklandca.gov` asset keys plus 793 Legistar attachments: 16 Docs, 16 `/file/d/`,
+  12 Sheets, 6 other, ZERO Slides, ZERO folders, ZERO `/open?id=`. By WHERE, every one of
+  the 50 is inside a document's BODY and not one is an asset or a Legistar attachment in
+  its own right** (0 of 43,283 keys; 0 of 793 attachments, and 0 of the 793 are of the
+  hyperlink kind at all). Four are in OOXML office bodies (3 of them real `.rels`
+  hyperlinks, census of 762 files / 1.29 GB) and 46 in PDF bodies (12 of 1,000 sampled
+  PDFs — a SAMPLE, 3.6 % of 27,783, because the PDF half is 133.6 GB); html/htm (62) and
+  csv (166) censuses found zero. Recorded as **M-13** in `MEASUREMENTS.md` with the
+  instrument, both commands and the blind spots; Part II §16's Drive paragraph carries the
+  dated figure and no longer says the census has not been run. Population re-listed from
+  the PUBLIC source, not read from any instance's register, and no credential was used or
+  needed — `s3://cao-94612` and `webapi.legistar.com` are both anonymous reads; `npx
+  wrangler whoami` reported `20b533579290b9b93168345edd3b7f72` as the standing guard. The
+  live record's write path was never touched and no scratch namespace was entered. GATES on
+  the committed tree: `corpuscheck` **44 governed document(s), 0 fail**, exit 0 unpiped and
+  byte-identical to the pre-edit baseline (no heading moved, so no `--write`);
+  `node tools/gates.mjs` **GREEN, class FULL** — battery **187/187 · 11,329 assertions**,
+  `coverage.mjs --strict` exit 0 run directly (171/171 ops reached, 0 unreached), UI harness
+  exit 0 from the repo root, `plancheck --local` 0 fail 0 warn. NEGATIVE CONTROL
+  `drivecontrol`, 45 assertions, exit 0, six arms including over-strictness (197 non-Drive
+  google links seen and refused on the REAL corpus, not only on fixtures). **The control
+  found a real defect in the instrument on its first run and it is recorded rather than
+  smoothed:** a `.rels` part that would not parse read as ZERO links while every other arm
+  was green — the structural OOXML row would have said 0 instead of 3 — fixed with a
+  raw-bytes fallback and kept as permanent arm 6. **MATERIALITY IS NOT RULED HERE and is
+  CONDUCT's on the CAP-7 row.** Nothing was built: no handler, no host-stack entry, no
+  schema. Nothing is owed to a future actor by this claim.
+## CLAIM 2026-09-14 M0 (M0-30 — the `plancheck` arm behind `CORPUS-STANDARD.md` §4.7, and the sweep that brings every open queue row to it)
+session: M0 background-lane worker (worktree `.claude/worktrees/agent-a12296b3767e15401`, branch `worktree-agent-a12296b3767e15401`)
+opened: 2026-09-14
+authority: QUEUE.md's `### M0-30` row; `docs/architecture/CORPUS-STANDARD.md` §4.7 (the rule), §5 (the governed table the arm READS) and §6 (what is ungoverned — the ledgers and the process documents); `kickoffs/CONDUCT.md` "A ROW NAMES THE DESIGN IT BUILDS FROM".
+paths:
+  - `tools/rowdesign.mjs` — NEW. The predicate: open rows out of `QUEUE.md`, the governed set
+    read through `corpuscheck.mjs`'s own `governed()` (never a hand list), and the judgement.
+    It is a module rather than inline in `plancheck.mjs` for the reason `plancheck` already
+    states at sections 2b and 2c: `plancheck.mjs` self-executes and cannot be imported, so an
+    inline predicate would have to be COPIED into the suite that drives it, and two readers of
+    one question is how two answers were allowed to differ (D-302's receipt). `mintid.mjs` and
+    `mergecarry.mjs` are the shape.
+  - `tools/plancheck.mjs` — the new ARM only (a new section importing `rowdesign.mjs`, one
+    FAIL per unpointed open row plus a corpus note). No existing check is edited.
+  - `bio-plane/test/planning-hygiene.test.mjs` — the suite arm and its `NEGATIVE CONTROL:`
+    line. This suite, not a new one: it is the file that already pins `plancheck`'s row
+    grammar (`QUEUE_IDS` is read out of `### <ID> ·` headings there) and already carries the
+    cheap-and-early copy of a `plancheck` gate.
+  - `bio-plane/test/rowdesign.control.mjs` — NEW, the committed control driver (five arms plus
+    a baseline), so the next session re-runs the controls in one step rather than re-deriving
+    how to break the subject. Not a `.test.mjs`, so the battery does not run it.
+  - `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR.arms` ONLY, 959 -> 961**, from this
+    branch's own printed figure on a green `--strict` run. Nothing else in the file; ONE key
+    set, grepped after writing. Added to this claim when the print moved, not before.
+  - `.gitignore` — one entry, `.m030-harness/`, the control driver's pen. Same rule and same
+    reason as every pen entry above it.
+  - `bio-plane/test/m025-arm-anchor-witness.test.mjs` — **AMENDED INTO THIS CLAIM MID-ITEM,
+    two lines of CORPUS ONLY** (`tools/` and `docs/architecture/**.md` added to the candidate
+    subject set) with the reason at the site. Not planned: this item's own driver made the
+    battery RED. Its anchors quote `tools/plancheck.mjs` and `CORPUS-STANDARD.md`, neither
+    directory was in the witness's corpus, and A4 reported two LIVE anchors as gone to zero.
+    That file's own comment records the identical false finding for `docs/development/` and
+    the identical repair, so this follows its precedent rather than inventing one. **The
+    alternative — re-spelling the driver's anchors so the extractor stops seeing them — was
+    refused: it dodges the detector and leaves the arm exactly as fragile.** No arm, floor or
+    assertion of that suite moves (24 pass before and after; corpus 391 -> 458 against a floor
+    of 300). The D-329+D-331+D-333 claim that owns the file is RELEASED and M0-29, which names
+    it, is `queued` and unspawned — CONDUCT should expect a trivial merge there.
+  - `docs/development/QUEUE.md` — **`design:` POINTER LINES ONLY, one per open row that the
+    arm fails, placed immediately after that row's `interface:` line.** Nothing else in this
+    file: no status flip, no scope edit, no new row, no other line. `QUEUE.md` is CONDUCT's
+    sole ground (ORCHESTRATION) and this claim is licensed for exactly those lines.
+  - `docs/development/CLAIMS.md` — this block, and any `## DELEGATION … -> BOB` a routed
+    design gap needs.
+  - `docs/DECIDED.md` — **GENERATED, never hand-edited, and added to this claim after the
+    fact rather than silently**: the seven `design:` lines shift QUEUE.md's line numbers, the
+    index cites rulings BY LINE, and `plancheck` failed STALE on the drift (CLAUDE.md:
+    regenerate it in any turn that moves the corpus). `node tools/decided.mjs`, 807 rulings /
+    226.4 KB; the whole diff is 26 QUEUE.md line numbers and no ruling text.
+not mine, stated: `CLAUDE.md`, `DECISIONS.md`, `docs/architecture/**` (the standard is READ,
+never edited — an arm that edits the rule it enforces is not an arm), `MILESTONES.md`,
+`DEBT.md`, and every row's own scope/status text in `QUEUE.md`.
+concurrency: REC-82 (`schema.mjs`/`store.mjs`), COFF-10 (`formats.mjs`) and CAP-7
+(`MEASUREMENTS.md`, Part II §16) are live and disjoint. `QUEUE.md` rows may be flipped by
+CONDUCT while this runs, which is why the pointer lines are one line each and additive.
+released: 2026-09-14, at the close of M0-30, on branch `worktree-agent-a12296b3767e15401`.
+**What landed.** `tools/rowdesign.mjs` (the §4.7 predicate, governed set via `corpuscheck`'s
+own `governed()`), its arm as `plancheck` section 7, the suite arm and 22 new assertions in
+`planning-hygiene.test.mjs`, the committed driver `bio-plane/test/rowdesign.control.mjs`, and
+the SWEEP: **seven `design:` pointer lines, one per open row the arm failed — M0-29, REC-87,
+VF-7, CAP-7, CAP-8, SK-5, UI-59 — and nothing else in `QUEUE.md`.** Every pointer names a
+section that EXISTS and was read before it was written; **ZERO gaps were routed to BOB, because
+every failing row turned out to have a real authority** — the routed-gap path is built, driven
+over fixtures and driven live by control arm A2, and is UNEXERCISED on today's queue, which is
+stated here rather than left to look like coverage.
+**Figures.** Battery **187/187 · 11,432** against this session's own pristine baseline worktree
+at `952c7d7` (**187/187 · 11,410**); the +22 is `planning-hygiene.test.mjs` 252 -> 274 and no
+other suite moved. `coverage.mjs --strict` DIRECTLY from `bio-plane/`, `$?` unpiped, **exit 0**,
+REGISTER FLOOR **961/961 · 178/178 · 179/179** exact (floor moved 959 -> 961 from this branch's
+own print, ONE key set). `node civicos-ui/test/run.mjs` from the repo root, **exit 0**.
+`node tools/gates.mjs` **GREEN · class FULL**. `plancheck --local` **0 fail 0 warn**.
+**Controls 25/25 as declared, FIRST RUN**, five arms plus a baseline, restores by sha256 AND
+`cmp` AND a floored byte count — declared in the suite's own `NEGATIVE CONTROL:` line.
+**THREE INSTRUMENT FINDINGS, each recorded rather than smoothed, and all three are about MY
+instruments rather than the subject.** (1) The driver's first cleanup removed the PEN DIRECTORY
+and took this session's baseline worktree and saved gate logs with it, on a clean run at exit 0;
+`git worktree prune` cleared the stale registration and the driver now removes only the copies it
+wrote. (2) The control register counted THREE arms in a declaration that states five, because two
+of them stated their outcome in prose where three used the arrow grammar; re-spelled, and the
+floor moved to the new print. (3) **The committed driver turned the battery RED, and the finding
+was the WITNESS rather than the driver**: `m025-arm-anchor-witness.test.mjs`'s A4 reported two
+live anchors as gone to zero because its candidate corpus reached neither `tools/` nor
+`docs/architecture/`; corpus widened on that file's own recorded precedent, 0 dead anchors, 0
+unnamed multiplicities, and the suite's own assertions unmoved at 24.
+**WHAT IS OWED TO A FUTURE ACTOR: nothing by this landing.** The two items CONDUCT may want are
+NOTICES, not debts, and both are in the report as acts with their actor: (1) `CORPUS-STANDARD.md`
+§4's numbered list is written 1,2,3,4,5,7,6 — the row-design rule is labelled 7 but sits SIXTH,
+so a Markdown renderer shows it as §4.6 and shows the line-citation rule as §4.7, exactly
+swapping two numbers that are both in live use (`kickoffs/CONDUCT.md` and `kickoffs/WORKER.md`
+cite §4.7; REC-81's claim cites §4.6). The fix is to swap the two list items so source order
+matches their numbers; `docs/architecture/**` is not this claim's, so it is reported, not
+edited. (2) UI-59's scope names the surface ledger as `docs/CIVICOS_UI_STATE.md`; the file is
+`docs/development/CIVICOS_UI_STATE.md`. This claim is licensed for `design:` lines only, so the
+row's own text was left alone.
+
+
+
+## CLAIM 2026-09-14 M0 (M0-28 — corpuscheck refuses a Status carrying more than one `as of YYYY-MM-DD`)
+session: worker for queue item M0-28, worktree-isolated, background lane (holds no slot), Opus 5.
+Worktree `.claude/worktrees/agent-a835afee6c274d911`, branch `worktree-agent-a835afee6c274d911`.
+
+paths, and NOTHING ELSE:
+- `tools/corpuscheck.mjs` — ONE new arm in `checkFile` (more than one `as of YYYY-MM-DD` in a
+  Status FAILS, naming the file and every date) plus the header grammar comment that states it.
+  No other behaviour in the checker moves.
+- `bio-plane/test/corpuscheck.test.mjs` — the suite arm driving it and the fifth entry in the
+  suite's own `NEGATIVE CONTROL:` block.
+- `docs/architecture/CORPUS-STANDARD.md` §3 — the grammar line: one date, the latest, at the END
+  of the Status. §3 only; no heading moves, so no `--write`.
+- `docs/development/UI-PLAN.md`, `docs/development/UI-KICKOFF.md`,
+  `docs/development/NOTIFICATIONS.md` — **their Status lines ONLY**, one phrase each. M0-27 is
+  live in the BODIES of these same three documents; this claim touches no body sentence.
+- `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR.arms` only, if this item's own green print
+  moves it (one key set, re-read from the print, never incremented by hand).
+
+not this claim's: `QUEUE.md`, `CLAUDE.md`, `DECISIONS.md`, every body sentence in the three
+documents above, and every other field of every governed document.
+
+released: 2026-09-14 by the M0 worker at the close of M0-28, commits `bdfcb86` + the floor
+move, on branch `worktree-agent-a835afee6c274d911`, unpushed and unmerged as a worker's are.
+`checkFile` carries the one arm; `CORPUS-STANDARD.md` §3 carries the rule; the three Status
+lines carry one `as of` each; `corpuscheck.test.mjs` carries the eleven assertions and the
+fifth NEGATIVE CONTROL entry; `REGISTER_FLOOR.arms` moved 974 -> 975 from this item's own
+printed figure, one key set. **NO ACT IS OWED TO ANY FUTURE ACTOR BY THIS LANDING** — the
+paths above are released, nothing is half-done, and the two observations for CONDUCT are in
+the report as findings rather than as debts.
+amended 2026-09-14, same session, with the reason: the claim above licensed the suite but not
+a driver file, and the suite's own convention is that a control is re-runnable in ONE STEP —
+so the negative-control driver landed as `bio-plane/test/nc-m028.mjs`, the estate's existing
+`test/nc-*.mjs` shape (`nc-rec82.mjs`, `nc-cpdf10.mjs`), not discovered by the battery and
+naming no path outside the six already claimed. `bio-plane/scripts/coverage.mjs` was claimed
+for `REGISTER_FLOOR.arms` only and that is all it carries.
+
+
+
+## CLAIM 2026-09-14 RECORD (REC-83 — the reads: `earnedBasisRegistry` keyed by content row, `op=earnedbasis` per extent, the fixed-key `content` read, `ensureLegContent` wired)
+
+Session: RECORD worker for REC-83, spawned by CONDUCT #10, Opus 5.
+Worktree: `.claude/worktrees/agent-ab4376cc9dd8e78b9` · branch `worktree-agent-ab4376cc9dd8e78b9`.
+Contract: IC-84 (ACCEPTED 2026-09-14, I3 14.0.0 -> 14.1.0, CHANGING until REC-83 + REC-84 land),
+its (3) and (4); IC-83's "What a leg may now claim (5.1, portion-scoped)" and its AMENDMENT.
+
+Paths claimed BY REGION, never whole files:
+
+- **`bio-plane/src/store.mjs`** — (a) the EARNED-BASIS READ region: `earnedBasisRegistry`
+  gains a content-grain block and `earnedBasis` (the `op=earnedbasis` body) answers per
+  extent; (b) a NEW read `contentRead(contentId, …)` placed in the REC-82 content region,
+  beside `contentRow`; (c) the `ensureLegContent` CALL SITE, inside `earnedBasis`'s own leg
+  pass and nowhere else; (d) the DO dispatch entry for `content` in the `url.pathname`
+  route table. **NOT** `checkInquiryBasis`, **NOT** the version-leg writer, **NOT** the
+  frontmatter grammar — REC-84 is live on all three. NOT the content WRITER
+  (`mintContent`, `#contentPlanFor`, `#markContentStale`, the promote projection) — REC-82's,
+  landed, read-only to me.
+- **`bio-plane/src/index.mjs`** — ONE new line in the OPS table (`content`), its comment, and
+  its `viewer`-stamping entry if the read-stamp list is explicit. Nothing else.
+- **`bio-plane/src/affordances.mjs`** — ONE `NON_ACTS` row for `content` and its comment.
+  NOT foreseen when this claim was written and added to it at the close rather than taken
+  silently: `affordances.test.mjs` asserts a TOTALITY — every op in `NEEDS` is an ACT or is
+  named in `NON_ACTS` with a reason — so a new read op is not addable without this row. It
+  is the mechanism doing its job (REC-25's six ungated reads accumulated because nobody was
+  asked the question), and it is one line plus prose.
+- **`bio-plane/checks/bio-checks.mjs`** — ONLY if a check is owed (C via
+  `node tools/mintid.mjs C`). MEASURED AT THE CLOSE: **no check is owed and this file is
+  NOT touched.** The three refusals this item adds (`FIXED_KEY_ONLY`, `NO_SUCH_CONTENT`,
+  `NO_ID`) are READ refusals on `reason`, which is `op=earnedbasis`' own shape
+  (`NO_ID` / `NO_SUCH_BUNDLE` / `NOT_AN_INQUIRY`) and not the DEC-49 catalogue family —
+  the guard harvests `/_CHECKS$/` exports, and a read's `reason` has never been one. REC-84
+  is live on C-2.8 / C-25.10 in this file; nothing here goes near it.
+- **`bio-plane/scripts/op-claims.mjs`** — the `PLANNED_OPS` line for `content` ONLY (removed
+  in the same commit that builds the op; the arm fails on a PLANNED op that got built).
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` only, ONE key set, moved to the
+  figures this item's own green `--strict` run PRINTED.
+- **`bio-plane/test/content-reads.test.mjs`** (new), **`bio-plane/test/nc-rec83.mjs`** (new,
+  the control driver) and **`bio-plane/test/rec83-baseline-probe.mjs`** (new, the instrument
+  that MEASURES the over-strictness pin against a pristine tree), with the
+  `NEGATIVE CONTROL:` declaration in the new suite.
+  `bio-plane/test/content-extent.test.mjs` ONLY to correct its stated "`ensureLegContent`
+  has no caller yet" paragraph, which this item makes false (corrected, never exempted).
+  `bio-plane/test/gate-reads.test.mjs` — ONE entry in its `GATED` map, for the same reason
+  as the `NON_ACTS` row above: its read-op sweep is a TOTALITY and a new read op must be
+  classified by the item that adds it. Also not foreseen, also added here rather than taken
+  silently.
+- **`bio-plane/dist/bio-plane.bundled.mjs`** and **`bio-plane/dist/bio-plane.bundle.json`** —
+  REBUILT, not authored (FL-10 fired on `src/`; `npm run build` in `bio-plane/`). Nothing
+  bumped, nothing deployed.
+- **`.gitignore`** — one line for `.rec83-control-pristine/`, the control harness's pen,
+  on `.rec82-control-pristine/`'s precedent one line above it.
+- **`docs/architecture/BIO_Content_Framework_v0_10.md`** — TWO SENTENCES of FRONT MATTER
+  only (the §14.5 and §18 "Incomplete sections" bullets), which CLAUDE.md requires in the
+  same commit as a landing that changes a construct: they named "the READS keyed by content
+  row (REC-83)" as still absent, and this landing makes that false. **BOB #10 is editing
+  this file today** — the edit is deliberately two sentences inside the front-matter block
+  and touches no body line, and CONDUCT should put his eye on it at the merge (REC-82's
+  landing flagged the same hazard on the same block).
+- **`docs/development/CLAIMS.md`** (this block), **`docs/development/DEBT.md`** and
+  **`docs/development/MEASUREMENTS.md`** only if this landing owes a row, and
+  **`docs/development/INTERFACE-CHANGES.md`** only if the landing moves what IC-84 says.
+  **`docs/development/QUEUE.md` IS NOT CLAIMED** — it was in this block's first draft and
+  is withdrawn: CLAUDE.md names CONDUCT its SOLE writer, so REC-83's row flip and its
+  `landed:` line are CONDUCT's act and are named as such in this worker's report rather
+  than taken here.
+
+Concurrency, measured at claim time: REC-84 live on `store.mjs`'s `checkInquiryBasis` /
+C-2.8 / C-25.10 grammar and the version-leg writer, and on `bio-checks.mjs` — disjoint from
+every region above, which is why the regions are named by function and not by file. COFF-10
+on `formats.mjs`, M0-30 on `tools/plancheck.mjs`, CAP-7 on a script — all disjoint.
+
+released: 2026-09-14 by the REC-83 worker — landed on branch
+`worktree-agent-ab4376cc9dd8e78b9` (`02da952` + the floor commit), NOT pushed and NOT
+merged; CONDUCT integrates. IC-84's read half is built: `earnedBasisRegistry` answers
+at content grain behind an optional third argument, `gradeCeiling(chain, extent)` per
+extent (a document attestation covers a `document` row, a PAGE attestation does NOT —
+driven both ways), the connection axis of a non-`document` row UNDETERMINED and STATED
+with the empty level NAMED, the new fixed-key `op=content`, `ensureLegContent` WIRED to
+the first read and driven, and the two legitimate NULL `content_id` cases carried as
+codes (`INQUIRY_TARGET`, `NO_BYTES_HELD`) decided where the distinction is made.
+`content` removed from `PLANNED_OPS` in the same commit that built it.
+
+**NOTHING MOVED BEYOND IC-84.** The capture axis is untouched and is not copied onto a
+content row — it is document-grain, one field away, and its own gap is **D-349** rather
+than a widening taken here. Two files beyond the claim's first draft were added to the
+claim before they were edited and are named in it: `src/affordances.mjs`'s `NON_ACTS`
+row and `test/gate-reads.test.mjs`'s `GATED` entry, both forced by TOTALITY guards that
+refuse a new read op until somebody classifies it.
+
+Gates on the final tree, every exit read UNPIPED: battery **189/189 · 11547 assertions ·
+0 skipped** (own baseline **188/188 · 11474** on a pristine `origin/main` worktree at
+`8f2023f` with all three member installs); the +73 attributed PER SUITE by diffing two
+full runs, not by subtraction — `content-reads.test.mjs` **+69** (new),
+`hygiene.test.mjs` **+3** (its three per-suite arms applied to the new suite: disposes
+its Miniflare, exits deterministically, imports `sandbox.mjs`), `planning-hygiene.test.mjs`
+**+1** (D-349's own disposition row). `coverage.mjs --strict` run DIRECTLY from
+`bio-plane/`, `$?` read with nothing piped after it, **exit 0**, OPS **172 declared · 172
+reached through the control plane · 0 unreached** (`content` carries its control-plane
+assertion in the same turn), `REGISTER_FLOOR` moved to the printed REPRODUCIBLE
+**973/180/181** (ONE key set, grepped after writing; the pre-commit run read
+`967/967 … contaminated: 1 suite` with `arms 973` beneath it and was refused as a
+source, exactly as REC-82's was). UI harness from the REPO ROOT **exit 0**.
+`plancheck --local` **0 fail, 0 warn**. `corpuscheck` **exit 0, 44 governed documents**.
+FL-10 fired on `src/` and `dist/` was rebuilt twice — once mid-item and once after the
+final source change — exactly as its message instructs; nothing bumped, nothing
+deployed, no live instance touched.
+
+Six control arms declared in `content-reads.test.mjs`'s `NEGATIVE CONTROL:` line and run
+by `test/nc-rec83.mjs`; **all six AS DECLARED on the final tree**, each armed ALONE and
+every restore verified byte-identically by sha256 AND `cmp` (1,947,657 bytes, sha256
+`ffd7b2553f99…` each time). **TWO CAME BACK WRONG ON THE FIRST RUN and both are recorded
+at their sites rather than smoothed**: `docattest`'s declared held-open half was an
+assertion that arm ALSO breaks, so the arm could not be held open by it and the
+"other direction" claim was re-cut; and `unwired` read `-1 pass / -1 fail` because the
+suite indexed `earned.content` directly and THREW when the arm left it absent — REC-82's
+`overstrict` arm found the identical throw-instead-of-fail shape one item earlier.
+**A THIRD THING WENT WRONG AND IT WAS THE DESIGN, NOT THE ARM**: the leg read was first
+written with a `LIMIT`, and `bounds.test.mjs`'s walk found a thirty-second capped op and
+named `earnedbasis` as capped-but-undriven. The cap came off rather than the roster
+moving — it would have published two populations in one answer — and both rosters were
+re-measured UNMOVED (`bounds` 162/0, `derivation-bounds` 42/0).
+
+**NOTHING IS OWED TO A FUTURE ACTOR BY THIS NOTE.** Three acts this landing obliges are
+stated as ACTS with their actors in the worker's REPORT, not here and not only here:
+CONDUCT flips REC-83's row and writes its `landed:` line (`QUEUE.md` is CONDUCT's, sole
+writer, so this claim deliberately does NOT claim it); CONDUCT resolves IC-84's CHANGING
+status when REC-84 lands and UI-61 confirms; and D-349 needs a DOCTRINE decision that is
+Bob's or CONDUCT's, priced in `DEBT.md` and measured in `MEASUREMENTS.md`. **D-349** was
+minted with `tools/mintid.mjs` (floor D-345); **D-348 was allocated by a first invocation
+of the same tool and is UNUSED** — held in the ledger, so nobody will collide on it, but
+CONDUCT should know the gap is a burned id and not a missing row. No C-number was minted:
+measured at the close, no check is owed (the three new refusals are READ refusals on
+`reason`, `op=earnedbasis`' own shape, not the DEC-49 `_CHECKS` family). Two regions
+CONDUCT should re-read on the merged tree: `REGISTER_FLOOR` in
+`bio-plane/scripts/coverage.mjs` (ONE key set — collapse any conflict and re-read the
+print) and the two FRONT-MATTER sentences in
+`docs/architecture/BIO_Content_Framework_v0_10.md`, which **BOB #10 is editing today** and
+which REC-82's landing flagged on the same block one item ago. One thing this worker
+found and did NOT touch, because it is in nobody's claimed path: the LAST LINE of
+`docs/development/DEBT.md` at `8f2023f` is a MALFORMED DUPLICATE of D-344 — id `344`
+without its `D-` prefix and with every backticked span stripped out — which is
+`printf`/`-m` damage in the shape CLAUDE.md's own trap section describes. `plancheck`
+passes over it. It is named here so it is not lost.
+
+
 
 
 ## CLAIM 2026-09-14 RECORD (REC-84 — the basis leg's `extent` in frontmatter, the C-2.8 / C-25.10 grammar arms, the version-leg `content_id` writer, and the suggested legs' `document` default)

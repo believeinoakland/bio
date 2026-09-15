@@ -770,6 +770,21 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     calibrationdrift: "CPDF-13 / REC-30: the bundle back-reference on every row of the drift obligation",
     textprovenance: "CPDF-10 / REC-30: the bundle back-reference on every row of the transcription index",
     textattest: "CPDF-10 / REC-30: the bundle back-reference on each attestation over a capture",
+    /* REC-83 / IC-84 (4), 2026-09-14. Classified by the item that adds it, and
+       GATED for REC-30's reason rather than by resemblance to its neighbours —
+       the row names the bundle its capture is filed in, and the answer carries
+       that bundle in a field AND in prose. It takes the STRONGER of this
+       sweep's two postures (op=readingname's, not op=reading's): the whole
+       answer is withheld as NO_SUCH_CONTENT rather than the bundle reference
+       nulled, because a content id is hash(capture, canonical extent, chain) —
+       a caller who can compute an address must not be able to learn from a
+       redacted-but-present answer that the passage exists in a project they
+       were never invited to. Hidden and absent are byte-identical here, which
+       is the only posture that makes the address safe to be guessable. */
+    content: "REC-83: one content row by content_id — GATED on the row's own bundle, and the whole "
+      + "answer is WITHHELD (NO_SUCH_CONTENT, byte-identical to an id that does not exist) rather than "
+      + "the reference redacted, because the id is CONTENT-ADDRESSED and therefore computable by a "
+      + "caller who never saw the row",
     /* REC-36's read, classified by the item that adds it (2026-08-04,
        rec36-agent). It is the FIRST reading read to take the WITHHOLD-THE-ROW
        shape rather than the redact-the-reference one, and the distinction is

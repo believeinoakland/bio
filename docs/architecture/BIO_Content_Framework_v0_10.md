@@ -5,9 +5,9 @@
 **Place in the system** · The single authoritative content design and the home of constructs 4, 5 and 6 of `BIO_System_Design.md` §3 (content — the heart of the system; document profile and the extraction substrate; meaning). `CONSTRUCTS.md` is the inventory and evidence beneath Part I; `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` is the design-space study for Part II §18's first piece; `STORE-AS-CACHE.md`'s three-axis and four-level tables are adopted in §14.2–14.3; `CLAUDE.md`'s content section points here; DEBT D-164 and INTERFACES I2 cite it. It does not own retrieval, the investigative session, the bias doctrine, the interface contracts, or any ruling.
 
 **Incomplete sections** ·
-- §14.5 — the AI EXTRACT role is designed as a role and absent as an item. **The content object is no longer absent: REC-82 landed it on 2026-09-14** as the `content` table (IC-83, I5 1.11.0), content-addressed by `hash(capture_sha, canonical extent, chain)`, with the WRITER on the `pdf-page` and `document` arms of the basis leg. **REC-84 landed the EDGE's half the same day** (IC-84, I3 14.1.0): a basis leg — and a version leg — names its extent in `bundle.md` frontmatter as IC-1's union flattened onto the leg, or names an already-minted part outright by `content_id`; an ABSENT extent means the whole document and never `unstated` (§14.4, Bob's ruling); the grammar runs at BOTH gates through one checker, at C-2.8 for `basis[]` and at C-25.10 for a version's legs; `inquiry_basis_version_legs.content_id` now has its writer, keyed by the same content address, so a version leg and a basis leg citing one passage share ONE row; and the investigative run's suggested legs state `document`. What is still absent, and is what §18's first piece now names: the READS keyed by content row (REC-83), the `sheet-cell` / `slide-shape` / `doc-para` arms' `covers` (REC-85), and the two authored acts NARROW and TRANSCRIBE (REC-86, REC-87). `dom` is REFUSED BY NAME until CONTENT-HTML produces one. **A version leg's referent is written but served only on `op=promote`'s own response — no read op answers it yet**, which is DEBT and is named there. D-164 closes when those land.
+- §14.5 — the AI EXTRACT role is designed as a role and absent as an item. **The content object is no longer absent: REC-82 landed it on 2026-09-14** as the `content` table (IC-83, I5 1.11.0), content-addressed by `hash(capture_sha, canonical extent, chain)`, with the WRITER on the `pdf-page` and `document` arms of the basis leg and `inquiry_basis.content_id` / `inquiry_basis_version_legs.content_id` arriving NULLABLE. **REC-83 landed the READS on 2026-09-14** (IC-84, I3 14.1.0): `earnedBasisRegistry` answers per content row, `op=earnedbasis` states a portion leg's connection axis as UNDETERMINED with the empty level named (§14.4's ruling — a portion refers only to its portion, and readings carry no position), a new fixed-key `op=content` resolves one row by `content_id`, and the legacy backfill is wired to the first read. **REC-84 landed the EDGE's own half the same day** (IC-84's (1) and (2)): a basis leg — and a version leg — names its extent in `bundle.md` frontmatter as IC-1's union flattened onto the leg, or names an already-minted part outright by `content_id`; an ABSENT extent means the whole document and never `unstated` (§14.4's ruling); the grammar runs at BOTH gates through ONE checker, at C-2.8 for `basis[]` and at C-25.10 for a version's legs, and a kind the plane cannot yet evaluate is refused BY NAME as unlanded rather than silently accepted; `inquiry_basis_version_legs.content_id` now has the writer it deliberately arrived without, keyed by the same content address, so a version leg and a basis leg citing one passage share ONE row; and the investigative run's suggested legs state `document` in the bytes. What is still absent, and is what §18's first piece now names: the `sheet-cell` / `slide-shape` / `doc-para` arms' `covers` (REC-85), and the two authored acts NARROW and TRANSCRIBE (REC-86, REC-87). A version leg's referent is written but served only on `op=promote`'s own response — no read op answers it yet, which is DEBT (D-350) and is named there. `dom` is REFUSED BY NAME until CONTENT-HTML produces one. D-164 closes when those land.
 - §16 — the closing table's ABSENT row: table and image extraction, the AI EXTRACT role, read-time re-extraction to tier 3 (D-319), the per-page tier-2 rule (D-283), the content-axis frontier.
-- §18 — six pieces "named here, designed nowhere in this document": the content object and extent-carrying edge (D-164 — **DESIGNED 2026-09-14 in `CONTENT-EXTENT-DESIGN-SPACE.md` §6 under Bob's rulings §5.1–5.8, contracted as IC-83 and IC-84, and PARTLY BUILT: REC-82 landed the table and the writer on two arms, REC-84 the extent-carrying EDGE — the frontmatter grammar at both leg grains and the version-leg writer; the reads are REC-83 and the other three arms REC-85**); content-grain search; the general observation log; extraction breadth; homes for the member's lead and firsthand observation (doctrine, Bob's); the claim object (doctrine, Bob's).
+- §18 — six pieces "named here, designed nowhere in this document": the content object and extent-carrying edge (D-164 — **DESIGNED 2026-09-14 in `CONTENT-EXTENT-DESIGN-SPACE.md` §6 under Bob's rulings §5.1–5.8, contracted as IC-83, and PARTLY BUILT: REC-82 landed the table and the writer on two arms, REC-83 the reads at content grain, and REC-84 the extent-carrying EDGE — the frontmatter grammar at both leg grains and the version-leg writer; the other three arms are REC-85**); content-grain search; the general observation log; extraction breadth; homes for the member's lead and firsthand observation (doctrine, Bob's); the claim object (doctrine, Bob's).
 - §19 — two owners' acts remain rowed (CPDF-17): the schema comments that should cite Part II, and the stale self-descriptions in the plane and the type registry.
 - §11 — seven declared bends; the first (documents that are not pages) has partly arrived with the non-text path and the OCR member, and Part I's text is frozen by design, so the bend is not updated in place.
 - §1.1 — "entities that outlive documents" named as the primary missing capability; the entity axis is since built at document grain (Part II §15).
@@ -1735,7 +1735,7 @@ yet: it extracts no TABLE as a table and no IMAGE as content (§15), only the me
 reader mints a reference over its text, and — as for every other format — nothing an edge
 can point at is minted from the element references it emits.
 
-**Google Drive formats — not supported, and not yet measured.** Nothing in the record or the
+**Google Drive formats — not supported, and measured 2026-09-14.** Nothing in the record or the
 code names Google Docs, Sheets or Slides (grepped 2026-09-14). They are not file formats: a
 shared Drive link serves a client-rendered application shell whose bytes carry no document
 (Part I §6's UNWATCHABLE case), and the honest routes to the bytes are Google's export
@@ -1753,20 +1753,38 @@ TSV, PDF, HTML, plain text — without a credential when the file is shared with
 the link or published; every export is Google's CONVERSION at fetch time, none is the original,
 so the hop records the export format and Google as the producer (D-251's sense). OpenDocument
 and OOXML are both open ISO standards and preserve the same evidence (formulas beside values,
-hidden sheets, comments, tracked changes, notes); the axis reads OOXML today and reads
-OpenDocument once one flavour row is added to the container reader, designed for and not
-built. **RULED by Bob, 2026-09-14: a link to a Google Drive file KEEPS THE LINK, and the harvest is
+hidden sheets, comments, tracked changes, notes); the axis reads OOXML **and, since 2026-09-14,
+reads OpenDocument too** — the flavour row went into the container reader at COFF-9 (`d791aa7`)
+and the three registry entries at COFF-10, so this sentence's former "designed for and not
+built" is CORRECTED rather than deleted: what it recorded was the design bet that the flavour
+table is a PARAMETER, and the bet paid. **RULED by Bob, 2026-09-14: a link to a Google Drive file KEEPS THE LINK, and the harvest is
 the OpenDocument export, from which the content is extracted.** So the record holds the Drive
 address as the citation of where the document lives, the ODF bytes as the capture with an
 honest hop (export address, format, Google as producer, time), and the content extracted from
-those bytes. Building it is two acts on the format axis: the OpenDocument flavour row in the
-container reader, and the three OpenDocument readers (`.ods`, `.odt`, `.odp` — one `content.xml`
-part each, smaller than their OOXML counterparts) producing the same I2 shape and evidentiary
-envelope; and one on the capture side: the Drive host-stack handler that recognises the address
-and acquires the export instead of the shell. CAP-7's count now sets priority, not whether. Whether it is
-worth building is a measurement: how many of the city's links point at Drive. That census has
-not been run; it is routed. OpenDocument (`.odt`, `.ods`, `.odp`) is designed for and
-deliberately not built: zero were found among 43,282 city assets.
+those bytes. Building it was two acts on the format axis, **and both are DONE as of 2026-09-14**:
+the OpenDocument flavour row in the container reader (COFF-9, `d791aa7` — `ODF_FLAVOURS` in
+`ooxml.mjs`, discriminating on the first-and-stored `mimetype`), and the three OpenDocument
+readers (`.ods`, `.odt`, `.odp` — one `content.xml` part each, smaller than their OOXML
+counterparts) producing the same I2 shape and evidentiary envelope (COFF-10 — `odf.mjs`, three
+`registerFormat` calls, `sheet-cell` / `doc-para` / `slide-shape` references and no new IC-1
+member). What `content.xml` cannot reach is stated by the entries rather than left silent: the
+core properties live in `meta.xml` and embedded objects in `META-INF/manifest.xml`, so both are
+carried as named undetermineds. **One act remains, and it is on the capture side**: the Drive
+host-stack handler that recognises the address and acquires the export instead of the shell
+(CAP-8). **CAP-7's count now sets priority, not whether, and it was taken on 2026-09-14 over the same
+city census the office bound rests on** (`MEASUREMENTS.md` M-13 carries the instrument, both
+commands and the blind spots): **50 Drive links — 22 distinct targets in 16 documents — 16 Docs,
+16 `/file/d/`, 12 Sheets, 6 other, and zero Slides, zero folders; every one of them inside a
+document's body, and not one of them an asset or a Legistar attachment in its own right**, a
+FLOOR rather than a ceiling because the PDF half of the corpus was read as a 1,000-of-27,783
+sample and a shortened link that resolves to Drive is not followed. OpenDocument (`.odt`, `.ods`, `.odp`) **is [BUILT] as of 2026-09-14**
+(COFF-9's flavour row, COFF-10's three entries). This sentence previously read "designed for and
+deliberately not built: zero were found among 43,282 city assets", and the CENSUS half of it is
+unrevised and still true — COFF-6 found zero NATIVE ODF assets in the wild, and on that evidence
+alone the deliberate non-build was right. What overturned the conclusion is not a re-count but a
+change of SOURCE: Bob's ruling the same day makes the Drive EXPORT the harvest, so ODF arrives as
+the format we produce the bytes in rather than one a body publishes. The entries are warranted by
+the ruling, not by the census.
 
 **The non-text path, in three tiers.** A PDF or an office container may need its text
 produced before anything can read it, and the intent layer runs over text from anywhere:

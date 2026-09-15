@@ -28,6 +28,10 @@
 
    `as of YYYY-MM-DD` must be no earlier than the file's last commit day: a body edit
    that leaves the front matter's date behind is exactly the staleness this exists to catch.
+   It appears EXACTLY ONCE, the latest date, at the END of the Status (M0-28): the date
+   check reads the FIRST match, so a second `as of` earlier in the prose is the date that
+   gets judged while the trailing one a reader bumps is read by nothing. A date written any
+   other way ("measured 2026-08-01") is not an `as of` and is left alone.
 
    USAGE
      node tools/corpuscheck.mjs                 check every governed document; exit 1 on fail
@@ -165,6 +169,15 @@ export function checkFile(path, { git = true } = {}) {
     const last = lastCommitDay(path);
     if (last && last > asOf[1]) fails.push(`${path}: Status says \`as of ${asOf[1]}\` but the file last changed ${last} — the body moved and the front matter did not`);
   }
+  /* ONE `as of`, the LATEST, at the END of the Status — CORPUS-STANDARD.md §3 (M0-28).
+     The check above `exec`s the FIRST match, so a Status carrying a second, earlier `as of`
+     in its prose is judged on a date no editor would think to bump, and bumping the trailing
+     date a reader can see changes nothing the checker reads. SK-6 swept the governed set and
+     found three documents carrying two dates — benign only because the two were EQUAL, live
+     the next time one of them was edited. A date in any OTHER form ("measured 2026-08-01") is
+     not matched, so a Status may still say when a measurement was taken. */
+  const asOfAll = [...fm.status.matchAll(/as of (\d{4}-\d{2}-\d{2})/g)].map((m) => m[1]);
+  if (asOfAll.length > 1) fails.push(`${path}: Status carries ${asOfAll.length} \`as of\` dates — ${asOfAll.join(" then ")} — and only the first (${asOfAll[0]}) is judged; keep ONE, the latest, at the END of the Status (CORPUS-STANDARD.md §3)`);
   if (fm.status.replace(/^\*\*Status\*\*\s*·?\s*/, "").trim().length < 40) fails.push(`${path}: Status is too short to describe completeness`);
   if (fm.place.replace(/^\*\*Place in the system\*\*\s*·?\s*/, "").trim().length < 40) fails.push(`${path}: Place in the system is too short to place the construct`);
 

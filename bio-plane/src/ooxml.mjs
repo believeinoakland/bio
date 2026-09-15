@@ -37,11 +37,20 @@
  * bet paid: the flavour table really was a PARAMETER
  * (`discriminate(bytes, contentType, flavours)`), so the ODF part-map arrived
  * as `ODF_FLAVOURS` beside `OOXML_FLAVOURS` and a branch where the function
- * had ALREADY decided there is no `[Content_Types].xml` — not a rewrite. What
- * is built is the FLAVOUR only: there is still no ODF registry entry, no
- * `registerFormat` call and no I2 emission (COFF-10's), so I7 is untouched by
- * this act. This module ASSERTS nothing about meaning (that stays FRAMEWORK's,
- * through I2) and WRITES nothing.
+ * had ALREADY decided there is no `[Content_Types].xml` — not a rewrite.
+ *
+ * COFF-9 built the FLAVOUR only, and this paragraph used to end "there is
+ * still no ODF registry entry, no `registerFormat` call and no I2 emission
+ * (COFF-10's)". COFF-10 LANDED ON 2026-09-14 and that sentence is corrected
+ * rather than deleted, the way COFF-9 corrected the one before it: the three
+ * entries are in `odf.mjs`, registered by three `registerFormat` calls in
+ * `formats.mjs`, each projecting ONE `content.xml` into the I2 shape and DEC-5
+ * envelope of its OOXML sibling. I7 is CONFIRMED by them, not changed — no new
+ * IC-1 union member was needed. NOTHING IN THIS FILE MOVED FOR THAT: the
+ * entries dispatch on `partMap:"odf"` and read every media type and main-part
+ * name out of `ODF_FLAVOURS` rather than spelling them again, which is the
+ * whole point of the table being a parameter. This module ASSERTS nothing
+ * about meaning (that stays FRAMEWORK's, through I2) and WRITES nothing.
  *
  * Registry entries (COFF-3/4/5) build their I7 `detect`/`parts`/`structure`/
  * `text` on top of these primitives; this module is below the registry and

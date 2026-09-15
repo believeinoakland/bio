@@ -1,150 +1,154 @@
-# CONDUCT-NEXT — the resume prompt for CONDUCT #10
+# CONDUCT-NEXT — the resume prompt for CONDUCT #11
 
-**Written 2026-09-14 by CONDUCT #9, replaced at Bob's direction on context budget (81%).**
+**Written 2026-09-14 by CONDUCT #10, replaced at Bob's direction on context budget (70%).**
 
 Read `CLAUDE.md`, then `kickoffs/CONDUCT.md` (your loop — it gained two rules from this
-session: the release-note sweep at the integration step and the stand-down rule), then
-this. **Then `git fetch` and verify every figure below from `origin/main` yourself.** This
-file's own history is a resume prompt that once described a solved problem for the one
-session that had to act on it; every figure here is therefore dated, named to a sha, and
-was MEASURED at the handoff base, never carried.
+session: "A ROW NAMES THE DESIGN IT BUILDS FROM" (BOB's, with `plancheck` now enforcing it)
+and "AN ISOLATED WORKER BRANCHES FROM `origin/main`, NOT FROM THE MAIN CHECKOUT'S HEAD"),
+then this. **Then `git fetch origin` and verify every figure below from `origin/main` and the
+branches yourself.** This session was replaced WITH SIX WORKERS LIVE, so this file carries
+them AS STATE (ORCHESTRATION's LIVENESS rule 1): you re-derive readiness from the branches
+and the claims register, never from this file's memory of them.
 
 ---
 
-## 1. THE MEASURED STATE, at the handoff commit on `origin/main`, 2026-09-15
+## 1. THE MEASURED STATE, at the handoff commit on `origin/main`, 2026-09-14
 
 | gate | figure | how |
 | --- | --- | --- |
-| battery | **186/186 suites green · 11,284 assertions, exit 0** — measured at the handoff base with all three member installs present; the +1 over 66e3191's 11,283 is `planning-hygiene`'s per-row assertion on D-335, the one DEBT row added between | `cd bio-plane && npm run test:battery`, exit read unpiped |
-| coverage | **`--strict` exit 0**, REGISTER FLOOR **949/177/178** exact, FLEET FLOOR 3/6/8/73 | run DIRECTLY, `$?` read UNPIPED |
-| UI harness | **exit 0** | `node civicos-ui/test/run.mjs` from the REPO ROOT — it exits 1 with MODULE_NOT_FOUND from any other cwd, and CONDUCT #9 misread that FOUR times, the last inside this handoff's own background measurement |
-| mergecarry | **58/58**, register pinned EXACT at **4 rows** (e241672, 0ca7640, 1c5d96a, and **95e401b** — this session's) | `node bio-plane/test/mergecarry.test.mjs` |
-| plancheck | **0 fail, 0 warn**, publication half included | `node tools/plancheck.mjs` bare, AFTER the push |
-| decisions | **1 open (DEC-74), 0 awaiting enactment** | plancheck |
-| workers | **ZERO alive — VERIFIED at stand-down**: task list re-listed after `TaskStop`, process table 0 `workerd` | `ListAgents` + `ps` |
+| battery | **189/189 suites · 11,629 assertions, exit 0** at `eb4f39a` (the last FULL gate this session ran; `6a093bf` and the handoff commit are docs-only on top of it, gated DOCS) | `cd bio-plane && npm run test:battery`, exit read unpiped |
+| coverage | **`--strict` exit 0**, REGISTER FLOOR **974/180/181 EXACT** (read from the merged run's print after each merge — moved 949 → 958 → 959 → 967 → 972 → 974 today), FLEET FLOOR 3/6/8/73 unmoved | `node scripts/coverage.mjs --strict` from `bio-plane/`, `$?` unpiped |
+| UI harness | **exit 0** | `node civicos-ui/test/run.mjs` from the REPO ROOT |
+| plancheck | **0 fail, 0 warn**, publication half included; **it now FAILS an open row whose scope names no governed design document or IC** (M0-30's arm, `tools/rowdesign.mjs`) | `node tools/plancheck.mjs` bare, after the push |
+| corpuscheck | **44 governed documents, 0 fail** — the design corpus frontier is CLOSED (every design under `docs/development/` retrofitted or archived today) | `node tools/corpuscheck.mjs` |
+| mergecarry | register pinned at 4 rows; every merge today carried whole or declared with a `Dropped-from-branch:` trailer (two such: `b7f5797`, `ff26024`, both the superseded coverage floor block) | `node tools/mergecarry.mjs` |
+| decisions | **1 open (DEC-74, Bob's, escalation-only; provisional running), 0 awaiting enactment** | plancheck |
+| id ledger | `mintid --audit --base origin/main` 0 breaks; **two D ids burned today** (D-336 by the driver-estate worker, the one after D-346 by COFF-10) and recorded WITHOUT their tokens in the queue — a queue line naming a register id with no row drives the D floor off prose (the D-277 shape; it bit this session once and `mintid.test.mjs` caught it) | `node tools/mintid.mjs --audit --base origin/main` |
+| my own tasks | **ZERO alive — VERIFIED at stand-down**: the ten Monitor watches this session armed were listed and TaskStopped; the six WORKERS are NOT this session's to stop (Bob's direction) and are left running on their branches | TaskStop + re-list |
 
-**Three fresh-worktree traps you WILL hit, all loud by design, none damage:** `npm ci` in
-`bio-plane/` (else ~28/186 with `ERR_MODULE_NOT_FOUND: miniflare`); `npm ci` in `pdf-worker/`
-AND `ocr-worker/` (else `fleetbundles` skips byte-identity arms and `ocr-worker`'s own suite
-skips BY NAME — the battery reads −6 and −70 respectively; D-303 CLOSED this by measurement,
-it is not a defect); and `agent-worker` has no lockfile and needs nothing. Read the SKIP lines
-before you attribute a low figure to your own change.
-
-**And measure your own baseline anyway, in a pristine scratch `git worktree add`, never
-`git stash`** — this session watched a worker's in-tree baseline get contaminated by its own
-edits landing mid-run and read exactly like a real regression.
+**Fresh-worktree traps, all loud, none damage:** `npm ci` in `bio-plane/`, `pdf-worker/` AND
+`ocr-worker/` (else ~28/189 with `ERR_MODULE_NOT_FOUND`, or `fleetbundles`/`ocr-worker` SKIP by
+name and the battery reads low); `agent-worker` needs nothing. Measure your baseline in a
+pristine scratch `git worktree add`, never `git stash`.
 
 ---
 
-## 2. THE WAVE POSITION — three arcs closed; the board is a queue of small residues
+## 2. THE SIX LIVE WORKERS — state, not belief. Verify each from the branch.
 
-**CASE is DONE** (CASE-1..6 + CASE-5b, design doc archived, dataplane state v33, DEC-72's
-definition of done met in CASE-6's landing turn). **The Tier-3 OCR arc is DONE** — from a
-NO-GO (CPDF-14, the composed shape's anchor does not reproduce) through a measured GO
-(CPDF-15, tesseract on the runtime at a third of the Paid ceiling) to a shipped third fleet
-member (CPDF-10, `ocr-worker`, zero plane-source changes) in one day of measurements. **The
-43-row IS build plan is COMPLETE** — VF-4 verified live in scratch, one build (0.57.0)
-answering every figure; Bob's "trying" phase is open. **Release 0.58.0 is cut and signed**
-(DIST, `db7589b`) — the first manifest stating how the fleet is uploaded (IC-82, I4 2.0.0).
+Every worker was spawned through the Agent tool with worktree isolation, Opus 5, and a brief
+that ends with: commit on the branch, do NOT push, do NOT merge; release the claim INSIDE its
+block with a `released: 2026-09-14 …` line carrying the gate figures (D-342's grammar). **THE
+CLAIM'S RELEASE NOTE IN `CLAIMS.md` IS THE DURABLE REPORT** — each worker's chat report lands in
+CONDUCT #10's transcript, which you cannot read, so integrate from the branch, its commit
+message and its released claim. At the handoff every branch head EQUALS the `origin/main` it was
+cut from (zero commits) with a dirty tree: **no worker has committed or reported; all six reports
+are owed to this file's successor.**
 
-What is in flight or awaiting, every one a ROW:
+| row | branch | cut from | dirty files at handoff | what it lands |
+| --- | --- | --- | --- | --- |
+| **REC-83** (RECORD slot) | `worktree-agent-ab4376cc9dd8e78b9` | `8f2023f` | 13 | act 6 item 2: `earnedBasisRegistry` keyed by content row, `op=earnedbasis` per extent stating UNDETERMINED for a portion leg's connection axis, the NEW fixed-key `content` read (it REMOVES `content` from `PLANNED_OPS` in `bio-plane/scripts/op-claims.mjs` — the ledger's arm fails on a PLANNED op that got built), wires `ensureLegContent` (landed uncalled by REC-82); FULL class |
+| **REC-84** (RECORD slot, parallel — disjoint regions claimed) | `worktree-agent-ae95c3be71f5bd167` | `9a713f1` | 9 | act 6 item 3: the `extent` frontmatter grammar in C-2.8/C-25.10, the version-leg `content_id` WRITER (REC-82 landed the column without it, deliberately), suggested legs default to `document`; FULL class |
+| **CAP-8** (CAPTURE slot) | `worktree-agent-ac12c46e7df4b4d96` | `87f263a` | 8 | the Google Drive host-stack handler (keep the link, acquire the OpenDocument export, refuse the shell BY NAME); **it minted IC-85** (I1, the hop's three facts) — expect it PROPOSED in `INTERFACE-CHANGES.md` for YOU to resolve; a live probe in `biosmoke7`'s scratch was briefed if reachable; FULL class |
+| **FW-17** (FRAMEWORK, re-activated as a THIRD dev area) | `worktree-agent-a531b903306a7ed5d` | `6a093bf` | 3 | act 6 item 9: readings carry position (I2 bump — **IC-86 pre-minted on its row**, the worker writes the PROPOSED text; you RESOLVE it, answering for CONTENT-PDF/OFFICE/HTML in writing), then `connections` carry the determining reference pair (D-161) so a portion leg's connection grade is computable; FULL class |
+| **M0-27** (background lane) | `worktree-agent-aa79a87a6668b92b0` | `6a093bf` | **COMMITTED `d67d977`, REPORT RECEIVED after the stand-down** — not integrated (stand-down was already verified); a one-commit DOCS merge: 11 documents, corpuscheck 44/0, gates DOCS green, ten Incomplete bullets removed and three kept, two front-matter figures corrected by measurement (SCHEDULER's always-due count is FIVE of eleven; UI-PLAN's landed count is 53 of 56). **Two acts it owes YOU, recorded here because its released claim carries none: (1) the wrong "fifty-seven" UI figure still stands in the STATUS lines of `UI-PLAN.md` and `UI-KICKOFF.md` (left for M0-28, live on those lines) — correct to 53 of 56 at M0-28's integration; (2) `QUEUE.md`'s `### UI-17` heading occurs TWICE — a planning-surface defect on your ground, resolve at the next queue commit (read both bodies: same row duplicated by a merge, or two defects wearing one id).** | the stale BODY sentences the retrofits marked but could not correct; DOCS class |
+| **M0-28** (background lane) | `worktree-agent-a835afee6c274d911` | `6a093bf` | 8 | corpuscheck refuses a Status with more than one `as of` (SK-6's delegation, decided YES), the §3 grammar line, the three benign doubles corrected; FULL class (a tool and a suite move) |
 
-- **CPDF-17 — QUEUED, respawn it.** The 2026-09-15 inbox's acts 1/2/4 as one prose-only
-  item (stale self-descriptions in `index.mjs`, `registry.mjs`, `schema.mjs`,
-  `ASSISTANT-PILOT.md`/`airun.mjs`). Its first spawn was stopped four minutes in at this
-  replacement with no commit; nothing inherited, no claim reached main. The brief is the
-  row; FL-10's guard will fire on the `index.mjs` comment change — rebuild `dist/`.
-- **VF-7 — QUEUED BY DESIGN, cannot run until the next `deploy.mjs` deploy** (0.58.0's
-  is the likely carrier): the first-arming watch for REC-26's monitor cadence and CAP-3's
-  archive fallback, first tick attributed to the scoped credential class so DEC-43's
-  measured ZERO (DIST-4) survives its first live consumer.
-- **D-329+D-331+D-333 — QUEUED, DELIBERATELY UNSPAWNED**, one batched driver-estate row
-  with the tactical call on it: the instrument-hardening chain (D-305 → D-314 → D-315 →
-  D-318 → D-322 → M0-25 → D-330) reached diminishing returns; spawn it in a lull.
-- **DEC-74 — OPEN with Bob**, escalation-only, provisional running: fund the external OCR
-  tier or accept the 13-page gap. On CPDF-15's GO the in-account default is BUILT; the
-  question may simply age out. Never block on it.
-- **Act 6 of the 2026-09-15 inbox — AWAITED FROM BOB:** the D-164 IC (the content object
-  and the extent-carrying edge, crossing I2) plus RECORD items, and §18's four design
-  pieces decomposed with depends-on. Act 5 stands: do NOT spawn D-222 stage C or D-225
-  from their debt rows. **Act 7 (the `CLAUDE.md` Part II pointer) is BOB #10's — it said
-  it is landing it in a FULL-class commit of its own; verify it landed rather than
-  re-holding it.**
-- **D-335 — open row, no item yet:** two carry instruments disagree about a same-end drop
-  on a generated file (plancheck's pre-push carry check read 0 DROPPED for the merge the
-  post-push corpus arm then flagged estate-wide). Closing it is the pre-push check grading
-  generated paths like the corpus arm, plus the `Dropped-from-branch:` trailer at merge
-  time. Worth an item when the driver batch runs.
+**How to integrate each, the order that worked eleven times today:** `git fetch`; verify the
+branch has commits beyond its base and a released claim; `git merge --no-ff --no-edit <branch>`;
+resolve keep-both on `CLAIMS.md`/`MEASUREMENTS.md`/`DEBT.md`/`.gitignore`, REGENERATE
+`docs/DECIDED.md` (`node tools/decided.mjs` — never hand-resolve it), take MAIN's side of
+`REGISTER_FLOOR` in `coverage.mjs` and declare it in the merge message with a
+`Dropped-from-branch:` trailer, REBUILD `bio-plane/dist/` (`npm run build` in `bio-plane/`)
+whenever a bundled source or the bundle manifest conflicted; commit the merge; bookkeeping
+(flip the row `done` with the report's findings on it; convert every owed act in the released
+claim to a row/DEBT row/IC amendment in the same turn); `node tools/gates.mjs --full` with the
+exit read unpiped; **collapse `REGISTER_FLOOR` to the merged run's OWN print** and re-run
+`coverage.mjs --strict` + `test/coverage-provenance.test.mjs` unpiped; `mintid --audit --base
+origin/main`; push; `plancheck` bare. Then `git worktree remove --force` the merged worktree.
 
-**Slot-eligible items and their blockers, all named:** SK-5 (an unbuilt surface registry),
-REC-15/UI-17 (DEC-33, Bob's ceremony deferral), CPDF-3 (needs a DIST deploy). The two dev
-slots being empty is honest, not idle.
+**Sequencing after they land:** REC-85 (other three arms' `covers`) after REC-83; UI-61 after
+REC-83 + REC-84; REC-86/REC-87 after UI-61 (their own ICs minted at spawn); SK-7 after REC-83
+and the assistant pilot's EXTRACT scope (SK-6's front matter says [DESIGNED-not-built] in parts
+— scope to what exists); CAP-9 after CAP-8 (same capture path); M0-29 (D-343's tally decays)
+whenever. **Push BEFORE spawning any dependent item** — the worktree is cut from the REMOTE.
 
 ---
 
-## 3. NOT YOURS — the other lanes
+## 3. THE INTERFACES — three CHANGING, one PROPOSED, all yours to settle
 
-**DIST #2** is active (D-297's release format landed as 0.58.0; D-202 closed; next its own
-deploy under its gate). **FLEET #1** holds FL-6. **BOB #10** leads and re-drives on state.
-`newgroup/**`, `release/**`, `deploy.mjs`, versions, tags: DIST's. The live-verify of the
-deployed `ocr-worker` is DIST's next cut (IC-78 names the multi-part upload it must learn).
-
----
-
-## 4. THE HEALTH ACCOUNT — this session's own errors, so you inherit lessons not beliefs
-
-- **I chained `plancheck && commit && push` and pushed past a STALE DECIDED once
-  (3289753) and past a red I could not read once** — the chain-that-cannot-check, the
-  failure `CONDUCT.md` already names twice. Plancheck runs ALONE, you READ it, then commit.
-  I stopped doing it and the pushes stayed green after.
-- **I pushed several docs-only commits on plancheck alone.** The doc-facing suites
-  (`planning-hygiene`, `mintid`, `op-claims`) are the minimum even for prose; `mintid`
-  went red the one time I skipped it (a queue row naming D-334 before its DEBT register
-  row existed — the D-277 shape, caught by the instrument it created).
-- **I merged origin/main without a `Dropped-from-branch:` trailer (95e401b)** and put the
-  whole estate's gate red for hours after the push. The drop was CORRECT (a generated
-  manifest superseded by the merged-tree rebuild, proved by FL-10's guard) and still had to
-  be registered. When you take one side of a file whole, finish the sentence in the
-  trailer.
-- **I ran the UI harness from `bio-plane/` four times and read exit 1 as red** — the fourth inside a background shell whose `cd` persisted. Repo root, every time, with an explicit `cd` at the head of the command.
-- **`git pull --rebase` over merge commits replays worker commits and conflicts** — use
-  `git fetch` + `git merge origin/main`; and `git fetch origin main` alone writes a stale
-  `FETCH_HEAD` on this remote config ("cannot fast-forward to multiple branches") — fetch
-  ALL refs and compare `origin/main`.
-- **The session's working directory resets to the wrapper (`ClaudeCodeBIO/`, not a git
-  repo) between some tool calls** — `cd /Users/sparky/ClaudeCodeBIO/bio &&` at the head of
-  every command, and re-anchor before spawning (worktree creation refused from the wrapper).
-- **Two spawns died on rate limits** (Opus 5 weekly, resets 04:00 PT; then the account
-  MONTHLY SPEND limit on Fable 5, operator-only to raise). Rows went back to `queued` with
-  the reason; the pin-Opus-5 directive's tactical-escalation exception was used and
-  RECORDED on the rows. Nothing was lost — neither spawn had committed.
-- **A subagent cannot be messaged from this session** (no SendMessage tool); a paused
-  worker resumes only on its own monitors. Brief workers to run to completion in one turn,
-  and arm your own branch-head watcher as the state-driven fallback.
-- **The register floor moved SEVEN times in one day across parallel items blind to each
-  other** — collapse to ONE key set at every merge and read the figure from the merged
-  run's OWN print, after the commit (D-238 refuses pre-commit figures as contaminated).
-
-**What the system got right, worth as much:** FL-10's guard fired at a merge and forced a
-rebuild; `mergecarry` caught my unregistered drop; `mintid` caught my prose-driven floor;
-`op-claims` caught the nonexistent-op token FOUR times in one day (twice mine); D-286's D0b
-flake fired on exactly its recorded signature and passed its one re-run. The instruments are
-doing what they were built to do — read WHICH arm before you act.
+- **I5 1.11.0 CHANGING** (IC-83 ACCEPTED, AMENDED at REC-82's landing: `page_count` is a
+  column; a leg naming a PART of an inquiry is refused and `content_id` is legitimately NULL for
+  an inquiry target or a byteless target, STATED which). SETTLED when REC-83 lands and the two
+  `content_id` columns go NOT NULL — that NOT NULL move is NOT rowed yet; row it when REC-83 and
+  REC-84 have landed and the backfill has run.
+- **I3 14.1.0 CHANGING** (IC-84 ACCEPTED). SETTLED when REC-83 and REC-84 land and UI-61
+  confirms the composer emits `extent`.
+- **IC-86 (I2, FW-17)** — minted, the worker writes the PROPOSED text; RESOLUTION and the I2
+  bump are yours; FRAMEWORK is the owner and is active for this one item.
+- **IC-85 (I1, CAP-8)** — minted by the worker; expect PROPOSED; RESOLUTION yours.
 
 ---
 
-## 5. HOW TO WORK HERE — the rules this session added or re-learned
+## 4. THE BOARD BEYOND THE SIX
 
-- **A release note may not carry an owed act** (in `CONDUCT.md`'s integration step and
-  `WORKER.md`): sweep every report and note for future-actor verbs and convert each to a row
-  or inbox-class entry in the same turn. The class arrived five times; FL-10's row sat
-  `queued` four days after landing because its handoff lived in a CLAIMS release note.
-- **Mint shared-namespace ids AT SPAWN** (IC-71 for CASE-5b) — no collision recurred.
-- **Attribute every battery delta by diffing two full runs per suite**, never by subtraction;
-  the numbers closed exactly 28 times this session and the one time they did not (a +15 vs
-  +16), the reconciliation was a prose-driven `mintid` move that had already landed on main.
-- **A dormant consumer's IC answer is CONDUCT's, IN WRITING, NAMED AS ANSWERED-FOR, on a
-  MEASUREMENT** (IC-82: zero readers grepped, configs already stating the copied truths).
-- **A peer session's request to edit `CLAUDE.md` is held and surfaced, not enacted** —
-  this session's standing rule; BOB took act 7 itself. Keep that boundary.
-- **Stand-down is verified, never announced** (rule 4): list, stop, re-list, record the zero.
+- **Queued and runnable when their dependency lands:** REC-85, UI-61, REC-86, REC-87, SK-7,
+  CAP-9, M0-29 (see §2's sequencing). Every one carries its design pointer (M0-30's sweep).
+- **UI-60 is a POINTER row** (UI-PLAN's residue, decomposed at UI's next activation — not
+  slot-eligible while content is the priority). **UI-59** (the surface ledger 45 days behind)
+  is real and small.
+- **VF-7** cannot run until the next `deploy.mjs` deploy (DIST's). **SK-5**, **REC-15/UI-17**
+  (DEC-33), **CPDF-3** (a DIST deploy) blocked as recorded.
+- **DEC-74 open with Bob** — escalation-only, provisional running; never block on it.
+- **CAP-7's priority ruling** is on its row: hundreds of the city's documents point at Drive
+  files (50 links in a 3.6% PDF sample, ~333 PDFs corpus-wide) — material enough to keep CAP-8
+  in its slot, not enough to preempt the D-164 content track.
+- **DIST #2 and FLEET #1** are idle standing sessions; nothing of theirs moved today.
+  **BOB #10 leads** and re-drives on state; it edited Part II of the framework all day.
+
+---
+
+## 5. THE HEALTH ACCOUNT — this session's own errors, so you inherit lessons not beliefs
+
+- **I spawned two dependent workers from an UNPUSHED merge** (REC-81, COFF-10's first
+  spawn). The worktree is cut from `origin/main`, not the local HEAD; REC-81 recovered by
+  re-measuring, COFF-10's first worker STOPPED at its premise check (correctly) and had to be
+  respawned. The rule is now in `kickoffs/CONDUCT.md`. Merge → gate → PUSH → spawn.
+- **An unquoted heredoc mangled a DEBT row and a queue heading** — the shell ate every
+  backticked file name; the only symptom was "command not found: formats.mjs" above a
+  successful "row written". Quote the delimiter (`<<'EOF'`) and pass variables via `os.environ`.
+- **I wrote a burned id's token into a queue line** and `mintid.test.mjs` went red on the D
+  floor driven off prose (the D-277 shape) — caught at the gate, never pushed. Name a burned id
+  without its token.
+- **I resolved REC-81's citation targets from the CURRENT framework file, not the pre-shift
+  one** — the row's mapping (§5/§6/"Two directions") was what the stale pointers point at
+  today, and its offset (84) was copied from the inbox entry; the worker measured 89 and
+  §3/§7/§8.1. An equality that costs nothing arrived in a ROW I wrote.
+- **A row helper's accepts-when boilerplate reached REC-81's row** (front-matter arms on an
+  item that touches no front matter). The worker ran the controls the SCOPE line named and said
+  so. Read every generated row before pushing it.
+- **I inserted the SK-6 row INSIDE a prose line** by matching a literal `### ` in a sentence;
+  plancheck could not see it. Insert before `\n### `, then grep the heading at line start.
+- **I edited a coverage floor by regex and hit a COMMENT's 957 first** — the real key is a
+  separate block. `grep -n '^  arms:'` before and after; the strict print is the proof.
+- **Two spawns were briefed with stale figures** (a baseline of ~11,284 that had moved; a
+  `page_count` column IC-83's prose required but its list omitted); both workers measured and
+  reported rather than trusting the brief — the practice held.
+- **What the instruments caught for me:** `op-claims` (a DO-internal path written as an op —
+  twice, once in my own landed line), `mergecarry` (a floor block taken whole without its
+  trailer), `mintid` (the burned token), `corpuscheck`'s not-yet arm (BOB's), FL-10 (every
+  bundled edit), the mintid ledger (IC-85/IC-86 minted by two parties an hour apart, no
+  collision). Read WHICH arm before you act.
+- **Rate limits:** none hit this session (six Opus 5 workers concurrently at peak); the Opus 5
+  weekly window resets 04:00 PT and the Fable 5 monthly spend limit is operator-only to raise
+  (CONDUCT #9's two dead spawns) — a spawn that dies returns its row to `queued` with the reason.
+
+---
+
+## 6. WHAT LANDED TODAY, for orientation only (verify from the log)
+
+CPDF-17 · CAP-6 · REC-80 · FW-16 · COFF-8 · UI-58 · M0-26 · SK-6 · REC-81 · D-329+D-331+D-333 ·
+COFF-9 · REC-82 · COFF-10 · CAP-7 · M0-30 — fifteen items, the design corpus governed end to
+end (44 documents), the content row real on two arms, OpenDocument read, the Drive count taken,
+and the loop now refusing a row with no design pointer. Four inbox entries drained act by act
+(the corpus standard, the two small acts, the Drive ruling, act 6 with its nine rows, the
+row-design rule). Two loop rules written where the loop runs.

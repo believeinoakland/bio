@@ -481,6 +481,47 @@ if (conduct && inbox && !/INBOX/.test(conduct))
   }
 }
 
+/* ------------------------------------------- 7. A ROW NAMES THE DESIGN IT BUILDS FROM
+
+   Bob, 2026-09-14, and the rule is `docs/architecture/CORPUS-STANDARD.md` §4.7: a queue row
+   names the governed design document and SECTION that is its scope's authority, and the
+   worker reads that section before the code. The receipt is the standard's own §1 — the
+   content construct sat undesigned for 46 days while items were built from ledger entries and
+   briefs, so the construct's document never learned what was built.
+
+   IT IS HERE FOR THE REASON SECTIONS 0, 2b AND 2c ARE: `kickoffs/CONDUCT.md` runs this file
+   before every push, and CONDUCT is who writes a row. A rule that lives only in
+   `kickoffs/CONDUCT.md` is a mechanism believed on the strength of its existence — this
+   repository's most-met defect, and the same paragraph-that-did-not-hold that produced section
+   2c. `done`/`blocked`/`superseded` rows are not judged: history is not re-briefed.
+
+   The predicate is `tools/rowdesign.mjs`, imported rather than written here, because
+   `plancheck.mjs` self-executes and cannot be imported by the suite that drives its arms —
+   the shape `mintid.mjs` and `mergecarry.mjs` already use. The governed set comes from
+   `corpuscheck.mjs`'s own `governed()`, so §5's table is READ and no hand list can fall
+   behind it. */
+
+{
+  const { rowDesignAudit, rowMessage } = await import("./rowdesign.mjs").catch(() => ({}));
+  if (!rowDesignAudit) {
+    warn(`rowdesign.mjs could not be loaded — QUEUE.md's design pointers are UNVERIFIED this run.`);
+  } else {
+    const a = rowDesignAudit({ repo: ROOT });
+    const routed = a.open.filter((r) => r.routed).length;
+    notes.push(`queue design pointers: ${a.open.length} open row(s) judged of ${a.rows.length}, `
+      + `${a.skipped.length} closed row(s) not judged, ${a.findings.length} naming no design`
+      + (routed ? `, ${routed} explicitly ROUTED as a missing design` : "")
+      + ` (governed set: ${a.governedCount} document(s), read from CORPUS-STANDARD.md §5)`);
+    /* A state this file does not understand is NAMED, never scored zero — a row typo'd into
+       an unjudged state is exactly how a rule stops applying without anyone deciding it. */
+    if (a.unknownState.length)
+      warn(`UNKNOWN ROW STATE — ${a.unknownState.length} QUEUE.md row(s) carry a state token that is\n`
+         + `        neither judged nor explicitly closed, so the §4.7 check does not reach them:\n`
+         + a.unknownState.map((r) => `          ${r.id} · ${r.state} (QUEUE.md:${r.line})`).join("\n"));
+    if (a.findings.length) fail(rowMessage(a.findings));
+  }
+}
+
 /* ------------------------------------------------------------- report */
 
 for (const n of notes) console.log(`  note  ${n}`);

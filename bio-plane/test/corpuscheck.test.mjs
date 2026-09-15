@@ -17,7 +17,14 @@
  * FAILS (over-strictness armed from the strict side); (3) drop the `.split(/^### /m)[0]`
  * in `governed()` -> the "not-yet-governed rows are NOT governed" arm FAILS, which is the
  * regression this suite's author hit while wiring it; (4) remove the corpuscheck block from
- * `tools/plancheck.mjs` -> the "mechanism is in the loop" arm FAILS.
+ * `tools/plancheck.mjs` -> the "mechanism is in the loop" arm FAILS; (5) delete the
+ * `asOfAll.length > 1` push from `checkFile` -> the "a Status carrying two `as of` dates is
+ * refused" arm FAILS, and only that one, because a Status judged on a date its own editor
+ * never sees is judged on nothing. Arm (5) and its over-strictness twins are re-run in ONE
+ * STEP with `node test/nc-m028.mjs` from `bio-plane/` (M0-28): six arms including the
+ * baseline, each armed ALONE against a REAL governed document with every other defence open,
+ * anchors validated before anything is armed, restored by cp-back from uniquely-named
+ * pristine copies verified by sha256 AND `cmp` AND a floored byte count.
  *
  * NEGATIVE CONTROL, THE OTHER DIRECTION — the checker armed against a REAL retrofitted
  * document rather than a fixture. Run 2026-09-14 by M0-26 in worktree
@@ -60,7 +67,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 6;
+const SECTIONS = 7;
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -162,6 +169,48 @@ section("Incomplete sections: explicit, and every bullet names a real section");
   t("`None — <how checked>` passes", fails(doc("none2.md", GOOD.replace(/\*\*Incomplete sections\*\* ·\n- §2[^\n]*\n- §whole[^\n]*\n/, "**Incomplete sections** · None — every section read against the build on 2026-09-14.\n"))), []);
   t("`None` followed by bullets is refused",
     /says None and then lists/.test(firstFail(doc("none3.md", GOOD.replace("**Incomplete sections** ·", "**Incomplete sections** · None — checked.")))), true);
+}
+
+/* ========================================================================== */
+section("ONE `as of`, the latest, at the END of the Status");
+{
+  /* M0-28, from SK-6's delegation. `checkFile`'s staleness check `exec`s the FIRST `as of`
+     in the Status, so a Status carrying a second, earlier one is judged on a date no editor
+     would think to bump while the trailing date they DO bump is read by nothing. Three
+     governed documents carried two — benign only because the two were equal. CORPUS-STANDARD
+     §3 now says one date, the latest, at the end; these arms are that rule. */
+  const two = GOOD.replace("as of 2026-09-14. Complete at its level.",
+    "as of 2026-08-01, and the surfaces were re-read since. Complete at its level, as of 2026-09-14.");
+  const f = firstFail(doc("twodates.md", two));
+  t("a Status carrying two `as of` dates is refused", /carries 2 `as of` dates/.test(f), true);
+  t("the refusal names the file", /twodates\.md/.test(f), true);
+  t("the refusal names BOTH dates, in the order they appear", /2026-08-01 then 2026-09-14/.test(f), true);
+  t("the refusal says which one is actually judged", /only the first \(2026-08-01\) is judged/.test(f), true);
+  t("the refusal states the rule and cites the standard", /keep ONE, the latest, at the END of the Status \(CORPUS-STANDARD\.md §3\)/.test(f), true);
+  t("three `as of` dates are refused too — the arm counts, it does not look for a pair",
+    /carries 3 `as of` dates/.test(firstFail(doc("threedates.md", GOOD.replace("as of 2026-09-14. Complete at its level.",
+      "as of 2026-07-30, amended as of 2026-08-01. Complete at its level, as of 2026-09-14.")))), true);
+
+  /* OVER-STRICTNESS, from the strict side: the rule is about the `as of` FORM, not about
+     dates. A Status must still be able to say when a measurement was taken. */
+  t("exactly one `as of` passes (the conforming fixture is unmoved)", fails(doc("onedate.md", GOOD)), []);
+  t("a prose date in any OTHER form passes — a Status may still say when a measurement was taken",
+    fails(doc("prosedate.md", GOOD.replace("as of 2026-09-14. Complete at its level.",
+      "measured 2026-08-01; the vendor's own figures are dated 2026-07-30. Complete at its level, as of 2026-09-14."))), []);
+  t("a date in the PLACE or Incomplete fields is not counted — only the Status is judged",
+    fails(doc("otherfield.md", GOOD.replace("nothing depends on it", "nothing depends on it as of 2026-08-01")
+      .replace("- §whole document — a fixture, not a design.", "- §whole document — a fixture, not a design, as of 2026-08-01."))), []);
+
+  /* THE CLASS, SWEPT OVER THE REAL CORPUS rather than over fixtures: after this item every
+     governed document's Status carries exactly one `as of`. The three that carried two —
+     UI-PLAN, UI-KICKOFF, NOTIFICATIONS — were corrected in the same commit. */
+  const g = governed();
+  const counts = g.map((p) => {
+    const fm = parseFront(readFileSync(join(ROOT, p), "utf8").split("\n"));
+    return { p, n: fm.error ? -1 : [...fm.status.matchAll(/as of \d{4}-\d{2}-\d{2}/g)].length };
+  });
+  t(`the corpus swept is non-empty and is the whole governed set (${g.length} documents)`, counts.length === g.length && g.length >= 40, true);
+  t("every governed document's Status carries exactly ONE `as of`", counts.filter((c) => c.n !== 1).map((c) => `${c.p}:${c.n}`), []);
 }
 
 /* ========================================================================== */
