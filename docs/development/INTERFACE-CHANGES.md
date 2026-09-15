@@ -6281,3 +6281,15 @@ which `CLAUDE.md` ranks worse than a missing feature.
 acquire path, one family in the check catalogue and two suites. No schema
 migration, no stored data reshaped, no other area's code. The captures already
 filed stay valid and stay readable; they would simply stop being produced.
+
+### RESPONSES — 2026-09-14, recorded by CONDUCT #11 at CAP-8's integration
+
+- **CAPTURE** (owner and proposer): AGREE — landed on `worktree-agent-ac12c46e7df4b4d96` (e310c51 + db66cfc + cd67364), integrated by CONDUCT #11.
+- **CONTENT-HTML** (dormant): NOT-AFFECTED, answered FOR by CONDUCT on the proposal's own measurement — `provenance_chain` has no field-by-field reader in the plane's HTML path; the published (`/d/e/<id>/pub`) Drive shape stays on the ordinary HTML path untouched.
+- **CONTENT-PDF** (dormant): NOT-AFFECTED, answered FOR by CONDUCT — `pdf-worker/` and the PDF entries read bytes and the chain's `who`; a Drive export is ODF, which the office entries (COFF-10) read, never the PDF path.
+- **FRAMEWORK** (active for FW-17 only): AGREE, answered FOR by CONDUCT in writing — I2 is unchanged; the Drive hop is I1's, and Part II §16's three falsified sentences are corrected at this integration under the §4.3 same-landing fold.
+- **DIST**: NOT-AFFECTED, answered FOR by CONDUCT on a measurement (DIST #2 idle) — `newgroup/` has 0 hits for `provenance_chain` or `retrieval_locator` outside the embedded plane copy that regenerates at the next cut.
+
+### RESOLUTION — ACCEPTED, **I1 1.3.0 → 1.4.0**, 2026-09-14 by CONDUCT #11
+
+MINOR, as proposed: a `via:"direct"` capture may carry a second hop (the Drive export hop, its facts DERIVED at acquire and refused from a caller by C-48.1), and `retrieval_locator` may differ from the document address on a direct capture — `captured_locators.address` (or the chain's `document_address`) is the document address, never `document.locator`, and `via` does not say whether the two are equal (the migration sentence, verbatim from the proposal). No field is renamed, reshaped or removed; no existing assertion over the chain became false (measured: `acquire.test.mjs`'s `length === 1` and `daemon-token.test.mjs`'s `=== 2` both hold). `via` gains NO term — a conversion is technique, disclosed on the hop, and the closed set stays closed (the proposal's own ruling, kept). **Two corrections to I1's registry text land with the bump:** §4b's "one hop, the archive capture the sole exception" and §5's "for a direct capture they are equal" are struck for the two-hop, two-address direct case; and **an inaccuracy CAP-8 found and pinned but did not correct** — I1 §4 lists `via` as a TOP-LEVEL field of the acquire document, and the plane has never emitted one there (it lives on the hop; pinned by an assertion in `drive.test.mjs`) — the row is corrected to say where `via` actually lives. CHANGING until the registry text is corrected in the same commit (it is: `INTERFACES.md` I1 1.4.0); SETTLED when the next DIST deploy serves the handler live (VF-7's class — a live probe of the export path on the project instance, which CAP-8 could not run because nothing was deployed).

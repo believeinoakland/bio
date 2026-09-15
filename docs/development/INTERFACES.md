@@ -24,7 +24,7 @@ a lie.
 
 - **ID:** I1
 - **Owner:** `CAPTURE`
-- **Version:** 1.3.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0 2026-07-31, FW-3 — ADDITIVE: `op=acquire` writes a new sibling field `document.profile` (§4) recording docprofile's stack/content-type identification; 1.2.0 2026-07-31, FW-4 — ADDITIVE, non-breaking: `document.profile.digests` (§4c) records the COMPUTED normalisation digests (rendition, evidentiary; identity is the existing `capture_sha`, not restated); no existing field's name, shape or value domain changed, and C-18.1 tolerates the extra key — conformance.test.mjs stays green with real acquire documents carrying it; 1.3.0 2026-08-03, COFF-1 — ADDITIVE, non-breaking, the FW-3/FW-4 precedent: `document.profile.format` (§4c) records what the FORMAT registry's `detect()` found (I7, `bio-plane/src/formats.mjs`) — `{format, confidence, signals}`, magic bytes first, content type second, `undetermined` first-class when nothing matched. No existing field reshaped; a consumer that ignores it keeps working — the whole battery's acquire-driving suites stayed green unedited)
+- **Version:** 1.3.0 (1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0 2026-07-31, FW-3 — ADDITIVE: `op=acquire` writes a new sibling field `document.profile` (§4) recording docprofile's stack/content-type identification; 1.2.0 2026-07-31, FW-4 — ADDITIVE, non-breaking: `document.profile.digests` (§4c) records the COMPUTED normalisation digests (rendition, evidentiary; identity is the existing `capture_sha`, not restated); no existing field's name, shape or value domain changed, and C-18.1 tolerates the extra key — conformance.test.mjs stays green with real acquire documents carrying it; 1.3.0 2026-08-03, COFF-1 — ADDITIVE, non-breaking, the FW-3/FW-4 precedent: `document.profile.format` (§4c) records what the FORMAT registry's `detect()` found (I7, `bio-plane/src/formats.mjs`) — `{format, confidence, signals}`, magic bytes first, content type second, `undetermined` first-class when nothing matched. No existing field reshaped; a consumer that ignores it keeps working — the whole battery's acquire-driving suites stayed green unedited; **1.4.0 2026-09-14, IC-85 ACCEPTED — ADDITIVE, non-breaking: a `via:"direct"` capture may carry a SECOND hop (the Google Drive export hop, CAP-8, its three facts derived at acquire and refused from a caller by C-48.1) and `retrieval_locator` may differ from the document address on a direct capture; the document address is `captured_locators.address` / the chain's `document_address`, never `document.locator`; `via` gains no term; the top-level `via` row in §4 corrected to say the field lives on the hop**)
 - **Consumers:** `CONTENT-HTML`, `CONTENT-PDF`, `FRAMEWORK` (the document page reads `document.profile`)
 - **Status:** STABLE
 
@@ -161,13 +161,13 @@ because headers cannot be recovered later:
 
 | Field | Value | Notes |
 | --- | --- | --- |
-| `locator` | the retrieval locator (what was fetched). | For an archive capture this is the replay URL; the DOCUMENT address is in the provenance chain / `captured_locators`. |
+| `locator` | the retrieval locator (what was fetched). | For an archive capture this is the replay URL, and since 1.4.0 (IC-85) for a Google Drive capture it is the composed export address; the DOCUMENT address is in the provenance chain / `captured_locators`, never here. |
 | `retrieved` | ISO8601 (second precision, `Z`). | |
 | `authority_state` | `"determined"` \| `"undetermined"` | `undetermined` is first-class and is BARRED from publication (C-18.9), never refused at intake. A consumer must carry it, never invent a value to fill it. |
 | `authority_basis` | string, dated, in BOTH states | "the member asserted it" and "nothing could establish it" are both recorded facts. |
 | `authority` | string, only when asserted | the issuing party, when a caller named one. |
 | `provenance_chain` | array of hops, §4b | |
-| `via` | `"direct"` \| `"archive.org"` | closed set, not a free string. |
+| `via` | `"direct"` \| `"archive.org"` | closed set, not a free string. **CORRECTED 1.4.0 (IC-85, 2026-09-14): `via` lives on each HOP of `provenance_chain`, not at the top level of the acquire document — the plane has never emitted a top-level `via`, pinned by `drive.test.mjs`; this row stood here since 1.0.0 describing a field nobody wrote.** |
 | `parts` | array of `{file, sha256, bytes}` | present only for a multipart capture. |
 | `renditions` | array | derived companions (e.g. a rendered HTML snapshot). A rendition has **no locator, authority, or grade of its own** — it is a rendering of this document, named on the same register document, and says so. A consumer must not treat a rendition as an independent acquisition. |
 | `origin` | `{kind: "named_request" | "sweep", ...}` | how the capture was initiated. |
@@ -185,7 +185,7 @@ is always present:
 ```
 
 An archive capture appends a second, weaker hop carrying the CDX evidence with
-`bound: false` and the reason it is unsigned. What transitive trust inherits is
+`bound: false` and the reason it is unsigned. **Since 1.4.0 (IC-85) a DIRECT capture may also carry a second hop: the Google Drive export hop, `bound: false`, whose `asserts`/`evidence` name the export address, the export format and the producer, derived by the plane at acquire — so `chain.length === 1` no longer means "direct"; read `via` on the hop.** What transitive trust inherits is
 the FACT OF PUBLICATION, never the credibility of the content (RULED,
 `AUTHORITY-AND-TRUST.md`). `bound` is `false` on hop 0 too: a self-recorded hash
 proves integrity since capture and nothing about origin.
@@ -270,7 +270,10 @@ record holds uses `captured_locators` (`schema.mjs`, written by
   a *different fact* from a `direct` one, not a repeat of it. Identity/bracket
   reasoning reads `via='direct'` observations only; do not merge streams.
 - `retrieval_locator` holds what was actually fetched when it differs from the
-  document address (archive replay URL); for a direct capture they are equal.
+  document address (archive replay URL, or — since 1.4.0, IC-85 — the composed Google Drive
+  export address on a `direct` capture whose document address is the Drive link); for an ordinary
+  direct capture they are equal, and `via` does NOT say which case you are in — read
+  `captured_locators.address` for the document address, always.
 
 ### What I1 does NOT include
 

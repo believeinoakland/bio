@@ -6,6 +6,7 @@
 
 **Incomplete sections** ·
 - §14.5 — the AI EXTRACT role is designed as a role and absent as an item. **The content object is no longer absent: REC-82 landed it on 2026-09-14** as the `content` table (IC-83, I5 1.11.0), content-addressed by `hash(capture_sha, canonical extent, chain)`, with the WRITER on the `pdf-page` and `document` arms of the basis leg and `inquiry_basis.content_id` / `inquiry_basis_version_legs.content_id` arriving NULLABLE. **REC-83 landed the READS on 2026-09-14** (IC-84, I3 14.1.0): `earnedBasisRegistry` answers per content row, `op=earnedbasis` states a portion leg's connection axis as UNDETERMINED with the empty level named (§14.4's ruling — a portion refers only to its portion, and readings carry no position), a new fixed-key `op=content` resolves one row by `content_id`, and the legacy backfill is wired to the first read. **REC-84 landed the EDGE's own half the same day** (IC-84's (1) and (2)): a basis leg — and a version leg — names its extent in `bundle.md` frontmatter as IC-1's union flattened onto the leg, or names an already-minted part outright by `content_id`; an ABSENT extent means the whole document and never `unstated` (§14.4's ruling); the grammar runs at BOTH gates through ONE checker, at C-2.8 for `basis[]` and at C-25.10 for a version's legs, and a kind the plane cannot yet evaluate is refused BY NAME as unlanded rather than silently accepted; `inquiry_basis_version_legs.content_id` now has the writer it deliberately arrived without, keyed by the same content address, so a version leg and a basis leg citing one passage share ONE row; and the investigative run's suggested legs state `document` in the bytes. What is still absent, and is what §18's first piece now names: the `sheet-cell` / `slide-shape` / `doc-para` arms' `covers` (REC-85), and the two authored acts NARROW and TRANSCRIBE (REC-86, REC-87). A version leg's referent is written but served only on `op=promote`'s own response — no read op answers it yet, which is DEBT (D-350) and is named there. `dom` is REFUSED BY NAME until CONTENT-HTML produces one. D-164 closes when those land.
+- §16 — the Google Drive paragraphs are SILENT on the one thing CAP-8 measured that matters most: the export is Google's conversion at fetch time and the conversion is NOT reproducible — three consecutive exports of one unchanged document produced three distinct `capture_sha` (D-351, MEASUREMENTS.md 2026-09-14 §4) — which puts C-18.3's corroboration fold and `resolveLinks`' identity bracket out of reach for Drive material; a design that makes the export the harvest owes a sentence about what that costs the record (a DESIGN GAP reported by CAP-8, folded here at integration, unwritten).
 - §16 — the closing table's ABSENT row: table and image extraction, the AI EXTRACT role, read-time re-extraction to tier 3 (D-319), the per-page tier-2 rule (D-283), the content-axis frontier — each with a design as of 2026-09-14 (`EXTRACTION-BREADTH-DESIGN.md`; the frontier in `OBSERVATION-LOG-DESIGN.md` §4.2) and none built.
 - §18 — six pieces "named here, designed nowhere in this document": the content object and extent-carrying edge (D-164 — **DESIGNED 2026-09-14 in `CONTENT-EXTENT-DESIGN-SPACE.md` §6 under Bob's rulings §5.1–5.8, contracted as IC-83, and PARTLY BUILT: REC-82 landed the table and the writer on two arms, REC-83 the reads at content grain, and REC-84 the extent-carrying EDGE — the frontmatter grammar at both leg grains and the version-leg writer; the other three arms are REC-85**); content-grain search, the general observation log and extraction breadth (**each DESIGNED 2026-09-14 by BOB #11** in `docs/development/CONTENT-SEARCH-DESIGN.md`, `OBSERVATION-LOG-DESIGN.md` and `EXTRACTION-BREADTH-DESIGN.md`, decomposed into the BOB INBOX — none built); homes for the member's lead and firsthand observation (doctrine, Bob's); the claim object (doctrine, Bob's).
 - §19 — two owners' acts remain rowed (CPDF-17): the schema comments that should cite Part II, and the stale self-descriptions in the plane and the type registry.
@@ -1741,8 +1742,11 @@ shared Drive link serves a client-rendered application shell whose bytes carry n
 (Part I §6's UNWATCHABLE case), and the honest routes to the bytes are Google's export
 endpoints, which yield DOCX, XLSX, PPTX or PDF that the format axis already reads, or the
 static HTML of "publish to the web". Supporting them is therefore a CAPTURE-side act — a
-host-stack handler that recognises a Drive address and acquires the export, recording the
-Drive file id and the export format as the hop's facts — not a new format. What happens
+host-stack handler that recognises a Drive address and acquires the export, recording the hop's
+THREE facts — the export ADDRESS, the export FORMAT and the PRODUCER — with the file id and the
+kind carried beside them so the three are re-derivable (as CAP-8 built it, 2026-09-14; this sentence
+first named "the file id and the export format" and was narrower than the row it produced) — not a
+new format. What happens
 today when a source links to a Sheet: the link is recorded in the deferred partition; acquiring
 the Sheet's own address stores the shell, which the client-rendered handler recognises and
 reports as a shell that cannot be evidence (D-64, D-55); acquiring the EXPORT address by hand
@@ -1769,9 +1773,13 @@ counterparts) producing the same I2 shape and evidentiary envelope (COFF-10 — 
 `registerFormat` calls, `sheet-cell` / `doc-para` / `slide-shape` references and no new IC-1
 member). What `content.xml` cannot reach is stated by the entries rather than left silent: the
 core properties live in `meta.xml` and embedded objects in `META-INF/manifest.xml`, so both are
-carried as named undetermineds. **One act remains, and it is on the capture side**: the Drive
-host-stack handler that recognises the address and acquires the export instead of the shell
-(CAP-8). **CAP-7's count now sets priority, not whether, and it was taken on 2026-09-14 over the same
+carried as named undetermineds. **No act remains on the capture side — CAP-8 landed the Drive
+host-stack handler on 2026-09-14** (`bio-plane/src/drive.mjs`, a pure recogniser, and `op=acquire`'s two
+DEC-49 regions): the address is recognised by shape, the OpenDocument export is acquired under the
+governor and filed as the capture with the Drive link KEPT as the document address, and the shell is
+refused BY NAME at two sites (C-48.5 on the declared type, C-48.7 on the bytes). *The sentence that
+stood here until CAP-8 said "one act remains"; it recorded the gap, and the gap closing is the news
+(corrected at CAP-8's integration, the way COFF-9 and COFF-10 corrected the sentences before it).* **CAP-7's count now sets priority, not whether, and it was taken on 2026-09-14 over the same
 city census the office bound rests on** (`MEASUREMENTS.md` M-13 carries the instrument, both
 commands and the blind spots): **50 Drive links — 22 distinct targets in 16 documents — 16 Docs,
 16 `/file/d/`, 12 Sheets, 6 other, and zero Slides, zero folders; every one of them inside a

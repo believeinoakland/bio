@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-861 rulings across 82 documents.
+863 rulings across 82 documents.
 
 ## DEC-
 
@@ -71,9 +71,9 @@ authority is the file named, never this one.
 - **DEC-19** — Carrying DEC-19 AS AMENDED (publishing is THE irreversible act; correction always moves FORWARD — a new edition as a separate document with every published edition standing, a withdrawal as another attested act with both standing; nothing is ever unpublished), DEC-33 (the ceremony is deferred; publication runs…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1190`
 - **DEC-20** · 2026-08-05 — CORRECTED 2026-08-05 (DEC-20, D-188).** This read *"and it may not advance or be > ratified until the debt is settled"*, and listed *blocking a state transition* among > the shared properties.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1249`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1250`
 - **DEC-20** · 2026-08-05 — CORRECTED 2026-08-05 (DEC-20, D-188, DEC-46 (d)).  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1320`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1321`
 - **DEC-20** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-20). The blanket rule above is REPLACED: only a HUNCH blocks publication.** *"Not all bias needs to be cleared before a piece is published. The only bias type that must be clear before publication is hunches."* And, in the same review: *"Bias is public and accompanies every published case  
   `docs/architecture/BIO_Declared_Bias_v0_1.md:283`
 - **DEC-20** · 2026-09-14 — One dated addendum (July 27, 2026, declared bias) follows the body and its middle clause is SUPERSEDED by DEC-20. as of 2026-09-14.  
@@ -93,7 +93,7 @@ authority is the file named, never this one.
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 (Bob, DEC-21) — R2's CONCLUSION stands; its MECHANISM does not.** > *"A capture is the act of reading a document in.  
   `docs/development/research/RECONCILED.md:183`
 - **DEC-23** — RULED | | machine extraction by recognisers, format entries and fleet members (§16) | BUILT | | the AI EXTRACT role — an assistant extracting on a member's objective | DESIGNED; excluded from the pilot by name; no item | | the content OBJECT — something an edge can point at that is smaller than a document |…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1674`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1675`
 - **DEC-23** · 2026-08-03 — RULED by DEC-23: content — a piece of information extracted from a document, up to and including the whole document — is the unit the record points at.  
   `docs/development/DEBT.md:133`
 - **DEC-24** — RULED and enforced in code where the record has an act to fence |  
@@ -221,7 +221,7 @@ authority is the file named, never this one.
 - **DEC-65** — THE C-NUMBER IN DEC-65 IS WRONG AND IS CORRECTED IN THE ENTRY.** The rule requiring a named MEMBER to assert every declared part is **C-25.6 / `VERSION_GROUND_UNASSERTED`** (`checks/bio-checks.mjs:5802`), not C-25.15 — which is `VERSION_ORPHAN_ROW`, an unrelated rule about a row naming a version that is not there.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:3112`
 - **DEC-69** · 2026-08-10 — AMENDED the same day, and the amendment is the harder half: the operative word is FORCED, and it CUTS BOTH WAYS** — *"they shouldn't be forced to make decisions in bulk.  
-  `docs/development/QUEUE.md:1724`
+  `docs/development/QUEUE.md:1725`
 - **DEC-72** · 2026-08-10 — AMENDED 2026-08-10 (DEC-72, Bob): the third "phase" is now its own OBJECT.** The > collapse below STANDS for inquiry and finding — one recursive object, a finding being > an inquiry that reached a conclusion.  
   `docs/architecture/BIO_Case_Making_v0_1.md:479`
 - **DEC-72** · 2026-08-10 — SUPERSEDED BY DEC-72 — THE QUESTION DISSOLVES.** Bob's 2026-08-10 ruling makes the bar a property of the PROJECT, told to the publishing act at act time; no bar ever attaches to a finding, so no departed project's bar can linger and nothing composes across citers.  
@@ -383,7 +383,7 @@ authority is the file named, never this one.
 - **D-190** · 2026-08-08 — AMENDED INTO THIS CLAIM 2026-08-08, same session, before any handoff**) — the diagnostic that established two properties of the platform the item could not assume: that a Worker cannot fetch another Worker on this account's own `*.workers.dev` name, and that a fresh script is not attributable by name OR tag on the…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2546`
 - **D-194** · 2026-09-14 — RULED 2026-09-14: the observation is evidence, authored, grade D on the member's trust; its attribution in a published case is the attesting member's choice among the group, the project, the member's cover, or the member by name, and an off-the-record source's anonymity is valid — designed in Program B | the…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1893`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1901`
 - **D-197** — (g) HAD TO BE CORRECTED MID-RUN AND IS REPORTED, NOT SMOOTHED**: the first sweep-neutering arm stayed 46/46 GREEN because with all guards removed there is no `.answered` anywhere and a whole-file region equals a scoped one — it measured nothing.  
   `docs/archive/ledgers/QUEUE-2026-08.md:2109`
 - **D-206** — D-206 RIDER DECIDED IN FAVOUR OF CARRYING THE DISTINCTION:** an optional `code` on the finding plus a derived `tallyDetail` beside `tally`, with `tally` not moving by one byte and `tallyDetail` absent when nothing carried a code; reasoning recorded in the code at BOTH sites, and settled by CLAUDE.md itself —…  
@@ -563,7 +563,7 @@ authority is the file named, never this one.
 - **IC-39** — interfaces owned: IC-39's `reading.text_source` chain, AMENDED (an optional `extent` on a derivation step).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:7022`
 - **IC-62** — THE ENDING WAS ADDED, NOT THE COMMENT CORRECTED, and the argument is the item.** Correcting the header would have closed the CHEAP half and cemented the EXPENSIVE one: the disagreement was the symptom, the misattribution was the bug, and editing the header to admit `cancelled` would have left a machine refusal…  
-  `docs/development/QUEUE.md:1523`
+  `docs/development/QUEUE.md:1524`
 - **IC-74** — `caseflip.test.mjs`'s pin was CORRECTED, never exempted, and now drives a finding published into two cases end to end; `multicase.test.mjs` re-runs the census every battery and asserts zero scalar readers remain.  
   `docs/development/kickoffs/RECORD.md:404`
 - **IC-75** — Superseded act-list pins in OTHER suites, CORRECTED with dated reasons and never exempted** — the set is MEASURED from the battery delta rather than guessed, and every one is named in an amendment to this claim before it is edited. - `docs/development/INTERFACE-CHANGES.md` — the appended **IC-75** row (I3), filed…  
@@ -577,17 +577,19 @@ authority is the file named, never this one.
 - **IC-83** — its (1) and (2); IC-83 as AMENDED at REC-82's landing. Paths claimed BY REGION, never whole files:  
   `docs/development/CLAIMS.md:4923`
 - **IC-83** · 2026-09-14 — CHANGING — IC-83 ACCEPTED 2026-09-14 (protocol step 4): the 1.10.0 shape keeps working; nothing NEW is built against the old or the new shape until REC-82 lands the table and writer; SETTLED (STABLE again) when REC-82 and REC-83 have landed and the two `content_id` columns are NOT NULL.  
-  `docs/development/INTERFACES.md:666`
+  `docs/development/INTERFACES.md:669`
 - **IC-83** — (IC-83 ACCEPTED, AMENDED at REC-82's landing: `page_count` is a column; a leg naming a PART of an inquiry is refused and `content_id` is legitimately NULL for an inquiry target or a byteless target, STATED which).  
   `docs/development/kickoffs/CONDUCT-NEXT.md:79`
 - **IC-83** — The `content` table before `host_governor`, two indexes, in purge's TABLES (both arms); columns exactly IC-83's PLUS `page_count INTEGER` — required by IC-83's own Rules prose and absent from its column list (IC-83 AMENDED at this landing, the column recorded, not widened).  
   `docs/development/QUEUE.md:827`
 - **IC-84** · 2026-09-14 — One superseded leak-guard pin (`gate-reads.test.mjs`'s whole-key-set assertion on `op=list`) CORRECTED with a dated reason and two arms proving `limit` is viewer-independent while `total` is not — never exempted.  
-  `docs/development/INTERFACES.md:504`
-- **IC-84** · 2026-09-14 — CHANGING — IC-84 ACCEPTED 2026-09-14 (protocol step 4): 14.0.0 keeps working; SETTLED when REC-83 and REC-84 land and UI-61 confirms the composer emits `extent`. ### What it is  
   `docs/development/INTERFACES.md:507`
+- **IC-84** · 2026-09-14 — CHANGING — IC-84 ACCEPTED 2026-09-14 (protocol step 4): 14.0.0 keeps working; SETTLED when REC-83 and REC-84 land and UI-61 confirms the composer emits `extent`. ### What it is  
+  `docs/development/INTERFACES.md:510`
 - **IC-84** · 2026-09-14 — design: IC-84 as RESOLVED and twice AMENDED (the contract this item consumes); `docs/architecture/BIO_Content_Framework_v0_10.md` Part II §14.4; `BIO_Interaction_Constructs_v0_1.md`; added 2026-09-14 by CONDUCT #11 at spawn (CORPUS-STANDARD §4.7)  
-  `docs/development/QUEUE.md:1676`
+  `docs/development/QUEUE.md:1677`
+- **IC-85** · 2026-09-14 — CORRECTED 1.4.0 (IC-85, 2026-09-14): `via` lives on each HOP of `provenance_chain`, not at the top level of the acquire document — the plane has never emitted a top-level `via`, pinned by `drive.test.mjs`; this row stood here since 1.0.0 describing a field nobody wrote.** |  
+  `docs/development/INTERFACES.md:170`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
@@ -956,6 +958,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:4493`
 - **CAP-7** — MATERIALITY IS NOT RULED HERE and is CONDUCT's on the CAP-7 row.** Nothing was built: no handler, no host-stack entry, no schema.  
   `docs/development/CLAIMS.md:4528`
+- **CAP-8** — CHANGING until the registry text is corrected in the same commit (it is: `INTERFACES.md` I1 1.4.0); SETTLED when the next DIST deploy serves the handler live (VF-7's class — a live probe of the export path on the project instance, which CAP-8 could not run because nothing was deployed).  
+  `docs/development/INTERFACE-CHANGES.md:6295`
 ## CPDF-
 
 - **CPDF-2** — CPDF-2 is SUPERSEDED** by Bob's function-specific Worker topology (I6).  
@@ -1019,7 +1023,7 @@ authority is the file named, never this one.
 - **PL-18** · 2026-08-09 — CORRECTED 2026-08-09 by PL-18, which MEASURED it: FALSE on the axis the ruling is about.** `contribute` alone permitted a `contribute`-holder OUTSIDE the project, which the ruling forbids.  
   `docs/archive/ledgers/QUEUE-2026-08.md:622`
 - **PL-18** · 2026-08-10 — STATUS CORRECTED 2026-08-10 by CONDUCT: it read `running` with no worker alive** — the holding session is gone, its claim was one of the four released as stale the same day, and the work has been on `main` since.  
-  `docs/development/QUEUE.md:1710`
+  `docs/development/QUEUE.md:1711`
 - **PL-18** · 2026-08-09 — SUPERSEDED READINGS OF THE ROW ABOVE, moved out of the table 2026-08-09 by CONDUCT.** PL-18 found this metric occupying **THREE table rows** with three different figures, newest first — so the table asserted its own value three times and a reader had no way to tell which was current.  
   `docs/development/VERIFICATION.md:56`
 - **PL-19** · 2026-08-09 — STEP TWO IS UNMERGED AND IT CLOSES A LIVE OVERCLAIM, AND WHEN IT LANDS THREE OF MY ASSERTIONS MUST BE CORRECTED** **PL-19 (`7844e16`, `4b3f7a7` on `worktree-agent-a875e2afd837947d7`) IS NOT IN `main`** — measured with `git branch -a --contains`, not assumed.  
@@ -1124,31 +1128,31 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-07-30** — " note was revised: transitive trust is accepted so long as it is disclosed (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30). - §12 — "Platform (resolved, v4)" describes the retired local-first client; the plane replaced it and the UI is built as constructs (`BIO_Interaction_Constructs_v0_1.md`). - §13…  
   `docs/architecture/BIO_Complete_Roadmap_v5.md:12`
 - **2026-09-14** — RULED: an authored edge is never re-pointed to a newer capture without a member's act (§14.4, §18); RULED: a link to a Google Drive file keeps the link and the harvest is the OpenDocument export, from which content is extracted (§16). - v0.12, 2026-09-14.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:100`
-- **2026-09-14** — (§14.4, §18); RULED: a link to a Google Drive file keeps the link and the harvest is the OpenDocument export, from which content is extracted (§16). - v0.12, 2026-09-14.  
   `docs/architecture/BIO_Content_Framework_v0_10.md:101`
+- **2026-09-14** — (§14.4, §18); RULED: a link to a Google Drive file keeps the link and the harvest is the OpenDocument export, from which content is extracted (§16). - v0.12, 2026-09-14.  
+  `docs/architecture/BIO_Content_Framework_v0_10.md:102`
 - §12.1 is CORRECTED — a member-scoped aspiration is not a declared bias — and §13 integrates the doctrine properly.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:127`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:128`
 - **2026-07-30** — RULED by Bob, 2026-07-30. **BIO exists to support members in all aspects of case development.** Every construct in this document is instrumental to that and none is an end in itself. A capture nobody can build a case on is waste, however faithfully it was hashed.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:233`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:234`
 - **2026-07-30** — RULED by Bob, 2026-07-30. The meeting chain — scheduled meeting, agenda, attendance, minutes — is ONE form of connected data and not the general case. His example of another: a mention of a need, a budget request, a budget approval, an RFP, responses to it, a contract award, a signed contract with terms, and onward…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:733`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:734`
 - **2026-07-30** — RULED by Bob, 2026-07-30. The system must support humans and their AI assistants defining goals at a high level, turning them into objectives and aspirations, and working to achieve the goals **and everything discovered along the way**.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:900`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:901`
 - **2026-07-30** — RULED by Bob, 2026-07-30. This level of support is central to what a member should expect from BIO, and it is safe for a specific structural reason: **a focus is informative, advisory and supportive of a project's development. It commits nobody.** Its states are `surfaced → elevated → deferred → dismissed`, and…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1006`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1007`
 - **2026-07-30** — RULED by Bob, 2026-07-30. The record carries `surfaced_by: agent` either way; the ruling is that the surface has to communicate it too. This is not a discount applied to the question. A good question stands on its merits whoever asked it, and a member weighing one needs to know that  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1039`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1040`
 - **2026-07-30** — RULED by Bob, 2026-07-30: an aspiration may be scoped at the group, the project, or the member level. | scope | whose commitment | what it shapes | changing it |  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1055`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1056`
 - **2026-07-30** — RULED by Bob, 2026-07-30, and for two reasons that are stronger than tolerance: - **We may not realise that they contradict.** The contradiction is the discovery.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1071`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1072`
 - was DECIDED — but its contrast partner was wrong, and the table below is > corrected to three rows rather than two.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1324`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1325`
 - built" is CORRECTED rather than deleted: what it recorded was the design bet that the flavour table is a PARAMETER, and the bet paid.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1759`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1763`
 - **2026-09-14** — RULED by Bob, 2026-09-14: a link to a Google Drive file KEEPS THE LINK, and the harvest is the OpenDocument export, from which the content is extracted.** So the record holds the Drive address as the citation of where the document lives, the ODF bytes as the capture with an honest hop (export address, format,…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1760`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1764`
 - **2026-08-01** — [RULED 2026-08-01: the subject vocabulary is the registry's, and the malformedness rule is the constraint](#ruled-2026-08-01-the-subject-vocabulary-is-the-registrys-and-the-malformedness-rule-is-the-constraint)  
   `docs/architecture/BIO_Declared_Bias_v0_1.md:22`
 - **2026-08-01** — [RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT](#ruled-2026-08-01-a-hunch-is-temporary-declared-bias-and-it-is-hunch-debt) - [The bias acknowledgement, authored at export](#the-bias-acknowledgement-authored-at-export) - [Differential traversal and the cross-group…  
@@ -1714,7 +1718,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-08-10** — : (1) `docs/BIO_DATAPLANE_STATE.md` is AMENDED to the case-as-production model — not afterwards, not as a follow-up row; (2) `docs/development/CASE-AS-PRODUCTION.md` is ARCHIVED to `docs/archive/`, which `decided.mjs` and `mintid` both still scan, so archiving is not lossy; (3) `node tools/decided.mjs` regenerated…  
   `docs/development/QUEUE.md:1112`
 - **2026-07-31** — CAPTURE-SCALING.md item 6, DECIDED 2026-07-31 under Bob's delegation — read that item before building, it carries four specifics.  
-  `docs/development/QUEUE.md:2151`
+  `docs/development/QUEUE.md:2152`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:240`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  

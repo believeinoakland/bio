@@ -830,9 +830,15 @@ const REGISTER_FLOOR = {
      stands and 981/181/182 is a strict subset of it — COLLAPSED TO ONE KEY SET, both
      notes kept, and the surviving values RE-VERIFIED by a green `--strict` run on this
      merge rather than reasoned about. ---- */
-  arms: 989,
-  classified: 182,
-  corpus: 183,
+  /* MOVED 2026-09-14 by CONDUCT #11 at CAP-8's integration (989 -> 996 · 182 -> 183 · 183 -> 184):
+     the MERGED run's own print read `arms 996/989 · classified 183/182 · corpus (suites read)
+     184/183 · GREW by 7 arm(s)` - CAP-8's `drive.test.mjs` (seven declared arms, one new suite)
+     on top of REC-84's 989. The branch's own block (979/181/182, cut at 87f263a) was dropped at
+     the merge and declared; this is the re-read the loop promises. One key set. Nothing FELL.
+     FLEET_FLOOR unmoved. */
+  arms: 996,
+  classified: 183,
+  corpus: 184,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

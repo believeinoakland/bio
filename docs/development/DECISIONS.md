@@ -1137,3 +1137,28 @@ decided: 2026-09-14 · BOB #11, delegated by Bob the same day
 enacted: 2026-09-14 · session BOB #11, same turn — nothing to build and nothing to fund: the
   reasoning is folded into `docs/development/EXTRACTION-BREADTH-DESIGN.md` §6 and
   `BIO_Content_Framework_v0_10.md` Part II §18 row 4; no row opens.
+
+### DEC-75 · open
+raised: 2026-09-14 · CONDUCT #11 (CAP-8's provisional at integration; `node tools/decided.mjs "conversion"` and `"direct fetch grade"` answer nothing — no ruling carrying a marker touches this)
+for: bob
+question: A Google Drive export is Google's CONVERSION of the document, performed at fetch
+  time and not reproducible (D-351: three exports of one unchanged document, three distinct
+  `capture_sha`). CAP-8 files it as a direct fetch at capture grade B, with the conversion
+  disclosed as TECHNIQUE on the hop (`via` stays "direct"; no third term). Should a
+  CONVERSION cap the capture axis BELOW a direct capture of the publisher's original bytes —
+  a letter for "the bytes are a rendering the record cannot re-derive" — or is capture
+  grade about the fetch path alone, with conversion belonging to the fidelity axis
+  (DEC-4's "no third scale")?
+why it is Bob's: it is a capture-axis doctrine VALUE (REC-50's precedent: the grade
+  vocabulary is Bob's), and it decides what the record claims about hundreds of the city's
+  Drive-linked documents (CAP-7: 50 links in the 3.6% sample) — an overclaim in the
+  direction CLAUDE.md names as worse than a missing feature, if B is too strong.
+provisional: CAP-8 as landed — grade B, the conversion on the hop's `asserts`/`evidence`
+  in words, `unsigned_reason` stating the bytes are not the original file, D-351 open on
+  the byte-instability. Reversal cost: one letter at `driveHop`'s site plus a re-grade of
+  every Drive capture then in the record (a migration the size of REC-88's), and nothing
+  else moves — the hop's facts are already the ones a re-grade would read.
+alternative: fold it into REC-88 (the fidelity bound on the capture axis, DEC-4 enforced),
+  reading "conversion at fetch time" as a fidelity step with a cap, which reaches the same
+  letter without a new capture-axis value — CONDUCT's recommendation if Bob wants no new
+  vocabulary: it keeps "no third scale" literally true.
