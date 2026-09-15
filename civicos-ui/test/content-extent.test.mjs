@@ -43,7 +43,7 @@ import { createRequire } from "module";
 import { pathToFileURL } from "url";
 import { webcrypto } from "crypto";
 import { appScript } from "./extract.mjs";
-import { CONTENT_EXTENT_KINDS } from "../../bio-plane/checks/bio-checks.mjs";
+import { CONTENT_EXTENT_KINDS, CONTENT_MINT_STATES } from "../../bio-plane/checks/bio-checks.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -438,6 +438,63 @@ ok("a leg the plane DID name a reason for renders the plane's own sentence",
   U.legReferentHtml({ content_id: null, standing: null, null_case: "INQUIRY_TARGET",
                       why: "a question has no capture to point into" })
     .includes("a question has no capture to point into"));
+
+/* ============================================================
+   9. SK-7 — THE MACHINE-MINTED ROW IS LABELLED HERE, which is the only place
+      a member can read it
+   ============================================================ */
+console.log("\n--- 8. SK-7 / 14.4's 5.7: a row a MACHINE marked citable says so on this surface ---");
+
+/* APPENDED BY SK-7, and the reason it is appended to UI-61's suite rather than
+   given one of its own is that the assertion is about THIS renderer: the plane
+   half of 5.7 puts a `mint` label on every content-row projection, and
+   `legReferentHtml` is the one consumer of `standing` in the estate. A label on
+   the wire that no surface renders is the rule "labelled everywhere it is shown"
+   satisfied in the record and broken on the screen.
+
+   THE STANDINGS ARE THE PLANE'S OWN, not hand-built objects: `docStd` came back
+   from `op=earnedbasis` above, so `mint` here is whatever `Store.#mintLabel`
+   composed — which is what makes the negative arms mean something. The machine
+   case is the one shape this fixture cannot get from the plane (no `ai`
+   credential is minted in this harness), so its `mint` is taken from the
+   CATALOGUE's own published sentence rather than typed out here. */
+const machineStd = { ...docStd, stale: false, minted_by: "class:ai/extractor",
+  mint: { by: "class:ai/extractor", state: "machine_marked", machine_work: true,
+          says: CONTENT_MINT_STATES.machine_marked } };
+const machineHtml = U.legReferentHtml({ content_id: "x", standing: machineStd });
+ok("a machine-minted row is LABELLED on the surface a member reads it on",
+  /MARKED BY A MACHINE/.test(machineHtml));
+ok("and the sentence is the PLANE's own, verbatim — never composed here",
+  machineHtml.includes(CONTENT_MINT_STATES.machine_marked));
+ok("the control plane's identity grammar is NOT printed at a member",
+  !machineHtml.includes("class:ai/extractor"),
+  `rendered: ${machineHtml.slice(0, 200)}`);
+ok("the row's own `ref` is still there — the label ADDS, it does not replace",
+  machineHtml.includes(machineStd.ref));
+
+/* THE OTHER THREE STATES ARE SILENT, and each for the reason written at
+   `legMintLabelHtml`. This is the over-strictness direction for this arm: every
+   row in the record today is one of these three. */
+ok("the PLANE's own mint is NOT announced as machine work — it is the referent of a member's own citation",
+  !/MARKED BY A MACHINE/.test(U.legReferentHtml({ content_id: "x", standing: { ...docStd, stale: false } })));
+ok("a MEMBER-marked row is not announced either",
+  !/MARKED BY A MACHINE/.test(U.legReferentHtml({ content_id: "x", standing: { ...docStd, stale: false,
+    mint: { by: "ruth", state: "member_marked", machine_work: false, says: CONTENT_MINT_STATES.member_marked } } })));
+ok("an UNSTATED row is not announced — stamping the whole pre-SK-7 corpus would be a finding this surface invented",
+  !/MARKED BY A MACHINE/.test(U.legReferentHtml({ content_id: "x", standing: { ...docStd, stale: false,
+    mint: { by: null, state: "unstated", machine_work: false, says: CONTENT_MINT_STATES.unstated } } })));
+ok("and a standing carrying NO `mint` at all renders exactly as it did before this item",
+  U.legReferentHtml({ content_id: "x", standing: { extent_kind: "some-future-arm", ref: "a passage this plane cannot name",
+    stale: false, extent: {}, bundle_id: DOC } }) === alien);
+
+/* THE PREDICATE IS THE PLANE'S. A surface that matched on the prefix itself
+   would keep working here and would go wrong the day the record adds a machine
+   class — so the arm drives a `machine_work: false` beside a machine-shaped
+   `by`, which only a surface reading the plane's answer gets right. */
+ok("the surface reads `machine_work` and never the `minted_by` string, so it cannot disagree with the plane",
+  !/MARKED BY A MACHINE/.test(U.legReferentHtml({ content_id: "x", standing: { ...docStd, stale: false,
+    mint: { by: "class:ai/extractor", state: "member_marked", machine_work: false,
+            says: CONTENT_MINT_STATES.member_marked } } })));
 
 console.log(`\ncontent-extent: ${pass} pass, ${fail} fail`);
 await mf.dispose();

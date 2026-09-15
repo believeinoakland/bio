@@ -853,9 +853,26 @@ const REGISTER_FLOOR = {
      new suite) on top of REC-85's 1010. The branch's own block (1001/184/185, cut at 980a9e5) was
      dropped at the merge and declared; this is the re-read the loop promises. One key set.
      Nothing FELL. FLEET_FLOOR unmoved. */
-  arms: 1015,
-  classified: 186,
-  corpus: 187,
+  /* MOVED 2026-09-14 by SK-7 (the RESPAWN): 1015 -> 1021 / 186 -> 187 / 187 -> 188,
+     ALL THREE IN THE SAME TURN and every one taken from the figure this item's own
+     green `--strict` run PRINTED as REPRODUCIBLE (`arms 1021/1015 · classified
+     187/186 · corpus 188/187 · GREW by 6`) at commit 9bc43d9, with `provenance: 204
+     of 204 discovered item(s) are in the commit` — never counted, never incremented
+     by hand, and never read off a run that still held a phantom. The cause is ONE
+     new suite, `test/content-machine-mint.test.mjs`, whose `NEGATIVE CONTROL:`
+     declaration states six arms.
+
+     WHY THIS IS A SECOND COMMIT and not part of the item's own: the reproducible
+     figure is the one another checkout at HEAD can reproduce, so the suite has to
+     be IN the commit before its arms may be quoted. Reading the floor from a run
+     taken before the commit would have quoted 1015. A run taken earlier in this
+     same session printed a CONTAMINATED `arms 1020`, one short of this figure,
+     because the suite then declared five arms and now declares six — which is the
+     second reason the contaminated figure is never the one to move to: it is a
+     snapshot of a tree still being written. Nothing FELL. */
+  arms: 1021,
+  classified: 187,
+  corpus: 188,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
