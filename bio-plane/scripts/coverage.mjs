@@ -778,7 +778,8 @@ const REGISTER_FLOOR = {
      `FLEET_FLOOR`, which is the documented state. `FLEET_FLOOR` is UNMOVED and none is owed
      — this item adds no fleet member and no fleet suite. */
   /* MOVED 2026-09-14 by CONDUCT #10 at COFF-10's merge (967 -> 972 · 179 -> 180 · 180 -> 181): the merged run's own print read `arms 972/967 · classified 180/179 · corpus 181/180`; the +5 arms and +1 suite are COFF-10's `formats-odf.test.mjs`, which set 964 on a tree without REC-82's +8. One key set, read from the print after the commit (D-238). */
-  arms: 972,
+  /* MOVED 2026-09-14 by CONDUCT #10 at M0-30's merge (972 -> 974): the merged run's own print read `arms 974/972`; the +2 is M0-30's planning-hygiene §4.7 declaration. One key set, read from the print after the commit (D-238). */
+  arms: 974,
   classified: 180,
   corpus: 181,
 };
