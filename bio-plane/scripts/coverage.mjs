@@ -853,9 +853,33 @@ const REGISTER_FLOOR = {
      new suite) on top of REC-85's 1010. The branch's own block (1001/184/185, cut at 980a9e5) was
      dropped at the merge and declared; this is the re-read the loop promises. One key set.
      Nothing FELL. FLEET_FLOOR unmoved. */
-  arms: 1015,
-  classified: 186,
-  corpus: 187,
+  /* MOVED 2026-09-14 by REC-93 (IC-92): 1015 -> 1022 · 186 -> 187 · 187 -> 188,
+     ALL THREE IN THE SAME TURN and every one taken from the figure THIS ITEM'S
+     OWN GREEN `--strict` RUN PRINTED AS REPRODUCIBLE after the commit
+     (`arms 1022/1015 · classified 187/186 · corpus (suites read) 188/187 ·
+     GREW by 7 arm(s)`, provenance `204 of 204 discovered item(s) are in the
+     commit at HEAD (92c8e59)`). Never counted, never added to the numbers above,
+     and read AFTER the commit on purpose — the same figures read BEFORE it said
+     1015/186/187, because this item's new suite was untracked and D-238's rule
+     is that a floor moved over work no other checkout can see is permanently
+     too high. The cause is ONE new suite, `test/observations.test.mjs`, whose
+     `NEGATIVE CONTROL:` declaration states SEVEN arms — every one of them RUN
+     through `test/nc-rec93.mjs`, and every one AS DECLARED. So corpus and
+     classified each rise by one and arms by seven. Nothing FELL.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file,
+     here and in FLEET_FLOOR, which is unmoved.
+
+     **THIS FIGURE IS TRUE OF THIS BRANCH AND OF NO OTHER TREE, AND CONDUCT MUST
+     RE-READ IT AT INTEGRATION.** `origin/main` moved to 4ff14ad while this item
+     ran and already carries 1021/187/188 from SK-7's landing, measured on a tree
+     without this suite — so 1021 and 1022 are each true of a tree the other is
+     not true of, and the merged figure is higher than either. Adding them would
+     be wrong in both directions. That is exactly the arithmetic the 2026-08-08
+     entry above records going wrong, and it is why the rule is to re-read from a
+     green run after every multi-item merge rather than to compute. */
+  arms: 1022,
+  classified: 187,
+  corpus: 188,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
