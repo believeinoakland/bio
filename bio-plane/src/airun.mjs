@@ -146,6 +146,27 @@ export const RUN_BOUNDS = {
   subsessions: "evidence sub-sessions spawned",
   wallclock:   "wall time across resumptions, in milliseconds",
   runtime:     "CPU or subrequest ceiling (D-54, D-56) — IS-9(d) builds its producer",
+  /* SK-8, AND IT IS A BOUND RATHER THAN A POLICY BECAUSE §7.3 (5) RULED IT ONE.
+     *"A machine that may mint citable rows without a bound produces a store of
+     proposals nobody cited — each correctly labelled, the whole unexamined"*,
+     which is exactly the failure `INVESTIGATIVE-SESSION.md` §15 named for
+     versions one layer up. So the EXTRACT role's productions are budgeted in the
+     table the run already has: **no schema, no new vocabulary**, which was the
+     answer's own test.
+
+     IT IS A ROW HERE AND NOT A SECOND FENCE. `finishedBound` already terminates
+     a run whose consumed reaches its allowed, and `#aiRunTerminate` already
+     writes which bound stopped it and where — a run that ran out of mints ends
+     exactly as a run that ran out of fetches does, with no branch anywhere
+     asking which kind of bound it was.
+
+     IT IS LAST IN DECLARATION ORDER BEFORE `lease`, WHICH IS A TIE-BREAK RULE
+     AND NOT AN OPINION: `finishedBound` sorts exhausted bounds by this object's
+     key order, so a run that exhausted both its fetches and its mints in one
+     tick reports FETCHES — the earlier, cheaper-to-explain cause. Putting mints
+     first would have renamed every such run's ending without changing anything
+     about it. */
+  mints:       "passages a machine credential marked citable (§7.3 (5)) — the EXTRACT role's budget",
   lease:       "the run stopped heartbeating and its lease lapsed: it died rather than finished",
 };
 

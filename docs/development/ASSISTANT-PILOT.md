@@ -10,7 +10,7 @@
 - §2 — [DESIGNED-not-built] in full. Nothing in `civicos-ui/app.html` or the plane offers a prompt entry point on any surface; there is no INTERPRET step and no FIND/HELP/CREATE/ACT classifier. The one AI surface that IS built is `SURFACES["ai-session"]`, the cross-cutting running-session indicator this file's own §4 block points at, and it belongs to `INVESTIGATIVE-SESSION.md` §14a rather than to this flow.
 - §3 — [DESIGNED-not-built] entirely. Nothing renders a plan as steps and nothing observes completion by re-reading state, so the section's sharpest rules (never enter a value, never press Submit, no prefill) fence nothing yet and are doctrine awaiting a builder.
 - §4 — STALE in its principals. It offers two — the organisation's or the member's Claude API key — and FL-6 landed a THREE-level cascade, member then project then instance, as `CASCADE_ORDER` in `agent-worker/src/cascade.mjs`, Bob's order verbatim. The project level is a principal this section does not have. Its `MACHINE_CANNOT_*` premise has moved the other way and for the better: all **12** codes in `bio-plane/src` now carry a canned translation, where SK-1 measured 1 of 12 on 2026-08-08.
-- §5 — two of the four exclusions rest on premises that have moved. Exclusion 1 says CHECK "is sequenced first AFTER the pilot"; SK-4 landed with CHECK deploying FIRST while the pilot is still unbuilt, so that order is inverted in fact. Exclusion 3 calls DEC-47 "still open"; DEC-47 is `answered` — an investigation session may reach public sources nobody named, the inquiry and the session launch being the authorisation. The exclusions stand as the pilot's own rules; their reasons no longer do.
+- §5 — **exclusion 1 is CORRECTED IN PLACE as of 2026-09-14 (SK-8, on BOB #11's delegation) and is no longer stale; exclusion 3 still is.** Exclusion 1 previously gave the wrong REASON for excluding PURSUE/EXTRACT/CHECK (*"those are DEC-24 roles with their own scopes"*) and a CHECK-sequencing clause SK-4 had already made false. It now says what §4 and the §6 hazard table already said — the pilot's credential writes nothing because it is READ-ONLY — and records that EXTRACT runs in DEC-62's RUN, citing `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3, with the correction note saying why the old sentence was wrong. The exclusion itself is unchanged. **Exclusion 3 remains stale**: it calls DEC-47 "still open" and DEC-47 is `answered` — an investigation session may reach public sources nobody named, the inquiry and the session launch being the authorisation. That exclusion stands as the pilot's own rule; its reason no longer does.
 - §6 — never revised since it was written, so it reads as six open intentions when two are now code: the D-106 hazard is answered by the self-describing registry and the build-failing recipes, and the drift-from-doctrine hazard by the refusal family's canned translations. The other four name no enforcement and none exists.
 - §7 — stale as a forward plan. Step 1 is [BUILT] (UI-38); step 2 is [BUILT] for the SIBLING's pack rather than an assistant's; step 3 is [BUILT] as the `ai` credential class; steps 4 (FIND end to end), 5 (the wizard) and 6 (the pilot's own observation log) are [ABSENT] and only the recipe blocker below step 1 is queued, as SK-5.
 
@@ -170,8 +170,33 @@ machine-made, dismissible, never blocking.
 
 ## 5 · What the pilot deliberately excludes
 
-1. **No PURSUE/EXTRACT/CHECK** — those are DEC-24 roles with their own scopes; the pilot
-   is DEC-27's surface only. CHECK is sequenced first AFTER the pilot (DEC-55).
+1. **No PURSUE/EXTRACT/CHECK on the pilot's credential — BECAUSE THAT CREDENTIAL IS
+   READ-ONLY AND WRITES NOTHING, not because the roles are out of reach.** §4 is the whole
+   of it: the pilot assistant holds no mutating op at all, and every one of these roles
+   writes. So the exclusion is a CONSEQUENCE of the pilot's scope rather than a separate
+   rule, and it is not lifted by any of them becoming buildable. **EXTRACT in particular
+   now RUNS, and it runs in DEC-62's RUN** — the object that already bounds, logs, resumes
+   and checks a machine credential's work — with no new runtime, no new credential class
+   and no new fence; its mints are a bound on that run, and an uncited machine-minted row
+   is a proposal rather than coverage. The authority is
+   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §7.3, where D-358 was answered on
+   2026-09-14; the plane half is `op=extractpropose` / `op=extractproposals` (SK-8) over the
+   mint door SK-7 built. **The pilot may still SHOW what an EXTRACT run produced and REQUEST
+   a run on the member's own act** — a read and an authored act, neither of which widens
+   anything here. CHECK is sequenced FIRST and not after: SK-4 landed with CHECK as the
+   first deployed mode while this pilot is still unbuilt.
+
+   > **Corrected in place 2026-09-14 by SK-8 (BOB #11's delegation), never exempted, and
+   > this note says why the old sentence was wrong.** It read *"those are DEC-24 roles with
+   > their own scopes; the pilot is DEC-27's surface only. CHECK is sequenced first AFTER
+   > the pilot (DEC-55)"*, written 2026-08-04 and overtaken three times. It gave the wrong
+   > REASON — it read as *these roles are somebody else's work*, when the actual defence is
+   > the one §4 states and the hazard table names, that the pilot token cannot execute any
+   > mutating op. A reason that is not the real reason is worse here than no reason: read
+   > as written, it made lifting the exclusion look like a scope decision about the pilot,
+   > which is exactly the question D-358 sat open on for a day while SK-7's door had no
+   > caller. Its CHECK clause was also false in fact from SK-4. The exclusion itself is
+   > unchanged and stands.
 2. **No field entry, no DOM access, no Submit** — stated above; revisit only after the
    pilot has usage to argue from.
 3. **No egress** — the assistant searches the four levels DOWN TO the store; reaching the

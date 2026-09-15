@@ -668,6 +668,25 @@ const OPS = {
      THE MINTER IS STAMPED SERVER-SIDE below and the body's is never read, which
      is the impostor rule at a field whose entire subject is who acted. */
   contentmint: { classes: ["admin", "member", "probe"],          mutating: true  },
+  /* SK-8 / `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 — THE EXTRACT RUN'S
+     PRODUCTIONS, and the class cut is the one directly above rather than a new
+     one. D-358's answer was that EXTRACT runs in DEC-62's RUN with **no new
+     runtime, no new credential class, no new fence**, so these two sit in
+     `contentmint`'s classes because the write performs `contentmint`'s act
+     inside a bounded object. The `ai` class reaches them through the DEC-55
+     floor exactly as it reaches that one — the credential's own declared
+     `writes` is what admits it, and nothing here is special-cased for machines.
+
+     THE REAL NARROWING IS NOT IN THIS TABLE AND IS NOT IN A CLASS LIST: it is
+     the STORE's, where the run object is. `extractPropose` refuses a production
+     with no live EXTRACT run by name, and refuses one whose run declares no
+     `mints` bound — because a run begins on a member's act (§7.3 (4)) and its
+     productions are budgeted in the bounds table it already has (§7.3 (5)).
+     `extractpropose` is named in `AI_RUN_ACTIONS` to say what KIND of act it is;
+     that array gates nothing. The proposer is stamped server-side below and the
+     body's is never read. */
+  extractpropose:   { classes: ["admin", "member", "probe"],     mutating: true  },
+  extractproposals: { classes: ["admin", "member", "probe"],     mutating: false },
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
@@ -1424,7 +1443,23 @@ const QUEUE_ACTIONS = ["queuemute", "queuesnooze"];
    daemon's conduct rules applied to them. `taskenqueue`/`taskdrain` draw the
    same line one door over, and `taskenqueue` is not in OPS at all for the same
    reason `capturerequestdrain` is not in this list. */
-const AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose", "suggest", "capturerequest"];
+const AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose", "suggest", "capturerequest",
+                        /* SK-8: the EXTRACT role's production is an ACT OF A RUN
+                           (§7.3 (2)), and it is named here for the reason
+                           `suggest` and `capturerequest` are — this array says
+                           WHAT KIND OF ACT an op is and carries it into the
+                           member and admin class sets as one entry rather than
+                           two literals. IT IS NOT THE GATE, and that is worth
+                           saying because a reader could take it for one: nothing
+                           in this array checks that a run exists. The refusal for
+                           a production with no live run is the STORE's
+                           (`extractPropose`: NO_RUN, NO_SUCH_RUN,
+                           RUN_NOT_RUNNING, NOT_AN_EXTRACT_RUN), where the run
+                           object is, which is the only place that can see it.
+                           The READ is deliberately absent: reading what a run
+                           proposed is not a production, and a member reviews
+                           proposals without holding a run at all. */
+                        "extractpropose"];
 /* PL-18 / DEC-63 — THE THREE RUN VERBS, AS THEIR OWN LIST, because Bob's
    ruling is about exactly these three and not about the array above them.
    `AI_RUN_ACTIONS` also carries `suggest` and `capturerequest`, which are acts
@@ -1524,6 +1559,12 @@ const SESSION_OPS = {
                       edge. Unlike `attesttext` above, the machine route is open too —
                       that asymmetry IS this item. */
                    "contentmint",
+                   /* SK-8: the READ half of the EXTRACT role. `extractpropose` is
+                      NOT named here because it arrives through `AI_RUN_ACTIONS`
+                      below, as an act of a run; this one is not an act of a run
+                      and a member reviews proposals without holding one, so it
+                      is named beside `contentmint`, whose act it reads back. */
+                   "extractproposals",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1542,6 +1583,12 @@ const SESSION_OPS = {
                    "caseratify",
                    "attesttext",
                    "contentmint",
+                   /* SK-8: the READ half of the EXTRACT role. `extractpropose` is
+                      NOT named here because it arrives through `AI_RUN_ACTIONS`
+                      below, as an act of a run; this one is not an act of a run
+                      and a member reviews proposals without holding one, so it
+                      is named beside `contentmint`, whose act it reads back. */
+                   "extractproposals",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1600,6 +1647,13 @@ const NEEDS = {
      lives in the OPS class cut and in C-35.10, not in a capability a group
      would have to be told about. */
   contentmint:      "contribute",
+  /* SK-8: the same capability as the act they perform, for the reason written
+     against `contentmint` above — a proposal is CONTRIBUTING and it is never
+     publishing. Nothing either op writes is the group putting its name on
+     anything: an uncited machine-minted row is a PROPOSAL (§7.3 (6)), and the
+     act that makes one part of a finding is a member's citation. */
+  extractpropose:   "contribute",
+  extractproposals: "contribute",
   monitor:          "contribute",
   cite:             "contribute",
   sever:            "contribute",
@@ -7287,6 +7341,11 @@ export default {
            arriving at a WRITE. The store fails closed on an absent stamp and
            answers an invisible bundle EXACTLY as an absent one. */
         || op === "contentmint"
+        /* SK-8: both EXTRACT ops, for `contentmint`'s reason exactly. The WRITE
+           mints through that same door, so it carries the same oracle; and the
+           READ answers about documents, so an ungated listing would be the
+           identical leak one op over. Fails closed on an absent stamp. */
+        || op === "extractpropose" || op === "extractproposals"
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -7441,6 +7500,37 @@ export default {
        would be a row the label could say nothing about. */
     if (op === "contentmint")
       inner.searchParams.set("mintedBy",
+        viaSession ? sessMember
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* SK-8 — WHO PROPOSED THIS READING, stamped on the identical rule and in the
+       identical shape, because it is the identical question about the identical
+       kind of act: a claim about a PERSON (or about a machine) rather than about
+       the record. The two lines are kept apart rather than folded into one
+       condition so each op's own reasoning stays readable at its own site; what
+       must never drift is the VALUE, and it cannot, because both read the same
+       three cases off the same `viaSession` / `cls` / `aiCred` state. A machine
+       class stamps `class:<cls>`; the `ai` class stamps its tokenId beside it so
+       the act stays attributable to the named credential a member chose; and
+       NEITHER ever stamps the PRINCIPAL — `member:<id>` is not a machine
+       identity by this record's own predicate, and stamping it would label the
+       assistant's own proposal as a member's.
+
+       IDENTITY-CLAIM: RULED DEC-24 — a machine credential MAY perform this act,
+       and the ruling is the EXTRACT role under DEC-24 (*the machine may do the
+       looking, the member does the concluding*), placed at
+       `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 and folded into framework Part II
+       §14.4 as Bob's 5.7. So the member-actor words in this block describe WHO IS
+       SHOWN the label, never who may write the field, and there is deliberately
+       no fence on this op. What the machine may not do is ATTEST — C-35.10's, at
+       `op=attesttext` a few stamps above — and PRODUCE WITHOUT A BOUND, refused
+       at the store by name when the run declares no `mints` allowance (§7.3 (5)).
+       The naming half the ruling rests on is the `class:<cls>` stamp this line
+       writes: permission is granted against a NAMED actor, and a proposal whose
+       proposer were anonymous would be one the record could say nothing about,
+       which is exactly what `NO_PROPOSER` refuses at the store. */
+    if (op === "extractpropose")
+      inner.searchParams.set("proposedBy",
         viaSession ? sessMember
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
         : `${MACHINE_CLASS_PREFIX}${cls}`);

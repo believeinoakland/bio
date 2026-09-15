@@ -882,6 +882,19 @@ export const RUNG_ABSENT = {
      it records what somebody thought worth citing. So the honest ground is the
      ladder's own gap — an act on the record, corrected forward, never signed. */
   contentmint:          { ground: "undetermined", is: "marks a PART of a document as citable — an address the record can hold, proposed by a member or by a machine credential and part of a finding only when a member cites it (§14.4)" },
+  /* SK-8 — `op=extractpropose`, and the ground is `contentmint`'s directly
+     above for its reason, which is the honest one rather than the convenient
+     one: no document assigns this act a rung, and the two that might are wrong
+     about it in opposite directions. NOT `substrate` — the whole of §7.3 (4) is
+     that a run works on a SUBJECT and an OBJECTIVE a member authored and then
+     CHOOSES what to propose, which is precisely what `substrate` says these
+     acts do not do. NOT `observational` — nothing here records what was
+     observed; the observation of where a run LOOKED is the run's log, and this
+     act records what the machine thought worth citing, which is a different
+     claim about the record. So the ground is the ladder's own gap, stated: an
+     act on the record, corrected forward (a proposal is never deleted — IC-83),
+     never signed by the thing that made it (C-35.10). */
+  extractpropose:       { ground: "undetermined", is: "an EXTRACT run PROPOSES a reading — what the text this record already holds NAMES, carrying an ai(function, version) step, bounded by the run's `mints` allowance and part of a finding only when a member cites it (§7.3)" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -1532,6 +1545,18 @@ export const NON_ACTS = {
      there is no bundle state for a surface to offer it against and an applies()
      over `affordanceFacts` would have nothing to read. */
   contentmint: "content-directed: marks a part of a document as citable, keyed by (document, extent); mints an address and no edge",
+  /* SK-8 — THE EXTRACT RUN'S TWO OPS, and the reason they are NON_ACTS is a
+     stronger version of `contentmint`'s directly above rather than a weaker one.
+     `extractpropose` is keyed by (RUN, document): its subject is a run's
+     production, so the thing a surface would have to offer it against is not a
+     bundle in a state at all — and `applies()` is handed `affordanceFacts`,
+     which holds no run. It is also not something a member performs: a run
+     begins on a member's act (`op=airunopen`, itself a NON_ACT below for this
+     reason) and the PRODUCTION is the machine's inside it, which is exactly
+     what an affordance published against a document would misrepresent.
+     `extractproposals` is a READ and nothing in this registry publishes reads. */
+  extractpropose: "run-directed: an EXTRACT run's production, keyed by (run, document); the run is the subject and no bundle state offers it",
+  extractproposals: "read: what an EXTRACT run proposed, keyed by a run or a document",
   /* Keyed by entity / capture / progression — the framework surface, not a
      bundle-state act. */
   entitycreate: "registry write, keyed by entity",

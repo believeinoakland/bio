@@ -276,6 +276,23 @@ const ROLE = {
   aiRunClose:         "WRITES",
   suggestVersion:     "AUTHORISES",
   captureRequest:     "AUTHORISES",
+  /* SK-8's, AND ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming
+     itself, on this item's first full battery, which is the fourth time this
+     ratchet has caught a new reader rather than absorbing one in silence.
+
+     AUTHORISES, beside `suggestVersion` and `captureRequest`, and the fit is
+     exact rather than approximate: `extractPropose` reads `ai_runs` (`status`,
+     `mode`) to decide whether a DIFFERENT act — a production on the content axis
+     — is legal, which is that role's definition word for word. NOT `WRITES`: it
+     writes `proposed_readings`, `content` and `ai_run_bounds`, and not one
+     column of `ai_runs`, so ARM P1's twenty columns are untouched by it. NOT
+     `PUBLISHES`: it echoes back only what the caller already sent (the run id it
+     named) plus `mode` inside the refusal that says the run is the wrong kind —
+     which is the caller's own argument answered, not a fact OF the row
+     disclosed, so ARM W4's "exactly three publishers" stands and was re-checked
+     rather than assumed. The `bound` block in its answer is `ai_run_bounds`', a
+     different table with its own publisher rules. */
+  extractPropose:     "AUTHORISES",
   "#aiRunReapPending": "HOUSEKEEPS",
   "#aiRunReapWake":    "HOUSEKEEPS",
   "#aiRunReap":        "HOUSEKEEPS",

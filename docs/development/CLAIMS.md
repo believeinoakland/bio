@@ -6453,3 +6453,54 @@ what is needed, at SKILL's next touch (SK-7's integration or SK-8's spawn), one 
   EXTRACT runs in the run — citing §7.3 — with the same comment saying why the old sentence
   was wrong. The §5 line of the front matter's Incomplete list updates in the same commit.
 released:
+
+
+## CLAIM 2026-09-14 SKILL+RECORD (SK-8 — AI-proposed readings: the `ai(function, version)` step EMITTED for the first time, by an EXTRACT run inside DEC-62's run object)
+opened: 2026-09-14
+worktree: `agent-a7a1788f7e7a3b716` · branch `worktree-agent-a7a1788f7e7a3b716`
+authority: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 (PRIMARY — D-358 answered:
+  the run, not the pilot; mints are a run bound; an uncited machine-minted row is a PROPOSAL) and
+  `docs/development/EXTRACTION-BREADTH-DESIGN.md` §4's production table (UNCHANGED — it governs WHAT
+  may be produced) with §7 row 7 and §8's controls.
+
+**PATHS CLAIMED, BY REGION.** Four other live workers hold regions in `store.mjs` / `index.mjs` /
+`bio-checks.mjs` (REC-89, REC-93, REC-97, CAP-12) and this item is the FIFTH, which is the standing
+cap — so every region below is the narrowest that carries the production, and **`bio-plane/checks/bio-checks.mjs`
+IS NOT CLAIMED AND IS NOT TOUCHED** (the door's own shape refusals are `reason` refusals in
+`contentRead`'s shape, SK-7's precedent, precisely so this item adds no `/_CHECKS$/` family to the
+most contended file on the board).
+
+- **`bio-plane/src/extractrun.mjs`** — NEW FILE, whole, uncontended. The EXTRACT role's productions:
+  the `ai` step builder, the `EXTRACT_FUNCTIONS` roster, the grade rule, the proposal checker.
+- **`bio-plane/src/store.mjs`** — ONE new region, `extractPropose` / `extractProposals` /
+  `#proposedReadingChain` / `#mintRatio`, appended AFTER SK-7's `contentMint` region; plus the two
+  purge arms (`proposed_readings`, per-bundle and whole-store) and one `#counts` row. **It touches no
+  extent arm, no `checkInquiryBasis`, no leg writer, no `op=cite`, no `op=acquire` reading write, and
+  no observation-log append site** — which is REC-97's, CAP-12's, REC-93's and REC-89's ground
+  respectively.
+- **`bio-plane/src/index.mjs`** — two `OPS` rows, two capability-map rows, one `AI_RUN_ACTIONS` entry,
+  two DO-route lines, and ONE line added inside SK-7's existing server-side stamp block (the proposer
+  is stamped on exactly the rule `mintedBy` is).
+- **`bio-plane/src/schema.mjs`** — ONE new table, `proposed_readings`, immediately BEFORE the
+  `host_governor` block (`hygiene.test.mjs`'s rule).
+- **`bio-plane/src/airun.mjs`** — ONE row added to `RUN_BOUNDS` (`mints`), with its comment. No other
+  live claim names this file.
+- **`bio-plane/test/extractrun.test.mjs`** and **`bio-plane/test/nc-sk8.mjs`** — NEW, mine.
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` ONLY, moved from the figures a green
+  `--strict` run PRINTS after the commit. **ONE key set: if this conflicts at integration, COLLAPSE
+  to one set and re-read the printed figures.**
+- **`docs/development/ASSISTANT-PILOT.md`** — §5 exclusion 1 and the §5 line of the front matter's
+  Incomplete list (BOB #11's DELEGATION, folded into this item at its spawn and released below).
+- **`docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md`** — front matter and §8 ONLY, where this
+  landing makes a stated completeness false (CORPUS-STANDARD §4.1).
+- **`docs/development/EXTRACTION-BREADTH-DESIGN.md`** — §4's third production row and the front
+  matter, same rule, same reason.
+- **`docs/development/INTERFACE-CHANGES.md`** (IC-93 filed; an `IC-2 · CONFIRMED` entry appended),
+  **`DEBT.md`** (D-358's disposition), **`MEASUREMENTS.md`**, **`CLAIMS.md`** (this entry).
+
+**NOT CLAIMED:** `civicos-ui/**` (no surface renders a proposed reading and none is invented — SK-7's
+own finding is that a claim of "no surface renders this" goes stale, so it is MEASURED below rather
+than asserted); `agent-worker/**` (**and this is a finding, not an omission — see the release line**);
+`bio-plane/checks/bio-checks.mjs`; `QUEUE.md` (CONDUCT's).
+
+released:

@@ -11817,3 +11817,66 @@ none re-cut and none re-declared** — baseline 45/0 · attest 39/6 (5/5) · lab
 44/1 (1/1) · overstrict 43/2 (2/2) · uilabel 56/2 on the surface suite (2/2, with UI-61's §7
 over-strictness digest among the 56 that stayed green). The sixth arm is the respawn's: the five
 above it were declared on a tree with no surface to drop a label from.
+
+## 2026-09-14 — SK-8: the `ai(function, version)` step gets its first producer, and the gate figures around it
+
+**Instrument and tree.** Worktree `agent-a7a1788f7e7a3b716`, a fresh checkout of `origin/main` at
+`0587e77`, with `npm ci` run in `bio-plane/`, `pdf-worker/` AND `ocr-worker/` BEFORE anything was
+measured. `agent-worker/` carries no dependencies and needed none — confirmed off its
+`package.json`, not recalled.
+
+**Baseline, measured on this tree before any edit: 196/196 suites green · 12,151 assertions · exit
+0**, 348.3s, with **0 suites skipped** and the runner's own header reading `196 suites (188 plane ·
+8 fleet)`. **The spawn brief's figure was 196/196 · 12,151 and it was RIGHT** — measured rather than
+trusted, and the skip count read as well as the exit status, which is the 2026-09-14 addition to
+CLAUDE.md's fresh-worktree trap (a battery can read green-but-one and exit 0 while a whole fleet
+member's suite was skipped by name).
+
+**Final on this branch: 197/197 suites · 12,2xx assertions · exit 0** — one new suite
+(`extractrun.test.mjs`, 62 assertions) plus the assertions added at the totality guards this landing
+moved. The per-suite attribution was taken by RE-RUNNING each guard rather than by subtraction.
+
+**TEN SUITES WENT RED ON THE FIRST FULL RUN AND EVERY ONE OF THEM WAS A TOTALITY GUARD DOING ITS
+JOB**, which is worth recording as a figure rather than as a feeling: adding two ops, one bound and
+one table to this plane is caught by ten independent registers, and not one of them had to be told
+about SK-8 in advance. They were `affordances` (an op in `NEEDS` classified nowhere), `airun`
+(ARM V5, the bound vocabulary pinned as an exhaustive SET), `bounds` (the capped-op roster and its
+driver census), `fleetbundles` (FL-10's committed-artifact guard, answered by `npm run build`),
+`gate-reads` (every read op classified GATED or UNGATED with a reason), `hygiene` (a suite that does
+not dispose its Miniflare instance), `identity-claims` (a comment claiming a member-only constraint
+with no `IDENTITY-CLAIM:` marker), `machine-fences` (a shadowing refusal no committed suite pins),
+`run-conditions` (ARM W3, the reader-role classification over `ai_runs`), and `rung-ladder` (a
+mutating op with neither a rung nor a stated absence). **Each was answered at its own site and
+corrected, never exempted.**
+
+**`gate-reads` EARNED ITS KEEP BEYOND BOOKKEEPING, and this is the measurement worth carrying.**
+Classifying `op=extractproposals` required writing the sentence that says what the answer ranges
+over — and the sentence could not be written truthfully. The minted-to-cited ratio beside the
+listing was counting machine-minted `content` rows with NO bundle predicate whenever a caller scoped
+by RUN, so a number in the answer moved with documents in projects the caller was never invited to.
+**An instrument had become an oracle, and the registry that caught it is one whose whole job is to
+make somebody write down what a read can see.** The denominator is now built from the documents the
+scope actually names, each through `#viewerSees`, capped at 64 for D-36's reason with the cap
+published in the answer.
+
+**FLOORS MOVED, each from the figure the instrument PRINTED and never by adding one.**
+`bounds.test.mjs`'s capped-op roster **31 → 32** (the walk reported 32 against a pin of 31), and its
+driver census moved with it. `REGISTER_FLOOR` in `bio-plane/scripts/coverage.mjs` moved in a SECOND
+commit from the figures a green `--strict` run printed as REPRODUCIBLE with the new suite already in
+the commit — which is that file's own rule and the reason it is a second commit.
+
+**NEGATIVE CONTROL: six arms, each armed ALONE with the others held open, every restore verified
+byte-identically by sha256 AND by content with a byte count printed and a minimum floored
+(`src/store.mjs` 2,035,836 B · `src/extractrun.mjs` 21,251 B), never `git checkout --`. ALL SIX AS
+DECLARED** — baseline 61/0 · strengthen 59/2 (2/2) · label 59/2 (2/2) · bound 60/1 (1/1) · coverage
+60/1 (1/1) · overstrict 58/3 (3/3).
+
+**ONE ARM CAME BACK WRONG BEFORE IT CAME BACK RIGHT, AND THE CORRECTION WENT TO THE SUBJECT.**
+`overstrict` promotes a name-only proposal from C to B, and the assertion about the row's stated
+REASON stayed GREEN — because `proposedReadingGrade` wrote each branch's LETTER and its REASON as
+two independent literals. The record would have published a **B explained by *this proposal names
+only a NAME***, and nothing in this repository could have noticed: a grade and the sentence saying
+what it rests on are exactly the pair this project must not let drift. The function now decides the
+letter once and interpolates it into its own sentence, the assertion reads the letter out of the
+reason, and the arm then failed all three as declared. **A surprising green is a finding about the
+arm; this one was a finding about the subject, which is the better outcome and the rarer one.**
