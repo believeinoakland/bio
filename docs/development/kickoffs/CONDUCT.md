@@ -213,6 +213,43 @@ same commit (`CORPUS-STANDARD.md` §4.1). A row with no design pointer is a row 
 honestly — find the section, or route the gap to BOB as the missing design, never spawn against
 the ledger.
 
+## THE ROW'S STATUS IS PART OF THE ROW. FLIP IT TO `running` AND **PUSH** BEFORE THE SPAWN, NOT AFTER.
+
+**Measured 2026-09-14 by CONDUCT #11, and it cost eight spawns.** The section above fixed
+*"the row does not exist"*. This is its residue: I drained an inbox into **twenty-two new rows
+in one commit**, wrote the spawn state on exactly ONE of them (CAP-12, because its flip was
+scripted with its predecessor's bookkeeping), pushed, and then spawned eight workers whose
+briefs told them — correctly — to STOP if their row read `queued`. Seven read `queued`. Two had
+already stopped and reported before I noticed; both diagnosed it from the remote precisely, one
+adding the distinction I had missed: **the flip was never WRITTEN, not merely unpushed**, since
+the same commit that added the row as `queued` added CAP-12's as `running`.
+
+**The rule, and it is one line:** a row you are about to spawn is flipped to `running` **with
+its spawn sentence**, gated and **pushed**, and only then does the worker start — the same
+merge → gate → PUSH → spawn order the section below demands for a dependency, applied to the
+row's own status. A worker reads its row from `origin/main`; a flip in your tree is a flip
+nobody can see, which is this file's oldest lesson wearing a new hat.
+
+**Why a new wave makes it likely rather than unlucky.** Flipping is per-row hand editing, and it
+is reliable while you flip one row beside one spawn. It fails the first time you author a COHORT:
+the rows all land in one commit, the flips are a second pass, and a second pass over twenty-two
+rows is exactly the check-then-act with no atomicity that `mintid` exists to refuse. **So the
+defence is not vigilance.** Until it is mechanised, flip the whole cohort in ONE edit before the
+gate, and read back `grep -c '· running'` against the number of workers you are about to spawn —
+the count is the check, and it is one command.
+
+**Mechanising it is worth a row when M0 has a free lane** (a worker reported it and it is
+recorded here rather than left in a report): `plancheck` cannot know what you spawned, but it
+CAN fail a row that names a live `agent-*` worktree while reading `queued`, and the spawn surface
+could write the status itself. Both are the same fix as `tools/mintid.mjs` — write the command,
+not a better warning.
+
+**What it cost, stated honestly, because it was not nothing and it was not much:** two workers
+spent a few minutes each establishing the stop and reported it well; six others hit the same gate;
+no tree was edited, no claim was taken, no id was minted, and the wave restarted on one push. The
+practice held exactly where it was designed to — **a brief that tells a worker to falsify its own
+premise is what turned a silent eight-way no-op into a five-minute correction.**
+
 ## A SPAWN BRIEF IS NOT A QUEUE ROW, AND AN ID IN THE LEDGER IS NOT AN ITEM.
 
 **Measured 2026-08-09: of eight items I spawned in one wave, SIX had no `QUEUE.md` row.** The id was
