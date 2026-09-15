@@ -881,9 +881,14 @@ const REGISTER_FLOOR = {
      190/189 · GREW by 7 arm(s)` - REC-97's cite-extent suite (seven declared arms, one new suite)
      on top of CAP-12's 1030. The branch's own block (1022/187/188, cut before SK-7 and CAP-12
      landed) was dropped at the merge and declared. One key set. Nothing FELL. FLEET_FLOOR unmoved. */
-  arms: 1037,
-  classified: 189,
-  corpus: 190,
+  /* MOVED 2026-09-14 by CONDUCT #11 at REC-93's integration (1037 -> 1044 · 189 -> 190 · 190 -> 191):
+     the MERGED run's own print read `arms 1044/1037 · classified 190/189 · corpus (suites read)
+     191/190 · GREW by 7 arm(s)` - REC-93's observation-log suite on top of REC-97's 1037. The
+     branch's own block (1022/187/188, cut at f38af22 before SK-7, CAP-12 and REC-97) was dropped
+     at the merge and declared. One key set. Nothing FELL. FLEET_FLOOR unmoved. */
+  arms: 1044,
+  classified: 190,
+  corpus: 191,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
