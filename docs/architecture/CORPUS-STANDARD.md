@@ -173,6 +173,9 @@ joins the table in the same commit that gives it front matter.
 | document | level | home (level-1) | since |
 | --- | --- | --- | --- |
 | `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 | 2026-09-14 |
+| `docs/development/CONTENT-SEARCH-DESIGN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 piece 2 (construct 9 names no level-1 home) | 2026-09-14 |
+| `docs/development/OBSERVATION-LOG-DESIGN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 piece 3 (construct 9 names no level-1 home) | 2026-09-14 |
+| `docs/development/EXTRACTION-BREADTH-DESIGN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 piece 4 and Part I | 2026-09-14 |
 | `docs/development/MULTI-INSTANCE-ISOLATION.md` | 2 | `BIO_System_Design.md` §distribution | 2026-09-14 |
 | `docs/development/STORE-AS-CACHE.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §14.2–14.3 | 2026-09-14 |
 | `docs/development/INVESTIGATIVE-SESSION.md` | 2 | `BIO_Case_Making_v0_1.md`; `BIO_Content_Framework_v0_10.md` Part I §12 | 2026-09-14 |

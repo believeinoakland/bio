@@ -61,9 +61,9 @@ authority is the file named, never this one.
 - **DEC-17** · 2026-08-01 — RULED 2026-08-01 (DEC-17). `BIO_Content_Framework_v0_10.md` §12 has recorded since v0.1 that a claim *"needs a standard of proof attached and that is doctrine rather than architecture — the next design conversation"*; this is that conversation. The question was what makes an unsupported case harder to state, and…  
   `docs/development/DEBT.md:124`
 - **DEC-17** — Removes DEC-17's strictest-across-citers composition and the project-less publication path — suites CORRECTED, never exempted.** Carries D-280's composed read, which becomes MOOT rather than wrong (see its row below).  
-  `docs/development/QUEUE.md:990`
+  `docs/development/QUEUE.md:1017`
 - **DEC-17** — The one genuine ambiguity was DECIDED FROM THE AUTHORITY rather than returned:** whether the group default still backs a publication is answered verbatim by the supersession table (*group default as a publication bar — Removed*).  
-  `docs/development/QUEUE.md:993`
+  `docs/development/QUEUE.md:1020`
 - **DEC-17** · 2026-08-03 — Q2 · SETTLED by DEC-17 — THE PROJECT DECLARES THE STRENGTH ITS WORK REQUIRES**, published beside the strength actually reached, with the GROUP setting the default a new project starts from (amended 2026-08-03).  
   `docs/development/research/RECONCILED.md:1406`
 - **DEC-18** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-18) — an ungraded leg is INERT, and UNRATED becomes the boundary case rather than the rule.** *"An ungraded leg doesn't contribute to a conclusion, but if there are other graded legs, then it doesn't suspend the conclusion either."*  
@@ -133,7 +133,7 @@ authority is the file named, never this one.
 - **DEC-34** · 2026-08-07 — — the container carries each included finding's current version with its ground partition, description, NAME in DEC-34's header, and DEC-54's policy pin; `[BOB-2 — RULED NO 2026-08-07: current version only, no disclosure of hidden alternatives]` — resolved. | **NC: DEC-44's** — publish a case of two findings with…  
   `docs/development/INVESTIGATIVE-SESSION.md:1221`
 - **DEC-35** · 2026-08-04 — PLACEMENT RE-BASED BY DEC-35 (2026-08-04, superseding the 2026-08-03 service-first note): in-plane and pdf-worker stay RULED OUT by bundle size; the IN-ACCOUNT path is the DEFAULT and its engine is now TESSERACT AS A FLEET MEMBER pending CPDF-12's deployed probe (DEC-42: Moondream returned NO-GO on coordinates;…  
-  `docs/development/QUEUE.md:1248`
+  `docs/development/QUEUE.md:1275`
 - **DEC-36** · 2026-08-04 — RULED 2026-08-04 (DEC-36): an INVISIBLE ancestor in the set is stated as an incompleteness and disclosed as nothing else.** D-15 §7.9 ("not its existence") and the truncation-honesty rule above pointed opposite ways on one bit, and Bob reconciled them BY SCOPE rather than one overriding the other: **D-15 governs…  
   `docs/architecture/BIO_Interaction_Constructs_v0_1.md:196`
 - **DEC-37** — — the class's totality assertion CORRECTED with a dated reason (SWEEP §4b(1) is the DECISION DEC-37 required), never exempted.  
@@ -159,7 +159,7 @@ authority is the file named, never this one.
 - **DEC-46** — The middle clause above is SUPERSEDED and is left standing only > because it is a dated record of a direction.** As it reads, *"work carrying > unsettled bias debt cannot be ratified for publication"* states the opposite > of the doctrine.  
   `docs/architecture/BIO_Design_Requirements_v2.md:457`
 - **DEC-46** · 2026-08-04 — AMENDED 2026-08-04 by DEC-46 (b), and it changes the first step:** import lands in a > **NEW PROJECT PER DISTINCT SOURCE BIAS**, states that it is doing so and why, and **may > NOT merge an imported lens into an existing project** — a lens is the frame a finding > was produced under, and merging two frames silently…  
-  `docs/development/MILESTONES.md:319`
+  `docs/development/MILESTONES.md:320`
 - **DEC-47** · 2026-08-07 — AMENDED 2026-08-07 (Bob; DECISIONS.md DEC-47 (access-parity amendment), IS-SWEEP-2026-08-07.md §4c) — the paragraph above is retained as the historical record but is superseded IN PART.** For PUBLICLY AVAILABLE documents fetched as part of the workflow, the member-browser UA (the UA the member's browser was using…  
   `docs/development/SOURCE-ACCESS.md:53`
 - **DEC-49** · 2026-08-07 — `civicos-ui/test/refusal-codes.control.mjs` (NEW — AMENDED INTO THIS CLAIM 2026-08-07, same session, before any handoff)** — the seven negative-control arms RUN against the REAL tree, each armed, restored, and the restore verified BY HASH, BY CONTENT and by RE-RUNNING.  
@@ -199,7 +199,7 @@ authority is the file named, never this one.
 - **DEC-52** · 2026-08-07 — IN RESERVE with a named trigger, not adopted pre-emptively *(AMENDED 2026-08-07: for publicly available documents fetched as part of the workflow, the member-browser UA is now PERMITTED by ruling — see the amendment note above; DEC-52, IS-SWEEP §4c)*.  
   `docs/development/SOURCE-ACCESS.md:278`
 - **DEC-53** — "Why do we want to count the number of times that a user approves a candidate?  
-  `docs/development/QUEUE.md:746`
+  `docs/development/QUEUE.md:773`
 - **DEC-55** — The earlier provisional (sidebar approval as the act of record) is SUPERSEDED as a gate; the sidebar remains a visibility and bulk-review surface, not a required approval. **What the ruling carries with it, from standing doctrine:** the record names the machine principal on every such act (DEC-55 det 4 / D-199.4 —…  
   `docs/archive/ledgers/DECISIONS-2026-08.md:2865`
 - **DEC-55.5** · 2026-08-09 — CORRECTED 2026-08-09 by VF-1 and the correction is the item's own subject.** This cell used to read `node bio-plane/scripts/control-register.mjs`, which is a MODULE with no entry point: it runs, prints nothing, and exits 0 over any tree whatsoever — an acceptance that could never fail, which is the shape of every…  
@@ -221,7 +221,7 @@ authority is the file named, never this one.
 - **DEC-65** — THE C-NUMBER IN DEC-65 IS WRONG AND IS CORRECTED IN THE ENTRY.** The rule requiring a named MEMBER to assert every declared part is **C-25.6 / `VERSION_GROUND_UNASSERTED`** (`checks/bio-checks.mjs:5802`), not C-25.15 — which is `VERSION_ORPHAN_ROW`, an unrelated rule about a row naming a version that is not there.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:3112`
 - **DEC-69** · 2026-08-10 — AMENDED the same day, and the amendment is the harder half: the operative word is FORCED, and it CUTS BOTH WAYS** — *"they shouldn't be forced to make decisions in bulk.  
-  `docs/development/QUEUE.md:1680`
+  `docs/development/QUEUE.md:1707`
 - **DEC-72** · 2026-08-10 — AMENDED 2026-08-10 (DEC-72, Bob): the third "phase" is now its own OBJECT.** The > collapse below STANDS for inquiry and finding — one recursive object, a finding being > an inquiry that reached a conclusion.  
   `docs/architecture/BIO_Case_Making_v0_1.md:479`
 - **DEC-72** · 2026-08-10 — SUPERSEDED BY DEC-72 — THE QUESTION DISSOLVES.** Bob's 2026-08-10 ruling makes the bar a property of the PROJECT, told to the publishing act at act time; no bar ever attaches to a finding, so no departed project's bar can linger and nothing composes across citers.  
@@ -231,11 +231,11 @@ authority is the file named, never this one.
 - **DEC-72** — WHAT IT DECIDED.** DEC-72 clause 6 rules that a finding can serve many cases; CASE-5's suite framed lifting `FINDING_IN_ANOTHER_CASE` as *"a surface question"* and handed it to CASE-6.  
   `docs/development/MEASUREMENTS.md:9062`
 - **DEC-72** — REDESIGN, RULED BY BOB.** A notification, not a copy (ORCHESTRATION's rule, and this entry was trimmed the same day for violating it): **the ruling is DEC-72; the design, its implications, the supersession table, AND the decomposition (CASE-1 … CASE-6, all M10, IC protocol against I3/I5) are…  
-  `docs/development/QUEUE.md:230`
+  `docs/development/QUEUE.md:257`
 - **DEC-72** — SUPERSEDED THE SAME DAY BY DEC-72, AND THE WORK IS MOOT RATHER THAN WRONG — stated here rather than left for a reader to collide with.** `CASE-AS-PRODUCTION.md`'s supersession table: *"D-280's severed-citer fix — moot rather than wrong: the code it fixed is removed with the composition."* Bars never attach to…  
-  `docs/development/QUEUE.md:706`
+  `docs/development/QUEUE.md:733`
 - **DEC-72** — DEC-72's definition of done was met IN THE LANDING TURN — `BIO_DATAPLANE_STATE.md` at v33 on the case-as-production model, `CASE-AS-PRODUCTION.md` archived with its one unbuilt clause STATED in the banner (D-309), `DECIDED` regenerated.**  
-  `docs/development/QUEUE.md:1064`
+  `docs/development/QUEUE.md:1091`
 ## D-
 
 - **D-10** · 2026-08-02 — SETTLED 2026-08-02 by the design pass this question asked for (session BOB).** Not doctrine: it is an application of the assembly rule already in `BIO_Interaction_Constructs_v0_1.md:258-268`, so it needed a design pass and not a ruling.  
@@ -265,7 +265,7 @@ authority is the file named, never this one.
 - **D-60** · 2026-07-30 — RULED by Bob 2026-07-30 on the measurement in D-60: two fetches of a Legistar page three seconds apart differ by 31% of their bytes, all of it ASP.NET postback state, with the other 68.6% identical.  
   `docs/development/UI-PLAN.md:350`
 - **D-68** · 2026-08-01 — Suggested activation order — SUPERSEDED 2026-08-01.** The version below is kept as history: *promote RECORD (M1's scheduler) and FRAMEWORK (D-68), CONTENT-PDF finishes CPDF-2 and goes dormant.* All three happened; the queue drained to 44 done and 0 runnable.  
-  `docs/development/MILESTONES.md:560`
+  `docs/development/MILESTONES.md:561`
 - **D-72** · 2026-07-30 — RULED by Bob: BIO's contribution should "improve the grade of connections overall".  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:54`
 - **D-73** · 2026-07-30 — RULED by Bob: the meeting-agenda-minutes sequence is ONE form of connected data, and the system must support many types of happenings and progressions, his example being need, budget request, budget approval, RFP, responses, award, signed contract.  
@@ -339,7 +339,7 @@ authority is the file named, never this one.
 - **D-127** — D-127 (the collapse, RULED) · JG-1, JG-2, JG-3, JG-4, JG-11, JG-14 · > `data/citations.json` / C-8.1's disposition · the `focus → inquiry` rename, the > concept's third name. > **Areas:** RECORD, UI.  
   `docs/archive/research/BUILD-ORDER.md:372`
 - **D-127** — D-127 (the collapse, RULED) · D-138 (the drift guard that does not read the authority it claims to check) · the `focus → inquiry` rename, the concept's third name · `data/citations.json` / C-8.1's disposition.  
-  `docs/development/MILESTONES.md:444`
+  `docs/development/MILESTONES.md:445`
 - **D-129** · 2026-08-02 — Q9 · SETTLED 2026-08-02→03 — the plane half was always D-129's answer; the N-8 form is now designed, by the deliberate pass the entry required rather than in passing (session BOB, 2026-08-03).**  
   `docs/development/research/RECONCILED.md:1570`
 - **D-140** — (D-140); producer-published `options[]` (GAP-Q2); `queue_state` for mute/snooze; the relevance filter P-88 (DEC-10, RULED, MISSING); the ageing job P-85 (MISSING) | B8, B9, B1 · **HOLE-1** (CONDITION has no carrier) |  
@@ -353,7 +353,7 @@ authority is the file named, never this one.
 - **D-157** · 2026-08-02 — `test/members.test.mjs:192` asserts the current behaviour and must be CORRECTED, never exempted** (`CLAUDE.md`), with a comment saying why the old assertion was wrong.  
   `docs/archive/ledgers/QUEUE-2026-08.md:973`
 - **D-164** · 2026-09-14 — Bob RULED 2026-09-14 that the record never moves an authored edge's target without a member's act, even when the passage is byte-identical — folded into Part II §14.4/§18 and the D-164 study §5.8; it shapes the D-164 IC when it arrives (act 6).  
-  `docs/development/QUEUE.md:461`
+  `docs/development/QUEUE.md:488`
 - **D-173** — ving app.html against the REAL plane in miniflare), civicos-ui/test/subject-view.test.mjs (ONLY the mock's reply shape, CORRECTED with a dated comment and never exempted — see D-173), docs/development/CLAIMS.md (this entry)  
   `docs/archive/ledgers/CLAIMS-2026-08.md:887`
 - **D-173** — Fixed at one seam (`recR`), the subject-view mock CORRECTED to the real envelope with a dated comment, and the new harness drives the real plane so the class cannot come back silently.  
@@ -447,7 +447,7 @@ authority is the file named, never this one.
 - **D-280** · 2026-08-09 — The arm's shape is deliberately unchanged otherwise — still the first citing project only, still falling through to the RULED admin fallback.  
   `docs/development/DEBT.md:252`
 - **D-280** — — the code it fixed is removed with the composition — and its row now says so above its own report; the work was correct for the model that existed, and its controls are the record of what that model did, including that a WITHDRAWN project was TIGHTENING a bar on a document it had left, which is part of why the…  
-  `docs/development/QUEUE.md:249`
+  `docs/development/QUEUE.md:276`
 - **D-282** · 2026-08-09 — THE THRESHOLD THIS ROW NAMED UNDETERMINED IS NOW BISECTED, AND THE ROW'S MODEL OF IT WAS TOO SIMPLE — CORRECTED HERE.** For a SINGLE write it is the pipe buffer exactly: 65,573 bytes survive and 65,580 do not, and every partial arrival observed is an exact multiple of **65,536**.  
   `docs/development/DEBT.md:251`
 - **D-285** · 2026-08-09 — when the lists moved — the pin working — and was CORRECTED, never exempted, with a dated reason and a DRIVEN cross-check proving the UI family catches every seed.  
@@ -457,9 +457,9 @@ authority is the file named, never this one.
 - **D-302** · 2026-09-10 — ct pin reds on every added paragraph, while this population is FIVE hand-written sentences in append-only history and a SETTLED IC, so the exact figure is the honest ratchet — `LEDGER`'s own argument for holding counts exactly.  
   `docs/development/DEBT.md:193`
 - **D-304** — Wider than briefed and AMENDED into the claim with reasons (the grade change forces the census arms to move or the ratchet reds on a correct estate); the cry-wolf half of the flow's scoping was narrowed only where the grade would otherwise PRINT a claim the record cannot support; **the quiet half is D-304, a row…  
-  `docs/development/QUEUE.md:676`
+  `docs/development/QUEUE.md:703`
 - **D-310** — and the seven roster acts DECIDED, not skipped: whether they move onto the same mechanism or stay stated-as-store-enforced, with the reasoning at the table**, because gating one act and not those seven is a consequence across the act catalogue.  
-  `docs/development/QUEUE.md:1087`
+  `docs/development/QUEUE.md:1114`
 - **D-311** · 2026-09-10 — ONE PATH ADDED: `docs/DECIDED.md`, REGENERATED AND NOT HAND-EDITED** `node tools/decided.mjs` re-run because this item RULES on something — the seven roster acts STAY `NON_ACTS`, argued at their table and carried as D-311 — and `plancheck` fails on  
   `docs/development/CLAIMS.md:2575`
 - **D-311** · 2026-09-10 — DECIDED: they STAY**, argued at their own table in `affordances.mjs` and carried as the item **D-311**, which also carries the machine fence (`MACHINE_CANNOT_PUBLISH` is the same class one rule over and is deliberately NOT closed here — a machine credential's published act set is byte-unchanged, measured).  
@@ -467,9 +467,9 @@ authority is the file named, never this one.
 - **D-311** — The seven roster acts stay `NON_ACTS`, "position-enforced by the store", and that is DECIDED rather than deferred** — the argument is at their own table in `affordances.mjs` and the item is `D-311`.  
   `docs/development/INTERFACE-CHANGES.md:5539`
 - **D-311** — THE SEVEN ROSTER ACTS DECIDED: THEY STAY, argued at their own table and filed as D-311** — publish was already published with an incomplete derivation (an overclaim, which this record ranks above a gap; nothing lies about acts nobody offers); they need a DIFFERENT, per-pair fact; they are seven positions, not one;…  
-  `docs/development/QUEUE.md:1091`
+  `docs/development/QUEUE.md:1118`
 - **D-315** — Then the mechanization question, DECIDED not deferred: whether a cheap arm-anchoring check (each arm's anchor occurs exactly once in its subject, the D-315 exactly-once shape) can run battery-side without running the arms — or argue at the site why the census stays periodic.  
-  `docs/development/QUEUE.md:1180`
+  `docs/development/QUEUE.md:1207`
 - **D-323** · 2026-09-13 — `level-empty-<level>` (FLEET's, one line in `harness.mjs`, plus the three mock-backed assertions CORRECTED rather than exempted, plus the `reportsAs()` bridge re-checked).  
   `docs/development/DEBT.md:279`
 - **D-324** · 2026-09-13 — (1) THE FIXTURES CORRECTED, NEVER EXEMPTED, each with the reason at the site: seven `kind: "new-version"` candidates across `harness.test.mjs` (B4, B5, B8, B9) and `fanout.test.mjs` are now `basis-version`, §9's main output and what a composing run actually proposes.  
@@ -477,7 +477,7 @@ authority is the file named, never this one.
 - **D-329** · 2026-09-13 — AND THE ROW'S OWN CONCLUSION IS OVERTURNED ON A MEASUREMENT: A STATIC INSTRUMENT CAN SEE THIS.** This row held that *"an assertion label composed at run time exists in no file, so no static instrument can see it and only a periodic census can."* That is true of the RENDERED label and FALSE OF THE TEMPLATE, which…  
   `docs/development/DEBT.md:281`
 - **D-329** — D-329 — the row's own conclusion OVERTURNED on a measurement: a run-time-composed label exists in no file only as RENDERED; its TEMPLATE does, and `composedSpan()` (new `scripts/armdecay.mjs`) catches a fragment that resolves against a suite's template only by eating its `${…}` slot — reach 2,700 label quotes from…  
-  `docs/development/QUEUE.md:1134`
+  `docs/development/QUEUE.md:1161`
 - **D-330** · 2026-09-13 — AMENDED MID-ITEM, 2026-09-13: `docs/development/DEBT.md` gains a SECOND row beyond D-330's disposition — **D-333**, the class this item's measurement establishes and its repair does not close: a driver's declared TALLY decays while every one of its anchors stays live, and no static check can see the difference…  
   `docs/development/CLAIMS.md:3205`
 - **D-331** · 2026-09-13 — RULED AS THIS ROW RECOMMENDED, AND THE RULING DECLINES BOTH HALVES OF THE FALSE CHOICE: A THROWING DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING.** `scripts/armdecay.mjs`'s `preflight()` is the shared dry pass — it counts every arm's quote in the file that arm will write, prints the WHOLE table, and only…  
@@ -497,7 +497,7 @@ authority is the file named, never this one.
 - **IC-1** · 2026-08-08 — RESPONSES · RESOLUTION · SETTLED — recorded by CONDUCT 2026-08-08 **RESPONSES.** CONDUCT answered for the consuming areas (the IC-1 precedent).  
   `docs/development/INTERFACE-CHANGES.md:1916`
 - **IC-1** — IC-1 AS AMENDED (incl. `doc-para`) is RESOLVED — CONDUCT answered AGREE on dormant FRAMEWORK's behalf in writing, `INTERFACE-CHANGES.md` (protocol step 3). The dangling CPDF-10 dependency is fixed in place: the handover's "CPDF-8" was RECONCILED §3.3's name for the FORMAT registry, now  
-  `docs/development/QUEUE.md:555`
+  `docs/development/QUEUE.md:582`
 - **IC-2** — nd:"doc-para", ref, para, run}) with wrappers byte-identical to linkWrapper; tracked changes carry author, date and the SUPERSEDED WORDING (excluded from text — the document as served — held attributed in the envelope); comments with author/date; unreadable parts stated ({part, why}), never invented.…  
   `docs/archive/ledgers/QUEUE-2026-08.md:1352`
 - **IC-12** — nforces it, never copied), bio-plane/test/citeinquiry.test.mjs (NEW — this item's suite), bio-plane/test/cite.test.mjs (CORRECTED, never exempted, with dated comments where its NOT_A_PROJECT fixture predates the widening), bio-plane/test/affordances.test.mjs + bio-plane/test/conclude.test.mjs +…  
@@ -557,7 +557,7 @@ authority is the file named, never this one.
 - **IC-39** — interfaces owned: IC-39's `reading.text_source` chain, AMENDED (an optional `extent` on a derivation step).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:7022`
 - **IC-62** — THE ENDING WAS ADDED, NOT THE COMMENT CORRECTED, and the argument is the item.** Correcting the header would have closed the CHEAP half and cemented the EXPENSIVE one: the disagreement was the symptom, the misattribution was the bug, and editing the header to admit `cancelled` would have left a machine refusal…  
-  `docs/development/QUEUE.md:1480`
+  `docs/development/QUEUE.md:1507`
 - **IC-74** — `caseflip.test.mjs`'s pin was CORRECTED, never exempted, and now drives a finding published into two cases end to end; `multicase.test.mjs` re-runs the census every battery and asserts zero scalar readers remain.  
   `docs/development/kickoffs/RECORD.md:404`
 - **IC-75** — Superseded act-list pins in OTHER suites, CORRECTED with dated reasons and never exempted** — the set is MEASURED from the battery delta rather than guessed, and every one is named in an amendment to this claim before it is edited. - `docs/development/INTERFACE-CHANGES.md` — the appended **IC-75** row (I3), filed…  
@@ -573,7 +573,7 @@ authority is the file named, never this one.
 - **IC-83** — (IC-83 ACCEPTED, AMENDED at REC-82's landing: `page_count` is a column; a leg naming a PART of an inquiry is refused and `content_id` is legitimately NULL for an inquiry target or a byteless target, STATED which).  
   `docs/development/kickoffs/CONDUCT-NEXT.md:79`
 - **IC-83** — The `content` table before `host_governor`, two indexes, in purge's TABLES (both arms); columns exactly IC-83's PLUS `page_count INTEGER` — required by IC-83's own Rules prose and absent from its column list (IC-83 AMENDED at this landing, the column recorded, not widened).  
-  `docs/development/QUEUE.md:785`
+  `docs/development/QUEUE.md:812`
 - **IC-84** · 2026-09-14 — One superseded leak-guard pin (`gate-reads.test.mjs`'s whole-key-set assertion on `op=list`) CORRECTED with a dated reason and two arms proving `limit` is viewer-independent while `total` is not — never exempted.  
   `docs/development/INTERFACES.md:504`
 - **IC-84** · 2026-09-14 — CHANGING — IC-84 ACCEPTED 2026-09-14 (protocol step 4): 14.0.0 keeps working; SETTLED when REC-83 and REC-84 land and UI-61 confirms the composer emits `extent`. ### What it is  
@@ -635,7 +635,7 @@ authority is the file named, never this one.
 - **C-25.19** — — roster/classification/ratchet/pin rows for the six new ops and the three new columns, each CORRECTED with a dated reason, never exempted.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2579`
 - **C-25.34** — Two superseded assertions CORRECTED, never exempted** — CASE-1's `version_sha is NULL` (now the pin) and `versionstate`'s registry-equality floor, which caught the new code immediately and was working as designed; CASE-1's control driver re-run, all five arms still red.  
-  `docs/development/QUEUE.md:1002`
+  `docs/development/QUEUE.md:1029`
 - **C-27** — Plus roster/ratchet/pin rows in whichever of `bio-plane/test/{bounds,meaning-bounds,capability,gate-reads,hygiene,versions,conformance}.test.mjs` the change makes owed, each CORRECTED with a dated reason and never exempted.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2641`
 - **C-27.13** · 2026-07-30 — , RULED BY BOB 2026-07-30: *"the appearance of an assistant-surfaced focus should communicate that it is one."* The plane holds the STATE half and SK-3 cites it (`C-27.13`: a suggestion may only ever arrive as something put forward; `C-32.2`/`C-32.8`: the acts that would make it the record's own  
@@ -725,7 +725,7 @@ authority is the file named, never this one.
 - **REC-44** — AN INSTRUMENT CORRECTED MID-RUN, reported not smoothed: arm (c) first fired 4 because "finding 1 shows Links C" was true whether the frozen PAIR carried it or not — a leg of finding 1 is graded connection C — so the pair is now read out of the `pub-axisrow` that names the finding; re-run 4 -> 6.  
   `docs/archive/ledgers/QUEUE-2026-08.md:2135`
 - **REC-44** — Nothing writes that shape today." The work: each of the nine scalar readers corrected to answer set-valued, EACH CALLER DECIDED INDIVIDUALLY (some want all cases, some want "in this case", a different question they should be asking); a NAMED refusal for the ambiguous REC-44 derivation (a member of case A published…  
-  `docs/development/QUEUE.md:1077`
+  `docs/development/QUEUE.md:1104`
 - **REC-47** · 2026-08-04 — 21 · I3: `op=publish` requires an authored bias acknowledgement · PROPOSED, RESPONSES, ACCEPTED, CHANGING, CHANGED AND SETTLED 2026-08-04 (REC-47) - **Interface:** I3 (plane → UI), **6.0.0 STABLE** → **7.0.0** - **Proposer and owner to land it:** `RECORD` (session rec47-agent), from REC-47 / DEC-46 (a)  
   `docs/development/INTERFACE-CHANGES.md:777`
 - **REC-48** · 2026-08-04 — CORRECTED 2026-08-04 AT THIS ITEM'S OWN LANDING — MY RE-MEASUREMENT WAS WRONG AND REC-48'S ORIGINAL REPORT WAS RIGHT.** I wrote here that `\s*` crosses newlines so a wrapped control still matches, and that the 60-line window was what bit REC-48.  
@@ -797,7 +797,7 @@ authority is the file named, never this one.
 - **REC-75** · 2026-08-08 — WHAT `composition` PUBLISHES IS DECIDED AND SAID: THE RECORD'S BYTES**, read back from the projection, labelled `composition_of: "record"`, and asserted equal to what `op=basisversions` publishes for the same version.  
   `docs/archive/ledgers/QUEUE-2026-08.md:417`
 - **REC-81** · 2026-09-14 — [CORRECTED at REC-81's landing, 2026-09-14: the measured offset is 89 — every Part I heading moved by exactly 89; the 84 propagated from this entry into two schema paragraphs and two queue lines before REC-81's alignment sweep caught it]* (its front matter, Contents included;  
-  `docs/development/QUEUE.md:493`
+  `docs/development/QUEUE.md:520`
 - **REC-82** — The registry is marked CHANGING now (step 4) and returns to STABLE at SETTLED when REC-82 (the table and the writer on the `pdf-page` and `document` arms) and REC-83 (the reads) have landed and the two nullable columns are NOT NULL — the IC's own SETTLED condition.  
   `docs/development/INTERFACE-CHANGES.md:6077`
 - **REC-82** · 2026-09-14 — AMENDED at REC-82's landing — 2026-09-14 by CONDUCT #10 (two facts the landing established; the version stays 1.11.0, still CHANGING) 1.  
@@ -877,7 +877,7 @@ authority is the file named, never this one.
 - **UI-38** · 2026-08-07 — SCOPE AMENDED 2026-08-07 by CONDUCT, enacting the investigative-session handover — and this is the collision `IS-SWEEP-2026-08-07.md` §5a flagged, which would have been expensive to discover late.** `INVESTIGATIVE-SESSION.md` §14a says **the running-session surface is designed ONCE for all AI features.** UI-38 was…  
   `docs/archive/ledgers/QUEUE-2026-08.md:1660`
 - **UI-38** — UI-38's SCOPE IS AMENDED, which is the collision the sweep flagged and the one thing here that would have been expensive to discover late:** §14a says the running-session surface is designed ONCE for all AI features, and UI-38 was already building the assistant's surface registry — so two AI features would have…  
-  `docs/development/QUEUE.md:140`
+  `docs/development/QUEUE.md:167`
 - **UI-40** — CORRECTED AT REBASE, and the original line was wrong.** It said no other worker held `bio-plane/**`; UI-40 (ui40-agent) held `publishedCase()`'s success return under its own IC at the same time, on a local-main merge this worktree's base predated.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2067`
 - **UI-40** · 2026-08-05 — CORRECTED 2026-08-05 at integration: this scope asserted the surface "already renders" all three, and UI-40 MEASURED THAT IT RENDERED NONE OF THEM** — zero reads of `.serves`, zero of `.names`, and the only `.unresolved` reads in `civicos-ui` belong to unrelated surfaces.  
@@ -921,7 +921,7 @@ authority is the file named, never this one.
 - **CAP-3** — accepts-when bio-plane/test/archive-monitoring.test.mjs: three source_refused outcomes drive the tick to fire the fallback (grade C, 2-hop chain, failing run reset by the archive success = the RULED re-fetch-for-monitoring).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:164`
 - **CAP-3** — "Design, not built" (CAP-3 wired it); `SOURCE-ACCESS.md` still says the fallback is IDLE; `CAPTURE-SCALING.md` §Job one SUPERSEDED by `reuseDecision` (recency of fetch, 24 h, because the stability gate measured as reusing nothing); `CAPTURE-FIDELITY.md` records `SUBRESOURCE_CAP` ~40 — it is 400;…  
-  `docs/development/QUEUE.md:1343`
+  `docs/development/QUEUE.md:1370`
 - **CAP-4** — — DECIDED, queued as CAP-4 |  
   `docs/archive/research/MACHINE-PROCESSES.md:96`
 - **CAP-4** — — DECIDED, queued CAP-4 | M2 |  
@@ -933,7 +933,7 @@ authority is the file named, never this one.
 - **CAP-4** · 2026-07-31 — DECIDED 2026-07-31 under Bob's delegation and queued as CAP-4**; the mandatory-ness is this project's decision rather than a ruling of his, and is labelled that way · D-54 (the installer does not detect the Workers plan) · D-63 / D-66  
   `docs/development/MILESTONES.md:147`
 - **CAP-4** — M2 · DECIDED, queued CAP-4 | | CAPTURE-SCALING open · freshness window, recurrence threshold | CAPTURE | M2 (measurement first) | | ARCHIVE-FALLBACK · per-document cadence by volatility | RECORD · CAPTURE | M1 | | ARCHIVE-FALLBACK · Memento rather than Wayback | RECORD | M6 |  
-  `docs/development/MILESTONES.md:633`
+  `docs/development/MILESTONES.md:634`
 - **CAP-7** — `docs/DECIDED.md` — REGENERATED, never hand-edited (`node tools/decided.mjs`), because this landing moves it twice: this block's own closing line about whose call materiality is gets indexed as a CAP-7 entry, and Part II §16's Drive paragraph growing shifts D-194's cited line by +4.  
   `docs/development/CLAIMS.md:4493`
 - **CAP-7** — MATERIALITY IS NOT RULED HERE and is CONDUCT's on the CAP-7 row.** Nothing was built: no handler, no host-stack entry, no schema.  
@@ -947,7 +947,7 @@ authority is the file named, never this one.
 - **CPDF-12** · 2026-08-04 — no page-shaped artifact is produced there is SUPERSEDED and its suite corrected, never exempted. enacted: 2026-08-04 · CONDUCT — SEQUENCED WITH CPDF-12 rather than beside it (both want page-shaped output from workerd; two renderers would repeat D-164): CPDF-12's scope gains the real layout.note join — a server-side…  
   `docs/archive/ledgers/DECISIONS-2026-08.md:2404`
 - **CPDF-14** · 2026-09-10 — CPDF-14-on-verdict (CORRECTED 2026-09-10 by CONDUCT: the "CPDF-12-on-GO" this row carried was never satisfiable — CPDF-12's own landed line recorded NO-GO on the default path and re-scoped itself to the composed-shape measurement, which was never run and had no row; it is CPDF-14 now, and CONDUCT #8's handoff…  
-  `docs/development/QUEUE.md:1250`
+  `docs/development/QUEUE.md:1277`
 ## COFF-
 
 - **COFF-1** · 2026-09-14 — nk to a Google Drive file should keep the link and export an OpenDocument version that the content is extracted from."* RULED, folded into `BIO_Content_Framework_v0_10.md` Part II §16.  
@@ -957,7 +957,7 @@ authority is the file named, never this one.
 - **COFF-3** · 2026-08-03 — undetermined marker kept; streaming-to-64-MiB NOT built, deferred), bio-plane/test/ooxml.test.mjs (the bound assertions CORRECTED to the measured metric, never exempted), bio-plane/src/formats.mjs (ONE registerFormat(xlsxEntry) call plus its import — nothing else), docs/development/INTERFACE-CHANGES.md (APPEND:…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:528`
 - **COFF-6** · 2026-09-14 — milestone: M2 — the content axis reaches OpenDocument, because Bob RULED (2026-09-14) that a Google Drive link keeps the link and extracts from the OpenDocument export; COFF-6's "ODF is ZERO in 43,282 assets → DO NOT BUILD" was about NATIVE ODF assets and stands as a measurement — the Drive export path makes ODF…  
-  `docs/development/QUEUE.md:1270`
+  `docs/development/QUEUE.md:1297`
 - **COFF-9** · 2026-09-14 — — its ODF recommendation was honoured, overtaken, and then RE-WARRANTED FROM A DIFFERENT DIRECTION, and this bullet is CORRECTED on 2026-09-14 rather than left standing, because its last sentence became false the day COFF-9 landed.  
   `docs/development/OFFICE-FORMATS.md:12`
 ## PL-
@@ -993,7 +993,7 @@ authority is the file named, never this one.
 - **PL-13** — PL-13's assertions pin the DEFECT and must be CORRECTED when it is fixed | plane |  
   `docs/archive/ledgers/QUEUE-2026-08.md:557`
 - **PL-15** — ilters on; `hygiene` caught a conditional `process.exit(1)`), and four superseded assertions in `current.test.mjs` were CORRECTED, never exempted.  
-  `docs/development/QUEUE.md:946`
+  `docs/development/QUEUE.md:973`
 - **PL-16** · 2026-08-10 — Everything from the paragraph below down to the wave rule is SUPERSEDED HISTORY, kept because a wave position deleted is a wave position nobody can audit** — and it was stale by seven waves when this correction was written, which is the receipt for checking the tree.  
   `docs/archive/ledgers/QUEUE-2026-08.md:472`
 - **PL-18** · 2026-08-09 — CORRECTED 2026-08-09 BY PL-18, WHICH MEASURED IT: that claim is FALSE on the axis the ruling is about.** `contribute` alone permitted a `contribute`-holder OUTSIDE the project, which is exactly what the ruling forbids.  
@@ -1001,7 +1001,7 @@ authority is the file named, never this one.
 - **PL-18** · 2026-08-09 — CORRECTED 2026-08-09 by PL-18, which MEASURED it: FALSE on the axis the ruling is about.** `contribute` alone permitted a `contribute`-holder OUTSIDE the project, which the ruling forbids.  
   `docs/archive/ledgers/QUEUE-2026-08.md:622`
 - **PL-18** · 2026-08-10 — STATUS CORRECTED 2026-08-10 by CONDUCT: it read `running` with no worker alive** — the holding session is gone, its claim was one of the four released as stale the same day, and the work has been on `main` since.  
-  `docs/development/QUEUE.md:1666`
+  `docs/development/QUEUE.md:1693`
 - **PL-18** · 2026-08-09 — SUPERSEDED READINGS OF THE ROW ABOVE, moved out of the table 2026-08-09 by CONDUCT.** PL-18 found this metric occupying **THREE table rows** with three different figures, newest first — so the table asserted its own value three times and a reader had no way to tell which was current.  
   `docs/development/VERIFICATION.md:56`
 - **PL-19** · 2026-08-09 — STEP TWO IS UNMERGED AND IT CLOSES A LIVE OVERCLAIM, AND WHEN IT LANDS THREE OF MY ASSERTIONS MUST BE CORRECTED** **PL-19 (`7844e16`, `4b3f7a7` on `worktree-agent-a875e2afd837947d7`) IS NOT IN `main`** — measured with `git branch -a --contains`, not assumed.  
@@ -1035,7 +1035,7 @@ authority is the file named, never this one.
 - **M0-15** · 2026-08-08 — RE-MEASURING A TRUE BASELINE: THE RECIPE, CORRECTED 2026-08-08 (M0-15) **Do not use `git stash` to park work while you re-measure at HEAD.** The stack is shared by every worktree in this repository (the row above), so `git stash pop` is a  
   `docs/development/ORCHESTRATION.md:202`
 - **M0-23** — Correct the fixture to the wire shape and delete the phantom keys, with any assertion that read them CORRECTED at its site, never exempted.  
-  `docs/development/QUEUE.md:662`
+  `docs/development/QUEUE.md:689`
 
 ## Rulings carrying no id
 
@@ -1616,33 +1616,33 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-07-31** — CORRECTED 2026-07-31, and the correction is worth reading because the original was right for a premise that stopped holding.** The rule said "`ARCH` works in the MAIN checkout; area sessions work in worktrees", and its reason was that `ARCH` edits the cross-cutting registry — `CLAIMS.md`, `INTERFACES.md`, this…  
   `docs/development/PARALLELISM.md:226`
 - **2026-08-10** — 2026-08-10 · BOB · THE DECIDED INDEX IS IN THE LOOP, AND THERE IS A NEW GATE.** Branch `bob-corpus-index` (596c697), green, unmerged.  
-  `docs/development/QUEUE.md:78`
+  `docs/development/QUEUE.md:105`
 - `docs/DECIDED.md`, generated from every ruling in the corpus — 585 of them, 161 KB against the corpus's 7.4 MB.  
-  `docs/development/QUEUE.md:83`
+  `docs/development/QUEUE.md:110`
 - `plancheck` now FAILS on a stale `docs/DECIDED.md`.** Any turn that rules on anything must run `node tools/decided.mjs` and commit the result, exactly as a version bump must leave `check-versions` green.  
-  `docs/development/QUEUE.md:86`
+  `docs/development/QUEUE.md:113`
 - a stale `docs/DECIDED.md`. Any turn that rules on anything runs `node tools/decided.mjs` and commits the result. - No queue item is superseded and no worker should be stopped.  
-  `docs/development/QUEUE.md:114`
+  `docs/development/QUEUE.md:141`
 - **2026-09-10** — 2026-09-10 · BOB · DIST'S DELEGATION TO FLEET IS ANSWERED — THE DIRECTION IS DECIDED AND IT IS ONE FLEET ITEM FOR YOU TO MINT AND RUN.** DIST's DELEGATION (CLAIMS.md, 2026-09-10) asks for the per-member build step FLEET deliberately deferred: `newgroup` is a Worker that cannot run wrangler or bundle, so an…  
-  `docs/development/QUEUE.md:211`
+  `docs/development/QUEUE.md:238`
 - lands, the design doc's ruled-not-built banner down and the doc archived, the DECIDED index regenerated — write it into the closing item's accepts-when.  
-  `docs/development/QUEUE.md:241`
+  `docs/development/QUEUE.md:268`
 - `docs/DECIDED.md` regenerated. - **No queue item is superseded and no worker should be stopped.** The one kickoff this supersedes is BOB's own (`BOB-NEXT.md`), corrected in the same turn.  
-  `docs/development/QUEUE.md:275`
+  `docs/development/QUEUE.md:302`
 - (2) Bob AMENDED 5.6: attribution of a member's observation or opinion in a published case is the ATTESTING MEMBER's choice among the group, the project, the member's cover, or the member by name; an off-the-record source's anonymity is valid.  
-  `docs/development/QUEUE.md:373`
+  `docs/development/QUEUE.md:400`
 - **2026-09-14** — 2026-09-14 · BOB #10 · BOB RULED THE GOOGLE DRIVE HARVEST, AND PART II IS REVIEWED.** Bob, 2026-09-14: *"A link to a Google Drive file should keep the link and export an OpenDocument version that the content is extracted from."* RULED, folded into Part II §16.  
-  `docs/development/QUEUE.md:433`
+  `docs/development/QUEUE.md:460`
 - version that the content is extracted from."* RULED, folded into Part II §16.  
-  `docs/development/QUEUE.md:435`
+  `docs/development/QUEUE.md:462`
 - One STATED-AND-NOT-DECIDED question is carried forward rather than closed with the item:** whether a SELECTS reader publishing a fact COMPUTED FROM the rows it selected (a count, a newest timestamp) is still SELECTS.  
-  `docs/development/QUEUE.md:892`
+  `docs/development/QUEUE.md:919`
 - D, driven through the op; the six keys are gone from finding bytes and `caseflip.test.mjs`'s still-there assertions are CORRECTED (never exempted) to say so; the stranger-verification path still passes end to end with the instance unreachable.  
-  `docs/development/QUEUE.md:1049`
+  `docs/development/QUEUE.md:1076`
 - **2026-08-10** — : (1) `docs/BIO_DATAPLANE_STATE.md` is AMENDED to the case-as-production model — not afterwards, not as a follow-up row; (2) `docs/development/CASE-AS-PRODUCTION.md` is ARCHIVED to `docs/archive/`, which `decided.mjs` and `mintid` both still scan, so archiving is not lossy; (3) `node tools/decided.mjs` regenerated…  
-  `docs/development/QUEUE.md:1069`
+  `docs/development/QUEUE.md:1096`
 - **2026-07-31** — CAPTURE-SCALING.md item 6, DECIDED 2026-07-31 under Bob's delegation — read that item before building, it carries four specifics.  
-  `docs/development/QUEUE.md:2107`
+  `docs/development/QUEUE.md:2134`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:240`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  

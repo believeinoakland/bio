@@ -4807,3 +4807,23 @@ found and did NOT touch, because it is in nobody's claimed path: the LAST LINE o
 without its `D-` prefix and with every backticked span stripped out — which is
 `printf`/`-m` damage in the shape CLAUDE.md's own trap section describes. `plancheck`
 passes over it. It is named here so it is not lost.
+
+## CLAIM 2026-09-14 BOB (Part II §18 pieces 2–4 designed as three level-2 documents; the three homeless level-1 documents)
+session: BOB #11 (worktree `bio-worktrees/BOB`, branch `bob-audit`)
+opened: 2026-09-14
+authority: `kickoffs/BOB.md` ("What this session may write"); `BIO_Content_Framework_v0_10.md` Part II §18 (pieces 2, 3, 4 are the architect's); `BIO_System_Design.md` §3 (rows 11, 13, 15 carry no level-1 home); `CORPUS-STANDARD.md` §4.3 and §5
+paths:
+  - `docs/development/CONTENT-SEARCH-DESIGN.md` — NEW (piece 2)
+  - `docs/development/OBSERVATION-LOG-DESIGN.md` — NEW (piece 3)
+  - `docs/development/EXTRACTION-BREADTH-DESIGN.md` — NEW (piece 4)
+  - `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` — NEW (construct 11's home)
+  - `docs/architecture/BIO_Publication_v0_1.md` — NEW (construct 13's home)
+  - `docs/architecture/BIO_Distribution_v0_1.md` — NEW (construct 15's home)
+  - `docs/architecture/BIO_Content_Framework_v0_10.md` — Part II §18's table and front matter only (pointers to the designs)
+  - `docs/architecture/BIO_System_Design.md` — §3 rows 5, 9, 11, 13, 15 and the closing paragraph; front matter
+  - `docs/architecture/CORPUS-STANDARD.md` — §5's governed table, three rows
+  - `docs/architecture/README.md` — the catalogue entries for the three new level-1 documents
+  - `docs/development/DEBT.md` — appended design pointers on D-222, D-196, D-319, D-283 (text cells only; dispositions are CONDUCT's)
+  - `docs/development/MILESTONES.md` — one pointer sentence under M5
+  - `docs/development/QUEUE.md` — the BOB INBOX only (append)
+released:

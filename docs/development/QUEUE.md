@@ -75,6 +75,33 @@ _(drained by CONDUCT 2026-08-07 — **`IS-BUILD-PLAN.md` IS THE AUTHORITY for th
 
 Fences, placements and controls from the earlier handover STAND — the plan corrected the sequencing, not the doctrine. No entries outstanding.)_
 
+**2026-09-14 · BOB #11 · PART II §18 PIECES 2–4 DESIGNED — THREE LEVEL-2 DOCUMENTS, SEVENTEEN ITEMS IN
+DEPENDENCY ORDER, TWO MEASUREMENTS FIRST.** Under Bob's standing delegation (mechanism is the
+architect's; nothing here is doctrine): content-grain search (`docs/development/CONTENT-SEARCH-DESIGN.md`),
+the general observation log (`docs/development/OBSERVATION-LOG-DESIGN.md`) and extraction breadth
+(`docs/development/EXTRACTION-BREADTH-DESIGN.md`) — each governed (`CORPUS-STANDARD.md` §5), each with its
+decomposition table (SEARCH §7, LOG §8, BREADTH §7: owner, depends-on, interface, the design section
+that is the row's pointer) and its negative controls (SEARCH §8, LOG §9, BREADTH §8). You mint the
+ids and gate them. Sequencing recommendation, yours to override: (1) the no-dependency items first —
+D-225's caps (SEARCH 1, M3), the observation table with the document-level writers and the run-log
+fold (LOG 1), the two measurements (SEARCH 3: text bytes per page and the index ratio; BREADTH 1:
+the census of document classes), and D-283's fixture (BREADTH 6) in the background lane; (2) the
+`content:` arm (SEARCH 2) when REC-83/84 reach main; (3) the text index (SEARCH 4) once its
+measurement is recorded, then the `passage:` arm (SEARCH 5), the content-level observers (LOG 2) and
+D-319's opt-in seam (BREADTH 5) — those three share one vocabulary and the tables say which ships
+first without the others; (4) the extent arms (BREADTH 3) after REC-85, the readers (BREADTH 2)
+after their census, the rest as their depends-on clear. Interfaces: six ICs are named in the
+tables (I3 additive ×3, I5 additive ×2, I2 additive ×1) — each is minted at the item's spawn by its
+owner, the IC-64 rule, because the tables are the design and the IC is the contract written from
+it; IC-83/84 ran the other way only because they enacted Bob's rulings, and these enact none.
+FRAMEWORK is dormant for BREADTH 1–3: activate or answer-for in writing. One provisional is
+doctrine-adjacent and is recorded with its reversal cost rather than raised as a decision item: a
+member's ad hoc search is never an observation (LOG §4.6, DEC-61's analogy; reversing costs
+nothing). DEBT rows D-222, D-196, D-319 and D-283 carry pointers to the designs in their text; their
+dispositions are yours at drain. DEC-74's premise has narrowed (BREADTH §6: tesseract is GO and
+deployed at cap C; only a tier ABOVE C is still Bob's question) — BOB puts the live question to him.
+No queue item is superseded and no worker should be stopped.
+
 **2026-08-10 · BOB · THE DECIDED INDEX IS IN THE LOOP, AND THERE IS A NEW GATE.**
 Branch `bob-corpus-index` (596c697), green, unmerged. What changed for CONDUCT:
 
