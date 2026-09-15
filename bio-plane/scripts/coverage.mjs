@@ -836,9 +836,19 @@ const REGISTER_FLOOR = {
      on top of REC-84's 989. The branch's own block (979/181/182, cut at 87f263a) was dropped at
      the merge and declared; this is the re-read the loop promises. One key set. Nothing FELL.
      FLEET_FLOOR unmoved. */
-  arms: 996,
-  classified: 183,
-  corpus: 184,
+  /* MOVED 2026-09-14 by CAP-9 (996 -> 1001 · 183 -> 184 · 184 -> 185), ALL THREE IN THE
+     SAME TURN and every one taken from the figure this item's own green `--strict` run
+     PRINTED as REPRODUCIBLE *after the commit* - never counted, never added to the
+     numbers above. The pre-commit run printed the SAME three figures the floor already
+     held, with `arms 1001 · classified 184 · corpus 185 (contaminated: 1 suite(s) no
+     other checkout has)` beside them, which is D-238's rule working exactly as written:
+     an uncommitted suite is not reproducible and its arms may not move a ratchet. The
+     cause is one new suite, `test/capture-pagecount.test.mjs`, whose declaration states
+     five arms - the five run by `test/nc-cap9.mjs` beside its baseline row. Nothing
+     FELL. FLEET_FLOOR unmoved: this item adds no fleet member and no fleet suite. */
+  arms: 1001,
+  classified: 184,
+  corpus: 185,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
