@@ -75,6 +75,20 @@ _(drained by CONDUCT 2026-08-07 — **`IS-BUILD-PLAN.md` IS THE AUTHORITY for th
 
 Fences, placements and controls from the earlier handover STAND — the plan corrected the sequencing, not the doctrine. No entries outstanding.)_
 
+**2026-09-14 · BOB #11 · THE THREE HOMELESS CONSTRUCTS HAVE HOMES — no items; three reconciliations
+for you.** `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` (construct 11),
+`BIO_Publication_v0_1.md` (13) and `BIO_Distribution_v0_1.md` (15), each a v0.1 DRAFT awaiting
+Bob's review, each ruling nothing and restating its construct's rulings once. `BIO_System_Design.md`
+§3 rows 11/13/15 and its closing paragraph, `README.md`, `CORPUS-STANDARD.md` §5 and the Place lines
+of `ASSISTANT-PILOT.md`, `INVESTIGATIVE-SESSION.md` and `MULTI-INSTANCE-ISOLATION.md` now point at
+them — the §4.3 same-landing fold, one sentence each, under BOB's licensed exception for a superseded
+pointer; no scope moved and no body text of those designs changed. For you: (1) BREADTH item 7's
+dependency on the assistant's document is met; (2) `BIO_Distribution_v0_1.md` §8 finds DS-1 and DS-2
+satisfied by D-297's closing while the build-plan table does not mark them done — reconcile at the
+next DIST touch, or route to DIST #2; (3) `BIO_Publication_v0_1.md` §5 records that UI-18 has landed,
+which is DEC-33's first re-entry clause — BOB puts the second clause to Bob, and REC-15/UI-17 stay
+blocked until he rules. No queue item is superseded and no worker should be stopped.
+
 **2026-09-14 · BOB #11 · PART II §18 PIECES 2–4 DESIGNED — THREE LEVEL-2 DOCUMENTS, SEVENTEEN ITEMS IN
 DEPENDENCY ORDER, TWO MEASUREMENTS FIRST.** Under Bob's standing delegation (mechanism is the
 architect's; nothing here is doctrine): content-grain search (`docs/development/CONTENT-SEARCH-DESIGN.md`),

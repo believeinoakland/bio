@@ -1,0 +1,127 @@
+# BIO Assistant and AI Roles
+
+**Status** · v0.1 DRAFT, written 2026-09-14 by session BOB #11 as the level-1 home of construct 11 of `BIO_System_Design.md` §3 (the assistant and the AI roles), which that map named as having no home document. Awaiting Bob's review. It RULES NOTHING: every rule below is restated from the ledger it was ruled in (DEC-24, DEC-27, DEC-55, DEC-60, DEC-61, DEC-62, Bob's 5.7 of 2026-09-14) and cited; the mechanisms are those the record already built or designed, placed once. Completeness: complete at its level for the construct as it stands — one AI integration built (the investigative session), one designed and not built (the assistant pilot's flow and wizard), one role named and now designed on its extraction half (EXTRACT); §8 is the explicit frontier. The one caveat a reader who has not lived in the repo needs: the two level-2 documents beneath this one were written before it and each says in its own front matter that no level-1 authority existed above it — this document is that authority from its landing, and their Place lines are corrected in the same commit. as of 2026-09-14
+
+**Place in the system** · Level 1; the authority for construct 11. Depends on `BIO_Membership_Architecture_v2.md` (who may perform which act, and what an act is worth when a machine performs it — construct 1), `BIO_Content_Framework_v0_10.md` Part II §14.4 (who may do what on the content axis) and Part I §12 (intent, the discovery loop), `BIO_Interaction_Constructs_v0_1.md` (the surfaces the assistant appears on), `BIO_Distribution_v0_1.md` (`agent-worker` as a fleet member). Level-2 documents beneath it: `docs/development/INVESTIGATIVE-SESSION.md` (the first AI integration, built), `docs/development/ASSISTANT-PILOT.md` (the assistant's flow and wizard, designed), `docs/development/EXTRACTION-BREADTH-DESIGN.md` §4 (the EXTRACT role's productions), `kickoffs/SKILL.md` (the skill pack). Supersedes: `ASSISTANT-PILOT.md` §4's two-principal model (overtaken by the three-level cascade, FL-6) and the "no level-1 authority" statements in both level-2 documents' front matter. Depended on by `INTERFACES.md` I8, DEBT D-199 and D-260, QUEUE SK-5 and SK-7, `MILESTONES.md` M9's placement of the investigative session.
+
+**Incomplete sections** ·
+- §5 — the assistant's own flow (FIND end to end, the prompt entry point, the wizard) is DESIGNED in `ASSISTANT-PILOT.md` §2–§3 and not built; this section places it and does not restate the flow.
+- §6 — the credential cascade's instance level is built and a woken run is not re-entered (D-260): whether an instance may hold a minted `ai` credential as an environment binding is an open question this document names and does not answer.
+- §7.3 — the EXTRACT role's surface and loop are not designed; only its productions are (`EXTRACTION-BREADTH-DESIGN.md` §4).
+- §8 — the frontier list is the record's as of 2026-09-14 and will lag the queue; `MILESTONES.md` is the authority for what is open.
+
+**Contents**
+- [1. What the construct is, and why it is major](#1-what-the-construct-is-and-why-it-is-major)
+- [2. The four roles](#2-the-four-roles)
+- [3. The rules, stated once](#3-the-rules-stated-once)
+- [4. What is built: the investigative session](#4-what-is-built-the-investigative-session)
+- [5. What is designed: the assistant](#5-what-is-designed-the-assistant)
+- [6. The credential cascade and the fleet member](#6-the-credential-cascade-and-the-fleet-member)
+- [7. The roles on the content axis](#7-the-roles-on-the-content-axis)
+  - [7.1 FIND names its level](#71-find-names-its-level)
+  - [7.2 PURSUE grows the record](#72-pursue-grows-the-record)
+  - [7.3 EXTRACT — the productions, and the fence around them](#73-extract-the-productions-and-the-fence-around-them)
+  - [7.4 CHECK reads adversarially](#74-check-reads-adversarially)
+- [8. Where it stands, and the frontier](#8-where-it-stands-and-the-frontier)
+- [9. What this document does not own](#9-what-this-document-does-not-own)
+
+---
+
+## 1. What the construct is, and why it is major
+
+The assistant is the way a member is helped by a machine at every point on the path — questioning, exploring, discovering, documenting, impacting — and the AI roles are what the machine may DO there. Bob's ruling of 2026-08-03 made it part of the system definition rather than a feature bolted on (DEC-24): *"AI IS PART OF THE SYSTEM DEFINITION NOW, AND THE BOUNDARY IS: THE MACHINE MAY DO THE LOOKING; THE MEMBER DOES THE CONCLUDING."* It is major because it is one way in on every surface (DEC-27: *"both a construct and a surface"*), because it is central to what BIO offers a group of one, and because everything it does is bounded by the same fences a member's act carries — so the construct is, above all, a set of BOUNDARIES that hold regardless of which model, prompt or vendor sits behind them.
+
+Two things it is not. It is not a trust boundary: *"the assistant introduces NO NEW TRUST BOUNDARY"* (DEC-27) — it holds a credential of its own class and never a member's, and the endpoint it calls is the fence. And it is not an author: *"THE LINE IS AUTHORSHIP, NOT WRITING"* (DEC-27, extension a) — it may write, capture, propose, structure and check; it may never vouch.
+
+## 2. The four roles
+
+DEC-24 names four roles on the path's own verbs, and they are the vocabulary of everything below:
+
+| role | what it is | where it is today |
+| --- | --- | --- |
+| **FIND** | search across content and claims — all four levels (Part II §14.3), naming the level it searched and the level at which it found nothing | built inside the investigative session's loop; the standalone FIND (`ASSISTANT-PILOT.md` §7 step 4) is ABSENT |
+| **PURSUE** | an unsupported claim is a standing OBJECTIVE — find material bearing on it and return candidates, supporting AND cutting against | built as the investigative session (DEC-62 merges FIND and PURSUE into one loop) |
+| **EXTRACT** | document → CONTENT: propose passages, readings, structure; resolve what a document names to the registry — "the role that makes everything else addressable" | named at DEC-24; its productions designed 2026-09-14 (`EXTRACTION-BREADTH-DESIGN.md` §4); machine-minted citable rows ruled by Bob (5.7) and rowed (SK-7); the `ai(function)` chain step DESIGNED and emitted by nothing |
+| **CHECK** | read the record ADVERSARIALLY and raise what it finds — "the role most worth building" (DEC-24); "Sequence the CHECK role first" (DEC-55) | the investigative session's first deployed mode is its CHECK-first enactment (D-199); a standalone checker is not built |
+
+Two acts sit beside the roles and are not roles: the assistant may **request capture** (DEC-27 extension a: a capture asserts nothing a person must vouch for, and the record states *"the assistant captured this, at Anna's request"*), and it may **initiate an act** that then runs its four beats with the member acting (DEC-27: *"the assistant CONDUCTS and the member ACTS"*).
+
+## 3. The rules, stated once
+
+Each is a ruling; each is enforced in code where it can be, and where it is not yet, §8 says so.
+
+1. **The machine proposes; the member authors** — amended the same day it was ruled to *"the machine never writes the member's reason, and it never hides why it thought there was one."* **Show the reasoning; never the sentence.** (DEC-24 rule 1.)
+2. **The machine may not choose the question.** (DEC-24 rule 2.) An objective is a member's; the assistant may propose project defaults and never set them silently (DEC-27 limit 3).
+3. **Machine work is labelled and graded as machine work.** (DEC-24 rule 3.) Machine-read text is never presented as publisher text (DEC-4); a machine-proposed connection carries the grade the record can EARN for it, A or B when the source's own link or a shared identifier grounds it, C when only a name or date does, and the machine never mints D (Part II §14.4); a machine-minted content row is labelled everywhere it is shown and is part of a finding only when a member cites it (Bob, 2026-09-14, 5.7).
+4. **A checker raises; it never resolves. No machine credential performs the attested act.** (DEC-24 rule 4; C-35.10.) The AI holds no op that ACCEPTS: every write it makes is a SUGGESTION and *"the machine may not accept the object"* (DEC-60). It never touches the provenance chain, and *"A CAPTURE IS NOT EVIDENCE"* until a member stands behind it (`INVESTIGATIVE-SESSION.md` §4).
+5. **An AI never travels on a member's token.** (DEC-55.) One `ai` credential class carrying a task scope declared in the record; minting one is a member act and never an AI act; the record names the token's identity and whether the principal is the organisation or a member; the `MACHINE_CANNOT_*` fences generalise by construction. **THE ENDPOINT SURFACE IS THE FENCE** — a rule the skill states is instructions; a rule the plane refuses is a fence (DEC-55's corrected recommendation; `INVESTIGATIVE-SESSION.md` §14b.4: *"A skill is instructions; a fence is code"*; `kickoffs/SKILL.md`: *"A SKILL MAY NEVER HOLD A GATE"*).
+6. **Transcripts are internal notes — device-local, TTL'd, deleted as part of publication, never in the record store**, with the purge suspendable for a litigation hold; teammates see the running-session indicator, not the reasoning (DEC-61). The observation log is the structured account of where a search WENT, and it is never a transcript (Part II §17; `OBSERVATION-LOG-DESIGN.md` §1).
+7. **The assistant may only structure what the member SAID** (DEC-27 limit 2) — this limit STANDS for the assistant pilot and is superseded for the investigative session by DEC-60, which lets the session formulate claims and legs proactively as suggestions.
+8. **Derived informs; authored binds.** An assistant-surfaced focus must be written and shown as one (D-78, D-82); a plan proposal is derived, LOOKING derived (D-90), and never itself an acquisition.
+9. **The skill's prohibition set** (the practice survey, `INVESTIGATIVE-SESSION.md` §14b.4): no generated justification anywhere — a generated one is a fabricated attribution; the one permitted auto-composition is assembling the member's OWN prior words; no single confidence score; no connection-density ranking; machine-proposed connections never presented as connections.
+10. **Refusals carry the plane's own label** (DEC-49): every condition the assistant relays has a named code and a canned translation, and an untranslated code fails the harness.
+
+## 4. What is built: the investigative session
+
+The first AI integration, designed in `INVESTIGATIVE-SESSION.md` and built through the IS plan (43/43 rows, closed history at `docs/archive/IS-BUILD-PLAN.md`). One session — one skill, one credential scope, one loop in which searching and forming versions interleave (DEC-62). What it is, placed:
+
+- **The run is an object** (`ai_runs`): the conditions it was formed under — the bias manifest in force, the launching project's declared standard pair, the claim and version set as it stood, the SKILL VERSION it ran under — because *"everything can change at the drop of a hat"* and a version is only interpretable against them (§11).
+- **The run is bounded, and the bound is recorded** (`ai_run_bounds`, both `allowed` and `consumed` stored — the surface derives nothing): fetches requested, sub-sessions spawned, wall time across resumptions; when a bound stops a run the log says which bound and where (§14b.6). `runtime-ceiling-reached` had the word and no producer; the run produces it.
+- **Its observation log** (`ai_run_log`): where it searched across the four levels, what it established, where it STOPPED and why; append-only; never in `bundle.md` (C-22.6); absence in D-129's vocabulary; a governed hold is a fact about us (C-22.2). It is the precedent for the general observation log, into which it folds (`OBSERVATION-LOG-DESIGN.md` §4.4).
+- **Partial results survive**: versions are written as they are formed; a resumed run reads its own log and continues (§14b.7).
+- **Control flow is deterministic; judgement is inside a step** (§14b): how many passes and when the loop stops, the fan-out across the four levels, the state a version is written in, dedup, the log, every fence — code; what to search for and what a level's reports mean — the model. TREC 2011's finding is the argument: searchers' self-estimated recall erred by up to +95/−87 points, so the model never decides when the loop stops.
+- **The run verifies its own work before proposing, and the checks are the PLANE'S** (§14b.5): every leg cites something that exists at the address given; the strengths compute per axis; the version differs in substance from every existing one; OR-branches pass the independence check (D-195); nothing is boilerplate; nothing is in a state the session may not write. Each refusal is a C-number.
+- **The ops** (`index.mjs`, the `OPS` table): `airunopen`, `airuntick`, `airunclose`, `airun` (with `suggest` and `capturerequest` as its actions), `airunlog` (bounded, IC-24), `airuns`, `airunspawn`; `aicredentialmint`, `aicredentialrevoke`, `aicredentials`. The `ai` class is admitted by a SHAPE (`aiTaskScope`), never by being named in a table.
+- **The skill pack** (`skillpack.mjs`, `skilldoctrine.mjs`; SK-1..SK-4): the five-layer pack the session runs under, versioned so a run names its version.
+- **The running-session surface** (UI-38, `civicos-ui` `SURFACES["ai-session"]`): designed ONCE for all AI features (§14a) — an arm asserts exactly one such surface — and it carries F11's finding that the budget is recorded and never SHOWN.
+
+## 5. What is designed: the assistant
+
+`ASSISTANT-PILOT.md` designs the member-facing assistant — the FIND / CREATE / ACT request kinds (DEC-27), the flow (§2), the wizard (§3) in which the plane's RULE checks are relayed verbatim and OBJECTIVE checks are advisory by nature, the read-only pilot scope (§4). Its own front matter is the sharpest inventory the corpus has of what is built beneath it and what is not: the pack is built, but as the investigative session's; the credential class is built; the flow, the wizard, the prompt entry point, FIND end to end and the pilot's own observation log are ABSENT. Its title is stale by its own admission — the investigative session, not the pilot, was the first AI integration.
+
+This document places it and does not restate it: the assistant is the SAME construct as the investigative session seen from the member's side — the same credential class, the same fences, the same running-session surface, the same observation log — and the pilot's design is the surface and flow of a construct whose boundaries are already built.
+
+## 6. The credential cascade and the fleet member
+
+`agent-worker` is the assistant's fleet member (`BIO_Distribution_v0_1.md` §5; `INTERFACES.md` I8, PROVISIONAL): the plane calls it over a service binding with a run to perform, and it calls the plane back with the run's credential. Which Claude account a run travels on is a cascade — **member → project → instance** (`INVESTIGATIVE-SESSION.md` §14a; FL-6, `agent-worker/src/cascade.mjs`): the record names WHICH LEVEL resolved, publication revokes a member-level token's standing, and when no token resolves *"the capability is UNAVAILABLE and says so"* — never silently degraded. The cascade decides sovereignty too: an instance-level token is the group's, and a group without one has an assistant that says so.
+
+What is open here (D-260): a woken run is not re-entered — nothing in the plane references the binding that would wake it — and whether an instance may hold a minted `ai` credential as an environment binding needs a ruling before I8 can leave PROVISIONAL. Named, not answered.
+
+## 7. The roles on the content axis
+
+### 7.1 FIND names its level
+
+The four-level search is one process at four altitudes (Part II §14.3), and the assistant's FIND is the one consumer that must say which level it searched and which absence it found: *nothing derived* may only mean nothing was extracted; *nothing extracted* may only mean the document was never read; *no document* may only mean nobody looked. `CONTENT-SEARCH-DESIGN.md` §4.4 makes that statement mechanical on the content level (`passage:` answers carry their level and the content-axis tally), and the observation log records the look either way.
+
+### 7.2 PURSUE grows the record
+
+An objective going looking is what grows the document set, identifies content within documents and connects it (Bob, 2026-08-04). The assistant's fetch plan is a PROPOSAL (D-90) — the member authorises the acquisition, the assistant requests it, and the observation log carries the outcome with the objective as its authority.
+
+### 7.3 EXTRACT — the productions, and the fence around them
+
+Bob ruled on 2026-09-14 that *"an assistant may mark passages as citable on its own"* (5.7), and `EXTRACTION-BREADTH-DESIGN.md` §4 fixes what the role may produce and under which chain: a proposed citable passage (a content row over an existing extent and the CURRENT chain, `minted_by` a machine credential — SK-7); an on-point candidate for a document-grain edge (Bob's 5.4, the member's choice is NARROW); a proposed reading with an `ai(function)` step, graded by what it names and never A; a proposed table structure once an engine is measured; cleaned text as a derivation that weakens and never a transcription. The fence is unchanged and already in code: it never attests (C-35.10), never touches the provenance chain, never chooses the question, and its rows are part of a finding only when a member cites them. What is not designed is the role's surface and loop — whether it runs inside the investigative session's loop, at a member's request on one document, or as a standing act on a project's scope — and that is this document's frontier, not piece 4's.
+
+### 7.4 CHECK reads adversarially
+
+The role most worth building and the one sequenced first: read the record against itself and raise what it finds — a leg that no longer resolves, a finding whose falsifier has evidence, an OR-branch whose legs share an origin (D-195). A checker raises and never resolves; its findings are proposals in the member's queue, labelled, and the member's acceptance is the authored act. The investigative session's plane-side checks (§4) are the first checker; a standing CHECK over a project is absent.
+
+## 8. Where it stands, and the frontier
+
+| | status |
+| --- | --- |
+| the boundary (DEC-24's four rules), the credential class (DEC-55), the suggestion fence (DEC-60), transcripts out of the record (DEC-61), one session (DEC-62) | RULED and enforced in code where the record has an act to fence |
+| the investigative session — run object, bounds, log, versions, checks, ops, pack, surface | BUILT (IS plan 43/43) |
+| the credential cascade member → project → instance; `agent-worker` | BUILT (FL-6); I8 PROVISIONAL |
+| the running-session surface, designed once | BUILT (UI-38); the budget recorded, never shown (F11) |
+| machine-minted citable rows (5.7) | RULED; rowed (SK-7, waits on REC-82/83 and the pilot's EXTRACT scope) |
+| the assistant's flow, wizard, prompt entry point, FIND end to end, the pilot's observation log | DESIGNED (`ASSISTANT-PILOT.md`), not built |
+| the recipe layer (SK-5) | queued on a published surface registry |
+| a woken run re-entered; an instance-held `ai` credential | OPEN (D-260) — needs a ruling |
+| `new-version` among the suggestion kinds | OPEN (D-324) |
+| the EXTRACT role's surface and loop; AI-proposed readings (`ai(function)` emitted) | not designed; `EXTRACTION-BREADTH-DESIGN.md` item 7 waits on this document |
+| a standing CHECK over a project | not designed |
+| a milestone rung of its own | none — the construct is distributed across M8, M9 and M10 (`MILESTONES.md`, the DEC-60 placement note) |
+
+## 9. What this document does not own
+
+The membership model and the credential's place in it (`BIO_Membership_Architecture_v2.md`); the content doctrine the roles act under (Part II §14.4); the interaction constructs the assistant appears in (`BIO_Interaction_Constructs_v0_1.md`); the fleet's release and deployment (`BIO_Distribution_v0_1.md`); the investigative session's internal design (`INVESTIGATIVE-SESSION.md`); the skill pack's contents (`kickoffs/SKILL.md`); and every ruling, which stays in the ledger it was ruled in.
