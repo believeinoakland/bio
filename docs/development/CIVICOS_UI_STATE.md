@@ -1,5 +1,681 @@
 # CivicOS Layer 3 UI: state and next-session kickoff
 
+> **BACKFILL, 2026-09-14 (UI-59, thread UI). THE FIFTY-SIX ENTRIES BELOW ARE WRITTEN
+> RETROSPECTIVELY, AND SAYING SO IS THE POINT.** This ledger had not been prepended to
+> since `v33` on 2026-07-31 — 45 days — while fifty-seven UI items landed against
+> `QUEUE.md`'s rows and seven of them appended their session log to `kickoffs/UI.md`
+> instead, which is a kickoff and is rewritten each session rather than accumulated
+> (`kickoffs/README.md`). So **the file the record names as the authority on how each
+> rung actually went answered with July**, and the log that did exist sat in the one
+> file whose shape guarantees it would eventually be overwritten. UI-58's front-matter
+> retrofit found it; this is the item that closes it.
+>
+> **What these entries are and are not.** Each is dated to its LANDING COMMIT, not to
+> today, and names that commit. Each says which member surface moved. They are written
+> from the tree and the history — `git log` over `civicos-ui/**`, `QUEUE.md`'s UI
+> section and its CLOSED ITEMS register, and the seven kickoff blocks whose substance
+> is carried here rather than deleted — and **not** from a session's own memory of the
+> day, which no longer exists. So they are shorter and flatter than `v1`–`v33`, which
+> were written by the session that did the work. **A retrospective entry cannot carry
+> what nobody wrote down**, and where the landing's own record is thin the entry is
+> thin; it does not invent the reasoning.
+>
+> **Numbering.** `v34`–`v89`, in the order `main` landed them, newest first. These are
+> ledger entry numbers, not UI build ids: no build ever announced itself as `v34`, and
+> `v33` and below are the live sequence this file kept at the time. The date and the
+> thread name on each first line are what disambiguate, per `kickoffs/README.md`.
+>
+> **The 2026-08-04 CONDUCT amendment below was NOT moved.** It reads *"the v33 entry
+> below"* and that is still literally true with this backfill above it. This file is
+> prepend-never-edit, and relocating an existing entry is an edit.
+>
+> **Four entries record a landing that changed NO member surface** — `v85` (UI-53),
+> `v78` (UI-52), `v67` (UI-36), `v63` (UI-31), all four instrument-only. They are here
+> because the ledger is where a UI landing's log belongs and UI-53's kickoff block had
+> to go somewhere, **not** because the completeness rule demanded them: a measurement
+> item owes no surface entry, and the check that produced this backfill does not ask
+> for one. **Four landed UI items are deliberately absent and named here so their
+> absence is not read as an omission:** `UI-17` never landed (DEC-33 deferred it; its
+> placeholder `UI-17a` is `v55`); `UI-43` never landed a surface at all (it was rowed
+> in `IS-BUILD-PLAN.md`, partly ran, and its undrained version acts are `UI-60`);
+> `UI-58` and `UI-59` are prose-only items that do not touch `civicos-ui/**`, and their
+> record is their own `QUEUE.md` row.
+>
+> **WHAT THIS BACKFILL CANNOT SEE, stated because a complete-looking ledger otherwise
+> reads as more than it is.** It is keyed on UI ITEM IDS. **143 commits touched
+> `civicos-ui/` since `v33` and only 79 name a UI item in their subject** — the other
+> 64 are other areas' items moving the member surface: `REC-*`, `PL-*`, `CASE-*`,
+> `CPDF-*`, `SK-*`, `M0-*`, `VF-2`, `D-257`, and DIST's deploys. **Those landings are
+> real surface changes and this ledger does not hold them.** The measurement is in
+> UI-59's release; the consequence is that "every UI item has an entry" is a weaker
+> claim than "every surface change has an entry", and only the first is true here.
+
+v89, 2026-09-10 session, thread UI, UI-57. Landed `ab9449e` (arm retirement `8e61e8f`,
+merged `77d8361`). SURFACE: `app.html`, `publicationEntryHtml`. THE GATE MOVED FROM THE
+ACT'S PRESENCE TO THE OBJECT'S STATE. The whole "Publishing this case" section had been
+gated on `publish` appearing in `op=affordances`' answer; D-310 correctly narrowed that
+answer for non-owners, and CASE-6's `data-pubwho` paragraph — the surface statement of
+the owner rule, written under DEC-33's deferral precisely so the fence is not learned by
+silence — then disappeared for exactly the readers it was written for. The section now
+renders for the case's STATE, and the act's presence gates one clause only: the record's
+own published LABEL, which a surface may not invent. A non-owner sees the owner rule in
+the record's words (0 B to 3,216 B, measured); an owner's rendering is BYTE-IDENTICAL to
+its pre-item self (3,258 B, sha-compared in isolated VM contexts) — an over-strictness
+measurement no arm can make. IC-75 resolved at integration, I3 13.0.0 to 14.0.0.
+
+v88, 2026-09-10 session, thread UI, UI-56. Landed `9bd74b7` (merged `b834f26`). SURFACE:
+`app.html`, the published index. THE JOIN IS ON THE PIN, NEVER EDITION TO EDITION. A
+published index row was being joined to its member's roster row edition-to-edition, so a
+diverged member read against the wrong ratified row. Five sites, not the three the item
+named. The fixture-shape gap this opened is `M0-23`, an item rather than a note.
+
+v87, 2026-08-10 session, thread UI, UI-55. Landed `050b164` (merged `9be29f3`). SURFACE:
+`app.html`, the REC-21/C-3 mute block only — `queueMuteHtml`, `queueMuteCase`, `queueWire`
+and two CSS rules. DEC-69 ENACTED: THE STANDING SWEEP FOR NAGGING, SECOND-GUESSING AND
+FORCED MODES, with `member-respect.test.mjs` (428 assertions) and its six-arm control.
+Bob's ruling, 2026-08-10, amended the same day, and the amendment is the harder half: the
+operative word is FORCED and it cuts both ways — a surface that offers ONLY bulk is the
+same flaw as one that offers only forty clicks.
+
+THE CENSUS IS A FIGURE WITH ITS REACH, NEVER A CLAIM OF COMPLETENESS: 40 member-facing act
+sites reaching 31 distinct mutating ops of the plane's 85, over 641 function bodies and
+647,585 characters, with four blind spots PRINTED every run — including that 54 of the
+plane's mutating ops are reached by no act site this walk sees. Shapes 1 to 3 absent by
+assertion. Shape 4 found the amendment's bulk-only half and it is the real catch: the
+queue's mute muted EVERY condition kind on a case, and **it read as respectful because it
+NAMED the set — but naming a set is not offering a choice within it.** `op=queuemute`
+already accepted an arbitrary subset, so the fix was one parameter and no plane delegation.
+**If you find a surface that only offers the whole set, measure the op before assuming the
+plane is the blocker.**
+
+SIX THINGS A LATER UI SESSION NEEDS BEFORE TOUCHING ANY OF IT, carried here from
+`kickoffs/UI.md` where they were appended on the day. (1) THE SCOPE BOUNDARY IS AN ARM
+THAT RUNS EVERY TIME. DEC-69 protects three things by number — DEC-39's fence, DEC-51's
+grade note, DEC-49's refusal reason — and ARM P asserts all three PRESENT on every run, so
+a future tidy that strips one fails the very suite that would otherwise report the tidy as
+a success. The cut that makes it decidable is the ruling's own: the record's voice is
+PLANE-SOURCED and a nag is AUTHORED HERE, and ARM P proves none of the three is a literal
+in `app.html` rather than assuming it. (2) The bulk-only half, above. (3) TWO SETS OF
+DECISIONS ARE CARRIED, NOT CLEAN, AND THE CARRY IS SELF-EXPIRING: `op=resolve` and
+`op=proposedispose`/`taskresolve`/`taskforward` give the member N identical buttons and no
+bulk path, and a client-side loop is not the fix — N motions over N items is the
+forty-dialogs shape wearing a bulk control's clothes. ARM 4d re-measures each carried op's
+signature against `store.mjs` every run, so the day one accepts a set the arm goes RED and
+the mode gets built. Do not delete the row; it is the alarm. Carried as D-291. (4) ARM 4
+PARTITIONS BY REGISTER BECAUSE NO STATIC WALK CAN DO IT — whether a repeated control is a
+SET OF DECISIONS or a CHOOSER FOR ONE DECISION is not readable from source, both compile to
+the same shape; every site must be classified, a site in neither register fails by name,
+and a register row naming a host that no longer renders a control fails too. The second
+half caught eight speculative rows on the item's own first build. (5) THE INSTRUMENT WAS
+WRONG TWICE, CONFIDENTLY, AND BOTH ARE NOW ARMS: a JS deriver over `app.html` starts inside
+`<style>`, where an apostrophe in a CSS comment opens a string that never closes and every
+later block comment lands in the member-facing prose corpus; and a single-slot string mode
+let a nested backtick close its parent, reporting a longest function body of 92,964
+characters against a real 13,117. **If you write a walk over this file, isolate the
+`<script>` first and use a mode stack.** (6) THIS SUITE IS A CONSUMER OF UI-53's BAN
+FAMILY, and it became one because UI-53's census called it a RIVAL on its first run.
+
+NO PROSE WAS DELETED ANYWHERE. The one clause the sweep found at the boundary —
+`elicPaint`'s persuasion tail about reading being easier than writing — is CARRIED for a
+ruling rather than removed by a worker, because deleting the record's own voice in this
+ruling's name is the failure the ruling itself warns about.
+
+v86, 2026-08-10 session, thread UI, UI-54. Landed `a63c1b5` (merged `485a039`). SURFACE:
+`app.html`, four sites in the unmarked Add region — `renderAdd`, `addCaptureNote`,
+`addCapture`, `addGo`, and a new note holder in the Add form. DEC-51 ENACTED: `op=acquire`'s
+GRADE NOTE IS RENDERED, WHOLE, AT THE MOMENT OF CAPTURE. `addCapture` had been receiving the
+note on every `op=acquire` answer and throwing it away, so a member's only account of what a
+capture is worth arrived on the document page afterwards — **a surface that RECEIVES the
+record's own account and DISCARDS it withholds at exactly the moment the member forms the
+belief.**
+
+FIVE THINGS A LATER UI SESSION NEEDS, carried here from `kickoffs/UI.md`. (1) THE
+CO-ATTESTATION CLAUSE SHIPS, AND REMOVING IT IS THE DEFECT RATHER THAN THE CAUTION. The
+note's last clause describes an act this surface does not offer, so stripping it is the tidy
+any careful reader reaches for; DEC-51 refuses that split by name, because DEC-39's
+three-part shape was deliberate, UI-28 measured the parts reassemble character for character,
+and that clause is exactly the sentence that stops a member reaching for co-attestation to
+solve a problem it does not address. **A rendering that is merely MOST of the note is the
+split Bob refused.** (2) UI-32 IS NOT REOPENED, AND THE TWO RULES LIVE ONE LINE APART: this
+surface still states no grade letter IT derived — `ADD_CAPTURE_TEACH` and `addValidate` are
+byte-unchanged — and it now withholds nothing the PLANE published about a capture that has
+actually happened. The UI-32 assertion is ordered BEFORE the string-for-string equality
+deliberately, so a fail-fast run reports the right reason; do not reorder them. (3) NOTHING
+IS AUTHORED AND THERE IS NO FALLBACK: a plane that publishes no note, or a blank one, leaves
+the holder EMPTY — UI-39's rule and UI-40's, both asserted rather than assumed. (4) DETECTOR
+(C) IS NEW AND CLOSES A STRUCTURAL HOLE: detectors (A) and (B) both judge the remainder after
+`minusPublications` — they must, or they fire on the record's own correct page (UI-28) — so
+an EXACT copy of a publication is invisible to both. (C) reads each file's WORD STREAM and
+sees a copy split across a concatenation. **If you need the record's sentence in a suite,
+IMPORT it.** (5) THE CONTROL DRIVER HOLDS NO COPY OF THE RECORD'S WORDS, ON PURPOSE — it
+imports `ACQUIRE_GRADE_NOTE` and serialises it, because a driver that typed the note out to
+plant it would BE the copy, in the tree its own detector guards.
+
+The zero-cost-agreement arm is the one worth re-reading: a hand-typed copy of the note left
+every BEHAVIOURAL assertion green, and only detector (C) could tell.
+
+v85, 2026-08-09 session, thread UI, UI-53. Landed `ac1c7d4` (merged `a7b027f`). **NO MEMBER
+SURFACE CHANGED** — `civicos-ui/app.html` is not edited by this item and was not claimed; the
+module only READS its two marked member-facing blocks. Seven files under `civicos-ui/test/`.
+THE FOUR HAND-WRITTEN `BANNED` LISTS BECAME CONSUMERS OF ONE DERIVED FAMILY (D-269's
+delegation to UI), and the standing rule it leaves behind: **THERE IS ONE DEFINITION OF
+DEC-32 CLAUSE 1'S BAN IN THIS DIRECTORY, and it is
+`civicos-ui/test/analyst-vocabulary.mjs`. If you are writing a sweep that asserts the
+analyst's vocabulary reaches no member, import it. Do not write a list.**
+
+WHY, carried here from `kickoffs/UI.md`. FOUR lists existed, not the three D-269 reported,
+and no two agreed — the fourth was a COPY made to give the ban "ONE spelling in this
+directory", and **copying a list to unify a rule makes another list**; it was missed because
+the census was keyed on the phrase rather than on the subject. NOT ONE of the four carried
+the phrase that was being rendered to members off the axis result and frozen into signed
+`bundle.md` frontmatter; it is now enforced at all four sites, as is a second term no list
+carried either. THE FAMILY IS DERIVED, NOT TYPED: the atoms are parsed from DEC-32 clause 1's
+own sentence in `DECISIONS.md`, closed over by stem prefix so every spelling of a named
+construct is caught unlisted, plus a ceilinged, printed RESIDUE each term of which is
+asserted at run time to occur in DEC-32's entry — **a residue term that is not in the ruling
+fails the suite, which is what keeps it from decaying back into a hand list.**
+
+THE ONE THING THAT WILL BITE YOU, AND IT IS MEASURED: **the bare capitalised connective is
+NOT banned, deliberately.** Three of the four lists banned it; the moment all four consumed
+one family it fired on `notifications.test.mjs`'s own correct prose — ordinary English
+capitalised for emphasis. Case-sensitivity is not enough. The connective is banned AS
+VOCABULARY — compounded, paired, behind a determiner, naming the relationship. If you find
+yourself widening it back to the bare token, run `analyst-vocabulary.control.mjs` first;
+arms 5a/5b/5c exist to stop that.
+
+WHAT THE FAMILY CANNOT SEE, stated because a clean sweep otherwise reads as more than it is:
+a genuinely novel term for the construct, sharing no stem with a clause-1 atom and not in the
+residue. There is no automatic tier for it and the reason is measured — D-269's open
+*machine-side minus member-side* derivation is sound over 30 machine-composed sentences with
+opaque values, but over a rendered UI surface it measures 208 words including `example`,
+`correct`, `safe` and `bob`. **The open tier belongs to the plane suite's narrow corpus; this
+family belongs to the broad one.** KEPT AND NAMED RATHER THAN FOLDED IN — three sites the
+census surfaces that are NOT rivals: `capture-honesty.test.mjs`'s `JARGON` (Bob's
+plain-language ruling, a different question), `publishedcase.test.mjs` (DEC-32's falsifier
+clause, no ban list), and `version-review.control.mjs` (the negative-control DRIVER that
+plants a leak to prove a consumer's sweep can fail — it must keep NAMING the ban rather than
+importing it).
+
+v84, 2026-08-09 session, thread UI, UI-44. Landed `5e57be5` (merged `134a9ed`). SURFACE:
+`app.html`, a new region inside the existing AI-session block plus one expression in
+`aiSessionPanelHtml`. THE CONNECTIONS SIDEBAR (DEC-52 final, 2026-08-07): connections the
+machine identifies land MACHINE-ATTRIBUTED, and the sidebar is a VISIBILITY and BULK-REVIEW
+surface, **not a required approval gate**.
+
+IT SHIPPED FIXTURE-VERIFIED, AND THAT IS THE FIRST THING TO KNOW. No op publishes a machine
+connection; the post-processing task scope that would produce one has no item and does not
+exist. What is verified is HOW THIS SURFACE TREATS a machine-attributed connection; what is
+NOT verified is that one exists to treat. The suite states it in its first paragraph, prints
+it in its FOOT on every run, and — the part that matters — MEASURES it: SECTION 0 reads
+`aiRunRead`'s own body out of `bio-plane/src/store.mjs` and fails the day the producer lands,
+**so the caveat expires by itself instead of being inherited.**
+
+THREE THINGS THIS AREA CARRIES FORWARD, from `kickoffs/UI.md`. **A D-82 DRESS IS NOT ONE
+SENTENCE FOR EVERY DERIVED THING.** The proposal badge says *nobody has yet decided this is
+worth pursuing… it changes nothing until a person acts on it* — TRUE of a proposal and FALSE
+of a connection the machine was licensed to rule on, which is in the record and which the
+record already stands on. Reusing it would have been cheap and would have made the surface
+lie in the safe-sounding direction. Two claims, two sentences, one rule: say what the record
+actually did. **ATTRIBUTION IS FOUND BY THE SHAPE OF A VALUE, NEVER BY A FIELD NAME OR A WORD
+LIST** — the surface asks the question REC-46 made the plane ask once: did the CONTROL PLANE
+mint this identity. A producer publishing the principal under a key nobody anticipated,
+nested inside an array, is still attributed, and that is the over-strictness arm.
+`MACHINE_STAMP_PREFIXES` is imported LIVE and compared, so a third spelling fails the build
+here rather than un-attributing a machine. **THE ANTI-GATE ARM IS AN EQUALITY, AND IT IS THE
+STRONGEST THING IN THE SUITE** — render with nothing selected and with everything selected,
+strip the selection controls, and every word about what each connection is and who made it
+must be BYTE-IDENTICAL. Under the superseded provisional that arm would have been the
+opposite assertion, and it was corrected in place with its date and its reversal written out
+rather than deleted.
+
+ONE INSTRUMENT WAS CORRECTED IN PLACE AND IT WAS NOT THIS ITEM'S. `ai-session-wire.test.mjs`
+ARM S5 asserts *the surface renders nothing the record did not publish* over every function
+in the AI-session block — right about the RUN, and the WRONG RULE the moment the block hosts
+D-82's dress, which by definition says something the record cannot say about itself. Left
+standing it would have made delivering D-82 fail the build. The replacement partitions by
+REGION MARKER rather than by a list of names, falls back to sweeping the WHOLE block when the
+marker is missing (**a deleted marker fails loudly instead of widening the excuse silently**),
+and requires the held-out region to be graded by this item's suite.
+
+TWO THINGS DELIBERATELY NOT ADDED, both traps this area keeps meeting: no new ROUTER (the
+sidebar is reached at the session address that already exists, so nothing arrived
+unclassified in `preauth-vocabulary`) and no new PLANE READ (the sidebar renders the run
+object `op=airun` already answered, so there is no explicit ask to state and `bound-sweep`'s
+two walks see nothing new). Both were choices, not omissions.
+
+v83, 2026-08-09 session, thread UI, UI-45. Landed `f6f9242` (merged `1081a6a`; post-merge
+figures `4a27f24`). SURFACE: `app.html`, a new notifications block appended after the
+version-review block, four named renderers inside the queue block, and one key in `SURFACES`.
+NOTIFICATIONS RENDERED. UI-42's delegated `current`/project half is discharged here and
+`versioncurrent` is struck from `ACTS_AWAITING_SURFACE` in the same commit.
+
+FIVE THINGS TO READ BEFORE TOUCHING A NOTIFICATION RENDERER, carried from `kickoffs/UI.md`.
+(1) EVERY WORD ABOUT WHAT HAPPENED IS THE PLANE'S. The queue renders a FINDING from the
+producer's own summary and detail fields, and this item added three more of the plane's own
+sentences. **The surface holds NO per-kind wording table and names no kind slug at all**,
+asserted structurally over the block's source. The plane's per-kind sentences live in
+`queuestate.mjs` and are published to no op; copying them here would be two answers to one
+question in two repositories, which is DEC-8's drift class. (2) THE TWO SLUGS UI-45's ROW
+NAMES DO NOT EXIST, AND THEIR ABSENCE IS ASSERTED — they are **PL-13's** to mint, and §0
+requires both absent, **so the day PL-13 lands that arm goes red and the next session
+surfaces them. Do not "fix" that failure by deleting the arm; it is the alarm.** (3) A
+CONTROL THE RECORD CANNOT HONOUR IS WORSE THAN NO CONTROL, AND THIS IS NOW A PROPERTY:
+`op=proposedispose` is keyed on a progression/stage pair, and until this item the queue drew
+Adopt / Defer / Dismiss on every FINDING, so on PL-15's out-of-inquiry lead all three could
+only ever be refused. `notifDispositionKeyed(it)` asks the ITEM whether it carries the
+identity the act is keyed on. **If you add a control to a queue item, ask what identity the
+act is keyed on and whether THIS item carries it — never what kind it is.** A list of kinds
+goes stale the day somebody mints a fourth. (4) AN EMPTY LIST OWES THE READER WHICH LEVEL WAS
+EMPTY: `notifAbsenceHtml` reads `op=queue`'s own class and count fields and says, per class,
+which of three is true — nothing on this plane raises one yet (*we did not look*), the record
+looked and raised none (*nothing happened*), or the record published no count at all (a third
+fact, said as one rather than shown as zero). A feed that did not answer produces NO level
+statement, because a line composed here would claim the record said something it did not.
+(5) AN AGED PROPOSAL LEAVES THE OPEN LIST AND STAYS ON THE SCREEN — the surface used to show
+the receipt inside a dialog that then closed, so the finding simply vanished; a field the
+answer did not carry is now **said to be missing rather than filled in from what this page
+sent**.
+
+THE STANCE SURFACE IS A SECOND SURFACE RATHER THAN A SECOND READ. `op=basisversions`
+publishes `current` only when a project is named, so the read names one and the surface hosts
+`op=versioncurrent`. **A NULL `current` is NOT "this project has not chosen":** the plane's
+`#currentVersionOf` collapses three situations into that one answer on purpose — no reading
+named, no document to record one in, a project this credential may not see — and the page
+says which three and why they answer identically. **Do not replace that with the flattering
+one.** UI-42's state words and composition helpers are CALLED here; no third spelling exists
+and the suite pins that.
+
+v82, 2026-08-09 session, thread UI, UI-42. Landed `d31302d` (merged `d579ae8`). SURFACE:
+`app.html`, a surface of its own — `SURFACES["basis-versions"]`, addressed at a versions
+route, living between the version-review region markers. VERSION REVIEW: ROTATION IS THE
+DIFF. It reads `op=basisversions` and `op=affordances`, hosts exactly ONE act
+(`versionhide`), and is driven by `version-review.test.mjs` (85 assertions) with a nine-arm
+control.
+
+THREE THINGS TO KNOW BEFORE TOUCHING IT, carried from `kickoffs/UI.md`. (1) ROTATION IS THE
+DIFF, AND THE MEMORY LIVES IN STATE. `VREV.focus` is the reading in front of the member and
+`VREV.against` is the one they came from. The default focus is settled in
+`versionReviewLoad` and NOT in the renderer — it was in the renderer first, and the first
+rotation then compared against nothing, **which is the member's first move being the one
+that tells them least.** If you make the focus a derived value again, that regression comes
+back. (2) THE ANALYST'S VOCABULARY IS READ AND NEVER PRINTED: the record stores the
+relationship as a token and files each set of reasons under a member-authored label; the
+surface renders the CONSEQUENCE — the elicitation's own two stems — and names a set by the
+reasons in it, never by its label. The fixture deliberately files one set under an
+analyst-worded label, so a renderer that ever prints a label fails the sweep naming the phase
+and the word. (3) HIDING SHRINKS THE DISPLAY AND NOTHING ELSE: `op=basisversions` keeps
+returning a hidden reading and the surface keeps holding it; only the LIST is filtered, the
+count line says how many it is holding back, one control puts them back, and the direct
+address opens a hidden reading with its rejection act intact. The control's arm 1 makes the
+load drop hidden readings — 10 of 85 assertions go red, five of them named ACTS PERSIST.
+
+WHAT THIS SURFACE DOES NOT DO, STATED SO IT IS NOT READ AS A GAP. It shows no strength, no
+grade and no pair for any reading. PL-14's `op=versionstrength` exists and is deliberately
+not asked here, because DEC-32 clause 5's ordering rule is that structure is read before
+strength is shown, and **a review surface that put a grade beside each alternative is the
+surface that invites choosing by the number.**
+
+v81, 2026-08-08 session, thread UI, UI-38. Landed `82ef337` and `3b1cbcf` (merged `818e863`
+and `c728ff5`). SURFACE: `app.html`. THE SURFACE REGISTRY AND THE RECIPE FORMAT with their
+build-time validation — `ASSISTANT-PILOT.md` §7 step 1, and it needs no AI at all. Surfaces
+self-describe, recipes are data, and there is ONE running-session surface, enforced. The
+panel had published three conditions and rendered one; **one recursive renderer replaced a
+list of field names**, which is the same invert-do-not-lengthen move UI-53 made a day later
+in the test tree. The integration also caught a sourcing arm that PASSED A COMPLETE HAND COPY
+— the zero-cost-agreement class, measured here before UI-54 met it again.
+
+v80, 2026-08-08 session, thread UI, UI-50. Landed `fbf1590` (merged `d892449`). SURFACE:
+`app.html`. `heldMatch` WAS WRITING A WRONG PREDECESSOR INTO EVERY NEW BUNDLE, PERMANENTLY,
+AND EVERY DAY ON THE OLD LOOKUP ADDED ANOTHER (PL-10's delegation). The record named the
+wrong predecessor and wrote it down; the join that answers correctly already existed, and the
+item was making the writer use it. The defect is enumerated as D-256 (renumbered from a
+colliding D-236 by CONDUCT the same day). The surface walk this opened was routed as D-257.
+
+THE DECISION THIS LANDING LEFT WITH BOB, carried here from `kickoffs/UI.md` where UI-50
+appended it on 2026-08-08 — **it is recorded, not resolved, and it is still his.** What runs
+NOW, provisionally: the lookup is fixed so no NEW bundle can be written with a wrong
+*"changed from"* sentence, and **the bundles that already carry one are left exactly as they
+are**, with the correction DEFERRED to a ruling rather than made by a worker. Why it was
+genuinely ambiguous: the record is append-only and correction moves forward (DEC-19), so the
+false sentence in a bundle body cannot be edited away — but leaving it unmarked means the
+record keeps asserting something it cannot support, which this project ranks as worse than a
+missing feature. **Both halves of the doctrine point in opposite directions here, and
+choosing between them is a statement about what the record MEANS.** The alternative, stated
+fairly: append a correction to each affected bundle — a new revision saying, in the record's
+own voice, that the earlier sentence was composed by a lookup that returned the oldest
+version at the address and naming the version that actually preceded this capture, the
+original staying in the body visibly superseded rather than removed. That is the fuller
+correction and entirely within DEC-19; it costs a write to every affected bundle and it needs
+an AUTHOR, because a machine appending a correction on nobody's behalf is the shape DEC-54
+(c) warns about. RECOMMENDATION: take the alternative, in two steps and in this order.
+**First the enumeration, which needs no ruling at all** — the affected set is findable (the
+sentence has one fixed literal shape) and every member is decidable today, because the
+capture is now in the register and the version-chain read answers with the true predecessor
+for it; that report splits into *provably wrong*, *provably right* (one prior version, where
+the two routes cannot disagree) and *undetermined* (no chain rows), and **those three must be
+reported separately or the report repeats the defect's own mistake.** **Then rule on whether
+the correction lands in the bundles or in one published report, with the size of the
+*provably wrong* set in front of you. A ruling made before that number exists is a ruling
+about an unknown.** What reversing it costs: reversing the DEFERRAL costs nothing today and
+gets no more expensive with time — the fix has stopped the set growing and every affected
+bundle stays decidable as long as its capture is registered; reversing the ALTERNATIVE, once
+correction revisions exist in bundles, costs the ordinary price of an append-only record,
+since they cannot be removed, only superseded in turn. **That asymmetry is the reason the
+enumeration comes first and the writing second.**
+
+v79, 2026-08-08 session, thread UI, UI-48. Landed `4c04e33` (merged `bf69c27`). SURFACE:
+`app.html`. FIVE SURFACES READ A CAPPED OP AND SAID NOTHING, AND AN UNSTATED BOUND READS AS
+COMPLETENESS. The lesser half of UI-46's class, routed rather than absorbed. Five surfaces,
+six sites — and the difference between those two numbers is the item.
+
+v78, 2026-08-08 session, thread UI, UI-52. Landed `7e0476f` (merged `c1d71f0`). **NO MEMBER
+SURFACE CHANGED** — `surface-registry-a4.control.mjs` (new) and `surface-registry.test.mjs`.
+ARM A4's TWO CLAIMS SPLIT: the arm asserted a property that only holds at WAVE COMPLETION and
+was blocking a finished plane item, so the ASSERTION was narrowed rather than the rule
+relaxed — fiction stays unconditional, and the plane-first gap becomes a named, ratcheted
+bill.
+
+v77, 2026-08-08 session, thread UI, UI-51. Landed `40fcf64` (merged `a2f8f9b`). SURFACE:
+`app.html` and `check-semantics.mjs`. THE FIFTH CANONICAL TYPE'S SEVEN UI ENTRIES — five read
+from the plane, two authored. `bias` joins the catalogue's type vocabulary; until it did,
+`check-semantics.mjs` FAILED, so the UI harness was RED on an unrelated integration and
+CONDUCT was the one holding it.
+
+v76, 2026-08-07 session, thread UI, UI-49. Landed `42f9fe9` (merged `d4a8d65`). SURFACE:
+`app.html`. §14a's PROMISE REACHES SOMEBODY — the running-session indicator gets its call
+sites. `INVESTIGATIVE-SESSION.md` §14a says any window focused on an inquiry shows that a run
+is active; the indicator existed and had NO CALL SITE, which is the
+mechanism-believed-on-its-existence class this project meets most. The integration also found
+that no op can answer which runs are in a context — a ratchet blind spot, recorded rather
+than smoothed.
+
+v75, 2026-08-07 session, thread UI, UI-47. Landed `2f8acea` (merged `d294b3f`). SURFACE:
+`app.html`. THE RUNNING-SESSION SURFACE READS THE RUN (IS-6's `op=airun`) — IS-6's
+delegation, and its consumer was built FIRST on purpose. UI-38 shipped the once-only surface;
+this wired the read. At integration §14a's promise was still undelivered, which is what
+became UI-49.
+
+v74, 2026-08-07 session, thread UI, UI-46. Landed `52bc9cf` (merged `a96bb06`). SURFACE:
+`app.html`. **THE COMMIT SPELLS THIS ITEM `UI-42`, AND THAT IS NOT AN ERROR IN THE LEDGER —
+IT IS A RENUMBERING.** The item was minted as UI-42, landed under that subject on 2026-08-07,
+and was renumbered to UI-46 at integration (`71d0a5b`, *"UI-46 (was UI-42)"*) because the id
+was reused for the version-review item that landed two days later as `v82`. **A subject-line
+matcher cannot see a renumbering**, and this entry exists because a hand check caught it.
+
+A LIVE MEMBER-FACING OVERCLAIM, CREATED BY REC-60 LANDING AND INVISIBLE TO EVERY SUITE — the
+class this project ranks worst, which is why the item was taken at all. The false sentence was
+DELETED and no new one was written in its place (the rule UI-39 and UI-40 also ran), and the
+instrument that was the reason it could not announce itself was built in the same turn. Five
+capped ops were invisible to the walk that should have caught this; the lesser half became
+UI-48.
+
+v73, 2026-08-05 session, thread UI, UI-41. Landed `f7e49fe` (merged `58b6533`). SURFACE:
+`app.html`. THE SURFACES READ THE RECORD'S BOUND INSTEAD OF AUTHORING THEIR OWN. REC-57 gave
+them the record's own bound sentence (UI-39's delegation, discharged on the plane side), so
+no surface authors a bound any more and DEC-58's exception is retired. The pattern this and
+its two neighbours establish, and it is the one to keep: **when a surface has been saying
+something the record did not say, delete the sentence and render the record's — never write
+a better one.**
+
+v72, 2026-08-05 session, thread UI, UI-40. Landed `5020ec8` (merged `1da216f`). SURFACE:
+`app.html`. RENDER THE RECORD'S TWO PUBLISHED ACCOUNTS; `opened` removed via IC-22. Three
+publications on `op=publishedcase` were unread — decided by CONDUCT rather than raised,
+because REC-41 had already set the precedent. **`unresolved[]` was a contradiction the reader
+was never shown**, and the integration's own line for it is the one worth keeping.
+
+v71, 2026-08-05 session, thread UI, UI-35. Landed `6212c65` (merged `1d3b164`). SURFACE:
+`app.html`. MEASURE `op=publishedcase`'s CONSUMERS — AND THE PREMISE IS CONTRADICTED. The
+item was raised on the belief that a published top-level detail was rendered nowhere for a
+case that was found; the measurement said otherwise. **THE FIELD DOES NOT EXIST — AND THE
+FIXTURE INVENTED IT, SO A DEAD BRANCH RENDERED AS ALIVE.** That is the finding: a fixture
+that mints a field the plane never publishes makes unreachable code look reached, and no
+assertion can tell.
+
+v70, 2026-08-05 session, thread UI, UI-39. Landed `7e0a5c3` (merged `db82819`). SURFACE:
+`app.html`. THE FOUR BOUND-DROPPING SITES UI-25 FOUND AND REPORTED RATHER THAN EDITED (they
+sat outside its claim), plus the sweep for the class. **A CAP GOVERNED A WRITE, AND A STALE
+CARRY WROTE A FALSEHOOD** — which is the same class one level worse than a cap governing a
+display. Two delegations were raised rather than absorbed: the ops that cap without
+publishing the cap (became REC-57, discharged into UI-41), and the battery's concurrency
+sensitivity (became M0-10).
+
+v69, 2026-08-05 session, thread UI, UI-25. Landed `fb0dadd` (merged `4e81fb2`). SURFACE:
+`app.html`. THE UNCAPPED QUERY SELECTION — *"hold everything this query matches"*, UI-21's
+follow-on. The finder's lease was drawn from a page capped at a limit, so a member holding
+"everything this query matches" held a page of it. **`digestChanged` is its own fact and not
+a synonym for per-row drift**, and separating the two is half the item. It reported four more
+sites outside its own claim rather than editing them; those became UI-39.
+
+v68, 2026-08-04 session, thread UI, UI-37. Landed `f51f8ae` (merged `d46a72d`). SURFACE:
+`app.html`. THE PUBLIC VERIFICATION SURFACE STOPS ANSWERING A QUESTION THE PLANE DECLINED
+(D-195, measured by UI-36). A plane REFUSAL was being rendered as a substantive negative —
+the record saying *we did not determine this* shown to a member as *this is not so*, which is
+the overclaim class in its purest form. **THE SWEEP FOUND THREE REFUSALS ACROSS THREE PUBLIC
+SURFACES WHERE THE ITEM NAMED ONE.**
+
+v67, 2026-08-04 session, thread UI, UI-36. Landed `3370514` (merged `4236109`). **NO MEMBER
+SURFACE CHANGED** — `preauth-vocabulary.test.mjs` only. THE PUBLIC OP NOBODY ASKED, DRIVEN.
+`pubVerify` is a public, uncredentialed op whose answers no scenario harvested, and driving
+it grew DEC-49's SUBJECT from 8 plane-sourced rows to 11. **An op with no scenario is an op
+whose wording nothing governs**, and the three rows it added are what made D-195 findable by
+UI-37.
+
+v66, 2026-08-04 session, thread UI, UI-34. Landed `f5add98` (merged `2012a0a`). SURFACE:
+`app.html`. `handle` DECIDED PRODUCT-WIDE AND KEPT, WITH THE DRIFT ASSERTION AS THE ITEM —
+the naming is settled by a machine-guarded assertion rather than by a note, so the next
+session cannot re-litigate it by accident. Also: one pre-authentication surface that NO
+SCENARIO DROVE, and the published rail's own links now discovered rather than authored.
+
+v65, 2026-08-04 session, thread UI, UI-33. Landed `a33d84f` (merged `b243547`). SURFACE:
+`app.html`. THE HALF OF THE PRE-AUTHENTICATION VOCABULARY NO RULING WOULD HAVE FIXED. UI-31's
+measurement, routed as a queue question rather than raised as one: DEC-49 settles who owns
+the words the PLANE publishes, and it can never settle the words the SURFACE authored. Those
+are closed here, **with every plane string untouched** — the boundary is the item.
+
+v64, 2026-08-04 session, thread UI, UI-32. Landed `b39ab4d` (merged `708495d`). SURFACE:
+`app.html`. THE FOURTH HAND-WRITTEN STATEMENT OF THE CAPTURE-GRADE DOCTRINE, plus two small
+stale copies in its neighbourhood, with a sweep so there is no fifth. **THE FOURTH STATEMENT
+WAS A PREDICTION AND IT WAS RIGHT — and a second site fell out of that reading.** No surface
+spells a capture grade letter it derived. This removal STANDS and UI-54 did not reopen it.
+
+v63, 2026-08-04 session, thread UI, UI-31. Landed `272c5a6` and `0e66041` (merged `54dfc15`).
+**NO MEMBER SURFACE CHANGED** — `preauth-vocabulary.test.mjs` only. THE VOCABULARY GUARD
+REACHES THE PRE-AUTHENTICATION SURFACES, AND REPORTS RATHER THAN FAILS while DEC-49 was open.
+UI-4's member-facing guard had never reached the sign-in gate. The follow-up commit asserts
+BOTH structural rules live, SEPARATELY — **one assertion covering two rules is one rule
+nobody is enforcing.** Its measurement is what routed UI-33.
+
+v62, 2026-08-04 session, thread UI, UI-28. Landed `fa1ba32` (merged `98f1ede`). SURFACE:
+`app.html`. THE SURFACE STOPS AUTHORING THE ATTESTATION FENCE — IT RENDERS THE PUBLISHED ONE
+(DEC-39's UI half). `ATTEST_YIELDS_GRADE` and its hand-written honesty block go; the plane's
+published fence arrives whole. **THE MEASUREMENT THAT MATTERS AND THAT UI-54 LATER LEANED ON:
+the plane's three parts reassemble CHARACTER FOR CHARACTER**, which is what makes "render it
+whole" a checkable rule rather than a preference.
+
+v61, 2026-08-04 session, thread UI, UI-30. Landed `084cafa` (merged `238a1d0`). SURFACE:
+`app.html`. THE SIGN-IN GATE RENDERS THE PLANE'S REFUSAL SENTENCE, and the harness stops
+asserting a RETIRED code (REC-41's consumer half). **A harness asserting a code the plane no
+longer emits is a test that passes for the wrong reason**, and correcting it — rather than
+exempting it — is the standing rule. The wording-ownership question this raised became DEC-49.
+
+v60, 2026-08-04 session, thread UI, UI-29. Landed `18fca89` and `bc0bb46` (merged `40e8638`).
+SURFACE: `app.html` and `check-mock-envelope.mjs`. THE PUBLISHED CASE RENDERS ITS FINDINGS,
+PLURAL (DEC-44's surface half). UI-18 rendered a single inquiry AS the case; **a case is a
+SET**, and rendering one member of a set as the whole is a claim about the record that the
+record does not make. The follow-up commit put an honest verification pointer in the awaiting
+window and RE-MEASURED the negative-control counts rather than carrying the old ones.
+
+v59, 2026-08-04 session, thread UI, UI-27. Landed `c46f365`, `d58067e` and `c4bd50e` (merged
+`b3c9203`). SURFACE: `app.html` and `check-mock-envelope.mjs`. THE READER SUPPLIES THE FLOORS
+(DEC-40), AND IT CORRECTS SHIPPED CODE — UI-18 had landed a four-stance selector and the
+ruling removes it, so the named stance set is GONE. Then DEC-32's ELICITATION: **consequences
+in, structure out**, reachable from the question's own act bar. Its eight negative controls
+and their measurements were recorded in `CLAIMS.md` in a commit of their own, which is the
+practice this ledger is the successor to.
+
+v58, 2026-08-04 session, thread UI, UI-26. Landed `f98161e` (merged `08e5675`). SURFACE:
+`app.html`. CONSUME `op=readingname` (REC-36's UI half) — ONE entity call where a per-name
+loop was. UI-13's candidate loader ran one read per alias and stated a limit that was not the
+one in force. The integration's line is the one to keep: **the measured bound stated clause by
+clause, and the identifier-tier trade NAMED** rather than silently taken.
+
+v57, 2026-08-04 session, thread UI, UI-18. Landed `7be97b5` (merged `55fca61`; the UI-18 ×
+UI-24 seam corrected at `784c9d6`). SURFACE: `app.html` and `check-mock-envelope.mjs`. **O2
+THE PUBLISHED CASE — THE CREDENTIAL-FREE READ, AT A REAL ADDRESS, AND THE REASON THE REST
+EXISTS.** The critical path complete. Both strengths everywhere including the index row. Two
+of its choices were superseded within the day by ruling rather than by defect — DEC-40 removed
+the stance selector it shipped (UI-27) and DEC-44 corrected findings-singular to findings-plural
+(UI-29) — and **both supersessions are recorded against this entry rather than hidden inside
+the later ones**, because a rung that was right when built and re-ruled after is not a rung
+that failed.
+
+v56, 2026-08-04 session, thread UI, UI-24. Landed `ffa11da` (merged `15eab62`). SURFACE:
+`app.html`. THE AUTHENTICATION SURFACE FINALLY HAS AN INSTRUMENT. Sign-in and the public list
+had ZERO harness coverage; UI-23's sweep had found the token read broken and nothing could
+have reported it. The attest label is read rather than authored, and the vocabulary mock is
+tied to its source. Its two delegations became REC-39.
+
+v55, 2026-08-04 session, thread UI, UI-17a. Landed `6ee25f0` (merged `9fd6254`). SURFACE:
+`app.html`. THE PUBLICATION ENTRY POINT — the placeholder DEC-33 ships in UI-17's place. A
+small surface stating what publication IS (irreversible, editions, correction moves forward —
+DEC-19's corrected top rung) and that publication currently runs THROUGH THE OPERATOR. **No
+ceremony controls, no signing, no pre-flight, and nothing calls the publish op — asserted on
+the wire AND by driving the act handler directly.** The statement renders IDENTICALLY for
+every credential, proved string for string, **because it is a statement about the record and
+not a control.** Two instrument findings were kept rather than smoothed: a greyed control is
+invisible from the credential it is not greyed for, so the read-only arm is not redundant;
+and the act handler returns synchronously, so counting calls on the next line measured
+nothing until a microtask drain made the arm honest.
+
+v54, 2026-08-04 session, thread UI, UI-21. Landed `704e4fb` (merged `20f70ad`). SURFACE:
+`app.html`. E1 THE EVIDENCE FINDER — ONE finder, TWO NAMED ROUTES, **the intersection REFUSED
+rather than approximated.** Refusing the intersection is the record's rule showing up in a
+search box: a result set the record cannot justify is not offered, however useful it would
+look. The merge seam turned the Actions route into a finder scope, and the deletions are part
+of the item rather than tidy-up. Its follow-on was UI-25.
+
+v53, 2026-08-04 session, thread UI, UI-19. Landed `822aac3` (merged `9f227c5`). SURFACE:
+`app.html`. O3 THE ACTION PAGE — the outward ask, and what came back. The intake was restored
+and the conformance flip-back proved in BOTH directions, which is the part worth keeping: **a
+conformance check that only proves the good direction proves half of nothing.**
+
+v52, 2026-08-04 session, thread UI, UI-23. Landed `97f8bf0` (merged `0dbe4b1`). SURFACE:
+`app.html` and `check-mock-envelope.mjs`. THE D-173 CLASS SWEEP — every DO-op read in the UI
+opens the envelope, and a guard so the class cannot reopen. Five instances across two items;
+six live defects found. **The envelope class is closed STRUCTURALLY, with a two-arm guard**,
+rather than by five corrections and a note — which is why UI-24 exists: the sweep found
+`signIn`'s token read had been broken and no instrument could have said so.
+
+v51, 2026-08-04 session, thread UI, UI-22. Landed `5ab4f9e` (merged `54f0e91`). SURFACE:
+`app.html`. THE FIVE PRE-DEC-8 REFUSAL RESIDUES — every flow now renders only plane-worded
+refusals. `disposePreflight` (UI-2's, built before DEC-8) was still computing and WORDING its
+own refusals; four more like it. **Dispose gets the probe the evidence supports** and no
+more.
+
+v50, 2026-08-04 session, thread UI, UI-16. Landed `b88fd8f` (merged `be5ec6c`). SURFACE:
+`app.html` and `check-semantics.mjs`. E4 THE PROJECT WORKSPACE, and the ballot act's FIRST
+CALL SITE. UI-3 built the ballot in July and nothing could reach it until this; **an act with
+no call site is the mechanism-believed-on-its-existence class, and this area has now met it
+three times (UI-3's ballot, UI-13's nine ops, UI-49's indicator).** The container side held.
+
+v49, 2026-08-04 session, thread UI, UI-15. Landed `d397ab5` (merged `55a5a46`). SURFACE:
+`app.html`. E3 ADD — THE TWO WORST LIVE DEFECTS IN THE MEMBER UI, plus F-6 and F-7 and the
+`ADD_TYPES` amendment. **This is the landing the 2026-08-04 CONDUCT amendment at the head of
+this file is about**: it REBUILT the A4 frame the 2026-07-30 ruling deleted, under the
+2026-08-01 case-making handover whose own BOB-authored acceptance requires it — and the
+rebuilt frame is not the one the ruling deleted. The old frame explained the platform limit
+and asked the member to arbitrate it; the new one classifies the complication, never names the
+ceiling, and asks only the record question: what may the record claim about a capture missing
+part of itself. **Do not delete the frame on the strength of `v33`'s entry.** Reversal is one
+function body and three assertions.
+
+v48, 2026-08-04 session, thread UI, UI-20. Landed `9c7cd57` (merged `4cdc140`). SURFACE:
+`app.html`. `op=cite` GETS ITS CALLER — **THE NEVER-BUILT U9 HALF**, in the item's own words.
+The cite/retire/sever/reinstate acts reach a member for the first time; the pre-flight checks
+every member is CITABLE before offering the act rather than after refusing it. The
+inquiry-cite gap was MEASURED and NAMED rather than worked around, and became REC-37.
+
+v47, 2026-08-04 session, thread UI, UI-12. Landed `0e6849e` (merged `73fd16a`). SURFACE:
+`app.html`. S3's ACT BAR — CONCLUDE, with every option and rung READ FROM THE PLANE. The
+target-withheld pre-flight lands here, and `DISPOSITIONS` is DELETED from the surface — a
+surface-side vocabulary for a plane-side ruling is two answers to one question. Its cost
+measurement is REC-34's, which also named the no-memo shape.
+
+v46, 2026-08-04 session, thread UI, UI-14. Landed `8b1e77c` (merged `1bbfd46`). SURFACE:
+`app.html`. **S1 THE QUEUE — THREE SCREENS BECOME ONE.** MILESTONES M8's build-order rule is
+the queue FIRST, and this is it. The mute control reads *"Mute conditions on this case"* and
+reaches the act; the receipt, the stated rule and **the honest all-clear** are the three
+pieces — an all-clear that cannot distinguish *nothing happened* from *we did not look* is the
+defect UI-45 later closed per-class.
+
+v45, 2026-08-04 session, thread UI, UI-13. Landed `9b0b357` (merged `7dfe631`). SURFACE:
+`app.html`. A WRITE SURFACE FOR THE INTENT LAYER — **NINE OPS, ZERO CALLERS**, and now nine
+call sites. The envelope bug D-173 was fixed at ONE SEAM in the same integration; the class
+sweep that followed is UI-23.
+
+v44, 2026-08-04 session, thread UI, UI-11. Landed `018e44b` (merged `740255e`). SURFACE:
+`app.html` and `check-semantics.mjs`. S3 THE INQUIRY PAGE, READ-ONLY — **TWO STRENGTHS, NEVER
+ONE**, each naming its own weakest leg. The inert legs are NAMED and the gap is STATED rather
+than left to be inferred, which is the undetermined-is-first-class rule reaching a page.
+
+v43, 2026-08-04 session, thread UI, UI-10. Landed `a26617f` (merged `2c136fe`). SURFACE:
+`app.html` and `check-semantics.mjs`. THE TYPE IN THE UI, AND THE DRIFT GUARD MADE REAL. The
+first item of UI's post-promotion run and the one every other UI item depended on: the
+member-facing type vocabulary comes from the plane, and the guard that says so is enforced
+rather than described.
+
+v42, 2026-07-31 session, thread UI, UI-9. Landed `e2e05e4` (merged `ba7fe07`; `op=captureprogressions`
+followed at `49d10ac`, I3 1.6.0). SURFACE: `app.html`. CONSTRUCTS STEP 8, THE DOCUMENT-PAGE
+HALF — a document page SHOWS its REFERENTIAL and TEMPORAL structure, so a member reading ONE
+document can see what it points at and when it sits.
+
+v41, 2026-07-31 session, thread UI, UI-8. Landed `1586ad2` (merged `1b2dc08`). SURFACE:
+`app.html`. THE MEMBER HOME — the *"what needs you"* orientation surface, and M8's ENTRY
+POINT. Live task and proposal summaries.
+
+v40, 2026-07-31 session, thread UI, UI-7. Landed `af81f28` (merged `ce39e62`). SURFACE:
+`app.html`. THE MEMBERS & GOVERNANCE ROSTER — the READ-ONLY half of U11, split from the rung
+because the whole rung exceeded it. **The founder discrepancy it met was SURFACED HONESTLY
+rather than reconciled**, which is the right answer and the one that costs something. U11's
+other halves — key fingerprints and the doorbell — are still ABSENT and are `UI-60`'s.
+
+v39, 2026-07-31 session, thread UI, UI-6. Landed `08f3e05` (merged `1245b61`). SURFACE:
+`app.html`. THE ATTESTATION ACT — a member CO-ATTESTS a capture through `op=attest`, raising
+it by co-attestation over the capture hash. Act four, **and with it the ACT construct fits all
+four act types** — which is what v0.2's falsifiable test was asking.
+
+v38, 2026-07-31 session, thread UI, UI-5. Landed `97e6b99` (merged `21739e6`; its two plane
+gaps closed by REC-6 at `bf4af92` and REC-7 at `ccbab84`, I3 1.3.0/1.4.0, I5 1.8.0). SURFACE:
+`app.html`. THE PROPOSAL SURFACE — THE THIRD ACT (derived findings; adopt, defer, dismiss),
+completing v0.2's falsifiable test and closing D-82's DISPLAY half. The gap banner it shipped
+with was retired by the plane rather than papered over, which is the pattern: **state the gap,
+then close it at the source.**
+
+v37, 2026-07-31 session, thread UI, UI-4. Landed `d2d94df` (merged `2aecb59`). SURFACE:
+`app.html`. THE SUBJECT VIEW — *"what the record knows about a subject"*, making the M4
+reverse index MEMBER-VISIBLE. Connection auto-derivation was logged as D-122 rather than
+assumed.
+
+v36, 2026-07-31 session, thread UI, UI-3. Landed `719473b` (merged `156d555`). SURFACE:
+`app.html`. THE SECOND ACT — A BALLOT (project owner removal) through the ACT construct,
+continuing v0.2's falsifiable test on an act UNLIKE the justified transition. **The construct
+held and the collapse was corroborated.** The ballot had no call site until UI-16.
+
+v35, 2026-07-31 session, thread UI, UI-2. Landed `bc434e1` (merged `3e57cb5`). SURFACE:
+`app.html`. THE FIRST ACT SURFACE — focus disposition as a JUSTIFIED TRANSITION, and v0.2's
+falsifiable test in its original form: build the queue and ONE act, and if the next three acts
+each need a new construct, the collapse was wrong. It raised DEC-8, the ACT construct's
+pre-flight source — **the ruling that later made UI-22's five residues findable**, because
+`disposePreflight` was built here, before it.
+
+v34, 2026-07-31 session, thread UI, UI-1. Landed `105198b` (merged `e69fd98`; the task-actor
+fence REC-4 completed it at `17aae55`, I3 1.2.0). SURFACE: `app.html`. **THE TASK INBOX — the
+member surface over the attention layer, and MILESTONES M8's FIRST item.** The plane half
+already existed (D-98, 0.49.0): the producer/consumer split with no control-plane route to the
+queue at all, and `actor` stamped server-side. This is the surface over it, and it is where
+UI's run against `QUEUE.md`'s rows begins — **the run this ledger had not recorded until
+today.**
+
 > **Amendment, 2026-08-04 (CONDUCT, at UI-15's integration — the D-160 pattern: a
 > dated record gets an amendment, not a rewrite).** The v33 entry below records the
 > 2026-07-30 ruling that deleted the ceiling-choice frames ("ALL THREE ARE GONE").

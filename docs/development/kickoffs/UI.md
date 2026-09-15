@@ -34,10 +34,14 @@ CONSUMES the op contracts (I3) and, through the plane, the capture interface
    token published in the repo and treats it as NOT SET, so committing one
    revokes it.
 
-Then read, in this order: `docs/development/UI-PLAN.md` (the plan of record; U1–U8
-are DONE and the standing-dependencies section names the plane defects that make
-the link surface tell a member something untrue), the newest
-`docs/development/CIVICOS_UI_STATE.md` entry, `docs/development/DEBT.md`,
+Then read, in this order: `docs/development/UI-PLAN.md` — **its FRONT MATTER first,
+which says rung by rung what is BUILT and which of its own sections will mislead
+you; the body is the 2026-07-28 plan and is stale as a statement of state** (this
+line read *"U1–U8 are DONE"* until 2026-09-14, when UI-58 measured eleven of
+fourteen rungs built; the standing-dependencies section still names plane defects
+that make the link surface tell a member something untrue, and it carries no
+dispositions) — then **the newest `docs/development/CIVICOS_UI_STATE.md` entries,
+which are the area's log and are where your own goes**, `docs/development/DEBT.md`,
 `docs/development/LINK-FIDELITY.md`, and `civicos-ui/test/run.mjs` (the UI test
 path). The parenthetical is why, not a summary; read the document.
 
@@ -149,383 +153,113 @@ An empty list is a real answer. At the close, rewrite ONLY this file for the
 session after; append to `DEBT.md` and `MEASUREMENTS.md`, prepend to
 `CIVICOS_UI_STATE.md`.
 
-## Decisions for Bob — appended 2026-08-08 by UI-50 (append, not a rewrite: several UI workers are live)
+## Where the area's log lives, and why this file no longer holds it
 
-**ONE ITEM. THE SENTENCES ALREADY WRITTEN.**
+**Rewritten 2026-09-14 by UI-59. This file is REWRITTEN EACH SESSION, not appended
+to** — `kickoffs/README.md`, "One kickoff per THREAD": a session reads its thread's
+file at the start and *"at the close rewrites only that thread's file."* Between
+2026-08-08 and 2026-08-10 seven UI items appended their session log here instead:
+UI-50's decision block and per-item blocks for UI-42, UI-45, UI-44, UI-53, UI-54 and
+UI-55, each correctly labelled *"append, not a rewrite: other UI workers are live"*.
+**Each of those appends was the right call on the day and the wrong file for the
+result.** Concurrent UI workers made rewriting this file unsafe, so the log went
+where it was safe to write rather than where it belonged — and the safe file is the
+one whose own rule guarantees it is eventually overwritten. 380 of this file's 531
+lines were that log.
 
-- **What runs NOW, provisionally.** UI-50 fixed the lookup, so no NEW bundle can
-  be written with a wrong *"changed from"* sentence. **The bundles that already
-  carry one are left exactly as they are, and the correction is DEFERRED to a
-  ruling rather than made by a worker.** Nothing has been rewritten and nothing
-  has been marked. The defect is enumerated as **D-256** (renumbered from a colliding D-236 by CONDUCT 2026-08-08) so it cannot be lost.
-- **Why it was genuinely ambiguous.** The record is append-only and *correction
-  moves forward* (DEC-19), so the false sentence in a bundle body cannot be
-  edited away — but leaving it unmarked means the record keeps asserting
-  something it cannot support, which this project ranks as worse than a missing
-  feature. Both halves of the doctrine point in opposite directions here, and
-  choosing between them is a statement about what the record MEANS.
-- **The alternative, stated fairly.** Append a correction to each affected
-  bundle: a new revision saying, in the record's own voice, that the earlier
-  sentence was composed by a lookup that returned the oldest version at the
-  address and that the version which actually preceded this capture is `<X>`.
-  The original sentence stays in the body, visibly superseded rather than
-  removed. That is the fuller correction and it is entirely within DEC-19; it
-  costs a write to every affected bundle, and it needs an AUTHOR, because a
-  machine appending a correction on nobody's behalf is the shape DEC-54 (c)
-  warns about.
-- **Recommendation.** Take the alternative, in two steps and in this order.
-  **First the enumeration, which needs no ruling at all** — the affected set is
-  findable (the sentence has one fixed literal shape) and every member is
-  decidable today, because the capture is now in the register and
-  `op=versionchain&at=` answers with the true predecessor for it. That report
-  splits into *provably wrong*, *provably right* (one prior version, where the
-  two routes cannot disagree) and *undetermined* (no chain rows), and those
-  three must be reported separately or the report repeats the defect's own
-  mistake. **Then rule on whether the correction lands in the bundles or in one
-  published report**, with the size of the *provably wrong* set in front of you.
-  A ruling made before that number exists is a ruling about an unknown.
-- **What reversing it costs.** Reversing the DEFERRAL costs nothing today and
-  gets no more expensive with time — the fix has stopped the set growing, and
-  every affected bundle stays decidable as long as its capture is registered.
-  Reversing the ALTERNATIVE, once correction revisions exist in bundles, costs
-  the ordinary price of an append-only record: they cannot be removed, only
-  superseded in turn. That asymmetry is the reason the enumeration comes first
-  and the writing second.
+**All seven blocks are MOVED, not deleted.** Their substance is in
+`docs/development/CIVICOS_UI_STATE.md` at `v87` (UI-55), `v86` (UI-54), `v85`
+(UI-53), `v84` (UI-44), `v83` (UI-45), `v82` (UI-42) and `v80` (UI-50, including the
+decision item that is still Bob's and is still open). That ledger is **prepend a new
+entry, never edit an existing one**, so it is exactly as safe to write concurrently
+as an append here was, and it is the file `UI-PLAN.md`'s own front matter names as
+what the plan is *"logged against by"*.
 
-## UI-42 landed 2026-08-09 — version review: rotation and diff (append, not a rewrite: other UI workers are live)
+**So the rule for a UI worker, stated once:**
 
-**What exists now that did not.** A surface of its own, `SURFACES["basis-versions"]`, addressed
-`#versions/<INQ-…>` and `#versions/<INQ-…>/<name>`, living between
-`/*__VERSION_REVIEW_START__*/` and `/*__VERSION_REVIEW_END__*/` in `app.html`. It reads
-`op=basisversions` and `op=affordances`, hosts exactly ONE act (`versionhide`), and is driven by
-`civicos-ui/test/version-review.test.mjs` (85 assertions) with a nine-arm negative control in
-`civicos-ui/test/version-review.control.mjs`.
+- **Your session log goes in `CIVICOS_UI_STATE.md`, PREPENDED**, one entry per
+  landed surface change, its first line carrying the date and the thread name so a
+  version collision with a concurrent worker is still readable. Name your landing
+  commit and say which surface moved.
+- **This file carries what the NEXT session needs to START** — what the area owns,
+  how a session opens, the plan, the deploy discipline, the standing knowledge. It
+  is state, not history. If you find yourself writing *"what landed"*, you are
+  writing in the wrong file.
+- **A decision that is Bob's goes in your turn's decision items** in the shape
+  `kickoffs/README.md` defines, and — because a note in a region nothing drains is
+  not even a note — **anything owed by a future actor goes in a DELEGATION or a
+  QUEUE row, never only in prose here.**
 
-**Three things the next UI session should know before touching it.**
+## The state of the ladder, as of 2026-09-14
 
-1. **ROTATION IS THE DIFF, AND THE MEMORY LIVES IN STATE.** `VREV.focus` is the reading in front of
-   the member and `VREV.against` is the one they came from. The default focus is settled in
-   `versionReviewLoad` and NOT in the renderer — it was in the renderer first, and the first
-   rotation then compared against nothing, which is the member's first move being the one that tells
-   them least. If you make the focus a derived value again, that regression comes back.
-2. **THE ANALYST'S VOCABULARY IS READ AND NEVER PRINTED.** The record stores `relationship` as the
-   token `and`/`or` and files each set of reasons under a member-authored label. The surface renders
-   the CONSEQUENCE (*"fails only if ALL of these fail"* / *"fails if ANY of these fails"*, the
-   elicitation's own two stems) and names a set by the reasons in it, never by its label. The
-   fixture deliberately files one set under `"OR-branch: the ground partition"`, so a renderer that
-   ever prints a label fails the sweep naming the phase and the word.
-3. **HIDING SHRINKS THE DISPLAY AND NOTHING ELSE.** `op=basisversions` keeps returning a hidden
-   reading and the surface keeps holding it; only the LIST is filtered, the count line says how many
-   it is holding back, one control puts them back, and `#versions/<INQ>/<name>` opens a hidden
-   reading directly with its rejection act intact. The negative control's arm 1 makes the load drop
-   hidden readings — 10 of 85 assertions go red, five of them named ACTS PERSIST.
+Measured by UI-58 and carried here so a starting session does not have to re-derive
+it. `UI-PLAN.md`'s body marks eight rungs DONE; the true state is **eleven of
+fourteen BUILT** — U1 through U10 and U12 — with **U11 PART-BUILT** (the roster,
+capabilities and invitations are built; key fingerprints and the doorbell are
+ABSENT), **U13 GESTURED** (two mobile media blocks give a viewing shell; no parity
+rung exists and Bob's phone test is unrecorded) and **U14 ABSENT** (two `aria-`
+attributes in 18,736 lines; no keyboard or screen-reader audit, no pagination or
+virtualization, no recorded token rotation).
 
-**What UI-43 and UI-45 inherit.** The two falsifier stems and the four state sentences are named
-constants in this block and are pinned against UI-27's elicitation block and against the catalog's
-`VERSION_MACHINE.legal`; reuse them rather than authoring a third spelling. The other five version
-acts are still on `ACTS_AWAITING_SURFACE`, and `surface-registry.test.mjs`'s ARM A4c requires the
-row struck in the same commit that surfaces each one.
+**`UI-PLAN.md`'s body is accurate as a statement of INTENT and stale as a statement
+of STATE, and its front matter says so field by field.** Read the front matter
+first. Two of its Incomplete entries will actively mislead you if you read the body
+alone: the *"Development is PAUSED for consolidation"* section forbids new
+capability until a step that is still open, and fifty-seven UI items added
+capability continuously after it; and the *"Standing dependencies"* section is
+dated 2026-07-29/30 with no dispositions, at least one contradicted by the debt
+register. **Where `UI-PLAN.md` and `QUEUE.md` disagree, the queue is the authority on
+what was BUILT and the plan is the authority on what the PLAN was.**
 
-**What this surface does NOT do, stated so it is not read as a gap.** It shows no strength, no grade
-and no pair for any reading — PL-14's `op=versionstrength` exists and is deliberately not asked
-here, because DEC-32 clause 5's ordering rule is that structure is read before strength is shown,
-and a review surface that put a grade beside each alternative is the surface that invites choosing
-by the number. It also names no `project`, so it renders no `current` (§7: a stance is the
-project's, not the question's) — that half is UI-45's.
+**The unrowed residue is `UI-60`** — U13, U14, expertise and licences, verified
+export, the doorbell, plus UI-43's undrained version acts. It is a POINTER row and
+is deliberately not slot-eligible while content is the priority; decompose it into
+scoped rows at the area's next activation rather than working it as one item.
 
----
+## What a UI worker should know before touching `app.html`
 
-## UI-45 — NOTIFICATIONS RENDERED (landed 2026-08-09, worktree `agent-a4f9c3083de5f28e3`)
+**`civicos-ui/app.html` IS SHARED GROUND AND SEVERAL UI WORKERS MAY BE LIVE IN IT.**
+Claim it BY SITE, never by file: name the region markers, the `SURFACES` keys and the
+individual functions you will touch, and say explicitly which marked regions you are
+NOT touching. Every UI claim in `CLAIMS.md` from UI-42 on is written that way, and
+that is what let five workers share the file in one week without a conflict.
 
-**The block is `__NOTIFICATIONS_START__` … `__NOTIFICATIONS_END__`, appended after
-`__VERSION_REVIEW_END__`, plus four named renderers inside `__QUEUE_START__` and one key in
-`SURFACES`.** UI-42's delegated `current`/project half is discharged here, and `versioncurrent` is
-struck from `ACTS_AWAITING_SURFACE` in the same commit.
+**The surface registry and the two vocabulary guards will catch you before review
+does, and that is their job.** A new router must be classified in
+`preauth-vocabulary.test.mjs` WALK 2; a new surface must have its `SURFACES` key and
+its `ACTS_AWAITING_SURFACE` row struck in the SAME commit that surfaces the act
+(`surface-registry.test.mjs` ARM A4c); and any sweep asserting the analyst's
+vocabulary reaches no member must **import `civicos-ui/test/analyst-vocabulary.mjs`
+rather than write a list** — `analyst-vocabulary.test.mjs` ARM C is a census that
+fails on a new private ban pattern, because a fourth list coming back silently is
+exactly how that defect happened.
 
-**Read these five before you touch a notification renderer.**
+**Three standing rules the area has paid for, each recorded against the entry that
+earned it.** *Delete the false sentence; do not write a better one* — render the
+record's own words or render nothing (`v73`, `v72`, `v74`). *An act with no call site
+is not a built act* — this area has shipped one three times (`v50`, `v45`, `v76`).
+*A control the record cannot honour is worse than no control* — ask what identity the
+act is keyed on and whether THIS item carries it, never what kind it is (`v83`).
 
-1. **EVERY WORD ABOUT WHAT HAPPENED IS THE PLANE'S.** The queue renders a FINDING from the
-   producer's own `summary`, `detail` and `basis.detail`, and this item added three more of the
-   plane's own sentences to that list — `options_grain.detail`, `basis_entry.detail` and the
-   disposition answer's `reason`. **The surface holds NO per-kind wording table and names no kind
-   slug at all**, and `notifications.test.mjs` §1 asserts that structurally over the block's source.
-   The plane's per-kind sentences live in `queuestate.mjs` and are not published to any op; copying
-   them here would be two answers to one question in two repositories, which is DEC-8's drift class.
-2. **THE TWO SLUGS UI-45's ROW NAMES DO NOT EXIST, AND THEIR ABSENCE IS ASSERTED.**
-   `stance-changed-here-not-elsewhere` and `new-version-arrived-from-another-team` are **PL-13's**
-   to mint and PL-13 has not landed. §0 of the suite imports `queuestate.mjs` and requires both to
-   be absent, so **the day PL-13 lands that arm goes red** and the next session surfaces them. Do
-   not "fix" that failure by deleting the arm; it is the alarm.
-3. **A CONTROL THE RECORD CANNOT HONOUR IS WORSE THAN NO CONTROL, AND THIS IS NOW A PROPERTY.**
-   `op=proposedispose` is keyed on (`progression_key`, `stage_key`). Until this item the queue drew
-   Adopt / Defer / Dismiss on every FINDING, so on PL-15's out-of-inquiry lead all three could only
-   ever be refused. `notifDispositionKeyed(it)` asks the ITEM whether it carries the identity the
-   act is keyed on. **If you add a control to a queue item, ask what identity the act is keyed on
-   and whether THIS item carries it — never what kind it is.** A list of kinds goes stale the day
-   somebody mints a fourth.
-4. **AN EMPTY LIST OWES THE READER WHICH LEVEL WAS EMPTY.** `notifAbsenceHtml` reads `op=queue`'s
-   own `classes`, `classes_deferred` and `counts` and says, per class, which of THREE is true:
-   nothing on this plane raises one yet (*we did not look*), the record looked and raised none
-   (*nothing happened*), or the record published no count at all (a third fact, said as one rather
-   than shown as zero). A feed that did not answer produces NO level statement — with no published
-   class list there is nothing to say, and a line composed here would claim the record said
-   something it did not.
-5. **AN AGED PROPOSAL LEAVES THE OPEN LIST AND STAYS ON THE SCREEN.** §6.4 and the item's second
-   named negative control. The plane already ages a disposed proposal out of the open feed; the
-   surface used to show the receipt inside a dialog that then closed, so the finding simply vanished.
-   `notifDisposedHtml` renders the record's own `op=proposedispose` answer on the queue, and a field
-   the answer did not carry is **said to be missing rather than filled in from what this page sent**.
+**`npm ci` IN `bio-plane/` BEFORE YOU MEASURE ANYTHING.** A fresh worktree has no
+`bio-plane/node_modules` and three UI suites drive the real plane through miniflare,
+so the harness reads 43 pass / 3 fail, exit 1, and **that looks exactly like damage
+your own change did.** Two workers hit it independently on 2026-08-10. Run
+`node civicos-ui/test/run.mjs` FROM THE REPO ROOT and read the exit status unpiped.
 
-**What the stance surface is, and why it is a second surface rather than a second read.**
-`#stands/<PROJ-…>/<INQ-…>` — `op=basisversions` publishes `current` **only when a project is
-named**, so the read names one and the surface hosts `op=versioncurrent`. A NULL `current` is **not**
-"this project has not chosen": the plane's `#currentVersionOf` collapses three situations into that
-one answer on purpose (no reading named, no document to record one in, a project this credential may
-not see), and the page says which three and why they answer identically. **Do not replace that with
-the flattering one.** UI-42's `VREV_STATE_WORD`, `vrevComposition` (and through it the elicitation's
-two falsifier stems) and `versionsBoundHtml` are CALLED here — no third spelling exists, and the
-suite pins that.
+## Decisions for Bob
 
-**The seventh router.** `stanceRouteFromHash` is classified POST-AUTHENTICATION in
-`preauth-vocabulary.test.mjs` WALK 2, both halves pinned. That arm fired on this item's first run,
-which is the third consecutive time it has stopped a router arriving unclassified.
+**One, and it is UI-50's, still open and still his** — the full item is at `v80` in
+`CIVICOS_UI_STATE.md`, moved there from this file where it had sat since 2026-08-08.
+In one line: the lookup that wrote a wrong *"changed from"* sentence into new bundles
+is FIXED, so the set has stopped growing, and **the bundles that already carry one
+are deliberately untouched** (D-256) pending his ruling on whether the correction
+lands as an appended revision in each affected bundle or as one published report. The
+recommendation on the row is to run the ENUMERATION first, which needs no ruling at
+all, and to rule with the size of the *provably wrong* set in front of him. Nothing
+about this gets more expensive with time.
 
-## UI-44 — the connections sidebar (DEC-52 final). Appended 2026-08-09, NOT a rewrite: UI-43 and UI-45 are live in the same file
-
-**WHAT LANDED.** The connections sidebar on the running-session surface, as
-`IS-BUILD-PLAN.md` UI-44 scopes it and DEC-52 (final, 2026-08-07) governs it:
-connections the machine identifies land MACHINE-ATTRIBUTED and the sidebar is a
-VISIBILITY and BULK-REVIEW surface, **not a required approval gate**. It is a new
-region inside the existing `__AI_SESSION_*` block plus one expression in
-`aiSessionPanelHtml`; the paths and the line-level detail are in `CLAIMS.md`.
-
-**IT SHIPPED FIXTURE-VERIFIED, AND THAT IS THE FIRST THING THE NEXT SESSION MUST
-KNOW.** No op publishes a machine connection. The post-processing task scope that
-would produce one has no item and does not exist. What is verified is HOW THIS
-SURFACE TREATS a machine-attributed connection; what is NOT verified is that one
-exists to treat. The suite states it in its first paragraph, prints it in its
-FOOT on every run, and — the part that matters — **MEASURES it**: SECTION 0 reads
-`aiRunRead`'s own body out of `bio-plane/src/store.mjs` and fails the day the
-producer lands, so the caveat expires by itself instead of being inherited.
-
-**THREE THINGS THIS AREA SHOULD CARRY FORWARD.**
-
-- **A D-82 DRESS IS NOT ONE SENTENCE FOR EVERY DERIVED THING.** The proposal
-  badge says *nobody has yet decided this is worth pursuing… it changes nothing
-  until a person acts on it*. That is TRUE of a proposal and FALSE of a
-  connection the machine was licensed to rule on, which is in the record and
-  which the record already stands on. Reusing it would have been cheap and would
-  have made the surface lie in the safe-sounding direction. Two claims, two
-  sentences, one rule: say what the record actually did.
-- **ATTRIBUTION IS FOUND BY THE SHAPE OF A VALUE, NEVER BY A FIELD NAME OR A WORD
-  LIST.** The surface asks the same question REC-46 made the plane ask once: did
-  the CONTROL PLANE mint this identity. So a producer publishing the principal
-  under a key nobody anticipated, nested inside an array, is still attributed —
-  driven as the over-strictness arm. The two prefixes are the one thing copied
-  from the plane, and `MACHINE_STAMP_PREFIXES` is imported LIVE and compared, so
-  a third spelling fails the build here rather than un-attributing a machine.
-- **THE ANTI-GATE ARM IS AN EQUALITY, AND IT IS THE STRONGEST THING IN THE SUITE.**
-  Render with nothing selected and with everything selected; strip the selection
-  controls; every word about what each connection is and who made it must be
-  BYTE-IDENTICAL. A surface where review changed a connection's standing cannot
-  pass it. Under the superseded provisional that arm would have been the opposite
-  assertion — and it is corrected in place, with its date and its reversal
-  written out, rather than deleted.
-
-**ONE INSTRUMENT WAS CORRECTED IN PLACE AND IT WAS NOT THIS ITEM'S.**
-`ai-session-wire.test.mjs` ARM S5 asserts *the surface renders nothing the record
-did not publish*, over every function in the AI-session block. That is right
-about the RUN — IS-6 publishes its own vocabulary — and it is the WRONG RULE the
-moment the block hosts D-82's dress, which by definition says something the
-record cannot say about itself. Left standing it would have made delivering D-82
-fail the build. The replacement partitions by REGION MARKER rather than by a list
-of names, falls back to sweeping the WHOLE block when the marker is missing (a
-deleted marker fails loudly instead of widening the excuse silently), and requires
-the held-out region to be graded by this item's suite. Same correction ARM C2 took
-from UI-49, one arm over, and for the same reason.
-
-**TWO THINGS THIS ITEM DELIBERATELY DID NOT ADD, because both are traps this area
-keeps meeting.** No new ROUTER — the sidebar is reached at the `#session/<id>`
-address that already exists, so nothing new needed classifying by
-`preauth-vocabulary`. No new PLANE READ — the sidebar renders the run object
-`op=airun` already answered, so there is no explicit ask to state and no applied
-bound to report, and `bound-sweep`'s two walks see nothing new. Both were
-choices, not omissions.
-
-## UI-53 — the four `BANNED` lists became CONSUMERS of one derived family (2026-08-09)
-
-**D-269's delegation to UI, and the standing rule it leaves behind: THERE IS ONE DEFINITION OF
-DEC-32 CLAUSE 1'S BAN IN THIS DIRECTORY, and it is `civicos-ui/test/analyst-vocabulary.mjs`.** If
-you are writing a sweep that asserts the analyst's vocabulary reaches no member, **import it. Do not
-write a list.** `analyst-vocabulary.test.mjs` ARM C is a census over every `.mjs` here and it FAILS
-on a new private ban pattern — the control arm `2-a-hand-list-comes-back` proves it, because a
-fourth list coming back silently is exactly how this defect happened.
-
-**WHY, in one line each, so the next UI worker does not re-derive it:**
-
-- **Four lists existed, not the three D-269 reported, and no two agreed.** The fourth
-  (`connections-sidebar.test.mjs`) was a COPY of `elicitation.test.mjs` made to give the ban "ONE
-  spelling in this directory" — **copying a list to unify a rule makes another list.** It was
-  missed because the census was keyed on the phrase rather than on the subject.
-- **NOT ONE of the four carried `independently sufficient`**, the phrase that was being rendered to
-  members off `#axisResult` and frozen into signed `bundle.md` frontmatter. It is now enforced at
-  all four sites, as is `conjunct`, which no list carried either.
-- **The family is DERIVED, not typed:** the atoms are parsed from DEC-32 clause 1's own sentence in
-  `DECISIONS.md`, closed over by stem prefix so every spelling of a named construct is caught
-  unlisted, plus a **ceilinged, printed RESIDUE** for terms no closure can reach — each one asserted
-  at run time to occur in DEC-32's entry. **A residue term that is not in the ruling fails the
-  suite**, which is what keeps it from decaying back into a hand list.
-
-**THE ONE THING THAT WILL BITE YOU, and it is measured:** **the bare capitalised connective is NOT
-banned, deliberately.** Three of the four lists banned `/\b(AND|OR)\b/`; the moment all four
-consumed one family it fired on `notifications.test.mjs`'s own correct prose, *"LOOKED FOR AND NOT
-THERE"* — ordinary English capitalised for emphasis. Case-sensitivity is not enough. The connective
-is banned AS VOCABULARY (compounded, paired, behind a determiner, naming the relationship). **If you
-find yourself widening it back to the bare token, run
-`node civicos-ui/test/analyst-vocabulary.control.mjs` first** — arms 5a/5b/5c are the over-strictness
-arms and they exist to stop that.
-
-**WHAT THE FAMILY CANNOT SEE, stated because a clean sweep otherwise reads as more than it is:** a
-genuinely novel term for the construct sharing no stem with a clause-1 atom and not in the residue.
-**There is no automatic tier for it and the reason is measured**: D-269's open *machine-side minus
-member-side* derivation is sound over 30 machine-composed sentences with opaque values, but over a
-rendered UI surface it measures **208 words** including `example`, `correct`, `safe` and `bob`.
-**The open tier belongs to the plane suite's narrow corpus; this family belongs to the broad one.**
-
-**KEPT AND NAMED RATHER THAN FOLDED IN** — three sites the census surfaces that are NOT rivals:
-`capture-honesty.test.mjs`'s `JARGON` (Bob's plain-language ruling, a different question),
-`publishedcase.test.mjs` (DEC-32's falsifier clause, no ban list), and
-`version-review.control.mjs` (the negative-control DRIVER that plants a leak to prove a consumer's
-sweep can fail — it must keep naming the ban rather than importing it).
-
-**NO SURFACE CHANGED.** `civicos-ui/app.html` is not edited by this item and not claimed — the
-module only READS its two marked member-facing blocks. UI harness 44 → 45 suites, exit 0.
-
----
-
-## UI-54 — DEC-51 ENACTED: `op=acquire`'s grade note is RENDERED, WHOLE, AT THE MOMENT OF CAPTURE (2026-08-10, worktree `agent-afd442fede94e63fe`)
-
-**APPENDED, NOT A REWRITE — other UI workers may be live in `app.html`.**
-
-**WHAT LANDED.** `addCapture` had been receiving `note` on every `op=acquire` answer and
-throwing it away. It now calls **`addCaptureNote(acq.note)`** the moment the plane answers with
-a document — before the completeness branch, on every tick of the continuation — and the new
-renderer puts the record's own sentence into a new `<div id="a-note">` in the Add form. Four
-sites in `app.html` (`renderAdd`, `addCaptureNote`, `addCapture`, `addGo`), all inside the
-UNMARKED Add region; `civicos-ui/test/add-surface.test.mjs` §3a and a third sweep detector;
-`civicos-ui/test/add-surface.control.mjs` (NEW) driving five arms.
-
-**FIVE THINGS THE NEXT UI SESSION SHOULD KNOW BEFORE TOUCHING ANY OF IT.**
-
-1. **THE CO-ATTESTATION CLAUSE SHIPS, AND REMOVING IT IS THE DEFECT RATHER THAN THE CAUTION.**
-   The note's last clause describes an act this surface does not offer and cannot offer, so
-   stripping it is the tidy any careful reader reaches for. DEC-51 refuses that split by name:
-   DEC-39's three-part shape was deliberate, UI-28 measured the parts reassemble
-   character-for-character, and that clause is exactly the sentence that stops a member reaching
-   for co-attestation to solve a problem it does not address. **A rendering that is merely MOST
-   of the note is the split Bob refused.** Arm 1 of the control is that edit, and the ONLY thing
-   in either tree that goes red under it is §3a — which is why the assertion exists.
-2. **UI-32 IS NOT REOPENED, AND THE TWO RULES LIVE ONE LINE APART.** This surface still states
-   no grade letter IT derived — `ADD_CAPTURE_TEACH` and `addValidate` are untouched and keep
-   their exact wording — and it now withholds nothing the PLANE published about a capture that
-   has actually happened. The difference is the whole of both. §3a's UI-32 assertion is ordered
-   BEFORE the string-for-string equality deliberately: the suite is fail-fast, so a surface that
-   computes a letter must trip the assertion that NAMES UI-32 rather than the one that would
-   report the wrong reason. Do not reorder them.
-3. **NOTHING HERE IS AUTHORED, AND THERE IS NO FALLBACK.** `addCaptureNote` escapes the string
-   and renders it; no heading is composed for it, no gloss, no re-wording. A plane that publishes
-   no note — or a blank one — leaves the holder EMPTY. That is UI-39's rule and UI-40's, and both
-   shapes are asserted rather than assumed.
-4. **DETECTOR (C) IS NEW IN THE SWEEP AND IT CLOSES A STRUCTURAL HOLE, NOT AN OVERSIGHT.**
-   Detectors (A) and (B) both judge the remainder after `minusPublications` — they must, or they
-   fire on the record's own correct page (UI-28) — so an EXACT copy of a publication is invisible
-   to both. (C) reads each file's WORD STREAM and fails on a whole publication reproduced
-   verbatim, which is what sees a copy split across a `"…" + "…"` concatenation. **If you need
-   the record's sentence in a suite, IMPORT it.** Arm 2 is a hand copy with the same characters;
-   every behavioural assertion stays green under it, and only (C) can tell.
-5. **THE CONTROL DRIVER HOLDS NO COPY OF THE RECORD'S WORDS, ON PURPOSE.** It imports
-   `ACQUIRE_GRADE_NOTE` and `EARNED_CAPTURE_CEILING` and serialises them into its patches. A
-   driver that typed the note out to plant it would BE the copy, in the tree its own detector
-   guards, and (C) would red the suite until somebody weakened it.
-
-**WHAT THIS ITEM DELIBERATELY DID NOT ADD.** No new SURFACE and no new ROUTER, so nothing
-arrived unclassified in `preauth-vocabulary.test.mjs` WALK 2 or `surface-registry.test.mjs`
-ARM A4c — both were left untouched and both stayed green. No new PLANE READ: the note rides on
-the `op=acquire` answer the surface already asks for, so `bound-sweep`'s two walks see nothing
-new and no IC is owed on I3. No edit anywhere under `bio-plane/**`.
-
-**ENVIRONMENT, because it will cost the next session an hour otherwise.** A fresh worktree has
-no `bio-plane/node_modules`, and three UI suites drive the REAL plane through miniflare. The
-harness reads 43/3 exit 1 until `npm ci` is run in `bio-plane/`. Measure your baseline AFTER
-that install; see `MEASUREMENTS.md`, "2026-08-10, UI-54".
-
----
-
-## UI-55 — DEC-69 ENACTED: the standing sweep for nagging, second-guessing and FORCED modes (2026-08-10, worktree `agent-a7b57b507f367abe3`)
-
-**APPENDED, NOT A REWRITE — other UI workers may be live in `app.html`.**
-
-**WHAT LANDED.** `civicos-ui/test/member-respect.test.mjs` (NEW, 428 assertions) and
-`civicos-ui/test/member-respect.control.mjs` (NEW, six arms). ONE correction in
-`app.html`, in the REC-21/C-3 mute block only: `queueMuteHtml`, `queueMuteCase`,
-`queueWire`, plus two CSS rules. Nothing under `bio-plane/**`.
-
-**SIX THINGS THE NEXT UI SESSION SHOULD KNOW BEFORE TOUCHING ANY OF IT.**
-
-1. **THE SCOPE BOUNDARY IS AN ARM THAT RUNS EVERY TIME, NOT A CONTROL RUN ONCE.**
-   DEC-69 protects three things BY NUMBER — DEC-39's fence, DEC-51's grade note,
-   DEC-49's refusal reason — and **ARM P asserts all three PRESENT on every run**, so
-   a future tidy that strips one fails the very suite that would otherwise report the
-   tidy as a success. The cut that makes it decidable is the ruling's own: **the
-   record's voice is PLANE-SOURCED and a nag is AUTHORED HERE.** ARM P proves none of
-   the three is a literal in `app.html` rather than assuming it.
-2. **THE AMENDMENT CUTS BOTH WAYS AND THE BULK-ONLY HALF IS THE ONE THIS AUDIT
-   NEARLY MISSED.** The queue's mute was ONE control that muted EVERY condition kind
-   on a case; a member who wanted to stop hearing about one kind had to give up all
-   of them. It read as respectful because it NAMED the set to the member — **naming a
-   set is not offering a choice within it.** `op=queuemute` already accepted an
-   arbitrary subset, so the fix was one parameter and no plane delegation. **If you
-   find a surface that only offers the whole set, measure the op before assuming the
-   plane is the blocker.**
-3. **TWO SETS OF DECISIONS ARE CARRIED, NOT CLEAN, and the carry is SELF-EXPIRING.**
-   `op=resolve` (one `captureSha`) and `op=proposedispose` / `op=taskresolve` /
-   `op=taskforward` (one key each) give the member N identical buttons and no bulk
-   path. A client-side loop is NOT the fix — N motions over N items is the
-   forty-dialogs shape wearing a bulk control's clothes. **ARM 4d re-measures each
-   carried op's signature against `store.mjs` every run**, so the day one accepts a
-   set the arm goes RED and the mode gets built. Do not "fix" that failure by
-   deleting the row; it is the alarm. UI-44's SECTION 0 is the precedent.
-4. **ARM 4 PARTITIONS BY REGISTER BECAUSE NO STATIC WALK CAN DO IT, AND THE REGISTER
-   IS SWEPT IN BOTH DIRECTIONS.** Whether a repeated control is a SET OF DECISIONS
-   (forty candidates, each decided independently) or a CHOOSER FOR ONE DECISION (four
-   owners, one removed) is not readable from source — both compile to
-   `list.map(control)`. So every site must be classified, **a site in neither register
-   fails by name**, and **a register row naming a host that no longer renders a
-   control fails too**. The second half is not decoration: it caught eight speculative
-   rows on this item's own first build.
-5. **THE INSTRUMENT WAS WRONG TWICE, CONFIDENTLY, AND BOTH ARE NOW ARMS.** A
-   JavaScript deriver run over `app.html` starts in the `<style>` blocks, where an
-   apostrophe in a CSS comment opens a string that never closes and **every block
-   comment after it lands in the member-facing prose corpus** — ARM 2 reported a
-   phrase at a line that is plainly inside a comment, which is how it was found.
-   Separately, a single-slot string mode let a nested backtick close its parent and
-   the longest "function body" measured **92,964 chars** against a real 13,117. **If
-   you write a walk over this file, isolate the `<script>` first and use a mode
-   stack.** ARM I1b / I2 / I4 / I6 are those regressions kept as assertions.
-6. **THIS SUITE IS A CONSUMER OF UI-53's BAN FAMILY, and it became one because
-   UI-53's census called it a RIVAL on its first run.** It reads the broadest
-   member-facing prose corpus in this directory, so it is a ban site whether it wants
-   to be or not. **Import the family; do not write a list, and do not stop citing
-   DEC-32 to slip the census.**
-
-**WHAT THIS ITEM DELIBERATELY DID NOT DO.** No new SURFACE and no new ROUTER, so
-nothing arrived unclassified in `preauth-vocabulary.test.mjs` WALK 2 or
-`surface-registry.test.mjs` ARM A4c — both untouched, both green. No new PLANE READ.
-No edit to another suite's arms or floors. **And no prose was deleted anywhere**: the
-one clause the sweep found at the boundary (`elicPaint`'s persuasion tail about
-reading being easier than writing) is CARRIED for a ruling rather than removed by a
-worker, because deleting the record's own voice in this ruling's name is the failure
-the ruling itself warns about.
-
-**ENVIRONMENT.** `npm ci` in `bio-plane/` BEFORE measuring anything. Baseline after
-the install: 46 suites, 0 FAIL, exit 0. After this item: 47 suites, 0 FAIL, exit 0.
+**Nothing from UI-59 itself.** It moved prose between two files the repository
+already told it to use, and every judgment it made — which items owe an entry, where
+the backfill sits, what the kickoff keeps — is settled by `kickoffs/README.md` and
+`CORPUS-STANDARD.md`.
