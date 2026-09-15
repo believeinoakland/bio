@@ -853,9 +853,22 @@ const REGISTER_FLOOR = {
      new suite) on top of REC-85's 1010. The branch's own block (1001/184/185, cut at 980a9e5) was
      dropped at the merge and declared; this is the re-read the loop promises. One key set.
      Nothing FELL. FLEET_FLOOR unmoved. */
-  arms: 1015,
-  classified: 186,
-  corpus: 187,
+  /* MOVED 2026-09-14 by CPDF-20 (1015 -> 1022 · 186 -> 187 · 187 -> 188), ALL THREE IN
+     THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN `--strict`
+     run PRINTED AFTER the new files were in a commit (`arms 1022/1015 · classified
+     187/186 · corpus (suites read) 188/187 · GREW by 7 arm(s)`, commit 1240af8) — never
+     by adding this item's arms to the number above. One new suite,
+     `test/tier-pagewise.test.mjs`, whose `NEGATIVE CONTROL:` declaration enumerates
+     SEVEN arms — a BASELINE, five break-it arms and an OVER-STRICTNESS arm — so
+     `classified` and `corpus` each rise by one and `arms` by seven. Every one of the
+     seven was RUN, through `test/nc-cpdf20.mjs`, 7 of 7 as declared. Nothing FELL.
+     FLEET_FLOOR unmoved: this item adds no fleet suite and no fleet arm.
+     THE UNCLASSIFIED CEILING IS UNMOVED AND THAT WAS CHECKED RATHER THAN ASSUMED —
+     the one unclassified declaration on this run is `case-opened.test.mjs`, which was
+     already there; this item's declaration classifies, at seven. */
+  arms: 1022,
+  classified: 187,
+  corpus: 188,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
