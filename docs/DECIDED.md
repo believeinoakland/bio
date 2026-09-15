@@ -1533,14 +1533,20 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1183`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1195`
-- I asked Bob two SETTLED questions (the roles axis; the member/assistant harvest division) before researching — run `decided.mjs` and grep BEFORE any design question to him. 2.  
-  `docs/development/kickoffs/BOB-NEXT.md:178`
-- Report what was DONE and what was DECIDED.  
-  `docs/development/kickoffs/BOB-NEXT.md:199`
+- RULED (ODF). Bring him consequences, never mechanism; `decided.mjs` and a grep BEFORE any question. ## PROGRAM B — THE MEMBER SURFACES (interactive with Bob; UX is paramount)  
+  `docs/development/kickoffs/BOB-NEXT.md:71`
+- `DECIDED.md` regeneration is owed in any commit that adds marker words (RULED, CORRECTED, SUPERSEDED…); `corpuscheck --write <file>` after any heading change; the Status `as of` date must not be behind the file's last commit. - **Do not prefix a not-yet-built op as `op=<name>` in prose** — `op-claims.test.mjs`…  
+  `docs/development/kickoffs/BOB-NEXT.md:100`
+- SUPERSEDED…); `corpuscheck --write <file>` after any heading change; the Status `as of` date must not be behind the file's last commit. - **Do not prefix a not-yet-built op as `op=<name>` in prose** — `op-claims.test.mjs` refuses it; the name enters `PLANNED_OPS` with the item that builds it.  
+  `docs/development/kickoffs/BOB-NEXT.md:101`
+- DECIDED. When Bob hands a determination back, decide it, implement it, record it, tell him.  
+  `docs/development/kickoffs/BOB-NEXT.md:132`
 - and present the areas that are NOT the paused thread, each with: what it needs DECIDED (vs what is already answered), what deciding it unblocks, and your recommendation.  
   `docs/development/kickoffs/BOB.md:85`
 - NOTATION IS SETTLED: classDiagram for structure, stateDiagram-v2 for lifecycle, edges labelled with the ACT.  
   `docs/development/kickoffs/BOB.md:105`
+- Report what was DONE and what was DECIDED.  
+  `docs/development/kickoffs/BOB.md:194`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
   `docs/development/kickoffs/CAPTURE.md:99`
 - debt that can be avoided; superseded rules in tests are CORRECTED, never exempted.** All of these earned their place; the ledger has the receipts. ## Bob's rulings, already made.  
