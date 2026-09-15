@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-825 rulings across 73 documents.
+846 rulings across 78 documents.
 
 ## DEC-
 
@@ -26,8 +26,6 @@ authority is the file named, never this one.
   `docs/development/DEBT.md:118`
 - **DEC-5** · 2026-08-01 — RULED 2026-08-01 (DEC-5), and the ruling INVERTS the framing: these are public documents, there is no reason to redact anything from a public record, and who edited a document and when IS evidence — it demonstrates the actions of people and departments.  
   `docs/development/DEBT.md:89`
-- **DEC-5** · 2026-07-31 — COMPLETE as the argument — every architectural claim it makes was exercised and none was overturned — and SUPERSEDED IN FOUR PLACES by things that happened after it: DEC-5 ruled the risk it raises, IC-1 landed the interface change it predicts in a shape it does not anticipate, and COFF-6's census answered both of…  
-  `docs/development/OFFICE-FORMATS.md:3`
 - **DEC-6** · 2026-08-01 — Titled "v0.1 DRAFT, drafted July 27, 2026, from Bob's proposal"; its header's "nothing here is ratified doctrine, no check exists, no code implements it" is now false — it carries three RULED markers (DEC-6 and DEC-15 of 2026-08-01, DEC-46 of 2026-08-04, built by REC-47), one AMENDED (DEC-20) and one STRUCK…  
   `docs/architecture/BIO_Declared_Bias_v0_1.md:3`
 - **DEC-6** · 2026-08-01 — RULED 2026-08-01: the subject vocabulary is the registry's, and the malformedness rule is the constraint **Every kind the SUBJECT REGISTRY carries is a legal subject for a bias statement.** Decided by session BOB (DEC-6), raised by FRAMEWORK from the FW-6 registry slice.  
@@ -197,7 +195,7 @@ authority is the file named, never this one.
 - **DEC-52** · 2026-08-07 — `[BOB-4 — RULED 2026-08-07, PROVISIONAL]`** — DEC-52's remaining yes/no: Bob's mechanical-standing principle recorded on DEC-52, pending his confirmation; the sidebar approval remains the act of record for the constitutive fields (§14a). 8.  
   `docs/development/INVESTIGATIVE-SESSION.md:1185`
 - **DEC-52** · 2026-08-07 — IN RESERVE with a named trigger, not adopted pre-emptively *(AMENDED 2026-08-07: for publicly available documents fetched as part of the workflow, the member-browser UA is now PERMITTED by ruling — see the amendment note above; DEC-52, IS-SWEEP §4c)*.  
-  `docs/development/SOURCE-ACCESS.md:278`
+  `docs/development/SOURCE-ACCESS.md:285`
 - **DEC-53** — "Why do we want to count the number of times that a user approves a candidate?  
   `docs/development/QUEUE.md:746`
 - **DEC-55** — The earlier provisional (sidebar approval as the act of record) is SUPERSEDED as a gate; the sidebar remains a visibility and bulk-review surface, not a required approval. **What the ruling carries with it, from standing doctrine:** the record names the machine principal on every such act (DEC-55 det 4 / D-199.4 —…  
@@ -253,17 +251,17 @@ authority is the file named, never this one.
 - **D-50** · 2026-07-26 — SUPERSEDED — closed by 0.28.0 (PLAN S-12 item 6); the residue is D-50 · open, S-12 step 6 |  
   `docs/development/DEBT.md:14`
 - **D-52** — §RULED: undetermined authority goes to a todo list — the task record is [BUILT] and is transport-agnostic as this section requires; what does not exist is any transport at all (D-52, no notification channel), so the load-bearing *"might later BE email"* parenthesis has never been tested against a second surface.  
-  `docs/development/AUTHORITY-AND-TRUST.md:10`
+  `docs/development/AUTHORITY-AND-TRUST.md:9`
 - **D-55** — It is upstream of two of CAPTURE's other designs: `ARCHIVE-FALLBACK.md` consumes its transitive-trust ruling and `CLIENT-RENDERED.md` records that its three-valued ruling SUPERSEDED D-55's block on rendered capture.  
   `docs/development/AUTHORITY-AND-TRUST.md:5`
 - **D-55** — [RULED: undetermined authority goes to a todo list, like an inbox](#ruled-undetermined-authority-goes-to-a-todo-list-like-an-inbox) - [RULED: an alternative source counts as a re-fetch, for MONITORING](#ruled-an-alternative-source-counts-as-a-re-fetch-for-monitoring) - [What D-55 becomes](#what-d-55-becomes) -…  
-  `docs/development/AUTHORITY-AND-TRUST.md:19`
+  `docs/development/AUTHORITY-AND-TRUST.md:18`
 - **D-55** · 2026-07-31 — [RULED: an alternative source counts as a re-fetch, for MONITORING](#ruled-an-alternative-source-counts-as-a-re-fetch-for-monitoring) - [What D-55 becomes](#what-d-55-becomes) - [RULED 2026-07-31: what publication actually requires](#ruled-2026-07-31-what-publication-actually-requires)  
-  `docs/development/AUTHORITY-AND-TRUST.md:20`
+  `docs/development/AUTHORITY-AND-TRUST.md:19`
 - **D-55** · 2026-07-30 — SUPERSEDED 2026-07-30 by Bob's authority rulings; see `AUTHORITY-AND-TRUST.md`.** Two things changed.  
   `docs/development/CLIENT-RENDERED.md:156`
 - **D-60** · 2026-07-30 — RULED by Bob 2026-07-30 on the measurement in D-60: two fetches of a Legistar page three seconds apart differ by 31% of their bytes, all of it ASP.NET postback state, with the other 68.6% identical.  
-  `docs/development/UI-PLAN.md:350`
+  `docs/development/UI-PLAN.md:363`
 - **D-68** · 2026-08-01 — Suggested activation order — SUPERSEDED 2026-08-01.** The version below is kept as history: *promote RECORD (M1's scheduler) and FRAMEWORK (D-68), CONTENT-PDF finishes CPDF-2 and goes dormant.* All three happened; the queue drained to 44 done and 0 runnable.  
   `docs/development/MILESTONES.md:560`
 - **D-72** · 2026-07-30 — RULED by Bob: BIO's contribution should "improve the grade of connections overall".  
@@ -614,8 +612,6 @@ authority is the file named, never this one.
   `docs/archive/ledgers/DEBT-closed-2026-08.md:62`
 - **C-18.5** — C-18.5's pattern copied field-for-field, the routing is the RULED order, and the tests are the both-ways C-18.5 tests with TASK fixtures.  
   `docs/development/INBOX-GRAMMAR.md:168`
-- **C-18.9** · 2026-07-30 — RULED sections are settled and are not re-litigated.  
-  `docs/development/AUTHORITY-AND-TRUST.md:3`
 - **C-18.9** — conformant); C-18.9 implements the RULED publication fence and refused an undetermined document at verified in a both-ways test.  
   `docs/development/CIVICOS_UI_STATE.md:184`
 - **C-19.1** — resolves each queued capture through `register`, applies the RULED routing order (`#routeTask`, `:6754-6780`), runs the C-19.1 grammar, writes or FOLDS a task | `tasks` rows; `created`/`folded`/`refused`/`waiting` lists | **OBLIGATION** (member task) | **YES** |  
@@ -959,7 +955,7 @@ authority is the file named, never this one.
 - **COFF-6** · 2026-09-14 — milestone: M2 — the content axis reaches OpenDocument, because Bob RULED (2026-09-14) that a Google Drive link keeps the link and extracts from the OpenDocument export; COFF-6's "ODF is ZERO in 43,282 assets → DO NOT BUILD" was about NATIVE ODF assets and stands as a measurement — the Drive export path makes ODF…  
   `docs/development/QUEUE.md:1270`
 - **COFF-9** · 2026-09-14 — — its ODF recommendation was honoured, overtaken, and then RE-WARRANTED FROM A DIFFERENT DIRECTION, and this bullet is CORRECTED on 2026-09-14 rather than left standing, because its last sentence became false the day COFF-9 landed.  
-  `docs/development/OFFICE-FORMATS.md:12`
+  `docs/development/OFFICE-FORMATS.md:11`
 ## PL-
 
 - **PL-1** · 2026-08-08 — FL-3's REPORT BACK, 2026-08-08 — (a) HELD, and the recommendation is AMENDED rather than declined.** FL-3 went to the checks, found the wrong C-number and the second site, and **raised a vocabulary question that is PL-1's rather than building past it: a machine's single-part ground row would carry `asserted_by:…  
@@ -1036,6 +1032,48 @@ authority is the file named, never this one.
   `docs/development/ORCHESTRATION.md:202`
 - **M0-23** — Correct the fixture to the wire shape and delete the phantom keys, with any assertion that read them CORRECTED at its site, never exempted.  
   `docs/development/QUEUE.md:662`
+- **M0-27** · 2026-09-14 — Its preamble's "Design, not built" was stale and M0-27 CORRECTED IT IN PLACE on 2026-09-14.** [BUILT] at plane 0.58.0: the CDX query, row selection and the empty-digest and non-200 exclusions (`cdx.mjs`), the archive arm of `op=acquire` with a two-hop grade-C chain built from the CDX record the call itself fetched…  
+  `docs/development/ARCHIVE-FALLBACK.md:3`
+- **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27). This line read "Design, not built", and it is now [BUILT] and WIRED.** The decision half and the capture half shipped in 0.51.0 and 0.52.0 and were live-verified: the CDX query, row selection and the empty-digest and non-200 exclusions (`bio-plane/src/cdx.mjs`), the archive arm of…  
+  `docs/development/ARCHIVE-FALLBACK.md:32`
+- **M0-27** · 2026-07-30 — RULED sections are settled and are not re-litigated.  
+  `docs/development/AUTHORITY-AND-TRUST.md:3`
+- **M0-27** · 2026-09-14 — Sections marked RULED are his and are not to be re-litigated. **CORRECTED 2026-09-14 (M0-27).  
+  `docs/development/AUTHORITY-AND-TRUST.md:26`
+- **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27). This line read "Nothing here is BUILT yet; this is the design the next sessions implement", and it has been false since 0.54.0.** Measured against `bio-plane/src` at plane 0.58.0, nearly all of it is **[BUILT]**: the three-valued authority record (`authority` / `authority_state` /…  
+  `docs/development/AUTHORITY-AND-TRUST.md:28`
+- **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27). This section said "cap ~40 subresources", and the appetite is TEN TIMES that.** `SUBRESOURCE_CAP` is **400** — read it rather than trust this line:  
+  `docs/development/CAPTURE-FIDELITY.md:63`
+- **M0-27** · 2026-09-14 — M0-27 CORRECTED IN THE BODY on 2026-09-14**: §Known gaps said the plane had not adopted the package and §Where this runs read as a conditional on three sites, and the plane adopted it (FW-3/FW-4, CONSTRUCTS Steps 1–2) while `op=audit`'s duplicate sweep discharged on the evidentiary digest, intra-bundle.  
+  `docs/development/DOCUMENT-PROFILES.md:3`
+- **M0-27** · 2026-09-14 — §Known gaps — its first bullet was stale and M0-27 CORRECTED IT IN PLACE on 2026-09-14; the section stays on this list because what the corrected bullet now states is itself an open gap.  
+  `docs/development/DOCUMENT-PROFILES.md:8`
+- **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27): this sentence was written as a conditional — "the plane SHOULD import it directly WHEN monitoring, `op=audit`'s duplicate sweep and `resolveLinks`' bracket arm adopt it" — and one of those three has happened while the other two have not.** `bio-plane/src/index.mjs` imports the registry  
+  `docs/development/DOCUMENT-PROFILES.md:331`
+- **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27). This bullet read "The plane has not adopted it — monitoring, the duplicate sweep and the contemporaneity bracket arm still compare raw hashes (D-60)", and it is now true of two of those three sites, not of all three.** The plane HAS adopted the package: `bio-plane/src/index.mjs`…  
+  `docs/development/DOCUMENT-PROFILES.md:343`
+- **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27): this read "a third weight, beside the two the plane already implements", and both halves of that have moved.** The plane's act catalogue publishes **THREE** weights today — `refuse`, `report` and `single` — and **`per-item` is [DESIGNED-not-built]: it exists nowhere in…  
+  `docs/development/NOTIFICATIONS.md:282`
+- **M0-27** · 2026-09-14 — The document's own preamble said "Nothing here is built" — the single most misleading line in it — and M0-27 CORRECTED IT IN PLACE on 2026-09-14; the preamble now states the axis as built and names the command that counts the registry.** COMPLETE as the argument — every architectural claim it makes was exercised…  
+  `docs/development/OFFICE-FORMATS.md:3`
+- **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27). This line read "Nothing here is built", which was true the day it was written and has been false since 2026-08-10.** The FORMAT axis this document argues for is **[BUILT] END TO END**: COFF-1..7 landed the registry with HTML and PDF moved onto it (`bio-plane/src/formats.mjs`), the…  
+  `docs/development/OFFICE-FORMATS.md:33`
+- **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27): this said "Today, for a member, it returns true.  
+  `docs/development/RETRIEVAL-SUBSTRATE.md:329`
+- **M0-27** · 2026-09-14 — M0-27 CORRECTED BOTH IN PLACE on 2026-09-14**: it holds ELEVEN, of which FIVE are unconditionally due, and each corrected sentence carries the COMMAND that counts it in `bio-plane/src/store.mjs` rather than only the number.  
+  `docs/development/SCHEDULER.md:3`
+- **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27): this read "the two real consumers are ALWAYS due", which described the registry of two that REC-1 created on 2026-07-31.** The registry holds **ELEVEN** real consumers today, of which **FIVE** are unconditionally due (`selection-sweep`, `task-drain`, `archive-monitor`, `connection-derive`,  
+  `docs/development/SCHEDULER.md:85`
+- **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27): this said "unset → the registry is exactly the two real consumers", which was true of the registry of two REC-1 created.** Unset, the registry is exactly the ELEVEN real consumers and no probe, and not one line of the seam runs; the seam itself is unchanged, still `SCHED_PROBE`-  
+  `docs/development/SCHEDULER.md:170`
+- **M0-27** · 2026-09-14 — item 1 was CORRECTED IN PLACE on 2026-09-14 (M0-27)**: the archive fallback said *"and IDLE.  
+  `docs/development/SOURCE-ACCESS.md:11`
+- **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27): this said "and IDLE.  
+  `docs/development/SOURCE-ACCESS.md:272`
+- **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27). THAT DOCUMENT WAS NEVER WRITTEN AND NO FILE OF THAT NAME EXISTS IN THE REPOSITORY** — verified against the tree on 2026-09-14. The six parts below are kept VERBATIM as the statement of what Bob asked for; what this section could not say is where the answers went, and they went to three…  
+  `docs/development/UI-KICKOFF.md:116`
+- **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27). THIS SECTION'S PAUSE IS HISTORY, AND THE SENTENCE ABOVE MUST NOT BE READ AS A LIVE PROHIBITION.** It was written 2026-07-30 and the pause it declares held for one day: UI work resumed on 2026-08-01 and **53 UI rows have landed `done` against `QUEUE.md` since**, adding capability…  
+  `docs/development/UI-PLAN.md:296`
 
 ## Rulings carrying no id
 
@@ -1266,33 +1304,31 @@ Settled in prose without an id allocated. Cite them by file and line.
 - old rule and were CORRECTED rather than exempted. **7.2 LOST ITS ADMINISTRATOR BYPASS, AND NOTHING HAD EVER EXERCISED IT.** `projectInvite` carried `|| this.#isAdminMember(by)` and no test drove that  
   `docs/BIO_DATAPLANE_STATE.md:552`
 - §RULED: authority is three-valued — its first clause, *"where the determination can be made mechanically, authority is assigned during capture"*, is [ABSENT].  
-  `docs/development/AUTHORITY-AND-TRUST.md:9`
+  `docs/development/AUTHORITY-AND-TRUST.md:8`
 - [RULED: the renderer is immaterial. Authority follows the DATA.](#ruled-the-renderer-is-immaterial-authority-follows-the-data) - [RULED: authority is three-valued, and undetermined is a task](#ruled-authority-is-three-valued-and-undetermined-is-a-task) - [RULED: an authority-undetermined capture cannot be…  
-  `docs/development/AUTHORITY-AND-TRUST.md:15`
+  `docs/development/AUTHORITY-AND-TRUST.md:14`
 - [RULED: authority is three-valued, and undetermined is a task](#ruled-authority-is-three-valued-and-undetermined-is-a-task) - [RULED: an authority-undetermined capture cannot be PUBLISHED](#ruled-an-authority-undetermined-capture-cannot-be-published) - [RULED: transitive trust is accepted, with disclosure and…  
-  `docs/development/AUTHORITY-AND-TRUST.md:16`
+  `docs/development/AUTHORITY-AND-TRUST.md:15`
 - [RULED: an authority-undetermined capture cannot be PUBLISHED](#ruled-an-authority-undetermined-capture-cannot-be-published) - [RULED: transitive trust is accepted, with disclosure and adjustment](#ruled-transitive-trust-is-accepted-with-disclosure-and-adjustment) - [RULED: undetermined authority goes to a todo…  
-  `docs/development/AUTHORITY-AND-TRUST.md:17`
+  `docs/development/AUTHORITY-AND-TRUST.md:16`
 - [RULED: transitive trust is accepted, with disclosure and adjustment](#ruled-transitive-trust-is-accepted-with-disclosure-and-adjustment) - [RULED: undetermined authority goes to a todo list, like an inbox](#ruled-undetermined-authority-goes-to-a-todo-list-like-an-inbox) - [RULED: an alternative source counts as a…  
-  `docs/development/AUTHORITY-AND-TRUST.md:18`
+  `docs/development/AUTHORITY-AND-TRUST.md:17`
 - **2026-07-31** — [RULED 2026-07-31: what publication actually requires](#ruled-2026-07-31-what-publication-actually-requires) ---  
-  `docs/development/AUTHORITY-AND-TRUST.md:22`
-- Sections marked RULED are his and are not to be re-litigated.  
-  `docs/development/AUTHORITY-AND-TRUST.md:27`
+  `docs/development/AUTHORITY-AND-TRUST.md:21`
 - **2026-07-30** — RULED: the renderer is immaterial. Authority follows the DATA. Bob, 2026-07-30. Sometimes what is being rendered is GIS data, a CAD drawing, or a paper posted to a hosting platform, and the rendering is genuinely executed by  
-  `docs/development/AUTHORITY-AND-TRUST.md:42`
+  `docs/development/AUTHORITY-AND-TRUST.md:54`
 - **2026-07-30** — RULED: authority is three-valued, and undetermined is a task Bob, 2026-07-30.  
-  `docs/development/AUTHORITY-AND-TRUST.md:69`
+  `docs/development/AUTHORITY-AND-TRUST.md:81`
 - **2026-07-30** — RULED: an authority-undetermined capture cannot be PUBLISHED Bob, 2026-07-30.  
-  `docs/development/AUTHORITY-AND-TRUST.md:97`
-- **2026-07-30** — RULED: transitive trust is accepted, with disclosure and adjustment Bob, 2026-07-30.  
   `docs/development/AUTHORITY-AND-TRUST.md:109`
+- **2026-07-30** — RULED: transitive trust is accepted, with disclosure and adjustment Bob, 2026-07-30.  
+  `docs/development/AUTHORITY-AND-TRUST.md:121`
 - **2026-07-30** — RULED: undetermined authority goes to a todo list, like an inbox Bob, 2026-07-30.  
-  `docs/development/AUTHORITY-AND-TRUST.md:145`
+  `docs/development/AUTHORITY-AND-TRUST.md:157`
 - **2026-07-30** — RULED: an alternative source counts as a re-fetch, for MONITORING Bob, 2026-07-30.  
-  `docs/development/AUTHORITY-AND-TRUST.md:177`
+  `docs/development/AUTHORITY-AND-TRUST.md:189`
 - **2026-07-31** — RULED 2026-07-31: what publication actually requires Bob, 2026-07-31: "A capture can be published if there are no undetermined authority links in the provenance.  
-  `docs/development/AUTHORITY-AND-TRUST.md:216`
+  `docs/development/AUTHORITY-AND-TRUST.md:228`
 - §Job one: stop re-fetching — its freshness rule is SUPERSEDED by what shipped.  
   `docs/development/CAPTURE-SCALING.md:9`
 - **2026-07-31** — STATUS CORRECTED 2026-07-31 (session BOB).  
@@ -1415,6 +1451,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:4557`
 - `docs/DECIDED.md` — **GENERATED, never hand-edited, and added to this claim after the fact rather than silently**: the seven `design:` lines shift QUEUE.md's line numbers, the index cites rulings BY LINE, and `plancheck` failed STALE on the drift (CLAUDE.md: regenerate it in any turn that moves the corpus).  
   `docs/development/CLAIMS.md:4575`
+- `docs/DECIDED.md` — the GENERATED ruling index, regenerated with `node tools/decided.mjs` because eleven ruling-bearing documents moved and `plancheck` fails on the drift (`CLAIMS.md` is not a list of what was hand-written, it is a list of what was touched).  
+  `docs/development/CLAIMS.md:4827`
+- **2026-09-14** — TWO FRONT-MATTER CLAIMS MEASURED WRONG AND CORRECTED.** (1) `SCHEDULER.md` said the always-due claim was "true of two entries out of eleven"; measured from `#schedConsumers` on 2026-09-14 it is true of **FIVE** (`selection-sweep`, `task-drain`, `archive-monitor`, `connection-derive`, `overdue-scan`), and the…  
+  `docs/development/CLAIMS.md:4855`
+- porcelain` shows exactly the 11 claimed documents plus `CLAIMS.md` and `DECIDED.md`.  
+  `docs/development/CLAIMS.md:4883`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -1454,9 +1496,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-08-03** — RULED IN PART 2026-08-03 by Bob — THE ARITHMETIC IS SETTLED: *"The simple truth is that sometimes the weakest is the claim's strength, and other times it's not.  
   `docs/development/DECISIONS.md:549`
 - **2026-07-30** — RULED by Bob, 2026-07-30: `index` versus `record` changes monitoring's BEHAVIOUR, not just which normalisation rules apply. A Legistar calendar changing is the calendar working.  
-  `docs/development/DOCUMENT-PROFILES.md:174`
+  `docs/development/DOCUMENT-PROFILES.md:173`
 - **2026-07-30** — RULED by Bob, 2026-07-30. The layers run in this order because each is cheap relative to the next and each can settle the question outright. `docprofile/pipeline.mjs` is the driver and every result carries a `trail` recording where the reasoning stopped, because a verdict whose depth is invisible cannot be audited.  
-  `docs/development/DOCUMENT-PROFILES.md:231`
+  `docs/development/DOCUMENT-PROFILES.md:230`
 - **2026-08-07** — : finding F9 is still open — `INVESTIGATIVE-SESSION.md` still carries the superseded `[BOB-4 — RULED 2026-08-07, PROVISIONAL]` text in three places and names F9 as outstanding in its final-comparison section, and `civicos-ui/test/connections-sidebar.test.mjs` pins that staleness on purpose so the delegation cannot…  
   `docs/development/FINDINGS-WORKPLAN.md:3`
 - **2026-07-30** — [Routing, exactly as RULED](#routing-exactly-as-ruled) - [What the write path enforces, and where](#what-the-write-path-enforces-and-where) - [RULED 2026-07-30: auto-create at capture, through a queue](#ruled-2026-07-30-auto-create-at-capture-through-a-queue) - [What this unblocks](#what-this-unblocks)  
@@ -1692,9 +1734,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - PARTLY SUPERSEDED by the four-level correction above — kept because one half of it stands and the other half is the mistake worth seeing.** WHAT STANDS: **an AI overview built on route 1 today would be reading titles, frontmatter  
   `docs/development/STORE-AS-CACHE.md:667`
 - **2026-07-30** — RULED by Bob, 2026-07-30, and it governs every rung.  
-  `docs/development/UI-PLAN.md:269`
+  `docs/development/UI-PLAN.md:268`
 - **2026-07-29** — RULED by Bob, 2026-07-29. Continuing a capture must know what has already been captured; parts may have to be obtained from the host again, and that is refilling the cache rather than rewriting the record.  
-  `docs/development/UI-PLAN.md:333`
+  `docs/development/UI-PLAN.md:346`
 - not the rule, so the fixture was CORRECTED rather than the assertion relaxed (standing lesson: superseded rules in tests are corrected, never exempted).  
   `docs/development/VERIFICATION.md:95`
 - **2026-07-27** — Bulk release, S-11 step 5: BOB DECIDED IN THE 2026-07-27 SESSION THAT IT WILL BE BUILT.** His use case: a collection of 20 or 100 job applications of interest to a project, where per-document release is tedium without protection.  

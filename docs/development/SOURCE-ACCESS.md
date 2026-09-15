@@ -8,7 +8,7 @@
 - §What is reachable now — a 2026-07-30 table, never re-measured. Admission still rests on `CivicOS` not being recognised by Akamai's bot directory, which this document says plainly is not a position; the table is therefore a fact about that day and not a statement about today.
 - §The fix, and why it is not durable — the site it names is stale: the string is no longer composed in `bio-plane/src/userAgent()` but in `checks/bio-checks.mjs`, so the Durable Object's capture-request drain can check the agent it is about to cause to be sent rather than a second copy of it (PL-4) — which is this section's own "two bare tokens that did not agree" defect closed one layer down.
 - §Open — stale as a list of open items: two of its three were answered in the update written the same day, and the third, telling the City, was CLOSED by the ruling at the foot of this document.
-- §the allowlist is NOT a viable mechanism — its "What this promotes" list is stale in both limbs. Item 1 says the archive fallback is *"built, live-verified, and IDLE. Nothing invokes it (QUEUE `CAP-3`)"* and CAP-3 has since landed the monitoring consumer that invokes it. Item 2, egress diversity, is still not built (D-120), though the member-driven capture path and its UA delegation now exist — so what is missing is the EGRESS, not the path.
+- §the allowlist is NOT a viable mechanism — its "What this promotes" list was stale in both limbs and **item 1 was CORRECTED IN PLACE on 2026-09-14 (M0-27)**: the archive fallback said *"and IDLE. Nothing invokes it (QUEUE `CAP-3`)"*, and CAP-3 has since landed the monitoring consumer that invokes it. **Item 2 keeps this section on the list**: egress diversity is still [ABSENT] (D-120), though the member-driven capture path and its UA delegation now exist — so what is missing is the EGRESS, not the path, and item 2's bare "Not built" does not say which.
 
 **Contents**
 - [The measurement](#the-measurement)
@@ -266,9 +266,16 @@ are admitted because Akamai does not recognise `CivicOS`, and that will change.
 
 **What this promotes.** Only two mitigations scale, and both are already named:
 
-1. **The archive fallback** — built, live-verified, and IDLE. Nothing invokes it
-   (QUEUE `CAP-3`). It is the only path that survives the City refusing us outright,
-   and this ruling makes it the primary resilience mechanism rather than a backstop.
+1. **The archive fallback** — built, live-verified, and **INVOKED**. It is the only
+   path that survives the City refusing us outright, and this ruling makes it the
+   primary resilience mechanism rather than a backstop.
+   **CORRECTED 2026-09-14 (M0-27): this said "and IDLE. Nothing invokes it (QUEUE
+   `CAP-3`)", and CAP-3 has since landed** — the `archive-monitor` consumer on the
+   single reconciling Durable Object alarm fires the fallback for documents that have
+   become `fallback_eligible` (`SCHEDULER.md`'s registry; `ARCHIVE-FALLBACK.md`). It is
+   **[BUILT] and wired**, and INERT rather than idle on an instance not configured with
+   `env.SELF` and a daemon token — which is a configuration state, not a missing
+   mechanism.
 2. **Egress diversity via the member-driven capture path** — many member addresses
    rather than one Cloudflare egress. Not built.
 

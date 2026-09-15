@@ -1,13 +1,12 @@
 # Retrieval substrate: what search, filter, list, sort, and select require of the plane
 
-**Status** · Probe 2 — a MEASUREMENT study of 2026-07-25 (RECORD, reproducible with `npm run probe:facets`) carrying the five design questions Bob settled the same day. It is the specification the shipped retrieval surface was built from, and everything its §Recommendation and its build order name is now [BUILT]: FTS5 inside the Durable Object (`bundles_fts`, created in `store.mjs`, not in `schema.mjs`), the parser-and-compiler as one pure module (`query.mjs`, 1,450 lines, measured 2026-09-14), the extended typed projection now at 34 filterable fields, facet counts, server-side selection leases on the published 300-second term (`Store.SELECTION_TTL_MS`), and the single viewer-gate compilation point — whose real project-participation predicate has since landed as well, which this document still describes as pending. PARTIALLY COMPLETE as a description of what shipped, and complete as the measurement it was: three things the compiler discovered or grew after 2026-07-25 appear nowhere here (workerd's five-term compound-SELECT ceiling, the MEANING arm of D-222, and the real viewer predicate), and the whole substrate is DOCUMENT-grain — content-grain search is [ABSENT]. The measured tables are actuals of the PROBE HARNESS at 20,000 synthetic rows, never re-measured against the shipped ops. as of 2026-09-14.
+**Status** · Probe 2 — a MEASUREMENT study of 2026-07-25 (RECORD, reproducible with `npm run probe:facets`) carrying the five design questions Bob settled the same day. It is the specification the shipped retrieval surface was built from, and everything its §Recommendation and its build order name is now [BUILT]: FTS5 inside the Durable Object (`bundles_fts`, created in `store.mjs`, not in `schema.mjs`), the parser-and-compiler as one pure module (`query.mjs`, 1,450 lines, measured 2026-09-14), the extended typed projection now at 34 filterable fields, facet counts, server-side selection leases on the published 300-second term (`Store.SELECTION_TTL_MS`), and the single viewer-gate compilation point — whose real project-participation predicate has since landed as well, and **M0-27 corrected §Serialization's "returns true" sentence in place on 2026-09-14** so the body no longer describes it as pending. PARTIALLY COMPLETE as a description of what shipped, and complete as the measurement it was: two things the compiler discovered or grew after 2026-07-25 still appear nowhere here (workerd's five-term compound-SELECT ceiling and the MEANING arm of D-222), and the whole substrate is DOCUMENT-grain — content-grain search is [ABSENT]. The measured tables are actuals of the PROBE HARNESS at 20,000 synthetic rows, never re-measured against the shipped ops. as of 2026-09-14.
 
 **Place in the system** · A level-2 design serving construct 9 of `BIO_System_Design.md` §3, *retrieval — the store as a read-through cache*. **That row names no level-1 document of its own**: it lists this file and `STORE-AS-CACHE.md` as its homes and points at `BIO_Content_Framework_v0_10.md` Part II §14.2–14.3 for the three-axis tables the framework adopted, so retrieval's nearest level-1 authority is Part II and this document is its measured DOCUMENT-axis half. It is the companion to `RETRIEVAL-PROBE.md`, which answered probe 1 for free text only, and it is the document `bio-plane/src/query.mjs` cites in its own header as the settled design that must not drift. What depends on it: `query.mjs`, the `bundles_fts` and projection writes in `store.mjs`, and I3's retrieval ops. What supersedes parts of it: the meaning arm (D-222) and the landed viewer predicate (D-15, DEC-72, D-310), both named below.
 
 **Incomplete sections** ·
 - §Recommendation — item 3's second half is not built. The full-frontmatter JSON column exists and is filtered with `json_extract` in `store.mjs`, but NO generated column and NO expression index has ever been promoted; grepped `bio-plane/src/*.mjs` for `GENERATED` on 2026-09-14, zero hits in a schema sense. The long per-schema tail is reachable and is not indexed.
 - §Actuals — actuals of the probe harness on 20,000 synthetic rows, not of the shipped ops, and never re-measured since 2026-07-25. The facet figures in particular predate the constraint that shapes the shipped implementation: workerd refuses a compound SELECT of more than five terms, far below SQLite's documented 500, so a six-field facet sidebar measured 283 ms until it was folded into one statement (`query.mjs`, `MAX_COMPOUND = 4`). That ceiling is a property of the substrate and is recorded only in the source.
-- §Serialization against the membership model — stale where it says the viewer predicate "returns true" for a member today. It does not: `viewerPredicate` carries the real project-participation filter (D-15, Membership Architecture 7.9), fails closed with `0=1` on an unrecognised viewer, and since D-310 (2026-09-10) also returns the member id positionally for DEC-72 clause 5. Build-order step 6 is done; the section still reads as though it were pending.
 - §Finding 1 — the engine inventory and the compiler it justifies are both bundle-row-shaped. The MEANING arm that made route 2 (`inquiry_basis`, `resolutions`, `connections`, `readings`, `reading_refs`) reachable from the same compiler — D-222 option A, now in `query.mjs` — landed after this was written and is documented nowhere in this file.
 - §Why probe 2 exists — the five verbs are measured over DOCUMENTS only. Content-grain search is [ABSENT] (`BIO_System_Design.md` §3 row 9; framework Part II §17), so the four-level search this substrate is meant to serve is not yet answerable from here, and this document does not say so.
 - §The public-class fence hole — a history section, correct as history and not re-verified since 0.14.1 (the plane is at 0.58.0). The op it describes is now behind the D-15 viewer gate, which is a different mechanism from the class grant the section removes.
@@ -326,11 +325,21 @@ The D-15 obligation is real: anything derived from project relationships must be
 filtered by what the viewer may see, or it leaks which projects are interested in
 which Information. What makes shipping first safe is that the filter is designed
 in from the first commit as a single compilation point. Every query compiles
-through one function that takes a viewer and returns a predicate. Today, for a
-member, it returns true. When projects and positions exist it returns a real
-predicate, and that is a change in one function rather than an audit of every
-query path. A test asserts that no query path reaches the store without passing
-through it, so the seam cannot rot while it is trivial.
+through one function that takes a viewer and returns a predicate.
+**CORRECTED 2026-09-14 (M0-27): this said "Today, for a member, it returns true. When
+projects and positions exist it returns a real predicate" — the real predicate has
+LANDED and is [BUILT].** `viewerPredicate` in `bio-plane/src/query.mjs` now carries the
+project-participation filter (D-15, `BIO_Membership_Architecture_v2.md` §7.9): an
+identified `member:<id>` session compiles `b.object_type <> 'project' OR EXISTS(…
+project_participants …) OR EXISTS(… an active admin …)`, so the evidence corpus stays
+shared and only PROJECT bundles are scoped; an unrecognised viewer FAILS CLOSED with
+`0=1`; and since D-310 (2026-09-10) the function also returns the member id positionally
+for DEC-72 clause 5. `1=1` survives only for a machine `class:` credential, deliberately
+and for the reason stated at the site — a shared instance-level token has no person
+behind it and therefore no participation to check. The bet this section placed was
+paid: it WAS a change in one function rather than an audit of every query path, and
+build-order step 6 below is done. A test asserts that no query path reaches the store
+without passing through it, so the seam did not rot while it was trivial.
 
 Build order:
 

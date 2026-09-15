@@ -1,11 +1,10 @@
 # Spreadsheets, word-processing and presentation documents
 
-**Status** · RESEARCH of 2026-07-31 (session BOB, at Bob's direction) that became the plan of record for the FORMAT axis, and the axis it argues for is now [BUILT] END TO END by COFF-1..7: the registry with HTML and PDF moved onto it (`bio-plane/src/formats.mjs` — the one place a format is known, and the D-70 test that framework §4's cost table is real), the dependency-free OOXML container reader (`ooxml.mjs`), and DOCX, XLSX and PPTX entries carrying I2 structure with per-container element references, text, and the DEC-5 evidentiary envelope. **The document's own preamble still says "Nothing here is built", and that is the single most misleading line in it.** COMPLETE as the argument — every architectural claim it makes was exercised and none was overturned — and SUPERSEDED IN FOUR PLACES by things that happened after it: DEC-5 ruled the risk it raises, IC-1 landed the interface change it predicts in a shape it does not anticipate, and COFF-6's census answered both of its open empirical questions (the size bound, and legacy/ODF prevalence). What the axis still does NOT extract is stated below rather than left derivable. as of 2026-09-14.
+**Status** · RESEARCH of 2026-07-31 (session BOB, at Bob's direction) that became the plan of record for the FORMAT axis, and the axis it argues for is now [BUILT] END TO END by COFF-1..7: the registry with HTML and PDF moved onto it (`bio-plane/src/formats.mjs` — the one place a format is known, and the D-70 test that framework §4's cost table is real), the dependency-free OOXML container reader (`ooxml.mjs`), and DOCX, XLSX and PPTX entries carrying I2 structure with per-container element references, text, and the DEC-5 evidentiary envelope. **The document's own preamble said "Nothing here is built" — the single most misleading line in it — and M0-27 CORRECTED IT IN PLACE on 2026-09-14; the preamble now states the axis as built and names the command that counts the registry.** COMPLETE as the argument — every architectural claim it makes was exercised and none was overturned — and SUPERSEDED IN FOUR PLACES by things that happened after it: DEC-5 ruled the risk it raises, IC-1 landed the interface change it predicts in a shape it does not anticipate, and COFF-6's census answered both of its open empirical questions (the size bound, and legacy/ODF prevalence). What the axis still does NOT extract is stated below rather than left derivable. as of 2026-09-14.
 
 **Place in the system** · A level-2 design serving construct 5 of `BIO_System_Design.md` §3, *document profile and the extraction substrate*, whose level-1 home is `BIO_Content_Framework_v0_10.md` **Part I**; §3 row 5 lists this document beside `DOCUMENT-PROFILES.md` as the two level-2 designs under it, and Part II §16 places the format entries in the extraction process as built ("delegated to format entries and members"). It is the FORMAT axis — framework §4's third axis, the one D-70 said had never been exercised — so it is also the evidence for a claim the framework makes about itself. Interfaces: it created I7 (the registry entry shape) and it drove IC-1 against I2, the element reference union that legs, connections and citations will share. What depends on it: `formats.mjs`, `ooxml.mjs`, `docx.mjs`, `formats-xlsx.mjs`, `pptx.mjs`, and `CONTENT-EXTENT-DESIGN-SPACE.md`, which treats IC-1's union as D-164's per-container leaf.
 
 **Incomplete sections** ·
-- §preamble — "**Nothing here is built.**" was true on 2026-07-31 and is false today, which a reader who stops at the third paragraph cannot know. Everything in §What to build landed as COFF-1..7 between 2026-08-01 and 2026-08-10.
 - §What to build — now a record rather than an instruction: step 1 is COFF-1, step 2 COFF-2, steps 3–4 COFF-3/4/5, step 5 COFF-6, step 6 the DEC-5 extras carried alongside 3–4 plus COFF-7 (hidden slides, the pptx analogue of hidden sheets). What the section cannot say is what step 5 RETURNED, and the answers now govern steps 2 and 7 — see the next three bullets.
 - §Bounds — superseded by the measurement it demanded. "The bound itself must be MEASURED on a real Oakland workbook, not picked" was honoured: COFF-6 censused all 43,282 `oaklandca.gov` assets plus 792 Legistar attachments and downloaded a 93-file stratified sample, and what shipped is `MEASURED_OOXML_TEXT_BOUND_BYTES` — 20 MiB of DECLARED UNCOMPRESSED text-part bytes summed from the central directory, because container size is a bad proxy in both directions — which passes 86 of 88 measured OOXML files. The two it excludes are the 2019/2020 police Stop-Data workbooks, which read `text-undetermined` honestly and are the named test cases for a streaming extractor reaching 64 MiB that is DEFERRED and not built. None of this is in the section.
 - §Legacy binary formats are a SEPARATE — the empirical question it poses has been answered and the section does not carry the answer. OLE2 prevalence measured 0.32% of assets (COFF-6), and the deferral STANDS with a trigger — a group actually needing one inspected — rather than as an open guess.
@@ -31,9 +30,22 @@ Research, 2026-07-31 (session BOB), at Bob's direction: BIO must inspect spreads
 Word-format and presentation documents as it inspects HTML and PDF, and the recognition
 and per-type processing must be architecturally clean.
 
-**Nothing here is built.** The one technical fact everything rests on was MEASURED
-this turn rather than assumed; every other number below is marked as unmeasured where
-it is.
+**CORRECTED 2026-09-14 (M0-27). This line read "Nothing here is built", which was true
+the day it was written and has been false since 2026-08-10.** The FORMAT axis this
+document argues for is **[BUILT] END TO END**: COFF-1..7 landed the registry with HTML
+and PDF moved onto it (`bio-plane/src/formats.mjs`), the dependency-free OOXML container
+reader (`ooxml.mjs`), and the DOCX, XLSX and PPTX entries carrying I2 structure with
+per-container element references, text, and the DEC-5 evidentiary envelope; **and since
+2026-09-14 the axis also reads OpenDocument** — COFF-9 put `ODF_FLAVOURS` beside
+`OOXML_FLAVOURS` in the container tier and COFF-10 added the `.odt` / `.ods` / `.odp`
+registry entries (`bio-plane/src/odf.mjs`), in the same I2 shape and DEC-5 envelope and
+with no new I2 union member. **COUNT THE REGISTRY RATHER THAN TRUST THIS SENTENCE:**
+`grep -cE '^registerFormat\(' bio-plane/src/formats.mjs` — eight entries on 2026-09-14.
+What the axis still does NOT extract is stated in §What these formats carry and in this
+document's Incomplete list, not here. The one technical fact everything rests on was
+MEASURED on 2026-07-31 rather than assumed; every other number below is marked as
+unmeasured where it is, and the two empirical questions that were open then were answered
+by COFF-6's census.
 
 ## The finding that shapes everything: three formats, one container
 
