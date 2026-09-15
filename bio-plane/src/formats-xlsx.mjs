@@ -146,8 +146,16 @@ async function sha256Hex(u8) {
 }
 
 /* IC-1: the sheet-cell element reference, produced by the container that
- * knows it. `ref` is the exact human form a citation surface displays. */
-function sheetCellRef(sheet, cell) {
+ * knows it. `ref` is the exact human form a citation surface displays.
+ *
+ * EXPORTED 2026-09-14 by COFF-10, and the export is the whole change to this
+ * file: the `.ods` entry (`odf.mjs`) emits `sheet-cell` references too, and
+ * its brief says REUSE the sibling's builder rather than grow a fourth. A
+ * second copy of two lines is how two producers of one IC-1 arm drift — the
+ * same argument that made `linkWrapper` imported rather than re-derived.
+ * Behaviour here is untouched; the over-strictness arm proves this entry's
+ * outputs are byte-identical across the change. */
+export function sheetCellRef(sheet, cell) {
   return { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell };
 }
 

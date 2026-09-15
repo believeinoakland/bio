@@ -762,9 +762,33 @@ const REGISTER_FLOOR = {
      own print read `arms 958/957` — the +1 is BOB's corpuscheck.test.mjs landing beside the item,
      invisible to the branch that set 957. One key set, read from the print after the commit (D-238). */
   /* MOVED 2026-09-14 by CONDUCT #10 at COFF-9's merge (958 -> 959): the merged run's own print read `arms 959/958`; the +1 is COFF-9's ooxml suite arm. One key set, read from the print after the commit (D-238). */
-  arms: 959,
-  classified: 178,
-  corpus: 179,
+  /* MOVED 2026-09-14 by COFF-10 (959 -> 964 · 178 -> 179 · 179 -> 180), ALL THREE IN
+     THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN RUN PRINTED
+     AFTER THE COMMIT — `arms 964/959 · classified 179/178 · corpus (suites read) 180/179
+     · GREW by 5 arm(s)` — never by adding to the numbers above, and never from the run
+     BEFORE the commit, which reported the same suite as a phantom and would have moved
+     the floor on a contaminated figure (D-238, and the earlier run in this session
+     printed exactly that warning).
+
+     The cause is ONE new suite, `test/formats-odf.test.mjs`, whose `NEGATIVE CONTROL:`
+     declaration states FIVE arms — content.xml removed, wrong flavour, the arm's own arm
+     (unregister an entry), over-strictness on the three OOXML entries, and
+     over-strictness on the ODF spellings this item did not anticipate. Every one of the
+     five was RUN and recorded. `classified` and `corpus` each move by exactly that one
+     suite. Nothing FELL.
+
+     D-344's interim law is honoured at that suite: the `NEGATIVE CONTROL` marker is
+     followed IMMEDIATELY by a colon, with the arm count after it — written that way
+     deliberately, because the parenthetical-before-the-colon form COFF-9 paid for scores
+     a suite as declaring none, and this run's `1 UNCLASSIFIED` is `case-opened.test.mjs`
+     as before and NOT this suite.
+
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and
+     in `FLEET_FLOOR`, the documented state. `FLEET_FLOOR` is UNMOVED and none is owed —
+     this item adds no fleet member and no fleet suite. */
+  arms: 964,
+  classified: 179,
+  corpus: 180,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

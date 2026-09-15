@@ -4228,3 +4228,127 @@ knowingly stale for that window). `OFFICE-FORMATS.md`'s one falsified sentence w
 here, in this area's own design source, per the amendment above.
 
 _(ROUTED by CONDUCT #10 2026-09-14 at COFF-9's integration, answering for dormant FRAMEWORK: the three §16 sentences are corrected by COFF-10 at its landing (in its brief and on its row); until then §16 is knowingly stale for that window, stated here. BOB #10, who is editing Part II today, is told so the merge stays trivial. Nothing further is owed here.)_
+
+
+
+## CLAIM 2026-09-14 CONTENT-OFFICE (COFF-10 — the three OpenDocument registry entries, `.ods` / `.odt` / `.odp`)
+
+Session: CONTENT-OFFICE worker, Opus 5, spawned by CONDUCT #10 after COFF-9 reached
+`origin/main` at `d791aa7`.
+Worktree: `/Users/sparky/ClaudeCodeBIO/bio/.claude/worktrees/agent-a3ef28cc916b7cee7`
+Branch: `worktree-agent-a3ef28cc916b7cee7`
+Pristine baseline worktree (measurement only, never edited):
+`/Users/sparky/ClaudeCodeBIO/bio/.claude/worktrees/agent-a3ef28cc916b7cee7-baseline` at `d791aa7`.
+
+EXACT PATHS CLAIMED:
+
+- `bio-plane/src/formats.mjs` — THREE `registerFormat(...)` calls and their comments, appended
+  after the existing `pptxEntry` registration. Nothing else in the file moves.
+- `bio-plane/src/odf.mjs` — NEW. The three OpenDocument entry modules in one file (one
+  container grammar, three part-maps), exporting `odtEntry` / `odsEntry` / `odpEntry` and the
+  three media-type constants. The OOXML siblings' envelope builders are REUSED by importing
+  their reference constructors (`docParaRef` from `docx.mjs`, `slideShapeRef` from `pptx.mjs`)
+  and the ONE `linkWrapper` from `subresources.mjs`.
+- `bio-plane/src/formats-xlsx.mjs` — **AMENDED at the build, and the amendment is stated rather
+  than quietly taken.** This claim first said the file would NOT be touched, on the theory that
+  the `.ods` entry could construct the `sheet-cell` reference to the same shape. That is
+  DUPLICATION, which is exactly what the item's brief says not to do and how two producers of one
+  IC-1 arm drift apart. The change is ONE `export` keyword on the existing `sheetCellRef`, no
+  behaviour, and over-strictness arm (4) measures the three OOXML entries' outputs byte-identical
+  across it rather than asserting that it is harmless.
+- `bio-plane/src/ooxml.mjs` — NOT claimed for behaviour. Read-only except for its header
+  paragraph's one falsified sentence ("What is built is the FLAVOUR only: there is still no ODF
+  registry entry, no `registerFormat` call and no I2 emission (COFF-10's)"), corrected in place
+  with the dated reason. No function, constant or branch in that file changes.
+- `bio-plane/test/formats-odf.test.mjs` — NEW suite, its `NEGATIVE CONTROL:` line (D-344: the
+  marker followed IMMEDIATELY by a colon), and its `test:` script in `bio-plane/package.json`.
+- `bio-plane/dist/bio-plane.bundled.mjs` and `bio-plane/dist/bio-plane.bundle.json` — rebuilt
+  because the sources above are bundled and FL-10's guard fails a stale artifact. Nothing
+  bumped, signed or deployed.
+- `docs/architecture/BIO_Content_Framework_v0_10.md` — Part II §16, THREE SENTENCES ONLY,
+  quoted here so the diff is verifiable and BOB #10's concurrent edits merge trivially:
+  (1) "the axis reads OOXML today and reads OpenDocument once one flavour row is added to the
+  container reader, designed for and not built."
+  (2) "Building it is two acts on the format axis: the OpenDocument flavour row in the
+  container reader, and the three OpenDocument readers (`.ods`, `.odt`, `.odp` — one
+  `content.xml` part each, smaller than their OOXML counterparts) producing the same I2 shape
+  and evidentiary envelope; and one on the capture side: ..."
+  (3) "OpenDocument (`.odt`, `.ods`, `.odp`) is designed for and deliberately not built: zero
+  were found among 43,282 city assets."
+  Plus the Status line's `as of` date if it reads lower than 2026-09-14. A FRAMEWORK delegation
+  routed to this item by CONDUCT #10; NOTHING else in that document is touched.
+- `docs/development/OFFICE-FORMATS.md` — the ODF bullet's `[DESIGNED-not-built]` clause only,
+  which that bullet's own last sentence says is COFF-10's to finish.
+- `docs/development/CLAIMS.md` (this block), `docs/development/MEASUREMENTS.md` (one appended
+  COFF-10 section), `docs/development/DEBT.md` (only if this item opens a row).
+- `docs/DECIDED.md` — REGENERATED, not hand-edited (`node tools/decided.mjs`), because the §16
+  and OFFICE-FORMATS corrections carry marker words and `plancheck` fails on the drift. Added to
+  this claim at the build; it is a generated artifact, so a merge conflict here is resolved by
+  re-running the tool and never by picking a side.
+
+NOT TOUCHED, stated because REC-82 is live on them: `bio-plane/src/schema.mjs`,
+`bio-plane/src/store.mjs`, `bio-plane/src/index.mjs`. The item's own acceptance asserts
+`index.mjs` never learns the three format names, so that disjointness is driven, not promised.
+
+ADDED AT THE CLOSE, because a claim that does not name a path it edited is worse than no claim:
+`bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` ONLY (959/178/179 → 964/179/180), moved from
+the figure this item's own green run PRINTED AFTER THE COMMIT, one key set, `^  arms:` grepped to
+2 matches afterwards. `FLEET_FLOOR` is UNMOVED and none is owed.
+
+released: 2026-09-14 CONTENT-OFFICE (COFF-10) — landed on branch
+`worktree-agent-a3ef28cc916b7cee7`, NOT pushed and NOT merged; CONDUCT integrates.
+**`.odt`, `.ods` and `.odp` are registry entries.** `bio-plane/src/odf.mjs`, three
+`registerFormat` calls in `formats.mjs` and NOTHING anywhere else — the D-70 property DRIVEN by
+grepping `index.mjs` for the three names and finding none. Each dispatches on COFF-9's
+`partMap:"odf"` result and reads ONE `content.xml` into the SAME I2 shape and DEC-5 envelope its
+OOXML sibling produces, with IC-1's `doc-para` / `sheet-cell` / `slide-shape` references built by
+IMPORTING the siblings' own constructors. **NO new union member was needed, so NO IC was filed and
+I7 is CONFIRMED by three more entries rather than changed.**
+**The detect ladder is one step stronger than the OOXML entries' and the reason is measured**: ODF's
+`mimetype` is required first and STORED, so a synchronous `detect` reads the VALUE (CRC-verified,
+compared exactly) and answers `certain`. A names-only ladder would have been WRONG, not merely
+weak — all three flavours have identical part names.
+**THE TWO DEC-5 EXTRAS ONE `content.xml` CANNOT SUPPLY ARE NAMED ON EVERY SUCCESSFUL READ**, which
+is this item's sharpest line: core properties live in `meta.xml` and embedded objects in
+`META-INF/manifest.xml`, so no `core-properties` item and no `intra` link is emitted and both
+absences are carried as `{part, why:"outside_content_xml_not_read", detail}` — an absent item
+would otherwise read as "this document names no author" and `intra: 0` as "this document embeds
+nothing". The fixture's `meta.xml` deliberately carries a creator the entries do not surface.
+**MEASURED against LibreOffice 26.8.0.3, and two constructs were NOT where a spec reading would
+have put them**: a hidden SHEET is `table:display="false"` on the table's STYLE and a hidden SLIDE
+is `presentation:visibility="hidden"` on the page's DRAWING-PAGE STYLE, both in content.xml's own
+automatic styles — which is what makes them readable from one part at all. Pre-item, against a
+pristine `origin/main` worktree at `d791aa7`, the REGISTRY answered `undetermined`/`none` on all
+three real files while the container tier already answered the flavour; that gap is what closed.
+**Google Drive's own export is NOT reachable here and is NOT measured** — CAP-8 meets it first.
+GATES: battery **188/188 · 11,542** against this session's own pristine baseline **187/187 ·
+11,410**, the delta attributed by diffing two full runs per suite and closing exactly (+130 the new
+suite, +2 hygiene's own per-suite census; no other suite moved by one assertion).
+`node scripts/coverage.mjs --strict` run DIRECTLY from `bio-plane/`, `$?` unpiped, **exit 0**,
+REGISTER FLOOR `arms 964/964 · classified 179/179 · corpus 180/180` after the move.
+`node civicos-ui/test/run.mjs` from the repo root **exit 0**. `node tools/plancheck.mjs --local`
+**0 fail 0 warn**. `node tools/corpuscheck.mjs` 44 governed documents **0 fail**. FL-10's guard
+FIRED as briefed and `npm run build` rebuilt `dist/bio-plane.bundled.mjs` (2,760,995 B, sha256
+`817e0a8f…`); `src/signpage.mjs` regenerated BYTE-IDENTICALLY and is not in the diff. Nothing
+bumped, signed or deployed.
+CONTROLS, five arms plus a baseline row: (1) content.xml removed → the absence named BY PART on
+all three, structure and text `ok:false` and never an empty structure; (2) wrong flavour → refused
+by name on all six cross pairs, plus a DOCX package and a plain ZIP; (3) the arm's own arm —
+`unregisterFormat("ods")` → its two detect assertions fail by name and the other two entries are
+UNMOVED, restored and the restore MEASURED; (4) over-strictness on the OOXML entries → outputs
+byte-identical to the pristine tree, **sha256 `050ae28e36ca4be2b8bf5cb3e221a617e765c8841daad88831beba6cc2e5edeb`
+on both sides**, corpus printed and FLOORED at 2,000 bytes because a digest over an empty object
+agrees for free; (5) over-strictness on spellings this item did not anticipate → hiddenness on the
+ELEMENT rather than the style, `text:s`/`tab`/`line-break`, and `number-columns-repeated` advancing
+the cell address, all READ.
+TWO FINDINGS ABOUT THIS ITEM'S OWN WORK, recorded rather than smoothed. (a) **A shared module-level
+`/g` regex HUNG the first run.** `docx.mjs` and `pptx.mjs` each hold one and reset `lastIndex` at
+the top of their single walk, which is safe because neither walk calls anything that walks. Every
+walk here NESTS, so the inner call's reset rewound the outer loop and it never terminated. Closed
+by a factory, with the reason at the site. (b) **`hygiene.test.mjs` caught the new suite ending on
+`process.exitCode` instead of `process.exit`** on its first battery run — the rule working, and
+the +2 hygiene delta is that same per-suite census counting the new file.
+**WHAT IS OWED TO A FUTURE ACTOR: nothing by this landing.** The §16 delegation CONDUCT routed
+here is DISCHARGED — all three sentences corrected in place with the dated reason, and nothing else
+in that document touched. Everything CONDUCT should record is in this worker's report, stated as
+acts with their actors.

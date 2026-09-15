@@ -1753,20 +1753,34 @@ TSV, PDF, HTML, plain text — without a credential when the file is shared with
 the link or published; every export is Google's CONVERSION at fetch time, none is the original,
 so the hop records the export format and Google as the producer (D-251's sense). OpenDocument
 and OOXML are both open ISO standards and preserve the same evidence (formulas beside values,
-hidden sheets, comments, tracked changes, notes); the axis reads OOXML today and reads
-OpenDocument once one flavour row is added to the container reader, designed for and not
-built. **RULED by Bob, 2026-09-14: a link to a Google Drive file KEEPS THE LINK, and the harvest is
+hidden sheets, comments, tracked changes, notes); the axis reads OOXML **and, since 2026-09-14,
+reads OpenDocument too** — the flavour row went into the container reader at COFF-9 (`d791aa7`)
+and the three registry entries at COFF-10, so this sentence's former "designed for and not
+built" is CORRECTED rather than deleted: what it recorded was the design bet that the flavour
+table is a PARAMETER, and the bet paid. **RULED by Bob, 2026-09-14: a link to a Google Drive file KEEPS THE LINK, and the harvest is
 the OpenDocument export, from which the content is extracted.** So the record holds the Drive
 address as the citation of where the document lives, the ODF bytes as the capture with an
 honest hop (export address, format, Google as producer, time), and the content extracted from
-those bytes. Building it is two acts on the format axis: the OpenDocument flavour row in the
-container reader, and the three OpenDocument readers (`.ods`, `.odt`, `.odp` — one `content.xml`
-part each, smaller than their OOXML counterparts) producing the same I2 shape and evidentiary
-envelope; and one on the capture side: the Drive host-stack handler that recognises the address
-and acquires the export instead of the shell. CAP-7's count now sets priority, not whether. Whether it is
+those bytes. Building it was two acts on the format axis, **and both are DONE as of 2026-09-14**:
+the OpenDocument flavour row in the container reader (COFF-9, `d791aa7` — `ODF_FLAVOURS` in
+`ooxml.mjs`, discriminating on the first-and-stored `mimetype`), and the three OpenDocument
+readers (`.ods`, `.odt`, `.odp` — one `content.xml` part each, smaller than their OOXML
+counterparts) producing the same I2 shape and evidentiary envelope (COFF-10 — `odf.mjs`, three
+`registerFormat` calls, `sheet-cell` / `doc-para` / `slide-shape` references and no new IC-1
+member). What `content.xml` cannot reach is stated by the entries rather than left silent: the
+core properties live in `meta.xml` and embedded objects in `META-INF/manifest.xml`, so both are
+carried as named undetermineds. **One act remains, and it is on the capture side**: the Drive
+host-stack handler that recognises the address and acquires the export instead of the shell
+(CAP-8). CAP-7's count now sets priority, not whether. Whether it is
 worth building is a measurement: how many of the city's links point at Drive. That census has
-not been run; it is routed. OpenDocument (`.odt`, `.ods`, `.odp`) is designed for and
-deliberately not built: zero were found among 43,282 city assets.
+not been run; it is routed. OpenDocument (`.odt`, `.ods`, `.odp`) **is [BUILT] as of 2026-09-14**
+(COFF-9's flavour row, COFF-10's three entries). This sentence previously read "designed for and
+deliberately not built: zero were found among 43,282 city assets", and the CENSUS half of it is
+unrevised and still true — COFF-6 found zero NATIVE ODF assets in the wild, and on that evidence
+alone the deliberate non-build was right. What overturned the conclusion is not a re-count but a
+change of SOURCE: Bob's ruling the same day makes the Drive EXPORT the harvest, so ODF arrives as
+the format we produce the bytes in rather than one a body publishes. The entries are warranted by
+the ruling, not by the census.
 
 **The non-text path, in three tiers.** A PDF or an office container may need its text
 produced before anything can read it, and the intent layer runs over text from anywhere:
