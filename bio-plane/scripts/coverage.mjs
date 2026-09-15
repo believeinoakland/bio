@@ -895,9 +895,22 @@ const REGISTER_FLOOR = {
      the MERGED run's own print read `arms 1059/1051 · classified 192/191 · corpus (suites read)
      193/192 · GREW by 8 arm(s)` - SK-8's extractrun suite on top of CPDF-20's 1051. The branch's own
      block (1029/188/189) was dropped at the merge and declared. One key set. Nothing FELL. */
-  arms: 1059,
-  classified: 192,
-  corpus: 193,
+  /* MOVED 2026-09-15 by REC-98 (1059 -> 1068 · 192 -> 193 · 193 -> 194): this item's
+     own green `--strict` run PRINTED `arms 1068/1059 · classified 193/192 · corpus
+     (suites read) 194/193 · GREW by 9 arm(s)` — taken from the print, never by
+     adding 9 to the number in the file, and taken AFTER the commit rather than
+     before it. THE PRE-COMMIT RUN OF THE SAME COMMAND SAID `contaminated: 1
+     suite(s) no other checkout has` and its figures were NOT used: `tier2-wire.test.mjs`
+     was untracked, so 1068 was not yet a figure another checkout reproduces, and a
+     floor moved over a phantom is permanently too high (D-238). After `272bf50` the
+     same run reads `provenance: 210 of 210 discovered item(s) are in the commit`.
+     The cause is one new suite whose `NEGATIVE CONTROL:` declaration states NINE
+     arms, all NINE of them RUN by `test/nc-rec98.mjs` and all nine AS DECLARED.
+     One key set. Nothing FELL. FLEET_FLOOR unmoved — this item adds no fleet
+     member, no fleet suite and no fleet op. */
+  arms: 1068,
+  classified: 193,
+  corpus: 194,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
