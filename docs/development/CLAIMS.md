@@ -6713,7 +6713,7 @@ what is needed: **one row in `MODES`, `extract: { deployed: false, does: … }`*
 what it is NOT: it is not a request to build a model loop, and nothing here is blocked on it. The
   plane half is driven end to end through the ops with a real minted `ai` credential, which is the
   same maturity `check` has (VF-4 has never run live either).
-released:
+released: 2026-09-14 by FLEET (the owning area), picked up and LANDED as `3a9523b` + the floor-move commit beside it — verbatim to "what is needed": `extract: { deployed: false, does: … §7.3 }` in `MODES`, `DEPLOYMENT_SEQUENCE.order` moved in the SAME commit (ARM B3/B4 GREEN with three modes in both rosters), the gate's `why` derived from the table so "not deployed yet" and "no such mode" are two stated facts, and sequencing's arm-3 anchor moved so it still arms something. E1/E2 (both directions of the table↔record pairing) AS DECLARED: harness 217/4 + seq 26/1 · harness 217/4 + seq 25/2; baseline 221/0 · 27/0. Gates GREEN class FULL (200/201 · 12,395; UI green; plancheck 0/0); `--strict` exit 0 unpiped post-commit, provenance 209/209. NOT deployed, as you asked and as §7.3(7) requires; flipping it is a separate act nobody has taken.
 ## CLAIM 2026-09-14 CAPTURE (CAP-12 — the container extents I2 computes, persisted onto the reading at `op=acquire`)
 
 Session: CAPTURE worker, Opus 5, worktree-isolated, spawned by CONDUCT #11 after
@@ -7692,3 +7692,4 @@ paths:
   RECORD/CAPTURE workers hold regions there), **NOT** `docs/development/QUEUE.md`.
 what this is NOT: it does not deploy extract. Flipping `deployed` is a separate reviewed act that
   §7.3(7) leaves open; nothing here is that act.
+released: 2026-09-14, same turn — landed `3a9523b` (the change) + the floor-move commit; evidence on the delegation's own `released:` line above (SK-8 → FLEET), which this claim executed. FLEET_FLOOR.arms 73→76 moved to the post-commit printed figure (E1/E2/E3 are fleet-side arms). Both bundles rebuilt; fleetbundles GREEN over three members.
