@@ -12634,3 +12634,35 @@ and says so; a corpus of none is not.
 2. **The same note reported only the first of two true facts** about an over-the-bound
    workbook — it has no unit arm AND it is over the bound, and reporting only the arm
    would have hidden the bound from the table that needed it. Both are now carried.
+## 2026-09-14 · REC-89 — D-225's CAPS RE-PROVED BY BREAKING THEM, AND THE ONE ARM THAT CAME BACK GREEN (instruments: `bio-plane/test/bounds.test.mjs`, `meaning-bounds.test.mjs`, `derivation-bounds.test.mjs`, driven from a per-arm harness kept OUTSIDE the suite tree; worktree `agent-aeb40c8345753a176` on `origin/main` at `f38af22`)
+
+**Why this was measured rather than read.** REC-89's row asked for caps that were already in the plane — `resolutionsForCapture`, `documentsConcerning` and `connectionsFor` have clamped to 500/5000 and published `limit`/`truncated` since REC-60 on 2026-08-07. Reading the comments at the site would have confirmed that and proved nothing: **a mechanism believed on the strength of its existence rather than its behaviour is the defect this project meets most.** So the caps were broken, one read at a time, and the instrument was watched.
+
+**How every arm was armed.** Each patch is applied INSIDE one method's segment (so a literal shared with another method cannot be hit by accident) and each anchor is asserted to match **exactly once** before mutation; the byte count is asserted to CHANGE; each arm is armed ALONE with the others held open; and `src/store.mjs` is restored from a **uniquely-named per-arm pristine copy** verified by sha256 **and** by `cmp`, with the byte count printed and floored at 1,000,000 (the file is **1,997,832 bytes**). A missing suite foot line is reported as **-1**, never 0. **Every arm restored byte-identically: YES, nine of nine.**
+
+**BASELINE, on the clean tree:** `bounds` **162 pass / 0 fail** · `meaning-bounds` **92 / 0** · `derivation-bounds` **42 / 0**. The whole battery on a pristine scratch checkout of the same commit: **195/195 suites · 12,100 assertions · 261.8 s.**
+
+| arm | what it broke | declared (REC-60, 2026-08-07) | MEASURED 2026-09-14 | |
+| --- | --- | --- | --- | --- |
+| 1a | `resolutionsForCapture` fully uncapped — `LIMIT ?`, `cap + 1`, the slice and the `limit:`/`truncated` keys all removed | 17 fail (bounds 4, mb 13) | **17 fail — bounds 4, mb 13, db 0** | EXACT |
+| 1b | `documentsConcerning`, same | 16 fail (bounds 4, mb 12) | **17 fail — bounds 4, mb 12, db 1** | +1, and the extra is `derivation-bounds`, a suite that **did not exist** when the figure was declared (REC-66, 2026-08-08) |
+| 1c | `connectionsFor`, BOTH arms | 15 fail (bounds 4, mb 11) | **16 fail — bounds 4, mb 11, db 1** | +1, same reason |
+| 2a | `documentsConcerning` dishonest — `const truncated = false;` beside a real slice; the scan stays bounded | 4 fail (bounds 2, mb 2) | **4 fail — bounds 2, mb 2, db 0** | EXACT |
+| 2b | `resolutionsForCapture` dishonest, same | 5 fail (bounds 2, mb 3) | **5 fail — bounds 2, mb 3, db 0** | EXACT |
+| 4 | OVER-STRICTNESS: a **comment** added inside the governed region, no behaviour changed | (none declared) | **0 fail, all three suites green** | AS DECLARED |
+
+**The failures NAME their op**, which is what makes these pins rather than counts: arm 1a's four `bounds` failures all read `op=resolutions: …`, 1b's `op=concerns: …`, 1c's `op=connections: …`, and `meaning-bounds` prints the read back on its BARE roster and fails the RATCHET by name. **Arm 4's six differing output lines are all corpus-census lines and nothing else** — `store.mjs 31350 → 31351 lines`, `18,814,670 → 18,814,782` chars, the exact size of the comment — so a correct change in a spelling the instrument was not built for passes, and the corpus is printed rather than hidden.
+
+### THE ARM THAT CAME BACK GREEN, WHICH IS THE FINDING (rowed as D-365)
+
+| arm | what it broke | MEASURED |
+| --- | --- | --- |
+| 3a | `resolutionsForCapture`: **only** the SQL `LIMIT ?` and its `cap + 1`. Envelope, slice and `truncated` computation untouched | **bounds 162/0 · meaning-bounds 92/0 · derivation-bounds 42/0 — FULLY GREEN** |
+| 3b | `documentsConcerning`, same | **FULLY GREEN, 0 failing assertions** |
+| 3c | `connectionsFor`'s entity arm, same | **FULLY GREEN, 0 failing assertions** |
+
+So the scan behind each of D-225's three reads can become unbounded again and **no assertion in this plane notices** — the honest envelope stands over an unbounded scan. This reproduces D-227's finding on all three reads (D-227 measured it on `resolutionsForCapture` alone at REC-60's integration, and on `op=connect` at REC-66).
+
+**AND THE SHARPER HALF, which is new.** `derivation-bounds.test.mjs` prints a census line; at baseline it reads `store.mjs 31350 lines, 467 method segments, **102 scanning UNBOUNDED**, 32 in the class, reaching 11 of 193 DISPATCHED ops`, and under **every** arm 3 it printed **103**. The walk COUNTED the newly-unbounded method and the suite stayed green, because that census carries no ratchet. **The instrument is not blind here — it is ungraded**, which is a cheaper fix than the live row-source assertion D-227's row asked for, and both are named and costed on D-365.
+
+**What this arm set can and cannot see, stated plainly.** It drives the three ops through the control plane with `&limit=`, so it measures the published envelope and the failure of the suites to defend the SQL bound. It does **not** measure memory or latency inside the Durable Object under an unbounded scan, and it does not reach `connectionGradeForContent` (FW-17's `content=` arm on `op=connections`), which takes the same bound at its own site and has no roster entry of its own — that arm was read, not driven, and is named here rather than scored.

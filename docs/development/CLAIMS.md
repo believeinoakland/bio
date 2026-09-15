@@ -7758,3 +7758,211 @@ released: 2026-09-14 by the M0-31 worker — **SEARCH §5's FOUR NUMBERS ARE TAK
 **IDS: M-20 is this item's. M-19 was minted and ABANDONED** because the first `mintid` run's output was piped through `tail -5` and the id line is at the HEAD — the repo's own "read it unpiped" lesson in a new costume. Gaps cost nothing (mintid's own note) and the floor moved 13 → 20.
 
 **WHAT THIS ITEM COULD NOT DO, stated plainly:** it could not measure a `sheet-range` or a `slide-shape` unit, because neither exists; it could not see the 26,783 unsampled PDFs (96.4 % of that population by count), the 139 legacy OLE2 assets (no reader), any text OCR would recover from the 26.3 % of pages that returned nothing, or any text past the pdf-worker's 16 MB envelope (44 PDFs) or COFF-2's 20 MiB bound (18 workbooks) — so every text figure is a FLOOR. The index and CPU figures are miniflare-hosted workerd on one machine, not a deployed Durable Object. `node tools/waitquiet.mjs` could not release: two `workerd` processes from a dead worker's checkout have sat at 0.0 % CPU for four and a half hours and the tool matches positionally, so it cannot tell an orphan from live work. The instrument figures were taken with the machine measured instead — no battery running, those two orphans at 0.0 %, and the state printed beside the figures.
+## CLAIM 2026-09-14 RECORD (REC-89 — SEARCH §7 row 1, D-225's caps: VERIFY-AND-DISPOSE, because the caps LANDED at REC-60 on 2026-08-07 and the debt row was never moved)
+session: REC-89 worker, spawned by CONDUCT #11. Worktree
+  `.claude/worktrees/agent-aeb40c8345753a176`, branch `worktree-agent-aeb40c8345753a176`.
+opened: 2026-09-14
+authority: `QUEUE.md` `### REC-89 · running` (verified on `origin/main` at `f38af22`
+  before any edit), under `CONTENT-SEARCH-DESIGN.md` §7 row 1 and §2.
+**THE ITEM'S SUBJECT IS ALREADY BUILT, and that is the finding rather than an excuse.**
+  `resolutionsForCapture`, `documentsConcerning` and `connectionsFor` each clamp to
+  default 500 / ceiling 5000 and publish `limit` after clamping beside `truncated`;
+  all three are driven through their ops on `bounds.test.mjs`'s roster; `IC-25` on I3
+  is SETTLED (8.1.0 → 9.0.0 → 10.0.0, recorded by CONDUCT 2026-08-07). So this item
+  builds nothing, MINTS NO IC (see the release line), and its work is the VERIFICATION
+  the row's accepts-when asks for, the NEGATIVE CONTROL it declares, and the disposition
+  the record is missing.
+paths:
+  - `docs/development/DEBT.md` — **THE D-225 ROW ONLY** (its Status column). Shared file;
+    D-297 (DIST) and COFF-9 (CONTENT-OFFICE) hold other rows in it and neither names D-225.
+    No other row on this file is read-modified-written by this item.
+  - `docs/development/CONTENT-SEARCH-DESIGN.md` — §2's D-225 constraint row, §7 row 1, and
+    the front matter that its stated completeness change obliges (the row's accepts-when:
+    "the home design's front matter moved in the same commit if its stated completeness
+    changes"). No other section.
+  - `docs/development/MEASUREMENTS.md` — this item's driven figures only, appended.
+  - `docs/development/CLAIMS.md` — this block.
+  **READ AND DRIVEN, NEVER EDITED**: `bio-plane/src/store.mjs` (`resolutionsForCapture`
+  :14113, `documentsConcerning` :14141, `connectionsFor` :14454, `connectionGradeForContent`
+  :14538, the REC-60/D-225 region header :13875, the op dispatch :30615-30621),
+  `bio-plane/src/index.mjs`, `bio-plane/test/bounds.test.mjs`,
+  `bio-plane/test/meaning-bounds.test.mjs`, `bio-plane/test/derivation-bounds.test.mjs`,
+  `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` — READ, and NOT moved: this item adds
+  no op, no check and no control, so no floor of its is invalidated).
+  **NOT EDITED, and each is a DELEGATION instead**: `docs/architecture/BIO_Content_Framework_v0_10.md`
+  (Part II's table still calls these three "fixed-key reads, uncapped (D-225)" at line numbers
+  three thousand lines stale — CAP-8's precedent on the same document, same day: the design
+  document is not a worker's to edit), `docs/development/INVESTIGATIVE-SESSION.md` §14c
+  (its "Related finding" says in the present tense that the three reads "are uncapped"),
+  `docs/development/QUEUE.md` (CONDUCT's, sole writer — REC-90's "waits on REC-89" and the
+  row's own disposition are CONDUCT's to move).
+  **NOT** `bio-plane/**` source of any kind, **NOT** `INTERFACE-CHANGES.md` (no IC is owed;
+  filing one would record a change that does not exist), **NOT** `civicos-ui/**`.
+concurrency: checked over the register 2026-09-14 against every claim with no `released:`
+  line — FL-10 and FL-6 (FLEET) name `store.mjs`, D-297 (DIST) and COFF-9 (CONTENT-OFFICE)
+  name `DEBT.md`, REC-84's addendum (RECORD) names `store.mjs` and `scripts/coverage.mjs`.
+  **This item writes NO `.mjs` file at all**, so the `store.mjs` overlap is read-only, and
+  the `DEBT.md` overlap is disjoint BY ROW. Of the four live siblings named in the brief —
+  REC-93 (`observations`), REC-97 (`op=cite`), CAP-12 (`op=acquire`), SK-7 (the mint path) —
+  none touches D-225's three reads or their op sites.
+  - **AMENDED MID-ITEM, 2026-09-14:** `docs/development/DEBT.md` gains **a SECOND row, `D-365`**,
+    beside the D-225 disposition this claim opened with. It was not foreseen from the brief: the
+    row's declared NEGATIVE CONTROL was run as declared, and one arm set came back GREEN where it
+    should have gone red, which is a finding about the SUITE rather than the plane. It is filed as
+    its own row rather than folded into D-225 because it is not D-225's defect — D-225 was
+    unboundedness in the PLANE and is closed; this is an unmeasured property in the SUITE. Still
+    no `.mjs` file is written.
+  - **AMENDED MID-ITEM, 2026-09-14:** `docs/DECIDED.md` — **REGENERATED, never authored**, by
+    `node tools/decided.mjs`, because this turn's edits move the line numbers the generated index
+    cites and `plancheck` fails on the drift. Not hand-edited in any part.
+released: 2026-09-14 by the REC-89 worker — **THE ITEM BUILT NOTHING BECAUSE ITS SUBJECT WAS ALREADY
+BUILT, AND THE WORK IS THE PROOF OF THAT PLUS THE DISPOSITION THE RECORD WAS MISSING.** D-225's three
+reads took REC-57's envelope at **REC-60 on 2026-08-07** under **IC-25** (SETTLED, I3 8.1.0 → 9.0.0 →
+10.0.0): `resolutionsForCapture` (`store.mjs:14113`), `documentsConcerning` (`:14141`) and
+`connectionsFor` (`:14454`) clamp to `#MEANING_LIMIT_DEFAULT` 500 / `_MAX` 5000 and publish `limit`
+AFTER clamping beside `truncated`, all three driven through `op=resolutions` / `op=concerns` /
+`op=connections` with `&limit=` on `bounds.test.mjs`'s roster. FW-17's `content=` arm
+(`connectionGradeForContent`, `:14538`) takes the same bound at its own site. **NO IC WAS MINTED AND
+THAT IS THE DECISION, NOT AN OMISSION:** the brief instructed one on I3 at spawn under IC-3's rule
+that an addition is recorded too, but there is no addition — filing an IC for a change that does not
+exist teaches the registry to lie in the other direction, which is IC-3's own reasoning. `IC-25` is
+the entry; `INTERFACE-CHANGES.md` was read and NOT written.
+
+GATE FIGURES, all against a baseline measured on a pristine scratch checkout of `origin/main`
+`f38af22` taken with `worktree add` (never the stash, which is repository-wide): **battery 195/195
+suites · 12,101 assertions**, baseline **195/195 · 12,100 · 261.8 s**, final 247.3 s. **THE +1 IS
+ATTRIBUTED PER SUITE BY RE-RUNNING THE BASELINE AND DIFFING THE PER-SUITE LINES, NEVER BY
+SUBTRACTION: `planning-hygiene.test.mjs` 285 → 286**, the one suite with a per-DEBT-row assertion,
+and it is the new `D-365` row passing that suite's hygiene rules. Every other one of the 193
+reporting suites is unmoved. `node scripts/coverage.mjs --strict` run DIRECTLY from `bio-plane/`,
+`$?` read with nothing piped after it: **exit 0** (provenance: 203 of 203 discovered items in the
+commit at HEAD). `node civicos-ui/test/run.mjs` from the REPO ROOT, unpiped: **exit 0**, all
+harnesses green. `node tools/plancheck.mjs --local`: **0 fail, 0 warn** — design corpus 50 governed
+documents, 0 front-matter failures; decided index current (895 rulings, 251.8 KB, regenerated not
+authored). **NO FLOOR MOVED, and none was owed:** this item adds no op, no check and no control, so
+`REGISTER_FLOOR` in `bio-plane/scripts/coverage.mjs` was READ and left byte-unchanged; no `.mjs`
+file in this repository is touched by this commit.
+
+**BASELINE CORRECTION WORTH CARRYING.** The first baseline run read **194/195 · 12,024** and named its
+own cause: `ocr-worker/ocr-worker.test.mjs` SKIPPED, *"cannot resolve 'miniflare' — run `npm ci` in
+ocr-worker/"*. That is CLAUDE.md's fresh-checkout trap **in a new costume** — the rule names
+`bio-plane/`, and the scratch baseline had `bio-plane/` installed and `ocr-worker/` not. It cost one
+re-run rather than a wrong number ONLY because the runner NAMES its skip in the foot region instead
+of scoring it zero. After installing `ocr-worker/` and `pdf-worker/` the baseline read **195/195 ·
+12,100 — exactly the brief's figure, confirmed by measurement rather than inherited.** The
+76-assertion gap is `ocr-worker`'s suite.
+
+CONTROL ARMS — **NINE, every one armed ALONE with the others held open, declared before arming, and
+ALL NINE BEHAVED AS DECLARED.** Each patch applied inside ONE method's segment with its anchor
+asserted to match exactly once (an arm that did not arm is a finding), bytes asserted CHANGED, and
+`src/store.mjs` restored from a **uniquely-named per-arm** pristine copy verified by sha256 **AND**
+`cmp`, byte count printed and floored at 1,000,000 against the real **1,997,832** — **restored
+byte-identically: YES, 9 of 9.** A missing foot line would report **-1**, never 0. Clean-tree
+baseline `bounds` **162/0** · `meaning-bounds` **92/0** · `derivation-bounds` **42/0**, asserted
+green before any arm ran.
+
+| arm | declared | actual |
+| --- | --- | --- |
+| 1a `resolutionsForCapture` fully uncapped | 17 fail (bounds 4, mb 13) — REC-60's own 2026-08-07 figure | **17 — bounds 4, mb 13, db 0. EXACT** |
+| 1b `documentsConcerning` fully uncapped | 16 fail (bounds 4, mb 12) | **17 — bounds 4, mb 12, db 1.** +1, and the extra is `derivation-bounds`, **a suite that did not exist when the figure was declared** (REC-66, 2026-08-08) |
+| 1c `connectionsFor` fully uncapped, BOTH arms | 15 fail (bounds 4, mb 11) | **16 — bounds 4, mb 11, db 1.** Same cause |
+| 2a `documentsConcerning` `truncated = false` beside a real slice | 4 fail (bounds 2, mb 2) | **4 — bounds 2, mb 2, db 0. EXACT** |
+| 2b `resolutionsForCapture` same | 5 fail (bounds 2, mb 3) | **5 — bounds 2, mb 3, db 0. EXACT** |
+| 3a/3b/3c the D-227 variant: ONLY the SQL `LIMIT ?` and `cap + 1` removed, envelope left honest, on each of the three | **DECLARED GREEN** — D-227's row predicts it | **FULLY GREEN on all three: 162/0, 92/0, 42/0, zero failing assertions.** AS DECLARED, and it is the finding |
+| 4 OVER-STRICTNESS: a COMMENT added inside the governed region | green, and the envelopes unmoved | **162/0, 92/0, 42/0.** Its 6 differing output lines are **all corpus-census lines and nothing else** — `store.mjs 31350 → 31351 lines`, `18,814,670 → 18,814,782` chars, exactly the comment's own bytes. **No assertion moved** |
+
+**THE FAILURES NAME THEIR OP**, which is what makes these pins and not counts: 1a's four `bounds`
+failures all read `op=resolutions: …`, 1b's `op=concerns: …`, 1c's `op=connections: …`, and
+`meaning-bounds` prints the read back on its BARE roster and fails the RATCHET by name. **That is
+also the over-strictness reading the row asked for, taken per assertion rather than per byte:** under
+each arm the OTHER two reads' pins stayed green and their envelopes unmoved.
+
+**THE SURPRISING RESULT, RECORDED AND NOT SMOOTHED — rowed as `D-365`.** Arms 3a–3c are the whole
+value this item added beyond a disposition. Removing only the SQL bound leaves every walk green, so
+**D-225's memory half can regress silently on all three of its own reads**; its honesty half is well
+defended (arms 2a/2b fail 4 and 5 assertions by name). **And the sharper half is new:**
+`derivation-bounds.test.mjs` PRINTS `… 102 scanning UNBOUNDED …` at baseline and printed **103**
+under every arm 3 — **the walk COUNTED the newly-unbounded method and nothing failed**, because that
+census carries no ratchet. The instrument is not blind here, it is **ungraded**, which is a cheaper
+fix than the live row-source assertion D-227 asked for; both are costed on D-365. D-227 itself was
+archived as PARTLY CLOSED **with that residue inside it**, in a ledger nothing drains — that pattern
+is delegated to CONDUCT as a candidate rule, not just this instance.
+
+**WHAT THE SWEEP COULD NOT SEE, stated plainly.** The arms drive the three ops through the control
+plane and measure the PUBLISHED envelope and the suites' failure to defend the SQL bound. They do NOT
+measure memory or latency inside the Durable Object under an unbounded scan, and they do NOT reach
+`connectionGradeForContent` (FW-17's `content=` arm), which has no roster entry of its own — that arm
+was READ, not DRIVEN, and is named here rather than scored. `REGISTER_FLOOR` was read and not moved,
+so no floor figure in this release line is a re-measurement of one.
+
+**RE-RUNNING THIS IN ONE STEP.** No new `NEGATIVE CONTROL:` line was added because no suite changed:
+the recipe is already at `bio-plane/test/bounds.test.mjs:14` and `test/meaning-bounds.test.mjs:89-105`,
+and **it still reproduces to the assertion 38 days later** — which is itself the finding that a
+recorded control is worth writing. The D-227 variant (arms 3a–3c) is the one shape those lines do not
+carry; `MEASUREMENTS.md` 2026-09-14 · REC-89 carries it, with the segment-scoped patch method in full.
+
+**FOUR DELEGATIONS FOLLOW THIS BLOCK**, each an ACT with an actor rather than a note: the framework
+document's "uncapped" row, `INVESTIGATIVE-SESSION.md` §14c's present tense, the four QUEUE acts
+(including that **REC-90 is unblocked now**), and D-365 wanting a row.
+
+## DELEGATION 2026-09-14 RECORD (REC-89) → CONDUCT (answering-for FRAMEWORK, dormant): **`BIO_Content_Framework_v0_10.md` Part II STILL CALLS D-225's THREE READS "UNCAPPED", AT LINE NUMBERS ~3,000 LINES STALE — AND THAT SENTENCE IS PART OF WHY THIS ITEM EXISTED**
+The row, verbatim, in the Part II "where" table (the row after `the MEANING arm (D-222 option A)`):
+
+    | fixed-key reads, uncapped (D-225) | `documentsConcerning` `store.mjs:12712`; `resolutionsForCapture` `:12685`; `connectionsFor` `:12944` |
+
+**Both halves are false, measured in this worktree on `origin/main` at `f38af22`.** (a) The three
+are not uncapped: they clamp to 500/5000 and publish `limit` after clamping beside `truncated`, and
+have since **REC-60 on 2026-08-07** under `IC-25` (SETTLED, I3 → 10.0.0). (b) The line numbers are
+stale by about three thousand lines — the real sites are `resolutionsForCapture` **:14113**,
+`documentsConcerning` **:14141**, `connectionsFor` **:14454** (`store.mjs` is 31,349 lines). The
+row beneath it, `D-222's staging and D-225's caps → DEBT.md:176, :179`, still resolves, but `:179`
+now points at a row this item CLOSED.
+
+**THE ACT, and its actor.** CONDUCT (or FRAMEWORK if it wakes) corrects that row to say the caps
+LANDED, names `IC-25` rather than `D-225` as the authority, and — per CLAUDE.md's own rule that *a
+citation into a design document names the SECTION, not a line* — replaces the three line numbers
+with method names, which do not go stale. **This is CAP-8's precedent on the same document, the
+same day, and it is followed deliberately rather than reasoned afresh: the design document is not
+a worker's to edit.**
+
+**WHY IT MATTERS BEYOND TIDINESS.** This is the second document (with `DEBT.md` D-225, now closed)
+whose staleness fed `CONTENT-SEARCH-DESIGN.md` §7 row 1, which became this queue item. A worker
+slot was spent confirming that already-shipped work had shipped. Leaving the framework row as it
+stands re-arms exactly that.
+
+## DELEGATION 2026-09-14 RECORD (REC-89) → CONDUCT: **`INVESTIGATIVE-SESSION.md` §14c's "Related finding" SAYS IN THE PRESENT TENSE THAT THE THREE READS "ARE UNCAPPED"**
+`docs/development/INVESTIGATIVE-SESSION.md`, §14c, the paragraph beginning **"Related finding, now a
+debt row (D-225)"**: *"the existing meaning-layer reads — `concerns`, `resolutions`, `connections` —
+are **uncapped**"*. Present tense, and false since 2026-08-07. It is one of the two sources
+`CONTENT-SEARCH-DESIGN.md` §2 and §7 row 1 cite for this precondition, so it is the other half of
+the same stale citation chain.
+
+**THE ACT, and its actor.** CONDUCT moves that sentence to the past tense and names REC-60/IC-25,
+the way a superseded claim is CORRECTED rather than deleted (CLAUDE.md). Not taken here because
+§14c is the investigative-session design's own analysis and this item's claim does not name it.
+
+## DELEGATION 2026-09-14 RECORD (REC-89) → CONDUCT: **THE QUEUE ACTS THIS ITEM OWES, STATED AS ACTS WITH ACTORS RATHER THAN LEFT IMPLIED**
+`QUEUE.md` is CONDUCT's, sole writer, so none of these is taken here. Each is an ACT, not a note.
+
+1. **Flip `### REC-89`** from `running`. Its scope was discharged by REC-60 five weeks before the
+   row was written; the landing is a VERIFICATION plus a disposition, and the row should say that
+   rather than reading as a build.
+2. **`### REC-90` says "waits on REC-89, REC-83 and REC-84 (both landed)".** REC-89's dependency is
+   satisfied and was satisfied before REC-89 was spawned. REC-90 is unblocked NOW.
+3. **`CONTENT-SEARCH-DESIGN.md` §7 rows 2–6 were rowed from the same table.** Row 1 arrived already
+   built. **Nothing checked the other five against the tree**, and this item did not check them
+   either — it is out of its scope and saying so is the honest boundary. Recommended act: before
+   spawning any of REC-90 / the §7 item-3..6 rows, grep the tree for the symbols each names. Row 3
+   is a measurement item, rows 4–6 are genuinely unbuilt as far as this worker could see from
+   `capture_text` having no occurrence in `bio-plane/src/`, but that is one grep and not a sweep.
+4. **`D-365` is new and OPEN** (`DEBT.md`), with two costed remedies and RECORD as owner. It wants a
+   queue row. It is D-227's residue, measured on all three of D-225's reads, and D-227 itself was
+   archived as PARTLY CLOSED **with that residue inside it** — in `docs/archive/ledgers/DEBT-closed-2026-08.md`,
+   which nothing drains. **That archiving pattern is the finding, not just this instance:** a row
+   closed with a "WHAT REMAINS" clause moves to the archive and the remainder leaves the working
+   set silently. Worth a rule in `kickoffs/CONDUCT.md` — a row with live residue does not archive
+   until the residue is its own row.
+5. **Two minted D ids were burned and are unused: the two allocations before `D-365`** (the tool
+   reported stepping over 358–364, of which two were this session's own). Gaps cost nothing by the
+   tool's own statement; recorded because an unexplained gap is otherwise a puzzle for the next
+   reader of the ledger.
