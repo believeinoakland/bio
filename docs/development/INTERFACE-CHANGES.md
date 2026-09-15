@@ -6552,3 +6552,14 @@ is lost by having chosen the read.
 - On the project's own instance, `op=reading` answers `found:false` for all 88
   captures in the register and `op=textprovenance` returns `count: 0` over the whole
   store, so **no live reading changes shape**; the field appears on the next acquire.
+
+### RESPONSES — 2026-09-14, recorded by CONDUCT #11 at CAP-9's integration
+
+- **CAPTURE** (owner and proposer): AGREE — landed on `worktree-agent-aaa4d22253c340546` (c597217 + 5e3ff57), integrated by CONDUCT #11.
+- **RECORD** (the one consumer that reads it): AGREE — `Store#contentContextFor` prefers the stored count over the derived union (a stored COUNT beats an observed FLOOR: preferring the larger would let a step naming a page the file lacks widen the bound), landed in the same item as the reader's change; D-356 (the backfill, population measured at zero) is RECORD's row.
+- **CONTENT-HTML / CONTENT-PDF** (dormant): NOT-AFFECTED, answered FOR by CONDUCT on the proposal's own statement — they PRODUCE structure; I2's `pages` has been emitted since 1.0.0 and this item consumes it.
+- **FRAMEWORK** (active): NOT-AFFECTED, answered FOR by CONDUCT — `readings`' COLUMNS do not move; the count rides the JSON the table already holds, keyed by the `capture_sha` the one reader looks up by, so I5 is untouched and no schema edit exists.
+
+### RESOLUTION — ACCEPTED, **I1 1.4.0 → 1.5.0**, 2026-09-14 by CONDUCT #11
+
+MINOR, as proposed: `document.reading.page_count` — one new optional key inside an existing object, present-and-null when the wire ran and the producer answered nothing, ABSENT when nothing ever counted; no absence stands in for another and it is never a zero. Carried at ONE site in `op=acquire`'s FW-15 reading wire covering all three reading branches; a consumer that never reads it sees 1.4.0 exactly. **The registry gap this IC names is closed with the bump:** I1 §4's document-level table had never listed `reading` at all (undocumented since FW-5) — the row is added. CAP-12 (the container extents — sheets with dimensions, paragraph count, slides with shape lists, D-354) rides this entry's shape and is expected to AMEND it rather than mint anew. SETTLED when CAP-12 lands and the three office arms' C-45.1 is fed, or at the next DIST deploy serving the count live — whichever first; CONDUCT writes it.

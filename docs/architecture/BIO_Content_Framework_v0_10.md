@@ -1853,7 +1853,7 @@ stale reference behind, and a revised reading that no longer names OCR never lea
 saying the document was OCR'd. The text-source projection writes **no row for an absent or
 malformed chain**, because "this document's text provenance was never recorded" and "this
 document's text was not transcribed" are different facts, and no absence may stand in for
-another.
+another. **Since 2026-09-14 (CAP-9, IC-87) the persisted reading also carries `page_count`, the page count I2 reports at acquire, so the content row's out-of-range refusal (C-45.1) reaches every captured PDF and not only a document whose scoped chain happens to name pages — present-and-null when the producer answered nothing, absent when nothing ever counted, never zero; this paragraph had enumerated what the reading persists without it, and the requirement lived only in IC-83's Rules until CAP-9 reported the gap.** The container extents the office arms need (sheets with dimensions, paragraph count, slides with shape lists) are NOT yet persisted — D-354, CAP-12.
 
 **What is specified, delegated, and absent:**
 

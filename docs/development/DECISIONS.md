@@ -1138,7 +1138,7 @@ enacted: 2026-09-14 · session BOB #11, same turn — nothing to build and nothi
   reasoning is folded into `docs/development/EXTRACTION-BREADTH-DESIGN.md` §6 and
   `BIO_Content_Framework_v0_10.md` Part II §18 row 4; no row opens.
 
-### DEC-75 · answered
+### DEC-75 · enacted
 raised: 2026-09-14 · CONDUCT #11 (CAP-8's provisional at integration; `node tools/decided.mjs "conversion"` and `"direct fetch grade"` answer nothing — no ruling carrying a marker touches this)
 for: bob
 question: A Google Drive export is Google's CONVERSION of the document, performed at fetch
@@ -1188,3 +1188,4 @@ for CONDUCT to enact: the `convert(producer, format)` step kind on I2 (its own I
   one measurement item — the export step's calibration over the census's Drive targets, text
   stability and fidelity, recorded per format; D-351 keeps its own row (byte instability is a
   trust-root problem, not a grade one). Nothing in CAP-8 as landed is undone.
+enacted: 2026-09-14 · CONDUCT #11 at the drain — the three acts are ROWS: CAP-10 (the `convert(producer, format)` step kind on I2, its IC minted at spawn, emitted by `driveHop` ahead of `layer` with cap null), CAP-11 (the export step's calibration measurement over the census's Drive targets), and REC-88's scope note (`captureBound` reads the step as any other — no code beyond the kind). The reasoning lives in this entry and in `BIO_Content_Framework_v0_10.md` Part II §16 (BOB #11's fold, 37ee338). CAP-8 as landed is not undone; its provisional (grade B, conversion disclosed on the hop) runs until CAP-10 lands, which claims LESS.

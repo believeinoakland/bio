@@ -847,9 +847,15 @@ const REGISTER_FLOOR = {
      186/185 · GREW by 8 arm(s)` - REC-85's content-extent-arms suite on top of FW-17's 1002. The
      branch's own block (997/183/184, its merge of ca92a3a) was dropped at the merge and declared;
      this is the re-read the loop promises. One key set. Nothing FELL. FLEET_FLOOR unmoved. */
-  arms: 1010,
-  classified: 185,
-  corpus: 186,
+  /* MOVED 2026-09-14 by CONDUCT #11 at CAP-9's integration (1010 -> 1015 · 185 -> 186 · 186 -> 187):
+     the MERGED run's own print read `arms 1015/1010 · classified 186/185 · corpus (suites read)
+     187/186 · GREW by 5 arm(s)` - CAP-9's `capture-pagecount.test.mjs` (five declared arms, one
+     new suite) on top of REC-85's 1010. The branch's own block (1001/184/185, cut at 980a9e5) was
+     dropped at the merge and declared; this is the re-read the loop promises. One key set.
+     Nothing FELL. FLEET_FLOOR unmoved. */
+  arms: 1015,
+  classified: 186,
+  corpus: 187,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
