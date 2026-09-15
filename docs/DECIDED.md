@@ -103,7 +103,7 @@ authority is the file named, never this one.
 - **DEC-24** — WHAT IS ALREADY RULED, so this entry only adds what is missing:** - **DEC-24 — the boundary**: *"the machine may do the LOOKING; the member does the CONCLUDING"*, with FOUR roles on the path verbs: **EXTRACT** (document → content), **PURSUE** (find material bearing on an unsupported claim, supporting AND cutting…  
   `docs/archive/ledgers/DECISIONS-2026-08.md:3396`
 - **DEC-24** · 2026-08-04 — §5 exclusion 1 CORRECTED IN PLACE, never exempted — it reads "No PURSUE/EXTRACT/CHECK — those are DEC-24 roles with their own scopes; the pilot is DEC-27's surface only", written 2026-08-04 and overtaken twice (Bob's 5.7 of 2026-09-14 ruled the capability; SK-7 built the door).  
-  `docs/development/CLAIMS.md:6449`
+  `docs/development/CLAIMS.md:6448`
 - **DEC-24** · 2026-09-14 — RULED 2026-09-14 by Bob:** "yes, an assistant may mark passages as citable on its own." The mechanism runs under DEC-24's rule 3: every row it mints is labelled machine-minted, it never attests one, and a passage becomes part of a finding only when a member cites it.  
   `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:284`
 - **DEC-27** · 2026-08-03 — RULED 2026-08-03 by Bob (DEC-27). **Both a construct and a surface.** The tag instantiates everywhere, like the ACT; the expanded dialog is S12, with its own states.  
@@ -595,7 +595,7 @@ authority is the file named, never this one.
 - **IC-83** · 2026-09-14 — model RULED; Part II REVIEWED by Bob 2026-09-14 and its eight doctrine items RULED the same day; the object is BUILDING — IC-83 (I5) and IC-84 (I3) ACCEPTED, REC-82…87, SK-7, FW-17 rowed; content-grain search, the observation log and extraction breadth remain the design frontier |  
   `docs/architecture/BIO_System_Design.md:80`
 - **IC-83** — its (1) and (2); IC-83 as AMENDED at REC-82's landing. Paths claimed BY REGION, never whole files:  
-  `docs/development/CLAIMS.md:4923`
+  `docs/development/CLAIMS.md:4922`
 - **IC-83** · 2026-09-14 — CHANGING — IC-83 ACCEPTED 2026-09-14 (protocol step 4): the 1.10.0 shape keeps working; nothing NEW is built against the old or the new shape until REC-82 lands the table and writer; SETTLED (STABLE again) when REC-82 and REC-83 have landed and the two `content_id` columns are NOT NULL.  
   `docs/development/INTERFACES.md:670`
 - **IC-83** — (IC-83 ACCEPTED, AMENDED at REC-82's landing: `page_count` is a column; a leg naming a PART of an inquiry is refused and `content_id` is legitimately NULL for an inquiry target or a byteless target, STATED which).  
@@ -603,9 +603,9 @@ authority is the file named, never this one.
 - **IC-83** — The `content` table before `host_governor`, two indexes, in purge's TABLES (both arms); columns exactly IC-83's PLUS `page_count INTEGER` — required by IC-83's own Rules prose and absent from its column list (IC-83 AMENDED at this landing, the column recorded, not widened).  
   `docs/development/QUEUE.md:996`
 - **IC-84** · 2026-09-14 — Contract: IC-84 (ACCEPTED 2026-09-14, I3 14.0.0 -> 14.1.0, CHANGING; twice AMENDED by CONDUCT #11 at REC-83's and REC-84's landings), its consumer half; the act shape governed by `BIO_Interaction_Constructs_v0_1.md` (nothing prefilled, DEC-69); framework Part II §14.4.  
-  `docs/development/CLAIMS.md:5469`
+  `docs/development/CLAIMS.md:5468`
 - **IC-84** — FOR CONDUCT — IC-84's SETTLED IS NOT YET WRITABLE ON THIS ITEM'S CONFIRMATION.** The IC's condition is *"UI-61 confirms the composer emits `extent`"*.  
-  `docs/development/CLAIMS.md:5557`
+  `docs/development/CLAIMS.md:5556`
 - **IC-84** · 2026-09-14 — CHANGING — IC-84 ACCEPTED 2026-09-14 (protocol step 4): 14.0.0 keeps working; SETTLED when REC-83 and REC-84 land and UI-61 confirms the composer emits `extent`. ### What it is  
   `docs/development/INTERFACES.md:511`
 - **IC-84** — interface: I3 — `op=cite` gains optional extent fields (additive); its OWN IC minted at spawn; IC-84's SETTLED follows this landing plus UI-61's re-confirmation design: IC-84 as RESOLVED and amended (the grammar the leg meets: `extent_kind` + per-arm fields OR `content_id`, never both, absent = the whole document);…  
@@ -643,7 +643,7 @@ authority is the file named, never this one.
 - **C-7.1** — THIS ROW'S OWN PREMISE IS THE THING THE MEASUREMENT CORRECTED, and it is the finding rather than a footnote.** The row reads *"NOTHING COLLIDES WITH A DELETION LEDGER, so the retire argument does not carry, and C-7.1 PLAUSIBLY WANTS BIND"*.  
   `docs/archive/ledgers/QUEUE-2026-08.md:1603`
 - **C-7.1** — `docs/DECIDED.md` WENT STALE AND THIS ITEM RULES ON NOTHING** — moving seven rulings from the kickoff into the ledger MOVES THEIR HOME, and the index records the file that owns each ruling, so a RELOCATION drifts it exactly as a new ruling does.  
-  `docs/development/CLAIMS.md:5449`
+  `docs/development/CLAIMS.md:5448`
 - **C-8.1** — `bio-plane/test/check-firing.test.mjs` (this item's own suite — the C-8.1 `proves()` block replaced by a RETIRED-CHECKS block at the foot, the header's M0-3 list annotated as SUPERSEDED, the `NEGATIVE CONTROL:` declaration extended with four arms).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4004`
 - **C-8.1** — (4) AND IT IS WORSE THAN C-8.1's, WHICH IS WHAT SETTLED IT.** Measured: C-7.1 validated the SHAPE of a deletion claim and **nothing about its truth**.  
@@ -839,9 +839,9 @@ authority is the file named, never this one.
 - **REC-81** · 2026-09-14 — [CORRECTED at REC-81's landing, 2026-09-14: the measured offset is 89 — every Part I heading moved by exactly 89; the 84 propagated from this entry into two schema paragraphs and two queue lines before REC-81's alignment sweep caught it]* (its front matter, Contents included;  
   `docs/development/QUEUE.md:576`
 - **REC-82** — not flake: `content-extent` (REC-82's four assertions, SUPERSEDED by IC-84 moving the gate — CORRECTED with a dated reason and never exempted, and they now assert BOTH the rule that refused and the code it was refused by); `hygiene` (the new suite owed `stdio.mjs` and `sandbox.mjs`); `mintid` (a comment naming a…  
-  `docs/development/CLAIMS.md:5050`
+  `docs/development/CLAIMS.md:5049`
 - **REC-82** — CORRECTED, never exempted**, with the reason at the site: they were right when REC-82 landed and this item is what makes them wrong. - **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` ONLY, ONE key set, from this  
-  `docs/development/CLAIMS.md:5774`
+  `docs/development/CLAIMS.md:5773`
 - **REC-82** — The registry is marked CHANGING now (step 4) and returns to STABLE at SETTLED when REC-82 (the table and the writer on the `pdf-page` and `document` arms) and REC-83 (the reads) have landed and the two nullable columns are NOT NULL — the IC's own SETTLED condition.  
   `docs/development/INTERFACE-CHANGES.md:6077`
 - **REC-82** · 2026-09-14 — AMENDED at REC-82's landing — 2026-09-14 by CONDUCT #10 (two facts the landing established; the version stays 1.11.0, still CHANGING) 1.  
@@ -857,13 +857,13 @@ authority is the file named, never this one.
 - **REC-83** — SETTLED when REC-83 and REC-84 land and UI-61 confirms the composer emits `extent`. - **IC-86 (I2, FW-17)** — minted, the worker writes the PROPOSED text; RESOLUTION and the I2 bump are yours; FRAMEWORK is the owner and is active for this one item.  
   `docs/development/kickoffs/CONDUCT-NEXT.md:84`
 - **REC-84** — landing invalidates were CORRECTED HERE, by this worker, rather than left as an act for CONDUCT** — the fixtures unchanged, the legs still refused, only the expected REASON moved, with the negative half asserted so the old sentence cannot quietly come back; plus REC-84's `unlanded` CONTROL ARM, whose patch anchor…  
-  `docs/development/CLAIMS.md:5894`
+  `docs/development/CLAIMS.md:5893`
 - **REC-84** — Status stays CHANGING until REC-84 (the writer half) lands and UI-61 confirms the composer emits `extent`; SETTLED is CONDUCT's to write then.  
   `docs/development/INTERFACE-CHANGES.md:6127`
 - **REC-84** · 2026-09-14 — AMENDED 2026-09-14 by CONDUCT #11 at REC-84's landing — the WRITE half is BUILT; the grammar column gains the field its own refusal presupposed; still CHANGING REC-84 landed at `7087905`: the leg grammar at both grains (C-2.8, C-25.10, one checker), the version-leg `content_id` writer, `version_content[]` on…  
   `docs/development/INTERFACE-CHANGES.md:6129`
 - **REC-85** · 2026-09-14 — `docs/DECIDED.md`** — regenerated with `node tools/decided.mjs`, which `plancheck` requires of any turn whose corpus edits move the ruling index. released: 2026-09-14 by the REC-85 worker — **all three arms landed and the item's real  
-  `docs/development/CLAIMS.md:5794`
+  `docs/development/CLAIMS.md:5793`
 - **REC-86** — SETTLED when REC-86/REC-87 (the authored acts that consume the pair) confirm, or at the next I2 producer landing that emits `source` from a real page — whichever comes first; CONDUCT writes it.  
   `docs/development/INTERFACE-CHANGES.md:6431`
 - **REC-92** · 2026-09-14 — SHARED VOCABULARY, RULED 2026-09-14 by CONDUCT #11 at BOB #11's raising — and it is a MECHANISM, not a convention.** REC-92 (the `passage:` arm's `scope` tally), REC-94 (the content-level writers and the per-capture state) and CPDF-19 (D-319's re-extraction, which moves a capture between states) all write or read…  
@@ -953,9 +953,9 @@ authority is the file named, never this one.
 - **UI-58** · 2026-09-14 — n (baseline measured at HEAD in a scratch worktree: 0 fail, 20 governed documents, decided index current — so the `docs/DECIDED.md` staleness this item hit was ITS OWN and is regenerated in the same commit, four rows moved by the one-time line offset §4.6 predicts).  
   `docs/development/CLAIMS.md:3647`
 - **UI-59** — is in the report and in the DELEGATION below as ACTS with their actor, never only here: CONDUCT re-regenerates `docs/DECIDED.md` at integration (this branch's copy is generated against `e9ba393`, 15 commits behind the current `origin/main`), flips the `UI-59` row and writes its `landed:` line.  
-  `docs/development/CLAIMS.md:5451`
+  `docs/development/CLAIMS.md:5450`
 - **UI-61** · 2026-09-14 — SETTLED is CONDUCT's to write when the cite widening lands. ### DELEGATION 2026-09-14 UI (UI-61) -> RECORD: **`op=cite` IS THE ONLY ACT THAT WRITES A BASIS LEG AND IT CARRIES NO EXTENT, SO THE COMPOSER CANNOT EMIT ONE — MEASURED, NOT INFERRED**  
-  `docs/development/CLAIMS.md:5565`
+  `docs/development/CLAIMS.md:5564`
 - **UI-61** — Status stays CHANGING until UI-61 confirms the composer emits `extent`; SETTLED is CONDUCT's to write then, together with IC-83's NOT NULL move for the two `content_id` columns once the backfill has run (not yet rowed — rowed when UI-61 lands).  
   `docs/development/INTERFACE-CHANGES.md:6131`
 - **UI-61** — Y NAME, never dropped (the silent drop is the defect); the UI harness suite UI-61 left re-measuring `cite`'s routing is CORRECTED to assert the new behaviour, never exempted, and the composer's stated `document` default gives way to the page picker UI-61 built (a one-line UI change, DELEGATED back to UI if it is…  
@@ -1153,7 +1153,7 @@ authority is the file named, never this one.
 - **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27). THIS SECTION'S PAUSE IS HISTORY, AND THE SENTENCE ABOVE MUST NOT BE READ AS A LIVE PROHIBITION.** It was written 2026-07-30 and the pause it declares held for one day: UI work resumed on 2026-08-01 and **53 UI rows have landed `done` against `QUEUE.md` since**, adding capability…  
   `docs/development/UI-PLAN.md:296`
 - **M0-29** · 2026-09-14 — `docs/DECIDED.md` REGENERATED, not authored**, by `node tools/decided.mjs` — 823 rulings, 230.6 KB.  
-  `docs/development/CLAIMS.md:5402`
+  `docs/development/CLAIMS.md:5401`
 
 ## Rulings carrying no id
 
@@ -1544,25 +1544,25 @@ Settled in prose without an id allocated. Cite them by file and line.
 - porcelain` shows exactly the 11 claimed documents plus `CLAIMS.md` and `DECIDED.md`.  
   `docs/development/CLAIMS.md:4883`
 - assertion is SUPERSEDED, corrected with a dated reason and never exempted. - **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` only, ONE key set, moved to the figures this item's own green `--strict` run PRINTED. - **`civicos-ui/check-refusal-codes.mjs`** — the `FLOOR` table only, and only the  
-  `docs/development/CLAIMS.md:4958`
+  `docs/development/CLAIMS.md:4957`
 - the gate — CORRECTED with a dated reason and never exempted, and they now assert BOTH the rule that refused and the code it was refused by); `hygiene` (the new suite owed `stdio.mjs` and `sandbox.mjs`); `mintid` (a comment naming a freshly minted C id drove the live C floor off PROSE — the number was removed and the  
-  `docs/development/CLAIMS.md:5051`
+  `docs/development/CLAIMS.md:5050`
 - AMENDED AT THE BUILD, three additions, each stated rather than quietly taken:** - `bio-plane/src/schema.mjs` — **ONE `--` COMMENT BLOCK ONLY**, above `CREATE TABLE captured_locators`.  
-  `docs/development/CLAIMS.md:5163`
+  `docs/development/CLAIMS.md:5162`
 - DECLARATION WAS CORRECTED — nothing restored, nothing removed**, each old number kept at its site as right when it was written, dated (`casepin.control.mjs`'s precedent).  
-  `docs/development/CLAIMS.md:5344`
+  `docs/development/CLAIMS.md:5343`
 - `docs/DECIDED.md` — **ADDED TO THIS CLAIM MID-ITEM, and the honest note is that the edit preceded the claim line by minutes.** Not foreseen: this item RULES on nothing, so it looked exempt from the regenerate-the-index rule.  
-  `docs/development/CLAIMS.md:5430`
+  `docs/development/CLAIMS.md:5429`
 - (`docs/DECIDED.md` regenerated — this claim's own Contract line added one ruling row, 860 → 861). **WHAT LANDED.** `civicos-ui/app.html`: `CONTENT_EXTENT_KINDS` + `EXTENT_KIND_WORD` beside the  
-  `docs/development/CLAIMS.md:5503`
+  `docs/development/CLAIMS.md:5502`
 - AMENDED AT THE BUILD, two additions, each stated rather than quietly taken:** - `.gitignore` — **ONE PEN, `.cap9-control-pristine/`**, with its reason at the line. This claim did not anticipate it.  
-  `docs/development/CLAIMS.md:6074`
+  `docs/development/CLAIMS.md:6073`
 - CORRECTED, NEVER EXEMPTED** — the suites whose attest fixtures drove the hole: `bio-plane/test/textchain.test.mjs`, `bio-plane/test/ocr-member-e2e.test.mjs`, `bio-plane/test/content-extent.test.mjs`, `bio-plane/test/content-reads.test.mjs`.  
-  `docs/development/CLAIMS.md:6249`
+  `docs/development/CLAIMS.md:6248`
 - was the generated `docs/DECIDED.md`, resolved by regenerating it (890 rulings).  
-  `docs/development/CLAIMS.md:6324`
+  `docs/development/CLAIMS.md:6323`
 - `docs/DECIDED.md` regenerated (888 rulings). **PREMISES OF ITS WORK I FOUND FALSE — four, and the first is the reportable one.**  
-  `docs/development/CLAIMS.md:6377`
+  `docs/development/CLAIMS.md:6376`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  

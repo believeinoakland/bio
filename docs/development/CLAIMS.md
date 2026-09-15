@@ -4908,13 +4908,12 @@ paths:
   - `docs/development/DEBT.md` — appended design pointers on D-222, D-196, D-319, D-283 (text cells only; dispositions are CONDUCT's)
   - `docs/development/MILESTONES.md` — one pointer sentence under M5
   - `docs/development/QUEUE.md` — the BOB INBOX only (append)
-released:
-
-
-
-
-
-
+released: 2026-09-14 — every path landed and verified from the remote (the three §18 designs, the
+  three level-1 homes, the pointer folds, the two inbox entries, D-358's answer in §7.3). RELEASED
+  EARLY AND DELIBERATELY: SK-8 now builds against `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 and
+  CONDUCT folds landings into home documents at integration, so a claim held on six governed
+  documents by a session that has finished writing them is a block with nothing behind it. BOB #11
+  re-claims by a new block if it writes to any of these paths again.
 ## CLAIM 2026-09-14 RECORD (REC-84 — the basis leg's `extent` in frontmatter, the C-2.8 / C-25.10 grammar arms, the version-leg `content_id` writer, and the suggested legs' `document` default)
 
 Session: RECORD worker for REC-84, spawned by CONDUCT #10, Opus 5.
