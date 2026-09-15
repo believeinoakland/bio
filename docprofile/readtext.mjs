@@ -289,7 +289,17 @@ export function readText(supplied, ctx = {}) {
   const locate = makeLocator(flat.segments);
   if (typeof doctype.type.parse === "function") {
     try {
-      parsed = doctype.type.parse({ ...dctx, handler: stack.handler, at: ctx.at || null, locate }) || {};
+      /* FW-18 / M0-32 — WHAT ELSE THIS DOCUMENT IS, handed to the reader on the same
+         ctx it already reads `text` and `locate` off. The census measured that 52 of
+         600 sampled documents satisfy more than one class, and `makeRegistry`'s
+         `recognise` stops at the first CERTAIN detection so its own `considered` list
+         cannot report a second one. `doctypeFor` has already asked every type
+         independently (`doctypes/registry.mjs`, `also`); this passes that answer down
+         so a reader can state it as a document FACT, which is the surface a member
+         sees. It is a plain list, computed once, and no reader is obliged to use it. */
+      const alsoSatisfies = () => (doctype.also || []).map((x) => x.key);
+      parsed = doctype.type.parse({ ...dctx, handler: stack.handler, at: ctx.at || null,
+                                    locate, alsoSatisfies }) || {};
     } catch (e) {
       parse_error = String((e && e.message) || e);
     }

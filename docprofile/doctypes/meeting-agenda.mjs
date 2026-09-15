@@ -36,7 +36,8 @@
  * list of legislation references — nothing more is claimed. What the body DID
  * with each item is the minutes' business, not the agenda's.
  */
-import { CONFIDENCE, CONTRACT, entity, diffEntities } from "./index.mjs";
+import { CONFIDENCE, CONTRACT, entity, diffEntities, selfNaming, FURNITURE_RECURS, alsoSatisfies }
+  from "./index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mjs";
 
 /* A Legistar legislation file number, alone on its line: two-digit year, dash,
@@ -45,6 +46,13 @@ import { event, worstSignificance, isMeaningful, bySeverity } from "../events.mj
    the measured document carries each item's number on its own line exactly once. */
 const FILE_LINE = /^(\d{2}-\d{4})$/;
 const ITEM_LINE = /^\d+(?:\.\d+)*$/;
+
+/* The agenda's own masthead, line-anchored. The measured packet's is ` Agenda -
+   SUPPLEMENTAL`, repeated on all 33 pages; a plain `Agenda` and the clerk's other
+   qualifiers (`- FINAL`, `- REVISED`) take the same shape. `Meeting Agenda` is the
+   spelling other Legistar instances use. It deliberately does NOT match a sentence
+   containing the word — see `detect`. */
+const AGENDA_MASTHEAD = /^(?:Meeting\s+)?Agenda(?:\s*[-–—]\s*\S.*)?$/i;
 
 /* The page furniture the measured document repeats; skipped when scanning back
    for a section heading. Deliberately narrow: an unrecognised line is treated as
@@ -80,6 +88,34 @@ export default {
      the content type (CONSTRUCTS Step 0 #4). */
   contract: CONTRACT.MEMBERSHIP,
 
+  /** CORRECTED 2026-09-15 (FW-18), and the correction is a MEASURED DEFECT rather
+   *  than a tidy-up. This rule used to take `/\bAgenda\b/i` — the word ANYWHERE in
+   *  the text — as "an agenda heading", and on that basis it read TWO REAL SETS OF
+   *  OAKLAND MEETING MINUTES as `meeting_agenda` at CERTAIN confidence:
+   *
+   *    9569_M__Rules___Legislation_Committee_26-07-16_Meeting_Minutes.pdf and
+   *    9560_M___Concurrent_Meeting_..._City_Council_26-07-21_Meeting_Minutes.pdf,
+   *
+   *  both fetched and read through Tier-1 on 2026-09-15. Minutes carry the same
+   *  line-anchored file numbers and the same `Subject:`/`Recommendation:` blocks as
+   *  the agenda of the same meeting, so two of the three legs were already satisfied
+   *  structurally; the third was satisfied by the phrase `On The July 21, 2026 City
+   *  Council Agenda On Consent`, which appears against nearly every item. That is a
+   *  REFERENCE to an agenda read as MEMBERSHIP of the class — exactly the one defect
+   *  class all five of M0-32's own recogniser errors fell into, and the record
+   *  claiming more than it could support on a whole class of document.
+   *
+   *  THE FIX IS A RATE, NOT A LONGER LIST OF WORDS. A document's self-naming is in
+   *  its MASTHEAD and a masthead is page furniture: it recurs once per page (33
+   *  times over the 33 pages of the measured agenda). A reference occurs once or
+   *  twice. The minutes above carry 2 line-anchored `Agenda` lines — and both are the
+   *  wrapped tails of attachment titles, `Draft July 28, 2026 Cancelled Finance And
+   *  Management Committee` / `Agenda` — so even line anchoring alone would not have
+   *  saved this; the threshold is what does. `selfNaming` in ./index.mjs carries the
+   *  measurement.
+   *
+   *  THE LIKELY PATH IS KEPT AND WIDENED RATHER THAN NARROWED, because a one-page
+   *  agenda names itself once and a fence tighter than its rule is not a safer fence. */
   detect(ctx) {
     const t = String(ctx.text || "");
     const signals = [];
@@ -90,15 +126,21 @@ export default {
     if (files.length) signals.push(`${files.length} legislation file number line(s)`);
     if (/\bSubject:/.test(t) && /\bRecommendation:/.test(t))
       signals.push("Subject:/Recommendation: item blocks");
-    if (/\bAgenda\b/i.test(t)) signals.push("an agenda heading");
+    const named = selfNaming(t, AGENDA_MASTHEAD);
+    const furniture = named >= FURNITURE_RECURS;
+    if (furniture) signals.push(`names itself as an agenda on ${named} lines, which is page furniture`);
+    else if (named) signals.push(`names itself as an agenda once (${named}), which a reference also does`);
     if (/Roll Call|Office of the City Clerk/i.test(t)) signals.push("meeting front matter");
-    /* The heading alone is far too common a word; it never matches by itself.
-       Certain needs the file-number lines AND the item blocks AND the heading —
-       all three were measured on the real packet. */
-    if (files.length && signals.includes("Subject:/Recommendation: item blocks")
-        && signals.includes("an agenda heading"))
+    /* CERTAIN needs the file-number lines AND the item blocks AND the masthead at
+       furniture rate — all three measured on the real packet, where the masthead
+       ` Agenda - SUPPLEMENTAL` recurs on every one of 33 pages. */
+    if (files.length && signals.includes("Subject:/Recommendation: item blocks") && furniture)
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
-    if (signals.includes("an agenda heading") && signals.length >= 3)
+    /* LIKELY on the evidence a ONE-PAGE agenda can produce: it names itself at least
+       once and two other families fired. A document that never names itself as an
+       agenda at all is not one, however many file numbers it lists — which is what
+       the minutes proved. */
+    if (named >= 1 && signals.length >= 3)
       return { match: true, confidence: CONFIDENCE.LIKELY, signals };
     return { match: false, confidence: CONFIDENCE.NONE };
   },
@@ -198,7 +240,12 @@ export default {
       pendingSubject = null; pendingFrom = null;
     }
 
-    return { entities, body, date, at: ctx.at || null };
+    /* FW-18 / M0-32: 52 of 600 sampled documents satisfied MORE THAN ONE class —
+       Oakland publishes agenda packets that genuinely contain an agenda, its staff
+       reports and its draft resolutions. Stated as a document fact so a packet read
+       as an agenda does not let that single verdict stand for the whole document. */
+    return { entities, body, date, also_satisfies: alsoSatisfies(ctx, "meeting_agenda"),
+             at: ctx.at || null };
   },
 
   /** Given two parses of the same agenda address, what happened to the list. */

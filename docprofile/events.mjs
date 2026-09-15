@@ -50,6 +50,23 @@ export const EVENTS = {
   item_pulled:       { significance: SIGNIFICANCE.EVENT },
   item_changed:      { significance: SIGNIFICANCE.NOTICE },
   item_added:        { significance: SIGNIFICANCE.ROUTINE },
+  /* FW-18's three readers. Each row is here rather than inline because `event()`
+     throws on a type the catalogue does not hold, which is the mechanism that
+     stopped the three earlier types inventing their own strings.
+
+     WHAT A PUBLISHED RECORD OF A PAST ACT CHANGING MEANS, and why these sit at
+     EVENT rather than NOTICE. `item_changed` (NOTICE) grades a change to what a
+     body says it WILL consider — an agenda is a forward-looking notice and it is
+     expected to move. The three below grade a change to what a body is recorded
+     as having ALREADY DONE, what staff already recommended, and what an
+     instrument of law already says. Those are the record's own subject: a member
+     who cited the recorded outcome of a vote, or the recommendation a report
+     made, has cited something that is not supposed to move afterwards. Grading
+     them as routine drift would be the record reassuring a member about the one
+     thing it exists to hold. */
+  outcome_changed:        { significance: SIGNIFICANCE.EVENT },
+  recommendation_changed: { significance: SIGNIFICANCE.EVENT },
+  instrument_changed:     { significance: SIGNIFICANCE.EVENT },
 };
 
 /** Build an event, drawing its significance from the catalogue so the grade lives in

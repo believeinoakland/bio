@@ -26,6 +26,16 @@ export const ORDER = [
      UI harness at once, which is what the drift check had been reporting since
      it landed. A doctype the registry imports MUST be listed here. */
   "docprofile/doctypes/meeting-agenda.mjs",
+  /* FW-18's three measured types, in M0-32's census order. Listed here for the reason
+     the entry above records in full: a doctype the registry imports and this list omits
+     is a symbol the flattened copy REGISTERS AND NEVER DEFINES — a ReferenceError in
+     the UI runtime and in every UI harness at once, which is what shipped when
+     `meeting-agenda.mjs` was added to the package and not to this list. The bundler
+     guards duplicate top-level names and surviving module syntax but NOT an undefined
+     reference, which is why that one went green from the package's own side. */
+  "docprofile/doctypes/meeting-minutes.mjs",
+  "docprofile/doctypes/staff-report.mjs",
+  "docprofile/doctypes/regulation.mjs",
   "docprofile/doctypes/generic.mjs",
   "docprofile/doctypes/registry.mjs",
   "docprofile/pipeline.mjs",

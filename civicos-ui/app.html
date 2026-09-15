@@ -3336,6 +3336,23 @@ const EVENTS = {
   item_pulled:       { significance: SIGNIFICANCE.EVENT },
   item_changed:      { significance: SIGNIFICANCE.NOTICE },
   item_added:        { significance: SIGNIFICANCE.ROUTINE },
+  /* FW-18's three readers. Each row is here rather than inline because `event()`
+     throws on a type the catalogue does not hold, which is the mechanism that
+     stopped the three earlier types inventing their own strings.
+
+     WHAT A PUBLISHED RECORD OF A PAST ACT CHANGING MEANS, and why these sit at
+     EVENT rather than NOTICE. `item_changed` (NOTICE) grades a change to what a
+     body says it WILL consider — an agenda is a forward-looking notice and it is
+     expected to move. The three below grade a change to what a body is recorded
+     as having ALREADY DONE, what staff already recommended, and what an
+     instrument of law already says. Those are the record's own subject: a member
+     who cited the recorded outcome of a vote, or the recommendation a report
+     made, has cited something that is not supposed to move afterwards. Grading
+     them as routine drift would be the record reassuring a member about the one
+     thing it exists to hold. */
+  outcome_changed:        { significance: SIGNIFICANCE.EVENT },
+  recommendation_changed: { significance: SIGNIFICANCE.EVENT },
+  instrument_changed:     { significance: SIGNIFICANCE.EVENT },
 };
 
 /** Build an event, drawing its significance from the catalogue so the grade lives in
@@ -4092,6 +4109,103 @@ const conservative = {
    said — a list). */
 const CONTRACT = { SUBSTANCE: "substance", MEMBERSHIP: "membership", UNMONITORABLE: "unmonitorable" };
 
+/* ------------------------------------------------------------------------- *
+ * FW-18 — THE TWO THINGS M0-32's CENSUS MEASURED THAT CHANGE HOW A TYPE IS
+ * WRITTEN. Both are properties of the corpus, not of any one reader, so the
+ * apparatus for them lives here once rather than in each type.
+ * ------------------------------------------------------------------------- */
+
+/** Collapse a document's text to ONE LINE of single-spaced words, for matching a
+ *  PHRASE.
+ *
+ *  MEASURED, and it is the reason this exists rather than a convenience. Tier-1
+ *  text is not one shape across producers. Legistar's minutes and agendas arrive
+ *  as clean lines, so a line-anchored test works on them. The same extractor over
+ *  the City of Oakland's own published PDFs breaks words and phrases across line
+ *  boundaries wherever the page laid them out that way — a real ordinance read in
+ *  this item opens `R\nESOLUTION \nN\nO\n.` from a drop cap, and its enacting
+ *  formula `NOW, THEREFORE, THE CITY COUNCIL ... DOES ORDAIN AS\nFOLLOWS` is split
+ *  mid-sentence. A phrase test anchored to lines would have found neither, and
+ *  would have looked like a document that is not an ordinance rather than like a
+ *  matcher that cannot see one.
+ *
+ *  So: PHRASES are matched over this normalisation, and LINE ANCHORING is kept
+ *  only where the principle is genuinely about a line (see `selfNaming`). */
+function flatten(text) {
+  return String(text || "").replace(/\s+/g, " ");
+}
+
+/** How many times a document NAMES ITSELF as a kind, on a line of its own.
+ *
+ *  THIS IS M0-32's DEFECT CLASS ANSWERED STRUCTURALLY. All five defects its
+ *  recogniser made were ONE shape: a REFERENCE to a kind mistaken for MEMBERSHIP
+ *  of it — a staff report that mentions an ordinance is not an ordinance. The
+ *  same shape was measured in this item, twice and in both directions, on real
+ *  documents:
+ *
+ *    - a set of Oakland minutes says `On The July 21, 2026 City Council Agenda On
+ *      Consent` of nearly every item, and the registered `meeting_agenda` type
+ *      read the whole document as an agenda at CERTAIN confidence because of it;
+ *    - the same minutes carry two lines that are exactly `Agenda`, which are the
+ *      wrapped tails of attachment titles (`Draft July 28, 2026 Cancelled Finance
+ *      And Management Committee` / `Agenda`) — a reference that even survives
+ *      line anchoring;
+ *    - and the agenda of that same meeting says `There Are No Minutes To Be
+ *      Approved`, which is a reference to minutes inside an agenda.
+ *
+ *  WHAT SEPARATES THEM IS NOT THE WORD, IT IS THE RATE. A document's self-naming
+ *  sits in its masthead, and a masthead is PAGE FURNITURE: it recurs once per
+ *  page. Measured on three real documents — 25 occurrences over 25 pages of one
+ *  set of minutes, 37 over 37 pages of another, 33 over 33 pages of the agenda —
+ *  against 2 for the reference and 0 the other way. A reference occurs once or
+ *  twice wherever the prose happened to need it.
+ *
+ *  So a type asks for the COUNT and decides what the count entitles it to. That is
+ *  a principle (furniture recurs, a mention does not) rather than a list of
+ *  spellings, which is what WORKER.md means by inverting instead of lengthening.
+ *
+ *  WHAT IT CANNOT SEE, stated because the sentence is load-bearing: a genuinely
+ *  ONE-PAGE document of any of these kinds names itself ONCE and is
+ *  indistinguishable by this test from a one-line reference. Every type here
+ *  therefore keeps a path that reaches `likely` on other evidence alone, and none
+ *  of them refuses a document for naming itself only once. */
+function selfNaming(text, re) {
+  let n = 0;
+  for (const line of String(text || "").split(/\r?\n/)) if (re.test(line.trim())) n++;
+  return n;
+}
+
+/** The threshold `selfNaming` counts against: a masthead is furniture, and
+ *  furniture recurs. Three is the smallest count that cannot be one wrapped title
+ *  plus one prose mention, which is exactly the pair measured in the minutes
+ *  above. Named once so the four types cannot drift apart on it. */
+const FURNITURE_RECURS = 3;
+
+/** WHAT ELSE THIS DOCUMENT IS. M0-32 measured that 52 of 600 sampled documents —
+ *  about one in twelve — satisfied MORE THAN ONE class, because Oakland publishes
+ *  agenda packets that genuinely contain an agenda, its staff reports and its
+ *  draft resolutions. §2's conclusion is that a content type which assumes one
+ *  document is one kind will mis-describe one document in twelve.
+ *
+ *  THE ENGINE CANNOT SAY THIS AND IS NOT BEING CHANGED TO. `makeRegistry`'s
+ *  `recognise` stops at the FIRST CERTAIN detection, so its `considered` list is
+ *  truncated at whatever won and cannot report a second class. That break is the
+ *  stack axis's behaviour too and is not FRAMEWORK's alone to move; the registry
+ *  (`doctypes/registry.mjs`) instead asks every type INDEPENDENTLY, as an
+ *  ADDITIVE second pass that changes no verdict, and a reader states what else
+ *  its own text satisfies as a document FACT so the answer reaches the record
+ *  rather than only the profile.
+ *
+ *  `alsoSatisfies(ctx, self)` returns the keys of the other registered types whose
+ *  own `detect` matches this same text, so a reader's facts can carry it. It is
+ *  wired by the registry, which is the only place that knows every type; a reader
+ *  called directly gets an honest empty list rather than a TypeError. */
+function alsoSatisfies(ctx, selfKey) {
+  const f = ctx && typeof ctx.alsoSatisfies === "function" ? ctx.alsoSatisfies : null;
+  if (!f) return [];
+  try { return f(selfKey) || []; } catch { return []; }
+}
+
 /** An entity a content type found in a document. `key` must be stable across
  *  fetches: a position in a list is not a key, an id in a URL is. `facts` are the
  *  fields whose change might mean something, named so assess() can say WHICH
@@ -4520,6 +4634,13 @@ const meetingCalendar = {
 const FILE_LINE = /^(\d{2}-\d{4})$/;
 const ITEM_LINE = /^\d+(?:\.\d+)*$/;
 
+/* The agenda's own masthead, line-anchored. The measured packet's is ` Agenda -
+   SUPPLEMENTAL`, repeated on all 33 pages; a plain `Agenda` and the clerk's other
+   qualifiers (`- FINAL`, `- REVISED`) take the same shape. `Meeting Agenda` is the
+   spelling other Legistar instances use. It deliberately does NOT match a sentence
+   containing the word — see `detect`. */
+const AGENDA_MASTHEAD = /^(?:Meeting\s+)?Agenda(?:\s*[-–—]\s*\S.*)?$/i;
+
 /* The page furniture the measured document repeats; skipped when scanning back
    for a section heading. Deliberately narrow: an unrecognised line is treated as
    substance (the conservative direction), not as furniture. */
@@ -4554,6 +4675,34 @@ const meetingAgenda = {
      the content type (CONSTRUCTS Step 0 #4). */
   contract: CONTRACT.MEMBERSHIP,
 
+  /** CORRECTED 2026-09-15 (FW-18), and the correction is a MEASURED DEFECT rather
+   *  than a tidy-up. This rule used to take `/\bAgenda\b/i` — the word ANYWHERE in
+   *  the text — as "an agenda heading", and on that basis it read TWO REAL SETS OF
+   *  OAKLAND MEETING MINUTES as `meeting_agenda` at CERTAIN confidence:
+   *
+   *    9569_M__Rules___Legislation_Committee_26-07-16_Meeting_Minutes.pdf and
+   *    9560_M___Concurrent_Meeting_..._City_Council_26-07-21_Meeting_Minutes.pdf,
+   *
+   *  both fetched and read through Tier-1 on 2026-09-15. Minutes carry the same
+   *  line-anchored file numbers and the same `Subject:`/`Recommendation:` blocks as
+   *  the agenda of the same meeting, so two of the three legs were already satisfied
+   *  structurally; the third was satisfied by the phrase `On The July 21, 2026 City
+   *  Council Agenda On Consent`, which appears against nearly every item. That is a
+   *  REFERENCE to an agenda read as MEMBERSHIP of the class — exactly the one defect
+   *  class all five of M0-32's own recogniser errors fell into, and the record
+   *  claiming more than it could support on a whole class of document.
+   *
+   *  THE FIX IS A RATE, NOT A LONGER LIST OF WORDS. A document's self-naming is in
+   *  its MASTHEAD and a masthead is page furniture: it recurs once per page (33
+   *  times over the 33 pages of the measured agenda). A reference occurs once or
+   *  twice. The minutes above carry 2 line-anchored `Agenda` lines — and both are the
+   *  wrapped tails of attachment titles, `Draft July 28, 2026 Cancelled Finance And
+   *  Management Committee` / `Agenda` — so even line anchoring alone would not have
+   *  saved this; the threshold is what does. `selfNaming` in ./index.mjs carries the
+   *  measurement.
+   *
+   *  THE LIKELY PATH IS KEPT AND WIDENED RATHER THAN NARROWED, because a one-page
+   *  agenda names itself once and a fence tighter than its rule is not a safer fence. */
   detect(ctx) {
     const t = String(ctx.text || "");
     const signals = [];
@@ -4564,15 +4713,21 @@ const meetingAgenda = {
     if (files.length) signals.push(`${files.length} legislation file number line(s)`);
     if (/\bSubject:/.test(t) && /\bRecommendation:/.test(t))
       signals.push("Subject:/Recommendation: item blocks");
-    if (/\bAgenda\b/i.test(t)) signals.push("an agenda heading");
+    const named = selfNaming(t, AGENDA_MASTHEAD);
+    const furniture = named >= FURNITURE_RECURS;
+    if (furniture) signals.push(`names itself as an agenda on ${named} lines, which is page furniture`);
+    else if (named) signals.push(`names itself as an agenda once (${named}), which a reference also does`);
     if (/Roll Call|Office of the City Clerk/i.test(t)) signals.push("meeting front matter");
-    /* The heading alone is far too common a word; it never matches by itself.
-       Certain needs the file-number lines AND the item blocks AND the heading —
-       all three were measured on the real packet. */
-    if (files.length && signals.includes("Subject:/Recommendation: item blocks")
-        && signals.includes("an agenda heading"))
+    /* CERTAIN needs the file-number lines AND the item blocks AND the masthead at
+       furniture rate — all three measured on the real packet, where the masthead
+       ` Agenda - SUPPLEMENTAL` recurs on every one of 33 pages. */
+    if (files.length && signals.includes("Subject:/Recommendation: item blocks") && furniture)
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
-    if (signals.includes("an agenda heading") && signals.length >= 3)
+    /* LIKELY on the evidence a ONE-PAGE agenda can produce: it names itself at least
+       once and two other families fired. A document that never names itself as an
+       agenda at all is not one, however many file numbers it lists — which is what
+       the minutes proved. */
+    if (named >= 1 && signals.length >= 3)
       return { match: true, confidence: CONFIDENCE.LIKELY, signals };
     return { match: false, confidence: CONFIDENCE.NONE };
   },
@@ -4672,7 +4827,12 @@ const meetingAgenda = {
       pendingSubject = null; pendingFrom = null;
     }
 
-    return { entities, body, date, at: ctx.at || null };
+    /* FW-18 / M0-32: 52 of 600 sampled documents satisfied MORE THAN ONE class —
+       Oakland publishes agenda packets that genuinely contain an agenda, its staff
+       reports and its draft resolutions. Stated as a document fact so a packet read
+       as an agenda does not let that single verdict stand for the whole document. */
+    return { entities, body, date, also_satisfies: alsoSatisfies(ctx, "meeting_agenda"),
+             at: ctx.at || null };
   },
 
   /** Given two parses of the same agenda address, what happened to the list. */
@@ -4711,6 +4871,1099 @@ const meetingAgenda = {
       why: events.length
         ? `${intact} of ${a.entities.length} items unchanged; ${d.gone.length} pulled, ${d.appeared.length} added, ${d.altered.length} altered`
         : `all ${b.entities.length} items on this agenda are unchanged`,
+    };
+  },
+};
+
+/* ---- docprofile/doctypes/meeting-minutes.mjs ---- */
+/* Meeting minutes: what a body DID, item by item, after the meeting.
+ *
+ * FW-18, the FIRST class in M0-32's measured order (`MEASUREMENTS.md` M-18;
+ * `EXTRACTION-BREADTH-DESIGN.md` §2's table, row 1). The census scaled a 600-document
+ * fixed-seed body sample to a 44,076-item population and settled the order with a
+ * PAIRED comparison: minutes ~2,617 (+/-673) do not separate from staff reports
+ * (z = 0.78) and do separate from ordinances (z = 2.27). §2's standing rule —
+ * *minutes first unless the count says otherwise* — therefore holds because the count
+ * DECLINED TO OVERTURN IT, which is a stronger reason than a default never tested.
+ *
+ * MEASURED ON REAL DOCUMENTS, per the standing rule that an unmeasured content type is
+ * not written. Two, fetched and read through the plane's own Tier-1 extraction
+ * (`bio-plane/src/pdfstructure.mjs`) and flattened by `readtext.mjs`'s own
+ * `flattenText`, so every rule below points at text a reader will actually be handed:
+ *
+ *   A · oakland.legistar1.com/oakland/meetings/2026/7/9569_M__Rules___Legislation_
+ *       Committee_26-07-16_Meeting_Minutes.pdf — the *Rules & Legislation Committee,
+ *       2026-07-16. 198,543 bytes, 25 pages, 42,065 characters decoded, 15 undetermined.
+ *   B · .../9560_M___Concurrent_Meeting_of_the_Oakland_Redevelopment_Successor_Agency_
+ *       and_the_City_Council_26-07-21_Meeting_Minutes.pdf — the Council, 2026-07-21.
+ *       259,438 bytes, 37 pages, 59,049 characters, 35 undetermined.
+ *
+ * DOCUMENT A IS THE MINUTES OF THE MEETING WHOSE AGENDA `meeting_agenda` WAS MEASURED
+ * ON (View.ashx?M=A&ID=1425405, the same body on the same date), and that is the point
+ * of taking minutes first: both carry the SAME 41 legislation file numbers, so the
+ * agenda->minutes progression Part I §8.2 names is the first one the record can close
+ * from two readings of its own rather than from one reading and an assumption.
+ *
+ * WHAT THE DOCUMENTS ACTUALLY LOOK LIKE. Every rule below cites one of these.
+ *
+ *   The masthead line `Meeting Minutes - DRAFT` repeats as page furniture: 25 times in
+ *   A, 37 in B — once per page. THAT RATE IS THE TYPE'S DEFINITIVE SIGNAL and the
+ *   reason it is a rate; see `selfNaming` in ./index.mjs for the measurement that
+ *   forced it.
+ *
+ *   The retrospective frame opens and closes the document: `The Oakland City Council
+ *   Rules And Legislation Committee Convened At 10:30 A.M.` and `There Being No Further
+ *   Business, The ... Committee Adjourned The Meeting At 11:02 A.M.`
+ *
+ *   The attendance roster follows the roll call as a NAME LINE then a LABEL then a
+ *   COUNT, each on its own line: `Rowena Brown, Janani Ramachandran, and Kevin Jenkins`
+ *   / `Present` / `3 - `, then `Carroll Fife` / `Excused` / `1 - `.
+ *
+ *   Each item carries its Legistar FILE NUMBER alone on a line (`26-0910`), 41 of them
+ *   in A and 61 in B, exactly as the agenda does, preceded by the same `Subject:` /
+ *   `From:` / `Recommendation:` blocks. WHAT THE MINUTES ADD IS THE OUTCOME, and it
+ *   follows the file number in one of two shapes:
+ *
+ *     a MOTION block — `A motion was made by Rowena Brown, seconded by Janani
+ *     Ramachandran, that this matter be Accepted. The motion carried by the following
+ *     vote:` then `Aye:` / names / `3 - `, `Excused:` / names / `1 - `, `NO VOTE:` / `0`;
+ *
+ *     a DISPOSITION line — `This City Resolution be Scheduled.to go before the *
+ *     Concurrent Meeting ... to be heard 7/21/2026`, or `This Informational Report be
+ *     Received and Filed.`
+ *
+ *   Page furniture falls BETWEEN an item's parts at a page break, exactly as it does in
+ *   the agenda, so nothing here assumes a block is contiguous.
+ *
+ * WHY THIS TYPE MATTERS, and what it does NOT claim. The agenda says what a body would
+ * consider; the minutes say what it decided. A reading of minutes is therefore a list
+ * of legislation references EACH CARRYING THE RECORDED OUTCOME — and nothing more. It
+ * does not interpret the outcome, does not decide whether a vote was proper, and does
+ * not treat a draft as final: `Meeting Minutes - DRAFT` is recorded as a fact so a
+ * member can see that the record they are citing is one the body has not yet approved.
+ */
+
+
+/* The masthead, line-anchored. `Meeting Minutes`, `Minutes`, either followed by a
+   qualifier the clerk appends (`- DRAFT`, `- FINAL`, `- Approved`). NOT a sentence
+   containing the word: `There Are No Minutes To Be Approved` is an AGENDA's line and
+   must not match, which line anchoring alone settles. */
+const MINUTES_MASTHEAD = /^(?:Meeting\s+)?Minutes(?:\s*[-–—]\s*\S.*)?$/i;
+
+/* A Legistar legislation file number alone on its line. Same shape as the agenda's and
+   for the same reason: an inline mention inside a recommendation's prose is a
+   cross-reference, not an item of THIS meeting. Named differently from the agenda's
+   `FILE_LINE` because the flattened copy in `civicos-ui/app.html` puts every doctype in
+   ONE scope and a duplicate top-level name is a runtime collision the bundler refuses. */
+const MINUTES_FILE_LINE = /^(\d{2}-\d{4})$/;
+/* An agenda item number. It starts at ONE — `0` alone on a line is the tally under a
+   `NO VOTE:` label, and admitting it made the Council's minutes report `item: "0"` for
+   every matter that followed a recorded vote. Items are numbered from 1; a zero is
+   arithmetic. */
+const MINUTES_ITEM_LINE = /^[1-9]\d*(?:\.\d+)*$/;
+
+/* Outcome language, matched over the FLATTENED text because these phrases wrap. */
+const MOTION_MADE = /\bA motion was made by\b/i;
+const MOTION_RESULT = /\bThe motion (carried|failed)\b/i;
+/* A roll-call tally label. `Aye`/`Noe`/`No`/`Abstain`/`Excused`/`Absent` followed by a
+   colon, which is how the clerk emits each arm of the vote. */
+const TALLY_LABEL = /\b(Aye|Ayes|Noe|Noes|No|Abstain|Abstained|Excused|Absent|Recused)\s*:/i;
+/* The retrospective frame: a meeting that CONVENED and one that ADJOURNED at a time. */
+/* Case-INSENSITIVE, and the flag is load-bearing rather than defensive: the measured
+   documents are set in title case (`Convened At 10:30 A.M.`), and without the flag
+   this family silently never fired on either of them. Found by driving the reader over
+   the documents, not by reading it back. */
+const CONVENED = /\bconvened\s+at\s+\d{1,2}:\d{2}\s*[AaPp]\.?\s*[Mm]\.?/i;
+const ADJOURNED = /\badjourned\b[^.]{0,80}?\bat\s+\d{1,2}:\d{2}\s*[AaPp]\.?[Mm]\.?/i;
+/* An attendance label alone on its line, which is how the roster is laid out. */
+const ROSTER_LABEL = /^(Present|Absent|Excused|Abstained|Recused)$/i;
+
+/* Page furniture skipped when scanning back for an item's heading. Deliberately narrow:
+   an unrecognised line is treated as substance, which is the conservative direction. */
+const MINUTES_FURNITURE = [
+  /^Page \d+$/i,
+  /^City of Oakland$/i,
+  /^Printed on /i,
+  /^View Report$/i,
+  /^View Legislation$/i,
+  /^View (Attachment|Supplemental)\b/i,
+  /^Attachments:$/i,
+  /^Sponsors:$/i,
+  /^Office of the City Clerk$/i,
+  MINUTES_MASTHEAD,
+  /^[A-Z][a-z]+day, [A-Z][a-z]+ \d{1,2}, \d{4}$/,
+  /^[A-Z][a-z]+ \d{1,2}, \d{4}$/,
+];
+const isMinutesFurniture = (l) => MINUTES_FURNITURE.some((re) => re.test(l));
+
+const MINUTES_MONTHS = { january: 0, february: 1, march: 2, april: 3, may: 4, june: 5, july: 6,
+                         august: 7, september: 8, october: 9, november: 10, december: 11 };
+const minutesLongDate = (s) => {
+  const m = /([A-Za-z]+) (\d{1,2}), (\d{4})/.exec(String(s || ""));
+  if (!m) return null;
+  const mo = MINUTES_MONTHS[m[1].toLowerCase()];
+  if (mo == null) return null;
+  return new Date(Date.UTC(+m[3], mo, +m[2])).toISOString().slice(0, 10);
+};
+const clockOf = (s, re) => { const m = re.exec(String(s || "")); return m ? m[0] : null; };
+
+const meetingMinutes = {
+  key: "meeting_minutes",
+  label: "a set of meeting minutes",
+  version: 1,
+  /* A list of items, each with what happened to it, so what matters is MEMBERSHIP:
+     which matters the body took up and whether each still says what it said. Declared
+     on the content type (CONSTRUCTS Step 0 #4), not derived from the stack. */
+  contract: CONTRACT.MEMBERSHIP,
+
+  /** Is this a set of minutes?
+   *
+   *  FOUR INDEPENDENT EVIDENCE FAMILIES, on M0-32's own discipline: a class is what
+   *  makes a document that class IN PRINCIPLE, implemented as a threshold over
+   *  families, never as one literal. The families are (1) self-naming AS FURNITURE,
+   *  (2) outcome language, (3) the retrospective frame, (4) an attendance roster.
+   *
+   *  THE ONE THING THIS TYPE MUST NOT DO is what the registered agenda reader was
+   *  measured doing on these very documents: read a REFERENCE as MEMBERSHIP. Minutes
+   *  and agendas of the same meeting share their file-number lines, their `Subject:` /
+   *  `Recommendation:` blocks and their front matter, and each mentions the other in
+   *  prose. So NONE of the shared signals appears below, and family (1) is a RATE. */
+  detect(ctx) {
+    const t = String(ctx.text || "");
+    const flat = flatten(t);
+    const signals = [];
+
+    const named = selfNaming(t, MINUTES_MASTHEAD);
+    const furniture = named >= FURNITURE_RECURS;
+    if (furniture) signals.push(`names itself as minutes on ${named} lines, which is page furniture`);
+    else if (named) signals.push(`names itself as minutes once (${named}), which a reference also does`);
+
+    const motion = MOTION_MADE.test(flat) && MOTION_RESULT.test(flat);
+    if (motion) signals.push("motions made, seconded and carried or failed");
+    const tallies = (flat.match(new RegExp(TALLY_LABEL.source, "gi")) || []).length;
+    if (tallies >= 2) signals.push(`${tallies} roll-call vote tally label(s)`);
+    const outcome = motion || tallies >= 2;
+
+    const frame = CONVENED.test(flat) && ADJOURNED.test(flat);
+    if (frame) signals.push("a meeting that convened and adjourned at stated times");
+
+    const roster = selfNaming(t, ROSTER_LABEL) >= 2;
+    if (roster) signals.push("an attendance roster");
+
+    /* CERTAIN needs the masthead AT FURNITURE RATE plus one other family. The
+       masthead alone is not enough and neither is any amount of outcome language:
+       an agenda packet quoting last meeting's motions is the failure this guards. */
+    const others = [outcome, frame, roster].filter(Boolean).length;
+    if (furniture && others >= 1) return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
+    /* LIKELY on the evidence a ONE-PAGE set of minutes can still produce: two
+       independent families that are not the masthead. This is the over-strictness
+       direction and it is deliberate — the rate test cannot see a single-page
+       document, and refusing one for that would be a fence tighter than its rule. */
+    if (others >= 2) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+    return { match: false, confidence: CONFIDENCE.NONE };
+  },
+
+  /** What is in it: the meeting's own facts, and one entity per matter taken up,
+   *  keyed by the source-assigned file number and carrying WHAT HAPPENED TO IT.
+   *
+   *  FW-17 / IC-86 — THIS READER CAN SAY WHERE, on the same grounds the agenda reader
+   *  can and with the same limit. Every reference it emits is a file number that sat
+   *  ALONE ON ITS OWN LINE, so that line's offset IS the reference's offset and
+   *  `ctx.locate` turns it into the container part the producer put it on. What it
+   *  CANNOT say is the rectangle: Tier-1 text is a flat per-page string with no
+   *  geometry, so a `pdf-page` source arrives with `rect: null` and the page is the
+   *  honest maximum. A reader may emit ONLY a source `locate` gave it.
+   *
+   *  It positions the REFERENCE, not the outcome. The outcome is prose that follows
+   *  the file number and may cross a page break — in document A the furniture falls
+   *  between an item's description and its number — so recording the outcome's page
+   *  would make the address disagree with the thing addressed. The file number is what
+   *  an edge points at, so its position is the one recorded.
+   *
+   *  ONE DOCUMENT MAY BE MORE THAN ONE KIND (M0-32: 52 of 600), so `also_satisfies`
+   *  states what else this same text satisfies. It is a fact, not a hedge: an agenda
+   *  packet read as minutes should say it is also an agenda rather than let the single
+   *  verdict stand for the whole document. */
+  parse(ctx) {
+    const raw = String(ctx.text || "");
+    const lines = raw.split(/\r?\n/).map((l) => l.trim());
+    /* The start offset of each line IN THE UNSPLIT TEXT, the only coordinate
+       `ctx.locate` understands. Derived from the separators the split actually
+       matched, never from `length + 1`: a CRLF document drifts one character per line
+       under the arithmetic, and a drift that grows silently down a 40,000-line packet
+       is the class of wrong address position exists to avoid. */
+    const offsets = [];
+    { let last = 0; const re = /\r?\n/g; let m;
+      while ((m = re.exec(raw)) !== null) { offsets.push(last); last = m.index + m[0].length; }
+      offsets.push(last); }
+    /* Always a function: `readText` supplies one and a direct caller that does not gets
+       the honest null rather than a TypeError. */
+    const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
+    const flat = flatten(raw);
+
+    /* The meeting's own facts. Every one of them may honestly be null; an unread fact
+       is never invented. */
+    let date = null;
+    for (const l of lines.slice(0, 80))
+      if (/^[A-Za-z]+day, [A-Za-z]+ \d{1,2}, \d{4}$/.test(l)) { date = minutesLongDate(l); break; }
+
+    /* THE BODY'S NAME IS FURNITURE OR IT IS NOTHING, and this is the rate test again
+       rather than a second heuristic. In document A the line `*Rules & Legislation
+       Committee` repeats on all 25 pages, so it is the running header and it is the
+       body. In document B the name is set across THREE lines — `* Concurrent Meeting
+       of the Oakland` / `Redevelopment Successor Agency` / `and the City Council` — so
+       no single line is the name, and the honest answer is that this reader cannot say.
+       Two earlier rules tried to pick one line out of that masthead and both produced a
+       CONFIDENT WRONG BODY (`and the City Council`, then `Items, Reconsiderations,
+       Pull Items Held In Committee`), which is the record naming a public body it
+       never read. A null with a reason is worth more than either. */
+    let body = null;
+    {
+      /* Every line's own recurrence, so both the candidate test and the wrap test
+         below can ask the same question. */
+      const freq = new Map();
+      for (const l of lines) if (l) freq.set(l, (freq.get(l) || 0) + 1);
+      /* SEARCHED IN THE MASTHEAD ONLY. A body's name is where the clerk puts it — at
+         the head of the document — and a line elsewhere that merely ends in `Council`
+         is not the body that met. Without this bound the reader reached further down
+         document B and named the body `Office Of The City Council`, a recurring
+         address block. The bound is what makes the two guards below sufficient rather
+         than the start of an endless list of them. */
+      for (let i = 0; i < Math.min(lines.length, 40) && !body; i++) {
+        const l = lines[i];
+        if (!l || l.length > 80) continue;
+        if (!/(Committee|City Council|Commission|Board|Authority)\s*$/.test(l)) continue;
+        if (/^(and|or|of|the)\b/i.test(l) || /^[a-z]/.test(l)) continue;
+        if (/^Councilmember/i.test(l) || isMinutesFurniture(l)) continue;
+        if ((freq.get(l) || 0) < FURNITURE_RECURS) continue;
+        /* THE WRAP TEST, and it is what stopped this reader naming the wrong body. A
+           header the producer broke across lines repeats EVERY ONE of its lines at the
+           furniture rate, so recurrence alone cannot tell the last line of a wrapped
+           name from a whole name. What can: whether the line ABOVE it is itself a
+           recurring NON-furniture line. Above `*Rules & Legislation Committee` sits the
+           meeting's date, which is furniture — so that is a whole name. Above `Agency
+           and the City Council` sits `Oakland Redevelopment Successor`, recurring 37
+           times and not furniture — so that is a tail, and the reader declines. */
+        let prev = null;
+        for (let j = i - 1; j >= 0 && j >= i - 3; j--) if (lines[j]) { prev = lines[j]; break; }
+        if (prev && !isMinutesFurniture(prev) && (freq.get(prev) || 0) >= FURNITURE_RECURS) continue;
+        body = l.replace(/^[*\s]+/, "").trim();
+      }
+    }
+    const body_why = body ? null
+      : "no single line of this document names the body at the rate a running header "
+      + "does, so which body met is not stated here rather than guessed from one line";
+    const convened = clockOf(flat, CONVENED);
+    const adjourned = clockOf(flat, ADJOURNED);
+    /* DRAFT is a first-class fact about the record a member would be citing, not a
+       cosmetic label: minutes the body has not yet approved can still change. */
+    let status = null;
+    for (const l of lines) {
+      const m = MINUTES_MASTHEAD.exec(l);
+      if (!m) continue;
+      status = /[-–—]\s*(\S.*)$/.exec(l) ? /[-–—]\s*(\S.*)$/.exec(l)[1].trim() : "unqualified";
+      break;
+    }
+
+    /* The attendance roster, as a DOCUMENT FACT rather than as entities, and the
+       reason is the key rule. An entity's `key` must be stable across fetches, and a
+       PERSON'S NAME is not a key the source assigned — it is the source's spelling of
+       a person on a day, and the two minutes read here spell one councilmember with a
+       double space (`Kevin  Jenkins`). Framework §7's line is that an id in a URL is a
+       key and a position in a list is not; a name is on the wrong side of it. Emitting
+       attendance as entities would put an unstable key into the record's own diffing,
+       which reports a re-spelling as a person leaving the body. So the roster is a
+       fact, stated, and who attended stays readable without being addressable. */
+    const roster = {};
+    for (let i = 0; i < lines.length; i++) {
+      const lab = ROSTER_LABEL.exec(lines[i]);
+      if (!lab) continue;
+      /* The names sit on the line ABOVE the label (measured in both documents); the
+         count sits below it. Neither is assumed present. */
+      const above = lines[i - 1] || "";
+      if (!above || isMinutesFurniture(above) || ROSTER_LABEL.test(above)) continue;
+      const key = lab[1].toLowerCase();
+      if (!roster[key]) roster[key] = above;
+    }
+
+    const entities = [];
+    const seen = new Set();
+    let pendingSubject = null, pendingFrom = null, pendingItem = null, expect = null;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line) continue;
+      /* THE ITEM NUMBER IS CARRIED FORWARD, not scanned back for, and the difference
+         is the measured layout. In the AGENDA the item number sits immediately before
+         the file number. In the MINUTES it opens the block — `3.1` / `Subject:` /
+         `From:` / `Recommendation: ...` / `26-0910` — so scanning back from the file
+         line hits the recommendation's prose and gives up, which is why the first
+         driven run reported `item: null` for every item of both documents. */
+      if (MINUTES_ITEM_LINE.test(line) && !MINUTES_FILE_LINE.test(line)) { pendingItem = line; continue; }
+      const lab = /^(Subject|From):\s*(.*)$/.exec(line);
+      if (lab) {
+        if (lab[2]) { if (lab[1] === "Subject") pendingSubject = lab[2]; else pendingFrom = lab[2]; expect = null; }
+        else expect = lab[1];
+        continue;
+      }
+      if (expect) {
+        if (expect === "Subject") pendingSubject = line; else pendingFrom = line;
+        expect = null;
+        continue;
+      }
+      const file = MINUTES_FILE_LINE.exec(line);
+      if (!file) continue;
+      const key = file[1];
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      /* A section item with no Subject block takes its heading from the nearest
+         substantive line above; the item number was carried forward (see above). */
+      const item = pendingItem;
+      let heading = null;
+      for (let j = i - 1, hops = 0; j >= 0 && hops < 8; j--) {
+        const prev = lines[j];
+        if (!prev) continue;
+        hops++;
+        if (MINUTES_ITEM_LINE.test(prev)) continue;
+        if (isMinutesFurniture(prev) || MINUTES_FILE_LINE.test(prev)) {
+          if (MINUTES_FILE_LINE.test(prev)) break;
+          continue;
+        }
+        heading = prev;
+        break;
+      }
+
+      /* THE OUTCOME, read FORWARD from the file number to the next one — which is
+         where the minutes put it, and the one thing this type adds over the agenda.
+         Bounded by the next file-number line so an item can never borrow the next
+         item's result, and the window is read as flattened text because both shapes
+         wrap across lines. */
+      let end = lines.length;
+      for (let j = i + 1; j < lines.length; j++) if (MINUTES_FILE_LINE.test(lines[j])) { end = j; break; }
+      const window = flatten(lines.slice(i + 1, end).join("\n"));
+      /* Shape 1, a motion: who moved, who seconded, what was moved, and whether it
+         carried. Shape 2, a disposition: `This <matter kind> be <action>`. */
+      const mo = /\bA motion was made by\s+(.+?),\s*seconded by\s+(.+?),\s*that\s+this matter be\s+(.+?)\.\s*The motion\s+(carried|failed)\b/i.exec(window);
+      const di = /\bThis\s+([A-Z][\w ]{2,40}?)\s+be\s+([^.]{2,90})\./.exec(window);
+      let outcome = null, moved_by = null, seconded_by = null, result = null;
+      if (mo) { moved_by = mo[1].trim(); seconded_by = mo[2].trim(); outcome = mo[3].trim(); result = mo[4].toLowerCase(); }
+      else if (di) { outcome = `${di[1].trim()} ${di[2].trim()}`.trim(); }
+
+      /* The vote as the clerk recorded it: each tally label with the count that
+         follows it. Never summed, never re-derived — a total this reader computed
+         would be a number the document does not contain. */
+      const vote = {};
+      for (const m of window.matchAll(/\b(Aye|Ayes|Noe|Noes|No|Abstain|Abstained|Excused|Absent|Recused|NO VOTE)\s*:\s*(.*?)(?=\b(?:Aye|Ayes|Noe|Noes|No|Abstain|Abstained|Excused|Absent|Recused|NO VOTE)\s*:|$)/gi)) {
+        const n = /(\d+)\s*-/.exec(m[2]);
+        if (n) vote[m[1].toLowerCase()] = Number(n[1]);
+      }
+
+      const label = pendingSubject || heading || `legislation ${key}`;
+      entities.push(entity(key, "legislation", String(label).slice(0, 160), {
+        subject: pendingSubject || null,
+        from: pendingFrom || null,
+        item: item || null,
+        /* What the body DID. Null is first-class and means THIS READER COULD NOT
+           SAY — an item listed with no recorded action, or an outcome in a shape
+           these two documents did not contain — never "nothing happened". */
+        outcome: outcome || null,
+        result: result || null,
+        moved_by, seconded_by,
+        vote: Object.keys(vote).length ? vote : null,
+      }, locate(offsets[i])));
+      pendingSubject = null; pendingFrom = null; pendingItem = null;
+    }
+
+    return {
+      entities, body, body_why, date, convened, adjourned, status,
+      attendance: Object.keys(roster).length ? roster : null,
+      also_satisfies: alsoSatisfies(ctx, "meeting_minutes"),
+      at: ctx.at || null,
+    };
+  },
+
+  /** Given two parses of the same minutes address, what happened to the record. */
+  assess(a, b) {
+    /* A read that found nothing is a failed reader, never an emptied record. */
+    if (!a.entities.length || !b.entities.length)
+      return { meaningful: null, significance: null, events: [], confirmed: null,
+               why: "the matters in these minutes could not be read this time, so nothing is "
+                  + "claimed about them either way" };
+
+    const d = diffEntities(a.entities, b.entities);
+    const events = [];
+    /* AN OUTCOME OR A VOTE MOVING IS THE SERIOUS ONE, and it is why this type exists
+       rather than the agenda type being pointed at a second document. A published
+       record of what a body DID changing afterwards is the record's own subject.
+       Graded apart from the wording of the item, which is `item_changed` (NOTICE). */
+    const HEAVY = new Set(["outcome", "result", "vote", "moved_by", "seconded_by"]);
+    for (const alt of d.altered) {
+      const heavy = alt.moved.filter((m) => HEAVY.has(m.fact));
+      const light = alt.moved.filter((m) => !HEAVY.has(m.fact));
+      if (heavy.length)
+        events.push(event("outcome_changed", { key: alt.entity.key, label: alt.entity.label,
+          moved: heavy,
+          why: "what these minutes record the body as having done with this matter changed" }));
+      if (light.length)
+        events.push(event("item_changed", { key: alt.entity.key, label: alt.entity.label,
+          moved: light,
+          why: "what these minutes say about this matter changed" }));
+    }
+    /* A matter vanishing from a published record of a past meeting is the
+       quiet-substitution class with no moving window to excuse it. */
+    for (const e of d.gone)
+      events.push(event("item_pulled", { key: e.key, label: e.label,
+        why: "a matter these minutes recorded is no longer in them" }));
+    /* Minutes gaining a matter is normal while they are a draft and is recorded. */
+    for (const e of d.appeared)
+      events.push(event("item_added", { key: e.key, label: e.label,
+        why: "a matter was added to these minutes" }));
+
+    bySeverity(events);
+    const intact = a.entities.filter((e) =>
+      b.entities.some((x) => x.key === e.key && JSON.stringify(x.facts) === JSON.stringify(e.facts))).length;
+    return {
+      meaningful: isMeaningful(events), significance: worstSignificance(events), events,
+      confirmed: { entries: b.entities.length, intact },
+      why: events.length
+        ? `${intact} of ${a.entities.length} matters unchanged; ${d.gone.length} gone, `
+          + `${d.appeared.length} added, ${d.altered.length} altered`
+        : `all ${b.entities.length} matters in these minutes are unchanged`,
+    };
+  },
+};
+
+/* ---- docprofile/doctypes/staff-report.mjs ---- */
+/* A staff report: written BY staff TO a body, recommending that it act.
+ *
+ * FW-18, the SECOND class in M0-32's measured order (`MEASUREMENTS.md` M-18;
+ * `EXTRACTION-BREADTH-DESIGN.md` §2's table, row 2). ~3,012 items (+/-716) scaled to
+ * the text-bearing stratum — the LARGEST unregistered class by point estimate, and it
+ * is second only because the census's PAIRED comparison could not separate it from
+ * minutes (z = 0.78), which left §2's standing rule standing. It is not rarer than
+ * minutes and the table says so.
+ *
+ * MEASURED ON A REAL DOCUMENT, fetched and read through the plane's own Tier-1
+ * extraction and flattened by `readtext.mjs`'s `flattenText`:
+ *
+ *   cao-94612.s3.amazonaws.com/documents/2020.06.23-Errata-3-Agenda-Report-Exhibits-
+ *   and-Resolution.pdf — the Director of Finance's AGENDA REPORT to the City
+ *   Administrator on the FY 2020-21 mid-cycle budget errata, 58 pages, 286,846
+ *   characters decoded. Read 2026-09-15.
+ *
+ * A SECOND DOCUMENT WAS READ AS A CONTROL and it is the more instructive one:
+ * cao-94612.../documents/30-Agenda-FOT-7-15-20-PACKET.pdf, the Fox Oakland Theater
+ * board's meeting packet. A crude first matcher — the presence of `TO:`/`SUBJECT:` and
+ * the word RECOMMENDATION — called it a staff report; the rule below does not, because
+ * it carries none of the template sections and no sign-off. It is in the pen as the
+ * over-firing arm this type had to survive.
+ *
+ * WHAT THE DOCUMENT ACTUALLY LOOKS LIKE.
+ *
+ *   A MEMORANDUM HEADER at the very top, four labels in one block:
+ *   `TO : Edard D. Reiskin ... FROM: Adam Benson ... SUBJECT: FY 2020-21 Proposed
+ *   Mid-cycle Budget Errata No. 3 - Supplemental DATE: June 19, 2020`. Measured: the
+ *   three-label span is 79 characters and it begins 42 characters into the document.
+ *
+ *   THE AGENDA-REPORT TEMPLATE'S SECTION HEADINGS, each alone on its line and in
+ *   capitals: RECOMMENDATION, REASON FOR SUPPLEMENTAL, BACKGROUND / LEGISLATIVE
+ *   HISTORY, ANALYSIS AND POLICY ALTERNATIVES, FISCAL IMPACT, PUBLIC OUTREACH /
+ *   INTEREST, COORDINATION, SUSTAINABLE OPPORTUNITIES, ACTION REQUESTED OF THE CITY
+ *   COUNCIL. Eight of the ten this type knows about fired.
+ *
+ *   A SIGN-OFF: `Respectfully submitted,` then the author and `Prepared by:`.
+ *
+ *   A RUNNING FOOTER repeating the subject, the date and a page number on every page.
+ *
+ *   AND A WHOLE RESOLUTION INSIDE IT — `OAKLAND CITY COUNCIL / RESOLUTION NO. ____
+ *   C.M.S.`, six WHEREAS recitals and eleven operative clauses. This document is a
+ *   LIVE INSTANCE of M0-32's 52-in-600 multi-class finding, and the `regulation` type
+ *   registered beside this one detects it as well. Neither reading is wrong; the
+ *   document is both things, and `also_satisfies` says so rather than letting one
+ *   verdict stand for the whole document.
+ *
+ * WHY THE PHRASES ARE MATCHED OVER FLATTENED TEXT. This producer is not Legistar.
+ * Tier-1 over the City's own published PDFs breaks words and phrases across lines
+ * wherever the page laid them out — `TO\n:\n`, `P\nage 1`, `ben\nefit` — so a
+ * line-anchored phrase test finds nothing and looks like a document that is not a
+ * staff report. `flatten` in ./index.mjs carries the measurement. LINE ANCHORING is
+ * kept only for the SECTION HEADINGS, where being alone on a line is the whole signal
+ * that distinguishes a heading from the same words inside a sentence.
+ *
+ * WHY THIS TYPE MATTERS. A staff report is where a recommendation to a public body is
+ * MADE and where the reasoning behind it is written down, so it is the document a
+ * member most often needs when the minutes record only that a body accepted something.
+ * What this reading claims is exactly: who addressed whom, on what subject, what was
+ * recommended, and which instruments and code sections the report points at. It does
+ * not evaluate the recommendation and does not treat the report's account of a fact as
+ * the fact.
+ */
+
+
+/* The memorandum header's four labels. Matched over flattened text and as a BLOCK —
+   see `memoHeader`. */
+const MEMO_LABEL = /\b(TO|FROM|SUBJECT|DATE)\s*:/gi;
+
+/* The agenda-report template's sections, as PRINCIPLES rather than one literal each:
+   a report of this kind states what it recommends, why, what it costs, who was
+   consulted and what it asks the body to do. Each is tested as a HEADING — alone on
+   its line — because the same words inside a sentence are not a section. */
+const REPORT_SECTIONS = [
+  /^RECOMMENDATION\b/i,
+  /^EXECUTIVE\s+SUMMARY\b/i,
+  /^(BACKGROUND|LEGISLATIVE\s+HISTORY|BACKGROUND\s*\/\s*LEGISLATIVE\s+HISTORY)\b/i,
+  /^ANALYSIS(\s+AND\s+POLICY\s+ALTERNATIVES)?\b/i,
+  /^FISCAL\s+IMPACT\b/i,
+  /^PUBLIC\s+OUTREACH\b/i,
+  /^COORDINATION\b/i,
+  /^SUSTAINABLE\s+OPPORTUNITIES\b/i,
+  /^ACTION\s+REQUESTED\b/i,
+  /^REASON\s+FOR\b/i,
+];
+/* A heading line is short: the template's headings are titles, and a sentence that
+   happens to open with one of these words is not a section. 64 characters admits
+   `ACTION REQUESTED OF THE CITY COUNCIL` (36) with room and excludes prose. */
+const HEADING_MAX = 64;
+
+const SIGNOFF = /\bRespectfully\s+submitted\b/i;
+const PREPARED = /\bPrepared\s+by\s*:/i;
+/* Self-naming, on a line of its own. Unlike a masthead this appears ONCE, on the
+   title page — measured at 1 in the real document — so it is never a rate here. */
+const REPORT_TITLE = /^(AGENDA|STAFF|INFORMATIONAL|CITY\s+ADMINISTRATOR'?S?)\s+REPORT\b/i;
+
+/** The memorandum header as a BLOCK, which is the whole discipline of this family.
+ *
+ *  A MEETING AGENDA AND A SET OF MINUTES BOTH CARRY `Subject:` AND `From:` — 41 and 61
+ *  times respectively in the documents read for `meeting_minutes` — one pair per item,
+ *  scattered the length of the document. A memorandum header is FOUR LABELS IN ONE
+ *  PLACE AT THE TOP. Measured: the real staff report's three-label span is 79
+ *  characters beginning at offset 42; the agenda's and the minutes' tightest such spans
+ *  are 116-128 characters beginning at offsets 1,572 to 54,013.
+ *
+ *  So the test is the span AND the position, never the presence of the labels. Returns
+ *  the block's fields when one is found, else null. */
+function memoHeader(flat) {
+  const hits = [...flat.matchAll(MEMO_LABEL)].map((m) => ({ i: m.index, k: m[1].toUpperCase() }));
+  for (let a = 0; a < hits.length; a++) {
+    if (hits[a].i > 2500) break;              /* a memorandum header is at the TOP */
+    const seen = new Map();
+    for (let b = a; b < hits.length; b++) {
+      if (!seen.has(hits[b].k)) seen.set(hits[b].k, hits[b].i);
+      if (seen.size < 3) continue;
+      if (hits[b].i - hits[a].i > 250) break; /* one block, not four scattered labels */
+      /* Every label of the block, not only the three that reached the threshold: the
+         measured document's `DATE:` is the fourth and sat just past it, and stopping
+         at three dropped a field the document plainly carries. */
+      for (let c = b + 1; c < hits.length && hits[c].i - hits[a].i <= 250; c++)
+        if (!seen.has(hits[c].k)) seen.set(hits[c].k, hits[c].i);
+      /* EACH FIELD ENDS WHERE THE NEXT LABEL BEGINS. Taking a fixed 120 characters
+         made every field swallow the rest of the header — `to` came back as the whole
+         block — which is the record carrying a value that is not the value. */
+      /* Bounded by the next label ANYWHERE in the document, not only by the next one
+         inside the block — the LAST field of the block has no successor inside it, and
+         bounding it by a character count instead made `date` come back as
+         `June 19, 2020 City Administrator Approval Date: RECOMMENDATION Staff
+         Recommends...`. The document's own next label (`Approval Date:`) is the
+         boundary it actually has. */
+      const all = hits.map((h) => h.i);
+      const at = {};
+      for (const [k, i] of seen) {
+        const next = all.find((x) => x > i);
+        const rest = flat.slice(i, next != null ? Math.min(next, i + 200) : i + 160)
+          .replace(/^\s*\w+\s*:\s*/, "");
+        at[k.toLowerCase()] = rest.trim() || null;
+      }
+      return { fields: at, labels: seen.size, span: hits[b].i - hits[a].i, at: hits[a].i };
+    }
+  }
+  return null;
+}
+
+/** Which of the template's sections appear as HEADINGS in this document. */
+function reportSections(raw) {
+  const found = [];
+  for (const line of String(raw || "").split(/\r?\n/)) {
+    const l = line.trim();
+    if (!l || l.length > HEADING_MAX) continue;
+    for (let i = 0; i < REPORT_SECTIONS.length; i++)
+      if (REPORT_SECTIONS[i].test(l) && !found.includes(i)) found.push(i);
+  }
+  return found;
+}
+
+/* The instruments a report points at, matched over RAW text with `\s+` between tokens
+   so a wrapped citation is still found AND `match.index` stays a RAW offset — which is
+   the only coordinate `ctx.locate` understands. */
+const INSTRUMENT_REF = /\b(Ordinance|Resolution)\s+No\.?\s*(\d{3,6})\b/gi;
+/* A Legistar file number cited inline. Not line-anchored here: a staff report is about
+   ONE matter and cites its number in prose, which is the opposite of the agenda's
+   item-per-line list. */
+const FILE_REF = /\b(\d{2}-\d{4})\b/g;
+/* A municipal code section the report names. */
+const CODE_REF = /\b(?:O\.?M\.?C\.?|Oakland\s+Municipal\s+Code)\s+(?:Section|Chapter)\s+([\d.]+[\w.]*)/gi;
+
+const staffReport = {
+  key: "staff_report",
+  label: "a staff report to a public body",
+  version: 1,
+  /* A narrative document making a case, not a list, so what matters is its SUBSTANCE.
+     Declared on the content type (CONSTRUCTS Step 0 #4). */
+  contract: CONTRACT.SUBSTANCE,
+
+  /** Is this a staff report?
+   *
+   *  FOUR INDEPENDENT FAMILIES on M0-32's discipline: (1) a memorandum header as a
+   *  block at the top, (2) the agenda-report template's sections as headings, (3) a
+   *  sign-off, (4) self-naming on a line of its own.
+   *
+   *  CERTAIN needs (1) AND (2), and that pair is what separates the measured document
+   *  from every other document in this item's pen: a staff report is BOTH addressed as
+   *  a memorandum AND sectioned by the template. Neither alone will do — the minutes
+   *  and the agenda each produce a memo-shaped label span somewhere, and `RECOMMENDATION`
+   *  appears as a heading in one set of minutes. */
+  detect(ctx) {
+    const t = String(ctx.text || "");
+    const flat = flatten(t);
+    const signals = [];
+
+    const memo = memoHeader(flat);
+    if (memo) signals.push(`a memorandum header of ${memo.labels} labels in ${memo.span} characters at the top`);
+    const secs = reportSections(t);
+    if (secs.length) signals.push(`${secs.length} agenda-report template section heading(s)`);
+    const signoff = SIGNOFF.test(flat) || PREPARED.test(flat);
+    if (signoff) signals.push("a staff sign-off");
+    const titled = String(t).split(/\r?\n/).some((l) => REPORT_TITLE.test(l.trim()));
+    if (titled) signals.push("names itself as a report on a line of its own");
+
+    if (memo && secs.length >= 3) return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
+    /* LIKELY on the evidence a report in a house style this type has not met can still
+       produce. The over-strictness direction is deliberate: a fence tighter than its
+       rule is not a safer fence, and a merely-likely recogniser declines to narrow. */
+    if (secs.length >= 3 && (signoff || titled)) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+    if (memo && signoff && titled) return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+    return { match: false, confidence: CONFIDENCE.NONE };
+  },
+
+  /** What is in it: who addressed whom about what, what was recommended, and every
+   *  instrument and code section the report points at.
+   *
+   *  FW-17 / IC-86 — THIS READER CAN SAY WHERE, WITH A LIMIT IT MUST STATE. Its
+   *  references are cited INLINE in prose rather than alone on a line, so the
+   *  reference's own offset is the offset of the match — which is why every pattern
+   *  above is run over the RAW text with `\s+` standing in for a line break, never over
+   *  the flattened copy: a flattened offset addresses a string no container ever
+   *  emitted, and handing that to `ctx.locate` would produce a confident wrong page.
+   *  As everywhere on this path, `rect` is null because Tier-1 text has no geometry,
+   *  and a reader may emit ONLY a source `locate` gave it.
+   *
+   *  WHAT IT CANNOT PLACE: a citation this producer split mid-word (`R` / `ESOLUTION`
+   *  from a drop cap, measured in a real ordinance) is not matched at all, so it is
+   *  absent rather than mispositioned — the safe direction, and named here because a
+   *  reference this reader never saw must not read as one the document lacks. */
+  parse(ctx) {
+    const raw = String(ctx.text || "");
+    const flat = flatten(raw);
+    const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
+
+    const memo = memoHeader(flat);
+    const f = (memo && memo.fields) || {};
+    const secs = reportSections(raw);
+
+    /* THE RECOMMENDATION, which is the point of the document. Read from the
+       `RECOMMENDATION` heading forward to the next heading — bounded, so it can never
+       swallow the rest of the report — or from the `Staff Recommends That` sentence
+       where the house style has no heading. Null is first-class and means this reader
+       could not find one, never that the report recommends nothing. */
+    let recommendation = null;
+    {
+      const lines = raw.split(/\r?\n/);
+      for (let i = 0; i < lines.length; i++) {
+        if (!/^RECOMMENDATION\b/i.test(lines[i].trim()) || lines[i].trim().length > HEADING_MAX) continue;
+        const body = [];
+        for (let j = i + 1; j < lines.length && body.join(" ").length < 600; j++) {
+          const l = lines[j].trim();
+          if (!l) continue;
+          if (l.length <= HEADING_MAX && REPORT_SECTIONS.some((re, k) => k !== 0 && re.test(l))) break;
+          body.push(l);
+        }
+        if (body.length) recommendation = flatten(body.join(" ")).slice(0, 600).trim();
+        break;
+      }
+      if (!recommendation) {
+        const m = /\bStaff\s+Recommends\s+That\b[^.]{0,500}\./i.exec(flat);
+        if (m) recommendation = m[0].trim();
+      }
+    }
+
+    /* The references. Each key is one the SOURCE assigned — an instrument number, a
+       Legistar file number, a code section — never a position in a list and never a
+       person's name. A reference cited twice is one reference; the FIRST sighting
+       carries the position, because that is where the reader actually read it. */
+    const entities = [];
+    const seen = new Set();
+    const take = (key, kind, label, facts, offset) => {
+      if (seen.has(key)) return;
+      seen.add(key);
+      entities.push(entity(key, kind, label, facts, locate(offset)));
+    };
+    for (const m of raw.matchAll(INSTRUMENT_REF))
+      take(`${m[1].toLowerCase()}:${m[2]}`, "instrument",
+           `${m[1][0].toUpperCase()}${m[1].slice(1).toLowerCase()} No. ${m[2]}`,
+           { instrument: m[1].toLowerCase(), number: m[2] }, m.index);
+    for (const m of raw.matchAll(FILE_REF))
+      take(`file:${m[1]}`, "legislation", `legislation ${m[1]}`, { file: m[1] }, m.index);
+    for (const m of raw.matchAll(CODE_REF))
+      take(`omc:${m[1]}`, "code_section", `O.M.C. ${m[1]}`, { section: m[1] }, m.index);
+
+    return {
+      entities,
+      to: f.to || null,
+      from: f.from || null,
+      subject: f.subject || null,
+      date: f.date || null,
+      recommendation,
+      sections: secs.length,
+      signed_off: SIGNOFF.test(flat) || PREPARED.test(flat),
+      also_satisfies: alsoSatisfies(ctx, "staff_report"),
+      at: ctx.at || null,
+    };
+  },
+
+  /** Given two parses of the same report address, what happened to it. */
+  assess(a, b) {
+    /* A read that found no recommendation AND no references is a failed reader, never
+       a report that says nothing. */
+    if (!a.entities.length && !b.entities.length && !a.recommendation && !b.recommendation)
+      return { meaningful: null, significance: null, events: [], confirmed: null,
+               why: "nothing could be read from this report this time, so nothing is claimed "
+                  + "about it either way" };
+
+    const events = [];
+    /* THE RECOMMENDATION MOVING IS THE SERIOUS ONE. A staff report is the document a
+       member cites for what staff advised a body to do; that advice changing after
+       publication, at the same address, is the record's own subject rather than drift. */
+    if (String(a.recommendation || "") !== String(b.recommendation || ""))
+      events.push(event("recommendation_changed", {
+        was: a.recommendation || null, now: b.recommendation || null,
+        why: "what this report recommends the body do is not what it recommended before" }));
+    /* The memorandum header moving is worth showing and is not the same fact. */
+    for (const k of ["to", "from", "subject", "date"])
+      if (String(a[k] || "") !== String(b[k] || ""))
+        events.push(event("item_changed", { key: k, label: k, moved: [{ fact: k, was: a[k], now: b[k] }],
+          why: `this report's ${k} changed` }));
+
+    const d = diffEntities(a.entities || [], b.entities || []);
+    for (const e of d.gone)
+      events.push(event("item_pulled", { key: e.key, label: e.label,
+        why: "an instrument or code section this report pointed at is no longer cited in it" }));
+    for (const e of d.appeared)
+      events.push(event("item_added", { key: e.key, label: e.label,
+        why: "this report now points at an instrument or code section it did not cite before" }));
+
+    bySeverity(events);
+    return {
+      meaningful: isMeaningful(events), significance: worstSignificance(events), events,
+      confirmed: { entries: (b.entities || []).length,
+                   intact: (a.entities || []).filter((e) => (b.entities || []).some((x) => x.key === e.key)).length },
+      why: events.length
+        ? `${events.length} change(s): ${d.gone.length} citation(s) gone, ${d.appeared.length} added`
+          + (String(a.recommendation || "") !== String(b.recommendation || "") ? ", and the recommendation moved" : "")
+        : "this report says what it said, and points at the same instruments",
+    };
+  },
+};
+
+/* ---- docprofile/doctypes/regulation.mjs ---- */
+/* An ordinance or a resolution: an instrument of law, enacted or proposed.
+ *
+ * FW-18, the THIRD class in M0-32's measured order (`MEASUREMENTS.md` M-18;
+ * `EXTRACTION-BREADTH-DESIGN.md` §2's table, row 3) — ~1,629 items (+/-540) scaled to
+ * the text-bearing stratum, SEPARATED from minutes by the census's paired comparison
+ * at z = 2.27 and from directories at z = 3.95. It sits third because it was measured
+ * to, not because an ordinance matters less than a report.
+ *
+ * ONE TYPE FOR BOTH INSTRUMENTS, and the choice is the design's. §2's table names the
+ * class *ordinance or resolution*, and the two are the same KIND OF THING: a body's
+ * own operative act, carrying a caption, recitals and clauses that change something.
+ * A reader answers the same four questions of each. Which instrument it is travels as
+ * a FACT (`instrument`), where a member can see it, rather than as two registry
+ * entries whose detectors would differ by one word.
+ *
+ * MEASURED ON REAL DOCUMENTS, fetched and read through the plane's own Tier-1
+ * extraction, 2026-09-15:
+ *
+ *   A · oakland.legistar1.com/oakland/attachments/9fde50ed-8b3d-45a5-bb51-c67af1d9d1a7.pdf
+ *       — the `View Legislation` attachment of Oakland matter 37551, a PROPOSED
+ *       ordinance amending O.M.C. Chapter 8.28 (solid waste collection). 369,264
+ *       bytes, 37 pages, 142,138 characters decoded, ZERO undetermined. It carries the
+ *       caption `OAKLAND CITY COUNCIL / ORDINANCE NO. ________ C.M.S.` with the number
+ *       still blank, 25 WHEREAS recitals, `NOW, THEREFORE, THE CITY COUNCIL OF THE
+ *       CITY OF OAKLAND DOES ORDAIN AS FOLLOWS`, and `SECTION 1. Amendment of Oakland
+ *       Municipal Code.`
+ *   B · cao-94612.s3.amazonaws.com/documents/2020.06.23-Errata-3-Agenda-Report-Exhibits-
+ *       and-Resolution.pdf — a RESOLUTION amending Resolution No. 87759 C.M.S.,
+ *       published inside the staff report the `staff_report` type was measured on. Six
+ *       WHEREAS recitals and eleven operative clauses. It is here deliberately: it is
+ *       this item's live instance of M0-32's multi-class finding.
+ *
+ * THE DEFECT THIS TYPE WAS BUILT NOT TO MAKE, measured on a third real document. All
+ * five of M0-32's own recogniser errors were one shape — a REFERENCE to a kind read as
+ * MEMBERSHIP of it — and the trap here is sprung by the minutes read for
+ * `meeting_minutes`: the Council's 2026-07-21 minutes carry SEVEN well-formed
+ * instrument captions (`Resolution No. 90xxx C.M.S.`), because minutes cite the
+ * instruments a body adopted. A matcher resting on the caption would call that document
+ * an ordinance. It carries ZERO enacting formulas and ZERO recitals, because it does
+ * not ENACT anything — so the threshold below requires the OPERATIVE VOICE and the
+ * caption is never sufficient on its own.
+ *
+ * WHAT THIS MATCHER CANNOT SEE, and it is the honest limit of the rule above: a
+ * document that QUOTES an instrument at length — a report reproducing a resolution, a
+ * set of minutes with the full text of what was adopted attached — carries the same
+ * enacting formula and the same recitals as the instrument itself, and this type will
+ * detect it. That is not a bug being tolerated: such a document genuinely CONTAINS an
+ * instrument, which is what `also_satisfies` exists to say. What the type does NOT do
+ * is claim the containing document IS only that.
+ *
+ * WHY THE PHRASES ARE MATCHED OVER FLATTENED TEXT. Document A's Tier-1 text opens
+ * `R\nESOLUTION \nN\nO\n.` from a drop cap and splits its own enacting formula across a
+ * line break. Line-anchored phrase tests find neither. See `flatten` in ./index.mjs.
+ */
+
+
+/* THE OPERATIVE VOICE — a body enacting, in the forms Oakland actually publishes plus
+   the general shapes. This is the family that separates an instrument from a document
+   that cites one, so it is written as a principle (a body ORDAINS or RESOLVES, in the
+   present operative voice) rather than as one literal: document A carries none of
+   `BE IT ORDAINED`, which a list of spellings would have made the whole test. */
+const ENACTING = /\b(?:DOES\s+(?:HEREBY\s+)?(?:ORDAIN|RESOLVE)|BE\s+IT\s+(?:FURTHER\s+)?(?:ORDAINED|RESOLVED)|IT\s+IS\s+(?:FURTHER\s+)?(?:ORDAINED|RESOLVED)|NOW,?\s+THEREFORE[^.]{0,160}?\b(?:ORDAINS?|RESOLVED?))\b/i;
+/* A recital chain. One `WHEREAS` is a quotation; a chain is how an instrument
+   establishes its own grounds. */
+const RECITAL = /\bWHEREAS\b/gi;
+/* The instrument's own caption. `C.M.S.` (Council Meeting Series) is Oakland's; the
+   number may be blank on a proposed instrument, which document A shows. */
+const CAPTION = /\b(ORDINANCE|RESOLUTION)\s+NO\.?\s*[_\s]*(\d{3,6})?\s*[_\s]*(?:C\.?\s?M\.?\s?S\.?)?/i;
+/* Codification: the language by which an instrument changes the code. */
+const CODIFYING = /\b(?:is\s+hereby\s+(?:amended|added|repealed|deleted)|hereby\s+(?:amended|repealed)|O\.?M\.?C\.?\s+(?:Section|Chapter)|Municipal\s+Code\s+(?:Section|Chapter))\b/gi;
+
+/* References, matched over RAW text with `\s+` for a line break so `match.index` stays
+   a RAW offset — the only coordinate `ctx.locate` understands. */
+const REG_INSTRUMENT_REF = /\b(Ordinance|Resolution)\s+No\.?\s*(\d{3,6})\b/gi;
+const REG_CODE_REF = /\b(?:O\.?M\.?C\.?|Oakland\s+Municipal\s+Code)\s+(?:Section|Chapter)\s+([\d.]+[\w.]*)/gi;
+
+const CAPTION_ALL = /\b(ORDINANCE|RESOLUTION)\s+NO\.?\s*[_\s]*(\d{3,6})?\s*[_\s]*(?:C\.?\s?M\.?\s?S\.?)?/gi;
+
+/* The enacting BODY, immediately above its own caption. Oakland's instruments open
+   `OAKLAND CITY COUNCIL` / `RESOLUTION NO. ____ C.M.S.`; the general shape is a
+   council, board, commission or authority named on its own just above. */
+const ENACTING_BODY = /\b(?:CITY\s+COUNCIL|COUNCIL\s+OF\s+THE\s+CITY|BOARD\s+OF\s+[A-Z]+|COMMISSION|AUTHORITY|CITY\s+OF\s+[A-Z]+)\b[^A-Za-z0-9]{0,40}$/;
+
+/** WHICH caption is the instrument's OWN, as opposed to one it merely cites.
+ *
+ *  THIS FUNCTION EXISTS BECAUSE THE FIRST TWO DRAFTS OF THIS READER MADE THE DEFECT
+ *  THIS WHOLE ITEM IS ABOUT, and both were caught by DRIVING the reader over the real
+ *  document rather than by reading it back.
+ *
+ *    Draft 1 took the first well-formed `ORDINANCE NO. nnnnn C.M.S.` anywhere in the
+ *    text. On document A — whose own caption reads `ORDINANCE NO. ________ C.M.S.`,
+ *    the number still blank because the instrument is PROPOSED — it reported
+ *    `number: 83689`, the number of a different ordinance document A cites.
+ *
+ *    Draft 2 took the last caption BEFORE the enacting formula, reasoning that an
+ *    instrument's caption is what its clauses hang off. It reported `number: 13314`:
+ *    document A's twenty-five WHEREAS recitals cite prior ordinances by number, and
+ *    every one of them sits between the real caption and the enactment.
+ *
+ *  Both are a REFERENCE read as MEMBERSHIP — M0-32's one defect class — made twice
+ *  inside the reader written to avoid it. That is worth recording rather than
+ *  smoothing: the class is not obvious from the outside, and neither draft looked
+ *  wrong until a real document was run through it.
+ *
+ *  WHAT ACTUALLY SEPARATES THEM is what sits IMMEDIATELY ABOVE. An instrument's own
+ *  caption is introduced by the ENACTING BODY (`OAKLAND CITY COUNCIL`); a citation
+ *  sits inside a sentence. So the own caption is the first one whose preceding ~120
+ *  characters end in a body's name.
+ *
+ *  AND WHEN THERE IS NONE, THERE IS NONE. A document whose caption did not survive
+ *  extraction — document B's opens `R ESOLUTION N O .` after a drop cap, which no
+ *  caption pattern matches — gets a null number with its reason stated, never the
+ *  nearest number in the text. That is the direction this reader has already been
+ *  wrong in twice. */
+function ownCaption(flat) {
+  for (const m of flat.matchAll(CAPTION_ALL)) {
+    const before = flat.slice(Math.max(0, m.index - 120), m.index).toUpperCase();
+    if (ENACTING_BODY.test(before)) return m;
+  }
+  return null;
+}
+
+const regulation = {
+  key: "regulation",
+  label: "an ordinance or resolution",
+  version: 1,
+  /* An instrument is a text that says what it says; what matters is its SUBSTANCE.
+     Declared on the content type (CONSTRUCTS Step 0 #4). */
+  contract: CONTRACT.SUBSTANCE,
+
+  /** Is this an instrument of law?
+   *
+   *  FOUR FAMILIES: (1) the operative voice, (2) a recital chain, (3) the instrument's
+   *  caption, (4) codifying language. THE OPERATIVE VOICE IS REQUIRED FOR EVERY
+   *  MATCH — it is the one family a document that merely CITES an instrument does not
+   *  produce, and the measured minutes prove the point by carrying seven captions and
+   *  no enacting formula at all. */
+  detect(ctx) {
+    const t = String(ctx.text || "");
+    const flat = flatten(t);
+    const signals = [];
+
+    const enacting = ENACTING.test(flat);
+    if (enacting) signals.push("an enacting formula in the operative voice");
+    const recitals = (flat.match(RECITAL) || []).length;
+    if (recitals >= 2) signals.push(`a recital chain of ${recitals} WHEREAS clause(s)`);
+    const caption = CAPTION.test(flat);
+    if (caption) signals.push("an instrument caption");
+    const codify = (flat.match(CODIFYING) || []).length;
+    if (codify) signals.push(`${codify} codification phrase(s)`);
+
+    /* The caption alone is NEVER a match, at any confidence — that is the measured
+       minutes' seven captions refused by name. */
+    if (!enacting) return { match: false, confidence: CONFIDENCE.NONE };
+    if (recitals >= 2 || caption) return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
+    /* An instrument with neither recitals nor a caption in a shape this type knows —
+       a short resolution, or a producer whose caption did not survive extraction —
+       still enacts something, and declining to narrow is the ladder working. */
+    return { match: true, confidence: CONFIDENCE.LIKELY, signals };
+  },
+
+  /** What is in it: which instrument it is, its own number when it has one, and every
+   *  instrument and code section it acts on.
+   *
+   *  FW-17 / IC-86 — THIS READER CAN SAY WHERE, with the same limit as the staff
+   *  report's: its references are cited inline, so every pattern is run over the RAW
+   *  text (with `\s+` standing in for a line break) and the match's own offset is what
+   *  `ctx.locate` is given. A flattened offset would address a string no container ever
+   *  emitted. `rect` is null — Tier-1 text has no geometry — and a reader may emit only
+   *  a source `locate` gave it.
+   *
+   *  WHAT IT CANNOT PLACE: a citation this producer split mid-word (document A's own
+   *  `R` / `ESOLUTION` drop cap) is not matched, so it is absent rather than
+   *  mispositioned. Absent-and-said is the safe direction; a confident wrong page is
+   *  not.
+   *
+   *  ONE THING IT DELIBERATELY DOES NOT DO: it does not decide whether the instrument
+   *  was ADOPTED. A proposed ordinance and an enacted one read the same at this grain,
+   *  and whether a body passed it is the minutes' business — which is why `enacted` is
+   *  not a fact here and `number` being null is reported as exactly what it is. */
+  parse(ctx) {
+    const raw = String(ctx.text || "");
+    const flat = flatten(raw);
+    const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
+
+    const cap = ownCaption(flat);
+    const number = cap && cap[2] ? cap[2] : null;
+    const instrument = cap ? cap[1].toLowerCase() : (/\bORDAIN/i.test(flat) ? "ordinance" : null);
+
+    /* The caption's TITLE — the capitalised sentence that says what the instrument
+       does. Taken from the OWN caption only, for the same reason the number is, and
+       read as THE FIRST SUBSTANTIAL MOSTLY-CAPITALS SENTENCE after it rather than as
+       the text immediately following: document A interposes `INTRODUCED BY
+       COUNCILMEMBER [IF APPLICABLE]` between its caption and its title, and a rule
+       that demanded adjacency returned null on the one document it was written from. */
+    let title = null;
+    if (cap) {
+      const after = flat.slice(cap.index + cap[0].length, cap.index + cap[0].length + 2500);
+      for (const s of after.split(/(?<=\.)\s+/)) {
+        const t = s.trim();
+        if (t.length < 40) continue;
+        const letters = t.replace(/[^A-Za-z]/g, "");
+        if (!letters.length) continue;
+        /* "Mostly capitals" rather than "all capitals": these titles carry ordinals,
+           punctuation and the occasional lower-case artefact of extraction. */
+        if ((t.replace(/[^A-Z]/g, "").length / letters.length) < 0.85) continue;
+        /* The template's own preamble is not the title: document A's caption is
+           followed by `INTRODUCED BY COUNCILMEMBER [IF APPLICABLE]`, an unfilled
+           blank on the form rather than anything the instrument says. */
+        title = t.replace(/^\s*INTRODUCED\s+BY\b[^\]]*\]\s*/i, "").replace(/\s+/g, " ").slice(0, 500);
+        break;
+      }
+    }
+
+    const recitals = (flat.match(RECITAL) || []).length;
+
+    const entities = [];
+    const seen = new Set();
+    const take = (key, kind, label, facts, offset) => {
+      if (seen.has(key)) return;
+      seen.add(key);
+      entities.push(entity(key, kind, label, facts, locate(offset)));
+    };
+    /* The instruments this one acts on or cites. Its OWN number, when it has one, is a
+       document fact rather than an entity — an instrument is not a reference to
+       itself, and emitting it as one would make every instrument appear to cite one
+       more thing than it does. */
+    const ownKey = number ? `${instrument}:${number}` : null;
+    for (const m of raw.matchAll(REG_INSTRUMENT_REF)) {
+      const key = `${m[1].toLowerCase()}:${m[2]}`;
+      if (key === ownKey) continue;
+      take(key, "instrument", `${m[1][0].toUpperCase()}${m[1].slice(1).toLowerCase()} No. ${m[2]}`,
+           { instrument: m[1].toLowerCase(), number: m[2] }, m.index);
+    }
+    for (const m of raw.matchAll(REG_CODE_REF))
+      take(`omc:${m[1]}`, "code_section", `O.M.C. ${m[1]}`, { section: m[1] }, m.index);
+
+    return {
+      entities,
+      instrument,
+      /* Null means THIS INSTRUMENT CARRIES NO NUMBER — document A's caption is
+         `ORDINANCE NO. ________ C.M.S.`, a proposed instrument awaiting one. It does
+         not mean the reader failed, and `number_why` says which. */
+      number,
+      number_why: number ? null
+        : "this instrument's caption carries no number, which is what a proposed ordinance "
+        + "or resolution looks like before a body adopts it",
+      title,
+      recitals,
+      also_satisfies: alsoSatisfies(ctx, "regulation"),
+      at: ctx.at || null,
+    };
+  },
+
+  /** Given two parses of the same instrument's address, what happened to it. */
+  assess(a, b) {
+    if (!a.instrument && !b.instrument && !(a.entities || []).length && !(b.entities || []).length)
+      return { meaningful: null, significance: null, events: [], confirmed: null,
+               why: "nothing could be read from this instrument this time, so nothing is claimed "
+                  + "about it either way" };
+
+    const events = [];
+    /* AN INSTRUMENT'S OWN TEXT MOVING AT THE SAME ADDRESS IS THE SERIOUS ONE. This is
+       the class of change the record exists to be able to prove: what a body enacted
+       is not supposed to change afterwards, and a member who cited the title or the
+       number of an instrument cited something fixed. */
+    for (const k of ["instrument", "number", "title"])
+      if (String(a[k] || "") !== String(b[k] || ""))
+        events.push(event("instrument_changed", { key: k, was: a[k] || null, now: b[k] || null,
+          why: `this instrument's ${k} is not what it was at this address` }));
+    if (Number(a.recitals || 0) !== Number(b.recitals || 0))
+      events.push(event("instrument_changed", { key: "recitals", was: a.recitals, now: b.recitals,
+        why: "the recitals establishing this instrument's grounds changed in number" }));
+
+    const d = diffEntities(a.entities || [], b.entities || []);
+    for (const e of d.gone)
+      events.push(event("item_pulled", { key: e.key, label: e.label,
+        why: "an instrument or code section this one acted on is no longer named in it" }));
+    for (const e of d.appeared)
+      events.push(event("item_added", { key: e.key, label: e.label,
+        why: "this instrument now names something it did not name before" }));
+
+    bySeverity(events);
+    return {
+      meaningful: isMeaningful(events), significance: worstSignificance(events), events,
+      confirmed: { entries: (b.entities || []).length,
+                   intact: (a.entities || []).filter((e) => (b.entities || []).some((x) => x.key === e.key)).length },
+      why: events.length
+        ? `${events.length} change(s) to an instrument at the same address`
+        : "this instrument says what it said, and acts on the same things",
     };
   },
 };
@@ -4762,9 +6015,10 @@ const generic = {
  * instances of the one recogniser engine (recogniser.mjs), which is the whole claim
  * of framework §4: a third axis is a third `makeRegistry()`, not a third loop.
  *
- * THREE types are registered today -- `meeting_calendar`, `meeting_agenda` and the
- * `generic` fallback (the register() calls below) -- of which TWO are measured real
- * types, and the restraint is still deliberate rather than unfinished.
+ * SIX types are registered today -- `meeting_calendar`, `meeting_agenda`,
+ * `meeting_minutes`, `staff_report`, `regulation` and the `generic` fallback (the
+ * register() calls below) -- of which FIVE are measured real types, and the restraint
+ * is still deliberate rather than unfinished.
  *
  * CORRECTED 2026-09-14 (CPDF-17): this header used to open "Only ONE real type is
  * registered today" and went on to list an agenda among the types that "none has been
@@ -4775,14 +6029,24 @@ const generic = {
  * of `docs/architecture/BIO_Content_Framework_v0_10.md` inventories what is registered
  * and is the authority; it caught this line.
  *
- * Both measured types were written from documents that were actually fetched and read:
+ * UPDATED 2026-09-15 (FW-18), and the count above is now the thing CPDF-17's
+ * correction obliges every later author to move: three types were added in the order
+ * M0-32's census measured (`MEASUREMENTS.md` M-18) -- meeting minutes, then the staff
+ * report, then the ordinance or resolution. A staff DIRECTORY, the fourth and smallest
+ * class in that order, is STILL NOT WRITTEN and the reason is measured rather than a
+ * shortfall of effort: see the register() calls below.
+ *
+ * Every measured type was written from a document that was actually fetched and read:
  * `meeting_calendar` from a page that was fetched, diffed and read, `meeting_agenda`
- * from a real Legistar agenda packet's Tier-1 text. A regulation, a staff directory and
- * a set of meeting minutes are still named in the design doc as types worth having and
- * none has been measured, so none is written: a content type invented from what a
- * document probably looks like is a type that reassures people about things it has not
+ * from a real Legistar agenda packet's Tier-1 text, and FW-18's three from the real
+ * Oakland documents each names in its own header, read through the plane's own Tier-1
+ * extractor. The rule has not moved: a content type invented from what a document
+ * probably looks like is a type that reassures people about things it has not
  * understood. The generic type reports change without describing it, which is noisy and
  * honest, and the noise is the prompt to go and measure. */
+
+
+
 
 
 
@@ -4791,20 +6055,81 @@ const generic = {
    detects — same mechanism as the conservative handler on the stack axis. */
 const types = makeRegistry();
 types.register(meetingCalendar);
+/* meeting_minutes (FW-18) is registered BEFORE meeting_agenda, and the order is
+   load-bearing rather than alphabetical. `recognise` walks in registration order and
+   BREAKS ON THE FIRST CERTAIN detection, so when two types are both certain the
+   earlier one wins. Minutes and the agenda of the same meeting share their file
+   numbers and their item blocks, and the document that can be BOTH at once is the
+   agenda PACKET, whose minutes-side evidence is quoted rather than its own. Putting
+   minutes first means the rarer, more specific reading is offered its chance; the
+   agenda's own masthead rate then decides. Neither type rests on this order for
+   correctness -- each was corrected until it separates the two measured documents on
+   its own evidence -- and `alsoSatisfies` below reports what the break hid. */
+types.register(meetingMinutes);
 /* meeting_agenda (FW-15) is the SECOND measured type, written from a real
    Legistar agenda packet's Tier-1 text — the first content type reached through
    text a non-HTML container produced, which is the FORMAT-axis uniformity claim
    exercised on the content axis. */
 types.register(meetingAgenda);
+/* staff_report and regulation (FW-18), classes 2 and 3 of M0-32's order. Both are
+   SUBSTANCE contracts and both read documents published by the City of Oakland rather
+   than by Legistar, which is why both match over flattened text: that producer's
+   Tier-1 output breaks phrases across lines (see `flatten` in ./index.mjs). */
+types.register(staffReport);
+types.register(regulation);
+/* NOT REGISTERED, and the absence is stated rather than left as silence: a STAFF
+   DIRECTORY, class 4 of M0-32's order (~395 items, the smallest class by a wide
+   margin). It is unwritten because no document of the class could be READ, not
+   because none was looked for. FW-18 fetched 30 name-matched directory PDFs from the
+   Oakland bucket and every one was Tier-1 UNDECODABLE (0-100 characters decoded
+   against 1,200-33,000 undetermined markers — single-page scans); a further fixed-seed
+   walk of 300 bucket PDFs decoded 45 and found none of the class. `readText` refuses a
+   document whose undetermined exceeds its decoded characters, so for these documents
+   NO reading is attempted at all and no content type is ever consulted. Writing a
+   directory type from a page nobody could read is precisely the invented type this
+   registry's rule forbids. */
 types.register(generic);
 
 function doctypes() { return types.all(); }
 
 /** Identify what KIND of content this is, independently of the stack that served it.
- *  A thin wrapper over the shared registry; always returns something. */
+ *  A thin wrapper over the shared registry; always returns something.
+ *
+ *  FW-18 / M0-32 — `also`: WHAT ELSE THIS DOCUMENT IS. The census measured that 52 of
+ *  600 sampled documents (about one in twelve) satisfy MORE THAN ONE class, so a
+ *  content type that assumes one document is one kind mis-describes one document in
+ *  twelve. The engine cannot say so: `recognise` stops at the first CERTAIN detection,
+ *  so its `considered` list is truncated at whatever won and a second class is
+ *  invisible. That break is the STACK axis's behaviour too and is not this axis's to
+ *  move, so the multi-class fact is produced here instead, by asking every registered
+ *  type independently.
+ *
+ *  IT CHANGES NO VERDICT. `type`, `confidence`, `signals` and `considered` are exactly
+ *  what they were; `also` is a new field beside them, and the plane's profile stamp
+ *  reads named fields rather than the whole object, so nothing downstream moves. A
+ *  reader is handed the same list through `ctx.alsoSatisfies` so it can state the fact
+ *  in the reading's own facts, which is the surface a member actually sees.
+ *
+ *  A type whose `detect` THROWS is reported as such rather than silently dropped: a
+ *  recogniser that cannot answer is a different fact from one that answered no. */
 function doctypeFor(ctx) {
   const r = types.recognise(ctx);
-  return { type: r.member, confidence: r.confidence, signals: r.signals, considered: r.considered };
+  return { type: r.member, confidence: r.confidence, signals: r.signals, considered: r.considered,
+           also: alsoFor(ctx, r.member.key) };
+}
+
+/** Every registered type OTHER than `selfKey` whose own `detect` matches this text.
+ *  Exported for the suite and for callers that want the fact without a full profile. */
+function alsoFor(ctx, selfKey) {
+  const out = [];
+  for (const m of types.all()) {
+    if (m.key === selfKey || m.fallback === true) continue;
+    let d;
+    try { d = m.detect(ctx) || { match: false }; }
+    catch (e) { out.push({ key: m.key, confidence: null, signals: [], error: String((e && e.message) || e) }); continue; }
+    if (d.match) out.push({ key: m.key, confidence: d.confidence, signals: d.signals || [] });
+  }
+  return out;
 }
 
 /* ---- docprofile/pipeline.mjs ---- */

@@ -39,6 +39,103 @@ export { CONFIDENCE } from "../recogniser.mjs";
    said — a list). */
 export const CONTRACT = { SUBSTANCE: "substance", MEMBERSHIP: "membership", UNMONITORABLE: "unmonitorable" };
 
+/* ------------------------------------------------------------------------- *
+ * FW-18 — THE TWO THINGS M0-32's CENSUS MEASURED THAT CHANGE HOW A TYPE IS
+ * WRITTEN. Both are properties of the corpus, not of any one reader, so the
+ * apparatus for them lives here once rather than in each type.
+ * ------------------------------------------------------------------------- */
+
+/** Collapse a document's text to ONE LINE of single-spaced words, for matching a
+ *  PHRASE.
+ *
+ *  MEASURED, and it is the reason this exists rather than a convenience. Tier-1
+ *  text is not one shape across producers. Legistar's minutes and agendas arrive
+ *  as clean lines, so a line-anchored test works on them. The same extractor over
+ *  the City of Oakland's own published PDFs breaks words and phrases across line
+ *  boundaries wherever the page laid them out that way — a real ordinance read in
+ *  this item opens `R\nESOLUTION \nN\nO\n.` from a drop cap, and its enacting
+ *  formula `NOW, THEREFORE, THE CITY COUNCIL ... DOES ORDAIN AS\nFOLLOWS` is split
+ *  mid-sentence. A phrase test anchored to lines would have found neither, and
+ *  would have looked like a document that is not an ordinance rather than like a
+ *  matcher that cannot see one.
+ *
+ *  So: PHRASES are matched over this normalisation, and LINE ANCHORING is kept
+ *  only where the principle is genuinely about a line (see `selfNaming`). */
+export function flatten(text) {
+  return String(text || "").replace(/\s+/g, " ");
+}
+
+/** How many times a document NAMES ITSELF as a kind, on a line of its own.
+ *
+ *  THIS IS M0-32's DEFECT CLASS ANSWERED STRUCTURALLY. All five defects its
+ *  recogniser made were ONE shape: a REFERENCE to a kind mistaken for MEMBERSHIP
+ *  of it — a staff report that mentions an ordinance is not an ordinance. The
+ *  same shape was measured in this item, twice and in both directions, on real
+ *  documents:
+ *
+ *    - a set of Oakland minutes says `On The July 21, 2026 City Council Agenda On
+ *      Consent` of nearly every item, and the registered `meeting_agenda` type
+ *      read the whole document as an agenda at CERTAIN confidence because of it;
+ *    - the same minutes carry two lines that are exactly `Agenda`, which are the
+ *      wrapped tails of attachment titles (`Draft July 28, 2026 Cancelled Finance
+ *      And Management Committee` / `Agenda`) — a reference that even survives
+ *      line anchoring;
+ *    - and the agenda of that same meeting says `There Are No Minutes To Be
+ *      Approved`, which is a reference to minutes inside an agenda.
+ *
+ *  WHAT SEPARATES THEM IS NOT THE WORD, IT IS THE RATE. A document's self-naming
+ *  sits in its masthead, and a masthead is PAGE FURNITURE: it recurs once per
+ *  page. Measured on three real documents — 25 occurrences over 25 pages of one
+ *  set of minutes, 37 over 37 pages of another, 33 over 33 pages of the agenda —
+ *  against 2 for the reference and 0 the other way. A reference occurs once or
+ *  twice wherever the prose happened to need it.
+ *
+ *  So a type asks for the COUNT and decides what the count entitles it to. That is
+ *  a principle (furniture recurs, a mention does not) rather than a list of
+ *  spellings, which is what WORKER.md means by inverting instead of lengthening.
+ *
+ *  WHAT IT CANNOT SEE, stated because the sentence is load-bearing: a genuinely
+ *  ONE-PAGE document of any of these kinds names itself ONCE and is
+ *  indistinguishable by this test from a one-line reference. Every type here
+ *  therefore keeps a path that reaches `likely` on other evidence alone, and none
+ *  of them refuses a document for naming itself only once. */
+export function selfNaming(text, re) {
+  let n = 0;
+  for (const line of String(text || "").split(/\r?\n/)) if (re.test(line.trim())) n++;
+  return n;
+}
+
+/** The threshold `selfNaming` counts against: a masthead is furniture, and
+ *  furniture recurs. Three is the smallest count that cannot be one wrapped title
+ *  plus one prose mention, which is exactly the pair measured in the minutes
+ *  above. Named once so the four types cannot drift apart on it. */
+export const FURNITURE_RECURS = 3;
+
+/** WHAT ELSE THIS DOCUMENT IS. M0-32 measured that 52 of 600 sampled documents —
+ *  about one in twelve — satisfied MORE THAN ONE class, because Oakland publishes
+ *  agenda packets that genuinely contain an agenda, its staff reports and its
+ *  draft resolutions. §2's conclusion is that a content type which assumes one
+ *  document is one kind will mis-describe one document in twelve.
+ *
+ *  THE ENGINE CANNOT SAY THIS AND IS NOT BEING CHANGED TO. `makeRegistry`'s
+ *  `recognise` stops at the FIRST CERTAIN detection, so its `considered` list is
+ *  truncated at whatever won and cannot report a second class. That break is the
+ *  stack axis's behaviour too and is not FRAMEWORK's alone to move; the registry
+ *  (`doctypes/registry.mjs`) instead asks every type INDEPENDENTLY, as an
+ *  ADDITIVE second pass that changes no verdict, and a reader states what else
+ *  its own text satisfies as a document FACT so the answer reaches the record
+ *  rather than only the profile.
+ *
+ *  `alsoSatisfies(ctx, self)` returns the keys of the other registered types whose
+ *  own `detect` matches this same text, so a reader's facts can carry it. It is
+ *  wired by the registry, which is the only place that knows every type; a reader
+ *  called directly gets an honest empty list rather than a TypeError. */
+export function alsoSatisfies(ctx, selfKey) {
+  const f = ctx && typeof ctx.alsoSatisfies === "function" ? ctx.alsoSatisfies : null;
+  if (!f) return [];
+  try { return f(selfKey) || []; } catch { return []; }
+}
+
 /** An entity a content type found in a document. `key` must be stable across
  *  fetches: a position in a list is not a key, an id in a URL is. `facts` are the
  *  fields whose change might mean something, named so assess() can say WHICH

@@ -221,3 +221,12 @@ _m025/
 .scratch-base/
 bio-plane/.coff11-arm-wire-pristine.mjs
 bio-plane/.coff11-arm-test-pristine.mjs
+# FW-18's pen, named for its item on the standing rule every line above it
+# follows. BREADTH §7 row 2 requires each content type to be written from a page
+# that was actually FETCHED AND READ, so this directory holds the real Oakland
+# documents of each class while they are read, the Tier-1 text extracted from
+# them, and the control harness's pristine copies. A document body left untracked
+# is a second corpus for the next walk to enrol — `coverage.mjs`'s fleet walk and
+# the battery's discovery both read directories rather than a list — and an
+# interrupted control run would leave one behind.
+.fw18-pen/
