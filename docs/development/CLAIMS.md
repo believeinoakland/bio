@@ -4622,3 +4622,26 @@ matches their numbers; `docs/architecture/**` is not this claim's, so it is repo
 edited. (2) UI-59's scope names the surface ledger as `docs/CIVICOS_UI_STATE.md`; the file is
 `docs/development/CIVICOS_UI_STATE.md`. This claim is licensed for `design:` lines only, so the
 row's own text was left alone.
+
+
+
+## CLAIM 2026-09-14 M0 (M0-28 — corpuscheck refuses a Status carrying more than one `as of YYYY-MM-DD`)
+session: worker for queue item M0-28, worktree-isolated, background lane (holds no slot), Opus 5.
+Worktree `.claude/worktrees/agent-a835afee6c274d911`, branch `worktree-agent-a835afee6c274d911`.
+
+paths, and NOTHING ELSE:
+- `tools/corpuscheck.mjs` — ONE new arm in `checkFile` (more than one `as of YYYY-MM-DD` in a
+  Status FAILS, naming the file and every date) plus the header grammar comment that states it.
+  No other behaviour in the checker moves.
+- `bio-plane/test/corpuscheck.test.mjs` — the suite arm driving it and the fifth entry in the
+  suite's own `NEGATIVE CONTROL:` block.
+- `docs/architecture/CORPUS-STANDARD.md` §3 — the grammar line: one date, the latest, at the END
+  of the Status. §3 only; no heading moves, so no `--write`.
+- `docs/development/UI-PLAN.md`, `docs/development/UI-KICKOFF.md`,
+  `docs/development/NOTIFICATIONS.md` — **their Status lines ONLY**, one phrase each. M0-27 is
+  live in the BODIES of these same three documents; this claim touches no body sentence.
+- `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR.arms` only, if this item's own green print
+  moves it (one key set, re-read from the print, never incremented by hand).
+
+not this claim's: `QUEUE.md`, `CLAUDE.md`, `DECISIONS.md`, every body sentence in the three
+documents above, and every other field of every governed document.
