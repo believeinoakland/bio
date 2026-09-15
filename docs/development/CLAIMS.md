@@ -6453,7 +6453,7 @@ what is needed, at SKILL's next touch (SK-7's integration or SK-8's spawn), one 
   EXTRACT runs in the run — citing §7.3 — with the same comment saying why the old sentence
   was wrong. The §5 line of the front matter's Incomplete list updates in the same commit.
 released: 2026-09-14 by the SK-8 worker — worktree `agent-a7a1788f7e7a3b716`, branch
-  `worktree-agent-a7a1788f7e7a3b716`, commit `3accbe3` (the item) plus `<FLOOR>` (the
+  `worktree-agent-a7a1788f7e7a3b716`, commit `3accbe3` (the item) plus `dba81a7` (the
   `REGISTER_FLOOR` move). **DONE AS ASKED, IN PLACE, NEVER EXEMPTED, and the correction note is at
   the site.** `ASSISTANT-PILOT.md` §5 exclusion 1 now says the pilot's credential writes nothing
   BECAUSE IT IS READ-ONLY — §4's own property and the one its §6 hazard table already named — and that
@@ -6531,7 +6531,7 @@ than asserted); `agent-worker/**` (**and this is a finding, not an omission — 
 `bio-plane/checks/bio-checks.mjs`; `QUEUE.md` (CONDUCT's).
 
 released: 2026-09-14 by the SK-8 worker — worktree `agent-a7a1788f7e7a3b716`, branch
-`worktree-agent-a7a1788f7e7a3b716`. **TWO COMMITS: `3accbe3` (the item) and `<FLOOR>` (the
+`worktree-agent-a7a1788f7e7a3b716`. **TWO COMMITS: `3accbe3` (the item) and `dba81a7` (the
 `REGISTER_FLOOR` move and this release line), in that order because that file's own comment block
 requires the floor to be read from a run taken AFTER the suite is in the commit.** NOT pushed and
 NOT merged; CONDUCT takes the integration, IC-93's resolution, the interface bumps and the QUEUE
