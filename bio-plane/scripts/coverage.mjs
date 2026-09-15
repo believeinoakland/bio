@@ -933,9 +933,25 @@ const REGISTER_FLOOR = {
      this one — every reading correct where it was taken and not one of them true of the
      result. The merged print is the only figure that is ever true of the merged tree. ONE
      KEY SET, grepped before writing. */
-  arms: 1087,
-  classified: 196,
-  corpus: 197,
+  /* MOVED 1087 -> 1094 · 196 -> 197 · 197 -> 198 by REC-91, 2026-09-15, FROM THIS
+     WORKER'S OWN POST-COMMIT PRINT on commit d917cc3 — `arms 1094/1087 ·
+     classified 197/196 · corpus (suites read) 198/197 · GREW by 7 arm(s)` — and
+     POST-COMMIT is the whole of why it is this figure. The PRE-commit run of the
+     same green tree printed `1087/1087 · 196/196 · 197/197` with
+     `(contaminated: 1 suite(s) no other checkout has)`, because
+     `test/capture-text-index.test.mjs` was still untracked and the register
+     refuses to count work no other checkout can see. Reading the floor off that
+     run would have moved nothing while seven real arms had arrived; reading it
+     off the branch's own arithmetic would have been the D-238 failure this
+     comment block already records four times over.
+     THE ARRIVAL IS ONE SUITE with a seven-arm declaration:
+     `capture-text-index.test.mjs` (a baseline and six arms in
+     `test/nc-rec91.mjs`, plus the over-strictness arm). `nc-rec91.mjs` itself is
+     NOT a `.test.mjs` and is not in the corpus, deliberately — it edits real
+     sources while it runs. ONE KEY SET, grepped before writing. */
+  arms: 1094,
+  classified: 197,
+  corpus: 198,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
