@@ -93,7 +93,61 @@
    green.** A grader that reds here would be tighter than its rule.
    THE OVER-STRICTNESS ARM THE CENSUS CARRIES BY CONSTRUCTION, stated because it is easy to
    miss: the 103 reads that were ALREADY unbounded and are declared so all PASS at baseline —
-   the ceiling grades ARRIVALS, never the standing roster. */
+   the ceiling grades ARRIVALS, never the standing roster.
+
+   ===== M0-38 / D-369, 2026-09-15 — THE ARMS FOR THE IN-MEMORY TRUNCATION AND THE OUT-OF-REACH
+   ROSTERS. SIX arms, each armed ALONE with every other held open, driven by `test/nc-m038.mjs`
+   (`cd bio-plane && node test/nc-m038.mjs`), every file restored from a PRISTINE copy named
+   UNIQUELY PER ARM and verified by sha256 AND by `cmp` (2,139,502 bytes on `store.mjs`, floored,
+   0 copies left behind, and the CLOSING baseline re-measured equal to the opening one). Every arm
+   asserts it ARMED — each patch must match EXACTLY ONCE — and all six did; two are TWO-PART
+   patches and both parts are asserted independently.
+   BASELINE ROW FIRST: derivation-bounds **58/0, census 104** · bounds **167/0** ·
+   meaning-bounds **92/0**.
+   (12) THE IN-MEMORY CUT MADE AT A BOUND THE ANSWER DOES NOT PUBLISH — `documentsNamingEntity`
+   keeps `limit: cap` and `truncated: merged.length > cap` and cuts at `merged.slice(0, 5000)`.
+   MEASURED: **57/1, census UNMOVED at 104, bounds 167/0, meaning-bounds 92/0**, naming
+   `["documentsNamingEntity:merged (cut at a bound the published claim does not name)"]`.
+   **THIS IS THE ARM THE ROW EXISTS FOR, and the three green figures beside it are the finding:
+   before this block the same edit failed NOWHERE** — the census cannot move because no SQL
+   changed, REC-99's inversion never looks because there is no row source, and the envelope suites
+   read the honest published cap.
+   (13) THE SAME ON `biasInhale`'s `bars`. MEASURED: **57/1, census 104, siblings green**, naming
+   `["biasInhale:bars (cut at a bound the published claim does not name)"]` — a second method, so
+   the arm measures the property and not one site.
+   (14) THE CUT REMOVED ENTIRELY — `const out = items.slice(0, cap)` becomes `const out = items`,
+   so `queueFeed` publishes `truncated: items.length > out.length` over a cut it no longer makes.
+   MEASURED: **57/1, census 104**, naming `["queueFeed:items (claims a cut this method does not
+   make)"]`. **AND `bounds` MOVED TO 165/2 HERE AND ONLY HERE, WHICH IS RECORDED RATHER THAN
+   SMOOTHED:** this is the one arm whose edit changes the ANSWER as well as the claim — the feed
+   returns every item — so the envelope suite legitimately catches it too. That is exactly why
+   (12) and (13) carry the item: they move only WHERE THE CUT WAS MADE, and this block is then the
+   sole instrument that fails.
+   (15) THE SOURCE BOUND MIGRATING OUT OF REACH — `frontier`'s `this.#frontierLatest("document",
+   { limit: cap + 1, … })` becomes `{ limit: 5000, … }`, so the row source is no longer fetched by
+   a call the published cap controls. MEASURED: **57/1, census 104, siblings green**, and the
+   failure is the OUT-OF-REACH ROSTER naming the arrival — `frontier:page` joins the five. **The
+   CUT arm stayed GREEN, which is the point of taking two verdicts: the cut is still at the
+   published cap and only the SOURCE moved.**
+   (16) SET 2's ROSTER IS A RATCHET IN BOTH DIRECTIONS — BOTH of `biasManifest`'s row sources
+   given a `LIMIT`, so the method LEAVES the census and both SET 2 rosters. MEASURED: **53/5,
+   census 103**, the SET 2 pin naming `["#calDriftFor", "#frontierContent", "documentsNamingEntity",
+   "frontier", "queueFeed"]` and the PARTITION pin naming the four left in it. **THE ARM CAME BACK
+   WITH MORE THAN WAS DECLARED AND THE SURPLUS IS NAMED:** three failures were declared and five
+   arrived — the two extra are REC-66's CLASS ratchet FLOOR and its dispatched-members pin, because
+   the same edit takes `biasManifest` off the CLASS roster (34 → 33) and `biasmanifest->biasManifest`
+   out of CLASS OPS. The declaration was incomplete, not the instrument: one method left three
+   rosters at once, which is REC-94's arrival accounting run backwards.
+   (17) OVER-STRICTNESS, AND IT IS THE ARM THAT MATTERS MOST HERE — the same CORRECT cut in a
+   spelling the grader did not anticipate, the cap passed through an ALIAS (`const take = cap;`
+   then `merged.slice(0, take)`). MEASURED: **58/0, census 104, everything green.** A grading that
+   reds here would be tighter than its rule, and REC-99's arm (11) is the model.
+   THE OVER-STRICTNESS THIS BLOCK CARRIES BY CONSTRUCTION, stated because it is the half the row
+   weighted most heavily: **the five methods that publish a bound while LEGITIMATELY holding an
+   unbounded scan — `#frontierContent`, `biasManifest`, `documentsNamingEntity`, `frontier`,
+   `queueFeed` — all PASS at baseline, byte-identically, and nothing added here can fail them.**
+   They are NAMED, not graded; the block's only failing conditions are a cut that disagrees with
+   the claim, a roster that moved, and a form that arrived. */
 /* REC-66 · D-224 / D-227 — THE BOUND ON THE DERIVATION, AND THE WALK FOR ITS CLASS.
  * ============================================================================
  *
@@ -799,6 +853,306 @@ t("REACH IS A DELTA (the truncation grader): over a copy of store.mjs with no `#
 + "every graded source becomes UNGRADEABLE and none is silently scored as compliant — the "
 + "direction that matters, since a reader that finds no row sources must not report a clean bill",
   [truncationVerdicts(noRowSources).graded.length, TRUNCATION.graded.length > 0], [0, true]);
+
+/* ============================ THE IN-MEMORY TRUNCATION, AND THE ROSTER OF WHAT IS STILL OUT OF
+ * REACH (M0-38 · D-369).
+ *
+ * WHAT REC-99 LEFT BEHIND WAS **TWO** BLIND SPOTS, AND THEY ARE BLIND FOR DIFFERENT REASONS.
+ * They are closed in one block and reported APART, because conflating them is how the gap
+ * arrived: D-369's own row says so, and the row that spawned this work says so again.
+ *
+ *   SET 1 — SEVEN `truncated` FIGURES MEASURED OVER AN IN-MEMORY COLLECTION. The count half
+ *     watches SQL row sources; the inversion half ties a published cap to a `#rows(` call. **A
+ *     figure computed over an array in memory satisfies NEITHER BY CONSTRUCTION**, so REC-99
+ *     PINNED the seven names and graded none of them. Pinning a name is not grading a bound.
+ *   SET 2 — METHODS THAT PUBLISH A BOUND WHILE ALREADY HOLDING AN UNBOUNDED SCAN. The census is
+ *     a COUNT OF METHODS, so a method already on the roster can lose a paging `LIMIT` on a
+ *     different read and the figure does not move. Here the count half is blind BY CONSTRUCTION
+ *     rather than by omission.
+ *
+ * WHAT THIS BLOCK GRADES, AND WHAT IT REFUSES TO PRETEND TO GRADE. An in-memory collection has
+ * no single row source, so the question "was the scan bounded" HAS NO ANSWER a one-method text
+ * walk can give. The question that DOES have one is the in-memory twin of REC-99's negative
+ * control (10) — **THE CUT AND THE CLAIM MUST AGREE**:
+ *
+ *   a method that publishes `truncated: SRC.length > C` has claimed that SRC was cut at C. So
+ *   either C is a local ASSIGNED FROM a cut of SRC (`const run = need.slice(0, MAX)` — the claim
+ *   is measured against the page itself, the strongest form there is), or the method must cut
+ *   SRC at a bound the published cap CONTROLS (`merged.slice(0, cap)`, the cap or an alias of
+ *   it, `capIdentifiers` above being REC-99's reader reused so the two cannot disagree about
+ *   what "the same cap" means).
+ *
+ * **THAT IS THE ARM THIS ROW EXISTS FOR.** Replace `merged.slice(0, cap)` with
+ * `merged.slice(0, 5000)` and leave `limit: cap` and `truncated: merged.length > cap` exactly as
+ * they are — an answer that says it cut at 100 over a page of 5,000 — and before this block
+ * NOTHING ANYWHERE FAILED: the census cannot move (no SQL changed), REC-99's inversion never
+ * looks (there is no row source), and the envelope suites read the honest published figure. It
+ * now fails HERE, naming the method and the collection.
+ *
+ * A SECOND VERDICT IS TAKEN AND IT IS DELIBERATELY WEAKER THAN IT LOOKS — **THE SOURCE BOUND** —
+ * and its whole value is that it PARTITIONS the seven into what can be reached and what cannot,
+ * by NAME and with the reason on the row. A collection assigned from a CALL that is PASSED the
+ * published cap (`this.#frontierLatest("document", { limit: cap + 1 })`) is bounded at its
+ * source **as far as this walk can see, and no further** — the callee's own body is not read,
+ * which is the first limitation this file's own header declares. A collection ASSEMBLED in
+ * memory from several reads, or DERIVED from an array the CALLER handed in, has no source this
+ * reader can bound at all. Those are OUT OF REACH, they are listed by name with the reason, and
+ * the roster is pinned so one cannot arrive quietly.
+ *
+ * **AN INSTRUMENT THAT CANNOT REACH SOMETHING MUST SAY SO BY NAME RATHER THAN PASS SILENTLY
+ * OVER IT.** Every roster below is PRINTED and PINNED for exactly that reason, and the rosters
+ * are kept SEPARATE because a reader must be able to tell a blind spot from an omission.
+ *
+ * WHAT THIS READER CANNOT SEE, STATED HERE RATHER THAN DISCOVERED LATER — and the third entry is
+ * the hole REC-88 found in the class walk one screen up (M0-40's row), checked against this
+ * block rather than assumed absent from it:
+ *   - It reads a cut written as `SRC.slice(0, …)` and NOTHING ELSE. A cut hoisted into a helper,
+ *     or spelled `.splice`, or made by `break`ing out of a loop, is invisible — and such a claim
+ *     lands in `violations` as `claims a cut this method does not make`, which is LOUD and in the
+ *     safe direction, never a silent pass. If a legitimate method ever cuts that way the arm is
+ *     widened AT THIS SITE with the reason stated — never the roster lowered to fit it.
+ *   - It reads the DECLARATION of the collection to classify where it came from. A collection
+ *     assigned through a branch, or re-assigned later, is classified on its first declaration.
+ *   - **IT DOES NOT INHERIT REC-88's HOLE, AND THAT IS CHECKED RATHER THAN ASSERTED:** that hole
+ *     is in `analyse`'s loop reader (an amplifying loop whose ITERABLE is hoisted to a local
+ *     scores zero, so the method leaves the CLASS roster), and nothing in this block calls
+ *     `analyse`, `loopsOver` or `classMembers`. What this block reads is `segments`, `scans` —
+ *     every `#rows(` and its `LIMIT` — and plain declarations, none of which has a loop in it.
+ *     SET 2's roster is built from `SCANNING_NAMES`, which is `scans()`-derived for the same
+ *     reason. M0-40 is that hole's row and it is NOT fixed here.
+ *   - **IT READS ONE SPELLING OF THE CLAIM, `X.length > Y`, BECAUSE REC-99's `TRUNC_RE` DOES**,
+ *     and a reader that grades one spelling is this file's own oldest failure. The claims that
+ *     spelling cannot read are therefore COUNTED AND NAMED in the third roster below rather than
+ *     being absent from every list — which is how `biasManifest`'s offset form came to be named
+ *     in D-369 as one of the four while being in NO roster the instrument printed.
+ */
+
+/* Every `SRC.slice(0, …)` in a body, whole call text. `closeParen` from the match start lands on
+   the `(` of `.slice` because the receiver is a bare identifier and carries no parenthesis. */
+const sliceCuts = (body, src) => {
+  const out = []; const re = new RegExp(`\\b${src.replace(/\$/g, "\\$")}\\s*\\.\\s*slice\\s*\\(`, "g");
+  let m; while ((m = re.exec(body))) out.push(body.slice(m.index, closeParen(body, m.index)));
+  return out.filter((c) => /\.\s*slice\s*\(\s*0\s*,/.test(c));
+};
+/* WHERE THE COLLECTION CAME FROM — four answers and a fifth that is PRINTED rather than scored.
+   `UNCLASSIFIED` is a first-class outcome here: a thing the matcher does not understand must be
+   NAMED, never silently given a verdict it did not earn. */
+const sourceOrigin = (body, src) => {
+  const esc = src.replace(/\$/g, "\\$");
+  const decl = new RegExp(`\\b(?:const|let|var)\\s+${esc}\\s*=\\s*([^;]*)`).exec(body);
+  if (!decl) return { kind: "UNCLASSIFIED", why: "no declaration of this collection in the method segment", rhs: "" };
+  const rhs = decl[1];
+  const grown = new RegExp(`\\b${esc}\\s*\\.\\s*(?:push|concat|unshift)\\s*\\(`).test(body);
+  if (/this\s*\.\s*#?[A-Za-z_$][\w$]*\s*\(/.test(rhs) && !grown)
+    return { kind: "CALL", why: "assigned from a call; the callee's body is not read by this walk", rhs };
+  if (/^\s*\[/.test(rhs) || grown)
+    return { kind: "ASSEMBLED", why: "assembled in memory — grown or spread from several reads, so there is no single source to bound", rhs };
+  const recv = /^\s*([A-Za-z_$][\w$]*)\s*\.\s*(?:filter|map|slice|concat|sort|flatMap|reduce)\s*\(/.exec(rhs);
+  if (recv) {
+    const local = new RegExp(`\\b(?:const|let|var)\\s+${recv[1].replace(/\$/g, "\\$")}\\b`).test(body);
+    return local
+      ? { kind: "DERIVED", why: `derived from the local \`${recv[1]}\`, whose own source this verdict does not follow`, rhs }
+      : { kind: "CALLER-SUPPLIED", why: `derived from \`${recv[1]}\`, which this method does not declare — it is an ARGUMENT, and there is no read here to bound`, rhs };
+  }
+  return { kind: "UNCLASSIFIED", why: "the declaration is a shape this reader does not classify", rhs };
+};
+
+/* The verdicts. ONE pass over the same segments REC-99's grader walks, taking only the claims it
+   reported as UNGRADEABLE — this reader must never disagree with that one about which claims are
+   in its scope, which is why the row-source test below is REC-99's `rowSourceCalls`, reused. */
+const inMemoryVerdicts = (code) => {
+  const cut = { graded: [], violations: [] }, source = { graded: [], outOfReach: [] };
+  for (const [name, body] of segments(code)) {
+    let m; TRUNC_RE.lastIndex = 0;
+    while ((m = TRUNC_RE.exec(body))) {
+      const [, src, capId] = m;
+      if (rowSourceCalls(body, src).length) continue;      /* REC-99's half owns this one. */
+      const label = `${name}:${src}`;
+      const ids = capIdentifiers(body, capId);
+      const cuts = sliceCuts(body, src);
+      const againstPage = new RegExp(
+        `\\b(?:const|let|var)\\s+${capId.replace(/\$/g, "\\$")}\\s*=\\s*${src.replace(/\$/g, "\\$")}\\s*\\.\\s*slice\\s*\\(`
+      ).test(body);
+      if (againstPage) cut.graded.push(`${label} (measured against the page cut from it)`);
+      else if (!cuts.length) cut.violations.push(`${label} (claims a cut this method does not make)`);
+      else if (cuts.some((c) => mentions(c.slice(c.indexOf(",")), ids)))
+        cut.graded.push(`${label} (cut at the published cap)`);
+      else cut.violations.push(`${label} (cut at a bound the published claim does not name)`);
+      const origin = sourceOrigin(body, src);
+      if (origin.kind === "CALL" && mentions(origin.rhs, ids))
+        source.graded.push(`${label} (bounded at the source by a CAP-CARRYING CALL; callee not read)`);
+      else source.outOfReach.push(`${label} — ${origin.kind}: ${origin.why}`);
+    }
+  }
+  return { cut, source };
+};
+const INMEM = inMemoryVerdicts(CODE);
+console.log(`  IN-MEMORY TRUNCATION (M0-38 · D-369): ${INMEM.cut.graded.length} cut-graded, `
+          + `${INMEM.cut.violations.length} in violation; source bound ${INMEM.source.graded.length} graded, `
+          + `${INMEM.source.outOfReach.length} OUT OF REACH`);
+for (const g of INMEM.cut.graded.slice().sort()) console.log(`    CUT GRADED    ${g}`);
+for (const g of INMEM.source.graded.slice().sort()) console.log(`    SOURCE GRADED ${g}`);
+for (const g of INMEM.source.outOfReach.slice().sort()) console.log(`    OUT OF REACH  ${g}`);
+
+t("IN-MEMORY TRUNCATION, THE ARM THIS ROW EXISTS FOR: every `truncated` figure measured over an "
++ "in-memory collection was measured against the cut the method actually makes — either the PAGE "
++ "itself or a slice at a bound the published cap controls. Cutting at a bound the answer does not "
++ "publish fails HERE, naming the method and the collection, and it fails NOWHERE ELSE: the census "
++ "cannot move because no SQL changed, and REC-99's inversion never looks because there is no row "
++ "source",
+  INMEM.cut.violations, []);
+
+/* A FLOOR ON THE REACH, and it is not decoration: `0 violations` is exactly what a reader that
+   matched NOTHING also produces — the failure this file has met in every other walk it carries,
+   and three times elsewhere in this estate over an empty corpus. The seven claims are the SAME
+   seven REC-99 pinned as ungradeable one assertion up, which is ASSERTED rather than assumed:
+   two readers that disagree about which claims are in scope are measuring two different things
+   and then neither figure means anything. */
+t("IN-MEMORY TRUNCATION IS A FLOOR TOO: this grader reaches the SAME claims REC-99's grader "
++ "reported it could not grade — not a set of its own choosing. If the two readers ever disagree "
++ "about which claims are in scope, one of them is measuring something else",
+  [...INMEM.cut.graded, ...INMEM.cut.violations].map((x) => x.split(" ")[0]).sort(),
+  TRUNCATION.ungraded.slice().sort());
+
+t("IN-MEMORY TRUNCATION: and the SOURCE BOUND is reported as TWO rosters, never one number — what "
++ "this walk can bound at the source and what it cannot, each by NAME with its reason on the row. "
++ "An instrument that cannot reach something must SAY SO by name rather than pass silently over "
++ "it, which is this block's entire content",
+  [INMEM.source.graded.length + INMEM.source.outOfReach.length, INMEM.source.graded.length > 0],
+  [7, true]);
+
+/* THE OUT-OF-REACH ROSTER, PINNED BY NAME. Same discipline as REC-99's ungraded pin: an EIGHTH
+   in-memory figure, or one MIGRATING between the two rosters, must be declared here before it can
+   pass. A migration is the movement that matters most — a method whose cut moves into a helper
+   leaves `graded` and arrives here, and a bare count would never see it. */
+t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row as much as the "
++ "grading is. Five of the seven have no source this one-method walk can bound: four ASSEMBLED in "
++ "memory from several reads and one handed in by the CALLER. The other two are bounded by a "
++ "cap-carrying call and no further — the callee is not read",
+  INMEM.source.outOfReach.map((x) => x.split(" ")[0]).sort(),
+  ["#backfillLegContent:need", "biasInhale:bars", "documentsNamingEntity:merged",
+   "queueFeed:dispAll", "queueFeed:items"]);
+
+/* ---- SET 2. THE METHODS THE CENSUS COUNT CANNOT GRADE BY CONSTRUCTION.
+   DERIVED BY INVERSION, NEVER LISTED — AND THE INVERSION FOUND ONE MORE THAN THE LEDGER'S HAND
+   LIST DID, WHICH IS THE ARGUMENT FOR INVERTING. D-369 named four on 2026-09-15 and a fifth
+   (`#frontierContent`) arrived at REC-94's integration the same day; computing the property
+   instead of writing the names finds SIX, the sixth being `#calDriftFor`. That is the
+   list-of-spellings failure this file's own header was written against, met once more.
+
+   THE PROPERTY: a method that PUBLISHES a `truncated` claim while ALREADY holding an unbounded
+   row source is already counted in the census, so it can lose a paging `LIMIT` on a different
+   read without the figure moving.
+
+   **AND THE SIX ARE PARTITIONED RATHER THAN REPORTED AS ONE NUMBER, because conflating two
+   different blindnesses is the exact failure D-369's row exists to prevent.** `#calDriftFor` is
+   blind to the COUNT and DEFENDED BY THE OTHER HALF — it publishes its bound off a row source
+   REC-99's inversion grades by name (`#calDriftFor:page`), so removing that `LIMIT ?` still fails,
+   one assertion up. The remaining FIVE are blind to BOTH halves, and they are D-369's set 2
+   exactly. **THEY MUST ALL STILL PASS, BYTE-IDENTICALLY** — every one is unbounded for a
+   legitimate reason (an alias lookup on a unique key, a GROUP BY aggregate, a dispositions table,
+   a frontier bounded to its caller over a log that is not) — and a grading that refuses correct
+   work is worse than the gap it closed. Nothing here fails them; it NAMES them. */
+const PUBLISHES_BOUND = (body) => /\btruncated\b\s*[:=]/.test(body);
+const CENSUS_BLIND = [...SEGMENTS]
+  .filter(([n, b]) => PUBLISHES_BOUND(b) && SCANNING_NAMES.includes(n)).map(([n]) => n).sort();
+const DOUBLY_BLIND = CENSUS_BLIND.filter((n) => !TRUNCATION.graded.some((g) => g.startsWith(`${n}:`)));
+console.log(`  CENSUS-BLIND (${CENSUS_BLIND.length} methods publish a bound AND already scan `
+          + `unbounded, so the COUNT cannot move if one loses a paging LIMIT): ${CENSUS_BLIND.join(", ")}`);
+console.log(`  BLIND TO BOTH HALVES (${DOUBLY_BLIND.length}, D-369's set 2): ${DOUBLY_BLIND.join(", ")}`);
+t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is blind to BY "
++ "CONSTRUCTION, derived by INVERSION rather than listed — and the inversion finds SIX where "
++ "D-369's hand list has five, the arrival being `#calDriftFor`. Each is legitimately unbounded "
++ "and each still PASSES; what changes is that the instrument now SAYS which methods its count "
++ "cannot defend, instead of a reader having to re-derive it from a debt row",
+  CENSUS_BLIND,
+  ["#calDriftFor", "#frontierContent", "biasManifest", "documentsNamingEntity", "frontier", "queueFeed"]);
+t("SET 2, PARTITIONED — and the partition is the point. `#calDriftFor` is blind to the COUNT but "
++ "DEFENDED by REC-99's inversion, which grades its row source by name; the other five are blind "
++ "to BOTH halves and are D-369's set 2 exactly. Reporting six as one number would put a method "
++ "that IS defended into a roster of methods that are not, which is the conflation this row was "
++ "written to undo",
+  DOUBLY_BLIND,
+  ["#frontierContent", "biasManifest", "documentsNamingEntity", "frontier", "queueFeed"]);
+
+/* ---- AND THE CLAIMS THE GRADER'S OWN SPELLING CANNOT READ AT ALL.
+   FOUND BY THIS ITEM AND NAMED RATHER THAN FIXED, because widening `TRUNC_RE` would enlarge
+   REC-99's `graded` and `ungraded` rosters in the same breath and this item's claim on this file
+   is additive. **`biasManifest` IS THE PROOF THAT THIS ROSTER IS OWED:** D-369 names it as one of
+   the four, and it publishes `from + page.length < all.length` — an OFFSET form — so it is in
+   `graded`, in `ungraded` and in `violations` NOWHERE. A debt row named it; no instrument did.
+   Three shapes are here: OFFSET (`from + page.length < all.length`), `>=` where the grader reads
+   only `>`, and a disjunction whose FIRST term is not a length comparison.
+
+   WHAT THIS ROSTER'S OWN READER CANNOT SEE, since it is subject to the same rule as everything
+   else in this file: (a) it reads the right-hand side to the first `,` or `;` on the line, so a
+   claim spanning two lines is read as its first line; (b) it blanks TEMPLATE-LITERAL CONTENTS
+   before matching — without that, the word `truncated` inside a refusal message counted as a
+   claim, which is the prose-matching failure the walk guards above already record for comments;
+   (c) it does not count a REPUBLICATION (`out.truncated = truncated`, `truncated: !!raw.truncated`,
+   `...(atts.truncated ? { truncated: true } : {})`) as a claim of its own, because the figure was
+   computed — and graded, or named — elsewhere. Those republications are COUNTED and the count is
+   printed, never silently dropped.
+
+   AND THE BLANKER IS QUOTE-AWARE, WHICH IS A CORRECTION A CONTROL FORCED RATHER THAN A FLOURISH.
+   Its first draft toggled on every backtick. `store.mjs` contains an ODD number of them — at
+   least one lives inside a `'`- or `"`-quoted string — so the scanner latched `inTemplate` at
+   line 33242 of the previous pass and **blanked the rest of the file**, which silently removed
+   `biasManifest`'s own claim from the roster this block exists to name. A blanker that runs off
+   the end is indistinguishable from a corpus with nothing in it, which is this file's oldest
+   failure met from a new direction. */
+const blankTemplates = (text) => {
+  let out = "", i = 0, q = null;
+  while (i < text.length) {
+    const c = text[i];
+    if (c === "\\") { out += q === "`" ? "  " : text.slice(i, i + 2); i += 2; continue; }
+    if (q === null && (c === "`" || c === "'" || c === '"')) { q = c; out += c; i++; continue; }
+    if (q !== null && c === q) { q = null; out += c; i++; continue; }
+    if (q === "'" || q === '"') { if (c === "\n") q = null; out += c; i++; continue; }
+    out += q === "`" && c !== "\n" ? " " : c; i++;
+  }
+  return out;
+};
+/* `(?<![=!<>])[:=](?![=])` so `shared.truncated === true` is a COMPARISON and not an assignment —
+   four of those read as claims on the first run of this block, which is the arm finding the
+   instrument rather than the subject, again. */
+const CLAIM_RE = /\btruncated\b\s*(?<![=!<>])[:=](?![=])\s*([^,;\n]*)/g;
+const UNREAD_FORMS = []; let republished = 0;
+for (const [name, body] of segments(blankTemplates(CODE))) {
+  CLAIM_RE.lastIndex = 0; let m;
+  while ((m = CLAIM_RE.exec(body))) {
+    const rhs = m[1].replace(/[\s})\]]+$/, "").trim();
+    if (/^(?:true|false)\b/.test(rhs)) continue;                      /* a constant, not a measurement */
+    if (/^[A-Za-z_$][\w$]*\s*\.\s*length\s*>\s*[A-Za-z_$][\w$]*/.test(rhs)) continue;  /* TRUNC_RE reads it */
+    if (/^!{0,2}[A-Za-z_$][\w$]*(?:\s*\.\s*[A-Za-z_$][\w$]*)*$/.test(rhs)) { republished++; continue; }
+    UNREAD_FORMS.push(`${name}: ${rhs}`);
+  }
+}
+console.log(`  TRUNCATION FORMS THE GRADER'S SPELLING CANNOT READ (${UNREAD_FORMS.length}; `
+          + `${republished} further claims REPUBLISH a figure computed elsewhere and are not counted here):`);
+for (const u of UNREAD_FORMS.slice().sort()) console.log(`    UNREAD        ${u}`);
+t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely absent: a "
++ "`truncated` claim written in a form `X.length > Y` does not match is in NO roster REC-99 prints "
++ "— not graded, not ungraded, not in violation. `biasManifest` is the proof this roster is owed: "
++ "D-369 NAMES it and no instrument did. A reader that grades one spelling is this file's oldest "
++ "failure, so the unread forms get a roster of their own and a NEW one must be declared here",
+  UNREAD_FORMS.slice().sort(),
+  ["basisVersions: from + versions.length < total",
+   "biasManifest: from + page.length < all.length",
+   "deriveConnections: rowsCut || distinct.length > endsCap",
+   "extractProposals: listed.length >= n",
+   "search: ids.length >= IDS_MAX",
+   "suggestVersion: rc ? !rc.legs_complete : false",
+   "versionChain: from + versions.length < total"]);
+
+/* REACH AS A DELTA, for this block's own readers. A walk that matches nothing reports zero
+   violations forever, and this estate has recorded that outcome three times. */
+const noCuts = inMemoryVerdicts(CODE.replace(/\.slice\(/g, ".noslice("));
+t("REACH IS A DELTA (the in-memory cut reader): over a copy of store.mjs with no `.slice(` in it, "
++ "every in-memory claim becomes a VIOLATION and none is silently scored as compliant — the "
++ "direction that matters, since a reader that finds no cuts must not report a clean bill",
+  [noCuts.cut.graded.length, noCuts.cut.violations.length > 0, INMEM.cut.graded.length > 0],
+  [0, true, true]);
 
 /* ------------------------------------------------ REACH, AS DELTAS.
    A walk that matches nothing reports zero and passes forever. Each reader is re-run over a

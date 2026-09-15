@@ -13497,3 +13497,127 @@ four workers collided on `M-21` earlier today, and how CONDUCT #11 renumbered th
 produced `M-25`, colliding with a live worker.** The allocator was right, was available, and the
 only thing standing between it and another collision was somebody choosing to call it. That is
 `yes / yes / no / no` demonstrated live rather than argued.
+
+## M-29 · 2026-09-15 · M0-38 — D-369's IN-MEMORY TRUNCATION FIGURES GRADED, AND EVERYTHING STILL OUT OF REACH NAMED: **the seven are graded on the question a text walk can answer, the inversion found SIX census-blind methods where the ledger's hand list had five, and a third blind spot — SEVEN claims in a spelling the grader cannot read at all — was found inside the row that names one of them** (worktree `agent-a5b2e8e66fda4f115`)
+
+**Instrument:** `bio-plane/test/derivation-bounds.test.mjs`, third half added by M0-38; arms driven
+by `bio-plane/test/nc-m038.mjs`. **Tree:** `origin/main` `58b77ea`, `npm ci` in all THREE packages
+before anything was measured.
+
+### THE BASELINE, measured on this pristine checkout before any edit
+
+**205/205 suites green · 12,769 assertions · 319.0 s · exit 0**, provenance line naming HEAD
+`58b77ea`, **205 suites run, 3 fleet manifests, NO member named as skipped**. The brief carried
+205/205 · 12,769 and **this measurement agrees with it exactly** — recorded because the practice is
+to trust the measurement and not the streak, and eight items in a row correcting a briefed figure
+does not make the ninth wrong. `derivation-bounds` **50/0, census 104** · `bounds` **167/0** ·
+`meaning-bounds` **92/0**. FINAL: `derivation-bounds` **58/0** (+8, this item's eight arms).
+
+### WHAT WAS GRADED, AND WHAT COULD NOT BE — the split is the deliverable
+
+An in-memory collection has no single row source, so *was the scan bounded* has **no answer a
+one-method text walk can give**. The question that does is **THE CUT AND THE CLAIM MUST AGREE**: a
+method publishing `truncated: SRC.length > C` must either compare against a page CUT FROM SRC, or
+cut SRC at a bound the published cap controls. All **seven** in-memory figures are graded on it.
+
+| figure | cut verdict | source verdict |
+|---|---|---|
+| `#backfillLegContent:need` | measured against the page cut from it | OUT OF REACH — CALLER-SUPPLIED (`legs` is an argument; there is no read in the method) |
+| `queueFeed:items` | measured against the page cut from it | OUT OF REACH — ASSEMBLED |
+| `queueFeed:dispAll` | measured against the page cut from it | OUT OF REACH — ASSEMBLED |
+| `documentsNamingEntity:merged` | cut at the published cap | OUT OF REACH — ASSEMBLED |
+| `biasInhale:bars` | cut at the published cap | OUT OF REACH — ASSEMBLED |
+| `frontier:page` | cut at the published cap | graded — CAP-CARRYING CALL (`#frontierLatest(…, { limit: cap + 1 })`); **callee not read** |
+| `#frontierContent:page` | cut at the published cap | graded — CAP-CARRYING CALL; **callee not read** |
+
+**SET 2, DERIVED BY INVERSION RATHER THAN LISTED, AND THE INVERSION FOUND ONE MORE THAN THE LEDGER
+DID.** D-369 names four methods that publish a bound while already scanning unbounded, and a fifth
+(`#frontierContent`) arrived the same day. Computing the property instead of writing the names
+finds **SIX**: the arrival is **`#calDriftFor`**. And the six are **PARTITIONED**, because
+conflating two different blindnesses is the failure D-369 exists to prevent: `#calDriftFor` is
+blind to the COUNT but **DEFENDED by REC-99's inversion** (its row source is graded by name), while
+`#frontierContent`, `biasManifest`, `documentsNamingEntity`, `frontier` and `queueFeed` are blind to
+**both** halves and are D-369's set 2 exactly.
+
+### THE THIRD BLIND SPOT, FOUND INSIDE THE ROW THAT NAMES ONE OF ITS MEMBERS — D-378
+
+`TRUNC_RE` reads ONE spelling, `X.length > Y`. **Seven `truncated` claims are therefore in NO roster
+the instrument prints — not graded, not ungraded, not in violation.** The proof this is owed rather
+than pedantic: **D-369 names `biasManifest` as one of its four, and `biasManifest` publishes
+`truncated: from + page.length < all.length` — an OFFSET form. A debt row named it; no instrument
+ever did.** Three OFFSET forms (`biasManifest`, `versionChain`, `basisVersions`), two `>=` forms
+(`search`, `extractProposals`), one disjunction whose first term is not a length comparison
+(`deriveConnections`), one claim that is not a length comparison at all (`suggestVersion`); two
+further sites REPUBLISH a figure computed elsewhere and are counted apart. Raised as **D-378** and
+PINNED by name in the suite, so the population cannot grow unseen. Not fixed here: widening the
+regex re-derives REC-99's two rosters and this item's three in one edit, and this item's claim on
+the file was additive.
+
+### THE ARMS — six, each armed ALONE, `bio-plane/test/nc-m038.mjs`
+
+Every arm asserts it ARMED (each patch matching EXACTLY ONCE; two are two-part patches and both
+parts are asserted independently) — **all six armed**. Every file restored from a PRISTINE copy
+named uniquely per arm and verified by sha256 **and** `cmp`: **2,139,502 bytes on `store.mjs`,
+floored, 0 copies left behind, closing baseline re-measured equal to the opening one.**
+
+| arm | declared | actual |
+|---|---|---|
+| (12) `documentsNamingEntity` cuts at a literal 5000 while publishing `limit: cap` | fails naming the method; census UNMOVED; siblings green | **57/1, census 104, bounds 167/0, meaning-bounds 92/0**, naming `documentsNamingEntity:merged (cut at a bound the published claim does not name)` ✓ |
+| (13) the same on `biasInhale:bars` | fails naming it; census unmoved | **57/1, census 104**, naming `biasInhale:bars` ✓ |
+| (14) the cut REMOVED — `const out = items` | fails naming `queueFeed:items (claims a cut this method does not make)` | **57/1, census 104**, named ✓ — **and `bounds` moved to 165/2, which is recorded rather than smoothed** (see below) |
+| (15) `frontier`'s source call no longer passed the cap (`{ limit: 5000 }`) | the OUT-OF-REACH roster fails naming the arrival; the CUT arm stays green | **57/1, census 104**, out-of-reach roster naming `frontier:page`, cut arm GREEN ✓ |
+| (16) BOTH of `biasManifest`'s row sources bounded | census FLOOR + both SET 2 pins fail, naming the departure | **53/5, census 103** — **FIVE failures, not the three declared** (see below) ✓ |
+| (17) OVER-STRICTNESS — the same correct cut through an ALIAS (`const take = cap`) | nothing may fail | **58/0, census 104, everything green** ✓ |
+
+**THE OVER-STRICTNESS THIS BLOCK CARRIES BY CONSTRUCTION, which is the half the row weighted most
+heavily:** the five legitimately-unbounded methods all PASS at baseline, byte-identically, and
+nothing added here can fail them. They are NAMED, never refused.
+
+### TWO ARMS CAME BACK OTHER THAN DECLARED, AND NEITHER IS SMOOTHED
+
+**(14) moved `bounds` to 165/2 and that was not declared.** It is the ONE arm whose edit changes the
+ANSWER as well as the claim — the feed now returns every item — so the envelope suite legitimately
+catches it too. **That is precisely why (12) and (13) carry the item**: they move only WHERE THE CUT
+WAS MADE, `bounds` stays 167/0, and this new block is then the sole instrument that fails. The
+declaration was incomplete, not the arm.
+
+**(16) produced five failures where three were declared.** The two extra are REC-66's CLASS ratchet
+FLOOR and its dispatched-members pin: bounding both scans also takes `biasManifest` off the CLASS
+roster (34 → 33) and `biasmanifest->biasManifest` out of CLASS OPS. **One method left three rosters
+at once** — REC-94's arrival accounting run backwards, and the declaration was incomplete rather
+than the instrument wrong.
+
+### AND A CONTROL FOUND THE INSTRUMENT RATHER THAN THE SUBJECT, for this estate's eighth recorded time
+
+The unread-forms reader blanks TEMPLATE-LITERAL CONTENTS before matching, because without it the
+word `truncated` inside a refusal message counted as a claim. **Its first draft toggled on every
+backtick — and `store.mjs` holds an ODD number of them**, at least one inside a quoted string, so
+the scanner latched at line 33242 and **blanked the rest of the file, silently removing
+`biasManifest`'s own claim from the roster the block exists to name.** A blanker that runs off the
+end is indistinguishable from a corpus with nothing in it. The scanner is quote-aware and the
+correction is stated at the site. Four further false claims came from `shared.truncated === true`
+being read as an assignment; the anchor now excludes comparison operators.
+
+### WHAT THIS INSTRUMENT CANNOT SEE, named because that sentence is what lets the next reader tell a clean result from a walk looking in the wrong place
+
+- It reads a cut written as `SRC.slice(0, …)` and nothing else. A cut hoisted into a helper, or
+  spelled `.splice`, or made by `break`ing out of a loop, is invisible — and such a claim lands in
+  `violations` as *claims a cut this method does not make*, which is LOUD and in the safe direction.
+- It classifies a collection on its FIRST declaration; a collection assigned through a branch or
+  re-assigned later is read there.
+- **It does NOT inherit REC-88's hole (M0-40's row), and that is checked rather than asserted:** that
+  hole is in `analyse`'s loop reader, and nothing in this block calls `analyse`, `loopsOver` or
+  `classMembers`. This block reads `segments`, `scans` and plain declarations, none of which has a
+  loop in it; SET 2's roster is built from `SCANNING_NAMES`, which is `scans()`-derived.
+- It inherits every limit the file's own header already declares: one file, one method at a time, a
+  helper's body unread, amplification inside SQL unseen, a `WHERE` on a unique key reading as
+  unbounded.
+- **It reads one spelling of the claim** — D-378, above, and the reason that roster exists.
+
+### WHAT REMAINS FOR D-369, and it is ONE thing
+
+Whether the in-memory collection was itself assembled over BOUNDED reads is a question no
+one-method text walk can answer. D-369's own *CLOSING IT TAKES* — REC-66's **LIVE DRIVEN** row-source
+assertion, a store driven past the ceiling asserting the query CANNOT return the rows — is still
+unbuilt for these shapes. The row is NARROWED to exactly that and stays open; **no residue is left
+inside it**, which is the D-227 failure D-365 was written to name.
