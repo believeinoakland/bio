@@ -6743,3 +6743,50 @@ what would close it: compose each branch's `method` from its own `grade` variabl
   moves with it.** Without that arm the fix is unfalsifiable, which is exactly how the original got
   written.
 released:
+
+### CLAIM ADDENDUM 2026-09-14 SKILL+RECORD (SK-8) — **THE PATHS ACTUALLY TOUCHED, against the ones claimed, because the difference is what a contended merge needs to know**
+The claim above named its regions before the work; **seven files the landing touched were not in it,
+every one of them arrived through a TOTALITY GUARD firing, and they are listed here rather than left
+for the merge to discover.** The full set at `0587e77..HEAD` is 25 files.
+
+- **AS CLAIMED:** `src/extractrun.mjs` (new) · `src/store.mjs` (the SK-8 REGION, `#mintsBound`,
+  `#posFields`, two purge entries, one `stats` row, two DO routes) · `src/index.mjs` (two OPS rows,
+  two capability rows, one `AI_RUN_ACTIONS` entry, two class-set entries, one viewer-stamp arm, one
+  proposer stamp) · `src/schema.mjs` (one table before `host_governor`) · `src/airun.mjs` (one
+  `RUN_BOUNDS` row) · `test/extractrun.test.mjs` and `test/nc-sk8.mjs` (new) ·
+  `scripts/coverage.mjs` (`REGISTER_FLOOR` only, ONE key set) · `ASSISTANT-PILOT.md` §5 and its
+  front matter · `BIO_Assistant_and_AI_Roles_v0_1.md` front matter, §2's roles table, §7.3 and §8 ·
+  `EXTRACTION-BREADTH-DESIGN.md` §4 and its front matter · `INTERFACE-CHANGES.md` · `DEBT.md` ·
+  `MEASUREMENTS.md` · `CLAIMS.md`.
+- **NOT CLAIMED IN ADVANCE, each an answer to a guard that fired, each a correction and never an
+  exemption:** `src/affordances.mjs` (two `NON_ACTS` entries and one `RUNG_ABSENT` entry — demanded
+  by `affordances.test.mjs`'s totality over `NEEDS` and by `rung-ladder`'s two-direction arm) ·
+  `test/airun.test.mjs` (ARM V5's bound SET, the FL-7 precedent) · `test/bounds.test.mjs` (the
+  capped-op roster floor 31→32, one `DRIVEN_ELSEWHERE` entry, one `answersByOp` entry) ·
+  `test/gate-reads.test.mjs` (the read's GATED classification — **and this is the one that found a
+  defect rather than recording a fact**) · `test/identity-claims.test.mjs` (the RULED-sites pin) ·
+  `test/run-conditions.test.mjs` (ARM W3's reader-role table) · `.gitignore` (the control pen's own
+  line, named rather than covered by a wildcard, on `.rec84-control-pristine/`'s standing rule).
+- **REGENERATED, not authored:** `bio-plane/dist/bio-plane.bundled.mjs` and
+  `dist/bio-plane.bundle.json` (`npm run build` — FL-10's committed-artifact guard, 2,985,468 B,
+  47 first-party inputs) and `docs/DECIDED.md` (904 rulings).
+- **STILL NOT TOUCHED, as claimed:** `bio-plane/checks/bio-checks.mjs` (**0 lines** — every door
+  refusal here is a `reason` refusal on SK-7's precedent, so this item adds no `/_CHECKS$/` family
+  to the most contended file on the board), `civicos-ui/**`, `agent-worker/**`, `newgroup/**`,
+  `QUEUE.md`.
+- **`regionLines` IS UNAFFECTED**: this landing adds and modifies no `DEC-49 REGION` marker
+  (measured — 0 occurrences of the marker in the diff of the three source files), so there is no
+  region figure for CONDUCT to re-read at integration.
+
+**HOUSEKEEPING, stated rather than hidden:** `.sk8-control-pristine/` remains in this worktree. The
+run was clean and the pen should have been removed; the removal was **refused by this session's
+permission system**, which is the same refusal SK-7's worker recorded for `.sk7-control-pristine/`
+and is therefore a repeat rather than a one-off. It is gitignored (`.gitignore:173`) and untracked,
+so it enters no walk and no commit, but the next session in this worktree will find it.
+
+**PERSONA, verified rather than assumed:** both commits are authored `Bob Krause
+<neobobkrause@gmail.com>`, which is the author on **all eight** of the most recent `origin/main`
+commits — checked because the standing note about this project's `bio` persona concerns the GitHub
+and Cloudflare ACCOUNTS (push and deploy), not the git author identity, and changing the author here
+would have made these two commits the odd ones out in their own history. Nothing was pushed and
+nothing was deployed.
