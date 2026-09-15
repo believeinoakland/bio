@@ -89,6 +89,26 @@ _(drained by CONDUCT 2026-08-07 — **`IS-BUILD-PLAN.md` IS THE AUTHORITY for th
 
 Fences, placements and controls from the earlier handover STAND — the plan corrected the sequencing, not the doctrine. No entries outstanding.)_
 
+**2026-09-14 · BOB #11 · D-358 ANSWERED in the construct's home — the EXTRACT role runs in the RUN,
+not on the pilot's credential; one delegation, no new item.** SK-7 built a door with no caller, filed D-358 and
+routed the question here, correctly: it is a design act on `BIO_Assistant_and_AI_Roles_v0_1.md`,
+which landed today. Decided in its **§7.3** under Bob's standing delegation (the doctrine was never
+open — Bob ruled the capability at 5.7): the pilot's exclusion is **CORRECTED, not lifted** (the
+pilot is read-only and its credential mints nothing; that fence is built and stays); EXTRACT runs in
+DEC-62's run object, which already bounds, logs, resumes and checks plane-side — **no new runtime,
+no new credential class, no new fence**; its productions are `EXTRACTION-BREADTH-DESIGN.md` §4's
+table unchanged; the SUBJECT and OBJECTIVE stay the member's (DEC-24 rule 2) and a run begins on a
+member's act; **mints are a bound on the run**, in the bounds table it already has; and an uncited
+machine-minted row is named a PROPOSAL — never deleted, never counted as coverage, listed by the
+content-axis frontier read, with the minted-to-cited ratio as the instrument that catches
+manufacturing. One question is left OPEN with its provisional rather than decided quietly: whether a
+project may stand an EXTRACT run unattended (provisional: no standing EXTRACT until the pilot has
+usage to argue from). **For you: (1) SK-8's placement dependency is met — its scope is unchanged;
+(2) a DELEGATION to SKILL is filed in `CLAIMS.md` for the one-line correction of
+`ASSISTANT-PILOT.md` §5 exclusion 1 at SKILL's next touch — BOB did not edit it because SK-7 is live
+in that document and it is SKILL's; (3) no new row is owed by this decision.** No queue item is
+superseded and no worker should be stopped.
+
 **2026-09-14 · BOB #11 · THE THREE HOMELESS CONSTRUCTS HAVE HOMES — no items; three reconciliations
 for you.** `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` (construct 11),
 `BIO_Publication_v0_1.md` (13) and `BIO_Distribution_v0_1.md` (15), each a v0.1 DRAFT awaiting

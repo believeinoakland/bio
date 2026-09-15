@@ -6435,3 +6435,21 @@ unchanged and already in code"*, which stood for one day and was wrong about its
   permission system. It is gitignored (`.gitignore:164`) and untracked, so it enters no walk and no
   commit, but the next session in this worktree will find it.
 
+
+## DELEGATION 2026-09-14 BOB #11 -> SKILL (`docs/development/ASSISTANT-PILOT.md` §5 exclusion 1)
+opened: 2026-09-14
+why: D-358 (SK-7's finding — the machine-mint door has no caller) is ANSWERED in the
+  construct's level-1 home,
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 — the EXTRACT role runs in the
+  RUN (DEC-62's object), not on the pilot's credential; the pilot stays READ-ONLY. The pilot
+  design is SKILL's and SK-7 is LIVE in it, so BOB does not edit it: PARALLELISM's rule, and
+  the level-1 document is where a ruling about the construct belongs anyway
+  (`CORPUS-STANDARD.md` §4.2).
+what is needed, at SKILL's next touch (SK-7's integration or SK-8's spawn), one edit:
+  §5 exclusion 1 CORRECTED IN PLACE, never exempted — it reads "No PURSUE/EXTRACT/CHECK —
+  those are DEC-24 roles with their own scopes; the pilot is DEC-27's surface only", written
+  2026-08-04 and overtaken twice (Bob's 5.7 of 2026-09-14 ruled the capability; SK-7 built the
+  door). It should say: the pilot's credential mints nothing because it is read-only, and
+  EXTRACT runs in the run — citing §7.3 — with the same comment saying why the old sentence
+  was wrong. The §5 line of the front matter's Incomplete list updates in the same commit.
+released:
