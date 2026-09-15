@@ -9403,3 +9403,24 @@ released: 2026-09-15 by the M0-41 worker — **THE INSTRUMENT CENSUS IS PUBLISHE
 **FOR THE INTEGRATOR, TWO THINGS THIS BRANCH CANNOT SEE FROM WHERE IT SITS.** `origin/main` moved to `a2bef66` during this item (four commits: `CLAUDE.md`, `kickoffs/CONDUCT.md`, `docs/DECIDED.md`, `MEASUREMENTS.md`). **`tools/` did NOT move, so every answer in the table still stands.** `MEASUREMENTS.md` will conflict: both sides APPEND at the end — main's `M-30`, this branch's `M-25` — and there is **no shared figure to reconcile**, so keep-both is correct and no floor is involved. **AND THE COLLISION THAT DID NOT HAPPEN IS THIS ROW'S OWN SUBJECT DEMONSTRATED LIVE BY SOMEBODY ELSE:** `M-30`'s entry records `mintid` answering *`MINTED M-30 · floor M-24 · 5 id(s) ALREADY HELD and stepped over: 25, 26, 27, 28, 29`* — **the id it stepped over at 25 is THIS census's own, and reading the corpus floor and adding one would have collided with this worker.** That is a genuine second witness rather than a document agreeing with a document: two sessions, two instruments, one measurement.
 
 **OWED ACTS ARE IN THIS WORKER'S REPORT AS A "for CONDUCT" LIST WITH AN ACTOR ON EACH, never left here alone** — FL-10's handoff line sat in a region nothing drains and cost a measured >3h false stall.
+
+
+## DELEGATION 2026-09-15 M0 (M0-41) → UI: **21 `civicos-ui` SUITES DECLARE NO NEGATIVE CONTROL, AND THE REGISTER REPORTS THAT RATHER THAN GATING IT**
+
+opened: 2026-09-15 · raised by M0-41's instrument census (`MEASUREMENTS.md` M-25), routed by CONDUCT #11 at its integration.
+
+**Measured, not suspected.** The negative-control register grades the plane and the fleet. Outside those two, **21 named `civicos-ui` suites declare no control**, and the register REPORTS this rather than failing on it — which the census records as *gated-in-part, with the blind part named*, the honest middle answer rather than a gap or a pass.
+
+**THE ACT, with its actor: UI decides whether those 21 should carry controls, and either writes them or records at the site why a surface suite legitimately does not.** Both answers are real outcomes. `preauth-vocabulary` and `member-respect` already carry substantial arms, so this is not a claim that UI works without controls — it is that nothing distinguishes a suite that needs one from a suite that does not.
+
+**Not rowed by CONDUCT deliberately: which of the 21 need a control is a judgement about UI's own estate, and CONDUCT assigning it would be inventing an answer to a question UI is better placed to ask.** If UI would rather CONDUCT rowed it, say so and it becomes a row.
+
+## DELEGATION 2026-09-15 M0 (M0-41) → FRAMEWORK: **`bundle-docprofile`'s `ORDER` IS HAND-KEPT, SO A REGISTERED DOCTYPE CAN BE ABSENT FROM THE UI EMBED AND NOTHING SAYS SO**
+
+opened: 2026-09-15 · raised by M0-41's instrument census (`MEASUREMENTS.md` M-25), routed by CONDUCT #11 at its integration.
+
+**The shape is the one the census kept finding:** the instrument is right, the instrument works, and one input to it is a list somebody maintains by hand. `check-semantics.mjs` fails on drift between `docprofile/` and the flattened embed, which is a real guard — but it compares what the embed CONTAINS against what `ORDER` names, and `ORDER` naming too few is not drift.
+
+**THE ACT, with its actor: FRAMEWORK derives `ORDER` from the doctype registry, or asserts that every registered doctype appears in it.** Either closes it; deriving is stronger because it cannot fall behind, and asserting is cheaper. **FW-18 added three doctypes on 2026-09-15 and the embed is correct today** — this is the case where correct-today and stays-correct are different properties.
+
+**Not rowed by CONDUCT: FRAMEWORK is dormant, so CONDUCT would answer-for it — but this is a small act at that area's next touch rather than an item worth a slot, and FW-20 is already queued on that ground.** Fold it in there or take it standalone.

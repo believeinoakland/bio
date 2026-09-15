@@ -760,3 +760,21 @@ literal and are ledgered as D-240** with their measured cost.
 - **It says nothing about live verification.** A green battery is not a serving
   build (D-108), and `op=audit` clean on the instance remains a separate step in
   `CLAUDE.md`'s ladder. No instrument here substitutes for it.
+
+
+## WHAT COMPOSES THE INSTRUMENTS — the question this document never asked (M0-41's DESIGN GAP, folded in 2026-09-15)
+
+**This document describes the instruments and their floors and never asks what CALLS them.** M0-41's
+census (`MEASUREMENTS.md` M-25) measured the answer and it conditions every figure in this file:
+**nothing composes any entry loop.** `.git/hooks/` holds only `.sample` files, `core.hooksPath` is
+unset, there is no `.github/`. **All five loops run because a session chooses to run them, and
+nothing records that it did.**
+
+**So every floor in this document is a floor on what a run REPORTS, not on what the estate
+ENFORCES** — and the difference is invisible while everyone runs the gate, which is precisely how
+it stayed invisible. Of 21 graded instrument rows, six read `exists / optional / unauditable` and
+exactly one is a genuine absence.
+
+**"Where the floor goes next" has no entry for REQUIRED-VERSUS-MERELY-EXISTING, and that is the
+axis this section adds.** An instrument that cannot be skipped without trace is a different object
+from one that can, and this document has been treating them as the same object throughout.
