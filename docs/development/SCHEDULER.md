@@ -1,12 +1,10 @@
 # The scheduler: one reconciling Durable Object alarm
 
-**Status** · The DECISION RECORD for the plane's periodic work, decided and built 2026-07-31 by RECORD as REC-1 (milestone M1) and approved in the item rather than by a separate ruling. [BUILT] and live: the reconciling Durable Object alarm, the `#schedConsumers` registry, earliest-wake reconciliation, idle self-termination and the two producers are all in the SCHEDULER block of `bio-plane/src/store.mjs`, with `bio-plane/test/scheduler.test.mjs` as the accepts-when. COMPLETE as the decision it records — the fork it settled (one reconciling alarm, never a Worker cron, never a second alarm) has held through every consumer added since, and each new consumer joined exactly the way this file says. NOT complete as a description of the registry AS IT STANDS: two sections still say the registry holds "the two real consumers", and it holds ELEVEN, measured in the source on 2026-09-14. The mechanism is the authority; the counts in this prose are not, which is the very argument the file makes about CPDF-13. as of 2026-09-14.
+**Status** · The DECISION RECORD for the plane's periodic work, decided and built 2026-07-31 by RECORD as REC-1 (milestone M1) and approved in the item rather than by a separate ruling. [BUILT] and live: the reconciling Durable Object alarm, the `#schedConsumers` registry, earliest-wake reconciliation, idle self-termination and the two producers are all in the SCHEDULER block of `bio-plane/src/store.mjs`, with `bio-plane/test/scheduler.test.mjs` as the accepts-when. COMPLETE as the decision it records — the fork it settled (one reconciling alarm, never a Worker cron, never a second alarm) has held through every consumer added since, and each new consumer joined exactly the way this file says. Two sections said the registry holds "the two real consumers" and **M0-27 CORRECTED BOTH IN PLACE on 2026-09-14**: it holds ELEVEN, of which FIVE are unconditionally due, and each corrected sentence carries the COMMAND that counts it in `bio-plane/src/store.mjs` rather than only the number. (The prior front matter said the always-due claim was "true of two entries out of eleven"; measured on 2026-09-14 it is true of FIVE, and that front-matter figure was corrected in the same pass.) The mechanism is the authority; the counts in this prose are not, which is the very argument the file makes about CPDF-13. as of 2026-09-14.
 
 **Place in the system** · A level-2 design serving construct 14 of `BIO_System_Design.md` §3, *scheduler and operations*, and through it construct 2 (intake and capture) and construct 10 (standing intent and monitoring), whose clocks are consumers of this one alarm. **That row names no level-1 document that owns the construct**: it lists this file and `INBOX-GRAMMAR.md`, and points at `BIO_Technical_Architecture_Decisions_v10.md` §10.7, whose interruption model is the RULE the plane implements — recover by re-deriving outstanding conditions from durable state, never by trusting a signal — while §10.7's own mechanisms are retired (that document's front matter says so). This file is the WHY the next periodic consumer inherits, and it is cited by name in `store.mjs` at every site where a consumer was appended.
 
 **Incomplete sections** ·
-- §The mechanism — stale in its count. "The two real consumers are ALWAYS due when the alarm fires" described a registry of two on 2026-07-31; `#schedConsumers` holds ELEVEN real entries today (selection-sweep, task-drain, archive-monitor, connection-derive, overdue-scan, queue-renotify, monitor-cadence, ai-run-reap, capture-request-drain, ai-run-wake, calibration-reprobe — read from `store.mjs` on 2026-09-14), and most are INTERVAL consumers due only at their own anchored `next`, which is the other arm the same paragraph describes. The two producers it names are still the two producers; the always-due claim is now true of two entries out of eleven.
-- §The test seam — the same stale count, one sentence further: "unset → the registry is exactly the two real consumers" is false. Unset, the registry is the eleven real consumers and no probe; the seam itself is unchanged, still `SCHED_PROBE`-gated and still inert in production.
 - §I5 note — true of REC-1 and true of nothing since. Consumers appended later DO carry schema tables (`calibration_subjects`, `monitor_fired`, `monitor_tick_epoch`), so this section describes the schema footprint of the ITEM that created the scheduler, not the footprint of the scheduler as it stands, and a reader taking it for the latter would conclude the alarm owes `op=purge` nothing.
 - §The eleventh consumer — correct today, verified against the registry on 2026-09-14, and fragile in exactly the way the section itself diagnoses: it convicts CPDF-13 of pinning a count in prose and then pins its own. One more consumer makes "the eleventh entry" wrong, and nothing in the gate will notice.
 
@@ -83,11 +81,22 @@ serves the coarse consumer too.
   consumer's wake, not only the one that just ran**, so a fast consumer cycling
   cannot shut a slow one out — when the fast one idles, the slow one's wake is
   still in the set and still re-arms the alarm.
-- `due(now)` → whether this consumer should `tick` at the firing instant. The two
-  real consumers are ALWAYS due when the alarm fires (they are cheap and a no-op
-  on an empty subject, which preserves the exact pre-REC-1 behaviour their suites
-  pin). An interval consumer is due only at its own anchored `next`, so it fires
-  at its own cadence and no other's.
+- `due(now)` → whether this consumer should `tick` at the firing instant.
+  **CORRECTED 2026-09-14 (M0-27): this read "the two real consumers are ALWAYS due",
+  which described the registry of two that REC-1 created on 2026-07-31.** The registry
+  holds **ELEVEN** real consumers today, of which **FIVE** are unconditionally due
+  (`selection-sweep`, `task-drain`, `archive-monitor`, `connection-derive`,
+  `overdue-scan` — they are cheap and a no-op on an empty subject, which preserves the
+  exact pre-REC-1 behaviour their suites pin). **COUNT THEM RATHER THAN TRUST THIS
+  PROSE, which is the argument this file makes against CPDF-13 and must not exempt
+  itself from:**
+
+      awk '/^  #schedConsumers\(probe\) \{/,/^  \}$/' bio-plane/src/store.mjs | grep -ac 'name: "'
+      awk '/^  #schedConsumers\(probe\) \{/,/^  \}$/' bio-plane/src/store.mjs | grep -acF 'due:  (now) => now,'
+
+  The remaining six are INTERVAL or gated consumers, due only at their own anchored
+  `next` or when their own predicate finds pending work, so each fires at its own
+  cadence and no other's.
 - `tick(now)` → do the work. `#sweepSelections` and `taskDrain` are unchanged;
   they are simply named by a registry entry now.
 
@@ -158,12 +167,16 @@ probe behind it, so it could not do it even if it tried.
 
 `bio-plane/test/scheduler.test.mjs` proves the mechanism with two synthetic
 INTERVAL consumers ("probes") registered only when the `SCHED_PROBE` binding is
-set — inert in production (unset → the registry is exactly the two real
-consumers, and not one line of the seam runs). Probes are the clean way to
+set — inert in production. **CORRECTED 2026-09-14 (M0-27): this said "unset → the
+registry is exactly the two real consumers", which was true of the registry of two
+REC-1 created.** Unset, the registry is exactly the ELEVEN real consumers and no probe,
+and not one line of the seam runs; the seam itself is unchanged, still `SCHED_PROBE`-
+gated and still inert in production. The command that counts them is in §The mechanism
+above and the count is not re-typed here. Probes are the clean way to
 exercise two *independent* cadences deterministically and to make starvation
-detectable by name; the two real consumers moved onto the mechanism are proven
-still-working by `selection.test.mjs` and `task-drain-alarm.test.mjs`, which this
-change leaves green.
+detectable by name; the two real consumers REC-1 moved onto the mechanism are proven
+still-working by `selection.test.mjs` and `task-drain-alarm.test.mjs`, which that
+change left green.
 
 ## I5 note
 

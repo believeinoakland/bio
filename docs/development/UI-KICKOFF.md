@@ -7,7 +7,6 @@
 **Incomplete sections** ·
 - §Where the project stands — a 2026-07-27 snapshot: plane 0.35.0, "LAYER 3 THE UI IS NEXT". The plane is 0.58.0 and Layer 3 has been building since 2026-07-28.
 - §The mission — *"Design, not build. The first arc produces a design the group can react to, not screens"* is superseded by the file's own 2026-07-28 update and by everything landed since; the boundary rule under it (do not invent foundation capabilities) is not superseded and is enforced.
-- §The first arc's deliverable — names one document, `docs/architecture/BIO_UI_Design_v0_1.md`, which was never written and does not exist; its six parts landed in three other documents. The section is kept as the statement of what was asked for, and says nothing about where the answers went.
 - §Working rules — written for a session that fetched the tree over HTTPS with no credentials and pushed a deliverable if a token was attached; sessions now work in a git worktree with `.env` carried in (`CLAUDE.md`, `kickoffs/UI.md`). Bob's own half — he edits no files, every point carries its context, never re-confirm directed work — stands.
 
 *Four sections are deliberately NOT in that list and their absence is a finding rather than an oversight: §Who this is for, §Constraints that are law, §Bob's UX principles and §Refinements from Bob are COMPLETE, CURRENT, and quoted record. A worker rewording them is the defect.*
@@ -113,6 +112,18 @@ Design for these people, in this order of frequency:
 ## The first arc's deliverable
 
 One document, `docs/architecture/BIO_UI_Design_v0_1.md`, DRAFT, containing:
+
+**CORRECTED 2026-09-14 (M0-27). THAT DOCUMENT WAS NEVER WRITTEN AND NO FILE OF THAT NAME
+EXISTS IN THE REPOSITORY** — verified against the tree on 2026-09-14. The six parts below
+are kept VERBATIM as the statement of what Bob asked for; what this section could not say
+is where the answers went, and they went to three other documents rather than to one:
+`docs/architecture/BIO_Interaction_Constructs_v0_1.md` (the constructs, and the level-1
+home of the member-surface construct), `docs/development/UI-PLAN.md` (the surface
+inventory and the build-stack question, part 5, ANSWERED rather than only framed — one
+served page) and `docs/development/research/RECONCILED.md` (users, journeys and
+audiences). So the deliverable is **[BUILT], relocated** — not absent — and the named
+file is **[ABSENT] and will stay so**; a session looking for it should read those three.
+Nothing in the list below is rescinded by this note.
 
 1. **Users and journeys.** The five audiences above, each with their two or
    three load-bearing journeys written end to end (e.g. member: "a batch of

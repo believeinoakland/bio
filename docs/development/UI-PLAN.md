@@ -10,7 +10,6 @@
 - §Families that shipped — four of the six families are built and no entry says so.
 - §Two drifts — the `op=searchfields` drift was closed by UI-21 and the entry still reads as live; the doorbell half is still true.
 - §New capability the plane now supports — two of six are built; the section carries no per-item state.
-- §Development is PAUSED for consolidation — STALE AND LOAD-BEARING. It forbids new capability until CONSTRUCTS Step 0 is done; Step 0 is still open in `MILESTONES.md`'s gap table and fifty-seven UI items added capability continuously from 2026-08-01, so a reader who follows this section concludes the wrong thing about what may be built.
 - §The capture architecture — describes `docprofile/` as the UI's; the package is at the repository root and `bio-plane/src/index.mjs` imports from it.
 - §Standing dependencies — dated 2026-07-29/30, no entry carries a disposition, and at least one is contradicted by the debt register: *"the profile architecture exists in the UI and not yet in the plane (D-60, D-63)"* against D-60's own amendment of 2026-08-06, *"the PLANE HAS ADOPTED docprofile"*.
 - §Next session kickoff — names U9 as the next rung; U9 is built.
@@ -293,6 +292,20 @@ No new capability until Step 0 of the CONSTRUCTS plan is done: reconcile the ove
 constructs, which is the only step that deletes more than it adds. Then Steps 1
 through 7, each of which is finished only when something CONSUMES its output. That
 rule is the discipline whose absence produced the 1,463 unconsumed lines.
+
+**CORRECTED 2026-09-14 (M0-27). THIS SECTION'S PAUSE IS HISTORY, AND THE SENTENCE ABOVE
+MUST NOT BE READ AS A LIVE PROHIBITION.** It was written 2026-07-30 and the pause it
+declares held for one day: UI work resumed on 2026-08-01 and **53 UI rows have landed
+`done` against `QUEUE.md` since**, adding capability continuously —
+`grep -oE '^### UI-[0-9]+ · done' docs/development/QUEUE.md | sort -u | wc -l`, which is
+the count rather than this number. Step 0 itself is **[DESIGNED-not-built] and STILL
+OPEN** (D-68, `MILESTONES.md`'s gap table: *"blocks M3, M4"*, owner FRAMEWORK, dormant),
+so the gate this section names never opened and was never what actually governed the
+work. What DID replace it is the queue: `QUEUE.md`'s UI rows are the authority on what
+may be built, as this document's Place in the system says, and the consolidation
+discipline the section argues for — nothing is finished until something CONSUMES its
+output — stands on its own and is not superseded. Read the pause as the record of a
+2026-07-30 measurement, never as permission withheld.
 
 ## The capture architecture
 
