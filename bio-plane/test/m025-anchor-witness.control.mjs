@@ -188,7 +188,14 @@ arm({
 
 arm({
   id: "A2", subject: "OVER-STRICTNESS — a correct edit OUTSIDE every anchor's span must pass",
-  what: "a comment line is added to `agent-worker/src/fanout.mjs` well away from any quoted line. This is "
+  /* THE PATH IN THIS DESCRIPTION READ `agent-worker/src/fanout.mjs` UNTIL 2026-09-14 (M0-29), AND
+     THIS REPOSITORY HAS NEVER HELD THAT FILE. The arm's SUBJECT was always `FANOUT_SRC`, which is
+     `agent-worker/src/subsession.mjs` and is live — so the arm armed and passed the whole time and
+     only its own account of itself was false. Found by M0-29's D-333 mode-(c) sweep, which looks
+     for a named subject that resolves nowhere; corrected rather than adjudicated away, because an
+     arm describing a file that does not exist is the record claiming more than it can support. The
+     name `FANOUT_SRC` is kept: the arm belongs to the fan-out's own suite and is named for it. */
+  what: "a comment line is added to `agent-worker/src/subsession.mjs` (the fan-out's source) well away from any quoted line. This is "
       + "ordinary correct work in a spelling nobody anticipated, and a fence tighter than its rule is an "
       + "undeclared interface change wearing the costume of caution",
   mustFail: "NOTHING. This arm's whole content is that the witness stays silent",

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-822 rulings across 73 documents.
+824 rulings across 73 documents.
 
 ## DEC-
 
@@ -1030,6 +1030,8 @@ authority is the file named, never this one.
   `docs/development/ORCHESTRATION.md:202`
 - **M0-23** — Correct the fixture to the wire shape and delete the phantom keys, with any assertion that read them CORRECTED at its site, never exempted.  
   `docs/development/QUEUE.md:661`
+- **M0-29** · 2026-09-14 — `docs/DECIDED.md` REGENERATED, not authored**, by `node tools/decided.mjs` — 823 rulings, 230.6 KB.  
+  `docs/development/CLAIMS.md:4769`
 
 ## Rulings carrying no id
 
@@ -1409,6 +1411,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:4557`
 - `docs/DECIDED.md` — **GENERATED, never hand-edited, and added to this claim after the fact rather than silently**: the seven `design:` lines shift QUEUE.md's line numbers, the index cites rulings BY LINE, and `plancheck` failed STALE on the drift (CLAUDE.md: regenerate it in any turn that moves the corpus).  
   `docs/development/CLAIMS.md:4575`
+- DECLARATION WAS CORRECTED — nothing restored, nothing removed**, each old number kept at its site as right when it was written, dated (`casepin.control.mjs`'s precedent).  
+  `docs/development/CLAIMS.md:4711`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  

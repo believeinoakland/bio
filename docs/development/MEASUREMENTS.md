@@ -11199,3 +11199,116 @@ caught, the OOXML structural row would have read 0 instead of 3.
 **What this entry does NOT say.** Whether 50 links, 22 targets and 16 documents — with an
 estimated 191–579 PDFs corpus-wide carrying at least one — is MATERIAL enough to build a
 Drive host-stack handler. That is CONDUCT's ruling on CAP-7's row.
+
+## 2026-09-14 · M0-29 — D-343's four declared tallies against their own runs, the four unverified candidates RUN, and D-333 decay mode (c) measured across the estate for the first time (instruments: `bio-plane/test/m025-arm-census.mjs`, `bio-plane/scripts/armdecay.mjs`'s `readDeclaredArms`, and `tools/modec-sweep.mjs`, all on `origin/main` at `e9ba393`)
+
+**THE COMPARISON, BEFORE AND AFTER, OVER THE SAME TEN DRIVERS, DRIVEN.** `m025-arm-census.mjs`
+runs each driver WHOLE and holds its declaration against the arm announcements it counts.
+
+| | BEFORE (`e9ba393`, nothing edited) | AFTER (this branch) |
+| --- | --- | --- |
+| census exit | **1** | **0** |
+| `tally NOT AS DECLARED` | **3** | **0** |
+| declared tallies read | 3 of 9 | 4 of 10 |
+| arms announced | 95 over 9 drivers, 0 unreadable | 108 over 10 drivers, 0 unreadable |
+| drivers with a STALE arm | 0 | 0 |
+
+**THE FOUR NAMED DRIVERS, EACH MEASURED RATHER THAN READ.** Declared -> corrected, against the
+announcement count the driver's own whole run produced:
+
+| driver | declared | announced | corrected to | its own run |
+| --- | --- | --- | --- | --- |
+| `bio-plane/test/caseflip.control.mjs` | 5 + baseline | **7** | 6 + baseline | ALL-ARMED, exit 0, 6.6 s |
+| `bio-plane/test/caselifecycle.control.mjs` | 5 + baseline | **8** | 7 + baseline | ALL-ARMED, exit 0, 7.4 s |
+| `bio-plane/test/fleetbundles.control.mjs` | 6 + baseline | **13** | 12 + baseline | ALL-ARMED, exit 0, 20.6 s |
+| `agent-worker/test/harness.control.mjs` | 10 (in a DATED results block) | **19** | 19, declared at the head | ALL-ARMED, exit 0, 43.1 s |
+
+**THE FINDING THE BRIEF DID NOT PREDICT: THREE OF THE FOUR WERE FALSE IN THEIR OWN LANDING
+COMMIT, NOT DECAYED BY A LATER ONE.** `caseflip` and `caselifecycle` each have EXACTLY ONE
+commit in their history (`c6b9b51`, `7e10ca9`) — the extra arms (caseflip's `(f)`;
+caselifecycle's `(b2)` and `(d2)`) were written during the item, after the head sentence, and
+the head was never moved. `fleetbundles` decayed in TWO steps and only the second was known:
+already false at `d83695b` (FL-9 landed EIGHT arms under a head saying six) and widened by
+`3607b3b` (FL-10 APPENDED `6`, `6b`, `7`, `8`). Only `harness.control.mjs` decayed the way
+D-343 describes — by appending to a driver whose only count sat inside a dated RESULTS block.
+**So the dominant mechanism is not a later item appending; it is an item finishing its own
+head sentence before it finishes its own arm table.** A declaration written at the top of a
+file is written BEFORE the work it counts.
+
+**THE FOUR UNVERIFIED CANDIDATES: ONE CONFIRMED, THREE STRUCK, every one of them RUN.**
+
+| candidate | claimed | announced (measured) | verdict |
+| --- | --- | --- | --- |
+| `bio-plane/test/owed-controls.control.mjs` | 6 vs 9 | **9** | **CONFIRMED** — `six` in two places, both about ITS OWN arms (1-6, the 7a/7b pair, 8). A METHOD sentence, so the shipped reader correctly never scored it; corrected anyway. |
+| `bio-plane/test/provenance-floor.control.mjs` | 8 vs 14 | **14** | **STRUCK** — its declaration block enumerates (0)-(8), *eight arms plus a baseline*, and is TRUE; three of those arms declare their own sub-stages ((2) a pair, (6) three stages, (8) a pair) = exactly 14. |
+| `civicos-ui/test/refusal-partition.control.mjs` | 6 vs 10 | **10** | **STRUCK** — declares no tally anywhere; its `six arms` recounts ANOTHER harness's incident. |
+| `civicos-ui/test/version-predecessor.control.mjs` | 6 vs 8 | **8** | **STRUCK** — its real declaration is its results block (*"Eight arms … FINAL: 8 arms, 8 as declared"*) and it announces 8, all AS DECLARED; `(arm 7)` as the baseline is still true. |
+
+**AND THE STRUCK ONE THAT IS WORTH MORE THAN THE CONFIRMED ONE.** `provenance-floor` is the
+measured limit of ANY declared-vs-announced comparison: **a driver that declares a multi-stage
+arm honestly breaks the one-announcement-per-declared-arm assumption.** 14 announcements against
+a true declaration of 8. The census does not read this driver's declaration (it has no
+first-paragraph tally), so nothing is wrong today — but a reader widened to catch it would
+manufacture a finding here, and that is the trade D-333's own narrowing already paid for once.
+
+**D-333 DECAY MODE (c), MEASURED ONCE ACROSS THE ESTATE — the row is D-353.** Instrument
+`tools/modec-sweep.mjs`, read-only, ~3 s, carrying a both-directions `--self-test`.
+
+| figure | value |
+| --- | --- |
+| drivers read | **89** (85 by convention + the same 4 off-convention files the census enumerates) |
+| path literals extracted | **408** |
+| tracked paths at HEAD | 683 |
+| candidates (a named subject resolving NOWHERE) | **6** |
+| **UNADJUDICATED candidates** | **0** — each of the six checked BY HAND and recorded in a dated adjudication table inside the instrument |
+| drivers retiring an arm in words | 39 lines across the estate |
+| set aside as CREATED-BY-THE-ARM | 51 (46 dot-directory pens, 4 `node_modules`, 1 phantom) |
+| unclassified, NAMED never scored | 4 distinct literals |
+
+**THREE REAL MODE-(c) INSTANCES EXIST AND ALL THREE ARE ALREADY RETIRED WITH THE LOSS STATED**,
+which is D-330's handling and the only honest one: `dec65-strength-reach.control.mjs` arm (5),
+`d280-strengthbar.control.mjs` arms (A)/(C)/(E), and `civicos-ui/test/case6.control.mjs`'s arm
+for `FINDING_IN_ANOTHER_CASE` (deleted by D-309). **So the answer is zero OPEN instances, not
+zero instances**, and the difference is the whole value of the figure.
+
+**THE SWEEP'S OWN FIRST DRAFT WAS WRONG AND THE CORRECTION IS THE REUSABLE PART.** It resolved a
+path against the repo root, the driver's OWN package and the driver's directory, and reported
+**19** candidates — of which at least eleven were a driver in one package naming a path in
+another (`agent-worker/test/fanout.control.mjs` names `scripts/battery.mjs`, which is
+`bio-plane/scripts/battery.mjs`). A control driver crossing packages is the normal case here.
+Resolution widened to every package root: 19 -> 6. **The cost is stated rather than hidden: the
+sweep can no longer see a subject that MOVED between packages.**
+
+**ONE REAL DEFECT OF A DIFFERENT KIND, FOUND BY THAT SWEEP AND FIXED.**
+`bio-plane/test/m025-anchor-witness.control.mjs` arm A2 described itself as editing
+`agent-worker/src/fanout.mjs` — **a file this repository has never held.** Its actual subject is
+`FANOUT_SRC` = `agent-worker/src/subsession.mjs`, which exists; the arm armed and passed the
+whole time and only its own account of itself was false.
+
+**NEGATIVE CONTROL — two arms plus a baseline, FIRST RUN, 7 checks, 0 not as declared.** Harness
+inside the worktree. BASELINE: both subjects unpatched, census exit 0, 0 findings. **N1** —
+`caseflip.control.mjs`'s reconciled head decayed by exactly one (`six` -> `five`), armed ALONE:
+census **exit 1**, `tally NOT AS DECLARED : 1`, the finding NAMES the driver and prints BOTH
+numbers (`decl=5+b` against `arms=7`), and **the driver itself stays ALL-ARMED at exit 0** — the
+decay is in the DECLARATION and nowhere else. **N2, over-strictness** —
+`accepts-without-reading.control.mjs` (3 declared / 3 announced, never touched by this item) reads
+0 findings BEFORE and STILL 0 while N1 is armed beside it. Restore verified by sha256 AND a full
+byte comparison AND `cmp(1)` against a uniquely-named per-arm pristine copy: **15,460 bytes
+(floor 4,000), sha `48a073365af7…`, MATCH / IDENTICAL / cmp exit 0.**
+
+**GATES, this branch.** Battery **188/189 suites green · 11,629 assertions · 270.5 s**;
+`coverage.mjs --strict` run DIRECTLY from `bio-plane/`, `$?` read UNPIPED, **exit 0**, REGISTER
+FLOOR **974/974 arms · 180/180 classified · 181/181 corpus**, exact, no slack and no floor owed;
+`node civicos-ui/test/run.mjs` from the REPO ROOT, exit read unpiped, **0**; `plancheck --local`
+**0 fail, 0 warn**.
+
+**THE ONE RED IS NOT THIS ITEM'S AND IT IS NOT A FLAKE — IT IS `origin/main`'s.**
+`mergecarry.test.mjs` fails one assertion of 58: `no UNREGISTERED drop sits in main's history`
+got `["cc8187d:bio-plane/scripts/coverage.mjs"]`. **`cc8187d` (the REC-83 merge) is NOT an
+ancestor of this worktree's HEAD** — `git merge-base --is-ancestor cc8187d HEAD` exits 1 and
+`--is-ancestor cc8187d origin/main` exits 0 — because the suite reads the `origin/main` REF out
+of the SHARED `.git`, which moved from `e9ba393` to `718e5e4` while this item ran. Attributed by
+RE-RUNNING THE BASELINE rather than by argument: a pristine detached worktree at `e9ba393` with
+none of this item's changes gives **57 pass, 1 fail, the identical finding**. **A worker's
+battery can therefore go red because another session merged**, which is the D-330 condition
+(a red indistinguishable from a regression) arriving through a ref rather than through a file.

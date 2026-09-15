@@ -1,5 +1,16 @@
-/* CASE-4's NEGATIVE CONTROL DRIVER — five arms plus a baseline, re-runnable in
+/* CASE-4's NEGATIVE CONTROL DRIVER — seven arms plus a baseline, re-runnable in
  * one step:
+ *
+ * TALLY CORRECTED 2026-09-14 (M0-29, D-343). This line read *"five arms plus a
+ * baseline"* and the driver announced EIGHT. It was RIGHT AS A COUNT OF THE
+ * QUESTIONS the list below asks — five — and wrong as a count of the ARMS that
+ * ask them, because two of those questions are asked in TWO SHAPES EACH: (b) and
+ * (b2) are set-but-never-clear's two failure shapes, and (d2) exists because (d)
+ * measured something other than what it was written for, which its own comment
+ * says at the site. Both splits landed inside this driver's OWN commit `7e10ca9`
+ * and nobody moved the opening sentence. THE ARMS ARE REAL — every one has its
+ * own anchor, subject and recorded result — so the DECLARATION is corrected and
+ * no arm is restored or removed (`casepin.control.mjs` is D-333's precedent).
  *
  *     node test/caselifecycle.control.mjs            # every arm, in order
  *     node test/caselifecycle.control.mjs b          # one arm
@@ -24,7 +35,10 @@
  *
  * EACH ARM IS ARMED ALONE, with every other defence held open.
  *
- * WHAT THE FIVE ARMS ARE FOR, since a list of edits is not a list of questions:
+ * WHAT THE SEVEN ARMS ARE FOR, since a list of edits is not a list of questions.
+ * The list is written by QUESTION and there are five questions; the arm count is
+ * SEVEN because two questions are asked in two shapes each, and the arm ids are
+ * named against each question so the two numbers can never drift apart again:
  *   (a) asks the question this item exists for: if a revised member raises no
  *       flag, does anything notice?
  *   (b) and (b2) ask whether SET-BUT-NEVER-CLEAR is real, in its two failure
@@ -32,12 +46,15 @@
  *       reaches every project instead of the one that acted (D-266's scoping).
  *   (c) asks the question the whole item turns on: does the PRECONDITION survive
  *       the state's removal, or did it ride on the table that was deleted?
- *   (d) asks the question a control usually forgets — whether the guard is WIDER
- *       than the rule it enforces, which here would freeze every concluded
- *       finding in the corpus.
+ *   (d) and (d2) ask the question a control usually forgets — whether the guard
+ *       is WIDER than the rule it enforces, which here would freeze every
+ *       concluded finding in the corpus. TWO ARMS, and (d2) is named in this
+ *       list from 2026-09-14 (M0-29): it exists because (d) measured something
+ *       other than what it was written for, which its own comment says at its
+ *       site, and leaving it out of this list is what made the tally false.
  *   (e) asks whether the suite's own ANCHOR is real: block 9 parses its
  *       expectations out of the design document, and an anchor that silently
- *       matched nothing would make five arms pass over an empty string.
+ *       matched nothing would make every arm pass over an empty string.
  */
 
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
@@ -67,7 +84,11 @@ const edit = (file, needle, replacement) => {
 };
 
 const ARMS = {
-  baseline: { files: [], label: "nothing armed — what distinguishes five-arms-working from five-arms-broken",
+  /* The count in this label is the SAME CLAIM as the head's tally and was stale the same way
+     (`five` against a table of seven); corrected 2026-09-14 by M0-29 with the head, because
+     correcting one and leaving the other is the half-fix that makes the next reader believe
+     the wrong half. */
+  baseline: { files: [], label: "nothing armed — what distinguishes seven-arms-working from seven-arms-broken",
               apply: () => {} },
 
   a: { files: [STORE],

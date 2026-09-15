@@ -1,5 +1,16 @@
-/* CASE-5's NEGATIVE CONTROL DRIVER — five arms plus a baseline, re-runnable in
+/* CASE-5's NEGATIVE CONTROL DRIVER — six arms plus a baseline, re-runnable in
  * one step:
+ *
+ * TALLY CORRECTED 2026-09-14 (M0-29, D-343). This line read *"five arms plus a
+ * baseline"* and the driver announced SEVEN. It was RIGHT WHEN IT WAS WRITTEN —
+ * arms (a) through (e) are the five the list below was written for — and it
+ * stopped being true inside its OWN landing commit `c6b9b51`, when arm (f) was
+ * added after the head was written and nobody moved the opening sentence. The
+ * ARMS ARE REAL: (f) is a live arm with its own anchor, its own subject and its
+ * own recorded measurement, so the DECLARATION is corrected and no arm is
+ * restored or removed. Same shape and same correction as `casepin.control.mjs`
+ * (D-333's worked precedent), and the reason the census now holds a declared
+ * tally against the run that produces it.
  *
  *     node test/caseflip.control.mjs            # every arm, in order
  *     node test/caseflip.control.mjs a          # one arm
@@ -24,7 +35,7 @@
  *
  * EACH ARM IS ARMED ALONE, with every other defence held open.
  *
- * WHAT THE FIVE ARMS ARE FOR, since a list of edits is not a list of questions:
+ * WHAT THE SIX ARMS ARE FOR, since a list of edits is not a list of questions:
  *   (a) THE ARM THIS ITEM EXISTS FOR — if a member is resolved by the CASE's
  *       edition number instead of by its pin, does anything notice?
  *   (b) if the CASE-SIDE stranger-verification data is stripped out of the
@@ -35,6 +46,12 @@
  *       the member's edition and the fixture must stop diverging.
  *   (e) the legacy fallback — armed, and its measurement is that THIS suite
  *       cannot see it, which is stated rather than left as a silent gap.
+ *   (f) ADDED TO THIS LIST 2026-09-14 (M0-29) — it was in the arm table from
+ *       `c6b9b51` and missing from this list, which is what made the tally
+ *       false. Require a pin on every roster row before an edition may be
+ *       complete: the arm CAME BACK NOT-AS-DECLARED and is kept with its
+ *       measurement at its own site, because this fixture writes no unpinned
+ *       row and its GREEN is a statement about the INSTRUMENT, not the plane.
  */
 
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
@@ -73,7 +90,11 @@ const PIN_RESOLVE =
 + "                    m.bundle_id, ed);";
 
 const ARMS = {
-  baseline: { files: [], label: "nothing armed — what distinguishes five-arms-working from five-arms-broken",
+  /* The count in this label is the SAME CLAIM as the head's tally and was stale in the same
+     way (`five` against a table of six); corrected 2026-09-14 by M0-29 with the head, because
+     correcting one and leaving the other is the half-fix that makes the next reader believe
+     the wrong half. */
+  baseline: { files: [], label: "nothing armed — what distinguishes six-arms-working from six-arms-broken",
               apply: () => {} },
 
   a: { files: [STORE],

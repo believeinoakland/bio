@@ -9,9 +9,16 @@
  *
  * THE RULES THIS HARNESS OBEYS, because the receipts for each are in WORKER.md:
  *   - ONE ARM AT A TIME, every other defence held OPEN.
- *   - A BASELINE ROW that arms nothing, so "six arms broken" and "six arms
+ *   - A BASELINE ROW that arms nothing, so "nine arms broken" and "nine arms
  *     working" cannot read the same. A harness whose first run reported the same
  *     verdict for every arm INCLUDING the baseline is why this row exists.
+ *     THE NUMBER WAS "six" UNTIL 2026-09-14 (M0-29, D-343's fourth candidate,
+ *     CONFIRMED BY RUNNING IT). It was right when written and the table grew to
+ *     NINE announcing arms — 1-6, the 7a/7b pair and 8 — with the sentence left
+ *     behind. It is a sentence about METHOD, which is why the census's declared-
+ *     tally reader deliberately does NOT read it and never scored this driver;
+ *     but it is a method sentence about THIS driver's OWN arms, so its number
+ *     was stale in exactly D-333's shape and is corrected rather than exempted.
  *   - EVERY ARM DECLARES what MUST fail and what MUST NOT, before it runs.
  *   - EVERY ARM REPORTS WHETHER IT ARMED (the patch's match count) and every
  *     restore is verified against a UNIQUELY-NAMED per-arm pristine copy by
@@ -92,8 +99,11 @@ function arm({ id, what, mustFail, mustNot, file, patch, move }) {
   return { code: r.code, out: r.out, f, named };
 }
 
-/* ---- BASELINE. Arms nothing. Six arms broken and six arms working must not
-   read the same, and only this row can tell them apart. ---------------------- */
+/* ---- BASELINE. Arms nothing. Nine arms broken and nine arms working must not
+   read the same, and only this row can tell them apart. (`Six` until 2026-09-14
+   — the same stale count as the head's, corrected with it by M0-29; correcting
+   one site and leaving the other is the half-fix that makes the next reader
+   believe the wrong half.) ------------------------------------------------- */
 {
   const r = strict();
   const f = figures(r.out);
