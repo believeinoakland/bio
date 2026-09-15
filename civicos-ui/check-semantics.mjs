@@ -70,6 +70,8 @@ import vm from "vm";
 import {
   OBJECT_TYPES, LEGACY_TYPE_ALIASES, normalizeType, STATES, HEADINGS,
   BASIS_ROLES, BASIS_GRADES, GRADE_AXES, GRADE_SOURCES, STRENGTH_STATES,
+  /* UI-61 / IC-84 (1): the extent grammar's kind set. */
+  CONTENT_EXTENT_KINDS,
 } from "../bio-plane/checks/bio-checks.mjs";
 
 const appPath = new URL("./app.html", import.meta.url).pathname;
@@ -96,6 +98,8 @@ const C = block("CATALOG", ["LEGACY_TYPE_ALIASES", "normalizeType", "vocabFor", 
   /* UI-11: REC-11/REC-12's basis and strength vocabulary. */
   "BASIS_ROLES", "BASIS_GRADES", "GRADE_AXES", "GRADE_SOURCES", "STRENGTH_STATES",
   "ROLE_WORD", "AXIS_WORD", "AXIS_SHORT", "GRADE_SOURCE_WORD", "STRENGTH_STATE_WORD",
+  /* UI-61: IC-84's extent grammar — the kind set and the member's noun for each. */
+  "CONTENT_EXTENT_KINDS", "EXTENT_KIND_WORD",
   /* UI-16: the project readiness ladder. */
   "WORKPRODUCT_STATES", "WORKPRODUCT_WORD"]);
 const S = block("SEMANTICS", ["SEMANTICS"]).SEMANTICS;
@@ -273,6 +277,35 @@ for (const [wordTable, values, label] of [
       bad(`${label} has no member-facing word for '${v}', which the catalog declares`);
   for (const k of Object.keys(wordTable || {}))
     if (!values.includes(k)) bad(`${label} names '${k}', which the catalog does not declare`);
+}
+/* ---- 1c. IC-84's EXTENT GRAMMAR IS THE CATALOG'S (UI-61) ----
+   The same guarantee as 1b, over the vocabulary that says WHAT PART of a
+   document a leg rests on. It matters here for a reason the other arms do not
+   have: three of the five arms are named in the grammar and NOT YET LANDED
+   (REC-85 builds their `covers`), so the day one lands the catalog gains
+   nothing and this file must already know the word — an arm the plane can
+   evaluate and the surface has no noun for renders a leg with a blank beside
+   the record's own sentence.
+
+   THE SHAPES DIFFER ON PURPOSE AND THE COMPARISON IS OVER THE KEY SET. The
+   catalog's `CONTENT_EXTENT_KINDS` is a MAP carrying `landed` and `human`;
+   app.html's is the ARRAY of its keys. `landed` is deliberately NOT mirrored —
+   it is a fact about what this plane can evaluate TODAY, it moves when REC-85
+   lands, and a copy of it in the runtime would be a second answer going stale
+   the moment the first one moved. What must not drift is WHICH KINDS EXIST and
+   whether each has a member-facing noun, and that is what is compared. */
+{
+  const catKinds = Object.keys(CONTENT_EXTENT_KINDS);
+  const uiKinds = Array.isArray(C.CONTENT_EXTENT_KINDS) ? C.CONTENT_EXTENT_KINDS : [];
+  if (J([...catKinds].sort()) !== J([...uiKinds].sort()))
+    bad(`CONTENT_EXTENT_KINDS has drifted from the catalog.\n       catalog:  ${J(catKinds)}\n       app.html: ${J(uiKinds)}`);
+  const words = C.EXTENT_KIND_WORD || {};
+  for (const k of catKinds)
+    if (words[k] === undefined)
+      bad(`EXTENT_KIND_WORD has no member-facing word for '${k}', which the catalog declares`);
+  for (const k of Object.keys(words))
+    if (!catKinds.includes(k))
+      bad(`EXTENT_KIND_WORD names '${k}', which the catalog does not declare`);
 }
 /* D-160 is ABSOLUTE: the retired word for the boundary case means the OPPOSITE
    in SB-OUTPUT §5.1, so it must not appear in the member-facing runtime at all.

@@ -5111,3 +5111,174 @@ fails identically (57 pass / 1 fail). It is **D-335's class exactly** — the ro
 that says this instrument goes red only AFTER publication, on everyone's gate —
 and it fails for every checkout of main until the register row is written.
 **CONDUCT's act, named in the report's "for CONDUCT" list.**
+
+## CLAIM 2026-09-14 UI (UI-61 — IC-84's CONSUMER half: the leg display shows the row's `ref`, `stale` renders as UNDETERMINED-stated, the viewer jumps to the cited page, and the extent vocabulary joins the drift guard)
+
+Session: UI worker for UI-61, spawned by CONDUCT #11, Opus 5.
+Worktree: `.claude/worktrees/agent-a0b18e5a56bf0c7de` · branch `worktree-agent-a0b18e5a56bf0c7de`.
+Contract: IC-84 (ACCEPTED 2026-09-14, I3 14.0.0 -> 14.1.0, CHANGING; twice AMENDED by CONDUCT #11
+at REC-83's and REC-84's landings), its consumer half; the act shape governed by
+`BIO_Interaction_Constructs_v0_1.md` (nothing prefilled, DEC-69); framework Part II §14.4.
+
+Paths claimed BY REGION, never whole files:
+
+- **`civicos-ui/app.html`** — (a) the vocabulary block beside `BASIS_ROLES` /
+  `GRADE_SOURCES`, which gains `CONTENT_EXTENT_KINDS` and its member-facing
+  words; (b) `basisLegRow` and a new `legReferentHtml` helper — the `ref`
+  verbatim, the `stale` pane, the page jump; (c) `openArtifact`'s optional page
+  argument and the `#page=` fragment; (d) the cite flow's extent region
+  (`citePaint`), in `intentChooser`'s ABSENT-AND-SAYS-SO shape. NOT the
+  strength panels, NOT `axisPanel`, NOT `mdFor`, NOT the publication surfaces.
+- **`civicos-ui/check-semantics.mjs`** — ONE new arm: the extent vocabulary
+  compared against `CONTENT_EXTENT_KINDS` in the catalogue, in BOTH directions,
+  plus the member-facing-word totality check (the `GRADE_SOURCE_WORD` precedent).
+- **`civicos-ui/test/content-extent.test.mjs`** (NEW) — the suite, driving the
+  REAL plane through miniflare (`intent-write.test.mjs`'s instrument).
+- **`civicos-ui/test/content-extent.control.mjs`** (NEW) — the negative-control driver.
+
+**NOT** `bio-plane/**` — not one byte. Where the plane must move, this item files a
+DELEGATION to RECORD and does not edit. **NOT** `newgroup/**`, **NOT** `docs/development/QUEUE.md`.
+
+Harness floors: any figure this item moves in `civicos-ui/check-refusal-codes.mjs`'s
+print is moved FROM THE PRINT and named in the release line.
+
+released: 2026-09-14 by the UI-61 worker — IC-84's CONSUMER HALF IS BUILT AND DRIVEN AGAINST THE REAL PLANE; THE COMPOSER'S EMIT HALF IS A DELEGATION TO RECORD, MEASURED AND NOT INFERRED.
+
+**GATES, every one run in this worktree and read unpiped.** `node civicos-ui/test/run.mjs` from
+the repo root: **48 suites, 0 FAIL, exit 0** (own baseline on the pristine tree at ce6e7cf: 47
+suites, 0 FAIL, exit 0 — the +1 is this item's own suite). `cd bio-plane && npm run test:battery`:
+**191/191 suites green · 11,771 assertions · 228.3s, exit 0** — IDENTICAL to the figure the brief
+quotes for ce6e7cf, which is expected and is the point: **not one byte under `bio-plane/` was
+edited.** `node scripts/coverage.mjs --strict` run DIRECTLY with nothing piped after it: **exit 0**.
+`node tools/plancheck.mjs --local`: **0 fail, 0 warn** (`docs/DECIDED.md` regenerated — this
+claim's own Contract line added one ruling row, 860 → 861).
+
+**WHAT LANDED.** `civicos-ui/app.html`: `CONTENT_EXTENT_KINDS` + `EXTENT_KIND_WORD` beside the
+basis vocabulary; `legReferent` (the leg → content-row join, **BY `ord` and never by target** —
+D4: one document cited for two legs); `legReferentHtml` (the row's `ref` VERBATIM, DEC-49);
+`legJumpHtml`; the stale pane in C-14's own shape carrying the plane's `says` whole;
+`openBundleAtPage` + `openArtifact`'s optional 1-based `atPage` reaching the blob URL as
+`#page=N`; one `op=earnedbasis` read on the question page, asked SEPARATELY so its failure is
+its own. `civicos-ui/check-semantics.mjs`: one arm, the extent vocabulary against the catalog
+**in both directions** plus word-totality. `civicos-ui/test/content-extent.test.mjs` (NEW, **48
+assertions**) drives the REAL plane through miniflare and mocks NOTHING — the `ref`, `stale` and
+`says` strings under assertion are minted by `describeExtent` and `#contentStanding` and reached
+through the surface's own bridged `fetch`.
+
+**ARMS DRIVEN, and which were not.** DROVE `document` and `pdf-page` — the two arms
+`CONTENT_EXTENT_KINDS[k].landed` marks as landed, including a `pdf-page` leg carrying a real
+`extent_rect` (the rect round-trips and the record mints its row, so the DATA path for a region
+is proven even though no surface can draw one). Did NOT drive `sheet-cell`, `slide-shape`,
+`doc-para` — REC-85's, refused by this plane today; section 6 asserts them over the VOCABULARY
+and over `legReferentHtml`'s behaviour on a kind it has no noun for, and **names them as undriven
+rather than pretending**. An arm the surface has no noun for still renders the plane's `ref`, so
+REC-85's landing needs **no edit here**.
+
+**NEGATIVE CONTROL: eight arms, ALL DECLARED BEFORE ARMING AND ALL RUN**, driver
+`civicos-ui/test/content-extent.control.mjs` (in this worktree, re-runnable in one step). Every
+arm armed ALONE and restored from a uniquely-named per-arm copy, **verified by sha256 AND by
+`cmp`, byte count printed, minimum guarded — never `git checkout --`**; every restore read
+`sha256 EQUAL · cmp identical` (app.html 1,220,514 bytes; check-semantics.mjs 23,415 bytes).
+Declared vs actual, and every one matched:
+`baseline` declared GREEN → **48 pass / 0 FAIL, exit 0** (the arm that proves the other seven are real).
+`stalehidden` (the item's own named control — the `stale` flag hidden by a ONE-LINE change) declared FAIL naming the pane, the sentence, the retry line and the mark, on the leg AND the page → **43 pass / 5 FAIL**, naming exactly those five; the row still renders and its `ref` is still right, and the only thing wrong with it is what it no longer says.
+`prefilled` (DEC-69 — a page control prefilled with a 1) declared FAIL on the prefill assertion → **47 pass / 1 FAIL**, that one.
+`reworded` (DEC-49 — the surface describing the citation in its OWN words) declared FAIL on both verbatim assertions and the page-level one → **44 pass / 4 FAIL**.
+`offbyone` (the record's 0-based page rendered unconverted) declared FAIL on the 1-based assertion → **47 pass / 1 FAIL**.
+`vocabdrift` (an arm dropped from the surface's grammar copy) declared FAIL in BOTH instruments → **47 pass / 1 FAIL** *and* check-semantics exit 1 naming `CONTENT_EXTENT_KINDS has drifted from the catalog`.
+`unconditional` (**THE OVER-STRICTNESS DIRECTION** — the referent line drawn for every leg) declared FAIL on the digest pin while every content-grain assertion stays GREEN → **46 pass / 2 FAIL**, exactly the two halves of the pin, **and that held-open half is the whole value of a separate instrument**.
+`citemoved` (a no-op edit to the guard's import — the CONTROL ON THE CONTROLS) declared GREEN → **48 pass / 0 FAIL**, proving the restore machinery and the check-semantics arm both actually run.
+
+**THE OVER-STRICTNESS PIN.** A leg that names no part renders **BYTE-IDENTICALLY** to the
+pristine tree: sha256 `6d636a7040da089dafac8b585b9f5b108f94008fccb67a6e0676a79742dcbe9f` over three
+legs (graded-with-a-note, ungraded, hunch), MEASURED ON `origin/main` AT ce6e7cf BEFORE ONE BYTE
+OF THIS ITEM WAS WRITTEN. It caught a real defect while this item was being built: the first draft
+put `${legReferentHtml(referent)}` on its own template line, which injected `\n    ` into EVERY
+leg in the record even when empty — green on every other assertion, and only the pin saw it.
+
+**HARNESS FLOORS: NONE MOVED.** `civicos-ui/check-refusal-codes.mjs` prints the same floors as
+the pristine baseline, compared line by line (474 census · 20/191 families · 244 reach · 270
+partition · 86 corpus / 180 refusals · 75 sites). Two REPORT figures moved and neither is a floor:
+the fixture-shape census reads **108 → 112 answers across 44 → 45 ops, 37 → 38 resolved** (this
+item's suite drives `op=earnedbasis` through the surface, which is a new op in that census), while
+its own floors — `12 judged / 1 classified` — are UNCHANGED. The runner's provenance report names
+the two new files as UNTRACKED until this commit, which is that report working.
+
+**FOR CONDUCT — IC-84's SETTLED IS NOT YET WRITABLE ON THIS ITEM'S CONFIRMATION.** The IC's
+condition is *"UI-61 confirms the composer emits `extent`"*. **It does not, and it cannot**: see
+the DELEGATION below — `op=cite` destructures seven parameters, none of them an extent, and
+silently drops anything else. Saying it in so many words, as asked: **THE COMPOSER DOES NOT EMIT
+`extent`, AND THE OBSTACLE IS THE PLANE'S ACT AND NOT THE SURFACE.** What UI-61 DOES confirm is
+the other half of the consumer contract, driven end to end: the leg display renders the row's
+`ref` verbatim, a `stale` row renders as UNDETERMINED-stated and is never hidden, the viewer
+jumps to the cited page, and the `document` default is STATED in the composer rather than silent.
+SETTLED is CONDUCT's to write when the cite widening lands.
+
+### DELEGATION 2026-09-14 UI (UI-61) -> RECORD: **`op=cite` IS THE ONLY ACT THAT WRITES A BASIS LEG AND IT CARRIES NO EXTENT, SO THE COMPOSER CANNOT EMIT ONE — MEASURED, NOT INFERRED**
+
+IC-84's RESOLUTION records UI as answering *"the composer emits `extent` per leg"*. **It cannot,
+and the reason is one function's parameter list rather than a UI gap.**
+
+**The measurement**, taken in source on `origin/main` at ce6e7cf and re-taken by
+`civicos-ui/test/content-extent.test.mjs` section 5 on every run:
+
+- `Store#cite` (`bio-plane/src/store.mjs`) destructures exactly
+  `{ project, handle, viewer, owner, note, author, role }`. There is no extent parameter.
+- Its op routing reads exactly those seven `url.searchParams`. An `extent_kind` sent beside
+  them is **DROPPED IN SILENCE** — no refusal, no `FIXED_KEY_ONLY`, nothing.
+- `cite()` composes the leg itself — `{ target, role, grade, grade_axis, grade_source, note, why }` —
+  and splices it with `#spliceBasis`. The extent fields never reach the frontmatter the
+  C-2.8 grammar REC-84 landed would judge.
+- No UI surface authors a `basis:` block directly: `mdFor` writes no basis, and `op=cite`
+  is the only producer. So there is no second route for the surface to take.
+
+**Why UI-61 did not build the picker anyway.** A control whose value is silently discarded is
+worse than an absent one: the member chooses page 2, the leg lands on the whole document, and
+nothing anywhere says the choice went nowhere. That is present-and-refused with the refusal
+removed — the shape UI-15 took out of the action form and UI-19 declined to reintroduce one
+field down. So the composer states the `document` default **explicitly** (Bob's 5.3: an absent
+extent IS `document`, and this item's clause says STATED, never silently) and says why no page
+is offered. The suite asserts the absence AND re-measures `cite`'s routing, so the day the
+plane moves this assertion FAILS and the region is revisited rather than going quietly stale.
+
+**What RECORD is asked for**, and it is small: `op=cite` accepts the flattened extent
+scalars already in REC-84's grammar — `extent_kind`, `extent_page`, `extent_rect`,
+`extent_ref`, or `content_id` — passes them onto the leg it splices, and refuses a leg
+naming both (the catalogue's `checkLegExtentGrammar` already does that at the gate, so the
+act need only carry them). It is an I3 change and wants its own IC on REC-86/REC-87's
+terms, because a widened act is a widened contract.
+
+**What lands with no further UI work when it does.** The READ half is built and driven:
+the leg display already renders every arm of IC-1's union from the plane's own `ref`, the
+`stale` pane, and the page jump. The picker is the only missing piece, and
+`civicos-ui/test/content-extent.control.mjs` arm `prefilled` already pins the rule it must
+be built to (DEC-69: nothing forced).
+
+### DECISIONS FOR BOB 2026-09-14 (UI-61): **NONE**
+
+### FINDING 2026-09-14 UI (UI-61) — **THE BRIEF NAMED `checkLegExtentGrammar` IN `store.mjs`; IT LIVES IN `bio-checks.mjs`, AND THE VERIFY-OR-STOP INSTRUCTION WOULD HAVE STOPPED THIS ITEM**
+
+The spawn brief's verification step was `grep -n checkLegExtentGrammar bio-plane/src/store.mjs`
+with an instruction to STOP and report if absent. It IS absent there — REC-84 landed it in
+`bio-plane/checks/bio-checks.mjs`, which is where the catalogue's own header says the grammar
+belongs (*"putting it in `store.mjs` would put it where the CHECKER cannot reach it"*). The
+store imports it. Taken literally the instruction halts a correctly-landed item; taken as
+"verify the symbol exists" it passes. **Recorded because the next consumer brief will be
+written the same way**: a verification step should name the symbol and let the worker find
+it, not pin it to a file the owner was free to choose.
+
+### FINDING 2026-09-14 UI (UI-61) — **THE ITEM'S `pdf-page` RECTANGLE HAS NO SURFACE TO BE DRAWN ON, AND SAYING SO IS CHEAPER THAN THE ALTERNATIVE**
+
+The row's scope says *"page + rectangle in the viewer for `pdf-page`"*. **There is no in-app PDF
+page renderer.** `openArtifact` hands a verified blob URL to `window.open`, and the browser's
+own PDF viewer renders it in a separate tab: app.html has no page canvas, no page navigation it
+controls, and no coordinate space a rectangle could be expressed in. Building one means a PDF
+rasteriser inside a single self-contained HTML file that may not fetch a library.
+
+**What UI-61 built instead, and why it is the honest half.** A page JUMP needs no renderer —
+`#page=N` is the viewer instruction PDF itself defines — so the leg display offers it, at the
+reader's 1-based page, degrading to page one where a viewer ignores the fragment. The rectangle
+is not stubbed and not faked: `extent_rect` round-trips through the plane today (the suite
+drives a leg carrying one and renders the `ref` the record minted for it), so the DATA path is
+proven and only the drawing surface is absent. That surface is NARROW's and TRANSCRIBE's
+requirement (IC-84 names both as decomposed behind it) and it is a real item, not a line.

@@ -1753,6 +1753,32 @@ const GRADE_SOURCE_WORD = {
   capture:    "earned from the record's own capture of this document",
 };
 const STRENGTH_STATE_WORD = { graded: "graded", unrated: "UNRATED", undetermined: "undetermined" };
+/* UI-61 / IC-84 (1) — WHAT PART OF A DOCUMENT A LEG RESTS ON, mirrored here for
+   the reason every table above is mirrored, and pinned by check-semantics.mjs
+   against `CONTENT_EXTENT_KINDS` in the catalog IN BOTH DIRECTIONS: a kind the
+   catalog adds and this file does not fails the harness, and a kind this file
+   spells that the catalog does not know fails it too.
+
+   `landed` IS THE CATALOG'S AND IS NOT RESTATED HERE. Whether this plane can
+   evaluate `sheet-cell` today is a fact about the plane that changes when
+   REC-85 lands, and a copy of it in this file would be a second answer going
+   stale the moment the first one moved. What is mirrored is the KEY SET and the
+   member's word for each — which is why a new arm needs no edit to any
+   rendering below: `legReferentHtml` reads the plane's own `ref` sentence and
+   asks this table only for a NOUN. IC-1's union is the shape, so REC-85's three
+   arms arrive as three rows here and nothing else in this file moves. */
+const CONTENT_EXTENT_KINDS = ["document", "pdf-page", "sheet-cell", "slide-shape", "doc-para"];
+/* The member's word for each — a NOUN PHRASE naming the part, never a sentence
+   about it. The sentence is the plane's (`ref`, and `says` when a row is stale)
+   and is rendered VERBATIM: DEC-49, and D-164's own lesson that the record's
+   words about what a citation points at must not be re-worded by a surface. */
+const EXTENT_KIND_WORD = {
+  "document":    "the whole document",
+  "pdf-page":    "a page of a PDF",
+  "sheet-cell":  "a cell of a spreadsheet",
+  "slide-shape": "a shape on a slide",
+  "doc-para":    "a paragraph of a document",
+};
 /* UI-16 · THE PROJECT READINESS LADDER. `workproduct_state` is the project
    extension's own field (C-2.9 names the four legal values; C-9.1 is what makes
    a rung advance, and it advances on RECORDED EVALUATIONS — never on anything a
@@ -2757,11 +2783,18 @@ function outstandingList(man){
     ${miss.length>show.length?`<div class="lkmeta" style="margin-top:6px">and ${miss.length-show.length} more</div>`:""}</div>`;
 }
 
-async function openArtifact(k){
+async function openArtifact(k, atPage){
   /* Like following any link: a tab opens for what a browser renders, a
      download starts for what it does not. Opened synchronously so popup
      blocking never bites; verification runs underneath and only speaks when
      the bytes fail the record. */
+  /* UI-61: `atPage` is OPTIONAL and 1-based, and every existing call site omits
+     it and is byte-identical in behaviour. It reaches only the `pdf` arm below,
+     as the `#page=` fragment of the blob URL — the viewer instruction PDF
+     itself defines, which is why the jump needs no page renderer of its own. A
+     browser whose viewer ignores the fragment opens the document at page one,
+     which is where it opened before this item: the jump degrades to the
+     shipped behaviour rather than to an error. */
   const a = VIEW_REG[k]; if(!a) return;
   const kind = artKind(a.base);
   let win = null;
@@ -2782,8 +2815,12 @@ async function openArtifact(k){
   const u = URL.createObjectURL(blob);
   const fname = a.base.split("/").pop();
   if(kind.view==="pdf" || kind.view==="img"){
-    if(win) win.location = u;
-    else note(`<div class="avnote">The browser blocked the tab. <a href="${u}" target="_blank" rel="noopener">Open ${esc(fname)}</a></div>`);
+    /* The page fragment is appended ONLY for a pdf and only for a real page
+       number: an image has no pages, and a fragment on one would be a claim
+       about a document shape this file does not have. */
+    const frag = (kind.view==="pdf" && Number.isInteger(atPage) && atPage > 0) ? `#page=${atPage}` : "";
+    if(win) win.location = u + frag;
+    else note(`<div class="avnote">The browser blocked the tab. <a href="${u}${frag}" target="_blank" rel="noopener">Open ${esc(fname)}${frag?` at page ${atPage}`:""}</a></div>`);
   } else if(kind.view==="html"){
     /* A captured page opens in its own BROWSER tab, like any link. It never
        runs code: scripts, handlers, and javascript: references are stripped
@@ -5313,6 +5350,21 @@ async function reviseWithCapture(id, img, acq, mergedManifest){
   return { ok:false, why:`The revision was refused: ${why}.` };
 }
 
+/* UI-61 / IC-84 — OPEN THE DOCUMENT AT THE PAGE A LEG CITES.
+   `page` is 1-BASED HERE, because `legJumpHtml` has already converted it from
+   the record's 0-based page and the conversion happens once (the catalog's
+   `describeExtent` states the same split in the sentence a member reads).
+
+   IT OPENS THE BUNDLE FIRST AND THEN THE ARTIFACT, in that order, because
+   `VIEW_REG` and `PRIMARY_K` are built by the page render: jumping without the
+   page would be addressing an artifact register that is still the previous
+   document's. Where the document has no primary artifact this lands the reader
+   on the document page with nothing further claimed — a jump that cannot be
+   completed is not offered as one that failed. */
+async function openBundleAtPage(id, page){
+  await openBundle(id);
+  if(PRIMARY_K >= 0) await openArtifact(PRIMARY_K, page);
+}
 async function openBundle(id, fromNav){
   if(!fromNav) navRemember();
   CUR = { type:"bundle", key:id };
@@ -6062,7 +6114,86 @@ function basisGradeBadge(leg){
        + `<span class="subj-how">${esc(how)}.</span>`;
 }
 
-function basisLegRow(leg, ord){
+/* ---- UI-61 / IC-84 — WHAT PART OF ITS TARGET A LEG RESTS ON ----------------
+   THE JOIN IS BY `ord` AND NOT BY TARGET, and that is D4's rule rather than a
+   preference: a basis legitimately cites one document for two legs, which is
+   why `inquiry_basis` has an ordinal at all, and joining by target would give
+   both legs the FIRST one's referent. `ord` is the leg's index in `basis[]`,
+   which is the same index this surface renders from.
+
+   NULL IS THE NORMAL ANSWER AND IS NOT A DEFECT. A leg whose target is a
+   QUESTION has no capture and no part to point at; a leg whose target this
+   record holds no bytes of has nothing to address. The plane names WHICH of the
+   two it is (`null_case`, `why_no_content` — IC-83's amendment 2) and this
+   surface renders the plane's own sentence rather than composing one, because
+   "which level was empty is part of the answer" and a surface that flattened
+   the two would be inventing a fact about what the record holds. */
+function legReferent(ref, ord){
+  if(!ref || typeof ref !== "object") return null;
+  const legs = Array.isArray(ref.legs) ? ref.legs : [];
+  const row = legs.find(l => l && l.ord === ord);
+  if(!row) return null;
+  const content = (ref.earned && ref.earned.content) ? ref.earned.content : null;
+  const std = (row.content_id && content) ? content[row.content_id] : null;
+  return { content_id: row.content_id || null, standing: std || null,
+           null_case: row.null_case || null, why: row.why_no_content || null };
+}
+/* THE REFERENT, RENDERED IN THE PLANE'S OWN WORDS.
+   `ref` IS RENDERED VERBATIM (DEC-49). It is the record's sentence about what
+   this leg points at — derived by the plane from the extent when the member did
+   not author one — and a surface that re-worded it would be the second spelling
+   D-164 exists to close. `EXTENT_KIND_WORD` supplies a NOUN beside it and never
+   a replacement for it, which is what lets REC-85's three arms arrive with no
+   edit here: an unknown kind renders the plane's `ref` and no noun, rather than
+   nothing at all.
+
+   A STALE ROW IS UNDETERMINED AND IS STATED (Bob's 5.8). It is NEVER hidden and
+   never quietly re-pointed: the record keeps the citation where the member put
+   it, and says that the transcription underneath it has moved. The sentence is
+   the plane's `says`, whole. The primitive it is drawn in is C-14's own, so a
+   stale referent reads as every other undetermined thing on this page reads. */
+function legReferentHtml(r){
+  if(!r) return "";
+  if(!r.content_id){
+    /* Stated only where the plane said WHY. A bare null is a leg the backfill
+       has not reached yet and inventing a sentence for it would be this surface
+       asserting something the record did not. */
+    return r.why ? `<div class="subj-how" style="margin-top:6px">${esc(r.why)}</div>` : "";
+  }
+  const s = r.standing;
+  if(!s) return "";
+  const noun = EXTENT_KIND_WORD[s.extent_kind] || null;
+  const jump = legJumpHtml(s);
+  const head = `<div class="subj-how" style="margin-top:6px"><b>rests on</b> &middot; ${esc(String(s.ref||""))}${noun?` <span style="color:var(--muted)">(${esc(noun)})</span>`:""}${jump}</div>`;
+  if(!s.stale) return head;
+  /* C-14's PRIMITIVE, drawn with the plane's own sentence as the basis line. The
+     retry line is `could_not_determine` because looking again is exactly what
+     MAY settle it — a member re-reads the passage and narrows or re-cites it.
+     The row is still shown, with its `ref` above: a stale citation resolves, and
+     hiding it is the one thing this rendering must never do. */
+  return head
+    + `<div class="card undet" style="margin:8px 0 0" data-stale="1">
+        <div class="subj-grade g-unconf">undetermined</div>
+        <div class="subj-how"><b>basis</b> &middot; ${esc(String(s.says||""))}</div>
+        <div class="subj-how"><b>retry</b> &middot; ${esc(UNDET_RETRY.could_not_determine)}</div>
+      </div>`;
+}
+/* THE JUMP. `pdf-page` is the one landed arm that names a place a reader can be
+   taken to, and the page is 0-BASED IN THE RECORD and 1-BASED TO A READER (the
+   catalog's own `describeExtent` says so in the sentence beside it) — so the
+   conversion happens HERE, once, rather than in three renderings.
+
+   OFFERED ONLY WHERE IT CAN BE COMPLETED. A kind this surface cannot place, or
+   a page the record did not record, renders NO control rather than one that
+   scrolls nowhere — UI-15's rule, and the reason nothing here is
+   present-and-refused. */
+function legJumpHtml(s){
+  if(!s || s.extent_kind !== "pdf-page") return "";
+  const e = s.extent && typeof s.extent === "object" ? s.extent : {};
+  if(!Number.isInteger(e.page)) return "";
+  return ` &middot; <a onclick="openBundleAtPage(${esc(JSON.stringify(String(s.bundle_id||"")))},${e.page+1})">open the document at page ${e.page+1}</a>`;
+}
+function basisLegRow(leg, ord, referent){
   const target = leg && leg.target ? String(leg.target) : "";
   const role = ROLE_WORD[leg && leg.role] || "is recorded against this";
   const axis = AXIS_SHORT[leg && leg.grade_axis] || null;
@@ -6071,7 +6202,7 @@ function basisLegRow(leg, ord){
     <div class="kv"><span class="k">Leg ${ord+1}</span><span class="v plain">
       <a onclick="openBundle(${esc(JSON.stringify(target))})" class="mono">${esc(target)}</a>
       &middot; ${esc(role)}${axis?` &middot; graded on the ${esc(axis.toLowerCase())} axis`:""}</span></div>
-    <div style="margin-top:6px">${basisGradeBadge(leg||{})}</div>
+    <div style="margin-top:6px">${basisGradeBadge(leg||{})}</div>${legReferentHtml(referent)}
     ${hunch?`<div class="teach" style="margin:8px 0 0"><b>HUNCH</b> &middot; declared by ${esc(leg.author||"an unnamed member")} on ${esc(leg.date||"an unrecorded date")}. A hunch is declared bias, recorded openly from the moment it is made rather than disclosed at publication, and it is temporary by construction: it is cleared by establishing the grade, or it stands and says so.</div>`:""}
     ${leg && leg.note?`<div class="subj-how" style="margin-top:6px">${esc(leg.note)}</div>`:""}
   </div>`;
@@ -6227,6 +6358,23 @@ async function openInquiry(id, fromNav){
        run addresses this device holds and renders the indicator for whichever
        of them THE RECORD places in this context. Nothing here decides that, and
        where the record answers nothing this is the empty string — no notice. */
+    /* UI-61 / IC-84 — AND WHAT PART OF EACH TARGET ITS LEGS REST ON. `op=earnedbasis`
+       is the ONE read that answers both halves in one call: `legs[]` carries the
+       `content_id` the record minted for each leg (by `ord`, which is the leg's
+       position in `basis[]` and is what makes the join exact rather than by
+       target — D4: a basis legitimately cites one document for two legs), and
+       `earned.content` carries that row's standing, including the `ref` this
+       surface renders VERBATIM and the `says` sentence a stale row carries.
+
+       ASKED SEPARATELY FROM THE BATCH ABOVE, and it is not a style choice: its
+       failure is its own. A referent read that goes wrong must not be reported
+       as the backlinks read failing — the defect the batch above already
+       records for the running-session read, one line down. Where this read
+       answers nothing, `REF` is null and every leg renders EXACTLY as it did
+       before this item, which is the over-strictness direction this item is
+       pinned against. */
+    let REF = null;
+    try{ REF = await recR("earnedbasis", { id }); }catch(_){ REF = null; }
     let back = null, backErr = null, actsR = null, runs = "";
     try{
       const [b, a, r] = await Promise.all([
@@ -6262,7 +6410,7 @@ async function openInquiry(id, fromNav){
       : `<div class="empty">This question's own words are not in the document. Nothing is shown in their place.</div>`;
 
     const legsPane = legs.length
-      ? legs.map((l,i)=>basisLegRow(l,i)).join("")
+      ? legs.map((l,i)=>basisLegRow(l,i,legReferent(REF,i))).join("")
       : `<div class="empty">This question rests on nothing yet. A question may stand with no legs at all: it is a standing objective, and the record says so rather than pretending it is answered.</div>`;
 
     const relPane = backErr
@@ -8562,6 +8710,37 @@ function citePaint(){
       : `<div class="empty">The record publishes no set of roles for a basis leg, so none is offered here. Nothing is invented in its place.</div>`}
     <p class="subj-note">The record fills each leg&rsquo;s <b>grade</b> itself, from its own resolutions of this question&rsquo;s subject. There is no grade to choose here and there is not meant to be: a leg the record earns nothing for lands ungraded and is shown as not yet load-bearing, which is a fact about the record rather than a gap for you to fill.</p>`;
 
+  /* ---- UI-61 / IC-84 (1) — WHAT PART OF THE DOCUMENT THE LEG RESTS ON.
+          THE DEFAULT IS STATED AND IS NEVER SILENT (Bob's 5.3, and this item's
+          own clause). An absent extent IS `document` in the record's grammar —
+          there is no `unstated` — so a leg written from this control rests on
+          the WHOLE document, and a member is told that here rather than
+          discovering it on the leg afterwards.
+
+          THE PICKER IS ABSENT, AND WHY IS MEASURED RATHER THAN ASSERTED.
+          `op=cite` is the ONE act that writes a basis leg, and it reads seven
+          named parameters — project, handle, viewer, owner, note, author, role
+          (store.mjs's `cite` op routing). An `extent_kind` sent beside them
+          would be DROPPED IN SILENCE, and a member who had chosen a page would
+          be shown a leg resting on the whole document with nothing saying the
+          choice went nowhere. That is present-and-refused wearing a worse
+          costume — the shape UI-15 removed from the action form and the shape
+          UI-19 refused to bring back one field down — so the control is ABSENT
+          and SAYS SO, in `intentChooser`'s own shape, exactly as the action
+          basis control is absent while its vocabulary is unpublished.
+
+          NOTHING IS PREFILLED (DEC-69). There is no page box holding a `1`, no
+          kind pre-selected, and no rectangle drawn on the member's behalf: the
+          record's grammar is stated and the member is told which act will carry
+          it when one does. The day `op=cite` carries an extent, the picker
+          appears here and NOTHING ELSE on this surface moves — the leg display
+          already renders every arm of IC-1's union from the plane's own `ref`.
+          ---- */
+  const extentBlock = !citeOntoInquiry() ? "" : `
+    <h3 class="cx-h">What part of the document this leg rests on</h3>
+    <p class="subj-note">A citation that points at the sentence answering the question refers to <b>that portion</b> of the document, not to all of it. The record holds that distinction and can address a page of a PDF as well as a whole document.</p>
+    <div class="empty" id="cx-extent">This act writes a leg resting on the <b>whole document</b>, and that is stated here rather than left to be discovered on the leg afterwards. The record&rsquo;s citation act carries no part-of-a-document yet, so no page or region is offered &mdash; a choice this page could not deliver is not a choice, and nothing is filled in on your behalf. Narrowing an existing citation to a passage is its own act on the record&rsquo;s own plan, and it is not this one.</div>`;
+
   /* THE COMMIT IS ABSENT UNTIL THE ACT HAS WHAT IT NEEDS. Absent, never present
      and greyed, and it asserts nothing about the record: there is no refusal
      here because this page has judged nothing. On the question arm the role is
@@ -8587,6 +8766,7 @@ function citePaint(){
     <p class="subj-note">Every case and question below is one the record publishes this act on. This page adds none.</p>
     <div class="dz-choose">${targets}</div>
     ${roleBlock}
+    ${extentBlock}
 
     <h3 class="cx-h">A note, if you want one</h3>
     <p class="subj-note">Optional. It is written verbatim into what the record writes &mdash; the edge or the leg &mdash; and into the citing object&rsquo;s Session Log. Nothing is drafted here, and no length rule is copied onto this page: if the record will not take what you wrote, the record says so in its own words.</p>

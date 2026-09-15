@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-860 rulings across 82 documents.
+864 rulings across 82 documents.
 
 ## DEC-
 
@@ -582,6 +582,10 @@ authority is the file named, never this one.
   `docs/development/kickoffs/CONDUCT-NEXT.md:79`
 - **IC-83** — The `content` table before `host_governor`, two indexes, in purge's TABLES (both arms); columns exactly IC-83's PLUS `page_count INTEGER` — required by IC-83's own Rules prose and absent from its column list (IC-83 AMENDED at this landing, the column recorded, not widened).  
   `docs/development/QUEUE.md:827`
+- **IC-84** · 2026-09-14 — Contract: IC-84 (ACCEPTED 2026-09-14, I3 14.0.0 -> 14.1.0, CHANGING; twice AMENDED by CONDUCT #11 at REC-83's and REC-84's landings), its consumer half; the act shape governed by `BIO_Interaction_Constructs_v0_1.md` (nothing prefilled, DEC-69); framework Part II §14.4.  
+  `docs/development/CLAIMS.md:5119`
+- **IC-84** — FOR CONDUCT — IC-84's SETTLED IS NOT YET WRITABLE ON THIS ITEM'S CONFIRMATION.** The IC's condition is *"UI-61 confirms the composer emits `extent`"*.  
+  `docs/development/CLAIMS.md:5207`
 - **IC-84** · 2026-09-14 — One superseded leak-guard pin (`gate-reads.test.mjs`'s whole-key-set assertion on `op=list`) CORRECTED with a dated reason and two arms proving `limit` is viewer-independent while `total` is not — never exempted.  
   `docs/development/INTERFACES.md:504`
 - **IC-84** · 2026-09-14 — CHANGING — IC-84 ACCEPTED 2026-09-14 (protocol step 4): 14.0.0 keeps working; SETTLED when REC-83 and REC-84 land and UI-61 confirms the composer emits `extent`. ### What it is  
@@ -910,6 +914,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:4580`
 - **UI-58** · 2026-09-14 — n (baseline measured at HEAD in a scratch worktree: 0 fail, 20 governed documents, decided index current — so the `docs/DECIDED.md` staleness this item hit was ITS OWN and is regenerated in the same commit, four rows moved by the one-time line offset §4.6 predicts).  
   `docs/development/CLAIMS.md:3647`
+- **UI-61** · 2026-09-14 — SETTLED is CONDUCT's to write when the cite widening lands. ### DELEGATION 2026-09-14 UI (UI-61) -> RECORD: **`op=cite` IS THE ONLY ACT THAT WRITES A BASIS LEG AND IT CARRIES NO EXTENT, SO THE COMPOSER CANNOT EMIT ONE — MEASURED, NOT INFERRED**  
+  `docs/development/CLAIMS.md:5215`
 - **UI-61** — Status stays CHANGING until UI-61 confirms the composer emits `extent`; SETTLED is CONDUCT's to write then, together with IC-83's NOT NULL move for the two `content_id` columns once the backfill has run (not yet rowed — rowed when UI-61 lands).  
   `docs/development/INTERFACE-CHANGES.md:6131`
 ## FW-
@@ -1485,6 +1491,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:4958`
 - the gate — CORRECTED with a dated reason and never exempted, and they now assert BOTH the rule that refused and the code it was refused by); `hygiene` (the new suite owed `stdio.mjs` and `sandbox.mjs`); `mintid` (a comment naming a freshly minted C id drove the live C floor off PROSE — the number was removed and the  
   `docs/development/CLAIMS.md:5051`
+- (`docs/DECIDED.md` regenerated — this claim's own Contract line added one ruling row, 860 → 861). **WHAT LANDED.** `civicos-ui/app.html`: `CONTENT_EXTENT_KINDS` + `EXTENT_KIND_WORD` beside the  
+  `docs/development/CLAIMS.md:5153`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
