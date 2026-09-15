@@ -1,15 +1,14 @@
 # Document profiles: recognising what kind of document this is
 
-**Status** · The DESIGN OF RECORD for document profiling, written 2026-07-30 at Bob's direction after per-variation handling had begun spreading through the capture path, and carrying two rulings Bob made that day (monitoring is a different contract per KIND; recognising change happens in LAYERS). [BUILT] as the `docprofile/` package: four stack handlers, the six-layer pipeline with its audit `trail`, the three digests and five verdicts, the content-type axis as a second `makeRegistry()` over the one recogniser engine, and `civicos-ui/test/docprofile.test.mjs` as its harness. COMPLETE as the model — nothing in the region/digest/verdict design has been superseded — and PARTIALLY STALE as a statement of REACH, in one specific and consequential way: its §Known gaps still says the plane has not adopted the package, and the plane adopted it (FW-3/FW-4, CONSTRUCTS Steps 1–2). `DEBT.md`'s D-60 names this document by line as repeating a claim D-60 itself has since corrected; that correction is made here, in the front matter, and the body is left as written. What genuinely remains of D-60 is two of its three sites, named below. as of 2026-09-14.
+**Status** · The DESIGN OF RECORD for document profiling, written 2026-07-30 at Bob's direction after per-variation handling had begun spreading through the capture path, and carrying two rulings Bob made that day (monitoring is a different contract per KIND; recognising change happens in LAYERS). [BUILT] as the `docprofile/` package: four stack handlers, the six-layer pipeline with its audit `trail`, the three digests and five verdicts, the content-type axis as a second `makeRegistry()` over the one recogniser engine, and `civicos-ui/test/docprofile.test.mjs` as its harness. COMPLETE as the model — nothing in the region/digest/verdict design has been superseded — and PARTIALLY STALE as a statement of REACH, in one specific and consequential way that **M0-27 CORRECTED IN THE BODY on 2026-09-14**: §Known gaps said the plane had not adopted the package and §Where this runs read as a conditional on three sites, and the plane adopted it (FW-3/FW-4, CONSTRUCTS Steps 1–2) while `op=audit`'s duplicate sweep discharged on the evidentiary digest, intra-bundle. `DEBT.md`'s D-60 names this document by line as repeating a claim D-60 itself has since corrected; that correction now stands in both the front matter and the two body sections. What genuinely remains of D-60 is two of its three sites — monitoring and `resolveLinks`' bracket, both still raw — named below. as of 2026-09-14.
 
 **Place in the system** · A level-2 design serving construct 5 of `BIO_System_Design.md` §3, *document profile and the extraction substrate*, whose level-1 home is `BIO_Content_Framework_v0_10.md` **Part I** — this package is framework §4's recogniser-and-registry shape built twice, once per axis, and Part II §16.1 (*Identify*) is the step it performs in the extraction process as built. Through change detection it also serves construct 2 (intake and capture, the monitoring contract) and construct 6 (meaning, where its referential and temporal connections are emitted as different kinds). What depends on it: `bio-plane/src/index.mjs`, the FIRST plane consumer, which imports `identify`, `doctypeFor`, `profileRecord`, `digests`, `CONFIDENCE` and `readText` from `docprofile/registry.mjs` and stamps the profile at `op=acquire`; `civicos-ui/app.html`, which carries a flattened copy produced by `tools/bundle-docprofile.mjs` with `check-semantics.mjs` failing the build on any drift between the two; and `INTERFACES.md`'s digest definitions, which cite this document.
 
 **Incomplete sections** ·
-- §Known gaps — its FIRST bullet is stale and is the one correction this retrofit owes. Measured 2026-09-14 against the tree: the plane HAS adopted the package (the import above; `identify()` and `digests()` are called at `op=acquire`), and `op=audit`'s duplicate sweep is DISCHARGED — `checkRegisterIntegrity` buckets on `profile.digests.evidentiary` when `determined === true`, beside the raw arm, though INTRA-BUNDLE only and no cross-bundle sweep exists at all. What remains of D-60 is its other two sites, both STILL RAW: monitoring compares a freshly computed sha against the recorded one with no digest and no `compare()`, and `resolveLinks`' contemporaneity bracket keys on raw `capture_sha`, so on a viewstate-churning page every fetch mints a fresh row and the bracket is always null (D-59's "strongest arm can never fire"). `compare()` has NO caller anywhere in `bio-plane/src`. The bullet's other three gaps are all still true as written.
+- §Known gaps — its first bullet was stale and M0-27 CORRECTED IT IN PLACE on 2026-09-14; the section stays on this list because what the corrected bullet now states is itself an open gap. Measured 2026-09-14 against the tree: the plane HAS adopted the package (the import above; `identify()` and `digests()` are called at `op=acquire`), and `op=audit`'s duplicate sweep is DISCHARGED — `checkRegisterIntegrity` buckets on `profile.digests.evidentiary` when `determined === true`, beside the raw arm, though INTRA-BUNDLE only and no cross-bundle sweep exists at all. What remains of D-60 is its other two sites, both STILL RAW: monitoring compares a freshly computed sha against the recorded one with no digest and no `compare()`, and `resolveLinks`' contemporaneity bracket keys on raw `capture_sha`, so on a viewstate-churning page every fetch mints a fresh row and the bracket is always null (D-59's "strongest arm can never fire"). `compare()` has NO caller anywhere in `bio-plane/src`. The bullet's other three gaps are all still true as written.
 - §Monitoring is a different contract per kind — the ruling is [BUILT] in the package and NOT REACHED by the instance. `CONTRACT.SUBSTANCE` / `MEMBERSHIP` / `UNMONITORABLE` is declared per doctype in `docprofile/doctypes/`, and grepping `bio-plane/src` for it on 2026-09-14 finds no consumer: the plane's monitoring tick does not ask what contract the document is under. So this section describes behaviour the LIBRARY offers, not behaviour the record exhibits, and the `unmonitorable` case it names as "the system lying quietly" is the case the plane currently cannot distinguish.
 - §Content type is a SEPARATE axis from the stack — written when the axis carried one measured type. THREE are registered today: `meeting_calendar`, `meeting_agenda` (FW-15, the second measured type and the first reached through text a non-HTML container produced), and the `generic` fallback. The section says nothing about how many types exist or what the second one cost to add, which is precisely the evidence for framework §4's uniformity claim and is recorded only in the source.
 - §What the measurements showed — the evidence base has not grown since the day this was written. Its own line says the table "is small… and it will grow"; 46 days on it is the same three sources, which is the same fact §Known gaps states as "only three stacks are measured". Read the architecture's confidence and the evidence's breadth separately.
-- §Where this runs — its conditional ("the plane should import it directly WHEN monitoring, `op=audit`'s duplicate sweep and `resolveLinks`' bracket arm adopt it") has been overtaken for one of the three and not for the other two; the sentence still reads as though none had happened.
 
 **Contents**
 - [The two requirements this serves](#the-two-requirements-this-serves)
@@ -328,16 +327,36 @@ been measured.
 
 ## Where this runs
 
-`docprofile/` is the canonical package and the plane should import it directly when
-monitoring, `op=audit`'s duplicate sweep and `resolveLinks`' bracket arm adopt it,
-rather than growing a second copy. `civicos-ui/app.html` carries a flattened copy
+`docprofile/` is the canonical package and the plane imports it directly rather than
+growing a second copy. **CORRECTED 2026-09-14 (M0-27): this sentence was written as a
+conditional — "the plane SHOULD import it directly WHEN monitoring, `op=audit`'s
+duplicate sweep and `resolveLinks`' bracket arm adopt it" — and one of those three has
+happened while the other two have not.** `bio-plane/src/index.mjs` imports the registry
+and stamps the profile at `op=acquire`, and `op=audit`'s duplicate sweep buckets on the
+evidentiary digest intra-bundle; monitoring and `resolveLinks`' bracket are still raw and
+are the surviving half of D-60 (§Known gaps). `civicos-ui/app.html` carries a flattened copy
 because its runtime is one self-contained file; `tools/bundle-docprofile.mjs`
 produces it and `check-semantics.mjs` fails the build on any drift between the two.
 
 ## Known gaps
 
-- **The plane has not adopted it.** Monitoring, the duplicate sweep and the
-  contemporaneity bracket arm still compare raw hashes (D-60).
+- **CORRECTED 2026-09-14 (M0-27). This bullet read "The plane has not adopted it —
+  monitoring, the duplicate sweep and the contemporaneity bracket arm still compare raw
+  hashes (D-60)", and it is now true of two of those three sites, not of all three.**
+  The plane HAS adopted the package: `bio-plane/src/index.mjs` imports `identify`,
+  `doctypeFor`, `profileRecord`, `digests`, `CONFIDENCE` and `readText` from
+  `docprofile/registry.mjs` and STAMPS THE PROFILE AT `op=acquire` (FW-3/FW-4,
+  CONSTRUCTS Steps 1–2) — **[BUILT]**. `op=audit`'s DUPLICATE SWEEP is **DISCHARGED**:
+  `checkRegisterIntegrity` in `bio-plane/checks/bio-checks.mjs` buckets on
+  `profile.digests.evidentiary` when `determined === true`, beside the raw-sha arm, and
+  fires only where at least two different raw captures share one evidentiary digest —
+  but it is **INTRA-BUNDLE ONLY**, over one register's `data/provenance.json`, and NO
+  cross-bundle sweep exists anywhere. The other two sites are **STILL RAW**: monitoring
+  compares a freshly computed sha against the recorded one with no digest and no
+  `compare()`, and `resolveLinks`' contemporaneity bracket keys on raw `capture_sha`, so
+  on a viewstate-churning page every fetch mints a fresh row and the bracket is always
+  null (D-59's "strongest arm can never fire"). `compare()` has NO caller anywhere in
+  `bio-plane/src`. That remainder is what is left of D-60.
 - **A shell is recognised and not yet captured properly.** Per the standing ruling
   JS-rendered content IS the content and must be captured at the same grade as the
   rest of the document, which needs the browser-rendering path. Until then this

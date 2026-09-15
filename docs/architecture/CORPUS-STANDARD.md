@@ -173,9 +173,12 @@ joins the table in the same commit that gives it front matter.
 | document | level | home (level-1) | since |
 | --- | --- | --- | --- |
 | `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 | 2026-09-14 |
-| `docs/development/MULTI-INSTANCE-ISOLATION.md` | 2 | `BIO_System_Design.md` §distribution | 2026-09-14 |
+| `docs/development/CONTENT-SEARCH-DESIGN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 piece 2 (construct 9 names no level-1 home) | 2026-09-14 |
+| `docs/development/OBSERVATION-LOG-DESIGN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 piece 3 (construct 9 names no level-1 home) | 2026-09-14 |
+| `docs/development/EXTRACTION-BREADTH-DESIGN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 piece 4 and Part I | 2026-09-14 |
+| `docs/development/MULTI-INSTANCE-ISOLATION.md` | 2 | `BIO_Distribution_v0_1.md` §7 | 2026-09-14 |
 | `docs/development/STORE-AS-CACHE.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §14.2–14.3 | 2026-09-14 |
-| `docs/development/INVESTIGATIVE-SESSION.md` | 2 | `BIO_Case_Making_v0_1.md`; `BIO_Content_Framework_v0_10.md` Part I §12 | 2026-09-14 |
+| `docs/development/INVESTIGATIVE-SESSION.md` | 2 | `BIO_Case_Making_v0_1.md`; `BIO_Content_Framework_v0_10.md` Part I §12; `BIO_Assistant_and_AI_Roles_v0_1.md` §4 | 2026-09-14 |
 | `docs/development/research/README.md` | 2 | `BIO_Case_Making_v0_1.md` | 2026-09-14 |
 | `docs/development/research/DATA-MODEL.md` | 2 | `BIO_Case_Making_v0_1.md` | 2026-09-14 |
 | `docs/development/research/RECONCILED.md` | 2 | `BIO_Case_Making_v0_1.md` | 2026-09-14 |
@@ -197,7 +200,7 @@ joins the table in the same commit that gives it front matter.
 | `docs/development/PRACTICE-SURVEY.md` | 2 | `BIO_Interaction_Constructs_v0_1.md` | 2026-09-14 |
 | `docs/development/FINDINGS-WORKPLAN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part I §12 | 2026-09-14 |
 | `docs/development/RETRIEVAL-PROBE.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §14.2–14.3 | 2026-09-14 |
-| `docs/development/ASSISTANT-PILOT.md` | 2 | construct 11 has no level-1 document (`BIO_System_Design.md` §3) | 2026-09-14 |
+| `docs/development/ASSISTANT-PILOT.md` | 2 | `BIO_Assistant_and_AI_Roles_v0_1.md` §5 | 2026-09-14 |
 
 ### Not yet governed — design documents that owe front matter
 

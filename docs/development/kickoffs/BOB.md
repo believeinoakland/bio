@@ -209,6 +209,14 @@ state from `origin/main`, claim before editing; (3) Bob clicks once and the sess
 exists, chatable and messageable. The same mechanism replaces a saturating session: the
 outgoing session writes its `<AREA>-NEXT.md` handoff FIRST, and the chip's prompt
 refuses to work if the handoff it names is absent from the remote.
+**And from the moment the successor's chip is clicked, the successor owns the checkout.**
+Measured 2026-09-14: CONDUCT #10, stood down and verified, was woken by its own worker
+subagents' late reports, wrote into the main checkout while CONDUCT #11 held it, and pushed
+CONDUCT #11's half-amended merge — two sessions in one tree (DEC-3) and a RED merge-carry
+arm on `main`. A replaced session that receives a late report MESSAGES its successor and
+writes nothing into any tree; a session's worker subagents outlive its stand-down, so its
+stand-down includes that rule for itself, and the successor's chip prompt says it owns the
+tree from the click.
 
 **Decision items are for doctrine, risk carrying Bob's name, and effects on people
 outside the project — and nothing else.** Activation order, sequencing, mechanism,

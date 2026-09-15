@@ -791,11 +791,19 @@ const REGISTER_FLOOR = {
      MOVED 2026-09-14 by CONDUCT #10 at M0-30's merge (972 -> 974): the merged run's own print read `arms 974/972`; the +2 is M0-30's planning-hygiene 4.7 declaration. One key set, read from the print after the commit (D-238).
      MOVED 2026-09-14 by M0-28 (974 -> 975): that item's own green `--strict` run, taken AFTER
      its commit `bdfcb86`, PRINTED `REGISTER FLOOR  arms 975/974 · classified 180/180 · corpus
-     (suites read) 181/181 · GREW by 1 arm(s)`. The cause is ONE new arm in an EXISTING suite:
-     `corpuscheck.test.mjs`'s declaration gains entry (5). No new suite, so `classified` and
-     `corpus` did not move for it.
-
-     MOVED 2026-09-14 by REC-84 (worktree agent-ae95c3be71f5bd167), on its OWN branch, from
+     (suites read) 181/181 · GREW by 1 arm(s)` — read from the print, never incremented by hand.
+     The cause is ONE new arm in an EXISTING suite: `corpuscheck.test.mjs`'s declaration gains
+     entry (5), the `asOfAll.length > 1` push disabled in `checkFile`, run and as declared. No
+     new suite, so `classified` and `corpus` are UNMOVED and none is owed. Nothing FELL.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
+     `FLEET_FLOOR`, which is the documented state; `FLEET_FLOOR` is unmoved. */
+  /* MOVED 2026-09-14 by CONDUCT #11 at REC-83's integration (975 -> 981 · 180 -> 181 · 181 -> 182):
+     the MERGED run's own print read `arms 981/975 · classified 181/180 · corpus (suites read)
+     182/181 · GREW by 6 arm(s)` - REC-83's `content-reads.test.mjs` (six declared arms, one new
+     suite) on top of M0-28's 975. The branch's own block (973/180/181, a tree without M0-30 and
+     M0-28) was dropped at the merge and declared; this is the re-read the loop promises. One key
+     set, grepped after writing. Nothing FELL. FLEET_FLOOR unmoved. */
+  /* MOVED 2026-09-14 by REC-84 (worktree agent-ae95c3be71f5bd167), on its OWN branch, from
      967/179/180 to 975/180/181 — read off a green `--strict` run at `47ec7cb` where the
      provenance line reported 197 of 197 discovered items in the commit. THE CONTAMINATED
      FIGURES WERE REFUSED AS A SOURCE AND THE REFUSAL IS THE POINT (D-238): an earlier run,
@@ -815,6 +823,13 @@ const REGISTER_FLOOR = {
      Nothing FELL. ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this
      file, here and in `FLEET_FLOOR`, which is the documented state; `FLEET_FLOOR` is
      UNMOVED and none is owed, since neither item adds a fleet member or a fleet suite. */
+  /* ---- SECOND MERGE OF `origin/main` INTO REC-84, 2026-09-14, and the third time this
+     key has been resolved today. CONDUCT #11's note above moved main to 981/181/182 for
+     REC-83's `content-reads`; REC-84's note above moved its own branch to 989/182/183 for
+     the SAME suite PLUS `content-extent-leg`. The merged tree holds both, so 989/182/183
+     stands and 981/181/182 is a strict subset of it — COLLAPSED TO ONE KEY SET, both
+     notes kept, and the surviving values RE-VERIFIED by a green `--strict` run on this
+     merge rather than reasoned about. ---- */
   arms: 989,
   classified: 182,
   corpus: 183,

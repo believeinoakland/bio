@@ -277,13 +277,28 @@ action to. When the handler is applied to a notice, it would then indicate wheth
 notice can be deleted from the list. If that action didn't work for one or more, they'd
 stay in the list so that the user can take a different action."*
 
-That is a **third weight**, beside the two the plane already implements:
+That is **a weight the plane does not have**.
 
-| weight | behaviour | where it is used |
-| --- | --- | --- |
-| `refuse` | all-or-nothing; on drift it stops and hands over nothing, so it cannot half-run | state-changing bulk acts (`dispose`, `retire`, `sever`) |
-| `report` | proceeds and says what moved | citing, reads |
-| **`per-item`** | **each item independently succeeds or is RETAINED WITH A REASON** | applying a handler to a notification selection |
+**CORRECTED 2026-09-14 (M0-27): this read "a third weight, beside the two the plane
+already implements", and both halves of that have moved.** The plane's act catalogue
+publishes **THREE** weights today — `refuse`, `report` and `single` — and **`per-item`
+is [DESIGNED-not-built]: it exists nowhere in `bio-plane/src/`.** Read the weights from
+the catalogue rather than from this table:
+
+    grep -aoE 'weight: *"[a-z-]+"' bio-plane/src/affordances.mjs | sort -u
+
+`single` is the weight added since, for an act that takes one key and has no set to
+apply; it is not `per-item` and does not stand in for it. The alarm on this row is
+UI-55's ARM 4d, which re-measures `op=proposedispose`, `op=taskresolve` and
+`op=taskforward` every run and goes RED the day one of them accepts a set — so the gap
+below is watched rather than merely recorded.
+
+| weight | state | behaviour | where it is used |
+| --- | --- | --- | --- |
+| `refuse` | **[BUILT]** | all-or-nothing; on drift it stops and hands over nothing, so it cannot half-run | state-changing bulk acts (`dispose`, `retire`, `sever`) |
+| `report` | **[BUILT]** | proceeds and says what moved | citing, reads |
+| `single` | **[BUILT]** | one subject at a time; there is no set to apply | `conclude`, `reopen`, `publish`, the reading acts |
+| **`per-item`** | **[DESIGNED-not-built]** | **each item independently succeeds or is RETAINED WITH A REASON** | what applying a handler to a notification selection WOULD use; no op accepts a set today |
 
 **Retention must carry the reason**, or the member re-applies the same action and it
 fails the same way in silence. The reasons are already named refusals in the plane and

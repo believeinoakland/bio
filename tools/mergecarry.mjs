@@ -125,6 +125,19 @@ const ABSENT = null; /* a path with no blob at a commit. Distinct from "" and fr
    the consequence of a drop is a fact about the CURRENT tree and this register is a fact
    about HISTORY. Conflating them is what the earlier draft did. */
 export const KNOWN_HISTORICAL_DROPS = [
+  { merge: "cc8187d", path: "bio-plane/scripts/coverage.mjs",
+    why: "REC-83, 2026-09-14, CONDUCT #11. A DECLARED drop whose declaration git could not "
+       + "read: the branch's REGISTER_FLOOR block (967 -> 973/180/181, from its own print on "
+       + "a tree without M0-30's +2 and M0-28's +1) was taken from MAIN's side whole (975/180/181) "
+       + "on purpose, and the merge message carried a `Dropped-from-branch:` line for it - in a "
+       + "paragraph FOLLOWED by a blank line and the Co-Authored-By block, so it was not in git's "
+       + "trailer block and `declared` read 0. The message was amended into the trailer block "
+       + "(9ec93e9, same tree) but the UN-amended commit had already been pushed to origin/main "
+       + "by another session acting in CONDUCT's checkout (18:26:35, DEC-3's two-sessions-one-tree "
+       + "failure), so cc8187d is permanent history. CONSEQUENCE: none owed - the floor is read from "
+       + "the MERGED run's own print in the commit after the merge, exactly as the loop says "
+       + "(981/181/182 at REC-83's integration). A trailer must be in the FINAL paragraph of the "
+       + "message, with any Co-Authored-By line, or git does not see it - that is the lesson." },
   { merge: "e241672", path: "civicos-ui/check-refusal-codes.mjs",
     why: "REC-69, 2026-08-08. 70 lines of floor moves. THE ITEM THIS CHECK EXISTS FOR. "
        + "The floors are NOT stale today — but CORRECTED 2026-08-09 (D-263) because the "

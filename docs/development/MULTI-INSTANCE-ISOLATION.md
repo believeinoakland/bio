@@ -2,7 +2,7 @@
 
 **Status** · An audit and plan, 2026-09-15, by session BOB at Bob's direction: what collides when several BIO instances share one Cloudflare account (buckets, fleet script names, the members' missing R2 binding, the freshness check, the central UI's fixed pointer), the cleanliness verdict, the lane map and interfaces crossed, the ordering constraints, and Bob's sequencing. **Planned, not built; no lane engaged.** Complete as a plan at `origin/main` `51d128a`, with Bob's steer folded in (shared stateless workers are acceptable if partitioning is structural). as of 2026-09-14.
 
-**Place in the system** · A level-2 design serving construct 15 of `BIO_System_Design.md` §3 (distribution) and §6 (the runtime shape). It crosses I6, I8 and I9 (the fleet interfaces) and the installer↔plane binding contract; DIST #2 holds its lane on it until the member surfaces are designed.
+**Place in the system** · A level-2 design serving construct 15 (distribution), whose level-1 home is `BIO_Distribution_v0_1.md` (its §7 points here), and `BIO_System_Design.md` §6 (the runtime shape). It crosses I6, I8 and I9 (the fleet interfaces) and the installer↔plane binding contract; DIST #2 holds its lane on it until the member surfaces are designed.
 
 **Incomplete sections** ·
 - §Lane map and interfaces — no IC has been proposed; the per-request instance identity for a shared `agent-worker` is named as the hard case and not designed.

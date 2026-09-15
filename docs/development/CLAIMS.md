@@ -4807,6 +4807,110 @@ found and did NOT touch, because it is in nobody's claimed path: the LAST LINE o
 without its `D-` prefix and with every backticked span stripped out — which is
 `printf`/`-m` damage in the shape CLAUDE.md's own trap section describes. `plancheck`
 passes over it. It is named here so it is not lost.
+## CLAIM 2026-09-14 M0 (M0-27 — the stale BODY sentences the four retrofits marked in front matter but could not correct, the D-106 class, prose only)
+
+Branch `worktree-agent-aa79a87a6668b92b0`, worktree-isolated, background lane. Eleven
+governed design documents under `docs/development/`, BODY prose and — where a front-matter
+claim is measured wrong — the front matter of the same file:
+
+- `docs/development/OFFICE-FORMATS.md`
+- `docs/development/SCHEDULER.md`
+- `docs/development/DOCUMENT-PROFILES.md`
+- `docs/development/RETRIEVAL-SUBSTRATE.md`
+- `docs/development/UI-PLAN.md`
+- `docs/development/UI-KICKOFF.md`
+- `docs/development/NOTIFICATIONS.md`
+- `docs/development/AUTHORITY-AND-TRUST.md`
+- `docs/development/ARCHIVE-FALLBACK.md`
+- `docs/development/SOURCE-ACCESS.md`
+- `docs/development/CAPTURE-FIDELITY.md`
+- `docs/DECIDED.md` — the GENERATED ruling index, regenerated with `node tools/decided.mjs`
+  because eleven ruling-bearing documents moved and `plancheck` fails on the drift
+  (`CLAIMS.md` is not a list of what was hand-written, it is a list of what was touched).
+
+Prose only, docs only. `docs/architecture/**` is NOT claimed and is not touched;
+`QUEUE.md`, `CLAUDE.md` and `DECISIONS.md` are not this claim's. **M0-28 is live on
+`tools/corpuscheck.mjs` and on the Status lines of `UI-PLAN.md`, `UI-KICKOFF.md` and
+`NOTIFICATIONS.md` (it reduces two `as of` dates to one); this claim touches those three
+files' BODY sentences and leaves their Status lines alone except to bump a trailing date
+that is lower than 2026-09-14, so the overlap is a trivial merge and is expected.**
+released: 2026-09-14, at the close of M0-27, on branch `worktree-agent-aa79a87a6668b92b0`.
+**WHAT LANDED.** Eleven stale BODY sentences corrected in place with the dated reason
+(2026-09-14, M0-27) in the framework's vocabulary, plus two the class sweep found in the
+same documents (`DOCUMENT-PROFILES.md` §Where this runs, and `SOURCE-ACCESS.md`'s own
+Incomplete bullet quoting the sentence it marked). **TEN Incomplete bullets removed**
+where the section was thereby complete — `OFFICE-FORMATS.md` §preamble,
+`DOCUMENT-PROFILES.md` §Where this runs, `RETRIEVAL-SUBSTRATE.md` §Serialization,
+`UI-PLAN.md` §Development is PAUSED, `UI-KICKOFF.md` §The first arc's deliverable,
+`AUTHORITY-AND-TRUST.md` §preamble, `ARCHIVE-FALLBACK.md` §preamble,
+`CAPTURE-FIDELITY.md` §Sizing, and BOTH of `SCHEDULER.md`'s count bullets (§The mechanism
+and §The test seam, its list going 4 -> 2) — and **THREE kept, deliberately**, because
+the section still describes an unbuilt mechanism: `DOCUMENT-PROFILES.md` §Known gaps
+(monitoring and `resolveLinks`' bracket still raw), `NOTIFICATIONS.md` §Applying a handler
+(`per-item` is [DESIGNED-not-built]) and `SOURCE-ACCESS.md` §the allowlist (egress
+diversity [ABSENT], D-120). The two `SCHEDULER.md` bullets are the only ones removed
+WITHOUT the section becoming complete in the ordinary sense: what they marked was a
+COUNT, and the count now lives in the corrected body as the COMMAND that reads it rather
+than as a figure a front-matter bullet has to chase.
+**TWO FRONT-MATTER CLAIMS MEASURED WRONG AND CORRECTED.** (1) `SCHEDULER.md` said the
+always-due claim was "true of two entries out of eleven"; measured from `#schedConsumers`
+on 2026-09-14 it is true of **FIVE** (`selection-sweep`, `task-drain`, `archive-monitor`,
+`connection-derive`, `overdue-scan`), and the corrected body now carries the two awk/grep
+commands rather than either figure. (2) `UI-PLAN.md`'s removed bullet said "fifty-seven UI
+items added capability"; measured, **53** UI rows read `done` of **56** distinct rows
+(UI-17 blocked — and its `### UI-17` heading occurs TWICE in `QUEUE.md`; UI-59 and UI-61
+queued). The wrong figure left with the bullet; the same figure still stands in the Status
+lines of `UI-PLAN.md` and `UI-KICKOFF.md`, WHICH THIS CLAIM DELIBERATELY DID NOT EDIT
+because M0-28 is live on exactly those lines — it is named as an act for CONDUCT in the
+report instead.
+**FIGURES.** `node tools/corpuscheck.mjs` **44 governed documents, 0 fail, exit 0**
+(unpiped), the same 44/0 as this branch's own baseline before any edit. `node
+tools/gates.mjs` from the repo root **GREEN · class DOCS**, 13 paths all prose under
+`docs/`, **exit 0** — doc-facing battery **19/19 suites green · 1,164 assertions · 53.1s**,
+four UI suites green, `plancheck --local` **0 fail 0 warn**. `bio-plane/npm ci` run first.
+**CONTROLS, run and recorded, 13 matchers + 2 arms + over-strictness.** A before/after
+harness proves each matcher ARMS against the pre-edit file from HEAD before it is believed
+against the tree (11 negative matchers 1->0, 2 positive 0->1 where the original text is
+kept as history under an appended correction): **13/13**. (1) One corrected sentence
+DELIBERATELY REVERTED — `CAPTURE-FIDELITY.md`'s "~40" cap — and the harness failed naming
+that file and no other, 1 of 13; restored by `cp`-back, sha256 `fda2d0e5…` and `cmp`
+identical at 5,626 B, harness back to 13/13. (2) corpuscheck's DATE ARM driven once on
+`ARCHIVE-FALLBACK.md`: Status `as of` set to 2026-09-13 behind the file's 2026-09-14
+commit day -> **exit 1, FAIL naming the file** ("the body moved and the front matter did
+not"); restored by `cp`-back, sha256 `627ce814…` and `cmp` identical at 16,337 B,
+corpuscheck back to 0 fail. **OVER-STRICTNESS: the 33 governed documents whose bodies
+already agreed with their front matter are UNTOUCHED and all pass** — `git status
+--porcelain` shows exactly the 11 claimed documents plus `CLAIMS.md` and `DECIDED.md`.
+**ONE INSTRUMENT FINDING, recorded rather than smoothed:** the `SOURCE-ACCESS.md` matcher
+armed **TWICE** on HEAD where 1 was declared, because the stale sentence sat in the body
+item AND was quoted verbatim in that file's own Incomplete bullet. The subject was right
+(both were corrected, tree=0); the DECLARATION was wrong, and it was only visible because
+the harness prints the armed count instead of asserting "non-zero".
+**NOTHING IS OWED TO A FUTURE ACTOR BY THIS LANDING.** The two items for CONDUCT are
+NOTICES stated as acts with their actor in the report: the two Status-line figures above,
+left to M0-28's pass, and `QUEUE.md`'s duplicated `### UI-17` heading.
+
+## CLAIM 2026-09-14 BOB (Part II §18 pieces 2–4 designed as three level-2 documents; the three homeless level-1 documents)
+session: BOB #11 (worktree `bio-worktrees/BOB`, branch `bob-audit`)
+opened: 2026-09-14
+authority: `kickoffs/BOB.md` ("What this session may write"); `BIO_Content_Framework_v0_10.md` Part II §18 (pieces 2, 3, 4 are the architect's); `BIO_System_Design.md` §3 (rows 11, 13, 15 carry no level-1 home); `CORPUS-STANDARD.md` §4.3 and §5
+paths:
+  - `docs/development/CONTENT-SEARCH-DESIGN.md` — NEW (piece 2)
+  - `docs/development/OBSERVATION-LOG-DESIGN.md` — NEW (piece 3)
+  - `docs/development/EXTRACTION-BREADTH-DESIGN.md` — NEW (piece 4)
+  - `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` — NEW (construct 11's home)
+  - `docs/architecture/BIO_Publication_v0_1.md` — NEW (construct 13's home)
+  - `docs/architecture/BIO_Distribution_v0_1.md` — NEW (construct 15's home)
+  - `docs/architecture/BIO_Content_Framework_v0_10.md` — Part II §18's table and front matter only (pointers to the designs)
+  - `docs/architecture/BIO_System_Design.md` — §3 rows 5, 9, 11, 13, 15 and the closing paragraph; front matter
+  - `docs/architecture/CORPUS-STANDARD.md` — §5's governed table, three rows
+  - `docs/architecture/README.md` — the catalogue entries for the three new level-1 documents
+  - `docs/development/DEBT.md` — appended design pointers on D-222, D-196, D-319, D-283 (text cells only; dispositions are CONDUCT's)
+  - `docs/development/MILESTONES.md` — one pointer sentence under M5
+  - `docs/development/QUEUE.md` — the BOB INBOX only (append)
+released:
+
+
 
 
 
