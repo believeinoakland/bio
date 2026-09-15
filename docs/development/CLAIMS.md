@@ -4228,3 +4228,81 @@ knowingly stale for that window). `OFFICE-FORMATS.md`'s one falsified sentence w
 here, in this area's own design source, per the amendment above.
 
 _(ROUTED by CONDUCT #10 2026-09-14 at COFF-9's integration, answering for dormant FRAMEWORK: the three §16 sentences are corrected by COFF-10 at its landing (in its brief and on its row); until then §16 is knowingly stale for that window, stated here. BOB #10, who is editing Part II today, is told so the merge stays trivial. Nothing further is owed here.)_
+
+
+
+## CLAIM 2026-09-14 M0 (M0-30 — the `plancheck` arm behind `CORPUS-STANDARD.md` §4.7, and the sweep that brings every open queue row to it)
+session: M0 background-lane worker (worktree `.claude/worktrees/agent-a12296b3767e15401`, branch `worktree-agent-a12296b3767e15401`)
+opened: 2026-09-14
+authority: QUEUE.md's `### M0-30` row; `docs/architecture/CORPUS-STANDARD.md` §4.7 (the rule), §5 (the governed table the arm READS) and §6 (what is ungoverned — the ledgers and the process documents); `kickoffs/CONDUCT.md` "A ROW NAMES THE DESIGN IT BUILDS FROM".
+paths:
+  - `tools/rowdesign.mjs` — NEW. The predicate: open rows out of `QUEUE.md`, the governed set
+    read through `corpuscheck.mjs`'s own `governed()` (never a hand list), and the judgement.
+    It is a module rather than inline in `plancheck.mjs` for the reason `plancheck` already
+    states at sections 2b and 2c: `plancheck.mjs` self-executes and cannot be imported, so an
+    inline predicate would have to be COPIED into the suite that drives it, and two readers of
+    one question is how two answers were allowed to differ (D-302's receipt). `mintid.mjs` and
+    `mergecarry.mjs` are the shape.
+  - `tools/plancheck.mjs` — the new ARM only (a new section importing `rowdesign.mjs`, one
+    FAIL per unpointed open row plus a corpus note). No existing check is edited.
+  - `bio-plane/test/planning-hygiene.test.mjs` — the suite arm and its `NEGATIVE CONTROL:`
+    line. This suite, not a new one: it is the file that already pins `plancheck`'s row
+    grammar (`QUEUE_IDS` is read out of `### <ID> ·` headings there) and already carries the
+    cheap-and-early copy of a `plancheck` gate.
+  - `bio-plane/test/rowdesign.control.mjs` — NEW, the committed control driver (five arms plus
+    a baseline), so the next session re-runs the controls in one step rather than re-deriving
+    how to break the subject. Not a `.test.mjs`, so the battery does not run it.
+  - `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR.arms` ONLY, 959 -> 961**, from this
+    branch's own printed figure on a green `--strict` run. Nothing else in the file; ONE key
+    set, grepped after writing. Added to this claim when the print moved, not before.
+  - `.gitignore` — one entry, `.m030-harness/`, the control driver's pen. Same rule and same
+    reason as every pen entry above it.
+  - `docs/development/QUEUE.md` — **`design:` POINTER LINES ONLY, one per open row that the
+    arm fails, placed immediately after that row's `interface:` line.** Nothing else in this
+    file: no status flip, no scope edit, no new row, no other line. `QUEUE.md` is CONDUCT's
+    sole ground (ORCHESTRATION) and this claim is licensed for exactly those lines.
+  - `docs/development/CLAIMS.md` — this block, and any `## DELEGATION … -> BOB` a routed
+    design gap needs.
+  - `docs/DECIDED.md` — **GENERATED, never hand-edited, and added to this claim after the
+    fact rather than silently**: the seven `design:` lines shift QUEUE.md's line numbers, the
+    index cites rulings BY LINE, and `plancheck` failed STALE on the drift (CLAUDE.md:
+    regenerate it in any turn that moves the corpus). `node tools/decided.mjs`, 807 rulings /
+    226.4 KB; the whole diff is 26 QUEUE.md line numbers and no ruling text.
+not mine, stated: `CLAUDE.md`, `DECISIONS.md`, `docs/architecture/**` (the standard is READ,
+never edited — an arm that edits the rule it enforces is not an arm), `MILESTONES.md`,
+`DEBT.md`, and every row's own scope/status text in `QUEUE.md`.
+concurrency: REC-82 (`schema.mjs`/`store.mjs`), COFF-10 (`formats.mjs`) and CAP-7
+(`MEASUREMENTS.md`, Part II §16) are live and disjoint. `QUEUE.md` rows may be flipped by
+CONDUCT while this runs, which is why the pointer lines are one line each and additive.
+released: 2026-09-14, at the close of M0-30, on branch `worktree-agent-a12296b3767e15401`.
+**What landed.** `tools/rowdesign.mjs` (the §4.7 predicate, governed set via `corpuscheck`'s
+own `governed()`), its arm as `plancheck` section 7, the suite arm and 22 new assertions in
+`planning-hygiene.test.mjs`, the committed driver `bio-plane/test/rowdesign.control.mjs`, and
+the SWEEP: **seven `design:` pointer lines, one per open row the arm failed — M0-29, REC-87,
+VF-7, CAP-7, CAP-8, SK-5, UI-59 — and nothing else in `QUEUE.md`.** Every pointer names a
+section that EXISTS and was read before it was written; **ZERO gaps were routed to BOB, because
+every failing row turned out to have a real authority** — the routed-gap path is built, driven
+over fixtures and driven live by control arm A2, and is UNEXERCISED on today's queue, which is
+stated here rather than left to look like coverage.
+**Figures.** Battery **187/187 · 11,432** against this session's own pristine baseline worktree
+at `952c7d7` (**187/187 · 11,410**); the +22 is `planning-hygiene.test.mjs` 252 -> 274 and no
+other suite moved. `coverage.mjs --strict` DIRECTLY from `bio-plane/`, `$?` unpiped, **exit 0**,
+REGISTER FLOOR **961/961 · 178/178 · 179/179** exact (floor moved 959 -> 961 from this branch's
+own print, ONE key set). `node civicos-ui/test/run.mjs` from the repo root, **exit 0**.
+`node tools/gates.mjs` **GREEN · class FULL**. `plancheck --local` **0 fail 0 warn**.
+**Controls 25/25 as declared, FIRST RUN**, five arms plus a baseline, restores by sha256 AND
+`cmp` AND a floored byte count — declared in the suite's own `NEGATIVE CONTROL:` line.
+**One instrument defect, recorded rather than smoothed**: the driver's first cleanup removed the
+PEN DIRECTORY and took this session's baseline worktree and saved gate logs with it, on a clean
+run at exit 0; `git worktree prune` cleared the stale registration and the driver now removes
+only the copies it wrote.
+**WHAT IS OWED TO A FUTURE ACTOR: nothing by this landing.** The two items CONDUCT may want are
+NOTICES, not debts, and both are in the report as acts with their actor: (1) `CORPUS-STANDARD.md`
+§4's numbered list is written 1,2,3,4,5,7,6 — the row-design rule is labelled 7 but sits SIXTH,
+so a Markdown renderer shows it as §4.6 and shows the line-citation rule as §4.7, exactly
+swapping two numbers that are both in live use (`kickoffs/CONDUCT.md` and `kickoffs/WORKER.md`
+cite §4.7; REC-81's claim cites §4.6). The fix is to swap the two list items so source order
+matches their numbers; `docs/architecture/**` is not this claim's, so it is reported, not
+edited. (2) UI-59's scope names the surface ledger as `docs/CIVICOS_UI_STATE.md`; the file is
+`docs/development/CIVICOS_UI_STATE.md`. This claim is licensed for `design:` lines only, so the
+row's own text was left alone.

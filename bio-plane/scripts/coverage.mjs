@@ -762,7 +762,20 @@ const REGISTER_FLOOR = {
      own print read `arms 958/957` — the +1 is BOB's corpuscheck.test.mjs landing beside the item,
      invisible to the branch that set 957. One key set, read from the print after the commit (D-238). */
   /* MOVED 2026-09-14 by CONDUCT #10 at COFF-9's merge (958 -> 959): the merged run's own print read `arms 959/958`; the +1 is COFF-9's ooxml suite arm. One key set, read from the print after the commit (D-238). */
-  arms: 959,
+  /* MOVED 2026-09-14 by M0-30 (959 -> 961), from this branch's own printed `arms 961/959 ·
+     GREW by 2 arm(s)` on a green `--strict` run. The +2 is `planning-hygiene.test.mjs`'s
+     §4.7 declaration: the suite's counted declaration went from 3 arms to 5. **AND THE +2 IS
+     ITSELF A FINDING ABOUT THE REGISTER, recorded rather than smoothed**: the declaration was
+     written stating five arms and the register first counted THREE, because two of them
+     (A2b, A4) stated their outcome in prose where the other three used the arrow grammar —
+     the "count that is merely WRONG is harder to notice than a count that is zero" receipt in
+     `control-register.mjs`'s own header, met while writing a new declaration. The two arms
+     were re-spelled to be legible to the grammar rather than left undercounted; nothing about
+     what the driver DOES changed. `classified` and `corpus` are UNMOVED — this suite already
+     declared, so no new declaration and no new suite. One key set, grepped after writing
+     (`^  arms:` matches twice in this file: here and in `FLEET_FLOOR`, the documented state;
+     `FLEET_FLOOR` is unmoved and none is owed — this item adds no fleet member or suite). */
+  arms: 961,
   classified: 178,
   corpus: 179,
 };

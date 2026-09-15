@@ -21,6 +21,31 @@
    registered file leaving `docs/development/` silently narrowed a walk while every
    other figure read right, and the repair is that a REGISTERED file is in the corpus by
    construction — lowering the floor would have recorded the loss instead of fixing it.** */
+/* NEGATIVE CONTROL: (M0-30, run 2026-09-14, worktree agent-a12296b3767e15401) the §4.7
+   row-design arm, driven by `test/rowdesign.control.mjs` — COMMITTED, so it re-runs in one
+   step. **25 of 25 checks as declared FIRST RUN across five arms plus a baseline**, each armed
+   ALONE, every restore verified by sha256 AND `cmp` AND a floored byte count against a
+   uniquely-named pristine copy in `.m030-harness/`. BASELINE 274 pass 0 fail, plancheck naming
+   no row. (A1) the arm this item exists for — M0-29's `design:` pointer REMOVED -> plancheck
+   FAILS naming M0-29 and ONLY M0-29, with §4.7's own sentence in the failure. (A2)
+   OVER-STRICTNESS — the same pointer replaced by `design: MISSING — routed to BOB (CLAIMS.md
+   DELEGATION …)` -> plancheck passes AND reports the routing, because an admitted gap is
+   schedulable and silence is the defect. (A2b) OVER-STRICTNESS — the 252 closed rows carrying
+   no pointer at all -> NOT judged and in no finding; history is not re-briefed. (A3)
+   THE ARM'S OWN ARM — the section deleted from `tools/plancheck.mjs` -> this suite goes red 2
+   fails, BY NAME ("plancheck RUNS the row-design check" and the count-equality arm beside it),
+   which is why the in-the-loop arm RUNS plancheck and reads its report instead of grepping its
+   text (mergecarry's receipt: a COMMENT satisfied the grep). (A4) THE GOVERNED SET IS §5's
+   TABLE — a row naming `docs/development/M030-PLANTED-DESIGN.md` FAILS, then that path planted
+   into CORPUS-STANDARD.md §5's table -> the SAME row PASSES, and FAILS again after the restore;
+   `governed()` is read at call time, so no hand list and no snapshot can sit between the table
+   and the judgement. The in-suite half of the same question is the ZZ-12 pair below, which
+   swaps the injected set rather than the file.
+   **THE DRIVER WAS WRONG ONCE AND IT IS RECORDED RATHER THAN SMOOTHED**: its first cleanup
+   removed the PEN DIRECTORY, which also held this session's baseline worktree and every saved
+   gate log, deleting all of it on a clean run with exit 0 and a cheerful "pen removed"; the
+   registration was cleared with `git worktree prune` and the driver now removes only the
+   copies it wrote. The subject was never in doubt, the instrument was. */
 /* NEGATIVE CONTROL: (run 2026-07-31) strip the M7 token from open DEBT row D-50 (cell -> "open") -> 2 fail (the D-50 row + the aggregate); AND strip the BUILT(FW-3) marker from CONSTRUCTS "The plan" Step 1 -> 2 fail (the Step 1 item + the aggregate); each restored, 154 pass 0 fail. */
 /* Planning-drift hygiene: the M0-6 gate, on D-113's precedent.
  *
@@ -63,6 +88,7 @@
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import { readFileSync, readdirSync, statSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 /* M0-18 — ONE mechanism, imported. The reason is at `allDocs()`. */
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
 import { fileURLToPath } from "node:url";
@@ -294,6 +320,151 @@ console.log("\n--- no unregistered 'Order of work' list escapes the check ---");
     const present = section(read(e.file), e.heading) != null;
     t(`exemption "${e.file.slice(REPO.length + 1)} · ${e.heading}" names a real section`, present, true);
   }
+}
+
+/* ------------------- 4. every OPEN queue row names the design it builds from */
+/* `CORPUS-STANDARD.md` §4.7, Bob 2026-09-14. The predicate is `tools/rowdesign.mjs` —
+   IMPORTED, not ported: `plancheck.mjs` self-executes and cannot be imported, so an inline
+   arm there would have to be COPIED here, and two readers of one question is how two answers
+   were allowed to differ (D-302). The DEBT port above predates that reasoning and is left
+   alone; this arm follows `mintid` and `mergecarry` instead.
+
+   The fixtures below use the synthetic namespace `ZZ`, which allocates nothing: `mintid`'s
+   corpora are `docs/` files and this is not one, and an id-shaped example in a real namespace
+   is how the id tool once poisoned its own floor. */
+console.log("\n--- every open queue row names the design it builds from (CORPUS-STANDARD §4.7) ---");
+{
+  const { rowDesignAudit, governedIndex, openRows } = await import("../../tools/rowdesign.mjs");
+  const { governed } = await import("../../tools/corpuscheck.mjs");
+
+  /* THE GOVERNED SET IS READ FROM §5's TABLE, NEVER LISTED — the arm's whole reason for
+     importing `corpuscheck`. Asserted as an IDENTITY against `governed()` so the injected
+     sets used by the fixtures below cannot hide a hand list in the module. */
+  t("the judge's governed set IS corpuscheck's governed() — §5's table, not a list in rowdesign.mjs",
+    [...governedIndex().paths].sort(), governed().slice().sort());
+  t("the governed set is non-trivial (a headline arm over an empty corpus proves nothing)",
+    governedIndex().paths.size >= 20, true);
+
+  /* A fixture queue. Every case is one row, and the cases are the rule's edges. */
+  const FIX = [
+    `### ZZ-1 · queued — a row naming an architecture document`,
+    `milestone: M4`,
+    `scope: builds from \`docs/architecture/BIO_Case_Making_v0_1.md\` §3`,
+    ``,
+    `### ZZ-2 · queued — a row naming a §5 table document by BASENAME`,
+    `milestone: M2`,
+    `design: \`SCHEDULER.md\` §"The mechanism, and how the next consumer joins"`,
+    ``,
+    `### ZZ-3 · running — a row naming only an IC`,
+    `milestone: M4`,
+    `interface: I3 (IC-84 ACCEPTED)`,
+    ``,
+    `### ZZ-4 · queued — a row naming only LEDGERS and a kickoff`,
+    `milestone: M0 (background lane)`,
+    `interface: none`,
+    `scope: \`DEBT.md\`'s row is the authority; see \`QUEUE.md\` and \`kickoffs/CONDUCT.md\``,
+    ``,
+    `### ZZ-5 · done — a closed row with no pointer at all`,
+    `milestone: M8`,
+    `scope: nothing here names a design, and history is not re-briefed`,
+    ``,
+    `### ZZ-6 · queued — an EXPLICIT routed gap`,
+    `milestone: M9`,
+    `design: MISSING — routed to BOB (CLAIMS.md DELEGATION 2026-09-14 M0 (M0-30) -> BOB)`,
+    ``,
+    `### ZZ-7 · queued — a routed gap that routes NOWHERE`,
+    `milestone: M9`,
+    `design: MISSING — routed to BOB`,
+    ``,
+    `### ZZ-8 · queued — an M0 row pointing at the test estate's own authority`,
+    `milestone: M0 (background lane, holds no slot)`,
+    `design: \`docs/development/VERIFICATION.md\` §"The negative-control register"`,
+    ``,
+    `### ZZ-9 · queued — a NON-M0 row pointing at the same process document`,
+    `milestone: M4 — a build row`,
+    `design: \`docs/development/VERIFICATION.md\``,
+    ``,
+    `### ZZ-10 · queued — an AMBIGUOUS basename`,
+    `milestone: M8`,
+    `design: \`README.md\``,
+    ``,
+    `### ZZ-11 · queued — a row whose own text names nothing`,
+    `milestone: M8`,
+    `interface: none`,
+    ``,
+    `## AN AREA HEADING — the prose below belongs to the AREA, not to ZZ-11`,
+    `This section mentions \`docs/architecture/BIO_System_Design.md\` §3 in passing.`,
+    ``,
+  ].join("\n");
+
+  const verdict = (queue, governedSet) => {
+    const a = rowDesignAudit({ queue, governedSet: governedSet ?? governed() });
+    const by = new Map(a.open.map((r) => [r.id, r.ok]));
+    return { a, by };
+  };
+  const { a: FA, by } = verdict(FIX);
+
+  t("the fixture parses as eleven rows, ten of them judged (the `done` row is not)",
+    [FA.rows.length, FA.open.length, FA.skipped.length], [11, 10, 1]);
+  t("ZZ-1 · a docs/architecture path passes", by.get("ZZ-1"), true);
+  t("ZZ-2 · a §5-table document named by BASENAME passes", by.get("ZZ-2"), true);
+  t("ZZ-3 · an IC token ALONE passes (over-strictness: an IC is an authority)", by.get("ZZ-3"), true);
+  t("ZZ-4 · ledgers and a kickoff are NOT designs — the row FAILS", by.get("ZZ-4"), false);
+  t("ZZ-5 · a `done` row with no pointer is NOT JUDGED (history is not re-briefed)",
+    [by.has("ZZ-5"), FA.skipped.map((r) => r.id)], [false, ["ZZ-5"]]);
+  t("ZZ-6 · an EXPLICIT routed gap passes — an admitted gap is honest", by.get("ZZ-6"), true);
+  t("ZZ-7 · a routed gap naming no CLAIMS.md FAILS — a gap routed nowhere is a label",
+    by.get("ZZ-7"), false);
+  t("ZZ-8 · VERIFICATION.md passes for an M0 row (the test estate's own authority)",
+    by.get("ZZ-8"), true);
+  t("ZZ-9 · the SAME process document FAILS for a non-M0 row — the exception is scoped",
+    by.get("ZZ-9"), false);
+  t("ZZ-10 · an AMBIGUOUS basename (`README.md` is two governed documents) is not accepted",
+    by.get("ZZ-10"), false);
+  /* THE LOAD-BEARING BOUNDARY ARM. A row ends at the next `##` area heading, so the last row
+     before one cannot pass on that area's prose. Measured, not assumed: without the bound,
+     `SK-5` absorbed the whole DIST section and `FW-17` the IS-BUILD-PLAN status block. */
+  t("ZZ-11 · a row does NOT inherit the area prose below it — it FAILS on its own text",
+    by.get("ZZ-11"), false);
+  t("the fixture's failures are exactly the five intended, and no sixth",
+    FA.findings.map((f) => f.id).sort(), ["ZZ-10", "ZZ-11", "ZZ-4", "ZZ-7", "ZZ-9"].sort());
+
+  /* THE GOVERNED SET DECIDES, AND IT IS THE TABLE'S. Same row, two sets: a path that is in
+     the governed set passes and the same path out of it fails. This is the injectable half of
+     the planted-§5-row control (the on-disk half is in the control block at the head). */
+  const PLANT = [`### ZZ-12 · queued — a row naming a planted document`, `milestone: M8`,
+                 `design: \`docs/development/PLANTED-DESIGN.md\` §1`, ``].join("\n");
+  t("a path IN the governed set passes and the SAME path out of it fails — the table decides",
+    [verdict(PLANT, [...governed(), "docs/development/PLANTED-DESIGN.md"]).by.get("ZZ-12"),
+     verdict(PLANT, governed()).by.get("ZZ-12")], [true, false]);
+
+  /* THE LIVE QUEUE. The cheap-and-early copy of the plancheck gate. */
+  const LIVE = rowDesignAudit({ repo: REPO });
+  console.log(`  queue design pointers: ${LIVE.open.length} open row(s) judged of ${LIVE.rows.length}, `
+    + `${LIVE.skipped.length} closed, ${LIVE.unknownState.length} unrecognised state(s), `
+    + `${LIVE.findings.length} naming no design`);
+  t("QUEUE.md has open rows to judge (a totality assertion over an empty corpus proves nothing)",
+    LIVE.open.length >= 5, true);
+  t("every OPEN row in QUEUE.md names a governed design, an IC, or an explicitly routed gap",
+    LIVE.findings.map((f) => `${f.id} (QUEUE.md:${f.line})`), []);
+  t("every row state in QUEUE.md is one this rule recognises — an unrecognised state is NAMED, "
+  + "never silently unjudged", LIVE.unknownState.map((r) => `${r.id} · ${r.state}`), []);
+
+  /* THE MECHANISM IS IN THE LOOP. `plancheck` is what CONDUCT runs before every push, and a
+     check that lives only in this battery would not reach the act that writes a row. Grepping
+     plancheck's TEXT is satisfied by a comment — mergecarry's arm measured exactly that — so
+     plancheck is RUN and its own report is read. */
+  const pc = spawnSync(process.execPath, [join(REPO, "tools/plancheck.mjs"), "--local"],
+    { cwd: REPO, encoding: "utf8" });
+  t("plancheck RUNS the row-design check and reports it in its own output",
+    /queue design pointers:\s*\d+ open row\(s\) judged/.test(pc.stdout || ""), true);
+  t("plancheck's own count of open rows equals this suite's",
+    ((pc.stdout || "").match(/queue design pointers: (\d+) open row\(s\) judged of (\d+)/) || []).slice(1, 3),
+    [String(LIVE.open.length), String(LIVE.rows.length)]);
+  /* `openRows` is exported and driven directly so a future refactor cannot quietly stop
+     parsing the file that QUEUE_IDS above is read from. */
+  t("the row parser agrees with this suite's own heading scan on the id set",
+    openRows(queue).length >= QUEUE_IDS.size, true);
 }
 
 console.log(`\nplanning-hygiene: ${pass} pass, ${fail} fail`);
