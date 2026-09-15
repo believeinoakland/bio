@@ -894,11 +894,18 @@ t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures a
      the instrument's own output and not a guess. Same disposition as the other seven: D-369's,
      not this suite's, and named here so it cannot arrive ungraded and invisible.
      WHY IT CANNOT BE GRADED, stated rather than left to the category: `truncated` at the
-     meaning level is `rows.length > cap || missing.length > cap`, and `missing` is assembled in
-     memory from THREE bounded reads — one per subject kind — so no single row source carries
-     the figure. Each of the four reads underneath it does carry a SQL `LIMIT`, which is what
-     the graded arm above would check if the figure were attributable to one of them. */
-  ["#backfillLegContent:need", "#frontierContent:page", "#frontierMeaning:rows",
+     meaning level WAS `rows.length > cap || missing.length > cap` — and that expression was a
+     DEFECT this arm caught at REC-95's integration (2026-09-15), not a shape to declare: `rows`
+     is the RAW fetch at `(cap + 1) * 3`, over-fetched because a withholding gate filters it, and
+     the published page is cut from `gated`; `missing` is not the list `never_looked` is paged
+     from either. **Both disjuncts over-reported.** Corrected at the site to
+     `gated.length > cap || never.length > cap`, which is what `#frontierDocument` one screen up
+     already does. What remains, and is declared here, is that `gated` is an in-memory collection
+     assembled from THREE bounded reads — one per subject kind — so no single row source carries
+     the figure. Each read underneath it does carry a SQL `LIMIT`, which is what the graded arm
+     above would check if the figure were attributable to one of them. **Fix what is wrong, then
+     declare what is out of reach — in that order.** */
+  ["#backfillLegContent:need", "#frontierContent:page", "#frontierMeaning:gated",
    "biasInhale:bars", "documentsNamingEntity:merged", "frontier:page",
    "queueFeed:dispAll", "queueFeed:items"]);
 const noRowSources = CODE.replace(/#rows\(/g, "#norows(");
@@ -1072,7 +1079,7 @@ t("IN-MEMORY TRUNCATION: and the SOURCE BOUND is reported as TWO rosters, never 
 + "An instrument that cannot reach something must SAY SO by name rather than pass silently over "
 + "it, which is this block's entire content",
   [INMEM.source.graded.length + INMEM.source.outOfReach.length, INMEM.source.graded.length > 0],
-  [7, true]);
+  [8, true]);
 
 /* THE OUT-OF-REACH ROSTER, PINNED BY NAME. Same discipline as REC-99's ungraded pin: an EIGHTH
    in-memory figure, or one MIGRATING between the two rosters, must be declared here before it can
@@ -1083,8 +1090,8 @@ t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row 
 + "memory from several reads and one handed in by the CALLER. The other two are bounded by a "
 + "cap-carrying call and no further — the callee is not read",
   INMEM.source.outOfReach.map((x) => x.split(" ")[0]).sort(),
-  ["#backfillLegContent:need", "biasInhale:bars", "documentsNamingEntity:merged",
-   "queueFeed:dispAll", "queueFeed:items"]);
+  ["#backfillLegContent:need", "#frontierMeaning:gated", "biasInhale:bars",
+   "documentsNamingEntity:merged", "queueFeed:dispAll", "queueFeed:items"]);
 
 /* ---- SET 2. THE METHODS THE CENSUS COUNT CANNOT GRADE BY CONSTRUCTION.
    DERIVED BY INVERSION, NEVER LISTED — AND THE INVERSION FOUND ONE MORE THAN THE LEDGER'S HAND
@@ -1119,14 +1126,16 @@ t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is b
 + "and each still PASSES; what changes is that the instrument now SAYS which methods its count "
 + "cannot defend, instead of a reader having to re-derive it from a debt row",
   CENSUS_BLIND,
-  ["#calDriftFor", "#frontierContent", "biasManifest", "documentsNamingEntity", "frontier", "queueFeed"]);
+  ["#calDriftFor", "#frontierContent", "#frontierMeaning", "biasManifest",
+   "documentsNamingEntity", "frontier", "queueFeed"]);
 t("SET 2, PARTITIONED — and the partition is the point. `#calDriftFor` is blind to the COUNT but "
 + "DEFENDED by REC-99's inversion, which grades its row source by name; the other five are blind "
 + "to BOTH halves and are D-369's set 2 exactly. Reporting six as one number would put a method "
 + "that IS defended into a roster of methods that are not, which is the conflation this row was "
 + "written to undo",
   DOUBLY_BLIND,
-  ["#frontierContent", "biasManifest", "documentsNamingEntity", "frontier", "queueFeed"]);
+  ["#frontierContent", "#frontierMeaning", "biasManifest", "documentsNamingEntity",
+   "frontier", "queueFeed"]);
 
 /* ---- AND THE CLAIMS THE GRADER'S OWN SPELLING CANNOT READ AT ALL.
    FOUND BY THIS ITEM AND NAMED RATHER THAN FIXED, because widening `TRUNC_RE` would enlarge

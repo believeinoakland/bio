@@ -29606,7 +29606,19 @@ export class Store extends DurableObject {
     }
     return {
       level: "meaning", found: true, built: true, limit: cap,
-      truncated: rows.length > cap || missing.length > cap,
+      /* CORRECTED AT INTEGRATION, 2026-09-15 by CONDUCT #11, and M0-38's grader —
+         landed in the same wave, minutes earlier — is what named it: THE CUT AND THE
+         CLAIM MUST AGREE. Two errors, both over-reporting. `rows` is the RAW fetch at
+         `(cap + 1) * 3`, deliberately over-fetched because the withholding gate below
+         filters it, so `rows.length > cap` was true wherever the gate dropped enough
+         rows — claiming a truncation that never happened. And the published
+         `never_looked` is cut from `never`, not from `missing`, so the second disjunct
+         compared against a list this method does not page. `#frontierDocument` one
+         screen up publishes `page.length > cap || never.length > cap` against exactly
+         the collections it cuts, and is the model. NEITHER BRANCH COULD HAVE SEEN THIS:
+         REC-95 wrote the method and M0-38 wrote the grader, in parallel, each green
+         alone — the merge is the only place the two met. */
+      truncated: gated.length > cap || never.length > cap,
       looked,
       never_looked: never.slice(0, cap),
       never_looked_count: never.slice(0, cap).length,
