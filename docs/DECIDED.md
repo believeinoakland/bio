@@ -528,7 +528,7 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:7828`
 - **D-367** — ) is now quoted at the `RULED` further in instead of at the filename in its headline, and `QUEUE.md:714` and `kickoffs/BOB-NEXT.md:100` re-quote **byte-identically**.  
   `docs/development/CLAIMS.md:8057`
-- **D-367** · 2026-09-15 — D-367: `tools/decided.mjs`'s ruling MARKER matches the index's own filename, because `.` is a word boundary and `DECIDED.md` therefore satisfies `/\b(RULED|DECIDED|…)\b/` — so prose that merely NAMES the index mints a ruling row attributed to whatever id was last mentioned, and at least eight such rows are already…  
+- **D-367** — Three rows survived by RE-ANCHORING (the scan moves forward, so a line naming the file that also carries a real marker keeps its ruling) — D-367's own row is now quoted at its `RULED` rather than at the filename.  
   `docs/development/QUEUE.md:774`
 ## IC-
 
