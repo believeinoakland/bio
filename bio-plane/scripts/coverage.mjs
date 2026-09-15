@@ -886,9 +886,14 @@ const REGISTER_FLOOR = {
      191/190 · GREW by 7 arm(s)` - REC-93's observation-log suite on top of REC-97's 1037. The
      branch's own block (1022/187/188, cut at f38af22 before SK-7, CAP-12 and REC-97) was dropped
      at the merge and declared. One key set. Nothing FELL. FLEET_FLOOR unmoved. */
-  arms: 1044,
-  classified: 190,
-  corpus: 191,
+  /* MOVED 2026-09-14 by CONDUCT #11 at CPDF-20's integration (1044 -> 1051 · 190 -> 191 · 191 -> 192):
+     the MERGED run's own print read `arms 1051/1044 · classified 191/190 · corpus (suites read)
+     192/191 · GREW by 7 arm(s)` - CPDF-20's tier-pagewise suite on top of REC-93's 1044. The branch's
+     own block (1022/187/188) was dropped at the merge and declared; its worker named the collision
+     itself and said not to add the two deltas, which is the rule. One key set. Nothing FELL. */
+  arms: 1051,
+  classified: 191,
+  corpus: 192,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

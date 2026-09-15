@@ -213,6 +213,85 @@ same commit (`CORPUS-STANDARD.md` §4.1). A row with no design pointer is a row 
 honestly — find the section, or route the gap to BOB as the missing design, never spawn against
 the ledger.
 
+## YOU ARE THE SECOND LINK IN THE BLOCKER CHAIN, AND THE ONLY CHEAP PLACE TO BREAK IT.
+
+**`CLAUDE.md` now carries the rule** (2026-09-14, *"a blocker is a claim, and nothing here
+audits one"*): every instrument in this repository is pointed at the record claiming MORE than
+it has, and a statement of what we CANNOT do passes all of them untouched — costing real work
+in the direction that leaves no trace, because the work never happens and nobody audits a
+reason for not building something. **This section is the loop's half: WHERE that claim passes
+through you, and what it costs at each step.**
+
+**The chain is three sessions long and only the last step is expensive:**
+
+1. **A worker states a blocker in its report.** Honest, usually right, and written from ONE
+   tree at ONE moment — often a tree that is already behind, since `origin/main` moves while it
+   runs. Cost to correct here: zero, and the worker often corrects itself.
+2. **YOU carry it onto a row** — into the `landed:` line, into a new row's `depends-on`, into a
+   `blocked` status. Cost to correct here: **one edit, in the turn you are already taking.**
+3. **BOB rests a design on the row**, or a future CONDUCT declines to spawn against it. Cost to
+   correct here: a design document, its decomposition table, every row drawn from it, and the
+   weeks nobody spent on work that was never actually blocked.
+
+**So the rule for this loop, and it is one command: before a blocker reaches a row, GREP THE
+CODE IT NAMES, on the tree you are on.** Not the tree the worker measured — yours, after the
+merge. The same check the content rule below demands before a SPAWN, run in the other
+direction and at the other end.
+
+**Both of the day's receipts came through step 2 and were caught there:**
+
+- **REC-89's row rested on a debt row that had been stale for 38 days.** D-225's caps landed at
+  REC-60 on 2026-08-07; the row stayed `open`; a design written five weeks later cited it as an
+  unmet precondition, and CONDUCT rowed the design's line. The worker found its own subject
+  already built, declined to mint an IC for a change that does not exist, and corrected the
+  design in place. **The lesson that generalises is the one its report named: a debt row is a
+  claim about the day it was written, and a remedy ships without the row closing.**
+- **A report named PERSISTENCE as the blocker on the extent picker; the real blocker was one
+  missing CANVAS.** `page_count` had been persisted at acquire hours earlier by CAP-9 and
+  `schema.mjs` says so in so many words. Carried unexamined, that sentence would have sent
+  someone to build a plane item nobody owed — and the narrower truth is a surface a UI worker
+  can actually build. It was caught because BOB asked whether it was still true, which is the
+  check this section makes routine rather than lucky.
+
+**And the asymmetry that makes this yours rather than shared:** a worker's overstated blocker
+is one report; a row's overstated blocker is READ BY EVERY SESSION AFTER IT, including the ones
+that decide what not to build. You are the last reader who can still check it for one command.
+
+## A CORRECTION TO A RUNNING ROW IS YOURS TO PAY AT INTEGRATION. THE WORKER CANNOT BE REACHED, AND PUSHING DOES NOT REACH IT EITHER.
+
+**Measured 2026-09-14, and the pair of us found the two halves of it in one exchange.** BOB
+renamed a table in a design while the worker building that table was mid-run — `observations`
+to `observation_log`, because `runtime_observations` and a `captured_locators.observations`
+counter already existed and a third thing under one word is how three statements about
+different things read as three confirmations of one. The ask was *"get it to that worker
+now"*, and the answer is that **you cannot**:
+
+- **A worker is a SUBAGENT, not a session.** The session-to-session channel reaches BOB, DIST
+  and FLEET; nothing reaches a subagent mid-run. There is no inbox on the other side.
+- **PUSHING DOES NOT REACH IT EITHER, and this is the part that looks like it should.** A
+  worktree is a checkout of a COMMIT the worker started from. A correction pushed to `main`
+  after the spawn is invisible to it until it fetches, and it has no reason to.
+- **Killing the run to deliver one edit is the wrong trade** — a worker is 30–55 minutes and
+  the edit is minutes at the merge.
+
+**So: a correction that arrives while a row is `running` is written ON THE ROW as an ACT WITH
+ITS ACTOR — CONDUCT, at integration — and then PAID there.** Not as a notification, which
+reads as already-handled; not held in your head, because this session can be replaced
+mid-flight and **a rename owed by a session that ends is a rename nobody performs.**
+
+**Pay it INSIDE the integration commit, before the merge is pushed**, so the corrected thing
+never reaches a reader, a release or another worker in its wrong form. The receipt: the table
+above was renamed in the merge commit itself — by SQL SHAPE rather than by token, which is what
+kept the two same-named things that must NOT move — and the suite it belongs to was renamed with
+it and driven green before the push. **Declare a rename in the merge trailer**: `mergecarry`
+cannot tell a rename from a deletion, so an undeclared one reads as a lost suite forever after.
+
+**And the general form, which is worth more than the instance:** the window between a spawn and
+its integration is a window in which the WORLD may correct the BRIEF, and the brief cannot be
+recalled. Everything you learn in that window about work already running is an integration act.
+That is the same shape as the release-note sweep two sections down — an owed act must land in
+a place that is DRAINED, and the row you are about to flip is drained by you, this turn.
+
 ## THE ROW'S STATUS IS PART OF THE ROW. FLIP IT TO `running` AND **PUSH** BEFORE THE SPAWN, NOT AFTER.
 
 **Measured 2026-09-14 by CONDUCT #11, and it cost eight spawns.** The section above fixed
