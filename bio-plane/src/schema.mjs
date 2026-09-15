@@ -2837,7 +2837,7 @@ CREATE INDEX IF NOT EXISTS calibration_signals_engine
 -- NULL means the record held no page set for that capture at mint -- which is
 -- UNDETERMINED and STATED, never a permission and never a refusal: refusing
 -- every page citation on a document whose page set the record does not know
--- would be a fence tighter than its rule. D-344 is the row that closes the gap
+-- would be a fence tighter than its rule. D-345 is the row that closes the gap
 -- by persisting I2's page count at acquire, which is CAPTURE's path.
 CREATE TABLE IF NOT EXISTS content (
   content_id     TEXT PRIMARY KEY,  -- sha256 over capture_sha + canonical extent + chain

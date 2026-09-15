@@ -4268,3 +4268,31 @@ Paths claimed BY REGION, never whole files:
 
 Concurrency: COFF-9 is live on `src/ooxml.mjs` only — disjoint from every path above.
 
+
+## DELEGATION 2026-09-14 RECORD (REC-82) → CAPTURE: persist I2's page count at acquire, so the content row's out-of-range refusal reaches every PDF
+
+**The act, with its actor:** CAPTURE (or whoever next opens `op=acquire`'s path in
+`bio-plane/src/index.mjs`) carries I2's page count onto the `reading` object that
+`#writeReadings` persists — one field beside `text_source` / `text_tier` /
+`text_container`, from the `i2text.pages` array the acquire path already holds in a
+local (`pdfstructure.mjs` also returns `pages: doc.pageCount` from `structure()`).
+
+**Why REC-82 did not do it.** `op=acquire` is CAPTURE's op and the acquire path is
+CAPTURE's ground (`kickoffs/RECORD.md`: "CAPTURE owns the capture, link, task and
+reachability functions"). REC-82 claimed `store.mjs`'s writer and `schema.mjs`'s new
+table and did not reach into it.
+
+**What REC-82 did instead, so nothing is blocked.** `content.page_count` stores the
+page set the record ACTUALLY holds at mint — the union of the pages D-252's scoped
+derivation steps name and the pages any attestation covers — and NULL where it holds
+none, which is UNDETERMINED AND STATED on the row. C-45.1 (an extent outside the
+capture's page set) therefore fires on a MIXED document today and not on a document
+with one unscoped chain. The full reasoning, the cost and what closing it takes are
+in **`DEBT.md` D-345**, which is the row this delegation points at; this entry exists
+because a debt row is not an assignment and a note is not an item.
+
+**What changes when it lands:** `Store#pageSetForCapture` prefers the stored figure
+over the derived one, and the arm already in `test/content-extent.test.mjs` §4 —
+already driven, already armed by `nc-rec82.mjs oob` — starts covering every captured
+PDF instead of only the mixed ones. No interface moves: `content.page_count` is
+already the column, and IC-83 already names the rule.

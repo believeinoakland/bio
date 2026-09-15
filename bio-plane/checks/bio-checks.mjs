@@ -9702,7 +9702,7 @@ export function checkContentExtent(extent, ctx = {}) {
        count is undetermined and stated on the row, never a refusal, because a
        gate that refused every page citation on a document whose page set this
        plane never recorded would pressure a member into citing the whole
-       document instead, which claims MORE and not less. D-344 is the row that
+       document instead, which claims MORE and not less. D-345 is the row that
        closes the gap by persisting I2's page count at acquire. */
     if (Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
       return contentRefusal('CONTENT_EXTENT_OUT_OF_RANGE',
