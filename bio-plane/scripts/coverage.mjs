@@ -777,9 +777,29 @@ const REGISTER_FLOOR = {
      ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
      `FLEET_FLOOR`, which is the documented state. `FLEET_FLOOR` is UNMOVED and none is owed
      — this item adds no fleet member and no fleet suite. */
-  arms: 967,
-  classified: 179,
-  corpus: 180,
+  /* MOVED 2026-09-14 by REC-84 (worktree agent-ae95c3be71f5bd167): arms 967 -> 975,
+     classified 179 -> 180, corpus 180 -> 181, EVERY FIGURE READ OFF THIS SCRIPT'S OWN
+     GREEN `--strict` RUN as REPRODUCIBLE (`arms 975/967 · classified 180/179 · corpus
+     (suites read) 181/180 · GREW by 8 arm(s)`) and never by adding to the numbers above.
+
+     THE CONTAMINATED FIGURES WERE REFUSED AS A SOURCE AND THE REFUSAL IS THE POINT
+     (D-238). An earlier run of this same script, before the new suite was in a commit,
+     printed exactly the same three numbers as CONTAMINATED with `1 suite(s) no other
+     checkout has`. They were identical and they were still the wrong source: a floor
+     moved while a phantom is present is permanently too high, and the figures above were
+     re-read from a run at `47ec7cb` where the provenance line reports 197 of 197
+     discovered items in the commit.
+
+     NO PRE-EXISTING SLACK FOUND — the three figures sat exactly where REC-82 left them,
+     which is the second consecutive item in this arc for which that is true. The cause of
+     the whole move is ONE new suite, `test/content-extent-leg.test.mjs`, whose
+     `NEGATIVE CONTROL:` declaration states eight arms; all eight are RUN by
+     `test/nc-rec84.mjs` and all eight came back AS DECLARED. Nothing FELL.
+     ONE KEY SET, grepped after writing. `FLEET_FLOOR` is UNMOVED and none is owed: this
+     item adds no fleet member and no fleet suite. */
+  arms: 975,
+  classified: 180,
+  corpus: 181,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
