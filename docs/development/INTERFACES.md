@@ -310,7 +310,7 @@ is written here.
   the emitted element reference is consumed by NO edge is that document's §18 headline
   (D-164).
 - **Owner:** `FRAMEWORK` (currently dormant)
-- **Version:** 2.0.0 (1.0.0 — **STABLE**, CONFIRMED by the consumer's owner FRAMEWORK
+- **Version:** 2.1.0 (**2.1.0 2026-09-14, IC-86 ACCEPTED — ADDITIVE, non-breaking: a `parse()` entity may carry an optional IC-1 `source` (where it was read, in the extent vocabulary) and the reader's context gains a total `ctx.locate(offset)`; an absent `source` means the reading cannot say where, never the whole document; readers that cannot place declare so in their headers (FW-17)**; 1.0.0 — **STABLE**, CONFIRMED by the consumer's owner FRAMEWORK
   (session framework-agent-2, FW-1) 2026-07-31. Supersedes the provisional 0.1.0
   producer-proposed 2026-07-31 from CONTENT-PDF's as-built output (plane 0.55.0),
   written from the code that emits it rather than as anyone would like it, exactly
@@ -604,7 +604,7 @@ correctness properties, not preferences. Changing either is an interface change.
 
 - **ID:** I5
 - **Owner:** `RECORD`
-- **Version:** 1.11.0 (1.11.0 2026-09-14, IC-83 ACCEPTED — ADDITIVE, non-breaking: the `content` table (first-class, content-addressed, minted lazily on first edge), its index, and nullable `content_id` on `inquiry_basis` and `inquiry_basis_version_legs`; nothing existing reshaped; lands through REC-82..REC-85; 1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
+- **Version:** 1.12.0 (**1.12.0 2026-09-14, at IC-86's resolution — ADDITIVE, non-breaking: `reading_refs.pos_kind`/`pos`/`pos_ref` (nullable, all or none) read by `op=readingref`; `connections`' eight determining-pair columns, `determining_pair` on the connection view and `connectionGradeForContent` reachable as `op=connections&content=`; C-49.1/.2/.3 (FW-17's RECORD half)**; 1.11.0 2026-09-14, IC-83 ACCEPTED — ADDITIVE, non-breaking: the `content` table (first-class, content-addressed, minted lazily on first edge), its index, and nullable `content_id` on `inquiry_basis` and `inquiry_basis_version_legs`; nothing existing reshaped; lands through REC-82..REC-85; 1.0.0 first written 2026-07-31, from plane 0.55.0; 1.1.0
   2026-07-31, FW-5 — ADDITIVE: two new DERIVED tables, `readings` and
   `reading_refs` (CONSTRUCTS Step 3), added BEFORE the `host_governor` block and to
   `op=purge`'s whole-store arm per the three rules below; 1.2.0 2026-07-31, FW-6 —

@@ -14432,14 +14432,18 @@ export class Store extends DurableObject {
     const row = this.#one(
       `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, stale FROM content WHERE content_id=?`,
       contentId.trim());
-    /* DEC-49 REGION is-content-row-present — FW-17/C-49.3. */
+    /* DEC-49 REGION pair-content-row-present — FW-17/C-49.3. RENAMED at integration 2026-09-14
+       (CONDUCT #11) from `is-content-row-present`: the DEC-49 guard's region matcher ends in a word
+       boundary and a hyphen satisfies it, so REC-84's `is-content-row` opener counted this region's
+       opener as a duplicate of its own (D-357). A region name may not be a prefix of another's until the
+       matcher anchors the whole name. */
     if (!row) {
       const r = CONNECTION_PAIR_CHECKS.CONNECTION_PAIR_NO_CONTENT;
       return { ok: false, reason: "CONNECTION_PAIR_NO_CONTENT", code: "CONNECTION_PAIR_NO_CONTENT",
                check: r.check, translation: r.translation, content_id: contentId.trim(),
                detail: "this record holds no content row with that id, so there is no portion to grade" };
     }
-    /* END DEC-49 REGION is-content-row-present */
+    /* END DEC-49 REGION pair-content-row-present */
     /* `safeJson` and NOT a try/catch of this function's own: the swallowed-read
        roster in `provenance-marker.test.mjs` is a ratchet, and the reason it can
        be one is that this store has ONE remedy for "a column this store wrote as

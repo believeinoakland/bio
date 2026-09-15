@@ -10126,7 +10126,7 @@ export const CONNECTION_PAIR_CHECKS = {
        made this row appear to govern it — so the guard asked for either a
        translation for "you passed no parameter" or a narrower span. The span is
        the honest answer. */
-    where: 'src/store.mjs connectionGradeForContent > is-content-row-present',
+    where: 'src/store.mjs connectionGradeForContent > pair-content-row-present',
     translation: 'This record holds no passage with that address, so there is no part of a '
       + 'document whose connections could be weighed. A content address is minted when a citation '
       + 'first points at a passage — if you expected one here, the citation that would have made it '

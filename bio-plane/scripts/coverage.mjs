@@ -836,9 +836,15 @@ const REGISTER_FLOOR = {
      on top of REC-84's 989. The branch's own block (979/181/182, cut at 87f263a) was dropped at
      the merge and declared; this is the re-read the loop promises. One key set. Nothing FELL.
      FLEET_FLOOR unmoved. */
-  arms: 996,
-  classified: 183,
-  corpus: 184,
+  /* MOVED 2026-09-14 by CONDUCT #11 at FW-17's integration (996 -> 1002 · 183 -> 184 · 184 -> 185):
+     the MERGED run's own print read `arms 1002/996 · classified 184/183 · corpus (suites read)
+     185/184 · GREW by 6 arm(s)` - FW-17's `reading-position.test.mjs` (six declared arms, one new
+     suite) on top of CAP-8's 996. The branch's own block (980/181/182, cut at 6a093bf) was dropped
+     at the merge and declared; this is the re-read the loop promises. One key set. Nothing FELL.
+     FLEET_FLOOR unmoved. */
+  arms: 1002,
+  classified: 184,
+  corpus: 185,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
