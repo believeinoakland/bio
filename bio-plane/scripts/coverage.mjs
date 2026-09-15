@@ -777,9 +777,29 @@ const REGISTER_FLOOR = {
      ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
      `FLEET_FLOOR`, which is the documented state. `FLEET_FLOOR` is UNMOVED and none is owed
      — this item adds no fleet member and no fleet suite. */
-  arms: 967,
-  classified: 179,
-  corpus: 180,
+  /* MOVED 2026-09-14 by REC-83 (IC-84's reads): 967 -> 973 / 179 -> 180 / 180 -> 181,
+     ALL THREE IN THE SAME TURN and every one taken from the figure THIS ITEM'S OWN
+     GREEN `--strict` RUN PRINTED AS REPRODUCIBLE — `arms 973/967 · classified 180/179
+     · corpus (suites read) 181/180 · GREW by 6 arm(s)` — read AFTER the new files were
+     in a commit, so these are the reproducible figures and not the contaminated ones
+     the pre-commit run printed under different numerals (D-238). The pre-commit run is
+     the receipt: it read `arms 967/967 … contaminated: 1 suite(s) no other checkout
+     has · arms 973 · classified 180 · corpus 181`, and its 973 was correctly refused as
+     a source until the commit made it reproducible. Never counted, never added to the
+     numbers above.
+     THE CAUSE IS ONE NEW SUITE, `test/content-reads.test.mjs`, whose `NEGATIVE CONTROL:`
+     declaration states SIX arms — five defeat arms plus the baseline, all run by
+     `test/nc-rec83.mjs` and all AS DECLARED. So `corpus` and `classified` each rise by
+     one and `arms` by six. Nothing FELL. `test/nc-rec83.mjs` and
+     `test/rec83-baseline-probe.mjs` are NOT suites and are correctly not in `corpus`:
+     the first edits real sources while it runs and the second needs a second checkout
+     to mean anything, so neither is `.test.mjs` and neither is discovered.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and
+     in `FLEET_FLOOR`, which is the documented state. `FLEET_FLOOR` is UNMOVED and none
+     is owed — this item adds no fleet member and no fleet suite. */
+  arms: 973,
+  classified: 180,
+  corpus: 181,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
