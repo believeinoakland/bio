@@ -104,10 +104,40 @@ export default {
   },
 
   /** What is in it: the meeting's own facts, and one entity per item of
-   *  legislation, keyed by the source-assigned file number. */
+   *  legislation, keyed by the source-assigned file number.
+   *
+   *  FW-17 / IC-86 — THIS READER CAN SAY WHERE, and says so here because a
+   *  reader's silence and a reader's honest null are indistinguishable at the
+   *  wire. Every reference it emits is a file number that sat ALONE ON ITS OWN
+   *  LINE, so the offset of that line is exactly the offset of the reference,
+   *  and `ctx.locate` turns it into the page (or paragraph) the container put it
+   *  on. What it CANNOT say is the rectangle: Tier-1 text is a flat per-page
+   *  string with no geometry, so the `pdf-page` arm arrives with `rect: null`
+   *  and the page is the honest maximum.
+   *
+   *  It says where the REFERENCE was read, not where the item's description
+   *  was. The two differ: the measured document's page furniture falls BETWEEN
+   *  a description and its file number at a page break, so a Subject: block can
+   *  sit on page 11 and the number it belongs to on page 12. The file number is
+   *  the reference an edge points at and the connection is drawn through, so its
+   *  position is the one recorded; recording the description's would make the
+   *  address disagree with the thing addressed. */
   parse(ctx) {
     const raw = String(ctx.text || "");
     const lines = raw.split(/\r?\n/).map((l) => l.trim());
+    /* The start offset of each line IN THE UNSPLIT TEXT, which is the only
+       coordinate `ctx.locate` understands. Derived from the separators the split
+       actually matched rather than from `length + 1`: a CRLF document would
+       drift one character per line under the arithmetic, and a drift that grows
+       silently down a 40,000-line packet is exactly the class of wrong address
+       this whole item exists to avoid. */
+    const offsets = [];
+    { let last = 0; const re = /\r?\n/g; let m;
+      while ((m = re.exec(raw)) !== null) { offsets.push(last); last = m.index + m[0].length; }
+      offsets.push(last); }
+    /* Always a function: `readText` supplies one, and a direct caller that does
+       not gets the honest null rather than a TypeError. */
+    const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
 
     /* The meeting's facts. Date: the first long-form date line (the measured
        document opens with it). Body: the first header-ish line naming a body.
@@ -164,7 +194,7 @@ export default {
         subject: pendingSubject || null,
         from: pendingFrom || null,
         item: item || null,
-      }));
+      }, locate(offsets[i])));
       pendingSubject = null; pendingFrom = null;
     }
 

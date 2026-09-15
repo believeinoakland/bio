@@ -5632,3 +5632,113 @@ is not stubbed and not faked: `extent_rect` round-trips through the plane today 
 drives a leg carrying one and renders the `ref` the record minted for it), so the DATA path is
 proven and only the drawing surface is absent. That surface is NARROW's and TRANSCRIBE's
 requirement (IC-84 names both as decomposed behind it) and it is a real item, not a line.
+## CLAIM 2026-09-14 FRAMEWORK (FW-17 — reading position on I2, and the determining reference pair on `connections`)
+
+Worker, worktree-isolated, branch `worktree-agent-a531b903306a7ed5d`, from `origin/main`
+`6a093bf` (REC-82 landed). Area FRAMEWORK, re-activated by CONDUCT #10 as a third dev area
+for the content track; the item is two halves that are ONE worker (the row's own words).
+
+**Paths, BY REGION.** Four workers are on `store.mjs` today, so the regions are named
+rather than the file.
+
+- `docprofile/**` — THE EMITTERS. `readtext.mjs` (`flattenText`'s segment map and
+  `readText`'s locator), `doctypes/index.mjs` (`entity()` gains an optional `source`),
+  `doctypes/meeting-agenda.mjs` and `doctypes/meeting-calendar.mjs` (`parse()` emits
+  position where the container's own text gives it), `doctypes/generic.mjs` (says in its
+  own header that it cannot). **`doctypes/registry.mjs` is NOT touched** — its header is
+  CPDF-17's.
+- `bio-plane/src/index.mjs` — the acquire path's `readEntities` only: the reading's
+  entities carry `source` through to `op=promote`. NOT the capture path (CAP-8's, live).
+- `bio-plane/src/store.mjs` — TWO REGIONS ONLY: (1) `#writeReadings`' `reading_refs`
+  INSERT (the position columns), (2) `deriveConnections` / `#connectionView` (the
+  determining pair) plus ONE new method for the portion-leg connection grade.
+  **NOT the earned-basis reads (REC-83's, live). NOT `checkInquiryBasis`'s grammar
+  (REC-84's, live). NOT the capture path (CAP-8's, live). NOT `#markContentStale` or
+  any other REC-82 content writer.**
+- `bio-plane/src/schema.mjs` — the new nullable columns on `reading_refs` and
+  `connections`, and their migration. Nothing else.
+- `bio-plane/checks/bio-checks.mjs` — the new refusals for this item only.
+- `bio-plane/src/affordances.mjs` — read only unless a connection kind moves; if none
+  moves this path is released untouched and the claim says so at the close.
+- `bio-plane/test/**` — this item's suite(s) and the suites whose counts this item moves.
+- `docs/development/INTERFACE-CHANGES.md` — IC-86 only (pre-minted at spawn).
+- `docs/development/CLAIMS.md`, `DEBT.md`, `MEASUREMENTS.md` — append-only.
+- `docs/development/INTERFACES.md` — I2's registry entry, if CONDUCT's resolution bumps it.
+- `.gitignore` — one line, this item's control pen, by the convention the file's own
+  head sets (a pen per item, never a widened glob).
+- **ADDED once building established it was owed: `civicos-ui/app.html` — the FLATTENED
+  DOCPROFILE EMBED ONLY, between its `__DOCPROFILE_START__`/`__DOCPROFILE_END__` markers,
+  regenerated with `tools/bundle-docprofile.mjs` and pasted, not hand-edited.** This is
+  UI's file and none of UI's surface is touched: the embed is a GENERATED copy of
+  `docprofile/**`, which is this area's, and `check-semantics.mjs` refuses any difference
+  between the two — so changing the package without regenerating the copy turns the UI
+  harness red for everyone. FL-10's shape one directory over. If UI would rather own the
+  regeneration, that is a DELEGATION to raise; leaving it stale was not an option.
+- **ADDED once building established it was owed, and it is GOVERNED:
+  `docs/architecture/BIO_Content_Framework_v0_10.md` — PART II ONLY** (§14.4, §14.5, §17's
+  capability table, §18's closing paragraph, and the front matter's Status and Incomplete
+  sections). This area owns `docs/architecture/BIO_Content_Framework_*`, and
+  CORPUS-STANDARD §4.1 obliges the home document to move in the same commit as the
+  construct: §17 said in so many words that *nothing records WHERE a reference was read*
+  and that a connection *throws the reference away*, and §18 closed on content-grain
+  connections being *impossible* until readings carry position. All three are false as of
+  this landing, and a governed document left saying them is the record overclaiming in the
+  one direction this project treats as worst. **PART I IS NOT TOUCHED**: it is
+  ARCHITECTURE APPROVED at v0.10 and frozen by design, which its own front matter states —
+  §3's READING and §8.1's connection GRADE are read as the authority here, not edited.
+
+Expect append-only merge noise on CLAIMS/DEBT; nothing here is a whole-file rewrite.
+
+released: 2026-09-14, at the close of FW-17, on branch `worktree-agent-a531b903306a7ed5d`
+(`5b46c43` the item, plus the floor-move commit beside it). **No path in this claim carries
+an owed act.** `affordances.mjs` was named conditionally and is RELEASED UNTOUCHED — no
+connection kind moved, which is stated here rather than left to be inferred from its absence
+from the diff.
+
+**What landed.** IC-86 (I2, PROPOSED, ADDITIVE → MINOR) written before any code and built
+against as proposed, with no amendment forced. FRAMEWORK: the segment map at
+`docprofile/readtext.mjs`'s flatten and the total `ctx.locate` it hands a reader; `entity()`'s
+optional IC-1 `source`; `meeting-agenda` placing every file number it reads (page, `rect` null);
+`meeting-calendar` and `generic` DECLARING in their own headers that they cannot and why;
+`readingSource`/`readingSourceJson`/`readingSourceFromColumns`/`readingPositionInExtent` beside
+the extent vocabulary in `textchain.mjs`; `reading_refs.pos_kind`/`pos`/`pos_ref` and their
+writer; `op=readingref` publishing the position so the columns have a reader a caller can
+reach. RECORD: `connections`' eight pair columns and their writer in `deriveConnections`;
+`#connectionView`'s `determining_pair`; `connectionGradeForContent`, reachable as
+`op=connections&content=`; C-49.1/.2/.3.
+
+**Figures.** Battery **189/190 · 11,695** against this branch's own pristine baseline worktree
+at `6a093bf` (**189/189 · 11,629**, its own `npm ci`), attributed per suite by diffing two full
+runs: `reading-position` +63, `hygiene` +3, `planning-hygiene` +1, `mergecarry` −1.
+`coverage.mjs --strict` DIRECTLY from `bio-plane/`, `$?` unpiped, **exit 0**, REGISTER FLOOR
+moved **974→980 · 180→181 · 181→182** from the print AFTER the commit, ONE key set.
+`node civicos-ui/test/run.mjs` from the repo root, **exit 0**. `plancheck --local` **0 fail
+0 warn**; `corpuscheck` **44 governed, 0 fail**. FL-10 fired; `dist/` rebuilt and
+`signpage.mjs` regenerated byte-identically.
+
+**Controls 6/6 AS DECLARED**, each armed alone, every restore verified by sha256 AND `cmp`
+with a floored byte count — and **THREE FINDINGS from the first pass, recorded rather than
+smoothed and all three about the ARMS or the SUITE rather than the subject**: (1) `nopair`
+nulled one end of the pair and the grade assertion still passed, because a pair reads as
+present when EITHER end carries a reference and the canonical order is decided by a capture
+hash — the arm was measuring a coin flip; (2) `overstrict` armed 1× and changed NOTHING,
+because the `document` arm is enforced independently in the checker AND at the call site, a
+real property of the subject and one that makes an arm that cannot bite look exactly like a
+subject that cannot break; (3) the SUITE was not null-robust and three arms ended in a
+TypeError with the tally reading −1, which is the missing-tally-is-minus-one rule earning its
+place.
+
+**FOR CONDUCT, and these are ACTS with their actor rather than notes.** (1) **Resolve IC-86**,
+answering in writing for the three dormant producers (CONTENT-PDF, CONTENT-OFFICE,
+CONTENT-HTML) per protocol step 3, and take the I2 version bump. (2) **Take the I5 bump the
+`reading_refs` and `connections` columns imply** — IC-86 describes them because the column
+arrives with its writer, and the registry entry is CONDUCT's, not this worker's. (3)
+**`mergecarry.test.mjs` is RED on `origin/main` and it is not this item's**: it names
+`cc8187d`, REC-83's own integration merge, as an UNREGISTERED drop of
+`bio-plane/scripts/coverage.mjs`. Proven rather than argued — it reproduces byte-for-byte in a
+pristine `6a093bf` worktree with none of this item's changes present, and `cc8187d` is not an
+ancestor of this branch. Either the drop was intended and belongs in the register, or
+`coverage.mjs`'s lost hunk needs restoring; a worker cannot tell which and this one did not
+guess. (4) **`civicos-ui/app.html`'s flattened docprofile embed was regenerated here** with
+`tools/bundle-docprofile.mjs`; if UI would rather own that regeneration, that is a boundary to
+rule on.

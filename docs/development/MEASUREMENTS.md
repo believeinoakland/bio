@@ -11528,3 +11528,60 @@ RE-RUNNING THE BASELINE rather than by argument: a pristine detached worktree at
 none of this item's changes gives **57 pass, 1 fail, the identical finding**. **A worker's
 battery can therefore go red because another session merged**, which is the D-330 condition
 (a red indistinguishable from a regression) arriving through a ref rather than through a file.
+
+## 2026-09-14 · FW-17 — reading POSITION and the determining reference PAIR, measured
+
+**Instruments:** `bio-plane/test/reading-position.test.mjs` (the subject), `bio-plane/test/nc-fw17.mjs`
+(six control arms), `npm run test:battery`, `scripts/coverage.mjs --strict`, `civicos-ui/test/run.mjs`,
+`node tools/plancheck.mjs --local`, `node tools/corpuscheck.mjs`. Branch
+`worktree-agent-a531b903306a7ed5d` off `origin/main` `6a093bf`.
+
+**HOW MANY OF THE PLANE'S READERS CAN SAY WHERE A REFERENCE WAS READ: ONE OF THREE, and the
+figure is the point rather than a disappointment.** Three content types are registered
+(`docprofile/doctypes/registry.mjs`): `meeting_agenda` places every reference it reads, because
+every one is a Legistar file number ALONE ON ITS OWN LINE and the line's offset is the
+reference's offset; `meeting_calendar` places none, for three independently sufficient reasons
+measured at the source (IC-1's `dom` arm has no producer anywhere in the tree; the reader
+unescapes HTML and then slices to the inside of `<main>`, so its offsets are displaced by an
+amount that depends on how many entity references preceded; and a calendar reaches it through
+`op=acquire`'s own text read-back, which is one decoded string with no container structure at
+all); `generic` places none because it reads no references. **Each of the three now says which
+it is IN ITS OWN HEADER**, and the suite asserts that against the SOURCE FILE rather than
+against a run — a reader's silence and a reader's honest null are indistinguishable at the
+wire, so the declaration is the only thing that tells them apart.
+
+**THE POSITION MAP IS EARNED, NOT ASSUMED, AND THE EQUALITY THAT EARNS IT COSTS REAL BYTES.**
+`flattenText` prefers a producer's `text.document` string, which carries no positions, so the
+itemised `pages[]`/`paragraphs[]` map may be laid over it ONLY on a byte-for-byte match of the
+documented join. Measured over the suite's own fixture: a matching pair yields 3 segments; the
+same pair with one extra line appended to `document` yields **0 segments and a stated reason**.
+A blank page contributes no segment and no separator, and the page after it is still placed
+correctly — which is why the map is built by the join rather than by arithmetic over page
+numbers, a computation that would drift one character per blank page, silently and cumulatively.
+
+**`rect` IS NULL ON EVERY READING-DERIVED `pdf-page` POSITION, and that is a measurement of the
+extractor rather than a choice.** I2's own Status section records that Tier-1 text is a flat
+per-page string with no table or row geometry. The PAGE is in the bytes; the RECTANGLE is not.
+The consequence, stated because it is a ceiling and not a floor: a REGION-grained content
+extent can never be reached by a reading-derived connection, only a PAGE-grained one (D-352).
+
+**THE PAIR LOOKUP IS LINEAR IN THE ENDS, NOT IN THE PAIRS, AND THE DISTINCTION IS REC-66's.**
+The derivation is quadratic in its ends by nature, so the `reading_refs` lookup that resolves
+each end's position is taken ONCE PER END before the pair loop: **k lookups, not k(k-1)/2** —
+100 against 4,950 at the 5,000-pair ceiling. Each is one PRIMARY KEY hit on
+`(capture_sha, ref)`. The pair's REFERENCE half costs nothing at all: `ref` joins a `SELECT` the
+scan already ran, so no extra read and no change to any bound.
+
+**BATTERY.** Own pristine baseline at `6a093bf`, measured in a scratch `git worktree` with its
+own `npm ci`: **189/189 suites green · 11,629 assertions · exit 0** — exactly the figure the
+brief carried, which is recorded because the practice is to trust the measurement rather than
+the streak, and this time the brief was right.
+
+**ONE BASELINE FAILURE APPEARED UNDER THIS ITEM AND IS NOT THIS ITEM'S.** `mergecarry.test.mjs`
+reports `no UNREGISTERED drop sits in main's history` → `["cc8187d:bio-plane/scripts/coverage.mjs"]`.
+`cc8187d` is **REC-83's integration merge**, landed on `origin/main` by CONDUCT AFTER this
+item's baseline ran, and it is NOT an ancestor of this branch's HEAD. Proven rather than
+argued: the failure reproduces byte-for-byte in the PRISTINE `6a093bf` worktree with none of
+this item's changes present. `mergecarry` reads the repository's shared history rather than the
+working tree, so every worktree of this clone sees it until the drop is registered or restored.
+**It is CONDUCT's to resolve and it is named in FW-17's report as an act with its actor.**

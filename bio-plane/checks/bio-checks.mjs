@@ -9815,7 +9815,18 @@ export const CONTENT_EXTENT_CHECKS = {
  *  quotes throughout; the eight call sites below are the deliberate exception,
  *  and the reason is here rather than in a commit message. */
 function refusal(key, detail) {
-  const row = CONTENT_EXTENT_CHECKS[key];
+  /* FW-17 widened the LOOKUP and deliberately did NOT add a second helper. The
+     paragraph above says the name is exactly `refusal` because that is what
+     `civicos-ui/check-refusal-codes.mjs` matches (`/\brefusal\s*\(\s*"CODE"/`),
+     and a sibling spelled `pairRefusal` was written first and was INVISIBLE to
+     the guard for precisely that reason — the harness failed with "arm C judged
+     NO refusal inside the region `is-connection-pair-covering`", which is the
+     guard doing its job on the second family exactly as it did on the first.
+     One helper over two catalogues keeps every call site in the one spelling the
+     guard can see; a `_CHECKS` table it does not know is the only thing that
+     could go untranslated, and that is a missing row, which the guard also
+     catches. */
+  const row = CONTENT_EXTENT_CHECKS[key] || CONNECTION_PAIR_CHECKS[key];
   return { ok: false, code: key, check: row.check, translation: row.translation, detail };
 }
 
@@ -10046,6 +10057,117 @@ export function checkContentExtent(extent, ctx = {}) {
       `this record holds no extraction chain for the capture this leg cites, so there is no `
       + `transcription over ${describeExtent(e)} for the citation to point at`);
   /* END DEC-49 REGION is-content-extent */
+  return null;
+}
+
+/* =========================================================================
+ * FW-17 · THE DETERMINING REFERENCE PAIR, AND WHAT A PORTION MAY EARN FROM IT
+ * (D-161; Bob's rulings of 2026-09-14, CONTENT-EXTENT-DESIGN-SPACE.md 5.1
+ * and 5.4; framework Part I 8.1 for the grade itself)
+ * =========================================================================
+ *
+ * Bob ruled that a citation pointing at a portion refers ONLY to that portion —
+ * "just as an HTML highlight link refers to specific content in that document" —
+ * so a content-grain leg earns, on every axis, only from what is IN its portion.
+ * On the CONNECTION axis that makes one question decidable that was not: does a
+ * connection between two documents belong to this PART of one of them?
+ *
+ * It belongs iff the reference that DETERMINED the connection was read inside
+ * the part. That is what the pair on a `connections` row is for, and it is why
+ * the two refusals below exist rather than a silent "no".
+ *
+ * WHY REFUSALS AND NOT AN EMPTY ANSWER, which is the judgement this family turns
+ * on. An empty answer and a refusal say different things to a member, and the
+ * difference is the whole product: "this connection does not reach your
+ * citation" is a FINDING about their case that they can act on by narrowing or
+ * widening the citation, while a silently dropped connection is a case that got
+ * weaker for a reason nobody stated. Undetermined is first-class and must be
+ * STATED — so it is stated, with a code and a sentence. */
+export const CONNECTION_PAIR_CHECKS = {
+  /* THE FORGED PAIR. A pair whose recorded position is NOT inside the extent
+     being graded may not grade it — which sounds obvious and is exactly the
+     shortcut this record would otherwise take, because the pair is right there
+     on the row and its grade is already computed. Taking it would let a leg
+     citing page 3 earn a connection established on page 300 of the same
+     document, which is Bob's 5.1 ruling inverted. */
+  CONNECTION_PAIR_OUTSIDE_EXTENT: {
+    check: 'C-49.1',
+    where: 'checks/bio-checks.mjs checkConnectionPairCovers > is-connection-pair-covering',
+    translation: 'This connection was established by a reference somewhere else in the document, '
+      + 'not in the part you cited. A citation that points at a passage stands on what is IN that '
+      + 'passage, so it cannot borrow a link the record found elsewhere in the same file. Cite the '
+      + 'part where the reference actually appears, or cite the document as a whole and say so.',
+  },
+  /* THE UNPLACEABLE PAIR. The connection has its two references and neither
+     reading recorded WHERE it read one, so whether the reference is inside the
+     cited part is not a hard question — it is an unanswerable one. This is the
+     state IC-86 exists to shrink and it will be the common state until every
+     producer itemises its text; it is a STATEMENT, and the closing is per pair
+     and never assumed for the connection as a whole. */
+  CONNECTION_PAIR_UNPLACED: {
+    check: 'C-49.2',
+    where: 'checks/bio-checks.mjs checkConnectionPairCovers > is-connection-pair-covering',
+    translation: 'The record knows which reference links these two documents but not where in '
+      + 'either document it was read, so it cannot say whether that reference falls inside the part '
+      + 'you cited. This is stated rather than assumed either way: the connection is real and its '
+      + 'reach into your citation is undetermined until the document is read with positions.',
+  },
+  /* THE ABSENT ROW. Asked to grade a portion the record does not hold. Refused
+     rather than answered UNDETERMINED, because those are opposite findings: an
+     undetermined grade says the portion exists and its connections cannot be
+     placed, and answering that for an id nothing minted would confirm a passage
+     that was never addressed. */
+  CONNECTION_PAIR_NO_CONTENT: {
+    check: 'C-49.3',
+    /* A REGION and not the whole function, which is DEC-49's own rule (a row's
+       `where` names the SMALLEST SPAN) and is also what the harness demanded:
+       the function's other early return, `NO_CONTENT`, is a caller who named no
+       key rather than a member who was refused, and a whole-function `where`
+       made this row appear to govern it — so the guard asked for either a
+       translation for "you passed no parameter" or a narrower span. The span is
+       the honest answer. */
+    where: 'src/store.mjs connectionGradeForContent > is-content-row-present',
+    translation: 'This record holds no passage with that address, so there is no part of a '
+      + 'document whose connections could be weighed. A content address is minted when a citation '
+      + 'first points at a passage — if you expected one here, the citation that would have made it '
+      + 'has not been written yet.',
+  },
+};
+
+/** May this connection's determining pair grade THIS content row's extent?
+ *
+ *  `pair` is the row's own `{a_ref, a_position, b_ref, b_position}` (the
+ *  `determining_pair` a connection view carries). `side` is which end of the
+ *  pair is the content row's own capture — 'a' or 'b'. `extentKind`/`extent`
+ *  are the content row's columns, and `covers` is the ONE predicate that
+ *  decides containment (`readingPositionInExtent`, passed in rather than
+ *  imported so this file keeps holding no opinion about the extent vocabulary —
+ *  the same discipline `checkAnchor` records about not defining a rival shape).
+ *
+ *  Returns null when the pair MAY grade the extent, a refusal otherwise. Null
+ *  is the permissive answer and it is reached only by a position that was
+ *  recorded and was inside — never by an absence.
+ *
+ *  A CONNECTION WITH NO PAIR AT ALL IS NOT THIS FUNCTION'S CASE and the caller
+ *  handles it before calling: that row predates the pair writer, and "this row
+ *  does not record its reference" is a third state that must not be collapsed
+ *  into "its reference is unplaced". */
+export function checkConnectionPairCovers(pair, side, extentKind, extent, covers) {
+  /* DEC-49 REGION is-connection-pair-covering */
+  const p = pair && typeof pair === 'object' ? pair : null;
+  const position = p ? (side === 'b' ? p.b_position : p.a_position) : null;
+  const ref = p ? (side === 'b' ? p.b_ref : p.a_ref) : null;
+  if (!position)
+    return refusal("CONNECTION_PAIR_UNPLACED",
+      `the determining reference on end ${side === 'b' ? 'B' : 'A'}`
+      + `${ref ? ` (${ref})` : ''} carries no position, so whether it was read inside `
+      + `${describeExtent({ kind: extentKind, ...(extent || {}) })} is undetermined`);
+  if (typeof covers !== 'function' || !covers(position, extentKind, extent))
+    return refusal("CONNECTION_PAIR_OUTSIDE_EXTENT",
+      `the determining reference on end ${side === 'b' ? 'B' : 'A'}`
+      + `${ref ? ` (${ref})` : ''} was read at ${position.ref}, which is outside `
+      + `${describeExtent({ kind: extentKind, ...(extent || {}) })}`);
+  /* END DEC-49 REGION is-connection-pair-covering */
   return null;
 }
 

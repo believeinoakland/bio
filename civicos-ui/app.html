@@ -3211,10 +3211,6 @@ function acquireWhy(a){
 }
 
 /*__DOCPROFILE_START__*/
-/* Flattened from docprofile/ by tools/bundle-docprofile.mjs. The package is the
-   canonical source and the plane imports it as modules; this runtime is one
-   self-contained file, so it carries a copy and the build refuses any drift.
-   Do not edit here. Edit docprofile/ and rebuild. */
 /* ---- docprofile/recogniser.mjs ---- */
 /* One extension shape for every axis: the RECOGNISER and its REGISTRY.
  *
@@ -4099,9 +4095,32 @@ const CONTRACT = { SUBSTANCE: "substance", MEMBERSHIP: "membership", UNMONITORAB
 /** An entity a content type found in a document. `key` must be stable across
  *  fetches: a position in a list is not a key, an id in a URL is. `facts` are the
  *  fields whose change might mean something, named so assess() can say WHICH
- *  moved rather than that the entity differs. */
-function entity(key, kind, label, facts) {
-  return { key: String(key), kind, label, facts: facts || {} };
+ *  moved rather than that the entity differs.
+ *
+ *  FW-17 / IC-86 — `source`: WHERE IN THE DOCUMENT this reference was read, in
+ *  IC-1's element-reference union and no other vocabulary
+ *  (`pdf-page`/`sheet-cell`/`slide-shape`/`doc-para`; `dom` has no producer and
+ *  is not emitted). It is OPTIONAL and `null` is both legal and meaningful.
+ *
+ *  THE ONLY LEGITIMATE SOURCE OF THIS VALUE IS `ctx.locate(offset)`, which
+ *  `readtext.mjs` puts on the reader's context: the reader knows which OFFSET
+ *  of the text it read the reference at, and only the producer knows which page
+ *  or paragraph of the container that offset is in. A reader that composes a
+ *  `source` itself is inventing an address, which is the one thing an address
+ *  may never be.
+ *
+ *  AND A NULL IS NOT A DOCUMENT-GRAIN CLAIM. An absent position means THIS
+ *  READING CANNOT SAY WHERE — never "the whole document was meant". Bob's
+ *  ruling of 2026-09-14 (5.3) is that a citation naming no part means the whole
+ *  document, and that is a MEMBER'S act of citation; it is not a reader's
+ *  silence. Collapsing the two would let a reader's shortcoming read as a
+ *  member's choice, which is the record claiming more than it holds. */
+function entity(key, kind, label, facts, source) {
+  const e = { key: String(key), kind, label, facts: facts || {} };
+  /* Carried only when the locator actually answered — an explicit `source: null`
+     and an absent `source` mean the same thing and the shape says so once. */
+  if (source) e.source = source;
+  return e;
 }
 
 /** Referential and temporal connections are different things and must not be
@@ -4225,7 +4244,40 @@ const meetingCalendar = {
     return { match: false, confidence: CONFIDENCE.NONE };
   },
 
-  /** What is in it: the window it shows, and one entity per meeting. */
+  /** What is in it: the window it shows, and one entity per meeting.
+   *
+   *  FW-17 / IC-86 — THIS READER CANNOT SAY WHERE A REFERENCE WAS READ, and it
+   *  says so here because IC-86 makes that a stated obligation rather than a
+   *  silence: a reader that emits no position and a reader that had none are
+   *  indistinguishable at the wire, so the one that cannot must declare it.
+   *  Every entity below is emitted with NO `source`, deliberately, and for three
+   *  reasons that are each sufficient on their own.
+   *
+   *  (1) NO ARM OF IC-1 HAS A PRODUCER FOR THIS CONTAINER. An HTML page's
+   *  element reference is IC-1's `dom` arm, and `dom` has no producer anywhere
+   *  in the tree and is refused by name until CONTENT-HTML emits it. Emitting
+   *  any other arm for an HTML page would be a second reference vocabulary —
+   *  precisely what IC-1's constraint forbids.
+   *
+   *  (2) THE OFFSETS THIS READER WORKS IN ARE NOT THE OFFSETS `ctx.locate`
+   *  ANSWERS. It reads `unescapeHtml(ctx.text)`, and unescaping SHORTENS the
+   *  string by four characters per `&amp;` and three per `&lt;` — so every
+   *  offset after the first entity reference is displaced by an amount that
+   *  depends on how many preceded it. It then narrows to the inside of `<main>`,
+   *  displacing them again. Handing either coordinate to `locate` would return a
+   *  confidently wrong page, which is worse than no page at all: a wrong address
+   *  is a claim, and an absent one is an admission.
+   *
+   *  (3) A CALENDAR REACHES THIS READER THROUGH THE ACQUIRE PATH'S OWN TEXT
+   *  READ-BACK — a bare decoded string, not I2's itemised text field — so there
+   *  is no segment map to consult even if (1) and (2) were solved. The map
+   *  exists only where a producer itemised the container, which for text today
+   *  means a PDF's pages and an office container's paragraphs.
+   *
+   *  What it would take to close this: CONTENT-HTML producing the `dom` arm, and
+   *  an offset-preserving unescape so a match's index in the working string maps
+   *  back to the served bytes. Both are that area's, neither is this item's, and
+   *  the absence is honest until they exist. */
   parse(ctx) {
     const raw = unescapeHtml(String(ctx.text || ""));
     const main = /<main\b[^>]*>([\s\S]*)<\/main>/i.exec(raw);
@@ -4526,10 +4578,40 @@ const meetingAgenda = {
   },
 
   /** What is in it: the meeting's own facts, and one entity per item of
-   *  legislation, keyed by the source-assigned file number. */
+   *  legislation, keyed by the source-assigned file number.
+   *
+   *  FW-17 / IC-86 — THIS READER CAN SAY WHERE, and says so here because a
+   *  reader's silence and a reader's honest null are indistinguishable at the
+   *  wire. Every reference it emits is a file number that sat ALONE ON ITS OWN
+   *  LINE, so the offset of that line is exactly the offset of the reference,
+   *  and `ctx.locate` turns it into the page (or paragraph) the container put it
+   *  on. What it CANNOT say is the rectangle: Tier-1 text is a flat per-page
+   *  string with no geometry, so the `pdf-page` arm arrives with `rect: null`
+   *  and the page is the honest maximum.
+   *
+   *  It says where the REFERENCE was read, not where the item's description
+   *  was. The two differ: the measured document's page furniture falls BETWEEN
+   *  a description and its file number at a page break, so a Subject: block can
+   *  sit on page 11 and the number it belongs to on page 12. The file number is
+   *  the reference an edge points at and the connection is drawn through, so its
+   *  position is the one recorded; recording the description's would make the
+   *  address disagree with the thing addressed. */
   parse(ctx) {
     const raw = String(ctx.text || "");
     const lines = raw.split(/\r?\n/).map((l) => l.trim());
+    /* The start offset of each line IN THE UNSPLIT TEXT, which is the only
+       coordinate `ctx.locate` understands. Derived from the separators the split
+       actually matched rather than from `length + 1`: a CRLF document would
+       drift one character per line under the arithmetic, and a drift that grows
+       silently down a 40,000-line packet is exactly the class of wrong address
+       this whole item exists to avoid. */
+    const offsets = [];
+    { let last = 0; const re = /\r?\n/g; let m;
+      while ((m = re.exec(raw)) !== null) { offsets.push(last); last = m.index + m[0].length; }
+      offsets.push(last); }
+    /* Always a function: `readText` supplies one, and a direct caller that does
+       not gets the honest null rather than a TypeError. */
+    const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
 
     /* The meeting's facts. Date: the first long-form date line (the measured
        document opens with it). Body: the first header-ish line naming a body.
@@ -4586,7 +4668,7 @@ const meetingAgenda = {
         subject: pendingSubject || null,
         from: pendingFrom || null,
         item: item || null,
-      }));
+      }, locate(offsets[i])));
       pendingSubject = null; pendingFrom = null;
     }
 
@@ -4650,6 +4732,16 @@ const generic = {
      the stack that served it. */
   contract: CONTRACT.SUBSTANCE,
   detect() { return { match: false, confidence: CONFIDENCE.NONE }; },
+  /* FW-17 / IC-86 — THIS READER CANNOT SAY WHERE A REFERENCE WAS READ, for the
+     one reason that admits no fix: it reads no references. The generic type's
+     whole discipline is that it reports a substantive difference without
+     describing it, so it emits NO entities, and where a reference was read is
+     not a question it can be asked. Declared here rather than left implicit
+     because IC-86 obliges a reader that cannot say to say so, and "it has
+     nothing to position" is a materially different answer from "it had
+     something and could not place it" — which is what the calendar reader's own
+     header records. This one closes when a measured type is written for the
+     document, not before. */
   parse() { return { entities: [], facts: {} }; },
   /* The one deliberate place `meaningful` is NOT derived from event significance:
      with no type there are no graded events, but a substantive difference in an
