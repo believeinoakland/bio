@@ -1347,6 +1347,21 @@ CREATE INDEX IF NOT EXISTS inquiry_basis_bundle ON inquiry_basis(bundle_id);
 -- an index is worth least exactly where the value is commonest. If a member's question
 -- ever makes cuts_against legs the hot path, the probe is here to re-run.
 CREATE INDEX IF NOT EXISTS inquiry_basis_grade_source ON inquiry_basis(grade_source, bundle_id);
+-- REC-90 -- THE content:cited PREDICATE'S OWN INDEX, AND THIS ONE IS NOT A TUNING
+-- CHOICE. content:cited and content:uncited ask whether ANY leg rests on a content
+-- row, which is an EXISTS over this column for every candidate row -- O(content
+-- rows x legs) without it. MEASURED 2026-09-15 (M-21, test/content-index-probe.mjs)
+-- at 20,000 bundles / 40,002 content rows / 31,200 legs, 9 reps:
+--   content:uncited  31,614.512 ms -> 9.028 ms  (-100.0%)
+--   content:cited    27,292.571 ms -> 11.881 ms (-100.0%)
+-- A THIRTY-ONE-SECOND read behind a surface any member can call, against a measured
+-- noise floor of 20.5%. That is REC-66 / D-227's amplification class arriving at a
+-- new door, not a percentage worth weighing: without these two indexes the op does
+-- not answer, it times out. The version-leg table gets the same index for the same
+-- predicate, because content:cited asks BOTH tables -- a version leg cites content
+-- exactly as a live leg does, and asking only the live one would report a passage
+-- as uncited while a recorded version of a basis rests on it.
+CREATE INDEX IF NOT EXISTS inquiry_basis_content ON inquiry_basis(content_id);
 -- REC-21: the PERSONAL half of the queue, and it is a SEPARATE TABLE on
 -- purpose. The record half of an item's state lives on the EVENT (DEC-16: a
 -- task's status, a proposal's disposition), so one member's resolution clears
@@ -2197,6 +2212,9 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (
 -- carries alternatives, and the answer must not be a scan of every leg of every
 -- version of every inquiry.
 CREATE INDEX IF NOT EXISTS inquiry_basis_version_legs_target ON inquiry_basis_version_legs(target_id);
+-- REC-90: the other half of content:cited's EXISTS. See the measurement recorded
+-- beside inquiry_basis_content above -- the two indexes are one decision.
+CREATE INDEX IF NOT EXISTS inquiry_basis_version_legs_content ON inquiry_basis_version_legs(content_id);
 -- =========================================================================
 
 -- PL-12 / D-84: THE BIAS SET'S STATEMENTS, a PROJECTION of the bundle's own
@@ -2923,6 +2941,52 @@ CREATE TABLE IF NOT EXISTS content (
 -- is re-read. By BUNDLE: purge's per-bundle arm, and the compiler's join.
 CREATE INDEX IF NOT EXISTS content_capture ON content(capture_sha);
 CREATE INDEX IF NOT EXISTS content_bundle ON content(bundle_id);
+-- REC-90 / CONTENT-SEARCH-DESIGN.md section 4.2 -- THE FILTERED COLUMNS OF THE
+-- content: ARM. Each compiles to SELECT bundle_id FROM content WHERE <col> = ?,
+-- and bundle_id is the second key column so every seek is COVERING: it never
+-- touches the table. inquiry_basis_grade_source above is the precedent and this
+-- is the same decision taken the same way -- MEASURED, and the measurement is
+-- what chose which columns appear here.
+--
+-- MEASURED 2026-09-15 (test/content-index-probe.mjs, node:sqlite, the statements
+-- DRIVEN out of compile() and every OTHER index DRIVEN out of schema.mjs AND
+-- store.mjs rather than typed). MEASUREMENTS.md M-21 carries both corpus sizes,
+-- the instrument, the synthetic proportions and what the instrument cannot see.
+-- At 20,000 bundles / 40,002 content rows, 9 reps:
+--   content:pdf-page          4.007 ms -> 2.062 ms  (-48.5%)
+--   content:document          5.391 ms -> 3.276 ms  (-39.2%)   the COMMON value
+--   content:stale             2.335 ms -> 0.924 ms  (-60.4%)
+--   content:machine           3.625 ms -> 2.291 ms  (-36.8%)
+--   content:plane             4.369 ms -> 2.726 ms  (-37.6%)
+--   content:cap=undetermined  3.284 ms -> 2.194 ms  (-33.2%)
+--   content:cap<C             4.907 ms -> 3.742 ms  (-23.8%)
+-- AGAINST A MEASURED NOISE FLOOR OF 20.5%, which is the swing on content:ocr --
+-- a query NO index in the candidate set can touch, because it filters on a JSON
+-- parse of the chain column. Every figure above clears it. THE SMALLER CORPUS
+-- SAID OTHERWISE FOR extent_kind (+1.6% at 5,000 bundles) and the larger one
+-- overturned it, which is exactly why two sizes were measured: the quantity being
+-- bought is the PROPORTION, and it grows with the corpus.
+--
+-- THE WRITE COST IS NOT inquiry_basis's, AND THAT ASYMMETRY IS THE REST OF THE
+-- DECISION. Every op=promote of an inquiry delete-then-inserts its basis rows, so
+-- an index there is re-written on every promotion. A content row is INSERT OR
+-- IGNORE'd ONCE and is never rewritten and never deleted (the rule at the head of
+-- this block), so each index here is one B-tree insert per mint and nothing on
+-- re-promotion. An index is cheaper on this table than on any other in the store.
+CREATE INDEX IF NOT EXISTS content_extent_kind ON content(extent_kind, bundle_id);
+CREATE INDEX IF NOT EXISTS content_stale ON content(stale, bundle_id);
+CREATE INDEX IF NOT EXISTS content_minted_by ON content(minted_by, bundle_id);
+CREATE INDEX IF NOT EXISTS content_derivation_cap ON content(derivation_cap, bundle_id);
+-- NO INDEX FOR content:chain, AND IT IS A STATED GAP RATHER THAN AN OMISSION.
+-- The arm filters on the chain's LAST STEP and this column holds the WHOLE chain
+-- as JSON, so the predicate is json_extract(chain, ...) -- an expression, which no
+-- ordinary index can serve. It is the SLOWEST single-column filter on this table
+-- (8.579 ms against 2.3-5.4 for the others, and it does not improve). Section 4.1
+-- of the design gives capture_text a chain_kind COLUMN for exactly this predicate,
+-- in its own words so that every OCRd unit is a predicate and not a parse -- and
+-- section 4.2 asks the same question of content without giving it the same column.
+-- REPORTED AS A DESIGN GAP by REC-90, which does not own the mint path that would
+-- write such a column.
 -- =========================================================================
 
 -- =========================================================================
@@ -21802,6 +21866,7 @@ var RESOLUTION_ROW = {
   refs: [],
   rowGrain: "one RESOLUTION of one reference in one capture to one registered subject, addressed by (capture_sha, ref, entity_id)"
 };
+var citedExists = (alias) => `(EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.content_id = ${alias}.content_id) OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl WHERE vl.content_id = ${alias}.content_id))`;
 var MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
      EVERY VOCABULARY HERE IS IMPORTED FROM THE CHECK CATALOG, never listed. The
@@ -21833,6 +21898,24 @@ var MEANING = {
        published because this op is gated exactly as the bundle page is — the
        whole point of staying on this compiler. `target_id` is the one column
        that names another bundle. */
+    level: "meaning",
+    /* REC-90 / §4.2's last table row — THE THREE COLUMNS THAT MAKE *every leg
+           citing page 14 of this document* ASKABLE. `content_id` is
+           `inquiry_basis`'s own column (REC-82); `extent_kind` and `ref` are the
+           content row's, reached by the LEFT JOIN below. Together they are what
+           turns a basis listing from "this leg rests on that DOCUMENT" into "this
+           leg rests on PAGE 14 of that document" — DEC-23's whole point arriving at
+           the surface a member actually reads a basis on, and the question §1 names
+           as unanswerable today.
+    
+           ADDITIVE, AND THE GRAIN DOES NOT MOVE. `content_id` is the PRIMARY KEY of
+           `content`, so the join matches at most one row and a leg still answers
+           with exactly one row — asserted rather than reasoned about, because a
+           join that fanned out would silently multiply `total` and turn a basis of
+           five legs into a basis of eleven. A leg with no content row (an inquiry
+           target, or a document this record holds no bytes of — IC-83's two
+           legitimate nulls) answers with all three NULL, which is the same
+           undetermined the leg already carried and not a new one. */
     row: [
       "ord",
       "target_id",
@@ -21843,16 +21926,32 @@ var MEANING = {
       "grade_source",
       "ground",
       "note",
-      "at"
+      "at",
+      "content_id"
     ],
+    rowJoin: {
+      table: "content",
+      alias: "xc",
+      on: "xc.content_id = m.content_id",
+      cols: ["extent_kind", "ref"]
+    },
     identity: ["bundle_id", "ord"],
     refs: ["target_id"],
     rowGrain: "one LEG of one inquiry's basis, addressed by (bundle_id, ord) \u2014 an inquiry resting on four legs answers with four rows"
   },
+  /* REC-90: `level` on both, and it is `meaning` rather than `content` for a
+     reason worth one line. A resolution is a REFERENCE IN A DOCUMENT RESOLVED TO
+     A REGISTERED SUBJECT — it is derived meaning ABOUT content, not the content
+     itself, and Part II §14.3's levels are distinguished by what an absence
+     means: no resolution may mean nothing was extracted, which is a statement
+     about a level BELOW this one. Calling it `content` would make the answer's
+     own four-level statement say the level below had been searched when it had
+     not. */
   resolves: {
     table: "resolutions",
     key: "bundle_id",
     bare: "grade",
+    level: "meaning",
     grain: "the bundle carrying a capture whose reference resolved so",
     sub: RESOLUTION_SUB,
     ...RESOLUTION_ROW
@@ -21861,9 +21960,187 @@ var MEANING = {
     table: "resolutions",
     key: "bundle_id",
     bare: "entity",
+    level: "meaning",
     grain: "the bundle carrying a capture that concerns the subject",
     sub: RESOLUTION_SUB,
     ...RESOLUTION_ROW
+  },
+  /* ---------------------------------------------------------------------
+   * REC-90 / CONTENT-SEARCH-DESIGN.md §4.2 — THE `content:` ARM, and it is
+   * question (b) of that document's §1 table: ROWS at content grain.
+   *
+   * IT IS NOT QUESTION (a). `passage:` — which passages MENTION X — searches
+   * the TEXT the extractors produced and needs an index that does not exist
+   * yet (§4.1's `capture_text`, item 4). This arm searches the `content`
+   * TABLE: the extents somebody has already cited or marked citable. The two
+   * are different questions over different sets and §3 says why building them
+   * as one is how a search that returns documents gets called finished. Saying
+   * so here matters because an empty `content:` answer is the EASIEST false
+   * absence in this system to produce — a corpus of five hundred captured
+   * agenda packets nobody has cited holds ZERO content rows, and that is a
+   * fact about citation, never about what the documents say. The `levels`
+   * block on the answer is where that is made mechanical rather than hoped
+   * for; this comment is why it is not optional.
+   *
+   * FOUR OF THE SIX SUB-FIELDS ARE NOT `column <cmp> ?`, WHICH IS NEW HERE.
+   * `leg:`, `resolves:` and `concerns:` all filter a column against a bound
+   * value, so the registry needed nothing else. The questions §4.2 names for
+   * this arm are not all of that shape: two of them ask about a CLASS over a
+   * column (`minted`), one asks about the LAST ELEMENT of a stored chain
+   * (`chain`), one asks whether any EDGE points here (`cited`), and one has a
+   * first-class UNDETERMINED that is `IS NULL` rather than a value (`cap`).
+   * `sub.pred` is the one extension that admits all four: it returns a
+   * PARAMETERISED fragment or null to fall through to the ordinary path, so
+   * the three existing arms compile through exactly the code they compiled
+   * through before. THE COLUMN NAMES COME FROM THIS REGISTRY AND THE MEMBER'S
+   * STRING IS ALWAYS AN ARGUMENT — the property the whole compiler has, kept
+   * rather than re-argued, and `content-arm.test.mjs` pins it by compiling a
+   * battery of hostile values and asserting the SQL is byte-identical across
+   * all of them while only `args` moves.
+   * ------------------------------------------------------------------- */
+  content: {
+    table: "content",
+    key: "bundle_id",
+    bare: "kind",
+    /* The LEVEL this arm answers at, declared rather than inferred from the
+       table name, because the four-level statement on the answer is composed
+       from it (CLAUDE.md: saying WHICH level is empty is a first-class
+       obligation, and a level nobody declared cannot be named). */
+    level: "content",
+    grain: "the document holding such a content row",
+    sub: {
+      /* IC-1's extent grammar, DRIVEN off the checker's own map. All five arms
+         are landed (REC-82 for `document`/`pdf-page`, REC-85 for the other
+         three), and `dom` is absent from that map ON PURPOSE — it is refused
+         by name until CONTENT-HTML produces one, so it is not a word here
+         either, and that falls out rather than being restated. */
+      kind: { col: "extent_kind", case: "lower", vocab: Object.keys(CONTENT_EXTENT_KINDS) },
+      /* REC-82's stale rule as a QUESTION. A content row is never rewritten and
+         never deleted: when the capture is re-read the chain moves and the row
+         becomes a reference to a transcription that no longer stands, recorded
+         as `stale=1` with the row and its edges still resolving. `content:stale`
+         is therefore "which of my documents carry citations made under a
+         transcription the record has since replaced", which is a debt question
+         of exactly `leg:hunch`'s kind and was unaskable before this arm. */
+      stale: {
+        col: "stale",
+        vocab: ["stale", "current"],
+        pred: (cmp, v) => v === "stale" || v === "current" ? { sql: `stale = ?`, args: [v === "stale" ? 1 : 0] } : null
+      },
+      /* DEC-24 rule 3 / Bob's 5.7 — WHO marked the passage citable, as a CLASS.
+         The column holds a member id, the literal `plane`, or a machine
+         credential, and the class is the question the record actually has:
+         SK-8's minted-to-cited ratio exists because a store of correctly
+         labelled machine proposals nobody cited is the failure mode that role
+         can produce. The three class words compile to the class predicate; ANY
+         OTHER VALUE falls through to equality on the column, so "which rows did
+         MEM-1 mint" stays askable and neither question is spent on the other.
+         THE TWO LITERALS ARE IMPORTED, never typed: `store.mjs`'s own ratio
+         reads `minted_by LIKE 'class:%'` off the same constant. */
+      minted: {
+        col: "minted_by",
+        vocab: ["member", "plane", "machine"],
+        pred: (cmp, v) => {
+          if (v === "plane") return { sql: `minted_by = ?`, args: [CONTENT_MINTED_BY_PLANE] };
+          if (v === "machine") return { sql: `minted_by LIKE ?`, args: [`${MACHINE_CLASS_PREFIX}%`] };
+          if (v === "member")
+            return {
+              sql: `minted_by <> ? AND minted_by NOT LIKE ?`,
+              args: [CONTENT_MINTED_BY_PLANE, `${MACHINE_CLASS_PREFIX}%`]
+            };
+          return null;
+        }
+      },
+      /* D-252's derivation cap OVER THIS EXTENT — the letter a leg citing this
+         passage cannot beat. `cap:undetermined` IS ITS OWN VALUE and compiles to
+         `IS NULL`, which is §4.2's explicit instruction ("never folded into a
+         letter") and CLAUDE.md's undetermined-is-first-class rule arriving in a
+         query language. THE CONSEQUENCE IS STATED RATHER THAN LEFT TO BE
+         DISCOVERED: `cap:<=B` does NOT match an undetermined row, because NULL
+         compares to nothing — so "B or better" and "not worse than B" are
+         different questions here, and a caller that wants both asks
+         `content:cap<=B OR content:cap=undetermined`. Folding NULL into the
+         comparison in either direction would be the record answering about
+         rows whose cap it does not know. */
+      cap: {
+        col: "derivation_cap",
+        case: "upper",
+        vocab: [],
+        pred: (cmp, v) => v === "UNDETERMINED" ? { sql: `derivation_cap IS NULL`, args: [] } : null
+      },
+      /* THE LAST STEP OF THE CHAIN — "every OCR'd region below cap C" is §1's
+         own example and this is its first half. THE COLUMN HOLDS THE WHOLE
+         CHAIN AS JSON and there is no column holding the last step's kind, so
+         this is a READ-TIME PARSE and it is therefore UNINDEXABLE. That is a
+         measured cost recorded in `MEASUREMENTS.md` and a stated DESIGN GAP
+         against §4.2, not a silent choice: §4.1 gives `capture_text` a
+         `chain_kind` COLUMN for exactly this predicate and says why ("so 'every
+         OCR'd unit' is a predicate and not a parse"), and §4.2 asks the same
+         question of `content` without giving it the same column. The column is
+         owed; this item does not own the mint path that would write it.
+         `chain:undetermined` is `IS NULL` for `cap`'s reason — the record holds
+         no chain for that row and says so instead of guessing a step. */
+      chain: {
+        col: "chain",
+        case: "lower",
+        vocab: Object.keys(STEP_KINDS),
+        pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL`, args: [] } : {
+          sql: `json_extract(chain, '$[#-1].step') ${cmp === "present" ? "IS NOT NULL" : `${cmp} ?`}`,
+          args: cmp === "present" ? [] : [v]
+        }
+      },
+      /* DEC-24 — THE MACHINE DOES THE LOOKING, THE MEMBER DOES THE CONCLUDING.
+         A content row is an ADDRESS; it becomes part of a finding only when a
+         member's basis leg names it. `content:cited` is "passages some claim
+         actually rests on" and `content:uncited` is "passages marked citable
+         that no finding has used" — SK-8 §7.3 (6)'s ratio as a SET a member can
+         open rather than a number they can only read. BOTH LEG TABLES ARE
+         ASKED, because `store.mjs`'s own ratio asks both: a version leg
+         (`inquiry_basis_version_legs`) cites content exactly as a live leg
+         does, and counting only the live table would report a passage as
+         uncited while a recorded version of a basis rests on it. */
+      cited: {
+        col: "content_id",
+        vocab: ["cited", "uncited"],
+        pred: (cmp, v) => v === "cited" || v === "uncited" ? { sql: `${v === "uncited" ? "NOT " : ""}${citedExists("content")}`, args: [] } : null
+      }
+    },
+    /* PL-9's grain for this table. `chain` is NOT in this list and that is a
+       decision rather than an omission: the column holds the whole chain as
+       JSON and a row list is not where a reader consumes one — `op=content`
+       answers it per row, through `describeChain`, in the sentence a member can
+       read. What a reader of a LIST needs from the chain is the one fact this
+       arm filters on, so it is published as the computed `chain_last` below and
+       the blob stays where it is already answered. */
+    row: [
+      "content_id",
+      "capture_sha",
+      "extent_kind",
+      "extent",
+      "ref",
+      "derivation_cap",
+      "page_count",
+      "minted_by",
+      "at",
+      "stale"
+    ],
+    /* Facts a row cannot state about itself, computed in the projection for
+       `target_present`'s reason exactly: existence is REPORTED, never inferred
+       from a null. `cited` is what makes the published grain below honest — it
+       says "cited or citable, and it says which", and without this column a
+       reader would have to ask a second op per row to tell which. */
+    rowComputed: {
+      chain_last: `json_extract(m.chain, '$[#-1].step')`,
+      cited: citedExists("m")
+    },
+    identity: ["content_id"],
+    /* NO REF COLUMN. `bundle_id` is the OWNER and is already gated by clause 1
+       of REC-36's rule, and `capture_sha` names a capture rather than a bundle —
+       it is not a bundle reference and treating it as one would apply a bundle
+       predicate to a thing that is not a bundle. Stated because an empty `refs`
+       list reads like nobody looked. */
+    refs: [],
+    rowGrain: "one content row \u2014 one addressable extent of one capture under one chain; cited or citable, and it says which"
   }
 };
 var BARE_INDEX = /* @__PURE__ */ new Map();
@@ -21895,8 +22172,28 @@ function meaningVocabulary() {
        bundle-grain half so a caller can see that one selector name answers at
        two grains and which is which. `grain` above is what `leg:hunch` selects;
        `rows.grain` is what `op=meaningrows&rows=leg` returns. */
-    rows: { grain: m.rowGrain, identity: m.identity, columns: m.row, refs: m.refs }
+    /* REC-90: the LEVEL this arm answers at, published beside the grain because
+       the answer's four-level statement is composed from it and a surface that
+       renders that statement must be able to say which level it is rendering.
+       Part II §14.3's vocabulary, not a new one. */
+    level: m.level,
+    /* REC-90: `columns` IS NOW THE COLUMNS A ROW ACTUALLY CARRIES, which it was
+       not. It published `m.row` alone, so the `target_present` column every
+       `rows=leg` row has ALREADY carried since PL-9 was missing from the
+       vocabulary a surface builds its table from — the "visible as a number,
+       unreachable as a structure" failure in miniature, one layer up. Corrected
+       rather than exempted, and DERIVED here so a descriptor that gains a
+       reached or computed column cannot forget to publish it. */
+    rows: { grain: m.rowGrain, identity: m.identity, columns: rowColumns(m), refs: m.refs }
   }]));
+}
+function rowColumns(m) {
+  return [
+    ...m.row,
+    ...m.rowJoin ? m.rowJoin.cols : [],
+    ...m.refs.map((c) => `${c}_present`),
+    ...Object.keys(m.rowComputed || {})
+  ];
 }
 var FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
 var SORTABLE = { relevance: null, ...Object.fromEntries(
@@ -22185,7 +22482,18 @@ function meaningAtom(arm, tok, ctx) {
   const m = MEANING[arm];
   let raw = String(tok.value);
   let subName = null;
-  const eq = raw.indexOf("=");
+  let subCmp = null;
+  const qual = /^([A-Za-z_]{1,32})(>=|<=|>|<)([\s\S]*)$/.exec(raw);
+  if (qual && Object.prototype.hasOwnProperty.call(m.sub, qual[1].toLowerCase())) {
+    subName = qual[1].toLowerCase();
+    subCmp = qual[2];
+    raw = qual[3];
+    if (raw === "") {
+      ctx.warnings.push(`${arm}: ${JSON.stringify(String(tok.value))} compares ${subName} against nothing`);
+      return null;
+    }
+  }
+  const eq = subName ? -1 : raw.indexOf("=");
   if (eq > 0) {
     const lhs = raw.slice(0, eq).toLowerCase();
     if (lhs in m.sub) {
@@ -22207,10 +22515,13 @@ function meaningAtom(arm, tok, ctx) {
   const sub = m.sub[subName];
   ctx.meaningArms.push({ arm, field: subName, column: sub.col });
   const norm = (x) => sub.case === "upper" ? String(x).toUpperCase() : sub.case === "lower" ? String(x).toLowerCase() : String(x);
-  if (raw === "" || raw === "*") return { op: "meaning", arm, col: sub.col, cmp: "present", value: null };
+  if (subCmp) return { op: "meaning", arm, field: subName, col: sub.col, cmp: subCmp, value: norm(raw) };
+  if (raw === "" || raw === "*")
+    return { op: "meaning", arm, field: subName, col: sub.col, cmp: "present", value: null };
   for (const [lead, cmp] of CMP)
-    if (raw.startsWith(lead)) return { op: "meaning", arm, col: sub.col, cmp, value: norm(raw.slice(lead.length)) };
-  return { op: "meaning", arm, col: sub.col, cmp: "=", value: norm(raw) };
+    if (raw.startsWith(lead))
+      return { op: "meaning", arm, field: subName, col: sub.col, cmp, value: norm(raw.slice(lead.length)) };
+  return { op: "meaning", arm, field: subName, col: sub.col, cmp: "=", value: norm(raw) };
 }
 function coerce(f2, v) {
   if (f2.type === "number") {
@@ -22309,12 +22620,24 @@ function metaSql(node) {
     args: [...args, node.value]
   };
 }
+function meaningWhere(node) {
+  const m = MEANING[node.arm];
+  const sub = node.field ? m.sub[node.field] : null;
+  if (sub && typeof sub.pred === "function") {
+    const p = sub.pred(node.cmp, node.value);
+    if (p) return p;
+  }
+  if (node.cmp === "present")
+    return node.col ? { sql: `${node.col} IS NOT NULL AND ${node.col} <> ''`, args: [] } : { sql: null, args: [] };
+  return { sql: `${node.col} ${node.cmp} ?`, args: [node.value] };
+}
 function meaningSql(node) {
   const m = MEANING[node.arm];
-  const inner = node.cmp === "present" ? node.col ? `SELECT ${m.key} FROM ${m.table} WHERE ${node.col} IS NOT NULL AND ${node.col} <> ''` : `SELECT ${m.key} FROM ${m.table}` : `SELECT ${m.key} FROM ${m.table} WHERE ${node.col} ${node.cmp} ?`;
+  const w = meaningWhere(node);
+  const inner = w.sql === null ? `SELECT ${m.key} FROM ${m.table}` : `SELECT ${m.key} FROM ${m.table} WHERE ${w.sql}`;
   return {
     sql: `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN (${inner})`,
-    args: node.cmp === "present" ? [] : [node.value],
+    args: w.args,
     compound: false
   };
 }
@@ -22498,13 +22821,26 @@ ORDER BY field ASC, n DESC, value ASC`,
         OR EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = m.${col} AND (${gate.sql})))`;
       args.push(...gate.args);
     }
+    if (mode === "levels")
+      return {
+        sql: `${c.sql}
+SELECT count(*) AS documents,
+       sum(CASE WHEN EXISTS (SELECT 1 FROM ${m.table} mx WHERE mx.${m.key} = b.bundle_id) THEN 1 ELSE 0 END) AS documents_with_rows
+FROM scope s JOIN bundles b ON b.fts_id = s.fid
+WHERE ${gate.sql}`,
+        args: [...c.args, ...gate.args]
+      };
+    const joined = m.rowJoin ? `
+ LEFT JOIN ${m.rowJoin.table} ${m.rowJoin.alias} ON ${m.rowJoin.on}` : "";
     const from = `FROM scope s JOIN bundles b ON b.fts_id = s.fid
- JOIN ${m.table} m ON m.${m.key} = b.bundle_id
+ JOIN ${m.table} m ON m.${m.key} = b.bundle_id${joined}
 WHERE ${gate.sql}${refSql}`;
     if (mode === "count") return { sql: `${c.sql}
 SELECT count(*) AS n ${from}`, args };
     const present = m.refs.map((col) => `, EXISTS (SELECT 1 FROM bundles tb WHERE tb.bundle_id = m.${col}) AS ${col}_present`).join("");
-    const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, ` + m.row.map((c2) => `m.${c2} AS ${c2}`).join(", ") + present;
+    const computed = Object.entries(m.rowComputed || {}).map(([name, expr]) => `, (${expr}) AS ${name}`).join("");
+    const reached = m.rowJoin ? m.rowJoin.cols.map((c2) => `, ${m.rowJoin.alias}.${c2} AS ${c2}`).join("") : "";
+    const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, ` + m.row.map((c2) => `m.${c2} AS ${c2}`).join(", ") + reached + present + computed;
     const order2 = [
       "b.bundle_id ASC",
       ...m.identity.filter((c2) => c2 !== m.key).map((c2) => `m.${c2} ASC`)
@@ -22583,10 +22919,16 @@ WHERE ${gate.sql}`,
            where a node sweep cannot see. Five of these fields' siblings read as
            never-read in node and are LIVE. The pin that stops the two coming back is
            structural (`Object.keys`) in `query.test.mjs`, because a field with no
-           consumer is invisible to every behavioural assertion there is. */
+           consumer is invisible to every behavioural assertion there is.
+    
+           REC-90 ADDS A SEVENTH, `level`, AND IT HAS A READER BEFORE IT IS WRITTEN —
+           which is the test D-258 above set for a field on this descriptor.
+           `store.mjs`'s `meaningRows` composes the answer's four-level statement from
+           it, so it is not a value published because it had already been computed. */
     meaning: rowArm ? {
       arm: rowArm,
       table: MEANING[rowArm].table,
+      level: MEANING[rowArm].level,
       grain: MEANING[rowArm].rowGrain,
       identity: MEANING[rowArm].identity,
       limit: mLim,
@@ -24570,6 +24912,7 @@ var Store = class _Store extends DurableObject {
     const tally = { applied: 0 };
     const total = this.#runQuery(plan.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
     const rows = this.#runQuery(plan.statements.meaning(), tally);
+    const lv = this.#runQuery(plan.statements.meaning({ mode: "levels" }), tally)[0] || {};
     return {
       ok: true,
       /* The GRAIN travels with the answer, in words, because a consumer that
@@ -24590,8 +24933,80 @@ var Store = class _Store extends DurableObject {
       count: rows.length,
       limit: plan.meaning.limit,
       offset: plan.meaning.offset,
-      total
+      total,
+      ..._Store.#meaningLevels(
+        plan.meaning.level,
+        Number(lv.documents || 0),
+        Number(lv.documents_with_rows || 0),
+        total
+      )
     };
+  }
+  /** REC-90 — WHICH LEVEL WAS EMPTY, SAID RATHER THAN LEFT TO BE INFERRED.
+   *
+   *  CLAUDE.md, and it is the rule this whole arm exists to serve: *sparse is
+   *  the normal condition at every level. Absence at one level is not evidence
+   *  of absence at the next: no meaning derived may mean nothing was extracted;
+   *  nothing extracted may mean the document was never read; no document may
+   *  mean nobody looked. Saying which of those is true is a first-class
+   *  obligation, not a diagnostic detail.*
+   *
+   *  WHY IT GOES ON THE ANSWER AND NOT IN A GUIDE. A zero from `content:` over
+   *  a corpus of five hundred captured agenda packets that nobody has cited is
+   *  BYTE-IDENTICAL to a zero over a corpus where the passages exist and say
+   *  nothing about the subject — and the first is the ordinary state of every
+   *  new instance. Without this block a member reads the second. Part II §14.3
+   *  says those are different facts with different next moves, so the difference
+   *  has to travel with the answer.
+   *
+   *  EVERY LEVEL IS NAMED, INCLUDING THE ONES THIS OP CANNOT SEE, and that is
+   *  the half that is easy to skip. A level omitted reads as a level with
+   *  nothing in it; UNDETERMINED is first-class and must be STATED, so the two
+   *  levels this read does not reach say so and NAME WHAT DOES reach them —
+   *  which is also the honest record of what this item did not build.
+   *
+   *  STATIC AND PURE, taking the three numbers rather than the store, so the
+   *  suite can drive every branch without a corpus and the branch a real corpus
+   *  rarely produces (documents = 0) is as testable as the common one. */
+  static #meaningLevels(level, documents, withRows, total) {
+    const without = Math.max(0, documents - withRows);
+    const NOBODY_LOOKED = {
+      state: "UNDETERMINED",
+      why: "whether anybody has looked at all is recorded in the observation log, which this read does not reach. An answer here cannot tell 'we looked and found nothing' from 'nobody has looked yet', and it says so rather than letting the zero speak for both"
+    };
+    const at = (lvl) => level === lvl;
+    const out = {
+      level,
+      scope: { documents, documents_with_rows: withRows, documents_without_rows: without },
+      levels: {
+        internet: NOBODY_LOOKED,
+        document: {
+          state: "COUNTED",
+          documents,
+          why: documents === 0 ? "no document is in scope at all \u2014 the other arms of this query selected none that this viewer may see, so every level below is empty for want of a document rather than for want of content" : `${documents} document(s) in scope, counted through the same gate as the rows`
+        },
+        content: at("content") ? {
+          state: "COUNTED",
+          documents_with_rows: withRows,
+          rows_matched: total,
+          why: withRows === 0 && documents > 0 ? `none of the ${documents} document(s) in scope holds a single content row. Nothing in them has been cited or marked citable, so this answer is a fact about CITATION and never evidence about what those documents say \u2014 the text of a document nobody has cited is not searched by this arm at all` : `${withRows} of ${documents} document(s) in scope hold content rows; ${without} hold none`
+        } : {
+          state: "UNDETERMINED",
+          why: "this arm answers at the meaning level. What has been extracted from the documents in scope is the content level, and `content:` with `rows=content` is the read that answers it"
+        },
+        meaning: at("meaning") ? {
+          state: "COUNTED",
+          documents_with_rows: withRows,
+          rows_matched: total,
+          why: `${withRows} of ${documents} document(s) in scope hold rows of this kind; ${without} hold none`
+        } : {
+          state: "UNDETERMINED",
+          why: "whether any finding RESTS ON these rows is the meaning level. `content:cited` and `content:uncited` answer it over this same set, and the `cited` column on each row says it per row"
+        }
+      }
+    };
+    out.says = total > 0 ? `${total} row(s) over ${documents} document(s) in scope` : documents === 0 ? "nothing matched, and no document was in scope to match in \u2014 this is an empty DOCUMENT level, not an empty record" : withRows === 0 ? `nothing matched over ${documents} document(s) in scope, none of which holds a row of this kind at all. That is absence at THIS level and says nothing about the level below it` : `nothing matched over ${documents} document(s) in scope, ${withRows} of which hold rows of this kind that this query's filters excluded`;
+    return out;
   }
   /** The fields the surface knows, so a UI can build its own controls from the
    *  plane's vocabulary rather than a copy of it that drifts. */
@@ -24622,7 +25037,16 @@ var Store = class _Store extends DurableObject {
         "has:field asks whether the field carries any value",
         "fm:path and fm:path=value reach frontmatter no column projects",
         "leg:, resolves: and concerns: reach the MEANING layer -- leg:hunch is outstanding hunch debt, resolves:C the flagged resolutions, concerns:ENT-1 the reverse index; they answer at BUNDLE grain",
-        "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B)",
+        /* REC-90. The `content:` arm searches WHAT HAS BEEN CITED OR MARKED
+           CITABLE, never the text of the documents themselves -- `passage:` is
+           that question and it is not built yet. Said in the published grammar
+           rather than only in the design, because a member reading this list is
+           exactly the reader who would otherwise take an empty `content:` answer
+           for an empty record (CONTENT-SEARCH-DESIGN.md sections 1 and 3). */
+        "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: content:pdf-page by extent kind, content:stale for citations made under a transcription the record has replaced, content:machine by who minted it, content:ocr by the chain's last step, content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
+        "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says",
+        "content:cap=undetermined and content:chain=undetermined are their own values, never folded into a letter or a step; a comparison like content:cap<=B does not match them, because NULL compares to nothing",
+        "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
         "has:leg asks whether the bundle carries any row in the meaning table at all",
         "sort:field and sort:-field order the result"
       ]

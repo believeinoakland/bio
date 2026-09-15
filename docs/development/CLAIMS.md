@@ -8852,3 +8852,63 @@ All three are already written into the document's **Incomplete sections** front 
 **ONE ACT FOR CONDUCT, ADDED TO THE SIX ABOVE.** **CONDUCT — at the merge, re-point this document's front-matter entry from §5 to §5.1.** The entry names §5 because **§5.1 IS NOT IN THIS TREE**: it arrives with `9954a9c`, `corpuscheck` refuses a front-matter reference to a section its own document does not carry, and this branch was cut before Bob's commit. The entry says so in its own first sentence.
 
 **AND A NOTE ON PROCESS, because this is the second receipt for it in two days.** `ORCHESTRATION.md` and this repository's own record both carry it: **nothing can reach a running worker.** CONDUCT paid the same cost inside REC-93's merge commit for the `observations` → `observation_log` rename, and `3cafa0a` on `origin/main` records a third instance the same week. This one was caught only because the close re-read `origin/main` rather than trusting the spawn base — **which is the standing rule and is the single cheapest thing a worker does all turn.** A worker that had merely run its gates and reported would have shipped a correct-looking item against a design that had changed underneath it, and CONDUCT would have found it at integration or not at all.
+
+## CLAIM 2026-09-15 RECORD (REC-90 — SEARCH item 2: the `content:` arm, `rows=content`, the three columns on `rows=leg`, and the index decision per filtered column MEASURED)
+session: REC-90 worker, spawned by CONDUCT #11, Opus 5. Worktree
+  `.claude/worktrees/agent-ac99401ee6695a599`, branch `worktree-agent-ac99401ee6695a599`.
+opened: 2026-09-15
+authority: `QUEUE.md` `### REC-90 · running` (read verbatim on `origin/main` at `6e88e35`
+  before any edit; it reads `running`), under `CONTENT-SEARCH-DESIGN.md` §4.2 and its §7
+  row 2, with §8's controls. Front matter read FIRST, as `WORKER.md` requires: the document
+  is v0.1 DRAFT, amended twice on 2026-09-14 — §5's four numbers are TAKEN (M0-31 / M-20)
+  and §7 row 1 was ALREADY BUILT when the document was written (REC-89).
+interface: **`IC-98`, on I3, ADDITIVE** — minted AT SPAWN with `node tools/mintid.mjs IC`
+  per the row's interface line, filed PROPOSED in `INTERFACE-CHANGES.md` with the MEASURED
+  consumer census, built against, and left for CONDUCT to resolve.
+  **`IC-99` was MINTED AND BURNED** and is recorded rather than left as a puzzle: the
+  allocator was invoked a second time with `--peek`, which it does not implement and which
+  therefore ALLOCATED. Gaps cost nothing by the tool's own statement. The same call reported
+  94, 95, 96 and 97 already held by other live worktrees, so none of those is mine.
+paths (claimed BY REGION, before any edit):
+  - `bio-plane/src/query.mjs` — **the `MEANING` registry's new `content` entry and its row
+    descriptor; the `rowJoin`/`rowComputed`/`pred`/`level` machinery the entry needs; the
+    three joined columns on the EXISTING `leg` descriptor; the `meaning()` statement builder's
+    `levels` projection.** NOT `FIELDS`, NOT `viewerPredicate`, NOT the FTS path, NOT
+    `RESOLUTION_SUB`/`RESOLUTION_ROW`'s own columns.
+  - `bio-plane/src/store.mjs` — **`meaningRows` ONLY** (the read's own site, ~:1584-1620) and
+    the `syntax` lines in `searchFields`. **NOT the extent arms, NOT `checkInquiryBasis`,
+    NOT the mint path (`mintContent`/`contentMint`/`extractPropose`), NOT the observation
+    log, NOT `contentRead`, NOT `#contentStandings`, NOT `#contentEarned`.**
+  - `bio-plane/src/schema.mjs` — **INDEX LINES ONLY, inside the REC-82 `content` block and
+    on `inquiry_basis`/`inquiry_basis_version_legs`, and only those the measurement carries.**
+    No table, no column, no writer. Precedent: `inquiry_basis_grade_source` was added by the
+    arm's own item (D-223/PL-8) with its measurement in the comment beside it.
+  - `bio-plane/checks/bio-checks.mjs` — **`MEANING_READ_CHECKS` ONLY**, if the arm earns a
+    refusal row. No other family; `_CHECKS` is a RESERVED SUFFIX and no new one is created.
+  - `bio-plane/test/content-arm.test.mjs`, `bio-plane/test/content-arm.control.mjs`,
+    `bio-plane/test/content-index-probe.mjs` — NEW files, mine alone.
+  - `bio-plane/test/meaningread.test.mjs`, `bio-plane/test/query.test.mjs`,
+    `bio-plane/test/bounds.test.mjs` — corrections forced by a landed change only.
+  - `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` ONLY, and only floors this item
+    INVALIDATES, moved from the figures the instrument PRINTED post-commit. **If it
+    conflicts, COLLAPSE TO ONE `arms:` KEY** (six keep-both merges, once the lowest won).
+  - `docs/development/INTERFACE-CHANGES.md` — the `IC-98` row only.
+  - `docs/development/MEASUREMENTS.md` — this item's driven figures only, appended.
+  - `docs/development/CONTENT-SEARCH-DESIGN.md` — front matter + §4.2 ONLY if this landing
+    changes the document's stated completeness (`CORPUS-STANDARD.md` §4.7 / CLAUDE.md's
+    same-commit rule). A gap found is reported as `DESIGN GAP:` rather than edited away.
+  - `docs/development/CLAIMS.md` — this block. `docs/DECIDED.md` — REGENERATED, never authored.
+  **READ AND DRIVEN, NEVER EDITED**: `bio-plane/src/textchain.mjs` (`STEP_KINDS`,
+  `derivationCap`, `describeChain`), `bio-plane/src/index.mjs` (the `meaningrows` op row and
+  `RETRIEVAL_READS` — the op already exists and this item adds none), `civicos-ui/**`.
+  **NOT** `docs/development/QUEUE.md` (CONDUCT's, sole writer), **NOT** `newgroup/**`,
+  **NOT** any version bump, tag or deploy.
+concurrency: four workers hold other REGIONS of `store.mjs`/`index.mjs`/`bio-checks.mjs`
+  per the brief — REC-94, REC-98, REC-88 and this item — which is the standing cap of five
+  with COFF-11, FW-18, M0-34 and REC-99 off those files. None of their claims is on
+  `origin/main` at `6e88e35` (workers do not push), so this is checked against the BRIEF's
+  region statement rather than against the register, and that is said plainly rather than
+  implied. `query.mjs` is named by NO other live region in the brief. `REGISTER_FLOOR` and
+  `MEANING_READ_CHECKS` are the two sites where a contended merge is expected; the collapse
+  rule above is the instruction for the first and the family is append-only for the second.
+released:

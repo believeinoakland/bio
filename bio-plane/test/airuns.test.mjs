@@ -109,6 +109,10 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { AI_RUNS_CONTEXT_CHECKS } from "../checks/bio-checks.mjs";
 import { RUN_CONTEXTS } from "../src/airun.mjs";
+/* REC-90: the index sweep's second exculpation reads the COMPILER'S OWN REGISTRY
+   to answer "is this column a meaning arm's filter column", rather than matching
+   a list of names that would go stale the day a fifth arm lands. */
+import { MEANING } from "../src/query.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SRC_STORE = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
@@ -598,14 +602,56 @@ t("SWEEP: `ai_runs_context` — THE INDEX THIS ITEM WAS ABOUT — now has a read
    asks it. They are NOT fixed here — this item builds one op, and eleven ops on
    one battery is how a diff stops being reviewable — they are DELEGATED with this
    list, which is the whole output of a sweep. */
+/* ==================================================================== *
+ * MOVED 13 -> 15 BY REC-90, 2026-09-15, FROM THE FIGURE THIS READER PRINTED —
+ * AND THE MOVE COMES WITH A CORRECTION TO THE ROSTER'S OWN PROSE ABOVE.
+ * ==================================================================== *
+ *
+ * THE ARRIVALS. REC-90 built the `content:` arm (D-222 stage C,
+ * `CONTENT-SEARCH-DESIGN.md` §4.2) and, on a measurement recorded as
+ * `MEASUREMENTS.md` M-21, declared four indexes on `content`. TWO of them land on
+ * this roster: `content(extent_kind)` and `content(derivation_cap)`. The other
+ * two do not, and the difference is instructive rather than lucky — `stale` and
+ * `minted_by` appear as literal column names in OTHER statements in `store.mjs`
+ * (the stale writer, the mint ratio), so this reader happens to see them.
+ *
+ * NEITHER IS AN INSTANCE OF REC-69's CLASS. Both are read by `op=search` and
+ * `op=meaningrows`, through statements `query.mjs` composes FROM ITS REGISTRY:
+ * the column name is `MEANING.content.sub.<field>.col` and never a literal beside
+ * a `WHERE`, so this reader cannot see it. That is this sweep's OWN DECLARED
+ * BLIND SPOT — *"an index whose column is filtered through a dynamically composed
+ * fragment"* — in a second spelling, and the exculpation below DRIVES it in the
+ * three parts `reading_text_source_kind`'s does.
+ *
+ * AND THE CORRECTION, WHICH MATTERS MORE THAN THE TWO ARRIVALS.
+ * **`inquiry_basis(grade_source)` HAS BEEN ON THIS ROSTER SINCE 2026-08-08
+ * DESCRIBED AS A REAL GAP — *"Nothing asks 'which legs got their grade from a
+ * resolution rather than from a member'"* — AND THAT SENTENCE WAS ALREADY FALSE
+ * WHEN IT WAS WRITTEN.** PL-8's `leg:` arm landed on 2026-08-07, the day BEFORE,
+ * and `leg:hunch` / `leg:source=resolution` compiles to exactly
+ * `SELECT bundle_id FROM inquiry_basis WHERE grade_source = ?`; the index's own
+ * comment in `schema.mjs` records the measurement that bought it. The roster
+ * carried it as a gap for 38 days for precisely the reason the two new ones are
+ * here: **the reader cannot see a WHERE composed from a registry.** A roster of
+ * "access paths no op asks for" that lists three paths an op DOES ask for is the
+ * record claiming more than it can support in the direction of a gap that is not
+ * there, which is the failure `reading_text_source_kind`'s entry exists to
+ * prevent — and it happened anyway, one blind spot over. Corrected, not exempted:
+ * the count moves and all three are named in the exculpation below.
+ *
+ * WHY THE MATCHER IS STILL NOT WIDENED. The 2026-08-08 entry's reason holds
+ * unchanged: broadening it would also match an UPDATE's SET clause and would
+ * SHRINK this roster by hiding real gaps, which is the one direction a ratchet
+ * must never move by accident. The blindness is DECLARED and MEASURED instead.
+ * ==================================================================== */
 t("SWEEP: and the finding is RATCHETED as a CEILING — an index added tomorrow with no statement "
 + "filtering its leading column pushes this over and fails HERE, naming the index, which is the "
 + "one thing UI-49 had to find by trying to build a surface",
-  unread.length <= 13, true);
+  unread.length <= 15, true);
 t("SWEEP: a FLOOR beside the ceiling — the list shrinking without this figure being moved means the "
 + "READER lost sight of indexes, not that the plane got better. REC-70's ratchet spent two days "
 + "reporting 27 over a corpus it could not see",
-  unread.length >= 13, true);
+  unread.length >= 15, true);
 /* AND THE TWO NAMED ARRIVALS ARE PINNED BY NAME, not only by count. A ceiling of
    13 is satisfied by ANY thirteen, so a real gap could be swapped for a blind
    spot and the figure would never move — which is how a roster stops being about
@@ -635,6 +681,35 @@ t("SWEEP: `reading_text_source_kind` is this reader's DECLARED BLIND SPOT FIRING
 t("SWEEP: POLARITY on that exculpation — the fragment-aware reader does NOT find a column nobody "
 + "pushes, so the three trues above are a measurement rather than a matcher that matches anything",
   [pushesFragment("zzz_no_such_column_anywhere"), pushesFragment("finding")], [false, false]);
+
+/* THE SECOND BLIND SPOT, DRIVEN THE SAME WAY — REC-90, 2026-09-15.
+   THE READER IS THE REGISTRY ITSELF, not a regex over `query.mjs`. A meaning arm's
+   WHERE is built from `MEANING[arm].sub[<field>].col`, so the honest question is
+   "is this column a meaning arm's filter column" and the honest way to ask it is
+   to IMPORT the registry. A list of column names typed here would be the hand copy
+   this project has measured five times, and it would go stale the day a fifth arm
+   lands. */
+const MEANING_FILTER_COLS = new Set(Object.values(MEANING)
+  .flatMap((m) => Object.values(m.sub).map((sf) => sf.col)));
+t("SWEEP: THREE roster entries are this reader's blind spot firing, not gaps — each column IS a "
++ "meaning arm's filter column, read from the compiler's own registry rather than from a list. "
++ "Measured the three ways the fragment exculpation is: unread HERE, read by a REGISTRY-AWARE "
++ "reader, and both ops are dispatched",
+  [["content_extent_kind", "content_derivation_cap", "inquiry_basis_grade_source"]
+     .filter((n) => !unread.some((ix) => ix.index === n)),
+   ["extent_kind", "derivation_cap", "grade_source"].filter((c) => !MEANING_FILTER_COLS.has(c)),
+   SRC_STORE.includes("meaningrows:"), SRC_STORE.includes("search:")],
+  [[], [], true, true]);
+t("SWEEP: POLARITY on THAT exculpation — the registry-aware reader does NOT claim a column no arm "
++ "filters on, so the emptiness above is a measurement and not a matcher that matches anything",
+  [MEANING_FILTER_COLS.has("zzz_no_such_column_anywhere"), MEANING_FILTER_COLS.has("finding"),
+   MEANING_FILTER_COLS.size > 0], [false, false, true]);
+/* AND THE CORRECTION IS PINNED, not only narrated: `inquiry_basis(grade_source)`
+   was carried as a REAL GAP for 38 days while `leg:hunch` was asking exactly that
+   question. If a future reader deletes the exculpation above, this fails. */
+t("SWEEP: the arm that reads `grade_source` is real and compiled — the roster's 38-day-stale "
++ "'nothing asks this' is corrected against the compiler, not against a memory",
+  MEANING.leg.sub.source.col, "grade_source");
 
 await mf.dispose();
 console.log(`\nairuns: ${pass} pass, ${fail} fail`);

@@ -12991,7 +12991,9 @@ says nothing about OpenDocument, which fixes no maximum table size at all — th
 `odf.mjs` emits a NULL bound for `.ods` rather than borrowing this figure, and the reason the
 `odsborrowsgrid` control arm exists to stop a later session doing so quietly.
 
-## M-21 · 2026-09-15 · FW-18 — THE CONTENT TYPES BEYOND THREE, DRIVEN OVER REAL DOCUMENTS: **the registered `meeting_agenda` reader read BOTH real sets of Oakland meeting minutes as an agenda at CERTAIN confidence, and the fourth class of M0-32's order could not be reached at all because every directory in the corpus is Tier-1 undecodable** (worktree `agent-a188c62407d239d13`)
+## M-24 · 2026-09-15 · FW-18 — THE CONTENT TYPES BEYOND THREE, DRIVEN OVER REAL DOCUMENTS: **the registered `meeting_agenda` reader read BOTH real sets of Oakland meeting minutes as an agenda at CERTAIN confidence, and the fourth class of M0-32's order could not be reached at all because every directory in the corpus is Tier-1 undecodable** (worktree `agent-a188c62407d239d13`)
+
+*(Filed by FW-18 as `M-21` and RENUMBERED to `M-24` at REC-90's integration, 2026-09-15 by CONDUCT #11 — **and this one reached `main` before it was caught, which is the honest part of the record.** FW-18 merged at `a59ac7b` carrying a second `## M-21` heading beside M0-34's, and nothing failed: no gate reads this file for duplicate ids. It was found only when a THIRD collision on the same number turned up one merge later and the headings were counted. **FOUR workers of one wave took `M-21` on the same day** — M0-34, COFF-11 (→ `M-22`), REC-90 (→ `M-23`) and this one. `M` is one of the two namespaces `mintid` does not grade, so nothing refused any of them. **Four collisions in one wave is a fact about the allocator, not about four workers**, and it is rowed as `M0-39` rather than left as four renumberings.)*
 
 **Instrument.** `bio-plane/src/pdfstructure.mjs`'s Tier-1 extraction and `docprofile/readtext.mjs`'s
 own `flattenText`/`readText` — the same path `op=acquire` runs — driven over documents fetched live
@@ -13120,3 +13122,113 @@ strongest signal. It does not measure precision or recall of the new types over 
 census, and it is M0-32's kind of work, not this item's. And **it cannot see a class whose documents do
 not decode**, which is finding 5 and is the honest limit of every content-type measurement taken over
 this corpus.
+
+## M-23 · 2026-09-15 · REC-90 — THE INDEX DECISION PER FILTERED COLUMN OF THE `content:` ARM, MEASURED: **all six candidates SHIP; `content:cited` is 31.6 SECONDS unindexed and 9 ms indexed; and the smaller corpus said the opposite about one of them** (worktree `agent-ac99401ee6695a599`)
+
+*(Filed by REC-90 as `M-21` and RENUMBERED to `M-23` at integration, 2026-09-15 by CONDUCT #11. **THREE workers of one wave took `M-21` on the same day** — M0-34 for D-367's phantom-ruling diff, COFF-11 for the XLSX grid probe (renumbered to `M-22` at its own merge), and this one. **`M` is one of the two namespaces `mintid` does not grade**, so nothing refused any of the three and every merge would have carried a duplicate heading silently. Recorded rather than quietly renumbered, because a reference written against the original number in a report or a transcript now points at a different measurement — and because three collisions in one wave is a fact about the allocator, not about three workers.)*
+
+`CONTENT-SEARCH-DESIGN.md` §4.2 says the `content:` arm's columns are *"indexed or
+the reason measured and recorded, as `inquiry_basis(grade_source)` was"*, and the
+QUEUE row repeats it as **the index decision per filtered column is MEASURED, not
+assumed**. This is that measurement. `inquiry_basis_grade_source`'s own comment in
+`schema.mjs` is the precedent and this was taken the same way.
+
+**Instrument.** `bio-plane/test/content-index-probe.mjs` — node v26.5.0, darwin/arm64,
+`node:sqlite` 3.53.3.
+
+    node tools/mintid.mjs M                                 # M-21
+    node test/content-index-probe.mjs 5000 5                # the smaller corpus
+    node test/content-index-probe.mjs 20000 3               # the scaling arm
+    node test/content-index-probe.mjs 20000 9               # the figures below
+
+**THE SQL IS DRIVEN OUT OF `compile()`, NEVER TYPED**, and every index the product
+already has is swept out of `schema.mjs` AND `store.mjs` rather than hand-listed —
+both properties inherited from `meaning-index-probe.mjs`, whose first version
+hand-wrote the indexes, missed `bundles_fts_id` (created in `store.mjs`'s migration,
+not in the schema text) and reported a 97 % saving from an index the product had had
+for months. The probe refuses to run if either sweep comes back empty.
+
+**THE ENGINE IS `node:sqlite`, NOT workerd, and that is stated rather than hidden.**
+What is measured is the QUERY PLANNER's use of an index, which is SQLite core and
+identical in both. The `$[#-1]` JSON path the `chain` filter uses is NOT assumed to
+work in workerd on the strength of this: it is pinned THROUGH the op, inside
+workerd, by `content-arm.test.mjs` §6.
+
+### THE NOISE FLOOR, MEASURED RATHER THAN ASSUMED — and it is what made the first two runs undecidable
+
+`content:ocr` filters on `json_extract` over the chain column. **No candidate index
+can touch it and none is proposed for it**, so whatever it moves between the two
+phases is pure run-to-run variation. At 9 reps it moved **20.5 %**. Every other
+delta is read against that number, and one that does not clear it is a measurement
+of the afternoon rather than of an index. The probe prints the verdict per row.
+
+### THE FIGURES — 20,000 bundles · 40,002 content rows · 31,200 legs · 9 reps
+
+| query | no index | with | delta | vs noise |
+| --- | --- | --- | --- | --- |
+| `content:uncited` | **31,614.512 ms** | 9.028 ms | **−100.0 %** | CLEARS ×3 |
+| `content:cited` | **27,292.571 ms** | 11.881 ms | **−100.0 %** | CLEARS ×3 |
+| `content:stale` | 2.335 ms | 0.924 ms | −60.4 % | clears |
+| `content:pdf-page` | 4.007 ms | 2.062 ms | −48.5 % | clears |
+| `content:document` | 5.391 ms | 3.276 ms | −39.2 % | clears |
+| `content:plane` | 4.369 ms | 2.726 ms | −37.6 % | clears |
+| `content:machine` | 3.625 ms | 2.291 ms | −36.8 % | clears |
+| `content:cap=undetermined` | 3.284 ms | 2.194 ms | −33.2 % | clears |
+| `content:cap<C` | 4.907 ms | 3.742 ms | −23.8 % | clears |
+| `content:ocr` | 8.579 ms | 6.819 ms | −20.5 % | **THE CONTROL** |
+| `content:ocr content:cap<C` | 9.907 ms | 9.710 ms | −2.0 % | inside noise |
+
+**THE DECISION: all six candidates ship.** Four on `content` —
+`(extent_kind, bundle_id)`, `(stale, bundle_id)`, `(minted_by, bundle_id)`,
+`(derivation_cap, bundle_id)` — each a COVERING seek that never touches the table,
+and two on the leg tables — `inquiry_basis(content_id)` and
+`inquiry_basis_version_legs(content_id)`.
+
+**THE TWO LEG INDEXES ARE NOT A TUNING CHOICE.** `content:cited` / `content:uncited`
+is an EXISTS over `content_id` for every candidate row, so without them it is
+O(content rows × legs) — **a thirty-one-second read behind a surface any member can
+call**. That is REC-66 / D-227's amplification class arriving at a new door, not a
+percentage worth weighing: without them the op does not answer slowly, it times out.
+
+### THE REVERSAL, RECORDED BECAUSE IT IS THE REASON TWO CORPUS SIZES WERE MEASURED
+
+At **5,000 bundles / 10,002 content rows, 5 reps**, `content:pdf-page` read **+1.6 %**
+and `content:document` **−6.6 %** — inside the noise, and on `inquiry_basis_role`'s
+precedent (refused at −9.1 % / −10.1 %) `content(extent_kind, …)` would have been
+**REFUSED**. At 20,000 the same column reads −48.5 % / −39.2 %. **The quantity an
+index buys is the PROPORTION, and the proportion grows with the corpus**, which is
+`inquiry_basis_grade_source`'s own recorded property (−39.8 % at 20,000 → −54.6 % at
+100,000). A single corpus size cannot tell a real effect from a lucky one, and the
+first run of this probe could not decide anything until the control row existed.
+
+### THE COST SIDE, because a decision that priced only the benefit is half a decision
+
+**The write cost here is NOT `inquiry_basis`'s, and the asymmetry is the rest of the
+argument.** Every `op=promote` of an inquiry delete-then-inserts its basis rows, so
+an index on that table is re-written on every promotion. **A content row is
+`INSERT OR IGNORE`'d once and is never rewritten and never deleted** (REC-82's rule:
+a better engine moves the chain and the row goes `stale`, it is not rewritten). So
+each index here is one B-tree insert per mint and nothing on re-promotion. An index
+is cheaper on `content` than on any other table in this store.
+
+### WHAT THIS INSTRUMENT CANNOT SEE, named because that sentence is what lets the next reader tell a clean result from a walk looking in the wrong place
+
+- **THE REAL DISTRIBUTION.** The proportions are reasoned from how content rows are
+  MINTED (lazily on first cite, plus SK-7/SK-8 machine mints) and are **not measured
+  off a live corpus, because no instance has enough content rows to measure** — the
+  table landed 2026-09-14. The probe prints them every run: 30 % of documents hold
+  rows, 6 rows each, 55 % `document` grain, 3 % stale, 20 % machine-minted, 45 %
+  plane, 35 % cap UNDETERMINED, 22 % uncited. A different distribution moves every
+  figure, and the direction is predictable — an index is worth MOST where the
+  matching value is RARE and least where it is common.
+- **THE WRITE COST IN PRODUCTION.** Priced above in B-trees per mint, not in
+  milliseconds: the probe has no honest way to time workerd's storage.
+- **WORKERD'S PLANNER.** Measured on `node:sqlite`. The plans (`EXPLAIN QUERY PLAN`,
+  printed per row) are the evidence and they are SQLite core; the compound-SELECT
+  ceiling is the known workerd difference and is not what this measures.
+- **ANYTHING ABOUT `content:chain`.** It filters on a JSON parse and no ordinary
+  index can serve it. It is the SLOWEST single-column filter on the table (8.579 ms
+  against 2.3–5.4 for the rest) and it does not improve. Reported by REC-90 as a
+  **DESIGN GAP against `CONTENT-SEARCH-DESIGN.md` §4.2**, which asks `content` for a
+  last-step predicate while §4.1 gives `capture_text` a `chain_kind` COLUMN for
+  exactly that question, *"so 'every OCR'd unit' is a predicate and not a parse"*.

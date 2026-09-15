@@ -1634,6 +1634,10 @@ export class Store extends DurableObject {
        any row is assembled rather than after. */
     const total = this.#runQuery(plan.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
     const rows = this.#runQuery(plan.statements.meaning(), tally);
+    /* REC-90 — THE FOUR-LEVEL STATEMENT, on the same gate and the same scope.
+       Third statement, not a second read: it runs through `#runQuery` like the
+       other two, so it throws without the gate exactly as they do. */
+    const lv = this.#runQuery(plan.statements.meaning({ mode: "levels" }), tally)[0] || {};
 
     return {
       ok: true,
@@ -1648,7 +1652,94 @@ export class Store extends DurableObject {
       gate: { scope: plan.gate, applied: tally.applied },
       rows, count: rows.length,
       limit: plan.meaning.limit, offset: plan.meaning.offset, total,
+      ...Store.#meaningLevels(plan.meaning.level, Number(lv.documents || 0),
+                              Number(lv.documents_with_rows || 0), total),
     };
+  }
+
+  /** REC-90 — WHICH LEVEL WAS EMPTY, SAID RATHER THAN LEFT TO BE INFERRED.
+   *
+   *  CLAUDE.md, and it is the rule this whole arm exists to serve: *sparse is
+   *  the normal condition at every level. Absence at one level is not evidence
+   *  of absence at the next: no meaning derived may mean nothing was extracted;
+   *  nothing extracted may mean the document was never read; no document may
+   *  mean nobody looked. Saying which of those is true is a first-class
+   *  obligation, not a diagnostic detail.*
+   *
+   *  WHY IT GOES ON THE ANSWER AND NOT IN A GUIDE. A zero from `content:` over
+   *  a corpus of five hundred captured agenda packets that nobody has cited is
+   *  BYTE-IDENTICAL to a zero over a corpus where the passages exist and say
+   *  nothing about the subject — and the first is the ordinary state of every
+   *  new instance. Without this block a member reads the second. Part II §14.3
+   *  says those are different facts with different next moves, so the difference
+   *  has to travel with the answer.
+   *
+   *  EVERY LEVEL IS NAMED, INCLUDING THE ONES THIS OP CANNOT SEE, and that is
+   *  the half that is easy to skip. A level omitted reads as a level with
+   *  nothing in it; UNDETERMINED is first-class and must be STATED, so the two
+   *  levels this read does not reach say so and NAME WHAT DOES reach them —
+   *  which is also the honest record of what this item did not build.
+   *
+   *  STATIC AND PURE, taking the three numbers rather than the store, so the
+   *  suite can drive every branch without a corpus and the branch a real corpus
+   *  rarely produces (documents = 0) is as testable as the common one. */
+  static #meaningLevels(level, documents, withRows, total) {
+    const without = Math.max(0, documents - withRows);
+    /* The observation log holds WHETHER ANYBODY EVER LOOKED, and this read does
+       not reach it. Named, with the item that will. */
+    const NOBODY_LOOKED = {
+      state: "UNDETERMINED",
+      why: "whether anybody has looked at all is recorded in the observation log, which this read does "
+         + "not reach. An answer here cannot tell 'we looked and found nothing' from 'nobody has looked "
+         + "yet', and it says so rather than letting the zero speak for both",
+    };
+    const at = (lvl) => level === lvl;
+    const out = {
+      level,
+      scope: { documents, documents_with_rows: withRows, documents_without_rows: without },
+      levels: {
+        internet: NOBODY_LOOKED,
+        document: { state: "COUNTED", documents,
+                    why: documents === 0
+                      ? "no document is in scope at all — the other arms of this query selected none that "
+                      + "this viewer may see, so every level below is empty for want of a document rather "
+                      + "than for want of content"
+                      : `${documents} document(s) in scope, counted through the same gate as the rows` },
+        content: at("content")
+          ? { state: "COUNTED", documents_with_rows: withRows, rows_matched: total,
+              why: withRows === 0 && documents > 0
+                ? `none of the ${documents} document(s) in scope holds a single content row. Nothing in them `
+                + `has been cited or marked citable, so this answer is a fact about CITATION and never `
+                + `evidence about what those documents say — the text of a document nobody has cited is `
+                + `not searched by this arm at all`
+                : `${withRows} of ${documents} document(s) in scope hold content rows; ${without} hold none` }
+          : { state: "UNDETERMINED",
+              why: "this arm answers at the meaning level. What has been extracted from the documents in "
+                 + "scope is the content level, and `content:` with `rows=content` is the read that "
+                 + "answers it" },
+        meaning: at("meaning")
+          ? { state: "COUNTED", documents_with_rows: withRows, rows_matched: total,
+              why: `${withRows} of ${documents} document(s) in scope hold rows of this kind; ${without} hold none` }
+          : { state: "UNDETERMINED",
+              why: "whether any finding RESTS ON these rows is the meaning level. `content:cited` and "
+                 + "`content:uncited` answer it over this same set, and the `cited` column on each row "
+                 + "says it per row" },
+      },
+    };
+    /* ONE SENTENCE a surface can render without composing it itself, because a
+       surface that composed it would be the second place this distinction is
+       made and the first place it could drift. */
+    out.says = total > 0
+      ? `${total} row(s) over ${documents} document(s) in scope`
+      : documents === 0
+        ? "nothing matched, and no document was in scope to match in — this is an empty DOCUMENT level, "
+        + "not an empty record"
+        : withRows === 0
+          ? `nothing matched over ${documents} document(s) in scope, none of which holds a row of this kind `
+          + `at all. That is absence at THIS level and says nothing about the level below it`
+          : `nothing matched over ${documents} document(s) in scope, ${withRows} of which hold rows of this `
+          + `kind that this query's filters excluded`;
+    return out;
   }
 
   /** The fields the surface knows, so a UI can build its own controls from the
@@ -1680,7 +1771,22 @@ export class Store extends DurableObject {
         "fm:path and fm:path=value reach frontmatter no column projects",
         "leg:, resolves: and concerns: reach the MEANING layer -- leg:hunch is outstanding hunch debt, "
         + "resolves:C the flagged resolutions, concerns:ENT-1 the reverse index; they answer at BUNDLE grain",
-        "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B)",
+        /* REC-90. The `content:` arm searches WHAT HAS BEEN CITED OR MARKED
+           CITABLE, never the text of the documents themselves -- `passage:` is
+           that question and it is not built yet. Said in the published grammar
+           rather than only in the design, because a member reading this list is
+           exactly the reader who would otherwise take an empty `content:` answer
+           for an empty record (CONTENT-SEARCH-DESIGN.md sections 1 and 3). */
+        "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: "
+        + "content:pdf-page by extent kind, content:stale for citations made under a transcription the "
+        + "record has replaced, content:machine by who minted it, content:ocr by the chain's last step, "
+        + "content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
+        "content: does NOT search the text of the documents -- it searches what has been cited or marked "
+        + "citable in them, so an empty answer is a fact about citation and never about what a document says",
+        "content:cap=undetermined and content:chain=undetermined are their own values, never folded into a "
+        + "letter or a step; a comparison like content:cap<=B does not match them, because NULL compares to nothing",
+        "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison "
+        + "(resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
         "has:leg asks whether the bundle carries any row in the meaning table at all",
         "sort:field and sort:-field order the result",
       ],

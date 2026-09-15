@@ -122,13 +122,28 @@ t("there ARE arms to drive (a walk that covers nothing proves nothing)", ARMS.le
      fact rather than a sentence: the registry and the schema can disagree, and
      if they ever do, THIS fails rather than the answer silently repeating or
      losing rows under paging. */
+  /* REC-90: IT READS BOTH SPELLINGS OF A PRIMARY KEY, AND THE SECOND ONE IS
+     WHY THIS COMMENT EXISTS. The parser matched only the TABLE-CONSTRAINT form
+     `PRIMARY KEY (a, b)`, because all three tables it was written against are
+     compound-keyed. `content` (REC-82) declares its key INLINE on the column —
+     `content_id TEXT PRIMARY KEY` — which is the ordinary SQLite spelling for a
+     single-column key, and the parser returned null for it. That made the
+     `content` arm fail the READABLE assertion above rather than the identity
+     assertion below, which is the instrument reporting its own blind spot as a
+     defect in the subject. CORRECTED, NOT EXEMPTED: the arm's identity genuinely
+     IS the table's primary key, and now the parser can see that it is. The
+     inline arm is tried only when the constraint arm finds nothing, so nothing
+     about the three existing tables changes. */
   const pkOf = (table) => {
     const at = SCHEMA_SRC.indexOf(`CREATE TABLE IF NOT EXISTS ${table} (`);
     if (at < 0) return null;
     const end = SCHEMA_SRC.indexOf("\n);", at);
     if (end < 0) return null;
-    const m = /PRIMARY KEY \(([^)]*)\)/.exec(SCHEMA_SRC.slice(at, end));
-    return m ? m[1].split(",").map((s) => s.trim()) : null;
+    const body = SCHEMA_SRC.slice(at, end);
+    const m = /PRIMARY KEY \(([^)]*)\)/.exec(body);
+    if (m) return m[1].split(",").map((s) => s.trim());
+    const inline = /^\s{2}(\w+)\s+\w+(?:\([^)]*\))?\s+PRIMARY KEY\b/m.exec(body);
+    return inline ? [inline[1]] : null;
   };
   const tables = [...new Set(ARMS.map((a) => MEANING[a].table))];
   console.log(`  meaning tables behind the arms: ${tables.join(", ")}`);
@@ -616,11 +631,35 @@ console.log("\n--- 10. REC-36: a candidate row the viewer may not see is WITHHEL
   /* NO COUNT OF WHAT WAS WITHHELD, because that count is the leak. The whole key
      set is enumerated rather than allow-listed, so the next key added has to
      come past this line. */
+  /* REC-90 / IC-98: FOUR NEW KEYS, and the assertion is MOVED rather than
+     loosened, because what it is really guarding is that no key counts what the
+     gate removed. `level`, `scope`, `levels` and `says` are the four-level
+     statement, and all four are computed through the SAME scope CTE and the SAME
+     viewer predicate as the rows — `scope.documents` is documents THIS VIEWER
+     may see, never the corpus. That is asserted directly two lines below rather
+     than left to this list, because an enumerated key set proves only that a key
+     exists and this rule is about what the key CONTAINS. */
   t("no field of the answer discloses a withheld count",
     Object.keys(asDave).sort(),
-    ["arm", "count", "gate", "grain", "identity", "limit", "offset", "ok", "query", "rows", "table", "total"]);
+    ["arm", "count", "gate", "grain", "identity", "level", "levels", "limit", "offset", "ok",
+     "query", "rows", "says", "scope", "table", "total"]);
+  /* THE NEW TALLY IS GATED TOO, and it is measured the way `total` is measured
+     two assertions up: the participant sees STRICTLY more documents than the
+     outsider. A `scope.documents` that answered the same number to both would be
+     an oracle reporting the existence of documents in projects the viewer was
+     never invited to — which is the exact defect `store.mjs`'s own mint ratio
+     shipped with and had to correct to `#viewerSees`. */
+  t("REC-90: the four-level tally is GATED with the rows — the outsider's document scope is strictly smaller",
+    (asDave?.scope?.documents ?? -1) < (asCarol?.scope?.documents ?? -1), true);
+  t("REC-90: and it never reports more documents than the viewer's own rows could have come from",
+    (asDave?.scope?.documents_with_rows ?? 0) <= (asDave?.scope?.documents ?? 0), true);
+  /* REC-90: THREE, not two. The four-level statement is a THIRD statement on the
+     same shape (`mode: "levels"`), run through `#runQuery` like the other two, so
+     it throws without the gate exactly as they do — and this counter is the
+     evidence that it carried one. A new statement that did NOT carry the gate
+     would leave this at 2 and fail here rather than leaking quietly. */
   t("the gate reports the scope it compiled for, and that every statement carried it",
-    [asDave?.gate?.scope, asDave?.gate?.applied], ["participant", 2]);
+    [asDave?.gate?.scope, asDave?.gate?.applied], ["participant", 3]);
   /* Hidden and absent are ONE answer: an unrecognised caller is refused at the
      door, and a recognised one who may see nothing gets an honest empty. */
   const denied = await (await mf.dispatchFetch(`http://x/api/?op=meaningrows&rows=leg`)).json();
@@ -744,9 +783,18 @@ console.log("\n--- 13. an equally correct phrasing must PASS, and the grain is p
      must consciously move — which is what makes it an interface change rather
      than an edit. */
   const env = await rows(`rows=leg&q=${encodeURIComponent("leg:hunch")}`);
+  /* REC-90 / IC-98 MOVED THIS PIN CONSCIOUSLY, which is what the comment above
+     asks of whoever adds a field. The four added keys are the four-level
+     statement (`level`, `scope`, `levels`, `says`) and they are an INTERFACE
+     CHANGE on I3, filed as IC-98, ADDITIVE — a caller reading the twelve keys
+     that were here reads them unchanged. They are not D-258's class: D-258
+     deleted two fields that restated what `op=searchfields` already published,
+     and these four state something NO other op answers — which of the four
+     levels the emptiness is at (CLAUDE.md's sparse rule). */
   t("D-258: the op=meaningrows envelope carries exactly these keys and no others",
     Object.keys(env ?? {}).sort(),
-    ["arm", "count", "gate", "grain", "identity", "limit", "offset", "ok", "query", "rows", "table", "total"]);
+    ["arm", "count", "gate", "grain", "identity", "level", "levels", "limit", "offset", "ok",
+     "query", "rows", "says", "scope", "table", "total"]);
   t("and NEITHER deleted name appears anywhere in the answer, at any depth",
     /"(columns|refs)"/.test(JSON.stringify(env)), false);
   /* The rows already carry their own column names as keys, which is the second

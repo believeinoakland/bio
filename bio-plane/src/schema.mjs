@@ -1340,6 +1340,21 @@ CREATE INDEX IF NOT EXISTS inquiry_basis_bundle ON inquiry_basis(bundle_id);
 -- an index is worth least exactly where the value is commonest. If a member's question
 -- ever makes cuts_against legs the hot path, the probe is here to re-run.
 CREATE INDEX IF NOT EXISTS inquiry_basis_grade_source ON inquiry_basis(grade_source, bundle_id);
+-- REC-90 -- THE content:cited PREDICATE'S OWN INDEX, AND THIS ONE IS NOT A TUNING
+-- CHOICE. content:cited and content:uncited ask whether ANY leg rests on a content
+-- row, which is an EXISTS over this column for every candidate row -- O(content
+-- rows x legs) without it. MEASURED 2026-09-15 (M-21, test/content-index-probe.mjs)
+-- at 20,000 bundles / 40,002 content rows / 31,200 legs, 9 reps:
+--   content:uncited  31,614.512 ms -> 9.028 ms  (-100.0%)
+--   content:cited    27,292.571 ms -> 11.881 ms (-100.0%)
+-- A THIRTY-ONE-SECOND read behind a surface any member can call, against a measured
+-- noise floor of 20.5%. That is REC-66 / D-227's amplification class arriving at a
+-- new door, not a percentage worth weighing: without these two indexes the op does
+-- not answer, it times out. The version-leg table gets the same index for the same
+-- predicate, because content:cited asks BOTH tables -- a version leg cites content
+-- exactly as a live leg does, and asking only the live one would report a passage
+-- as uncited while a recorded version of a basis rests on it.
+CREATE INDEX IF NOT EXISTS inquiry_basis_content ON inquiry_basis(content_id);
 -- REC-21: the PERSONAL half of the queue, and it is a SEPARATE TABLE on
 -- purpose. The record half of an item's state lives on the EVENT (DEC-16: a
 -- task's status, a proposal's disposition), so one member's resolution clears
@@ -2190,6 +2205,9 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (
 -- carries alternatives, and the answer must not be a scan of every leg of every
 -- version of every inquiry.
 CREATE INDEX IF NOT EXISTS inquiry_basis_version_legs_target ON inquiry_basis_version_legs(target_id);
+-- REC-90: the other half of content:cited's EXISTS. See the measurement recorded
+-- beside inquiry_basis_content above -- the two indexes are one decision.
+CREATE INDEX IF NOT EXISTS inquiry_basis_version_legs_content ON inquiry_basis_version_legs(content_id);
 -- =========================================================================
 
 -- PL-12 / D-84: THE BIAS SET'S STATEMENTS, a PROJECTION of the bundle's own
@@ -2916,6 +2934,52 @@ CREATE TABLE IF NOT EXISTS content (
 -- is re-read. By BUNDLE: purge's per-bundle arm, and the compiler's join.
 CREATE INDEX IF NOT EXISTS content_capture ON content(capture_sha);
 CREATE INDEX IF NOT EXISTS content_bundle ON content(bundle_id);
+-- REC-90 / CONTENT-SEARCH-DESIGN.md section 4.2 -- THE FILTERED COLUMNS OF THE
+-- content: ARM. Each compiles to SELECT bundle_id FROM content WHERE <col> = ?,
+-- and bundle_id is the second key column so every seek is COVERING: it never
+-- touches the table. inquiry_basis_grade_source above is the precedent and this
+-- is the same decision taken the same way -- MEASURED, and the measurement is
+-- what chose which columns appear here.
+--
+-- MEASURED 2026-09-15 (test/content-index-probe.mjs, node:sqlite, the statements
+-- DRIVEN out of compile() and every OTHER index DRIVEN out of schema.mjs AND
+-- store.mjs rather than typed). MEASUREMENTS.md M-21 carries both corpus sizes,
+-- the instrument, the synthetic proportions and what the instrument cannot see.
+-- At 20,000 bundles / 40,002 content rows, 9 reps:
+--   content:pdf-page          4.007 ms -> 2.062 ms  (-48.5%)
+--   content:document          5.391 ms -> 3.276 ms  (-39.2%)   the COMMON value
+--   content:stale             2.335 ms -> 0.924 ms  (-60.4%)
+--   content:machine           3.625 ms -> 2.291 ms  (-36.8%)
+--   content:plane             4.369 ms -> 2.726 ms  (-37.6%)
+--   content:cap=undetermined  3.284 ms -> 2.194 ms  (-33.2%)
+--   content:cap<C             4.907 ms -> 3.742 ms  (-23.8%)
+-- AGAINST A MEASURED NOISE FLOOR OF 20.5%, which is the swing on content:ocr --
+-- a query NO index in the candidate set can touch, because it filters on a JSON
+-- parse of the chain column. Every figure above clears it. THE SMALLER CORPUS
+-- SAID OTHERWISE FOR extent_kind (+1.6% at 5,000 bundles) and the larger one
+-- overturned it, which is exactly why two sizes were measured: the quantity being
+-- bought is the PROPORTION, and it grows with the corpus.
+--
+-- THE WRITE COST IS NOT inquiry_basis's, AND THAT ASYMMETRY IS THE REST OF THE
+-- DECISION. Every op=promote of an inquiry delete-then-inserts its basis rows, so
+-- an index there is re-written on every promotion. A content row is INSERT OR
+-- IGNORE'd ONCE and is never rewritten and never deleted (the rule at the head of
+-- this block), so each index here is one B-tree insert per mint and nothing on
+-- re-promotion. An index is cheaper on this table than on any other in the store.
+CREATE INDEX IF NOT EXISTS content_extent_kind ON content(extent_kind, bundle_id);
+CREATE INDEX IF NOT EXISTS content_stale ON content(stale, bundle_id);
+CREATE INDEX IF NOT EXISTS content_minted_by ON content(minted_by, bundle_id);
+CREATE INDEX IF NOT EXISTS content_derivation_cap ON content(derivation_cap, bundle_id);
+-- NO INDEX FOR content:chain, AND IT IS A STATED GAP RATHER THAN AN OMISSION.
+-- The arm filters on the chain's LAST STEP and this column holds the WHOLE chain
+-- as JSON, so the predicate is json_extract(chain, ...) -- an expression, which no
+-- ordinary index can serve. It is the SLOWEST single-column filter on this table
+-- (8.579 ms against 2.3-5.4 for the others, and it does not improve). Section 4.1
+-- of the design gives capture_text a chain_kind COLUMN for exactly this predicate,
+-- in its own words so that every OCRd unit is a predicate and not a parse -- and
+-- section 4.2 asks the same question of content without giving it the same column.
+-- REPORTED AS A DESIGN GAP by REC-90, which does not own the mint path that would
+-- write such a column.
 -- =========================================================================
 
 -- =========================================================================

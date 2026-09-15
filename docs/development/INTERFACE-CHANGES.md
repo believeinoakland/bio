@@ -7474,3 +7474,105 @@ read as documents nobody had touched. The shipped read consults the pre-log evid
 returns the never-extracted member only under the third cause, and **defaults an absent cause to
 the WEAKEST claim**. A consumer may rely on that ordering; it is part of this interface and not an
 implementation detail.
+
+## IC-98 · I3: THE `content:` ARM, `rows=content`, THREE COLUMNS ON `rows=leg`, AND THE FOUR-LEVEL STATEMENT ON EVERY `op=meaningrows` ANSWER · PROPOSED 2026-09-15 (REC-90, building `CONTENT-SEARCH-DESIGN.md` §4.2 / §7 row 2) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **MEASURED AT THIS ITEM'S BASE `6e88e35`
+  as 15.2.0 (IC-93 ACCEPTED, SK-8).** This change is ADDITIVE over that number; nothing
+  published before it moves, and no key is renamed or removed.
+- **Proposer:** RECORD, worker `agent-ac99401ee6695a599`, 2026-09-15, from QUEUE REC-90
+- **Owner to land it:** `RECORD` (owner and proposer)
+- **Consumers to answer:** `UI` (the search surface is SEARCH §7 row 6, UI-62 — not yet
+  built), `RECORD`, `DIST` (served surfaces). **SKILL** is named because the assistant's FIND
+  names the level it searched (§6) and this is the first op that publishes one.
+- **Change class:** ADDITIVE → MINOR bump
+- **The id was MINTED with `node tools/mintid.mjs IC`** (floor IC-93; 94, 95, 96 and 97 were
+  already held by other live worktrees, and this worker took 98). **IC-99 was also taken by
+  this worker and is BURNED AND UNUSED** — the allocator was invoked a second time with a
+  `--peek` flag it does not implement, and which therefore ALLOCATED. A gap costs nothing and
+  the tool says so; it is named here rather than left as a silent hole.
+
+### THE MEASURED CONSUMER CENSUS, taken on this tree rather than recalled
+
+- **`op=meaningrows` has ZERO production callers.** `grep -rn meaningrows civicos-ui/` →
+  no match, in any file. The 2026-08-09 measurement recorded in `query.mjs` at D-258 said the
+  same and is RE-MEASURED here rather than inherited, because a census inherited from a ledger
+  is a claim about the day it was written.
+- **`op=searchfields` HAS one production caller — `civicos-ui/app.html`** — and it reads
+  exactly three keys off the answer: `fields`, `syntax`, `idsMax` (`loadSearchFields`, and the
+  three are the whole of what it stores). **It does not read `meaning` at all**, so every
+  addition below under `meaning.*` is invisible to the only surface that calls the op.
+- **The `syntax` array IS read** (it is offered to the member as the published grammar), and
+  four lines are added to it. A consumer that renders the array renders four more lines; one
+  that matches specific strings in it — `app.html` does not — would be unaffected, because no
+  existing line is changed.
+- Test-suite callers: `meaningread.test.mjs`, `query.test.mjs`, `bounds.test.mjs`. All three
+  are corrected in this item's own commit, and none is exempted.
+
+### WHAT IS ADDED
+
+**1. A fourth meaning arm, `content:`, over REC-82's `content` table.** Six sub-fields, each
+answering a question §4.2 names: `kind` (the extent arm), `stale`, `minted` (member · plane ·
+machine, with any other value read as a literal minter id), `cap` (the derivation cap, with
+**`undetermined` as its own value** and never folded into a letter), `chain` (the chain's last
+step kind) and `cited` (whether any leg rests on the row). It composes with every existing
+operator, spends one of the four compound terms like every arm, and carries no gate of its own.
+
+**2. `rows=content`.** A row descriptor at content grain — identity `content_id`, no ref
+columns, and the grain published in §4.2's own words: *one content row — one addressable extent
+of one capture under one chain; cited or citable, and it says which*. Two computed columns keep
+that promise: `cited`, and `chain_last` (the one fact of the chain the arm filters on; the raw
+chain blob stays where `op=content` already answers it, in words).
+
+**3. Three columns on `rows=leg`** — `content_id` (the leg's own), plus `extent_kind` and `ref`
+reached through a LEFT JOIN on the content table's PRIMARY KEY. This is what makes *every leg
+citing page 14 of this document* readable, which §1 names as a question the record cannot ask.
+**The grain does not move**: the join is on a primary key, so a leg still answers with exactly
+one row, and a leg with no content row answers with all three NULL — the undetermined it
+already carried, not a new one.
+
+**4. FOUR KEYS ON EVERY `op=meaningrows` ANSWER, for every arm: `level`, `scope`, `levels`,
+`says`.** This is the half a consumer must actually read, and it is CLAUDE.md's rule made
+mechanical: *absence at one level is not evidence of absence at the next... saying which of
+those is true is a first-class obligation.* A zero from `content:` over five hundred captured
+packets nobody has cited is byte-identical to a zero over a corpus where the passages exist and
+say nothing — and the first is the ordinary state of every new instance. `scope` carries the
+documents in scope and how many hold any row of the arm's table; `levels` names all four of
+Part II §14.3's levels, each either COUNTED or **UNDETERMINED with the read that does answer
+it**; `says` is one sentence a surface renders without composing it itself.
+
+**Every one of the three statements is gated.** The tally is a third projection on the same
+shape, run through `Store#runQuery` like the other two, so it throws without the viewer
+predicate rather than reporting a corpus-wide number — `gate.applied` reads 3 rather than 2,
+and that is asserted.
+
+**5. `op=searchfields` publishes `meaning.<arm>.level`**, and **`meaning.<arm>.rows.columns` is
+CORRECTED**: it published the arm's own table columns only, so `target_present` — a column every
+`rows=leg` row has carried since PL-9 — was missing from the vocabulary a surface builds its
+table from. It is now DERIVED from the descriptor, so a reached or computed column cannot be
+forgotten.
+
+### WHAT IS FIXED IN PASSING, AND IT IS A DEFECT RATHER THAN AN ADDITION
+
+**`leg:grade>=B` has never compiled and has never said so.** Measured on `origin/main` at
+`6e88e35` before this item changed anything: a NAMED sub-field with a comparison compiled to
+`grade = 'GRADE>=B'` — an equality no row can satisfy, with no warning, on every arm, since
+PL-8. The sub-field split was `indexOf("=")` and `>=` contains an `=`, so the left side came out
+as `grade>`, which is neither a sub-field nor an identifier and fell past the warning arm that
+exists for exactly this. The unqualified spellings (`resolves:>=B`) always worked, which is why
+it survived.
+
+It is corrected here rather than routed, because §4.2's own worked example — *every OCR'd region
+below cap C* = `content:chain=ocr content:cap<C` — cannot compile without it. **This WIDENS what
+the language answers and refuses nothing new**: the qualified form is taken only when the name on
+the left IS a sub-field of that arm, so `concerns:ENT<1` is still a bare entity value. A caller
+that sent `leg:grade>=B` and got nothing now gets the rows it asked for; no caller that got rows
+gets fewer.
+
+### WHAT IS NOT CHANGED
+
+`op=content` (still fixed-key, D-222 stage C), `op=cite`, the mint path, the extent grammar, the
+observation log, and the three pre-existing arms' own columns. No op is added and none is
+removed. `passage:` and `rows=passage` are §7 item 5's and are not here — this arm searches what
+has been CITED OR MARKED CITABLE, never the text of the documents, and the published `syntax`
+says so in as many words so a member cannot take one for the other.

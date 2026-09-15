@@ -566,7 +566,16 @@ console.log("\n--- D-258: the meaning descriptor carries exactly what op=meaning
      twice because it is the reason both defects survived so long: a field with
      no consumer changes no answer, so no behavioural assertion anywhere can see
      it. `Object.keys` is the only thing that can. */
-  const SIX = ["arm", "table", "grain", "identity", "limit", "offset"];
+  /* REC-90 MOVED THIS TO SEVEN, AND THE TEST D-258 SET IS THE ONE IT HAD TO
+     PASS: a field on this descriptor must have a READER, because a field with no
+     consumer changes no answer and no behavioural assertion can see it. `level`
+     has one before it was written — `store.mjs`'s `meaningRows` composes the
+     answer's four-level statement from it, and that statement is pinned
+     behaviourally in `meaningread.test.mjs` and `content-arm.test.mjs`. So this
+     is not the class D-258 deleted; it is the opposite case, and the pin moves
+     rather than loosens. The name is still enumerated, so the EIGHTH field has
+     to come past this line too. */
+  const SIX = ["arm", "table", "level", "grain", "identity", "limit", "offset"];
   const arms = Object.keys(MEANING);
   console.log(`  corpus: ${arms.length} meaning arms · every one compiled and its descriptor read`);
   t("the corpus this sweep runs over is not empty", arms.length >= 3, true);

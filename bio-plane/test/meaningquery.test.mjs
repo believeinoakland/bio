@@ -157,8 +157,14 @@ console.log(`  corpus of arms: ${ARMS.length} (${ARMS.join(", ")})`);
     [(p.warnings ?? []).length, (p.terms ?? []).length], [0, 0]);
 }
 
-t("the arm count is pinned, so an arm added or lost is visible", ARMS.length, 3);
-t("the three the build plan names are the three that exist", ARMS.sort(), ["concerns", "leg", "resolves"]);
+/* REC-90 MOVED THIS FROM THREE TO FOUR, and the pin is MOVED rather than
+   loosened — it exists so an arm added or lost is VISIBLE, and a count nobody has
+   to move would not be one. The fourth is `content`, D-222 stage C /
+   `CONTENT-SEARCH-DESIGN.md` §4.2, over REC-82's content table. The three PL-8
+   built are unchanged and every assertion below still runs over them. */
+t("the arm count is pinned, so an arm added or lost is visible", ARMS.length, 4);
+t("the arms the build plans name are the ones that exist — PL-8's three plus SEARCH §4.2's `content`",
+  ARMS.sort(), ["concerns", "content", "leg", "resolves"]);
 
 /* PIN THE COUNT OF IMPLEMENTATIONS. A rule with two implementations left its
    control green once already, because one absorbed the other. The published
@@ -212,7 +218,12 @@ t("`legs:` the projected count survives beside `leg:` the arm",
      picked silently. Pinning the SET is what makes a NEW collision — introduced
      by a doctrine change to the catalog's vocabularies — fail here rather than
      surface as a warning in front of a member. */
-  t("the ambiguous bare words are exactly the one known collision", AMB, { leg: ["capture"], resolves: [], concerns: [] });
+  /* REC-90: the `content` arm declares seventeen bare words across six sub-fields
+     and collides with none of them — a fact worth pinning rather than an empty
+     array added to satisfy a shape. `leg:capture` stays the ONE known collision in
+     the whole registry. */
+  t("the ambiguous bare words are exactly the one known collision", AMB,
+    { leg: ["capture"], resolves: [], concerns: [], content: [] });
   for (const [arm, ws] of Object.entries(AMB)) for (const w of ws) {
     const p = compile({ q: `${arm}:${w}`, viewer: M });
     t(`\`${arm}:${w}\` is refused with a warning naming BOTH readings, never guessed`,
