@@ -13336,52 +13336,7 @@ and the detector matched `"grade a"` — the ARTICLE, not the letter. The detect
 them apart and a fence that is spelling-blind in the safe direction is the right fence, so
 the SENTENCE moved and the rule did not.
 
-## M-30 · 2026-09-15 · CONDUCT #11 — AN UNEXPLAINED GATE RED, RECORDED WITH ITS NON-CORROBORATION RATHER THAN RESOLVED IN EITHER DIRECTION
-
-**The observation.** A `node tools/gates.mjs --docs` run over a prose-only change to
-`kickoffs/CONDUCT.md` printed `gates: RED · class DOCS`. **Its failing suite was not captured**
-— the output was not redirected to a file, and by the time it was interrogated the run was gone.
-Two subsequent runs of the identical command over the identical tree printed `gates: GREEN ·
-class DOCS` at exit 0 with **zero `FAIL` lines**, both captured in full. The change was pushed on
-those two.
-
-**The context that makes it worth recording at all: SEVEN worker batteries were running
-concurrently**, the loudest contention this estate has seen. The DOCS profile includes suites
-that read `origin/main` and the shared temp roots — the moving-target class UI-59's delegation
-named on 2026-09-14 (*a worker measuring anything that reads `origin/main` is measuring a moving
-target it does not control*).
-
-**THE NON-CORROBORATION, AND IT IS THE POINT OF THE ENTRY.** BOB #11 holds **35 gate logs from
-the same session, every one captured to a file. Eight went RED and ALL EIGHT have a named
-cause** — four `DECIDED.md` staleness, two `mergecarry` (the registered drop), one `mintid` (an
-un-minted id in prose), one `corpuscheck` (a heading renamed without regenerating). **Not one
-unexplained red, including runs taken while these seven batteries were live.** So there is **no
-second sighting from the other lane.**
-
-**WHAT THIS ENTRY CLAIMS: nothing about the cause.** It does not claim a flaky gate, and it does
-not claim the red was imagined. **It claims that one red was observed, its cause was not
-captured, and a 35-log census from a second lane over the same window found no unexplained red.**
-That is an UNDETERMINED with both halves stated, which `CLAUDE.md` requires to be first-class —
-and it is recorded so that a second sighting has something to be pinned against. **A single
-unexplained observation that is smoothed away cannot be corroborated later; one that is recorded
-can be.**
-
-**THE LESSON THAT IS NOT UNDETERMINED: capture every gate run to a file.** The only reason this
-is undetermined is that the run was not redirected. BOB's eight reds are all explained because
-all 35 were captured. **The cost of capturing is one redirection; the cost of not capturing is
-that a red becomes permanently unresolvable the moment the scrollback moves.**
-
-**AND ONE THING MEASURED IN PASSING WHILE FILING THIS, WHICH IS THE CLEANEST DEMONSTRATION OF
-M0-39's SUBJECT THIS PROJECT WILL GET.** This entry's own id was taken with `node
-tools/mintid.mjs M`, and the allocator answered: **`MINTED M-30 · floor M-24 · 5 id(s) ALREADY
-HELD and stepped over: 25, 26, 27, 28, 29`** — five ids held by the seven workers live at that
-moment. **The corpus floor reads M-24. Reading the floor and adding one — which is exactly how
-four workers collided on `M-21` earlier today, and how CONDUCT #11 renumbered them — would have
-produced `M-25`, colliding with a live worker.** The allocator was right, was available, and the
-only thing standing between it and another collision was somebody choosing to call it. That is
-`yes / yes / no / no` demonstrated live rather than argued.
-
-## M-25 · 2026-09-15 · M0-41 — **THE INSTRUMENT CENSUS: of 25 graded instruments, 6 read `exists / optional / unauditable` and 3 more are `exists / gated-in-part / blind-in-the-rest`. NOTHING COMPOSES ANY ENTRY LOOP — there is no git hook and no CI, so every gate in this repository is a gate a session chooses to run and skipping one leaves no trace anywhere** (instruments: `bio-plane/test/m041-instrument-census.mjs` driven from `bio-plane/test/m041-instrument-census.control.mjs`, with `tools/mintid.mjs --audit --base`, `tools/plancheck.mjs --local`, `tools/corpuscheck.mjs`, `tools/mergecarry.mjs`, `tools/decided.mjs --check`, `tools/waitquiet.mjs --check` and `bio-plane/scripts/coverage.mjs --strict` each run and read directly; worktree `agent-adffd6057e80cc06e` on `origin/main` at `58b77ea`)
+## M-25 · 2026-09-15 · M0-41 — **THE INSTRUMENT CENSUS: of 21 graded instrument rows, 6 read `exists / optional / unauditable` and 3 more are `exists / gated-in-part / blind-in-the-rest`. NOTHING COMPOSES ANY ENTRY LOOP — there is no git hook and no CI, so every gate in this repository is a gate a session chooses to run and skipping one leaves no trace anywhere** (instruments: `bio-plane/test/m041-instrument-census.mjs` driven from `bio-plane/test/m041-instrument-census.control.mjs`, with `tools/mintid.mjs --audit --base`, `tools/plancheck.mjs --local`, `tools/corpuscheck.mjs`, `tools/mergecarry.mjs`, `tools/decided.mjs --check`, `tools/waitquiet.mjs --check` and `bio-plane/scripts/coverage.mjs --strict` each run and read directly; worktree `agent-adffd6057e80cc06e` on `origin/main` at `58b77ea`)
 
 **THE QUESTION, AND WHY IT IS FOUR QUESTIONS.** `ORCHESTRATION.md` §*Why integration is a ROLE and not a queue-flip* put UNION FACTS to a four-part test — **is an allocator/checker POSSIBLE · does it EXIST · is it USED at the moment it matters · can the AUDIT see a bypass** — and the id row came back **yes / yes / NO / NO**. M0-41 generalises it: the same four questions asked of every instrument in the estate.
 
@@ -13457,7 +13412,7 @@ Pristine scratch `git worktree add` of `origin/main` at `58b77ea`, `npm ci` in *
 
 ### 3 · THE HEADLINE THE ROW ASKED FOR
 
-**Of 25 graded instruments, `exists / optional / unauditable` — it exists, calling it is optional at the moment it matters, and a bypass leaves no trace — is the reading for SIX:**
+**Of the 21 graded instrument rows, `exists / optional / unauditable` — it exists, calling it is optional at the moment it matters, and a bypass leaves no trace — is the reading for SIX:**
 
 1. **`mintid` the allocator** — the worked example. Optional to call; no site refuses a hand-written id.
 2. **`mintid --audit --base`, the bypass detector** — exists, placed in CONDUCT's kickoff loop, called by no gate, and a skip is unrecorded.
