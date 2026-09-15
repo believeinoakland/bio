@@ -75,6 +75,28 @@ other's probes. Provision a `biosmoke-framework` instance the day a FRAMEWORK
 session first needs to live-verify — per-area instances are created only when a
 second session actually starts, not before (`PARALLELISM.md`).
 
+## `docprofile/` IS AN INPUT TO THE PLANE'S COMMITTED BUNDLE. REBUILD IT IN THE SAME COMMIT.
+
+**Added 2026-09-15 by CONDUCT #11 at FW-18's integration (D-377), because this rule was written
+down for one consumer and nowhere for the other, and it has now been rediscovered twice.**
+
+`civicos-ui/app.html` carries a FLATTENED copy of `docprofile/` produced by
+`tools/bundle-docprofile.mjs`, and `check-semantics.mjs` fails on any drift between the two.
+That rule is stated in `DOCUMENT-PROFILES.md`. **What was stated nowhere is that
+`bio-plane/dist/bio-plane.bundled.mjs` is ALSO a generated artifact of this package** — several
+of its first-party inputs live under `docprofile/` — so a change here that does not rebuild the
+plane bundle makes FL-10's freshness guard fail the battery **on a suite the change never
+touched**, which reads as damage the worker did somewhere else entirely.
+
+**So a `docprofile/` change carries two regenerations, not one:** `node tools/bundle-docprofile.mjs`
+for the UI embed, and `cd bio-plane && npm run build` for the plane bundle. Neither is a UI edit or
+a deploy; both are generated artifacts catching up to their source.
+
+**FW-17 hit this and did not record it. FW-18 hit it again and paid a green-to-red battery before
+filing the row.** A rule that has to be rediscovered is a rule that was never written down, and the
+half that WAS written down is what made the gap invisible — a reader who finds the embed rule
+reasonably concludes they have found the rule.
+
 ## What this area should know without being told
 
 **Fetch and rebase before pushing; never force-push `main`.** A rejected push
