@@ -4470,3 +4470,151 @@ the +2 hygiene delta is that same per-suite census counting the new file.
 here is DISCHARGED — all three sentences corrected in place with the dated reason, and nothing else
 in that document touched. Everything CONDUCT should record is in this worker's report, stated as
 acts with their actors.
+
+
+## CLAIM 2026-09-14 CAPTURE (CAP-8 — the Google Drive host-stack handler: the link is KEPT, the OpenDocument export is the capture)
+
+Session: CAPTURE worker, Opus 5, worktree-isolated, spawned by CONDUCT #10 after
+COFF-9 and COFF-10 reached `origin/main` at `87f263a`.
+Worktree: `/Users/sparky/ClaudeCodeBIO/bio/.claude/worktrees/agent-ac12c46e7df4b4d96`
+Branch: `worktree-agent-ac12c46e7df4b4d96`
+Baseline: THIS worktree measured at `87f263a` BEFORE any edit (the tree was
+byte-identical to `origin/main`, verified by `git status --porcelain` empty), and
+re-measured per suite at the close by diffing two full battery runs.
+
+EXACT PATHS CLAIMED, BY REGION:
+
+- `bio-plane/src/drive.mjs` — **NEW**. The Drive address recogniser and the export-address
+  composer, pure and dependency-free (no fetch, no store, no registry), so the suite and the
+  plane read ONE definition of what a Drive address is. Whole file.
+- `bio-plane/src/index.mjs` — **TWO REGIONS ONLY**, both inside `op=acquire`:
+  (a) the DEC-49 region `is-drive-capture` — the caller-supplied-hop-fact refusal and the
+  shape refusals, sited immediately after the `capture-request` arm and before the
+  `const locator = body?.locator` line; (b) the export seam — the lines that derive
+  `driveHopRecorded` / `documentAddress` / `locator` from the recogniser, the `text/html`
+  shell refusal after the fetch returns, and the one `...(driveHopRecorded ? [driveHopRecorded] : [])`
+  spread on the existing `provenance_chain` literal. **REC-83's new read op's dispatch entry
+  and REC-84's basis-leg grammar are NOT in either region and are not touched.**
+- `bio-plane/checks/bio-checks.mjs` — ONE new export appended, `DRIVE_CAPTURE_CHECKS`
+  (C-48.1 … C-48.6), placed with the other DEC-49 families. `C-48` minted with
+  `node tools/mintid.mjs C` (floor C-45; 46 and 47 already held and stepped over).
+  Nothing existing in the file moves.
+- `bio-plane/test/drive.test.mjs` — **NEW**. The suite, driven THROUGH `op=acquire`
+  against a miniflare fixture serving both the shell and the export.
+- `bio-plane/test/drive.control.mjs` — **NEW**. The negative-control harness: six arms,
+  each armed ALONE, every restore verified by sha256 AND `cmp`.
+- `bio-plane/scripts/coverage.mjs` — the ONE `REGISTER_FLOOR` key set only, moved to the
+  figures this item's own green post-commit run PRINTED. **M0-30 holds `tools/plancheck.mjs`
+  and is not touched.**
+- `docs/development/INTERFACE-CHANGES.md` — IC-85 appended, PROPOSED. Id minted with
+  `node tools/mintid.mjs IC` (floor IC-84).
+- `docs/development/MEASUREMENTS.md` — one appended section, the Drive-export measurement.
+- `docs/development/CLAIMS.md` — this block.
+
+NOT CLAIMED, stated because a reader would reasonably expect them: `store.mjs`
+(no transport-record field is needed — the three hop facts ride the provenance
+chain and the existing `retrieval_locator` column, both already written by
+`recordcapturedlocator`), `subresources.mjs`, `formats.mjs`, `odf.mjs`,
+`ooxml.mjs`, `civicos-ui/**`, `newgroup/**`, `tools/plancheck.mjs` (M0-30's),
+`docs/development/QUEUE.md` (CONDUCT's sole writer), and
+`docs/architecture/BIO_Content_Framework_v0_10.md` (CONTENT's — the three
+sentences this landing falsifies are a DELEGATION at the foot of this file, not
+an edit).
+
+**AMENDED AT THE BUILD, three additions, each stated rather than quietly taken:**
+
+- `bio-plane/src/schema.mjs` — **ONE `--` COMMENT BLOCK ONLY**, above
+  `CREATE TABLE captured_locators`. This claim first said the file would not be
+  touched. It has to be: the comment asserts *"For a direct capture they are the
+  same string"* about `address` and `retrieval_locator`, and a Drive capture is
+  `via: 'direct'` with the two differing. **Leaving a false sentence at the column
+  it describes is not a smaller change than correcting it**, and it is the same
+  invariant IC-85 files. The old sentence is corrected in place with its dated
+  reason, never deleted. No table, no column, no index, no behaviour; every line
+  begins `--` (so `#migrate`'s `split(";")` never sees it) and carries no backtick.
+- `bio-plane/src/index.mjs` — **ONE MORE LINE**, the `taskenqueue` call's
+  `subject:`, inside the same acquire seam. Without it this item would have made
+  the record WORSE at the one place a person reads it: a member asked "who issued
+  this?" about an undetermined Drive capture would have been shown
+  `…/export?format=odt` rather than the document. The expression is
+  `driveCapture ? documentAddress : locator`, which IS `locator` for every
+  non-Drive capture, so no existing task moves by a byte. The ARCHIVE arm is
+  deliberately left as it was.
+- `bio-plane/dist/bio-plane.bundled.mjs` + `dist/bio-plane.bundle.json` — FL-10's
+  guard fires on any `src/` change and the bundle is rebuilt with `npm run build`.
+  Nothing bumped, signed or deployed. `src/signpage.mjs` regenerated BYTE-IDENTICALLY
+  and is therefore not in the diff.
+- `docs/development/DEBT.md` — one row, `D-351`, minted with `node tools/mintid.mjs D`
+  (floor D-346; 347-350 already held and stepped over). This claim did not anticipate a
+  debt row because the finding that produced it was not anticipated: the Drive export
+  turns out not to be byte-stable.
+
+released: 2026-09-14 CAPTURE (CAP-8) — landed on `worktree-agent-ac12c46e7df4b4d96`, NOT pushed and
+NOT merged; CONDUCT integrates. **THIS RELEASE CARRIES NO OWED ACT** (D-342's grammar, and WORKER.md's
+rule that an owed act never lives in prose alone). Everything this landing obliges a future actor to
+do is an ITEM or a DELEGATION with its actor named, and none of it is implied:
+`IC-85` is PROPOSED in `INTERFACE-CHANGES.md` with its consumers named and CONDUCT takes the version
+bump and the RESOLUTION; `D-351` is a DEBT row with its disposition token; the three falsified
+sentences in `BIO_Content_Framework_v0_10.md` §16 are the DELEGATION at the foot of this file; the
+`### CAP-8 · running` row in `QUEUE.md` is CONDUCT's to flip and this worker did not touch that file.
+GATES on this branch, every exit status read UNPIPED: battery **190/190 suites · 11,771 assertions ·
+exit 0** against this worktree's own pristine baseline **189/189 · 11,607** measured at `87f263a`
+BEFORE any edit with `git status --porcelain` empty (+1 suite, +164 assertions, attributed by diffing
+two full runs); `node scripts/coverage.mjs --strict` run DIRECTLY from `bio-plane/`, `$?` unpiped,
+**exit 0**, checks named 261/261 (100.0%, was 255/261 before the C-48 pins were written);
+`node civicos-ui/test/run.mjs` from the REPO ROOT **exit 0**; `node tools/plancheck.mjs --local`
+**0 fail 0 warn**; `node tools/corpuscheck.mjs` 44 governed documents **0 fail**; `op=audit` clean on
+`biosmoke7` scratch before and after the live probe, and the namespace SWEPT (`scope=ALL`) after every
+run. FL-10 fired and `npm run build` rebuilt `dist/bio-plane.bundled.mjs` (2,831,348 B, sha256
+`745ccc55…`); `src/signpage.mjs` regenerated byte-identically. Nothing bumped, signed or deployed.
+CONTROLS: seven rows — six arms plus a baseline — in `test/drive.control.mjs`, re-runnable in one
+step, every restore verified by sha256 AND by `cmp` (7 of 7 MATCH/IDENTICAL/ok, 0 mismatch); baseline
+154/0, arms 149/5 · 150/4 · 145/9 · 151/3 · 146/8 · 150/4 · **55/99** (the arm's own arm). TWO
+FINDINGS ABOUT THIS ITEM'S OWN WORK, recorded rather than smoothed: the arm's own arm first produced
+NO TALLY (reported as -1, never 0) because the suite dereferenced a null recogniser result, and the
+suite was corrected rather than the arm reinterpreted; and the D-112 arm showed that a SILENT drop
+would be behaviourally invisible here, because the capture succeeds either way with the plane's own
+derived hop — which is the argument for the refusal being loud.
+
+
+## DELEGATION 2026-09-14 CAPTURE (CAP-8) → CONDUCT (answering-for FRAMEWORK / CONTENT, both dormant): **THREE SENTENCES IN `BIO_Content_Framework_v0_10.md` Part II §16 ARE FALSIFIED BY THIS LANDING, AND THE DESIGN DOCUMENT IS NOT MINE TO EDIT**
+
+CAP-8's row names Part II §16's Google Drive paragraphs as its design authority. The
+handler landing makes three of their sentences false. They are CONTENT's ground and
+this worker holds no claim or delegation on the file, so they are named here as ACTS
+WITH THEIR ACTOR rather than edited — and named even though the first one is obviously
+implied, because a note is not an item (WORKER.md, 2026-09-14).
+
+**THE ACTS, for CONDUCT at integration:**
+
+1. §16, *"**One act remains, and it is on the capture side**: the Drive host-stack
+   handler that recognises the address and acquires the export instead of the shell
+   (CAP-8)."* — **NO ACT REMAINS.** The handler is in `bio-plane/src/drive.mjs` and in
+   `op=acquire`'s two DEC-49 regions as of this commit. Correct in place with the dated
+   reason, the way COFF-9 and COFF-10 corrected the sentences before it, rather than
+   deleting: what that sentence recorded was the gap, and the gap closing is the news.
+
+2. §16, *"Supporting them is therefore a CAPTURE-side act — a host-stack handler that
+   recognises a Drive address and acquires the export, **recording the Drive file id and
+   the export format as the hop's facts**"* — the hop's facts as BUILT and as the QUEUE
+   row specifies are **three**: the export ADDRESS, the export FORMAT and the PRODUCER.
+   The file id and the kind are carried beside them so the three are re-derivable, but
+   they are not the facts. The design sentence is narrower than the row it produced.
+
+3. §16 is **SILENT ON THE ONE THING THAT TURNED OUT TO MATTER MOST**, and this is a
+   DESIGN GAP rather than a correction. The section says every export is Google's
+   conversion at fetch time — it does not say that **the conversion is not
+   reproducible**. CAP-8 measured three consecutive exports of one unchanged document
+   producing three distinct `capture_sha` (MEASUREMENTS.md 2026-09-14 §4, DEBT `D-351`),
+   which puts C-18.3's corroboration fold and `resolveLinks`' identity bracket
+   permanently out of reach for Drive material. A design that makes the export the
+   harvest owes a sentence about what that costs the record. **For §Incomplete sections.**
+
+**Why CAP-8 did not do it.** `docs/architecture/BIO_Content_Framework_v0_10.md` is a
+governed design document on CONTENT's ground; this worker claimed the capture path and
+did not reach outside it. `corpuscheck` reports 44 governed documents, 0 front-matter
+failures, on this branch as it stands — the edits above will move §16 and therefore the
+document's Status `as of`, which is CONDUCT's act to take together.
+
+**Also for CONDUCT, and NOT a design edit:** `docs/development/QUEUE.md`'s `### CAP-8 ·
+running` row is CONDUCT's to flip. This worker did not touch `QUEUE.md`.

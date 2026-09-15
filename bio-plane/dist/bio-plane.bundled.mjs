@@ -459,11 +459,21 @@ CREATE INDEX IF NOT EXISTS link_verdicts_pair ON link_verdicts(source_capture, a
 -- direct one, not a repeat of it.
 --
 -- The address columns carry the DOCUMENT ADDRESS, the address the record
--- reasons about; retrieval_locator carries what was actually fetched. For a
--- direct capture they are the same string. For an archive capture the document
--- address is the CDX original field through our own normaliser and the
--- retrieval locator is the archive's replay address, and conflating them is
--- how a provenance difference gets reported as a change.
+-- reasons about; retrieval_locator carries what was actually fetched. For an
+-- archive capture the document address is the CDX original field through our own
+-- normaliser and the retrieval locator is the archive's replay address, and
+-- conflating them is how a provenance difference gets reported as a change.
+--
+-- CORRECTED 2026-09-14 BY CAP-8, AND THE OLD SENTENCE IS SAID RATHER THAN
+-- DELETED. This read "For a direct capture they are the same string", and that
+-- was true of every capture the plane could make until Bob ruled that a link to
+-- a Google Drive file KEEPS THE LINK while the harvest is the OpenDocument
+-- export. A Drive capture is via 'direct' -- we asked Google and Google answered
+-- us, with nobody in between -- and its two addresses differ anyway: the address
+-- columns hold the Drive link the source page carried, and retrieval_locator
+-- holds the export address the plane composed from the file id and the kind.
+-- So via no longer tells a reader whether the two are equal, and a reader that
+-- wants the document address must read it here rather than infer it. IC-85.
 CREATE TABLE IF NOT EXISTS captured_locators (
   address_norm      TEXT NOT NULL,
   address           TEXT NOT NULL,
@@ -3125,6 +3135,7 @@ __export(bio_checks_exports, {
   CONTENT_EXTENT_KIND_NO_PRODUCER: () => CONTENT_EXTENT_KIND_NO_PRODUCER,
   CORE_FIELDS: () => CORE_FIELDS,
   CORRESPONDENCE_DIRECTIONS: () => CORRESPONDENCE_DIRECTIONS,
+  DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS,
   EARNED_CAPTURE_CEILING: () => EARNED_CAPTURE_CEILING,
   EARNED_GRADE_SOURCES: () => EARNED_GRADE_SOURCES,
   EARNED_SOURCE_AXIS: () => EARNED_SOURCE_AXIS,
@@ -9595,6 +9606,78 @@ var ADMISSION_CHECKS = {
     translation: "That credential is allowed to act, but not on the part of the record this request named. It is confined to its own namespace and this request reached outside it."
   }
 };
+var DRIVE_CAPTURE_CHECKS = {
+  /* D-112, AND IT IS THE SPINE OF THE ITEM. The three facts this capture's hop
+     carries — the export address, the export format, the producer — are derived
+     by the plane from the file id and the kind in the address. A body carrying
+     one is a caller trying to author the record's own provenance, and it is
+     refused BY NAME rather than having the field quietly dropped: a caller told
+     nothing learns nothing, and a hop a caller can hand us is one a caller can
+     invent. */
+  DRIVE_HOP_FACT_SUPPLIED: {
+    check: "C-48.1",
+    where: "src/index.mjs fetch > is-drive-capture",
+    translation: "This request tried to tell the record where a document was exported from, in what format, or by whom. Those are facts this instance establishes by doing the fetch itself, never facts it accepts from whoever asked. Send the Drive link and nothing else."
+  },
+  /* A FOLDER. There is nothing to export and no single set of bytes a capture
+     could honestly hold, so the honest answer is the shape's name and the reason. */
+  DRIVE_FOLDER_NOT_A_DOCUMENT: {
+    check: "C-48.2",
+    where: "src/index.mjs fetch > is-drive-capture",
+    translation: "That address is a Drive FOLDER \u2014 a listing of files rather than a document. There is nothing to export and no single set of bytes a capture of it would hold. Name the document you want; harvesting everything a folder lists is a different act."
+  },
+  /* A FILE ID WITH NO KIND. The kind decides the export format, so composing an
+     export address here would mean guessing which conversion to ask for, and
+     filing bytes whose format the record had invented. Undetermined is
+     first-class and must be STATED. */
+  DRIVE_KIND_UNDETERMINED: {
+    check: "C-48.3",
+    where: "src/index.mjs fetch > is-drive-capture",
+    translation: "That Drive address names a file but not what KIND of file it is, and the kind is what decides which export to ask for. Guessing would file bytes in a format nobody established. Use the address that opens the document itself, which carries the kind."
+  },
+  /* A DRIVE HOST WITH AN UNREAD PATH. Named rather than harvested, and named
+     rather than passed through: a Drive address whose shape is unread is not a
+     document this instance can promise to have captured. */
+  DRIVE_SHAPE_UNRECOGNISED: {
+    check: "C-48.4",
+    where: "src/index.mjs fetch > is-drive-capture",
+    translation: "That is a Google Drive address in a form this instance does not recognise. Rather than capture whatever bytes the address happens to serve and call it the document, it says so. If this shape should be harvestable, that is a change worth making deliberately."
+  },
+  /* THE APPLICATION SHELL, REFUSED BY NAME AND NEVER PARSED. Google answers the
+     export address with `text/html` when the file is not shared with anyone who
+     has the link: a sign-in page, an error page, the app. It is never the
+     document. Filing it would put a page of Google's furniture into the record
+     under a city document's address — the record claiming more than it can
+     support, which CLAUDE.md ranks worse than a missing feature. */
+  DRIVE_EXPORT_IS_THE_SHELL: {
+    check: "C-48.5",
+    where: "src/index.mjs fetch > is-drive-export",
+    translation: "Google answered the export address with a web page rather than a document \u2014 which is what it does when a file is not shared with anyone who has the link. That page is the application, not the document, and it is not filed as one. Check that the file is shared."
+  },
+  /* THE SAME SHELL, CAUGHT ON THE BYTES, AND IT IS A SECOND CODE RATHER THAN THE
+     ROW ABOVE FIRING TWICE. PL-4 measured what one predicate at two points costs:
+     one of the two becomes unreachable and can never be driven. These are two
+     different predicates over two different pieces of evidence — the header, and
+     the first kibibyte — and they are two different findings. C-48.5 is "Google
+     told us it was a web page"; this is "Google told us it was a document and it
+     was a web page", which is the more serious fact and is why detection here is
+     bytes-first (COFF-1: a byte signature ALWAYS outranks a declared type). */
+  DRIVE_EXPORT_BYTES_ARE_THE_SHELL: {
+    check: "C-48.7",
+    where: "src/index.mjs fetch > is-drive-bytes",
+    translation: "The export address said it was sending a document and sent a web page instead. This instance checks the bytes rather than taking the label, so the application page was recognised and refused. Nothing was filed under that document address."
+  },
+  /* THE EXPORT FETCH FAILING, AND THE HALF THAT MATTERS IS WHAT DOES *NOT*
+     HAPPEN. There is no fallback to the shell. A 403 or a 404 at the export
+     address ends the capture with the failure named; it never quietly becomes a
+     capture of the application page, which would look like a success and hold
+     nothing. */
+  DRIVE_EXPORT_UNREACHABLE: {
+    check: "C-48.6",
+    where: "src/index.mjs fetch > is-drive-export",
+    translation: "The OpenDocument export of that Drive document could not be fetched, so nothing was captured. The application page at the same address is NOT captured instead: a record holding the app in place of the document would look like evidence and be none."
+  }
+};
 var CASE_DOCUMENT_FORMAT = "bio-case-document/1";
 var CASE_DOCUMENT_FAMILY = {
   FORMAT: { check: "C-41.1", what: "the format token" },
@@ -12039,6 +12122,167 @@ async function containerEntries(manifest, manifestBytes, read) {
     entries.push({ name: layout.root + part.path, bytes });
   }
   return { ok: true, entries, layout };
+}
+
+// src/drive.mjs
+var DRIVE_HOSTS = [
+  "docs.google.com",
+  "drive.google.com",
+  "sheets.google.com",
+  "slides.google.com"
+];
+var DRIVE_KINDS = [
+  {
+    kind: "document",
+    segment: "document",
+    format: "odt",
+    mimetype: "application/vnd.oasis.opendocument.text"
+  },
+  {
+    kind: "spreadsheet",
+    segment: "spreadsheets",
+    format: "ods",
+    mimetype: "application/vnd.oasis.opendocument.spreadsheet"
+  },
+  {
+    kind: "presentation",
+    segment: "presentation",
+    format: "odp",
+    mimetype: "application/vnd.oasis.opendocument.presentation"
+  }
+];
+var FILE_ID = /^[A-Za-z0-9_-]{10,200}$/;
+var DRIVE_PRODUCER = "Google Drive export";
+var EXPORT_HOST = "docs.google.com";
+function readDriveAddress(address) {
+  if (typeof address !== "string" || !/^https:\/\//.test(address)) return null;
+  let u;
+  try {
+    u = new URL(address);
+  } catch {
+    return null;
+  }
+  if (u.protocol !== "https:") return null;
+  const host = u.hostname.toLowerCase().replace(/^www\./, "");
+  if (!DRIVE_HOSTS.includes(host)) return null;
+  const base = { address, host };
+  const raw = u.pathname.split("/").filter(Boolean);
+  const seg = [];
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i] === "u" && /^\d+$/.test(raw[i + 1] || "")) {
+      i++;
+      continue;
+    }
+    if (raw[i] === "a" && /\./.test(raw[i + 1] || "")) {
+      i++;
+      continue;
+    }
+    seg.push(raw[i]);
+  }
+  if (seg[0] === "drive" && seg[1] === "folders" || seg[0] === "folderview" || seg[0] === "drive" && seg[1] === "my-drive" || seg[0] === "drive" && seg[1] === "shared-with-me") {
+    return {
+      ...base,
+      shape: "folder",
+      harvestable: false,
+      why: "a Drive FOLDER is a listing of files, not a document: there is no export address to compose and no single set of bytes a capture of it could honestly hold. The link is recorded; harvesting the files it lists is a separate act nobody has asked for."
+    };
+  }
+  const kindRow = DRIVE_KINDS.find((k) => k.segment === seg[0]);
+  if (kindRow && seg[1] === "d" && seg[2] === "e") {
+    return {
+      ...base,
+      shape: "published",
+      harvestable: false,
+      why: "this is Google's PUBLISH-TO-WEB address, which serves static HTML rather than the application shell. It is already an honest document and is captured by the ordinary path; its `e/\u2026` published id is not a file id the export endpoint accepts."
+    };
+  }
+  if (kindRow && seg[1] === "d" && FILE_ID.test(seg[2] || "")) {
+    const fileId = seg[2];
+    return {
+      ...base,
+      shape: kindRow.kind,
+      harvestable: true,
+      kind: kindRow.kind,
+      fileId,
+      format: kindRow.format,
+      mimetype: kindRow.mimetype,
+      exportAddress: exportAddressFor(kindRow, fileId)
+    };
+  }
+  const idParam = u.searchParams.get("id");
+  if (seg[0] === "file" && seg[1] === "d" || seg[0] === "open" || seg[0] === "uc" || idParam && FILE_ID.test(idParam)) {
+    const fileId = seg[0] === "file" && seg[1] === "d" && FILE_ID.test(seg[2] || "") ? seg[2] : idParam && FILE_ID.test(idParam) ? idParam : null;
+    return {
+      ...base,
+      shape: "file",
+      harvestable: false,
+      ...fileId ? { fileId } : {},
+      why: "this Drive address names a FILE ID and no KIND. The kind is what decides the export format, so no OpenDocument export address can be composed from it, and asking for one kind at a venture would file bytes whose format the record had guessed. If the file is an uploaded document, capture its own address; if it is a Doc, Sheet or Slides deck, capture the editor address, which carries the kind."
+    };
+  }
+  return {
+    ...base,
+    shape: "unknown",
+    harvestable: false,
+    why: `this is a Drive host (${host}) with a path shape this recogniser does not read, so it is named rather than harvested. A Drive address whose shape is unread is not a document this instance can promise to have captured.`
+  };
+}
+function exportAddressFor(kindRow, fileId) {
+  return `https://${EXPORT_HOST}/${kindRow.segment}/d/${fileId}/export?format=${kindRow.format}`;
+}
+function driveHop(drive, { retrieved, resolved = null, detected = null } = {}) {
+  const confirmed = detected && detected.format === drive.format;
+  return {
+    who: `Google Drive (${DRIVE_PRODUCER})`,
+    asserts: `these bytes are Google's ${drive.format.toUpperCase()} conversion, made at export time, of the Drive ${drive.kind} ${drive.fileId}, served for ${drive.exportAddress} at ${retrieved}. The document itself lives at ${drive.address}, which is the address the record keeps.`,
+    evidence: [
+      `export address ${drive.exportAddress}`,
+      `export format ${drive.format} (${drive.mimetype})`,
+      `producer ${DRIVE_PRODUCER}`,
+      `the export address was COMPOSED BY THIS INSTANCE from the file id and the kind carried in ${drive.address}, and no part of it was read from the request (D-112)`,
+      `the export endpoint is canonicalised to ${EXPORT_HOST}${drive.host === EXPORT_HOST ? "" : `, though the link named ${drive.host}`}`,
+      resolved && resolved !== drive.exportAddress ? `redirected to ${resolved}` : null,
+      /* BYTES-FIRST, and stated either way. COFF-9's discriminator reads the
+         first-and-stored `mimetype` entry, so the flavour is CERTAIN from the
+         bytes and Google's declared content type need not be trusted. A
+         MISMATCH is recorded, NOT refused: the rule is that the application
+         shell is never filed as the document, not that only a perfectly
+         detecting export may be filed, and a fence tighter than its rule is an
+         undeclared interface change wearing the costume of caution. */
+      detected ? confirmed ? `confirmed from the bytes: ${detected.format} (${detected.confidence}) \u2014 ${detected.signals.join("; ")}` : `NOT confirmed from the bytes: ${drive.format} was asked for and the bytes detect as ${detected.format} (${detected.confidence}) \u2014 ${detected.signals.join("; ")}. The capture is filed with the disagreement stated rather than refused; what is refused by name is the application shell, and these bytes are not it.` : "the bytes were not sniffed, so the export format is what was ASKED FOR and not what was confirmed"
+    ].filter(Boolean).join("; "),
+    bound: false,
+    unsigned_reason: "no attestation exists over a Google Drive export, and the bytes are not the original file: they are Google's conversion performed at fetch time. What this hop discloses is the FACT that Google served a conversion of the named file, never the fidelity of the conversion and never the credibility of the content.",
+    via: "direct",
+    /* THE THREE FACTS, AS NAMED KEYS. They are in `asserts` and `evidence` as
+       prose because a hop is read by people; they are here as fields because a
+       consumer must not have to parse prose to answer "what format is this, and
+       who produced it". The archive hop's own `unsigned_reason` is the precedent
+       for a hop carrying keys beyond I1 §4b's five. */
+    export_address: drive.exportAddress,
+    export_format: drive.format,
+    producer: DRIVE_PRODUCER,
+    /* Beside them, the two facts that make the three re-derivable by anyone
+       holding the chain: which file, of which kind, at which address. */
+    drive_file_id: drive.fileId,
+    drive_kind: drive.kind,
+    document_address: drive.address,
+    export_format_confirmed: detected ? !!confirmed : null
+  };
+}
+var DRIVE_HOP_FACT_KEYS = [
+  "export_address",
+  "export_format",
+  "producer",
+  "drive_file_id",
+  "drive_kind",
+  "drive",
+  "document_address",
+  "provenance_hop"
+];
+function callerSuppliedHopFacts(body) {
+  if (!body || typeof body !== "object") return [];
+  return DRIVE_HOP_FACT_KEYS.filter((k) => Object.prototype.hasOwnProperty.call(body, k));
 }
 
 // src/affordances.mjs
@@ -50641,6 +50885,12 @@ async function captureRequestArm(env, storeName, body, cls) {
   };
 }
 var storeSilent = (op) => json({ ok: false, reason: STORE_SILENT_REASON, op, detail: STORE_SILENT_DETAIL }, 502);
+var driveRow = (code) => {
+  const row = DRIVE_CAPTURE_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`driveRow: ${code} has no DRIVE_CAPTURE_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
 var admissionRow = (code) => {
   const row = ADMISSION_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
@@ -51764,6 +52014,61 @@ var index_default = {
         crPurpose = arm.purpose;
         crAgent = arm.agent;
       }
+      let driveCapture = null, driveHopRecorded = null;
+      {
+        const supplied = callerSuppliedHopFacts(body2);
+        if (supplied.length)
+          return json({
+            ok: false,
+            reason: "DRIVE_HOP_FACT_SUPPLIED",
+            ...driveRow("DRIVE_HOP_FACT_SUPPLIED"),
+            op,
+            supplied,
+            detail: `this request carried ${supplied.map((k) => `\`${k}\``).join(", ")}. The export address, the export format and the producer are DERIVED by this instance from the file id and the kind in the address, at the moment it performs the fetch, and are never read from a request. A provenance hop a caller can hand us is a provenance hop a caller can invent (D-112), and the whole value of a disclosed chain is that the disclosure is ours. Send the Drive link alone.`
+          }, 400);
+        const drive = readDriveAddress(body2?.locator);
+        if (drive) {
+          if (drive.shape === "folder")
+            return json({
+              ok: false,
+              reason: "DRIVE_FOLDER_NOT_A_DOCUMENT",
+              ...driveRow("DRIVE_FOLDER_NOT_A_DOCUMENT"),
+              op,
+              drive: { host: drive.host, shape: drive.shape, harvestable: false },
+              locator: drive.address,
+              detail: drive.why
+            }, 422);
+          if (drive.shape === "file")
+            return json({
+              ok: false,
+              reason: "DRIVE_KIND_UNDETERMINED",
+              ...driveRow("DRIVE_KIND_UNDETERMINED"),
+              op,
+              drive: {
+                host: drive.host,
+                shape: drive.shape,
+                harvestable: false,
+                ...drive.fileId ? { file_id: drive.fileId } : {}
+              },
+              locator: drive.address,
+              detail: drive.why
+            }, 422);
+          if (drive.shape === "unknown")
+            return json({
+              ok: false,
+              reason: "DRIVE_SHAPE_UNRECOGNISED",
+              ...driveRow("DRIVE_SHAPE_UNRECOGNISED"),
+              op,
+              drive: { host: drive.host, shape: drive.shape, harvestable: false },
+              locator: drive.address,
+              detail: drive.why
+            }, 422);
+          if (drive.harvestable) {
+            driveCapture = drive;
+            body2.locator = drive.exportAddress;
+          }
+        }
+      }
       const locator = body2?.locator;
       if (typeof locator !== "string" || !isPublicHttpsLocator(locator))
         return json({
@@ -51775,7 +52080,8 @@ var index_default = {
       const retrieved = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
       const stGov = env.STORE.get(env.STORE.idFromName(storeName));
       const via = body2?.via === "archive.org" ? "archive.org" : "direct";
-      const documentAddress = via === "archive.org" && archiveAddress ? archiveAddress : locator;
+      const documentAddress = via === "archive.org" && archiveAddress ? archiveAddress : driveCapture ? driveCapture.address : locator;
+      const addressIsDerived = via === "archive.org" && !!archiveAddress || !!driveCapture;
       const addrNorm = normalizeAddress(documentAddress);
       const noteOutcome = async (outcome, status) => {
         try {
@@ -51805,6 +52111,55 @@ var index_default = {
         await noteOutcome("fetch_failed", null);
         return json({ ok: false, reason: "FETCH_FAILED", detail: String(e && e.message || e), locator }, 502);
       }
+      if (driveCapture && !res2.ok) {
+        await noteOutcome("source_refused", res2.status);
+        return json({
+          ok: false,
+          reason: "DRIVE_EXPORT_UNREACHABLE",
+          ...driveRow("DRIVE_EXPORT_UNREACHABLE"),
+          op,
+          status: res2.status,
+          locator: driveCapture.address,
+          export_address: driveCapture.exportAddress,
+          drive: {
+            host: driveCapture.host,
+            shape: driveCapture.shape,
+            kind: driveCapture.kind,
+            file_id: driveCapture.fileId,
+            export_format: driveCapture.format
+          },
+          detail: `Google answered ${res2.status} at the OpenDocument export address ${driveCapture.exportAddress}, which this instance composed from the ${driveCapture.kind} id in ${driveCapture.address}. Nothing was captured, and the application page at the document's own address was NOT captured in its place \u2014 a fallback to the shell would record a success holding no document. A 404 usually means the id is wrong; a 403 usually means the file is not shared with anyone who has the link.`
+        }, 502);
+      }
+      if (driveCapture) {
+        const ect = (res2.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+        if (ect === "text/html" || ect === "application/xhtml+xml") {
+          await noteOutcome("source_refused", res2.status);
+          try {
+            await res2.body?.cancel?.();
+          } catch {
+          }
+          return json({
+            ok: false,
+            reason: "DRIVE_EXPORT_IS_THE_SHELL",
+            ...driveRow("DRIVE_EXPORT_IS_THE_SHELL"),
+            op,
+            status: res2.status,
+            locator: driveCapture.address,
+            export_address: driveCapture.exportAddress,
+            declared_content_type: ect,
+            refused_on: "the declared content type",
+            drive: {
+              host: driveCapture.host,
+              shape: driveCapture.shape,
+              kind: driveCapture.kind,
+              file_id: driveCapture.fileId,
+              export_format: driveCapture.format
+            },
+            detail: `the OpenDocument export address answered with \`${ect}\`, which is the Google Drive APPLICATION \u2014 a client-rendered shell whose bytes carry no document (framework Part I \xA76's UNWATCHABLE case, D-64/D-55). It is refused by name and it is not parsed: the shell is never filed as the document. Google serves it here when the file is not shared with anyone who has the link.`
+          }, 502);
+        }
+      }
       if (!res2.ok) {
         await noteOutcome("source_refused", res2.status);
         return json({ ok: false, reason: "SOURCE_REFUSED", status: res2.status, locator }, 502);
@@ -51831,6 +52186,8 @@ var index_default = {
           await env.CAPTURES.put(`${storeName}/captures/${psha}`, buf, { sha256: d });
         parts.push({ sha256: psha, bytes: buf.length });
       };
+      const driveHead = driveCapture ? new Uint8Array(1024) : null;
+      let driveHeadBytes = 0;
       const reader = res2.body && res2.body.getReader ? res2.body.getReader() : null;
       if (!reader) return json({ ok: false, reason: "NO_BODY", locator }, 502);
       for (; ; ) {
@@ -51842,9 +52199,45 @@ var index_default = {
           break;
         }
         whole.update(value);
+        if (driveHead && driveHeadBytes < driveHead.length) {
+          const take = Math.min(value.length, driveHead.length - driveHeadBytes);
+          driveHead.set(value.subarray(0, take), driveHeadBytes);
+          driveHeadBytes += take;
+        }
         held.push(value);
         heldBytes += value.length;
         if (heldBytes >= PART) await flush();
+      }
+      if (driveCapture && driveHeadBytes > 0) {
+        const sniff = detectFormat(driveHead.subarray(0, driveHeadBytes), null);
+        const declared = (res2.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+        if (sniff.format === "html") {
+          try {
+            await reader.cancel();
+          } catch {
+          }
+          await noteOutcome("source_refused", res2.status);
+          return json({
+            ok: false,
+            reason: "DRIVE_EXPORT_BYTES_ARE_THE_SHELL",
+            ...driveRow("DRIVE_EXPORT_BYTES_ARE_THE_SHELL"),
+            op,
+            status: res2.status,
+            locator: driveCapture.address,
+            export_address: driveCapture.exportAddress,
+            declared_content_type: declared || null,
+            refused_on: "the bytes",
+            detected: sniff,
+            drive: {
+              host: driveCapture.host,
+              shape: driveCapture.shape,
+              kind: driveCapture.kind,
+              file_id: driveCapture.fileId,
+              export_format: driveCapture.format
+            },
+            detail: `the OpenDocument export address served bytes that are HTML \u2014 ${sniff.signals.join("; ")} \u2014 while declaring \`${declared || "(no content type)"}\`. That is the Google Drive APPLICATION, not the document, and the declared type did not say so. Detection here is bytes-first and certain, which is the whole reason this arm exists beside the one that reads the header. Nothing was filed, and the shell is never filed as the document.`
+          }, 502);
+        }
       }
       if (oversize) {
         try {
@@ -51899,13 +52292,25 @@ var index_default = {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-            address: via === "archive.org" ? documentAddress : res2.url || locator,
-            addressNorm: via === "archive.org" ? addrNorm : normalizeAddress(res2.url || locator),
+            address: addressIsDerived ? documentAddress : res2.url || locator,
+            addressNorm: addressIsDerived ? addrNorm : normalizeAddress(res2.url || locator),
             captureSha: sha,
             retrieved,
             /* D-96: a direct fetch is its own source, and the document address
                and the retrieval locator are the same string. An archive-sourced
-               capture will name via 'archive.org' and split the two. */
+               capture will name via 'archive.org' and split the two.
+               *
+               CAP-8: A DRIVE EXPORT SPLITS THEM TOO, WITH `via` STILL 'direct',
+               AND THIS IS WHERE "KEEP THE LINK" IS ACTUALLY KEPT. The `address`
+               column takes the Drive link EXACTLY as the source page carried it
+               (`driveCapture.address` is the caller's own string, untouched);
+               `address_norm` is that link through the plane's normaliser, so
+               `resolveLinks` finds this capture for a page linking to the Doc;
+               and `retrieval_locator` holds the export address we actually
+               fetched. `res.url` is deliberately NOT used here — Google redirects
+               the export to a `googleusercontent.com` download address, and
+               filing the capture under THAT would file it under a one-time CDN
+               URL that names no document and no link would ever resolve to. */
             via,
             retrievalLocator: locator
           })
@@ -51917,10 +52322,22 @@ var index_default = {
           await stLim.fetch("http://x/taskenqueue", {
             method: "POST",
             headers: { "content-type": "application/json" },
+            /* CAP-8: THE SUBJECT IS THE DOCUMENT, NOT THE EXPORT ADDRESS — and
+               this line is here because the item would otherwise have made the
+               record WORSE at the one place a person reads it. Before the Drive
+               handler, acquiring a Doc link enqueued a task whose subject was
+               that link; after it, the locator is the composed export address,
+               so the member resolving "who issued this?" would have been shown
+               `…/export?format=odt` instead of the document. `documentAddress`
+               is the Drive link for a Drive capture and IS `locator` for every
+               other direct capture, so no existing task changes by one byte.
+               The ARCHIVE arm is deliberately left as it was: its subject is the
+               replay URL today, which is a separate and pre-existing question
+               this item does not answer by drive-by. */
             body: JSON.stringify({
               kind: "authority-undetermined",
               captureSha: sha,
-              subject: locator,
+              subject: driveCapture ? documentAddress : locator,
               locator,
               at: retrieved
             })
@@ -52185,6 +52602,12 @@ var index_default = {
            records what the record THINKS the bytes are, never authority. */
         format: detectFormat(formatBytes, ct || null)
       };
+      if (driveCapture) {
+        driveHopRecorded = driveHop(
+          driveCapture,
+          { retrieved, resolved: res2.url || null, detected: profile.format }
+        );
+      }
       const digestCertain = !!profileBytes && stackId.handler.textual === true && stackId.confidence === CONFIDENCE.CERTAIN;
       if (digestCertain) {
         const dg = await digests(profileBytes, stackId.handler, { ...profCtx, sha256: sha256Hex5 });
@@ -52486,13 +52909,23 @@ var index_default = {
              * transitive trust is accepted WHERE DISCLOSED, and what is
              * inherited is the fact of publication, never the credibility of
              * the content. */
-          provenance_chain: [{
-            who: `instance ${env.INSTANCE_NAME || "unnamed"} (CivicOS/${env.VERSION || "0.0.0"})`,
-            asserts: `these bytes were served for ${locator} at ${retrieved}`,
-            evidence: "first-party https fetch, hashed at receipt, transport record on this document",
-            bound: false,
-            via
-          }, ...archiveHopRecorded ? [archiveHopRecorded] : []],
+          provenance_chain: [
+            {
+              who: `instance ${env.INSTANCE_NAME || "unnamed"} (CivicOS/${env.VERSION || "0.0.0"})`,
+              asserts: `these bytes were served for ${locator} at ${retrieved}`,
+              evidence: "first-party https fetch, hashed at receipt, transport record on this document",
+              bound: false,
+              via
+              /* CAP-8 joins the SAME spread, and a capture is never both: an archive
+                 arm requires `via: "archive.org"`, which the Drive arm never sets.
+                 A Drive export is therefore TWO hops — ours, honest that what we
+                 fetched was the export address rather than the document's own, and
+                 Google's, carrying the three facts with `bound: false` and the
+                 reason it is unsigned. */
+            },
+            ...archiveHopRecorded ? [archiveHopRecorded] : [],
+            ...driveHopRecorded ? [driveHopRecorded] : []
+          ],
           capture: {
             method: multipart ? `bio-plane acquire, https fetch, streamed in ${parts.length} parts, hashed at receipt` : "bio-plane acquire, https fetch, hashed at receipt",
             /* GRADE TRACKS DIRECTNESS, NEVER TECHNIQUE (RULED). An archive hop

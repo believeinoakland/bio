@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-813 rulings across 73 documents.
+814 rulings across 73 documents.
 
 ## DEC-
 
@@ -1397,6 +1397,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:4370`
 - `docs/DECIDED.md` — REGENERATED, not hand-edited (`node tools/decided.mjs`), because the §16 and OFFICE-FORMATS corrections carry marker words and `plancheck` fails on the drift.  
   `docs/development/CLAIMS.md:4402`
+- AMENDED AT THE BUILD, three additions, each stated rather than quietly taken:** - `bio-plane/src/schema.mjs` — **ONE `--` COMMENT BLOCK ONLY**, above `CREATE TABLE captured_locators`.  
+  `docs/development/CLAIMS.md:4524`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  

@@ -9224,6 +9224,111 @@ export const ADMISSION_CHECKS = {
 };
 
 /* ===========================================================================
+   CAP-8 — THE GOOGLE DRIVE HOST STACK (C-48), enacting Bob's ruling of
+   2026-09-14: a link to a Google Drive file KEEPS THE LINK, and the harvest is
+   the OpenDocument export the content is extracted from.
+
+   EVERY ROW HERE IS A NAMING, AND THAT IS THE FAMILY'S WHOLE SHAPE. The item's
+   rule is that folders and unknown shapes are NAMED as not harvestable and never
+   silently skipped, and that the application shell is REFUSED BY NAME and never
+   filed as the document. A silent skip and a named refusal produce the same
+   absence in the store and completely different knowledge in the operator: one
+   says "this instance looked at that link and can tell you exactly why it holds
+   no bytes for it", the other says nothing at all. Sparse is the normal condition
+   at every level, and saying WHICH kind of sparse is a first-class obligation
+   (CLAUDE.md).
+
+   The recogniser these rows sit over is `src/drive.mjs`, which is pure: the
+   REFUSALS are here, the SHAPES are there, and neither file restates the other.
+   =========================================================================== */
+export const DRIVE_CAPTURE_CHECKS = {
+  /* D-112, AND IT IS THE SPINE OF THE ITEM. The three facts this capture's hop
+     carries — the export address, the export format, the producer — are derived
+     by the plane from the file id and the kind in the address. A body carrying
+     one is a caller trying to author the record's own provenance, and it is
+     refused BY NAME rather than having the field quietly dropped: a caller told
+     nothing learns nothing, and a hop a caller can hand us is one a caller can
+     invent. */
+  DRIVE_HOP_FACT_SUPPLIED: {
+    check: 'C-48.1',
+    where: 'src/index.mjs fetch > is-drive-capture',
+    translation: 'This request tried to tell the record where a document was exported from, in what '
+      + 'format, or by whom. Those are facts this instance establishes by doing the fetch itself, '
+      + 'never facts it accepts from whoever asked. Send the Drive link and nothing else.',
+  },
+  /* A FOLDER. There is nothing to export and no single set of bytes a capture
+     could honestly hold, so the honest answer is the shape's name and the reason. */
+  DRIVE_FOLDER_NOT_A_DOCUMENT: {
+    check: 'C-48.2',
+    where: 'src/index.mjs fetch > is-drive-capture',
+    translation: 'That address is a Drive FOLDER — a listing of files rather than a document. There '
+      + 'is nothing to export and no single set of bytes a capture of it would hold. Name the '
+      + 'document you want; harvesting everything a folder lists is a different act.',
+  },
+  /* A FILE ID WITH NO KIND. The kind decides the export format, so composing an
+     export address here would mean guessing which conversion to ask for, and
+     filing bytes whose format the record had invented. Undetermined is
+     first-class and must be STATED. */
+  DRIVE_KIND_UNDETERMINED: {
+    check: 'C-48.3',
+    where: 'src/index.mjs fetch > is-drive-capture',
+    translation: 'That Drive address names a file but not what KIND of file it is, and the kind is '
+      + 'what decides which export to ask for. Guessing would file bytes in a format nobody '
+      + 'established. Use the address that opens the document itself, which carries the kind.',
+  },
+  /* A DRIVE HOST WITH AN UNREAD PATH. Named rather than harvested, and named
+     rather than passed through: a Drive address whose shape is unread is not a
+     document this instance can promise to have captured. */
+  DRIVE_SHAPE_UNRECOGNISED: {
+    check: 'C-48.4',
+    where: 'src/index.mjs fetch > is-drive-capture',
+    translation: 'That is a Google Drive address in a form this instance does not recognise. Rather '
+      + 'than capture whatever bytes the address happens to serve and call it the document, it says '
+      + 'so. If this shape should be harvestable, that is a change worth making deliberately.',
+  },
+  /* THE APPLICATION SHELL, REFUSED BY NAME AND NEVER PARSED. Google answers the
+     export address with `text/html` when the file is not shared with anyone who
+     has the link: a sign-in page, an error page, the app. It is never the
+     document. Filing it would put a page of Google's furniture into the record
+     under a city document's address — the record claiming more than it can
+     support, which CLAUDE.md ranks worse than a missing feature. */
+  DRIVE_EXPORT_IS_THE_SHELL: {
+    check: 'C-48.5',
+    where: 'src/index.mjs fetch > is-drive-export',
+    translation: 'Google answered the export address with a web page rather than a document — which '
+      + 'is what it does when a file is not shared with anyone who has the link. That page is the '
+      + 'application, not the document, and it is not filed as one. Check that the file is shared.',
+  },
+  /* THE SAME SHELL, CAUGHT ON THE BYTES, AND IT IS A SECOND CODE RATHER THAN THE
+     ROW ABOVE FIRING TWICE. PL-4 measured what one predicate at two points costs:
+     one of the two becomes unreachable and can never be driven. These are two
+     different predicates over two different pieces of evidence — the header, and
+     the first kibibyte — and they are two different findings. C-48.5 is "Google
+     told us it was a web page"; this is "Google told us it was a document and it
+     was a web page", which is the more serious fact and is why detection here is
+     bytes-first (COFF-1: a byte signature ALWAYS outranks a declared type). */
+  DRIVE_EXPORT_BYTES_ARE_THE_SHELL: {
+    check: 'C-48.7',
+    where: 'src/index.mjs fetch > is-drive-bytes',
+    translation: 'The export address said it was sending a document and sent a web page instead. '
+      + 'This instance checks the bytes rather than taking the label, so the application page was '
+      + 'recognised and refused. Nothing was filed under that document address.',
+  },
+  /* THE EXPORT FETCH FAILING, AND THE HALF THAT MATTERS IS WHAT DOES *NOT*
+     HAPPEN. There is no fallback to the shell. A 403 or a 404 at the export
+     address ends the capture with the failure named; it never quietly becomes a
+     capture of the application page, which would look like a success and hold
+     nothing. */
+  DRIVE_EXPORT_UNREACHABLE: {
+    check: 'C-48.6',
+    where: 'src/index.mjs fetch > is-drive-export',
+    translation: 'The OpenDocument export of that Drive document could not be fetched, so nothing '
+      + 'was captured. The application page at the same address is NOT captured instead: a record '
+      + 'holding the app in place of the document would look like evidence and be none.',
+  },
+};
+
+/* ===========================================================================
    CASE-5b / DEC-72 — THE CASE DOCUMENT'S GATE (C-41).
 
    WHAT THIS GATES, AND WHY IT IS A SEPARATE FUNCTION RATHER THAN A BRANCH OF
