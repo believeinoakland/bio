@@ -7274,3 +7274,39 @@ Battery green own-baseline (201/201 · 12,467 pristine → the same suites green
 suites pinned by whole-object comparison where the shape could regress, and **seven negative
 control arms plus a baseline, all AS DECLARED** (`bio-plane/test/nc-coff11.mjs`, results in each
 suite's `NEGATIVE CONTROL:` line), two of which arm the DECISION itself rather than the patch.
+
+### RESOLUTION — 2026-09-15, CONDUCT #11 · ACCEPTED, I2 2.1.0 → **2.2.0**, ADDITIVE
+
+Six keys added to the office entries' `text()` return; none removed, renamed or re-typed, so
+this is a MINOR by IC-25's rule and the version moves accordingly.
+
+**THE CONSUMER CENSUS IS THE PART OF THIS RESOLUTION WORTH READING, because it falsifies the
+premise three documents agreed on.** D-359, COFF-11's queue row and the spawn brief all stated
+that `op=acquire`'s wire reads the I2 shape BY KEY PRESENCE, so a producer that starts returning
+a field is fed with no edit. **Measured: true of the LEVELS, false of these six keys.**
+`store.mjs` and `bio-checks.mjs` genuinely do consume them unchanged. `index.mjs`'s FW-15
+projection writes `rows`, `cols` and `shapes` as LITERAL NULLS and does not bind the slides
+element at all, so the two inner bounds are emitted and UNFED.
+
+**The worker did not widen into that file — its scope forbade it — and it did not merely assert
+the fix would work either.** It applied the three-line passthrough as a temporary arm, restored
+`index.mjs` byte-identically (545,806 B, sha256 `991c44d1d87f…`, verified by sha256 AND `cmp`
+AND git-clean), and recorded exactly which assertions flip: the impossible row and shape 9,999
+each refused C-45.1 BY NAME with the figure in the refusal, while an address inside the grid
+keeps minting. **That is a delegation whose sufficiency is measured rather than predicted**, and
+it is the reason this IC resolves now instead of waiting for the consumer.
+
+**SETTLED is NOT taken and D-359 is NOT closed.** The producer half is built; the inner bound is
+not live on any tree until COFF-12 lands the passthrough. Saying otherwise would be the
+overclaim this interface's own subject exists to prevent.
+
+**One decision travels with the contract and belongs here rather than only at the site: a
+container's bound is its CAPACITY, never the capture's used range.** A slide needs no decision —
+a shape list is exhaustive, so shape 9,999 of a four-shape slide is not an empty shape, it is no
+shape. A sheet does — a cell exists in the grid whether or not it holds a value, so bounding by
+the used range would refuse a TRUE statement about an empty cell, which in this product is
+routinely the finding, and the refusal would not even stop the citation: it would push the member
+up to the whole document, which claims MORE. Both figures are therefore carried, under their own
+names. The OOXML grid was MEASURED against a real producer (M-22) rather than cited, and
+OpenDocument fixes no maximum table size at all, so `.ods` emits an honestly NULL bound with a
+control arm that breaks if anyone later borrows the OOXML figure.
