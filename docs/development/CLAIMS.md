@@ -4859,7 +4859,102 @@ itself because it has to be runnable against a PRISTINE worktree to produce the 
 suite then asserts; and **`docs/DECIDED.md`** — regenerated with `node tools/decided.mjs`,
 which `plancheck` requires of any turn whose corpus edits move the ruling index.
 
-released:
+released: 2026-09-14 by the REC-85 worker — **all three arms landed and the item's real
+finding is that the figure the third of each arm compares against is persisted NOWHERE.**
+
+**WHAT LANDED.** `sheet-cell`, `doc-para` and `slide-shape` are `landed: true` in
+`CONTENT_EXTENT_KINDS`; `legExtent` reads each arm's OWN fields (the six-key `fields` bag
+REC-82 carried through UNREAD is gone — its own prediction was "a reader rather than a
+shape", and it held, because no row of these kinds could exist to migrate and the suite
+asserts that count is zero against a real store); `canonicalExtent` takes the address over
+fixed per-arm fields with `$B$14`/`b14`/`B14` normalised to ONE cell (`normRect`'s rule in
+A1 notation); `describeExtent` derives exactly the producer's own `ref`, PINNED in the suite
+against `sheetCellRef` / `docParaRef` / `slideShapeRef` themselves because `bio-checks.mjs`
+imports nothing and the parity had to be a measurement rather than a call. The SHAPE half of
+each arm refuses by name as C-45.3 through `op=promote`; the CONTAINER half refuses by name
+as C-45.1 — the SAME code as the page set because it is the same fact, so C-45.1's canned
+translation was WIDENED to every container rather than a fifth code minted.
+
+**THE FINDING, MEASURED FOUR WAYS AND FILED AS D-354 + a DELEGATION to CAPTURE above.**
+Nothing in this plane persists a container's extent: the reading carries no structure,
+`docprofile/readtext.mjs` says so in its own words, none of the 77 tables in `schema.mjs`
+holds a sheet/paragraph/shape, and Part II §15 already said the I2 structure is "not stored".
+So the three container arms are BUILT, CORRECT AND UNFED. `#containerExtentForCapture`
+answers all three levels NULL and NAMES THE EMPTY LEVEL; the arms are skipped, never guessed;
+and an impossible-but-well-formed address MINTS today — driven and asserted THROUGH THE OP,
+because refusing for a bound nobody measured pushes a member toward citing the whole
+document, which claims MORE. Per arm, the answer to "persisted or absent" is **ABSENT, all
+three**. The CAPTURE act has its shape fixed in the delegation; nothing on the RECORD side
+moves when it arrives.
+
+**GATES on the final tree, every exit read UNPIPED.** Battery **191/191 suites green ·
+11,780 assertions · 0 skipped · 200.8s**; own baseline **190/190 · 11,713** on this worktree
+at `3f92e5c` with all three member installs, which is EXACTLY the briefed figure — measured,
+and right. The +67 attributed PER SUITE by diffing two full runs rather than by subtraction:
+`content-extent-arms.test.mjs` **+63** (new), `hygiene.test.mjs` **+3** (its three per-suite
+arms applied to the new suite), `planning-hygiene.test.mjs` **+1** (D-354's disposition row);
+`content-extent.test.mjs` UNCHANGED at 59, which is the corrected (4b) pair costing nothing.
+`coverage.mjs --strict` run DIRECTLY from `bio-plane/`, `$?` read with nothing piped after
+it, **exit 0**, OPS **172 declared · 172 reached · 0 unreached**; **no new check and no new
+op, measured at the close** — the three arms reuse C-45.1 and C-45.3, so no control-plane
+assertion is owed. `REGISTER_FLOOR` moved to the printed REPRODUCIBLE **989/182/183** (ONE
+key set, grepped after writing; the PRE-COMMIT run printed the same numerals under
+`contaminated: 1 suite(s)` and was refused as a source, exactly as REC-82's and REC-83's
+were). UI harness from the REPO ROOT **exit 0**. `plancheck --local` **0 fail, 0 warn**.
+`corpuscheck` **0 fail, 44 governed documents**. FL-10 fired on `src/` and `checks/` and
+`dist/` was rebuilt (2,848,036 B, sha256 `7344b2440cafe2…`) — caught by
+`fleetbundles.test.mjs` going red at 83/4 mid-item rather than by remembering; nothing
+bumped, nothing deployed, no live instance touched, `op=audit` not run because no live
+instance was reached.
+
+**EIGHT CONTROL ARMS, all AS DECLARED on the final tree**, each armed ALONE with the others
+held open, every restore verified byte-identically by sha256 AND `cmp` (631,437 bytes,
+sha256 `cff3ac7f3928…` each time): `baseline` 63/0 GREEN (the row that tells eight-broken
+from eight-working) · `sheetcell` 59/4 (4/4) · `docpara` 61/2 (2/2) · `slideshape` 61/2 (2/2)
+· `a1` 61/2 (1/1) · `onebased` 61/2 (1/1) · `canon` 50/13 (7/7) · `overstrict` DID NOT REACH
+ITS FOOT, exit 1, 3/3 crash markers. **TWO CAME BACK WRONG ON THE FIRST RUN AND BOTH ARE
+RECORDED AT THEIR SITES RATHER THAN SMOOTHED.** `canon` read `3/7 declared, 6 failing`
+because it patched ONE canonical branch while the declaration named three — THE DECLARATION
+WAS THE DEFECT, and a mis-declared arm reads exactly like a partially-working subject; it now
+patches all three and reads 7/7. `overstrict` read `-1 pass, -1 fail`: it refuses the suite's
+own FIXTURES, `mustPromote` THROWS, and a throw goes through no assertion at all — **the
+third sighting of that shape in three consecutive items** (REC-82's `overstrict`, REC-83's
+`unwired`), so it is named as a class and the arm is now verified on what the crash SAYS
+(`mustThrow`), which is stronger than the four assertion failures first declared.
+
+**OVER-STRICTNESS, both directions.** `pdf-page` and `document` are BYTE-IDENTICAL to
+REC-82's landing across a **130-row sweep** (`test/rec85-arm-digest.mjs`, sha256
+`28875841782289e9…`) computed on a PRISTINE detached worktree at `3f92e5c` and recomputed on
+this tree — and the sweep deliberately includes two contexts carrying the `container` key
+this item ADDED, so it says specifically that adding it moved nothing there. Second
+direction: a well-formed cell, paragraph and shape are NOT refused by the pure catalogue,
+which holds no container and must not answer a question only the store can.
+
+**TWO DECISIONS TAKEN AS MECHANISM, both reversible, both recorded at their sites.** (1) NO
+COLUMN on `content` records the container extent — `page_count`'s reasoning inverted (a
+figure NULL on every row that can ever be minted until CAP-9 is not information, and
+`schema.mjs`'s rule is that the column arrives WITH ITS WRITER); reversal costs one additive
+column and an IC-83 amendment, which is exactly what `page_count` itself cost. (2) The three
+container predicates answer a SENTENCE and `checkContentExtent` answers WHICH CODE THAT IS,
+so all four C-45.1 sites stay inside the one `is-content-extent` region the row's `where`
+names — the first draft minted the code in the helpers, which passed the UI guard and would
+have joined the MULTI-SITE-CODE condition `check-refusal-codes.mjs` documents and cannot
+close, for no gain.
+
+**WHAT THIS WORKER DID NOT DO, stated plainly.** The transcription-axis `covers` — whether an
+ATTESTATION covers one of these addresses — is untouched and stays NULL for all three arms,
+because an attestation's extent vocabulary is `document|page|region` and has no cell,
+paragraph or shape in it; `#contentTarget`'s comment predicts REC-85 changes that and it does
+not, which is named for CONDUCT in the report. No live instance was reached, so `op=audit`
+was not run. And one adjacent fact found and deliberately NOT built on:
+`reading.text_container` IS persisted and could feed a COARSE container check, but it is not
+what this row names and it is NULL on every capture that never reached the format axis, so a
+fence on it would refuse correct work — named in the delegation as a candidate row, not as a
+gap D-354 covers.
+
+**NOTHING IS OWED TO A FUTURE ACTOR BY THIS NOTE.** Every act this landing obliges is stated
+as an ACT with its actor in the worker's REPORT — chiefly the four REC-84 assertions this
+landing invalidates, which CONDUCT must correct (never exempt) at integration.
 
 
 ## DELEGATION 2026-09-14 RECORD (REC-85) -> CAPTURE: **THE THREE CONTAINER-EXTENT ARMS ARE BUILT, DRIVEN AND UNFED — NOTHING PERSISTS A SHEET LIST, A PARAGRAPH COUNT OR A SHAPE LIST, AND WITHOUT ONE THE OUT-OF-RANGE REFUSAL CANNOT FIRE IN PRODUCTION**
