@@ -1,11 +1,10 @@
 # Authority, delegated trust, and who answers the question
 
-**Status** · The record of Bob's 2026-07-30 CAPTURE rulings on authority and delegated trust, extended by his 2026-07-31 ruling on what publication actually requires. RULED sections are settled and are not re-litigated. **The preamble's "Nothing here is BUILT yet" has been false since 0.54.0, and that staleness is what this front matter exists to catch.** Measured against `bio-plane/src` at plane 0.58.0: the three-valued authority record (`authority` / `authority_state` / `authority_basis`, `index.mjs:5289-5295`), the `provenance_chain` of hops the plane builds and never accepts from a caller, the two-hop grade-C archive chain, the `via` column on `captured_locators` (`schema.mjs:460-470`), the producer/consumer task split (`task_queue` / `tasks`, `schema.mjs:527-577`) with `op=taskdrain` / `taskforward` / `taskresolve` and a drain consumer on the reconciling alarm, the three-consecutive-failures-or-fourteen-days threshold (`store.mjs:28021`), and the publication fence in its 2026-07-31 shape (C-18.9, `bio-checks.mjs:1689-1727`) are all [BUILT]. Two things are [ABSENT]: MECHANICAL determination of authority, and the per-origin sub-document attribution D-55's surviving case needs. Complete as a record of the rulings; incomplete as a description of the system, per the list below. as of 2026-09-14.
+**Status** · The record of Bob's 2026-07-30 CAPTURE rulings on authority and delegated trust, extended by his 2026-07-31 ruling on what publication actually requires. RULED sections are settled and are not re-litigated. **The preamble's "Nothing here is BUILT yet" had been false since 0.54.0 — the staleness this front matter exists to catch — and M0-27 CORRECTED IT IN PLACE on 2026-09-14.** Measured against `bio-plane/src` at plane 0.58.0: the three-valued authority record (`authority` / `authority_state` / `authority_basis`, `index.mjs:5289-5295`), the `provenance_chain` of hops the plane builds and never accepts from a caller, the two-hop grade-C archive chain, the `via` column on `captured_locators` (`schema.mjs:460-470`), the producer/consumer task split (`task_queue` / `tasks`, `schema.mjs:527-577`) with `op=taskdrain` / `taskforward` / `taskresolve` and a drain consumer on the reconciling alarm, the three-consecutive-failures-or-fourteen-days threshold (`store.mjs:28021`), and the publication fence in its 2026-07-31 shape (C-18.9, `bio-checks.mjs:1689-1727`) are all [BUILT]. Two things are [ABSENT]: MECHANICAL determination of authority, and the per-origin sub-document attribution D-55's surviving case needs. Complete as a record of the rulings; incomplete as a description of the system, per the list below. as of 2026-09-14.
 
 **Place in the system** · A level-2 design. `BIO_System_Design.md` §3 lists it as the level-2 design serving construct 1, **membership and authority**, whose level-1 home is `BIO_Membership_Architecture_v2.md`; its subject matter belongs equally to construct 2, **intake, capture and provenance**, home `BIO_Intake_Doctrine_v1_1.md`, which is where the capture-side doctrine it rules is folded. It is upstream of two of CAPTURE's other designs: `ARCHIVE-FALLBACK.md` consumes its transitive-trust ruling and `CLIENT-RENDERED.md` records that its three-valued ruling SUPERSEDED D-55's block on rendered capture. Its closing fence is enacted as C-18.9 in `bio-plane/checks/bio-checks.mjs`, and `DEC-42` and D-52 bear on the inbox half.
 
 **Incomplete sections** ·
-- §preamble — *"Nothing here is BUILT yet; this is the design the next sessions implement"* is STALE by six weeks of releases: nearly all of it shipped between 0.54.0 and 0.55.0 and the drain trigger landed later still. Read the Status, not that line.
 - §RULED: authority is three-valued — its first clause, *"where the determination can be made mechanically, authority is assigned during capture"*, is [ABSENT]. Nothing in `bio-plane/src` derives authority; `index.mjs:5291-5295` marks `determined` only when a caller asserted one and otherwise writes the basis *"no mechanical determination is implemented"*, so every capture with no assertion is undetermined by construction rather than by finding.
 - §RULED: undetermined authority goes to a todo list — the task record is [BUILT] and is transport-agnostic as this section requires; what does not exist is any transport at all (D-52, no notification channel), so the load-bearing *"might later BE email"* parenthesis has never been tested against a second surface.
 - §What D-55 becomes — still the live frontier rather than a closed narrowing: D-55 is open and BLOCKS D-64, per-origin sub-document attribution is [ABSENT], and rendered capture, which this document unblocks in doctrine, is not built (`CLIENT-RENDERED.md`).
@@ -24,8 +23,21 @@
 ---
 
 Written 2026-07-30. Records rulings Bob made during the CAPTURE session of that
-date. Sections marked RULED are his and are not to be re-litigated. Nothing here
-is BUILT yet; this is the design the next sessions implement.
+date. Sections marked RULED are his and are not to be re-litigated.
+
+**CORRECTED 2026-09-14 (M0-27). This line read "Nothing here is BUILT yet; this is the
+design the next sessions implement", and it has been false since 0.54.0.** Measured
+against `bio-plane/src` at plane 0.58.0, nearly all of it is **[BUILT]**: the
+three-valued authority record (`authority` / `authority_state` / `authority_basis`), the
+`provenance_chain` of hops the plane builds and never accepts from a caller, the two-hop
+grade-C archive chain, the `via` column on `captured_locators`, the producer/consumer
+task split (`task_queue` / `tasks`) with `op=taskdrain` / `taskforward` / `taskresolve`
+and a drain consumer on the reconciling alarm, the three-consecutive-failures-or-
+fourteen-days threshold, and the publication fence in its 2026-07-31 shape (C-18.9).
+Two things are **[ABSENT]** and are named per section in the Incomplete list above:
+MECHANICAL determination of authority, and the per-origin sub-document attribution
+D-55's surviving case needs. Read the Status for the current reach; read the sections
+below for the rulings, which stand unchanged.
 
 ## The problem this replaces
 

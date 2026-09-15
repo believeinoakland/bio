@@ -123,6 +123,14 @@ const get = async (op, qs = "", tok = "mem-r85") => rP(await (await mf.dispatchF
 const NOW = "2026-09-14T00:00:00Z";
 const LATER = "2026-09-14T01:00:00Z";
 const codes = (r) => (r.findings || []).map((f) => f.check).sort();
+/* REC-84's `codeNames`, and reading BOTH is the point rather than a convenience.
+   A shape refusal now travels as REC-84's leg-grammar RULE (C-2.8, which is what
+   IC-84 moved) carrying the content-extent family's own CODE (which is what
+   carries the DEC-49 translation and what tells `dom` from a typo). REC-84 paid
+   for that distinction with four of REC-82's assertions going red when its first
+   draft flattened the two into one number, so this suite asserts both halves
+   everywhere it asserts either. */
+const codeNames = (r) => [...new Set((r.findings || []).map((f) => f.code).filter(Boolean))].sort();
 const detail = (r) => (r.findings || []).map((f) => f.detail).join(" || ");
 
 /* ------------------------------------------------------------- documents */
@@ -393,25 +401,52 @@ const refuse = async (id, target, leg) => promote(id,
 
 const rNoSheet = await refuse("INQ-2026-8500-nosheet", DOC_BOOK, { kind: "sheet-cell", cell: "B14" });
 t("(a) a cell with NO SHEET is refused by name — `B14` of what?",
-  [rNoSheet.ok, rNoSheet.reason, codes(rNoSheet), /names which sheet/.test(detail(rNoSheet))],
-  [false, "BASIS_REFUSED", ["C-45.3"], true]);
+  [rNoSheet.ok, rNoSheet.reason, codes(rNoSheet), codeNames(rNoSheet),
+   /names which sheet/.test(detail(rNoSheet))],
+  [false, "BASIS_REFUSED", ["C-2.8"], ["CONTENT_EXTENT_UNREADABLE"], true]);
 const rBadCell = await refuse("INQ-2026-8500-badcell", DOC_BOOK, { kind: "sheet-cell", sheet: "Sheet1", cell: "14B" });
 t("(b) a cell that is not A1 notation is refused by name",
-  [rBadCell.ok, codes(rBadCell), /A1 notation/.test(detail(rBadCell))], [false, ["C-45.3"], true]);
+  [rBadCell.ok, codes(rBadCell), codeNames(rBadCell), /A1 notation/.test(detail(rBadCell))],
+  [false, ["C-2.8"], ["CONTENT_EXTENT_UNREADABLE"], true]);
 const rBadPara = await refuse("INQ-2026-8500-badpara", DOC_TEXT, { kind: "doc-para", para: "two" });
 t("(c) a paragraph that is not a 0-based integer is refused by name",
-  [rBadPara.ok, codes(rBadPara), /0-based integer/.test(detail(rBadPara))], [false, ["C-45.3"], true]);
+  [rBadPara.ok, codes(rBadPara), codeNames(rBadPara), /0-based integer/.test(detail(rBadPara))],
+  [false, ["C-2.8"], ["CONTENT_EXTENT_UNREADABLE"], true]);
 const rNoPara = await refuse("INQ-2026-8500-nopara", DOC_TEXT, { kind: "doc-para" });
 t("(d) a doc-para naming NO paragraph is unreadable, not paragraph zero",
-  [rNoPara.ok, codes(rNoPara)], [false, ["C-45.3"]]);
+  [rNoPara.ok, codes(rNoPara), codeNames(rNoPara)],
+  [false, ["C-2.8"], ["CONTENT_EXTENT_UNREADABLE"]]);
 const rSlide0 = await refuse("INQ-2026-8500-slide0", DOC_DECK, { kind: "slide-shape", slide: 0 });
 t("(e) SLIDE 0 IS REFUSED — the numbering is 1-BASED (IC-1: ref \"slide 7\", slide 7), and it is "
   + "the one place in this grammar where 0 is not the first item",
-  [rSlide0.ok, codes(rSlide0), /1-based integer/.test(detail(rSlide0))], [false, ["C-45.3"], true]);
+  [rSlide0.ok, codes(rSlide0), codeNames(rSlide0), /1-based integer/.test(detail(rSlide0))],
+  [false, ["C-2.8"], ["CONTENT_EXTENT_UNREADABLE"], true]);
 const rNoSlide = await refuse("INQ-2026-8500-noslide", DOC_DECK, { kind: "slide-shape", shape: 2 });
 t("(f) a shape with no slide is refused — a shape index alone is not an address",
-  [rNoSlide.ok, codes(rNoSlide)], [false, ["C-45.3"]]);
+  [rNoSlide.ok, codes(rNoSlide), codeNames(rNoSlide)],
+  [false, ["C-2.8"], ["CONTENT_EXTENT_UNREADABLE"]]);
 t("AND NOTHING WAS MINTED BY ANY OF THEM", (await get("stats")).content, before4);
+
+/* THE C-NUMBER IS THE GATE AND THE CODE IS THE FACT, asserted here as a VALUE
+   because dropping it was a real regression this run caught rather than a
+   hypothetical. REC-84's relay means a shape refusal reaching a member arrives
+   at C-2.8 — the leg grammar's number, which is what IC-84 moved — while the
+   CHECKER's own verdict is still C-45.3, which is what carries the DEC-49 canned
+   translation and what tells an unreadable extent from `dom`. Until this
+   assertion existed the ONLY thing in the whole battery naming C-45.3 was the
+   TEXT of an assertion label in `content-extent-leg.test.mjs`, and this item's
+   own correction of that label removed it — `coverage.mjs --strict` then went
+   red with "1 never named: C-45.3", exactly the C-20.1 defect class it exists to
+   catch (a check exercised only in the direction that passes). So it is pinned
+   as BEHAVIOUR here instead of as a sentence anywhere: a label can be reworded
+   by the next item without anyone noticing, and a value cannot. */
+t("the CHECKER's own verdict is C-45.3 and the leg grammar RELAYS it at C-2.8 — two gates, one code",
+  [checkContentExtent({ kind: "sheet-cell", cell: "B14" }, { chain: layerChain }).check,
+   checkContentExtent({ kind: "sheet-cell", cell: "B14" }, { chain: layerChain }).code,
+   checkContentExtent({ kind: "doc-para", para: "two" }, { chain: layerChain }).check,
+   checkContentExtent({ kind: "slide-shape", slide: 0 }, { chain: layerChain }).check,
+   codes(rNoSheet)],
+  ["C-45.3", "CONTENT_EXTENT_UNREADABLE", "C-45.3", "C-45.3", ["C-2.8"]]);
 
 /* A leg on a capture the record has NEVER READ still meets C-45.2 on all three
    arms, unchanged from REC-82: an address into text nobody produced. */
@@ -420,7 +455,15 @@ await mustPromote(DOC_UNREAD, infoMd(DOC_UNREAD), "information",
   { reading: readingOf(sha("never-read"), undefined) });
 const rNoChain = await refuse("INQ-2026-8500-nochain", DOC_UNREAD,
   { kind: "sheet-cell", sheet: "Sheet1", cell: "B14" });
-t("(g) and the NO-CHAIN refusal reaches the new arms unchanged — C-45.2, naming the extent",
+/* AND THIS ONE STAYS AT C-45.2 RATHER THAN RELAYING, WHICH IS REC-84's SPLIT
+   DOING EXACTLY WHAT IT WAS BUILT FOR — measured here rather than assumed. The
+   catalogue gate runs the grammar with `CONTENT_EXTENT_DOCUMENT_ONLY`, whose
+   `known: false` SKIPS the two arms only the store can answer, so a chain
+   refusal is not something one `bundle.md` can raise; it is raised at the
+   STORE's own gate and arrives with the content family's C-number intact. Two
+   gates, one checker, two honest answers — and the contrast with (a)-(f) above,
+   which DO relay at C-2.8, is what shows the split is real. */
+t("(g) and the NO-CHAIN refusal reaches the new arms at the STORE's gate — C-45.2, not relayed, naming the extent",
   [rNoChain.ok, codes(rNoChain), /Sheet1!B14/.test(detail(rNoChain))], [false, ["C-45.2"], true]);
 
 /* ===================== 5. THE CONTAINER REFUSALS ======================== */

@@ -82,6 +82,10 @@ const NOW = "2026-09-14T00:00:00Z";
 const LATER = "2026-09-14T01:00:00Z";
 const codes = (r) => (r.findings || []).map((f) => f.check).sort();
 const detail = (r) => (r.findings || []).map((f) => f.detail).join(" || ");
+/* REC-84: the WIRE CODE, beside the check number. A refusal now carries both —
+   the RULE that refused it and the NAME it was refused by — and the arms below
+   assert both rather than collapsing them. */
+const codeNames = (r) => [...new Set((r.findings || []).map((f) => f.code).filter(Boolean))].sort();
 
 /* ------------------------------------------------------------- documents */
 
@@ -285,13 +289,44 @@ const rNoChain = await refuseLeg("INQ-2026-8200-nochain", { kind: "pdf-page", pa
 t("(2) an extent with no extraction chain is REFUSED",
   [rNoChain.ok, codes(rNoChain)], [false, ["C-45.2"]]);
 
+/* ---------------------------------------------------------------------------
+ * CORRECTED 2026-09-14 BY REC-84, NEVER EXEMPTED, AND THE REASON IS THE RULE
+ * CHANGE ITSELF.
+ *
+ * Arms (3) and (4a-c) asserted a CHECK NUMBER of `C-45.x` for a MALFORMED
+ * EXTENT. When REC-82 wrote them that was the only gate that could judge one:
+ * the extent grammar ran at the WRITE and nowhere in the catalogue, so the
+ * store's own arm was the first and only thing to see a bad kind.
+ *
+ * IC-84 MOVED THE GATE. The extent grammar is now part of the LEG grammar —
+ * `checkInquiryBasis` (C-2.8) and `basisVersionFindings` (C-25.10) run it over
+ * one document's bytes, at the catalogue AND at the write, through the same
+ * `checkContentExtent` these arms exercise directly one block up. So a
+ * malformed extent is now refused by the LEG rule and never reaches the store's
+ * arm, and the number a member sees is the leg grammar's.
+ *
+ * WHAT IS NOT SUPERSEDED, and is why these arms are corrected rather than
+ * deleted: `dom` must still be refused BY NAME rather than as an unknown kind,
+ * and an unlanded arm by name rather than as a typo. That distinction is what
+ * arms (3) and (4b) exist for, and it now lives in the CODE — which travels on
+ * the finding, carries the canned translation, and is minted in exactly the
+ * place it always was. Each arm therefore asserts BOTH halves: the rule that
+ * refused it, and the name it was refused by.
+ *
+ * Every arm below was RUN in both shapes: red against REC-82's expectation on
+ * the REC-84 tree, green after correction, and `nc-rec84.mjs`'s `grammar` arm
+ * (which neuters the new gate) shows the store's own C-45 arms still standing
+ * behind it.
+ * ------------------------------------------------------------------------- */
 const rDom = await refuseLeg("INQ-2026-8200-dom", { kind: "dom" });
-t("(3) `dom` is REFUSED BY NAME while no producer exists — C-45.4, not the unknown-kind arm",
-  [rDom.ok, codes(rDom)], [false, ["C-45.4"]]);
+t("(3) `dom` is REFUSED BY NAME while no producer exists — the leg grammar's rule, the content family's name",
+  [rDom.ok, codes(rDom), codeNames(rDom)], [false, ["C-2.8"], ["CONTENT_EXTENT_NO_PRODUCER"]]);
+t("    and its canned translation travels with it, so the code is named to a member and not merely numbered",
+  (rDom.findings || [])[0]?.translation === CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_PRODUCER.translation, true);
 
 const rUnknown = await refuseLeg("INQ-2026-8200-unknown", { kind: "paragraph-ish" });
 t("(4a) an UNKNOWN kind covers nothing and mints nothing",
-  [rUnknown.ok, codes(rUnknown)], [false, ["C-45.3"]]);
+  [rUnknown.ok, codes(rUnknown), codeNames(rUnknown)], [false, ["C-2.8"], ["CONTENT_EXTENT_UNREADABLE"]]);
 /* CORRECTED 2026-09-14 BY REC-85, NEVER EXEMPTED, and the correction is the
    whole reason this pair is kept rather than deleted. As REC-82 wrote it, this
    leg (`sheet-cell` with a cell and no sheet) was refused because the ARM had
@@ -301,23 +336,29 @@ t("(4a) an UNKNOWN kind covers nothing and mints nothing",
    ABOUT THE REASON while being right about the outcome, which is exactly the
    shape a test has to be corrected out of rather than left to pass by accident.
 
-   The leg is STILL REFUSED and still as C-45.3 — it names a cell and no sheet,
-   which is not an address — and that is what this pair now pins: the same
-   fixture, the same code, the reason moved from "this plane cannot evaluate
-   this kind" to "this is not a well-formed cell address". Keeping the fixture
-   unchanged is deliberate: it measures that landing the arm did not turn an
-   incomplete address into an accepted one, which is the direction that would
-   have mattered. The arm's own in-range/out-of-range behaviour is
-   `content-extent-arms.test.mjs`, REC-85's suite. */
+   The leg is STILL REFUSED, and at REC-84's own check id and code — it names a
+   cell and no sheet, which is not an address — and that is what this pair now
+   pins: the same fixture, the same relay through C-2.8, the reason moved from
+   "this plane cannot evaluate this kind" to "this is not a well-formed cell
+   address". Keeping the fixture unchanged is deliberate: it measures that
+   landing the arm did not turn an incomplete address into an accepted one,
+   which is the direction that would have mattered.
+
+   RESOLVED AT THE REC-85 x REC-84 MERGE, 2026-09-14, and NEITHER SIDE ALONE WAS
+   RIGHT: REC-84's shape wins (the finding relays through C-2.8 and `codeNames`
+   reports the underlying code — its landing, untouched here) and REC-85's reason
+   wins (the arm landed, so "refused for being unlanded" is now a false sentence).
+   Taking either side whole would have left one of those two wrong. The arm's own
+   in-range/out-of-range behaviour is `content-extent-arms.test.mjs`. */
 const rUnlanded = await refuseLeg("INQ-2026-8200-cell", { kind: "sheet-cell", cell: "B7" });
 t("(4b) a LANDED arm still refuses an incomplete address — a cell with no sheet is not an address",
-  [rUnlanded.ok, codes(rUnlanded)], [false, ["C-45.3"]]);
+  [rUnlanded.ok, codes(rUnlanded), codeNames(rUnlanded)], [false, ["C-2.8"], ["CONTENT_EXTENT_UNREADABLE"]]);
 t("     and it is refused for naming no sheet rather than for being an unlanded kind (REC-85 landed it)",
   [/names which sheet, as the workbook spells it/.test(detail(rUnlanded)),
    /named in the grammar and this plane cannot yet/.test(detail(rUnlanded))], [true, false]);
 const rNoPage = await refuseLeg("INQ-2026-8200-nopage", { kind: "pdf-page" });
 t("(4c) a pdf-page extent naming no page is unreadable, not page zero",
-  [rNoPage.ok, codes(rNoPage)], [false, ["C-45.3"]]);
+  [rNoPage.ok, codes(rNoPage), codeNames(rNoPage)], [false, ["C-2.8"], ["CONTENT_EXTENT_UNREADABLE"]]);
 
 t("no refused promotion minted anything", (await get("stats")).content, 2);
 

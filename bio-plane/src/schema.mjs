@@ -2119,12 +2119,20 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (
   at           TEXT,
   ground       TEXT NOT NULL,    -- the branch of the argument. NOT NULL: the partition is TOTAL on a version
   -- REC-82 / IC-83: the version leg's referent, on inquiry_basis.content_id's
-  -- exact terms. THE COLUMN ARRIVES HERE AND ITS WRITER DOES NOT: REC-82 lands
-  -- the writer on the LIVE basis only, and the version-leg grammar that lets a
-  -- version leg NAME an extent is REC-84. So this column reads NULL on every
-  -- row this plane currently writes, and that is the honest state rather than a
-  -- gap -- a version leg minted with no stated extent is a whole-document
-  -- reference (5.3, no unstated) and REC-84 is what makes it say so.
+  -- exact terms. The column arrived at REC-82 WITHOUT its writer, deliberately,
+  -- and REC-84 / IC-84 (2) IS THAT WRITER: promote mints or finds the row per
+  -- version leg through the SAME plan and the SAME content address the live
+  -- basis uses, so one passage cited by a version leg and by a basis leg is ONE
+  -- row by construction and there is no second allocator.
+  -- NULL IS STILL A FIRST-CLASS ANSWER AND IT IS THREE DIFFERENT FACTS, each
+  -- stated by the reads rather than collapsed. One, the leg rests on an INQUIRY
+  -- (no capture and no part to point at, DEC-21). Two, the record holds no bytes
+  -- of the information object. Three, the row is a REPLAY of a leg written under
+  -- rules that did not exist, for which nothing is minted retroactively.
+  -- A version leg with no stated extent is a WHOLE-DOCUMENT reference (Bob's
+  -- 5.3, no unstated) and mints the document-extent row, exactly as a basis leg
+  -- does. Part II section 14.4 is the doctrine and section 18 piece 1 the design.
+  -- NO SEMICOLON MAY APPEAR IN THIS COMMENT -- migrate splits the schema on it.
   content_id   TEXT,
   PRIMARY KEY (bundle_id, name, ord)
 );

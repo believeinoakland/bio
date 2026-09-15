@@ -2964,6 +2964,84 @@ export const GROUND_LABEL_RE = /^[a-z0-9][a-z0-9 _-]{0,47}$/i;
  * permitted above D). Duplicate targets are LEGAL by design — D4: a basis
  * legitimately cites one document for two legs, which is why this table has
  * an ordinal and refs could not carry it. */
+/** REC-84 / IC-84 (1) — THE EXTENT GRAMMAR ON A LEG, AT BOTH LEG GRAINS.
+ *
+ *  A basis leg may say WHICH PART of its target it rests on. The grammar is
+ *  IC-1's union flattened onto the leg (`legExtent` reads it; the restricted
+ *  frontmatter grammar cannot carry a nested object, so the fields are scalars
+ *  — the `completeness` / `division` precedent), plus the option of naming an
+ *  already-minted part outright by its `content_id`.
+ *
+ *  ONE FUNCTION, TWO CHECK IDS, AND THAT PAIRING IS THE ITEM'S OWN RULE. C-2.8
+ *  governs `basis[]` and C-25.10 governs `basis_version_legs[]`; they are two
+ *  rules over two grains of one shape, and a second implementation of the
+ *  grammar is the drift this repository has measured five times. The CHECK id is
+ *  a parameter and the GRAMMAR is not.
+ *
+ *  IT RUNS THE CATALOGUE'S ONE CHECKER AND OWNS NO GRAMMAR OF ITS OWN.
+ *  `checkContentExtent` is where an extent is judged, here and in the store
+ *  alike; this function supplies the document-only context and re-labels the
+ *  result. The two arms it adds on top are facts about the DOCUMENT and not
+ *  about the extent — the shape of a named id, and a leg stating its referent
+ *  twice.
+ *
+ *  WHY NAMING BOTH AN ID AND AN EXTENT IS REFUSED RATHER THAN RECONCILED. They
+ *  are one fact written twice, and the record must never hold two authorities
+ *  for one fact that can disagree — the `case_edition` and `refs`/`inquiry_basis`
+ *  lessons, one construct down. Reconciling them would mean the plane silently
+ *  preferring one, which is an authored citation moving without a member's act
+ *  (Bob's 5.8). The id is the precise form and the extent is the descriptive
+ *  one; a member uses whichever they have, never both.
+ *
+ *  AN ABSENT EXTENT IS `document` AND IS NEVER REFUSED (Bob's 5.3, no
+ *  `unstated`), which is what makes every existing leg in the record promote
+ *  byte-identically through this arm. */
+export function checkLegExtentGrammar(leg, label, checkId, findings) {
+  const bad = checkContentExtent(legExtent(leg), CONTENT_EXTENT_DOCUMENT_ONLY);
+  if (bad)
+    /* THE CODE TRAVELS AND THE C-NUMBER IS THE LEG GRAMMAR'S, and that pairing
+       is a correction this item paid for rather than a design chosen up front.
+       REC-82's arms assert that `dom` is refused BY NAME rather than as an
+       unknown kind — a distinction a member meets as a different sentence and a
+       machine meets as a different CODE. The first draft of this arm pushed a
+       bare C-2.8 finding, the catalogue then fired BEFORE the store's own arm,
+       and four of REC-82's assertions went red because the distinction had been
+       flattened into one number. Carrying `f`'s fifth argument keeps both facts:
+       the RULE is the leg grammar (which is what IC-84 moves), and the CODE is
+       the content-extent family's, which is what carries the canned translation
+       (DEC-49) and what tells `dom` from a typo. No new row and no new region:
+       the code is MINTED in `checkContentExtent`'s own governed region and this
+       is a RELAY of it — a relay given its own marker is the defect PL-18 was
+       failed by name for. */
+    findings.push(f(checkId, 'error', `${label} names an extent this record cannot evaluate: ${bad.detail}`,
+      /* CORRECTED 2026-09-14 BY REC-85: this named two landed kinds because two
+         were landed when REC-84 wrote it, and the other three landed the same
+         day. GUIDANCE THAT NAMES A CLOSED LIST GOES STALE THE MOMENT THE LIST
+         MOVES, and stale guidance is worse than none here — it tells a member
+         citing a real cell that the record cannot hold the citation, which is
+         false and would send them to the whole document instead. The list is
+         COMPOSED FROM THE MAP rather than typed, so the next kind to land (or
+         `dom`, the day CONTENT-HTML produces one) cannot leave this sentence
+         behind: the same rule `describeChain` and the DEC-49 fence composer
+         already follow — a sentence built from the value it describes cannot
+         come to describe a different one. */
+      [`name one of the landed extent kinds — ${Object.entries(CONTENT_EXTENT_KINDS)
+        .filter(([, v]) => v.landed).map(([k]) => k).sort().join(', ')} — with the fields that arm takes`,
+       'or drop the extent fields entirely: a citation that names no part means the WHOLE document, which is always a legal thing to cite'],
+      bad.code));
+  const cid = leg && typeof leg === 'object' ? leg.content_id : undefined;
+  if (cid !== undefined && cid !== null && cid !== '') {
+    if (typeof cid !== 'string' || !CONTENT_ID_RE.test(cid.trim()))
+      findings.push(f(checkId, 'error', `${label}.content_id '${String(cid).slice(0, 40)}' is not a content id: a part of a document is named by the 64-character lowercase hexadecimal address this record mints for it, and nothing shorter or longer can be one`,
+        ['copy the content id from the part as this record answers for it',
+         'or describe the part instead — extent_kind and its fields — and the record will find or mint the entry']));
+    else if (legHasAuthoredExtent(leg))
+      findings.push(f(checkId, 'error', `${label} names BOTH a content_id and an extent: these are one fact written twice and they can disagree, which would leave the record holding two answers to what this leg rests on`,
+        ['keep the content_id — it names the part exactly',
+         'or keep the extent fields and drop content_id — the record finds or mints the part they describe']));
+  }
+}
+
 export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
   const legs = fm?.basis;
   /* PL-1 / IS-1: the VERSION block is checked FIRST and unconditionally, on
@@ -3121,6 +3199,14 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
     if (leg.note !== undefined && leg.note !== null && typeof leg.note !== 'string') {
       findings.push(f('C-2.8', 'error', `basis[${i}].note is not a string`));
     }
+    /* REC-84 / IC-84 (1): THE EXTENT, at C-2.8 and through the ONE checker. The
+       bundle-id target grammar above is KEPT exactly as it was — the leg still
+       names a document or another question — and this adds WHICH PART of it.
+       Run unconditionally, including on a leg whose target was refused above: an
+       extent is a fact about the leg's own bytes and does not need the target to
+       resolve, and a member who typed `extent_kind: pdf-pge` should be told so
+       in the same pass rather than on the next one. */
+    checkLegExtentGrammar(leg, `basis[${i}]`, 'C-2.8', findings);
     checkEarnedLeg(leg, i, graded, targetType, earnedRegistry, findings);
     checkInheritedLeg(leg, i, graded, publishedRegistry, findings);
   }
@@ -6840,12 +6926,21 @@ export const VERSION_NAME_RE = /^[a-z0-9][a-z0-9 ._-]{0,63}$/i;
  *  TWO BOUNDS STATED RATHER THAN SILENTLY VIOLATED, both standing decisions of
  *  the record this item does not get to move:
  *
- *  1. **D-164 IS UNLANDED, so a version's legs address WHOLE BUNDLES.** There is
- *     no extent, no offset and no extraction method on a version leg, because the
- *     record cannot express one yet. A version therefore composes DOCUMENT-GRAIN
- *     legs and this comment is where it says so; when D-164 lands, the field
- *     arrives here with a writer rather than as a nullable column that reads like
- *     a precision the record never had.
+ *  1. **CORRECTED 2026-09-14 BY REC-84, AND THE OLD RULE IS QUOTED RATHER THAN
+ *     DELETED because a superseded rule is corrected with its reason.** This
+ *     bound read: *"D-164 IS UNLANDED, so a version's legs address WHOLE
+ *     BUNDLES. There is no extent, no offset and no extraction method on a
+ *     version leg, because the record cannot express one yet … when D-164 lands,
+ *     the field arrives here with a writer rather than as a nullable column that
+ *     reads like a precision the record never had."* D-164 landed: IC-83 (the
+ *     `content` table and its writer, REC-82) and IC-84 (this grammar, REC-84).
+ *     **The prediction held exactly** — `inquiry_basis_version_legs.content_id`
+ *     arrived NULLABLE AND WITHOUT ITS WRITER at REC-82, deliberately, and the
+ *     writer is REC-84's. A version leg may now carry an `extent` (IC-1's union,
+ *     flattened onto the leg by `legExtent`) or name a part outright by
+ *     `content_id`; absent, it means the whole document and NOT `unstated`
+ *     (Bob's 5.3). The grammar is `checkLegExtentGrammar`, shared with
+ *     `basis[]`'s own loop, and it fires here as C-25.10.
  *  2. **D-184 / C-2.8 bound the leg vocabulary to information or inquiry.** Not
  *     projects, not actions, not entities — C-25.10 refuses everything else by
  *     name, at the version's own grain, because a version's legs do not pass
@@ -7115,6 +7210,19 @@ export function basisVersionFindings(fm, findings) {
         push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade_axis '${String(leg.grade_axis).slice(0, 40)}' is not one of: ${GRADE_AXES.join(', ')}`);
       if (leg.grade_source !== undefined && leg.grade_source !== null && !GRADE_SOURCES.includes(leg.grade_source))
         push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade_source '${String(leg.grade_source).slice(0, 40)}' is not one of: ${GRADE_SOURCES.join(', ')}`);
+      /* REC-84 / IC-84 (1): THE EXTENT AT THE VERSION'S OWN GRAIN, C-25.10,
+         through the SAME function `basis[]` runs — and it is what retires bound
+         (1) in this function's header, which said D-164 was unlanded so a
+         version's legs address whole bundles. They no longer must. The header
+         bound is corrected there rather than deleted, because a superseded rule
+         is corrected with its reason and never quietly removed. */
+      /* THE C-NUMBER IS READ OUT OF THE MAP AND NEVER TYPED, which is this
+         function's own stated discipline ("`basisVersionFindings` reads the
+         C-number OUT of this map at every site") and is enforced by
+         `versions.test.mjs`: a second literal is a second place for the number
+         to drift. Typed here, that arm went red on this item's first battery. */
+      checkLegExtentGrammar(leg, `basis_version_legs[${li}] (version '${name}')`,
+        BASIS_VERSION_CHECKS.VERSION_LEG_NOT_CITABLE.check, findings);
 
       const g = typeof leg.ground === 'string' ? leg.ground.trim() : '';
       if (!g) { unlabelled++; continue; }
@@ -9477,8 +9585,8 @@ export function checkCaseDocument(fm, ctx = {}) {
  * file is the layer both already import, which is where C-35's own constant
  * ended up for exactly the same reason (see EARNED_CAPTURE_CEILING above).
  *
- * THE FAMILY IS FOUR CONDITIONS AND THEY ARE FOUR DIFFERENT FACTS, which is
- * why they are four codes and not one "bad extent":
+ * THE FAMILY IS SIX CONDITIONS AND THEY ARE SIX DIFFERENT FACTS, which is
+ * why they are six codes and not one "bad extent":
  *
  *   C-45.1  the extent names a page the capture does not have — a citation
  *           into a document that cannot contain it
@@ -9488,6 +9596,31 @@ export function checkCaseDocument(fm, ctx = {}) {
  *           nobody can evaluate COVERS NOTHING AND MINTS NOTHING, never "all
  *           of it" (extentCovers' own default, one construct along)
  *   C-45.4  `dom` — REFUSED BY NAME while no producer exists
+ *   C-45.5  the leg NAMES a content id and this record holds no such row
+ *   C-45.6  the leg names a content id whose row addresses a DIFFERENT
+ *           document from the one the leg rests on
+ *
+ * REC-84 ADDED THE LAST TWO AND MINTED NO NEW FAMILY, on SK-1's measured rule
+ * that a `*_CHECKS` family is a FLOOR in `civicos-ui/check-refusal-codes.mjs`
+ * which buys slack for everybody else's walk. They belong here on their own
+ * terms as well: this family's subject is *the ways the record could come to
+ * point at nothing*, and an id naming no row is the purest instance of it.
+ * `node tools/mintid.mjs C` WAS run before this choice was made and the id it
+ * answered is MINTED AND UNUSED — the gap costs nothing (the tool says so
+ * itself). The number is deliberately NOT written here: `mintid.test.mjs`'s live
+ * arm refuses a floor driven by PROSE, and naming an unallocated id in a comment
+ * inside this file — which IS the C namespace's corpus — raises the floor above
+ * the highest real allocation and costs every later allocator a gap. Measured:
+ * writing it turned that arm red on the first run of this item's battery.
+ *
+ * THE FIRST FOUR ARE FACTS ABOUT THE EXTENT AND THE LAST TWO ARE FACTS ABOUT
+ * THE RECORD, and that split decides where each is enforced. C-45.1..4 fire in
+ * `checkContentExtent` below, which a PURE document check can run; C-45.5/6 can
+ * only be answered by the store, and their `where` says so — the same split
+ * C-25.10 / C-25.16 already draw one construct along, and for the same reason:
+ * "you cited something that cannot be a part of a document" and "you cited a
+ * part this record does not hold" are different facts, and a member told the
+ * wrong one is worse off than one told nothing.
  *
  * There is deliberately NO code here for the machine-credential fence: a
  * machine credential MAY mint a content row (Bob, 5.7, under DEC-24 rule 3 —
@@ -9611,6 +9744,27 @@ export const CONTENT_EXTENT_CHECKS = {
       + 'would record a pointer that resolves to nothing and looks exactly like one that works. '
       + 'Cite the captured page as a whole for now.',
   },
+  /* REC-84 / IC-84 (1): a leg may NAME the part it rests on, instead of
+     describing it. The two refusals below are the two ways that name can be
+     wrong, and both are facts only the store can establish — hence a store
+     `where` and a REGION, on VERSION_FROZEN's and VERSION_LEG_UNRESOLVED's own
+     precedent a few thousand lines up. */
+  CONTENT_ROW_UNKNOWN: {
+    check: 'C-45.5',
+    where: 'src/store.mjs #contentRowFor > is-content-row',
+    translation: 'This citation names a specific part of a document, and this record holds no '
+      + 'such part. That is not a typo the record can fix for you: the part is named by a code '
+      + 'taken over the document, the passage and how its text was produced, so a code nothing '
+      + 'answers to points at nothing at all. Cite the part by describing it — the page, the '
+      + 'cell, the paragraph — and the record will find or create the entry for it.',
+  },
+  CONTENT_ROW_NOT_THIS_TARGET: {
+    check: 'C-45.6',
+    where: 'src/store.mjs #contentRowFor > is-content-row',
+    translation: 'This citation rests on one document and names a part of a different one. A '
+      + 'reference that says "this document, that passage" is two claims that do not meet, and a '
+      + 'reader following it would be shown material the citation never meant.',
+  },
 };
 
 /** DEC-49's refusal helper for this family, and BOTH halves of its spelling are
@@ -9698,6 +9852,64 @@ export function legExtent(leg) {
   }
   return out;
 }
+
+/** REC-84 / IC-84 (1). DID THE MEMBER AUTHOR AN EXTENT AT ALL, or is this leg
+ *  reading `document` because Bob's 5.3 says an unstated part means the whole
+ *  document? `legExtent` deliberately cannot tell you — it answers what the leg
+ *  MEANS — and two arms need the other question:
+ *
+ *  (1) the refusal below that a leg naming BOTH a `content_id` and an `extent`
+ *      is stating one fact twice, where the two can disagree; and
+ *  (2) the composition line a version leg contributes to the freeze, which must
+ *      stay ABSENT for every leg written before this field existed.
+ *
+ *  So: TRUE only when the document actually carries an extent field. An empty
+ *  `extent_kind:` is NOT authored — the restricted grammar writes `''` for a key
+ *  with no value, and a member who typed nothing has said nothing. */
+export function legHasAuthoredExtent(leg) {
+  const l = leg && typeof leg === 'object' ? leg : {};
+  for (const k of ['extent_kind', 'extent_page', 'extent_rect', 'extent_ref', 'extent_sheet',
+                   'extent_cell', 'extent_slide', 'extent_shape', 'extent_para', 'extent_run']) {
+    const v = l[k];
+    if (v === undefined || v === null || v === '') continue;
+    return true;
+  }
+  return false;
+}
+
+/** A CONTENT ID AS THE DOCUMENT MAY SPELL IT — `contentIdFor`'s own output and
+ *  nothing else. Lowercase hex, exactly 64 characters, because the id IS a
+ *  SHA-256 and anything that is not one cannot be an id this plane ever minted.
+ *  Deliberately NOT a loose `[A-Za-z0-9]+`: a shape test that admits ids the
+ *  minter cannot produce turns "this record holds no such part" (C-45.5, a true
+ *  and useful sentence) into the only diagnosis a member ever gets for a
+ *  mistyped field. */
+export const CONTENT_ID_RE = /^[0-9a-f]{64}$/;
+
+/** The content id a leg NAMES, or null where it names none. Trimmed, because
+ *  the restricted grammar's scalars carry whatever spacing the author left. */
+export function legContentId(leg) {
+  const v = leg && typeof leg === 'object' ? leg.content_id : undefined;
+  if (typeof v !== 'string') return null;
+  const t = v.trim();
+  return t === '' ? null : t;
+}
+
+/** THE CONTEXT A PURE DOCUMENT CHECK CAN HONESTLY SUPPLY, and it is a value
+ *  rather than an absent argument so the difference is visible at the call site.
+ *
+ *  `checkContentExtent` asks two questions only the STORE can answer — how many
+ *  pages this capture has, and whether any transcription chain covers it. A
+ *  catalogue run over one `bundle.md` knows neither, and an empty `{}` would let
+ *  it answer them WRONGLY: `ctx.chain` absent reads as "no chain recorded" and
+ *  would refuse every portion citation in the catalogue while the store admitted
+ *  it. That is not a stricter gate, it is two gates holding two answers — the
+ *  drift this file's one-function discipline exists to prevent.
+ *
+ *  So the document-only caller says `known: false` and the two record arms are
+ *  SKIPPED rather than guessed. The store keeps passing `{ chain, pageCount }`
+ *  and its behaviour is byte-for-byte what REC-82 landed. */
+export const CONTENT_EXTENT_DOCUMENT_ONLY = Object.freeze({ known: false, chain: null, pageCount: null });
 
 /** The CANONICAL form of an extent — the bytes the content address is taken
  *  over. Two members who mean the same passage must produce the same string or
@@ -9854,7 +10066,8 @@ export function checkContentExtent(extent, ctx = {}) {
        plane never recorded would pressure a member into citing the whole
        document instead, which claims MORE and not less. D-345 is the row that
        closes the gap by persisting I2's page count at acquire. */
-    if (Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
+    if (ctx.known !== false
+        && Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
       return refusal("CONTENT_EXTENT_OUT_OF_RANGE",
         `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the `
         + `extent names page ${e.page}`);
@@ -9944,7 +10157,14 @@ export function checkContentExtent(extent, ctx = {}) {
      make the one universally-legal citation illegal on every unread capture and
      would break every legacy leg's backfill. The over-strictness arm in the
      suite is exactly this case. */
-  if (e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))
+  /* REC-84: AND IT IS SKIPPED, NEVER GUESSED, FOR A CALLER THAT CANNOT SEE THE
+     RECORD. `CONTENT_EXTENT_DOCUMENT_ONLY` is that caller (the catalogue, over
+     one `bundle.md`); the store passes a real `{ chain, pageCount }` and this
+     arm is exactly what REC-82 landed. The same gate sits on the page-set arm
+     above, and both are the C-25.10 / C-25.16 split: a shape one document
+     answers, and a fact only the store holds. */
+  if (ctx.known !== false
+      && e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))
     return refusal("CONTENT_EXTENT_NO_CHAIN",
       `this record holds no extraction chain for the capture this leg cites, so there is no `
       + `transcription over ${describeExtent(e)} for the citation to point at`);

@@ -383,7 +383,8 @@ const FLOOR = {
      was — it measured 1527, the merge reads 1556. Thirteen floors collided and NOT ONE was
      resolvable by taking a side, which is what that item said when it filed the delegation. */
   /* D-309 2026-09-10: 17 -> 19. pristine tree printed 18, this item's 19 — so 1 of this move was PRE-EXISTING SLACK and 1 is D-309's. */
-  families: 19,    // + AI_RUNS_CONTEXT_CHECKS (REC-69, C-36 — the context-keyed run list).
+  /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): families 19 -> 20. PRISTINE `origin/main` at 9a713f1 printed 20, this item's tree 20 — so 1 of this move was PRE-EXISTING SLACK and 0 is REC-84's. */
+  families: 20,    // + AI_RUNS_CONTEXT_CHECKS (REC-69, C-36 — the context-keyed run list).
   /* ================================================================== *
    * TEN FLOORS AND ONE CEILING MOVED IN ONE TURN, 2026-08-09 by REC-79, EVERY
    * ONE FROM THE FIGURE THIS GUARD PRINTED ON A GREEN RUN of its own worktree.
@@ -404,7 +405,8 @@ const FLOOR = {
                           moved in the same turn — for the SECOND time, the first having been
                           dropped by the merge. */
   /* D-309 2026-09-10: 176 -> 185. pristine tree printed 184, this item's 185 — so 8 of this move was PRE-EXISTING SLACK and 1 is D-309's. */
-  rows: 185,    /* MOVED 174 -> 176, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), READ
+  /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): rows 185 -> 191. PRISTINE `origin/main` at 9a713f1 printed 189, this item's tree 191 — so 4 of this move was PRE-EXISTING SLACK and 2 is REC-84's. */
+  rows: 191,    /* MOVED 174 -> 176, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), READ
                           OFF THIS FILE'S OWN GREEN RUN and never by adding to the number that was here.
                           CASE-3 minted ONE row — PUBLISHED_CANNOT_MOVE_VERSION (C-25.34) in the
                           EXISTING VERSION_ACT_CHECKS, so `families` does not move: SK-1's rule that a
@@ -442,7 +444,9 @@ const FLOOR = {
                        // (PL-15) + C-29.1..9 (PL-11, all nine DRIVEN) + C-30.1..9 (PL-14).
                        // Was 163 at REC-76, 105 at PL-15, 81 at PL-4, 70 at PL-3.
   /* D-309 2026-09-10: 437 -> 465. pristine tree printed 465, this item's 465 — so 28 of this move was PRE-EXISTING SLACK and 0 is D-309's. */
-  census: 465,    /* MOVED 433 -> 437, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), from
+  /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): census 465 -> 472. PRISTINE `origin/main` at 9a713f1 printed 470, this item's tree 472 — so 5 of this move was PRE-EXISTING SLACK and 2 is REC-84's. */
+  /* RE-READ 2026-09-14 by REC-84 AFTER MERGING `origin/main` (commit 40f34e1): census 472 -> 474. The figure REC-84 set an hour earlier was true of its own branch and is not true of the merged tree — the merge with `origin/main` brought REC-83's content-grain reads, whose two new codes join the plane's census. Read off the merged tree's own green run, never incremented by hand. */
+  census: 474,    /* MOVED 433 -> 437, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), from
                           the figure this file PRINTED on a green run (`walk: UNION (the census) 437
                           codes over 27 files`) and never by adding to what was here.
                           **THREE OF THE FOUR ARE PRE-EXISTING SLACK AND ONE IS THIS ITEM'S.**
@@ -482,7 +486,8 @@ const FLOOR = {
                           and it is recorded here as a number rather than a principle so the next item
                           can see how little margin it takes to disarm the control. */
   /* D-309 2026-09-10: 229 -> 238. pristine tree printed 237, this item's 238 — so 8 of this move was PRE-EXISTING SLACK and 1 is D-309's. */
-  reach: 238,    /* MOVED 227 -> 229, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), from
+  /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): reach 238 -> 244. PRISTINE `origin/main` at 9a713f1 printed 242, this item's tree 244 — so 4 of this move was PRE-EXISTING SLACK and 2 is REC-84's. */
+  reach: 244,    /* MOVED 227 -> 229, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3), from
                           this file's own printed figure (`arm B: REACH 229 codes`) and never by
                           adding to what was here. ONE of the two is pre-existing slack (the tree
                           measured 228 against a floor of 227 with `bio-checks.mjs` reverted to HEAD)
@@ -507,7 +512,8 @@ const FLOOR = {
                        // move, which is the property a new family owes rather than the number itself.
                        // (Confirmed on this tree: 41 of 220, ceiling 41, sitting exactly at it.)
   /* D-309 2026-09-10: 69 -> 73. pristine tree printed 72, this item's 73 — so 3 of this move was PRE-EXISTING SLACK and 1 is D-309's. */
-  governedSites: 73,   // spans named by a row's `where` — a function, or a region inside one.
+  /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): governedSites 73 -> 75. PRISTINE `origin/main` at 9a713f1 printed 74, this item's tree 75 — so 1 of this move was PRE-EXISTING SLACK and 1 is REC-84's. */
+  governedSites: 75,   // spans named by a row's `where` — a function, or a region inside one.
                        // (was 60 pre-REC-76, 59 pre-REC-63, 28, 27, 25, 20, 17, 13, 9, 5)
                        // + REC-79's `fetch > is-admission` — THE FIRST GOVERNED SITE IN THE CONTROL
                        //   PLANE'S REQUEST PATH. Three index.mjs sites were governed before it, all
@@ -526,7 +532,8 @@ const FLOOR = {
                        // the gate yet), so this stays a COLLAPSE DETECTOR — its stated purpose, a
                        // parameter list read as a body — and `codesChecked` carries the ratchet.
   /* D-309 2026-09-10: 55 -> 59. pristine tree printed 58, this item's 59 — so 3 of this move was PRE-EXISTING SLACK and 1 is D-309's. */
-  regions: 59,    // + REC-69's `is-airuns-context` (ONE region, three codes, every one COMPARED —
+  /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): regions 59 -> 61. PRISTINE `origin/main` at 9a713f1 printed 60, this item's tree 61 — so 1 of this move was PRE-EXISTING SLACK and 1 is REC-84's. */
+  regions: 61,    // + REC-69's `is-airuns-context` (ONE region, three codes, every one COMPARED —
                        // eight judged refusals — `ROOT_OF_TRUST_REQUIRED` fires at two conditions
                        // inside the one span, which is what a region `where` can honestly hold).
                        // + REC-69's `is-airuns-context` (ONE region, three codes, every one COMPARED —
@@ -547,7 +554,8 @@ const FLOOR = {
                        // is-ai-task-scope, is-ai-scope-declaration), each COMPARING every code
                        // it judges (3/3, 2/2, 3/3, 2/2); 9 at PL-4, 6 at PL-3, 3 before.
   /* D-309 2026-09-10: 1556 -> 1657. pristine tree printed 1639, this item's 1657 — so 83 of this move was PRE-EXISTING SLACK and 18 is D-309's. */
-  regionLines: 1657,   /* MOVED 1407 -> 1425 BY REC-69'S REPLAY, 2026-08-09, RE-READ FROM A GREEN RUN
+  /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): regionLines 1657 -> 1745. PRISTINE `origin/main` at 9a713f1 printed 1713, this item's tree 1745 — so 56 of this move was PRE-EXISTING SLACK and 32 is REC-84's. */
+  regionLines: 1745,   /* MOVED 1407 -> 1425 BY REC-69'S REPLAY, 2026-08-09, RE-READ FROM A GREEN RUN
                           nothing else. **CONDUCT MUST RE-READ THIS FROM A GREEN RUN OF THE MERGED
                           TREE RATHER THAN TRUST THIS NUMBER** — it is a property of the MERGED source
                           and it has moved at integration FOUR times, most recently when REC-75 landed
@@ -649,7 +657,8 @@ const FLOOR = {
                        // is the tight half and this is the aggregate one; they fail for different
                        // reasons. (was 851, 724, 632, 45)
   /* D-309 2026-09-10: 152 -> 167. pristine tree printed 165, this item's 167 — so 13 of this move was PRE-EXISTING SLACK and 2 is D-309's. */
-  codesChecked: 167,   // + REC-69's THREE (C-36.1..3), all COMPARED: the region's `refusal` helper sits
+  /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): codesChecked 167 -> 177. PRISTINE `origin/main` at 9a713f1 printed 175, this item's tree 177 — so 8 of this move was PRE-EXISTING SLACK and 2 is REC-84's. */
+  codesChecked: 177,   // + REC-69's THREE (C-36.1..3), all COMPARED: the region's `refusal` helper sits
                        // refusals JUDGED, and not the same as lines read. Was 119 pre-REC-76 (and 118 on
                        // minted at two conditions in the span). Every code there is a STRING LITERAL
                        // at its site precisely so this number can move; `admissionRow` supplies the
@@ -694,7 +703,8 @@ const FLOOR = {
                        // teeth reached 5 of 13 sites, and that is a measurement, delegated to
                        // REC-64 rather than smoothed away.
   /* D-309 2026-09-10: 83 -> 84. pristine tree printed 84, this item's 84 — so 1 of this move was PRE-EXISTING SLACK and 0 is D-309's. */
-  outcomeReturns: 84,   /* REC-76 — THE CORPUS OF ARM C'S OUTCOME WALK: return-position object
+  /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): outcomeReturns 84 -> 86. PRISTINE `origin/main` at 9a713f1 printed 84, this item's tree 86 — so 0 of this move was PRE-EXISTING SLACK and 2 is REC-84's. */
+  outcomeReturns: 86,   /* REC-76 — THE CORPUS OF ARM C'S OUTCOME WALK: return-position object
                           separating: EIGHT are `is-admission`'s own outcomes, and ONE is a return the
                           walk could never see before — `suggestVersion > is-suggest-write`'s
                           `return remember({ ...promoted, … })`, at a site that has been governed since
@@ -710,7 +720,8 @@ const FLOOR = {
                           verdict rule does — and a headline assertion that PASSED OVER AN EMPTY
                           CORPUS is this project's most recent instrument defect. */
   /* D-309 2026-09-10: 156 -> 170. pristine tree printed 168, this item's 170 — so 12 of this move was PRE-EXISTING SLACK and 2 is D-309's. */
-  refusalsJudged: 170,   /* +3 by REC-69 (C-36.1..3 inside `is-airuns-context`), 2026-08-09, from the
+  /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): refusalsJudged 170 -> 180. PRISTINE `origin/main` at 9a713f1 printed 178, this item's tree 180 — so 8 of this move was PRE-EXISTING SLACK and 2 is REC-84's. */
+  refusalsJudged: 180,   /* +3 by REC-69 (C-36.1..3 inside `is-airuns-context`), 2026-08-09, from the
                           2026-08-09, from the printed figure on a green run.
 
                           +3 by REC-69 (C-36.1..3 inside `is-airuns-context`), 2026-08-09, from the
@@ -731,7 +742,9 @@ const FLOOR = {
   /* D-309 2026-09-10: 63 -> 64. pristine tree printed 64, this item's 64 — so 1 of this move was PRE-EXISTING SLACK and 0 is D-309's. */
   vocabularyTerms: 64, // + REC-69's TWO `RUN_CONTEXTS` terms (inquiry, project).
   /* D-309 2026-09-10: 248 -> 267. pristine tree printed 268, this item's 267 — so 20 of this move was PRE-EXISTING SLACK and -1 is D-309's. */
-  untranslated: 267,   /* MOVED 246 -> 248, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3),
+  /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): untranslated 267 -> 268. PRISTINE `origin/main` at 9a713f1 printed 268, this item's tree 268 — so 1 of this move was PRE-EXISTING SLACK and 0 is REC-84's. */
+  /* RE-READ 2026-09-14 by REC-84 AFTER MERGING `origin/main` (commit 40f34e1): untranslated 268 -> 270. The figure REC-84 set an hour earlier was true of its own branch and is not true of the merged tree — the same two codes from the merge; they are NOT in reach of a surface, so `reachGap` is unmoved at its ceiling of 40 and this figure and that one move independently, which is the partition arm's whole point. Read off the merged tree's own green run, never incremented by hand. */
+  untranslated: 270,   /* MOVED 246 -> 248, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3),
                           from arm F's own printed partition (F1=2 F2=1 F3=18 F4=94 F5=6 F6=127,
                           summing to 248). **ALL OF THIS MOVE IS PRE-EXISTING SLACK AND NONE OF IT IS
                           THIS ITEM'S** — the partition summed to 248 against a floor of 246 with

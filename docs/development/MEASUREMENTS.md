@@ -11240,6 +11240,84 @@ imports from it are the explicit named list at `store.mjs:253-255`, which does n
 regenerates at the next cut) or about the fleet members, none of which import `textchain.mjs`.
 
 
+## 2026-09-14 · REC-84, the basis leg's extent — the gate figures, and where the slack was
+
+Instruments: `npm run test:battery`, `node scripts/coverage.mjs --strict`,
+`node civicos-ui/test/run.mjs`, `node tools/plancheck.mjs --local`, all from the
+worktree `agent-ae95c3be71f5bd167`. Every exit status read UNPIPED.
+
+**The baseline was MEASURED AND THE BRIEF WAS RIGHT**, which is reported because
+the practice is to trust the measurement and not the streak: a pristine
+`git worktree add` of `origin/main` at `9a713f1`, with `npm ci` run in
+`bio-plane/`, `pdf-worker/` and `ocr-worker/` BEFORE anything was measured, read
+**188/188 suites green · 11,474 assertions · exit 0 · 212.9s**. The brief said
+"~188/188 · ~11,474". No stale figure found.
+
+**THE DEC-49 GUARD'S FLOORS WERE STALE BY MORE THAN THIS ITEM MOVED THEM, and
+the split is measured rather than asserted** — the pristine worktree above was
+used as the second tree, so the two figures are from two real runs and not from
+subtraction. `civicos-ui/check-refusal-codes.mjs`, floor / pristine `9a713f1` /
+REC-84's tree:
+
+| figure | floor | 9a713f1 | REC-84 | pre-existing slack | REC-84's |
+| --- | --- | --- | --- | --- | --- |
+| families | 19 | 20 | 20 | 1 | 0 |
+| rows | 185 | 189 | 191 | 4 | 2 |
+| census | 465 | 470 | 472 | 5 | 2 |
+| reach | 238 | 242 | 244 | 4 | 2 |
+| governedSites | 73 | 74 | 75 | 1 | 1 |
+| regions | 59 | 60 | 61 | 1 | 1 |
+| regionLines | 1657 | 1713 | 1745 | 56 | 32 |
+| codesChecked | 167 | 175 | 177 | 8 | 2 |
+| outcomeReturns | 84 | 84 | 86 | 0 | 2 |
+| refusalsJudged | 170 | 178 | 180 | 8 | 2 |
+| untranslated | 267 | 268 | 268 | 1 | 0 |
+
+Every figure but `outcomeReturns` was ALREADY above its floor before this item
+touched anything — REC-82 landed a whole DEC-49 family (`CONTENT_EXTENT_CHECKS`,
+four rows, one region) the same day and did not move them, which is the tax
+C-22's header names and the reason that header exists. `reachGap` is a CEILING
+and read **40 on BOTH trees**, unmoved: REC-84's two new codes arrive translated
+and never enter the gap. `bodyLines` is deliberately not ratcheted and is
+unmoved.
+
+**`REGISTER_FLOOR` in `bio-plane/scripts/coverage.mjs`** was `967 / 179 / 180`
+(arms / classified / corpus) — exactly what REC-82 set it to, no slack — and
+moves to the figures this item's own green `--strict` run printed as
+REPRODUCIBLE once its new suite was in the commit. The CONTAMINATED figures
+(`975 / 180 / 181` with one suite in no commit) were refused as a source, which
+is D-238's rule: a floor moved while a phantom is present is permanently too
+high and the gate then gets switched off.
+
+### RE-READ ON THE MERGED TREE, 2026-09-14 (REC-84 x REC-83/M0-28/COFF-10/M0-30, commit `40f34e1`)
+
+Every figure in the block above is TRUE OF REC-84's BRANCH and NOT of the tree
+anybody will merge, which is the receipt this repository has collected twice
+before (PL-11 and SK-1 each remeasured a whole floor block from its own tree,
+both were right where they stood, and both were wrong on the merge). Re-read
+from the merged tree's own green runs:
+
+| figure | branch | merged | why it moved |
+| --- | --- | --- | --- |
+| battery | 189/189 · 11,532 | **190/191 · 11,770** | +2 suites from main (`content-reads`, `formats-odf`); the one red is main's own, below |
+| `REGISTER_FLOOR` arms | 975 | **989** | +8 REC-84's `content-extent-leg`, +6 REC-83's `content-reads` |
+| `REGISTER_FLOOR` classified / corpus | 180 / 181 | **182 / 183** | one new suite each side |
+| guard `census` | 472 | **474** | REC-83's two new codes |
+| guard `untranslated` | 268 | **270** | the same two, and they are NOT in reach |
+| guard `reachGap` (CEILING) | 40 | **40** | unmoved on every tree measured |
+
+**BOTH SIDES OF THE `REGISTER_FLOOR` CONFLICT CARRIED 975/180/181 AND THE MERGED
+TRUTH IS 989/182/183.** That is the measurement that makes this file's standing
+instruction concrete: a keep-both here, or a take-either-side, installs 14 arms
+of slack in a ratchet whose whole purpose is to have none — and it would have
+looked correct to a reader comparing the two numbers, because they were equal.
+
+**ONE RED ON THE MERGED TREE IS NOT THIS ITEM'S AND IS MEASURED SO.**
+`mergecarry.test.mjs` names `cc8187d:bio-plane/scripts/coverage.mjs` as an
+unregistered drop in main's own history. Reproduced on a pristine
+`git worktree add` of `origin/main` holding none of REC-84's work: **57 pass / 1
+fail, exit 1, the identical path named.** D-335's class, and CONDUCT's to
+register.
 ## M-REC85 · 2026-09-14 — WHAT THE RECORD HOLDS OF A CONTAINER'S OWN EXTENT: NOTHING, MEASURED FOUR WAYS
 
 **Instrument and why it was run.** REC-85 landed the `sheet-cell`, `doc-para` and `slide-shape`

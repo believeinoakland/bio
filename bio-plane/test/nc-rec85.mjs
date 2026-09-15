@@ -188,8 +188,25 @@ const ARMS = {
        below, so this arm is verified rather than excused — an arm whose verdict
        is "it crashed" and nothing more would be indistinguishable from an arm
        that broke the harness. */
+    /* RE-CUT AT THE REC-84 MERGE, 2026-09-14, AND THE RE-CUT IS A FINDING RATHER
+       THAN A FIX. The third marker was `C-45.1` and came back MISSING — 2/3 —
+       on the merged tree, and the reason is worth more than the arm. Pre-merge,
+       a container refusal could only ever arrive at the STORE's gate, so it
+       carried the content family's own C-number. REC-84 added a CATALOGUE gate
+       that runs the same checker with `CONTENT_EXTENT_DOCUMENT_ONLY`, and this
+       arm — which makes an ABSENT container read as zero — therefore fires at
+       that gate too, where the leg grammar RELAYS the finding at C-2.8 while
+       carrying the content family's CODE through unchanged. Measured, not
+       reasoned: the crash reads `"check":"C-2.8" … "code":
+       "CONTENT_EXTENT_OUT_OF_RANGE"`.
+       So the C-NUMBER IS THE GATE and the CODE IS THE FACT, which is precisely
+       the distinction REC-84 paid four red assertions to establish, and it is
+       the CODE that "refused BY NAME" has always meant. Both are now asserted —
+       the code because it is the stable half, the C-number because pinning
+       which gate answered is worth having — and the finding is recorded here
+       rather than smoothed into a passing arm. */
     mustFail: [],
-    mustThrow: ["Error: promote INQ-2026-8500-cell", "C-45.1", "CONTENT_EXTENT_OUT_OF_RANGE"],
+    mustThrow: ["Error: promote INQ-2026-8500-cell", "CONTENT_EXTENT_OUT_OF_RANGE", "C-2.8"],
     mustPass: "every refusal arm above — the arm must break CORRECT WORK and nothing else, and here it breaks it so early the suite cannot reach its own foot",
     /* RE-ANCHORED after the three predicates were changed to answer a SENTENCE
        rather than a refusal — the code literal moved back inside the

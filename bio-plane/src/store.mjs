@@ -306,7 +306,7 @@ import { CASE_DERIVATION_CHECKS } from "../checks/bio-checks.mjs";
    "what part of a document does this leg mean" is D-164's own lesson arriving
    inside the construct that exists to close it. */
 import { CONTENT_EXTENT_CHECKS, checkContentExtent, legExtent, canonicalExtent,
-         describeExtent, contentIdFor } from "../checks/bio-checks.mjs";
+         describeExtent, contentIdFor, legContentId } from "../checks/bio-checks.mjs";
 
 /* D-309 / DEC-49, `src/airun.mjs`'s precedent exactly. THE CODE IS A STRING
    LITERAL AT ITS SITE and reaches the wire through here, because a code held in
@@ -9667,9 +9667,38 @@ export class Store extends DurableObject {
       const name = str(v.name);
       if (name === null) continue;
       const legs = [];
-      for (const l of legRows) {
+      for (let li = 0; li < legRows.length; li++) {
+        const l = legRows[li];
         if (!l || typeof l !== "object" || str(l.version) !== name) continue;
         legs.push({
+          /* REC-84: THE ROW'S INDEX IN `basis_version_legs[]`, carried so the
+             projection can look this leg up in the content plan `promote`
+             resolves over the RAW array. It is not a column and not part of the
+             composition — it is how the assembled view finds its own source row,
+             and deriving it a second time at the write would be two answers to
+             one question three hundred lines apart. */
+          src_ord: li,
+          /* REC-84 / IC-84 (1): WHAT THIS LEG RESTS ON, INSIDE the composition
+             the freeze compares — but emitted as its own line and ONLY when the
+             leg says something other than "the whole document".
+             BOTH HALVES ARE LOAD-BEARING. Inside, because narrowing a leg from
+             the whole document to one page changes what the reading rests on,
+             and a version whose referents could move in place would break the
+             one property a freeze exists to hold (C-25.11: two people comparing
+             a version must be comparing the same thing). Conditional, on PL-3's
+             `kind` precedent and for PL-3's exact reason: every version already
+             in the record was frozen against a composition with no such line, so
+             an unconditional one would change EVERY stored composition and make
+             the next promotion of any of them fail the freeze. An absent extent
+             and an explicit `extent_kind: document` are the same value (Bob's
+             5.3), so both emit nothing and one value still has one
+             representation. */
+          referent: (() => {
+            const cid = legContentId(l);
+            if (cid) return `id:${cid}`;
+            const ce = canonicalExtent(legExtent(l));
+            return ce === canonicalExtent({ kind: "document" }) ? null : ce;
+          })(),
           target_id: typeof l.target === "string" ? l.target : "",
           /* denormalised from the id prefix through the catalog's own map, so
              the walk never re-derives it — inquiry_basis' own discipline */
@@ -9712,6 +9741,12 @@ export class Store extends DurableObject {
         ...grounds.map((g) => `ground\t${c(g.ground)}\t${c(g.asserted_by)}\t${c(g.at)}\t${c(g.statement)}`),
         ...legs.map((l, k) => `leg\t${k}\t${c(l.target_id)}\t${c(l.target_type)}\t${c(l.role)}\t${c(l.grade)}\t`
                             + `${c(l.grade_axis)}\t${c(l.grade_source)}\t${c(l.note)}\t${c(l.at)}\t${c(l.ground)}`),
+        /* REC-84 — see `referent`'s own note above. Emitted AFTER the leg lines
+           rather than folded into them, which is the other half of keeping every
+           existing composition byte-identical: appending a field to the `leg`
+           line would move every stored composition whether or not any leg
+           carried a referent. */
+        ...legs.flatMap((l, k) => (l.referent === null ? [] : [`leg_referent\t${k}\t${c(l.referent)}`])),
       ].join("\n");
       out.push({
         name, ord: i,
@@ -9997,6 +10032,19 @@ export class Store extends DurableObject {
              ADDITIVE: an existing caller reading only check+detail is unaffected. */
           return { ok: false, reason: "BASIS_REFUSED",
                    findings: errs.map((x) => ({ check: x.check, detail: x.message,
+                                                /* REC-84 / DEC-49: A CODE ON A BASIS FINDING NOW TRAVELS
+                                                   WITH ITS CANNED TRANSLATION. `checkInquiryBasis`'s arms
+                                                   carried no code until the extent grammar joined it, and
+                                                   that grammar RELAYS the content-extent family's codes —
+                                                   which is what tells a member citing a web page (`dom`,
+                                                   refused by name) from one who mistyped a kind. Sending
+                                                   the code WITHOUT the translation is the exact condition
+                                                   DEC-49 ended, and `basisVersionFindings`' own mapping
+                                                   below paid for it once with `translation: undefined`
+                                                   reaching a member. Absent for every arm that carries no
+                                                   code, so nothing existing changes shape. */
+                                                ...(x.code ? { code: x.code,
+                                                               translation: CONTENT_EXTENT_CHECKS[x.code]?.translation } : {}),
                                                 ...(x.repairs ? { repairs: x.repairs } : {}) })) };
         /* REC-82 / IC-83: THE CONTENT EXTENT, refused at the write and BEFORE
            anything lands, on `checkInquiryBasis`'s own terms and inside its own
@@ -10017,49 +10065,13 @@ export class Store extends DurableObject {
            * would be a vocabulary split serving nothing. The C-45 code and its
            * canned translation travel WITH the finding (DEC-49), which is what
            * makes the refusal named to the member rather than merely numbered. */
-        const cerrs = [];
-        const plan0 = this.#contentPlanFor(basisLegs);
-        for (let i = 0; i < basisLegs.length; i++) {
-          const leg = basisLegs[i];
-          if (typeof leg.target !== "string") continue;   // already refused above
-          const p = plan0.get(i);
-          if (!p) continue;
-          if (!p.isInfo) {
-            /* An inquiry leg has no capture and therefore no part to point at.
-               Refusing a member for NOT naming one would be a fence on a rule
-               that does not exist; refusing one who DID name a part of an
-               inquiry is the honest half, because there is no such thing. */
-            const e0 = p.extent;
-            if (e0.kind !== "document")
-              cerrs.push({ check: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_UNREADABLE.check,
-                code: "CONTENT_EXTENT_UNREADABLE",
-                translation: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_UNREADABLE.translation,
-                detail: `basis[${i}] names extent '${String(e0.kind).slice(0, 40)}' on `
-                      + `'${leg.target}', which is an inquiry rather than a document. An inquiry `
-                      + `has no bytes and no pages, so there is no part of it to point at (DEC-21)` });
-            continue;
-          }
-          const sha = p.captureSha, ext = p.extent;
-          if (!sha) {
-            /* NO CAPTURE HELD. A `document` leg is still perfectly legal — it
-               names the document, which is what it always named — so it passes
-               and its content_id stays NULL, stated. A leg naming a PART of a
-               document this record holds no bytes of is refused, because the
-               part cannot be shown to exist. */
-            if (ext.kind !== "document")
-              cerrs.push({ check: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.check,
-                code: "CONTENT_EXTENT_NO_CHAIN",
-                translation: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.translation,
-                detail: `basis[${i}] cites ${describeExtent(ext)} of '${leg.target}', and this `
-                      + `record holds no capture of that document at all`
-                      + (typeof leg.extent_capture === "string" && leg.extent_capture.trim()
-                          ? ` under the capture the leg names (${leg.extent_capture.trim().slice(0, 16)}…)` : ``) });
-            continue;
-          }
-          const bad = checkContentExtent(ext, p.ctx);
-          if (bad) cerrs.push({ check: bad.check, code: bad.code, translation: bad.translation,
-                                detail: `basis[${i}]: ${bad.detail}` });
-        }
+        /* REC-84: THE LOOP THAT WAS HERE IS NOW `#contentLegRefusals`, because a
+           version's legs need the identical pass and two copies of "which parts
+           may this leg point at" is D-164's own finding arriving inside the
+           construct built to close it. The arms are REC-82's verbatim, plus the
+           two a NAMED content id can fail (C-45.5 / C-45.6). */
+        const cerrs = this.#contentLegRefusals(
+          basisLegs, this.#contentPlanFor(basisLegs), (i) => `basis[${i}]`);
         if (cerrs.length) return { ok: false, reason: "BASIS_REFUSED", findings: cerrs };
       }
       /* REC-18: an inquiry naming a SUBJECT ENTITY that does not resolve in this
@@ -10275,7 +10287,14 @@ export class Store extends DurableObject {
                                                     reaching a member, which is the exact condition
                                                     DEC-49 ended. Arm C could not see it because the code
                                                     is a variable here. */
-                                                 translation: (BASIS_VERSION_CHECKS[x.code] ?? SUGGEST_CHECKS[x.code])?.translation,
+                                                 /* REC-84 adds the THIRD registry, on the same terms and
+                                                    after the same measurement: a version leg's extent
+                                                    grammar relays a CONTENT_EXTENT code at C-25.10's
+                                                    number, and a lookup in two registries would send it
+                                                    out with `translation: undefined` — the condition this
+                                                    very line was written to end. */
+                                                 translation: (BASIS_VERSION_CHECKS[x.code] ?? SUGGEST_CHECKS[x.code]
+                                                               ?? CONTENT_EXTENT_CHECKS[x.code])?.translation,
                                                  ...(x.repairs ? { repairs: x.repairs } : {}) })) };
         const offered = Store.basisVersionsOf(docFmW);
         /* DEC-49 REGION basis-version-resolve
@@ -10316,6 +10335,27 @@ export class Store extends DurableObject {
           }
         }
         /* END DEC-49 REGION basis-version-resolve */
+        /* REC-84 / IC-84 (1) — THE VERSION LEGS' CONTENT REFUSALS, through the
+           SAME pass `basis[]` runs and over the SAME plan method, so the two
+           grains cannot come to hold two answers. No marker pair here: every
+           refusal this relays is MINTED in `checkContentExtent`'s own region or
+           in `#contentRowFor`'s, and a relay given its own region is the defect
+           PL-18 was failed by name for (a `DEC-49 REGION` no row's `where`
+           claims). It is run AFTER the resolve arm above, so a leg naming a
+           target the record does not hold is told that rather than being told
+           its extent cannot be evaluated.
+           NOT RUN ON REPLAY, and it is inside the `!pkg.replay` guard that says
+           so: history is append-only, so a version leg written under rules that
+           did not exist must still project. It projects with `content_id` NULL,
+           which is the honest reading. */
+        const vLegRows = Array.isArray(docFmW.basis_version_legs) ? docFmW.basis_version_legs : [];
+        if (vLegRows.length) {
+          const vplan = this.#contentPlanFor(vLegRows);
+          const verrs2 = this.#contentLegRefusals(vLegRows, vplan, (i) =>
+            `basis_version_legs[${i}] (version '${String(vLegRows[i]?.version ?? "").slice(0, 48)}')`);
+          if (verrs2.length)
+            return { ok: false, reason: "BASIS_VERSION_REFUSED", findings: verrs2 };
+        }
         /* DEC-49 REGION basis-version-freeze
          *
          * THE SPAN `BASIS_VERSION_CHECKS.VERSION_FROZEN`'s `where` NAMES (REC-71),
@@ -10587,23 +10627,42 @@ export class Store extends DurableObject {
              * would now refuse therefore mints nothing and projects NULL, which
              * is the honest reading of "this row was written under rules that
              * did not exist" — never a row minted retroactively for it. */
-          let legContentId = null, legCarried = false, legMinted = false;
+          /* REC-84 renamed this local from `legContentId`, which SHADOWED the
+             catalogue's `legContentId()` import inside this block — a function
+             this loop now has to call. The shadow parsed, ran, and would have
+             thrown `not a function` only on the path that reads an authored id;
+             renamed rather than aliased so there is one name for one thing. */
+          let legRowId = null, legCarried = false, legMinted = false;
           const cp = contentPlan.get(i);
           if (cp && cp.isInfo) {
             const ext = cp.extent;
-            const carried = priorContent.get(`${leg.target}\u0000${canonicalExtent(ext)}`);
-            if (carried) { legContentId = carried; legCarried = true; }
-            else if (cp.captureSha) {
-              const mint = this.mintContent({ bundleId: leg.target, captureSha: cp.captureSha,
-                extent: ext, mintedBy: "plane", at: meta.last_updated || null, ctx: cp.ctx });
-              if (mint.ok) { legContentId = mint.content_id; legMinted = mint.minted; }
+            /* REC-84 / IC-84 (1): A LEG THAT NAMES ITS ROW OUTRIGHT IS TAKEN AT
+               ITS WORD, and nothing is minted for it. The refusal arm above has
+               already established that the row EXISTS and is about this leg's
+               target (C-45.5 / C-45.6), so this is a FIND with the lookup
+               already paid for. It is checked before the carry-forward map on
+               purpose: naming an id IS the member's act of saying which part
+               this leg rests on, and carrying a prior referent over it would be
+               the record overriding an authored citation — the exact direction
+               Bob's 5.8 forbids, with the member's act present rather than
+               absent. */
+            const namedRow = legContentId(leg);
+            if (namedRow) { legRowId = namedRow; }
+            else {
+              const carried = priorContent.get(`${leg.target}\u0000${canonicalExtent(ext)}`);
+              if (carried) { legRowId = carried; legCarried = true; }
+              else if (cp.captureSha) {
+                const mint = this.mintContent({ bundleId: leg.target, captureSha: cp.captureSha,
+                  extent: ext, mintedBy: "plane", at: meta.last_updated || null, ctx: cp.ctx });
+                if (mint.ok) { legRowId = mint.content_id; legMinted = mint.minted; }
+              }
             }
             /* The ROW is not read here. `contentRow` is a read, and a read inside
                this loop is the amplification REC-66 / D-227's ratchet counts —
                it is what kept `promote` itself on that roster. The ids are
                collected and resolved in ONE set-based pass after the loop. */
-            if (legContentId)
-              contentProjected.push({ ord: i, target: leg.target, content_id: legContentId,
+            if (legRowId)
+              contentProjected.push({ ord: i, target: leg.target, content_id: legRowId,
                 extent_kind: ext.kind, minted: legMinted, carried: legCarried });
           }
           this.sql.exec(
@@ -10633,7 +10692,7 @@ export class Store extends DurableObject {
                the mint above — an inquiry leg, or an information object this
                record holds no bytes of. It is never a document-extent row
                invented to avoid the null. */
-            legContentId);
+            legRowId);
         }
       }
       /* REC-82: and the STANDING of each referent, resolved in ONE pass over the
@@ -10665,6 +10724,23 @@ export class Store extends DurableObject {
          rather than throwing inside the transaction. */
       this.sql.exec(`DELETE FROM inquiry_basis_version_legs WHERE bundle_id=?`, bundleId);
       this.sql.exec(`DELETE FROM inquiry_basis_versions WHERE bundle_id=?`, bundleId);
+      /* REC-84: THE VERSION LEGS' CONTENT PLAN, resolved ONCE for the whole
+         block and keyed by the row's index in `basis_version_legs[]` — the same
+         method, the same memoisation per target and per capture that
+         `inquiry_basis` uses, and for the same reason: a read per leg inside
+         this projection loop is the amplification REC-66 / D-227's ratchet
+         counts, and a version citing one document for four legs must pay for one
+         resolution rather than four. Hoisted out of the loop bodies below for
+         the reason recorded at `promote`'s prior-content read: a scan sitting in
+         a loop's header reads as a scan per row. */
+      const vLegRowsAll = isInquiry && docFmW && Array.isArray(docFmW.basis_version_legs)
+        ? docFmW.basis_version_legs : [];
+      const vPlan = vLegRowsAll.length ? this.#contentPlanFor(vLegRowsAll) : new Map();
+      const vLegNamed = new Map();
+      for (let li = 0; li < vLegRowsAll.length; li++) {
+        const nid = legContentId(vLegRowsAll[li]);
+        if (nid) vLegNamed.set(li, nid);
+      }
       if (isInquiry && docFmW) {
         for (const v of Store.basisVersionsOf(docFmW)) {
           this.sql.exec(
@@ -10691,12 +10767,63 @@ export class Store extends DurableObject {
           for (let k = 0; k < v.legs.length; k++) {
             const l = v.legs[k];
             if (!l.target_id) continue;   // replay of a malformed shape: unprojectable
+            /* REC-84 / IC-84 (2) — THE VERSION LEG'S REFERENT, and this is the
+               writer REC-82 deliberately did not land with the column.
+               `inquiry_basis_version_legs.content_id` arrived NULLABLE and
+               UNWRITTEN there, so that the column would arrive WITH its writer
+               rather than as a nullable column advertising a precision the
+               record never had (`basisVersionFindings`' own bound, corrected at
+               this landing).
+               *
+               * KEYED EXACTLY AS THE BASIS LEG IS, AND THROUGH THE SAME PLAN.
+               * `#contentPlanFor` resolved the capture and the context, and
+               * `mintContent` takes the content address — `hash(capture,
+               * canonical extent, chain)`, `INSERT OR IGNORE`. THERE IS NO
+               * SECOND ALLOCATOR AND THERE IS NOTHING TO DEDUP: a version leg
+               * and a `basis[]` leg citing one passage of one document get ONE
+               * row by construction, which is the whole property IC-83 rests on.
+               *
+               * NO CARRY-FORWARD MAP HERE, and the asymmetry with `inquiry_basis`
+               * above is deliberate rather than an omission. That map exists
+               * because a re-promotion re-projects an AUTHORED, LIVE citation and
+               * must not silently re-point it at a newer chain (Bob's 5.8). A
+               * version is FROZEN by C-25.11 — its composition, including the
+               * `leg_referent` line this item added, cannot change without a new
+               * version — so a re-promotion of the same version offers the same
+               * referent and the content address answers the same id. The one
+               * case where it would not is a RE-EXTRACTION moving the chain, and
+               * there the honest answer is the new row plus the old one marked
+               * `stale`, which is exactly what `mintContent` and
+               * `#markContentStale` already do.
+               *
+               * A REPLAY REACHES HERE WITH THE REFUSAL ARM SKIPPED, as every
+               * shape arm is: the record's own history must be holdable
+               * verbatim. `mintContent` still refuses on its own terms, and a
+               * refused mint projects NULL rather than a row minted
+               * retroactively for bytes written under rules that did not exist. */
+            let vContentId = null;
+            const vp = vPlan.get(l.src_ord);
+            if (vp && vp.isInfo) {
+              const namedId = vLegNamed.get(l.src_ord);
+              if (namedId) vContentId = namedId;
+              else if (vp.captureSha) {
+                const m = this.mintContent({ bundleId: l.target_id, captureSha: vp.captureSha,
+                  extent: vp.extent, mintedBy: "plane", at: meta.last_updated || null, ctx: vp.ctx });
+                if (m.ok) vContentId = m.content_id;
+              }
+            }
             this.sql.exec(
               `INSERT INTO inquiry_basis_version_legs
-                 (bundle_id,name,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+                 (bundle_id,name,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
               bundleId, v.name, k, l.target_id, l.target_type, l.role,
-              l.grade, l.grade_axis, l.grade_source, l.note, l.at, l.ground);
+              l.grade, l.grade_axis, l.grade_source, l.note, l.at, l.ground,
+              /* NULL is a first-class answer and it is three different facts,
+                 each stated rather than invented: the leg rests on an INQUIRY
+                 (no capture, no part — DEC-21); the record holds no bytes of the
+                 information object; or a replayed leg the plane would now refuse.
+                 It is never a document-extent row minted to avoid the null. */
+              vContentId);
           }
         }
       }
@@ -10987,7 +11114,29 @@ export class Store extends DurableObject {
            row still resolving and saying what it is. ADDITIVE: absent on a
            promotion with no content-bearing leg, and a caller reading only
            ok/bundleSha/rowVersion is unaffected. */
-        ...(contentProjected.length ? { content: contentProjected } : {}) };
+        ...(contentProjected.length ? { content: contentProjected } : {}),
+        /* REC-84 / IC-84 (2): THE SAME SURFACE FOR THE VERSION LEGS, on REC-82's
+           precedent above and for REC-82's stated reason — a column no op can
+           see is a mechanism believed on its existence. `op=basisversions` is
+           NOT extended: IC-84's text names `op=promote`, `op=earnedbasis`, the
+           `content` read and `op=attesttext`, and widening a surface the IC does
+           not name is an undeclared interface change wearing the costume of
+           completeness. The writer's own op is where the writer answers for
+           itself.
+           *
+           * READ BACK OUT OF THE TABLE AND NEVER ASSEMBLED FROM THE VARIABLE
+           * THAT WAS INSERTED, and that is the whole value of this array. Built
+           * from the local, it would agree with the INSERT for free and would
+           * stay green with the column dropped from the statement — the
+           * blind-by-construction assertion this repository has measured
+           * repeatedly, and exactly what the control arm "disable the writer and
+           * the suite must name the NULL column" would have failed to catch. One
+           * set-based read after the projection, never one per leg. */
+        ...(vLegRowsAll.length ? { version_content: this.#rows(
+          `SELECT name, ord, target_id, content_id FROM inquiry_basis_version_legs
+            WHERE bundle_id=? ORDER BY name, ord`, bundleId)
+          .map((r) => ({ version: r.name, ord: r.ord, target: r.target_id,
+                         content_id: r.content_id ?? null })) } : {}) };
     });
   }
 
@@ -11485,6 +11634,130 @@ export class Store extends DurableObject {
                     extent: legExtent(leg) });
     }
     return plan;
+  }
+
+  /** REC-84 / IC-84 (1) — THE ROW A LEG NAMES OUTRIGHT, RESOLVED OR REFUSED BY
+   *  NAME. `content_id` on a leg is the precise half of the extent grammar: the
+   *  descriptive half says "page 14 of this document" and the record finds or
+   *  mints the row, while this half names the row itself.
+   *
+   *  BOTH REFUSALS ARE FACTS ONLY THE STORE CAN ESTABLISH, which is why they are
+   *  here and not in the catalogue — the C-25.10 / C-25.16 split, one construct
+   *  along. The catalogue has already refused a malformed id and a leg naming
+   *  both an id and an extent; what is left is whether the record HOLDS the row
+   *  and whether the row is about the document this leg rests on.
+   *
+   *  THE CAPTURE IS DELIBERATELY NOT COMPARED. A member may legitimately name a
+   *  row minted against an EARLIER capture of the same document — that is the
+   *  whole of why a `stale` row still resolves and says so (Bob's 5.8: the
+   *  record never re-points an authored edge). Refusing it would be a fence
+   *  tighter than its rule, in the direction that refuses correct work.
+   *
+   *  Returns `{ ok: true, content_id }` or a DEC-49 refusal. */
+  #contentRowFor(contentId, targetId, label) {
+    /* DEC-49 REGION is-content-row
+     *
+     * THE SPAN `CONTENT_EXTENT_CHECKS.CONTENT_ROW_UNKNOWN`'s and
+     * `CONTENT_ROW_NOT_THIS_TARGET`'s `where` NAMES (REC-71), on the same terms
+     * as `basis-version-freeze` and `basis-version-resolve` in `promote`: a
+     * governed SITE rather than a governed FUNCTION. Every refusal between this
+     * marker and its END owes a code with a canned translation, and
+     * `civicos-ui/check-refusal-codes.mjs` arm C fails the harness on one that
+     * does not. The codes below are DOUBLE-QUOTED STRING LITERALS at their sites
+     * for exactly that reason — REC-82 paid for this once in this same family,
+     * where a `contentRefusal` helper spelled with single quotes made eight rows
+     * invisible to the guard. */
+    const id = typeof contentId === "string" ? contentId.trim() : "";
+    const row = this.#one(
+      `SELECT content_id, bundle_id, extent_kind, ref, stale FROM content WHERE content_id=?`, id);
+    if (!row)
+      return { ok: false, check: CONTENT_EXTENT_CHECKS.CONTENT_ROW_UNKNOWN.check,
+               code: "CONTENT_ROW_UNKNOWN",
+               translation: CONTENT_EXTENT_CHECKS.CONTENT_ROW_UNKNOWN.translation,
+               detail: `${label} names content_id '${id.slice(0, 16)}…', and this record holds no `
+                     + `such part. The id is an address taken over the document, the passage and `
+                     + `the transcription chain, so nothing can be found for one nothing minted` };
+    if (row.bundle_id !== targetId)
+      return { ok: false, check: CONTENT_EXTENT_CHECKS.CONTENT_ROW_NOT_THIS_TARGET.check,
+               code: "CONTENT_ROW_NOT_THIS_TARGET",
+               translation: CONTENT_EXTENT_CHECKS.CONTENT_ROW_NOT_THIS_TARGET.translation,
+               detail: `${label} rests on '${targetId}' and names a part of '${row.bundle_id}' `
+                     + `(${row.ref}): the leg and the part it points at are about two different `
+                     + `documents` };
+    /* END DEC-49 REGION is-content-row */
+    return { ok: true, content_id: row.content_id };
+  }
+
+  /** REC-84 — THE CONTENT REFUSALS OVER A SET OF LEGS, AT BOTH LEG GRAINS.
+   *
+   *  ONE PASS SERVES `basis[]` AND `basis_version_legs[]`, and that is the
+   *  item's own rule rather than tidiness: two copies of "which parts may this
+   *  leg point at" is D-164's own finding — the primitive built three times and
+   *  drifting — arriving inside the construct built to close it. The caller
+   *  supplies the legs, the plan `#contentPlanFor` already resolved for them,
+   *  and how to LABEL a leg; everything else is identical at both grains.
+   *
+   *  It returns findings and never throws, so the caller decides the envelope:
+   *  `BASIS_REFUSED` for `basis[]`, `BASIS_VERSION_REFUSED` for a version's.
+   *
+   *  THE ORDER IS THE CHECKER'S. A named row is resolved FIRST, because a leg
+   *  that names one has no extent to judge (the catalogue refuses both together);
+   *  then the target class, then the capture, then the extent. Every arm below
+   *  was REC-82's, moved here verbatim and re-labelled — the only new ones are
+   *  the two the named row can fail. */
+  #contentLegRefusals(legs, plan, label) {
+    const errs = [];
+    for (let i = 0; i < legs.length; i++) {
+      const leg = legs[i];
+      if (!leg || typeof leg.target !== "string") continue;   // already refused above
+      const p = plan.get(i);
+      if (!p) continue;
+      const named = legContentId(leg);
+      if (!p.isInfo) {
+        /* An inquiry leg has no capture and therefore no part to point at.
+           Refusing a member for NOT naming one would be a fence on a rule
+           that does not exist; refusing one who DID name a part of an
+           inquiry is the honest half, because there is no such thing.
+           REC-84: and naming one by id is the same act in the precise
+           spelling, so it meets the same refusal rather than a different one. */
+        const e0 = p.extent;
+        if (e0.kind !== "document" || named)
+          errs.push({ check: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_UNREADABLE.check,
+            code: "CONTENT_EXTENT_UNREADABLE",
+            translation: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_UNREADABLE.translation,
+            detail: `${label(i)} names ${named ? `content_id '${named.slice(0, 16)}…'` : `extent '${String(e0.kind).slice(0, 40)}'`} on `
+                  + `'${leg.target}', which is an inquiry rather than a document. An inquiry `
+                  + `has no bytes and no pages, so there is no part of it to point at (DEC-21)` });
+        continue;
+      }
+      if (named) {
+        const got = this.#contentRowFor(named, leg.target, label(i));
+        if (!got.ok) errs.push({ check: got.check, code: got.code,
+                                 translation: got.translation, detail: got.detail });
+        continue;
+      }
+      const sha = p.captureSha, ext = p.extent;
+      if (!sha) {
+        /* NO CAPTURE HELD. A `document` leg is still perfectly legal — it
+           names the document, which is what it always named — so it passes
+           and its content_id stays NULL, stated. A leg naming a PART of a
+           document this record holds no bytes of is refused, because the
+           part cannot be shown to exist. */
+        if (ext.kind !== "document")
+          errs.push({ check: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.check,
+            code: "CONTENT_EXTENT_NO_CHAIN",
+            translation: CONTENT_EXTENT_CHECKS.CONTENT_EXTENT_NO_CHAIN.translation,
+            detail: `${label(i)} cites ${describeExtent(ext)} of '${leg.target}', and this `
+                  + `record holds no capture of that document at all`
+                  + (typeof leg.extent_capture === "string" && leg.extent_capture.trim()
+                      ? ` under the capture the leg names (${leg.extent_capture.trim().slice(0, 16)}…)` : ``) });
+        continue;
+      }
+      const bad = checkContentExtent(ext, p.ctx);
+      if (bad) errs.push({ check: bad.check, code: bad.code, translation: bad.translation,
+                           detail: `${label(i)}: ${bad.detail}` });
+    }
+    return errs;
   }
 
   /** MINT OR FIND the content row a leg addresses, and return its id.
@@ -25106,7 +25379,12 @@ export class Store extends DurableObject {
        ...(l.grade_axis === null ? [] : [`    grade_axis: ${q(l.grade_axis)}`]),
        ...(l.grade_source === null ? [] : [`    grade_source: ${q(l.grade_source)}`]),
        ...(l.note === null ? [] : [`    note: ${q(l.note)}`]),
-       ...(l.date === null ? [] : [`    date: ${q(l.date)}`])].join("\n"));
+       ...(l.date === null ? [] : [`    date: ${q(l.date)}`]),
+       /* REC-84 — see `#suggestionPersisted`'s note. UNCONDITIONAL, unlike every
+          optional field above it: the run always cites whole documents, and a
+          line emitted only sometimes would make "the run said document" and "the
+          run said nothing" the same bytes again. */
+       `    extent_kind: ${q(l.extent_kind)}`].join("\n"));
 
     let text = Store.#appendFmRows(text0, "basis_versions", [vRow.join("\n")]);
     if (text !== null && gRows.length) text = Store.#appendFmRows(text, "basis_version_grounds", gRows);
@@ -25395,7 +25673,29 @@ export class Store extends DurableObject {
       legs: (legs || []).map((l) => ({
         target: fs(l?.target), role: fs(String(l?.role ?? "supports")),
         ground: opt(l?.ground), grade: opt(l?.grade), grade_axis: opt(l?.grade_axis),
-        grade_source: opt(l?.grade_source), note: opt(l?.note), date: opt(l?.date) })),
+        grade_source: opt(l?.grade_source), note: opt(l?.note), date: opt(l?.date),
+        /* REC-84 / IC-84, and IC-83's own SKILL answer: THE INVESTIGATIVE RUN'S
+           SUGGESTED LEGS ARE `document` LEGS, AND THE VALUE IS A LITERAL RATHER
+           THAN A PARAMETER. There is no path through this function that writes
+           any other extent — the same shape `state: "suggested"` takes at the
+           write below, and for the same reason: a fence expressed as the ABSENCE
+           OF A VARIABLE cannot be got round by a caller.
+           *
+           * WHY WRITE IT AT ALL, when an absent extent already MEANS `document`
+           * (Bob's 5.3, no `unstated`). Because "the run cited the whole
+           * document" is a fact about what the run did, and leaving it to a
+           * default makes a machine's scope indistinguishable from a legacy
+           * leg's silence. The run may honestly cite a whole document; it may
+           * not be read later as having chosen a portion, nor as having said
+           * nothing. Stated, it is checkable at the bytes.
+           *
+           * AND THE RUN MAY NOT NARROW IT. A machine naming a PORTION is the
+           * machine-mint act (Bob's 5.7), which is SK-7 with its own IC — not
+           * this item, and not something a caller reaches by adding a field to a
+           * request. When SK-7 lands, this literal becomes the place the
+           * assistant's own extent arrives, refused or minted through exactly
+           * the arms `basis[]` already runs. */
+        extent_kind: "document" })),
     };
   }
 
@@ -25421,7 +25721,14 @@ export class Store extends DurableObject {
       basis_version_legs: p.legs.map((l) => ({
         version: name, target: l.target, role: l.role, ground: l.ground,
         grade: l.grade, grade_axis: l.grade_axis,
-        grade_source: l.grade_source, note: l.note, date: l.date })),
+        grade_source: l.grade_source, note: l.note, date: l.date,
+        /* REC-84: carried so the candidate composition is computed over exactly
+           the shape the document will hold. An explicit `document` extent
+           contributes NO `leg_referent` line (it is the default value, one
+           representation for one value), so this leaves every stored
+           composition byte-identical — which is what the freeze needs and what
+           the over-strictness arm measures. */
+        extent_kind: l.extent_kind })),
     };
   }
 

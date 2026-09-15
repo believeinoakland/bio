@@ -4807,6 +4807,310 @@ found and did NOT touch, because it is in nobody's claimed path: the LAST LINE o
 without its `D-` prefix and with every backticked span stripped out — which is
 `printf`/`-m` damage in the shape CLAUDE.md's own trap section describes. `plancheck`
 passes over it. It is named here so it is not lost.
+## CLAIM 2026-09-14 M0 (M0-27 — the stale BODY sentences the four retrofits marked in front matter but could not correct, the D-106 class, prose only)
+
+Branch `worktree-agent-aa79a87a6668b92b0`, worktree-isolated, background lane. Eleven
+governed design documents under `docs/development/`, BODY prose and — where a front-matter
+claim is measured wrong — the front matter of the same file:
+
+- `docs/development/OFFICE-FORMATS.md`
+- `docs/development/SCHEDULER.md`
+- `docs/development/DOCUMENT-PROFILES.md`
+- `docs/development/RETRIEVAL-SUBSTRATE.md`
+- `docs/development/UI-PLAN.md`
+- `docs/development/UI-KICKOFF.md`
+- `docs/development/NOTIFICATIONS.md`
+- `docs/development/AUTHORITY-AND-TRUST.md`
+- `docs/development/ARCHIVE-FALLBACK.md`
+- `docs/development/SOURCE-ACCESS.md`
+- `docs/development/CAPTURE-FIDELITY.md`
+- `docs/DECIDED.md` — the GENERATED ruling index, regenerated with `node tools/decided.mjs`
+  because eleven ruling-bearing documents moved and `plancheck` fails on the drift
+  (`CLAIMS.md` is not a list of what was hand-written, it is a list of what was touched).
+
+Prose only, docs only. `docs/architecture/**` is NOT claimed and is not touched;
+`QUEUE.md`, `CLAUDE.md` and `DECISIONS.md` are not this claim's. **M0-28 is live on
+`tools/corpuscheck.mjs` and on the Status lines of `UI-PLAN.md`, `UI-KICKOFF.md` and
+`NOTIFICATIONS.md` (it reduces two `as of` dates to one); this claim touches those three
+files' BODY sentences and leaves their Status lines alone except to bump a trailing date
+that is lower than 2026-09-14, so the overlap is a trivial merge and is expected.**
+released: 2026-09-14, at the close of M0-27, on branch `worktree-agent-aa79a87a6668b92b0`.
+**WHAT LANDED.** Eleven stale BODY sentences corrected in place with the dated reason
+(2026-09-14, M0-27) in the framework's vocabulary, plus two the class sweep found in the
+same documents (`DOCUMENT-PROFILES.md` §Where this runs, and `SOURCE-ACCESS.md`'s own
+Incomplete bullet quoting the sentence it marked). **TEN Incomplete bullets removed**
+where the section was thereby complete — `OFFICE-FORMATS.md` §preamble,
+`DOCUMENT-PROFILES.md` §Where this runs, `RETRIEVAL-SUBSTRATE.md` §Serialization,
+`UI-PLAN.md` §Development is PAUSED, `UI-KICKOFF.md` §The first arc's deliverable,
+`AUTHORITY-AND-TRUST.md` §preamble, `ARCHIVE-FALLBACK.md` §preamble,
+`CAPTURE-FIDELITY.md` §Sizing, and BOTH of `SCHEDULER.md`'s count bullets (§The mechanism
+and §The test seam, its list going 4 -> 2) — and **THREE kept, deliberately**, because
+the section still describes an unbuilt mechanism: `DOCUMENT-PROFILES.md` §Known gaps
+(monitoring and `resolveLinks`' bracket still raw), `NOTIFICATIONS.md` §Applying a handler
+(`per-item` is [DESIGNED-not-built]) and `SOURCE-ACCESS.md` §the allowlist (egress
+diversity [ABSENT], D-120). The two `SCHEDULER.md` bullets are the only ones removed
+WITHOUT the section becoming complete in the ordinary sense: what they marked was a
+COUNT, and the count now lives in the corrected body as the COMMAND that reads it rather
+than as a figure a front-matter bullet has to chase.
+**TWO FRONT-MATTER CLAIMS MEASURED WRONG AND CORRECTED.** (1) `SCHEDULER.md` said the
+always-due claim was "true of two entries out of eleven"; measured from `#schedConsumers`
+on 2026-09-14 it is true of **FIVE** (`selection-sweep`, `task-drain`, `archive-monitor`,
+`connection-derive`, `overdue-scan`), and the corrected body now carries the two awk/grep
+commands rather than either figure. (2) `UI-PLAN.md`'s removed bullet said "fifty-seven UI
+items added capability"; measured, **53** UI rows read `done` of **56** distinct rows
+(UI-17 blocked — and its `### UI-17` heading occurs TWICE in `QUEUE.md`; UI-59 and UI-61
+queued). The wrong figure left with the bullet; the same figure still stands in the Status
+lines of `UI-PLAN.md` and `UI-KICKOFF.md`, WHICH THIS CLAIM DELIBERATELY DID NOT EDIT
+because M0-28 is live on exactly those lines — it is named as an act for CONDUCT in the
+report instead.
+**FIGURES.** `node tools/corpuscheck.mjs` **44 governed documents, 0 fail, exit 0**
+(unpiped), the same 44/0 as this branch's own baseline before any edit. `node
+tools/gates.mjs` from the repo root **GREEN · class DOCS**, 13 paths all prose under
+`docs/`, **exit 0** — doc-facing battery **19/19 suites green · 1,164 assertions · 53.1s**,
+four UI suites green, `plancheck --local` **0 fail 0 warn**. `bio-plane/npm ci` run first.
+**CONTROLS, run and recorded, 13 matchers + 2 arms + over-strictness.** A before/after
+harness proves each matcher ARMS against the pre-edit file from HEAD before it is believed
+against the tree (11 negative matchers 1->0, 2 positive 0->1 where the original text is
+kept as history under an appended correction): **13/13**. (1) One corrected sentence
+DELIBERATELY REVERTED — `CAPTURE-FIDELITY.md`'s "~40" cap — and the harness failed naming
+that file and no other, 1 of 13; restored by `cp`-back, sha256 `fda2d0e5…` and `cmp`
+identical at 5,626 B, harness back to 13/13. (2) corpuscheck's DATE ARM driven once on
+`ARCHIVE-FALLBACK.md`: Status `as of` set to 2026-09-13 behind the file's 2026-09-14
+commit day -> **exit 1, FAIL naming the file** ("the body moved and the front matter did
+not"); restored by `cp`-back, sha256 `627ce814…` and `cmp` identical at 16,337 B,
+corpuscheck back to 0 fail. **OVER-STRICTNESS: the 33 governed documents whose bodies
+already agreed with their front matter are UNTOUCHED and all pass** — `git status
+--porcelain` shows exactly the 11 claimed documents plus `CLAIMS.md` and `DECIDED.md`.
+**ONE INSTRUMENT FINDING, recorded rather than smoothed:** the `SOURCE-ACCESS.md` matcher
+armed **TWICE** on HEAD where 1 was declared, because the stale sentence sat in the body
+item AND was quoted verbatim in that file's own Incomplete bullet. The subject was right
+(both were corrected, tree=0); the DECLARATION was wrong, and it was only visible because
+the harness prints the armed count instead of asserting "non-zero".
+**NOTHING IS OWED TO A FUTURE ACTOR BY THIS LANDING.** The two items for CONDUCT are
+NOTICES stated as acts with their actor in the report: the two Status-line figures above,
+left to M0-28's pass, and `QUEUE.md`'s duplicated `### UI-17` heading.
+
+## CLAIM 2026-09-14 BOB (Part II §18 pieces 2–4 designed as three level-2 documents; the three homeless level-1 documents)
+session: BOB #11 (worktree `bio-worktrees/BOB`, branch `bob-audit`)
+opened: 2026-09-14
+authority: `kickoffs/BOB.md` ("What this session may write"); `BIO_Content_Framework_v0_10.md` Part II §18 (pieces 2, 3, 4 are the architect's); `BIO_System_Design.md` §3 (rows 11, 13, 15 carry no level-1 home); `CORPUS-STANDARD.md` §4.3 and §5
+paths:
+  - `docs/development/CONTENT-SEARCH-DESIGN.md` — NEW (piece 2)
+  - `docs/development/OBSERVATION-LOG-DESIGN.md` — NEW (piece 3)
+  - `docs/development/EXTRACTION-BREADTH-DESIGN.md` — NEW (piece 4)
+  - `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` — NEW (construct 11's home)
+  - `docs/architecture/BIO_Publication_v0_1.md` — NEW (construct 13's home)
+  - `docs/architecture/BIO_Distribution_v0_1.md` — NEW (construct 15's home)
+  - `docs/architecture/BIO_Content_Framework_v0_10.md` — Part II §18's table and front matter only (pointers to the designs)
+  - `docs/architecture/BIO_System_Design.md` — §3 rows 5, 9, 11, 13, 15 and the closing paragraph; front matter
+  - `docs/architecture/CORPUS-STANDARD.md` — §5's governed table, three rows
+  - `docs/architecture/README.md` — the catalogue entries for the three new level-1 documents
+  - `docs/development/DEBT.md` — appended design pointers on D-222, D-196, D-319, D-283 (text cells only; dispositions are CONDUCT's)
+  - `docs/development/MILESTONES.md` — one pointer sentence under M5
+  - `docs/development/QUEUE.md` — the BOB INBOX only (append)
+released:
+
+
+
+
+
+
+## CLAIM 2026-09-14 RECORD (REC-84 — the basis leg's `extent` in frontmatter, the C-2.8 / C-25.10 grammar arms, the version-leg `content_id` writer, and the suggested legs' `document` default)
+
+Session: RECORD worker for REC-84, spawned by CONDUCT #10, Opus 5.
+Worktree: `.claude/worktrees/agent-ae95c3be71f5bd167` · branch `worktree-agent-ae95c3be71f5bd167`.
+Contract: IC-84 (ACCEPTED 2026-09-14, I3 14.0.0 -> 14.1.0, CHANGING until REC-83 + REC-84 land),
+its (1) and (2); IC-83 as AMENDED at REC-82's landing.
+
+Paths claimed BY REGION, never whole files:
+
+- **`bio-plane/checks/bio-checks.mjs`** — (a) the C-45 family's header and
+  `CONTENT_EXTENT_CHECKS`, which gains three rows for the content-ROW refusals
+  (no new family: SK-1's rule that a family is a floor which buys slack for
+  everybody else's walk — `node tools/mintid.mjs C` was run and returned C-47,
+  which is therefore MINTED AND UNUSED, a gap that costs nothing); (b) the
+  grammar half of `checkContentExtent`, split out as `checkContentExtentGrammar`
+  so ONE implementation serves the pure catalogue and the store — the checker is
+  not duplicated; (c) `checkInquiryBasis`'s extent arm (C-2.8) and the
+  `content_id` shape arm; (d) `basisVersionFindings`' per-leg extent arm
+  (C-25.10). NOT `checkEarnedLeg` / `checkInheritedLeg`, NOT the earned-basis
+  reads (REC-83's).
+- **`bio-plane/src/store.mjs`** — (a) `checkInquiryBasis`'s grammar half as it is
+  consumed at `promote`'s content-extent refusal arm (REC-82's `cerrs` loop),
+  extended with the content-ROW arms; (b) the NEW private `#contentRowFor`
+  helper and its DEC-49 region `is-content-row`; (c) the VERSION-LEG WRITER —
+  `Store.basisVersionsOf`'s leg shape and `promote`'s
+  `INSERT INTO inquiry_basis_version_legs`, which gains `content_id`; (d) the
+  version-leg content refusal arm inside `promote`'s existing
+  `basis-version-resolve` neighbourhood; (e) `#suggestionPersisted` and the
+  suggest endpoint's `lRows` emitter (the investigative run's suggested legs).
+  **NOT** `earnedBasisRegistry`, **NOT** `ensureLegContent`'s call site, **NOT**
+  any new `content` read op, **NOT** the PLANNED ledger — all four are REC-83's,
+  live in parallel. **NOT** the capture/link/task/reachability functions
+  (CAPTURE's), **NOT** `formats.mjs` (COFF-10's), **NOT** `tools/plancheck.mjs`
+  (M0-30's).
+- **`bio-plane/src/index.mjs`** — ONLY if the op layer must route a new refusal
+  shape. Expected NOT to be needed (the refusals ride `op=promote`'s existing
+  `BASIS_REFUSED` / `BASIS_VERSION_REFUSED` envelopes); recorded at the close.
+- **`bio-plane/test/content-extent-leg.test.mjs`** (new) and
+  **`bio-plane/test/nc-rec84.mjs`** (new, the negative-control driver), with the
+  `NEGATIVE CONTROL:` declaration in the new suite. Existing suites only where an
+  assertion is SUPERSEDED, corrected with a dated reason and never exempted.
+- **`bio-plane/scripts/coverage.mjs`** — `REGISTER_FLOOR` only, ONE key set, moved
+  to the figures this item's own green `--strict` run PRINTED.
+- **`civicos-ui/check-refusal-codes.mjs`** — the `FLOOR` table only, and only the
+  keys this item's own green run reports as GROWN, each attributed between
+  pre-existing slack and this item.
+- **`bio-plane/dist/`** — rebuilt as FL-10 instructs (sources are bundled); nothing
+  bumped, nothing deployed.
+- **`docs/development/CLAIMS.md`** (this block), **`docs/development/DEBT.md`**,
+  **`docs/development/MEASUREMENTS.md`**, and **`docs/development/INTERFACE-CHANGES.md`**
+  only if the landing moves what IC-84 says.
+
+Concurrency, checked at the claim: REC-83 is live on `store.mjs`'s earned-basis
+reads, `ensureLegContent`'s call site and a new `content` read in `index.mjs`;
+COFF-10 on `formats.mjs`; M0-30 on `tools/plancheck.mjs`; CAP-7 on a script.
+Every one is disjoint from the regions above.
+
+released: 2026-09-14 by the REC-84 worker — landed on branch
+`worktree-agent-ae95c3be71f5bd167`, NOT pushed and NOT merged; CONDUCT
+integrates. IC-84's (1) and (2) are built. **The grammar:** a basis leg and a
+version leg may carry IC-1's union flattened onto the leg as `extent_kind`,
+`extent_page`, `extent_rect`, `extent_ref` (plus the three unlanded arms' fields,
+carried unread) — the restricted frontmatter grammar needed NO change and that is
+MEASURED through the real parser, not assumed — or may name an already-minted
+part outright as `content_id` (64 lowercase hex, the minter's own shape). ABSENT
+means the whole document and never `unstated` (Bob's 5.3), which is what keeps
+every leg already in the record promoting byte-identically. `checkLegExtentGrammar`
+is the ONE grammar function and it runs `checkContentExtent` — the ONE checker,
+one `covers` per arm — so nothing is re-implemented; `checkInquiryBasis` calls it
+at **C-2.8** and `basisVersionFindings` at **C-25.10**, the C-number read out of
+the map and never typed. The two arms only the record can answer (the page set,
+the chain) are SKIPPED for the pure catalogue through an explicit
+`CONTENT_EXTENT_DOCUMENT_ONLY` value, so the two gates cannot come to hold two
+answers. **Two new rows in the EXISTING C-45 family, no new family** (SK-1's rule
+that a family is a floor which buys slack for everybody else's walk): **C-45.5**
+a named content id whose row does not exist, **C-45.6** a row that addresses a
+different document — both refused BY NAME from the new DEC-49 region
+`src/store.mjs #contentRowFor > is-content-row`. A leg naming a PART of an inquiry
+is refused, by extent or by id. **The version-leg writer** fills
+`inquiry_basis_version_legs.content_id` through the SAME `#contentPlanFor` plan
+and the SAME `mintContent` address the live basis uses — mint-or-find, no second
+allocator, one row for one passage across both leg grains; the leg's referent
+joins the composition the freeze compares as a `leg_referent` line emitted ONLY
+when it is not the default, so every version already in the record composes
+byte-identically (PL-3's `kind` precedent, and the reason). **The suggested legs**
+state `extent_kind: "document"` in the emitted bytes, written as a LITERAL with no
+path for a caller to name a portion — that is SK-7's act, not this one's.
+**ONE SHAPE BEYOND IC-84's LISTED TEXT, named here rather than widened:** a basis
+leg's optional `content_id`. IC-84 (1) says "a content id whose row does not exist
+is refused", which presupposes a leg that can name one, and the row's own negative
+control requires it — but the FIELD is not in the IC's column of the grammar, so
+CONDUCT decides whether the IC's text is amended or read as already requiring it.
+`op=basisversions` was NOT widened to serve the column (see **D-350**), for the
+same reason: IC-84's text names `op=promote`, `op=earnedbasis`, the `content` read
+and `op=attesttext`, and a surface it does not name is not this item's to move.
+`op=promote`'s response gained an additive `version_content[]`, SELECTED BACK OUT
+OF THE TABLE — never assembled from the value the INSERT was handed, which is what
+lets the `vwriter` control arm see a dropped column at all.
+
+Gates on the final tree, every exit read UNPIPED: battery **189/189 · 11,532 · 0
+skipped, exit 0** (own baseline **188/188 · 11,474, exit 0** on a pristine
+`git worktree add` of `origin/main` at `9a713f1` with all three member installs —
+the brief's ~188/188 · ~11,474 was RIGHT and is reported as measured, not
+assumed); the +58 attributed PER SUITE by diffing two full runs —
+`content-extent-leg.test.mjs` +53 (new), `content-extent.test.mjs` +1,
+`hygiene.test.mjs` +3, `planning-hygiene.test.mjs` +1 (D-350's own row), summing
+exactly. `coverage.mjs --strict` **exit 0**, `REGISTER_FLOOR` moved to the
+REPRODUCIBLE figures this item's own green run printed (the CONTAMINATED figures
+were refused as a source — D-238). UI harness from the repo root **exit 0**, with
+**ELEVEN floors moved** in `civicos-ui/check-refusal-codes.mjs` from that run's
+print, each attributed between PRE-EXISTING SLACK and this item by re-running the
+guard on the pristine `9a713f1` worktree — ten of the eleven were already stale
+(REC-82 landed a whole DEC-49 family the same day and moved none), and the table
+is in `MEASUREMENTS.md`. `plancheck --local` 0 fail. `corpuscheck` 0 fail. FL-10
+fired on three sources and `dist/` was rebuilt exactly as its message instructs;
+nothing bumped, nothing deployed, no live instance touched.
+
+Eight control arms declared in `content-extent-leg.test.mjs`'s `NEGATIVE CONTROL:`
+line and run by `test/nc-rec84.mjs`; **all eight AS DECLARED on the final tree**,
+each armed ALONE, every patch matching exactly 1×, every restore verified
+byte-identically by sha256 AND `cmp` with the byte count printed. **Three findings
+recorded rather than smoothed.** (1) The `grammar` arm's first run read `-1/-1`
+because an assertion spelled `a[0].message` threw when the neutered function
+pushed nothing — REC-82's own shape one item later; the assertion is now null-safe
+and the arm reaches the foot, which is what proved the STORE's arms still stand
+behind the catalogue's. (2) `composeOf` first asked `op=basisversions` with
+`target=` instead of `id=`, so two over-strictness arms passed OVER AN EMPTY
+ANSWER — blind by construction, caught only because a sibling arm asked for the
+version by name; the helper now throws on an answer it did not get. (3) The
+`overstrict` arm necessarily refuses the fixtures and cannot reach the tally; that
+is DECLARED up front and graded separately rather than as a clean count.
+**Four suites went red on the first battery and every one was a real finding**,
+not flake: `content-extent` (REC-82's four assertions, SUPERSEDED by IC-84 moving
+the gate — CORRECTED with a dated reason and never exempted, and they now assert
+BOTH the rule that refused and the code it was refused by); `hygiene` (the new
+suite owed `stdio.mjs` and `sandbox.mjs`); `mintid` (a comment naming a freshly
+minted C id drove the live C floor off PROSE — the number was removed and the
+lesson written at the site); `versions` (a typed `C-25.10` literal in a call
+argument, where the map's own `.check` belongs).
+
+**NOTHING IS OWED TO A FUTURE ACTOR BY THIS NOTE.** The two acts this landing
+obliges are stated as ACTS with their actors in the report's "for CONDUCT" list
+and priced in **`DEBT.md` D-350** (RECORD: serve the version leg's referent on a
+read). **D-350** was minted with `tools/mintid.mjs` (floor D-345) and a C id was
+minted and deliberately left UNUSED — the number is not written into
+`bio-checks.mjs`, because that file IS the C namespace's corpus and naming an
+unallocated id there raises the floor off prose, measured red on this item's own
+first battery. Three regions CONDUCT should re-read on the merged tree:
+`REGISTER_FLOOR` in `bio-plane/scripts/coverage.mjs` (ONE key set — collapse any
+conflict and re-read the print), the eleven `FLOOR` keys in
+`civicos-ui/check-refusal-codes.mjs`, and the new DEC-49 region `is-content-row`
+in `src/store.mjs`, whose `regionLines` is a property of the MERGED source. The
+front matter of `BIO_Content_Framework_v0_10.md` was corrected in the landing
+commit as CLAUDE.md requires — the §14.5 and §18 bullets, which named REC-84 as
+still absent.
+
+
+## CLAIM ADDENDUM 2026-09-14 RECORD (REC-84 — the merge with `origin/main`, and the figures RE-READ on the merged tree)
+
+Appended rather than rewriting the release above, because that block's figures
+were TRUE OF THE BRANCH and the branch is no longer the tree anybody will merge.
+**`origin/main` moved onto this item's own ground while it ran** — REC-83 landed
+the content-grain READS (`cc8187d`), with M0-28, COFF-10 and M0-30 beside it —
+and both items had edited `src/store.mjs`, `test/content-extent.test.mjs`,
+`scripts/coverage.mjs`'s `REGISTER_FLOOR`, three planning documents and the
+content framework's front matter. The merge was therefore done HERE (`40f34e1`)
+rather than handed to CONDUCT blind, by a session that understands both halves of
+the content work. `src/store.mjs` and `test/content-extent.test.mjs` AUTO-MERGED
+and were verified by RUNNING the suites rather than by reading the diff.
+
+**THE CONFLICT WORTH READING IS `REGISTER_FLOOR`, and it is the six-times hazard
+in its most dangerous form: both sides carried the SAME three numbers
+(975/180/181) for entirely different reasons.** Taking either side unchanged
+would have looked right and been wrong, because on a merged tree the two items'
+arms ADD. Collapsed to ONE key set with both sides' notes kept, and the values
+re-read from the merged tree's own green run: **arms 989, classified 182, corpus
+183** (`GREW by 14`), the +14 being REC-84's `content-extent-leg` (8) and REC-83's
+`content-reads` (6), each a suite the other branch did not have. Two DEC-49 guard
+floors also moved again on the merged tree — `census` 472 -> 474 and
+`untranslated` 268 -> 270, both REC-83's codes; `reachGap` read 40, its ceiling,
+on every tree measured.
+
+Gates ON THE MERGED TREE, every exit read UNPIPED: battery **190/191 · 11,770**,
+`coverage.mjs --strict` **exit 0**, UI harness **exit 0**, the eight control arms
+re-run and **all eight AS DECLARED** with every restore byte-identical,
+`plancheck --local` clean.
+
+**THE ONE RED IS NOT THIS ITEM'S AND IS PROVEN SO RATHER THAN ASSERTED.**
+`mergecarry.test.mjs` fails naming ONE unregistered drop in main's own history —
+`cc8187d:bio-plane/scripts/coverage.mjs`, CONDUCT's merge of REC-83 taking one
+side of that same `REGISTER_FLOOR` whole. It was reproduced on a PRISTINE
+`git worktree add` of `origin/main` holding none of this item's work, where it
+fails identically (57 pass / 1 fail). It is **D-335's class exactly** — the row
+that says this instrument goes red only AFTER publication, on everyone's gate —
+and it fails for every checkout of main until the register row is written.
+**CONDUCT's act, named in the report's "for CONDUCT" list.**
 
 ## CLAIM 2026-09-14 RECORD (REC-85 — the other three `covers` arms: `sheet-cell`, `doc-para`, `slide-shape`)
 
