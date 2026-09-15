@@ -12370,3 +12370,267 @@ what it rests on are exactly the pair this project must not let drift. The funct
 letter once and interpolates it into its own sentence, the assertion reads the letter out of the
 reason, and the arm then failed all three as declared. **A surprising green is a finding about the
 arm; this one was a finding about the subject, which is the better outcome and the rarer one.**
+
+
+## M-20 · 2026-09-14 · M0-31 — SEARCH §5's FOUR NUMBERS, TAKEN: **text is 1,302 B per captured PDF page and 31,612 B per PDF document (means); indexing a text byte costs 1.998 stored bytes on workerd's SQLite; a promote costs 0.0076 ms per unit plus 0.054 ms per KiB, against a 257 ms per-invocation window** (worktree `agent-a942c3a55de100fb8`)
+
+The measurement `CONTENT-SEARCH-DESIGN.md` §5 names as the thing that must exist
+before the content-grain text index is built, and that §4.3's cap was PROVISIONAL
+until. **Nothing was built and no plane file moved**: `capture_text` and
+`capture_text_fts` still do not exist, and SEARCH §7 item 4 is the row that will
+create them. This is the measurement, and §4.3's two bounds are SET from it.
+
+**Instrument.** `tools/m031-index-measure.mjs` — five modes, node v26.5.0, darwin/arm64.
+
+    node tools/mintid.mjs M                                              # M-20
+    node tools/m031-index-measure.mjs control                            # 7 arms, 0 fail, exit 0
+    node tools/m031-index-measure.mjs text --pdf 1000 --budget-min 150   # the corpus walk, 2,769 s
+    node tools/m031-index-measure.mjs text --no-pdf --append --no-sample # the OOXML half re-walked, 581 s
+    node tools/m031-index-measure.mjs derive                             # every figure below, from the log, no network
+    node tools/m031-index-measure.mjs index --units 9000                 # figure 2, on workerd through miniflare
+    node tools/m031-index-measure.mjs cpu   --units 9000                 # figure 4, host-clocked, workerd-executed
+
+**IT DRIVES THE PLANE'S OWN EXTRACTORS AND REIMPLEMENTS NONE OF THEM**, reached the
+way `index.mjs` reaches them at its wire seam: `detectFormat(bytes, null)` →
+`getFormat(fmt)` → `entry.parts()` → `entry.text()` for an office container, and
+`entry.structure()` then — when `needsTier2` says so — the **pdf-worker's own `fetch`
+handler**, driven with an R2 stub that hands it the bytes, so the 16 MB envelope, the
+honest `over_envelope` decline and the tier-2 error path are the shipped ones. The one
+thing typed rather than imported is §4.1's DDL, because the table does not exist; that
+is marked at its site and is an ACT owed at item 4.
+
+**Corpus: COFF-6's census corpus, re-listed from the source.** `s3://cao-94612`
+answers public anonymous `ListObjectsV2` and needs no credential (CAP-7 established
+that at M-13; re-established here by the listing succeeding). **43,283 keys, 44 list
+requests — identical to CAP-7's read on the same day**, and +1 on COFF-6's 43,282.
+
+| half | what was read | census or sample |
+| --- | --- | --- |
+| OOXML | **762 / 762**, 1.29 GB | **CENSUS** |
+| PDF | **1,000 / 27,783**, 5.31 GB | **SAMPLE, 3.60 % by count** — M-13's OWN DRAW (the seeded `random.sample` is delegated to python3 with CAP-7's two lines and its seed 20260914, so this is the same 1,000 documents, not a second draw beside them) |
+| legacy OLE2 | **0 / 139** | NOT READ — no OLE2 reader exists here, COFF-6's recorded deferral |
+| everything else | 0 / 14,599 keys | not walked — images, csv, html, zip; not captured documents with an indexable unit arm |
+
+1,762 documents extracted, 6.60 GB streamed, zero fetch failures, peak disk one file.
+
+### 1 · Text bytes per captured PAGE, and per DOCUMENT
+
+| what | n | mean | p50 | p75 | p90 | p95 | p99 | max |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **`pdf-page` unit, every page** | **24,262** | **1,302** | 880 | 2,259 | 3,140 | 3,701 | 5,723 | **21,224** |
+| `pdf-page` unit, pages that recovered any text | 17,873 | 1,768 | 1,665 | 2,606 | 3,386 | 3,928 | 6,470 | 21,224 |
+| `doc-para` unit | 122,748 | 60 | 10 | 43 | 156 | 315 | 757 | 2,931 |
+| slide unit (§4.1 asks `slide-shape`; see the design gap below) | 1,403 | 329 | 250 | 476 | 717 | 886 | 1,559 | 2,329 |
+| **PDF document** | **1,000** | **31,612** | 6,780 | 21,208 | 72,284 | 138,111 | 396,328 | **1,354,686** |
+| docx document | 388 | 19,192 | 4,470 | 11,296 | 28,556 | 66,864 | 278,094 | 1,187,253 |
+| pptx document | 84 | 5,511 | 4,087 | 7,221 | 12,615 | 16,493 | 21,787 | 21,787 |
+| xlsx document | 288 | 252,262 | 13,513 | 185,244 | 587,544 | 1,827,025 | 3,090,957 | 5,103,594 |
+| `pdf-page` units per document | 1,000 | 24 | 5 | 18 | 55 | 89 | 271 | **1,181** |
+| `doc-para` units per document | 388 | 316 | 70 | 162 | 383 | 870 | 6,086 | **20,571** |
+| slide units per document | 84 | 17 | 15 | 24 | 32 | 41 | 67 | 67 |
+
+- **6,389 of 24,262 pages (26.3 %) recovered NO text at all** — scans and image-only
+  pages. They are indexed as NOTHING rather than as empty, which is the whole reason
+  §4.4's `scope` tally exists: an empty `passage:` answer over this corpus is a quarter
+  unindexed by construction.
+- **The largest single unit anywhere in 148,413 units is 21,224 B.** `TEXT_CAP`
+  (131,072 B) is **6.2×** it.
+- **288 workbooks hold 72,651,441 bytes of extracted text over 1,056 sheets and NOT
+  ONE indexable unit between them** — §4.1 gives a workbook no unit arm until
+  EXTRACTION-BREADTH §3.2's `sheet-range` lands. Stated, never scored zero.
+- Tier split over the 1,000 PDFs: **639 tier 2, 361 tier 1**. Undetermined markers by
+  name: `no_text_layer` 159, `no_tounicode` 113, `unmapped_code` 64,
+  `code_width_misaligned` 51, `over_envelope` 48, `over_size_bound` 18,
+  `cid_font_no_tounicode` 7, `tier2_extraction_error` 4. Notes: 44 PDFs
+  `tier2_declined_over_envelope`, 18 workbooks over the COFF-2 bound, 8 encrypted,
+  10 `objstm_undecodable`, 8 `content_stream_undecodable`.
+- **The extension census is NOT the format census, and this corpus proves it in both
+  directions.** By BYTES: `documents/2024_Living_Wage_Letter_to_City_Contractors.docx`
+  is a **PDF**, and `documents/Final_Impact_Fee_Zone-_-Revised-dlrv1_ACRP.xlsx` matches
+  **no registered signature at all** (format `undetermined`, nothing extracted, nothing
+  indexed, and that is the honest answer rather than a guess). One further file answers
+  `opc_main_part_unrecognized`. COFF-6 found the extension census trustworthy on its own
+  93-file sample; over the whole 762 it is not, in three documents.
+
+### 2 · Index bytes per text byte — on workerd's SQLite, FTS5 external-content at unit grain
+
+9,000 real units from 1,325 documents, 10,110,129 UTF-8 text bytes, mean unit 1,123 B.
+Three Durable Objects, the same bytes into each, so every cost is ISOLATED rather than
+inferred. Engine: workerd through miniflare `^4.20260722.0`, DDL quoted from §4.1.
+
+| what | bytes | per text byte |
+| --- | --- | --- |
+| the units' own text (UTF-8) | 10,110,129 | 1.000 |
+| `capture_text` base table alone, unit grain | 15,527,936 | 1.536 |
+| `capture_text_fts` index ALONE (the difference) | 4,669,440 | **0.462** |
+| **both — the stored cost of indexing a text byte** | **20,197,376** | **1.998** |
+| both, DOCUMENT grain (the same bytes as 1,325 rows) | 15,085,568 | 1.492 |
+
+- Empty schema on a fresh object: 16,384 B (base only), 32,768 B (with the FTS index).
+- Stored cost **2,244 B per unit** at this corpus's mean unit.
+- **The unit grain costs 568 B per unit** over indexing the same bytes at document
+  grain. That is the per-row price of a hit being an ADDRESS (§4.5) rather than a
+  document, and it is what option (iii) buys over option (ii) in §3.
+- **THE RATIO IS NOT SCALE-FREE.** Every row carries a 64-char sha, a canonical-JSON
+  extent, a ref and a chain kind whatever its text weighs, so a corpus of smaller units
+  has a larger ratio — measured at **5.49 over a 75 B mean unit** and **1.998 over a
+  1,123 B** one, on the same instrument in the same hour. The mean unit is the handle;
+  quoting 1.998 without it would be quoting a constant that is not one.
+
+### 3 · The storage curve
+
+D-190's marginal cost is **176,657 B per bundle** (`op=stats` → `dbBytes`), putting the
+vendor's 10 GB per object at ~60,800 bundles. The content index adds
+text × (1 + index ratio):
+
+- **31,612 B mean PDF text × 1.998 = 63,153 B per indexed PDF**, **+35.7 %** on the
+  existing per-bundle cost.
+- At that rate 10 GB holds **~41,700 indexed bundles** against ~60,800 unindexed. The
+  numerator is ours; the 10 GB is the vendor's.
+- D-190's own caveat still binds and is inherited here: its loaded point had an EMPTY
+  meaning layer, so 176,657 is a FLOOR on the cost and 41,700 an OVERSTATEMENT of
+  capacity.
+
+### 4 · Promote-time CPU per indexed unit
+
+**The clock is the HOST's, never the Worker's** — a Worker cannot time its own compute
+(`cpu.mjs`'s header; FL-1's fabrication gate refuses a self-timed reading), so every
+millisecond is measured outside workerd around a dispatch and the round-trip floor
+(0.99 ms) is measured and subtracted. `burn()` is imported from `cpu.mjs`, never retyped.
+
+| units in one promote | text bytes | ms | ms/unit | ref-iter/unit | % of the 40M window |
+| --- | --- | --- | --- | --- | --- |
+| 10 | 1,124 | 0.3 | 0.026 | 3,929 | 0.010 % |
+| 50 | 3,608 | 0.5 | 0.010 | 1,532 | 0.004 % |
+| 100 | 7,210 | 1.1 | 0.011 | 1,663 | 0.004 % |
+| 400 | 29,838 | 4.5 | 0.011 | 1,731 | 0.004 % |
+| 2,000 | 180,003 | 22.6 | 0.011 | 1,733 | 0.004 % |
+| 8,000 | 8,153,959 | 452.3 | 0.057 | 8,678 | 0.022 % |
+
+**ms/unit is not one number, and the ladder says so out loud**: it rises at 8,000 not
+because a row got dearer but because the sample's later units are PDF pages (~1 KB)
+where its early ones are OOXML first-paragraphs (~90 B). Two-point fit over the two
+largest rungs, stated as the two-point fit it is:
+
+    ms = 0.0076 x units  +  0.054 x KiB of text
+
+The measured per-invocation window is 40M reference iterations (`op=cpuprobe`,
+2026-07-29: 40M fit, killed during the next 2M), which at this run's workerd rate is
+**257 ms** of single-thread work. Against it:
+
+| the promote | units | text bytes | predicted ms | % of the window |
+| --- | --- | --- | --- | --- |
+| §4.1's worked example | 400 | 400 KB | 24 | 9.3 % |
+| **the corpus's worst docx** | **20,571** | 1,187,253 | **218** | **84.8 %** |
+| the corpus's worst PDF | 1,181 | 1,354,686 | 80 | 31.1 % |
+| a document at the 2 MiB per-capture bound, page grain | 1,000 | 2,097,152 | 117 | 45.7 % |
+
+**THE LARGEST PROMOTE THAT FITS is ~3,900 units at this corpus's mean unit size**, and
+the corpus's worst real document reaches 84.8 % of the window. §4.1 says "if the ceiling
+is near, the write is chunked across ticks the way `capture_sessions` already resumes."
+**The ceiling is near.** §4.1's own remedy is required rather than optional, and §4.1's
+four-hundred-unit example is not the case that decides it.
+
+### THE CALIBRATION DISAGREES WITH THE ONLY PUBLISHED ONE, AND IT IS REPORTED RATHER THAN SMOOTHED
+
+`cpu.mjs`'s `burn()`, **this machine, same process, same minute**: **25,032 iter/ms in
+node**, **155,538 iter/ms inside workerd** — a factor of **6.21**. CONTENT-PDF recorded
+**26,036 iter/ms** as a node proxy on 2026-08-03, which this run's node half
+**corroborates to within 4 %**; the disagreement is entirely between the two RUNTIMES,
+not between the two dates.
+
+- The workerd rate is the one used above, because the work being converted runs in
+  workerd. It is also the CONSERVATIVE choice: the faster the reference loop is judged
+  to be, the MORE reference iterations a given millisecond of promote is scored as
+  costing. At CONTENT-PDF's node rate the 400-unit promote reads 1.59 % of the ceiling
+  instead of 9.3 %.
+- **The reference-iteration currency is therefore NOT runtime-portable, and any figure
+  converted across runtimes in this file is a CPU-ORDER figure.** That bears on
+  CONTENT-PDF's OCR row, whose per-page costs are node-proxy milliseconds converted at
+  the node rate; **this measurement does not re-take that row and does not correct it.**
+  The act it names is for CONDUCT: re-pin the currency with `op=cpuprobe` on a DEPLOYED
+  Worker before any further figure is converted between runtimes.
+- This is miniflare-hosted workerd on one machine, warmed on both sides (5 reps, median;
+  a warm-up burn before the node half). Not a deployed-Worker reading.
+
+### WHAT THE INSTRUMENT CANNOT SEE, and this is the load-bearing paragraph
+
+- **The 26,783 PDFs NOT sampled** — 96.4 % of the PDF population by count. Every figure
+  headed "PDF" is a 3.60 % sample; the OOXML figures are a census.
+- **The 139 legacy OLE2 assets** — no reader exists here, so their text is not zero, it
+  is UNREAD.
+- **Any text a better engine would recover.** 26.3 % of pages returned nothing because
+  they are scans; tier 3 (OCR) is not in this walk at all, so every per-page and
+  per-document figure is a FLOOR that OCR raises.
+- **Any text past the pdf-worker's 16 MB envelope** — 44 PDFs in the sample declined
+  tier 2 on it, and 48 `over_envelope` markers were raised.
+- **Any text past COFF-2's 20 MiB declared-text-part bound** — 18 workbooks.
+- **Workbook units do not exist**, so no `sheet-range` figure could be taken and none is
+  reported.
+- **`slide-shape` units do not exist either** — see the design gap below; the slide-grain
+  figure is reported in its place and NAMED as a substitution.
+- **The index and promote figures are miniflare-hosted workerd on one machine**, not a
+  deployed Durable Object. What they measure is SQLite behaviour and V8 execution, which
+  is the same engine; what they cannot see is the platform's own accounting.
+- **A Durable Object cannot compact before reading its own size.** `PRAGMA
+  wal_checkpoint(TRUNCATE)` and `PRAGMA page_size` are BOTH refused inside a DO —
+  `not authorized: SQLITE_AUTH`, measured by this item — so `databaseSize` (free pages
+  included) is the only handle. It is the same surface D-190's 176,657 B/bundle was read
+  off, which is what makes the two comparable.
+
+### THE DESIGN GAP THIS MEASUREMENT FOUND — `slide-shape` cannot be written from I2
+
+`CONTENT-SEARCH-DESIGN.md` §4.1 names `slide-shape` as a deck's indexing unit and says
+the units come "from the I2 shape the acquire path already holds". **They do not.**
+`pptx.mjs`'s `pptxText()` emits `slides[]` — ONE text string per SLIDE — and
+`walkSlide()` keeps a live `shape` counter (its `SHAPE_TAGS` set) that it attaches to
+`hlinks` and then DISCARDS at the line where it pushes a finished paragraph. The shape
+index is in hand at the exact line the text is collected and is not recorded with it.
+
+Two consequences, and the second is the one a builder needs:
+
+1. A `capture_text` row at `slide-shape` grain cannot be written from I2 today. This
+   item measured the per-SLIDE unit and named the substitution rather than reporting a
+   `slide-shape` figure it could not take.
+2. `textchain.mjs`'s `readingSource()` REQUIRES both `slide` and `shape` for a
+   `slide-shape` reading position, while `covers()` accepts a shape-omitted extent as
+   covering the whole slide. **So a slide-grain unit is expressible as an EXTENT but not
+   as a reading POSITION**, and §4.1 does not say which of the two a `capture_text` row
+   must satisfy. Either `pptx.mjs` emits text per shape, or §4.1 adopts the slide as the
+   deck's unit and says so — it is a design ruling, not a coding choice.
+
+### NEGATIVE CONTROL — run 2026-09-14, `control`, 7 arms, 0 fail, exit 0 read unpiped
+
+Each arm ALONE, declared before arming. **The headline arm is the one this project has
+failed three times**: a figure that passes over an empty corpus.
+
+| arm | declared | actual |
+| --- | --- | --- |
+| EMPTY corpus (0 documents) → every headline figure | **REFUSED** | REFUSED |
+| 3 documents, all `FETCH_FAILED` → per-page figure | **REFUSED** (documents that produced no unit are an empty corpus wearing a count) | REFUSED |
+| OVER-STRICTNESS: ONE document, one page → measures | **n=1** | n=1 |
+| OVER-STRICTNESS: one 0-byte page among three real ones | **n=4** — a scanned page that recovered nothing is a DATUM | n=4 |
+| 3 pages, ALL 0 bytes → the pages-with-text figure | **REFUSED**, while the all-pages figure still measures | REFUSED |
+| the copied `needsTier2` vs `index.mjs`'s shipped one, comment-stripped | **MATCH** | MATCH |
+| BASELINE: a real 3-document corpus prints its figures | **n=3** | n=3 |
+
+The refusal is structural, not a promise: every derived figure passes through
+`floorOrRefuse()`, which throws with the corpus size printed. 24 refusals fired across
+the seven arms — more than the three declared, because a refused arm refuses each
+sub-figure it reaches. The floor is **1 and never 0**: a corpus of one is a measurement
+and says so; a corpus of none is not.
+
+### TWO INSTRUMENT DEFECTS THIS CORPUS FOUND, recorded rather than smoothed
+
+1. **`undetermined` markers do not all name themselves the same way.** The PDF markers
+   carry `reason`; `ooxml.mjs`'s `sizeGuard` carries `why` and no `reason` at all.
+   Reading only `reason` scored **18 over-the-bound workbooks as an undetermined with a
+   NULL name** — a thing the matcher did not understand, silently unnamed, which is
+   exactly the defect the sweep rule exists to catch. Found by reading the corpus's own
+   output, not by reasoning. Fixed in one function (`markerName`), and **the OOXML half
+   was re-walked** rather than the figure patched: the re-walk is a second 762/762
+   census, and `derive` keeps the LAST record per key and PRINTS the supersession count
+   so a reader can see that it happened.
+2. **The same note reported only the first of two true facts** about an over-the-bound
+   workbook — it has no unit arm AND it is over the bound, and reporting only the arm
+   would have hidden the bound from the table that needed it. Both are now carried.
