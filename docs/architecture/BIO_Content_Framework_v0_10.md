@@ -1735,7 +1735,7 @@ yet: it extracts no TABLE as a table and no IMAGE as content (§15), only the me
 reader mints a reference over its text, and — as for every other format — nothing an edge
 can point at is minted from the element references it emits.
 
-**Google Drive formats — not supported, and not yet measured.** Nothing in the record or the
+**Google Drive formats — not supported, and measured 2026-09-14.** Nothing in the record or the
 code names Google Docs, Sheets or Slides (grepped 2026-09-14). They are not file formats: a
 shared Drive link serves a client-rendered application shell whose bytes carry no document
 (Part I §6's UNWATCHABLE case), and the honest routes to the bytes are Google's export
@@ -1763,9 +1763,13 @@ those bytes. Building it is two acts on the format axis: the OpenDocument flavou
 container reader, and the three OpenDocument readers (`.ods`, `.odt`, `.odp` — one `content.xml`
 part each, smaller than their OOXML counterparts) producing the same I2 shape and evidentiary
 envelope; and one on the capture side: the Drive host-stack handler that recognises the address
-and acquires the export instead of the shell. CAP-7's count now sets priority, not whether. Whether it is
-worth building is a measurement: how many of the city's links point at Drive. That census has
-not been run; it is routed. OpenDocument (`.odt`, `.ods`, `.odp`) is designed for and
+and acquires the export instead of the shell. **CAP-7's count now sets priority, not whether, and it was taken on 2026-09-14 over the same
+city census the office bound rests on** (`MEASUREMENTS.md` M-13 carries the instrument, both
+commands and the blind spots): **50 Drive links — 22 distinct targets in 16 documents — 16 Docs,
+16 `/file/d/`, 12 Sheets, 6 other, and zero Slides, zero folders; every one of them inside a
+document's body, and not one of them an asset or a Legistar attachment in its own right**, a
+FLOOR rather than a ceiling because the PDF half of the corpus was read as a 1,000-of-27,783
+sample and a shortened link that resolves to Drive is not followed. OpenDocument (`.odt`, `.ods`, `.odp`) is designed for and
 deliberately not built: zero were found among 43,282 city assets.
 
 **The non-text path, in three tiers.** A PDF or an office container may need its text

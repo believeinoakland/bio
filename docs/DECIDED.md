@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-809 rulings across 73 documents.
+811 rulings across 73 documents.
 
 ## DEC-
 
@@ -377,7 +377,7 @@ authority is the file named, never this one.
 - **D-190** · 2026-08-08 — AMENDED INTO THIS CLAIM 2026-08-08, same session, before any handoff**) — the diagnostic that established two properties of the platform the item could not assume: that a Worker cannot fetch another Worker on this account's own `*.workers.dev` name, and that a fresh script is not attributable by name OR tag on the…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2546`
 - **D-194** · 2026-09-14 — RULED 2026-09-14: the observation is evidence, authored, grade D on the member's trust; its attribution in a published case is the attesting member's choice among the group, the project, the member's cover, or the member by name, and an off-the-record source's anonymity is valid — designed in Program B | the…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1875`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1879`
 - **D-197** — (g) HAD TO BE CORRECTED MID-RUN AND IS REPORTED, NOT SMOOTHED**: the first sweep-neutering arm stayed 46/46 GREEN because with all guards removed there is no `.answered` anywhere and a whole-file region equals a scoped one — it measured nothing.  
   `docs/archive/ledgers/QUEUE-2026-08.md:2109`
 - **D-206** — D-206 RIDER DECIDED IN FAVOUR OF CARRYING THE DISTINCTION:** an optional `code` on the finding plus a derived `tallyDetail` beside `tally`, with `tally` not moving by one byte and `tallyDetail` absent when nothing carried a code; reasoning recorded in the code at BOTH sites, and settled by CLAUDE.md itself —…  
@@ -922,6 +922,10 @@ authority is the file named, never this one.
   `docs/development/MILESTONES.md:147`
 - **CAP-4** — M2 · DECIDED, queued CAP-4 | | CAPTURE-SCALING open · freshness window, recurrence threshold | CAPTURE | M2 (measurement first) | | ARCHIVE-FALLBACK · per-document cadence by volatility | RECORD · CAPTURE | M1 | | ARCHIVE-FALLBACK · Memento rather than Wayback | RECORD | M6 |  
   `docs/development/MILESTONES.md:633`
+- **CAP-7** — `docs/DECIDED.md` — REGENERATED, never hand-edited (`node tools/decided.mjs`), because this landing moves it twice: this block's own closing line about whose call materiality is gets indexed as a CAP-7 entry, and Part II §16's Drive paragraph growing shifts D-194's cited line by +4.  
+  `docs/development/CLAIMS.md:4372`
+- **CAP-7** — MATERIALITY IS NOT RULED HERE and is CONDUCT's on the CAP-7 row.** Nothing was built: no handler, no host-stack entry, no schema.  
+  `docs/development/CLAIMS.md:4407`
 ## CPDF-
 
 - **CPDF-2** — CPDF-2 is SUPERSEDED** by Bob's function-specific Worker topology (I6).  
