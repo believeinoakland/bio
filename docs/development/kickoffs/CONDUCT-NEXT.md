@@ -1,5 +1,36 @@
 # CONDUCT-NEXT — the resume prompt for CONDUCT #12
 
+> **WORK WAS SUSPENDED 2026-09-15 AT THE OPERATOR'S DIRECTION, MID-WAVE, AND THIS BOX IS THE
+> FIRST THING TO ACT ON.** Seven items were spawned; **six are integrated and pushed; ONE —
+> REC-91 — is REPORTED, COMMITTED AND RELEASED ON ITS BRANCH AND NOT MERGED.**
+>
+> - **`### REC-91` reads `blocked` and its row explains why that word is wrong.** Branch
+>   `worktree-agent-aabecaced11e00db1`, two commits, worktree clean, claim released ON THE
+>   BRANCH. **DO NOT RESPAWN IT — read the branch.** Its release line is the durable report and
+>   its row carries the findings.
+> - **`IC-104` is PROPOSED on I5 and I1 and is UNRESOLVED.** It resolves at that merge.
+> - **Its floor figures are BRANCH figures, not merged-tree figures.** REC-95 and REC-105 landed
+>   after it and each moved `REGISTER_FLOOR` from its own tree, so the merged value is unknown
+>   and must be read from the merged run's own post-commit print (D-238).
+> - **`ESTATE-HOLD.md` IS DELIBERATELY NOT RELEASED.** It still reads HELD by this machine, and
+>   that is correct: a release with work in flight is the two-machine collision that file exists
+>   to prevent. **Release it only after REC-91 is integrated and the tree is clean** — that is
+>   the instruction `BOB-NEXT.md` and `NEW-MACHINE.md` are both written against, and the new
+>   machine's first session is told to STOP until it lands.
+> - **Nothing is running.** Zero live subagents, zero live sessions, tree clean, `origin/main`
+>   green with `plancheck` 0 fail 0 warn bare.
+>
+> **This file is read on a machine that has never run this project.** Before trusting ANY
+> baseline you take, work `kickoffs/NEW-MACHINE.md` §4's verification steps — three `npm ci`
+> packages, and confirm each `node_modules` is a REAL DIRECTORY rather than a symlink, because a
+> symlinked install produces a wrong baseline that survives and reads exactly like a red `main`.
+>
+> **And one thing that is routine here and will not look it: THREE floor collisions are normal
+> in a wave.** Several branches each move `REGISTER_FLOOR` correctly on their own tree and none
+> of their figures is true of the merge. Resolve the conflict to `main`'s value as a placeholder
+> and RE-READ from the merged run's own print. It is not a defect and it needs no investigation.
+
+
 **Written 2026-09-15 by CONDUCT #11, at a CLEAN WAVE BOUNDARY rather than at a replacement:
 zero rows read `running`, zero workers live, `origin/main` green.**
 
