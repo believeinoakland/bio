@@ -7576,3 +7576,30 @@ observation log, and the three pre-existing arms' own columns. No op is added an
 removed. `passage:` and `rows=passage` are §7 item 5's and are not here — this arm searches what
 has been CITED OR MARKED CITABLE, never the text of the documents, and the published `syntax`
 says so in as many words so a member cannot take one for the other.
+
+### RESOLUTION — 2026-09-15, CONDUCT #11 · ACCEPTED, I3 15.3.0 → **15.4.0**, ADDITIVE
+
+One arm, one row kind, three columns on an existing row kind, and one statement added to every
+answer. Nothing removed, renamed or re-typed, so MINOR by IC-25's rule.
+
+**THE INDEX DECISION IS PART OF THIS CONTRACT RATHER THAN AN IMPLEMENTATION NOTE, because a
+published filter a consumer may call is a promise about cost as well as about shape.** All six
+candidates ship indexed, and the measurement is in `MEASUREMENTS.md` **M-23** (filed as `M-21`
+and renumbered at integration — see the collision note there). Two figures are worth carrying
+here. One filter read **31.6 s unindexed against 9 ms** — REC-66's amplification class, not a
+percentage worth weighing. And **the measurement REVERSED ITSELF between corpus sizes**: one
+column read **+1.6% at 5,000 bundles and −48.5% at 20,000**, against a **measured 20.5% noise
+floor** taken from a query no index can help. That reversal is why two sizes were measured, and
+it is the reason a single-size index measurement should not be trusted in this store.
+
+**WHAT THIS RESOLUTION DOES NOT CLAIM, stated because the absence is load-bearing.** REC-36's
+withhold rule **cannot be staged for this arm at all**: the participant clause fences only
+`project` bundles and every content row hangs off an `information` bundle. That was MEASURED
+rather than asserted, so no assertion in the suite passes over an empty set — an arm that cannot
+be armed is named here instead of being reported green.
+
+**A DESIGN GAP TRAVELS WITH THIS CONTRACT AND IS ROWED AS REC-104:** the `chain` filter is a
+read-time JSON parse, while §4.1 gives `capture_text` a `chain_kind` COLUMN for the identical
+question and says why. Measured: it is the slowest filter on the table and the one query no index
+improved. It shipped as the parse because the mint path is outside the item's region, not because
+the parse is right.

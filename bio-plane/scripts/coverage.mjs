@@ -918,9 +918,16 @@ const REGISTER_FLOOR = {
      Adding the deltas would have produced 1074 and installed permanent slack in a ratchet
      whose entire purpose is to have none. The conflict was resolved to main's value as a
      PLACEHOLDER and re-read here from the print above. ONE KEY SET — grepped before writing. */
-  arms: 1075,
-  classified: 194,
-  corpus: 195,
+  /* MOVED 1075 -> 1082 · 194 -> 195 · 195 -> 196 at REC-90's INTEGRATION, 2026-09-15 by
+     CONDUCT #11, FROM THE MERGED RUN'S OWN POST-COMMIT PRINT — `arms 1082/1075 · classified
+     195/194 · corpus (suites read) 196/195 · GREW by 7 arm(s)`. Second move of the day and
+     the same rule both times (D-238): the figure is READ from the merged run, never computed
+     from a branch's. REC-90's own branch figure was 1066, taken correctly on its own tree and
+     already untrue of `origin/main` before the merge began — the conflict on this file was
+     resolved to main's value as a placeholder and re-read here. ONE KEY SET, grepped. */
+  arms: 1082,
+  classified: 195,
+  corpus: 196,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
