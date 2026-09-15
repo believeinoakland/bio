@@ -727,6 +727,13 @@ for CONDUCT to enact: UI-17 and REC-15 move to DEFERRED with this entry as the r
   small UI item for the S8 placeholder is added where UI-17 sat; REC-14/REC-22/UI-18 are
   unaffected. Kickoffs naming UI-17 as next-up must be corrected in the same pass.
 enacted: 2026-08-03 · CONDUCT — 5318b53: REC-15 and UI-17 moved to blocked with this ruling as the reason and Bob-reopens-the-thread as the trigger; UI-17a queued in UI-17's place (entry point stating what publication is, operator-run for now, Q12 narration); REC-14, REC-22 and UI-18 stay queued — they are not the process. No kickoff names UI-17 as next-up (checked). Reasoning in QUEUE.md (REC-15/UI-17/UI-17a).
+  RE-ENTRY CONDITION READ 2026-09-14 by BOB #11, at Bob's delegation, as the tactical call it
+  is: the first clause (UI-18 landed) is met; the second ("a group needs to publish without
+  its operator") is not, by measurement — the only instances the record names are the
+  project's own and the smoke instance, both operator-run. So the ceremony is designed
+  inside Program B when Bob turns to the member surfaces, and REC-15 / UI-17 reopen then or
+  when a sovereign group is installed, whichever comes first. No further ruling is needed;
+  folded into `BIO_Publication_v0_1.md` §5 and §9.
 
 ### DEC-39 · answered
 raised: 2026-08-04 · CONDUCT (lifted from REC-38's report)
@@ -1087,7 +1094,7 @@ recommendation: set the repo-local identity to the bio persona's address once Bo
   it; leave history alone.
 what reversing costs: nothing — a repo-local config is one line to set or unset.
 
-### DEC-74 · open
+### DEC-74 · answered
 raised: 2026-09-10 · CONDUCT #9 (CPDF-14's verdict at integration)
 for: bob
 question: CPDF-14 measured the composed shape (detect → crop → transcribe) and the
@@ -1116,3 +1123,17 @@ recommendation: run the tesseract runtime probe before funding anything — it i
   discipline (comparability guard, blank/noise controls) is reusable on it as-is.
 what reversing costs: funding later costs only the days waited; funding now and finding
   tesseract sufficed costs an external dependency the D-115 class exists to avoid.
+response: **NOT FUNDED — AND THE QUESTION IS NARROWER THAN RAISED.** Decided by BOB #11 at
+  Bob's delegation of 2026-09-14 ("low level issues you should figure out yourself"). Since
+  the item was raised its own recommendation was taken: CPDF-10 measured tesseract-wasm GO on
+  the deployed runtime and shipped it as the `ocr-worker` member at 0.58.0, chain
+  `pixels → ocr(tesseract-wasm 0.11.0)`, cap C (Part II §16). So image-only pages HAVE a
+  tier-3 text path, and the only question left is a tier ABOVE C — which nothing measured
+  needs: 13 image-only pages of 1,458, in two documents, and no case rests on them. The
+  external tier is reconsidered when an image-only document is LOAD-BEARING in a real case
+  and C is below that project's bar; that is a funding request with a document and a bar
+  attached, brought to Bob then — DEC-35's word still governs spending.
+decided: 2026-09-14 · BOB #11, delegated by Bob the same day
+enacted: 2026-09-14 · session BOB #11, same turn — nothing to build and nothing to fund: the
+  reasoning is folded into `docs/development/EXTRACTION-BREADTH-DESIGN.md` §6 and
+  `BIO_Content_Framework_v0_10.md` Part II §18 row 4; no row opens.

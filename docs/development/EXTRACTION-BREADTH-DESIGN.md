@@ -1,13 +1,13 @@
 # Extraction breadth — Part II §18 piece 4
 
-**Status** · v0.1 DRAFT design, written 2026-09-14 by session BOB #11 under Bob's standing delegation (mechanism is the architect's). Not yet reviewed by Bob. Complete as a design of five of piece 4's six parts — readers beyond three, tables and images as content, the extraction half of the AI EXTRACT role, read-time re-extraction to tier 3 (D-319), the per-page tier-2 rule (D-283); the sixth, the external OCR tier, is Bob's (DEC-74, open) and §6 records only what it would be and how its premise has narrowed since the item was raised. Every "as built" statement below is Part II §15–§16's, measured 2026-09-14 at the shas those sections name; nothing here re-measures the plane. as of 2026-09-14
+**Status** · v0.1 DRAFT design, written 2026-09-14 by session BOB #11 under Bob's standing delegation (mechanism is the architect's). Not yet reviewed by Bob. Complete as a design of five of piece 4's six parts — readers beyond three, tables and images as content, the extraction half of the AI EXTRACT role, read-time re-extraction to tier 3 (D-319), the per-page tier-2 rule (D-283); the sixth, the external OCR tier, is DEC-74, answered 2026-09-14 at Bob's delegation (not funded); §6 records the decision and the trigger that reopens it. Every "as built" statement below is Part II §15–§16's, measured 2026-09-14 at the shas those sections name; nothing here re-measures the plane. as of 2026-09-14
 
 **Place in the system** · Level 2. Serves construct 5 (the document profile and the extraction substrate — `BIO_Content_Framework_v0_10.md` Part I, approved 2026-07-30) and construct 4 (content, Part II). Depends on `OFFICE-FORMATS.md` (what the office axis extracts and does not), `DOCUMENT-PROFILES.md` (the recogniser engine and the content-type axis), `CONTENT-EXTENT-DESIGN-SPACE.md` §6 (the content row and IC-1's extent grammar this widens) and `OBSERVATION-LOG-DESIGN.md` §4.2 (the content-axis frontier that lists what is worth re-extracting). The AI EXTRACT role's whole design belongs to construct 11's level-1 document, `BIO_Assistant_and_AI_Roles_v0_1.md`; §4 here names only its extraction half. Supersedes nothing; it gives D-319 and D-283 their design and the two GESTURED rows of Part II §15 (tables, images) their extent.
 
 **Incomplete sections** ·
 - §2 — the order in which content types are written is set by a census count of document classes not yet taken; the argument for minutes first is stated and the count decides.
 - §3.3 — table recognition on a PDF page waits on an engine measurement (GO / NO-GO); no table reader on PDF is designed past the measurement.
-- §6 — the external OCR tier is DEC-74's; nothing is designed here beyond its premise.
+- §6 — the external OCR tier is not designed; DEC-74 is answered (not funded) and the section states only the trigger that would reopen it.
 
 **Contents**
 - [1. The frontier, as Part II measures it](#1-the-frontier-as-part-ii-measures-it)
@@ -21,7 +21,7 @@
 - [5. Read-time re-extraction, and the per-page rule](#5-read-time-re-extraction-and-the-per-page-rule)
   - [5.1 D-319: the tier-3 seam on the read path — opt-in, recorded, and listed](#51-d-319-the-tier-3-seam-on-the-read-path-opt-in-recorded-and-listed)
   - [5.2 D-283: the per-page rule for two decodes of one layer](#52-d-283-the-per-page-rule-for-two-decodes-of-one-layer)
-- [6. The external OCR tier — DEC-74, and how its premise has narrowed](#6-the-external-ocr-tier-dec-74-and-how-its-premise-has-narrowed)
+- [6. The external OCR tier — DEC-74, decided on its narrowed premise](#6-the-external-ocr-tier-dec-74-decided-on-its-narrowed-premise)
 - [7. The decomposition](#7-the-decomposition)
 - [8. Negative controls the discipline demands](#8-negative-controls-the-discipline-demands)
 
@@ -104,9 +104,9 @@ Tier 1 and tier 2 are both `layer` derivations of the same source under the same
 
 **Decided:** the winner is chosen PER PAGE — the decode with fewer undetermined characters on that page wins; a tie keeps tier 1 (fewer steps, the same cap, the same producer marker carried forward); the mixed-document chain the plane already composes (Part II §16, "The chain, composed as the path walks") records which tier produced each page, so the document's chain is honest about being a merge. **Measured first, not shipped first:** D-283 is stated as unmeasured because no fixture of partially-decodable PDFs exists; the item builds that fixture from the census sample (documents whose tier-1 reading carried undetermined pages), measures both decodes page-wise, and lands the rule behind the measurement with its negative control (a page tier 1 read well and tier 2 read worse is kept from tier 1).
 
-## 6. The external OCR tier — DEC-74, and how its premise has narrowed
+## 6. The external OCR tier — DEC-74, decided on its narrowed premise
 
-DEC-74 (open, for Bob, raised 2026-09-10) asked whether to fund an external OCR tier, direct the tesseract runtime probe first, or accept that image-only pages have no tier-3 path. Since it was raised, CPDF-10 delivered tesseract-wasm as the `ocr-worker` fleet member, GO on the deployed runtime, connected and taken on the project's own instance at 0.58.0 with a chain of `pixels → ocr(tesseract-wasm 0.11.0)` capped at C (Part II §16). So the recommendation the item carried — run the probe before funding anything — has been taken, and its second and third options are closed by measurement. **What remains for Bob is narrower than the entry says: whether to fund a tier ABOVE C for the image-only class** (13 of 1,458 censused pages, in two documents), which is his money and his product-priority call. Nothing is designed or rowed here; the item's text is updated to say so at the next BOB turn so he rules on the live question.
+DEC-74 (open, for Bob, raised 2026-09-10) asked whether to fund an external OCR tier, direct the tesseract runtime probe first, or accept that image-only pages have no tier-3 path. Since it was raised, CPDF-10 delivered tesseract-wasm as the `ocr-worker` fleet member, GO on the deployed runtime, connected and taken on the project's own instance at 0.58.0 with a chain of `pixels → ocr(tesseract-wasm 0.11.0)` capped at C (Part II §16). So the recommendation the item carried — run the probe before funding anything — has been taken, and its second and third options are closed by measurement. What remained was narrower than the entry said: whether to fund a tier ABOVE C for the image-only class (13 of 1,458 censused pages, in two documents). **DECIDED 2026-09-14 by BOB #11 at Bob's delegation: not funded.** The tesseract member at cap C is the tier-3 path; the external tier is reconsidered only when an image-only document is LOAD-BEARING in a real case and C is below that project's bar — a funding request with the document and the bar attached, brought to Bob then, since DEC-35's word still governs spending. Nothing is designed or rowed.
 
 ## 7. The decomposition
 
