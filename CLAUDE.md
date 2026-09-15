@@ -225,6 +225,22 @@ governor refusing is not the source failing. Two empty-body digests agreeing
 agree on nothing. A provenance hop a caller can hand us is one a caller can
 invent. All three are enforced structurally, not by convention.
 
+**THE AGREEMENT OF SEVERAL DOCUMENTS IS NOT EVIDENCE — IT IS USUALLY ONE SOURCE
+COPIED.** Found by CONDUCT #11 on 2026-09-15 after it was the day's repeated shape:
+**four premises stated confidently in several places at once turned out to be false**,
+and **three of the four were corrected by someone going to the ARTIFACT instead of
+re-reading the sentence.** A credential's presence asserted in three documents; a
+design resting on a debt row 38 days after the row's own remedy shipped; an inbox act
+held under a rule when the patch it asked for was already in the tree; and a tool
+described as not allocating a namespace it has allocated all along, because a true
+note about the tool's AUDIT half was widened into a false claim about its ALLOCATOR
+half. **This is the costs-nothing rule one level up: corroboration that cost nothing
+to produce is not corroboration**, and documents agreeing because one was copied from
+another agree on exactly as much as two digests of an empty body. So when a claim
+matters, **go to the thing it describes** — run the tool and read its own output, grep
+the code, probe the account — and treat a second document saying the same as a
+POINTER to where the claim came from rather than as a second witness.
+
 **A BLOCKER IS A CLAIM, AND NOTHING HERE AUDITS ONE.** Every instrument in this
 repository is pointed one way — at the record claiming more than it can support. The
 publication fence, undetermined-is-first-class, grade tracks directness, the
