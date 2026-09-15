@@ -795,6 +795,41 @@ worker then builds against a criterion that already knows how it could be faked.
 same economics as flipping a row before the spawn: **do the cheap thing while you are the one
 who knows.**
 
+## WHEN THE DISK FORCES YOUR HAND, PRUNE BY ANCESTRY AND KEEP A LIVE-LIST. "MERGED" AND "FINISHED WITH" ARE DIFFERENT PROPERTIES.
+
+**Written 2026-09-15 by CONDUCT #11 on BOB #11's point that the next session under disk pressure
+reaches for the same knife with less time to think.** Agent worktrees accumulate at roughly
+600 MB each — the three `npm ci` installs every worker is now told to do — and 71 of them held
+32 GiB while four workers were running batteries. **The volume reached 1 GiB free and workers
+started failing in ways that do not look like disk.**
+
+**THE CRITERION, and it is the whole safety of the act: remove only a worktree whose branch tip
+is an ANCESTOR OF `origin/main`.** Under that rule nothing unmerged can be lost, because the
+content is already on the remote. `git merge-base --is-ancestor <tip> origin/main` answers it
+per worktree. **Never prune by age, by name, by "looks finished", or by the worktree's own dirty
+state.**
+
+**AND THE CRITERION IS NOT SUFFICIENT ALONE — keep an explicit LIVE-LIST beside it.** A worker
+that has REPORTED but not yet been integrated is merged nowhere, and a worker still running is
+merged nowhere. **Both look identical to a tool that only asks about ancestry**, so the list is
+what distinguishes them, and it is built from `ListAgents` plus the rows you have not yet
+flipped. **Verify the keep-list SURVIVED afterwards** — list each kept worktree and print its
+HEAD — because a prune that removed the wrong tree is silent until a worker's next command.
+
+**Expect the rule to keep more than you want.** A branch merged and then rebased away by a later
+`git rebase origin/main` on `main` stops being an ancestor even though its content landed. That
+reads as unmerged and is kept. **That is the correct direction to be wrong in**, and it is not
+worth a cleverer test.
+
+**WHAT DISK PRESSURE ACTUALLY LOOKS LIKE, measured three ways in one wave, because none of them
+says "disk":** `npm ci` failing with `ENOSPC` and succeeding on a re-run; a pristine baseline
+that SYMLINKED `node_modules` rather than installing, so the bundler resolved through the
+symlink and one suite failed — **a symlinked baseline looks exactly like a red `main`**; and
+seven suites dying with `SQLITE_CANTOPEN` / `SQLITE_IOERR_SHMSIZE` mid-battery, **each passing
+alone on a re-run, and indistinguishable from real failures until somebody re-ran them.**
+**Capture `df -h` in the same breath as every gate**, so a red carries the one reading that
+tells these apart from the tree.
+
 ## KILL THE TREE, NOT THE LEAF — OR THE LEAF COMES BACK AND THE NEXT READER MEASURES A FRESH ORPHAN RATHER THAN A SURVIVOR.
 
 **Measured 2026-09-14 by CONDUCT #11, found 3.5 hours later by BOB #11, and recorded here

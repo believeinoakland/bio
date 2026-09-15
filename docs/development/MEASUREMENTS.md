@@ -13481,6 +13481,8 @@ and it is recorded so that a second sighting has something to be pinned against.
 unexplained observation that is smoothed away cannot be corroborated later; one that is recorded
 can be.**
 
+**A CANDIDATE MECHANISM ARRIVED LATER THE SAME DAY AND IS RECORDED AS A CANDIDATE, because it does not settle this and cannot.** BOB #11 proposed DISK: an `ENOSPC` inside a battery does not announce itself as a disk problem — it surfaces as a suite failing to write and clears on a re-run. **Three independent sightings of that family followed within the wave, none of them this red:** `npm ci` failing `ENOSPC` and succeeding on re-run (M0-38's worker); a pristine baseline that SYMLINKED `node_modules` at 154 MiB free, so the bundler resolved through the symlink and one suite failed, reading 204/205 — **a symlinked baseline looks exactly like a red `main`** (COFF-12's worker); and **seven baseline suites dying with `SQLITE_CANTOPEN` / `SQLITE_IOERR_SHMSIZE` at 100% disk, each passing ALONE on re-run and indistinguishable from real failures until somebody re-ran them** (REC-95's worker). **That is a mechanism with a demonstrated family in this estate, measured by three workers who were not looking for it. It is still NOT a confirmation of THIS red**, whose output is gone and which was a DOCS-profile run rather than a battery. Recorded at this strength and no higher. **The volume was 1 GiB free at the time; it is 21 GiB now, after 50 merged worktrees were pruned.**
+
 **THE LESSON THAT IS NOT UNDETERMINED: capture every gate run to a file.** The only reason this
 is undetermined is that the run was not redirected. BOB's eight reds are all explained because
 all 35 were captured. **The cost of capturing is one redirection; the cost of not capturing is
