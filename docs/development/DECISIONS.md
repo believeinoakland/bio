@@ -1138,7 +1138,7 @@ enacted: 2026-09-14 · session BOB #11, same turn — nothing to build and nothi
   reasoning is folded into `docs/development/EXTRACTION-BREADTH-DESIGN.md` §6 and
   `BIO_Content_Framework_v0_10.md` Part II §18 row 4; no row opens.
 
-### DEC-75 · open
+### DEC-75 · answered
 raised: 2026-09-14 · CONDUCT #11 (CAP-8's provisional at integration; `node tools/decided.mjs "conversion"` and `"direct fetch grade"` answer nothing — no ruling carrying a marker touches this)
 for: bob
 question: A Google Drive export is Google's CONVERSION of the document, performed at fetch
@@ -1162,3 +1162,29 @@ alternative: fold it into REC-88 (the fidelity bound on the capture axis, DEC-4 
   reading "conversion at fetch time" as a fidelity step with a cap, which reaches the same
   letter without a new capture-axis value — CONDUCT's recommendation if Bob wants no new
   vocabulary: it keeps "no third scale" literally true.
+response: **CAPTURE GRADE IS ABOUT THE FETCH PATH; A CONVERSION IS A DERIVATION STEP IN THE
+  CHAIN, AND THE RECORD ALREADY RULES HOW THOSE COMPOSE.** Decided by BOB #11 at Bob's
+  delegation of 2026-09-14 — the question is DEC-4 applied, not a new value. No third scale
+  and no new capture-axis letter: the hop stays `direct`, grade B (the bytes came from the
+  address the record reasons about, at that time, by our own fetch). What Google did to the
+  document is a TRANSFORMATION OF THE TEXT, and Part I's chain rules already say what a
+  transformation is worth: every derivation step weakens, and a step whose fidelity was never
+  measured has cap UNDETERMINED, stated, never a letter. So the export's chain carries a
+  `convert(google-export, <format>)` step ahead of `layer`, with cap undetermined; REC-88's
+  `captureBound` then bounds any leg on a Drive export by that weakest link — the leg claims
+  UNDETERMINED on the capture axis, stated, until the step is CALIBRATED (Part II §14.3's
+  content-axis staleness rule): a measurement of the export's TEXT stability and fidelity
+  across fetches, which D-351 already half-took (`.ods` `content.xml` byte-identical across
+  three exports; `.odt` differs by a style name). This claims LESS than CAP-8's provisional,
+  which is the direction CLAUDE.md prefers, and a calibration row raises it later without a
+  migration — the reverse (a letter now, lowered later under authored legs) is the move
+  Bob's 5.8 forbids.
+decided: 2026-09-14 · BOB #11, delegated by Bob the same day
+reasoning recorded in: this entry; folded into `BIO_Content_Framework_v0_10.md` Part II §16 (the
+  Drive paragraph) in the same commit.
+for CONDUCT to enact: the `convert(producer, format)` step kind on I2 (its own IC, minted at
+  spawn — FRAMEWORK dormant, answer-for), emitted by CAP-8's `driveHop` path ahead of `layer`
+  with cap null; REC-88's `captureBound` reads it as any other step (no code beyond the kind);
+  one measurement item — the export step's calibration over the census's Drive targets, text
+  stability and fidelity, recorded per format; D-351 keeps its own row (byte instability is a
+  trust-root problem, not a grade one). Nothing in CAP-8 as landed is undone.
