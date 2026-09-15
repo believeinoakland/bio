@@ -359,6 +359,23 @@ plan without running; `--full` forces everything. The full set, when it is owed:
 
 ## Traps that have already cost time
 
+**WHAT BELONGS HERE, AND WHEN AN ENTRY SHOULD LEAVE.** An entry earns its place when its
+**SYMPTOM IS DISTANT FROM ITS CAUSE and NO INSTRUMENT NAMES IT.** The distance takes three
+forms, and *exit 0* is NOT the common thread — that hypothesis was tested first and breaks on
+two entries that fail loudly. It is distance in **KIND** (the operation reports success while
+doing the wrong thing), in **LOCATION** (the failure surfaces where the cause is not), or in
+**TIME** (a stale number reads plausible for weeks because nobody re-measures). Verified over
+all nine entries by CONDUCT #11, 2026-09-15.
+
+**So this section has an EXIT CONDITION, which it has never had: the fix for an entry is to
+BUILD THE INSTRUMENT THAT NAMES IT**, after which the entry stops needing to be read and
+becomes a note beside a check. **A traps section is a list of defects the estate has not yet
+instrumented, and it should SHRINK.** The proof is already in it: the schema-table entry below
+is the one whose symptom points straight at its cause, and it is the one two suites assert BY
+NAME — `aicredential.test.mjs` and `bias.test.mjs` both check the ordering and cite this trap
+in the assertion text. That is the mechanism rather than a coincidence, and it makes that entry
+this section's first candidate for demotion to a note beside its check.
+
 - **BUILD A COMMIT MESSAGE WITH A HEREDOC (`git commit -F -`), NEVER WITH `printf`.**
   Backticks in `-m` are command-substituted and silently delete words (three times in
   one day, 2026-08-08). `printf` fails the same way one character over: a literal `%`
