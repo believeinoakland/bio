@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-816 rulings across 73 documents.
+819 rulings across 73 documents.
 
 ## DEC-
 
@@ -570,6 +570,8 @@ authority is the file named, never this one.
   `docs/architecture/BIO_System_Design.md:80`
 - **IC-83** · 2026-09-14 — CHANGING — IC-83 ACCEPTED 2026-09-14 (protocol step 4): the 1.10.0 shape keeps working; nothing NEW is built against the old or the new shape until REC-82 lands the table and writer; SETTLED (STABLE again) when REC-82 and REC-83 have landed and the two `content_id` columns are NOT NULL.  
   `docs/development/INTERFACES.md:666`
+- **IC-83** — (IC-83 ACCEPTED, AMENDED at REC-82's landing: `page_count` is a column; a leg naming a PART of an inquiry is refused and `content_id` is legitimately NULL for an inquiry target or a byteless target, STATED which).  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:79`
 - **IC-83** — The `content` table before `host_governor`, two indexes, in purge's TABLES (both arms); columns exactly IC-83's PLUS `page_count INTEGER` — required by IC-83's own Rules prose and absent from its column list (IC-83 AMENDED at this landing, the column recorded, not widened).  
   `docs/development/QUEUE.md:784`
 - **IC-84** · 2026-09-14 — One superseded leak-guard pin (`gate-reads.test.mjs`'s whole-key-set assertion on `op=list`) CORRECTED with a dated reason and two arms proving `limit` is viewer-independent while `total` is not — never exempted.  
@@ -802,6 +804,10 @@ authority is the file named, never this one.
   `docs/development/INTERFACE-CHANGES.md:6079`
 - **REC-83** — CHANGING now; SETTLED when REC-83 and REC-84 land and UI-61 confirms its migration.  
   `docs/development/INTERFACE-CHANGES.md:6123`
+- **REC-83** — SETTLED when REC-83 lands and the two `content_id` columns go NOT NULL — that NOT NULL move is NOT rowed yet; row it when REC-83 and REC-84 have landed and the backfill has run. - **I3 14.1.0 CHANGING** (IC-84 ACCEPTED).  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:81`
+- **REC-83** — SETTLED when REC-83 and REC-84 land and UI-61 confirms the composer emits `extent`. - **IC-86 (I2, FW-17)** — minted, the worker writes the PROPOSED text; RESOLUTION and the I2 bump are yours; FRAMEWORK is the owner and is active for this one item.  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:84`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -1541,8 +1547,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CAPTURE.md:239`
 - never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
   `docs/development/kickoffs/CAPTURE.md:281`
-- I chained `plancheck && commit && push` and pushed past a STALE DECIDED once (3289753) and past a red I could not read once** — the chain-that-cannot-check, the failure `CONDUCT.md` already names twice.  
-  `docs/development/kickoffs/CONDUCT-NEXT.md:96`
+- `docs/DECIDED.md` (`node tools/decided.mjs` — never hand-resolve it), take MAIN's side of `REGISTER_FLOOR` in `coverage.mjs` and declare it in the merge message with a `Dropped-from-branch:` trailer, REBUILD `bio-plane/dist/` (`npm run build` in `bio-plane/`) whenever a bundled source or the bundle manifest…  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:59`
 - **2026-07-31** — CORRECTED 2026-07-31 by session BOB: item (3) of the plan below is SUPERSEDED by the function-specific Worker topology decision.  
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
