@@ -891,9 +891,13 @@ const REGISTER_FLOOR = {
      192/191 · GREW by 7 arm(s)` - CPDF-20's tier-pagewise suite on top of REC-93's 1044. The branch's
      own block (1022/187/188) was dropped at the merge and declared; its worker named the collision
      itself and said not to add the two deltas, which is the rule. One key set. Nothing FELL. */
-  arms: 1051,
-  classified: 191,
-  corpus: 192,
+  /* MOVED 2026-09-14 by CONDUCT #11 at SK-8's integration (1051 -> 1059 · 191 -> 192 · 192 -> 193):
+     the MERGED run's own print read `arms 1059/1051 · classified 192/191 · corpus (suites read)
+     193/192 · GREW by 8 arm(s)` - SK-8's extractrun suite on top of CPDF-20's 1051. The branch's own
+     block (1029/188/189) was dropped at the merge and declared. One key set. Nothing FELL. */
+  arms: 1059,
+  classified: 192,
+  corpus: 193,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

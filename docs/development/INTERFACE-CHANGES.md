@@ -6899,6 +6899,16 @@ rectangle — UI-61's own second finding). It is a DELEGATION to UI in `CLAIMS.m
 So IC-84's SETTLED, which CONDUCT writes, rests on this landing **plus** that UI item —
 and the honest sentence today is *the act carries it, the surface does not yet send it*.
 
+### RESOLUTION — ACCEPTED, **I3 15.0.0 → 15.1.0**, MINOR, 2026-09-14 by CONDUCT #11 — **recorded LATE, and the lateness is recorded with it**
+
+ADDITIVE, as proposed: `op=cite` accepts the flattened extent scalars or a `content_id` as a BAG beside its seven parameters and splices them onto the leg it writes, routing the composed leg through REC-84's ONE grammar checker rather than owning a second; a field the act does not carry is REFUSED BY NAME, which is the whole point — **the defect this closes was a SILENT DROP, and a control whose value is silently discarded is worse than an absent one.** Four refusals in the existing C-45 family, no new C id. Measured consumer census: one production caller (`app.html`), zero in `agent-worker`.
+
+**THE LATENESS IS PART OF THE RECORD.** REC-97's row was flipped `done` and its landing pushed before this RESOLUTION was written, so `origin/main` carried the built change for several commits while the registry still read 15.0.0 — and what caught it was not a gate but **the version line's own GAP**: writing IC-93's bump produced 15.0.0 → 15.2.0, and a missing 15.1.0 in a sequence is visible in a way a missing paragraph is not. That is worth more than the correction: **an IC resolution is owed in the SAME turn as the row flip that reports its landing**, because the row says the change is in the tree and the registry is what a consumer reads to know it. Nothing was built on the wrong number in between — the item's own consumer is UI, which sends no extent yet.
+
+**RESPONSES, recorded by CONDUCT #11:** `UI` AGREE with an act owed and named — the composer STATES the whole-document default today and does not yet emit an extent, because the picker needs a page CANVAS `app.html` does not have (NOT persistence: `page_count` is the stored page set, landed by CAP-9, and saying otherwise would be a blocker stated too wide). `SKILL` NOT-AFFECTED, answered FOR by CONDUCT — the assistant's productions mint through `op=contentmint`, not through the citation act. `RECORD` AGREE (owner).
+
+**IC-84 therefore stays CHANGING and is NOT settled by this**, which is the honest reading of its own RESOLUTION: that text records UI as answering *"the composer emits `extent` per leg"*, and the act now CAN carry one while the surface still sends none. SETTLED when UI-62 or a successor emits an extent from the composer end to end; CONDUCT writes it then.
+
 ## IC-92 · I5: THE OBSERVATION LOG — one `observations` table every level writes to, and `ai_run_log` FOLDS INTO IT · PROPOSED 2026-09-14 (REC-93, building `OBSERVATION-LOG-DESIGN.md` §8 row 1) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I5 (the store schema), currently **1.12.0 STABLE** (1.12.0 came from IC-86's resolution, FW-17, the same day)
@@ -7131,3 +7141,13 @@ not urgent and why SK-8 did not reach into another area's vocabulary to fix it. 
 **DESIGN GAP** against `textchain.mjs`'s `STEP_KINDS` and is CONDUCT's to route: either the label
 widens to cover a model that READ rather than rewrote, or the `ai` kind splits, and both are I2
 decisions.
+
+### RESOLUTION — ACCEPTED, **I3 15.1.0 → 15.2.0** and **I5 1.14.0 → 1.15.0**, both MINOR, 2026-09-14 by CONDUCT #11
+
+ADDITIVE on both, as proposed and as the registry's own rule scores it: two new ops and one new table, with no existing column touched and no existing answer reshaped — a consumer that calls neither op sees the versions it saw before. **I2 IS NOT CHANGED AND IS CONFIRMED INSTEAD**, which is the part worth stating rather than passing over: the `ai(function, version)` step has been in I2's chain grammar since CPDF-10 and carried by every version since, and this item is its FIRST PRODUCER — so what the registry records is a producer arriving for a shape that was already contracted, not a shape changing. **A confirmation is not a bump**, and recording it as one would teach the registry that the contract moved when only the world did.
+
+**RESPONSES, recorded by CONDUCT #11 at integration:** `SKILL` AGREE (owner and proposer). `RECORD` AGREE — the run, its bounds table and the content rows the productions mint are its ground, and its own totality guards fired ten times on this item and were answered at their sites. `FRAMEWORK` NOT-AFFECTED as an interface owner and answered FOR by CONDUCT in writing: I2 is confirmed, not changed. `UI` NOT-AFFECTED, answered FOR by CONDUCT — no surface renders a proposal yet, and the member-facing surface on which a run is requested and its productions reviewed is Program B's by §7.3 (7).
+
+**ONE THING THIS RESOLUTION FIXES RATHER THAN RECORDS, because it was a leak and not a shape:** the proposal's own minted-to-cited ratio — the instrument §7.3 (6) put there to catch a machine manufacturing work nobody asked for — counted content rows with NO BUNDLE PREDICATE when scoped by run, making the anti-manufacturing instrument an oracle for projects the caller was never invited to. It was found by this item's own `gate-reads` guard, because classifying a new read means writing what its answer ranges over and that sentence could not be written truthfully. The denominator is the scope's own documents through `#viewerSees`, capped and published. **A guard that forces a sentence to be written is how a leak gets found before a member does.**
+
+**RAISED ON IC-2 RATHER THAN EDITED, and left for FRAMEWORK:** `textchain.mjs`'s `STEP_KINDS.ai.label` reads *"a model rewrote the text"*, and a proposed reading rewrites nothing — conservative in direction (it claims more transformation than occurred, not less) but inexact. SETTLED when a model actually runs behind `op=extractpropose` and the step's first real chain is inspected live; CONDUCT writes it.
