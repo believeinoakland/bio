@@ -85,7 +85,7 @@
  *                       a list nobody can act on.
  */
 
-import { readFileSync, writeFileSync, copyFileSync, statSync, existsSync, unlinkSync } from "node:fs";
+import { readFileSync, writeFileSync, copyFileSync, statSync, existsSync, unlinkSync, renameSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
@@ -274,6 +274,49 @@ commitArm({
   declared: "the census MUST NOT find it — M declares no allocation site — and MUST name M as UNAUDITABLE. A GREEN HERE IS THE DEFECT, NOT THE PASS",
   judge: (a, p) => !a.namesId("M-9002") && /UNAUDITABLE\s+M\s/.test(a.out) && p.sawId === false,
 });
+
+/* ---- (5) THE SILENT-DEGRADE ARM ----------------------------------------- */
+/* **DRIVEN RATHER THAN READ, because a mechanism believed on its EXISTENCE
+   rather than its behaviour is the defect this project meets most.**
+   `plancheck.mjs` imports three of its arms with `.catch(() => ({}))` —
+   `corpuscheck.mjs` (section 6), `rowdesign.mjs` (section 7) and `decided.mjs`
+   (the index arm) — and on a failed import each pushes a WARN, not a FAIL. A
+   WARN does not move the exit status. So an arm that cannot LOAD reports
+   `UNVERIFIED this run` and `plancheck` still exits 0, with the design corpus,
+   the row-design rule and the decided index all unchecked.
+
+   THE ARM IS A RENAME, NOT AN EDIT. `tools/**` is M0-39's ground; this row
+   writes ABOUT it and changes not one byte of it. The file is moved aside and
+   moved back, and the sha is taken before and after anyway, because a restore is
+   only believable if it is measured. It happens in THIS worktree's checkout and
+   cannot reach any other worktree's. */
+{
+  const tag = "(5) silent degrade";
+  const rel = "tools/corpuscheck.mjs";
+  const abs = join(REPO, rel);
+  const aside = abs + ".m041-armed-aside";
+  if (!existsSync(abs)) {
+    findings.push(`ARM ${tag}: ${rel} not found — THE ARM DID NOT ARM`);
+    armsNeverArmed++;
+  } else {
+    const before = { sha: sha(abs), bytes: bytes(abs) };
+    renameSync(abs, aside);
+    const armedGone = !existsSync(abs);
+    const plan = plancheckLocal();
+    renameSync(aside, abs);
+    const after = { sha: sha(abs), bytes: bytes(abs) };
+    const restored = after.sha === before.sha && after.bytes === before.bytes;
+    if (!restored) findings.push(`ARM ${tag}: RESTORE OF ${rel} NOT IDENTICAL — ${before.sha.slice(0, 12)} -> ${after.sha.slice(0, 12)}`);
+    if (!armedGone) { armsNeverArmed++; findings.push(`ARM ${tag}: the file was still present after the move — THE ARM DID NOT ARM`); }
+    const warned = /could not be loaded|UNVERIFIED/.test(plan.out);
+    results.push({
+      arm: tag,
+      declared: "with corpuscheck.mjs unloadable, plancheck WARNS (UNVERIFIED this run) and STILL EXITS 0 — the design corpus and the row-design rule go unchecked and the gate reads green. MUST NOT: it must not FAIL, because the not-failing IS the finding",
+      actual: `armed (file gone): ${armedGone} · plancheck ${plan.fail} fail, ${plan.warn} warn [${plan.fails.join("; ") || "none"}]${plan.blind ? " *** READER BLIND ***" : ""} · said UNVERIFIED: ${warned} · restored identically: ${restored ? "YES" : "NO"} (${before.bytes} B, sha ${before.sha.slice(0, 12)})`,
+      pass: armedGone && plan.fail === 0 && warned && restored,
+    });
+  }
+}
 
 /* ------------------------------------------------------------------- report */
 console.log("\n--- ARMS, declared vs actual ---");
