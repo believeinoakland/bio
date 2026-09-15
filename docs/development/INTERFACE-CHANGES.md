@@ -7480,7 +7480,7 @@ the op as gated, which is a DISCLOSURE DEFECT in REC-93's region, measured and l
 rather than absorbed here.
 
 **AND A RULING LANDED ON THIS DESIGN AFTER THE ITEM WAS CUT, WHICH IS WHY THIS CONTRACT READS THE
-WAY IT DOES.** Bob's `9954a9c` settled that a missing row has three causes and that an absence
+WAY IT DOES.** BOB #11's `9954a9c` settled that a missing row has three causes and that an absence
 does not state itself. The first draft of this read violated it, treating "no content-level row"
 as never-extracted — which on any existing instance would have offered documents the record HAD
 read as documents nobody had touched. The shipped read consults the pre-log evidence first,

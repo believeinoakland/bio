@@ -657,6 +657,77 @@ it does not control, and the total it prints IS a baseline sessions quote.** Tha
   `tools/`, `agent-worker/` or `pdf-worker/`; and it cannot tell a temp-directory walk
   from a repository walk, which is why the named list carries that judgement.
 
+## DOES THE CITATION RESOLVE TO THE ACTOR THE SENTENCE NAMES? (M0-39, 2026-09-15)
+
+`node tools/attribution.mjs`, and `tools/plancheck.mjs` section 2d runs it before every
+push. It sits beside section 2b's duplicate-id gate because **the two are one defect
+wearing different clothes: the corpus states a rule and nothing reads it.**
+
+**The rule.** An architect attribution — the ruling marker, then Bob's name — means DOCTRINE,
+which no session may revisit. A session's own name means MECHANISM, which a later session MAY
+revisit on evidence.
+
+**THE MARKER WORD IS DELIBERATELY NOT SPELLED ANYWHERE IN THIS SECTION**, and the omission is
+load-bearing rather than fussy: `tools/decided.mjs` indexes every occurrence of it in the
+corpus, so a section that quoted the form three times minted three phantom rulings out of its
+own prose — measured here, by writing them and reading the regenerated index. That is D-367's
+class in a third instrument on the same day, and the fix is the one this repository already
+knows: **never write a specimen into a file that is a corpus.**
+
+**The receipt.** 2026-09-15: FIVE landed plane comments called commit `9954a9c` a ruling of
+Bob's. That commit is the BOB #11 SESSION's correction of its own design document —
+mechanism under Bob's standing delegation. It was raised by BOB #11 itself and corrected in
+the plane at that wave's close, **and the wave's corrections missed four more sites**, which
+this arm found on the day it landed: two in `QUEUE.md`, one in `INTERFACE-CHANGES.md`, and
+one in the generated index quoting the first. Nothing in the repository could have found
+them.
+
+**Why the harm is one-directional, which is why it is a GATE and not a warning.** A
+mechanism decision wearing doctrine's attribution becomes **unrevisable in practice**: the
+next reader works AROUND the rule instead of correcting it, and working around leaves no
+trace that correcting does. The reverse error is cheap and self-correcting.
+
+**IT IS NOT A BANNED PHRASE, AND A BANNED PHRASE HERE WOULD BE WORSE THAN NOTHING.** The
+architect form is CORRECT wherever he actually ruled, and this corpus is full of places he did —
+**17 bindings were read the day this landed and 13 of them were correct, in BOTH forms.** An
+arm satisfied by a corpus-wide rewrite of one phrase has verified nothing, because it can be
+satisfied by making every attribution uniformly WRONG.
+
+**So the verdict comes from RESOLVING the citation, not from recognising the words.** Every
+attribution binds an ACTOR to a citation, and the repository resolves both kinds from its own
+records: a **sha** against the commit's own trailers (`git`), and a **`DEC-n`** against the
+decision register's own `for:` field, which exists precisely to declare whose decision it is.
+The arm fails where the actor named and the actor resolved DISAGREE — **in both directions**,
+an architect attribution over a session-authored commit and a session attribution over the
+architect's own decision. Firing in one direction only would be enforcing a house style.
+
+**Why a commit resolves to a session, measured rather than assumed.** `CLAUDE.md` records
+that Bob does not operate shells or editors; he does not commit. **1,525 of `origin/main`'s
+1,740 commits carry the author `Bob Krause` and 1,221 carry a `Co-Authored-By: Claude`
+trailer, so the author field discriminates nothing** and the trailer is what speaks. A commit
+whose record carries no session marker is UNDETERMINED and is printed as itself.
+
+**THE ACCEPTANCE IS THREE RUNS, NOT ONE**, and `tools/nc-m039.mjs` drives all three: PASS
+over a corpus using both forms correctly; FAIL over the same corpus with the two forms
+SWAPPED; FAIL over the same corpus rewritten UNIFORMLY to one form. A phrase list scores the
+third clean. The over-strictness arm runs seven correct spellings — two tree pointers, a
+landing note that attributes the rule to Bob and the landing to whoever committed it, a
+possessive over a register id meaning *the work for it*, a comma list of ids, and the
+framework's own architect attribution of 2026-07-30 (the marker word, his name, the date, and
+no sha at all) — and every one must pass. The control driver builds that specimen from pieces
+at runtime for the same reason this section does not spell it.
+
+**WHAT IT CANNOT SEE, and the limit is the load-bearing sentence.** A ruling of Bob's cited
+by DATE AND PLACE alone — the commonest correct architect attribution here — carries no
+citation the arm can resolve, so it is not graded: **the arm can say a pairing is wrong and
+cannot certify one is right.** `docs/archive/` and `docs/DECIDED.md` are outside the corpus
+(closed history; a generated view whose findings belong against the lines it quotes).
+`docs/development/CLAIMS.md` is outside it **by rule rather than convenience** — that file is
+append-only, so a released block cannot be corrected and an arm demanding it be corrected
+would be demanding a rule violation. `--census` reads the excluded paths anyway and prints
+their would-be findings, because an exclusion whose consequences nobody sees is
+indistinguishable from an exemption.
+
 ## What a queue item must satisfy before it is done
 
 The one thing `PLAN.md` had that `QUEUE.md` did not: *every acceptance test is

@@ -256,17 +256,53 @@ export const NAMESPACES = {
            CONFIRM` blocks beneath it are that entry's own sub-sections and are not
            allocations — measured: IC-2 carries four of them. */
         allocPattern: () => /^##\s+IC-(\d+)\s+·/gm, allocIsUnique: true },
+  /* `M`'s ALLOCATION SITE, DECLARED 2026-09-15 (M0-39), AND THE REASON IT COULD NOT BE
+     DECLARED BEFORE HAS EXPIRED RATHER THAN BEEN OVERRULED.
+
+     WHAT THIS ROW SAID UNTIL TODAY, and it was true when written: *"`MEASUREMENTS.md`
+     allocates nothing at a recognisable site: its 4,000+ lines are dated prose and its
+     single `### M-4` heading is a sentence."* So `allocPattern` was omitted on purpose,
+     `allocFloor` answered null, and `--audit` reported `NOT COVERED  M`.
+
+     WHAT THAT COST, MEASURED: on 2026-09-15 **four workers of one wave filed `M-21`** —
+     M0-34 (kept), COFF-11 (→ M-22), REC-90 (→ M-23) and FW-18 (→ M-24) — **and FW-18's
+     reached `origin/main` at `a59ac7b` beside M0-34's with nothing failing**, because a
+     namespace with no declared site is a namespace `allocations()` returns
+     `covered:false` for and `plancheck`'s duplicate gate therefore never grades.
+
+     AND THE DIAGNOSIS THAT MATTERS IS NOT THE ONE THE INCIDENT FIRST GOT. `mintid`
+     ALLOCATES `M` and always has — it is a row in this register and `mintid.mjs M
+     --floor-only` answers. The four collisions were a **BYPASS of a working allocator**,
+     not a gap in it: each worker read the corpus floor out of `MEASUREMENTS.md` and added
+     one, which is correct on every branch and wrong in the union, and **the bypass left
+     nothing for the audit to see.** (The renumbering that followed bypassed it the same
+     way.) So what is added here is the thing a bypass becomes VISIBLE in — a site — and
+     not a second allocator.
+
+     THE SITE IS READ OFF THE FILE AS IT STANDS, NOT LEGISLATED ONTO IT. `## M-<n> · …` is
+     the shape every measurement entry from `M-8` onward carries, twelve of them, and it is
+     the file's own convention rather than one invented here.
+
+     WHAT THE SITE CANNOT SEE, and both are NAMED rather than scored clean:
+
+       - `## 2026-08-08 · M-4 —` — the LEGACY DATE-FIRST heading, the one entry written
+         before the convention settled. It is not normalised, because `MEASUREMENTS.md` is
+         held by another item and because a matcher whose reach is stated is worth more
+         than a corpus edited to fit it. The generous floor still counts it (the floor
+         counts a MENTION), so nothing can be minted over it; what it is invisible to is
+         the DUPLICATE detector, which would not see a second `## 2026-…· M-4 —`.
+       - **THE TWO ALLOCATION SPACES ARE STILL TWO, AND THE SITE PICKS ONE ON PURPOSE.**
+         `QUEUE.md` carries `### M-4 · done`, an item heading in the (now dormant)
+         measurement LANE; `MEASUREMENTS.md` carries the measurement ENTRY. For `M-4` those
+         are two records of ONE allocation — the lane item that produced the entry — so
+         admitting both shapes would make every future lane item read as a duplicate of its
+         own measurement and force `allocIsUnique:false`, i.e. back to NOT COVERED. The
+         site is therefore the ENTRY heading alone (`^## M-n ·`, two hashes), and the
+         queue's three-hash item heading is deliberately outside it. `M-8`..`M-24` have no
+         queue rows at all, which is why this costs nothing today and is stated anyway. */
   M: { kind: "prose", what: "measurement entries",
-       corpus: ["docs/archive/", "docs/development/MEASUREMENTS.md", "docs/development/QUEUE.md"], ceiling: 999 },
-       /* NO ALLOCATION PATTERN, DELIBERATELY, AND THE REASON IS A FINDING RATHER THAN
-          A SHRUG. `MEASUREMENTS.md` allocates nothing at a recognisable site: its
-          4,000+ lines are dated prose and its single `### M-4` heading is a sentence
-          ("M-4's figures HELD"). Meanwhile QUEUE.md carries one `### M-4 · done` item
-          heading — so `M-4` names BOTH a measurement lane item and a measurements
-          entry. That is two allocation spaces wearing one prefix, which is a latent
-          version of the very defect this file exists for, and inventing a site here
-          would paper over it. So `allocFloor` answers null — never 0 — and the
-          duplicate detector reports M as NOT COVERED with this reason attached. */
+       corpus: ["docs/archive/", "docs/development/MEASUREMENTS.md", "docs/development/QUEUE.md"], ceiling: 999,
+       allocPattern: () => /^##\s+M-(\d+)\s+·/gm, allocIsUnique: true },
 
   /* (ii) prose-referenced — the queue item families, one corpus between them.
    *
@@ -439,8 +475,10 @@ export function corpusFloor(ns, { repo = REPO_ROOT } = {}) {
  * WHAT THIS CANNOT SEE, stated because a matcher's reach is the load-bearing sentence:
  * an un-minted id that has not YET collided (that is `--audit`'s half, and it needs
  * the ledger); a collision inside `C`, whose dotted members repeat a family number by
- * design (named, not scored clean); a collision in `M`, which declares no allocation
- * site; an id referred to in prose but never allocated at a site; and a collision
+ * design (named, not scored clean); a SECOND `M-4` written in the LEGACY date-first
+ * heading shape, which `M`'s site (declared 2026-09-15, M0-39) deliberately does not
+ * match — `M` itself is graded now and this is the one heading in it that is not;
+ * an id referred to in prose but never allocated at a site; and a collision
  * between two branches that have not been merged, which by construction does not
  * exist in any one commit and is exactly what CONDUCT's integration step is for. */
 
@@ -901,6 +939,56 @@ function audit(argv) {
     if (!asked) console.log(`   UNKNOWN — the ledger holds no ids in any namespace yet, so it can grade nothing.`);
   }
 
+  /* --- 2b. THE BYPASS, PER ID (M0-39) ---------------------------------------
+   *
+   * WHAT SECTION 2 ABOVE CANNOT SEE, AND WHY THAT MATTERED THE DAY THIS WAS WRITTEN. It
+   * compares ONE number — the highest corpus allocation — against the top of the ledger.
+   * So an id taken by hand BELOW the ledger's top is invisible to it, and that is exactly
+   * the shape a renumber produces: `M-22`, `M-23` and `M-24` were written by hand while the
+   * ledger's top stood at 28, and section 2's line for `M` read clean.
+   *
+   * THE QUESTION THIS ASKS INSTEAD, per id: is this allocation, which sits ABOVE its
+   * namespace's watermark and is therefore inside the ledger's reach, one the ledger ever
+   * issued? A `no` is a BYPASS — somebody read a corpus floor and added one instead of
+   * calling the allocator — and a bypass is the thing that leaves no trace anywhere else.
+   *
+   * IT IS A QUESTION AND NOT A BREAK, on this file's own standing reasoning: the ledger is
+   * deliberately not committed, so a fresh clone or a second machine answers `no` for work
+   * that was minted perfectly well elsewhere (D-242). A gate that answers unknown for a
+   * whole corpus is the shape `VERIFICATION.md` refuses. What it costs to leave it a
+   * question is that somebody must read it; what it would cost to make it a gate is that
+   * everybody would switch it off.
+   *
+   * MEASURED THE DAY IT LANDED, AND THE FIGURE IS THE WHOLE ARGUMENT FOR DECLARING A SITE:
+   * across the 15 graded namespaces whose ledger has history, **4 bypasses, every one of
+   * them in `M`** — M-9, M-22, M-23, M-24 — and ZERO in the other fourteen. `M` is the one
+   * namespace that had no allocation site until 2026-09-15, and it is the only one that
+   * was bypassed. Three of the four are CONDUCT's own renumbering of the `M-21` collision,
+   * which the queue row predicted and which nothing could see until now. */
+  if (root) {
+    console.log(`\n2b. ALLOCATED WITHOUT THE ALLOCATOR — an allocation INSIDE the ledger's reach that it never issued`);
+    let asked = 0, found = 0;
+    for (const ns of Object.keys(NAMESPACES)) {
+      const a = allocations(ns);
+      if (!a.covered) continue;
+      const w = watermark(ns).floor;
+      if (w === null) { console.log(`   ${ns.padEnd(5)} UNKNOWN — this namespace has no ledger history, so nothing here is gradable`); continue; }
+      asked++;
+      const h = new Set(held(ns));
+      const inReach = [...new Set(a.sites.map((s) => s.n))].filter((n) => n > w).sort((x, y) => x - y);
+      const bypassed = inReach.filter((n) => !h.has(n));
+      found += bypassed.length;
+      if (!bypassed.length) continue;
+      const where = (n) => a.sites.filter((s) => s.n === n).map((s) => `${s.file}:${s.line}`).join(", ");
+      console.log(`   ${ns.padEnd(5)} QUESTION ${bypassed.length} of ${inReach.length} allocation(s) above watermark ${w} are NOT in this ledger:`);
+      for (const n of bypassed) console.log(`         ${ns}-${n}  at ${where(n)}`);
+    }
+    console.log(`   ${found} bypass question(s) across ${asked} namespace(s) with ledger history.`
+      + (found ? `\n         Each is either an id taken WITHOUT \`mintid\` — which is what the allocator exists to`
+               + `\n         make impossible and what leaves no other trace — or an id minted from a ledger this`
+               + `\n         machine cannot see (D-242). ASK the author; do not renumber on this alone.` : ""));
+  }
+
   /* --- 3. the ids a branch introduces --------------------------------------- */
   const base = val("--base", null);
   console.log(`\n3. IDS INTRODUCED BY A DIFF${base ? ` against ${base}` : ""}`);
@@ -959,8 +1047,9 @@ function audit(argv) {
   console.log(`\naudit: ${breaks} break(s). Questions above are QUESTIONS — every id allocated before`);
   console.log(`2026-08-08 is honestly unknown, and a gate that answers unknown for the whole corpus`);
   console.log(`is the shape VERIFICATION.md refuses. What this CANNOT see: an un-minted id that has`);
-  console.log(`not yet collided and sits below its namespace's watermark; a collision inside C or M`);
-  console.log(`(both named above); a collision between two branches nobody has merged.`);
+  console.log(`not yet collided and sits below its namespace's watermark; a collision inside C`);
+  console.log(`(named above); a second M-4 in the LEGACY date-first heading shape, which M's site`);
+  console.log(`does not match; a collision between two branches nobody has merged.`);
   return breaks ? 1 : 0;
 }
 

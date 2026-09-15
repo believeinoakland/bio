@@ -308,12 +308,28 @@ section("the floor refuses year-shaped noise, and SAYS it did");
      the `### IC-n · RESPONSES/RESOLUTION` blocks beneath it are that entry's own
      sub-sections, measured at four for IC-2). The old assertion was testing the
      absence of a declaration rather than the null answer, so it stopped being about
-     its own subject the moment the declaration was added. `M` is the namespace that
-     genuinely declares none, and its reason is recorded at its register row. */
-  t("a namespace with no declared allocation site answers null, not zero",
-    [corpusFloor("M").allocFloor, corpusFloor("M").proseDriven], [null, false]);
+     its own subject the moment the declaration was added.
+     CORRECTED AGAIN 2026-09-15 (M0-39), and for the SAME REASON A SECOND TIME: this
+     arm then read `M`, and `M` now declares its site too — `## M-n ·`, the heading
+     every measurement entry from M-8 onward carries — so the arm had once more become
+     a test of a declaration's absence rather than of the null ANSWER. **It is not
+     exempted and it is not re-pointed at a third victim**: the null answer is asserted
+     against a namespace CONSTRUCTED here without a pattern, so it can never again stop
+     being about its own subject when somebody declares a site. The live half of the
+     claim — that `M` is now graded — is asserted directly below. */
+  {
+    const NOSITE = { kind: "prose", what: "a namespace declaring no allocation site",
+                     corpus: ["docs/development/MEASUREMENTS.md"], ceiling: 999 };
+    NAMESPACES.__NOSITE = NOSITE;
+    const f = corpusFloor("__NOSITE");
+    delete NAMESPACES.__NOSITE;
+    t("a namespace with no declared allocation site answers null, not zero",
+      [f.allocFloor, f.proseDriven], [null, false]);
+  }
   t("...and IC, which now DOES declare one, answers a real strict floor rather than null",
     Number.isInteger(corpusFloor("IC").allocFloor), true);
+  t("...and M, whose site was declared 2026-09-15, answers a real strict floor rather than null",
+    Number.isInteger(corpusFloor("M").allocFloor), true);
 }
 
 /* ========================================================================== */
@@ -417,7 +433,25 @@ section("D-243 · TWO THINGS WEARING ONE ID — the half that needs no ledger");
      `C` repeats a family number once per dotted member by design. */
   const cov = allocations("C");
   t("C is reported as NOT COVERED with a reason rather than silently clean", [cov.covered, cov.why.length > 40], [false, true]);
-  t("M is reported as NOT COVERED too (it declares no allocation site)", allocations("M").covered, false);
+
+  /* CORRECTED 2026-09-15 (M0-39), NOT EXEMPTED. This line read *"M is reported as NOT
+     COVERED too (it declares no allocation site)"* and was true when written — and it
+     was the state in which FOUR workers of one wave filed `M-21` on 2026-09-15, one of
+     them reaching `origin/main` at `a59ac7b` with nothing failing, because a namespace
+     `allocations()` returns `covered:false` for is one the duplicate gate never grades.
+     `M` now declares its site, so the assertion is INVERTED rather than deleted: what is
+     asserted is that the namespace is GRADED and that the sites it finds are the entry
+     headings, which is the property the old line's absence stood in for. */
+  const m = allocations("M");
+  console.log(`  M: covered=${m.covered}, ${m.sites.length} allocation site(s), ${m.duplicates.length} duplicate(s)`);
+  t("M is now GRADED rather than reported NOT COVERED — the gap four collisions went through",
+    m.covered, true);
+  t("...over a real set of entry headings rather than an empty read", m.sites.length > 5, true);
+  t("...every one of them in MEASUREMENTS.md, which is where the entries live",
+    m.sites.every((s) => s.file.endsWith("MEASUREMENTS.md")), true);
+  t("...and the live corpus carries no duplicate M allocation today", m.duplicates, []);
+  t("...while C stays the one registered namespace that cannot be graded at all",
+    collisions().notCovered.map((n) => n.ns), ["C"]);
 
   /* THE LIVE CORPUS. The registered set is EXACT in both directions: a seventh
      collision fails here, and a registered one that somebody renumbers ALSO fails, so
@@ -601,8 +635,14 @@ section("the audit is in the loop CONDUCT actually runs");
   t("`--audit` runs and exits 0 on a corpus with no NEW duplicate", a.code, 0);
   t("...and prints the SCOPE, so the integrator sees what the ledger does not cover", /NOT exclusive against/.test(a.out), true);
   t("...and NAMES what it cannot see rather than reading as a complete sweep", /What this CANNOT see/.test(a.out), true);
-  t("...and prints its four sections", [/1\. DUPLICATE ALLOCATIONS/, /2\. ALLOCATED ABOVE THE LEDGER/, /3\. IDS INTRODUCED BY A DIFF/, /4\. THE REGISTER/].map((re) => re.test(a.out)),
-    [true, true, true, true]);
+  /* CORRECTED 2026-09-15 (M0-39): the audit now prints FIVE, not four. Section 2b asks the
+     BYPASS question per id — an allocation inside the ledger's reach that the ledger never
+     issued — which the old section 2 could not see, because it compared only the HIGHEST
+     corpus allocation against the ledger's top and a hand renumber lands BELOW that top.
+     Three of the four bypasses it found on the day it landed are exactly that shape. */
+  t("...and prints its five sections", [/1\. DUPLICATE ALLOCATIONS/, /2\. ALLOCATED ABOVE THE LEDGER/, /2b\. ALLOCATED WITHOUT THE ALLOCATOR/, /3\. IDS INTRODUCED BY A DIFF/, /4\. THE REGISTER/].map((re) => re.test(a.out)),
+    [true, true, true, true, true]);
+  t("...and the bypass question is a QUESTION, so it never fails the run", a.code, 0);
   const bad = run(["ZZZ"]);
   t("an unregistered namespace is still refused BY NAME", [bad.code, /REFUSED: unknown namespace/.test(bad.out)], [2, true]);
   t("...and the refusal now says what to DO, which is the half that was missing",

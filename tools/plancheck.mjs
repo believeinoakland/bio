@@ -240,7 +240,23 @@ if (register) {
 
    The predicate lives in `tools/mintid.mjs` and is shared with the battery suite, for
    the reason planning-hygiene already states: two checks in two places for one
-   invariant is the cheap-and-early copy plus the cannot-be-bypassed copy. */
+   invariant is the cheap-and-early copy plus the cannot-be-bypassed copy.
+
+   **AND THIS CHECK IS A BACKSTOP FOR A BYPASS, NOT THE PRIMARY DEFENCE. SAID HERE
+   BECAUSE THE NEXT READER WILL OTHERWISE TAKE IT FOR ONE** (M0-39, 2026-09-15). The
+   primary defence is `tools/mintid.mjs` REFUSING to hand out a taken id, and an allocator
+   that refuses beats a checker that reports for the reason `mintid` exists at all:
+   check-then-act has no atomicity between the check and the act, so every worker in a
+   wave can measure a number free and be right when it looks. What reaches this line is
+   therefore always a BYPASS — somebody read a corpus floor and added one instead of
+   calling the tool. MEASURED the day this sentence was written: **four workers of one
+   wave filed `M-21`, and FW-18's reached `origin/main` at `a59ac7b` with nothing
+   failing**, because `M` had declared no ALLOCATION SITE and `allocations()` therefore
+   returned `covered:false` for it — a namespace this gate could not grade at all. `M`
+   declares one now, so it enters this check rather than a second grep being written
+   beside it, and `--audit` can see a bypass for the first time. **A duplicate arriving
+   here is evidence the allocator was skipped, and the fix is to call it — not to make
+   this check stricter.** */
 
 {
   const { collisions, unregisteredNamespaces } = await import("./mintid.mjs");
@@ -336,6 +352,49 @@ if (register) {
        + `        somebody made at a modify/delete conflict rather than one that happened to them,\n`
        + `        which is why it warns rather than fails — but the branch's work on it is gone.`);
   if (drops.length) fail(dropMessage(drops));
+}
+
+/* ------------------- 2d. AN ATTRIBUTION WHOSE CITATION NAMES SOMEBODY ELSE (M0-39)
+
+   THE SECOND HALF OF THE SAME DEFECT SECTION 2b GATES, AND THAT IS WHY IT SITS HERE:
+   THE CORPUS STATES A RULE AND NOTHING READS IT. `RULED by Bob` means DOCTRINE no session
+   may revisit; a session's own name means MECHANISM a later session MAY revisit on
+   evidence. On 2026-09-15 FIVE landed plane comments called a BOB-session commit a ruling
+   of Bob's, and nothing in this repository could see it — the convention held until a busy
+   day, exactly as the id convention did.
+
+   THE HARM IS ONE-DIRECTIONAL AND THAT IS WHY IT IS A GATE. A mechanism decision wearing
+   doctrine's attribution becomes UNREVISABLE IN PRACTICE: the next reader works AROUND the
+   rule instead of correcting it, and working around leaves no trace that correcting does.
+   The reverse error is cheap and self-correcting.
+
+   IT IS NOT A BANNED PHRASE, AND A BANNED PHRASE HERE WOULD BE WORSE THAN NOTHING —
+   `RULED by Bob` is CORRECT wherever he actually ruled, and this corpus is full of places
+   he did (17 bindings read on the day this landed; 13 of them correct, in BOTH forms). The
+   predicate RESOLVES each citation against the repository's own records — a sha against the
+   commit's own trailers, a `DEC-n` against the decision register's own `for:` field — and
+   fails only where the actor named and the actor resolved DISAGREE, in both directions.
+   That is what makes it unsatisfiable by a corpus-wide rewrite of one phrase: rewriting
+   every attribution to say `session` fails every one of Bob's real rulings, and the
+   reverse fails every session's commit.
+
+   THE PREDICATE LIVES IN `tools/attribution.mjs`, imported rather than written here, for
+   the reason section 2c already states: `plancheck.mjs` self-executes and cannot be
+   imported by the driver that drives its arms. `tools/nc-m039.mjs` drives it. */
+
+{
+  const { attributionAudit, attributionMessage } = await import("./attribution.mjs").catch(() => ({}));
+  if (!attributionAudit) {
+    warn(`attribution.mjs could not be loaded — attribution pairings are UNGRADED this run.`);
+  } else {
+    const at = attributionAudit({ repo: ROOT });
+    notes.push(`attribution: ${at.graded.length} actor-to-citation binding(s) over ${at.corpus} file(s); `
+      + `${at.undetermined.length} undetermined; ${at.excluded.length} path(s) outside the corpus`);
+    for (const u of at.undetermined)
+      warn(`ATTRIBUTION UNDETERMINED — ${u.file}:${u.line} cites ${u.cited} and ${u.why}.\n`
+         + `        Undetermined is first-class and is printed as itself; it is a QUESTION, never a pass.`);
+    if (at.findings.length) fail(attributionMessage(at.findings));
+  }
 }
 
 /* ------------------------------------------- 2b. THE DECIDED INDEX IS CURRENT
