@@ -258,6 +258,26 @@ UI someone can build and a plane item nobody owed and nobody was going to write.
 you are on, before you rest a decomposition, a deferral, a row or a refusal on it.** A
 blocker inherited from a ledger is a claim about the day it was written.
 
+**AND THE SAME RULE GOVERNS OUR OWN PROCESS, WHERE IT KEEPS ARRIVING THROUGH NEW DOORS.**
+Stated because 2026-09-14/15 produced SIX instances in two days and they are not six
+lessons — they are one lesson with six doors (CONDUCT #11): **a row that outlived its
+work; a row that outlived its worker; a hold that outlived the condition it held for; an
+inference clause telling a reader to read *no live worker* as `queued`; a reap that killed
+the children and left the parents, so a respawned orphan was indistinguishable from one
+nobody reaped; and a spawn that silently did not happen, leaving seven rows advertising
+workers that did not exist.** Every one is **a reader concluding a value from an absence
+that has two causes** — the rule above, turned on the machinery that builds the record
+rather than on the record.
+
+Two consequences worth more than the list. **Care does not catch this class and a
+VERIFICATION STEP does**: five of the six were preventable by someone being more careful,
+and the sixth — a working directory that reverts between turns — was not preventable by
+anyone at all, which is why *an act is not done until it is verified to have taken* beats
+*be careful* every time. And **a workaround nobody NAMES is a hazard whose evidence it
+consumes**: one session defended against that reverting directory on every command for
+hours without recognising the defence, paying the cost of the bug continuously while
+generating no record of it, so the silence looked like health until a spawn failed loudly.
+
 **Undetermined is first-class and must be STATED.** Never invent an attribution
 to get past a gate. A gate that pressures someone into inventing one is a bug in
 the gate: that is why the publication fence moved off the content axis onto the
