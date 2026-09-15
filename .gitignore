@@ -38,6 +38,12 @@
 # next walk — `coverage.mjs`'s fleet walk, or the battery's discovery — can
 # enrol it as a source file.
 .rec82-control-pristine/
+# REC-84's pen (`test/nc-rec84.mjs`), on exactly REC-82's line above and for
+# exactly its reason: the same two sources are armed, and an interrupted run
+# must not leave a copy of either sitting untracked where the next walk can
+# enrol it as a source file. Its own line rather than a glob, because a glob
+# over `.rec*-control-pristine/` would silently cover a pen nobody declared.
+.rec84-control-pristine/
 # D-271's pen. Named for the item rather than the area because the item is a
 # plane item; the `.ui*` spelling above is an accident of which area needed a
 # pen first, not a rule about who may have one.
