@@ -955,3 +955,208 @@ export function readingPositionInExtent(position, extentKind, extent) {
   if (!isIndex(e.shape)) return true;
   return e.shape === p.shape;
 }
+
+/*__CPDF20_PER_PAGE_START__*/
+/* ===================================================================== *
+ * CPDF-20 / D-283 — WHICH OF TWO DECODES OF ONE LAYER WINS, PAGE BY PAGE
+ * ===================================================================== *
+ *
+ * D-283, stated as it was found by D-252's class sweep: `needsTier2` is a
+ * DOCUMENT-level predicate and `i2text = t2.text` is a WHOLESALE assignment, so
+ * a document Tier 1 read well on page 0 and failed on page 1 escalates whole,
+ * and if Tier 2 recovers page 1 but does worse on page 0 the plane keeps the
+ * worse page silently. Tier 1 and Tier 2 are both `layer` derivations of the
+ * same source under the same null cap, so nothing is OVERCLAIMED by the swap —
+ * what is unbounded is TEXT LOSS.
+ *
+ * ---------------------------------------------------------------------------
+ * THE MEASUREMENT CAME FIRST AND IT FALSIFIED THE DESIGN'S RULE. READ THIS.
+ * ---------------------------------------------------------------------------
+ * `EXTRACTION-BREADTH-DESIGN.md` §5.2 states the rule as "the decode with fewer
+ * undetermined characters on that page wins; a tie keeps tier 1". CPDF-20 built
+ * the fixture D-283 said did not exist, measured both decodes page-wise over it
+ * and over a live 50-document census sample, and the rule as written does not
+ * survive contact with real documents (MEASUREMENTS.md 2026-09-14, CPDF-20):
+ *
+ *   TIER 2 REPORTS ZERO UNDETERMINED CHARACTERS ON EVERY PAGE — 203 of 203 in
+ *   the census sample, 15 of 15 in the committed fixture.
+ *
+ * Not because it decodes perfectly. Because it HAS NO UNDETERMINED-CHARACTER
+ * VOCABULARY: `pdf-worker/src/index.mjs` emits one `no_text_layer` marker with
+ * `count: 0` for a page pdf.js returned nothing for, and says nothing at all
+ * about characters pdf.js dropped inside a page it did return text for. Tier 1
+ * counts every code its `/ToUnicode` cannot map. THE TWO NUMBERS ARE NOT
+ * COMMENSURABLE, so "fewer undetermined characters" performs no comparison:
+ * it reduces to "did Tier 1 flag this page", and hands Tier 2 every flagged
+ * page however little it recovered.
+ *
+ * Measured cost of shipping it as written: 145 of 203 census pages go to Tier
+ * 2, and on 23 of those Tier 1 HAD DECODED MORE CHARACTERS — 692 characters of
+ * real text traded for a handful of unmapped glyphs. Those 23 pages are exactly
+ * the page §8 requires the rule to KEEP from Tier 1, so the rule as written
+ * fails its own negative control on real documents. This is reported as a
+ * DESIGN GAP against §5.2 rather than resolved silently (WORKER.md).
+ *
+ * ---------------------------------------------------------------------------
+ * THE RULE THAT SHIPS — TWO CONDITIONS, AND THE SECOND ONLY EVER WITHHOLDS
+ * ---------------------------------------------------------------------------
+ * D-283's row warns that "character count is exactly the instrument CPDF-9
+ * argued against", and it is right: volume is not fidelity, and a tier emitting
+ * fluent garbage would win on it. So character count is NOT the award axis
+ * here. §5.2's award axis is kept exactly as designed, and a ONE-DIRECTIONAL
+ * guard is added that can only ever REFUSE an award, never make one:
+ *
+ *   1. TIER 1 ADMITTED IT FAILED ON THIS PAGE — strictly fewer undetermined
+ *      characters in Tier 2's decode than in Tier 1's. This is §5.2's rule,
+ *      unchanged, and it is a claim by a producer about its OWN output.
+ *   2. TIER 2 ACTUALLY RECOVERED SOMETHING — strictly more decoded characters
+ *      than Tier 1. This is a fact about the text in hand rather than a claim
+ *      by anybody, and it is what makes condition 1 safe to act on.
+ *
+ * Anything else keeps Tier 1 — which subsumes §5.2's "a tie keeps tier 1"
+ * (fewer steps, the same cap, the same producer marker carried forward).
+ *
+ * THE SHAPE IS DELIBERATELY `mergeTier3Text`'s, ONE TIER UP (D-252,
+ * `index.mjs`): "condition 1 is a claim by a producer about its own output;
+ * condition 2 is a fact about the text in hand... a guarantee that rests on
+ * another component's correctness is the class of mechanism this project meets
+ * most often and believes least." Two mechanisms for one job is how the next
+ * tier goes dark differently, so this is that mechanism with its comparison
+ * changed, not a second one invented. The one-directional discipline is
+ * `OCR_PRODUCER_MARKERS`' (D-251): a detector whose miss is the status quo ante.
+ *
+ * Measured over the same corpora: 122 of 203 census pages to Tier 2, ZERO
+ * degraded, +186,242 characters recovered, and NOTHING left behind — every page
+ * where Tier 2 genuinely had more text still moves.
+ *
+ * ---------------------------------------------------------------------------
+ * THE CHAIN RECORDS THE WINNER PER PAGE, WHICH IS THE HALF THAT IS NOT A MERGE
+ * ---------------------------------------------------------------------------
+ * §5.2: "the mixed-document chain the plane already composes records which tier
+ * produced each page, so the document's chain is honest about being a merge."
+ * `layerChain` already carries `tier` on the `layer` step; what did not exist is
+ * a per-PAGE statement. `mergeTier2Text` writes `tier` onto every merged page
+ * and returns `perPageTier` — the pages each tier produced, by number — so a
+ * consumer composing the document's chain can say "layer, tier 1 on pages 0 and
+ * 2-5, tier 2 on page 1" instead of one document-level tier true of neither.
+ *
+ * A page nobody's decode carries keeps Tier 1's and is recorded as Tier 1: an
+ * absence with nothing to report is not a finding.
+ *
+ * WHAT THIS DOES NOT DO. It does not decide whether to CALL Tier 2 — that is
+ * `needsTier2`'s, in `index.mjs`, unchanged and deliberately so (the routing
+ * half was closed on purpose; it is the ASSIGNMENT half D-283 left open). It
+ * holds no engine and reaches no network. And it is NOT WIRED by this landing:
+ * the two call sites are `index.mjs`'s, RECORD's control plane, and are a
+ * DELEGATION (CLAIMS.md 2026-09-14) exactly as the existing Tier-2 call site's
+ * own note in that file already says. Until they are wired the plane's
+ * behaviour is unchanged, and that is stated rather than implied. */
+
+/** The rule in one sentence, so the probe, the suite and any report quote ONE
+ *  spelling of it rather than three that drift. */
+export const TIER_RULE =
+  "per page, tier 2 replaces tier 1 only when it has strictly fewer undetermined "
++ "characters AND strictly more decoded characters; anything else keeps tier 1";
+
+const undeterminedChars = (page) =>
+  (page && Array.isArray(page.undetermined))
+    ? page.undetermined.reduce((n, m) => n + (m && Number.isFinite(m.count) ? m.count : 0), 0)
+    : 0;
+
+const decodedChars = (page) =>
+  (page && typeof page.text === "string") ? page.text.length : 0;
+
+/**
+ * Which tier wins ONE page. The whole rule, isolated so it can be driven
+ * directly and inverted by a control without touching the merge around it.
+ *
+ * @param {object} p1  tier 1's page: {page, text, undetermined:[{count}]}
+ * @param {object} p2  tier 2's page, same shape
+ * @returns {"tier1"|"tier2"}
+ */
+export function perPageTierWinner(p1, p2) {
+  if (!p2) return "tier1";                       // nothing offered, nothing to weigh
+  if (!p1) return "tier2";                       // tier 1 has no page here at all
+  const u1 = undeterminedChars(p1), u2 = undeterminedChars(p2);
+  const c1 = decodedChars(p1), c2 = decodedChars(p2);
+  /* (1) tier 1's own admission, and (2) the fact about the text in hand. Both,
+     or the page stays where it is. */
+  return (u2 < u1 && c2 > c1) ? "tier2" : "tier1";
+}
+
+/**
+ * Merge tier 2's decode into tier 1's PAGE BY PAGE, and say which tier produced
+ * each page. The D-283 answer, and the counterpart to `mergeTier3Text`.
+ *
+ * Returns `{ok, text, perPageTier, replaced, kept, why}`. `ok:false` with a
+ * `why` when the merge cannot be made page-wise — the base has no usable
+ * `pages[]` grain — because there is then no way to tell WHICH text a wholesale
+ * assignment would replace, and refusing costs an unread document while
+ * accepting costs an overwritten one. Only the second makes the record claim
+ * more than it can support.
+ */
+export function mergeTier2Text(base, t2) {
+  const basePages = (base && Array.isArray(base.pages)) ? base.pages : [];
+  const usable = basePages.filter((p) => p && Number.isInteger(p.page));
+  const t2Pages = (t2 && Array.isArray(t2.pages)) ? t2.pages : [];
+
+  if (!usable.length) {
+    const baseChars = (base && base.counts && Number.isFinite(base.counts.chars))
+      ? base.counts.chars
+      : (typeof (base && base.document) === "string" ? base.document.length : 0);
+    if (baseChars > 0)
+      return { ok: false, replaced: [], kept: [], perPageTier: null,
+               why: `this document's tier-1 reading has no per-page grain and already holds `
+                  + `${baseChars} decoded character(s), so a tier-2 decode was refused rather `
+                  + `than allowed to replace text page by page it cannot be compared against` };
+    /* Nothing to lose — the wholly-unread document. Tier 2 takes it whole, and
+       the per-page statement says so honestly rather than inventing pages. */
+    return { ok: true, text: t2, wholesale: true, perPageTier: null,
+             replaced: t2Pages.map((p) => p.page).filter(Number.isInteger), kept: [] };
+  }
+
+  const byPage = new Map();
+  for (const p of t2Pages) if (p && Number.isInteger(p.page)) byPage.set(p.page, p);
+
+  const pages = [], undetermined = [], replaced = [], kept = [];
+  for (const b of usable) {
+    const cand = byPage.get(b.page) || null;
+    const winner = perPageTierWinner(b, cand);
+    if (winner === "tier2" && cand) {
+      replaced.push(b.page);
+      pages.push({ page: b.page,
+                   text: typeof cand.text === "string" ? cand.text : "",
+                   undetermined: Array.isArray(cand.undetermined) ? cand.undetermined : [],
+                   tier: 2 });
+    } else {
+      kept.push(b.page);
+      pages.push({ ...b, tier: 1 });
+    }
+    for (const u of pages[pages.length - 1].undetermined || []) undetermined.push(u);
+  }
+
+  const document = pages.map((p) => p.text).filter((t) => typeof t === "string" && t.length).join("\n");
+  const text = { ...base, document, pages, undetermined,
+                 counts: { chars: document.length, undetermined: undetermined.length } };
+  return { ok: true, text, wholesale: false, replaced, kept,
+           perPageTier: { tier1: kept, tier2: replaced } };
+}
+
+/**
+ * The merge in the record's own sentence, for the document's notes. `null` when
+ * there is nothing to say, so a document no page moved on reads as it always
+ * did — three findings kept apart because collapsing them loses the one a
+ * reader needs (D-252's rule, applied here).
+ */
+export function tier2Note(m) {
+  if (!m || !m.ok) return m && m.why ? m.why : null;
+  if (m.wholesale) return null;
+  const say = [];
+  if (m.replaced.length)
+    say.push(`${m.replaced.length} page(s) were re-read by the tier-2 decoder, which recovered text `
+           + `tier 1 could not map and more of it; the other ${m.kept.length} page(s) kept tier 1's reading`);
+  if (m.replaced.length && m.kept.length)
+    say.push(`this document's text layer is a merge of two decodes and its chain names the tier per page`);
+  return say.length ? say.join("; ") : null;
+}
+/*__CPDF20_PER_PAGE_END__*/
