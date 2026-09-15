@@ -876,9 +876,14 @@ const REGISTER_FLOOR = {
      suite) on top of SK-7's 1021. The branch's own block (1024/187/188, its post-commit print on a
      tree cut before SK-7 landed) was dropped at the merge and declared; this is the re-read the
      loop promises. One key set. Nothing FELL. FLEET_FLOOR unmoved. */
-  arms: 1030,
-  classified: 188,
-  corpus: 189,
+  /* MOVED 2026-09-14 by CONDUCT #11 at REC-97's integration (1030 -> 1037 · 188 -> 189 · 189 -> 190):
+     the MERGED run's own print read `arms 1037/1030 · classified 189/188 · corpus (suites read)
+     190/189 · GREW by 7 arm(s)` - REC-97's cite-extent suite (seven declared arms, one new suite)
+     on top of CAP-12's 1030. The branch's own block (1022/187/188, cut before SK-7 and CAP-12
+     landed) was dropped at the merge and declared. One key set. Nothing FELL. FLEET_FLOOR unmoved. */
+  arms: 1037,
+  classified: 189,
+  corpus: 190,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
