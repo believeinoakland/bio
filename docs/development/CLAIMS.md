@@ -7950,6 +7950,8 @@ whose staleness fed `CONTENT-SEARCH-DESIGN.md` §7 row 1, which became this queu
 slot was spent confirming that already-shipped work had shipped. Leaving the framework row as it
 stands re-arms exactly that.
 
+**DISCHARGED 2026-09-15 by CONDUCT #11 at REC-99's integration (`fccf40a`) — AND THE DELEGATION'S OWN MEASUREMENT WAS HALF WRONG, which is worth more than the discharge.** The prose is corrected: the framework's Appendix A.4 row and `INVESTIGATIVE-SESSION.md` §14c now read true, in place, with the dated reason and the landing they missed. **But the line numbers this delegation called stale by about 3,000 lines land EXACTLY on the three method signatures at the appendix's own declared sha `51d128a`.** They were honest at their sha; REC-89 measured them against the WORKING TREE, which is a different document. The citation moved to SYMBOLS anyway under `CORPUS-STANDARD.md` §4.6 — a citation into a governed design names the section, not a line — so the right fix landed for a reason the delegation had not given. **A measurement taken against the wrong baseline can reach the right conclusion, and it is still a wrong measurement**; that is why the correction is recorded here rather than quietly absorbed into the landing.
+
 ## DELEGATION 2026-09-14 RECORD (REC-89) → CONDUCT: **`INVESTIGATIVE-SESSION.md` §14c's "Related finding" SAYS IN THE PRESENT TENSE THAT THE THREE READS "ARE UNCAPPED"**
 `docs/development/INVESTIGATIVE-SESSION.md`, §14c, the paragraph beginning **"Related finding, now a
 debt row (D-225)"**: *"the existing meaning-layer reads — `concerns`, `resolutions`, `connections` —
@@ -7960,6 +7962,8 @@ the same stale citation chain.
 **THE ACT, and its actor.** CONDUCT moves that sentence to the past tense and names REC-60/IC-25,
 the way a superseded claim is CORRECTED rather than deleted (CLAUDE.md). Not taken here because
 §14c is the investigative-session design's own analysis and this item's claim does not name it.
+
+**DISCHARGED 2026-09-15 by CONDUCT #11 at REC-99's integration (`fccf40a`) — AND THE DELEGATION'S OWN MEASUREMENT WAS HALF WRONG, which is worth more than the discharge.** The prose is corrected: the framework's Appendix A.4 row and `INVESTIGATIVE-SESSION.md` §14c now read true, in place, with the dated reason and the landing they missed. **But the line numbers this delegation called stale by about 3,000 lines land EXACTLY on the three method signatures at the appendix's own declared sha `51d128a`.** They were honest at their sha; REC-89 measured them against the WORKING TREE, which is a different document. The citation moved to SYMBOLS anyway under `CORPUS-STANDARD.md` §4.6 — a citation into a governed design names the section, not a line — so the right fix landed for a reason the delegation had not given. **A measurement taken against the wrong baseline can reach the right conclusion, and it is still a wrong measurement**; that is why the correction is recorded here rather than quietly absorbed into the landing.
 
 ## DELEGATION 2026-09-14 RECORD (REC-89) → CONDUCT: **THE QUEUE ACTS THIS ITEM OWES, STATED AS ACTS WITH ACTORS RATHER THAN LEFT IMPLIED**
 `QUEUE.md` is CONDUCT's, sole writer, so none of these is taken here. Each is an ACT, not a note.
@@ -7986,6 +7990,8 @@ the way a superseded claim is CORRECTED rather than deleted (CLAUDE.md). Not tak
    reported stepping over 358–364, of which two were this session's own). Gaps cost nothing by the
    tool's own statement; recorded because an unexplained gap is otherwise a puzzle for the next
    reader of the ledger.
+
+**DISCHARGED 2026-09-15 by CONDUCT #11, act by act.** 1 — `### REC-89` reads `done` and its row says what it was: a VERIFICATION plus a disposition over a scope REC-60 had discharged five weeks before the row was written, not a build. 2 — REC-90's dependency on REC-89 was satisfied before REC-89 was spawned; REC-90 was flipped and spawned on 2026-09-15 and is running. 3 — **the act this delegation was right to raise and honest to say it had not done: nothing had checked `CONTENT-SEARCH-DESIGN.md` §7's other rows against the tree.** REC-89 itself arrived already built, which is the whole reason to ask. Every dependency of the eight-row wave flipped on 2026-09-15 was verified LANDED ON THE TREE rather than read from a row before the flip, which is that recommendation enacted as a practice rather than as one grep — and it is now in `kickoffs/CONDUCT.md` as the rule for a cohort.
 
 ## CLAIM 2026-09-15 RECORD (REC-99 — the two stale "uncapped" sentences CORRECTED IN PLACE, and D-365's census GRADED so a removed SQL `LIMIT` fails BY NAME)
 session: rec99-worker (worktree agent-a21fbacbb34bfb1ec)
