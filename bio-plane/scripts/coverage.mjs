@@ -951,9 +951,30 @@ const REGISTER_FLOOR = {
      was reworded; the instrument was not touched.
      ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and
      in the fleet floor below, which is one occurrence per distinct object. */
-  arms: 1093,
-  classified: 197,
-  corpus: 198,
+  /* MOVED 1093 -> 1100 · 197 -> 198 · 198 -> 199 by CONDUCT #1, 2026-09-16, AT REC-91'S
+     INTEGRATION, and taken from THE MERGED TREE'S OWN POST-COMMIT `--strict` PRINT on
+     c09dae61 — `arms 1100/1093 · classified 198/197 · corpus (suites read) 199/198 ·
+     GREW by 7 arm(s)`. Provenance on that run: `210 of 210 discovered item(s) are in the
+     commit at HEAD`, no contamination reported, tree clean.
+     THIS IS THE FIGURE THE MERGE COMMIT PROMISED AND IT IS PAID HERE RATHER THAN LATER,
+     which is the whole point: `8fcbe15` declared `Dropped-from-branch:` on this file
+     because REC-91's branch moved this floor to 1094/197/198 from ITS OWN print while main
+     carried REC-95's 1093/197/198 from ITS OWN. BOTH were correct where taken. NEITHER is
+     true here, and — the part worth keeping — **1100 is not the sum of their deltas either**
+     (1093 + the branch's 7 would be 1100 only by coincidence of arithmetic; the classified
+     and corpus figures move by one each and no addition of the two branches' numbers
+     produces 198/199). A floor reconstructed by adding deltas installs permanent slack in a
+     ratchet whose entire purpose is to have none. The merged print is the only figure ever
+     true of the merged tree (D-238).
+     REC-69 IS WHY THIS COMMENT IS LONG: its merge named this same file, described taking
+     main's side, promised exactly this re-read, and never performed it — and a dropped floor
+     goes SLACK, not red, so eleven floors sat stale for days behind a green battery, a green
+     --strict and a green UI harness. A floor promised for later is a floor nobody moved.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
+     FLEET_FLOOR below (76, unmoved) — one occurrence per distinct object. */
+  arms: 1100,
+  classified: 198,
+  corpus: 199,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
