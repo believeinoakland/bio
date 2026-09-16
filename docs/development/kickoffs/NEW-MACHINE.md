@@ -63,6 +63,12 @@ happens under the new account while the old machine is working, or the reverse.
 for taking and releasing it is in that file. **Take the hold before your first commit and not
 after.** A session that finds another machine holding it stops and says so.
 
+**The hold EXPIRES rather than waiting to be released**, and that is a correction this file's
+first version earned within hours: a release that depends on a session performing it is lost the
+moment that session is suspended, and the hold then outlives the machine's work. A hold past its
+`held through` date is FREE — a fact, not a judgement — so **claim it, refresh it whenever you
+push a planning surface, and release it at stand-down; three acts, none of which requires Bob.**
+
 ## 4. Making the local repo
 
 **Prerequisites**, measured on the outgoing machine — match the majors, not the patches:
