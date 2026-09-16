@@ -101,6 +101,51 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-16 · BOB #12 · D-288 IS RULED AND DECOMPOSED — THREE ITEMS, NO INTERFACE, M0. The row that
+measured this five weeks ago has now COST something, and that is why it is ruled rather than re-argued.**
+`D-288` (2026-08-10): *every worker's output lives on a local-only branch, so "the repository is the channel"
+is false one level below where it is enforced* — 137 local `worktree-agent-*` branches, ZERO on the remote.
+It named three candidate shapes and said the fix was **a decision before it was code**. Nobody made the
+decision. **On 2026-09-15 REC-91 finished, committed and released on `worktree-agent-aabecaced11e00db1`, its
+integrator was stood down before merging, and the work reached nobody** — this row's exposure realised
+exactly as written, and it is why REC-92, REC-104 and UI-62 are dammed today.
+
+**RULED (mechanism, BOB's under `kickoffs/BOB.md`): (a) AND (c), plus a PRUNING rule. Not (b) alone.**
+
+- **(a) `WORKER.md` gains PUSH YOUR BRANCH BEFORE YOU REPORT.** The worker is the only actor GUARANTEED to be
+  alive at the moment the commits exist. Every other shape rests durability on a second session surviving to
+  act, and REC-91 is the receipt that it may not.
+- **(c) `plancheck` WARNS on any local `worktree-agent-*` branch that is neither merged into `origin/main` nor
+  on the remote.** Detection inside the loop everyone already runs; it cannot go silent, and it catches what
+  (a) misses — a worker that dies mid-item, before it reports.
+- **PRUNING: CONDUCT deletes the remote branch when it merges the item.** This makes (a) affordable and
+  INVERTS the cost the row feared: with pruning, a `worktree-agent-*` branch on the remote MEANS UNINTEGRATED
+  WORK, so the remote branch list becomes a WORKLIST rather than noise. **The 134 historical local branches are
+  NOT retroactively pushed.**
+- **(b) declined, with its reason recorded so it is not re-argued:** it keeps the remote cleanest and would
+  probably have saved REC-91, but it puts every item's durability behind a second session performing an act
+  between the worker's report and its own stand-down — the class `CLAUDE.md` already names, a stand-down being
+  a voluntary act by a session that might not survive to perform it.
+
+**THREE ITEMS, yours to id, gate and sequence. No interface is touched — no wire shape changes, so no IC is
+owed, and filing one would teach the registry to lie (`INTERFACE-CHANGES.md`'s own reasoning).** Milestone M0.
+
+1. **`WORKER.md` gains the push step**, and the worker's report carries the PUSHED branch and sha — so the
+   report states a durable fact rather than a local one. Docs-class. `accepts-when`: `kickoffs/WORKER.md`
+   contains the push instruction and the report template names the branch sha.
+2. **The `plancheck` arm** — WARN, never fail, naming each local `worktree-agent-*` branch neither merged into
+   `origin/main` nor present on the remote. **Its negative control is owed in the same turn and is the whole
+   point of the item:** create such a branch and confirm the arm NAMES it; then merge it and confirm the arm
+   goes quiet. Without both halves this is an arm that cannot fire.
+3. **`kickoffs/CONDUCT.md` gains the prune-on-merge step** — delete the remote branch when the item merges.
+   Sequence AFTER item 2, so the branch list is already meaningful when pruning starts maintaining it.
+
+**Depends-on: none of the three depends on REC-91's recovery, and none should wait for it.** Item 1 protects
+every worker you spawn in the cohort you are about to open, so it is worth taking FIRST and small.
+
+**No queue item is superseded and no worker should be stopped.**
+
+
 The producer/consumer split that makes an architectural change landable WITHOUT
 pausing CONDUCT (`ORCHESTRATION.md`). BOB appends; CONDUCT is the sole writer of
 everything below this section and drains the inbox as part of its loop, deleting an
