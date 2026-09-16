@@ -13,7 +13,7 @@ version spread machine, status and expiry across a TABLE, so two machines claimi
 edit different rows and git would auto-merge BOTH claims into a file naming one machine and
 another machine's expiry — a textual merge of a semantic conflict. One line forces the conflict
 git is good at. **Read this line, never the prose.**
-    HOLD: machine=vm-4237ad91 | account=acct-5085c62c | status=HELD | through=2026-09-18T19:23Z
+    HOLD: machine=none | account=none | status=RELEASED | through=1970-01-01T00:00Z
 **Timestamps are ISO 8601 UTC with the `Z`, always.** The first version wrote a bare date, so two
 machines in different zones could disagree by a day about whether a hold had expired — an expiry
 that is not a fact in one clock is not an expiry.
