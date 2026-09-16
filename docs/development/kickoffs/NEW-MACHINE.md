@@ -178,9 +178,13 @@ VERIFY BY THE POSITIVE ARTIFACT, never by the absence of an error: plancheck mus
 (design-corpus, id-allocation, attribution), and a full gate is a pass only if it ends with
 "N/N suites green · M assertions passing" — a wrapper reports its own status, not the battery's.
 
-DO NOT DEVELOP, DO NOT SPAWN, DO NOT PUSH. Read docs/development/ESTATE-HOLD.md from origin/main.
-If it does not read RELEASED, STOP and tell Bob which machine still holds it. If it does read
-RELEASED, still stop here — §7's session claims it.
+DO NOT DEVELOP, DO NOT SPAWN, DO NOT PUSH. Read the single HOLD line in
+docs/development/ESTATE-HOLD.md from origin/main — it reads
+  HOLD: machine=... | account=... | status=... | through=<ISO 8601 UTC>
+The estate is FREE when status=RELEASED or through is in the past; otherwise STOP and tell Bob
+which machine holds it and through when. Either way STOP HERE — §7's session is the one that
+claims it. plancheck ENFORCES this, so expect exactly one WARN saying no machine holds the estate:
+that warning is correct on a machine that has not claimed it yet and is not a fault to fix.
 
 Report to Bob in one short message: what you cloned, which credentials are in place and which are
 missing, the plancheck and gate results, whether the memory seed and settings were written, and
