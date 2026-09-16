@@ -218,10 +218,31 @@ const ARMS = {
      caution that breaks correct work — "a fence tighter than its rule is not a
      safer fence, it is an undeclared interface change wearing the costume of
      caution". */
+  /* **THIS ARM IS NOT A SUFFICIENT MEASUREMENT OF "NO LIVE WRITER EMITS A BARE
+     `run` PRESENT", AND REC-100's ACCEPTS-WHEN ASKED IT TO BE ONE.** Recorded
+     2026-09-16 by the REC-100 worker, which was sent to widen the check when
+     this arm "came back EMPTY" and found the arm structurally blind to the
+     writers that decide the question. It runs `observation-log.test.mjs` and
+     nothing else, so it cannot see:
+       - `#aiRunTerminate` and `#aiRunReap` in `store.mjs`, whose PRESENT comes
+         from `#aiRunSearchState` — a ROLLUP over the run's whole log, which has
+         no referent BY CONSTRUCTION and that no writer change can give one;
+       - `agent-worker`'s `stepLog`, the one EXTERNAL caller of `op=airuntick`,
+         which composes no referent field at all while `observed` is JUDGEABLE,
+         so a model may set `PRESENT` — and whose own suites MOCK this plane's
+         `op=airuntick`, meaning a widening would break that integration with the
+         entire battery green.
+     An arm whose emptiness is read as a fact about writers it cannot reach is
+     the unearned-absence class inside the harness built to refuse it. The three
+     are driven directly in section I of `observation-log.test.mjs`; this arm's
+     own job — proving the fence is a fence and not a wall — is unchanged and
+     its declaration below is correct as written. */
   overstrict: {
     files: [AIRUN],
     why: "WIDEN C-22.10 to every authority including `run`, the over-strictness direction — "
-       + "correct work in a spelling the fence did not anticipate must not be refused",
+       + "correct work in a spelling the fence did not anticipate must not be refused. "
+       + "NOTE (REC-100): this arm sees ONE SUITE and is blind to the two rollup writers in "
+       + "store.mjs and to agent-worker's stepLog — its emptiness is not a fact about writers",
     /* THIS ARM CAME BACK `NOT AS DECLARED` ON ITS FIRST RUN AND THE HARNESS WAS
        RIGHT TO SAY SO — the fault was in the SUITE, not in the arm or the
        subject. All three declared markers were present in the output, and the
@@ -234,9 +255,26 @@ const ARMS = {
        suite (`C4` is index-safe now) rather than tolerated in the driver.
        The declaration is UNCHANGED, because it was correct; what changed is that
        the suite can now report it. */
+    /* **I3 IS DECLARED BY REC-100 SO THIS ARM GRADES THE ROLLUP FINDING RATHER
+       THAN MERELY PRINTING IT** (REC-99's lesson: the census was never blind,
+       it was UNGRADED). With the carve-out widened, `op=airunclose` answers
+       `terminated: false, ok: false, code: OBS_PRESENT_NO_REFERENT` and the
+       run's terminal entry is NEVER WRITTEN — so **a run that observed anything
+       PRESENT cannot be closed at all**, and the reaper's wake entry is the same
+       rollup and fails the same way. That is a lifecycle deadlock in this plane,
+       and it is a far heavier consequence than the over-strictness this arm was
+       built to catch. Declaring it here means a future session that satisfies
+       the rollup (a ruling on §3) sees this arm go GREEN on I3 and knows the
+       carve-out is finally deletable — the arm becomes the gate on D-366. */
     mustFail: ["OVER-STRICTNESS — a `run` PRESENT with no referent is ACCEPTED",
                "the run's three entries all appended THROUGH THE FOLD — none refused",
-               "`seq` is 1,2,3 PER RUN"],
+               "`seq` is 1,2,3 PER RUN",
+               "the run's TERMINAL entry is a bare `run` PRESENT"],
+    /* I1 and I2 MUST STAY GREEN under this arm and that is the half that makes
+       the finding precise: a run PRESENT that CARRIES a referent is accepted
+       either way (the door is open), and the read still does not project it. So
+       what the widening breaks is exactly the ROLLUP and the referent-less
+       caller — not the mechanism. */
     mustPass: "every refusal arm — this arm breaks CORRECT WORK and nothing else, which is what "
             + "makes it the over-strictness arm rather than a seventh way to break the subject",
     patch: () => arm(AIRUN,

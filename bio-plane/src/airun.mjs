@@ -1213,8 +1213,45 @@ export function checkObservation(entry, conditionKinds) {
      fold to INVENT a referent, and inventing one to pass a gate is the failure
      the standing rule names by name. So the fold is admitted UNDER THE WEAKER
      RULE IT WAS WRITTEN UNDER and every other authority carries the refusal.
-     The carve-out is a DEBT row, not a permanent shape: it closes when the run's
-     own writers carry referents, which is REC-95's meaning level. */
+     The carve-out is a DEBT row, not a permanent shape.
+
+     WHAT CLOSES IT WAS WRONG HERE FOR TWO DAYS AND IS CORRECTED BY MEASUREMENT
+     (REC-100, 2026-09-16). This comment said it closes at *"REC-95's meaning
+     level"*. REC-95 LANDED, and it does not close: **REC-95's three writers
+     write under `authority_kind = derive`, not `run`** — REC-95 read the tree
+     and said so itself, and the correction was owed here. Believing the sentence
+     would have widened this refusal over three live writers that cannot satisfy
+     it. The THREE that actually emit a bare `run` PRESENT, each verified in the
+     source rather than inherited from a ledger:
+
+       1. `#aiRunTerminate` — the run's TERMINAL entry, and
+       2. `#aiRunReap`      — the reaper's wake entry.
+          BOTH take their state from `#aiRunSearchState`, which REDUCES a whole
+          run's log to one word. **A rollup PRESENT has no referent BY
+          CONSTRUCTION**: it does not report a look, it summarises many, so there
+          is no single thing for it to point at and no writer-side work produces
+          one. This is a DESIGN GAP against §3 (which writes the rule over
+          individual looks) and §4.4, not a defect in these two methods.
+       3. `op=airuntick`'s external caller — `agent-worker`'s `stepLog`, which
+          composes NO referent field at all while `observed` sits in `JUDGEABLE`,
+          so a model's judgement can set `PRESENT`. That is another area's path
+          and is DELEGATED rather than edited.
+
+     THE WRITE DOOR IS ALREADY OPEN, which nothing recorded: `aiRunTick` passes
+     the caller's entry straight to `#aiRunAppend`, which reads `entry.result_ref`
+     — driven, `appended: 1, refused: []`. The half that is missing is at the
+     READ: `aiRunLog`'s SELECT does not project `result_kind` or `result_ref`, so
+     a referent that IS stored cannot be seen through `op=airunlog` (additive, an
+     IC on I3). Section I of `observation-log.test.mjs` drives them. **EVIDENCE
+     GRADES DIFFER AND ARE LABELLED: `#aiRunTerminate` is DRIVEN there (and the
+     `overstrict` arm now DECLARES it, so it grades rather than prints);
+     `#aiRunReap` is READ — same rollup, same absent `resultRef`, so the same
+     shape by construction, but no arm reaches it because the reaper needs an
+     expired lease. An arm that drives the reaper is OWED and is not REC-100's.**
+     **DRIVEN CONSEQUENCE, the reason this is not a tightened fence:** with the
+     carve-out widened, `op=airunclose` answers `terminated: false, ok: false,
+     code: OBS_PRESENT_NO_REFERENT` and the terminal entry is NEVER WRITTEN — a
+     run that observed anything PRESENT CANNOT BE CLOSED AT ALL. */
   if (state === "PRESENT" && authorityKind !== "run"
       && (e.result_ref == null || String(e.result_ref) === ""))
     return refusal("OBS_PRESENT_NO_REFERENT",
