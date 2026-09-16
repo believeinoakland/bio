@@ -147,7 +147,29 @@
    unbounded scan — `#frontierContent`, `biasManifest`, `documentsNamingEntity`, `frontier`,
    `queueFeed` — all PASS at baseline, byte-identically, and nothing added here can fail them.**
    They are NAMED, not graded; the block's only failing conditions are a cut that disagrees with
-   the claim, a roster that moved, and a form that arrived. */
+   the claim, a roster that moved, and a form that arrived.
+
+   NEGATIVE CONTROL: (run 2026-09-16, CONDUCT #1, at REC-91's INTEGRATION — not by a worker, because
+   this is a MERGED-TREE defect that neither branch could see: REC-91 was green on its own branch and
+   this arm was red the moment its `#observeIndexed` met M0-38's roster on main.) TWO arms, each armed
+   ALONE, `src/store.mjs` restored from a pristine copy and verified by sha256 AND by `cmp` AND by byte
+   count (4ac7110da8b43bd4, 2,223,618 B, identical before and after both arms). BASELINE ROW: 58/0.
+   (a) THE FIX REVERTED — the constant test put back to `^(?:true|false)\b`: **57 pass, 1 FAIL**, the
+   roster carrying an eighth entry `#observeIndexed: 0` and the arm naming it. That is the state this
+   integration met and it proves the widening is load-bearing rather than cosmetic.
+   (b) THE ARM THAT DECIDES WHETHER (a) WAS A CORRECTION OR A SILENCING, and it is the one worth
+   re-running: a GENUINE unreadable MEASUREMENT planted in `#observeIndexed`
+   (`{ truncated: from + page.length < all.length }`, in a dead branch): **57 pass, 1 FAIL**, the roster
+   NAMING `#observeIndexed: from + page.length < all.length`. So widening the constant test to numeric
+   literals does NOT blind this roster to real measurements — it removes constants only.
+   AND ARM (b) HAD TO BE RUN TWICE, WHICH IS RECORDED RATHER THAN SMOOTHED, because the first method
+   perturbed a second variable exactly as `CLAUDE.md` warns: the anchor chosen was a MULTI-LINE method
+   signature, so the plant landed inside the parameter list, `store.mjs` no longer parsed, and the suite
+   CRASHED. The static roster still printed the planted form — a text scan does not parse — so the arm
+   LOOKED like it had proved its point while the runtime had never run. A second attempt was REFUSED by
+   its own occurs-exactly-once guard (anchor matched 3 times, tree untouched), which is the guard working.
+   Only the third, anchored on a unique two-line statement and checked with `node --check`, isolated the
+   variable. */
 /* REC-66 · D-224 / D-227 — THE BOUND ON THE DERIVATION, AND THE WALK FOR ITS CLASS.
  * ============================================================================
  *
@@ -1184,7 +1206,18 @@ for (const [name, body] of segments(blankTemplates(CODE))) {
   CLAIM_RE.lastIndex = 0; let m;
   while ((m = CLAIM_RE.exec(body))) {
     const rhs = m[1].replace(/[\s})\]]+$/, "").trim();
-    if (/^(?:true|false)\b/.test(rhs)) continue;                      /* a constant, not a measurement */
+    /* A CONSTANT IS NOT A MEASUREMENT, and that rule now covers NUMERIC literals as well as
+       boolean ones. WIDENED 2026-09-16 by CONDUCT #1 at REC-91's integration, and the old
+       spelling is recorded as wrong rather than exempted: REC-91's `#observeIndexed` opens
+       with a null-object default — `const r = result || { written: 0, bytes: 0, truncated: 0,
+       ... }` — whose `truncated: 0` is the SAME KIND of thing as `truncated: false` and was
+       caught only because the boolean test does not read a digit. Declaring it in the roster
+       below was the other available fix and it is the WRONG one: that roster names truncation
+       claims the grader's spelling cannot read, so putting a constant in it would assert an
+       unreadable MEASUREMENT where there is no measurement at all — the instrument claiming
+       more than it found, which is the direction this estate weighs heaviest. The real figure
+       this method reports, `r.truncated > 0`, is read normally and is unaffected. */
+    if (/^(?:true|false|\d+)\b/.test(rhs)) continue;
     if (/^[A-Za-z_$][\w$]*\s*\.\s*length\s*>\s*[A-Za-z_$][\w$]*/.test(rhs)) continue;  /* TRUNC_RE reads it */
     if (/^!{0,2}[A-Za-z_$][\w$]*(?:\s*\.\s*[A-Za-z_$][\w$]*)*$/.test(rhs)) { republished++; continue; }
     UNREAD_FORMS.push(`${name}: ${rhs}`);
