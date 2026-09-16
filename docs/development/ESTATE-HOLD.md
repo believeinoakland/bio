@@ -13,17 +13,21 @@ edit different rows and git would auto-merge BOTH claims into a file naming one 
 another machine's expiry — a textual merge of a semantic conflict. One line forces the conflict
 git is good at. **Read this line, never the prose.**
 
-    HOLD: machine=MiniM4 | account=original | status=HELD | through=2026-09-18T14:29Z
+    HOLD: machine=none | account=none | status=RELEASED | through=1970-01-01T00:00Z
 
 **Timestamps are ISO 8601 UTC with the `Z`, always.** The first version wrote a bare date, so two
 machines in different zones could disagree by a day about whether a hold had expired — an expiry
 that is not a fact in one clock is not an expiry.
 
-**Currently HELD by the outgoing machine, deliberately and briefly.** BOB #11 released the estate
-on 2026-09-16, then RE-CLAIMED it to land this file's own corrections and the `plancheck` arm that
-enforces them — **developing the lock without holding the lock would have been the first violation
-of it.** It is released again in the commit that follows, and if that release is somehow not made,
-the hold EXPIRES at `2026-09-18T14:29Z` on its own, which is the whole point of the change.
+**RELEASED 2026-09-16 by the outgoing machine, and the release is now belt-and-braces.** BOB #11
+released it, re-claimed it to land this file's corrections and the `plancheck` arm that enforces
+them — developing the lock without holding the lock would have been its first violation — and
+released it again here. **Had that second release been missed, the hold would have expired on its
+own**, which is the correction this file's first version earned.
+
+**Evidence for the release:** `origin/main` had not moved for 16 hours at `93ecbd5`, *"work
+suspended at the operator's direction"*; zero rows read `running`; no session on this machine is
+running. A new machine may claim it.
 
 ## How to take it, and why the push is the mechanism
 
