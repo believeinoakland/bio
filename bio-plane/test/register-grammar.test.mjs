@@ -15,6 +15,36 @@
  * not anticipate, keeping every claim and numeral, and EVERY arm stays GREEN.
  * (7) BASELINE -> nothing armed, all arms GREEN, so a run of six nulls cannot be
  * mistaken for six passes.
+ * (8) M0-42, AND IT IS THE ARM THAT ITEM EXISTS FOR, POINTED INWARD: take a suite
+ * whose declaration RECORDS its run and remove the record, leaving its arms exactly
+ * as they were -> C5c FAILS BY NAME. A control DECLARED and not RUN becomes visible
+ * in the register's own output, which before M0-42 it was not: every declaration
+ * read identically whether its arms had been run or only imagined. (9) M0-42
+ * OVER-STRICTNESS, and it is the arm that decides whether the mechanism is USABLE ->
+ * rewrite the same run record in a DIFFERENT spelling the estate also writes, and
+ * EVERY arm stays GREEN. A worker who genuinely ran the control must never be told
+ * they did not because they reached for another word; a register that makes honest
+ * work expensive gets bypassed and then measures nothing. (10) FORGE A TOKEN into a
+ * declaration that records no run, inventing the date and the result and running
+ * nothing -> C5d and C5e FAIL, because the register grades that suite RUN. **THIS
+ * ARM IS DECLARED TO SUCCEED AT FORGING AND ITS RED IS THE FINDING**: nothing
+ * detects it and nothing could, so the limit printed beside the figure is DRIVEN
+ * rather than merely conceded in prose. (11) DELETE THE LIMIT — remove the sentence
+ * in which the register admits it cannot prove a run -> C7b FAILS BY NAME, because
+ * an instrument that quietly drops its own caveat keeps printing the figure while
+ * the reader stops being told what it is worth.
+ * RUN 2026-09-16 by M0-42 via `node test/register-grammar.control.mjs`, all eleven
+ * arms armed ALONE with the others held open, every restore verified by sha256 AND
+ * by content against per-arm pristine copies under a byte floor. RESULTS: 11 of 11
+ * ARMED, 11 of 11 as declared — but only after arm (1), which is D-263's and not
+ * M0-42's, came back NOT AS DECLARED and was corrected at the driver rather than
+ * smoothed: **A5 was declared to FAIL under it and now stays GREEN, because the
+ * CORPUS GREW and A5's `readable > 100` floor no longer bites** (measured 2026-09-16:
+ * 197 classified, 124 surviving with transitions zeroed against ~146/under-100 when
+ * D-263 ran it on 2026-08-09). A5 is deliberately NOT retuned to make the arm fire;
+ * the slack floor is named at the driver for whoever owns it. **A declaration nobody
+ * re-runs decays toward GREEN and says nothing while it does — M0-42's own subject,
+ * found inside M0-42's own harness.**
  * RUN 2026-08-09 by D-263, each arm ALONE with the others held open, via
  * `node test/register-grammar.control.mjs`; restores verified by sha256 AND by
  * content against per-arm uniquely-named pristine copies under a byte floor, and
@@ -64,7 +94,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { countArms, countTransitions, countEnumerations, readControl }
+import { countArms, countTransitions, countEnumerations, readControl, readRunEvidence }
   from "../scripts/control-register.mjs";
 /* GUARDED, NOT NAMED (D-238's class, and hygiene's walk census caught this suite
    on its first full battery before anyone read the diff — the ratchet working).
@@ -257,6 +287,159 @@ t("B6 the recovered block is a real span, not a narrowed-to-nothing one",
 
 console.log(`corpus (B): ${block.length} byte(s) of recovered block read from `
   + `docs/development/VERIFICATION.md · ${blob.length} byte(s) of REC-68 branch blob read from git`);
+
+/* ==================================================================== PART C
+   M0-42 — RUN vs DECLARED, AND THE LIMIT PINNED BEFORE THE MECHANISM.
+
+   **WHAT PART C DOES NOT ASSERT, SAID FIRST BECAUSE IT IS THE POINT OF THE ITEM.**
+   It does not assert that any control ran. Nothing here can, and C7 exists to pin
+   that the instrument SAYS SO rather than to hide it. A register that claimed to
+   prove execution would be a worse instrument than one that admits it cannot,
+   because every downstream reader would then believe a figure exactly as strong as
+   the worker's word and no stronger.
+
+   **AND THE PREMISE THE ITEM WAS ROWED ON IS CORRECTED HERE RATHER THAN REPEATED.**
+   M0-41's census reported that nothing distinguishes a control that RAN from one
+   only DECLARED. That is true of the INSTRUMENTS and false of the RECORD: measured
+   2026-09-16, 164 of the plane's 198 declarations already carried a dated run token
+   in prose, written by workers nobody asked. The absence was never that the estate
+   fails to record its runs — it is that NO INSTRUMENT READ THE RECORD, so the 34
+   that carry nothing were invisible beside the 164 that do. C6 is therefore the
+   load-bearing arm of this part: the spellings workers ALREADY use must grade RUN,
+   because a register that makes honest work expensive gets bypassed and then
+   measures nothing. */
+
+const RUN_FIXTURE = "NEGATIVE CONTROL: break the tokenizer -> the suite fails. "
+  + "RUN 2026-08-09 by D-263, each arm ALONE, 7 of 7 as declared.";
+const UNDET_FIXTURE = "NEGATIVE CONTROL: break the tokenizer -> 17 of 34 assertions fail.";
+const BARE_FIXTURE = "NEGATIVE CONTROL: break the tokenizer and the suite must then fail.";
+
+t("C1 a declaration carrying a dated execution token reads RUN, with the date recovered",
+  [readRunEvidence(RUN_FIXTURE).state, readRunEvidence(RUN_FIXTURE).date],
+  ["RUN", "2026-08-09"]);
+
+/* UNDETERMINED IS FIRST-CLASS AND IS NOT A SOFTER "NO". A figure alone CANNOT
+   distinguish a measurement from a prediction, because the register grammar spells
+   a forecast and a result the same way: `break this -> that must then fail` is the
+   form of both. Collapsing this state into RUN would be the overclaim; collapsing
+   it into DECLARED-ONLY would call an honest worker's run a failure. */
+t("C2 a measured-LOOKING outcome with no date is UNDETERMINED, never RUN and never DECLARED-ONLY",
+  readRunEvidence(UNDET_FIXTURE).state, "UNDETERMINED");
+
+t("C3 a wholly prospective declaration is DECLARED-ONLY",
+  readRunEvidence(BARE_FIXTURE).state, "DECLARED-ONLY");
+
+/* C4 — NEGATION, AND THE CLAUSE BOUND THAT COST SIX TRUE TOKENS.
+   The first draft of the negation guard read a flat 44 characters back and scored
+   158 where the unguarded scan scored 164. All six losses were a negator in the
+   PRECEDING SENTENCE with that sentence's own full stop in between — this suite's
+   own declaration among them. The second pair below is that regression pinned
+   verbatim, so a future tightening of the guard fails here instead of silently
+   converting six honest runs into six false NOT-RUNs. */
+t("C4a a NEGATED run claim does not read RUN",
+  readRunEvidence("NEGATIVE CONTROL: arm (1) -> it fails. This has never been run, 2026-09-16.").state,
+  "DECLARED-ONLY");
+t("C4b a negator in the PREVIOUS SENTENCE does not suppress a real token (the six-token regression)",
+  readRunEvidence("NEGATIVE CONTROL: a run of six nulls cannot be mistaken for six "
+    + "passes. RUN 2026-08-09 by D-263, 7 of 7 as declared.").state,
+  "RUN");
+
+/* C5 — THE LIVE CORPUS. Every declaration lands in exactly one of three states and
+   the three partition the corpus: a state that could be both, or neither, is how a
+   count gets quietly reported over a set nobody defined. Two suites are named, and
+   they are named because the DRIVER flips each one: stripping `admission-gate`'s
+   token must make it visible here, and forging one into `affordances` must be
+   visible too — which is the forgery WORKING, not the register catching it. */
+const runStates = { RUN: 0, UNDETERMINED: 0, "DECLARED-ONLY": 0 };
+let gradedCorpus = 0, admissionState = null, affordancesState = null;
+let notRun = 0, notRunButTokenElsewhere = 0, affordancesElsewhere = null;
+for (const f of suiteFiles) {
+  if (disc.verified && !inCommit.has(repoPath(REPO, join(DIR, f)))) continue;
+  const src = readFileSync(join(DIR, f), "utf8");
+  const d = readControl(src);
+  if (!d) continue;
+  gradedCorpus++;
+  runStates[d.run.state]++;
+  if (d.run.state !== "RUN") {
+    notRun++;
+    const elsewhere = readRunEvidence(src.replace(/\s+/g, " ")).state === "RUN";
+    if (elsewhere) notRunButTokenElsewhere++;
+    if (f === "affordances.test.mjs") affordancesElsewhere = elsewhere;
+  }
+  if (f === "admission-gate.test.mjs") admissionState = d.run.state;
+  if (f === "affordances.test.mjs") affordancesState = d.run.state;
+}
+console.log(`corpus (C): ${gradedCorpus} declaration(s) graded · RUN ${runStates.RUN} · `
+  + `UNDETERMINED ${runStates.UNDETERMINED} · DECLARED-ONLY ${runStates["DECLARED-ONLY"]} · `
+  + `admission-gate=${admissionState} affordances=${affordancesState} · ${notRunButTokenElsewhere}/${notRun} not-RUN suites carry a token ELSEWHERE`);
+
+t("C5a the three states PARTITION the graded corpus — no declaration is both or neither",
+  runStates.RUN + runStates.UNDETERMINED + runStates["DECLARED-ONLY"] === gradedCorpus, true);
+t("C5b the corpus is non-empty and the mechanism is live in it, not merely possible",
+  [gradedCorpus > 150, runStates.RUN > 150], [true, true]);
+t("C5c a suite whose declaration RECORDS its run reads RUN, by name",
+  admissionState, "RUN");
+t("C5d a suite whose declaration records NO run does not read RUN, by name",
+  affordancesState === "RUN", false);
+
+/* C5e — THE ANTI-OVERCLAIM PIN, AND IT IS HERE BECAUSE THIS ITEM'S FIRST DRAFT GOT
+   IT WRONG IN THE DIRECTION THIS PROJECT CARES ABOUT. Naming all 34 not-RUN suites
+   as resting on the worker's word read as a finding and was FALSE for 18 of them:
+   `readControl` records ONE declaration per suite, and the marker grammar does not
+   see `NEGATIVE CONTROL (` at all, so a suite can record its runs in a second
+   declaration and still be graded on the silent one. `affordances.test.mjs` is the
+   receipt — graded DECLARED-ONLY while holding five further declarations reading
+   *"all RUN 2026-08-04 … restored BYTE-IDENTICAL"*. **A register that reported that
+   suite as uncontrolled would be claiming more than it can support, which is the
+   defect this whole item exists to avoid, turned on itself.** */
+t("C5e a suite graded not-RUN whose runs are recorded in a declaration the register CANNOT SEE is not reported as a finding",
+  [affordancesState, affordancesElsewhere], ["DECLARED-ONLY", true]);
+t("C5f the overclaim is bounded and PRINTED: not every not-RUN suite is evidence-free",
+  [notRun > 0, notRunButTokenElsewhere > 0, notRunButTokenElsewhere < notRun],
+  [true, true, true]);
+
+/* C6 — OVER-STRICTNESS, AND IT IS THE ARM THAT DECIDES WHETHER THIS IS USABLE.
+   Every spelling below was COPIED OUT OF THIS ESTATE'S OWN SUITES on 2026-09-16,
+   not invented for the test. If any one of them failed to grade RUN, this register
+   would be telling a worker who already did the work that they had not, and the
+   correct response to that instrument is to bypass it. No worker is asked to add
+   ceremony to prove what they already did; the vocabulary was fitted to what they
+   had already written. */
+const REAL_SPELLINGS = [
+  "NEGATIVE CONTROL: arm (1) -> it fails (run 2026-07-31) on the acquire path.",
+  "NEGATIVE CONTROL: arm (1) -> it fails. ALL SIX ARMS RUN 2026-08-08 IN WORKTREE agent-a6feaaff.",
+  "NEGATIVE CONTROL: arm (1) -> it fails. all four RUN 2026-08-05 by rec24-agent, each broken ALONE.",
+  "NEGATIVE CONTROL: arm (1) -> it fails. 27 pass, 0 fail — RE-MEASURED 2026-08-10 BY FL-7.",
+  "NEGATIVE CONTROL: arm (1) -> it fails. re-run 2026-08-10 against the merged tree.",
+  "NEGATIVE CONTROL: arm (1) -> it fails. every arm below was RUN on 2026-08-07 by is6-agent.",
+  "NEGATIVE CONTROL: arm (1) -> it fails. DRIVEN 2026-09-12, restores verified by content.",
+];
+t("C6 every run-token spelling this estate ALREADY writes grades RUN — no new ceremony is imposed",
+  REAL_SPELLINGS.map((s) => readRunEvidence(s).state),
+  REAL_SPELLINGS.map(() => "RUN"));
+
+/* C7 — THE LIMIT, PINNED AT THE SITE AND IN THE REGISTER'S OWN WORDS.
+   **A FORGED TOKEN IS INDISTINGUISHABLE FROM A REAL ONE.** C7a drives that rather
+   than conceding it in prose: a token fabricated out of nothing grades RUN, and
+   nothing here refuses it. C7b is the accepts-when — the instrument must SAY this
+   where it prints the figure, not only in a queue row nobody reads beside the
+   output. An instrument that quietly overstates its own reach is this project's
+   own defect turned inward, and it is the one thing this item could get wrong in a
+   way that leaves the record worse than it found it. */
+t("C7a A FORGED TOKEN GRADES RUN AND NOTHING DETECTS IT — the limit, driven, not conceded",
+  readRunEvidence("NEGATIVE CONTROL: arm (1) -> it fails. RUN 2026-09-16, 9 of 9 as "
+    + "declared, in a session that never existed.").state,
+  "RUN");
+
+const COVERAGE = readFileSync(join(DIR, "../scripts/coverage.mjs"), "utf8");
+const LIMIT_AT_SITE = [
+  "THIS DOES NOT PROVE THAT ANY CONTROL",
+  "FORGED RUN TOKEN IS INDISTINGUISHABLE FROM A REAL ONE",
+  "would be a worse instrument than this one",
+];
+t("C7b the register STATES its limit where it prints the figure, in its own words",
+  LIMIT_AT_SITE.map((s) => COVERAGE.includes(s)), LIMIT_AT_SITE.map(() => true));
+
 
 console.log(`\nregister-grammar: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

@@ -436,6 +436,108 @@ an unreadable declaration is a gap in the instrument, not a defect in the driver
 tally MAY remain a hard-coded literal — the defect was never the literal but that nothing
 reconciled it, and a tally derived from the driver's own baseline run agrees for free.
 
+### RUN vs DECLARED — AND THE LIMIT IS THE FIRST THING STATED (M0-42, 2026-09-16)
+
+**NOTHING HERE PROVES THAT A NEGATIVE CONTROL RAN, AND A REGISTER THAT CLAIMED TO WOULD BE A
+WORSE INSTRUMENT THAN THE ONE THAT ADMITS IT CANNOT.** Proving execution is not achievable
+from inside this repository: any artifact a worker can write, a worker can write without
+running anything, and a forged run token is one line of prose. That is stated first, it is
+PRINTED first by `coverage.mjs` beside the figure, and it is pinned by an assertion so a later
+editor cannot quietly delete it — because an instrument that drops its own caveat keeps
+printing the number while the reader stops being told what it is worth.
+
+**THE PREMISE THE ITEM WAS ROWED ON IS HALF WRONG, AND CORRECTING IT IS THE ITEM.** M0-41's
+census reported that nothing in this estate distinguishes a control that RAN from one only
+DECLARED. That is true of the INSTRUMENTS and **false of the RECORD**. Measured 2026-09-16
+over the plane's 198 declarations: **164 already carried a dated run token in prose** — `RUN
+2026-08-09 by PL-18 (worktree agent-…)`, `all four RUN 2026-08-05 by rec24-agent, each broken
+ALONE and restored byte-identical`, `RE-MEASURED 2026-08-10 BY FL-7`. The convention was
+already there, written by workers nobody asked, and **no instrument read it** — so the 34
+carrying nothing were invisible beside the 164 that do. The work was therefore to READ what
+honest workers already write, never to impose a ceremony on them. **This is the reason the
+mechanism costs nothing to adopt, and it is why the vocabulary was FITTED to the corpus rather
+than chosen: a register that makes honest work expensive gets bypassed and then measures
+nothing.**
+
+**THE THREE STATES, with UNDETERMINED first-class.** `readRunEvidence` in
+`bio-plane/scripts/control-register.mjs` grades the declaration the register already records:
+
+- **RUN** — a past-tense EXECUTION VERB with an ISO date within 60 characters. The date
+  separates a report from a prediction; the verb separates an execution from a defect's
+  discovery date. Negation is read, bounded to the CURRENT CLAUSE.
+- **UNDETERMINED** — a measured-LOOKING outcome (`17 of 34 assertions fail`, `471 -> 482`,
+  `exit 1`) with no date. **A FIGURE ALONE CANNOT DISTINGUISH A MEASUREMENT FROM A
+  PREDICTION**, because the register grammar spells a forecast and a result the same way.
+  This state says so rather than guessing, and it is the honest home of a worker who ran the
+  arm and wrote the number down without dating it. It is not a finding against anyone.
+- **DECLARED-ONLY** — neither; wholly prospective.
+
+**AND THE GRADE IS SYNTACTIC, WHICH CUTS THE OTHER WAY TOO.** A run word that merely happens to
+sit near a date reads RUN, so the token can be satisfied BY ACCIDENT and not only by intent.
+Measured rather than waved at: 21 quotes sampled evenly across the 164 on 2026-09-16 were 21
+genuine run claims and 0 false. **That is a sample and not a proof**, and it is the honest shape
+of the whole instrument — every claim it makes is cheaper to falsify than it was before, and
+none of them is certain.
+
+**WHAT IT BUYS, stated so the gain is not overstated either.** The absence becomes VISIBLE and
+COUNTED where every declaration used to read alike. A false claim must now carry a DATE and a
+FIGURE, which makes it FALSIFIABLE by anyone who re-runs the arm — a purely prospective
+declaration was unfalsifiable by construction, because it predicted nothing that could later
+be shown wrong. `REGISTER_FLOOR.run` is a ratchet at the estate's already-held 164, so a token
+can no longer be REMOVED in silence. It is deliberately NOT a requirement that every
+declaration carry one: a gate that failed 34 honest suites on the day it landed would be
+switched off.
+
+**THE SECOND LOOK EXISTS BECAUSE THE FIRST DRAFT OF THIS REPORT OVERCLAIMED, AND THAT IS THE
+MOST IMPORTANT PARAGRAPH HERE.** Naming all 34 not-RUN suites as resting on the worker's word
+read as a finding and was FALSE for 18 of them. `readControl` records ONE declaration per
+suite — the fullest — and the marker grammar does not recognise `NEGATIVE CONTROL (` at all,
+because `(` is not one of `MARKER_SEPARATORS`. So a suite can state its control several times,
+record its runs in the copies, and be graded on the silent one: `affordances.test.mjs` grades
+DECLARED-ONLY while holding five further declarations reading *"all RUN 2026-08-04 … restored
+BYTE-IDENTICAL"*. Both are PRE-EXISTING properties of the arms grammar, NAMED and deliberately
+not changed — widening the separator set moves `arms` and `classified`, which is a decision
+about the arms tally and not about run evidence. The report therefore prints a second, LOOSE
+column that reads the whole file; it is a **floor on innocence** whose only job is to stop the
+strict list overclaiming, it never promotes a suite into the RUN count, and **the figure that
+matters is 16, not 34**.
+
+**THE FALSIFIER THAT LOOKED AVAILABLE AND IS NOT ONE, MEASURED AND KEPT SO NOBODY RE-DERIVES
+IT.** Dating a token against the suite it sits in is mechanical, and that made it the obvious
+way to make a run claim checkable. It does not work: **roughly 88% of tokens are stale on a
+completely healthy estate** — 143-144 of 164 across this item's own runs on 2026-09-16, median
+gap 10 days, max 46, identical under `%cs` and `%as` so it is not a rebase artefact. **The live
+figure is PRINTED by the instrument and that is the authority**; the range is given here rather
+than a numeral because this very figure moved by one within a turn of first being written. A suite is far too coarse a proxy for an arm's subject; suites
+are edited constantly for reasons unrelated to their control, while the change that WOULD
+invalidate a run is usually in `src/` and is invisible from there. **Wrong in both directions
+at once.** It is printed as a distribution, never as a list and never as a gate. A real
+falsifier must key on the SUBJECT an arm names, not on the file its declaration lives in.
+
+**THE ARMS, and the load-bearing three.** `register-grammar.test.mjs` PART C, run by
+`register-grammar.control.mjs` (`node test/register-grammar.control.mjs`), 11 of 11 armed and
+run, 11 of 11 as declared on 2026-09-16. Arm 7 STRIPS a real suite's run record and leaves its
+arms untouched — C5c fails by name, which is a control DECLARED and not RUN becoming visible
+without anyone reading prose. Arm 8 is the OVER-STRICTNESS arm and it is the one that decides
+whether this is usable: the same record rewritten in another spelling the estate writes leaves
+every arm GREEN. **Arm 9 FORGES a token into a suite that records no run, and it is DECLARED
+TO SUCCEED — its red is the finding, not a defect.** A limit conceded in prose and never
+driven is how an instrument ends up believed past its reach.
+
+**AND RE-RUNNING THE HARNESS CAUGHT A DECLARATION THAT HAD QUIETLY STOPPED BEING TRUE, WHICH IS
+THIS SECTION'S OWN SUBJECT ARRIVING INSIDE ITS OWN INSTRUMENT.** D-263's arm (1) declared A5 to
+FAIL and A5 now stays GREEN — nothing about the subject changed, the CORPUS GREW, and A5's
+non-vacuity floor of `readable > 100` no longer bites at 198 declarations (124 survive with
+transitions zeroed; it was under 100 at ~146 when D-263 ran it on 2026-08-09). A5 is
+deliberately NOT retuned to make the arm fire again: moving an assertion's threshold so a
+control declaration comes true is tuning the subject to fit the control. The declaration was
+corrected at the driver with its date and reason, in BOTH halves — the prose and the judgement
+array, because correcting only the prose leaves the half the harness actually reads still
+wrong, and the run after the first correction still read NOT AS DECLARED for exactly that.
+**`readable > 100` against a live 197 is a slack floor — a hand-carried number nobody
+re-measured while the thing it bounds grew by a third — and it is named for whoever owns it.
+A declaration nobody re-runs decays toward GREEN and says nothing while it does.**
+
 ## Prose naming an op is a CLAIM about the dispatch table (M0-12)
 
 **REC-58 was a whole queue item spent establishing that a sentence was false**, and the
