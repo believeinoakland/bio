@@ -68,6 +68,7 @@ import "./stdio.mjs";
 import "./sandbox.mjs";
 import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
@@ -155,38 +156,83 @@ section("THE UNIT: one account many sessions, two accounts refused");
 /* THE SECTION THIS SUITE EXISTS FOR. Both of the code's errors are pinned here as
    consequences rather than described in prose, so neither can come back quietly. */
 {
-  const A = { CLAUDE_CODE_ACCOUNT_UUID: "11111111-1111-1111-1111-111111111111" };
-  const B = { CLAUDE_CODE_ACCOUNT_UUID: "22222222-2222-2222-2222-222222222222" };
+  /* THESE ARMS DROVE `CLAUDE_CODE_ACCOUNT_UUID` AND THE RULE CHANGED UNDER THEM —
+     corrected, never exempted. The old assertions were not wrong about the UNIT;
+     they were wrong about WHERE THE UNIT IS READ FROM, and they passed because the
+     suite supplied the variable the real platform does not. Measured 2026-09-16 on
+     a desktop session: 26 `CLAUDE_*` variables and not that one. A suite that hands
+     its subject an input the world never supplies is testing something else — the
+     negative-control rule, arriving through the fixture instead of through the
+     method. The account now comes from `~/.claude.json`, so the fixture is a HOME
+     and not an env. */
+  const home = (name, uuid) => {
+    const h = join(SANDBOX, `home-${name}`);
+    mkdirSync(h, { recursive: true });
+    writeFileSync(join(h, ".claude.json"), JSON.stringify({
+      machineID: "a-machine-not-an-account",
+      oauthAccount: { accountUuid: uuid, emailAddress: `${name}@example.test` },
+    }));
+    return h;
+  };
+  const A = home("acctA", "11111111-1111-1111-1111-111111111111");
+  const B = home("acctB", "22222222-2222-2222-2222-222222222222");
+  const NOHOME = join(SANDBOX, "home-empty");
+  mkdirSync(NOHOME, { recursive: true });
   /* TWO SESSIONS OF ONE ACCOUNT ARE TWO CLONES — the cloud case exactly, since a
      container clones fresh every session. They must agree. */
   const s1 = scratchClone("acctA-s1", RELEASED);
   const s2 = scratchClone("acctA-s2", RELEASED);
-  const k1 = accountIdentity({ repo: s1.work, env: A });
-  const k2 = accountIdentity({ repo: s2.work, env: A });
+  const k1 = accountIdentity({ repo: s1.work, env: {}, home: A });
+  const k2 = accountIdentity({ repo: s2.work, env: {}, home: A });
   t("two SESSIONS of one account derive the SAME holder key, though they are different clones",
     k1.key === k2.key, true);
-  t("...and it is derived from the account uuid rather than typed or observed",
-    k1.source, "CLAUDE_CODE_ACCOUNT_UUID (hashed)");
+  t("...and it is derived from the config's account uuid rather than typed or observed",
+    k1.source, "~/.claude.json oauthAccount.accountUuid (hashed)");
   t("...and it does not disclose the uuid it came from",
     [/^acct-[0-9a-f]{8}$/.test(k1.key), k1.key.includes("1111")], [true, false]);
-  const kB = accountIdentity({ repo: s1.work, env: B });
+  const kB = accountIdentity({ repo: s1.work, env: {}, home: B });
   t("a DIFFERENT account derives a different key from the same clone", kB.key !== k1.key, true);
+  /* THE REGRESSION THAT COST A DAY, pinned as a consequence: the machine's OWN
+     identity must never be read off the machine. `machineID` sits in the same file
+     and is not the answer. */
+  t("...and the key is NOT derived from the machineID sitting beside it in that file",
+    k1.key, `acct-${createHash("sha256").update("11111111-1111-1111-1111-111111111111").digest("hex").slice(0, 8)}`);
 
   const future = "2026-09-17T12:00Z";
-  const aHolds = held(k1.key, future, machineIdentity({ repo: s1.work, env: A }).id);
+  const aHolds = held(k1.key, future, machineIdentity({ repo: s1.work, env: {} }).id);
   /* THE ARM THAT CATCHES v2. Session 2 must read session 1's hold as ITS OWN. */
   t("session 2 reads session 1's hold as OURS — an account is never refused its own estate",
     estateVerdict(aHolds, k2.key, NOW).kind, "ours");
   /* THE ARM THAT CATCHES v1. The other account must be refused. */
   t("the OTHER account is REFUSED by that same hold — the collision the lock exists for",
     estateVerdict(aHolds, kB.key, NOW).kind, "theirs");
+  /* THE PRECEDENCE, because a demoted fallback that quietly still wins is the same
+     defect with the sources swapped. */
+  t("the config uuid BEATS CLAUDE_CODE_ACCOUNT_UUID, which is now the fallback",
+    accountIdentity({ repo: s1.work, home: A,
+      env: { CLAUDE_CODE_ACCOUNT_UUID: "99999999-9999-9999-9999-999999999999" } }).key, k1.key);
+  t("...and that variable is still USED where there is no config file to read",
+    accountIdentity({ repo: s1.work, home: NOHOME,
+      env: { CLAUDE_CODE_ACCOUNT_UUID: "11111111-1111-1111-1111-111111111111" } }).source,
+    "CLAUDE_CODE_ACCOUNT_UUID (hashed)");
   /* AND THE FALLBACK IS HONEST ABOUT NOT BEING ACCOUNT-SCOPED, which is what keeps
-     a machine with no account uuid from silently claiming per-clone. */
-  const fb = accountIdentity({ repo: s1.work, env: {} });
+     a machine with neither source from silently claiming per-clone. */
+  const fb = accountIdentity({ repo: s1.work, env: {}, home: NOHOME });
   t("with no account uuid the key falls back to the per-clone id and SAYS it is not account-scoped",
     [fb.discriminating, /NOT account-scoped/.test(fb.source)], [true, true]);
   t("BIO_HOLD_ACCOUNT beats both, which is what lets a control drive the unit",
-    accountIdentity({ repo: s1.work, env: { ...A, BIO_HOLD_ACCOUNT: "acct-fixed" } }).key, "acct-fixed");
+    accountIdentity({ repo: s1.work, home: A, env: { BIO_HOLD_ACCOUNT: "acct-fixed" } }).key, "acct-fixed");
+  /* A CONFIG THAT IS PRESENT AND USELESS MUST FALL THROUGH, NOT THROW: an unparseable
+     or half-written file is the state a crashed CLI leaves behind, and a lock that
+     dies on it is worse than one that falls back and says so. */
+  for (const [what, body] of [["unparseable", "{not json"], ["no oauthAccount", "{}"],
+                              ["empty uuid", JSON.stringify({ oauthAccount: { accountUuid: "" } })]]) {
+    const h = join(SANDBOX, `home-bad-${what.replace(/\W+/g, "-")}`);
+    mkdirSync(h, { recursive: true });
+    writeFileSync(join(h, ".claude.json"), body);
+    t(`a config that is ${what} falls through to the fallback instead of throwing`,
+      /NOT account-scoped/.test(accountIdentity({ repo: s1.work, env: {}, home: h }).source), true);
+  }
 }
 
 /* ========================================================================== */
@@ -213,8 +259,13 @@ section("the machine label, and the grain of the fallback key");
     machineIdentity({ repo: c.work, env: { BIO_MACHINE_ID: "a|b c" } }).id, "a-b-c");
   const bare = join(SANDBOX, "not-a-repo");
   mkdirSync(bare, { recursive: true });
+  /* `home` is pinned at an empty directory for the same reason the section above
+     changed: reading the RUNNER's real config would make this arm assert about
+     whoever is running the suite rather than about the subject. */
+  const noHome = join(SANDBOX, "home-none");
+  mkdirSync(noHome, { recursive: true });
   t("outside a repository, with no account uuid, the key reports NOT DISCRIMINATING rather than guessing",
-    accountIdentity({ repo: bare, env: {} }).discriminating, false);
+    accountIdentity({ repo: bare, env: {}, home: noHome }).discriminating, false);
 }
 
 /* ========================================================================== */

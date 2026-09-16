@@ -110,6 +110,7 @@ import { execFileSync } from "node:child_process";
 import { randomBytes, createHash } from "node:crypto";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, isAbsolute, resolve } from "node:path";
+import { homedir } from "node:os";
 
 /** The HOLD grammar splits on `|` and the line is one line, so a machine name
  *  that carries either would break the very collision the one-line form buys.
@@ -170,27 +171,62 @@ export function machineIdentity({ repo = process.cwd(), env = process.env } = {}
 
 /* WHO THE HOLDER IS — the ACCOUNT, ruled by Bob 2026-09-16.
  *
- * Derived from `CLAUDE_CODE_ACCOUNT_UUID`, which is authoritative, stable across
- * every session and every container of one account, and different for a different
- * account — which is the collision this lock actually exists to prevent. It is
- * HASHED to 8 hex rather than written out, because the HOLD line lives in a
- * repository and an account UUID in it would be an identifier disclosed for no
- * benefit: the lock needs the two accounts to DIFFER, not to be readable.
+ * Derived from `oauthAccount.accountUuid` in `~/.claude.json` — RULED by Bob
+ * 2026-09-16 — which is the value the CLI itself persists for the signed-in
+ * account. It is HASHED to 8 hex rather than written out, because the HOLD line
+ * lives in a repository and an account UUID in it would be an identifier
+ * disclosed for no benefit: the lock needs two accounts to DIFFER, not to be
+ * readable.
+ *
+ * `CLAUDE_CODE_ACCOUNT_UUID` WAS the primary and it is demoted to a fallback,
+ * because the previous rule rested on a claim about the environment that was
+ * never measured. Measured 2026-09-16 on a desktop session: 26 `CLAUDE_*`
+ * variables present and NOT that one, so `accountIdentity` fell through to the
+ * per-clone id and an account read ITS OWN unexpired hold as another holder's —
+ * `plancheck` then refused by name, naming this very machine as "another
+ * machine". That is v2's defect arriving through the fallback path rather than
+ * through the primary, and it cost most of a day.
+ *
+ * WHY THIS SOURCE AND NOT THAT ONE, measured rather than reasoned: the uuid is
+ * UUID-shaped; it is SERVER-ISSUED, since the record holding it also carries
+ * `profileFetchedAt`, `seatTier`, `billingType` and `organizationRole`, none of
+ * which this machine could mint; and it is distinct from the sibling top-level
+ * `machineID`, which is not UUID-shaped — so the config's own schema separates
+ * the account from the machine, which is the separation this lock turns on. It
+ * lives in the HOME directory and not in the repository, so every clone and
+ * every worktree on one machine derives ONE key, which is exactly the property
+ * the per-clone fallback lacks.
  *
  * FALLBACKS, in order, each NAMED in the result so a reader can see which applied:
- * `BIO_HOLD_ACCOUNT` for an explicit value and for controls; then the per-clone id
- * persisted in the common gitdir, which is not account-scoped but IS stable and
- * distinct, so the two-accounts collision is still caught on a machine where the
- * account uuid is not in the environment; then nothing, reported as
- * `discriminating: false` so the caller refuses to claim rather than claiming
- * under a key that cannot discriminate. */
-export function accountIdentity({ repo = process.cwd(), env = process.env } = {}) {
+ * `BIO_HOLD_ACCOUNT` for an explicit value and for controls; then this uuid; then
+ * `CLAUDE_CODE_ACCOUNT_UUID` for a platform that has it and no config file; then
+ * the per-clone id persisted in the common gitdir, which is not account-scoped but
+ * IS stable and distinct, so the two-accounts collision is still caught on a
+ * machine with neither; then nothing, reported as `discriminating: false` so the
+ * caller refuses to claim rather than claiming under a key that cannot
+ * discriminate. */
+const hash8 = (v) => createHash("sha256").update(String(v)).digest("hex").slice(0, 8);
+
+/** Read the signed-in account uuid out of the CLI's own config. Every failure —
+ *  no file, unreadable, unparseable, key absent — is one answer, `null`, because
+ *  the caller's next fallback is the same in all of them and a partial read here
+ *  would be an identity nobody could account for. */
+export function configAccountUuid(home = homedir()) {
+  try {
+    const j = JSON.parse(readFileSync(join(home, ".claude.json"), "utf8"));
+    const v = j && j.oauthAccount && j.oauthAccount.accountUuid;
+    return typeof v === "string" && v ? v : null;
+  } catch { return null; }
+}
+
+export function accountIdentity({ repo = process.cwd(), env = process.env, home = homedir() } = {}) {
   if (env.BIO_HOLD_ACCOUNT)
     return { key: sanitizeName(env.BIO_HOLD_ACCOUNT), source: "BIO_HOLD_ACCOUNT", discriminating: true };
-  if (env.CLAUDE_CODE_ACCOUNT_UUID) {
-    const d = createHash("sha256").update(env.CLAUDE_CODE_ACCOUNT_UUID).digest("hex").slice(0, 8);
-    return { key: `acct-${d}`, source: "CLAUDE_CODE_ACCOUNT_UUID (hashed)", discriminating: true };
-  }
+  const uuid = configAccountUuid(home);
+  if (uuid)
+    return { key: `acct-${hash8(uuid)}`, source: "~/.claude.json oauthAccount.accountUuid (hashed)", discriminating: true };
+  if (env.CLAUDE_CODE_ACCOUNT_UUID)
+    return { key: `acct-${hash8(env.CLAUDE_CODE_ACCOUNT_UUID)}`, source: "CLAUDE_CODE_ACCOUNT_UUID (hashed)", discriminating: true };
   const m = machineIdentity({ repo, env });
   return m.discriminating
     ? { key: `clone-${m.suffix || m.id}`, source: `per-clone id (${m.source}) — NOT account-scoped`, discriminating: true }

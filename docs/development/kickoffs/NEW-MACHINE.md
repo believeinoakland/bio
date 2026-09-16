@@ -73,8 +73,13 @@ ordering; read its HOLD line from `origin/main`, never from your own tree.**
 
 **AND THE HOLDER IS THE ACCOUNT, not this machine and not this session** — Bob, 2026-09-16. So your
 account's other sessions, on this machine or any other, share your hold and are not refused; a
-DIFFERENT account is. The key is derived from `CLAUDE_CODE_ACCOUNT_UUID` and hashed, because the
-line lives in a repository; `machine=` on the line is a label only. The window is Bob's 48 h for
+DIFFERENT account is. The key is derived from `oauthAccount.accountUuid` in `~/.claude.json` and
+hashed, because the line lives in a repository; `machine=` on the line is a label only. **It is read
+from the config and NOT from the environment: `CLAUDE_CODE_ACCOUNT_UUID` is not present on a desktop
+session, which is how an account spent most of a day locked out of its own estate by a refusal that
+named its own machine as the stranger.** `node tools/estatehold.mjs show` prints the key and the
+source it came from; if the source reads `NOT account-scoped`, stop and fix that before claiming
+rather than developing under it. The window is Bob's 48 h for
 everyone, including an ephemeral container, because an ACCOUNT outlives any container and its next
 session refreshes the hold inside a push it already makes. `ESTATE-HOLD.md` records the two ways
 the code got this unit wrong before believing the prose here.

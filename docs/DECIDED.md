@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-947 rulings across 84 documents.
+948 rulings across 84 documents.
 
 ## DEC-
 
@@ -1685,8 +1685,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/ESTATE-HOLD.md:45`
 - RULED. One account may run as many sessions and as many machines as it likes — they are one holder and they share the hold. A DIFFERENT account is refused. That is the collision this lock exists to prevent, and it is the only one it is trying to prevent.  
   `docs/development/ESTATE-HOLD.md:74`
+- **2026-09-16** — — RULED by Bob, 2026-09-16. Hashed rather than written out because this line lives in a repository, and an account UUID in it would be an identifier disclosed for no benefit — the lock needs two accounts to DIFFER, not to be readable. `accountIdentity()` in `tools/estatehold.mjs` is the only reader of that…  
+  `docs/development/ESTATE-HOLD.md:99`
 - **2026-09-16** — RULED 2026-09-16, at Bob's direction: a machine claims the estate BEFORE it runs the battery and the rest of its startup verification, not after.** The claim's own gate is **`plancheck`** — the claim is a one-line change to this file, which `gates.mjs` classifies docs-class — and **not** the full battery, which is…  
-  `docs/development/ESTATE-HOLD.md:117`
+  `docs/development/ESTATE-HOLD.md:146`
 - **2026-08-07** — : finding F9 is still open — `INVESTIGATIVE-SESSION.md` still carries the superseded `[BOB-4 — RULED 2026-08-07, PROVISIONAL]` text in three places and names F9 as outstanding in its final-comparison section, and `civicos-ui/test/connections-sidebar.test.mjs` pins that staleness on purpose so the delegation cannot…  
   `docs/development/FINDINGS-WORKPLAN.md:3`
 - **2026-07-30** — [Routing, exactly as RULED](#routing-exactly-as-ruled) - [What the write path enforces, and where](#what-the-write-path-enforces-and-where) - [RULED 2026-07-30: auto-create at capture, through a queue](#ruled-2026-07-30-auto-create-at-capture-through-a-queue) - [What this unblocks](#what-this-unblocks)  

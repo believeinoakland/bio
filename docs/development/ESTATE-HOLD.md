@@ -13,7 +13,7 @@ version spread machine, status and expiry across a TABLE, so two machines claimi
 edit different rows and git would auto-merge BOTH claims into a file naming one machine and
 another machine's expiry — a textual merge of a semantic conflict. One line forces the conflict
 git is good at. **Read this line, never the prose.**
-    HOLD: machine=Sparky-Air-c47d80fb | account=acct-5085c62c | status=HELD | through=2026-09-18T19:30Z
+    HOLD: machine=Sparky-Air-c47d80fb | account=acct-13711d31 | status=HELD | through=2026-09-18T20:29Z
 **Timestamps are ISO 8601 UTC with the `Z`, always.** The first version wrote a bare date, so two
 machines in different zones could disagree by a day about whether a hold had expired — an expiry
 that is not a fact in one clock is not an expiry.
@@ -95,17 +95,46 @@ Two containers of one account agreeing is correct. v2 measured the mechanism acc
 mis-named the unit, which is the more expensive half of the error and the one no test caught, because
 there were no tests.
 
-**The rule now: the holder key is derived from `CLAUDE_CODE_ACCOUNT_UUID`, hashed to eight hex.**
-Hashed rather than written out because this line lives in a repository, and an account UUID in it
-would be an identifier disclosed for no benefit — the lock needs two accounts to DIFFER, not to be
-readable. `accountIdentity()` in `tools/estatehold.mjs` is the only reader of that question, and
-`plancheck` prints the key it derived on every run, beside the machine label.
+**The rule now: the holder key is derived from `oauthAccount.accountUuid` in `~/.claude.json`,
+hashed to eight hex** — RULED by Bob, 2026-09-16. Hashed rather than written out because this line
+lives in a repository, and an account UUID in it would be an identifier disclosed for no benefit —
+the lock needs two accounts to DIFFER, not to be readable. `accountIdentity()` in
+`tools/estatehold.mjs` is the only reader of that question, and `plancheck` prints the key it
+derived on every run, beside the machine label.
+
+**`CLAUDE_CODE_ACCOUNT_UUID` was the primary and is demoted, because the rule rested on a claim
+about the environment that nobody had measured.** Measured on a desktop session, 2026-09-16:
+twenty-six `CLAUDE_*` variables present and NOT that one. So `accountIdentity` fell through to the
+per-clone id, an account read ITS OWN unexpired hold as another holder's, and `plancheck` refused
+by name — **naming the very machine it was refusing as "another machine"**. That is v3 of this
+file's unit error: not the hostname of v1 and not the clone of v2, but the right unit read from a
+source that is not there, which degrades to v2 silently and wears v1's error message. The lesson
+that generalises past this file: **a fallback that announces itself in a NOTE while the refusal
+above it states the opposite is not an announcement.**
+
+Why this source, measured rather than reasoned: the uuid is UUID-shaped; it is SERVER-ISSUED, since
+the record holding it also carries `profileFetchedAt`, `seatTier`, `billingType` and
+`organizationRole`, none of which a machine could mint; and it is distinct from the sibling
+top-level `machineID`, which is not UUID-shaped — **so the config's own schema separates the account
+from the machine, which is the separation this lock turns on.** It lives in the HOME directory and
+not in the repository, so every clone and every worktree on one machine derives ONE key, which is
+exactly the property the per-clone fallback lacks.
+
+**WHAT IS NOT YET MEASURED, AND IT IS THE LOAD-BEARING HALF.** Only ONE account's config has ever
+been read. That the uuid DIFFERS across two accounts is a property of the field's construction and
+not an observation, and the estate has been burned twice by exactly that distinction. **The arm that
+would settle it is one reading of `oauthAccount.accountUuid` and `oauthAccount.emailAddress`
+together, taken while signed in as the other account** — differing email with differing uuid
+confirms the rule; differing email with the SAME uuid disqualifies this source outright. Until that
+reading exists, this rule is the best-supported candidate and not a verified one, and it is recorded
+here as such rather than as settled.
 
 Fallbacks, in order, each NAMED in the output so a reader sees which applied: `BIO_HOLD_ACCOUNT` for
-an explicit value and for controls; then the per-clone id, which is **not account-scoped and says
-so**, so the two-accounts collision is still caught on a machine whose environment lacks the uuid;
-then nothing, reported as not discriminating, where the tool REFUSES to claim rather than claim under
-a key that cannot discriminate.
+an explicit value and for controls; then the config uuid above; then `CLAUDE_CODE_ACCOUNT_UUID`, for
+a platform that has the variable and no config file; then the per-clone id, which is **not
+account-scoped and says so**, so the two-accounts collision is still caught on a machine with
+neither; then nothing, reported as not discriminating, where the tool REFUSES to claim rather than
+claim under a key that cannot discriminate.
 
 **A holder crossing this change finds its own earlier hold unrecognisable**, because the old line's
 account field was a literal rather than a derived key. The tool says so when it sees an undervived
