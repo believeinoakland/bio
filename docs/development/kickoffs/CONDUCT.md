@@ -589,7 +589,10 @@ So when the timer fires: do not check whether the slots are *nominally* filled,
 check whether anything is actually RUNNING, and treat every empty one as the
 defect it is.
 
-2. **When a worker reports:** VERIFY (full battery from the main checkout; **AND
+2. **When a worker reports:** VERIFY (full battery from the MERGED TREE — your own
+   worktree with the worker's branch merged into it, since 2026-09-16 you no longer hold
+   the main checkout and the figure that matters was always the merged one, never the
+   tree's address; **AND
    `node civicos-ui/test/run.mjs`, exit read UNPIPED — on 2026-08-08 CONDUCT pushed
    `origin/main` with that harness RED at 32 failures, having verified the battery and
    coverage and not it, and the integration note claimed green. Three workers found it
@@ -719,10 +722,35 @@ defect it is.
    turn that edits an area's code has stopped being CONDUCT — enqueue it and
    spawn a worker instead.
 
-**You hold the MAIN checkout and every other session, including BOB, works in a
-worktree** (`PARALLELISM.md`, DEC-3). From 2026-07-31 a dirty main tree is YOUR work
-and nobody else's, so `plancheck` refusing an unpublished planning surface is a
-finding about this session rather than noise from another.
+**YOU NO LONGER HOLD THE MAIN CHECKOUT, AND THE INVARIANT INVERTS RATHER THAN LAPSING.**
+RULED 2026-09-16 by BOB #12 (mechanism, BOB's) on CONDUCT #1's report, which flagged the
+change instead of quietly working around it. **What this paragraph said until today, kept
+because it was true and its closing is what a later reader needs to see:** CONDUCT held
+main, every other session including BOB worked in a worktree (`PARALLELISM.md`, DEC-3),
+and from 2026-07-31 **a dirty main tree was YOUR work and nobody else's** — so `plancheck`
+refusing an unpublished planning surface was a finding about this session rather than noise
+from another.
+
+**The harness now puts EVERY session, CONDUCT included, in its own worktree, and the main
+checkout is held by nobody.** So:
+
+- **Integrate from your own worktree, pushing `HEAD:main`.** Never force-push and never
+  `--force-with-lease`; a rejected push means fetch and rebase, exactly as it always did.
+  This is the ordinary act every other session already performs, and it has the property
+  `CLAUDE.md` asks for — the landing is then verifiable from the REMOTE rather than from
+  the tree you happen to be standing in.
+- **DEC-3 is better satisfied than before, not waived.** Its rule is ONE SESSION PER
+  CHECKOUT; with main held by nobody, the collision it exists to prevent cannot occur in
+  that tree at all.
+- **THE DIAGNOSTIC SHARPENS — this is the half that is easy to read as a loss.** *A dirty
+  main is CONDUCT's work* made a dirty main AMBIGUOUS: mid-integration, or something wrong,
+  and only the holder could tell you which. With nobody writing there, **a main checkout
+  that is dirty or off the tip is an ANOMALY WITH NO BENIGN READING.** That is a strictly
+  better predicate than the one it replaces. **Treat it as one: if you find that tree dirty
+  or behind, STOP AND REPORT IT — do not tidy it.** Tidying destroys the only evidence of
+  whatever wrote there.
+- **Nobody watching that tree is the right answer rather than a gap.** What needed watching
+  was a tree somebody wrote into; an unheld clean checkout at the tip needs no watcher.
 
 Credentials are in `.env`; git is configured to push as the bio persona (see the
 recalled memory). Reserve gated actions — deploying the plane or the installer —
