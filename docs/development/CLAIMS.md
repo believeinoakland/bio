@@ -10074,3 +10074,29 @@ session: REC-105 worker (worktree `agent-ab0036215c20a9dd1`). Appended rather th
   `bio-plane/src/schema.mjs`, `bio-plane/src/index.mjs`, `bio-plane/scripts/coverage.mjs`
   (`REGISTER_FLOOR` READ and NOT moved — this item adds no op and no check id), `newgroup/**`,
   `civicos-ui/**`, any version bump, tag or deploy.
+
+## CLAIM 2026-09-16 M0 (M0-40 — the bounds classifier defeated by a local binding: why it cannot be taught to follow one, and the HOIST-FRAGILE roster BY NAME)
+session: m040-worker (worktree agent-af08132ad4ca455b7)
+opened: 2026-09-16T00:00:00Z
+paths:
+- **`bio-plane/test/derivation-bounds.test.mjs`** — ADDITIVE ONLY, one new block immediately
+  after REC-66's CLASS ratchet and before REC-99's CENSUS block, plus one paired fixture inside
+  the existing over-strictness block at the foot, plus this item's entry in the file's own
+  `NEGATIVE CONTROL:` header. **No existing assertion is edited, weakened or removed. The
+  classifier itself (`decomment`, `segments`, `closeParen`, `loopBodyEnd`, `scans`, `mentions`,
+  `analyse`, `classMembers`) is BYTE-IDENTICAL** — `CLASS_MEASURED_2026_08_08 = 35` and
+  `SCANNING_MEASURED_2026_09_15 = 105` are both left exactly where they are, and no method
+  enters or leaves any roster. **M0-44 is queued on this same file and is deliberately not in
+  this cohort; this claim is held alone.**
+- **`bio-plane/test/nc-m040.mjs` (NEW)** — the negative-control DRIVER, named the way
+  `nc-rec66.mjs`, `nc-rec99.mjs` and `nc-m038.mjs` beside it are, deliberately NOT a
+  `*.test.mjs` so the battery does not discover it.
+- **`docs/development/DEBT.md`** — ONE new row, `D-384`, minted with `node tools/mintid.mjs D`.
+- **`docs/development/MEASUREMENTS.md`** — ONE appended entry, `M-33`, minted with
+  `node tools/mintid.mjs M`.
+- `docs/DECIDED.md` — regenerated with `node tools/decided.mjs` if the DEBT insertion drifts it.
+- `docs/development/CLAIMS.md` (this block).
+**NOT CLAIMED, and it is this item's hard boundary: NO PLANE SOURCE MOVES.**
+`bio-plane/src/store.mjs`, `src/index.mjs` and `checks/bio-checks.mjs` are untouched — including
+REC-88's own note at the `earnedBasisRegistry` call site, which now under-describes the finding
+and is named as an ACT for CONDUCT rather than edited from here. `tools/` is not touched.

@@ -147,7 +147,59 @@
    unbounded scan — `#frontierContent`, `biasManifest`, `documentsNamingEntity`, `frontier`,
    `queueFeed` — all PASS at baseline, byte-identically, and nothing added here can fail them.**
    They are NAMED, not graded; the block's only failing conditions are a cut that disagrees with
-   the claim, a roster that moved, and a form that arrived. */
+   the claim, a roster that moved, and a form that arrived.
+
+   ===== M0-40 / D-384, 2026-09-16 — THE ARMS FOR THE HOIST, AND FOR THE CORRECTION THIS ITEM
+   DELIBERATELY DID NOT MAKE. SIX arms, each armed ALONE with every other held open, driven by
+   `test/nc-m040.mjs` (`cd bio-plane && node test/nc-m040.mjs`), every file restored from a
+   PRISTINE copy named UNIQUELY PER ARM and verified by sha256 AND by `cmp` (2,182,088 bytes on
+   `store.mjs`, 116,483 on this file, both floored, 0 copies left behind, and the CLOSING
+   baseline re-measured equal to the opening one). Every arm asserts it ARMED — each part must
+   match EXACTLY ONCE — and all six did; two are multi-part patches and every part is asserted
+   independently. **TWO ARMS PATCH THIS SUITE RATHER THAN THE PLANE, on purpose: the defect
+   M0-40 measured lives in the INSTRUMENT, so two of its arms have to be able to reach it.**
+   BASELINE ROW FIRST: derivation-bounds **66/0, 35 in the class / 105 scanning** · bounds
+   **167/0** · meaning-bounds **92/0**.
+   (18) REC-88's HOIST RECONSTRUCTED ON THE REAL `earnedBasisRegistry` — the scan taken out of
+   the `for` header into a `const`, the same query and the same rows. MEASURED: **61/5, 34 in
+   the class**, and the five NAME the method: REC-66's FLOOR, the by-name CLASS roster, the
+   roster/count identity, the HOIST-FRAGILE roster and the worked-example pin. **THE SIBLINGS
+   STAYED FULLY GREEN — bounds 167/0, meaning-bounds 92/0 — which is D-227 reproduced once
+   more**: nothing the plane publishes changed, because nothing the plane does changed.
+   (19) THE ARM THAT EARNS THE BY-NAME ROSTER ITS PLACE — the same hoist PLUS a new member
+   arriving, so REC-88's failure is reproduced with the COUNT NEUTRALISED. MEASURED: **61/5,
+   and `CLASS.size` is STILL 35, so REC-66's CEILING and FLOOR are BOTH GREEN.** Only the
+   by-name arms fire. **This is the arm the item exists for**: the count that caught REC-88
+   caught it by luck of arithmetic, and a wave that hoisted one method while adding another
+   would have shipped green before today.
+   (19a) AND IT CAME BACK WITH MORE THAN WAS DECLARED — the surplus is NAMED and the reason is
+   STRUCTURAL rather than a slip. Four failures were declared and five arrived; the extra is
+   REC-99's CENSUS CEILING (105 -> 106), because **a method cannot join THIS class without
+   also gaining an unbounded row source, so a class-count-neutral swap necessarily moves the
+   census by one.** The declaration was incomplete, not the instrument, and the two ratchets
+   being unable to move independently here is worth knowing on its own.
+   (20) NEUTER THE HOIST TRANSFORM — it recognises no inline row source at all. MEASURED:
+   **63/3**: both rosters go EMPTY and the worked-example pin fails, while the PARTITION arm
+   stays GREEN over an all-unreached partition. **That green is the whole reason the rosters
+   are pinned BY NAME beside the partition** — a totality check is satisfied by a walk that
+   found nothing, which is how three walks in this estate congratulated themselves in one week.
+   (21) OVER-STRICTNESS — a BOUNDED row source written inline in a for-header, with real nested
+   loops and a write in its body: correct work in the exact spelling the classifier is
+   sensitive to. MEASURED: **66/0, census unmoved at 105, everything green.** A roster that
+   enrolled it would be tighter than its rule.
+   (22) OVER-STRICTNESS, THE OTHER DIRECTION — the same arrival with its row source UNBOUNDED,
+   so it genuinely joins the class with amplification its BODY carries. MEASURED: **61/5, 36 in
+   the class**, the CEILING and the by-name roster naming the arrival — **and HOIST-FRAGILE
+   STAYED GREEN**, which is the arm that proves fragile and stable are told apart on a real
+   arrival and not only on a fixture. The same census surplus as (19a), same structural cause.
+   (23) THE CORRECTION D-384 PRICES, ARMED SO IT CANNOT BE MADE SILENTLY — the header credit
+   removed, so a scan that is the loop's own row source is no longer counted as a scan PER ROW.
+   MEASURED: **59/7, 14 in the class** — twenty-one departures — with the pinned
+   `ncLinearInline` contradiction RED and REC-66's own CLASS OPS pin red beside it. **This is
+   the arm that says M0-40 chose not to do something rather than failed to see it**: the
+   correction is available, it is one substitution, and what it costs is a ceiling falling by
+   twenty-one methods, which is a decision about what the class MEANS and not a worker's.
+*/
 /* REC-66 · D-224 / D-227 — THE BOUND ON THE DERIVATION, AND THE WALK FOR ITS CLASS.
  * ============================================================================
  *
@@ -692,6 +744,176 @@ t("RATCHET: the dispatched members are pinned BY NAME, not merely counted — a 
               "publishedcase->publishedCase", "queue->queueFeed", "readingname->documentsNamingEntity",
               "reevaluations->reevaluations", "select->selectionCreate", "selection->selectionResolve",
               "selectionrelease->selectionRelease"]);
+
+
+/* ====================== M0-40 · THE SPELLING THE CLASSIFIER READS AMPLIFICATION OFF,
+ * AND WHY THE ANSWER IS A ROSTER BY NAME RATHER THAN A CLEVERER CLASSIFIER.
+ *
+ * WHAT WAS FOUND, AND NOBODY WAS LOOKING FOR IT. REC-88's first draft hoisted a scan out of
+ * a `for` header into a `const` — the SAME query, the SAME rows, the SAME work — and
+ * `earnedBasisRegistry` silently LEFT this class, 33 -> 32. The FLOOR above caught the
+ * departure; the CEILING never could. REC-88 kept the inline shape, said so at the site in
+ * `store.mjs`, and recorded the blind spot rather than moving the figure. This block is the
+ * answer to it.
+ *
+ * THE ROW OFFERED TWO ROUTES — teach the classifier to FOLLOW A LOCAL BINDING to its row
+ * source, or STATE PRECISELY WHY IT CANNOT and add a second arm that catches the departure BY
+ * NAME rather than by count. It is the second, and the reason is MEASURED on this tree rather
+ * than argued, because the first route looks obviously right until it is run.
+ *
+ * WHY THE CLASSIFIER IS NOT TAUGHT TO FOLLOW THE BINDING, AND THE FINDING IS BIGGER THAN THE
+ * HOLE. `perRowScan` counts scans lying INSIDE A LOOP, and a loop's extent begins at its `for`
+ * KEYWORD — so a scan written in the loop's own HEADER is counted as a scan PER ROW when it is
+ * the loop's ROW SOURCE and runs exactly once. **That credit is unsound on its own terms**, and
+ * the hoist blind spot is the same unsoundness seen from the other side. Making the two
+ * spellings agree therefore means choosing which one is wrong, and all three directions were
+ * DRIVEN on this tree (2026-09-16, M0-40, off this file's own classifier text):
+ *   - FOLLOW THE BINDING for `for…of` only — roster 35 -> 46, ELEVEN arrivals, and the linear
+ *     read `ncLinearFor` in the over-strictness block below is enrolled.
+ *   - FOLLOW THE BINDING for every loop form this walk follows — roster 35 -> 56, TWENTY-ONE
+ *     arrivals, and `ncLinear` itself is enrolled: the shape this file already declares BY NAME
+ *     is NOT this class. **A classifier that over-collects is worse here than one that
+ *     under-collects, because the roster is a CEILING and a false arrival forces a real one out
+ *     of sight.**
+ *   - REMOVE THE HEADER CREDIT instead — roster 35 -> 14, TWENTY-ONE departures, measured twice
+ *     by two independent readers that agree on the same 21 names (an `inLoop` that excludes the
+ *     header, and the source transform below, which share no code path).
+ * Every one of those is a ratchet moving to fit what its reader cannot see, which is the
+ * failure REC-60's shrunken 27 already cost this project two days over. **So the classifier is
+ * left BYTE-IDENTICAL and nothing added here grades anything**: `CLASS` is the same 35 and no
+ * method enters or leaves. What is added is a NAME for every membership that rests on the
+ * spelling, so the next hoist fails saying WHICH method left instead of `34 of 35`.
+ *
+ * WHAT THIS BLOCK CANNOT SETTLE, STATED HERE RATHER THAN DISCOVERED LATER. It does NOT decide
+ * whether the 21 belong in the class. Twenty-one of thirty-five memberships are held by a
+ * credit this file's own header calls out of scope — "a LINEAR read over an unbounded scan is
+ * NOT (this class is amplification, not size)" — so the ceiling's SOUNDNESS is an open
+ * question, and it is `DEBT.md` D-384's, not this block's. Naming them is what makes that
+ * question askable at all: before this, nothing in the estate could say which memberships were
+ * spelling-held.
+ * ====================================================================================== */
+
+/* REC-88's HOIST, RECONSTRUCTED AS A TRANSFORM AND DRIVEN — not described. Every `for…of`
+   whose iterable is written inline as `this.#rows(…)` is rewritten to a `const` above the
+   loop, which is exactly the edit REC-88 drafted, and the member is re-classified by the SAME
+   `analyse` above. The transform reuses `closeParen`, so a header whose SQL contains its own
+   parentheses is read the way the classifier reads it and the two cannot disagree. */
+const hoistRowSources = (body) => {
+  let out = body, n = 0;
+  for (;;) {
+    const forHead = /\bfor\s*\(/g; let m, changed = false;
+    while ((m = forHead.exec(out))) {
+      const end = closeParen(out, m.index);
+      const head = out.slice(m.index, end);
+      const of = head.indexOf(" of ");
+      if (of < 0) continue;
+      const iterable = head.slice(of + 4, -1).trim();
+      if (!/^this\.#rows\(/.test(iterable)) continue;
+      out = `${out.slice(0, m.index)}const __rowSrc${n} = ${iterable};\n    `
+          + `${head.slice(0, of)} of __rowSrc${n})${out.slice(end)}`;
+      n++; changed = true; break;                 /* indices moved; restart the scan */
+    }
+    if (!changed) return { body: out, hoists: n };
+  }
+};
+
+const HOIST = { fragile: [], stable: [], noInlineSource: [] };
+for (const name of CLASS.keys()) {
+  const h = hoistRowSources(SEGMENTS.get(name) || "");
+  if (!h.hoists) { HOIST.noInlineSource.push(name); continue; }
+  const a = analyse(h.body);
+  (a.unbounded && a.loops && a.amplified ? HOIST.stable : HOIST.fragile).push(name);
+}
+for (const k of Object.keys(HOIST)) HOIST[k].sort();
+console.log(`\n--- M0-40: which of the ${CLASS.size} memberships survive REC-88's HOIST ---`);
+console.log(`  HOIST-FRAGILE (${HOIST.fragile.length} — membership rests on the row source being written INSIDE `
+          + `a for-header; hoisting it to a local is the same work and they LEAVE): ${HOIST.fragile.join(", ")}`);
+console.log(`  HOIST-STABLE (${HOIST.stable.length} — an inline row source, but amplification the body carries `
+          + `anyway): ${HOIST.stable.join(", ")}`);
+console.log(`  NO INLINE ROW SOURCE IN A for-HEADER (${HOIST.noInlineSource.length} — the transform does not `
+          + `apply, so this arm reaches no verdict on them): ${HOIST.noInlineSource.join(", ")}`);
+
+t("M0-40: the hoist partition is TOTAL over the class and disjoint — a member the transform cannot "
++ "reach must be NAMED as unreached, never silently scored stable. A partition that does not add up "
++ "is a walk looking in the wrong place",
+  [HOIST.fragile.length + HOIST.stable.length + HOIST.noInlineSource.length, CLASS.size,
+   new Set([...HOIST.fragile, ...HOIST.stable, ...HOIST.noInlineSource]).size],
+  [CLASS.size, CLASS.size, CLASS.size]);
+
+/* THE ARM THE ROW EXISTS FOR, AND IT IS BY NAME BECAUSE A COUNT IS WHAT FAILED REC-88.
+   The floor above fires on `34 of 35` and says nothing about WHICH method the reader lost.
+   This roster names every membership a hoist can take away, so the failure reads
+   `earnedBasisRegistry left`. Moving it means naming the arrival or the departure, exactly as
+   the ceiling's own comments demand — and an ARRIVAL here is a new method written in the
+   spelling, which is a fact worth knowing even though it grades nothing. */
+const HOIST_FRAGILE_2026_09_16 = [
+  "#caseClaimInBytes", "#citesInto", "#conditionsCaptureRequested", "#conditionsCaptureUnattended",
+  "#conditionsGovernorHolding", "#conditionsPartialCapture", "#findingsOutOfInquiryLead",
+  "#frontierContent", "#frontierMeaning", "#monitorCadencePlan", "#queueAncestorEdges",
+  "#queueMutes", "#queueRenotifyWake", "#restsOnLive", "#routeTask", "auditPass",
+  "danglingRefs", "earnedBasisRegistry", "frontier", "publishedCaseRegistryFor", "queueFeed",
+];
+t("M0-40: the HOIST-FRAGILE roster is pinned BY NAME — this is the second arm the row asked for, "
++ "and it is by name because the FLOOR that caught REC-88 could only say the count fell. A member "
++ "leaving this roster means the reader's grip on it changed; one arriving means a method was "
++ "written in the spelling the classifier is sensitive to",
+  HOIST.fragile, HOIST_FRAGILE_2026_09_16);
+
+t("M0-40: `earnedBasisRegistry` is the WORKED EXAMPLE and is pinned on its own — REC-88's draft "
++ "hoisted exactly this method's scan and it left the class for no reason but the spelling. The "
++ "transform is driven here, not recalled, and it must still take the method out",
+  [CLASS.has("earnedBasisRegistry"),
+   (() => { const h = hoistRowSources(SEGMENTS.get("earnedBasisRegistry") || "");
+            const a = analyse(h.body);
+            return [h.hoists, Boolean(a.unbounded && a.loops && a.amplified)]; })()],
+  [true, [1, false]]);
+
+/* AND THE CLASS ITSELF, BY NAME. The ceiling and the floor between them say only that the size
+   did not move, and every comment above this pin has had to name an arrival or a departure BY
+   HAND for that reason. With the roster pinned, the instrument names it. */
+const CLASS_ROSTER_2026_09_16 = [
+  "#assembleInstance", "#caseClaimInBytes", "#citesInto", "#conditionsCaptureRequested",
+  "#conditionsCaptureUnattended", "#conditionsGovernorHolding", "#conditionsPartialCapture",
+  "#findingsOutOfInquiryLead", "#flagCasesOnRevision", "#frontierContent", "#frontierMeaning",
+  "#monitorCadencePlan", "#overdueScan", "#queueAncestorEdges", "#queueMutes",
+  "#queueRenotifyWake", "#restsOnLive", "#routeTask", "#sweepSelections", "auditPass",
+  "biasManifest", "danglingRefs", "documentsNamingEntity", "earnedBasisRegistry",
+  "exportManifest", "frontier", "proposalsFeed", "publishedCase", "publishedCaseRegistryFor",
+  "publishedRegistryFor", "queueFeed", "reevaluations", "selectionCreate", "selectionRelease",
+  "selectionResolve",
+];
+t("M0-40: the class roster is pinned BY NAME beside the ceiling and the floor, so a departure "
++ "names itself instead of reading `34 of 35`. Every movement comment above had to name its "
++ "arrival by hand precisely because this pin did not exist",
+  [...CLASS.keys()].sort(), CLASS_ROSTER_2026_09_16);
+t("M0-40: and the by-name roster and the counted ratchet are ONE reader — a pin that could "
++ "disagree with the figure beside it would be two instruments, and this file has already paid "
++ "once for a by-name arm satisfiable by the healthy half of what it pinned (control 9b)",
+  CLASS_ROSTER_2026_09_16.length, CLASS.size);
+
+/* OVER-STRICTNESS FOR THE NEW ARM, and it is the half the row weighted most heavily. Nothing
+   added above can enrol a method: the partition iterates `CLASS` and cannot reach outside it,
+   so a method holding no unbounded row source is untouchable by construction. That is asserted
+   rather than asserted-by-comment, in both directions — a BOUNDED scan in a for-header is in
+   no roster because it is in no class, and a member whose body carries real amplification is
+   HOIST-STABLE rather than fragile. */
+const NC_BOUNDED_HEADER = `class Z {
+  ncBoundedHeader({ id, cap } = {}) {
+    const out = [];
+    for (const r of this.#rows(\`SELECT a FROM t WHERE id=? LIMIT ?\`, id, cap)) out.push(r.a);
+    return { ok: true, count: out.length, out };
+  }
+  end() { return 1; }
+}`;
+t("M0-40 OVER-STRICTNESS: a BOUNDED row source written inline in a for-header is in no class and "
++ "therefore in no roster this block builds — the new arm can only ever NAME members, never enrol "
++ "one. A classifier that over-collects is worse here than one that under-collects",
+  [classMembers(NC_BOUNDED_HEADER).has("ncBoundedHeader"),
+   HOIST.fragile.length + HOIST.stable.length <= CLASS.size], [false, true]);
+t("M0-40 OVER-STRICTNESS, the other direction: a member whose BODY carries the amplification is "
++ "HOIST-STABLE and must not be called fragile — otherwise the roster would name every inline row "
++ "source and say nothing. These four are measured, not chosen",
+  HOIST.stable, ["documentsNamingEntity", "proposalsFeed", "publishedCase", "selectionRelease"]);
 
 /* ================================================== THE CENSUS, GRADED (REC-99 · D-365).
  *
@@ -1438,6 +1660,27 @@ const NOT_THE_CLASS = [
 for (const [name, src] of NOT_THE_CLASS)
   t(`OVER-STRICTNESS: \`${name}\` is NOT in the class, and the reason is in this file's header`,
     classMembers(`class Z {\n${src}\n  end() { return 1; }\n}`).has(name), false);
+/* M0-40: THE CONTRADICTION ITSELF, PINNED RATHER THAN EXEMPTED OR SMOOTHED. `ncLinear` above is
+   declared NOT this class and that verdict is right — one linear pass over an unbounded scan is
+   REC-60's class and not this one. **The SAME read with the scan left INLINE in the for-header IS
+   in the class**, because `perRowScan` counts a scan lying inside a loop's extent and a loop's
+   extent begins at its `for` keyword. Same query, same rows, same work, opposite verdicts, and the
+   only difference is where the call is written. That is the whole of M0-40's finding stated as two
+   fixtures, and it is asserted in the state the instrument is ACTUALLY in rather than exempted:
+   a session that corrects the header credit reds THIS line and reads the reason here, and
+   `DEBT.md` D-384 is where that correction is priced (roster 35 -> 14, twenty-one departures). */
+const NC_LINEAR_INLINE = `  ncLinearInline({ id } = {}) {
+    const out = [];
+    for (const r of this.#rows(\`SELECT a FROM t WHERE id=?\`, id)) out.push(r.a);
+    return { ok: true, count: out.length, out };
+  }`;
+t("M0-40: `ncLinearInline` — `ncLinear`'s own read with the scan left in the for-header — IS in the "
++ "class, while `ncLinear` is NOT. The pair is the defect M0-40 measured, pinned so that neither "
++ "direction of correcting it can happen silently",
+  [classMembers(`class Z {\n${NC_LINEAR_INLINE}\n  end() { return 1; }\n}`).has("ncLinearInline"),
+   classMembers(`class Z {\n${NOT_THE_CLASS[0][1]}\n  end() { return 1; }\n}`).has("ncLinear")],
+  [true, false]);
+
 /* And the classifier must still SEE the class in a phrasing this file never wrote — an
    over-strictness block that only rejects proves nothing about what it accepts. */
 const ALT_MEMBER = `  ncPerRow({ id } = {}) {

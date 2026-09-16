@@ -13700,3 +13700,58 @@ the AUTHORED letter back through any control-plane op at all — `/basis` and `/
 DO-internal class and `op=earnedbasis`'s `legs` carry the leg's address and content row rather
 than its grade, so the authored letter in the table above is known by construction from the
 fixture and is labelled as such rather than printed as a measurement.
+
+## M-33 · 2026-09-16 · M0-40 — THE DERIVATION CLASSIFIER IS SENSITIVE TO A SPELLING IN BOTH DIRECTIONS, AND TWENTY-ONE OF THIRTY-FIVE MEMBERSHIPS REST ON IT
+
+**Instrument:** `bio-plane/test/derivation-bounds.test.mjs`'s own classifier text, sliced out of
+the suite between its declaration lines and driven unchanged, so no second reader can disagree
+with the first. **Tree:** this clone, worktree `agent-af08132ad4ca455b7`, `origin/main` at
+`82ffae30`. **Every figure below is printed by a run, none is carried by hand.**
+
+REC-88 measured the first half of this on 2026-09-15 (`M-30`'s table, 33 → 32): hoisting a scan
+out of a `for` header into a `const` took `earnedBasisRegistry` off the class roster while the
+method behaved identically. M0-40 was sent to close that. **What it found is that the hoist
+blind spot is one side of a defect whose other side is a FALSE POSITIVE**, and both come from the
+same line: `perRowScan` counts scans lying inside a loop's extent, and a loop's extent begins at
+its `for` KEYWORD — so a scan written in the loop's own HEADER is credited as a scan PER ROW when
+it is the loop's ROW SOURCE and runs exactly once.
+
+| correction driven | roster | arrivals | departures | and it enrols |
+| --- | --- | --- | --- | --- |
+| none (as built) | **35** | — | — | — |
+| follow the local binding, `for…of` only | **46** | 11 | 0 | `ncLinearFor` — a linear read |
+| follow the local binding, every loop form | **56** | 21 | 0 | **`ncLinear` itself**, the fixture this suite already declares BY NAME is not this class |
+| remove the header credit | **14** | 0 | **21** | — |
+
+**The twenty-one departures were measured twice by readers sharing no code path** — an `inLoop`
+that excludes the header, and a source transform performing REC-88's hoist on every member — and
+the two agree on the same 21 names. That agreement is worth something precisely because the two
+methods are different: one edits the classifier, one edits the subject.
+
+**The finding stated as two fixtures, both now pinned in the suite.** `ncLinear` — a linear pass
+over an unbounded scan, its row source hoisted to a local — is correctly OUT of the class.
+`ncLinearInline` — the SAME read with the scan left in the `for` header — is IN. Same query, same
+rows, same work, opposite verdicts, and the difference is where the call is written. The suite's
+own header says this class is *"amplification, not size"*, so the inline verdict contradicts the
+rule the file states for itself.
+
+**WHAT WAS NOT DONE, AND WHY IT IS A DECISION RATHER THAN A GAP.** Every one of the three
+corrections moves a ratchet to fit what its reader cannot see, which is REC-60's shrunken 27
+exactly; and the two that follow the binding OVER-COLLECT, which is worse here than
+under-collecting, because the roster is a CEILING and a false arrival forces a real one out of
+sight. Three of the twenty-one (`frontier`, `#frontierContent`, `#frontierMeaning`) were admitted
+to the class by REC-93/94/95 for per-row reads that happen inside HELPERS this walk declares it
+cannot see at all — so the right roster for them is not derivable from the classifier in either
+direction. The question is raised as `D-384` and the roster is pinned BY NAME
+(`HOIST_FRAGILE_2026_09_16`) so that it cannot grow or shrink unseen while the question is open.
+
+**The by-name roster earns its place on a measurement, not on principle.** Control arm (19)
+reproduces REC-88's failure with the COUNT NEUTRALISED — one member hoisted out, one member
+arriving — and `CLASS.size` stays at 35, so REC-66's CEILING and FLOOR are BOTH GREEN and only
+the by-name arms fire. **The floor that caught REC-88 caught it by luck of arithmetic.**
+
+**A second fact fell out of that arm and is recorded because it constrains any future control
+here: the two ratchets in this file cannot move independently.** A method cannot join the
+derivation class without also gaining an unbounded row source, so a class-count-neutral swap
+necessarily moves REC-99's census by one (105 → 106). Two arms declared four failures and got
+five for that reason; the declaration was incomplete, not the instrument.
