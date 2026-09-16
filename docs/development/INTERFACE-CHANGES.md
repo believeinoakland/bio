@@ -8042,3 +8042,76 @@ ACCEPTED interface as a settled design. Closing one looks like closing both, and
 landed code first and record second by minutes, never the other way round.
 
 
+
+## IC-105 · I3: `op=frontier&level=document` NOW WITHHOLDS ROWS IT PUBLISHED — the arm accepted a `viewer` and never read it, and an uninvited member was receiving a PROJECT BUNDLE ID VERBATIM · PROPOSED 2026-09-16 (REC-103, closing the design's §6 row-1 gap at the document level) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). Measured on this item's base `origin/main`
+  at `82ffae30`: **17.0.0** (IC-102 ACCEPTED, BREAKING). **Proposed as BREAKING — 17.0.0 →
+  18.0.0**, on IC-25's settled rule and IC-96's and IC-102's own precedent: *a refusal where none
+  stood before is a break WHATEVER the measured impact*. **The measured impact is ZERO and the
+  zero is recorded as EVIDENCE rather than offered as an argument for a smaller bump:** a grep for
+  `op=frontier` over `civicos-ui/`, `agent-worker/`, `newgroup/` and `tools/` returns **no caller
+  at all** — every caller on this tree is a `bio-plane/test/` suite, and all six are green.
+- **Proposer:** RECORD, worker `agent-a4fe71943bfcf63db`, 2026-09-16, from QUEUE REC-103
+- **Owner to land it:** `RECORD` (owner and proposer)
+- **Consumers to answer:** `UI` (no surface reads this op today — measured, not assumed),
+  `SKILL`, `CASE`, `DIST` (served surfaces), `RECORD`.
+
+**THE DEFECT IS THAT THE SIGNATURE ADVERTISED A FENCE NOBODY BUILT, WHICH IS WORSE THAN AN ABSENT
+PARAMETER AND WORSE THAN AN UNGATED OP.** `Store#frontier` has accepted a `viewer` since REC-93
+landed it, and the DOCUMENT arm never read it — while `gate-reads.test.mjs` classified the op
+GATED and said so at length. Two documents agreed and neither was a second witness; the artifact
+disagreed with both. REC-94 measured it while building the content arm and left it for this row's
+owner rather than widening a claim mid-wave, which was the right call.
+
+**IT IS A LEAK AND NOT A DEAD PARAMETER, AND THE ROW ADMITTED BOTH OUTCOMES, SO THIS WAS DRIVEN
+BEFORE ANYTHING WAS BUILT.** With `viewer=member:not-invited` against a `project` bundle that
+member is not a participant of, the document arm returned **three separate disclosures through
+three separate writers**:
+
+1. **the PROJECT BUNDLE ID VERBATIM.** `recordReuseVerdicts` writes ratify's observation with
+   `authority: bundleId || v.source_capture`, so `authority` IS a bundle id and it was published
+   raw. This is REC-94's own leak shape exactly one method over — *a per-capture read that gated
+   the register lookup and then fell through*.
+2. **the capture back-reference.** `result_ref` named a capture registered to that project, with
+   `result_purged` derived from `register` beside it — which is `op=contentaxis`' disclosure
+   precisely (*an answer of anything other than `capture not held` tells the caller THIS RECORD
+   HOLDS THIS DOCUMENT*), and that op is GATED on this same resolution. Two ops answering
+   differently about one capture is the mirror-and-drift class.
+3. **the never-looked partition.** A `deferred` link discovered inside that project's capture
+   published the capture sha as `from_document`.
+
+**And the absent stamp was answered in full**: the document arm did not fail closed at the store,
+while the content arm did.
+
+**WHAT CHANGES, AND IT IS THE DESIGN'S OWN WORD RATHER THAN A CHOICE TAKEN HERE.**
+`OBSERVATION-LOG-DESIGN.md` §6: *"a subject discloses a project's interest, so REC-36's
+withholding applies row-whole across the fence."* A document-level row is now published only when
+**every bundle-scoped referent it carries** is one the viewer may see, and a referent this record
+**cannot attribute to a bundle at all withholds the row** — `#bundleGate`'s own fail-closed arm
+(*"a row pointing at something the store cannot show is withheld rather than answered for"*) and
+`#frontierContent`'s, both inherited rather than re-decided. A NULL referent names no bundle and
+passes. No count of what was withheld is published, because the count is the leak.
+
+**THE RESOLVER IS INVERTED RATHER THAN LISTED.** Anything it does not UNDERSTAND is withheld, so
+a tenth `authority_kind` added to `OBSERVATION_AUTHORITY_KINDS` with no resolver is refused by
+default instead of waved through by omission. `observation-log.test.mjs` section I drives every
+member of that constant by name.
+
+**THE ONE COST IS STATED RATHER THAN DISCOVERED, AND IT IS A COLLISION BETWEEN TWO LANDED RULES.**
+§7 says *a `result_ref` to a PURGED capture is annotated at read time (`purged`)*; a per-bundle
+purge clears `register` (it is in `purge`'s own TABLES list), so after one the capture is
+unattributable and the row is withheld from every **identified session, admins included**. The
+annotation survives for the machine credential, which is the operator path it was written for.
+§6 and §7 cannot both be satisfied for a member there. This takes the fail-closed one and raises
+the collision against §7 rather than resolving it silently — and the item's own `machine` control
+arm is what proved the carve-out is what preserves the operator path, because `#bundleRedactor`
+already carves out a machine credential for the RESOLVABLE path and this fence is load-bearing
+only for the unresolved one.
+
+**WHAT IS DELIBERATELY NOT GATED, SAID HERE SO NOBODY HAS TO FIND IT.** The answer's `tally`
+counts EVERY row at this level while `looked` is the latest row per subject cut at `limit`, so the
+two have never been comparable and a reader cannot read withholding out of the gap. It names no
+bundle, no subject and no address. REC-30's rule bites on *the total of an enumeration*, and this
+is not one. Gating it would mean either a second implementation of the resolver in SQL or silently
+changing what the field counts, and REC-103 raises it (**D-386**) rather than doing either.
