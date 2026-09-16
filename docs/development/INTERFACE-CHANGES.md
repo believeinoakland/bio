@@ -8005,3 +8005,40 @@ exists today — must respect the same limit or the promote will refuse.
   `authority_kind = derive` where extraction writes under `extract`, and the two reads that
   matter are now narrowed by authority so neither can answer with the other's row.
 
+### RESOLUTION — 2026-09-16, CONDUCT #1 · ACCEPTED, I5 1.15.0 → **1.16.0** and I1 1.3.0 → **1.4.0**, both ADDITIVE
+
+MINOR on each, because nothing existing is renamed, reshaped or removed and an answer for a
+document with no indexable units is byte-identical to the pre-item answer. **The registered
+versions were RE-READ on the merged tree rather than taken from the proposal**, which matters
+here more than usual: this item sat unmerged for a day while other work landed, and a version
+measured at a base commit is a claim about that commit. I5 still read 1.15.0 (IC-93, SK-8) and
+I1 still read 1.3.0, so the proposal's measurement held — verified, not assumed.
+
+**CONSUMERS ANSWERED, and three of the four are answered by MEASUREMENT rather than by asking.**
+`UI` — **nothing to do, and this is the strong form of nothing**: `civicos-ui/app.html`'s
+`docFiles()` copies the acquire document WHOLESALE, so the new `text_units` sibling reaches
+`data/provenance.json` with no UI change; `op=stats` and `op=contentaxis` have ZERO callers in
+`civicos-ui/`. That census was taken by reading the functions, which is why this item files no
+DELEGATION. `RECORD` is proposer and owner. `FRAMEWORK` is DORMANT and **CONDUCT answers for it
+in writing**: the units are taken off the I2 text shape, no producer changes, and the read it
+would have to answer for does not move. `DIST` — served surfaces are unaffected; the two new
+`op=stats` keys are additive over an answer no production surface reads.
+
+**THE LIMIT IS PART OF THE CONTRACT AND IS CARRIED INTO THE REGISTRY, NOT LEFT IN THE ENTRY.**
+A consumer composing `data/provenance.json` from anything other than the acquire answer must
+respect the acquire wire's own budget (524,288 B of text plus a 128 B envelope allowance per
+unit, publishing what it dropped), because `op=promote` refuses an inline bundle file over
+`INLINE_MAX` = 1,048,576 B and would refuse the WHOLE promotion rather than truncate the index.
+No such consumer exists today; it is registered so the first one does not have to discover it.
+
+**WHAT THIS RESOLUTION DOES NOT DO.** It does not settle `CONTENT-SEARCH-DESIGN.md` §4.3's
+per-capture bound, which this item's worker showed CANNOT FIRE — `op=promote`'s `INLINE_MAX`
+refusal is reached first — nor the independent second half, that BYTES DO NOT BOUND THE UNIT
+COUNT because the index costs rows and FTS entries. **Both are DESIGN errors and are BOB's**,
+in flight as I write this, and they are named here so a reader of this entry does not take an
+ACCEPTED interface as a settled design. Closing one looks like closing both, and it does not.
+
+**Registry:** both versions bumped in `INTERFACES.md` in this same commit (protocol step 4 → 5),
+landed code first and record second by minutes, never the other way round.
+
+
