@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-944 rulings across 83 documents.
+947 rulings across 84 documents.
 
 ## DEC-
 
@@ -1779,6 +1779,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1187`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1199`
+- **2026-09-16** — RULED by Bob 2026-09-16: the estate gate is held per ACCOUNT, not per session.** So if you are a session of `acct-5085c62c` — any session, on any machine — **this hold is yours already**: run `node tools/estatehold.mjs refresh`, never `claim`, and do not release at stand-down merely because your session is ending.  
+  `docs/development/kickoffs/BOB-NEXT.md:17`
+- RULED: CLAIM BEFORE YOU VERIFY** — the claim's gate is `plancheck`, not the battery.  
+  `docs/development/kickoffs/BOB-NEXT.md:35`
+- **2026-09-15** — SUPERSEDED BY §0 — these are the MAC MINI's figures at 2026-09-15, kept as that day's record.** `origin/main` **19a46a4**, plancheck **0 fail / 0 warn** with all three notes present (id allocations 709 sites / 20 namespaces; attribution 17 bindings / 661 files / 0 undetermined; design corpus 50 documents / 0 failures).  
+  `docs/development/kickoffs/BOB-NEXT.md:101`
 - and present the areas that are NOT the paused thread, each with: what it needs DECIDED (vs what is already answered), what deciding it unblocks, and your recommendation.  
   `docs/development/kickoffs/BOB.md:85`
 - NOTATION IS SETTLED: classDiagram for structure, stateDiagram-v2 for lifecycle, edges labelled with the ACT.  

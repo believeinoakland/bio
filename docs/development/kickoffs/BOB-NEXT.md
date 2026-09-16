@@ -5,6 +5,77 @@ Read `kickoffs/BOB.md` (the role, the closing protocol with its EIGHT rules, the
 and ONE DESIGN SWEEP IS OWED (§1). `CLAUDE.md` gained nine entries today and several of them are this session's own
 errors — read its traps section and its "agreement of several documents" rule before trusting any premise below.
 
+## 0. SESSION BOB-CLOUD #1, 2026-09-16 — READ THIS BEFORE §1, WHICH IS STILL OWED
+
+**The first session on the Claude Code CLOUD platform, under a new account. It did the machine
+bootstrap and the estate lock, and it did NOT do §1 — that sweep is still the first act owed.**
+
+**THE ESTATE IS HELD AND MUST NOT BE RE-CLAIMED. REFRESH IT.**
+
+    HOLD: machine=vm-4237ad91 | account=acct-5085c62c | status=HELD | through=2026-09-18T17:43Z
+
+**RULED by Bob 2026-09-16: the estate gate is held per ACCOUNT, not per session.** So if you are a
+session of `acct-5085c62c` — any session, on any machine — **this hold is yours already**: run
+`node tools/estatehold.mjs refresh`, never `claim`, and do not release at stand-down merely because
+your session is ending. This session was told twice not to release when it retired, and that is
+why: retiring a session does not end the account's hold. Release only when the ACCOUNT is done with
+the estate.
+
+**What landed, three commits, each behind its own green full gate** (`207/207 suites green · 12945
+assertions passing` on the last): the estate claim; the protocol rebuilt as a tool; and the
+correction of the lock's UNIT to the account.
+
+- `tools/estatehold.mjs` is now the protocol: `show | claim | refresh | release`. **Do not
+  hand-edit the HOLD line.** It reads `origin/main`, refuses and writes NOTHING against another
+  account's hold, gates on `plancheck`, commits only that file by path, never rebases a rejected
+  push, and re-reads the REMOTE afterwards.
+- `bio-plane/test/estatehold.test.mjs` — 57 assertions where the lock had **ZERO**. Its central
+  section pins the UNIT (one account many sessions; two accounts refused) because the code got the
+  unit wrong twice in one day in opposite directions, and `ESTATE-HOLD.md` records both.
+- **RULED: CLAIM BEFORE YOU VERIFY** — the claim's gate is `plancheck`, not the battery. Bob's
+  direction; the phrase is pinned by a test in both `ESTATE-HOLD.md` and `NEW-MACHINE.md`.
+- **The lock was not in `CLAUDE.md` at all**, only in NEW-MACHINE and CONDUCT-NEXT, so an ordinary
+  session had no route to it. It is there now and a test asserts the mention.
+- `CLAUDE.md`'s ruling count read "598 of them, 167 KB" against a tool printing 944. Replaced with
+  the instruction to read the tool.
+
+**WHAT THIS MACHINE CANNOT DO, and it is a real constraint rather than a caveat.**
+`api.cloudflare.com` is **refused 403 at CONNECT by this environment's network policy** — measured,
+with `api.github.com` returning 200 through the same proxy as the control. So `wrangler whoami`
+cannot answer, **the Cloudflare account is UNCONFIRMED here** (the pinned id matches the
+environment, but that is a string comparison and not a witness), and **no deploy and no live
+verification can run from this environment: it cannot be DIST** and cannot reach `CLAUDE.md`'s
+verification steps 3–5. The fix is not on the machine: the account has a second environment
+described *"Default — trusted network access"*, and the session must be STARTED in it. Whether that
+one permits Cloudflare was never measured — treat its name as a claim.
+
+**`INSTANCE_CLAUDE_TOKEN` is NOT SET.** The other nine keys are. The absence has two causes — never
+saved, or not injected — and only Bob can say which.
+
+**Three premises of `NEW-MACHINE.md` do not hold on this platform**, and §3 now carries the
+corrections: there is **no clipboard** (no `pbpaste`; the ten keys arrive as ENVIRONMENT VARIABLES
+and `.env` is written from them), there is **no `~/ClaudeCodeBIO` wrapper** (the working directory
+IS the clone at `/home/user/bio`), and the image ships node v22 so **v26 must be installed** and
+`ssh-keygen` apt-installed or five case suites skip by name.
+
+**TWO TRAPS THIS PLATFORM ADDS, both measured here.**
+1. **THE CLONE ARRIVES SHALLOW, and `plancheck` reads that as 44 corpus failures and 7 undetermined
+   attributions.** `corpuscheck` asks `git log -1 --format=%as -- <path>`, and the grafted boundary
+   commit appears to ADD every file, so every document's "last changed" is the boundary's date. It
+   looks exactly like a corpus somebody broke. `git fetch --unshallow` cleared all 51 at once.
+   **This is the distance-in-KIND class: the instrument is right and its input is wrong.**
+2. **`battery-residue.test.mjs` arm (f) CANNOT ARM AS ROOT** — it chmods a root 0o000 and expects
+   UNVERIFIED, but uid 0 readdirs it anyway (driven directly, not assumed). It now STATES the
+   condition, the shape `mintid.test.mjs` uses. **Both arms measured, because a conditioned
+   assertion is only believable once someone has seen it fire: 45 pass as root with the condition
+   stated, 46 pass under `setpriv` as uid 65534 with the two real assertions RUNNING AND PASSING.**
+   The one-assertion delta is what makes it a condition statement and not an exemption. A fresh
+   clone also needs `.git/bio-idalloc` to exist or `mintid` reports PROBE_UNWRITABLE; it is created
+   on first mint, and creating it took that suite to 83/0.
+
+**NOT DONE, and none of it is blocked:** §1 below. The three watches of §4 were **never re-armed**.
+No chip was filed for CONDUCT on this platform. No worker was spawned and no queue row was touched.
+
 ## 1. THE ONE ACT OWED, AND IT IS A DESIGN ERROR OF MINE — DO THIS FIRST
 
 **`CONTENT-SEARCH-DESIGN.md` §4.3's per-capture bound is WRONG IN TWO INDEPENDENT WAYS, and REC-91's worker found
@@ -26,6 +97,8 @@ the code here, and the code follows the design decision, in that order (CONDUCT 
 bytes bound relative to what promote already refuses upstream, and take the numbers from the worker's evidence.
 
 ## 2. STATE AT HANDOFF
+
+**SUPERSEDED BY §0 — these are the MAC MINI's figures at 2026-09-15, kept as that day's record.**
 
 `origin/main` **19a46a4**, plancheck **0 fail / 0 warn** with all three notes present (id allocations 709 sites /
 20 namespaces; attribution 17 bindings / 661 files / 0 undetermined; design corpus 50 documents / 0 failures).
