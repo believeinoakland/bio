@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-943 rulings across 83 documents.
+944 rulings across 83 documents.
 
 ## DEC-
 
@@ -1244,7 +1244,7 @@ authority is the file named, never this one.
 Settled in prose without an id allocated. Cite them by file and line.
 
 - BEFORE RAISING A QUESTION, OR WRITING A DECISION ITEM, ASK WHAT IS ALREADY DECIDED:** node tools/decided.mjs "<the subject>"  
-  `CLAUDE.md:173`
+  `CLAUDE.md:175`
 - **2026-09-14** — DECIDED 2026-09-14 (§7.3): the run, not the pilot; no new credential or fence; mints bounded and the uncited row named a proposal | | AI-proposed readings — the `ai(function, version)` step EMITTED | **BUILT 2026-09-14 (SK-8)**: `op=extractpropose` inside an EXTRACT run, the step appended through `appendStep` so…  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:139`
 - **2026-08-10** — ⚠ SUPERSEDED IMPLEMENTATION, INHERITED FORMAT > > **Banner added 2026-08-10 (session BOB), moving into this file what > `architecture/README.md` has said about it since July and no reader of this document  
@@ -1679,12 +1679,14 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/DOCUMENT-PROFILES.md:174`
 - **2026-07-30** — RULED by Bob, 2026-07-30. The layers run in this order because each is cheap relative to the next and each can settle the question outright. `docprofile/pipeline.mjs` is the driver and every result carries a `trail` recording where the reasoning stopped, because a verdict whose depth is invisible cannot be audited.  
   `docs/development/DOCUMENT-PROFILES.md:231`
+- **2026-09-16** — — RULED by Bob 2026-09-16: *the estate gate is held per account, not per session.* One account may run many sessions on many machines; they are one holder and they share the hold.  
+  `docs/development/ESTATE-HOLD.md:3`
 - **2026-09-16** — RULED 2026-09-16: the acts are the tool, and this section points at the tool rather than describing the edit.** What the tool guarantees, so that no reader has to remember it:  
-  `docs/development/ESTATE-HOLD.md:44`
-- **2026-09-16** — RULED 2026-09-16: identity is `<base name>-<8 hex>`, where the suffix is a random id persisted in the clone's COMMON gitdir** (`.git/bio-machine`, never committed), minted on first use with an exclusive create.  
-  `docs/development/ESTATE-HOLD.md:88`
+  `docs/development/ESTATE-HOLD.md:45`
+- RULED. One account may run as many sessions and as many machines as it likes — they are one holder and they share the hold. A DIFFERENT account is refused. That is the collision this lock exists to prevent, and it is the only one it is trying to prevent.  
+  `docs/development/ESTATE-HOLD.md:74`
 - **2026-09-16** — RULED 2026-09-16, at Bob's direction: a machine claims the estate BEFORE it runs the battery and the rest of its startup verification, not after.** The claim's own gate is **`plancheck`** — the claim is a one-line change to this file, which `gates.mjs` classifies docs-class — and **not** the full battery, which is…  
-  `docs/development/ESTATE-HOLD.md:113`
+  `docs/development/ESTATE-HOLD.md:117`
 - **2026-08-07** — : finding F9 is still open — `INVESTIGATIVE-SESSION.md` still carries the superseded `[BOB-4 — RULED 2026-08-07, PROVISIONAL]` text in three places and names F9 as outstanding in its final-comparison section, and `civicos-ui/test/connections-sidebar.test.mjs` pins that staleness on purpose so the delegation cannot…  
   `docs/development/FINDINGS-WORKPLAN.md:3`
 - **2026-07-30** — [Routing, exactly as RULED](#routing-exactly-as-ruled) - [What the write path enforces, and where](#what-the-write-path-enforces-and-where) - [RULED 2026-07-30: auto-create at capture, through a queue](#ruled-2026-07-30-auto-create-at-capture-through-a-queue) - [What this unblocks](#what-this-unblocks)  

@@ -71,12 +71,13 @@ lock exists to prevent. Claiming costs seconds and strands nothing if the gate t
 the hold EXPIRES on its own. **`ESTATE-HOLD.md` carries the protocol, the identity rule and this
 ordering; read its HOLD line from `origin/main`, never from your own tree.**
 
-**AND IDENTITY IS NOT THE HOSTNAME, which cost this estate a fail-open.** On a cloud image every
-container answers `hostname -s` as `vm`, so before 2026-09-16 two cloud machines read each other's
-hold as their own and were told they held the estate. `machineIdentity()` now mints a per-clone
-suffix; the consequence for an EPHEMERAL machine is that it is a new machine every session and claims
-a SHORT window (4 h, refreshed inside pushes) rather than 48 h, because a container that suspends
-between turns and is reclaimed when idle cannot be relied on to release.
+**AND THE HOLDER IS THE ACCOUNT, not this machine and not this session** — Bob, 2026-09-16. So your
+account's other sessions, on this machine or any other, share your hold and are not refused; a
+DIFFERENT account is. The key is derived from `CLAUDE_CODE_ACCOUNT_UUID` and hashed, because the
+line lives in a repository; `machine=` on the line is a label only. The window is Bob's 48 h for
+everyone, including an ephemeral container, because an ACCOUNT outlives any container and its next
+session refreshes the hold inside a push it already makes. `ESTATE-HOLD.md` records the two ways
+the code got this unit wrong before believing the prose here.
 
 
 **Only one MACHINE develops this repository at a time**, and Bob has directed that no development

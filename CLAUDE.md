@@ -135,10 +135,12 @@ a group's own Cloudflare account — that is the distribution model, not a demo.
 
 **Never force-push.** Fetch and rebase.
 
-**ONE MACHINE DEVELOPS THIS REPOSITORY AT A TIME, AND THIS FILE IS WHERE YOU LEARN THAT.**
+**ONE ACCOUNT DEVELOPS THIS REPOSITORY AT A TIME, AND THIS FILE IS WHERE YOU LEARN THAT.**
 `docs/development/ESTATE-HOLD.md` is the lock and a `git push` of its one HOLD line is what makes it
-one. **Claim it BEFORE you verify and before your first commit** — not after the battery, which
-spends up to twenty-five minutes before telling you that you lost the race:
+one. **The unit is the ACCOUNT, not the session and not the machine** — Bob, 2026-09-16 — so one
+account's many sessions share one hold and a second account is refused. **Claim it BEFORE you verify
+and before your first commit**, not after the battery, which spends up to twenty-five minutes before
+telling you that you lost the race:
 
     node tools/estatehold.mjs show     # who am I, and who holds it
     node tools/estatehold.mjs claim    # take it; refresh when you push, release at stand-down

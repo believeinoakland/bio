@@ -28,7 +28,7 @@ export const HOLD_RE =
 
 /** Pure: text in, verdict out, so a control can drive every arm without a repository.
  *  Kinds: theirs · ours · ours-expired · free · unreadable · unparseable · badtime. */
-export function estateVerdict(holdText, thisMachine, nowIso) {
+export function estateVerdict(holdText, thisHolder, nowIso) {
   if (!holdText) return { kind: "unreadable" };
   const m = HOLD_RE.exec(holdText);
   if (!m) return { kind: "unparseable" };
@@ -44,12 +44,23 @@ export function estateVerdict(holdText, thisMachine, nowIso) {
   const t = Date.parse(through);
   if (Number.isNaN(t)) return { kind: "badtime", through };
   const expired = t <= Date.parse(nowIso);
+  /* THE UNIT IS THE ACCOUNT, RULED BY BOB 2026-09-16, correcting this module's
+     first version — which keyed on the MACHINE and would therefore have refused
+     one account's SECOND session its own estate. His words: "the estate gate is
+     held per account, not per session." The consequence runs the other way too,
+     and it retires a "defect" this module was written to fix: two cloud
+     containers of ONE account reading each other's hold as `ours` is CORRECT,
+     not a fail-open. What was genuinely wrong was that the load-bearing field
+     was never derived from anything — `account=` was a hand-typed literal while
+     `machine=` carried a hostname that identifies no account at all.
+     `machine=` is now INFORMATIONAL, for a human reading the line, and the
+     account is what the lock turns on. */
   if (status === "RELEASED" || expired) {
-    if (machine === thisMachine && status !== "RELEASED")
-      return { kind: "ours-expired", machine, through };
-    return { kind: "free", machine, status, through };
+    if (account === thisHolder && status !== "RELEASED")
+      return { kind: "ours-expired", machine, account, through };
+    return { kind: "free", machine, account, status, through };
   }
-  return machine === thisMachine
+  return account === thisHolder
     ? { kind: "ours", machine, account, through }
     : { kind: "theirs", machine, account, through };
 }
@@ -96,7 +107,7 @@ export function estateVerdict(holdText, thisMachine, nowIso) {
  * see below. */
 
 import { execFileSync } from "node:child_process";
-import { randomBytes } from "node:crypto";
+import { randomBytes, createHash } from "node:crypto";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, isAbsolute, resolve } from "node:path";
 
@@ -157,30 +168,57 @@ export function machineIdentity({ repo = process.cwd(), env = process.env } = {}
   return { id: `${base}-${suffix}`, base, suffix, source: file, discriminating: true };
 }
 
-/* THE WINDOW, AND WHY IT IS NOT ONE NUMBER ANY MORE. Bob's 48 h is kept for a
- * machine that PERSISTS, where the file says it is "a bound, not a measurement"
- * and deliberately generous: the cost of an over-long window is a new machine
- * waiting, and of a short one a working machine losing its lock.
+/* WHO THE HOLDER IS — the ACCOUNT, ruled by Bob 2026-09-16.
  *
- * ON AN EPHEMERAL MACHINE THAT TRADE REVERSES, because the premise the 48 h was
- * generous FOR — a machine that is present and might legitimately not push for a
- * while — is exactly what fails. A cloud container suspends between turns and is
- * RECLAIMED when idle; this one suspended for 45 minutes mid-conversation. So a
- * 48 h hold taken here routinely outlives the machine that took it while nobody
- * is running, and because a re-clone is a NEW identity, the next cloud session
- * cannot even refresh it — it reads `theirs` and is refused for up to two days
- * with no machine working. A short window costs a working session nothing it
- * cannot see: `plancheck` FAILS on `ours-expired` by name, refresh is enforced
- * inside acts already performed, and re-claiming an expired hold nobody took is
- * one command. */
+ * Derived from `CLAUDE_CODE_ACCOUNT_UUID`, which is authoritative, stable across
+ * every session and every container of one account, and different for a different
+ * account — which is the collision this lock actually exists to prevent. It is
+ * HASHED to 8 hex rather than written out, because the HOLD line lives in a
+ * repository and an account UUID in it would be an identifier disclosed for no
+ * benefit: the lock needs the two accounts to DIFFER, not to be readable.
+ *
+ * FALLBACKS, in order, each NAMED in the result so a reader can see which applied:
+ * `BIO_HOLD_ACCOUNT` for an explicit value and for controls; then the per-clone id
+ * persisted in the common gitdir, which is not account-scoped but IS stable and
+ * distinct, so the two-accounts collision is still caught on a machine where the
+ * account uuid is not in the environment; then nothing, reported as
+ * `discriminating: false` so the caller refuses to claim rather than claiming
+ * under a key that cannot discriminate. */
+export function accountIdentity({ repo = process.cwd(), env = process.env } = {}) {
+  if (env.BIO_HOLD_ACCOUNT)
+    return { key: sanitizeName(env.BIO_HOLD_ACCOUNT), source: "BIO_HOLD_ACCOUNT", discriminating: true };
+  if (env.CLAUDE_CODE_ACCOUNT_UUID) {
+    const d = createHash("sha256").update(env.CLAUDE_CODE_ACCOUNT_UUID).digest("hex").slice(0, 8);
+    return { key: `acct-${d}`, source: "CLAUDE_CODE_ACCOUNT_UUID (hashed)", discriminating: true };
+  }
+  const m = machineIdentity({ repo, env });
+  return m.discriminating
+    ? { key: `clone-${m.suffix || m.id}`, source: `per-clone id (${m.source}) — NOT account-scoped`, discriminating: true }
+    : { key: m.id, source: m.source, discriminating: false };
+}
+
+/* THE WINDOW IS BOB'S 48 h, ONE NUMBER, AND THE ARGUMENT FOR SHORTENING IT WAS
+ * WRONG — recorded rather than deleted, because it was wrong for an instructive
+ * reason. This module's first version cut the window to 4 h on an ephemeral
+ * machine, reasoning that a container which suspends between turns and is
+ * reclaimed when idle cannot be relied on to release, so a 48 h hold would
+ * outlive the machine that took it with nobody working.
+ *
+ * THAT ARGUMENT ASSUMED THE HOLDER DIES WITH THE CONTAINER, and under Bob's
+ * ruling the holder is the ACCOUNT, which does not. The account's next session
+ * reads `ours` and refreshes inside an act it already performs, so nothing is
+ * stranded and there is nothing for a shorter window to rescue. The 4 h would
+ * have bought only a hold expiring under a working account — the very failure the
+ * file says a short window causes. One window, and it is his.
+ *
+ * It stays overridable by `BIO_HOLD_HOURS` for controls and for a genuinely
+ * unusual case, which is what the suite drives it with. */
 export function claimWindowHours({ env = process.env } = {}) {
   if (env.BIO_HOLD_HOURS) {
     const n = Number(env.BIO_HOLD_HOURS);
     if (Number.isFinite(n) && n > 0) return { hours: n, kind: "BIO_HOLD_HOURS" };
   }
-  return env.CLAUDE_CODE_REMOTE
-    ? { hours: 4, kind: "ephemeral (CLAUDE_CODE_REMOTE set — suspends and is reclaimed)" }
-    : { hours: 48, kind: "persistent" };
+  return { hours: 48, kind: "the one window — the holder is an ACCOUNT, which outlives any container" };
 }
 
 /** ISO 8601 UTC with the Z and to the MINUTE, which is the one form the
@@ -273,12 +311,12 @@ function writeAndPush(repo, fields, { push, subject }) {
       { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
   } catch {
     console.log("  PUSH REJECTED — you lost the race. Not rebasing: that is the reflex that defeats the lock.");
-    const v = estateVerdict(remoteHoldText(repo), machineIdentity({ repo }).id, new Date().toISOString());
+    const v = estateVerdict(remoteHoldText(repo), accountIdentity({ repo }).key, new Date().toISOString());
     console.log(`  the remote now says: ${JSON.stringify(v)}`);
     console.log("  STOP. Do not develop, spawn or push.");
     return 1;
   }
-  const after = estateVerdict(remoteHoldText(repo), machineIdentity({ repo }).id, new Date().toISOString());
+  const after = estateVerdict(remoteHoldText(repo), accountIdentity({ repo }).key, new Date().toISOString());
   console.log(`  pushed, and VERIFIED FROM THE REMOTE rather than from this tree: ${after.kind}`);
   return after.kind === "ours" || (fields.status === "RELEASED" && after.kind === "free") ? 0 : 1;
 }
@@ -292,13 +330,17 @@ async function main(argv) {
   })();
   const repo = repoRoot();
   const me = machineIdentity({ repo });
+  const holder = accountIdentity({ repo });
   const win = hoursArg ? { hours: hoursArg, kind: "--hours" } : claimWindowHours();
-  const account = process.env.BIO_HOLD_ACCOUNT || "believeinoakland";
   const text = remoteHoldText(repo);
-  const v = estateVerdict(text, me.id, new Date().toISOString());
+  const v = estateVerdict(text, holder.key, new Date().toISOString());
 
-  console.log(`  this machine: "${me.id}" (${me.source})`
-    + (me.discriminating ? "" : "  <- NOT DISCRIMINATING: two machines could share this name"));
+  /* BOTH are printed, and the distinction is the whole point: the ACCOUNT is what
+     the lock turns on, the machine is a label so a human reading the line knows
+     where the work was happening. */
+  console.log(`  this holder:  "${holder.key}" (${holder.source})`
+    + (holder.discriminating ? "" : "  <- NOT DISCRIMINATING: two holders could share this key"));
+  console.log(`  this machine: "${me.id}" (informational only)`);
   console.log(`  origin/main says: ${v.kind}${v.machine ? ` — machine="${v.machine}" through ${v.through}` : ""}`);
 
   if (cmd === "show") {
@@ -323,21 +365,21 @@ async function main(argv) {
          beats letting the reader conclude a second machine appeared — but it does
          NOT unlock anything: the two ways across are the holder rewriting the line
          in the same change that upgrades the rule, or waiting out the expiry. */
-      if (v.machine === me.base)
-        console.log(`  note: that hold names this machine's BASE name ("${me.base}"), so it may be`
-          + ` yours from before the 2026-09-16 identity rule. That is NOT authority to take it:`
-          + ` let it expire, or rewrite it in the commit that upgrades the rule.`);
+      if (!/^(acct|clone)-/.test(v.account || ""))
+        console.log(`  note: that hold's account field ("${v.account}") is not a DERIVED holder key, so it`
+          + ` predates the 2026-09-16 account rule and may be your own. That is NOT authority to take`
+          + ` it: let it expire, or rewrite it in the commit that upgrades the rule.`);
       return 1;
     }
     if (cmd === "refresh" && v.kind === "free" && v.machine !== me.id)
       console.log("  note: nothing was held, so this refresh is a fresh claim.");
-    if (!me.discriminating) {
-      console.log("  REFUSED: identity is not discriminating, so a hold under it would not be a lock.");
+    if (!holder.discriminating) {
+      console.log("  REFUSED: the holder key is not discriminating, so a hold under it would not be a lock.");
       return 1;
     }
     return writeAndPush(repo,
-      { machine: me.id, account, status: "HELD", through: throughIso(Date.now(), win.hours) },
-      { push, subject: `estate: ${cmd === "claim" ? "CLAIMED" : "refreshed"} by ${me.id} for ${win.hours}h (${win.kind})` });
+      { machine: me.id, account: holder.key, status: "HELD", through: throughIso(Date.now(), win.hours) },
+      { push, subject: `estate: ${cmd === "claim" ? "CLAIMED" : "refreshed"} by ${holder.key} on ${me.id} for ${win.hours}h` });
   }
   console.log(`  unknown command "${cmd}" — one of show, claim, refresh, release.`);
   return 1;

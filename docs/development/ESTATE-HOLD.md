@@ -1,9 +1,10 @@
-# Which machine holds the estate
+# Which account holds the estate
 
-**One machine develops this repository at a time.** Two machines under two Claude accounts, both
-believing they hold it, is the one collision nothing else here protects against: claims keep two
-SESSIONS out of one tree, worktrees keep two sessions out of one checkout, and neither knows a
-second MACHINE exists.
+**One ACCOUNT develops this repository at a time** — RULED by Bob 2026-09-16: *the estate gate is
+held per account, not per session.* One account may run many sessions on many machines; they are one
+holder and they share the hold. Two ACCOUNTS both believing they hold it is the one collision nothing
+else here protects against: claims keep two SESSIONS out of one tree, worktrees keep two sessions out
+of one checkout, and neither knows a second account exists.
 
 ## THE HOLD — one line, because two claimants must collide
 
@@ -12,7 +13,7 @@ version spread machine, status and expiry across a TABLE, so two machines claimi
 edit different rows and git would auto-merge BOTH claims into a file naming one machine and
 another machine's expiry — a textual merge of a semantic conflict. One line forces the conflict
 git is good at. **Read this line, never the prose.**
-    HOLD: machine=vm-4237ad91 | account=believeinoakland | status=HELD | through=2026-09-16T21:21Z
+    HOLD: machine=vm-4237ad91 | account=acct-5085c62c | status=HELD | through=2026-09-18T17:43Z
 **Timestamps are ISO 8601 UTC with the `Z`, always.** The first version wrote a bare date, so two
 machines in different zones could disagree by a day about whether a hold had expired — an expiry
 that is not a fact in one clock is not an expiry.
@@ -67,46 +68,49 @@ visibly and by name, when nobody holds it, because a machine must be able to COM
 makes it compliant; that bootstrap is the reason the free case is not a refusal, and it is stated
 here so a later reader can revisit it rather than infer it.
 
-## WHO "THIS MACHINE" IS — the lock's second failure, and it failed OPEN
+## WHO THE HOLDER IS — THE ACCOUNT, and the code got this wrong twice in one day
 
-**The predicate was right and the identity fed to it was wrong.** `plancheck` derived this machine's
-name inline as `scutil --get ComputerName` || `hostname -s`. On the Claude Code cloud image
-**`hostname -s` is literally `vm` for every container**, and identity is an exact string match — so
-two cloud machines read each other's hold as their OWN. Driven through `estateVerdict` on
-2026-09-16, before anything was changed:
+**The unit is the ACCOUNT: the estate gate is held per account, not per session.** Bob, 2026-09-16,
+RULED. One account may run as many sessions and as many machines as it likes — they are one holder
+and they share the hold. A DIFFERENT account is refused. That is the collision this lock exists to
+prevent, and it is the only one it is trying to prevent.
 
-| the hold says | read by | verdict |
-| --- | --- | --- |
-| `machine=vm` | the Mac Mini | `theirs` — correctly refused |
-| `machine=vm` | **another cloud container** | **`ours` — no refusal, no warning, just a note saying it holds the estate** |
-| `machine=<a distinguishing name>` | the machine that wrote it | `theirs` — it refuses itself |
+**`account=` is the load-bearing field. `machine=` is a label** for a human reading the line, so it
+says where the work was happening. Nothing turns on it.
 
-**Row 2 is the whole lock failing open**, and it is worse than a missing lock because the second
-machine is told it HOLDS the estate. Row 3 is why writing a better name could not fix it: identity is
-matched against a value the tool computes, so **the tool is what had to change**.
+**Both of this file's implementations got the unit wrong, in OPPOSITE directions, and they are kept
+here because a reader who knows only the fix will reintroduce one of them.**
 
-**RULED 2026-09-16: identity is `<base name>-<8 hex>`, where the suffix is a random id persisted in
-the clone's COMMON gitdir** (`.git/bio-machine`, never committed), minted on first use with an
-exclusive create. `machineIdentity()` in `tools/estatehold.mjs` is the only reader of that question
-and `plancheck` prints what it derived, every run, as a note.
+**v1 keyed on the hostname.** `plancheck` derived the holder from `scutil --get ComputerName` ||
+`hostname -s`. A hostname identifies no account at all, and on the Claude Code cloud image it is the
+constant `vm` for every container — so the load-bearing question was answered by a value incapable of
+answering it, while the `account=` field sat beside it as a **hand-typed literal**. The one field
+that mattered was the one nothing derived.
 
-Why that and not a platform fact — the alternatives were available here and were **rejected for a
-stated reason, not overlooked**: `/etc/machine-id` may be baked into an image and shared by every
-container from it, **which this session could not measure having only one container**, so resting the
-lock on it would repeat exactly the unverified-premise mistake that produced the defect;
-`CLAUDE_CODE_CONTAINER_ID` and the session id are Claude-specific, so the Mac and the cloud would
-derive identity by different rules and only one of them would ever be exercised. A minted id is
-**distinct because it is minted rather than observed**, uniform across platforms, stable across turns
-and suspensions, and **shared by every WORKTREE of one clone** — the correct grain, because one
-machine is one identity however many lanes it runs. It is the pattern `mintid.mjs` already trusts for
-the id ledger.
+**v2 keyed on the clone, and was wrong the other way.** It replaced the hostname with a random id
+minted per clone: distinct, stable, well-tested — and it would have **refused an account its own
+estate**, because a second session is a second clone. It was written to close a "fail-open" where two
+cloud containers read each other's hold as `ours`; under this ruling **that was never a defect**.
+Two containers of one account agreeing is correct. v2 measured the mechanism accurately and
+mis-named the unit, which is the more expensive half of the error and the one no test caught, because
+there were no tests.
 
-**Two consequences, stated rather than left to be discovered.** A machine that RE-CLONES gets a new
-identity, so an ephemeral container is a new machine every session — which is the honest answer and
-the reason the window below is short for one. And a machine crossing this change finds its own
-earlier hold unrecognisable: the tool says so when the hold names its base name, but that is
-informative and never permissive — **let it expire, or rewrite it in the commit that upgrades the
-rule**, which is what this change itself did.
+**The rule now: the holder key is derived from `CLAUDE_CODE_ACCOUNT_UUID`, hashed to eight hex.**
+Hashed rather than written out because this line lives in a repository, and an account UUID in it
+would be an identifier disclosed for no benefit — the lock needs two accounts to DIFFER, not to be
+readable. `accountIdentity()` in `tools/estatehold.mjs` is the only reader of that question, and
+`plancheck` prints the key it derived on every run, beside the machine label.
+
+Fallbacks, in order, each NAMED in the output so a reader sees which applied: `BIO_HOLD_ACCOUNT` for
+an explicit value and for controls; then the per-clone id, which is **not account-scoped and says
+so**, so the two-accounts collision is still caught on a machine whose environment lacks the uuid;
+then nothing, reported as not discriminating, where the tool REFUSES to claim rather than claim under
+a key that cannot discriminate.
+
+**A holder crossing this change finds its own earlier hold unrecognisable**, because the old line's
+account field was a literal rather than a derived key. The tool says so when it sees an undervived
+field, but that is informative and never permissive: **let it expire, or rewrite it in the commit
+that upgrades the rule**, which is what this change itself did.
 
 ## CLAIM BEFORE YOU VERIFY — the ordering, ruled
 

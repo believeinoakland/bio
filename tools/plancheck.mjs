@@ -31,7 +31,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { estateVerdict, machineIdentity } from "./estatehold.mjs";
+import { estateVerdict, machineIdentity, accountIdentity } from "./estatehold.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DEV = join(ROOT, "docs/development");
@@ -616,7 +616,12 @@ if (!LOCAL_ONLY) {
      discriminates and SAYS which rule it used; see its comment for the three
      verdicts that were driven before it was written. */
   const me = machineIdentity({ repo: ROOT });
-  const thisMachine = me.id;
+  /* THE HOLDER IS THE ACCOUNT, RULED BY BOB 2026-09-16. The first fix keyed this on
+     a per-CLONE identity, which was wrong in the opposite direction from the
+     hostname it replaced: it would have refused one account's SECOND session its
+     own estate. The account is the unit; the machine is a label beside it. */
+  const holder = accountIdentity({ repo: ROOT });
+  const thisMachine = holder.key;
   const text = sh("git show origin/main:docs/development/ESTATE-HOLD.md");
   const v = estateVerdict(text, thisMachine, new Date().toISOString());
   const where = "docs/development/ESTATE-HOLD.md (its HOLD line, read from origin/main)";
@@ -645,13 +650,16 @@ if (!LOCAL_ONLY) {
        + `        line in ${where.split(" (")[0]} (machine="${thisMachine}", status=HELD,\n`
        + `        through = now + 48 h UTC) and pushing. The push is the allocator.`);
   else
-    notes.push(`estate hold: "${v.machine}" (${v.account}) through ${v.through} — this machine`);
-  notes.push(`machine identity: "${me.id}" from ${me.source}` + (me.discriminating ? "" : " — NOT DISCRIMINATING, so a hold under it is not a lock"));
-  if (!me.discriminating)
-    warn(`MACHINE IDENTITY IS NOT DISCRIMINATING — "${me.id}" could name more than one machine,\n`
+    notes.push(`estate hold: "${v.account}" on machine "${v.machine}" through ${v.through} — this holder`);
+  notes.push(`holder: "${holder.key}" from ${holder.source}`
+    + (holder.discriminating ? "" : " — NOT DISCRIMINATING, so a hold under it is not a lock")
+    + ` · machine "${me.id}" (label only)`);
+  if (!holder.discriminating)
+    warn(`HOLDER KEY IS NOT DISCRIMINATING — "${holder.key}" could name more than one holder,\n`
        + `        so a hold taken under it would not be a lock. This is a WARNING and not a refusal\n`
        + `        for the same reason the free case is: a machine must be able to reach a state where\n`
-       + `        it complies. Persisting an id needs a gitdir; without one, do not claim.`);
+       + `        it complies. Deriving a key needs CLAUDE_CODE_ACCOUNT_UUID, BIO_HOLD_ACCOUNT or a\n`
+       + `        gitdir; with none of the three, do not claim.`);
 }
 
 for (const n of notes) console.log(`  note  ${n}`);
