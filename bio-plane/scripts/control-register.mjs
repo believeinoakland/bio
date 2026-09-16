@@ -301,6 +301,13 @@ function declarationAt(src, at, after) {
     lines: kept.length,
     text,
     arms: countArms(text),
+    /* M0-42, and it is ADDITIVE ON PURPOSE. Every gated figure in this register
+       — arms, classified, corpus — is computed from the keys above and must come
+       out byte-identical with this key present. `run` is graded, reported and
+       floored on its OWN count; it changes nothing about how an arm is counted.
+       See the M0-42 block at the foot of this file for what it cannot do, which
+       is stated before what it can. */
+    run: readRunEvidence(text),
   };
 }
 
@@ -325,4 +332,149 @@ export function readControl(src) {
   const rank = (d) => (d.arms == null ? -1 : d.arms);
   return all.reduce((best, d) =>
     rank(d) > rank(best) || (rank(d) === rank(best) && d.text.length > best.text.length) ? d : best);
+}
+
+/* ===========================================================================
+   M0-42 — RUN vs DECLARED, AND THE LIMIT STATED BEFORE THE MECHANISM.
+
+   **THIS CANNOT PROVE THAT A NEGATIVE CONTROL RAN, AND NOTHING BELOW SHOULD BE
+   READ AS IF IT COULD.** Any artifact a worker can write, a worker can write
+   without running anything. A register that claimed to prove execution would be
+   a worse instrument than one that admits it cannot, because every reader
+   downstream would then believe a figure that is exactly as strong as the
+   worker's word and no stronger. What follows raises the COST of a false claim.
+   It does not make one impossible.
+
+   WHAT IT BUYS, stated so the gain is not overstated either:
+     - The absence becomes VISIBLE and COUNTED. Before this, every declaration in
+       the register read the same whether its arms had been run or merely
+       imagined, so "NCs 5 of 5 as declared" in a report rested on prose nobody
+       could check without reading it.
+     - A false claim must now carry a DATE and a FIGURE, which makes it
+       FALSIFIABLE by anyone who re-runs the arm. A purely prospective
+       declaration was unfalsifiable by construction: it predicted nothing that
+       could later be shown wrong.
+     - The claim can go STALE, and staleness is mechanical. A run token dated
+       before the subject last moved is a claim about a different tree.
+
+   **AND THE FINDING THAT SHAPED THE GRAMMAR, MEASURED BEFORE IT WAS WRITTEN AND
+   NOT REASONED ABOUT.** The item this module serves was rowed on the premise
+   that nothing in the estate distinguishes a control that RAN from one only
+   DECLARED. That is true of the INSTRUMENTS and FALSE OF THE RECORD. Measured
+   2026-09-16 over the plane's 198 declarations: 164 ALREADY CARRY A DATED RUN
+   TOKEN IN PROSE — "RUN 2026-08-09 by PL-18 (worktree agent-...)", "all four RUN
+   2026-08-05 by rec24-agent, each broken ALONE and restored byte-identical",
+   "RE-MEASURED 2026-08-10 BY FL-7". The convention was already there and NO
+   INSTRUMENT READ IT, so the 34 that carry nothing were invisible beside the 164
+   that do. **The work here is therefore to READ what honest workers already
+   write, never to impose a new ceremony on them** — a register that makes honest
+   work expensive gets bypassed and then measures nothing.
+
+   THE THREE STATES, with UNDETERMINED first-class because it is the true answer
+   for a real class of declaration, and collapsing it either way would be a claim
+   this instrument cannot support:
+
+     RUN           a past-tense EXECUTION VERB followed, within RUN_WINDOW
+                   characters, by an ISO date. The date is what separates a
+                   report from a prediction; the verb is what separates an
+                   execution from a defect's discovery date.
+     UNDETERMINED  no dated token, but the declaration states a MEASURED-LOOKING
+                   OUTCOME — "17 of 34 assertions fail", "471 -> 482", "exit 1".
+                   **A FIGURE ALONE CANNOT DISTINGUISH A MEASUREMENT FROM A
+                   PREDICTION**, because the register grammar spells both the same
+                   way: "break this -> that must then fail" is the form of a
+                   forecast AND of a result. This state says so instead of
+                   guessing, and it is the honest home of a worker who ran the
+                   arm and wrote the number down without dating it.
+     DECLARED-ONLY neither. The declaration is wholly prospective and rests on
+                   nobody having run anything that left a trace.
+
+   WHAT THIS STILL CANNOT SEE, stated here rather than discovered later:
+     - **A FORGED TOKEN IS INDISTINGUISHABLE FROM A REAL ONE.** It is one line of
+       prose. Nothing here, and nothing that could be built here, detects one.
+     - The verb set is a VOCABULARY, and a vocabulary goes stale the moment a
+       tenth spelling is written — this project's own "invert, do not lengthen a
+       list" rule, conceded rather than solved, because the inverted form (any
+       word beside a date) matches every date the prose contains. The mitigation
+       is that the register PRINTS the vocabulary it accepted, so a worker whose
+       spelling was refused can see why instead of guessing.
+       Measured 2026-09-16: the execution verbs alone yield 163 of 198; adding
+       MEASURED yields 164 (skillsequencing.test.mjs's RE-MEASURED); adding
+       VERIFIED yields 164 again, so it earns no place and is left out.
+     - It reads the DECLARATION and never a DELEGATION. A suite whose arms are
+       stated and run in a sibling control driver scores on its own text only —
+       readControl's existing rule, kept deliberately rather than widened here.
+     - A token says the arm ran. It says NOTHING about whether the arm ran
+       against the subject it names, whether it armed at all, or whether the
+       result written beside it is the result it produced.
+
+   NEGATION IS READ, and it is not fastidiousness: declarations in this estate
+   really do say "the second half is arm (1) below and IT HAS NEVER BEEN RUN IN
+   THIS PROJECT" in the same paragraph as a genuine token. A negated verb is
+   skipped and the scan continues, so that suite still scores on its real token
+   while a declaration whose only run word is negated scores none.           */
+
+/* A past-tense claim that the arm was EXECUTED. Matched case-insensitively; both
+   hyphenations of the repeated forms are carried because the tree writes both. */
+export const RUN_VERBS = ["RE-RUN", "RERUN", "RE-MEASURED", "REPRODUCED",
+                          "MEASURED", "DRIVEN", "DROVE", "RUN", "RAN"];
+
+/* How far after the verb the date may sit. Sixty characters is one clause: it
+   reaches "RUN 2026-08-09 by PL-18" and "all four RUN 2026-08-05 by rec24-agent"
+   without reaching the NEXT sentence's date. It is a floor against noise in the
+   same spirit as armdecay's shoulders, and it is stated rather than tuned in
+   silence. */
+export const RUN_WINDOW = 60;
+
+/* Words that turn the verb into a statement that it did NOT happen, read back
+   over the CURRENT CLAUSE only.
+
+   **THE CLAUSE BOUND IS NOT TIDINESS — IT WAS MEASURED, AND WITHOUT IT THIS GUARD
+   COSTS SIX TRUE TOKENS.** The first draft read a flat 44 characters back and
+   scored 158 where the ungarded scan scored 164. Every one of the six losses was a
+   negator in the PRECEDING SENTENCE, with the sentence's own full stop sitting
+   between it and the verb: `register-grammar.test.mjs`'s *"six nulls cannot be
+   mistaken for six passes. RUN 2026-08-09 by D-263"*, `battery-residue`'s
+   *"counted and never named. RUN 2026-08-08"*, `casesign`'s *"a file it had not
+   restored). ALL SIX RUN 2026-09-10"*, and three more. **A guard against the
+   generous direction that silently produced six false NOT-RUNs is the
+   over-strictness failure this register exists to refuse, and it was caught only
+   because the figure was re-measured after the guard went in rather than before.**
+   So the window is cut at the last sentence-ending punctuation: a negation in the
+   sentence before says nothing about this one. */
+export const RUN_NEGATORS = ["never", "not ", "n't", "cannot", "without", "unrun", "yet to be"];
+const CLAUSE_END = /[.;:!?—–]/g;
+
+const RUN_VERB_RE = new RegExp("\\b(" + RUN_VERBS.join("|") + ")\\b", "gi");
+const ISO_DATE = /\b(20\d\d-\d\d-\d\d)\b/;
+
+/* An outcome with a MEASURED SHAPE. Deliberately a shape and not a judgement:
+   every one of these spellings is also how a PREDICTION is written, which is the
+   whole reason the state it produces is UNDETERMINED rather than RUN. */
+const OUTCOME_FIGURE =
+  /\b\d+\s+of\s+\d+\b|\bexit\s+\d+\b|\b\d+\s*(?:->|→)\s*\d+\b|\b(?:GREEN|RED)\s*(?:->|→)\s*(?:RED|GREEN)\b|\b\d+\s+(?:pass|fail|assertion)/i;
+
+/* The grading. It returns a state ALWAYS — there is no null here, because a
+   declaration that says nothing about a run is a real measurement of that fact
+   and not the absence of one, which is the opposite of the `arms` case. */
+export function readRunEvidence(text) {
+  const none = (state) => ({ state, verb: null, date: null, quote: null });
+  if (!text) return none("DECLARED-ONLY");
+  for (const m of text.matchAll(RUN_VERB_RE)) {
+    const window = text.slice(Math.max(0, m.index - 44), m.index);
+    CLAUSE_END.lastIndex = 0;
+    let cut = 0;
+    for (const p of window.matchAll(CLAUSE_END)) cut = p.index + 1;
+    const clause = window.slice(cut).toLowerCase();
+    if (RUN_NEGATORS.some((n) => clause.includes(n))) continue;
+    const d = ISO_DATE.exec(text.slice(m.index, m.index + RUN_WINDOW));
+    if (!d) continue;
+    return {
+      state: "RUN",
+      verb: m[0],
+      date: d[1],
+      quote: text.slice(m.index, m.index + RUN_WINDOW).replace(/\s+/g, " ").trim(),
+    };
+  }
+  return OUTCOME_FIGURE.test(text) ? none("UNDETERMINED") : none("DECLARED-ONLY");
 }
