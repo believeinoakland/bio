@@ -130,9 +130,13 @@ exactly as written, and it is why REC-92, REC-104 and UI-62 are dammed today.
 **THREE ITEMS, yours to id, gate and sequence. No interface is touched — no wire shape changes, so no IC is
 owed, and filing one would teach the registry to lie (`INTERFACE-CHANGES.md`'s own reasoning).** Milestone M0.
 
-1. **`WORKER.md` gains the push step**, and the worker's report carries the PUSHED branch and sha — so the
-   report states a durable fact rather than a local one. Docs-class. `accepts-when`: `kickoffs/WORKER.md`
-   contains the push instruction and the report template names the branch sha.
+1. **~~`WORKER.md` gains the push step~~ — LANDED 2026-09-16 BY BOB, do not row it.** Corrected in the same
+   turn under `BOB.md`'s rule 3 (correct every kickoff your change superseded), which I owed at the ruling and
+   did not pay until Bob asked whether the flaw was actually fixed. **THREE sites:** the standing rule now reads
+   *push your own branch, do not merge, never push to `main`*, the close-out step pushes AND VERIFIES from
+   `git ls-remote` rather than from the worker's own tree, and the report template now leads with the PUSHED
+   branch and sha. **This one mattered most and was the cheapest: until it landed, every worker you spawned
+   read `Do not push` — the instruction that stranded REC-91 — and would have done exactly the same thing.**
 2. **The `plancheck` arm** — WARN, never fail, naming each local `worktree-agent-*` branch neither merged into
    `origin/main` nor present on the remote. **Its negative control is owed in the same turn and is the whole
    point of the item:** create such a branch and confirm the arm NAMES it; then merge it and confirm the arm
@@ -140,8 +144,9 @@ owed, and filing one would teach the registry to lie (`INTERFACE-CHANGES.md`'s o
 3. **`kickoffs/CONDUCT.md` gains the prune-on-merge step** — delete the remote branch when the item merges.
    Sequence AFTER item 2, so the branch list is already meaningful when pruning starts maintaining it.
 
-**Depends-on: none of the three depends on REC-91's recovery, and none should wait for it.** Item 1 protects
-every worker you spawn in the cohort you are about to open, so it is worth taking FIRST and small.
+**Depends-on: none depends on REC-91's recovery, and none should wait for it.** **ITEM 1 IS DONE; ITEMS 2 AND 3
+ARE YOURS AND THE DEFECT IS NOT CLOSED UNTIL THEY LAND.** Item 1 makes the worker save its own work; item 2 is
+the only thing that will ever TELL US when that failed, and a rule with no instrument is what D-288 already was.
 
 **No queue item is superseded and no worker should be stopped.**
 

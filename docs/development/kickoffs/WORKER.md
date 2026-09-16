@@ -87,7 +87,16 @@ incident's own shape inverted:
   **counted into its baseline**. Need a clean tree? `git worktree add` a scratch checkout.
 - **The shared scratchpad is NOT isolated between sessions** — two workers reported it
   independently. Keep every harness and scratch file **inside your own worktree**.
-- **Do not push. Do not merge.** CONDUCT integrates.
+- **PUSH YOUR OWN BRANCH. Do not merge, and never push to `main`.** CONDUCT integrates; you make
+  your work SURVIVE. CORRECTED 2026-09-16 (D-288, ruled by BOB #12) — this line read *do not push*
+  for five weeks and that is the instruction that strands the work: `CLAUDE.md`'s rule is that a
+  change is made when it is COMMITTED AND PUSHED, `plancheck` enforces it for `main` and for the
+  planning surfaces, and NOTHING enforced it for a worker branch — which is where your item's code
+  sits between your report and CONDUCT's merge. **The receipt: REC-91 finished, committed and
+  released on its branch on 2026-09-15; its integrator was stood down before merging; the work
+  reached nobody and sat on one disk until somebody went to that physical machine to get it.**
+  You are the only actor GUARANTEED to be alive at the moment your commits exist, so the push is
+  yours. `git push origin <your-branch>:<your-branch>` — never force, never to `main`.
 
 ## Measurement
 
@@ -225,12 +234,17 @@ number" into a corpus file**; the tool caught its own debt row poisoning its own
    that did not exist when the fixture was written.
 4. `node tools/plancheck.mjs` — clean but for UNPUSHED. It also refuses an unresolved merge
    marker anywhere in the tree.
-5. Commit on your branch. **Do NOT push, do NOT merge.**
+5. Commit on your branch, **then PUSH IT** — `git push origin <your-branch>:<your-branch>`, never
+   force and never to `main`. **Do not merge; CONDUCT integrates.** Then VERIFY it arrived by
+   asking the REMOTE rather than your own tree: `git ls-remote --heads origin <your-branch>`
+   must answer with the sha you just committed. An unverified push is a claim, and this project
+   has paid for exactly that distinction (D-288).
 
 ## Report back
 
-Your final text **is the return value**, not a message to a human. Give CONDUCT: what
-landed and where; the numbers (baseline, final, per-suite attribution, coverage, UI
+Your final text **is the return value**, not a message to a human. Give CONDUCT: **your PUSHED
+branch name and its sha, read back from `git ls-remote` and not from your tree** (D-288 — a report
+naming a branch nobody else can fetch is worse than no report); what landed and where; the numbers (baseline, final, per-suite attribution, coverage, UI
 harness, every floor moved); **every control arm with its declared and actual result,
 including the ones that came back wrong**; what the class sweep found and **what it could
 not see**; what your brief did not predict; every delegation; any decision for Bob.
