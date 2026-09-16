@@ -289,16 +289,27 @@ function plancheckClean(repo) {
 function writeAndPush(repo, fields, { push, subject }) {
   const rel = "docs/development/ESTATE-HOLD.md";
   const path = join(repo, rel);
+  /* GATE BEFORE WRITING, AND THE ORDER IS THE WHOLE BUG THIS FIXES. The first
+     version wrote the HOLD line and THEN ran plancheck, so plancheck's UNPUBLISHED
+     arm saw the tool's OWN uncommitted write and refused every time — a refresh
+     that could never succeed, on a tool the handoff instructs the next session to
+     run. Measured the first time `refresh` was used for real, which is the only
+     reason it was caught: the suite drives `claim` with --no-push and against
+     another holder's hold, and NEITHER of those paths reaches the gate.
+     It is this project's own rule turned on my own tool: a control whose method
+     perturbs the variable it measures. The gate has to answer for the tree as the
+     caller handed it over, not for the tree after the tool has edited it. */
+  const pc = push ? plancheckClean(repo) : { ok: true, out: "" };
+  if (!pc.ok) {
+    console.log("  REFUSED: plancheck reports a FAIL on the tree AS HANDED OVER, so this is not a tree to push from.");
+    console.log(pc.out.split("\n").filter((l) => /FAIL|plancheck:/.test(l)).map((l) => `    ${l.trim()}`).join("\n"));
+    console.log("  Nothing was written: the hold line is untouched.");
+    return 1;
+  }
   const next = rewriteHold(readFileSync(path, "utf8"), fields);
   writeFileSync(path, next);
   console.log(`  ${holdLine(fields).trim()}`);
   if (!push) { console.log("  --no-push: written but NOT pushed, so nothing is allocated yet."); return 0; }
-  const pc = plancheckClean(repo);
-  if (!pc.ok) {
-    console.log("  REFUSED: plancheck reports a FAIL, so this is not a tree to push from.");
-    console.log(pc.out.split("\n").filter((l) => /FAIL|plancheck:/.test(l)).map((l) => `    ${l.trim()}`).join("\n"));
-    return 1;
-  }
   sh("git", ["-C", repo, "add", "--", rel]);
   try {
     execFileSync("git", ["-C", repo, "commit", "-m", subject, "--", rel],

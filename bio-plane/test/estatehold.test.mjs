@@ -303,6 +303,28 @@ section("the CLI: the acts, and the refusal that must write NOTHING");
     /NOT pushed, so nothing is allocated/.test(dry.out), true);
   t("...and origin/main is untouched, which is the fact that matters",
     /account=none/.test(git(free.work, "show", "origin/main:" + HOLD_DOC)), true);
+
+  /* THE GATE RUNS BEFORE THE WRITE, PINNED AT SOURCE LEVEL AND HERE IS WHY.
+     This arm exists because the defect it guards SHIPPED: writeAndPush wrote the
+     HOLD line and only then ran plancheck, so plancheck's UNPUBLISHED arm saw the
+     tool's OWN uncommitted write and refused every time. A refresh that could
+     never succeed, on the command the handoff tells the next session to run, and
+     it was caught by using it for real rather than by any assertion above —
+     because NEITHER driven path reaches the gate: --no-push skips it by design,
+     and the other-holder path refuses before it.
+     It cannot be driven end-to-end from a scratch clone either: plancheckClean
+     shells `node tools/plancheck.mjs` in the repo it is given, and a scratch clone
+     has no tools/ tree, so the gate fails there for a reason that has nothing to
+     do with the order. Rather than weaken the gate to make it testable — which
+     would trade a real guard for a green arm — the ORDER is asserted in the
+     source, the way hygiene.test.mjs pins source-level hazards. THE LIMIT IS
+     STATED: this arm proves the call order, not the gate's behaviour. */
+  const src = readFileSync(TOOL, "utf8");
+  const body = src.slice(src.indexOf("function writeAndPush"), src.indexOf("async function main"));
+  t("the gate is consulted BEFORE the hold line is written, not after",
+    body.indexOf("plancheckClean(repo)") < body.indexOf("writeFileSync(path, next)"), true);
+  t("...and a refused gate says the file was left untouched, so the caller is not left guessing",
+    /Nothing was written: the hold line is untouched/.test(body), true);
 }
 
 /* ========================================================================== */
