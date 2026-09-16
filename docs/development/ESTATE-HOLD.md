@@ -5,30 +5,45 @@ believing they hold it, is the one collision nothing else here protects against:
 SESSIONS out of one tree, worktrees keep two sessions out of one checkout, and neither knows a
 second MACHINE exists.
 
-## The hold
+## THE HOLD — one line, because two claimants must collide
 
-| field | value |
-| --- | --- |
-| **machine** | Mac Mini (`sparky`, darwin 25.5.0) |
-| **account** | the original Claude account |
-| **status** | **RELEASED 2026-09-16** |
-| **held through** | — (released; a new machine may claim it) |
-| **evidence for the release** | `origin/main` last moved at `93ecbd5`, *"work suspended at the operator's direction"*, **16 hours** before the release; **zero rows read `running`**; no session on this machine is running; BOB #11 stopped 2026-09-15 and CONDUCT #11 was suspended at Bob's direction with six of seven integrated. |
+**Every field a reader needs is on the single line below, and that is the point.** The first
+version spread machine, status and expiry across a TABLE, so two machines claiming at once could
+edit different rows and git would auto-merge BOTH claims into a file naming one machine and
+another machine's expiry — a textual merge of a semantic conflict. One line forces the conflict
+git is good at. **Read this line, never the prose.**
+
+    HOLD: machine=MiniM4 | account=original | status=HELD | through=2026-09-18T14:29Z
+
+**Timestamps are ISO 8601 UTC with the `Z`, always.** The first version wrote a bare date, so two
+machines in different zones could disagree by a day about whether a hold had expired — an expiry
+that is not a fact in one clock is not an expiry.
+
+**Currently HELD by the outgoing machine, deliberately and briefly.** BOB #11 released the estate
+on 2026-09-16, then RE-CLAIMED it to land this file's own corrections and the `plancheck` arm that
+enforces them — **developing the lock without holding the lock would have been the first violation
+of it.** It is released again in the commit that follows, and if that release is somehow not made,
+the hold EXPIRES at `2026-09-18T14:29Z` on its own, which is the whole point of the change.
 
 ## How to take it, and why the push is the mechanism
 
-1. `git fetch origin` and read THIS FILE FROM `origin/main` — never from your own tree, which may
-   be a checkout of a commit taken before someone else claimed it.
-2. **The hold is free if `status` is `RELEASED`, or if `held through` is in the past.** Otherwise
-   STOP: say which machine holds it and through when. Do not develop, spawn or push.
-3. To claim it: set `machine`, `account`, `status: HELD`, and **`held through` = now + 48 hours**,
-   commit, and **push to `main`**. **The push is the allocator.** A rejected push means you lost the
-   race — fetch, read who won, and stop. An allocator that REFUSES beats a checker that REPORTS.
-4. **REFRESH IT AS PART OF AN ACT YOU ALREADY PERFORM, never as a separate chore**: the lead extends
-   `held through` whenever it pushes a planning surface, and the integrator does the same at each
-   integration. A mechanism that is not in the loop the reader actually runs is not a mechanism.
-5. **Release explicitly at stand-down** — set `status: RELEASED` with the date and the evidence, so
-   the next machine reads a fact rather than an absence.
+1. `git fetch origin` and read the **HOLD line** from `origin/main` — never from your own tree.
+2. **It is free when `status=RELEASED`, or when `through` is in the past** (compare in UTC).
+   Otherwise STOP: name the machine and its `through`, and do not develop, spawn or push.
+3. **Claim it by rewriting the WHOLE line** — machine, account, `status=HELD`, `through` = now + 48 h
+   in UTC — then commit and **push to `main`**. **The push is the allocator.** A rejected push means
+   you lost the race: fetch, read who won, and STOP — do not rebase and re-push, which is the one
+   reflex that defeats this.
+4. **REFRESH INSIDE AN ACT YOU ALREADY PERFORM**, never as a separate chore: rewrite `through` when
+   you push a planning surface, and at every integration. `plancheck` fails you if the hold has
+   expired under you, so the refresh is enforced rather than remembered.
+5. **Release at stand-down**: `status=RELEASED`, `machine=none`, `through` in the past.
+
+**`node tools/plancheck.mjs` ENFORCES this** — it reads the HOLD line from `origin/main` and REFUSES
+when another machine holds it unexpired, and when this machine's own hold has expired. It warns,
+visibly and by name, when nobody holds it, because a machine must be able to COMMIT the claim that
+makes it compliant; that bootstrap is the reason the free case is not a refusal, and it is stated
+here so a later reader can revisit it rather than infer it.
 
 ## Why `held through` and not `held since` — this file's own first failure
 
