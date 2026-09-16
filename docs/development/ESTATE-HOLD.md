@@ -120,14 +120,30 @@ from the machine, which is the separation this lock turns on.** It lives in the 
 not in the repository, so every clone and every worktree on one machine derives ONE key, which is
 exactly the property the per-clone fallback lacks.
 
-**WHAT IS NOT YET MEASURED, AND IT IS THE LOAD-BEARING HALF.** Only ONE account's config has ever
-been read. That the uuid DIFFERS across two accounts is a property of the field's construction and
-not an observation, and the estate has been burned twice by exactly that distinction. **The arm that
-would settle it is one reading of `oauthAccount.accountUuid` and `oauthAccount.emailAddress`
-together, taken while signed in as the other account** — differing email with differing uuid
-confirms the rule; differing email with the SAME uuid disqualifies this source outright. Until that
-reading exists, this rule is the best-supported candidate and not a verified one, and it is recorded
-here as such rather than as settled.
+**MEASURED ACROSS TWO MACHINES, 2026-09-16, and it settles half the question.** Sparky-Air and
+MiniM4 — genuinely different machines, different `machineID`, different `userID` — report the SAME
+`accountUuid`, the same `emailAddress`, the same `organizationUuid` and the same
+`organizationName`. So the uuid is **stable across machines under one account**, which is the first
+half of what this key must do, and it is now an observation rather than an inference. The same run
+shows `userID` DIFFERING between those two machines, so it is per-machine and was never a candidate
+however account-shaped its name reads.
+
+**THE SECOND HALF REMAINS UNMEASURED, AND THE REASON IS WORTH MORE THAN THE GAP.** That the uuid
+DIFFERS across two ACCOUNTS is still a property of the field's construction and not an observation —
+because the two machines this estate has been developed from turn out to be **ONE account**, not two.
+The "old account / new account" framing that produced a day of lockout has no referent at the Claude
+auth layer: `neodall-e@neologic.com` on both, one `accountUuid`, one organization. Nothing here was
+ever an account collision. **The collision this lock exists to prevent has not yet occurred on this
+estate**, which is a fine reason to keep the lock and a bad reason to believe its key is proven. When
+a genuine second account first touches this repository, read its `accountUuid` and `emailAddress`
+together before trusting the refusal.
+
+**AND `CLAUDE_CODE_ACCOUNT_UUID` IS ABSENT ON BOTH MACS**, measured the same day — not merely on the
+desktop session that found the defect. The demotion above is therefore not a workaround for one
+machine's environment; the variable is simply not how a Mac learns its account. A cloud container
+derived `acct-5085c62c` from it, which matches NO value on either Mac, so the variable's value space
+is not the config's. Reading the config FIRST is what closes that split: a cloud session signed into
+this account now derives the same key a Mac does, instead of a second key for one holder.
 
 Fallbacks, in order, each NAMED in the output so a reader sees which applied: `BIO_HOLD_ACCOUNT` for
 an explicit value and for controls; then the config uuid above; then `CLAUDE_CODE_ACCOUNT_UUID`, for
