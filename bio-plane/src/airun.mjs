@@ -299,14 +299,23 @@ export const MISSING_ROW_CAUSES = {
  *  EXISTS AS A MECHANISM at all — not whether this capture has rows in it, which
  *  is the distinction that decides between `indexed_none` and UNDETERMINED.
  *
- *  THE ONE ARM THAT IS ANSWERABLE TODAY IN BOTH DIRECTIONS is the pair at the
- *  ends: no observation is `not_extracted`, and an observation that says no text
- *  could be produced is `indexed_none` — because a capture with no extracted
- *  text has no units to index whatever index exists, and the REASON is already
- *  on the row as its condition. Everything between them needs REC-91. */
+ *  THE ONE ARM THAT WAS ANSWERABLE IN BOTH DIRECTIONS BEFORE REC-91 is the pair
+ *  at the ends: no observation is `not_extracted`, and an observation that says
+ *  no text could be produced is `indexed_none` — because a capture with no
+ *  extracted text has no units to index whatever index exists, and the REASON is
+ *  already on the row as its condition.
+ *
+ *  **REC-91 LANDED THE MIDDLE.** `capture_text` exists, so `unitIndex` is now
+ *  true at every caller, and `unitsComplete` is read off the capture's own
+ *  `indexed` observation (`authority_kind = derive`) rather than counted from
+ *  the rows — which keeps section 4.3's promise that *not extracted*, *over the
+ *  bound* and *indexed* are ONE VOCABULARY IN ONE PLACE, and is why a count here
+ *  would be a second opinion that could not see the bound at all. `null` is its
+ *  own answer and is handled below. */
 export function contentAxisFor({ observed = null, unitIndex = false,
                                  unitsComplete = null, reason = null,
-                                 missingCause = null } = {}) {
+                                 missingCause = null,
+                                 indexObserved = null, indexReason = null } = {}) {
   if (observed == null || observed === "NEVER_LOOKED") {
     /* Section 5.1's ORDER, and the never-extracted member is returned ONLY under
        cause (3). Under (1) and (2) the honest answer is UNDETERMINED NAMING
@@ -339,6 +348,46 @@ export function contentAxisFor({ observed = null, unitIndex = false,
                 + `indexed_partial is a fact about the per-unit text index, and no unit index `
                 + `exists in this build (CONTENT-SEARCH-DESIGN.md section 4.1, REC-91). `
                 + `Stated as undetermined rather than answered from the extraction alone` };
+  /* REC-91 — THE INDEX'S OWN ABSENCE ANSWER, AND IT IS NOT A DEGREE OF
+     INDEXING. `indexObserved` is the state of the capture's `indexed`
+     observation (`authority_kind = derive`), and two of its four values are not
+     points on the full/partial scale at all: the index LOOKED and there was
+     nothing to index (no text), or it looked and COULD NOT address a passage of
+     this container (a workbook has no unit arm until `sheet-range` lands; an
+     HTML page has no `dom` producer). Both are the none-with-a-reason member,
+     and the reason travels with them.
+     THE DIRECTION IS WHY THIS BRANCH EXISTS. Without it those captures fall
+     through to `unitsComplete === false` and answer PARTIAL — telling a member
+     that some of a workbook's passages are searchable when the record cannot
+     address a single one of them. That is the record claiming more than it can
+     support at exactly the level the four-level search exists to keep honest,
+     and it is the same null-read-as-falsy shape as the branch below it. */
+  if (indexObserved === "LOOKED_ABSENT" || indexObserved === "LOOKED_INDETERMINATE")
+    return { state: "indexed_none", determined: true,
+             why: indexReason ? `${CONTENT_AXIS_STATES.indexed_none}: ${indexReason}`
+                              : CONTENT_AXIS_STATES.indexed_none };
+  /* REC-91 — `unitsComplete === null` IS A THIRD ANSWER AND NOT A WEAK `false`,
+     and this branch is the correction REC-91's landing required rather than a
+     new rule. `unitIndex` says the index EXISTS AS A MECHANISM, which from
+     REC-91 onward is always true; `unitsComplete` says what the index holds
+     ABOUT THIS CAPTURE, and the record can genuinely not know — every capture
+     promoted before REC-91's writer existed has extracted text, no indexed
+     units, and no index observation, because nothing ever looked.
+     WITHOUT THIS BRANCH THAT CAPTURE READS `indexed_partial`, which tells a
+     member some of its passages are searchable when none of them are. That is
+     the record claiming more than it can support, in the one surface a member
+     reads absence from, and it arrives the way this failure always does: a
+     null treated as a falsy rather than as its own fact. The pre-REC-91
+     spelling of this line was CORRECT while no index existed and became wrong
+     the moment one did, which is why it is corrected here rather than exempted
+     anywhere. */
+  if (unitsComplete == null)
+    return { state: CONTENT_AXIS_UNDETERMINED, determined: false,
+             why: `this capture's text WAS extracted (${observed}) and the per-unit text index `
+                + `exists, but this record holds no index observation for this capture — so `
+                + `whether its passages are indexed is UNDETERMINED rather than partial. A `
+                + `capture promoted before the index writer existed is in exactly that `
+                + `position, and re-promoting it is what settles the question` };
   return unitsComplete === true && observed === "PRESENT"
     ? { state: "indexed_full", determined: true, why: CONTENT_AXIS_STATES.indexed_full }
     : { state: "indexed_partial", determined: true, why: CONTENT_AXIS_STATES.indexed_partial };

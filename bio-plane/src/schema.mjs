@@ -3135,6 +3135,89 @@ CREATE INDEX IF NOT EXISTS proposed_readings_bundle ON proposed_readings(bundle_
 CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
 -- =========================================================================
 
+-- REC-91 / CONTENT-SEARCH-DESIGN.md section 4.1 -- THE TEXT INDEX, one row per
+-- INDEXED UNIT of one capture's text under its CURRENT chain. This is the
+-- content level of the four-level search (Part II section 14.3): bundles_fts
+-- indexes the GROUP'S OWN NOTES about a document, and until this table existed
+-- nothing indexed what the document SAYS, so a group that captured five hundred
+-- agenda packets could search its notes about them and not the packets.
+--
+-- ONE UNIT PER ELEMENT REFERENCE, which is section 3's option (iii) and the
+-- reason this is a table rather than one more column feed into bundles_fts.
+-- Pouring document text into bundles_fts.body would truncate a 400-page packet
+-- at page ~40 against TEXT_CAP and would land a reader on a DOCUMENT -- the
+-- anchor found and then thrown away, which is D-161's failure one axis over.
+-- Here the unit's address IS a content extent, so a hit is a mintable row's
+-- identity without minting it (section 4.5, IC-83's lazy mint).
+--
+-- THE EXTENT IS THE SAME CANONICAL FORM THE content TABLE HASHES OVER, produced
+-- by canonicalExtent in bio-checks.mjs and never re-spelled here. That is what
+-- makes contentIdFor(capture_sha, extent, chain) computable AT HIT TIME, which
+-- is the whole of section 4.5: a search returns an ADDRESS a member may cite,
+-- and searching mints nothing.
+--
+-- chain_kind IS A COLUMN AND NOT A PARSE, so "every OCR'd unit" is a predicate.
+-- It holds the LAST step kind of the chain that produced this unit (layer, ocr,
+-- member). Section 4.2 asks the identical question of the content table, whose
+-- chain column holds the WHOLE chain as JSON, and that filter measured as the
+-- slowest on the table at M-21 -- so the column here is the same question
+-- answered the cheap way, and the difference is stated in SEARCH's own
+-- Incomplete list rather than left for a reader to notice.
+--
+-- truncated IS PER UNIT AND NEVER A SILENT PREFIX (M5's rule, section 2): a
+-- unit stored to the bound says so, and rows=passage carries the flag. The
+-- per-capture bound is a different metric and is NOT a column here at all -- it
+-- is the indexed observation, written per capture into observation_log, so that
+-- not extracted, extracted but over the bound, and extracted and indexed are one
+-- vocabulary in one place (section 4.3).
+--
+-- WHAT HAS NO UNIT ARM AND IS THEREFORE ABSENT RATHER THAN EMPTY: a WORKBOOK
+-- (a cell is not a passage and a sheet-range does not exist until
+-- EXTRACTION-BREADTH section 3.2 lands -- 288 workbooks in M-20's census hold
+-- 72,651,441 bytes of text over 1,056 sheets and not one indexable unit), and
+-- HTML (no dom producer, Part II section 15). Neither is scored zero: the
+-- capture's indexed observation says none with the reason.
+--
+-- DERIVED, AND PURGED ON BOTH ARMS. It carries bundle_id -- the document this
+-- text is of -- so it rides purge's TABLES list. Text is a PROJECTION and is
+-- re-derived rather than versioned (section 4.1): when the chain moves, the
+-- capture's previous rows are DELETED and rewritten, so a revised chain never
+-- leaves a unit claiming an engine that did not produce it. A content row is
+-- the opposite and is never rewritten -- an authored edge holds it, and a
+-- re-extraction marks it stale (REC-82).
+CREATE TABLE IF NOT EXISTS capture_text (
+  capture_sha  TEXT    NOT NULL,   -- the document. The register's trust root
+  bundle_id    TEXT    NOT NULL,   -- the join every query arm makes (section 2)
+  extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape. sheet-range when EXTRACTION-BREADTH 3.2 lands
+  extent       TEXT    NOT NULL,   -- canonicalExtent's output. The SAME bytes the content address is taken over
+  ref          TEXT    NOT NULL,   -- IC-1's required human form, from describeExtent
+  seq          INTEGER NOT NULL,   -- reading order within the capture, so a partial index is a PREFIX and says so
+  text         TEXT    NOT NULL,   -- the unit's text, capped per unit at TEXT_CAP (section 4.3)
+  truncated    INTEGER NOT NULL DEFAULT 0,
+  chain_kind   TEXT    NOT NULL,   -- the chain's LAST step kind, so an engine is a predicate
+  PRIMARY KEY (capture_sha, extent_kind, extent)
+);
+-- By BUNDLE: the join every arm makes, and purge's per-bundle arm.
+CREATE INDEX IF NOT EXISTS capture_text_bundle ON capture_text(bundle_id);
+-- AND NOT BY CHAIN KIND, WHICH THIS ITEM DECLARED AND THEN WITHDREW ON THE
+-- REPOSITORY'S OWN RULE. "Every OCR'd unit below cap C" is one of the three
+-- questions Part II section 17 names as unanswerable, and it is a predicate only
+-- if such an index exists -- so one was written here. The airuns suite sweep
+-- then named it on the roster of ACCESS PATHS NO OP ASKS FOR, correctly: the op
+-- that would read it is REC-92's passage: arm and it does not exist. REC-12's
+-- rule is already recorded a few hundred lines up in store.mjs for three
+-- other columns -- *an index nobody seeks on is cost with no reader* -- and the
+-- index's cost here is per UNIT rather than per bundle, which is the grain that
+-- made this whole table worth measuring.
+-- THE HONEST MOVE IS TO LET THE READER BRING IT. The alternative was to raise
+-- that sweep's CEILING by one on a promise, and a ceiling raised for a reader
+-- that might arrive is a ceiling that stops meaning anything. M-21's 31.6
+-- SECONDS against 9 ms is a real measurement of a DIFFERENT table's column under
+-- a query that exists; quoting it for a query nobody has written would be
+-- borrowing evidence rather than having it. REC-92 adds the index with its own
+-- measurement, the way REC-90 did for the content table.
+-- =========================================================================
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

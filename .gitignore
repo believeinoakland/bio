@@ -268,3 +268,13 @@ bio-plane/.coff11-arm-test-pristine.mjs
 .rec105-control-pristine/
 .pristine-rec105/
 _work-ab0036/
+# REC-91's control pen (`bio-plane/test/nc-rec91.mjs`), on its own line for the
+# reason the note at `.rec84-control-pristine/` gives and that every pen above it
+# repeats: a glob over `.*-control-pristine/` would silently cover a pen nobody
+# declared. The harness keeps per-arm pristine copies of `src/store.mjs` and
+# `src/index.mjs` here while it arms them, and an untracked copy of either left
+# behind by an interrupted run is a SECOND plane source for the next walk to
+# enrol — which is not hypothetical, since `coverage.mjs`'s fleet walk and the
+# battery's discovery both read directories rather than a list. Added to this
+# item's CLAIMS block at the close rather than taken silently.
+.rec91-control-pristine/

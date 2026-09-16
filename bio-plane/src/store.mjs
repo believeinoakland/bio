@@ -443,6 +443,73 @@ const INLINE_MAX = 1024 * 1024; // spill to R2 above 1MB; measured hard limit ~2
    before it is stored rather than after it is read. Anything a member sees on
    a task passed through boundedSubject on its way in. */
 const TASK_KINDS = ["authority-undetermined"];
+
+/* REC-91 / `CONTENT-SEARCH-DESIGN.md` section 4.3 -- THE TWO BOUNDS ON THE
+ * CONTENT-GRAIN TEXT INDEX. **Both are SET FROM A MEASUREMENT and neither is a
+ * preference**: `MEASUREMENTS.md` M-20, 2026-09-14, `tools/m031-index-measure.mjs`
+ * over COFF-6's census corpus -- 762 OOXML documents as a CENSUS and 1,000 of
+ * 27,783 PDFs as M-13's own seeded draw. The figure each rests on is beside it
+ * so a later reader can overturn it with evidence rather than with an opinion.
+ *
+ * PER UNIT. The same 131,072 B `query.mjs` already caps an FTS column at, KEPT
+ * rather than re-chosen, and kept on evidence: over M-20's 148,413 units the
+ * largest anywhere was 21,224 B (a PDF page), with `doc-para` topping out at
+ * 2,931 B and a slide at 2,329 B. The cap is 6.2x the largest unit the census
+ * produced and is never approached -- it is a guard against a pathological
+ * document, not a policy about ordinary ones. A second, smaller number here
+ * would cost a second vocabulary beside the one the existing index already
+ * carries, and would bound nothing that matters, because **a per-unit cap bounds
+ * nothing when a document carries 20,571 units.** What actually bounds a promote
+ * is the figure below. It is DECLARED here rather than imported from `query.mjs`
+ * because that constant is not exported and because the two caps are equal today
+ * by evidence rather than by definition: `bundles_fts` caps a COLUMN spanning a
+ * whole bundle's inline files, this caps ONE passage of one document, and a
+ * later item that moves one must not silently move the other.
+ *
+ * PER CAPTURE, ACROSS ALL OF ONE CAPTURE'S UNITS. One number for every
+ * container, because the `indexed` state is one vocabulary and a per-format
+ * bound would need two. It admits 100 % of M-20's measured 1,000-PDF sample
+ * FULLY -- the largest PDF in it carries 1,354,686 B of text, so the bound has
+ * 54.8 % headroom over the worst document measured -- where 1 MiB would already
+ * leave two of the thousand `partial`. The exclusions are NAMED rather than
+ * implied: none in the measured sample, and the sample is 3.60 % of the PDF
+ * population, so captures over the bound certainly exist in the other 96.4 %.
+ * Those take the `partial` path, which is what that path is for.
+ *
+ * AND WHAT THIS BOUND DOES **NOT** BOUND, stated here because section 4.3's own
+ * argument for it does not hold at every grain and this build MEASURED that.
+ * Section 4.3 reasons that a capture at the bound costs 45.7 % of the measured
+ * per-invocation CPU window, "so the bound cannot by itself push a promote over
+ * the ceiling". That is true AT PAGE GRAIN and false at paragraph grain: M-20's
+ * own ladder puts the census's worst docx -- 20,571 units, 1,187,253 B, well
+ * INSIDE this byte bound -- at 218 ms, **84.8 % of the 257 ms window**. Bytes do
+ * not bound the UNIT COUNT, and the unit count is the dominant term for a
+ * word-processing container. Reported as a DESIGN GAP against section 4.3
+ * rather than closed here with a unit cap this item was not scoped to choose:
+ * a second bound is a decision about what a member's promote may cost, it wants
+ * the chunk-across-ticks remedy section 4.1 already names, and inventing one
+ * inside this item would be a fence tighter than its rule. */
+const CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
+const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
+/* WHICH CONTAINERS HAVE AN INDEXING UNIT ARM AT ALL, which is a DIFFERENT
+ * question from whether a given capture produced units and must not be folded
+ * into it. A workbook with no `sheet-range` arm and an HTML page with no `dom`
+ * producer are the none-with-a-reason member of the content-axis vocabulary
+ * (spelled in `airun.mjs`, never here); a PDF that produced nothing is a
+ * PDF whose pages are scans. Both are absences and only one of them is about
+ * the container.
+ *
+ * NAMED BY CONTAINER RATHER THAN DERIVED FROM THE UNITS, deliberately: deriving
+ * it would make "this producer emitted nothing today" and "this record has no
+ * way to address a passage of this kind of document" one answer, and section
+ * 4.1's whole point about workbooks is that they are two. The spellings are
+ * `reading.text_container`'s, which is `detectFormat`'s own format key.
+ *
+ * `odt` and `odp` ARE HERE and `ods` IS NOT, which is the rule rather than a
+ * list: COFF-10's ODF entries return `docx.mjs`'s and `pptx.mjs`'s shapes --
+ * `paragraphs[]` and `slides[]` -- while `.ods` returns `sheets[]` like `.xlsx`.
+ * The arm follows the SHAPE the producer returns, not the file extension. */
+const CAPTURE_TEXT_UNIT_CONTAINERS = new Set(["pdf", "docx", "odt", "pptx", "odp"]);
 /* D-104. Closed on purpose: the value of the reachability table is that it tells
    kinds of not-getting-the-bytes apart, and a free string would let a caller
    collapse that distinction by accident. */
@@ -943,6 +1010,79 @@ export class Store extends DurableObject {
     this.sql.exec(
       `CREATE VIRTUAL TABLE IF NOT EXISTS bundles_fts USING fts5(
          ${FTS_COLUMNS.join(", ")}, tokenize='unicode61')`);
+
+    /*__REC91_FTS_DDL_START__*/
+    /* REC-91 / CONTENT-SEARCH-DESIGN.md section 4.1 — THE CONTENT-GRAIN TEXT
+     * INDEX, and it is the OPPOSITE choice from `bundles_fts` eight lines up.
+     *
+     * `bundles_fts` is a REGULAR content table and its own comment says why: it
+     * spans every inline text file in the bundle, so no single table could
+     * reconstruct its columns. `capture_text_fts` is EXTERNAL CONTENT over
+     * exactly one column of exactly one table, ROWID ALIGNED, so `snippet()` and
+     * `highlight()` read `capture_text.text` itself rather than a second copy of
+     * it. At M-20's measured ratios that choice is 0.462 stored bytes per text
+     * byte for the index against 1.536 for the base row — a second copy would
+     * have cost about a third again on every indexed byte, on a store whose
+     * per-object ceiling is the thing M6 wants to know about.
+     *
+     * WHY THE DDL IS HERE AND NOT IN `schema.mjs`. Two reasons and both are
+     * mechanical rather than stylistic. A VIRTUAL TABLE is not a `CREATE TABLE`
+     * and `bundles_fts` already established this file as where one lives. And
+     * the three TRIGGERS below carry `;` INSIDE `BEGIN` / `END`, while `#migrate`
+     * splits the schema literal on `;` before executing it — so a trigger in
+     * `schema.mjs` would be truncated mid-statement and every `promote` would
+     * then fail with `SQLITE_ERROR: incomplete input`, which is PL-1's trap
+     * exactly, met from the other direction.
+     *
+     * WHY TRIGGERS AT ALL, AND THIS WAS MEASURED RATHER THAN PREFERRED. An
+     * external-content FTS5 table is not maintained by writes to its base table;
+     * it is maintained by the documented `'delete'` command, and a plain
+     * `DELETE FROM capture_text_fts WHERE rowid = ?` answers
+     * `SQLITE_CORRUPT_VTAB` on workerd — measured, not read in a vendor
+     * document. Triggers put that command at the ONE place a row actually
+     * leaves the base table, which is what makes `purge`'s two arms, the
+     * chain-move replacement and any future deleter correct by construction
+     * rather than by each caller remembering. The alternative — every deleter
+     * issuing the command by hand — is the eleven-copies-of-one-predicate shape
+     * this record has already paid for.
+     *
+     * AND THE ONE RULE THE TRIGGERS DO NOT COVER, STATED HERE BECAUSE IT IS A
+     * SILENT CORRUPTION AND NOT AN ERROR: `INSERT OR REPLACE` into
+     * `capture_text` DOES NOT FIRE THE DELETE TRIGGER (SQLite does not run
+     * delete triggers for REPLACE conflict resolution unless
+     * `recursive_triggers` is on), so the replaced row's index entry is
+     * ORPHANED and still MATCHES — a search would return a passage the record no
+     * longer holds, which is the record claiming more than it can support, in
+     * the one surface a member reads absence from. Measured on workerd: a
+     * REPLACE left the superseded text matching while the base table held only
+     * the new text. **So `#writeCaptureText` DELETES the capture's rows and then
+     * plainly INSERTs, which is also what section 4.1 mandates in its own
+     * words** — the rule and the hazard happen to point the same way, and the
+     * suite drives it rather than trusting this paragraph. */
+    this.sql.exec(
+      `CREATE VIRTUAL TABLE IF NOT EXISTS capture_text_fts USING fts5(
+         text, content='capture_text', content_rowid='rowid', tokenize='unicode61')`);
+    this.sql.exec(
+      `CREATE TRIGGER IF NOT EXISTS capture_text_ai AFTER INSERT ON capture_text BEGIN
+         INSERT INTO capture_text_fts(rowid, text) VALUES (new.rowid, new.text);
+       END`);
+    this.sql.exec(
+      `CREATE TRIGGER IF NOT EXISTS capture_text_ad AFTER DELETE ON capture_text BEGIN
+         INSERT INTO capture_text_fts(capture_text_fts, rowid, text)
+           VALUES ('delete', old.rowid, old.text);
+       END`);
+    /* The UPDATE trigger addresses no write this plane makes today — the writer
+       deletes and inserts — and it is here anyway, because an external-content
+       index left unmaintained on an UPDATE nobody has written yet fails as a
+       WRONG ANSWER rather than as an error. A guard that only covers the writes
+       that exist is a guard against the writes that exist. */
+    this.sql.exec(
+      `CREATE TRIGGER IF NOT EXISTS capture_text_au AFTER UPDATE ON capture_text BEGIN
+         INSERT INTO capture_text_fts(capture_text_fts, rowid, text)
+           VALUES ('delete', old.rowid, old.text);
+         INSERT INTO capture_text_fts(rowid, text) VALUES (new.rowid, new.text);
+       END`);
+    /*__REC91_FTS_DDL_END__*/
 
     /* S-10 step 5: server-side selections.
      *
@@ -11680,6 +11820,75 @@ export class Store extends DurableObject {
          * is that a re-promotion carrying the SAME chain stales nothing and
          * still writes an observation — we looked again, and this is what we
          * had. */
+      /* REC-91 / CONTENT-SEARCH-DESIGN.md section 4.1 -- THE CONTENT-GRAIN
+         TEXT INDEX, WRITTEN HERE, in promote's one transaction, beside the
+         reading it projects and BEFORE the extraction observation that ends
+         this capture's content-level story.
+         *
+         * WHY BEFORE `#observeExtraction` AND NOT AFTER, which is the one
+         * ordering decision in this block. Both write content-level rows about
+         * this capture, and the FRONTIER is the LATEST row per (level,
+         * subject_kind, subject) -- so whichever runs last is what a frontier
+         * read answers with. The EXTRACTION row is the one that must win: it
+         * says what the record GOT, which is the fact the content axis is about,
+         * and the index row says what the record can SEARCH, which is a fact
+         * about a derived structure over it. `contentAxis` keeps the two apart
+         * by AUTHORITY (`extract` against `derive`) rather than by order, so
+         * neither read depends on this line -- but the frontier does, and an
+         * ordering that quietly changed what `op=frontier` answers about every
+         * extracted capture would have been this item's blast radius landing in
+         * REC-93's surface.
+         *
+         * THE DELETE IS UNCONDITIONAL AND THE WRITE IS NOT. `#writeCaptureText`
+         * clears the capture's previous units whatever the new reading carries,
+         * which is the same rule the three `DELETE`s above follow and is what
+         * makes a re-extraction that recovers LESS text honest rather than
+         * stale. */
+      const textUnits = Array.isArray(doc && doc.text_units) ? doc.text_units : null;
+      const indexed = this.#writeCaptureText(bundleId, sha, textUnits, reading.text_source);
+      /* WHAT THE ACQUIRE WIRE ITSELF DROPPED BEFORE THIS STORE EVER SAW IT, and
+         it is FOLDED INTO the store's own over-bound count rather than reported
+         separately. Two bounds bit the same capture for the same reason — its
+         text did not fit — and a member does not need to know which of our two
+         numbers stopped it; they need to know the index is PARTIAL. What the
+         two bounds ARE is on the observation's `bound` sentence and in the
+         design, which is where a reader who does need to know will look.
+         A caller that does not carry the key drops nothing, which is the same
+         answer as a capture nothing was dropped from — correctly, because a
+         caller that never offered the units did not have them truncated. */
+      if (Number.isInteger(doc && doc.text_units_over_bound) && doc.text_units_over_bound > 0) {
+        indexed.over_bound += doc.text_units_over_bound;
+        indexed.offered += doc.text_units_over_bound;
+      }
+      /* WHAT THE OBSERVATION IS TOLD, and each of the three is a DIFFERENT fact
+         that a single boolean would have collapsed:
+           `hadText`   -- did extraction produce any text at all. Read off the
+                          reading's own `read_from_text`, the same field
+                          `contentObservationsFor` branches on, so the two
+                          cannot disagree about whether this document was read.
+           `unitArm`   -- does this CONTAINER have an indexing unit arm. A
+                          workbook and an HTML page do not (section 4.1), and
+                          that is not an absence of text.
+           `armReason` -- which container, in the producer's own word, so the
+                          sentence names the thing rather than the category.
+         `text_units` being ABSENT is not the same as being EMPTY and is not
+         read as "no unit arm": a capture promoted before this landing, or by a
+         caller that does not carry the sibling yet, offers nothing and is
+         recorded as having produced no addressable passage -- which is true,
+         and is what a re-promotion fixes. */
+      const container = typeof reading.text_container === "string" ? reading.text_container : null;
+      const armed = CAPTURE_TEXT_UNIT_CONTAINERS.has(container);
+      this.#observeIndexed(bundleId, sha, indexed, {
+        author,
+        hadText: reading.read_from_text === true,
+        unitArm: armed,
+        armReason: armed ? null
+          : container
+            ? `a ${container} has no indexing unit arm in this build `
+              + "(CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage and "
+              + "`sheet-range` waits on EXTRACTION-BREADTH section 3.2; HTML has no `dom` producer)"
+            : "this record does not hold which container this capture is, so it has no unit arm to name",
+      });
       this.#observeExtraction(bundleId, sha, reading, { author });
       /* REC-95 — THE MEANING-LEVEL OBSERVATION, written HERE for the reason the
        * content-level one above is written here, and kept a SEPARATE ROW from it
@@ -11794,6 +12003,237 @@ export class Store extends DurableObject {
       JSON.stringify(engines), derivationCap(chain), chain.length, JSON.stringify(chain),
       cals.length ? JSON.stringify(cals) : null);
   }
+
+  /*__REC91_WRITER_START__*/
+  /** REC-91 / `CONTENT-SEARCH-DESIGN.md` section 4.1 and 4.3 -- THE CONTENT-GRAIN
+   *  TEXT INDEX, WRITTEN AT PROMOTE, INSIDE PROMOTE'S ONE TRANSACTION.
+   *
+   *  WHERE IT SITS AND WHY. Beside `#writeTextSource` above and
+   *  `#observeExtraction` below, in `#writeReadings`, because this is the one
+   *  moment in this plane where a capture's reading is persisted -- and because
+   *  the rule section 4.1 states is the rule every projection in that method
+   *  already follows: **the capture's previous text rows are DELETED FIRST**, so
+   *  a revised chain never leaves a unit claiming an engine that did not produce
+   *  it. Text is a PROJECTION and is re-derived rather than versioned. A content
+   *  row is the opposite and is REC-82's line, a few lines away: an authored
+   *  edge holds one, so a re-extraction MARKS it stale and never rewrites it.
+   *  The two lines look alike and mean opposite things, which is exactly why
+   *  this one says so.
+   *
+   *  THE DELETE IS ALSO WHAT KEEPS THE FTS INDEX TRUE, and that is MEASURED
+   *  rather than assumed -- see the DDL region in `#migrate`. `INSERT OR
+   *  REPLACE` here would leave the superseded text MATCHING, because SQLite does
+   *  not fire delete triggers for REPLACE conflict resolution. So the two
+   *  statements below are delete-then-plain-INSERT and must stay that way.
+   *
+   *  THE UNITS ARE READ, NEVER RE-DERIVED. They arrive on the acquire document's
+   *  `text_units` (I1's additive sibling, emitted at the one place `i2text` is
+   *  final) in the SAME `data/provenance.json` this method already reads the
+   *  reading out of. This file re-walks no container and holds no second opinion
+   *  about what a page or a paragraph is -- the producers already answer that,
+   *  and `canonicalExtent` / `describeExtent` answer what its address and its
+   *  human form are.
+   *
+   *  AND THE EXTENT IS THE CONTENT ADDRESS, WHICH IS THE WHOLE POINT. Two
+   *  spellings of one passage must produce one string or section 4.5's "a hit is
+   *  a mintable row's identity" is a claim rather than a mechanism, so the
+   *  extent written here is `canonicalExtent`'s output and nothing else. For a
+   *  PDF page that means **`rect: null`, which is the record's own spelling for
+   *  THE WHOLE PAGE** -- not a literal rectangle. Section 4.1's phrase is *"the
+   *  page's full rectangle"*, and writing a literal rect would compute a
+   *  DIFFERENT `contentIdFor` from the one a member citing page 14 produces, so
+   *  the hit and the citation would address one passage under two ids. The
+   *  degenerate `rect` is what makes them one, and `describeExtent` already
+   *  reads it as *"page 14"* rather than *"page 14, a region of it"*.
+   *
+   *  The same reasoning one container over is Bob's ruling of 2026-09-15: a
+   *  deck's unit is ONE PER SLIDE, written as a `slide-shape` extent with the
+   *  SHAPE OMITTED, which `covers()` accepts as covering the whole slide. **What
+   *  a slide-grain unit CANNOT be, stated here rather than found later: a
+   *  reading POSITION.** `readingSource()` requires both `slide` and `shape`, so
+   *  deck-grain SEARCH ships complete while deck-grain CONNECTIONS wait on
+   *  `pptx.mjs` emitting per-shape text -- FW-17's axis, not this one.
+   *
+   *  TWO BOUNDS, BOTH FROM M-20 AND NEITHER INVENTED HERE (section 4.3):
+   *
+   *   - PER UNIT, `CAPTURE_TEXT_UNIT_CAP` (131,072 B). Over M-20's 148,413 units
+   *     the largest was 21,224 B, so the cap is 6.2x the largest unit that
+   *     census produced and is never approached -- it is a guard, not a policy.
+   *     A unit over it is stored TO it with `truncated = 1`, never a silent
+   *     prefix (M5's rule, and section 2 carries it as a constraint).
+   *   - PER CAPTURE, `CAPTURE_TEXT_CAPTURE_BOUND` (2,097,152 B) across a
+   *     capture's units. It admits 100 % of M-20's measured 1,000-PDF sample
+   *     fully, with 54.8 % headroom over the worst document in it. Over the
+   *     bound the capture is indexed TO the bound IN READING ORDER and its
+   *     `indexed` observation reads `partial` -- which is why `seq` exists and
+   *     why the units are sorted before they are written: a partial index must
+   *     be a PREFIX a reader can reason about, not an arbitrary subset.
+   *
+   *  Returns what it did, for the observation below and for the caller's own
+   *  surface. It refuses nothing and can fail no promotion: a document whose
+   *  container has no unit arm is a document with no units, which is a STATED
+   *  absence and not an error. */
+  #writeCaptureText(bundleId, captureSha, units, chain) {
+    /* The capture's previous units go whatever happens next, INCLUDING when the
+       new reading carries none. A re-extraction that recovers nothing must not
+       leave the previous engine's text standing as though it were current --
+       that is the staleness this whole method exists to refuse, and writing the
+       delete inside a `units.length` branch is how it would be lost. */
+    this.sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);
+
+    const chainKind = terminalStep(chain) || "layer";
+    const list = Array.isArray(units) ? units : [];
+    /* READING ORDER IS THE RECORD'S, NOT THE CALLER'S. `provenance.json` is a
+       document a caller can AUTHOR, so the order the units are indexed in is
+       taken from each unit's own `seq` rather than from the array's order --
+       otherwise "the first 2 MiB in reading order" would mean whatever a caller
+       shuffled the array to. */
+    const ordered = list
+      .filter((u) => u && typeof u === "object" && typeof u.text === "string" && u.text.length)
+      .map((u, i) => ({ extent: u.extent, text: u.text,
+                        seq: Number.isInteger(u.seq) ? u.seq : i }))
+      .sort((a, b) => a.seq - b.seq);
+
+    let bytes = 0, written = 0, truncatedUnits = 0, overBound = 0, unaddressable = 0;
+    /* DEDUPED BY THE ADDRESS, AND THE DROPPED ONES ARE COUNTED RATHER THAN
+       SWALLOWED. The primary key IS the address, so two units at one address
+       would throw on the second plain INSERT -- and `INSERT OR IGNORE` would
+       drop one silently, which is a unit this record does not hold and does not
+       know it does not hold. The count comes back and reaches the observation's
+       own sentence, so a producer that ever emits a colliding or unnamed
+       address is NAMED rather than scored zero. */
+    const seen = new Set();
+    for (const u of ordered) {
+      const kind = u.extent && typeof u.extent === "object" && typeof u.extent.kind === "string"
+        ? u.extent.kind : null;
+      if (!kind) { unaddressable++; continue; }
+      const extent = canonicalExtent(u.extent);
+      if (seen.has(extent)) { unaddressable++; continue; }
+      seen.add(extent);
+      const full = u.text;
+      const capped = full.length > CAPTURE_TEXT_UNIT_CAP
+        ? full.slice(0, CAPTURE_TEXT_UNIT_CAP) : full;
+      /* BYTES, NOT CHARACTERS, because the bound is a STORAGE bound and M-20
+         measured it in UTF-8 bytes. A character count would admit a different
+         amount of text per document depending on its script, which is a bound
+         that means something different for a Spanish agenda than for an English
+         one -- and this record serves both. */
+      const size = new TextEncoder().encode(capped).length;
+      if (bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) { overBound++; continue; }
+      bytes += size;
+      if (capped.length < full.length) truncatedUnits++;
+      this.sql.exec(
+        `INSERT INTO capture_text
+           (capture_sha,bundle_id,extent_kind,extent,ref,seq,text,truncated,chain_kind)
+         VALUES (?,?,?,?,?,?,?,?,?)`,
+        captureSha, bundleId, kind, extent, describeExtent(u.extent), u.seq,
+        capped, capped.length < full.length ? 1 : 0, chainKind);
+      written++;
+    }
+    return { written, bytes, truncated: truncatedUnits, over_bound: overBound,
+             unaddressable, offered: ordered.length, chain_kind: chainKind };
+  }
+
+  /** REC-91 / section 4.3 -- THE PER-CAPTURE `indexed` STATE, WRITTEN AS A
+   *  CONTENT-AXIS OBSERVATION AND NOT AS A COLUMN OF ITS OWN.
+   *
+   *  Section 4.3's words, and its reason is the one CLAUDE.md's sparse rule
+   *  gives: *not extracted*, *extracted but over the bound* and *extracted and
+   *  indexed* must be ONE VOCABULARY IN ONE PLACE, or a member reading an empty
+   *  answer cannot tell which absence is true. So this goes through REC-93's ONE
+   *  append site, in the same transaction as the units it describes.
+   *
+   *  `authority_kind = derive` AND THAT IS LOAD-BEARING RATHER THAN A LABEL.
+   *  `#observeExtraction` writes under `extract`; indexing is a DERIVATION over
+   *  what extraction produced, and they are two different looks at one subject.
+   *  Keeping them apart BY AUTHORITY is what lets `contentAxis` go on reading
+   *  *what extraction established* and *what the index holds* as two facts --
+   *  the invariant that method already states in its own words, and which one
+   *  shared row would have collapsed on this item's first day.
+   *
+   *  NO NEW CONDITION WORD IS COINED. `queuestate.mjs`'s vocabulary is closed
+   *  and names nothing for *over the index bound* or *no unit arm for this
+   *  container*, and widening a write's vocabulary from inside this item would
+   *  be one item's blast radius becoming another's. The fact travels in `bound`
+   *  -- the column whose whole job is *which bound stopped it* -- and in
+   *  `detail`.
+   *
+   *  THE FOUR STATES, each the honest one rather than the convenient one:
+   *
+   *   - every unit indexed        -> `PRESENT` (section 4.3's `full`)
+   *   - indexed to the bound      -> `partial`, `bound` naming the figure
+   *   - text, but no unit arm     -> `LOOKED_INDETERMINATE`, `bound` naming the
+   *     container's own limit. **NOT `LOOKED_ABSENT`**: a workbook's text exists
+   *     and this record simply cannot address a passage of it yet, so *we looked
+   *     and there is nothing* would be a FALSE ABSENCE at the one level the
+   *     four-level search exists to keep honest.
+   *   - no text at all            -> `LOOKED_ABSENT`, and the REASON is already
+   *     on the extraction row beside it rather than restated here.
+   *
+   *  `result_kind: "reading"` / `result_ref: <capture_sha>` is the SAME referent
+   *  `#observeExtraction`'s own rows carry, and it is that rather than
+   *  `"content"` on purpose: C-22.10 requires a `PRESENT` row to point at what
+   *  it produced, the units are fetched by `capture_sha`, and `"content"` would
+   *  invite a reader to look up a content row that was deliberately NOT minted
+   *  (section 4.5 -- searching mints nothing, and neither does indexing). */
+  #observeIndexed(bundleId, captureSha, result, { author = null, hadText = false,
+                                                  unitArm = true, armReason = null } = {}) {
+    const mint = contentMintState(author);
+    const actorClass = mint === "member_marked" ? "member"
+                     : mint === "machine_marked" ? "machine" : "plane";
+    const actor = actorClass === "plane" ? null : String(author);
+    const r = result || { written: 0, bytes: 0, truncated: 0, over_bound: 0,
+                          unaddressable: 0, offered: 0 };
+    let state, bound = null, detail;
+    if (!hadText) {
+      state = "LOOKED_ABSENT";
+      detail = "no text was extracted from this capture, so there is nothing to index. "
+             + "WHY there is no text is on this capture's extraction observation, "
+             + "not on this one";
+    } else if (!unitArm) {
+      state = "LOOKED_INDETERMINATE";
+      bound = armReason || "this container has no indexing unit arm";
+      detail = `text was extracted and this record cannot address a passage of it: ${bound}. `
+             + "That is not an absence of text and must not be read as one";
+    } else if (r.over_bound > 0) {
+      state = "partial";
+      bound = `the per-capture text bound, ${CAPTURE_TEXT_CAPTURE_BOUND} B `
+            + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20) "
+            + "or the acquire answer's own budget, whichever bit first -- the second is "
+            + "the smaller and is what the promote path's inline-file limit forces";
+      detail = `${r.written} of ${r.offered} unit(s) indexed in reading order, ${r.bytes} B; `
+             + `${r.over_bound} unit(s) past the bound are NOT indexed`;
+    } else if (r.written > 0) {
+      state = "PRESENT";
+      detail = `${r.written} unit(s) indexed, ${r.bytes} B`;
+    } else {
+      /* TEXT WAS EXTRACTED, A UNIT ARM EXISTS, AND NOT ONE UNIT CAME BACK. That
+         is neither `full` nor `partial`, and it is not the no-arm case either --
+         it is a producer that answered with an empty list. Calling it `PRESENT`
+         over zero units is the headline failure this project has measured three
+         times: a totality assertion passing over an empty corpus. */
+      state = "LOOKED_ABSENT";
+      detail = "this container has an indexing unit arm and produced no unit carrying text "
+             + "(M-20 measured 26.3 % of PDF pages recovering nothing at all), so the record "
+             + "holds no addressable passage of it";
+    }
+    if (r.truncated > 0)
+      detail += `; ${r.truncated} unit(s) stored to the per-unit cap and flagged truncated`;
+    if (r.unaddressable > 0)
+      detail += `; ${r.unaddressable} unit(s) offered an address this record could not index `
+             +  "separately (an unnamed or duplicate extent) and are NOT indexed";
+    return this.#observe({
+      actorClass, actor,
+      authorityKind: "derive",
+      authority: bundleId == null ? null : String(bundleId),
+      level: "content", subjectKind: "capture", subject: captureSha,
+      state, bound,
+      resultKind: state === "PRESENT" || state === "partial" ? "reading" : null,
+      resultRef: state === "PRESENT" || state === "partial" ? captureSha : null,
+      detail,
+    });
+  }
+  /*__REC91_WRITER_END__*/
 
   /* CPDF-10: RECORD A MEMBER'S ATTESTATION that a document's text matches the
    * image of the page, over a stated extent.
@@ -19567,6 +20007,35 @@ export class Store extends DurableObject {
     return {
       bundles: n("bundles"), files: n("files"), history: n("history"),
       refs: n("refs"), register: n("register"), indexed: n("bundles_fts"),
+      /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX, reported for exactly the
+         reason every other row on this list is -- so a purge can PROVE it took
+         the rows rather than assert it.
+         *
+         * AND THE SECOND FIGURE IS NOT A COUNT, WHICH IS A CORRECTION THIS
+         * ITEM'S OWN NEGATIVE CONTROL FORCED. The first draft reported
+         * `textIndexed: n("capture_text_fts")` beside the base count, on the
+         * reasoning that the two must agree and that a suite asserting it would
+         * be asserting the trigger discipline. **They agree for free.** An
+         * FTS5 EXTERNAL-CONTENT table answers `count(*)` OUT OF ITS CONTENT
+         * TABLE, so the figure was the base count read a second time — measured
+         * on workerd: with a deliberately ORPHANED index entry present, base and
+         * "index" both read 1 while the orphaned term still MATCHED. That is
+         * CLAUDE.md's costs-nothing rule exactly, in an instrument written to
+         * detect the one thing it could not see, and the `replace` control arm
+         * is what caught it: the arm planted a real orphan and the parity
+         * assertion stayed green.
+         *
+         * WHAT IS REPORTED INSTEAD IS A REAL QUESTION WITH A REAL ANSWER. FTS5's
+         * `integrity-check` AT RANK 1 verifies the index AGAINST THE CONTENT
+         * TABLE and throws `SQLITE_CORRUPT_VTAB` when they disagree — measured,
+         * and measured to catch the same orphan plain `integrity-check` (rank 0)
+         * passes over. It costs a walk of the index, which is why it belongs on
+         * an admin read taken deliberately and not on a member path. */
+      textUnits: n("capture_text"),
+      textIndexOk: (() => {
+        try { this.sql.exec(`INSERT INTO capture_text_fts(capture_text_fts, rank) VALUES('integrity-check', 1)`); return true; }
+        catch { return false; }
+      })(),
       selections: n("selections"), selectionItems: n("selection_items"),
       /* Reported so a purge can prove it took them, and so an operator can see
          inbox and reachability depth without a second call. */
@@ -21017,7 +21486,35 @@ export class Store extends DurableObject {
                        minted-to-cited ratio is the silent-leftover exactly, and it would
                        corrupt the one instrument §7.3 (6) put there to catch
                        manufacturing. hygiene.test.mjs holds this list against schema.mjs. */
-                    "proposed_readings"];
+                    "proposed_readings",
+                    /*__REC91_PURGE_START__*/
+                    /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX. It is a
+                       PROJECTION of a capture's extracted text -- re-derivable
+                       from the bytes and the chain, which is precisely why it is
+                       not `content`'s neighbour in the keep-it column -- and it
+                       carries `bundle_id` (the DOCUMENT the text is of), so it
+                       rides this list and clears in BOTH arms.
+                       Per-bundle: purging a document while leaving its indexed
+                       passages would let `passage:` return text from a file
+                       nobody holds, and a later bundle allocated a colliding id
+                       would inherit somebody else's text -- the same hazard the
+                       `content` entry above names, one level down and WORSE,
+                       because these rows hold the words themselves rather than
+                       an address.
+                       Whole-store: a scratch reset reporting scope ALL while a
+                       search still answered out of the purged corpus is the
+                       D-113 silent-leftover in the one surface a member reads
+                       absence from.
+                       **THE FTS INDEX GOES WITH IT AND NEEDS NO ENTRY HERE**:
+                       `capture_text_fts` is EXTERNAL CONTENT maintained by the
+                       triggers created in `#migrate`, so every row deleted
+                       through this list takes its index entry with it, in both
+                       arms, by construction. The explicit sweep below is a
+                       belt-and-braces over the whole-store arm only, and its
+                       PLACEMENT is load-bearing -- see it. hygiene.test.mjs
+                       holds this list against schema.mjs. */
+                    "capture_text"];
+                    /*__REC91_PURGE_END__*/
     const before = this.stats();
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
@@ -21125,6 +21622,24 @@ export class Store extends DurableObject {
       } else {
         this.sql.exec(`DELETE FROM bundles_fts`);
         for (const t of TABLES) this.sql.exec(`DELETE FROM ${t}`);
+        /*__REC91_PURGE_SWEEP_START__*/
+        /* REC-91 -- AND THE ORDER OF THESE TWO LINES IS THE WHOLE POINT, which
+           is why it is a separate statement rather than another name in TABLES.
+           `capture_text_fts` is FTS5 EXTERNAL CONTENT over `capture_text`.
+           Clearing the INDEX FIRST and the base rows second answers
+           `SQLITE_CORRUPT_VTAB` on the base delete and LEAVES THE BASE ROWS
+           STANDING -- measured on workerd through miniflare by this item, not
+           read in a vendor document. Clearing the base rows first lets the
+           delete triggers do the work correctly and makes this line a no-op on
+           a healthy store, which is exactly what a belt-and-braces sweep should
+           be.
+           Note the CONTRAST with `bundles_fts` three lines up: that one is a
+           REGULAR content table and MUST be cleared explicitly, and it is
+           cleared FIRST for its own stated reason. The two FTS tables in this
+           store are maintained by opposite disciplines and this comment is here
+           so the next reader does not make one look like the other. */
+        this.sql.exec(`DELETE FROM capture_text_fts`);
+        /*__REC91_PURGE_SWEEP_END__*/
         this.sql.exec(`DELETE FROM bundles`);
         /* REC-22 / D-113: the whole published GRAPH goes with the corpus, for the
            reason recorded above the TABLES list — it is an index over bytes that
@@ -28929,9 +29444,22 @@ export class Store extends DurableObject {
        capture that already has a content-level row has been extracted before, so
        this attempt is a RE-extraction, and the log says which without anybody
        having to remember to say it. */
+    /* REC-91 — `AND authority_kind = 'extract'`, AND THIS WAS A REAL DEFECT
+       CAUGHT BY THIS SUITE'S OWN C1b ARM rather than a precaution. The question
+       is *has this capture been EXTRACTED before*, and until REC-91 the content
+       level held one kind of row per capture, so any row WAS an extraction and
+       the unqualified read answered it correctly. REC-91 writes a second kind —
+       the index's `derive` row — in the same transaction, so on the very first
+       promotion of a document the index row was already present when this ran
+       and every FIRST extraction began reporting itself as a RE-extraction.
+       A false `re-extraction` is not cosmetic: it says the record looked at this
+       document before and is looking again, which is a claim about the history
+       of a document nobody had ever read. The narrowing is what the sentence
+       always meant. */
     const before = this.#one(
       `SELECT seq FROM observation_log
         WHERE level = 'content' AND subject_kind = 'capture' AND subject = ?
+          AND authority_kind = 'extract'
         ORDER BY seq DESC LIMIT 1`, captureSha);
     const { rows, unclassified } = contentObservationsFor(reading, captureSha, tiersEvidenced);
     const written = [], refused = [];
@@ -29047,12 +29575,33 @@ export class Store extends DurableObject {
    *  literal it learned separately — PL-17's rule, and the reason this is a
    *  mechanism rather than three documents agreeing in prose.
    *
-   *  `unitIndex: false` IS A FACT ABOUT THIS BUILD, MEASURED AT THE SITE. The
-   *  per-unit text index is `capture_text` and it is REC-91's; it does not exist
-   *  on this tree. It is passed as a value rather than assumed inside the pure
+   *  `unitIndex` WAS `false` HERE AND IS NOW `true`, AND THE CORRECTION IS
+   *  RECORDED RATHER THAN THE OLD SENTENCE DELETED, because what it predicted is
+   *  what happened and that is worth one paragraph. REC-94 wrote *"it does not
+   *  exist on this tree... passed as a value rather than assumed inside the pure
    *  function so that REC-91's landing changes ONE expression here and no
-   *  judgement anywhere — and so that the day it lands, a reader can see what
-   *  this answer was waiting on. */
+   *  judgement anywhere"*. REC-91 landed `capture_text` and `capture_text_fts`,
+   *  and the arrangement held: the pure function's rule did not move.
+   *
+   *  WHAT IT COST MORE THAN ONE EXPRESSION, stated because the prediction was
+   *  not wrong so much as one fact short. Two things had to move with it, and
+   *  neither is a judgement this method makes:
+   *
+   *   1. `unitsComplete` is now READ, off the capture's own `indexed`
+   *      observation, and `null` — no index observation at all — is a THIRD
+   *      answer rather than a weak `false`. Every capture promoted before
+   *      REC-91's writer existed is in exactly that position, and reading it as
+   *      `false` would have answered the PARTIAL member of the content-axis
+   *      vocabulary over a capture with no
+   *      indexed units at all.
+   *   2. The extraction read below is now NAMED BY AUTHORITY. There are two
+   *      kinds of content-level row per capture from this item onward and the
+   *      unqualified latest-row read would have started answering `extraction:`
+   *      with an index row.
+   *
+   *  The invariant this method already stated — the extraction axis and the
+   *  index axis are kept apart — is what both of those protect, and it is now
+   *  enforced by the queries rather than by there being only one kind of row. */
   contentAxis({ captureSha = null, viewer = null } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.trim() : "";
     if (!sha)
@@ -29098,14 +29647,51 @@ export class Store extends DurableObject {
                       spelling the ruling forbids, arriving in a string rather than in code. */
                    + `say about its content axis. That is NOT '${Object.keys(CONTENT_AXIS_STATES)[3]}', `
                    + `which is a statement about a document the record DOES hold and has never read` };
+    /*__REC91_AXIS_READ_START__*/
+    /* REC-91 — THE EXTRACTION ROW, NAMED BY ITS AUTHORITY RATHER THAN TAKEN AS
+       THE LATEST. Until this item there was one kind of content-level row per
+       capture and `ORDER BY seq DESC LIMIT 1` was therefore the extraction row
+       by construction. There are now two — `extract` (what the record GOT) and
+       `derive` (what the INDEX holds) — and the unqualified read would have
+       started answering `extraction:` with an index row the day this landed,
+       silently, with every field still populated and every type still right.
+       This method's own comment already promised the two axes are kept apart;
+       this is the line that makes the promise true rather than true by accident.
+       Still one index walk: `observation_log_frontier` leads with (level,
+       subject_kind, subject) and ends on seq, and the authority filter narrows
+       rows the walk has already reached. */
     const latest = this.#one(
       `SELECT state, condition, detail, authority_kind, authority, actor_class, actor, at, seq
          FROM observation_log
         WHERE level = 'content' AND subject_kind = 'capture' AND subject = ?
+          AND authority_kind = 'extract'
+        ORDER BY seq DESC LIMIT 1`, sha);
+    /* AND THE INDEX ROW, which is the fact `unitsComplete` is about. Read out of
+       the LOG rather than counted out of `capture_text`, because section 4.3
+       puts the `indexed` state in one vocabulary in one place and a count here
+       could not tell "indexed to the bound" from "indexed whole" at all — the
+       bound is a fact about the write, not about the surviving rows. */
+    const indexRow = this.#one(
+      `SELECT state, bound, detail, actor_class, actor, at, seq FROM observation_log
+        WHERE level = 'content' AND subject_kind = 'capture' AND subject = ?
+          AND authority_kind = 'derive'
         ORDER BY seq DESC LIMIT 1`, sha);
     const axis = contentAxisFor({
       observed: latest ? latest.state : null,
-      unitIndex: false,
+      /* THE MECHANISM EXISTS FROM THIS ITEM ONWARD — `capture_text` and
+         `capture_text_fts` are in the schema — so this is `true` unconditionally
+         and the per-capture question moves entirely into `unitsComplete`. */
+      unitIndex: true,
+      unitsComplete: indexRow ? indexRow.state === "PRESENT" : null,
+      /* THE INDEX'S OWN STATE AND ITS OWN REASON, passed rather than reduced to
+         the boolean above, because two of its values are not degrees of
+         indexing at all — see `contentAxisFor`. `bound` first and `detail`
+         second: `bound` is the column whose whole job is naming WHICH BOUND
+         stopped it, and it is the more useful half of the sentence when there
+         is one. */
+      indexObserved: indexRow ? indexRow.state : null,
+      indexReason: indexRow ? (indexRow.bound || indexRow.detail || null) : null,
+    /*__REC91_AXIS_READ_END__*/
       reason: latest ? (latest.condition || latest.detail || null) : null,
       /* COMPUTED ONLY WHEN THERE IS AN ABSENCE TO EXPLAIN. Asking otherwise would
          pay two reads to qualify a row that is right there. */
@@ -29127,6 +29713,27 @@ export class Store extends DurableObject {
         ? { state: latest.state, condition: latest.condition, detail: latest.detail,
             authority_kind: latest.authority_kind, authority: latest.authority,
             actor_class: latest.actor_class, actor: latest.actor, at: latest.at, seq: latest.seq }
+        : null,
+      /* REC-91 — AND THE INDEX'S OWN ROW, PUBLISHED BESIDE IT AND IN ITS SHAPE.
+         `indexed` above is the STATE; this is the observation that set it, and
+         it carries the two facts the state cannot: WHICH BOUND bit, and how many
+         units were stored to the per-unit cap and flagged `truncated`.
+         WITHOUT IT THOSE FACTS ARE WRITTEN AND UNREADABLE. `capture_text.truncated`
+         is a column no op reads until REC-92's `rows=passage`, and the bound is a
+         fact about the WRITE that no count of the surviving rows could recover —
+         so a capture indexed to a bound would look, from every surface that
+         exists, exactly like one that fitted. A mechanism believed on the
+         strength of its EXISTENCE rather than its behaviour is the defect this
+         project meets most, and a flag nothing publishes is that defect with the
+         flag set correctly.
+         NULL WHEN THERE IS NO INDEX ROW, which is every capture promoted before
+         this writer existed — the same absence `indexed` reports as undetermined,
+         and reported the same way here rather than as an empty object. */
+      index: indexRow
+        ? { state: indexRow.state, bound: indexRow.bound, detail: indexRow.detail,
+            authority_kind: "derive",
+            actor_class: indexRow.actor_class, actor: indexRow.actor,
+            at: indexRow.at, seq: indexRow.seq }
         : null,
       undetermined_value: CONTENT_AXIS_UNDETERMINED,
       vocabulary: CONTENT_AXIS_STATES,
@@ -29277,6 +29884,32 @@ export class Store extends DurableObject {
        exists to refuse and what it caught in the first draft of `#calDriftFor`
        itself. */
     const drift = this.#calDriftFor(null);
+    /*__REC91_AXIS_LIST_START__*/
+    /* REC-91 — THE INDEX STATE FOR THE WHOLE PAGE IN ONE SET-BASED READ, never
+       one per row. The rule is the `#calDriftFor` line directly above and
+       `test/derivation-bounds.test.mjs` is what enforces it: a per-row query
+       inside a bounded read is an amplifying scan wearing a bound, and it is
+       what that suite caught in `#calDriftFor`'s own first draft.
+       The page is already capped at `cap + 1`, so the `IN` list is bounded at
+       birth by the same number that bounds the answer. */
+    const indexState = new Map();
+    {
+      const subjects = [...new Set(page.map((r) => r.subject).filter((v) => typeof v === "string" && v))];
+      if (subjects.length) {
+        const marks = subjects.map(() => "?").join(",");
+        /* The LATEST `derive` row per subject, which is the frontier's own shape
+           narrowed by authority — `MAX(seq)` grouped by subject, so the walk
+           reads the index and not the table. */
+        for (const r of this.#rows(
+          `SELECT subject, state, bound, detail FROM observation_log
+            WHERE seq IN (SELECT MAX(seq) FROM observation_log
+                           WHERE level = 'content' AND subject_kind = 'capture'
+                             AND authority_kind = 'derive' AND subject IN (${marks})
+                           GROUP BY subject)`, ...subjects))
+          indexState.set(r.subject, { state: r.state, bound: r.bound, detail: r.detail });
+      }
+    }
+    /*__REC91_AXIS_LIST_END__*/
     /* IT RETURNS A FLAT ARRAY OF OBLIGATIONS WITH `truncated` HUNG OFF IT, one
        per (capture, superseded calibration) pair — read from the function rather
        than assumed from its name, because a shape guessed here would be a wrong
@@ -29286,7 +29919,15 @@ export class Store extends DurableObject {
       if (o && o.capture_sha) drifted.set(o.capture_sha, o.superseded_calibration || null);
     const looked = page.slice(0, cap).filter((r) => seen(r.subject)).map((r) => {
       const axis = contentAxisFor({
-        observed: r.state, unitIndex: false,
+        /* REC-91: the mechanism exists; what this record knows about THIS
+           capture is the `derive` row, absent for every capture promoted before
+           the writer existed — which is UNDETERMINED and not `partial`. */
+        observed: r.state, unitIndex: true,
+        unitsComplete: indexState.has(r.subject)
+          ? indexState.get(r.subject).state === "PRESENT" : null,
+        indexObserved: indexState.has(r.subject) ? indexState.get(r.subject).state : null,
+        indexReason: indexState.has(r.subject)
+          ? (indexState.get(r.subject).bound || indexState.get(r.subject).detail || null) : null,
         reason: r.condition || r.detail || null,
       });
       /* THE PROPERTY, NOT A LIST. A definitive PRESENT is what the fleet can
