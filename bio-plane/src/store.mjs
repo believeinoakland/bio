@@ -219,7 +219,7 @@ import { QUEUE_CONDITION_KINDS, classOfKind, MUTE_REFUSAL_DETAIL,
    D-15 viewer gate a SINGLE compilation point rather than a convention: there is
    no second place in the plane where a query could come from. */
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX, viewerPredicate,
-         meaningVocabulary, MEANING } from "./query.mjs";
+         meaningVocabulary, MEANING, cachedNotes } from "./query.mjs";
 /* IS-6: the investigative run's vocabulary and its refusals. Pure, for the same
    reason queuestate.mjs is: a rule reachable only through a Durable Object is a
    rule that gets exercised less. `finishedBound` is imported rather than
@@ -1569,9 +1569,23 @@ export class Store extends DurableObject {
       out.truncated = ids.length >= IDS_MAX;
     }
 
-    if (input.facets !== false && mode !== "count") {
+    const facetsRan = input.facets !== false && mode !== "count";
+    if (facetsRan) {
       out.facets = this.#facetCounts(plan, tally, input.facetMode);
     }
+
+    /* REC-108 / D-379: WHAT THIS ANSWER READ FROM A CACHE, SAID IN THE ANSWER.
+       Three routes reach `bundles.inquiry_capture_strength` — the `capture:`
+       selector a member typed, the DEFAULT facet nobody asked for, and
+       `sort=capture` — and each publishes a letter computed at the question's
+       last promotion rather than now. `strengthOf()` is the authority and
+       `op=inquirystrength` serves it; this block is what stops the projection
+       being read as the derivation. `[]` when this answer consulted no cached
+       column, published rather than omitted, because "no cache was read" is a
+       statement and an absent key is not one. Composed in `query.mjs`, which
+       owns what each field is a value OF; the routes actually EXECUTED are this
+       function's own fact and are passed in. */
+    out.cached = cachedNotes(plan.cached, { facets: facetsRan, ordered: mode !== "count" });
 
     /* The affordance that makes AND safe. AND's failure mode is nothing found
        because of a typo or one word too many, which reads as "the system has
@@ -1673,6 +1687,12 @@ export class Store extends DurableObject {
       query: { q: String(input.q ?? ""), warnings: plan.warnings,
                meaningArms: plan.meaningArms },
       gate: { scope: plan.gate, applied: tally.applied },
+      /* REC-108 / D-379: the SAME compiler, so the same selector reaches the
+         same cached column here — `capture:<=B rows=leg` picks WHICH questions'
+         legs to list by a letter computed at each question's last promotion.
+         Neither facets nor a sort run at this grain, so only the FILTER route
+         can be present and the other two are excluded rather than assumed away. */
+      cached: cachedNotes(plan.cached, { facets: false, ordered: false }),
       rows, count: rows.length,
       limit: plan.meaning.limit, offset: plan.meaning.offset, total,
       ...Store.#meaningLevels(plan.meaning.level, Number(lv.documents || 0),
@@ -20819,6 +20839,25 @@ export class Store extends DurableObject {
      "every inquiry at B or better on an axis" is an indexed query rather than
      a scan of every basis in the store; anything that must be RIGHT calls
      strengthOf().
+
+     REC-108 / D-379 RULED ON THIS COLUMN AND LEFT IT EXACTLY AS IT IS, which is
+     worth stating HERE because this is where the next reader will come looking.
+     REC-105 opened a SECOND path to staleness — a DOCUMENT being re-read moves
+     the registry ceiling `strengthOf()` now caps by, so this row can hold a
+     letter STRONGER than the record earns, without any member acting on the
+     question. D-379 rowed two answers: re-walk the dependents at the re-read, or
+     make every route into this column STATE what it is a value of. The second
+     was taken. The first would have made this column fresh along the NEW path
+     and left it stale along REC-12's ORIGINAL one (a leg raised beneath this
+     inquiry still does not re-promote it, and nothing re-projects an ancestor) —
+     a cache fresh one way and stale another, about which the one honest sentence
+     below can no longer be said — and it would have put an unbounded fan-out
+     (every `inquiry_basis.target_id` dependent, each needing a full walk) inside
+     op=promote's transaction. `query.mjs`'s `CACHED_FIELDS` carries the ruling
+     and the evidence; the answer a member reads now names this column, names
+     `op=inquirystrength` as the authority, and says which of the three routes it
+     was reached by. NOTHING HERE MOVED, and that is the disposition, not an
+     omission.
 
      PER AXIS, in two columns and never one: a single cached letter is exactly
      the composed scalar DEC-21 forbids, and a column is where one would grow.

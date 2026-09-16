@@ -13700,3 +13700,114 @@ the AUTHORED letter back through any control-plane op at all — `/basis` and `/
 DO-internal class and `op=earnedbasis`'s `legs` carry the leg's address and content row rather
 than its grade, so the authored letter in the table above is known by construction from the
 fixture and is labelled as such rather than printed as a measurement.
+
+## 2026-09-16 · REC-108 — D-379's cache, the reader census, and a baseline a worker contaminated with its own edit
+
+Instruments: `bio-plane/test/rec108-cache-asof.test.mjs` (36 assertions, driven through
+`op=search`, `op=meaningrows` and `op=inquirystrength` against the real worker in miniflare),
+`bio-plane/test/nc-rec108.mjs` (six control arms), `bio-plane/test/rec88-instance-census.mjs`
+(read-only, against the live instance).
+
+### The baseline, and it was RED for a reason that was this worker's own
+
+Measured on this clone at `82ffae30`, `npm run test:battery`, 610.7s:
+**205/206 suites green · 12,886 assertions · FAILED: `mintid.test.mjs`** · 3 fleet manifests ·
+provenance 209/209 discovered items at HEAD `82ffae30`.
+
+**The failure was not in `main` and not in this item's subject.** `mintid.test.mjs` asserts that
+this repository's own prose is not driving a floor for a namespace that declares an allocation
+pattern. It printed `live D: floor 383 · highest real allocation 379 · prose-driven true ·
+from: docs/development/CLAIMS.md`. **This worker had minted `D-383` and written it into its
+CLAIM block while its own baseline battery was running**, and the row that would make 383 a REAL
+allocation did not exist yet. `git status` confirmed the only occurrence of `D-383` in the tree
+was that one uncommitted line.
+
+Establishing it rather than reasoning about it: with the `D-383` row written into `DEBT.md`,
+`mintid.test.mjs` alone reads **83 pass, 0 fail, exit 0 read UNPIPED**, and prints
+`live D: floor 383 · highest real allocation 383 · prose-driven false`.
+
+**So the TRUE pristine baseline is 206/206 · 12,887**, which **CONFIRMS the figure CONDUCT
+briefed** (206/206 · 12,887 at `d981598e`) exactly — 12,886 + the one assertion `mintid` was
+failing. A worker correcting a briefed figure is the system working; so is a worker measuring it
+and finding the brief right, and this is the second case.
+
+**THE GENERAL FORM, which is worth more than the incident and is a NEW FACE of a known trap.**
+`CLAUDE.md` already forbids writing *the next free number* into a corpus file. This is the
+neighbouring shape and it is not the same one: the id was **really allocated**, by the tool, and
+it was still prose-driving a floor because **allocation and the ROW that records it are two
+steps**, and `mintid`'s corpus reader only sees the second. Do it while your own baseline
+battery is running and **your baseline comes back red in a suite that has nothing to do with
+your change** — which looks exactly like damage you did somewhere else, and is the shared-state
+version of *a corpus figure is not stable while a battery runs against the same checkout*. The
+practice: **write the DEBT/QUEUE row in the same turn you mint the id**, and take instrument
+figures on a quiet tree.
+
+### The reader census — how many surfaces answer a capture-axis letter
+
+Established by DRIVING, on the fixture, not by reading the code. FIVE, and the row asked whether
+there was a fourth:
+
+| reader | what it answers from | state |
+| --- | --- | --- |
+| `earnedBasisRegistry` / `op=earnedbasis` | the registry: the ceiling itself | the authority on the bound |
+| `strengthOf()` / `#strengthWalk` (6 consumers) | the walk, capped through the registry | corrected by REC-105 |
+| `#versionLegsAsMembers` / `op=versionstrength` | the walk over a version's legs, capped | **already correct since REC-88 — a further reader, NAMED rather than omitted, because neither D-373 nor D-379 counted it and "no fourth" without naming it is an absence with two causes** |
+| `bundles.inquiry_capture_strength` | REC-12's projection cache | D-379's third reader — **and it has THREE ROUTES, not the one D-379 names** |
+| `op=meaningrows&rows=leg` | `inquiry_basis.grade` **live and UNCAPPED** | **NEW — the pre-REC-105 read surviving in a surface nobody swept. D-383.** |
+
+The cache's three routes, measured: the `capture:` SELECTOR; the **DEFAULT FACET** (`capture` is
+in `DEFAULT_FACETS`, so every page-mode search publishes per-letter counts off the column to a
+member who never asked); and `sort=capture` (`SORTABLE` is derived from `FIELDS`). **`overdue` —
+the precedent D-379 rests its recommendation on — is NOT in `DEFAULT_FACETS`.** The precedent
+does not extend on its own, and that measurement is what turned option (b) from one sentence on
+one selector into a mechanism over all three routes.
+
+Driven for D-383, on a fixture deliberately kept untouched so the correcting act elsewhere in
+the suite could not consume it: for a question whose document was re-read at C,
+`op=meaningrows` publishes `grade: "B", grade_axis: "capture"` while `op=inquirystrength`
+answers `C`.
+
+### A fact the corpus did not hold: the stale stronger letter is NOT self-clearing
+
+Found by the fixture refusing to build. Re-promoting the affected question **unchanged** is
+REFUSED by **C-2.8**, naming both letters — REC-88 re-validates the whole basis on every
+promotion, so once the document has been re-read at a weaker fidelity the question cannot be
+promoted at all until its leg is corrected. The column therefore sits at the stronger letter
+until a member LOWERS the leg; there is no ordinary act that refreshes it. A disposition that
+waited for a re-promotion would have been waiting for an act the gate forbids.
+
+### (a)'s cost, VERIFIED on this tree rather than inherited from D-379
+
+`#writeTextSource` runs inside `#writeReadings` inside `op=promote`'s ONE transaction. The
+dependents of a re-read document are `inquiry_basis.target_id` rows — indexed
+(`inquiry_basis_target`) but **unbounded in cardinality** — each needing a full recursive
+`strengthOf()` with a registry call, plus its own ancestors. A blocker is a claim and nothing in
+this repository audits one; this one holds.
+
+### Control arms (full declarations and results in the suite's own `NEGATIVE CONTROL:` header)
+
+Six arms, each armed ALONE in `src/query.mjs`, each restored from its own uniquely-named
+pristine copy and verified by sha256 AND `cmp` AND size — **118,327 bytes, sha256
+`ee26cea1fa44de9f`, floored at 50 kB, 0 copies left in the tree**, on every arm.
+`none` 38/0 exit 0 · `a` 29/9 · `b` 36/2 · `c` 37/1 · `d` 32/6 · `e` (over-strictness) 38/0
+exit 0. All six **AS DECLARED** after three findings about the ARMS were corrected and recorded:
+arm (a) first did not reach the suite's own foot (a `TypeError` inside an assertion, reported as
+`-1` and not `0`, with four declared failures never firing); arm (b)'s first declaration named an
+assertion that is blind to it BY CONSTRUCTION; arm (d) bit one more than declared, in the correct
+direction.
+
+### What these instruments cannot see, stated
+
+The suite drives member-reachable ops on one store through miniflare; it cannot see
+`civicos-ui/` or the skillpack, and it says nothing about a published case's frozen bytes. **And
+the whole arm is driven on a FIXTURE and never on the live instance, which is a limit rather
+than a choice:** the instance census below measured ZERO captures carrying a transcription
+chain, so every answer there is byte-identical by construction and would pass every arm without
+exercising one of them — the costs-nothing equality exactly.
+
+### Live instance, read-only (`test/rec88-instance-census.mjs`, 2026-09-16)
+
+`biosmoke7.believeinoakland.workers.dev` · store `bio` · **build serving 0.58.0** ·
+**31 bundles · 1 inquiry · 0 basis legs · 0 captures carrying a text chain** · `truncated=false`
+at limit 500. **No existing field of any answer moves.** Every page-mode search answer gains the
+additive `cached` key carrying the `facet` route for both axes, because both are default facets.

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-947 rulings across 83 documents.
+948 rulings across 83 documents.
 
 ## DEC-
 
@@ -930,6 +930,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:7996`
 - **REC-105** — The drift was never damage; it was the distance between a CORRECTED read and an UNCORRECTED one.** `strengthOf()` builds ONE bounded map over the walk's whole collected target set and hands it down the recursion: a capture leg's letter is CAPPED at the registry's ceiling, an unmeasured transcription answers…  
   `docs/development/QUEUE.md:1200`
+- **REC-108** · 2026-09-16 — CLOSED 2026-09-16 by REC-108, BY ITS OWN RECOMMENDED OPTION (b) — AND THE OPTION WAS TAKEN ON EVIDENCE RATHER THAN ON DEFERENCE, WITH THE ROW'S OWN STATEMENT OF THE PROBLEM CORRECTED IN ONE RESPECT.** **The cache is untouched and that is the disposition, not an omission**: `#writeStrengthProjection` still derives…  
+  `docs/development/DEBT.md:316`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
