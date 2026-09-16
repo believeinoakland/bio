@@ -12,11 +12,8 @@
 > - **Its floor figures are BRANCH figures, not merged-tree figures.** REC-95 and REC-105 landed
 >   after it and each moved `REGISTER_FLOOR` from its own tree, so the merged value is unknown
 >   and must be read from the merged run's own post-commit print (D-238).
-> - **`ESTATE-HOLD.md` IS DELIBERATELY NOT RELEASED.** It still reads HELD by this machine, and
->   that is correct: a release with work in flight is the two-machine collision that file exists
->   to prevent. **Release it only after REC-91 is integrated and the tree is clean** — that is
->   the instruction `BOB-NEXT.md` and `NEW-MACHINE.md` are both written against, and the new
->   machine's first session is told to STOP until it lands.
+> - **The estate lock this bullet used to describe was REMOVED on 2026-09-16** and must not be
+>   rebuilt; which account develops is Bob's call, made by hand. `CLAUDE.md` carries why.
 > - **Nothing is running.** Zero live subagents, zero live sessions, tree clean, `origin/main`
 >   green with `plancheck` 0 fail 0 warn bare.
 >

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-948 rulings across 84 documents.
+943 rulings across 83 documents.
 
 ## DEC-
 
@@ -1243,8 +1243,10 @@ authority is the file named, never this one.
 
 Settled in prose without an id allocated. Cite them by file and line.
 
+- **2026-09-16** — RULED by Bob, 2026-09-16: the protocol is his, performed by hand, and there is no instrument.  
+  `CLAUDE.md:139`
 - BEFORE RAISING A QUESTION, OR WRITING A DECISION ITEM, ASK WHAT IS ALREADY DECIDED:** node tools/decided.mjs "<the subject>"  
-  `CLAUDE.md:175`
+  `CLAUDE.md:182`
 - **2026-09-14** — DECIDED 2026-09-14 (§7.3): the run, not the pilot; no new credential or fence; mints bounded and the uncited row named a proposal | | AI-proposed readings — the `ai(function, version)` step EMITTED | **BUILT 2026-09-14 (SK-8)**: `op=extractpropose` inside an EXTRACT run, the step appended through `appendStep` so…  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:139`
 - **2026-08-10** — ⚠ SUPERSEDED IMPLEMENTATION, INHERITED FORMAT > > **Banner added 2026-08-10 (session BOB), moving into this file what > `architecture/README.md` has said about it since July and no reader of this document  
@@ -1679,16 +1681,6 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/DOCUMENT-PROFILES.md:174`
 - **2026-07-30** — RULED by Bob, 2026-07-30. The layers run in this order because each is cheap relative to the next and each can settle the question outright. `docprofile/pipeline.mjs` is the driver and every result carries a `trail` recording where the reasoning stopped, because a verdict whose depth is invisible cannot be audited.  
   `docs/development/DOCUMENT-PROFILES.md:231`
-- **2026-09-16** — — RULED by Bob 2026-09-16: *the estate gate is held per account, not per session.* One account may run many sessions on many machines; they are one holder and they share the hold.  
-  `docs/development/ESTATE-HOLD.md:3`
-- **2026-09-16** — RULED 2026-09-16: the acts are the tool, and this section points at the tool rather than describing the edit.** What the tool guarantees, so that no reader has to remember it:  
-  `docs/development/ESTATE-HOLD.md:45`
-- RULED. One account may run as many sessions and as many machines as it likes — they are one holder and they share the hold. A DIFFERENT account is refused. That is the collision this lock exists to prevent, and it is the only one it is trying to prevent.  
-  `docs/development/ESTATE-HOLD.md:74`
-- **2026-09-16** — — RULED by Bob, 2026-09-16. Hashed rather than written out because this line lives in a repository, and an account UUID in it would be an identifier disclosed for no benefit — the lock needs two accounts to DIFFER, not to be readable. `accountIdentity()` in `tools/estatehold.mjs` is the only reader of that…  
-  `docs/development/ESTATE-HOLD.md:99`
-- **2026-09-16** — RULED 2026-09-16, at Bob's direction: a machine claims the estate BEFORE it runs the battery and the rest of its startup verification, not after.** The claim's own gate is **`plancheck`** — the claim is a one-line change to this file, which `gates.mjs` classifies docs-class — and **not** the full battery, which is…  
-  `docs/development/ESTATE-HOLD.md:162`
 - **2026-08-07** — : finding F9 is still open — `INVESTIGATIVE-SESSION.md` still carries the superseded `[BOB-4 — RULED 2026-08-07, PROVISIONAL]` text in three places and names F9 as outstanding in its final-comparison section, and `civicos-ui/test/connections-sidebar.test.mjs` pins that staleness on purpose so the delegation cannot…  
   `docs/development/FINDINGS-WORKPLAN.md:3`
 - **2026-07-30** — [Routing, exactly as RULED](#routing-exactly-as-ruled) - [What the write path enforces, and where](#what-the-write-path-enforces-and-where) - [RULED 2026-07-30: auto-create at capture, through a queue](#ruled-2026-07-30-auto-create-at-capture-through-a-queue) - [What this unblocks](#what-this-unblocks)  
@@ -1781,12 +1773,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1187`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1199`
-- **2026-09-16** — RULED by Bob 2026-09-16: the estate gate is held per ACCOUNT, not per session.** So if you are a session of `acct-5085c62c` — any session, on any machine — **this hold is yours already**: run `node tools/estatehold.mjs refresh`, never `claim`, and do not release at stand-down merely because your session is ending.  
-  `docs/development/kickoffs/BOB-NEXT.md:17`
-- RULED: CLAIM BEFORE YOU VERIFY** — the claim's gate is `plancheck`, not the battery.  
-  `docs/development/kickoffs/BOB-NEXT.md:35`
+- **2026-09-16** — RULED by Bob 2026-09-16: one account develops this repository at a time and he enforces that by hand, standing one account down and confirming every lane and worker under it is stopped before opening the other.  
+  `docs/development/kickoffs/BOB-NEXT.md:14`
 - **2026-09-15** — SUPERSEDED BY §0 — these are the MAC MINI's figures at 2026-09-15, kept as that day's record.** `origin/main` **19a46a4**, plancheck **0 fail / 0 warn** with all three notes present (id allocations 709 sites / 20 namespaces; attribution 17 bindings / 661 files / 0 undetermined; design corpus 50 documents / 0 failures).  
-  `docs/development/kickoffs/BOB-NEXT.md:101`
+  `docs/development/kickoffs/BOB-NEXT.md:86`
 - and present the areas that are NOT the paused thread, each with: what it needs DECIDED (vs what is already answered), what deciding it unblocks, and your recommendation.  
   `docs/development/kickoffs/BOB.md:85`
 - NOTATION IS SETTLED: classDiagram for structure, stateDiagram-v2 for lifecycle, edges labelled with the ACT.  
@@ -1805,8 +1795,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
   `docs/development/kickoffs/CONTENT-PDF.md:129`
-- **2026-09-16** — RULED 2026-09-16 at Bob's direction, and it reverses what §4 and §7 used to imply.  
-  `docs/development/kickoffs/NEW-MACHINE.md:62`
+- **2026-09-16** — RULED by Bob, 2026-09-16: one account develops this repository at a time, enforced by him rather than by an instrument.** He stands development down in one account — the BOB session retires itself and every lane and worker under it — and only once that account confirms everything is stopped does he open the other…  
+  `docs/development/kickoffs/NEW-MACHINE.md:59`
 - `op=strengthbarof&target=` IS WITHDRAWN** and refused `BAR_IS_A_PROJECT_PROPERTY`.  
   `docs/development/kickoffs/RECORD.md:323`
 - CORRECTED with dated reasons, never exempted.  

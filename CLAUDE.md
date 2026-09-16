@@ -135,23 +135,30 @@ a group's own Cloudflare account — that is the distribution model, not a demo.
 
 **Never force-push.** Fetch and rebase.
 
-**ONE ACCOUNT DEVELOPS THIS REPOSITORY AT A TIME, AND THIS FILE IS WHERE YOU LEARN THAT.**
-`docs/development/ESTATE-HOLD.md` is the lock and a `git push` of its one HOLD line is what makes it
-one. **The unit is the ACCOUNT, not the session and not the machine** — Bob, 2026-09-16 — so one
-account's many sessions share one hold and a second account is refused. **Claim it BEFORE you verify
-and before your first commit**, not after the battery, which spends up to twenty-five minutes before
-telling you that you lost the race:
+**ONE ACCOUNT DEVELOPS THIS REPOSITORY AT A TIME, AND IT IS THE OPERATOR WHO ENFORCES THAT.**
+RULED by Bob, 2026-09-16: the protocol is his, performed by hand, and there is no instrument. He
+stands development down in one account — the BOB session retires itself and every lane and worker
+under it — and only once that account CONFIRMS everything is stopped does he open the other account
+and have it create its BOB session and lanes. **So: do not develop under an account you were not
+told to develop under, and when you are told to stand down, confirm that every lane and worker under
+you is stopped before you report that it is.** Your confirmation is what he acts on.
 
-    node tools/estatehold.mjs show     # who am I, and who holds it
-    node tools/estatehold.mjs claim    # take it; refresh when you push, release at stand-down
+**THERE WAS A LOCK HERE AND IT WAS REMOVED ON PURPOSE — do not rebuild it.** `ESTATE-HOLD.md`,
+`tools/estatehold.mjs`, its suite and the `plancheck` arm are gone, ruled by Bob 2026-09-16 after
+the mechanism cost a day and prevented nothing. The record of why, kept so the next session does not
+re-derive the idea and re-introduce the cost: it keyed on the hostname, then on the clone, then on an
+environment variable that is **not present on a Mac at all** — so it fell through to a per-clone id
+and refused an account its own estate, in a message naming the very machine it was refusing as
+"another machine". Three implementations, three wrong units, and across the whole period **no second
+account ever touched this repository**: both machines measured are one account, one organization, one
+login. The collision it guarded has never occurred here. `docs/development/MEASUREMENTS.md` keeps
+the identity measurements, which are facts about this estate whatever gates it does or does not run.
 
-**This paragraph is here because the lock was NOT here, and that was found by a test rather than by a
-reader.** The lock was written on 2026-09-15 and named in `kickoffs/NEW-MACHINE.md` and
-`CONDUCT-NEXT.md` — a bootstrapping machine's file and the integrator's — so a session that was
-neither had **no route to it at all** while loading this file every time. `estatehold.test.mjs`
-asserts that this mention exists, for the same reason `mintid.test.mjs` asserts its own: a mechanism
-that is not in the loop the reader actually runs is not a mechanism, and the loop every session runs
-is this file. `plancheck` refuses when another machine holds it and warns when nobody does.
+**This is the honest trade and it is stated rather than hidden.** An operator protocol is exactly the
+thing this file warns about everywhere else — a mechanism that is not in the loop the reader runs,
+and a stand-down that is a voluntary act by a session that might not survive to perform it. Bob owns
+that risk deliberately, having priced the alternative. **If you think the estate needs a lock again,
+say so and let him rule; do not build one.**
 
 
 **THE REPOSITORY IS THE CHANNEL. A change is not made when it is written; it is

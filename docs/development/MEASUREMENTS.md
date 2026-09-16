@@ -13700,34 +13700,3 @@ the AUTHORED letter back through any control-plane op at all — `/basis` and `/
 DO-internal class and `op=earnedbasis`'s `legs` carry the leg's address and content row rather
 than its grade, so the authored letter in the table above is known by construction from the
 fixture and is labelled as such rather than printed as a measurement.
-
-### The estate holder key, measured on two machines rather than reasoned about
-
-2026-09-16, instrument: `node -e` reading `~/.claude.json` and `process.env` on each machine, hashing
-each field SHA-256 and comparing the first eight hex — the same derivation `accountIdentity()` uses,
-so the comparison is of the key the lock would actually compute.
-
-| field | Sparky-Air | MiniM4 | |
-| --- | --- | --- | --- |
-| `oauthAccount.accountUuid` | `acct-13711d31` | `acct-13711d31` | SAME |
-| `oauthAccount.emailAddress` | `acct-ecc78dc7` | `acct-ecc78dc7` | SAME |
-| `oauthAccount.organizationUuid` | `acct-5d2b5e03` | `acct-5d2b5e03` | SAME |
-| `userID` | `acct-8e26528f` | `acct-00cfdff1` | DIFFERENT |
-| `machineID` | `acct-7e3e2122` | `acct-92684290` | DIFFERENT |
-| `CLAUDE_CODE_ACCOUNT_UUID` | ABSENT | ABSENT | — |
-
-**What it establishes:** `accountUuid` is stable across two different machines of one account, and it
-does not move with the machine — `machineID` and `userID` both differ in the same run. That is the
-account/machine separation demonstrated rather than assumed, and it is the first half of what the
-holder key must do.
-
-**What it does NOT establish, stated because the gap is the load-bearing half:** that the uuid
-differs across two ACCOUNTS. It cannot, from this data — **both machines are one account**
-(`neodall-e@neologic.com`, one organization). The "two accounts" this estate spent a day on do not
-exist at the Claude auth layer, so no account collision has ever occurred here and the refusal half
-of the lock is still unexercised against a real second account.
-
-**And the variable the rule used to name is absent on BOTH Macs**, so its demotion is not a
-workaround for one machine. The cloud container's key `acct-5085c62c` matches no value on either Mac,
-which places `CLAUDE_CODE_ACCOUNT_UUID` in a different value space from the config's uuid and is why
-the config is read first.

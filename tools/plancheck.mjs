@@ -31,7 +31,6 @@ import { readFileSync, existsSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { estateVerdict, machineIdentity, accountIdentity } from "./estatehold.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DEV = join(ROOT, "docs/development");
@@ -583,84 +582,6 @@ if (conduct && inbox && !/INBOX/.test(conduct))
 }
 
 /* ------------------------------------------------------------- report */
-
-/* =========================================================================
-   THE ESTATE HOLD — one MACHINE develops this repository at a time.
-   `docs/development/ESTATE-HOLD.md`, added 2026-09-16 when development moved
-   to a second machine under a second Claude account.
-
-   WHY AN ARM AND NOT A CONVENTION. Claims keep two SESSIONS out of one tree
-   and worktrees keep two out of one checkout; neither knows a second MACHINE
-   exists. The file's first version relied on a session RELEASING the hold at
-   stand-down — a voluntary act by a session that may be suspended before it
-   gets there, which is exactly what happened within hours: the integrator was
-   suspended mid-flight and the hold outlived the machine's work by 16 hours.
-   An instrument that EXISTS and is OPTIONAL is the common failure this estate
-   measured in M0-41; this one is not optional, because nothing else can see
-   the collision it prevents.
-
-   THE ASYMMETRY, stated rather than left to be inferred. A hold belonging to
-   ANOTHER machine is a REFUSAL: developing against it is the collision. A hold
-   that is FREE is a WARNING, not a refusal, because a machine must be able to
-   COMMIT the claim that makes it compliant — refusing there would make the
-   mechanism unbootstrappable. Revisit that if a second reason ever appears.
-
-   READ FROM origin/main, never from the working tree, which may be a checkout
-   of a commit taken before another machine claimed it. */
-if (!LOCAL_ONLY) {
-  /* IDENTITY COMES FROM THE MODULE NOW, and the reason is measured rather than
-     stylistic: this line used to be `scutil --get ComputerName` || `hostname -s`,
-     and on the cloud image every container answers `vm`, so two cloud machines
-     read each other's hold as their OWN — no refusal, no warning, just a note
-     saying they hold it. estatehold.machineIdentity() derives a name that
-     discriminates and SAYS which rule it used; see its comment for the three
-     verdicts that were driven before it was written. */
-  const me = machineIdentity({ repo: ROOT });
-  /* THE HOLDER IS THE ACCOUNT, RULED BY BOB 2026-09-16. The first fix keyed this on
-     a per-CLONE identity, which was wrong in the opposite direction from the
-     hostname it replaced: it would have refused one account's SECOND session its
-     own estate. The account is the unit; the machine is a label beside it. */
-  const holder = accountIdentity({ repo: ROOT });
-  const thisMachine = holder.key;
-  const text = sh("git show origin/main:docs/development/ESTATE-HOLD.md");
-  const v = estateVerdict(text, thisMachine, new Date().toISOString());
-  const where = "docs/development/ESTATE-HOLD.md (its HOLD line, read from origin/main)";
-  if (v.kind === "theirs")
-    fail(`ESTATE HELD BY ANOTHER MACHINE — "${v.machine}" (${v.account}) holds it through\n`
-       + `        ${v.through}, and this machine is "${thisMachine}". ONE MACHINE DEVELOPS AT A TIME:\n`
-       + `        do not commit, push, spawn or deploy. Claims and worktrees cannot see this\n`
-       + `        collision — they keep two SESSIONS apart and know nothing of a second machine.\n`
-       + `        If that hold is wrong, it EXPIRES on its own; breaking it early is Bob's call.`);
-  else if (v.kind === "ours-expired")
-    fail(`ESTATE HOLD EXPIRED UNDER YOU — "${v.machine}" held it through ${v.through}, which has\n`
-       + `        passed, so another machine may legitimately have taken it. Fetch and re-read the\n`
-       + `        HOLD line before writing anything: refresh it (through = now + 48 h, UTC) if it is\n`
-       + `        still yours, and STOP if it is not. Refresh happens when you push a planning\n`
-       + `        surface and at every integration — never as a separate chore.`);
-  else if (v.kind === "unreadable" || v.kind === "unparseable" || v.kind === "badtime")
-    fail(`ESTATE HOLD UNVERIFIED — ${where}: ${
-           v.kind === "badtime"   ? `its through= value "${v.through}" is not ISO 8601 UTC with a Z,\n        and a time without a zone is read as LOCAL, which is the disagreement the Z removes`
-         : v.kind === "unreadable" ? "the file is absent from origin/main"
-         : "no HOLD line was found in it"}.\n`
-       + `        This REFUSES rather than warns: the whole value of the lock is that it says who\n`
-       + `        may develop, and a check reporting on its own availability instead of on the\n`
-       + `        world is the defect M0-41 found inside this very gate.`);
-  else if (v.kind === "free")
-    warn(`no machine holds the estate — claim it before your first commit by rewriting the HOLD\n`
-       + `        line in ${where.split(" (")[0]} (machine="${thisMachine}", status=HELD,\n`
-       + `        through = now + 48 h UTC) and pushing. The push is the allocator.`);
-  else
-    notes.push(`estate hold: "${v.account}" on machine "${v.machine}" through ${v.through} — this holder`);
-  notes.push(`holder: "${holder.key}" from ${holder.source}`
-    + (holder.discriminating ? "" : " — NOT DISCRIMINATING, so a hold under it is not a lock")
-    + ` · machine "${me.id}" (label only)`);
-  if (!holder.discriminating)
-    warn(`HOLDER KEY IS NOT DISCRIMINATING — "${holder.key}" could name more than one holder,\n`
-       + `        so a hold taken under it would not be a lock. This is a WARNING and not a refusal\n`
-       + `        for the same reason the free case is: a machine must be able to reach a state where\n`
-       + `        it complies. Deriving a key needs CLAUDE_CODE_ACCOUNT_UUID, BIO_HOLD_ACCOUNT or a\n`
-       + `        gitdir; with none of the three, do not claim.`);
-}
 
 for (const n of notes) console.log(`  note  ${n}`);
 for (const w of warns) console.log(`  WARN  ${w}`);

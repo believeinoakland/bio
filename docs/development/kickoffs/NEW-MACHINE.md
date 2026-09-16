@@ -13,8 +13,7 @@ can take — a click, a clipboard copy, a decision — never a sequence and neve
 up as a suggestion. This governs every instruction below: where a command appears, it is for the
 SESSION to run, never for Bob to type.
 
-**Read in this order:** this file, then `docs/development/ESTATE-HOLD.md` (which machine may
-develop), then `CLAUDE.md`, then `docs/development/kickoffs/BOB.md`, then
+**Read in this order:** this file, then `CLAUDE.md`, then `docs/development/kickoffs/BOB.md`, then
 `docs/development/kickoffs/BOB-NEXT.md` — the outgoing session's handoff, whose §1 is the one
 piece of design work owed.
 
@@ -55,47 +54,25 @@ files. A cross-session message is a courtesy; the file is the fact.
 chip he clicks, never headless** — the app hides programmatically created sessions, so a headless
 one cannot be seen or interrupted by him (LIVENESS rule 6, `ORCHESTRATION.md`).
 
-## 3. THE ESTATE LOCK — read this before anything else
+## 3. WHICH ACCOUNT DEVELOPS — the operator decides, and there is no lock
 
-**CLAIM THE ESTATE FIRST: CLAIM BEFORE YOU VERIFY.** Before `npm ci`, before the battery, before
-anything else on this list.
-RULED 2026-09-16 at Bob's direction, and it reverses what §4 and §7 used to imply. The claim is one
-command and its own gate is `plancheck`, not the battery:
+**RULED by Bob, 2026-09-16: one account develops this repository at a time, enforced by him rather
+than by an instrument.** He stands development down in one account — the BOB session retires itself
+and every lane and worker under it — and only once that account confirms everything is stopped does
+he open the other account and have it create its BOB session and lanes.
 
-    node tools/estatehold.mjs show     # who holds it, and who this machine is
-    node tools/estatehold.mjs claim    # writes, gates, commits, pushes, verifies from the REMOTE
+**What that asks of you:** do not develop under an account you were not told to develop under, and
+when you are told to stand down, confirm that every lane and worker under you is actually stopped
+before reporting that it is. He acts on your confirmation, so a confirmation you have not verified is
+worse than none.
 
-The old ordering had a machine verify and then claim, which spends nine to twenty-five minutes before
-telling it that it lost the race — and every minute of that is work under exactly the condition the
-lock exists to prevent. Claiming costs seconds and strands nothing if the gate then fails, because
-the hold EXPIRES on its own. **`ESTATE-HOLD.md` carries the protocol, the identity rule and this
-ordering; read its HOLD line from `origin/main`, never from your own tree.**
-
-**AND THE HOLDER IS THE ACCOUNT, not this machine and not this session** — Bob, 2026-09-16. So your
-account's other sessions, on this machine or any other, share your hold and are not refused; a
-DIFFERENT account is. The key is derived from `oauthAccount.accountUuid` in `~/.claude.json` and
-hashed, because the line lives in a repository; `machine=` on the line is a label only. **It is read
-from the config and NOT from the environment: `CLAUDE_CODE_ACCOUNT_UUID` is not present on a desktop
-session, which is how an account spent most of a day locked out of its own estate by a refusal that
-named its own machine as the stranger.** `node tools/estatehold.mjs show` prints the key and the
-source it came from; if the source reads `NOT account-scoped`, stop and fix that before claiming
-rather than developing under it. The window is Bob's 48 h for
-everyone, including an ephemeral container, because an ACCOUNT outlives any container and its next
-session refreshes the hold inside a push it already makes. `ESTATE-HOLD.md` records the two ways
-the code got this unit wrong before believing the prose here.
-
-
-**Only one MACHINE develops this repository at a time**, and Bob has directed that no development
-happens under the new account while the old machine is working, or the reverse.
-`docs/development/ESTATE-HOLD.md` is the lock, `git push` is what makes it one, and the procedure
-for taking and releasing it is in that file. **Take the hold before your first commit and not
-after.** A session that finds another machine holding it stops and says so.
-
-**The hold EXPIRES rather than waiting to be released**, and that is a correction this file's
-first version earned within hours: a release that depends on a session performing it is lost the
-moment that session is suspended, and the hold then outlives the machine's work. A hold past its
-`held through` date is FREE — a fact, not a judgement — so **claim it, refresh it whenever you
-push a planning surface, and release it at stand-down; three acts, none of which requires Bob.**
+**There was a lock here and it was REMOVED on purpose — do not rebuild it.** `ESTATE-HOLD.md`,
+`tools/estatehold.mjs`, its suite and the `plancheck` arm are gone. It keyed on the hostname, then
+the clone, then an environment variable that is not present on a Mac — and so fell through to a
+per-clone id and refused an account its own estate, naming the machine it was refusing as "another
+machine". Three implementations, three wrong units, and no second account ever touched this
+repository in that whole period. `CLAUDE.md` carries the full record and the standing instruction not
+to re-derive it.
 
 ## 4. Making the local repo
 
@@ -166,7 +143,7 @@ free; nothing depends on them. **Worker worktrees are created by CONDUCT's tooli
 
 ## 6. Starting the lanes, in order
 
-1. **BOB first** — §7's block. It takes the estate hold, verifies state, re-arms the watches, and
+1. **BOB first** — §7's block. It verifies state, re-arms the watches, and
    reads `BOB-NEXT.md`.
 2. **CONDUCT second, through a chip BOB files and Bob clicks**, gated on `CONDUCT-NEXT.md`'s head
    line being on `origin/main` (it is). CONDUCT then holds `bio/` and runs the queue.
@@ -206,17 +183,11 @@ VERIFY BY THE POSITIVE ARTIFACT, never by the absence of an error: plancheck mus
 (design-corpus, id-allocation, attribution), and a full gate is a pass only if it ends with
 "N/N suites green · M assertions passing" — a wrapper reports its own status, not the battery's.
 
-DO NOT DEVELOP, DO NOT SPAWN, DO NOT PUSH. Read the single HOLD line in
-docs/development/ESTATE-HOLD.md from origin/main — it reads
-  HOLD: machine=... | account=... | status=... | through=<ISO 8601 UTC>
-The estate is FREE when status=RELEASED or through is in the past; otherwise STOP and tell Bob
-which machine holds it and through when. Either way STOP HERE — §7's session is the one that
-claims it. plancheck ENFORCES this, so expect exactly one WARN saying no machine holds the estate:
-that warning is correct on a machine that has not claimed it yet and is not a fault to fix.
+DO NOT DEVELOP, DO NOT SPAWN, DO NOT PUSH. Which account develops is Bob's call and there is no
+lock to consult — STOP HERE and let him say whether this machine is the one working.
 
 Report to Bob in one short message: what you cloned, which credentials are in place and which are
-missing, the plancheck and gate results, whether the memory seed and settings were written, and
-whether the estate is free.
+missing, the plancheck and gate results, and whether the memory seed and settings were written.
 ```
 
 ## 7. THE PASTE BLOCK — hand this to the first BOB session on the new machine
@@ -229,11 +200,9 @@ Working directory is ~/ClaudeCodeBIO (the wrapper); the repo is bio/. Persona is
 believeinoakland, Cloudflare account 20b533579290b9b93168345edd3b7f72 — never any other account
 this machine may default to. Credentials are in bio/.env; never print one.
 
-FIRST, THE ESTATE LOCK. git fetch origin, then read docs/development/ESTATE-HOLD.md FROM
-origin/main. If it names a machine other than this one and its status is not RELEASED, STOP and say
-which machine holds it. Otherwise claim it: edit the table to name this machine, this account,
-today's date and this session, commit, and push to main. THE PUSH IS THE LOCK — if it is rejected,
-you lost the race; fetch, read who won, and stop.
+FIRST, CONFIRM THIS IS THE WORKING ACCOUNT. One account develops at a time and Bob enforces that by
+hand — there is no lock to read and none to build. If he has not told you this machine is the one
+working, ask before you commit, spawn or push.
 
 THEN READ, in order: docs/development/kickoffs/NEW-MACHINE.md (how this machine was stood up and
 why the layout is what it is) · CLAUDE.md · docs/development/kickoffs/BOB.md (the role, the closing
@@ -316,8 +285,9 @@ repository.
 | **quote heredocs with backticks** | An unquoted `<<EOF` lets the shell eat every backticked span in an edit script. Use `<<'EOF'`, and pass values through the environment. |
 | **the design corpus front-matter rule** | Every design document carries current Status / Place / Incomplete / Contents; `corpuscheck` enforces it inside `plancheck`; `BIO_System_Design.md` is the level-0 map. |
 
-**One more, and it is the newest:** *one machine develops at a time; `docs/development/ESTATE-HOLD.md`
-is the lock and `git push` is what makes it one.*
+**One more, and it is the newest:** *one account develops at a time, and Bob enforces it by hand —
+the lock that used to do it was removed on 2026-09-16 and must not be rebuilt. `CLAUDE.md` carries
+why.*
 
 ### 9.3 What Bob still has to supply himself
 

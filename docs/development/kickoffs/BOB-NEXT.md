@@ -8,34 +8,19 @@ errors — read its traps section and its "agreement of several documents" rule 
 ## 0. SESSION BOB-CLOUD #1, 2026-09-16 — READ THIS BEFORE §1, WHICH IS STILL OWED
 
 **The first session on the Claude Code CLOUD platform, under a new account. It did the machine
-bootstrap and the estate lock, and it did NOT do §1 — that sweep is still the first act owed.**
+bootstrap and an estate lock that has since been REMOVED, and it did NOT do §1 — that sweep is
+still the first act owed.**
 
-**THE ESTATE IS HELD AND MUST NOT BE RE-CLAIMED. REFRESH IT.**
+**THE ESTATE LOCK IS GONE — DO NOT LOOK FOR IT AND DO NOT REBUILD IT.** RULED by Bob 2026-09-16:
+one account develops this repository at a time and he enforces that by hand, standing one account
+down and confirming every lane and worker under it is stopped before opening the other. There is no
+HOLD line to read, refresh or release; `ESTATE-HOLD.md`, `tools/estatehold.mjs`, its suite and the
+`plancheck` arm were all deleted. `CLAUDE.md` carries the record of why and the standing
+instruction not to re-derive it.
 
-    HOLD: machine=vm-4237ad91 | account=acct-5085c62c | status=HELD | through=2026-09-18T17:43Z
-
-**RULED by Bob 2026-09-16: the estate gate is held per ACCOUNT, not per session.** So if you are a
-session of `acct-5085c62c` — any session, on any machine — **this hold is yours already**: run
-`node tools/estatehold.mjs refresh`, never `claim`, and do not release at stand-down merely because
-your session is ending. This session was told twice not to release when it retired, and that is
-why: retiring a session does not end the account's hold. Release only when the ACCOUNT is done with
-the estate.
-
-**What landed, three commits, each behind its own green full gate** (`207/207 suites green · 12945
-assertions passing` on the last): the estate claim; the protocol rebuilt as a tool; and the
-correction of the lock's UNIT to the account.
-
-- `tools/estatehold.mjs` is now the protocol: `show | claim | refresh | release`. **Do not
-  hand-edit the HOLD line.** It reads `origin/main`, refuses and writes NOTHING against another
-  account's hold, gates on `plancheck`, commits only that file by path, never rebases a rejected
-  push, and re-reads the REMOTE afterwards.
-- `bio-plane/test/estatehold.test.mjs` — 57 assertions where the lock had **ZERO**. Its central
-  section pins the UNIT (one account many sessions; two accounts refused) because the code got the
-  unit wrong twice in one day in opposite directions, and `ESTATE-HOLD.md` records both.
-- **RULED: CLAIM BEFORE YOU VERIFY** — the claim's gate is `plancheck`, not the battery. Bob's
-  direction; the phrase is pinned by a test in both `ESTATE-HOLD.md` and `NEW-MACHINE.md`.
-- **The lock was not in `CLAUDE.md` at all**, only in NEW-MACHINE and CONDUCT-NEXT, so an ordinary
-  session had no route to it. It is there now and a test asserts the mention.
+**What this session landed that OUTLIVED the lock:** `CLAUDE.md`'s ruling count read "598 of them,
+167 KB" against a tool printing 944, and was replaced with the instruction to read the tool's own
+output — the hand-carried-number defect, found inside the rule about measuring.
 - `CLAUDE.md`'s ruling count read "598 of them, 167 KB" against a tool printing 944. Replaced with
   the instruction to read the tool.
 
