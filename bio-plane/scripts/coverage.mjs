@@ -951,9 +951,26 @@ const REGISTER_FLOOR = {
      was reworded; the instrument was not touched.
      ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and
      in the fleet floor below, which is one occurrence per distinct object. */
-  arms: 1093,
-  classified: 197,
-  corpus: 198,
+  /* MOVED 2026-09-16 by REC-108 (1093->1098, 197->198, 198->199), from the figures a
+     green `--strict` PRINTED on the tree AFTER the commit — `arms 1098/1093 ·
+     classified 198/197 · corpus (suites read) 199/198 · GREW by 5 arm(s)` — and never
+     by adding to the numbers that were here. The mover is `test/rec108-cache-asof.test.mjs`
+     with its driver `test/nc-rec108.mjs`, so `corpus` and `classified` each rise by one.
+     Nothing FELL.
+     **`arms` ROSE BY FIVE AND NOT BY SIX, WHICH IS THE FIGURE AND NOT A DISCREPANCY.**
+     The driver offers SIX selectors — `none|a|b|c|d|e` — but `none` is the BASELINE arm,
+     which runs the suite WHOLE and breaks nothing, and the declaration states five arms
+     because five is what is armed. A worker counting its own selectors by hand would have
+     written 1099 here and installed one arm of slack in a ratchet built to carry none.
+     THE PRINTED FIGURE IS THE FIGURE (D-238), and this is a worked example of why.
+     AND THE FLOOR WAS UNREADABLE BEFORE THE COMMIT, which is worth one line because it
+     reads as a green run: `--strict` counts suites that are IN THE COMMIT, so a pre-commit
+     run over untracked new suites printed `1093/1093 · 197/197 · 198/198` — EXACT, no
+     slack, exit 0 — over a tree carrying a suite it could not see. An honest-looking
+     EXACT is what a phantom-free floor and an unread one both produce. */
+  arms: 1098,
+  classified: 198,
+  corpus: 199,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
