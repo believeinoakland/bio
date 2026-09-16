@@ -53,3 +53,295 @@ export function estateVerdict(holdText, thisMachine, nowIso) {
     ? { kind: "ours", machine, account, through }
     : { kind: "theirs", machine, account, through };
 }
+
+/* ============================================================================
+ * WHO "THIS MACHINE" IS — added 2026-09-16 by the first CLOUD machine, because
+ * the predicate above was correct and the IDENTITY FED TO IT WAS NOT.
+ *
+ * THE DEFECT, MEASURED RATHER THAN REASONED ABOUT. `plancheck` derived this
+ * machine's name inline as `scutil --get ComputerName` || `hostname -s`, and on
+ * the Claude Code cloud image `hostname -s` is literally `vm` for EVERY
+ * container. Driven through `estateVerdict` before any of this was written:
+ *
+ *   a hold written as machine=vm, read by the Mac Mini      -> theirs  (refused, right)
+ *   a hold written as machine=vm, read by ANOTHER cloud VM  -> OURS    (the defect)
+ *   a hold written under a distinguishing name, read here   -> theirs  (refuses itself)
+ *
+ * Row 2 is the whole lock failing open: a second cloud session reads the first
+ * one's hold as its own, is told NOTHING — not a refusal, not even a warning,
+ * just a note saying it holds the estate — and develops. Two machines believing
+ * they hold it is the one collision `ESTATE-HOLD.md` exists to prevent, and it
+ * was reachable the moment the estate moved to a platform where the hostname is
+ * a constant. Row 3 is why a better STRING cannot fix it: identity is an exact
+ * match against a value the TOOL computes, so the tool is what had to change.
+ *
+ * WHY A PERSISTED PER-CLONE ID AND NOT A PLATFORM FACT. `/etc/machine-id`,
+ * `CLAUDE_CODE_CONTAINER_ID` and the session id were all available here and all
+ * rejected as the primary: the first may be baked into an image and shared by
+ * every container from it — WHICH THIS SESSION COULD NOT MEASURE, having only
+ * one container, so relying on it would rest the lock on an unverified premise
+ * of exactly the kind that produced the defect — and the other two are
+ * Claude-specific, so the Mac and the cloud would derive identity by different
+ * rules and only one of them would be tested. A random id persisted in the
+ * COMMON gitdir is uniform across platforms, provably distinct per clone (it is
+ * minted, not observed), stable across turns and suspensions, and SHARED BY
+ * EVERY WORKTREE of one clone — which is the correct grain, because one machine
+ * is one identity however many lanes it runs. It is the pattern `mintid.mjs`
+ * already trusts for the id ledger, whose own comment notes that two machines do
+ * not share a common gitdir.
+ *
+ * AND THE CONSEQUENCE IS STATED RATHER THAN HIDDEN: an ephemeral container gets
+ * a NEW identity every session, because a re-clone is a new machine. That is the
+ * honest answer and it is why `claimWindowHours` is short on a remote session —
+ * see below. */
+
+import { execFileSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { join, isAbsolute, resolve } from "node:path";
+
+/** The HOLD grammar splits on `|` and the line is one line, so a machine name
+ *  that carries either would break the very collision the one-line form buys.
+ *  A Mac's ComputerName is routinely "Bob's Mac Mini" — spaces and an
+ *  apostrophe — so this is the normal case and not a hostile one. */
+export function sanitizeName(raw) {
+  const s = String(raw || "").replace(/[^A-Za-z0-9._-]+/g, "-").replace(/-{2,}/g, "-")
+    .replace(/^[-.]+|[-.]+$/g, "");
+  return s || "unknown";
+}
+
+function sh(cmd, args) {
+  try {
+    return execFileSync(cmd, args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  } catch { return ""; }
+}
+
+/** The COMMON gitdir — the one `.git` every worktree of a clone shares.
+ *  `--git-common-dir` answers a RELATIVE `.git` in the main checkout, which is
+ *  the trap `mintid.ledgerRoot` documents, so it is resolved against the repo. */
+export function machineIdFile({ repo = process.cwd() } = {}) {
+  const common = sh("git", ["-C", repo, "rev-parse", "--git-common-dir"]);
+  if (!common) return null;
+  return join(isAbsolute(common) ? common : resolve(repo, common), "bio-machine");
+}
+
+/** Stable, discriminating, and it SAYS WHICH RULE APPLIED, because a reader who
+ *  cannot see how identity was derived cannot judge whether it discriminates.
+ *  `discriminating: false` is the honest report when nothing could be persisted:
+ *  the caller must say so rather than pretend the bare hostname is an identity. */
+export function machineIdentity({ repo = process.cwd(), env = process.env } = {}) {
+  const base = sanitizeName(sh("scutil", ["--get", "ComputerName"]) || sh("hostname", ["-s"]) || "unknown");
+  if (env.BIO_MACHINE_ID)
+    return { id: sanitizeName(env.BIO_MACHINE_ID), base, source: "BIO_MACHINE_ID", discriminating: true };
+  const file = machineIdFile({ repo });
+  if (!file)
+    return { id: base, base, source: "hostname-only (no gitdir)", discriminating: false };
+  let suffix = "";
+  try {
+    suffix = readFileSync(file, "utf8").trim();
+  } catch {
+    /* EXCLUSIVE create, so two sessions racing on one machine agree on one id
+       rather than each minting its own — the same reason `mintid` creates
+       exclusively. On EEXIST the winner's value is read back. */
+    const minted = randomBytes(4).toString("hex");
+    try {
+      mkdirSync(join(file, ".."), { recursive: true });
+      writeFileSync(file, minted + "\n", { flag: "wx" });
+      suffix = minted;
+    } catch {
+      try { suffix = readFileSync(file, "utf8").trim(); } catch { suffix = ""; }
+    }
+  }
+  if (!/^[0-9a-f]{8}$/.test(suffix))
+    return { id: base, base, source: "hostname-only (id file unusable)", discriminating: false };
+  return { id: `${base}-${suffix}`, base, suffix, source: file, discriminating: true };
+}
+
+/* THE WINDOW, AND WHY IT IS NOT ONE NUMBER ANY MORE. Bob's 48 h is kept for a
+ * machine that PERSISTS, where the file says it is "a bound, not a measurement"
+ * and deliberately generous: the cost of an over-long window is a new machine
+ * waiting, and of a short one a working machine losing its lock.
+ *
+ * ON AN EPHEMERAL MACHINE THAT TRADE REVERSES, because the premise the 48 h was
+ * generous FOR — a machine that is present and might legitimately not push for a
+ * while — is exactly what fails. A cloud container suspends between turns and is
+ * RECLAIMED when idle; this one suspended for 45 minutes mid-conversation. So a
+ * 48 h hold taken here routinely outlives the machine that took it while nobody
+ * is running, and because a re-clone is a NEW identity, the next cloud session
+ * cannot even refresh it — it reads `theirs` and is refused for up to two days
+ * with no machine working. A short window costs a working session nothing it
+ * cannot see: `plancheck` FAILS on `ours-expired` by name, refresh is enforced
+ * inside acts already performed, and re-claiming an expired hold nobody took is
+ * one command. */
+export function claimWindowHours({ env = process.env } = {}) {
+  if (env.BIO_HOLD_HOURS) {
+    const n = Number(env.BIO_HOLD_HOURS);
+    if (Number.isFinite(n) && n > 0) return { hours: n, kind: "BIO_HOLD_HOURS" };
+  }
+  return env.CLAUDE_CODE_REMOTE
+    ? { hours: 4, kind: "ephemeral (CLAUDE_CODE_REMOTE set — suspends and is reclaimed)" }
+    : { hours: 48, kind: "persistent" };
+}
+
+/** ISO 8601 UTC with the Z and to the MINUTE, which is the one form the
+ *  predicate accepts and the file states. */
+export function throughIso(fromMs, hours) {
+  return new Date(fromMs + hours * 3600 * 1000).toISOString().replace(/:\d\d\.\d+Z$/, "Z");
+}
+
+export function holdLine({ machine, account, status, through }) {
+  return `    HOLD: machine=${machine} | account=${account} | status=${status} | through=${through}`;
+}
+
+/** Rewrite the WHOLE line — never a field — because the file's own first failure
+ *  was a shape where two claimants could edit different parts and git would
+ *  auto-merge both claims into one incoherent line. Throws rather than appending
+ *  when there is no line to replace: a second HOLD line would make the predicate
+ *  read whichever came first, silently. */
+export function rewriteHold(text, fields) {
+  if (!HOLD_RE.test(text)) throw new Error("no HOLD line to rewrite");
+  const line = holdLine(fields);
+  if (!HOLD_RE.test(line + "\n")) throw new Error(`the rewritten line does not parse: ${line}`);
+  return text.replace(HOLD_RE, line);
+}
+
+/* ============================================================================
+ * THE CLI — `node tools/estatehold.mjs show|claim|refresh|release`.
+ *
+ * IT EXISTS BECAUSE THE PROTOCOL WAS PROSE AND A PROSE PROTOCOL IS PERFORMED
+ * DIFFERENTLY BY EVERY READER. `ESTATE-HOLD.md` told a session to "rewrite the
+ * WHOLE line" with four fields, one of them a timestamp in a format the
+ * predicate refuses three ways, one of them an identity the session had no way
+ * to compute correctly — and then to push, and to read the rejection as a lost
+ * race rather than rebasing. That is five chances to get it wrong per claim, and
+ * `CLAUDE.md`'s own rule is that a mechanism not in the loop the reader actually
+ * runs is not a mechanism. So the acts are a command now, and the prose points
+ * at the command rather than describing the edit.
+ *
+ * IT DOES THE PUSH, because the push IS the allocator and a tool that leaves the
+ * load-bearing half to the caller has moved the hazard rather than removed it.
+ * It refuses on any `plancheck` FAIL first — the claim is a one-line docs change
+ * whose gate is `plancheck`, not the battery, which is the ordering ruled below
+ * in `ESTATE-HOLD.md` — and it commits ONLY this file by path, so it can be run
+ * safely in a tree with unrelated work in it. On a rejected push it fetches,
+ * names the winner and STOPS; it never rebases and re-pushes, which is the one
+ * reflex that defeats the lock. */
+
+const RELEASED_THROUGH = "1970-01-01T00:00Z";
+
+function repoRoot() {
+  return sh("git", ["rev-parse", "--show-toplevel"]) || process.cwd();
+}
+
+function remoteHoldText(repo) {
+  sh("git", ["-C", repo, "fetch", "origin", "main"]);
+  return sh("git", ["-C", repo, "show", "origin/main:docs/development/ESTATE-HOLD.md"]);
+}
+
+function plancheckClean(repo) {
+  try {
+    const out = execFileSync("node", ["tools/plancheck.mjs"],
+      { cwd: repo, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    return { ok: !/^plancheck: [1-9]/m.test(out), out };
+  } catch (e) {
+    return { ok: false, out: `${e.stdout || ""}${e.stderr || ""}` };
+  }
+}
+
+function writeAndPush(repo, fields, { push, subject }) {
+  const rel = "docs/development/ESTATE-HOLD.md";
+  const path = join(repo, rel);
+  const next = rewriteHold(readFileSync(path, "utf8"), fields);
+  writeFileSync(path, next);
+  console.log(`  ${holdLine(fields).trim()}`);
+  if (!push) { console.log("  --no-push: written but NOT pushed, so nothing is allocated yet."); return 0; }
+  const pc = plancheckClean(repo);
+  if (!pc.ok) {
+    console.log("  REFUSED: plancheck reports a FAIL, so this is not a tree to push from.");
+    console.log(pc.out.split("\n").filter((l) => /FAIL|plancheck:/.test(l)).map((l) => `    ${l.trim()}`).join("\n"));
+    return 1;
+  }
+  sh("git", ["-C", repo, "add", "--", rel]);
+  try {
+    execFileSync("git", ["-C", repo, "commit", "-m", subject, "--", rel],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  } catch (e) {
+    console.log(`  nothing to commit (the line may already say this): ${(e.stdout || "").trim().split("\n")[0]}`);
+  }
+  try {
+    execFileSync("git", ["-C", repo, "push", "origin", "HEAD:main"],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  } catch {
+    console.log("  PUSH REJECTED — you lost the race. Not rebasing: that is the reflex that defeats the lock.");
+    const v = estateVerdict(remoteHoldText(repo), machineIdentity({ repo }).id, new Date().toISOString());
+    console.log(`  the remote now says: ${JSON.stringify(v)}`);
+    console.log("  STOP. Do not develop, spawn or push.");
+    return 1;
+  }
+  const after = estateVerdict(remoteHoldText(repo), machineIdentity({ repo }).id, new Date().toISOString());
+  console.log(`  pushed, and VERIFIED FROM THE REMOTE rather than from this tree: ${after.kind}`);
+  return after.kind === "ours" || (fields.status === "RELEASED" && after.kind === "free") ? 0 : 1;
+}
+
+async function main(argv) {
+  const cmd = argv[0] || "show";
+  const push = !argv.includes("--no-push");
+  const hoursArg = (() => {
+    const i = argv.indexOf("--hours");
+    return i >= 0 && argv[i + 1] ? Number(argv[i + 1]) : null;
+  })();
+  const repo = repoRoot();
+  const me = machineIdentity({ repo });
+  const win = hoursArg ? { hours: hoursArg, kind: "--hours" } : claimWindowHours();
+  const account = process.env.BIO_HOLD_ACCOUNT || "believeinoakland";
+  const text = remoteHoldText(repo);
+  const v = estateVerdict(text, me.id, new Date().toISOString());
+
+  console.log(`  this machine: "${me.id}" (${me.source})`
+    + (me.discriminating ? "" : "  <- NOT DISCRIMINATING: two machines could share this name"));
+  console.log(`  origin/main says: ${v.kind}${v.machine ? ` — machine="${v.machine}" through ${v.through}` : ""}`);
+
+  if (cmd === "show") {
+    if (!me.discriminating)
+      console.log("  WARNING: identity could not be persisted, so this machine cannot hold the estate safely.");
+    return 0;
+  }
+  if (cmd === "release")
+    return v.kind === "ours" || v.kind === "ours-expired" || v.kind === "free"
+      ? writeAndPush(repo, { machine: "none", account: "none", status: "RELEASED", through: RELEASED_THROUGH },
+          { push, subject: "estate: RELEASED at stand-down" })
+      : (console.log(`  REFUSED: this is not yours to release — "${v.machine}" holds it.`), 1);
+
+  if (cmd === "claim" || cmd === "refresh") {
+    if (v.kind === "theirs") {
+      console.log(`  REFUSED: "${v.machine}" (${v.account}) holds the estate through ${v.through}.`);
+      console.log("  ONE MACHINE DEVELOPS AT A TIME: do not commit, push, spawn or deploy.");
+      console.log("  It EXPIRES on its own; breaking it early is Bob's call.");
+      /* INFORMATIVE, NEVER PERMISSIVE. A machine crossing the 2026-09-16 identity
+         change finds its OWN hold unrecognisable, because the hold carries the bare
+         name the old rule computed and this rule computes name+suffix. Saying so
+         beats letting the reader conclude a second machine appeared — but it does
+         NOT unlock anything: the two ways across are the holder rewriting the line
+         in the same change that upgrades the rule, or waiting out the expiry. */
+      if (v.machine === me.base)
+        console.log(`  note: that hold names this machine's BASE name ("${me.base}"), so it may be`
+          + ` yours from before the 2026-09-16 identity rule. That is NOT authority to take it:`
+          + ` let it expire, or rewrite it in the commit that upgrades the rule.`);
+      return 1;
+    }
+    if (cmd === "refresh" && v.kind === "free" && v.machine !== me.id)
+      console.log("  note: nothing was held, so this refresh is a fresh claim.");
+    if (!me.discriminating) {
+      console.log("  REFUSED: identity is not discriminating, so a hold under it would not be a lock.");
+      return 1;
+    }
+    return writeAndPush(repo,
+      { machine: me.id, account, status: "HELD", through: throughIso(Date.now(), win.hours) },
+      { push, subject: `estate: ${cmd === "claim" ? "CLAIMED" : "refreshed"} by ${me.id} for ${win.hours}h (${win.kind})` });
+  }
+  console.log(`  unknown command "${cmd}" — one of show, claim, refresh, release.`);
+  return 1;
+}
+
+if (import.meta.url === `file://${process.argv[1]}`)
+  main(process.argv.slice(2)).then((c) => process.exit(c));

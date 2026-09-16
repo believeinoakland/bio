@@ -135,6 +135,23 @@ a group's own Cloudflare account — that is the distribution model, not a demo.
 
 **Never force-push.** Fetch and rebase.
 
+**ONE MACHINE DEVELOPS THIS REPOSITORY AT A TIME, AND THIS FILE IS WHERE YOU LEARN THAT.**
+`docs/development/ESTATE-HOLD.md` is the lock and a `git push` of its one HOLD line is what makes it
+one. **Claim it BEFORE you verify and before your first commit** — not after the battery, which
+spends up to twenty-five minutes before telling you that you lost the race:
+
+    node tools/estatehold.mjs show     # who am I, and who holds it
+    node tools/estatehold.mjs claim    # take it; refresh when you push, release at stand-down
+
+**This paragraph is here because the lock was NOT here, and that was found by a test rather than by a
+reader.** The lock was written on 2026-09-15 and named in `kickoffs/NEW-MACHINE.md` and
+`CONDUCT-NEXT.md` — a bootstrapping machine's file and the integrator's — so a session that was
+neither had **no route to it at all** while loading this file every time. `estatehold.test.mjs`
+asserts that this mention exists, for the same reason `mintid.test.mjs` asserts its own: a mechanism
+that is not in the loop the reader actually runs is not a mechanism, and the loop every session runs
+is this file. `plancheck` refuses when another machine holds it and warns when nobody does.
+
+
 **THE REPOSITORY IS THE CHANNEL. A change is not made when it is written; it is
 made when it is COMMITTED AND PUSHED.** Sessions do not share a working tree: an
 area session works in a git worktree, and a worktree is a checkout of a COMMIT, so
@@ -157,9 +174,14 @@ and an open debt row with no disposition.
 
     node tools/decided.mjs "<the subject>"
 
-It answers from a generated index of every ruling in the corpus — 598 of them,
-167 KB — returning the ruling in the words it was ruled in, plus the file and
-line that owns it. **Only 12% of those rulings are in `DECISIONS.md`**; the rest
+It answers from a generated index of every ruling in the corpus, returning the
+ruling in the words it was ruled in, plus the file and line that owns it. **The
+SIZE OF THE INDEX IS NOT CARRIED HERE, because it was and it went stale: this
+line read "598 of them, 167 KB" while the tool was printing 943 and 266 KB — a
+hand-carried number in a document nobody re-measures, which is this project's
+most-repeated finding, committed inside the very rule about measuring.** The tool
+prints its own count on every run; read that. **Most of those rulings are NOT in
+`DECISIONS.md`**; the rest
 are spread across fifty documents, several of which are larger than a context
 window. So a session re-asks a settled question not because it was careless but
 because the answer was somewhere it could not afford to open.

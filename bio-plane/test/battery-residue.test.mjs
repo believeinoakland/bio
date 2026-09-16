@@ -325,9 +325,44 @@ if (!HAVE_LSOF) {
 
 /* ---- (f) a root that cannot be read -> UNVERIFIED, never clean ------------ */
 {
+  /* THE ARM CANNOT BE ARMED AS ROOT, AND THAT IS STATED RATHER THAN ASSERTED — the
+     shape `mintid.test.mjs` already uses for its unwritable-ledger arm. The
+     instrument MAKES the condition by chmod-ing the shared root to 0o000, but root
+     BYPASSES the mode bits: measured 2026-09-16 on the Linux cloud image, a node
+     process running as uid 0 readdirs a 0o000 directory it has just created. So the
+     root loop reads the root fine, reports nothing UNVERIFIED, and the two
+     assertions below fail WHILE THE SUBJECT WAS NEVER EXERCISED — the
+     arm-that-did-not-arm class, and counting it as a failure of `residue.mjs` would
+     be a refutation that looks more confident than the finding it refutes. The old
+     unconditional assertions were not wrong about `residue.mjs`; they were wrong to
+     assume the instrument can create the condition on every machine the battery
+     runs on. They still run wherever the battery runs UNPRIVILEGED, which is the
+     only place this arm can arm, so the rule stays enforced rather than exempted.
+     CONSEQUENCE FOR THE `blind` CONTROL DECLARED ABOVE: its measured result of
+     (b) (c) (d) AND (f) was taken unprivileged. Re-driven as root it gives
+     (b) (c) (d) only — (f) is absent because it never armed, not because the
+     blinding failed to reach it. */
+  /* THE ESTATE IS DRIVEN EITHER WAY, and only the two assertions are conditioned.
+     The first draft of this fix skipped the drive as well, and THE SUITE'S OWN REACH
+     ARM CAUGHT IT — corpus fell to 10 against a declared 11. That arm is right and
+     the draft was wrong: a machine where the condition cannot be made must still
+     exercise the path, or the suite quietly narrows itself, which is the defect the
+     reach arm exists to catch.
+     BOTH ARMS MEASURED 2026-09-16 on the cloud image, because a conditioned
+     assertion is only believable if someone has seen it fire: as uid 0,
+     45 pass / 0 fail with the condition STATED; re-driven as uid 65534 under
+     setpriv, 46 pass / 0 fail with the two assertions below RUNNING AND PASSING.
+     The delta is exactly one assertion, which is what says this is a condition
+     statement and not an exemption — and it also establishes that residue.mjs
+     itself is sound here, which the root run alone could not say either way. */
   const { out } = drive({ suites: { "clean.test.mjs": suiteSrc(4) }, unreadableRoot: true });
-  t("(f) an unreadable root is reported UNVERIFIED", /UNVERIFIED for 1 root\(s\) that could not be read/.test(out), true);
-  t("(f) and the figures are called a FLOOR, not a total", /the figures above are a FLOOR/.test(out), true);
+  const asRoot = typeof process.getuid === "function" && process.getuid() === 0;
+  if (asRoot)
+    t("(f) (running as root: a 0o000 root is still readable, so this arm cannot arm — stated rather than counted as a pass)", true, true);
+  else {
+    t("(f) an unreadable root is reported UNVERIFIED", /UNVERIFIED for 1 root\(s\) that could not be read/.test(out), true);
+    t("(f) and the figures are called a FLOOR, not a total", /the figures above are a FLOOR/.test(out), true);
+  }
 }
 
 /* ---- (g) OVER-STRICTNESS: temp files INSIDE the fence say nothing --------- */

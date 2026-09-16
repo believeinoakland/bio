@@ -57,6 +57,28 @@ one cannot be seen or interrupted by him (LIVENESS rule 6, `ORCHESTRATION.md`).
 
 ## 3. THE ESTATE LOCK — read this before anything else
 
+**CLAIM THE ESTATE FIRST: CLAIM BEFORE YOU VERIFY.** Before `npm ci`, before the battery, before
+anything else on this list.
+RULED 2026-09-16 at Bob's direction, and it reverses what §4 and §7 used to imply. The claim is one
+command and its own gate is `plancheck`, not the battery:
+
+    node tools/estatehold.mjs show     # who holds it, and who this machine is
+    node tools/estatehold.mjs claim    # writes, gates, commits, pushes, verifies from the REMOTE
+
+The old ordering had a machine verify and then claim, which spends nine to twenty-five minutes before
+telling it that it lost the race — and every minute of that is work under exactly the condition the
+lock exists to prevent. Claiming costs seconds and strands nothing if the gate then fails, because
+the hold EXPIRES on its own. **`ESTATE-HOLD.md` carries the protocol, the identity rule and this
+ordering; read its HOLD line from `origin/main`, never from your own tree.**
+
+**AND IDENTITY IS NOT THE HOSTNAME, which cost this estate a fail-open.** On a cloud image every
+container answers `hostname -s` as `vm`, so before 2026-09-16 two cloud machines read each other's
+hold as their own and were told they held the estate. `machineIdentity()` now mints a per-clone
+suffix; the consequence for an EPHEMERAL machine is that it is a new machine every session and claims
+a SHORT window (4 h, refreshed inside pushes) rather than 48 h, because a container that suspends
+between turns and is reclaimed when idle cannot be relied on to release.
+
+
 **Only one MACHINE develops this repository at a time**, and Bob has directed that no development
 happens under the new account while the old machine is working, or the reverse.
 `docs/development/ESTATE-HOLD.md` is the lock, `git push` is what makes it one, and the procedure
