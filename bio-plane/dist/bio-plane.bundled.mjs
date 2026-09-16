@@ -50301,6 +50301,153 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       limit
     );
   }
+  /** REC-103 / IC-105 — WHICH BUNDLES A DOCUMENT-LEVEL OBSERVATION NAMES, so
+   *  §6's withholding can be applied to the document arm the way REC-94 applied
+   *  it to the content arm.
+   *
+   *  THE DEFECT THIS CLOSES WAS DRIVEN, NOT INFERRED. `Store#frontier` accepted a
+   *  `viewer` and the document arm never read it, while `gate-reads.test.mjs`
+   *  classified the op GATED — a signature ADVERTISING a fence that was not
+   *  there, which is worse than an absent parameter because a reader of the
+   *  signature stops asking. Driven with `viewer=member:not-invited` against a
+   *  project that member is not a participant of, the arm handed over THE PROJECT
+   *  BUNDLE ID VERBATIM in `authority` (ratify's writer passes `bundleId`), the
+   *  capture sha of a document filed in that project in `result_ref` together
+   *  with a `result_purged` answer derived from `register`, and that same capture
+   *  sha as `from_document` on a never-looked row. **REC-94 found a leak of
+   *  exactly this shape one method over** — its per-capture read gated the
+   *  register lookup and then fell through — and left it for this row's owner
+   *  rather than widening a claim mid-wave.
+   *
+   *  ROW-WHOLE, WHICH IS THE DESIGN'S OWN WORD AND NOT A CHOICE TAKEN HERE. §6:
+   *  *"a subject discloses a project's interest, so REC-36's withholding applies
+   *  row-whole across the fence"*, and the reason it is not a column redaction is
+   *  in the op's own classification: *"a subject with its authority nulled still
+   *  names what was looked for."*
+   *
+   *  INVERTED RATHER THAN LISTED, which is the difference between a rule and a
+   *  set of spellings that goes stale the moment a tenth is written. The `default`
+   *  arm below resolves UNRESOLVED, so an authority kind added to
+   *  `OBSERVATION_AUTHORITY_KINDS` with no resolver here is WITHHELD until
+   *  somebody answers for it. `observation-log.test.mjs` drives every member of
+   *  that constant by name, so the silent direction is a red suite and never a
+   *  leak.
+   *
+   *  FAIL CLOSED ON WHAT CANNOT BE ATTRIBUTED, and both halves of that come from
+   *  landed precedent rather than from this item's preference: `#bundleGate`'s own
+   *  arm (*"a row pointing at something the store cannot show is withheld rather
+   *  than answered for"*) and `#frontierContent`'s (*"a capture the register does
+   *  not hold cannot be attributed to a bundle … it is WITHHELD rather than
+   *  shown"*). A NULL referent names no bundle and discloses nothing, so it
+   *  PASSES — that is `#bundleGate`'s other arm and it is what keeps this from
+   *  being a fence tighter than its rule.
+   *
+   *  THE ONE COST IS STATED RATHER THAN DISCOVERED. §7 says *a `result_ref` to a
+   *  PURGED capture is annotated at read time (`purged`)* — and a per-bundle purge
+   *  clears `register` (it is in `purge`'s own TABLES list), so after one the
+   *  capture is unattributable and the row is withheld from every identified
+   *  session, admins included. The annotation survives for the machine credential,
+   *  which is the operator path it was written for. Two landed rules cannot both
+   *  be satisfied for a member there; this takes the fail-closed one and raises
+   *  the collision against §7 rather than resolving it silently in the design. */
+  #observationBundles(row) {
+    const out = [];
+    let unresolved = false;
+    let run = null;
+    const viaRegister = (sha) => {
+      const r = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, sha);
+      return r ? r.bundle_id : null;
+    };
+    const bundleOrCapture = (id) => this.#one(`SELECT 1 AS x FROM bundles WHERE bundle_id = ? LIMIT 1`, id) ? id : viaRegister(id);
+    if (row.result_kind === "capture" && row.result_ref) {
+      const b = viaRegister(row.result_ref);
+      if (b) out.push(b);
+      else unresolved = true;
+    }
+    if (row.authority != null && row.authority !== "") {
+      const a = String(row.authority);
+      switch (row.authority_kind) {
+        /* A RUN IS GATED ON ITS CONTEXT, and handing a run id to a caller who
+           cannot see that context is `op=airuns`' disclosure by a new door —
+           that op was gated for precisely the reason that it is the run read a
+           caller can drive from an id they can already see.
+           **IT IS RETURNED FOR DELEGATION RATHER THAN RESOLVED HERE, AND THE
+           REASON IS A RATCHET THAT CAUGHT THIS METHOD BY NAME.** The first draft
+           read `SELECT context_id FROM ai_runs WHERE run = ?`, which made this a
+           THIRTEENTH reader of `ai_runs` and failed `run-conditions.test.mjs`
+           ARM W3 — and no role in that sweep's table fits a reader that projects
+           a stored column merely to describe the row, which ARM W9 then refuses.
+           `#aiRunAppend` met both arms on 2026-09-14 and the table keeps the
+           episode as a comment for the next reader tempted the same way. The
+           honest answer there was to stop reading, and it is the honest answer
+           here: `aiRunLog` ALREADY answers *may this viewer see this run* through
+           `#bundleGate("r.context_id", viewer)`, and a second implementation of
+           one gate is the mirror-and-drift class in the one place it would be
+           most dangerous. */
+        case "run":
+          run = a;
+          break;
+        /* THE SWEEP'S AUTHORITY IS A CAPTURE REQUEST, which is bundle-scoped in
+           TWO columns this plane already gates on elsewhere (`cr.target`, the
+           inquiry the run works under, and `cr.lead_inquiry`, PL-15/D-213's other
+           question). Both are taken, because withholding on one and not the other
+           would be a fence with a documented hole in it. */
+        case "sweep": {
+          const r = this.#one(
+            `SELECT target, lead_inquiry FROM capture_requests WHERE request = ? LIMIT 1`,
+            a
+          );
+          if (!r) unresolved = true;
+          else {
+            if (r.target) out.push(r.target);
+            if (r.lead_inquiry) out.push(r.lead_inquiry);
+          }
+          break;
+        }
+        case "ratify":
+        case "link":
+        case "acquire":
+        case "extract":
+        case "derive": {
+          const b = bundleOrCapture(a);
+          if (b) out.push(b);
+          else unresolved = true;
+          break;
+        }
+        /* NEITHER HAS A WRITER ON THIS TREE — §4.5's authored writer is a member's
+           LEAD and is Program B's — so there is nothing to resolve and nothing to
+           be right about. UNRESOLVED is the honest answer and it fails in the
+           direction that withholds, which is what lets Program B land a reader
+           without inheriting a hole from this one. */
+        case "lead":
+        case "objective":
+          unresolved = true;
+          break;
+        /* THE INVERSION. Not a list of spellings: anything this method does not
+           UNDERSTAND is withheld, so a tenth `authority_kind` is refused by
+           default rather than waved through by omission. */
+        default:
+          unresolved = true;
+          break;
+      }
+    }
+    return { bundles: out, unresolved, run };
+  }
+  /** REC-103 — THE DOCUMENT ARM'S ROW PREDICATE. One compilation point, taken
+   *  from `viewerPredicate` like every other gate in this file and restating none
+   *  of it, including the two arms that are easy to get wrong by hand. */
+  #frontierDocumentVisible(viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "member") return () => true;
+    if (gate.scope === "DENY") return () => false;
+    const visible = this.#bundleRedactor(viewer);
+    return (row) => {
+      const { bundles, unresolved, run } = this.#observationBundles(row);
+      if (unresolved) return false;
+      if (run && this.aiRunLog({ run, viewer, limit: 1 }).found !== true) return false;
+      return bundles.every((id) => visible(id) !== null);
+    };
+  }
   static FRONTIER_LIMIT_DEFAULT = 200;
   static FRONTIER_LIMIT_MAX = 2e3;
   /** REC-94 / IC-95 — THE BOUNDED CONTENT-LEVEL FRONTIER. Section 4.2's closing
@@ -50868,7 +51015,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            is Program B's, not a RECORD row. */
         note: `the ${level} level of the frontier is not built yet. This is NOT an empty frontier: nothing has been written at this level because no writer exists, which is a different fact from having looked and found nothing. The document, content and meaning levels are built (REC-93, REC-94, REC-95); the internet level's authored writer is a member's LEAD and is Program B's (\xA74.5, D-194)`
       };
-    const page = this.#frontierLatest("document", { limit: cap + 1, subjectKind: "address" });
+    const seenRow = this.#frontierDocumentVisible(viewer);
+    const page = this.#frontierLatest("document", { limit: (cap + 1) * 2, subjectKind: "address" }).filter(seenRow);
     const looked = page.slice(0, cap).map((r) => ({
       subject: r.subject,
       subject_kind: r.subject_kind,
@@ -50895,7 +51043,12 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       at: r.at,
       ...this.#frontierVerification("document", r.subject_kind, r.subject)
     }));
-    const never = this.#frontierNeverLooked(cap + 1);
+    const never = this.#frontierNeverLooked((cap + 1) * 2).filter((r) => seenRow({
+      result_kind: "capture",
+      result_ref: r.from_document,
+      authority: null,
+      authority_kind: null
+    }));
     const tally = {};
     for (const row of this.#rows(
       `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'document' GROUP BY state`
@@ -50906,12 +51059,19 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       found: true,
       built: true,
       limit: cap,
+      /* THE CUT AND THE CLAIM AGREE, and both disjuncts compare against
+         collections this method actually pages — CONDUCT #11's correction of
+         `#frontierMeaning` on 2026-09-15, inherited rather than re-derived.
+         They are the GATED collections and never the raw fetch: a
+         `truncated` computed from the raw supply would be true exactly when
+         the gate dropped enough rows, which is a one-bit count of what was
+         withheld, and the count is the leak. */
       truncated: page.length > cap || never.length > cap,
       looked,
       never_looked: never.slice(0, cap),
       tally,
       never_looked_count: never.slice(0, cap).length,
-      note: "NEVER_LOOKED is the absence of a row and is reported apart from the tally: these are addresses a document we hold points at that nothing has ever looked for"
+      note: "NEVER_LOOKED is the absence of a row and is reported apart from the tally: these are addresses a document we hold points at that nothing has ever looked for. The withholding fence applies ROW-WHOLE (REC-103, design section 6): a row is published only when every bundle it names \u2014 through `result_ref`, through a ratify or link authority, through a run's context or a sweep's capture request \u2014 is one this viewer may see, and a referent this record cannot attribute to a bundle at all withholds the row rather than being waved through. No count of what was withheld is reported, because that count is the leak. The `tally` counts every row at this level rather than this page, names nothing, and is not gated"
     };
   }
   /** Append ONE run-log observation. **THE FOLD** (`OBSERVATION-LOG-DESIGN.md`

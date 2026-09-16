@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-947 rulings across 83 documents.
+948 rulings across 84 documents.
 
 ## DEC-
 
@@ -928,6 +928,8 @@ authority is the file named, never this one.
   `docs/architecture/BIO_Content_Framework_v0_10.md:3`
 - **REC-99** · 2026-09-15 — CLAIM 2026-09-15 RECORD (REC-99 — the two stale "uncapped" sentences CORRECTED IN PLACE, and D-365's census GRADED so a removed SQL `LIMIT` fails BY NAME) session: rec99-worker (worktree agent-a21fbacbb34bfb1ec) opened: 2026-09-15T00:00:00Z paths:  
   `docs/development/CLAIMS.md:7996`
+- **REC-103** · 2026-09-16 — CORRECTED 2026-09-16 by REC-103: the document arm now applies the fence row-whole (IC-105), so the withholding differs across three levels for THREE stated reasons rather than because one arm was never built — the entity partition is deliberately unfenced and still wants a ruling, and that is the only open half of…  
+  `docs/development/OBSERVATION-LOG-DESIGN.md:15`
 - **REC-105** — The drift was never damage; it was the distance between a CORRECTED read and an UNCORRECTED one.** `strengthOf()` builds ONE bounded map over the walk's whole collected target set and hands it down the recursion: a capture leg's letter is CAPPED at the registry's ceiling, an unmeasured transcription answers…  
   `docs/development/QUEUE.md:1200`
 ## UI-

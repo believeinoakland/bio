@@ -10074,3 +10074,71 @@ session: REC-105 worker (worktree `agent-ab0036215c20a9dd1`). Appended rather th
   `bio-plane/src/schema.mjs`, `bio-plane/src/index.mjs`, `bio-plane/scripts/coverage.mjs`
   (`REGISTER_FLOOR` READ and NOT moved — this item adds no op and no check id), `newgroup/**`,
   `civicos-ui/**`, any version bump, tag or deploy.
+
+## CLAIM 2026-09-16 RECORD (REC-103 — `Store#frontier`'s document arm accepts a `viewer` and never reads it)
+
+session: RECORD worker for REC-103, spawned by CONDUCT #1, Opus 5, worktree-isolated (`agent-a4fe71943bfcf63db`), RECORD's dev slot.
+
+**THE ANSWER WAS DRIVEN BEFORE THIS CLAIM WAS WRITTEN, because the row admits two outcomes and
+the claim's width depends on which.** It is a LEAK and not a dead parameter, so the fix is the
+FILTER and not the deletion. Three vectors measured through the Durable Object with
+`viewer=member:not-invited` against a `project` bundle that member is not a participant of:
+the ratify writer publishes **`authority = PRJ-…-secret`, the project bundle id verbatim**; the
+acquire writer publishes `result_ref` = a capture registered to that project, plus `result_purged`
+derived from `register`; and the `never_looked` partition publishes `from_document` = that
+project's capture sha. **The absent stamp answers in full too** — the DO's document arm does not
+fail closed, while its content arm does.
+
+**PATHS CLAIMED, BY REGION — three other RECORD workers hold `store.mjs` in other regions:**
+
+- `bio-plane/src/store.mjs` — **ONLY** `#frontierNeverLooked`, `frontier()`'s DOCUMENT arm, and
+  ONE new private helper placed immediately beside them. **NOT** `#frontierContent`,
+  **NOT** `#frontierMeaning`, **NOT** `#frontierLatest`, **NOT** `#frontierVerification`,
+  **NOT** `#observe` or any writer, **NOT** `#bundleGate` / `#bundleRedactor`.
+- `bio-plane/test/observation-log.test.mjs` — REC-93's suite, the document arm's own home.
+- `bio-plane/test/gate-reads.test.mjs` — the `frontier` GATED entry's prose only (the
+  classification is corrected in the same commit as the fence it names).
+- `docs/development/INTERFACE-CHANGES.md` — IC-105 only.
+- `docs/development/OBSERVATION-LOG-DESIGN.md` — front matter only: the §6 row-1 Incomplete entry
+  this item discharges, and the §7 entry it opens.
+- `docs/development/DEBT.md`, `docs/DECIDED.md` (regenerated, never hand-edited), this file.
+
+**NOT TOUCHED:** `docs/development/QUEUE.md` (CONDUCT's sole writer), `bio-plane/src/index.mjs`,
+`bio-plane/src/schema.mjs`, `bio-plane/src/query.mjs`, `bio-plane/src/airun.mjs`,
+`bio-plane/checks/bio-checks.mjs`, `newgroup/**`, `civicos-ui/**`, any version bump, tag or deploy.
+
+## CLAIM ADDENDUM 2026-09-16 RECORD (REC-103 — three paths the original claim did not reserve, each FORCED BY AN INSTRUMENT rather than chosen)
+
+Appended rather than editing the block above, per this file's append-only rule. **Not one of the
+three is a widening of judgement; each is a ratchet naming this item by name.**
+
+1. `bio-plane/dist/bio-plane.bundled.mjs` and `bio-plane/dist/bio-plane.bundle.json` — REGENERATED
+   with `npm run build`, never hand-edited. `fleetbundles.test.mjs`'s D-298 arm refuses a committed
+   artifact that is not the deterministic build of its source, and it named the file and the
+   remedy. `src/signpage.mjs` was re-rendered by the same command and came back BYTE-IDENTICAL, so
+   it is not in the diff. **No version bump, no sign, no tag, no deploy** — `npm run build` is
+   `embed:sign && build-plane`, neither of which touches a release.
+2. `bio-plane/test/run-conditions.test.mjs` — **READ AND NOT EDITED, and that is the finding.** Its
+   ARM W3 went red naming `#observationBundles` as a THIRTEENTH reader of `ai_runs`: this item's
+   first draft read `SELECT context_id FROM ai_runs WHERE run = ?` to gate a `run` authority. The
+   table's own comment records `#aiRunAppend` meeting that arm on 2026-09-14 and ARM W9 then
+   REFUSING the only role that could have fitted, because a reader projecting a stored column
+   merely to describe the row fits none. **The honest answer was the same both times: stop
+   reading.** `aiRunLog` already answers *may this viewer see this run* through
+   `#bundleGate("r.context_id", viewer)`, so the referent is DELEGATED and a second implementation
+   of one gate — in the one place it would be most dangerous — does not exist. The suite is green
+   at 58/0 with no edit, and a seventh control arm was added for the delegation, because a referent
+   this resolver does not decide in its own bytes is the one most in need of one.
+3. `bio-plane/test/nc-rec103.mjs` — this item's control driver, NEW and inside this worktree.
+
+**STILL NOT TOUCHED, re-verified at the close:** `docs/development/QUEUE.md` (CONDUCT's sole
+writer — the row flip, IC-105's RESOLUTION and the I3 bump are ACTS in this item's report, not
+notes left here), `bio-plane/src/index.mjs`, `bio-plane/src/schema.mjs`, `bio-plane/src/query.mjs`,
+`bio-plane/src/airun.mjs`, `bio-plane/src/signpage.mjs` (re-rendered, byte-identical),
+`bio-plane/checks/bio-checks.mjs`, `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` READ and NOT
+moved — this item adds no op, no check and no refusal code), `#frontierContent` and
+`#frontierMeaning` (**D-385 found in the first and REPORTED rather than absorbed**), `newgroup/**`,
+`civicos-ui/**`, any version bump, tag or deploy.
+
+**IDS: IC-105 and D-385/D-386 are used; IC-106 was minted by a truncated first `mintid` call of
+mine and is a BURNED GAP, stated rather than left to look like a collision.**

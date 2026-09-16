@@ -1,3 +1,50 @@
+/* NEGATIVE CONTROL: (declared and RUN 2026-09-16, REC-103, worktree agent-a4fe71943bfcf63db) SIX
+   arms over section I's fence, RUN in one step through `node test/nc-rec103.mjs [arm|all]` (the
+   driver lives INSIDE this worktree), each armed ALONE with every other defence held open, each
+   DECLARED before it ran, each mutation passing an anchor-occurs-EXACTLY-ONCE guard and a
+   bytes-really-changed guard, and every restore verified by sha256 AND by `cmp` against a PRISTINE
+   copy named UNIQUELY PER ARM with a byte count printed and a 500,000-byte floor guarded. Opening
+   AND closing baseline rows bracket the run. Baseline both ends: 72 pass / 0 fail, exit 0.
+   The sixth was added mid-item when the `run` referent became a delegation (see (e)).
+   **EVERY ARM IS ARMED AGAINST THE DATA AND NOT AGAINST A FLAG**, which is this row's own
+   instruction and REC-94's receipt: its leak one method over passed a flag-only arm because
+   `capture_held` was already false.
+   (a) `fence` — neuter `#frontierDocumentVisible` to admit every row. Declared MUST FAIL I1 I2 I3
+       I8; MUST NOT FAIL I4 I4b. ACTUAL: I1 I1b I2 I3 **I5** I8 **I9b** — more than declared, and
+       both extras are right to be there: with the predicate gone the absent stamp is answered too,
+       and so is every run-context row.
+   (b) `authority` — neuter ONLY the authority half of `#observationBundles`, leaving the
+       `result_ref` half intact. Declared MUST FAIL I1 I8. Final: I1 I1b I8 I9b. **FIRST RUN: I8 ALONE — I1 CAME
+       BACK GREEN, AND THAT IS A FINDING ABOUT THE ARM RATHER THAN ABOUT THE SUBJECT.** On ratify's
+       `confirmed` row the capture back-reference withholds it anyway, so the two defences overlap
+       and the arm could not tell which one fired — REC-94's fall-through shape pointed at a suite
+       instead of at the store. **I1b was ADDED for it**: ratify's `unreachable` verdict carries NO
+       `result_ref` (§4.1), so `authority` is its only referent. Re-run: I1 I1b I8.
+   (c) `overstrict` — THE ARM THAT MUST GO RED IN THE OTHER DIRECTION: make every referent
+       unresolvable. Declared MUST FAIL I4 I4b I8b; MUST NOT FAIL I1 I2 I3. ACTUAL: those plus I9b,
+       which follows — an unresolved referent withholds before the run delegation is reached.
+   (e) `run` — neuter ONLY the delegated run gate, ADDED after `run-conditions.test.mjs` ARM W3
+       caught this item's first draft reading `ai_runs` directly and the referent became a
+       delegation to `aiRunLog`. **A referent the resolver DELEGATES is the one most in need of an
+       arm**, because nothing in this method's own bytes decides it. Declared MUST FAIL I9b.
+       ACTUAL: I8 **and** I9b — one more than declared and right to be there, since `run` is one of
+       the nine kinds I8's inversion fixture drives.
+   (d) `machine` — remove the machine carve-out from the document arm. Declared MUST FAIL I0 I1 I2
+       I3 I4b I7. **ACTUAL: E3 E3b E3c G4 I7 — a different set, and the difference is the finding.**
+       `#bundleRedactor` already carves out a machine credential for the RESOLVABLE path, so the
+       carve-out here is load-bearing for the UNRESOLVED path alone — which is precisely §7's purge
+       annotation (`frontier-seed` and G4's rows name captures the register does not hold). The arm
+       proves what preserves the operator path rather than what the declaration guessed.
+   (f) `deny` — remove the explicit fail-closed arm for an absent stamp. Declared MUST FAIL I5.
+       **ACTUAL: GREEN, and it is RECORDED RATHER THAN SMOOTHED.** Every document-level row this
+       plane writes today carries at least one bundle-scoped referent, and under DENY the redactor
+       already answers null for every one — so the line is redundant ON TODAY'S WRITERS and is kept
+       as the defence for a row with NO referent at all, which `#lookAuthority` can produce in
+       principle (`authority: null` on a request that names none) and does not today.
+   WHAT THESE ARMS CANNOT SEE: they are local to this plane's source under miniflare. Nothing here
+   exercises the real account, a deploy, a second instance, or the control plane's own stamp — the
+   arms drive the Durable Object directly with a named member viewer, because the control plane
+   stamps `class:member` for a shared token and a token-only arm CANNOT ARM against this fence. */
 /* NEGATIVE CONTROL: (declared 2026-09-14, REC-93, worktree agent-a239cb7601fee3669) SEVEN arms,
    RUN in one step through `node test/nc-rec93.mjs [arm]` (the driver lives INSIDE this worktree),
    each armed ALONE with every other held open, each DECLARED must-fail or must-not-fail BEFORE it
@@ -577,6 +624,234 @@ console.log("\n--- G · ratify's re-fetch, and `not_attempted` writes nothing (�
     [byAddr["https://example.gov/part-a"], byAddr["https://example.gov/part-b"],
      byAddr["https://example.gov/part-c"], byAddr["https://example.gov/part-d"] ?? "ABSENT"],
     ["PRESENT", "PRESENT", "LOOKED_INDETERMINATE", "ABSENT"]);
+}
+
+/* ========================================================================= *
+ *  I · REC-103 / IC-105 — THE DOCUMENT ARM'S FENCE.
+ *
+ *  OUT OF LETTER ORDER ON PURPOSE, and the reason is mechanical rather than
+ *  stylistic: section H purges the whole store, so anything appended after it
+ *  measures an empty table. This section is the last one that needs rows.
+ *
+ *  WHAT IT CLOSES. `Store#frontier` accepted a `viewer` and the DOCUMENT arm
+ *  never read it, while `gate-reads.test.mjs` classified the op GATED — a
+ *  signature ADVERTISING a fence that was not there. REC-94 measured it while
+ *  building the content arm and left it for this row's owner.
+ *
+ *  EVERY ARM HERE IS DRIVEN AGAINST THE DATA AND NEVER AGAINST A FLAG, which is
+ *  the queue row's own instruction and REC-94's receipt: its leak one method over
+ *  passed a flag-only arm because `capture_held` was already false. So each arm
+ *  below builds a PROJECT the viewer is not a participant of, writes a real row
+ *  under a real writer, and asks what comes back.
+ *
+ *  ASKED THROUGH THE DURABLE OBJECT WITH A REAL MEMBER VIEWER, because the
+ *  control plane stamps `class:member` for a shared instance token and
+ *  `viewerPredicate` deliberately does not filter a machine credential — an arm
+ *  driven only through the token is an arm that CANNOT ARM. That is why every
+ *  pre-existing arm in this file is untouched by this item: they all hold a class
+ *  credential, and the machine carve-out means their answers do not move.
+ * ========================================================================= */
+console.log("\n--- I · REC-103: the document frontier withholds row-whole (§6) ---");
+
+{
+  const DO = async (op, q = "") => rP(await (await obj.fetch(`http://x/${op}?${q}`)).json());
+  const SECRET = "PRJ-2026-0916-rec103-secret";
+  const OPEN = "INF-2026-0916-rec103-open";
+  const SHA_SECRET = "e".repeat(64);
+  const SHA_OPEN = "f".repeat(64);
+  const reg = (s) => [{ sha256: s, path: `data/${s.slice(0, 4)}.pdf`, encoding: "binary", bytes: 10 }];
+  const mk = async (id, type, capture) => {
+    const text = `---\nid: ${id}\nobject_type: ${type}\n---\n\n## Summary\n\n${id}\n`;
+    const r = await POST(`op=promote&token=${TOK}`, {
+      bundleId: id, base: null, snapKey: `20260916T0900${id.length % 10}0Z_${sha(id).slice(0, 8)}`,
+      meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+              current_state: type === "project" ? "forming" : "collected",
+              created: T0, last_updated: T0 },
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+      register: reg(capture) });
+    if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 400)}`);
+  };
+  await mk(OPEN, "information", SHA_OPEN);
+  await mk(SECRET, "project", SHA_SECRET);
+
+  /* THE THREE VECTORS, EACH THROUGH ITS OWN REAL WRITER rather than through one
+     that happens to be convenient — the leak arrives by three doors and a suite
+     that drove one would have called the other two closed. */
+  await obj.recordCapturedLocator({                        // acquire: result_ref
+    address: "https://example.gov/rec103-secret-target",
+    addressNorm: "https://example.gov/rec103-secret-target",
+    captureSha: SHA_SECRET, retrieved: at(70000) });
+  await obj.recordReuseVerdicts({ bundleId: SECRET, at: at(70000), verdicts: [
+    { source_capture: SHA_SECRET, address_norm: "https://example.gov/rec103-secret-asset.css",
+      host: "example.gov", verdict: "confirmed", reused_sha: SHA_SECRET, basis: "re-fetch" },
+    /* THE ROW WHERE THE AUTHORITY IS THE ONLY REFERENT, ADDED BECAUSE THIS ITEM'S
+       OWN `authority` CONTROL ARM CAME BACK GREEN ON I1 AND THAT WAS A FINDING
+       ABOUT THE ARM. §4.1 maps `unreachable` to LOOKED_INDETERMINATE with
+       `resultKind: null, resultRef: null`, so this row's ONLY bundle-scoped
+       referent is `authority` — the project id ratify passes as `bundleId`. On
+       the `confirmed` row above, the capture back-reference withholds it anyway,
+       so neutering the authority half left I1 green over a leak the OTHER half
+       happened to cover. That is REC-94's fall-through shape pointed at this
+       suite instead of at the store: two overlapping defences, and an arm that
+       cannot tell which one fired. */
+    { source_capture: SHA_SECRET, address_norm: "https://example.gov/rec103-secret-unreachable",
+      host: "example.gov", verdict: "unreachable", reused_sha: SHA_SECRET, basis: "re-fetch" }] });
+  await obj.recordLinks({ sourceCapture: SHA_SECRET, sourceBundle: SECRET, capturedAt: at(70000),
+    links: [{ ref: "https://example.gov/rec103-secret-lead",
+              address: "https://example.gov/rec103-secret-lead",
+              address_norm: "https://example.gov/rec103-secret-lead", type: "deferred" }] });
+  /* THE OVER-STRICTNESS FIXTURE, built in the same breath so it cannot drift from
+     the leak fixture: `viewerPredicate` filters PROJECT bundles and NOTHING else
+     (the evidence corpus stays shared, D-15), so every row below must survive for
+     the same uninvited member the rows above are withheld from. */
+  await obj.recordCapturedLocator({
+    address: "https://example.gov/rec103-open-target",
+    addressNorm: "https://example.gov/rec103-open-target",
+    captureSha: SHA_OPEN, retrieved: at(70000) });
+  await obj.recordLinks({ sourceCapture: SHA_OPEN, sourceBundle: OPEN, capturedAt: at(70000),
+    links: [{ ref: "https://example.gov/rec103-open-lead",
+              address: "https://example.gov/rec103-open-lead",
+              address_norm: "https://example.gov/rec103-open-lead", type: "deferred" }] });
+
+  const asMachine = await DO("frontier", `level=document&limit=500&viewer=class:member`);
+  const asMember  = await DO("frontier", `level=document&limit=500&viewer=member:not-invited`);
+  const asNobody  = await DO("frontier", `level=document&limit=500`);
+  const subj = (f) => (f.looked || []).map((r) => r.subject);
+  const leads = (f) => (f.never_looked || []).map((r) => r.subject);
+
+  t("I0: THE FIXTURE IS NOT EMPTY — the arms below are measured over real rows through real "
+  + "writers, not over a store that happened to have nothing in it (three headline totality "
+  + "assertions have passed over an empty corpus in this repository)",
+    [subj(asMachine).length >= 3, leads(asMachine).length >= 2], [true, true]);
+
+  t("I1: THE LEAK, DRIVEN — the ratify writer passes `bundleId` as the observation's AUTHORITY, "
+  + "so before this item an uninvited member read the PROJECT BUNDLE ID VERBATIM off the document "
+  + "frontier. The machine credential still sees it; the uninvited member sees no row at all",
+    [(asMachine.looked || []).some((r) => r.authority === SECRET),
+     (asMember.looked  || []).some((r) => r.authority === SECRET),
+     JSON.stringify(asMember).includes(SECRET)],
+    [true, false, false]);
+
+  t("I1b: THE AUTHORITY HALF, ALONE AND OVER A REAL WRITER'S ROW — ratify's `unreachable` verdict "
+  + "maps to LOOKED_INDETERMINATE with NO `result_ref` (§4.1), so the project id in `authority` is "
+  + "the row's ONLY bundle-scoped referent and nothing else can withhold it. Added because this "
+  + "item's `authority` control arm came back GREEN on I1: two overlapping defences, and an arm "
+  + "that could not tell which one fired",
+    [(asMachine.looked || []).some((r) => r.subject === "https://example.gov/rec103-secret-unreachable"
+                                        && r.state === "LOOKED_INDETERMINATE" && r.result_ref === null),
+     subj(asMember).includes("https://example.gov/rec103-secret-unreachable")],
+    [true, false]);
+
+  t("I2: THE BACK-REFERENCE — a row whose `result_ref` names a capture registered to that project "
+  + "says THIS RECORD HOLDS THIS DOCUMENT, which is `op=contentaxis`' own disclosure and is gated "
+  + "there on this same register resolution. Withheld ROW-WHOLE, not column-redacted, because a "
+  + "subject with its authority nulled still names what was looked for (§6)",
+    [subj(asMachine).includes("https://example.gov/rec103-secret-target"),
+     subj(asMember).includes("https://example.gov/rec103-secret-target"),
+     JSON.stringify(asMember).includes(SHA_SECRET)],
+    [true, false, false]);
+
+  t("I3: THE NEVER-LOOKED PARTITION — a deferred link discovered INSIDE that project's capture "
+  + "published the capture sha as `from_document`. It takes the SAME predicate as the looked "
+  + "rows, because two ways to decide one question is the mirror-and-drift class",
+    [leads(asMachine).includes("https://example.gov/rec103-secret-lead"),
+     leads(asMember).includes("https://example.gov/rec103-secret-lead")],
+    [true, false]);
+
+  t("I4: OVER-STRICTNESS, AND IT IS THE ARM THAT MATTERS MOST — the same uninvited member still "
+  + "sees every row of the INFORMATION bundle, in both partitions. The evidence corpus stays "
+  + "shared (D-15); a fence tighter than its rule is not a safer fence",
+    [subj(asMember).includes("https://example.gov/rec103-open-target"),
+     leads(asMember).includes("https://example.gov/rec103-open-lead")],
+    [true, true]);
+
+  t("I4b: …and BYTE-IDENTICALLY to what the machine credential gets for those same subjects — the "
+  + "row does not change with the reader, only whether it is published at all",
+    JSON.stringify((asMember.looked || []).filter((r) => r.subject.includes("rec103-open"))),
+    JSON.stringify((asMachine.looked || []).filter((r) => r.subject.includes("rec103-open"))));
+
+  t("I5: THE GATE FAILS CLOSED ON AN ABSENT STAMP, at the STORE and not only at the control "
+  + "plane — a missing stamp is an outage and never a leak, and a row naming NO bundle would "
+  + "otherwise walk past a redactor whose whole job is ids",
+    [(asNobody.looked || []).length, (asNobody.never_looked || []).length, asNobody.built],
+    [0, 0, true]);
+
+  t("I6: NO COUNT OF WHAT WAS WITHHELD is published, because the count is the leak (REC-30). "
+  + "`truncated` is computed from the GATED collections and not from the raw fetch, which would "
+  + "be true exactly when the gate dropped enough rows — a one-bit count wearing a bound's name",
+    [asMember.truncated, asNobody.truncated,
+     Object.keys(asMember).filter((k) => /withheld|hidden|redacted/i.test(k))],
+    [false, false, []]);
+
+  /* THE INVERSION ARM, and it is the one that keeps this a RULE rather than a
+     list of spellings. Every member of `OBSERVATION_AUTHORITY_KINDS` gets a row
+     whose authority resolves to NOTHING, over a capture that DOES resolve — so
+     the only variable is the authority, which is the break-only-the-thing rule
+     applied to a fixture instead of to a control arm. A tenth kind added to that
+     constant with no resolver in `#observationBundles` is WITHHELD and this arm
+     stays green; a tenth kind waved through by omission turns it red. */
+  const KINDS = Object.keys(OBSERVATION_AUTHORITY_KINDS);
+  for (const k of KINDS)
+    await obj.recordCapturedLocator({
+      address: `https://example.gov/rec103-kind-${k}`,
+      addressNorm: `https://example.gov/rec103-kind-${k}`,
+      captureSha: SHA_OPEN, retrieved: at(80000),
+      authorityKind: k, authority: `REC103-UNRESOLVABLE-${k}` });
+  const m2 = await DO("frontier", `level=document&limit=500&viewer=class:member`);
+  const u2 = await DO("frontier", `level=document&limit=500&viewer=member:not-invited`);
+  const kindsSeen = (f) => KINDS.filter((k) =>
+    (f.looked || []).some((r) => r.subject === `https://example.gov/rec103-kind-${k}`));
+
+  t("I7: the fixture ARMED — every authority kind in the vocabulary actually wrote a row "
+  + "(an arm that did not arm is a finding, and this one has nine chances to not arm)",
+    [kindsSeen(m2).length, KINDS.length >= 9], [KINDS.length, true]);
+
+  t("I8: THE INVERSION — an authority this record cannot attribute to a bundle WITHHOLDS the row, "
+  + "for every member of the vocabulary. The referent resolves to nothing while the capture "
+  + "back-reference resolves fine, so the authority is the only variable. Anything the resolver "
+  + "does not UNDERSTAND fails closed rather than being waved through by omission",
+    kindsSeen(u2), []);
+
+  t("I8b: …and the SAME uninvited member still sees the open bundle's row, so I8 measured a fence "
+  + "and not an outage — six reds read exactly like six arms working without this row",
+    subj(u2).includes("https://example.gov/rec103-open-target"), true);
+
+  /* THE RUN REFERENT, IN BOTH DIRECTIONS. It is the one referent the resolver
+     DELEGATES rather than resolving — `aiRunLog` already gates on
+     `ai_runs.context_id` and a second implementation of one gate is the
+     mirror-and-drift class — so it is the one that most needs driving, and I8's
+     unresolvable fixture only exercises the closed half. Two real runs, one in
+     each kind of context, and the rows are otherwise identical. */
+  for (const [run, ctxType, ctx] of [["RUN-2026-0916-rec103-open", "information", OPEN],
+                                     ["RUN-2026-0916-rec103-secret", "project", SECRET]]) {
+    const o = await POST(`op=airunopen&token=${TOK}`, {
+      run, contextType: ctxType, contextId: ctx, label: "REC-103's fence fixture", mode: "check",
+      principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+      skillVersion: "investigative-session@1", biasManifest: null,
+      bounds: [{ bound: "fetches", allowed: 4, unit: "requests" }], leaseMs: 600000, at: at(90000) });
+    if (!o || o.ok === false) throw new Error(`airunopen ${run}: ${JSON.stringify(o).slice(0, 300)}`);
+    await obj.recordCapturedLocator({
+      address: `https://example.gov/rec103-run-${ctxType}`,
+      addressNorm: `https://example.gov/rec103-run-${ctxType}`,
+      captureSha: SHA_OPEN, retrieved: at(90000), authorityKind: "run", authority: run });
+  }
+  const m3 = await DO("frontier", `level=document&limit=500&viewer=class:member`);
+  const u3 = await DO("frontier", `level=document&limit=500&viewer=member:not-invited`);
+
+  t("I9: THE RUN REFERENT ARMED — both rows were written under a `run` authority over the SAME "
+  + "capture, so the run's context is the only thing that differs between them",
+    [subj(m3).includes("https://example.gov/rec103-run-information"),
+     subj(m3).includes("https://example.gov/rec103-run-project")], [true, true]);
+
+  t("I9b: A ROW UNDER A RUN IS GATED ON THAT RUN'S CONTEXT, and the gate is DELEGATED to "
+  + "`aiRunLog` rather than re-implemented — handing a run id to a caller who cannot see its "
+  + "context is `op=airuns`' disclosure by a new door. The information-context row is published "
+  + "to the uninvited member and the project-context row is not, which is the fence proving it "
+  + "is a fence rather than a refusal of everything",
+    [subj(u3).includes("https://example.gov/rec103-run-information"),
+     subj(u3).includes("https://example.gov/rec103-run-project"),
+     JSON.stringify(u3).includes("RUN-2026-0916-rec103-secret")],
+    [true, false, false]);
 }
 
 /* ========================================================================= *
