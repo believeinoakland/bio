@@ -73,6 +73,7 @@
   - [16. How content is extracted today](#16-how-content-is-extracted-today)
   - [17. How content is organized and reached](#17-how-content-is-organized-and-reached)
   - [18. The central gap, and the six pieces to design](#18-the-central-gap-and-the-six-pieces-to-design)
+    - [18.1 THE CROSS-VERSION RELATION — D-394 DESIGNED, 2026-09-17](#181-the-cross-version-relation-d-394-designed-2026-09-17)
   - [19. Where this document is the authority, and who defers to it](#19-where-this-document-is-the-authority-and-who-defers-to-it)
   - [Appendix A · The evidence, as measured at `origin/main` `51d128a`](#appendix-a-the-evidence-as-measured-at-originmain-51d128a)
     - [A.1 The rulings](#a1-the-rulings)
@@ -1938,10 +1939,82 @@ The pieces to be designed, named here and designed nowhere in this document:
 | 5 | **homes for the member's lead and firsthand observation** | D-194 and D-184, designed together. RULED 2026-09-14: the observation is evidence, authored, grade D on the member's trust; its attribution in a published case is the attesting member's choice among the group, the project, the member's cover, or the member by name, and an off-the-record source's anonymity is valid — designed in Program B | the architect, under the ruling |
 | 6 | **the claim object** | Bob's direction of 2026-09-14, confirmed against the record: the burden of proof attaches to the PRODUCTION and is set by the project's bar and the audience's needs, so no separate claim object is required for it to vary; the research owed is the catalogue of standards by audience and output act | the architect; Program B |
 
+### 18.1 THE CROSS-VERSION RELATION — D-394 DESIGNED, 2026-09-17
+
+**§18's ruling below says the correspondence is *proposed and never applied*. The never-applied
+half was ruled and built; THE PROPOSED HALF WAS DESIGNED NOWHERE**, measured 2026-09-17: zero
+occurrences of any cross-capture content relation in `store.mjs`, and no row anywhere. Bob asked
+the question that opened it — *is content updated when a refreshed version of a document is
+obtained* — and D-394 names the three decisions. They are decided here.
+
+**THE GAP IS NOT AN OVERCLAIM, WHICH IS WHY NO INSTRUMENT HERE CATCHES IT.** A member's citation
+stays honestly pointed at the capture it was made against, every grade stays earned, and nothing
+claims more than it can support — **while a case may rest on a passage the publisher has since
+revised, with the record holding BOTH captures and saying nothing.** Every gate in this estate
+watches the record claiming too much. **This is the record KNOWING something and not telling
+anyone**, and it is the first gap of that shape to be designed.
+
+#### The decomposition that makes it tractable: the valuable half does not need the hard half
+
+**The trustworthiness gap is *never told a newer version exists*. That is answerable TODAY with
+certainty** — `op=versionchain` already answers for a document address and captures carry their
+shas. **Which PASSAGE survives into the new version is a separate, harder, and much less valuable
+question**, and collapsing the two is what has kept both unbuilt. So they are split, and the
+first ships without the second.
+
+#### WHEN — lazily, at READ, never at capture
+
+**A correspondence derived at capture is a STORED CLAIM, and a stored claim goes stale the moment
+either extraction improves** — the failure this corpus has met more than any other. A read-time
+answer is computed against the current state of both captures and cannot go stale. It also costs
+nothing for the overwhelming majority of refreshed captures, which nobody ever cites. **The
+question is only ever asked about a passage a member is actually resting on.**
+
+#### WHAT — a read-time ANSWER about a pair, attached to nothing
+
+Not the content row: §14.4 puts the capture inside the row's identity, so hanging a cross-capture
+relation on it corrupts the thing the rule protects. Not the edge: an edge that gains a pointer to
+a newer capture **is** the re-pointing, whatever it is called.
+
+**So it is attached to NOTHING PERSISTENT, and that is the mechanism rather than an omission: the
+strongest guarantee that a proposal is never mistaken for a re-pointing is to make it impossible
+to persist one.** A proposal that cannot be stored cannot be followed by accident, re-projected on
+promotion, or inherited by a later reader as fact.
+
+#### HOW — a NOTICE on the citation, in three states, one of which is UNDETERMINED
+
+Shown where the member meets the citation, naming both captures, and stating that only a member's
+act can move anything:
+
+| state | when | what it says |
+| --- | --- | --- |
+| **no newer capture** | the version chain has nothing after this one | nothing; silence here is earned |
+| **newer capture, passage MATCHED** | the extent test holds across the two captures | *a newer version exists and a passage at the same extent is in it* — a candidate, never a move |
+| **newer capture, passage UNDETERMINED** | a newer capture exists and the extent test does not hold | **the honest and most common answer** — *a newer version of this document exists; whether your passage survives into it is undetermined* |
+
+**THE THIRD ROW IS THE DESIGN.** D-394 observes that `REC-82`'s extent-match test *is NOT
+obviously right across versions, where a revision may move a passage between pages* — and that is
+correct, so **extent-match is admitted as a SUFFICIENT signal for a candidate and never as
+evidence of identity.** Where it fails, the answer is UNDETERMINED rather than a guess.
+
+**And undetermined is not a degraded answer here, it is nearly the whole value.** *A newer version
+exists and I cannot tell you whether your passage is in it* is exactly what a member needs in
+order to go and look — which is the act the doctrine reserves to them anyway. A guessed
+correspondence would be worth less and could mislead a published case.
+
+#### What this does not decide
+
+Whether the notice also reaches a member whose case is already PUBLISHED, and through what surface,
+is a publication question and is not settled here. Nothing above changes §14.4, the row's identity,
+or the rule that an authored edge moves only by a member's act.
+
+---
+
 Two rulings to carry into every option for piece 1. An authored edge is never re-pointed to a
 newer capture without a member's act (§14.4) — so the content row's identity includes the
 capture, a new capture is a new row, and "the same passage across versions" is a derived
-relation between rows, proposed and never applied. **The same rule bit at the first landing,
+relation between rows, proposed and never applied **(the PROPOSED half is designed in §18.1
+above, 2026-09-17, as a read-time notice attached to nothing)**. **The same rule bit at the first landing,
 one level down:** the row's identity also includes the extraction CHAIN, so re-extracting a
 document under a better engine yields a new row for the same extent — and because the record
 re-projects a bundle's legs on every promotion, a naive projection would have silently moved

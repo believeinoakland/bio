@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1028 rulings across 85 documents.
+1027 rulings across 85 documents.
 
 ## DEC-
 
@@ -71,9 +71,9 @@ authority is the file named, never this one.
 - **DEC-19** — Carrying DEC-19 AS AMENDED (publishing is THE irreversible act; correction always moves FORWARD — a new edition as a separate document with every published edition standing, a withdrawal as another attested act with both standing; nothing is ever unpublished), DEC-33 (the ceremony is deferred; publication runs…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1190`
 - **DEC-20** · 2026-08-05 — CORRECTED 2026-08-05 (DEC-20, D-188).** This read *"and it may not advance or be > ratified until the debt is settled"*, and listed *blocking a state transition* among > the shared properties.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1251`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1252`
 - **DEC-20** · 2026-08-05 — CORRECTED 2026-08-05 (DEC-20, D-188, DEC-46 (d)).  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1322`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1323`
 - **DEC-20** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-20). The blanket rule above is REPLACED: only a HUNCH blocks publication.** *"Not all bias needs to be cleared before a piece is published. The only bias type that must be clear before publication is hunches."* And, in the same review: *"Bias is public and accompanies every published case  
   `docs/architecture/BIO_Declared_Bias_v0_1.md:283`
 - **DEC-20** · 2026-09-14 — One dated addendum (July 27, 2026, declared bias) follows the body and its middle clause is SUPERSEDED by DEC-20. as of 2026-09-14.  
@@ -93,7 +93,7 @@ authority is the file named, never this one.
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 (Bob, DEC-21) — R2's CONCLUSION stands; its MECHANISM does not.** > *"A capture is the act of reading a document in.  
   `docs/development/research/RECONCILED.md:183`
 - **DEC-23** · 2026-09-14 — RULED | | machine extraction by recognisers, format entries and fleet members (§16) | BUILT | | the AI EXTRACT role — an assistant extracting on a member's objective | **PARTLY BUILT** — the PLANE half landed 2026-09-14 (SK-7): a machine credential MINTS content rows (`op=contentmint`), every surface LABELS them as…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1683`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1684`
 - **DEC-23** · 2026-08-03 — RULED by DEC-23: content — a piece of information extracted from a document, up to and including the whole document — is the unit the record points at.  
   `docs/development/DEBT.md:139`
 - **DEC-24** · 2026-08-04 — 1 · The pilot's exclusion is CORRECTED, not lifted.** The pilot is READ-ONLY and stays so: its own hazard table names the defence — *the pilot token cannot execute any mutating op* — and minting a content row is a write.  
@@ -397,7 +397,7 @@ authority is the file named, never this one.
 - **D-190** · 2026-08-08 — AMENDED INTO THIS CLAIM 2026-08-08, same session, before any handoff**) — the diagnostic that established two properties of the platform the item could not assume: that a Worker cannot fetch another Worker on this account's own `*.workers.dev` name, and that a fresh script is not attributable by name OR tag on the…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2546`
 - **D-194** · 2026-09-14 — RULED 2026-09-14: the observation is evidence, authored, grade D on the member's trust; its attribution in a published case is the attesting member's choice among the group, the project, the member's cover, or the member by name, and an off-the-record source's anonymity is valid — designed in Program B | the…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1938`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1939`
 - **D-197** — (g) HAD TO BE CORRECTED MID-RUN AND IS REPORTED, NOT SMOOTHED**: the first sweep-neutering arm stayed 46/46 GREEN because with all guards removed there is no `.answered` anywhere and a whole-file region equals a scoped one — it measured nothing.  
   `docs/archive/ledgers/QUEUE-2026-08.md:2109`
 - **D-206** — D-206 RIDER DECIDED IN FAVOUR OF CARRYING THE DISTINCTION:** an optional `code` on the finding plus a derived `tallyDetail` beside `tally`, with `tally` not moving by one byte and `tallyDetail` absent when nothing carried a code; reasoning recorded in the code at BOTH sites, and settled by CLAUDE.md itself —…  
@@ -427,7 +427,7 @@ authority is the file named, never this one.
 - **D-222** — §Where AI actually sits — self-marked PARTLY SUPERSEDED; D-222 option A landed (the MEANING arm reaches `inquiry_basis` and `resolutions`); `readings`, `reading_refs`, `connections` still fixed-key only; stage C is inside Part II §18's scope, not queued.  
   `docs/development/STORE-AS-CACHE.md:10`
 - **D-225** · 2026-09-15 — CAPPED — this row read "uncapped (D-225)" until 2026-09-15 and is CORRECTED IN PLACE rather than deleted, because what it recorded was a real gap and the gap CLOSING is the news** | `documentsConcerning`, `resolutionsForCapture`, `connectionsFor` in `store.mjs`, named by SYMBOL and not by line (`CORPUS-STANDARD.md`…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:2038`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:2111`
 - **D-225** · 2026-08-07 — Related finding, raised as D-225 on 2026-08-07 and since CLOSED — CORRECTED IN PLACE on 2026-09-15 by REC-99, never deleted, because the gap this paragraph recorded was real and the gap CLOSING is the news:** the existing meaning-layer reads — `concerns`, `resolutions`, `connections` — **WERE uncapped** on the day…  
   `docs/development/INVESTIGATIVE-SESSION.md:1107`
 - **D-227** — `bio-plane/test/versions.test.mjs` — ONE superseded pin CORRECTED, and it was not predicted:** that suite's D-227 bound arm demanded exactly THREE `#rows(` inside a 4,600-character slice of `basisVersions`, which pinned the reader's TOPOLOGY rather than its rule, and this item's helper extraction moved it.  
@@ -564,8 +564,6 @@ authority is the file named, never this one.
   `docs/development/INTERFACE-CHANGES.md:8369`
 - **D-391** · 2026-09-16 — WHY NEITHER IS CORRECTED HERE:** re-denominating another area's measurement from outside it is how a wrong number acquires a second author.  
   `docs/development/DEBT.md:315`
-- **D-394** · 2026-09-17 — M4 · OPEN — the doctrine is RULED and the mechanism is undesigned; BOB owns the design, and the WHEN/WHAT/HOW above is the decision it must make first.  
-  `docs/development/DEBT.md:330`
 - **D-398** · 2026-09-17 — CORRECTED 2026-09-17 BY BOB #13, AND THE CORRECTION IS A MECHANISM THIS ROW SAYS DOES NOT EXIST: ARCHIVING THE SESSION RELEASES THE LOCK.** This row and BOB-NEXT's amendment both say the lock does not release when the process exits and becomes a stale lock nothing cleans up, so reclamation was framed as an…  
   `docs/development/DEBT.md:342`
 - **D-401** · 2026-09-17 — RULED BY BOB THE SAME DAY:** *"BOB #12 being alive is not my problem.  
@@ -1396,31 +1394,31 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-07-30** — " note was revised: transitive trust is accepted so long as it is disclosed (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30). - §12 — "Platform (resolved, v4)" describes the retired local-first client; the plane replaced it and the UI is built as constructs (`BIO_Interaction_Constructs_v0_1.md`). - §13…  
   `docs/architecture/BIO_Complete_Roadmap_v5.md:12`
 - **2026-09-14** — RULED: an authored edge is never re-pointed to a newer capture without a member's act (§14.4, §18); RULED: a link to a Google Drive file keeps the link and the harvest is the OpenDocument export, from which content is extracted (§16). - v0.12, 2026-09-14.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:102`
-- **2026-09-14** — (§14.4, §18); RULED: a link to a Google Drive file keeps the link and the harvest is the OpenDocument export, from which content is extracted (§16). - v0.12, 2026-09-14.  
   `docs/architecture/BIO_Content_Framework_v0_10.md:103`
+- **2026-09-14** — (§14.4, §18); RULED: a link to a Google Drive file keeps the link and the harvest is the OpenDocument export, from which content is extracted (§16). - v0.12, 2026-09-14.  
+  `docs/architecture/BIO_Content_Framework_v0_10.md:104`
 - §12.1 is CORRECTED — a member-scoped aspiration is not a declared bias — and §13 integrates the doctrine properly.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:129`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:130`
 - **2026-07-30** — RULED by Bob, 2026-07-30. **BIO exists to support members in all aspects of case development.** Every construct in this document is instrumental to that and none is an end in itself. A capture nobody can build a case on is waste, however faithfully it was hashed.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:235`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:236`
 - **2026-07-30** — RULED by Bob, 2026-07-30. The meeting chain — scheduled meeting, agenda, attendance, minutes — is ONE form of connected data and not the general case. His example of another: a mention of a need, a budget request, a budget approval, an RFP, responses to it, a contract award, a signed contract with terms, and onward…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:735`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:736`
 - **2026-07-30** — RULED by Bob, 2026-07-30. The system must support humans and their AI assistants defining goals at a high level, turning them into objectives and aspirations, and working to achieve the goals **and everything discovered along the way**.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:902`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:903`
 - **2026-07-30** — RULED by Bob, 2026-07-30. This level of support is central to what a member should expect from BIO, and it is safe for a specific structural reason: **a focus is informative, advisory and supportive of a project's development. It commits nobody.** Its states are `surfaced → elevated → deferred → dismissed`, and…  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1008`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1009`
 - **2026-07-30** — RULED by Bob, 2026-07-30. The record carries `surfaced_by: agent` either way; the ruling is that the surface has to communicate it too. This is not a discount applied to the question. A good question stands on its merits whoever asked it, and a member weighing one needs to know that  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1041`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1042`
 - **2026-07-30** — RULED by Bob, 2026-07-30: an aspiration may be scoped at the group, the project, or the member level. | scope | whose commitment | what it shapes | changing it |  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1057`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1058`
 - **2026-07-30** — RULED by Bob, 2026-07-30, and for two reasons that are stronger than tolerance: - **We may not realise that they contradict.** The contradiction is the discovery.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1073`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1074`
 - was DECIDED — but its contrast partner was wrong, and the table below is > corrected to three rows rather than two.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1326`
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1327`
 - built" is CORRECTED rather than deleted: what it recorded was the design bet that the flavour table is a PARAMETER, and the bet paid.  
-  `docs/architecture/BIO_Content_Framework_v0_10.md:1796`
-- **2026-09-14** — RULED by Bob, 2026-09-14: a link to a Google Drive file KEEPS THE LINK, and the harvest is the OpenDocument export, from which the content is extracted.** So the record holds the Drive address as the citation of where the document lives, the ODF bytes as the capture with an honest hop (export address, format,…  
   `docs/architecture/BIO_Content_Framework_v0_10.md:1797`
+- **2026-09-14** — RULED by Bob, 2026-09-14: a link to a Google Drive file KEEPS THE LINK, and the harvest is the OpenDocument export, from which the content is extracted.** So the record holds the Drive address as the citation of where the document lives, the ODF bytes as the capture with an honest hop (export address, format,…  
+  `docs/architecture/BIO_Content_Framework_v0_10.md:1798`
 - **2026-08-01** — [RULED 2026-08-01: the subject vocabulary is the registry's, and the malformedness rule is the constraint](#ruled-2026-08-01-the-subject-vocabulary-is-the-registrys-and-the-malformedness-rule-is-the-constraint)  
   `docs/architecture/BIO_Declared_Bias_v0_1.md:22`
 - **2026-08-01** — [RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT](#ruled-2026-08-01-a-hunch-is-temporary-declared-bias-and-it-is-hunch-debt) - [The bias acknowledgement, authored at export](#the-bias-acknowledgement-authored-at-export) - [Differential traversal and the cross-group…  
