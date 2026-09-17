@@ -288,3 +288,6 @@ _work-ab0036/
 # enough on its own. Added to this item's CLAIMS block at the close rather than
 # taken silently.
 bio-plane/test/.nc-rec102-pristine/
+
+# M0-35 worker scratch: the CPU-currency probes generate a worker script here.
+bio-plane/.m035-pen/

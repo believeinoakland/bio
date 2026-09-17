@@ -10771,3 +10771,40 @@ note: **A SELF-INFLICTED CONTAMINATION IS REPORTED RATHER THAN QUIETLY REDONE.**
   **That run was DISCARDED and the battery re-measured on the settled tree**; both figures
   are in the report. Nothing outside this worktree was touched and no process outside it was
   signalled — the run was allowed to finish rather than killed, so no PID was sent anything.
+
+## CLAIM 2026-09-16 M0 (M0-35 — the reference-iteration CPU currency is not runtime-portable, D-368)
+session: M0-35 worker (worktree `agent-af799694331ecc8d3`, branch **`worktree-agent-af799694331ecc8d3`**, base `origin/main` `82ab002c`)
+opened: 2026-09-16T00:00:00Z
+paths:
+  `tools/m035-refiter-census.mjs` (NEW) — the census of every figure quoted in this currency.
+    A tool rather than a grep because the row asks how many figures exist, where they live and
+    how many are ATTRIBUTABLE NOW, and because the cheap defeat the row names is a sweep that
+    matches a convenient set and reports 100% over it. It prints its corpus and its reach
+    BEFORE any result and names its own blind spot on every run.
+  `bio-plane/test/m035-cpu-currency-probe.mjs` (NEW) — the 2x2 that separates RUNTIME from
+    CODE SHAPE. Deliberately NOT a `.test.mjs`: it is a timing probe that refuses a busy
+    machine, so the discovering runner must not pick it up and no suite floor moves (the
+    `ocr-measure-probe.mjs` / `fl1-cpu-probe.mjs` precedent, both of which sit in this
+    directory under exactly this convention).
+  `bio-plane/.m035-pen/` — scratch for the probe's generated worker, INSIDE this worktree
+    (WORKER.md: the shared scratchpad is not isolated between sessions). Gitignored, swept.
+  `docs/development/MEASUREMENTS.md` — **ONE APPENDED section** carrying the 2x2 and its
+    controls. **The existing M-20 block at ~12,536 and the CONTENT-PDF OCR block at ~1,373
+    are NOT edited by this item** — see the note below on why that is a boundary and not
+    timidity.
+  `docs/development/DEBT.md` — **the D-368 row's disposition only**, and any row this item's
+    measurement opens. No other row is edited.
+  `docs/development/CLAIMS.md` — this block, and a DELEGATION if the measurement obliges one.
+  `docs/development/QUEUE.md` — NOT TOUCHED. The M0-35 row's `landed:` names a merge sha that
+    does not exist until CONDUCT merges; writing it here would publish a claim ahead of the
+    act, which is the gap every wrong status in this project has lived in.
+note: **THE OCR ROW AND M-20 ARE ANOTHER AREA'S FIGURES AND THIS ITEM DOES NOT RE-TAKE THEM.**
+  `MEASUREMENTS.md` ~1,373 is CONTENT-PDF's (CPDF-9/CPDF-10, 2026-08-03) and ~12,536 is
+  M0-31's. The row is explicit — *do NOT re-take another area's figure from outside it; where
+  a figure needs re-denominating, file a DELEGATION to its owner* — and M0-31 declined exactly
+  this and was right to. Where this item finds a figure whose reading changes, it files the
+  DELEGATION with the measurement attached rather than editing the number.
+note: **THIS CLAIM IS ON A MEASUREMENT, SO IT COMMITS NO PLANE CODE.** No file under
+  `bio-plane/src/`, `bio-plane/checks/`, `bio-plane/scripts/`, `civicos-ui/`, `newgroup/` or
+  `release/` is opened. `bio-plane/src/cpu.mjs` is READ ONLY — the probe IMPORTS `burn()` from
+  it and never retypes it, for the reason M0-31 gave and this item is testing.

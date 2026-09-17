@@ -1,0 +1,60 @@
+provenance: HEAD=82ab002ccd3aabcce43a7af824773d2763ca540d worktree=agent-af799694331ecc8d3 item=M0-35 started=2026-09-17T02:03:11Z
+M0-35 — RUNTIME vs CODE SHAPE in the reference-iteration currency
+==============================================================================
+machine: darwin/arm64  node v26.0.0
+rungs: 10,000,000, 20,000,000, 40,000,000 iterations · reps: 5 (median) · warm-up: 5,000,000
+started: 2026-09-17T02:03:11.974Z
+
+dispatch round-trip floor (noop, median of 25), subtracted from both workerd arms: 1.010 ms
+
+PER-RUNG, all four arms (iterations per millisecond):
+
+| iterations | A node·fn | B node·inline | C workerd·fn | D workerd·inline |
+| --- | --- | --- | --- | --- |
+| 10,000,000 | 18,552 | 18,350 | 116,803 | 116,041 |
+| 20,000,000 | 18,560 | 18,576 | 117,426 | 117,375 |
+| 40,000,000 | 18,376 | 18,411 | 119,009 | 121,064 |
+
+the same rows as raw medians in ms (workerd shown UNSUBTRACTED too, so the noop subtraction is auditable):
+| iterations | A ms | B ms | C ms (raw) | D ms (raw) |
+| --- | --- | --- | --- | --- |
+| 10,000,000 | 539.0 | 544.9 | 85.6 (86.6) | 86.2 (87.2) |
+| 20,000,000 | 1077.6 | 1076.6 | 170.3 (171.3) | 170.4 (171.4) |
+| 40,000,000 | 2176.7 | 2172.6 | 336.1 (337.1) | 330.4 (331.4) |
+
+THE 2x2, as mean iter/ms over the rungs:
+
+|            | function-call form | inlined form |
+| --- | --- | --- |
+| **node**    | A 18,496 | B 18,446 |
+| **workerd** | C 117,746 | D 118,160 |
+
+THE TWO EFFECTS, SEPARATED — this is the whole point of the probe:
+  RUNTIME effect, shape held at function-call ... C/A = 6.37x
+  RUNTIME effect, shape held at inlined ........ D/B = 6.41x
+  SHAPE   effect, runtime held at node ......... B/A = 1.00x
+  SHAPE   effect, runtime held at workerd ...... D/C = 1.00x
+  D-368's DIAGONAL (both at once, node·fn vs workerd·inline) ... D/A = 6.39x
+
+miniflare-hosted workerd, Date.now() across 20,000,000 synchronous iterations, measured FROM INSIDE: 165 ms
+  (cpu.mjs records that DEPLOYED Workers freeze this clock. What miniflare does is printed, not assumed.)
+
+NEGATIVE CONTROL ARMS
+==============================================================================
+1. NOISE FLOOR (same runtime, same shape, twice) — declared: must AGREE within 20%.
+   first 18,376 iter/ms · second 18,747 iter/ms · spread 2.0%
+   ACTUAL: AGREE — the probe's noise floor is below the effects above
+
+2. TIMING THE LOOP, NOT THE HARNESS — declared: a loop with a DIFFERENT multiplier
+   must return a DIFFERENT x than the reference loop at the same iteration count.
+   reference x = 1764068477 · wrong-multiplier x = 89246137
+   ACTUAL: DIFFER — the probe is timing the loop body
+
+3. OVER-STRICTNESS (correct work in an unanticipated spelling must PASS) — declared:
+   all four arms must compute the SAME x at 10,000,000 iterations. If they differ they are
+   not the same computation and no timing comparison between them means anything.
+   A(node·fn)=1764068477  B(node·inline)=1764068477  C(workerd·fn)=1764068477  D(workerd·inline)=1764068477
+   ACTUAL: ALL IDENTICAL — the four arms run the same computation
+
+finished: 2026-09-17T02:04:11.477Z
+PROBE_OWN_EXIT=0

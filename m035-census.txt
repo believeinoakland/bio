@@ -1,0 +1,121 @@
+M0-35 REFERENCE-ITERATION CURRENCY CENSUS
+==============================================================================
+REACH (printed before any result, so the corpus is auditable):
+  files walked ..................... 741
+  directories skipped by name ...... 9  (node_modules, .git, dist, release)
+  files skipped by extension ....... 35
+  GENERATED files excluded ......... 4  (docs/DECIDED.md, newgroup/src/release.mjs, tools/m035-refiter-census.mjs, bio-plane/test/m035-cpu-currency-probe.mjs)
+  files mentioning the currency .... 23
+  extensions walked ................ .md .mjs .js .json .ts .jsonc
+
+--- RATE — 9 sites (9 live, 0 archived) ---
+         docs/development/CLAIMS.md:7834  [25,032] runtime=UNDETERMINED
+         **A FINDING ABOUT THE PROJECT'S OWN CPU CURRENCY, reported and NOT acted on because it is not this item's row.** `cpu.mjs`'s `burn()` on this machine,
+         docs/development/DEBT.md:312  [25,032] runtime=UNDETERMINED
+         | D-368 | defect | 2026-09-15 | **THE REFERENCE-ITERATION CPU CURRENCY IS NOT RUNTIME-PORTABLE, AND EVERY FIGURE QUOTED IN IT COMPARES ACROSS RUNTIMES
+         docs/development/MEASUREMENTS.md:1373  [26,036] runtime=UNDETERMINED
+         iterations (`cpu.mjs` `burn()`) = 1,536 ms on this machine (26,036 iter/ms)**.
+         docs/development/MEASUREMENTS.md:12536  [25,032] runtime=UNDETERMINED
+         `cpu.mjs`'s `burn()`, **this machine, same process, same minute**: **25,032 iter/ms in
+         docs/development/MEASUREMENTS.md:12537  [155,538] runtime=workerd
+         node**, **155,538 iter/ms inside workerd** — a factor of **6.21**. CONTENT-PDF recorded
+         docs/development/MEASUREMENTS.md:12538  [26,036] runtime=node
+         **26,036 iter/ms** as a node proxy on 2026-08-03, which this run's node half
+         docs/development/QUEUE.md:826  [25,032] runtime=UNDETERMINED
+         landed: `e194590`, merged at `3d6ffe3`. **The four numbers, measured THROUGH THE PLANE'S OWN EXTRACTORS rather than a reimplementation** (`detectForma
+         docs/development/QUEUE.md:960  [25,032] runtime=UNDETERMINED
+         ### M0-35 · running — spawned 2026-09-16 by CONDUCT #1, Opus 5, worktree-isolated, the M0 background lane, which holds no slot (the reference-iteratio
+         tools/m031-index-measure.mjs:886  [26,036] runtime=UNDETERMINED
+         26,036 iter/ms) was a NODE proxy, and quoting a workerd figure against it
+
+--- COUNT — 14 sites (10 live, 4 archived) ---
+         bio-plane/test/ocr-measure-probe.mjs:15  [40M] runtime=UNDETERMINED
+         *      ceiling's own currency (op=cpuprobe measured 40M iterations fit on Free);
+         bio-plane/test/ocr-measure-probe.mjs:221  [40,000,000] runtime=UNDETERMINED
+         console.log(`\nCALIBRATION: 40,000,000 reference iterations (cpu.mjs burn) = ${calMs.toFixed(0)} ms on this machine (${Math.round(iterPerMs).toLocaleS
+         docs/development/DEBT.md:54  [2,000,000] runtime=UNDETERMINED
+         | D-56 | unverified | 2026-07-29 | **CPU headroom: MEASURED 2026-07-29, and the worry was unfounded on the numbers available. HELD OPEN DELIBERATELY a
+         docs/development/DEBT.md:236  [54M] runtime=UNDETERMINED
+         | D-245 | gap | 2026-08-08 | **CPDF-12 PRODUCED NO WORKER CPU FIGURE AND NO ISOLATE MEMORY FIGURE, WHICH IS EXACTLY WHAT ITS QUEUE ROW ASKED FOR, AND 
+         docs/development/MEASUREMENTS.md:24  [40,000,000] runtime=UNDETERMINED
+         | CPU | **40,000,000 reference iterations fit**; killed during the next 2,000,000 | `op=cpuprobe`, 20 steps completed, HTTP 503 `error code: 1102`, ch
+         docs/development/MEASUREMENTS.md:1386  [54M] runtime=UNDETERMINED
+         **Reading: one 300-dpi page costs ~17–54M reference-iteration equivalents
+         docs/development/MEASUREMENTS.md:3108  [40,000,000] runtime=UNDETERMINED
+         | `fl1-burn` | 40,000,000 reference iterations | 1,078 ms | **1,071.01 ms** | 1.75 MB |
+         docs/development/MEASUREMENTS.md:9421  [40,000,000] runtime=UNDETERMINED
+         its run of record 2026-09-11 on this machine (calibration 40,000,000 ref-iter = 1,450 ms);
+         docs/development/MEASUREMENTS.md:12517  [40M] runtime=UNDETERMINED
+         The measured per-invocation window is 40M reference iterations (`op=cpuprobe`,
+         tools/m031-index-measure.mjs:974  [40M] runtime=UNDETERMINED
+         `The measured per-invocation window is 40M reference iterations, which at this ` +
+  [arch] docs/archive/ledgers/CLAIMS-2026-08.md:2553  [40,000,000] runtime=UNDETERMINED
+         concurrency: no live claim names any `bio-plane/test/fl1-*` path — every one is NEW. The two live RECORD claims are on `bio-plane/src/store.mjs` by SI
+  [arch] docs/archive/ledgers/DECISIONS-2026-08.md:2449  [54M] runtime=UNDETERMINED
+         It was never blocked on size; it was blocked on the ~17–54M reference-iterations per
+  [arch] docs/archive/ledgers/QUEUE-2026-08.md:1250  [54M] runtime=UNDETERMINED
+         landed: (merge on main, worker 3ec9a41) — MEASUREMENTS.md 2026-08-03 + probe bio-plane/test/ocr-measure-probe.mjs (re-runs every number). Named doc: l
+  [arch] docs/archive/research/MACHINE-PROCESSES.md:255  [40,000,000] runtime=UNDETERMINED
+         - **40,000,000 reference iterations of CPU**, MEASURED — killed during the next
+
+--- MENTION-NO-FIGURE — 99 sites in 21 files ---
+  (the currency is NAMED but no figure is quoted: plumbing, op dispatch, prose.
+   Listed per file rather than per line — these are not figures and owe no stamp.)
+  bio-plane/scripts/op-claims.mjs  x2
+  bio-plane/src/affordances.mjs  x1
+  bio-plane/src/cpu.mjs  x6
+  bio-plane/src/index.mjs  x11
+  bio-plane/src/store.mjs  x4
+  bio-plane/test/cpdf15-tesseract-runtime.probe.mjs  x1
+  bio-plane/test/fl1-cpu-probe.mjs  x6
+  bio-plane/test/ocr-measure-probe.mjs  x4
+  bio-plane/test/plane-envelope.test.mjs  x1
+  bio-plane/test/subresources.test.mjs  x8
+  docs/archive/ledgers/CLAIMS-2026-08.md  x2
+  docs/archive/ledgers/DECISIONS-2026-08.md  x1
+  docs/archive/ledgers/QUEUE-2026-08.md  x1
+  docs/archive/research/CAPABILITIES.md  x4
+  docs/archive/research/PROCESS-CATALOGUE.md  x2
+  docs/development/CIVICOS_UI_STATE.md  x1
+  docs/development/CLAIMS.md  x4
+  docs/development/MEASUREMENTS.md  x21
+  docs/development/QUEUE.md  x3
+  docs/development/research/DATA-MODEL.md  x1
+  tools/m031-index-measure.mjs  x15
+
+--- DERIVED (the class the matcher CANNOT see; hand-adjudicated) ---
+  docs/development/MEASUREMENTS.md:~1373  runtime=node  via 26,036 iter/ms
+      OCR per-page ms -> ref-iter, whole table (8 cells)
+      proof: 'Node-proxy medians (5 warm runs/page), calibrated: 40,000,000 reference iterations = 1,536 ms on this machine (26,036 iter/ms)'
+  docs/development/MEASUREMENTS.md:~1376  runtime=node  via 26,036 iter/ms
+      'the ceiling's currency converts on this machine to ~1.54 s'
+      proof: same calibration sentence; 40M / 26,036 = 1,536 ms
+  docs/development/MEASUREMENTS.md:~12518  runtime=workerd (miniflare)  via 155,538 iter/ms
+      'the 40M window ... at this run's workerd rate is 257 ms'
+      proof: 'The workerd rate is the one used above, because the work being converted runs in workerd'
+  docs/development/MEASUREMENTS.md:~12501  runtime=workerd (miniflare)  via 155,538 iter/ms
+      promote ladder 'ref-iter/unit' column (6 rows) + '% of the 40M window' (6 rows)
+      proof: same sentence as above
+  docs/development/MEASUREMENTS.md:~12523  runtime=workerd (miniflare)  via 155,538 iter/ms
+      predicted-ms / %-of-window table (4 rows) from ms = 0.0076*units + 0.054*KiB
+      proof: 'The measured per-invocation window is 40M reference iterations ... which at this run's workerd rate is 257 ms'
+
+SUMMARY
+==============================================================================
+  RATE figures (NOT portable; need a stamp) .......... 9
+    of which the line/context names a runtime ........ 2
+    UNDETERMINED .................................... 7
+  COUNT figures (portable; a stamp is NOT owed) ...... 14
+  DERIVED figure GROUPS (hand-adjudicated) .......... 5
+
+WHAT THIS CENSUS CANNOT SEE, and it is the load-bearing paragraph:
+  - Any DERIVED figure not in the hand list. A derived figure is spelled
+    `257 ms` and nothing in it says a rate was applied. The hand list was
+    built by reading every RATE site's surrounding prose; a derived figure
+    whose rate was applied SILENTLY, in a document that never names the
+    currency, is invisible to both halves and is honestly UNDETERMINED.
+  - Figures inside `dist/` and `release/` bundles (generated; excluded).
+  - Figures in a non-walked extension, and any figure in an image or table
+    image. Extensions walked are printed above.
+  - Whether a COUNT is portable IN PRACTICE for non-burn work: a count is
+    portable as a count, but converting OTHER work into it needs a rate.

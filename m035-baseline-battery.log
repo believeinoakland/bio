@@ -1,0 +1,247 @@
+provenance: HEAD=82ab002ccd3aabcce43a7af824773d2763ca540d worktree=agent-af799694331ecc8d3 item=M0-35 label=m035-baseline-battery.log started=2026-09-17T01:54:33Z
+
+> bio-plane@0.58.0 test:battery
+> node scripts/battery.mjs
+
+
+temp sweep: 3 orphan(s) removed, 46 live or too recent to be sure (spared)
+
+battery: 208 suites (200 plane · 8 fleet)
+
+  ok    acquire.test.mjs                    10183ms  84 pass
+  ok    action-loop.test.mjs                  853ms  82 pass
+  ok    admission-gate.test.mjs               630ms  43 pass
+  ok    affordances.test.mjs                  756ms  89 pass
+  ok    aicredential.test.mjs                 862ms  90 pass
+  ok    airun-projectgate.test.mjs            782ms  47 pass
+  ok    airun.test.mjs                        765ms  126 pass
+  ok    airuns.test.mjs                       833ms  52 pass
+  ok    analystvocab.test.mjs                  82ms  112 pass
+  ok    archive-monitoring.test.mjs          4188ms  22 pass
+  ok    attest.test.mjs                      3016ms  48 pass
+  ok    audit.test.mjs                        744ms  18 pass
+  ok    basis.test.mjs                        553ms  29 pass
+  ok    battery-provenance.test.mjs          2444ms  23 pass
+  ok    battery-residue.test.mjs             5884ms  46 pass
+  ok    bias.test.mjs                         744ms  127 pass
+  ok    bootstrap.test.mjs                   1018ms  18 pass
+  ok    bounds.test.mjs                      3166ms  167 pass
+  ok    browse.test.mjs                       626ms  41 pass
+  ok    bundle.test.mjs                      1089ms  assertions unknown
+  ok    calibration.test.mjs                 1063ms  110 pass
+  ok    capability.test.mjs                   729ms  63 pass
+  ok    capture-container-extent.test.mjs    1130ms  47 pass
+  ok    capture-pagecount.test.mjs            650ms  22 pass
+  ok    capture-progressions.test.mjs         767ms  13 pass
+  ok    capture-text-index.test.mjs           785ms  41 pass
+  ok    capture.test.mjs                      565ms  19 pass
+  ok    capturerequests.test.mjs              859ms  99 pass
+  ok    case-opened.test.mjs                  901ms  29 pass
+  ok    caseflip.test.mjs                    1014ms  58 pass
+  ok    caselifecycle.test.mjs               1049ms  68 pass
+  ok    caseobject.test.mjs                   779ms  19 pass
+  ok    casepin.test.mjs                      880ms  34 pass
+  ok    caseproduction.test.mjs               988ms  74 pass
+  ok    casesign.test.mjs                     992ms  54 pass
+  ok    cdx.test.mjs                           68ms  37 pass
+  ok    check-firing.test.mjs                 143ms  100 pass
+  ok    cite-extent.test.mjs                  766ms  47 pass
+  ok    cite.test.mjs                        1121ms  73 pass
+  ok    citeinquiry.test.mjs                  709ms  50 pass
+  ok    citeproject-inquiry.test.mjs          726ms  37 pass
+  ok    claudecascade.test.mjs                 94ms  10 pass
+  ok    conclude.test.mjs                     709ms  50 pass
+  ok    conformance.test.mjs                  593ms  56 pass
+  ok    connection-derive-sweep.test.mjs     1590ms  26 pass
+  ok    connection.test.mjs                   646ms  41 pass
+  ok    content-arm.test.mjs                  744ms  107 pass
+  ok    content-capture-bound.test.mjs        666ms  33 pass
+  ok    content-extent-arms.test.mjs          712ms  64 pass
+  ok    content-extent-leg.test.mjs           710ms  53 pass
+  ok    content-extent.test.mjs               721ms  60 pass
+  ok    content-machine-mint.test.mjs         722ms  45 pass
+  ok    content-reads.test.mjs                830ms  70 pass
+  ok    corpuscheck.test.mjs                   97ms  70 pass
+  ok    counterparty.test.mjs                 584ms  39 pass
+  ok    coverage-provenance.test.mjs         1531ms  29 pass
+  ok    current.test.mjs                      804ms  63 pass
+  ok    d266scope.test.mjs                    729ms  38 pass
+  ok    d280-strengthbar.test.mjs            1148ms  34 pass
+  ok    d315-guard-witness.test.mjs          1468ms  25 pass
+  ok    d322-floor-gate-witness.test.mjs      116ms  16 pass
+  ok    d334-monitor-credential.test.mjs     8491ms  45 pass
+  ok    daemon-token.test.mjs               12793ms  56 pass
+  ok    dec65-single-part.test.mjs           1165ms  37 pass
+  ok    dec65-strength-reach.test.mjs        1219ms  27 pass
+  ok    declared-corpus.test.mjs              142ms  33 pass
+  ok    deploybindings.test.mjs                71ms  20 pass
+  ok    derivation-bounds.test.mjs           1085ms  58 pass
+  ok    disposition.test.mjs                 1238ms  47 pass
+  ok    divide.test.mjs                       892ms  82 pass
+  ok    doorbell.test.mjs                    1012ms  36 pass
+  ok    drive.test.mjs                        810ms  160 pass
+  ok    earnedbasis.test.mjs                  710ms  54 pass
+  ok    edges.test.mjs                        945ms  50 pass
+  ok    empty-body.test.mjs                   604ms  10 pass
+  ok    entityregistry.test.mjs               619ms  47 pass
+  ok    extractrun.test.mjs                   699ms  62 pass
+  ok    fence-e2e.test.mjs                    901ms  55 pass
+  ok    fence.test.mjs                        783ms  33 pass
+  ok    fleetbundles.test.mjs                2799ms  87 pass
+  ok    fleetposture.test.mjs                  73ms  23 pass
+  ok    formats-docx.test.mjs                 127ms  82 pass
+  ok    formats-odf.test.mjs                  754ms  140 pass
+  ok    formats-pptx.test.mjs                 152ms  116 pass
+  ok    formats-xlsx.test.mjs                 731ms  88 pass
+  ok    formats.test.mjs                      632ms  35 pass
+  ok    framework-digest-audit.test.mjs       665ms  21 pass
+  ok    gate-reads.test.mjs                   930ms  115 pass
+  ok    gathering.test.mjs                    619ms  40 pass
+  ok    governor.test.mjs                     699ms  37 pass
+  ok    grounds.test.mjs                      948ms  68 pass
+  ok    hygiene.test.mjs                     7327ms  759 pass
+  ok    identity-claims.test.mjs              716ms  32 pass
+  ok    inbox.test.mjs                        689ms  71 pass
+  ok    independence.test.mjs                1025ms  14 pass
+  ok    inquiry.test.mjs                     1129ms  34 pass
+  ok    inquiryground.test.mjs                957ms  81 pass
+  ok    inquirystrength.test.mjs              881ms  68 pass
+  ok    installer.test.mjs                   3336ms  30 pass
+  ok    leadslug.test.mjs                     918ms  72 pass
+  ok    livefire.test.mjs                    1098ms  assertions unknown
+  ok    m025-arm-anchor-witness.test.mjs     1635ms  24 pass
+  ok    machine-fences.test.mjs              1318ms  47 pass
+  ok    machinefences-dec49.test.mjs          137ms  61 pass
+  ok    meaning-bounds.test.mjs               813ms  92 pass
+  ok    meaningquery.test.mjs                 729ms  105 pass
+  ok    meaningread.test.mjs                  840ms  115 pass
+  ok    mechanical.test.mjs                  8559ms  44 pass
+  ok    members.test.mjs                      942ms  93 pass
+  ok    membership.test.mjs                   691ms  97 pass
+  ok    mergecarry.test.mjs                 22506ms  58 pass
+  ok    migrate.test.mjs                     1048ms  40 pass
+  ok    mintid.test.mjs                      2450ms  83 pass
+  ok    monitor-cadence.test.mjs            13684ms  59 pass
+  ok    multicase.test.mjs                    152ms  20 pass
+  ok    multifinding.test.mjs                1128ms  84 pass
+  ok    observation-content.test.mjs          741ms  52 pass
+  ok    observation-log.test.mjs              818ms  72 pass
+  ok    observation-meaning.test.mjs          739ms  57 pass
+  ok    ocr-member-e2e.test.mjs             12267ms  64 pass
+  ok    ooxml.test.mjs                        122ms  167 pass
+  ok    op-claims.test.mjs                   5199ms  35 pass
+  ok    overdue-successor.test.mjs           1200ms  22 pass
+  ok    owed-controls.test.mjs               9384ms  41 pass
+  ok    pdf-worker-binding.test.mjs          1664ms  12 pass
+  ok    pdfstructure-op.test.mjs              559ms  29 pass
+  ok    pdfstructure.test.mjs                 105ms  94 pass
+  ok    pipeline-e2e.test.mjs                 847ms  53 pass
+  ok    plane-envelope.test.mjs              1588ms  60 pass
+  ok    planning-hygiene.test.mjs            2649ms  328 pass
+  ok    producer-provenance.test.mjs          650ms  58 pass
+  ok    profile.test.mjs                      628ms  25 pass
+  ok    progression-exception.test.mjs        651ms  36 pass
+  ok    progression-instance.test.mjs         674ms  37 pass
+  ok    projection.test.mjs                   540ms  35 pass
+  ok    projects.test.mjs                     777ms  114 pass
+  ok    proposals-feed.test.mjs               692ms  20 pass
+  ok    proposedispose.test.mjs               683ms  27 pass
+  ok    provenance-chain.test.mjs             948ms  63 pass
+  ok    provenance-marker.test.mjs           1010ms  113 pass
+  ok    publish.test.mjs                     1721ms  99 pass
+  ok    publishedcase.test.mjs               1021ms  100 pass
+  ok    purge.test.mjs                        699ms  14 pass
+  ok    query.test.mjs                         86ms  133 pass
+  ok    queue-conditions.test.mjs             970ms  51 pass
+  ok    queue-state.test.mjs                  943ms  66 pass
+  ok    queue.test.mjs                        875ms  36 pass
+  ok    ratify-envelope.test.mjs             1023ms  35 pass
+  ok    ratify.test.mjs                       795ms  37 pass
+  ok    reachability.test.mjs                 696ms  40 pass
+  ok    reading-position.test.mjs             697ms  63 pass
+  ok    reading-wire.test.mjs                2180ms  55 pass
+  ok    reading.test.mjs                      688ms  30 pass
+  ok    readingname.test.mjs                 1486ms  100 pass
+  ok    reevaluation.test.mjs                1013ms  63 pass
+  ok    refusal-wire.test.mjs                1034ms  23 pass
+  ok    refuse-gate.test.mjs                  694ms  61 pass
+  ok    register-grammar.test.mjs             272ms  29 pass
+  ok    release.test.mjs                      618ms  31 pass
+  ok    reopen.test.mjs                      1313ms  58 pass
+  ok    repair-reachability.test.mjs          984ms  43 pass
+  ok    resolution.test.mjs                   646ms  39 pass
+  ok    resolveversion.test.mjs               100ms  11 pass
+  ok    reuse-ratify.test.mjs                 828ms  36 pass
+  ok    run-conditions.test.mjs               758ms  58 pass
+  ok    rung-ladder.test.mjs                  255ms  47 pass
+  ok    scheduler.test.mjs                   2654ms  48 pass
+  ok    search.test.mjs                      2641ms  182 pass
+  ok    selection.test.mjs                   1971ms  65 pass
+  ok    setup-honesty.test.mjs                 70ms  6 pass
+  ok    severedhomes.test.mjs                 721ms  14 pass
+  ok    shadowed-refusals.test.mjs            994ms  44 pass
+  ok    signpage.test.mjs                     311ms  35 pass
+  ok    skilldoctrine.test.mjs                600ms  43 pass
+  ok    skillpack.test.mjs                    597ms  46 pass
+  ok    skillprohibitions.test.mjs            642ms  30 pass
+  ok    skillsequencing.test.mjs              545ms  27 pass
+  ok    sshsig.test.mjs                        85ms  18 pass
+  ok    store.test.mjs                        535ms  43 pass
+  ok    strength.test.mjs                     865ms  42 pass
+  ok    strengthpair.test.mjs                 811ms  91 pass
+  ok    subresources.test.mjs                1089ms  344 pass
+  ok    sufficiency-state.test.mjs            676ms  39 pass
+  ok    suggest.test.mjs                     1458ms  96 pass
+  ok    surfaced-by.test.mjs                  629ms  8 pass
+  ok    tally-through-pipe.test.mjs           322ms  13 pass
+  ok    task-drain-alarm.test.mjs            1349ms  19 pass
+  ok    task-fence.test.mjs                  1045ms  19 pass
+  ok    task-machine.test.mjs                 862ms  32 pass
+  ok    textchain.test.mjs                   1230ms  197 pass
+  ok    tier-pagewise.test.mjs                170ms  86 pass
+  ok    tier2-wire.test.mjs                  6480ms  45 pass
+  ok    tier3-layer-parts.test.mjs            633ms  25 pass
+  ok    unattended-lease.test.mjs             892ms  22 pass
+  ok    versionchain.test.mjs                1114ms  91 pass
+  ok    versions.test.mjs                     848ms  78 pass
+  ok    versionstate.test.mjs                1099ms  89 pass
+  ok    waitquiet.test.mjs                   1013ms  7 pass
+  ok    walkfigure.test.mjs                   600ms  32 pass
+  ok    walkfloor.test.mjs                   6143ms  44 pass
+  ok    agent-worker/agent-worker.test.mjs   1428ms  113 pass
+  ok    agent-worker/cascade.test.mjs         399ms  29 pass
+  ok    agent-worker/fanout.test.mjs         1505ms  182 pass
+  ok    agent-worker/harness.test.mjs        2276ms  221 pass
+  ok    agent-worker/wire-vocabulary.test.mjs     73ms  83 pass
+  ok    ocr-worker/ocr-worker.test.mjs      11140ms  70 pass
+  ok    pdf-worker/pagepixels.test.mjs       4213ms  63 pass
+  ok    pdf-worker/pdf-worker.test.mjs       1848ms  48 pass
+
+208/208 suites green · 13035 assertions passing · 321.2s
+  2 suite(s) reported no assertion count: bundle.test.mjs, livefire.test.mjs
+fleet: 3 members beside the plane · 8 suite(s) discovered · 3 member(s) actually RAN
+provenance: 211 of 211 discovered item(s) are in the commit at HEAD (82ab002c) · 208 suite(s) run · 3 fleet manifest(s)
+temp: this run left 0 directories holding 0 miniflare sandboxes INSIDE $TMPDIR (was 0/0 before the suites ran) · host orphans 46 -> 41
+outside the fence: 3 shared temp root(s) walked to depth 4 · 104615 top-level entries · 0 HELD by this run · 2 moved while it ran · 0 standing workerd ground(s)
+  roots: /private/tmp, /private/var/folders/94/s7t7g4q16r186k45nzdbdfrw0000gn/T, /private/var/tmp  (shown as the kernel resolves them: /private/X IS X)
+  HELD arm: 348 lsof sample(s) covering 208 of 208 suite(s)
+  UNVERIFIED beyond 250000 filesystem operations: the walk hit its budget, so every figure above is a FLOOR and not a total.
+  9 further shared entries (0.0 MB) not named here: mtime touched, no bytes written.
+  1 further shared entry (0.0 MB) not named here: another battery's fence.
+  41 further shared entries (86.1 MB) not named here: legacy orphan.
+  NAMED — the fenced figure above is a statement about $TMPDIR ONLY, and these are outside it (D-237):
+    /private/tmp/zeb_def_ipc_92287  0.0 MB · 0 file(s) · written 2026-09-17 01:59 .. 2026-09-17 01:59
+      APPEARED while this run ran · suite: tier2-wire.test.mjs · unfenced
+      not held by any descendant of this battery in 348 lsof sample(s)
+    /private/tmp/claude-501  42.4 MB · 404 file(s) · written 2026-08-15 18:32 .. 2026-09-17 02:00
+      CHANGED while this run ran · unfenced · deeper than the scan's depth: size is a floor
+      not held by any descendant of this battery in 348 lsof sample(s)
+  ATTRIBUTION, and it is three different claims: HELD BY THIS RUN is a pid chain from this
+  process to a process that had the path open — that one is ours. APPEARED and CHANGED are
+  CANDIDATES ONLY: a concurrent checkout of this repository writing into the same shared root
+  produces the identical observation, and one was measurably doing so when this was written.
+  PRE-EXISTING is NOT this run's and is named because accumulation is the finding — /tmp/mfp
+  sat unreported for eight days while the runner printed 0 directories, 0 sandboxes.
+
+BATTERY_OWN_EXIT=0
+finished=2026-09-17T02:00:35Z
