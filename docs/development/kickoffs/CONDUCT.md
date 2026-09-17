@@ -580,6 +580,35 @@ conversation) — **but the timer is SESSION-ONLY and expires in seven days, so 
 the durable half and the timer is the convenience.** A mechanism that dies with the session
 is not a mechanism; do not let its existence excuse not filling a slot yourself.
 
+**AND THE THING THIS PARAGRAPH PREDICTED THEN HAPPENED, WHICH IS WHY THERE IS NOW A TIMER AT A
+DIFFERENT LAYER.** Measured 2026-09-17 by BOB #12: CONDUCT closed a wave at 23:18 on the 16th and
+**sat IDLE FOR 9 HOURS 20 MINUTES with 23 runnable rows and zero workers.** Every board read green
+for the whole period — `plancheck` 0 fail 0 warn, no red suite, no blocked row, no alarm. **GREEN AND
+STOPPED LOOK IDENTICAL, and nothing in the estate distinguished them.**
+
+**The in-session timer could not have caught it and the paragraph above says why in its own words:
+it is SESSION-ONLY and dies with the session that created it.** The genuinely-idle case is the half
+that timer was supposed to cover, the genuinely-idle case is exactly what occurred, and it did not
+fire — because the session holding it had ended. *A mechanism that dies with the session is not a
+mechanism* was already written here, correctly, and the durable half was simply never built.
+
+**IT IS BUILT NOW, AND IT IS NOT IN THIS SESSION.** A scheduled task — `conduct-heartbeat`, stored on
+disk at `~/.claude/scheduled-tasks/conduct-heartbeat/SKILL.md` — fires every 20 minutes in a FRESH
+SESSION OF ITS OWN. That placement is the entire point and it fixes both halves at once: **a separate
+session's timer is not blocked by CONDUCT being mid-integration** (the reason the in-session cron
+never fired) **and it does not die when a CONDUCT session ends** (the reason nothing caught the
+9-hour stall). It is EDGE-TRIGGERED, not a blind poll: it does nothing when CONDUCT is busy, does
+nothing when the queue is empty, sends ONE message carrying the tip sha, the runnable count and the
+free disk when CONDUCT is idle with work waiting, and **makes a noise a human will see when there is
+no CONDUCT session at all** — which is the failure no session can report about itself.
+
+**WHAT THIS DOES NOT CHANGE, and the paragraph above is still the load-bearing half:** the heartbeat
+is a convenience for the case where nobody is watching, not a licence to stop filling slots yourself.
+It cannot run while the desktop app is closed — it fires on next launch instead — so an overnight
+stall is bounded by when the machine is next awake and not by twenty minutes. **Treat a heartbeat
+message as a turn, not as an instruction: sequencing stays yours, and if the right answer is that
+nothing should run, say so rather than spawning to satisfy a timer.**
+
 **THE STATE THE TIMER IS ACTUALLY FOR IS ZERO, NOT ONE-OF-N.** CONDUCT's first
 response to being told to add it was that a poll *"will answer full nearly every
 time"* — which is an argument that a check will usually find nothing, and this
