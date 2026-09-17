@@ -447,7 +447,8 @@ single wave.** The population is GROWING, which is what refuses the spot fix: re
 driver to satisfy the matcher is tuning the SUBJECT to fit the INSTRUMENT, and would leave
 eighteen invisible while making the nineteenth look handled.
 
-**THE RULE. Walk the DRIVERS and read which suites each one NAMES IN CODE** — prose blanked
+**THE RULE, RULED by M0-51 on 2026-09-17 under the determination this row delegated rather
+than returned. Walk the DRIVERS and read which suites each one NAMES IN CODE** — prose blanked
 through the estate's one lexer, exactly as D-277 and D-301 already require of this reader.
 The same-name sibling is KEPT as one way in rather than replaced, so the new rule is a
 structural SUPERSET: measured on the real tree, 52 suites had a driver under the old rule

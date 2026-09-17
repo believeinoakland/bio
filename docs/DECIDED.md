@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-984 rulings across 85 documents.
+985 rulings across 85 documents.
 
 ## DEC-
 
@@ -1300,6 +1300,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:859`
 - **M0-51** · 2026-09-17 — THE ROW'S OWN SCOPE FIGURE IS STALE AND IS CORRECTED HERE RATHER THAN LEFT FOR THE WORKER TO TRIP ON.** The row says TWELVE `*.control.mjs` files have no same-named `.test.mjs` sibling.  
   `docs/development/QUEUE.md:889`
+- **M0-51** · 2026-09-17 — THE RULE, RULED by M0-51 on 2026-09-17 under the determination this row delegated rather than returned.  
+  `docs/development/VERIFICATION.md:450`
 
 ## Rulings carrying no id
 

@@ -1204,9 +1204,18 @@ const REGISTER_FLOOR = {
      necessarily moves the census by one — the two ratchets in that file cannot move
      independently. Arithmetic on these figures is wrong in more ways than one.
      ONE KEY SET, grepped after writing: `^  arms:` matches twice, here and FLEET_FLOOR (76). */
-  arms: 1129,
-  classified: 201,
-  corpus: 202,
+  /* MOVED 2026-09-17 by M0-51 (1129 -> 1136 · 201 -> 202 · 202 -> 203): this item's own green
+     `--strict` run, taken AFTER its commit `e80d4993`, PRINTED `REGISTER FLOOR  arms 1136/1129 ·
+     classified 202/201 · corpus (suites read) 203/202 · GREW by 7 arm(s)` — READ FROM THE PRINT,
+     never incremented by hand, which is the only way this ratchet is allowed to move (D-238).
+     The cause is ONE new suite, `m051-driver-census.test.mjs`, declaring SEVEN arms: the driver
+     census's negative controls, all seven armed and as declared. Nothing FELL.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
+     `FLEET_FLOOR`, which is the documented state; `FLEET_FLOOR` is UNMOVED and none is owed —
+     this item adds no fleet member and no fleet suite. */
+  arms: 1136,
+  classified: 202,
+  corpus: 203,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
