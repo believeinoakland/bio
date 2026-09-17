@@ -11811,3 +11811,25 @@ paths:
   `INTERFACES.md` and IC-112's RESOLUTION. All three are named as owed acts with their actor in
   this item's report rather than left implied, because a note in a region nothing drains is not
   even a note.
+
+## CLAIM 2026-09-17 M0 (M0-54 — the first honest reading of D-288's branch signal)
+session: m0-54-branch-census (worktree `agent-affbb166b8b390e09`, branch `worktree-agent-affbb166b8b390e09`)
+opened: 2026-09-17T17:50:00Z
+paths:
+  `docs/development/DEBT.md` — **APPEND ONLY**: the `D-397` row, and nothing else. **NOT** D-288's
+  row — this item measures D-288's signal and does not re-dispose it; that is CONDUCT's or Bob's.
+  `docs/development/MEASUREMENTS.md` — **APPEND ONLY**: the `M-42` entry (the census, the
+  instrument, the three control arms). No existing entry edited.
+  `docs/development/CLAIMS.md` — this block.
+  **NOT `docs/development/QUEUE.md`** — the three unintegrated branches are ROWED in `DEBT.md`
+  because **`QUEUE.md` is CONDUCT's sole ground** (`CLAUDE.md`'s own table says so), and a worker
+  writing a queue row is the undeclared act `WORKER.md` forbids. The three integration items are
+  named as owed acts with their actor in this item's report rather than left implied.
+  **NOT** any file under `bio-plane/`, `civicos-ui/`, `newgroup/`, `pdf-worker/`, `ocr-worker/` or
+  `agent-worker/` — this item is a census over remote refs and the tree they point at, and it
+  changes no code. **NOT** a merge of any branch: M0-54 rows what it finds unintegrated and
+  **never merges it**, which is its own acceptance text.
+remote acts taken (outside any file, recorded here because a claim on paths cannot carry them):
+  six `worktree-agent-*` branches DELETED from `origin` under a content proof, each verified
+  afterwards from `git ls-remote` rather than from a local remote-tracking ref. No worktree was
+  removed, no branch was force-updated, and nothing was pushed to `main`.
