@@ -295,6 +295,25 @@ governor refusing is not the source failing. Two empty-body digests agreeing
 agree on nothing. A provenance hop a caller can hand us is one a caller can
 invent. All three are enforced structurally, not by convention.
 
+**AND THE COSTS-NOTHING RULE APPLIED TO TIME: A CLAIM YOU VERIFIED IS A CLAIM ABOUT THE
+MOMENT YOU VERIFIED IT, SO RE-ISSUING IT IS RE-ASSERTING IT AND OWES THE SAME CHECK.**
+Added 2026-09-17 after BOB #13 ordered a row as the lead TWICE and it had been `done` since
+the first time — a heartbeat or a successor acting on that sentence would have spawned against
+a closed row. **The mechanism is worth more than the instance: `ls-remote` had verified the sha
+of `origin/main`, and the row's state was then INFERRED from the fact that the container had
+been verified.** Verifying a CONTAINER licenses nothing about its CONTENTS; that is two
+empty-body digests agreeing, one level up. Read the thing you are about to assert, in the
+version you are about to assert it against.
+
+**IT BITES HARDEST WHERE A CLAIM IS RELAYED OR REPEATED**, because both feel like reporting
+rather than asserting: a brief that carries last wave's ruling, a handoff that restates a
+figure, a message quoting a peer, a row's `landed:` sha. **A ruling has a TARGET whose state
+can change while the ruling stays correct** — and the stale half is invisible precisely because
+the reasoning is still sound. Five separate *true status about the wrong thing* findings were
+measured on 2026-09-17, and **three of the five were someone reading a CORRELATE instead of the
+thing** — `remoteControlActive` for a blocked archive, a battery-process count for a dead
+writer, a verified sha for a row's state. Go to the thing.
+
 **THE AGREEMENT OF SEVERAL DOCUMENTS IS NOT EVIDENCE — IT IS USUALLY ONE SOURCE
 COPIED.** Found by CONDUCT #11 on 2026-09-15 after it was the day's repeated shape:
 **four premises stated confidently in several places at once turned out to be false**,

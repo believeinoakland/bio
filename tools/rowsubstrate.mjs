@@ -33,6 +33,14 @@
  *
  * ------------------------------------------------ WHAT IT DELIBERATELY DOES NOT CLAIM
  *
+ * **MEASURED PRECISION: 1 GENUINE OF 3 VERIFIED (2026-09-17), and both false ones share a
+ * mechanism — the design names the RULE in prose, not the IDENTIFIER in code.** REC-115's cited
+ * section was topically exactly right; REC-117's design says *"the falsifier is REQUIRED"* while
+ * never writing `NO_FALSIFIER`, and this note would have held a runnable row. **So a note from
+ * this arm that disagrees with a row someone has checked at the artifact is the thing that is
+ * wrong.** The figure is recorded downward on purpose: a precision number that only improves in
+ * the telling is worthless.
+ *
  * **A HIT IS NOT PROOF THE DESIGN IS ADEQUATE. A MISS IS NOT PROOF IT IS ABSENT.** A section may
  * describe a construct in prose without ever writing its identifier, and that is legitimate
  * design writing rather than a defect. So a miss is a QUESTION PUT TO A HUMAN, never a verdict,

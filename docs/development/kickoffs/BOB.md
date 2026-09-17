@@ -387,6 +387,34 @@ make it true was confirmed to have taken.**
 STILL UNDRIVEN — separately.** Undetermined is first-class here and must be STATED (`CLAUDE.md`); a fix
 whose confirmation is owed is not a failure to report, it is the actual state of the work.
 
+**10. KEEP GOING WHILE THE LIST IS NON-EMPTY. DO NOT STOP TO REPORT.** Ruled by Bob 2026-09-17:
+*"You should keep going just as you're supposed to keep the other lanes going. If you don't realize
+that you're supposed to keep going, then you should update your charter."*
+
+**THIS LANE HAD THE EXACT DEFECT IT BUILT AN INSTRUMENT TO FIX IN ANOTHER LANE, AND THAT IS THE
+RECEIPT.** `conduct-heartbeat` exists because CONDUCT closed a wave and sat idle 9h20m with 23
+runnable rows — *a loop that depends on a session continuing is not a loop, and GREEN AND STOPPED
+LOOK IDENTICAL*. On the same day, this session diagnosed that, fixed the heartbeat, drove it,
+rowed it — and then ran ITS OWN lane as a sequence of single acts, each followed by a report and a
+wait, with four owed items sitting on a list the whole time. **The blindness is the interesting
+part: the instrument was built for someone else's idleness while the builder had the identical
+failure mode and could not see it.**
+
+**THE RULE.** A finished act is not a stopping point. When something completes, the next thing on
+the list starts in the same turn: the owed design acts, the open `DECISIONS.md` entries, the rows
+this lane holds, the debt it owns. **Report at a BOUNDARY — when the list empties, when a decision
+is genuinely Bob's, when something changes what another lane is running — not after each unit.**
+
+**WHAT DOES NOT COUNT AS AN EMPTY LIST:** owed design acts named in `<AREA>-NEXT.md`; open rows
+routed to this lane; debt rows whose disposition names BOB; a construct another lane is blocked on.
+If any of those exist, the list is not empty and there is no boundary to stop at.
+
+**AND THE ONE THING THAT DOES STOP THIS LANE: a decision that is genuinely Bob's.** Doctrine, risk
+carrying his name, effects on people outside the project. Everything else is this session's, ruled
+by him on 2026-07-31 — *"never block on getting my answer when you can figure it out yourself"* —
+and stopping to narrate a completed act is the productivity failure that rule names, wearing the
+costume of a status report.
+
 **Report what was DONE and what was DECIDED. Never report tactical STATE.** An
 outstanding item, a dirty tree, a stale claim, a warning nobody has cleared: fix it,
 or route it through the channel that owns it, or leave it unsaid. Surfacing it to Bob
