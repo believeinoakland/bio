@@ -62,7 +62,7 @@ const ARMS = {
                "the cached column MOVES, B -> C",
                "a query that consults NO cached column answers with an EMPTY statement",
                "op=inquirystrength carries NO new key",
-               "A FOURTH READER, NAMED"],
+               "THE FOURTH READER IS CLOSED"],
   },
   b: {
     what: "THE FACET ROUTE DROPPED. `cachedRoutes` marks only what the member TYPED, so the "
@@ -122,7 +122,7 @@ const ARMS = {
     mustPass: ["the letter a member is FILTERED BY, the letter the record DERIVES NOW",
                "the cached column MOVES, B -> C",
                "op=inquirystrength carries NO new key",
-               "A FOURTH READER, NAMED"],
+               "THE FOURTH READER IS CLOSED"],
   },
   e: {
     what: "OVER-STRICTNESS. The SAME rule, written as a lookup table instead of a chain of "
@@ -142,7 +142,7 @@ const ARMS = {
                "FILTER only", "FACET only", "SORT only", "ALL THREE at once",
                "a `count` runs neither facets nor an order",
                "a query that consults NO cached column answers with an EMPTY statement",
-               "the cached column MOVES, B -> C", "A FOURTH READER, NAMED"],
+               "the cached column MOVES, B -> C", "THE FOURTH READER IS CLOSED"],
   },
 };
 

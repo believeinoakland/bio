@@ -12236,3 +12236,58 @@ region nothing drains is not even a note.
 work and a fence you may edit is not a fence. It is RUN and its walks are measured, never amended.
 
 **open as of 2026-09-17.**
+## CLAIM 2026-09-17 RECORD (REC-114 / D-383 — the leg listing's capture letter, capped through the registry)
+session: rec114-leg-earned-letter (worktree agent-ac7f5ea0af44d1c3f)
+opened: 2026-09-17T00:00:00Z
+released:
+paths: `bio-plane/src/store.mjs` — **named by SITE**: (1) `meaningRows()`, which gains one
+  post-projection resolution step for the `leg` arm and nothing else; (2) ONE new private
+  helper beside it. **NOT** `#strengthWalk`, **NOT** `#capturedAt`, **NOT** `#captureBoundsFor`,
+  **NOT** `earnedBasisRegistry` — REC-105's landing is READ and REUSED here, never edited, which
+  is what keeps the walk and this listing from becoming two implementations of one rule.
+  `bio-plane/src/query.mjs` — the `MEANING.leg` registry entry's `row` list and its comment only.
+  `bio-plane/test/rec114-leg-earned.test.mjs` (NEW), `bio-plane/test/rec114-leg-earned.control.mjs` (NEW).
+  `bio-plane/test/rec108-cache-asof.test.mjs` — **block 7 ONLY, CORRECTED not exempted.** That block
+  is the probe that FOUND this defect, so it asserts the defect's presence: `grade` publishing `"B"`
+  while the record derives `"C"`, and a source pin on the `grade:` sub-field literal this item edits.
+  Both are SUPERSEDED by this landing and both are rewritten with the reason at the site, per
+  `CLAUDE.md`'s rule that an exempted test is a rule nobody is enforcing. No other block is touched.
+  `docs/development/QUEUE.md` (the REC-114 row), `docs/development/DEBT.md` (D-383's disposition),
+  `docs/development/INTERFACE-CHANGES.md` (IC-117, appended), `docs/development/CLAIMS.md` (this block).
+  **NOT** `civicos-ui/app.html` (UI-63 is live there), **NOT** `tools/corpuscheck.mjs` (M0-57).
+
+### DELEGATION 2026-09-17 RECORD (REC-114) -> CONDUCT: **THREE ACTS THIS LANDING OWES, EACH WITH ITS ACTOR, WRITTEN HERE BECAUSE A NOTE IN A REPORT IS NOT AN ITEM**
+**open as of 2026-09-17** — raised at the landing; none of the three is a worker's to perform.
+
+1. **RESOLVE IC-117 and take the I3 version bump, 19.0.0 → 20.0.0 (MAJOR).** Proposed BREAKING on
+   IC-25's rule whatever the measured impact, and the measured impact is **zero non-test consumers**
+   — deliberately not argued down, on IC-112's precedent from this interface's own last bump.
+   `INTERFACE-CHANGES.md` carries the row with its reversal.
+2. **FLIP AND SPAWN REC-118 (D-406) and REC-119 (D-407)** — the fifth and sixth readers of the
+   capture axis, both member-facing, both found by the census REC-114's row demanded and both DRIVEN
+   rather than grepped. They are ROWED with scope, accepts-when and negative controls. **REC-119
+   carries a freeze constraint that makes it a design question and possibly BOB's** — its scope says
+   so at the top rather than leaving it to be discovered late.
+3. **RE-READ `regionLines` / any floor this landing may have moved AT INTEGRATION.** This item added
+   no DEC-49 region and moved no floor, and `coverage.mjs --strict` is green on this branch — but the
+   figures are a property of the MERGED source and have moved at integration five times, so this is
+   named rather than assumed to be nothing.
+
+## CLAIM 2026-09-17 RECORD (REC-114 / D-383 — the leg listing's capture letter) — RELEASED
+released: 2026-09-17 by the REC-114 worker at its own landing. Every path named in the claim above is
+committed and pushed on `worktree-agent-ac7f5ea0af44d1c3f`; nothing is left open in them, and the three
+acts this landing owes are the DELEGATION immediately above rather than anything held in these paths.
+
+## CLAIM 2026-09-17 RECORD (REC-114 — AMENDMENT: the coverage register's floor) — RELEASED
+session: rec114-leg-earned (worktree agent-ac7f5ea0af44d1c3f)
+opened: 2026-09-17 · released: 2026-09-17 (same turn — the floor move IS the work)
+paths: `bio-plane/scripts/coverage.mjs` — **the `REGISTER_FLOOR` block ONLY**, four figures moved
+  UPWARD to what this item's own green `--strict` run PRINTED after committing: `arms 1148 -> 1173`,
+  `classified 204 -> 208`, `corpus 205 -> 209`, `run 167 -> 171`. Nothing FELL, and re-running
+  `--strict` afterwards reads `1173/1173 · 208/208 · 209/209 · 171/171`, exit 0 — a floor at the
+  measurement rather than above it, because a floor moved too high fails every honest run afterwards.
+  **ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in the file**, once in this block and
+  once in the unrelated fleet object at the foot. **At most +2 corpus is this item's** (two new suites);
+  the rest was ALREADY SLACK on arrival, which makes this the sixth consecutive item to find this floor
+  stale by measuring it. **CONDUCT must re-read these on the MERGED tree** — `regionLines` and this
+  floor are properties of the merged source and have collided at integration before.

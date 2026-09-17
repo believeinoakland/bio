@@ -457,14 +457,37 @@ console.log("\n--- 7. THE READER CENSUS, DRIVEN: IS THERE A FOURTH? ---");
 
   t("the meaning arm is REACHABLE and returns this question's leg",
     legs.length, 1);
-  t("A FOURTH READER, NAMED: op=meaningrows publishes the AUTHORED letter, uncapped, beside the bounded one",
-    { authored_published: legs[0] ? legs[0].grade : null, axis: legs[0] ? legs[0].grade_axis : null,
-      record_derives: derivedNow },
-    { authored_published: "B", axis: "capture", record_derives: "C" });
+  /* CORRECTED BY REC-114 (D-383 CLOSED), NOT EXEMPTED — and the old assertion
+     is quoted here because what it asserted was TRUE when written and is the
+     reason this block exists. It read:
+         want { authored_published: "B", axis: "capture", record_derives: "C" }
+     i.e. it pinned the DEFECT this block had just discovered: `grade` carrying
+     the member's AUTHORED letter, uncapped, while the record derived a weaker
+     one. REC-114 ruled that a leg listing publishes what the record can
+     SUPPORT, with the authored letter beside it rather than erased — so `grade`
+     is now the EARNED letter, `grade_authored` carries what was authored, and
+     `grade_why` says why they differ. The census finding this block made is
+     unchanged and still stands; only the letter the surface publishes moved.
+     An exempted assertion here would have been a rule nobody was enforcing. */
+  t("THE FOURTH READER IS CLOSED (REC-114): op=meaningrows now publishes the EARNED letter with the AUTHORED one beside it",
+    { earned_published: legs[0] ? legs[0].grade : null,
+      authored_published: legs[0] ? legs[0].grade_authored : null,
+      axis: legs[0] ? legs[0].grade_axis : null, record_derives: derivedNow },
+    { earned_published: "C", authored_published: "B", axis: "capture", record_derives: "C" });
+  t("...and the letter it publishes now AGREES with the authority, which is what D-383 was open about",
+    legs[0] ? legs[0].grade === derivedNow : null, true);
   t("it is NOT a cache — it reads `inquiry_basis` live, so it states nothing and correctly states nothing here",
     mr.cached, []);
-  t("and the same column is SELECTABLE, so the drift is filterable as well as readable",
-    /grade:\s+\{ col: "grade",\s+case: "upper", vocab: \[\] \}/.test(QUERY_SRC), true);
+  /* ALSO CORRECTED BY REC-114. The old pin read the `grade:` sub-field as the
+     exact literal `grade: { col: "grade", case: "upper", vocab: [] }` — which
+     REC-114 edited, adding a `selects` sentence telling a member that this
+     SELECTOR still reads the AUTHORED column while the row publishes the earned
+     letter. Pinning a whole literal made a true statement (the column is
+     selectable) brittle against any addition to the descriptor, so the
+     corrected pin asserts the PROPERTY instead: the selector still targets the
+     `grade` column, which is what "the drift is filterable" actually means. */
+  t("and the same column is STILL SELECTABLE, so the drift is filterable as well as readable",
+    /grade:\s+\{ col: "grade",\s+case: "upper"/.test(QUERY_SRC), true);
 
   /* The OTHER fourth-reader candidate, named rather than left as a silence: the
      VERSION path. `#versionLegsAsMembers` resolves through `earnedBasisRegistry`
