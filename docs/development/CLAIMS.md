@@ -53,7 +53,8 @@ paths: `tools/corpuscheck.mjs` (the `statusAuthority` arm APPENDED after `covera
   construct 8's STATE cell and the Status front matter ONLY). `docs/architecture/BIO_Content_Framework_v0_10.md`
   (§18 table item 6, the §18 Incomplete bullet, and the Status front matter ONLY — no section moved,
   no heading changed, so Contents is untouched). `docs/architecture/CORPUS-STANDARD.md` (§4 gains one
-  rule, §7 one paragraph, Status date). `docs/development/QUEUE.md` (the M0-57 row only).
+  rule, §7 one paragraph, Status date). **NOT `docs/development/QUEUE.md`** — flipping the M0-57 row is CONDUCT's act at
+  integration (`kickoffs/WORKER.md`), and it is named as an act with its actor in this session's report.
   **`tools/plancheck.mjs` — SAID LOUDLY BECAUSE EVERY SIBLING RUNS IT:** the change is confined to the
   existing corpuscheck block — one destructured name added to the `await import`, and one `if
   (statusAuthority)` block appended after the coverage note. No other section, arm, ordering or exit

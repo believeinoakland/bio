@@ -280,6 +280,24 @@ export function coverage({ pop = population() } = {}) {
         its own `Place in the system` line and (b) carries a BODY HEADING containing EVERY content
         word of the cited item's own bold key. Two independent statements, neither guessed.
 
+   THE CORPUS PROPERTY THAT DECIDES THIS, MEASURED BY THE NEIGHBOURING INSTRUMENT RATHER THAN
+   ASSUMED HERE. `tools/rowsubstrate.mjs` asks whether a cited design SECTION mentions a ROW's
+   backticked code identifiers, and its precision is now 1 TRUE OF 3 VERIFIED (CONDUCT #3,
+   2026-09-17). **Both false positives share one mechanism: THE DESIGN NAMES THE RULE, NOT THE
+   IDENTIFIER** — one section was topically right and never wrote the op's name, another stated the
+   rule in prose and never wrote the marker's name. That is a fact about how this corpus is
+   WRITTEN, and any matcher here must survive it.
+
+   **THIS ARM INHERITS THE SAME PROPERTY AND FAILS IN THE OPPOSITE DIRECTION, WHICH IS THE WHOLE
+   REASON IT CAN AFFORD TO FAIL RATHER THAN WARN.** A home document that designs a piece while
+   naming only the rule — no heading carrying the piece's own words — reads to signal 4 as ABSENT,
+   so the arm STAYS SILENT. rowsubstrate's miss produces a WARN nobody owed (a false alarm, which
+   is how an instrument gets switched off); this arm's miss produces UNDER-REACH (a stated bound,
+   which M0-58's sweep exists to measure). Given a corpus that names rules rather than identifiers,
+   under-reach is the survivable failure and over-reach is not — so signal 4 was kept at HEADING
+   grain rather than widened to the body, and the control's arm 5 drives exactly that widening to
+   show it breaks the healthy state.
+
    WHAT IT DELIBERATELY DOES NOT DO. It does not read prose bodies for design; a heading is the
    narrowest honest evidence that a document has a section ABOUT the piece. It does not judge
    whether that section's design is ADEQUATE — `rowsubstrate.mjs` asks a neighbouring question

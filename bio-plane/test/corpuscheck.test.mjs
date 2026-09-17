@@ -52,6 +52,34 @@
  * check at all and so cannot fail for a reason the arm did not cause; the one plancheck arm
  * runs `--local`, which skips the publication half.
  *
+ * NEGATIVE CONTROL, THE DESIGN-STATUS AUTHORITY HALF (M0-57, 2026-09-17) — re-runnable in ONE
+ * STEP with `node bio-plane/test/m057-authority.control.mjs`. SIX arms, each armed ALONE with every
+ * other defence open, anchors validated before anything is armed, restored by cp-back from
+ * uniquely-named pristine copies verified by sha256 AND a floored byte count — never the checkout
+ * form this repository forbids, which in a tree with uncommitted work is "throw mine away" and
+ * exits 0 either way. (1) THE RECEIPT REPRODUCED ON DISK: `BIO_Content_Framework_v0_10.md` §18
+ * item 6 reverted to the words that misled BOB #12 -> corpuscheck RED, naming construct 8, the
+ * document that RESTATES and the document that DESIGNED it; (2) THE ARM REMOVED over that same
+ * reverted corpus -> the claim-class pair PASSES corpuscheck again and THIS SUITE goes red, which
+ * is the pair of measurements that establishes the arm is what catches it rather than something
+ * else in the run; (3) signal 3 removed, so an item that POINTS at its design is no longer exempt
+ * -> the healthy CORRECTED corpus is refused, which is over-strictness armed from the strict side;
+ * (4) signal 4a removed, so a home document need no longer DECLARE the construct -> the
+ * "does not declare this construct" arm fails; (5) signal 4b widened from a HEADING match to a
+ * whole-body match -> the "no heading naming the piece" arm fails; (6) over-strictness baseline,
+ * nothing armed -> corpuscheck green, byte-identical, `plancheck --local` 0 fail.
+ * **All 6 as declared, 0 arms never armed, 15 pass 0 fail**, 39,017 B and 166,876 B restored
+ * byte-identically on every arm.
+ * **AND THE SUITE'S OWN ARM-THAT-DID-NOT-ARM GUARD EARNED ITS PLACE ON FIRST RUN**: the revert of
+ * §18 item 6 was written pipe-anchored, but the pointer and the cell's original prose are ONE table
+ * cell, so it matched nothing — and without the guard the receipt arm would have reported a
+ * confident PASS over a document that was never modified. That is this estate's *break only the
+ * thing* rule with the sign flipped, and it is why the guard asserts the substitution TOOK before
+ * anything is concluded from the result.
+ * **THE METHOD IS RECORDED BESIDE THE RESULT**, because the obvious method gives the confident
+ * wrong answer here: every arm drives `corpuscheck` DIRECTLY, which has no publication check and so
+ * cannot fail for a reason the arm did not cause, and the one plancheck arm runs `--local`.
+ *
  * NEGATIVE CONTROL, THE OTHER DIRECTION — the checker armed against a REAL retrofitted
  * document rather than a fixture. Run 2026-09-14 by M0-26 in worktree
  * agent-a64d514be75dea71a, re-runnable in one step with

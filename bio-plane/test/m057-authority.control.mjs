@@ -103,7 +103,15 @@ const ARMS = [
     const r = run([]);
     t("arm 1 · corpuscheck exits non-zero", r.code === 1, `code ${r.code}`);
     t("arm 1 · and names construct 8", /DESIGN STATUS RESTATED — construct 8\b/.test(r.out));
-    t("arm 1 · and names the document that RESTATES", r.out.includes("BIO_Content_Framework_v0_10.md §18 item 6"));
+    /* A REGEX RATHER THAN `.includes(<literal>)`, DELIBERATELY, AND THE REASON IS THE WITNESS.
+       `m025-arm-anchor-witness.test.mjs` reads a driver's `.includes("<long literal>")` as an
+       ANCHOR INTO A SUBJECT FILE and fails when it occurs nowhere in the estate — the D-276 class,
+       and it caught this line on its first run. It was right to: the string is assembled by
+       `corpuscheck` at RUN TIME from a path, a section and an item number, so it exists in no file
+       and an anchor that cannot arm is exactly what that suite exists to find. What is asserted
+       here is PROGRAM OUTPUT, not a file's contents, so the idiom is corrected to say so rather
+       than the anchor being exempted. Nothing is weakened: the same text is required. */
+    t("arm 1 · and names the document that RESTATES", /BIO_Content_Framework_v0_10\.md §18 item 6/.test(r.out));
     t("arm 1 · and names the document that DESIGNED it", r.out.includes("BIO_Case_Making_v0_1.md"));
   }],
   ["2 · THE ARM REMOVED — same reverted corpus → the claim-class pair PASSES again, and the suite FAILS", () => {
