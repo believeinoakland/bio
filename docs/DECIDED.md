@@ -65,7 +65,7 @@ authority is the file named, never this one.
 - **DEC-17** · 2026-08-03 — Q2 · SETTLED by DEC-17 — THE PROJECT DECLARES THE STRENGTH ITS WORK REQUIRES**, published beside the strength actually reached, with the GROUP setting the default a new project starts from (amended 2026-08-03).  
   `docs/development/research/RECONCILED.md:1406`
 - **DEC-18** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-18) — an ungraded leg is INERT, and UNRATED becomes the boundary case rather than the rule.** *"An ungraded leg doesn't contribute to a conclusion, but if there are other graded legs, then it doesn't suspend the conclusion either."*  
-  `docs/architecture/BIO_Case_Making_v0_1.md:929`
+  `docs/architecture/BIO_Case_Making_v0_1.md:1009`
 - **DEC-19** · 2026-08-02 — CORRECTED 2026-08-02 by Bob (DEC-19). This construct was called "the irreversible signed act" and that was wrong.** *"People make mistakes or misinterpret. An attestation must be reversible to correct mistakes. (Though there may be a record of the attestation and reversal in the record.)"*  
   `docs/architecture/BIO_Interaction_Constructs_v0_1.md:426`
 - **DEC-19** — Carrying DEC-19 AS AMENDED (publishing is THE irreversible act; correction always moves FORWARD — a new edition as a separate document with every published edition standing, a withdrawal as another attested act with both standing; nothing is ever unpublished), DEC-33 (the ceremony is deferred; publication runs…  
@@ -89,7 +89,7 @@ authority is the file named, never this one.
 - **DEC-20** · 2026-08-02 — (1) FACT CHECK — THERE IS NO CONTRADICTION, AND IT WAS ALREADY RULED.** DEC-20, 2026-08-02, Bob's own: *"Not all bias needs to be cleared before a piece is published.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:2709`
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-21) — the CONCLUSION above stands; the MECHANISM below it was wrong.** Bob: *"A capture is the act of reading a document in.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:996`
+  `docs/architecture/BIO_Case_Making_v0_1.md:1076`
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 (Bob, DEC-21) — R2's CONCLUSION stands; its MECHANISM does not.** > *"A capture is the act of reading a document in.  
   `docs/development/research/RECONCILED.md:183`
 - **DEC-23** · 2026-09-14 — RULED | | machine extraction by recognisers, format entries and fleet members (§16) | BUILT | | the AI EXTRACT role — an assistant extracting on a member's objective | **PARTLY BUILT** — the PLANE half landed 2026-09-14 (SK-7): a machine credential MINTS content rows (`op=contentmint`), every surface LABELS them as…  
@@ -235,7 +235,7 @@ authority is the file named, never this one.
 - **DEC-69** · 2026-08-10 — AMENDED the same day, and the amendment is the harder half: the operative word is FORCED, and it CUTS BOTH WAYS** — *"they shouldn't be forced to make decisions in bulk.  
   `docs/development/QUEUE.md:2749`
 - **DEC-72** · 2026-08-10 — AMENDED 2026-08-10 (DEC-72, Bob): the third "phase" is now its own OBJECT.** The > collapse below STANDS for inquiry and finding — one recursive object, a finding being > an inquiry that reached a conclusion.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:479`
+  `docs/architecture/BIO_Case_Making_v0_1.md:485`
 - **DEC-72** · 2026-08-10 — SUPERSEDED BY DEC-72 — THE QUESTION DISSOLVES.** Bob's 2026-08-10 ruling makes the bar a property of the PROJECT, told to the publishing act at act time; no bar ever attaches to a finding, so no departed project's bar can linger and nothing composes across citers.  
   `docs/development/DECISIONS.md:307`
 - **DEC-72** · 2026-08-10 — op=publish` REQUIRES A PUBLISHING PROJECT AND AN AUTHORED LOAD-BEARING PARTITION, `op=strengthbarof`'s `target=` ARM IS WITHDRAWN FOR A `project=` ARM, AND THE STAMPED `required_strength` BLOCK STOPS COMPOSING ACROSS CITERS · PROPOSED 2026-08-10 (CASE-2, enacting DEC-72) — the version bump and the RESOLUTION are…  
@@ -717,7 +717,7 @@ authority is the file named, never this one.
 - **C-2.8** — PROPOSED → RESPONSES (silence is not consent) → RESOLUTION (dormant consumer: CONDUCT answers in writing) → CHANGING → CHANGED → SETTLED.  
   `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:69`
 - **C-6.3** · 2026-08-01 — CORRECTED 2026-08-01: an earlier version of this line said `supersedes` is already in `REL_VOCAB`, as if the mechanism existed.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:523`
+  `docs/architecture/BIO_Case_Making_v0_1.md:529`
 - **C-7.1** — `bio-plane/test/check-firing.test.mjs` (this item's own suite — the C-7.1 `proves()` block replaced by a pointer, the retirement block widened to be keyed by retired id, the header's SUPERSEDED note and `NEGATIVE CONTROL:` line extended).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4088`
 - **C-7.1** · 2026-08-08 — C-7.1 RETIRED — AND IT CORRECTED CONDUCT'S OWN QUEUE ROW, WHICH IS THE MOST VALUABLE THING IN THE ITEM.  
@@ -1378,19 +1378,19 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-08-10** — ⚠ SUPERSEDED IMPLEMENTATION, INHERITED FORMAT > > **Banner added 2026-08-10 (session BOB), moving into this file what > `architecture/README.md` has said about it since July and no reader of this document  
   `docs/architecture/BIO_Bundle_Skill_Composite_Design_v1_7.md:47`
 - CORRECTED — the administrator is not an inverted threat model, and the threat is symmetric](#4-corrected-the-administrator-is-not-an-inverted-threat-model-and-the-threat-is-symmetric) - [4a. "Less narrative" is a design constraint, and it cuts against how such tools usually…  
-  `docs/architecture/BIO_Case_Making_v0_1.md:21`
+  `docs/architecture/BIO_Case_Making_v0_1.md:22`
 - [The god-object risk, WITHDRAWN as stated and narrowed to what is real](#the-god-object-risk-withdrawn-as-stated-and-narrowed-to-what-is-real) - [Naming: three names for three phases, and the type name question](#naming-three-names-for-three-phases-and-the-type-name-question) - [Division: one inquiry becomes two or…  
-  `docs/architecture/BIO_Case_Making_v0_1.md:38`
+  `docs/architecture/BIO_Case_Making_v0_1.md:39`
 - **2026-08-10** — STATUS CORRECTED 2026-08-10 (session BOB).  
-  `docs/architecture/BIO_Case_Making_v0_1.md:66`
+  `docs/architecture/BIO_Case_Making_v0_1.md:72`
 - CORRECTED — the administrator is not an inverted threat model, and the threat is symmetric This section originally read "the administrator archetype inverts the threat model" and treated an adversarial default as the given.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:179`
+  `docs/architecture/BIO_Case_Making_v0_1.md:185`
 - The god-object risk, WITHDRAWN as stated and narrowed to what is real Bob: *"changing its name as it evolves doesn't make it god-like."* Correct, and the risk as I wrote it was over-weighted.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:464`
+  `docs/architecture/BIO_Case_Making_v0_1.md:470`
 - **2026-08-01** — RULED by Bob, 2026-08-01: `inquiry` early (NOT `focus`), `finding` once it concludes, `case` once published.** Same object, different phases, different names. **This session's determination on how that is expressed**, since a phase called  
-  `docs/architecture/BIO_Case_Making_v0_1.md:489`
+  `docs/architecture/BIO_Case_Making_v0_1.md:495`
 - RULED by Bob: the lifecycle must include dividing into 2 or more.** Composition came free with recursion; division does not, and working through it produces four things. **1.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:514`
+  `docs/architecture/BIO_Case_Making_v0_1.md:520`
 - **2026-07-30** — " note was revised: transitive trust is accepted so long as it is disclosed (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30). - §12 — "Platform (resolved, v4)" describes the retired local-first client; the plane replaced it and the UI is built as constructs (`BIO_Interaction_Constructs_v0_1.md`). - §13…  
   `docs/architecture/BIO_Complete_Roadmap_v5.md:12`
 - **2026-09-14** — RULED: an authored edge is never re-pointed to a newer capture without a member's act (§14.4, §18); RULED: a link to a Google Drive file keeps the link and the harvest is the OpenDocument export, from which content is extracted (§16). - v0.12, 2026-09-14.  
@@ -1922,9 +1922,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - NOTATION IS SETTLED: classDiagram for structure, stateDiagram-v2 for lifecycle, edges labelled with the ACT.  
   `docs/development/kickoffs/BOB.md:105`
 - Report what was DONE and what was DECIDED.  
-  `docs/development/kickoffs/BOB.md:390`
+  `docs/development/kickoffs/BOB.md:418`
 - **2026-09-17** — RULED BY BOB, 2026-09-17: a lane's retired session is archived WITHOUT HIS INVOLVEMENT.** Verbatim: *"BOB #12 being alive is not my problem.  
-  `docs/development/kickoffs/BOB.md:425`
+  `docs/development/kickoffs/BOB.md:453`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
   `docs/development/kickoffs/CAPTURE.md:99`
 - debt that can be avoided; superseded rules in tests are CORRECTED, never exempted.** All of these earned their place; the ledger has the receipts. ## Bob's rulings, already made.  

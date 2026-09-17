@@ -1,6 +1,6 @@
 # Case-making: the design pass
 
-**Status** · The record of the case-making design pass: the frame in Bob's words, the observations, the collapse of focus/finding/case into one recursive INQUIRY, naming and division, what a CLAIM is, the action plan, and the R1–R4 resolutions the adversarial pass forced. "Opened 2026-08-01 (session BOB) as the D-127 design pass Bob directed … Nothing here is settled unless it says so." Its 2026-08-10 status correction rules the file non-authoritative: the collapse HAS SHIPPED, and "what is authoritative is no longer this file. It is the plane, and the rulings the pass produced — DEC-15 through DEC-32 and the R1–R4 resolutions." Superseded as design authority (by the plane, `docs/development/DECISIONS.md`, and DEC-72 for the case section); complete as the reasoning record. Read it for WHY; several body sentences are now false as written (below). as of 2026-09-14.
+**Status** · The record of the case-making design pass: the frame in Bob's words, the observations, the collapse of focus/finding/case into one recursive INQUIRY, naming and division, what a CLAIM is, the action plan, and the R1–R4 resolutions the adversarial pass forced. "Opened 2026-08-01 (session BOB) as the D-127 design pass Bob directed … Nothing here is settled unless it says so." Its 2026-08-10 status correction rules the file non-authoritative: the collapse HAS SHIPPED, and "what is authoritative is no longer this file. It is the plane, and the rulings the pass produced — DEC-15 through DEC-32 and the R1–R4 resolutions." Superseded as design authority (by the plane, `docs/development/DECISIONS.md`, and DEC-72 for the case section); complete as the reasoning record. Read it for WHY; several body sentences are now false as written (below). as of 2026-09-17.
 
 **Place in the system** · The reasoning behind construct 8 of `BIO_System_Design.md` §3 (intent and inquiry): "CASE-MAKING is undesigned, and it is what the whole system is for" (D-127). Its rulings feed M9 and M10; `BIO_Interaction_Constructs_v0_1.md` takes FINDING as case-making's substrate from it; the thread itself is paused behind DEC-33 until Bob reopens it.
 
@@ -9,6 +9,7 @@
 - §Division: one inquiry becomes two or more — items 3 and 5 were written for case-as-phase; re-read under DEC-72.
 - §What a CLAIM is, and why it is a field rather than an object — "`inquiry_basis` does not exist in the schema" is false; "Awaiting Bob" and "DEC-32 remains open" are stale (decided 2026-08-04); the contradiction question is open.
 - §THE ACTION PLAN — "not yet in the review document"; S11's backward question (D-165) deferred; DEC-25 deferred with its provisional; "Ten surfaces are specified today" is dated.
+- §CONTRADICTION — Q14 ANSWERED 2026-09-17 in doctrine and in two of its three cases; the IRRECONCILABLE PAIR is NOT designed and needs the claim object, which is Bob's. IDENTIFY / PRESENT / RESOLVE are specified as separable mechanisms and NONE is built; the acceptance test for IDENTIFY is its over-strictness arm.
 - §R1 — the residual laundering hazard is D-159, open · WATCH.
 - §Open questions this pass must answer — the heading is duplicated in one line; of eight questions only Q7 is marked answered though Q1, Q2 and Q4 were answered in the body; never reconciled.
 
@@ -40,6 +41,11 @@
 - [Division: one inquiry becomes two or more](#division-one-inquiry-becomes-two-or-more)
 - [What a CLAIM is, and why it is a field rather than an object — 2026-08-03](#what-a-claim-is-and-why-it-is-a-field-rather-than-an-object-2026-08-03)
   - [Can one finding hold SEVERAL claims? Not today, and the alternative is already expressible](#can-one-finding-hold-several-claims-not-today-and-the-alternative-is-already-expressible)
+- [CONTRADICTION — Q14 ANSWERED, and the premise was INVERTED — Bob, 2026-09-17](#contradiction-q14-answered-and-the-premise-was-inverted-bob-2026-09-17)
+  - [The three cases, and only one of them carries a DUTY](#the-three-cases-and-only-one-of-them-carries-a-duty)
+  - [Three mechanisms, separable, built in this order](#three-mechanisms-separable-built-in-this-order)
+  - [What still needs the claim object, and is Bob's](#what-still-needs-the-claim-object-and-is-bobs)
+  - [Two constructs share the word, and conflating them is the hazard](#two-constructs-share-the-word-and-conflating-them-is-the-hazard)
 - [THE ACTION PLAN — mapped 2026-08-03, not yet in the review document](#the-action-plan-mapped-2026-08-03-not-yet-in-the-review-document)
   - [1 · What a plan answers, and why it is not an inquiry](#1-what-a-plan-answers-and-why-it-is-not-an-inquiry)
   - [2 · The object question, and the argument that settles it](#2-the-object-question-and-the-argument-that-settles-it)
@@ -55,7 +61,7 @@
   - [R2 · Capture grade and connection grade are TWO scales and must never be composed into one number](#r2-capture-grade-and-connection-grade-are-two-scales-and-must-never-be-composed-into-one-number)
   - [R3 · The collapse deletes the system's only cycle guard, and must replace it explicitly](#r3-the-collapse-deletes-the-systems-only-cycle-guard-and-must-replace-it-explicitly)
   - [R4 · Division must cost at least what severance costs](#r4-division-must-cost-at-least-what-severance-costs)
-- [Open questions this pass must answer## Open questions this pass must answer](#open-questions-this-pass-must-answer-open-questions-this-pass-must-answer)
+- [Open questions this pass must answer](#open-questions-this-pass-must-answer)
 
 ---
 
@@ -653,6 +659,80 @@ the design: COUNT THE FALSIFIERS. One proposition, one falsifier, several indepe
 Different propositions → different falsifiers → separate inquiries, composed by recursion,
 rendered together. DEC-32 remains open.**
 
+## CONTRADICTION — Q14 ANSWERED, and the premise was INVERTED — Bob, 2026-09-17
+
+**Q14 sat undesigned for six weeks on the stated grounds that *the contradiction shape has no
+consumer*. Bob supplied the consumer and reversed the sign of the question.** Verbatim:
+
+> *"Why CAN'T a record hold two findings that flatly contradict each other… A situation like that
+> might be the very thing that the investigation is searching for. The regulation that says one
+> thing but action that doesn't conform. The city department saying one thing in March and other
+> in October. I contend that contradictions are golden nuggets that shouldn't be 'fixed', but
+> rather drawn attention to."*
+
+**That is doctrine, and it changes what this construct IS: contradiction is not an edge case the
+model must tolerate, it is an OUTPUT the system exists to find.** The section above reserved this
+question — *"CONTRADICTION, which is §4 Q14 and is undesigned… If a claim ever becomes an object,
+this is the reason it will"* — and this section answers the part that does not need the object.
+
+### The three cases, and only one of them carries a DUTY
+
+Bob refined it into three, and the distinction is load-bearing because it decides what is OWED.
+
+| case | what it is | what it obliges |
+| --- | --- | --- |
+| **in the WORLD** | the rule requires X and the department did not-X; the department said X in March and Y in October | **A FINDING.** The system's product. Kept, published, drawn attention to, never "fixed" |
+| **in the RECORD** | one part of our own holding asserts a fact and another asserts its opposite | **A DEFECT IN OUR HOLDING, with a DUTY to identify, present and resolve** — because in one of the two places the record is wrong, and trustworthiness of the record is the whole product |
+| **NEITHER** | *"spending was reduced a little"* vs *"spending dropped a lot"* | **NOTHING. This is not a contradiction** — two descriptions at different precision of one fact |
+
+**THE FIRST CASE IS EXPRESSIBLE TODAY AND NOTHING STRUCTURAL IS MISSING.** *The rule requires X and
+the department did not-X* is ONE inquiry whose CONCLUSION IS the discrepancy, supported by legs on
+both sides. What is missing is that nothing PROPOSES one and nothing DRAWS ATTENTION to it — a
+detection and surfacing capability, not an architecture change. **So the golden nuggets are
+reachable without reopening claim-as-field, and they should be taken first.**
+
+**THE SECOND CASE IS THE FIRST CONTRADICTION SHAPE WITH A DUTY ATTACHED RATHER THAN A CAPABILITY**,
+and it must not be folded into the first. They share a detector; they do not share an obligation.
+
+**THE THIRD CASE IS THE ITEM.** A detector that cannot tell imprecision from genuine double-speak
+will bury members in false conflicts and be switched off inside a week — this estate's own recorded
+failure mode for alarms, and the reason `strandedwork.mjs`'s over-strictness arm exists. **So the
+acceptance test for IDENTIFY is its OVER-STRICTNESS ARM, not its recall.** Bob's own examples of
+cause are the hard part rather than colour: *"a difference of opinion…, a misquote, or genuine
+double-speak by a politician."* The first is not a contradiction at all.
+
+### Three mechanisms, separable, built in this order
+
+1. **IDENTIFY** — detect candidate conflicts. Its acceptance test is the over-strictness arm above.
+2. **PRESENT** — a member sees BOTH SIDES with enough context to judge, in the record's own words,
+   never a machine verdict (DEC-24, D-82).
+3. **RESOLVE** — a MEMBER'S act, attributed, never silent, and it never deletes either side:
+   content rows go `stale`, never away.
+
+**RESOLUTION RECORDS ITS KIND, AND THIS IS WHERE THE CIVIC VALUE IS.** A vocabulary that flattened
+every cause to *resolved* would throw away the thing worth having: **genuine double-speak, resolved
+and recorded, is a FINDING ABOUT THE SUBJECT** — produced as a by-product of keeping our own record
+straight. So at least one kind must be able to PROMOTE the conflict INTO a finding rather than
+closing it, which is case two turning into case one.
+
+### What still needs the claim object, and is Bob's
+
+**The IRRECONCILABLE PAIR** — two findings about ONE question, each well supported, that cannot both
+be true, where the record declines to choose and keeps both. `role: cuts_against` is one leg's
+polarity and cannot express it. The section above says *"if a claim ever becomes an object, this is
+the reason it will"*, and that is now live. **It is the one part of Q14 this session does not
+decide.**
+
+### Two constructs share the word, and conflating them is the hazard
+
+**`BIO_Content_Framework_v0_10.md`'s *contradicting aspirations* is a DIFFERENT CONSTRUCT.** It was
+ruled 2026-07-30 — contradicting aspirations are WELCOMED, *"what the system looks for is CONTACT,
+not contradiction"*, because judging whether two aspirations truly conflict is semantic work the
+system cannot do. **That is the goal axis. This section is about conflicting CLAIMS.** They share a
+word and nothing else, and a reader who merges them will import *we do not judge conflict* into the
+one case that carries a duty to resolve it. Named here because the corpus's own single-authority
+sweep is what this hazard is for.
+
 ## THE ACTION PLAN — mapped 2026-08-03, not yet in the review document
 
 Bob, 2026-08-03: *"the finding of a project indicate[s] that some government action (or action
@@ -1056,7 +1136,7 @@ and **a published child names its parent and its siblings.** A reader who can se
 of a divided inquiry can see that the other half exists. Without that, division is a
 laundering path with a tidy name.
 
-## Open questions this pass must answer## Open questions this pass must answer
+## Open questions this pass must answer
 
 1. Do `focus` / `project` / `action` / `case file` survive, evolve, or get replaced?
    Bob is explicitly open on this and it is the first question.
