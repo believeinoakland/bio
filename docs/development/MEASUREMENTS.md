@@ -13505,6 +13505,39 @@ to another. **Both readings are wrong and for the same reason.**
 before a sweep leaves no trace here, and the sweep says nothing about how LONG any of these had been
 stranded — only that they were, at `711d5f44`.
 
+### RE-RUN ~1 HOUR LATER, AND THE SNAPSHOT HAD ALREADY EXPIRED — WHICH FALSIFIES THIS ENTRY'S OWN ADVICE
+
+**Three of the four cleared through the subagent channel** (M0-48 `3cd60c98` on origin, REC-100 clear,
+M0-35 clear at `056d904e`) — no push by any session, all four asked and three answered. **But the fifth
+row, `a8eea05132b9aee1d`, THE ONE THIS ENTRY NAMED AS THE OVER-STRICTNESS CASE THAT THE ARM MUST NOT
+NAME, HAD BECOME AN EXPOSURE:** still 0 commits and still no branch on origin, now **12 MODIFIED TRACKED
+FILES including `bio-plane/src/store.mjs`**. It started work in the interval.
+
+**SO THE EXEMPTION CRITERION IS *NOTHING AT RISK*, NOT *FRESH*, and the distinction is load-bearing
+because a worktree crosses that line silently, committing nothing and pushing nothing.** This entry's
+own wording — *a fresh worktree whose tip sits at `origin/main` with nothing committed* — invites an
+implementer to exempt on ZERO COMMITS, which `a8eea051` still satisfies while holding twelve modified
+files. **Exempt only when there is no committed work past `origin/main` AND no working-tree change,
+evaluated every run and never inferred from the tip position.** That is BOB's specification being wrong
+in the same way CONDUCT's was an hour earlier, and by the same mechanism: written before looking again.
+
+**M0-40 is the same lesson pointing the other way.** CONDUCT saw three `UU` paths and read it correctly
+as mid-conflict rather than stranded; an hour later the conflict is resolved, 2 commits sit past `main`,
+and the ONLY dirt is `?? .m040-resolved/` and `?? m040-merged.log` — untracked SCRATCH. **A naive
+`dirty > 0` would name it for two log files.** Modified tracked files are work; untracked may be scratch
+or may be a new test file, which is also work. **No heuristic is offered for telling those apart,
+deliberately — that is where an arm goes subtly wrong and stays wrong.** The shape that survives both is
+to **REPORT THE COUNTS rather than merely warn**: *"nothing committed, 12 modified files"* is actionable
+and *"nothing committed, 1 untracked path"* is dismissible in a second, and a reported shape lets the
+READER be right where the arm never can be.
+
+**THE CONSEQUENCE FOR ANY ARM BUILT FROM THIS ENTRY: REPRODUCE THE SHAPES, NOT THE TABLE.** Pinning a
+fixture to *four named, `a8eea051` not named* pins it to a snapshot that expired within the hour, and the
+item would assert a fact that is no longer true. The four shapes are: a never-pushed branch with commits;
+a branch present but BEHIND with commits; a clean tip with modified files; and a genuinely empty
+worktree. The first three are named, **in different words because the reader's next act differs**, and
+the fourth is not named at all.
+
 ## M-30 · 2026-09-15 · CONDUCT #11 — AN UNEXPLAINED GATE RED, RECORDED WITH ITS NON-CORROBORATION RATHER THAN RESOLVED IN EITHER DIRECTION
 
 **The observation.** A `node tools/gates.mjs --docs` run over a prose-only change to
