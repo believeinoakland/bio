@@ -1001,7 +1001,21 @@ const REGISTER_FLOOR = {
      --strict and a green UI harness. A floor promised for later is a floor nobody moved.
      ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
      FLEET_FLOOR below (76, unmoved) — one occurrence per distinct object. */
-  arms: 1100,
+  /* MOVED `arms` 1100 -> 1104 by CONDUCT #1, 2026-09-16, at M0-42's and REC-103's merge,
+     from THE MERGED TREE'S OWN POST-COMMIT `--strict` PRINT on ba116c02 — `arms 1104/1100 ·
+     classified 198/198 · corpus (suites read) 199/199 · GREW by 4 arm(s)`. Provenance on
+     that run: `210 of 210 discovered item(s) are in the commit at HEAD`, no contamination,
+     tree clean.
+     `classified` AND `corpus` DO NOT MOVE AND THAT IS CORRECT RATHER THAN AN OVERSIGHT:
+     neither item added a SUITE. M0-42 added four arms to `register-grammar.test.mjs`'s
+     existing declaration, and REC-103 contributed ZERO to this figure — its 6-arm block
+     sits under REC-93's 7, because the register records the LARGEST SINGLE DECLARATION
+     per suite and never the sum. REC-103's worker verified that rather than trusting an
+     unchanged number, which is the right way round.
+     AND THE DELTA IS THE SAME WHILE THE FIGURE IS NOT, which is D-238 in one line: M0-42's
+     own tree printed 1097 (1093 + 4) and this tree prints 1104 (1100 + 4). Same four arms,
+     different base, and only the merged print is ever true of the merged tree. */
+  arms: 1104,
   classified: 198,
   corpus: 199,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
