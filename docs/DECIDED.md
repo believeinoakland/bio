@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1038 rulings across 85 documents.
+1040 rulings across 85 documents.
 
 ## DEC-
 
@@ -568,6 +568,8 @@ authority is the file named, never this one.
   `docs/development/DEBT.md:344`
 - **D-401** · 2026-09-17 — RULED BY BOB THE SAME DAY:** *"BOB #12 being alive is not my problem.  
   `docs/development/DEBT.md:335`
+- **D-411** — NOT SETTLED BY THIS ITEM: D-411 / REC-119**, the sixth reader (`#versionCollections`, feeding `op=basisversions` and `op=suggest`).  
+  `docs/development/INTERFACE-CHANGES.md:9004`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
@@ -698,6 +700,8 @@ authority is the file named, never this one.
   `docs/development/INTERFACES.md:509`
 - **IC-112** · 2026-09-17 — IC-112 RESOLVED ACCEPTED as BREAKING — the wave's I3 MAJOR, 18.2.0 → 19.0.0, RULED AGAINST BOTH THE DESIGN AND THIS ROW, which said additive MINOR.** D-196 is CLOSED: a signed case document now carries a `searched` section computed at AUTHORING — the only point it can enter the signed bytes, since the signature…  
   `docs/development/QUEUE.md:1480`
+- **IC-119** — CORRECTED, NOT EXEMPTED**: they asserted the defect as a finding and this item removes the defect they assert. - `bio-plane/test/reevaluation.test.mjs` — the full-leg-shape assertion gains the two new fields. - `docs/development/INTERFACES.md` (I3), `docs/development/INTERFACE-CHANGES.md` (IC-119),  
+  `docs/development/CLAIMS.md:12352`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  

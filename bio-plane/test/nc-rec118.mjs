@@ -89,8 +89,29 @@ const ARMS = {
         + "capped `strength` block. This is the arm the ROW names: the suite must FAIL NAMING BOTH "
         + "LETTERS AND THE OP. It touches no source text block 5 reads, so the pins hold open and "
         + "the failure is attributable to the behaviour alone.",
-    find: "      ? (this.earnedBasisRegistry(null, [...targets])?.earned?.capture || {})",
-    with: "      ? (this.earnedBasisRegistry(null, [...targets]) ? {} : {})",
+    /* THE ANCHOR CARRIES THE LINE ABOVE IT, AND THAT IS A FINDING RATHER THAN
+       A STYLE CHOICE — RECORDED BECAUSE THE INSTRUMENT EARNED IT. The first
+       spelling of this arm anchored on the registry line ALONE:
+
+         `      ? (this.earnedBasisRegistry(null, [...targets])?.earned?.capture || {})`
+
+       and the driver refused it with `anchor occurs 2 time(s)`. That line is
+       BYTE-IDENTICAL in `#legEarnedCapture`, because this item reused REC-114's
+       shape deliberately — so the reuse that makes the two readers one rule is
+       exactly what made the anchor ambiguous. `String.prototype.replace` with a
+       string argument replaces only the FIRST occurrence, so this arm would
+       have patched **REC-114's listing instead of this item's resolver**, run a
+       suite that never touches it, reported a clean pass, and been recorded as
+       evidence that the subject cannot be broken. An arm that fires at the
+       wrong thing and reports success at refuting is CONDUCT #11's
+       arm-that-did-not-arm class with the sign flipped. The preceding `for`
+       line is unique to this method and disambiguates it. */
+    find: "    for (const o of obligations) for (const l of (o.legs ?? [])) if (bounded(l)) targets.add(l.target_id);\n"
+        + "    const cap = targets.size\n"
+        + "      ? (this.earnedBasisRegistry(null, [...targets])?.earned?.capture || {})",
+    with: "    for (const o of obligations) for (const l of (o.legs ?? [])) if (bounded(l)) targets.add(l.target_id);\n"
+        + "    const cap = targets.size\n"
+        + "      ? (this.earnedBasisRegistry(null, [...targets]) ? {} : {})",
     mustFail: ["op=reevaluations PUBLISHES THE EARNED LETTER",
                "and `grade_why` NAMES THE TARGET",
                "THE TWO HALVES OF ONE ANSWER NOW AGREE ABOUT THE SAME LEG",
