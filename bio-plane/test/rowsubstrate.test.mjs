@@ -26,13 +26,26 @@
  * findings on a HEALTHY corpus were worthless, and no instrument here was obliged to measure
  * that. So section 6 asserts the arm's precision directly, against rows known to be fine.
  *
- * MEASURED PRECISION OF THE SURVIVING SYMBOL ARM, stated rather than implied: on its first run
- * over the live queue it produced 4 findings — **REC-117 verified a GENUINE open question**
- * (`NO_FALSIFIER` absent from the cited design, "falsifier" present 7 times in prose, so whether
- * the marker is designed at all is really unknown), **REC-115 verified FALSE** (§4.4 is *"The
- * answer names its level and the content-axis state"*, topically exactly right, and simply does
- * not write the op's name), two unverified. **That is why it is a NOTE and not a WARN**, and why
- * its own message says a miss is a question rather than a verdict.
+ * MEASURED PRECISION, CORRECTED DOWNWARD 2026-09-17 AFTER A SECOND VERIFICATION — and recorded
+ * that way because **a precision figure that only ever improves in the telling is worthless.**
+ * On its first run over the live queue it produced 4 findings. THREE have now been checked at
+ * the artifact and **ONLY ONE IS GENUINE**:
+ *   - REC-116 (the shape this arm was built for): GENUINE — no governed design covers the
+ *     construct at all, and it survived 39 days.
+ *   - REC-115: FALSE — §4.4 is *"The answer names its level and the content-axis state"*,
+ *     topically exactly the right authority, and simply does not write the op's name.
+ *   - REC-117: FALSE — `NO_FALSIFIER` appears in three code files and zero design documents,
+ *     but the RULE is designed under another name: `BIO_Case_Making_v0_1.md` says *"the
+ *     falsifier is REQUIRED"* and `falsifier` occurs 7 times there. The row was runnable and
+ *     this note would have held it.
+ *
+ * **THE TWO FALSE ONES SHARE A MECHANISM, WHICH MAKES IT A BIAS RATHER THAN NOISE: the design
+ * names the RULE in prose and not the IDENTIFIER in code.** That is the limitation this file's
+ * own header predicted, occurring in two cases out of three. It is why the arm is a NOTE and
+ * never a WARN, and it is why **a 2e note that disagrees with a row someone has checked at the
+ * artifact is the thing that is wrong.** Closing the bias would mean matching a rule's PHRASE
+ * rather than its symbol, which is not machine-derivable from the row; named as the frontier
+ * rather than attempted.
  *
  * NEGATIVE CONTROL: (all five RUN 2026-09-17 by BOB #13, exit 0, 28 pass / 0 fail, both baselines
  * green) `node bio-plane/test/rowsubstrate.control.mjs` from the repo root — FIVE live arms and
