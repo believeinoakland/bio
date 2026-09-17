@@ -8,28 +8,28 @@
  * `cmp` with a byte count printed — never `git checkout --`, which restores to
  * HEAD and has twice discarded a session's own uncommitted work.
  *
- * ELEVEN ARMS, ALL DECLARED BEFORE ARMING AND ALL RUN, 2026-09-17. Every arm armed
- * and restored byte-identically (sha256 EQUAL, `cmp` identical, 1,348,297 bytes).
- * The first ten were run at a 94-assertion baseline and `prefilledquery` at 96,
- * because the two assertions it exists for were added after that sweep — the
- * figures are recorded as they were PRINTED rather than normalised, since a
- * baseline is a fact about a run and not about a file:
- *     baseline        94 pass / 0 fail   — the arms are real, not all broken
- *     levelhidden     89 / 5   one of the four levels dropped: both "every one of
+ * ELEVEN ARMS, ALL DECLARED BEFORE ARMING AND ALL RUN. The figures below are the
+ * FINAL SWEEP over the shipped tree, 2026-09-17 — re-taken after the last edit
+ * rather than carried from the first sweep, because an arm's anchor can stop
+ * matching when the source moves and an arm that DID NOT ARM is a finding, not a
+ * quiet pass (the driver refuses to arm and says so). Every arm armed and every
+ * restore verified: sha256 EQUAL, `cmp` identical, 1,349,745 bytes.
+ *     baseline        99 pass / 0 fail   — the arms are real, not all broken
+ *     levelhidden     94 / 5   one of the four levels dropped: both "every one of
  *                              the four is RENDERED" arms, both "the plane's OWN
  *                              sentence" arms, and the UNDETERMINED arm
- *     tallyfour       93 / 1   the fifth bucket dropped: "every one of the five is
+ *     tallyfour       98 / 1   the fifth bucket dropped: "every one of the five is
  *                              RENDERED"
- *     reworded        93 / 1   DEC-8: the plane's `says` replaced by friendlier prose
- *     prefilled       93 / 1   DEC-69: a page box prefilled with a 1
- *     proportions     93 / 1   a percentage beside each bucket
- *     sampleunmarked  92 / 2   the SAMPLE card removed when the bound bites
- *     extentdropped   91 / 3   the extent silently not sent while the composer
+ *     reworded        98 / 1   DEC-8: the plane's `says` replaced by friendlier prose
+ *     prefilled       98 / 1   DEC-69: a page box prefilled with a 1
+ *     proportions     98 / 1   a percentage beside each bucket
+ *     sampleunmarked  97 / 2   the SAMPLE card removed when the bound bites
+ *     extentdropped   96 / 3   the extent silently not sent while the composer
  *                              still says it will be — the act still SUCCEEDS
- *     offbyone        93 / 1   the record's 0-based page handed to the reader
- *     prefilledquery  95 / 1   DEC-69, and this row's own named control: the search
- *                              box opened with a term already in it (baseline 96)
- *     reordered       94 / 0   OVER-STRICTNESS: the levels in the opposite order
+ *     offbyone        98 / 1   the record's 0-based page handed to the reader
+ *     prefilledquery  98 / 1   DEC-69, and this row's own named control: the search
+ *                              box opened with a term already in it
+ *     reordered       99 / 0   OVER-STRICTNESS: the levels in the opposite order
  *                              take NOTHING down, as they must not
  *
  * ONE ARM CAME BACK DIFFERENT FROM ITS DECLARATION AND IT IS RECORDED RATHER THAN
