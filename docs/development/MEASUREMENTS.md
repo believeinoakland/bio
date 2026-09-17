@@ -14914,3 +14914,49 @@ Live, re-probed 2026-09-16 against the pinned account `20b533579290b9b93168345ed
 (subdomain `believeinoakland`): `agent-worker` `0.58.0`, `pdf-worker` `0.58.0`, `ocr-worker`
 `0.58.0` with `engine_loaded: true`. The handoff marked these `(live)`; they are re-verified
 rather than inherited, because a deployment is a fact about an account and not about a tree.
+
+## M-40 — the content-axis tally's cost per capture, and the bound `MEANING_AXIS_CAP` is set FROM it
+
+**Taken 2026-09-17 by REC-92 (worker `agent-aa1a6eb8fbcd2b4f3`), instrument
+`bio-plane/test/passage-axis-probe.mjs`, re-runnable in one step with
+`node test/passage-axis-probe.mjs 100 500 1000` from `bio-plane/`.**
+
+**Why it was taken.** `CONTENT-SEARCH-DESIGN.md` §4.4's tally rides on EVERY `rows=passage`
+answer and the section describes it as if a scope had no size. A bound was needed, and a
+bound chosen by judgement is a number nobody can re-derive — this project's most-repeated
+finding is a hand-carried figure in a document nobody re-measures.
+
+| captures in scope | whole answer, HIT (med) | whole answer, MISS (med) | tally counted | `truncated` |
+| --- | --- | --- | --- | --- |
+| 100 | 3.6 ms | 1.8 ms | 100 | false |
+| 500 | 7.1 ms | 3.6 ms | 500 | false |
+| 1,000 | 10.3 ms | 4.1 ms | **500** | **true** |
+
+**Noise floor, measured on the same harness rather than assumed:** 9 reps of one query read
+min 8.3 ms, med 8.5 ms, max 9.8 ms — a spread of **18.4 % of the median**, which is the same
+order as M-21's measured 20.5 % on this kind of harness. **Every difference reported above is
+larger than that floor; nothing smaller than it is claimed as a difference.**
+
+**What the numbers say.** The tally's cost is linear in captures and small: the MISS answer,
+which is almost entirely the tally (no rows to project), runs 1.8 ms at 100 and 3.6 ms at 500
+— about **7 µs per capture**. At 1,000 the tally STOPS GROWING because the bound bit, while
+the HIT answer keeps rising (7.1 → 10.3 ms) on the ROWS rather than the tally. **So 500 buys
+a real census on any scope a member is likely to be looking at, for a few milliseconds, and
+the bound demonstrably fires and publishes that it fired.**
+
+**THE MACHINE WAS BUSY AND THAT IS RECORDED RATHER THAN HIDDEN.** `node tools/waitquiet.mjs
+--check` answered **1 (busy)** when this ran — several sibling workers' batteries were live on
+this shared machine, and free disk was 2.9 GiB at 99 %. The absolute figures are therefore an
+upper bound on a quiet machine; the SHAPE (linear, and the bound arresting it) is what the
+decision rests on and contention does not invert it.
+
+**WHAT THIS INSTRUMENT CANNOT SEE, stated because a probe is an instrument.** It runs in
+miniflare on a developer Mac, not in workerd on Cloudflare, so the absolute numbers are this
+machine's — M0-35 measured that the reference-iteration currency is **not runtime-portable**
+and this figure inherits that caveat. The corpus is synthetic one-unit captures, so this is
+the per-CAPTURE cost of the tally and says nothing about the per-UNIT cost of the index
+itself, which is M-20's. And it does not measure a scope larger than 1,000.
+
+**Consequence, shipped:** `MEANING_AXIS_CAP = 500` in `bio-plane/src/query.mjs`, with
+`captures_counted`, `captures_truncated` and `captures_bound` published on the answer so a
+sample is never read as a census.

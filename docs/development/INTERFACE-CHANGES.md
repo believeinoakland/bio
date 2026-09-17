@@ -8381,3 +8381,76 @@ unaffected.
 
 **Registry:** I3 bumped in `INTERFACES.md` in this same commit (protocol step 4 → 5).
 
+
+---
+
+## IC-110 · I3: `op=meaningrows` gains the `passage` ARM (`rows=passage`) and, on that arm only, a CONTENT-AXIS TALLY inside the existing `scope` block · PROPOSED 2026-09-17 (REC-92, building `CONTENT-SEARCH-DESIGN.md` §7 row 5) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Read off this tree's
+  `INTERFACES.md` rather than off a row: 18.2.0** (IC-109 ACCEPTED, ADDITIVE). **Proposed as
+  MINOR — 18.2.0 → 18.3.0.** Three proposals in the last wave named a stale base, so the
+  figure here is the registry's own current value at the commit this branch forked from.
+- **Proposer:** RECORD, worker `agent-aa1a6eb8fbcd2b4f3`, 2026-09-17, from QUEUE REC-92.
+- **NO NEW OP.** `op=meaningrows` already dispatches and is already in `RETRIEVAL_READS`;
+  `rows=passage` is a new ARM on it, exactly as `rows=content` was at IC-98. No op is added,
+  none is removed, and no existing op's refusals change.
+
+**WHAT IS ADDED, and every item is ADDITIVE — nothing is refused that was answered, and no
+published field moves.**
+
+1. **`rows=passage`** — a new value for the `rows` parameter. Its row carries
+   `capture_sha`, `extent_kind`, `extent`, `ref`, `seq`, `truncated`, `chain_kind`, the
+   computed `content_id` (NULL where no content row exists for that extent under the current
+   chain), and `snippet` (FTS5's, bracketed exactly as the bundle snippet is; NULL when the
+   query carried no `passage:` term to centre one on).
+2. **`passage:` as a query selector**, on `op=search` and `op=meaningrows` alike. `text:` is
+   UNCHANGED in meaning and in behaviour — it is still the group's own notes and frontmatter
+   over `bundles_fts`; `passage:` is what the documents say, over REC-91's `capture_text_fts`.
+3. **The content-axis tally, INSIDE the existing `scope` object and only on this arm.**
+   `scope` gains `captures_counted`, `captures_truncated`, `captures_bound` and one counter
+   per content-axis state. A sibling `content_axis` block publishes the vocabulary and the
+   undetermined value so a surface renders the plane's sentences rather than matching
+   literals it learned separately.
+4. **`levels.content.matched`**, a boolean saying whether the rows are units that MATCHED a
+   term or every indexed unit in scope. Present only on this arm.
+5. **`op=searchfields`** publishes the new arm automatically, because `meaningVocabulary()`
+   is DRIVEN off the same registry rather than hand-maintained. No edit was needed and none
+   was made; a surface that builds its controls from that vocabulary gains a scope word.
+
+**THE ONE SHAPE QUESTION THAT WAS NOT OBVIOUS, AND IT IS REGISTERED HERE BECAUSE IT IS PART OF
+THE CONTRACT.** `CONTENT-SEARCH-DESIGN.md` §4.4 specifies the envelope as carrying
+`scope: { captures: N, indexed_full: a, … }` — **and `scope` was ALREADY TAKEN.** REC-90 had
+published `scope: { documents, documents_with_rows, documents_without_rows }` on every arm at
+IC-98, five weeks after §4.4 was written. Two different shapes under one name is an interface
+no surface can read, so they are **UNIONED**: every field §4.4 names appears exactly where
+§4.4 says it does, and nothing REC-90 published moves, is renamed, or is refused. The
+alternative — replacing `scope` for this arm — would have broken any surface reading
+`scope.documents` the moment it asked for passages, which is a BREAK dressed as a new
+feature. Reported as a DESIGN GAP against §4.4 for CONDUCT to fold.
+
+**AND THE TALLY CARRIES FIVE BUCKETS WHERE §4.4 NAMES FOUR.** `contentAxisFor` has five
+answers — the four `CONTENT_AXIS_STATES` and `CONTENT_AXIS_UNDETERMINED`, which REC-94
+exported SEPARATELY and deliberately because it *is not a member of the four*. Folding it
+into a neighbour would be concluding a value from an absence, and it is not a rare corner:
+**every capture promoted before REC-91's index writer existed is undetermined**, so on any
+instance that predates that landing a four-bucket tally would report a whole unindexed corpus
+as indexed to some degree. The fifth bucket is spelled from the constant, never typed.
+
+**Consumers, MEASURED on this tree rather than inherited from a report:**
+
+- **`agent-worker` IS a live consumer** — `SUBSESSION_OPS = ["meaningrows"]`
+  (`agent-worker/src/subsession.mjs:179`), and it passes `rows` through. **Impact: ZERO.** A
+  new arm NAME is additive to a caller that forwards the parameter; nothing it sends stops
+  being answered. Its own suites already drive an UNKNOWN arm (`rows=legs`, D-276) and that
+  refusal is unchanged — `passage` simply joins the list `MEANING_ROWS_UNKNOWN_ARM` names.
+- **`civicos-ui/app.html` consumes `op=searchfields`** and composes its finder scopes from
+  the published vocabulary. **Impact: ADDITIVE** — one new scope word appears, derived, with
+  no UI edit required and none made by this item. `civicos-ui` calls `op=meaningrows`
+  **nowhere** (measured; the same zero D-258 recorded).
+- **`newgroup`** touches `searchfields` only through its bundled release artifact; no
+  contract it depends on moves. **`DIST`** unaffected. **`tools/`** has no caller.
+
+**Registry:** I3 to be bumped in `INTERFACES.md` by CONDUCT at integration (protocol step
+4 → 5). This worker did NOT bump it — the version bump and the resolution are CONDUCT's,
+and a worker that moved the registry itself would be the second writer that protocol exists
+to prevent.
