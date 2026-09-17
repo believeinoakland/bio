@@ -793,11 +793,25 @@ checkout is held by nobody.** So:
   that tree at all.
 - **THE DIAGNOSTIC SHARPENS — this is the half that is easy to read as a loss.** *A dirty
   main is CONDUCT's work* made a dirty main AMBIGUOUS: mid-integration, or something wrong,
-  and only the holder could tell you which. With nobody writing there, **a main checkout
-  that is dirty or off the tip is an ANOMALY WITH NO BENIGN READING.** That is a strictly
-  better predicate than the one it replaces. **Treat it as one: if you find that tree dirty
-  or behind, STOP AND REPORT IT — do not tidy it.** Tidying destroys the only evidence of
+  and only the holder could tell you which. With nobody writing there, **a main checkout that
+  is DIRTY is an ANOMALY WITH NO BENIGN READING.** Treat it as one: **if you find that tree
+  dirty, STOP AND REPORT IT — do not tidy it.** Tidying destroys the only evidence of
   whatever wrote there.
+
+  **CORRECTED 2026-09-17, and the correction is BOB's own error caught one day later.** This
+  bullet read *"dirty or off the tip"* and told you to stop and report on either. **BEHIND IS
+  NOT AN ANOMALY — it is the NORMAL AND EXPECTED STATE of a checkout nobody uses**, because
+  nothing fetches there and `origin/main` advances every time anybody lands anything. An
+  unheld checkout drifts behind by construction and the drift means only that the mechanism
+  is working. **Found by reading `plancheck`'s own output: it warns *local main is behind
+  origin/main* on every bare run now, forever, and under the sentence as written that warn
+  was an anomaly to escalate.** It is not; it is the arrangement functioning.
+
+  **It is the same error as the one BOB made in `M-38` the same day and for the same reason —
+  two states with different causes collapsed into one word.** Dirty has exactly one cause
+  (something wrote there, and nothing should have). Behind has exactly one cause and it is
+  benign. **A predicate that fires on both teaches the reader to ignore it**, which is the
+  cost this estate has now priced three times in two days.
 - **Nobody watching that tree is the right answer rather than a gap.** What needed watching
   was a tree somebody wrote into; an unheld clean checkout at the tip needs no watcher.
 
