@@ -1165,6 +1165,17 @@ because a retiring session cannot verify its own deadness and the successor alre
 the moment its chip is clicked. It re-checks D-398's three conditions AT THE MOMENT IT ACTS — holder not
 running, tree CLEAN, tip an ANCESTOR of `origin/main` — never inheriting them from an earlier sweep.
 
+**WHEN THE ARCHIVE IS REFUSED — AND IT CAN BE, WHICH THE FIRST VERSION OF THIS PROTOCOL DID NOT KNOW.**
+`archive_session` refuses a session that *still has live work (an agent run, a Remote Control client, a queued
+message or a background task)*. **Measured 2026-09-17 on CONDUCT #2 with all three conditions verified and its
+tip IDENTICAL to `origin/main`: refused, because `remoteControlActive` was true.** The refusal is CORRECT — it is
+the harness declining to archive something that may be in use, and that protection is what makes an automatic
+sweep safe at all. So: **do NOT retry it in a loop, do NOT reach for `set_remote_control` on a session you do not
+own** (that connection is the operator's and may be his phone), and **do NOT record it as a failure of the three
+conditions** — they were met. Record that they were met, name the blocker the error gave, and surface the ONE act
+only the operator can take: archive it from the sidebar, or disconnect Remote Control from it. The resources stay
+held until then, so say how much, measured.
+
 **AND ARCHIVING IS TWO ACTS, NOT ONE, MEASURED RATHER THAN READ OFF THE TOOL.** Archiving RELEASED the
 worktree lock — which D-398 says nothing does — but the tool's *"cleans up its worktree"* did NOT hold:
 635 MB stayed and free space did not move until `git worktree remove` ran. Both, then report the measured

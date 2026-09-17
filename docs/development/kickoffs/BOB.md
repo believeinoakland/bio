@@ -149,6 +149,17 @@ the remedy. Then:
     mcp__ccd_session_mgmt__archive_session   # stops the process AND releases the worktree lock
     git worktree remove <its worktree>       # the tool does NOT do this; measured
 
+**WHEN THE ARCHIVE IS REFUSED — AND IT CAN BE, WHICH THE FIRST VERSION OF THIS PROTOCOL DID NOT KNOW.**
+`archive_session` refuses a session that *still has live work (an agent run, a Remote Control client, a queued
+message or a background task)*. **Measured 2026-09-17 on CONDUCT #2 with all three conditions verified and its
+tip IDENTICAL to `origin/main`: refused, because `remoteControlActive` was true.** The refusal is CORRECT — it is
+the harness declining to archive something that may be in use, and that protection is what makes an automatic
+sweep safe at all. So: **do NOT retry it in a loop, do NOT reach for `set_remote_control` on a session you do not
+own** (that connection is the operator's and may be his phone), and **do NOT record it as a failure of the three
+conditions** — they were met. Record that they were met, name the blocker the error gave, and surface the ONE act
+only the operator can take: archive it from the sidebar, or disconnect Remote Control from it. The resources stay
+held until then, so say how much, measured.
+
 **Archiving is REVERSIBLE (`unarchive_session`), which is what makes it safe to do without asking.**
 Report the disk you measured before and after. Driven 2026-09-17: 5.4 GiB → 6.1 GiB free.
 
