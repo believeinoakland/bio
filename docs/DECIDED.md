@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1026 rulings across 85 documents.
+1028 rulings across 85 documents.
 
 ## DEC-
 
@@ -41,7 +41,7 @@ authority is the file named, never this one.
 - **DEC-10** · 2026-08-01 — , RULED 2026-08-01 | **MISSING** — P-70 notices and nothing filters or notifies | M4 |  
   `docs/archive/research/PROCESS-CATALOGUE.md:269`
 - **DEC-12** — Q1 · SETTLED by DEC-12 — REVISABLE, AS NUMBERED EDITIONS.** Each edition is a separate document; earlier editions stay published, keep their own attestation and still answer, so a reader who relied on one is never left holding a hash that changed.  
-  `docs/development/research/RECONCILED.md:1389`
+  `docs/development/research/RECONCILED.md:1396`
 - **DEC-13** · 2026-08-03 — CORRECTED BY LATER RULINGS — read with: DEC-13 (H4/H6 are the REQUIRED workflow, not hazards); D-156 as amended by DEC-21's session (AUDIENCE = readers/consumers of a published case; USER TYPE/ARCHETYPE = the requirements sense — this file's "eight audiences" mixes both, and the same person can be both); DEC-31…  
   `docs/archive/research/AUDIENCES.md:1`
 - **DEC-13** · 2026-08-01 — RULED 2026-08-01 (DEC-13). AUDIENCES §7 runs `RATIFY -> CASE -> rendering -> action -> consequence` and §9 lists the pre-publication release of material among its HAZARDS — H4 (*the low-threshold rendering that escapes*) and H6 (*the embargo*). The practice literature says the ordering is inverted, and the sources…  
@@ -49,11 +49,11 @@ authority is the file named, never this one.
 - **DEC-15** · 2026-08-01 — RULED 2026-08-01 (DEC-15), and it resolves the D1(a)-versus-D1(b) fork by showing it was a false one: an authored connection grade and an earned one are not rivals, they are two phases of the same object.  
   `docs/development/DEBT.md:128`
 - **DEC-15** — Q4 · SETTLED by DEC-15 — BOTH, AND THE FORK WAS FALSE: it is a LIFECYCLE.** During `open` a connection grade may be AUTHORED — that is a hunch, and it is what makes the graph traversable before the evidence exists.  
-  `docs/development/research/RECONCILED.md:1432`
+  `docs/development/research/RECONCILED.md:1439`
 - **DEC-16** · 2026-08-02 — RULED 2026-08-02 (DEC-16): once questions NEST, an event reaches EVERY ancestor, and one member's resolution settles it for all of them.** DEC-10 was ruled when a `focus` was a leaf.  
   `docs/architecture/BIO_Interaction_Constructs_v0_1.md:165`
 - **DEC-16** — Q3 · SETTLED by DEC-16 — EVERY ANCESTOR, with one shared resolution.** The unit of queue state is the EVENT, not the (member, case) entry: one state, several homes, which dissolves the flooding objection without a second mechanism.  
-  `docs/development/research/RECONCILED.md:1419`
+  `docs/development/research/RECONCILED.md:1426`
 - **DEC-17** — section 4 (DEC-17's declared bar) is CORRECTED to the project-alone read** with a dated block saying what it asserted before and why that was right when written.  
   `docs/development/CLAIMS.md:1176`
 - **DEC-17** · 2026-08-01 — RULED 2026-08-01 (DEC-17). `BIO_Content_Framework_v0_10.md` §12 has recorded since v0.1 that a claim *"needs a standard of proof attached and that is doctrine rather than architecture — the next design conversation"*; this is that conversation. The question was what makes an unsupported case harder to state, and…  
@@ -63,9 +63,9 @@ authority is the file named, never this one.
 - **DEC-17** — The one genuine ambiguity was DECIDED FROM THE AUTHORITY rather than returned:** whether the group default still backs a publication is answered verbatim by the supersession table (*group default as a publication bar — Removed*).  
   `docs/development/QUEUE.md:1899`
 - **DEC-17** · 2026-08-03 — Q2 · SETTLED by DEC-17 — THE PROJECT DECLARES THE STRENGTH ITS WORK REQUIRES**, published beside the strength actually reached, with the GROUP setting the default a new project starts from (amended 2026-08-03).  
-  `docs/development/research/RECONCILED.md:1406`
+  `docs/development/research/RECONCILED.md:1413`
 - **DEC-18** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-18) — an ungraded leg is INERT, and UNRATED becomes the boundary case rather than the rule.** *"An ungraded leg doesn't contribute to a conclusion, but if there are other graded legs, then it doesn't suspend the conclusion either."*  
-  `docs/architecture/BIO_Case_Making_v0_1.md:1009`
+  `docs/architecture/BIO_Case_Making_v0_1.md:1011`
 - **DEC-19** · 2026-08-02 — CORRECTED 2026-08-02 by Bob (DEC-19). This construct was called "the irreversible signed act" and that was wrong.** *"People make mistakes or misinterpret. An attestation must be reversible to correct mistakes. (Though there may be a record of the attestation and reversal in the record.)"*  
   `docs/architecture/BIO_Interaction_Constructs_v0_1.md:426`
 - **DEC-19** — Carrying DEC-19 AS AMENDED (publishing is THE irreversible act; correction always moves FORWARD — a new edition as a separate document with every published edition standing, a withdrawal as another attested act with both standing; nothing is ever unpublished), DEC-33 (the ceremony is deferred; publication runs…  
@@ -89,7 +89,7 @@ authority is the file named, never this one.
 - **DEC-20** · 2026-08-02 — (1) FACT CHECK — THERE IS NO CONTRADICTION, AND IT WAS ALREADY RULED.** DEC-20, 2026-08-02, Bob's own: *"Not all bias needs to be cleared before a piece is published.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:2709`
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-21) — the CONCLUSION above stands; the MECHANISM below it was wrong.** Bob: *"A capture is the act of reading a document in.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:1076`
+  `docs/architecture/BIO_Case_Making_v0_1.md:1078`
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 (Bob, DEC-21) — R2's CONCLUSION stands; its MECHANISM does not.** > *"A capture is the act of reading a document in.  
   `docs/development/research/RECONCILED.md:183`
 - **DEC-23** · 2026-09-14 — RULED | | machine extraction by recognisers, format entries and fleet members (§16) | BUILT | | the AI EXTRACT role — an assistant extracting on a member's objective | **PARTLY BUILT** — the PLANE half landed 2026-09-14 (SK-7): a machine credential MINTS content rows (`op=contentmint`), every surface LABELS them as…  
@@ -115,11 +115,11 @@ authority is the file named, never this one.
 - **DEC-28** · 2026-08-03 — SETTLED 2026-08-03 BY SESSION BOB, working the open list at Bob's direction:** **Q8** (settled by DEC-28 — `divided` is a terminal STATE, not a disposition), **Q9** (the design pass the N-8 sub-question required — the third line takes one of three closed forms, below), **Q12** (narration is SURFACE-scoped and…  
   `docs/development/research/RECONCILED.md:1364`
 - **DEC-28** — Q8 · SETTLED by DEC-28 — `divided` IS A TERMINAL STATE, not a disposition.** The line between the families is not terminality, it is what the word claims about the question: a disposition is a member's judgment about a well-formed question, which survives it unchanged; division says the question ITSELF was…  
-  `docs/development/research/RECONCILED.md:1557`
+  `docs/development/research/RECONCILED.md:1564`
 - **DEC-29** · 2026-08-03 — Q7 · SETTLED by DEC-29 (Bob, 2026-08-03).** Both halves kept: one authored reason plus total disclosure — division cannot do severance's work at a discount because no leg may be dropped — and the divide prompt stays, its wording required to state that the other question remains on the record and the published child…  
-  `docs/development/research/RECONCILED.md:1544`
+  `docs/development/research/RECONCILED.md:1551`
 - **DEC-30** · 2026-08-03 — Q10 · SETTLED by DEC-30 (Bob, 2026-08-03).** Author-scoped division, no ballot on concluding — one name on every judgment; dissent before the act is a veto, dissent on the record after it is evidence.  
-  `docs/development/research/RECONCILED.md:1602`
+  `docs/development/research/RECONCILED.md:1609`
 - **DEC-32** — AND THE WORKAROUND IS CLOSED BY DEC-32, RULED THIS SAME DAY**, which is what turns this from a preference into an inconsistency.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:2507`
 - **DEC-32** — ; the route exists through this act, so nothing blocks); the operational-test wording RULED by CONDUCT to belong on the SURFACE per DEC-32's own assignment (noted on UI-27, no DEC needed); IC-19 recorded, I3 → 5.12.0.  
@@ -253,7 +253,7 @@ authority is the file named, never this one.
 ## D-
 
 - **D-10** · 2026-08-02 — SETTLED 2026-08-02 by the design pass this question asked for (session BOB).** Not doctrine: it is an application of the assembly rule already in `BIO_Interaction_Constructs_v0_1.md:258-268`, so it needed a design pass and not a ruling.  
-  `docs/development/research/RECONCILED.md:1447`
+  `docs/development/research/RECONCILED.md:1454`
 - **D-15** — ed structurally, the server-stamped-param audit, the `ms` assertions, and this suite's own client-side `delete body.ms` CORRECTED away with the reason), bio-plane/test/inbox.test.mjs + bio-plane/test/task-fence.test.mjs + bio-plane/test/task-drain-alarm.test.mjs + bio-plane/test/search.test.mjs (ONLY their…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:693`
 - **D-15** — members.test.mjs:192 CORRECTED never exempted (it counted rows on an op whose whole rule governs what may be IN the answer).  
@@ -357,7 +357,7 @@ authority is the file named, never this one.
 - **D-127** — D-127 (the collapse, RULED) · D-138 (the drift guard that does not read the authority it claims to check) · the `focus → inquiry` rename, the concept's third name · `data/citations.json` / C-8.1's disposition.  
   `docs/development/MILESTONES.md:445`
 - **D-129** · 2026-08-02 — Q9 · SETTLED 2026-08-02→03 — the plane half was always D-129's answer; the N-8 form is now designed, by the deliberate pass the entry required rather than in passing (session BOB, 2026-08-03).**  
-  `docs/development/research/RECONCILED.md:1570`
+  `docs/development/research/RECONCILED.md:1577`
 - **D-137** — and was CORRECTED, never exempted. `bounds` demanded the new capped op be DRIVEN and **its first run read `truncated: false` at a cap of ONE — the arm could not arm**, because the suite's store held fewer than two document-level subjects; three are now seeded through the real writer. `derivation-bounds`'…  
   `docs/development/CLAIMS.md:7420`
 - **D-140** — (D-140); producer-published `options[]` (GAP-Q2); `queue_state` for mute/snooze; the relevance filter P-88 (DEC-10, RULED, MISSING); the ageing job P-85 (MISSING) | B8, B9, B1 · **HOLE-1** (CONDITION has no carrier) |  
@@ -567,7 +567,7 @@ authority is the file named, never this one.
 - **D-394** · 2026-09-17 — M4 · OPEN — the doctrine is RULED and the mechanism is undesigned; BOB owns the design, and the WHEN/WHAT/HOW above is the decision it must make first.  
   `docs/development/DEBT.md:330`
 - **D-398** · 2026-09-17 — CORRECTED 2026-09-17 BY BOB #13, AND THE CORRECTION IS A MECHANISM THIS ROW SAYS DOES NOT EXIST: ARCHIVING THE SESSION RELEASES THE LOCK.** This row and BOB-NEXT's amendment both say the lock does not release when the process exits and becomes a stale lock nothing cleans up, so reclamation was framed as an…  
-  `docs/development/DEBT.md:340`
+  `docs/development/DEBT.md:341`
 - **D-401** · 2026-09-17 — RULED BY BOB THE SAME DAY:** *"BOB #12 being alive is not my problem.  
   `docs/development/DEBT.md:333`
 ## IC-
@@ -2071,14 +2071,18 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/research/RECONCILED.md:1158`
 - **2026-08-02** — SETTLED 2026-08-02 BY SESSION BOB, in place, without a ruling — do not re-raise:** **Q5** (the completeness panel is re-keyed onto the case's basis legs — a design pass, as the entry required), **Q6** (a threshold is a named stance over a pair of independent floors — a rendering-design call, as the entry required),…  
   `docs/development/research/RECONCILED.md:1354`
+- **2026-09-17** — [SUPERSEDED 2026-09-17]**; the intent-axis projection is a RECORD-area call at build time.  
+  `docs/development/research/RECONCILED.md:1373`
+- **2026-09-17** — [SUPERSEDED 2026-09-17 — the contradiction half of this sentence is the premise Bob INVERTED, and it is left in place with its correction beside it because the sentence is the receipt.** *"No consumer"* was the stated ground on which Q14 stayed undesigned **[2026-09-17]** for six weeks; Bob supplied the consumer in…  
+  `docs/development/research/RECONCILED.md:1374`
 - **2026-08-02** — SETTLED 2026-08-02 by the design pass this question asked for (session BOB)**, against `AUDIENCES.md` §0's rule that a threshold is a parameter labelled by what the reader is DOING. **THE ANSWER: a threshold is a NAMED STANCE that resolves to a PAIR OF INDEPENDENT FLOORS, one per  
-  `docs/development/research/RECONCILED.md:1497`
+  `docs/development/research/RECONCILED.md:1504`
 - **2026-08-02** — SETTLED 2026-08-02 BY MEASUREMENT, as this entry required** — run against the real plane under `workerd`, recorded in `MEASUREMENTS.md` with its date and instrument. **THE ANSWER: YES, with no new op.** `op=signerlist` is reachable by an ordinary member's SESSION  
-  `docs/development/research/RECONCILED.md:1614`
+  `docs/development/research/RECONCILED.md:1621`
 - **2026-08-03** — Q12 · SETTLED 2026-08-03 by the design pass this question asked for (session BOB).** **THE ANSWER: narration is SURFACE-scoped and plane-sourced; controls are never narrated and never greyed.** The three files were answering two different questions, which is why they seemed  
-  `docs/development/research/RECONCILED.md:1641`
+  `docs/development/research/RECONCILED.md:1648`
 - **2026-08-03** — Q13 · SETTLED 2026-08-03 by the design pass this question asked for (session BOB).** **THE ANSWER: within a class, LONGEST-WAITING FIRST, stated on the surface — as the RULE, not a proxy.** The candidate orderings are bounded and each of the others fails on a standing rule:  
-  `docs/development/research/RECONCILED.md:1664`
+  `docs/development/research/RECONCILED.md:1671`
 - **2026-07-24** — Its five design questions are SUPERSEDED** by that document, which the section itself says.  
   `docs/development/RETRIEVAL-PROBE.md:3`
 - §Design questions — SUPERSEDED IN FULL by `RETRIEVAL-SUBSTRATE.md`, as the section's own opening paragraph states.  

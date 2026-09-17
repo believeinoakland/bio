@@ -1,6 +1,6 @@
 # The store as a read-through cache — research, and what it changes
 
-**Status** · Research note, 2026-08-04, session BOB at Bob's direction: a survey of archival and caching systems (Software Heritage, WARC, Memento, DNS RFC 2308, LOCKSS, Cloudflare) measured against BIO's own mechanisms, concluding "read-through acquisition over a write-once archive — a cache in mechanism, an archive in policy." It carries no DEC ruling of its own; it records Bob's two same-day corrections as authoritative text — the three-axis model (DOCUMENT / CONTENT / MEANING with FETCH / EXTRACT / DERIVE) and the four-level search — and marks its own "Where AI actually sits" PARTLY SUPERSEDED and its bias framing CORRECTED and withdrawn. Complete as research; its build recommendations (observation log, authored frontier, harvest-rate gate, planning) are unbuilt, and its two adopted tables now live with build status in `BIO_Content_Framework_v0_10.md` Part II §14.2–14.3. The caveat: "nothing here is built" is still true of the observation log and the frontier's authored half, while the route-2 hole it measured has since been partly closed (D-222 option A, PL-8) — read its retrieval-route claims against the framework, not as current measurement. as of 2026-09-14.
+**Status** · Research note, 2026-08-04, session BOB at Bob's direction: a survey of archival and caching systems (Software Heritage, WARC, Memento, DNS RFC 2308, LOCKSS, Cloudflare) measured against BIO's own mechanisms, concluding "read-through acquisition over a write-once archive — a cache in mechanism, an archive in policy." It carries no DEC ruling of its own; it records Bob's two same-day corrections as authoritative text — the three-axis model (DOCUMENT / CONTENT / MEANING with FETCH / EXTRACT / DERIVE) and the four-level search — and marks its own "Where AI actually sits" PARTLY SUPERSEDED and its bias framing CORRECTED and withdrawn. Complete as research; its build recommendations (observation log, authored frontier, harvest-rate gate, planning) are unbuilt, and its two adopted tables now live with build status in `BIO_Content_Framework_v0_10.md` Part II §14.2–14.3. The caveat: "nothing here is built" is still true of the observation log and the frontier's authored half, while the route-2 hole it measured has since been partly closed (D-222 option A, PL-8) — read its retrieval-route claims against the framework, not as current measurement. as of 2026-09-17.
 
 **Place in the system** · Level-2 design serving `BIO_System_Design.md` §3 row 9 (retrieval — the store as a read-through cache), which has no level-1 home: Part II §14.2–14.3 of `BIO_Content_Framework_v0_10.md` carry the adopted tables and are the authority to cite; row 4 (content) lists it in brackets. `INVESTIGATIVE-SESSION.md` §3 and §14b.2, the D-222/D-223/D-194/D-190 debt rows and `CLAUDE.md`'s four-level rules depend on it; Part II §14.2–14.3 (model), §17 (OBSERVE rows) and §18 (content-grain search) supersede parts of it; `RETRIEVAL-SUBSTRATE.md` owns the FTS5 substrate it does not address.
 
@@ -10,7 +10,7 @@
 - §Where AI actually sits — self-marked PARTLY SUPERSEDED; D-222 option A landed (the MEANING arm reaches `inquiry_basis` and `resolutions`); `readings`, `reading_refs`, `connections` still fixed-key only; stage C is inside Part II §18's scope, not queued.
 - §ABSENCE AS DATA — widening D-129 to four states plus `partial` is still a debt row; no state column exists in the schema.
 - §A ZERO-PAYLOAD PROVENANCE RECORD — the OBSERVATION record and last-verified field are [ABSENT] per Part II §17; the one built consumer is the IS run's `ai_run_log`.
-- §THE FRONTIER HAS TWO SOURCES — the authored lead has no home (D-194 open, paired with D-184); the empty-search record is not written.
+- §THE FRONTIER HAS TWO SOURCES — the authored lead has no home (D-194 open, paired with D-184 **[audited 2026-09-17: STILL TRUE, both rows re-read]**); the empty-search record is not written.
 - §The genuinely new capability — objective-driven PLANNING unbuilt; the harvest-rate gate under "What must be MEASURED" never run; D-190's ceiling partly measured (FL-1).
 - §What the platform permits — vendor claims dated 2026-08-04, unrefreshed.
 - §Four findings that bear on things BIO has already built — the "new debt row" promises (temporal spread, rendered-HTML attacks) are not traced to D-numbers here.
@@ -474,9 +474,9 @@ ends, and neither is worth much without the other.
 
 **Two gaps this names, neither of which the record can express today:**
 
-1. **A member's LEAD has no home.** The frontier is `deferred` links — URLs discovered
+1. **A member's LEAD has no home. **[audited 2026-09-17: STILL TRUE, D-194 open]** The frontier is `deferred` links — URLs discovered
    inside documents. A tip is not a URL: it is *a thing that should exist, sought*. Sibling
-   to D-184 (a member's firsthand OBSERVATION has no home as a basis leg); the same member
+   to D-184 (a member's firsthand OBSERVATION has no home as a basis leg **[audited 2026-09-17: STILL TRUE, D-184 open]**); the same member
    knowledge is unrepresentable both before the search and after it.
 2. **A search that came back empty is not recorded at all.** Only fetches that succeeded
    leave a trace. The most evidentiary outcome of shoe leather — *we looked hard, here, and

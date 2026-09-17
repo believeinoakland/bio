@@ -1,6 +1,6 @@
 # RECONCILED — the single statement of the case-making design
 
-**Status** · The single statement of the case-making design, written 2026-08-01 by session BOB and amended in place through 2026-08-03: it resolves 38 contradictions across the study, applies R1–R4 passage by passage, re-derives the 35-item build order and ranks 14 open questions. It rests on Bob's rulings DEC-12 through DEC-22 and DEC-28 through DEC-31 (each marked in place), is amended by DEC-18 and DEC-21, and its §3 build order is DONE — every item `done` in `QUEUE.md` except REC-15 and UI-17, blocked by DEC-33, the deferral under which this whole set is PARKED. Complete as a design record; superseded in part by DEC-72 (a CASE is a production of a project) which §0 does not know. Caveat: the file says SUSPEND in some fifty places and means UNRATED (its own §1.1 amendment), and it cites the archived storyboards by line. as of 2026-09-14.
+**Status** · The single statement of the case-making design, written 2026-08-01 by session BOB and amended in place through 2026-08-03: it resolves 38 contradictions across the study, applies R1–R4 passage by passage, re-derives the 35-item build order and ranks 14 open questions. It rests on Bob's rulings DEC-12 through DEC-22 and DEC-28 through DEC-31 (each marked in place), is amended by DEC-18 and DEC-21, and its §3 build order is DONE — every item `done` in `QUEUE.md` except REC-15 and UI-17, blocked by DEC-33, the deferral under which this whole set is PARKED. Complete as a design record; superseded in part by DEC-72 (a CASE is a production of a project) which §0 does not know. Caveat: the file says SUSPEND in some fifty places and means UNRATED (its own §1.1 amendment), and it cites the archived storyboards by line. as of 2026-09-17.
 
 **Place in the system** · Owns the reasoning behind construct 8 of `BIO_System_Design.md` §3 and touches 12 (surfaces) and 13 (publication); level-1 home `BIO_Case_Making_v0_1.md`, rulings in `DECISIONS.md`. `QUEUE.md`'s REC/UI items and `review-document.html` depend on it; DEC-72, `BIO_DATAPLANE_STATE.md` and DEC-33's deferral (REC-15, UI-17, UI-17a) supersede parts of §0 and §3.
 
@@ -1370,8 +1370,15 @@ the original text kept as history. **The questions that are Bob's were carried a
 entries and are now resolved: Q7 → DEC-29 (answered), Q10 → DEC-30 (answered), Q14's delivery
 bullet → DEC-31 (deferred, trigger named, in-band rule bound). The parallel-claims question →
 DEC-32, still open while Bob weighs the grounds model.** Q14's other two bullets stay as they are: the contradiction
-shape has no consumer and stays honestly undesigned; the intent-axis projection is a RECORD-area
-call at build time.
+shape has no consumer and stays honestly undesigned **[SUPERSEDED 2026-09-17]**; the intent-axis projection is a RECORD-area
+call at build time. **[SUPERSEDED 2026-09-17 — the contradiction half of this sentence is the
+premise Bob INVERTED, and it is left in place with its correction beside it because the sentence
+is the receipt.** *"No consumer"* was the stated ground on which Q14 stayed undesigned **[2026-09-17]** for six
+weeks; Bob supplied the consumer in one sentence — *"contradictions are golden nuggets that
+shouldn't be 'fixed', but rather drawn attention to"* — and the design now lives in
+`BIO_Case_Making_v0_1.md` §CONTRADICTION. **The lesson is not that the sentence was wrong when
+written; it is that a premise supporting an *undesigned* **[2026-09-17]** was never re-checked, which is exactly
+what the corpus single-authority sweep exists to catch.]**
 
 **CLOSED BY R1–R4 and removed from every list — do not re-raise:** whether `undetermined` floors or
 suspends (was `SB-OUTPUT` §5.1, `BUILD-ORDER` HOLE-5, `CRITIQUE` D-2 — closed by R1); whether the
@@ -1610,7 +1617,7 @@ is the right shape. **Settled by:** Bob. The material difference is stated and i
 owner-only would let an owner block an honest de-escalation.
 
 **Q11 · Can a surface know, before the act, that a MEMBER holds no active signing key?** *(=
-`SB-CORE` §5; `CRITIQUE` C-4's undesigned half.)* **Blocks:** nothing; REC-15 ships the instance-wide
+`SB-CORE` §5; `CRITIQUE` C-4's undesigned half **[audited 2026-09-17: archived research, closed history — not re-audited]**.)* **Blocks:** nothing; REC-15 ships the instance-wide
 refusal. **SETTLED 2026-08-02 BY MEASUREMENT, as this entry required** — run against the real plane
 under `workerd`, recorded in `MEASUREMENTS.md` with its date and instrument.
 
