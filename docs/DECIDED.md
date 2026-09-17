@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1023 rulings across 85 documents.
+1024 rulings across 85 documents.
 
 ## DEC-
 
@@ -1114,6 +1114,8 @@ authority is the file named, never this one.
   `docs/development/CONTENT-SEARCH-DESIGN.md:339`
 - **UI-62** — SETTLED when UI-62 or a successor emits an extent from the composer end to end; CONDUCT writes it then.  
   `docs/development/INTERFACE-CHANGES.md:6910`
+- **UI-63** · 2026-09-17 — IT CORRECTED CONDUCT'S BASELINE AND THE CORRECTION EXPOSED AN INTEGRATOR ERROR WORTH MORE THAN THE FIGURE — see this row's integration note in the commit: the briefed 215/215 · 13527 was true of `df4fb394` and NOT of the tree that was pushed.** True baseline at `7ebe2dd1`: **216/216 suites green · 13555 assertions…  
+  `docs/development/QUEUE.md:1521`
 ## FW-
 
 - **FW-1** · 2026-08-03 — RESPONSES · 2026-08-03 · to the proposal AS AMENDED (including `doc-para`) - **FRAMEWORK: `AGREE` — answered on its behalf by CONDUCT, in writing, per protocol step 3.** FRAMEWORK is dormant (its FW-1…FW-10 run is done and its slot released; no  

@@ -12183,6 +12183,7 @@ a trap paid for and not repeated: the first draft of `hookState()` used `readdir
   instead, and the resulting blind spot — a hook under a non-standard name — is STATED at the site.
 
 ## CLAIM 2026-09-17 UI (UI-63 — the cross-seam panel says *"Answered by neither"* about three arms `op=search` compiles)
+released: 2026-09-17 by CONDUCT #3 at integration, merged at `1829cb05`. **Every path this claim reserved is free.** Gated on the MERGED tree — `216/216 suites green · 13556 assertions passing`, provenance 219/219 at `1829cb05`, 3 fleet members RAN, 0 skips — **and this row's integration is where CONDUCT's own baseline error was caught and corrected, by this worker, at the artifact.**
 
 worker `agent-af80bb7c93b1a381b`, branch `worktree-agent-af80bb7c93b1a381b`.
 opened: 2026-09-17
