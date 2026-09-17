@@ -8766,7 +8766,9 @@ and is now a measurement.
 
 ---
 
-## IC-117 · I3 `op=meaningrows&rows=leg`: the leg's `grade` becomes the EARNED letter, with the AUTHORED letter published beside it · PROPOSED
+## IC-117 · I3 `op=meaningrows&rows=leg`: the leg's `grade` becomes the EARNED letter, with the AUTHORED letter published beside it · RESOLVED ACCEPTED 2026-09-17 by CONDUCT #3 at integration — I3 19.0.0 → **20.0.0**, MAJOR
+
+> **ACCEPTED AS PROPOSED, AND THE GRADE WAS NOT ARGUED DOWN THOUGH IT EASILY COULD HAVE BEEN.** The measured impact is **ZERO non-test consumers** — `civicos-ui` calls `op=meaningrows` nowhere, measured on this tree and independently recorded as D-258 on 2026-08-09. **IC-25 settles that a break is a break whatever the measured impact, and IC-112 is the standing precedent for refusing to soften a grade because nobody happens to be listening today.** A consumer count is a fact about this moment; the contract is a promise about every moment after it. **`grade` MOVED rather than gaining a sibling, and that is what makes this MAJOR rather than additive** — an `earned` field beside an uncorrected `grade` would have left every existing consumer publishing the overclaim this item exists to end, which is the shape of a fix that changes nothing. **The base was re-read off the tree and the row's implied base was STALE** (lineage said 18.x, `INTERFACES.md` read 19.0.0) — the same class REC-108 found and caught the same way.
 
 - **Interface:** I3 (plane → UI, the op contracts), read **19.0.0 STABLE ON THIS TREE**.
 - **Item:** REC-114 (D-383). **Owner:** `RECORD`.
