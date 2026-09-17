@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-995 rulings across 84 documents.
+998 rulings across 84 documents.
 
 ## DEC-
 
@@ -562,6 +562,10 @@ authority is the file named, never this one.
   `docs/development/DEBT.md:315`
 - **D-394** · 2026-09-17 — M4 · OPEN — the doctrine is RULED and the mechanism is undesigned; BOB owns the design, and the WHEN/WHAT/HOW above is the decision it must make first.  
   `docs/development/DEBT.md:330`
+- **D-398** · 2026-09-17 — CORRECTED 2026-09-17 BY BOB #13, AND THE CORRECTION IS A MECHANISM THIS ROW SAYS DOES NOT EXIST: ARCHIVING THE SESSION RELEASES THE LOCK.** This row and BOB-NEXT's amendment both say the lock does not release when the process exits and becomes a stale lock nothing cleans up, so reclamation was framed as an…  
+  `docs/development/DEBT.md:334`
+- **D-401** · 2026-09-17 — RULED BY BOB THE SAME DAY:** *"BOB #12 being alive is not my problem.  
+  `docs/development/DEBT.md:333`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
@@ -1874,7 +1878,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - NOTATION IS SETTLED: classDiagram for structure, stateDiagram-v2 for lifecycle, edges labelled with the ACT.  
   `docs/development/kickoffs/BOB.md:105`
 - Report what was DONE and what was DECIDED.  
-  `docs/development/kickoffs/BOB.md:302`
+  `docs/development/kickoffs/BOB.md:324`
+- **2026-09-17** — RULED BY BOB, 2026-09-17: a lane's retired session is archived WITHOUT HIS INVOLVEMENT.** Verbatim: *"BOB #12 being alive is not my problem.  
+  `docs/development/kickoffs/BOB.md:359`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
   `docs/development/kickoffs/CAPTURE.md:99`
 - debt that can be avoided; superseded rules in tests are CORRECTED, never exempted.** All of these earned their place; the ledger has the receipts. ## Bob's rulings, already made.  
