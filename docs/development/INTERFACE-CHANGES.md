@@ -8263,3 +8263,80 @@ it is rowed and not closed, and it may be Bob's to rule.
 
 **Registry:** I3 bumped in `INTERFACES.md` in this same commit (protocol step 4 → 5).
 
+## IC-109 · I3: `op=frontier&level=content`'s `truncated` NOW DESCRIBES THE LIST THE CALLER RECEIVED, and a gated caller may receive MORE ROWS than before · PROPOSED 2026-09-16 (REC-109, closing D-385) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). Measured on this item's base `origin/main`
+  at `a1c85798`: **18.0.0** (IC-105 ACCEPTED, BREAKING). **Proposed as MINOR — 18.0.0 → 18.1.0**,
+  and the argument for the alternative is written out below rather than left for CONDUCT to
+  reconstruct. **The measured impact is ZERO and the zero is recorded as EVIDENCE rather than
+  offered as an argument for a smaller bump:** a grep for `op=frontier` over `civicos-ui/`,
+  `agent-worker/`, `newgroup/` and `tools/` returns **no caller at all** — the same measurement
+  REC-103 took one landing earlier, re-run on this tree rather than inherited from its report.
+  Every caller is a `bio-plane/test/` suite; two read `level=content`
+  (`observation-content.test.mjs`, `observation-meaning.test.mjs`) and both are green.
+- **Proposer:** RECORD, worker `agent-a8eea05132b9aee1d`, 2026-09-16, from QUEUE REC-109
+- **Owner to land it:** `RECORD` (owner and proposer)
+- **Consumers to answer:** `UI` (no surface reads this op today — measured, not assumed),
+  `SKILL`, `CASE`, `DIST` (served surfaces), `RECORD`.
+
+**WHY THIS IS PROPOSED MINOR AND NOT MAJOR, WITH THE COUNTER-ARGUMENT STATED.** IC-25's settled
+rule — *a refusal where none stood before is a break WHATEVER the measured impact* — is what took
+I3 to 17.0.0 and then to 18.0.0, and it does **not** bite here: **nothing is refused that was
+answered.** The fence itself is untouched. Every row an entitled viewer saw, it still sees; every
+row that was withheld is still withheld. What moves is (1) a published field's VALUE, corrected
+from wrong to right, and (2) the number of rows a GATED caller receives, which goes UP toward the
+bound they asked for. **The counter-argument, which is real: a caller that PAGED on `truncated`
+changes behaviour, and a field changing its answers is a read change whatever direction it moves
+in.** Against it: the old value was not a contract, it was a defect — it answered a question about
+a list the caller never received — and IC-25's rule is about REFUSALS rather than about
+corrections. **CONDUCT takes the bump; this proposal records both sides rather than presenting
+one.**
+
+**THE DEFECT, AND IT WAS TWO ERRORS IN ONE STATEMENT WHERE THE ROW NAMED ONE.**
+`truncated: page.length > cap || missing.length > cap`.
+
+1. **`page` WAS THE RAW FETCH and the withholding gate ran AFTER it** (`page.slice(0, cap)
+   .filter(seen)` — cut first, gate second). So the flag was true exactly when the supply exceeded
+   the bound, whether or not the caller's own list did. **To a viewer whose page was short, `true`
+   said *rows exist here that you are not being shown*.**
+2. **`missing` IS NOT A LIST THIS METHOD PUBLISHES.** It is split by §5.1's cause into `never` and
+   `unexplained`, and those are what get cut at `cap`. **That is the SECOND error CONDUCT #11
+   corrected in `#frontierMeaning` on 2026-09-15**, still standing here in the same statement as
+   the first. D-385 named only the first; both are fixed, and the fix was swept for the class
+   rather than applied to the reported line.
+
+**AND THE CUT-BEFORE-GATE ORDER WAS A DEFECT IN THE ANSWER, NOT ONLY IN THE FLAG — MEASURED BY
+THIS ITEM'S OWN CONTROL RATHER THAN REASONED.** The `overfetch` arm was declared behaviourally
+invisible and was not: with the raw fetch at `cap + 1`, an uninvited member asking for a bound of
+2 over a supply of 4 received **TWO rows while entitled to THREE**, and was then told the list was
+complete. **That is the false-coverage direction**, which is the one this whole table exists to
+refuse. The raw page is now over-fetched at `(cap + 1) * 2` — the DOCUMENT arm's factor, taken
+rather than chosen — and the gate runs BEFORE the cut.
+
+**WHAT CHANGES ON THE WIRE.** No field is added, removed or renamed. `looked`, `never_looked` and
+`missing_unexplained` are unchanged in SHAPE; a gated caller may receive more of them, up to the
+bound they asked for. `truncated` now answers about the three collections this method actually
+pages — the GATED `page`, `never`, and `unexplained` — instead of about the raw supply and a list
+that is split before publication.
+
+**THE WITHHELD-COUNT DECISION WAS TAKEN AND THE ANSWER IS NO, AND IT IS NOT A FORMATTING CHOICE.**
+The row asked whether a one-bit count of what was withheld should be published beside this flag.
+**It is not, and the reason is that the defect above WAS one.** A `truncated` read off the raw
+supply is a count of the withheld set to one bit, wearing a bound's name — REC-30's rule exactly,
+*a total bigger than the list says something is hidden*. **So fixing the flag and refusing the
+count are ONE act and not two**, and nothing was added beside it. Computed over the gated lists
+the flag leaks nothing **by construction, which was driven and not asserted** (arm G3b): for a
+viewer entitled to every row the two lists are the SAME LIST, and at the bounds where the flag
+moves, both viewers move together. The reasoning is at the site in `store.mjs` rather than in this
+registry, as the row required. **REC-110's question — the ungated `tally` — is deliberately NOT
+absorbed here.**
+
+**WHAT IS DELIBERATELY NOT CLOSED, SAID HERE SO NOBODY HAS TO FIND IT. `truncated: false` still
+rests on the over-fetch being wide enough to absorb the fence.** On a FULL raw fetch, rows beyond
+it were never fetched and their visibility is unknown, so `false` claims a completeness the method
+did not establish. **This is true of all THREE arms of this reader** — it is a property of the
+over-fetch mechanism rather than of this one method — so fixing it in one arm of three would be
+the mirror-and-drift class. It is **D-389**, the sound form and its leak analysis are written into
+that row so the next owner does not re-derive them, and `observation-content.test.mjs` arm **G5**
+pins the mechanism and names the residual, so the next reader meets the decision rather than the
+defect.

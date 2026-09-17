@@ -14424,3 +14424,106 @@ exercising one of them — the costs-nothing equality exactly.
 **31 bundles · 1 inquiry · 0 basis legs · 0 captures carrying a text chain** · `truncated=false`
 at limit 500. **No existing field of any answer moves.** Every page-mode search answer gains the
 additive `cached` key carrying the `facet` route for both axes, because both are default facets.
+## M-39 · 2026-09-16 · REC-109 — **THE OVER-FETCH IN `#frontierContent` PROTECTS THE ANSWER AND NOT ONLY THE FLAG, AND THE PAGE'S `IN` LIST IS ALREADY 2× OVER D-36's MEASURED workerd CEILING AT THE DEFAULT BOUND** (worktree `agent-a8eea05132b9aee1d`, `origin/main` at `a1c85798`)
+
+### 1 · THE BASELINE, CONFIRMED RATHER THAN INHERITED
+
+Instrument: `cd bio-plane && npm run test:battery`, read from the battery's OWN completion line
+and never from the wrapper's status.
+
+- **208/208 suites green · 13,049 assertions passing · 325.4 s**, `provenance:` naming HEAD
+  `a1c85798`, **0 skips**, 211 of 211 discovered items in the commit at HEAD.
+- This is **exactly** the figure CONDUCT #1 briefed. Recorded because the practice is to trust
+  the measurement rather than the streak, and a confirmation is a result.
+- `npm ci` was run in **three** packages (`bio-plane/`, `pdf-worker/`, `ocr-worker/`) and each
+  `node_modules` was checked to be a REAL DIRECTORY rather than a symlink, with `df -h` read
+  before and after: **5.0 GiB free at 98 % before, 4.5 GiB after.** No `ENOSPC`, no symlink.
+
+### 2 · THE OVER-FETCH IS LOAD-BEARING ON THE ANSWER — DECLARED INVISIBLE, MEASURED VISIBLE
+
+Instrument: `node test/nc-rec109.mjs overfetch`, arm `overfetch`, which narrows the raw content
+page from `(cap + 1) * 2` back to `cap + 1` with the gate still running before the cut.
+
+**Declared before running: STRUCTURAL-ONLY, behaviourally invisible at a four-capture corpus,
+because a four-row supply sits under both bounds. THAT DECLARATION WAS WRONG**, and the reasoning
+behind it was wrong about which quantity the over-fetch protects.
+
+| viewer | bound | raw fetched | gated | rows RECEIVED | `truncated` |
+| --- | --- | --- | --- | --- | --- |
+| `member:not-invited`, over-fetch `(cap+1)*2` | 2 | 6 requested, 4 exist | 3 | **2** | `true` |
+| `member:not-invited`, narrowed to `cap+1` | 2 | **3** | **2** | **2** | **`false`** |
+
+`cap + 1` bounds the RAW fetch, so at a bound of 2 the raw page is 3 rows, the fence drops one of
+them, and **an uninvited member receives two rows while entitled to three — and is then told the
+list is complete.** That is the false-coverage direction. The suite caught it at arms G2 and G3b
+without having been written for it; only arm G5's source pin was expected to fire.
+
+**The general form is worth more than the number: an over-fetch in front of a fence is not a
+performance choice, it is what keeps the CUT from being taken out of a list the fence has not
+finished narrowing.** The document arm (REC-103) states this and the content arm did not have it.
+
+### 3 · D-390 — THE `IN` LIST AGAINST D-36's CEILING, COUNTED RATHER THAN HIT
+
+Instrument: reading `Store.FRONTIER_LIMIT_DEFAULT` / `FRONTIER_LIMIT_MAX` off `store.mjs` and
+counting the placeholders REC-91's index-state join builds, one per distinct subject on the page.
+
+| what | bound variables | against D-36's ~100 |
+| --- | --- | --- |
+| default bound (`FRONTIER_LIMIT_DEFAULT` = 200), as inherited | up to **201** | **2.0× over** |
+| default bound, had the over-fetch been left to feed the `IN` list | up to **402** | 4.0× over |
+| default bound, as landed (`IN` list narrowed to the published cut) | up to **200** | 2.0× over |
+| ceiling bound (`FRONTIER_LIMIT_MAX` = 2000), as landed | up to **2000** | 20× over |
+
+D-36's limit was binary-searched through the real code path on 2026-07-25 and is guarded at **64**
+everywhere else in this plane. **It has never fired here because no fixture and no instance has
+had more than ~100 captures carrying a content-level row** — this suite's corpus is FOUR, and
+every instance is still a development instance. REC-109 did not widen its claim to fix it, but
+narrowed the `IN` list from the raw page to the published cut so its own over-fetch could not
+double the exposure; the row is **D-390**.
+
+### 4 · FIVE ARMS THAT READ AS ONE — THE ARMS GRAMMAR COUNTING ITS OWN MARKER
+
+Instrument: `readControl` from `bio-plane/scripts/control-register.mjs`, run against both versions
+of `observation-content.test.mjs` directly, and `node scripts/coverage.mjs --strict`.
+
+| version of the declaration | `countArms` | what `--strict` printed |
+| --- | --- | --- |
+| REC-94's, seven arms `(a)`–`(g)` | **7** | floor `arms 1109` |
+| + REC-109's five, paragraph QUOTING the marker phrase | **8** | `arms 1110/1109 · GREW by 1 arm(s)`, **exit 0** |
+| + REC-109's five, phrase removed | **12** | `arms 1114/1109 · GREW by 5 arm(s)`, exit 0 |
+
+**A quotation of `NEGATIVE CONTROL` followed by a separator IS a marker.** `markerPositions` found
+the one inside the prose, split a single declaration into two, and `readControl` — which keeps the
+FULLEST — recorded the larger half at 8. **Five arms were added and the register moved by one, on a
+GREEN run at exit 0.** A floor taken from that print would have been four arms low and permanently
+so, and the number is plausible enough that nothing would have questioned it.
+
+**This is the shape `WORKER.md` already records** — *a check that caught its own correction because
+the correction quoted the token it was correcting* — arriving in the arms grammar rather than in a
+sweep. **The only thing that caught it was measuring `countArms` on both versions instead of
+trusting that five edits made five arms**, which is this project's own rule about hand-carried
+numbers applied to a number nobody carries by hand.
+
+### 5 · THE CONSUMER CENSUS FOR IC-109, RE-RUN AND NOT INHERITED
+
+`grep -rn 'op=frontier'` over `civicos-ui/`, `agent-worker/`, `newgroup/` and `tools/`:
+**zero callers.** Every caller of the op is a `bio-plane/test/` suite; two read `level=content`.
+This is the same zero REC-103 measured one landing earlier and it was **re-measured on this tree
+rather than carried from its report**, on the rule that a second document agreeing is a pointer to
+where a claim came from and not a second witness.
+
+### 6 · WHAT THIS MEASUREMENT CANNOT SEE
+
+- **Nothing here is a real deploy.** Every figure is miniflare and source on this machine. No
+  scratch-namespace probe, no account, no rollout.
+- **D-36's ceiling is inherited, not re-measured.** Section 3 counts this plane's bound variables
+  against a number binary-searched fifteen months of commits ago. **Whether workerd's limit is
+  still ~100 has not been re-established by anybody**, and D-390 asks for the bench rather than
+  resting on the old figure.
+- **The `IN`-list question was NOT swept.** `#frontierMeaning` and every other
+  `IN (${marks})` built from a `limit`-bounded page may be the same class. Named rather than
+  claimed; no sweep was run.
+- **The second disjunct's correction is pinned structurally and was NOT driven.** This suite's
+  `missing` holds ONE row and `unexplained` is EMPTY, so `missing`, `never` and `unexplained`
+  cannot straddle any bound the op accepts (`cap` floors at 1, and 1 is not greater than 1).
+  Driving it needs a `pre_log` or `purged` fixture, which is `#missingContentCause`'s region.

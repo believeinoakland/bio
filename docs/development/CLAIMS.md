@@ -11026,3 +11026,139 @@ no check id), `newgroup/**`, `civicos-ui/**`, any version bump, tag, signature o
 any version bump, tag, signature or deploy. A merge of `store.mjs` may take every other region
 wholesale: the only bytes this item changes there are one import name, one published line in
 `search()`, one published line in `meaningRows()`, and two comments.
+## CLAIM 2026-09-16 RECORD (REC-109 — D-385: `#frontierContent`'s `truncated` describes a list the caller never sees)
+
+session: rec109-truncated-gated-list (worktree agent-a8eea05132b9aee1d)
+opened: 2026-09-16T00:00:00Z
+
+**PATHS CLAIMED, BY REGION — five other workers are live and three other RECORD claims name
+`store.mjs`. The disjointness was MEASURED on this tree before claiming rather than assumed:**
+REC-103's open claim names `#frontierNeverLooked` and `frontier()`'s DOCUMENT arm and says
+**NOT `#frontierContent`** in its own words; REC-111's names the capture-text bound and says
+**NOT `frontier()`**; REC-95's names the meaning-level writers; REC-105's names `#strengthWalk`;
+REC-91's names `capture_text`. Every one is disjoint from the single region below.
+
+- `bio-plane/src/store.mjs` — **ONE REGION AND NOTHING ELSE**: `#frontierContent`'s body, from
+  its raw `#frontierLatest` call through its `return`. **NOT** `frontier()`'s document arm,
+  **NOT** `#frontierMeaning`, **NOT** `#frontierDocumentVisible`, **NOT** `#observationBundles`,
+  **NOT** `#frontierLatest`, **NOT** `#frontierNeverLooked`, **NOT** `#frontierVerification`,
+  **NOT** `#bundleRedactor`, **NOT** `#missingContentCause`, **NOT** any writer or the schema.
+- `bio-plane/test/observation-content.test.mjs` — REC-94's suite, `#frontierContent`'s own home,
+  extended with this item's section. `bio-plane/test/nc-rec109.mjs` (NEW, the control driver).
+- `docs/development/INTERFACE-CHANGES.md` — IC-109 only.
+- `docs/development/DEBT.md` — D-385's disposition, and the one new row this item opens.
+- `docs/development/MEASUREMENTS.md` (appended), `docs/DECIDED.md` (regenerated, never
+  hand-edited), this file.
+
+**NOT TOUCHED:** `docs/development/QUEUE.md` (CONDUCT's sole writer), `bio-plane/src/index.mjs`,
+`bio-plane/src/schema.mjs`, `bio-plane/src/query.mjs`, `bio-plane/src/airun.mjs`,
+`bio-plane/checks/bio-checks.mjs`, `docs/development/OBSERVATION-LOG-DESIGN.md` (no body moves;
+this item changes no design construct), `newgroup/**`, `civicos-ui/**`, any version bump, tag or
+deploy. **REC-110 is deliberately NOT absorbed** — the ungated `tally` is its row and is sequenced
+behind this one.
+
+released: 2026-09-16 by the REC-109 worker — **D-385 CLOSED: `#frontierContent`'s `truncated` IS
+  NOW COMPUTED OVER THE LISTS THE CALLER RECEIVED, AND THE WITHHELD-COUNT DECISION IS *NO* WITH
+  ITS REASONING IN THE CODE.** Landed on branch `rec109-truncated-gated-list`, PUSHED (never to
+  `main`, never merged). IC-109 PROPOSED, I3 18.0.0 → 18.1.0 MINOR with the MAJOR counter-argument
+  written out for CONDUCT rather than presented as settled.
+  **THE ONE STATEMENT CARRIED TWO ERRORS AND THE ROW NAMED ONE.** `truncated: page.length > cap ||
+  missing.length > cap`. First, `page` was the RAW fetch and the fence ran AFTER it, so the flag
+  answered about a list the caller never saw. Second, `missing` is **not a list this method
+  publishes** — §5.1's cause split cuts it into `never` and `unexplained`, and those are what get
+  paged. **The second is exactly CONDUCT #11's `#frontierMeaning` correction of 2026-09-15 still
+  standing one method over**, and it was fixed by asking what KIND the reported defect was rather
+  than by fixing the reported line.
+  **THE DISCLOSURE DECISION, TAKEN AND NOT DEFERRED: NO COUNT OF WHAT WAS WITHHELD IS PUBLISHED,
+  BECAUSE THE DEFECT WAS ONE.** A `truncated` read off the raw supply is a one-bit count of the
+  withheld set wearing a bound's name — to a viewer whose page is short, `true` said *rows exist
+  here that you are not being shown*, which is REC-30's leak. **So fixing the flag and refusing the
+  count are ONE act**, and the reasoning is at the site in `store.mjs` as the row required, not in
+  this line. That the corrected flag leaks nothing is **DRIVEN** (arm G3b), not argued: at the
+  bounds where it moves, both viewers move together. **REC-110's ungated `tally` was NOT absorbed.**
+  **THE EQUALITY IS DRIVEN, NEVER PINNED OVER TWO PATHS.** `observation-content.test.mjs` §G, ELEVEN
+  arms, 52 → **63** assertions. One fixture, two viewers, two bounds: at a bound of **3** over a
+  supply of **4**, an uninvited member receives 3 rows and reads `truncated: false` while an
+  entitled viewer at the SAME bound receives 3 and reads `true` — the same function, opposite
+  answers, each correct about its own caller's list. At a bound of **2** the uninvited member's own
+  list of 3 does exceed it and reads `true`, which is the reverse case and is what stops G1 being
+  satisfied by a flag wired to false. Every figure is a LITERAL: REC-111's finding of the same day —
+  *an assertion written against the product's own constant can prove the MECHANISM right and can
+  never prove the NUMBER right* — was inherited rather than re-paid.
+  **NEGATIVE CONTROL: `test/nc-rec109.mjs`, FIVE arms, RUN, each alone, both baselines green
+  (63/0 opening and closing), every restore verified by sha256 AND `cmp` against a uniquely-named
+  per-arm pristine copy with a byte count printed and a floor guarded. TWO OF THE FIVE CAME BACK
+  OTHER THAN DECLARED AND BOTH ARE RECORDED RATHER THAN SMOOTHED.**
+  (1) `rawflag` — D-385 itself. Declared MUST FAIL G1; **actual G1 + G5b.** The declaration was
+  wrong: G5b is a source pin on the very expression the arm rewrites, so it MUST go red. The arm
+  and the suite were both right.
+  (2) `fence` — the DATA arm, armed against the rows and never the flag (REC-94's leak passed a
+  flag-only arm because `capture_held` was already false). Declared G0 G1 G1b G4b; **actual
+  exactly that** — the private project's capture appears BY NAME.
+  (3) `missinglist` — declared STRUCTURAL-ONLY with its reason; **actual G5b, as declared.**
+  (4) `overfetch` — **THE MOST USEFUL RESULT IN THE ITEM.** Declared STRUCTURAL-ONLY and
+  BEHAVIOURALLY INVISIBLE; **actual G2 G3b G5.** The reasoning behind the declaration was wrong
+  about WHICH QUANTITY the over-fetch protects: `cap + 1` bounds the RAW fetch, so at a bound of 2
+  the raw page is 3, the fence drops one, and **an uninvited member receives TWO rows while
+  entitled to THREE and is told the list is complete** — the false-coverage direction. The
+  over-fetch protects THE ANSWER, not only the flag. **M-39** carries the table.
+  (5) `unexplained` — declared STRUCTURAL-ONLY; **actual G5b, as declared.**
+  **THE ARM GUARD FIRED ON ME FIRST, AND IT IS THE REASON TO HAVE ONE:** `rawflag`'s first anchor
+  matched **twice** — the DOCUMENT arm one screen down publishes the same corrected expression and
+  a six-space prefix is a substring of its thirteen-space one. An arm that patched both would have
+  measured two methods and reported one.
+  **TWO ROWS OPENED, BOTH REPORTED RATHER THAN ABSORBED, ON THE SAME CALL REC-94 AND REC-103 MADE.**
+  **D-389** — `truncated: false` still rests on the over-fetch being wide enough to absorb the
+  fence; on a FULL raw fetch, rows beyond it were never fetched, so `false` claims a completeness
+  the method did not establish. **It is true of all THREE arms of this reader**, so fixing it in one
+  would be the mirror-and-drift class. The sound form and its **leak analysis are written into the
+  row** — the extra disjunct never distinguishes the withheld viewer from the entitled one, checked
+  rather than assumed — so the next owner does not re-derive them. **PINNED at arm G5**, so the next
+  reader meets the decision rather than the defect.
+  **D-390** — the page's index-state `IN` list binds one variable per subject and is **already 2×
+  over D-36's measured workerd ceiling of ~100 at the default bound of 200, and 20× at the 2000
+  ceiling.** Found by asking what this item's own over-fetch would do to it, not by hitting it: it
+  has never fired because no fixture or instance has had >100 captures with a content-level row.
+  **The claim was not widened to fix it, but it was refused the chance to get worse** — the `IN`
+  list was narrowed from the raw page to the PUBLISHED cut, holding the worst case at `cap` (200,
+  better than the 201 inherited) instead of the 402 the over-fetch would have made it, and it
+  stops computing an index state for rows the answer discards.
+  **AND FIVE ARMS READ AS ONE, WHICH IS THE SECOND INSTRUMENT FINDING AND THE QUIETER OF THE TWO.**
+  The five arms were added to REC-94's EXISTING declaration on purpose — the register records ONE
+  declaration per suite, the fullest, so a second block would have left them uncounted (D-233). The
+  paragraph EXPLAINING that spelled the register's own marker phrase, **and a quotation of the
+  phrase IS a marker**: `markerPositions` split one declaration in two, `readControl` kept the
+  fuller half, and the suite reported **8 arms after five were added** — `GREW by 1 arm(s)`, a
+  figure entirely plausible to a reader who did not count. **Nothing would have named it.** The run
+  was GREEN, `--strict` exited 0, and a floor moved to 1110 from that green print would have been
+  four arms low and permanently so. It was caught only by running `countArms` against both versions
+  of the file rather than trusting that five edits made five arms. It is `WORKER.md`'s own receipt —
+  *a check that caught its own correction because the correction quoted the token it was
+  correcting* — arriving in the arms grammar. Phrase removed; **`arms` 1109 → 1114, `GREW by 5`,
+  exact with no slack, ONE key set (2 matches for `^  arms:`, this one and the fleet's), `classified`
+  and `corpus` deliberately UNMOVED at 199/200 and VERIFIED from the same print** because this item
+  adds no suite — its driver is not a `.test.mjs`. **CONDUCT re-reads this floor from the MERGED
+  tree's own post-commit print; other RECORD items are live in the plane's sources.**
+  **GATE.** Own baseline on the pristine worktree after `npm ci` in THREE packages, each
+  `node_modules` verified a real directory (not a symlink) with `df -h` read at 5.0 GiB / 98 %:
+  **208/208 suites green · 13,049 assertions · 0 skips**, `provenance:` HEAD `a1c85798` — **exactly
+  CONDUCT #1's briefed figure, confirmed rather than inherited.** FL-10's bundle guard: rebuilt
+  with `npm run build` — `dist/bio-plane.bundled.mjs` 3,226,440 B sha256 `8b96b668…`, 50
+  first-party inputs — with nothing bumped, signed, tagged or deployed; `src/signpage.mjs`
+  re-rendered BYTE-IDENTICAL. `node civicos-ui/test/run.mjs` from the repo root, unpiped: **exit 0,
+  all harnesses green.** `node tools/decided.mjs` re-run: **972 rulings, 275.3 KB, no drift.**
+  `plancheck --local`: **0 fail, 0 warn**, over **50 governed documents with 0 front-matter
+  failures**.
+  **WHAT I COULD NOT DO, STATED PLAINLY.** (1) **The second disjunct's correction is pinned
+  STRUCTURALLY and was never driven** — this fixture's `missing` holds ONE row and `unexplained` is
+  EMPTY, so the three lists cannot straddle any bound the op accepts (`cap` floors at 1, and 1 is
+  not greater than 1); driving it needs a `pre_log` or `purged` fixture, which is
+  `#missingContentCause`'s region and not this row's. Named on the arm rather than scored as
+  driven. (2) **D-36's ~100 was inherited, not re-measured** — D-390 counts this plane's bound
+  variables against a figure binary-searched on 2026-07-25, and whether workerd's limit is still
+  there has not been re-established by anybody. (3) **The `IN`-list question was NOT swept** beyond
+  this method; `#frontierMeaning` and every other `IN (${marks})` built off a `limit`-bounded page
+  may be the same class, and that is named rather than claimed. (4) **Nothing was live-verified
+  against the real account** — no deploy, no scratch-namespace probe; everything is miniflare and
+  source. (5) **No design document body was moved** — this item changes no construct, so
+  `OBSERVATION-LOG-DESIGN.md` is untouched and no front-matter date moves with it.
