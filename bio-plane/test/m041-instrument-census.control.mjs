@@ -63,6 +63,70 @@
  *       ("ASK, do not fail"). The count was right and every id was invisible —
  *       this estate's most-repeated instrument defect, inside the instrument
  *       written to catalogue it.
+ *       **AND ITS ANCHOR THEN DIED THE WAY EVERY ANCHOR IN THIS ESTATE DIES — ON
+ *       AN ORDINARY ACT, NOT ON ANYBODY'S MISTAKE.** It quoted `M0-41 · running`.
+ *       CONDUCT flipped that row to `done`, which is the loop working exactly as
+ *       designed, and the anchor went to ZERO; M0-56's worker found it on
+ *       2026-09-17 while draining its own row, reporting `3 as declared · 1 NOT as
+ *       declared · 1 finding(s)` and saying so rather than working around it.
+ *       **A ROW'S STATUS WORD IS THE ONE TOKEN IN A QUEUE ITEM GUARANTEED TO
+ *       CHANGE** — `queued` -> `running` -> `done` is the queue's whole purpose —
+ *       so an anchor resting on one was not stale by accident but stale by
+ *       construction, on a clock nobody was reading. The anchor is now the M0
+ *       LANE'S OWN AREA HEADING: a structural line in the same `^## <AREA> — …`
+ *       grammar `plancheck` reads areas from, which moves only when somebody
+ *       restructures the lane deliberately, and the plant lands as that lane's
+ *       FIRST ROW, where an M0 item belongs.
+ *
+ *       **AND THE DURABILITY THAT ACTUALLY PAYS IS NOT CLEVERNESS — IT IS BEING
+ *       WATCHED.** This driver sat in the BLIND HALF of
+ *       `m025-arm-anchor-witness.test.mjs`, the anchor-liveness check the battery
+ *       ALREADY RUNS, built by M0-25 for precisely this defect class (D-276) — so
+ *       nothing in any loop could see the zero until somebody ran this whole
+ *       control on a clean tree, which is a periodic act. **The cause was measured
+ *       rather than guessed, and it was two independent refusals:** that suite
+ *       extracts literals from eight anchor-bearing SHAPES and `anchor:` as an
+ *       object KEY is none of them, and the old literal was 19 characters carrying
+ *       no code-shaped punctuation, so both of its filters would have refused it
+ *       even in a shape it could read. Arms (2) and (4) now bind their anchors to
+ *       named `const anchor…` literals — the suite's `anchor…=` assignment shape
+ *       — so **A4 FAILS THE BATTERY on the next anchor here that goes to zero**
+ *       instead of leaving it for a run nobody schedules.
+ *       **AND WRITING THIS PARAGRAPH TRIPPED THE VERY SUITE IT IS ABOUT, WHICH IS
+ *       WHY THE SPELLING ABOVE CARRIES AN ELLIPSIS.** The witness's anchor half
+ *       does NOT strip comments, and its literal grammar accepts a BACKTICK
+ *       string — so prose naming one of its eight shapes inside backticks reads as
+ *       an anchor-bearing position, and the span from the closing backtick to the
+ *       next one reads as the anchor. The first draft of this section put the
+ *       shape's name in bare backticks twice and A4 came back red with TWO dead
+ *       anchors that are not arms at all. **Both were PROSE, both were guaranteed
+ *       dead, and neither is a defect in any arm** — a false finding, which is the
+ *       over-strictness direction this estate refuses everywhere else. The suite
+ *       already closes exactly this class on its LABEL half (arm S10: *a driver's
+ *       own COMMENTARY is not its code*) and not on its ANCHOR half, so it is the
+ *       fix-the-class shape with one half done. ROUTED to CONDUCT in `CLAIMS.md`
+ *       rather than fixed here: it is an edit to M0-25's suite with its own
+ *       control and reach figures to re-measure, and this claim moves no
+ *       `.test.mjs`. Until then, **naming one of those shapes in prose here needs
+ *       the ellipsis spelling**, and that is the workaround NAMED rather than
+ *       performed silently — `CLAUDE.md`'s rule about a defence nobody records.
+ *       **A REGEX ANCHOR WAS THE OTHER CANDIDATE AND IT IS DECLINED, WITH THE
+ *       REASON, because it is the more obvious answer and the worse one.**
+ *       `/^## M0 — [^\n]*\n/m` survives the heading's descriptor being reworded,
+ *       which the literal does not. But that witness suite DECLARES ITSELF BLIND
+ *       to a RegExp anchor, so the tail-insensitive spelling buys durability by
+ *       leaving the arm unwatched — and an unwatched anchor is exactly what cost
+ *       this arm. A literal that fails the battery the day it moves is worth more
+ *       than a pattern that survives a rewording nobody was going to make.
+ *
+ *       **WHAT STAYS BLIND, NAMED RATHER THAN LEFT AS A SILENCE.** Arm (3)'s
+ *       anchor is `MEASUREMENTS.md`'s H1 — 14 characters, no code punctuation —
+ *       and the witness REFUSES it ON PURPOSE: its own arm S4 asserts that prose
+ *       carrying no code-shaped punctuation is not an anchor, and loosening that
+ *       filter is the over-strictness direction its control drives. A document's
+ *       H1 is already the most durable line in it, so arm (3) keeps it unchanged
+ *       and `test/m025-arm-census.mjs`, which RUNS the arms, is what covers it.
+ *       Arm (5) holds no anchor at all — it is a RENAME.
  *
  *   (3) PLANTED BYPASS, UNGRADED NAMESPACE — the worked example this project
  *       already owns. A hand-picked `M-` id written into `MEASUREMENTS.md` and
@@ -208,8 +272,13 @@ results.push({
 
 /* ---- (4) OVER-STRICTNESS (no commit needed; run before the committing arms) */
 {
-  const a = armFile("bio-plane/test/m041-instrument-census.mjs",
-    "  const call = /\\b(?:execSync|execFileSync|spawnSync|spawn|exec)\\s*\\(/g;",
+  /* BOUND TO A NAMED `const anchor…` for the reason the header gives: this is
+     `m025-arm-anchor-witness.test.mjs`'s `anchor…=` assignment shape, so A4 fails
+     the BATTERY if this line in the census driver is ever changed in place without
+     the quote moving with it. That is the D-276 class, and it is what killed arm
+     (2). The ellipsis in the shape's name is load-bearing — see the header. */
+  const anchorOverstrict = "  const call = /\\b(?:execSync|execFileSync|spawnSync|spawn|exec)\\s*\\(/g;";
+  const a = armFile("bio-plane/test/m041-instrument-census.mjs", anchorOverstrict,
     "  const call = /\\bNEVER_MATCHES_M041_OVERSTRICT_ARM\\s*\\(/g;",
     "overstrict");
   if (a) {
@@ -255,13 +324,23 @@ function commitArm({ tag, rel, anchor, replacement, expectId, declared, judge })
   });
 }
 
+/* **THE M0 LANE'S AREA HEADING, BOUND TO A NAMED `const anchor…` SO THE BATTERY
+   READS IT.** Both halves are deliberate and the header's arm-(2) section argues
+   them: the area heading carries no row STATUS WORD, which is what took the old
+   anchor to zero, and the `anchor…=` binding is what lifts this driver out of
+   `m025-arm-anchor-witness.test.mjs`'s blind half. The trailing newline is PART
+   of the anchor, so the plant is spliced between whole lines and never into the
+   middle of one; the replacement re-emits the heading and the plant becomes the
+   lane's first row, which is where an M0 item belongs. */
+const anchorGraded = "## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)\n";
+
 commitArm({
   tag: "(2) planted bypass, GRADED namespace",
   rel: "docs/development/QUEUE.md",
-  anchor: "### M0-41 · running",
-  replacement: "### M0-9001 · queued — M0-41 CONTROL ARM, a hand-picked id the ledger never issued; reverted in the same run\nmilestone: M0\ndesign: `docs/development/VERIFICATION.md`\n\n### M0-41 · running",
+  anchor: anchorGraded,
+  replacement: anchorGraded + "\n### M0-9001 · queued — M0-41 CONTROL ARM, a hand-picked id the ledger never issued; reverted in the same run\nmilestone: M0\ndesign: `docs/development/VERIFICATION.md`\n",
   expectId: "M0-9001",
-  declared: "census names M0-9001 NOT HELD; plancheck --local does NOT see the id bypass (no DUPLICATE ID / UNREGISTERED NAMESPACE arm fires) and that half is the finding. CORRECTED after the first run: the original declaration said plancheck would read 0 fail, which conflated 'plancheck cannot see the id' with 'my arm broke nothing else' — editing a corpus file stales docs/DECIDED.md and fires a DIFFERENT arm. The question is WHICH arm, never HOW MANY.",
+  declared: "census names M0-9001 NOT HELD; plancheck --local does NOT see the id bypass (no DUPLICATE ID / UNREGISTERED NAMESPACE arm fires) and that half is the finding. CORRECTED after the first run: the original declaration said plancheck would read 0 fail, which conflated 'plancheck cannot see the id' with 'my arm broke nothing else' — editing a corpus file stales docs/DECIDED.md and fires a DIFFERENT arm. The question is WHICH arm, never HOW MANY. REPOINTED 2026-09-17: the anchor was `M0-41 · running` and that row now reads `done`, so the arm refused to arm and the guard reported it as a finding — it is now the M0 lane's AREA HEADING, which carries no status word, and it is bound to a named `const anchor…` so the battery's own anchor-liveness check stops being blind to this driver.",
   judge: (a, p) => a.notHeld >= 1 && a.namesId("M0-9001") && p.sawId === false,
 });
 
