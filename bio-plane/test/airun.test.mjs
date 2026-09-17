@@ -946,8 +946,19 @@ const RESUMED = "RUN-2026-0807-resumed";
   const after = await GET(`op=airunlog&token=${TOK}&run=${RESUMED}`);
   t("ARM P5: the log is the union of both invocations, in order",
     after.entries.map((e) => e.subject), ["observation:a", "observation:b"]);
+  /* CORRECTED 2026-09-17, REC-113 / IC-116 — SIX, NOT FOUR, AND THE OLD FOUR WAS
+     NOT WRONG WHEN IT WAS WRITTEN. It is superseded: `op=airunlog` now STATES
+     each row's coverage claim (`backed` / `none_owed` / `undetermined`), and
+     DEC-8 is the reason the word travels with the answer rather than being a
+     literal every consumer holds a copy of. `coverage_undetermined` is published
+     SEPARATELY from `coverage` on purpose — the undetermined value is
+     deliberately not a member of the two, which is `op=contentaxis`'s
+     `undetermined_value` shape one construct over. The pin is WIDENED rather
+     than deleted: it is still the arm that catches an undeclared vocabulary
+     change, which is exactly what it just did. */
   t("ARM P6: the vocabularies travel WITH the answer, so a reader needs no copy of them (DEC-8)",
-    Object.keys(after.vocabulary).sort(), ["bounds", "endings", "levels", "states"]);
+    Object.keys(after.vocabulary).sort(),
+    ["bounds", "coverage", "coverage_undetermined", "endings", "levels", "states"]);
 
   /* THE GATE, both polarities, driven at the Durable Object because that is
      where an ABSENT viewer stamp can be produced at all — the control plane

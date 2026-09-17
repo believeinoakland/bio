@@ -1450,15 +1450,24 @@ const RUN = "RUN-2026-0807-rec70";
   + "caller measure what is being withheld from them (D-15, REC-57's pin on op=list)",
     [(await GET(`op=airunlog&token=mem-r60&run=${RUN}&limit=3`)).limit,
      (await GET(`op=airunlog&token=prb-r60&run=${RUN}&limit=3`)).limit], [3, 3]);
-  /* THE VOCABULARIES ARE UNCHANGED BY THE BOUND. The log publishes four of them
+  /* THE VOCABULARIES ARE UNCHANGED BY THE BOUND. The log publishes them
      precisely so its reader holds no copy (DEC-8); a truncated answer that also
      truncated the vocabulary would leave a cut reader unable to read the rows
-     it DID get. */
-  t("op=airunlog: a CUT answer still carries the four vocabularies whole — they describe the "
+     it DID get.
+     CORRECTED 2026-09-17, REC-113 / IC-116 — FOUR BECAME SIX. The old count was
+     right until `op=airunlog` began STATING each row's coverage claim; it is
+     superseded rather than mistaken, and the ARM ITSELF IS UNCHANGED IN WHAT IT
+     TESTS. That is the point worth keeping: this is not a count of vocabularies,
+     it is the assertion that a CUT answer carries them WHOLE, so what matters is
+     that both sides still agree with each other and with the live set. The
+     literal is widened because the set grew, and the two-sided comparison is
+     what makes the arm survive the next one. */
+  t("op=airunlog: a CUT answer still carries the vocabularies WHOLE — they describe the "
   + "entries, they are not entries, and a reader cut at 2 rows still has to read those 2",
     [Object.keys(cut.vocabulary || {}).sort().join(","),
      Object.keys(whole.vocabulary || {}).sort().join(",")],
-    ["bounds,endings,levels,states", "bounds,endings,levels,states"]);
+    ["bounds,coverage,coverage_undetermined,endings,levels,states",
+     "bounds,coverage,coverage_undetermined,endings,levels,states"]);
 }
 
 /* ==========================================================================

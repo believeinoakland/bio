@@ -15159,3 +15159,58 @@ corpus. Whether `rows=content`, `rows=leg`, `rows=resolves` and `rows=concerns` 
 same disagreement was NOT measured — `mode:"levels"` is shared by all five and `armSet`
 is applied by `mode:"axis"` only, so the same shape is *available* to every arm whose
 selector narrows the scope, but only the passage arm was driven.
+
+## 2026-09-17 · REC-113 (worker `agent-ab3bf809046a052e6`) — the battery's true size, and `op=airunlog`'s answer before and after IC-116
+
+**THE BRIEFED BASELINE WAS STALE AND THE CORRECTION IS THE MEASUREMENT.** CONDUCT #3's spawn
+brief carried **213/213 suites · 13,395 assertions** as CONDUCT #2's figure. Measured twice on
+`10574da9`, once on this worker's own worktree and once on an INDEPENDENT pristine checkout of
+the same commit with a real `npm ci` in all three packages that carry dependencies:
+
+    214/214 suites green · 13446 assertions passing · 354.4s     (pristine checkout, clean)
+    214/214 suites green · 13446 assertions passing · 415.3s     (this worktree)
+
+Instrument: `cd bio-plane && npm run test:battery`, completion line read verbatim, no pipe.
+The two agree exactly, which is what makes the correction evidence rather than one reading.
+
+**AND THE FIRST PRISTINE RUN WAS NOT A BASELINE, WHICH IS THE ENTRY WORTH KEEPING.** The pristine
+checkout was first installed in `bio-plane/` ALONE, and the battery then answered:
+
+    213/214 suites green · 1 skipped · 13370 assertions passing · 381.4s     ← NOT a baseline
+      SKIPPED (named): ocr-worker/ocr-worker.test.mjs — cannot resolve 'miniflare'
+
+**Exit status 0, headline reads healthy, and a whole fleet member's 76 assertions were simply not
+in the total.** This is `CLAUDE.md`'s "second sighting is the quiet one" reproduced exactly, in a
+worker that had read the warning an hour earlier and still had to be caught by the SKIP LINE
+rather than by the exit code. `npm ci` in `pdf-worker/` and `ocr-worker/` brought it to 214/214.
+The difference 13,446 − 13,370 = 76 is `ocr-worker`'s suite, which closes the arithmetic.
+
+**`op=airunlog`'s ANSWER, BEFORE AND AFTER, over `test/rec113-identity.mjs`'s fixture** (five
+entries, deliberately carrying both a referent-bearing and a bare `run` PRESENT). Raw wire text,
+sha256, no re-serialisation:
+
+| build | bytes | sha256 |
+| --- | --- | --- |
+| pre-change (`10574da9`) | 3,236 | `75a9946f25120431c5009f2f7851fd0ab1d71c9c90ad17449a7c78b39ee19252` |
+| this item, as answered | 4,073 | `5e4c84a887950601045fafa5073062a3ca3d5887db5d510deb198b000c536a4c` |
+| this item, added keys STRIPPED | 3,236 | `75a9946f25120431c5009f2f7851fd0ab1d71c9c90ad17449a7c78b39ee19252` |
+
+**Byte-for-byte identical once the three added entry keys and two vocabulary keys are removed** —
+every value, key AND POSITION unchanged. The comparison carries its own positive control: the
+UNSTRIPPED answers must DIFFER, so two copies of one tree cannot agree for free.
+
+**A METHOD NOTE THAT CHANGED A RESULT, recorded because the wrong version would have printed
+green.** The first draft asserted the JSON round trip with COMPACT `JSON.stringify` and went RED:
+the plane answers through `JSON.stringify(dec49Attach(o), null, 1)`, so the wire form is indented
+and the compact round trip silently drops **537 bytes** of whitespace. Had that assertion not
+been written, the strip would have compared two COMPACTED forms and reported "byte-identical"
+over a comparison that had quietly stopped being about bytes — a true statement about structure
+wearing a stronger claim's name.
+
+**The same fixture through `rec93-fold-digest.mjs`** (a different five-entry fixture, none with a
+referent): pre-change 3,223 bytes / `7d6fd7484085bc489e66538e2a2f4d47777abe2fb83feb4e9edbdd8cf734298f`;
+current stripped, identical. That pre-change digest was measured on THIS worktree before any edit
+and again on the independent pristine checkout, and the two agreed.
+
+**Source sizes at this landing**, since the standing instruction is the command rather than the
+answer (`wc -c`): `bio-plane/src/store.mjs` 2,292,948 B; `bio-plane/src/airun.mjs` 121,812 B.

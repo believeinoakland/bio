@@ -1,4 +1,41 @@
-/* NEGATIVE CONTROL: (declared and RUN 2026-09-16, REC-103, worktree agent-a4fe71943bfcf63db) SIX
+/* NEGATIVE CONTROL: (declared and RUN 2026-09-17, REC-113 / IC-116, worktree
+   agent-ab3bf809046a052e6) FIVE arms over section I's coverage statement, RUN in one step
+   through `node test/nc-rec113.mjs [arm|all]` (the driver lives INSIDE this worktree), each
+   armed ALONE with every other defence held open, each DECLARED before it ran, each mutation
+   passing an anchor-occurs-EXACTLY-ONCE guard and a bytes-really-changed guard, and every
+   restore verified by sha256 AND by `cmp` against a PRISTINE copy named UNIQUELY PER ARM with a
+   byte count printed and a floor guarded. An opening AND a closing baseline bracket the run;
+   both read 81 pass / 0 fail, exit 0. `git checkout --` is never used to undo an arm.
+   EVERY ARM ALSO RUNS `test/rec113-identity.mjs` against a pre-change checkout, so the
+   over-strictness direction is graded on each arm rather than once at the end.
+   (a) `baseline` — nothing armed. The row that distinguishes four-arms-broken from
+       four-arms-working. Both ends green.
+   (b) `projection` — the row's own arm: the two columns removed from the SELECT. Declared
+       MUST FAIL I2 I2b I2c I2d. **ACTUAL: I2 and I2c ONLY — I2b AND I2d CAME BACK GREEN, AND
+       THAT IS THIS CONTROL'S MOST USEFUL RESULT RATHER THAN A FAULT IN THE ARM.** With the
+       columns gone a row that HAS no referent still reads `null / null / undetermined`, which
+       is what it should read — so an assertion over a row with nothing to show cannot tell
+       *the record has no referent* from *the read dropped the column*. That is D-366's own
+       absence-with-two-causes shape arriving inside the suite written to close it. **Only a
+       row that HAS a referent can detect a missing projection**, which is what makes I2 and
+       I2c load-bearing; the declaration is CORRECTED in the driver with its reason, never
+       exempted.
+   (c) `statement` — projected but NOT stated: the columns come back, the `coverage` sentence
+       does not. Declared MUST FAIL I2 I2b I2c I2d; MUST NOT FAIL I2e I2f. AS DECLARED. This is
+       the arm that proves the third field is load-bearing rather than decoration — without it,
+       "STATED as undetermined" would be satisfied by a null after all.
+   (d) `manufacture` — THE COSTLY DIRECTION: drop the state test so ANY row without a referent
+       reads undetermined, making a LOOKED_ABSENT row say the record does not know something it
+       does know. Declared MUST FAIL I2d I2e; MUST NOT FAIL I2 I2b I2c I2f. AS DECLARED.
+   (e) `blind` — THE WORST DIRECTION: ignore the referent entirely, so even rows the record CAN
+       back read undetermined. Declared MUST FAIL I2 I2c I2e; MUST NOT FAIL I2b I2f. AS
+       DECLARED, and the identity driver's own must-fail arm went red with it.
+   WHAT THESE ARMS CANNOT SEE: they are local to this plane's source under miniflare — no real
+   account, no deploy, no second instance, and critically NOT `agent-worker`'s live use of
+   `op=airunlog`, whose own suites MOCK the op, so a consumer break there would not surface in
+   this battery at all. That gap was closed by reading every call site rather than by measuring.
+
+   NEGATIVE CONTROL: (declared and RUN 2026-09-16, REC-103, worktree agent-a4fe71943bfcf63db) SIX
    arms over section I's fence, RUN in one step through `node test/nc-rec103.mjs [arm|all]` (the
    driver lives INSIDE this worktree), each armed ALONE with every other defence held open, each
    DECLARED before it ran, each mutation passing an anchor-occurs-EXACTLY-ONCE guard and a
@@ -165,7 +202,11 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { AI_RUN_CHECKS } from "../checks/bio-checks.mjs";
 import { OBSERVATION_AUTHORITY_KINDS, OBSERVATION_SUBJECT_KINDS,
-         OBSERVATION_ACTOR_CLASSES, checkObservation } from "../src/airun.mjs";
+         OBSERVATION_ACTOR_CLASSES, checkObservation,
+         /* REC-113 / IC-116: section I2e drives the READ's rule and the REFUSAL's
+            side by side, so the suite holds them together rather than trusting
+            that somebody kept two literals in step. */
+         observationCoverage } from "../src/airun.mjs";
 import { QUEUE_CONDITION_KINDS } from "../src/queuestate.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -456,8 +497,13 @@ t("C4: the governed row survives the fold as a BOOLEAN, not a 1",
   logAnswer.entries[2]?.governed ?? "(no third entry)", true);
 t("C5: the envelope still publishes its bound (REC-70)",
   [typeof logAnswer.limit, logAnswer.truncated, logAnswer.found], ["number", false, true]);
+/* CORRECTED 2026-09-17, REC-113 / IC-116. The old pin named four and was right
+   until this read began STATING each row's coverage claim; it is superseded, not
+   mistaken, and it is widened rather than exempted — an exempted pin is a rule
+   nobody is enforcing and nobody remembers deleting. */
 t("C6: and the vocabularies still travel WITH the answer (DEC-8)",
-  Object.keys(logAnswer.vocabulary || {}).sort(), ["bounds", "endings", "levels", "states"]);
+  Object.keys(logAnswer.vocabulary || {}).sort(),
+  ["bounds", "coverage", "coverage_undetermined", "endings", "levels", "states"]);
 
 /* THE BYTE-IDENTITY PIN, and its provenance is what makes it evidence.
    `test/rec93-fold-digest.mjs` drove THIS EXACT FIXTURE through the PRE-ITEM
@@ -466,7 +512,22 @@ t("C6: and the vocabularies still travel WITH the answer (DEC-8)",
    IDENTICAL. A digest this item computed and then pinned against itself would
    prove only that the answer stopped moving AFTER the change; the number below
    is the PRE-ITEM build's own answer, so re-checking it here is a comparison
-   with the old behaviour rather than with this item's opinion of it. */
+   with the old behaviour rather than with this item's opinion of it.
+
+   **SUPERSEDED AS A LIVE NUMBER 2026-09-17 BY REC-113 / IC-116, AND SAID HERE
+   RATHER THAN LEFT TO GO QUIETLY STALE — which is this project's most-repeated
+   finding and would have happened silently, because NO ASSERTION BELOW
+   RECOMPUTES THIS DIGEST.** `op=airunlog` now projects `result_kind` and
+   `result_ref` and STATES a per-row `coverage`, so this fixture's answer is no
+   longer 3,120 bytes and no longer digests to `10bf6e28…`. The sentence above is
+   kept because it is the true record of what REC-93 measured against f38af22;
+   what changed is the READ, by an accepted additive interface change.
+   THE BYTE-IDENTITY CLAIM ITSELF DID NOT GO AWAY, IT MOVED AND GOT STRONGER:
+   `test/rec113-identity.mjs` drives a fixture carrying BOTH a referent-bearing
+   and a bare `run` PRESENT through this build and a pre-change checkout, strips
+   exactly the three added keys, and compares the raw text — so the old answer is
+   still pinned against a build that predates the change rather than against this
+   item's opinion of it. C7 below is unchanged and still does its own job. */
 const FOLD_PIN = "10bf6e28346b652793d7cd64d9ca56f5c09cea5a5da830641ea5f24be74a4a1a";
 t("C7: the pinned pre-item digest is a real sha256 and not an empty-string artefact "
 + "(e3b0c442… has been recorded here twice as a 'byte-identical' result over nothing)",
@@ -977,19 +1038,129 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
   + "the write door is already open and needs no plane change",
     [withRef && withRef.appended, (withRef && withRef.refused || []).length], [1, 0]);
 
-  /* I2 — AND IT IS UNREADABLE AT THE RUN'S OWN LOG. `aiRunLog`'s SELECT lists
-     `seq, at, level, subject, state, governed, condition, bound, terminal,
-     detail` and NOT `result_kind` / `result_ref`, so a referent that is stored
-     cannot be seen through the op. This is why REC-100's accepts-when — "rows
-     read back through `op=airunlog` with their coverage claim STATED as
-     undetermined" — is not satisfiable today: a field the read does not project
-     cannot be stated as anything. Widening the projection is ADDITIVE and owes
-     an IC on I3. */
+  /* I2 — INVERTED 2026-09-17 BY REC-113 / IC-116, WHICH IS THE ARM WORKING
+     EXACTLY AS REC-100 BUILT IT TO.
+     ==================================================================
+     REC-100 wrote this assertion to PIN A GAP rather than a capability, and said
+     so in this section's header: *"Each one states what is true TODAY. When the
+     gap closes, the arm goes red AT THE SITE THAT HAS TO CHANGE and names it —
+     which is how the next worker finds these three places instead of re-deriving
+     them."* It went red here, on the site that changed, and this is the
+     CORRECTION rather than an exemption: the old assertion was true when it was
+     written and is now false, and saying which is the whole value of having
+     written it.
+     WHAT IT USED TO ASSERT, kept so the inversion is legible: `aiRunLog`'s SELECT
+     listed `seq, at, level, subject, state, governed, condition, bound, terminal,
+     detail` and NOT `result_kind` / `result_ref`, so a referent that WAS stored
+     could not be seen through the op — which made REC-100's own accepts-when
+     ("rows read back with their coverage claim STATED as undetermined")
+     unsatisfiable, because a field the read never projects cannot be stated as
+     anything.
+     WHAT IT ASSERTS NOW: the referent is VISIBLE, and — the half the projection
+     alone would not have bought — the claim it supports is SAID. A `null`
+     `result_ref` is an absence with two causes (never written, or dropped by the
+     read); `coverage: "backed"` is a statement. Note this row is the one that
+     CARRIES a referent, so it must read `backed` and NEVER `undetermined`: the
+     failure that costs here is the record saying it does not know something it
+     does know. I2b below drives the other direction. */
   const back = await GET(`op=airunlog&token=${TOK}&run=${R2}`);
-  t("I2: …and `op=airunlog` does NOT project it — the referent is stored and INVISIBLE, "
-  + "so the coverage claim cannot be stated as undetermined at the read (additive, an IC on I3)",
-    [back.entries[0].state, "result_ref" in back.entries[0], "result_kind" in back.entries[0]],
-    ["PRESENT", false, false]);
+  t("I2: …and `op=airunlog` NOW PROJECTS IT — the stored referent is visible AND the coverage "
+  + "claim it supports is STATED as `backed`, never left to be inferred from a non-null "
+  + "(REC-113 / IC-116 closes the READ half of D-366)",
+    [back.entries[0].state, back.entries[0].result_kind, back.entries[0].result_ref,
+     back.entries[0].coverage],
+    ["PRESENT", "capture", SHA_B, "backed"]);
+
+  /* I2b — THE ARM THIS ITEM EXISTS FOR, AND IT IS DRIVEN THROUGH THE OP RATHER
+     THAN AT THE STORE, because `op=invitelook` shipped with a ReferenceError
+     while 1,276 assertions passed.
+     A BARE `run` PRESENT — the exact shape C-22.10's carve-out admits (D-366) —
+     is appended, then read back. It must come back STATED as `undetermined`:
+     NEVER FILLED (no referent is invented to get past a gate — that is the
+     failure CLAUDE.md names by name), NEVER DROPPED (the row is still there, in
+     order, with its state intact), and NEVER INFERRED FROM A SIBLING ROW — which
+     is why this run already contains a row that IS backed, so a read that
+     borrowed a neighbour's referent would answer `backed` here and fail. */
+  const bare = await POST(`op=airuntick&token=${TOK}`, {
+    run: R2, at: at(6000), leaseMs: 600000, consume: { fetches: 1 },
+    log: [{ level: "document", subject: "observation:budget-2025", state: "PRESENT",
+            detail: "a run PRESENT that names NOTHING — the carve-out's own shape" }],
+  });
+  const back2 = await GET(`op=airunlog&token=${TOK}&run=${R2}`);
+  const bareRow = back2.entries.find((e) => e.subject === "observation:budget-2025");
+  t("I2b: a pre-existing bare `run` PRESENT is accepted (the carve-out STANDS — this item did "
+  + "not touch `checkObservation`) and reads back STATED as undetermined: not filled, not "
+  + "dropped, and not inferred from the backed sibling one row above it",
+    [bare && bare.appended, (bare && bare.refused || []).length,
+     bareRow?.state, bareRow?.result_kind, bareRow?.result_ref, bareRow?.coverage],
+    [1, 0, "PRESENT", null, null, "undetermined"]);
+
+  /* I2c IS LOAD-BEARING AND THE NEGATIVE CONTROL IS WHAT PROVED IT, which is
+     worth knowing before anyone decides it duplicates I2b.
+     Under this item's `projection` arm — the two columns removed from the SELECT
+     so the read projects NOTHING — I2b AND I2d BOTH CAME BACK GREEN. They had to:
+     with the columns gone `e.result_ref` is `undefined`, so a row that has no
+     referent reads `null / null / undetermined`, which is exactly what it should
+     read. An assertion over a row with nothing to show CANNOT TELL "the record
+     has no referent" from "the read dropped the column" — the same two bytes for
+     two different facts, which is D-366's own shape arriving inside the suite
+     written to close it.
+     So only a row that HAS a referent can detect a missing projection. I2 and
+     this line are those rows. A suite built only around the undetermined case
+     would have passed, in full, over a read that projected nothing at all. */
+  t("I2c: …and the SIBLING is untouched by it — the backed row still reads `backed` after an "
+  + "undetermined row lands in the same run, which is what makes I2b a per-row statement "
+  + "rather than a property of the answer",
+    back2.entries.find((e) => e.subject === "observation:budget-2026")?.coverage, "backed");
+
+  /* I2d — THE OTHER DIRECTION, AND IT IS THE ONE THAT PROTECTS THE RECORD FROM
+     MANUFACTURING AN UNKNOWN. A `LOOKED_ABSENT` row has nothing to point at BY
+     DEFINITION — that is what it found out — so calling it undetermined would be
+     the record saying it does not know something it DOES know. `none_owed` is
+     that third value, and it is why this item did not simply answer
+     "undetermined whenever `result_ref` is null". */
+  await POST(`op=airuntick&token=${TOK}`, {
+    run: R2, at: at(7000), leaseMs: 600000, consume: { fetches: 1 },
+    log: [{ level: "document", subject: "observation:never-existed", state: "LOOKED_ABSENT",
+            detail: "positively gone, 404 from the origin" }],
+  });
+  const back3 = await GET(`op=airunlog&token=${TOK}&run=${R2}`);
+  t("I2d: a LOOKED_ABSENT row reads `none_owed`, NOT undetermined — a row with nothing to "
+  + "point at by definition is not an unknown, and manufacturing one would be an overclaim "
+  + "wearing the costume of caution",
+    back3.entries.find((e) => e.subject === "observation:never-existed")?.coverage, "none_owed");
+
+  /* I2e — THE READ AND THE REFUSAL HELD TOGETHER BY DRIVING BOTH, not by
+     asserting that somebody kept two literals in step. `observationCoverage`
+     answers `undetermined` on exactly the rows C-22.10 would REFUSE under a
+     non-`run` authority; if the two ever drift, this goes red. `checkObservation`
+     is imported and driven — it is NOT edited by this item, and must not be:
+     widening the carve-out is REC-100's refused scope and a lifecycle deadlock
+     (`op=airunclose` answers `OBS_PRESENT_NO_REFERENT`, so a run that observed
+     anything PRESENT cannot be closed at all). */
+  {
+    const matrix = [
+      { state: "PRESENT",              resultRef: null },
+      { state: "PRESENT",              resultRef: SHA_B },
+      { state: "LOOKED_ABSENT",        resultRef: null },
+      { state: "LOOKED_INDETERMINATE", resultRef: null },
+      { state: "NEVER_LOOKED",         resultRef: null },
+    ];
+    const refusesUnderSweep = matrix.map((m) => !!checkObservation(
+      { level: "document", subject_kind: "address", subject: "https://example.gov/x",
+        state: m.state, result_ref: m.resultRef,
+        actor_class: "machine", authority_kind: "sweep", authority: "SWEEP-1" },
+      QUEUE_CONDITION_KINDS));
+    const saysUndetermined = matrix.map((m) => observationCoverage(m) === "undetermined");
+    t("I2e: the read's `undetermined` fires on EXACTLY the rows C-22.10 refuses elsewhere — "
+    + "the read and the refusal share one rule instead of two literals somebody must keep "
+    + "in step, and the carve-out itself is UNTOUCHED",
+      saysUndetermined, refusesUnderSweep);
+    t("I2f: …and that agreement is not free — the matrix genuinely contains both answers, so "
+    + "two all-false lists cannot pass it (an equality that costs nothing is not evidence)",
+      [refusesUnderSweep.filter(Boolean).length, refusesUnderSweep.filter((x) => !x).length],
+      [1, 4]);
+  }
 
   /* I3 — THE ROLLUP, AND IT IS THE FINDING THAT UNSEATS D-366's REMEDY.
      `#aiRunTerminate` writes the run's terminal entry with `#aiRunSearchState`'s

@@ -129,6 +129,81 @@ export const OBSERVATION_STATES = {
    quietly escaping two checks that each hard-coded four names. */
 export const DEFINITIVE_STATES = new Set(["LOOKED_ABSENT", "PRESENT"]);
 
+/* ===================================================================== *
+ * REC-113 / IC-116 -- THE COVERAGE CLAIM, SAID RATHER THAN LEFT TO BE
+ * INFERRED FROM A NULL.
+ * ===================================================================== *
+ *
+ * D-366's cost while open, in its own words: *"a later reader cannot tell that
+ * row's coverage claim from one backed by a capture"*. REC-100 was spawned to
+ * close it, found its remedy -- rows read back *"with their coverage claim
+ * STATED as undetermined"* -- UNSATISFIABLE, and said exactly why: `aiRunLog`'s
+ * SELECT projected neither `result_kind` nor `result_ref`, so a field the read
+ * never returns cannot be stated as anything. This is the READ half, and only
+ * that half: nothing here widens C-22.10's `run` carve-out, which stands.
+ *
+ * WHY THIS IS A THIRD FIELD AND NOT TWO NULLABLE COLUMNS, WHICH IS THE ONE
+ * PLACE THIS ITEM DEPARTS FROM THE LETTER OF ITS ROW AND IS REPORTED AS SUCH.
+ * Projecting `result_ref: null` is not a statement, it is an ABSENCE -- and an
+ * absence with two causes is the defect class this repository meets most: the
+ * row may have been written without a referent, or the read may have dropped
+ * it, and a null says which of those is true about neither. CLAUDE.md's rule is
+ * that *undetermined is first-class and must be STATED*, and `accepts-when`
+ * says STATED. So the two columns are projected AND the claim they support is
+ * spelled out beside them.
+ *
+ * THE THREE VALUES, AND THE THIRD IS DELIBERATELY NOT A MEMBER OF THE FIRST TWO
+ * -- `CONTENT_AXIS_UNDETERMINED`'s precedent one construct over, for the same
+ * reason: folding an unknown into a known bucket is concluding a value from an
+ * absence.
+ *
+ * `none_owed` EXISTS BECAUSE THE COSTLIER FAILURE HERE RUNS THE OTHER WAY. A
+ * `LOOKED_ABSENT` row has nothing to point at BY DEFINITION -- that is what it
+ * found out -- and calling it undetermined would be the record saying it does
+ * not know something it DOES know, which is an overclaim wearing the costume of
+ * caution. The record's own instrument decides which rows those are: this
+ * predicate keys on EXACTLY C-22.10's condition (`state === "PRESENT"` and no
+ * referent) and on nothing else, so the read and the refusal cannot drift. The
+ * suite holds them together by DRIVING `checkObservation` over the same matrix
+ * rather than by asserting that someone kept two literals in step.
+ *
+ * DESIGN GAP, against `OBSERVATION-LOG-DESIGN.md` section 3, and it is NAMED
+ * rather than silently resolved in either direction. `partial` ("we looked and
+ * got part of it") DID obtain something, so a referent is arguably owed for it
+ * too -- but C-22.10 does not refuse a `partial` without one, and inventing a
+ * fourth opinion here would be a fence tighter than its rule, which this
+ * repository already knows is an undeclared interface change rather than
+ * safety. `partial` therefore answers `none_owed` and the question is handed
+ * to the design, where the rollup question from D-366 is already waiting. */
+export const OBSERVATION_COVERAGE = {
+  backed:    "the row names what the look produced: `result_ref` points at it, and the claim "
+           + "can be checked against the thing itself",
+  none_owed: "the row's state does not assert the record obtained anything, so C-22.10 requires "
+           + "no referent and its absence is a fact about the look rather than an unknown",
+};
+
+/** The value that is NOT one of the two above, and it is the whole point of
+ *  this item. A `PRESENT` row under the `run` carve-out asserts *we looked and
+ *  it is there* while naming nothing -- so the record cannot tell it from a row
+ *  backed by a capture, and the honest answer is to say so at the read. It is a
+ *  constant for the reason every vocabulary here is one: a later reader must
+ *  not re-spell it. */
+export const OBSERVATION_COVERAGE_UNDETERMINED = "undetermined";
+
+/** THE ONE RULE, so that the read, the suite and any later reader share it
+ *  rather than each holding a copy. Pure, total over its inputs, and it decides
+ *  from the ROW ALONE -- never from a sibling row, which `accepts-when` forbids
+ *  by name and which would be the agreement-is-not-evidence failure arriving
+ *  inside a single answer. */
+export function observationCoverage({ state, resultRef } = {}) {
+  const named = resultRef != null && String(resultRef) !== "";
+  if (named) return "backed";
+  /* C-22.10's condition, and ONLY it. See the DESIGN GAP note above for
+     `partial`, which this deliberately does not claim to have decided. */
+  if (state === "PRESENT") return OBSERVATION_COVERAGE_UNDETERMINED;
+  return "none_owed";
+}
+
 /* REC-93 / IC-92 -- THE OBSERVATION LOG'S THREE REMAINING VOCABULARIES, added
    when `OBSERVATION-LOG-DESIGN.md` generalised this file's run log into the one
    `observations` table every level writes to. They live HERE, beside the levels

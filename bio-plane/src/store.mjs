@@ -252,6 +252,11 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
             site: this file puts judged rows in and holds no second opinion about
             what a reading means. */
          CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED,
+         /* REC-113 / IC-116: the coverage claim `op=airunlog` now STATES per row.
+            The rule is imported rather than re-spelled here for the same reason
+            the content axis is -- `aiRunLog` puts judged rows out and holds no
+            second opinion about what an absent referent means. */
+         OBSERVATION_COVERAGE, OBSERVATION_COVERAGE_UNDETERMINED, observationCoverage,
          /* BOB #11's correction of 2026-09-15 (`9954a9c`, design section 5.1): a subject
             with no row has THREE causes and they are different facts. The
             vocabulary lives beside the states it qualifies. */
@@ -32921,12 +32926,43 @@ export class Store extends DurableObject {
        because the rows are already `ORDER BY seq` ascending and the cut falls at
        the END (§14b.7 replays from the start), so index + 1 is exact rather than
        approximate. This is the digest-pinned property. */
+    /* REC-113 / IC-116 — THE COVERAGE CLAIM, PROJECTED AND THEN STATED.
+       ADDITIVE: `result_kind` and `result_ref` are APPENDED to the projection
+       and `coverage` is composed after them, so every key this op answered
+       yesterday keeps its value AND ITS POSITION. That second half is not
+       pedantry — `test/rec113-identity.mjs` strips exactly these three keys back
+       off and compares the RAW RESPONSE TEXT to a pre-change build's, which is
+       only a comparison if the order survives.
+
+       WHY THE READ CHANGED AND THE REFUSAL DID NOT. C-22.10 does not fire on
+       `authority_kind = 'run'` (D-366), so rows under this very authority may
+       assert PRESENT while naming nothing. REC-100 drove what happens if that
+       carve-out is deleted today: `op=airunclose` answers `terminated: false,
+       code: OBS_PRESENT_NO_REFERENT` and a run that observed anything PRESENT
+       CANNOT BE CLOSED AT ALL — a lifecycle deadlock blocked on a design ruling
+       about what a ROLLUP's referent is. That ruling is not this item's and the
+       carve-out STANDS. What this item fixes is that the reader could not even
+       SEE the condition: D-366's whole cost is *"a later reader cannot tell that
+       row's coverage claim from one backed by a capture"*, and until now the
+       read made that true by construction.
+
+       NOTHING IS INFERRED FROM A SIBLING ROW. `observationCoverage` is pure and
+       sees one row's own two values — `accepts-when` forbids the alternative by
+       name, and a run whose OTHER rows carry referents says nothing whatever
+       about this one. That is the agreement-is-not-evidence rule arriving inside
+       a single answer. */
     const page = this.#rows(
-      `SELECT seq, at, level, subject, state, governed, condition, bound, terminal, detail
+      `SELECT seq, at, level, subject, state, governed, condition, bound, terminal, detail,
+              result_kind, result_ref
        FROM observation_log WHERE authority_kind = 'run' AND authority = ?
        ORDER BY seq LIMIT ?`, run, cap + 1);
     const entries = page.slice(0, cap)
-      .map((e, i) => ({ ...e, seq: i + 1, governed: e.governed === 1, terminal: e.terminal === 1 }));
+      .map((e, i) => ({ ...e, seq: i + 1, governed: e.governed === 1, terminal: e.terminal === 1,
+                        /* NULL IS NORMALISED TO `null` RATHER THAN LEFT AS `undefined`:
+                           a key that serialises away is the absence-with-two-causes this
+                           whole item is about, one layer down. */
+                        result_kind: e.result_kind ?? null, result_ref: e.result_ref ?? null,
+                        coverage: observationCoverage({ state: e.state, resultRef: e.result_ref }) }));
     return { run, found: true, status: row.status, entries,
              limit: cap, truncated: page.length > cap,
              stopped: row.stopped_bound
@@ -32937,7 +32973,17 @@ export class Store extends DurableObject {
                 reason op=affordances publishes the act set instead of naming it
                 (DEC-8: a surface renders what it received). */
              vocabulary: { states: OBSERVATION_STATES, levels: OBSERVATION_LEVELS,
-                           bounds: RUN_BOUNDS, endings: RUN_ENDINGS } };
+                           bounds: RUN_BOUNDS, endings: RUN_ENDINGS,
+                           /* REC-113 / IC-116, APPENDED for the same reason the four
+                              above travel at all (PL-17, DEC-8): a surface that must
+                              render `undetermined` should read the word off the answer
+                              rather than hold a literal it learned somewhere else and
+                              will not re-learn. `coverage_undetermined` is published
+                              SEPARATELY because it is deliberately not a member of
+                              `coverage` — `op=contentaxis`'s `undetermined_value` is the
+                              same shape one construct over. */
+                           coverage: OBSERVATION_COVERAGE,
+                           coverage_undetermined: OBSERVATION_COVERAGE_UNDETERMINED } };
   }
 
   /* ------------------------------------------------------------------ *

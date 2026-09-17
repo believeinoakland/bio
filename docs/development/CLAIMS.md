@@ -10943,7 +10943,9 @@ composer and the refusal have never met.
 
 **NOT EDITED BY THIS ITEM.** `agent-worker/**` is outside RECORD's claim and REC-100 read it only.
 
-**open as of 2026-09-16** — raised today by REC-100 and NOT yet discharged. **Recorded by CONDUCT #1 at integration because M0-37's own arm, which landed hours earlier, FAILED this block by name on its first live encounter** — the delegation arrived through a merge carrying neither a DISCHARGED line nor an `open as of` line, which is exactly the silence that arm exists to refuse. It is the instrument working on the day it shipped, on a block written by a worker who could not have known the rule had changed under it.
+**open as of 2026-09-16** — raised today by REC-100 and NOT yet discharged.
+
+**STILL OPEN as of 2026-09-17, RE-AFFIRMED by REC-113 rather than left to be inferred from silence.** REC-113 landed the OTHER half of D-366 — `op=airunlog` now projects `result_kind` / `result_ref` and STATES each row's coverage claim (IC-116 on I3, additive) — and **deliberately did not open `agent-worker/**`**, which is outside RECORD's claim. Nothing in this delegation is discharged by that landing and its urgency is UNCHANGED: `stepLog` still composes no referent field, the four mocks still accept any entry, and the contract arm this block asks for still does not exist. **One thing REC-113 measured that sharpens it:** `agent-worker/src/index.mjs` (~326–340) is a live consumer of `op=airunlog` and reads `entries` for its LENGTH only, so IC-116's added keys are transparent to it and this landing required no change there — but that is a fact about the READ, and it says nothing about the WRITE side this block is about. **Recorded by CONDUCT #1 at integration because M0-37's own arm, which landed hours earlier, FAILED this block by name on its first live encounter** — the delegation arrived through a merge carrying neither a DISCHARGED line nor an `open as of` line, which is exactly the silence that arm exists to refuse. It is the instrument working on the day it shipped, on a block written by a worker who could not have known the rule had changed under it.
 
 ### FINDING 2026-09-16 RECORD (REC-100) — **THE ITEM DID NOT WIDEN THE CHECK, AND EVERY PRECONDITION ITS OWN ROW NAMED WAS WRONG**
 Recorded here as well as in the report, because a finding left in a report reaches one reader.
@@ -12009,3 +12011,39 @@ released: 2026-09-17 by CONDUCT #2 at integration, merged at `c1671bdc`. **RELEA
   rules on anything* — reached by paying for it rather than by remembering it.
 
 **open as of 2026-09-17** — part of the UI-62 claim above and released with it.
+
+## CLAIM 2026-09-17 RECORD (REC-113 — THE READ HALF OF D-366: a coverage claim that can be READ, and is SAID)
+
+worker `agent-ab3bf809046a052e6`, branch `worktree-agent-ab3bf809046a052e6`.
+
+**PATHS CLAIMED:**
+
+- `bio-plane/src/airun.mjs` — the coverage vocabulary and its one rule (`OBSERVATION_COVERAGE`,
+  `OBSERVATION_COVERAGE_UNDETERMINED`, `observationCoverage`). **`checkObservation` is NOT
+  touched** — widening C-22.10's `run` carve-out is REC-100's refused scope and a lifecycle
+  deadlock; this item stayed out of it deliberately.
+- `bio-plane/src/store.mjs` — `Store#aiRunLog` only: the SELECT's two added columns, the three
+  composed keys, and the two appended `vocabulary` keys. No other method.
+- `bio-plane/test/observation-log.test.mjs` — section I (I2 inverted, I2b–I2f added), C6
+  corrected, the NEGATIVE CONTROL block.
+- `bio-plane/test/airun.test.mjs` ARM P6 and `bio-plane/test/meaning-bounds.test.mjs` — one
+  vocabulary key-set pin each, WIDENED rather than exempted.
+- `bio-plane/test/rec93-fold-digest.mjs`, `bio-plane/test/rec93-migrate-probe.mjs` — the two
+  hand-run cross-checkout probes, corrected to strip exactly the added keys with a
+  strip-did-something guard. Their subjects (the fold; `#migrate`) are unchanged.
+- `bio-plane/test/rec113-identity.mjs`, `bio-plane/test/nc-rec113.mjs` — new instruments.
+- `docs/development/INTERFACE-CHANGES.md` (IC-116), `docs/development/DEBT.md` (D-366's
+  disposition), `docs/development/OBSERVATION-LOG-DESIGN.md` (status + Incomplete sections),
+  `docs/development/MEASUREMENTS.md`, this file.
+
+**THE CLAIM WAS WRITTEN AFTER THE FIRST EDITS, NOT BEFORE, AND THAT IS RECORDED RATHER THAN
+TIDIED.** `kickoffs/WORKER.md` says claim BEFORE editing. This worker read its brief, the design
+and the code, then edited `airun.mjs` and `store.mjs` before writing this block. No other session
+touched these paths in the window — verified against `origin/main` at merge — so nothing was
+lost, but the rule exists because that is exactly what cannot be verified in general, and a
+worker reporting its own procedural miss is cheaper than the next one inferring the rule is soft.
+
+**A SIBLING WORKER (REC-115) OWNS `bio-plane/src/query.mjs` THIS WAVE AND THIS ITEM DID NOT OPEN
+IT.**
+
+released: (pending CONDUCT integration)
