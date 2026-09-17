@@ -50,7 +50,64 @@
    NOTE ON THE MACHINE THIS RAN ON: the first full-battery baseline taken for this item lost seven
    suites to `SQLITE_CANTOPEN` / `SQLITE_IOERR_SHMSIZE` because the volume was at 100%. Every one
    passed alone at exit 0 and the re-run was 205/205. If suites in this neighbourhood ever fail
-   with a workerd SQLite open error, read `df` before reading the diff. */
+   with a workerd SQLite open error, read `df` before reading the diff.
+
+   ===== REC-107's ARMS ARE DECLARED IN THIS SAME BLOCK AND NOT UNDER A SECOND MARKER =====
+   (declared and RUN 2026-09-17, REC-107, worktree agent-a9a42611f2cdf409e, driver
+   `node test/nc-rec107.mjs [arm]`.) The marker phrase is deliberately NOT repeated: the
+   coverage register reads a declaration to the end of its paragraph or until the MARKER
+   RECURS, and a second marker here would TRUNCATE the declaration above it — the exact
+   failure recorded in arm (b) of that declaration, which cost REC-95 an UNCLASSIFIED
+   suite. One marker, one declaration, two items' arms.
+   THE DRIVER RUNS **BOTH** THIS SUITE AND `observation-content.test.mjs` ON EVERY ARM,
+   because REC-107 swept one class across two levels and a driver running only the rowed
+   level could not tell a fix that CLOSED one level from a fix that ENTANGLED them.
+   EIGHT arms, baseline first, every one AS DECLARED on the final run — baseline 139/0:
+   (a) `baseline` — nothing armed. Declared green. 139 pass, 0 fail.
+   (b) `never` — THE ROW'S OWN CONTROL: drop `never_looked` from the TWO-SIDED undetermined
+       set, restoring exactly the claim that shipped. Declared MUST FAIL: H1 here and H4 in
+       the content suite. Declared MUST NOT FAIL: every ONE-SIDED answer. 2/2.
+   (c) `onesided` — collapse the one-sided widening onto the two-sided set. Declared MUST
+       FAIL: H2, H3, H8. Declared MUST NOT FAIL: the whole content suite, which takes the
+       other branch — the orthogonality pair, and it held. 3/3.
+       **`H5` WAS DECLARED MUST-FAIL AND CAME BACK GREEN, AND THE ARM WAS RIGHT**: an
+       unrecognised cause word exits one line ABOVE the return this arm patches, so the
+       function has TWO wide exits for two different reasons and this mutation cannot reach
+       the other. The declaration was corrected, not the arm.
+   (d) `weakdefault` — THE QUIET ONE. Rewrite `=== false` to a falsy test, so an UNDECLARED
+       sidedness inherits the STRONG answer by omission. Every declared kind still answers
+       correctly and nothing about the code looks wrong with it applied. Declared MUST FAIL:
+       H3 ALONE, and H3 alone is what failed. 1/1.
+   (e) `rowfield` — stop publishing the two fields ON the row, leaving the rule correct and
+       unreachable: the state this item found. Declared MUST FAIL: H7, H8, H9 here and H2,
+       H3 in the content suite. 5/5.
+       **THIS ARM FOUND A DEFECT IN THIS ITEM'S OWN INSTRUMENT ON ITS FIRST RUN.** Removing
+       the field made four of section H's assertions dereference `.length` / `.every` on
+       `undefined`, and a TypeError inside an assertion goes through NO assertion at all —
+       BOTH suites died with tallies of -1 instead of going red. Every dereference in
+       section H at both levels is now guarded by `Array.isArray`. The control found the
+       instrument wrong, which is where WORKER.md says controls find them most often.
+   (f) `prose` — restore the two-member assertion in the `purged` SENTENCE alone, so the
+       prose claims a set the row's own field contradicts. Declared MUST FAIL: H10 alone,
+       proving no computed value is load-bearing on a canned string. 1/1.
+   (g) `extrakey` — armed as an over-strictness arm and RED IS THE CORRECT ANSWER, which is
+       the finding. It adds an UNMEASURED fourth kind to `MEANING_EVIDENCE_IS_ONE_SIDED` and
+       `A4` refuses it. A kind's sidedness is a MEASUREMENT — whether that evidence table
+       holds a row when the answer was no — so A4 is refusing an unmeasured claim about the
+       record's own coverage rather than being over-strict. The DECLARATION was corrected;
+       the assertion was NOT loosened, because an exempted test is a rule nobody enforces.
+   (h) `extrakey_content` — THE ACTUAL OVER-STRICTNESS ARM, rebuilt after (g): a declared
+       kind added to the CONTENT level's map, which no assertion pins by key set. Declared
+       MUST STAY GREEN and did, 139/0 — which is what proves section H reads the published
+       map rather than pinning the three kinds it was written against, and what lets
+       `OBSERVATION-LOG-DESIGN.md` §8's fourth item land without this suite refusing it for
+       being NEW rather than for being wrong.
+   WHAT REC-107's ARMS CANNOT SEE: **no arm reaches a genuinely PRE-LOG corpus**, because
+   neither suite can register a subject before the log's first row at its own level. The
+   `purged` cause is driven at a REFERENCE through the null-`entered` path
+   `#missingMeaningCause`'s own guard exists for, and on the PURE RULE for every other kind.
+   That is the same window this item concluded cannot be closed, so the control shares the
+   subject's limit rather than covering it. */
 
 /* REC-95 — THE MEANING-LEVEL WRITERS: THE READER RUN, THE RESOLUTION ATTEMPT,
  * THE CONNECTION DERIVATION.
@@ -96,6 +153,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { OBSERVATION_SUBJECT_KINDS, OBSERVATION_AUTHORITY_KINDS, OBSERVATION_STATES,
          MISSING_ROW_CAUSES, MEANING_MISSING_ROW_CAUSES, MEANING_EVIDENCE_IS_ONE_SIDED,
+         ALL_MISSING_ROW_CAUSES, causesNotRuledOut,
          readerRunObservation, resolutionObservation, derivationObservation } from "../src/airun.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -735,6 +793,156 @@ t("G5: AND AN UNRECOGNISED SUBJECT KIND TAKES THE WEAKEST CAUSE, never the stron
 + "nobody looked, and defaulting to it would let a later reader reach the positive statement by "
 + "adding an eighth subject kind and forgetting to come here",
   /if \(!probe\) return "purged";/.test(SRC.store), true);
+
+/* ===================================================================== *
+ * H · REC-107 — THE UNDETERMINED SET IS NAMED ON THE ROW, AND IT WAS ONE
+ *     MEMBER SHORT.
+ *
+ * WHAT THIS SECTION EXISTS FOR, because section G above was GREEN over the
+ * defect and stayed green when it was fixed. G asserts which LIST a subject
+ * lands in and which CAUSE WORD it carries; nothing in it — nor in
+ * `observation-content.test.mjs`'s 63 — ever asserted on the CONTENT of the
+ * undetermined set. So `MEANING_MISSING_ROW_CAUSES.purged` could publish
+ * *"either the log did not yet carry this level for it or a whole-store purge
+ * cleared the rows that described it. NEITHER CAN BE RULED OUT"* — a
+ * two-member enumeration of a three-member set, on every row, at every subject
+ * kind — through 120 assertions that could not see it. **A suite that cannot
+ * see a defect is not evidence the defect is absent**, and this section is
+ * that gap closed rather than a new feature pinned.
+ *
+ * THE MISSING MEMBER IS `never_looked` AND IT IS LIVE EVERYWHERE THAT CAUSE IS
+ * REACHED, because the cause is reached when the EVIDENCE PROBE MISSED. At a
+ * reference or an entity a second member is missing too — the pre-log look
+ * that found nothing and left no artifact — and that one WAS published, but as
+ * a top-level map a caller had to remember to join.
+ * ===================================================================== */
+
+t("H1: THE PURE RULE — at a TWO-SIDED subject kind the undetermined set is `purged` AND "
++ "`never_looked`. The second member is the one that was missing: this cause is reached because "
++ "the evidence probe MISSED, so nobody-having-looked is fully live, and the sentence that shipped "
++ "excluded it",
+  causesNotRuledOut("purged", { evidenceOneSided: false }),
+  ["purged", "never_looked"]);
+
+t("H2: and at a ONE-SIDED kind it is ALL THREE, because a pre-log look that found nothing left no "
++ "artifact for cause (1) to read — so the fruitless look is live alongside the purge and the "
++ "never-look, and this record can never tell them apart over the pre-log window",
+  causesNotRuledOut("purged", { evidenceOneSided: true }),
+  ["pre_log", "purged", "never_looked"]);
+
+t("H3: THE WEAKEST-CLAIM DEFAULT IS STRUCTURAL AND NOT A CONVENTION — an UNDECLARED sidedness "
++ "takes the WIDE branch. The predicate is `=== false` and never `!evidenceOneSided`, so a fourth "
++ "subject kind somebody adds and forgets to declare reads honestly instead of inheriting the "
++ "strong two-member answer by omission. REC-94's landed rule, made structural",
+  [causesNotRuledOut("purged", {}), causesNotRuledOut("purged", { evidenceOneSided: undefined }),
+   causesNotRuledOut("purged", { evidenceOneSided: null })],
+  [["pre_log", "purged", "never_looked"], ["pre_log", "purged", "never_looked"],
+   ["pre_log", "purged", "never_looked"]]);
+
+t("H4: THE OVER-STRICTNESS ARM, and it points the other way — a resolved cause is NOT widened. "
++ "`pre_log` was reached because the evidence table HAS a row, so a look demonstrably happened and "
++ "neither a purge nor a never-look survives it; `never_looked` is §5.1's one positive statement. "
++ "Widening either would make the frontier refuse to conclude anything, which is its own defect",
+  [causesNotRuledOut("pre_log", { evidenceOneSided: true }),
+   causesNotRuledOut("never_looked", { evidenceOneSided: true })],
+  [["pre_log"], ["never_looked"]]);
+
+t("H5: an UNRECOGNISED CAUSE WORD takes the widest set, never the narrowest — G5's rule one field "
++ "over, pointed at the cause vocabulary instead of at the subject vocabulary. A later reader "
++ "cannot reach a narrow answer by inventing a fourth cause and forgetting to come here",
+  causesNotRuledOut("something-nobody-has-written-yet", { evidenceOneSided: false }),
+  ["pre_log", "purged", "never_looked"]);
+
+t("H6: and every set this function can return is a SUBSET of the published vocabulary — a member "
++ "spelled any other way would be a fourth cause wearing a set's clothes, invisible to the "
++ "key-equality arm that guards the vocabularies themselves",
+  ["purged", "pre_log", "never_looked", "unknown"]
+    .flatMap((c) => [causesNotRuledOut(c, { evidenceOneSided: true }),
+                     causesNotRuledOut(c, { evidenceOneSided: false })])
+    .every((set) => Array.isArray(set) && set.length > 0
+                 && set.every((k) => ALL_MISSING_ROW_CAUSES.includes(k)
+                                  && Object.keys(MEANING_MISSING_ROW_CAUSES).includes(k))),
+  true);
+
+/* THROUGH THE OP, AND THE FIXTURE IS BUILT RATHER THAN HOPED FOR. A `purged`
+   row is NOT reachable in this suite by promoting normally: everything this
+   file promotes is registered AFTER the log's first meaning-level row, so it
+   reads `never_looked`. The state that IS reachable is the one
+   `#missingMeaningCause`'s own null-guard exists for — a reference whose
+   carrying capture is not in `register`, so `MIN(g.registered)` is NULL and
+   `entered` cannot be compared to anything. That is the per-bundle-purge shape,
+   not a contrivance, and it gives a REFERENCE-subject `purged` row: the
+   one-sided kind this row was written about. */
+{
+  const SHA_UNREG = "f".repeat(64);
+  /* A reading (so `reading_refs` carries the name) with NO register entry. */
+  await promote("INF-2026-0917-unregistered", {
+    reading: readingOf({ found: true, entities: [ENT(31)] }), captureSha: SHA_UNREG });
+
+  const m = await meaning();
+  const rowsOf = (mm) => [...(mm.never_looked || []), ...(mm.missing_unexplained || [])];
+  const purgedRows = (m.missing_unexplained || []).filter((r) => r.missing_cause === "purged");
+
+  t("H7-fixture: THE FIXTURE REALLY ARMED — at least one `purged`-cause row exists on this answer, "
+  + "and it is a REFERENCE. Without this row H7 and H8 would be measured over an EMPTY list and "
+  + "would pass no matter what the code did, which is the headline-over-an-empty-corpus trap this "
+  + "repository has paid for three times",
+    [purgedRows.length > 0, purgedRows.every((r) => typeof r.subject_kind === "string"),
+     purgedRows.some((r) => r.subject_kind === "reference")],
+    [true, true, true]);
+
+  t("H7: THE DEFECT THIS ROW CLOSED, DRIVEN THROUGH THE OP — `never_looked` is named in "
+  + "`not_ruled_out` on EVERY `purged`-cause row. It is the member the shipped sentence excluded, "
+  + "and excluding it told a member the subject had been looked at (or purged) when nobody may "
+  + "ever have looked — the record claiming more coverage than it can support",
+    purgedRows.length > 0
+      && purgedRows.every((r) => Array.isArray(r.not_ruled_out)
+                              && r.not_ruled_out.includes("never_looked")),
+    true);
+
+  t("H8: and at a ONE-SIDED subject kind the row names ALL THREE and SAYS ON ITSELF that its "
+  + "evidence could never have narrowed them. The limit moves from a top-level map the caller had "
+  + "to remember to join, ONTO the row it applies to — a limit published beside the row is one the "
+  + "reader must remember to apply",
+    purgedRows.filter((r) => MEANING_EVIDENCE_IS_ONE_SIDED[r.subject_kind] === true)
+      .every((r) => r.evidence_one_sided === true
+                 && Array.isArray(r.not_ruled_out)
+                 && r.not_ruled_out.length === 3
+                 && r.not_ruled_out.includes("pre_log")),
+    true);
+
+  t("H9: `not_ruled_out` IS TOTAL ACROSS BOTH LISTS — every row of `never_looked` and of "
+  + "`missing_unexplained` carries it and carries `evidence_one_sided`. A field present only on "
+  + "the rows a reader already distrusts is one they learn to look for only when they are already "
+  + "suspicious; on a `never_looked` row it is the one-member set that says THIS row is the "
+  + "positive statement",
+    await (async () => { const all = rowsOf(m);
+      return [all.length > 0,
+              all.every((r) => Array.isArray(r.not_ruled_out) && r.not_ruled_out.length > 0),
+              all.every((r) => typeof r.evidence_one_sided === "boolean"),
+              (m.never_looked || []).every((r) => Array.isArray(r.not_ruled_out)
+                && r.not_ruled_out.length === 1 && r.not_ruled_out[0] === "never_looked")]; })(),
+    [true, true, true, true]);
+
+  t("H10: AND THE PROSE STOPPED ASSERTING A SET IT CANNOT ASSERT. No `why` on any published row "
+  + "still claims that exactly two causes could not be ruled out — the sentence now describes the "
+  + "cause and DEFERS the set to the row, which is the only place it can be right, because the set "
+  + "differs by subject kind and one canned sentence cannot",
+    rowsOf(m).every((r) => typeof r.why !== "string" || !/Neither can be ruled out/i.test(r.why)),
+    true);
+
+  t("H11: THE REACH OF THE ARMS ABOVE, STATED RATHER THAN LEFT TO BE ASSUMED. Through the op this "
+  + "section drives `purged` at a REFERENCE and `never_looked` at a CAPTURE; it does NOT reach a "
+  + "`purged` ENTITY, because `entities.at` is stamped at creation and is always later than the "
+  + "log's first row on a store this suite built, so no entity here can predate the log. That kind "
+  + "is covered by H1-H6 on the pure rule with the same sidedness map the op passes, and the gap "
+  + "is NAMED rather than scored zero",
+    [new Set(rowsOf(m).map((r) => r.subject_kind)).has("reference"),
+     new Set(rowsOf(m).map((r) => r.subject_kind)).has("capture"),
+     (m.missing_unexplained || []).some((r) => r.subject_kind === "entity"
+                                            && r.missing_cause === "purged")],
+    [true, true, false]);
+}
 
 } catch (e) {
   fail++;

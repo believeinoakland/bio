@@ -284,9 +284,22 @@ export const MISSING_ROW_CAUSES = {
   pre_log:      "this capture was extracted BEFORE the observation log carried the content level, "
               + "so the look is recorded in the readings table and not here. It is not a capture "
               + "nobody read",
-  purged:       "this capture predates the earliest content-level row this log holds, so either the "
-              + "log did not yet exist for it or a whole-store purge cleared the rows that "
-              + "described it. Neither can be ruled out, and they are different facts",
+  /* CORRECTED BY REC-107, and the old sentence is quoted in the reason rather than
+     deleted, because it is the defect and a reader who meets the new one should be
+     able to see what it replaced. It read: *"...so either the log did not yet exist
+     for it or a whole-store purge cleared the rows that described it. NEITHER CAN
+     BE RULED OUT, and they are different facts."* That is an ENUMERATION of the
+     undetermined set, published on every row, and it had TWO members where the live
+     set has three: a capture reaches this cause because the `readings` probe MISSED,
+     and NOBODY HAVING LOOKED is fully live in that bucket. The sentence excluded it,
+     so a member reading the row concluded the capture had been extracted (or purged)
+     and left it off the never-extracted worklist. **The set is now stated per row in
+     `not_ruled_out` rather than asserted in prose here**, so this sentence describes
+     the cause and stops claiming what it cannot. */
+  purged:       "this capture predates the earliest content-level row this log holds, so the log "
+              + "may not yet have existed for it, a whole-store purge may have cleared the rows "
+              + "that described it, or nobody may have looked at all. THIS ROW'S `not_ruled_out` "
+              + "NAMES THE SET THIS RECORD COULD NOT NARROW, and they are different facts",
   never_looked: "the log existed and was not purged over this capture's lifetime, and the record "
               + "holds nothing else about its text -- so nobody has tried to extract it. This is "
               + "the one cause that licenses a positive statement",
@@ -610,10 +623,22 @@ export const MEANING_MISSING_ROW_CAUSES = {
   pre_log:      "this subject was looked at BEFORE the observation log carried the meaning level, "
               + "so the look is recorded in the table that holds what it produced -- a reading, a "
               + "resolution, a connection -- and not here. It is not a subject nobody looked at",
+  /* CORRECTED BY REC-107, the same defect as the content level's above and with one
+     member MORE at two of this level's three subject kinds. It read: *"...either the
+     log did not yet carry this level for it or a whole-store purge cleared the rows
+     that described it. NEITHER CAN BE RULED OUT."* Two members, and the live set is
+     three at a capture and three at a reference or an entity for DIFFERENT reasons —
+     `never_looked` was missing at all three, and at a reference or an entity the
+     PRE-LOG LOOK THAT FOUND NOTHING is live as well, because it left no artifact for
+     cause (1) to read. That second widening was published, but as the top-level
+     `evidence_one_sided` map a caller had to remember to join to the row. Both now
+     sit ON the row, in `not_ruled_out` and `evidence_one_sided`. */
   purged:       "this subject entered the record before the earliest meaning-level row this log "
-              + "holds, so either the log did not yet carry this level for it or a whole-store "
-              + "purge cleared the rows that described it. Neither can be ruled out, and they are "
-              + "different facts",
+              + "holds, so the log may not yet have carried this level for it, a whole-store purge "
+              + "may have cleared the rows that described it, or nobody may have looked -- and at a "
+              + "reference or an entity a pre-log look that found NOTHING is live too, having left "
+              + "no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` "
+              + "SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT",
   never_looked: "the log carried this level over this subject's whole lifetime and was not purged "
               + "since, AND the record holds no product of such a look -- so nobody has looked. "
               + "This is the one cause that licenses a positive statement",
@@ -648,6 +673,90 @@ export const MEANING_EVIDENCE_IS_ONE_SIDED = {
   reference: true,    /* `resolutions` holds a row only where the recogniser MATCHED */
   entity:    true,    /* `connections` holds a row only where a pair was DERIVED */
 };
+
+/** THE CONTENT LEVEL'S SIDEDNESS, SAID IN THE SAME SHAPE AND FOR THE SAME REASON
+ *  (REC-107). The content level has ONE subject kind — a capture, whose act is an
+ *  EXTRACTION rather than the meaning level's reader run — and its evidence is
+ *  `readings`, which holds a row for every capture the extractor ran over
+ *  whatever it produced. That is REC-94's own finding and it is TWO-SIDED.
+ *
+ *  IT IS A MAP AND NOT A BARE `false`, deliberately: `#frontierMeaning` publishes
+ *  `evidence_one_sided` as a map keyed by subject kind, and one key name carrying
+ *  a boolean at one level and a map at another is two shapes for one fact — the
+ *  MAP RULE, and the exact drift this file already refuses for the content-axis
+ *  vocabulary. A reader that joins the key the same way at both levels is right
+ *  at both. */
+export const CONTENT_EVIDENCE_IS_ONE_SIDED = {
+  capture: false,     /* `readings` holds a row whether or not text was produced */
+};
+
+/** REC-107 — **THE CAUSES THIS RECORD COULD NOT RULE OUT, PUBLISHED AS A SET ON
+ *  THE ROW RATHER THAN LEFT FOR THE CALLER TO WIDEN.**
+ *
+ *  WHAT WAS WRONG, AND IT IS THE OVERCLAIM CLASS RATHER THAN A WORDING PROBLEM.
+ *  `MISSING_ROW_CAUSES.purged` and `MEANING_MISSING_ROW_CAUSES.purged` each
+ *  ENUMERATE what could not be ruled out — *"either the log did not yet carry
+ *  this level for it or a whole-store purge cleared the rows that described it.
+ *  Neither can be ruled out"* — and that enumeration has TWO members while the
+ *  live set has three. **`never_looked` is missing from it at every level and at
+ *  every subject kind.** A subject reaches this cause when the evidence probe
+ *  MISSED and the subject predates the log's first row at the level; nobody
+ *  having looked is fully live in that bucket, and the sentence excludes it. A
+ *  member acting on the row concludes a look happened (or a purge hid one) and
+ *  therefore does NOT put the subject on the never-looked worklist — the record
+ *  claiming more coverage than it can support, which is the one direction every
+ *  instrument in this repository is pointed at.
+ *
+ *  AND AT A ONE-SIDED KIND IT OMITS A SECOND MEMBER: the pre-log look that found
+ *  NOTHING and therefore left no artifact for cause (1) to read. That widening
+ *  was published — honestly — as `evidence_one_sided`, but as a TOP-LEVEL map
+ *  beside the rows, which a caller must remember to JOIN to the row it applies
+ *  to. **A limit published beside the row is a limit the reader must remember to
+ *  apply; a limit published ON the row is one they cannot miss.** That is the
+ *  whole of what this function changes.
+ *
+ *  THE WEAKEST-CLAIM DEFAULT IS STRUCTURAL HERE AND NOT A CONVENTION, which is
+ *  REC-94's landed rule and it binds. `evidenceOneSided` is consulted as
+ *  `=== false`, never as `!evidenceOneSided`, so `undefined` — an unknown subject
+ *  kind, a level that has not stated its sidedness, a fourth kind somebody adds
+ *  and forgets to declare — takes the WIDE branch and names all three causes. An
+ *  unrecognised cause word does the same. The strong answer has to be earned by
+ *  an explicit `false`; nothing reaches it by omission.
+ *
+ *  ONE FUNCTION FOR EVERY LEVEL, and that is the point rather than tidiness.
+ *  `OBSERVATION-LOG-DESIGN.md` §8's fourth item (the internet level, REC-96) is
+ *  being built as this lands. A second level open-coding this widening is a
+ *  second spelling of one rule, which is the drift this file refuses everywhere
+ *  else — so the internet level calls this with its own sidedness map and
+ *  inherits the defaults above, including the one that protects it from
+ *  forgetting to declare a kind. */
+export const ALL_MISSING_ROW_CAUSES = Object.freeze(["pre_log", "purged", "never_looked"]);
+
+export function causesNotRuledOut(missingCause, { evidenceOneSided = undefined } = {}) {
+  /* CAUSE (1) AND CAUSE (3) ARE EACH A SET OF ONE, and for opposite reasons that
+     are worth saying once. `pre_log` was reached because the evidence table HAS a
+     row: an artifact exists, so a look demonstrably happened, and neither a purge
+     nor nobody-looked survives it. `never_looked` was reached by excluding the
+     other two — it is §5.1's one cause that licenses a positive statement, and
+     widening it here would make the frontier refuse to conclude anything, which
+     is its own defect and the direction G2a exists to catch. */
+  if (missingCause === "pre_log") return ["pre_log"];
+  if (missingCause === "never_looked") return ["never_looked"];
+  /* AN UNRECOGNISED CAUSE WORD TAKES THE WIDEST SET, never the narrowest — the
+     same shape as `#missingMeaningCause`'s unrecognised-subject-kind default one
+     call up, pointed at the cause vocabulary instead of at the subject one. */
+  if (missingCause !== "purged") return [...ALL_MISSING_ROW_CAUSES];
+  /* TWO-SIDED: cause (1) as §5.1 DEFINES it requires the evidence table to hold
+     what the look produced, and the probe just missed. So a bare pre-log look is
+     excluded — it survives only THROUGH a purge, which is cause (2) and is
+     already named. Two members, and the third is the one that was missing. */
+  if (evidenceOneSided === false) return ["purged", "never_looked"];
+  /* ONE-SIDED, or undeclared: all three. A look that found nothing left nothing
+     to find, so cause (1) is live in its fruitless form — which is not cause (2)
+     and is not cause (3), and is exactly what this level's evidence can never
+     confirm or deny. */
+  return [...ALL_MISSING_ROW_CAUSES];
+}
 
 /** THE READER RUN — section 4.3's first act, as a function.
  *

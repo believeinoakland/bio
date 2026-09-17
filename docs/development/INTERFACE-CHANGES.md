@@ -8381,3 +8381,93 @@ unaffected.
 
 **Registry:** I3 bumped in `INTERFACES.md` in this same commit (protocol step 4 → 5).
 
+
+## IC-114 · I3: `op=frontier` NAMES THE UNDETERMINED SET **ON EVERY ROW** — `not_ruled_out` and a per-row `evidence_one_sided` at `level=meaning` and `level=content`, because the sentence that shipped enumerated TWO causes where the live set has THREE · PROPOSED 2026-09-17 (REC-107, closing `OBSERVATION-LOG-DESIGN.md` §5.1's one-sided-evidence gap) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). Measured on this item's base `origin/main`
+  at `1234095a`: **18.2.0** (IC-109 ACCEPTED, ADDITIVE). **Proposed as MINOR — 18.2.0 →
+  18.3.0.** **The measured impact is ZERO and the zero is recorded as EVIDENCE rather than
+  offered as an argument for a smaller bump:** a grep for `op=frontier` over `civicos-ui/`,
+  `agent-worker/`, `newgroup/` and `tools/` returns **no caller at all** — the same
+  measurement REC-103 and REC-109 each took, re-run on THIS tree rather than inherited from
+  either report. Every caller is a `bio-plane/test/` suite; exactly two read these levels
+  (`observation-content.test.mjs`, `observation-meaning.test.mjs`) and both are green.
+- **Proposer:** RECORD, worker `agent-a9a42611f2cdf409e`, 2026-09-17, from QUEUE REC-107
+- **Owner to land it:** `RECORD` (owner and proposer)
+- **Consumers to answer:** `UI` (no surface reads this op today — measured, not assumed),
+  `SKILL`, `CASE`, `DIST` (served surfaces), `RECORD`.
+
+**THE DEFECT, AND IT IS THE OVERCLAIM CLASS RATHER THAN A WORDING PROBLEM.** Both levels
+published, on every `missing_unexplained` row, a `why` sentence that ENUMERATED the causes
+that could not be ruled out: *"...so either the log did not yet carry this level for it or a
+whole-store purge cleared the rows that described it. **Neither can be ruled out**, and they
+are different facts."* **That enumeration has two members and the live set has three.** A
+subject reaches that cause precisely when the EVIDENCE PROBE MISSED — so *nobody looked* is
+fully live in the bucket, at every level and every subject kind, and the sentence excluded
+it. **A member acting on the row concluded the subject had been looked at (or that a purge
+hid the look) and therefore left it OFF the never-looked worklist** — the record claiming
+more coverage than it can support, which is the one direction every instrument in this
+repository is pointed at.
+
+**AND AT A ONE-SIDED SUBJECT KIND IT OMITTED A SECOND MEMBER.** At `reference` and `entity`
+the pre-log look that found NOTHING left no artifact, so it is live alongside the purge and
+the never-look. That widening WAS published, honestly, by REC-95 — but as a TOP-LEVEL
+`evidence_one_sided` map beside the rows, **which a caller had to remember to JOIN to the row
+it applies to.** A caller that did not join it read a narrower set than the truth. **A limit
+published beside the row is a limit the reader must remember to apply.**
+
+**WHAT CHANGES ON THE WIRE. Nothing is removed, renamed, refused or narrowed; every change is
+additive and every one WEAKENS a published claim rather than strengthening it.**
+
+1. Every row of `missing_unexplained` **and** of `never_looked`, at `level=meaning` and
+   `level=content`, gains **`not_ruled_out`** — the explicit array of §5.1 cause keys this
+   record could not exclude for THAT subject. Two members at a two-sided kind
+   (`["purged","never_looked"]`), three at a one-sided one, and exactly one on a row whose
+   cause is resolved. **It is TOTAL across both lists on purpose:** a field present only on
+   the rows a reader already distrusts is one they learn to look for only when they are
+   already suspicious.
+2. Every such row gains **`evidence_one_sided`** as a BOOLEAN — the same fact the top-level
+   map carries, on the row it governs. **The top-level map is UNCHANGED and still published**
+   at `level=meaning`, which the queue row named as the condition on this interface.
+3. `level=content` gains a top-level **`evidence_one_sided`**, keyed by subject kind exactly
+   as the meaning level's is — `{ capture: false }`. **A map and not a bare boolean**: one
+   key name carrying a scalar at one level and a map at another is two shapes for one fact,
+   and a reader who joins it the same way at both levels is now right at both.
+4. The two `purged` sentences stop enumerating and DEFER the set to the row. They remain two
+   DIFFERENT sentences, which the suite pins.
+
+**WHY MINOR AND NOT MAJOR.** IC-25's settled rule — *a refusal where none stood before is a
+break WHATEVER the measured impact* — does not bite: **nothing is refused that was answered,
+no field is removed or renamed, and no published value NARROWS.** Every value that moves
+moves toward the weaker claim: a set a caller could already have computed by joining a
+published map is now stated, and one that could NOT be computed (`never_looked`'s membership)
+is now present. **The counter-argument, stated rather than omitted: a caller keying off the
+`why` STRING would see different prose.** Against it — that sentence was a defect, not a
+contract; it asserted a set it had no right to assert, and the suite now forbids any row from
+claiming exactly two causes were live.
+
+**THE CLASS WAS SWEPT AND NOT THE REPORTED SITE.** The row named the MEANING level. The
+content level had the same short enumeration for the same reason and is fixed in the same
+landing, through ONE exported function (`causesNotRuledOut` in `bio-plane/src/airun.mjs`)
+rather than two open-coded widenings. **Fixing one level and leaving the other would have
+taught the next reader that the short enumeration was acceptable** — REC-95's own recorded
+lesson, in this exact file. The DOCUMENT level is NOT affected and that is measured rather
+than assumed: `#frontierDocument` publishes no cause vocabulary at all.
+
+**AND THE UNDECLARED-SIDEDNESS DEFAULT IS PART OF THE CONTRACT, not an implementation
+detail.** `causesNotRuledOut` consults its sidedness as `=== false`, never as a falsy test, so
+a subject kind whose evidence nobody has measured takes the WIDE set and publishes
+`evidence_one_sided: true`. **A kind cannot reach the strong two-member answer by omission.**
+This matters to the next consumer rather than to this one: `OBSERVATION-LOG-DESIGN.md` §8's
+fourth item (the internet level, REC-96) is being built as this lands, and it inherits the
+rule by calling the function with its own map. The negative control's `weakdefault` arm
+rewrites that one predicate and is caught by exactly one assertion.
+
+**WHAT IS NOT PROPOSED, AND IT IS THE ITEM'S HEADLINE.** The one-sidedness itself is **NOT
+closed and cannot be**, which was driven at the artifact rather than concluded from the
+design's sentence. Two proxies would have closed it and both are refuted in §5.1 by name so
+nobody re-derives them. **Both conclude a look from an ABSENCE that cost nothing to produce**,
+and adopting either would have let the record claim a look that never happened — a
+STRENGTHENING, in an interface whose every other change here weakens. `evidence_one_sided`
+therefore still carries a STATED LIMIT and not a resolved cause, which is precisely the
+condition the queue row set on this interface.

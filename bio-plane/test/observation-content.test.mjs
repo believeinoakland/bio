@@ -72,7 +72,21 @@
    below that is not at the two ends of the vocabulary reads UNDETERMINED, asserted rather than
    assumed. Nothing here drives D-319's read-time seam either: that seam is CPDF-19's and has no
    call site on this tree, so what is driven is the WRITER it will call, through the re-promotion
-   path that moves a chain today. */
+   path that moves a chain today.
+
+   ===== REC-107's SECTION H IS DRIVEN FROM `nc-rec107.mjs`, AND ITS ARMS ARE DECLARED IN
+   `observation-meaning.test.mjs` RATHER THAN HERE. That is deliberate and is not laziness:
+   the coverage register reads a declaration to the end of its paragraph or until the MARKER
+   PHRASE recurs, so a second declaration carrying the marker would TRUNCATE the one above —
+   the failure recorded in REC-95's own arm (b), which cost that suite an UNCLASSIFIED
+   reading. ONE declaration owns those eight arms and it names this suite's arms by number.
+   WHAT MATTERS HERE: `nc-rec107.mjs` runs BOTH suites on EVERY arm, because REC-107 swept one
+   class across two levels and a driver running only the rowed level could not tell a fix that
+   CLOSED one level from a fix that ENTANGLED them. Section H's arms below are named
+   MUST-FAIL by the `never` and `rowfield` arms and MUST-PASS by `onesided` — that last one is
+   the orthogonality pair, and it held: collapsing the MEANING level's one-sided widening left
+   all 70 assertions here green, which is what makes the shared `causesNotRuledOut` shared
+   rather than coupled. */
 
 /* REC-94 / IC-95 — THE CONTENT-LEVEL WRITERS, THE PER-CAPTURE CONTENT-AXIS READ,
  * AND THE BOUNDED CONTENT-LEVEL FRONTIER.
@@ -111,7 +125,9 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED,
          contentAxisFor, contentObservationsFor,
-         OBSERVATION_AUTHORITY_KINDS, OBSERVATION_SUBJECT_KINDS } from "../src/airun.mjs";
+         OBSERVATION_AUTHORITY_KINDS, OBSERVATION_SUBJECT_KINDS,
+         MISSING_ROW_CAUSES, CONTENT_EVIDENCE_IS_ONE_SIDED,
+         ALL_MISSING_ROW_CAUSES, causesNotRuledOut } from "../src/airun.mjs";
 import { tiersEvidenced, STEP_KINDS } from "../src/textchain.mjs";
 import { QUEUE_CONDITION_KINDS } from "../src/queuestate.mjs";
 
@@ -876,6 +892,78 @@ const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private proje
      /truncated: page\.length > cap \|\| missing\.length > cap/.test(SRC.store)],
     [true, false]);
 }
+
+/* ===================================================================== *
+ * H · REC-107 — THE SWEPT HALF. This level had the SAME defect the meaning
+ *     level was rowed for, and fixing one while leaving the other would have
+ *     taught the next reader that the short enumeration was acceptable.
+ *
+ * `MISSING_ROW_CAUSES.purged` published, on every row, *"either the log did
+ * not yet exist for it or a whole-store purge cleared the rows that described
+ * it. NEITHER CAN BE RULED OUT."* Two members. A capture reaches that cause
+ * because the `readings` probe MISSED — so NOBODY HAVING LOOKED is fully live
+ * and the sentence excluded it. This level's evidence is TWO-SIDED, which is
+ * REC-94's own finding and is why the set here is two rather than three; the
+ * sidedness is now PUBLISHED in the same key and the same map shape the
+ * meaning level uses, so a reader who joins it the same way at both levels is
+ * right at both.
+ * ===================================================================== */
+{
+  const f = await GET(`op=frontier&token=${TOK}&level=content&limit=500`);
+  const all = [...(f.never_looked || []), ...(f.missing_unexplained || [])];
+
+  t("H1: THIS LEVEL PUBLISHES ITS SIDEDNESS, in the SAME key and the SAME shape as the meaning "
+  + "level rather than as a bare boolean — one key name carrying a map at one level and a scalar "
+  + "at another is two shapes for one fact, and REC-94 measured this level TWO-SIDED without ever "
+  + "publishing it",
+    [f.evidence_one_sided && typeof f.evidence_one_sided === "object",
+     f.evidence_one_sided?.capture],
+    [true, false]);
+
+  t("H1-fixture: and the rows this section measures are NOT AN EMPTY LIST — a totality arm over an "
+  + "empty corpus passes whatever the code does, which this repository has paid for three times",
+    all.length > 0, true);
+
+  t("H2: `not_ruled_out` IS TOTAL over both published lists, and every member of every set is a "
+  + "key of this level's own published cause vocabulary — a fourth spelling would be a cause "
+  + "wearing a set's clothes",
+    [all.every((r) => Array.isArray(r.not_ruled_out) && r.not_ruled_out.length > 0),
+     all.every((r) => typeof r.evidence_one_sided === "boolean"),
+     all.every((r) => Array.isArray(r.not_ruled_out)
+                   && r.not_ruled_out.every((k) => ALL_MISSING_ROW_CAUSES.includes(k)
+                                               && Object.keys(MISSING_ROW_CAUSES).includes(k)))],
+    [true, true, true]);
+
+  t("H3: A `never_looked` ROW CARRIES THE ONE-MEMBER SET, which is what makes it the positive "
+  + "statement §5.1 licenses — and it carries the field at all, so a reader never meets a row "
+  + "without it and never has to wonder whether its absence meant anything",
+    (f.never_looked || []).every((r) => Array.isArray(r.not_ruled_out)
+                                     && r.not_ruled_out.length === 1
+                                     && r.not_ruled_out[0] === "never_looked"),
+    true);
+
+  t("H4: AND THE TWO-SIDED SET IS TWO AND NOT THREE — driven through THIS level's constant rather "
+  + "than asserted as a literal, so the day `readings` stops holding a row for every capture the "
+  + "extractor ran over, this arm moves with it instead of pinning a stale answer",
+    causesNotRuledOut("purged", { evidenceOneSided: CONTENT_EVIDENCE_IS_ONE_SIDED.capture }),
+    ["purged", "never_looked"]);
+
+  t("H5: no published `why` at this level still asserts that exactly two causes could not be ruled "
+  + "out. The sentence describes the cause and DEFERS the set to the row, which is the only place "
+  + "it can be right",
+    all.every((r) => typeof r.why !== "string" || !/Neither can be ruled out/i.test(r.why)),
+    true);
+
+  t("H6: WHAT THIS SECTION CANNOT SEE, STATED. Every row above is one THIS suite's fixture "
+  + "produced, so the arms reach the causes this store can reach and no others; a `purged`-cause "
+  + "capture needs a registration predating the log's first content-level row, which a store built "
+  + "inside this file cannot have. That branch is driven on the pure rule in H4 with this level's "
+  + "own sidedness — the same value the op passes — and the gap is NAMED rather than scored zero",
+    [new Set(all.map((r) => r.missing_cause)).size > 0,
+     (f.missing_unexplained || []).some((r) => r.missing_cause === "purged")],
+    [true, false]);
+}
+
 
 reachedFoot = true;
 

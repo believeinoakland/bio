@@ -11498,3 +11498,130 @@ message needs to name the resolution path PER MEMBER. I have taken neither, so n
 is blocked on the other.
 
 **open as of 2026-09-16** — raised by FLEET #1 and NOT discharged. **Recorded by CONDUCT #1 at integration, and this is the THIRD block M0-37's delegation arm has caught today** — after REC-100's and M0-48's. **It is the most interesting of the three: FLEET's session had ENDED before that arm existed**, so this block was written by a session that could not have known the rule, could not be asked, and could not correct itself. The arm audited it anyway. **That is the difference between a rule and a mechanism** — a rule reaches only sessions alive to read it, and this register now states its own state for work whose author is gone. The commit carrying it was itself STRANDED on a dead session's worktree until D-288's detection arm named it hours after both were written.
+
+## CLAIM 2026-09-17 RECORD (REC-107 — the meaning level's ONE-SIDED pre-log evidence, closed where it can be closed and STATED where it cannot)
+
+Worker spawned by CONDUCT #2, worktree `agent-a9a42611f2cdf409e`. Paths claimed:
+
+- `bio-plane/src/airun.mjs` — `MEANING_MISSING_ROW_CAUSES`, `MEANING_EVIDENCE_IS_ONE_SIDED`
+  and whatever this item adds beside them.
+- `bio-plane/src/store.mjs` — `#missingMeaningCause` and `#frontierMeaning` ONLY. No other
+  region of this file is touched; `Store#frontier`'s document arm is REC-103's and its
+  content arm is REC-94's.
+- `bio-plane/test/observation-meaning.test.mjs` and this item's negative-control driver.
+- `docs/development/OBSERVATION-LOG-DESIGN.md` §5.1 and its front matter.
+- `docs/development/QUEUE.md` REC-107's row, `docs/development/INTERFACE-CHANGES.md`.
+
+**The premise was VERIFIED at the artifact before any work, not carried from a row.**
+`evidence_one_sided` is published at `bio-plane/src/store.mjs:30778` from
+`MEANING_EVIDENCE_IS_ONE_SIDED` in `airun.mjs`, with the reason stated at the site, and
+`observation-meaning.test.mjs` G3 asserts it reaches a caller. REC-95 did not hide the
+one-sidedness; it published it. This item's work is to close it.
+
+### FINDING 2026-09-17 RECORD (REC-107) — **THE ROW'S OWN QUESTION, ANSWERED NO, AND THE TWO PROXIES NAMED SO NOBODY RE-DERIVES THEM**
+
+The row asked this item to CLOSE the meaning level's one-sided pre-log evidence. **It cannot be
+closed, and that was driven at the artifact rather than concluded from the design's sentence.**
+Two signals look like they would close it and both are refuted:
+
+1. **At a REFERENCE** — *a sibling `resolutions` row on the same capture proves the recogniser
+   ran over that capture, therefore over every reference in it.* **FALSE.**
+   `resolveReferences({ captureSha, ref })` (`bio-plane/src/store.mjs`) accepts a SINGLE `ref`
+   and, given one, fetches that one row and loops over `[it]`; only the `ref`-omitted call runs
+   the whole reading. So a pre-log caller could have resolved one name and never touched its
+   siblings, and the sibling row proves a look at the CAPTURE rather than at this REFERENCE.
+2. **At an ENTITY** — *`connection_dirty` is stamped on every resolution insert or raise and
+   deleted only by the derive sweep, so an entity with resolutions and no dirty row was derived
+   over.* **FALSE TWICE.** An entity nobody ever resolved to was never stamped and never
+   derived, producing the identical absence; and the dirty-set postdates most of the pre-log
+   window, so a resolution written before it existed leaves the same absence again. `op=connect`
+   also derives WITHOUT clearing the row, so the table is a work queue and not a record of
+   derivation at all.
+
+**BOTH PROXIES CONCLUDE A LOOK FROM AN ABSENCE, AND BOTH ABSENCES COST NOTHING TO PRODUCE** —
+the costs-nothing rule pointed at an ABSENCE rather than at an outcome, which is the thing this
+estate's instruments do not catch. Adopting either would have let the record claim a look that
+never happened: a STRENGTHENING, in an item whose every other change weakens. §4.3's remedy
+stands and is the only one — **the window stops growing rather than closing**, and it is bounded
+at its top end, because a subject entering after the log's first row at its level reaches cause
+(3) normally.
+
+### FINDING 2026-09-17 RECORD (REC-107) — **THE ONE-SIDEDNESS WAS PUBLISHED HONESTLY AND THE UNDETERMINED SET WAS PUBLISHED WRONG, AT BOTH LEVELS, AND 120 ASSERTIONS COULD NOT SEE IT**
+
+The defect was not where the row pointed. `evidence_one_sided` is exactly what REC-95 said it
+was. **What was wrong is the `why` sentence on every `missing_unexplained` row, which ENUMERATED
+the causes that could not be ruled out and had TWO members where the live set has THREE:**
+*"...either the log did not yet carry this level for it or a whole-store purge cleared the rows
+that described it. **Neither can be ruled out**."* That cause is reached precisely when the
+EVIDENCE PROBE MISSED, so **`never_looked` is fully live in the bucket and the sentence excluded
+it — at every level and every subject kind.** A member acting on the row concluded the subject
+had been looked at and left it off the never-looked worklist. At a one-sided kind a second
+member was missing too; that one WAS published, but as a top-level map the caller had to
+remember to JOIN. **A limit published beside the row is a limit the reader must remember to
+apply.**
+
+**IT SURVIVED 57 ASSERTIONS IN `observation-meaning.test.mjs` AND 63 IN `observation-content.test.mjs`,
+AND BOTH STAYED GREEN WHEN IT WAS FIXED** — because every one of them asserted which LIST a
+subject landed in or which CAUSE WORD it carried, and none asserted on the CONTENT of the
+undetermined set. A green suite is not evidence a defect is absent; it is evidence the suite
+cannot see it. Section H at both levels is that gap closed.
+
+**THE CLASS WAS SWEPT: the content level had the same short enumeration and is fixed in the same
+landing, through ONE exported function rather than two open-coded widenings.** The DOCUMENT
+level is unaffected and that is MEASURED — `#frontierDocument` publishes no cause vocabulary at
+all. Fixing one level and leaving the other would have taught the next reader the short
+enumeration was acceptable, which is REC-95's own recorded lesson in this file.
+
+### FINDING 2026-09-17 RECORD (REC-107) — **A SUITE CAN CARRY ONLY ONE COUNTED NEGATIVE-CONTROL DECLARATION, AND TWO ITEMS' CONTROLS NOW SHARE TWO SUITES**
+
+`readControl` in `bio-plane/scripts/control-register.mjs` finds every declaration in a file and
+then **reduces them to ONE** — the highest arm count, ties broken by length. So when a second
+item adds arms to a suite that already declares a control, **only one of the two declarations is
+ever counted**, whichever way it is written:
+
+- Appending to the existing block (what this item did) keeps REC-95's six arms counted and
+  leaves REC-107's eight uncounted — measured: `arms 1129/1129` EXACT, unmoved by this landing.
+- A second `NEGATIVE CONTROL:` marker would make this item's eight the "best" and drop REC-95's
+  six, and REC-95's own header records a marker recurrence truncating a declaration and costing
+  that suite an UNCLASSIFIED reading.
+
+**Neither form is right and the choice is between two undercounts.** This item took the
+appending form deliberately — REC-95's declaration is the one with the dated history, and this
+item's eight arms are runnable in ONE step (`node bio-plane/test/nc-rec107.mjs [arm]`) and named
+in the same block — but **the estate's arms figure is now eight short and nothing says so except
+this entry.** It is `M0`'s instrument and this is a DELEGATION rather than an edit.
+
+**open as of 2026-09-17** — raised by REC-107's worker and NOT discharged; no floor was lowered
+and no assertion loosened to accommodate it.
+
+### DELEGATION 2026-09-17 RECORD (REC-107) -> M0 (`bio-plane/scripts/control-register.mjs`): **ONE COUNTED DECLARATION PER SUITE UNDERSTATES A SUITE TWO ITEMS HAVE BOTH CONTROLLED**
+
+See the FINDING above for the measurement. What I need is a RULING on the shape rather than a
+wording change: either declarations ACCUMULATE per suite (sum the arms, keep every block), or
+the register states that it counts one and the estate reads its arms figure as a floor per SUITE
+rather than per ITEM. I have taken neither and nothing is blocked on it.
+
+**open as of 2026-09-17** — raised by REC-107's worker.
+
+### DELEGATION 2026-09-17 RECORD (REC-107) -> REC-96 (the internet level, LIVE in this same wave): **YOUR LEVEL INHERITS A RULE THAT NOW EXISTS, AND IT IS ONE FUNCTION RATHER THAN A PATTERN TO COPY**
+
+`causesNotRuledOut` and the per-row `not_ruled_out` / `evidence_one_sided` fields are exported
+from `bio-plane/src/airun.mjs` and are called by BOTH existing frontier arms through
+`Store#missingCauseSet`. **The internet level should call the same function with its own
+sidedness map rather than open-code a third widening** — a second spelling of one rule is the
+drift this file refuses everywhere else. Two things that matter to you specifically: an
+UNDECLARED subject kind takes the WIDE set by construction (the predicate is `=== false`, never
+a falsy test), so a kind you add without measuring its sidedness reads honestly instead of
+inheriting the strong answer; and `MEANING_EVIDENCE_IS_ONE_SIDED` is pinned by EXACT KEY SET by
+REC-95's `A4`, so declare your kinds in your OWN map. This item's `extrakey_content` control arm
+exists to prove a level can gain a kind without either suite refusing it for being new.
+
+**open as of 2026-09-17** — raised by REC-107's worker; REC-96 was `running` in the same wave and
+could not have seen this before its own landing. **Neither item is blocked on the other.**
+
+### DECISIONS FOR BOB 2026-09-17 (REC-107): **NONE**
+
+Nothing here was ambiguous in a way the repository does not already answer. The one judgement
+that could have gone either way — whether to close the one-sidedness with a proxy signal — is
+settled by the standing rule that the weaker claim is the correct one, and the proxies were
+refuted at the artifact rather than declined on principle.

@@ -23161,7 +23161,19 @@ var CONTENT_AXIS_STATES = {
 var CONTENT_AXIS_UNDETERMINED = "undetermined";
 var MISSING_ROW_CAUSES = {
   pre_log: "this capture was extracted BEFORE the observation log carried the content level, so the look is recorded in the readings table and not here. It is not a capture nobody read",
-  purged: "this capture predates the earliest content-level row this log holds, so either the log did not yet exist for it or a whole-store purge cleared the rows that described it. Neither can be ruled out, and they are different facts",
+  /* CORRECTED BY REC-107, and the old sentence is quoted in the reason rather than
+     deleted, because it is the defect and a reader who meets the new one should be
+     able to see what it replaced. It read: *"...so either the log did not yet exist
+     for it or a whole-store purge cleared the rows that described it. NEITHER CAN
+     BE RULED OUT, and they are different facts."* That is an ENUMERATION of the
+     undetermined set, published on every row, and it had TWO members where the live
+     set has three: a capture reaches this cause because the `readings` probe MISSED,
+     and NOBODY HAVING LOOKED is fully live in that bucket. The sentence excluded it,
+     so a member reading the row concluded the capture had been extracted (or purged)
+     and left it off the never-extracted worklist. **The set is now stated per row in
+     `not_ruled_out` rather than asserted in prose here**, so this sentence describes
+     the cause and stops claiming what it cannot. */
+  purged: "this capture predates the earliest content-level row this log holds, so the log may not yet have existed for it, a whole-store purge may have cleared the rows that described it, or nobody may have looked at all. THIS ROW'S `not_ruled_out` NAMES THE SET THIS RECORD COULD NOT NARROW, and they are different facts",
   never_looked: "the log existed and was not purged over this capture's lifetime, and the record holds nothing else about its text -- so nobody has tried to extract it. This is the one cause that licenses a positive statement"
 };
 function contentAxisFor({
@@ -23294,7 +23306,17 @@ function detailFor(tier, terminal, reading, outcome) {
 }
 var MEANING_MISSING_ROW_CAUSES = {
   pre_log: "this subject was looked at BEFORE the observation log carried the meaning level, so the look is recorded in the table that holds what it produced -- a reading, a resolution, a connection -- and not here. It is not a subject nobody looked at",
-  purged: "this subject entered the record before the earliest meaning-level row this log holds, so either the log did not yet carry this level for it or a whole-store purge cleared the rows that described it. Neither can be ruled out, and they are different facts",
+  /* CORRECTED BY REC-107, the same defect as the content level's above and with one
+     member MORE at two of this level's three subject kinds. It read: *"...either the
+     log did not yet carry this level for it or a whole-store purge cleared the rows
+     that described it. NEITHER CAN BE RULED OUT."* Two members, and the live set is
+     three at a capture and three at a reference or an entity for DIFFERENT reasons —
+     `never_looked` was missing at all three, and at a reference or an entity the
+     PRE-LOG LOOK THAT FOUND NOTHING is live as well, because it left no artifact for
+     cause (1) to read. That second widening was published, but as the top-level
+     `evidence_one_sided` map a caller had to remember to join to the row. Both now
+     sit ON the row, in `not_ruled_out` and `evidence_one_sided`. */
+  purged: "this subject entered the record before the earliest meaning-level row this log holds, so the log may not yet have carried this level for it, a whole-store purge may have cleared the rows that described it, or nobody may have looked -- and at a reference or an entity a pre-log look that found NOTHING is live too, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT",
   never_looked: "the log carried this level over this subject's whole lifetime and was not purged since, AND the record holds no product of such a look -- so nobody has looked. This is the one cause that licenses a positive statement"
 };
 var MEANING_EVIDENCE_IS_ONE_SIDED = {
@@ -23305,6 +23327,18 @@ var MEANING_EVIDENCE_IS_ONE_SIDED = {
   entity: true
   /* `connections` holds a row only where a pair was DERIVED */
 };
+var CONTENT_EVIDENCE_IS_ONE_SIDED = {
+  capture: false
+  /* `readings` holds a row whether or not text was produced */
+};
+var ALL_MISSING_ROW_CAUSES = Object.freeze(["pre_log", "purged", "never_looked"]);
+function causesNotRuledOut(missingCause, { evidenceOneSided = void 0 } = {}) {
+  if (missingCause === "pre_log") return ["pre_log"];
+  if (missingCause === "never_looked") return ["never_looked"];
+  if (missingCause !== "purged") return [...ALL_MISSING_ROW_CAUSES];
+  if (evidenceOneSided === false) return ["purged", "never_looked"];
+  return [...ALL_MISSING_ROW_CAUSES];
+}
 function readerRunObservation(reading, captureSha, { readerRegistered = null } = {}) {
   if (!reading || typeof reading !== "object")
     return { row: null, why: "no reading was persisted for this capture, so no reader run happened here to record. A look not taken is the ABSENCE of a row (section 5.1)" };
@@ -51224,7 +51258,18 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          the mirror-and-drift class. */
       truncated: page.length > cap || never.length > cap || unexplained.length > cap,
       looked,
-      never_looked: never.slice(0, cap),
+      /* REC-107 SWEPT THE CLASS RATHER THAN THE REPORTED SITE. The defect was rowed
+         against the MEANING level, and this arm had it too: `missing_unexplained`
+         published a `why` that enumerated the causes it could not rule out, and the
+         enumeration omitted `never_looked` — which is live here for exactly the
+         reason it is live one level up, because a capture reaches `purged` when the
+         `readings` probe MISSED. Fixing one level and leaving the other would have
+         taught the next reader that the short enumeration was acceptable, which is
+         REC-95's own recorded lesson in this file. */
+      never_looked: never.slice(0, cap).map((r) => ({
+        ...r,
+        ...this.#missingCauseSet(CONTENT_EVIDENCE_IS_ONE_SIDED, "capture", r.missing_cause)
+      })),
       never_looked_count: never.slice(0, cap).length,
       /* NAMED, NEVER SILENTLY SCORED ZERO. These are captures with no
          content-level row whose absence this record CANNOT explain as
@@ -51233,10 +51278,23 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       missing_unexplained: unexplained.slice(0, cap).map((r) => ({
         subject: r.subject,
         missing_cause: r.missing_cause,
-        why: MISSING_ROW_CAUSES[r.missing_cause]
+        why: MISSING_ROW_CAUSES[r.missing_cause],
+        /* THE SUBJECT KIND IS NAMED HERE AND NOT DEFAULTED INSIDE THE HELPER. This
+           level has ONE act — an extraction over a capture — so its rows carry no
+           `subject_kind` column, and the honest way to say that is to pass the kind
+           at the one site that knows it rather than let a method invent it from an
+           absent field. */
+        ...this.#missingCauseSet(CONTENT_EVIDENCE_IS_ONE_SIDED, "capture", r.missing_cause)
       })),
       missing_unexplained_count: unexplained.slice(0, cap).length,
       missing_causes: MISSING_ROW_CAUSES,
+      /* THE CONTENT LEVEL'S SIDEDNESS, PUBLISHED IN THE SAME KEY AND THE SAME SHAPE
+         AS THE MEANING LEVEL'S — a map keyed by subject kind, never a bare boolean.
+         It says the thing REC-94 measured and never published: this level's evidence
+         is TWO-SIDED, so `never_looked` here is decidable wherever a purge can be
+         excluded, and a reader who assumed every level resolves §5.1 the same way
+         now finds out at both levels instead of at one. */
+      evidence_one_sided: CONTENT_EVIDENCE_IS_ONE_SIDED,
       tally,
       /* The candidate list is a PROJECTION of `looked` and never a second read,
          so the two can never disagree about which captures are on it — and it is
@@ -51467,6 +51525,41 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const sec = (v) => String(v).slice(0, 19);
     return sec(entered) >= sec(firstAt) ? "never_looked" : "purged";
   }
+  /** REC-107 — **THE TWO FIELDS THAT PUT §5.1's UNDETERMINED SET ON THE ROW**, for
+   *  every level's frontier, through the one function in `airun.mjs` that decides
+   *  it. Shared by the content and meaning arms and written for the internet arm
+   *  that is being built as this lands.
+   *
+   *  WHY IT EXISTS AT ALL, AND IT IS NOT A CONVENIENCE. Both arms published a
+   *  `why` per row that ENUMERATED what could not be ruled out, and both
+   *  enumerations were one member short — `never_looked` is live wherever the
+   *  evidence probe missed, and neither sentence named it. The meaning arm was
+   *  short a second member at a reference and an entity, where a pre-log look that
+   *  found nothing left no artifact; that widening WAS published, but as a
+   *  top-level map the caller had to join to the row themselves. **A caller that
+   *  did not join it read a narrower set than the truth, which is the record
+   *  claiming more coverage than it has.**
+   *
+   *  THE SUBJECT KIND IS PASSED IN AND NEVER GUESSED. The content arm's rows carry
+   *  no `subject_kind` — that level has one act — so it names `capture` at the
+   *  call site rather than having this method default an absent value into a
+   *  meaning it was not given. A default here would be a fact invented to fill a
+   *  column, which is the thing §5.1 exists to refuse one construct up.
+   *
+   *  AND AN UNDECLARED KIND PUBLISHES `evidence_one_sided: true`, WHICH IS THE
+   *  WEAKER STATEMENT. It says *this record cannot claim the evidence could ever
+   *  have narrowed this*, and `causesNotRuledOut` then names all three causes. A
+   *  fourth subject kind added without declaring its sidedness therefore reads
+   *  honestly instead of inheriting the strong answer by omission — the same
+   *  arrangement `#missingMeaningCause` takes for an unrecognised kind, one field
+   *  over. */
+  #missingCauseSet(sidedness, subjectKind, missingCause) {
+    const oneSided = sidedness && Object.prototype.hasOwnProperty.call(sidedness, subjectKind) ? sidedness[subjectKind] : void 0;
+    return {
+      evidence_one_sided: oneSided !== false,
+      not_ruled_out: causesNotRuledOut(missingCause, { evidenceOneSided: oneSided })
+    };
+  }
   /** REC-95 — THE BOUNDED MEANING-LEVEL FRONTIER. Section 6's first reader at the
    *  meaning level, and the half of this item's accepts-when that is a READ:
    *  *the frontier view distinguishes "nothing derived" from "never run"*.
@@ -51621,7 +51714,15 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          alone — the merge is the only place the two met. */
       truncated: gated.length > cap || never.length > cap,
       looked,
-      never_looked: never.slice(0, cap),
+      /* REC-107: `not_ruled_out` IS TOTAL ACROSS BOTH LISTS, and that is the point
+         rather than symmetry. A field present on the rows a reader distrusts and
+         absent on the rows they trust is a field they learn to look for only when
+         they already suspect something — so it goes on `never_looked` too, where it
+         is the one-member set that says this row IS the positive statement. */
+      never_looked: never.slice(0, cap).map((r) => ({
+        ...r,
+        ...this.#missingCauseSet(MEANING_EVIDENCE_IS_ONE_SIDED, r.subject_kind, r.missing_cause)
+      })),
       never_looked_count: never.slice(0, cap).length,
       /* NAMED, NEVER SILENTLY SCORED ZERO. Subjects with no meaning-level row
          whose absence this record CANNOT explain as nobody-looked — the pre-log
@@ -51632,7 +51733,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         subject: r.subject,
         subject_kind: r.subject_kind,
         missing_cause: r.missing_cause,
-        why: MEANING_MISSING_ROW_CAUSES[r.missing_cause]
+        why: MEANING_MISSING_ROW_CAUSES[r.missing_cause],
+        ...this.#missingCauseSet(MEANING_EVIDENCE_IS_ONE_SIDED, r.subject_kind, r.missing_cause)
       })),
       missing_unexplained_count: unexplained.slice(0, cap).length,
       missing_causes: MEANING_MISSING_ROW_CAUSES,
