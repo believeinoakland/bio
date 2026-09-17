@@ -1016,7 +1016,7 @@ authority is the file named, never this one.
   `docs/development/CONTENT-SEARCH-DESIGN.md:7`
 - **REC-116** · 2026-09-17 — BLOCKED ON BOB, RULED 2026-09-17 BY BOB #13, AND THE ROW IS KEPT RATHER THAN DELETED BECAUSE THE REASON IS THE VALUABLE PART.** CONDUCT #2 rowed this as runnable; **BOB #13 ruled it is NOT, and took the design instead: *I take the design; the item follows the design, not the other way round.*** The ground is…  
   `docs/development/QUEUE.md:1551`
-- **REC-117** — BOB RULED THAT `NO_FALSIFIER` MUST BECOME A STATED, ATTRIBUTED, OVERRIDABLE CONDITION AND `op=conclude` STILL REFUSES OUTRIGHT — so the gate pressures a member into INVENTING a falsifier, which is the exact bug the publication fence was moved off the content axis to avoid.** — waits on nothing; owner RECORD.  
+- **REC-117** · 2026-09-17 — BOB RULED THAT `NO_FALSIFIER` MUST BECOME A STATED, ATTRIBUTED, OVERRIDABLE CONDITION AND `op=conclude` STILL REFUSES OUTRIGHT — so the gate pressures a member into INVENTING a falsifier, which is the exact bug the publication fence was moved off the content axis to avoid.** — waits on nothing; owner RECORD.  
   `docs/development/QUEUE.md:1531`
 ## UI-
 
