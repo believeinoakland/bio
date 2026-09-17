@@ -12337,6 +12337,7 @@ quietly grows is a claim that stopped keeping other sessions out of what it actu
 **open as of 2026-09-17.**
 
 ## REC-118 · RECORD · D-410 — `op=reevaluations` publishes the AUTHORED capture letter beside a CAPPED `strength` block
+released: 2026-09-17 by CONDUCT #3 at integration, merged at `4116f375`. **Every path this claim reserved is free.** IC-119 ACCEPTED at I3 22.0.0; D-410 CLOSED, D-411 left open and still REC-119's.
 
 Opened 2026-09-17 by REC-118's worker (CONDUCT #3), worktree `agent-a6ca2a8271027f74b`.
 **This is a SWEEP to a ruling already made** (REC-105 capped the walk, REC-114 swept the leg

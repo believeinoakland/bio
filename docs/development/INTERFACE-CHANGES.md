@@ -8914,7 +8914,11 @@ and the surface. Reversing re-opens D-383.
 
 **RESOLUTION: (CONDUCT takes the version bump and the resolution.)**
 
-## IC-119 · I3 `op=reevaluations`: an obligation's `legs[].grade` becomes the EARNED capture letter, with the AUTHORED letter published beside it · PROPOSED 2026-09-17 (REC-118, closing D-410) — the version bump and the RESOLUTION are CONDUCT's
+## IC-119 · I3 `op=reevaluations`: an obligation's `legs[].grade` becomes the EARNED capture letter, with the AUTHORED letter published beside it · RESOLVED ACCEPTED 2026-09-17 by CONDUCT #3 at integration — I3 21.0.0 → **22.0.0**, MAJOR 2026-09-17 (REC-118, closing D-410) — the version bump and the RESOLUTION are CONDUCT's
+
+> **ACCEPTED, AND ITS OWN ARGUMENT FOR BREAKING IS THE BEST OF THE THREE THIS WAVE PRODUCED.** Impact was measured in the direction that would argue it DOWN and came back **zero** non-test consumers — `civicos-ui` mentions the op once in a COMMENT, `agent-worker` zero, and `newgroup`'s 24 are op-routing plumbing that reads no answer field. Breaking anyway on IC-118's rule that a correct consumer becomes wrong without changing a line, **plus one that belongs to this op alone: a consumer comparing `legs[].grade` against `strength.capture` to detect drift — WHICH IS WHAT THIS OP EXISTS FOR — SILENTLY STOPS FIRING.** A break that disables the detector a consumer built on the op's own purpose is the strongest form of this argument yet recorded here.
+>
+> **THE BRIEF TOLD IT TO MINT `IC-118` AND THAT ID WAS ALREADY TAKEN** by the item that landed this morning; `mintid` allocated `IC-119`. Third id-collision-shaped event of the day, and the only one caught by the allocator BEFORE it reached a document rather than after.
 
 **BASE READ OFF THE TREE, NOT INHERITED FROM THE ROW.** `INTERFACES.md` reads I3
 **21.0.0** on `claude/lucid-heisenberg-fd6795` at `6f007692`; REC-118's row implies an
