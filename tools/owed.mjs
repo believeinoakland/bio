@@ -42,7 +42,22 @@
  * **And it never scores an unreadable file as clean**, which is the rule this whole family of
  * instruments turns on.
  *
- * NEGATIVE CONTROL: `node bio-plane/test/owed.control.mjs` from the repo root.
+ * NEGATIVE CONTROL: (all six RUN 2026-09-17 by BOB #13, exit 0, 33 pass / 0 fail, both
+ * baselines green) `node bio-plane/test/owed.control.mjs` from the repo root.
+ *   (A1) the owner test matches the row BODY again -> the 58-item defect: a row whose body
+ *        NARRATES an assignment is read as carrying one.
+ *   (A2) a bare `RESIDUE` marker -> the 28-item defect: prose ABOUT a residue counts as one.
+ *   (A3) the CLOSED-row filter removed -> a resolved row is owed forever.
+ *   (A4) the residue exemption on a closed row removed -> closing a row erases its own
+ *        honest remainder.
+ *   (A5) an UNREADABLE ledger reported as an EMPTY one -> the arm that would silently STOP
+ *        the lane, and the rule this whole family turns on.
+ *   (A6) THE PRECISION ARM — every judged row returned as owed, so the list is complete and
+ *        useless. A sensitivity control does not notice; only this does.
+ *
+ * **THE HEADER FIRST CITED THIS FILE BEFORE IT EXISTED**, which is the false-absence class this
+ * family exists to catch, committed by a file in the family. Corrected to say so, then built.
+ * A declared control is a CLAIM; the artifact is the only witness.
  */
 
 import { readFileSync } from "node:fs";

@@ -40,7 +40,11 @@
  * an *undesigned* nobody re-reads is a claim about the day it was written, and 21 of them were
  * sitting unaudited across 9 governed documents when this was built.
  *
- * NEGATIVE CONTROL: `node bio-plane/test/undesignedclaims.control.mjs` from the repo root.
+ * NEGATIVE CONTROL: **NONE YET, AND THIS LINE SAYS SO RATHER THAN NAMING A FILE THAT DOES NOT
+ * EXIST.** The first draft of this header declared `bio-plane/test/undesignedclaims.control.mjs` before
+ * writing it — a citation to a control nobody can run, which is the same false-absence class
+ * this file family exists to catch, committed by the file catching it. **A declared control is
+ * a CLAIM; the artifact is the only witness.** Suite and driver are owed and rowed.
  */
 
 import { readFileSync } from "node:fs";
