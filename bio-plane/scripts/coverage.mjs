@@ -972,9 +972,17 @@ const REGISTER_FLOOR = {
      --strict and a green UI harness. A floor promised for later is a floor nobody moved.
      ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
      FLEET_FLOOR below (76, unmoved) — one occurrence per distinct object. */
-  arms: 1100,
-  classified: 198,
-  corpus: 199,
+  /* M0-48 2026-09-16: 1100/198/199 -> 1108/199/200, read off the PRINTED line of a `--strict`
+     run on the COMMITTED tree at `91556f7b` (`arms 1108/1100 · classified 199/198 · corpus
+     200/199 · GREW by 8 arm(s)`), never by adding this item's delta to the old figure. The
+     first `--strict` of this item was taken while its suite was still UNTRACKED and read
+     `corpus 199/199`, because the provenance guard excludes an uncommitted suite from the
+     counted corpus — moving the floor from THAT run would have installed permanent slack,
+     which is the hazard this whole comment block exists for. +8 arms is `strandedwork.control.mjs`;
+     +1 classified and +1 corpus are `strandedwork.test.mjs`. */
+  arms: 1108,
+  classified: 199,
+  corpus: 200,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
