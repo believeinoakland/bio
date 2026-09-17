@@ -104,6 +104,8 @@ time. For UI-45 specifically: `op=basisversions` publishes `current` ONLY when a
 and **this surface names none and therefore renders none** — §7's rule that a stance belongs to the
 project and not to the question, honoured by not asking rather than by filtering an answer.
 
+**DISCHARGED 2026-09-16 by M0-37 — the constraint HELD and an assertion is what holds it, verified against the tree rather than remembered.** `civicos-ui/app.html` carries exactly TWO spellings and no third: `elicFalsifier` composes *"Your answer fails only if ALL of these fail: "* (`:9478`) and `VREV_FAILS_ALL` composes *"This reading fails only if ALL of these fail: "* (`:19395`, reused at `:19482`). `version-review.test.mjs:332`/`:336` and `elicitation.test.mjs:276` pin both tails. UI-43 and UI-45 are gone from `QUEUE.md` — the items this was addressed to are closed, and they closed without authoring a third. **The discharge is the ASSERTION and not the outcome:** a constraint honoured once is luck, a constraint a suite fails on is a mechanism.
+
 ### DELEGATION 2026-08-09 UI (UI-42) -> CONDUCT: **FIVE FLOORS MOVED IN `surface-registry.test.mjs`, AND TWO OF THEM WERE ALREADY SLACK BEFORE THIS ITEM TOUCHED THEM**
 
 Moved from the figures the arms PRINTED, never by adding to the number in the file, and each with
@@ -123,6 +125,8 @@ a ratchet*) sitting in two arms nobody had re-measured since they were written. 
 sat green through the deletion of a fifth of app.html's static op calls. They are moved rather than
 noted, because noting a stale floor is what left them stale, and moving three of five while leaving
 two known-slack ones behind is the inconsistency the next reader would trip on.
+
+**DISCHARGED 2026-09-16 by M0-37 — SUPERSEDED BY A LATER MEASUREMENT, which is the only way a floor notice can honestly close.** All five floors have been re-read and moved PAST the figures this block reported, by UI-45 on the same day, each *"from the figure this arm PRINTED"*: A3 19 → 20 (`civicos-ui/test/surface-registry.test.mjs:852`), A4d 16 → 17 (`:907`), A4e 16 → 17 (`:910`), D1 **64 → 65** (`:955`), D5 **39 → 41** (`:972`). The two this block flagged as already-slack are the two that moved furthest again, which is the block's own point surviving its discharge: a floor with slack is not a ratchet, and REC-71's finding has now been re-demonstrated by the same arms twice.
 
 ### DECISIONS FOR BOB 2026-08-09 (UI-42): **NONE**
 
@@ -154,9 +158,13 @@ expected: REC-69 merged and backed out on 2026-08-08 having failed two ratchets 
 
 `provenance_route_marks(finding)` is a REAL instance of REC-69's class and is the arrival that took the roster 11 → 12. `finding` appears in NO `WHERE` anywhere in the plane: every reader takes the LATEST mark per bundle by `seq` and classifies in JS, and `op=list`'s route tally is computed over the gated PAGE. **The question no op asks: "which documents in this instance carry a standing `LOOKED_INDETERMINATE` marker."** A group asking where its own record's provenance is doubted must page the whole store and count for itself; the index for it was declared the day the table landed. Not fixed here — one op per unread index on one battery is how a diff stops being reviewable — and it joins `links(source_bundle)`, `tasks(assignee)` and `inquiry_basis(grade_source)` on the list REC-69 already delegated.
 
+**open as of 2026-09-16** — GENUINELY OPEN, and the sharpest form of it: **the INDEX EXISTS AND NOTHING READS IT.** `bio-plane/src/schema.mjs:2533` declares `provenance_route_marks_finding ON provenance_route_marks(finding, bundle_id)`, and all four SQL readers of that table in `store.mjs` (`:9345`, `:9694`, `:9843`, `:9974`) key on `bundle_id` and `seq` — **not one puts `finding` in a `WHERE`** (searched `store.mjs` with `grep -a` for `finding=?`, `AND finding`, `m.finding =`: zero). Classification is still in JS at `:9717`, `:9833`, `:9856`. No op answers it: `index.mjs:827` registers `provenanceroute` as a WRITE, and no read op is named for the index. The three companions the block lists — `links(source_bundle)`, `tasks(assignee)`, `inquiry_basis(grade_source)` — have no read filter either. **NO QUEUE ROW CARRIES THIS**, and REC-69 reads `done`: an owed act with an index built for it and no item to build the reader. Checked by M0-37; the close is RECORD's.
+
 ### DELEGATION 2026-08-09 RECORD (REC-69) -> M0-14 / D-233's area (`scripts/control-register.mjs`)
 
 **The register records the declaration STATING THE MOST ARMS and never the sum, and this item is the shape that rule did not anticipate: TWO DIFFERENT controls, for two different items, in ONE suite.** Measured, not inferred: `airuns.test.mjs` now carries REC-69's original 7-arm block and this replay's 4-arm block, and reports 7 — the new block contributes nothing; `run-conditions.test.mjs` carries REC-74's 5-arm block and this replay's, and moved 5 → 6 because the NEW one became the larger, so REC-74's five stopped being counted. `arms` is therefore a floor on ARMS STATED IN THE LARGEST SINGLE DECLARATION PER SUITE. It is SAFE — the number is reported and never gated, and the floor still cannot fall without a declaration really shrinking — but a reader doing the arithmetic between two `--strict` runs will conclude a declaration shrank when one was ADDED. The "never the sum" rule is right for the case it was written for (M0-2's backfill left most suites stating ONE control twice) and needs a way to tell one control stated twice from two controls stated once.
+
+**open as of 2026-09-16** — UNCHANGED IN SUBSTANCE, checked against the file rather than against its row. `bio-plane/scripts/control-register.mjs:325-335` still selects by `rank` = arm count with text length as the tie-break, so the register still records THE LARGEST SINGLE DECLARATION and never the sum, and `findControlDeclarations` still discards the other block without reading any identity or ownership attribute. Searched the file for `TWO DIFFERENT`, `two controls`, `stated twice`, `per suite`: zero. **The file HAS been edited since — twice — and neither edit touched this**: M0-14/D-233 added `arms: null` for the unclassifiable (`:144`), and M0-42 added the run-vs-declared token (`:337+`). So the question is not forgotten, it is unanswered. M0-14 reads `done`. The close is M0's.
 
 ### FINDING 2026-08-09 RECORD (REC-69) — A THIRD CROSS-ITEM RATCHET, AND NOBODY LISTED IT
 
@@ -293,6 +301,8 @@ together and `SHARED_FNS` (which REC-79 grew by two) re-checked; a merge that fi
 the arm naming the other.
 
 ---
+
+**DISCHARGED 2026-09-16 by M0-37 — and the argument is ARITHMETIC RATHER THAN TESTIMONY, because this block's whole subject is that a contended floor must not be resolved by taking a side.** Every one of the twelve figures in `civicos-ui/check-refusal-codes.mjs` now stands STRICTLY ABOVE all three of the columns this block tabulated (base / REC-79 / `main`-then): families 22 vs 16/17/16 (`:388`), rows 205 vs 166/172/168 (`:411`), census 490 vs 427/431/429 (`:452`), reach 258 vs 220/225/222 (`:494`), governedSites 81 (`:521`), regions 67 (`:542`), regionLines 2035 vs 1425/1527/1454 (`:565`), codesChecked 201 (`:669`), outcomeReturns 98 (`:716`), refusalsJudged 203 (`:734`), vocabularies 11 (`:744`), vocabularyTerms 64 (`:753`). **No side has those numbers**, so they were not taken from one — they were re-read, and `:565` carries the in-file provenance saying so. REC-79's new `inheritedVerdicts` key is present at 4 (`:863`); `REGISTER_FLOOR` is ONE key set (`bio-plane/scripts/coverage.mjs:1018-1020`, the only other `arms:` at `:1213` being the fleet table, guarded by its own grepped-after-writing note); `verdict-reader.mjs` exports `SHARED_FNS` and `readerDrift` (`:245`, `:275`) so the guard's copy is reconciled by an instrument rather than by hand. **And the class now has a tool that did not exist when this was written: `tools/mergecarry.mjs`, whose header names this very merge.**
 
 ## CLAIM 2026-08-09 M0 (D-249)
 released: 2026-08-10 by CONDUCT as STALE — **D-249's work is ON `main`** (`5edc051`, merged at `00090a2` and again in the `5263088` integration) and the holding session is gone. Same instruction and same reasoning as the UI-42 release above. **This block carries no `session:` or `opened:` line** — it opens straight into its path list, which is why the first release pass anchored on `opened:` and landed the line in the NEXT claim instead. Corrected here; the shape is noted so the next reader does not repeat it.
@@ -444,6 +454,8 @@ import it delivered all of it, every run.
 
 **STILL OPEN AFTER FIVE WEEKS, AND NOW AN ITEM: M0-36** (2026-09-15, CONDUCT #11). Re-measured today rather than inherited, and the narrower figure is the honest one: 53 UI suites call `process.exit`, **38 of them do not import the flush module**, and `civicos-ui/test/run.mjs:25` spawns every suite with `{stdio:"pipe"}` — so the mechanism is live exactly as this delegation described it. (A crude scan says 49 of 64; narrowing to suites that actually exit gives 38 of 53, and the row says to re-measure again before editing, because a five-week-old count is the kind of figure this project refuses to build on.) **Placed in the M0 background lane rather than on UI's slot**, CONDUCT answering for the placement: it is instrument integrity of the same kind M0 already fixed on the plane side, the lane holds no slot, so it costs UI nothing and waits on nobody. **This entry is why the sweep happened.** A delegation is a legitimate home for an owed act, but nothing drains this register on a schedule, and an act that sits in one for five weeks is the note-is-not-an-item class wearing a register entry.
 
+**DISCHARGED 2026-09-16 by M0-37 — MEASURED AS A POPULATION, not read off M0-36's row.** Re-ran this block's own predicate over `civicos-ui/test/*.mjs`: files containing `process.exit` AND not containing `stdio.mjs` — **ZERO**. 57 files there call `process.exit`; every one imports the flush. `civicos-ui/test/run.mjs:1` carries the import itself, and its spawn now reads `{ stdio: "pipe", maxBuffer: 256 * 1024 * 1024 }` (`:50`) — the second loss mechanism M0-36's own control found, closed in the same landing. **The three `civicos-ui/check-*.mjs` guards are NOT this block's scope and are NOT discharged here**: they are a separate delegation raised 2026-09-16 at the foot of this file, and discharging them silently under this one is exactly how a residue disappears.
+
 ## CLAIM 2026-08-10 SKILL (SK-2 — the investigative skill: composition judgement, description standard, search-completeness discipline)
 session: sk2-investigative-skill (worktree `agent-ab0c5fdce6f2627dc`)
 opened: 2026-08-10T00:00:00Z
@@ -582,6 +594,8 @@ failures into a setup step. **A hint would be enough; a mechanism that is not in
 reader runs is not a mechanism.**
 ---
 
+**DISCHARGED 2026-09-16 by M0-37 — and the evidence is that IT FIRED ON THIS WORKER TODAY, which is a better proof than a grep.** The hint landed in the first of the three homes this block named: `CLAUDE.md:470-483`, with the 2026-08-10 `28/157 green` sighting quoted, and it has since grown two more faces recorded beneath it — the QUIET one (a battery green-but-one, exit 0, a member skipped by name) at `:486-497`, and *"I RAN `npm ci` IS NOT EVIDENCE"* at `:499+`. **M0-37's own worktree arrived with `node_modules` absent in all five packages; the instruction was in the loop, was read, and three `npm ci` runs plus a real-directory-not-symlink check preceded any measurement.** STATED RATHER THAN ROUNDED: `tools/gates.mjs` still has NO pre-flight (`:112` runs the battery without checking), and `VERIFICATION.md` does not mention `npm ci`. The block asked for ONE of three homes and got the one every session loads, which is the right one; the other two remain available and are nobody's debt.
+
 ## CLAIM 2026-08-10 RECORD (D-266 — the WIDENED disposition key for STANCE-SCOPED kinds)
 session: d266-scope (worktree `agent-a3479876cd7e9561b`)
 opened: 2026-08-10T00:00:00Z
@@ -660,6 +674,8 @@ turn, yourself*:
   `op=proposedispose` receives the server-side `viewer` its project-scoped arm gates on.
   Without it the act refused `NO_SUCH_PROJECT` for a real project, fail-closed and
   correct, which is how the omission was found.
+
+**open as of 2026-09-16** — GENUINELY OPEN AND UNSTARTED, checked in the page rather than inferred from D-266's `done` row. `civicos-ui/app.html` contains **zero** occurrences of `disposition.requires`, `disposition.projects` or `disposition.finding`. The send is still key-only: `:14938` composes `{ key, to, reason }` and `:14941` posts `proposedispose` with exactly those three; `:12788` still derives the key from the item id alone. The controls are still drawn off availability (`:12772`). The plane's half is live and waiting — `store.mjs:19837` and `:19853` return `NO_PROJECT_SCOPE` with the finding attached, which this block correctly called the honest interim, and `app.html:14943-14947` renders that refusal. **So the member still meets a refusal where a project picker was designed**; the surrounding comments at `:19893` and `:20008` still describe the pre-fix model. The close is UI's.
 
 ## CLAIM 2026-08-10 RECORD (D-280 — a project that WITHDREW still sets the publication bar)
 session: record-d280 (worktree `agent-aa5a5b887286869b2`, branch `worktree-agent-aa5a5b887286869b2`)
@@ -1344,6 +1360,8 @@ must never render as a bar of zero; `bar_detail` carries that sentence in the an
 live store can have diverged yet, because nothing before this commit could produce one. The
 first diverged case will be the first one a member adds a new finding to at a later edition.
 
+**DISCHARGED 2026-09-16 by M0-37 — closed BETTER than it was asked, and the difference is worth keeping.** The block asked for three join sites to be changed; the tree answers with ONE helper that all three call, `pubMemberKey` at `civicos-ui/app.html:17712-17714` — SHA when `version_sha` is pinned, `bundle_id@edition` when it is not, which is exactly the pre-CASE-3 carve-out this block required. The map answers to both keys (`:17716-17719`), and all three sites route through it (`:17720`, `:17780`, `:17813`), with the duplicate-row half at `:17883`. The source states the reason at `:17705-17711`: *the defect was several sites spelling one rule*. **Three edits would have discharged this block and left the defect's shape intact; one helper removed it.**
+
 ### AMENDMENT 2026-09-10, MID-ITEM (CASE-5, `case5-artifact-flip`) — one file added to the claim, and the honest reason is that a UI RATCHET CAUGHT THIS ITEM
 
 This claim said **NOT `civicos-ui/**`** and the item had to edit one file inside it.
@@ -1408,6 +1426,8 @@ half is not, and it cannot be closed by DIST alone.**
   the signature cover a set rather than a file, which is why it is not the recommendation.
 
 ---
+
+**DISCHARGED 2026-09-16 by M0-37 — the ruling was REVERSED and the reversal is annotated at the site it reversed.** `agent-worker/scripts/build.mjs` exists and its header states the reversal, by BOB on 2026-09-10, as MECHANISM rather than doctrine, answering this delegation by name. The committed artifacts are on disk: `agent-worker/dist/agent-worker.bundled.mjs` with its `.bundle.json` sha256 sidecar. `agent-worker/wrangler.jsonc:21-28` KEEPS the old ruling under *"WHAT STOOD HERE, AND IT WAS RIGHT ABOUT ITS OWN RISK"* and `:41` carries the drift guard DIST recommended — byte-identity against a fresh build. `release/RELEASE.json` now carries per-member assets for all three fleet members, against the ONE this block measured. **NOTED, NOT ROUNDED: `RELEASE.json` records `agent-worker` at 57,379 B while the bundle on disk is 59,101 B.** That is a release-artifact question and it belongs to DIST; it is named here so it is not lost, and it is raised again in the block below.
 
 ## CLAIM 2026-09-10 FLEET (FL-9 — the per-member build step on the GUARD pattern: a committed bundle whose gate refuses to ship stale)
 session: fl9-fleet-bundle-guard (worktree `agent-abe10acbf93247266`, branch
@@ -1504,6 +1524,8 @@ paths: **NAMED BY REGION, AND A CASE-4 WORKER IS LIVE ON THE INQUIRY STATE MACHI
    are the platform's own (`node:*`). So "one asset, one hash, one signature" is available for both
    members and a signature over a SET buys nothing here. Stated either way, as the item required.
 
+**open as of 2026-09-16 — AND IT IS THIS ITEM'S OWN SUBJECT, CAUGHT LIVE.** Item 1 is not done and the file now states the past as the present: `tools/deploy-fleet.mjs:28-36` still argues *"records a deliberate FLEET decision at its `main` key: THE SOURCE DEPLOYS, NOT A BUNDLE"* and *"a raw REST upload of one part cannot resolve them"* — while `agent-worker/wrangler.jsonc:54` reads `"main": "dist/agent-worker.bundled.mjs"` and `pdf-worker/wrangler.jsonc:15` the same. **The string `THE SOURCE DEPLOYS` does not appear in the wrangler config the header claims to be quoting; its only occurrence in the tree is the header itself.** `:43-45` still defers the release format to D-297, and **D-297 is not a row in `QUEUE.md` at all** — it lives only in prose at `:256`, `:290`, `:443`, `:445`, `:1646`. Items 2 and 3 are facts on the record and need nothing. **AND ONE FIGURE DISAGREES WITH THE TREE:** `release/RELEASE.json` gives `agent-worker` 57,379 B against 59,101 B on disk. The close is DIST's.
+
 ### DELEGATION 2026-09-10 FLEET (FL-9) -> whoever owns `bio-plane/test/action-loop.test.mjs`: **A SUITE WITH AN EXPIRING FIXTURE WENT RED BETWEEN CONDUCT'S BASELINE AND MINE, AND THE CAUSE IS THE CALENDAR**
 
 **MEASURED, not suspected, and it is NOT this item's damage** — it reproduces on a tree this item
@@ -1526,6 +1548,8 @@ be RELATIVE to the run (`today + N days`) or the suite must pin a clock, and cho
 is the owner's call. **A hardcoded future date in a fixture is a time bomb with a fuse measured in
 days**, and this is the class, not the instance: the same pattern should be swept for wherever a
 suite writes a literal date into a document it then conformance-checks.
+
+**open as of 2026-09-16 — HALF DONE, AND THE HALF THAT IS DONE IS THE HARDER ONE.** The DECISION was taken and is written where it binds: `bio-plane/test/action-loop.test.mjs:55-98`, headed *"THE CLOCK, PINNED — M0-22, 2026-09-10"*, naming the relative-date alternative and rejecting it with a reason (`:72-84`), with `DUE` kept as a literal (`:104`) read only against instants the file names (`:105-106`), the failing assertion re-anchored on `LONG_PAST` (`:567`), and eight control arms RUN (clock advanced +1, +5 and +20 years, 82 pass at every one). `clockshift.preload.mjs` and `clockadvance.control.mjs` are both in the tree; five suites bind `BIO_NOW_MS`. **WHAT IS NOT IN THE TREE IS THE CLASS SWEEP AS A STANDING FIGURE** — searched `tools/` and `bio-plane/` for a census of date-pinned fixtures reporting its reach: absent. M0-22's own `accepts-when` names *"the census of date-pinned fixtures reported as a FIGURE with its reach"* and its row reads `done`. The suite's header records one further in-file instance (RFC3's `2026-12-01`) found by hand. **A row closed over an accepts-when clause whose artifact is not findable is worth more attention than this line can give it**; M0-37 states it rather than resolving it.
 
 ### AMENDMENT 2026-09-10, MID-ITEM (FL-9, `fl9-fleet-bundle-guard`) — TWO FILES ADDED TO THE CLAIM, AND ONE OF THEM IS A FLOOR THIS ITEM DID NOT INVALIDATE
 
@@ -1684,6 +1708,8 @@ than two.
 
 **What is NOT owed:** nothing in `newgroup`, `pdf-worker`, `agent-worker`, `docprofile`, `tools` or
 `release` reads a state vocabulary at all. Measured, zero.
+
+**open as of 2026-09-16 — TWO OF THE THREE ACTIONABLE SITES ARE NOT DONE, AND UI-56 READS `done`.** Site 1 IS done: `civicos-ui/app.html:1671` drops `published` from `STATE_EDGES.inquiry.concluded` and keeps the legacy `published:` edge at `:1672`, under a comment citing CASE-4 / DEC-72. **Site 2 is not:** `:1699-1700` still maps `PHASE.published = "case"`, `phaseOf()` (`:1799`) still takes only `state`, and **`case_member` appears in `app.html` three times and all three are COMMENTS** (`:7342`, `:16853`, `:17822`) — no code path reads the relation, though the plane serves it (`op=caseflags`, `index.mjs:878`, `:3280`). **Site 3 is not:** the state seal at `:1851-1853` still carries the `published` row with its two `forbids`, and `:1850` still offers `published` in `concluded.next` — **so the seal vocabulary offers a transition `STATE_EDGES` no longer has**, which is the two-answers-to-one-question shape rather than a cosmetic residue. Site 4 (SPACE, `:1823`) is intact, as the block required. The close is UI's.
 
 ### AMENDMENT 2026-09-10 RECORD (CASE-4) — **I EDITED THREE `civicos-ui/` PATHS MY OWN CLAIM SAID `NOT`, AND THIS BLOCK IS WHY, WHAT, AND WHAT I DID NOT TOUCH**
 
@@ -1938,6 +1964,8 @@ I did not touch any of these files. `preauth-vocabulary.test.mjs`'s `cases[]` ro
 left it narrow DELIBERATELY for the reason in (2) — correcting it would have been the fence
 tighter than its rule that `WORKER.md` warns about, and would have moved this file's measurement
 basis a second time for no measured reader.
+
+**open as of 2026-09-16 — TWO OF THREE CLOSED, AND THE SURVIVOR'S OWN JUSTIFICATION HAS BEEN FALSIFIED.** Finding 1 closed: `civicos-ui/test/auth-surface.test.mjs:385`/`:395` now carry `strength` and `required`, and the fixture answers `cases:` (`:406`) and `caseMembers:` (`:416`). Finding 3 closed: `manifest`/`manifest_sha` moved to the `cases[]` row (`:404-408`) with an assertion pinning their absence from `published[]` (`:980`), both with controls recorded at `:207-217` and `:246-250`. **Finding 2 is half open:** `publishedcase.test.mjs` now carries all three keys (`:746`, `:750`, `:759`, `:769`, `:778`), but `preauth-vocabulary.test.mjs:818-832` still carries six and **`bias_acknowledgement` and `project_id` are absent from that file entirely**. **AND THE REASON THE BLOCK GAVE FOR LEAVING IT — *the page reads none of these* — IS NOW FALSE:** `app.html:17868` reads `cs.project_id` live, and `:17015`/`:17026`/`:17070` read case-level `bar` and `bar_detail`. Only `bias_acknowledgement` is still unread. **A narrow fixture declared legitimate on a measurement that has since moved is this register's subject in miniature.** The close is UI's.
 
 
 ## CLAIM 2026-09-10 CONTENT-PDF (CPDF-13 — the CALIBRATION construct, its chain reference, and the scheduled re-probe; D-183 / D-253)
@@ -2208,6 +2236,8 @@ derived strength is displayed beside the case's standard, so the pair is `streng
 `bar` per case.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `ac2941e` and verified on the MERGED tree: battery 173/173 · 10,753 (10,680 + the attributed +73, closing exactly suite for suite), `coverage --strict` exit 0 read unpiped (OPS 171/171, CHECKS 249/249, `REGISTER_FLOOR` collapsed a fourth time and verified by print at 901/167/168), UI harness exit 0, `mintid --audit` 0 breaks, `dist/**` rebuilt on the merged tree. IC-71 RESOLVED in the same act: I3 11.0.0, I5 1.10.0.
 
+**DISCHARGED 2026-09-16 by M0-37 — the comments were CORRECTED IN PLACE and the design call was taken, not deferred.** `pubBarHtml` and `pubIndex` no longer exist under those names; `civicos-ui/app.html:16968-17000` carries a replacement block headed *"THE BAR IS THE CASE'S, AND THIS FUNCTION WAS CORRECTED RATHER THAN EXEMPTED (CASE-6 / DEC-72 clause 2)"*, which QUOTES the falsified sentence verbatim at `:16974-16975` before stating the new rule at `:16993`. The field switch is live: `:17015`, `:17026`, `:17070` read `c.bar` and `c.bar_detail`. **The design question this block raised was ANSWERED rather than absorbed** — `:16995-17000` rules that what survives per finding is STRENGTH and not the bar, so `pubPairBadges` (`:16962`) stays per finding and the bar moves to the case.
+
 
 ## CLAIM 2026-09-10 M0 (M0-24 — M0-23's census delegation, the fixable half: a `publishedmanifest` fixture that cannot represent the record's own published shape)
 session: M0 worker (worktree `.claude/worktrees/agent-a48e1c6d709be1620`, branch `worktree-agent-a48e1c6d709be1620`)
@@ -2262,6 +2292,8 @@ FIXTURE across the whole package, and the three NARROWER rows that remain are ON
 closure in three suites — `cases[].bias_acknowledgement`, `.bar` and `.project_id`, which no
 surface in `app.html` reads.
 released: 2026-09-10 by CONDUCT #9 at integration — merged on `main` at `db1df93` and verified on the MERGED tree: battery 173/173 · 10,753 (delta ZERO, predicted), `coverage --strict` exit 0 read unpiped, UI harness exit 0 (`auth-surface` 94), `mintid --audit` 0 breaks.
+
+**open as of 2026-09-16 — THE CONSTRAINT HOLDS; THE UNDETERMINED QUESTION IS STILL UNDETERMINED AND HAS NO OWNER.** Item 2, the one that mattered most, is honoured and is control-pinned rather than trusted: `civicos-ui/check-mock-envelope.mjs:547-548`, `:557-558`, `:560-561` still report NARROWER / WIDER / UNCLASSIFIED without failing, the only `FAIL(` in arm C being the meta-guard at `:528-531` that fires when the arm judged NO field at all — and the report-only behaviour is driven from the SUBJECT suite, `auth-surface.test.mjs:207-217` and `:246-250`, which restore a phantom key and assert the guard still EXITS 0. **Item 1 is untouched:** nothing in the file records whether the other 36 ops are un-SELECTable in fact or merely unreadable by this reader (searched for `UNDETERMINED`, `un-SELECTable`, `36`: absent), and `git log` shows no commit after M0-23 touches the file. **That is the correct state for an honest unknown and it is why this block is affirmed open rather than discharged: the question has no actor, and an unknown with no owner is how a census's reach quietly becomes its claim.**
 
 ## CLAIM 2026-09-10 CONTENT-PDF (CPDF-14 — the COMPOSED-SHAPE measurement: detect → crop → transcribe the crop, at n>1, against the enforced-comparable CPDF-9 floor)
 session: cpdf14-composed-shape (worktree agent-a6d473988f1f33530)
@@ -2567,6 +2599,8 @@ and `case6.control.mjs` drive a MOCK plane with hand-built `acts` arrays, so not
 moves; `SURFACES.inquiry.acts` still names `publish` correctly, because the plane still
 publishes it. `node civicos-ui/test/run.mjs` from the repo root is green on this branch.
 The cost is to a real reader, not to a suite, which is why it is delegated rather than left.
+
+**DISCHARGED 2026-09-16 by M0-37 — the gate moved off the act and onto the object, exactly as asked and with no per-credential variant.** `civicos-ui/app.html:7371-7384` now opens `publicationEntryHtml(r)` with a comment headed *"UI-57 / IC-75 · THE GATE IS THE OBJECT'S STATE AND NOT THE ACT'S PRESENCE"* and gates on `r.object_type === "inquiry" && r.current_state === "concluded"`; the `if(!act) return ""` line this block quoted is gone. The act survives only to choose a label, with an explicit fallback sentence when it is absent (`:7386-7396`). The constraint the block set is still stated at `:7333-7338`, and the act bar's `elsewhere:["publish"]` is now conditioned on `pubEntry` (`:7879`) — so the bar and the statement agree instead of disagreeing per credential. The unresolved DEC-8 disagreement is ROUTED to `DEBT.md` at `:7340-7369` rather than left implied.
 
 ### AMENDMENT 2026-09-10, MID-ITEM (D-310) — **TWO BUILD ARTIFACTS ADDED, BECAUSE FL-10's GUARD MADE THEM PART OF ANY PLANE-SOURCE CHANGE**
 
@@ -3312,6 +3346,8 @@ FIX is plane ground and therefore not DIST's: `#monitorToken()` should skip a no
 DAEMON_TOKEN (one liveToken call at selection), or the refusal should be surfaced. Low
 likelihood (requires a committed token value), stated rather than sat on.
 
+**DISCHARGED 2026-09-16 by M0-37 — and closed in the stronger of the two forms this block offered.** `bio-plane/src/store.mjs:33008-33015`: `#monitorToken()` is now `async` and calls `await liveToken(...)` on EACH credential in turn, so a denylisted `DAEMON_TOKEN` is skipped and `ADMIN_TOKEN` is reached — the presence-only expression this block quoted survives under a different name, `#monitorTokenBound()` (`:33005-33007`), used only for ARMING, with the split's reason written at `:32995-33004`. **The block offered *either* the liveness call *or* surfacing the refusal; the tree does BOTH**: `MONITOR_NO_LIVE_CREDENTIAL` at `:33018-33022` says in as many words that every bound credential is absent or denylisted and that the tick spent nothing. Call site awaits at `:28621`. Landed as D-334, whose row reads `done`.
+
 ### AMENDMENT 2026-09-14, MID-ITEM (DIST-4) — **THE FIRST REAL RUN PRODUCED A NUMBER AND A FINDING, AND TWO THINGS JOIN THE CLAIM**
 paths added: `docs/development/MEASUREMENTS.md` — APPEND ONLY, this item's rows. Live acts
 added, under the STANDING smoke-instance authority (Bob 2026-08-10): read-only `op=selftest`
@@ -3419,7 +3455,11 @@ bound and live (DIST-4's remediation), so the first armed tick spends the SCOPED
 the root of trust. Nothing deploys today; the arming happens at the next release's deploy and
 this delegation is the advance telling DIST-NEXT.md said the change must carry.
 
+**DISCHARGED 2026-09-16 by M0-37 — the telling was RECEIVED, the deploy has since happened, and what remains is a ROW rather than a notice.** The binding derivation is live (`bio-plane/scripts/deploy.mjs:277`, `:290`, `:301`) and `bio-plane/wrangler.jsonc:112` declares `SELF`. `#monitorConfigured()` (`store.mjs:33024-33026`) reads `env.SELF.fetch` and the bound token, and gates six call sites. **The deploy this block was warning about is no longer future:** release 0.58.0 is recorded in `MEASUREMENTS.md:10699-10707`, which states the account read `SELF->biosmoke7` back and that REC-26 and CAP-3 *"spend the scoped credential from their first tick"*. **The verification half is DRAINED INTO AN ITEM and not left here: `VF-7` (`QUEUE.md:1778`) is `queued` and restates both tellings.** STATED RATHER THAN ROUNDED: no post-deploy first-tick observation is recorded in `MEASUREMENTS.md`, which is VF-7's job and nobody else's.
+
 ### DELEGATION 2026-09-14 DIST (D-202) -> CAPTURE: **THE SAME DEPLOY ARMS CAP-3's ARCHIVE FALLBACK** — same mechanism, same timing, same advance telling as the RECORD delegation above; recorded separately because the consumer is yours and a shared notice is how one owner misses it.
+
+**DISCHARGED 2026-09-16 by M0-37 — same mechanism, same timing, same drain, and it is verified separately rather than inherited from the block above.** CAP-3's fallback reaches `op=acquire` over `env.SELF` (`bio-plane/src/store.mjs:32925`, `#fireArchiveFallback` at `:33333-33341`) and is INERT without it (`:32939-32943`), with D-334's `MONITOR_NO_LIVE_CREDENTIAL` guarding the no-token path at `:33335-33336`. The 0.58.0 deploy named CAP-3 as armed alongside REC-26 (`MEASUREMENTS.md:10706`). CAP-3 reads `done`; the verification is `VF-7`'s (`QUEUE.md:1778`, `:1783`), which carries this half by name. **No first live firing is recorded — that is the item's to observe, and it is an item rather than a note, which is the whole reason this discharges.**
 
 ### AMENDMENT 2026-09-14, MID-ITEM (D-297 claim) — ONE PATH ADDED: `docs/development/DEBT.md`, the D-202 row's disposition ONLY, closed by the landing above.
 
@@ -3916,6 +3956,8 @@ the sweep sees only the literal `as of YYYY-MM-DD` form.
 - **Reversal cost:** none today. It rises by one document each time a retrofitted Status is
   edited without the trap being known.
 
+**DISCHARGED 2026-09-16 by M0-37 — CONDUCT decided, the decision is IN THE CHECKER, and the three named documents are clean.** `tools/corpuscheck.mjs:179-180` collects every `as of` in the Status and fails on more than one; the original first-match read survives at `:166` exactly as this block described it, which is what makes the second read an addition rather than a rewrite. The grammar moved with it: `CORPUS-STANDARD.md:86` (*"ONCE and LAST"*) and `:111`, with `:115` preserving the untouched `measured 2026-08-01` form the block asked not to break. The suite arm is `bio-plane/test/corpuscheck.test.mjs:175` with a six-arm control named at `:24`. **The three documents this block flagged as benign-today now carry one Status date each** — `UI-KICKOFF.md` and `NOTIFICATIONS.md` one occurrence, `UI-PLAN.md` two of which only `:3` is in the Status. M0-28 reads `done`.
+
 _(ROUTED by CONDUCT #10 2026-09-14 at SK-6's integration: decided YES — one `as of`, the latest, at the end of the Status; enacted as **M0-28** in `QUEUE.md` (the arm, the grammar line in `CORPUS-STANDARD.md` §3, the three doubles corrected, a suite arm). The delegation is answered; nothing further is owed here.)_
 ## CLAIM 2026-09-14 RECORD (REC-81 — every `framework:NNN` LINE citation in the plane's sources and in `INTERFACES.md` becomes a SECTION citation, per `CORPUS-STANDARD.md` §4.6)
 session: REC-81 worker, worktree-isolated, Opus 5. Worktree
@@ -4175,6 +4217,8 @@ timing: this is TRUE ONLY ONCE COFF-9's branch merges. Do not edit §16 before t
   both at COFF-10 is a legitimate disposition — but then §16 is knowingly stale for that
   window and CONDUCT should say so rather than let it read as current.
 
+**open as of 2026-09-16 — THE SENTENCES ARE CORRECTED AND THE SECOND HALF OF THE ASK WAS NOT PERFORMED.** All three falsified sentences are fixed in place with their dated reason and the old text kept: `BIO_Content_Framework_v0_10.md:1793-1796` (the flavour row, *"CORRECTED rather than deleted"*), `:1805-1810` (both acts DONE as of 2026-09-14), `:1825-1830` (OpenDocument `[BUILT]`, with the census half preserved because it is still true). **But the ask had two halves and the front matter is the one that did not move:** `git log -S` places the correction in `c1cb0fa6` (COFF-10), whose diff against this document is ONE hunk, `@@ -1753,20 +1753,34 @@` — **lines 1-14 were not touched in that commit**, and the front matter names neither COFF-9 nor COFF-10 today. **Whether it is now STALE is UNDETERMINED and is stated as undetermined rather than guessed**: the correction made §16 more complete, so no Incomplete bullet is obviously owed — and `CLAUDE.md`'s rule is that the front matter moves in the SAME commit, which it did not. The document is BOB's; the close is CONDUCT's or FRAMEWORK's.
+
 ### RELEASED 2026-09-14: the COFF-9 claim above, with its amendment and its delegation — landed on branch `worktree-agent-ade6a3d78be9417fd`, NOT pushed and NOT merged (CONDUCT integrates)
 released: 2026-09-14 by the COFF-9 worker. **`discriminate()` answers `odt`/`ods`/`odp` on a
 real OpenDocument package and a STATED `undetermined` on a container that only looks like
@@ -4357,6 +4401,8 @@ because a debt row is not an assignment and a note is not an item.
 over the derived one, and the arm already in `test/content-extent.test.mjs` §4 —
 already driven, already armed by `nc-rec82.mjs oob` — starts covering every captured
 PDF instead of only the mixed ones. No interface moves: `content.page_count` is
+
+**DISCHARGED 2026-09-16 by M0-37 — the figure is persisted and the consumer PREFERS it, which is the whole of what was asked.** `bio-plane/src/index.mjs:6352` writes `reading.page_count` at `op=acquire` with the integer-or-null absence rule IC-87 set; `bio-plane/src/store.mjs:12476-12482` opens `#pageSetForCapture` with *"CAP-9: the stored figure, and it ends the question"* and returns it before falling back to the derived union. The `content.page_count` column is written at `:12841` and read at four sites. D-345 reads **CLOSED 2026-09-14 by CAP-9** (`DEBT.md:294`) with `test/capture-pagecount.test.mjs` named as the end-to-end driver, and CAP-9 reads `done` with IC-87 RESOLVED ACCEPTED. **The residue is rowed rather than absorbed:** `D-356` carries the un-backfilled pre-CAP-9 captures at a measured population of ZERO.
 already the column, and IC-83 already names the rule.
 ## CLAIM 2026-09-14 CONTENT-OFFICE (COFF-10 — the three OpenDocument registry entries, `.ods` / `.odt` / `.odp`)
 
@@ -5617,6 +5663,8 @@ the leg display already renders every arm of IC-1's union from the plane's own `
 `civicos-ui/test/content-extent.control.mjs` arm `prefilled` already pins the rule it must
 be built to (DEC-69: nothing forced).
 
+**DISCHARGED 2026-09-16 by M0-37 — AND THE DISCHARGE ALREADY EXISTED IN THIS FILE, 2,415 LINES AWAY, WHICH IS EXACTLY THE BLIND SPOT THIS ITEM NAMES.** `CLAIMS.md:7165` has said *"UI-61's DELEGATION to RECORD is DISCHARGED"* since REC-97 landed — in a DIFFERENT block, so anyone who went to the delegation itself read it as open. A discharge that is not where the delegation is has not been communicated; it is recorded here now, and `tools/delegations.mjs` reads the BLOCK for this reason. The tree agrees: `store.mjs:8242` gives `cite()` an eighth parameter `extent`; `:8465-8480` states that an `extent_kind` sent beside the seven was previously DROPPED IN SILENCE and that the leg now routes through REC-84's `checkLegExtentGrammar` (imported at `:391`) rather than being judged twice; `:8508-8518` enumerates eleven extent fields with their wire types and `:8519-8521` refuses an unknown one; the op routing collects them at `:34706-34707`. IC-90 is PROPOSED (`INTERFACE-CHANGES.md:6784`) and its RESOLUTION is CONDUCT's, as the IC itself says.
+
 ### DECISIONS FOR BOB 2026-09-14 (UI-61): **NONE**
 
 ### FINDING 2026-09-14 UI (UI-61) — **THE BRIEF NAMED `checkLegExtentGrammar` IN `store.mjs`; IT LIVES IN `bio-checks.mjs`, AND THE VERIFY-OR-STOP INSTRUCTION WOULD HAVE STOPPED THIS ITEM**
@@ -6008,6 +6056,8 @@ the sheet's DIMENSIONS), and `text_container` is null on captures that never rea
 format axis, so a fence on it would refuse correct work on every such document — over-strict
 in exactly the direction this family refuses. **It is a real candidate for its own row and is
 named as one, not as a gap this delegation covers.**
+
+**DISCHARGED 2026-09-16 by M0-37 — all three container arms are FED, and the way the figure was stored is itself a recorded decision rather than a default.** `bio-plane/src/index.mjs:6370` writes `reading.container_extent` beside the page count on the same FW-15 wire; `store.mjs:12569-12573` reads sheets, paragraphs and slides straight off the held reading, and `:12580-12584` names which level is missing per capture rather than reporting a bare null. `:12564-12568` records that NO `content` column was added and why — the figure is a fact about the capture and not about the extent — which is a deviation from nothing that was asked, stated at the site. `:12639-12640` returns both figures together. D-354 reads **CLOSED 2026-09-14 by CAP-12** (`DEBT.md:303`) with real XLSX/DOCX/PPTX driven end to end, and the inner bound it left partial became **D-359, CLOSED 2026-09-15 by COFF-12** (`:304`). CAP-12 reads `done`.
 
 
 ## CLAIM 2026-09-14 CAPTURE (CAP-9 — the page count I2 already carries, persisted onto the reading at `op=acquire`)
@@ -6496,6 +6546,8 @@ released: 2026-09-14 by the SK-8 worker — worktree `agent-a7a1788f7e7a3b716`, 
   Status, which is that item working eleven days after it landed). Full figures in the SK-8 release
   line below.
 
+**DISCHARGED 2026-09-16 by M0-37 — corrected IN PLACE with the old sentence kept, and BOTH halves of the ask landed.** `docs/development/ASSISTANT-PILOT.md:173-176` now states the exclusion as a CONSEQUENCE of the pilot's read-only credential rather than as a scope decision about the roles, and cites `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 at `:182`. The correction note is at `:196-198` as a blockquote saying why the old sentence was wrong — **including a second wrongness this block did not ask about**, that its CHECK clause had been false in fact since SK-4. **The front-matter half moved too, which is the half that usually does not:** `:13` records exclusion 1 as corrected as of 2026-09-14 and, rather than sweeping, NAMES exclusion 3 as still stale. `:3` carries exactly one Status `as of`, M0-28's rule observed in the same document. SK-8 reads `done` and folded this delegation into its scope at spawn; D-358 is closed on that row.
+
 
 ## CLAIM 2026-09-14 SKILL+RECORD (SK-8 — AI-proposed readings: the `ai(function, version)` step EMITTED for the first time, by an EXTRACT run inside DEC-62's run object)
 opened: 2026-09-14
@@ -6729,6 +6781,8 @@ what is needed: **one row in `MODES`, `extract: { deployed: false, does: … }`*
 what it is NOT: it is not a request to build a model loop, and nothing here is blocked on it. The
   plane half is driven end to end through the ops with a real minted `ai` credential, which is the
   same maturity `check` has (VF-4 has never run live either).
+
+**DISCHARGED 2026-09-16 by M0-37 — the row is in the table and the two dependent pins moved with it.** `agent-worker/src/harness.mjs:202-206` carries `extract: { deployed: false, does: "propose citable passages … §7.3 …; not yet deployed …" }` under a landed-2026-09-14 comment at `:191-201`. **The table is READ rather than mirrored:** the gate reads it at `:569` and derives the deployed and waiting lists from it at `:588-592`, so a mode cannot be in the sequence and absent from the gate. The order moved: `bio-plane/src/skilldoctrine.mjs:767` is `["check", "investigate", "extract"]`. ARM B4 was updated in the same landing and now asserts index 0 is the only deployed mode with `order.slice(1)` the rest (`bio-plane/test/skillsequencing.test.mjs:244-252`). No `deployed: true` on `extract` anywhere — the row announces the mode without claiming it runs, which is what was asked.
 released: 2026-09-14 by FLEET (the owning area), picked up and LANDED as `3a9523b` + the floor-move commit beside it — verbatim to "what is needed": `extract: { deployed: false, does: … §7.3 }` in `MODES`, `DEPLOYMENT_SEQUENCE.order` moved in the SAME commit (ARM B3/B4 GREEN with three modes in both rosters), the gate's `why` derived from the table so "not deployed yet" and "no such mode" are two stated facts, and sequencing's arm-3 anchor moved so it still arms something. E1/E2 (both directions of the table↔record pairing) AS DECLARED: harness 217/4 + seq 26/1 · harness 217/4 + seq 25/2; baseline 221/0 · 27/0. Gates GREEN class FULL (200/201 · 12,395; UI green; plancheck 0/0); `--strict` exit 0 unpiped post-commit, provenance 209/209. NOT deployed, as you asked and as §7.3(7) requires; flipping it is a separate act nobody has taken.
 ## CLAIM 2026-09-14 CAPTURE (CAP-12 — the container extents I2 computes, persisted onto the reading at `op=acquire`)
 
@@ -7000,6 +7054,8 @@ UNDETERMINED and STATED — `#containerExtentForCapture` names it per capture in
 D-359 — never a zero and never a refusal. `capture-container-extent.test.mjs` section 4 drives exactly the
 cost: `Summary!ZZ999999` of a real three-sheet workbook and shape 9,999 of a real slide both MINT today.
 
+**DISCHARGED 2026-09-16 by M0-37 — all four entries return what they compute, and the decision this block said had to be recorded FIRST was recorded first.** `bio-plane/src/formats-xlsx.mjs:667-670` returns `rows`/`cols` (capacity) alongside `usedRows`/`usedCols` (used range), with the capacity-versus-used-range choice written out at `:661-666`; `pptx.mjs:754-755` returns `shapes` per slide with its own reasoning at `:740-751`; `odf.mjs:1140-1141` returns `rows: null, cols: null, usedRows, usedCols` for `.ods` **with the null-bound reason at `:1108-1127` — OpenDocument fixes no maximum table size, so a null here is a fact about the format rather than a gap**, and `:1315-1316` returns slide shapes. IC-100 is RESOLVED ACCEPTED, I2 2.1.0 → 2.2.0 ADDITIVE (`INTERFACE-CHANGES.md:7278`). D-359's producer half reads CLOSED 2026-09-15 by COFF-11 (`DEBT.md:304`).
+
 ## CLAIM 2026-09-14 BOB #11 (the fresh-worktree trap corrected to three packages; the stale-ledger rule for designs)
 session: BOB #11 (worktree `bio-worktrees/BOB`, branch `bob-audit`)
 opened: 2026-09-14
@@ -7201,6 +7257,8 @@ repairs — `citeRefusalHtml` already renders them.
 **AND `EXTENT_NOT_APPLICABLE` IS WHY THE REGION STAYS ON THE QUESTION ARM.** A case's
 citation edge has no leg, so an extent sent on that arm is refused by name exactly as `role`
 is. The existing `citeOntoInquiry()` guard on `extentBlock` is already correct.
+
+**open as of 2026-09-16 — NOT BUILT, AND NOTHING DRAINS IT.** `civicos-ui/app.html:10191-10194` is still a static `<div class="empty" id="cx-extent">` whose own text says *"this page does not yet offer a way to pick one — the control is a separate piece of work on this surface"*, rendered at `:10221`; the only other `extent` code in the page is the display-side `EXTENT_KIND_WORD` helpers at `:7560-7638`. **The absence is PINNED rather than merely true:** `civicos-ui/test/content-extent.test.mjs:396-398` asserts the composer still offers no control, with the failure hint *"if this fails the picker was built here"*. **AND THE ACT HAS NO ROW:** UI-61 reads `done`, and searching `QUEUE.md` and `DEBT.md` for an open picker item finds none. **That is the note-is-not-an-item class, and this register line is now the only thing in the tree that says so.** The close is UI's, and it needs a row before it needs a worker.
 
 ## CLAIM ADDENDUM 2026-09-14 RECORD (REC-97 — four paths added at the close, each forced by a mechanism rather than chosen)
 
@@ -7460,6 +7518,8 @@ CPDF-20 lands D-283's fixture, its page-wise measurement and the corrected per-p
 block is the act that changes it. Stated as an ACT with an actor because a note in a
 region nothing drains is not even a note (WORKER.md, 2026-09-14).
 
+**DISCHARGED 2026-09-16 by M0-37 — both sites call the merge, verified in `index.mjs` and not read off REC-98's row.** `:116` imports `mergeTier2Text, tier2Note`. Site 1: `:4389` guards on `needsTier2`, `:4408` merges, `:4409-4422` sets the tier from `m.replaced.length` and folds `tier2Note(m)` into the notes, carrying `m.why` on refusal. Site 2: `:5657` guards, `:5675` merges, `:5717-5727` builds the per-page chain and note, `:5735` carries the refusal. `needsTier2` is unchanged at `:2690`, as the block required, and `:4380` says so at the site. **NAMED RATHER THAN ROUNDED, AND IT IS THIS ITEM'S OWN CLASS ONE LEDGER OVER: `DEBT.md:252`, D-283's disposition, still reads *"the rule is landed and driven but NOT WIRED"* — a cell that was true when written and is false on this tree.** It is not M0-37's to edit; it is raised for CONDUCT in this item's report as an act with an actor.
+
 ### THE ACT, with its actor
 
 **`RECORD` replaces the two WHOLESALE tier-2 assignments in `bio-plane/src/index.mjs` with
@@ -7600,6 +7660,8 @@ what would close it: compose each branch's `method` from its own `grade` variabl
   moves with it.** Without that arm the fix is unfalsifiable, which is exactly how the original got
   written.
 released:
+
+**open as of 2026-09-16 — UNSTARTED, and nothing in the tree names it.** `bio-plane/src/store.mjs:15475-15501` still writes the grade letter and the prose that describes it as INDEPENDENT literals in all three branches: `:15482-15484` sets `grade = "A"` beside a `method` beginning *"source identifier -- "*; `:15488-15491` `"B"` beside *"source identifier in content -- "*; `:15494-15497` `"C"` beside *"correspondence -- "*. **No `grade` variable is interpolated into any `method` string**, so a promotion still moves the letter and leaves the sentence, which is the defect as described. The test arm this block asked for does not exist: `recogniseTier` appears in `bio-plane/test` only as prose at `readingname.test.mjs:107` and `:433`, neither a promote-the-letter arm. **No QUEUE or DEBT row names `recogniseTier`.** The close is RECORD's, and it needs a row.
 
 ### CLAIM ADDENDUM 2026-09-14 SKILL+RECORD (SK-8) — **THE PATHS ACTUALLY TOUCHED, against the ones claimed, because the difference is what a contended merge needs to know**
 The claim above named its regions before the work; **seven files the landing touched were not in it,
@@ -8527,6 +8589,8 @@ unreadable slide the shape count would be attributed to the wrong slide. The uni
 - **CONDUCT**: take IC-100's version bump and RESOLUTION; and **D-359 is NOT closed by COFF-11** —
   its producer half is, its consumer half is this delegation, and the row's disposition says so.
 
+**DISCHARGED 2026-09-16 by M0-37 — all three actors' acts landed, and the one that could have gone wrong quietly did not.** CAPTURE: `bio-plane/src/index.mjs:6034-6043` passes the inner figures through with an integer-or-null coercion, and `:5966-5971` keeps the sentence saying these three lines read literal nulls until 2026-09-15. **THE KEYING IS THE PART WORTH CHECKING AND IT IS RIGHT: `slideExtents` (`:6024-6033`) sizes the array by `max(unit count, highest slide number)` and writes `out[u.slide - 1]`, keyed on the unit's own `slide` and never on its position**, with the hazard written up at `:5997-6013`. The three assertions moved with it: `capture-container-extent.test.mjs:686-694` and `:698-711` now assert REFUSED naming the out-of-range row and shape, `:671` keeps `ZZ999999` minting by the decision, and `:518`/`:544` correct the *"still holds NULL"* sentence in place. RECORD: `store.mjs:12584-12608` and `bio-checks.mjs:10516-10531` both corrected in place with dated reasons. CONDUCT: IC-100 RESOLVED ACCEPTED (`INTERFACE-CHANGES.md:7278`), D-359's disposition moved (`DEBT.md:304`). **Residue, named and not rowed: no entry emits a DECK LENGTH** (`index.mjs:6015-6022`).
+
 ### AMENDMENT 2026-09-15, MID-ITEM — FOUR PATHS ADDED TO THE COFF-11 CLAIM, each forced by a mechanism rather than chosen
 
 - **`bio-plane/test/nc-coff11.mjs` — NEW.** This item's own negative-control harness: seven arms
@@ -8828,6 +8892,8 @@ All three are already written into the document's **Incomplete sections** front 
 6. **CAPTURE — PERSIST THE EXTRACTED CHARACTER COUNT ONTO THE READING AT `op=acquire`**, which closes D-375 and gives §4.2's fourth outcome a producer. The figure already exists at acquire (`text.counts.chars`, which `mergeTier2Text` computes and CPDF-20 measured over 203 census pages) and is dropped before the store sees it. **This is CAP-9's exact shape one field over** — that item persisted `page_count` for the same class of question and by the same argument — and this worker did not reach into CAPTURE's acquire wire, which is CAP-12's claimed region.
 
 **NO DECISION FOR BOB.** Every choice here was activation, sequencing, mechanism or scoping — mine to make. The two that were close to doctrine were already decided: the shared vocabulary was ruled by CONDUCT on 2026-09-14 and this item's contribution is that it is now a build error rather than a convention, and §4.6's provisional was already enforced at the vocabulary by REC-93 and is untouched here — **this item adds a writer under `authority_kind = extract`, which is an authority the record can name, so nothing about it reopens the question of whether a member's own search is ever an observation.**
+
+**open as of 2026-09-16 — FOUR OF FIVE ACTS ARE DONE AND ONE WAS NOT PERFORMED.** Act 1: IC-98 RESOLVED ACCEPTED, I3 15.3.0 → 15.4.0 (`INTERFACE-CHANGES.md:7593`) — **and note the header at `:7491` still reads PROPOSED, because the protocol APPENDS stages rather than rewriting the line, so a header scan alone reads this as open**. Act 3: `REGISTER_FLOOR` re-read on the merged tree to 1104/198/199 with the collision narrated at `bio-plane/scripts/coverage.mjs:1010-1017`, ONE key set; the `airuns` ceiling moved 13 → 15 (`airuns.test.mjs:650`, `:654`), though its comment at `:656-658` still narrates 13. Act 4: rowed as `REC-104 · queued` (`QUEUE.md:1274`). **Act 5 was not performed: REC-92's `depends-on` at `QUEUE.md:1199` still reads `REC-90, REC-91; REC-94` unedited**, and `QUEUE.md:160` lists REC-92 among the dammed. **Act 2 IS DONE, and M0-37 measured it BY POINTER rather than by count — M0-34's method, because a count cannot say WHICH rows moved.** Regenerating `docs/DECIDED.md` on this tree moved 107 insertions and 101 deletions, and **every one of the 203 changed rows points at `CLAIMS.md`, the one file this item edited** — no row pointing at any other corpus file moved. An index that had been stale before this turn would have had to move rows elsewhere; none did. So the committed index matched the corpus at `92d15614`, act 2 was performed, and the drift this turn produces is M0-37's own and is regenerated in the same commit. The close of act 5 is CONDUCT's.
 
 ### CLAIM ADDENDUM 2026-09-15 RECORD (REC-94) — **A BOB RULING ON THIS DESIGN LANDED ON `origin/main` WHILE THIS ITEM WAS RUNNING, THIS ITEM'S FIRST DRAFT VIOLATED IT, AND THE CORRECTION IS THE MOST IMPORTANT THING IN THIS BLOCK**
 
@@ -9151,6 +9217,8 @@ Recorded in the document's own Incomplete list and in the `schema.mjs` comment b
    *"waits on REC-90 and REC-91"*; REC-90's half is landed. REC-91 and REC-94 are its own
    business and this act claims nothing about them.
 
+**open as of 2026-09-16 — FOUR OF SIX ACTS ARE DONE AND TWO ARE NOT, one of them measurably.** Done: act 1, IC-95 RESOLVED ACCEPTED, I3 15.2.0 → 15.3.0 (`INTERFACE-CHANGES.md:7461` — **and it is worth recording that a grep keyed on `IC-95` finds only the header at `:7327`, which still reads PROPOSED; the RESOLUTION subsection does not repeat the id, so an id-keyed search reports this act undone. M0-37 read the section rather than the grep**). Act 3, `REGISTER_FLOOR` 1104/198/199 on the merged tree. Act 4, REC-94 reads `done`. Act 5, the frontier's document-level viewer fence is closed — `store.mjs:30661` calls `#frontierDocumentVisible(viewer)` (defined `:29952`) — landed as REC-103, merged 2026-09-16. **NOT DONE — act 2: the landed spelling was never folded into the designs.** `CONTENT_AXIS_STATES` appears in `airun.mjs`, three suites, `INTERFACE-CHANGES.md` and `QUEUE.md`'s own REC-94 row — and **ZERO times in `CONTENT-SEARCH-DESIGN.md`, ZERO in `EXTRACTION-BREADTH-DESIGN.md`, and not in `OBSERVATION-LOG-DESIGN.md` §4.2, whose table at `:141` still spells the states as prose; neither REC-92's row nor CPDF-19's carries it.** **NOT DONE — act 6: D-375 is still open** (`DEBT.md:309`), the persisted reading carries no character count, and `airun.mjs:410-421` still says so in the present tense. The close is CONDUCT's for act 2 and CAPTURE's for act 6.
+
 ### DECISIONS FOR BOB 2026-09-15 (REC-90): **NONE**
 
 Every determination this item met was answerable from the repository or by measurement, and each
@@ -9415,6 +9483,8 @@ opened: 2026-09-15 · raised by M0-41's instrument census (`MEASUREMENTS.md` M-2
 
 **Not rowed by CONDUCT deliberately: which of the 21 need a control is a judgement about UI's own estate, and CONDUCT assigning it would be inventing an answer to a question UI is better placed to ask.** If UI would rather CONDUCT rowed it, say so and it becomes a row.
 
+**open as of 2026-09-16 — RE-MEASURED WITH THE REGISTER'S OWN READER RATHER THAN RE-QUOTED.** Running `readControl` from `bio-plane/scripts/control-register.mjs` over `civicos-ui/test/*.test.mjs` — which is exactly what `coverage.mjs:1353` does — gives **50 suites, 29 declaring, 21 quiet**, confirming the block's figure on a tree six days later. **AND A SPLIT THE BLOCK DID NOT REPORT, which changes what the decision is about: 12 of the 21 CONTAIN the string `NEGATIVE CONTROL` and fail the register's declaration grammar (`control-register.mjs:316-335`); only 9 of the 50 contain no occurrence of it at all.** So two thirds of the gap is a GRAMMAR question and one third is an absence question, and they do not have the same answer. Searched all 21 for a recorded site-reason (*"no negative control"*, *"legitimately"*, *"control: none"*): **none carries one.** The register still reports rather than gates (`coverage.mjs:1333-1341`, `:1626`), which is the correct stance and not the gap. The close is UI's.
+
 ## DELEGATION 2026-09-15 M0 (M0-41) → FRAMEWORK: **`bundle-docprofile`'s `ORDER` IS HAND-KEPT, SO A REGISTERED DOCTYPE CAN BE ABSENT FROM THE UI EMBED AND NOTHING SAYS SO**
 
 opened: 2026-09-15 · raised by M0-41's instrument census (`MEASUREMENTS.md` M-25), routed by CONDUCT #11 at its integration.
@@ -9424,6 +9494,8 @@ opened: 2026-09-15 · raised by M0-41's instrument census (`MEASUREMENTS.md` M-2
 **THE ACT, with its actor: FRAMEWORK derives `ORDER` from the doctype registry, or asserts that every registered doctype appears in it.** Either closes it; deriving is stronger because it cannot fall behind, and asserting is cheaper. **FW-18 added three doctypes on 2026-09-15 and the embed is correct today** — this is the case where correct-today and stays-correct are different properties.
 
 **Not rowed by CONDUCT: FRAMEWORK is dormant, so CONDUCT would answer-for it — but this is a small act at that area's next touch rather than an item worth a slot, and FW-20 is already queued on that ground.** Fold it in there or take it standalone.
+
+**open as of 2026-09-16 — UNCHANGED, and the blind half is still blind.** `tools/bundle-docprofile.mjs:11-42` is still a hand-written literal array of 20 path strings, carrying the FW-15 and FW-18 incident comments at `:22-27` and `:29-35` — nothing in the file reads a doctype registry, and the only consumer of `ORDER` is the loop at `:46`. Searched for an assertion that every registered doctype appears in `ORDER`: `civicos-ui/test/doctype-breadth.test.mjs:135` and `:337-340` **describe** the comparison in comments and assert nothing, and `civicos-ui/check-semantics.mjs:373-378` compares the bundler's OUTPUT against the `app.html` embed — **which catches drift between the bundle and the page and can never catch a doctype that `ORDER` omits, because an omitted doctype is absent from both sides.** That is the gap stated precisely rather than restated. FW-20 (`QUEUE.md:2116`) is `queued` and is about D-376, not about `ORDER`. The close is FRAMEWORK's.
 
 ## CLAIM 2026-09-15 CONTENT-OFFICE (COFF-12 — the acquire wire READS the inner figures COFF-11's producers emit, and the slide map stops keying on POSITION; D-359's consumer half)
 
@@ -9965,6 +10037,8 @@ even a note (FL-10, a measured >3h false stall).
 7. **RECORD (REC-103) — the document-level frontier's absent viewer fence is unchanged**, and
    `op=frontier` now has three levels of which two are gated. Named here as well as in IC-95's own
    block so it cannot be lost with either.
+
+**open as of 2026-09-16 — THREE OF SEVEN ACTS ARE DONE AND FOUR ARE NOT.** Done: act 1, the four figures re-read on the merged tree — `REGISTER_FLOOR` 1104/198/199 with one key set, the CLASS ratchet at 35 (`derivation-bounds.test.mjs:694`), the scanning ceiling at 105 (`:811`) and the eight-member ungraded pin at `[8, true]` (`:1104`). Act 2, REC-95 reads `done` and REC-96 `queued`. Act 7, REC-103 reads `done` **and IC-95 IS RESOLVED at `INTERFACE-CHANGES.md:7461`, which an id-keyed grep misses because the RESOLUTION subsection does not repeat the id** — read the section, not the string. **NOT DONE — act 3:** `bio-plane/checks/bio-checks.mjs:6392` still reads *"it closes when the run's own writers carry referents (REC-95)"* and the file contains no `REC-100`, while REC-100 is `running`. **NOT DONE — act 4:** the entity partition is still unruled; `OBSERVATION-LOG-DESIGN.md:15` and `DECIDED.md:947` both say it *"still wants a ruling"* and no ruling exists. **NOT DONE — act 5:** no decision on whether `op=resolvetestify` writes an observation — the method (`store.mjs:15570`) writes none, and `DECIDED.md` has no entry. **NOT DONE — act 6:** no fallback-doctype field on the reading (`schema.mjs:677-686` has no such column, `index.mjs` writes `content_type` only) **and no row in `QUEUE.md` or `DEBT.md` carries the act.** The close is CONDUCT's, and acts 4, 5 and 6 need rows before they need workers.
 
 ## CLAIM 2026-09-15 RECORD (REC-105 — D-373 CLOSED BY CORRECTING THE SECOND READ: `#strengthWalk` resolves the capture-axis member's grade through `earnedBasisRegistry`, bounded, with the version path structurally untouched)
 session: REC-105 worker, spawned by CONDUCT #11. Worktree
@@ -10510,3 +10584,47 @@ with a dump past that loses its tally under the D-173 second pass **however well
 flushes**, because the reader never accepts the bytes. `run.mjs`'s half is fixed under
 M0-36; this one is one line, `maxBuffer: 256 * 1024 * 1024`, and ARM D of the census
 prints its state every run so the gap cannot go quiet.
+
+**open as of 2026-09-16 — RAISED TODAY AND VERIFIED OPEN TODAY, which is what a register line is for.** Neither half has landed. **Half 1:** none of the three guards imports the flush — `check-semantics.mjs` imports `fs`, `vm` and `bio-checks.mjs` only (`:68-76`); `check-refusal-codes.mjs` imports `fs`, `path`, `fileURLToPath`, `provenance.mjs` (`:104-122`); `check-mock-envelope.mjs` imports `fs`, `path`, `fileURLToPath`, `execFileSync`, `os` (`:141-145`). The only occurrence of the string `stdio` in all three is the spawn option at `check-mock-envelope.mjs:303`, and all 39 `stdio.mjs` references under `civicos-ui/` are in `test/`. The exits are where the block said: `check-semantics.mjs:381-382` prints its `OK:` line and exits on the next line. **Half 2 (D-387):** `check-mock-envelope.mjs:302-303` still spawns with `{ stdio:"pipe", env:{…} }` and **no `maxBuffer`** — zero hits for it in all three files — so it is on node's 1 MiB default. **The delegation is NOT going quiet, and that is by construction:** `civicos-ui/test/stdio-census.test.mjs:206` names all three in `RESIDUAL`, ARM D1 (`:212`) prints their state and `:222` prints D-387's, on every run. `DEBT.md:257` carries D-387 as closed in `run.mjs` and OPEN on the second reader. The close is UI's.
+
+## CLAIM 2026-09-16 M0 (M0-37 — a DELEGATION block states its own state, dated, or plancheck FAILS)
+session: M0-37 worker (worktree `agent-a603fc3555ed6156f`, branch `claude/epic-raman-a21136`, base `origin/main` `92d15614`)
+opened: 2026-09-16T00:00:00Z
+paths:
+  `tools/delegations.mjs` (NEW) — the predicate module. The `rowdesign.mjs` / `mergecarry.mjs`
+    shape: `plancheck.mjs` self-executes and cannot be imported by the suite that drives its
+    arms, so the rule lives in a module both of them import and neither of them copies.
+  `tools/plancheck.mjs` — **ONE new section, 8, APPENDED after section 7.** Nothing above it
+    moves. The arm's git half is skipped under `--local` for `corpuscheck`'s reason.
+  `bio-plane/test/planning-hygiene.test.mjs` — **ONE new section, 5, APPENDED before the
+    tally line.** Sections 1-4 are not touched.
+  `bio-plane/test/delegations.control.mjs` (NEW) — this item's control driver, inside this
+    worktree, deliberately NOT a `.test.mjs` so the runner does not discover it and no
+    suite floor moves (the `m025-arm-census.mjs` / `nc-m036.mjs` precedent).
+  `docs/development/CLAIMS.md` — **this block, and ONE state line appended inside each of the
+    38 `DELEGATION` blocks that carried neither.** No block's existing prose is edited, moved
+    or deleted: a state line is APPENDED to the block it belongs to, which is also the shape
+    the register takes from here on, so a re-affirmation accumulates rather than overwrites.
+  `docs/development/MEASUREMENTS.md` — **ONE new section APPENDED at the end**, carrying the
+    register census, the discharge-latency measurement (the one that says there is no
+    distribution) and the threshold's argument. Nothing above it moves.
+  `docs/DECIDED.md` — REGENERATED, not hand-edited. 38 state lines in `CLAIMS.md` move every
+    line number below them and carry ruling markers of their own, so the index drifts and
+    `plancheck` fails on the drift. **The regeneration is also a MEASUREMENT and is recorded
+    as one**: all 203 changed rows point at `CLAIMS.md`, which is how this item established
+    that the committed index was current at `92d15614` and that the drift is its own.
+  `docs/development/kickoffs/CONDUCT.md` and `docs/development/kickoffs/WORKER.md` — **ONE
+    paragraph each**, because a mechanism that is not in the loop the reader runs is not a
+    mechanism: WORKER writes the state line when it RAISES a delegation, CONDUCT re-affirms
+    or discharges when the gate says the register has gone stale.
+  **NOT** `docs/development/QUEUE.md` — M0-37's row stays `running` and its flip is CONDUCT's
+    at integration, which is where the merge sha it must record comes from.
+  **NOT** `bio-plane/src/**`, **NOT** `bio-plane/checks/**`, **NOT** `bio-plane/scripts/coverage.mjs`
+    (this item adds no op, no check and no refusal code — `REGISTER_FLOOR` is READ and NOT moved),
+    **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, no version bump, tag or deploy.
+
+**THE IRONY IS NAMED RATHER THAN LEFT FOR A READER TO FIND: this item's subject is the register
+it is editing, so the claim is narrow on purpose.** It appends one line per block and touches no
+other area's words. Where a block is genuinely another area's to close, this item AFFIRMS it open
+with what it checked and says who owns the close — it does not discharge another area's work to
+make its own gate green, which is this row's own defect arriving one layer up.
