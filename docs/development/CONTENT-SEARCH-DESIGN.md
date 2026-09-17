@@ -1,10 +1,18 @@
 # Content-grain search — Part II §18 piece 2
 
-**Status** · v0.1 DRAFT design, written 2026-09-14 by session BOB #11 under Bob's standing delegation (mechanism is the architect's; `kickoffs/BOB.md`). Not yet reviewed by Bob. Nothing here is ruled: the doctrine it rests on is Part II §14.3 (the four-level search, Bob's correction of 2026-08-04) and the fence M5 settled on 2026-07-31 (document text is member-scope and the index never leaves the Durable Object). Complete as a design at its level — the question is split, the constraints are measured and named, the mechanism is decided, the decomposition is in the BOB INBOX. **The caveat this line carried until 2026-09-14 is gone: §5's four numbers are TAKEN (M0-31, `MEASUREMENTS.md` M-20, over COFF-6's census corpus — 1,302 B of text per captured PDF page, 31,612 B per PDF document, 1.998 stored bytes per indexed text byte on workerd's SQLite, and 0.0076 ms per unit plus 0.054 ms per KiB at promote), and §4.3's two bounds are SET from them rather than provisional.** The caveat a reader needs NOW is a different one and it is smaller: the measurement found that §4.1's `slide-shape` unit cannot be written from the I2 shape the acquire path holds, so a deck's unit is an open design question rather than a settled one (Incomplete sections, below). **AMENDED 2026-09-15 by REC-91: §7 row 4 is BUILT** — `capture_text` and `capture_text_fts` exist, are written at promote for `pdf-page`, `doc-para` and `slide-shape`, are replaced on a chain move, carry `truncated` per unit, are purged on both arms, and the per-capture `indexed` observation is written under `authority_kind = derive`, all under `IC-104`. **Three things the section did not predict are in the Incomplete list below and one of them changes a number the section states:** §4.3's 2 MiB per-capture bound CANNOT FIRE through the route §4.1 names, because `op=promote` refuses an inline bundle file over 1,048,576 B first (M-32); the route stores the text a SECOND time in `files`/`history`, which §3's chosen option says it does not; and a deck's speaker notes have no indexable unit at all. Items 5 and 6 are untouched and still outstanding, and §3–§6's mechanism does not otherwise change. **AMENDED 2026-09-15 by REC-90: §7 row 2 is BUILT** — the `content:` arm, `rows=content`, the three columns on `rows=leg` and §5's outstanding *index decision per filtered column* all landed under `IC-98`, with the index decision MEASURED at `MEASUREMENTS.md` M-21 rather than reasoned. Items 4, 5 and 6 are untouched and still outstanding, and §3–§6's mechanism does not change. **One gap in §4.2 was found in the building of it and is in the Incomplete list below:** the section asks the `content` table for a last-step-of-chain predicate and that column holds the whole chain as JSON, so the filter is a read-time parse — while §4.1 gives `capture_text` a `chain_kind` COLUMN for the identical question and says why. **AMENDED 2026-09-14 by REC-89, and the amendment is about this document's own completeness rather than its mechanism: §7's decomposition row 1 (D-225's caps) WAS ALREADY BUILT when this document was written** — it landed at REC-60 on 2026-08-07 under `IC-25` — and the row was written as outstanding because `DEBT.md` D-225 still read `open`. §2's corresponding constraint row and §7 row 1 now say so; nothing about the mechanism in §3–§6 changes, and items 2–6 are untouched and still outstanding. The general lesson is recorded rather than only the instance: **a design that cites a debt row as a precondition inherits that row's staleness**, and this document cited three, as of 2026-09-15.
+**Status** · v0.1 DRAFT design, written 2026-09-14 by session BOB #11 under Bob's standing delegation (mechanism is the architect's; `kickoffs/BOB.md`). Not yet reviewed by Bob. Nothing here is ruled: the doctrine it rests on is Part II §14.3 (the four-level search, Bob's correction of 2026-08-04) and the fence M5 settled on 2026-07-31 (document text is member-scope and the index never leaves the Durable Object). Complete as a design at its level — the question is split, the constraints are measured and named, the mechanism is decided, the decomposition is in the BOB INBOX. **CORRECTED 2026-09-16 by BOB #12 — §4.3 WAS WRONG IN THREE INDEPENDENT WAYS and REC-91 found all three by BUILDING it.** The per-capture bound was MIS-SITED (it sits downstream of `INLINE_MAX`, which refuses the whole promotion first, so it could never fire); its headline claim that it *admits 100 % of the measured 1,000-PDF sample fully* is FALSE against the bound that actually ships (524,288 B at the acquire wire, half of `INLINE_MAX` for JSON escaping); and — independently of both — it bounds BYTES while the index costs ROWS, so M-20's worst docx sits inside the byte bound and still spends 84.8 % of the CPU window. **Left alone it would have been a REGRESSION: two documents the record accepts today would have stopped promoting.** A fourth finding is recorded rather than closed: §3 chose its option partly because *text is stored once*, and through this route it is stored TWICE. §4.3 now carries all four with the code as the authority. **The sentence below is therefore RETRACTED in its second half — §5's numbers are taken, but §4.3's bounds were NOT correctly SET from them, and that is the difference between having a measurement and asking it the right question.** **The caveat this line carried until 2026-09-14 is gone: §5's four numbers are TAKEN (M0-31, `MEASUREMENTS.md` M-20, over COFF-6's census corpus — 1,302 B of text per captured PDF page, 31,612 B per PDF document, 1.998 stored bytes per indexed text byte on workerd's SQLite, and 0.0076 ms per unit plus 0.054 ms per KiB at promote), and §4.3's two bounds are SET from them rather than provisional.** The caveat a reader needs NOW is a different one and it is smaller: the measurement found that §4.1's `slide-shape` unit cannot be written from the I2 shape the acquire path holds, so a deck's unit is an open design question rather than a settled one (Incomplete sections, below). **AMENDED 2026-09-15 by REC-91: §7 row 4 is BUILT** — `capture_text` and `capture_text_fts` exist, are written at promote for `pdf-page`, `doc-para` and `slide-shape`, are replaced on a chain move, carry `truncated` per unit, are purged on both arms, and the per-capture `indexed` observation is written under `authority_kind = derive`, all under `IC-104`. **Three things the section did not predict are in the Incomplete list below and one of them changes a number the section states:** §4.3's 2 MiB per-capture bound CANNOT FIRE through the route §4.1 names, because `op=promote` refuses an inline bundle file over 1,048,576 B first (M-32); the route stores the text a SECOND time in `files`/`history`, which §3's chosen option says it does not; and a deck's speaker notes have no indexable unit at all. Items 5 and 6 are untouched and still outstanding, and §3–§6's mechanism does not otherwise change. **AMENDED 2026-09-15 by REC-90: §7 row 2 is BUILT** — the `content:` arm, `rows=content`, the three columns on `rows=leg` and §5's outstanding *index decision per filtered column* all landed under `IC-98`, with the index decision MEASURED at `MEASUREMENTS.md` M-21 rather than reasoned. Items 4, 5 and 6 are untouched and still outstanding, and §3–§6's mechanism does not change. **One gap in §4.2 was found in the building of it and is in the Incomplete list below:** the section asks the `content` table for a last-step-of-chain predicate and that column holds the whole chain as JSON, so the filter is a read-time parse — while §4.1 gives `capture_text` a `chain_kind` COLUMN for the identical question and says why. **AMENDED 2026-09-14 by REC-89, and the amendment is about this document's own completeness rather than its mechanism: §7's decomposition row 1 (D-225's caps) WAS ALREADY BUILT when this document was written** — it landed at REC-60 on 2026-08-07 under `IC-25` — and the row was written as outstanding because `DEBT.md` D-225 still read `open`. §2's corresponding constraint row and §7 row 1 now say so; nothing about the mechanism in §3–§6 changes, and items 2–6 are untouched and still outstanding. The general lesson is recorded rather than only the instance: **a design that cites a debt row as a precondition inherits that row's staleness**, and this document cited three, as of 2026-09-15.
 
 **Place in the system** · Level 2. Serves construct 9 (retrieval — `BIO_System_Design.md` §3 names no level-1 home for it; `BIO_Content_Framework_v0_10.md` Part II §14.2–14.3 and §17 carry the adopted design) and construct 4 (content, Part II). Depends on `CONTENT-EXTENT-DESIGN-SPACE.md` §6 (the content row this searches over), `INVESTIGATIVE-SESSION.md` §14c (the graded options for D-222, whose stage C this is) and `RETRIEVAL-SUBSTRATE.md` (the FTS5 substrate and its measurements). Feeds `OBSERVATION-LOG-DESIGN.md` (the content-axis state a search answer must state) and `EXTRACTION-BREADTH-DESIGN.md` §3 (the extent arms for tables and images, which become indexed units when they exist). Supersedes nothing; it discharges the design half of D-222's stage C, fixes D-225's place in the order, and gives M5's indexing gap its shape.
 
 **Incomplete sections** ·
+- §4.3 / §3 — **TEXT IS STORED TWICE, and §3's chosen option rests on it being stored once.** The units ride in
+  `data/provenance.json`, a bundle FILE, so their bytes land in `files.content` AND in `history` in addition to
+  `capture_text`. Measured and reported by REC-91, which did not own the two areas a promote-package sibling
+  outside the bundle image would touch. **Open against §3, not closed by §4.3's correction.**
+- §4.3 — **A UNIT-COUNT BOUND IS OWED AND IS NOT BUILT.** The shape is decided (a unit budget beside the byte
+  budget at the same wire, so neither hides the other) and the number comes from M-20's ladder; the number itself
+  is a decision about what a member's promote may COST and is rowed rather than written here. Until it lands, a
+  container whose units are many and small is bounded by nothing this document specifies.
 - §4.2 — the `content:` arm's `chain` filter has no column to read. The section names `chain` (the
   chain's LAST STEP) as one of the arm's six filters over the `content` table, and that table stores
   the WHOLE chain as JSON — so the predicate is `json_extract(chain, '$[#-1].step')`, a read-time parse
@@ -160,14 +168,86 @@ Both on the ONE compiler (D-15), each arm an `IN` subquery selecting bundles, ea
 
 ### 4.3 The cap, and truncation stated
 
-Two bounds, both stated where they bite. **Both are now SET from the measurement §5 asked for — `MEASUREMENTS.md` M-20, 2026-09-14, `tools/m031-index-measure.mjs` over COFF-6's census corpus (762 OOXML documents as a CENSUS, 1,000 of 27,783 PDFs as M-13's own seeded draw).** Neither is provisional any longer, and the figure each rests on is named beside it.
+**CORRECTED 2026-09-16 by BOB #12, folding what REC-91 BUILT AND MEASURED rather than restating what
+this section said — the document follows the code here, and the code follows the design decision, in that
+order. This section was wrong in THREE independent ways, and the first two read as one, which is the
+hazard: closing the siting looks like closing the lot.** The corrected statement is below; what the
+section claimed until today is kept at the end of it, because a reader needs to see what was overturned.
 
-- **Per unit: `TEXT_CAP`, 131,072 B, KEPT — and kept on evidence rather than on inheritance.** The claim this section used to make without a measurement is now measured and true: over **148,413 units** the largest is **21,224 B** (a PDF page), with `doc-para` topping out at 2,931 B and a slide at 2,329 B. The cap is **6.2× the largest unit the corpus produced** and is never approached. It is kept rather than lowered for two reasons and the alternative is recorded so a later reader can overturn it with evidence: a second cap number costs a second vocabulary beside the one the existing index already carries, and **the per-capture bound below is what actually bounds a promote** — a per-unit cap bounds nothing when a document carries 20,571 units. Reversing this costs one constant and a re-run of M-20's `derive`. A unit over the bound is stored to the bound with `truncated = 1`, and `rows=passage` carries the flag — never a silent prefix.
-- **Per capture: 2,097,152 B (2 MiB) of extracted text per capture, total across its units.** One number for every container, because the `indexed` state is one vocabulary (below) and a per-format bound would need two. The evidence: **it admits 100 % of the measured 1,000-PDF sample fully** — the largest PDF in it carries 1,354,686 B of text, so the bound has **54.8 % headroom over the worst document measured** — and 1 MiB would already leave two of the thousand `partial` while admitting 99.01 % of the text. It also costs what a bound must cost knowably: at M-20's measured index ratio a capture at the bound stores ~4.19 MB, and a promote at the bound at page grain is **45.7 % of the measured per-invocation CPU window**, so the bound cannot by itself push a promote over the ceiling. **The exclusions are named rather than implied: none in the measured sample.** The sample is 3.60 % of the PDF population, so captures over the bound certainly exist in the other 96.4 % — they take the `partial` path in the next sentence, which is what that path is for.
-  - **Upstream of this, and a DIFFERENT metric that is not folded into it:** for office containers COFF-2's extraction bound already applies — 20 MiB of *declared uncompressed text-part bytes* read from the ZIP central directory before any inflation (COFF-6, `MEASUREMENTS.md`) — over which the document is `text-undetermined`, nothing is extracted, nothing is indexed and the reason is already recorded. **18 workbooks in the census are over it.** Of the office documents that ARE extracted, the largest text is 1,187,253 B (docx) and 21,787 B (pptx), both inside the 2 MiB bound; the one container that exceeds it is a workbook at 5,103,594 B, which §4.1 gives no unit arm at all, so nothing about it is indexed today either way.
-  - Over the bound, the capture is indexed to the bound in reading order and its `indexed` state reads `partial`.
+**THE BOUNDS AS BUILT, and only one of them is the operative one:**
 
-The per-capture `indexed` state — `full` · `partial` · `none (reason)` — is written as a content-axis OBSERVATION (`OBSERVATION-LOG-DESIGN.md` §4.2), not as a column of its own, so that *not extracted*, *extracted but over the bound* and *extracted and indexed* are one vocabulary in one place. This document consumes that state; it does not define a second.
+| bound | value | where it lives | does it fire? |
+| --- | --- | --- | --- |
+| the acquire wire's own budget, `ACQUIRE_TEXT_UNITS_BUDGET` | **524,288 B** | `index.mjs` | **YES — this is the bound that actually binds** |
+| `INLINE_MAX`, the promote path's per-FILE limit | **1,048,576 B** | `store.mjs`; the refusal is whole-call | **YES — it refuses the entire promotion** |
+| this section's per-capture bound, `CAPTURE_TEXT_CAPTURE_BOUND` | 2,097,152 B | `store.mjs`, `#writeCaptureText` | **NO — unreachable through the product's own route** |
+
+**1 · MIS-SITED, AND THE QUESTION I FAILED TO ASK IS THE GENERAL LESSON.** The units ride in
+`data/provenance.json`, which is a bundle FILE, and `op=promote` refuses any inline file over `INLINE_MAX`
+**whole-call** before the index writer is ever reached. So the 2 MiB bound sits DOWNSTREAM of a 1 MiB
+refusal and cannot fire. **M0-31 answered *how big is the text*; the question that SITES a bound is *what
+refuses BEFORE me*, and this section asked only the first.** A 2.4 MiB capture's provenance file measured
+2,460,076 B and had its whole promotion refused.
+
+**Unaddressed this would have been a REGRESSION, not a new limit** — M-20's census holds a PDF at
+1,354,686 B and a docx at 1,187,253 B; **both promote today and neither would have.** An index that makes
+the record unable to FILE a document is the worst direction available. REC-91 therefore put the budget at
+the WIRE, at **half of `INLINE_MAX` on purpose**, so JSON escaping and the rest of the document cannot
+blow the file on punctuation — and it **COUNTS what it drops**, so the capture reports `partial` rather
+than being recorded as whole.
+
+**2 · THIS SECTION'S HEADLINE CLAIM IS FALSE AS BUILT** — a consequence of (1) and not a fourth defect,
+stated separately because the sentence is quotable and was quoted. It said the bound *"admits 100 % of the
+measured 1,000-PDF sample fully"*. Against the operative 524,288 B budget the sample's worst PDF
+(1,354,686 B) is **2.58× over and lands `partial`**. The claim was true of the number this section chose
+and false of the system that ships, which is the only sense that counts.
+
+**3 · BYTES DO NOT BOUND THE UNIT COUNT, AND THIS IS INDEPENDENT OF (1) AND (2).** The index costs ROWS
+and FTS ENTRIES; this section bounds BYTES. A spreadsheet of one-character cells is small in bytes and
+enormous in units, and a deck is the reverse. Read off M-20's own ladder rather than re-measured, **because
+this section drew the opposite conclusion from the same table**: its *"45.7 % of the measured
+per-invocation CPU window, so the bound cannot by itself push a promote over the ceiling"* is true **at
+PAGE grain only**. M-20's worst docx is **20,571 units at 1,187,253 B — INSIDE the byte bound — at 218 ms,
+84.8 % of the 257 ms window.** The unit count is the dominant term for a word-processing container.
+
+**4 · AND A GAP AGAINST §3 THAT IS NOT A BOUND AT ALL**, reported by REC-91 and outside this section's own
+framing of its defect. §3 chose option (iii) partly because **text is stored once**. Through this route it
+is stored **TWICE** — once in `capture_text` at M-20's 1.998 stored bytes per text byte, and once more in
+the bundle image, because `data/provenance.json`'s bytes land in `files.content` AND in `history`. It is
+the only route that needs no change from any caller; the alternative — a promote-package sibling outside
+the bundle image — costs edits in two areas REC-91 did not own. **Recorded as a live gap against §3, not
+closed by this correction.**
+
+**WHAT IS DECIDED HERE, so the next reader is not left with four findings and no rule:**
+
+- **The operative per-capture bound is expressed at the WIRE, in bytes, RELATIVE TO WHAT PROMOTE ALREADY
+  REFUSES.** That is not a preference: any bound sited after `INLINE_MAX` is unreachable by construction,
+  so the only place a per-capture text bound can bind is upstream of the file it rides in.
+- **The 2 MiB store-side constant STAYS, and is relabelled a BACKSTOP rather than deleted.** It costs
+  nothing, and a second line of defence is worth keeping the day the wire's shape changes. **What is not
+  acceptable is what this section did — presenting it as the operative bound.** `nc-rec91.mjs`'s
+  `overstrict` arm reaches its branch only by lowering the constant, and **a control arm that can reach a
+  branch the product's own route cannot is a finding about the ROUTE, not a passing control.**
+- **A UNIT-COUNT bound is OWED and is not built.** Its shape is decided — a unit-count budget beside the
+  byte budget at the same wire, so both are stated in one place and neither hides the other — and its
+  number comes from M-20's ladder rather than from judgement. **It is rowed rather than written here,
+  because the number is a decision about what a member's promote may COST**, and §4.1 already names the
+  alternative remedy (chunk the write across ticks, as `capture_sessions` already resumes).
+
+**WHAT THIS SECTION SAID UNTIL 2026-09-16, kept so the overturning is visible:** two bounds, both in
+bytes — `TEXT_CAP` 131,072 B per unit (KEPT, and still correct: over M-20's 148,413 units the largest is
+21,224 B, so the cap is 6.2× the largest unit the corpus produced and is a guard rather than a policy; a
+unit over it is stored TO it with `truncated = 1` and `rows=passage` carries the flag, never a silent
+prefix) — and 2,097,152 B per capture, which is the half that was wrong. The per-format note beneath it
+stands unchanged: COFF-2's 20 MiB of declared uncompressed text-part bytes still applies upstream for
+office containers, 18 workbooks in the census are over it, and a workbook has no unit arm anyway.
+
+The per-capture `indexed` state — `full` · `partial` · `none (reason)` — is written as a content-axis
+OBSERVATION (`OBSERVATION-LOG-DESIGN.md` §4.2), not as a column of its own, so that *not extracted*,
+*extracted but over the bound* and *extracted and indexed* are one vocabulary in one place. This document
+consumes that state; it does not define a second. **Unchanged by this correction, and now load-bearing in
+a way it was not: with the operative budget at 524,288 B, `partial` is the NORMAL outcome for a large
+document rather than an edge case, so the envelope in §4.4 is what keeps a partial index honest.**
 
 ### 4.4 The answer names its level and the content-axis state
 
