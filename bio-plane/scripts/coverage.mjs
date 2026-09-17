@@ -1015,9 +1015,28 @@ const REGISTER_FLOOR = {
      AND THE DELTA IS THE SAME WHILE THE FIGURE IS NOT, which is D-238 in one line: M0-42's
      own tree printed 1097 (1093 + 4) and this tree prints 1104 (1100 + 4). Same four arms,
      different base, and only the merged print is ever true of the merged tree. */
-  arms: 1104,
-  classified: 198,
-  corpus: 199,
+  /* MOVED 2026-09-16 by REC-102: arms 1104 -> 1109, classified 198 -> 199, corpus 199 -> 200,
+     ALL THREE IN THE SAME TURN and every one taken from the figure this item's own green
+     `--strict` run PRINTED **AFTER THE COMMIT** as REPRODUCIBLE (`arms 1109/1104 ·
+     classified 199/198 · corpus (suites read) 200/199 · GREW by 5 arm(s)`) — never counted,
+     never added to the numbers above. The cause is ONE new suite,
+     `test/tier3-layer-parts.test.mjs`, whose `NEGATIVE CONTROL:` declaration states five
+     arms, so `corpus` and `classified` each rise by one and `arms` by five. Nothing FELL.
+     THE PRE-COMMIT RUN PRINTED THE OLD FIGURES AND THAT IS THE POINT, not a discrepancy: an
+     untracked suite is a PHANTOM to `provenance.mjs`, so the reproducible print stayed at
+     1104/198/199 while the contaminated one already read 1109/199/200. A floor moved from the
+     contaminated figure would be right today by accident and permanently too high the moment
+     the suite failed to land, which is D-238's whole case. The FLEET floor is deliberately
+     UNMOVED at 3/6/8/76, and that was VERIFIED from the same print rather than inferred from
+     an unchanged number: this item adds no fleet member, no surface op and no fleet suite.
+     AND THE DECLARATION THIS FIGURE COUNTS WAS REWRITTEN BECAUSE THIS INSTRUMENT REFUSED IT.
+     The suite's first `NEGATIVE CONTROL:` paragraph was prose the register could not count
+     arms in, so it landed in UNCLASSIFIED and `--strict` exited 1 — D-233's own shape, caught
+     by the check that exists for it rather than by anyone re-reading the suite. The arms are
+     a marked ordinal list now, and the five this figure counts are the five that RAN. */
+  arms: 1109,
+  classified: 199,
+  corpus: 200,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither

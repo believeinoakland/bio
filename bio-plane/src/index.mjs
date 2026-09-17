@@ -5621,7 +5621,17 @@ export default {
            computed and then dropped on the floor is the document-level answer
            standing in for a per-page fact all over again. `null` when there is
            nothing to say, so a document no page moved on reads as it always did. */
-        let chain = null, ocrNote = null, tier2note = null;
+        /* REC-102 / D-372: `tier2PerPage` is the TIER-2 MERGE'S OWN PER-PAGE
+           STATEMENT — `{tier1: [...], tier2: [...]}` — carried to the tier-3
+           block below, which is the only other place in this assembly that
+           composes a layer part. It rides here rather than being re-derived
+           there for the reason D-164 gives about second spellings: the merge
+           already said which tier produced each page, and asking a second time
+           is how the two answers learn to disagree. `null` means no tier-2
+           merge produced a per-page partition — either tier 2 never ran, or it
+           took the document WHOLESALE — and the tier-3 block's fall-back to the
+           single document-level tier is then exactly what it always did. */
+        let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null;
         const fmt = profile.format && profile.format.format;
         if (!multipart && fmt && fmt !== "undetermined") {
           try {
@@ -5690,6 +5700,14 @@ export default {
                              when the member supplied none of its own. */
                           i2text = (tier1Text && tier1Text.producer && !m.text.producer)
                             ? { ...m.text, producer: tier1Text.producer } : m.text;
+                          /* REC-102 / D-372 — THE PER-PAGE STATEMENT IS KEPT,
+                             because the tier-3 block below composes a layer
+                             part too and had no way to know what this merge
+                             decided. Taken from the merge's own return rather
+                             than from the `tier` stamps on the pages: one fact,
+                             one home, and `tier-pagewise.test.mjs` already
+                             asserts the two agree. */
+                          tier2PerPage = m.perPageTier;
                           /* TIER 2 ONLY IF TIER 2 ACTUALLY PRODUCED A PAGE. A
                              document where the member answered and no page met
                              the rule was read by Tier 1, and saying `2` would be
@@ -5865,14 +5883,61 @@ export default {
                                         && typeof p.text === "string" && p.text.length)
                             .map((p) => p.page);
                           const parts = [];
-                          if (layerPages.length)
-                            parts.push({ pages: layerPages,
-                              /* D-251: the layer PART of a mixed document is
-                                 still a text layer somebody made, and the file
-                                 says who. `baseText` is the pre-merge shape, so
-                                 the marker is read off the document rather than
-                                 off the OCR member's answer. */
+                          /*__REC102_TIER3_LAYER_PARTS_START__*/
+                          /* REC-102 / D-372 — THE LAYER PART IS PARTITIONED BY
+                             THE TIER-2 MERGE'S OWN PER-PAGE STATEMENT, NOT
+                             COLLAPSED ONTO ONE DOCUMENT-LEVEL TIER.
+                             This block used to be a single part at `baseTier`,
+                             and that single tier is a DOCUMENT-level answer to a
+                             PER-PAGE question — the very shape D-252 closed one
+                             tier up and REC-98 closed one merge earlier. A
+                             document that escalates to tier 2 per page and THEN
+                             re-extracts to tier 3 had its per-page statement
+                             rebuilt as `tier: 2` over every page the tier-2
+                             merge had deliberately KEPT at tier 1, so the record
+                             named a derivation those pages do not have. Not a
+                             regression (before REC-98 the escalation assigned
+                             tier 2 wholesale anyway) and that is why it is a row
+                             rather than a revert — but it is the record
+                             overclaiming, which is the direction this project
+                             cares about most.
+                             THE FALL-BACK IS THE OLD BEHAVIOUR EXACTLY. With no
+                             per-page partition (`tier2PerPage` null — tier 2
+                             never ran, or took the document wholesale) every
+                             layer page is `unspoken` and this composes the one
+                             part at `baseTier` that it always composed, in the
+                             same position, so a document reaching only ONE of
+                             the two merges answers byte-identically.
+                             A PAGE THE PARTITION DOES NOT SPEAK FOR IS NAMED,
+                             NEVER SCORED TO A TIER. It goes to the `baseTier`
+                             part rather than being guessed into tier 1 or tier
+                             2: undetermined is first-class, and the document's
+                             own wired tier is the honest answer for a page the
+                             merge said nothing about.
+                             `baseText` is the pre-merge shape at every site, so
+                             D-251's producer marker is still read off the
+                             DOCUMENT rather than off the OCR member's answer —
+                             unchanged, and true of all three parts. */
+                          const layerSet = new Set(layerPages);
+                          const spokenFor = tier2PerPage
+                            ? [[1, (tier2PerPage.tier1 || []).filter((p) => layerSet.has(p))],
+                               [2, (tier2PerPage.tier2 || []).filter((p) => layerSet.has(p))]]
+                            : [];
+                          const spoken = new Set(spokenFor.flatMap(([, ps]) => ps));
+                          /* IN THE ORDER THE ATTEMPTS HAPPENED, which is what
+                             `tiersEvidenced` reads the chain as and what the
+                             content-level writer walks cumulatively: the tier-1
+                             decode had its go before the tier-2 one, which had
+                             its go before the engine. */
+                          for (const [tier, ps] of spokenFor)
+                            if (ps.length)
+                              parts.push({ pages: ps,
+                                chain: layerChainFor(baseText, { tier, container: fmt }) });
+                          const unspoken = layerPages.filter((p) => !spoken.has(p));
+                          if (unspoken.length)
+                            parts.push({ pages: unspoken,
                               chain: layerChainFor(baseText, { tier: baseTier, container: fmt }) });
+                          /*__REC102_TIER3_LAYER_PARTS_END__*/
                           if (m.filled.length) parts.push({ pages: m.filled, chain: built.chain });
                           /* ONE part gives that part's chain back unscoped, so a
                              wholly-scanned document records exactly what it

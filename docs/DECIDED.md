@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-966 rulings across 85 documents.
+967 rulings across 85 documents.
 
 ## DEC-
 
@@ -249,7 +249,7 @@ authority is the file named, never this one.
 - **DEC-72** — DEC-72's definition of done was met IN THE LANDING TURN — `BIO_DATAPLANE_STATE.md` at v33 on the case-as-production model, `CASE-AS-PRODUCTION.md` archived with its one unbuilt clause STATED in the banner (D-309), `DECIDED` regenerated.**  
   `docs/development/QUEUE.md:1683`
 - **DEC-74** · 2026-09-14 — DECIDED 2026-09-14 by BOB #11 at Bob's delegation: not funded.** The tesseract member at cap C is the tier-3 path; the external tier is reconsidered only when an image-only document is LOAD-BEARING in a real case and C is below that project's bar — a funding request with the document and the bar attached, brought…  
-  `docs/development/EXTRACTION-BREADTH-DESIGN.md:122`
+  `docs/development/EXTRACTION-BREADTH-DESIGN.md:126`
 ## D-
 
 - **D-10** · 2026-08-02 — SETTLED 2026-08-02 by the design pass this question asked for (session BOB).** Not doctrine: it is an application of the assembly rule already in `BIO_Interaction_Constructs_v0_1.md:258-268`, so it needed a design pass and not a ruling.  
@@ -436,6 +436,8 @@ authority is the file named, never this one.
   `docs/development/INTERFACE-CHANGES.md:1659`
 - **D-229** — 4 RULED · 2 ENFORCED-ELSEWHERE · 2 OPEN · 13 CLEAR · 0 DEFECT.** **The ENFORCED-ELSEWHERE pair is D-229's shape one subsystem over, and only DRIVING it showed that: a machine IS refused — by the MEMBERSHIP GUARD, not by a machine fence** — so the comment now names what actually refuses, **because a later author…  
   `docs/archive/ledgers/QUEUE-2026-08.md:432`
+- **D-233** — TWO INSTRUMENTS CORRECTED THIS WORK AND BOTH ARE RECORDED RATHER THAN WORKED AROUND.** `coverage.mjs`'s register REFUSED the suite's first control declaration — prose it could not count arms in, D-233's own shape — and the declaration is a marked ordinal list now; FL-10's bundle guard fired the moment a bundled…  
+  `docs/development/CLAIMS.md:10714`
 - **D-234** · 2026-08-08 — THE PUBLICATION QUESTION IS SETTLED: `composition` PUBLISHES THE RECORD'S BYTES**, read back from `inquiry_basis_versions` after the promotion, with `composition_of: "record"` on the answer so a consumer can tell which bytes it holds; asserted equal to what `op=basisversions` publishes for the same version.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:103`
 - **D-235** · 2026-08-08 — TWO SUPERSEDED PINS CORRECTED, NEVER EXEMPTED, each with why the old one was right when written:** §4's sole-output walk ran over the WHOLE METHOD and scored the answer's new `state: recorded.state` — a read-back, the opposite of what §4 forbids — as a violation, so it now walks the WRITE REGION **with the…  
@@ -1127,7 +1129,7 @@ authority is the file named, never this one.
 - **COFF-10** · 2026-09-16 — open as of 2026-09-16 — THE SENTENCES ARE CORRECTED AND THE SECOND HALF OF THE ASK WAS NOT PERFORMED.** All three falsified sentences are fixed in place with their dated reason and the old text kept: `BIO_Content_Framework_v0_10.md:1793-1796` (the flavour row, *"CORRECTED rather than deleted"*), `:1805-1810` (both…  
   `docs/development/CLAIMS.md:4220`
 - **COFF-11** · 2026-09-15 — (CORRECTED 2026-09-15 at BOB #11's check: the allocator DOES allocate `M`; the AUDIT cannot, because `M` declares no allocation site — so these four were a BYPASS of a working allocator, not a gap in it), so nothing refused the second use and the merge would have carried two `M-21` sections silently — the id…  
-  `docs/development/MEASUREMENTS.md:12947`
+  `docs/development/MEASUREMENTS.md:12950`
 - **COFF-11** · 2026-09-15 — CORRECTED 2026-09-15 at BOB #11's check, and the sentence is kept because getting it wrong changed a proposed fix: the allocator DOES allocate `M`; the AUDIT cannot, because `M` declares no allocation site.  
   `docs/development/QUEUE.md:1983`
 ## PL-
