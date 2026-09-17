@@ -567,7 +567,7 @@ authority is the file named, never this one.
 - **D-394** · 2026-09-17 — M4 · OPEN — the doctrine is RULED and the mechanism is undesigned; BOB owns the design, and the WHEN/WHAT/HOW above is the decision it must make first.  
   `docs/development/DEBT.md:330`
 - **D-398** · 2026-09-17 — CORRECTED 2026-09-17 BY BOB #13, AND THE CORRECTION IS A MECHANISM THIS ROW SAYS DOES NOT EXIST: ARCHIVING THE SESSION RELEASES THE LOCK.** This row and BOB-NEXT's amendment both say the lock does not release when the process exits and becomes a stale lock nothing cleans up, so reclamation was framed as an…  
-  `docs/development/DEBT.md:339`
+  `docs/development/DEBT.md:340`
 - **D-401** · 2026-09-17 — RULED BY BOB THE SAME DAY:** *"BOB #12 being alive is not my problem.  
   `docs/development/DEBT.md:333`
 ## IC-
