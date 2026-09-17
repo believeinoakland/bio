@@ -260,6 +260,14 @@ td.upd{color:var(--muted);font-size:12.5px;font-family:var(--font-fact)}
 .subj-grade.g-unconf{background:var(--tint-note);color:var(--signal-dk);border:1px solid #d6a48c}
 .subj-how{display:block;font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4}
 .subj-ref{font-size:12px;color:var(--muted)}
+/* UI-62 — A PASSAGE OF A CAPTURED DOCUMENT, quoted on the finder. It gets its
+   OWN class rather than borrowing `.pub-casebar-ref`, which the first draft did:
+   that class is the published case bar's, and somebody tuning the case bar would
+   otherwise silently restyle the one place a member reads a document's own words.
+   The face is the FACT font, because these are the document's words and not the
+   surface's. */
+.pass-snip{font-family:var(--font-fact);font-size:12.5px;line-height:1.55;color:var(--ink);
+  border-left:2px solid var(--verdigris-dk);padding:4px 0 4px 10px}
 .subj-note{font-size:12.5px;color:var(--muted);max-width:var(--measure-work);margin:0 0 14px;line-height:1.5}
 .subj-conn .ends{font-size:13.5px;color:var(--ink);margin-bottom:3px}
 .subj-conn .weaker{font-size:12px;color:var(--muted)}
@@ -11065,9 +11073,25 @@ async function finderPassageRoute(plan){
      member asked for a phrase. So this reads the TEXT seam's own untouched
      terms instead, which is the only place the member's spelling survives. */
   const bare = plan.text.filter(t => t.field === null).map(t => t.term);
+  /* THE MEMBER'S OWN FIELD SELECTORS GO TOO, AND LEAVING THEM OUT WAS A REAL
+     DEFECT rather than a simplification. `type:information`, `state:collected`,
+     `authority:…` are ordinary scope filters and the ONE compiler applies them
+     in the same CTE for this arm as for `op=search`. Sent only to the text
+     route, they would make the two routes answer over DIFFERENT SETS while
+     reporting under one question — and worse than the counts diverging, §4.4's
+     tally is taken over *the query's other arms*, so the absence statement's
+     DENOMINATOR would silently become the whole record rather than the scope
+     the member asked about. "Nothing matched over 412 searchable captures"
+     would then be a true sentence about a set nobody asked for.
+     `plan.unpublished` is deliberately NOT sent: the plane drops a term it
+     cannot place, so the scope is identical either way, and sending them here
+     would only make the record word the same complaint twice. */
+  const fields = plan.text.filter(t => t.field !== null).map(t => t.term);
   const terms = plan.passages.map(t => t.term)
     .concat(bare.map(w => `${PASSAGE_ARM}:${w}`));
-  const q = [scoped].concat(terms).filter(Boolean).join(" ").trim();
+  /* A SCOPE WITH NO TERMS IS STILL A QUESTION — `rows=passage` with no
+     `passage:` selector lists what has been READ in that scope and says so. */
+  const q = [scoped].concat(fields).concat(terms).filter(Boolean).join(" ").trim();
   if(!q) return { asked:false };
   try{
     const r = await recR("meaningrows", { q, rows: PASSAGE_ARM, limit:String(MEANING_ASK_LIMIT) });
@@ -11568,7 +11592,7 @@ function passageRowHtml(row, i){
     <div class="kv"><span class="k">In</span><span class="v plain">
       <a onclick="openBundle(${esc(JSON.stringify(String(row.bundle_id||"")))})" class="mono">${esc(String(row.bundle_id||""))}</a></span></div>
     <div class="subj-how" style="margin-top:6px"><b>rests on</b> &middot; ${esc(String(row.ref||""))}${noun?` <span style="color:var(--muted)">(${esc(noun)})</span>`:""}${passageJumpHtml(row)}</div>
-    ${snip ? `<div class="pub-casebar-ref" data-snippet="1" style="margin-top:8px">${esc(snip)}</div>` : ""}
+    ${snip ? `<div class="pass-snip" data-snippet="1" style="margin-top:8px">${esc(snip)}</div>` : ""}
     <div class="subj-ref" style="margin-top:6px">
       ${row.chain_kind ? `read by <span class="mono">${esc(String(row.chain_kind))}</span> &middot; ` : ""}unit ${esc(String(row.seq))} in reading order${
         row.truncated ? ` &middot; <b>this unit&rsquo;s text was cut short</b> when the record indexed it, so words past that point are not searched and are not shown here` : ""}</div>

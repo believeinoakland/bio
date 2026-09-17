@@ -11844,3 +11844,66 @@ entirety (this item adds NO op, NO check and NO column — it is an I3 CONSUMER 
 as REC-92 shipped it), `newgroup/**`, any version bump, tag or deploy.
 
 **open as of 2026-09-17** — raised by the UI-62 worker and not yet released.
+
+### DELEGATION 2026-09-17 UI (UI-62) -> RECORD: **`op=meaningrows` MEANS TWO DIFFERENT THINGS BY *IN SCOPE* IN ONE ENVELOPE, AND THE HALF THAT FEEDS THE MEMBER-FACING SENTENCE IS THE WRONG ONE**
+
+**What is needed:** in `bio-plane/src/query.mjs`, `meaning({mode:"levels"})` should build its
+scope the way `meaning({mode:"axis"})` already does — from `cte(false, armSet(rowArm))`, the
+query with this arm STRIPPED — which is `CONTENT-SEARCH-DESIGN.md` §4.4's *the query's OTHER
+arms* and is what the `levels` statement's OWN COMMENT already claims it does ("how many
+documents the query's other arms put in scope at all"). Today it uses the ordinary cte with
+the arm still applied.
+
+**Why it matters, and it is not a tidy-up.** `Store.#meaningLevels` tests `documents === 0`
+BEFORE `searchable === 0`, so when `scope.documents` collapses on a passage miss the first
+branch wins and **the two honest branches of `says` are unreachable by any passage miss at
+all.** Measured 2026-09-17 (`MEASUREMENTS.md` **M-41**, six queries against the live plane): a
+miss over a scope holding two documents — one of them fully indexed and searched — publishes
+
+> nothing matched, and no document was in scope to match in — this is an empty DOCUMENT level,
+> not an empty record
+
+while the SAME envelope's `captures_counted` says 2. **This is the false absence the whole
+content-search construct exists to refuse, produced by the mechanism itself for the second
+time and through the second statement** — REC-92 found the first instance in the axis tally,
+fixed that statement, and the `levels` statement four hundred lines up was not moved with it.
+The member-facing cost is the wrong next move: a member is told to go and capture material
+when what the record needs is for somebody to READ the one capture nobody has read.
+
+**Why UI-62 did not fix it and must not have:** `bio-plane/**` is outside this item's claim and
+`query.mjs` is REC-92's ground; DEC-8 forbids a surface rewording the record's sentence; and a
+surface adjudicating between two of the plane's own numbers would be making a judgement it
+cannot support. The surface renders the plane's sentence VERBATIM and the tally BESIDE it, so
+the distinction survives on screen in the field that still carries it, and
+`civicos-ui/test/passage-surface.test.mjs` pins that and PRINTS the collapse as a `REPORT ·`
+line on every run rather than failing over it.
+
+**What a fixer should add beside the fix**, because the gap is why it survived REC-92's own
+suite: `passage-arm.test.mjs` S8 asserts `levels.content.why`, which is composed FROM the
+tally and is therefore already correct, and never compares the three empties' `says` to each
+other. The two assertions that would have caught this are *the three empties are
+distinguishable by `says`* and *`scope.documents` agrees with `captures_counted` about the same
+scope*.
+
+**And one thing this measurement did NOT establish, stated so nobody widens it:** only the
+`passage` arm was driven. `mode:"levels"` is shared by all five arms and `armSet` is applied by
+`mode:"axis"` alone, so the same shape is AVAILABLE to every arm whose selector narrows the
+scope — but whether `content:`, `leg:`, `resolves:` and `concerns:` actually exhibit it was not
+measured and is not claimed.
+
+**open as of 2026-09-17** — raised by the UI-62 worker; RECORD's to take, and CONDUCT's to row.
+
+### DELEGATION 2026-09-17 UI (UI-62) -> CONDUCT: **THE OTHER MEANING ARMS ARE MIS-REPORTED BY THE FINDER'S CROSS-SEAM PANEL, AND THIS ITEM DELIBERATELY DID NOT FIX IT**
+
+`leg:`, `resolves:` and `content:` are MEANING ARMS that `op=search` compiles — its own published
+`syntax` lines say so — but `finderPlan` in `civicos-ui/app.html` tests only `searchHasField`,
+which asks the FIELD half of `op=searchfields`. So all three land in the `unpublished` bucket and
+the cross-seam panel reports them to a member as *"Answered by neither"*, which is false: they are
+answered by the text route, which is where the surface then sends them anyway.
+
+**UI-62 routed `passage:` and left the other three exactly where they were, on purpose.** Widening
+the parse moves terms between seams on queries this item has no business changing, and this item's
+over-strictness arm exists to prove those walks did not move. It is a small, contained UI item of
+its own; it wants a row rather than a quiet fix inside somebody else's landing.
+
+**open as of 2026-09-17** — raised by the UI-62 worker; needs a QUEUE row, which is CONDUCT's act.
