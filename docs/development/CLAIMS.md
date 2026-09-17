@@ -12181,3 +12181,34 @@ a trap paid for and not repeated: the first draft of `hookState()` used `readdir
   own header promises NO DIRECTORY WALK precisely so it stays out of `hygiene.test.mjs`'s `readdirSync`
   census, which fails BY NAME on a new member.** It probes a NAMED LIST of standard git hook names
   instead, and the resulting blind spot — a hook under a non-standard name — is STATED at the site.
+
+## CLAIM 2026-09-17 UI (UI-63 — the cross-seam panel says *"Answered by neither"* about three arms `op=search` compiles)
+
+worker `agent-af80bb7c93b1a381b`, branch `worktree-agent-af80bb7c93b1a381b`.
+opened: 2026-09-17
+
+**PATHS CLAIMED:**
+
+- `civicos-ui/app.html` — `finderPlan`'s selector branch and the one predicate it gains
+  (`searchHasMeaningArm`), plus the two comment blocks that stated the defect as deliberate.
+  **`finderTextRoute`, `finderCrossSeamHtml`, `finderPassageArm` and the passage branch are NOT
+  touched** — this item moves a term between two buckets the panel already renders; it adds no
+  panel, no route and no wire.
+- `civicos-ui/test/meaning-arms.test.mjs` — new suite, driving the REAL plane through miniflare
+  rather than a mock, because the criterion this fix turns on is *what the plane publishes as a
+  meaning arm* and a hand-written fixture asserting that would be this suite agreeing with itself.
+- `civicos-ui/test/meaning-arms.walks.mjs` — new, the byte-identical measurement of the fence.
+- `civicos-ui/test/meaning-arms.control.mjs` — new, the negative-control driver.
+- `docs/development/CLAIMS.md` (this block) and `docs/DECIDED.md` if a regeneration is owed.
+
+**`docs/development/QUEUE.md` IS NOT CLAIMED AND THE UI-63 ROW IS NOT FLIPPED BY THIS WORKER** —
+`QUEUE.md` is CONDUCT's and CONDUCT is its sole writer. The flip is named as an ACT with its actor
+in this worker's report rather than left implied, which is `kickoffs/WORKER.md`'s rule: a note in a
+region nothing drains is not even a note.
+
+**NOT CLAIMED AND DELIBERATELY NOT TOUCHED:** `bio-plane/**` (a sibling worker holds
+`bio-plane/src/query.mjs` for REC-114), `tools/**` (M0-57), and
+`civicos-ui/test/passage-surface.test.mjs` — UI-62's over-strictness arm is the fence around this
+work and a fence you may edit is not a fence. It is RUN and its walks are measured, never amended.
+
+**open as of 2026-09-17.**
