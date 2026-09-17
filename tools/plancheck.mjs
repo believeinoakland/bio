@@ -641,6 +641,37 @@ if (conduct && inbox && !/INBOX/.test(conduct))
   }
 }
 
+/* ------------------------------------- 2e. DOES THE NAMED DESIGN COVER THE CONSTRUCT?
+
+   D-404, ruled by Bob 2026-09-17: *"BOB must be responsible for the design being complete
+   and the underlying substrate built before those elements that rely on substrate being
+   built."* Section 2d asks whether a row NAMES a design. This asks whether the design it
+   names SAYS ANYTHING ABOUT what the row builds — and REC-116 is the receipt: it named a
+   real document and a real section that mentions its construct ZERO times, and passed 2d.
+
+   IT IS A NOTE, NOT A WARN, AND THE REASON IS ITS OWN MEASURED PRECISION. On its first run
+   it produced four findings: one verified a GENUINE open question (REC-117), one verified
+   FALSE (REC-115's section is topically exactly right and simply does not write the op's
+   name), two unverified. A section may describe a construct in prose without ever writing
+   its identifier — that is legitimate design writing. So this surfaces a QUESTION and must
+   never read as a verdict; `rowsubstrate.mjs`'s header carries the full account, including
+   a second signal that was WITHDRAWN after firing four times and being wrong four times. */
+
+{
+  const { substrateAudit } = await import("./rowsubstrate.mjs").catch(() => ({}));
+  if (!substrateAudit) {
+    notes.push(`rowsubstrate.mjs could not be loaded — design COVERAGE is unexamined this run.`);
+  } else {
+    const a = substrateAudit({ repo: ROOT });
+    notes.push(`design coverage: ${a.counts.judged} open row(s) judged, ${a.counts.uncovered} whose `
+      + `cited section names none of the row's own symbols (a QUESTION, not a verdict), `
+      + `${a.counts.unjudged} unjudged because the question is not askable of them`);
+    if (a.findings.length)
+      notes.push(`  substrate not evident: ${a.findings.map((f) => f.id).join(", ")} — read the cited `
+        + `section, then correct the pointer, write the design, or route the gap (D-404)`);
+  }
+}
+
 /* ------------------------------------------- 8. A DELEGATION STATES ITS OWN STATE, DATED
 
    M0-37, from BOB #11's sentence of 2026-09-15: EVERY REGISTER IN THIS PROJECT CAN STATE THE
