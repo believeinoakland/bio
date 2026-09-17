@@ -554,7 +554,13 @@ and not `git status`, because an IGNORED file does not appear in `git status` an
   **CLOSED 2026-08-08 by M0-16, and the rule moved rather than being copied.** See
   the section below.
 - **It says nothing about whether a commit is PUSHED.** "In a commit" is a weaker
-  claim than "reaches anybody", and `tools/plancheck.mjs` is what checks the latter.
+  claim than "reaches anybody", and `tools/plancheck.mjs` is what checks the latter. —
+  **and that was only half true for five weeks, which is the section below.** `plancheck`
+  checked pushedness for `main` and for the planning surface and for nothing else, so a
+  WORKER BRANCH — where an item's code lives between the worker reporting and CONDUCT
+  merging — was outside every instrument in the estate. Closed 2026-09-16 by M0-48; the
+  bullet is extended in place rather than struck, because the claim it makes about `main`
+  is still exactly right and the gap was in its reach, not in its reasoning.
 
 ## DID THE MERGE CARRY WHAT THE BRANCH CHANGED? (M0-20)
 
@@ -727,6 +733,112 @@ append-only, so a released block cannot be corrected and an arm demanding it be 
 would be demanding a rule violation. `--census` reads the excluded paths anyway and prints
 their would-be findings, because an exclusion whose consequences nobody sees is
 indistinguishable from an exemption.
+
+## A WORKER BRANCH NOBODY ELSE CAN REACH (M0-48, 2026-09-16 — D-288's DETECTION half)
+
+**The rule is `CLAUDE.md`'s oldest one, and `plancheck` already enforced it — at one
+altitude only.** A change is made when it is COMMITTED AND PUSHED; `plancheck` section 1
+checks exactly that for `main` and for the planning surface. **Nothing checked it for a
+WORKER BRANCH**, which is where every item's code sits between the worker reporting and
+CONDUCT merging — a window that has repeatedly lasted a day or more. The section above
+already named this gap and pointed at `plancheck` for it: *"It says nothing about whether a
+commit is PUSHED"*. `plancheck` was the right pointer and it was only half true.
+
+**Two measurements and a loss, which are the whole argument for building this.**
+
+- **2026-08-10, D-288: 137 local `worktree-agent-*` branches, ZERO on the remote.** The row
+  was filed with a perfectly good disposition and then sat `open` for **five weeks** while
+  nothing chased it — because `plancheck` fails an open debt row with NO disposition and
+  this one HAD one. **The estate's own watchdog was satisfied for the entire period the
+  exposure was total. A disposition is not a schedule.**
+- **2026-09-15: REC-91 finished, committed and released on `worktree-agent-aabecaced11e00db1`.**
+  Its integrator was stood down before merging. The work reached nobody for a day and was
+  recovered only by getting a session onto the physical machine that held the disk.
+
+D-288 item 1 (`WORKER.md`: *push your own branch before you report*) is the PREVENTION half,
+landed 2026-09-16. **Nothing audits prevention, which is precisely the shape that just
+failed.** This is the DETECTION half, and it is the only thing in the estate that will ever
+tell anyone a branch was stranded. Until it existed, the way we found out was that somebody
+went looking.
+
+**IT WARNS AND NEVER FAILS, and that is BOB #12's ruling rather than caution.** A historical
+local branch is not a defect; the branches this estate has inherited are deliberately not
+retroactively pushed, because pushing them would make the remote's branch list useless as a
+signal. **A gate that goes red on inherited state gets switched off, and that is this
+estate's own recorded failure mode for ratchets.**
+
+### What it reads, and why it is not what the row's phrase literally says
+
+D-288 and M0-48 both phrase the predicate as *neither merged into `origin/main` nor present
+on the remote*. **Read literally — the remote holds a ref of that NAME — the test is quiet
+over the exact exposure it exists for, and this estate was already in that state when the
+instrument was written.** Measured 2026-09-16 on the merged tree at `2726fb85`, before a line
+of the predicate existed:
+
+| branch | local tip | on the remote | local tip an ancestor of it? |
+| --- | --- | --- | --- |
+| `worktree-agent-a984a71a7b324f52c` | `e2af2534` | `fcd4cf9b` | **no** — 1 commit only on this disk |
+| `worktree-agent-af08132ad4ca455b7` | `ea263c29` | `541bc92d` | **no** — 1 commit only on this disk |
+
+A name-presence test calls both published and says nothing. **So the test is REACHABILITY:**
+a branch is stranded when its tip is reachable from neither `origin/main` nor the remote's
+own ref of that name. The refinement is strictly more inclusive — every branch the literal
+test would name is named here too — so it cannot weaken M0-48's acceptance, while the
+over-strictness constraint holds exactly: a branch whose tip IS an ancestor of `origin/main`,
+and one whose tip IS on the remote, each stay unnamed. Four states, reported separately
+because `absent` and `diverged` ask for different acts:
+
+```
+  integrated   tip is an ancestor of origin/main                        silent
+  published    the remote's ref of that name IS the tip, or the tip     silent
+               is an ancestor of it (another clone pushed more)
+  diverged     the remote has the name; the tip is not on it            NAMED, with the count
+  absent       the remote has no ref of that name                       NAMED
+```
+
+**The remote's list comes from `git ls-remote`, not from `refs/remotes`.** A plain `git fetch`
+does not prune, so a branch deleted on the remote lingers in the tracking refs and reads as
+published — a false negative, and D-288 item 3 (M0-49) makes CONDUCT delete the remote branch
+on merge, so the estate is about to start manufacturing exactly those stale refs. Under
+`--local`, where `plancheck` is promising not to touch the network, the tracking refs are used
+and **the finding says so in its own text** rather than presenting a cache as a measurement.
+
+### The defeat it was designed against arrived inside its own first draft
+
+M0-48's acceptance names how a liar would satisfy it: **a walk that matches no branches and
+congratulates itself.** The predicate's first draft did precisely that, within ten minutes of
+being written. It shelled out through `execSync`, so `--format=%(refname:short)` — unquoted —
+was a syntax error in `/bin/sh`; an `allowFail` path swallowed it and returned an empty list;
+and the audit reported `{integrated: 0, published: 0, absent: 0, diverged: 0}` over an estate
+holding seven local worker branches, two of them genuinely diverged.
+
+Two fixes, and the second is the one that generalises. The plumbing became `execFileSync` with
+an argv array, so there is no shell and nothing to quote. And **a failed enumeration became a
+DISTINCT state rather than an empty one** — `walkFailed`, which `plancheck` reports as *this
+run says nothing about stranded branches, which is not the same as saying there are none*.
+That is `CLAUDE.md`'s rule about concluding a value from an absence with two causes, arriving
+inside the instrument written to serve it. Arm A7 of the control re-arms the original defect
+from the real receipt.
+
+### What it cannot see, stated rather than left to be found
+
+- **A branch that is not `worktree-agent-*`.** `bob-*`, `claude/*` and `m041-*` refs exist in
+  this estate and are out of the row's scope. Widening the glob is a decision, not a tidy-up.
+- **Work that was never committed at all**, which is stranded harder than anything here.
+- **Whether a branch SHOULD be pushed.** Every branch it names may be inherited and dead. It
+  reports a fact about reachability and leaves the judgement where it belongs — which is also
+  why it is a warning and not a gate.
+- **A remote other than `origin`.**
+- **Another machine's branches.** It answers about the clone it is run in. D-288's original
+  137 were measured on a different disk; this clone holds seven.
+
+Subject: `tools/strandedbranches.mjs`, `plancheck` section 8.
+Suite: `bio-plane/test/strandedbranches.test.mjs`.
+NEGATIVE CONTROL: `node bio-plane/test/strandedbranches.control.mjs` — seven arms plus an
+opening and closing baseline, every one armed alone. No arm touches a ref: the caution on
+M0-48's row is that the last two controls run against `plancheck` were both defeated by a
+method that dirtied the tree, so each run failed on UNPUBLISHED and exited 1 with a named
+failure while the subject was never exercised.
 
 ## What a queue item must satisfy before it is done
 

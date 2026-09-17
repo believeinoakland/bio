@@ -278,3 +278,10 @@ _work-ab0036/
 # battery's discovery both read directories rather than a list. Added to this
 # item's CLAIMS block at the close rather than taken silently.
 .rec91-control-pristine/
+# M0-48's control pen (`bio-plane/test/strandedbranches.control.mjs`), on its own
+# line for the reason every pen above it repeats. The driver keeps per-arm pristine
+# copies of `tools/strandedbranches.mjs` and `tools/plancheck.mjs` here while it
+# arms them, and an untracked copy of either left behind by an interrupted run is a
+# SECOND copy of an instrument for the next walk to enrol. Added to this item's
+# CLAIMS block rather than taken silently.
+.m048-harness/

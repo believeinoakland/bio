@@ -10309,3 +10309,47 @@ released: 2026-09-15 by the REC-91 worker — **SEARCH §7 row 4 IS BUILT: `capt
   `bio-plane/src/pptx.mjs`, `bio-plane/checks/bio-checks.mjs`, `civicos-ui/**`, `newgroup/**`,
   `#strengthWalk` (REC-105), the meaning-level writers (REC-95), the FW-15 projection's
   `rows`/`cols`/`shapes` lines (COFF-12), and no version bump, tag, sign or deploy.
+
+## CLAIM 2026-09-16 M0 (M0-48 — D-288's DETECTION half: `plancheck` warns on a local `worktree-agent-*` branch whose commits are reachable from neither `origin/main` nor the remote)
+session: m048-stranded-branches (worktree agent-a0c3609704dee7166)
+opened: 2026-09-16T00:00:00Z
+released: 2026-09-16 on report — the landing is complete and pushed, and holding `tools/plancheck.mjs` after that blocks every later instrument item for nothing.
+paths:
+  - `tools/strandedbranches.mjs` — **NEW**, the predicate. Imported rather than written into
+    `plancheck.mjs`, the shape sections 6 and 7 already use, because `plancheck.mjs`
+    self-executes and cannot be imported by the suite that drives its arms.
+  - `tools/plancheck.mjs` — **by REGION, not by file**: ONE new block appended as section 8,
+    between section 7's closing brace and the `report` banner. **Nothing existing moved**; no
+    earlier section, no helper, no report line was touched.
+  - `bio-plane/test/strandedbranches.test.mjs` (NEW), `bio-plane/test/strandedbranches.control.mjs` (NEW).
+  - `docs/development/VERIFICATION.md` — **ONE new section appended** before *"What a queue
+    item must satisfy before it is done"*, plus **ONE existing bullet extended in place** in
+    the M0-15 section (*"It says nothing about whether a commit is PUSHED"*), which this item
+    makes half-true and which is corrected rather than exempted.
+  - `.gitignore` — ONE line, the control driver's pen `.m048-harness/`, in the run of
+    per-item pen lines that already ends the file.
+  **NOT** `docs/development/QUEUE.md` (CONDUCT flips the row), **NOT** `docs/development/DEBT.md`
+  (D-288's closure is BOB #12's to rule — see the DELEGATION below), **NOT** any kickoff:
+  `CONDUCT.md` step 1 and `WORKER.md` step 4 already run `plancheck`, so the mechanism is
+  already inside the loop both readers perform and adding a step would be adding a second
+  statement of one rule.
+
+## DELEGATION 2026-09-16 M0 (M0-48) -> BOB — **D-288 item 2 has landed; the closure ruling is yours and is not taken here.**
+D-288's own disposition says *"BOB verifies item 2's landing against the tree and reports
+closure; Bob is not to be the one who chases it"*, and *"ITEMS 2 AND 3 ARE OUTSTANDING AND
+THIS ROW IS NOT CLOSED UNTIL ITEM 2 LANDS."* **Item 2 is landed and pushed** —
+`tools/strandedbranches.mjs`, `plancheck` section 8, a suite and a seven-arm control driver,
+with both of M0-48's control halves run. The ACT owed, with its actor named: **BOB #12 reads
+the landed tree, and rules whether D-288 closes now or waits on item 3 (M0-49, the pruning
+rule), which is queued and depends on this one.** It is stated here as well as in the
+worker's report because a report is not a channel anything drains.
+
+**One finding that bears on the ruling rather than on the item.** The predicate names two
+branches as STRANDED on the merged tree at `2726fb85`, and both are live workers' —
+`worktree-agent-a984a71a7b324f52c` and `worktree-agent-af08132ad4ca455b7`, each holding one
+commit that is on no remote. **D-288's literal phrase — *present on the remote* — would have
+called both published**, because the remote holds a ref of each name at an older sha. The
+predicate reads REACHABILITY instead, for the reason set out in `VERIFICATION.md`. If that
+widening is not what was intended, it is one condition in one file and reversing it costs
+nothing; the recommendation is to keep it, because the literal reading is quiet over exactly
+the loss REC-91 was.
