@@ -12293,6 +12293,7 @@ paths: `bio-plane/scripts/coverage.mjs` — **the `REGISTER_FLOOR` block ONLY**,
   floor are properties of the merged source and have collided at integration before.
 
 ## CLAIM 2026-09-17 RECORD (REC-117 — `NO_FALSIFIER` becomes a STATED, ATTRIBUTED, OVERRIDABLE condition)
+released: 2026-09-17 by CONDUCT #3 at integration, merged at `58b8b98a`. **Every path this claim reserved is free.** IC-118 ACCEPTED at I3 21.0.0; the conclude-journey gap it delegated is rowed as `UI-64` in the same turn.
 
 worker `agent-aa7814dd8fb705958`, branch `worktree-agent-aa7814dd8fb705958`.
 opened: 2026-09-17
