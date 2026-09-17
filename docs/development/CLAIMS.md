@@ -12335,3 +12335,47 @@ quietly grows is a claim that stopped keeping other sessions out of what it actu
   conditions one as far as `op=audit` can see. Both are the guard working. C-33.33 allocated.
 
 **open as of 2026-09-17.**
+
+## CLAIM 2026-09-17 UI (UI-64 — the falsifier override is reachable on the wire and INVISIBLE to the member)
+
+**THE GAP, VERIFIED AT THE ARTIFACT BEFORE OPENING THIS CLAIM:** `grep -an no_falsifier
+civicos-ui/app.html` returns NOTHING, while `bio-plane/src/store.mjs` accepts `no_falsifier=1`
+and `bio-plane/src/index.mjs` forwards it from the query string. The plane accepts an act the
+surface offers no way to perform, so Bob's ruling is HALF standing: overridable by the plane,
+invisible to the member, and a member who cannot find the override is still pressured toward
+inventing a falsifier — the exact defect that moved the publication fence off the content axis.
+DEC-69 forbids compelling a member and a control that exists only on the wire does not discharge it.
+
+**THE DESIGN DECISION THIS ITEM SETTLES, because REC-117 correctly refused to settle it:** the
+override is **NOT A FIELD AND NOT A CHECKBOX.** It is an act offered BY THE PLANE'S OWN REFUSAL,
+rendered only where and when `op=conclude` has actually answered `NO_FALSIFIER` to this member.
+That makes *surfaced before overridden* STRUCTURAL rather than promised — the control cannot be
+reached without the plane's sentence having been rendered first — and it keeps DEC-8 by
+construction, because the surface writes no sentence of its own about what the override means:
+REC-117 put the door in the refusal's own `detail`, and the surface renders those bytes verbatim.
+HARD 2's derivation of the falsifier from leg selection is UNTOUCHED; this adds a door that opens
+only when that derivation is empty.
+
+**PATHS CLAIMED:**
+
+- `civicos-ui/app.html` — **ONLY** the conclude act region between `/*__CONCLUDE_ACT_END__*/`'s
+  block and its opening (`CONCL` state, `concludePreflight`, `concludePaint`'s commit slot,
+  `doConclude`, `concludeReceiptHtml`). No route, no panel, no finder, and **NOT** the published
+  finding's falsifier cell (`elicFalsifier`), which REC-117 landed and this item measures
+  byte-identical rather than touching.
+- `civicos-ui/test/conclude-nofalsifier.test.mjs` — NEW. Drives the surface against the REAL
+  plane under miniflare and reads the CONCLUDED DOCUMENT BACK, because REC-117's own arm B found
+  that an assertion on the op's computed return value passes under a fully silent override.
+- `civicos-ui/test/conclude-nofalsifier.control.mjs` — NEW, the negative-control driver.
+- `civicos-ui/test/conclude-act.test.mjs` — extended only if its mock must learn the parameter;
+  the ordinary journey it drives must stay byte-identical and that is measured, not asserted.
+- `docs/development/CIVICOS_UI_STATE.md` — the area ledger entry.
+- `docs/development/CLAIMS.md` (this block), `docs/DECIDED.md` on regeneration.
+
+**NOT CLAIMED AND DELIBERATELY NOT TOUCHED:** all of `bio-plane/**` — REC-118 is in `bio-plane/src/`
+this wave, and my row says that if the surface cannot compose the act without a new plane answer I
+STOP and file it rather than widening. It can: I3 21.0.0 already carries the parameter (IC-118) and
+this is a CONSUMER catching up. Also untouched: `tools/**` and `.git/hooks` (D-406's worker),
+`newgroup/**`. `docs/development/QUEUE.md` is CONDUCT's and is not flipped by this worker.
+
+**open as of 2026-09-17.**
