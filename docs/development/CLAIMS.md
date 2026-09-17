@@ -12009,3 +12009,25 @@ released: 2026-09-17 by CONDUCT #2 at integration, merged at `c1671bdc`. **RELEA
   rules on anything* — reached by paying for it rather than by remembering it.
 
 **open as of 2026-09-17** — part of the UI-62 claim above and released with it.
+
+## CLAIM 2026-09-17 M0 (M0-56 — the DECIDED index goes stale on any prose edit, and a rebase stales it with nobody touching anything)
+session: m056-decided-index-pushguard (worktree agent-a3378dc3df6e90e46, branch `worktree-agent-a3378dc3df6e90e46`)
+opened: 2026-09-17T00:00:00Z
+released: (held until CONDUCT integrates — REC-96/M0-52's precedent, and it is the right one here: this claim covers `tools/plancheck.mjs`, which every sibling worker in this wave runs as a gate, so releasing on my own report would open the file during exactly the window a sibling is running it.)
+paths:
+  `tools/pushguard.mjs` — NEW FILE, the whole of it. The installer, the hook body, and `--control`.
+  `bio-plane/test/pushguard.test.mjs` — NEW FILE, the whole of it.
+  `tools/plancheck.mjs` — by SITE, not by file: ONE new block appended after arm 2b (the DECIDED
+  index arm), which INSTALLS the hook and reports its state. **NOT arm 2b itself** — the existing
+  STALE failure is the detector this row is forbidden to weaken, and it is untouched byte for byte.
+  **NOT** any other arm, **NOT** `fail`/`warn`/`notes`, **NOT** the summary.
+  `docs/development/VERIFICATION.md` — ONE new section, appended. This is M0-56's named design
+  authority, so the mechanism's argument belongs in it.
+  `docs/development/MEASUREMENTS.md` — new measurement rows only, appended.
+  `docs/development/kickoffs/CONDUCT.md` — ONE line in the integration sequence naming the guard.
+  **NOT `docs/development/QUEUE.md`** — flipping the M0-56 row is CONDUCT's act (`kickoffs/WORKER.md`).
+  **NOT `bio-plane/src/`** — two siblings of this wave are in it (REC-115 in `query.mjs`, REC-113 in
+  the `airunlog` read path) and nothing this row builds reaches the plane at all.
+  **NOT `tools/decided.mjs`** — the generator is CORRECT and is not this row's subject. This row
+  changes WHEN it is run, never WHAT it computes, and a `docs/DECIDED.md` that this mechanism causes
+  to differ by one byte would be a defect in the mechanism.

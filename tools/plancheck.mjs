@@ -433,6 +433,46 @@ if (register) {
   }
 }
 
+/* ------------------------------------------- 2c. AND THE SAME CHECK, ARMED AT THE PUSH (M0-56)
+
+   ARM 2b ABOVE IS CORRECT AND IS UNTOUCHED.  It caught all five of the occurrences that
+   rowed M0-56, and a row that mechanises a remedy while softening its detector has traded
+   a loud defect for a silent one.  Nothing here makes 2b quieter.
+
+   WHAT 2b CANNOT DO IS FIRE LATE ENOUGH.  It runs when a session runs plancheck, which is
+   before the commit — and the index is stale again after (1) any later prose edit, or (2)
+   a REBASE that lands a peer's rulings underneath a freshly generated index.  **Cause (2)
+   is not forgetting: the corpus changed while this session touched nothing**, so no amount
+   of care reaches it and no gate that runs before the commit can see it.  CONDUCT #2 wrote
+   the correct rule mid-session and then broke it twice more.
+
+   So the check is ALSO armed at the push, where it is after the last rebase by construction.
+   `tools/pushguard.mjs` carries the argument, the alternatives it beat, and its limits.
+
+   THIS WRITES `.git/hooks/pre-push` AND SAYS SO BELOW.  It is NOT the gate mutating the tree
+   it is measuring — that objection is what killed the regenerating-gate candidate, and it is
+   answered rather than dodged: `.git/` is not tracked, not in the working tree, not in
+   `git status`, and not an input to any arm of this gate.  `pushguard.test.mjs` asserts
+   `git status --porcelain` is byte-identical across an install. */
+
+{
+  const pg = await import("./pushguard.mjs").catch(() => null);
+  if (!pg) {
+    warn(`pushguard.mjs could not be loaded — the push-time DECIDED guard is NOT armed this run.`);
+  } else {
+    const r = pg.install({ repo: ROOT });
+    if (r.action === "installed" || r.action === "replaced") {
+      notes.push(`push guard: ${r.action.toUpperCase()} — WROTE ${r.path} (in .git/, not in the working tree)`);
+    } else if (r.action === "current") {
+      notes.push(`push guard: armed at ${r.path}`);
+    } else {
+      warn(`push guard NOT armed — ${r.reason}.\n`
+         + `        A push carrying a stale docs/DECIDED.md will not be refused in this clone,\n`
+         + `        so the rebase case (a peer's rulings landing under a fresh index) is open.`);
+    }
+  }
+}
+
 /* ------------------------------------------- 3. THE DECISION CHANNEL */
 
 const decisions = read("docs/development/DECISIONS.md");
