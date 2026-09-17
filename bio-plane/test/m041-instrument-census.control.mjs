@@ -136,6 +136,13 @@
  *                        mention. **A GREEN HERE IS THE DEFECT, NOT THE PASS.**
  *         MUST:          section B must NAME `M` as UNAUDITABLE with its reason.
  *                        The census's job is to return the NEGATIVE and say why.
+ *       **THIS DECLARATION HAS DECAYED AND THE ARM IS TRUTHFULLY RED — MEASURED
+ *       2026-09-17, NOT SMOOTHED, NOT EXEMPTED.** See the note at the arm's own
+ *       site, which carries the measurement and the decision it needs. It is a
+ *       SEPARATE defect from arm (2)'s stale anchor, it predates this session, and
+ *       repointing arm (2) neither caused nor cured it — it was merely HIDDEN
+ *       behind arm (2)'s louder did-not-arm finding, which is the whole argument
+ *       for a control that reports every arm rather than a tally.
  *
  *   (4) OVER-STRICTNESS — correct work in a spelling the matcher did not
  *       anticipate must PASS. `civicos-ui/check-semantics.mjs` is reached by
@@ -344,6 +351,37 @@ commitArm({
   judge: (a, p) => a.notHeld >= 1 && a.namesId("M0-9001") && p.sawId === false,
 });
 
+/* **ARM (3)'S DECLARATION WAS FALSIFIED BY A SIBLING ITEM, AND THE RED IS THE ARM
+   TELLING THE TRUTH. IT IS LEFT RED ON PURPOSE.**
+
+   MEASURED 2026-09-17, from the artifacts rather than from a second document
+   saying so. The arm reports `NOT AS DECLARED`; `names M-9002: false` still holds
+   and `plancheck SAW the id bypass: NO` still holds, so the clause that fails is
+   the one requiring section B to name `M` as UNAUDITABLE. It does not, because
+   **M0-39 DECLARED AN ALLOCATION SITE FOR `M`** — landed `f2fc2b89`, 2026-09-15,
+   found with `git log -S` over `tools/mintid.mjs` and not recalled — and the
+   census now prints `20 of 21 namespace(s) gradable · 1 UNAUDITABLE (C)`. The
+   declaration was TRUE the day M0-41 wrote it and a sibling closed the gap it
+   rested on, which is this estate's row-outlived-its-work class arriving inside a
+   control arm.
+
+   **AND THE FIRST CLAUSE NOW PASSES FOR A CHANGED REASON, WHICH IS WORSE THAN A
+   FAILING CLAUSE BECAUSE IT LOOKS LIKE A PASS.** The plant writes a THREE-hash
+   heading; `M`'s declared site is the TWO-hash entry heading and the queue's
+   three-hash item heading is deliberately outside it. So the planted id is
+   invisible as a WRONG-SHAPE PLANT rather than as an unauditable namespace — the
+   arm still arms, still measures something, and no longer measures what it says.
+
+   **WHY THE JUDGE IS NOT BEING RELAXED.** Dropping the UNAUDITABLE clause turns a
+   truthful red into a green over an arm that proves strictly less, which is
+   `CLAUDE.md`'s *correct superseded tests, never exempt them* read backwards. The
+   correction is a DECISION and it is routed to CONDUCT in `CLAIMS.md` rather than
+   taken inside a claim that was opened to repoint one anchor: `C` is the only
+   UNAUDITABLE namespace left and it is ungraded for a DIFFERENT reason (a dotted
+   family repeats its number by design), so re-aiming the negative there means a
+   control arm writing the CHECK CATALOG, which is a ruling about what a control
+   may edit and not a detail. The other half worth rowing beside it is a POSITIVE
+   arm planting at M's real two-hash site to prove M0-39's site actually bites. */
 commitArm({
   tag: "(3) planted bypass, UNGRADED namespace (M)",
   rel: "docs/development/MEASUREMENTS.md",
