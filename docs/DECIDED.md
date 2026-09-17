@@ -561,7 +561,7 @@ authority is the file named, never this one.
 - **D-391** · 2026-09-16 — WHY NEITHER IS CORRECTED HERE:** re-denominating another area's measurement from outside it is how a wrong number acquires a second author.  
   `docs/development/DEBT.md:315`
 - **D-394** · 2026-09-17 — M4 · OPEN — the doctrine is RULED and the mechanism is undesigned; BOB owns the design, and the WHEN/WHAT/HOW above is the decision it must make first.  
-  `docs/development/DEBT.md:329`
+  `docs/development/DEBT.md:330`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
