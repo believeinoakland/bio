@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-974 rulings across 85 documents.
+975 rulings across 85 documents.
 
 ## DEC-
 
@@ -960,6 +960,8 @@ authority is the file named, never this one.
   `docs/development/OBSERVATION-LOG-DESIGN.md:17`
 - **REC-103** · 2026-09-16 — added: 2026-09-16 · CONDUCT #1 (draining BOB #12's `§4.3 CORRECTED` entry as an ITEM.  
   `docs/development/QUEUE.md:1322`
+- **REC-108** · 2026-09-16 — CLOSED 2026-09-16 by REC-108, BY ITS OWN RECOMMENDED OPTION (b) — AND THE OPTION WAS TAKEN ON EVIDENCE RATHER THAN ON DEFERENCE, WITH THE ROW'S OWN STATEMENT OF THE PROBLEM CORRECTED IN ONE RESPECT.** **The cache is untouched and that is the disposition, not an omission**: `#writeStrengthProjection` still derives…  
+  `docs/development/DEBT.md:321`
 - **REC-111** · 2026-09-16 — AMENDED 2026-09-16 by REC-111 — §4.3's OWED UNIT-COUNT BOUND IS BUILT, AND THE ROW'S OWN PREMISE WAS HALF WRONG, WHICH IS THE finding worth more than the bound.** *A container whose units are many and small is bounded by nothing this design specifies* is true of THIS DOCUMENT and false of the SYSTEM: M-35 measured…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:5`
 ## UI-

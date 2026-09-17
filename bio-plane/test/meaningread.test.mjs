@@ -639,10 +639,31 @@ console.log("\n--- 10. REC-36: a candidate row the viewer may not see is WITHHEL
      may see, never the corpus. That is asserted directly two lines below rather
      than left to this list, because an enumerated key set proves only that a key
      exists and this rule is about what the key CONTAINS. */
+  /* REC-108 / IC-108: ONE NEW KEY, `cached`, and the assertion is MOVED
+     CONSCIOUSLY rather than loosened — which is what the comment above asks of
+     whoever adds a field, and what IC-98 did before it. **What this rule really
+     guards is that no key counts what the gate removed**, so the key is not just
+     listed here: the two assertions immediately below establish that `cached`
+     CANNOT be such a count, and they are the ones that would fail if it ever
+     became one. It is composed in `query.mjs` from the compiled plan's own FIELD
+     registry and the routes this call executed — it reads no row, no total and
+     no viewer — so it is a statement about WHERE THE ANSWER'S VALUES CAME FROM
+     (a projection cache computed at each question's last promotion) and never
+     about what is in the corpus. */
   t("no field of the answer discloses a withheld count",
     Object.keys(asDave).sort(),
-    ["arm", "count", "gate", "grain", "identity", "level", "levels", "limit", "offset", "ok",
-     "query", "rows", "says", "scope", "table", "total"]);
+    ["arm", "cached", "count", "gate", "grain", "identity", "level", "levels", "limit", "offset",
+     "ok", "query", "rows", "says", "scope", "table", "total"]);
+  /* THE TWO THAT DO THE WORK. An enumerated key set proves only that a key
+     exists; these prove it cannot carry the leak. The first is the sharper: if
+     `cached` ever varied with the reader it would be an oracle, and a derivation
+     that got different with the reader is the record saying something different
+     to different people — worse than the leak it would be hiding. */
+  t("REC-108: `cached` is IDENTICAL for both viewers, so it cannot be a channel",
+    JSON.stringify(asDave?.cached), JSON.stringify(asCarol?.cached));
+  t("REC-108: and it holds no number at all — no count, gated or otherwise",
+    /\d/.test(JSON.stringify((asDave?.cached ?? []).map((c) =>
+      ({ ...c, detail: undefined, as_of: undefined })))), false);
   /* THE NEW TALLY IS GATED TOO, and it is measured the way `total` is measured
      two assertions up: the participant sees STRICTLY more documents than the
      outsider. A `scope.documents` that answered the same number to both would be
@@ -791,10 +812,21 @@ console.log("\n--- 13. an equally correct phrasing must PASS, and the grain is p
      deleted two fields that restated what `op=searchfields` already published,
      and these four state something NO other op answers — which of the four
      levels the emptiness is at (CLAUDE.md's sparse rule). */
+  /* REC-108 / IC-108 MOVED THIS PIN CONSCIOUSLY, the third author to do so, and
+     the comment above is why it is a move rather than an edit. The one added key
+     is `cached`: which PROJECTION-CACHE columns this answer consulted, what each
+     value is a value OF, and which read is the authority. It is ADDITIVE — a
+     caller reading the sixteen keys that were here reads them unchanged — and it
+     is NOT D-258's class. D-258 deleted two fields that restated what
+     `op=searchfields` already publishes; this states something NO other op
+     answers and `op=searchfields` deliberately does not: `searchFields()`
+     projects each field as `{type, freeText, column}` and the as-of marker stays
+     out of it, so a caller cannot learn from the vocabulary that the value it
+     just filtered by was computed at some other time. D-379 is the row. */
   t("D-258: the op=meaningrows envelope carries exactly these keys and no others",
     Object.keys(env ?? {}).sort(),
-    ["arm", "count", "gate", "grain", "identity", "level", "levels", "limit", "offset", "ok",
-     "query", "rows", "says", "scope", "table", "total"]);
+    ["arm", "cached", "count", "gate", "grain", "identity", "level", "levels", "limit", "offset",
+     "ok", "query", "rows", "says", "scope", "table", "total"]);
   t("and NEITHER deleted name appears anywhere in the answer, at any depth",
     /"(columns|refs)"/.test(JSON.stringify(env)), false);
   /* The rows already carry their own column names as keys, which is the second

@@ -21938,14 +21938,37 @@ var FIELDS = {
   since: { col: "reeval_since", type: "time" },
   reevalsource: { col: "reeval_source", type: "text", lower: true },
   /* REC-12: the derived strength PAIR, filterable per axis over the projection
-     CACHE (store.mjs #writeStrengthProjection). TWO fields and never one — a
-     single `strength:` selector would be the composed scalar DEC-21 forbids,
-     and a query language is where a reader would learn the wrong shape first.
-     `upper` because grades are recorded A..D and a member types `capture:b`.
-     "B or better" is `capture:<=B`: the letters sort the way the grades rank,
-     so an ordering that reads oddly in prose is one indexed seek in SQLite. */
-  capture: { col: "inquiry_capture_strength", type: "text", upper: true },
-  connection: { col: "inquiry_connection_strength", type: "text", upper: true },
+       CACHE (store.mjs #writeStrengthProjection). TWO fields and never one — a
+       single `strength:` selector would be the composed scalar DEC-21 forbids,
+       and a query language is where a reader would learn the wrong shape first.
+       `upper` because grades are recorded A..D and a member types `capture:b`.
+       "B or better" is `capture:<=B`: the letters sort the way the grades rank,
+       so an ordering that reads oddly in prose is one indexed seek in SQLite.
+  
+       REC-108 / D-379 adds `asOf` to BOTH AXES, and it is a marker on the FIELD
+       rather than a sentence in this comment BECAUSE A COMMENT IS NOT IN THE LOOP
+       THE MEMBER RUNS. See `CACHED_FIELDS` below for what it buys and why this
+       item did not instead make the cache correct. `legs` deliberately carries no
+       marker: `inquiry_basis_count` is written from `inquiry_basis` inside the
+       SAME transaction that writes the legs, and nothing but a re-promotion can
+       change either, so it is EXACT rather than stale — marking it would be a
+       statement of doubt the record does not hold, which is its own overclaim. */
+  capture: {
+    col: "inquiry_capture_strength",
+    type: "text",
+    upper: true,
+    asOf: "each question's LAST PROMOTION",
+    authority: "op=inquirystrength",
+    why: "a capture letter is bounded by the fidelity of the text the leg rests on (DEC-4, framework Appendix A.1), and a DOCUMENT being re-read moves that bound without re-promoting the question \u2014 so this column can name a letter STRONGER than the record now earns, and never a weaker one"
+  },
+  connection: {
+    col: "inquiry_connection_strength",
+    type: "text",
+    upper: true,
+    asOf: "each question's LAST PROMOTION",
+    authority: "op=inquirystrength",
+    why: "a leg raised anywhere BENEATH this question does not re-promote it, so this column can name a letter the walk no longer derives"
+  },
   legs: { col: "inquiry_basis_count", type: "number" },
   /* REC-24 (e): the ACTION's six, and they are what makes the Actions rail
      (P-52) a filter rather than a list. `overdue:true` is the one to be careful
@@ -21964,6 +21987,42 @@ var FIELDS = {
   due: { col: "action_clock_next", type: "time" },
   overdue: { col: "action_clock_overdue", type: "bool" }
 };
+var CACHED_FIELDS = Object.fromEntries(
+  Object.entries(FIELDS).filter(([, f2]) => f2.asOf).map(([name, f2]) => [f2.col, { field: name, asOf: f2.asOf, authority: f2.authority, why: f2.why }])
+);
+function metaColumnsOf(node, into = /* @__PURE__ */ new Set()) {
+  if (!node || typeof node !== "object") return into;
+  if (node.op === "meta" && node.col) into.add(node.col);
+  if (node.kid) metaColumnsOf(node.kid, into);
+  if (Array.isArray(node.kids)) for (const k of node.kids) metaColumnsOf(k, into);
+  return into;
+}
+function cachedRoutes(ast, facetList, sortField) {
+  const cols = metaColumnsOf(ast);
+  const routes = {};
+  const mark = (col, route) => {
+    if (!(col in CACHED_FIELDS)) return;
+    (routes[col] ||= /* @__PURE__ */ new Set()).add(route);
+  };
+  for (const c of cols) mark(c, "filter");
+  for (const f2 of facetList) mark(FIELDS[f2]?.col, "facet");
+  if (sortField && sortField in FIELDS) mark(FIELDS[sortField].col, "sort");
+  return routes;
+}
+function cachedNotes(routes, { facets = true, ordered = true } = {}) {
+  const order = Object.values(FIELDS).map((f2) => f2.col);
+  return Object.entries(routes).map(([col, set]) => {
+    const via = ["filter", "facet", "sort"].filter((r) => set.has(r) && (r !== "facet" || facets) && (r !== "sort" || ordered));
+    return { col, via };
+  }).filter((e) => e.via.length).sort((a, b) => order.indexOf(a.col) - order.indexOf(b.col)).map(({ col, via }) => ({
+    field: CACHED_FIELDS[col].field,
+    column: col,
+    via,
+    as_of: CACHED_FIELDS[col].asOf,
+    authority: CACHED_FIELDS[col].authority,
+    detail: `${CACHED_FIELDS[col].field}: this is the value computed at ${CACHED_FIELDS[col].asOf}, not at this query \u2014 ${CACHED_FIELDS[col].why}. ${CACHED_FIELDS[col].authority} derives the current answer and reads no column; this ${via.join(" and ")} ${via.length > 1 ? "are" : "is"} a projection and not the authority.`
+  }));
+}
 var RESOLUTION_SUB = {
   grade: { col: "grade", case: "upper", vocab: [] },
   entity: { col: "entity_id", vocab: [] }
@@ -23055,6 +23114,13 @@ WHERE ${gate.sql}`,
     } : null,
     facetFields: facetList,
     facetCols: facetList.map((n) => FIELDS[n].col),
+    /* REC-108 / D-379: which CACHED columns this plan reaches, and by which of
+       the three routes. The PLAN states the routes; only the caller knows which
+       of them it will actually execute (a `count` runs no facets and no page),
+       so `cachedNotes` takes that as an argument rather than this guessing — a
+       block naming a facet the answer does not carry would be the honesty
+       mechanism itself overclaiming. */
+    cached: cachedRoutes(ast, facetList, ctx.sort ? ctx.sort.field : null),
     restricted: Array.isArray(ids) && ids.length > 0,
     statements: { page, count, ids: idsStmt, snapshot, facets: facets_, facetScan, meaning }
   };
@@ -25118,9 +25184,11 @@ var Store = class _Store extends DurableObject {
       out.ids = ids;
       out.truncated = ids.length >= IDS_MAX;
     }
-    if (input.facets !== false && mode !== "count") {
+    const facetsRan = input.facets !== false && mode !== "count";
+    if (facetsRan) {
       out.facets = this.#facetCounts(plan, tally, input.facetMode);
     }
+    out.cached = cachedNotes(plan.cached, { facets: facetsRan, ordered: mode !== "count" });
     out.widen = null;
     if (total === 0 && plan.widenable && input.widen !== false) {
       const or = compile({ ...input, implicitOp: "or" });
@@ -25220,6 +25288,12 @@ var Store = class _Store extends DurableObject {
         meaningArms: plan.meaningArms
       },
       gate: { scope: plan.gate, applied: tally.applied },
+      /* REC-108 / D-379: the SAME compiler, so the same selector reaches the
+         same cached column here — `capture:<=B rows=leg` picks WHICH questions'
+         legs to list by a letter computed at each question's last promotion.
+         Neither facets nor a sort run at this grain, so only the FILTER route
+         can be present and the other two are excluded rather than assumed away. */
+      cached: cachedNotes(plan.cached, { facets: false, ordered: false }),
       rows,
       count: rows.length,
       limit: plan.meaning.limit,
@@ -43285,6 +43359,25 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
        "every inquiry at B or better on an axis" is an indexed query rather than
        a scan of every basis in the store; anything that must be RIGHT calls
        strengthOf().
+  
+       REC-108 / D-379 RULED ON THIS COLUMN AND LEFT IT EXACTLY AS IT IS, which is
+       worth stating HERE because this is where the next reader will come looking.
+       REC-105 opened a SECOND path to staleness — a DOCUMENT being re-read moves
+       the registry ceiling `strengthOf()` now caps by, so this row can hold a
+       letter STRONGER than the record earns, without any member acting on the
+       question. D-379 rowed two answers: re-walk the dependents at the re-read, or
+       make every route into this column STATE what it is a value of. The second
+       was taken. The first would have made this column fresh along the NEW path
+       and left it stale along REC-12's ORIGINAL one (a leg raised beneath this
+       inquiry still does not re-promote it, and nothing re-projects an ancestor) —
+       a cache fresh one way and stale another, about which the one honest sentence
+       below can no longer be said — and it would have put an unbounded fan-out
+       (every `inquiry_basis.target_id` dependent, each needing a full walk) inside
+       op=promote's transaction. `query.mjs`'s `CACHED_FIELDS` carries the ruling
+       and the evidence; the answer a member reads now names this column, names
+       `op=inquirystrength` as the authority, and says which of the three routes it
+       was reached by. NOTHING HERE MOVED, and that is the disposition, not an
+       omission.
   
        PER AXIS, in two columns and never one: a single cached letter is exactly
        the composed scalar DEC-21 forbids, and a column is where one would grow.

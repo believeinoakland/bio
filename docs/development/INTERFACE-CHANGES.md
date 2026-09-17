@@ -8153,3 +8153,78 @@ from `#frontierContent`. Both are rowed, and the collision is BOB's.
 
 **Registry:** I3 bumped in `INTERFACES.md` in this same commit (protocol step 4 → 5).
 
+
+## IC-108 · I3: `op=search` AND `op=meaningrows` PUBLISH A `cached` BLOCK NAMING EVERY PROJECTION-CACHE COLUMN THE ANSWER ACTUALLY CONSULTED, WHAT THE VALUE IS A VALUE *OF*, AND WHICH READ IS THE AUTHORITY · PROPOSED 2026-09-16 (REC-108, closing D-379) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane -> UI, the op contracts). Measured on this item's base `origin/main`
+  at `82ffae30`: **17.0.0** (IC-102 ACCEPTED, BREAKING). **Proposed as MINOR — 17.0.0 ->
+  17.1.0**, and the reasoning is stated rather than assumed, because this project's rule cuts
+  the other way so often: **a refusal or a weakening where none stood before is a BREAK whatever
+  the measured impact** (IC-25, IC-96, IC-102). This item introduces NEITHER. No answer is
+  refused, no letter moves, no field is removed or renamed, no accepted input narrows, and no
+  existing value changes — the answer gains ONE additive key. That is the MINOR case, and it is
+  the first I3 change in this sequence that genuinely is one.
+- **Proposer:** RECORD, worker `agent-a46502db8421daf80`, 2026-09-16, from QUEUE REC-108
+- **Owner to land it:** `RECORD` (owner and proposer)
+- **Consumers to answer:** `UI` (the finder — any surface rendering `capture:`/`connection:`
+  filters, the facet sidebar, or a sort by either axis), `SKILL` (the investigative run's
+  corpus queries), `CASE`, `DIST` (served surfaces), `RECORD`.
+
+**WHAT CHANGES ON THE WIRE, exactly one shape.** `op=search`'s answer and `op=meaningrows`'
+answer each gain a top-level `cached` array. It is ALWAYS PRESENT and may be empty:
+
+```
+cached: [ { field: "capture", column: "inquiry_capture_strength",
+            via: ["filter", "facet", "sort"],        // only the routes this call actually RAN
+            as_of: "each question's LAST PROMOTION",
+            authority: "op=inquirystrength",
+            detail: "<one sentence a surface can show a member verbatim>" } ]
+```
+
+`[]` is PUBLISHED rather than the key omitted, deliberately: *this answer consulted no cached
+column* is a STATEMENT, and an absent key is not one — it is indistinguishable from a build that
+cannot say. Entries appear in `FIELDS` order, never in the order the routes were reached, so two
+identical queries answer identically.
+
+**WHY THIS IS A CONTRACT AND NOT A COMMENT, which is the whole item.** `bundles.inquiry_capture_strength`
+is REC-12's projection cache. Its staleness was always deliberate and REC-12's own suite proves
+it on purpose. **What REC-105 made new is the PATH**: a DOCUMENT being re-read — a machine's act,
+on another bundle, with no member involved — now moves the ceiling `strengthOf()` caps by, so the
+column can publish a letter STRONGER than the record earns. D-379 rowed two answers and
+recommended the second; this item took it, and *a mechanism that is not in the loop the reader
+runs is not a mechanism*, so the statement is in the ANSWER rather than in `query.mjs`'s prose.
+
+**THE MEASUREMENT THAT CHANGED THE FIX, and it is a correction to D-379's own statement of the
+problem.** D-379 says the exposure is *the `capture:` selector* and rests its recommendation on
+`overdue:`'s precedent one selector over. Checked against the artifact rather than re-read from
+the sentence, **the cached column has THREE routes, not one**: the SELECTOR a member typed; the
+**DEFAULT FACET** — `capture` is in `DEFAULT_FACETS`, so EVERY page-mode search counts the corpus
+per cached letter and publishes it **to a member who never asked**; and `sort=capture`
+(`SORTABLE` is derived from `FIELDS`). **And `overdue` is NOT in `DEFAULT_FACETS`** — it is a
+filter a member opts into by typing it. So the precedent does not extend on its own, and a
+sentence attached to the selector alone would have reached exactly the route a member CHOSE and
+missed the one that answers unasked. Driven in `rec108-cache-asof.test.mjs` block 4 and pinned
+in block 6; negative-control arm (b) exists precisely to prove that half is load-bearing.
+
+**CONSUMER IMPACT ON THE LIVE INSTANCE, MEASURED BY THIS ITEM RATHER THAN COPIED FROM IC-102**
+(`test/rec88-instance-census.mjs`, read-only against store `bio`, build **0.58.0** serving,
+2026-09-16): **31 bundles · 1 inquiry · 0 basis legs · 0 captures carrying a text chain.** So:
+
+- **NO EXISTING FIELD OF ANY ANSWER MOVES.** No hit, no count, no letter, no order.
+- Every page-mode search answer **gains** the key, populated with the `facet` route for both
+  axes, because `capture` and `connection` are default facets. That is the additive change and
+  it is the whole of it. A consumer that ignores unknown keys is unaffected by construction.
+- The zero is recorded as **EVIDENCE**, never as an argument for a smaller bump — the bump is
+  MINOR because the change is additive, and it would be MINOR at any population.
+
+**WHAT THIS ENTRY DOES NOT CLAIM, stated because a reader would otherwise infer it.** The cache
+is NOT made correct and was deliberately left exactly as it was; `#writeStrengthProjection` still
+derives from `strengthOf()` and `#writeTextSource` gained no dependent sweep, both pinned
+structurally so option (a) arriving later fails by name. **And a FURTHER reader exists, found by
+the census this row demanded and DRIVEN rather than assumed — D-383**: `op=meaningrows&rows=leg`
+publishes a leg's **AUTHORED** capture letter straight off `inquiry_basis.grade`, uncapped by the
+registry, and `leg:grade=`/`leg:axis=capture` select over the same column. It is not a cache and
+not a time problem — it is the pre-REC-105 read surviving in a surface nobody swept — so it is a
+row of its own and NOT touched here. **That finding also corrects REC-105's own census in one
+line**, which recorded that the authored letter cannot be read back through any member-reachable
+op; it can.

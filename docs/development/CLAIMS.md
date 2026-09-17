@@ -10983,3 +10983,44 @@ block above, per this file's append-only rule.
     silently rewrote a source file would be exactly the kind of thing a worker should not discover later.
   **NO VERSION BUMP, NO SIGN, NO TAG, NO DEPLOY** — the artifact is rebuilt so the tree is
   self-consistent, which is CPDF-20's and REC-98's precedent; cutting a release remains DIST's.
+
+## CLAIM 2026-09-16 RECORD (REC-108 — D-379: the capture-axis CACHE stays a cache, and every route into it STATES what it is a value OF; plus the census that found two more readers)
+session: rec108-capture-cache-asof (worktree agent-a46502db8421daf80)
+opened: 2026-09-16T00:00:00Z
+paths: **claimed BY REGION, not by whole file.** Three other RECORD workers hold regions of
+`store.mjs` right now and this item deliberately takes none of theirs — not `#strengthWalk`,
+not `strengthOf`, not `earnedBasisRegistry`, not `#captureBoundsFor`, not the promote writer.
+
+- `bio-plane/src/query.mjs` — **the `FIELDS` table's new `asOf` marker on the cached
+  fields, the `CACHED_NOTE` builder, and `compile()`'s `cached` return value.** No
+  selector's SQL moves, no gate is minted, no `MEANING` descriptor changes.
+- `bio-plane/src/store.mjs` — **`search()`'s answer assembly ONLY** (one line publishing
+  `out.cached`), plus **PROSE** on `#writeStrengthProjection`'s header comment recording
+  D-379's disposition. **NOT ONE LINE** of `#strengthWalk`, `strengthOf`,
+  `#captureBoundsFor`, `earnedBasisRegistry` or the promote transaction.
+- `bio-plane/test/rec108-cache-asof.test.mjs` (NEW) — the driven suite.
+- `bio-plane/test/nc-rec108.mjs` (NEW) — this item's control harness, inside this worktree.
+- `docs/development/DEBT.md` — **D-379's disposition row ONLY**, and the **NEW D-383** row.
+- `docs/development/INTERFACE-CHANGES.md` — **the NEW IC-108 block ONLY**.
+- `docs/development/QUEUE.md` — REC-108's own row only (CONDUCT flips it; this item does not).
+
+**NOT TOUCHED:** `bio-plane/src/schema.mjs`, `bio-plane/src/index.mjs`, `bio-plane/checks/**`,
+`bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` READ, not moved — this item adds no op and
+no check id), `newgroup/**`, `civicos-ui/**`, any version bump, tag, signature or deploy.
+
+## CLAIM ADDENDUM 2026-09-16 RECORD (REC-108 — two paths added at the close, each FORCED BY A MEASUREMENT rather than chosen)
+
+- `docs/development/MEASUREMENTS.md` (NEW ENTRY, append only) — FORCED by three measurements this
+  item had to record with their date and instrument: the reader census (five readers, two of them
+  not named by D-379), (a)'s verified cost, and **a baseline this worker contaminated with its own
+  edit**. The last one is a NEW FACE of a known trap and belongs where the next session measures.
+- `docs/development/INTERFACE-CHANGES.md` — the NEW **IC-108** block only, as claimed.
+
+**STILL NOT TOUCHED**, and this is said plainly because three other RECORD workers hold regions of
+`store.mjs` right now: `#strengthWalk`, `strengthOf`, `#captureBoundsFor`, `earnedBasisRegistry`,
+`#writeStrengthProjection`'s CODE (its header comment only), the promote transaction,
+`bio-plane/src/schema.mjs`, `bio-plane/src/index.mjs`, `bio-plane/checks/**`, `newgroup/**`,
+`civicos-ui/**`, `REGISTER_FLOOR` (READ, not moved — this item adds no op and no check id), and
+any version bump, tag, signature or deploy. A merge of `store.mjs` may take every other region
+wholesale: the only bytes this item changes there are one import name, one published line in
+`search()`, one published line in `meaningRows()`, and two comments.

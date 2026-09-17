@@ -76,9 +76,28 @@ export const FIELDS = {
      and a query language is where a reader would learn the wrong shape first.
      `upper` because grades are recorded A..D and a member types `capture:b`.
      "B or better" is `capture:<=B`: the letters sort the way the grades rank,
-     so an ordering that reads oddly in prose is one indexed seek in SQLite. */
-  capture:        { col: "inquiry_capture_strength",    type: "text", upper: true },
-  connection:     { col: "inquiry_connection_strength", type: "text", upper: true },
+     so an ordering that reads oddly in prose is one indexed seek in SQLite.
+
+     REC-108 / D-379 adds `asOf` to BOTH AXES, and it is a marker on the FIELD
+     rather than a sentence in this comment BECAUSE A COMMENT IS NOT IN THE LOOP
+     THE MEMBER RUNS. See `CACHED_FIELDS` below for what it buys and why this
+     item did not instead make the cache correct. `legs` deliberately carries no
+     marker: `inquiry_basis_count` is written from `inquiry_basis` inside the
+     SAME transaction that writes the legs, and nothing but a re-promotion can
+     change either, so it is EXACT rather than stale — marking it would be a
+     statement of doubt the record does not hold, which is its own overclaim. */
+  capture:        { col: "inquiry_capture_strength",    type: "text", upper: true,
+                    asOf: "each question's LAST PROMOTION",
+                    authority: "op=inquirystrength",
+                    why: "a capture letter is bounded by the fidelity of the text the leg rests on"
+                       + " (DEC-4, framework Appendix A.1), and a DOCUMENT being re-read moves that"
+                       + " bound without re-promoting the question — so this column can name a letter"
+                       + " STRONGER than the record now earns, and never a weaker one" },
+  connection:     { col: "inquiry_connection_strength", type: "text", upper: true,
+                    asOf: "each question's LAST PROMOTION",
+                    authority: "op=inquirystrength",
+                    why: "a leg raised anywhere BENEATH this question does not re-promote it,"
+                       + " so this column can name a letter the walk no longer derives" },
   legs:           { col: "inquiry_basis_count",         type: "number" },
   /* REC-24 (e): the ACTION's six, and they are what makes the Actions rail
      (P-52) a filter rather than a list. `overdue:true` is the one to be careful
@@ -97,6 +116,129 @@ export const FIELDS = {
   due:            { col: "action_clock_next",           type: "time" },
   overdue:        { col: "action_clock_overdue",        type: "bool" },
 };
+
+/* ---------------------------------------------------------------------------
+ * REC-108 / D-379: EVERY ROUTE INTO A CACHED COLUMN STATES WHAT THE VALUE IS
+ * A VALUE *OF* — IN THE ANSWER, NOT IN A COMMENT.
+ *
+ * WHAT THIS IS AND IS NOT. It is D-379 option (b), taken on REC-105's own
+ * recommendation, and the reason it is not option (a) — re-walking a document's
+ * dependents when its text provenance is written — is recorded here rather than
+ * only in the debt row, because the next reader's first instinct will be (a).
+ *
+ *   (a) MAKES THE CACHE CORRECT FOR ONE OF ITS TWO STALENESS PATHS AND LEAVES
+ *   THE OTHER EXACTLY AS IT WAS. REC-12 built this column stale by design in
+ *   the LEG-RE-GRADED direction: an inquiry beneath this one can be re-promoted
+ *   without touching this row, and nothing re-projects an ancestor. REC-105
+ *   opened a SECOND path — a document re-read moves the registry's ceiling —
+ *   and (a) closes only the second. A cache that is fresh along one path and
+ *   stale along another is WORSE THAN ONE THAT IS FRANKLY STALE, because the
+ *   single honest sentence below can no longer be said about it, and a reader
+ *   who learns the filter is trustworthy will trust it along the path where it
+ *   is not. That is this project's *believed on the strength of its EXISTENCE
+ *   rather than its behaviour* failure, manufactured on purpose.
+ *
+ *   AND ITS COST IS REAL AND WAS VERIFIED RATHER THAN INHERITED FROM THE ROW.
+ *   `#writeTextSource` runs inside `#writeReadings` inside `op=promote`'s ONE
+ *   transaction. The dependents of a re-read document are `inquiry_basis`
+ *   rows keyed by `target_id` — indexed, but UNBOUNDED IN CARDINALITY — and
+ *   each one needs a full `strengthOf()` recursion with a registry call, plus
+ *   its own ancestors. So promoting a widely-cited document would pay
+ *   O(dependent questions x walk) inside a Durable Object transaction.
+ *
+ *   (b) COSTS ONE DERIVED SENTENCE PER CONSULTED FIELD and leaves every letter
+ *   exactly where it was. `query.mjs`'s own ruling one selector over governs:
+ *   *a filter that is a little behind is a filter; an ANSWER that is behind is
+ *   a record saying nothing is late when something is.* This column is a
+ *   filter, a facet and a sort key. It is not an answer — `op=inquirystrength`
+ *   is, it calls `strengthOf()`, and it touches no column.
+ *
+ * WHAT THE CENSUS CORRECTED IN D-379'S OWN STATEMENT OF THE PROBLEM, and it is
+ * why this is a mechanism rather than one line of prose on one selector. D-379
+ * says the exposure is *the `capture:` selector* and rests option (b) on
+ * `overdue:`'s precedent. Measured against the artifact, THE CACHED COLUMN HAS
+ * THREE ROUTES, NOT ONE:
+ *
+ *   1. the SELECTOR — `capture:<=B`, which a member typed;
+ *   2. the DEFAULT FACET — `capture` is in `DEFAULT_FACETS`, so EVERY page-mode
+ *      search counts the corpus per cached letter and publishes it to a member
+ *      WHO NEVER ASKED FOR IT;
+ *   3. the SORT KEY — `SORTABLE` is derived from `FIELDS`, so `sort=capture`
+ *      orders a page by the cached letter.
+ *
+ * **AND THE PRECEDENT DOES NOT EXTEND ON ITS OWN, which is why it was checked
+ * rather than cited.** `overdue` is NOT in `DEFAULT_FACETS`; it is a filter a
+ * member OPTS INTO by typing it. `capture` is counted for everyone by default.
+ * A sentence attached to the selector alone would have reached exactly the
+ * route a member chose and missed the one that answers unasked.
+ *
+ * SO THE MARKER IS ON THE FIELD AND THE MATCH IS ON THE COLUMN. `CACHED_FIELDS`
+ * is DERIVED from `FIELDS` rather than listed beside it, and the AST walk below
+ * matches `meta` nodes by `col`, not by selector name — so a second selector
+ * spelled over the same cached column, or a field renamed, is caught without
+ * anyone remembering to add a spelling. A list of names goes stale the moment a
+ * fourth is written; this is the inversion.
+ * ------------------------------------------------------------------------- */
+
+/** column -> { field, asOf, authority, why }, derived from FIELDS and never listed. */
+export const CACHED_FIELDS = Object.fromEntries(
+  Object.entries(FIELDS).filter(([, f]) => f.asOf)
+    .map(([name, f]) => [f.col, { field: name, asOf: f.asOf, authority: f.authority, why: f.why }]));
+
+/* Every `meta` leaf's column, wherever it sits in the tree — under NOT, inside a
+   range's two halves, at any depth. A meaning arm carries no cached column (its
+   sub-fields are live meaning-table columns), so it contributes nothing here,
+   and saying that is what keeps a later reader from assuming it was missed. */
+function metaColumnsOf(node, into = new Set()) {
+  if (!node || typeof node !== "object") return into;
+  if (node.op === "meta" && node.col) into.add(node.col);
+  if (node.kid) metaColumnsOf(node.kid, into);
+  if (Array.isArray(node.kids)) for (const k of node.kids) metaColumnsOf(k, into);
+  return into;
+}
+
+/** The three routes a compiled plan reached a cached column by. Route membership
+ *  is a fact about the PLAN; whether the facets and the page actually RAN is a
+ *  fact about the call, which is why `cachedNotes` takes it as an argument
+ *  instead of this guessing. */
+function cachedRoutes(ast, facetList, sortField) {
+  const cols = metaColumnsOf(ast);
+  const routes = {};
+  const mark = (col, route) => {
+    if (!(col in CACHED_FIELDS)) return;
+    (routes[col] ||= new Set()).add(route);
+  };
+  for (const c of cols) mark(c, "filter");
+  for (const f of facetList) mark(FIELDS[f]?.col, "facet");
+  if (sortField && sortField in FIELDS) mark(FIELDS[sortField].col, "sort");
+  return routes;
+}
+
+/** The published block. One entry per cached column this answer actually
+ *  consulted, in `FIELDS` order so two identical queries answer identically.
+ *  EMPTY IS A STATEMENT AND IS PUBLISHED AS ONE: `[]` says this answer consulted
+ *  no cached column, which is a different fact from a column being fresh. */
+export function cachedNotes(routes, { facets = true, ordered = true } = {}) {
+  const order = Object.values(FIELDS).map((f) => f.col);
+  return Object.entries(routes)
+    .map(([col, set]) => {
+      const via = ["filter", "facet", "sort"].filter((r) =>
+        set.has(r) && (r !== "facet" || facets) && (r !== "sort" || ordered));
+      return { col, via };
+    })
+    .filter((e) => e.via.length)
+    .sort((a, b) => order.indexOf(a.col) - order.indexOf(b.col))
+    .map(({ col, via }) => ({
+      field: CACHED_FIELDS[col].field, column: col, via,
+      as_of: CACHED_FIELDS[col].asOf,
+      authority: CACHED_FIELDS[col].authority,
+      detail: `${CACHED_FIELDS[col].field}: this is the value computed at `
+            + `${CACHED_FIELDS[col].asOf}, not at this query — `
+            + `${CACHED_FIELDS[col].why}. `
+            + `${CACHED_FIELDS[col].authority} derives the current answer and reads no column; `
+            + `this ${via.join(" and ")} ${via.length > 1 ? "are" : "is"} a projection and not the authority.`,
+    }));
+}
 
 /* ---------------------------------------------------------------------------
  * THE MEANING ARM — D-222 option A, and it is the answer to a hole rather than
@@ -1818,6 +1960,13 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     } : null,
     facetFields: facetList,
     facetCols: facetList.map((n) => FIELDS[n].col),
+    /* REC-108 / D-379: which CACHED columns this plan reaches, and by which of
+       the three routes. The PLAN states the routes; only the caller knows which
+       of them it will actually execute (a `count` runs no facets and no page),
+       so `cachedNotes` takes that as an argument rather than this guessing — a
+       block naming a facet the answer does not carry would be the honesty
+       mechanism itself overclaiming. */
+    cached: cachedRoutes(ast, facetList, ctx.sort ? ctx.sort.field : null),
     restricted: Array.isArray(ids) && ids.length > 0,
     statements: { page, count, ids: idsStmt, snapshot, facets: facets_, facetScan, meaning },
   };
