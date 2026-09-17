@@ -351,6 +351,42 @@ is the usable one: ask what you would DO if you disagreed.** *Go look* means a w
 trap runs both ways — re-reading a stale debt row confirms it every time, and re-running a
 battery never sees a rule whose two sides cannot disagree.
 
+**9. NEVER REPORT AN ACT AS DONE WITHOUT THE ARTIFACT THAT WOULD BE DIFFERENT IF IT WERE NOT.**
+Ruled by Bob 2026-09-17, after a day in which this lane reported six things fixed that were not:
+*"the 'fixes' you've been putting in end up not working because you assume that the fixes are correct
+without actually checking/testing/confirming that the changes do what they're supposed to do. So train
+yourself to never assume without confirmation."*
+
+**THE SIX, because the pattern is only visible as a set and every one felt like diligence at the time:**
+a predicate fixed without re-running its control, which had silently disarmed an arm; a heartbeat
+reported fixed while the row's own disposition said *undriven in the failing condition*; a blocker
+attributed to Remote Control **without ever testing it**; that attribution then "refuted" by a
+single-variable control that could not discriminate; a debt row published that **broke its own markdown
+table** on a literal pipe; and a false alarm raised on a healthy lane by misreading `ps -o etime`'s
+two-field form as hours. **Different subjects, one shape: a claim published before the step that would
+make it true was confirmed to have taken.**
+
+**THE RULE IS MECHANICAL, NOT AN INTENTION, because care demonstrably does not catch this class
+(`CLAUDE.md` says so in as many words and today is its sixth receipt):**
+
+- **Name the artifact BEFORE you act** — the output, exit status, count or state-change that will read
+  DIFFERENTLY if the change did not work. If you cannot name one, you cannot report the act as done;
+  report it as made-and-unconfirmed, which is a real and respectable result.
+- **A green suite after a refactor is not confirmation.** The suite is coupled to BEHAVIOUR and survives;
+  the CONTROL is coupled to SHAPE and does not. **Re-run the negative control after changing its subject
+  and read the ARMS' results, not the subject's** (VERIFICATION.md, and it found two dead arms in one day).
+- **An instrument's own output beats your reading of your edit.** `plancheck` caught a row whose prose was
+  right and whose table was broken; nothing else would have.
+- **When a control shows NO EFFECT, suspect a second cause before recording a refutation** (D-405): two
+  independent blockers on one door each test innocent alone.
+- **Report the residue in the same breath as the fix, in the same words the row uses.** A residue named in
+  a ledger and dropped from the report is worse than one never noticed, because the row makes it look
+  audited.
+
+**AND THE HONEST FORM WHEN IT IS NOT CONFIRMED: say what was CHANGED, what was MEASURED, and what is
+STILL UNDRIVEN — separately.** Undetermined is first-class here and must be STATED (`CLAUDE.md`); a fix
+whose confirmation is owed is not a failure to report, it is the actual state of the work.
+
 **Report what was DONE and what was DECIDED. Never report tactical STATE.** An
 outstanding item, a dirty tree, a stale claim, a warning nobody has cleared: fix it,
 or route it through the channel that owns it, or leave it unsaid. Surfacing it to Bob
