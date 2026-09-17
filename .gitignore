@@ -302,3 +302,16 @@ bio-plane/.m035-pen/
 m035-*.log
 m035-*.sh
 m035-census.txt
+# M0-48's control pen (`bio-plane/test/strandedbranches.control.mjs`), on its own
+# line for the reason every pen above it repeats. The driver keeps per-arm pristine
+# copies of `tools/strandedbranches.mjs` and `tools/plancheck.mjs` here while it
+# arms them, and an untracked copy of either left behind by an interrupted run is a
+# SECOND copy of an instrument for the next walk to enrol. Added to this item's
+# CLAIMS block rather than taken silently.
+.m048-harness/
+# M0-48's own run logs, kept INSIDE the worktree rather than in a shared temp root
+# for the reason `.d310-runs/` gives and that this item paid for directly: its own
+# dry-run wrote into /var/folders and the battery NAMED the directory as unfenced
+# residue, attributing it as a CANDIDATE to whichever suite was running at the time
+# (D-237, and WORKER.md's rule about a generic name under /tmp).
+.m048-runs-*

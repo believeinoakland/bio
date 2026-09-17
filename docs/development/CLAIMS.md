@@ -11273,3 +11273,92 @@ note: **THE RUN LOGS AND RUNNER SHIMS ARE DELIBERATELY NOT COMMITTED**, and the 
   `ocr-measure-probe.mjs`, whose queue row says exactly that: *re-runs every number*. They are
   gitignored rather than deleted, so they survive in this worktree for anyone who wants to
   check the figures against the log's own `provenance:` line before CONDUCT reaps it.
+## CLAIM 2026-09-16 M0 (M0-48 — D-288's DETECTION half: `plancheck` warns on a local `worktree-agent-*` branch whose commits are reachable from neither `origin/main` nor the remote)
+session: m048-stranded-branches (worktree agent-a0c3609704dee7166)
+opened: 2026-09-16T00:00:00Z
+released: 2026-09-16 on report — the landing is complete and pushed, and holding `tools/plancheck.mjs` after that blocks every later instrument item for nothing.
+paths:
+  - `tools/strandedbranches.mjs` — **NEW**, the predicate. Imported rather than written into
+    `plancheck.mjs`, the shape sections 6 and 7 already use, because `plancheck.mjs`
+    self-executes and cannot be imported by the suite that drives its arms.
+  - `tools/plancheck.mjs` — **by REGION, not by file**: ONE new block appended as section 8,
+    between section 7's closing brace and the `report` banner. **Nothing existing moved**; no
+    earlier section, no helper, no report line was touched.
+  - `bio-plane/test/strandedbranches.test.mjs` (NEW), `bio-plane/test/strandedbranches.control.mjs` (NEW).
+  - `docs/development/VERIFICATION.md` — **ONE new section appended** before *"What a queue
+    item must satisfy before it is done"*, plus **ONE existing bullet extended in place** in
+    the M0-15 section (*"It says nothing about whether a commit is PUSHED"*), which this item
+    makes half-true and which is corrected rather than exempted.
+  - `.gitignore` — ONE line, the control driver's pen `.m048-harness/`, in the run of
+    per-item pen lines that already ends the file.
+  **NOT** `docs/development/QUEUE.md` (CONDUCT flips the row), **NOT** `docs/development/DEBT.md`
+  (D-288's closure is BOB #12's to rule — see the DELEGATION below), **NOT** any kickoff:
+  `CONDUCT.md` step 1 and `WORKER.md` step 4 already run `plancheck`, so the mechanism is
+  already inside the loop both readers perform and adding a step would be adding a second
+  statement of one rule.
+
+## DELEGATION 2026-09-16 M0 (M0-48) -> BOB — **D-288 item 2 has landed; the closure ruling is yours and is not taken here.**
+D-288's own disposition says *"BOB verifies item 2's landing against the tree and reports
+closure; Bob is not to be the one who chases it"*, and *"ITEMS 2 AND 3 ARE OUTSTANDING AND
+THIS ROW IS NOT CLOSED UNTIL ITEM 2 LANDS."* **Item 2 is landed and pushed** —
+`tools/strandedbranches.mjs`, `plancheck` section 8, a suite and a seven-arm control driver,
+with both of M0-48's control halves run. The ACT owed, with its actor named: **BOB #12 reads
+the landed tree, and rules whether D-288 closes now or waits on item 3 (M0-49, the pruning
+rule), which is queued and depends on this one.** It is stated here as well as in the
+worker's report because a report is not a channel anything drains.
+
+**One finding that bears on the ruling rather than on the item.** The predicate names two
+branches as STRANDED on the merged tree at `2726fb85`, and both are live workers' —
+`worktree-agent-a984a71a7b324f52c` and `worktree-agent-af08132ad4ca455b7`, each holding one
+commit that is on no remote. **D-288's literal phrase — *present on the remote* — would have
+called both published**, because the remote holds a ref of each name at an older sha. The
+predicate reads REACHABILITY instead, for the reason set out in `VERIFICATION.md`. If that
+widening is not what was intended, it is one condition in one file and reversing it costs
+nothing; the recommendation is to keep it, because the literal reading is quiet over exactly
+the loss REC-91 was.
+
+**open as of 2026-09-16** — raised today by M0-48 and NOT discharged: the closure ruling on D-288 is BOB #12's, and it has said it will read item 2's landing off `main` rather than take a report for it. **Recorded by CONDUCT #1 at integration because M0-37's delegation arm FAILED this block by name** — the SECOND time today that arm has caught a delegation arriving through a merge with no state line, and the first time it has caught one from its OWN WAVE. M0-37 and M0-48 were live at the same moment and neither could see the other; the arm landed hours earlier and is now auditing a sibling it never met. **Two paths in this block are STALE and are corrected here rather than in the worker's own words: the predicate shipped as `tools/strandedwork.mjs`, not `strandedbranches.mjs`** (the worker renamed it — a branch cannot see uncommitted work) **and it is `plancheck` SECTION 9, not 8** — M0-37 and M0-48 each independently claimed a section 8, which is the id-collision shape arriving in a section NUMBER, resolved at the merge by keeping both arms and renumbering the later one.
+
+## CLAIM 2026-09-16 M0 (M0-48 — AMENDMENT: the row was corrected FOUR times while running, the unit moved from BRANCH to WORKTREE, and the files are renamed)
+session: m048-stranded-branches (worktree agent-a0c3609704dee7166)
+opened: 2026-09-16T00:00:00Z
+released: 2026-09-16 on report.
+**Appended rather than edited into the block above, because this register is append-only and
+a released block cannot be corrected** — the same rule `tools/attribution.mjs` excludes this
+file for.
+
+**WHAT CHANGED AND WHY, since the first block names files that no longer exist.** The row as
+specified said *`plancheck` warns on a local `worktree-agent-*` branch neither merged nor
+present on the remote*. CONDUCT #1 and BOB #12 corrected it four times while the item was
+running, each correction from someone who had then gone and LOOKED:
+1. **The glob is not the population** — `rec111-unit-count-bound` and every `claude/*` session
+   worktree hold real work it never matches, **and the narrow arm would have passed its own
+   negative control**, because a planted `worktree-agent-*` branch is exactly what it sees.
+2. **Branch-EXISTS is not the test** — compare the local HEAD against the REMOTE REF. (This one
+   the item had already built before the correction arrived; it was the first thing measuring
+   the estate showed, and the finding is in `VERIFICATION.md`.)
+3. **A genuinely idle worktree must not be named**, or the arm is tuned out as noise.
+4. **And correction 3 was itself wrong within the hour** — the worktree named as the canonical
+   silent row started working, so the exemption is read from the STATE and never inferred from
+   the TIP, and a third window (UNCOMMITTED) is reported in its own words because no push
+   closes it.
+
+paths, superseding the list in the block above:
+  - `tools/strandedwork.mjs` — **NEW**, the predicate. **Renamed from `strandedbranches.mjs`,
+    which existed for one commit**: the unit is the WORKTREE, a branch cannot see uncommitted
+    work, and the name was the first thing the narrow reading got wrong.
+  - `tools/plancheck.mjs` — **by REGION**: ONE new block as section 8, between section 7's
+    closing brace and the `report` banner. Nothing existing moved.
+  - `bio-plane/test/strandedwork.test.mjs` (NEW), `bio-plane/test/strandedwork.control.mjs` (NEW).
+    `strandedbranches.{test,control}.mjs` are DELETED in the same commit; they were never on
+    `origin/main`.
+  - `bio-plane/scripts/coverage.mjs` — **ONE key in `REGISTER_FLOOR`**, `corpus`, moved from the
+    figure the merged green run PRINTED. `arms` and `classified` are NOT touched.
+  - `docs/development/VERIFICATION.md` — the M0-48 section, rewritten for the worktree design;
+    plus the M0-15 bullet extended in place.
+  - `.gitignore` — the control pen and this item's run logs.
+  **NOT** `QUEUE.md` (CONDUCT flips the row), **NOT** `DEBT.md` (D-288's closure is BOB #12's),
+  **NOT** `MEASUREMENTS.md` (M-38 is BOB's entry and BOB is landing the corrections onto it),
+  **NOT** any kickoff: `CONDUCT.md` step 1 and `WORKER.md` step 4 already run `plancheck`, so
+  the mechanism is inside the loop both readers perform and a new step would be a second
+  statement of one rule.
