@@ -13930,3 +13930,77 @@ diagnostic: it now reports **67 of 69 discovered items are in the commit at HEAD
 (`82ffae30`)**, naming its own two uncommitted files, so a reader about to quote *53
 writers repaired* is told which total another checkout reproduces. Battery arithmetic:
 `hygiene` went 752 pass / 1 fail → **753 pass / 0 fail**, the same 753 assertions.
+
+## 2026-09-16 · M0-37 — THE DELEGATION REGISTER CENSUSED, AND THE THRESHOLD'S OWN DISTRIBUTION TURNS OUT TO BE ONE POINT (instrument: `tools/delegations.mjs`, run over `docs/development/CLAIMS.md`; worktree `agent-a603fc3555ed6156f` on `origin/main` at `92d15614`)
+
+**THE CENSUS, taken before any edit.** `CLAIMS.md` holds **49 `DELEGATION` blocks**. Eleven
+carried a `DISCHARGED` line; **38 carried no statement of their own state at all** — neither a
+discharge nor an affirmation — and had said the same thing since the day they were written.
+
+By raise date: 2026-08-09 · 5 (0 discharged), 2026-08-10 · 7 (4), 2026-09-10 · 9 (0),
+2026-09-14 · 21 (7), 2026-09-15 · 6 (0), 2026-09-16 · 1 (0).
+
+**M0-37's ROW CARRIED THE FIGURE `nine` AND SAID SO ITSELF: the number this row was first
+written with was already false when it was written.** The true population is 38, not 9 — the
+row's own count was the live tail of one sweep, and the sweep's scope was not the register's.
+A row that warns you its own number is stale is rare and it was right.
+
+**THE DISCHARGE-LATENCY DISTRIBUTION DOES NOT EXIST, WHICH IS THE MEASUREMENT THAT MATTERS
+MOST HERE.** All eleven discharges in the entire history of this register were written **on one
+day, 2026-09-15, by one session, CONDUCT #11**. The latencies read 36d ×4 and 1d ×7 and both
+clusters are that single event seen from two raise dates. **So the estate has exactly ONE
+discharge event ever, and a threshold cannot be derived from a single point.** M0-37's row
+asked for the threshold to come from the measured distribution; the honest answer is that
+there is none, and the number is therefore a POLICY CHOICE with its argument at the site
+(`tools/delegations.mjs`) rather than a derived figure.
+
+**THE TWO MEASURED FACTS THE CHOICE OF 30 DAYS RESTS ON.** (1) The drift that produced the row
+was **36 days** — raised 2026-08-10, swept 2026-09-15 — so any threshold under 36 turns it into
+a blocking FAIL; the comparison that matters is not 30 against 36 but 30 against NEVER, since
+nothing caught the 36 except somebody choosing to look. (2) Delegations are raised at
+**~1.3/day** (49 over the 38 days 2026-08-09..09-16); with B open blocks and threshold T, the
+steady-state re-affirmation load is B/T per day, and at B=38, T=30 that is ~1.3/day — the
+register costs about as much to maintain as it costs to write, which is the affordability
+point a register has to sit under or be routed around.
+
+**THE ADJUDICATION, and it is the finding worth more than the instrument.** All 38 silent
+blocks were read against the tree rather than against their own rows. **21 of 38 (55%) were
+ALREADY CLOSED IN THE TREE AND SAID SO NOWHERE**; 17 are genuinely open. The register after
+the sweep reads **49 blocks · 32 discharged · 17 affirmed open · 0 stale · 0 silent**.
+The 2026-09-15 sweep's ratio was 8 of 9 (89%) over a smaller and older sample; 55% over the
+whole register is the better-founded figure and the two do not disagree about the direction.
+
+**THE COHORT IS A PROPERTY OF THE FIX AND IS NAMED RATHER THAN DISCOVERED LATER:** 17 of 17
+open blocks now carry the same affirmation date, so they expire together on 2026-10-16.
+`plancheck` prints that cohort on every run and says in its own output that **a blanket date
+stamp and an honest sweep make the identical shape and it cannot tell them apart.**
+
+**FOUR THINGS THE SWEEP FOUND THAT NO COUNT WOULD HAVE.**
+1. **A discharge written 2,415 lines from the delegation it closed.** `CLAIMS.md:7165` has said
+   *"UI-61's DELEGATION to RECORD is DISCHARGED"* since REC-97 landed — in a different block, so
+   anyone who went to the delegation itself read it as open. The check reads the BLOCK, which is
+   why it reported that one as silent, and the discharge is now where the delegation is.
+2. **A ledger cell that is false on this tree.** `DEBT.md:252`, D-283's disposition, still reads
+   *"the rule is landed and driven but NOT WIRED"* — while `index.mjs:4408` and `:5675` both call
+   `mergeTier2Text`. Raised as an act with an actor, not edited by this item.
+3. **An index built for a reader that does not exist.** `schema.mjs:2533` declares
+   `provenance_route_marks_finding ON provenance_route_marks(finding, bundle_id)`, and not one of
+   the four SQL readers of that table puts `finding` in a `WHERE`. No row carries the act.
+4. **Two owed acts with no row at all** — REC-97's extent picker (pinned as absent by
+   `content-extent.test.mjs:396-398`, with UI-61 `done` and no open item) and `#recogniseTier`'s
+   grade/prose pairing. Both are the note-is-not-an-item class, found by reading the register.
+
+**AND A METHOD FINDING ABOUT SEARCHING THE RECORD, measured twice in this item.** An id-keyed
+grep reports an interface change as unresolved: `IC-95`'s only occurrence in
+`INTERFACE-CHANGES.md` is its header at `:7327`, which still reads PROPOSED, while its
+`### RESOLUTION — 2026-09-15 … ACCEPTED, I3 15.2.0 → 15.3.0` sits at `:7461` **without
+repeating the id**, because the protocol APPENDS stages rather than rewriting the line. The
+same is true of IC-98 at `:7491`/`:7593`. **Read the section, not the string** — and this is
+the *agreement-of-documents* rule with the sign flipped: two readers disagreed, and the
+artifact settled it.
+
+**`docs/DECIDED.md` WAS CURRENT AT `92d15614`, established BY POINTER rather than by count**
+(M0-34's method). Regenerating on this tree moved 107 insertions and 101 deletions, and **all
+203 changed rows point at `CLAIMS.md`** — the one file this item edited. A previously stale
+index would have had to move rows pointing elsewhere; none did. The index went 951 → **965
+rulings, 273.0 KB**.

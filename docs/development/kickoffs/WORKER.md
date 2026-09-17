@@ -208,6 +208,16 @@ number" into a corpus file**; the tool caught its own debt row poisoning its own
 
 - **Claim your paths in `docs/development/CLAIMS.md` BEFORE editing.**
 - **Do not edit another area's paths.** Append a DELEGATION and continue.
+- **A DELEGATION YOU RAISE CARRIES ITS STATE ON A LINE OF ITS OWN, DATED, OR `plancheck`
+  FAILS (M0-37, 2026-09-16).** Write `**open as of YYYY-MM-DD** — <why it is open>` under the
+  block when you raise it. That is one line and it costs you nothing, and it is the whole
+  difference between a register that accumulates and one that is re-affirmed: **until this
+  landed, a block carried only the date it was RAISED on, so 38 of the 49 blocks in
+  `CLAIMS.md` said nothing about their own state — and adjudicating them found 21 already
+  CLOSED IN THE TREE and saying so nowhere.** If your own landing closes somebody else's
+  delegation, write the discharge **in that block**, not in your claim or your report: this
+  file has held a discharge written 2,415 lines away from the delegation it closed, which
+  reads as open to everyone who goes and looks.
 - **Never leave an owed act in a release note, a claim's prose, or your report alone**
   (added 2026-09-14; FL-10's handoff line sat in a release note nothing drains and cost
   a measured >3h false stall). If your landing obliges a future actor to do something —

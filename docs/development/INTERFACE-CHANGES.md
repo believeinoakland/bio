@@ -157,7 +157,7 @@ resolved union.
   itself stays PARKED with Bob's paused case-making thread, and this entry constrains
   its leaf shape without pre-empting it.
 
-### RESOLUTION · 2026-08-03 · ACCEPTED (as amended)
+### RESOLUTION · IC-1 · 2026-08-03 · ACCEPTED (as amended)
 
 Sole consumer agreed, by proxy, named above. When FRAMEWORK next wakes it may re-open
 this with a COUNTER before the version bumps — which is why CHANGING is not entered
@@ -1342,7 +1342,7 @@ does not know, is invisible to it. So the figure is a FLOOR, not a census — wh
 every migrated consumer is additionally asserted THROUGH THE OP in its own suite rather
 than trusted to the walk.
 
-### RESOLUTION, 2026-08-07
+### RESOLUTION · IC-24, 2026-08-07
 
 Protocol step 3. All consumer answers are NOT-AFFECTED (CONDUCT answering for three
 dormant areas, named above), and no counter was raised. **ACCEPTED.**
@@ -5003,7 +5003,7 @@ a battery green on an artifact nobody ships from) FAILS instead of shipping.
 **PROPOSED, 2026-09-10.** The guard half is FL-10's to land; the release half is DIST's and
 nothing here builds against it. **The version bump and the RESOLUTION are CONDUCT's.**
 
-### RESOLUTION — ACCEPTED, **I4 1.0.0 → 1.1.0**, 2026-09-10 by CONDUCT #9
+### RESOLUTION · IC-70 — ACCEPTED, **I4 1.0.0 → 1.1.0**, 2026-09-10 by CONDUCT #9
 
 Additive in fact, on the row's own measured table: the new manifest has ZERO readers today,
 the artifact path and build command are unchanged, and `embed-release.mjs` rebuilds before
@@ -5151,7 +5151,7 @@ Nothing migrates and nothing is backfilled. An existing store gains three empty
 tables and one NULL column; with no `calibration_subjects` row it registers no
 wake, holds no alarm, and behaves exactly as it did before this row existed.
 
-### RESOLUTION — ACCEPTED, **I5 1.8.0 → 1.9.0**, 2026-09-10 by CONDUCT #9
+### RESOLUTION · IC-72 — ACCEPTED, **I5 1.8.0 → 1.9.0**, 2026-09-10 by CONDUCT #9
 
 Additive: three new tables, one nullable column on a derived projection, five new ops; no
 existing column changed and the migration section above is a no-op for every existing store.
@@ -5254,7 +5254,7 @@ per-acquire store read to attach one would be paying for a join that says
 nothing. When a probe measures a text layer's fidelity, that step gains its
 reference the same way the OCR step does.
 
-### RESOLUTION — ACCEPTED, **I2 1.1.0 → 1.2.0**, 2026-09-10 by CONDUCT #9
+### RESOLUTION · IC-73 — ACCEPTED, **I2 1.1.0 → 1.2.0**, 2026-09-10 by CONDUCT #9
 
 Additive: one OPTIONAL field on a chain step and one refusal for a reference that is present
 and unreadable; a reader ignoring the field sees 1.1.0. CONDUCT answers in writing on dormant
@@ -5374,7 +5374,7 @@ DRIVES the split instead of asserting it.
   refused, which is the outcome this record reaches for everywhere else.
 
 **PROPOSED, 2026-09-10.** The version bump and the RESOLUTION are CONDUCT's.
-### RESOLUTION — ACCEPTED, **I3 10.4.0 → 11.0.0** and **I5 1.9.0 → 1.10.0**, 2026-09-10 by CONDUCT #9
+### RESOLUTION · IC-71 — ACCEPTED, **I3 10.4.0 → 11.0.0** and **I5 1.9.0 → 1.10.0**, 2026-09-10 by CONDUCT #9
 
 I3 MAJOR on IC-3's settled reasoning: four divergence refusal reasons are REMOVED wire
 strings, eight keys leave the published artifact's member frontmatter, and the container
@@ -5582,7 +5582,7 @@ row:
 - **NOTHING ON I3 MOVES FOR THIS**, which is why UI-57 was filed as I3 CONSUMPTION with no IC
   of its own.
 
-### RESOLUTION — ACCEPTED, **I3 13.0.0 → 14.0.0**, 2026-09-10 by CONDUCT #9
+### RESOLUTION · IC-75 — ACCEPTED, **I3 13.0.0 → 14.0.0**, 2026-09-10 by CONDUCT #9
 
 MAJOR on IC-25's and IC-47's own rule: the SET of published acts is something consumers build
 against, and narrowing it for a caller class is a behaviour break whatever the measured impact.
@@ -5863,7 +5863,7 @@ not extended as courtesy:
 
 *(awaited — `DIST`)*
 
-### RESOLUTION — ACCEPTED, **I4 1.1.0 → 1.2.0**, 2026-09-14 by CONDUCT #9
+### RESOLUTION · IC-79 — ACCEPTED, **I4 1.1.0 → 1.2.0**, 2026-09-14 by CONDUCT #9
 
 Additive on the member manifest (the `assets` block, emitted only where declared, so absence
 stays free), with the owner's answer on the row (FLEET, `99c0513`: the extension is welcome ON
@@ -5965,7 +5965,7 @@ FLEET attached is precisely what protects this area: a member whose config went 
 refused at assembly rather than guessed at inside a group's account. The forcing case is
 welcome — ocr-worker's parts are exactly why the types belong inside the signature.
 
-### RESOLUTION — ACCEPTED, **I4 1.2.0 → 2.0.0**, 2026-09-14 by CONDUCT #9
+### RESOLUTION · IC-82 — ACCEPTED, **I4 1.2.0 → 2.0.0**, 2026-09-14 by CONDUCT #9
 
 MAJOR, deliberately, on IC-3's settled reasoning even at measured-nil impact: the signed
 fleet statement moves `bio-release-fleet/1 → /2`, and a signed statement's format is a
@@ -6072,7 +6072,7 @@ QUERY arm (D-222 stage C), not this IC.
 - **FRAMEWORK** (dormant): NOT-AFFECTED for this IC, answered FOR by CONDUCT in writing per the protocol's step 3 — I2 does not move (the extent grammar is IC-1's union, unchanged); the position-in-reading change is its own later IC on I2 (FW-17).
 - **SKILL**: NOT-AFFECTED until the machine-mint item (SK-7), answered FOR by CONDUCT — the investigative run's suggested legs default to `document` (REC-84).
 
-### RESOLUTION — ACCEPTED, **I5 1.10.0 → 1.11.0**, 2026-09-14 by CONDUCT #10
+### RESOLUTION · IC-83 — ACCEPTED, **I5 1.10.0 → 1.11.0**, 2026-09-14 by CONDUCT #10
 
 MINOR, as proposed: one new table, one index, one nullable column on two tables, populated by the writer; nothing existing reshaped. The registry is marked CHANGING now (step 4) and returns to STABLE at SETTLED when REC-82 (the table and the writer on the `pdf-page` and `document` arms) and REC-83 (the reads) have landed and the two nullable columns are NOT NULL — the IC's own SETTLED condition. `INTERFACES.md` bumped in the same act. Every consumer is on the row above; the two answered-for are named as such. REC-82 is UNGATED by anything but this resolution and is spawned at this drain.
 
@@ -6118,7 +6118,7 @@ behind IC-83/IC-84 rather than folded in.
 - **DIST**: NOT-AFFECTED, answered FOR by CONDUCT on a measurement (DIST #2 is idle): `newgroup/src/release.mjs` mentions the basis only inside the embedded plane copy that regenerates at the next cut; no served surface reads a leg.
 - **SKILL**: AGREE, answered FOR by CONDUCT — the investigative run's suggested legs default to `document` (REC-84); the machine-mint act is SK-7 with its own IC.
 
-### RESOLUTION — ACCEPTED, **I3 14.0.0 → 14.1.0**, 2026-09-14 by CONDUCT #10
+### RESOLUTION · IC-84 — ACCEPTED, **I3 14.0.0 → 14.1.0**, 2026-09-14 by CONDUCT #10
 
 MINOR, as proposed: an optional `extent` on a basis leg (absent = `document`), a new fixed-key read `content read`, `op=earnedbasis` answering per extent and stating UNDETERMINED for a portion leg's connection axis, `op=attesttext` unchanged. CHANGING now; SETTLED when REC-83 and REC-84 land and UI-61 confirms its migration. `INTERFACES.md` bumped in the same act. NARROW and TRANSCRIBE are deliberately NOT in this IC and carry their own (REC-86, REC-87).
 
@@ -6290,7 +6290,7 @@ filed stay valid and stay readable; they would simply stop being produced.
 - **FRAMEWORK** (active for FW-17 only): AGREE, answered FOR by CONDUCT in writing — I2 is unchanged; the Drive hop is I1's, and Part II §16's three falsified sentences are corrected at this integration under the §4.3 same-landing fold.
 - **DIST**: NOT-AFFECTED, answered FOR by CONDUCT on a measurement (DIST #2 idle) — `newgroup/` has 0 hits for `provenance_chain` or `retrieval_locator` outside the embedded plane copy that regenerates at the next cut.
 
-### RESOLUTION — ACCEPTED, **I1 1.3.0 → 1.4.0**, 2026-09-14 by CONDUCT #11
+### RESOLUTION · IC-85 — ACCEPTED, **I1 1.3.0 → 1.4.0**, 2026-09-14 by CONDUCT #11
 
 MINOR, as proposed: a `via:"direct"` capture may carry a second hop (the Drive export hop, its facts DERIVED at acquire and refused from a caller by C-48.1), and `retrieval_locator` may differ from the document address on a direct capture — `captured_locators.address` (or the chain's `document_address`) is the document address, never `document.locator`, and `via` does not say whether the two are equal (the migration sentence, verbatim from the proposal). No field is renamed, reshaped or removed; no existing assertion over the chain became false (measured: `acquire.test.mjs`'s `length === 1` and `daemon-token.test.mjs`'s `=== 2` both hold). `via` gains NO term — a conversion is technique, disclosed on the hop, and the closed set stays closed (the proposal's own ruling, kept). **Two corrections to I1's registry text land with the bump:** §4b's "one hop, the archive capture the sole exception" and §5's "for a direct capture they are equal" are struck for the two-hop, two-address direct case; and **an inaccuracy CAP-8 found and pinned but did not correct** — I1 §4 lists `via` as a TOP-LEVEL field of the acquire document, and the plane has never emitted one there (it lives on the hop; pinned by an assertion in `drive.test.mjs`) — the row is corrected to say where `via` actually lives. CHANGING until the registry text is corrected in the same commit (it is: `INTERFACES.md` I1 1.4.0); SETTLED when the next DIST deploy serves the handler live (VF-7's class — a live probe of the export path on the project instance, which CAP-8 could not run because nothing was deployed).
 ---
@@ -6426,7 +6426,7 @@ amendment building forced is written into this entry in the same commit, naming 
 - **CONTENT-HTML** (dormant): NOT-AFFECTED, answered FOR by CONDUCT — `dom` has no producer and stays refused by name.
 - **UI**: NOT-AFFECTED as a consumer of I2, answered FOR by CONDUCT — `civicos-ui/app.html`'s flattened docprofile embed is a GENERATED artifact of `docprofile/` (`tools/bundle-docprofile.mjs`) and was regenerated by FW-17 as the change that made it stale; CONDUCT rules the boundary the worker raised: whoever changes `docprofile/` regenerates the embed in the same commit (FL-10's shape), and that is not a UI edit.
 
-### RESOLUTION — ACCEPTED, **I2 2.0.0 → 2.1.0**, 2026-09-14 by CONDUCT #11
+### RESOLUTION · IC-86 — ACCEPTED, **I2 2.0.0 → 2.1.0**, 2026-09-14 by CONDUCT #11
 
 MINOR, as proposed: one optional IC-1 `source` on a `parse()` entity and one total `ctx.locate(offset)` on the reader's context; a reader emitting neither and a consumer reading neither see 2.0.0 exactly. The constraint recorded with the acceptance stands as written: an ABSENT `source` means "this reading cannot say where" and NEVER "the whole document" — the whole document is a MEMBER's citation act (Bob's 5.3), not a reader's silence — and a reader may emit only a source `locate` gave it (never-invent, structural). Of the three registered readers one places (`meeting_agenda`, page with `rect` null), two declare in their own headers that they cannot and why, and the suite asserts the declaration against the source. **The I5 bump these columns imply is taken here as I5 1.11.0 → 1.12.0, ADDITIVE:** `reading_refs.pos_kind`/`pos`/`pos_ref` (nullable, all three together or none, re-normalised at the store) with `op=readingref` as their reader, and `connections`' eight determining-pair columns with `#connectionView`'s `determining_pair` and `connectionGradeForContent` (`op=connections&content=`) — C-49.1/.2/.3 the refusals. SETTLED when REC-86/REC-87 (the authored acts that consume the pair) confirm, or at the next I2 producer landing that emits `source` from a real page — whichever comes first; CONDUCT writes it.
 
@@ -6560,7 +6560,7 @@ is lost by having chosen the read.
 - **CONTENT-HTML / CONTENT-PDF** (dormant): NOT-AFFECTED, answered FOR by CONDUCT on the proposal's own statement — they PRODUCE structure; I2's `pages` has been emitted since 1.0.0 and this item consumes it.
 - **FRAMEWORK** (active): NOT-AFFECTED, answered FOR by CONDUCT — `readings`' COLUMNS do not move; the count rides the JSON the table already holds, keyed by the `capture_sha` the one reader looks up by, so I5 is untouched and no schema edit exists.
 
-### RESOLUTION — ACCEPTED, **I1 1.4.0 → 1.5.0**, 2026-09-14 by CONDUCT #11
+### RESOLUTION · IC-87 — ACCEPTED, **I1 1.4.0 → 1.5.0**, 2026-09-14 by CONDUCT #11
 
 MINOR, as proposed: `document.reading.page_count` — one new optional key inside an existing object, present-and-null when the wire ran and the producer answered nothing, ABSENT when nothing ever counted; no absence stands in for another and it is never a zero. Carried at ONE site in `op=acquire`'s FW-15 reading wire covering all three reading branches; a consumer that never reads it sees 1.4.0 exactly. **The registry gap this IC names is closed with the bump:** I1 §4's document-level table had never listed `reading` at all (undocumented since FW-5) — the row is added. CAP-12 (the container extents — sheets with dimensions, paragraph count, slides with shape lists, D-354) rides this entry's shape and is expected to AMEND it rather than mint anew. SETTLED when CAP-12 lands and the three office arms' C-45.1 is fed, or at the next DIST deploy serving the count live — whichever first; CONDUCT writes it.
 ---
@@ -6725,7 +6725,7 @@ session). **Nothing that landed between the two measurements closed it.** The
 correction in this commit is therefore against live behaviour and not against a tree that has since
 moved.
 
-### RESOLUTION — ACCEPTED, **I3 14.1.0 → 15.0.0 (MAJOR)** and **I5 1.12.0 → 1.13.0 (MINOR)**, 2026-09-14 by CONDUCT #11
+### RESOLUTION · IC-88 — ACCEPTED, **I3 14.1.0 → 15.0.0 (MAJOR)** and **I5 1.12.0 → 1.13.0 (MINOR)**, 2026-09-14 by CONDUCT #11
 
 **The two changes are ruled apart, as the proposal states them.**
 
@@ -6899,7 +6899,7 @@ rectangle — UI-61's own second finding). It is a DELEGATION to UI in `CLAIMS.m
 So IC-84's SETTLED, which CONDUCT writes, rests on this landing **plus** that UI item —
 and the honest sentence today is *the act carries it, the surface does not yet send it*.
 
-### RESOLUTION — ACCEPTED, **I3 15.0.0 → 15.1.0**, MINOR, 2026-09-14 by CONDUCT #11 — **recorded LATE, and the lateness is recorded with it**
+### RESOLUTION · IC-90 — ACCEPTED, **I3 15.0.0 → 15.1.0**, MINOR, 2026-09-14 by CONDUCT #11 — **recorded LATE, and the lateness is recorded with it**
 
 ADDITIVE, as proposed: `op=cite` accepts the flattened extent scalars or a `content_id` as a BAG beside its seven parameters and splices them onto the leg it writes, routing the composed leg through REC-84's ONE grammar checker rather than owning a second; a field the act does not carry is REFUSED BY NAME, which is the whole point — **the defect this closes was a SILENT DROP, and a control whose value is silently discarded is worse than an absent one.** Four refusals in the existing C-45 family, no new C id. Measured consumer census: one production caller (`app.html`), zero in `agent-worker`.
 
@@ -7041,7 +7041,7 @@ REC-95 or REC-96 have landed is a different question and should be assumed
 expensive**: they are three more writers into this vocabulary, which is the whole
 reason this item was sequenced first.
 
-### RESOLUTION — ACCEPTED, **I5 1.12.0 → 1.13.0**, 2026-09-14 by CONDUCT #11 — **and the table is `observation_log`, renamed in the integration commit**
+### RESOLUTION · IC-92 — ACCEPTED, **I5 1.12.0 → 1.13.0**, 2026-09-14 by CONDUCT #11 — **and the table is `observation_log`, renamed in the integration commit**
 
 ADDITIVE, as proposed: one new table and three indexes, every level writing through ONE append site with its refusals read out of the map, the frontier view and its bounded read, and `ai_run_log` FOLDED so `op=airunlog` reads through unchanged. **The fold is the part that needed proving and was proved twice against the real pre-item build**, because `seq` moved from per-run to store-wide and an unchanged envelope could have carried changed numbers invisibly: a before/after digest (3,120 bytes, identical) and a migration probe that re-opens a store the OLD build wrote, with every row migrated, the NULL subject PRESERVED rather than invented, and idempotence on re-boot. I3 is therefore unchanged in VALUE and not merely in shape, and that distinction is recorded because it is the one a reader would otherwise have to take on trust.
 
@@ -7142,7 +7142,7 @@ not urgent and why SK-8 did not reach into another area's vocabulary to fix it. 
 widens to cover a model that READ rather than rewrote, or the `ai` kind splits, and both are I2
 decisions.
 
-### RESOLUTION — ACCEPTED, **I3 15.1.0 → 15.2.0** and **I5 1.14.0 → 1.15.0**, both MINOR, 2026-09-14 by CONDUCT #11
+### RESOLUTION · IC-93 — ACCEPTED, **I3 15.1.0 → 15.2.0** and **I5 1.14.0 → 1.15.0**, both MINOR, 2026-09-14 by CONDUCT #11
 
 ADDITIVE on both, as proposed and as the registry's own rule scores it: two new ops and one new table, with no existing column touched and no existing answer reshaped — a consumer that calls neither op sees the versions it saw before. **I2 IS NOT CHANGED AND IS CONFIRMED INSTEAD**, which is the part worth stating rather than passing over: the `ai(function, version)` step has been in I2's chain grammar since CPDF-10 and carried by every version since, and this item is its FIRST PRODUCER — so what the registry records is a producer arriving for a shape that was already contracted, not a shape changing. **A confirmation is not a bump**, and recording it as one would teach the registry that the contract moved when only the world did.
 
@@ -7275,7 +7275,7 @@ suites pinned by whole-object comparison where the shape could regress, and **se
 control arms plus a baseline, all AS DECLARED** (`bio-plane/test/nc-coff11.mjs`, results in each
 suite's `NEGATIVE CONTROL:` line), two of which arm the DECISION itself rather than the patch.
 
-### RESOLUTION — 2026-09-15, CONDUCT #11 · ACCEPTED, I2 2.1.0 → **2.2.0**, ADDITIVE
+### RESOLUTION · IC-100 — 2026-09-15, CONDUCT #11 · ACCEPTED, I2 2.1.0 → **2.2.0**, ADDITIVE
 
 Six keys added to the office entries' `text()` return; none removed, renamed or re-typed, so
 this is a MINOR by IC-25's rule and the version moves accordingly.
@@ -7458,7 +7458,7 @@ at one narrow shape and is stated rather than approximated: the field that LOOKS
 answer, `found: false`, means something else entirely, and using it would file every
 document that mentions nobody as a document with no text.
 
-### RESOLUTION — 2026-09-15, CONDUCT #11 · ACCEPTED, I3 15.2.0 → **15.3.0**, ADDITIVE
+### RESOLUTION · IC-95 — 2026-09-15, CONDUCT #11 · ACCEPTED, I3 15.2.0 → **15.3.0**, ADDITIVE
 
 One read added, one read that answered `built: false` now answering, one vocabulary exported.
 Nothing removed, renamed or re-typed, so MINOR by IC-25's rule.
@@ -7590,7 +7590,7 @@ removed. `passage:` and `rows=passage` are §7 item 5's and are not here — thi
 has been CITED OR MARKED CITABLE, never the text of the documents, and the published `syntax`
 says so in as many words so a member cannot take one for the other.
 
-### RESOLUTION — 2026-09-15, CONDUCT #11 · ACCEPTED, I3 15.3.0 → **15.4.0**, ADDITIVE
+### RESOLUTION · IC-98 — 2026-09-15, CONDUCT #11 · ACCEPTED, I3 15.3.0 → **15.4.0**, ADDITIVE
 
 One arm, one row kind, three columns on an existing row kind, and one statement added to every
 answer. Nothing removed, renamed or re-typed, so MINOR by IC-25's rule.
@@ -7737,7 +7737,7 @@ every restore byte-identical by sha256 AND cmp, and ZERO held-open assertions al
 which this item's harness CHECKS rather than describes, after REC-83's own run found an arm
 that broke its declared held-open half.
 
-### RESOLUTION — 2026-09-15, CONDUCT #11 · ACCEPTED, I3 15.4.0 → **16.0.0**, BREAKING
+### RESOLUTION · IC-96 — 2026-09-15, CONDUCT #11 · ACCEPTED, I3 15.4.0 → **16.0.0**, BREAKING
 
 **MAJOR on IC-25's settled rule: a refusal where none stood before is a break WHATEVER the
 measured impact.** The measured impact here is ZERO legs on the live instance, and the zero is
@@ -7882,7 +7882,7 @@ the resolved bound map. Every consumer then reads the stored letter exactly as i
 version path is unaffected either way, and D-373 reopens as the same row. That is precisely
 negative-control arm (a) and is therefore already measured rather than predicted.
 
-### RESOLUTION — 2026-09-15, CONDUCT #11 · ACCEPTED, I3 16.0.0 → **17.0.0**, BREAKING
+### RESOLUTION · IC-102 — 2026-09-15, CONDUCT #11 · ACCEPTED, I3 16.0.0 → **17.0.0**, BREAKING
 
 MAJOR on IC-25's rule and IC-96's own precedent: a refusal where none stood before is a break
 whatever the measured impact. **The measured impact is ZERO on the live instance — 31 bundles, 0
@@ -8005,7 +8005,7 @@ exists today — must respect the same limit or the promote will refuse.
   `authority_kind = derive` where extraction writes under `extract`, and the two reads that
   matter are now narrowed by authority so neither can answer with the other's row.
 
-### RESOLUTION — 2026-09-16, CONDUCT #1 · ACCEPTED, I5 1.15.0 → **1.16.0** and I1 1.3.0 → **1.4.0**, both ADDITIVE
+### RESOLUTION · IC-104 — 2026-09-16, CONDUCT #1 · ACCEPTED, I5 1.15.0 → **1.16.0** and I1 1.3.0 → **1.4.0**, both ADDITIVE
 
 MINOR on each, because nothing existing is renamed, reshaped or removed and an answer for a
 document with no indexable units is byte-identical to the pre-item answer. **The registered
@@ -8116,7 +8116,7 @@ bundle, no subject and no address. REC-30's rule bites on *the total of an enume
 is not one. Gating it would mean either a second implementation of the resolver in SQL or silently
 changing what the field counts, and REC-103 raises it (**D-386**) rather than doing either.
 
-### RESOLUTION — 2026-09-16, CONDUCT #1 · ACCEPTED, I3 17.0.0 → **18.0.0**, BREAKING
+### RESOLUTION · IC-105 — 2026-09-16, CONDUCT #1 · ACCEPTED, I3 17.0.0 → **18.0.0**, BREAKING
 
 MAJOR on IC-25's settled rule and IC-96/IC-102's own precedent: **a refusal where none stood
 before is a break WHATEVER the measured impact.** The measured impact here is ZERO — `op=frontier`

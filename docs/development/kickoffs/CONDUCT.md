@@ -624,6 +624,26 @@ defect it is.
    written down and the class recurred anyway, which is why this is now a NAMED SWEEP in
    the integration step rather than a lesson.
 
+   **AND A DELEGATION IS ONE OF THE THREE DRAINED CHANNELS ONLY BECAUSE SOMETHING NOW
+   DRAINS IT (M0-37, 2026-09-16).** Until this landed, a `DELEGATION` block carried exactly
+   one date — the one it was RAISED on — so nothing distinguished a block that was true when
+   written from one that is true now, and the only instrument was a CONDUCT session choosing
+   to sweep: manual, unscheduled, and **37 days late the one time it ran**. `plancheck` now
+   FAILS a block that carries neither a dated `**DISCHARGED …**` line nor a dated
+   `**open as of YYYY-MM-DD**` line, and fails an `open as of` older than 30 days.
+   **So two acts are yours and neither is optional.** When you INTEGRATE an item whose
+   landing closes a delegation, write the discharge **in that delegation's own block** —
+   `CLAIMS.md` already held a discharge written in a DIFFERENT block, which meant anyone who
+   went to the delegation read it as open. And when the gate reports a block STALE, the
+   remedy is to READ THE TREE the block names and then either discharge it or APPEND a new
+   dated `open as of` line saying why it is still open. **Appending, never overwriting: the
+   affirmations accumulate, and a block re-affirmed three times without closing is printed as
+   a candidate for a row rather than a register line.**
+   **What the gate is worth is bounded and is printed on every run rather than argued here:
+   a blanket date stamp defeats the staleness arm and looks identical to an honest sweep, so
+   `plancheck` prints the COHORT — how many blocks were affirmed on one day — and says in its
+   own output that it cannot tell the two apart.** Do not read a green register as a read one.
+
    **AND AFTER THE MERGE, BEFORE THE PUSH, RUN `node tools/mintid.mjs --audit --base origin/main`.**
    D-243, closed 2026-08-08. **A merge is the only moment two branches' ids become one
    corpus, so a collision that existed in NEITHER branch appears at your hands and
