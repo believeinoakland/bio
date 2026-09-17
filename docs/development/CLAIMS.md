@@ -11811,3 +11811,36 @@ paths:
   `INTERFACES.md` and IC-112's RESOLUTION. All three are named as owed acts with their actor in
   this item's report rather than left implied, because a note in a region nothing drains is not
   even a note.
+
+## CLAIM 2026-09-17 UI (UI-62 — SEARCH §7 row 6: the search surface at content grain, and the absence statement by level)
+
+session: ui62-passage-surface (worktree agent-a79a0995d1af935bb, branch `worktree-agent-a79a0995d1af935bb`)
+opened: 2026-09-17T00:00:00Z
+
+**PATHS CLAIMED, BY SITE AND BY REGION. The disjointness was MEASURED against `origin/main` at
+`78ef0efc` rather than assumed:** the three live 2026-09-17 RECORD claims — REC-107, REC-92 (with
+its four addenda) and REC-96 — every one names `civicos-ui/**` in its own **NOT TOUCHED** list, so
+this item's ground is reserved by their exclusions as well as by this block, and no unreleased UI
+claim exists on `origin/main`.
+
+- `civicos-ui/app.html` — **claimed by SITE, not by file** (it is shared ground and `CLAIMS.md`'s
+  UI-42 precedent governs): the FINDER's own region — `renderFinder`, `runSearch`,
+  `finderPaintResults` and the panel renderers beneath them — plus the new passage-route code and
+  the new entries in the guarded CATALOG block. **NOT** the composer's own body (`citePaint`,
+  `doCite`) beyond the one call site that opens it, **NOT** `legReferentHtml` / `legJumpHtml` /
+  `legMintLabelHtml` (UI-61's, REUSED rather than rewritten), **NOT** `__DOCPROFILE__`, **NOT**
+  `__ELICITATION__`, **NOT** any other marked block.
+- `civicos-ui/test/passage-surface.test.mjs` (NEW, this item's suite) and
+  `civicos-ui/test/passage-surface.control.mjs` (NEW, the control driver).
+- `civicos-ui/check-semantics.mjs` — **only the pin this item's newly mirrored vocabulary needs.**
+- `docs/development/CONTENT-SEARCH-DESIGN.md` — §4.4's Incomplete bullet (the bounded tally's
+  presentation question, which REC-92 left open BECAUSE IT IS THIS ROW'S), §7 row 6, and the front
+  matter (Status and Incomplete sections), per `CORPUS-STANDARD.md`.
+- `docs/development/CIVICOS_UI_STATE.md` (PREPENDED — UI-59 restored this ledger as the area's log),
+  `docs/development/MEASUREMENTS.md` (appended), this file.
+
+**NOT TOUCHED:** `docs/development/QUEUE.md` (CONDUCT's sole writer), `bio-plane/**` in its
+entirety (this item adds NO op, NO check and NO column — it is an I3 CONSUMER of `op=meaningrows`
+as REC-92 shipped it), `newgroup/**`, any version bump, tag or deploy.
+
+**open as of 2026-09-17** — raised by the UI-62 worker and not yet released.
