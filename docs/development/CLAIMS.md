@@ -12031,3 +12031,19 @@ paths:
   **NOT `tools/decided.mjs`** — the generator is CORRECT and is not this row's subject. This row
   changes WHEN it is run, never WHAT it computes, and a `docs/DECIDED.md` that this mechanism causes
   to differ by one byte would be a defect in the mechanism.
+
+## CLAIM ADDENDUM 2026-09-17 M0 (M0-56 — the CONDUCT.md edit is larger than the claim reserved, and the claim is corrected rather than the edit excused)
+session: m056-decided-index-pushguard (worktree agent-a3378dc3df6e90e46)
+opened: 2026-09-17T00:00:00Z
+what changed: the original block reserved **`docs/development/kickoffs/CONDUCT.md` — ONE line in the
+  integration sequence naming the guard.** What landed is a **twelve-line numbered point (3.)** appended
+  to the two-rule list under *PLANCHECK GREEN IS NOT THE GATE*, because that list is the site that
+  already says *a lesson written down is not yet a habit — where a rule can be mechanised, mechanise
+  it*, and a one-line pointer there could not carry the limit (a fresh clone is unguarded until a gate
+  runs in it once) without stating it. **A limit omitted for brevity is the exact failure this row was
+  written about**, so the line grew and the claim is corrected instead.
+  **NO EXISTING LINE OF `CONDUCT.md` WAS EDITED** — rules 1 and 2 are byte-identical and the addition is
+  purely appended to the list.
+why this is an addendum and not an edit: `CLAIMS.md` is APPEND ONLY and the one field that changes on an
+  existing block is `released:`. A claim quietly widened in place is a register that no longer records
+  who held what, which is the only thing a claim register has to support.
