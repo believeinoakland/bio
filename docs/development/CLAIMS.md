@@ -10074,3 +10074,63 @@ session: REC-105 worker (worktree `agent-ab0036215c20a9dd1`). Appended rather th
   `bio-plane/src/schema.mjs`, `bio-plane/src/index.mjs`, `bio-plane/scripts/coverage.mjs`
   (`REGISTER_FLOOR` READ and NOT moved — this item adds no op and no check id), `newgroup/**`,
   `civicos-ui/**`, any version bump, tag or deploy.
+
+## CLAIM 2026-09-16 M0 (M0-36 — D-282's other estate: every `civicos-ui/test` writer that exits flushes first)
+session: M0-36 worker (worktree `agent-aa65135b8f1324f15`, branch `claude/epic-raman-a21136`, base `origin/main` `82ffae30`)
+opened: 2026-09-16T00:00:00Z
+paths: **`civicos-ui/test/**` and nothing else.** Every `.mjs` in that directory that calls
+  `process.exit` gains ONE import line — `import "../../bio-plane/test/stdio.mjs";` — plus the
+  comment stating why it is SHARED rather than copied. **53 files: the 41 `.test.mjs` suites
+  `run.mjs` discovers and spawns piped, the 11 `.control.mjs`/harness drivers beside them, and
+  `run.mjs` ITSELF** (which prints `civicos-ui: all harnesses green` after a `process.exit(1)`
+  path and is therefore the same defect one layer out, whenever a session pipes it).
+  `civicos-ui/test/stdio-census.test.mjs` (NEW) — the standing census the row's accepts-when
+  requires, asserting the population rather than a count in a row.
+  `civicos-ui/test/nc-m036.mjs` (NEW) — this item's control driver, inside this worktree,
+  deliberately NOT a `.test.mjs` so the runner does not discover it.
+  `docs/development/DEBT.md` — **D-282's disposition line, plus ONE NEW ROW, D-387**
+  (minted with `tools/mintid.mjs`), which is a SECOND tally-loss mechanism in the same
+  runner found by this item's own control arm coming back red over a working subject:
+  `run.mjs` spawned its children on node's DEFAULT `execFileSync` maxBuffer of 1 MiB and
+  node KILLS a child that overflows it. No other row moves.
+  `docs/development/MEASUREMENTS.md` — **ONE new section APPENDED at the end**, carrying
+  the population census, the pipe-loss rates at both dump sizes and the `ENOBUFS` figure
+  with their date and instrument. Nothing above it moves.
+  **NOT** `docs/development/QUEUE.md` — M0-36's row stays `running` and its flip is
+  CONDUCT's at integration, which is where the merge sha it must record comes from.
+  **NOT** `civicos-ui/app.html`, **NOT** `civicos-ui/check-*.mjs` (see the DELEGATION below —
+  three guards outside this region have the same defect and this session does not own them),
+  **NOT** `bio-plane/**` (the shared module is IMPORTED, not edited), **NOT** `newgroup/**`.
+
+## DELEGATION 2026-09-16 M0 (M0-36) -> UI: **THE SAME DEFECT IN THE THREE `civicos-ui/check-*.mjs` GUARDS, WHICH ARE OUTSIDE THIS SESSION'S REGION**
+M0-36 closes `civicos-ui/test/**` — 53 writers, every one measured rather than
+inherited. It does NOT close the three guards `run.mjs` invokes, because
+`civicos-ui/check-*.mjs` is not in this claim's paths and a prior UI claim names it
+as excluded ground. **Measured here, not assumed** (`82ffae30`, this worktree):
+
+- `civicos-ui/check-semantics.mjs` — **the live one.** It prints its `OK: …` result
+  line and then calls `process.exit(fail ? 1 : 0)` on the next line (line 382). That
+  is D-282 exactly: the one line a reader takes the verdict from is the last thing
+  written before an exit that does not flush. `run.mjs` spawns it `stdio:"inherit"`,
+  so the pipe is whatever `run.mjs`'s own stdout is — and a session that pipes
+  `run.mjs` (to `tee`, to a log, from a control driver) makes it a pipe.
+- `civicos-ui/check-refusal-codes.mjs` and `civicos-ui/check-mock-envelope.mjs` —
+  **at risk on the FAILURE path only.** Each prints its tally line and falls off the
+  end on success (node flushes on a natural exit), but each calls `process.exit(1)`
+  after printing its failure detail, which is the larger dump of the two.
+
+The fix is the same one line, `import "../../bio-plane/test/stdio.mjs";` adjusted for
+the directory (`./test/stdio.mjs` is not it — the module lives in the plane's test
+estate and is SHARED rather than copied, for the reason stated at every site in
+`civicos-ui/test/`). `civicos-ui/test/stdio-census.test.mjs` asserts the population it
+covers and **names this residual in its header rather than leaving it silent**, so the
+gap is visible from inside the instrument rather than only from this register.
+
+**AND A SECOND ACT ON THE SAME FILE, WHICH IS A DIFFERENT DEFECT: D-387.**
+`civicos-ui/check-mock-envelope.mjs:302` spawns all 56 suites with `{stdio:"pipe"}` and
+**no `maxBuffer`**, so it is on node's default of 1 MiB — and node KILLS a child that
+overflows it (measured: `ENOBUFS after 1,114,112 bytes`, node v26.0.0). A suite failing
+with a dump past that loses its tally under the D-173 second pass **however well it
+flushes**, because the reader never accepts the bytes. `run.mjs`'s half is fixed under
+M0-36; this one is one line, `maxBuffer: 256 * 1024 * 1024`, and ARM D of the census
+prints its state every run so the gap cannot go quiet.
