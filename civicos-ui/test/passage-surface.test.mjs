@@ -582,6 +582,25 @@ ok("the never-read document really does land in the not-extracted bucket, so thi
   JSON.stringify(A_HIT.env.scope));
 ok("and where that bucket is non-zero the surface says WHICH cause it cannot tell you, rather than implying one",
   /f-pass-cause/.test(P_HIT) && /not on this answer/.test(P_HIT));
+{
+  /* THE ONE LITERAL THE SURFACE SPELLS, PINNED IN BOTH DIRECTIONS. The cause note
+     is a statement about ONE state's meaning and must name it; there is no
+     published predicate for "this is the never-extracted bucket". Unpinned, a
+     rename in the plane would drop the note in SILENCE and tell a member less
+     while every other assertion here stayed green — the exact drift this file
+     guards everywhere else, arriving through the one place it could not be
+     driven off the vocabulary. */
+  const app = fs.readFileSync(new URL("../app.html", import.meta.url), "utf8");
+  const NEVER = Object.keys(CONTENT_AXIS_STATES)[3];
+  eq("the plane's fourth axis state is still the one the surface's cause note is about",
+    NEVER, "not_extracted");
+  ok("...and the surface spells exactly that key, so a rename fails HERE rather than dropping the note",
+    app.includes(`sc.${NEVER} === "number" && sc.${NEVER} > 0`),
+    `looked for sc.${NEVER} in the cause-note guard`);
+  ok("...and the note really is conditional on it — it does not render over a fully extracted scope",
+    !/f-pass-cause/.test(U.finderTallyHtml({
+      scope: { ...A_HIT.env.scope, [NEVER]: 0 }, content_axis: A_HIT.env.content_axis })));
+}
 
 /* THE PRESENTATION QUESTION §4.4 LEFT OPEN, DECIDED AND PINNED. */
 eq("the bound this scope is counted against is the plane's own constant",

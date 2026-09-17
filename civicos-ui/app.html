@@ -11550,7 +11550,18 @@ function finderTallyHtml(env){
       <div class="subj-how">The record counts at most <b>${esc(String(sc.captures_bound))}</b> captures for this tally and this scope has more, so it counted <b>${esc(String(sc.captures_counted))}</b> and stopped. <b>The captures past that point are in none of the figures below</b> &mdash; not in the searched buckets and not in the unsearched ones. They are not "probably like these"; they are uncounted, and this screen cannot tell you what they hold.</div>
     </div>` : ""}
     <div class="card" id="f-pass-axis" style="margin:8px 0">${rows}</div>
-    ${/* WHICH CAUSE, AND THE HONEST ANSWER IS THAT THIS READ DOES NOT CARRY IT.
+    ${/* THE ONE STATE NAME THIS FILE SPELLS, AND IT IS PINNED RATHER THAN TRUSTED.
+          Everything above is driven off `content_axis.vocabulary`, so the buckets
+          are whatever the plane says they are. This note is different: it is a
+          statement about ONE state's meaning — that a capture was never extracted
+          and the record is not saying WHY on this answer — so it has to name that
+          state, and there is no published predicate for "this is the never-
+          extracted bucket". A rename would therefore drop the note in SILENCE,
+          which is the drift this file guards everywhere else. So
+          `passage-surface.test.mjs` pins the literal against
+          `CONTENT_AXIS_STATES`' own key in both directions: a plane that renames
+          it fails the harness BY NAME instead of quietly telling a member less. */
+      /* WHICH CAUSE, AND THE HONEST ANSWER IS THAT THIS READ DOES NOT CARRY IT.
           Measured on this tree rather than inherited: `#contentAxisTally`
           computes a per-capture cause and then COUNTS AND DISCARDS it, so only
           the bucket totals cross the wire. Naming the reads that do carry it is
