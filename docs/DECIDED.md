@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1028 rulings across 85 documents.
+1029 rulings across 85 documents.
 
 ## DEC-
 
@@ -1366,6 +1366,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1511`
 - **M0-57** · 2026-09-17 — BOB RULED §3 THE SINGLE AUTHORITY ON DESIGN STATUS on 2026-09-17, and asked that the record be checked for second sources of truth; `tools/corpuscheck.mjs`'s `--authority` arm (M0-57) now refuses a governed document that lists a construct among the pieces still to be designed when a home document this map names has…  
   `docs/architecture/BIO_System_Design.md:3`
+- **M0-57** · 2026-09-17 — THE STALE ASSERTION WAS CORRECTED AT SOURCE IN THREE SITES AND NONE WAS EXEMPTED**, including **§3 construct 8's own STATE cell, which had said the claim object was doctrine still owed — the map contradicting itself within one row, six weeks after the design existed.** The rule now lives in `CORPUS-STANDARD.md`…  
+  `docs/development/QUEUE.md:1491`
 
 ## Rulings carrying no id
 
