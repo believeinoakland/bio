@@ -10353,3 +10353,47 @@ predicate reads REACHABILITY instead, for the reason set out in `VERIFICATION.md
 widening is not what was intended, it is one condition in one file and reversing it costs
 nothing; the recommendation is to keep it, because the literal reading is quiet over exactly
 the loss REC-91 was.
+
+## CLAIM 2026-09-16 M0 (M0-48 — AMENDMENT: the row was corrected FOUR times while running, the unit moved from BRANCH to WORKTREE, and the files are renamed)
+session: m048-stranded-branches (worktree agent-a0c3609704dee7166)
+opened: 2026-09-16T00:00:00Z
+released: 2026-09-16 on report.
+**Appended rather than edited into the block above, because this register is append-only and
+a released block cannot be corrected** — the same rule `tools/attribution.mjs` excludes this
+file for.
+
+**WHAT CHANGED AND WHY, since the first block names files that no longer exist.** The row as
+specified said *`plancheck` warns on a local `worktree-agent-*` branch neither merged nor
+present on the remote*. CONDUCT #1 and BOB #12 corrected it four times while the item was
+running, each correction from someone who had then gone and LOOKED:
+1. **The glob is not the population** — `rec111-unit-count-bound` and every `claude/*` session
+   worktree hold real work it never matches, **and the narrow arm would have passed its own
+   negative control**, because a planted `worktree-agent-*` branch is exactly what it sees.
+2. **Branch-EXISTS is not the test** — compare the local HEAD against the REMOTE REF. (This one
+   the item had already built before the correction arrived; it was the first thing measuring
+   the estate showed, and the finding is in `VERIFICATION.md`.)
+3. **A genuinely idle worktree must not be named**, or the arm is tuned out as noise.
+4. **And correction 3 was itself wrong within the hour** — the worktree named as the canonical
+   silent row started working, so the exemption is read from the STATE and never inferred from
+   the TIP, and a third window (UNCOMMITTED) is reported in its own words because no push
+   closes it.
+
+paths, superseding the list in the block above:
+  - `tools/strandedwork.mjs` — **NEW**, the predicate. **Renamed from `strandedbranches.mjs`,
+    which existed for one commit**: the unit is the WORKTREE, a branch cannot see uncommitted
+    work, and the name was the first thing the narrow reading got wrong.
+  - `tools/plancheck.mjs` — **by REGION**: ONE new block as section 8, between section 7's
+    closing brace and the `report` banner. Nothing existing moved.
+  - `bio-plane/test/strandedwork.test.mjs` (NEW), `bio-plane/test/strandedwork.control.mjs` (NEW).
+    `strandedbranches.{test,control}.mjs` are DELETED in the same commit; they were never on
+    `origin/main`.
+  - `bio-plane/scripts/coverage.mjs` — **ONE key in `REGISTER_FLOOR`**, `corpus`, moved from the
+    figure the merged green run PRINTED. `arms` and `classified` are NOT touched.
+  - `docs/development/VERIFICATION.md` — the M0-48 section, rewritten for the worktree design;
+    plus the M0-15 bullet extended in place.
+  - `.gitignore` — the control pen and this item's run logs.
+  **NOT** `QUEUE.md` (CONDUCT flips the row), **NOT** `DEBT.md` (D-288's closure is BOB #12's),
+  **NOT** `MEASUREMENTS.md` (M-38 is BOB's entry and BOB is landing the corrections onto it),
+  **NOT** any kickoff: `CONDUCT.md` step 1 and `WORKER.md` step 4 already run `plancheck`, so
+  the mechanism is inside the loop both readers perform and a new step would be a second
+  statement of one rule.

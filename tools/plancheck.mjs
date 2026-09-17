@@ -581,59 +581,66 @@ if (conduct && inbox && !/INBOX/.test(conduct))
   }
 }
 
-/* ---------------------------- 8. A WORKER BRANCH NOBODY ELSE CAN REACH (warn) — D-288
+/* ------------------------------ 8. WORK THAT REACHES NOBODY (warn) — D-288's DETECTION half
 
    Section 1 above enforces `CLAUDE.md`'s oldest rule — a change is made when it is COMMITTED
-   AND PUSHED — for `main` and for the planning surface. NOTHING enforced it for a WORKER
-   BRANCH, which is where every item's code sits between the worker reporting and CONDUCT
-   merging, a window that has repeatedly lasted a day or more.
+   AND PUSHED — for `main` and for the planning surface. NOTHING enforced it for a WORKER's own
+   tree, which is where every item's work sits between the worker starting and CONDUCT merging.
 
    THE RECEIPT IS TWO MEASUREMENTS AND A LOSS. 2026-08-10: 137 local `worktree-agent-*`
-   branches, ZERO on the remote. The row then sat `open` for FIVE WEEKS while nothing chased
-   it — because section 2's debt check fails an open row with NO disposition, and this one HAD
-   one, so the estate's own watchdog was satisfied for the whole period the exposure was
-   total. 2026-09-15: REC-91 finished, committed and released on its branch, its integrator
-   was stood down before merging, and the work reached nobody for a day; recovering it took
-   getting a session onto the physical machine that held the disk.
+   branches, ZERO on the remote; the row then sat `open` for FIVE WEEKS, because section 2's
+   debt check fails an open row with NO disposition and this one HAD one — the estate's own
+   watchdog was satisfied for the whole period the exposure was total. 2026-09-15: REC-91
+   finished, committed and released on its branch, its integrator was stood down before
+   merging, and the work reached nobody for a day. 2026-09-16 (M-38): a sweep of all nine
+   worktrees found FOUR live exposures in THREE shapes, and the first was M0-48's own worktree
+   — the alarm for stranded work was itself stranded work while it was being built.
 
-   IT WARNS AND NEVER FAILS, and that is BOB #12's ruling rather than caution. A historical
-   local branch is not a defect and the inherited ones are deliberately not retroactively
-   pushed; a gate that goes red on inherited state gets switched off, which is this estate's
-   own recorded failure mode for ratchets. `WORKER.md`'s push step is D-288's PREVENTION half
-   and NOTHING AUDITS PREVENTION — exactly the shape that just failed. This is the DETECTION
-   half, and it is the only thing in the estate that will ever tell anyone a branch was
-   stranded; until it existed, the way we found out was that somebody went looking.
+   IT WARNS AND NEVER FAILS (BOB #12's ruling). A historical local branch is not a defect and
+   the inherited ones are deliberately not retroactively pushed; a gate that goes red on
+   inherited state gets switched off, which is this estate's own recorded failure mode for
+   ratchets. `WORKER.md`'s push step PREVENTS and NOTHING AUDITS PREVENTION — exactly the shape
+   that failed. This DETECTS, inside the loop `WORKER.md` step 4 and `kickoffs/CONDUCT.md` step
+   1 already run, which is why this item adds no step to either file.
 
-   The predicate is `tools/strandedbranches.mjs`, imported rather than written here — the
-   shape sections 6 and 7 already use, because `plancheck.mjs` self-executes and cannot be
-   imported by the suite that drives its arms. Its header carries why the test is
-   REACHABILITY rather than the name-presence D-288's phrase literally asks for, the two live
-   branches that measurement came from, and the silent-empty-walk defect its own first draft
+   THREE WINDOWS IN THREE DIFFERENT SETS OF WORDS, because the reader's next act differs:
+   never-pushed and behind both want a PUSH, and uncommitted wants a COMMIT that no push can
+   substitute for. The unit is the WORKTREE rather than the branch precisely because a branch
+   cannot see the third one.
+
+   The predicate is `tools/strandedwork.mjs`, imported rather than written here — the shape
+   sections 6 and 7 already use, because `plancheck.mjs` self-executes and cannot be imported
+   by the suite that drives its arms. Its header carries why the population comes from git's
+   own worktree enumeration rather than from a name glob, why the exemption is read from the
+   STATE and never inferred from the tip, and the silent-empty-walk defect its first draft
    shipped. */
 
 {
-  const { strandedAudit, strandedMessage } = await import("./strandedbranches.mjs").catch(() => ({}));
+  const { strandedAudit, strandedMessage } = await import("./strandedwork.mjs").catch(() => ({}));
   if (!strandedAudit) {
-    warn(`strandedbranches.mjs could not be loaded — local worker branches are UNAUDITED this run.`);
+    warn(`strandedwork.mjs could not be loaded — stranded work is UNAUDITED this run.`);
   } else {
     /* Under `--local` plancheck is promising not to touch the network, so the remote's list
        comes from the tracking refs and the finding says so. It still RUNS in both modes: a
-       worker running `--local` mid-turn is the reader whose branch this most often is. */
+       worker running `--local` mid-turn is the reader whose tree this most often is. */
     const a = strandedAudit({ repo: ROOT, network: !LOCAL_ONLY });
-    notes.push(`worker branches: ${a.branches.length} local \`worktree-agent-*\`, `
-      + `${a.counts.integrated} merged into ${a.main}, ${a.counts.published} on the remote, `
-      + `${a.stranded.length} STRANDED (${a.counts.absent} absent, ${a.counts.diverged} diverged)`
-      + ` — evidence: ${a.source}`);
-    /* A walk that FAILED is never reported as a clean estate. This predicate's own first
-       draft did exactly that — the receipt is in its header — and the rule is CLAUDE.md's:
-       do not conclude a value from an absence that has two causes. */
+    notes.push(`stranded work: ${a.counts.worktrees} worktree(s) + ${a.counts.orphanBranches} `
+      + `branch(es) with no worktree judged, ${a.counts.exposed} EXPOSED `
+      + `(${a.counts.unpushed} never pushed, ${a.counts.behind} behind, `
+      + `${a.counts.uncommitted} uncommitted) — evidence: ${a.source}`);
+    /* A walk that FAILED is never reported as a clean estate. This predicate's own first draft
+       did exactly that — the receipt is in its header — and the rule is CLAUDE.md's: do not
+       conclude a value from an absence that has two causes. */
     if (a.walkFailed)
-      warn(`worker branches could not be ENUMERATED — this run says NOTHING about stranded\n`
-         + `        branches, which is not the same as saying there are none.`);
+      warn(`stranded work could not be ENUMERATED — this run says NOTHING about stranded\n`
+         + `        work, which is not the same as saying there is none.`);
     if (a.remoteFailed)
-      warn(`the remote's branch list could not be READ — the stranded-branch finding below,\n`
-         + `        or its absence, rests on cached remote-tracking refs and not on the remote.`);
-    if (a.stranded.length) warn(strandedMessage(a));
+      warn(`the remote's branch list could not be READ — the finding below, or its absence,\n`
+         + `        rests on cached remote-tracking refs and not on the remote.`);
+    if (a.treeFailed.length)
+      warn(`${a.treeFailed.length} worktree(s) could not be read for uncommitted changes, so\n`
+         + `        the third window is UNKNOWN for them: ${a.treeFailed.join(", ")}`);
+    if (a.exposed.length) warn(strandedMessage(a));
   }
 }
 

@@ -290,4 +290,4 @@ _work-ab0036/
 # dry-run wrote into /var/folders and the battery NAMED the directory as unfenced
 # residue, attributing it as a CANDIDATE to whichever suite was running at the time
 # (D-237, and WORKER.md's rule about a generic name under /tmp).
-.m048-runs-final-battery.log
+.m048-runs-*
