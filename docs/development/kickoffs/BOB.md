@@ -415,7 +415,22 @@ declares a residue (*STILL OPEN*, *NOT CLAIMED DONE*, *RESIDUE, NAMED*), open `D
 entries, and `QUEUE.md` rows blocked on BOB. **Its first honest run surfaced D-394 — a design act
 this lane had been TOLD it owed, had not done, and had not mentioned in hours of reporting.**
 
-**SO THE OBLIGATION IS: RUN IT, AND IF IT IS NON-EMPTY, KEEP GOING.** Sequencing among the items
+**AND THE RULE NEEDED ONE CORRECTION THE FIRST TIME IT WAS ENFORCED, because *when the list
+empties* IS THE WRONG STOPPING CONDITION AND WOULD MAKE THIS RULE EITHER INFINITE OR IGNORED.**
+The list holds the estate's STANDING DEBT — thirteen inherited rows the day this was written —
+and that never empties. A rule whose terminating condition cannot occur is one a session learns
+to disregard, which would leave it worse than no rule.
+
+**THE BOUNDARY IS THIS SESSION'S OWN COMMITMENTS BEING DISCHARGED, not the ledger going quiet.**
+Concretely: every design act this lane was HANDED, every residue it DECLARED, and every row it
+ROUTED to itself. Those are the items whose absence from the report is a broken promise. An
+inherited row that has sat since M4 is real work and belongs on the list, but it is not a promise
+this session made, and treating it as one makes the honest report impossible to write.
+
+**So: run it, discharge everything on it that is YOURS, and report at that boundary — naming what
+remains and whose it is.** Sequencing among the rest is this lane's judgement as always.
+
+**SO THE OBLIGATION IS: RUN IT, AND IF ANYTHING ON IT IS YOURS, KEEP GOING.** Sequencing among the items
 is this lane's own judgement and the tool deliberately does not rank them. What it removes is the
 one thing that was never reliable — a session REMEMBERING what it promised. **A commitment in a
 message is the same class as a mechanism in a document nobody executes: the repository is the
