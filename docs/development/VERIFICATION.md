@@ -1229,3 +1229,100 @@ exactly one is a genuine absence.
 **"Where the floor goes next" has no entry for REQUIRED-VERSUS-MERELY-EXISTING, and that is the
 axis this section adds.** An instrument that cannot be skipped without trace is a different object
 from one that can, and this document has been treating them as the same object throughout.
+
+---
+
+## THE FIRST ENTRY LOOP THIS ESTATE COMPOSES, AND WHY IT IS A PUSH RATHER THAN A GATE
+
+*Added 2026-09-17 by M0-56. The section above measured that **nothing composes any entry
+loop** — `.git/hooks/` holds only samples, `core.hooksPath` is unset, there is no
+`.github/` — and drew the consequence that every floor here is a floor on what a run
+REPORTS, not on what the estate ENFORCES. **This is the first thing that changes that, and
+it is deliberately the smallest possible instance of it.** Re-verified on this tree before
+building, not inherited: `.git/hooks` held fifteen `.sample` files and nothing else,
+`git config --get core.hooksPath` exited 1, and `ls .github` reported no such directory.*
+
+### The defect, and why it is not a discipline problem
+
+`docs/DECIDED.md` is GENERATED from every ruling in the corpus, so **any prose edit stales
+it**, and `plancheck` arm 2b FAILS on the drift. That detector is correct and it works: it
+caught all five occasions on 2026-09-17 when CONDUCT #2 pushed a stale index — four that
+turned `main` RED, and a fifth that turned a merged-tree battery red through
+`strandedwork.test.mjs`'s `plancheck --local exits 0` arm.
+
+**The session derived the correct rule MID-SESSION, wrote it down, and then broke it twice
+more.** `CLAUDE.md`'s instruction for that situation is not ambiguous: where a rule can be
+mechanised, write the command, not a better warning.
+
+### TWO CAUSES, AND THE SECOND IS THE WHOLE ARGUMENT FOR THE SHAPE
+
+1. **Regenerate, then edit more prose.** Ordinary forgetting. Every gate that runs before
+   the commit already catches this one.
+2. **Regenerate, then REBASE**, where a peer's commit lands new rulings UNDERNEATH a
+   correctly generated index. **Nothing the session did made it stale** — the corpus
+   changed while the session touched nothing.
+
+**Cause (2) cannot be fixed by remembering, and it cannot be fixed by any gate**, because
+every gate in this document runs when a session chooses to run it, which is *before the
+commit*. The rebase happens after. There is no gate arm reachable from any loop that sits
+between the last rebase and the bytes leaving. **The push is the only moment that is after
+the last rebase by construction**, which is why the mechanism is a `pre-push` hook and not
+a sixth arm in `gates.mjs`.
+
+### What was rejected, and the one that is a trap
+
+- **A `gates.mjs` step that regenerates before it reports.** Cheap, and it lands in the
+  loop everyone runs. **Rejected on two counts, and the second is decisive.** First, it
+  makes the gate MUTATE THE TREE IT IS MEASURING — a gate that edits its subject can no
+  longer answer *was this tree correct*, only *is it correct now that I fixed it*, and this
+  estate should not grant a gate that power for convenience. Second: **it does not close
+  cause (2) at all.** It would close the cause care already reaches and miss the one it
+  cannot.
+- **A `plancheck` arm that regenerates into a temp file and diffs.** **Not a candidate,
+  because it already exists** — that is arm 2b, and it is what caught all five. M0-56
+  forbids weakening it and it is untouched byte for byte. The defect is not a missing
+  detector; it is a detector that fires at a moment the session can still invalidate.
+
+### It REFUSES; it does not regenerate
+
+The hook runs `decided.mjs --check` and refuses a stale push naming the command. It writes
+nothing tracked. **The decisive reason is not purity: a hook that regenerated would not fix
+its own push anyway.** By the time `pre-push` runs the commits are made and the ref list is
+computed, so regenerating would leave a dirty tree and send the stale bytes regardless. The
+auto-fixing hook is not a safer version of this one — it is a broken one that reports
+success.
+
+### `plancheck` installs it, and that is not the mutation objection by the back door
+
+A mechanism that is not in the loop the reader actually runs is not a mechanism, so the
+gate every worker already runs installs the hook on every run, idempotently, and says in
+its own output when it wrote. **The objection to a regenerating gate is that it writes a
+TRACKED path. This writes `.git/hooks/pre-push`, which is not tracked, not in the working
+tree, not in `git status`, and not an input to any arm.** That distinction is MEASURED
+rather than argued: `git status --porcelain` is byte-identical across two installs, asserted
+in `pushguard.test.mjs`.
+
+### Two corrections to the record, both verified rather than inherited
+
+- **Hooks resolve against the GIT COMMON DIR, which every worktree SHARES.** One install
+  covers every `agent-*` worker worktree of this clone. M0-56's brief said a hook is not
+  carried by a worktree; **the clone half is right and the worktree half is wrong**, and
+  that difference is what makes this worth building at all.
+- **A hook is a new ENTRY POINT here, not a new place to keep state.** `tools/mintid.mjs`
+  has kept the id ledger under `--git-common-dir` since M0-17 — `.git/bio-idalloc` is on
+  this disk — with a named control arm defending that choice. Only *git calls it* is new.
+
+### THE LIMIT, STATED RATHER THAN IMPLIED CLOSED
+
+**A FRESH CLONE HAS NO HOOK** until something runs `plancheck` once in it. The window is
+narrowed by the gate installing on every run — the first gate anybody runs arms it — but a
+clone that pushes before it ever gates is outside this mechanism, and so is a push made
+with `--no-verify`. **Both causes are closed for this clone and its worktrees; neither is
+closed for a checkout that has never run a gate.** That is a real gap and it is written
+here rather than left for a later session to discover.
+
+Two further bounds the guard reports rather than hides: a push whose corpus is DIRTY in the
+working tree gets a verdict about the TREE and is told so in those words, because the
+commits and the tree are then different objects; and a ref whose local sha is not HEAD is
+NAMED as one the guard did not speak for, read from the hook's own stdin rather than
+assumed.

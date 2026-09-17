@@ -1926,11 +1926,11 @@ Settled in prose without an id allocated. Cite them by file and line.
 - BOB #13's CORRECTED RULE, and it cost us both a wrong diagnosis: THE LOCK DOES NOT RELEASE WHEN THE HOLDER EXITS.  
   `docs/development/kickoffs/CONDUCT-NEXT.md:149`
 - **2026-09-16** — RULED 2026-09-16 by BOB #12 (mechanism, BOB's) on CONDUCT #1's report, which flagged the change instead of quietly working around it.  
-  `docs/development/kickoffs/CONDUCT.md:826`
+  `docs/development/kickoffs/CONDUCT.md:839`
 - **2026-09-17** — CORRECTED 2026-09-17, and the correction is BOB's own error caught one day later.** This bullet read *"dirty or off the tip"* and told you to stop and report on either.  
-  `docs/development/kickoffs/CONDUCT.md:852`
+  `docs/development/kickoffs/CONDUCT.md:865`
 - A CLAIM ABOUT THE WORLD IS CORRECTED BY GOING TO THE ARTIFACT.  
-  `docs/development/kickoffs/CONDUCT.md:903`
+  `docs/development/kickoffs/CONDUCT.md:916`
 - **2026-07-31** — CORRECTED 2026-07-31 by session BOB: item (3) of the plan below is SUPERSEDED by the function-specific Worker topology decision.  
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
@@ -1987,6 +1987,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/MEASUREMENTS.md:12815`
 - regex tail, `CONCEDED)\b(?!\.md\b)/;`, asserted to occur exactly once.  
   `docs/development/MEASUREMENTS.md:12832`
+- **2026-09-17** — THE PUSH-TIME DECIDED GUARD — both causes driven against a real remote, and the estate's hook premises re-verified** *(Id minted with `node tools/mintid.mjs M`, run bare.  
+  `docs/development/MEASUREMENTS.md:15163`
 - **2026-08-01** — CORRECTED 2026-08-01 — this hole is CLOSED and the paragraph below is kept as the > reasoning that closed it.** One reconciling Durable Object alarm now serves FIVE > consumers (selection-sweep, task-drain, archive-monitor, connection-derive, > overdue-scan), three of which landed within a week of the decision.  
   `docs/development/MILESTONES.md:118`
 - Bob already RULED the doctrine** — content > produced by a third-party script, if it is ever evidence, is recorded as produced by > THAT party and not by the hosting site.  
