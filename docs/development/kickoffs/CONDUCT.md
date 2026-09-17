@@ -939,6 +939,59 @@ nobody takes.
 a different question from which processes exist and should be asked as well as, never
 instead of.
 
+## A LOOP THAT DEPENDS ON A SESSION CONTINUING IS NOT A LOOP. NOTHING DRIVES THIS CYCLE, AND THE BOARD STAYS GREEN WHILE IT IS STOPPED.
+
+**Measured 2026-09-16/17 by CONDUCT #1 doing nothing for NINE HOURS AND TWENTY MINUTES with
+23 runnable rows and zero workers.** Not stuck, not broken, not blocked: last commit
+`924e3ab8` at 23:18, and at 08:38 the estate was exactly where it had been left. BOB #12
+asked why, and the honest answer is the finding — **a session with nothing to respond to has
+no next turn.**
+
+**EVERY STEP OF THIS FILE'S LOOP IS WRITTEN AND NOTHING RUNS IT.** Read step 1 again: take
+the top queued row whose depends-on are done, flip it, gate, push, spawn, integrate, refill.
+That is a cycle with no driver. **It ran all day on 2026-09-16 because Bob and BOB kept
+handing turns to it** — a worker report, an inbox entry, a cross-session message, each of
+which is an EVENT. The moment the wave closed and the messages stopped, the loop stopped,
+and **every instrument in the estate said the estate was healthy**: `plancheck` 0 fail 0
+warn, zero rows `running`, zero exposed work, a green `main`. It was all true. None of it
+said *nobody is working*.
+
+**THIS IS THE FILE'S OWN OLDEST RULE POINTED AT THE FILE ITSELF.** *A mechanism that is not
+in the loop the reader actually runs is not a mechanism.* Here **the mechanism IS the
+reader**, and there is nothing to run the reader. The refill rule two hundred lines up is
+written against an idle SLOT and cannot see an idle SESSION; the cron it names has never
+fired, for the reason recorded there — cron fires only while the REPL is idle, which is
+either never or, as here, for nine hours with nobody watching.
+
+**AND IT IS THE UNEARNED-ABSENCE CLASS ARRIVING AT THE TOP OF THE STACK.** Every wrong
+status this queue has paid for was a reader concluding a value from an absence with two
+causes. *No live worker* means either nobody started or somebody finished. **Here: an estate
+with no activity means either the work is done or NOBODY IS RUNNING THE LOOP — and the
+board renders those two identically, in green.** The whole day of 2026-09-16 was spent
+building instruments that refuse exactly this shape one level down.
+
+**WHAT TO DO ABOUT IT, and the honest answer is that the durable half is not yet built.**
+Until it is:
+
+- **Treat the END of a wave as the START of the next act, in the same turn.** The dangerous
+  moment is not a worker failing; it is the last integration succeeding. When the queue
+  reaches zero `running`, the very next thing in that turn is the flip-gate-push-spawn for
+  the next wave — not a summary, not a handoff, not a report. **Reporting that the wave is
+  complete is the shape of this mistake**, exactly as reporting that a slot is free was.
+- **If you must stop, say what will restart you and who has to do it.** A handoff that says
+  *nothing is running* and does not say *and nothing will start it* is describing half the
+  state. Name the turn you need.
+- **Mechanising it is worth a row and it is NOT the cron** (which cannot fire while you work,
+  and did not fire while you did not). The shape that would work is external: something that
+  gives this session a turn on a schedule regardless of its state. That is a harness
+  capability, not a repository one, so it is Bob's to decide whether it exists — **which is
+  exactly why this is written here rather than quietly worked around.**
+
+**THE COST, stated as a measurement rather than a worry:** nine hours and twenty minutes, 23
+runnable rows, eight worker-slots' worth of throughput, and a green board throughout. That
+is larger than any single defect this file records.
+
+
 ## Standing down (added 2026-09-10 — ORCHESTRATION's LIVENESS rule 4, in the file whose owner performs it)
 
 **STAND-DOWN IS VERIFIED, NEVER ANNOUNCED.** Before the words "standing down": list every
