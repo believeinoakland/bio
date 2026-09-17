@@ -324,3 +324,4 @@ m035-census.txt
 # restore by sha256 AND by content before the next arm measures the tree.
 .rec107-control-pristine/
 .d402-harness/
+.d404-harness/
