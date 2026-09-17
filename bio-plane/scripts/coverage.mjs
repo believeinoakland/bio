@@ -1034,9 +1034,24 @@ const REGISTER_FLOOR = {
      arms in, so it landed in UNCLASSIFIED and `--strict` exited 1 — D-233's own shape, caught
      by the check that exists for it rather than by anyone re-reading the suite. The arms are
      a marked ordinal list now, and the five this figure counts are the five that RAN. */
-  arms: 1109,
-  classified: 199,
-  corpus: 200,
+  /* MOVED 1109 -> 1114 · 199 -> 200 · 200 -> 201 by CONDUCT #1, 2026-09-16, at REC-108's
+     merge, from THE MERGED TREE'S OWN POST-COMMIT `--strict` PRINT — `arms 1114/1109 ·
+     classified 200/199 · corpus (suites read) 201/200 · GREW by 5 arm(s)`.
+     THE FOURTH FLOOR COLLISION OF THIS WAVE, AND THE ARITHMETIC IS AGAIN THE LESSON.
+     REC-108's branch printed 1098/198/199 off a 1093 base; this tree already carried
+     1109/199/200 from REC-102; the merged truth is 1114/200/201 and is NEITHER — nor is it
+     reachable by adding the branch's delta to this tree's figure. `8fcbe15`'s merge declared
+     this same file dropped for exactly this reason and paid it in the commit after, as does
+     this one. Four times today two honest readings have collided and not once has either
+     been true of the merge (D-238).
+     AND REC-108 RECORDED WHY ITS OWN DELTA WAS 5 AND NOT THE 6 A HAND COUNT GIVES: `none` is
+     its baseline arm and arms nothing. A figure counted by hand and a figure read from the
+     print differ by exactly the kind of thing nobody notices.
+     ONE KEY SET, grepped after writing: `^  arms:` matches twice in this file, here and in
+     FLEET_FLOOR below (76, unmoved). */
+  arms: 1114,
+  classified: 200,
+  corpus: 201,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
