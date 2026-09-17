@@ -160,6 +160,8 @@ expected: REC-69 merged and backed out on 2026-08-08 having failed two ratchets 
 
 **open as of 2026-09-16** — GENUINELY OPEN, and the sharpest form of it: **the INDEX EXISTS AND NOTHING READS IT.** `bio-plane/src/schema.mjs:2533` declares `provenance_route_marks_finding ON provenance_route_marks(finding, bundle_id)`, and all four SQL readers of that table in `store.mjs` (`:9345`, `:9694`, `:9843`, `:9974`) key on `bundle_id` and `seq` — **not one puts `finding` in a `WHERE`** (searched `store.mjs` with `grep -a` for `finding=?`, `AND finding`, `m.finding =`: zero). Classification is still in JS at `:9717`, `:9833`, `:9856`. No op answers it: `index.mjs:827` registers `provenanceroute` as a WRITE, and no read op is named for the index. The three companions the block lists — `links(source_bundle)`, `tasks(assignee)`, `inquiry_basis(grade_source)` — have no read filter either. **NO QUEUE ROW CARRIES THIS**, and REC-69 reads `done`: an owed act with an index built for it and no item to build the reader. Checked by M0-37; the close is RECORD's.
 
+**open as of 2026-09-17** — **STILL OPEN, AND NARROWED RATHER THAN DISCHARGED.** REC-112 took this as a row and answered the question it was rowed to answer: of the three outcomes the row held live, this is **a reader that was supposed to exist and never got built**, and the index is KEPT and annotated at its site rather than deleted. What is now settled, and settled by MEASUREMENT rather than by grep (M-41, query plans, sqlite3 3.51.0, no `ANALYZE` because the plane never runs one): **the index is not mis-phrased and not mis-specified** — SQLite declines it for all four existing readers, whose plans are byte-identical with it dropped, and USES it for the delegated question in three spellings, **including both columns for the `bundle_id > ?` after-cursor cursor, which is this plane's paging key.** A two-column index whose second column is the paging key of the op that would read it was specified FOR a reader, so this is an unbuilt reader and not an idle declaration. **What this delegation still asks for is UNCHANGED: the READ op.** REC-112 did not build it — a read op is a wire shape and its I3 IC is minted by whoever builds it — and **the row for it is handed to CONDUCT as an ACT WITH ITS ACTOR in REC-112's report, because `QUEUE.md` is CONDUCT's to write and a worker rowing its own follow-up is not this project's shape.** The three companions (`links(source_bundle)`, `tasks(assignee)`, `inquiry_basis(grade_source)`) were NOT examined by REC-112 and nothing above is evidence about them — **but one correction is owed to the 2026-09-16 state line, which says all three "have no read filter either", and that is FALSE of `inquiry_basis(grade_source)` and was already false when written.** REC-90 corrected it at `airuns.test.mjs` on 2026-09-15: PL-8's `leg:` arm landed 2026-08-07 and `leg:source=resolution` compiles to `SELECT bundle_id FROM inquiry_basis WHERE grade_source = ?`. It remains ON the unread roster — the sweep's regex still cannot see a WHERE composed from a registry — but it is carried there as a **declared blind spot**, not as a gap. **The other two are unexamined by anyone here and stay genuinely undetermined rather than inheriting this row's answer.** **Line-number drift corrected:** the readers this block cites at `store.mjs:9345/9694/9843/9974` and `index.mjs:827` are on today's tree at `:9902/:10251/:10400/:10531` and `index.mjs:876`. The claim was re-verified at the artifact and is unchanged; only the coordinates moved.
+
 ### DELEGATION 2026-08-09 RECORD (REC-69) -> M0-14 / D-233's area (`scripts/control-register.mjs`)
 
 **The register records the declaration STATING THE MOST ARMS and never the sum, and this item is the shape that rule did not anticipate: TWO DIFFERENT controls, for two different items, in ONE suite.** Measured, not inferred: `airuns.test.mjs` now carries REC-69's original 7-arm block and this replay's 4-arm block, and reports 7 — the new block contributes nothing; `run-conditions.test.mjs` carries REC-74's 5-arm block and this replay's, and moved 5 → 6 because the NEW one became the larger, so REC-74's five stopped being counted. `arms` is therefore a floor on ARMS STATED IN THE LARGEST SINGLE DECLARATION PER SUITE. It is SAFE — the number is reported and never gated, and the floor still cannot fall without a declaration really shrinking — but a reader doing the arithmetic between two `--strict` runs will conclude a declaration shrank when one was ADDED. The "never the sum" rule is right for the case it was written for (M0-2's backfill left most suites stating ONE control twice) and needs a way to tell one control stated twice from two controls stated once.
@@ -11858,3 +11860,35 @@ paths:
   disposition already names `M0-52` as the mechanism behind it. Nothing is owed there and nothing
   was written there; editing a closed row to announce that its mechanism landed would be noise in
   the one ledger that must stay readable.
+## CLAIM 2026-09-17 RECORD (REC-112 · THE INDEX WITH NO READER)
+
+held: RECORD, worker spawned by CONDUCT #2, worktree `agent-a0b34f0da25e239d6`
+paths:
+  `bio-plane/src/schema.mjs` — by SITE: the COMMENT BLOCK immediately above
+  `provenance_route_marks_finding` ONLY. **The two lines of the index declaration itself are
+  left BYTE-IDENTICAL on purpose** — `bio-plane/test/nc-rec69-selects.mjs` patches them as EXACT
+  STRING LITERALS to arm two negative controls, so reflowing them would make those arms match
+  zero times and PASS while testing nothing, which is the arm-that-did-not-arm class.
+  **NOT** any table, column, index or statement. No DDL moves in this item.
+  `bio-plane/test/nc-rec112-index-plan.mjs` — NEW, this item's committed control driver.
+  **Deliberately not a `.test.mjs`**, so the battery's discovery does not pick it up, which is
+  `nc-rec69-selects.mjs`'s own convention. **This path was added to this claim AFTER the block
+  was first written and BEFORE it was published** — the block said `NOT any suite` while the
+  driver was being built, and correcting it here rather than quietly not exercising it is the
+  same courtesy REC-96's claim paid when it corrected its own QUEUE line.
+  `docs/development/CLAIMS.md` — this block, and a dated state line under REC-69's
+  `-> whoever takes the unread-index roster` DELEGATION. **That delegation is NOT discharged
+  and the state line says so:** it asks for the READER, and this item does not build one.
+  `docs/development/MEASUREMENTS.md` — one new entry (M-36), the query-plan measurement.
+  **NOT `docs/development/QUEUE.md`** — rowing the missing reader is CONDUCT's act, not this
+  worker's (`kickoffs/WORKER.md`). The row is handed to CONDUCT in this item's report as an ACT
+  WITH ITS ACTOR, with the text to paste, rather than left implied.
+  **NOT** `bio-plane/src/store.mjs`, **NOT** `bio-plane/src/index.mjs`, **NOT** any suite,
+  **NOT** `civicos-ui/**`, **NOT** `newgroup/**`.
+interfaces consumed: none. **No IC is minted and the reason is stated rather than omitted:**
+  this item builds no reader, so no wire shape moves. The reader, when it is built, is I3 and
+  ITS builder mints the IC against I3's version read on the tree it is on.
+expected: the question ANSWERED WITH EVIDENCE — which of the three outcomes this is, measured
+  at the artifact and by query plan rather than by reading the SQL.
+
+**open as of 2026-09-17** — held while this worker runs.

@@ -2537,6 +2537,53 @@ CREATE TABLE IF NOT EXISTS provenance_route_marks (
   documents      TEXT    NOT NULL, -- JSON per-document outcomes, so the marker says WHICH
   PRIMARY KEY (bundle_id, seq)
 );
+-- =========================================================================
+-- REC-112, 2026-09-17 -- THIS INDEX HAS NO READER, AND IT IS KEPT ON PURPOSE.
+--
+-- WHAT IT WAITS FOR: a READ op answering the question no op asks --
+-- "which documents in this instance carry a standing LOOKED_INDETERMINATE
+-- marker". All four SQL readers of this table key on bundle_id and seq and
+-- classify in JS, so a group asking where its own record's provenance is
+-- doubted must page the whole store and count for itself. The route act is
+-- registered mutating:true in index.mjs -- a WRITE. There is no read.
+--
+-- IT IS NOT DEAD WEIGHT AND IT IS NOT MIS-SPECIFIED, and that is MEASURED
+-- rather than read off the SQL (EXPLAIN QUERY PLAN, sqlite3 3.51.0, no
+-- ANALYZE, which is this plane's live condition because nothing here ever
+-- runs one). MEASUREMENTS.md M-41 carries the plans in full:
+--   the four existing readers     -- every one uses the PRIMARY KEY autoindex,
+--                                    none touches this index, and DROPPING it
+--                                    leaves all four plans IDENTICAL
+--   finding = ?                   -- SEARCH USING INDEX (finding=?)
+--   finding = ? AND bundle_id > ? -- SEARCH USING INDEX (finding=? AND
+--                                    bundle_id>?) -- BOTH columns, which is
+--                                    this plane's after-cursor paging shape
+--   COUNT over finding = ?        -- COVERING INDEX
+-- The second column is therefore not decoration: whoever declared this knew
+-- the intended reader's PAGING shape. That is evidence of a SPECIFIC reader
+-- rather than a speculative index, and it is why the act was to row the
+-- reader rather than to delete the declaration.
+--
+-- DELETING IT WAS CONSIDERED AND REFUSED. REC-92 withdrew a chain_kind index
+-- a few hundred lines down on REC-12's rule -- an index nobody seeks on is
+-- cost with no reader -- but that precedent governs ADDING one, not removing
+-- one a dated delegation has pointed at for 39 days. Removing this would take
+-- the airuns sweep's unread roster DOWN by one for a reason that is not the
+-- plane getting better, which is the one direction that ratchet must never
+-- move, and it would delete the very artifact that made the sweep find this
+-- owed act at all. The write cost is one row per member assessment, on an
+-- append-only table a member writes by hand.
+--
+-- THE INTENT SURVIVES IN THREE PLACES AND THIS IS THE THIRD, so the index is
+-- NOT the only evidence of it: CLAIMS.md carries REC-69's DELEGATION of
+-- 2026-08-09 naming the question verbatim and re-affirmed open by M0-37 on
+-- 2026-09-16, airuns.test.mjs carries it on the unread roster AND pins it BY
+-- NAME, and the declaration is here.
+--
+-- DO NOT REFLOW THE TWO LINES BELOW. test/nc-rec69-selects.mjs patches them as
+-- EXACT STRING LITERALS to arm two negative controls, so a whitespace change
+-- makes those arms match zero times and PASS while testing nothing.
+-- =========================================================================
 CREATE INDEX IF NOT EXISTS provenance_route_marks_finding
   ON provenance_route_marks(finding, bundle_id);
 

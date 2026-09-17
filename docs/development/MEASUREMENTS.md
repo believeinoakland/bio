@@ -15009,3 +15009,79 @@ sample is never read as a census.
 **WHAT THIS ITEM DELIBERATELY DID NOT DO.** The worktree half was NOT touched: no worktree was removed, and the ten locked ones were not unlocked. That is `CLAUDE.md`'s standing guard (*several are harness-LOCKED and that guard is not to be defeated*) and it is also the honest scope line — **this entry REPORTS where the cost sits and does not act on it**, because a background-lane census is not the right instrument for a harness defect. **The owed act is a decision about the harness lock and it is not a worker's**: either the lock is released when an agent finishes, or waves are sized to the disk the locks leave behind, which is what CONDUCT #2 already did this session in sizing a five-worker wave down to four.
 
 **AND THE MEASUREMENT CUTS AGAINST A TEMPTING READING OF THIS ITEM'S OWN RESULT.** Six of nine branches were pruned here and the volume did not move. **So the value of this sweep is entirely in what the list now MEANS and not at all in what it costs to keep** — which is the right way round, because it means the branch list can be kept honest continuously and cheaply, at every integration, without anyone needing a disk emergency as the reason to do it.
+## M-41 · 2026-09-17 · REC-112 — **`provenance_route_marks_finding` IS NOT DEAD WEIGHT AND IT IS NOT MIS-PHRASED: SQLITE DECLINES IT FOR ALL FOUR EXISTING READERS AND USES IT — BOTH COLUMNS — FOR THE READER THE 2026-08-09 DELEGATION SAID WAS MISSING** (worktree `agent-a0b34f0da25e239d6`, `origin/main` at `78ef0efc`)
+
+**WHY THIS IS A MEASUREMENT AND NOT A READING.** REC-112's row named three outcomes and forbade
+assuming which: dead weight, a missing reader, or **a reader that exists but phrases its predicate
+so the index cannot serve it**. The third is not decidable by reading SQL — SQLite will not use an
+index whose column is wrapped in a function or compared across a type, and nothing in the source
+says so. The row therefore asked for the QUERY PLAN, and this entry is it. It also settles the
+third outcome in the only way that is honest: **it is refuted, and not because the predicate is
+well phrased — because there is no predicate on `finding` anywhere to phrase.**
+
+**THE INSTRUMENT.** `EXPLAIN QUERY PLAN`, sqlite3 **3.51.0** (macOS system binary), against the
+table and index DDL **extracted from `bio-plane/src/schema.mjs` rather than retyped**, populated
+with 5,000 bundles and 500 marks of which **62 are `LOOKED_INDETERMINATE`** — a selective filter,
+which is the condition under which an index either earns its place or does not. **No `ANALYZE`,
+and that is the live condition rather than a simplification:** `grep` over `bio-plane/src/`
+returns zero occurrences of `ANALYZE` and zero of `sqlite_stat`, so the plane's planner never has
+statistics.
+
+**THE LIMIT, STATED RATHER THAN DISCOVERED LATER.** The plane runs on Durable Object SQLite inside
+`workerd`, not on this CLI binary, and the two may differ in version. What is measured here is
+index ELIGIBILITY for a leading-column equality, which is core planner behaviour and not a
+version-dependent costing decision — but the arm was not driven inside `workerd` and this entry
+does not claim it was.
+
+### ARM A — the four existing readers. **NONE uses this index.**
+
+| reader | site | plan |
+| --- | --- | --- |
+| `op=list` route tally | `store.mjs:9902` | `SEARCH m USING INDEX sqlite_autoindex_provenance_route_marks_1 (bundle_id>? AND bundle_id<?)` |
+| `#latestRouteMark` | `store.mjs:10251` | `SEARCH ... USING INDEX sqlite_autoindex_provenance_route_marks_1 (bundle_id=?)` |
+| the `seq` allocator | `store.mjs:10400` | `SEARCH ... USING COVERING INDEX sqlite_autoindex_provenance_route_marks_1 (bundle_id=?)` |
+| `op=list` LEFT JOIN | `store.mjs:10531` | `SEARCH m USING INDEX sqlite_autoindex_provenance_route_marks_1 (bundle_id=? AND seq=?) LEFT-JOIN` |
+
+Every one resolves through the **PRIMARY KEY autoindex** on `(bundle_id, seq)`. The declared index
+is not named in any of the four plans.
+
+### ARM B — the reader the delegation said was missing. **The index serves it, and BOTH columns do work.**
+
+| query | plan |
+| --- | --- |
+| `finding = ?` | `SEARCH m USING INDEX provenance_route_marks_finding (finding=?)` |
+| `finding = ? AND bundle_id > ?` | `SEARCH m USING INDEX provenance_route_marks_finding (finding=? AND bundle_id>?)` |
+| `COUNT(*) WHERE finding = ?` | `SEARCH ... USING COVERING INDEX provenance_route_marks_finding (finding=?)` |
+
+**The middle row is the finding worth more than the other two.** `bundle_id` is this plane's
+after-cursor paging key — it is what `op=list` pages on — and the planner uses the index's SECOND
+column for exactly that cursor. **A two-column index whose second column happens to be the paging
+key of the op that would read it is not a speculative index**; whoever declared it knew the shape
+of the reader they expected. That is what makes this outcome *a reader that was never built*
+rather than *cost with no reader*.
+
+### ARM C — polarity, the index DROPPED. **The intended reader degrades, the existing four do not move.**
+
+- `finding = ? AND seq = MAX(...)` → `SCAN m USING INDEX sqlite_autoindex_provenance_route_marks_1`
+- `COUNT(*) WHERE finding = ?` → **`SCAN provenance_route_marks`** — a bare full-table scan
+- `#latestRouteMark` → **plan IDENTICAL to Arm A**
+- `op=list` LEFT JOIN → **plan IDENTICAL to Arm A**
+
+So the index's presence changes nothing any current caller does, and its absence is the difference
+between a `SEARCH` and a full `SCAN` for the one question nobody can ask yet.
+
+**HOW A LIAR WOULD SATISFY THIS, stated before what it checks.** A matcher that never matches
+reports every index unread and would produce Arm A for free — which is why Arm A is **not** a
+regex over the source at all: it is the planner's own decision on real rows, and Arm B is the same
+instrument returning the opposite answer on the same table in the same session. A query written
+specially to use the index would satisfy Arm B — which is why the query is not this worker's
+invention but **the question recorded verbatim in REC-69's 2026-08-09 delegation**, driven in
+three independent spellings, with Arm C showing all three degrade and nothing else does.
+
+**AND A LINE-NUMBER CORRECTION, because a hand-carried number going stale is this project's
+most-repeated finding and citations are numbers too.** The delegation's own state line cites the
+four readers at `store.mjs:9345`, `:9694`, `:9843`, `:9974` and the op registration at
+`index.mjs:827`. On this tree they are at **`:9902`, `:10251`, `:10400`, `:10531`** and
+**`index.mjs:876`**. The CLAIM is unchanged and was re-verified at the artifact; only the
+coordinates drifted, which is `CLAUDE.md`'s own rule about citing a section rather than a line
+arriving in a ledger instead of a design document.
