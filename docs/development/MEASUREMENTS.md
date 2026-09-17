@@ -15159,3 +15159,49 @@ corpus. Whether `rows=content`, `rows=leg`, `rows=resolves` and `rows=concerns` 
 same disagreement was NOT measured — `mode:"levels"` is shared by all five and `armSet`
 is applied by `mode:"axis"` only, so the same shape is *available* to every arm whose
 selector narrows the scope, but only the passage arm was driven.
+
+## M-44 — the `levels` statement's scope after REC-115, and the answer to the one thing M-43 could not see
+
+**Date** · 2026-09-17 · **Session** · REC-115 worker (worktree `agent-a997c958fae212f25`)
+**Instrument** · the two modules compiled SIDE BY SIDE IN ONE PROCESS — `git show HEAD:bio-plane/src/query.mjs`
+against the corrected `query.mjs` — over a 13-query battery covering every meaning arm and several
+query shapes, comparing `sql` **and** `args` for all four modes. Comparing `sql` alone would have
+let a statement whose text held still while its bound values moved read as identical.
+**Tree** · `10574da9` plus this item's change. The scratch module was deleted after the run.
+
+| mode | identical | MOVED | no statement |
+| --- | --- | --- | --- |
+| `rows` | 13 | **0** | 0 |
+| `count` | 13 | **0** | 0 |
+| `levels` | 3 | **10** | 0 |
+| `axis` | 13 | **0** | 0 |
+
+**`mode:"axis"` IS BYTE-IDENTICAL, WHICH IS WHAT THE ROW REQUIRED AND IS STATED AS A MEASUREMENT
+RATHER THAN AS AN INTENTION.** So are `rows` and `count`. This item corrects `levels` and moves
+nothing else, and the claim rests on 13 compiled statement/argument pairs per mode rather than on
+the size of the diff.
+
+**THE THREE `levels` STATEMENTS THAT DID NOT MOVE ARE THE FINDING, NOT THE NOISE.** They are
+exactly the queries carrying no arm of the row's own kind to strip — `type:information` with
+`rows=passage`, `type:information` with `rows=content`, `has:resolves` with `rows=leg`. Stripping
+an arm that is not there is a no-op by construction, so a change that moved those too would have
+been changing something other than what it claimed to.
+
+**AND IT ANSWERS WHAT M-43 EXPLICITLY DID NOT CLAIM.** M-43 drove ONE arm and said so: whether
+`content:`, `leg:`, `resolves:` and `concerns:` exhibit the same disagreement *was not measured*.
+**They do.** `content:pdf-page`, `leg:hunch`, `resolves:>=B` and `concerns:ENT-1` all moved. The
+defect was never passage-only — it was a passage-only SIGHTING, because the passage arm is the one
+whose miss makes the collapse visible in a member-facing sentence. The other four arms were
+publishing a scope figure that was a tautology: against the unstripped scope every document in
+scope held a matching row by construction, so `documents_with_rows === documents` cost nothing to
+produce and was evidence of nothing — `CLAUDE.md`'s costs-nothing rule, sitting inside the honesty
+instrument itself.
+
+**Driven end to end, not asserted at the store** (`passage-arm.test.mjs` S10, through
+`op=meaningrows&rows=passage`): a passage MISS over a scope of two documents, one fully indexed and
+searched and one never read, now publishes `scope.documents: 2` — counted independently at BUNDLE
+grain through `op=search`, not read back off the same envelope — and `scope.documents` AGREES with
+`captures_counted`, which the other statement mints over the same scope. The two honest branches of
+`says` are REACHED, each with its own assertion. **The TRUE zero is unchanged and measured: a query
+whose other arms select no document still reports `documents: 0` and still publishes the
+empty-DOCUMENT-level sentence.** This narrows a FALSE zero; it does not remove the true one.

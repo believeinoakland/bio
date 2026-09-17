@@ -23238,15 +23238,17 @@ ORDER BY field ASC, n DESC, value ASC`,
       args.push(...gate.args);
       refArgs.push(...gate.args);
     }
-    if (mode === "levels")
+    if (mode === "levels") {
+      const lc = cte(false, armSet(rowArm));
       return {
-        sql: `${c.sql}
+        sql: `${lc.sql}
 SELECT count(*) AS documents,
        sum(CASE WHEN EXISTS (SELECT 1 FROM ${m.table} mx WHERE mx.${m.key} = b.bundle_id) THEN 1 ELSE 0 END) AS documents_with_rows
 FROM scope s JOIN bundles b ON b.fts_id = s.fid
 WHERE ${gate.sql}`,
-        args: [...c.args, ...gate.args]
+        args: [...lc.args, ...gate.args]
       };
+    }
     if (mode === "axis") {
       const ac = cte(false, armSet(rowArm));
       return {
