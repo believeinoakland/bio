@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1022 rulings across 85 documents.
+1023 rulings across 85 documents.
 
 ## DEC-
 
@@ -1010,6 +1010,8 @@ authority is the file named, never this one.
   `docs/development/OBSERVATION-LOG-DESIGN.md:20`
 - **REC-113** · 2026-09-17 — IT CORRECTED THE BRIEFED BASELINE AND CAUGHT THE QUIET TRAP DOING IT:** its first pristine run read `213/214 · 1 skipped · 13370`, **exit 0 and a healthy-looking headline with a whole fleet member's 76 assertions missing** — `ocr-worker` unresolvable without `npm ci` in all three packages.  
   `docs/development/QUEUE.md:1581`
+- **REC-114** · 2026-09-17 — THE DOCTRINE QUESTION IS RULED BY CONDUCT #3 RATHER THAN ROUTED, AND THE REASONING IS RECORDED HERE BECAUSE THE ROW INVITED EITHER: the listing publishes the EARNED letter — capped through `strengthOf()`, the authority — and the AUTHORED value is NOT ERASED but published beside it, labelled.** **THE GROUND IS THAT…  
+  `docs/development/QUEUE.md:1591`
 - **REC-115** · 2026-09-17 — AMENDED 2026-09-17 by REC-115 — §4.4's *THE QUERY'S OTHER ARMS* NOW BINDS BOTH STATEMENTS, UI-62's DELEGATED FINDING IS DISCHARGED AND ITS INCOMPLETE BULLET IS STRUCK, under `IC-115` on I3.** `meaning({mode:"levels"})` builds its scope from `cte(false, armSet(rowArm))` — the query with the row's own arm STRIPPED —…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:7`
 - **REC-116** · 2026-09-17 — BLOCKED ON BOB, RULED 2026-09-17 BY BOB #13, AND THE ROW IS KEPT RATHER THAN DELETED BECAUSE THE REASON IS THE VALUABLE PART.** CONDUCT #2 rowed this as runnable; **BOB #13 ruled it is NOT, and took the design instead: *I take the design; the item follows the design, not the other way round.*** The ground is…  
