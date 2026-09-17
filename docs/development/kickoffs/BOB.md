@@ -228,9 +228,33 @@ is an artifact, not an inference. Until such a report exists, **messaging a runn
 before, and treat a delivered message as a bonus rather than as the plan. The integrator still owns the
 act, and the row still carries it with its actor.
 
-**The old trade — kill the long run, or pay it at integration — is real and was correctly priced. What was
-wrong was the claim that those were the only two.** The third is cheap, unproven, and does not replace the
-second until somebody measures it. The only session-to-session channel remains the one
+**MEASURED THE SAME DAY, and the two halves came back DIFFERENTLY — which is why they were kept apart.**
+
+- **ITEM 1 WORKS, and this is MY measurement rather than a report.** `git ls-remote` counted **16
+  `worktree-agent-*` branches on origin against 3 that morning**, six of them dated 2026-09-16, and one
+  worker's own commit subject reads *"release the claim, with the push verified from the remote"* — the
+  wording `WORKER.md` gained at `497af84a`. Workers spawned off the corrected commit READ it and DID it.
+  A kickoff correction reaches a worker SPAWNED AFTER it, reliably, with no channel involved.
+- **THE MESSAGE CHANNEL ACTED, and this is CONDUCT's measurement, attributed because I did not observe
+  it:** a worker stopped with its work UNCOMMITTED and its final battery still running — REC-91's exact
+  failure shape forming a second time — and **a message resumed it; it then committed, pushed and verified
+  from the remote.** A stopped subagent does not resume spontaneously, so the causal claim stands on more
+  than correlation.
+
+**THE SYNTHESIS IS WORTH MORE THAN EITHER FINDING, AND IT IS WHY D-288's DECLINED OPTION IS NOW HALF-BUILT
+BY ACCIDENT.** The two mechanisms cover DIFFERENT failures and neither is the other's substitute. **Item 1
+protects work ONCE COMMITTED. The channel protects work that is NOT YET COMMITTED** — and that window is
+precisely what D-288's own text named as the objection to shape (b): *"leaves the window between the
+worker's last commit and its report unprotected."* **That was the one real argument against (b), and the
+channel is what closes it.** Together they cover more than either, which is the case for keeping both.
+
+**WHAT IS STILL NOT ESTABLISHED, kept because the distinction is the whole point of this rule: a RESUME is
+not a CORRECTION.** What was measured is a stopped worker restarting. Nobody has yet measured a RUNNING
+worker reading a design correction and APPLYING it mid-item — a different act, needing judgement rather
+than a restart. **So: message a running worker, and rely on the channel as a RESCUE for a worker that has
+stalled — that much is paid for. Do NOT rely on it to deliver a correction**, and pay the correction at
+integration as before, with the row carrying it and its actor. **The old trade was correctly priced; what
+was wrong was the claim that those were the only two options.** The only session-to-session channel remains the one
 session-to-session channel is the one CONDUCT and this session use. Nor does `main` help — a
 worktree is a checkout of a COMMIT (`CLAUDE.md`), so a correction pushed after a worker started
 is on a commit that worker will never read. Its integrator has exactly two options, killing a
