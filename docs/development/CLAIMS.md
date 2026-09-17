@@ -10877,3 +10877,109 @@ released: 2026-09-16 by the REC-111 worker — **§4.3's OWED UNIT-COUNT BOUND I
   because a `sheet-range` unit moves the envelope estimate and the unit count at once. (4)
   **Nothing was live-verified against the real account** — no deploy, no scratch-namespace probe;
   everything here is miniflare and source.
+
+## CLAIM 2026-09-16 RECORD (REC-100 — the run-authority carve-out on C-22.10)
+session: REC-100 worker (worktree `agent-a984a71a7b324f52c`), spawned by CONDUCT #1, Opus 5.
+expected: QUEUE.md REC-100 — delete C-22.10's `authority_kind = 'run'` carve-out once no live
+  writer emits a bare `run` `PRESENT`, and STATE the unbackfillable rows as undetermined.
+  **THE ITEM DID NOT WIDEN THE CHECK, AND THE ROW'S OWN GUARD IS WHY** — the `overstrict` arm
+  does not come back EMPTY, so the accepts-when's stated precondition is unmet. What this claim
+  landed instead is the MEASUREMENT of why, the correction of a blocker that was wrong in every
+  place it was written, and the delegation the real blocker needs.
+paths:
+  - `bio-plane/src/airun.mjs` — C-22.10's COMMENT only (the false "closes at REC-95's meaning
+    level" sentence). The predicate itself is UNCHANGED and the carve-out STANDS.
+  - `bio-plane/checks/bio-checks.mjs` — C-22.10's catalogue row COMMENT only; no C-number added,
+    no translation changed.
+  - `bio-plane/test/observation-log.test.mjs` — APPENDED assertions only (section H); no existing
+    assertion edited. B17 and C1..C4 are LEFT STANDING and are correct: they assert the carve-out,
+    which this item did not remove.
+  - `bio-plane/test/nc-rec93.mjs` — the `overstrict` arm's declaration, to record what the arm is
+    BLIND to. No arm added, no arm's patch changed.
+  - `docs/development/DEBT.md` — D-366's row (its disposition moves with this commit).
+  - `docs/development/OBSERVATION-LOG-DESIGN.md` — front matter Incomplete sections only.
+  - `docs/DECIDED.md` — regenerated, never hand-edited.
+  **NOT** `docs/development/QUEUE.md` (CONDUCT's sole writer — the row flip is an ACT in this
+  item's report), **NOT** `agent-worker/**` (another area's — a DELEGATION below, not an edit),
+  **NOT** `bio-plane/src/store.mjs`, **NOT** `bio-plane/src/schema.mjs`, **NOT**
+  `bio-plane/src/index.mjs`, **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, no version bump,
+  no tag, no deploy.
+released: 2026-09-16 by the REC-100 worker — **THE CARVE-OUT STANDS AND THAT IS THE RESULT, not a failure to finish.** The item was spawned to DELETE C-22.10's `authority_kind = 'run'` carve-out; its own accepts-when requires the `overstrict` arm to come back EMPTY first and it does not, so the row's guard held. **Every precondition the row and D-366 named was WRONG, measured on the tree:** REC-95 landed and did not close it (its writers are `derive`, not `run` — REC-95 said so itself and left the correction owed here), and the drain exits were never the blocker (the capture exit has carried its referent since REC-93). **The three writers that actually emit a bare `run` PRESENT were named nowhere:** `#aiRunTerminate` and `#aiRunReap`, whose PRESENT comes from `#aiRunSearchState` — **a ROLLUP, with no referent BY CONSTRUCTION** — and `agent-worker`'s `stepLog`. **DRIVEN CONSEQUENCE: with the carve-out widened, `op=airunclose` answers `terminated: false, ok: false, code: OBS_PRESENT_NO_REFERENT` and the terminal entry is NEVER WRITTEN — a run that observed anything PRESENT CANNOT BE CLOSED AT ALL.** Deleting it today is a lifecycle deadlock, not a tightened fence. **A THIRD GAP unseats the backfill remedy independently:** `aiRunLog`'s SELECT omits `result_kind`/`result_ref`, so a referent that IS stored is invisible and the row's *STATE it as undetermined* cannot be done through a read that never projects the field (additive, an IC on I3). **And the measurement the row PRESCRIBED would have given the wrong answer** — the `overstrict` arm runs ONE SUITE and is blind to both rollup writers and to `agent-worker`, whose own suites MOCK `op=airuntick`; an EMPTY arm would have licensed exactly the wrong conclusion, and READING THE WRITERS is what found all three. Landed `fcd4cf9b` on branch `worktree-agent-a984a71a7b324f52c`, **PUSHED and verified from the remote by sha** (D-288a), NOT merged. Gates class FULL green: battery **206/206 · 12,891** against this session's own pristine baseline of **206/206 · 12,887** (delta +4, all section I); `--strict` exit 0 unpiped with **REGISTER FLOOR 1093/197/198 EXACT — no floor moved**; UI harness exit 0; plancheck --local 0 fail 0 warn. All seven `nc-rec93` arms AS DECLARED, baseline 62/0, every restore byte-identical by sha256 AND `cmp`.
+
+### DELEGATION 2026-09-16 RECORD (REC-100) -> the area owning `agent-worker/**`: **THE ONE EXTERNAL WRITER OF A BARE `run` `PRESENT` CANNOT CARRY A REFERENT, AND ITS OWN SUITES MOCK THE PLANE SO NOTHING WOULD REPORT IT**
+`op=airuntick`'s only caller outside this repository's tests is `agent-worker/src/index.mjs:423`,
+which sends `log: [stepLog(state, decision)]`. **`stepLog` (`agent-worker/src/harness.mjs:699`)
+composes NO `result_ref` and no `result_kind`** — the entry it builds is `level, subject, state,
+governed, condition, terminal, bound, detail` and nothing else — while `state` is
+`s.observed || "NEVER_LOOKED"` and **`observed` is in `JUDGEABLE`**, so a model's judgement can set
+`PRESENT`. That is a `run` `PRESENT` with nothing to point at, composed by a live worker.
+
+**WHAT IS NEEDED, and the plane half is already done so this is genuinely one-sided.** REC-100
+drove it: `aiRunTick` passes the caller's entry straight to `#aiRunAppend`, which reads
+`entry.result_ref`, and a `run` `PRESENT` carrying a referent is ACCEPTED today (`appended: 1,
+refused: []`, section I of `bio-plane/test/observation-log.test.mjs`). So `stepLog` needs a
+referent field and `JUDGEABLE` a way for the model to supply one — or, better and cheaper, a rule
+that a composed `PRESENT` without a referent is not composable at all, which is the same division
+of labour §14b.6 already uses (the member composes, the plane refuses).
+
+**WHY THIS IS URGENT RATHER THAN TIDY, and it is the part a reader should not skip.**
+`agent-worker`'s suites MOCK `op=airuntick` — `harness.test.mjs:614`, `fanout.test.mjs:522`,
+`cascade.test.mjs:182` and `agent-worker.test.mjs:184` all answer it from a stub that accepts any
+entry. **So when C-22.10's carve-out is eventually deleted, this integration breaks and the entire
+battery stays green**, because no suite anywhere drives agent-worker's composer against the plane's
+real `checkObservation`. That is "test through the op" owed at a package boundary. A contract test
+that runs `stepLog`'s output through the real `checkObservation` would close both the gap and the
+blindness, and it is cheap: `checkObservation` is a pure exported function.
+
+**AND THE PATTERN ALREADY EXISTS IN YOUR OWN PACKAGE, so this is not a new kind of test to invent.**
+`agent-worker/test/plane-suggest.mjs` already imports `../../bio-plane/checks/bio-checks.mjs` to hold
+a VOCABULARY to the plane's own copy rather than a transcription of it. The same import one file over
+(`../../bio-plane/src/airun.mjs`, which exports `checkObservation`) is all a `stepLog` contract arm
+needs — no miniflare, no store, no network, because the checker is pure. **Verified 2026-09-16 by
+REC-100: no file under `agent-worker/` imports `checkObservation` today**, which is precisely why the
+composer and the refusal have never met.
+
+**NOT EDITED BY THIS ITEM.** `agent-worker/**` is outside RECORD's claim and REC-100 read it only.
+
+### FINDING 2026-09-16 RECORD (REC-100) — **THE ITEM DID NOT WIDEN THE CHECK, AND EVERY PRECONDITION ITS OWN ROW NAMED WAS WRONG**
+Recorded here as well as in the report, because a finding left in a report reaches one reader.
+REC-100's brief and D-366 both said the carve-out closes once REC-95's writers carry referents and
+becomes "ONE DELETED CONDITION". **Measured on the tree: REC-95's writers write under `derive`, not
+`run`** (REC-95 found this itself and recorded that the correction was owed to REC-100), **the
+capture drain exit has carried its referent since REC-93**, and the three writers that actually
+emit a bare `run` `PRESENT` were named nowhere: `#aiRunTerminate` and `#aiRunReap`, whose PRESENT
+comes from `#aiRunSearchState` — **a ROLLUP, which has no referent BY CONSTRUCTION** — and
+`agent-worker`'s `stepLog`. Two of the three are not writer problems at all and need a design
+ruling on §3; the third is another area's.
+
+**AND THE MEASUREMENT THE ROW PRESCRIBED WOULD HAVE GIVEN THE WRONG ANSWER.** The accepts-when says
+to measure by *"the `overstrict` arm coming back EMPTY rather than by reading the writers"*. The arm
+runs ONE SUITE and cannot see either rollup writer or agent-worker. **Reading the writers is exactly
+what found all three.** The arm's blindness is now recorded in its own declaration and in the
+harness, so the next session does not read an empty arm as a fact about writers it cannot reach.
+
+**AND A THIRD GAP NOBODY HAD MEASURED, which unseats the row's backfill remedy independently:**
+`aiRunLog`'s SELECT omits `result_kind` and `result_ref`, so a referent that IS stored is invisible
+through `op=airunlog`. The row requires pre-existing rows to "read back through `op=airunlog` with
+their coverage claim STATED as undetermined" — **unsatisfiable through a read that never projects
+the field.** Widening the projection is additive and owes an IC on I3. The backfill was the part the
+row said could not be done; it turns out not even the STATING of it can be done yet.
+
+## CLAIM ADDENDUM 2026-09-16 RECORD (REC-100 — two built artifacts, FORCED by the gate and not chosen)
+session: REC-100 worker (worktree `agent-a984a71a7b324f52c`). Appended rather than edited into the
+block above, per this file's append-only rule.
+  - `bio-plane/dist/bio-plane.bundled.mjs` and `bio-plane/dist/bio-plane.bundle.json` — REBUILT with
+    `npm run build`, never hand-edited. **NOT anticipated by the original claim, and the reason is
+    worth the line: this item's ONLY plane-source change is a COMMENT, and a comment still moves the
+    artifact.** `fleetbundles.test.mjs` went 83 pass / 4 FAIL on the frozen-tree battery naming
+    staleness, a fresh build's byte-identity, and the manifest's sha256. The bundle is UNMINIFIED and
+    RETAINS comments, so the corrected C-22.10 catalogue row travels into `dist/` verbatim — which is
+    also why the suite's own arm *"a COMMENT-only source change bundles byte-identically"* is the arm
+    that fired. Rebuilt, 3,180,038 B, sha256 `9555347e6674…`, 50 first-party inputs, 0 vendored;
+    `fleetbundles` then 87 pass / 0 fail, and the four other `dist/`-reading suites re-run green
+    (`bundle` livefire 19/19, `resolveversion` 11/0, `tier2-wire` 45/0, `case-opened` 29/0).
+    `npm run embed:sign` ran as the build's first half and regenerated `src/signpage.mjs`
+    BYTE-IDENTICALLY — it does not appear in `git status`, which is stated because a signing step that
+    silently rewrote a source file would be exactly the kind of thing a worker should not discover later.
+  **NO VERSION BUMP, NO SIGN, NO TAG, NO DEPLOY** — the artifact is rebuilt so the tree is
+  self-consistent, which is CPDF-20's and REC-98's precedent; cutting a release remains DIST's.

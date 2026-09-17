@@ -6388,8 +6388,25 @@ export const AI_RUN_CHECKS = {
      record, or force the fold to invent a referent — and inventing one to get
      past a gate is the failure CLAUDE.md names by name. The fold is therefore
      admitted under the weaker rule it was written under, every other authority
-     carries the refusal, and the carve-out is a DEBT row rather than a shape:
-     it closes when the run's own writers carry referents (REC-95). */
+     carries the refusal, and the carve-out is a DEBT row rather than a shape.
+
+     **THE CLOSING CONDITION NAMED HERE WAS FALSE AND IS CORRECTED BY
+     MEASUREMENT (REC-100, 2026-09-16).** This row said the carve-out *"closes
+     when the run's own writers carry referents (REC-95)"*. REC-95 landed and it
+     did NOT close: its three writers write under `authority_kind = derive`, not
+     `run` — REC-95 read the tree, found the sentence wrong and recorded that the
+     correction was owed to REC-100. Left standing, it would have invited the
+     next session to delete one condition and refuse three live writers.
+
+     **AND THE REMAINING BLOCKER IS NOT A WRITER AT ALL, AT TWO OF THE THREE.**
+     `#aiRunTerminate` and `#aiRunReap` take their state from
+     `#aiRunSearchState`, a ROLLUP over the run's whole log — a summary PRESENT
+     has nothing single to point at BY CONSTRUCTION, so no writer-side work
+     satisfies this refusal and the design owes a ruling on what a terminal
+     entry's referent is. The third is `agent-worker`'s `stepLog`, another area's
+     path, which composes no referent field while a model may judge `PRESENT`.
+     The full reasoning and the driven evidence are at the predicate in
+     `src/airun.mjs`; section I of `test/observation-log.test.mjs` drives it. */
   OBS_PRESENT_NO_REFERENT: {
     check: 'C-22.10',
     where: 'src/airun.mjs checkObservation, called from store.mjs #observe',

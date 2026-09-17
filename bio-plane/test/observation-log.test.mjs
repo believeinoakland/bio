@@ -71,8 +71,42 @@
        correct work in a spelling this suite did not anticipate — a run-log `PRESENT` with no
        referent, which C-22.10 deliberately does not refuse under `authority_kind = run` — must
        still be accepted, and `op=airunlog`'s answer must not move.
+       **WHAT THIS ARM CANNOT SEE, ADDED BY REC-100 2026-09-16 AFTER IT WAS RELIED ON AS A
+       SUFFICIENT MEASUREMENT AND IS NOT ONE.** REC-100's accepts-when reads *"no live writer
+       emits a `run` `PRESENT` with no referent — measured by the `overstrict` arm coming back
+       EMPTY rather than by reading the writers"*. The arm runs THIS SUITE ONLY, so it sees
+       neither of the two rollup writers in `store.mjs` (`#aiRunTerminate`, `#aiRunReap`, whose
+       PRESENT comes from `#aiRunSearchState` and cannot carry a referent by construction) nor
+       the one EXTERNAL caller that matters — `agent-worker`'s `stepLog`, which composes no
+       referent field while `observed` sits in `JUDGEABLE`. **And agent-worker's own suites MOCK
+       the plane's `op=airuntick`**, so widening C-22.10 would break that integration with the
+       whole battery green. An EMPTY arm here would therefore have licensed exactly the wrong
+       conclusion. Section I drives the three directly, which is what the arm cannot do.
    THE ACTUAL RESULTS OF EVERY ARM ARE IN `CLAIMS.md`'s release line for REC-93, including the
    ones that came back other than declared.
+   NEGATIVE CONTROL RE-RUN AND RE-DECLARED 2026-09-16 BY REC-100 (worktree
+   `agent-a984a71a7b324f52c`), which appended section I. ALL SEVEN ARMS RUN, every one AS
+   DECLARED, baseline green at 62/0, every restore byte-identical by sha256 AND `cmp`
+   (`airun.mjs` 91,867 B sha256 `1890746cfc23…`, `store.mjs` 2,182,088 B sha256 `548259580784…`).
+   `overstrict` moved 5 fail -> 7 as section I landed, and **its declaration GAINED I3 so the arm
+   now GRADES the rollup rather than printing it** — REC-99's finding applied here.
+   **WHAT THAT ARM MEASURED, AND IT IS HEAVIER THAN THE OVER-STRICTNESS IT WAS BUILT FOR:** with
+   C-22.10 widened over `run`, `op=airunclose` answers `terminated: false, ok: false,
+   code: OBS_PRESENT_NO_REFERENT` and **the run's terminal entry is never written — a run that
+   observed anything PRESENT cannot be closed at all**. Deleting the carve-out today is a lifecycle
+   deadlock in this plane, not a tightened fence.
+   **THE TWO WRITERS ARE HELD TO DIFFERENT EVIDENCE AND THE DIFFERENCE IS STATED RATHER THAN
+   BLURRED:** `#aiRunTerminate` is DRIVEN above, through `op=airunclose`, and I3/I4 assert it.
+   `#aiRunReap` is READ — it calls the same `#aiRunSearchState` and appends with no `resultRef`,
+   so it is the same shape by construction, but no arm here reaches it (the reaper needs an
+   expired lease). That is an inference from the source, not a measurement, and it is labelled as
+   one; an arm that drives the reaper is owed and is not this item's. I1 and I2 stay GREEN throughout, which is what makes the finding precise: the
+   write door is open and the read still does not project the referent, so what the widening breaks
+   is exactly the ROLLUP — nothing about the mechanism.
+   REC-100's OWN ROW DECLARED TWO ARMS THAT ARE INAPPLICABLE AND ARE RECORDED AS NOT RUN RATHER
+   THAN QUIETLY DROPPED: *the carve-out restored* and *the backfill filled with a derived referent
+   must FAIL* both presuppose a widening and a backfill that this item deliberately did not do.
+
    WHAT THESE ARMS CANNOT SEE: they are all local to this plane's own source. Nothing here
    exercises a second instance, a real network fetch, or the content and meaning levels, which are
    REC-94's and REC-95's and have no writer yet — the frontier says so IN WORDS rather than
@@ -113,6 +147,15 @@
  *      absence of a row, and the bound published.
  *   F. §7's EDGE-TRIGGERED RULE, whose volume is measured in M-14.
  *   G. RATIFY'S MAPPING, including the one outcome that writes NO ROW.
+ *   H. PURGE — both arms, which do opposite things on purpose.
+ *   I. REC-100 (appended 2026-09-16) — WHAT THE `run` CARVE-OUT IS WAITING ON,
+ *      measured rather than inherited: the write door is already open, the READ
+ *      does not project the referent, and the run's terminal entry is a ROLLUP
+ *      whose PRESENT has nothing to point at by construction.
+ *
+ * THE SECTION LIST SAID "SEVEN SECTIONS" AND NAMED SIX while H was already in
+ * the file — corrected here rather than left, since a header that miscounts its
+ * own contents is the cheapest possible version of this suite's whole subject.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -876,6 +919,98 @@ console.log("\n--- H · purge: the whole-store arm clears, the per-bundle arm LE
   await POST(`op=purge&token=${ADM}&confirm=bio`, {});
   t("H3: and the WHOLE-STORE arm clears the table — D-113's rule applies to it as to every table",
     (await obsCount()), 0);
+}
+
+/* ========================================================================= *
+ *  I · REC-100 — WHAT THE `run` CARVE-OUT IS ACTUALLY WAITING ON.
+ *
+ *  APPENDED 2026-09-16. C-22.10 does not fire on `authority_kind = run`
+ *  (D-366). REC-100 was spawned to DELETE that carve-out and did not, because
+ *  its own accepts-when requires the `overstrict` arm to come back EMPTY first
+ *  and it does not. These assertions are the MEASUREMENT of why — driven
+ *  through the real plane, because the blocker recorded in three places named
+ *  writers that either do not exist under this authority or cannot satisfy the
+ *  rule at all, and this repository's standing rule is that a blocker is a
+ *  claim nothing audits.
+ *
+ *  THEY PIN A GAP RATHER THAN A CAPABILITY, WHICH IS DELIBERATE AND IS THE
+ *  POINT. Each one states what is true TODAY. When the gap closes, the arm goes
+ *  red AT THE SITE THAT HAS TO CHANGE and names it — which is how the next
+ *  worker finds these three places instead of re-deriving them. A finding left
+ *  in prose reaches nobody; this is the same finding with a failing test
+ *  attached to it.
+ * ========================================================================= */
+console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) ---");
+
+{
+  const B2 = "INQ-2026-0916-rec100";
+  const R2 = "RUN-2026-0916-rec100";
+  await POST(`op=promote&token=${TOK}`, {
+    bundleId: B2, base: null, snapKey: "20260916T090000Z_inbox", author: "ruth",
+    meta: { object_type: "inquiry", group: "believe-in-oakland",
+            title: "what is the carve-out waiting on?", current_state: "open",
+            created: T0, last_updated: T0 },
+    files: [{ path: "bundle.md", text: `---\nid: ${B2}\n---\n\n## Question\n\nWaiting on what?\n`,
+              bytes: 90, sha256: SHA_A }],
+    register: [],
+  });
+  await POST(`op=airunopen&token=${TOK}`, {
+    run: R2, contextType: "inquiry", contextId: B2, label: "REC-100's fixture", mode: "check",
+    principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1", biasManifest: null,
+    bounds: [{ bound: "fetches", allowed: 40, unit: "requests" }], leaseMs: 600000, at: T0,
+  });
+
+  /* I1 — THE WRITE DOOR IS ALREADY OPEN, and nothing in the record said so.
+     D-366 reads as though the fold cannot carry a referent at all; in fact
+     `aiRunTick` hands the caller's entry straight to `#aiRunAppend`, which reads
+     `entry.result_ref`. So the plane half of "the run's writers carry referents"
+     needs NO plane change — which is exactly the kind of already-built
+     precondition a decomposition rests a deferral on without checking. */
+  const withRef = await POST(`op=airuntick&token=${TOK}`, {
+    run: R2, at: at(5000), leaseMs: 600000, consume: { fetches: 1 },
+    log: [{ level: "document", subject: "observation:budget-2026", state: "PRESENT",
+            result_kind: "capture", result_ref: SHA_B,
+            detail: "a run PRESENT that DOES name what it found" }],
+  });
+  t("I1: a `run` PRESENT that CARRIES a referent is accepted through `op=airuntick` — "
+  + "the write door is already open and needs no plane change",
+    [withRef && withRef.appended, (withRef && withRef.refused || []).length], [1, 0]);
+
+  /* I2 — AND IT IS UNREADABLE AT THE RUN'S OWN LOG. `aiRunLog`'s SELECT lists
+     `seq, at, level, subject, state, governed, condition, bound, terminal,
+     detail` and NOT `result_kind` / `result_ref`, so a referent that is stored
+     cannot be seen through the op. This is why REC-100's accepts-when — "rows
+     read back through `op=airunlog` with their coverage claim STATED as
+     undetermined" — is not satisfiable today: a field the read does not project
+     cannot be stated as anything. Widening the projection is ADDITIVE and owes
+     an IC on I3. */
+  const back = await GET(`op=airunlog&token=${TOK}&run=${R2}`);
+  t("I2: …and `op=airunlog` does NOT project it — the referent is stored and INVISIBLE, "
+  + "so the coverage claim cannot be stated as undetermined at the read (additive, an IC on I3)",
+    [back.entries[0].state, "result_ref" in back.entries[0], "result_kind" in back.entries[0]],
+    ["PRESENT", false, false]);
+
+  /* I3 — THE ROLLUP, AND IT IS THE FINDING THAT UNSEATS D-366's REMEDY.
+     `#aiRunTerminate` writes the run's terminal entry with `#aiRunSearchState`'s
+     state — a reduction over the run's WHOLE log. Because this run wrote a
+     PRESENT, the rollup is PRESENT, and the terminal row carries no referent.
+     No writer-side work fixes this: a summary does not report a look, so there
+     is no single thing for it to point at. D-366 says the carve-out becomes
+     "ONE DELETED CONDITION" once the writers carry referents; two of the three
+     writers structurally cannot, and both of them are in this plane. */
+  const closed = await POST(`op=airunclose&token=${TOK}`, {
+    run: R2, at: at(9000), bound: "completed",
+  });
+  t("I3: the run's TERMINAL entry is a bare `run` PRESENT — `#aiRunSearchState` ROLLS UP the "
+  + "run's whole log, and a summary PRESENT has no referent BY CONSTRUCTION, so no writer "
+  + "change can satisfy C-22.10 here (a DESIGN GAP against §3, not a defect in the writer)",
+    closed && closed.state, "PRESENT");
+  const after = await GET(`op=airunlog&token=${TOK}&run=${R2}`);
+  const terminal = after.entries.filter((e) => e.terminal === true);
+  t("I4: …and it is written to the log as one row, terminal, PRESENT — driven rather than "
+  + "read off the method, because a blocker is a claim and nothing here audits one",
+    [terminal.length, terminal[0]?.state], [1, "PRESENT"]);
 }
 
 console.log(`\nobservation-log: ${pass} pass, ${fail} fail`);
