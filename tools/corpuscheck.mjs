@@ -226,6 +226,248 @@ export function coverage({ pop = population() } = {}) {
   return { ...by, population: pop, exclusions: exc, undecidedRows: und, fails };
 }
 
+/* ====================================================== THE SECOND AUTHORITY ON DESIGN STATUS (M0-57)
+
+   BOB, 2026-09-17, ruled `BIO_System_Design.md` §3 — the construct map — the SINGLE AUTHORITY on
+   design status, and asked "that there aren't multiple sources of truth elsewhere in the record".
+
+   THE RECEIPT IS A SESSION'S OWN ERROR, which is why this is an instrument rather than a
+   correction. BOB #12 told Bob the claim class was UNDESIGNED, because the Content Framework's
+   §18 table lists "the claim object" among the pieces still to be designed — while the design had
+   existed in `BIO_Case_Making_v0_1.md` since 2026-08-03. Nobody was careless. A to-do list that
+   RESTATES a status is a SECOND AUTHORITY, and this project's standing finding is that restated
+   content is a copy that starts rotting the moment it is written. Care does not catch that class;
+   an instrument does.
+
+   ---------------------------------------------------------------- THE MATCH IS THE HARD PART
+
+   Deciding that a §18 table row and a §3 construct-map row are ABOUT THE SAME CONSTRUCT is a
+   JUDGEMENT. An arm that guesses it fires on healthy pairs, and **an arm that fires on a healthy
+   state is worse than no arm** — it is switched off inside a week and takes its true positives
+   with it. So the match was MEASURED before it was chosen:
+
+     PROSE SIMILARITY IS NOT AVAILABLE HERE, and that is a measurement, not an opinion. §3 names
+     construct 8 "Intent and inquiry — from goal to case"; §18 names the piece "the claim object".
+     The two vocabularies share NOT ONE content word. Any similarity threshold loose enough to
+     pair them would pair most of the corpus with most of the corpus.
+
+   What IS available is an EXPLICIT KEY that the authority itself wrote: §3's construct-8 row
+   carries the citation `(Part II §18 item 6)`. That is the construct map — the single authority —
+   declaring which §18 item belongs to which construct. The tool does not infer the pairing; it
+   READS one the map's author stated. **Narrow beats general here, and the coverage not obtained
+   is stated rather than implied closed** (see `--authority` and the suite).
+
+   HOW A LIAR WOULD SATISFY THIS, STATED BEFORE WHAT IT CHECKS. The cheapest green is an arm
+   matching on a HAND-WRITTEN PAIR LIST inside this file containing exactly the one known receipt:
+   it fails the receipt, passes everything else, and detects nothing that was not already found by
+   hand. **The criterion that excludes it: a NEW instance must be caught with NO EDIT TO THIS
+   FILE.** The pair list lives in the CORPUS, written by the authority in its ordinary voice, so
+   any future construct row that cites `§N item M` into a to-design list is judged on sight. The
+   suite drives that claim directly — a SECOND, synthetic construct/document/item triple fires the
+   arm with the tool untouched — because an arm that only ever evaluates one pair is the liar's
+   arm whatever its author intended.
+
+   THE FOUR SIGNALS, ALL AUTHORED BY THE CORPUS, ALL REQUIRED TOGETHER. A conjunction is chosen
+   deliberately over a disjunction: it narrows, and under-reach here is a stated bound while
+   over-reach is a dead instrument.
+     1. §3's row for construct N carries a resolvable item citation `§<sec> item <n>`.
+     2. The cited SECTION asserts its items are still to be designed (its heading or its preamble
+        speaks the undesignedness vocabulary below).
+     3. The cited ITEM does not itself say where its design lives. A row that names a design
+        document, or says DESIGNED, is POINTING rather than restating and is healthy — which is
+        why §18's items 1–4, which do exactly that, are silent here.
+     4. Another document named in that construct row's HOME cell both (a) declares construct N in
+        its own `Place in the system` line and (b) carries a BODY HEADING containing EVERY content
+        word of the cited item's own bold key. Two independent statements, neither guessed.
+
+   WHAT IT DELIBERATELY DOES NOT DO. It does not read prose bodies for design; a heading is the
+   narrowest honest evidence that a document has a section ABOUT the piece. It does not judge
+   whether that section's design is ADEQUATE — `rowsubstrate.mjs` asks a neighbouring question
+   about ROWS and WARNS; this asks about DOCUMENTS and FAILS, because a contradiction between two
+   governed documents is a defect rather than a question. And it says UNRESOLVED out loud when a
+   citation names a section or item it cannot find, because a citation silently skipped is the
+   unearned-absence class this whole family belongs to.
+
+   THE COVERAGE NOT OBTAINED, STATED PLAINLY BECAUSE M0-58's SWEEP TAKES IT AS INPUT: an
+   undesignedness claim that no §3 row cites is INVISIBLE to this arm; a citation of any other
+   shape (`Part II §18` with no item, `§14.2–14.3`, a bare document reference) is NOT resolved; a
+   bold key of fewer than two content words is SKIPPED rather than matched on one generic noun;
+   and a home document that designs a piece without a heading naming it reads as absent. */
+
+export const MAP_DOC = "docs/architecture/BIO_System_Design.md";
+export const MAP_SECTION = /^(\d+\.\s*)?The major constructs/i;
+
+/* The vocabulary in which this corpus says a thing is not designed. Kept literal and short:
+   every alternative below is lifted from a governed document's own words. */
+const UNDESIGNED = /\bundesigned\b|\bnot\s+(?:yet\s+)?designed\b|\bto\s+be\s+designed\b|\bpieces?\s+to\s+design\b|\bdesigned\s+nowhere\b|\bDOCTRINE\s+still\b/i;
+
+/* An item that NAMES where its design lives is pointing, not restating — signal 3. */
+const POINTS_AT_A_DESIGN = (cell) => /\bDESIGNED\b/.test(cell) || /`[^`]+\.md`/.test(cell);
+
+const KEY_STOPWORDS = new Set(["the", "a", "an", "and", "or", "of", "its", "it", "for", "to", "in",
+  "on", "as", "is", "are", "that", "this", "with", "by", "from", "at", "be"]);
+
+/* A row's bold key reduced to its content words. Two or more, or the pair is SKIPPED. */
+export function keyWords(bold) {
+  return (bold || "").toLowerCase().replace(/[^a-z0-9\s-]/g, " ").split(/\s+/)
+    .filter((w) => w.length > 2 && !KEY_STOPWORDS.has(w));
+}
+
+/* A home cell names documents by bare filename — level 1 lives in `docs/architecture/`, but a
+   level-2 design is named the same way (`INVESTIGATIVE-SESSION.md`) and lives under
+   `docs/development/`. Both are tried; a name that resolves to neither is left as written so the
+   caller reports it UNRESOLVED rather than silently dropping it. */
+function resolveDoc(name) {
+  if (name.includes("/")) return name;
+  for (const d of ["docs/architecture", "docs/development"]) {
+    if (existsSync(join(ROOT, `${d}/${name}`))) return `${d}/${name}`;
+  }
+  return `docs/architecture/${name}`;
+}
+
+function readDoc(path) {
+  const abs = join(ROOT, path);
+  return existsSync(abs) ? readFileSync(abs, "utf8") : null;
+}
+
+/* The body of the section whose heading begins `<sec>.` — up to the next heading of the same or
+   a higher level, so a `## 18.` section keeps its `###` children and stops at `## 19.`. */
+export function numberedSection(text, sec) {
+  const lines = text.split("\n");
+  const esc = sec.replace(/\./g, "\\.");
+  const re = new RegExp(`^(#{2,6})\\s+${esc}[.·:\\s]`);
+  let start = -1, level = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const m = re.exec(lines[i]);
+    if (m) { start = i; level = m[1].length; break; }
+  }
+  if (start < 0) return null;
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i++) {
+    const h = HEADING.exec(lines[i]);
+    if (h && h[1].length <= level) { end = i; break; }
+  }
+  return { heading: lines[start], body: lines.slice(start, end).join("\n") };
+}
+
+/* The first table in a section, as rows of cells. The preamble is everything before it — where a
+   list states, in prose, that what follows is still to be designed. */
+function firstTable(body) {
+  const lines = body.split("\n");
+  const at = lines.findIndex((l) => /^\|/.test(l));
+  if (at < 0) return { preamble: body, rows: [] };
+  const rows = [];
+  for (let i = at; i < lines.length && /^\|/.test(lines[i]); i++) {
+    rows.push({ raw: lines[i], cells: lines[i].split("|").slice(1, -1).map((c) => c.trim()) });
+  }
+  return { preamble: lines.slice(0, at).join("\n"), rows };
+}
+
+/* §3's construct map, as rows keyed by the header cells the document itself writes. */
+export function constructMap(text = readDoc(MAP_DOC)) {
+  if (!text) return [];
+  const sect = section(text, MAP_SECTION);
+  if (!sect) return [];
+  const { rows } = firstTable(sect);
+  if (!rows.length) return [];
+  const head = rows[0].cells.map((c) => c.toLowerCase().replace(/[^a-z]/g, ""));
+  const col = (name) => head.indexOf(name);
+  const iN = col(""), iHome = col("home"), iState = col("state"), iName = col("construct");
+  const out = [];
+  for (const r of rows.slice(1)) {
+    if (/^[-: ]+$/.test(r.cells[0] ?? "")) continue;          /* the |---| separator */
+    const n = Number(r.cells[iN < 0 ? 0 : iN]);
+    if (!Number.isInteger(n)) continue;
+    out.push({
+      n,
+      construct: (r.cells[iName] || "").replace(/\*\*/g, ""),
+      home: r.cells[iHome] ?? "",
+      state: r.cells[iState] ?? "",
+      raw: r.raw,
+    });
+  }
+  return out;
+}
+
+/* THE AUDIT. Returns every pair it could evaluate, every citation it could NOT resolve, and the
+   failures — one computation read by the CLI, plancheck and the suite alike. `mapText` is
+   injectable for exactly one reason, stated so it is not mistaken for a seam: the suite must
+   drive a SECOND, synthetic triple to prove the pairing comes from the corpus rather than from a
+   list in this file, and writing a fixture construct row into the real map during a concurrent
+   battery is the contamination class this project has already paid for. The REAL map is asserted
+   separately and directly. */
+export function statusAuthority({ mapText = readDoc(MAP_DOC), docs = null } = {}) {
+  const read = (p) => (docs && p in docs ? docs[p] : readDoc(p));
+  const rows = constructMap(mapText);
+  const pairs = [], unresolved = [], fails = [];
+  const CITE = /§\s*(\d+(?:\.\d+)*)\s+item\s+(\d+)/gi;
+
+  for (const row of rows) {
+    const named = [...row.raw.matchAll(/`([^`]+\.md)`/g)].map((m) => resolveDoc(m[1]));
+    for (const c of row.raw.matchAll(CITE)) {
+      const [, sec, itemNo] = c;
+      const where = `${MAP_DOC} §3 construct ${row.n} cites §${sec} item ${itemNo}`;
+
+      /* Signal 1 — the citation must resolve to a section of a document the row itself names. */
+      const citing = named.map((p) => ({ path: p, text: read(p) }))
+        .find((d) => d.text && numberedSection(d.text, sec));
+      if (!citing) { unresolved.push(`${where} — no document named in that row has a §${sec}`); continue; }
+      const sect = numberedSection(citing.text, sec);
+
+      /* Every RESOLVED citation is recorded with the verdict it earned — never skipped silently.
+         `0 fail` cannot tell a corpus with one authority from an arm that evaluated nothing, and
+         this instrument's whole family is *a reader concluding a value from an absence*. */
+      const item0 = firstTable(sect.body).rows.find((r) => r.cells[0] === itemNo);
+      const bold = item0 ? (/\*\*([^*]+)\*\*/.exec(item0.raw) || [])[1] : undefined;
+      const pair = { construct: row.n, citing: citing.path, sec, item: itemNo, key: bold ?? null, covering: null, verdict: null };
+      pairs.push(pair);
+      const verdict = (v) => { pair.verdict = v; return null; };
+
+      /* Signal 2 — the cited list asserts its items are still to be designed. */
+      const { preamble, rows: items } = firstTable(sect.body);
+      if (!UNDESIGNED.test(sect.heading) && !UNDESIGNED.test(preamble)) { verdict("list-claims-no-undesignedness"); continue; }
+
+      /* Signal 3 — and the cited item does not say where its own design lives. */
+      const item = items.find((r) => r.cells[0] === itemNo);
+      if (!item) { pairs.pop(); unresolved.push(`${where} — §${sec} of ${citing.path} has no item ${itemNo}`); continue; }
+      if (POINTS_AT_A_DESIGN(item.raw)) { verdict("points-at-its-design"); continue; }
+      const words = keyWords(bold);
+      if (words.length < 2) {
+        pairs.pop();
+        unresolved.push(`${where} — item ${itemNo}'s key ${JSON.stringify(bold ?? null)} has fewer than two content words, `
+          + `and one generic noun is not a match this arm will make`);
+        continue;
+      }
+
+      /* Signal 4 — another home document declares this construct AND has a heading for the piece. */
+      let hit = null;
+      for (const p of named) {
+        if (p === citing.path) continue;
+        const text = read(p);
+        if (!text) continue;
+        const fm = parseFront(text.split("\n"));
+        if (fm.error || !new RegExp(`construct\\s+${row.n}\\b`, "i").test(fm.place)) continue;
+        const heading = bodyHeadings(text.split("\n"), fm.blockEnd, 6)
+          .find((h) => words.every((w) => new RegExp(`\\b${w}\\b`, "i").test(h.text)));
+        if (heading) { hit = { path: p, heading: heading.text }; break; }
+      }
+      if (!hit) { verdict("honestly-undesigned — no home document this map names covers it"); continue; }
+      pair.covering = hit.path;
+      verdict("RESTATED");
+
+      fails.push(`DESIGN STATUS RESTATED — construct ${row.n} (${row.construct}): `
+        + `${citing.path} §${sec} item ${itemNo} — "${bold}" — lists it among the pieces still TO BE DESIGNED, `
+        + `while ${hit.path}, which ${MAP_DOC} §3 names as that construct's home and which declares construct ${row.n} `
+        + `in its own Place line, carries the section "${hit.heading}". ${MAP_DOC} §3 is the SINGLE AUTHORITY on design `
+        + `status (Bob, 2026-09-17): a to-do list that RESTATES status is a second authority and rots. `
+        + `Correct it AT ITS SOURCE — have §${sec} item ${itemNo} POINT at ${hit.path} the way its neighbours do — `
+        + `and, where the map's own state cell repeats the stale status, correct that too. Never exempt it.`
+        + (UNDESIGNED.test(row.state) ? ` (${MAP_DOC} §3's own state cell for construct ${row.n} repeats it.)` : ""));
+    }
+  }
+  return { rows: rows.length, pairs, unresolved, fails };
+}
+
 /* GitHub-style slug, the one most viewers resolve. Duplicate headings get -1, -2 … */
 export function slugger() {
   const seen = new Map();
@@ -411,6 +653,19 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     console.log(`\ncorpuscheck --coverage: ${c.population.length} document(s) under ${DEVDIR}/, ${c.fails.length} fail`);
     process.exit(c.fails.length ? 1 : 0);
   }
+  if (args.includes("--authority")) {
+    const a = statusAuthority();
+    console.log(`  construct map rows   ${a.rows}`);
+    for (const p of a.pairs) {
+      console.log(`  pair    construct ${p.construct} · ${p.citing} §${p.sec} item ${p.item} "${p.key}" `
+        + `→ ${p.verdict}${p.covering ? ` (covered by ${p.covering})` : ""}`);
+    }
+    for (const u of a.unresolved) console.log(`  UNRESOLVED  ${u}`);
+    for (const f of a.fails) console.log(`  FAIL  ${f}`);
+    console.log(`\ncorpuscheck --authority: ${a.pairs.length} cited pair(s) evaluated, `
+      + `${a.unresolved.length} citation(s) unresolved, ${a.fails.length} fail`);
+    process.exit(a.fails.length ? 1 : 0);
+  }
   if (args.includes("--write")) {
     const files = args.filter((a) => !a.startsWith("--")).map((a) => relative(ROOT, join(process.cwd(), a)).replace(/\\/g, "/"));
     const set = files.length ? files : governed();
@@ -429,6 +684,15 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
      nobody classified. A flag nobody passes is not a mechanism. */
   const cov = coverage();
   for (const f of cov.fails) { console.log(`  FAIL  ${f}`); fails++; }
+  /* M0-57: and in the same pass, the SECOND-AUTHORITY arm — a flag nobody passes is not a
+     mechanism, so it runs by default the way the coverage audit does. The note states what was
+     EVALUATED and what could not be RESOLVED, because `0 fail` cannot tell a corpus with one
+     authority from a corpus nobody asked. */
+  const auth = statusAuthority();
+  for (const f of auth.fails) { console.log(`  FAIL  ${f}`); fails++; }
+  for (const u of auth.unresolved) console.log(`  note  authority: UNRESOLVED citation — ${u}`);
+  console.log(`  note  design status: ${MAP_DOC} §3 is the single authority; ${auth.rows} construct row(s), `
+    + `${auth.pairs.length} cited pair(s) evaluated, ${auth.unresolved.length} unresolved`);
   console.log(`\ncorpuscheck: ${docs} governed document(s); under ${DEVDIR}/ ${cov.population.length} document(s) `
     + `— ${cov.governed.length} governed, ${cov.excluded.length} excluded, ${cov.undecided.length} undecided, `
     + `${cov.unclassified.length} unclassified; ${fails} fail`);

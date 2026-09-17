@@ -85,7 +85,8 @@ import { fileURLToPath } from "node:url";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(DIR, "..", "..");
 const { ROOT, governed, checkFile, writeContents, parseFront, bodyHeadings, renderContents,
-  population, coverage, matchPattern } =
+  population, coverage, matchPattern, statusAuthority, constructMap, numberedSection, keyWords,
+  MAP_DOC } =
   await import(join(REPO_ROOT, "tools/corpuscheck.mjs"));
 
 let pass = 0, fail = 0;
@@ -94,7 +95,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 8;   /* M0-43 added the coverage section */
+const SECTIONS = 9;   /* M0-43 added the coverage section; M0-57 the design-status authority */
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -337,6 +338,185 @@ section("coverage — the hand-fed half, and the walk that audits it (M0-43)");
   t("plancheck imports and runs the coverage audit, not only checkFile", /coverage\(\)/.test(pc) && /coverage/.test(pc), true);
   t("the standard describes the walk in §7 so a reader meets it", /population\(\)/.test(std) && /Undecided —/.test(std), true);
 }
+
+/* ========================================================================== */
+section("design status has ONE authority — the construct map, and the arm that refuses a second (M0-57)");
+{
+  /* Bob, 2026-09-17: `BIO_System_Design.md` §3 is the SINGLE AUTHORITY on design status, and
+     "other areas [should] confirm that there aren't multiple sources of truth elsewhere in the
+     record". THE RECEIPT IS A SESSION'S OWN ERROR: BOB #12 told Bob the claim class was
+     UNDESIGNED because the Content Framework's §18 table listed it among the pieces designed
+     nowhere — while `BIO_Case_Making_v0_1.md` had designed it on 2026-08-03.
+
+     THE ARM THAT MATTERS MOST HERE IS OVER-STRICTNESS, and it is driven separately below against
+     a LIVE true negative rather than a fixture: REC-116's route marker is genuinely undesigned,
+     and a document that honestly says so must PASS. An arm that fires on a healthy state is
+     worse than no arm — it is switched off inside a week and takes its true positives with it. */
+
+  const real = (p) => readFileSync(join(ROOT, p), "utf8");
+  const FRAMEWORK = "docs/architecture/BIO_Content_Framework_v0_10.md";
+  const CASEMAKING = "docs/architecture/BIO_Case_Making_v0_1.md";
+
+  // ---------------------------------------------------------------- 1. the REAL tree, healthy
+  const live = statusAuthority();
+  t("the construct map parses and every construct row is found", live.rows, 15);
+  t("the real corpus has ONE authority on design status — no restatement", live.fails, []);
+  /* A statement of what was EVALUATED, never `0 fail` alone: an arm that evaluated nothing is
+     indistinguishable from an arm that is broken, which is this instrument's own family. */
+  t("and it EVALUATED the receipt's pair rather than passing it by silence",
+    live.pairs.map((p) => `${p.construct}·${p.citing}·${p.sec}·${p.item}·${p.verdict}`),
+    [`8·${FRAMEWORK}·18·6·points-at-its-design`]);
+  t("every citation in the map RESOLVED — an unresolved one is SAID, not skipped", live.unresolved, []);
+
+  // -------------------------------------------- 2. THE RECEIPT, RE-ARMED AT THE REAL DOCUMENTS
+  /* The arm is driven over the pair that ACTUALLY MISLED BOB, by reverting §18 item 6 to the
+     words it carried before this item corrected it. Injected rather than written to disk: a
+     fixture inside docs/architecture/ during a concurrent battery is the contamination class
+     this project has paid for, and arm 1 pins the real tree directly. */
+  const POINTER = "**DESIGNED 2026-08-03 in `BIO_Case_Making_v0_1.md`, §What a CLAIM is, and why it is a field rather than an object**";
+  const framework = real(FRAMEWORK);
+  t("ARM-THAT-DID-NOT-ARM GUARD: the corrected pointer is present exactly once before reverting",
+    framework.split(POINTER).length - 1, 1);
+  /* The pointer and the cell's original prose are ONE table cell, so a pipe-anchored revert
+     matches nothing — which is how this suite's own guard earned its place on first run. Strip
+     the pointer itself and leave the words item 6 carried before 2026-09-17. */
+  const before = framework.replace(/\*\*DESIGNED 2026-08-03[\s\S]*?Bob's direction of 2026-09-14/,
+    "Bob's direction of 2026-09-14");
+  t("and the revert TOOK — the pointer is gone and item 6 is back to restating status",
+    before.includes(POINTER) === false && before !== framework, true);
+
+  const armed = statusAuthority({ docs: { [FRAMEWORK]: before } });
+  t("THE RECEIPT FAILS — §18 item 6 restating a status the construct map's home has designed",
+    armed.fails.length, 1);
+  const f = armed.fails[0] || "";
+  t("and the failure names the CONSTRUCT", /construct 8\b/.test(f), true);
+  t("and it names BOTH documents — the one that restates and the one that designed it",
+    f.includes(FRAMEWORK) && f.includes(CASEMAKING), true);
+  t("and it names the piece in the words the document itself used", /the claim object/.test(f), true);
+  t("and it says where the correction belongs — at the source, never as an exemption",
+    /AT ITS SOURCE/.test(f) && /Never exempt it/.test(f), true);
+  t("the pair's verdict is RESTATED and its covering document named",
+    armed.pairs.map((p) => [p.verdict, p.covering]), [["RESTATED", CASEMAKING]]);
+
+  // --------------------- 3. THE LIAR'S ARM, EXCLUDED — a SECOND triple fires with NO TOOL EDIT
+  /* The cheapest green for this row is an arm matching on a hand-written pair list holding
+     exactly the one known receipt: it fails the receipt, passes everything else, and detects
+     nothing that was not already found by hand. THE CRITERION THAT EXCLUDES IT is that a NEW
+     instance must be caught with NO EDIT TO THE TOOL — so here is one, sharing not one construct
+     number, document name, section number, item number or content word with the receipt. */
+  const FX_MAP = `# Fixture system design
+
+## 3. The major constructs
+
+| # | construct | what it is | importance | relates to | home | state |
+| --- | --- | --- | --- | --- | --- | --- |
+| 4 | **Ballast trimming** | the trim ladder | it floats | none | \`FIXTURE_Ballast.md\` [\`FIXTURE_Trim_Ladder.md\`] | the trim ladder is DOCTRINE still Bob's (Part III §9 item 2) |
+`;
+  const FX_FRONT = (place) => `**Status** · A fixture document written to drive the corpuscheck authority arm, complete at its level, as of 2026-09-17.
+
+**Place in the system** · ${place}
+
+**Incomplete sections** · None — the fixture has no frontier.
+
+**Contents**
+- [x](#x)
+
+---
+`;
+  const FX_LIST = `# Fixture ballast
+
+${FX_FRONT("The ballast construct's home; nothing depends on it.")}
+## 9. The central gap, and the pieces to design
+
+The pieces to be designed, named here and designed nowhere in this document:
+
+| # | piece | what it is | whose |
+| --- | --- | --- | --- |
+| 1 | **the keel sensor** | a sensor | the architect |
+| 2 | **the trim ladder** | the rungs by which trim is earned | the architect |
+
+## 10. After
+`;
+  const FX_HOME = `# Fixture trim ladder
+
+${FX_FRONT("The reasoning behind construct 4 of `FIXTURE_MAP.md` §3 (ballast trimming).")}
+## How the trim ladder is earned — 2026-01-01
+
+It is earned.
+`;
+  const fxDocs = {
+    "docs/architecture/FIXTURE_Ballast.md": FX_LIST,
+    "docs/architecture/FIXTURE_Trim_Ladder.md": FX_HOME,
+  };
+  const synth = statusAuthority({ mapText: FX_MAP, docs: fxDocs });
+  t("A SECOND, WHOLLY SYNTHETIC TRIPLE FIRES WITH THE TOOL UNTOUCHED — the pairing is read from "
+    + "the corpus, not from a list in the tool", synth.fails.length, 1);
+  t("and it names that construct and both of ITS documents, sharing nothing with the receipt",
+    /construct 4\b/.test(synth.fails[0]) && synth.fails[0].includes("FIXTURE_Ballast.md")
+    && synth.fails[0].includes("FIXTURE_Trim_Ladder.md"), true);
+
+  // ------------ 4. OVER-STRICTNESS, DRIVEN AGAINST A LIVE TRUE NEGATIVE — REC-116's route marker
+  /* REC-116 is BLOCKED because its construct genuinely has NO HOME: `BIO_System_Design.md` never
+     mentions the route marker, and Part II §17 — the section a queue row named as its authority —
+     contains the marker zero times. A document that honestly says THAT must still pass. This is
+     the arm that decides whether the instrument survives contact with the corpus. */
+  t("the live true negative holds AT THE ARTIFACT: the construct map never mentions the route marker",
+    /LOOKED_INDETERMINATE/.test(real(MAP_DOC)) === false
+    && /route marker/i.test(real(MAP_DOC)) === false, true);
+  const TN_MAP = FX_MAP.replace("| 4 | **Ballast trimming** | the trim ladder | it floats | none | `FIXTURE_Ballast.md` [`FIXTURE_Trim_Ladder.md`] |",
+    "| 4 | **Ballast trimming** | the trim ladder | it floats | none | `FIXTURE_Ballast.md` |");
+  t("ARM-THAT-DID-NOT-ARM GUARD: the home document really was removed from the row",
+    TN_MAP !== FX_MAP && TN_MAP.includes("FIXTURE_Trim_Ladder.md") === false, true);
+  const tn = statusAuthority({ mapText: TN_MAP, docs: fxDocs });
+  t("REC-116's SHAPE PASSES — a construct the map gives no covering home is honestly undesigned "
+    + "and the arm does NOT fire", tn.fails, []);
+  t("and the pair is still EVALUATED and its verdict SAID, so the pass is a finding not a silence",
+    tn.pairs.map((p) => p.verdict), ["honestly-undesigned — no home document this map names covers it"]);
+
+  // ---------------------------------------------- 5. the other three ways a healthy pair passes
+  const pointing = FX_LIST.replace("| 2 | **the trim ladder** | the rungs by which trim is earned |",
+    "| 2 | **the trim ladder** | **DESIGNED 2026-01-01 in `FIXTURE_Trim_Ladder.md`** — the rungs |");
+  t("an item that POINTS at its design is healthy — which is why §18's items 1-4 are silent here",
+    statusAuthority({ mapText: FX_MAP, docs: { ...fxDocs, "docs/architecture/FIXTURE_Ballast.md": pointing } }).fails, []);
+  const notAList = FX_LIST.replace("## 9. The central gap, and the pieces to design", "## 9. The parts, as built")
+    .replace("The pieces to be designed, named here and designed nowhere in this document:", "The parts, as built:");
+  t("a cited section that claims NO undesignedness is not a to-do list and is never judged",
+    statusAuthority({ mapText: FX_MAP, docs: { ...fxDocs, "docs/architecture/FIXTURE_Ballast.md": notAList } }).fails, []);
+  const noDeclare = FX_HOME.replace("construct 4 of", "construct 11 of");
+  t("a home document that does NOT declare this construct in its Place line does not count as cover",
+    statusAuthority({ mapText: FX_MAP, docs: { ...fxDocs, "docs/architecture/FIXTURE_Trim_Ladder.md": noDeclare } }).fails, []);
+  const noHeading = FX_HOME.replace("## How the trim ladder is earned — 2026-01-01", "## Generalities");
+  t("nor does a home document with no HEADING naming the piece — a body mention is not evidence "
+    + "this arm will act on", statusAuthority({ mapText: FX_MAP, docs: { ...fxDocs, "docs/architecture/FIXTURE_Trim_Ladder.md": noHeading } }).fails, []);
+
+  // ------------------------------- 6. an absence is SAID, never concluded from silently skipping
+  const badSec = FX_MAP.replace("§9 item 2", "§77 item 2");
+  const u1 = statusAuthority({ mapText: badSec, docs: fxDocs });
+  t("a citation naming a section no document has is UNRESOLVED and named, not quietly dropped",
+    [u1.fails.length, u1.unresolved.length, /has a §77/.test(u1.unresolved[0] || "")], [0, 1, true]);
+  const badItem = FX_MAP.replace("§9 item 2", "§9 item 9");
+  const u2 = statusAuthority({ mapText: badItem, docs: fxDocs });
+  t("and a citation naming an item the section has not is UNRESOLVED and named",
+    [u2.fails.length, u2.unresolved.length, /no item 9/.test(u2.unresolved[0] || "")], [0, 1, true]);
+  const oneWord = FX_LIST.replace("**the trim ladder**", "**the ladder**");
+  const u3 = statusAuthority({ mapText: FX_MAP, docs: { ...fxDocs, "docs/architecture/FIXTURE_Ballast.md": oneWord } });
+  t("a one-content-word key is SKIPPED and said — one generic noun is not a match this arm makes",
+    [u3.fails.length, /fewer than two content words/.test(u3.unresolved[0] || "")], [0, true]);
+  t("keyWords drops articles and keeps the content words", keyWords("**the claim object**"), ["claim", "object"]);
+
+  // ----------------------------------------------------- 7. the helpers, and the loop it runs in
+  t("numberedSection stops at the next heading of the same level, not the next heading at all",
+    /19\. Where this document is the authority/.test(numberedSection(framework, "18").body), false);
+  t("numberedSection finds the section it is asked for", /the central gap/i.test(numberedSection(framework, "18").heading), true);
+  t("constructMap reads the map's own header row rather than fixed column positions",
+    constructMap().filter((r) => r.n === 8).map((r) => /Intent and inquiry/.test(r.construct)), [true]);
+  const pc2 = readFileSync(join(ROOT, "tools/plancheck.mjs"), "utf8");
+  t("the mechanism is IN THE LOOP — plancheck runs the authority arm, not only the front matter",
+    /statusAuthority\(\)/.test(pc2), true);
+  t("and the standard's §3 ruling is written where a reader of the map meets it",
+    /SINGLE AUTHORITY ON DESIGN STATUS/i.test(real(MAP_DOC)), true);
+}
+
 
 t("every section reached an assertion (the FOOT sentinel)", reached, SECTIONS);
 console.log(`\n${pass} pass, ${fail} fail`);
