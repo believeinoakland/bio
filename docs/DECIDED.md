@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-996 rulings across 85 documents.
+997 rulings across 85 documents.
 
 ## DEC-
 
@@ -1322,6 +1322,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:950`
 - **M0-51** · 2026-09-17 — THE RULE, RULED by M0-51 on 2026-09-17 under the determination this row delegated rather than returned.  
   `docs/development/VERIFICATION.md:450`
+- **M0-54** · 2026-09-17 — GATE PROFILE RULED BY CONDUCT #2 AS `DOCS`, ON A MEASUREMENT AND NOT AS A CONCESSION TO THE DISK:** `gates.mjs` classifies the diff DOCS and CONDUCT verified it at the artifact — four paths, every one under `docs/`, no code — so the doc-facing suites plus `plancheck` were the owed gate and a full battery was never…  
+  `docs/development/QUEUE.md:910`
 
 ## Rulings carrying no id
 
