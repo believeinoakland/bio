@@ -7904,7 +7904,15 @@ async function openInquiry(id, fromNav){
       <h2 class="sec">What would falsify it</h2>
       ${falsifyText
         ? `<div class="card"><div class="prose">${mdLite(falsifyText)}</div></div>`
-        : `<div class="empty">This question does not yet say what would falsify it. Saying so is a requirement of concluding it, and nothing is written here on the author's behalf.</div>`}
+        /* CORRECTED 2026-09-17 (REC-117), never exempted. This read "Saying so is a
+           requirement of concluding it", which was TRUE when it was written and was
+           overruled by Bob the day this landed: a member may conclude without a
+           falsifier by recording that none can honestly be stated. Leaving the old
+           sentence would have told a member on their own question that a gate exists
+           which no longer does — and the whole of the ruling is that nobody should be
+           pressed into inventing a falsifier to get past one. The first clause is
+           unchanged and is what inquiry-page.test.mjs pins. */
+        : `<div class="empty">This question does not yet say what would falsify it. Concluding it means either saying what would overturn it, or recording that nothing available would &mdash; and nothing is written here on the author's behalf.</div>`}
       <h2 class="sec">What relies on this</h2>
       <p class="subj-note">Read from the record's own reverse index, filtered to what this credential may see. Nothing here is assembled by walking the record from this page.</p>
       ${relPane}`;

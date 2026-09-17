@@ -5132,12 +5132,35 @@ function checkInquiryExtension(ctx, findings) {
         ["author the conclusion where the document stands: reopening does not pick a concluded inquiry back up (op=reopen answers NOT_SET_DOWN), so there is no act that undoes the conclusion and the repair is made in place"]
       ));
     }
-    if (typeof fm.falsifier !== "string" || fm.falsifier.trim() === "") {
+    const ovBy = typeof fm.falsifier_override_by === "string" ? fm.falsifier_override_by.trim() : "";
+    const ovAt = typeof fm.falsifier_override_at === "string" ? fm.falsifier_override_at.trim() : "";
+    const falsStated = typeof fm.falsifier === "string" && fm.falsifier.trim() !== "";
+    if (!falsStated && !ovBy && !ovAt) {
       findings.push(f(
         "C-2.8",
         "error",
         "concluded state requires a non-empty falsifier: a conclusion that names nothing which would overturn it cannot be checked by anyone, including its author",
-        ["state what evidence would falsify this conclusion"]
+        [
+          "state what evidence would falsify this conclusion",
+          "or, if none can honestly be stated, record the absence: conclude with no_falsifier=1 so the record carries who accepted it and when"
+        ]
+      ));
+    } else if (!falsStated && !(ovBy && ovAt)) {
+      findings.push(f(
+        "C-2.8",
+        "error",
+        "concluded state has no falsifier and only a HALF-RECORDED override: an override missing its " + (ovBy ? "date" : "member") + " is a silent one, and a record that has stopped requiring a falsifier without saying who accepted that claims more than it can support",
+        ["record both falsifier_override_by and falsifier_override_at, or state a falsifier"]
+      ));
+    } else if (falsStated && (ovBy || ovAt)) {
+      findings.push(f(
+        "C-2.8",
+        "error",
+        "concluded state carries BOTH an authored falsifier and a record that none was stated: those are two contradictory claims about this finding and nothing may choose between them",
+        [
+          "remove the falsifier_override_by/at pair if the falsifier stands",
+          "or clear the falsifier if the absence is what the member meant to record"
+        ]
       ));
     }
     if (!Array.isArray(fm.basis) || fm.basis.length < 1) {
@@ -9716,10 +9739,24 @@ var ACT_SHAPE_CHECKS = {
     where: "src/store.mjs conclude > is-conclude-answer",
     translation: "Concluding records what was concluded, and this one says nothing. If the honest answer is that the group could not settle it, write that down \u2014 an answer of undetermined is a real answer here and is stated rather than left blank."
   },
+  /* REC-117 / BOB 2026-09-17: the translation now NAMES THE DOOR, and that is
+     the surfacing half of the ruling rather than a nicety. A member who is
+     refused here and told only that a falsifier is required is a member under
+     pressure to invent one; a member told they may instead state that none can
+     honestly be given has been offered the honest way through. */
   NO_FALSIFIER: {
     check: "C-33.2",
     where: "src/store.mjs conclude > is-conclude-answer",
-    translation: "A conclusion has to say what would overturn it. Without that nobody can check the finding, including the person who wrote it, and a finding that cannot be checked claims more than the evidence behind it can carry."
+    translation: "A conclusion has to say what would overturn it. Without that nobody can check the finding, including the person who wrote it, and a finding that cannot be checked claims more than the evidence behind it can carry. If no falsifier can honestly be named, say so rather than inventing one: the record will carry that no falsifier was stated, in your name and with the date, wherever this finding appears."
+  },
+  /* REC-117. The one refusal the override ADDS, and it exists because the
+     alternative is the plane choosing which of a member's two statements it
+     meant. No caller written before this item can reach it: the parameter it
+     turns on did not exist. */
+  FALSIFIER_AND_NONE_STATED: {
+    check: "C-33.33",
+    where: "src/store.mjs conclude > is-conclude-answer",
+    translation: "You have written a falsifier and also asked to record that none could be stated. Those are two different things to say about this finding, and choosing between them is not something the record should do on your behalf. Keep the falsifier, or clear it and record the absence."
   },
   NO_RESOLUTION: {
     check: "C-33.3",
@@ -13657,7 +13694,22 @@ var ACTS = [
      rung enforced in code. The suite asserts that backing. The entry requirements (a conclusion, a falsifier, at least
      one basis leg) and the named-member rule are ACT-TIME refusals the store
      words itself, the release precedent: publishing the act says the state
-     machine permits the move, not that this caller's parameters will pass. */
+     machine permits the move, not that this caller's parameters will pass.
+     CORRECTED 2026-09-17 (REC-117), AND THE RUNG SURVIVES THE CHANGE THAT
+     BROKE THE SENTENCE. Bob ruled NO_FALSIFIER overridable, so `store.conclude`
+     no longer refuses it unconditionally: a member may conclude with no
+     falsifier by DECLARING the absence, which the record then carries in their
+     name and with a date. The sentence above is left standing because it is
+     still true of NO_CONCLUSION — which is refused unconditionally and has no
+     override — and REC-76's finding is what makes that enough: the rung is
+     graded by the FAMILY (JUSTIFICATION_REFUSALS, this file, ~line 492) and
+     never by one spelling, so an act that still demands an authored account for
+     WHAT was concluded is still `reasoned`. What the override changes is the
+     ACCOUNT the member must give, never whether one is required: stating that
+     no falsifier can honestly be given IS the authored account, and it is
+     attributed. The one thing that would drop this rung is an override the
+     plane could take SILENTLY, and that is the case C-2.8 and the store both
+     refuse by name. */
   {
     id: "conclude",
     label: "Conclude",
@@ -28525,7 +28577,14 @@ Mitigation: ${mit}
    * `## Conclusion` to put one in — is refused ILLEGAL_TRANSITION rather than
    * quietly given a state its contract never had. Modernizing such a document
    * is a promotion, and then it concludes like any other. */
-  conclude({ target, conclusion = "", falsifier = "", viewer = null, author = null } = {}) {
+  conclude({
+    target,
+    conclusion = "",
+    falsifier = "",
+    noFalsifier = false,
+    viewer = null,
+    author = null
+  } = {}) {
     const who = String(author ?? "").trim();
     if (!who || isMachineIdentity(who))
       return {
@@ -28535,17 +28594,24 @@ Mitigation: ${mit}
       };
     const concl = String(conclusion ?? "").trim();
     const fals = String(falsifier ?? "").trim();
+    const noFals = noFalsifier === true || noFalsifier === 1 || noFalsifier === "1" || noFalsifier === "true";
     if (!concl)
       return {
         ok: false,
         reason: "NO_CONCLUSION",
         detail: "concluding records WHAT was concluded. C-2.8 requires a non-empty conclusion in the concluded state, so a conclusion with nothing in it would produce a bundle the catalog rejects. An undetermined answer is stated as undetermined, never left blank."
       };
-    if (!fals)
+    if (!fals && !noFals)
       return {
         ok: false,
         reason: "NO_FALSIFIER",
-        detail: "a conclusion states what would OVERTURN it. Without that the finding cannot be checked by anyone, including its author, and a record that cannot be checked claims more than it can support."
+        detail: "a conclusion states what would OVERTURN it. Without that the finding cannot be checked by anyone, including its author, and a record that cannot be checked claims more than it can support. If no falsifier can honestly be stated, SAY SO rather than inventing one: conclude again with no_falsifier=1 and the record will carry `no falsifier stated` in your name and with today's date, on every surface this finding appears on and in the signed bytes if it is ever published."
+      };
+    if (fals && noFals)
+      return {
+        ok: false,
+        reason: "FALSIFIER_AND_NONE_STATED",
+        detail: "you have both stated a falsifier and asked to record that none was stated. Those are two different claims about this finding and the plane will not choose between them. Send the falsifier, or send no_falsifier=1 with the falsifier empty."
       };
     for (const [name, v] of [["conclusion", concl], ["falsifier", fals]])
       if (v.length > _Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(v))
@@ -28626,13 +28692,21 @@ Mitigation: ${mit}
     text = _Store.#setScalar(text, "current_state", "concluded");
     text = _Store.#setOrAddScalar(text, "conclusion", `"${concl}"`);
     text = _Store.#setOrAddScalar(text, "falsifier", `"${fals}"`);
+    if (noFals) {
+      text = _Store.#setOrAddScalar(text, "falsifier_override_by", `"${_Store.#fmSafe(who)}"`);
+      text = _Store.#setOrAddScalar(text, "falsifier_override_at", `"${when}"`);
+    } else {
+      text = _Store.#setScalar(text, "falsifier_override_by", `""`);
+      text = _Store.#setScalar(text, "falsifier_override_at", `""`);
+    }
     text = _Store.#setScalar(text, "last_updated", `"${when}"`);
     const entry = `### Session ${when} | Concluded | ${who}
 Trigger: op=conclude on ${target}
 Changes: state ${b.current_state} to concluded.
 Conclusion: ${concl}
-Falsifier: ${fals}
-`;
+` + (noFals ? `Falsifier: NO FALSIFIER STATED \u2014 recorded by ${who} at ${when}
+` : `Falsifier: ${fals}
+`);
     const at = text.indexOf("## Session Log");
     if (at < 0) text += "\n## Session Log\n\n" + entry;
     else {
@@ -28678,6 +28752,7 @@ Falsifier: ${fals}
       conclusion: concl,
       falsifier: fals,
       basis_legs: legs.length,
+      falsifier_override: noFals ? { by: who, at: when } : null,
       author: who,
       at: when,
       weight: "single"
@@ -31076,6 +31151,8 @@ Subject position: ${pos} \u2014 ${just}
       text2 = _Store.#setOrAddScalar(text2, "state_history", "[]");
       text2 = _Store.#setOrAddScalar(text2, "conclusion", `""`);
       text2 = _Store.#setOrAddScalar(text2, "falsifier", `""`);
+      text2 = _Store.#setOrAddScalar(text2, "falsifier_override_by", `""`);
+      text2 = _Store.#setOrAddScalar(text2, "falsifier_override_at", `""`);
       text2 = _Store.#setOrAddScalar(text2, "disposition_reason", `""`);
       text2 = _Store.#setOrAddScalar(text2, "division_parent", target);
       text2 = _Store.#setOrAddScalar(text2, "division_siblings", `[${sibs.join(", ")}]`);
@@ -56774,10 +56851,15 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         /* REC-13. No `handle` and no `owner`: concluding is not a set
            application (see conclude() above), so it takes the ONE target and
            the viewer/author stamps the control plane sets. */
+        /* REC-117: `no_falsifier` is the member's OWN assertion that none can
+           be stated, so it arrives from the caller like `conclusion` and
+           `falsifier` do — never stamped by the control plane, which stamps
+           only identity. */
         conclude: () => this.conclude({
           target: url.searchParams.get("target"),
           conclusion: url.searchParams.get("conclusion"),
           falsifier: url.searchParams.get("falsifier"),
+          noFalsifier: url.searchParams.get("no_falsifier"),
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author")
         }),
@@ -59280,11 +59362,23 @@ var index_default = {
                division writes its account and where a person reads. Returning
                only one of them would either drop the gated claim or drop the
                explanation; a renderer needs to know which is which. */
+            /* REC-117 / BOB 2026-09-17, AND THIS SURFACE IS THE ONE HE NAMED.
+               "a member can override either temporarily or IN THE PUBLISHED
+               RECORD" — so the override travels into the signed bytes and is
+               rendered from them here, beside the falsifier it stands in for.
+               `falsifier_override` is `{by, at}` or NULL and never absent: a
+               renderer that had to tell the two cases apart by a missing key
+               would be inferring the condition, and the whole of this item is
+               that the condition is STATED. A published finding whose
+               falsifier is empty and whose override is null is a document
+               that predates this item or was never gated — NOT a silent
+               override, and a renderer must not print one as the other. */
             authored: {
               conclusion: typeof fm?.conclusion === "string" ? fm.conclusion : null,
-              falsifier: typeof fm?.falsifier === "string" ? fm.falsifier : null
+              falsifier: typeof fm?.falsifier === "string" ? fm.falsifier : null,
+              falsifier_override: typeof fm?.falsifier_override_by === "string" && fm.falsifier_override_by.trim() && typeof fm?.falsifier_override_at === "string" && fm.falsifier_override_at.trim() ? { by: fm.falsifier_override_by.trim(), at: fm.falsifier_override_at.trim() } : null
             },
-            detail: "`authored` is what op=conclude wrote into the frontmatter and what the gate holds the finding to; the section fields are the prose printed beside it in the signed bytes."
+            detail: "`authored` is what op=conclude wrote into the frontmatter and what the gate holds the finding to; the section fields are the prose printed beside it in the signed bytes. `falsifier_override`, when it is not null, is the member who recorded that NO falsifier could be stated for this finding, and when they did so."
           } : {
             state: "unavailable",
             from_sha: fnd.bundle_sha,
