@@ -12181,3 +12181,23 @@ a trap paid for and not repeated: the first draft of `hookState()` used `readdir
   own header promises NO DIRECTORY WALK precisely so it stays out of `hygiene.test.mjs`'s `readdirSync`
   census, which fails BY NAME on a new member.** It probes a NAMED LIST of standard git hook names
   instead, and the resulting blind spot — a hook under a non-standard name — is STATED at the site.
+
+## CLAIM 2026-09-17 RECORD (REC-114 / D-383 — the leg listing's capture letter, capped through the registry)
+session: rec114-leg-earned-letter (worktree agent-ac7f5ea0af44d1c3f)
+opened: 2026-09-17T00:00:00Z
+released:
+paths: `bio-plane/src/store.mjs` — **named by SITE**: (1) `meaningRows()`, which gains one
+  post-projection resolution step for the `leg` arm and nothing else; (2) ONE new private
+  helper beside it. **NOT** `#strengthWalk`, **NOT** `#capturedAt`, **NOT** `#captureBoundsFor`,
+  **NOT** `earnedBasisRegistry` — REC-105's landing is READ and REUSED here, never edited, which
+  is what keeps the walk and this listing from becoming two implementations of one rule.
+  `bio-plane/src/query.mjs` — the `MEANING.leg` registry entry's `row` list and its comment only.
+  `bio-plane/test/rec114-leg-earned.test.mjs` (NEW), `bio-plane/test/rec114-leg-earned.control.mjs` (NEW).
+  `bio-plane/test/rec108-cache-asof.test.mjs` — **block 7 ONLY, CORRECTED not exempted.** That block
+  is the probe that FOUND this defect, so it asserts the defect's presence: `grade` publishing `"B"`
+  while the record derives `"C"`, and a source pin on the `grade:` sub-field literal this item edits.
+  Both are SUPERSEDED by this landing and both are rewritten with the reason at the site, per
+  `CLAUDE.md`'s rule that an exempted test is a rule nobody is enforcing. No other block is touched.
+  `docs/development/QUEUE.md` (the REC-114 row), `docs/development/DEBT.md` (D-383's disposition),
+  `docs/development/INTERFACE-CHANGES.md` (IC-117, appended), `docs/development/CLAIMS.md` (this block).
+  **NOT** `civicos-ui/app.html` (UI-63 is live there), **NOT** `tools/corpuscheck.mjs` (M0-57).

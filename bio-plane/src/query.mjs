@@ -416,8 +416,34 @@ export const MEANING = {
       /* Invariant 7: a leg that argues the other way is a ROW, so it is askable. */
       role:   { col: "role",         case: "lower", vocab: BASIS_ROLES },
       /* R2: the axis is NOT derivable from target_type, so it is its own column. */
-      axis:   { col: "grade_axis",   case: "lower", vocab: GRADE_AXES },
-      grade:  { col: "grade",        case: "upper", vocab: [] },
+      axis:   { col: "grade_axis",   case: "lower", vocab: GRADE_AXES,
+                /* REC-114: see `grade` below — `leg:axis=capture` reaches the
+                   same rows by the same column and is the second of the three
+                   routes D-383 named. */
+                selects: "the axis the leg's grade was RECORDED on. Selecting "
+                       + "`capture` here selects on what was authored; the rows "
+                       + "answer with `grade` resolved against the registry" },
+      /* REC-114 / D-383 — THE SELECTOR SELECTS ON THE AUTHORED COLUMN AND THE
+         ROW PUBLISHES THE EARNED LETTER, AND A MEMBER IS TOLD SO HERE.
+         This is a real disagreement and it is stated rather than smoothed. The
+         filter is SQL over `inquiry_basis.grade`; the published `grade` is that
+         letter capped by `earnedBasisRegistry`, which is a derivation over
+         `register`, `readings` and each capture's transcription chain and has
+         no column to select on. The two CANNOT be made one the way REC-90 made
+         `content:cited` one — so the honest move is to say which is which at
+         the place a member learns what the selector means, rather than to let
+         `leg:grade=B` quietly return a row reading `C` with nothing explaining
+         it. `grade_authored` on every row carries the same fact at row grain.
+         `op=searchfields` is the vocabulary route a surface actually composes
+         from, which is why this note lives here and not in the answer
+         envelope — a second spelling in the envelope would reach no consumer
+         that exists and would be the twelfth way of saying one thing. */
+      grade:  { col: "grade",        case: "upper", vocab: [],
+                selects: "the grade letter as AUTHORED on the leg. The rows this "
+                       + "selects answer with `grade` = what the record can "
+                       + "support and `grade_authored` = what was authored, so a "
+                       + "leg selected at B can answer at C when the capture it "
+                       + "rests on cannot support B" },
       /* REC-42's OR branch. `has:leg` plus `leg:ground=*` is "a multi-ground
          basis", the second question D-223 named as equally unaskable. */
       ground: { col: "ground",  vocab: [] },
@@ -449,6 +475,45 @@ export const MEANING = {
           "grade_source", "ground", "note", "at", "content_id"],
     rowJoin: { table: "content", alias: "xc", on: "xc.content_id = m.content_id",
                cols: ["extent_kind", "ref"] },
+    /* REC-114 / D-383 — THE TWO FIELDS THIS ARM DERIVES *AFTER* THE PROJECTION,
+       DECLARED HERE SO `op=searchfields` AND THE ROWS CANNOT DISAGREE ABOUT WHAT
+       A LEG ROW CARRIES. They are NOT `rowComputed`: that key generates SQL, and
+       these two cannot be SQL. The capture ceiling lives in `earnedBasisRegistry`
+       — a JS derivation over `register`, `readings` and each capture's
+       transcription chain — so there is no column to select and no expression to
+       compute. `store.mjs`'s `meaningRows` fills them from the SAME
+       `Store.#capturedAt` the strength walk applies, which is the whole point:
+       one arithmetic, two readers, never two implementations.
+
+       WHY `grade` MOVED RATHER THAN GAINING A SIBLING, and it is the ruling
+       rather than a preference. Before this item `grade` published the letter a
+       member AUTHORED, straight off `inquiry_basis.grade`, uncapped — so every
+       consumer that read the obvious field published a claim the record could
+       not support. Adding an `earned` field beside an uncorrected `grade` would
+       have left that consumer publishing the overclaim and called the item done.
+       So `grade` is the EARNED letter, which is what the record can support, and
+       the authored letter is published BESIDE it rather than erased: a member's
+       own act stays legible, and `grade_why` says in words why the two differ.
+       `CLAUDE.md` weighs an overclaim heaviest; DEC-4 bounds the capture axis by
+       fidelity; REC-88 corrected the registry and REC-105 corrected the walk.
+       This is the fourth reader of one rule, swept to it.
+
+       BOTH ARE ALWAYS PRESENT ON EVERY LEG ROW, NEVER SOMETIMES. That is this
+       compiler's own convention (`snippet` is `NULL AS snippet` rather than
+       absent, `target_present` is always projected) and it is what keeps
+       `columns` honest: a field a row carries only when something went wrong
+       makes a surface test for presence, and a surface testing for presence
+       reads absence as *nothing was capped* when it may mean *nobody looked*.
+       On a connection-axis leg, and on a capture leg at or under its ceiling,
+       `grade_authored` simply equals `grade` and `grade_why` is null — which is
+       a statement that the member's letter STANDS, not a filler. */
+    rowDerived: {
+      grade_authored: "the grade letter the member actually authored on this leg, "
+                    + "verbatim from `inquiry_basis.grade` and never capped — equal to "
+                    + "`grade` unless the record cannot support what was authored",
+      grade_why: "why `grade` differs from `grade_authored`, in words, or null when "
+               + "the authored letter stands unchanged",
+    },
     identity: ["bundle_id", "ord"],
     refs: ["target_id"],
     rowGrain: "one LEG of one inquiry's basis, addressed by (bundle_id, ord) — "
@@ -767,7 +832,15 @@ export function ambiguousBareWords() {
 export function meaningVocabulary() {
   return Object.fromEntries(Object.entries(MEANING).map(([arm, m]) => [arm, {
     table: m.table, key: m.key, grain: m.grain, bare: m.bare,
-    fields: Object.fromEntries(Object.entries(m.sub).map(([n, s]) => [n, { column: s.col, values: s.vocab || [] }])),
+    /* REC-114: `selects` when a sub-field HAS one, and absent when it does not
+       — an empty string on every other field would be eleven statements that a
+       selector has nothing unusual to say, which is noise a surface has to
+       filter. It is published because the fact it carries (this selector reads
+       a column the row no longer publishes verbatim) is one a member cannot
+       recover from the vocabulary any other way. */
+    fields: Object.fromEntries(Object.entries(m.sub).map(([n, s]) => [n, {
+      column: s.col, values: s.vocab || [],
+      ...(s.selects ? { selects: s.selects } : {}) }])),
     words: Object.fromEntries([...bareIndex(arm)].filter(([, subs]) => subs.length === 1).map(([w, subs]) => [w, subs[0]])),
     ambiguous: ambiguousBareWords()[arm],
     /* PL-9: the MEANING-GRAIN half of the same arm, published beside the
@@ -801,6 +874,12 @@ function rowColumns(m) {
           ...(m.rowJoin ? m.rowJoin.cols : []),
           ...m.refs.map((c) => `${c}_present`),
           ...Object.keys(m.rowComputed || {}),
+          /* REC-114: the fields the STORE derives after this compiler has run.
+             They are columns of a row exactly as `target_present` is, and the
+             only thing that distinguishes them is which layer fills them — so
+             leaving them out here would re-create, for a capped grade, the
+             five-week hole this function was written to close. */
+          ...Object.keys(m.rowDerived || {}),
           /* REC-92: an FTS-backed arm always projects `snippet` — NULL when the
              query carried no term to centre one on, never absent. Published
              here for the same reason `target_present` had to be: a column a row

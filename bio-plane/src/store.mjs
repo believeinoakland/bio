@@ -1876,7 +1876,11 @@ export class Store extends DurableObject {
     /* The count FIRST, so a statement that somehow lost the gate throws before
        any row is assembled rather than after. */
     const total = this.#runQuery(plan.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
-    const rows = this.#runQuery(plan.statements.meaning(), tally);
+    /* REC-114 / D-383: the LEG arm's capture letter is resolved against the
+       registry before it leaves, and the authored letter travels beside it.
+       Every other arm passes through untouched — see `#legEarnedCapture`. */
+    const rows = this.#legEarnedCapture(plan.meaning.arm,
+      this.#runQuery(plan.statements.meaning(), tally));
     /* REC-90 — THE FOUR-LEVEL STATEMENT, on the same gate and the same scope.
        Third statement, not a second read: it runs through `#runQuery` like the
        other two, so it throws without the gate exactly as they do. */
@@ -1912,6 +1916,78 @@ export class Store extends DurableObject {
                               Number(lv.documents_with_rows || 0), total,
                               { arm: plan.meaning.arm, matched: plan.meaning.matched, axis }),
     };
+  }
+
+  /** REC-114 / D-383 — A LEG LISTING'S CAPTURE LETTER, RESOLVED AGAINST WHAT THE
+   *  RECORD CAN EARN FOR THAT LEG'S TARGET, WITH THE AUTHORED LETTER BESIDE IT.
+   *
+   *  THE DEFECT THIS CLOSES, IN ONE SENTENCE. `MEANING.leg` names `grade`, so
+   *  until this item `op=meaningrows&rows=leg` handed a member the letter a
+   *  member AUTHORED, straight off `inquiry_basis.grade`, with no registry
+   *  ceiling applied — and `leg:grade=` and `leg:axis=capture` are selectors
+   *  over that same column, so all three routes published it. DEC-4 bounds the
+   *  capture axis by transcription fidelity; REC-88 corrected the registry and
+   *  REC-105 corrected the strength walk. **This is the FOURTH reader of one
+   *  rule and it is swept to the ruling already made, not ruled afresh.**
+   *
+   *  IT REUSES `Store.#capturedAt` AND THAT IS THE LOAD-BEARING DECISION. The
+   *  arithmetic of the ceiling lives in `captureBound` (CPDF-10), the SENTENCE
+   *  lives in `earnedBasisRegistry`, and the three-case policy — NO ENTRY,
+   *  NULL GRADE, A CEILING — lives in `#capturedAt`. Writing a second policy
+   *  here would open at this surface exactly the divergence REC-105 closed at
+   *  the walk: one rule with two implementations, either covering for the
+   *  other, which is the shape this repository has measured five times. So this
+   *  method decides NOTHING about grades. It collects, calls, and labels.
+   *
+   *  WHY IT IS NOT THE WALK. `#strengthWalk` derives an inquiry's PAIR and
+   *  composes members; this answers at LEG grain and must not aggregate — an
+   *  inquiry resting on four legs is four rows here, which is the grain
+   *  `op=meaningrows` exists to expose. Reaching for `strengthOf()` would have
+   *  returned one pair for a page of legs belonging to many inquiries, and it
+   *  would have run a full recursive walk per row. The shared unit is the
+   *  per-leg cap, and that is precisely what `#capturedAt` is.
+   *
+   *  THE THREE CONDITIONS MATCH THE WALK'S, RE-STATED RATHER THAN INHERITED,
+   *  because this is a different loop over the same rule and a silent drift
+   *  between them is the whole failure mode. Capture axis only (a connection
+   *  leg's earned answer is a VALUE the write already pins, not a ceiling a
+   *  read applies); a leg actually carrying a letter (null stays null — nothing
+   *  is invented); and a target that is NOT an inquiry, which is the walk's
+   *  `noReferent` arm — a capture grade on an INQ- leg ranges over no document,
+   *  `checkInquiryBasis` refuses new ones, and history can still hold one.
+   *
+   *  ONE REGISTRY CALL FOR THE WHOLE PAGE, never one per leg — the shape
+   *  `earnedBasisRegistry` was built in and the same choice `#captureBoundsFor`
+   *  made. The page is already bounded by `limit`, so this adds two indexed
+   *  reads to the op and not a per-row probe.
+   *
+   *  THE SUBJECT IS NULL ON PURPOSE, for `#captureBoundsFor`'s stated reason:
+   *  the registry's CAPTURE arm is computed from `register` and `readings`
+   *  alone and does not branch on a subject entity, while a page of legs
+   *  crosses many inquiries with many subjects of their own. Passing null
+   *  returns the same capture answer and invents no subject.
+   *
+   *  BOTH DERIVED FIELDS ARE ALWAYS PRESENT — `query.mjs`'s `rowDerived` block
+   *  carries that reasoning and `rowColumns` publishes them, so
+   *  `op=searchfields` and these rows cannot disagree about what a leg row
+   *  holds. */
+  #legEarnedCapture(arm, rows) {
+    if (arm !== "leg" || !Array.isArray(rows) || !rows.length) return rows;
+    const bounded = (r) => !!r && r.grade_axis === "capture" && r.grade != null
+      && typeof r.target_id === "string" && !!r.target_id
+      && normalizeType(r.target_type) !== "inquiry";
+    const targets = new Set();
+    for (const r of rows) if (bounded(r)) targets.add(r.target_id);
+    const cap = targets.size
+      ? (this.earnedBasisRegistry(null, [...targets])?.earned?.capture || {})
+      : {};
+    return rows.map((r) => {
+      const res = bounded(r) ? Store.#capturedAt(r.grade, cap[r.target_id], r.target_id) : null;
+      return { ...r,
+               grade: res ? res.grade : (r ? r.grade : null),
+               grade_authored: r ? r.grade : null,
+               grade_why: res ? res.why : null };
+    });
   }
 
   /** REC-92 / CONTENT-SEARCH-DESIGN.md §4.4 — THE CONTENT-AXIS TALLY.
