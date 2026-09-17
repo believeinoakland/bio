@@ -657,6 +657,63 @@ if (conduct && inbox && !/INBOX/.test(conduct))
    never read as a verdict; `rowsubstrate.mjs`'s header carries the full account, including
    a second signal that was WITHDRAWN after firing four times and being wrong four times. */
 
+/* ------------------------------------------- 2g. WHAT EACH LANE STILL OWES
+
+   D-409. `kickoffs/BOB.md` rule 10 says a lane keeps going while its list is non-empty, and
+   when that rule was written THERE WAS NO LIST — the commitments lived in prose, in messages,
+   reachable by nobody. Bob, 2026-09-17: *"This isn't just a bug in idleness, but a failure to
+   document (in the repo) and follow the commitments you've made."*
+
+   The obligations were already written down; what was missing was any way to SEE them together.
+   Its first honest run surfaced D-394 — a design act this lane had been told it owed, had not
+   done, and had not mentioned in hours of reporting. A promise nobody can enumerate is a
+   promise nobody keeps. */
+
+{
+  const { owedFor } = await import("./owed.mjs").catch(() => ({}));
+  if (!owedFor) {
+    notes.push(`owed.mjs could not be loaded — no lane's outstanding list was read this run.`);
+  } else {
+    for (const lane of ["BOB", "CONDUCT"]) {
+      const o = owedFor(lane, { repo: ROOT });
+      if (o.unreadable.length) { warn(`OWED BY ${lane} is UNKNOWN — could not read `
+        + `${o.unreadable.join(", ")}. An unreadable ledger is not an empty one.`); continue; }
+      notes.push(`owed by ${lane}: ${o.counts.owed} item(s)`
+        + (o.counts.owed ? ` — ${o.items.map((i) => i.id).join(", ")}` : " — the list is empty"));
+    }
+  }
+}
+
+/* ---------------------------------- 2f. UNDESIGNED CLAIMS NOBODY HAS RE-READ
+
+   D-408, and it is the OTHER DIRECTION from 2e. Every arm in this file is pointed at the
+   record claiming MORE than it can support. A sentence saying *X is undesigned* claims LESS
+   and passes all of them — `CLAUDE.md`'s *a blocker is a claim, and nothing here audits one*.
+   The sweep found 21 such claims across 9 governed documents and EIGHT WERE STALE, including
+   a contradiction between the construct map (case-making: built) and D-127 (undesigned),
+   copied into three more documents.
+
+   A stale one is worse than a stale debt row: a row invites you to close it, an *undesigned*
+   invites everyone to stay away, so it is self-preserving. This arm exists because the sweep
+   that cleared them was a one-off, and a one-off does not survive the next six weeks. */
+
+{
+  const { sweep } = await import("./undesignedclaims.mjs").catch(() => ({}));
+  if (!sweep) {
+    notes.push(`undesignedclaims.mjs could not be loaded — undesigned-claims are UNAUDITED this run.`);
+  } else {
+    const u = sweep({ repo: ROOT });
+    notes.push(`undesigned claims: ${u.counts.unaudited} UNAUDITED of ${u.counts.claims} across `
+      + `${u.counts.governed} governed document(s) (${u.counts.audited} carry a dated verdict)`);
+    /* A NOTE, never a warn: an undesigned-claim is a QUESTION for a reader, and a fresh one is
+       the NORMAL state the day someone writes it honestly. What it must never be is invisible. */
+    if (u.counts.unaudited)
+      notes.push(`  undated: ${u.byDoc.filter((d) => !d.unreadable)
+        .map((d) => `${d.path.split("/").pop()}:${d.claims.filter((c) => !c.audited)
+        .map((c) => c.line).join(",")}`).join("; ")} — read the construct map before believing one (D-408)`);
+  }
+}
+
 {
   const { substrateAudit } = await import("./rowsubstrate.mjs").catch(() => ({}));
   if (!substrateAudit) {
