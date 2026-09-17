@@ -8340,3 +8340,44 @@ the mirror-and-drift class. It is **D-389**, the sound form and its leak analysi
 that row so the next owner does not re-derive them, and `observation-content.test.mjs` arm **G5**
 pins the mechanism and names the residual, so the next reader meets the decision rather than the
 defect.
+
+### RESOLUTION · IC-109 — 2026-09-16, CONDUCT #1 · ACCEPTED, I3 18.1.0 → **18.2.0**, ADDITIVE
+
+**MINOR, and the worker was right to put the MAJOR counter-argument to CONDUCT rather than
+decide it.** IC-25's rule is that a REFUSAL where none stood before is a break whatever the
+measured impact — and **nothing here is refused that was answered.** `truncated` stops
+claiming about a list the caller never sees and starts claiming about the list it is given;
+the over-fetch means an entitled viewer at a bound of 2 now receives the THREE rows they were
+always entitled to instead of two. **This change hands a viewer MORE of what they may see and
+takes nothing from anyone**, which is the opposite direction from IC-105's break three hours
+earlier and is why the same rule produces a different answer.
+
+**AND THE BASE WAS RE-READ ON THE MERGED TREE: 18.1.0, not the 18.0.0 this branch forked
+from.** IC-108 landed in between. That is the third interface version this wave whose
+proposal named a stale base, which is the floor-collision class living in the registry, and
+it is now checked rather than inherited.
+
+**THE WITHHELD COUNT IS REFUSED, AND THE REASONING IS REGISTERED HERE BECAUSE IT IS PART OF
+THE CONTRACT rather than an implementation note.** A `truncated` read off the RAW supply *is*
+a one-bit count of the withheld set wearing a bound's name: to a viewer whose page is short,
+`true` said *rows exist here you are not being shown* — REC-30's leak. **So fixing the flag
+and refusing the count are ONE act, not two**, and a future consumer asking for a
+withheld-count must reopen that reasoning rather than assume it was never considered. That
+the corrected flag leaks nothing is DRIVEN (arm G3b), not argued: at the bounds where it
+moves, both viewers move together.
+
+**NOT SETTLED BY THIS BUMP, and both are rowed rather than left in a report.** **D-389** —
+`truncated: false` still rests on the over-fetch absorbing the fence, and that is true of ALL
+THREE frontier arms, so correcting one would be mirror-and-drift; the sound form and its leak
+analysis are in the row. **D-390** — the page's index-state `IN` list is already 2× over
+D-36's ~100 at the default bound and 20× at the ceiling. **The item refused to make it
+worse** — narrowing the `IN` list from the raw page to the published cut, holding the worst
+case at 200 rather than the 402 its own over-fetch would have produced — without widening its
+claim to fix it.
+
+**Consumers:** `RECORD` is proposer and owner; measured consumer impact ZERO, re-run on this
+tree rather than inherited from REC-103's report. `UI` has no surface on this arm. `DIST`
+unaffected.
+
+**Registry:** I3 bumped in `INTERFACES.md` in this same commit (protocol step 4 → 5).
+

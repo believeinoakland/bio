@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-979 rulings across 85 documents.
+982 rulings across 85 documents.
 
 ## DEC-
 
@@ -556,6 +556,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:10762`
 - **D-388** · 2026-09-16 — The three undecided files are ROUTED AND NOT RULED as **D-388**, each with the question it poses; only `MILESTONES.md` is judged worth Bob's attention.  
   `docs/development/QUEUE.md:869`
+- **D-389** — NOT SETTLED BY THIS BUMP, and both are rowed rather than left in a report.** **D-389** — `truncated: false` still rests on the over-fetch absorbing the fence, and that is true of ALL THREE frontier arms, so correcting one would be mirror-and-drift; the sound form and its leak analysis are in the row.  
+  `docs/development/INTERFACE-CHANGES.md:8369`
 - **D-391** · 2026-09-16 — WHY NEITHER IS CORRECTED HERE:** re-denominating another area's measurement from outside it is how a wrong number acquires a second author.  
   `docs/development/DEBT.md:313`
 ## IC-
@@ -680,7 +682,7 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:6799`
 - **IC-87** — IC-87 is AMENDED in place** (no new IC, as its own RESOLUTION directed) and CONDUCT takes the bump decision and the RESOLUTION; **D-359** is a DEBT row with its disposition token and an actor (`CONTENT-OFFICE`) and is the DELEGATION at the foot of this file; **D-354 is CLOSED** in the same file; the `### CAP-12 ·…  
   `docs/development/CLAIMS.md:6941`
-- **IC-108** · 2026-09-16 — One superseded leak-guard pin (`gate-reads.test.mjs`'s whole-key-set assertion on `op=list`) CORRECTED with a dated reason and two arms proving `limit` is viewer-independent while `total` is not — never exempted.  
+- **IC-109** · 2026-09-16 — One superseded leak-guard pin (`gate-reads.test.mjs`'s whole-key-set assertion on `op=list`) CORRECTED with a dated reason and two arms proving `limit` is viewer-independent while `total` is not — never exempted.  
   `docs/development/INTERFACES.md:508`
 ## C-
 
@@ -965,7 +967,9 @@ authority is the file named, never this one.
 - **REC-103** · 2026-09-16 — added: 2026-09-16 · CONDUCT #1 (draining BOB #12's `§4.3 CORRECTED` entry as an ITEM.  
   `docs/development/QUEUE.md:1322`
 - **REC-108** · 2026-09-16 — CLOSED 2026-09-16 by REC-108, BY ITS OWN RECOMMENDED OPTION (b) — AND THE OPTION WAS TAKEN ON EVIDENCE RATHER THAN ON DEFERENCE, WITH THE ROW'S OWN STATEMENT OF THE PROBLEM CORRECTED IN ONE RESPECT.** **The cache is untouched and that is the disposition, not an omission**: `#writeStrengthProjection` still derives…  
-  `docs/development/DEBT.md:321`
+  `docs/development/DEBT.md:320`
+- **REC-109** · 2026-09-16 — TWO ARMS CORRECTED THE WORKER'S REASONING RATHER THAN ITS CODE:** `overfetch` was declared structural-only and behaviourally invisible, and actually failed three arms — **at a bound of 2 an uninvited member got TWO ROWS WHILE ENTITLED TO THREE and was told the list was complete**, so the over-fetch protects the…  
+  `docs/development/QUEUE.md:1344`
 - **REC-111** · 2026-09-16 — AMENDED 2026-09-16 by REC-111 — §4.3's OWED UNIT-COUNT BOUND IS BUILT, AND THE ROW'S OWN PREMISE WAS HALF WRONG, WHICH IS THE finding worth more than the bound.** *A container whose units are many and small is bounded by nothing this design specifies* is true of THIS DOCUMENT and false of the SYSTEM: M-35 measured…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:5`
 ## UI-
@@ -1276,6 +1280,8 @@ authority is the file named, never this one.
   `docs/development/UI-PLAN.md:296`
 - **M0-31** · 2026-09-15 — DECIDED 2026-09-15, the fork M0-31's measurement opened and this section left open for one day — one unit per SLIDE for a deck**, written as a `slide-shape` extent with the SHAPE OMITTED, which `covers()` already accepts as covering the whole slide (`textchain.mjs`).  
   `docs/development/CONTENT-SEARCH-DESIGN.md:148`
+- **M0-31** · 2026-09-16 — TWO LIVE DERIVATIONS CORRECTED OR NARROWED:** CONTENT-PDF's OCR row understated 1.43× not 6×, **its verdict SURVIVES**; and M0-31's promote percentages are honestly **UNDETERMINED between ~20% and ~85%**, with its conclusion that §4.1's chunking is REQUIRED resting on the miniflare end.  
+  `docs/development/QUEUE.md:960`
 - **M0-32** · 2026-09-14 — Found by M0-32's worker (2026-09-14) while reading the instrument rather than its output, and CONFIRMED at integration: `tools/decided.mjs`'s `MARKER` is `/\b(RULED|DECIDED|AMENDED|CORRECTED|OVERTURNED|SETTLED|SUPERSEDED|WITHDRAWN|CONCEDED)\b/` and **`.` IS A WORD BOUNDARY**, so the literal string `DECIDED.md`…  
   `docs/development/DEBT.md:310`
 - **M0-34** · 2026-09-15 — `RULED by Bob` means DOCTRINE no session may revisit; a session's own name means MECHANISM a later session MAY revisit on evidence.  
