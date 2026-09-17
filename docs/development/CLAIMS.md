@@ -10588,7 +10588,12 @@ prints its state every run so the gap cannot go quiet.
 **open as of 2026-09-16 — RAISED TODAY AND VERIFIED OPEN TODAY, which is what a register line is for.** Neither half has landed. **Half 1:** none of the three guards imports the flush — `check-semantics.mjs` imports `fs`, `vm` and `bio-checks.mjs` only (`:68-76`); `check-refusal-codes.mjs` imports `fs`, `path`, `fileURLToPath`, `provenance.mjs` (`:104-122`); `check-mock-envelope.mjs` imports `fs`, `path`, `fileURLToPath`, `execFileSync`, `os` (`:141-145`). The only occurrence of the string `stdio` in all three is the spawn option at `check-mock-envelope.mjs:303`, and all 39 `stdio.mjs` references under `civicos-ui/` are in `test/`. The exits are where the block said: `check-semantics.mjs:381-382` prints its `OK:` line and exits on the next line. **Half 2 (D-387):** `check-mock-envelope.mjs:302-303` still spawns with `{ stdio:"pipe", env:{…} }` and **no `maxBuffer`** — zero hits for it in all three files — so it is on node's 1 MiB default. **The delegation is NOT going quiet, and that is by construction:** `civicos-ui/test/stdio-census.test.mjs:206` names all three in `RESIDUAL`, ARM D1 (`:212`) prints their state and `:222` prints D-387's, on every run. `DEBT.md:257` carries D-387 as closed in `run.mjs` and OPEN on the second reader. The close is UI's.
 
 ## CLAIM 2026-09-16 M0 (M0-37 — a DELEGATION block states its own state, dated, or plancheck FAILS)
-session: M0-37 worker (worktree `agent-a603fc3555ed6156f`, branch `claude/epic-raman-a21136`, base `origin/main` `92d15614`)
+session: M0-37 worker (worktree `agent-a603fc3555ed6156f`, branch **`worktree-agent-a603fc3555ed6156f`**, base `origin/main` `92d15614`)
+  **This line first read `claude/epic-raman-a21136`, which is the branch the SPAWN named and
+  not the branch the worktree is on — corrected here after reading `git rev-parse` rather than
+  the brief. Kept as a correction rather than rewritten away, because an item about a register
+  that states the past as the present should not quietly fix its own instance of it, and
+  because `git ls-remote` is the only thing that settles where the work actually is (D-288).**
 opened: 2026-09-16T00:00:00Z
 paths:
   `tools/delegations.mjs` (NEW) — the predicate module. The `rowdesign.mjs` / `mergecarry.mjs`
