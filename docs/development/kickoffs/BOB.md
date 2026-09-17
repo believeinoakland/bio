@@ -149,16 +149,35 @@ the remedy. Then:
     mcp__ccd_session_mgmt__archive_session   # stops the process AND releases the worktree lock
     git worktree remove <its worktree>       # the tool does NOT do this; measured
 
-**WHEN THE ARCHIVE IS REFUSED — AND IT CAN BE, WHICH THE FIRST VERSION OF THIS PROTOCOL DID NOT KNOW.**
-`archive_session` refuses a session that *still has live work (an agent run, a Remote Control client, a queued
-message or a background task)*. **Measured 2026-09-17 on CONDUCT #2 with all three conditions verified and its
-tip IDENTICAL to `origin/main`: refused, because `remoteControlActive` was true.** The refusal is CORRECT — it is
-the harness declining to archive something that may be in use, and that protection is what makes an automatic
-sweep safe at all. So: **do NOT retry it in a loop, do NOT reach for `set_remote_control` on a session you do not
-own** (that connection is the operator's and may be his phone), and **do NOT record it as a failure of the three
-conditions** — they were met. Record that they were met, name the blocker the error gave, and surface the ONE act
-only the operator can take: archive it from the sidebar, or disconnect Remote Control from it. The resources stay
-held until then, so say how much, measured.
+**WHEN THE ARCHIVE IS REFUSED — AND THE REASON IS ALMOST NEVER THE FIRST ONE YOU WILL GUESS (D-405).**
+`archive_session` refuses with a DISJUNCTIVE error naming four causes — an agent run, a Remote Control client, a
+queued message, a background task — and on 2026-09-17 CONDUCT #2 had **TWO of them at once**. **Removing either
+one alone changed nothing**, so a single-variable control returned *no effect* for a genuine cause and two
+different sessions each published a false refutation from a correctly-run experiment. **When a control shows no
+effect here, suspect a SECOND blocker before recording a refutation.**
+
+**THE TWO THAT ACTUALLY BIT, AND BOTH ARE PREVENTABLE BY THE RETIRING SESSION:**
+1. **A WEDGED TOOL CALL.** An unbounded `until … ; do sleep N; done` poller waiting on a condition that never
+   arrived held a turn open for **5h15m** while `ListAgents` read `idle` and `isRunning` read `false`. **BOUND
+   EVERY POLLER: `until <cond> || [ $SECONDS -gt N ]; do sleep 5; done`.** The harness steers you into the
+   unbounded form — it refuses a bare `sleep` and recommends an until-loop — so the deadline is a habit, not a
+   judgement call.
+2. **YOUR OWN REMOTE CONTROL. TURN IT OFF AS THE LAST ACT OF YOUR STAND-DOWN** —
+   `set_remote_control(session_id: "self", enabled: false)`. You may change your OWN; you may NOT change a
+   session you do not own, because that connection is the operator's and may be his phone. **RC stays ON for
+   every LIVE lane — that is how Bob reaches these lanes from other machines — and goes off only at retirement.**
+
+**ALSO REAP WHAT YOUR BATTERIES LEAK.** Nine `workerd` processes, `PPID 1`, ~5h old, were left holding one dead
+agent's worktree by runs whose parent died without reaping them. The safe discriminator is **`PPID 1` + an age in
+HOURS + a worktree whose session is gone**; kill by explicit PID from a table you read at that moment, never by
+pattern (`pkill` is forbidden on this shared machine). **`ps -o etime` prints `[[DD-]HH:]MM:SS`, so `5:15` is FIVE
+MINUTES and `05:15:34` is five hours — the units live in the FIELD COUNT, and misreading them raised a false alarm
+on a healthy lane the same day.**
+
+**VERIFY BY THE ARCHIVE SUCCEEDING, NEVER BY VERIFIED ZEROS.** CONDUCT #2's stand-down report was true in every
+figure it gave and could not see what was wrong with it: a wedged tool call is invisible to `ListAgents`, to a
+battery-process count, and to the session itself. A refusal is the only signal, so treat the successful archive as
+the artifact and say what it released, measured.
 
 **Archiving is REVERSIBLE (`unarchive_session`), which is what makes it safe to do without asking.**
 Report the disk you measured before and after. Driven 2026-09-17: 5.4 GiB → 6.1 GiB free.
