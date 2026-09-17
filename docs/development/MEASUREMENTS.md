@@ -14135,3 +14135,218 @@ would assign a class to 33 files that §6 has already ruled the other way for 30
 also says nothing about whether the 30 exclusions are RIGHT.** It proves they are stated with
 reasons, not that the reasons are good; that is the reviewer's job, the same limit §6 already
 records about the honesty of a Status.
+
+## 2026-09-16, M0-35: the reference-iteration currency — THREE runtimes, not two, and the big gap is the one nobody was looking at (D-368)
+
+**D-368 asked whether the reference-iteration CPU currency is runtime-portable, on the
+strength of M0-31's `burn()` reading of 25,032 iter/ms in node against 155,538 inside
+workerd. It is not portable, and that part of the row is CONFIRMED by independent
+measurement. But the row's account of WHY, and its estimate of what the error costs, are
+both wrong — and the figure that corrects them has been in this file since 2026-08-08.**
+
+### Instrument
+
+- `bio-plane/test/m035-cpu-currency-probe.mjs` — the 2x2 separating RUNTIME from CODE SHAPE.
+- `bio-plane/test/m035-workload-generality.mjs` — five different workloads, node vs workerd.
+- `tools/m035-refiter-census.mjs` — the corpus census, `--selftest` for its own arms.
+
+Both probes REFUSE a busy machine (`tools/waitquiet.mjs --check`), because a CPU timing
+figure taken against five live batteries measures contention. Every figure below was taken
+on a quiet machine, warmed, median of 5 or 7 reps, with the raw reps printed. The workerd
+halves are timed on the HOST clock across `dispatchFetch` with a noop round-trip subtracted,
+and the unsubtracted figure is printed so the subtraction is auditable.
+
+### 1. The 6.21x is NOT an artifact of how M0-31 measured it — my own hypothesis, refuted
+
+`m031-index-measure.mjs`'s two halves differ in TWO ways, not one: the node half IMPORTS
+`burn()` from `cpu.mjs` and calls it, the workerd half runs a hand-INLINED copy of the loop
+inside a `fetch` method. So the 6.21x was attributed to the runtime by a comparison that also
+changed the code shape — *break only the thing* pointed at the measurement that produced the
+row. Measured, darwin/arm64, node v26.0.0, 10M/20M/40M rungs:
+
+| | function-call form | inlined form |
+| --- | --- | --- |
+| **node** | A 18,496 iter/ms | B 18,446 |
+| **workerd (miniflare)** | C 117,746 | D 118,160 |
+
+    RUNTIME effect, shape held at function-call ... C/A = 6.37x
+    RUNTIME effect, shape held at inlined ........ D/B = 6.41x
+    SHAPE   effect, runtime held at node ......... B/A = 1.00x
+    SHAPE   effect, runtime held at workerd ...... D/C = 1.00x
+
+**Code shape contributes nothing. D-368's runtime disagreement is real**, and the 6.39x
+diagonal corroborates M0-31's 6.21x to within 3%. The hypothesis was declared before the run
+and the measurement killed it; it is recorded because a refuted hypothesis is a result.
+
+### 2. THE DEPLOYED RATE ALREADY EXISTED, AND IT IS 37,348 iter/ms — so miniflare, not node, is the outlier
+
+D-368's row says closing it *takes an `op=cpuprobe` on a DEPLOYED Worker*, and M0-35's row
+carries that as a dependency needing a DIST deploy. **No deploy is needed. FL-1 measured it
+on 2026-08-08 and it is in this file at the `fl1-burn` row**: 40,000,000 reference iterations
+= **1,071.01 ms of BILLED CPU**, from the Cloudflare GraphQL Analytics API — the platform's
+own observation from outside the isolate, explicitly *never from the Worker*. That is
+
+    DEPLOYED workerd = 40,000,000 / 1,071.01 ms = 37,348 reference iterations/ms
+
+**A blocker is a claim and nothing here audits one.** This one was false for 39 days.
+
+Every rate this corpus holds, in one place for the first time:
+
+| runtime | iter/ms | who, when |
+| --- | --- | --- |
+| node | 26,036 | CONTENT-PDF, 2026-08-03 |
+| node | 25,032 | M0-31, 2026-09-14 |
+| node | 27,586 | 2026-09-11 run of record (40M = 1,450 ms) |
+| node | **18,496** | M0-35, 2026-09-16 (this run) |
+| **deployed workerd** | **37,348** | **FL-1, 2026-08-08 — billed CPU, not self-timed** |
+| workerd (miniflare) | 155,538 | M0-31, 2026-09-14 |
+| workerd (miniflare) | **117,746** | M0-35, 2026-09-16 (this run) |
+
+**THE GAP D-368 NAMES IS NOT THE BIG ONE.** node-vs-deployed is **1.35–2.02x**. The 6.21x
+the row is built on is node-vs-MINIFLARE, and **miniflare runs the reference loop 3.15–4.16x
+faster than the deployed runtime it stands in for.** The currency's worst hazard is not that
+node and workerd disagree; it is that **miniflare is not the deployed runtime and is quoted
+as though it were.**
+
+**The absolute rate does not reproduce even within one runtime.** Four node readings span
+18,496–27,586 (a factor of 1.49) and two miniflare readings span 117,746–155,538 (1.32),
+while the node-to-miniflare RATIO reproduces to 3%. **So a runtime stamp is NECESSARY BUT NOT
+SUFFICIENT** — it does not make two node figures 49% apart comparable, and a stamp that
+implied it did would overstate its own reach.
+
+### 3. The 6.4x is a property of THE LCG LOOP, not of the runtime — which is what decides the remedy
+
+The currency's only job is to answer *does this work fit inside the 40M ceiling*, by
+converting the work's milliseconds into reference iterations. **That conversion is valid only
+if the rate is a property of the runtime rather than of the reference loop.** Five
+deterministic workloads chosen to stress different machinery, one definition shipped to both
+runtimes (never hand-copied), node vs miniflare-workerd, quiet machine:
+
+| workload | 20M: speedup | 40M: speedup | what it stresses |
+| --- | --- | --- | --- |
+| **lcg — the reference loop itself** | **6.38x** | **6.40x** | double multiply + fmod |
+| float (`Math.sqrt`) | 1.00x | 1.00x | transcendentals |
+| typed (`Int32Array`) | 0.84x | 0.83x | memory traffic |
+| string (alloc + charCodeAt) | 0.89x | 0.82x | GC, string table |
+| props (inline caches) | 0.80x | 0.84x | object shapes |
+
+**The LCG loop is the ONLY workload where workerd is faster. On every other one workerd is
+the same or SLOWER.** Spread 0.80x–6.40x, a factor of **7.8**, reproduced at two work sizes.
+Every workload returns an IDENTICAL value in both runtimes, which is what licenses comparing
+their times at all.
+
+**So the reference loop is one benchmark, not a currency.** Converting other work through it
+is invalid across runtimes, and its rate transfers to nothing else. What the unit CAN do it
+does exactly: a COUNT of reference iterations is runtime-portable, because `burn(4e7)` is 4e7
+multiplications anywhere, and the 40M ceiling is a sound statement in that count.
+
+### 4. What this costs the two figures derived through the currency
+
+**CONTENT-PDF's OCR row (this file, "CPU per page"), and the news is better than D-368 feared.**
+It converts node-proxy OCR milliseconds at the node rate and compares to the 40M ceiling —
+equivalent to pricing the ceiling at 1,536 ms. The deployed ceiling is **1,071 ms**, so the
+window is 1.43x too generous and the costs are understated by 1.43x — **not by the 6x D-368
+predicts**, because D-368 measures node against miniflare rather than against deployed.
+
+| page | row reads | corrected against the 1,071 ms deployed ceiling |
+| --- | --- | --- |
+| 1, best_int (2,064 ms) | ~54M = 134% of window | **193%** |
+| 4, tessdata_fast (646 ms) | ~17M = 42% of window | **60%** |
+
+**The row's VERDICT survives** — *one page per invocation is at the ceiling's order, model-
+and content-dependent* is still true, shifted up ~1.4x. This assumes OCR wall-clock in
+deployed workerd is near node's, which is UNMEASURED; four of five workloads above are within
+0.82–1.00x, which supports it without settling it.
+
+**M0-31's promote figures are the ones actually bitten, and the direction is the safe one.**
+M0-31 converted the 40M ceiling at the MINIFLARE rate, giving a 257 ms window where the
+deployed truth is 1,071 ms — **4.16x too small, so every percentage-of-the-window figure is up
+to 4.16x too PESSIMISTIC.** Its worst docx reads 84.8% of the window; against the deployed
+ceiling that is 20.4%. **But the promote itself was also measured in miniflare and deployed
+SQLite promote speed is UNMEASURED**, so the two errors partly cancel by an amount nobody has
+bounded. **The honest statement is that M0-31's percentages are UNDETERMINED between ~20% and
+~85%, and its conclusion — "THE CEILING IS NEAR", §4.1's chunking remedy REQUIRED rather than
+optional — rests on the miniflare-derived end of that range.** Neither figure is re-taken
+here; both are delegated to their owners with this measurement attached (D-391).
+
+### 5. Miniflare does NOT freeze `Date.now()`, and that matters for anyone reusing this method
+
+`cpu.mjs`'s whole design rests on deployed Workers freezing the clock during synchronous
+execution, so a Worker cannot time itself. Measured from INSIDE miniflare-hosted workerd:
+**165 ms across 20M iterations, against 170.3 ms on the host clock — agreeing to 3%.**
+Miniflare does not implement the freeze. This independently validates the host-clock method
+used above, and it is one more way **miniflare is not the deployed runtime**: a self-timing
+probe would read plausibly in miniflare and return zeros in production.
+
+### The census of every figure quoted in this currency
+
+`node tools/m035-refiter-census.mjs`. **A census is as-of a tree, and this one names its
+tree, because this very section changes the answer.** Taken at `82ab002c` — the commit this
+item was spawned on, before anything below existed — 741 files walked, 5 generated files
+excluded BY CONSTRUCTION (this item's own three among them, since a tool that counts its own
+prose is the sweep-arm-that-cites-itself class), 23 files mentioning the currency:
+
+- **9 RATE sites** (live), which are **restatements of only THREE distinct measurements** —
+  25,032, 155,538 and 26,036. *The agreement of several documents is not evidence; it is one
+  source copied.* The strict matcher attributes 2 of 9; **by hand all 9 are attributable**,
+  and the matcher under-attributes ON PURPOSE rather than guessing.
+- **14 COUNT sites** (10 live, 4 archived) — portable, and **no stamp is owed on any of them**.
+- **5 DERIVED groups**, hand-adjudicated with the proof line for each, because no lexical
+  matcher can see a figure spelled `257 ms`.
+
+**AND D-368's PREMISE IS FALSE FOR THE FIGURES IT IS ABOUT.** The row says *nothing in the
+record says which runtime a given figure came from*. Read BY HAND at all nine RATE sites —
+the line and two either side — **9 of 9 NAME THEIR RUNTIME**: `CLAIMS.md:7834`, `DEBT.md:312`,
+`MEASUREMENTS.md:1373`/`12536`/`12537`/`12538`, `QUEUE.md:826`/`960`, and
+`m031-index-measure.mjs:886`. CONTENT-PDF's calibration is introduced as *Node-proxy medians*;
+M-20 names both halves in one sentence. **There is no labelling gap in the RATE figures at
+all** — so the sweep the row imagines would relabel nine figures that are already labelled and
+report 100% coverage. That is the covering-nothing walk arrived at honestly, and it is the
+strongest argument against the remedy D-368 proposes. **The gap is entirely in the five DERIVED
+groups**, where a figure spelled `257 ms` or `~54M` sits in a table whose column heading says
+nothing about any runtime — and those are delegated rather than stamped (D-391), because
+stamping them means re-deciding what they mean, which is their owners' call.
+
+**AND RE-RUNNING IT ON THE TREE THAT CARRIES THIS SECTION GIVES A DIFFERENT AND EQUALLY
+CORRECT ANSWER: 745 files, 25 mentioning, 17 RATE, 15 COUNT.** The eight new RATE sites are
+the ones written above — the four runtime rows of the table in section 2 and the figures in
+sections 1 and 3 — and every one of them names its runtime at the site. That is the census
+counting its own item's output, stated rather than suppressed, and it is why the figures in
+this section are quoted WITH THE SHA THEY WERE TAKEN AT. A reader who re-runs the tool and
+gets 17 has not found a discrepancy; they have found this section.
+
+**What the census cannot see**, stated because it is load-bearing: any derived figure whose
+rate was applied silently in a document that never names the currency. That is honestly
+UNDETERMINED and is not scored zero.
+
+**Three defects in the census's own matcher, found by its self-test and recorded rather than
+smoothed:** it scored the `35` out of this item's own id as a figure; it counted its own prose
+(the sweep-arm-that-cites-itself class); and a three-line attribution window stamped M-20's
+WORKERD figure `runtime=node`, because the preceding figure's qualifier was in range — **an
+instrument built to catch mislabelled runtimes was mislabelling one.** All three are pinned in
+`--selftest` (7/7, exit 0 unpiped).
+
+### Negative controls, all as declared
+
+1. **Noise floor** — arm A measured twice: 18,376 vs 18,747 iter/ms, **2.0% spread** against a
+   declared tolerance of 20% and an effect of 6.4x. Without this the run would be void.
+2. **Timing the loop, not the RPC** — a wrong-multiplier loop returns a different value
+   (89246137 vs 1764068477), so the probe measures the loop body.
+3. **Over-strictness** — all four 2x2 arms and all five workloads return IDENTICAL values in
+   both runtimes. This is what licenses every timing comparison above.
+4. One arm **did not arm and failed loudly**: the workload probe's first run died with
+   `ReferenceError: WORKLOADS is not defined`, because a module is strict and `eval`'s `const`
+   never reaches module scope. `new Function` replaced it, keeping the single-definition
+   property. Recorded because an arm that did not arm is a finding.
+
+### What could NOT be done
+
+- **No `op=cpuprobe` was run on a deployed Worker by this item.** Deploying is DIST's and a
+  worker may not. The deployed RATE did not need one — FL-1's billed-CPU figure supplies it —
+  but a fresh deployed walk of the KILL WINDOW (still 2026-07-29, on Workers Free) was not
+  taken, so the 40M ceiling is carried forward on its original date.
+- **wasm was not measured in either runtime.** The OCR correction above rests on five JS
+  workloads, not on tesseract.
+- **Deployed-vs-miniflare was measured for the LCG loop ONLY** (via FL-1's figure). Whether
+  the 3.15–4.16x gap holds for SQLite promote work is unmeasured, and it is exactly what would
+  settle M0-31's percentages.

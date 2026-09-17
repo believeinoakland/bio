@@ -87,8 +87,14 @@ const WORKLOADS = {
     for (let i = 0; i < N; i++) { const k = ks[i & 3]; o[k] = (o[k] + i) | 0; s = (s + o[k]) | 0; } return s; },
 };
 `;
-eval(WORKLOADS_SRC);          // node side: the SAME source text, never retyped
-/* eslint-disable no-undef */
+/* The node side evaluates THE SAME SOURCE TEXT the worker is built from, via
+ * `new Function` rather than `eval`. A module is strict, so `eval`'s `const`
+ * binding never reaches module scope and the first run died with
+ * `ReferenceError: WORKLOADS is not defined` — loudly, which is the good
+ * failure mode for an arm that did not arm. `new Function` returns the object
+ * explicitly, so the two runtimes still share one definition and neither is a
+ * hand copy of the other. */
+const WORKLOADS = new Function(WORKLOADS_SRC + "\nreturn WORKLOADS;")();
 
 const NAMES = ["lcg", "float", "typed", "string", "props"];
 const N = Number(arg("--n", "20e6"));

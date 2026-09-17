@@ -65,6 +65,7 @@ const GENERATED = new Set([
    * not construction, and luck is not an exclusion. Both are named here. */
   "tools/m035-refiter-census.mjs",
   "bio-plane/test/m035-cpu-currency-probe.mjs",
+  "bio-plane/test/m035-workload-generality.mjs",
 ]);
 
 function walk(dir, out = [], skipped = { dirs: 0, files: 0 }) {
