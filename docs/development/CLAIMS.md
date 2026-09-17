@@ -12223,3 +12223,17 @@ paths: `bio-plane/src/store.mjs` — **named by SITE**: (1) `meaningRows()`, whi
 released: 2026-09-17 by the REC-114 worker at its own landing. Every path named in the claim above is
 committed and pushed on `worktree-agent-ac7f5ea0af44d1c3f`; nothing is left open in them, and the three
 acts this landing owes are the DELEGATION immediately above rather than anything held in these paths.
+
+## CLAIM 2026-09-17 RECORD (REC-114 — AMENDMENT: the coverage register's floor) — RELEASED
+session: rec114-leg-earned (worktree agent-ac7f5ea0af44d1c3f)
+opened: 2026-09-17 · released: 2026-09-17 (same turn — the floor move IS the work)
+paths: `bio-plane/scripts/coverage.mjs` — **the `REGISTER_FLOOR` block ONLY**, four figures moved
+  UPWARD to what this item's own green `--strict` run PRINTED after committing: `arms 1148 -> 1173`,
+  `classified 204 -> 208`, `corpus 205 -> 209`, `run 167 -> 171`. Nothing FELL, and re-running
+  `--strict` afterwards reads `1173/1173 · 208/208 · 209/209 · 171/171`, exit 0 — a floor at the
+  measurement rather than above it, because a floor moved too high fails every honest run afterwards.
+  **ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in the file**, once in this block and
+  once in the unrelated fleet object at the foot. **At most +2 corpus is this item's** (two new suites);
+  the rest was ALREADY SLACK on arrival, which makes this the sixth consecutive item to find this floor
+  stale by measuring it. **CONDUCT must re-read these on the MERGED tree** — `regionLines` and this
+  floor are properties of the merged source and have collided at integration before.

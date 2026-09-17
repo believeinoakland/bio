@@ -1236,7 +1236,24 @@ const REGISTER_FLOOR = {
      failure mode (a dropped floor move goes SLACK, not broken). classified and corpus are
      UNMOVED and that is stated rather than implied: the arriving arm joined an already-counted
      declaration rather than adding a suite. */
-  arms: 1148,
+  arms: 1173,
+  // [branch record | REC-114 read arms 1173 on its own tree]  REC-114, 2026-09-17: 1148 -> 1173 / 204 -> 208 / 205 -> 209 / run 167 -> 171,
+  // [branch record | REC-114 read arms 1173 on its own tree] ALL FOUR MOVED IN THE SAME TURN and every one taken from the figure THIS
+  // [branch record | REC-114 read arms 1173 on its own tree] ITEM'S OWN GREEN `--strict` RUN PRINTED AFTER COMMITTING (`arms 1173/1148 ·
+  // [branch record | REC-114 read arms 1173 on its own tree] classified 208/204 · corpus 209/205 · GREW by 25 arm(s)` and `171 RUN ·
+  // [branch record | REC-114 read arms 1173 on its own tree] floor 171/167 reproducible · GREW by 4`), never by adding to the numbers
+  // [branch record | REC-114 read arms 1173 on its own tree] above. Provenance at HEAD 71749407, 225/225 discovered items in the commit.
+  // [branch record | REC-114 read arms 1173 on its own tree] THIS ITEM ADDED TWO SUITES (`test/rec114-leg-earned.test.mjs`, whose
+  // [branch record | REC-114 read arms 1173 on its own tree] declaration states FIVE arms driven by `test/nc-rec114.mjs`), so at most
+  // [branch record | REC-114 read arms 1173 on its own tree] +2 corpus is THIS item's. **THE REST OF THE +25/+4 WAS ALREADY SLACK WHEN
+  // [branch record | REC-114 read arms 1173 on its own tree] THIS ITEM ARRIVED** — the tree at 7ebe2dd1 carried suites whose floor was
+  // [branch record | REC-114 read arms 1173 on its own tree] never moved for them (CONDUCT #3 gated `df6795`-era `df4fb394` and pushed
+  // [branch record | REC-114 read arms 1173 on its own tree] 7ebe2dd1, which added `test/rowsubstrate.test.mjs`), so this is the sixth
+  // [branch record | REC-114 read arms 1173 on its own tree] consecutive item to find a floor stale BY MEASURING IT rather than by being
+  // [branch record | REC-114 read arms 1173 on its own tree] told. Nothing FELL. ONE KEY SET, grepped after writing: `^  arms:` matches
+  // [branch record | REC-114 read arms 1173 on its own tree] TWICE in this file, once here and once in the fleet object at the foot.
+  // [branch record | REC-114 read arms 1173 on its own tree] CONDUCT re-reads this on the MERGED tree — these figures are true of this
+  // [branch record | REC-114 read arms 1173 on its own tree] branch and of no other.
   // [branch record | REC-96 read arms 1134 on its own tree]  REC-96, 2026-09-17: 1129 -> 1134 / 201 -> 202 / 202 -> 203, ALL THREE MOVED IN
   // [branch record | REC-96 read arms 1134 on its own tree] THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN RUN
   // [branch record | REC-96 read arms 1134 on its own tree] PRINTED after committing (`arms 1134/1129 · classified 202/201 · corpus
@@ -1250,8 +1267,8 @@ const REGISTER_FLOOR = {
   // [branch record | REC-96 read arms 1134 on its own tree] reported the suite as NOT IN ANY COMMIT and refused to count work no other
   // [branch record | REC-96 read arms 1134 on its own tree] checkout can see (D-238), so a floor moved then would have been a figure
   // [branch record | REC-96 read arms 1134 on its own tree] nobody else reproduces. CONDUCT re-reads this on the MERGED tree. 
-  classified: 204,
-  corpus: 205,
+  classified: 208,
+  corpus: 209,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
@@ -1279,7 +1296,7 @@ const REGISTER_FLOOR = {
      EXACT, so nothing about that item moved either figure. It is the sixth consecutive
      item to find a floor already stale BY MEASURING IT, which is the argument for
      measuring rather than for trusting the number in the file. */
-  run: 167,
+  run: 171,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
