@@ -15232,3 +15232,19 @@ was M0-56's own defect happening live: appending a CLAIM block to `CLAIMS.md` �
 staled the index mid-run.** Regenerating cleared it. The true baseline is **214/214**, which
 corrects the briefed figure of 213/213 · 13,395 in both terms; the suite total is 214 here
 because no fleet member was skipped.
+
+**THE MECHANISM CAUGHT ITS OWN AUTHOR, ON THE REAL REMOTE, BEFORE THIS ITEM EVER LANDED —
+and it is recorded here because it is worth more than every synthetic arm above.** After the
+arms were driven and the work committed, this worker fetched and found `origin/main` had
+moved to `a403957c`. The rebase conflicted on exactly one path — `docs/DECIDED.md`, the
+generated index — which was resolved the only correct way for a generated file: REGENERATED,
+never side-chosen. The rebase then completed cleanly, **`git status` was EMPTY, and the index
+was STALE ANYWAY**, because the regeneration resolved commit 1 of 3 and the two later commits
+replayed their own older index on top of it.
+
+**That is cause (2) in its purest form: a clean tree, a successful rebase, nothing left to
+notice, and a stale index.** The real `git push` to `origin` was REFUSED by the hook, exit 1,
+naming `node tools/decided.mjs`. **The author of the mechanism reproduced the defect the
+mechanism exists for, minutes after driving five controls proving it would — which is exactly
+CONDUCT #2's finding that the rule was written down and then broken twice more.** No amount
+of care was going to catch this one; the tree looked finished.

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1017 rulings across 85 documents.
+1018 rulings across 85 documents.
 
 ## DEC-
 
