@@ -14,8 +14,8 @@ belong to `MEASUREMENTS.md` and are repeated here only where they are the point.
 
 ## Why line coverage is not the metric, and what is
 
-**36 of the 42 suites drive the plane through Miniflare, which runs `src/**` inside
-WORKERD — a different process from the node harness.** `NODE_V8_COVERAGE` therefore
+**163 of the 203 plane suites drive the plane through Miniflare, which runs `src/**` inside
+WORKERD — a different process from the node harness.** *(Re-measured 2026-09-17 by CONDUCT #2 at M0-51's integration, by counting `test/*.test.mjs` and those naming `miniflare`. **This line read `36 of the 42` — a figure roughly FIVE TIMES out of date, sitting in the opening argument of the document that defines what TESTED means here.** It was found by M0-51's worker, which flagged it and deliberately did NOT drive-by edit it, on the grounds that it was outside its scope and flagging is worth more than a silent correction — the right call, and the reason it reached somebody who owns the file. **It is this project's most-repeated finding — a hand-carried number in a document nobody re-measures — and it had lodged in the one place that instructs every session to measure rather than assume.** The ratio is what the argument needs and the ratio is unchanged: most suites run the subject in a process the node harness cannot instrument, so line coverage would be a fabrication. **The figures are stated with their method so the next reader can re-take them rather than trust them, and they WILL go stale again: the count is `ls bio-plane/test/*.test.mjs | wc -l` and `grep -l miniflare bio-plane/test/*.test.mjs | wc -l`.)* `NODE_V8_COVERAGE` therefore
 instruments the test files and not the subject: it would report high coverage of
 `test/`, nothing at all for `store.mjs`, and the number would be a fabrication in
 exactly the sense `cpu.mjs` records for a Worker timing itself. So this project does
