@@ -1033,8 +1033,26 @@ const REGISTER_FLOOR = {
      The suite's first `NEGATIVE CONTROL:` paragraph was prose the register could not count
      arms in, so it landed in UNCLASSIFIED and `--strict` exited 1 — D-233's own shape, caught
      by the check that exists for it rather than by anyone re-reading the suite. The arms are
-     a marked ordinal list now, and the five this figure counts are the five that RAN. */
-  arms: 1109,
+     a marked ordinal list now, and the five this figure counts are the five that RAN.
+     MOVED 2026-09-16 by M0-40 (1109 -> 1111): this item's own green `--strict` run on the
+     MERGED tree PRINTED `REGISTER FLOOR  arms 1111/1109 - classified 199/199 - corpus
+     (suites read) 200/200 - GREW by 2 arm(s)` — read from the print, never incremented by
+     hand. **THE +2 IS ATTRIBUTED BY MEASUREMENT AND NOT BY ASSUMPTION**: with this item's
+     two files restored to the remote's own main (the suite read back out of the object
+     store, `nc-m040.mjs` moved aside, both put back by `cp` and verified by sha256 AND
+     `cmp`) the same run printed `arms 1109/1109` with NO growth, so the delta is this
+     item's and nobody else's. The cause is new arms in an EXISTING suite —
+     `derivation-bounds.test.mjs` gains a fourth `=====` declaration section stating six
+     arms (18)-(23) plus (19a) — and **the exact arithmetic inside the counter that turns
+     those into +2 rather than +6 was NOT established, which is stated rather than
+     guessed**: on the PRE-MERGE tree the same block moved this figure by ZERO (1093/1093
+     measured both with and without it), so the +2 is a property of the MERGED source,
+     exactly as this file's header says these figures are. No new suite, so `classified`
+     and `corpus` are UNMOVED and none is owed. Nothing FELL. ONE KEY SET, grepped after
+     writing: `^  arms:` matches TWICE in this file, here and in `FLEET_FLOOR`, which is
+     the documented state; `FLEET_FLOOR` is unmoved at 3/6/8/76, verified from the same
+     print. */
+  arms: 1111,
   classified: 199,
   corpus: 200,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
