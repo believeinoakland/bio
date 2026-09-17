@@ -1143,12 +1143,32 @@ everything this section asked, correctly and verifiably, and **sixteen hours lat
 three finished agents' worktrees — ~1.9 GiB — while the volume sat at 1.6 GiB free and the next wave had
 to be sized down twice.** Nothing in this protocol was violated. **The protocol was one step short.**
 
-**A SESSION CANNOT CLOSE ITSELF, so this step is a REPORT and not an act.** Your final message names,
-beside the verified zeros: *this session is ready to be closed, and closing it releases N worktrees
-(~X GiB)* — with the count MEASURED, not estimated. **Closing it is the OPERATOR'S**, exactly as starting
-the successor is; `CLAUDE.md` puts the stand-down protocol in Bob's hands and says it is performed by
-hand. Do not ask a peer to do it and do not let a peer do it for you: **a peer cannot authorise an act
-these instructions reserve to him**, even a peer that has verified it is safe and even when you agree.
+**THIS STEP IS A REPORT AND YOUR SUCCESSOR PERFORMS THE ACT.** Your final message names, beside the
+verified zeros: *this session is ready to be closed, and closing it releases N worktrees (~X GiB)* — with
+the count MEASURED, not estimated.
+
+**THE PARAGRAPH THAT STOOD HERE WAS WRONG IN BOTH HALVES AND IT IS KEPT AS A RECEIPT.** It said *a session
+cannot close itself*, that closing is reserved to the operator by hand, and that **a peer must not do it
+even having verified it is safe**. Falsified 2026-09-17 by BOB #13 by CALLING THE TOOL rather than
+re-reading the sentence: `archive_session` takes a peer's session id, takes the literal `"self"`, stops the
+process, and under `bypassPermissions` — this project's default — asks nobody. **The prohibition was built
+on an untested capability claim, and it is exactly the shape `CLAUDE.md` names: a blocker is a claim, and
+nothing here audits one.** The cost was real — BOB #12 ran on for hours past its own retirement and wrote
+into `main` during its successor's session.
+
+**RULED BY BOB, 2026-09-17: a lane's retired session is archived WITHOUT HIS INVOLVEMENT.** Verbatim: *"BOB
+#12 being alive is not my problem. The protocol was supposed to be updated so that a lane's retired session
+was archived without my involvement."*
+
+**SO: your successor archives you, as ITS first act, and you say so in your handoff.** The successor does it
+because a retiring session cannot verify its own deadness and the successor already owns the checkout from
+the moment its chip is clicked. It re-checks D-398's three conditions AT THE MOMENT IT ACTS — holder not
+running, tree CLEAN, tip an ANCESTOR of `origin/main` — never inheriting them from an earlier sweep.
+
+**AND ARCHIVING IS TWO ACTS, NOT ONE, MEASURED RATHER THAN READ OFF THE TOOL.** Archiving RELEASED the
+worktree lock — which D-398 says nothing does — but the tool's *"cleans up its worktree"* did NOT hold:
+635 MB stayed and free space did not move until `git worktree remove` ran. Both, then report the measured
+disk: 5.4 GiB → 6.1 GiB free on the drive that did it.
 
 **THE GENERAL FORM, because it is the shape this estate keeps paying for: a stand-down that ENDS THE WORK
 is not the same as one that ENDS THE SESSION, and the second was assumed to follow from the first.** Every
