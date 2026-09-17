@@ -8913,3 +8913,97 @@ control arm (a), which is RUN and recorded — 24 pass, 12 fail, with the headli
 and the surface. Reversing re-opens D-383.
 
 **RESOLUTION: (CONDUCT takes the version bump and the resolution.)**
+
+## IC-119 · I3 `op=reevaluations`: an obligation's `legs[].grade` becomes the EARNED capture letter, with the AUTHORED letter published beside it · PROPOSED 2026-09-17 (REC-118, closing D-410) — the version bump and the RESOLUTION are CONDUCT's
+
+**BASE READ OFF THE TREE, NOT INHERITED FROM THE ROW.** `INTERFACES.md` reads I3
+**21.0.0** on `claude/lucid-heisenberg-fd6795` at `6f007692`; REC-118's row implies an
+older base. IC-117 then IC-118 both landed on 2026-09-17 and moved I3 19.0.0 → 20.0.0 →
+21.0.0 in one day, so a base inherited from a row written that morning is stale by two
+majors. REC-114 found exactly this and caught it the same way; so did IC-108. **Proposed
+against 21.0.0, and if another IC moves I3 underneath this one it resolves against the
+base as read at RESOLUTION, not at proposal** — IC-118's rule, adopted.
+
+**WHAT MOVES.** `op=reevaluations` answers with `obligations[].legs[]`. Each published leg's
+`grade`, when it is on the **capture** axis, stops being the letter the member AUTHORED
+(read straight off `inquiry_basis.grade`) and becomes the letter the record can EARN for
+that leg's target, resolved through `earnedBasisRegistry` by `Store.#capturedAt` — the same
+function `op=inquirystrength`'s walk has used since REC-105 and the leg listing since
+REC-114. Two fields are ADDED and are **always present on every published leg**:
+
+- `grade_authored` — the letter the member wrote, never erased.
+- `grade_why` — why the two differ, naming the target and the ceiling; `null` when nothing
+  was capped.
+
+Unchanged: connection-axis legs, legs carrying no letter, legs whose target is an inquiry
+(the capture axis treats an inquiry as having no referent and never caps it), and every
+other part of the envelope — `causes`, `reeval`, `stored`, `strength`, `superseded_by`.
+`target_type` is read to apply the no-referent arm and is **not** published.
+
+**THE DEFECT THIS CLOSES, AND WHY IT IS THE SHARPEST OF ITS FAMILY (D-410).** This op
+already published a `strength` block that has been capped since REC-105. So one answer
+object carried **two letters for one fact** — `legs[0].grade = "B"` beside
+`strength.capture = "C"` — with nothing saying which was which, and the half a member reads
+first was the uncapped one. The whole question this op asks is *does this still read the way
+you published it?*, which a reader cannot weigh while the answer contradicts itself. Found
+and DRIVEN by REC-114's census through the op, not grepped.
+
+**GRADE: MAJOR. ARGUED, NOT ASSUMED — AND THE IMPACT WAS MEASURED IN THE DIRECTION THAT
+WOULD HAVE ARGUED IT DOWN.** Measured on this tree, 2026-09-17:
+
+| consumer | mentions of `op=reevaluations` | reads `legs[].grade`? |
+| --- | --- | --- |
+| `civicos-ui/app.html` | 1 | **no** — the single occurrence is a COMMENT explaining why a public banner does not call this member-class op |
+| `agent-worker/` | 0 | no |
+| `newgroup/` | 24 | **no** — every one is op-routing plumbing (viewer/token/whitelist), none reads an answer field |
+
+**So the measured count of non-test consumers that read this field is ZERO, and it is
+breaking anyway.** The deciding reason is **not** IC-25 read backwards. It is IC-118's, whose
+argument was ruled better than IC-117's and is adopted here in its own shape: **A CORRECT
+CONSUMER BECOMES WRONG WITHOUT CHANGING A LINE.** A renderer printing `legs[].grade` under a
+label like *the grade this member gave this leg* was COMPLETE and correct before; after, it
+prints the letter the RECORD earned under a label attributing it to the member — a silent
+misattribution produced by code that did nothing wrong.
+
+**AND THIS OP CARRIES A SECOND, SHARPER INSTANCE THAT IS ITS OWN.** A consumer comparing
+`legs[].grade` against `strength.capture` to detect that an obligation's basis had drifted —
+which is precisely what this op exists to support — saw a difference before and sees none
+now. **Its detection silently stops firing.** That is breaking in the strongest available
+sense: no error, no exception, a behaviour change the consumer cannot observe. A consumer
+count is a fact about this moment; a contract is a promise about every moment after it
+(IC-112's rule, IC-117's precedent).
+
+**WHY THE AUTHORED LETTER IS NOT SIMPLY REPLACED, AND WHY THAT COMPROMISE IS LOAD-BEARING.**
+The record publishes what it can SUPPORT and never erases what a member AUTHORED. Both
+halves are the ruling, not one with a courtesy attached: `nc-rec118.mjs` arm (b) implements
+the erasing answer and shows the suite failing, because without that arm a fix that silently
+replaced a member's letter would satisfy this item's headline acceptance.
+
+**WHY `grade` MOVED RATHER THAN GAINING A SIBLING.** An `earned` field beside an uncorrected
+`grade` leaves every existing consumer publishing the overclaim and calls the item done.
+REC-114 took the same decision for the same reason.
+
+**WHY BOTH NEW FIELDS ARE ALWAYS PRESENT, INCLUDING WHERE NOTHING WAS CAPPED.** A field
+appearing only when the record disagreed with its author is a one-bit signal of exactly
+that, and forces a consumer to read an ABSENCE as a value — the absence-with-two-causes
+shape `CLAUDE.md` names as this project's most repeated failure. An obligation at or under
+its ceiling is byte-identical but for `grade_authored` echoing `grade` and `grade_why: null`.
+
+**REVERSING IT** costs one commit: `#reevalLegsEarned` is a single post-pass and the raw
+rows still travel into it, so restoring the authored letter is deleting the resolution, not
+unpicking a migration. Nothing is written differently — **the cap is a READ-TIME resolution
+and `inquiry_basis` is untouched**, which the suite proves by reading the member's authored
+letter back off the record through a different surface.
+
+**THIS IS THE THIRD READER OF ONE RULE AND THE DRIFT BETWEEN THEM IS NOW INSTRUMENTED.**
+REC-105 capped the walk, REC-114 the leg listing, this item the obligation envelope; each
+restates the same three conditions in its own loop and all three call `Store.#capturedAt`.
+REC-114's comment named silent drift between them as the whole failure mode but nothing
+MEASURED it. `rec118-reeval-earned.test.mjs` block 5 now does, by name.
+
+**NOT SETTLED BY THIS ITEM: D-411 / REC-119**, the sixth reader (`#versionCollections`,
+feeding `op=basisversions` and `op=suggest`). It is deliberately untouched here: the freeze
+byte-compares `inquiry_basis_versions.composition`, which embeds the authored letters as
+text, so capping there is a design question rather than a sweep.
+
+**RESOLUTION: (CONDUCT takes the version bump and the resolution.)**

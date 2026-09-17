@@ -21065,8 +21065,13 @@ export class Store extends DurableObject {
     for (const t of targets) {
       const moved = this.#reevalMoved(t, visible);
       if (!moved) continue;
+      /* REC-118 / D-410: `target_type` is SELECTED because the cap has a
+         no-referent arm — a capture letter on an INQ- leg ranges over no
+         document and is never bounded. It is read here and never published:
+         the leg shape this op answers with is composed in
+         `#reevalLegsEarned`, which is the one place that shape is decided. */
       const legs = this.#rows(
-        `SELECT bundle_id, ord, target_id, role, grade, grade_axis, grade_source, at
+        `SELECT bundle_id, ord, target_id, target_type, role, grade, grade_axis, grade_source, at
            FROM inquiry_basis WHERE target_id=? ORDER BY bundle_id, ord`, t);
       const byBundle = new Map();
       for (const l of legs) {
@@ -21114,9 +21119,11 @@ export class Store extends DurableObject {
           bundle_id: bundleId, title: dep?.title ?? null,
           object_type: dep?.object_type ?? null, current_state: dep?.current_state ?? null,
           target: t, target_state: moved.state,
-          legs: mine.map((l) => ({ ord: l.ord, role: l.role || null, grade: l.grade ?? null,
-                                   grade_axis: l.grade_axis ?? null,
-                                   grade_source: l.grade_source ?? null,
+          /* REC-118 / D-410: the RAW rows travel here, and the PUBLISHED leg
+             shape is composed once, in `#reevalLegsEarned`, after the whole
+             answer is built — so the registry is asked ONCE for the page
+             rather than once per obligation. Nothing below reads `legs`. */
+          legs: mine.map((l) => ({ ...l,
                                    target_edition: fmBasis[l.ord]?.target_edition ?? null })),
           /* THE REUSED TRIPLE. `flag` is true because this answer only ever
              carries rows that have an obligation; `since` and `source` come
@@ -21139,7 +21146,83 @@ export class Store extends DurableObject {
       }
     }
     obligations.sort((a, b) => (a.bundle_id + a.target) < (b.bundle_id + b.target) ? -1 : 1);
+    this.#reevalLegsEarned(obligations);
     return { ok: true, ...(target ? { target } : {}), obligations, count: obligations.length };
+  }
+
+  /** REC-118 / D-410 — AN OBLIGATION'S LEG LETTERS, RESOLVED AGAINST WHAT THE
+   *  RECORD CAN EARN, SO THE TWO HALVES OF ONE ANSWER STOP DISAGREEING.
+   *
+   *  THE DEFECT THIS CLOSES, AND WHY IT WAS THE SHARPEST OF THE CENSUS'S FIVE.
+   *  `op=reevaluations` published each leg's AUTHORED letter straight off
+   *  `inquiry_basis.grade` in the SAME answer object as a `strength` block
+   *  that has been capped since REC-105. One envelope, two letters for one
+   *  fact, with nothing saying which was which — and the whole question this
+   *  op asks is *does this still read the way you published it?*, which a
+   *  reader cannot weigh while the answer contradicts itself. REC-114 DROVE
+   *  it rather than grepping it: `legs[0].grade = B` beside
+   *  `strength.capture = C`, on a fixture that supersedes a document.
+   *
+   *  THE RULING IS INHERITED, NOT RE-LITIGATED. REC-105 capped the walk;
+   *  REC-114 swept the leg listing and published the AUTHORED letter beside
+   *  the earned one. This is the same rule reaching a third reader: publish
+   *  what the record can SUPPORT, never erase what a member AUTHORED, and say
+   *  why they differ.
+   *
+   *  IT REUSES `Store.#capturedAt` AND THAT IS THE LOAD-BEARING DECISION, for
+   *  REC-114's reason in its own words: the ARITHMETIC lives in `captureBound`,
+   *  the SENTENCE in `earnedBasisRegistry`, the three-case policy in
+   *  `#capturedAt`. A second policy here would open at this surface exactly the
+   *  divergence REC-105 closed at the walk. This method decides NOTHING about
+   *  grades — it collects, calls, and labels.
+   *
+   *  THE THREE CONDITIONS ARE THE WALK'S AND THE LISTING'S, RE-STATED RATHER
+   *  THAN INHERITED — a different loop over the same rule, where a silent
+   *  drift between the three sites is the whole failure mode. That restatement
+   *  is not left to care: `rec118-reeval-earned.test.mjs` block 5 asserts all
+   *  THREE resolvers carry the same three conditions and all three call
+   *  `#capturedAt`, so a future edit to one that does not reach the others
+   *  fails by name. Capture axis only (a connection leg's earned answer is a
+   *  VALUE the write pins, not a ceiling a read applies); a leg actually
+   *  carrying a letter (null stays null — nothing is invented); and a target
+   *  that is NOT an inquiry (the walk's `noReferent` arm).
+   *
+   *  ONE REGISTRY CALL FOR THE WHOLE ANSWER, which is why this runs as a
+   *  post-pass rather than inside the target loop: that loop's cost model is
+   *  one row read per UNMOVED target, and a registry call per moved target
+   *  would have put a probe on a member-facing sweep.
+   *
+   *  BOTH DERIVED FIELDS ARE ALWAYS PRESENT, including on a leg that needed no
+   *  cap. A field that appears only when the record disagreed with its author
+   *  is a one-bit signal of exactly that, and a consumer would have to treat
+   *  absence as a value — the absence-with-two-causes shape `CLAUDE.md` names.
+   *  So an obligation at or under its ceiling is byte-identical but for
+   *  `grade_authored` echoing `grade` and `grade_why: null`.
+   *
+   *  IT MUTATES `obligations` IN PLACE and returns nothing, because the array
+   *  is this method's own local and a copy would say it was shared. */
+  #reevalLegsEarned(obligations) {
+    if (!Array.isArray(obligations) || !obligations.length) return;
+    const bounded = (l) => !!l && l.grade_axis === "capture" && l.grade != null
+      && typeof l.target_id === "string" && !!l.target_id
+      && normalizeType(l.target_type) !== "inquiry";
+    const targets = new Set();
+    for (const o of obligations) for (const l of (o.legs ?? [])) if (bounded(l)) targets.add(l.target_id);
+    const cap = targets.size
+      ? (this.earnedBasisRegistry(null, [...targets])?.earned?.capture || {})
+      : {};
+    for (const o of obligations) {
+      o.legs = (o.legs ?? []).map((l) => {
+        const res = bounded(l) ? Store.#capturedAt(l.grade, cap[l.target_id], l.target_id) : null;
+        return { ord: l.ord, role: l.role || null,
+                 grade: res ? res.grade : (l.grade ?? null),
+                 grade_axis: l.grade_axis ?? null,
+                 grade_source: l.grade_source ?? null,
+                 target_edition: l.target_edition ?? null,
+                 grade_authored: l.grade ?? null,
+                 grade_why: res ? res.why : null };
+      });
+    }
   }
 
   /* One target's own row, answered as "has anything moved under a leg naming

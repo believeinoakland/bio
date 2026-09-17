@@ -460,23 +460,37 @@ console.log("\n--- 9. THE FIFTH-READER CENSUS, DRIVEN THROUGH THE OPS AND NAMED 
     !!mine, true);
   console.log(`    legs[0].grade = ${mine && mine.legs && mine.legs[0] && mine.legs[0].grade}`
     + ` · strength.capture = ${mine && mine.strength && mine.strength.capture && mine.strength.capture.grade}`);
-  t("A FIFTH READER, NAMED AND DRIVEN: op=reevaluations publishes the AUTHORED letter beside a CAPPED strength block, in ONE answer",
-    { leg_grade_authored_uncapped: mine && mine.legs && mine.legs[0] ? mine.legs[0].grade : null,
+  /* CORRECTED 2026-09-17 BY REC-118, NOT EXEMPTED — AND THE OLD ASSERTION WAS
+     RIGHT WHEN IT WAS WRITTEN. As landed, this block ASSERTED THE DEFECT'S
+     PRESENCE: `leg_grade_authored_uncapped: "B"` and `they_disagree: true`,
+     because REC-114's scope was the meaning listing and this fifth reader was
+     ROWED rather than closed. D-410 is now closed, so an assertion that the two
+     halves DISAGREE is an assertion that the defect is still there — it would
+     fail on a correct tree, which is the definition of a superseded test. The
+     shape it measures is unchanged and the direction is flipped: the leg letter
+     is now the EARNED one and the two halves of the envelope AGREE. REC-114 had
+     this done to its own block 7 predecessor in `rec108-cache-asof.test.mjs`
+     for exactly the same reason, by exactly this route. */
+  t("A FIFTH READER, NAMED AND DRIVEN — and CLOSED by REC-118 (D-410): op=reevaluations publishes the EARNED letter, and the two halves of the one answer now AGREE",
+    { leg_grade_earned: mine && mine.legs && mine.legs[0] ? mine.legs[0].grade : null,
+      leg_grade_authored: mine && mine.legs && mine.legs[0] ? mine.legs[0].grade_authored : null,
       leg_axis: mine && mine.legs && mine.legs[0] ? mine.legs[0].grade_axis : null,
       strength_capture_capped: mine && mine.strength && mine.strength.capture ? mine.strength.capture.grade : null,
       they_disagree: !!(mine && mine.legs && mine.legs[0] && mine.strength && mine.strength.capture
                         && mine.legs[0].grade !== mine.strength.capture.grade) },
-    { leg_grade_authored_uncapped: "B", leg_axis: "capture",
-      strength_capture_capped: "C", they_disagree: true });
-  /* THE SAME LEG, THROUGH THE SURFACE THIS ITEM FIXED, so the two answers sit
-     side by side in one suite: the listing now says C and names the authored B,
-     while op=reevaluations still says B with nothing saying what it is a letter
-     OF. That contrast is the row this landing files. */
+    { leg_grade_earned: "C", leg_grade_authored: "B", leg_axis: "capture",
+      strength_capture_capped: "C", they_disagree: false });
+  /* THE SAME LEG THROUGH BOTH SURFACES, so the two answers sit side by side in
+     one suite. AS LANDED THIS ASSERTED THE DISAGREEMENT — the listing said C
+     while op=reevaluations still said B — and that contrast WAS the row this
+     landing filed. REC-118 closed it, so the two member-facing surfaces now
+     answer alike; this assertion keeps measuring both and only flips which
+     answer it demands of the second. */
   const sameLeg = await legOf("rows=leg&q=type:inquiry&limit=500", INQ_SUP, DOC_SUP);
-  t("...while op=meaningrows, FIXED by this item, publishes the earned letter for the SAME leg — the two surfaces now disagree, and that is the row being filed",
+  t("...while op=meaningrows, FIXED by this item, publishes the earned letter for the SAME leg — and since REC-118 the two surfaces AGREE rather than disagree, which is that row discharged",
     sameLeg ? { meaningrows_grade: sameLeg.grade, meaningrows_authored: sameLeg.grade_authored,
                 reevaluations_grade: mine && mine.legs && mine.legs[0] ? mine.legs[0].grade : null } : null,
-    { meaningrows_grade: "C", meaningrows_authored: "B", reevaluations_grade: "B" });
+    { meaningrows_grade: "C", meaningrows_authored: "B", reevaluations_grade: "C" });
 
   /* SIXTH READER — #versionCollections, feeding op=basisversions and
      op=suggest. It is the same SELECT, over the same table, with the same

@@ -422,9 +422,20 @@ console.log("\n--- 2. D-5, the terminal arm and the reversible arm on the SAME q
     /* grade_source CORRECTED 2026-08-04 (REC-18): the leg is the same leg and
        the obligation is the same obligation — an authored connection grade is
        now spelled `hunch`, which is what it always was. */
+    /* grade_authored / grade_why ADDED 2026-09-17 (REC-118 / D-410, I3 IC-119):
+       this op used to publish the AUTHORED capture letter beside a `strength`
+       block that has been capped since REC-105 — two letters for one fact in
+       one envelope. The leg letter is now resolved through the SAME
+       `Store.#capturedAt` the walk uses, with the authored letter published
+       beside it and ALWAYS present. THIS LEG IS ON THE CONNECTION AXIS, which
+       the capture ceiling never touches, so `grade` is UNMOVED at B and
+       `grade_why` is null — which is exactly the byte-identity this assertion
+       is well placed to hold: if a future edit ever caps by axis NAME rather
+       than by what the registry holds, this row moves and this test fails. */
     r.obligations[0]?.legs ?? [], [{ ord: 2, role: "supports", grade: "B",
                               grade_axis: "connection", grade_source: "hunch",
-                              target_edition: null }]);
+                              target_edition: null,
+                              grade_authored: "B", grade_why: null }]);
   t("the REUSED triple: flag, since and source, in the reeval_pending vocabulary already in the schema",
     [r.obligations[0]?.reeval?.flag ?? null, r.obligations[0]?.reeval?.source ?? null,
      typeof r.obligations[0]?.reeval?.since], [true, "deferred", "string"]);
