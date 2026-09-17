@@ -30120,7 +30120,20 @@ export class Store extends DurableObject {
          reader who can name the capture directly. */
       return owner ? visible(owner.bundle_id) !== null : false;
     };
-    const page = this.#frontierLatest("content", { limit: cap + 1, subjectKind: "capture" });
+    /* REC-109 / IC-109 — THE GATE RUNS BEFORE THE CUT, AND THE RAW PAGE IS
+       OVER-FETCHED BECAUSE OF IT. This read fetched `cap + 1` and filtered
+       AFTERWARDS (`page.slice(0, cap).filter(seen)`), which is two defects in one
+       line and only the second of them was reported as D-385.
+       THE FIRST: cutting before gating hands back however many of the first `cap`
+       RAW rows happened to survive the fence — a page short for a reason the
+       caller cannot see, and short even for a viewer entitled to every row that
+       reached them. THE SECOND is D-385 itself and is below at `truncated`.
+       `(cap + 1) * 2` is the DOCUMENT arm's factor, taken rather than chosen: one
+       subject kind, one gate, one bound, so a second number here would be a second
+       vocabulary for one fact. `#frontierMeaning` over-fetches at `* 3` because it
+       pages three subject kinds, which is the same rule and not a different one. */
+    const page = this.#frontierLatest("content", { limit: (cap + 1) * 2, subjectKind: "capture" })
+      .filter((r) => seen(r.subject));
     /* ONE CALL, NOT ONE PER ROW. The drift join is bounded at birth and its
        result is a SET; asking it per row would put an amplifying scan inside a
        bounded read, which is exactly what `test/derivation-bounds.test.mjs`
@@ -30133,11 +30146,22 @@ export class Store extends DurableObject {
        `test/derivation-bounds.test.mjs` is what enforces it: a per-row query
        inside a bounded read is an amplifying scan wearing a bound, and it is
        what that suite caught in `#calDriftFor`'s own first draft.
-       The page is already capped at `cap + 1`, so the `IN` list is bounded at
-       birth by the same number that bounds the answer. */
+       THE `IN` LIST IS BUILT FROM THE PUBLISHED CUT AND NOT FROM THE RAW PAGE,
+       AND THAT IS REC-109's CORRECTION RATHER THAN REC-91's WORDING — the
+       sentence here read *"the page is already capped at `cap + 1`"*, which
+       stopped being true when the over-fetch above went to `(cap + 1) * 2` to
+       make room for the fence. Narrowing it to `pageCut` does two things at once:
+       it keeps the bound at `cap` instead of doubling it, which matters because
+       **D-36's measured workerd ceiling is about 100 BOUND VARIABLES and this
+       list is already over it at the default `cap` of 200** (a pre-existing
+       hazard in this method, raised as its own row rather than absorbed here —
+       what is NOT acceptable is an item that doubles the exposure and says
+       nothing); and it stops computing an index state for rows this answer then
+       throws away. */
+    const pageCut = page.slice(0, cap);
     const indexState = new Map();
     {
-      const subjects = [...new Set(page.map((r) => r.subject).filter((v) => typeof v === "string" && v))];
+      const subjects = [...new Set(pageCut.map((r) => r.subject).filter((v) => typeof v === "string" && v))];
       if (subjects.length) {
         const marks = subjects.map(() => "?").join(",");
         /* The LATEST `derive` row per subject, which is the frontier's own shape
@@ -30160,7 +30184,7 @@ export class Store extends DurableObject {
     const drifted = new Map();
     for (const o of (Array.isArray(drift) ? drift : []))
       if (o && o.capture_sha) drifted.set(o.capture_sha, o.superseded_calibration || null);
-    const looked = page.slice(0, cap).filter((r) => seen(r.subject)).map((r) => {
+    const looked = pageCut.map((r) => {
       const axis = contentAxisFor({
         /* REC-91: the mechanism exists; what this record knows about THIS
            capture is the `derive` row, absent for every capture promoted before
@@ -30201,7 +30225,14 @@ export class Store extends DurableObject {
       };
     });
     /* THE NEVER-EXTRACTED SET: a capture the register holds with no content-level
-       row at all. It is the content level's `NEVER_LOOKED`, and it is the one
+       row at all. OVER-FETCHED AT `(cap + 1) * 2` FOR REC-109's REASON, AND THE
+       REASON IS STRONGER HERE THAN ON THE `looked` PAGE: this collection is
+       narrowed TWICE before anything is published — once by the visibility filter
+       and again by §5.1's cause split — and the two lists that actually get cut
+       at `cap` are `never` and `unexplained`, not this one. Fetching `cap + 1` and
+       narrowing twice hands back a short page under a `truncated` computed from a
+       list nobody receives, which is D-385 in the second of its two disjuncts.
+       It is the content level's `NEVER_LOOKED`, and it is the one
        number in this answer that says WHICH ABSENCE IS TRUE — a search that
        found nothing over these captures found nothing because nobody has read
        them, which is a different fact from having read them and found nothing
@@ -30213,7 +30244,7 @@ export class Store extends DurableObject {
                            WHERE o.level = 'content' AND o.subject_kind = 'capture'
                              AND o.subject = g.capture_sha)
         ORDER BY g.capture_sha
-        LIMIT ?`, cap + 1).filter((r) => visible(r.bundle_id) !== null)
+        LIMIT ?`, (cap + 1) * 2).filter((r) => visible(r.bundle_id) !== null)
       .map((r) => ({ ...r, missing_cause: this.#missingContentCause(r.subject, r.registered) }));
     /* SECTION 5.1, AND THE SET IS SPLIT RATHER THAN NAMED ONCE. Bob's ruling of
        2026-09-15: a subject with no row has three causes and they are different
@@ -30234,7 +30265,37 @@ export class Store extends DurableObject {
     const candidates = looked.filter((r) => r.recandidate);
     return {
       level: "content", found: true, built: true, limit: cap,
-      truncated: page.length > cap || missing.length > cap,
+      /* REC-109 / IC-109 — D-385 CLOSED: THE CUT AND THE CLAIM NOW AGREE, and
+         every disjunct compares against a collection this method ACTUALLY PAGES.
+         It read `page.length > cap || missing.length > cap` and both halves were
+         wrong, in the same direction, for two different reasons.
+         `page` WAS THE RAW FETCH and the fence ran after it, so the flag was true
+         exactly when the gate had dropped enough rows — **a question about a list
+         the caller never sees**, answered to a caller who cannot see it.
+         `missing` IS NOT A LIST THIS METHOD PUBLISHES: it is split by §5.1's cause
+         into `never` and `unexplained`, and those are what get cut at `cap`. That
+         is the SECOND error CONDUCT #11 corrected in `#frontierMeaning` on
+         2026-09-15, still standing here — the same statement carried both.
+         THE WITHHELD COUNT IS STILL NOT PUBLISHED, AND THE REASON IS THAT THIS
+         DEFECT WAS ONE. A `truncated` read off the raw supply is a ONE-BIT COUNT
+         OF WHAT WAS WITHHELD wearing a bound's name: to a viewer whose own page
+         is short, `true` says *rows exist here that you are not being shown*,
+         which is the size of the unseen set to one bit and is REC-30's leak
+         exactly — *"a total bigger than the list says something is hidden."* So
+         fixing the flag and refusing the count are ONE ACT and not two, and
+         nothing is added beside it. Computed over the gated lists the flag leaks
+         nothing by construction: for a viewer entitled to every row the two lists
+         are the SAME LIST, and for any other viewer the flag describes only the
+         rows they received.
+         THE RESIDUAL IS STATED RATHER THAN HIDDEN, because a coverage flag that
+         overclaims is this file's worst defect class: when the raw fetch comes
+         back FULL, rows beyond it were never fetched, so `false` rests on the
+         over-fetch being wide enough to absorb the fence. That is true of all
+         three arms of this reader and is raised as its own row — it is a property
+         of the over-fetch mechanism and fixing it in one arm of three would be
+         the mirror-and-drift class. */
+      truncated: page.length > cap || never.length > cap
+              || unexplained.length > cap,
       looked, never_looked: never.slice(0, cap),
       never_looked_count: never.slice(0, cap).length,
       /* NAMED, NEVER SILENTLY SCORED ZERO. These are captures with no
@@ -30267,7 +30328,11 @@ export class Store extends DurableObject {
           + "transcription rests on a calibration a worse measurement has superseded. The "
           + "per-capture indexed state reads UNDETERMINED wherever text WAS extracted, because "
           + "the per-unit text index it would be read through is REC-91's and does not exist in "
-          + "this build",
+          + "this build. The withholding fence applies ROW-WHOLE: a capture this viewer may not "
+          + "see is absent from every collection here, and `truncated` describes THE LISTS YOU "
+          + "WERE GIVEN and never the supply they were cut from — for a viewer entitled to every "
+          + "row those are the same list, and no count of what was withheld is reported, because "
+          + "that count is the leak",
     };
   }
 

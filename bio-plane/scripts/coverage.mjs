@@ -1033,8 +1033,28 @@ const REGISTER_FLOOR = {
      The suite's first `NEGATIVE CONTROL:` paragraph was prose the register could not count
      arms in, so it landed in UNCLASSIFIED and `--strict` exited 1 — D-233's own shape, caught
      by the check that exists for it rather than by anyone re-reading the suite. The arms are
-     a marked ordinal list now, and the five this figure counts are the five that RAN. */
-  arms: 1109,
+     a marked ordinal list now, and the five this figure counts are the five that RAN.
+
+     MOVED 1109 -> 1114 on 2026-09-16 by REC-109 (IC-109, D-385), from this instrument's OWN
+     printed `GREW by 5 arm(s)` and never by adding five to the number in this file. `classified`
+     and `corpus` are deliberately UNMOVED at 199/200, VERIFIED from the same print rather than
+     inferred from an unchanged number: this item adds NO suite — its five arms extend
+     `observation-content.test.mjs`'s existing declaration, and its driver `test/nc-rec109.mjs`
+     is not a `.test.mjs` and is not in the corpus. The FLEET floor is UNMOVED at 3/6/8/76 for
+     the same reason, checked the same way. Nothing FELL.
+
+     **AND THE FIVE ARMS READ AS ONE FOR A WHILE, WHICH IS WHY THE FIGURE WAS MEASURED INSTEAD
+     OF ASSUMED.** The first draft of that declaration EXPLAINED why the arms were being added to
+     the existing block, and the explanation SPELLED THIS REGISTER'S MARKER PHRASE. A quotation of
+     the phrase IS a marker: `markerPositions` split one declaration into two, `readControl` kept
+     the fuller half, and the suite reported **8** arms after five were added — a `GREW by 1` that
+     is entirely plausible to a reader who did not count. It is `WORKER.md`'s own receipt — *a
+     check that caught its own correction because the correction quoted the token it was
+     correcting* — arriving in the arms grammar rather than in a sweep, and NOTHING would have
+     named it: the run was green at 1110 and a floor moved to 1110 would have been four arms low
+     and permanently so. **The only thing that caught it was reading `countArms` against both
+     versions of the file instead of trusting that five edits made five arms.** */
+  arms: 1114,
   classified: 199,
   corpus: 200,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is

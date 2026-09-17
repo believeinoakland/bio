@@ -50995,11 +50995,12 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       const owner = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, sha);
       return owner ? visible(owner.bundle_id) !== null : false;
     };
-    const page = this.#frontierLatest("content", { limit: cap + 1, subjectKind: "capture" });
+    const page = this.#frontierLatest("content", { limit: (cap + 1) * 2, subjectKind: "capture" }).filter((r) => seen(r.subject));
     const drift = this.#calDriftFor(null);
+    const pageCut = page.slice(0, cap);
     const indexState = /* @__PURE__ */ new Map();
     {
-      const subjects = [...new Set(page.map((r) => r.subject).filter((v) => typeof v === "string" && v))];
+      const subjects = [...new Set(pageCut.map((r) => r.subject).filter((v) => typeof v === "string" && v))];
       if (subjects.length) {
         const marks = subjects.map(() => "?").join(",");
         for (const r of this.#rows(
@@ -51016,7 +51017,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const drifted2 = /* @__PURE__ */ new Map();
     for (const o of Array.isArray(drift) ? drift : [])
       if (o && o.capture_sha) drifted2.set(o.capture_sha, o.superseded_calibration || null);
-    const looked = page.slice(0, cap).filter((r) => seen(r.subject)).map((r) => {
+    const looked = pageCut.map((r) => {
       const axis = contentAxisFor({
         /* REC-91: the mechanism exists; what this record knows about THIS
            capture is the `derive` row, absent for every capture promoted before
@@ -51067,7 +51068,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
                              AND o.subject = g.capture_sha)
         ORDER BY g.capture_sha
         LIMIT ?`,
-      cap + 1
+      (cap + 1) * 2
     ).filter((r) => visible(r.bundle_id) !== null).map((r) => ({ ...r, missing_cause: this.#missingContentCause(r.subject, r.registered) }));
     const never = missing.filter((r) => r.missing_cause === "never_looked");
     const unexplained = missing.filter((r) => r.missing_cause !== "never_looked");
@@ -51082,7 +51083,36 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       found: true,
       built: true,
       limit: cap,
-      truncated: page.length > cap || missing.length > cap,
+      /* REC-109 / IC-109 — D-385 CLOSED: THE CUT AND THE CLAIM NOW AGREE, and
+         every disjunct compares against a collection this method ACTUALLY PAGES.
+         It read `page.length > cap || missing.length > cap` and both halves were
+         wrong, in the same direction, for two different reasons.
+         `page` WAS THE RAW FETCH and the fence ran after it, so the flag was true
+         exactly when the gate had dropped enough rows — **a question about a list
+         the caller never sees**, answered to a caller who cannot see it.
+         `missing` IS NOT A LIST THIS METHOD PUBLISHES: it is split by §5.1's cause
+         into `never` and `unexplained`, and those are what get cut at `cap`. That
+         is the SECOND error CONDUCT #11 corrected in `#frontierMeaning` on
+         2026-09-15, still standing here — the same statement carried both.
+         THE WITHHELD COUNT IS STILL NOT PUBLISHED, AND THE REASON IS THAT THIS
+         DEFECT WAS ONE. A `truncated` read off the raw supply is a ONE-BIT COUNT
+         OF WHAT WAS WITHHELD wearing a bound's name: to a viewer whose own page
+         is short, `true` says *rows exist here that you are not being shown*,
+         which is the size of the unseen set to one bit and is REC-30's leak
+         exactly — *"a total bigger than the list says something is hidden."* So
+         fixing the flag and refusing the count are ONE ACT and not two, and
+         nothing is added beside it. Computed over the gated lists the flag leaks
+         nothing by construction: for a viewer entitled to every row the two lists
+         are the SAME LIST, and for any other viewer the flag describes only the
+         rows they received.
+         THE RESIDUAL IS STATED RATHER THAN HIDDEN, because a coverage flag that
+         overclaims is this file's worst defect class: when the raw fetch comes
+         back FULL, rows beyond it were never fetched, so `false` rests on the
+         over-fetch being wide enough to absorb the fence. That is true of all
+         three arms of this reader and is raised as its own row — it is a property
+         of the over-fetch mechanism and fixing it in one arm of three would be
+         the mirror-and-drift class. */
+      truncated: page.length > cap || never.length > cap || unexplained.length > cap,
       looked,
       never_looked: never.slice(0, cap),
       never_looked_count: never.slice(0, cap).length,
@@ -51114,7 +51144,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       calibration_drift_truncated: !!(drift && drift.truncated),
       vocabulary: CONTENT_AXIS_STATES,
       undetermined_value: CONTENT_AXIS_UNDETERMINED,
-      note: "NEVER_LOOKED at the content level is a capture this record holds that nothing has ever tried to extract, and it is reported apart from the tally because it is the absence of a row \u2014 and a missing row is read through section 5.1's THREE CAUSES in order, so a capture extracted before this log carried the content level is NOT in that set and is named in `missing_unexplained` with its cause instead. The re-extraction candidate list is every capture whose latest content-level state is not a definitive PRESENT, plus every capture whose transcription rests on a calibration a worse measurement has superseded. The per-capture indexed state reads UNDETERMINED wherever text WAS extracted, because the per-unit text index it would be read through is REC-91's and does not exist in this build"
+      note: "NEVER_LOOKED at the content level is a capture this record holds that nothing has ever tried to extract, and it is reported apart from the tally because it is the absence of a row \u2014 and a missing row is read through section 5.1's THREE CAUSES in order, so a capture extracted before this log carried the content level is NOT in that set and is named in `missing_unexplained` with its cause instead. The re-extraction candidate list is every capture whose latest content-level state is not a definitive PRESENT, plus every capture whose transcription rests on a calibration a worse measurement has superseded. The per-capture indexed state reads UNDETERMINED wherever text WAS extracted, because the per-unit text index it would be read through is REC-91's and does not exist in this build. The withholding fence applies ROW-WHOLE: a capture this viewer may not see is absent from every collection here, and `truncated` describes THE LISTS YOU WERE GIVEN and never the supply they were cut from \u2014 for a viewer entitled to every row those are the same list, and no count of what was withheld is reported, because that count is the leak"
     };
   }
   /* ==================================================================== *

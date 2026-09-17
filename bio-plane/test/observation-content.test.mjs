@@ -32,8 +32,40 @@
        FAIL: §5.1's order arm and the weakest-default arm. This is the defect the design was
        written to prevent, and the arm exists because this item shipped it once already: an
        absence that took no work to produce, reported as a fact about the world.
-   THE ACTUAL RESULTS OF EVERY ARM ARE IN `CLAIMS.md`'s release line for REC-94, including the
-   ones that came back other than declared.
+   (h) `rawflag` — ADDED 2026-09-16 by REC-109 (worktree agent-a8eea05132b9aee1d), RUN in one step
+       through `node test/nc-rec109.mjs [arm]`, ARMS EXTENDED IN THIS SAME BLOCK rather than in a
+       second declaration paragraph, because the register records ONE declaration per suite — the
+       fullest — and a second block would have left these five uncounted (D-233).
+       **AND THIS PARAGRAPH MAY NOT SPELL THE REGISTER'S OWN MARKER PHRASE, WHICH IS WRITTEN HERE
+       BECAUSE IT WAS PAID FOR ONCE.** The first draft of this line quoted that phrase to explain
+       why the arms live here — and the quotation IS a marker, so `markerPositions` split this
+       declaration in two and `readControl`, which keeps the FULLEST, recorded 8 arms instead of
+       12. Five arms were added and the register moved by one. It is `WORKER.md`'s own receipt —
+       *a check that caught its own correction because the correction quoted the token it was
+       correcting* — arriving in the arms grammar, and it is invisible except by reading the
+       printed figure rather than trusting that five edits made five arms.
+       D-385 ITSELF: make `truncated` compare the RAW SUPPLY against the bound again while the
+       answer is still cut from the gated list. Declared MUST FAIL G1, printing BOTH the gated
+       count and the supply; MUST NOT FAIL the entitled viewer's arms. ACTUAL: G1 and G5b — the
+       declaration was wrong, because G5b pins the very expression this arm rewrites.
+   (i) `fence` — drop the visibility filter from the raw content page. THE ARM ARMED AGAINST THE
+       DATA rather than the flag, which is REC-94's own lesson: its leak passed a flag-only arm
+       because `capture_held` was already false. Declared MUST FAIL G0 G1 G1b G4b — the private
+       project's capture appears BY NAME in an uninvited member's rows; MUST NOT FAIL G1c G4.
+       ACTUAL: exactly as declared.
+   (j) `missinglist` — put the second disjunct back to `missing.length > cap`, the list this
+       method SPLITS by §5.1's cause and never pages. Declared STRUCTURAL-ONLY before running,
+       with the reason: this fixture's `missing` holds ONE row and `unexplained` is EMPTY, so the
+       three lists cannot straddle any bound the op accepts. ACTUAL: G5b, as declared.
+   (k) `overfetch` — narrow the raw fetch back to `cap + 1`. Declared STRUCTURAL-ONLY and
+       BEHAVIOURALLY INVISIBLE. **ACTUAL: G2 G3b G5 — WRONG IN THE INFORMATIVE DIRECTION, and it
+       is this control's most useful result.** The over-fetch protects THE ANSWER and not only the
+       flag: at a bound of 2 the raw page is 3, the fence drops one, and an uninvited member gets
+       TWO rows while entitled to THREE and is told the list is complete.
+   (l) `unexplained` — drop the third disjunct alone. Declared STRUCTURAL-ONLY for (j)'s reason.
+       ACTUAL: G5b, as declared.
+   THE ACTUAL RESULTS OF EVERY ARM ARE IN `CLAIMS.md`'s release line for REC-94 and REC-109,
+   including the ones that came back other than declared — and two of REC-109's five did.
    WHAT THESE ARMS CANNOT SEE: they are all local to this plane's own source. Nothing here
    exercises a second instance, a real network fetch, a real OCR engine, or the per-unit text
    index — `capture_text` is REC-91's and does not exist, which is why every `indexed` answer
@@ -687,6 +719,162 @@ console.log("\n--- F · a moved chain appends a row and rewrites none (§3: appe
   + "is append-only and a log that can be rewritten is not evidence of anything. The frontier "
   + "shows the latest state; the TABLE still holds the history",
     all.tally.partial >= 1, true);
+}
+
+/* ========================================================================= *
+ *  G · REC-109 / IC-109 — `truncated` DESCRIBES THE LIST THE CALLER RECEIVED.
+ *      D-385, and the withheld-count disclosure decision beside it.
+ * ========================================================================= */
+console.log("\n--- G · REC-109: the cut and the claim agree, and the flag is not a one-bit count ---");
+
+/* WHY THIS SECTION USES NO NEW FIXTURE, STATED RATHER THAN LEFT TO LOOK LAZY.
+   The census this suite already builds is exactly the shape the row asks to be
+   driven: FOUR captures carry a content-level row and ONE of them (`SHA_PROJ`)
+   sits in a project `member:not-invited` was never invited to, so at one bound
+   the two viewers' own lists fall on OPPOSITE SIDES of it. Adding a fifth
+   capture would move the arithmetic without adding a case.
+
+   EVERY FIGURE BELOW IS INDEPENDENT OF THE PRODUCT, and that is REC-111's
+   finding of 2026-09-16 inherited rather than re-paid: that item declared eight
+   control failures and got five, because three of its assertions read the bound
+   out of the product's own constant, so BOTH SIDES MOVED TOGETHER and the arms
+   could prove the mechanism right while being blind to the number. `4` (the
+   captures with a content-level row), `3` (the ones an uninvited member may
+   see), `1` (the one withheld) and the bounds `2` and `3` are written here as
+   literals. Nothing below reads `f.limit`, `FRONTIER_LIMIT_DEFAULT` or any
+   length off the answer to build its own expectation. */
+const G_TOTAL_WITH_ROWS = 4;      /* aaaa, bbbb, cccc (information) + eeee (project) */
+const G_VISIBLE_UNINVITED = 3;    /* aaaa, bbbb, cccc — the shared evidence corpus (D-15) */
+const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private project */
+
+{
+  /* THE CENSUS IS ASSERTED BEFORE ANYTHING RESTS ON IT, because a headline
+     totality arm that passed over an EMPTY corpus is on record in this project
+     three times. If the suite's fixture ever changes shape, this arm goes red
+     FIRST and names the number, instead of the arms below quietly measuring a
+     different world. */
+  const mAll = await DO("frontier", `level=content&viewer=class:member&limit=500`);
+  const nAll = await DO("frontier", `level=content&viewer=member:not-invited&limit=500`);
+  t("G0: THE CORPUS, ASSERTED AND NOT ASSUMED — four captures carry a content-level row, an "
+  + "uninvited member may see three of them, and exactly one is withheld. Every arm below rests "
+  + "on this and none of it is read off the product",
+    [mAll.looked.length, nAll.looked.length, mAll.looked.length - nAll.looked.length,
+     nAll.looked.some((r) => r.subject === SHA_PROJ)],
+    [G_TOTAL_WITH_ROWS, G_VISIBLE_UNINVITED, G_WITHHELD, false]);
+
+  /* ---- THE EQUALITY, DRIVEN AND NEVER ASSERTED OVER ONE PATH ---------------
+     The row's own words: *two paths through one function cannot disagree and a
+     pin over them proves nothing*. So both cases below are driven by ASKING THE
+     PRODUCT with a real viewer, at a real bound, and reading what came back —
+     never by comparing `truncated` against a second expression computed here. */
+
+  /* CASE ONE — the raw fetch EXCEEDS the bound and the gated answer does NOT.
+     Bound 3. The supply is 4 rows, which is more than 3. An uninvited member's
+     own list is 3, which is not. `false` is the only honest answer: they have
+     every row they are entitled to and the flag must say so. */
+  const nAt3 = await DO("frontier", `level=content&viewer=member:not-invited&limit=3`);
+  const mAt3 = await DO("frontier", `level=content&viewer=class:member&limit=3`);
+  t("G1: THE DEFECT, DRIVEN — at a bound of 3 over a supply of 4, an uninvited member receives "
+  + "3 rows, which is their WHOLE entitlement, and `truncated` reads FALSE. Before this landing "
+  + "it read TRUE, because the flag compared the RAW FETCH against the bound while the answer was "
+  + "cut from the GATED list — a question about a list the caller never sees. THE SUPPLY IS IN "
+  + "THE TUPLE ON PURPOSE: a failure naming only one of the two counts is a failure a reader "
+  + "cannot act on, so this arm goes red printing the gated count AND the raw supply together",
+    [nAt3.looked.length, nAt3.truncated, mAll.looked.length],
+    [G_VISIBLE_UNINVITED, false, G_TOTAL_WITH_ROWS]);
+
+  t("G1b: …AND IT IS ARMED AGAINST THE DATA, NEVER AGAINST THE FLAG (REC-94's leak passed a "
+  + "flag-only arm because `capture_held` was already false). The three rows are the three "
+  + "captures an uninvited member may see, BY NAME, and the withheld one is in none of them — so "
+  + "the `false` above is a statement about a list whose contents this arm has checked",
+    [nAt3.looked.map((r) => r.subject).sort().join(","),
+     JSON.stringify(nAt3).includes(SHA_PROJ)],
+    [[SHA_WHOLE, SHA_SHORT, SHA_NOTEXT].sort().join(","), false]);
+
+  t("G1c: THE SAME BOUND, THE OTHER VIEWER, THE OPPOSITE ANSWER — and this is the arm that shows "
+  + "the flag now follows the CALLER'S OWN LIST rather than the supply. A viewer entitled to all "
+  + "four gets 3 rows at a bound of 3 and `truncated` TRUE, because for THEM a row really was cut",
+    [mAt3.looked.length, mAt3.truncated], [3, true]);
+
+  /* CASE TWO — THE REVERSE. Bound 2. The uninvited member's own list is 3, which
+     DOES exceed it, so their answer really is cut and `true` is the honest
+     answer. Without this arm G1 would be satisfied by a flag hard-wired false. */
+  const nAt2 = await DO("frontier", `level=content&viewer=member:not-invited&limit=2`);
+  t("G2: THE REVERSE, DRIVEN — at a bound of 2 the same uninvited member's own list of 3 DOES "
+  + "exceed it, they receive 2 rows, and `truncated` reads TRUE. Without this arm G1 is satisfied "
+  + "by a flag wired to false, which is the equality costing nothing to produce",
+    [nAt2.looked.length, nAt2.truncated], [2, true]);
+
+  /* ---- THE DISCLOSURE DECISION, PINNED -------------------------------------
+     REC-109 was asked to decide whether a count of what was withheld is
+     published beside this flag. IT IS NOT, and the reasoning is at the site in
+     `store.mjs` rather than here: the defect this row closed WAS such a count.
+     A `truncated` read off the raw supply is one bit of it wearing a bound's
+     name — to a viewer whose page is short, `true` said *rows exist here that
+     you are not being shown*. So fixing the flag and refusing the count are one
+     act, and this arm keeps the decision visible to the next reader. */
+  t("G3: NO COUNT OF WHAT WAS WITHHELD IS PUBLISHED, and the answer carries no field that is one "
+  + "— REC-30's rule, and the decision is recorded at the site in `store.mjs` rather than in a "
+  + "report. The defect this row closed WAS a one-bit count of exactly that, so refusing the "
+  + "count and fixing the flag were ONE act",
+    [Object.keys(nAt3).filter((k) => /withheld|hidden|redacted|suppressed/i.test(k)),
+     Object.keys(nAt3).some((k) => /count/i.test(k) && /withh|hidd/i.test(k))],
+    [[], false]);
+
+  t("G3b: …AND THE FLAG LEAKS NOTHING BY CONSTRUCTION, which is a stronger statement than *no "
+  + "field is named withheld* and is why it is driven separately: at a bound of 2 BOTH viewers "
+  + "read TRUE and at a bound of 4 BOTH read FALSE, so across those bounds the flag does not "
+  + "distinguish the viewer who is being withheld from the one who is not",
+    [nAt2.truncated, (await DO("frontier", `level=content&viewer=class:member&limit=2`)).truncated,
+     (await DO("frontier", `level=content&viewer=member:not-invited&limit=4`)).truncated,
+     (await DO("frontier", `level=content&viewer=class:member&limit=4`)).truncated],
+    [true, true, false, false]);
+
+  /* ---- OVER-STRICTNESS, AND IT IS THE ARM THAT MATTERS MOST ---------------- */
+  t("G4: OVER-STRICTNESS — a viewer entitled to EVERY row gets an answer this landing did not "
+  + "move, because for them the gated list and the supply ARE the same list. Four rows at a bound "
+  + "of 500, `truncated` false, and the rows themselves byte-identical to the first three of the "
+  + "unbounded read",
+    [mAll.looked.length, mAll.truncated,
+     JSON.stringify(mAt3.looked) === JSON.stringify(mAll.looked.slice(0, 3))],
+    [G_TOTAL_WITH_ROWS, false, true]);
+
+  t("G4b: …and the uninvited member's three rows are BYTE-IDENTICAL to what the entitled viewer "
+  + "gets for those same three subjects. The row does not change with the reader; only whether it "
+  + "is published at all does (REC-103's I4b, at this level)",
+    JSON.stringify(nAll.looked),
+    JSON.stringify(mAll.looked.filter((r) => r.subject !== SHA_PROJ)));
+
+  /* ---- THE RESIDUAL, PINNED RATHER THAN LEFT TO BE REDISCOVERED ------------
+     D-389. `truncated: false` rests on the raw over-fetch being wide enough to
+     absorb the fence: when the raw fetch comes back FULL, rows beyond it were
+     never fetched and their visibility is unknown, so `false` is a claim about
+     coverage this method did not establish. It is true of all THREE arms of this
+     reader — document, content and meaning — and is a property of the over-fetch
+     mechanism, so fixing it in one arm of three would be the mirror-and-drift
+     class. THIS ARM EXISTS SO THE NEXT READER MEETS THE DECISION RATHER THAN THE
+     DEFECT, which is the pattern REC-110's row names for the ungated tally. */
+  t("G5: THE OVER-FETCH IS PINNED AT TWICE THE BOUND, ON PURPOSE AND WITH ITS LIMIT NAMED — the "
+  + "raw page is fetched at `(cap + 1) * 2`, the DOCUMENT arm's factor, so the fence has room to "
+  + "drop rows before the cut. IT PROTECTS THE ANSWER AND NOT ONLY THE FLAG, which this item's "
+  + "control MEASURED rather than assumed: narrowed back to `cap + 1`, an uninvited member at a "
+  + "bound of 2 receives TWO rows while entitled to THREE and is told the list is complete, and "
+  + "G2 and G3b go red for that reason alone. This pin is the belt beside those braces. The "
+  + "residual is D-389 and is STATED: on a FULL raw fetch `false` rests on that room being enough",
+    [/#frontierLatest\("content", \{ limit: \(cap \+ 1\) \* 2, subjectKind: "capture" \}\)/
+       .test(SRC.store),
+     /LIMIT \?`, \(cap \+ 1\) \* 2\)\.filter\(\(r\) => visible\(r\.bundle_id\) !== null\)/
+       .test(SRC.store)],
+    [true, true]);
+
+  t("G5b: AND THE CLAIM NAMES ONLY COLLECTIONS THIS METHOD PAGES — `never` and `unexplained` are "
+  + "what get cut at the bound, never `missing`, which is split by §5.1's cause before anything "
+  + "is published. That was the SECOND error in the one statement D-385 named, and it is the one "
+  + "CONDUCT #11 already corrected in `#frontierMeaning` on 2026-09-15",
+    [/truncated: page\.length > cap \|\| never\.length > cap\s*\n\s*\|\| unexplained\.length > cap/
+       .test(SRC.store),
+     /truncated: page\.length > cap \|\| missing\.length > cap/.test(SRC.store)],
+    [true, false]);
 }
 
 reachedFoot = true;
