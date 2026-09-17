@@ -11502,6 +11502,7 @@ is blocked on the other.
 **open as of 2026-09-16** — raised by FLEET #1 and NOT discharged. **Recorded by CONDUCT #1 at integration, and this is the THIRD block M0-37's delegation arm has caught today** — after REC-100's and M0-48's. **It is the most interesting of the three: FLEET's session had ENDED before that arm existed**, so this block was written by a session that could not have known the rule, could not be asked, and could not correct itself. The arm audited it anyway. **That is the difference between a rule and a mechanism** — a rule reaches only sessions alive to read it, and this register now states its own state for work whose author is gone. The commit carrying it was itself STRANDED on a dead session's worktree until D-288's detection arm named it hours after both were written.
 
 ## CLAIM 2026-09-17 M0 (M0-49 — D-288 item 3: CONDUCT deletes the remote branch when it merges the item)
+released: 2026-09-17 by CONDUCT #2 at integration, merged at `4ce4d9e5`. **RELEASED LATE AND THE LATENESS IS RECORDED RATHER THAN BACKDATED: this claim should have been released in its own item's integration turn and was not. CONDUCT #2 found it by sweeping every 2026-09-17 block for a missing `released:` line at the wave's close instead of trusting that each had been handled — an open claim over integrated work is a fence around paths nobody is editing, which reads to the next session as work still in flight.**
 
 **RELEASED on push.** Paths:
 
@@ -11543,6 +11544,7 @@ running the file rather than by reading its exports.
 
 ### DECISIONS FOR BOB 2026-09-17 (M0-49): **NONE**
 ## CLAIM 2026-09-17 RECORD (REC-107 — the meaning level's ONE-SIDED pre-log evidence, closed where it can be closed and STATED where it cannot)
+released: 2026-09-17 by CONDUCT #2 at integration, merged at `40309950`. **RELEASED LATE AND THE LATENESS IS RECORDED RATHER THAN BACKDATED: this claim should have been released in its own item's integration turn and was not. CONDUCT #2 found it by sweeping every 2026-09-17 block for a missing `released:` line at the wave's close instead of trusting that each had been handled — an open claim over integrated work is a fence around paths nobody is editing, which reads to the next session as work still in flight.**
 
 Worker spawned by CONDUCT #2, worktree `agent-a9a42611f2cdf409e`. Paths claimed:
 
@@ -11669,6 +11671,7 @@ that could have gone either way — whether to close the one-sidedness with a pr
 settled by the standing rule that the weaker claim is the correct one, and the proxies were
 refuted at the artifact rather than declined on principle.
 ## CLAIM 2026-09-17 RECORD (REC-92 — SEARCH §7 row 5: the `passage:` arm and `rows=passage`)
+released: 2026-09-17 by CONDUCT #2 at integration, merged at `3378a35f`. **RELEASED LATE AND THE LATENESS IS RECORDED RATHER THAN BACKDATED: this claim should have been released in its own item's integration turn and was not. CONDUCT #2 found it by sweeping every 2026-09-17 block for a missing `released:` line at the wave's close instead of trusting that each had been handled — an open claim over integrated work is a fence around paths nobody is editing, which reads to the next session as work still in flight.**
 
 session: rec92-passage-arm (worktree agent-aa1a6eb8fbcd2b4f3, branch `worktree-agent-aa1a6eb8fbcd2b4f3`)
 opened: 2026-09-17T00:00:00Z
@@ -11710,6 +11713,7 @@ dispatches and `rows=passage` is a new ARM on it), `bio-plane/checks/bio-checks.
 **open as of 2026-09-17** — raised by the REC-92 worker and not yet released.
 
 ## CLAIM ADDENDUM 2026-09-17 RECORD (REC-92 — two paths the original claim did not reserve, each FORCED rather than chosen)
+released: 2026-09-17 by CONDUCT #2 at integration, merged at `3378a35f`. **RELEASED LATE AND THE LATENESS IS RECORDED RATHER THAN BACKDATED: this claim should have been released in its own item's integration turn and was not. CONDUCT #2 found it by sweeping every 2026-09-17 block for a missing `released:` line at the wave's close instead of trusting that each had been handled — an open claim over integrated work is a fence around paths nobody is editing, which reads to the next session as work still in flight.**
 
 - `bio-plane/src/store.mjs` — **`#missingContentCause`'s BODY, and only its body.** The
   original claim named `meaningRows()`, `#meaningLevels()` and the new tally. The tally needs
@@ -11734,6 +11738,7 @@ suite tripwire — see the report**), `bio-plane/src/airun.mjs` (`CONTENT_AXIS_S
 **open as of 2026-09-17** — raised by the REC-92 worker and not yet released.
 
 ## CLAIM ADDENDUM 2026-09-17 RECORD (REC-92 — five more paths, every one FORCED BY AN INSTRUMENT that failed and NAMED its own arrival)
+released: 2026-09-17 by CONDUCT #2 at integration, merged at `3378a35f`. **RELEASED LATE AND THE LATENESS IS RECORDED RATHER THAN BACKDATED: this claim should have been released in its own item's integration turn and was not. CONDUCT #2 found it by sweeping every 2026-09-17 block for a missing `released:` line at the wave's close instead of trusting that each had been handled — an open claim over integrated work is a fence around paths nobody is editing, which reads to the next session as work still in flight.**
 
 **None of these was chosen. Each is a pin that went red, named what had arrived, and was
 CORRECTED rather than exempted — which is the behaviour those pins exist for.**
@@ -11767,6 +11772,7 @@ CORRECTED rather than exempted — which is the behaviour those pins exist for.*
 **open as of 2026-09-17** — raised by the REC-92 worker and not yet released.
 
 ## CLAIM ADDENDUM 2026-09-17 RECORD (REC-92 — a sixth instrument-forced path, and it is D-258's pin doing exactly what it was built to do)
+released: 2026-09-17 by CONDUCT #2 at integration, merged at `3378a35f`. **RELEASED LATE AND THE LATENESS IS RECORDED RATHER THAN BACKDATED: this claim should have been released in its own item's integration turn and was not. CONDUCT #2 found it by sweeping every 2026-09-17 block for a missing `released:` line at the wave's close instead of trusting that each had been handled — an open claim over integrated work is a fence around paths nobody is editing, which reads to the next session as work still in flight.**
 
 - `bio-plane/test/query.test.mjs` — **D-258's structural pin on the `meaning` descriptor's
   FIELD SET, moved from seven names to nine, with both arrivals justified at the site.**
@@ -11817,6 +11823,7 @@ paths:
 ## CLAIM 2026-09-17 M0 (M0-54 — the first honest reading of D-288's branch signal)
 session: m0-54-branch-census (worktree `agent-affbb166b8b390e09`, branch `worktree-agent-affbb166b8b390e09`)
 opened: 2026-09-17T17:50:00Z
+released: 2026-09-17 by CONDUCT #2 at integration, merged at `de288de`. **Wave two is fully integrated and every path this claim reserved is free.**
 paths:
   `docs/development/DEBT.md` — **APPEND ONLY**: the `D-397` row, and nothing else. **NOT** D-288's
   row — this item measures D-288's signal and does not re-dispose it; that is CONDUCT's or Bob's.
@@ -11861,6 +11868,7 @@ paths:
   was written there; editing a closed row to announce that its mechanism landed would be noise in
   the one ledger that must stay readable.
 ## CLAIM 2026-09-17 RECORD (REC-112 · THE INDEX WITH NO READER)
+released: 2026-09-17 by CONDUCT #2 at integration, merged at `72a485d`. **RELEASED LATE AND THE LATENESS IS RECORDED RATHER THAN BACKDATED: this claim should have been released in its own item's integration turn and was not. CONDUCT #2 found it by sweeping every 2026-09-17 block for a missing `released:` line at the wave's close instead of trusting that each had been handled — an open claim over integrated work is a fence around paths nobody is editing, which reads to the next session as work still in flight.**
 
 held: RECORD, worker spawned by CONDUCT #2, worktree `agent-a0b34f0da25e239d6`
 paths:
@@ -11896,6 +11904,7 @@ expected: the question ANSWERED WITH EVIDENCE — which of the three outcomes th
 
 session: ui62-passage-surface (worktree agent-a79a0995d1af935bb, branch `worktree-agent-a79a0995d1af935bb`)
 opened: 2026-09-17T00:00:00Z
+released: 2026-09-17 by CONDUCT #2 at integration, merged at `c1671bdc`. **Wave two is fully integrated and every path this claim reserved is free.**
 
 **PATHS CLAIMED, BY SITE AND BY REGION. The disjointness was MEASURED against `origin/main` at
 `78ef0efc` rather than assumed:** the three live 2026-09-17 RECORD claims — REC-107, REC-92 (with
@@ -11989,6 +11998,7 @@ its own; it wants a row rather than a quiet fix inside somebody else's landing.
 **open as of 2026-09-17** — raised by the UI-62 worker; needs a QUEUE row, which is CONDUCT's act.
 
 ## CLAIM ADDENDUM 2026-09-17 UI (UI-62 — one path the original claim did not reserve, and it was FORCED by an instrument)
+released: 2026-09-17 by CONDUCT #2 at integration, merged at `c1671bdc`. **RELEASED LATE AND THE LATENESS IS RECORDED RATHER THAN BACKDATED: this claim should have been released in its own item's integration turn and was not. CONDUCT #2 found it by sweeping every 2026-09-17 block for a missing `released:` line at the wave's close instead of trusting that each had been handled — an open claim over integrated work is a fence around paths nobody is editing, which reads to the next session as work still in flight.**
 
 - `docs/DECIDED.md` — **regenerated by `node tools/decided.mjs`, never hand-edited.** Not
   foreseen and not chosen: this item's amendment to `CONTENT-SEARCH-DESIGN.md` §4.4 RULES on the

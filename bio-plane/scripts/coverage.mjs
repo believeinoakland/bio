@@ -1228,7 +1228,15 @@ const REGISTER_FLOOR = {
      a method that is right by luck is indistinguishable from one that is right. The figure
      above is the PRINT. Cause: three new suites (`m051-driver-census`, `passage-arm`,
      `casesearched`) declaring 7 + 6 + 5 arms. Nothing FELL. */
-  arms: 1147,
+  /* MOVED 1147 -> 1148 by CONDUCT #2 at wave two's integration, 2026-09-17, READ FROM THE MERGED
+     TREE'S OWN POST-COMMIT PRINT: `REGISTER FLOOR  arms 1148/1147 · classified 204/204 · corpus
+     (suites read) 205/205 · GREW by 1 arm(s)`. Kept EXACT rather than left slack at 1147: --strict
+     exits 0 either way because a floor only refuses a FALL, so slack here would never fail and
+     would silently stop covering the arm that arrived — which is this ratchet's own recorded
+     failure mode (a dropped floor move goes SLACK, not broken). classified and corpus are
+     UNMOVED and that is stated rather than implied: the arriving arm joined an already-counted
+     declaration rather than adding a suite. */
+  arms: 1148,
   // [branch record | REC-96 read arms 1134 on its own tree]  REC-96, 2026-09-17: 1129 -> 1134 / 201 -> 202 / 202 -> 203, ALL THREE MOVED IN
   // [branch record | REC-96 read arms 1134 on its own tree] THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN RUN
   // [branch record | REC-96 read arms 1134 on its own tree] PRINTED after committing (`arms 1134/1129 · classified 202/201 · corpus
