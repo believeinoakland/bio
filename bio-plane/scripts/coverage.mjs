@@ -1213,6 +1213,17 @@ const REGISTER_FLOOR = {
      ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
      `FLEET_FLOOR`, which is the documented state; `FLEET_FLOOR` is UNMOVED and none is owed —
      this item adds no fleet member and no fleet suite. */
+  /* PLACEHOLDER AT CONDUCT #2's WAVE MERGE, 2026-09-17 — RE-READ BELOW FROM THE MERGED RUN.
+     Four items of one wave each moved this ratchet from their own green post-commit print and
+     NO TWO AGREE, which is the floor-collision class: M0-51 read 1136/202/203, REC-92 read
+     1135/202/203, REC-96 read 1134/202/203. Every reading is correct of its own tree and NONE
+     is true of this one, because this tree carries all of their suites at once. Two of them
+     printed the SAME classified and corpus figures by different arms — which is precisely why
+     CONDUCT #1 ruled this may NOT be relaxed to check-only-when-they-disagree, having measured
+     seven such collisions in a day and found neither input true of the merge in all seven.
+     Adding deltas is equally refused: M0-40 measured that the bounds class and the census
+     ratchet cannot move independently. The values here are one side's, carried ONLY so the
+     tree parses, and are replaced from this merged tree's own printed figures. */
   arms: 1136,
   classified: 202,
   corpus: 203,

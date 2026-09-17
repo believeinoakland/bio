@@ -157,14 +157,25 @@ console.log(`  corpus of arms: ${ARMS.length} (${ARMS.join(", ")})`);
     [(p.warnings ?? []).length, (p.terms ?? []).length], [0, 0]);
 }
 
-/* REC-90 MOVED THIS FROM THREE TO FOUR, and the pin is MOVED rather than
-   loosened — it exists so an arm added or lost is VISIBLE, and a count nobody has
-   to move would not be one. The fourth is `content`, D-222 stage C /
-   `CONTENT-SEARCH-DESIGN.md` §4.2, over REC-82's content table. The three PL-8
-   built are unchanged and every assertion below still runs over them. */
-t("the arm count is pinned, so an arm added or lost is visible", ARMS.length, 4);
-t("the arms the build plans name are the ones that exist — PL-8's three plus SEARCH §4.2's `content`",
-  ARMS.sort(), ["concerns", "content", "leg", "resolves"]);
+/* REC-90 MOVED THIS FROM THREE TO FOUR, and REC-92 MOVES IT TO FIVE — the pin is
+   MOVED rather than loosened, both times, because it exists so an arm added or
+   lost is VISIBLE and a count nobody has to move would not be one. The fourth is
+   `content`, D-222 stage C / `CONTENT-SEARCH-DESIGN.md` §4.2, over REC-82's
+   content table. The FIFTH is `passage`, the same document's §4.2 over REC-91's
+   `capture_text` — and the two are deliberately SEPARATE arms answering the two
+   halves of one level: `content:` searches what has been CITED, `passage:`
+   searches what the documents SAY. The four that existed before are unchanged
+   and every assertion below still runs over them. */
+t("the arm count is pinned, so an arm added or lost is visible", ARMS.length, 5);
+/* REC-92 adds `passage`, NAMED here rather than only counted above, so a reader
+   sees WHICH arm arrived and not merely that a number moved. The two SEARCH §4.2
+   arms are deliberately separate and answer the two halves of one level:
+   `content:` searches the extents somebody has CITED, `passage:` searches what
+   the documents SAY. A corpus nobody has cited holds no content rows and may
+   hold every passage a member is looking for. */
+t("the arms the build plans name are the ones that exist — PL-8's three plus SEARCH §4.2's "
+  + "`content` (what has been cited) and `passage` (what the documents say)",
+  ARMS.sort(), ["concerns", "content", "leg", "passage", "resolves"]);
 
 /* PIN THE COUNT OF IMPLEMENTATIONS. A rule with two implementations left its
    control green once already, because one absorbed the other. The published
@@ -222,8 +233,18 @@ t("`legs:` the projected count survives beside `leg:` the arm",
      and collides with none of them — a fact worth pinning rather than an empty
      array added to satisfy a shape. `leg:capture` stays the ONE known collision in
      the whole registry. */
+  /* REC-92 CORRECTS THIS ROW RATHER THAN EXEMPTING IT, and the correction is the
+     assertion doing its job. The `passage` arm added a fifth key, so the pinned
+     map no longer matched — which is exactly what a pin on the WHOLE map is for:
+     a new arm cannot join the registry without a session looking at this line
+     and saying what its bare words collide with. The old expectation was not
+     wrong when written; it was COMPLETE for a four-arm registry and this is a
+     five-arm one. `passage` declares ONE bare word (`text`, its only sub-field)
+     and collides with nothing, so `leg:capture` remains the ONE known collision
+     in the whole registry — which is the claim this row actually makes, and it
+     is now made over a larger set. */
   t("the ambiguous bare words are exactly the one known collision", AMB,
-    { leg: ["capture"], resolves: [], concerns: [], content: [] });
+    { leg: ["capture"], resolves: [], concerns: [], content: [], passage: [] });
   for (const [arm, ws] of Object.entries(AMB)) for (const w of ws) {
     const p = compile({ q: `${arm}:${w}`, viewer: M });
     t(`\`${arm}:${w}\` is refused with a warning naming BOTH readings, never guessed`,

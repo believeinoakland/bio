@@ -622,6 +622,109 @@ export const MEANING = {
     rowGrain: "one content row — one addressable extent of one capture under one chain; "
             + "cited or citable, and it says which",
   },
+  /* ---------------------------------------------------------------------
+   * REC-92 / CONTENT-SEARCH-DESIGN.md §4.2 — THE `passage:` ARM, and it is
+   * question (a) of that document's §1 table: TEXT at content grain.
+   *
+   * IT IS THE SIBLING OF `content:` AND NOT ITS REPLACEMENT, and the pair is
+   * the whole point. `content:` searches the extents somebody has ALREADY
+   * cited or marked citable; `passage:` searches what the documents SAY. §3:
+   * *the whole point of (a) is to find what nobody has cited yet.* A corpus of
+   * five hundred captured agenda packets that nobody has cited holds ZERO
+   * content rows and may hold half a million indexed passages, so an empty
+   * `content:` answer and an empty `passage:` answer over the same corpus are
+   * different facts with different next moves — which is why both arms declare
+   * `level: "content"` and the answer's own statement distinguishes them by
+   * ARM rather than by level alone (`Store.#meaningLevels`).
+   *
+   * `text:` IS UNTOUCHED AND STILL MEANS THE GROUP'S OWN NOTES. §4.2: *the
+   * surface labels the two; the vocabulary does not rename a settled arm.*
+   * `text:` compiles over `bundles_fts` (title/body/meta/locator/authority,
+   * projected from `bundle.md`'s frontmatter); `passage:` compiles over
+   * `capture_text_fts`, which REC-91 fills at promote from the extractors'
+   * own units. The two are different questions over different sets.
+   *
+   * THE MEMBER'S STRING BECOMES AN FTS5 EXPRESSION THROUGH THE ONE HELPER
+   * THAT ALREADY DOES THAT — `textAtom` then `ftsAtom`, the same two functions
+   * `text:` uses — so quoted phrases and trailing-`*` prefixes mean here
+   * exactly what they mean there, and there is ONE place in this compiler
+   * where a member's text becomes a MATCH argument. A second spelling would
+   * be a second grammar to learn and a second place to get the escaping
+   * wrong; `ftsLiteral` doubles an embedded `"` and the expression is always a
+   * BOUND ARGUMENT, never interpolated, which `passage-arm.test.mjs` pins by
+   * compiling hostile values and asserting the SQL is byte-identical while
+   * only `args` moves.
+   * ------------------------------------------------------------------- */
+  passage: {
+    table: "capture_text", key: "bundle_id", bare: "text",
+    /* The FTS side of this arm, named on the descriptor rather than known by
+       `meaning()`, so the row projection's `snippet()` and the arm's own MATCH
+       read ONE declaration. `column: 0` because `capture_text_fts` indexes
+       exactly one column (`text`) — `snippet(pf, 0, …)` names it by position,
+       as FTS5 requires, and `-1` (best-matching column) would be a claim about
+       a table with more than one. */
+    ftsTable: "capture_text_fts", ftsColumn: 0,
+    /* THE LEVEL, and it is the same one `content:` declares. Part II §14.3's
+       content level is *what has been extracted from the documents*, which is
+       precisely what this table holds. Declaring anything else would make the
+       answer's four-level statement name a level this arm does not answer. */
+    level: "content",
+    grain: "the document holding an indexed unit whose text matches",
+    sub: {
+      /* THE ONLY SUB-FIELD, and the absence of the other five is a decision
+         rather than an omission. §4.2 gives this arm ONE question — *which
+         BUNDLES hold an indexed unit whose text matches* — and gives the five
+         row-shaped questions (`kind`, `stale`, `minted`, `cap`, `chain`,
+         `cited`) to `content:`, over the `content` table, where they already
+         landed at REC-90. An arm that grew a `chain` filter here because the
+         column happens to exist would be building a reader to justify an
+         index; see the note on `chain_kind` in `schema.mjs`, and this item's
+         report, which declines that index for exactly that reason. */
+      text: { col: "text", fts: true },
+    },
+    /* §4.2's row: the unit's extent and `ref`, its `chain_kind`, its
+       `truncated` flag. `seq` rides with them because a PARTIAL index is a
+       PREFIX in reading order (`schema.mjs`) — without it a member cannot tell
+       whether the passage they are reading sits before or after the point the
+       per-capture bound stopped at, which is the one thing `truncated` at the
+       CAPTURE level cannot say per unit. `text` is NOT projected: the whole
+       unit can be 128 KB and a row list is not where a member reads a
+       document — `snippet` below is what a list wants, and UI-61's viewer is
+       where the unit itself is read. */
+    row: ["capture_sha", "extent_kind", "extent", "ref", "seq", "truncated", "chain_kind"],
+    rowComputed: {
+      /* §4.2: *where a content row already exists for that extent under the
+         current chain — its `content_id`*. A SCALAR SUBQUERY AND NOT A JOIN,
+         and that is the load-bearing choice. `content` is minted lazily and is
+         never rewritten: when a capture is re-read the chain moves, the old
+         row is marked `stale = 1` and a NEW row is minted over the same
+         extent — so (capture_sha, extent_kind, extent) can name SEVERAL rows,
+         and a LEFT JOIN would emit one passage row per content row. That
+         duplicates the grain, makes `total` and the page describe different
+         relations, and breaks paging, all silently. A scalar subquery can
+         return at most one value by construction, so the grain is
+         unrepresentably wrong rather than remembered.
+         `stale = 0` IS THE "under the current chain" CLAUSE, read off the
+         column REC-82's stale rule maintains rather than by re-parsing the
+         chain JSON — and NULL when no row exists is the honest answer §4.5
+         requires: a hit is an ADDRESS, and nothing is minted by searching. */
+      content_id: `(SELECT xc.content_id FROM content xc`
+                + ` WHERE xc.capture_sha = m.capture_sha AND xc.extent_kind = m.extent_kind`
+                + ` AND xc.extent = m.extent AND xc.stale = 0`
+                + ` ORDER BY xc.at DESC LIMIT 1)`,
+    },
+    /* §4.2's identity exactly, and it is `capture_text`'s own PRIMARY KEY, so
+       the ORDER BY this generates is TOTAL and a unit cannot appear on two
+       pages or on none. */
+    identity: ["capture_sha", "extent_kind", "extent"],
+    /* NO REF COLUMN, for `content:`'s reason unchanged: `bundle_id` is the
+       OWNER and clause 1 of REC-36's rule already gates it, and `capture_sha`
+       names a capture rather than a bundle. Stated because an empty `refs`
+       list reads like nobody looked. */
+    refs: [],
+    rowGrain: "one indexed unit of one capture's text under its current chain — an ADDRESS, "
+            + "not a content row until a member cites it or the assistant proposes it",
+  },
 };
 
 /* The bare-word index, PRODUCED BY DRIVING the registry above rather than
@@ -697,7 +800,14 @@ function rowColumns(m) {
   return [...m.row,
           ...(m.rowJoin ? m.rowJoin.cols : []),
           ...m.refs.map((c) => `${c}_present`),
-          ...Object.keys(m.rowComputed || {})];
+          ...Object.keys(m.rowComputed || {}),
+          /* REC-92: an FTS-backed arm always projects `snippet` — NULL when the
+             query carried no term to centre one on, never absent. Published
+             here for the same reason `target_present` had to be: a column a row
+             carries and the vocabulary does not name is a column a surface
+             cannot build a table from, which is how `columns` came to be
+             missing `target_present` for five weeks. */
+          ...(m.ftsTable ? ["snippet"] : [])];
 }
 
 /* The text columns of the FTS5 table, in table order. `meta` carries the
@@ -749,6 +859,27 @@ export const DEFAULT_FACETS = ["type", "state", "criticality", "schema", "status
    the gate would be caught by its absence rather than by an audit of the code.
    It is a SQL comment, so it changes nothing about what runs. */
 export const GATE_MARK = "/*viewer-gate*/";
+
+/* REC-92 / CONTENT-SEARCH-DESIGN.md §4.4 — HOW MANY CAPTURES THE CONTENT-AXIS
+   TALLY ON A `rows=passage` ANSWER IS TAKEN OVER, AND IT IS PUBLISHED RATHER
+   THAN ASSUMED.
+   §4.4 describes the tally as if it ranged over the whole scope ("0 hits over
+   412 indexed captures; 38 in scope are unindexed…") and a scope has no bound.
+   An unbounded read on the one surface a member reads ABSENCE from is the wrong
+   trade twice over: it is the slowest statement in the answer, and it is the
+   one whose cost grows with the corpus the instance is trying to grow.
+   SO IT IS BOUNDED AND THE ANSWER SAYS SO — `captures_counted` beside
+   `captures_in_scope`, with `truncated` when the bound bit, which is REC-57's
+   envelope rule applied to a TALLY rather than to a list. A tally that silently
+   covered the first N would be a number that looks like a census and is a
+   sample, which is worse than a smaller number that says what it is.
+   THE FIGURE IS MEASURED, NOT CHOSEN — see `MEASUREMENTS.md` M-40 and this
+   item's report. It is deliberately NOT expressed as an `IN (?)` list of
+   subjects: D-36's measured workerd ceiling is about 100 BOUND VARIABLES, and
+   `#frontierContent` is already over it at its default cap (D-390). This read
+   joins instead, so its cost is rows and not bound variables, and raising this
+   number cannot walk into that ceiling. */
+export const MEANING_AXIS_CAP = 500;
 
 /* ---------------------------------------------------------------------------
  * The viewer gate: D-15, designed in from the first commit.
@@ -1346,6 +1477,68 @@ function meaningAtom(arm, tok, ctx) {
     subName = (claims && claims[0]) || m.bare;
   }
   const sub = m.sub[subName];
+  /* ---------------------------------------------------------------------
+   * REC-92 — AN FTS SUB-FIELD IS NOT A COLUMN COMPARISON, and it returns here
+   * rather than falling through the four arms below, every one of which
+   * assumes the member's string is a VALUE to bind against a column.
+   *
+   * IT REUSES `textAtom` AND `ftsAtom` RATHER THAN RE-IMPLEMENTING THEM. That
+   * is what makes `passage:"budget shortfall"` a phrase and `passage:water*` a
+   * prefix without a member learning a second grammar, and it is the only
+   * place escaping could have been got wrong twice.
+   *
+   * THE THROWAWAY `textAtoms` SINK IS DELIBERATE AND IS NOT A LEAK. `textAtom`
+   * pushes onto `ctx.textAtoms`, which feeds `rankExpr` — the BUNDLE-level
+   * bm25 score and the BUNDLE-level `snippet` over `bundles_fts`. A passage
+   * term must not reach either: it is a term over a DIFFERENT FTS table, and
+   * scoring a bundle by it would rank the group's notes by words that appear
+   * only inside a captured PDF. So the atom is built into a sink that is
+   * discarded and the expression is recorded on `ctx.passageTerms` instead,
+   * which is the row projection's input and nothing else's.
+   * ------------------------------------------------------------------- */
+  if (sub && sub.fts) {
+    /* A COMPARISON AGAINST A TEXT INDEX HAS NO MEANING, and the arm is DROPPED
+       WITH A WARNING rather than compiled — the visible direction this function
+       chooses everywhere else. `passage:foo>=bar` cannot be answered by an FTS5
+       MATCH, and compiling it to one anyway would answer a question the member
+       did not ask. */
+    if (subCmp) {
+      ctx.warnings.push(`${arm}: ${JSON.stringify(String(tok.value))} compares a full-text field; `
+        + `${arm}: matches text and does not order it`);
+      return null;
+    }
+    /* `passage:*` — HAS THIS DOCUMENT ANY INDEXED TEXT AT ALL. It falls to the
+       ordinary presence arm on purpose: it is a real member question ("which
+       documents in scope are searchable at passage grain"), it needs no MATCH,
+       and answering it through the same path every other arm's presence test
+       uses means it cannot drift. There is no term, so there is no snippet and
+       the answer says so rather than publishing an empty one. */
+    if (raw === "" || raw === "*") {
+      ctx.meaningArms.push({ arm, field: subName, column: sub.col });
+      return { op: "meaning", arm, field: subName, col: sub.col, cmp: "present", value: null };
+    }
+    /* THE ARM IS RECORDED ONLY IF IT COMPILES, AND THE SUITE FOUND THIS.
+       `ctx.meaningArms` is *which meaning arms this query COMPILED* — the list
+       that lets a caller tell an arm that compiled from a string that quietly
+       degraded to free text. The first draft of this branch pushed before
+       checking the term, so a DROPPED `passage:---` was reported as a compiled
+       arm: the record claiming it had answered a question it had in fact
+       widened past, which is the wrong direction for exactly the list that
+       exists to catch that. */
+    const atom = textAtom(null, raw, !!tok.quoted, { textAtoms: [] });
+    if (!atom) {
+      /* `textAtom` refuses a term with no letter or digit in it, because an
+         FTS5 literal built from punctuation matches no row and would silently
+         empty an otherwise good query. Dropped and SAID, which widens. */
+      ctx.warnings.push(`${arm}: ${JSON.stringify(raw)} has no word in it to match`);
+      return null;
+    }
+    ctx.meaningArms.push({ arm, field: subName, column: sub.col });
+    const expr = ftsAtom(atom);
+    ctx.passageTerms.push(expr);
+    return { op: "meaning", arm, field: subName, col: sub.col, cmp: "match", value: atom.value,
+             fts: expr };
+  }
   /* RECORDED, so the caller and the suite can tell an arm that COMPILED from a
      string that quietly degraded to free text. `unknown field "leg"` and a set
      arm over inquiry_basis produce very different answers and looked identical
@@ -1524,6 +1717,18 @@ function metaSql(node) {
 function meaningWhere(node) {
   const m = MEANING[node.arm];
   const sub = node.field ? m.sub[node.field] : null;
+  /* REC-92 — THE FTS MATCH, and it is a `rowid IN (…)` rather than a join for
+     `meaningSql`'s property 2 exactly: this fragment lands inside a subquery
+     that must select a SET of `bundle_id`, and a join to the FTS table would
+     emit one row per matching UNIT, so a document with forty matching pages
+     would appear forty times. Harmless inside an INTERSECT, which dedupes, and
+     wrong as the only arm. The set shape makes that unrepresentable.
+     THE EXPRESSION IS A BOUND ARGUMENT. `node.fts` was built by `ftsAtom` from
+     an escaped literal; it is never interpolated into the SQL, so the statement
+     text is identical for every value a member can type. */
+  if (node.cmp === "match" && typeof node.fts === "string")
+    return { sql: `rowid IN (SELECT rowid FROM ${m.ftsTable} WHERE ${m.ftsTable} MATCH ?)`,
+             args: [node.fts] };
   if (sub && typeof sub.pred === "function") {
     const p = sub.pred(node.cmp, node.value);
     if (p) return p;
@@ -1608,7 +1813,11 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
                           limit = LIMIT_DEFAULT, offset = 0, ids = null,
                           facets = null, implicitOp = "and", snippetChars = 12,
                           rows = null, rowLimit = MEANING_LIMIT_DEFAULT, rowOffset = 0 } = {}) {
-  const ctx = { warnings: [], textAtoms: [], sort: null, meaningArms: [] };
+  /* REC-92: `passageTerms` is the FTS5 expression of every `passage:` selector
+     this query compiled, kept APART from `textAtoms` because the two are terms
+     over different FTS tables — see the note in `meaningAtom`. It is the input
+     to the row projection's MATCH and `snippet()`, and to nothing else. */
+  const ctx = { warnings: [], textAtoms: [], sort: null, meaningArms: [], passageTerms: [] };
   const ast = parseTokens(tokenize(q), implicitOp === "or" ? "or" : "and", ctx);
   /* An explicit sort parameter outranks a `sort:` token in the query string:
      the parameter is a header the member just clicked, the token is what they
@@ -1617,7 +1826,77 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
 
   const gate = viewerPredicate(viewer);
   const rank = rankExpr(ctx.textAtoms);
+  /* REC-92 — the ONE expression the `rows=passage` projection matches and
+     snippets on, OR'd over every `passage:` selector this query compiled.
+     OR AND NOT AND, and that is a decision about what a member means rather
+     than about SQL. The ARMS already intersected: `passage:water passage:main`
+     selected the documents holding a unit matching EACH, which is the question
+     the member asked at document grain. At UNIT grain, requiring one unit to
+     match both would hide the case the pair was asked about — a document where
+     one page says "water" and another says "main" would answer zero rows while
+     the bundle-level answer said it matched, which is the two halves of one
+     answer disagreeing in the direction that under-reports. OR lists the units
+     that matched ANY of the terms, `snippet` centres on what that unit hit, and
+     the arm's own INTERSECT has already done the narrowing at the grain where
+     narrowing was asked for.
+     NULL WHEN EMPTY, never an empty string: `""` is a valid FTS5 expression
+     that matches nothing, and it would turn "no term to centre on" into "no
+     passage matches" — the false absence this whole construct exists to
+     refuse. */
+  const passageMatch = ctx.passageTerms.length
+    ? [...new Set(ctx.passageTerms)].join(" OR ") : null;
+  /* ONE SPELLING OF *THIS PLAN MATCHES ON A PASSAGE TERM*, AND THE NEGATIVE
+     CONTROL IS WHY IT EXISTS. `matched` on the published descriptor and the row
+     builder's own `fts` are two readers of one fact, and the first draft wrote
+     the expression twice. The `nomatch` arm then disabled the builder's copy and
+     the answer went on publishing `matched: true` over rows that had NOT been
+     matched — the envelope telling a member these are the passages that hit
+     their term while the statement had returned every unit in scope. In the
+     shipped code the two agreed, so nothing could have caught it except an arm
+     that pulled them apart. One predicate, two callers. */
+  const passageOn = (armName) =>
+    !!(armName && MEANING[armName] && MEANING[armName].ftsTable && passageMatch);
   const set = setSql(ast);
+  /* ---------------------------------------------------------------------
+   * REC-92 / §4.4 — THE TALLY IS TAKEN OVER THE QUERY'S *OTHER* ARMS, AND
+   * THAT PHRASE IN §4.4 IS LOAD-BEARING RATHER THAN INCIDENTAL.
+   *
+   * *…read off the observation log for the bundles the query's OTHER arms put
+   * in scope.* The first draft of this item took the tally over the WHOLE
+   * scope, which is the obvious reading and is useless in exactly the case the
+   * tally exists for: the passage arm is itself part of the scope, so a query
+   * that matched nothing had an EMPTY scope and therefore an empty tally — and
+   * the answer said *0 hits over 0 captures*, which is the false absence this
+   * mechanism was built to refuse, produced by the mechanism itself. §4.4's own
+   * worked example is impossible under that reading: *0 hits over 412 indexed
+   * captures* requires 412 captures to still be in scope AFTER the text arm
+   * found nothing in them.
+   *
+   * CAUGHT BY THE SUITE AND NOT BY REVIEW. The tally was structurally correct,
+   * gated correctly, summed correctly, and answered zero over a corpus the same
+   * suite had just proved non-empty.
+   *
+   * SO THE TEXT ARM IS STRIPPED FROM THE TREE and the remaining arms are
+   * re-compiled into a second `hits` set. Everything else is identical — same
+   * gate, same `scope` shape, same bound — so the tally still cannot range
+   * wider than a viewer may see. A query with NO other arms yields the whole
+   * corpus, which is the honest denominator for *we searched everything and
+   * found nothing*. */
+  const stripMeaningArm = (node, arm) => {
+    if (!node) return null;
+    if (node.op === "meaning") return node.arm === arm ? null : node;
+    if (node.op === "not") {
+      const k = stripMeaningArm(node.kid, arm);
+      return k ? { ...node, kid: k } : null;
+    }
+    if (Array.isArray(node.kids)) {
+      const kids = node.kids.map((k) => stripMeaningArm(k, arm)).filter(Boolean);
+      if (!kids.length) return null;
+      return kids.length === 1 ? kids[0] : { ...node, kids };
+    }
+    return node;
+  };
+  const armSet = (arm) => setSql(stripMeaningArm(ast, arm));
 
   /* Whether the query is a bare implicit conjunction of more than one atom,
      which is the only case where offering the OR reading makes sense. */
@@ -1639,7 +1918,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
      with what the viewer may see, so the gate bounds the page, the count, the
      facets, and select-all identically. There is no path to `hits` that does
      not go through `scope`. */
-  const cte = (withRanked) => {
+  const cte = (withRanked, overrideSet = null) => {
     /* An explicit id list is an ARM of the query, not a filter applied after it.
        Compiling it here is what keeps a stored selection on the same path as
        everything else: it passes the viewer gate, it obeys the sort, and it is
@@ -1653,14 +1932,15 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     /* `picked` exists only when there IS an id restriction. The first version
        emitted a match-all CTE and intersected it unconditionally, which is a
        second full table scan buying nothing. */
-    const parts = [`hits(fid) AS (${set.sql})`];
+    const use = overrideSet || set;
+    const parts = [`hits(fid) AS (${use.sql})`];
     if (idArm) {
       parts.push(`picked(fid) AS (${idArm.sql})`);
       parts.push(`scope(fid) AS (SELECT fid FROM hits INTERSECT SELECT fid FROM picked)`);
     } else {
       parts.push(`scope(fid) AS (SELECT fid FROM hits)`);
     }
-    const args = [...set.args, ...(idArm ? idArm.args : [])];
+    const args = [...use.args, ...(idArm ? idArm.args : [])];
     if (withRanked && rank) {
       parts.push(`ranked(fid, score, snip) AS (SELECT rowid AS fid, bm25(bundles_fts) AS score, `
                + `snippet(bundles_fts, -1, '[', ']', '\u2026', ?) AS snip FROM bundles_fts WHERE bundles_fts MATCH ?)`);
@@ -1812,11 +2092,18 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
        shadowing the outer alias is what binds the predicate to the REFERENCED
        bundle — the same construction `Store#bundleGate` uses and for the same
        reason. */
+    /* REC-92: the ref clauses' arguments are collected SEPARATELY as well as
+       pushed onto `args`, because the row projection now splices the snippet
+       budget in ahead of the gate and can no longer reuse `args` wholesale.
+       `args` itself is left exactly as it was so `count` and `levels` — and the
+       three arms that predate this item — bind byte-identically. */
     let refSql = "";
+    const refArgs = [];
     for (const col of m.refs) {
       refSql += `\n   AND (NOT EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = m.${col})`
               + `\n        OR EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = m.${col} AND (${gate.sql})))`;
       args.push(...gate.args);
+      refArgs.push(...gate.args);
     }
     /* REC-90 — THE FOUR-LEVEL STATEMENT'S OWN PROJECTION, and it is a third mode
        on this one shape rather than a second read, for `count`'s reason exactly.
@@ -1840,6 +2127,61 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
                   + ` WHERE mx.${m.key} = b.bundle_id) THEN 1 ELSE 0 END) AS documents_with_rows`
                   + `\nFROM scope s JOIN bundles b ON b.fts_id = s.fid\nWHERE ${gate.sql}`,
                args: [...c.args, ...gate.args] };
+    /* ------------------------------------------------------------------
+     * REC-92 / §4.4 — THE CONTENT-AXIS TALLY'S RAW INPUTS, and the point of
+     * this mode is what it does NOT do: it does not decide anything.
+     *
+     * The four states are ONE VOCABULARY IN ONE PLACE (`CONTENT_AXIS_STATES`,
+     * REC-94's export) and the branch logic that picks between them is
+     * `contentAxisFor`, which is PURE and lives beside the observation writer.
+     * Re-deriving that logic in SQL — `CASE WHEN ex.state = 'PRESENT' AND …` —
+     * would be a SECOND SPELLING of the decision, in a language where the
+     * suites cannot pin it against the constant, which is exactly the failure
+     * the shared-vocabulary ruling was made to prevent. REC-94 says so in its
+     * own words: *the aggregate over a bundle set that §4.4's envelope carries
+     * is REC-92's, and it composes FROM this rather than re-deriving it.*
+     * So this statement returns the RAW COLUMNS `contentAxisFor` takes as
+     * arguments, and the store calls it once per capture.
+     *
+     * IT IS A JOIN AND NOT AN `IN (?)` LIST, deliberately — see
+     * `MEANING_AXIS_CAP`. D-36's ceiling is about bound VARIABLES, and this
+     * statement binds exactly two whatever the scope's size.
+     *
+     * THE SET IS THE CAPTURES OF THE DOCUMENTS IN SCOPE, NOT THE CAPTURES WITH
+     * INDEXED TEXT, and that distinction is the whole tally. Taking it from
+     * `capture_text` would have made the NEVER-EXTRACTED member of the
+     * content-axis vocabulary unreachable by construction — the captures nobody has read hold no rows there — so the
+     * one bucket that says NOBODY LOOKED would have read zero on every
+     * instance, forever, and the answer would have claimed a complete index
+     * over a corpus it had never opened. It comes from `register`, which holds
+     * every capture the record has, and `registered` rides with it because
+     * `#missingContentCause` needs it to tell cause (3) from cause (1).
+     *
+     * SAME SCOPE AND SAME GATE AS THE ROWS, on REC-90's rule: a tally that
+     * ranged wider than the answer would be REC-36's leak arriving as an
+     * instrument. `LIMIT ? + 1` over-fetches by one so truncation is OBSERVED
+     * rather than inferred from equality with the cap. */
+    if (mode === "axis") {
+      /* The scope WITHOUT this arm's own text filter — §4.4's *other arms*. */
+      const ac = cte(false, armSet(rowArm));
+      return { sql: `${ac.sql}\nSELECT r.capture_sha AS capture_sha, r.registered AS registered,`
+                  + `\n       ex.state AS extract_state, ex.condition AS extract_condition,`
+                  + `\n       ex.detail AS extract_detail,`
+                  + `\n       ix.state AS index_state, ix.bound AS index_bound,`
+                  + `\n       ix.detail AS index_detail,`
+                  + `\n       EXISTS (SELECT 1 FROM readings rd WHERE rd.capture_sha = r.capture_sha)`
+                  + ` AS has_reading`
+                  + `\nFROM scope s JOIN bundles b ON b.fts_id = s.fid`
+                  + `\n JOIN register r ON r.bundle_id = b.bundle_id`
+                  + `\n LEFT JOIN observation_log ex ON ex.seq = (SELECT MAX(seq) FROM observation_log`
+                  + `\n      WHERE level = 'content' AND subject_kind = 'capture'`
+                  + `\n        AND authority_kind = 'extract' AND subject = r.capture_sha)`
+                  + `\n LEFT JOIN observation_log ix ON ix.seq = (SELECT MAX(seq) FROM observation_log`
+                  + `\n      WHERE level = 'content' AND subject_kind = 'capture'`
+                  + `\n        AND authority_kind = 'derive' AND subject = r.capture_sha)`
+                  + `\nWHERE ${gate.sql}\nORDER BY r.capture_sha ASC LIMIT ?`,
+               args: [...ac.args, ...gate.args, MEANING_AXIS_CAP + 1] };
+    }
     /* REC-90: a descriptor may reach ONE more table for columns the grain needs
        and its own table does not hold — `rows=leg`'s `extent_kind` and `ref`,
        which live on the content row the leg cites. LEFT, because a leg with no
@@ -1852,10 +2194,50 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
        KEY (asserted in `content-arm.test.mjs`, not reasoned about here). */
     const joined = m.rowJoin
       ? `\n LEFT JOIN ${m.rowJoin.table} ${m.rowJoin.alias} ON ${m.rowJoin.on}` : "";
+    /* REC-92 — THE MATCH ON THE ROW SHAPE, AND IT IS A CORRECTNESS REQUIREMENT
+       BEFORE IT IS A SNIPPET REQUIREMENT. The ARM selects BUNDLES that hold a
+       matching unit; without this the row shape would then return EVERY indexed
+       unit of those bundles — a four-hundred-page packet answering four hundred
+       rows because one page matched, with `total` agreeing. §4.2 says
+       `rows=passage` returns *the indexed units MATCHED*, so the match has to be
+       applied a second time, at the grain the rows are actually cut to.
+       IT IS AN INNER JOIN ON `rowid`, which is what `content_rowid='rowid'` on
+       the external-content table makes exact, and `snippet()` then reads the
+       base row rather than a second copy of the text.
+       NULL WHEN THERE IS NO TERM. `rows=passage` with no `passage:` selector
+       (or with `passage:*`, which has no term by construction) is ANSWERED and
+       not refused — it lists every indexed unit in scope, which is the
+       `rows=content`-without-`content:` precedent — and its `snippet` is NULL
+       rather than an invented excerpt. A `snippet()` call with no MATCH in the
+       statement is an FTS5 error, not an empty string, so the two shapes are
+       genuinely different statements and the answer STATES which one it is
+       (`Store.#meaningLevels`), rather than leaving a member to read the null. */
+    /* THE FTS TABLE IS JOINED UNDER ITS OWN NAME AND NEVER UNDER AN ALIAS, and
+       that is a property of FTS5 rather than a style choice. `alias MATCH ?`
+       does not compile: SQLite resolves the left operand of MATCH as a COLUMN
+       unless it is the table's own name, and the first draft of this statement
+       answered `no such column: pf` from inside the count. Measured, not
+       recalled — the arm existed and the row shape did not, which is exactly the
+       shape `op=invitelook` shipped in with 1,276 assertions passing. */
+    const fts = passageOn(rowArm)
+      ? { name: m.ftsTable, expr: passageMatch, col: m.ftsColumn } : null;
+    const ftsJoin = fts ? `\n JOIN ${fts.name} ON ${fts.name}.rowid = m.rowid` : "";
+    /* The MATCH goes AFTER the gate and after `refSql` so the argument order is
+       the TEXT order of the statement and stays readable as the shape grows —
+       the one place an off-by-one in `args` would bind a member's search term
+       to a viewer predicate. */
+    const ftsWhere = fts ? ` AND ${fts.name} MATCH ?` : "";
+    const ftsArgs = fts ? [fts.expr] : [];
     const from = `FROM scope s JOIN bundles b ON b.fts_id = s.fid`
-               + `\n JOIN ${m.table} m ON m.${m.key} = b.bundle_id${joined}`
-               + `\nWHERE ${gate.sql}${refSql}`;
-    if (mode === "count") return { sql: `${c.sql}\nSELECT count(*) AS n ${from}`, args };
+               + `\n JOIN ${m.table} m ON m.${m.key} = b.bundle_id${ftsJoin}${joined}`
+               + `\nWHERE ${gate.sql}${refSql}${ftsWhere}`;
+    /* THE COUNT CARRIES THE SAME MATCH AS THE PAGE, for the reason the `rowJoin`
+       note above gives one relation over: a filter present in one statement and
+       not the other is how `total` and the page come to describe different
+       things, and here it would be the difference between "units that match"
+       and "units of documents that match". */
+    if (mode === "count") return { sql: `${c.sql}\nSELECT count(*) AS n ${from}`,
+                                   args: [...args, ...ftsArgs] };
     /* Existence is REPORTED, never inferred from a null: `target_present` is the
        fact the departure above turns on, so it is a column and not a silence. */
     const present = m.refs.map((col) =>
@@ -1870,15 +2252,37 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
       .map(([name, expr]) => `, (${expr}) AS ${name}`).join("");
     const reached = m.rowJoin
       ? m.rowJoin.cols.map((c2) => `, ${m.rowJoin.alias}.${c2} AS ${c2}`).join("") : "";
+    /* REC-92 — `snippet` IS ALWAYS A COLUMN AND NEVER A MISSING KEY, on the
+       precedent this compiler already set for the bundle page (`, NULL AS
+       snippet` when nothing was ranked). A column that appears only sometimes
+       makes a surface test for its presence, and a surface testing for presence
+       is a surface that will read its absence as "no passage" rather than as
+       "nothing to centre a passage on".
+       THE DELIMITERS ARE LITERALS AND THE BUDGET IS BOUND, exactly as the
+       `bundles_fts` snippet does — same brackets, same ellipsis, same clamp —
+       so a member reading a passage hit and a bundle hit reads one convention. */
+    const snip = m.ftsTable
+      ? (fts
+          ? `, snippet(${fts.name}, ${fts.col}, '[', ']', '…', ?) AS snippet`
+          : `, NULL AS snippet`)
+      : "";
+    const snipArgs = m.ftsTable && fts ? [Math.max(4, Math.min(64, Math.floor(snippetChars)))] : [];
     const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, `
-              + m.row.map((c2) => `m.${c2} AS ${c2}`).join(", ") + reached + present + computed;
+              + m.row.map((c2) => `m.${c2} AS ${c2}`).join(", ") + reached + present + computed + snip;
     /* The ORDER BY is the GRAIN's own identity, which is what makes paging over
        meaning rows total rather than merely tidy — without it a leg can appear on
        two pages or on none, exactly as the bundle page's id tiebreak prevents. */
     const order = ["b.bundle_id ASC",
                    ...m.identity.filter((c2) => c2 !== m.key).map((c2) => `m.${c2} ASC`)].join(", ");
+    /* ARGUMENT ORDER IS STATEMENT-TEXT ORDER: the CTE's, then the SELECT list's
+       (`snippet`'s budget), then the WHERE's gate and refs, then the MATCH,
+       then the page. `args` above already carries the CTE's and the gate's in
+       that order, so the snippet budget has to be SPLICED between them rather
+       than appended — which is why this is written out rather than reusing
+       `args`, and why the suite pins a compiled statement's `args` positionally
+       instead of by length. */
     return { sql: `${c.sql}\nSELECT ${sel} ${from}\nORDER BY ${order} LIMIT ? OFFSET ?`,
-             args: [...args, mLim, mOff] };
+             args: [...c.args, ...snipArgs, ...gate.args, ...refArgs, ...ftsArgs, mLim, mOff] };
   };
 
   /* D-32, the remaining option named in the debt register: count the facets from
@@ -1953,10 +2357,22 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
        which is the test D-258 above set for a field on this descriptor.
        `store.mjs`'s `meaningRows` composes the answer's four-level statement from
        it, so it is not a value published because it had already been computed. */
+    /* REC-92 ADDS AN EIGHTH, `matched`, AND IT HAS A READER BEFORE IT IS
+       WRITTEN — D-258's own test for a field on this descriptor.
+       `Store.#meaningLevels` composes the sentence that tells a member whether
+       they are reading the units that MATCHED a term or every indexed unit in
+       scope. Those two answers have the same shape, the same columns and very
+       different meanings, and without this field the only thing distinguishing
+       them on the wire is a NULL in `snippet` — which is a member inferring a
+       fact from an absence, the exact move this whole arm exists to stop. It is
+       a BOOLEAN about the plan and not a copy of the member's terms: the terms
+       are already published on `query.meaningArms`. */
     meaning: rowArm ? {
       arm: rowArm, table: MEANING[rowArm].table, level: MEANING[rowArm].level,
       grain: MEANING[rowArm].rowGrain, identity: MEANING[rowArm].identity,
       limit: mLim, offset: mOff,
+      matched: passageOn(rowArm),
+      fts: !!MEANING[rowArm].ftsTable,
     } : null,
     facetFields: facetList,
     facetCols: facetList.map((n) => FIELDS[n].col),

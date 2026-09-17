@@ -607,7 +607,7 @@ authority is the file named, never this one.
 - **IC-25** · 2026-08-07 — under `IC-25` (SETTLED, I3 → 10.0.0). (b) The line numbers are stale by about three thousand lines — the real sites are `resolutionsForCapture` **:14113**, `documentsConcerning` **:14141**, `connectionsFor` **:14454** (`store.mjs` is 31,349 lines). The row beneath it, `D-222's staging and D-225's caps →…  
   `docs/development/CLAIMS.md:7997`
 - **IC-25** · 2026-09-14 — the interface change is `IC-25`, SETTLED** (I3 8.1.0 → 9.0.0 → 10.0.0 — recorded as a BREAK, not additive, because a caller that received everything now receives the first 500).  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:331`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:364`
 - **IC-25** · 2026-08-07 — ounds.test.mjs`'s roster (`op=resolutions`, `op=concerns`, `op=connections`, each with `&limit=`), and `IC-25` on I3 is SETTLED (8.1.0 → 9.0.0 → 10.0.0, recorded by CONDUCT 2026-08-07).  
   `docs/development/DEBT.md:185`
 - **IC-26** · 2026-08-07 — IC-26 taken to SETTLED by CONDUCT as ADDITIVE; I3 10.0.0 -> 10.1.0.** **CONDUCT VERIFIED THE CORRECTION THIS ITEM MADE TO PL-8's HEADER rather than taking it on report**: `#writeReadings` carries no `object_type` gate in its body and its call site is unconditional, so a project bundle CAN carry resolution rows and…  
@@ -935,15 +935,19 @@ authority is the file named, never this one.
 - **REC-88** · 2026-09-15 — CORRECTED 2026-09-15 by REC-88 (IC-96), because that last clause was ASPIRATIONAL WHEN IT WAS WRITTEN AND IS NOW TRUE.** `captureBound` had ZERO callers under `src/` when this sentence was drafted (D-349, measured by REC-83 the day after), so the bound it names was computed by nothing and a leg citing a document…  
   `docs/development/INTERFACE-CHANGES.md:6047`
 - **REC-89** · 2026-09-14 — SATISFIED ALREADY, CORRECTED 2026-09-14 (REC-89): the caps LANDED at REC-60 on 2026-08-07** — `resolutionsForCapture`, `documentsConcerning` and `connectionsFor` clamp to 500/5000 and publish `limit` after clamping beside `truncated`, `IC-25` on I3 is SETTLED, and all three are driven on `bounds.test.mjs`'s roster.  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:108`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:118`
 - **REC-91** · 2026-09-16 — CORRECTED 2026-09-16 by BOB #12 — §4.3 WAS WRONG IN THREE INDEPENDENT WAYS and REC-91 found all three by BUILDING it.** The per-capture bound was MIS-SITED (it sits downstream of `INLINE_MAX`, which refuses the whole promotion first, so it could never fire); its headline claim that it *admits 100 % of the measured…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:3`
 - **REC-91** · 2026-09-16 — CORRECTED 2026-09-16 by BOB #12, folding what REC-91 BUILT AND MEASURED rather than restating what this section said — the document follows the code here, and the code follows the design decision, in that order.  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:174`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:184`
 - **REC-91** · 2026-09-16 — 2026-09-16 · BOB #12 · §4.3 CORRECTED — ONE ITEM OWED, and the correction itself is LANDED so nothing waits on you to read it.** `CONTENT-SEARCH-DESIGN.md` §4.3's per-capture bound was wrong in THREE independent ways; REC-91 found all three by BUILDING it, and BOB-NEXT §1 carried only two.  
   `docs/development/QUEUE.md:104`
 - **REC-92** — NOT moved, and an index was WITHDRAWN instead.** `capture_text(chain_kind)` was declared for "every OCR'd unit", the sweep named it on the roster of access paths no op asks for, and it was RIGHT: the reader is REC-92's `passage:` arm and it does not exist.  
   `docs/development/CLAIMS.md:10303`
+- **REC-92** · 2026-09-17 — AMENDED 2026-09-17 by REC-92 — §7 row 5 IS BUILT, and the amendment changes what §4.4 SPECIFIES rather than only recording that something shipped.** The `passage:` arm and `rows=passage` landed under `IC-110` on I3, ADDITIVE: `snippet()`, the `content_id` as a scalar subquery, `truncated` and `seq` per unit,…  
+  `docs/development/CONTENT-SEARCH-DESIGN.md:7`
+- **REC-92** · 2026-09-17 — CORRECTED 2026-09-17 by REC-92, folding what it BUILT AND MEASURED — three of this section's four sentences were right and the shape it specifies could not be shipped as written.** Every `passage:` answer's envelope carries, beside `limit`/`total`/`truncated`:  
+  `docs/development/CONTENT-SEARCH-DESIGN.md:311`
 - **REC-92** · 2026-09-14 — SHARED VOCABULARY, RULED 2026-09-14 by CONDUCT #11 at BOB #11's raising — and it is a MECHANISM, not a convention.** REC-92 (the `passage:` arm's `scope` tally), REC-94 (the content-level writers and the per-capture state) and CPDF-19 (D-319's re-extraction, which moves a capture between states) all write or read…  
   `docs/development/QUEUE.md:1273`
 - **REC-94** — SETTLED when REC-94, REC-95 and REC-96 have written into this table at the other two levels and the design's §3/§4.4 contradiction is reconciled; CONDUCT writes it.  
@@ -1283,7 +1287,7 @@ authority is the file named, never this one.
 - **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27). THIS SECTION'S PAUSE IS HISTORY, AND THE SENTENCE ABOVE MUST NOT BE READ AS A LIVE PROHIBITION.** It was written 2026-07-30 and the pause it declares held for one day: UI work resumed on 2026-08-01 and **53 UI rows have landed `done` against `QUEUE.md` since**, adding capability…  
   `docs/development/UI-PLAN.md:296`
 - **M0-31** · 2026-09-15 — DECIDED 2026-09-15, the fork M0-31's measurement opened and this section left open for one day — one unit per SLIDE for a deck**, written as a `slide-shape` extent with the SHAPE OMITTED, which `covers()` already accepts as covering the whole slide (`textchain.mjs`).  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:148`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:158`
 - **M0-31** · 2026-09-16 — TWO LIVE DERIVATIONS CORRECTED OR NARROWED:** CONTENT-PDF's OCR row understated 1.43× not 6×, **its verdict SURVIVES**; and M0-31's promote percentages are honestly **UNDETERMINED between ~20% and ~85%**, with its conclusion that §4.1's chunking is REQUIRED resting on the miniflare end.  
   `docs/development/QUEUE.md:1021`
 - **M0-32** · 2026-09-14 — Found by M0-32's worker (2026-09-14) while reading the instrument rather than its output, and CONFIRMED at integration: `tools/decided.mjs`'s `MARKER` is `/\b(RULED|DECIDED|AMENDED|CORRECTED|OVERTURNED|SETTLED|SUPERSEDED|WITHDRAWN|CONCEDED)\b/` and **`.` IS A WORD BOUNDARY**, so the literal string `DECIDED.md`…  
@@ -1713,6 +1717,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:10375`
 - SIX CONTROL ARMS, ALL RUN, ALL AS DECLARED, with one declaration CORRECTED by its own result.** `tighten` — the over-strictness arm that decides this item is safe to ship — was declared with eight failures and returned five, and the three surprising greens are recorded at the arm: `G5`, `G6b` and `G7` read the…  
   `docs/development/CLAIMS.md:10843`
+- CORRECTED rather than exempted — which is the behaviour those pins exist for.** - `bio-plane/test/meaningquery.test.mjs` — **three superseded pins, corrected with the reason at the site.** The arm COUNT (4 -> 5), the arm LIST by name, and the ambiguous-bare-word MAP  
+  `docs/development/CLAIMS.md:11570`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -1746,7 +1752,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-14** — RULED 2026-09-14 by Bob:** *"the record never moves an authored edge's target without a member's act, even when the passage is byte-identical."* The recommendation below is therefore the mechanism, and the proposal is the whole of it.  
   `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:301`
 - WHAT IS DECIDED HERE, so the next reader is not left with four findings and no rule:** - **The operative per-capture bound is expressed at the WIRE, in bytes, RELATIVE TO WHAT PROMOTE ALREADY REFUSES.** That is not a preference: any bound sited after `INLINE_MAX` is unreachable by construction,  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:224`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:234`
 - approved."* Nothing is built and the watch item itself is WITHDRAWN as premise-rejected, not merely unmeasurable.  
   `docs/development/DECISIONS.md:189`
 - CONCEDED — semantically each ground IS a claim: the same proposition asserted on a distinct basis.** What the grounds shape refuses is not claim-plurality; it is separate OBJECT IDENTITY for each claim inside the finding.  

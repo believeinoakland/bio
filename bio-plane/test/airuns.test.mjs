@@ -647,11 +647,24 @@ t("SWEEP: `ai_runs_context` — THE INDEX THIS ITEM WAS ABOUT — now has a read
 t("SWEEP: and the finding is RATCHETED as a CEILING — an index added tomorrow with no statement "
 + "filtering its leading column pushes this over and fails HERE, naming the index, which is the "
 + "one thing UI-49 had to find by trying to build a surface",
-  unread.length <= 15, true);
+  unread.length <= 14, true);   /* REC-92: 15 -> 14. The CEILING is tightened with the floor
+                                   rather than left carrying a row of slack — a ceiling a real
+                                   departure has already walked under is not a ratchet. */
 t("SWEEP: a FLOOR beside the ceiling — the list shrinking without this figure being moved means the "
 + "READER lost sight of indexes, not that the plane got better. REC-70's ratchet spent two days "
 + "reporting 27 over a corpus it could not see",
-  unread.length >= 15, true);
+  /* REC-92 MOVES THIS FLOOR DOWN, 15 -> 14, AND A FALLING FLOOR NEEDS ITS REASON AT THE SITE
+     (CLAUDE.md) — this one falls because THE PLANE GOT BETTER, not because the reader lost
+     sight of an index, which is the one direction this row exists to catch.
+     `content_extent_kind` LEFT the roster: REC-92's `rows=passage` projects each unit's
+     content row through `xc.extent_kind = m.extent_kind`, so for the first time a STATEMENT
+     filters `content(extent_kind)` and this reader — which looks for exactly that shape —
+     sees it. It was previously carried as a DECLARED BLIND SPOT (the index was exculpated by
+     the registry-aware reader below, because `content:kind` filters that column through a
+     WHERE this regex cannot see); it is now an ordinary READ index and needs no exculpation
+     at all. The departure is therefore real in BOTH readers, which is why the exculpation
+     roster below drops from three names to two in the same commit. */
+  unread.length >= 14, true);
 /* AND THE TWO NAMED ARRIVALS ARE PINNED BY NAME, not only by count. A ceiling of
    13 is satisfied by ANY thirteen, so a real gap could be swapped for a blind
    spot and the figure would never move — which is how a roster stops being about
@@ -695,7 +708,15 @@ t("SWEEP: THREE roster entries are this reader's blind spot firing, not gaps —
 + "meaning arm's filter column, read from the compiler's own registry rather than from a list. "
 + "Measured the three ways the fragment exculpation is: unread HERE, read by a REGISTRY-AWARE "
 + "reader, and both ops are dispatched",
-  [["content_extent_kind", "content_derivation_cap", "inquiry_basis_grade_source"]
+  /* REC-92: THREE became TWO, and the departure is a GAIN rather than a loss.
+     `content_extent_kind` no longer needs this exculpation because it no longer
+     needs one: `rows=passage` filters `content.extent_kind` in a literal WHERE
+     (`xc.extent_kind = m.extent_kind`, the scalar subquery that finds a unit's
+     content row), so the plain reader above sees it and it is off the unread
+     roster entirely. It is left in the COLUMN half below on purpose — it is
+     still a meaning arm's filter column, and asserting that has not stopped
+     being true is what would catch a later item deleting `content:kind`. */
+  [["content_derivation_cap", "inquiry_basis_grade_source"]
      .filter((n) => !unread.some((ix) => ix.index === n)),
    ["extent_kind", "derivation_cap", "grade_source"].filter((c) => !MEANING_FILTER_COLS.has(c)),
    SRC_STORE.includes("meaningrows:"), SRC_STORE.includes("search:")],

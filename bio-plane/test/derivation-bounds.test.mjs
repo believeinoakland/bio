@@ -1148,9 +1148,18 @@ t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures a
      the figure. Each read underneath it does carry a SQL `LIMIT`, which is what the graded arm
      above would check if the figure were attributable to one of them. **Fix what is wrong, then
      declare what is out of reach — in that order.** */
-  ["#backfillLegContent:need", "#frontierContent:page", "#frontierMeaning:gated",
-   "biasInhale:bars", "documentsNamingEntity:merged", "frontier:page",
-   "queueFeed:dispAll", "queueFeed:items"]);
+  /* REC-92 DECLARES A NINTH, `#contentAxisTally:raw`, and the arm worked exactly
+     as this block says it must: it FAILED rather than absorbing the arrival, and
+     NAMED the newcomer in its own failure message. The figure is the content-axis
+     tally's `captures_truncated` on a `rows=passage` answer. It is in-memory for
+     this walk's reason unchanged — the flag is computed by comparing the raw
+     over-fetch against `MEANING_AXIS_CAP` in JS, not read off one row source —
+     and it is CUT GRADED at the published cap by the arm below, with ZERO
+     violations. Declared here BEFORE it could pass, which is the whole point of
+     pinning the roster rather than counting it. */
+  ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierContent:page",
+   "#frontierMeaning:gated", "biasInhale:bars", "documentsNamingEntity:merged",
+   "frontier:page", "queueFeed:dispAll", "queueFeed:items"]);
 const noRowSources = CODE.replace(/#rows\(/g, "#norows(");
 t("REACH IS A DELTA (the truncation grader): over a copy of store.mjs with no `#rows(` in it, "
 + "every graded source becomes UNGRADEABLE and none is silently scored as compliant — the "
@@ -1322,7 +1331,8 @@ t("IN-MEMORY TRUNCATION: and the SOURCE BOUND is reported as TWO rosters, never 
 + "An instrument that cannot reach something must SAY SO by name rather than pass silently over "
 + "it, which is this block's entire content",
   [INMEM.source.graded.length + INMEM.source.outOfReach.length, INMEM.source.graded.length > 0],
-  [8, true]);
+  [9, true]);   /* REC-92: 8 -> 9, `#contentAxisTally:raw`. Moved from the figure the
+                   instrument PRINTED, never by incrementing the number in this file. */
 
 /* THE OUT-OF-REACH ROSTER, PINNED BY NAME. Same discipline as REC-99's ungraded pin: an EIGHTH
    in-memory figure, or one MIGRATING between the two rosters, must be declared here before it can
@@ -1333,8 +1343,16 @@ t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row 
 + "memory from several reads and one handed in by the CALLER. The other two are bounded by a "
 + "cap-carrying call and no further — the callee is not read",
   INMEM.source.outOfReach.map((x) => x.split(" ")[0]).sort(),
-  ["#backfillLegContent:need", "#frontierMeaning:gated", "biasInhale:bars",
-   "documentsNamingEntity:merged", "queueFeed:dispAll", "queueFeed:items"]);
+  /* REC-92: `#contentAxisTally:raw` joins this roster too, and the reason is the
+     same one the four ASSEMBLED members give. The tally's raw list is fetched by
+     ONE bounded read carrying `LIMIT ?`, but the `truncated` flag is not measured
+     off that read — it is measured off the length of the array AFTER the
+     over-fetch, in JS, so this one-method walk cannot attribute the figure to a
+     row source even though a row source with a SQL bound is right there. Named
+     with its reason rather than scored zero. */
+  ["#backfillLegContent:need", "#contentAxisTally:raw", "#frontierMeaning:gated",
+   "biasInhale:bars", "documentsNamingEntity:merged", "queueFeed:dispAll",
+   "queueFeed:items"]);
 
 /* ---- SET 2. THE METHODS THE CENSUS COUNT CANNOT GRADE BY CONSTRUCTION.
    DERIVED BY INVERSION, NEVER LISTED — AND THE INVERSION FOUND ONE MORE THAN THE LEDGER'S HAND

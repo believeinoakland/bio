@@ -219,7 +219,7 @@ import { QUEUE_CONDITION_KINDS, classOfKind, MUTE_REFUSAL_DETAIL,
    D-15 viewer gate a SINGLE compilation point rather than a convention: there is
    no second place in the plane where a query could come from. */
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX, viewerPredicate,
-         meaningVocabulary, MEANING, cachedNotes } from "./query.mjs";
+         meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP } from "./query.mjs";
 /* IS-6: the investigative run's vocabulary and its refusals. Pure, for the same
    reason queuestate.mjs is: a rule reachable only through a Durable Object is a
    rule that gets exercised less. `finishedBound` is imported rather than
@@ -1866,6 +1866,13 @@ export class Store extends DurableObject {
        Third statement, not a second read: it runs through `#runQuery` like the
        other two, so it throws without the gate exactly as they do. */
     const lv = this.#runQuery(plan.statements.meaning({ mode: "levels" }), tally)[0] || {};
+    /* REC-92 / CONTENT-SEARCH-DESIGN.md §4.4 — THE CONTENT-AXIS TALLY, on the
+       same gate and the same scope as everything above it. Fourth statement,
+       and ONLY for an arm that searches the text index: the three meaning arms
+       and `content:` answer over tables whose emptiness is a fact about
+       CITATION, and a content-axis tally beside them would be answering a
+       question nobody asked with numbers about a different set. */
+    const axis = plan.meaning.fts ? this.#contentAxisTally(plan, tally) : null;
 
     return {
       ok: true,
@@ -1887,7 +1894,89 @@ export class Store extends DurableObject {
       rows, count: rows.length,
       limit: plan.meaning.limit, offset: plan.meaning.offset, total,
       ...Store.#meaningLevels(plan.meaning.level, Number(lv.documents || 0),
-                              Number(lv.documents_with_rows || 0), total),
+                              Number(lv.documents_with_rows || 0), total,
+                              { arm: plan.meaning.arm, matched: plan.meaning.matched, axis }),
+    };
+  }
+
+  /** REC-92 / CONTENT-SEARCH-DESIGN.md §4.4 — THE CONTENT-AXIS TALLY.
+   *
+   *  *An empty answer says "0 hits over 412 indexed captures; 38 in scope are
+   *  unindexed (31 workbooks: no unit arm; 7 over the bound); 3 not yet
+   *  extracted" — which is CLAUDE.md's rule that saying WHICH absence is true
+   *  is a first-class obligation, made mechanical at the one place a member
+   *  reads absence.*
+   *
+   *  IT DECIDES NOTHING. `contentAxisFor` is the decision and it is called once
+   *  per capture, against the raw columns the `axis` statement returned —
+   *  REC-94's instruction in its own words: *the aggregate over a bundle set
+   *  that §4.4's envelope carries is REC-92's, and it composes FROM this rather
+   *  than re-deriving it.*
+   *
+   *  §4.4 NAMES FOUR BUCKETS AND THIS TALLY CARRIES FIVE, WHICH IS THIS ITEM'S
+   *  ONE CORRECTION TO ITS OWN DESIGN AND IS REPORTED AS A DESIGN GAP.
+   *  `contentAxisFor` has FIVE outcomes: the four states of
+   *  `CONTENT_AXIS_STATES` and `CONTENT_AXIS_UNDETERMINED`, which REC-94
+   *  exported SEPARATELY and deliberately because it *is not a member of the
+   *  four*. §4.4's tally has no bucket for it. Folding undetermined into any of
+   *  the four would be concluding a value from an absence — the defect BOB #11
+   *  ruled on and the one REC-94 self-corrected against — and it would not be
+   *  a rare corner: EVERY capture promoted before REC-91's index writer existed
+   *  is undetermined, so on any instance that predates that landing this tally
+   *  would report a whole corpus as indexed to some degree when not one unit of
+   *  it is. The fifth bucket is spelled from the CONSTANT, so it cannot drift
+   *  from the value `op=contentaxis` publishes for the same capture.
+   *
+   *  NO MEMBER OF THE VOCABULARY IS SPELLED HERE. The keys come from
+   *  `Object.keys(CONTENT_AXIS_STATES)` and `CONTENT_AXIS_UNDETERMINED`, so a
+   *  sixth state added beside the writer appears in this tally the same day and
+   *  a divergent spelling is a build error rather than a review finding. */
+  #contentAxisTally(plan, tally) {
+    const raw = this.#runQuery(plan.statements.meaning({ mode: "axis" }), tally);
+    /* The statement over-fetched by one, so truncation is OBSERVED rather than
+       inferred from equality with the bound — the distinction REC-109 was
+       spawned to fix one construct over, taken here at the first writing. */
+    const truncated = raw.length > MEANING_AXIS_CAP;
+    const page = truncated ? raw.slice(0, MEANING_AXIS_CAP) : raw;
+    /* ONE read for the whole set, not one per capture: the log's first
+       content-level row is a watermark, the same value for every capture in the
+       page, and `#missingContentCause` pays for it per call because it answers
+       for one. It carries no bundle dimension, so it is not a gated read — the
+       same reasoning `#missingContentCause` already runs under. */
+    const first = this.#one(`SELECT MIN(at) AS at FROM observation_log WHERE level = 'content'`);
+    const firstAt = first && first.at ? String(first.at) : null;
+    const counts = Object.fromEntries(
+      [...Object.keys(CONTENT_AXIS_STATES), CONTENT_AXIS_UNDETERMINED].map((k) => [k, 0]));
+    for (const r of page) {
+      const axis = contentAxisFor({
+        observed: r.extract_state || null,
+        /* REC-91 landed the mechanism, so this is true unconditionally and the
+           per-capture question lives entirely in `unitsComplete`. */
+        unitIndex: true,
+        unitsComplete: r.index_state == null ? null : r.index_state === "PRESENT",
+        indexObserved: r.index_state == null ? null : r.index_state,
+        indexReason: r.index_state == null ? null : (r.index_bound || r.index_detail || null),
+        reason: r.extract_state ? (r.extract_condition || r.extract_detail || null) : null,
+        /* COMPUTED ONLY WHEN THERE IS AN ABSENCE TO EXPLAIN, and through the ONE
+           rule — `#missingCauseFrom` — that `#missingContentCause` also calls. */
+        missingCause: r.extract_state ? null : Store.#missingCauseFrom({
+          hasReading: !!r.has_reading, registeredAt: r.registered, firstContentAt: firstAt }),
+      });
+      /* A STATE THIS TALLY DOES NOT KNOW IS COUNTED AS UNDETERMINED AND NEVER
+         DROPPED. A sixth state arriving beside the writer must not silently
+         vanish from a census — a bucket that quietly loses rows is a tally whose
+         total stops meaning anything, and the honest place for a value nobody
+         has classified is the bucket that says so. */
+      if (Object.prototype.hasOwnProperty.call(counts, axis.state)) counts[axis.state] += 1;
+      else counts[CONTENT_AXIS_UNDETERMINED] += 1;
+    }
+    return {
+      captures_counted: page.length, truncated, bound: MEANING_AXIS_CAP,
+      ...counts,
+      /* THE VOCABULARY TRAVELS WITH THE TALLY, PL-17's rule: a surface renders
+         the sentence the plane holds rather than matching a literal it learned
+         somewhere else and will not re-learn when the set grows. */
+      vocabulary: CONTENT_AXIS_STATES, undetermined_value: CONTENT_AXIS_UNDETERMINED,
     };
   }
 
@@ -1917,8 +2006,36 @@ export class Store extends DurableObject {
    *  STATIC AND PURE, taking the three numbers rather than the store, so the
    *  suite can drive every branch without a corpus and the branch a real corpus
    *  rarely produces (documents = 0) is as testable as the common one. */
-  static #meaningLevels(level, documents, withRows, total) {
+  /* REC-92 — THE FIFTH ARGUMENT, AND WHY THE FOURTH WAS NOT ENOUGH.
+     `level` alone no longer identifies the question: `content:` and `passage:`
+     BOTH answer at the content level and their zeros mean opposite things. A
+     `content:` zero is a fact about CITATION — nobody has cited these passages.
+     A `passage:` zero is a fact about TEXT — these documents do not say this,
+     OR nobody has read them yet, and only the axis tally can tell those apart.
+     Publishing `content:`'s sentence over a `passage:` miss would tell a member
+     "nothing in them has been cited" about a search that never asked about
+     citation, which is the honesty mechanism itself producing a false
+     statement — so the arm travels with the level.
+     DEFAULTED, so the three pre-existing arms and `content:` reach byte-
+     identical output through a call that names none of this. */
+  static #meaningLevels(level, documents, withRows, total,
+                        { arm = null, matched = false, axis = null } = {}) {
     const without = Math.max(0, documents - withRows);
+    /* §4.4's tally, folded into `scope` rather than replacing it. THE DESIGN
+       NAMES A FIELD THAT WAS ALREADY TAKEN: §4.4 says the envelope carries
+       `scope: { captures, <one key per content-axis state>, … }`, and REC-90
+       had already published
+       `scope: { documents, documents_with_rows, documents_without_rows }` on
+       every arm. Two different shapes under one name is an interface a surface
+       cannot read, so they are UNIONED — every field §4.4 names appears exactly
+       where §4.4 says it does, and nothing REC-90 published moves or is
+       refused. Reported as a DESIGN GAP against §4.4. */
+    const axisScope = axis ? { captures_counted: axis.captures_counted,
+                               captures_truncated: axis.truncated,
+                               captures_bound: axis.bound,
+                               ...Object.fromEntries(Object.entries(axis).filter(([k]) =>
+                                 !["captures_counted", "truncated", "bound",
+                                   "vocabulary", "undetermined_value"].includes(k))) } : null;
     /* The observation log holds WHETHER ANYBODY EVER LOOKED, and this read does
        not reach it. Named, with the item that will. */
     const NOBODY_LOOKED = {
@@ -1930,7 +2047,10 @@ export class Store extends DurableObject {
     const at = (lvl) => level === lvl;
     const out = {
       level,
-      scope: { documents, documents_with_rows: withRows, documents_without_rows: without },
+      scope: { documents, documents_with_rows: withRows, documents_without_rows: without,
+               ...(axisScope || {}) },
+      ...(axis ? { content_axis: { vocabulary: axis.vocabulary,
+                                   undetermined_value: axis.undetermined_value } } : {}),
       levels: {
         internet: NOBODY_LOOKED,
         document: { state: "COUNTED", documents,
@@ -1940,17 +2060,57 @@ export class Store extends DurableObject {
                       + "than for want of content"
                       : `${documents} document(s) in scope, counted through the same gate as the rows` },
         content: at("content")
-          ? { state: "COUNTED", documents_with_rows: withRows, rows_matched: total,
-              why: withRows === 0 && documents > 0
-                ? `none of the ${documents} document(s) in scope holds a single content row. Nothing in them `
-                + `has been cited or marked citable, so this answer is a fact about CITATION and never `
-                + `evidence about what those documents say — the text of a document nobody has cited is `
-                + `not searched by this arm at all`
-                : `${withRows} of ${documents} document(s) in scope hold content rows; ${without} hold none` }
+          ? (axis
+            /* REC-92 — THE TEXT-INDEX READING OF THE CONTENT LEVEL. This is the
+               one place in the plane where a member reads "no passages match",
+               and it is the place §4.4 exists for: the sentence names WHICH
+               absence is true out of the tally rather than letting one zero
+               stand for four different facts. */
+            ? { state: "COUNTED", documents_with_rows: withRows, rows_matched: total,
+                matched,
+                why: (() => {
+                  const never = axis[Object.keys(CONTENT_AXIS_STATES)[3]];
+                  const none = axis[Object.keys(CONTENT_AXIS_STATES)[2]];
+                  const undet = axis[CONTENT_AXIS_UNDETERMINED];
+                  const full = axis[Object.keys(CONTENT_AXIS_STATES)[0]];
+                  const part = axis[Object.keys(CONTENT_AXIS_STATES)[1]];
+                  const over = axis.captures_truncated
+                    ? ` (the tally covers the first ${axis.captures_bound} capture(s) in scope and says so `
+                    + `rather than presenting a sample as a census)` : "";
+                  if (!matched)
+                    return `this answer lists every indexed unit of the document(s) in scope rather than `
+                         + `units that matched a term, because the query carried no \`passage:\` selector `
+                         + `— so \`snippet\` is null on every row for want of a term to centre it on, and `
+                         + `not for want of a passage. Of the capture(s) counted: ${full} fully indexed, `
+                         + `${part} partly, ${none} with nothing indexable, ${never} never extracted, `
+                         + `${undet} undetermined${over}`;
+                  return `${total} matching unit(s) over ${withRows} of ${documents} document(s) in scope `
+                       + `that hold any indexed text. THE ABSENCE OF A HIT IS NOT EVIDENCE OF ABSENCE `
+                       + `UNTIL THIS TALLY IS READ: ${full} capture(s) fully indexed, ${part} partly `
+                       + `indexed (over the per-capture bound, or only some pages readable), ${none} with `
+                       + `nothing indexable at all (no text, or a container with no unit arm), ${never} `
+                       + `never extracted — nobody has read them — and ${undet} undetermined, where this `
+                       + `record cannot yet say which of those is true${over}`;
+                })() }
+            : { state: "COUNTED", documents_with_rows: withRows, rows_matched: total,
+                why: withRows === 0 && documents > 0
+                  ? `none of the ${documents} document(s) in scope holds a single content row. Nothing in them `
+                  + `has been cited or marked citable, so this answer is a fact about CITATION and never `
+                  + `evidence about what those documents say — the text of a document nobody has cited is `
+                  + `not searched by this arm at all. \`passage:\` with \`rows=passage\` is the arm that `
+                  + `searches what those documents SAY`
+                  : `${withRows} of ${documents} document(s) in scope hold content rows; ${without} hold none` })
           : { state: "UNDETERMINED",
+              /* REC-92: TWO reads answer the content level now, and they answer
+                 different halves of it. Naming only one would send a member
+                 asking "what do these documents say" to the arm that answers
+                 "what has anybody cited" — which returns zero over an
+                 uncited corpus and reads as an answer. */
               why: "this arm answers at the meaning level. What has been extracted from the documents in "
-                 + "scope is the content level, and `content:` with `rows=content` is the read that "
-                 + "answers it" },
+                 + "scope is the content level, and TWO reads answer it: `content:` with `rows=content` "
+                 + "for the extents somebody has cited or marked citable, and `passage:` with "
+                 + "`rows=passage` for what the documents actually SAY. A corpus nobody has cited holds "
+                 + "no content rows and may hold every passage you are looking for" },
         meaning: at("meaning")
           ? { state: "COUNTED", documents_with_rows: withRows, rows_matched: total,
               why: `${withRows} of ${documents} document(s) in scope hold rows of this kind; ${without} hold none` }
@@ -1963,7 +2123,44 @@ export class Store extends DurableObject {
     /* ONE SENTENCE a surface can render without composing it itself, because a
        surface that composed it would be the second place this distinction is
        made and the first place it could drift. */
-    out.says = total > 0
+    /* REC-92 — THE PASSAGE ARM'S OWN SENTENCE, and the branch it replaces is the
+       one that would have done the most damage. `withRows === 0` on a text
+       index does NOT mean "these documents hold no passages"; it means NOT ONE
+       DOCUMENT IN SCOPE HAS BEEN READ AT PASSAGE GRAIN, which is a statement
+       about this record's own coverage and never about the documents. The
+       generic sentence below says "absence at THIS level", which is true and
+       far too weak: it invites a member to conclude the documents are silent
+       when nobody has opened them. So the passage arm says which, out of the
+       tally, and it leads with the coverage rather than with the zero. */
+    const axisSays = () => {
+      const never = axis[Object.keys(CONTENT_AXIS_STATES)[3]];
+      const undet = axis[CONTENT_AXIS_UNDETERMINED];
+      const searchable = axis[Object.keys(CONTENT_AXIS_STATES)[0]]
+                       + axis[Object.keys(CONTENT_AXIS_STATES)[1]];
+      const unread = never + undet;
+      if (total > 0)
+        return `${total} passage(s) over ${documents} document(s) in scope`
+             + (unread > 0
+               ? `, and ${unread} capture(s) in that scope have NOT been read at passage grain — so this `
+               + `is what the searched part of the record says, not all of it`
+               : `, over a scope every capture of which has been read at passage grain`);
+      if (documents === 0)
+        return "nothing matched, and no document was in scope to match in — this is an empty DOCUMENT "
+             + "level, not an empty record";
+      if (searchable === 0)
+        return `nothing matched, and NOTHING IN SCOPE WAS SEARCHABLE: not one of the ${axis.captures_counted} `
+             + `capture(s) counted has indexed text. This says nothing whatever about what those documents `
+             + `contain — ${never} have never been extracted and ${undet} cannot be determined. The next `
+             + `move is to read them, not to conclude they are silent`;
+      return `nothing matched over ${searchable} searchable capture(s) in scope`
+           + (unread > 0
+             ? `, but ${unread} further capture(s) in scope have not been read at passage grain, so this `
+             + `absence covers only the part of the record that has been read`
+             : `, every capture of which has been read at passage grain — this absence is about the `
+             + `documents and not about our coverage of them`);
+    };
+    out.says = axis ? axisSays()
+      : total > 0
       ? `${total} row(s) over ${documents} document(s) in scope`
       : documents === 0
         ? "nothing matched, and no document was in scope to match in — this is an empty DOCUMENT level, "
@@ -29654,29 +29851,39 @@ export class Store extends DurableObject {
    *
    *  ONE READ PER CAUSE AND NO SCAN. The earliest content-level `at` is an index
    *  walk on the tally index; the `readings` probe is a primary-key read. */
-  #missingContentCause(captureSha, registeredAt = null) {
-    if (this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha))
-      return "pre_log";
-    const first = this.#one(
-      `SELECT MIN(at) AS at FROM observation_log WHERE level = 'content'`);
-    const firstAt = first && first.at ? String(first.at) : null;
+  /** REC-92 — THE RULE ITSELF, LIFTED OUT OF THE READ THAT FETCHES ITS INPUTS,
+   *  and it is a refactor this item was FORCED into rather than one it chose.
+   *
+   *  `#missingContentCause` below answers for ONE capture and pays two reads to
+   *  do it. §4.4's tally answers for a SET, and at `MEANING_AXIS_CAP` captures
+   *  the per-capture form is a thousand reads inside one Durable Object
+   *  invocation — so the tally reads the same three inputs in ONE joined
+   *  statement instead. That left two ways to spell the DECISION, and the
+   *  shared-vocabulary ruling says what to do with two spellings of one
+   *  decision: have one. The inputs are gathered differently; the rule is this
+   *  function and there is no second copy of it.
+   *
+   *  PURE AND STATIC, taking the three facts rather than the store, so the
+   *  suite drives every branch — including the tie on the second, which a real
+   *  corpus produces rarely and which was a real defect in the first draft of
+   *  the method below — without a corpus at all. */
+  static #missingCauseFrom({ hasReading = false, registeredAt = null, firstContentAt = null } = {}) {
+    if (hasReading) return "pre_log";
     /* NO CONTENT ROW ANYWHERE: cause (1) and cause (2) are both live — an empty
        table is equally the never-written case and the purged one — and the
        answer says so rather than picking. */
-    if (!firstAt) return "purged";
+    if (!firstContentAt) return "purged";
     const reg = typeof registeredAt === "string" && registeredAt ? registeredAt : null;
     if (!reg) return "purged";
     /* BOTH SIDES NORMALISED TO THE SECOND BEFORE THEY ARE COMPARED, AND THIS WAS
-       A REAL DEFECT IN THIS METHOD'S FIRST DRAFT rather than a precaution.
+       A REAL DEFECT IN THIS RULE'S FIRST DRAFT rather than a precaution.
        `register.registered` is a full ISO timestamp WITH MILLISECONDS
        (`new Date().toISOString()`); `observation_log.at` is the same value with
        the fraction CUT (`…split(".")[0] + "Z"`), which is `#observe`'s own
        spelling. Compared as raw strings those two precisions mis-sort inside a
        single second — `"…:15.900Z"` is LESS than `"…:15Z"`, because `.` sorts
        below `Z` — so a capture registered in the same second as the log's first
-       row was being read as PREDATING it. This item's own suite caught it: the
-       never-extracted arm went red over a capture registered after every row in
-       the table.
+       row was being read as PREDATING it.
        The direction it failed in was the safe one (undetermined rather than a
        claim), which is exactly why it would have survived review: it produced a
        more cautious answer for a wrong reason, on an instance where nothing
@@ -29687,7 +29894,25 @@ export class Store extends DurableObject {
        — and is therefore not in this set at all — or was promoted with no
        reading, which is genuinely nobody-looked. */
     const sec = (v) => String(v).slice(0, 19);
-    return sec(reg) >= sec(firstAt) ? "never_looked" : "purged";
+    return sec(reg) >= sec(firstContentAt) ? "never_looked" : "purged";
+  }
+
+  #missingContentCause(captureSha, registeredAt = null) {
+    if (this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha))
+      return "pre_log";
+    const first = this.#one(
+      `SELECT MIN(at) AS at FROM observation_log WHERE level = 'content'`);
+    const firstAt = first && first.at ? String(first.at) : null;
+    /* REC-92: THE RULE IS `#missingCauseFrom` AND THIS METHOD IS NOW ONLY THE
+       READ THAT FETCHES ITS INPUTS. The `readings` lookup above already
+       answered `pre_log` and returned, so `hasReading` is false by the time we
+       get here; it is passed explicitly rather than relied on, because a reader
+       of this call should not have to know that the early return exists.
+       REC-94's suite drives this method unchanged and its assertions did not
+       move — the behaviour is identical for every input, which is the property
+       that makes this a refactor rather than a change. */
+    return Store.#missingCauseFrom({
+      hasReading: false, registeredAt, firstContentAt: firstAt });
   }
 
   /** REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS STATE. Section 4.2's *"the

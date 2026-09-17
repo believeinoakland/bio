@@ -22319,6 +22319,108 @@ var MEANING = {
        list reads like nobody looked. */
     refs: [],
     rowGrain: "one content row \u2014 one addressable extent of one capture under one chain; cited or citable, and it says which"
+  },
+  /* ---------------------------------------------------------------------
+   * REC-92 / CONTENT-SEARCH-DESIGN.md §4.2 — THE `passage:` ARM, and it is
+   * question (a) of that document's §1 table: TEXT at content grain.
+   *
+   * IT IS THE SIBLING OF `content:` AND NOT ITS REPLACEMENT, and the pair is
+   * the whole point. `content:` searches the extents somebody has ALREADY
+   * cited or marked citable; `passage:` searches what the documents SAY. §3:
+   * *the whole point of (a) is to find what nobody has cited yet.* A corpus of
+   * five hundred captured agenda packets that nobody has cited holds ZERO
+   * content rows and may hold half a million indexed passages, so an empty
+   * `content:` answer and an empty `passage:` answer over the same corpus are
+   * different facts with different next moves — which is why both arms declare
+   * `level: "content"` and the answer's own statement distinguishes them by
+   * ARM rather than by level alone (`Store.#meaningLevels`).
+   *
+   * `text:` IS UNTOUCHED AND STILL MEANS THE GROUP'S OWN NOTES. §4.2: *the
+   * surface labels the two; the vocabulary does not rename a settled arm.*
+   * `text:` compiles over `bundles_fts` (title/body/meta/locator/authority,
+   * projected from `bundle.md`'s frontmatter); `passage:` compiles over
+   * `capture_text_fts`, which REC-91 fills at promote from the extractors'
+   * own units. The two are different questions over different sets.
+   *
+   * THE MEMBER'S STRING BECOMES AN FTS5 EXPRESSION THROUGH THE ONE HELPER
+   * THAT ALREADY DOES THAT — `textAtom` then `ftsAtom`, the same two functions
+   * `text:` uses — so quoted phrases and trailing-`*` prefixes mean here
+   * exactly what they mean there, and there is ONE place in this compiler
+   * where a member's text becomes a MATCH argument. A second spelling would
+   * be a second grammar to learn and a second place to get the escaping
+   * wrong; `ftsLiteral` doubles an embedded `"` and the expression is always a
+   * BOUND ARGUMENT, never interpolated, which `passage-arm.test.mjs` pins by
+   * compiling hostile values and asserting the SQL is byte-identical while
+   * only `args` moves.
+   * ------------------------------------------------------------------- */
+  passage: {
+    table: "capture_text",
+    key: "bundle_id",
+    bare: "text",
+    /* The FTS side of this arm, named on the descriptor rather than known by
+       `meaning()`, so the row projection's `snippet()` and the arm's own MATCH
+       read ONE declaration. `column: 0` because `capture_text_fts` indexes
+       exactly one column (`text`) — `snippet(pf, 0, …)` names it by position,
+       as FTS5 requires, and `-1` (best-matching column) would be a claim about
+       a table with more than one. */
+    ftsTable: "capture_text_fts",
+    ftsColumn: 0,
+    /* THE LEVEL, and it is the same one `content:` declares. Part II §14.3's
+       content level is *what has been extracted from the documents*, which is
+       precisely what this table holds. Declaring anything else would make the
+       answer's four-level statement name a level this arm does not answer. */
+    level: "content",
+    grain: "the document holding an indexed unit whose text matches",
+    sub: {
+      /* THE ONLY SUB-FIELD, and the absence of the other five is a decision
+         rather than an omission. §4.2 gives this arm ONE question — *which
+         BUNDLES hold an indexed unit whose text matches* — and gives the five
+         row-shaped questions (`kind`, `stale`, `minted`, `cap`, `chain`,
+         `cited`) to `content:`, over the `content` table, where they already
+         landed at REC-90. An arm that grew a `chain` filter here because the
+         column happens to exist would be building a reader to justify an
+         index; see the note on `chain_kind` in `schema.mjs`, and this item's
+         report, which declines that index for exactly that reason. */
+      text: { col: "text", fts: true }
+    },
+    /* §4.2's row: the unit's extent and `ref`, its `chain_kind`, its
+       `truncated` flag. `seq` rides with them because a PARTIAL index is a
+       PREFIX in reading order (`schema.mjs`) — without it a member cannot tell
+       whether the passage they are reading sits before or after the point the
+       per-capture bound stopped at, which is the one thing `truncated` at the
+       CAPTURE level cannot say per unit. `text` is NOT projected: the whole
+       unit can be 128 KB and a row list is not where a member reads a
+       document — `snippet` below is what a list wants, and UI-61's viewer is
+       where the unit itself is read. */
+    row: ["capture_sha", "extent_kind", "extent", "ref", "seq", "truncated", "chain_kind"],
+    rowComputed: {
+      /* §4.2: *where a content row already exists for that extent under the
+         current chain — its `content_id`*. A SCALAR SUBQUERY AND NOT A JOIN,
+         and that is the load-bearing choice. `content` is minted lazily and is
+         never rewritten: when a capture is re-read the chain moves, the old
+         row is marked `stale = 1` and a NEW row is minted over the same
+         extent — so (capture_sha, extent_kind, extent) can name SEVERAL rows,
+         and a LEFT JOIN would emit one passage row per content row. That
+         duplicates the grain, makes `total` and the page describe different
+         relations, and breaks paging, all silently. A scalar subquery can
+         return at most one value by construction, so the grain is
+         unrepresentably wrong rather than remembered.
+         `stale = 0` IS THE "under the current chain" CLAUSE, read off the
+         column REC-82's stale rule maintains rather than by re-parsing the
+         chain JSON — and NULL when no row exists is the honest answer §4.5
+         requires: a hit is an ADDRESS, and nothing is minted by searching. */
+      content_id: `(SELECT xc.content_id FROM content xc WHERE xc.capture_sha = m.capture_sha AND xc.extent_kind = m.extent_kind AND xc.extent = m.extent AND xc.stale = 0 ORDER BY xc.at DESC LIMIT 1)`
+    },
+    /* §4.2's identity exactly, and it is `capture_text`'s own PRIMARY KEY, so
+       the ORDER BY this generates is TOTAL and a unit cannot appear on two
+       pages or on none. */
+    identity: ["capture_sha", "extent_kind", "extent"],
+    /* NO REF COLUMN, for `content:`'s reason unchanged: `bundle_id` is the
+       OWNER and clause 1 of REC-36's rule already gates it, and `capture_sha`
+       names a capture rather than a bundle. Stated because an empty `refs`
+       list reads like nobody looked. */
+    refs: [],
+    rowGrain: "one indexed unit of one capture's text under its current chain \u2014 an ADDRESS, not a content row until a member cites it or the assistant proposes it"
   }
 };
 var BARE_INDEX = /* @__PURE__ */ new Map();
@@ -22370,7 +22472,14 @@ function rowColumns(m) {
     ...m.row,
     ...m.rowJoin ? m.rowJoin.cols : [],
     ...m.refs.map((c) => `${c}_present`),
-    ...Object.keys(m.rowComputed || {})
+    ...Object.keys(m.rowComputed || {}),
+    /* REC-92: an FTS-backed arm always projects `snippet` — NULL when the
+       query carried no term to centre one on, never absent. Published
+       here for the same reason `target_present` had to be: a column a row
+       carries and the vocabulary does not name is a column a surface
+       cannot build a table from, which is how `columns` came to be
+       missing `target_present` for five weeks. */
+    ...m.ftsTable ? ["snippet"] : []
   ];
 }
 var FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
@@ -22387,6 +22496,7 @@ var DEFAULT_FACETS = [
   "connection"
 ];
 var GATE_MARK = "/*viewer-gate*/";
+var MEANING_AXIS_CAP = 500;
 function viewerPredicate(viewer) {
   const v = typeof viewer === "string" ? viewer : "";
   const CLS = MACHINE_CLASS_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -22691,6 +22801,33 @@ function meaningAtom(arm, tok, ctx) {
     subName = claims && claims[0] || m.bare;
   }
   const sub = m.sub[subName];
+  if (sub && sub.fts) {
+    if (subCmp) {
+      ctx.warnings.push(`${arm}: ${JSON.stringify(String(tok.value))} compares a full-text field; ${arm}: matches text and does not order it`);
+      return null;
+    }
+    if (raw === "" || raw === "*") {
+      ctx.meaningArms.push({ arm, field: subName, column: sub.col });
+      return { op: "meaning", arm, field: subName, col: sub.col, cmp: "present", value: null };
+    }
+    const atom = textAtom(null, raw, !!tok.quoted, { textAtoms: [] });
+    if (!atom) {
+      ctx.warnings.push(`${arm}: ${JSON.stringify(raw)} has no word in it to match`);
+      return null;
+    }
+    ctx.meaningArms.push({ arm, field: subName, column: sub.col });
+    const expr = ftsAtom(atom);
+    ctx.passageTerms.push(expr);
+    return {
+      op: "meaning",
+      arm,
+      field: subName,
+      col: sub.col,
+      cmp: "match",
+      value: atom.value,
+      fts: expr
+    };
+  }
   ctx.meaningArms.push({ arm, field: subName, column: sub.col });
   const norm = (x) => sub.case === "upper" ? String(x).toUpperCase() : sub.case === "lower" ? String(x).toLowerCase() : String(x);
   if (subCmp) return { op: "meaning", arm, field: subName, col: sub.col, cmp: subCmp, value: norm(raw) };
@@ -22801,6 +22938,11 @@ function metaSql(node) {
 function meaningWhere(node) {
   const m = MEANING[node.arm];
   const sub = node.field ? m.sub[node.field] : null;
+  if (node.cmp === "match" && typeof node.fts === "string")
+    return {
+      sql: `rowid IN (SELECT rowid FROM ${m.ftsTable} WHERE ${m.ftsTable} MATCH ?)`,
+      args: [node.fts]
+    };
   if (sub && typeof sub.pred === "function") {
     const p = sub.pred(node.cmp, node.value);
     if (p) return p;
@@ -22896,28 +23038,46 @@ function compile({
   rowLimit = MEANING_LIMIT_DEFAULT,
   rowOffset = 0
 } = {}) {
-  const ctx = { warnings: [], textAtoms: [], sort: null, meaningArms: [] };
+  const ctx = { warnings: [], textAtoms: [], sort: null, meaningArms: [], passageTerms: [] };
   const ast = parseTokens(tokenize(q), implicitOp === "or" ? "or" : "and", ctx);
   if (sort && sort in SORTABLE) ctx.sort = { field: sort, dir: /^d/i.test(dir || "") ? "DESC" : dir ? "ASC" : sort === "relevance" ? "ASC" : "DESC" };
   const gate = viewerPredicate(viewer);
   const rank4 = rankExpr(ctx.textAtoms);
+  const passageMatch = ctx.passageTerms.length ? [...new Set(ctx.passageTerms)].join(" OR ") : null;
+  const passageOn = (armName) => !!(armName && MEANING[armName] && MEANING[armName].ftsTable && passageMatch);
   const set = setSql(ast);
+  const stripMeaningArm = (node, arm) => {
+    if (!node) return null;
+    if (node.op === "meaning") return node.arm === arm ? null : node;
+    if (node.op === "not") {
+      const k = stripMeaningArm(node.kid, arm);
+      return k ? { ...node, kid: k } : null;
+    }
+    if (Array.isArray(node.kids)) {
+      const kids = node.kids.map((k) => stripMeaningArm(k, arm)).filter(Boolean);
+      if (!kids.length) return null;
+      return kids.length === 1 ? kids[0] : { ...node, kids };
+    }
+    return node;
+  };
+  const armSet = (arm) => setSql(stripMeaningArm(ast, arm));
   const widenable = implicitOp !== "or" && ast?.op === "and" && Array.isArray(ast.kids) && ast.kids.length > 1;
   const lim = Math.max(1, Math.min(LIMIT_MAX, Math.floor(Number(limit) || LIMIT_DEFAULT)));
   const off = Math.max(0, Math.floor(Number(offset) || 0));
   const rowArm = typeof rows === "string" && rows.toLowerCase() in MEANING ? rows.toLowerCase() : null;
   const mLim = Math.max(1, Math.min(MEANING_LIMIT_MAX, Math.floor(Number(rowLimit) || MEANING_LIMIT_DEFAULT)));
   const mOff = Math.max(0, Math.floor(Number(rowOffset) || 0));
-  const cte = (withRanked) => {
+  const cte = (withRanked, overrideSet = null) => {
     const idArm = Array.isArray(ids) && ids.length ? { sql: `SELECT fts_id AS fid FROM bundles WHERE bundle_id IN (${ids.map(() => "?").join(",")})`, args: ids } : null;
-    const parts = [`hits(fid) AS (${set.sql})`];
+    const use = overrideSet || set;
+    const parts = [`hits(fid) AS (${use.sql})`];
     if (idArm) {
       parts.push(`picked(fid) AS (${idArm.sql})`);
       parts.push(`scope(fid) AS (SELECT fid FROM hits INTERSECT SELECT fid FROM picked)`);
     } else {
       parts.push(`scope(fid) AS (SELECT fid FROM hits)`);
     }
-    const args = [...set.args, ...idArm ? idArm.args : []];
+    const args = [...use.args, ...idArm ? idArm.args : []];
     if (withRanked && rank4) {
       parts.push(`ranked(fid, score, snip) AS (SELECT rowid AS fid, bm25(bundles_fts) AS score, snippet(bundles_fts, -1, '[', ']', '\u2026', ?) AS snip FROM bundles_fts WHERE bundles_fts MATCH ?)`);
       args.push(Math.max(4, Math.min(64, Math.floor(snippetChars))), rank4);
@@ -22993,11 +23153,13 @@ ORDER BY field ASC, n DESC, value ASC`,
     const c = cte(false);
     const args = [...c.args, ...gate.args];
     let refSql = "";
+    const refArgs = [];
     for (const col of m.refs) {
       refSql += `
    AND (NOT EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = m.${col})
         OR EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = m.${col} AND (${gate.sql})))`;
       args.push(...gate.args);
+      refArgs.push(...gate.args);
     }
     if (mode === "levels")
       return {
@@ -23008,17 +23170,50 @@ FROM scope s JOIN bundles b ON b.fts_id = s.fid
 WHERE ${gate.sql}`,
         args: [...c.args, ...gate.args]
       };
+    if (mode === "axis") {
+      const ac = cte(false, armSet(rowArm));
+      return {
+        sql: `${ac.sql}
+SELECT r.capture_sha AS capture_sha, r.registered AS registered,
+       ex.state AS extract_state, ex.condition AS extract_condition,
+       ex.detail AS extract_detail,
+       ix.state AS index_state, ix.bound AS index_bound,
+       ix.detail AS index_detail,
+       EXISTS (SELECT 1 FROM readings rd WHERE rd.capture_sha = r.capture_sha) AS has_reading
+FROM scope s JOIN bundles b ON b.fts_id = s.fid
+ JOIN register r ON r.bundle_id = b.bundle_id
+ LEFT JOIN observation_log ex ON ex.seq = (SELECT MAX(seq) FROM observation_log
+      WHERE level = 'content' AND subject_kind = 'capture'
+        AND authority_kind = 'extract' AND subject = r.capture_sha)
+ LEFT JOIN observation_log ix ON ix.seq = (SELECT MAX(seq) FROM observation_log
+      WHERE level = 'content' AND subject_kind = 'capture'
+        AND authority_kind = 'derive' AND subject = r.capture_sha)
+WHERE ${gate.sql}
+ORDER BY r.capture_sha ASC LIMIT ?`,
+        args: [...ac.args, ...gate.args, MEANING_AXIS_CAP + 1]
+      };
+    }
     const joined = m.rowJoin ? `
  LEFT JOIN ${m.rowJoin.table} ${m.rowJoin.alias} ON ${m.rowJoin.on}` : "";
+    const fts = passageOn(rowArm) ? { name: m.ftsTable, expr: passageMatch, col: m.ftsColumn } : null;
+    const ftsJoin = fts ? `
+ JOIN ${fts.name} ON ${fts.name}.rowid = m.rowid` : "";
+    const ftsWhere = fts ? ` AND ${fts.name} MATCH ?` : "";
+    const ftsArgs = fts ? [fts.expr] : [];
     const from = `FROM scope s JOIN bundles b ON b.fts_id = s.fid
- JOIN ${m.table} m ON m.${m.key} = b.bundle_id${joined}
-WHERE ${gate.sql}${refSql}`;
-    if (mode === "count") return { sql: `${c.sql}
-SELECT count(*) AS n ${from}`, args };
+ JOIN ${m.table} m ON m.${m.key} = b.bundle_id${ftsJoin}${joined}
+WHERE ${gate.sql}${refSql}${ftsWhere}`;
+    if (mode === "count") return {
+      sql: `${c.sql}
+SELECT count(*) AS n ${from}`,
+      args: [...args, ...ftsArgs]
+    };
     const present = m.refs.map((col) => `, EXISTS (SELECT 1 FROM bundles tb WHERE tb.bundle_id = m.${col}) AS ${col}_present`).join("");
     const computed = Object.entries(m.rowComputed || {}).map(([name, expr]) => `, (${expr}) AS ${name}`).join("");
     const reached = m.rowJoin ? m.rowJoin.cols.map((c2) => `, ${m.rowJoin.alias}.${c2} AS ${c2}`).join("") : "";
-    const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, ` + m.row.map((c2) => `m.${c2} AS ${c2}`).join(", ") + reached + present + computed;
+    const snip = m.ftsTable ? fts ? `, snippet(${fts.name}, ${fts.col}, '[', ']', '\u2026', ?) AS snippet` : `, NULL AS snippet` : "";
+    const snipArgs = m.ftsTable && fts ? [Math.max(4, Math.min(64, Math.floor(snippetChars)))] : [];
+    const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, ` + m.row.map((c2) => `m.${c2} AS ${c2}`).join(", ") + reached + present + computed + snip;
     const order2 = [
       "b.bundle_id ASC",
       ...m.identity.filter((c2) => c2 !== m.key).map((c2) => `m.${c2} ASC`)
@@ -23027,7 +23222,7 @@ SELECT count(*) AS n ${from}`, args };
       sql: `${c.sql}
 SELECT ${sel} ${from}
 ORDER BY ${order2} LIMIT ? OFFSET ?`,
-      args: [...args, mLim, mOff]
+      args: [...c.args, ...snipArgs, ...gate.args, ...refArgs, ...ftsArgs, mLim, mOff]
     };
   };
   const facetScan = () => {
@@ -23103,6 +23298,16 @@ WHERE ${gate.sql}`,
            which is the test D-258 above set for a field on this descriptor.
            `store.mjs`'s `meaningRows` composes the answer's four-level statement from
            it, so it is not a value published because it had already been computed. */
+    /* REC-92 ADDS AN EIGHTH, `matched`, AND IT HAS A READER BEFORE IT IS
+       WRITTEN — D-258's own test for a field on this descriptor.
+       `Store.#meaningLevels` composes the sentence that tells a member whether
+       they are reading the units that MATCHED a term or every indexed unit in
+       scope. Those two answers have the same shape, the same columns and very
+       different meanings, and without this field the only thing distinguishing
+       them on the wire is a NULL in `snippet` — which is a member inferring a
+       fact from an absence, the exact move this whole arm exists to stop. It is
+       a BOOLEAN about the plan and not a copy of the member's terms: the terms
+       are already published on `query.meaningArms`. */
     meaning: rowArm ? {
       arm: rowArm,
       table: MEANING[rowArm].table,
@@ -23110,7 +23315,9 @@ WHERE ${gate.sql}`,
       grain: MEANING[rowArm].rowGrain,
       identity: MEANING[rowArm].identity,
       limit: mLim,
-      offset: mOff
+      offset: mOff,
+      matched: passageOn(rowArm),
+      fts: !!MEANING[rowArm].ftsTable
     } : null,
     facetFields: facetList,
     facetCols: facetList.map((n) => FIELDS[n].col),
@@ -25306,6 +25513,7 @@ var Store = class _Store extends DurableObject {
     const total = this.#runQuery(plan.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
     const rows = this.#runQuery(plan.statements.meaning(), tally);
     const lv = this.#runQuery(plan.statements.meaning({ mode: "levels" }), tally)[0] || {};
+    const axis = plan.meaning.fts ? this.#contentAxisTally(plan, tally) : null;
     return {
       ok: true,
       /* The GRAIN travels with the answer, in words, because a consumer that
@@ -25337,8 +25545,83 @@ var Store = class _Store extends DurableObject {
         plan.meaning.level,
         Number(lv.documents || 0),
         Number(lv.documents_with_rows || 0),
-        total
+        total,
+        { arm: plan.meaning.arm, matched: plan.meaning.matched, axis }
       )
+    };
+  }
+  /** REC-92 / CONTENT-SEARCH-DESIGN.md §4.4 — THE CONTENT-AXIS TALLY.
+   *
+   *  *An empty answer says "0 hits over 412 indexed captures; 38 in scope are
+   *  unindexed (31 workbooks: no unit arm; 7 over the bound); 3 not yet
+   *  extracted" — which is CLAUDE.md's rule that saying WHICH absence is true
+   *  is a first-class obligation, made mechanical at the one place a member
+   *  reads absence.*
+   *
+   *  IT DECIDES NOTHING. `contentAxisFor` is the decision and it is called once
+   *  per capture, against the raw columns the `axis` statement returned —
+   *  REC-94's instruction in its own words: *the aggregate over a bundle set
+   *  that §4.4's envelope carries is REC-92's, and it composes FROM this rather
+   *  than re-deriving it.*
+   *
+   *  §4.4 NAMES FOUR BUCKETS AND THIS TALLY CARRIES FIVE, WHICH IS THIS ITEM'S
+   *  ONE CORRECTION TO ITS OWN DESIGN AND IS REPORTED AS A DESIGN GAP.
+   *  `contentAxisFor` has FIVE outcomes: the four states of
+   *  `CONTENT_AXIS_STATES` and `CONTENT_AXIS_UNDETERMINED`, which REC-94
+   *  exported SEPARATELY and deliberately because it *is not a member of the
+   *  four*. §4.4's tally has no bucket for it. Folding undetermined into any of
+   *  the four would be concluding a value from an absence — the defect BOB #11
+   *  ruled on and the one REC-94 self-corrected against — and it would not be
+   *  a rare corner: EVERY capture promoted before REC-91's index writer existed
+   *  is undetermined, so on any instance that predates that landing this tally
+   *  would report a whole corpus as indexed to some degree when not one unit of
+   *  it is. The fifth bucket is spelled from the CONSTANT, so it cannot drift
+   *  from the value `op=contentaxis` publishes for the same capture.
+   *
+   *  NO MEMBER OF THE VOCABULARY IS SPELLED HERE. The keys come from
+   *  `Object.keys(CONTENT_AXIS_STATES)` and `CONTENT_AXIS_UNDETERMINED`, so a
+   *  sixth state added beside the writer appears in this tally the same day and
+   *  a divergent spelling is a build error rather than a review finding. */
+  #contentAxisTally(plan, tally) {
+    const raw = this.#runQuery(plan.statements.meaning({ mode: "axis" }), tally);
+    const truncated = raw.length > MEANING_AXIS_CAP;
+    const page = truncated ? raw.slice(0, MEANING_AXIS_CAP) : raw;
+    const first = this.#one(`SELECT MIN(at) AS at FROM observation_log WHERE level = 'content'`);
+    const firstAt = first && first.at ? String(first.at) : null;
+    const counts = Object.fromEntries(
+      [...Object.keys(CONTENT_AXIS_STATES), CONTENT_AXIS_UNDETERMINED].map((k) => [k, 0])
+    );
+    for (const r of page) {
+      const axis = contentAxisFor({
+        observed: r.extract_state || null,
+        /* REC-91 landed the mechanism, so this is true unconditionally and the
+           per-capture question lives entirely in `unitsComplete`. */
+        unitIndex: true,
+        unitsComplete: r.index_state == null ? null : r.index_state === "PRESENT",
+        indexObserved: r.index_state == null ? null : r.index_state,
+        indexReason: r.index_state == null ? null : r.index_bound || r.index_detail || null,
+        reason: r.extract_state ? r.extract_condition || r.extract_detail || null : null,
+        /* COMPUTED ONLY WHEN THERE IS AN ABSENCE TO EXPLAIN, and through the ONE
+           rule — `#missingCauseFrom` — that `#missingContentCause` also calls. */
+        missingCause: r.extract_state ? null : _Store.#missingCauseFrom({
+          hasReading: !!r.has_reading,
+          registeredAt: r.registered,
+          firstContentAt: firstAt
+        })
+      });
+      if (Object.prototype.hasOwnProperty.call(counts, axis.state)) counts[axis.state] += 1;
+      else counts[CONTENT_AXIS_UNDETERMINED] += 1;
+    }
+    return {
+      captures_counted: page.length,
+      truncated,
+      bound: MEANING_AXIS_CAP,
+      ...counts,
+      /* THE VOCABULARY TRAVELS WITH THE TALLY, PL-17's rule: a surface renders
+         the sentence the plane holds rather than matching a literal it learned
+         somewhere else and will not re-learn when the set grows. */
+      vocabulary: CONTENT_AXIS_STATES,
+      undetermined_value: CONTENT_AXIS_UNDETERMINED
     };
   }
   /** REC-90 — WHICH LEVEL WAS EMPTY, SAID RATHER THAN LEFT TO BE INFERRED.
@@ -25367,8 +25650,32 @@ var Store = class _Store extends DurableObject {
    *  STATIC AND PURE, taking the three numbers rather than the store, so the
    *  suite can drive every branch without a corpus and the branch a real corpus
    *  rarely produces (documents = 0) is as testable as the common one. */
-  static #meaningLevels(level, documents, withRows, total) {
+  /* REC-92 — THE FIFTH ARGUMENT, AND WHY THE FOURTH WAS NOT ENOUGH.
+     `level` alone no longer identifies the question: `content:` and `passage:`
+     BOTH answer at the content level and their zeros mean opposite things. A
+     `content:` zero is a fact about CITATION — nobody has cited these passages.
+     A `passage:` zero is a fact about TEXT — these documents do not say this,
+     OR nobody has read them yet, and only the axis tally can tell those apart.
+     Publishing `content:`'s sentence over a `passage:` miss would tell a member
+     "nothing in them has been cited" about a search that never asked about
+     citation, which is the honesty mechanism itself producing a false
+     statement — so the arm travels with the level.
+     DEFAULTED, so the three pre-existing arms and `content:` reach byte-
+     identical output through a call that names none of this. */
+  static #meaningLevels(level, documents, withRows, total, { arm = null, matched = false, axis = null } = {}) {
     const without = Math.max(0, documents - withRows);
+    const axisScope = axis ? {
+      captures_counted: axis.captures_counted,
+      captures_truncated: axis.truncated,
+      captures_bound: axis.bound,
+      ...Object.fromEntries(Object.entries(axis).filter(([k]) => ![
+        "captures_counted",
+        "truncated",
+        "bound",
+        "vocabulary",
+        "undetermined_value"
+      ].includes(k)))
+    } : null;
     const NOBODY_LOOKED = {
       state: "UNDETERMINED",
       why: "whether anybody has looked at all is recorded in the observation log, which this read does not reach. An answer here cannot tell 'we looked and found nothing' from 'nobody has looked yet', and it says so rather than letting the zero speak for both"
@@ -25376,7 +25683,16 @@ var Store = class _Store extends DurableObject {
     const at = (lvl) => level === lvl;
     const out = {
       level,
-      scope: { documents, documents_with_rows: withRows, documents_without_rows: without },
+      scope: {
+        documents,
+        documents_with_rows: withRows,
+        documents_without_rows: without,
+        ...axisScope || {}
+      },
+      ...axis ? { content_axis: {
+        vocabulary: axis.vocabulary,
+        undetermined_value: axis.undetermined_value
+      } } : {},
       levels: {
         internet: NOBODY_LOOKED,
         document: {
@@ -25384,14 +25700,35 @@ var Store = class _Store extends DurableObject {
           documents,
           why: documents === 0 ? "no document is in scope at all \u2014 the other arms of this query selected none that this viewer may see, so every level below is empty for want of a document rather than for want of content" : `${documents} document(s) in scope, counted through the same gate as the rows`
         },
-        content: at("content") ? {
+        content: at("content") ? axis ? {
           state: "COUNTED",
           documents_with_rows: withRows,
           rows_matched: total,
-          why: withRows === 0 && documents > 0 ? `none of the ${documents} document(s) in scope holds a single content row. Nothing in them has been cited or marked citable, so this answer is a fact about CITATION and never evidence about what those documents say \u2014 the text of a document nobody has cited is not searched by this arm at all` : `${withRows} of ${documents} document(s) in scope hold content rows; ${without} hold none`
+          matched,
+          why: (() => {
+            const never = axis[Object.keys(CONTENT_AXIS_STATES)[3]];
+            const none = axis[Object.keys(CONTENT_AXIS_STATES)[2]];
+            const undet = axis[CONTENT_AXIS_UNDETERMINED];
+            const full = axis[Object.keys(CONTENT_AXIS_STATES)[0]];
+            const part = axis[Object.keys(CONTENT_AXIS_STATES)[1]];
+            const over = axis.captures_truncated ? ` (the tally covers the first ${axis.captures_bound} capture(s) in scope and says so rather than presenting a sample as a census)` : "";
+            if (!matched)
+              return `this answer lists every indexed unit of the document(s) in scope rather than units that matched a term, because the query carried no \`passage:\` selector \u2014 so \`snippet\` is null on every row for want of a term to centre it on, and not for want of a passage. Of the capture(s) counted: ${full} fully indexed, ${part} partly, ${none} with nothing indexable, ${never} never extracted, ${undet} undetermined${over}`;
+            return `${total} matching unit(s) over ${withRows} of ${documents} document(s) in scope that hold any indexed text. THE ABSENCE OF A HIT IS NOT EVIDENCE OF ABSENCE UNTIL THIS TALLY IS READ: ${full} capture(s) fully indexed, ${part} partly indexed (over the per-capture bound, or only some pages readable), ${none} with nothing indexable at all (no text, or a container with no unit arm), ${never} never extracted \u2014 nobody has read them \u2014 and ${undet} undetermined, where this record cannot yet say which of those is true${over}`;
+          })()
+        } : {
+          state: "COUNTED",
+          documents_with_rows: withRows,
+          rows_matched: total,
+          why: withRows === 0 && documents > 0 ? `none of the ${documents} document(s) in scope holds a single content row. Nothing in them has been cited or marked citable, so this answer is a fact about CITATION and never evidence about what those documents say \u2014 the text of a document nobody has cited is not searched by this arm at all. \`passage:\` with \`rows=passage\` is the arm that searches what those documents SAY` : `${withRows} of ${documents} document(s) in scope hold content rows; ${without} hold none`
         } : {
           state: "UNDETERMINED",
-          why: "this arm answers at the meaning level. What has been extracted from the documents in scope is the content level, and `content:` with `rows=content` is the read that answers it"
+          /* REC-92: TWO reads answer the content level now, and they answer
+             different halves of it. Naming only one would send a member
+             asking "what do these documents say" to the arm that answers
+             "what has anybody cited" — which returns zero over an
+             uncited corpus and reads as an answer. */
+          why: "this arm answers at the meaning level. What has been extracted from the documents in scope is the content level, and TWO reads answer it: `content:` with `rows=content` for the extents somebody has cited or marked citable, and `passage:` with `rows=passage` for what the documents actually SAY. A corpus nobody has cited holds no content rows and may hold every passage you are looking for"
         },
         meaning: at("meaning") ? {
           state: "COUNTED",
@@ -25404,7 +25741,20 @@ var Store = class _Store extends DurableObject {
         }
       }
     };
-    out.says = total > 0 ? `${total} row(s) over ${documents} document(s) in scope` : documents === 0 ? "nothing matched, and no document was in scope to match in \u2014 this is an empty DOCUMENT level, not an empty record" : withRows === 0 ? `nothing matched over ${documents} document(s) in scope, none of which holds a row of this kind at all. That is absence at THIS level and says nothing about the level below it` : `nothing matched over ${documents} document(s) in scope, ${withRows} of which hold rows of this kind that this query's filters excluded`;
+    const axisSays = () => {
+      const never = axis[Object.keys(CONTENT_AXIS_STATES)[3]];
+      const undet = axis[CONTENT_AXIS_UNDETERMINED];
+      const searchable = axis[Object.keys(CONTENT_AXIS_STATES)[0]] + axis[Object.keys(CONTENT_AXIS_STATES)[1]];
+      const unread = never + undet;
+      if (total > 0)
+        return `${total} passage(s) over ${documents} document(s) in scope` + (unread > 0 ? `, and ${unread} capture(s) in that scope have NOT been read at passage grain \u2014 so this is what the searched part of the record says, not all of it` : `, over a scope every capture of which has been read at passage grain`);
+      if (documents === 0)
+        return "nothing matched, and no document was in scope to match in \u2014 this is an empty DOCUMENT level, not an empty record";
+      if (searchable === 0)
+        return `nothing matched, and NOTHING IN SCOPE WAS SEARCHABLE: not one of the ${axis.captures_counted} capture(s) counted has indexed text. This says nothing whatever about what those documents contain \u2014 ${never} have never been extracted and ${undet} cannot be determined. The next move is to read them, not to conclude they are silent`;
+      return `nothing matched over ${searchable} searchable capture(s) in scope` + (unread > 0 ? `, but ${unread} further capture(s) in scope have not been read at passage grain, so this absence covers only the part of the record that has been read` : `, every capture of which has been read at passage grain \u2014 this absence is about the documents and not about our coverage of them`);
+    };
+    out.says = axis ? axisSays() : total > 0 ? `${total} row(s) over ${documents} document(s) in scope` : documents === 0 ? "nothing matched, and no document was in scope to match in \u2014 this is an empty DOCUMENT level, not an empty record" : withRows === 0 ? `nothing matched over ${documents} document(s) in scope, none of which holds a row of this kind at all. That is absence at THIS level and says nothing about the level below it` : `nothing matched over ${documents} document(s) in scope, ${withRows} of which hold rows of this kind that this query's filters excluded`;
     return out;
   }
   /** The fields the surface knows, so a UI can build its own controls from the
@@ -50692,6 +51042,30 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *
    *  ONE READ PER CAUSE AND NO SCAN. The earliest content-level `at` is an index
    *  walk on the tally index; the `readings` probe is a primary-key read. */
+  /** REC-92 — THE RULE ITSELF, LIFTED OUT OF THE READ THAT FETCHES ITS INPUTS,
+   *  and it is a refactor this item was FORCED into rather than one it chose.
+   *
+   *  `#missingContentCause` below answers for ONE capture and pays two reads to
+   *  do it. §4.4's tally answers for a SET, and at `MEANING_AXIS_CAP` captures
+   *  the per-capture form is a thousand reads inside one Durable Object
+   *  invocation — so the tally reads the same three inputs in ONE joined
+   *  statement instead. That left two ways to spell the DECISION, and the
+   *  shared-vocabulary ruling says what to do with two spellings of one
+   *  decision: have one. The inputs are gathered differently; the rule is this
+   *  function and there is no second copy of it.
+   *
+   *  PURE AND STATIC, taking the three facts rather than the store, so the
+   *  suite drives every branch — including the tie on the second, which a real
+   *  corpus produces rarely and which was a real defect in the first draft of
+   *  the method below — without a corpus at all. */
+  static #missingCauseFrom({ hasReading = false, registeredAt = null, firstContentAt = null } = {}) {
+    if (hasReading) return "pre_log";
+    if (!firstContentAt) return "purged";
+    const reg = typeof registeredAt === "string" && registeredAt ? registeredAt : null;
+    if (!reg) return "purged";
+    const sec = (v) => String(v).slice(0, 19);
+    return sec(reg) >= sec(firstContentAt) ? "never_looked" : "purged";
+  }
   #missingContentCause(captureSha, registeredAt = null) {
     if (this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha))
       return "pre_log";
@@ -50699,11 +51073,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       `SELECT MIN(at) AS at FROM observation_log WHERE level = 'content'`
     );
     const firstAt = first && first.at ? String(first.at) : null;
-    if (!firstAt) return "purged";
-    const reg = typeof registeredAt === "string" && registeredAt ? registeredAt : null;
-    if (!reg) return "purged";
-    const sec = (v) => String(v).slice(0, 19);
-    return sec(reg) >= sec(firstAt) ? "never_looked" : "purged";
+    return _Store.#missingCauseFrom({
+      hasReading: false,
+      registeredAt,
+      firstContentAt: firstAt
+    });
   }
   /** REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS STATE. Section 4.2's *"the
    *  `indexed` state `CONTENT-SEARCH-DESIGN.md` section 4.3 needs … is this row
