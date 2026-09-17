@@ -323,3 +323,4 @@ m035-census.txt
 # `src/airun.mjs` and `src/store.mjs` here and restores from it, verifying the
 # restore by sha256 AND by content before the next arm measures the tree.
 .rec107-control-pristine/
+.d402-harness/
