@@ -488,9 +488,53 @@ const TASK_KINDS = ["authority-undetermined"];
  * rather than closed here with a unit cap this item was not scoped to choose:
  * a second bound is a decision about what a member's promote may cost, it wants
  * the chunk-across-ticks remedy section 4.1 already names, and inventing one
- * inside this item would be a fence tighter than its rule. */
+ * inside this item would be a fence tighter than its rule.
+ *
+ * REC-111 CLOSED THAT GAP, AND IT CLOSED IT WITH THE OTHER REMEDY -- a unit
+ * budget, NOT chunk-across-ticks -- FOR A REASON THAT IS A MEASUREMENT AND NOT
+ * A PREFERENCE (M-35, and the decision is recorded in section 4.3 with the
+ * alternative named). Chunking is the remedy for a write that does not FIT a
+ * tick. REC-111 measured BOTH routes that can reach this method and NEITHER can
+ * produce one: the acquire wire admits at most **4,064** units (its 524,288 B
+ * budget divided by the smallest chargeable unit, one text byte plus the 128 B
+ * envelope), predicted by M-20's fit at 58.5 ms -- **22.8 %** of the 257 ms
+ * window; a caller-authored `data/provenance.json` admits at most **13,720**,
+ * because `INLINE_MAX` refuses the file above 1,048,576 B and the store reads
+ * that file only as INLINE TEXT (an R2-backed one is not read at all), at
+ * 105.0 ms -- **40.9 %**. There is no write to chunk, and making one would
+ * require RAISING the wire's byte budget first, which is the exact regression
+ * section 4.3 was corrected for. Chunking would also have to coin a fifth
+ * `indexed` state for *written so far, resuming*, against a vocabulary this
+ * file says at `#observeIndexed` is CLOSED -- and a capture promoted with a
+ * half-written index and nothing saying so is the record claiming coverage it
+ * does not have.
+ *
+ * SO WHAT WAS ACTUALLY WRONG WAS NOT THAT THE UNIT COUNT WAS UNBOUNDED -- IT
+ * WAS THAT BOTH BOUNDS WERE ACCIDENTS. 4,064 falls out of a JSON envelope
+ * ESTIMATE; 13,720 falls out of an inline-file limit that knows nothing about
+ * indexing. Neither is written anywhere, both move silently the day either
+ * constant moves, and nobody could state what a promote may cost without doing
+ * the arithmetic REC-111 did. Section 4.3 asked for both bounds "stated in one
+ * place" so "neither hides the other"; today the byte bound HIDES the unit
+ * bound. That is what the constant below is for.
+ *
+ * THE FIGURE IS M-20's OWN SENTENCE, not a judgement: *"THE LARGEST PROMOTE
+ * THAT FITS is ~3,900 units at this corpus's mean unit size"* -- taken at the
+ * resolution the adjacent constants already use (524,288 / 128 = 4,096 exactly).
+ * At 4,096 units with the byte bound below ALSO at its maximum, M-20's fit
+ * predicts 141.7 ms, 55.1 % of the window.
+ *
+ * AND IT REFUSES NOTHING THE RECORD ACCEPTS TODAY, which is the arm that decides
+ * this is safe to ship rather than the overflow arm. The acquire wire's own
+ * ceiling (4,064) is BELOW it, so the product's own route is untouched --
+ * M-20's worst PDF is 1,181 units, and M-20's worst docx (20,571) already lands
+ * `partial` at the wire today, where its 60 B mean paragraph costs 188 B against
+ * a 524,288 B budget. It bites on exactly one thing: a caller-authored
+ * provenance document of many tiny units, which is the case section 4.3 named
+ * and the case nothing stated. */
 const CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
 const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
+const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
 /* WHICH CONTAINERS HAVE AN INDEXING UNIT ARM AT ALL, which is a DIFFERENT
  * question from whether a given capture produced units and must not be folded
  * into it. A workbook with no `sheet-range` arm and an HTML page with no `dom`
@@ -12054,7 +12098,7 @@ export class Store extends DurableObject {
    *  deck-grain SEARCH ships complete while deck-grain CONNECTIONS wait on
    *  `pptx.mjs` emitting per-shape text -- FW-17's axis, not this one.
    *
-   *  TWO BOUNDS, BOTH FROM M-20 AND NEITHER INVENTED HERE (section 4.3):
+   *  THREE BOUNDS, ALL THREE FROM M-20 AND NONE INVENTED HERE (section 4.3):
    *
    *   - PER UNIT, `CAPTURE_TEXT_UNIT_CAP` (131,072 B). Over M-20's 148,413 units
    *     the largest was 21,224 B, so the cap is 6.2x the largest unit that
@@ -12068,6 +12112,18 @@ export class Store extends DurableObject {
    *     `indexed` observation reads `partial` -- which is why `seq` exists and
    *     why the units are sorted before they are written: a partial index must
    *     be a PREFIX a reader can reason about, not an arbitrary subset.
+   *   - PER CAPTURE, `CAPTURE_TEXT_CAPTURE_UNIT_BOUND` (4,096 units), REC-111.
+   *     The index costs ROWS AND FTS ENTRIES and the two bounds above count
+   *     BYTES, so until this one existed a container of many tiny units was
+   *     bounded only by accident -- see the long note at the constant for the
+   *     two accidents, their measured sizes and why a unit budget was built
+   *     rather than section 4.1's chunk-across-ticks. Over it the capture is
+   *     indexed TO it IN READING ORDER and reads `partial`, exactly as the byte
+   *     bound does: one state, one vocabulary, and the sentence says which bound
+   *     bit. **It bites nothing the product's own wire can send** (that wire
+   *     admits at most 4,064 units), which is deliberate -- a bound that refused
+   *     a document the record accepts today would be a regression wearing the
+   *     costume of caution, and section 4.3 has already shipped one of those.
    *
    *  Returns what it did, for the observation below and for the caller's own
    *  surface. It refuses nothing and can fail no promotion: a document whose
@@ -12119,7 +12175,19 @@ export class Store extends DurableObject {
          that means something different for a Spanish agenda than for an English
          one -- and this record serves both. */
       const size = new TextEncoder().encode(capped).length;
-      if (bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) { overBound++; continue; }
+      /* REC-111 -- THE UNIT BOUND IS TESTED BESIDE THE BYTE BOUND, IN THE SAME
+         BRANCH, AND THAT PLACEMENT IS THE ITEM. Section 4.3 asked for a unit
+         budget "beside the byte budget ... so both are stated in one place and
+         neither hides the other", and an `if` three lines away from this one
+         would have satisfied the letter and not the point: a reader asking WHAT
+         STOPS A PROMOTE has to find one place, not two. Both are counted into
+         the SAME `over_bound`, because `#observeIndexed` publishes one `partial`
+         state and a second tally would be a distinction a member cannot act on.
+         WHICH one bit is named in the observation's sentence, where it belongs.
+         `>=` and not `>`: `written` is the count already in the table, so the
+         unit now being considered would be the (bound + 1)th. */
+      if (written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND
+          || bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) { overBound++; continue; }
       bytes += size;
       if (capped.length < full.length) truncatedUnits++;
       this.sql.exec(
@@ -12197,10 +12265,26 @@ export class Store extends DurableObject {
              + "That is not an absence of text and must not be read as one";
     } else if (r.over_bound > 0) {
       state = "partial";
-      bound = `the per-capture text bound, ${CAPTURE_TEXT_CAPTURE_BOUND} B `
-            + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20) "
-            + "or the acquire answer's own budget, whichever bit first -- the second is "
-            + "the smaller and is what the promote path's inline-file limit forces";
+      /* REC-111 -- THE SENTENCE NAMES THE UNIT BOUND AND THE BYTE BOUND, AND IT
+         SAYS WHICH ONE BIT WHEN IT CAN TELL. A `partial` that named only one of
+         two possible causes is a failure a reader cannot act on: *this document
+         is too big* and *this document has too many pieces* want different
+         answers from a member, and the second is the one nothing could say until
+         this item. The discriminator is the unit count itself -- if the table
+         holds exactly the unit bound, the unit bound is what stopped it, because
+         the byte bound cannot stop a promote at a round number by coincidence.
+         When both could have bitten, BOTH are named rather than one guessed. */
+      const byUnits = r.written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND;
+      bound = (byUnits
+                ? `the per-capture UNIT bound, ${CAPTURE_TEXT_CAPTURE_UNIT_BOUND} units `
+                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20's "
+                + "largest-promote-that-fits and M-35's two route ceilings) -- the index costs "
+                + "ROWS, not only bytes, and this capture offered more pieces than a promote "
+                + "may spend its CPU window on"
+                : `the per-capture text bound, ${CAPTURE_TEXT_CAPTURE_BOUND} B `
+                + "(CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20)")
+            + " or the acquire answer's own budget, whichever bit first -- the last is "
+            + "the smaller in bytes and is what the promote path's inline-file limit forces";
       detail = `${r.written} of ${r.offered} unit(s) indexed in reading order, ${r.bytes} B; `
              + `${r.over_bound} unit(s) past the bound are NOT indexed`;
     } else if (r.written > 0) {

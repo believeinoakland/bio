@@ -288,3 +288,11 @@ _work-ab0036/
 # enough on its own. Added to this item's CLAIMS block at the close rather than
 # taken silently.
 bio-plane/test/.nc-rec102-pristine/
+# REC-111's control pen (`bio-plane/test/nc-rec111.mjs`), on its own line for the
+# reason the note at `.rec84-control-pristine/` gives and that every pen above it
+# repeats: a glob over `.*-control-pristine/` would silently cover a pen nobody
+# declared. The harness keeps per-arm pristine copies of `src/store.mjs` and
+# `src/index.mjs` here while it arms them, and an untracked copy of either left
+# behind by an interrupted run is a SECOND plane source for the next walk to
+# enrol. Added to this item's CLAIMS block at the close rather than taken silently.
+.rec111-control-pristine/
