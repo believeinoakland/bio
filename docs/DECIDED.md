@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1017 rulings across 85 documents.
+1020 rulings across 85 documents.
 
 ## DEC-
 
@@ -1352,6 +1352,8 @@ authority is the file named, never this one.
   `docs/development/kickoffs/CONDUCT-NEXT.md:125`
 - **M0-54** · 2026-09-17 — GATE PROFILE RULED BY CONDUCT #2 AS `DOCS`, ON A MEASUREMENT AND NOT AS A CONCESSION TO THE DISK:** `gates.mjs` classifies the diff DOCS and CONDUCT verified it at the artifact — four paths, every one under `docs/`, no code — so the doc-facing suites plus `plancheck` were the owed gate and a full battery was never…  
   `docs/development/QUEUE.md:1036`
+- **M0-56** · 2026-09-17 — CLAIM 2026-09-17 M0 (M0-56 — the DECIDED index goes stale on any prose edit, and a rebase stales it with nobody touching anything) session: m056-decided-index-pushguard (worktree agent-a3378dc3df6e90e46, branch `worktree-agent-a3378dc3df6e90e46`) opened: 2026-09-17T00:00:00Z released: (held until CONDUCT integrates…  
+  `docs/development/CLAIMS.md:12129`
 
 ## Rulings carrying no id
 
@@ -1763,6 +1765,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:10845`
 - CORRECTED rather than exempted — which is the behaviour those pins exist for.** - `bio-plane/test/meaningquery.test.mjs` — **three superseded pins, corrected with the reason at the site.** The arm COUNT (4 -> 5), the arm LIST by name, and the ambiguous-bare-word MAP  
   `docs/development/CLAIMS.md:11746`
+- `tools/plancheck.mjs` — by SITE, not by file: ONE new block appended after arm 2b (the DECIDED index arm), which INSTALLS the hook and reports its state.  
+  `docs/development/CLAIMS.md:12136`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -1926,11 +1930,11 @@ Settled in prose without an id allocated. Cite them by file and line.
 - BOB #13's CORRECTED RULE, and it cost us both a wrong diagnosis: THE LOCK DOES NOT RELEASE WHEN THE HOLDER EXITS.  
   `docs/development/kickoffs/CONDUCT-NEXT.md:149`
 - **2026-09-16** — RULED 2026-09-16 by BOB #12 (mechanism, BOB's) on CONDUCT #1's report, which flagged the change instead of quietly working around it.  
-  `docs/development/kickoffs/CONDUCT.md:826`
+  `docs/development/kickoffs/CONDUCT.md:839`
 - **2026-09-17** — CORRECTED 2026-09-17, and the correction is BOB's own error caught one day later.** This bullet read *"dirty or off the tip"* and told you to stop and report on either.  
-  `docs/development/kickoffs/CONDUCT.md:852`
+  `docs/development/kickoffs/CONDUCT.md:865`
 - A CLAIM ABOUT THE WORLD IS CORRECTED BY GOING TO THE ARTIFACT.  
-  `docs/development/kickoffs/CONDUCT.md:903`
+  `docs/development/kickoffs/CONDUCT.md:916`
 - **2026-07-31** — CORRECTED 2026-07-31 by session BOB: item (3) of the plan below is SUPERSEDED by the function-specific Worker topology decision.  
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
@@ -1987,6 +1991,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/MEASUREMENTS.md:12815`
 - regex tail, `CONCEDED)\b(?!\.md\b)/;`, asserted to occur exactly once.  
   `docs/development/MEASUREMENTS.md:12832`
+- **2026-09-17** — THE PUSH-TIME DECIDED GUARD — both causes driven against a real remote, and the estate's hook premises re-verified** *(Id minted with `node tools/mintid.mjs M`, run bare.  
+  `docs/development/MEASUREMENTS.md:15262`
 - **2026-08-01** — CORRECTED 2026-08-01 — this hole is CLOSED and the paragraph below is kept as the > reasoning that closed it.** One reconciling Durable Object alarm now serves FIVE > consumers (selection-sweep, task-drain, archive-monitor, connection-derive, > overdue-scan), three of which landed within a week of the decision.  
   `docs/development/MILESTONES.md:118`
 - Bob already RULED the doctrine** — content > produced by a third-party script, if it is ever evidence, is recorded as produced by > THAT party and not by the hosting site.  

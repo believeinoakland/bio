@@ -15259,3 +15259,91 @@ grain through `op=search`, not read back off the same envelope — and `scope.do
 `says` are REACHED, each with its own assertion. **The TRUE zero is unchanged and measured: a query
 whose other arms select no document still reports `documents: 0` and still publishes the
 empty-DOCUMENT-level sentence.** This narrows a FALSE zero; it does not remove the true one.
+### M-45 · 2026-09-17 · **THE PUSH-TIME DECIDED GUARD — both causes driven against a real remote, and the estate's hook premises re-verified**
+
+*(Id minted with `node tools/mintid.mjs M`, run bare. **The first draft of this section wrote
+`M-43` — the corpus floor — and the allocator had NOT given it: it returned `M-45`, having
+stepped over `M-44` as ALREADY HELD by a live sibling.** So the hand-written id would have
+collided with a worker running right now. That is M0-56's own row repeating its own
+`added:` note one file over, and it is recorded rather than quietly corrected, because the
+lesson is the same one this whole item is about: a discipline that costs nothing to follow
+still fails, and the remedy is the tool rather than the intention.)*
+
+Taken by M0-56's worker in worktree `agent-a3378dc3df6e90e46`, instrument: real `git push`
+at a bare repository in the session scratchpad. Nothing here is inherited from a ledger.
+
+**The entry-loop premises, re-verified rather than read off M0-41.** `.git/hooks` held
+fifteen files, ALL of them `*.sample`. `git config --get core.hooksPath` exited 1 (unset).
+`ls .github` reported no such directory. **So M0-41's measurement still holds and this is
+the first entry loop the estate composes.**
+
+**THE COMMON-DIR CORRECTION, and it changes what a hook is worth here.** From this worktree
+`git rev-parse --git-common-dir` answers `/Users/sparky/Downloads/ClaudeCodeBIO/.git` — the
+MAIN checkout's `.git`, not `.git/worktrees/<name>`. **Hooks are therefore SHARED by every
+worktree of a clone, so one install covers the whole worker fleet.** M0-56's brief stated a
+hook is carried by neither a clone nor a worktree; the clone half is right and the worktree
+half is wrong. Beside it, `.git/bio-idalloc` and `.git/bio-machine` are on this disk:
+**`.git/` is already an established place for this project to keep mechanism state** (M0-17),
+so only *git invokes it* is new.
+
+**BOTH CAUSES DRIVEN, SEPARATELY, AT A REAL REMOTE.**
+
+| arm | what changed | push exit | outcome |
+| --- | --- | --- | --- |
+| over-strictness | nothing; index current | **0** | accepted, `docs/DECIDED.md current` on stderr |
+| cause (1) | a ruling added to prose after a regeneration | **1** | REFUSED naming `node tools/decided.mjs`; ref did NOT land |
+| cause (2), before | index verified current | **0** | accepted |
+| cause (2), after | **a rebase onto a peer commit, and nothing else** | **1** | REFUSED; ref did NOT land |
+
+**Cause (2) is the row's point and the arm is built so the REBASE IS THE ONLY VARIABLE:**
+the same branch, the same working tree, no prose edited by the pushing session — green
+before, refused after. Only `arm0-current` and `arm2-before` ever appeared in the remote's
+branch list; every refused ref's bytes stayed on this disk.
+
+**NEGATIVE CONTROL — the mechanism removed.** `.git/hooks/pre-push` copied aside and
+deleted. Cause (1)'s branch pushed **exit 0 and LANDED**; cause (2)'s rebased branch pushed
+**exit 0 and LANDED**. The defect reproduces on demand in both causes. **`git status
+--porcelain` stayed EMPTY throughout, because the hook is not a tracked path — so this
+control moves exactly one variable**, which is the property the two earlier `plancheck`
+controls failed to achieve when `mv` and `chmod 000` both dirtied the tree. Restored by
+`cp`-back, sha256 `8ed050ae...` identical; the next push of the same ref was refused again.
+
+**NEGATIVE CONTROL — the generator broken.** `tools/decided.mjs` copied aside, a syntax
+error appended, driven on a branch whose index was VERIFIED CURRENT first so staleness could
+not confound it. Push REFUSED naming `generator-failed`, carrying the real `SyntaxError:
+Unexpected identifier 'is'` and the sentence *This is NOT a stale index and regenerating
+will not clear it*. **This is the arm that closes the liar shape**: a mechanism that
+regenerated unconditionally and never reported would pass every staleness arm forever while
+hiding a broken generator. Restored by `cp`-back, sha256 `880ac5a4...`, tree clean.
+
+**IDEMPOTENCE / OVER-STRICTNESS.** Regeneration over an already-current tree produced a
+BYTE-IDENTICAL `docs/DECIDED.md`, sha256 `845e6839...` before and after. `git status
+--porcelain` was byte-identical across a `plancheck` run that installed the hook (`diff`
+exit 0). **A mechanism that dirtied a clean tree on every gate run would be worse than the
+defect it closes, and that is measured here rather than asserted.**
+
+**BASELINE, AND IT IS ITSELF A RECEIPT FOR THE ROW.** The battery measured
+**`213/214 suites green · 13445 assertions passing · 423.9s`, exit 1**, with
+`strandedwork.test.mjs` failing its `plancheck --local exits 0` arm and **0 suites skipped,
+3 of 3 fleet members run** (after `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/`,
+each verified a REAL directory and not a symlink, `df -h` 6.2 GiB free at 97%). **The cause
+was M0-56's own defect happening live: appending a CLAIM block to `CLAIMS.md` — cause (1) —
+staled the index mid-run.** Regenerating cleared it. The true baseline is **214/214**, which
+corrects the briefed figure of 213/213 · 13,395 in both terms; the suite total is 214 here
+because no fleet member was skipped.
+
+**THE MECHANISM CAUGHT ITS OWN AUTHOR, ON THE REAL REMOTE, BEFORE THIS ITEM EVER LANDED —
+and it is recorded here because it is worth more than every synthetic arm above.** After the
+arms were driven and the work committed, this worker fetched and found `origin/main` had
+moved to `a403957c`. The rebase conflicted on exactly one path — `docs/DECIDED.md`, the
+generated index — which was resolved the only correct way for a generated file: REGENERATED,
+never side-chosen. The rebase then completed cleanly, **`git status` was EMPTY, and the index
+was STALE ANYWAY**, because the regeneration resolved commit 1 of 3 and the two later commits
+replayed their own older index on top of it.
+
+**That is cause (2) in its purest form: a clean tree, a successful rebase, nothing left to
+notice, and a stale index.** The real `git push` to `origin` was REFUSED by the hook, exit 1,
+naming `node tools/decided.mjs`. **The author of the mechanism reproduced the defect the
+mechanism exists for, minutes after driving five controls proving it would — which is exactly
+CONDUCT #2's finding that the rule was written down and then broken twice more.** No amount
+of care was going to catch this one; the tree looked finished.

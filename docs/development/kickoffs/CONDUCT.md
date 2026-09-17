@@ -196,6 +196,19 @@ rather than assuming the tree was fine.
    the same commit. Where a rule can be mechanised, mechanise it: `plancheck` already reads
    the ledger, and an id with a queue row, no register row and no commit is a WARN it could
    raise on its own.
+3. **`docs/DECIDED.md` NO LONGER NEEDS TO BE REMEMBERED, AND YOU SHOULD STOP TRYING**
+   (M0-56, 2026-09-17). The rule *regenerate after the LAST prose edit AND after the LAST
+   rebase, immediately before the push* was derived mid-session, written down, and then
+   broken twice more in the same session — five stale pushes in total, four of them `main`
+   RED. **It is now mechanised: a `pre-push` hook REFUSES a push whose index is stale,
+   naming `node tools/decided.mjs`.** `plancheck` installs it on every run and says so in
+   its own output, so there is nothing to set up; running the gate once arms it for every
+   worktree of this clone, because hooks live in the shared git common dir.
+   **This closes the REBASE case, which no gate could** — a peer's commit lands new rulings
+   underneath a correct index, and nothing you did made it stale. `plancheck`'s own STALE
+   failure is unchanged and still fires. **The limit, stated: a fresh clone is unguarded
+   until a gate runs in it once, and `--no-verify` skips it.** `VERIFICATION.md`, "the first
+   entry loop this estate composes", carries the argument and what it cannot cover.
 
 ## A ROW NAMES THE DESIGN IT BUILDS FROM (added 2026-09-14 — `CORPUS-STANDARD.md` §4.7, in the file whose owner performs it)
 

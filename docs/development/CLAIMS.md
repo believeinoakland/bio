@@ -12126,3 +12126,59 @@ row's kind to strip, where stripping is a no-op by construction. So this was nev
 defect; it was a passage-only SIGHTING, and the correction reaches all five arms.
 
 **DISCHARGED 2026-09-17** — this block records the discharge of UI-62's delegation; it asks nothing of anybody and is closed on the day it was written.
+## CLAIM 2026-09-17 M0 (M0-56 — the DECIDED index goes stale on any prose edit, and a rebase stales it with nobody touching anything)
+session: m056-decided-index-pushguard (worktree agent-a3378dc3df6e90e46, branch `worktree-agent-a3378dc3df6e90e46`)
+opened: 2026-09-17T00:00:00Z
+released: (held until CONDUCT integrates — REC-96/M0-52's precedent, and it is the right one here: this claim covers `tools/plancheck.mjs`, which every sibling worker in this wave runs as a gate, so releasing on my own report would open the file during exactly the window a sibling is running it.)
+paths:
+  `tools/pushguard.mjs` — NEW FILE, the whole of it. The installer, the hook body, and `--control`.
+  `bio-plane/test/pushguard.test.mjs` — NEW FILE, the whole of it.
+  `tools/plancheck.mjs` — by SITE, not by file: ONE new block appended after arm 2b (the DECIDED
+  index arm), which INSTALLS the hook and reports its state. **NOT arm 2b itself** — the existing
+  STALE failure is the detector this row is forbidden to weaken, and it is untouched byte for byte.
+  **NOT** any other arm, **NOT** `fail`/`warn`/`notes`, **NOT** the summary.
+  `docs/development/VERIFICATION.md` — ONE new section, appended. This is M0-56's named design
+  authority, so the mechanism's argument belongs in it.
+  `docs/development/MEASUREMENTS.md` — new measurement rows only, appended.
+  `docs/development/kickoffs/CONDUCT.md` — ONE line in the integration sequence naming the guard.
+  **NOT `docs/development/QUEUE.md`** — flipping the M0-56 row is CONDUCT's act (`kickoffs/WORKER.md`).
+  **NOT `bio-plane/src/`** — two siblings of this wave are in it (REC-115 in `query.mjs`, REC-113 in
+  the `airunlog` read path) and nothing this row builds reaches the plane at all.
+  **NOT `tools/decided.mjs`** — the generator is CORRECT and is not this row's subject. This row
+  changes WHEN it is run, never WHAT it computes, and a `docs/DECIDED.md` that this mechanism causes
+  to differ by one byte would be a defect in the mechanism.
+
+## CLAIM ADDENDUM 2026-09-17 M0 (M0-56 — the CONDUCT.md edit is larger than the claim reserved, and the claim is corrected rather than the edit excused)
+session: m056-decided-index-pushguard (worktree agent-a3378dc3df6e90e46)
+opened: 2026-09-17T00:00:00Z
+what changed: the original block reserved **`docs/development/kickoffs/CONDUCT.md` — ONE line in the
+  integration sequence naming the guard.** What landed is a **twelve-line numbered point (3.)** appended
+  to the two-rule list under *PLANCHECK GREEN IS NOT THE GATE*, because that list is the site that
+  already says *a lesson written down is not yet a habit — where a rule can be mechanised, mechanise
+  it*, and a one-line pointer there could not carry the limit (a fresh clone is unguarded until a gate
+  runs in it once) without stating it. **A limit omitted for brevity is the exact failure this row was
+  written about**, so the line grew and the claim is corrected instead.
+  **NO EXISTING LINE OF `CONDUCT.md` WAS EDITED** — rules 1 and 2 are byte-identical and the addition is
+  purely appended to the list.
+why this is an addendum and not an edit: `CLAIMS.md` is APPEND ONLY and the one field that changes on an
+  existing block is `released:`. A claim quietly widened in place is a register that no longer records
+  who held what, which is the only thing a claim register has to support.
+
+## CLAIM ADDENDUM 2026-09-17 M0 (M0-56 — this row FALSIFIED a measurement in `m041-instrument-census.mjs`, and the path was not reserved)
+session: m056-decided-index-pushguard (worktree agent-a3378dc3df6e90e46)
+opened: 2026-09-17T00:00:00Z
+path added: `bio-plane/test/m041-instrument-census.mjs` — **unclaimed, not another area's**, and taken
+  rather than delegated because this row is what made it wrong. The census stated, as a hard-coded
+  sentence in two places, *this repository has no git hook and no CI (measured — `.git/hooks` holds
+  only samples, `core.hooksPath` unset, no `.github/`)*. **Installing a `pre-push` hook made the first
+  half FALSE.** Leaving it would have planted this project's most-repeated defect — a hand-carried fact
+  in a document nobody re-measures — **inside the very instrument built to detect it**.
+what changed: a `hookState()` helper and the paragraph that printed the sentence; the sentence is now
+  MEASURED on every run and prints what it found. The second site is a comment, corrected in place with
+  the reason. **NOTHING ELSE IN THE FILE MOVED** — no arm, no matcher, no corpus, no ENTRY_LOOPS row.
+  **The conclusion the census draws is UNCHANGED and that is the point:** the hook composes the PUSH,
+  not the five gates, so every entry loop remains convention-only and skipping one still leaves no trace.
+a trap paid for and not repeated: the first draft of `hookState()` used `readdirSync`, and **this file's
+  own header promises NO DIRECTORY WALK precisely so it stays out of `hygiene.test.mjs`'s `readdirSync`
+  census, which fails BY NAME on a new member.** It probes a NAMED LIST of standard git hook names
+  instead, and the resulting blind spot — a hook under a non-standard name — is STATED at the site.
