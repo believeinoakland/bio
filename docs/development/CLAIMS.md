@@ -11811,3 +11811,29 @@ paths:
   `INTERFACES.md` and IC-112's RESOLUTION. All three are named as owed acts with their actor in
   this item's report rather than left implied, because a note in a region nothing drains is not
   even a note.
+
+## CLAIM 2026-09-17 M0 (M0-52 — an allocation must be UNAMBIGUOUS TO ITS CALLER, both doors)
+session: m052-mintid-argument-surface (worktree agent-a49aa3914466cfa1e, branch `worktree-agent-a49aa3914466cfa1e`)
+opened: 2026-09-17T00:00:00Z
+released: **HELD DELIBERATELY until CONDUCT integrates**, on REC-96's precedent. A claim released by a
+worker that has finished but not been merged protects nothing, and the window between this push and
+that merge is exactly when a sibling could edit the same two files. The release is CONDUCT's act and
+is named here as an owed act with its actor rather than left implied.
+paths:
+  `tools/mintid.mjs` — by SITE, not by file: (1) ONE new block above `usage()` carrying
+  `VALUE_FLAGS`, the exported `KNOWN_FLAGS` and the exported `unknownFlags()`; (2) ONE refusal
+  block at the head of `main`, placed above the `--help` dispatch because every line below it can
+  allocate; (3) TWO appended lines at the foot of `main`'s mint path restating the id on stderr and
+  on the last stdout line; (4) three lines of `usage()` text. **NOT** `mint`, **NOT** `corpusFloor`,
+  **NOT** `ledgerRoot`, **NOT** `NAMESPACES`, **NOT** `KNOWN_COLLISIONS`, **NOT** `audit()`, **NOT**
+  the `--json` branch — the allocation mechanism itself is untouched and was verified untouched by a
+  17-invocation before/after sweep over a pristine copy of the tool.
+  `bio-plane/test/mintid.test.mjs` — ONE new section (the twelfth), the `SECTIONS` count, the import
+  line, and arms (14)-(16) appended to the existing `NEGATIVE CONTROL:` header. **NOT** any existing
+  section, assertion or arm — all eleven prior sections are unchanged.
+  **NOT `docs/development/QUEUE.md`** — flipping the M0-52 row is CONDUCT's act, not this worker's
+  (`kickoffs/WORKER.md`: CONDUCT integrates).
+  **NOT `docs/development/DEBT.md`** — `D-395` and `D-289` are already CLOSED, and `D-395`'s own
+  disposition already names `M0-52` as the mechanism behind it. Nothing is owed there and nothing
+  was written there; editing a closed row to announce that its mechanism landed would be noise in
+  the one ledger that must stay readable.
