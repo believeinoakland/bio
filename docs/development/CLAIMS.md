@@ -10559,4 +10559,52 @@ paths: **`bio-plane/src/index.mjs` — BY REGION, NOT BY FILE, and the region is
   suite, **NOT** `bio-plane/scripts/coverage.mjs` (no op added, no refusal added, and the
   register floor is read from the POST-COMMIT print rather than assumed), **NOT** `newgroup/**`,
   **NOT** `civicos-ui/**`.
-released:
+released: 2026-09-16 by the REC-102 worker, after the full gate and after the push was VERIFIED
+  FROM THE REMOTE — **D-372 CLOSED, AND CLOSED *DRIVEN* RATHER THAN ARGUED, WHICH THE ROW SAID
+  MIGHT NOT BE POSSIBLE.** Branch `rec102-tier3-layer-parts` at `e3bd4a9a` (`f57d06af` the item,
+  `e3bd4a9a` the floor), read back with `git ls-remote --heads origin`. NOT merged; CONDUCT
+  integrates. The tier-3 merge composes its layer parts FROM the tier-2 merge's `perPageTier` —
+  three parts when both merges fired, and the single `baseTier` part, in the same position and
+  byte-identically, when no partition exists. **THE ROW'S FIRST ACT SUCCEEDED AND THE OUTCOME IS
+  STATED UNBLURRED: a fixture was FOUND-BY-BUILDING, so this is the driven branch of the row's
+  two, not the argued one.** The class needs a `no_text_layer` marker to survive the tier-2
+  merge, so it must come from a page tier 1 KEPT; the only real instance in CPDF-20's census is a
+  private individual's resume, so the class is SYNTHESISED — three pages in the shapes
+  `pdfstructure.mjs` reads, no personal record taken — and the trade is stated at the site: it
+  buys REACHABILITY and says nothing about FREQUENCY, which remains CPDF-20's census.
+  **MEASURED BOTH WAYS:** the pristine tree at `92d15614` reads 22/3 and the failure is D-372's
+  own sentence in the record's shape (`[["layer",2,[0,2]],…]` — the page tier 1 read, stamped
+  tier 2); after the fix, 25/0 and `[["layer",1,[2]],["layer",2,[0]],…]`.
+  **Own clean baseline: 207/207 · 12,963 — CONDUCT's briefed figure confirmed EXACTLY**, measured
+  on a pristine tree after `npm ci` in all three dependency-carrying packages, each `node_modules`
+  verified a REAL DIRECTORY and the volume read (4.8 GiB free; no symlink, no `ENOSPC`). Final on
+  the committed tree: **208/208 suites green · 12,991 assertions passing**, from the battery's own
+  completion line, 0 skipped, `211 of 211 discovered item(s) in the commit at HEAD`.
+  **DELTA +28, ATTRIBUTED PER SUITE BY RE-READING BOTH RUNS AND NEVER BY SUBTRACTION:**
+  `tier3-layer-parts.test.mjs` **NEW +25**; `hygiene.test.mjs` **756 → 759** (+3, the new source
+  files to check). 25 + 3 = 28. **Every other suite's count is unchanged.**
+  `coverage.mjs --strict` exit 0 unpiped; `civicos-ui/test/run.mjs` exit 0, all harnesses green;
+  `plancheck --local` 0 fail 0 warn, and BARE after committing 1 fail — UNPUSHED only, before the
+  push. `REGISTER_FLOOR` **1104/198/199 → 1109/199/200 from the POST-COMMIT print**, in its own
+  commit for the reason recorded at the site: an untracked suite is a phantom, so the pre-commit
+  reproducible figure was still the old one. FLEET floor UNMOVED at 3/6/8/76, verified from the
+  same print rather than inferred.
+  **TWO INSTRUMENTS CORRECTED THIS WORK AND BOTH ARE RECORDED RATHER THAN WORKED AROUND.**
+  `coverage.mjs`'s register REFUSED the suite's first control declaration — prose it could not
+  count arms in, D-233's own shape — and the declaration is a marked ordinal list now; FL-10's
+  bundle guard fired the moment a bundled source moved, and the bundle is REBUILT (3,222,330 B,
+  sha256 `5fbf4b8c…`) with nothing bumped, signed, tagged or deployed.
+  **A SELF-INFLICTED CONTAMINATION IS REPORTED RATHER THAN QUIETLY REDONE:** the first baseline
+  battery was started and then `src/index.mjs` was edited while it ran, so every suite that had
+  not yet started would have read the modified file. That run was KILLED BY ITS OWN PID (90375,
+  read from a process table filtered to this worktree — never `pkill -f`, which on this machine
+  reaches every worker's battery), DISCARDED, and the baseline re-measured on a verifiably clean
+  tree. Window: roughly the first twenty minutes of this session; nothing outside this worktree
+  was signalled.
+  **FOR CONDUCT, as ACTS with their actor:** (1) flip REC-102's QUEUE row to `done` with the
+  merge sha — the row is untouched here on purpose, since the sha it must record does not exist
+  until the merge; (2) re-read `REGISTER_FLOOR` from a green `--strict` on the MERGED tree, since
+  three RECORD items were live in the plane's sources at once and only the merged print is ever
+  true of the merged tree. **No DELEGATION is owed, no IC is owed** (the published chain shape did
+  not move — it gains a second scoped part for one class and is otherwise byte-identical, which is
+  the case the row anticipated), **no new debt row was opened, and nothing is left for Bob.**

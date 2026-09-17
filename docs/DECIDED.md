@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-962 rulings across 85 documents.
+963 rulings across 85 documents.
 
 ## DEC-
 
@@ -436,6 +436,8 @@ authority is the file named, never this one.
   `docs/development/INTERFACE-CHANGES.md:1659`
 - **D-229** — 4 RULED · 2 ENFORCED-ELSEWHERE · 2 OPEN · 13 CLEAR · 0 DEFECT.** **The ENFORCED-ELSEWHERE pair is D-229's shape one subsystem over, and only DRIVING it showed that: a machine IS refused — by the MEMBERSHIP GUARD, not by a machine fence** — so the comment now names what actually refuses, **because a later author…  
   `docs/archive/ledgers/QUEUE-2026-08.md:432`
+- **D-233** — TWO INSTRUMENTS CORRECTED THIS WORK AND BOTH ARE RECORDED RATHER THAN WORKED AROUND.** `coverage.mjs`'s register REFUSED the suite's first control declaration — prose it could not count arms in, D-233's own shape — and the declaration is a marked ordinal list now; FL-10's bundle guard fired the moment a bundled…  
+  `docs/development/CLAIMS.md:10592`
 - **D-234** · 2026-08-08 — THE PUBLICATION QUESTION IS SETTLED: `composition` PUBLISHES THE RECORD'S BYTES**, read back from `inquiry_basis_versions` after the promotion, with `composition_of: "record"` on the answer so a consumer can tell which bytes it holds; asserted equal to what `op=basisversions` publishes for the same version.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:103`
 - **D-235** · 2026-08-08 — TWO SUPERSEDED PINS CORRECTED, NEVER EXEMPTED, each with why the old one was right when written:** §4's sole-output walk ran over the WHOLE METHOD and scored the answer's new `state: recorded.state` — a read-back, the opposite of what §4 forbids — as a violation, so it now walks the WRITE REGION **with the…  
