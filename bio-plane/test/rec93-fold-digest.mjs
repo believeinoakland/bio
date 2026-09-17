@@ -111,7 +111,7 @@ const sha = (v) => createHash("sha256").update(v).digest("hex");
 const here = fileURLToPath(new URL("../..", import.meta.url));
 const other = process.argv[2] || null;
 
-const mine = await answerFrom(here);
+let mine = await answerFrom(here);   /* `let`: REC-113 strips its added keys below */
 console.log(`CURRENT  ${here}`);
 console.log(`  bytes  ${Buffer.byteLength(mine)}`);
 console.log(`  sha256 ${sha(mine)}`);
@@ -136,6 +136,38 @@ const theirs = await answerFrom(other);
 console.log(`\nCOMPARISON  ${other}`);
 console.log(`  bytes  ${Buffer.byteLength(theirs)}`);
 console.log(`  sha256 ${sha(theirs)}`);
+
+/* CORRECTED 2026-09-17, REC-113 / IC-116, AND THE SUBJECT OF THIS FILE IS
+   UNCHANGED. This probe asks whether THE FOLD moved a value — most sharply
+   whether `seq`, store-wide in the new table and per-run in the old one, still
+   answers 1,2,3… That question is untouched by this item. What changed is that
+   `op=airunlog` now also projects `result_kind` / `result_ref` and STATES a
+   per-row `coverage` (the READ half of D-366, additive on I3), so a raw
+   comparison against a pre-fold checkout fails for a reason that is not the
+   fold. Exactly those keys are stripped, and only they: the remainder must still
+   match BYTE FOR BYTE, so every value, key and POSITION the fold could have
+   disturbed is still pinned. The strip is guarded — a strip that matched nothing
+   would turn this whole file into a free pass. */
+const ADDED_ENTRY_KEYS = ["result_kind", "result_ref", "coverage"];
+const ADDED_VOCAB_KEYS = ["coverage", "coverage_undetermined"];
+const WIRE = (v) => JSON.stringify(v, null, 1);   /* the plane's own indent */
+const stripAdded = (text) => {
+  const o = JSON.parse(text);
+  const b = o.result || o;
+  for (const e of b.entries || []) for (const k of ADDED_ENTRY_KEYS) delete e[k];
+  for (const k of ADDED_VOCAB_KEYS) delete (b.vocabulary || {})[k];
+  return WIRE(o);
+};
+const mineStripped = stripAdded(mine);
+console.log(`\nSTRIPPED (REC-113's added keys removed from the CURRENT answer)`);
+console.log(`  bytes  ${Buffer.byteLength(mineStripped)}`);
+console.log(`  sha256 ${sha(mineStripped)}`);
+if (!(mineStripped.length < mine.length)) {
+  console.log(`\nFAIL: the strip removed nothing. An arm that did not arm is a finding, and a `
+            + `no-op strip would make the comparison below pass for free.`);
+  process.exit(1);
+}
+mine = mineStripped;
 
 if (mine === theirs) {
   console.log(`\nIDENTICAL — op=airunlog answers byte-for-byte the same before and after the fold.`);

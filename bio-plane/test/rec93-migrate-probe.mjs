@@ -109,7 +109,42 @@ let beforeText;
   const afterText = await TEXT(`op=airunlog&token=${TOK}&run=${RUN}`);
   console.log(`  op=airunlog is ${Buffer.byteLength(afterText)} bytes`);
 
-  t("the migrated log answers BYTE-IDENTICALLY through op=airunlog", afterText === beforeText, true);
+  /* CORRECTED 2026-09-17, REC-113 / IC-116 — THE COMPARISON IS UNCHANGED IN WHAT
+     IT TESTS AND IS NARROWED TO KEEP TESTING IT.
+     ==================================================================
+     THIS PROBE'S SUBJECT IS `#migrate`: does the fold carry the OLD build's rows
+     across into the new table with every value intact? That question is
+     untouched by this item. What changed is that the NEW build's `op=airunlog`
+     additionally PROJECTS `result_kind` / `result_ref` and STATES a per-row
+     `coverage` (the READ half of D-366, accepted as additive on I3), so a raw
+     text comparison against a build that predates the projection now fails for a
+     reason that has nothing to do with migration.
+     SO THE ADDED KEYS ARE STRIPPED — AND ONLY THEY. Stripping is not a weakening
+     here: the remainder must still match BYTE FOR BYTE, which means every
+     migrated value, every key and EVERY POSITION is still pinned. Exempting this
+     probe, or deleting it, would have retired the only instrument that watches
+     `#migrate` over a real old-build store — an exempted test is a rule nobody
+     is enforcing and nobody remembers deleting.
+     THE ARM THAT THE STRIP COULD HIDE IS ADDED BELOW rather than assumed away:
+     the stripped text must be SHORTER than the raw one, so a strip that silently
+     matched nothing is a finding instead of a free pass. */
+  const ADDED_ENTRY_KEYS = ["result_kind", "result_ref", "coverage"];
+  const ADDED_VOCAB_KEYS = ["coverage", "coverage_undetermined"];
+  const WIRE = (v) => JSON.stringify(v, null, 1);   /* the plane's own indent */
+  const strip = (text) => {
+    const o = JSON.parse(text);
+    const b = o.result || o;
+    for (const e of b.entries || []) for (const k of ADDED_ENTRY_KEYS) delete e[k];
+    for (const k of ADDED_VOCAB_KEYS) delete (b.vocabulary || {})[k];
+    return WIRE(o);
+  };
+  const afterStripped = strip(afterText);
+  t("the strip actually removed something — an arm that did not arm is a finding, and a "
+  + "no-op strip would turn the pin below into a free pass",
+    afterStripped.length < afterText.length, true);
+  t("the migrated log answers BYTE-IDENTICALLY through op=airunlog, once REC-113's three "
+  + "added keys are stripped — every MIGRATED value, key and position is unchanged",
+    afterStripped === beforeText, true);
 
   const after = JSON.parse(afterText);
   const entries = (after.result || after).entries || [];
