@@ -37,10 +37,48 @@
      node tools/corpuscheck.mjs                 check every governed document; exit 1 on fail
      node tools/corpuscheck.mjs --write [files]  regenerate the Contents block in place
      node tools/corpuscheck.mjs --list           print the governed set
+     node tools/corpuscheck.mjs --coverage       print the docs/development/ classification
    Governed: docs/architecture/*.md plus the files listed in CORPUS-STANDARD.md's
-   "Governed documents outside docs/architecture" table (one backticked path per row). */
+   "Governed documents outside docs/architecture" table (one backticked path per row).
 
-import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
+   COVERAGE — WHY THIS TOOL WALKS docs/development/ AS WELL AS READING §5 (M0-43).
+
+   The §5 table is HAND-KEPT, and a hand-kept list has the failure mode M0-41's instrument
+   census named: not absence but OPTIONAL-AND-UNAUDITED. The tool is right about every
+   document it is told about, which is exactly why nobody notices the ones it is not. A
+   governed design added under `docs/development/` is checked by NOTHING until somebody
+   remembers to add the row.
+
+   THE FIX IS AUDIT, NOT REPLACEMENT, and the distinction is the whole design.
+   `docs/architecture/` is a SINGLE-PURPOSE directory, so there the path implies the class
+   and a walk can decide governance on its own. `docs/development/` is MIXED — ledgers,
+   kickoffs, process documents and designs share it — so a walk there cannot decide
+   governance without making a decision that belongs to CORPUS-STANDARD (and to Bob, who
+   owns it). What a walk CAN decide is COVERAGE. So:
+
+     discovery establishes the POPULATION      (every .md under docs/development/, recursive)
+     the standard's tables decide the CLASS    (§5 governed · §6 excluded · §6 undecided)
+     this tool FAILS on any member of the population carrying NO class, BY NAME
+
+   That is the two-way requirement: a file there is GOVERNED or it is EXPLICITLY EXCLUDED
+   WITH A REASON, and a new file satisfying neither cannot pass quietly. §6 already excluded
+   the ledgers and the process documents by class in prose; this makes that same exclusion
+   MACHINE-READABLE so the tool can tell "excluded on purpose" from "nobody looked".
+
+   HOW A LIAR WOULD SATISFY THIS, STATED SO THE TEST CAN REFUSE IT. The cheap defeat is a
+   check that walks §5 and reports every entry healthy — congratulating itself over exactly
+   the set that was never the problem. Two guards, both driven from OUTSIDE the tables:
+     - the suite PLANTS an unclassified .md (and one in a SUBDIRECTORY, because a
+       non-recursive walk passes every table-driven arm) and requires a named failure;
+     - an EXCLUSION row is a literal path or a single-directory glob, never a `**`, and the
+       tool refuses an exclusion that shadows a governed document. A broad pattern is the
+       other way to make the population look classified without classifying it.
+   The UNDECIDED table is literal paths ONLY and every row must EXIST: it is a CLOSED,
+   ENUMERATED hole that somebody drains, not an open bucket that swallows new files. Each
+   run PRINTS the per-class counts, because a statement of what was CLASSIFIED beats an
+   absence of complaint (CLAUDE.md, `50 governed documents` over `0 fail`). */
+
+import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname, relative, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
@@ -61,6 +99,131 @@ export function governed() {
   const sect = (std.split(/^## /m).find((s) => /^(\d+\.\s*)?Governed documents outside/i.test(s)) || "").split(/^### /m)[0];
   for (const m of sect.matchAll(/^\|\s*`([^`]+\.md)`/gm)) out.add(m[1]);
   return [...out];
+}
+
+/* ---------------------------------------------------------------- COVERAGE (M0-43)
+
+   The population: every `.md` under docs/development/, RECURSIVELY — `research/` holds
+   three governed documents, so a flat `readdirSync` would leave a real subdirectory of the
+   design corpus outside the audit while passing every table-driven arm. */
+export const DEVDIR = "docs/development";
+
+export function population(dir = DEVDIR) {
+  const out = [];
+  const walk = (rel) => {
+    const abs = join(ROOT, rel);
+    if (!existsSync(abs)) return;
+    for (const e of readdirSync(abs).sort()) {
+      const r = `${rel}/${e}`;
+      if (statSync(join(ROOT, r)).isDirectory()) walk(r);
+      else if (e.endsWith(".md")) out.push(r);
+    }
+  };
+  walk(dir);
+  return out;
+}
+
+function standardText() {
+  return existsSync(join(ROOT, STANDARD)) ? readFileSync(join(ROOT, STANDARD), "utf8") : "";
+}
+
+/* The body of a `## <n>. <title>` section, up to its first `### ` sub-heading. */
+function section(std, re) {
+  return (std.split(/^## /m).find((s) => re.test(s)) || "").split(/^### /m)[0];
+}
+/* The body of a `### <title>` sub-section, up to the next `## ` or `### `. */
+function subsection(std, re) {
+  const parts = std.split(/^### /m);
+  const hit = parts.find((s) => re.test(s));
+  return hit ? hit.split(/^## /m)[0] : "";
+}
+
+/* A row's pattern cell. Literal path, or ONE `dir/*.md` glob — never `**`, and never a
+   pattern with no `.md` suffix, because both are ways to classify the population without
+   classifying anything. `bad` is returned rather than thrown so the CLI can name the row. */
+export function matchPattern(pat, path) {
+  if (pat === path) return true;
+  const g = /^(.+)\/\*\.md$/.exec(pat);
+  return !!g && path.startsWith(`${g[1]}/`) && path.slice(g[1].length + 1).endsWith(".md")
+    && !path.slice(g[1].length + 1).includes("/");
+}
+
+export function excluded() {
+  const sect = section(standardText(), /^(\d+\.\s*)?What this standard does not govern/i);
+  const rows = [];
+  for (const m of sect.matchAll(/^\|\s*`([^`]+)`\s*\|\s*([^|]*?)\s*\|\s*([^|]*?)\s*\|/gm)) {
+    rows.push({ pattern: m[1].trim(), klass: m[2].trim(), why: m[3].trim() });
+  }
+  return rows;
+}
+
+export function undecided() {
+  const sect = subsection(standardText(), /^Undecided —/i);
+  const rows = [];
+  for (const m of sect.matchAll(/^\|\s*`([^`]+\.md)`\s*\|\s*([^|]*?)\s*\|/gm)) {
+    rows.push({ path: m[1].trim(), question: m[2].trim() });
+  }
+  return rows;
+}
+
+/* The audit. Returns every class plus the failures, so plancheck, the CLI and the suite
+   all read ONE computation rather than three that can disagree.
+
+   `pop` is injectable for ONE reason and it is stated so the next reader does not mistake
+   it for a seam that weakens the check: the suite must PLANT an unclassified file to prove
+   the walk looks OUTSIDE the tables, and writing a fixture into `docs/development/` while a
+   concurrent battery reads that directory is the contamination class this project has
+   already paid for. The walk itself is asserted separately and directly against the REAL
+   tree, including a file in a SUBDIRECTORY, so an injected plant cannot hide a
+   non-recursive `population()`. */
+export function coverage({ pop = population() } = {}) {
+  const gov = new Set(governed().filter((p) => p.startsWith(`${DEVDIR}/`)));
+  const exc = excluded();
+  const und = undecided();
+  const undPaths = new Set(und.map((r) => r.path));
+  const fails = [];
+
+  for (const r of exc) {
+    if (/\*\*/.test(r.pattern) || !r.pattern.endsWith(".md")) {
+      fails.push(`${STANDARD} §6: exclusion pattern \`${r.pattern}\` is too broad — a row is a literal `
+        + `\`path.md\` or one \`dir/*.md\`, never a \`**\`, because a pattern that swallows the directory `
+        + `classifies the population without classifying anything`);
+      continue;
+    }
+    if (!r.why || r.why.length < 12) {
+      fails.push(`${STANDARD} §6: exclusion \`${r.pattern}\` carries no reason — §6's model is excluded WITH A REASON, not merely absent`);
+    }
+    const shadowed = [...gov].filter((p) => matchPattern(r.pattern, p));
+    if (shadowed.length) {
+      fails.push(`${STANDARD} §6: exclusion \`${r.pattern}\` shadows governed document(s) ${shadowed.join(", ")} — a file cannot be both governed and excluded`);
+    }
+  }
+  for (const r of und) {
+    if (!existsSync(join(ROOT, r.path))) {
+      fails.push(`${STANDARD} §6: UNDECIDED row \`${r.path}\` names a file that does not exist — the undecided list is drained, not left to rot`);
+    }
+    if (gov.has(r.path)) {
+      fails.push(`${STANDARD} §6: UNDECIDED row \`${r.path}\` is also in §5's governed table — it is decided; drop the row`);
+    }
+  }
+
+  const classOf = (p) => {
+    if (gov.has(p)) return "governed";
+    const e = exc.find((r) => matchPattern(r.pattern, p));
+    if (e) return "excluded";
+    if (undPaths.has(p)) return "undecided";
+    return null;
+  };
+  const by = { governed: [], excluded: [], undecided: [], unclassified: [] };
+  for (const p of pop) by[classOf(p) ?? "unclassified"].push(p);
+
+  for (const p of by.unclassified) {
+    fails.push(`UNCLASSIFIED — ${p} is under ${DEVDIR}/ and the standard does not say what it is. `
+      + `Add it to CORPUS-STANDARD.md §5 (governed, and give it front matter), to §6's exclusions `
+      + `WITH A REASON, or to §6's UNDECIDED table and route it. A design document nobody classified `
+      + `is checked by nothing.`);
+  }
+  return { ...by, population: pop, exclusions: exc, undecidedRows: und, fails };
 }
 
 /* GitHub-style slug, the one most viewers resolve. Duplicate headings get -1, -2 … */
@@ -238,6 +401,16 @@ export function writeContents(path) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const args = process.argv.slice(2);
   if (args.includes("--list")) { for (const p of governed()) console.log(p); process.exit(0); }
+  if (args.includes("--coverage")) {
+    const c = coverage();
+    for (const k of ["governed", "excluded", "undecided", "unclassified"]) {
+      console.log(`  ${k.padEnd(13)} ${String(c[k].length).padStart(3)}`);
+      if (k === "undecided" || k === "unclassified") for (const p of c[k]) console.log(`      ${p}`);
+    }
+    for (const f of c.fails) console.log(`  FAIL  ${f}`);
+    console.log(`\ncorpuscheck --coverage: ${c.population.length} document(s) under ${DEVDIR}/, ${c.fails.length} fail`);
+    process.exit(c.fails.length ? 1 : 0);
+  }
   if (args.includes("--write")) {
     const files = args.filter((a) => !a.startsWith("--")).map((a) => relative(ROOT, join(process.cwd(), a)).replace(/\\/g, "/"));
     const set = files.length ? files : governed();
@@ -251,6 +424,13 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     for (const n of r.notes) console.log(`  note  ${n}`);
     for (const f of r.fails) { console.log(`  FAIL  ${f}`); fails++; }
   }
-  console.log(`\ncorpuscheck: ${docs} governed document(s), ${fails} fail`);
+  /* M0-43: the coverage audit runs in the same pass, so the DEFAULT invocation — the one
+     plancheck and every session actually runs — is the one that notices a design document
+     nobody classified. A flag nobody passes is not a mechanism. */
+  const cov = coverage();
+  for (const f of cov.fails) { console.log(`  FAIL  ${f}`); fails++; }
+  console.log(`\ncorpuscheck: ${docs} governed document(s); under ${DEVDIR}/ ${cov.population.length} document(s) `
+    + `— ${cov.governed.length} governed, ${cov.excluded.length} excluded, ${cov.undecided.length} undecided, `
+    + `${cov.unclassified.length} unclassified; ${fails} fail`);
   process.exit(fails ? 1 : 0);
 }

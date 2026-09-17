@@ -205,7 +205,56 @@ teaches the registry to lie in the direction nobody checks.
 
 **6. A CORRECTION TO A DESIGN DOES NOT REACH A WORKER THAT IS ALREADY RUNNING, AND PUSHING IT
 DOES NOT EITHER** (measured 2026-09-14, twice in one evening). A worker is a SUBAGENT of the
-session that spawned it, not a session: there is no message channel to it mid-run, and the only
+session that spawned it, not a session. **THE CLAUSE THAT STOOD HERE — *there is no message channel to
+it mid-run* — IS FALSIFIED AS AN ABSOLUTE, found 2026-09-16 by CONDUCT by CALLING THE TOOL instead of
+re-reading the sentence.** `SendMessage` addressed to a live subagent's id is ACCEPTED and answers
+*queued for delivery at its next tool round*; it was sent to six live workers. **So there IS an inbox on
+the other side, and four documents agreeing there was not agreed on exactly as much as two digests of an
+empty body** — this file's own rule 7, landing on this file.
+
+**WHAT IS ESTABLISHED AND WHAT IS NOT, kept apart on purpose, because collapsing them is how a premise
+gets replaced by its opposite and stays just as unchecked.** ESTABLISHED: the send is accepted, so the
+channel is not absent. **NOT ESTABLISHED: that a mid-run worker RECEIVES it, reads it, and ACTS on it.**
+Accepted, delivered and acted-on are three claims and only the first has a witness — and this project's
+own tool contract says so in as many words, that a successful send means the message reached the session
+rather than that its Claude read it. **UNDETERMINED IS FIRST-CLASS AND MUST BE STATED (`CLAUDE.md`), so it
+is stated rather than resolved by optimism.**
+
+**WHAT WOULD SETTLE IT, named so the next session drives it instead of re-reasoning it: a worker's REPORT
+exhibiting behaviour it could only have from the message** — for the 2026-09-16 case, a report naming a
+PUSHED branch and sha from a worker spawned off a commit whose `WORKER.md` still said *do not push*. That
+is an artifact, not an inference. Until such a report exists, **messaging a running worker is worth DOING
+(it is free and it may work) and worth RELYING ON by nobody**: pay the correction at integration as
+before, and treat a delivered message as a bonus rather than as the plan. The integrator still owns the
+act, and the row still carries it with its actor.
+
+**MEASURED THE SAME DAY, and the two halves came back DIFFERENTLY — which is why they were kept apart.**
+
+- **ITEM 1 WORKS, and this is MY measurement rather than a report.** `git ls-remote` counted **16
+  `worktree-agent-*` branches on origin against 3 that morning**, six of them dated 2026-09-16, and one
+  worker's own commit subject reads *"release the claim, with the push verified from the remote"* — the
+  wording `WORKER.md` gained at `497af84a`. Workers spawned off the corrected commit READ it and DID it.
+  A kickoff correction reaches a worker SPAWNED AFTER it, reliably, with no channel involved.
+- **THE MESSAGE CHANNEL ACTED, and this is CONDUCT's measurement, attributed because I did not observe
+  it:** a worker stopped with its work UNCOMMITTED and its final battery still running — REC-91's exact
+  failure shape forming a second time — and **a message resumed it; it then committed, pushed and verified
+  from the remote.** A stopped subagent does not resume spontaneously, so the causal claim stands on more
+  than correlation.
+
+**THE SYNTHESIS IS WORTH MORE THAN EITHER FINDING, AND IT IS WHY D-288's DECLINED OPTION IS NOW HALF-BUILT
+BY ACCIDENT.** The two mechanisms cover DIFFERENT failures and neither is the other's substitute. **Item 1
+protects work ONCE COMMITTED. The channel protects work that is NOT YET COMMITTED** — and that window is
+precisely what D-288's own text named as the objection to shape (b): *"leaves the window between the
+worker's last commit and its report unprotected."* **That was the one real argument against (b), and the
+channel is what closes it.** Together they cover more than either, which is the case for keeping both.
+
+**WHAT IS STILL NOT ESTABLISHED, kept because the distinction is the whole point of this rule: a RESUME is
+not a CORRECTION.** What was measured is a stopped worker restarting. Nobody has yet measured a RUNNING
+worker reading a design correction and APPLYING it mid-item — a different act, needing judgement rather
+than a restart. **So: message a running worker, and rely on the channel as a RESCUE for a worker that has
+stalled — that much is paid for. Do NOT rely on it to deliver a correction**, and pay the correction at
+integration as before, with the row carrying it and its actor. **The old trade was correctly priced; what
+was wrong was the claim that those were the only two options.** The only session-to-session channel remains the one
 session-to-session channel is the one CONDUCT and this session use. Nor does `main` help — a
 worktree is a checkout of a COMMIT (`CLAUDE.md`), so a correction pushed after a worker started
 is on a commit that worker will never read. Its integrator has exactly two options, killing a

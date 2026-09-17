@@ -28,13 +28,19 @@ const REPO = join(PLANE, "..");
 
 const REGISTER = join(PLANE, "scripts/control-register.mjs");
 const VERIF = join(REPO, "docs/development/VERIFICATION.md");
+/* M0-42's three further subjects. ADMISSION and AFFORD are REAL SUITES whose
+   declarations the arms edit; COVERAGE is the site the limit must be stated at. */
+const ADMISSION = join(PLANE, "test/admission-gate.test.mjs");
+const AFFORD = join(PLANE, "test/affordances.test.mjs");
+const COVERAGE = join(PLANE, "scripts/coverage.mjs");
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
 /* A per-file floor. A "restore" proved equal over two empty files is the receipt
    this guard exists for. */
-const FLOOR = { [REGISTER]: 8_000, [VERIF]: 40_000 };
+const FLOOR = { [REGISTER]: 8_000, [VERIF]: 40_000,
+                [ADMISSION]: 10_000, [AFFORD]: 40_000, [COVERAGE]: 90_000 };
 
 /* ------------------------------------------------------------------ the arms */
 
@@ -42,7 +48,8 @@ const ARMS = [
   { id: "0-BASELINE", file: null,
     declared: "nothing armed -> the suite is GREEN and the tally is non-zero. Without "
             + "this row, a run of seven nulls is indistinguishable from seven passes.",
-    mustFail: [], mustPass: ["A1", "A2", "A3", "A4", "A5", "B1", "B2", "B3c", "B4", "B6"] },
+    mustFail: [], mustPass: ["A1", "A2", "A3", "A4", "A5", "B1", "B2", "B3c", "B4", "B6",
+                             "C1", "C2", "C3", "C4a", "C4b", "C5a", "C5b", "C5c", "C5d", "C5e", "C6", "C7a", "C7b"] },
 
   /* DECLARATION CORRECTED 2026-08-09 AFTER ITS FIRST RUN, and the correction is
      the finding rather than a tidy-up. The first draft declared A4 and A5 to stay
@@ -54,16 +61,55 @@ const ARMS = [
        - A5 counts suites with a COUNTABLE declaration. Most of the estate marks
          its arms with arrows, so zeroing transitions collapses the corpus.
      Recorded here rather than smoothed: the arm found my declaration wrong, not
-     the subject, and that is the commonest result a control produces here. */
+     the subject, and that is the commonest result a control produces here.
+
+     >>> AND THE DECLARATION WENT WRONG A SECOND TIME, THE OTHER WAY, MEASURED
+     2026-09-16 BY M0-42 AND CORRECTED ABOVE RATHER THAN SMOOTHED. **A5 was
+     declared to FAIL under this arm and it now STAYS GREEN.** Nothing about the
+     subject changed; the CORPUS GREW. A5's non-vacuity floor is `readable > 100`,
+     and with transitions zeroed the enumerated half alone now classifies 124 of
+     198 declarations (measured, not reasoned about: 197 classified today, 124
+     surviving with transitions zeroed, 172 surviving with enumerations zeroed).
+     When D-263 ran this arm on 2026-08-09 the corpus was ~146 and that same floor
+     bit; at 198 it does not.
+
+     **A5 IS DELIBERATELY NOT RETUNED TO MAKE THIS ARM FIRE AGAIN**, and the reason
+     is a rule rather than a preference: A5's job is to show the corpus is not
+     empty, never to be sensitive to the transition counter dying — that is A1,
+     A3 and A4's job, and all three still fall. Its appearance in this arm's
+     declaration was always INCIDENTAL, added in 2026-08-09's own correction
+     because the floor happened to bite that day. Moving an assertion's threshold
+     so that a control declaration comes true again is tuning the subject to fit
+     the control, which is the wrong way round and would leave a floor chosen by a
+     driver rather than by what A5 is for.
+
+     **WHAT IS WORTH CARRYING OUT OF IT IS THE CLASS, NOT THE ARM.** `readable >
+     100` against a live 197 is a SLACK FLOOR — a hand-carried number nobody
+     re-measured while the thing it bounds grew by a third — which is this
+     project's most-repeated finding sitting inside the suite built to catch
+     figures that cannot be falsified. It is NAMED here and left for whoever owns
+     A5's floor to move, because tightening it is a decision about what A5 asserts.
+     **And note how it was found: not by anyone reading the file, but by RE-RUNNING
+     a control whose declaration had quietly stopped being true. A declaration
+     nobody re-runs decays in exactly this direction — toward green — and says
+     nothing while it does. That is M0-42's own subject arriving inside M0-42's own
+     harness, which is why it is recorded at this length.** */
   { id: "1-NO-TRANSITIONS", file: REGISTER,
-    declared: "countTransitions always 0 -> A1, A3, A4 and A5 FAIL — every arm whose "
+    declared: "countTransitions always 0 -> A1, A3 and A4 FAIL — every arm whose "
             + "count comes from an arrow, which after the first run turned out to "
-            + "include A4 (one ordinal, so enumerations refuse it) and A5 (the real "
-            + "corpus marks its arms with arrows). A2 stays GREEN, because an "
-            + "enumerated declaration never depended on arrows.",
+            + "include A4 (one ordinal, so enumerations refuse it). A2 stays GREEN, "
+            + "because an enumerated declaration never depended on arrows. A5 ALSO "
+            + "STAYS GREEN, and that is a CORRECTION dated 2026-09-16 rather than the "
+            + "original declaration: A5 used to fall here and no longer does.",
     find: "export const countTransitions = (text) => (text.match(ARM) || []).length;",
     put:  "export const countTransitions = (text) => 0 * (text.match(ARM) || []).length;",
-    mustFail: ["A1", "A3", "A4", "A5"], mustPass: ["A2", "B1", "B2"] },
+    /* A5 MOVED FROM mustFail TO mustPass ON 2026-09-16 (M0-42), with the reason in
+       the block above: it no longer falls here because the corpus grew, not because
+       anything was exempted. The judgement array and the prose declaration are two
+       statements of one claim, and a control that corrects only the prose has left
+       the half the harness actually reads still wrong — which is how this file read
+       NOT AS DECLARED on the run after its own correction. */
+    mustFail: ["A1", "A3", "A4"], mustPass: ["A2", "A5", "B1", "B2"] },
 
   { id: "2-NO-ENUMERATIONS", file: REGISTER,
     declared: "countEnumerations always 0 -> A2 FAILS (3 -> null, the UNCLASSIFIED "
@@ -113,7 +159,65 @@ const ARMS = [
     find: "so this is a\nlive property and not a curiosity.",
     put:  "so the property is live in\nthe estate rather than merely available to it.",
     mustFail: [], mustPass: ["A1", "A2", "A3", "A4", "A5", "B1", "B2", "B3c", "B4", "B6"] },
+
+  /* ==================== M0-42's FOUR ARMS — RUN vs DECLARED ====================
+     Arm 7 is THE LOAD-BEARING ONE and is this item pointed inward: a declaration
+     that states an arm and records no run must be VISIBLE as such without anyone
+     reading the worker's prose. Arm 8 decides whether the mechanism is USABLE.
+     Arm 9 proves the stated limit is REAL rather than modest. Arm 10 keeps the
+     limit itself from being quietly deleted by a later editor. */
+
+  { id: "7-STRIP-THE-RUN-TOKEN", file: ADMISSION,
+    declared: "THE ARM THIS ITEM EXISTS FOR. Take a suite whose declaration RECORDS "
+            + "its run and remove the record, leaving the arms exactly as they were "
+            + "-> C5c FAILS BY NAME. That is a control DECLARED and not RUN becoming "
+            + "visible in the register's own output, which before this item it was "
+            + "not: every declaration read identically whether its arms had been run "
+            + "or only imagined.",
+    find: "(run 2026-08-09, REC-79)",
+    put:  "(planned, REC-79)",
+    mustFail: ["C5c"], mustPass: ["C1", "C2", "C3", "C4a", "C4b", "C6", "C7a", "C7b", "A1", "B1"] },
+
+  { id: "8-OVER-STRICTNESS", file: ADMISSION,
+    declared: "THE ARM THAT DECIDES WHETHER THIS IS USABLE. Rewrite the same run "
+            + "record in a DIFFERENT spelling the estate also writes, keeping the "
+            + "claim identical -> EVERY arm stays GREEN. A worker who genuinely ran "
+            + "the control must never be told they did not because they reached for "
+            + "another word; a register that makes honest work expensive gets "
+            + "bypassed and then measures nothing. The vocabulary was FITTED to what "
+            + "workers had already written (164 of 198 declarations on 2026-09-16), "
+            + "not imposed on them.",
+    find: "(run 2026-08-09, REC-79)",
+    put:  "(DRIVEN 2026-08-09, REC-79)",
+    mustFail: [], mustPass: ["C1", "C2", "C3", "C4a", "C4b", "C5a", "C5b", "C5c", "C5d", "C6", "C7a", "C7b"] },
+
+  { id: "9-FORGE-A-TOKEN", file: AFFORD,
+    declared: "**THIS ARM IS DECLARED TO SUCCEED AT FORGING, AND ITS RED IS THE "
+            + "FINDING RATHER THAN A DEFECT.** Write a run token into a declaration "
+            + "that records no run, inventing the date and the result outright and "
+            + "running nothing -> C5d and C5e FAIL, because the register now grades "
+            + "that suite RUN. Nothing detects it and nothing could: any artifact a "
+            + "worker can write, a worker can write without running anything. The arm "
+            + "exists so the limit printed beside the figure is DRIVEN rather than "
+            + "merely conceded in prose — a modest-sounding caveat nobody tested is "
+            + "how an instrument ends up believed past its reach.",
+    find: "Recorded as run below in the suite header.",
+    put:  "Recorded as run below in the suite header. RUN 2026-09-16 by nobody, 5 of 5 as declared, in a session that never existed.",
+    mustFail: ["C5d", "C5e"], mustPass: ["C1", "C2", "C3", "C5a", "C5c", "C6", "C7a", "C7b"] },
+
+  { id: "10-DELETE-THE-LIMIT", file: COVERAGE,
+    declared: "Remove the sentence in which the register admits it cannot prove a run "
+            + "-> C7b FAILS BY NAME. The accepts-when is that the limit is stated AT "
+            + "THE SITE and not only in a queue row nobody reads beside the output, "
+            + "so the statement is pinned the way any other load-bearing claim is. An "
+            + "instrument that quietly drops its own caveat is worse than one that "
+            + "never had it: the figure keeps printing and the reader stops being "
+            + "told what it is worth.",
+    find: "would be a worse instrument than this one",
+    put:  "is the instrument this project needs",
+    mustFail: ["C7b"], mustPass: ["C1", "C2", "C3", "C5a", "C5c", "C5d", "C6", "C7a"] },
 ];
+
 
 /* --------------------------------------------------------------- the driver */
 

@@ -26,6 +26,32 @@
  * anchors validated before anything is armed, restored by cp-back from uniquely-named
  * pristine copies verified by sha256 AND `cmp` AND a floored byte count.
  *
+ * NEGATIVE CONTROL, THE COVERAGE HALF (M0-43, 2026-09-16) — re-runnable in ONE STEP with
+ * `node test/corpuscheck.control.mjs` from `bio-plane/`. EIGHT arms, each armed ALONE with
+ * every other defence open, anchors validated before anything is armed, restored by cp-back
+ * from uniquely-named pristine copies verified by sha256 AND `cmp` AND a floored byte count:
+ * (1) a GOVERNED document's §5 row removed while the file still carries front matter ->
+ * FAILS naming it UNCLASSIFIED, which is the arm proving DISCOVERY BEAT the hand-kept list
+ * rather than merely agreeing with it; (2) an unclassified .md planted ON DISK at top level
+ * and in `research/` -> both named (the suite's own plant is INJECTED, so this is the arm
+ * that drives the real filesystem walk); (3) an exclusion widened to `docs/development/**.md`
+ * -> refused as too broad, which is the liar's pattern this item was written against;
+ * (4) an exclusion shadowing a governed document -> refused; (5) an exclusion's reason cell
+ * blanked -> refused; (6) an UNDECIDED row pointed at a nonexistent file -> refused;
+ * (7) `population()` made NON-RECURSIVE in the tool -> THIS suite's RECURSION arm fails,
+ * proving the subdirectory half is load-bearing; (8) over-strictness, nothing armed ->
+ * corpuscheck's output BYTE-IDENTICAL to baseline and `plancheck --local` 0 fail, because a
+ * discovery rule that reclassifies a file nobody asked it to reclassify has made a decision
+ * that belongs to Bob. **All 8 as declared, 0 arms never armed**, 28,688 B and 23,287 B
+ * restored byte-identically on every arm.
+ * **THE METHOD IS RECORDED BESIDE THE RESULT** because the obvious method gives the
+ * confident wrong answer here: the last controls against this toolchain were defeated by
+ * the METHOD dirtying the tree — a rename and a `chmod 000` each made `plancheck` fail on
+ * UNPUBLISHED and exit 1, a NAMED failure that felt like evidence while the subject was
+ * never exercised. Every arm above drives `corpuscheck` DIRECTLY, which has no publication
+ * check at all and so cannot fail for a reason the arm did not cause; the one plancheck arm
+ * runs `--local`, which skips the publication half.
+ *
  * NEGATIVE CONTROL, THE OTHER DIRECTION — the checker armed against a REAL retrofitted
  * document rather than a fixture. Run 2026-09-14 by M0-26 in worktree
  * agent-a64d514be75dea71a, re-runnable in one step with
@@ -58,7 +84,8 @@ import { fileURLToPath } from "node:url";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(DIR, "..", "..");
-const { ROOT, governed, checkFile, writeContents, parseFront, bodyHeadings, renderContents } =
+const { ROOT, governed, checkFile, writeContents, parseFront, bodyHeadings, renderContents,
+  population, coverage, matchPattern } =
   await import(join(REPO_ROOT, "tools/corpuscheck.mjs"));
 
 let pass = 0, fail = 0;
@@ -67,7 +94,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 7;
+const SECTIONS = 8;   /* M0-43 added the coverage section */
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -242,6 +269,73 @@ section("the mechanism is in the loop the readers actually run");
   t("kickoffs/BOB.md carries the standard in its closing protocol", /CORPUS-STANDARD\.md/.test(rd("docs/development/kickoffs/BOB.md")), true);
   t("CLAUDE.md points every session at the system design and the standard", /BIO_System_Design\.md/.test(rd("CLAUDE.md")) && /CORPUS-STANDARD\.md/.test(rd("CLAUDE.md")), true);
   t("the level-0 document the standard requires exists", existsSync(join(ROOT, "docs/architecture/BIO_System_Design.md")), true);
+}
+
+/* ========================================================================== */
+section("coverage — the hand-fed half, and the walk that audits it (M0-43)");
+{
+  /* §5's table is HAND-KEPT: right about every document it is told about, which is why
+     nobody notices the ones it is not. These arms are written from OUTSIDE the tables on
+     purpose, because the cheap defeat of this whole item is a check that walks §5 and
+     reports every entry healthy — congratulating itself over exactly the set that was
+     never the problem. */
+  const std = readFileSync(join(ROOT, "docs/architecture/CORPUS-STANDARD.md"), "utf8");
+
+  // 1. the walk is real and RECURSIVE, asserted against the real tree, not a fixture
+  const pop = population();
+  t("population() walks the real docs/development/", pop.length > 40, true);
+  t("population() is RECURSIVE — research/ is a real subdirectory of the design corpus",
+    pop.includes("docs/development/research/DATA-MODEL.md"), true);
+  t("population() is wider than the governed table (a walk that only re-read §5 would be equal)",
+    pop.length > governed().filter((p) => p.startsWith("docs/development/")).length, true);
+
+  // 2. THE PLANT — the arm that proves the walk looks outside the tables. Injected rather
+  //    than written to disk: a fixture in docs/development/ during a concurrent battery is
+  //    the contamination class this project has paid for, and arm 1 already pins the walk.
+  const planted = ["docs/development/PLANTED-BY-THE-SUITE.md", "docs/development/research/PLANTED-SUB.md"];
+  const withPlant = coverage({ pop: [...pop, ...planted] });
+  t("a new .md under docs/development/ that no table classifies is UNCLASSIFIED",
+    withPlant.unclassified, planted);
+  t("and it FAILS BY NAME, both of them, top level and subdirectory",
+    planted.filter((p) => withPlant.fails.some((f) => f.includes(p) && /UNCLASSIFIED/.test(f))), planted);
+
+  // 3. over-strictness, armed from the strict side: the REAL tree is fully classified
+  const cov = coverage();
+  t("the real tree has nothing unclassified", cov.unclassified, []);
+  t("and the audit produces no failures over it", cov.fails, []);
+  t(`every file is in exactly one class (${cov.population.length} = ${cov.governed.length}+${cov.excluded.length}+${cov.undecided.length})`,
+    cov.governed.length + cov.excluded.length + cov.undecided.length, cov.population.length);
+
+  // 4. an exclusion cannot be a way to classify the population without classifying anything
+  t("no exclusion pattern is a `**` glob or a non-.md pattern",
+    cov.exclusions.filter((r) => /\*\*/.test(r.pattern) || !r.pattern.endsWith(".md")).map((r) => r.pattern), []);
+  t("every exclusion carries a reason (§6's model: excluded WITH A REASON, not merely absent)",
+    cov.exclusions.filter((r) => !r.why || r.why.length < 12).map((r) => r.pattern), []);
+  t("no exclusion shadows a governed document", cov.exclusions.filter((r) =>
+    governed().some((g) => g.startsWith("docs/development/") && matchPattern(r.pattern, g))).map((r) => r.pattern), []);
+  t("matchPattern's dir glob does not reach into a SUBdirectory",
+    matchPattern("docs/development/*.md", "docs/development/research/DATA-MODEL.md"), false);
+  t("matchPattern's dir glob does reach that directory's own files",
+    matchPattern("docs/development/kickoffs/*.md", "docs/development/kickoffs/WORKER.md"), true);
+  /* Driven, not assumed: a `**` exclusion is the liar's pattern and must be REFUSED. */
+  const broad = coverage({ pop: ["docs/development/QUEUE.md"] });
+  t("the exclusions actually classify something (an empty table would pass every arm above)",
+    cov.excluded.length >= 11 && broad.excluded.length === 1, true);
+
+  // 5. UNDECIDED is a CLOSED, ENUMERATED hole somebody drains — not an open bucket
+  t("every UNDECIDED row names a file that exists", cov.undecidedRows.filter((r) => !existsSync(join(ROOT, r.path))).map((r) => r.path), []);
+  t("no UNDECIDED row names a path pattern rather than a literal file",
+    cov.undecidedRows.filter((r) => /\*/.test(r.path)).map((r) => r.path), []);
+  t("every UNDECIDED row says what is undecided about it",
+    cov.undecidedRows.filter((r) => !r.question || r.question.length < 20).map((r) => r.path), []);
+  t("the UNDECIDED files are NOT silently governed", cov.undecidedRows.filter((r) => governed().includes(r.path)).map((r) => r.path), []);
+  t("the undecided set is ROUTED to an entry somebody drains, not a sentence in a report",
+    /D-388/.test(std) && /^\| D-388 \|/m.test(readFileSync(join(ROOT, "docs/development/DEBT.md"), "utf8")), true);
+
+  // 6. the mechanism is in the loop the readers actually run
+  const pc = readFileSync(join(ROOT, "tools/plancheck.mjs"), "utf8");
+  t("plancheck imports and runs the coverage audit, not only checkFile", /coverage\(\)/.test(pc) && /coverage/.test(pc), true);
+  t("the standard describes the walk in §7 so a reader meets it", /population\(\)/.test(std) && /Undecided —/.test(std), true);
 }
 
 t("every section reached an assertion (the FOOT sentinel)", reached, SECTIONS);

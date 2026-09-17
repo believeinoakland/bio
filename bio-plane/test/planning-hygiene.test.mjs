@@ -21,6 +21,30 @@
    registered file leaving `docs/development/` silently narrowed a walk while every
    other figure read right, and the repair is that a REGISTERED file is in the corpus by
    construction — lowering the floor would have recorded the loss instead of fixing it.** */
+/* NEGATIVE CONTROL: (M0-37, run 2026-09-16, worktree agent-a603fc3555ed6156f) the
+   DELEGATION-register arm, driven by `node bio-plane/test/delegations.control.mjs` from the
+   repo root — COMMITTED, so it re-runs in one step. **24 of 24 checks as declared across six
+   arms plus a baseline**, each armed ALONE, every restore verified by sha256 AND `cmp` AND a
+   floored byte count against a uniquely-named pristine in `.m037-harness/`. BASELINE
+   `plancheck --local` exit 0, corpus 49, no block named. (A1) an `open as of` rolled back past
+   the threshold -> FAILS naming that block AS STALE and naming only it and its affirming line.
+   (A2) **the arm this item exists for** — the DISCHARGED line deleted from a block the TREE
+   has discharged -> still FAILS, as SILENT: the check grades the register's STATEMENT, so it
+   cannot be satisfied by the register agreeing with itself. (A3) OVER-STRICTNESS — CLAIM,
+   AMENDMENT, DESIGN GAP and discharged DELEGATION blocks untouched and plancheck's other arms
+   print BYTE-IDENTICALLY. (A4) section 8 excised from `plancheck.mjs` -> this suite fails by name
+   (the mechanism-in-the-loop arm). (A5) `tools/delegations.mjs` made unloadable **by injecting
+   a syntax error into a copy-restored file and running `--local`** — never by rename or chmod,
+   both of which dirty the tree and fail on UNPUBLISHED while the subject goes unexercised ->
+   FAILS and says UNVERIFIED, and reports no corpus figure it cannot have measured. (A6)
+   **FORGERY, DECLARED TO PASS and its red would be the finding**: every affirmation aged (gate
+   RED over the whole register), then one blanket re-date reading nothing -> gate GREEN. The
+   staleness arm is defeatable by a `sed` and the module's header says so; the COHORT is what a
+   reader gets instead, and this arm asserts it prints. **A6 DID NOT ARM on its first writing**
+   — it stamped today onto lines already carrying today, so the forged register and the honest
+   one were byte-identical, which is the arm's own thesis arriving as a bug in the arm; it was
+   corrected to drive the round trip rather than relaxed. A1 was also wrong first: it expected
+   the block's line alone and the message correctly names the affirming line too. */
 /* NEGATIVE CONTROL: (M0-30, run 2026-09-14, worktree agent-a12296b3767e15401) the §4.7
    row-design arm, driven by `test/rowdesign.control.mjs` — COMMITTED, so it re-runs in one
    step. **25 of 25 checks as declared FIRST RUN across five arms plus a baseline**, each armed
@@ -465,6 +489,156 @@ console.log("\n--- every open queue row names the design it builds from (CORPUS-
      parsing the file that QUEUE_IDS above is read from. */
   t("the row parser agrees with this suite's own heading scan on the id set",
     openRows(queue).length >= QUEUE_IDS.size, true);
+}
+
+/* ---------------- 5. every DELEGATION block in CLAIMS.md states its own state, DATED */
+/* M0-37, from BOB #11's sentence of 2026-09-15: EVERY REGISTER IN THIS PROJECT CAN STATE THE
+   PAST AS THE PRESENT, AND NONE OF THEM FAILS LOUDLY WHEN IT DOES. The predicate is
+   `tools/delegations.mjs` — IMPORTED for section 4's reason, not ported.
+
+   WHAT THESE ARMS ARE WORTH IS BOUNDED AND THE BOUND IS ASSERTED, not only written in the
+   module header: the staleness arm is satisfiable by a blanket date edit and this suite
+   pins that the module SAYS so, because a limit conceded in prose is a limit a later editor
+   deletes quietly (M0-42's shape, one register over). */
+console.log("\n--- every DELEGATION in CLAIMS.md states its own state, dated (M0-37) ---");
+{
+  const { delegationAudit, delegationMessage, parseBlocks, THRESHOLD_DAYS, CORPUS_FLOOR,
+          daysBetween, RULE_SENTENCE } = await import("../../tools/delegations.mjs");
+
+  /* A fixture register. Every block is one case, and the cases are the rule's edges. The
+     dates are computed RELATIVE TO A FIXED `today` passed into the audit, never to the wall
+     clock — a fixture pinned to a literal date becomes a decaying control the moment it
+     passes the threshold, which is exactly what M0-42 found had happened to D-263's arm 1. */
+  const TODAY = "2026-09-16";
+  const ago = (n) => {
+    const d = new Date(Date.parse(TODAY + "T00:00:00Z") - n * 86400000);
+    return d.toISOString().slice(0, 10);
+  };
+  const FIX = [
+    `## DELEGATION 2026-01-01 AREA-A -> AREA-B: a block with neither line`,
+    `Body prose that says nothing about its state.`,
+    ``,
+    `## DELEGATION 2026-01-01 AREA-A -> AREA-C: a FRESH affirmation`,
+    `**open as of ${ago(1)}** — still waiting on the consumer.`,
+    ``,
+    `## DELEGATION 2026-01-01 AREA-A -> AREA-D: a STALE affirmation`,
+    `**open as of ${ago(THRESHOLD_DAYS + 1)}** — nobody has looked since.`,
+    ``,
+    `## DELEGATION 2026-01-01 AREA-A -> AREA-E: an affirmation exactly ON the threshold`,
+    `**open as of ${ago(THRESHOLD_DAYS)}** — the boundary is inclusive.`,
+    ``,
+    `## DELEGATION 2026-01-01 AREA-A -> AREA-F: a DISCHARGE`,
+    `**DISCHARGED ${ago(400)} — the tree closed it, and here is where.**`,
+    ``,
+    `## DELEGATION 2026-01-01 AREA-A -> AREA-G: a discharge with NO DATE`,
+    `**DISCHARGED — somebody closed this at some point.**`,
+    ``,
+    `## DELEGATION 2026-01-01 AREA-A -> AREA-H: an affirmation with NO DATE`,
+    `**open as of** — still open, whenever this was.`,
+    ``,
+    `## DELEGATION 2026-01-01 AREA-A -> AREA-I: APPENDED affirmations, newest governs`,
+    `**open as of ${ago(400)}** — raised.`,
+    `**open as of ${ago(200)}** — still open.`,
+    `**open as of ${ago(2)}** — still open, checked again.`,
+    ``,
+    `## DELEGATION 2026-01-01 AREA-A -> AREA-J: the phrase in PROSE only`,
+    `This block discusses whether it is open as of any particular date and settles nothing.`,
+    ``,
+    `## CLAIM 2026-01-01 AREA-A — a CLAIM block carrying neither line`,
+    `Not a delegation. Not judged.`,
+    ``,
+    `### AMENDMENT 2026-01-01 — an AMENDMENT block carrying neither line`,
+    `Not a delegation either.`,
+    ``,
+    `## DESIGN GAP 2026-01-01 AREA-A -> a design document`,
+    `A routed gap, not a delegation, and not judged.`,
+    ``,
+  ].join("\n");
+
+  const F = delegationAudit({ src: FIX, today: TODAY });
+  const at = (n) => (s) => s.some((b) => b.heading.includes(`AREA-${n}`));
+  const has = (set, n) => at(n)(set);
+
+  t("the fixture parses NINE delegation blocks — CLAIM, AMENDMENT and DESIGN GAP are not judged",
+    F.corpus, 9);
+  t("B · a block with neither line is SILENT and FAILS", has(F.silent, "B"), true);
+  t("C · a fresh `open as of` PASSES", [has(F.affirmed, "C"), has(F.stale, "C")], [true, false]);
+  t(`D · an \`open as of\` past ${THRESHOLD_DAYS}d is STALE and FAILS`, has(F.stale, "D"), true);
+  /* THE BOUNDARY IS ASSERTED IN BOTH DIRECTIONS. An off-by-one here is the difference
+     between a gate that fires a day early on honest state and one that never fires at all. */
+  t(`E · an \`open as of\` EXACTLY ${THRESHOLD_DAYS}d old still PASSES (the boundary is inclusive)`,
+    [has(F.affirmed, "E"), has(F.stale, "E")], [true, false]);
+  t("F · a DISCHARGE is terminal and never goes stale, however old", has(F.discharged, "F"), true);
+  t("G · a DISCHARGED line with NO DATE is UNDATED and FAILS — a state line without a date is\n"
+  + "       the defect this check exists for", has(F.undated, "G"), true);
+  t("H · an `open as of` with NO DATE is UNDATED and FAILS", has(F.undated, "H"), true);
+  /* THE APPEND PROPERTY. A sweep adds a dated line rather than editing the last one away, so
+     the re-affirmation history survives; the NEWEST governs. */
+  t("I · appended affirmations keep their history and the NEWEST governs",
+    [has(F.affirmed, "I"), F.affirmed.find((b) => b.heading.includes("AREA-I")).affirmations], [true, 3]);
+  /* OVER-STRICTNESS, and it is the arm that decides whether the register is usable: the
+     phrase in flowing prose does NOT affirm a block, so an affirmation has to be a findable
+     register LINE and not a sentence a regex happened to reach. */
+  t("J · the phrase in PROSE does not affirm — a state line must START a line",
+    has(F.silent, "J"), true);
+  t("the fixture's failures are exactly the five intended, and no sixth",
+    /* `-> AREA-x`, not `AREA-(\w)`: every fixture heading names AREA-A as the SOURCE, so the
+       loose spelling reported five A's and would have passed the moment the expectation was
+       written to match what it printed. An arm that names the wrong element is an arm that
+       did not arm — recorded rather than smoothed. */
+    F.findings.map((f) => f.b.heading.match(/-> AREA-(\w)/)[1]).sort(), ["B", "D", "G", "H", "J"]);
+  t("CLAIM, AMENDMENT and DESIGN GAP blocks are NOT judged — the corpus figure says what it reaches,\n"
+  + "       rather than scoring them zero",
+    parseBlocks(FIX).length, 9);
+
+  /* THE MESSAGE CARRIES THE RULE, never a paraphrase, and it NAMES each block. A failure a
+     reader cannot act on is a failure that gets switched off. */
+  const msg = delegationMessage(F);
+  t("the failure message quotes the rule and names every failing block by file:line",
+    [msg.includes(RULE_SENTENCE), (msg.match(/CLAIMS\.md:\d+/g) || []).length >= 5], [true, true]);
+
+  /* THE LIMIT IS PINNED AT THE SITE. M0-42's finding: an instrument that LOOKS like it
+     proves freshness and does not is worse than one that admits it cannot — so the admission
+     is asserted, not merely written, and a later editor cannot delete it quietly. */
+  const HEADER = read(join(REPO, "tools/delegations.mjs"));
+  t("the module STATES that its staleness arm is weak and that a blanket stamp defeats it",
+    /THE STALENESS ARM IS WEAK/.test(HEADER) && /blanket stamp/.test(HEADER), true);
+  t("the module STATES that it cannot tell a blanket stamp from an honest sweep",
+    /CANNOT TELL A BLANKET STAMP FROM AN HONEST SWEEP/.test(HEADER), true);
+  t("the threshold carries its argument at the site, and says there is no distribution to "
+  + "derive it from", /THERE IS NO\s*\n?\s*\*?\s*DISTRIBUTION/.test(HEADER), true);
+
+  /* THE LIVE REGISTER. */
+  const LIVE = delegationAudit({ repo: REPO, git: false });
+  console.log(`  delegation register: ${LIVE.corpus} block(s) — ${LIVE.discharged.length} discharged, `
+    + `${LIVE.affirmed.length} affirmed open, ${LIVE.stale.length} stale, ${LIVE.silent.length} silent, `
+    + `${LIVE.undated.length} undated (threshold ${LIVE.threshold}d)`);
+  /* PRINT THE CORPUS AND FLOOR IT. A matcher that stops matching reports a clean register,
+     and three headline totality assertions in this project have passed over an EMPTY corpus. */
+  t(`the walk finds a real register — ${LIVE.corpus} block(s), floor ${CORPUS_FLOOR}`,
+    LIVE.corpus >= CORPUS_FLOOR, true);
+  t("every DELEGATION block in CLAIMS.md states its own state, dated",
+    LIVE.findings.map((f) => `CLAIMS.md:${f.b.line} ${f.kind}`), []);
+
+  /* THE MECHANISM IS IN THE LOOP. Section 4's reasoning exactly: a check that lives only in
+     this battery never reaches the act that writes a delegation. Grepping plancheck's TEXT is
+     satisfied by a comment — mergecarry's arm measured that — so plancheck is RUN and its own
+     report is read. */
+  const pc = spawnSync(process.execPath, [join(REPO, "tools/plancheck.mjs"), "--local"],
+    { cwd: REPO, encoding: "utf8" });
+  t("plancheck RUNS the delegation-register check and reports it in its own output",
+    /delegation register: \d+ DELEGATION block\(s\)/.test(pc.stdout || ""), true);
+  t("plancheck's own corpus figure equals this suite's",
+    ((pc.stdout || "").match(/delegation register: (\d+) DELEGATION block\(s\)/) || [])[1],
+    String(LIVE.corpus));
+  /* The threshold is one number in one place. A second copy is how two readers of one
+     question were allowed to differ (D-302). */
+  t("the threshold is the module's and is not re-spelled in plancheck or in this suite",
+    [THRESHOLD_DAYS, /THRESHOLD_DAYS\s*=\s*\d+/.test(HEADER),
+     (read(join(REPO, "tools/plancheck.mjs")).match(/THRESHOLD_DAYS\s*=/g) || []).length],
+    [LIVE.threshold, true, 0]);
+  t("daysBetween is exported and agrees with itself across a month boundary",
+    [daysBetween("2026-08-10", "2026-09-15"), daysBetween("2026-09-16", "2026-09-16")], [36, 0]);
 }
 
 console.log(`\nplanning-hygiene: ${pass} pass, ${fail} fail`);

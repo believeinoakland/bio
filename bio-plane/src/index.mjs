@@ -323,6 +323,68 @@ export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
  * reads, not from who holds a token.
  */
 
+/* REC-91 — HOW MUCH OF A CAPTURE'S TEXT THE ACQUIRE ANSWER MAY CARRY. See the
+ * long note at the emission site: this is NOT `CONTENT-SEARCH-DESIGN.md` §4.3's
+ * per-capture bound (2 MiB, from M-20, applied in `store.mjs`), it is the bound
+ * that actually binds, and it exists because `op=promote` refuses an inline
+ * bundle file over `INLINE_MAX` (1 MiB) outright. Half of that, so JSON escaping
+ * and the rest of the acquire document cannot push a promote over the limit. */
+const ACQUIRE_TEXT_UNITS_BUDGET = 512 * 1024;
+/* What one unit costs the wire BESIDE its text: the extent object, the seq, the
+   keys and the indentation a caller serialising with `JSON.stringify(doc, null, 1)`
+   adds — which is what `civicos-ui/app.html` does. Charged per unit so a document
+   of twenty thousand short paragraphs cannot pass a byte budget on its words and
+   then blow `INLINE_MAX` on its punctuation. */
+const ACQUIRE_TEXT_UNIT_ENVELOPE = 128;
+/* REC-111 -- THE UNIT CEILING THIS WIRE ALREADY HAS, WRITTEN DOWN. IT IS A
+ * STATED CONSEQUENCE, NOT A SECOND CHECK, AND THE ABSENCE OF A CHECK HERE IS THE
+ * ITEM'S OWN MEASURED RESULT RATHER THAN AN OMISSION.
+ *
+ * `CONTENT-SEARCH-DESIGN.md` section 4.3 asks for a unit budget "beside the byte
+ * budget ... so both are stated in one place and neither hides the other",
+ * because the index costs ROWS and FTS ENTRIES while every bound in that section
+ * counts BYTES. The premise REC-111 was given -- *a container whose units are
+ * many and small is bounded by nothing* -- is TRUE OF THE DESIGN AND FALSE OF
+ * THIS WIRE, and that was found by measuring rather than by reading: the budget
+ * above charges `ACQUIRE_TEXT_UNIT_ENVELOPE` per unit and a unit with no text is
+ * never emitted at all (see the `arm` helper), so the smallest chargeable unit
+ * is 1 + 128 B and this wire can emit AT MOST
+ *
+ *     floor(524288 / 129) = 4,064 units
+ *
+ * whatever the document is. M-20's fit (0.0076 ms/unit + 0.054 ms/KiB against a
+ * 257 ms window) puts that worst case at 58.5 ms -- 22.8 % of the window. So the
+ * many-small-unit overflow cannot happen HERE. It can happen one step down, in
+ * `op=promote`, which reads `data/provenance.json` from a caller who may author
+ * it: M-35 measured 13,720 units through that route before `INLINE_MAX` refuses
+ * the file. That is where `store.mjs`'s `CAPTURE_TEXT_CAPTURE_UNIT_BOUND` bites,
+ * and it is the bound that fires.
+ *
+ * WHY NO SECOND `if` IN THE LOOP BELOW, stated because adding one is the obvious
+ * move and it is wrong. The largest unit budget that REGRESSES NOTHING is 4,096
+ * (M-20's own *"largest promote that fits is ~3,900 units"*, at the resolution
+ * these constants use), and 4,096 is ABOVE the 4,064 this wire can reach -- so a
+ * wire-side unit budget provably cannot fire on this tree. Set it lower and it
+ * starts trimming real documents: M-20's median `doc-para` is 10 B, so a
+ * document of ~3,800 short paragraphs passes today, and a budget of 3,000 would
+ * silently stop indexing part of it. **A refusal invented without measuring what
+ * the record already accepts takes capability away silently** -- section 4.3 has
+ * shipped exactly that once and this item exists partly to undo it. A check that
+ * cannot fire is worse than no check, because it is a mechanism a reader would
+ * believe on the strength of its existence.
+ *
+ * WHAT IS LIVE INSTEAD IS AN ASSERTION, and there is deliberately NO
+ * `ACQUIRE_TEXT_UNITS_CEILING` constant here to go with this paragraph: a
+ * constant nothing reads is the same dead mechanism one sentence up, wearing a
+ * name. The ceiling is DERIVED where it can be checked --
+ * `capture-text-index.test.mjs` reads the two operands out of THIS FILE and the
+ * bound out of `store.mjs`, does the division itself, and pins
+ * `ceiling <= CAPTURE_TEXT_CAPTURE_UNIT_BOUND`. **That is the whole point.** The
+ * ceiling is a side effect of an ENVELOPE ESTIMATE -- "about eight indented
+ * lines" -- and section 4.1 already names `sheet-range` as a coming unit arm
+ * whose extent is larger, so that estimate WILL be revised. Without the pin, a
+ * change about BYTES would silently change what a member's promote may COST,
+ * which is the drift this item exists to stop. */
 const OPS = {
   //  op          class allowed              mutating
   selftest:   { classes: ["admin", "member", "probe"],           mutating: false },
@@ -5512,6 +5574,15 @@ export default {
         source: readingSource(e && e.source),
       })).filter((e) => e.key != null || e.kind != null);
       let reading;
+      /* REC-91: declared BESIDE `reading` and not beside `containerExtent`, and
+         the difference is a scope rather than a preference. `wired`,
+         `pageCount` and `containerExtent` live in the FORMAT WIRE's own block,
+         which closes before the answer is assembled — they reach the answer by
+         being written ONTO `reading`. This one is a SIBLING of `reading` on the
+         wire rather than a field on it (see the answer's own note), so it has to
+         outlive that block, and declaring it inside was a ReferenceError on every
+         acquire until this suite drove one. */
+      let textUnits = null, textUnitsOverBound = 0;
       const canRead = !!profileText && typeof docType.type.parse === "function";
       if (canRead) {
         try {
@@ -5599,7 +5670,17 @@ export default {
            computed and then dropped on the floor is the document-level answer
            standing in for a per-page fact all over again. `null` when there is
            nothing to say, so a document no page moved on reads as it always did. */
-        let chain = null, ocrNote = null, tier2note = null;
+        /* REC-102 / D-372: `tier2PerPage` is the TIER-2 MERGE'S OWN PER-PAGE
+           STATEMENT — `{tier1: [...], tier2: [...]}` — carried to the tier-3
+           block below, which is the only other place in this assembly that
+           composes a layer part. It rides here rather than being re-derived
+           there for the reason D-164 gives about second spellings: the merge
+           already said which tier produced each page, and asking a second time
+           is how the two answers learn to disagree. `null` means no tier-2
+           merge produced a per-page partition — either tier 2 never ran, or it
+           took the document WHOLESALE — and the tier-3 block's fall-back to the
+           single document-level tier is then exactly what it always did. */
+        let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null;
         const fmt = profile.format && profile.format.format;
         if (!multipart && fmt && fmt !== "undetermined") {
           try {
@@ -5668,6 +5749,14 @@ export default {
                              when the member supplied none of its own. */
                           i2text = (tier1Text && tier1Text.producer && !m.text.producer)
                             ? { ...m.text, producer: tier1Text.producer } : m.text;
+                          /* REC-102 / D-372 — THE PER-PAGE STATEMENT IS KEPT,
+                             because the tier-3 block below composes a layer
+                             part too and had no way to know what this merge
+                             decided. Taken from the merge's own return rather
+                             than from the `tier` stamps on the pages: one fact,
+                             one home, and `tier-pagewise.test.mjs` already
+                             asserts the two agree. */
+                          tier2PerPage = m.perPageTier;
                           /* TIER 2 ONLY IF TIER 2 ACTUALLY PRODUCED A PAGE. A
                              document where the member answered and no page met
                              the rule was read by Tier 1, and saying `2` would be
@@ -5843,14 +5932,61 @@ export default {
                                         && typeof p.text === "string" && p.text.length)
                             .map((p) => p.page);
                           const parts = [];
-                          if (layerPages.length)
-                            parts.push({ pages: layerPages,
-                              /* D-251: the layer PART of a mixed document is
-                                 still a text layer somebody made, and the file
-                                 says who. `baseText` is the pre-merge shape, so
-                                 the marker is read off the document rather than
-                                 off the OCR member's answer. */
+                          /*__REC102_TIER3_LAYER_PARTS_START__*/
+                          /* REC-102 / D-372 — THE LAYER PART IS PARTITIONED BY
+                             THE TIER-2 MERGE'S OWN PER-PAGE STATEMENT, NOT
+                             COLLAPSED ONTO ONE DOCUMENT-LEVEL TIER.
+                             This block used to be a single part at `baseTier`,
+                             and that single tier is a DOCUMENT-level answer to a
+                             PER-PAGE question — the very shape D-252 closed one
+                             tier up and REC-98 closed one merge earlier. A
+                             document that escalates to tier 2 per page and THEN
+                             re-extracts to tier 3 had its per-page statement
+                             rebuilt as `tier: 2` over every page the tier-2
+                             merge had deliberately KEPT at tier 1, so the record
+                             named a derivation those pages do not have. Not a
+                             regression (before REC-98 the escalation assigned
+                             tier 2 wholesale anyway) and that is why it is a row
+                             rather than a revert — but it is the record
+                             overclaiming, which is the direction this project
+                             cares about most.
+                             THE FALL-BACK IS THE OLD BEHAVIOUR EXACTLY. With no
+                             per-page partition (`tier2PerPage` null — tier 2
+                             never ran, or took the document wholesale) every
+                             layer page is `unspoken` and this composes the one
+                             part at `baseTier` that it always composed, in the
+                             same position, so a document reaching only ONE of
+                             the two merges answers byte-identically.
+                             A PAGE THE PARTITION DOES NOT SPEAK FOR IS NAMED,
+                             NEVER SCORED TO A TIER. It goes to the `baseTier`
+                             part rather than being guessed into tier 1 or tier
+                             2: undetermined is first-class, and the document's
+                             own wired tier is the honest answer for a page the
+                             merge said nothing about.
+                             `baseText` is the pre-merge shape at every site, so
+                             D-251's producer marker is still read off the
+                             DOCUMENT rather than off the OCR member's answer —
+                             unchanged, and true of all three parts. */
+                          const layerSet = new Set(layerPages);
+                          const spokenFor = tier2PerPage
+                            ? [[1, (tier2PerPage.tier1 || []).filter((p) => layerSet.has(p))],
+                               [2, (tier2PerPage.tier2 || []).filter((p) => layerSet.has(p))]]
+                            : [];
+                          const spoken = new Set(spokenFor.flatMap(([, ps]) => ps));
+                          /* IN THE ORDER THE ATTEMPTS HAPPENED, which is what
+                             `tiersEvidenced` reads the chain as and what the
+                             content-level writer walks cumulatively: the tier-1
+                             decode had its go before the tier-2 one, which had
+                             its go before the engine. */
+                          for (const [tier, ps] of spokenFor)
+                            if (ps.length)
+                              parts.push({ pages: ps,
+                                chain: layerChainFor(baseText, { tier, container: fmt }) });
+                          const unspoken = layerPages.filter((p) => !spoken.has(p));
+                          if (unspoken.length)
+                            parts.push({ pages: unspoken,
                               chain: layerChainFor(baseText, { tier: baseTier, container: fmt }) });
+                          /*__REC102_TIER3_LAYER_PARTS_END__*/
                           if (m.filled.length) parts.push({ pages: m.filled, chain: built.chain });
                           /* ONE part gives that part's chain back unscoped, so a
                              wholly-scanned document records exactly what it
@@ -6021,6 +6157,164 @@ export default {
                   };
                 }
               }
+              /*__REC91_TEXT_UNITS_START__*/
+              /* REC-91 / `CONTENT-SEARCH-DESIGN.md` section 4.1 -- THE INDEXABLE
+               * UNITS OF THIS CAPTURE'S TEXT, taken off the I2 shape at the one
+               * place `i2text` is final, exactly where CAP-12's container extent
+               * is taken and for the same reason. **It reads the same object and
+               * touches not one line of that block**, which is deliberate: that
+               * region is COFF-12's live claim.
+               *
+               * WHY THIS EXISTS AT ALL. Section 4.1 says the units are written
+               * at promote "from the I2 shape the acquire path already holds" --
+               * and the acquire path HOLDS it here and, until this line, carried
+               * none of it forward. `readings.reading` holds `entities`,
+               * `facts`, the chain, the tier, the page count and the container
+               * extent, and NO TEXT; `reading_text_source` stores the chain and
+               * not the text; per-page text was persisted nowhere at all. So the
+               * store had no text to index and the design's own sentence had no
+               * mechanism under it. This is that mechanism, and it is a SIBLING
+               * of `reading` rather than a field ON it, which is the one shape
+               * decision in this block and is load-bearing -- see below.
+               *
+               * RECOGNISED BY SHAPE, NEVER BY A LIST OF CONTAINER NAMES, which
+               * is CAP-12's own rule and the reason a seventh producer landing
+               * in the same I2 shape is fed by this code with no edit. `pages[]`
+               * is a PDF; `paragraphs[]` a word-processing container; `slides[]`
+               * a deck. A workbook returns `sheets[]`, which is none of these
+               * and correctly yields nothing -- a cell is not a passage and
+               * `sheet-range` waits on EXTRACTION-BREADTH section 3.2.
+               *
+               * THE DECK IS ONE UNIT PER SLIDE, RULED BY BOB 2026-09-15, written
+               * as a `slide-shape` extent with the SHAPE OMITTED -- which
+               * `covers()` already accepts as covering the whole slide, so no
+               * grammar change is owed and `pptx.mjs` needs no change either: it
+               * emits one text string per slide today. A shape is not a passage,
+               * exactly as a cell is not one.
+               *
+               * SPEAKER NOTES ARE NOT INDEXED, AND THAT IS STATED RATHER THAN
+               * LEFT TO BE NOTICED. `pptxText` emits `speakerNotes[]` per slide
+               * and DEC-5 requires them "DISTINGUISHABLE from slide text
+               * EVERYWHERE shown, cited or indexed, never merged" -- so they
+               * cannot be folded into the slide's unit. Nor can they have a unit
+               * of their own: the only address that reaches a slide is
+               * `slide-shape`, whose shape-omitted form is now THE SLIDE, so a
+               * notes unit would collide with the slide's own primary key. There
+               * is no extent arm for a slide's notes, so the most candid text in
+               * a deck is not searchable at content grain. Reported as a DESIGN
+               * GAP against section 4.1.
+               *
+               * THE RECT IS DEGENERATE ON PURPOSE. Section 4.1 says `pdf-page`
+               * "with the page's full rectangle"; I2's text shape carries no
+               * rectangle, and inventing one would be worse than not having it —
+               * `canonicalExtent` hashes the rect INTO the content address, so a
+               * literal rectangle would give the indexed unit a different
+               * `contentIdFor` from the one a member citing "page 14" produces,
+               * and the hit would stop being the citation's own identity
+               * (section 4.5). The absent rect IS the whole page, in the
+               * record's own spelling, and `describeExtent` already reads it
+               * that way.
+               *
+               * A UNIT WITH NO TEXT IS NOT EMITTED. M-20 measured 26.3 % of PDF
+               * pages recovering nothing at all -- scans and image-only pages --
+               * and they are indexed as NOTHING rather than as empty, which is
+               * why section 4.4's `scope` tally exists. Text below the OCR floor
+               * never reaches here at all: it is discarded rather than carried
+               * beside a flag (Part II section 16, chain rule 4). */
+              if (i2text) {
+                const arm = (list, kind, fields) => (Array.isArray(list) ? list : [])
+                  .map((u, i) => (u && typeof u === "object" && typeof u.text === "string" && u.text.length
+                    ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null))
+                  .filter(Boolean);
+                /* The index each producer ALREADY assigns is carried, never
+                   re-counted from the array position: `pages[].page`,
+                   `paragraphs[].para` and `slides[].slide` are the producer's own
+                   numbering and are what every other reference into these
+                   containers is written against. A re-count would silently
+                   disagree the first time a producer skipped one. */
+                const units =
+                    Array.isArray(i2text.pages)      ? arm(i2text.pages, "pdf-page",
+                      (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null }))
+                  : Array.isArray(i2text.paragraphs) ? arm(i2text.paragraphs, "doc-para",
+                      (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null }))
+                  : Array.isArray(i2text.slides)     ? arm(i2text.slides, "slide-shape",
+                      (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null }))
+                  : null;
+                /* AN EMPTY LIST IS NULL AND NEVER A ZERO, which is CAP-12's rule
+                   twelve lines up applied to this key. A container whose entry
+                   returned `pages: []` because it was over the size bound has not
+                   told us it holds no pages, and emitting `[]` would let the
+                   store record "extracted, unit arm present, nothing to index"
+                   for a document nobody managed to read. The absent key and the
+                   empty array are two different facts; only one of them belongs
+                   on the wire. */
+                /* THE WIRE'S OWN BUDGET, AND IT IS NOT §4.3's BOUND — IT IS THE
+                   ONE THAT ACTUALLY BINDS, MEASURED BY THIS ITEM'S OWN SUITE
+                   RATHER THAN REASONED.
+                   *
+                   * §4.3 sets a PER-CAPTURE bound of 2,097,152 B from M-20, and
+                   * `#writeCaptureText` applies exactly that. But the route the
+                   * design names for getting the units to the store is
+                   * `data/provenance.json`, and `op=promote` REFUSES an inline
+                   * bundle file over `INLINE_MAX` — 1,048,576 B — with
+                   * `OVERSIZE_INLINE`. So a capture carrying more text than that
+                   * would not be indexed to the bound and reported `partial`: THE
+                   * WHOLE PROMOTION WOULD BE REFUSED. Measured at 2,460,076 B on
+                   * this item's first run of its own bound arm.
+                   *
+                   * THAT WOULD BE A REGRESSION AND NOT A NEW LIMIT, which is why
+                   * it is fixed here rather than reported and left. M-20's census
+                   * holds real documents over it — the largest PDF at 1,354,686 B
+                   * of text and the largest docx at 1,187,253 B — and every one of
+                   * them promotes today. Emitting their text unbounded would make
+                   * this item REFUSE documents the record currently accepts, which
+                   * is the worst direction available: a capture the group cannot
+                   * file at all, because of an index.
+                   *
+                   * THE FIGURE, and it is half of `INLINE_MAX` on purpose. The
+                   * other half is headroom for the rest of the document — the
+                   * reading, the chain, the provenance hops — and for JSON
+                   * ESCAPING, which is not a constant factor: a quote or a control
+                   * byte expands, so a budget set close to the limit would fail on
+                   * text rather than on size and would do it unpredictably. At
+                   * M-20's percentiles 524,288 B admits the PDF sample past its
+                   * 99th (396,328 B) and every docx and pptx but the largest two.
+                   *
+                   * AND WHAT IS DROPPED IS COUNTED, NEVER SILENT. The count rides
+                   * beside the units so the store's `indexed` observation reads
+                   * `partial` and names this bound — otherwise a capture truncated
+                   * at the wire would be recorded as fully indexed, which is the
+                   * record claiming coverage it does not have at the one level a
+                   * member reads absence from. Reported as a DESIGN GAP against
+                   * §4.3: the bound the design sets is not the bound that binds. */
+                let budget = ACQUIRE_TEXT_UNITS_BUDGET, kept = [], dropped = 0;
+                for (const u of (units || [])) {
+                  /* THE ENVELOPE IS CHARGED WITH THE TEXT, AND THAT IS NOT
+                     FASTIDIOUSNESS — a unit costs the wire its JSON STRUCTURE as
+                     well as its words, and the structure is the half that bites.
+                     `civicos-ui/app.html` serialises the acquire document with
+                     `JSON.stringify(..., null, 1)`, so every unit spends about
+                     eight indented lines on its extent, its seq and its keys
+                     whatever its text weighs. M-20's worst docx carries 20,571
+                     paragraph units at a mean of 60 B: charged on text alone
+                     they are 1.2 MB and fit the budget twice over, while their
+                     ENVELOPES ALONE are about 1.8 MB and would take the promote
+                     past `INLINE_MAX` on their own. A budget that counted only
+                     the words would have been a bound that did not bound.
+                     AND IT LANDS NEAR A NUMBER NOBODY AIMED AT, which is worth
+                     the line: 512 KiB at 128 B of envelope admits about 4,000
+                     units, and M-20 measured the largest promote that fits the
+                     CPU window at ~3,900 units at that corpus's mean unit size.
+                     Two independent limits agreeing is not evidence of either —
+                     it is a coincidence worth noticing and not resting on. */
+                  const size = new TextEncoder().encode(u.text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
+                  if (size > budget) { dropped++; continue; }
+                  budget -= size; kept.push(u);
+                }
+                textUnits = kept.length ? kept : null;
+                textUnitsOverBound = dropped;
+              }
+              /*__REC91_TEXT_UNITS_END__*/
               if (i2text) wired = readText(i2text, { headers: profHeaders,
                 locator: documentAddress, content_type: ct || null, at: retrieved });
               /* The chain, at last, and only if a text surface actually
@@ -6209,6 +6503,41 @@ export default {
              `readings` table indexed by entity reference; a failed/empty reading
              is carried honestly (found:false), never fabricated (framework §7). */
           reading,
+          /*__REC91_TEXT_UNITS_WIRE_START__*/
+          /* REC-91 / `CONTENT-SEARCH-DESIGN.md` section 4.1 -- THE INDEXABLE
+             UNITS OF THIS DOCUMENT'S TEXT. A new sibling field, ADDITIVE to I1
+             in `reading`'s and `profile`'s own shape: `op=promote` derives the
+             content-grain text index from `data/provenance.json` exactly as it
+             already derives `readings` and `reading_refs` from it, and a caller
+             that copies the acquire document wholesale -- which is the shape
+             C-18.1 requires and every caller already builds -- carries this with
+             no change of its own.
+             *
+             * A SIBLING OF `reading` AND NOT A FIELD ON IT, and that is the one
+             * shape decision here. `readings.reading` is persisted WHOLE as
+             * JSON, so a `reading.text_units` would store every byte of the
+             * document's text in the `readings` table AND AGAIN in
+             * `capture_text` -- and section 3's chosen option is option (iii)
+             * precisely because "text is stored once". As a sibling the store
+             * consumes it into `capture_text` and the reading persists exactly
+             * as it did before this landing, gaining not one byte.
+             *
+             * WHAT THIS DOES COST, MEASURED AND REPORTED RATHER THAN LEFT TO BE
+             * FOUND: `data/provenance.json` is a bundle FILE, so its bytes land
+             * in `files.content` and in `history` -- which means the text IS
+             * stored a second time, in the one place section 3 says it is not.
+             * It is the only route that needs no change from any caller, and the
+             * alternative (a promote-package sibling outside the bundle image)
+             * costs edits in two areas this item does not own. Reported as a
+             * DESIGN GAP against section 3 / section 4.1 with the figure, not
+             * closed here by widening the scope. */
+          ...(textUnits ? { text_units: textUnits } : {}),
+          /* WHAT THE WIRE'S OWN BUDGET DROPPED, so the store can say `partial`
+             rather than recording a truncated capture as a whole one. Emitted
+             only when it is non-zero, so a document nothing was dropped from
+             carries exactly the keys it carried before. */
+          ...(textUnitsOverBound ? { text_units_over_bound: textUnitsOverBound } : {}),
+          /*__REC91_TEXT_UNITS_WIRE_END__*/
           /* D-97: authority mirrors verdict / verdict_basis / verdict_at
              rather than inventing a shape. The determination when one was
              made; the STATE always; the basis in BOTH cases, dated, because

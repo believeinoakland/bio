@@ -1,3 +1,8 @@
+import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
+   discard the writer's own output. SHARED from the plane's test estate rather than copied into
+   this one — ONE implementation, so `bio-plane/test/tally-through-pipe.test.mjs` guards it for
+   both estates and a node release closing the private door goes red once instead of half. The
+   import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import { execFileSync } from "child_process";
 import fs from "fs";
 import { fileURLToPath } from "url";
@@ -21,8 +26,30 @@ const HERE = fileURLToPath(new URL(".", import.meta.url));
 const REPO = fileURLToPath(new URL("../../", import.meta.url));
 const tests = fs.readdirSync(new URL(".", import.meta.url)).filter(f=>f.endsWith(".test.mjs")).sort();
 let fail = 0;
+/* D-387 — THE READER'S OWN CEILING, AND IT IS A SECOND TALLY-LOSS MECHANISM THAT THE
+ * D-282 FIX DOES NOT TOUCH. Found 2026-09-16 by M0-36's control arm reporting a
+ * SURPRISING RED: with the flush module imported, a suite dumping ~2.4 MB still
+ * delivered no tally — and the bytes that arrived were 1,051,059 and 1,096,225, which
+ * is not a pipe-buffer number. `execFileSync`'s `maxBuffer` DEFAULTS to 1 MiB, and on
+ * overflow node KILLS the child and truncates: measured directly rather than inferred,
+ * `ENOBUFS after 1114112 bytes` on node v26.0.0.
+ *
+ * SO THE TWO DEFECTS LOOK IDENTICAL FROM THE READER'S SEAT — a FAIL line with no count
+ * after it — and have different causes and different fixes. D-282 is the WRITER
+ * discarding queued bytes at `process.exit`; this is the READER refusing to accept them
+ * at all. D-282's row states "IT IS NOT `maxBuffer`", and that was measured and is true
+ * of `bio-plane/scripts/battery.mjs`, which sets its own. It was never a statement about
+ * THIS runner, which sets none — the agreement-of-documents trap, where a true sentence
+ * about one instrument reads as a claim about its sibling.
+ *
+ * 256 MB rather than unlimited: a ceiling that exists and is never reached still reports
+ * ENOBUFS rather than hanging if a suite ever runs away, and D-282's fix makes a blocking
+ * write stall visibly instead of dropping. `civicos-ui/check-mock-envelope.mjs` spawns the
+ * same suites with the same default and is OUTSIDE M0-36's region — DELEGATED in CLAIMS.md
+ * and pinned by `stdio-census.test.mjs` ARM D. */
+const CHILD = { stdio: "pipe", maxBuffer: 256 * 1024 * 1024 };
 for(const t of tests){
-  try{ execFileSync("node", [new URL(t, import.meta.url).pathname], {stdio:"pipe"}); console.log("PASS", t); }
+  try{ execFileSync("node", [new URL(t, import.meta.url).pathname], CHILD); console.log("PASS", t); }
   catch(e){ fail++; console.error("FAIL", t, "\n"+String(e.stdout||"")+String(e.stderr||"")); }
 }
 /* THE PROVENANCE OF WHAT WAS JUST RUN — every suite this runner ADMITTED,

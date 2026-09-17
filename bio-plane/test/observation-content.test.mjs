@@ -483,11 +483,39 @@ console.log("\n--- D · op=contentaxis, and the withholding that is DRIVEN rathe
 
 {
   const a = await GET(`op=contentaxis&token=${TOK}&captureSha=${SHA_WHOLE}`);
-  t("D1: a capture whose text WAS extracted answers UNDETERMINED on the index axis, with the "
-  + "reason naming what it is waiting on — and the EXTRACTION axis beside it, because what "
-  + "extraction established and what the search index holds are two facts",
+  /* CORRECTED 2026-09-15 BY REC-91, AND THE OLD ASSERTION IS WORTH A PARAGRAPH
+     BECAUSE IT WAS RIGHT WHEN IT WAS WRITTEN AND THE WORLD MOVED UNDER IT.
+     It read: *answers UNDETERMINED on the index axis, with the reason naming
+     what it is waiting on*, and expected `[…, CONTENT_AXIS_UNDETERMINED, false,
+     "PRESENT"]`. What it was waiting on was `capture_text`, and `capture_text`
+     now exists — so a capture that once had no index to be in now HAS one and
+     the index has an ANSWER about it, which is the whole point of REC-91
+     landing. Leaving the old expectation would have made the suite enforce
+     *we cannot say* over a plane that can.
+     WHY THE NEW ANSWER IS THE NONE MEMBER AND NOT THE FULL ONE, which is the
+     part a reader will want: this fixture's reading carries no `text_container`
+     and its promotion carries no `text_units`, so the record cannot name a unit
+     arm for it at all — the index looked and could not address a passage of it.
+     That is DETERMINED and it is `none` WITH A REASON, which is a strictly
+     better answer than the undetermined this row used to assert, and it is a
+     different fact from the FULL member in the direction that matters: it claims
+     nothing is searchable rather than claiming everything is.
+     THE `determined` FLIP IS THE ASSERTION, not an incidental. A capture like
+     this used to be a gap in the answer and is now an answer. */
+  t("D1: a capture whose text WAS extracted, over a container this record cannot name a unit arm "
+  + "for, answers the NONE member on the index axis — DETERMINED, with the reason — and the "
+  + "EXTRACTION axis beside it, because what extraction established and what the search index "
+  + "holds are two facts (CORRECTED by REC-91: this read UNDETERMINED while no index existed)",
     [a.found, a.capture_held, a.indexed, a.determined, a.extraction?.state],
-    [true, true, CONTENT_AXIS_UNDETERMINED, false, "PRESENT"]);
+    [true, true, MEMBERS[2], true, "PRESENT"]);
+  /* AND THE REASON IS ON IT RATHER THAN ONLY THE STATE. A none-with-a-reason
+     whose reason is the bare vocabulary sentence has told the member nothing
+     they could act on — the whole value of this member over UNDETERMINED is
+     that it names WHICH absence is true, so the row asserts the sentence is
+     longer than the vocabulary's own. */
+  t("D1a: and the none answer CARRIES ITS REASON, so a member is told which absence is true "
+  + "rather than only that one is",
+    typeof a.why === "string" && a.why.length > (a.vocabulary?.[MEMBERS[2]] || "").length, true);
   t("D1b: and the answer PUBLISHES the vocabulary, so a surface renders the plane's own sentence "
   + "rather than matching a literal it learned separately (PL-17)",
     Object.keys(a.vocabulary || {}), MEMBERS);

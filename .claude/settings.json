@@ -1,6 +1,6 @@
 {
   "permissions": {
-    "defaultMode": "acceptEdits",
+    "defaultMode": "bypassPermissions",
     "allow": [
       "Read",
       "Grep",
@@ -20,7 +20,6 @@
     "ask": [
       "Write(.env)",
       "Edit(.env)",
-      "Bash(git push:*)",
       "Bash(node scripts/deploy.mjs:*)",
       "Bash(node bio-plane/scripts/deploy.mjs:*)",
       "Bash(npx wrangler deploy:*)"

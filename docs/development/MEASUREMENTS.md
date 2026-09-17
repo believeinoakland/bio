@@ -12936,7 +12936,10 @@ reports a real 33/12.
 **WHAT THE SUITE CANNOT SEE, STATED.** It drives two ops and not the frontier reads; it
 cannot see a document that reaches BOTH the tier-2 and the tier-3 merge (D-372 — no fixture,
 because the only such document in CPDF-20's census sample is a private individual's resume
-and was rightly not committed); and the merge's REFUSAL branch is driven at the merge but is
+and was rightly not committed) — **STILL TRUE OF THIS SUITE, AND NO LONGER TRUE OF THE
+ESTATE: M-34 (REC-102, 2026-09-16) SYNTHESISED that class rather than taking it, and drives
+it. This blind spot is a statement about `tier2-wire.test.mjs`, not about what can be
+reached** —; and the merge's REFUSAL branch is driven at the merge but is
 **unreachable through either op today**, because `pdfstructure` emits a `pages[]` entry for
 every page it ordered and its one pageless return carries zero characters, which takes the
 WHOLESALE branch rather than the refusal. That branch is a guard against a future pageless
@@ -13451,6 +13454,90 @@ The driver follows two edge kinds out of a file's CODE: an `import` of a relativ
 
 **5 of 5 as declared · 0 arms never armed · 0 findings · HEAD restored to `7638231d6dcc` · working tree clean.** Arms 2 and 3 COMMIT, because `mintid --audit --base` reads `git diff -U0 base...HEAD` and **an id in the working tree is invisible to it** — itself a measured property of the instrument. Those arms REFUSE on a dirty tree and say so; that guard fired on its first run, against this worker's own redirected log file, and was correct to.
 
+## M-38 · 2026-09-16 · BOB #12 — D-288's EXPOSURE SWEPT ACROSS EVERY WORKTREE AT ONCE: **all THREE windows are live simultaneously, and the instrument built to detect two of them is itself sitting in the first** (Sparky-Air, `origin/main` at `711d5f44`)
+
+**Taken because CONDUCT found two stranded HEADs by hand while checking whether three workers were
+progressing, and a hand check of three is not a measurement of nine.** I swept every worktree on the
+clone. **CONDUCT's two were real and there were FOUR exposures, not two**, in three distinct shapes.
+
+**THE INSTRUMENT, re-runnable and the point of this entry** — for each worktree, compare the LOCAL HEAD
+against the REMOTE ref for its own branch, not against a branch's mere existence:
+
+    for w in .claude/worktrees/agent-*/; do
+      b=$(git -C "$w" rev-parse --abbrev-ref HEAD); h=$(git -C "$w" rev-parse --short HEAD)
+      if ! git rev-parse --verify -q "origin/$b" >/dev/null; then echo "$b ABSENT FROM REMOTE"
+      elif ! git merge-base --is-ancestor "$h" "origin/$b"; then echo "$b LOCAL HEAD NOT ON REMOTE"
+      fi
+    done
+
+| worktree / branch | shape | at risk |
+| --- | --- | --- |
+| `a0c3609704dee7166` — **M0-48** | **never pushed** | **2 commits, including `b58c8d3a` "plancheck WARNS on a local worker branch whose commits reach nobody (D-288 item 2)"** |
+| `a984a71a7b324f52c` — REC-100 | pushed, then behind | 2 commits |
+| `af08132ad4ca455b7` — M0-40 | pushed, then behind | 2 commits + 1 uncommitted file |
+| `af799694331ecc8d3` | nothing committed | **11 uncommitted files** |
+| `a8eea05132b9aee1d` | fresh worktree | **NOTHING — and this row is why the arm needs a third word** |
+
+**THE HEADLINE IS THE FIRST ROW. D-288's item 2 — the alarm for stranded worker branches — WAS ITSELF A
+STRANDED WORKER BRANCH**, two commits on no remote, at the moment I swept. Nothing in the estate reported
+it; I found it because I went looking, which is the sentence that argued the item into the cohort in the
+first place.
+
+**THREE WINDOWS, AND THEY NEED DIFFERENT WORDS BECAUSE THE READER'S NEXT ACT DIFFERS:**
+
+1. **Never pushed** (M0-48) — the original D-288 shape. Next act: push it.
+2. **Pushed, then behind** (REC-100, M0-40) — CONDUCT's find, and **a window neither D-288's item 1 nor
+   the subagent channel covers.** Item 1 protects a worker that pushes ONCE at the end; these pushed once
+   in the MIDDLE and committed after. Both stranded HEADs carry a *"release the claim"* commit — the
+   worker's LAST act — so the loss would have been the durable report itself. Next act: push it.
+3. **Committed nothing, 11 files live** (`af799694`) — the channel's window, and a push cannot help:
+   the worker must commit first, which is what a message can ask it to do.
+
+**AND THE OVER-STRICTNESS ROW MATTERS AS MUCH AS THE OTHERS:** `a8eea05132b9aee1d` has no branch on the
+remote and NO exposure — a fresh worktree whose tip is still at `main`. **An arm that names it will be
+tuned out as noise within a day**, which is the failure mode of every alarm that cries about a healthy
+state. This is the same shape CONDUCT measured from the other side an hour earlier, when the ancestry
+prune criterion reported all six of its LIVE workers as prunable: *a branch tip at `origin/main` means
+nothing has been committed yet*, and that fact reads as "safe to delete" to one instrument and "stranded"
+to another. **Both readings are wrong and for the same reason.**
+
+**WHAT THIS CANNOT SEE:** one clone on one machine at one instant. A worktree that strands and is pruned
+before a sweep leaves no trace here, and the sweep says nothing about how LONG any of these had been
+stranded — only that they were, at `711d5f44`.
+
+### RE-RUN ~1 HOUR LATER, AND THE SNAPSHOT HAD ALREADY EXPIRED — WHICH FALSIFIES THIS ENTRY'S OWN ADVICE
+
+**Three of the four cleared through the subagent channel** (M0-48 `3cd60c98` on origin, REC-100 clear,
+M0-35 clear at `056d904e`) — no push by any session, all four asked and three answered. **But the fifth
+row, `a8eea05132b9aee1d`, THE ONE THIS ENTRY NAMED AS THE OVER-STRICTNESS CASE THAT THE ARM MUST NOT
+NAME, HAD BECOME AN EXPOSURE:** still 0 commits and still no branch on origin, now **12 MODIFIED TRACKED
+FILES including `bio-plane/src/store.mjs`**. It started work in the interval.
+
+**SO THE EXEMPTION CRITERION IS *NOTHING AT RISK*, NOT *FRESH*, and the distinction is load-bearing
+because a worktree crosses that line silently, committing nothing and pushing nothing.** This entry's
+own wording — *a fresh worktree whose tip sits at `origin/main` with nothing committed* — invites an
+implementer to exempt on ZERO COMMITS, which `a8eea051` still satisfies while holding twelve modified
+files. **Exempt only when there is no committed work past `origin/main` AND no working-tree change,
+evaluated every run and never inferred from the tip position.** That is BOB's specification being wrong
+in the same way CONDUCT's was an hour earlier, and by the same mechanism: written before looking again.
+
+**M0-40 is the same lesson pointing the other way.** CONDUCT saw three `UU` paths and read it correctly
+as mid-conflict rather than stranded; an hour later the conflict is resolved, 2 commits sit past `main`,
+and the ONLY dirt is `?? .m040-resolved/` and `?? m040-merged.log` — untracked SCRATCH. **A naive
+`dirty > 0` would name it for two log files.** Modified tracked files are work; untracked may be scratch
+or may be a new test file, which is also work. **No heuristic is offered for telling those apart,
+deliberately — that is where an arm goes subtly wrong and stays wrong.** The shape that survives both is
+to **REPORT THE COUNTS rather than merely warn**: *"nothing committed, 12 modified files"* is actionable
+and *"nothing committed, 1 untracked path"* is dismissible in a second, and a reported shape lets the
+READER be right where the arm never can be.
+
+**THE CONSEQUENCE FOR ANY ARM BUILT FROM THIS ENTRY: REPRODUCE THE SHAPES, NOT THE TABLE.** Pinning a
+fixture to *four named, `a8eea051` not named* pins it to a snapshot that expired within the hour, and the
+item would assert a fact that is no longer true. The four shapes are: a never-pushed branch with commits;
+a branch present but BEHIND with commits; a clean tip with modified files; and a genuinely empty
+worktree. The first three are named, **in different words because the reader's next act differs**, and
+the fourth is not named at all.
+
 ## M-30 · 2026-09-15 · CONDUCT #11 — AN UNEXPLAINED GATE RED, RECORDED WITH ITS NON-CORROBORATION RATHER THAN RESOLVED IN EITHER DIRECTION
 
 **The observation.** A `node tools/gates.mjs --docs` run over a prose-only change to
@@ -13700,6 +13787,532 @@ the AUTHORED letter back through any control-plane op at all — `/basis` and `/
 DO-internal class and `op=earnedbasis`'s `legs` carry the leg's address and content row rather
 than its grade, so the authored letter in the table above is known by construction from the
 fixture and is labelled as such rather than printed as a measurement.
+## M-32 · 2026-09-15 · REC-91 — WHAT AN FTS5 EXTERNAL-CONTENT INDEX ACTUALLY DOES ON WORKERD, AND THE BOUND THAT REALLY BINDS THE TEXT INDEX: **a plain per-row `DELETE` on the index answers `SQLITE_CORRUPT_VTAB`; `INSERT OR REPLACE` on the base table ORPHANS the index entry and the orphan still MATCHES; `count(*)` on the index cannot see that orphan because it is read out of the CONTENT table; `integrity-check` at rank 1 can and rank 0 cannot; and §4.3's 2 MiB per-capture bound is UNREACHABLE because `op=promote` refuses an inline bundle file over 1,048,576 B first** (worktree `agent-aabecaced11e00db1`)
+
+Taken while BUILDING `CONTENT-SEARCH-DESIGN.md` §7 row 4 — `capture_text` and
+`capture_text_fts` — because every one of these is a property of the substrate
+the design names and not one of them is in the design. **Four of the five were
+found by a control arm or a probe rather than by reading**, and three would have
+shipped as silent wrong answers.
+
+**Instrument.** Four scratch probes under miniflare-hosted workerd (`miniflare`
+`^4.20260722.0`, node v26.5.0, darwin/arm64), each a Durable Object executing
+**§4.1's own DDL**, plus `bio-plane/test/nc-rec91.mjs`'s eight arms against the
+shipped code. The probes were scratch and are not committed; **what replaced them
+is `test/capture-text-index.test.mjs` §F, which extracts the `CREATE VIRTUAL
+TABLE` and the three `CREATE TRIGGER` statements OUT OF `src/store.mjs` by regex
+and executes those** — so the behaviour below is re-measured on every battery
+run, against the product's own DDL rather than against a copy of it.
+
+### 1 · The four substrate facts, each with the wrong belief it corrects
+
+| what was tried | what happened | the belief it corrects |
+| --- | --- | --- |
+| `DELETE FROM capture_text_fts WHERE rowid = ?` | **`SQLITE_CORRUPT_VTAB`** | that an external-content index is deleted from the way `bundles_fts` is. It is not: the documented route is the `'delete'` command, which is why the table carries TRIGGERS |
+| `DELETE FROM capture_text_fts` (unqualified) **before** its base rows, then the base rows | the index cleared, then **the BASE delete threw `SQLITE_CORRUPT_VTAB` and the base rows were LEFT** | that a purge may clear the index beside `bundles_fts`'s own line. Clearing index-first corrupts the table AND leaves the rows — worse than no sweep at all. The sweep must come AFTER |
+| `INSERT OR REPLACE INTO capture_text` over an existing address | the base table is correct and **the superseded row's index entry is ORPHANED and still MATCHES** | that `INSERT OR REPLACE` is a tidier way to write the same rows. SQLite does not fire delete triggers for REPLACE conflict resolution unless `recursive_triggers` is on, so the record answers a search out of text it no longer holds |
+| `PRAGMA recursive_triggers = ON` then the same REPLACE | the trigger fires and no orphan | that the pragma is the fix. It is *a* fix; delete-then-plain-INSERT is §4.1's own rule and needs no connection state, so that is what shipped |
+
+### 2 · THE INSTRUMENT THAT COULD NOT SEE THE DEFECT IT WAS WRITTEN FOR
+
+`op=stats` first reported `textIndexed: count(*) FROM capture_text_fts` beside
+the base count, on the reasoning that the two must agree and that asserting it
+would be asserting the trigger discipline. **They agree for free.**
+
+| with a deliberate orphan present | figure |
+| --- | --- |
+| `count(*) FROM capture_text` | 1 |
+| `count(*) FROM capture_text_fts` | **1** |
+| `... WHERE capture_text_fts MATCH '<the superseded term>'` | **1 — the orphan is there** |
+| `fts5vocab(capture_text_fts, 'instance')`, distinct docs | **2 — and this one can see it** |
+| `INSERT INTO capture_text_fts(capture_text_fts) VALUES('integrity-check')` | **ok — did NOT catch it** |
+| `INSERT INTO capture_text_fts(capture_text_fts, rank) VALUES('integrity-check', 1)` | **`SQLITE_CORRUPT_VTAB` — caught it** |
+
+An external-content table answers `count(*)` out of its CONTENT table, so the
+parity assertion was one figure read twice — **CLAUDE.md's costs-nothing rule
+inside the one instrument written to detect this exact corruption.** It was
+caught by `nc-rec91.mjs`'s `replace` arm coming back **2 of 3 declared** with a
+real orphan planted and the parity row still green. `op=stats` now reports
+`textIndexOk` from `integrity-check` **at rank 1**, which compares the index
+against the content table. **Rank 0 is not a weaker check of the same thing; it
+is a check of something else.**
+
+### 3 · The bound that really binds, and it is not the design's
+
+§4.3 sets a per-capture bound of **2,097,152 B** from M-20 and reasons that a
+capture at it costs 45.7 % of the CPU window. Both halves are true and neither is
+the binding constraint.
+
+| figure | value | where it comes from |
+| --- | --- | --- |
+| §4.3's per-capture bound | 2,097,152 B | M-20, applied in `#writeCaptureText` |
+| `INLINE_MAX`, the promote path's per-file limit | **1,048,576 B** | `store.mjs`, long-standing |
+| the `data/provenance.json` a 2.4 MiB capture produces | **2,460,076 B** | measured by this item's own bound arm — **`op=promote` REFUSED it** |
+| the acquire answer's own budget, shipped | 524,288 B | half of `INLINE_MAX`, for JSON escaping and the rest of the document |
+
+**Left alone this would have been a REGRESSION and not a new limit.** M-20's
+census holds a PDF with 1,354,686 B of text and a docx with 1,187,253 B; both
+promote today and **neither would have**, because the units ride in
+`data/provenance.json` and that file would have exceeded `INLINE_MAX`. An index
+that makes the record unable to FILE a document is the worst direction
+available. The wire therefore carries its own budget and **COUNTS what it drops**,
+so the capture is reported `partial` rather than recorded as whole.
+
+Two consequences, both stated rather than implied:
+
+- **§4.3's bound cannot fire through the route §4.1 names.** The store's branch
+  is reachable only by lowering the constant, which `nc-rec91.mjs`'s `overstrict`
+  arm does. A control arm reaching a branch the product's own route cannot is a
+  finding about the ROUTE.
+- **`data/provenance.json` is a bundle FILE**, so its bytes land in
+  `files.content` and in `history`. §3 chose option (iii) partly because "text is
+  stored once"; through this route it is stored **twice** — once in
+  `capture_text` at M-20's 1.998 B per text byte, and once more in the bundle
+  image. Reported as a DESIGN GAP against §3/§4.1.
+
+### 4 · CPU: the bound does not bound the unit count
+
+Not re-measured — **read off M-20's own ladder**, and recorded here because §4.3
+draws the opposite conclusion from the same table. §4.3: *"a promote at the bound
+at page grain is 45.7 % of the measured per-invocation CPU window, so the bound
+cannot by itself push a promote over the ceiling."* True at PAGE grain. M-20's
+worst docx is **20,571 units, 1,187,253 B — inside the byte bound — at 218 ms,
+84.8 % of the 257 ms window.** Bytes do not bound the unit count, and the unit
+count is the dominant term for a word-processing container. DESIGN GAP against
+§4.3; not closed here, because a second bound is a decision about what a member's
+promote may cost and §4.1 already names the remedy (chunk across ticks).
+
+### WHAT THIS CANNOT SEE
+
+- **Miniflare-hosted workerd on one machine**, not a deployed Durable Object.
+  What it measures is SQLite behaviour and trigger semantics, which is the same
+  engine; what it cannot see is the platform's own accounting.
+- **No figure here is a corpus figure.** M-20 is the corpus measurement and every
+  document-shaped number above is quoted FROM it rather than re-taken.
+- **Nothing here exercises `passage:`**, which does not exist (REC-92). Whether a
+  member searching a term inside a captured PDF finds it is unmeasured.
+- **The orphan arm was measured on a 1-row table.** Whether an orphan's cost
+  scales is not measured and does not need to be: one wrong answer is the defect.
+- **`recursive_triggers` was ON for part of one probe run and that invalidated a
+  later arm in the same run** — recorded because it is the shape of the finding
+  rather than a footnote: a connection-level pragma set by an earlier arm silently
+  made a later arm measure a different engine. The figures above are from the
+  runs where it was off, taken on freshly created tables.
+
+
+## M0-36 — the UI test estate's tally loss, both mechanisms, measured 2026-09-16
+
+Instrument: `civicos-ui/test/nc-m036.mjs` (seven arms, each armed alone) and
+`civicos-ui/test/stdio-census.test.mjs`. Machine: darwin 25.5.0, node **v26.0.0**, base
+`origin/main` `82ffae30`. **Every arm was driven through `civicos-ui/test/run.mjs`'s own
+pipe and none through a terminal** — node's writes to a POSIX tty are synchronous, so the
+defect does not exist there and a terminal run refutes nothing while looking exactly like
+a refutation.
+
+### The population, and why neither figure in the queue row was the one to edit on
+
+| population | count |
+| --- | --- |
+| `.mjs` files in `civicos-ui/test/` | 67 (before this item's two new files) |
+| …of those, calling `process.exit` | 55 |
+| …of those, already importing the flush module | 2 (`member-respect.test.mjs`, `member-respect.control.mjs`) |
+| **…therefore repaired** | **53** — 41 `.test.mjs` suites, 11 `.control.mjs`/harness drivers, and `run.mjs` itself |
+| `.test.mjs` suites `run.mjs` discovers | 49 |
+| …of those, calling `process.exit` | 42 |
+
+M0-36's row carried **"38 of the 53"**. Both figures are reproducible and neither is the
+editing figure: **53** is the whole directory's unguarded writers, and **38** is
+`.test.mjs` files that call `process.exit` and contain **no occurrence of the string
+`stdio` at all** — which under-counts the suites by three (`auth-surface.test.mjs`,
+`intent-write.test.mjs`, `refusal-codes.test.mjs`), each of which spawns piped children of
+its own and so matched a scan for the substring while importing nothing. **A grep for a
+substring of the answer is not a census for the answer**, and the same false positive then
+occurred inside the census written to replace it: its first draft scored `nc-m036.mjs`
+guarded because that driver carries the module path as a STRING CONSTANT in order to strip
+it during an arm. The matcher is now anchored to an import statement and is tested in both
+directions inside the suite that uses it.
+
+### D-282 — the WRITER discarding queued bytes at `process.exit`
+
+Armed suite: flood, then a tally line, then `process.exit(1)` — the shape of every failing
+suite here. The ONLY difference between arms is the one import line.
+
+Armed suite: flood, then a tally line, then `process.exit(1)`. **40 samples per cell**,
+spawned with `run.mjs`'s own child options, PINNED to `run.mjs`'s source so the cheap path
+cannot drift from what the runner does:
+
+| dump | flush import | samples | **tally LOST** | bytes delivered (min–max) |
+| --- | --- | --- | --- | --- |
+| ~410 KB | **no** | 40 | **30 of 40** | 65,581 – 410,568 |
+| ~410 KB | yes | 40 | **0 of 40** | 410,568 – 410,568 |
+| ~2.4 MB | **no** | 40 | **39 of 40** | 65,581 – 2,463,568 |
+| ~2.4 MB | yes | 40 | **0 of 40** | 2,463,568 – 2,463,568 |
+
+Through the ACTUAL `run.mjs` — all 50 suites, its three guards, its provenance report —
+at ~2.4 MB without the import, across four separate driver runs on this machine: **lost in
+3/3, 1/3, 2/3 and 2/3 samples**; at ~410 KB: **1/3 and 0/3**. With the import, through the
+real runner: **0 lost in 18 samples**, at both sizes, in every driver run.
+
+**THE MINIMUM ARRIVAL IS 65,581 BYTES, WHICH IS THE 64 KiB PIPE BUFFER PLUS THE LINES
+BEFORE IT** — the signature `stdio.mjs`'s header records, reproduced here independently.
+With the import the delivered byte count is not merely sufficient but **identical and
+complete in every one of 80 samples**.
+
+**THE LOSS IS A RACE AND ITS RATE MOVES WITH MACHINE LOAD, AND TWO DECLARATIONS GOT THAT
+WRONG BEFORE THE ARM DID.** Declared *lost in every one of 3 runs* at ~410 KB it measured
+1 of 3; re-declared *lost at least once in 3* it measured 0 of 3 on a quieter machine; the
+~2.4 MB cell measured 3-of-3 with several workers live and 1-of-3 on a quiet one. **Both
+times the arm was right and the DECLARATION was wrong** — which is what D-282's own control
+had to record twice — and the correction was not a better guess but a change of KIND: stop
+declaring an OUTCOME, count SAMPLES, and declare the comparison of rates. Three samples
+cannot decide a coin, and an arm that declares one anyway produces a confident wrong answer
+in whichever direction the machine happened to be leaning. **Intermittence is the WORSE
+property and not the milder one**: a tally that is usually there is a tally nobody learns to
+distrust, and D-93 exists because a suite reporting no tally reads as one that never ran.
+
+### D-387 — the READER refusing the bytes, which the flush fix cannot touch
+
+`execFileSync` with no `maxBuffer` defaults to **1 MiB**, and node KILLS the child on
+overflow. Measured directly rather than inferred from the shape:
+
+    ENOBUFS after 1,114,112 bytes          node v26.0.0, execFileSync, no maxBuffer set
+
+With the flush fix held CONSTANT and `run.mjs`'s `maxBuffer` line as the only variable, at
+a ~2.4 MB dump: **with it, tally PRESENT at 2,463,601 bytes; without it, tally LOST at
+1,055,165 bytes.**
+
+**THIS IS WHY THE FIRST DRAFT OF ARM 2 CAME BACK RED OVER A SUBJECT THAT WAS WORKING.** It
+was sized at 2.4 MB against the unfixed reader, so it measured the ceiling and said nothing
+whatever about flushing — the *control whose method perturbs a second variable* class,
+arriving inside the fix for a tally-loss bug. The tell was the byte counts: 1,051,059 and
+1,096,225 are not pipe-buffer numbers.
+
+**AND D-282's ROW SAYS "IT IS NOT `maxBuffer`", WHICH IS TRUE AND WAS NEVER ABOUT THIS
+RUNNER.** That measurement was taken against `bio-plane/scripts/battery.mjs`, **which sets
+its own**; `civicos-ui/test/run.mjs` set none. A true sentence about one instrument read
+for five weeks as a claim about its twin one directory over.
+
+### What these instruments cannot see, stated
+
+The census reads SOURCE TEXT: it can see that a file imports the module and cannot see
+whether the module still WORKS, which is why it also drives a flooding child through a real
+pipe, and why `bio-plane/test/tally-through-pipe.test.mjs` remains the load-bearing half
+for the private `_handle.setBlocking` door. The census's reach is `civicos-ui/test/` only —
+the three `civicos-ui/check-*.mjs` guards are outside it, still exit unflushed, and
+`check-mock-envelope.mjs` still spawns all 56 suites on the 1 MiB default; ARM D prints
+that state every run rather than leaving it to a register. No historical UI-harness failure
+was re-examined for either truncation, because none was kept, so **how often this has
+already happened is UNKNOWN** and is not rounded up.
+
+### The census was caught by the estate at this item's own gate, and the catch was right
+
+`hygiene.test.mjs` failed `stdio-census.test.mjs` on the M0-16/D-301 arm — *every walk of
+this class is GUARDED or NAMED; a new one is a decision, not a silence* — because the new
+file discovers its own corpus with `readdirSync` and prints a population from it. That is
+precisely the shape that let M0-15's phantom (`machinefences-dec49.test.mjs`, 57
+assertions, in no commit) into a baseline, and `refs/stash` is repository-wide across every
+worktree of this clone. It is GUARDED by `scripts/provenance.mjs` rather than added to the
+named-and-unguarded list, because the figure it prints is the ANSWER rather than a
+diagnostic: it now reports **67 of 69 discovered items are in the commit at HEAD
+(`82ffae30`)**, naming its own two uncommitted files, so a reader about to quote *53
+writers repaired* is told which total another checkout reproduces. Battery arithmetic:
+`hygiene` went 752 pass / 1 fail → **753 pass / 0 fail**, the same 753 assertions.
+
+## 2026-09-16 · M0-37 — THE DELEGATION REGISTER CENSUSED, AND THE THRESHOLD'S OWN DISTRIBUTION TURNS OUT TO BE ONE POINT (instrument: `tools/delegations.mjs`, run over `docs/development/CLAIMS.md`; worktree `agent-a603fc3555ed6156f` on `origin/main` at `92d15614`)
+
+**THE CENSUS, taken before any edit.** `CLAIMS.md` holds **49 `DELEGATION` blocks**. Eleven
+carried a `DISCHARGED` line; **38 carried no statement of their own state at all** — neither a
+discharge nor an affirmation — and had said the same thing since the day they were written.
+
+By raise date: 2026-08-09 · 5 (0 discharged), 2026-08-10 · 7 (4), 2026-09-10 · 9 (0),
+2026-09-14 · 21 (7), 2026-09-15 · 6 (0), 2026-09-16 · 1 (0).
+
+**M0-37's ROW CARRIED THE FIGURE `nine` AND SAID SO ITSELF: the number this row was first
+written with was already false when it was written.** The true population is 38, not 9 — the
+row's own count was the live tail of one sweep, and the sweep's scope was not the register's.
+A row that warns you its own number is stale is rare and it was right.
+
+**THE DISCHARGE-LATENCY DISTRIBUTION DOES NOT EXIST, WHICH IS THE MEASUREMENT THAT MATTERS
+MOST HERE.** All eleven discharges in the entire history of this register were written **on one
+day, 2026-09-15, by one session, CONDUCT #11**. The latencies read 36d ×4 and 1d ×7 and both
+clusters are that single event seen from two raise dates. **So the estate has exactly ONE
+discharge event ever, and a threshold cannot be derived from a single point.** M0-37's row
+asked for the threshold to come from the measured distribution; the honest answer is that
+there is none, and the number is therefore a POLICY CHOICE with its argument at the site
+(`tools/delegations.mjs`) rather than a derived figure.
+
+**THE TWO MEASURED FACTS THE CHOICE OF 30 DAYS RESTS ON.** (1) The drift that produced the row
+was **36 days** — raised 2026-08-10, swept 2026-09-15 — so any threshold under 36 turns it into
+a blocking FAIL; the comparison that matters is not 30 against 36 but 30 against NEVER, since
+nothing caught the 36 except somebody choosing to look. (2) Delegations are raised at
+**~1.3/day** (49 over the 38 days 2026-08-09..09-16); with B open blocks and threshold T, the
+steady-state re-affirmation load is B/T per day, and at B=38, T=30 that is ~1.3/day — the
+register costs about as much to maintain as it costs to write, which is the affordability
+point a register has to sit under or be routed around.
+
+**THE ADJUDICATION, and it is the finding worth more than the instrument.** All 38 silent
+blocks were read against the tree rather than against their own rows. **21 of 38 (55%) were
+ALREADY CLOSED IN THE TREE AND SAID SO NOWHERE**; 17 are genuinely open. The register after
+the sweep reads **49 blocks · 32 discharged · 17 affirmed open · 0 stale · 0 silent**.
+The 2026-09-15 sweep's ratio was 8 of 9 (89%) over a smaller and older sample; 55% over the
+whole register is the better-founded figure and the two do not disagree about the direction.
+
+**THE COHORT IS A PROPERTY OF THE FIX AND IS NAMED RATHER THAN DISCOVERED LATER:** 17 of 17
+open blocks now carry the same affirmation date, so they expire together on 2026-10-16.
+`plancheck` prints that cohort on every run and says in its own output that **a blanket date
+stamp and an honest sweep make the identical shape and it cannot tell them apart.**
+
+**FOUR THINGS THE SWEEP FOUND THAT NO COUNT WOULD HAVE.**
+1. **A discharge written 2,415 lines from the delegation it closed.** `CLAIMS.md:7165` has said
+   *"UI-61's DELEGATION to RECORD is DISCHARGED"* since REC-97 landed — in a different block, so
+   anyone who went to the delegation itself read it as open. The check reads the BLOCK, which is
+   why it reported that one as silent, and the discharge is now where the delegation is.
+2. **A ledger cell that is false on this tree.** `DEBT.md:252`, D-283's disposition, still reads
+   *"the rule is landed and driven but NOT WIRED"* — while `index.mjs:4408` and `:5675` both call
+   `mergeTier2Text`. Raised as an act with an actor, not edited by this item.
+3. **An index built for a reader that does not exist.** `schema.mjs:2533` declares
+   `provenance_route_marks_finding ON provenance_route_marks(finding, bundle_id)`, and not one of
+   the four SQL readers of that table puts `finding` in a `WHERE`. No row carries the act.
+4. **Two owed acts with no row at all** — REC-97's extent picker (pinned as absent by
+   `content-extent.test.mjs:396-398`, with UI-61 `done` and no open item) and `#recogniseTier`'s
+   grade/prose pairing. Both are the note-is-not-an-item class, found by reading the register.
+
+**AND A METHOD FINDING ABOUT SEARCHING THE RECORD, measured twice in this item.** An id-keyed
+grep reports an interface change as unresolved: `IC-95`'s only occurrence in
+`INTERFACE-CHANGES.md` is its header at `:7327`, which still reads PROPOSED, while its
+`### RESOLUTION — 2026-09-15 … ACCEPTED, I3 15.2.0 → 15.3.0` sits at `:7461` **without
+repeating the id**, because the protocol APPENDS stages rather than rewriting the line. The
+same is true of IC-98 at `:7491`/`:7593`. **Read the section, not the string** — and this is
+the *agreement-of-documents* rule with the sign flipped: two readers disagreed, and the
+artifact settled it.
+
+**`docs/DECIDED.md` WAS CURRENT AT `92d15614`, established BY POINTER rather than by count**
+(M0-34's method). Regenerating on this tree moved 107 insertions and 101 deletions, and **all
+203 changed rows point at `CLAIMS.md`** — the one file this item edited. A previously stale
+index would have had to move rows pointing elsewhere; none did. The index went 951 → **965
+rulings, 273.0 KB**.
+
+## M-34 · 2026-09-16 · REC-102 — THE DOCUMENT THAT REACHES **BOTH** EXTRACTION MERGES, SYNTHESISED RATHER THAN TAKEN: **the per-page tier statement was measurably collapsed by the tier-3 merge before the fix and measurably survives it after, and the class D-372 said had no fixture is now driven through `op=acquire`** (worktree `agent-a87f25eda8bad3a73`, `origin/main` at `92d15614`)
+
+**WHY THIS IS A MEASUREMENT AND NOT JUST A LANDING.** D-372 rested on a REACHABILITY
+ARGUMENT — two merge sites read side by side — and said plainly that it was verified by
+reading rather than by driving, because the only document in CPDF-20's 50-document census
+that reaches both merges is a private individual's resume and was rightly not committed.
+**A blocker is a claim, and nothing in this repository audits one.** This entry is that
+audit: the class was built instead of taken, and the argument turned out to be exactly right.
+
+**THE INSTRUMENT.** `bio-plane/test/tier3-layer-parts.test.mjs`, driven through `op=acquire`
+on the real plane under miniflare, with the real `pdfstructure.mjs` reading real PDF bytes and
+BOTH fleet members stubbed. What is real and what is a stub is stated in the suite's own
+header; the stubs are the two network members and nothing between the bytes and the recorded
+chain.
+
+**THE FIXTURE, and the three shapes the class needs.** A three-page PDF:
+
+| page | structure | what tier 1 reports | fate |
+| --- | --- | --- | --- |
+| 0 | a font resource with **no `/ToUnicode`**, 20 show operations | 20 `no_tounicode` markers, **0 characters** | tier 2 WINS it |
+| 1 | **no font resource**, one full-page `DCTDecode` image | 1 `no_text_layer` marker, 0 characters | tier 2 keeps it at tier 1; **the marker survives, and it is what `needsTier3` then reads**; tier 3 fills it |
+| 2 | identity-CMap font, one short line (`Item 3.1`) | **8 characters**, 0 markers | tier 1 KEEPS it — **the page the defect was about** |
+
+**THE ESCALATION MARGIN, measured on the fixture itself rather than arranged and forgotten:**
+`needsTier2` compares MARKERS against decoded CHARACTERS document-wide, and this document
+reads **21 markers over 8 characters**. That margin is asserted in the suite, and the negative
+control's A4 arm lengthens page 2's line until the document stops escalating — at which point
+the suite FAILS naming the premise instead of passing over a document that never reached merge
+one. **That arm exists because three headline totality assertions in this estate have passed
+over an empty corpus.**
+
+**THE DEFECT, REPRODUCED BEFORE THE FIX.** The suite run against the pristine tree at
+`92d15614`, index.mjs sha `2423a66e`, read **22 pass / 3 fail**, and the failure is D-372's
+sentence in the record's own shape — the chain as a consumer reads it, `[step, tier, pages]`:
+
+    want [["layer",1,[2]],["layer",2,[0]],["pixels",…,[1]],["ocr",…,[1]]]
+    got  [["layer",2,[0,2]],                ["pixels",…,[1]],["ocr",…,[1]]]
+
+**Page 2 — which tier 1 read, byte for byte, and which the tier-2 merge deliberately kept —
+came back stamped `tier: 2`.** After the fix, sha `8282ab92`, the same run reads **25 pass /
+0 fail** and the chain carries both layer parts.
+
+**THE NEGATIVE CONTROL: `node bio-plane/test/nc-rec102.mjs`, 5/5 arms agreeing**, each armed
+ALONE, each restored from a uniquely-named per-arm pristine copy verified by sha256 AND by
+`cmp` with the byte count printed and floored.
+
+| arm | what it breaks | declared | actual |
+| --- | --- | --- | --- |
+| BASELINE | nothing | PASS | **PASS, 25 assertions** — never a bare 0 |
+| A1 | the partition emptied: one part at one `baseTier`, the pre-item code exactly | FAIL | **FAIL 22/3**, by name on the D-372 assertions, and it did NOT stray into either over-strictness section |
+| A2 | the CARRY dropped at the tier-2 site, so the tier-3 site has nothing to partition by | FAIL | **FAIL 22/3**, the same three assertions — the same collapse through a different door |
+| A3 | **OVER-STRICTNESS** — the same partition spelled the other way round (walking the layer pages rather than filtering the lists) | PASS | **PASS 25/0** |
+| A4 | **the FIXTURE's own margin** — page 2's line lengthened past the marker count, in the SUITE | FAIL | **FAIL 17/8**, naming the premise assertions, a DIFFERENT set from A1's and A2's |
+
+**A1 AND A2 ARE SEPARATE ARMS ON PURPOSE**, for the reason M-21 gives one section up: the
+composition and the carry are two halves, and a landing that shipped only one would pass the
+other's arm completely. **They fail on the SAME assertions here and that is the finding, not
+a redundancy** — it says the two halves have exactly one observable consequence between them,
+which is what makes either one a complete break.
+
+**ONE ASSERTION CAME BACK GREEN UNDER THE DEFECT AND IS RECORDED RATHER THAN SMOOTHED.**
+*"every page that produced text is covered exactly once"* PASSES on the pre-fix tree: the
+collapsed chain still covers pages 0 and 2 with one layer step and page 1 with the engine's,
+so the COVERAGE is right while the ATTRIBUTION is wrong. That is a true statement about what
+the assertion measures — **a partition can be complete and still be wrong about who did
+what** — and it is why the tier assertions are separate from the coverage one.
+
+**WHAT THIS MEASURES AND WHAT IT DOES NOT.** It measures that the class is reachable, that
+the plane records it honestly, and that both over-strictness directions (a document reaching
+only the tier-3 merge, and one reaching only the tier-2 merge) answer exactly what they
+answered before. **It says NOTHING about how common the class is** — the fixture is
+synthesised, so it cannot; frequency remains CPDF-20's census of 50 real documents, which
+found one, and that figure is unchanged by this entry. It also cannot say what a real pdf.js
+decode of page 0 would be, because the member is stubbed.
+
+## M-36 · 2026-09-16 · M0-43 — **THE HAND-FED HALF OF `corpuscheck` WAS BLIND TO 3 FILES, NOT 33, AND THE BLIND SPOT IS ENTIRELY PROSPECTIVE** (worktree `agent-a1bbf18d7612475d1`, `origin/main` at `f3f2acba`)
+
+**Instrument:** `node tools/corpuscheck.mjs --coverage` (written by this item), cross-checked
+against `find docs/development -name '*.md' -type f | wc -l` and `--list`, on a pristine
+worktree with `npm ci` in all three dependency-carrying packages, each `node_modules` verified
+a real directory rather than a symlink, volume 5.9 GiB free.
+
+| figure | value |
+| --- | --- |
+| `.md` files under `docs/development/`, RECURSIVE | **62** |
+| governed by CORPUS-STANDARD §5's hand-kept table | **29** |
+| excluded by §6's classes (ledgers 7, process documents 3, kickoffs 20) | **30** |
+| **classified by nothing** | **3** |
+| ungoverned files carrying ANY front-matter field | **0 of 33** |
+| governed set overall (architecture 21 + development 29) | **50, unchanged** |
+
+**THE ROW IS INHERITED FROM A CENSUS AND A CENSUS IS A CLAIM ABOUT THE DAY IT WAS TAKEN, SO
+THE HONEST ANSWER IS RECORDED: THE BLIND SPOT IS SMALLER THAN A READER OF THE ROW WOULD
+ASSUME, AND IT IS A DIFFERENT SHAPE.** Not one of the 33 ungoverned files carries so much as a
+single `**Status**`, `**Place in the system**`, `**Incomplete sections**` or `**Contents**`
+line — measured by running `parseFront` over all 33, not by reading them. So **nothing is
+silently half-governed today**: there is no document sitting under `docs/development/` that
+looks like a governed design and is checked by nothing. **30 of the 33 were already ruled
+excluded by §6 in prose** — the ledgers and the process documents and the kickoffs, by class,
+with reasons — which is why the residue is three and not thirty-three.
+
+**What M0-41's census got right is the EXPOSURE, not a backlog.** The defect is real and it is
+prospective: §5's table is hand-kept, it is correct today, and **nothing made it stay correct**.
+A design document written under `docs/development/` tomorrow is checked by NOTHING until
+somebody remembers the row — and because the tool is RIGHT about every document it is told
+about, the failure would be invisible. That is `optional-and-unaudited`, M0-41's common case,
+exactly as graded. It is measured here as an exposure with a bound rather than as a pile of
+neglected files, because those are different claims and only one of them is true.
+
+**THE THREE, which are this item's real output and are ROUTED (D-388) rather than ruled:**
+`MILESTONES.md` (ledger by behaviour, design document by content), `CIVICOS_UI_STATE.md`
+(a 2,229-line prepended UI ledger whose own backfill note records 45 days unwritten), and
+`SESSION-KICKOFF-UI.md` (an 18-line tombstone pointing at `kickoffs/UI.md`). **Which files are
+governed is CORPUS-STANDARD's decision and Bob owns it**, so they are listed with the question
+each poses. No file's governance moved and the governed count did not move: **50 before, 50
+after**, which is the correct outcome for an item that builds an audit and rules on nothing.
+
+**WHAT THIS MEASURES AND WHAT IT DOES NOT.** It measures the population, the classification,
+and that the walk is recursive (`research/` holds three governed documents and a flat read
+would have missed the subdirectory while passing every table-driven arm). **It says nothing
+about `docs/architecture/`**, which needs no audit because the directory itself decides
+governance there — and that asymmetry is the argument for AUDITING the table rather than
+REPLACING it: `docs/development/` is a MIXED directory, so a walk that governed what it found
+would assign a class to 33 files that §6 has already ruled the other way for 30 of them. **It
+also says nothing about whether the 30 exclusions are RIGHT.** It proves they are stated with
+reasons, not that the reasons are good; that is the reviewer's job, the same limit §6 already
+records about the honesty of a Status.
+## M-35 · 2026-09-16 · REC-111 — **HOW MANY INDEXED UNITS A PROMOTE CAN ACTUALLY CARRY: 4,064 through the acquire wire and 13,720 through a caller-authored provenance document — so the unit count was ALREADY BOUNDED ON BOTH ROUTES, BY ACCIDENT, AND NEITHER ACCIDENT WAS WRITTEN DOWN** (worktree `agent-ab9f22802cd2cdb44`, `origin/main` at `f3f2acba`)
+
+**Why this was taken.** `CONTENT-SEARCH-DESIGN.md` §4.3's third correction (BOB #12,
+2026-09-16) says the content index costs ROWS and FTS ENTRIES while every bound the section
+sets counts BYTES, and cites M-20's worst docx — 20,571 units at 1,187,253 B, inside the byte
+bound, at 84.8 % of the CPU window — for the claim that **a container whose units are many and
+small is bounded by nothing this design specifies.** REC-111 was rowed to close that with a
+unit budget, and its first act was to measure the claim rather than build against it.
+**CLAUDE.md's rule: verify a blocker the way you verify a capability.**
+
+**Instrument.** Two arms, both on this tree, neither requiring the network or a deploy.
+
+    node -e '<the JSON-size bisection below>'            # arm 1, the caller-authored ceiling
+    node bio-plane/test/capture-text-index.test.mjs      # arm 2, both ceilings driven through op=promote
+
+Arm 1 bisects the largest `{documents:[{... text_units:[...] }]}` whose serialisation stays
+under `INLINE_MAX`, with each unit carrying a DISTINCT extent (a colliding address is counted
+`unaddressable` and dropped by `#writeCaptureText`, so a fixture of identical extents would
+have measured a ceiling nothing can reach) and one byte of text. Arm 2 is section G of the
+suite, which promotes documents at these shapes through the real op on miniflare-hosted
+workerd.
+
+### 1 · The two route ceilings
+
+| route | what bounds it | ceiling, in UNITS | predicted ms | % of the 257 ms window |
+| --- | --- | --- | --- | --- |
+| `op=acquire` → `op=promote` (the product's own) | `ACQUIRE_TEXT_UNITS_BUDGET` 524,288 B, charging `ACQUIRE_TEXT_UNIT_ENVELOPE` 128 B **per unit** | **4,064** | 58.5 | **22.8 %** |
+| a caller-authored `data/provenance.json` → `op=promote` | `INLINE_MAX` 1,048,576 B on the whole file | **13,720** | 105.0 | **40.9 %** |
+| §4.3's `CAPTURE_TEXT_CAPTURE_BOUND`, 2,097,152 B | — | unreachable (REC-91, M-32) | — | — |
+
+- **4,064 and not 4,096.** `floor(524288 / 128)` is 4,096, but the wire's `arm()` helper never
+  emits a unit with empty text, so the smallest chargeable unit is `1 + 128` B. The difference
+  is 32 units and it is the difference between a ceiling and an estimate.
+- **13,720 is a ceiling on UNITS and the maximising shape is all-units, not all-bytes.** Against
+  M-20's fit a unit costs ~1.0e-4 ms per JSON byte spent on it and a text byte ~5.3e-5, so units
+  dominate; a mixed document cannot beat the all-tiny-units figure. JSON escaping cannot help a
+  caller either — an escape is more JSON bytes per text byte, never fewer.
+- **An R2-backed `data/provenance.json` is NOT a third route.** `#writeReadings` and the
+  `text_units` read both require `typeof prov.text === "string"`, so a spilled file is not read
+  at all and contributes no units. Checked in the source on this tree, not inferred.
+- **The predicted milliseconds are M-20's two-point fit** (`0.0076 × units + 0.054 × KiB`)
+  applied to these shapes. **They are a PREDICTION and not a reading**, and nothing here
+  re-takes M-20's calibration; the 257 ms window is M-20's own conversion of `op=cpuprobe`'s
+  40M-reference-iteration budget at the workerd rate, and that currency is not runtime-portable.
+
+### 2 · What that means, and it is not what the row expected
+
+**The premise is true of the DESIGN and false of the SYSTEM.** Both reachable routes are
+bounded, and both bounds sit comfortably inside the CPU window — the worse of them at 40.9 %,
+against the 45.7 % §4.3 itself called acceptable. **Nothing was broken and nothing was going to
+overflow.**
+
+**What was wrong is that both bounds were ACCIDENTS.** 4,064 falls out of a JSON envelope
+ESTIMATE — the comment at the site says "about eight indented lines" — and 13,720 falls out of
+an inline-file limit that knows nothing about indexing. Neither is written anywhere. Either
+moves the day an unrelated constant moves, and §4.1 already names `sheet-range` as a coming unit
+arm with a larger extent, which is exactly the change that would move the first one. §4.3 asked
+for both bounds *"stated in one place"* so that *"neither hides the other"*; **the byte bound was
+hiding the unit bound, and a bound nobody can state without doing arithmetic across two files is
+not a decision about what a member's promote may cost — it is a side effect wearing one.**
+
+**And the same measurement decides the remedy.** §4.1's alternative is to chunk the write across
+ticks as `capture_sessions` resumes. Chunking is for a write that does not FIT a tick, and
+neither route can produce one: to make chunking necessary you would first have to RAISE the
+wire's byte budget, which is the regression §4.3 was corrected for on 2026-09-16. So the bound
+built is a unit BUDGET — `CAPTURE_TEXT_CAPTURE_UNIT_BOUND`, 4,096, from M-20's own *"the largest
+promote that fits is ~3,900 units"*, at the resolution the adjacent constants use.
+
+**M-20's worst docx is not a counter-example to any of this, and reading it as one is the trap.**
+Its 20,571 units and 218 ms are a figure about a document's TEXT, not about a promote: through
+the wire its 60 B mean paragraph costs 188 B against a 524,288 B budget, so ~2,788 units are kept
+and it lands `partial` today, before this item and after it. **A cost quoted for a document the
+wire never sends whole is a cost nothing pays.**
+
+### 3 · WHAT THIS MEASUREMENT CANNOT SEE
+
+- **No real CPU was measured.** Every millisecond above is M-20's fit applied to a unit count,
+  on a machine running other workers. A deployed-Worker reading of a promote at these shapes has
+  not been taken by anybody, and M-20's own note that the reference-iteration currency is not
+  runtime-portable is inherited here unchanged.
+- **No real many-tiny-unit DOCUMENT.** The 13,720-unit fixture is synthesised. M-20's census
+  holds no container that produces units at that count — its worst is 20,571 `doc-para` units,
+  and those are not tiny enough to survive the wire. **So this says what the ROUTE admits and
+  nothing about how often anything travels it.**
+- **The workbook case is still absent, and it is the one that would matter.** §4.3's own example
+  of the hazard is "a spreadsheet of one-character cells", and a workbook has NO unit arm
+  (`EXTRACTION-BREADTH-DESIGN.md` §3.2's `sheet-range`). M-20 measured 288 workbooks holding
+  72,651,441 B of text over 1,056 sheets with not one indexable unit between them. **When that
+  arm lands, this measurement is the one to re-take**, because a `sheet-range` unit changes both
+  the envelope estimate and the unit count at once.
+- **It cannot see a caller that is not this plane.** Arm 1 models the provenance document this
+  repository's own writers produce; a caller emitting a leaner shape would fit more units, and
+  the ceiling would rise without any constant moving. That is an argument FOR the stated bound
+  rather than a limit of it, and it is the reason the bound is on the STORE's side of the wire.
 
 ## M-33 · 2026-09-16 · M0-40 — THE DERIVATION CLASSIFIER IS SENSITIVE TO A SPELLING IN BOTH DIRECTIONS, AND TWENTY-ONE OF THIRTY-FIVE MEMBERSHIPS REST ON IT
 

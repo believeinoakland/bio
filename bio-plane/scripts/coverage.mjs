@@ -42,7 +42,7 @@
  * fails the run. Report first, enforce when the floor has been set.
  */
 
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { readControl } from "./control-register.mjs";
@@ -66,6 +66,8 @@ import { codeOnly, declaredCheckIds, proseOnlyCheckIds, namesCheckId } from "./d
    `--strict` the gate yet. See `provenance.mjs` for the mechanism and, more
    usefully, for what the check cannot see. */
 import { readGitProvenance, reportProvenance, repoPath } from "./provenance.mjs";
+import { spawnSync } from "node:child_process";
+import { RUN_VERBS, RUN_WINDOW, readRunEvidence } from "./control-register.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = join(ROOT, ".."); // the fleet lives BESIDE the plane, not inside it.
@@ -198,7 +200,34 @@ const checkRows = CHECKS.map((c) => ({ check: c, named: namesCheckId(c, allText)
 const controlRows = battery.map(({ file, src }) => {
   const c = readControl(src);
   return { suite: file, control: c ? c.text : null, arms: c ? c.arms : null,
-           declaredAtLine: c ? c.line : null, declarationLines: c ? c.lines : 0 };
+           declaredAtLine: c ? c.line : null, declarationLines: c ? c.lines : 0,
+           /* M0-42. A suite with NO declaration has no run evidence to grade and
+              is not scored DECLARED-ONLY for it — it is already counted, by name,
+              in the `uncontrolled` list above, and counting it twice would make
+              the RUN-vs-DECLARED split a restatement of a figure this report
+              already prints. */
+           run: c ? c.run : null,
+           /* M0-42, AND IT IS HERE BECAUSE THE FIRST DRAFT OF THIS REPORT OVERCLAIMED.
+              `readControl` records ONE declaration per suite — the fullest — and the
+              marker grammar does not see `NEGATIVE CONTROL (` at all, because `(` is
+              not one of MARKER_SEPARATORS. So a suite can state its control several
+              times, record its runs in the copies, and still be graded on the one that
+              says nothing. Measured 2026-09-16: of the 34 suites whose RECORDED
+              declaration is not RUN, **18 carry a run token elsewhere in the same
+              file** — `affordances.test.mjs` grades DECLARED-ONLY while holding five
+              further declarations reading `all RUN 2026-08-04 … restored
+              BYTE-IDENTICAL`. Naming those 18 as resting on the worker's word would be
+              this register making a claim it cannot support, which is the exact defect
+              the item exists to avoid, one level in.
+              **THIS SECOND LOOK IS DELIBERATELY LOOSE AND IS NOT A GRADE.** It reads
+              the WHOLE FILE, so a run token in an unrelated comment — or in a string
+              literal — satisfies it. That is the right direction for its only job: it
+              is a FLOOR ON INNOCENCE, used solely to stop the strict list overclaiming,
+              and never to promote a suite into the RUN count. The floor and every
+              printed RUN figure stay on the RECORDED declaration alone. */
+           runElsewhere: c && c.run.state !== "RUN"
+             ? readRunEvidence(src.replace(/\s+/g, " ")).state === "RUN" : false,
+           hasDriver: existsSync(join(ROOT, "test", file.replace(/\.test\.mjs$/, ".control.mjs"))) };
 });
 
 /* THE REGISTER'S FLOOR (M0-14). A ceiling is not a ratchet: the arms tally could
@@ -951,9 +980,80 @@ const REGISTER_FLOOR = {
      was reworded; the instrument was not touched.
      ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and
      in the fleet floor below, which is one occurrence per distinct object. */
-  arms: 1093,
-  classified: 197,
-  corpus: 198,
+  /* MOVED 1093 -> 1100 · 197 -> 198 · 198 -> 199 by CONDUCT #1, 2026-09-16, AT REC-91'S
+     INTEGRATION, and taken from THE MERGED TREE'S OWN POST-COMMIT `--strict` PRINT on
+     c09dae61 — `arms 1100/1093 · classified 198/197 · corpus (suites read) 199/198 ·
+     GREW by 7 arm(s)`. Provenance on that run: `210 of 210 discovered item(s) are in the
+     commit at HEAD`, no contamination reported, tree clean.
+     THIS IS THE FIGURE THE MERGE COMMIT PROMISED AND IT IS PAID HERE RATHER THAN LATER,
+     which is the whole point: `8fcbe15` declared `Dropped-from-branch:` on this file
+     because REC-91's branch moved this floor to 1094/197/198 from ITS OWN print while main
+     carried REC-95's 1093/197/198 from ITS OWN. BOTH were correct where taken. NEITHER is
+     true here, and — the part worth keeping — **1100 is not the sum of their deltas either**
+     (1093 + the branch's 7 would be 1100 only by coincidence of arithmetic; the classified
+     and corpus figures move by one each and no addition of the two branches' numbers
+     produces 198/199). A floor reconstructed by adding deltas installs permanent slack in a
+     ratchet whose entire purpose is to have none. The merged print is the only figure ever
+     true of the merged tree (D-238).
+     REC-69 IS WHY THIS COMMENT IS LONG: its merge named this same file, described taking
+     main's side, promised exactly this re-read, and never performed it — and a dropped floor
+     goes SLACK, not red, so eleven floors sat stale for days behind a green battery, a green
+     --strict and a green UI harness. A floor promised for later is a floor nobody moved.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
+     FLEET_FLOOR below (76, unmoved) — one occurrence per distinct object. */
+  /* MOVED `arms` 1100 -> 1104 by CONDUCT #1, 2026-09-16, at M0-42's and REC-103's merge,
+     from THE MERGED TREE'S OWN POST-COMMIT `--strict` PRINT on ba116c02 — `arms 1104/1100 ·
+     classified 198/198 · corpus (suites read) 199/199 · GREW by 4 arm(s)`. Provenance on
+     that run: `210 of 210 discovered item(s) are in the commit at HEAD`, no contamination,
+     tree clean.
+     `classified` AND `corpus` DO NOT MOVE AND THAT IS CORRECT RATHER THAN AN OVERSIGHT:
+     neither item added a SUITE. M0-42 added four arms to `register-grammar.test.mjs`'s
+     existing declaration, and REC-103 contributed ZERO to this figure — its 6-arm block
+     sits under REC-93's 7, because the register records the LARGEST SINGLE DECLARATION
+     per suite and never the sum. REC-103's worker verified that rather than trusting an
+     unchanged number, which is the right way round.
+     AND THE DELTA IS THE SAME WHILE THE FIGURE IS NOT, which is D-238 in one line: M0-42's
+     own tree printed 1097 (1093 + 4) and this tree prints 1104 (1100 + 4). Same four arms,
+     different base, and only the merged print is ever true of the merged tree. */
+  /* MOVED 2026-09-16 by REC-102: arms 1104 -> 1109, classified 198 -> 199, corpus 199 -> 200,
+     ALL THREE IN THE SAME TURN and every one taken from the figure this item's own green
+     `--strict` run PRINTED **AFTER THE COMMIT** as REPRODUCIBLE (`arms 1109/1104 ·
+     classified 199/198 · corpus (suites read) 200/199 · GREW by 5 arm(s)`) — never counted,
+     never added to the numbers above. The cause is ONE new suite,
+     `test/tier3-layer-parts.test.mjs`, whose `NEGATIVE CONTROL:` declaration states five
+     arms, so `corpus` and `classified` each rise by one and `arms` by five. Nothing FELL.
+     THE PRE-COMMIT RUN PRINTED THE OLD FIGURES AND THAT IS THE POINT, not a discrepancy: an
+     untracked suite is a PHANTOM to `provenance.mjs`, so the reproducible print stayed at
+     1104/198/199 while the contaminated one already read 1109/199/200. A floor moved from the
+     contaminated figure would be right today by accident and permanently too high the moment
+     the suite failed to land, which is D-238's whole case. The FLEET floor is deliberately
+     UNMOVED at 3/6/8/76, and that was VERIFIED from the same print rather than inferred from
+     an unchanged number: this item adds no fleet member, no surface op and no fleet suite.
+     AND THE DECLARATION THIS FIGURE COUNTS WAS REWRITTEN BECAUSE THIS INSTRUMENT REFUSED IT.
+     The suite's first `NEGATIVE CONTROL:` paragraph was prose the register could not count
+     arms in, so it landed in UNCLASSIFIED and `--strict` exited 1 — D-233's own shape, caught
+     by the check that exists for it rather than by anyone re-reading the suite. The arms are
+     a marked ordinal list now, and the five this figure counts are the five that RAN. */
+  arms: 1109,
+  classified: 199,
+  corpus: 200,
+  /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
+     why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
+     print while this tree already carried REC-91's 1100 — two correct readings, neither
+     true of the merge. The three FIGURES are resolved to this tree's and RE-READ from the
+     merged run's own post-commit print below; the `run` key is NOT part of that collision,
+     it is a pure ADDITION and is kept whole with its reasoning. Taking one side of this
+     file wholesale would have dropped it, which is REC-69's defect exactly. */
+  /* M0-42's key, and it is a RATCHET ON A CLAIM rather than on a capability, which
+     is why it is floored at what the estate ALREADY HELD rather than at a target.
+     Measured 2026-09-16 on this tree: 164 of 198 declarations already carried a
+     dated run token in prose and NO INSTRUMENT READ ONE, so the 34 that carried
+     nothing were invisible beside them. The floor catches a token being REMOVED —
+     the only direction this figure can fall, exactly as `arms` can only fall by an
+     edit. **It is deliberately NOT a requirement that every declaration carry one:
+     a gate that failed 34 honest suites on the day it landed would be switched off,
+     and a register nobody runs measures nothing.** The 34 are NAMED instead. */
+  run: 164,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
@@ -1418,7 +1518,70 @@ const reproClassified = repro.filter((r) => typeof r.arms === "number");
 const reproArms = reproClassified.reduce((n, r) => n + r.arms, 0);
 const contaminated = PROV.inHead !== null && repro.length !== controlRows.length;
 
+/* M0-42 — RUN vs DECLARED. Graded over the declarations the register already
+   reads, and the reproducible half is what the floor is held against, for D-238's
+   reason: a floor moved while a phantom suite was present is permanently too high. */
+const declared = controlRows.filter((r) => r.run);
+const runRows = declared.filter((r) => r.run.state === "RUN");
+const undeterminedRows = declared.filter((r) => r.run.state === "UNDETERMINED");
+const declaredOnlyRows = declared.filter((r) => r.run.state === "DECLARED-ONLY");
+const reproRun = repro.filter((r) => r.run && r.run.state === "RUN");
+
+/* THE ONE MECHANICAL FALSIFIER THAT LOOKED AVAILABLE, MEASURED, AND FOUND NOT TO
+   BE ONE. This is kept — built, run and reported — because the finding is worth
+   more than the feature, and because the next session to have this idea should
+   find the measurement rather than re-derive it.
+
+   THE IDEA: a run token dated BEFORE the suite's own last commit is a claim about
+   a tree that has since moved, and unlike everything else here that is mechanical
+   rather than a matter of belief. THE MEASUREMENT, 2026-09-16 over 164 tokens:
+   **roughly 88% of them are stale on a completely healthy estate** (143-144 of 164
+   across this item's own runs, the figure moving by one as this item dated its own
+   token). Median gap 10 days, max 46. Identical under `%cs` and `%as`, so it is not
+   a rebase artefact. **THE LIVE FIGURE IS PRINTED ON EVERY RUN AND THAT IS THE
+   AUTHORITY** — no numeral is carried in the printed prose below, because a
+   hand-carried number in output nobody re-measures is this project's most-repeated
+   finding, and it went stale HERE, inside this block, within one turn of being
+   written.
+
+   WHY, AND THE WHY IS THE POINT: a suite file is FAR TOO COARSE A PROXY FOR THE
+   ARM'S SUBJECT. Suites are edited constantly for reasons that have nothing to do
+   with their control — a comment, a figure, a floor, an added assertion — and none
+   of those invalidate a run. Meanwhile the change that WOULD invalidate one is
+   usually in `src/`, and this cannot see it at all. **So the signal is wrong in
+   both directions at once: it fires on almost every honest row, and stays silent
+   on the case it was wanted for.**
+
+   IT IS THEREFORE REPORTED AS A DISTRIBUTION AND NEVER AS A LIST OR A GATE. An
+   instrument that names 144 healthy rows as suspect buries the 26 that are the
+   actual finding, and a gate built on it would fail honest runs and be switched
+   off inside a week. Recorded so the exit is stated: **staleness at this grain is
+   not the falsifier this register is missing, and a future one must key on the
+   SUBJECT an arm names, not on the file the declaration sits in.** */
+function lastCommitDate(relPath) {
+  const r = spawnSync("git", ["log", "-1", "--format=%cs", "--", relPath],
+    { cwd: REPO, encoding: "utf8", timeout: 30_000 });
+  if (r.status !== 0 || !r.stdout) return null;
+  const d = r.stdout.trim();
+  return /^20\d\d-\d\d-\d\d$/.test(d) ? d : null;
+}
+const staleRun = [];
+for (const r of runRows) {
+  const moved = lastCommitDate(`bio-plane/test/${r.suite}`);
+  if (moved && moved > r.run.date) staleRun.push({ ...r, moved });
+}
+const staleGap = (() => {
+  const days = staleRun
+    .map((r) => Math.round((Date.parse(r.moved) - Date.parse(r.run.date)) / 86_400_000))
+    .sort((a, b) => a - b);
+  return days.length
+    ? { n: days.length, median: days[Math.floor(days.length / 2)], max: days[days.length - 1] }
+    : { n: 0 };
+})();
+
 const registerBelowFloor = [];
+if (reproRun.length < REGISTER_FLOOR.run)
+  registerBelowFloor.push(`${reproRun.length} declaration(s) carry a dated RUN token, floor is ${REGISTER_FLOOR.run}`);
 if (reproArms < REGISTER_FLOOR.arms)
   registerBelowFloor.push(`${reproArms} arms stated, floor is ${REGISTER_FLOOR.arms}`);
 if (reproClassified.length < REGISTER_FLOOR.classified)
@@ -1520,6 +1683,92 @@ if (JSON_OUT) {
     console.log(`  UNVERIFIED: git could not answer, so the figures above are what this tree holds and`);
     console.log(`  NOT a claim that another checkout reproduces them. Do not move a floor from them.`);
   }
+  /* ------------------------------------------------- M0-42: RUN vs DECLARED.
+     THE LIMIT IS PRINTED BEFORE THE FIGURES, DELIBERATELY AND IN THIS REGISTER'S
+     OWN WORDS, because a reader who takes the count for proof of execution has
+     been misled by an instrument rather than by a worker — and that is a worse
+     defect than the one this closes. */
+  console.log(`\n  RUN vs DECLARED — WHAT THIS CANNOT DO, FIRST. **THIS DOES NOT PROVE THAT ANY CONTROL`);
+  console.log(`  RAN.** It cannot. Any artifact a worker can write, a worker can write without running`);
+  console.log(`  anything, and a FORGED RUN TOKEN IS INDISTINGUISHABLE FROM A REAL ONE — it is one line`);
+  console.log(`  of prose. What this raises is the COST of a false claim, in three ways and no more:`);
+  console.log(`  the absence is now VISIBLE and COUNTED where every declaration used to read alike; a`);
+  console.log(`  false claim must now carry a DATE and a FIGURE, which makes it FALSIFIABLE by anyone`);
+  console.log(`  who re-runs the arm, where a purely prospective declaration predicted nothing that`);
+  console.log(`  could later be shown wrong; and a dated claim can go STALE, which is mechanical.`);
+  console.log(`  A register that CLAIMED to prove execution would be a worse instrument than this one.`);
+  console.log(`\n  ${runRows.length} RUN (dated token) · ${undeterminedRows.length} UNDETERMINED · `
+    + `${declaredOnlyRows.length} DECLARED-ONLY · of ${declared.length} declarations · `
+    + `floor ${reproRun.length}/${REGISTER_FLOOR.run} reproducible`
+    + `${reproRun.length > REGISTER_FLOOR.run ? ` · GREW by ${reproRun.length - REGISTER_FLOOR.run}` : ""}`);
+  console.log(`  RUN           a past-tense EXECUTION VERB with an ISO date within ${RUN_WINDOW} characters.`);
+  console.log(`                Vocabulary PRINTED so a refused spelling is visible rather than guessed at:`);
+  console.log(`                ${RUN_VERBS.join(" ")}   (negated occurrences are skipped — "HAS NEVER BEEN RUN"`);
+  console.log(`                appears in a real declaration beside a real token).`);
+  console.log(`  UNDETERMINED  a measured-LOOKING outcome ("17 of 34 assertions fail", "471 -> 482", "exit 1")`);
+  console.log(`                with no date. **A FIGURE ALONE CANNOT DISTINGUISH A MEASUREMENT FROM A`);
+  console.log(`                PREDICTION**: the register grammar spells a forecast and a result the same`);
+  console.log(`                way. This state says so instead of guessing, and it is the honest home of a`);
+  console.log(`                worker who ran the arm and wrote the number down without dating it. It is`);
+  console.log(`                NOT a finding against that worker and must never be reported as one.`);
+  console.log(`  DECLARED-ONLY neither. Wholly prospective, and resting on nobody having run anything.`);
+  console.log(`  AND THE GRADE IS SYNTACTIC, which cuts the OTHER way too and is said here rather than`);
+  console.log(`  left to be found: a run word that merely happens to sit near a date reads RUN, so this`);
+  console.log(`  can be satisfied by accident and not only by intent. MEASURED rather than waved at —`);
+  console.log(`  21 quotes sampled evenly across the 164 on 2026-09-16 were 21 genuine run claims, 0`);
+  console.log(`  false. That is a sample and not a proof, and it is the honest shape of the whole line.`);
+  console.log(`  THE FLOOR IS ON THE COUNT, NOT ON EVERY SUITE. 164 of 198 already carried a token on`);
+  console.log(`  2026-09-16, written by workers nobody asked — the convention existed and no instrument`);
+  console.log(`  read it. Requiring one everywhere would have failed 34 honest suites on day one, and a`);
+  console.log(`  gate that fails honest runs gets switched off. They are NAMED below instead.`);
+  /* **THE FOURTH COLUMN, AND IT EXISTS BECAUSE THE FIRST DRAFT OF THIS REPORT WAS
+     WRONG IN THE DIRECTION THIS PROJECT CARES ABOUT.** Naming all 34 as resting on
+     the worker's word read as a finding and was an OVERCLAIM: 18 of them record
+     their runs in a SECOND declaration this register cannot see. The strict grade
+     and the loose second look are printed as two different claims, because they
+     are two different claims. */
+  const notRun = [...declaredOnlyRows, ...undeterminedRows].sort((a, b) => a.suite < b.suite ? -1 : 1);
+  const noEvidenceAnywhere = notRun.filter((r) => !r.runElsewhere);
+  if (notRun.length) {
+    console.log(`\n  NOT GRADED RUN (${notRun.length}) — and READ THE SECOND COLUMN BEFORE TREATING ANY OF THIS AS A`);
+    console.log(`  FINDING. ${notRun.length - noEvidenceAnywhere.length} of them DO record a run, in a second declaration this register cannot`);
+    console.log(`  see: readControl records ONE declaration per suite (the fullest), and the marker`);
+    console.log(`  grammar does not recognise "NEGATIVE CONTROL (" at all, because "(" is not one of`);
+    console.log(`  MARKER_SEPARATORS. affordances.test.mjs grades DECLARED-ONLY while holding five more`);
+    console.log(`  declarations reading "all RUN 2026-08-04 ... restored BYTE-IDENTICAL". Both are`);
+    console.log(`  PRE-EXISTING properties of the arms grammar, named here and deliberately NOT changed:`);
+    console.log(`  widening the separator set would move "arms" and "classified", which is a decision`);
+    console.log(`  about the arms tally and not about run evidence.`);
+    console.log(`  The "elsewhere" look is LOOSE ON PURPOSE — it reads the whole file, so a token in any`);
+    console.log(`  comment satisfies it. It is a FLOOR ON INNOCENCE whose only job is to stop the strict`);
+    console.log(`  list overclaiming. It never promotes a suite into the RUN count, and the floor above`);
+    console.log(`  is computed from the RECORDED declaration alone.`);
+    console.log(`\n    grade          run token elsewhere?   suite`);
+    for (const r of notRun)
+      console.log(`    ${r.run.state.padEnd(14)} ${r.runElsewhere ? "YES — not a finding  " : "none anywhere        "} ${r.suite}`
+        + `${r.hasDriver ? "   (has a driver)" : ""}`);
+    console.log(`\n  **THE FIGURE THAT MATTERS IS ${noEvidenceAnywhere.length}, NOT ${notRun.length}** — the suites with no run evidence anywhere`);
+    console.log(`  in the file. ${noEvidenceAnywhere.filter((r) => r.hasDriver).length} of those ${noEvidenceAnywhere.length} have a sibling *.control.mjs, so their evidence may`);
+    console.log(`  live in the DRIVER: this register reads a declaration and NEVER FOLLOWS A DELEGATION,`);
+    console.log(`  which is readControl's existing rule and a real blind spot here, not a tidy-up.`);
+  }
+  console.log(`\n  RE-RUNNABLE IN ONE STEP: ${runRows.filter((r) => r.hasDriver).length}/${runRows.length} RUN tokens sit beside a *.control.mjs driver, so`);
+  console.log(`  the claim can be falsified by one command. The other ${runRows.filter((r) => !r.hasDriver).length} are falsifiable only by`);
+  console.log(`  re-deriving the break, and THAT IS WHERE A FALSE TOKEN IS CHEAPEST — said plainly`);
+  console.log(`  because the place a mechanism is weakest is the thing a reader most needs told.`);
+  console.log(`\n  STALENESS: ${staleRun.length}/${runRows.length} tokens predate their suite's last commit`
+    + `${staleGap.n ? ` · median gap ${staleGap.median}d, max ${staleGap.max}d` : ""}`);
+  console.log(`  **THIS IS A MEASUREMENT AND NOT A DEFECT LIST, AND THE NAMES ARE DELIBERATELY NOT`);
+  console.log(`  PRINTED.** Dating a token against the suite it sits in looked like the one mechanical`);
+  console.log(`  falsifier available here, and it is not one: it fires on ~88% of a completely healthy`);
+  console.log(`  estate, because a suite is edited constantly for reasons that have nothing to do with`);
+  console.log(`  its control — while the change that WOULD invalidate a run is usually in src/ and is`);
+  console.log(`  invisible from here. Wrong in both directions at once. Listing ${staleRun.length} healthy rows would`);
+  console.log(`  bury the ${declaredOnlyRows.length} above that ARE the finding, and a gate on it would fail honest runs and`);
+  console.log(`  be switched off. Kept and printed so the next session finds the MEASUREMENT instead of`);
+  console.log(`  re-deriving the idea: a real falsifier must key on the SUBJECT an arm names, not on the`);
+  console.log(`  file its declaration happens to live in.`);
+
   if (uncontrolled.length) {
     console.log(`\n  No declared control — add one, in a comment anywhere in the file, over as many`);
     console.log(`  lines and arms as it needs:`);

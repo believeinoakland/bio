@@ -526,7 +526,7 @@ if (conduct && inbox && !/INBOX/.test(conduct))
    is allowed to rot answers a reader with last month's completeness. */
 
 {
-  const { governed, checkFile } = await import("./corpuscheck.mjs").catch(() => ({}));
+  const { governed, checkFile, coverage } = await import("./corpuscheck.mjs").catch(() => ({}));
   if (!governed) {
     warn(`corpuscheck.mjs could not be loaded — the design corpus front matter is UNVERIFIED this run.`);
   } else {
@@ -537,6 +537,17 @@ if (conduct && inbox && !/INBOX/.test(conduct))
       for (const f of r.fails) { bad++; fail(`CORPUS — ${f}`); }
     }
     notes.push(`design corpus: ${n} governed document(s), ${bad} front-matter failure(s)`);
+    /* M0-43: the front-matter arm above is only as wide as §5's HAND-KEPT table, so a design
+       document added under `docs/development/` and never rowed is checked by nothing — the
+       blind part M0-41's census named. The coverage audit walks that directory and fails on
+       any file the standard does not classify. It is git-free, so it runs identically under
+       `--local`, unlike the date arm. The NOTE states the classification rather than an
+       absence of complaint: `0 fail` cannot distinguish a clean corpus from an unread one. */
+    const cov = coverage();
+    for (const f of cov.fails) fail(`CORPUS — ${f}`);
+    notes.push(`design corpus coverage: ${cov.population.length} document(s) under docs/development/ `
+      + `— ${cov.governed.length} governed, ${cov.excluded.length} excluded, `
+      + `${cov.undecided.length} undecided (D-388), ${cov.unclassified.length} unclassified`);
   }
 }
 
@@ -578,6 +589,81 @@ if (conduct && inbox && !/INBOX/.test(conduct))
          + `        neither judged nor explicitly closed, so the §4.7 check does not reach them:\n`
          + a.unknownState.map((r) => `          ${r.id} · ${r.state} (QUEUE.md:${r.line})`).join("\n"));
     if (a.findings.length) fail(rowMessage(a.findings));
+  }
+}
+
+/* ------------------------------------------- 8. A DELEGATION STATES ITS OWN STATE, DATED
+
+   M0-37, from BOB #11's sentence of 2026-09-15: EVERY REGISTER IN THIS PROJECT CAN STATE THE
+   PAST AS THE PRESENT, AND NONE OF THEM FAILS LOUDLY WHEN IT DOES. A `DELEGATION` block in
+   `CLAIMS.md` carries exactly one date — the one it was RAISED on — so a block that was true
+   when it was written is indistinguishable from one that is true now, forever and silently.
+
+   IT IS HERE RATHER THAN ONLY IN A KICKOFF FOR THE REASON SECTIONS 6 AND 7 ARE: this file is
+   in the loop CONDUCT actually runs, and the receipt is section 6's own — D-288 sat `open`
+   for five weeks WITH a disposition, so the one arm that reads DEBT.md was satisfied for the
+   entire period the exposure was total. A rule that lives only in a kickoff is a mechanism
+   believed on the strength of its existence.
+
+   THE PREDICATE IS `tools/delegations.mjs`, imported rather than written here — the shape
+   `rowdesign.mjs` and `mergecarry.mjs` already use, because `plancheck.mjs` self-executes and
+   cannot be imported by the suite that drives its arms.
+
+   THE GIT ARM IS SKIPPED UNDER `--local`, and it is the same limit `corpuscheck`'s date arm
+   has: a line edited in this turn blames to `Not Committed Yet`, so a claim about when it was
+   written CANNOT FIRE BEFORE THE COMMIT. `gates: GREEN` therefore does not imply a bare
+   `plancheck` green for a turn that re-affirms a block; run bare after committing. */
+
+{
+  const { delegationAudit, delegationMessage, CORPUS_FLOOR } =
+    await import("./delegations.mjs").catch(() => ({}));
+  if (!delegationAudit) {
+    /* THIS ARM FAILS WHERE SECTIONS 6 AND 7 WARN, AND THE DIVERGENCE IS DELIBERATE.
+       M0-41 measured the class: with `corpuscheck.mjs` made unloadable, `plancheck` reads
+       `0 fail, 2 warn` and EXITS 0 — the design corpus and the row-design rule both
+       UNVERIFIED while the run reports success. That is the arm-that-did-not-arm wearing a
+       green exit, and M0-39 owns unifying it. This is a NEW arm with no established
+       behaviour to change, so it is written closed rather than added to the pile: a
+       predicate module that is committed and cannot load is a structural break, not a note.
+       Sections 6 and 7 are NOT changed here — that is M0-39's call over three arms at once,
+       and a worker quietly re-deciding it inside its own item is how a convention drifts. */
+    fail(`delegations.mjs COULD NOT BE LOADED — CLAIMS.md's DELEGATION register is UNVERIFIED,\n`
+       + `        and an unverified register is not a clean one (D-233). The predicate is committed;\n`
+       + `        if it cannot be imported, that is a break and not a degraded mode.`);
+  } else {
+    const a = delegationAudit({ repo: ROOT, git: !LOCAL_ONLY });
+    /* THE CORPUS IS PRINTED AND FLOORED. A sweep that reports zero because its matcher found
+       nothing is one of this row's three named cheap defeats, and it is indistinguishable
+       from a clean register unless the reach is stated. Three headline totality assertions in
+       this project have passed over an EMPTY corpus. */
+    notes.push(`delegation register: ${a.corpus} DELEGATION block(s) in CLAIMS.md — `
+      + `${a.discharged.length} discharged, ${a.affirmed.length} affirmed open, `
+      + `${a.stale.length} stale, ${a.silent.length} silent, ${a.undated.length} undated `
+      + `(threshold ${a.threshold}d, today ${a.today}`
+      + (a.gitArm ? "" : "; git arm SKIPPED under --local") + ")");
+    if (a.corpus < CORPUS_FLOOR)
+      fail(`DELEGATION CORPUS BELOW ITS FLOOR — the walk found ${a.corpus} block(s), floor ${CORPUS_FLOOR}\n`
+         + `        (measured 49 on 2026-09-16). A matcher that stops matching reports a clean register,\n`
+         + `        which is exactly the answer a broken walk gives. Establish which before moving the floor.`);
+    /* THE COHORT IS REPORTED AND NEVER GATED, because a blanket date stamp and an honest
+       sweep make the SAME shape and this instrument cannot tell them apart. Surfacing it is
+       what lets a reader do what the instrument cannot (M0-42's limit, stated at the site). */
+    if (a.largestCohort && a.largestCohort[1] > 1)
+      notes.push(`delegation cohort: ${a.largestCohort[1]} of ${a.affirmed.length} open block(s) were `
+        + `affirmed on ${a.largestCohort[0]} — a blanket stamp and an honest sweep look identical here, `
+        + `and this check does not claim to tell them apart`);
+    if (a.unjudgeable.length)
+      notes.push(`delegation git arm: ${a.unjudgeable.length} affirming line(s) NOT COMMITTED on this tree, `
+        + `so their dates are UNVERIFIED this run — not clean, unverified (D-233)`);
+    if (a.perennial.length)
+      notes.push(`delegation perennials: ${a.perennial.length} block(s) re-affirmed 3+ times without closing — `
+        + `a candidate for a QUEUE row rather than a register line, which is CONDUCT's call and not this check's`);
+    if (a.contradictory.length)
+      warn(`CONTRADICTORY DELEGATION — ${a.contradictory.length} block(s) carry BOTH a DISCHARGED line\n`
+         + `        and an \`open as of\` line. They are judged on the OPEN half, which is the conservative\n`
+         + `        reading; if the block is closed, the \`open as of\` line comes out:\n`
+         + a.contradictory.map((b) => `          CLAIMS.md:${b.line}`).join("\n"));
+    if (a.findings.length) fail(delegationMessage(a));
   }
 }
 
