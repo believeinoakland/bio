@@ -1231,8 +1231,19 @@ const REGISTER_FLOOR = {
      the only direction this figure can fall, exactly as `arms` can only fall by an
      edit. **It is deliberately NOT a requirement that every declaration carry one:
      a gate that failed 34 honest suites on the day it landed would be switched off,
-     and a register nobody runs measures nothing.** The 34 are NAMED instead. */
-  run: 164,
+     and a register nobody runs measures nothing.** The 34 are NAMED instead.
+
+     MOVED 164 -> 165 on 2026-09-17 by REC-107, from the figure a green `--strict` run
+     PRINTED, and the ATTRIBUTION is the part worth keeping: **this floor was ALREADY
+     STALE at that item's base commit `1234095a` and the growth is NOT that item's.**
+     Measured both ways rather than assumed — the item copied its four changed files
+     aside, put HEAD's own versions back, re-ran `--strict`, and read `165 RUN ... floor
+     165/164 ... GREW by 1` on a tree carrying none of its work; then restored its files
+     and verified each by sha256 AND by `cmp`. Both runs also read `arms 1129/1129`
+     EXACT, so nothing about that item moved either figure. It is the sixth consecutive
+     item to find a floor already stale BY MEASURING IT, which is the argument for
+     measuring rather than for trusting the number in the file. */
+  run: 165,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
