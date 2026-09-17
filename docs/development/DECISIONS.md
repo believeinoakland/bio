@@ -451,7 +451,7 @@ decided: 2026-08-03 · Bob
 enacted: 2026-08-03 · CONDUCT — the deferral stands with its constraint ATTACHED, not bare: the never-published provisional runs; if ever answered the other way it applies PROSPECTIVELY only (plans are written under a privacy promise, and retroactive publication would betray it). S11 stays parked with Bob's thread; the trigger is in this entry. Reasoning in this entry.
 
 
-### DEC-31 · deferred
+### DEC-31 · answered
 raised: 2026-08-03 · session BOB (RECONCILED §4 Q14 third bullet; AUDIENCES rows 13–14)
 for: bob
 question: What is ADDRESSED NON-PUBLIC DELIVERY — a case sent to one recipient (a confidential
@@ -493,6 +493,19 @@ for CONDUCT to enact: record the H4 extension (addressed renderings carry hash, 
   outward rendering inherits it. RECONCILED §4 Q14's delivery bullet marked deferred by this
   entry.
 enacted: 2026-08-03 · CONDUCT — 5318b53: deferred on its trigger (first group asking for addressed non-public delivery), and the BOUND rule is recorded now — addressed renderings carry hash, date, author and both floors in-band — on UI-18's scope beside H4 (the AUDIENCES.md header pointer names it). Reasoning in this entry and QUEUE.md (UI-18).
+
+
+response: **ANSWERED 2026-09-17 by Bob, and the deferral's own trigger is what fired: he named the need rather than the abstraction.** Bob, verbatim: *"a member will sometimes want to hand a case to one person or internal group. It seems to me that that action should stand beside the publish act, maybe even an option of publishing... it's important that the product of that act clearly indicate that it's a pre-publish version. Also, it should be as complete as a published work as possible, though those pieces that a fully published work requires that are missing from the pre-published version should be clearly indicated. We also need to think about what actions can be done on a pre-published work - comment (certainly), edit (?)."*
+
+  **THE DOCTRINE IS RULED AND THE MECHANISM IS THE ARCHITECT'S. Bob's ruling: the act stands BESIDE publish, is marked, is as complete as a full publication can be, and NAMES WHAT IS MISSING.** The scope determination below is BOB #12's under standing delegation, and the first line of it is the one that must not be skipped.
+
+  **1 · IT IS UNLISTED, NOT CONFIDENTIAL, AND THAT DISTINCTION IS DOCTRINE RATHER THAN MECHANISM.** The two-bucket fence is STRUCTURAL: the private bucket is member-scope and never leaves the Durable Object, and the set of components that can reach it is small and named (`PARALLELISM.md`). **A review copy that leaves the instance has left the fence — there is no third bucket that is outside the instance and also private.** So the recommendation is that a review copy is PUBLISHED, at an unguessable address, unlisted and marked — which is why Bob's *"maybe even an option of publishing"* is exactly right, and why it costs nothing structurally. **The consequence must be stated ON THE ARTIFACT AND TO THE MEMBER AT THE ACT: anyone holding the link can read it.** A member who needs genuine confidentiality is not served by this and must be told so rather than sold an unlisted URL as secrecy — the *never invent an attribution to get past a gate* rule, pointed at privacy. **If Bob wants true confidential delivery, that is a different and much larger act and is NOT what this entry answers.**
+
+  **2 · THE ARTIFACT IS IMMUTABLE AND VERSIONED, WHICH ANSWERS THE SECOND HALF OF THE ORIGINAL QUESTION.** This entry asked *when does a persistent RENDERING someone acted on become a record?* If a review copy cannot be edited in place and an edit produces a NEW marked version, the question dissolves: what the recipient acted on still exists, unchanged, addressable, and the difference from what came later is derivable. **So on Bob's open question — comment yes, EDIT NO.** Editing in place is the one act that would recreate the problem the deferral was protecting against.
+
+  **3 · COMPLETENESS IS ALREADY EXPRESSIBLE AND SHOULD BE REUSED, NOT INVENTED.** *As complete as possible, with what is missing clearly indicated* is the vocabulary this record already has — the `searched` section (IC-112, which now REFUSES a case document that omits it), undetermined-is-first-class, the strength walk naming its weakest legs, and the frontier's absence vocabulary. **A review copy states its own gaps in the same words a published case does**, and a gate that pressured a member into filling them would be a bug in the gate (DEC-69).
+
+decided: 2026-09-17 · Bob · reasoning in this entry; the mechanism decomposed to CONDUCT through the BOB INBOX the same day. **NAMING IS PUT BACK TO BOB and is not settled here:** *pre-publish for review* is descriptive but ASSERTS A FUTURE THAT MAY NOT HAPPEN — a confidential referral may never be published — and this record does not name acts for what they precede. `advance copy` and `review copy` are the recommendations, both terms of art a member already understands; the choice is Bob's because it is member-facing vocabulary (DEC-8).
 
 ### DEC-32 · answered
 raised: 2026-08-03 · session BOB (Bob's overlapping-utility example,

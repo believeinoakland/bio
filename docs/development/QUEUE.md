@@ -101,6 +101,67 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-17 · BOB #12 · FOUR RULINGS FROM BOB, ONE OF WHICH OVERTURNS A PARKED PREMISE AND IS THE MOST VALUABLE
+THING IN THIS ENTRY.** Doctrine is his; the scope determinations are mine under standing delegation. **Ids, gating
+and sequencing yours. Nothing here supersedes a queue item and no worker should be stopped.**
+
+**1 · DEC-31 IS ANSWERED — the review copy stands beside publish.** Read the entry; it is written in full. The two
+acts owed here are a DESIGN act (mine, in `BIO_Publication_v0_1.md`) and then items. **Do not row the build until the
+design lands** — the shape rests on one determination that Bob may overturn: **a review copy is PUBLISHED-BUT-UNLISTED,
+not confidential**, because the two-bucket fence is structural and there is no third bucket that is both outside the
+instance and private. **Comment yes, EDIT NO**, and the artifact is immutable and versioned — that is what answers
+*when does a rendering someone acted on become a record*. Naming is back with Bob (`advance copy` / `review copy`
+recommended over *pre-publish*, which asserts a future that may not happen).
+
+**2 · Q14's CONTRADICTION CASE IS NO LONGER PARKED — BOB SUPPLIED THE CONSUMER, AND HE INVERTED THE PREMISE.**
+The record has said for six weeks that *the contradiction shape has no consumer and stays honestly undesigned*.
+Bob, 2026-09-17: *"Why CAN'T a record hold two findings that flatly contradict each other... A situation like that
+might be the very thing that the investigation is searching for. The regulation that says one thing but action that
+doesn't conform. The city department saying one thing in March and other in October. I contend that contradictions
+are golden nuggets that shouldn't be 'fixed', but rather drawn attention to."* **That is doctrine and it reverses the
+sign: contradiction is not an edge case the model must tolerate, it is an OUTPUT the system exists to find.**
+
+**THE SCOPE DETERMINATION MATTERS MORE THAN THE RULING HERE, because it decides whether this is a small capability or
+a change to the centre of the design. THE TWO CASES ARE NOT THE SAME AND ONLY ONE NEEDS AN OBJECT:**
+- **THE DISCREPANCY FINDING — both of Bob's examples — IS EXPRESSIBLE TODAY.** *The rule requires X and the department
+  did not-X*, and *the department said X in March and Y in October*, are each ONE inquiry whose CONCLUSION IS THE
+  DISCREPANCY, supported by legs on both sides. Nothing structural is missing. **What is missing is that nothing
+  PROPOSES one and nothing DRAWS ATTENTION to it** — which is exactly what Bob asked for, and it is a detection and
+  surfacing capability, not an architecture change.
+- **THE IRRECONCILABLE PAIR still needs the object**: two findings about ONE question, each well supported, that
+  cannot both be true, where the record declines to choose and keeps both. `role: cuts_against` is one leg's polarity
+  and cannot express it. `BIO_Case_Making_v0_1.md` says *"if a claim ever becomes an object, this is the reason it
+  will"* — **that is now live, and it is the one thing here I will bring back to Bob rather than decide.**
+
+**So: the golden nuggets are reachable WITHOUT reopening claim-as-field, and I recommend taking them first.** The
+design act is mine; expect a level-2 document naming the discrepancy detector's inputs (the entity axis, the
+progression's supposed-versus-actual, version chains across time) and what it may PROPOSE under DEC-24 — never mint,
+never conclude, a member's act throughout.
+
+**3 · THE FALSIFIER IS NO LONGER A HARD REFUSAL.** Bob: *"NO_FALSIFIER is a condition that should be surfaced. But I
+think it should also be something a member can override either temporarily or in the published record."* **Today
+`op=conclude` REFUSES outright** (`store.mjs`, `reason: "NO_FALSIFIER"`). **This is consistent with doctrine already
+here rather than a loosening of it:** undetermined is first-class and must be STATED, and a gate that pressures a
+member into inventing a value is a bug in the gate — the publication fence moved off the content axis for exactly
+this reason, and DEC-69 forbids compelling a member. **Requiring a falsifier pressures a member into inventing one.**
+The shape, and it is the one this record uses everywhere: **the refusal becomes a STATED, ATTRIBUTED, OVERRIDABLE
+condition** — the finding concludes, carries *no falsifier stated* as a first-class value that is never blank and
+never inferred, the override names WHO and WHEN, and it is visible on every surface the finding appears on
+**including the published record**, because Bob named that case specifically. **A silent override is the only wrong
+answer.** One item; it touches a refusal, so it is an interface change.
+
+**4 · ONE AUTHORITY ON DESIGN STATUS, AND A SWEEP FOR THE REST.** Bob agreed the construct map is the single
+authority and asked for *"other areas to confirm that there aren't multiple sources of truth elsewhere in the
+record."* **The receipt is my own error of this morning:** I told Bob the claim class was undesigned, because
+`BIO_Content_Framework_v0_10.md` §18's table lists it as a piece still to be designed while the design has existed in
+`BIO_Case_Making_v0_1.md` since 2026-08-03. **A to-do list that restates status is a second authority, and this
+project's own rule is that restating content creates a copy that immediately starts rotting.** Two items: (a) a
+`corpuscheck` arm — a document that claims a construct is UNDESIGNED fails when the construct map names a home
+document that covers it, which makes the staleness impossible to carry; and (b) a SWEEP of the governed set for other
+places where two documents state the same status, **reporting what it finds rather than fixing it**, because which
+copy is the authority is a judgement per case. **(a) before (b)**: build the instrument, then let it find them.
+
+
 **2026-09-16 · BOB #12 · §4.3 CORRECTED — ONE ITEM OWED, and the correction itself is LANDED so nothing
 waits on you to read it.** `CONTENT-SEARCH-DESIGN.md` §4.3's per-capture bound was wrong in THREE
 independent ways; REC-91 found all three by BUILDING it, and BOB-NEXT §1 carried only two. Folded at
