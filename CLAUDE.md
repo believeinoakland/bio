@@ -40,8 +40,32 @@ One consequence for tooling: a session that stops every few minutes for
 permission to run a command is not usable at this level. `.claude/settings.json`
 already pre-approves everything this project does routinely, so if you find
 yourself prompting him for a command that recurs, ADD IT THERE rather than
-asking twice. Reserve the interruptions for the three things that are actually
-gated: pushing, deploying the plane, and deploying the installer.
+asking twice. Reserve the interruptions for the two things that are actually
+gated: **deploying the plane and deploying the installer** — plus a write to
+`.env`, which is a secret and not an act.
+
+**PUSHING IS NO LONGER GATED, RULED BY BOB 2026-09-16, and the reason is worth
+more than the change.** This sentence said THREE and named pushing first. It was
+his doctrine and it was defensible — a push is the moment work becomes real or
+stays stranded, which is precisely what D-288 cost us the same day. **What broke
+it was VOLUME, not principle.** A session that lands its work in many small,
+correct commits fires that gate many times an hour, so the gate stopped being a
+moment of judgement and became a stream of assent — and **a gate a human clicks
+through without reading protects nothing while costing everything.** Bob, plainly:
+*"I do NOT want to have to approve permissions."*
+
+**What actually protects the push is the `deny` list, and it is UNCHANGED and
+never asks anybody:** `--force`, `--force-with-lease`, `-f`, `reset --hard`,
+`clean -fdx`, `rm -rf`, `sudo`, `chmod 777` are REFUSED OUTRIGHT, not prompted.
+Never force-push survives as a REFUSAL rather than as a question, which is the
+stronger form and always was. **`defaultMode` is now `bypassPermissions`, so
+every session and worker this project spawns starts unattended** rather than
+only the one an operator set by hand — which was the real source of the flood:
+one gated act times nine simultaneous sessions.
+
+**The standing obligation this transfers onto US, since nobody is watching the
+door any more:** an act that would have been worth interrupting him for is still
+worth SAYING. Report the landing, not the intention to land.
 
 ## What this is
 
