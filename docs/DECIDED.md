@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-968 rulings across 85 documents.
+969 rulings across 85 documents.
 
 ## DEC-
 
@@ -550,6 +550,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:960`
 - **D-386** — accepts-when: the tally's behaviour is DECIDED with its reasoning at the site, and whichever way it goes is DRIVEN — if gated, a viewer who cannot see rows gets a total that excludes them, driven end to end; if left ungated, an assertion PINS that it is ungated ON PURPOSE with the reason, so the next reader meets…  
   `docs/development/QUEUE.md:1329`
+- **D-388** — WHICH FILES ARE GOVERNED WAS NOT DECIDED HERE.** The row put that with CORPUS-STANDARD and Bob; the three files the walk found unclassified are LISTED with the question each poses and routed as D-388, not assigned a class.  
+  `docs/development/CLAIMS.md:10762`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  

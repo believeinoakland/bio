@@ -1,12 +1,12 @@
 # The design corpus standard
 
-**Status** · v0.1, written 2026-09-14 by session BOB #10 at Bob's direction the same day, as of 2026-09-14. This is the standard every design document in this repository is held to: what the corpus is, which levels it has, and the FRONT MATTER every document carries so that a reader can tell, without reading the body, what the document is, where it sits, how complete it is, and what it still lacks. The rules are Bob's (§1); the grammar and the checker that enforces it (`tools/corpuscheck.mjs`, run by `plancheck`) are the mechanism, and the mechanism is this session's. Complete at its level for what it governs today; §6 names what it does not yet govern.
+**Status** · v0.2, written 2026-09-14 by session BOB #10 at Bob's direction the same day; §6 and §7 extended 2026-09-16 by M0-43. This is the standard every design document in this repository is held to: what the corpus is, which levels it has, and the FRONT MATTER every document carries so that a reader can tell, without reading the body, what the document is, where it sits, how complete it is, and what it still lacks. The rules are Bob's (§1); the grammar and the checker that enforces it (`tools/corpuscheck.mjs`, run by `plancheck`) are the mechanism, and the mechanism is this session's. v0.2 closed the hand-kept half: §5's table was correct with nothing making it stay correct, so §6 now carries a MACHINE-READABLE exclusion table and an UNDECIDED table, and the checker walks `docs/development/` and fails by name on a file that is in none of the three. Complete at its level for what it governs today; §6 names what it does not govern, and its UNDECIDED table names the three files nobody has classified, as of 2026-09-16.
 
 **Place in the system** · This document governs the FORM of the design corpus, not its content. It sits beside `README.md` (the catalog of documents) and above every document in `docs/architecture/` and the design documents it lists in §5, all of which must satisfy it. `BIO_System_Design.md` is the level-0 document this standard requires to exist; `tools/corpuscheck.mjs` is its enforcement; `tools/plancheck.mjs` runs that enforcement before every push.
 
 **Incomplete sections** ·
 - §5 — the design documents under `docs/development/` are listed and the governed table grows as each is retrofitted (an act per owner, routed through the queue); the "Not yet governed" table below is the live frontier and is the only place the remainder is counted, deliberately, because a count carried in this prose goes stale the moment an owner lands a retrofit. **That table is EMPTY as of 2026-09-14** — SK-6 landed the last retrofit — so §5 is complete for the corpus as it stands today and incomplete only in the sense that it grows: the section is kept on this list because a new design document arrives owing front matter and the frontier reopens with it.
-- §6 — whether the ledgers (`DECISIONS.md`, `DEBT.md`, `QUEUE.md`, `MEASUREMENTS.md`) should carry a variant of this front matter is not decided; they are append-only registers with their own hygiene checks and are deliberately outside this standard for now.
+- §6 — whether the ledgers (`DECISIONS.md`, `DEBT.md`, `QUEUE.md`, `MEASUREMENTS.md`) should carry a variant of this front matter is not decided; they are append-only registers with their own hygiene checks and are deliberately outside this standard for now. **AND ITS UNDECIDED TABLE IS INCOMPLETE BY CONSTRUCTION AND SAYS SO:** three files under `docs/development/` are classified by nothing and are listed there with the question each poses rather than assigned a class, because which files are governed is this document's decision and Bob owns it. D-388 is the row that drains them; the section is complete only when that table is empty.
 
 **Contents**
 - [1. Why this exists — Bob's ruling of 2026-09-14, and the receipt](#1-why-this-exists-bobs-ruling-of-2026-09-14-and-the-receipt)
@@ -16,6 +16,7 @@
 - [5. Governed documents outside docs/architecture](#5-governed-documents-outside-docsarchitecture)
   - [Not yet governed — design documents that owe front matter](#not-yet-governed-design-documents-that-owe-front-matter)
 - [6. What this standard does not govern, and why](#6-what-this-standard-does-not-govern-and-why)
+  - [Undecided — files the walk found that nobody has classified](#undecided-files-the-walk-found-that-nobody-has-classified)
 - [7. How the checker works, in one paragraph](#7-how-the-checker-works-in-one-paragraph)
 
 ---
@@ -234,6 +235,46 @@ closed document leaves this list without ever joining the governed table.
 
 ## 6. What this standard does not govern, and why
 
+**THIS SECTION WAS PROSE AND IS NOW ALSO A TABLE, AND THAT IS THE POINT (M0-43).** §5's
+governed table is hand-kept: correct today, with nothing making it stay correct. A design
+document added under `docs/development/` was checked by NOTHING until somebody remembered
+the row — M0-41's instrument census graded `corpuscheck` gated-in-part for exactly this, and
+named the blind part. The remedy is **not** to let a directory walk decide what is governed
+(see below, and §7), but to make the walk decide COVERAGE: every `.md` under
+`docs/development/` must be **governed (§5), excluded here WITH A REASON, or listed as
+UNDECIDED and routed** — and a file that is none of the three FAILS `corpuscheck` by name.
+The exclusions below were already ruled, in the prose that follows the table; writing them as
+rows changes no file's status and makes the ruling machine-readable so the tool can tell
+*excluded on purpose* from *nobody looked*.
+
+**The population, measured 2026-09-16 at `f3f2acba` rather than read off this section:** 62
+`.md` files under `docs/development/` (recursive), of which 29 are governed by §5, 30 are
+excluded by the rows below, and **3 were classified by nothing** — the first run's real
+output, now the UNDECIDED table. **None of the 33 ungoverned files carries so much as one
+front-matter field**, so the blind spot here is entirely PROSPECTIVE: nothing is silently
+half-governed today, and the exposure is the next design document somebody writes.
+
+**A row is a literal path or ONE `dir/*.md` glob — never `**`** — and the checker refuses a
+broader pattern, because a pattern that swallows the directory classifies the population
+without classifying anything. It also refuses an exclusion that shadows a §5 row: a file
+cannot be both governed and excluded.
+
+| pattern | class | why it is not governed |
+| --- | --- | --- |
+| `docs/development/DECISIONS.md` | ledger | append-only state, not description; checked row by row by `plancheck` and the battery |
+| `docs/development/DEBT.md` | ledger | append-only state; every open row's disposition is a `plancheck` arm |
+| `docs/development/QUEUE.md` | ledger | append-only state; `planning-hygiene` and `rowdesign` check it row by row |
+| `docs/development/MEASUREMENTS.md` | ledger | append-only state; each figure carries its own date and instrument |
+| `docs/development/CLAIMS.md` | ledger | append-only state; `register-grammar` and the DELEGATION arm check it |
+| `docs/development/INTERFACES.md` | ledger | append-only state; the interface arms check it |
+| `docs/development/INTERFACE-CHANGES.md` | ledger | append-only state; `mergecarry` and the resolution arms check it |
+| `docs/development/ORCHESTRATION.md` | process document | describes how the project works, not what the system is |
+| `docs/development/PARALLELISM.md` | process document | describes how the project works, not what the system is |
+| `docs/development/VERIFICATION.md` | process document | describes how the project works, not what the system is |
+| `docs/development/kickoffs/*.md` | kickoff | describes how a lane works; `plancheck` already checks each for the mechanisms it must carry |
+
+The reasoning behind those rows, unchanged:
+
 - **The ledgers** (`DECISIONS.md`, `DEBT.md`, `QUEUE.md`, `MEASUREMENTS.md`, `CLAIMS.md`,
   `INTERFACES.md`, `INTERFACE-CHANGES.md`). They are append-only state, not description;
   their currency is checked row by row by `plancheck` and the battery (`planning-hygiene`,
@@ -244,12 +285,29 @@ closed document leaves this list without ever joining the governed table.
   adopt the grammar voluntarily; `plancheck` already checks the kickoffs for the
   mechanisms they must carry.
 - **`docs/archive/**`.** Closed history is not edited. `decided.mjs` and `mintid` scan it;
-  nothing else reads it as current.
+  nothing else reads it as current. It is outside the population the checker walks, so it
+  needs no row.
 - **The honesty of a Status.** The checker can prove a Contents matches, a date is not
   behind the file, and every incomplete bullet names a real section. It cannot prove a
   document that says "complete" is complete. That is the reviewer's job — Bob reviews as a
   reader who has not lived in the repo, and this front matter is written for exactly that
   reader.
+
+### Undecided — files the walk found that nobody has classified
+
+**WHICH FILES ARE GOVERNED IS NOT THE CHECKER'S DECISION AND WAS NOT M0-43'S**; it is this
+standard's, and Bob owns this document. So the three files the first coverage run named are
+listed here with the question each one poses, rather than assigned a class by the session that
+found them. **This table is LITERAL PATHS ONLY and every row must name a file that EXISTS** —
+it is a closed, enumerated hole somebody drains, not an open bucket that swallows the next
+file written. A new document does not land here by default; it FAILS. **D-388 is the row that
+drains it.**
+
+| document | what is undecided |
+| --- | --- |
+| `docs/development/MILESTONES.md` | The capability ladder and where every open piece of work sits. It behaves like a ledger (rows, appended, drained) but it also carries the construct-set reasoning that a level-2 design document would — so it is either a ledger §6 forgot to name, or a design document owing front matter. |
+| `docs/development/CIVICOS_UI_STATE.md` | A 2,229-line per-session UI ledger, prepended rather than described, whose own 2026-09-14 backfill note says it went 45 days unwritten. Ledger by behaviour; named by nothing; overlaps `kickoffs/UI.md`. Possibly archive rather than either class. |
+| `docs/development/SESSION-KICKOFF-UI.md` | An 18-line tombstone that says only "this file is now `kickoffs/UI.md`". Neither design nor ledger — a redirect. Either §6 gains a *redirect* class, or the file is deleted and its inbound links repointed. |
 
 ## 7. How the checker works, in one paragraph
 
@@ -263,3 +321,17 @@ names a section the document does not have. `--write <file>` regenerates Content
 place. `plancheck` imports the module and folds its failures into its own; a governed
 document that fails corpuscheck fails the gate. `bio-plane/test/corpuscheck.test.mjs`
 drives every arm and its negative control.
+
+**And in the same pass it audits COVERAGE (M0-43).** `population()` walks every `.md` under
+`docs/development/` RECURSIVELY — `research/` holds three governed documents, so a flat read
+would leave a real subdirectory outside the audit while passing every table-driven arm — and
+`coverage()` classifies each file against §5's governed table, §6's exclusion table and §6's
+UNDECIDED table, failing by name on anything in none of the three. **Discovery decides the
+population; the tables decide the class.** That division is deliberate and is the one
+judgment call in this item: `docs/architecture/` is single-purpose, so there a path implies
+governance and a walk can decide it alone; `docs/development/` is MIXED, so a walk that
+governed what it found would assign a class to 33 files that §6 has already ruled the other
+way for 30 of them — a decision belonging to this document, not to a checker. What a walk can
+decide without overreaching is whether every file has been LOOKED AT, and that is the failure
+the hand-kept table actually had. `--coverage` prints the classification alone; the default
+invocation includes it, because a flag nobody passes is not a mechanism.

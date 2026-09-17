@@ -10730,3 +10730,44 @@ released: 2026-09-16 by the REC-102 worker, after the full gate and after the pu
   true of the merged tree. **No DELEGATION is owed, no IC is owed** (the published chain shape did
   not move — it gains a second scoped part for one class and is otherwise byte-identical, which is
   the case the row anticipated), **no new debt row was opened, and nothing is left for Bob.**
+
+## CLAIM 2026-09-16 M0 (M0-43 — `corpuscheck` discovers one directory and is hand-fed the other)
+session: M0-43 worker (worktree `agent-a1bbf18d7612475d1`, branch **`worktree-agent-a1bbf18d7612475d1`**, base `origin/main` `f3f2acba`)
+opened: 2026-09-16T00:00:00Z
+paths:
+  `tools/corpuscheck.mjs` — **APPENDED functions only** (`population`, `excluded`, `undecided`,
+    `matchPattern`, `coverage`, `DEVDIR`), one new `--coverage` CLI branch, and three lines
+    folded into the existing tally print. **`governed()`, `checkFile()`, `parseFront()`,
+    `bodyHeadings()`, `renderContents()` and `writeContents()` are NOT touched** — every
+    existing arm of the front-matter checker reads byte-identically, which the control's
+    over-strictness arm proves rather than asserts.
+  `tools/plancheck.mjs` — **the existing section 6 block only**, which gains the coverage call
+    and one note. No section is added, moved or renumbered.
+  `docs/architecture/CORPUS-STANDARD.md` — §6 gains a machine-readable exclusion table and an
+    `### Undecided` sub-section; §7 gains a paragraph; the front matter's Status and Incomplete
+    list are updated in the same commit (§4 rule 1) and Contents regenerated with `--write`.
+    **§5's governed table is NOT edited and no document's status moves** — the 50-document
+    governed count is unchanged, because this item builds the audit and rules on nothing.
+  `bio-plane/test/corpuscheck.test.mjs` — **ONE new section, 8, APPENDED before the tally**,
+    plus the import line and the `SECTIONS` sentinel. Sections 1-7 are not touched.
+  `bio-plane/test/corpuscheck.control.mjs` (NEW) — this item's control driver, inside this
+    worktree, deliberately NOT a `.test.mjs` so the runner does not discover it and no suite
+    floor moves (the `m025-arm-census.mjs` / `delegations.control.mjs` precedent).
+  `docs/development/DEBT.md` — **ONE appended row, D-388**, the routed output. Nothing edited.
+  `docs/development/MEASUREMENTS.md` — **ONE appended section**, the population measurement.
+  `docs/development/CLAIMS.md` — this block.
+  `docs/development/QUEUE.md` — NOT TOUCHED. The M0-43 row records a merge sha that does not
+    exist until CONDUCT merges, so flipping it here would publish a claim ahead of the act —
+    the gap this project's every wrong status has lived in.
+note: **WHICH FILES ARE GOVERNED WAS NOT DECIDED HERE.** The row put that with
+  CORPUS-STANDARD and Bob; the three files the walk found unclassified are LISTED with the
+  question each poses and routed as D-388, not assigned a class. No file's governance moved.
+note: **A SELF-INFLICTED CONTAMINATION IS REPORTED RATHER THAN QUIETLY REDONE.** The first
+  post-change battery was started and the control driver was then RENAMED (to the
+  `<suite>.control.mjs` sibling convention `scripts/coverage.mjs` actually reads) and one
+  comment line in `corpuscheck.test.mjs` edited WHILE IT RAN. The edits are inside a block
+  comment, but `declared-corpus`, `owed-controls` and `register-grammar` read other suites'
+  declarations FROM DISK, so a suite that had not yet started could have read either state.
+  **That run was DISCARDED and the battery re-measured on the settled tree**; both figures
+  are in the report. Nothing outside this worktree was touched and no process outside it was
+  signalled — the run was allowed to finish rather than killed, so no PID was sent anything.

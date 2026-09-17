@@ -526,7 +526,7 @@ if (conduct && inbox && !/INBOX/.test(conduct))
    is allowed to rot answers a reader with last month's completeness. */
 
 {
-  const { governed, checkFile } = await import("./corpuscheck.mjs").catch(() => ({}));
+  const { governed, checkFile, coverage } = await import("./corpuscheck.mjs").catch(() => ({}));
   if (!governed) {
     warn(`corpuscheck.mjs could not be loaded — the design corpus front matter is UNVERIFIED this run.`);
   } else {
@@ -537,6 +537,17 @@ if (conduct && inbox && !/INBOX/.test(conduct))
       for (const f of r.fails) { bad++; fail(`CORPUS — ${f}`); }
     }
     notes.push(`design corpus: ${n} governed document(s), ${bad} front-matter failure(s)`);
+    /* M0-43: the front-matter arm above is only as wide as §5's HAND-KEPT table, so a design
+       document added under `docs/development/` and never rowed is checked by nothing — the
+       blind part M0-41's census named. The coverage audit walks that directory and fails on
+       any file the standard does not classify. It is git-free, so it runs identically under
+       `--local`, unlike the date arm. The NOTE states the classification rather than an
+       absence of complaint: `0 fail` cannot distinguish a clean corpus from an unread one. */
+    const cov = coverage();
+    for (const f of cov.fails) fail(`CORPUS — ${f}`);
+    notes.push(`design corpus coverage: ${cov.population.length} document(s) under docs/development/ `
+      + `— ${cov.governed.length} governed, ${cov.excluded.length} excluded, `
+      + `${cov.undecided.length} undecided (D-388), ${cov.unclassified.length} unclassified`);
   }
 }
 
