@@ -12365,6 +12365,7 @@ CONDUCT's sole writer and is not flipped by this worker.
 
 **open as of 2026-09-17.**
 ## CLAIM 2026-09-17 UI (UI-64 — the falsifier override is reachable on the wire and INVISIBLE to the member)
+released: 2026-09-17 by CONDUCT #3 at integration, merged at `84f5ac5f`. **Every path this claim reserved is free.**
 
 **THE GAP, VERIFIED AT THE ARTIFACT BEFORE OPENING THIS CLAIM:** `grep -an no_falsifier
 civicos-ui/app.html` returns NOTHING, while `bio-plane/src/store.mjs` accepts `no_falsifier=1`
@@ -12432,6 +12433,7 @@ file it if the surface could not compose the act without a new plane answer. It 
 **the refusal's own sentence turned out to BE the surfacing half** — the surface renders those
 bytes and writes none of its own.
 ## CLAIM 2026-09-17 M0 (M0-59 / D-406 — the push guard is installed once for the clone but resolved per-worktree, so it is INACTIVE in every checkout made before it landed)
+released: 2026-09-17 by CONDUCT #3 at integration, merged at `c79ccd81`. **Every path this claim reserved is free**, including `tools/plancheck.mjs` and `.git/hooks`, which siblings push through.
 session: m059-pushguard-worktree-gap (worktree agent-a20ba9ff2880e1eae, branch `worktree-agent-a20ba9ff2880e1eae`)
 opened: 2026-09-17T23:00:00Z
 released: (held until CONDUCT integrates — M0-56's precedent and for M0-56's reason, one step
