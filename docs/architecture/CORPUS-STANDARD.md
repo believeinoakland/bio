@@ -174,7 +174,7 @@ What each field is FOR, so the prose is written to the purpose rather than to th
    and never re-asserts the status itself**.
 
    **THE RECEIPT IS A SESSION'S OWN ERROR, which is why this is a rule and not a preference.** BOB
-   #12 told Bob the claim class was UNDESIGNED, because `BIO_Content_Framework_v0_10.md` §18's
+   #12 told Bob the claim class was UNDESIGNED **[audited 2026-09-17: HISTORICAL NARRATION of a corrected error, not a live claim — the claim class has been designed in `BIO_Case_Making_v0_1.md` since 2026-08-03 and `BIO_System_Design.md` §3 construct 8 now says so; this sentence is the receipt that earned the rule]**, because `BIO_Content_Framework_v0_10.md` §18's
    table listed "the claim object" among the pieces designed nowhere — while
    `BIO_Case_Making_v0_1.md` had designed it on 2026-08-03. Nobody was careless; the record
    contradicted itself in two places and the reader believed the nearer one. `corpuscheck`'s
@@ -362,7 +362,7 @@ CITES is invisible to it. A citation of any other shape — `Part II §18` with 
 words is skipped and SAID, because one generic noun is not a match this arm will make. A home
 document that designs a piece without a heading naming it reads as absent. And a HIT is evidence
 that a section EXISTS about the piece, never that its design is adequate. Every resolved citation
-therefore reports a VERDICT — `RESTATED`, `points-at-its-design`, `honestly-undesigned`,
+therefore reports a VERDICT **[audited 2026-09-17: a VOCABULARY LIST naming this tool's own verdict values, not an assertion that anything is undesigned]** — `RESTATED`, `points-at-its-design`, `honestly-undesigned`,
 `list-claims-no-undesignedness` — so a clean run states what it EVALUATED rather than only that
 nothing failed; `0 fail` cannot tell one authority from an arm that asked nothing. **`D-404`'s
 `tools/rowsubstrate.mjs` asks a neighbouring question about ROWS and WARNS; this one asks about
