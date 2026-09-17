@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-997 rulings across 85 documents.
+998 rulings across 85 documents.
 
 ## DEC-
 
@@ -494,6 +494,8 @@ authority is the file named, never this one.
   `docs/development/MEASUREMENTS.md:14994`
 - **D-288** · 2026-09-16 — 2026-09-16 · BOB #12 · D-288 IS RULED AND DECOMPOSED — THREE ITEMS, NO INTERFACE, M0.  
   `docs/development/QUEUE.md:153`
+- **D-289** · 2026-09-17 — THE SHAPE WAS DECIDED BY THE RECURRENCE RATHER THAN BY PREFERENCE: `D-289` prescribed *run it bare and read all of it* — correct, written down, and the third occurrence happened anyway — so the fix had to be a MECHANISM and not a better warning**, which is `kickoffs/CONDUCT.md`'s own finding about vigilance…  
+  `docs/development/QUEUE.md:928`
 - **D-302** · 2026-09-10 — ct pin reds on every added paragraph, while this population is FIVE hand-written sentences in append-only history and a SETTLED IC, so the exact figure is the honest ratchet — `LEDGER`'s own argument for holding counts exactly.  
   `docs/development/DEBT.md:199`
 - **D-304** — Wider than briefed and AMENDED into the claim with reasons (the grade change forces the census arms to move or the ratchet reds on a correct estate); the cry-wolf half of the flow's scoping was narrowed only where the grade would otherwise PRINT a claim the record cannot support; **the quiet half is D-304, a row…  

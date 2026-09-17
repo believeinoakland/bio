@@ -11836,7 +11836,7 @@ remote acts taken (outside any file, recorded here because a claim on paths cann
 ## CLAIM 2026-09-17 M0 (M0-52 — an allocation must be UNAMBIGUOUS TO ITS CALLER, both doors)
 session: m052-mintid-argument-surface (worktree agent-a49aa3914466cfa1e, branch `worktree-agent-a49aa3914466cfa1e`)
 opened: 2026-09-17T00:00:00Z
-released: **HELD DELIBERATELY until CONDUCT integrates**, on REC-96's precedent. A claim released by a
+released: 2026-09-17 by CONDUCT #2 at integration, merged at `e083416`. **Held deliberately by the worker until integration rather than released on its own report, on REC-96's precedent — correct, and worth stating as a practice now that two workers have chosen it independently: a claim released by a worker that has FINISHED but not been INTEGRATED protects nothing, and this one covered `tools/mintid.mjs` while a sibling of the same wave was minting ids through it.** A claim released by a
 worker that has finished but not been merged protects nothing, and the window between this push and
 that merge is exactly when a sibling could edit the same two files. The release is CONDUCT's act and
 is named here as an owed act with its actor rather than left implied.
