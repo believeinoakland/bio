@@ -9716,6 +9716,39 @@ export const DRIVE_CAPTURE_CHECKS = {
    =========================================================================== */
 export const CASE_DOCUMENT_FORMAT = 'bio-case-document/1';
 
+/* REC-96 / D-196 / IC-112 — WHERE A CASE'S `searched` SECTION GOT ITS SUBJECTS,
+   AND THE VOCABULARY IS THE FENCE RATHER THAN A LABEL.
+
+   WHAT A LIAR WOULD DO, STATED BEFORE WHAT THIS CHECKS. The cheapest way to make
+   a coverage section green is not to forge a row — every row can be real and
+   every number true. It is to choose the SUBJECT SET. Compute the section over
+   *every subject the observation log holds a row for* and the answer is 100%
+   searched BY CONSTRUCTION, and it is a statement about the log rather than about
+   the case. That is D-196's own ancestor: Blair & Maron's attorneys stipulated
+   they must reach 75% recall and sincerely believed they had; measured recall was
+   ~20%, because what they measured was not what they claimed.
+
+   SO THE SOURCE IS DECLARED IN THE SIGNED BYTES AND CHECKED AT THE GATE. The
+   observation log is deliberately NOT a member of this object — the same
+   construction that keeps `member` out of `OBSERVATION_AUTHORITY_KINDS`, where a
+   provisional is enforced by a vocabulary having no value for it rather than by a
+   comment asking nicely. A document declaring a source this object does not name
+   is refused by C-41.10, so the fence stands over bytes a stranger hands us and
+   not only over the path that wrote them.
+
+   IT LIVES HERE AND NOT IN `airun.mjs` FOR TWO REASONS, ONE STRUCTURAL: that file
+   imports THIS one, so a gate check there would be a cycle — and this is the case
+   document's vocabulary rather than the observation log's, qualifying a
+   provenance claim in a signed artifact, beside `CASE_DOCUMENT_FORMAT` and
+   `SUBJECT_POSITIONS`. `airun.mjs` re-exports it so a reader of the
+   observation-log vocabularies meets it beside the states it qualifies. */
+export const SEARCHED_SUBJECT_SOURCES = {
+  case_basis: "the subjects were taken from the CASE -- its members' basis legs and the content "
+            + "rows those legs name -- and the observation log was consulted only to ask what "
+            + "became of each. The log never supplies the subject set; a section computed the "
+            + "other way round is 100% searched by construction and says nothing about the case",
+};
+
 /* THE FAMILY, DECLARED — and it is a declaration rather than twelve string
    literals for two measured reasons rather than tidiness.
 
@@ -9868,6 +9901,36 @@ export function checkCaseDocument(fm, ctx = {}) {
       findings.push(f(C41.COMPLETENESS, 'error', `a case document requires completeness.subject_position, one of: ${SUBJECT_POSITIONS.join(', ')} (got '${c.subject_position}'). The gate is that the position is declared and justified — never that contact happened, and never that the answer was favourable (DEC-13)`));
     if (typeof c.subject_justification !== 'string' || c.subject_justification.trim() === '')
       findings.push(f(C41.COMPLETENESS, 'error', 'a case document requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse (DEC-13)'));
+  }
+  /* REC-96 / D-196 / IC-112 — THE `searched` SECTION, AND IT IS C-41.10's ARM
+     BECAUSE IT IS THE SAME QUESTION. The completeness statement says what this
+     case does not cover; this says what was looked for. A case carrying the first
+     without the second is Blair & Maron's stipulation with no disclosed process
+     behind it, which D-196 records as the exact claim the field considers
+     worthless — so the FIELD is required here for the reason the exclusion list
+     and the bar are required one arm down: what is refused is SILENCE, never an
+     unfavourable value.
+
+     EVERY HONEST ANSWER IS LEGAL AND ONE OF THEM SAYS NOBODY LOOKED. A section
+     reporting `never_looked` at every level passes this gate, and so does one
+     reporting `no_subjects`. That is not a hole in the check — it is the check
+     working. A gate that refused those would pressure a member into publishing a
+     coverage claim they could not support, which is the failure mode CLAUDE.md
+     names for the publication fence: a gate that pressures someone into inventing
+     an attribution is a bug in the gate. */
+  const srch = (typeof fm?.searched === 'object' && fm.searched) || null;
+  if (!srch) {
+    findings.push(f(C41.COMPLETENESS, 'error', 'a case document requires a searched block beside its completeness block: a completeness claim with no record of what was looked for is prose with nothing behind it, which is what the search-completeness literature identifies as the claim worth least (D-196). An empty or negative answer is legal here — SILENCE is not',
+      ['publish the searched section computed from the observation log over this case\'s own subjects']));
+  } else {
+    if (!Object.prototype.hasOwnProperty.call(SEARCHED_SUBJECT_SOURCES, String(srch.subject_source)))
+      findings.push(f(C41.COMPLETENESS, 'error', `a case document's searched.subject_source must name a source this record recognises (got '${srch.subject_source}'; known: ${Object.keys(SEARCHED_SUBJECT_SOURCES).join(', ')}). THE SUBJECT SET IS THE FENCE: a coverage section computed over the observation log's own subjects is 100% searched by construction with every row in it honest, and is a statement about the log rather than about this case`,
+        ['compute the section over the case\'s own subjects — its members\' basis legs and the content rows those legs name']));
+    if (!Number.isInteger(srch.subjects) || srch.subjects < 0)
+      findings.push(f(C41.COMPLETENESS, 'error', `a case document's searched block requires an integer subject count (got '${srch.subjects}')`));
+    if (!Array.isArray(fm?.searched_levels))
+      findings.push(f(C41.COMPLETENESS, 'error', 'a case document requires a searched_levels field beside the searched block: an EMPTY list is a claim (this record could compute no level for this case) and is legal — an ABSENT field is silence about which levels were consulted',
+        ['author searched_levels, empty if no level could be computed']));
   }
   /* C-9. The FIELD may not be absent; the LIST may legitimately be empty. */
   if (!Array.isArray(fm?.completeness_excluded)) {

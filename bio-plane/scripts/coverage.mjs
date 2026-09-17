@@ -1204,6 +1204,7 @@ const REGISTER_FLOOR = {
      necessarily moves the census by one — the two ratchets in that file cannot move
      independently. Arithmetic on these figures is wrong in more ways than one.
      ONE KEY SET, grepped after writing: `^  arms:` matches twice, here and FLEET_FLOOR (76). */
+<<<<<<< HEAD
   /* MOVED 2026-09-17 by M0-51 (1129 -> 1136 · 201 -> 202 · 202 -> 203): this item's own green
      `--strict` run, taken AFTER its commit `e80d4993`, PRINTED `REGISTER FLOOR  arms 1136/1129 ·
      classified 202/201 · corpus (suites read) 203/202 · GREW by 7 arm(s)` — READ FROM THE PRINT,
@@ -1225,6 +1226,22 @@ const REGISTER_FLOOR = {
      ratchet cannot move independently. The values here are one side's, carried ONLY so the
      tree parses, and are replaced from this merged tree's own printed figures. */
   arms: 1136,
+=======
+  /* REC-96, 2026-09-17: 1129 -> 1134 / 201 -> 202 / 202 -> 203, ALL THREE MOVED IN
+     THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN RUN
+     PRINTED after committing (`arms 1134/1129 · classified 202/201 · corpus
+     203/202 · GREW by 5 arm(s)`), never by adding to the numbers above. One new
+     suite, `test/casesearched.test.mjs`, whose declaration states FIVE arms — a
+     baseline plus four, driven by `test/casesearched.control.mjs` and every one
+     RUN — so `corpus` and `classified` each rise by one and `arms` by five.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file,
+     once here and once in an unrelated object at the foot; this block has one.
+     THE FIGURE WAS TAKEN AFTER THE COMMIT ON PURPOSE: before it, the register
+     reported the suite as NOT IN ANY COMMIT and refused to count work no other
+     checkout can see (D-238), so a floor moved then would have been a figure
+     nobody else reproduces. CONDUCT re-reads this on the MERGED tree. */
+  arms: 1134,
+>>>>>>> fa04ee40cab104921647a1eca781a32982d8b4d1
   classified: 202,
   corpus: 203,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is

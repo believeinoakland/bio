@@ -742,9 +742,9 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    numbers rather than about work. The figure moved; the order stayed.
    THE FIGURE IS TAKEN FROM THIS ARM'S OWN FAILURE OUTPUT (`35 methods derive
    over an unbounded scan`), never by adding one to the number in the file. */
-const CLASS_MEASURED_2026_08_08 = 35;
+const CLASS_MEASURED_2026_08_08 = 36;
 console.log(`  RATCHET: ${CLASS.size} methods derive over an unbounded scan, `
-          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements)`);
+          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196). THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
 + "this over the figure measured on 2026-08-08 and fails here, with the roster printed above so the "
 + "failure names it",
@@ -871,7 +871,11 @@ const HOIST_FRAGILE_2026_09_16 = [
   "#caseClaimInBytes", "#citesInto", "#conditionsCaptureRequested", "#conditionsCaptureUnattended",
   "#conditionsGovernorHolding", "#conditionsPartialCapture", "#findingsOutOfInquiryLead",
   "#frontierContent", "#frontierMeaning", "#monitorCadencePlan", "#queueAncestorEdges",
-  "#queueMutes", "#queueRenotifyWake", "#restsOnLive", "#routeTask", "auditPass",
+  "#queueMutes", "#queueRenotifyWake", "#restsOnLive", "#routeTask",
+  /* REC-96, 2026-09-17 — the arrival is NAMED as this roster's own comment demands.
+     `#searchedForCase` writes its row sources inside `chunked()` callbacks, which is
+     the spelling this classifier is sensitive to. */
+  "#searchedForCase", "auditPass",
   "danglingRefs", "earnedBasisRegistry", "frontier", "publishedCaseRegistryFor", "queueFeed",
 ];
 t("M0-40: the HOIST-FRAGILE roster is pinned BY NAME — this is the second arm the row asked for, "
@@ -897,7 +901,9 @@ const CLASS_ROSTER_2026_09_16 = [
   "#conditionsCaptureUnattended", "#conditionsGovernorHolding", "#conditionsPartialCapture",
   "#findingsOutOfInquiryLead", "#flagCasesOnRevision", "#frontierContent", "#frontierMeaning",
   "#monitorCadencePlan", "#overdueScan", "#queueAncestorEdges", "#queueMutes",
-  "#queueRenotifyWake", "#restsOnLive", "#routeTask", "#sweepSelections", "auditPass",
+  "#queueRenotifyWake", "#restsOnLive", "#routeTask",
+  /* REC-96, 2026-09-17 — the arrival, named beside the ceiling it moved. */
+  "#searchedForCase", "#sweepSelections", "auditPass",
   "biasManifest", "danglingRefs", "documentsNamingEntity", "earnedBasisRegistry",
   "exportManifest", "frontier", "proposalsFeed", "publishedCase", "publishedCaseRegistryFor",
   "publishedRegistryFor", "queueFeed", "reevaluations", "selectionCreate", "selectionRelease",
@@ -1028,8 +1034,17 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    to the caller; the scans underneath it are not), the category M0-38 exists to grade or name.
    REC-99 recorded that this constant is a property of the MERGED source exactly as
    `REGISTER_FLOOR` is, and REC-94 obeyed that on the first tree where it bit; this is the
-   second. **CONDUCT must re-read it on the merged tree** rather than carrying 105 across. */
-const SCANNING_MEASURED_2026_09_15 = 105;
+   second. **CONDUCT must re-read it on the merged tree** rather than carrying the number across.
+   **MOVED TO 106 ON 2026-09-17 BY REC-96, and the arrival is `#searchedForCase`** — the same
+   reader a fourth time, reading the observation log over a CASE's own subjects for the
+   completeness statement's `searched` section (D-196). It belongs to the same D-369 second set as
+   its three siblings: the answer it publishes is bounded (`Store.SEARCHED_SUBJECT_MAX`, with the
+   overflow published as `unidentified` rather than dropped) while the scans underneath it are not.
+   **AND IT CARRIES THE SAME INSTRUMENT FINDING THE CLASS CEILING ABOVE RECORDS:** batching this
+   method's per-subject reads into one `MAX(seq) GROUP BY` per level cut its real statement count
+   by ~50x and RAISED its `scans-per-row` score, because this census counts row sources inside
+   loops and not amplification. The faster code was kept and the figure moved. */
+const SCANNING_MEASURED_2026_09_15 = 106;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
