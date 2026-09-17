@@ -12335,3 +12335,31 @@ quietly grows is a claim that stopped keeping other sessions out of what it actu
   conditions one as far as `op=audit` can see. Both are the guard working. C-33.33 allocated.
 
 **open as of 2026-09-17.**
+
+## REC-118 · RECORD · D-410 — `op=reevaluations` publishes the AUTHORED capture letter beside a CAPPED `strength` block
+
+Opened 2026-09-17 by REC-118's worker (CONDUCT #3), worktree `agent-a6ca2a8271027f74b`.
+**This is a SWEEP to a ruling already made** (REC-105 capped the walk, REC-114 swept the leg
+listing and published `grade_authored`/`grade_why` beside it). The doctrine is not re-litigated;
+what is this item's own work is the ENVELOPE — the answer already carries a capped `strength`
+block, so the two halves must be made to AGREE visibly rather than merely both be correct.
+
+- `bio-plane/src/store.mjs` — **ONLY** `reevaluations()`'s leg SELECT and leg composition, plus the
+  new private resolver beside it. `Store.#capturedAt` is READ and NOT EDITED — that is what keeps
+  the readers one rule. `#legEarnedCapture` (REC-114) is NOT touched.
+- `bio-plane/test/rec118-reeval-earned.test.mjs` — new, the driven suite.
+- `bio-plane/test/nc-rec118.mjs` — new, the negative-control driver.
+- `bio-plane/test/rec114-leg-earned.test.mjs` — block 9's assertions are **CORRECTED, NOT EXEMPTED**:
+  they asserted the defect as a finding and this item removes the defect they assert.
+- `bio-plane/test/reevaluation.test.mjs` — the full-leg-shape assertion gains the two new fields.
+- `docs/development/INTERFACES.md` (I3), `docs/development/INTERFACE-CHANGES.md` (IC-119),
+  `docs/development/DEBT.md` (D-410's disposition), `docs/development/CLAIMS.md` (this block),
+  `docs/DECIDED.md` on regeneration.
+
+**NOT CLAIMED AND DELIBERATELY NOT TOUCHED:** `bio-plane/src/query.mjs` and `#legEarnedCapture`
+(REC-114's landed surface), `#versionCollections` (D-411/REC-119's region — the FREEZE constraint
+makes it a design question and taking it here would be the widening REC-114 declined), `tools/**`
+and `.git/hooks` (D-406's worker), `civicos-ui/app.html` (UI-64). `docs/development/QUEUE.md` is
+CONDUCT's sole writer and is not flipped by this worker.
+
+**open as of 2026-09-17.**
