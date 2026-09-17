@@ -53,18 +53,26 @@
  *   - S6 plants a branch whose name matches NO convention, which the original glob would miss.
  *   - S7 walks the real estate and asserts the walk is NON-EMPTY and that every unit was
  *     classified — an arm that found nothing here would satisfy everything above.
+ *   - S11 pushes a branch under a DIFFERENT NAME and requires silence, because **an arm that
+ *     pushes under the SAME name cannot tell the fixed predicate from the broken one** — the
+ *     broken one is silent there too (CONDUCT #2, 2026-09-17). Its twin in the same run is a
+ *     genuinely uncarried tree that must still be NAMED, or the false positive has been traded
+ *     for a false negative in the direction that loses work.
  *   - Every benign arm asserts the candidate set is non-empty in the same breath as asserting
  *     nothing was named, so "nothing stranded" can never be satisfied by "nothing looked at".
  *
- * NEGATIVE CONTROL: `node bio-plane/test/strandedwork.control.mjs` from the repo root — eight
+ * NEGATIVE CONTROL: `node bio-plane/test/strandedwork.control.mjs` from the repo root — NINE
  * arms plus an opening and a closing baseline, each armed ALONE against a uniquely-named
  * pristine copy in `.m048-harness/`, every restore verified by sha256 AND `cmp` AND a floored
  * byte count.
  *   (A1) `unpushed` classified as clear -> S2 fails: the naming path is what does the work.
  *   (A2) the `nothing committed past origin/main` exemption removed -> S5 fails: the quiet over
  *        an idle worktree is a JUDGEMENT and not an empty corpus.
- *   (A3) `onRemote` made sha-EQUALITY only -> S8 fails: a remote that is AHEAD reads as
- *        stranded and the arm starts crying wolf. OVER-STRICTNESS.
+ *   (A3) `carriedBy`'s ancestry fallback made sha-EQUALITY only -> S8 fails: a remote that is
+ *        AHEAD reads as stranded and the arm starts crying wolf. OVER-STRICTNESS. It armed
+ *        `onRemote` until 2026-09-17, when the fix that added `carriedBy` left `onRemote` read
+ *        by no window — **the arm went on matching once and reporting ARMED while S8 stayed
+ *        green.** A control arm is coupled to WHERE the behaviour lives.
  *   (A4) `behind` collapsed into clear — D-288's literal name-presence reading -> S3 fails,
  *        which is the receipt for comparing the HEAD against the REMOTE REF.
  *   (A5) the worktree enumeration narrowed back to a `worktree-agent-*` name filter -> S6
@@ -74,6 +82,8 @@
  *   (A7) plancheck's arm unloadable -> S9 fails: the arm proving the GATE, not the library.
  *   (A8) plancheck's `warn(...)` promoted to `fail(...)` -> S9's never-FAIL and exit-0 arms
  *        fail, which is the consequence BOB #12's ruling forbids.
+ *   (A9) the carrier walk reverted to a lookup by BRANCH NAME -> S11 fails and its
+ *        over-strictness twin does NOT. The spelling defect as the estate actually had it.
  *
  * M0-49 ADDS TWO ARMS TO SECTION 10, AND THEY ARE DRIVEN BY HAND RATHER THAN BY THE DRIVER
  * ABOVE, because their subject is a COMMITTED document and `g(REPO, "show", "HEAD:…")` cannot
@@ -93,7 +103,7 @@
 
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard its own output */
 import "./sandbox.mjs";
-import { mkdtempSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { mkdtempSync, writeFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -113,7 +123,7 @@ const t = (label, got, want) => {
 /* The FOOT sentinel. A TypeError inside an assertion goes through no assertion at all and
    ends the module while the tally reads clean; this project has met that, and this suite met
    it during its own control run — which is why every indexed read below is `?.`. */
-const SECTIONS = 10;
+const SECTIONS = 11;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -371,12 +381,44 @@ section("9 — THE GATE. `plancheck` must actually RUN this and must NOT fail on
                       { cwd: REPO, encoding: "utf8" });
   const out = `${r.stdout || ""}${r.stderr || ""}`;
   t("plancheck reports the stranded-work walk in its notes",
-    /note {2}stranded work:/.test(out), true);
+    /note {2}stranded work \[/.test(out), true);
   t("...naming the counts it judged rather than only a verdict",
-    /stranded work: \d+ worktree\(s\)/.test(out), true);
+    /\d+ worktree\(s\) \+ \d+ branch\(es\)/.test(out), true);
   t("the finding is a WARN, never a FAIL — BOB #12's ruling, and the arm that pins it",
     /FAIL {2}STRANDED WORK/.test(out), false);
   t("...and plancheck --local exits 0", r.status, 0);
+
+  /* THE VANTAGE ARMS. Two sessions went to the artifact on 2026-09-17 and reached opposite
+     answers about one worktree, because this file's arm is ESTATE-WIDE and plancheck's
+     `UNPUSHED` arm is LOCAL-HEAD, and neither output said so. Nothing about being careful
+     prevents that — only the instrument declaring where it was standing does. */
+  t("the estate-wide arm DECLARES its scope in the line it always prints",
+    /stranded work \[SCOPE: ESTATE-WIDE/.test(out), true);
+  t("...naming the unit that scope covers, not merely the word",
+    /ESTATE-WIDE, every worktree on this clone\]/.test(out), true);
+
+  /* THE LOCAL-HEAD ARM CANNOT BE DRIVEN FROM HERE and the limit is STATED rather than papered
+     over: it fires only on a tree that is ahead of `origin/main`, `plancheck` resolves its root
+     from its own location so it cannot be pointed at a scratch repo, and an assertion that
+     depends on whether THIS checkout happens to be ahead is an arm that passes for free. So it
+     is read from the SOURCE — which section 9 otherwise forbids, because mergecarry's
+     equivalent arm grepped and A COMMENT SATISFIED IT.
+
+     The guard against exactly that: the marker must sit on a line that is part of the EMITTED
+     TEMPLATE — a line carrying a backtick — which a block-comment line cannot be. The working
+     tree is read rather than the committed blob, because a change is uncommitted at the moment
+     the suite that proves it runs. The estate-wide half above is DRIVEN and needs none of
+     this. */
+  const src = readFileSync(join(REPO, "tools/plancheck.mjs"), "utf8");
+  const emitted = (marker) => src.split("\n")
+    .some((l) => l.includes(marker) && l.includes("`"));
+  t("the local-head arm declares ITS scope too", src.includes("SCOPE: THIS CHECKOUT ONLY"), true);
+  t("...in EMITTED text and not merely in a comment, which is how the equivalent arm was "
+  + "satisfied for free elsewhere", emitted("SCOPE: THIS CHECKOUT ONLY"), true);
+  t("...and points the reader at the estate-wide arm rather than leaving the gap",
+    /says nothing[\s\S]{0,160}STRANDED WORK arm is the estate-wide one/.test(src), true);
+  t("...and the two scopes are DIFFERENT words, so a reader cannot read one as the other",
+    src.includes("SCOPE: ESTATE-WIDE") && src.includes("SCOPE: THIS CHECKOUT ONLY"), true);
 }
 
 /* ========================================================================== */
@@ -437,6 +479,49 @@ section("10 — THE MECHANISM IS IN THE LOOP THE READER ACTUALLY RUNS");
     t("...and ancestry is named as necessary-never-sufficient rather than as the criterion",
       /NECESSARY AND NEVER\s+SUFFICIENT/.test(conduct), true);
   }
+}
+
+/* ========================================================================== */
+section("11 — REACHABILITY, NOT THE SPELLING. Work pushed under a DIFFERENT branch name is "
+      + "NOT stranded, and the arm that proves it is the one that pushes under a different "
+      + "name — an arm that pushes under the SAME name cannot tell the fixed predicate from "
+      + "the broken one, because the broken one goes quiet there too (CONDUCT #2).");
+{
+  const { work } = scratch();
+  /* The estate's real shape, 2026-09-17: an integrator's worktree on `claude/…`, its HEAD
+     pushed to a WIP branch under another name entirely. Reported as NEVER PUSHED for a day. */
+  const p = addWorktree(work, "claude-session-tree", { commits: 3 });
+  g(p, "push", "-q", "origin", "HEAD:conduct-wip-20260917");
+  g(work, "fetch", "-q", "origin");
+
+  const a = A(work);
+  const u = a.all.find((x) => x.name === "claude-session-tree-wt");
+  t("the work IS past main, so the unit was really examined", u?.ahead, 3);
+  t("...and NO remote ref shares its branch name", u?.remoteSha, null);
+  t("THE DEFECT: it is NOT named as stranded", named(a).includes("claude-session-tree-wt"), false);
+  t("...in NO window at all", u?.windows, []);
+  /* The quiet must be a JUDGEMENT rather than an empty walk — the header's own rule about
+     never reporting an idle worktree as clean, applied to this verdict. */
+  t("...and the carrier is IDENTIFIED, so the silence is a finding not an omission",
+    u?.carrier?.ref, "conduct-wip-20260917");
+  t("...and reported in the counts the caller prints", a.counts.carriedElsewhere >= 1, true);
+
+  /* THE OVER-STRICTNESS TWIN. Without this the false positive has simply been traded for a
+     false NEGATIVE, which is the direction that LOSES WORK. Same repo, same run. */
+  addWorktree(work, "genuinely-stranded", { commits: 2 });
+  const b = A(work);
+  t("a tree NO ref carries is still NAMED", named(b).includes("genuinely-stranded-wt"), true);
+  t("...in the `unpushed` window", windowsOf(b, "genuinely-stranded-wt"), ["unpushed"]);
+  t("...and the carried tree is STILL silent in the same run, so the two are discriminated",
+    named(b).includes("claude-session-tree-wt"), false);
+  t("...so the message names exactly one of them",
+    (strandedMessage(b).match(/-wt /g) || []).length, 1);
+
+  /* The remedy line is the dangerous half: a reader acting on a false NEVER-PUSHED publishes
+     a live integrator's ungated tree under a second name — a strand MANUFACTURED by the
+     detector. Pinned so a regression is reported in the words that say why it matters. */
+  t("the remedy the reader would have acted on is still the push instruction",
+    WINDOWS.unpushed.act.includes("git push origin HEAD:"), true);
 }
 
 console.log(`\nsections reached ${reached}/${SECTIONS}`);
