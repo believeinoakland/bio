@@ -23425,6 +23425,17 @@ var OBSERVATION_STATES = {
   partial: "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)"
 };
 var DEFINITIVE_STATES = /* @__PURE__ */ new Set(["LOOKED_ABSENT", "PRESENT"]);
+var OBSERVATION_COVERAGE = {
+  backed: "the row names what the look produced: `result_ref` points at it, and the claim can be checked against the thing itself",
+  none_owed: "the row's state does not assert the record obtained anything, so C-22.10 requires no referent and its absence is a fact about the look rather than an unknown"
+};
+var OBSERVATION_COVERAGE_UNDETERMINED = "undetermined";
+function observationCoverage({ state, resultRef } = {}) {
+  const named = resultRef != null && String(resultRef) !== "";
+  if (named) return "backed";
+  if (state === "PRESENT") return OBSERVATION_COVERAGE_UNDETERMINED;
+  return "none_owed";
+}
 var OBSERVATION_AUTHORITY_KINDS = {
   run: "an investigative run (the precedent this generalises; IS-6)",
   sweep: "the monitor's sweep, under a named request or a ratified cadence",
@@ -53893,13 +53904,25 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       truncated: false
     };
     const page = this.#rows(
-      `SELECT seq, at, level, subject, state, governed, condition, bound, terminal, detail
+      `SELECT seq, at, level, subject, state, governed, condition, bound, terminal, detail,
+              result_kind, result_ref
        FROM observation_log WHERE authority_kind = 'run' AND authority = ?
        ORDER BY seq LIMIT ?`,
       run,
       cap + 1
     );
-    const entries = page.slice(0, cap).map((e, i) => ({ ...e, seq: i + 1, governed: e.governed === 1, terminal: e.terminal === 1 }));
+    const entries = page.slice(0, cap).map((e, i) => ({
+      ...e,
+      seq: i + 1,
+      governed: e.governed === 1,
+      terminal: e.terminal === 1,
+      /* NULL IS NORMALISED TO `null` RATHER THAN LEFT AS `undefined`:
+         a key that serialises away is the absence-with-two-causes this
+         whole item is about, one layer down. */
+      result_kind: e.result_kind ?? null,
+      result_ref: e.result_ref ?? null,
+      coverage: observationCoverage({ state: e.state, resultRef: e.result_ref })
+    }));
     return {
       run,
       found: true,
@@ -53916,7 +53939,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         states: OBSERVATION_STATES,
         levels: OBSERVATION_LEVELS,
         bounds: RUN_BOUNDS,
-        endings: RUN_ENDINGS
+        endings: RUN_ENDINGS,
+        /* REC-113 / IC-116, APPENDED for the same reason the four
+           above travel at all (PL-17, DEC-8): a surface that must
+           render `undetermined` should read the word off the answer
+           rather than hold a literal it learned somewhere else and
+           will not re-learn. `coverage_undetermined` is published
+           SEPARATELY because it is deliberately not a member of
+           `coverage` — `op=contentaxis`'s `undetermined_value` is the
+           same shape one construct over. */
+        coverage: OBSERVATION_COVERAGE,
+        coverage_undetermined: OBSERVATION_COVERAGE_UNDETERMINED
       }
     };
   }

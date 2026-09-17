@@ -8616,3 +8616,84 @@ at the gate; and it is the reason this section is worth signing at all.
 
 
 **RESOLVED ACCEPTED 2026-09-17 by CONDUCT #2 at integration — BREAKING, MAJOR, AND RULED AGAINST BOTH THE DESIGN AND THE ROW, WHICH SAID MINOR.** C-41.10 now refuses a case document lacking the `searched` section, so a case authored-but-unsigned across this upgrade carries none and `op=caseratify` refuses it — **a refusal where none stood before, which IC-25 settles as breaking WHATEVER the measured impact.** The proposer measured impact as ZERO outside `bio-plane/test` and **declined to take the minor on that basis, routing it here** — precisely the judgement IC-25 removes from a proposer who can see the impact is zero. Overruling on those grounds would teach that the rule is negotiable when convenient, and a registry recording a break as a minor is a registry learning to lie. **The in-flight window is a KNOWN BREAK WITH NO MIGRATION** — the section must be in the SIGNED bytes and back-filling moves `doc_sha`, so there is no migration that is not re-authoring; already-ratified documents are NOT re-gated and keep verifying, MEASURED rather than assumed. **AND THE GATE REFUSES SILENCE, NEVER AN UNFAVOURABLE VALUE:** an honestly negative section (`never_looked` at every level) PUBLISHES, because a record stating its own weakness in signed bytes is the strongest act available and a gate that pressures a member into inventing an answer is a bug in the gate (`CLAUDE.md`). Both directions pinned as POSITIVE assertions. I3 18.2.0 → 19.0.0.
+
+## IC-116 · I3: `op=airunlog` PROJECTS `result_kind` / `result_ref` AND **STATES** EACH ROW'S COVERAGE CLAIM — the READ half of D-366, without which "read back with the coverage claim STATED as undetermined" is unsatisfiable by construction · PROPOSED 2026-09-17 (REC-113) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS MERGED TREE's
+  `docs/development/INTERFACES.md`, not off the row: 19.0.0** (IC-110 + IC-112 + IC-114
+  accepted in one bump, 2026-09-17). **Proposed as MINOR — 19.0.0 → 19.1.0, ADDITIVE.**
+  Nothing moves: three keys are APPENDED to each entry and two to the published
+  `vocabulary`, and every key the op answered before keeps its value AND ITS POSITION.
+- **Proposer:** RECORD, worker `agent-ab3bf809046a052e6`, 2026-09-17, from QUEUE REC-113
+- **Owner to land it:** `RECORD` (owner and proposer)
+- **Consumers to answer:** `UI`, `SKILL`, `CASE`, `DIST`, `RECORD`.
+
+**THE DEFECT.** `aiRunLog`'s SELECT listed `seq, at, level, subject, state, governed,
+condition, bound, terminal, detail` and NOT `result_kind` / `result_ref`. D-366's stated cost
+while open is that *"a later reader cannot tell that row's coverage claim from one backed by a
+capture"* — and the read made that true **by construction**, because a field it never projects
+cannot be stated as anything. REC-100 was spawned to close D-366, measured this, and correctly
+refused to paper over it. This is that half and only that half.
+
+**WHAT LANDED, AND IT IS THREE KEYS RATHER THAN THE TWO THE ROW NAMED.** The row's scope says
+*project `result_kind` and `result_ref`*; its `accepts-when` says the claim must be **STATED**
+as undetermined. Those are not the same requirement, and two nullable projections do not
+satisfy the second: `result_ref: null` is an ABSENCE WITH TWO CAUSES — the row may have been
+written without a referent, or the read may have dropped it — which is the exact defect class
+this repository meets most, and `CLAUDE.md`'s standing rule is that undetermined is first-class
+and must be STATED. So each entry gains `result_kind`, `result_ref` **and** `coverage`, one of:
+
+- `backed` — the row names what the look produced;
+- `none_owed` — the row's state does not assert the record obtained anything, so C-22.10
+  requires no referent and its absence is a fact about the look rather than an unknown;
+- `undetermined` — the row asserts `PRESENT` and names nothing (the `run` carve-out's own
+  shape), so the record cannot tell it from a backed row and says so.
+
+`undetermined` is **deliberately not a member of** `OBSERVATION_COVERAGE` and is published
+separately as `coverage_undetermined` — `op=contentaxis`'s `undetermined_value` shape one
+construct over, for the same reason: folding an unknown into a known bucket is concluding a
+value from an absence.
+
+**`none_owed` EXISTS BECAUSE THE COSTLIER FAILURE RUNS THE OTHER WAY.** A `LOOKED_ABSENT` row
+has nothing to point at by definition — that is what it found out — and calling it undetermined
+would be the record saying it does not know something it DOES know. The predicate therefore
+keys on **exactly C-22.10's condition** and nothing else, and the suite holds the read and the
+refusal together by DRIVING both over one matrix (I2e/I2f) rather than by trusting that someone
+kept two literals in step.
+
+**THE CARVE-OUT IS UNTOUCHED AND `checkObservation` WAS NOT EDITED.** Widening C-22.10 over
+`authority_kind = 'run'` is REC-100's refused scope and remains blocked on a design ruling:
+REC-100 drove it and found `op=airunclose` then answers `terminated: false, code:
+OBS_PRESENT_NO_REFERENT`, so a run that observed anything PRESENT cannot be closed at all — a
+lifecycle deadlock, not a tightened fence.
+
+**MEASURED CONSUMER IMPACT — a census of every call site on this tree, not a grep count.**
+
+- **`civicos-ui/` reads this op NOWHERE.** All hits are comments; UI-49/UI-38 ruled the
+  observation log a separate surface, and **three UI tests PIN that absence**
+  (`surface-registry.test.mjs` ARM X5 and ARM Y14, `ai-session-wire.test.mjs` ARM Y1). Impact:
+  **zero**, and pinned so it stays zero.
+- **`agent-worker/` IS a real consumer** (`src/index.mjs` ~326–340) and reads `entries` **for
+  its LENGTH only** (`resumedFrom`); it touches no entry field. Additive keys are transparent
+  to it. **Its own suites MOCK `op=airunlog`** (four mocks), which is a gap worth naming: a
+  break there would not surface in the plane battery. The mocks are already loose — they omit
+  `status`, `stopped` and `vocabulary` — so they need no change for this.
+- **`newgroup/`, `tools/`, `pdf-worker/`, `ocr-worker/`: no reader at all.**
+- **`bio-plane/test/`: four sites needed correcting, all CORRECTED rather than exempted** —
+  `observation-log.test.mjs` I2 (REC-100's deliberate gap pin, INVERTED at the site that
+  changed, exactly as its author designed it to be) and C6, plus the vocabulary key-set pins in
+  `airun.test.mjs` ARM P6 and `meaning-bounds.test.mjs`. Two hand-run probes
+  (`rec93-fold-digest.mjs`, `rec93-migrate-probe.mjs`) compare raw text across checkouts; both
+  now STRIP exactly the added keys, with a guard that a strip matching nothing is a failure —
+  their subject (the fold, and `#migrate`) is unchanged and still pinned byte-for-byte.
+- **`meaning-bounds.test.mjs`'s SQL pin starts at `FROM`**, so widening the SELECT column list
+  does not disturb it; the bound, the `found: true` spelling and `cap + 1` are all untouched.
+
+**BYTE-IDENTITY IS MEASURED AGAINST A PRE-CHANGE BUILD, NOT PINNED AGAINST ITSELF.**
+`test/rec113-identity.mjs` drives one fixture — carrying BOTH a referent-bearing and a bare
+`run` PRESENT — through this build and through a checkout of `10574da9`, strips exactly the
+added keys, and compares the RAW WIRE TEXT at the plane's own indent: **3,236 bytes, sha256
+`75a9946f25120431c5009f2f7851fd0ab1d71c9c90ad17449a7c78b39ee19252`, IDENTICAL.** The comparison
+carries its own positive control — the UNSTRIPPED answers must DIFFER, so two copies of one
+tree cannot agree for free.
+

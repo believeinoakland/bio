@@ -71,11 +71,28 @@ const ARMS = {
        FROM observation_log`,
     repl: `SELECT seq, at, level, subject, state, governed, condition, bound, terminal, detail
        FROM observation_log`,
-    mustFail:    ["I2", "I2b", "I2c", "I2d"],
-    mustNotFail: ["I2e", "I2f"],
+    /* DECLARATION CORRECTED 2026-09-17 AFTER THE ARM REFUTED IT, AND THE
+       CORRECTION IS THIS CONTROL'S MOST USEFUL RESULT.
+       First declaration: MUST FAIL I2 I2b I2c I2d. ACTUAL: I2 and I2c only.
+       I2b and I2d CAME BACK GREEN OVER A READ THAT PROJECTS NOTHING AT ALL, and
+       that is a fact about those assertions rather than a fault in this arm.
+       WHY, and it is this repository's own rule arriving inside its suite: with
+       the columns gone, `e.result_ref` is `undefined`, so a row that HAS no
+       referent reads `null / null / undetermined` — WHICH IS EXACTLY WHAT IT
+       SHOULD READ. An assertion over a row with nothing to show cannot tell "the
+       record has no referent for this row" from "the read dropped the column",
+       because those two causes produce identical bytes. That is D-366's own
+       shape one level up: an absence with two causes.
+       THE CONSEQUENCE WORTH CARRYING: only an assertion over a row that HAS a
+       referent can detect a missing projection. I2 and I2c are those arms, and
+       this is the measurement that says they are load-bearing rather than
+       decorative — a suite built only around the undetermined case would have
+       passed over a read that projected nothing. */
+    mustFail:    ["I2", "I2c"],
+    mustNotFail: ["I2b", "I2d", "I2e", "I2f"],
     note: "I2e/I2f are PURE — they drive `observationCoverage` and `checkObservation` "
-        + "directly and never touch the read, so they must survive this arm. That is what "
-        + "makes them a check on the RULE rather than on the projection.",
+        + "directly and never touch the read, so they must survive this arm. I2b/I2d "
+        + "survive for a DIFFERENT and more interesting reason: see the correction above.",
   },
 
   /* (c) PROJECTED BUT NOT STATED — the arm that separates this item's two

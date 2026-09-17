@@ -1,4 +1,41 @@
-/* NEGATIVE CONTROL: (declared and RUN 2026-09-16, REC-103, worktree agent-a4fe71943bfcf63db) SIX
+/* NEGATIVE CONTROL: (declared and RUN 2026-09-17, REC-113 / IC-116, worktree
+   agent-ab3bf809046a052e6) FIVE arms over section I's coverage statement, RUN in one step
+   through `node test/nc-rec113.mjs [arm|all]` (the driver lives INSIDE this worktree), each
+   armed ALONE with every other defence held open, each DECLARED before it ran, each mutation
+   passing an anchor-occurs-EXACTLY-ONCE guard and a bytes-really-changed guard, and every
+   restore verified by sha256 AND by `cmp` against a PRISTINE copy named UNIQUELY PER ARM with a
+   byte count printed and a floor guarded. An opening AND a closing baseline bracket the run;
+   both read 81 pass / 0 fail, exit 0. `git checkout --` is never used to undo an arm.
+   EVERY ARM ALSO RUNS `test/rec113-identity.mjs` against a pre-change checkout, so the
+   over-strictness direction is graded on each arm rather than once at the end.
+   (a) `baseline` — nothing armed. The row that distinguishes four-arms-broken from
+       four-arms-working. Both ends green.
+   (b) `projection` — the row's own arm: the two columns removed from the SELECT. Declared
+       MUST FAIL I2 I2b I2c I2d. **ACTUAL: I2 and I2c ONLY — I2b AND I2d CAME BACK GREEN, AND
+       THAT IS THIS CONTROL'S MOST USEFUL RESULT RATHER THAN A FAULT IN THE ARM.** With the
+       columns gone a row that HAS no referent still reads `null / null / undetermined`, which
+       is what it should read — so an assertion over a row with nothing to show cannot tell
+       *the record has no referent* from *the read dropped the column*. That is D-366's own
+       absence-with-two-causes shape arriving inside the suite written to close it. **Only a
+       row that HAS a referent can detect a missing projection**, which is what makes I2 and
+       I2c load-bearing; the declaration is CORRECTED in the driver with its reason, never
+       exempted.
+   (c) `statement` — projected but NOT stated: the columns come back, the `coverage` sentence
+       does not. Declared MUST FAIL I2 I2b I2c I2d; MUST NOT FAIL I2e I2f. AS DECLARED. This is
+       the arm that proves the third field is load-bearing rather than decoration — without it,
+       "STATED as undetermined" would be satisfied by a null after all.
+   (d) `manufacture` — THE COSTLY DIRECTION: drop the state test so ANY row without a referent
+       reads undetermined, making a LOOKED_ABSENT row say the record does not know something it
+       does know. Declared MUST FAIL I2d I2e; MUST NOT FAIL I2 I2b I2c I2f. AS DECLARED.
+   (e) `blind` — THE WORST DIRECTION: ignore the referent entirely, so even rows the record CAN
+       back read undetermined. Declared MUST FAIL I2 I2c I2e; MUST NOT FAIL I2b I2f. AS
+       DECLARED, and the identity driver's own must-fail arm went red with it.
+   WHAT THESE ARMS CANNOT SEE: they are local to this plane's source under miniflare — no real
+   account, no deploy, no second instance, and critically NOT `agent-worker`'s live use of
+   `op=airunlog`, whose own suites MOCK the op, so a consumer break there would not surface in
+   this battery at all. That gap was closed by reading every call site rather than by measuring.
+
+   NEGATIVE CONTROL: (declared and RUN 2026-09-16, REC-103, worktree agent-a4fe71943bfcf63db) SIX
    arms over section I's fence, RUN in one step through `node test/nc-rec103.mjs [arm|all]` (the
    driver lives INSIDE this worktree), each armed ALONE with every other defence held open, each
    DECLARED before it ran, each mutation passing an anchor-occurs-EXACTLY-ONCE guard and a
@@ -1058,6 +1095,19 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
      bareRow?.state, bareRow?.result_kind, bareRow?.result_ref, bareRow?.coverage],
     [1, 0, "PRESENT", null, null, "undetermined"]);
 
+  /* I2c IS LOAD-BEARING AND THE NEGATIVE CONTROL IS WHAT PROVED IT, which is
+     worth knowing before anyone decides it duplicates I2b.
+     Under this item's `projection` arm — the two columns removed from the SELECT
+     so the read projects NOTHING — I2b AND I2d BOTH CAME BACK GREEN. They had to:
+     with the columns gone `e.result_ref` is `undefined`, so a row that has no
+     referent reads `null / null / undetermined`, which is exactly what it should
+     read. An assertion over a row with nothing to show CANNOT TELL "the record
+     has no referent" from "the read dropped the column" — the same two bytes for
+     two different facts, which is D-366's own shape arriving inside the suite
+     written to close it.
+     So only a row that HAS a referent can detect a missing projection. I2 and
+     this line are those rows. A suite built only around the undetermined case
+     would have passed, in full, over a read that projected nothing at all. */
   t("I2c: …and the SIBLING is untouched by it — the backed row still reads `backed` after an "
   + "undetermined row lands in the same run, which is what makes I2b a per-row statement "
   + "rather than a property of the answer",
