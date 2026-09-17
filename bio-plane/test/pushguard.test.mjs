@@ -75,6 +75,45 @@
  * silently eaten a session's own uncommitted work twice in this project).
  * Baseline 60 pass / 0 fail. Arm (5) restored at sha256 `48c75a13...`, 27,606 bytes.
  *
+ * NEGATIVE CONTROL: D-406 / M0-59, run and recorded 2026-09-17 in worktree
+ * agent-a20ba9ff2880e1eae, each arm driven ALONE against a REAL bare remote, with
+ * `tools/pushguard.mjs` restored between arms by `cp`-back from a UNIQUELY NAMED
+ * per-arm pristine copy, verified by sha256 AND `cmp` AND a byte count with a 30,000-byte
+ * floor (pristine `21a3fcc7...`, 37,755 bytes) — NEVER by `git checkout -- <file>`.
+ * **Baseline for these arms: 81 pass / 0 fail.**
+ *
+ * (1) THE FALLBACK REMOVED FROM THE SHIM — `shim()` reverted to v1's single source,
+ * degrading open exactly as v1 did -> 73 pass / 6 FAIL (measured before arms (2)'s
+ * hardening added two assertions, so against a 79-assertion baseline). The six are the
+ * D-406 refusal arms, and the one that states the defect is *...and the stale bytes did
+ * NOT reach the remote* FAILING — i.e. **the stale bytes DID reach the remote**, the
+ * unguarded push reproduced on demand from a pre-guard worktree.
+ * **THE OVER-STRICTNESS ARM STILL PASSED under this arm**, which is what shows the six
+ * are specific to the defect rather than a suite that reddens at any perturbation.
+ *
+ * (2) `installCopy` NEUTERED TO A LIAR — returns `{ok:true, action:"installed"}` and
+ * writes nothing, isolating the COPY half from the SHIM half -> 70 pass / 11 FAIL with the
+ * FOOT sentinel REACHED. **THIS ARM FOUND A DEFECT IN THIS SUITE RATHER THAN IN ITS
+ * SUBJECT, and it is the third time this project's controls have done that at this exact
+ * spot.** The first run of it DID NOT FAIL — it DIED, `readFileSync` throwing ENOENT on the
+ * absent copy, ending the module with NO TALLY and NO FOOT and losing every section after
+ * it. Hardened to read through an `existsSync` guard, the arm now fails BY NAME. A control
+ * that diagnoses beats one that merely goes red.
+ * It also made an ARM-THAT-DID-NOT-ARM detector earn its place: *...and there is a cache to
+ * corrupt, so the ordering arm below can actually arm* FAILS here, which says in one line
+ * that the WORKTREE-FIRST arm could not arm in this configuration and its PASS is therefore
+ * not evidence — rather than letting a vacuous pass read as a real one.
+ *
+ * (3) THE REJECTED FIX, DRIVEN RATHER THAN ARGUED — the naive shape D-406's row warned
+ * against: v1's single source with the absent-script branch promoted to `exit 1` ->
+ * 74 pass / 7 FAIL. **The decisive failures are `OVER-STRICTNESS — a CURRENT index pushes
+ * cleanly from a previously-unguarded worktree` and `...and the ref actually landed`.**
+ * Note what this arm proves about the SUITE: *THE FIX — a STALE index is REFUSED* PASSES
+ * here, because a guard that refuses EVERYTHING also refuses stale ones. **The refusal arm
+ * cannot tell a working guard from a blanket blockage; only the over-strictness arm can.**
+ * That is why an over-strictness arm is mandatory here and not a courtesy — it is the only
+ * instrument that separates D-406's fix from the failure D-406 predicted.
+ *
  *   BASELINE, and it is a finding rather than a formality: the baseline battery
  *   measured 213/214 · 13,445 assertions, exit 1, with `strandedwork.test.mjs`
  *   failing its `plancheck --local exits 0` arm. THE CAUSE WAS THIS SUITE'S OWN
@@ -146,6 +185,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { install, hooksDir, check, shim, refsNotHead, corpusDirty,
+         installCopy, commonDir, COPY_NAME,
          HOOK_MARKER, STALE_SIGNATURE, CORPUS_PATHS } from "../../tools/pushguard.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
@@ -162,7 +202,7 @@ const t = (label, got, want) => {
    module while the tally still reads clean, so every section bumps this and the last
    assertion requires all of them. A section that dies silently cannot leave a green
    count. */
-const SECTIONS = 7;
+const SECTIONS = 8;
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -462,6 +502,136 @@ section("THE DETECTOR THIS ROW MAY NOT WEAKEN, AND THE LOOP THAT ARMS IT");
     || readFileSync(livePath, "utf8").includes(HOOK_MARKER);
   t("any pre-push installed in THIS clone is ours (or absent — a fresh clone is the stated limit)",
     liveOk, true);
+}
+
+/* ========================================================================== */
+section("D-406 — A WORKTREE WHOSE COMMIT PREDATES THE GUARD");
+/* THE DEFECT THIS SECTION EXISTS FOR, and it is the reason the section is an END-TO-END
+   PUSH rather than an assertion about `shim()`.  The hook is installed ONCE in the shared
+   common dir — so it FIRES in every worktree — but v1 resolved its SCRIPT from the pushing
+   worktree alone.  A checkout whose tip predates M0-56 does not contain `tools/pushguard.mjs`,
+   so the hook found nothing to run, printed one stderr line, and EXITED 0.  Measured at 6 of 9
+   worktrees by BOB #13 INCLUDING THE MAIN CHECKOUT, and re-measured at 5 of 15 on this tree
+   with the main checkout still among them.
+
+   **THE ABSENCE AND THE PRESENCE OF THE GUARD PRODUCED THE SAME VISIBLE OUTCOME — a successful
+   push.**  That is why no function-level arm can establish this and why a real `git push` from
+   a real linked worktree at a real pre-guard commit is the only shape that can.
+
+   Commit A carries the corpus and the generator but NOT the guard script; commit B adds it.
+   `main` sits at B and a linked worktree sits at A. That is D-406's exact geometry. */
+{
+  const root = join(SANDBOX, "d406");
+  mkdirSync(join(root, "tools"), { recursive: true });
+  mkdirSync(join(root, "docs"), { recursive: true });
+  cpSync(join(REPO, "tools/decided.mjs"), join(root, "tools/decided.mjs"));
+  writeFileSync(join(root, "docs/seed.md"), "# seed\n\nDEC-1 was RULED on 2026-09-17 to exist.\n");
+  writeFileSync(join(root, "CLAUDE.md"), "# scratch\n");
+  git(["init", "-q", "-b", "main"], root);
+  git(["config", "user.email", "d406@example.invalid"], root);
+  git(["config", "user.name", "D-406 suite"], root);
+
+  regen(root);
+  commitAll(root, "A — corpus and generator, NO guard script (predates M0-56)");
+  const shaA = git(["rev-parse", "HEAD"], root).stdout.trim();
+  cpSync(join(REPO, "tools/pushguard.mjs"), join(root, "tools/pushguard.mjs"));
+  commitAll(root, "B — the guard script lands");
+
+  install({ repo: root });
+  const copy = installCopy({ repo: root });
+  t("the clone-wide copy installs into the git COMMON dir", copy.action, "installed");
+  t("...under its bio-* name, beside the ledger mintid has kept there since M0-17",
+    copy.path, join(commonDir({ repo: root }), COPY_NAME));
+  /* READ THROUGH A GUARD, NOT DIRECTLY. A bare `readFileSync` here THROWS when the copy is
+     absent, which ends the module with no tally and no FOOT — the suite reaches a verdict by
+     DYING instead of by failing, and every section after it is lost. Found by this row's own
+     arm (2), where a lying `installCopy` reported `installed` and wrote nothing; it is the
+     same defect M0-56's control found at this same spot, and `mintid.test.mjs` records it too.
+     A control that diagnoses beats one that merely goes red. */
+  const copyBody = copy.path && existsSync(copy.path) ? readFileSync(copy.path, "utf8") : "";
+  t("...and the copy REALLY EXISTS on disk — an install that reported success wrote something",
+    copyBody.length > 0, true);
+  t("...and is a copy of a REAL pushguard, not an empty or truncated file",
+    copyBody.includes("export function shim"), true);
+  t("...idempotent by bytes — a second call does not rewrite it",
+    installCopy({ repo: root }).action, "current");
+
+  /* The pre-guard worktree. */
+  const old = join(SANDBOX, "d406-old");
+  git(["worktree", "add", "-q", "-b", "oldbranch", old, shaA], root);
+  t("the old worktree genuinely lacks the guard script — the D-406 geometry, not a mock",
+    existsSync(join(old, "tools/pushguard.mjs")), false);
+  t("...but DOES carry the generator, so the fallback has something real to check",
+    existsSync(join(old, "tools/decided.mjs")), true);
+
+  const remote = bareRemote("d406-remote.git");
+  git(["remote", "add", "origin", remote], old);
+
+  /* ---------------------------------------------------------------- OVER-STRICTNESS FIRST.
+     It matters more here than usual.  A guard that hard-failed in every checkout predating it
+     would refuse pushes from the MAIN CHECKOUT on a tree that has done nothing wrong — trading
+     a silent gap for a loud blockage, which is the failure D-406's row explicitly warned
+     against.  A correct tree must push CLEANLY and SILENTLY. */
+  regen(old);
+  commitAll(old, "old worktree, index regenerated — nothing wrong here");
+  const healthy = git(["push", "origin", "oldbranch"], old);
+  t("OVER-STRICTNESS — a CURRENT index pushes cleanly from a previously-unguarded worktree",
+    healthy.status, 0);
+  t("...and the ref actually landed", git(["rev-parse", "--verify", "oldbranch"], remote).status, 0);
+  t("...and the guard now gives a REAL VERDICT there instead of `NOT guarded`",
+    healthy.stderr.includes(`${HOOK_MARKER}: docs/DECIDED.md current`), true);
+  t("...and does NOT announce itself as inactive, which is what v1 said here",
+    healthy.stderr.includes("NOT guarded"), false);
+
+  /* ---------------------------------------------------------------- THE REFUSAL THAT DID NOT
+     HAPPEN BEFORE.  Under v1 this exact push exited 0 and the stale bytes LANDED. */
+  const before = git(["rev-parse", "oldbranch"], remote).stdout.trim();
+  writeFileSync(join(old, "docs/later.md"),
+    "DEC-2 was RULED on 2026-09-17, after the index was built.\n");
+  commitAll(old, "a ruling added WITHOUT regenerating the index");
+  const stale = git(["push", "origin", "oldbranch"], old);
+  t("THE FIX — a STALE index is REFUSED from a worktree that predates the guard",
+    stale.status === 0 ? 0 : 1, 1);
+  t("...and the stale bytes did NOT reach the remote",
+    git(["rev-parse", "oldbranch"], remote).stdout.trim() !== before, false);
+  t("...naming the remedy, so the reader can act in one step",
+    stale.stderr.includes("node tools/decided.mjs"), true);
+  t("...and saying it is the INDEX that is stale", stale.stderr.includes("STALE"), true);
+
+  /* The remedy must actually clear it — advice that does not work spends the reader's
+     trust before they find out. */
+  regen(old);
+  commitAll(old, "regenerated");
+  t("...and running the named remedy CLEARS it, from the old worktree too",
+    git(["push", "origin", "oldbranch"], old).status, 0);
+
+  /* ---------------------------------------------------------------- NO REGRESSION.
+     A worktree that ALREADY had the guard must still refuse, and must still do it through
+     its OWN tracked script rather than the cache — worktree-first is the whole of the chosen
+     ordering and an arm that does not pin the ORDER would pass under either. */
+  git(["remote", "add", "origin", remote], root);
+  regen(root); commitAll(root, "main, index current");
+  t("a tree WITH its own script still pushes clean", git(["push", "-q", "origin", "main"], root).status, 0);
+  writeFileSync(join(root, "docs/more.md"), "DEC-4 was RULED on 2026-09-17 with no regeneration.\n");
+  commitAll(root, "stale again on main");
+  t("NO REGRESSION — a tree where the guard already worked STILL refuses a stale index",
+    git(["push", "origin", "main"], root).status === 0 ? 0 : 1, 1);
+
+  /* THE ORDER, pinned by BEHAVIOUR rather than by reading the shim.  Corrupt the CACHE only.
+     If the hook preferred the cache, this push would die on a SyntaxError; worktree-first
+     means the tracked script answers and the corrupt cache is never opened. */
+  /* Guarded for the reason given above — this arm must not be able to END the module. */
+  const cacheSaved = copyBody;
+  t("...and there is a cache to corrupt, so the ordering arm below can actually arm",
+    cacheSaved.length > 0, true);
+  if (cacheSaved) writeFileSync(copy.path, "this is not valid javascript {{{\n");
+  regen(root); commitAll(root, "regenerated, index current again");
+  const withBadCache = git(["push", "origin", "main"], root);
+  t("WORKTREE-FIRST, DRIVEN — a corrupt CACHE cannot affect a tree that carries its own script",
+    withBadCache.status, 0);
+  if (cacheSaved) writeFileSync(copy.path, cacheSaved);
+  t("...and the cache was restored byte-identically for the arms after it",
+    existsSync(copy.path) && readFileSync(copy.path, "utf8") === cacheSaved, true);
 }
 
 /* ========================================================================== */

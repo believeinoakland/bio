@@ -1321,8 +1321,73 @@ with `--no-verify`. **Both causes are closed for this clone and its worktrees; n
 closed for a checkout that has never run a gate.** That is a real gap and it is written
 here rather than left for a later session to discover.
 
+> **CORRECTED 2026-09-17 by M0-59 (D-406), and the correction is the point rather than a
+> footnote.** The sentence above said *closed for this clone AND ITS WORKTREES*. **The
+> worktree half was FALSE for six weeks' worth of checkouts and nothing here could have told
+> you** — see the section below. It is corrected rather than exempted, in the estate's own
+> terms: an assertion that outlived its truth, inside the document that is the M0 lane's
+> design authority. The clause is now true because the mechanism below makes it true, not
+> because the wording was softened.
+
 Two further bounds the guard reports rather than hides: a push whose corpus is DIRTY in the
 working tree gets a verdict about the TREE and is told so in those words, because the
 commits and the tree are then different objects; and a ref whose local sha is not HEAD is
 NAMED as one the guard did not speak for, read from the hook's own stdin rather than
 assumed.
+
+### D-406 — ONE HOOK, EVERY WORKTREE, BUT THE SCRIPT RESOLVED PER-WORKTREE
+
+*Added 2026-09-17 by M0-59.*
+
+**THE HOOK FIRED EVERYWHERE AND GUARDED ALMOST NOWHERE.** M0-56 got the important half
+right: the hook lives in the git common dir, so git invokes it from every worktree of the
+clone. But v1's body resolved its SCRIPT with `git rev-parse --show-toplevel` and ran
+`$top/tools/pushguard.mjs` — **a path that does not exist in any checkout whose commit
+predates M0-56.** There the hook fired, found nothing, printed one line to stderr and
+**exited 0, allowing the push.** Measured at 6 of 9 worktrees by BOB #13 including the main
+checkout; re-measured by this row at 5 of 15, the arithmetic moved by rebasing and **the
+main checkout still among them.**
+
+**WHY IT LED THE WAVE, AND IT IS NOT THAT THE GAP WAS LARGE.** A guard believed to protect
+and silently inactive **changes behaviour**: sessions stop checking the thing themselves
+because the mechanism has it. `CLAUDE.md` says a mechanism not in the loop the reader runs
+is not a mechanism; this one **was** in the loop and did nothing. And the failure direction
+is the worst available — **the absence of the guard and the presence of the guard produce
+the same visible outcome, a successful push.** The announcement is not a mitigation: one
+stderr line in the middle of push output nobody diffs.
+
+**THE GENERAL FORM, WHICH IS WORTH MORE THAN THE FIX: a mechanism shipped as a FILE IN THE
+REPOSITORY is only in the loop for checkouts made or rebased AFTER it landed.** This estate
+already knew that for DOCUMENTS — the 2026-07-31 untracked kickoff that reached no worker.
+**Nobody had pointed it at INSTRUMENTS, where it is worse, because a document that is absent
+is merely unread while a guard that is absent reports a healthy push.**
+
+**THE SHAPE.** Two sources, tried in order: (1) the pushing worktree's own tracked
+`tools/pushguard.mjs`; (2) `<git-common-dir>/bio-pushguard.mjs`, a clone-wide copy installed
+by `plancheck` on the same schedule as the hook. **The order is worktree-first, which is a
+deliberate departure from the shape D-406 recommended**, and the argument is on the debt
+row: it is a strict superset of v1 so it cannot regress a checkout that already works, it
+keeps the reviewed tracked file authoritative over an unversioned cache, and it lets a
+worktree developing the guard run its own copy. The cost, stated: a fix to the guard reaches
+old checkouts only at the next `plancheck` rather than instantly.
+
+**THE REJECTED FIX IS RECORDED BECAUSE IT IS THE TEMPTING ONE.** Promoting the absent-script
+branch to `exit 1` would refuse pushes from the main checkout on a tree that has done nothing
+wrong — trading a silent gap for a loud blockage, and **a gate that goes red on inherited
+state gets switched off, which deletes the instrument rather than extending it.** It was
+DRIVEN as a control arm rather than dismissed: it makes the over-strictness arm fail while
+the refusal arm still passes, because a guard that refuses everything also refuses stale
+ones. **Only an over-strictness arm can tell a working guard from a blanket blockage.**
+
+**EVERY WRITE TO THE SHARED MACHINERY IS AN ATOMIC RENAME.** The hook is read by git on every
+push from every worktree, and this project runs up to eight at once. `writeFileSync`
+truncates and then fills, so a push inside that window execs a half-written shell script and
+is refused **in a session that changed nothing and has no way to attribute it.** That hazard
+was present in v1 and is closed here for both files.
+
+**THE LIMITS THAT REMAIN, and (iii) is NEW and owned by this fix rather than inherited:**
+(i) a fresh clone is unguarded until a gate runs in it once — unchanged, narrowed, not
+closed; (ii) `--no-verify` skips the hook and always will; (iii) **an old checkout is covered
+only once SOME worktree of the clone has run `plancheck` since this landed**, so there is a
+window after the merge in which the unguarded trees stay unguarded; (iv) the cache can go
+stale relative to the tracked script, which is a direct consequence of the chosen order.

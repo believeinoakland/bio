@@ -183,39 +183,126 @@
  */
 
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync, chmodSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, chmodSync, renameSync, unlinkSync } from "node:fs";
 import { join, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 import { realpathSync } from "node:fs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 
+/* This file's own path.  `installCopy()` copies THE RUNNING SCRIPT rather than reading
+   `<repo>/tools/pushguard.mjs`, so the clone-wide copy is always a copy of a pushguard
+   that actually ran, and never depends on the installing tree's layout. */
+const SELF = fileURLToPath(import.meta.url);
+
+/* ------------------------------------------------------------------ writeAtomic
+ *
+ * EVERY WRITE TO THE SHARED MACHINERY IS A RENAME, NOT A TRUNCATE-AND-WRITE, AND THE
+ * REASON IS A SIBLING'S SESSION RATHER THAN THIS ONE'S.  The hook file in the common dir
+ * is read by git on EVERY push from EVERY worktree of this clone, and this project runs up
+ * to eight worktrees at once — two were pushing through it while this was written.
+ * `writeFileSync` truncates and then fills, so a push landing inside that window execs a
+ * HALF-WRITTEN shell script: a `/bin/sh` syntax error, a non-zero exit, and a refused push
+ * **in a session that changed nothing and has no way to attribute it**.  `rename(2)` is
+ * atomic within a filesystem, so a concurrent reader gets the whole old file or the whole
+ * new one and never a torn one.  The temp name carries the pid so two installers racing
+ * each other cannot share a scratch path.
+ *
+ * It is a small cost for a failure that would surface as somebody else's defect. */
+function writeAtomic(path, content, mode) {
+  const tmp = `${path}.tmp-${process.pid}`;
+  try {
+    writeFileSync(tmp, content);
+    if (mode !== undefined) chmodSync(tmp, mode);
+    renameSync(tmp, path);
+  } catch (e) {
+    try { if (existsSync(tmp)) unlinkSync(tmp); } catch { /* best effort */ }
+    throw e;
+  }
+}
+
 /* The marker is how `install()` tells OUR hook from somebody else's.  It carries a
    version so a later change to the shim can replace an older one of ours without
    ever touching a hook this project did not write. */
 export const HOOK_MARKER = "bio-pushguard";
-export const HOOK_VERSION = 1;
+export const HOOK_VERSION = 2;
+
+/* The clone-wide copy of this script, kept beside the hook's own directory in the git
+   COMMON dir.  `.git/` is not a novel place for this project to keep state — `mintid.mjs`
+   has kept `.git/bio-idalloc` there since M0-17, and `.git/bio-machine` sits beside it —
+   so this follows an established `bio-*` convention rather than inventing one. */
+export const COPY_NAME = "bio-pushguard.mjs";
 
 /* THE SHIM CARRIES NO ABSOLUTE PATH, AND THAT IS THE POINT — see "the arm that
    would not have armed" above.  One hook file serves every worktree of the clone,
    so it must resolve the PUSHING worktree at push time.
 
-   It degrades OPEN when the tool is absent (an old commit checked out, a branch
-   from before this landed) — but it SAYS SO on stderr.  A guard that silently
-   waved a push through would be the unearned-absence class, which is the defect
-   this whole estate is pointed at. */
+   ------------------------------------------------------------------ v2, AND D-406
+ *
+ * v1 resolved ONE source — the pushing worktree's own `tools/pushguard.mjs` — and
+ * degraded OPEN when it was absent.  **That made the guard INACTIVE in every checkout
+ * whose commit predates M0-56**, which D-406 measured at 6 of 9 worktrees INCLUDING THE
+ * MAIN CHECKOUT, and re-measured here at 5 of 15 with the main checkout still among them.
+ * The hook FIRES everywhere (it lives in the shared common dir); it simply found nothing
+ * to run and said so in one stderr line in the middle of push output nobody diffs.
+ *
+ * **THAT IS WORSE THAN NO GUARD, WHICH IS WHY IT WAS WORTH FIXING BEFORE ANYTHING ELSE.**
+ * A guard believed to protect and silently inactive CHANGES BEHAVIOUR: sessions stop
+ * checking the thing themselves because the mechanism has it.  And the absence and the
+ * presence of the guard produce the SAME VISIBLE OUTCOME — a successful push.
+ *
+ * ------------------------------------------------------------------ TWO SOURCES, AND THE ORDER IS THE FIX
+ *
+ *   1. the PUSHING worktree's own tracked `tools/pushguard.mjs`, when it has one;
+ *   2. otherwise the clone-wide copy in the git common dir.
+ *
+ * **THE ORDER IS DELIBERATE AND IT IS A DEPARTURE FROM D-406's RECOMMENDED SHAPE**, which
+ * said to exec the common-dir copy and fall back to the worktree.  Three reasons, and the
+ * first is the one that decides it:
+ *
+ *   - **WORKTREE-FIRST CANNOT REGRESS A CHECKOUT THAT ALREADY WORKS.**  It is a strict
+ *     superset of v1: every tree carrying its own copy behaves byte-identically to before,
+ *     and only the trees that are unguarded TODAY change at all — where the downside is
+ *     bounded below by "no worse than now".  Common-first would change behaviour in 10 of
+ *     15 live checkouts at once, mid-wave, including for the two siblings pushing through
+ *     this hook right now.  D-406's own warning is against trading a silent gap for a loud
+ *     blockage; common-first maximises the blast radius of any defect in this change and
+ *     worktree-first minimises it.
+ *   - **THE REPOSITORY IS THE CHANNEL.**  The tracked script is the artifact that was
+ *     reviewed, gated and merged.  The common-dir copy is an unversioned cache written by
+ *     whichever worktree last ran `plancheck` — arbitrary, invisible to `git status`, and
+ *     reviewed by nobody.  Preferring the cache over the tracked file would make the
+ *     guard's behaviour depend on a file outside the channel.
+ *   - **A WORKTREE DEVELOPING THE GUARD MUST RUN ITS OWN COPY**, or its arms measure a
+ *     sibling's build instead of its own — the arm-that-did-not-arm class.
+ *
+ * The honest cost of choosing this order, stated rather than omitted: a FIX to the guard
+ * propagates to the old checkouts only when some worktree next runs `plancheck`, instead of
+ * instantly.  That is a real property of the cache and it is accepted, because a guard whose
+ * behaviour differs from its reviewed source is the worse of the two.
+ *
+ * It STILL degrades open when neither source exists, and still SAYS SO — a guard that
+ * silently waved a push through would be the unearned-absence class this estate is pointed at. */
 export function shim() {
   return [
     "#!/bin/sh",
-    `# ${HOOK_MARKER} v${HOOK_VERSION} — installed by tools/pushguard.mjs (M0-56).`,
+    `# ${HOOK_MARKER} v${HOOK_VERSION} — installed by tools/pushguard.mjs (M0-56, extended by D-406).`,
     "# GENERATED, NEVER HAND-EDITED. Re-installed by `node tools/plancheck.mjs`.",
     "# It refuses a push whose `docs/DECIDED.md` is stale. It writes nothing tracked.",
-    "top=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0",
-    'if [ ! -f "$top/tools/pushguard.mjs" ]; then',
-    `  echo "${HOOK_MARKER}: tools/pushguard.mjs absent in $top — this push is NOT guarded" >&2`,
-    "  exit 0",
+    "#",
+    "# Source 1: the PUSHING worktree's own tracked copy, which is authoritative when present.",
+    "# Source 2: the clone-wide copy in the git common dir, for a checkout whose commit",
+    "#           predates the guard and so does not carry the script at all (D-406).",
+    "top=$(git rev-parse --show-toplevel 2>/dev/null)",
+    'if [ -n "$top" ] && [ -f "$top/tools/pushguard.mjs" ]; then',
+    '  exec node "$top/tools/pushguard.mjs" --run',
     "fi",
-    'exec node "$top/tools/pushguard.mjs" --run',
+    "common=$(git rev-parse --git-common-dir 2>/dev/null)",
+    `if [ -n "$common" ] && [ -f "$common/${COPY_NAME}" ]; then`,
+    `  exec node "$common/${COPY_NAME}" --run`,
+    "fi",
+    `echo "${HOOK_MARKER}: no guard script in \${top:-this tree} or the git common dir — this push is NOT guarded" >&2`,
+    "exit 0",
     "",
   ].join("\n");
 }
@@ -282,14 +369,64 @@ export function install({ repo = REPO, dryRun = false } = {}) {
                reason: `a pre-push hook exists at ${path} and is NOT ours — refusing to overwrite it` };
     }
     if (dryRun) return { ok: true, action: "would-replace", path, source: h.source };
-    writeFileSync(path, want);
-    chmodSync(path, 0o755);
+    writeAtomic(path, want, 0o755);
     return { ok: true, action: "replaced", path, source: h.source };
   }
   if (dryRun) return { ok: true, action: "would-install", path, source: h.source };
-  writeFileSync(path, want);
-  chmodSync(path, 0o755);
+  writeAtomic(path, want, 0o755);
   return { ok: true, action: "installed", path, source: h.source };
+}
+
+/* ------------------------------------------------------------------ commonDir
+ *
+ * The git COMMON dir — the one directory every worktree of a clone shares, and the same
+ * insight that put the hook there in the first place.  Resolved through git rather than
+ * assumed, and made absolute against `repo` because git answers a RELATIVE `.git` from a
+ * main checkout and an ABSOLUTE path from a linked worktree (measured both ways). */
+export function commonDir({ repo = REPO } = {}) {
+  const common = git(["rev-parse", "--git-common-dir"], repo);
+  if (!common) return null;
+  return isAbsolute(common) ? common : join(repo, common);
+}
+
+/* ------------------------------------------------------------------ installCopy — D-406
+ *
+ * THE CLONE-WIDE COPY.  `install()` puts ONE hook where git reads hooks for every worktree;
+ * this puts ONE SCRIPT where that hook can always find it.  Together they make the guard as
+ * checkout-independent as the hook already was, which is the whole of D-406.
+ *
+ * **IT IS A CACHE, NOT THE ARTIFACT, AND THE DIFFERENCE IS LOAD-BEARING.**  The tracked
+ * `tools/pushguard.mjs` remains the reviewed source and the shim prefers it everywhere it
+ * exists; this copy is consulted ONLY by a checkout that does not carry the script at all.
+ * So it can never silently override reviewed code — it can only stand in where the channel
+ * has not reached.
+ *
+ * Idempotent by bytes, like `install()`, so a current copy is not touched and its mtime does
+ * not move.  Written by RENAME for the reason `writeAtomic` gives: a sibling's push may be
+ * reading it at any instant.  It is NOT chmod +x — nothing execs it directly; the shim runs
+ * it through `node`, and a non-executable file is one fewer thing in `.git/` that can be run
+ * by accident. */
+export function installCopy({ repo = REPO, dryRun = false } = {}) {
+  const dir = commonDir({ repo });
+  if (!dir) {
+    return { ok: false, action: "no-git", path: null,
+             reason: "git could not name a common directory (not a repository?)" };
+  }
+  if (!existsSync(dir)) {
+    return { ok: false, action: "no-common-dir", path: dir,
+             reason: `${dir} does not exist` };
+  }
+  const path = join(dir, COPY_NAME);
+  const want = readFileSync(SELF, "utf8");
+  if (existsSync(path)) {
+    if (readFileSync(path, "utf8") === want) return { ok: true, action: "current", path };
+    if (dryRun) return { ok: true, action: "would-replace", path };
+    writeAtomic(path, want);
+    return { ok: true, action: "replaced", path };
+  }
+  if (dryRun) return { ok: true, action: "would-install", path };
+  writeAtomic(path, want);
+  return { ok: true, action: "installed", path };
 }
 
 /* ------------------------------------------------------------------ check
@@ -466,6 +603,26 @@ function control() {
   const b = install({ dryRun: true });
   arm(a.action === b.action && a.path === b.path, "install is idempotent (two dry runs agree)");
 
+  /* ---------------------------------------------------------------- D-406 arms
+   *
+   * The shim must now name BOTH sources, in the order that makes worktree-first true.
+   * These are cheap structural pins; the BEHAVIOUR they stand for is driven through a
+   * real push from a real pre-guard worktree in `pushguard.test.mjs`, because a shim
+   * that merely MENTIONS a fallback is the mechanism-believed-on-its-existence defect. */
+  arm(s.includes("--git-common-dir"), "the shim resolves the clone-wide copy through the COMMON dir");
+  arm(s.includes(COPY_NAME), `the shim names the fallback copy (${COPY_NAME})`);
+  arm(s.indexOf("$top/tools/pushguard.mjs") < s.indexOf(`$common/${COPY_NAME}`),
+      "WORKTREE-FIRST: the tracked copy is tried BEFORE the clone-wide cache");
+  arm(!/\/Users\/|\/home\/|\/private\//.test(s),
+      "the fallback added NO absolute path to the shim (the arm v1 earned, still true)");
+
+  /* The copy is a copy of THE RUNNING SCRIPT, so it can never be a stale sibling build
+     of something this process did not run. */
+  const c1 = installCopy({ dryRun: true });
+  const c2 = installCopy({ dryRun: true });
+  arm(c1.action === c2.action && c1.path === c2.path, "installCopy is idempotent (two dry runs agree)");
+  arm(!!c1.path && c1.path.endsWith(COPY_NAME), "the copy lands in the common dir under its bio-* name");
+
   console.log(bad ? `\n${bad} FAILED` : "\nall control arms pass");
   return bad ? 1 : 0;
 }
@@ -493,17 +650,25 @@ if (!IS_CLI) {
 } else if (arg === "--install") {
   const r = install();
   console.log(`${r.action}${r.path ? ` — ${r.path}` : ""}${r.reason ? ` (${r.reason})` : ""}`);
-  process.exit(r.ok ? 0 : 1);
+  /* The copy is part of arming, not an extra: without it the hook is inactive in every
+     checkout that predates the guard, which is D-406.  Its failure is reported and is
+     NOT silently folded into the hook's status — an install that half happened must not
+     read as one that did. */
+  const c = installCopy();
+  console.log(`copy: ${c.action}${c.path ? ` — ${c.path}` : ""}${c.reason ? ` (${c.reason})` : ""}`);
+  process.exit(r.ok && c.ok ? 0 : 1);
 } else {
   const h = hooksDir();
   const r = install({ dryRun: true });
+  const c = installCopy({ dryRun: true });
   const v = check();
   console.log(`hooks dir : ${h.dir || "(none)"}  [${h.source}]`);
   console.log(`pre-push  : ${r.action}${r.reason ? ` — ${r.reason}` : ""}`);
+  console.log(`copy      : ${c.action}${c.path ? ` — ${c.path}` : ""}${c.reason ? ` — ${c.reason}` : ""}`);
   console.log(`index     : ${v.kind} — ${v.message}`);
   console.log(`corpus    : ${corpusDirty() ? "DIRTY in the working tree (a push verdict would be UNDETERMINED)" : "clean against the tree"}`);
   console.log("");
-  console.log("  --install   write the pre-push hook (idempotent; writes to .git/, never to the tree)");
+  console.log("  --install   write the pre-push hook AND the clone-wide copy (idempotent; writes to .git/, never to the tree)");
   console.log("  --run       the hook body; refuses a push whose docs/DECIDED.md is stale");
   console.log("  --control   the negative-control arms");
 }

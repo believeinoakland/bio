@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1038 rulings across 85 documents.
+1039 rulings across 85 documents.
 
 ## DEC-
 
@@ -1378,6 +1378,8 @@ authority is the file named, never this one.
   `docs/architecture/BIO_System_Design.md:3`
 - **M0-57** · 2026-09-17 — THE STALE ASSERTION WAS CORRECTED AT SOURCE IN THREE SITES AND NONE WAS EXEMPTED**, including **§3 construct 8's own STATE cell, which had said the claim object was doctrine still owed — the map contradicting itself within one row, six weeks after the design existed.** The rule now lives in `CORPUS-STANDARD.md`…  
   `docs/development/QUEUE.md:1530`
+- **M0-59** · 2026-09-17 — CORRECTED 2026-09-17 by M0-59 (D-406), and the correction is the point rather than a > footnote.** The sentence above said *closed for this clone AND ITS WORKTREES*.  
+  `docs/development/VERIFICATION.md:1324`
 
 ## Rulings carrying no id
 
