@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1026 rulings across 85 documents.
+1029 rulings across 85 documents.
 
 ## DEC-
 
@@ -65,7 +65,7 @@ authority is the file named, never this one.
 - **DEC-17** · 2026-08-03 — Q2 · SETTLED by DEC-17 — THE PROJECT DECLARES THE STRENGTH ITS WORK REQUIRES**, published beside the strength actually reached, with the GROUP setting the default a new project starts from (amended 2026-08-03).  
   `docs/development/research/RECONCILED.md:1406`
 - **DEC-18** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-18) — an ungraded leg is INERT, and UNRATED becomes the boundary case rather than the rule.** *"An ungraded leg doesn't contribute to a conclusion, but if there are other graded legs, then it doesn't suspend the conclusion either."*  
-  `docs/architecture/BIO_Case_Making_v0_1.md:1009`
+  `docs/architecture/BIO_Case_Making_v0_1.md:1048`
 - **DEC-19** · 2026-08-02 — CORRECTED 2026-08-02 by Bob (DEC-19). This construct was called "the irreversible signed act" and that was wrong.** *"People make mistakes or misinterpret. An attestation must be reversible to correct mistakes. (Though there may be a record of the attestation and reversal in the record.)"*  
   `docs/architecture/BIO_Interaction_Constructs_v0_1.md:426`
 - **DEC-19** — Carrying DEC-19 AS AMENDED (publishing is THE irreversible act; correction always moves FORWARD — a new edition as a separate document with every published edition standing, a withdrawal as another attested act with both standing; nothing is ever unpublished), DEC-33 (the ceremony is deferred; publication runs…  
@@ -89,7 +89,7 @@ authority is the file named, never this one.
 - **DEC-20** · 2026-08-02 — (1) FACT CHECK — THERE IS NO CONTRADICTION, AND IT WAS ALREADY RULED.** DEC-20, 2026-08-02, Bob's own: *"Not all bias needs to be cleared before a piece is published.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:2709`
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-21) — the CONCLUSION above stands; the MECHANISM below it was wrong.** Bob: *"A capture is the act of reading a document in.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:1076`
+  `docs/architecture/BIO_Case_Making_v0_1.md:1115`
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 (Bob, DEC-21) — R2's CONCLUSION stands; its MECHANISM does not.** > *"A capture is the act of reading a document in.  
   `docs/development/research/RECONCILED.md:183`
 - **DEC-23** · 2026-09-14 — RULED | | machine extraction by recognisers, format entries and fleet members (§16) | BUILT | | the AI EXTRACT role — an assistant extracting on a member's objective | **PARTLY BUILT** — the PLANE half landed 2026-09-14 (SK-7): a machine credential MINTS content rows (`op=contentmint`), every surface LABELS them as…  
@@ -989,7 +989,7 @@ authority is the file named, never this one.
 - **REC-100** · 2026-09-14 — REC-100 CORRECTED THE BLOCKER AND DID NOT WIDEN THE CHECK: the carve-out STANDS, now resting on a statement that is true.  
   `docs/development/DEBT.md:310`
 - **REC-100** — `bio-plane/test/`: four sites needed correcting, all CORRECTED rather than exempted** — `observation-log.test.mjs` I2 (REC-100's deliberate gap pin, INVERTED at the site that changed, exactly as its author designed it to be) and C6, plus the vocabulary key-set pins in `airun.test.mjs` ARM P6 and…  
-  `docs/development/INTERFACE-CHANGES.md:8682`
+  `docs/development/INTERFACE-CHANGES.md:8762`
 - **REC-100** · 2026-09-16 — CORRECTED WHILE RUNNING — THREE TIMES, ALL THREE MINE, AND THE ACT IS CONDUCT #1's TO PAY AT INTEGRATION IF THE WORKER'S REPORT DOES NOT ALREADY CARRY THEM** (written as an act with its actor, because a session can be replaced mid-flight and a correction owed by a session that ends is a correction nobody performs).  
   `docs/development/QUEUE.md:1104`
 - **REC-103** · 2026-09-16 — CORRECTED 2026-09-16 by REC-103: the document arm now applies the fence row-whole (IC-105), so the withholding differs across three levels for THREE stated reasons rather than because one arm was never built — the entity partition is deliberately unfenced and still wants a ruling, and that is the only open half of…  
@@ -1018,6 +1018,12 @@ authority is the file named, never this one.
   `docs/development/DEBT.md:336`
 - **REC-116** · 2026-09-17 — BLOCKED ON BOB, RULED 2026-09-17 BY BOB #13, AND THE ROW IS KEPT RATHER THAN DELETED BECAUSE THE REASON IS THE VALUABLE PART.** CONDUCT #2 rowed this as runnable; **BOB #13 ruled it is NOT, and took the design instead: *I take the design; the item follows the design, not the other way round.*** The ground is…  
   `docs/development/QUEUE.md:1551`
+- **REC-117** · 2026-09-17 — One of them was CORRECTED IN PLACE 2026-09-17 (REC-117) rather than left to the list — *the falsifier is REQUIRED* in §What a CLAIM is, which Bob overruled the same day; a non-authoritative reasoning record may carry stale sentences, but a sentence that states the OPPOSITE of a live ruling misleads a reader about…  
+  `docs/architecture/BIO_Case_Making_v0_1.md:3`
+- **REC-117** · 2026-09-17 — The threshold argument's SECOND LEG was CORRECTED 2026-09-17 (REC-117) and the section is current on it:** *the falsifier is REQUIRED* was overruled by Bob — `NO_FALSIFIER` is a condition a member may override, stated and attributed, including in the published record — so the leg is REPLACED by *the falsifier is…  
+  `docs/architecture/BIO_Case_Making_v0_1.md:10`
+- **REC-117** · 2026-09-17 — CORRECTED 2026-09-17 (REC-117), AND THE SECOND LEG IS REPLACED RATHER THAN STRUCK.** Bob, > ruling on `NO_FALSIFIER`: *"NO_FALSIFIER is a condition that should be surfaced.  
+  `docs/architecture/BIO_Case_Making_v0_1.md:596`
 - **REC-117** · 2026-09-17 — BOB RULED THAT `NO_FALSIFIER` MUST BECOME A STATED, ATTRIBUTED, OVERRIDABLE CONDITION AND `op=conclude` STILL REFUSES OUTRIGHT — so the gate pressures a member into INVENTING a falsifier, which is the exact bug the publication fence was moved off the content axis to avoid.** — waits on nothing; owner RECORD.  
   `docs/development/QUEUE.md:1531`
 ## UI-

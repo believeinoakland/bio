@@ -12246,4 +12246,13 @@ opened: 2026-09-17
 (M0-57), `newgroup/**`. `docs/development/QUEUE.md` is CONDUCT's and is not flipped by this
 worker; the flip is named as an act with its actor in the report.
 
+**PATHS ADDED AFTER OPENING, and they were NOT foreseen — recorded because a claim that
+quietly grows is a claim that stopped keeping other sessions out of what it actually holds:**
+
+- `docs/development/INTERFACE-CHANGES.md` (IC-118) — foreseen, named on opening.
+- `bio-plane/checks/bio-checks.mjs` ACT_SHAPE_CHECKS — **NOT foreseen.** DEC-49's guard failed
+  the UI harness because `FALSIFIER_AND_NONE_STATED` was minted at a governed site with no
+  canned translation, and then again because sharing C-33.2 with `NO_FALSIFIER` makes two
+  conditions one as far as `op=audit` can see. Both are the guard working. C-33.33 allocated.
+
 **open as of 2026-09-17.**

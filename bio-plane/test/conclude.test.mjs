@@ -1,3 +1,10 @@
+/* NEGATIVE CONTROL (REC-117's own — FOUR ARMS, each broken ALONE with the others held open, each restored and VERIFIED byte-identical by sha256 AND cmp against a per-arm pristine copy; 68 pass, 0 fail when whole; ALL RUN 2026-09-17). DECLARED BEFORE ARMING, and each came back as declared.
+   (A) THE OVERRIDE REMOVED — in src/store.mjs conclude() change `if (!fals && !noFals)` back to `if (!fals)` -> 59 pass, 9 FAIL. The falsifier-less conclude REFUSES again and the suite fails BY NAME at "REC-117 (b): a finding with NO falsifier CONCLUDES when the member states the absence". Sections 1-7's original 49 assertions ALL STILL PASS, which is what says the arm hit this item and not the item REC-13 built.
+   (B) THE SILENT OVERRIDE, AND IT IS THE ARM THIS RULING IS ABOUT — in src/store.mjs conclude() delete the two `#setOrAddScalar` writes of falsifier_override_by/at, so the act SUCCEEDS and the record stores nothing. This is the cheapest green a liar could take: drop the refusal, store nothing, and the record silently stops distinguishing a finding whose falsifier was stated from one whose absence a member accepted. -> 63 pass, 5 FAIL, naming "the ABSENCE is asserted BESIDE it" and "what the op wrote AUDITS CLEAN" (C-2.8 refuses the bundle, which is the second enforcement doing its job).
+   **THE FINDING THIS ARM PRODUCED ABOUT THE INSTRUMENT, recorded rather than smoothed: "REC-117 (b): the ANSWER names who overrode and when" STILL PASSED under arm B.** The op's return value is computed from the parameter and is not read back from the document, so an assertion suite built only on the ANSWER would have passed a completely silent override. What catches it is reading the DOCUMENT and asking the CATALOG. Any future assertion added here for this item belongs on the record, not on the envelope.
+   (C) THE PUBLISHED SURFACE GOES SILENT — in src/index.mjs the publishedcase `authored` block, replace the falsifier_override expression with a bare `null` -> publishedcase.test.mjs 104 pass, 1 FAIL at "the published record is where Bob said this must be visible". The conclude suite stays 68/0, which is the point: the published surface has its own arm because it is its own failure.
+   (D) THE CATALOG ACCEPTS A HALF-RECORDED OVERRIDE — in checks/bio-checks.mjs checkInquiryExtension change `} else if (!falsStated && !(ovBy && ovAt)) {` to `} else if (false) {` -> 66 pass, 2 FAIL, exactly the two REC-117 (d) arms and nothing else. An actor with no date, or a date with no actor, is a record that has stopped requiring a falsifier without saying who decided that.
+   OVER-STRICTNESS is arm (f) IN THIS SUITE and runs on every green pass, not only under a control: a finding that HAS a falsifier is BYTE-IDENTICAL with the new parameter ABSENT and with it PRESENT-AND-FALSE, over a fixture asserted non-empty and asserted to really be concluded first — a byte equality over nothing agrees on nothing. */
 /* NEGATIVE CONTROL: (REC-13's own — remove the FALSIFIER requirement and an inquiry concludes with nothing that would falsify it) break BOTH gates together, since either alone is still refused by the other: in checks/bio-checks.mjs checkInquiryExtension delete the `concluded state requires a non-empty falsifier` arm, AND in src/store.mjs conclude() change `if (!fals)` to `if (false)` -> 42 pass, 7 FAIL. The headline is "a conclusion with no falsifier is refused before anything moves", which reports got [true,"concluded"]: op=conclude ACCEPTED falsifier="" and the inquiry is now concluded with nothing that would falsify it. "the catalog names a missing falsifier under C-2.8" reports false — the catalog finds nothing wrong with that document either, so nothing downstream would ever notice. The other five are the cascade (NO_FALSIFIER unnamed; the wrongly-concluded inquiry no longer publishes conclude and can no longer be concluded by pilar). Restore BOTH lines -> 49 pass, 0 fail. */
 /* REC-13: the `concluded` state, its ENTRY REQUIREMENTS, and op=conclude.
  * BUILD-ORDER.md §2 (REC-13) is the scope; DEC-22 and DEC-30 are the folded
@@ -20,6 +27,14 @@
  *      MACHINE_CANNOT_CONCLUDE. Each is checked BEFORE anything moves, and the
  *      inquiry is still open afterwards — a refusal that half-ran would be
  *      worse than the refusal.
+ *      CORRECTED 2026-09-17 (REC-117), never exempted — the sentence was right
+ *      when it was written and is now one word short. NO_FALSIFIER is still
+ *      refused by name and still before anything moves, for every caller that
+ *      does not ask for the override Bob ruled in; what it is no longer is
+ *      UNCONDITIONAL. A fifth refusal joins the four, FALSIFIER_AND_NONE_STATED,
+ *      and section 8 holds both. The reason the old assertions in this section
+ *      are UNCHANGED is that they never asked for the override, so they measure
+ *      exactly what they always measured.
  *   4. ONE MACHINE, THE CATALOG'S. `surfaced` (open's legal alias) concludes;
  *      `deferred` does not (it is reopened first); `concluded` does not
  *      conclude again; and a LEGACY focus document is refused, because its own

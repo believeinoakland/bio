@@ -1,13 +1,13 @@
 # Case-making: the design pass
 
-**Status** · The record of the case-making design pass: the frame in Bob's words, the observations, the collapse of focus/finding/case into one recursive INQUIRY, naming and division, what a CLAIM is, the action plan, and the R1–R4 resolutions the adversarial pass forced. "Opened 2026-08-01 (session BOB) as the D-127 design pass Bob directed … Nothing here is settled unless it says so." Its 2026-08-10 status correction rules the file non-authoritative: the collapse HAS SHIPPED, and "what is authoritative is no longer this file. It is the plane, and the rulings the pass produced — DEC-15 through DEC-32 and the R1–R4 resolutions." Superseded as design authority (by the plane, `docs/development/DECISIONS.md`, and DEC-72 for the case section); complete as the reasoning record. Read it for WHY; several body sentences are now false as written (below). as of 2026-09-17.
+**Status** · The record of the case-making design pass: the frame in Bob's words, the observations, the collapse of focus/finding/case into one recursive INQUIRY, naming and division, what a CLAIM is, the action plan, and the R1–R4 resolutions the adversarial pass forced. "Opened 2026-08-01 (session BOB) as the D-127 design pass Bob directed … Nothing here is settled unless it says so." Its 2026-08-10 status correction rules the file non-authoritative: the collapse HAS SHIPPED, and "what is authoritative is no longer this file. It is the plane, and the rulings the pass produced — DEC-15 through DEC-32 and the R1–R4 resolutions." Superseded as design authority (by the plane, `docs/development/DECISIONS.md`, and DEC-72 for the case section); complete as the reasoning record. Read it for WHY; several body sentences are now false as written (below). **One of them was CORRECTED IN PLACE 2026-09-17 (REC-117) rather than left to the list — *the falsifier is REQUIRED* in §What a CLAIM is, which Bob overruled the same day; a non-authoritative reasoning record may carry stale sentences, but a sentence that states the OPPOSITE of a live ruling misleads a reader about what was decided, and it was load-bearing in an argument.** as of 2026-09-17.
 
 **Place in the system** · The reasoning behind construct 8 of `BIO_System_Design.md` §3 (intent and inquiry): "CASE-MAKING is undesigned, and it is what the whole system is for" (D-127). Its rulings feed M9 and M10; `BIO_Interaction_Constructs_v0_1.md` takes FINDING as case-making's substrate from it; the thread itself is paused behind DEC-33 until Bob reopens it.
 
 **Incomplete sections** ·
 - §Naming: three names for three phases, and the type name question — DEC-72 rules a case is a PRODUCTION of a project, not a phase; the open → concluded → published states are superseded.
 - §Division: one inquiry becomes two or more — items 3 and 5 were written for case-as-phase; re-read under DEC-72.
-- §What a CLAIM is, and why it is a field rather than an object — "`inquiry_basis` does not exist in the schema" is false; "Awaiting Bob" and "DEC-32 remains open" are stale (decided 2026-08-04); the contradiction question is open.
+- §What a CLAIM is, and why it is a field rather than an object — "`inquiry_basis` does not exist in the schema" is false; "Awaiting Bob" and "DEC-32 remains open" are stale (decided 2026-08-04); the contradiction question is open. **The threshold argument's SECOND LEG was CORRECTED 2026-09-17 (REC-117) and the section is current on it:** *the falsifier is REQUIRED* was overruled by Bob — `NO_FALSIFIER` is a condition a member may override, stated and attributed, including in the published record — so the leg is REPLACED by *the falsifier is ACCOUNTED FOR* rather than struck, because it was one of three carrying the argument and striking it would have left an argument that no longer closes with nothing saying so. Shipped in the plane (`op=conclude` `no_falsifier=1`, `falsifier_override_by`/`_at`, C-2.8's three outcomes, `op=publishedcase`'s `authored.falsifier_override`).
 - §THE ACTION PLAN — "not yet in the review document"; S11's backward question (D-165) deferred; DEC-25 deferred with its provisional; "Ten surfaces are specified today" is dated.
 - §CONTRADICTION — Q14 ANSWERED 2026-09-17 in doctrine and in two of its three cases; the IRRECONCILABLE PAIR is NOT designed and needs the claim object, which is Bob's. IDENTIFY / PRESENT / RESOLVE are specified as separable mechanisms and NONE is built; the acceptance test for IDENTIFY is its over-strictness arm.
 - §R1 — the residual laundering hazard is D-159, open · WATCH.
@@ -588,9 +588,48 @@ and each was a candidate reading that fails:
   property of the evidence but of what you intend to do with it** — enough to publish a question
   is not enough to refer to a prosecutor — so a threshold in the object would have to pick one
   purpose and impose it on every other. What discharges the need for one is already built into
-  the design: strength is DERIVED and names its weakest legs; the falsifier is REQUIRED; and
-  DEC-15's project-declared required strength lets a GROUP declare its own standard, published
-  beside what was actually reached. A declaration, not a gate.
+  the design: strength is DERIVED and names its weakest legs; **the falsifier is ACCOUNTED FOR —
+  stated, or its absence stated, attributed and published**; and DEC-15's project-declared
+  required strength lets a GROUP declare its own standard, published beside what was actually
+  reached. A declaration, not a gate.
+
+  > **CORRECTED 2026-09-17 (REC-117), AND THE SECOND LEG IS REPLACED RATHER THAN STRUCK.** Bob,
+  > ruling on `NO_FALSIFIER`: *"NO_FALSIFIER is a condition that should be surfaced. But I think
+  > it should also be something a member can override either temporarily or in the published
+  > record."* The clause read **the falsifier is REQUIRED**, and it was LOAD-BEARING: it is one
+  > of THREE things offered as together discharging the need for a sufficiency threshold in the
+  > claim object. **Deleting it would have left an argument that no longer closes and nothing
+  > saying so** — a design going quietly incoherent, which no gate in this repository would
+  > catch. So it is replaced, and what now discharges the need in its place is **the same move
+  > the other two legs already make: a DECLARATION.** `op=conclude` no longer refuses a finding
+  > whose falsifier is unstated; it refuses one whose falsifier is unstated AND UNACCOUNTED FOR.
+  > A member may conclude with no falsifier by SAYING SO, and the record then carries *no
+  > falsifier stated* as a first-class value — never blank, never inferred from an empty field —
+  > naming who accepted the absence and when, on every surface the finding appears on and inside
+  > the signed bytes of the published case.
+  >
+  > **Why that is not a weakening of the argument, and is arguably the stronger form.** A
+  > REQUIREMENT discharged the threshold by making every conclusion checkable. But a gate that
+  > will not let a member past without a falsifier **PRESSURES THEM INTO INVENTING ONE**, and an
+  > invented falsifier is a conclusion that LOOKS checkable and is not — the record claiming more
+  > than it can support, by the shorter route and with no trace. That is the same reasoning that
+  > moved the publication fence off the content axis onto the provenance chain; it is why
+  > undetermined is first-class and must be STATED; and it is DEC-69 (a gate may not compel a
+  > member) read at this altitude. **A reader of a concluded finding therefore learns exactly
+  > what they learned before** — what would overturn this, or that nobody has said what would,
+  > and who decided that was acceptable — **and the second answer is now TRUE where it used to be
+  > unobtainable.** All three legs are now declarations, which is what the paragraph's own last
+  > sentence has claimed since it was written.
+  >
+  > **What this does NOT do, stated so the next reader does not have to test it.** It does not
+  > touch the claim object, the collapse, or DEC-32's falsifier-COUNT test — *one proposition,
+  > one falsifier* is a rule about what a finding IS, and a finding whose one falsifier is
+  > recorded as unstated still has exactly one. It does not make the condition invisible: the
+  > refusal still fires for every caller that does not explicitly ask for the override, which is
+  > the SURFACING half of Bob's ruling and is asserted in the direction that fails. And it admits
+  > exactly one wrong answer — **a SILENT override**. An override missing its member or its date
+  > is refused by C-2.8 in its own right, because a record that has stopped requiring a falsifier
+  > without saying who decided that is worse than one that never asked.
 - **A conclusion does not silently revert when its evidence weakens.** Strength genuinely can
   fall — a grade regraded down, a leg severed, a capture that proves to be archival rather than
   direct. When it does, DEC-16 already makes that an EVENT propagating to every ancestor, and
