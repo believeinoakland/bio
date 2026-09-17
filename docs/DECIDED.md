@@ -1298,6 +1298,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:879`
 - **M0-42** · 2026-09-16 — THE LIMIT IS DRIVEN RATHER THAN CONCEDED IN PROSE — arm 9 drives the FORGERY SUCCEEDING, declared to succeed, its red being the finding**, because a limit conceded and never driven is how an instrument gets believed past its reach; it is printed FIRST beside the figure and pinned by an assertion so a later editor…  
   `docs/development/QUEUE.md:859`
+- **M0-51** · 2026-09-17 — THE ROW'S OWN SCOPE FIGURE IS STALE AND IS CORRECTED HERE RATHER THAN LEFT FOR THE WORKER TO TRIP ON.** The row says TWELVE `*.control.mjs` files have no same-named `.test.mjs` sibling.  
+  `docs/development/QUEUE.md:889`
 
 ## Rulings carrying no id
 
