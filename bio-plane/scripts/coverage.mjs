@@ -1068,9 +1068,25 @@ const REGISTER_FLOOR = {
      caught only by running `countArms` against both versions (D-233's shape, inside the
      instrument that reports the floor).
      ONE KEY SET, grepped after writing: `^  arms:` matches twice, here and FLEET_FLOOR (76). */
-  arms: 1119,
-  classified: 200,
-  corpus: 201,
+  /* MOVED 1119 -> 1129 · 200 -> 201 · 201 -> 202 by CONDUCT #1, 2026-09-16, at M0-48's and
+     M0-40's merge — the LAST integration of this wave — from THE MERGED TREE'S OWN
+     POST-COMMIT `--strict` PRINT: `arms 1129/1119 · classified 201/200 · corpus 202/201 ·
+     GREW by 10 arm(s)`.
+     SEVEN FLOOR COLLISIONS IN ONE WAVE, AND NOT ONCE WAS EITHER INPUT TRUE OF THE MERGE:
+     1094-vs-1093 -> 1100 · 1097-vs-1100 -> 1104 · 1109-vs-1104 -> 1109 (equal, checked
+     anyway) · 1098-vs-1109 -> 1114 · 1114-vs-1114 -> 1119 (EQUAL AND NOT THE SAME CLAIM,
+     reached by different arms) · 1108-vs-1119 · 1111-vs-1119 -> 1129. Every branch figure was
+     correct where it was taken. The merged print is the only figure ever true of the merged
+     tree (D-238), and the fifth case is the one that proves the rule cannot be relaxed: two
+     branches printed the SAME NUMBER and the merged truth was neither.
+     AND M0-48 MEASURED WHY A DELTA CANNOT BE ADDED EITHER: a method cannot join the bounds
+     class without also gaining an unbounded row source, so a class-count-neutral swap
+     necessarily moves the census by one — the two ratchets in that file cannot move
+     independently. Arithmetic on these figures is wrong in more ways than one.
+     ONE KEY SET, grepped after writing: `^  arms:` matches twice, here and FLEET_FLOOR (76). */
+  arms: 1129,
+  classified: 201,
+  corpus: 202,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
