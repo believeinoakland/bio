@@ -8697,3 +8697,69 @@ added keys, and compares the RAW WIRE TEXT at the plane's own indent: **3,236 by
 carries its own positive control — the UNSTRIPPED answers must DIFFER, so two copies of one
 tree cannot agree for free.
 
+---
+
+## IC-115 · I3: `op=meaningrows`'s `scope.documents` STOPS COLLAPSING TO 0 — the `levels` statement now counts the query's OTHER arms, as `axis` already did and as its own comment always claimed · PROPOSED 2026-09-17 (REC-115, discharging UI-62's delegation and `CONTENT-SEARCH-DESIGN.md` §4.4's Incomplete bullet) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI), **19.0.0 STABLE** — the version READ OFF THE TREE this item was
+  built on (`10574da9`), not off the row. The row anticipated 18.x and it had moved.
+- **Proposer:** the REC-115 worker, 2026-09-17
+- **Owner to land it:** `RECORD` (I3's owner)
+- **Consumers to answer:** `UI` — the only live consumer of this op's `scope` block, through
+  `civicos-ui`'s finder passage route, which UI-62 shipped the same day.
+
+### The change
+
+No field is added, removed or renamed. **The SHAPE does not move at all; three published VALUES
+become correct.** On `op=meaningrows`, `scope.documents`, `scope.documents_with_rows` and
+`scope.documents_without_rows` — and the `says` sentence composed from them — are now taken over
+the query with the ROW'S OWN ARM STRIPPED (`cte(false, armSet(rowArm))`), which is
+`CONTENT-SEARCH-DESIGN.md` §4.4's *the query's OTHER arms* and what the statement's own comment
+already claimed. Before, they were taken over the FULL query, this arm included.
+
+`mode:"axis"`, `mode:"rows"` and `mode:"count"` are **BYTE-IDENTICAL**, measured over a 13-query
+battery comparing `sql` AND `args` from the pristine and corrected modules side by side in one
+process (`MEASUREMENTS.md` M-44, 13 of 13 per mode). This item corrects one statement.
+
+### Why, and why it is a CORRECTION rather than a break
+
+The arm SELECTS the documents that hold a matching row, so on a MISS the scope was empty by
+construction and `scope.documents` read **0 over a scope that genuinely held documents.** Because
+`Store.#meaningLevels` tests `documents === 0` BEFORE `searchable === 0`, the two honest branches
+of `says` were **unreachable by any passage miss at all**: a member who had searched two documents,
+one of them fully indexed, was told *"nothing matched, and no document was in scope to match in"*
+while the SAME envelope's `captures_counted` said 2. **That is a record-claims-more-than-it-can-
+support defect on the live member path** — the surface tells a member something false about what
+was searched — and `CLAUDE.md` weighs that class heaviest.
+
+**CLASSIFICATION, AND THE ALTERNATIVE READING IS STATED RATHER THAN QUIETLY DISMISSED.** Proposed
+**MINOR (19.0.0 → 19.1.0)**. No field moves, nothing is removed, and **no refusal exists where none
+stood before**, which is the test IC-25 fixes for breaking. Every value that changes moves from a
+FALSE figure to a true one, and a consumer reading `scope.documents` as *how many documents were in
+scope* gets what it always asked for. **The reading under which someone could argue MAJOR, named
+because a proposer who can see the impact is zero is exactly the one IC-25 distrusts:** a consumer
+that had learned to treat `documents === 0` as *this was a miss* now sees a non-zero on a miss, so
+a behaviour some consumer might depend on does change. **I do not take that reading, and the
+reason is that the behaviour in question is the DEFECT** — depending on it means depending on the
+record's false statement, and versioning a correction as a break would put a wrong number and a
+right one on equal footing in the registry. **CONDUCT takes the bump and may overrule; IC-112 of
+this same wave is the precedent for the proposer routing the judgement rather than assuming its
+own classification is the last word.**
+
+### Consumer impact, MEASURED and not estimated
+
+`UI` is the only live consumer. **Measured on this tree: `node civicos-ui/test/run.mjs` needs NO
+rendering change.** The surface already rendered the plane's `says` VERBATIM (DEC-8) and the tally
+BESIDE it, so a corrected number flows through unchanged — which is UI-62's refusal to work around
+the defect paying off exactly as intended. The one edit in `civicos-ui/**` is to that item's own
+suite: its `REPORT ·` block, which PRINTED the collapse and passed either way, is now an
+ASSERTION, so the collapse cannot return silently at the surface a member reads the sentence on.
+`passage-surface.test.mjs` goes 99 → 100 assertions, all green.
+
+**AND THE CHANGE REACHES MORE ARMS THAN THE DELEGATION CLAIMED, which is why this is an I3 entry
+and not a footnote.** UI-62's delegation and M-43 both said only the `passage` arm was driven and
+explicitly did not claim the others. **M-44 measured them: `content:`, `leg:`, `resolves:` and
+`concerns:` all carried the same defect.** Their `scope` figures change too. The member-facing
+consequence was invisible there only because their misses do not compose a sentence a member reads
+— but their published `documents_with_rows` was a TAUTOLOGY (equal to `documents` by construction)
+and is now a measurement.

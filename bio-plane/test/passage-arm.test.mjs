@@ -1,4 +1,5 @@
-/* NEGATIVE CONTROL: SIX arms and a baseline live in `test/nc-rec92.mjs` and are re-run in one step with `node test/nc-rec92.mjs [arm|all]` from `bio-plane/` (the driver lives INSIDE this worktree). Each arm EDITS A REAL SOURCE, is armed ALONE with every other defence held open, is DECLARED must-fail or must-not-fail BEFORE it ran, passes an anchor-occurs-EXACTLY-ONCE guard and a bytes-really-changed guard, and every restore is verified by sha256 AND by content (`cmp`) against a PRISTINE copy named UNIQUELY PER ARM with a byte count printed and a minimum guarded — never `git checkout --`, which restores to HEAD and has twice discarded a session's own uncommitted work. An opening AND a closing BASELINE row bracket the run, because a harness that reported the same answer for every arm INCLUDING the baseline is on record in this repository, and without a baseline row six reds read exactly like six arms working. FIVE ARMS AND A BASELINE, every one RUN, and the DECLARED-vs-ACTUAL comparison is in `nc-rec92.mjs` beside each arm. THREE WERE EXACTLY AS DECLARED and TWO DECLARATIONS WERE WRONG AND ARE CORRECTED THERE RATHER THAN SMOOTHED. (a) `baseline` — nothing armed; green at BOTH ends, 79 pass / 0 fail. (b) `withhold` — the passage row projection takes `1=1` in place of the compiled viewer predicate, conditioned on `fts` so the four row arms this item did not write keep theirs: §8's *a `passage:` hit inside a project the viewer is not in is withheld whole*. ACTUAL 34 assertions including S41-S410 and S61-S611, with ALL of S9* standing — `content:`, `leg:` and the no-term passage path keep their gate, which is the discriminator. Its FIRST run reported only 3 failures because THE SUITE DIED at section 4 and sections 5-9 never ran; the row accesses were hardened so a destructive arm can no longer look like a precise one. (c) `nomatch` — the ROW shape's MATCH removed while the ARM keeps its own. ACTUAL S42 S44. IT FOUND A REAL DEFECT IN THIS ITEM'S CODE: `matched` and the row builder's `fts` were two spellings of one fact, so the envelope announced `matched: true` over rows that had not been matched; collapsed to one predicate (`passageOn`). (d) `tallyhardcoded` — `#contentAxisTally` returns a fixed state instead of calling `contentAxisFor`: §8's *the tally hard-coded → the observation-log arm catches it*. ACTUAL S69 S610, exactly as declared, and S61-S66 STOOD — a shape-only assertion cannot see this defect, which is why S69/S610 are named separately. (e) `foldundetermined` — the fifth bucket dropped from the tally's keys. ACTUAL S63 S66 S611, exactly as declared, and DECLARED STRUCTURAL-ONLY BEFORE RUNNING because this fixture can hold no undetermined capture (see S611). (f) `foldnever` — `not_extracted` folded into `indexed_none`, turning *nobody looked* into *we looked and found nothing*. ACTUAL S610 ALONE, exactly as declared, and S66 STOOD: the arm MOVES a row between buckets rather than losing one, so the sum is blind to it. OVER-STRICTNESS is section S9 and is HELD OPEN under every arm above rather than armed on its own — six correct spellings this implementation was not written around, all of which must keep passing. Declared before arming, and every one RUN; results in this file's own RESULTS line and in the item's report. */
+/* NEGATIVE CONTROL: SIX arms and a baseline live in `test/nc-rec92.mjs` and are re-run in one step with `node test/nc-rec92.mjs [arm|all]` from `bio-plane/` (the driver lives INSIDE this worktree). Each arm EDITS A REAL SOURCE, is armed ALONE with every other defence held open, is DECLARED must-fail or must-not-fail BEFORE it ran, passes an anchor-occurs-EXACTLY-ONCE guard and a bytes-really-changed guard, and every restore is verified by sha256 AND by content (`cmp`) against a PRISTINE copy named UNIQUELY PER ARM with a byte count printed and a minimum guarded — never `git checkout --`, which restores to HEAD and has twice discarded a session's own uncommitted work. An opening AND a closing BASELINE row bracket the run, because a harness that reported the same answer for every arm INCLUDING the baseline is on record in this repository, and without a baseline row six reds read exactly like six arms working. FIVE ARMS AND A BASELINE, every one RUN, and the DECLARED-vs-ACTUAL comparison is in `nc-rec92.mjs` beside each arm. THREE WERE EXACTLY AS DECLARED and TWO DECLARATIONS WERE WRONG AND ARE CORRECTED THERE RATHER THAN SMOOTHED. (a) `baseline` — nothing armed; green at BOTH ends, 79 pass / 0 fail. (b) `withhold` — the passage row projection takes `1=1` in place of the compiled viewer predicate, conditioned on `fts` so the four row arms this item did not write keep theirs: §8's *a `passage:` hit inside a project the viewer is not in is withheld whole*. ACTUAL 34 assertions including S41-S410 and S61-S611, with ALL of S9* standing — `content:`, `leg:` and the no-term passage path keep their gate, which is the discriminator. Its FIRST run reported only 3 failures because THE SUITE DIED at section 4 and sections 5-9 never ran; the row accesses were hardened so a destructive arm can no longer look like a precise one. (c) `nomatch` — the ROW shape's MATCH removed while the ARM keeps its own. ACTUAL S42 S44. IT FOUND A REAL DEFECT IN THIS ITEM'S CODE: `matched` and the row builder's `fts` were two spellings of one fact, so the envelope announced `matched: true` over rows that had not been matched; collapsed to one predicate (`passageOn`). (d) `tallyhardcoded` — `#contentAxisTally` returns a fixed state instead of calling `contentAxisFor`: §8's *the tally hard-coded → the observation-log arm catches it*. ACTUAL S69 S610, exactly as declared, and S61-S66 STOOD — a shape-only assertion cannot see this defect, which is why S69/S610 are named separately. (e) `foldundetermined` — the fifth bucket dropped from the tally's keys. ACTUAL S63 S66 S611, exactly as declared, and DECLARED STRUCTURAL-ONLY BEFORE RUNNING because this fixture can hold no undetermined capture (see S611). (f) `foldnever` — `not_extracted` folded into `indexed_none`, turning *nobody looked* into *we looked and found nothing*. ACTUAL S610 ALONE, exactly as declared, and S66 STOOD: the arm MOVES a row between buckets rather than losing one, so the sum is blind to it. OVER-STRICTNESS is section S9 and is HELD OPEN under every arm above rather than armed on its own — six correct spellings this implementation was not written around, all of which must keep passing. Declared before arming, and every one RUN; results in this file's own RESULTS line and in the item's report.
+   REC-115 ADDS SECTION S10 AND ITS OWN DRIVER: TWO arms and a bracketing baseline live in `test/nc-rec115.mjs`, re-run in one step with `node test/nc-rec115.mjs [arm|all]` from `bio-plane/`. It keeps every guard above and adds two: an arm may carry MORE THAN ONE EDIT, and it drives TWO SUITES — this one AND `civicos-ui/test/passage-surface.test.mjs`, because the surface is where a member actually reads the sentence and REC-115 turned UI-62's REPORT there into an ASSERTION. Baseline green at BOTH ends: 92 pass / 0 fail here, 100 pass / 0 fail at the surface. (a) `levelsunstripped` — THE FIX REVERTED, one variable, one edit: `meaning({mode:"levels"})` builds its scope from the FULL query again instead of `armSet(rowArm)`, which is the defect exactly as it shipped. ACTUAL **EXACTLY AS DECLARED**: 82 pass / 10 fail, failing S102 S103 S104 S105 S106 S107 S109 S1010 S1012 S1013 — **naming BOTH halves, which is the requirement: the COLLAPSED FIGURE (S102, S103) AND the BRANCHES THAT BECOME UNREACHABLE (S104/S105 and S106)**, because a failure naming only one is one a reader cannot act on. The surface went red with it (99 pass / 1 fail). S108 — THE TRUE ZERO SURVIVES — STAYED GREEN, and so did S101, S1011 and every assertion of S1-S9, which is what shows the `axis`, `rows` and `count` statements were not moved by this item. (b) `liar` — TWO EDITS ON PURPOSE, and it is not a test of this implementation: it stages the CHEAPEST GREEN named in the row (the fix reverted AND `says` blinded to `documents`), which reaches the branches and silences the sentence assertions while leaving the scope FIGURE wrong for every other reader of the envelope. ACTUAL 84 pass / 8 fail, failing S85 S102 S103 S106 S108 S1010 S1012 S1013. **TWO DECLARATIONS WERE WRONG AND ARE CORRECTED HERE RATHER THAN SMOOTHED.** (i) S106 was declared to PASS under this arm and it FAILED — because S106 asserts `blind.scope.documents >= 1` as well as the sentence, so it pins the FIGURE too and the liar cannot buy it; the assertion is stronger than its author thought. (ii) S108 was declared held open and it FAILED — correctly, and this is the over-strictness arm catching the liar rather than the liar breaking it: blinding `says` does not merely leave the false zero wrong, it DESTROYS THE TRUE ZERO'S OWN SENTENCE, which is the thing this row must not remove. A third result was undeclared and is the useful one: **S85 — REC-92's own pre-existing assertion — failed too, an independent witness this item did not write.** THE FINDING THAT MATTERS MOST FROM ARM (b): **the SURFACE stayed GREEN under it (100 pass / 0 fail)**, because its assertion counts DISTINCT sentences and the liar still mints four. So the surface assertion alone would NOT have caught the cheapest green — the plane's S102/S103, which assert the NUMBER against an independently-derived count and against `captures_counted`, are what do. That is why S10 does not rest on prose. */
 /* WHAT THIS SUITE IS FOR — REC-92, `CONTENT-SEARCH-DESIGN.md` §7 row 5.
  *
  * §4.2's `passage:` arm and `rows=passage`: the text index made askable. Six
@@ -652,6 +653,146 @@ section("S9", "over-strictness: six correct spellings that MUST still work");
     chainPlan.statements.meaning({ mode: "count" }).sql.includes("chain_kind ="), false);
   t("...and the schema still declares exactly ONE index on `capture_text`, by bundle",
     (SCHEMA_SRC.match(/CREATE INDEX IF NOT EXISTS capture_text_\w+/g) || []).length, 1);
+}
+
+/* ==================================================================== 10
+ * REC-115 / IC-115 — THE `levels` SCOPE IS THE QUERY'S *OTHER* ARMS, AND THE
+ * TWO BRANCHES OF `says` THAT NO PASSAGE MISS COULD EVER REACH ARE DRIVEN.
+ *
+ * WHAT WAS WRONG, stated as the defect and not as the fix. `meaning({mode:
+ * "levels"})` built its scope from the FULL query, this arm included, while its
+ * own comment promised *how many documents the query's other arms put in scope
+ * at all*. The arm selects the documents that HOLD a matching row, so on a MISS
+ * the scope was empty by construction and `scope.documents` collapsed to 0 —
+ * and since `Store.#meaningLevels` tests `documents === 0` BEFORE
+ * `searchable === 0`, the first branch won every time and the two honest
+ * branches below it were UNREACHABLE BY ANY PASSAGE MISS AT ALL. Measured
+ * against the live plane by UI-62 (`MEASUREMENTS.md` M-43) and re-measured here
+ * (M-44): a member who searched two documents, one of them fully indexed, was
+ * told NO DOCUMENT WAS IN SCOPE.
+ *
+ * WHY S8 DID NOT CATCH IT, recorded because the gap is the interesting part and
+ * the delegation asked for exactly these two assertions. S8 asserts
+ * `levels.content.why`, which is composed from the TALLY and was therefore
+ * already correct, and it never compared the empties' `says` TO EACH OTHER nor
+ * asked `scope.documents` to agree with `captures_counted` about the same
+ * scope. Both are asserted below.
+ *
+ * HOW A LIAR WOULD SATISFY THIS SECTION, stated before what it checks. The
+ * cheapest green is to make `says` stop testing `documents` at all: that
+ * reaches both branches and silences every sentence assertion while leaving the
+ * scope FIGURE wrong for every other reader of the envelope — the surface's own
+ * denominator among them. So S10 does NOT assert sentences alone. It asserts
+ * the NUMBER (`scope.documents`) against an independently-derived count, and it
+ * asserts the number AGREES with `captures_counted`, which is minted by the
+ * OTHER statement over the same scope — a figure this statement cannot move.
+ * A `says` divorced from `documents` fails S104 and S105 on the numbers while
+ * every sentence still reads fine.
+ * ================================================================== */
+section("S10", "REC-115: the levels scope is the OTHER arms, and both honest branches are REACHED");
+{
+  /* A SCOPE OF EXACTLY TWO DOCUMENTS, ONE FULLY INDEXED AND SEARCHED AND ONE
+     NEVER READ — M-43's shape, staged here rather than inherited. The two share
+     the token `scopeprobe` in their ids, which is what lets one non-text arm
+     (`text:`) select exactly this pair and nothing else in the corpus. */
+  const SHA_SCOPE = sha("scope-probe-read");
+  await promote("INFO-2026-9205-scopeprobe-read",
+    { document: pdfDocOf(SHA_SCOPE, ["a page about culverts and drainage easements"]) });
+  await promote("INFO-2026-9206-scopeprobe-unread", { registerOnly: sha("scope-probe-unread") });
+
+  /* THE MISS. A term that is in neither document, over a scope the OTHER arm
+     puts two documents in. Driven END TO END through `op=meaningrows&rows=
+     passage` and never asserted at the store, because `op=invitelook` shipped
+     with a ReferenceError while 1,276 assertions passed. */
+  const miss = await rows(`rows=passage&q=${encodeURIComponent(
+    "passage:zzzznotaword text:scopeprobe")}`);
+  /* THE INDEPENDENT COUNT: the same non-text arm at BUNDLE grain through
+     op=search, which does not go anywhere near `meaning()`. Deriving the
+     expected 2 from the envelope itself would be the equality that costs
+     nothing to produce. */
+  const scopeIds = await ids("text:scopeprobe");
+
+  t("S10 fixture: the other arm really does put exactly two documents in scope, "
+    + "counted at BUNDLE grain through a different op",
+    scopeIds.length, 2);
+  t("THE FALSE ZERO IS GONE: a passage MISS over that scope counts the documents the "
+    + "OTHER arms put in scope, rather than collapsing to the arm's own empty result",
+    [miss.total, miss.scope.documents], [0, scopeIds.length]);
+  /* THE ASSERTION THE DELEGATION NAMED, and the one a liar cannot dodge: the
+     two halves of ONE envelope must mean the same thing by *in scope*. The
+     tally is minted by the `axis` statement, which this item did not move. */
+  t("...and `scope.documents` AGREES WITH `captures_counted` about that same scope — "
+    + "the two halves of one envelope no longer mean different things by *in scope*",
+    miss.scope.documents, miss.scope.captures_counted);
+  /* BRANCH ONE OF THE TWO THAT WERE UNREACHABLE: searched, something WAS
+     searchable, nothing matched. */
+  t("BRANCH REACHED (1/2) — the honest final branch: the answer names how many captures "
+    + "were searchable and says the absence covers only the part of the record that was read",
+    [/no document was in scope/.test(miss.says), /searchable capture\(s\) in scope/.test(miss.says)],
+    [false, true]);
+  t("...and it names the UNREAD remainder rather than letting the searched part speak for the whole",
+    /have not been read at passage grain/.test(miss.says), true);
+
+  /* BRANCH TWO: documents ARE in scope and NOT ONE of them was searchable. Only
+     the never-read bundle, selected by its own token. */
+  const blind = await rows(`rows=passage&q=${encodeURIComponent(
+    "passage:zzzznotaword text:9206")}`);
+  t("BRANCH REACHED (2/2) — NOTHING IN SCOPE WAS SEARCHABLE: a document IS in scope and "
+    + "not one capture of it has been read, and the answer says the next move is to READ them",
+    [blind.scope.documents >= 1, /NOTHING IN SCOPE WAS SEARCHABLE/.test(blind.says),
+     /next\s+move is to read them/.test(blind.says)],
+    [true, true, true]);
+  t("...and that is a DIFFERENT sentence from the searched-and-empty one, which is the whole "
+    + "point: three different empties, three different next moves",
+    blind.says === miss.says, false);
+
+  /* OVER-STRICTNESS, AND IT IS THE HALF THAT MATTERS MOST: this item narrows a
+     FALSE zero and must not remove the TRUE one. A query whose OTHER arms
+     select no document at all must STILL report `documents: 0` and must STILL
+     publish the empty-DOCUMENT-level sentence. Without this arm the cheapest
+     way to pass everything above is to stop counting zero at all. */
+  const trueZero = await rows(`rows=passage&q=${encodeURIComponent(
+    "passage:zzzznotaword type:nosuchtype")}`);
+  t("THE TRUE ZERO SURVIVES: a scope whose other arms select NO document still reports "
+    + "`documents: 0` and still says so — this narrows a false zero and does not remove the true one",
+    [trueZero.scope.documents, /empty DOCUMENT level/.test(trueZero.says)], [0, true]);
+
+  /* THE THREE EMPTIES, DISTINGUISHABLE BY `says` ALONE — the second assertion
+     the delegation named, and the one `civicos-ui/test/passage-surface.test.mjs`
+     was reduced to REPORTING rather than asserting. */
+  t("THE THREE EMPTIES ARE DISTINGUISHABLE BY `says` ALONE, which is what the surface "
+    + "renders verbatim and what UI-62's suite could only REPORT on before this item",
+    new Set([miss.says, blind.says, trueZero.says]).size, 3);
+
+  /* THE EQUALITY THAT COST NOTHING, NOW A MEASUREMENT. Against the unstripped
+     scope every document in scope held a matching row by construction, so
+     `documents_with_rows === documents` always and the second count was
+     evidence of nothing. On a HIT over a wider scope the two must now differ. */
+  const hit = await rows(`rows=passage&q=${encodeURIComponent(
+    `passage:${ONLY_IN_PAGE} type:information`)}`);
+  t("`documents_with_rows` is a MEASUREMENT rather than a tautology now: on a hit over the "
+    + "whole corpus it is SMALLER than the documents in scope, which it could never be before",
+    [hit.total >= 1, hit.scope.documents_with_rows < hit.scope.documents], [true, true]);
+  t("...and the three document counts still agree with each other arithmetically",
+    hit.scope.documents_without_rows,
+    hit.scope.documents - hit.scope.documents_with_rows);
+
+  /* THE PLAN-LEVEL TRIPWIRE, the twin of S2's assertion for the `axis`
+     statement. If a later edit puts this arm's own text filter back into the
+     `levels` scope, this fails at COMPILE time and names the cause, rather than
+     surfacing four hundred lines away as a member reading a false absence. */
+  const lp = compile({ q: "passage:water type:information", viewer: "member:MEM-1", rows: "passage" });
+  t("section 4.4's *OTHER arms* now binds the `levels` statement too: its scope does NOT "
+    + "carry this arm's own text filter, while a NON-text arm of the same query DOES survive",
+    [lp.statements.meaning({ mode: "levels" }).sql.includes("capture_text_fts MATCH"),
+     lp.statements.meaning({ mode: "levels" }).sql.includes("object_type = ?")],
+    [false, true]);
+  /* AND `axis` IS UNTOUCHED, BYTE FOR BYTE. This row corrects `levels` and moves
+     nothing else, so the statement REC-92 shipped must compile identically. */
+  t("...and the `axis` statement is byte-identical to the `levels` one in the scope it builds — "
+    + "the two now agree by CONSTRUCTION and not by two authors happening to write the same thing",
+    lp.statements.meaning({ mode: "levels" }).sql.split("\nSELECT")[0],
+    lp.statements.meaning({ mode: "axis" }).sql.split("\nSELECT")[0]);
 }
 
 } catch (e) {

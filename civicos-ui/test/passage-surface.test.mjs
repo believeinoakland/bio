@@ -462,50 +462,44 @@ const P_NODOCS  = U.finderPassagePanelHtml(A_NODOCS);
     says.map((s) => s.slice(0, 80)).join("\n         "));
 
   /* ====================================================================
-     A MEASURED FINDING ABOUT THE PLANE, REPORTED AND NOT FAILED — the
-     `preauth-vocabulary.test.mjs` precedent for a tension this surface
-     cannot resolve and must not paper over.
+     THIS WAS A REPORT AND IT IS NOW AN ASSERTION — CLOSED BY REC-115 /
+     IC-115 ON 2026-09-17, AND THE HISTORY IS KEPT BECAUSE IT IS THE PART
+     THAT TRANSFERS.
 
-     `says` COLLAPSES TO ONE SENTENCE FOR ALL THREE EMPTIES, and it is the
-     WRONG one. Measured here against the live plane: an empty passage answer
-     over a scope holding two indexed documents publishes *"nothing matched,
-     and no document was in scope to match in — this is an empty DOCUMENT
-     level, not an empty record"*. Two documents WERE in scope; the same
-     envelope's own `captures_counted` says 2.
+     WHAT UI-62 MEASURED HERE AND COULD NOT FIX. `says` COLLAPSED TO ONE
+     SENTENCE FOR ALL THREE EMPTIES, and it was the WRONG one: an empty
+     passage answer over a scope holding two indexed documents published
+     *"nothing matched, and no document was in scope to match in — this is an
+     empty DOCUMENT level, not an empty record"*, while the SAME envelope's
+     `captures_counted` said 2. The cause, read in `query.mjs` rather than
+     inferred: `meaning({mode:"axis"})` built its scope from `cte(false,
+     armSet(rowArm))` — §4.4's *other arms*, this arm STRIPPED — and
+     `meaning({mode:"levels"})`, four hundred lines up, used the ORDINARY cte
+     with the arm still applied, while its own comment claimed otherwise. So
+     the two halves of one envelope meant different things by *in scope* and
+     the half feeding the member-facing sentence was the wrong one; and since
+     `#meaningLevels` tests `documents === 0` BEFORE `searchable === 0`, the
+     two honest branches below it were UNREACHABLE by any passage miss.
 
-     THE CAUSE, read in `query.mjs` rather than inferred. `meaning({mode:
-     "axis"})` builds its scope from `cte(false, armSet(rowArm))` — §4.4's
-     *other arms*, with the passage arm STRIPPED. `meaning({mode:"levels"})`,
-     four hundred lines up, uses the ORDINARY cte with the arm still applied,
-     while its own comment says it counts "how many documents the query's
-     other arms put in scope at all". So the two halves of one envelope mean
-     different things by *in scope*, and the half that feeds the member-facing
-     sentence is the wrong one.
+     WHY IT WAS A REPORT: `bio-plane/**` was not UI-62's ground, DEC-8 forbids
+     this surface rewording the record's sentence, and a red here would have
+     been that item failing for a defect it was not permitted to fix. It was
+     DELEGATED to RECORD in `CLAIMS.md`, rowed as REC-115, and REC-115 brought
+     the `levels` statement to its stated contract.
 
-     THE CONSEQUENCE IS THE FALSE ABSENCE THIS WHOLE CONSTRUCT EXISTS TO
-     REFUSE. `#meaningLevels` tests `documents === 0` BEFORE `searchable ===
-     0`, so for ANY passage miss the first branch wins and the two honest
-     branches below it are UNREACHABLE. A member who searched two fully
-     indexed documents is told the record is empty and to go capture
-     something.
-
-     WHY THIS SUITE REPORTS RATHER THAN FAILS: `bio-plane/**` is not this
-     item's ground, DEC-8 forbids this surface rewording the sentence, and a
-     red here would be this item failing for a defect it may not fix. It is a
-     DELEGATION to RECORD, and the assertions below pin what the SURFACE owes
-     — that the distinction survives in the tally, which is rendered beside
-     the sentence, so a member is not left with the sentence alone.
+     **SO THE `if` IS GONE AND THE NUMBER IS ASSERTED.** The REPORT form could
+     only ever print; it passed whether the plane minted four sentences or
+     one, which is precisely why the defect survived REC-92's suite as well.
+     Now a regression in `query.mjs` turns THIS suite red at the surface that
+     renders the sentence — which is the right place for it to be caught a
+     second time, because the surface is where a member reads it. The suite is
+     CORRECTED rather than exempted, and the count is asserted BY NUMBER
+     rather than by matching prose: a plane that reworded every sentence would
+     still owe four distinct ones.
      ==================================================================== */
-  const distinctSays = new Set(says).size;
-  console.log(`  REPORT · the plane minted ${distinctSays} distinct \`says\` sentence(s) for 4 genuinely different cases.`);
-  if (distinctSays < 4) {
-    console.log(`  REPORT · THE THREE EMPTIES COLLAPSE. miss / nothing-searchable / no-documents all publish:`);
-    console.log(`           "${A_MISS.env.says}"`);
-    console.log(`           …while their own tallies differ: captures_counted = `
-      + `${A_MISS.env.scope.captures_counted} / ${A_NOTHING.env.scope.captures_counted} / ${A_NODOCS.env.scope.captures_counted}.`);
-    console.log(`  REPORT · CAUSE: query.mjs \`mode==="levels"\` does not strip the row arm from its scope CTE, though`);
-    console.log(`           \`mode==="axis"\` does and the levels comment says it does. DELEGATED to RECORD in CLAIMS.md.`);
-  }
+  eq("THE THREE EMPTIES NO LONGER COLLAPSE (REC-115): the plane mints a DISTINCT `says` for "
+    + "each of the four genuinely different cases — asserted, where UI-62 could only REPORT it",
+    new Set(says).size, 4);
 }
 
 /* THE THREE CAUSES, DISTINGUISHED — BY THE TALLY, WHICH IS WHAT ACTUALLY

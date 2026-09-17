@@ -2121,12 +2121,57 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
        see — a tally that ranged wider than the answer would be REC-36's leak
        arriving as an instrument, which is the shape `store.mjs`'s own mint ratio
        was caught in and corrected to `#viewerSees`. */
-    if (mode === "levels")
-      return { sql: `${c.sql}\nSELECT count(*) AS documents,`
+    /* REC-115 / IC-115 — AND *THE QUERY'S OTHER ARMS* IN THE PARAGRAPH ABOVE IS
+       LOAD-BEARING RATHER THAN DESCRIPTIVE, which is what this statement got
+       wrong for the whole of its life. It built its scope from `c` — the FULL
+       query, THIS ARM INCLUDED — while its own comment promised the other arms
+       alone, so the comment described a constraint nothing enforced. The cost
+       was not a wrong number in a corner: the arm SELECTS the documents that
+       hold a matching row, so on a MISS the scope is empty by construction and
+       `documents` collapses to 0 — and because `Store.#meaningLevels` tests
+       `documents === 0` BEFORE `searchable === 0`, the two honest branches of
+       `says` were UNREACHABLE BY ANY PASSAGE MISS AT ALL. A member who had
+       searched two documents, one of them fully indexed, was told NO DOCUMENT
+       WAS IN SCOPE and sent off to capture more material when what the record
+       needed was for somebody to READ the capture nobody had read. That is the
+       false absence this whole construct exists to refuse, produced by the
+       construct itself for the second time and through the second statement —
+       REC-92 found the first instance in the `axis` tally below, corrected THAT
+       statement, and did not move this one with it (UI-62 measured it against
+       the live plane at `MEASUREMENTS.md` M-43 and DELEGATED it rather than
+       papering over it at the surface, which DEC-8 forbids).
+
+       So the scope here is `armSet(rowArm)` — the query with this arm STRIPPED
+       and the remaining arms re-compiled — EXACTLY as `mode:"axis"` builds its
+       own thirty lines down. Both halves of one envelope now mean the same
+       thing by *in scope*, which is the property that was actually missing; the
+       two statements are deliberately not merged, because they count different
+       things (documents here, captures there) over that one shared scope.
+
+       TWO CONSEQUENCES WORTH STATING RATHER THAN LEAVING TO BE REDISCOVERED.
+       (1) `documents_with_rows` only becomes a MEASUREMENT here: against the
+       unstripped scope every document in scope held a matching row by
+       construction, so `documents_with_rows === documents` cost nothing to
+       produce and was evidence of nothing — CLAUDE.md's rule about an equality
+       that costs nothing, sitting inside the honesty instrument itself.
+       (2) THE TRUE ZERO SURVIVES AND MUST. A query whose OTHER arms select no
+       document at all still reports `documents: 0` and still publishes the
+       empty-DOCUMENT-level sentence; this narrows a FALSE zero and does not
+       remove the true one. Driven both ways in `passage-arm.test.mjs` S10.
+
+       NOT FIXED BY REORDERING `#meaningLevels`'s branch tests, deliberately:
+       `documents === 0` winning first is how the defect SURFACED, not what
+       caused it, and a reorder would have left every other reader of the
+       envelope — the surface's own denominator among them — holding a scope
+       figure that was still wrong and now harder to see. */
+    if (mode === "levels") {
+      const lc = cte(false, armSet(rowArm));
+      return { sql: `${lc.sql}\nSELECT count(*) AS documents,`
                   + `\n       sum(CASE WHEN EXISTS (SELECT 1 FROM ${m.table} mx`
                   + ` WHERE mx.${m.key} = b.bundle_id) THEN 1 ELSE 0 END) AS documents_with_rows`
                   + `\nFROM scope s JOIN bundles b ON b.fts_id = s.fid\nWHERE ${gate.sql}`,
-               args: [...c.args, ...gate.args] };
+               args: [...lc.args, ...gate.args] };
+    }
     /* ------------------------------------------------------------------
      * REC-92 / §4.4 — THE CONTENT-AXIS TALLY'S RAW INPUTS, and the point of
      * this mode is what it does NOT do: it does not decide anything.
