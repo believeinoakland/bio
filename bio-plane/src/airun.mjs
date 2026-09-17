@@ -89,7 +89,7 @@
  * the reading that must NOT report as PRESENT.
  * ========================================================================= */
 
-import { AI_RUN_CHECKS } from "../checks/bio-checks.mjs";
+import { AI_RUN_CHECKS, SEARCHED_SUBJECT_SOURCES } from "../checks/bio-checks.mjs";
 
 /* THE FOUR LEVELS a run searches, from CLAUDE.md's own standing section: when
    anything goes looking it "may need to search meaning, content, documents, AND
@@ -871,6 +871,228 @@ export function derivationObservation({ entityId = null, count = null, documents
                         + `. This is a derivation that RAN and produced nothing, which is a different `
                         + `fact from a subject nobody has derived over${unregistered}` },
            why: null };
+}
+
+/* ===========================================================================
+   REC-96 / D-196 / IC-112 — THE COMPLETENESS STATEMENT'S `searched` SECTION.
+
+   `OBSERVATION-LOG-DESIGN.md` §6: *at case signing: which levels were searched
+   for the case's subjects, under which authorities, with which outcomes and
+   where each stopped — computed from the log, published with the case, the
+   first thing behind a completeness claim that is not prose.*
+
+   WHAT A LIAR WOULD DO, STATED BEFORE WHAT THIS CHECKS, because the cheapest
+   way to make a coverage section green is NOT to forge a row. It is to choose
+   the SUBJECT SET. Compute this section over *every subject the observation log
+   holds a row for* and every case is 100% searched by construction: the
+   arithmetic is honest, every row is real, every state is true, and the
+   document says nothing whatsoever about the case. D-196's own ancestor is
+   exactly that failure — Blair & Maron's attorneys stipulated 75% recall and
+   sincerely believed they had it; measured recall was ~20%, because what they
+   measured was not what they claimed.
+
+   SO THE SUBJECT SET IS THE FENCE, AND IT IS STRUCTURAL RATHER THAN
+   CONVENTIONAL. `subjectSource` must be a member of `SEARCHED_SUBJECT_SOURCES`;
+   the observation log is deliberately NOT a member of it, exactly as
+   `OBSERVATION_AUTHORITY_KINDS` deliberately has no `member` value (§4.6's
+   provisional enforced by the vocabulary rather than by a comment). A section
+   computed from a source this vocabulary does not name is REFUSED and never
+   published. The subjects come DOWN from the case — its members' basis legs and
+   the `content` rows those legs name — and the log is consulted only to ask what
+   became of a subject the case had already named. A caller that inverts that
+   direction cannot express it here.
+
+   THE SECOND LIE IS ARITHMETIC AND IS FENCED IN THE SAME PLACE: a level with NO
+   identified subjects must never read as searched. Zero of zero is 100% and is
+   the costs-nothing rule wearing a percentage — an equality that took no work to
+   produce, reported as coverage. `no_subjects` is its own outcome and a level
+   that reaches it says so in the signed document.
+
+   THE THIRD IS THE ONE THIS PROJECT MEETS MOST, AND IT IS WHY `never_looked` IS
+   THE HARDEST VALUE TO GET OUT OF THIS FUNCTION RATHER THAN THE DEFAULT. A
+   subject with no row has THREE causes (§5.1) and only the third licenses a
+   positive statement. Worse, at two of the meaning level's three subject kinds
+   the pre-log evidence is ONE-SIDED (`MEANING_EVIDENCE_IS_ONE_SIDED`, REC-95's
+   measured finding), so cause (3) is UNREACHABLE there over the pre-log window
+   and `never_looked` is not merely unproven but unprovable. This function
+   REFUSES to emit it in that case and emits `undetermined` naming both causes
+   instead — and it decides that by CONSULTING the constant rather than by
+   listing the two kinds, so a fourth meaning subject kind added later is
+   fail-closed by omission rather than waved through.
+   =========================================================================== */
+
+/* WHERE THE SUBJECTS CAME FROM — the vocabulary that IS the fence, and it lives
+   in `bio-checks.mjs` rather than here. THAT IS A DEPENDENCY FACT AND ALSO THE
+   RIGHT HOME, and both halves are worth stating. The fact: this file IMPORTS
+   from `bio-checks.mjs` (`AI_RUN_CHECKS`), so the gate cannot import back
+   without a cycle — and the gate must check the source, because a hand-forged
+   case document claiming an unrecognised provenance for its subject set is
+   exactly what C-41.10's new arm refuses. The home: this is the CASE DOCUMENT's
+   vocabulary, not the observation log's — it qualifies a provenance claim in a
+   signed artifact, which is where `CASE_DOCUMENT_FORMAT` and `SUBJECT_POSITIONS`
+   already live. It is re-exported here so a reader of the observation-log
+   vocabularies meets it beside the states it qualifies. */
+export { SEARCHED_SUBJECT_SOURCES };
+
+/** WHAT A LEVEL'S ANSWER CAN BE. `no_subjects` and `undetermined` are the two
+ *  that exist so the other three cannot be reached dishonestly. */
+export const SEARCHED_LEVEL_OUTCOMES = {
+  searched:     "every subject this case names at this level has an observation: the record can say "
+              + "what was looked for and what came of it",
+  partial:      "some of this case's subjects at this level have an observation and some do not, or "
+              + "some could not be identified at all -- the coverage is stated and is not complete",
+  never_looked: "no subject this case names at this level has ever been looked at, and cause (3) of "
+              + "section 5.1 is ESTABLISHED for every one of them. This is the one outcome that "
+              + "licenses a positive statement about the absence",
+  undetermined: "no subject this case names at this level has an observation, and the pre-log or "
+              + "purge cause cannot be excluded -- so whether anybody looked is not knowable from "
+              + "this record, and that is stated rather than resolved in either direction",
+  no_subjects:  "this case names no subject this level could be computed over. This is NOT coverage: "
+              + "zero of zero is not 100%, and a level that reports it is saying the question was "
+              + "not askable here rather than that it was answered",
+};
+
+/** THE SECTION, COMPUTED. Pure: it touches no table, so a suite can hold the
+ *  rule to the store's behaviour without workerd — this file's own standing
+ *  reason, and REC-93/94/95's.
+ *
+ *  `levels` is one entry per (level, subject_kind) partition the caller could
+ *  identify from the case, each carrying:
+ *    - `subjects`: `{ subject, state, cause }` per subject the CASE names, where
+ *      `state` is the subject's latest observation state or null, and `cause` is
+ *      the §5.1 key that applies when `state` is null;
+ *    - `unidentified`: how many of the case's referents at this level could not
+ *      be resolved to a subject at all (a basis leg with no `content_id`, which
+ *      is nullable while I5 lands). They are COUNTED AND PUBLISHED rather than
+ *      dropped, because a referent we cannot name is not a referent nobody
+ *      looked at — and silently dropping it is how a partial answer becomes a
+ *      complete-looking one.
+ *
+ *  IT RETURNS A REFUSAL RATHER THAN A SECTION when it cannot compute honestly.
+ *  A case document that cannot say what was searched must fail the ceremony
+ *  rather than publish a blank: silence about coverage inside a completeness
+ *  statement is precisely what D-196 says the field considers worthless. */
+export function searchedSection({ at = null, subjectSource = null, levels = null } = {}) {
+  if (typeof at !== "string" || at.trim() === "")
+    return { ok: false, why: "a searched section requires the time it was computed at" };
+  if (!Object.prototype.hasOwnProperty.call(SEARCHED_SUBJECT_SOURCES, String(subjectSource)))
+    return { ok: false,
+             why: `a searched section requires a subject source this vocabulary names (got `
+                + `'${subjectSource}'; known: ${Object.keys(SEARCHED_SUBJECT_SOURCES).join(", ")}). `
+                + `THE SUBJECT SET IS THE FENCE: a section computed over the observation log's own `
+                + `subjects is 100% searched by construction and is a statement about the log `
+                + `rather than about the case` };
+  if (!Array.isArray(levels))
+    return { ok: false, why: "a searched section requires a levels array, empty if the case names none" };
+
+  const out = [];
+  let totalSubjects = 0, totalLooked = 0, totalUnidentified = 0;
+
+  for (const entry of levels) {
+    const level = entry && entry.level;
+    const kind = entry && entry.subject_kind;
+    if (!Object.prototype.hasOwnProperty.call(OBSERVATION_LEVELS, String(level)))
+      return { ok: false, why: `a searched section names a level this vocabulary does not: '${level}'` };
+    if (!Object.prototype.hasOwnProperty.call(OBSERVATION_SUBJECT_KINDS, String(kind)))
+      return { ok: false, why: `a searched section names a subject kind this vocabulary does not: '${kind}'` };
+
+    const subjects = Array.isArray(entry.subjects) ? entry.subjects : [];
+    const unidentified = Math.max(0, Math.floor(Number(entry.unidentified) || 0));
+
+    /* §5.1's ORDER, AND THE ONE-SIDED REFUSAL ON TOP OF IT. The evidence question
+       is asked of the CONSTANT rather than of a list of kinds written here, so a
+       meaning subject kind added later with no entry is treated as one-sided —
+       fail closed, `#observationBundles`' inverted default one construct over.
+       At the document and content levels the evidence is two-sided
+       (`captured_locators` and `readings` both hold a row whatever the look
+       produced), so cause (3) is reachable and `never_looked` can be said. */
+    const oneSided = level === "meaning"
+      ? (Object.prototype.hasOwnProperty.call(MEANING_EVIDENCE_IS_ONE_SIDED, String(kind))
+           ? !!MEANING_EVIDENCE_IS_ONE_SIDED[String(kind)] : true)
+      : false;
+
+    const states = {};
+    let looked = 0, neverLooked = 0, undetermined = 0, coerced = 0;
+    for (const s of subjects) {
+      if (s && typeof s.state === "string" && s.state !== "") {
+        looked += 1;
+        states[s.state] = (states[s.state] || 0) + 1;
+        continue;
+      }
+      const cause = s ? String(s.cause) : "";
+      if (cause === "never_looked") {
+        /* THE COERCION, AND IT IS THE POINT OF THE FUNCTION. A caller may believe
+           cause (3) holds; where the evidence is one-sided it CANNOT hold, and
+           the honest answer is cause (2) naming both. This is not defensive
+           programming against a bad caller — the caller has no way to know this
+           and should not have to, which is why the rule is here and once. */
+        if (oneSided) { undetermined += 1; coerced += 1; } else neverLooked += 1;
+      } else {
+        undetermined += 1;
+      }
+    }
+
+    const counted = looked + neverLooked + undetermined;
+    /* THE OUTCOME, AND EVERY GATE ON THE CONFIDENT ANSWERS IS EXPLICIT. An
+       unidentified referent caps the level at `partial` however clean the
+       identified half looks: a coverage claim over the subjects we could name,
+       published without saying that others could not be named, is the overclaim
+       this section exists to refuse. */
+    let outcome;
+    if (counted === 0 && unidentified === 0)           outcome = "no_subjects";
+    else if (counted === 0)                            outcome = "partial";
+    else if (looked === counted && !unidentified)      outcome = "searched";
+    else if (looked > 0)                               outcome = "partial";
+    else if (neverLooked === counted && !unidentified) outcome = "never_looked";
+    else                                               outcome = "undetermined";
+
+    totalSubjects += counted;
+    totalLooked += looked;
+    /* THE MAXIMUM AND NOT THE SUM, AND THIS WAS A REAL DEFECT CAUGHT BY READING
+       A RENDERED DOCUMENT RATHER THAN BY A TEST. An unresolvable referent — a
+       basis leg with no content row — is unresolvable at EVERY level, so it
+       appears once per level and summing them reported FOUR unidentified
+       referents for a case that had TWO. That is an inaccuracy in a signed
+       document, and the direction does not save it: overstating the RECORD'S OWN
+       BLIND SPOT is still a number a reader outside this project would act on
+       that is not true. They are the same referents recurring, so the honest
+       aggregate is the largest any single level could not resolve. */
+    totalUnidentified = Math.max(totalUnidentified, unidentified);
+
+    out.push({
+      level, subject_kind: kind, outcome,
+      subjects: counted, looked, never_looked: neverLooked, undetermined, unidentified,
+      states,
+      evidence_one_sided: oneSided,
+      /* WHAT THE NUMBERS MEAN, IN THE DOCUMENT, because a reader outside this
+         project holds these bytes and has no access to this comment. */
+      detail: SEARCHED_LEVEL_OUTCOMES[outcome]
+            + (coerced
+                 ? `. ${coerced} subject(s) could not be reported as never-looked-at because at this `
+                 + `level and subject kind the evidence of a look exists only where the answer was `
+                 + `YES: a look that found nothing leaves no trace, so *nobody looked* and *somebody `
+                 + `looked and found nothing* are indistinguishable over the window before the log `
+                 + `carried this level. They are reported as undetermined`
+                 : "")
+            + (unidentified
+                 ? `. ${unidentified} referent(s) this case rests on could not be resolved to a `
+                 + `subject at this level at all, so nothing is claimed about them either way`
+                 : ""),
+    });
+  }
+
+  return {
+    ok: true,
+    summary: {
+      computed_at: at,
+      subject_source: String(subjectSource),
+      subjects: totalSubjects,
+      looked: totalLooked,
+      unidentified: totalUnidentified,
+      levels_reported: out.length,
+    },
+    levels: out,
+  };
 }
 
 /* §14b.6's bounds, in its own enumeration: "a budget — fetches requested,

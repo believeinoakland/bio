@@ -8381,3 +8381,68 @@ unaffected.
 
 **Registry:** I3 bumped in `INTERFACES.md` in this same commit (protocol step 4 → 5).
 
+
+---
+
+## IC-112 · I3: THE CASE DOCUMENT (`bio-case-document/1`) GAINS A `searched` SECTION IN ITS SIGNED BYTES, AND C-41.10 NOW REFUSES A CASE DOCUMENT THAT LACKS ONE · PROPOSED 2026-09-17 (REC-96, closing D-196) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts), which is where `bio-case-document/1`
+  rides — the format has no semver of its own (`BIO_Publication_v0_1.md` §42 carries the prose
+  registry row). Measured on this item's base `origin/main` at `1234095a`: **18.2.0**
+  (IC-109 ACCEPTED, ADDITIVE). **Read off `INTERFACES.md` in the tree, not off a row.**
+- **Proposed as MAJOR — 18.2.0 → 19.0.0**, and this CONTRADICTS the design and the queue row,
+  both of which say *an additive minor*. The contradiction is the finding and is argued below
+  rather than resolved quietly in the direction that costs less.
+- **Proposer:** RECORD, worker `agent-a24e7153a704df2de`, 2026-09-17, from QUEUE REC-96
+- **Owner to land it:** `RECORD` (owner and proposer)
+- **Consumers to answer:** `UI`, `SKILL`, `CASE`, `DIST`, `RECORD`.
+- **Measured consumer impact: ZERO outside `bio-plane/test/`, and the zero is recorded as
+  EVIDENCE rather than offered as an argument for a smaller bump.** A grep for `casedocument`,
+  `case_document` and the case frontmatter keys over `civicos-ui/`, `agent-worker/`, `newgroup/`
+  and `tools/` returns **no consumer of the case document at all** — every hit is the word
+  *completeness* occurring in unrelated prose and comments. No surface renders this document
+  today; the ceremony's member-facing half is `UI-17`/`REC-15`, which DEC-33 defers.
+
+**WHAT CHANGED.** `Store.#caseDocumentText` emits two new top-level frontmatter keys — `searched`
+(a map of scalars: `computed_at`, `subject_source`, `subjects`, `looked`, `unidentified`,
+`levels_reported`) and `searched_levels` (an array of flat objects, one per level) — plus a
+`## What Was Searched` body section. **Two keys and not one nested block because the frontmatter
+grammar has exactly two levels**: a top-level key is a scalar, a map of scalars, or an array of
+flat objects, and a map holding an array has no slot in it and parses as the *buried by stray
+indentation* failure. `completeness` + `completeness_excluded` is the precedent in this very
+document and this follows it rather than inventing a third arrangement.
+
+**WHY MAJOR, AND THE COUNTER-ARGUMENT STATED.** IC-25's settled rule is *a refusal where none
+stood before is a break WHATEVER the measured impact*, and it **does** bite here: C-41.10 now
+refuses a case document with no `searched` block, and **a case document authored before this
+landing and not yet signed carries none.** `op=caseratify` re-runs `runCaseGate` over the STORED
+bytes, so on any instance upgrading across this landing, an authored-but-unsigned case edition
+**cannot be signed** until it is re-published. That window is narrow and the remedy is the
+ceremony's own ordinary path — *a member refused at the gate fixes the document and publishes
+again*, which `publishCase`'s `ON CONFLICT DO UPDATE … WHERE sig_armored IS NULL` exists to
+support — and already-RATIFIED documents are not re-gated, so nothing that is signed stops
+verifying. **The argument for MINOR is therefore real**: nothing a caller SENDS is refused,
+nothing published is withdrawn, and the measured impact is zero. **It is not taken, for the
+reason IC-25 exists:** the rule is settled precisely so that a proposer who can see the impact is
+zero does not get to decide the bump on that basis, and a worker eroding it on a narrow window is
+how a settled rule stops being one. CONDUCT rules.
+
+**THE IN-FLIGHT WINDOW IS A KNOWN BREAK WITH NO MIGRATION, AND THAT IS STATED RATHER THAN LEFT FOR A READER TO DISCOVER.** A case edition AUTHORED before this landing and not yet signed carries no `searched` section, and `op=caseratify` re-runs the gate over those stored bytes, so it cannot be signed. **There is no migration path that is not re-authoring, and the reason is structural rather than an omission:** the section must be in the SIGNED bytes to be worth anything, the signature covers `doc_sha`, and `doc_sha` is taken over the authored text — so back-filling the section into an existing row would change the digest, which IS re-authoring. The remedy is therefore to re-run `op=publish` for that edition, which is the ceremony's own ordinary path for a document refused at the gate and is what `ON CONFLICT DO UPDATE … WHERE sig_armored IS NULL` exists to support. **Already-RATIFIED case documents are NOT re-gated and keep verifying** — measured, not assumed: `op=casedocument` reads and does not re-run `runCaseGate`. So nothing that is signed breaks; what breaks is a ceremony left half-finished across an upgrade.
+
+**WHY THE REFUSAL IS NOT DROPPED TO AVOID THE BUMP**, which was the other available move. A gate
+that tolerates an absent section is a gate that lets a case document make a completeness claim
+with no record of the looking behind it — which is D-196 verbatim, the row this item closes. The
+alternative of writing the section but never checking it would leave the fence standing only over
+the path that already behaves, and none over bytes a stranger hands us. **What the gate refuses is
+SILENCE, never an unfavourable value:** a section reporting `never_looked` at every level, or
+`no_subjects`, PASSES — and the over-strictness control arm drives exactly that, measuring that a
+gate refusing the honest negative makes the honest case unpublishable and leaves a member two
+routes, to look or to lie.
+
+**THE PART A CONSUMER MUST NOT RE-IMPLEMENT.** `searched.subject_source` names where the subject
+set came from and must be a member of `SEARCHED_SUBJECT_SOURCES` (`checks/bio-checks.mjs`). The
+observation log is **deliberately not a member of it**. A consumer computing its own coverage
+figure over the log's own subjects would produce 100% by construction, with every row honest and
+every number true, and it would be a statement about the log rather than about the case — Blair &
+Maron's ~20% measured against a sincerely-believed 75%. The vocabulary is the fence; it is checked
+at the gate; and it is the reason this section is worth signing at all.

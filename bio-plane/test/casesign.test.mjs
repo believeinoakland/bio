@@ -445,6 +445,41 @@ const doc1 = await anon(`op=casedocument&case=${CASE}&edition=1`);
     [/NO STANDARD OF EVIDENCE WAS DECLARED/.test(doc1.text),
      /An absent bar is not a bar of zero/.test(doc1.text),
      parseFrontmatter(doc1.text).data.required_strength.declared], [true, true, false]);
+  /* REC-96 / D-196 / IC-112 — THE `searched` SECTION IS IN THE SIGNED BYTES.
+     THIS SUITE'S CASE IS THE UNIDENTIFIED-SUBJECT CASE and that is a property of
+     its corpus rather than an accident: it promotes with `register: []` — see the
+     fixture's own reasoning above — so its basis legs carry no `content_id`,
+     nothing resolves to a capture, and the honest answer is that the case rests
+     on referents this record cannot name. The IDENTIFIED case, where a real
+     capture reads `never_looked`, is driven in `casesearched.test.mjs`, which
+     builds the corpus this one deliberately does not. */
+  t("the signed document carries the searched section, and it names the source its subjects came "
+  + "from — the subject set is the fence, and a section computed over the observation log's own "
+  + "subjects would be 100% searched by construction while saying nothing about this case",
+    [typeof parseFrontmatter(doc1.text).data.searched === "object",
+     parseFrontmatter(doc1.text).data.searched.subject_source], [true, "case_basis"]);
+  t("and a PERSON meets it in the BODY under its own heading, not only in frontmatter — the whole "
+  + "justification for this artifact is that what is SIGNED is a thing a member actually reviewed",
+    doc1.text.includes("## What Was Searched"), true);
+  /* THE HONEST ANSWER FOR THIS CORPUS, ASSERTED RATHER THAN AVOIDED. Every level
+     reports referents it could not resolve, and NO level claims `searched`. A
+     fixture whose legs name nothing must not produce a document claiming
+     coverage — that is the overclaim this whole section exists to refuse, and it
+     is the arm that would catch a `searched` computed over the wrong set. */
+  t("NO LEVEL CLAIMS COVERAGE THIS CORPUS CANNOT SUPPORT: every level reports the referents it could "
+  + "not resolve to a subject, and not one of them reads `searched`",
+    [(parseFrontmatter(doc1.text).data.searched_levels || []).map((r) => r.outcome),
+     (parseFrontmatter(doc1.text).data.searched_levels || []).every((r) => r.unidentified >= 1)],
+    [["partial", "partial", "partial"], true]);
+  /* THE COUNT IS THE CASE'S REFERENTS, NOT THE SUM ACROSS LEVELS. The same
+     unresolvable leg appears at all three levels; summing them reported FOUR
+     unidentified referents for a case that has TWO, which is an inaccuracy in a
+     signed document even though it overstates our own blind spot rather than our
+     coverage. Caught by reading a rendered document, not by a test. */
+  t("and the summary counts this case's unresolvable referents ONCE rather than once per level — the "
+  + "same referents recur across levels and summing them overstates the record's own blind spot",
+    parseFrontmatter(doc1.text).data.searched.unidentified,
+    Math.max(...(parseFrontmatter(doc1.text).data.searched_levels || []).map((r) => r.unidentified)));
 }
 
 /* =========================================================================== 3

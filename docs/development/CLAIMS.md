@@ -11498,3 +11498,33 @@ message needs to name the resolution path PER MEMBER. I have taken neither, so n
 is blocked on the other.
 
 **open as of 2026-09-16** — raised by FLEET #1 and NOT discharged. **Recorded by CONDUCT #1 at integration, and this is the THIRD block M0-37's delegation arm has caught today** — after REC-100's and M0-48's. **It is the most interesting of the three: FLEET's session had ENDED before that arm existed**, so this block was written by a session that could not have known the rule, could not be asked, and could not correct itself. The arm audited it anyway. **That is the difference between a rule and a mechanism** — a rule reaches only sessions alive to read it, and this register now states its own state for work whose author is gone. The commit carrying it was itself STRANDED on a dead session's worktree until D-288's detection arm named it hours after both were written.
+
+## CLAIM 2026-09-17 RECORD (REC-96 — the completeness statement's `searched` section, D-196)
+session: rec96-searched-section (worktree agent-a24e7153a704df2de, branch `worktree-agent-a24e7153a704df2de`)
+opened: 2026-09-17T00:00:00Z
+released:
+paths:
+  `bio-plane/src/airun.mjs` — **APPEND ONLY, at the foot of the observation-log vocabulary region**:
+  the pure `searchedSection()` computation and its two vocabularies (`SEARCHED_LEVEL_OUTCOMES`,
+  `SEARCHED_SUBJECT_SOURCES`). **NOT** `CONTENT_AXIS_STATES`, **NOT** `MISSING_ROW_CAUSES`, **NOT**
+  `MEANING_MISSING_ROW_CAUSES`, **NOT** `MEANING_EVIDENCE_IS_ONE_SIDED` — all four are IMPORTED and
+  consumed, and a divergent spelling of any of them is the D-164 failure this item exists inside.
+  `bio-plane/src/store.mjs` — by SITE, not by file: (1) `Store.#caseDocumentText` gains the
+  `searched` frontmatter block, the `searched_levels` array-of-objects block and the
+  `## What Was Searched` body section; (2) ONE new private method `#searchedForCase` beside the
+  case-document methods; (3) the `op=publish` call site that composes the document's arguments.
+  **NOT** `frontier`, **NOT** `#frontierContent`, **NOT** `#frontierMeaning`, **NOT** `#observe`,
+  **NOT** any observation WRITER — this item adds no row, no table, no column and no refusal.
+  `bio-plane/checks/bio-checks.mjs` — by SITE: the `C41` family table gains ONE row (C-41.13) and
+  `checkCaseDocument` gains that arm beside the existing C-41.10 block. **NOT** any other C-41 arm.
+  `bio-plane/test/casesign.test.mjs` and `bio-plane/test/casesign.control.mjs` — the suite and its
+  committed control driver gain this item's section and arms.
+  `docs/development/OBSERVATION-LOG-DESIGN.md` — front matter (Status, Incomplete sections) only.
+  `docs/development/DEBT.md` — D-196's row and its disposition ONLY.
+  `docs/development/INTERFACE-CHANGES.md` — IC-112's row ONLY.
+  **NOT `docs/development/QUEUE.md`** — this claim named REC-96's row when it was opened and the
+  claim is CORRECTED here rather than silently not exercised: **flipping the row is CONDUCT's act,
+  not this worker's** (`kickoffs/WORKER.md` — CONDUCT integrates), and so is the I3 version bump in
+  `INTERFACES.md` and IC-112's RESOLUTION. All three are named as owed acts with their actor in
+  this item's report rather than left implied, because a note in a region nothing drains is not
+  even a note.

@@ -3515,6 +3515,7 @@ __export(bio_checks_exports, {
   RESOLUTIONS: () => RESOLUTIONS,
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
   ROUTE_MARK_CHECKS: () => ROUTE_MARK_CHECKS,
+  SEARCHED_SUBJECT_SOURCES: () => SEARCHED_SUBJECT_SOURCES,
   STATES: () => STATES,
   STRENGTH_STATES: () => STRENGTH_STATES,
   SUBJECT_POSITIONS: () => SUBJECT_POSITIONS,
@@ -10199,6 +10200,9 @@ var DRIVE_CAPTURE_CHECKS = {
   }
 };
 var CASE_DOCUMENT_FORMAT = "bio-case-document/1";
+var SEARCHED_SUBJECT_SOURCES = {
+  case_basis: "the subjects were taken from the CASE -- its members' basis legs and the content rows those legs name -- and the observation log was consulted only to ask what became of each. The log never supplies the subject set; a section computed the other way round is 100% searched by construction and says nothing about the case"
+};
 var CASE_DOCUMENT_FAMILY = {
   FORMAT: { check: "C-41.1", what: "the format token" },
   IDENTITY: { check: "C-41.2", what: "case_id, and that it is the case being ratified" },
@@ -10333,6 +10337,32 @@ function checkCaseDocument(fm, ctx = {}) {
       findings.push(f(C41.COMPLETENESS, "error", `a case document requires completeness.subject_position, one of: ${SUBJECT_POSITIONS.join(", ")} (got '${c.subject_position}'). The gate is that the position is declared and justified \u2014 never that contact happened, and never that the answer was favourable (DEC-13)`));
     if (typeof c.subject_justification !== "string" || c.subject_justification.trim() === "")
       findings.push(f(C41.COMPLETENESS, "error", "a case document requires completeness.subject_justification: a declared position with no reasoning behind it is the checkbox this gate exists to refuse (DEC-13)"));
+  }
+  const srch = typeof fm?.searched === "object" && fm.searched || null;
+  if (!srch) {
+    findings.push(f(
+      C41.COMPLETENESS,
+      "error",
+      "a case document requires a searched block beside its completeness block: a completeness claim with no record of what was looked for is prose with nothing behind it, which is what the search-completeness literature identifies as the claim worth least (D-196). An empty or negative answer is legal here \u2014 SILENCE is not",
+      ["publish the searched section computed from the observation log over this case's own subjects"]
+    ));
+  } else {
+    if (!Object.prototype.hasOwnProperty.call(SEARCHED_SUBJECT_SOURCES, String(srch.subject_source)))
+      findings.push(f(
+        C41.COMPLETENESS,
+        "error",
+        `a case document's searched.subject_source must name a source this record recognises (got '${srch.subject_source}'; known: ${Object.keys(SEARCHED_SUBJECT_SOURCES).join(", ")}). THE SUBJECT SET IS THE FENCE: a coverage section computed over the observation log's own subjects is 100% searched by construction with every row in it honest, and is a statement about the log rather than about this case`,
+        ["compute the section over the case's own subjects \u2014 its members' basis legs and the content rows those legs name"]
+      ));
+    if (!Number.isInteger(srch.subjects) || srch.subjects < 0)
+      findings.push(f(C41.COMPLETENESS, "error", `a case document's searched block requires an integer subject count (got '${srch.subjects}')`));
+    if (!Array.isArray(fm?.searched_levels))
+      findings.push(f(
+        C41.COMPLETENESS,
+        "error",
+        "a case document requires a searched_levels field beside the searched block: an EMPTY list is a claim (this record could compute no level for this case) and is legal \u2014 an ABSENT field is silence about which levels were consulted",
+        ["author searched_levels, empty if no level could be computed"]
+      ));
   }
   if (!Array.isArray(fm?.completeness_excluded)) {
     findings.push(f(
@@ -23152,6 +23182,34 @@ var OBSERVATION_AUTHORITY_KINDS = {
   lead: "a member's LEAD -- the authored act that puts a name behind a negative answer (D-194, Program B)",
   objective: "a standing objective the instance is monitoring for"
 };
+var OBSERVATION_SUBJECT_KINDS = {
+  address: "the web address a document was looked for at, in its normalised form",
+  capture: "a document the record already holds, named by the fingerprint of its bytes",
+  extent: "a particular passage inside a document \u2014 a page, a cell, a paragraph (IC-1)",
+  entity: "a person, body or thing the record keeps a registry entry for",
+  description: "a member's own words for something they could not name any other way",
+  unstated: "the writer did not record what kind of thing this was about, and the record says so rather than guessing (the folded run log, and nothing new)",
+  /* THE SEVENTH, ADDED BY REC-95 AND STATED HERE RATHER THAN SMUGGLED, exactly
+       as `unstated` above is. It is NOT in design section 3's list either.
+  
+       A RESOLUTION ATTEMPT'S SUBJECT IS A REFERENCE, AND IT CANNOT BE `entity`.
+       Section 4.3 says *"one row per resolution attempt over an entity"*, but the
+       attempt that FAILS names no entity — there is no registry entry, which is
+       precisely what it found out — and that failing attempt is the look the
+       section exists to record. Keying it on `entity` would write a row for every
+       success and NOTHING AT ALL for the case the section was written for; putting
+       a raw, unresolved `kind:key` in a column called `entity` would say the record
+       keeps a registry entry for a name it has just established it does not. Both
+       are the record claiming more than it can support, in the one direction this
+       whole table exists to refuse.
+  
+       `observation-log.test.mjs`'s arm B9 pins this key set EXACTLY, and that pin
+       is what brought this item here to say so instead of letting a seventh member
+       arrive unremarked. It worked as designed; the arm is CORRECTED with its date
+       and its reason, never exempted. Reported as a DESIGN GAP against sections 3
+       and 4.3 rather than resolved silently. */
+  reference: "a reference as a document's reading carries it \u2014 the raw, source-assigned kind:key, before any resolution to a canonical entity (D-83). The subject of a RESOLUTION attempt, whose whole point is that it may match no entity at all"
+};
 var CONTENT_AXIS_STATES = {
   indexed_full: "every unit of this capture's text is indexed under its current chain",
   indexed_partial: "part of this capture's text is indexed: it ran over the per-capture bound, or only some of its pages could be read",
@@ -23422,6 +23480,93 @@ function derivationObservation({
       detail: `the derivation ran over ${ends} document(s) concerning this entity and found no connection to write` + (docs != null && docs < 2 ? `; a connection is a PAIR, and fewer than two documents concern this subject, so there was no pair to form` : "") + `. This is a derivation that RAN and produced nothing, which is a different fact from a subject nobody has derived over${unregistered}`
     },
     why: null
+  };
+}
+var SEARCHED_LEVEL_OUTCOMES = {
+  searched: "every subject this case names at this level has an observation: the record can say what was looked for and what came of it",
+  partial: "some of this case's subjects at this level have an observation and some do not, or some could not be identified at all -- the coverage is stated and is not complete",
+  never_looked: "no subject this case names at this level has ever been looked at, and cause (3) of section 5.1 is ESTABLISHED for every one of them. This is the one outcome that licenses a positive statement about the absence",
+  undetermined: "no subject this case names at this level has an observation, and the pre-log or purge cause cannot be excluded -- so whether anybody looked is not knowable from this record, and that is stated rather than resolved in either direction",
+  no_subjects: "this case names no subject this level could be computed over. This is NOT coverage: zero of zero is not 100%, and a level that reports it is saying the question was not askable here rather than that it was answered"
+};
+function searchedSection({ at = null, subjectSource = null, levels = null } = {}) {
+  if (typeof at !== "string" || at.trim() === "")
+    return { ok: false, why: "a searched section requires the time it was computed at" };
+  if (!Object.prototype.hasOwnProperty.call(SEARCHED_SUBJECT_SOURCES, String(subjectSource)))
+    return {
+      ok: false,
+      why: `a searched section requires a subject source this vocabulary names (got '${subjectSource}'; known: ${Object.keys(SEARCHED_SUBJECT_SOURCES).join(", ")}). THE SUBJECT SET IS THE FENCE: a section computed over the observation log's own subjects is 100% searched by construction and is a statement about the log rather than about the case`
+    };
+  if (!Array.isArray(levels))
+    return { ok: false, why: "a searched section requires a levels array, empty if the case names none" };
+  const out = [];
+  let totalSubjects = 0, totalLooked = 0, totalUnidentified = 0;
+  for (const entry of levels) {
+    const level = entry && entry.level;
+    const kind = entry && entry.subject_kind;
+    if (!Object.prototype.hasOwnProperty.call(OBSERVATION_LEVELS, String(level)))
+      return { ok: false, why: `a searched section names a level this vocabulary does not: '${level}'` };
+    if (!Object.prototype.hasOwnProperty.call(OBSERVATION_SUBJECT_KINDS, String(kind)))
+      return { ok: false, why: `a searched section names a subject kind this vocabulary does not: '${kind}'` };
+    const subjects = Array.isArray(entry.subjects) ? entry.subjects : [];
+    const unidentified = Math.max(0, Math.floor(Number(entry.unidentified) || 0));
+    const oneSided = level === "meaning" ? Object.prototype.hasOwnProperty.call(MEANING_EVIDENCE_IS_ONE_SIDED, String(kind)) ? !!MEANING_EVIDENCE_IS_ONE_SIDED[String(kind)] : true : false;
+    const states = {};
+    let looked = 0, neverLooked = 0, undetermined = 0, coerced = 0;
+    for (const s of subjects) {
+      if (s && typeof s.state === "string" && s.state !== "") {
+        looked += 1;
+        states[s.state] = (states[s.state] || 0) + 1;
+        continue;
+      }
+      const cause = s ? String(s.cause) : "";
+      if (cause === "never_looked") {
+        if (oneSided) {
+          undetermined += 1;
+          coerced += 1;
+        } else neverLooked += 1;
+      } else {
+        undetermined += 1;
+      }
+    }
+    const counted = looked + neverLooked + undetermined;
+    let outcome;
+    if (counted === 0 && unidentified === 0) outcome = "no_subjects";
+    else if (counted === 0) outcome = "partial";
+    else if (looked === counted && !unidentified) outcome = "searched";
+    else if (looked > 0) outcome = "partial";
+    else if (neverLooked === counted && !unidentified) outcome = "never_looked";
+    else outcome = "undetermined";
+    totalSubjects += counted;
+    totalLooked += looked;
+    totalUnidentified = Math.max(totalUnidentified, unidentified);
+    out.push({
+      level,
+      subject_kind: kind,
+      outcome,
+      subjects: counted,
+      looked,
+      never_looked: neverLooked,
+      undetermined,
+      unidentified,
+      states,
+      evidence_one_sided: oneSided,
+      /* WHAT THE NUMBERS MEAN, IN THE DOCUMENT, because a reader outside this
+         project holds these bytes and has no access to this comment. */
+      detail: SEARCHED_LEVEL_OUTCOMES[outcome] + (coerced ? `. ${coerced} subject(s) could not be reported as never-looked-at because at this level and subject kind the evidence of a look exists only where the answer was YES: a look that found nothing leaves no trace, so *nobody looked* and *somebody looked and found nothing* are indistinguishable over the window before the log carried this level. They are reported as undetermined` : "") + (unidentified ? `. ${unidentified} referent(s) this case rests on could not be resolved to a subject at this level at all, so nothing is claimed about them either way` : "")
+    });
+  }
+  return {
+    ok: true,
+    summary: {
+      computed_at: at,
+      subject_source: String(subjectSource),
+      subjects: totalSubjects,
+      looked: totalLooked,
+      unidentified: totalUnidentified,
+      levels_reported: out.length
+    },
+    levels: out
   };
 }
 var RUN_BOUNDS = {
@@ -29482,6 +29627,15 @@ Subject position: ${pos} \u2014 ${just}
       });
     }
     const pinOf = new Map(written.map((w) => [w.target, w.bundleSha]));
+    const searched = this.#searchedForCase(members, when);
+    if (!searched.ok)
+      return {
+        ok: false,
+        code: "CASE_SEARCHED_UNCOMPUTABLE",
+        case: theCase,
+        edition,
+        detail: `the case document's searched section could not be computed: ${searched.why}. A case document publishes what was looked for beside what it claims to cover (D-196); it does not publish the claim with the record of the looking left blank.`
+      };
     const docText = _Store.#caseDocumentText({
       caseId: theCase,
       edition,
@@ -29497,7 +29651,8 @@ Subject position: ${pos} \u2014 ${just}
       justification: just,
       excluded: rows,
       author: who,
-      at: when
+      at: when,
+      searched
     });
     const docBytes = new TextEncoder().encode(docText);
     const docSha = createSha256().update(docBytes).hex();
@@ -29631,7 +29786,14 @@ Subject position: ${pos} \u2014 ${just}
     justification,
     excluded,
     author,
-    at
+    at,
+    /* REC-96 / IC-112: the `searched` section, COMPUTED BY THE CALLER
+       and passed in, because this method is pure and static on purpose
+       and the section needs the store. It is REQUIRED rather than
+       optional — a case document that cannot say what was searched must
+       fail the ceremony rather than publish a completeness statement
+       with the same silence D-196 exists to name. */
+    searched
   }) {
     const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
     const fm = [
@@ -29659,6 +29821,34 @@ Subject position: ${pos} \u2014 ${just}
       ...(excluded || []).flatMap((r) => [
         ...r.target ? [`  - target: ${r.target}`, `    description: "${_Store.#fmSafe(r.description || "")}"`] : [`  - description: "${_Store.#fmSafe(r.description || "")}"`],
         `    reason: "${_Store.#fmSafe(r.reason || "")}"`
+      ]),
+      /* REC-96 / D-196 / IC-112 — THE `searched` SECTION, IN THE SIGNED BYTES.
+         TWO TOP-LEVEL KEYS AND NOT ONE NESTED BLOCK, because the frontmatter
+         grammar has exactly two levels: a top-level key is a scalar, a MAP of
+         scalars, or an ARRAY of flat objects, and a map holding an array has no
+         slot in it. `completeness` + `completeness_excluded` is the precedent in
+         this very document and this follows it rather than inventing a third
+         arrangement. The section is the completeness statement's (C-41.10 owns
+         both) and is spelled as its sibling for the grammar's sake alone. */
+      "searched:",
+      `  computed_at: "${_Store.#fmSafe(searched.summary.computed_at)}"`,
+      `  subject_source: ${searched.summary.subject_source}`,
+      `  subjects: ${searched.summary.subjects}`,
+      `  looked: ${searched.summary.looked}`,
+      `  unidentified: ${searched.summary.unidentified}`,
+      `  levels_reported: ${searched.summary.levels_reported}`,
+      "searched_levels:",
+      ...searched.levels.flatMap((l) => [
+        `  - level: ${l.level}`,
+        `    subject_kind: ${l.subject_kind}`,
+        `    outcome: ${l.outcome}`,
+        `    subjects: ${l.subjects}`,
+        `    looked: ${l.looked}`,
+        `    never_looked: ${l.never_looked}`,
+        `    undetermined: ${l.undetermined}`,
+        `    unidentified: ${l.unidentified}`,
+        `    evidence_one_sided: ${l.evidence_one_sided}`,
+        `    detail: "${_Store.#fmSafe(l.detail)}"`
       ]),
       "required_strength:",
       `  declared: ${bar.declared}`,
@@ -29695,6 +29885,25 @@ Subject position: ${pos} \u2014 ${just}
       "",
       `Position on putting this case to its subject: ${position}. ${justification}`,
       "",
+      /* REC-96 / D-196 — IN THE BODY, IN PROSE, AND THIS IS NOT DECORATION. The
+         whole justification for this artifact is the container manifest's
+         constraint that WHAT IS SIGNED MUST BE A THING A MEMBER ACTUALLY
+         REVIEWED, and a member cannot review a block of key-value pairs they
+         have to decode — this method's own header says so about the frontmatter
+         above. A completeness claim discharged only in machine-readable fields
+         would be D-196 closed in form and open in substance: the reader outside
+         this project who acts on these bytes is exactly the person the section
+         exists for, and they read the body. */
+      "## What Was Searched",
+      "",
+      "This section is computed from the observation log over THIS CASE'S OWN SUBJECTS \u2014 the documents its findings rest on, reached through each member's basis legs \u2014 and never over the log's own contents. That direction is the whole of its value: a coverage section computed over everything the log happens to hold is 100% complete by construction, with every number in it true, while saying nothing whatever about this case.",
+      "",
+      "It is a record of WHAT WAS LOOKED FOR, not a measure of how much exists. No recall figure is offered and none is computable: the denominator \u2014 everything that might have been found \u2014 is not knowable, and a number that looked like one would be worse than this prose.",
+      "",
+      ...searched.levels.map((l) => `- **${l.level} level** (${l.subject_kind}): ${l.outcome.replace(/_/g, " ").toUpperCase()} \u2014 ${l.subjects} subject(s), ${l.looked} with a recorded observation, ${l.never_looked} established as never looked at, ${l.undetermined} undetermined` + (l.unidentified ? `, ${l.unidentified} referent(s) this case rests on that could not be resolved to a subject at all` : "") + `. ${l.detail}`),
+      "",
+      searched.summary.subjects === 0 ? "**THIS CASE NAMES NO SUBJECT THIS RECORD COULD COMPUTE COVERAGE OVER.** That is not a statement that nothing was searched, and it is emphatically not a statement that everything was: it means the question could not be asked of this record. A reader should treat this case's completeness claim as resting on its author's prose alone." : "A level reported as UNDETERMINED is not a level reported as empty. It means this record cannot exclude that the looking happened before the log carried that level, or that a purge removed what described it \u2014 different facts from nobody having looked, and stated rather than resolved in whichever direction would read better.",
+      "",
       "## Bias Acknowledgement",
       "",
       bias,
@@ -29720,6 +29929,170 @@ Subject position: ${pos} \u2014 ${just}
       ""
     ];
     return fm.join("\n") + body.join("\n");
+  }
+  /** REC-96 / D-196 / IC-112 — THE CASE'S OWN SUBJECTS, GATHERED DOWNWARD.
+   *
+   *  `OBSERVATION-LOG-DESIGN.md` §8 row 4: *computed from the log at case signing
+   *  over the case's subjects*. This method is the "over the case's subjects"
+   *  half and it is deliberately the larger half — `searchedSection` decides what
+   *  the answers MEAN and this decides WHAT IS ASKED ABOUT, which is the half a
+   *  dishonest section gets wrong. See that function's header for the lie.
+   *
+   *  THE DIRECTION IS THE WHOLE POINT AND IT IS ONE-WAY. Subjects come DOWN from
+   *  the case — its members, their basis legs, the `content` rows those legs name
+   *  and the captures those rows sit on — and the log is consulted only to ask
+   *  what became of a subject the case had already named. This method never reads
+   *  `observation_log` to DISCOVER a subject, only to look one up.
+   *
+   *  THE CHAIN, MEASURED ON THIS TREE RATHER THAN ASSUMED:
+   *    `published_case_members.bundle_id` (the roster, passed in — at authoring
+   *    time the rows do not exist yet, which is why the members are an argument)
+   *      -> `inquiry_basis.content_id`  (the leg's referent extent, REC-82/IC-83)
+   *      -> `content.capture_sha`       (the document; the register's trust root)
+   *      -> `captured_locators.address_norm` (the address it was fetched at)
+   *
+   *  `inquiry_basis.content_id` IS NULLABLE WHILE I5 LANDS, AND THAT IS STATED
+   *  RATHER THAN SMOOTHED. A leg with no content row is a referent this case
+   *  rests on that we cannot name at the content level — which is NOT a referent
+   *  nobody looked at, and collapsing those two is D-129's distinction in this
+   *  project's own vocabulary. They are counted as `unidentified`, published, and
+   *  they cap their level at `partial` so no case can read as fully searched over
+   *  a basis it could not fully resolve.
+   *
+   *  THE DOCUMENT LEVEL CANNOT SAY `never_looked` FOR A CASE, AND THE REASON IS
+   *  WORTH THE SENTENCE: every document-level subject here is the address of a
+   *  capture WE HOLD, so it was fetched at least once — possession IS the look,
+   *  and `captured_locators` is §5.1's cause (1) evidence for exactly that. What
+   *  the log adds at this level is WHEN it was last verified and what came of it,
+   *  never WHETHER anybody looked. That is why this method passes `pre_log` there
+   *  and never probes for cause (3): claiming nobody looked at a document we are
+   *  holding would be the record contradicting its own bytes.
+   *
+   *  BOUNDED, AND THE OVERFLOW IS PUBLISHED RATHER THAN DROPPED (D-225/REC-70,
+   *  and D-36's 100-bound-parameter ceiling is why the IN lists are chunked at
+   *  50). A subject past the bound is folded into `unidentified` — which is
+   *  precisely what that count means, *a referent this case rests on about which
+   *  nothing is claimed either way* — so a case larger than the bound reads
+   *  `partial` with the remainder stated, never `searched` over a truncated set. */
+  #searchedForCase(members, at) {
+    const CHUNK = 50;
+    const roster = [...new Set((members || []).filter((m) => typeof m === "string" && m))];
+    const chunked = (vals, fn) => {
+      for (let i = 0; i < vals.length; i += CHUNK) fn(vals.slice(i, i + CHUNK));
+    };
+    const contentIds = /* @__PURE__ */ new Set();
+    let legsUnresolved = 0;
+    if (roster.length) chunked(roster, (part) => {
+      const marks = part.map(() => "?").join(",");
+      for (const r of this.#rows(
+        `SELECT content_id FROM inquiry_basis WHERE bundle_id IN (${marks})`,
+        ...part
+      )) {
+        if (typeof r.content_id === "string" && r.content_id) contentIds.add(r.content_id);
+        else legsUnresolved += 1;
+      }
+    });
+    const captures = /* @__PURE__ */ new Set();
+    let contentUnresolved = 0;
+    if (contentIds.size) chunked([...contentIds], (part) => {
+      const marks = part.map(() => "?").join(",");
+      const seen = /* @__PURE__ */ new Set();
+      for (const r of this.#rows(
+        `SELECT content_id, capture_sha FROM content WHERE content_id IN (${marks})`,
+        ...part
+      )) {
+        seen.add(r.content_id);
+        if (typeof r.capture_sha === "string" && r.capture_sha) captures.add(r.capture_sha);
+      }
+      contentUnresolved += part.filter((c) => !seen.has(c)).length;
+    });
+    const capList = [...captures].slice(0, _Store.SEARCHED_SUBJECT_MAX);
+    const capOver = Math.max(0, captures.size - capList.length);
+    const addrOf = /* @__PURE__ */ new Map();
+    const registeredOf = /* @__PURE__ */ new Map();
+    if (capList.length) chunked(capList, (part) => {
+      const marks = part.map(() => "?").join(",");
+      for (const r of this.#rows(
+        `SELECT capture_sha, address_norm, MIN(first_retrieved) AS first_retrieved
+           FROM captured_locators WHERE capture_sha IN (${marks}) GROUP BY capture_sha`,
+        ...part
+      ))
+        if (typeof r.address_norm === "string" && r.address_norm) addrOf.set(r.capture_sha, r.address_norm);
+      for (const r of this.#rows(
+        `SELECT capture_sha, registered FROM register WHERE capture_sha IN (${marks})`,
+        ...part
+      ))
+        registeredOf.set(r.capture_sha, r.registered || null);
+    });
+    const latestMap = (level, kind, subjects) => {
+      const out = /* @__PURE__ */ new Map();
+      if (!subjects.length) return out;
+      chunked(subjects, (part) => {
+        const marks = part.map(() => "?").join(",");
+        for (const r of this.#rows(
+          `SELECT subject, state FROM observation_log
+            WHERE seq IN (SELECT MAX(seq) FROM observation_log
+                           WHERE level = ? AND subject_kind = ? AND subject IN (${marks})
+                           GROUP BY subject)`,
+          level,
+          kind,
+          ...part
+        ))
+          out.set(r.subject, r.state ? String(r.state) : null);
+      });
+      return out;
+    };
+    const levels = [];
+    {
+      const addrs = capList.map((sha) => addrOf.get(sha)).filter(Boolean);
+      const seen = latestMap("document", "address", addrs);
+      const subjects = addrs.map((addr) => {
+        const state = seen.get(addr) || null;
+        return { subject: addr, state, cause: state ? null : "pre_log" };
+      });
+      const missingAddr = capList.filter((s) => !addrOf.has(s)).length;
+      levels.push({
+        level: "document",
+        subject_kind: "address",
+        subjects,
+        unidentified: missingAddr + capOver + legsUnresolved + contentUnresolved
+      });
+    }
+    {
+      const seen = latestMap("content", "capture", capList);
+      const subjects = capList.map((sha) => {
+        const state = seen.get(sha) || null;
+        return {
+          subject: sha,
+          state,
+          cause: state ? null : this.#missingContentCause(sha, registeredOf.get(sha) || null)
+        };
+      });
+      levels.push({
+        level: "content",
+        subject_kind: "capture",
+        subjects,
+        unidentified: legsUnresolved + contentUnresolved + capOver
+      });
+    }
+    {
+      const seen = latestMap("meaning", "capture", capList);
+      const subjects = capList.map((sha) => {
+        const state = seen.get(sha) || null;
+        return {
+          subject: sha,
+          state,
+          cause: state ? null : this.#missingMeaningCause("capture", sha, registeredOf.get(sha) || null)
+        };
+      });
+      levels.push({
+        level: "meaning",
+        subject_kind: "capture",
+        subjects,
+        unidentified: legsUnresolved + contentUnresolved + capOver
+      });
+    }
+    return searchedSection({ at, subjectSource: "case_basis", levels });
   }
   /* CASE-5b / DEC-72: THE FACTS THE CASE RATIFICATION NEEDS, out of the one
        place that holds the rows — `gateFacts`' own shape one altitude up, and for
@@ -51064,6 +51437,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   }
   static FRONTIER_LIMIT_DEFAULT = 200;
   static FRONTIER_LIMIT_MAX = 2e3;
+  /** REC-96 — HOW MANY SUBJECTS A CASE'S `searched` SECTION COMPUTES OVER.
+   *  A bound rather than a scan (D-225/REC-70), and the overflow is PUBLISHED as
+   *  `unidentified` rather than dropped, so a case past it reads `partial` with
+   *  the remainder stated and never `searched` over a truncated set. */
+  static SEARCHED_SUBJECT_MAX = 500;
   /** REC-94 / IC-95 — THE BOUNDED CONTENT-LEVEL FRONTIER. Section 4.2's closing
    *  paragraph and section 6's first reader, at the content level:
    *
