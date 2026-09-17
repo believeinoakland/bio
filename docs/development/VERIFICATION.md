@@ -1391,3 +1391,25 @@ closed; (ii) `--no-verify` skips the hook and always will; (iii) **an old checko
 only once SOME worktree of the clone has run `plancheck` since this landed**, so there is a
 window after the merge in which the unguarded trees stay unguarded; (iv) the cache can go
 stale relative to the tracked script, which is a direct consequence of the chosen order.
+
+**(v) THE SHARED HOOK IS REWRITTEN BY WHOEVER GATED LAST, AND THAT BIT THIS ROW WHILE IT WAS
+CLOSING IT.** `plancheck` reinstalls `pre-push` on every run from whichever worktree is
+gating, so a sibling on a pre-M0-59 checkout writes v1 over v2 and five checkouts go quietly
+back to unguarded — measured by timestamp on this clone: v2 at 19:32:43, v1 again by 19:41:18.
+**It is this section's own class one level up**: the guard's live behaviour depending on which
+checkout last ran a gate rather than on what was merged, and invisible because both states
+produce a successful push. `install()` now refuses to DOWNGRADE. **That cannot fix this
+instance — the overwriting code lives in the other checkouts — and the claim is not made. It
+stops the next one. The flapping ends when M0-59 is on `main` and the worktrees carry it.**
+
+### THE ACCEPTANCE INSTRUMENT WAS WRONG FIRST, AND THAT IS THE MORE USEFUL FINDING
+
+The first coverage instrument **hardcoded v2's resolution logic and asked what the shim WOULD
+do**, rather than running the hook actually installed. It answered `0 unguarded` while five
+checkouts were unguarded. **An equality that costs nothing to produce is not evidence** — and
+this one was produced inside the acceptance check for the row about mechanisms believed on
+their existence rather than their behaviour. It was caught by a routine end-of-item sanity
+check reading the live hook's version line, not by the instrument. The corrected instrument
+**executes the installed `pre-push` with cwd set to each worktree**, which is how git invokes
+it, and reads what it says. **A coverage claim about a shared mechanism must drive the
+artifact that is installed, never a model of it.**

@@ -114,6 +114,14 @@
  * That is why an over-strictness arm is mandatory here and not a courtesy — it is the only
  * instrument that separates D-406's fix from the failure D-406 predicted.
  *
+ * (4) THE DOWNGRADE GUARD DISABLED — `haveVersion > HOOK_VERSION` short-circuited to false
+ * -> 83 pass / 3 FAIL, the decisive one being *...and the newer hook on disk is genuinely
+ * untouched* failing, i.e. the newer hook WAS overwritten. Baseline for this arm 86/0.
+ * **THIS ARM EXISTS BECAUSE THE DEFECT HAPPENED IN THE WILD, TO THIS ROW, WHILE IT WAS BEING
+ * CLOSED** — see the note on `install()`. Note what still PASSES under it: *...and reports ok*,
+ * because a `replaced` is also `ok:true`. The arm that carries the meaning is the one on
+ * `action`, and a suite that only checked `ok` would have been green over the defect.
+ *
  *   BASELINE, and it is a finding rather than a formality: the baseline battery
  *   measured 213/214 · 13,445 assertions, exit 1, with `strandedwork.test.mjs`
  *   failing its `plancheck --local exits 0` arm. THE CAUSE WAS THIS SUITE'S OWN
@@ -620,6 +628,35 @@ section("D-406 — A WORKTREE WHOSE COMMIT PREDATES THE GUARD");
   /* THE ORDER, pinned by BEHAVIOUR rather than by reading the shim.  Corrupt the CACHE only.
      If the hook preferred the cache, this push would die on a SyntaxError; worktree-first
      means the tracked script answers and the corrupt cache is never opened. */
+  /* ---------------------------------------------------------------- NEVER DOWNGRADE.
+     Measured in the wild while this row was being closed: one hook file is shared by every
+     worktree and `plancheck` rewrites it from whichever worktree is gating, so a sibling on an
+     OLDER checkout reinstalled an OLDER shim over the newer one — v2 at 19:32:43, back to v1
+     by 19:41:18 — silently returning five checkouts to unguarded. It is D-406's own class one
+     level up, and invisible for the same reason: both states produce a successful push.
+     THIS ARM PINS WHAT THE GUARD CAN DO, WHICH IS NOT THE SAME AS WHAT WAS NEEDED — it cannot
+     stop a v1 installer, whose code lives in another checkout, and the suite must not imply it
+     can. It stops the NEXT one. */
+  {
+    const hookPath = join(hooksDir({ repo: root }).dir, "pre-push");
+    const realHook = readFileSync(hookPath, "utf8");
+    writeFileSync(hookPath, realHook.replace(/bio-pushguard v\d+/, "bio-pushguard v99"));
+    const older = install({ repo: root });
+    t("NEVER DOWNGRADE — an installer older than the installed hook LEAVES IT ALONE",
+      older.action, "newer");
+    t("...and reports ok, because leaving a newer hook in place is a correct outcome",
+      older.ok, true);
+    t("...and says WHY, naming both versions rather than reporting a silent success",
+      /v99/.test(older.reason || "") && /v2/.test(older.reason || ""), true);
+    t("...and the newer hook on disk is genuinely untouched",
+      readFileSync(hookPath, "utf8").includes("bio-pushguard v99"), true);
+    /* Restore, and prove the restore took — a downgrade guard that could not be turned off
+       would be a fence tighter than its rule. */
+    writeFileSync(hookPath, realHook);
+    t("...and an installer at the SAME version still reports current, so the guard is not a ratchet",
+      install({ repo: root }).action, "current");
+  }
+
   /* Guarded for the reason given above — this arm must not be able to END the module. */
   const cacheSaved = copyBody;
   t("...and there is a cache to corrupt, so the ordering arm below can actually arm",

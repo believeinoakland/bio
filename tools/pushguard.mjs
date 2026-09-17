@@ -368,6 +368,30 @@ export function install({ repo = REPO, dryRun = false } = {}) {
       return { ok: false, action: "foreign", path, source: h.source,
                reason: `a pre-push hook exists at ${path} and is NOT ours — refusing to overwrite it` };
     }
+    /* ---------------------------------------------------------------- NEVER DOWNGRADE
+     *
+     * MEASURED IN THE WILD, ON THIS CLONE, WHILE D-406 WAS BEING CLOSED.  The hook is ONE
+     * file shared by every worktree, and `plancheck` rewrites it on every run from whichever
+     * worktree happens to be gating.  A sibling running an OLDER checkout therefore reinstalls
+     * an OLDER shim over a newer one: v2 was installed at 19:32:43 and was back to v1 by
+     * 19:41:18, which silently returned five checkouts to being unguarded.
+     *
+     * **IT IS D-406's OWN CLASS ONE LEVEL UP** — the guard's live behaviour depending on which
+     * checkout last ran a gate, rather than on what was merged — and it is invisible, because
+     * a reverted hook and a current one both produce a successful push.
+     *
+     * **WHAT THIS CAN AND CANNOT DO, STATED PRECISELY BECAUSE THE DIFFERENCE IS THE WHOLE
+     * POINT: it CANNOT stop a v1 installer, because the overwriting code lives in the OTHER
+     * checkout and no edit here can reach it.** The v1<->v2 flapping closes only when this
+     * lands on `main` and the worktrees carry it. What this DOES is stop the NEXT one: once
+     * every installer is v2 or later, an older worktree can no longer silently downgrade a
+     * newer hook, and it says so rather than reporting a successful install. */
+    const haveVersion = Number((have.match(/bio-pushguard v(\d+)/) || [])[1]);
+    if (Number.isFinite(haveVersion) && haveVersion > HOOK_VERSION) {
+      return { ok: true, action: "newer", path, source: h.source, installedVersion: haveVersion,
+               reason: `the installed hook is v${haveVersion} and this installer writes v${HOOK_VERSION}`
+                     + ` — LEFT ALONE rather than downgraded (this checkout is older than the hook)` };
+    }
     if (dryRun) return { ok: true, action: "would-replace", path, source: h.source };
     writeAtomic(path, want, 0o755);
     return { ok: true, action: "replaced", path, source: h.source };

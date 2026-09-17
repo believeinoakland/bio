@@ -15468,3 +15468,47 @@ resolved to before — which is the property the chosen order was picked for.
 live worktree population that grew 9 -> 15 during a single session. A worktree created from a
 commit that predates M0-56 *after* this was measured is covered by the fallback the moment it
 exists (the copy is already on disk); a FRESH CLONE is not covered until a gate runs in it once.
+
+### THE ACCEPTANCE MEASUREMENT WAS WRONG THE FIRST TIME, AND THE CORRECTION IS THE FINDING
+
+**The first coverage instrument answered `0 unguarded` while five checkouts were in fact
+unguarded.** It HARDCODED v2's resolution logic and asked what the shim WOULD do, rather than
+running the hook that was actually installed. **That is this project's costs-nothing rule
+arriving inside the acceptance check for the row about mechanisms believed on their existence
+rather than their behaviour** — an arm that could not see the regression it existed to catch.
+
+It was caught by a routine end-of-item sanity check reading the live hook's version line, not
+by the instrument. The corrected instrument **executes the installed `pre-push` with cwd set
+to each worktree** — how git invokes it — and reads what it says.
+
+| instrument | answer | true? |
+| --- | --- | --- |
+| simulated v2 resolution (first attempt) | 0 unguarded / 15 | **NO** |
+| driving the INSTALLED hook (corrected) | **5 unguarded / 15** | yes |
+
+### AND THE REGRESSION IT REVEALED IS A SECOND DEFECT, MEASURED IN THE WILD
+
+**`.git/hooks/pre-push` is ONE file shared by every worktree, and `plancheck` rewrites it on
+every run from whichever worktree is gating.** So a sibling running an OLDER checkout
+reinstalls an OLDER shim over a newer one. Measured on this clone, by timestamp:
+
+| time | event |
+| --- | --- |
+| 19:32:43 | this row installs shim **v2**; coverage becomes 15/15 |
+| ~19:41:18 | a sibling's `plancheck`, running **v1** code from a pre-M0-59 checkout, rewrites the hook to **v1** |
+| 19:42:54 | driving the installed hook: **5 checkouts unguarded again** |
+
+**IT IS D-406's OWN CLASS ONE LEVEL UP** — the guard's live behaviour depending on which
+checkout last ran a gate rather than on what was merged — and it is invisible for exactly the
+same reason: a reverted hook and a current one both produce a successful push.
+
+**WHAT WAS DONE ABOUT IT, AND WHAT COULD NOT BE.** `install()` now refuses to DOWNGRADE: an
+installer whose `HOOK_VERSION` is lower than the installed hook's leaves it alone and says so.
+**This CANNOT fix the v1 -> v2 flapping, and the row does not claim it does** — the overwriting
+code lives in the other checkouts and no edit here can reach it. **The flapping closes only when
+M0-59 reaches `main` and the worktrees carry it.** What the guard does is stop the NEXT one.
+
+**SO THE HONEST STATE OF THE ACCEPTANCE IS TWO-PART, and both parts are stated rather than the
+convenient one: the FIX is proved correct (driven at a real remote from a real pre-guard
+worktree, both directions, plus 86 suite assertions and four control arms), and the LIVE CLONE
+will keep flapping between 15/15 and 10/15 until this is merged and the worktrees rebase.**
