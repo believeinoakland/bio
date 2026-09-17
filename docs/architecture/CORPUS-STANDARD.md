@@ -1,6 +1,6 @@
 # The design corpus standard
 
-**Status** · v0.2, written 2026-09-14 by session BOB #10 at Bob's direction the same day; §6 and §7 extended 2026-09-16 by M0-43. This is the standard every design document in this repository is held to: what the corpus is, which levels it has, and the FRONT MATTER every document carries so that a reader can tell, without reading the body, what the document is, where it sits, how complete it is, and what it still lacks. The rules are Bob's (§1); the grammar and the checker that enforces it (`tools/corpuscheck.mjs`, run by `plancheck`) are the mechanism, and the mechanism is this session's. v0.2 closed the hand-kept half: §5's table was correct with nothing making it stay correct, so §6 now carries a MACHINE-READABLE exclusion table and an UNDECIDED table, and the checker walks `docs/development/` and fails by name on a file that is in none of the three. Complete at its level for what it governs today; §6 names what it does not govern, and its UNDECIDED table names the three files nobody has classified, as of 2026-09-16.
+**Status** · v0.2, written 2026-09-14 by session BOB #10 at Bob's direction the same day; §6 and §7 extended 2026-09-16 by M0-43. This is the standard every design document in this repository is held to: what the corpus is, which levels it has, and the FRONT MATTER every document carries so that a reader can tell, without reading the body, what the document is, where it sits, how complete it is, and what it still lacks. The rules are Bob's (§1); the grammar and the checker that enforces it (`tools/corpuscheck.mjs`, run by `plancheck`) are the mechanism, and the mechanism is this session's. v0.2 closed the hand-kept half: §5's table was correct with nothing making it stay correct, so §6 now carries a MACHINE-READABLE exclusion table and an UNDECIDED table, and the checker walks `docs/development/` and fails by name on a file that is in none of the three. Complete at its level for what it governs today; §6 names what it does not govern, and its UNDECIDED table names the three files nobody has classified. **§4 GAINED AN EIGHTH RULE AND §7 A SECOND HALF ON 2026-09-17 (M0-57), ON BOB'S RULING THE SAME DAY THAT `BIO_System_Design.md` §3 IS THE SINGLE AUTHORITY ON DESIGN STATUS**: a to-do list may point at a construct's status but may never restate it, and `corpuscheck --authority` refuses the restatement. **§7 states that arm's reach and its bounds together, deliberately** — the arm is narrow, it judges only a piece a §3 row cites by item number, and a checker believed to cover more than it does is the exact failure §4.8 exists to prevent. as of 2026-09-17.
 
 **Place in the system** · This document governs the FORM of the design corpus, not its content. It sits beside `README.md` (the catalog of documents) and above every document in `docs/architecture/` and the design documents it lists in §5, all of which must satisfy it. `BIO_System_Design.md` is the level-0 document this standard requires to exist; `tools/corpuscheck.mjs` is its enforcement; `tools/plancheck.mjs` runs that enforcement before every push.
 
@@ -165,6 +165,23 @@ What each field is FOR, so the prose is written to the purpose rather than to th
    gap in the design, it reports it to the document's Incomplete sections list through its
    report, and CONDUCT folds it at integration.
 
+8. **DESIGN STATUS HAS ONE AUTHORITY, AND IT IS `BIO_System_Design.md` §3.** Ruled by Bob on
+   2026-09-17, when he agreed the construct map is that authority and asked "that there aren't
+   multiple sources of truth elsewhere in the record". A document may SAY what it lacks — that is
+   §3's whole purpose — but a **to-do list that restates a CONSTRUCT'S design status is a second
+   authority**, and a restated status is a copy that starts rotting the moment it is written. So a
+   list of pieces still to be designed **POINTS at the construct map and at the design document,
+   and never re-asserts the status itself**.
+
+   **THE RECEIPT IS A SESSION'S OWN ERROR, which is why this is a rule and not a preference.** BOB
+   #12 told Bob the claim class was UNDESIGNED, because `BIO_Content_Framework_v0_10.md` §18's
+   table listed "the claim object" among the pieces designed nowhere — while
+   `BIO_Case_Making_v0_1.md` had designed it on 2026-08-03. Nobody was careless; the record
+   contradicted itself in two places and the reader believed the nearer one. `corpuscheck`'s
+   `--authority` arm (M0-57) refuses that shape, and §7 states what it can and cannot see —
+   **which matters more than usual here, because a checker believed to cover more than it does is
+   the exact failure this rule exists to prevent.**
+
 ## 5. Governed documents outside docs/architecture
 
 Every `docs/architecture/*.md` is governed without being listed. Design documents elsewhere
@@ -321,6 +338,42 @@ names a section the document does not have. `--write <file>` regenerates Content
 place. `plancheck` imports the module and folds its failures into its own; a governed
 document that fails corpuscheck fails the gate. `bio-plane/test/corpuscheck.test.mjs`
 drives every arm and its negative control.
+
+**AND IN THE SAME PASS IT CHECKS THAT DESIGN STATUS HAS ONE AUTHORITY (§4.8, M0-57).**
+`statusAuthority()` reads `BIO_System_Design.md` §3's construct table and follows the citations the
+MAP ITSELF wrote — a row carrying `§<section> item <n>` is the authority declaring which item of
+another governed document belongs to which construct. It fails when FOUR corpus-authored signals
+coincide: the citation resolves; the cited section says its items are still to be designed; the
+cited item does not itself name where its design lives; and another document in that row's HOME
+cell both declares the construct in its own `Place in the system` line and carries a body HEADING
+containing every content word of the cited item's own bold key. `--authority` prints it alone; the
+default invocation includes it, and `plancheck` folds it in.
+
+**THE MATCH WAS MEASURED BEFORE IT WAS CHOSEN, AND THE NARROW FORM WAS TAKEN DELIBERATELY.** §3
+calls construct 8 *Intent and inquiry — from goal to case*; §18 calls the piece *the claim object*.
+**The two vocabularies share not one content word**, so no prose-similarity rule could pair them
+without pairing most of the corpus with most of the corpus — and **an arm that fires on a healthy
+state is worse than no arm**, because it is switched off inside a week and takes its true positives
+with it. The explicit citation is narrower and it is what the tool uses.
+
+**WHAT IT CANNOT SEE, STATED RATHER THAN IMPLIED CLOSED.** An undesignedness claim that no §3 row
+CITES is invisible to it. A citation of any other shape — `Part II §18` with no item number,
+`§14.2–14.3`, a bare document reference — is not resolved. A bold key of fewer than two content
+words is skipped and SAID, because one generic noun is not a match this arm will make. A home
+document that designs a piece without a heading naming it reads as absent. And a HIT is evidence
+that a section EXISTS about the piece, never that its design is adequate. Every resolved citation
+therefore reports a VERDICT — `RESTATED`, `points-at-its-design`, `honestly-undesigned`,
+`list-claims-no-undesignedness` — so a clean run states what it EVALUATED rather than only that
+nothing failed; `0 fail` cannot tell one authority from an arm that asked nothing. **`D-404`'s
+`tools/rowsubstrate.mjs` asks a neighbouring question about ROWS and WARNS; this one asks about
+DOCUMENTS and FAILS, because a contradiction between two governed documents is a defect rather
+than a question.** **And the two fail in OPPOSITE directions on purpose, which is what lets this
+one fail rather than warn.** `rowsubstrate`'s measured precision is 1 true of 3 verified, both
+false positives sharing one mechanism — **the design names the RULE, not the IDENTIFIER**
+(CONDUCT #3, 2026-09-17). That is a property of how this corpus is written, not of that tool. A
+home document that designs a piece while naming only the rule reads to signal 4 as ABSENT, so this
+arm stays SILENT: its failure mode is UNDER-REACH, which is a bound M0-58 measures, rather than a
+false alarm, which is how an instrument gets switched off inside a week.
 
 **And in the same pass it audits COVERAGE (M0-43).** `population()` walks every `.md` under
 `docs/development/` RECURSIVELY — `research/` holds three governed documents, so a flat read

@@ -116,6 +116,52 @@ returns 403 to the plane on every path including `robots.txt`, while
 `data.oaklandca.gov`, `oaklandca.opengov.com`, `oakland.legistar.com`,
 `oaklandside.org` and `www.acgov.org` all answer normally.
 
+## M-46 · Why the design-status arm matches on a citation and not on prose (M0-57, 2026-09-17)
+
+**The measurement that chose the matching rule, taken before the rule was written** rather than
+after it, because "these two rows are about the same construct" is a judgement and an arm that
+guesses it fires on healthy states.
+
+| what was measured | figure | instrument |
+| --- | --- | --- |
+| content words shared between `BIO_System_Design.md` §3's name for construct 8 (*Intent and inquiry — from goal to case*) and `BIO_Content_Framework_v0_10.md` §18's name for the piece (*the claim object*) | **0** | read at the artifact, both documents, 2026-09-17 |
+| citations of the shape `§<section> item <n>` in §3's construct table | **1** (construct 8 → Part II §18 item 6) | `node tools/corpuscheck.mjs --authority` |
+| §3 construct rows the arm evaluates | 15 rows, **1 cited pair**, **0 unresolved** | same |
+| `LOOKED_INDETERMINATE` occurrences in `BIO_System_Design.md` (REC-116's true negative) | **0** | `grep -c`, 2026-09-17 |
+
+**What follows, and it is the whole design decision.** With zero shared content words, no
+prose-similarity threshold could pair the receipt without pairing most of the corpus with most of
+the corpus — so the general form of the match is NOT available and the narrow, explicit one was
+taken. **The one-pair figure is the honest cost and is published rather than buried:** the arm's
+LIVE reach today is a single pair. Its PROSPECTIVE reach is every future row written in the same
+voice, which is what separates it from a pair list in the tool — driven in
+`bio-plane/test/corpuscheck.test.mjs` by a second, wholly synthetic triple that fires with the tool
+untouched. M0-58's sweep takes this figure as its input.
+
+## Battery, 2026-09-17 (M0-57's worktree `agent-aa383f4f0259d59f2`)
+
+| run | completion line | note |
+| --- | --- | --- |
+| first | `215/216 suites green · 13554 assertions passing · 393.0s` | **NOT A BASELINE, and said rather than dressed up:** this session started the battery and then edited the tree it was measuring. The one red was `strandedwork.test.mjs`, whose arm asserts `plancheck --local` exits 0 — red at that instant because the session's own prose edits had staled `docs/DECIDED.md`. Re-run alone after regenerating: **88 pass, 0 fail**. |
+
+**THE BRIEFED FIGURE WAS 215/215 · 13527 AND IT WAS WRONG; CONDUCT #3 CORRECTED IT MID-ITEM TO
+216/216 · 13555 AT `7ebe2dd1`, AND THIS WORKTREE CONFIRMS THAT FIGURE INDEPENDENTLY.** The first
+run here read 216 suites with 13554 assertions passing and exactly ONE red, which is 216/216 ·
+13555 on a clean tree — arrived at from a different direction than the run CONDUCT re-measured.
+**The cause it reported is worth more than the number:** it gated the battery at `df4fb394`, then
+merged `origin/main` at `207e13e8` — which ADDED `bio-plane/test/rowsubstrate.test.mjs`, one suite
+and 28 assertions — and pushed without re-running on the tree it shipped. One tree gated, another
+tree shipped.
+
+**AND `rowsubstrate`'s MEASURED PRECISION IS THE FINDING M0-57's MATCHING RULE RESTS ON: 1 TRUE OF
+3 VERIFIED, with both false positives sharing one mechanism — THE DESIGN NAMES THE RULE, NOT THE
+IDENTIFIER** (CONDUCT #3, 2026-09-17). That is a fact about how this corpus is written. It is why
+M0-57's signal 4 was kept at HEADING grain and never widened to the body: with a corpus that names
+rules rather than identifiers, a matcher's misses are unavoidable, so the arm is built to fail by
+UNDER-REACH (silence, a bound M0-58 measures) rather than by over-reach (a false alarm, which is
+how an instrument gets switched off). The two instruments therefore fail in opposite directions on
+purpose, and that is why this one may FAIL a run where `rowsubstrate` only WARNS.
+
 ## Instruments
 
 - `op=runtime` — measured work, the CPU probe trail, and the subrequest ceiling

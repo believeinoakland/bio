@@ -575,7 +575,7 @@ if (conduct && inbox && !/INBOX/.test(conduct))
    is allowed to rot answers a reader with last month's completeness. */
 
 {
-  const { governed, checkFile, coverage } = await import("./corpuscheck.mjs").catch(() => ({}));
+  const { governed, checkFile, coverage, statusAuthority } = await import("./corpuscheck.mjs").catch(() => ({}));
   if (!governed) {
     warn(`corpuscheck.mjs could not be loaded — the design corpus front matter is UNVERIFIED this run.`);
   } else {
@@ -597,6 +597,21 @@ if (conduct && inbox && !/INBOX/.test(conduct))
     notes.push(`design corpus coverage: ${cov.population.length} document(s) under docs/development/ `
       + `— ${cov.governed.length} governed, ${cov.excluded.length} excluded, `
       + `${cov.undecided.length} undecided (D-388), ${cov.unclassified.length} unclassified`);
+    /* M0-57: Bob ruled `BIO_System_Design.md` §3 the SINGLE AUTHORITY on design status on
+       2026-09-17. A second document that RESTATES that status is a copy, and a copy rots — the
+       receipt is a session telling Bob the claim class was undesigned on the strength of a to-do
+       table, six weeks after the design existed. Git-free, so it runs identically under
+       `--local`. The note states what was EVALUATED and what could not be RESOLVED, because
+       `0 fail` cannot tell one authority from an arm that asked nothing. */
+    if (statusAuthority) {
+      const auth = statusAuthority();
+      for (const f of auth.fails) fail(`CORPUS — ${f}`);
+      for (const u of auth.unresolved) warn(`CORPUS — design-status citation UNRESOLVED: ${u}`);
+      notes.push(`design status: one authority (BIO_System_Design.md §3) — ${auth.rows} construct row(s), `
+        + `${auth.pairs.length} cited pair(s) evaluated, ${auth.unresolved.length} unresolved`);
+    } else {
+      warn(`corpuscheck.mjs loaded without statusAuthority — design status is UNVERIFIED this run.`);
+    }
   }
 }
 

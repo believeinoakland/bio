@@ -42,6 +42,28 @@ The format is the one `PARALLELISM.md` fixes:
 
 **Not repaired by rewriting history.** `CLAUDE.md`: never force-push. The commit stands, this entry names what is inside it, and the next reader of `576dd52` has somewhere to land. Recorded here rather than only in a commit message because a commit message is exactly the surface that failed.
 
+## CLAIM 2026-09-17 M0 (M0-57 — design status has ONE authority, and the arm that refuses a second)
+session: m057-design-status-authority (worktree agent-aa383f4f0259d59f2)
+opened: 2026-09-17T00:00:00Z
+paths: `tools/corpuscheck.mjs` (the `statusAuthority` arm APPENDED after `coverage()`; `--authority`
+  added to the CLI; the default run gains one block — no existing arm's behaviour changed).
+  `bio-plane/test/corpuscheck.test.mjs` (ONE new section appended before the FOOT sentinel, plus the
+  import line and `SECTIONS` 8 -> 9; no existing assertion touched).
+  `bio-plane/test/m057-authority.control.mjs` (NEW). `docs/architecture/BIO_System_Design.md` (§3
+  construct 8's STATE cell and the Status front matter ONLY). `docs/architecture/BIO_Content_Framework_v0_10.md`
+  (§18 table item 6, the §18 Incomplete bullet, and the Status front matter ONLY — no section moved,
+  no heading changed, so Contents is untouched). `docs/architecture/CORPUS-STANDARD.md` (§4 gains one
+  rule, §7 one paragraph, Status date). **NOT `docs/development/QUEUE.md`** — flipping the M0-57 row is CONDUCT's act at
+  integration (`kickoffs/WORKER.md`), and it is named as an act with its actor in this session's report.
+  **`tools/plancheck.mjs` — SAID LOUDLY BECAUSE EVERY SIBLING RUNS IT:** the change is confined to the
+  existing corpuscheck block — one destructured name added to the `await import`, and one `if
+  (statusAuthority)` block appended after the coverage note. No other section, arm, ordering or exit
+  path is touched, and `plancheck --local` is green on this tree.
+**LATE, AND SAID RATHER THAN BACKDATED:** this claim was appended after the first edits landed, not
+before them. Nothing was lost — the only shared file is `plancheck.mjs` and its change is additive —
+but the rule is claim-then-edit and this session did not, which is exactly the kind of thing that
+reads as compliance in a report unless it is stated.
+
 ## CLAIM 2026-08-09 UI (UI-42 — version review: rotation and diff)
 session: ui42-version-review (worktree agent-a8c8ed9c32eb56980)
 opened: 2026-08-09T00:00:00Z
