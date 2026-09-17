@@ -151,6 +151,120 @@ const battery = suites.map((f) => {
   return { file: f, src, code: codeOnly(src) };
 });
 
+/* ------------------------------------------------- THE DRIVER CENSUS (M0-51)
+
+   WHAT WAS WRONG. `hasDriver` asked `existsSync(test/<suite>.control.mjs)`, so it
+   measured a NAMING CONVENTION and called the answer a fact about the estate. A
+   correctly written, committed, runnable driver under any other name read as
+   ABSENT. Measured on this tree, 2026-09-17, by a literal walk: **19 of 71
+   drivers have no same-named `.test.mjs` sibling** and were therefore invisible
+   to this reader — up from the TWELVE the row was written against on 2026-09-16,
+   seven having arrived in one day. The population is GROWING, which is why the
+   spot fix was refused: renaming one driver to satisfy the matcher is tuning the
+   SUBJECT to fit the INSTRUMENT, and would leave eighteen invisible while making
+   the nineteenth look handled.
+
+   THE FIX INVERTS THE TEST RATHER THAN LENGTHENING A LIST OF SPELLINGS —
+   VERIFICATION.md's driver law, REC-70's lesson, and the same move that repaired
+   the arms matcher. Instead of guessing a driver's NAME from the suite, walk the
+   DRIVERS and let each one say which suites it drives. The relation is then
+   MEASURED off the artifacts that must exist for the driver to work at all,
+   rather than inferred from a filename.
+
+   WHY NOT THE OTHER TWO CANDIDATES, recorded so the next session does not
+   re-derive them:
+     - A DECLARED DRIVER PATH IN THE SUITE'S OWN HEADER is AUTHORED and costs
+       nothing to produce — a suite asserting it is controlled is the party with
+       an interest in looking controlled, and that is the provenance-hop shape
+       this estate refuses structurally.
+     - A MANIFEST is another hand-kept list, which is the exact defect M0-43
+       measured one tool over, and a hand-carried figure nobody re-measures is
+       this project's most-repeated finding. It would go stale in a day — this
+       population moved by seven in one.
+
+   IT READS CODE, NOT PROSE, and that is load-bearing rather than tidy. D-277
+   blanked prose here because credit-from-a-sentence is the generous direction
+   this instrument exists to refuse, and D-301 put the class census on the same
+   lexer. MEASURED: reading the RAW driver source instead would credit five links
+   across three drivers that exist only in a comment —
+   `accepts-without-reading.control.mjs` MENTIONS `readingname.test.mjs`,
+   `fieldread.control.mjs` mentions `daemon-token` and `meaningread`, and
+   `d301-census.control.mjs` and `verdict-excluder.control.mjs` each name a suite
+   they discuss but never touch. Those are drivers talking ABOUT a suite, not
+   driving it.
+
+   HOW A LIAR MAKES THIS GREEN, said before what it checks, because the place a
+   mechanism is weakest is the thing a reader most needs told: a DEAD CODE
+   REFERENCE. `const _ = "foo.test.mjs";` in a driver that never touches `foo`
+   credits `foo` with a driver. That is a real hole and it is not closed here.
+   What is claimed is only that it is STRICTLY HARDER TO FAKE THAN WHAT IT
+   REPLACES — the old rule was satisfied by RENAMING A FILE, which is zero work
+   and is precisely the cosmetic fix this row exists to refuse — and harder than
+   prose, which one comment satisfies.
+
+   AND IT IS A POINTER, NEVER A GRADE. `hasDriver` annotates "the evidence may
+   live here, go and run it"; it never promotes a suite into the RUN count, which
+   stays on the RECORDED declaration alone. That is the same category the
+   `runElsewhere` floor sits in and for the same reason: over-crediting a POINTER
+   costs a reader one wasted command, over-crediting a GRADE costs the record.
+
+   THE LIMIT, STATED WHICHEVER WAY IT GOES: this establishes that a driver EXISTS
+   and names the suite. IT CANNOT ESTABLISH THAT THE DRIVER RAN. A code reference
+   is not an execution. The instrument for that half is M0-42's `run:` key, which
+   is not re-solved here and which nothing in this census's output may be read to
+   imply. */
+const SUITE_REF = /[A-Za-z0-9._-]+\.test\.mjs/g;
+const suiteNames = new Set(suites);
+const driverRows = readdirSync(join(ROOT, "test"))
+  .filter((f) => f.endsWith(".control.mjs")).sort()
+  .map((file) => {
+    const src = readFileSync(join(ROOT, "test", file), "utf8");
+    const sibling = file.replace(/\.control\.mjs$/, ".test.mjs");
+    /* The SAME-NAME SIBLING IS KEPT as one way in, not replaced by the new one.
+       Every suite this reader credits today is therefore still credited after —
+       the new rule is a STRUCTURAL SUPERSET, not a re-decision. This register
+       changes what is SEEN and must change nothing that is TRUE. */
+    const byName = suiteNames.has(sibling) ? [sibling] : [];
+    const byCode = [...new Set(codeOnly(src).match(SUITE_REF) || [])]
+      .filter((s) => suiteNames.has(s)).sort();
+    const drives = [...new Set([...byName, ...byCode])].sort();
+    return { file, byName: byName[0] || null, byCode, drives,
+             /* A driver naming NO suite in code is NOT dropped and NOT counted as
+                healthy. It is carried with its reason so the census reports a
+                JUDGEMENT rather than a figure — the acceptance this row was
+                written to, and the difference between "not found" and "not where
+                I looked". */
+             unreadable: drives.length === 0 };
+  });
+const driversFor = new Map();
+for (const d of driverRows)
+  for (const s of d.drives) driversFor.set(s, [...(driversFor.get(s) || []), d.file]);
+
+/* NOT WALKED (M0-51). A file whose NAME CLAIMS to be a control but which this
+   reader does not walk. The predicate is deliberately narrow — `*.control.*`
+   that is not `*.control.mjs` — rather than "every other file in test/", of
+   which there are 108 and which would bury the finding in probes and fixtures.
+
+   IT EXISTS FOR TWO REASONS, and the second is the one that earns it.
+
+   First, it found three: `battery-provenance.control.sh`,
+   `coverage-provenance.control.sh` and `d334-monitor-credential.control.sh` are
+   CONTROL DRIVERS WRITTEN IN SHELL, and a reader that walks only `.control.mjs`
+   cannot see them at all. That is this row's own defect one notch further out —
+   the instrument measuring a naming convention and calling it an estate fact.
+   They are NAMED here rather than resolved: this reader does not parse shell,
+   and pretending to would be the overclaim the register exists to refuse.
+
+   Second, IT IS WHAT MAKES THE TWO NEGATIVE-CONTROL HALVES DISTINGUISHABLE. A
+   driver DELETED outright and a driver RENAMED OUT OF THE WALK both leave their
+   suite with no driver, and from the suite's seat those are the same absence.
+   They are not the same fact. With this category, a rename leaves a NAMED
+   residue here — *not where I looked* — while a delete leaves nothing at all —
+   *not found*. Separating those two is the whole reason this row exists, and
+   without this list the register could not have done it. */
+const notWalked = readdirSync(join(ROOT, "test"))
+  .filter((f) => f.includes(".control.") && !f.endsWith(".control.mjs")).sort();
+
 /* A call-shaped occurrence, not a mention. `index.mjs` resolves the op as
    `searchParams.get("op") || path.slice(1)`, so `/api/?op=cite` and a bare
    `/cite` are the SAME dispatch and both count; the word "monitor" appearing in
@@ -227,7 +341,13 @@ const controlRows = battery.map(({ file, src }) => {
               printed RUN figure stay on the RECORDED declaration alone. */
            runElsewhere: c && c.run.state !== "RUN"
              ? readRunEvidence(src.replace(/\s+/g, " ")).state === "RUN" : false,
-           hasDriver: existsSync(join(ROOT, "test", file.replace(/\.test\.mjs$/, ".control.mjs"))) };
+           /* M0-51. Was `existsSync(test/<suite>.control.mjs)` — a NAMING TEST
+              reported as a fact about the estate. Now a lookup in the DRIVER
+              CENSUS above, which walks the drivers and reads which suites each
+              one names in CODE. Same-name siblings still resolve, so nothing
+              this reader credited before has stopped being credited. */
+           hasDriver: driversFor.has(file),
+           drivers: driversFor.get(file) || [] };
 });
 
 /* THE REGISTER'S FLOOR (M0-14). A ceiling is not a ratchet: the arms tally could
@@ -1084,9 +1204,18 @@ const REGISTER_FLOOR = {
      necessarily moves the census by one — the two ratchets in that file cannot move
      independently. Arithmetic on these figures is wrong in more ways than one.
      ONE KEY SET, grepped after writing: `^  arms:` matches twice, here and FLEET_FLOOR (76). */
-  arms: 1129,
-  classified: 201,
-  corpus: 202,
+  /* MOVED 2026-09-17 by M0-51 (1129 -> 1136 · 201 -> 202 · 202 -> 203): this item's own green
+     `--strict` run, taken AFTER its commit `e80d4993`, PRINTED `REGISTER FLOOR  arms 1136/1129 ·
+     classified 202/201 · corpus (suites read) 203/202 · GREW by 7 arm(s)` — READ FROM THE PRINT,
+     never incremented by hand, which is the only way this ratchet is allowed to move (D-238).
+     The cause is ONE new suite, `m051-driver-census.test.mjs`, declaring SEVEN arms: the driver
+     census's negative controls, all seven armed and as declared. Nothing FELL.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
+     `FLEET_FLOOR`, which is the documented state; `FLEET_FLOOR` is UNMOVED and none is owed —
+     this item adds no fleet member and no fleet suite. */
+  arms: 1136,
+  classified: 202,
+  corpus: 203,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
@@ -1801,6 +1930,49 @@ if (JSON_OUT) {
     console.log(`  in the file. ${noEvidenceAnywhere.filter((r) => r.hasDriver).length} of those ${noEvidenceAnywhere.length} have a sibling *.control.mjs, so their evidence may`);
     console.log(`  live in the DRIVER: this register reads a declaration and NEVER FOLLOWS A DELEGATION,`);
     console.log(`  which is readControl's existing rule and a real blind spot here, not a tidy-up.`);
+  }
+  /* M0-51. THE DRIVER CENSUS, PRINTED AS A JUDGEMENT AND NOT AS A FIGURE. Every
+     driver in `test/` is accounted for here: either it is READ — the suites it
+     drives are named — or it is NAMED AS UNREADABLE with its reason. A census
+     that printed only a percentage would report the drivers it already saw as
+     healthy, which is the acceptance this row explicitly refuses. */
+  {
+    const orphans = driverRows.filter((d) => !d.byName);
+    const unreadable = driverRows.filter((d) => d.unreadable);
+    const recovered = orphans.filter((d) => !d.unreadable);
+    console.log(`\n  DRIVER CENSUS (M0-51): ${driverRows.length} *.control.mjs in test/ · ${orphans.length} have NO same-named`);
+    console.log(`  .test.mjs sibling and were INVISIBLE to this reader before this item. The old rule`);
+    console.log(`  tested a NAMING CONVENTION; this one walks the drivers and reads which suites each`);
+    console.log(`  NAMES IN CODE — prose blanked, because a driver that MENTIONS a suite is not driving it.`);
+    console.log(`  IT ESTABLISHES THAT A DRIVER EXISTS, AND CANNOT ESTABLISH THAT IT RAN: a code`);
+    console.log(`  reference is not an execution, and the instrument for that half is the "run:" key.`);
+    if (recovered.length) {
+      console.log(`\n    READ (${recovered.length}) — driver found under a name the old matcher could never match:`);
+      for (const d of recovered) console.log(`      ${d.file.padEnd(38)} drives  ${d.byCode.join(", ")}`);
+    }
+    if (unreadable.length) {
+      console.log(`\n    UNREADABLE (${unreadable.length}) — NAMED, not dropped, and NOT counted as healthy. The file is`);
+      console.log(`    here and was walked; it names no suite of this battery in code, so this reader`);
+      console.log(`    cannot say what it drives. "I HAVE IT AND CANNOT READ IT" is a third fact, distinct`);
+      /* The count is INTERPOLATED and not typed. This sentence first read "all
+         five", which was true of the tree it was written on and wrong on every
+         other — a hand-carried figure in a document nobody re-measures, which is
+         this project's most-repeated finding, and it had landed inside the output
+         of an instrument whose whole subject is miscounting. Caught by running
+         this reader over a scratch tree holding two. */
+      console.log(`    from both "not found" and "not where I looked", and a census that reported a`);
+      console.log(`    PERCENTAGE instead of these names would have hidden all ${unreadable.length}:`);
+      for (const d of unreadable) console.log(`      ${d.file.padEnd(38)} names no suite in code`);
+    }
+    if (notWalked.length) {
+      console.log(`\n    NOT WALKED (${notWalked.length}) — the name claims a control; this reader does not walk it.`);
+      console.log(`    "NOT WHERE I LOOKED", which is a different fact from "not found" and is kept apart`);
+      console.log(`    from it on purpose. These are control drivers written in SHELL: they are NAMED and`);
+      console.log(`    deliberately NOT resolved, because this reader does not parse shell and claiming to`);
+      console.log(`    read them would be the overclaim the register exists to refuse.`);
+      for (const f of notWalked) console.log(`      ${f}`);
+    }
+    console.log(`\n    ${driverRows.length - unreadable.length}/${driverRows.length} drivers resolve to at least one suite · ${driversFor.size}/${battery.length} suites have a driver.`);
   }
   console.log(`\n  RE-RUNNABLE IN ONE STEP: ${runRows.filter((r) => r.hasDriver).length}/${runRows.length} RUN tokens sit beside a *.control.mjs driver, so`);
   console.log(`  the claim can be falsified by one command. The other ${runRows.filter((r) => !r.hasDriver).length} are falsifiable only by`);
