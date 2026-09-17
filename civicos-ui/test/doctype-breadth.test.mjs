@@ -44,6 +44,11 @@
  *      order, has no type, and the suite asserts the registry says so rather than
  *      letting the absence be silent.
  */
+import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
+   discard the writer's own output. SHARED from the plane's test estate rather than copied into
+   this one — ONE implementation, so `bio-plane/test/tally-through-pipe.test.mjs` guards it for
+   both estates and a node release closing the private door goes red once instead of half. The
+   import is for its SIDE EFFECT and is idempotent. Census: `stdio-census.test.mjs`. */
 import fs from "fs";
 import { readText } from "../../docprofile/readtext.mjs";
 import { doctypes, doctypeFor, alsoFor } from "../../docprofile/doctypes/registry.mjs";

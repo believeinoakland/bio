@@ -13812,3 +13812,121 @@ promote may cost and §4.1 already names the remedy (chunk across ticks).
   made a later arm measure a different engine. The figures above are from the
   runs where it was off, taken on freshly created tables.
 
+
+## M0-36 — the UI test estate's tally loss, both mechanisms, measured 2026-09-16
+
+Instrument: `civicos-ui/test/nc-m036.mjs` (seven arms, each armed alone) and
+`civicos-ui/test/stdio-census.test.mjs`. Machine: darwin 25.5.0, node **v26.0.0**, base
+`origin/main` `82ffae30`. **Every arm was driven through `civicos-ui/test/run.mjs`'s own
+pipe and none through a terminal** — node's writes to a POSIX tty are synchronous, so the
+defect does not exist there and a terminal run refutes nothing while looking exactly like
+a refutation.
+
+### The population, and why neither figure in the queue row was the one to edit on
+
+| population | count |
+| --- | --- |
+| `.mjs` files in `civicos-ui/test/` | 67 (before this item's two new files) |
+| …of those, calling `process.exit` | 55 |
+| …of those, already importing the flush module | 2 (`member-respect.test.mjs`, `member-respect.control.mjs`) |
+| **…therefore repaired** | **53** — 41 `.test.mjs` suites, 11 `.control.mjs`/harness drivers, and `run.mjs` itself |
+| `.test.mjs` suites `run.mjs` discovers | 49 |
+| …of those, calling `process.exit` | 42 |
+
+M0-36's row carried **"38 of the 53"**. Both figures are reproducible and neither is the
+editing figure: **53** is the whole directory's unguarded writers, and **38** is
+`.test.mjs` files that call `process.exit` and contain **no occurrence of the string
+`stdio` at all** — which under-counts the suites by three (`auth-surface.test.mjs`,
+`intent-write.test.mjs`, `refusal-codes.test.mjs`), each of which spawns piped children of
+its own and so matched a scan for the substring while importing nothing. **A grep for a
+substring of the answer is not a census for the answer**, and the same false positive then
+occurred inside the census written to replace it: its first draft scored `nc-m036.mjs`
+guarded because that driver carries the module path as a STRING CONSTANT in order to strip
+it during an arm. The matcher is now anchored to an import statement and is tested in both
+directions inside the suite that uses it.
+
+### D-282 — the WRITER discarding queued bytes at `process.exit`
+
+Armed suite: flood, then a tally line, then `process.exit(1)` — the shape of every failing
+suite here. The ONLY difference between arms is the one import line.
+
+Armed suite: flood, then a tally line, then `process.exit(1)`. **40 samples per cell**,
+spawned with `run.mjs`'s own child options, PINNED to `run.mjs`'s source so the cheap path
+cannot drift from what the runner does:
+
+| dump | flush import | samples | **tally LOST** | bytes delivered (min–max) |
+| --- | --- | --- | --- | --- |
+| ~410 KB | **no** | 40 | **30 of 40** | 65,581 – 410,568 |
+| ~410 KB | yes | 40 | **0 of 40** | 410,568 – 410,568 |
+| ~2.4 MB | **no** | 40 | **39 of 40** | 65,581 – 2,463,568 |
+| ~2.4 MB | yes | 40 | **0 of 40** | 2,463,568 – 2,463,568 |
+
+Through the ACTUAL `run.mjs` — all 50 suites, its three guards, its provenance report —
+at ~2.4 MB without the import, across four separate driver runs on this machine: **lost in
+3/3, 1/3, 2/3 and 2/3 samples**; at ~410 KB: **1/3 and 0/3**. With the import, through the
+real runner: **0 lost in 18 samples**, at both sizes, in every driver run.
+
+**THE MINIMUM ARRIVAL IS 65,581 BYTES, WHICH IS THE 64 KiB PIPE BUFFER PLUS THE LINES
+BEFORE IT** — the signature `stdio.mjs`'s header records, reproduced here independently.
+With the import the delivered byte count is not merely sufficient but **identical and
+complete in every one of 80 samples**.
+
+**THE LOSS IS A RACE AND ITS RATE MOVES WITH MACHINE LOAD, AND TWO DECLARATIONS GOT THAT
+WRONG BEFORE THE ARM DID.** Declared *lost in every one of 3 runs* at ~410 KB it measured
+1 of 3; re-declared *lost at least once in 3* it measured 0 of 3 on a quieter machine; the
+~2.4 MB cell measured 3-of-3 with several workers live and 1-of-3 on a quiet one. **Both
+times the arm was right and the DECLARATION was wrong** — which is what D-282's own control
+had to record twice — and the correction was not a better guess but a change of KIND: stop
+declaring an OUTCOME, count SAMPLES, and declare the comparison of rates. Three samples
+cannot decide a coin, and an arm that declares one anyway produces a confident wrong answer
+in whichever direction the machine happened to be leaning. **Intermittence is the WORSE
+property and not the milder one**: a tally that is usually there is a tally nobody learns to
+distrust, and D-93 exists because a suite reporting no tally reads as one that never ran.
+
+### D-387 — the READER refusing the bytes, which the flush fix cannot touch
+
+`execFileSync` with no `maxBuffer` defaults to **1 MiB**, and node KILLS the child on
+overflow. Measured directly rather than inferred from the shape:
+
+    ENOBUFS after 1,114,112 bytes          node v26.0.0, execFileSync, no maxBuffer set
+
+With the flush fix held CONSTANT and `run.mjs`'s `maxBuffer` line as the only variable, at
+a ~2.4 MB dump: **with it, tally PRESENT at 2,463,601 bytes; without it, tally LOST at
+1,055,165 bytes.**
+
+**THIS IS WHY THE FIRST DRAFT OF ARM 2 CAME BACK RED OVER A SUBJECT THAT WAS WORKING.** It
+was sized at 2.4 MB against the unfixed reader, so it measured the ceiling and said nothing
+whatever about flushing — the *control whose method perturbs a second variable* class,
+arriving inside the fix for a tally-loss bug. The tell was the byte counts: 1,051,059 and
+1,096,225 are not pipe-buffer numbers.
+
+**AND D-282's ROW SAYS "IT IS NOT `maxBuffer`", WHICH IS TRUE AND WAS NEVER ABOUT THIS
+RUNNER.** That measurement was taken against `bio-plane/scripts/battery.mjs`, **which sets
+its own**; `civicos-ui/test/run.mjs` set none. A true sentence about one instrument read
+for five weeks as a claim about its twin one directory over.
+
+### What these instruments cannot see, stated
+
+The census reads SOURCE TEXT: it can see that a file imports the module and cannot see
+whether the module still WORKS, which is why it also drives a flooding child through a real
+pipe, and why `bio-plane/test/tally-through-pipe.test.mjs` remains the load-bearing half
+for the private `_handle.setBlocking` door. The census's reach is `civicos-ui/test/` only —
+the three `civicos-ui/check-*.mjs` guards are outside it, still exit unflushed, and
+`check-mock-envelope.mjs` still spawns all 56 suites on the 1 MiB default; ARM D prints
+that state every run rather than leaving it to a register. No historical UI-harness failure
+was re-examined for either truncation, because none was kept, so **how often this has
+already happened is UNKNOWN** and is not rounded up.
+
+### The census was caught by the estate at this item's own gate, and the catch was right
+
+`hygiene.test.mjs` failed `stdio-census.test.mjs` on the M0-16/D-301 arm — *every walk of
+this class is GUARDED or NAMED; a new one is a decision, not a silence* — because the new
+file discovers its own corpus with `readdirSync` and prints a population from it. That is
+precisely the shape that let M0-15's phantom (`machinefences-dec49.test.mjs`, 57
+assertions, in no commit) into a baseline, and `refs/stash` is repository-wide across every
+worktree of this clone. It is GUARDED by `scripts/provenance.mjs` rather than added to the
+named-and-unguarded list, because the figure it prints is the ANSWER rather than a
+diagnostic: it now reports **67 of 69 discovered items are in the commit at HEAD
+(`82ffae30`)**, naming its own two uncommitted files, so a reader about to quote *53
+writers repaired* is told which total another checkout reproduces. Battery arithmetic:
+`hygiene` went 752 pass / 1 fail → **753 pass / 0 fail**, the same 753 assertions.
