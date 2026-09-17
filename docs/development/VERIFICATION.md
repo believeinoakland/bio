@@ -436,6 +436,68 @@ an unreadable declaration is a gap in the instrument, not a defect in the driver
 tally MAY remain a hard-coded literal — the defect was never the literal but that nothing
 reconciled it, and a tally derived from the driver's own baseline run agrees for free.
 
+### A DRIVER IS FOUND BY WALKING THE DRIVERS, NEVER BY GUESSING ITS NAME (M0-51, 2026-09-17)
+
+**`coverage.mjs` used to answer *does this suite have a control driver?* with
+`existsSync(test/<suite>.control.mjs)`.** That is a test of a NAMING CONVENTION reported
+as a fact about the estate, and a correctly written, committed, runnable driver under any
+other name read as ABSENT. **Measured by a literal walk of `bio-plane/test/`: 19 of 71
+drivers have no same-named sibling — up from 12 the day before, seven having arrived in a
+single wave.** The population is GROWING, which is what refuses the spot fix: renaming one
+driver to satisfy the matcher is tuning the SUBJECT to fit the INSTRUMENT, and would leave
+eighteen invisible while making the nineteenth look handled.
+
+**THE RULE. Walk the DRIVERS and read which suites each one NAMES IN CODE** — prose blanked
+through the estate's one lexer, exactly as D-277 and D-301 already require of this reader.
+The same-name sibling is KEPT as one way in rather than replaced, so the new rule is a
+structural SUPERSET: measured on the real tree, 52 suites had a driver under the old rule
+and 73 under this one, and **the number that LOST one was ZERO.**
+
+**The two candidates that were refused, recorded so they are not re-derived.** A DECLARED
+DRIVER PATH IN THE SUITE'S OWN HEADER is authored and costs nothing to produce — a suite
+asserting it is controlled is the party with an interest in looking controlled. A MANIFEST
+is another hand-kept list, the exact defect M0-43 measured one tool over, and this
+population moved by seven in one day.
+
+**IT READS CODE AND NOT PROSE, AND THAT IS LOAD-BEARING.** Reading the raw driver source
+would credit five links across three drivers that exist only in a comment — a driver that
+MENTIONS a suite is not driving it, which is D-277's defect pointed at drivers.
+
+**HOW A LIAR MAKES IT GREEN, stated before what it checks: a DEAD CODE REFERENCE.** A
+string naming a suite, in code, in a driver that never touches it, buys a credit. That hole
+is NOT closed. What is claimed is only that it is strictly harder to fake than what it
+replaced — **the old rule was satisfied by RENAMING A FILE** — and that `hasDriver` is a
+POINTER and never a GRADE: it says *the evidence may live here, go and run it*, and never
+promotes a suite into the RUN count. Over-crediting a pointer costs one wasted command;
+over-crediting a grade costs the record.
+
+**THE CENSUS REPORTS A JUDGEMENT AND NOT A FIGURE, AND IT SEPARATES THREE FACTS** that a
+percentage collapses into one: **NOT FOUND** (no driver anywhere), **I HAVE IT AND CANNOT
+READ IT** (walked, names no suite in code — 5 drivers today, each NAMED), and **NOT WHERE I
+LOOKED** (a file whose name claims a control, outside the walk). The third found three real
+ones: `battery-provenance.control.sh`, `coverage-provenance.control.sh` and
+`d334-monitor-credential.control.sh` are **control drivers written in SHELL**, invisible to
+any `.control.mjs` walk. They are NAMED and deliberately NOT resolved, because this reader
+does not parse shell and pretending to would be the overclaim the register exists to refuse.
+
+**WHY THAT THIRD CATEGORY IS NOT DECORATION, and it is the measurement worth keeping.**
+Driving both halves on the real tree over `clockadvance.control.mjs` — the sole driver of
+`action-loop.test.mjs`, and one of the nineteen the old matcher missed — a driver RENAMED
+OUT of the walk and a driver DELETED outright produced **numerically identical reports**:
+`66/71 drivers resolve · 73/203 suites have a driver` in both. **Only the NAMED residue
+told them apart** — the renamed file appears in NOT WALKED, the deleted one appears
+nowhere. A FIGURE cannot separate *not found* from *not where I looked*; a JUDGEMENT can.
+
+**THE LIMIT, AND IT IS STATED WHICHEVER WAY THE CENSUS READS.** This establishes that a
+driver EXISTS and names the suite. **IT CANNOT ESTABLISH THAT THE DRIVER RAN.** A code
+reference is not an execution. The instrument for that half is M0-42's `run:` key, below,
+and nothing in the census's output may be read to imply it.
+
+The suite is `bio-plane/test/m051-driver-census.test.mjs`; its seven arms are declared
+there and RUN by `bio-plane/test/m051-driver-census.control.mjs`
+(`node test/m051-driver-census.control.mjs` from `bio-plane/`), 7 of 7 armed and 7 of 7 as
+declared, every restore verified by sha256 AND by byte comparison under a floor.
+
 ### RUN vs DECLARED — AND THE LIMIT IS THE FIRST THING STATED (M0-42, 2026-09-16)
 
 **NOTHING HERE PROVES THAT A NEGATIVE CONTROL RAN, AND A REGISTER THAT CLAIMED TO WOULD BE A
