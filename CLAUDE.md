@@ -274,6 +274,28 @@ when a control refutes a finding, check what ELSE your method changed before bel
 and record the method beside the result, because the next person re-driving it the obvious
 way gets the confident wrong answer.
 
+**A FIX VERIFIED ONLY AT THE THING YOU CHANGED IS NOT VERIFIED.** Added 2026-09-17 after the
+same shape was measured THREE times in one afternoon by two sessions, and CONDUCT #3's phrasing is
+the one that generalises: **a CONSUMER and a CROSS-REFERENCE are the same relationship wearing
+different names.** A predicate was corrected while `plancheck`'s own note went on printing the
+figure it had just disproved. Two colliding debt rows were renumbered correctly while a third
+row's cross-reference still pointed at the old ids. A message was rewritten while the suite arm
+pinning its old WORDING stayed green until it didn't. **In every case the change was right, the
+check at the change site passed, and something downstream kept publishing the old answer.**
+
+So after a fix, ask **who else reads this** — the gate's note, the suite's assertion, the row that
+cites it, the kickoff that quotes it — and check THERE. It is the same discipline as *test through
+the op*, pointed at a correction rather than at a feature.
+
+**AND THE INSTRUMENT THAT CATCHES AN OVERCLAIM CAN MANUFACTURE ONE, POINTED AT WHOEVER IS HOLDING
+IT.** CONDUCT #3, verifying a peer's fix to this standard, ran `node tools/owed.mjs --bogusflag |
+head -1; echo $?`, read **0**, and was one sentence from reporting that half the fix had not
+landed. `$?` after a pipe is the PIPE's status. Unpiped it exits **2** and the claim was exact.
+That is this file's own `cmd | tail` rule — already paid for once on a strict coverage run —
+arriving INSIDE THE ACT OF CHECKING SOMEBODY ELSE'S WORK, where it produces a false REFUTATION
+rather than a false pass. **A refutation is a claim and owes the same measurement as the thing it
+refutes.**
+
 **Correct superseded tests, never exempt them.** If a rule changed, change the
 assertion and say in a comment why the old one was wrong. An exempted test is a
 rule nobody is enforcing and nobody remembers deleting.
