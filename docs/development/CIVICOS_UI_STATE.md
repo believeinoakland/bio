@@ -50,6 +50,67 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v91, 2026-09-17 session, thread UI, UI-64. Landed on `worktree-agent-a3e2efc5bdd9b529e`.
+SURFACE: `app.html`, the conclude act's commit slot. **THE FALSIFIER OVERRIDE WAS
+REACHABLE ON THE WIRE AND INVISIBLE TO THE MEMBER.** REC-117 landed the plane half the
+same day — `op=conclude` accepts `no_falsifier=1`, the document carries who and when,
+the published page says so — and verified AT THE ARTIFACT that `no_falsifier` appeared
+NOWHERE in this file. So the record accepted an act this surface offered no way to
+perform, which left Bob's ruling half-standing: overridable by the plane, invisible to
+the member, and a member who cannot find the override is still pressured into INVENTING
+a falsifier. DEC-69 forbids compelling a member and a control that exists only on the
+wire does not discharge it.
+
+**THE DESIGN DECISION, AND IT IS THE SUBSTANCE OF THE ITEM RATHER THAN A PRELIMINARY.**
+REC-117 declined to build this from the RECORD lane because the conclude flow DERIVES
+the falsifier from leg selection (HARD 2), so how a member says *none* there is a UI
+question. The answer taken here: **the override is NOT a field and NOT a checkbox — it
+is an act offered BY THE PLANE'S OWN REFUSAL.** `concludeDoorHtml` renders it only while
+`op=conclude` is answering `NO_FALSIFIER` to this member with this draft, and
+`concludeNoFalsifier(true)` REFUSES TO SET THE FLAG at any other moment. That makes
+*surfaced before overridden* a fact about the ACT rather than about the markup — the
+distinction that matters, because a handler is a global on this page and "the button is
+only rendered under the refusal" would otherwise be a claim about rendering that a
+caller could walk straight past. **A checkbox beside the textarea cannot have that
+property at all**, which is why it was rejected: it is reachable before the record has
+said anything, so a member could set it having never been told what they were accepting
+— the silent override the plane half was built to make impossible, reintroduced one
+layer up.
+
+**DEC-8 HOLDS BY CONSTRUCTION AND NOT BY CARE.** The sentence that teaches the override
+is the refusal's own `detail`, which REC-117 wrote deliberately (*"If no falsifier can
+honestly be stated, SAY SO rather than inventing one"*); this surface renders those bytes
+and supplies only the CONTROL. What the member accepted stays on screen, in the record's
+words, right up to the commit — a flow that showed the condition once and hid it would
+satisfy *surfaced* on a transcript and fail it for the member standing at the button —
+with the way back beside it. **A falsifier stated while the override stands is refused by
+the PLANE (`FALSIFIER_AND_NONE_STATED`) and this surface clears NEITHER statement**,
+because choosing between a member's two statements is exactly what REC-117 refused to let
+the plane do, and a surface doing it instead would be the same act at a different layer.
+
+**ONE LINE OF THE ORDINARY JOURNEY LEGITIMATELY MOVED AND IT IS NAMED RATHER THAN LET
+PASS.** The empty-falsifier hint read *"Nothing yet. The record refuses a conclusion that
+says nothing would overturn it."* — a sentence THIS SURFACE WROTE, true until REC-117 and
+FALSE after it, stating the record's gate as absolute when the record's own refusal now
+names a way through. **The only member who ever reads that line is the member with no
+falsifier**: the exact member this item exists for, told the door was shut. It is now
+*"Nothing yet."* and the rule is left entirely to the plane's sentence below it, which is
+where DEC-8 says it belongs.
+
+TESTS: `civicos-ui/test/conclude-nofalsifier.test.mjs`, 66 assertions against the REAL
+plane under miniflare — real members enrolled through `op=memberadd`/`op=enroll`/
+`op=login`, real questions promoted with real basis legs — driven THROUGH THE SURFACE and
+**read back off the DOCUMENT rather than the envelope, because REC-117's arm B proved the
+op's computed answer passes under a completely silent override.** Over-strictness is two
+members, not one: one who states a falsifier by TYPING and one who states it by POINTING
+at legs with an empty textarea, which is the spelling a door keyed on *the textarea is
+blank* would get wrong. Control: `conclude-nofalsifier.control.mjs`.
+
+**A GAP IN THIS LEDGER'S NUMBERING, STATED SO IT IS NOT READ AS A MISSING ITEM: UI-63
+landed before this item (`3126e3bb`, merged `1829cb05`) and appended no entry here.** Its
+record is its `QUEUE.md` row. This entry takes `v91` rather than leaving the number free,
+because a reserved slot nobody fills is indistinguishable from one nobody noticed.
+
 v90, 2026-09-17 session, thread UI, UI-62. Landed on `worktree-agent-a79a0995d1af935bb`.
 SURFACE: `app.html`, the evidence finder and the cite composer. THE MEMBER CAN READ A
 PASSAGE, AND THE SURFACE SAYS WHICH LEVEL WAS EMPTY. The finder asked two questions and

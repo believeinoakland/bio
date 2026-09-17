@@ -9159,7 +9159,14 @@ function legConsequence(axisRaw, target){
 
 let CONCL = null;
 /* { id, title, act, legs, pair, raw, pairErr, legPairs:{id->answer}, sel:[],
-     conclusion, falsifierText, pf, receipt, busy } */
+     conclusion, falsifierText, noFals, noFalsSaid, pf, receipt, busy }
+
+   UI-64: `noFals` is the member's own assertion that none can be stated, and
+   `noFalsSaid` is THE REFUSAL THEY WERE SHOWN when they made it — kept rather
+   than re-derived, because what Bob's ruling turns on is what this member
+   actually read before accepting it. Both are per-draft and die with the
+   dialog: a fresh `openConclude` builds a fresh object, so an override never
+   outlives the question it was taken on. */
 
 /* THE FALSIFIER, COMPOSED FROM THE MEMBER'S OWN TWO INPUTS AND NOTHING ELSE:
    the ids they selected, in the order the record holds them, and the words they
@@ -9174,9 +9181,29 @@ function concludeFalsifier(){
   return [ids.join(", "), txt].filter(Boolean).join(" · ");
 }
 
+/* UI-64 — THE WHOLE DRAFT, BUILT ONCE, SO THE PRE-FLIGHT AND THE COMMIT CANNOT
+   DRIFT APART. They differ in exactly ONE field — `target`, which the pre-flight
+   withholds — and a second difference would quietly stop the pre-flight being a
+   dry run of the act it precedes.
+   `no_falsifier` IS APPENDED ONLY WHEN THE MEMBER HAS TAKEN THE OVERRIDE, never
+   as `0` and never as a default. Two reasons, and the second is a trap: the
+   plane's refusal must keep firing for every caller that does not ask, which is
+   what keeps the condition SURFACED at all (store.mjs conclude, REC-117); and
+   `rec` builds its query with `URLSearchParams`, which renders an `undefined`
+   value as the STRING "undefined" rather than dropping the key — so a
+   non-overriding member's request is byte-identical to the one this surface
+   sent before this item only if the key is genuinely absent. */
+function concludeParams(target){
+  if(!CONCL) return { target };
+  const p = { target, conclusion: CONCL.conclusion, falsifier: concludeFalsifier() };
+  if(CONCL.noFals) p.no_falsifier = "1";
+  return p;
+}
+
 async function openConclude(id, title, act){
   CONCL = { id, title, act, legs:[], pair:null, raw:null, pairErr:null, legPairs:{},
-            sel:[], conclusion:"", falsifierText:"", pf:null, receipt:null, busy:false };
+            sel:[], conclusion:"", falsifierText:"", noFals:false, noFalsSaid:null,
+            pf:null, receipt:null, busy:false };
   $("#dlg").innerHTML = `<h2>${esc(act.label)}</h2><p class="count-line">Loading&hellip;</p>`;
   $("#dlg-wrap").classList.remove("hidden");
   /* The legs come from the plane's OWN parse of the document's frontmatter
@@ -9212,8 +9239,7 @@ async function concludeRefresh(){
 async function concludePreflight(){
   if(!CONCL) return;
   const id = CONCL.id;
-  const a = await actAsk("conclude", { target:"", conclusion: CONCL.conclusion,
-                                       falsifier: concludeFalsifier() });
+  const a = await actAsk("conclude", concludeParams(""));
   if(!CONCL || CONCL.id !== id) return;
   CONCL.pf = a.accepted
     ? { clear:false, refusal:{ reason:"PREFLIGHT_NOT_REFUSED",
@@ -9233,6 +9259,84 @@ function concludeAuthor(which, v){
   if(!CONCL) return;
   if(which === "conclusion") CONCL.conclusion = v; else CONCL.falsifierText = v;
   return concludePreflight();    // onchange, never oninput — one round trip per finished field
+}
+
+/* ============================================================
+   UI-64 — THE MEMBER'S OWN OVERRIDE OF NO_FALSIFIER, AND WHY IT IS AN ACT
+   OFFERED BY THE PLANE'S REFUSAL RATHER THAN A FIELD IN THE FORM.
+
+   BOB RULED, 2026-09-17: *"NO_FALSIFIER is a condition that should be
+   surfaced. But I think it should also be something a member can override
+   either temporarily or in the published record."* REC-117 landed the plane
+   half — `op=conclude` accepts `no_falsifier=1`, the document carries who and
+   when, and the published render says so. It did NOT land a way for a member to
+   ask for it, and it said so rather than guessing: the falsifier here is
+   DERIVED from leg selection (HARD 2), so how a member says *none* is a UI
+   design question. This is that decision.
+
+   THE OVERRIDE IS NOT A CHECKBOX AND NOT A FIELD, and the difference is the
+   whole item. Bob asked for the condition to be OVERRIDABLE, not INVISIBLE. A
+   checkbox beside the falsifier box is reachable before the record has said
+   anything at all, so a member could set it having never been told what they
+   were accepting — which is the SILENT OVERRIDE the plane half was built to
+   make impossible, reintroduced one layer up. So the control exists ONLY while
+   the plane is, right now, answering NO_FALSIFIER to THIS member with THIS
+   draft. *Surfaced before overridden* is then STRUCTURAL: the door is
+   unreachable until the plane's own sentence has been rendered above it.
+
+   NOT ONE WORD OF THE CONDITION IS WRITTEN HERE (DEC-8). The sentence that
+   teaches the override is the refusal's own `detail`, which REC-117 put there
+   deliberately — *"If no falsifier can honestly be stated, SAY SO rather than
+   inventing one"* — and this renders those bytes through `actRefusalHtml` like
+   every other refusal on this surface. The surface supplies the CONTROL, never
+   the explanation.
+
+   AND IT STAYS ON SCREEN. A flow that showed the condition once and then hid it
+   would satisfy *surfaced* on a transcript and fail it for the member standing
+   in front of the commit button. What they accepted is rendered, in the
+   record's words, right up to the moment they commit — with the way back.
+   ============================================================ */
+function concludeNoFalsifier(on){
+  if(!CONCL) return;
+  if(on){
+    /* THE GUARD IS THE DESIGN, NOT A PRECAUTION. `concludeNoFalsifier` is a
+       global on this page like every other handler, so *the button is only
+       rendered under the refusal* would be a fact about the markup and not
+       about the act. The flag cannot be set unless the plane is refusing
+       NO_FALSIFIER at this instant, and the refusal object that authorised it
+       is what gets stored. */
+    const r = (CONCL.pf && !CONCL.pf.clear) ? CONCL.pf.refusal : null;
+    if(!r || r.reason !== "NO_FALSIFIER") return;
+    CONCL.noFals = true; CONCL.noFalsSaid = r;
+  }else{
+    CONCL.noFals = false; CONCL.noFalsSaid = null;
+  }
+  concludePaint();               // the member's choice is immediate; the plane's answer follows
+  return concludePreflight();
+}
+
+/* THE DOOR. Rendered under the plane's refusal and nowhere else, and never once
+   the member has already walked through it. */
+function concludeDoorHtml(refusal){
+  if(!CONCL || CONCL.noFals) return "";
+  if(!refusal || refusal.reason !== "NO_FALSIFIER") return "";
+  return `<div class="cc" data-nofals="offer">`
+       + `<button class="btn ghost" id="cx-nofals" onclick="concludeNoFalsifier(true)">`
+       + `Record that no falsifier can be stated</button></div>`;
+}
+
+/* WHAT THEY ACCEPTED, STILL IN FRONT OF THEM. The refusal is re-rendered from
+   `noFalsSaid` — the very object the plane sent and the member read — so the
+   commit is never taken over a condition that has scrolled out of the member's
+   view. The lead-in says what this BLOCK is; it makes no claim about what the
+   record does, because the record's own sentence is immediately below it. */
+function concludeStandingHtml(){
+  if(!CONCL || !CONCL.noFals) return "";
+  return `<div data-nofals="taken">`
+       + `<div class="cc">You are recording that none can be stated. This is what the record said, and what you are answering for:</div>`
+       + actRefusalHtml(CONCL.noFalsSaid)
+       + `<div class="cc"><button class="btn ghost" id="cx-nofals-off" onclick="concludeNoFalsifier(false)">`
+       + `Withdraw this and state one instead</button></div></div>`;
 }
 
 function concludePaint(){
@@ -9282,8 +9386,8 @@ function concludePaint(){
   /* THE COMMIT IS ABSENT WHILE THE PLANE REFUSES — never present-and-disabled.
      What stands in its place is the plane's own refusal, verbatim. */
   const commit = !pf ? `<div class="intent-pf"><div class="intent-ref-why">Asking the record what it would refuse&hellip;</div></div>`
-    : !pf.clear ? `<div class="intent-pf">${actRefusalHtml(pf.refusal)}</div>`
-    : `<div class="intent-pf"><button class="btn" id="cx-go" onclick="doConclude()"${CONCL.busy?" disabled":""}>${esc(act.label)}</button></div>`;
+    : !pf.clear ? `<div class="intent-pf">${actRefusalHtml(pf.refusal)}${concludeDoorHtml(pf.refusal)}${concludeStandingHtml()}</div>`
+    : `<div class="intent-pf">${concludeStandingHtml()}<button class="btn" id="cx-go" onclick="doConclude()"${CONCL.busy?" disabled":""}>${esc(act.label)}</button></div>`;
 
   box.innerHTML = `<h2>${esc(act.label)}</h2>
     <p class="what">This act answers one question, in your name, on the permanent record. What you write below is written verbatim into the question's own document and its Session Log.</p>
@@ -9301,7 +9405,17 @@ function concludePaint(){
     <h3 class="cx-h">What would falsify it</h3>
     <p class="subj-note">Which of those legs, if it went the other way, breaks this? The ones you picked above are named here. Add anything that cannot be said by pointing.</p>
     <textarea class="txt" id="cx-fals" rows="3" onchange="concludeAuthor('falsifier', this.value)"></textarea>
-    <div class="cc">${fals ? `Recorded verbatim as: <span class="mono">${esc(fals)}</span>` : "Nothing yet. The record refuses a conclusion that says nothing would overturn it."}</div>
+    <!-- UI-64: THE SECOND CLAUSE WAS CORRECTED, NOT DELETED, AND IT WAS FALSE
+         RATHER THAN MERELY STALE. It read "Nothing yet. The record refuses a
+         conclusion that says nothing would overturn it." — true until REC-117,
+         and after it a sentence THIS SURFACE WROTE that states the record's
+         gate as absolute when the record's own refusal now names a way
+         through. It is exactly the pressure Bob ruled against: the only member
+         who ever reads this line is the one with no falsifier, and it told
+         them the door was shut. The rule is not restated here in the surface's
+         words at all — the plane's own refusal carries it, verbatim, in the
+         commit slot below, which is where DEC-8 says it belongs. -->
+    <div class="cc">${fals ? `Recorded verbatim as: <span class="mono">${esc(fals)}</span>` : "Nothing yet."}</div>
 
     <h3 class="cx-h">Your conclusion</h3>
     <p class="subj-note">In your words. Nothing is drafted, suggested, or filled in here, and nothing will be.</p>
@@ -9320,8 +9434,7 @@ function concludePaint(){
 async function doConclude(){
   if(!CONCL || CONCL.busy) return;
   CONCL.busy = true; concludePaint();
-  const a = await actAsk("conclude", { target: CONCL.id, conclusion: CONCL.conclusion,
-                                       falsifier: concludeFalsifier() });
+  const a = await actAsk("conclude", concludeParams(CONCL.id));
   if(!CONCL) return;
   CONCL.busy = false;
   if(!a.accepted){ CONCL.pf = { clear:false, refusal:a.refusal }; concludePaint(); return; }
@@ -9337,6 +9450,16 @@ function concludeReceiptHtml(r){
       <div>The record moved <span class="mono">${esc(r.target||"")}</span> from <b>${esc(r.from||"")}</b> to <b>${esc(r.to||"")}</b>.</div>
       <div>Recorded against <b>${esc(r.author||"")}</b>${r.at?` on <span class="mono">${esc(r.at)}</span>`:""} &mdash; the record's own stamp, not this page's.</div>
       ${r.basis_legs!=null?`<div>It rests on ${esc(String(r.basis_legs))} leg${r.basis_legs===1?"":"s"}.</div>`:""}
+      ${/* UI-64: THE OVERRIDE IS READ BACK OFF THE PLANE'S OWN ANSWER, never
+            off this page's memory of what it sent. `falsifier_override` is
+            `{by, at}` or NULL and REC-117 made it never absent, so a receipt
+            that shows nothing here is the plane saying a falsifier was stated
+            rather than this page having forgotten to ask. The names are the
+            record's stamps — the same who and when the document carries and
+            the published page will show. */""}
+      ${r.falsifier_override && r.falsifier_override.by
+        ? `<div data-nofals="receipt">No falsifier was stated, and the record carries that against <b>${esc(String(r.falsifier_override.by))}</b>${r.falsifier_override.at?` on <span class="mono">${esc(String(r.falsifier_override.at))}</span>`:""}.</div>`
+        : ""}
     </div>
     <div class="row-btns"><button class="btn" onclick="closeDialog();openInquiry(${esc(JSON.stringify(String(r.target||"")))})">Back to the question</button></div>`;
 }
