@@ -11982,7 +11982,6 @@ scope*.
 scope — but whether `content:`, `leg:`, `resolves:` and `concerns:` actually exhibit it was not
 measured and is not claimed.
 
-**open as of 2026-09-17** — raised by the UI-62 worker; RECORD's to take, and CONDUCT's to row.
 
 **DISCHARGED 2026-09-17 by REC-115 — taken exactly as filed, fixed in `query.mjs`, and BOTH assertions this block asked a fixer to add beside the fix are in `passage-arm.test.mjs` S10** (*the three empties are distinguishable by `says`* is S109; *`scope.documents` agrees with `captures_counted` about the same scope* is S103). The discharge is the ASSERTION and not the outcome: this defect survived REC-92's own suite precisely because nothing asserted it. **AND THE ONE THING THIS BLOCK EXPLICITLY DID NOT CLAIM IS NOW MEASURED AND WENT THE OTHER WAY** — its last paragraph says only the `passage` arm was driven and that `content:`, `leg:`, `resolves:` and `concerns:` were not measured; M-44 measured them and all four carried it, so the correction reaches five arms rather than one. The block was right to refuse to widen on an unmeasured guess, and right that the guess was worth naming.
 
@@ -11999,7 +11998,7 @@ the parse moves terms between seams on queries this item has no business changin
 over-strictness arm exists to prove those walks did not move. It is a small, contained UI item of
 its own; it wants a row rather than a quiet fix inside somebody else's landing.
 
-**open as of 2026-09-17** — raised by the UI-62 worker; needs a QUEUE row, which is CONDUCT's act.
+**DISCHARGED 2026-09-17 by CONDUCT #3 — rowed as `UI-63`, which is the whole of what this block asked for.** The delegation asked for a ROW rather than a fix, and it was right to: widening the parse moves terms between seams on queries UI-62 had no business changing, and its over-strictness arm exists to prove those walks did not move. **Found by `plancheck`'s CONTRADICTORY DELEGATION warn rather than by anyone reading the file** — the block above this one carried BOTH a `DISCHARGED` line and an `open as of` line after REC-115 landed, and chasing that one-line contradiction is what surfaced this second block sitting unrowed beside it. An owed act with no row is how the route marker survived 39 days.
 
 ## CLAIM ADDENDUM 2026-09-17 UI (UI-62 — one path the original claim did not reserve, and it was FORCED by an instrument)
 released: 2026-09-17 by CONDUCT #2 at integration, merged at `c1671bdc`. **RELEASED LATE AND THE LATENESS IS RECORDED RATHER THAN BACKDATED: this claim should have been released in its own item's integration turn and was not. CONDUCT #2 found it by sweeping every 2026-09-17 block for a missing `released:` line at the wave's close instead of trusting that each had been handled — an open claim over integrated work is a fence around paths nobody is editing, which reads to the next session as work still in flight.**
