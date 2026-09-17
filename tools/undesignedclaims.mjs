@@ -40,11 +40,22 @@
  * an *undesigned* nobody re-reads is a claim about the day it was written, and 21 of them were
  * sitting unaudited across 9 governed documents when this was built.
  *
- * NEGATIVE CONTROL: **NONE YET, AND THIS LINE SAYS SO RATHER THAN NAMING A FILE THAT DOES NOT
- * EXIST.** The first draft of this header declared `bio-plane/test/undesignedclaims.control.mjs` before
- * writing it — a citation to a control nobody can run, which is the same false-absence class
- * this file family exists to catch, committed by the file catching it. **A declared control is
- * a CLAIM; the artifact is the only witness.** Suite and driver are owed and rowed.
+ * NEGATIVE CONTROL: (all five RUN 2026-09-17 by BOB #13, exit 0, 28 pass / 0 fail, both
+ * baselines green) `node bio-plane/test/undesignedclaims.control.mjs` from the repo root.
+ *   (A1) the AUDITED test made to ignore the date -> the raw count can never go down again,
+ *        which is this instrument's own measured first defect.
+ *   (A2) the audited test widened from the LINE to the WHOLE DOCUMENT -> a verdict anywhere
+ *        silences a claim everywhere, which is how *undesigned* propagates.
+ *   (A3) an unreadable document scored as CLEAN -> the unearned-absence rule, inside the
+ *        instrument whose entire subject is unearned absence.
+ *   (A4) one claim shape dropped -> a whole class goes silent.
+ *   (A5) THE PRECISION ARM — every line reported as a claim. A sensitivity control does not
+ *        notice a sweep that finds everything; only this does.
+ *
+ * **THE HEADER FIRST CITED THIS FILE BEFORE IT EXISTED** — corrected to say so, then built.
+ * A declared control is a CLAIM; the artifact is the only witness. **And arming A2 and A3
+ * crashed the suite rather than failing it, on two unguarded dereferences — a TypeError ends
+ * the module with the tally reading clean. The control found both.**
  */
 
 import { readFileSync } from "node:fs";
