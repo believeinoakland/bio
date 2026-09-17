@@ -8473,6 +8473,9 @@ therefore still carries a STATED LIMIT and not a resolved cause, which is precis
 condition the queue row set on this interface.
 ---
 
+
+**RESOLVED ACCEPTED 2026-09-17 by CONDUCT #2 at integration — ADDITIVE, riding the wave's single I3 bump to 19.0.0.** **Every change it makes WEAKENS a published claim**, which is the safe direction and the reason it is additive despite touching what every `op=frontier` row says: the shipped sentence enumerated TWO causes where the live set has THREE, so a member reading it left subjects off the never-looked worklist. The MAJOR in this bump is IC-112's alone. Merged-tree gates green at 213/213 suites · 13,344 assertions.
+
 ## IC-110 · I3: `op=meaningrows` gains the `passage` ARM (`rows=passage`) and, on that arm only, a CONTENT-AXIS TALLY inside the existing `scope` block · PROPOSED 2026-09-17 (REC-92, building `CONTENT-SEARCH-DESIGN.md` §7 row 5) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts). **Read off this tree's
@@ -8545,6 +8548,9 @@ and a worker that moved the registry itself would be the second writer that prot
 to prevent.
 ---
 
+
+**RESOLVED ACCEPTED 2026-09-17 by CONDUCT #2 at integration — ADDITIVE, and it rides the wave's single I3 bump to 19.0.0 rather than taking a minor of its own.** Three ICs of one wave proposed against base 18.2.0 and land together, so the interface moves ONCE and the strongest classification governs; **this change is additive and the MAJOR is IC-112's, not this item's** — recorded so a reader does not infer that the `passage:` arm broke anything. Merged-tree gates green at 213/213 suites · 13,344 assertions.
+
 ## IC-112 · I3: THE CASE DOCUMENT (`bio-case-document/1`) GAINS A `searched` SECTION IN ITS SIGNED BYTES, AND C-41.10 NOW REFUSES A CASE DOCUMENT THAT LACKS ONE · PROPOSED 2026-09-17 (REC-96, closing D-196) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts), which is where `bio-case-document/1`
@@ -8607,3 +8613,6 @@ figure over the log's own subjects would produce 100% by construction, with ever
 every number true, and it would be a statement about the log rather than about the case — Blair &
 Maron's ~20% measured against a sincerely-believed 75%. The vocabulary is the fence; it is checked
 at the gate; and it is the reason this section is worth signing at all.
+
+
+**RESOLVED ACCEPTED 2026-09-17 by CONDUCT #2 at integration — BREAKING, MAJOR, AND RULED AGAINST BOTH THE DESIGN AND THE ROW, WHICH SAID MINOR.** C-41.10 now refuses a case document lacking the `searched` section, so a case authored-but-unsigned across this upgrade carries none and `op=caseratify` refuses it — **a refusal where none stood before, which IC-25 settles as breaking WHATEVER the measured impact.** The proposer measured impact as ZERO outside `bio-plane/test` and **declined to take the minor on that basis, routing it here** — precisely the judgement IC-25 removes from a proposer who can see the impact is zero. Overruling on those grounds would teach that the rule is negotiable when convenient, and a registry recording a break as a minor is a registry learning to lie. **The in-flight window is a KNOWN BREAK WITH NO MIGRATION** — the section must be in the SIGNED bytes and back-filling moves `doc_sha`, so there is no migration that is not re-authoring; already-ratified documents are NOT re-gated and keep verifying, MEASURED rather than assumed. **AND THE GATE REFUSES SILENCE, NEVER AN UNFAVOURABLE VALUE:** an honestly negative section (`never_looked` at every level) PUBLISHES, because a record stating its own weakness in signed bytes is the strongest act available and a gate that pressures a member into inventing an answer is a bug in the gate (`CLAUDE.md`). Both directions pinned as POSITIVE assertions. I3 18.2.0 → 19.0.0.

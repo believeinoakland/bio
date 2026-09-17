@@ -1204,7 +1204,6 @@ const REGISTER_FLOOR = {
      necessarily moves the census by one — the two ratchets in that file cannot move
      independently. Arithmetic on these figures is wrong in more ways than one.
      ONE KEY SET, grepped after writing: `^  arms:` matches twice, here and FLEET_FLOOR (76). */
-<<<<<<< HEAD
   /* MOVED 2026-09-17 by M0-51 (1129 -> 1136 · 201 -> 202 · 202 -> 203): this item's own green
      `--strict` run, taken AFTER its commit `e80d4993`, PRINTED `REGISTER FLOOR  arms 1136/1129 ·
      classified 202/201 · corpus (suites read) 203/202 · GREW by 7 arm(s)` — READ FROM THE PRINT,
@@ -1214,36 +1213,37 @@ const REGISTER_FLOOR = {
      ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in
      `FLEET_FLOOR`, which is the documented state; `FLEET_FLOOR` is UNMOVED and none is owed —
      this item adds no fleet member and no fleet suite. */
-  /* PLACEHOLDER AT CONDUCT #2's WAVE MERGE, 2026-09-17 — RE-READ BELOW FROM THE MERGED RUN.
-     Four items of one wave each moved this ratchet from their own green post-commit print and
-     NO TWO AGREE, which is the floor-collision class: M0-51 read 1136/202/203, REC-92 read
-     1135/202/203, REC-96 read 1134/202/203. Every reading is correct of its own tree and NONE
-     is true of this one, because this tree carries all of their suites at once. Two of them
-     printed the SAME classified and corpus figures by different arms — which is precisely why
-     CONDUCT #1 ruled this may NOT be relaxed to check-only-when-they-disagree, having measured
-     seven such collisions in a day and found neither input true of the merge in all seven.
-     Adding deltas is equally refused: M0-40 measured that the bounds class and the census
-     ratchet cannot move independently. The values here are one side's, carried ONLY so the
-     tree parses, and are replaced from this merged tree's own printed figures. */
-  arms: 1136,
-=======
-  /* REC-96, 2026-09-17: 1129 -> 1134 / 201 -> 202 / 202 -> 203, ALL THREE MOVED IN
-     THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN RUN
-     PRINTED after committing (`arms 1134/1129 · classified 202/201 · corpus
-     203/202 · GREW by 5 arm(s)`), never by adding to the numbers above. One new
-     suite, `test/casesearched.test.mjs`, whose declaration states FIVE arms — a
-     baseline plus four, driven by `test/casesearched.control.mjs` and every one
-     RUN — so `corpus` and `classified` each rise by one and `arms` by five.
-     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file,
-     once here and once in an unrelated object at the foot; this block has one.
-     THE FIGURE WAS TAKEN AFTER THE COMMIT ON PURPOSE: before it, the register
-     reported the suite as NOT IN ANY COMMIT and refused to count work no other
-     checkout can see (D-238), so a floor moved then would have been a figure
-     nobody else reproduces. CONDUCT re-reads this on the MERGED tree. */
-  arms: 1134,
->>>>>>> fa04ee40cab104921647a1eca781a32982d8b4d1
-  classified: 202,
-  corpus: 203,
+  /* MOVED 2026-09-17 by CONDUCT #2 AT THE WAVE MERGE — 1136 -> 1147 · 202 -> 204 · 203 -> 205,
+     READ FROM THIS MERGED TREE'S OWN POST-COMMIT `--strict` PRINT:
+     `REGISTER FLOOR  arms 1147/1136 · classified 204/202 · corpus (suites read) 205/203 ·
+     GREW by 11 arm(s)`. THE PLACEHOLDER THIS REPLACES WAS A FOUR-WAY FLOOR COLLISION and it
+     is recorded because the collision is the lesson, not the number: M0-51 read 1136, REC-92
+     read 1135, REC-96 read 1134, each correctly from its own green post-commit run, and NOT
+     ONE was true of the tree that carries all three suites. Two of them printed IDENTICAL
+     `classified` and `corpus` figures by different arms — which is CONDUCT #1's fifth
+     collision shape exactly, and the reason this may NOT be relaxed to check-only-when-they-
+     disagree. THE DELTAS HAPPEN TO SUM HERE (1129 + 7 + 6 + 5 = 1147) AND THAT IS STATED AS A
+     COINCIDENCE RATHER THAN A METHOD: adding them is refused whatever it yields, because
+     M0-40 measured that the bounds class and the census ratchet cannot move independently, and
+     a method that is right by luck is indistinguishable from one that is right. The figure
+     above is the PRINT. Cause: three new suites (`m051-driver-census`, `passage-arm`,
+     `casesearched`) declaring 7 + 6 + 5 arms. Nothing FELL. */
+  arms: 1147,
+  // [branch record | REC-96 read arms 1134 on its own tree]  REC-96, 2026-09-17: 1129 -> 1134 / 201 -> 202 / 202 -> 203, ALL THREE MOVED IN
+  // [branch record | REC-96 read arms 1134 on its own tree] THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN RUN
+  // [branch record | REC-96 read arms 1134 on its own tree] PRINTED after committing (`arms 1134/1129 · classified 202/201 · corpus
+  // [branch record | REC-96 read arms 1134 on its own tree] 203/202 · GREW by 5 arm(s)`), never by adding to the numbers above. One new
+  // [branch record | REC-96 read arms 1134 on its own tree] suite, `test/casesearched.test.mjs`, whose declaration states FIVE arms — a
+  // [branch record | REC-96 read arms 1134 on its own tree] baseline plus four, driven by `test/casesearched.control.mjs` and every one
+  // [branch record | REC-96 read arms 1134 on its own tree] RUN — so `corpus` and `classified` each rise by one and `arms` by five.
+  // [branch record | REC-96 read arms 1134 on its own tree] ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file,
+  // [branch record | REC-96 read arms 1134 on its own tree] once here and once in an unrelated object at the foot; this block has one.
+  // [branch record | REC-96 read arms 1134 on its own tree] THE FIGURE WAS TAKEN AFTER THE COMMIT ON PURPOSE: before it, the register
+  // [branch record | REC-96 read arms 1134 on its own tree] reported the suite as NOT IN ANY COMMIT and refused to count work no other
+  // [branch record | REC-96 read arms 1134 on its own tree] checkout can see (D-238), so a floor moved then would have been a figure
+  // [branch record | REC-96 read arms 1134 on its own tree] nobody else reproduces. CONDUCT re-reads this on the MERGED tree. 
+  classified: 204,
+  corpus: 205,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
@@ -1271,7 +1271,7 @@ const REGISTER_FLOOR = {
      EXACT, so nothing about that item moved either figure. It is the sixth consecutive
      item to find a floor already stale BY MEASURING IT, which is the argument for
      measuring rather than for trusting the number in the file. */
-  run: 165,
+  run: 167,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

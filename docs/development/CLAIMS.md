@@ -11785,7 +11785,7 @@ CORRECTED rather than exempted — which is the behaviour those pins exist for.*
 ## CLAIM 2026-09-17 RECORD (REC-96 — the completeness statement's `searched` section, D-196)
 session: rec96-searched-section (worktree agent-a24e7153a704df2de, branch `worktree-agent-a24e7153a704df2de`)
 opened: 2026-09-17T00:00:00Z
-released:
+released: 2026-09-17 by CONDUCT #2 at integration, merged at `2abcdea3`. **THE WORKER LEFT THIS CLAIM HELD DELIBERATELY rather than releasing it on its own report, so nobody could edit these paths between its push and the merge — and it said so, naming the release as CONDUCT's act.** That is the correct shape: a claim released by a worker that has finished but not been integrated protects nothing, and this one covered `store.mjs`, `airun.mjs` and `bio-checks.mjs` while two sibling items of the same wave were merging into the same files.
 paths:
   `bio-plane/src/airun.mjs` — **APPEND ONLY, at the foot of the observation-log vocabulary region**:
   the pure `searchedSection()` computation and its two vocabularies (`SEARCHED_LEVEL_OUTCOMES`,

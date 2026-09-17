@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-991 rulings across 85 documents.
+995 rulings across 85 documents.
 
 ## DEC-
 
@@ -653,7 +653,7 @@ authority is the file named, never this one.
 - **IC-83** — its (1) and (2); IC-83 as AMENDED at REC-82's landing. Paths claimed BY REGION, never whole files:  
   `docs/development/CLAIMS.md:4977`
 - **IC-83** · 2026-09-14 — CHANGING — IC-83 ACCEPTED 2026-09-14 (protocol step 4): the 1.10.0 shape keeps working; nothing NEW is built against the old or the new shape until REC-82 lands the table and writer; SETTLED (STABLE again) when REC-82 and REC-83 have landed and the two `content_id` columns are NOT NULL.  
-  `docs/development/INTERFACES.md:670`
+  `docs/development/INTERFACES.md:673`
 - **IC-83** — The `content` table before `host_governor`, two indexes, in purge's TABLES (both arms); columns exactly IC-83's PLUS `page_count INTEGER` — required by IC-83's own Rules prose and absent from its column list (IC-83 AMENDED at this landing, the column recorded, not widened).  
   `docs/development/QUEUE.md:1493`
 - **IC-84** · 2026-09-14 — Contract: IC-84 (ACCEPTED 2026-09-14, I3 14.0.0 -> 14.1.0, CHANGING; twice AMENDED by CONDUCT #11 at REC-83's and REC-84's landings), its consumer half; the act shape governed by `BIO_Interaction_Constructs_v0_1.md` (nothing prefilled, DEC-69); framework Part II §14.4.  
@@ -669,7 +669,7 @@ authority is the file named, never this one.
 - **IC-84** · 2026-09-14 — So IC-84's SETTLED, which CONDUCT writes, rests on this landing **plus** that UI item — and the honest sentence today is *the act carries it, the surface does not yet send it*. ### RESOLUTION · IC-90 — ACCEPTED, **I3 15.0.0 → 15.1.0**, MINOR, 2026-09-14 by CONDUCT #11 — **recorded LATE, and the lateness is recorded…  
   `docs/development/INTERFACE-CHANGES.md:6899`
 - **IC-84** · 2026-09-14 — CHANGING — IC-84 ACCEPTED 2026-09-14 (protocol step 4): 14.0.0 keeps working; SETTLED when REC-83 and REC-84 land and UI-61 confirms the composer emits `extent`. ### What it is  
-  `docs/development/INTERFACES.md:511`
+  `docs/development/INTERFACES.md:514`
 - **IC-84** — interface: I3 — `op=cite` gains optional extent fields (additive); its OWN IC minted at spawn; IC-84's SETTLED follows this landing plus UI-61's re-confirmation design: IC-84 as RESOLVED and amended (the grammar the leg meets: `extent_kind` + per-arm fields OR `content_id`, never both, absent = the whole document);…  
   `docs/development/QUEUE.md:1476`
 - **IC-84** — So IC-84's SETTLED is NOT owed on this landing alone**, because its RESOLUTION recorded UI as answering that the composer emits `extent` per leg, and that half is outstanding.  
@@ -685,9 +685,13 @@ authority is the file named, never this one.
 - **IC-87** — IC-87 is AMENDED in place** (no new IC, as its own RESOLUTION directed) and CONDUCT takes the bump decision and the RESOLUTION; **D-359** is a DEBT row with its disposition token and an actor (`CONTENT-OFFICE`) and is the DELEGATION at the foot of this file; **D-354 is CLOSED** in the same file; the `### CAP-12 ·…  
   `docs/development/CLAIMS.md:6941`
 - **IC-109** · 2026-09-16 — One superseded leak-guard pin (`gate-reads.test.mjs`'s whole-key-set assertion on `op=list`) CORRECTED with a dated reason and two arms proving `limit` is viewer-independent while `total` is not — never exempted.  
-  `docs/development/INTERFACES.md:508`
+  `docs/development/INTERFACES.md:511`
 - **IC-112** — claim is CORRECTED here rather than silently not exercised: **flipping the row is CONDUCT's act, not this worker's** (`kickoffs/WORKER.md` — CONDUCT integrates), and so is the I3 version bump in `INTERFACES.md` and IC-112's RESOLUTION.  
   `docs/development/CLAIMS.md:11809`
+- **IC-112** — WHY IC-112 IS MAJOR, AND IT WAS RULED AGAINST THE DESIGN AND THE ROW, BOTH OF WHICH SAID MINOR.** C-41.10 now refuses a case document that lacks the `searched` section, so a case authored-but-unsigned across this upgrade carries none and `op=caseratify` refuses it — **a refusal where none stood before, which IC-25…  
+  `docs/development/INTERFACES.md:509`
+- **IC-112** · 2026-09-17 — IC-112 RESOLVED ACCEPTED as BREAKING — the wave's I3 MAJOR, 18.2.0 → 19.0.0, RULED AGAINST BOTH THE DESIGN AND THIS ROW, which said additive MINOR.** D-196 is CLOSED: a signed case document now carries a `searched` section computed at AUTHORING — the only point it can enter the signed bytes, since the signature…  
+  `docs/development/QUEUE.md:1315`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
@@ -756,6 +760,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:4843`
 - **C-41** — CORRECTED IN THIS ITEM, never exempted.** The predicate's own comment named this item as where the change would arrive, and it arrives there.  
   `docs/development/INTERFACE-CHANGES.md:5333`
+- **C-41.10** · 2026-09-17 — RESOLVED ACCEPTED 2026-09-17 by CONDUCT #2 at integration — BREAKING, MAJOR, AND RULED AGAINST BOTH THE DESIGN AND THE ROW, WHICH SAID MINOR.** C-41.10 now refuses a case document lacking the `searched` section, so a case authored-but-unsigned across this upgrade carries none and `op=caseratify` refuses it — **a…  
+  `docs/development/INTERFACE-CHANGES.md:8618`
 ## REC-
 
 - **REC-8** · 2026-07-31 — PARTLY SETTLED 2026-07-31 (REC-8, Step 7): the TEMPORAL half is built and the mechanism is decided — an `overdue-scan` consumer on REC-1's reconciling DO alarm detects an overdue required successor (derived on read against an injectable clock, no stored flag), surfacing an `overdue_successor` proposal.  
@@ -950,6 +956,8 @@ authority is the file named, never this one.
   `docs/development/CONTENT-SEARCH-DESIGN.md:7`
 - **REC-92** · 2026-09-17 — CORRECTED 2026-09-17 by REC-92, folding what it BUILT AND MEASURED — three of this section's four sentences were right and the shape it specifies could not be shipped as written.** Every `passage:` answer's envelope carries, beside `limit`/`total`/`truncated`:  
   `docs/development/CONTENT-SEARCH-DESIGN.md:311`
+- **REC-92** · 2026-09-17 — TWO CONTROL DECLARATIONS WERE WRONG AND WERE CORRECTED AT THE ARM RATHER THAN SMOOTHED, and one of them is the more valuable finding: `withhold` was declared must-not-fail and FAILED, because S24 pins the very property the arm removes — and its FIRST RUN reported only 3 failures BECAUSE THE SUITE DIED AT SECTION 4…  
+  `docs/development/QUEUE.md:1266`
 - **REC-92** · 2026-09-14 — SHARED VOCABULARY, RULED 2026-09-14 by CONDUCT #11 at BOB #11's raising — and it is a MECHANISM, not a convention.** REC-92 (the `passage:` arm's `scope` tally), REC-94 (the content-level writers and the per-capture state) and CPDF-19 (D-319's re-extraction, which moves a capture between states) all write or read…  
   `docs/development/QUEUE.md:1273`
 - **REC-94** — SETTLED when REC-94, REC-95 and REC-96 have written into this table at the other two levels and the design's §3/§4.4 contradiction is reconciled; CONDUCT writes it.  
