@@ -101,6 +101,49 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-16 · BOB #12 · §4.3 CORRECTED — ONE ITEM OWED, and the correction itself is LANDED so nothing
+waits on you to read it.** `CONTENT-SEARCH-DESIGN.md` §4.3's per-capture bound was wrong in THREE
+independent ways; REC-91 found all three by BUILDING it, and BOB-NEXT §1 carried only two. Folded at
+`fc9e649a` from the code and from M-20, not restated from what BOB #11 wrote. **No queue item is
+superseded, no worker should be stopped, and REC-91 needs nothing further — it is merged and correct;
+the defect was in the DESIGN, and the build is what caught it.**
+
+What the section now says, so you do not have to re-read it to gate the item below: the operative
+per-capture bound is **524,288 B at the acquire wire** (half of `INLINE_MAX`, so JSON escaping cannot
+blow the file on punctuation), because the units ride in `data/provenance.json` — a bundle FILE — and
+`op=promote` refuses any inline file over **1,048,576 B whole-call** before the index writer is reached.
+**§4.3's 2 MiB constant could therefore never fire**; it stays as a LABELLED BACKSTOP rather than being
+deleted, because presenting it as the operative bound is exactly what went wrong. **Left alone this was a
+REGRESSION and not a new limit** — M-20's census holds a PDF at 1,354,686 B and a docx at 1,187,253 B,
+both of which promote today and neither of which would have.
+
+**ONE ITEM, yours to id, gate and sequence. No interface is touched.** Milestone M3 (it is SEARCH's
+ground, beside item 4 which REC-91 discharged).
+
+1. **THE UNIT-COUNT BOUND — a unit budget beside the byte budget at the SAME wire**, so both are stated
+   in one place and neither hides the other. **Why it is owed and is not a nicety: bytes do not bound the
+   unit count, and the index costs ROWS and FTS ENTRIES.** M-20's ladder, read off rather than
+   re-measured: the worst docx is **20,571 units at 1,187,253 B — INSIDE the byte bound — at 218 ms,
+   84.8 % of the 257 ms window**, against §4.3's own *"45.7 %, so the bound cannot by itself push a
+   promote over the ceiling"*, which is true at PAGE grain only. A container whose units are many and
+   small is bounded by nothing this design specifies today.
+   **THE NUMBER IS THE ITEM AND IT IS NOT MINE TO PICK IN PROSE:** it is a decision about what a member's
+   promote may COST, and §4.1 already names the alternative remedy — chunk the write across ticks, the way
+   `capture_sessions` already resumes — so the item's first act is to say which of the two it is BUILDING
+   and why, from M-20's ladder rather than from judgement. `accepts-when`: the wire refuses or trims on
+   unit count with the figure in the report, the capture reads `partial`, and the negative control drives
+   a many-small-unit container past the bound and a page-grain one under it.
+
+**A SECOND GAP IS RECORDED AND DELIBERATELY NOT ROWED, so nobody rows it by reflex.** §3 chose its option
+partly because *text is stored once*; through this route it is stored **TWICE** — in `capture_text` at
+M-20's 1.998 B per text byte, and again in the bundle image, since `data/provenance.json`'s bytes land in
+`files.content` AND in `history`. REC-91 reported it rather than closing it because the alternative — a
+promote-package sibling outside the bundle image — costs edits in two areas it did not own. **It is in
+§4.3 and in the front matter's Incomplete list; it needs a decision about I1's shape before it needs a
+worker, and that decision is mine to bring you when the content axis next moves.** Rowing it now would
+buy a worker with no design to build from.
+
+
 **2026-09-16 · BOB #12 · D-288 IS RULED AND DECOMPOSED — THREE ITEMS, NO INTERFACE, M0. The row that
 measured this five weeks ago has now COST something, and that is why it is ruled rather than re-argued.**
 `D-288` (2026-08-10): *every worker's output lives on a local-only branch, so "the repository is the channel"
