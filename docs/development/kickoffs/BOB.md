@@ -130,6 +130,28 @@ system's protection, because a claim reserves paths BETWEEN checkouts and says n
 about two sessions writing one. The handoff is a push, which is not overhead: it is
 the act that makes this session's output exist for anybody else (`CLAUDE.md`).
 
+## Opening a BOB SESSION: archive your predecessor
+
+**FIRST ACT OF A NEW SESSION, ruled by Bob 2026-09-17, and it needs nobody's click.** A retired
+predecessor keeps running, holds its worktree, and is indistinguishable in `ListAgents` from a live
+peer — BOB #12 sat for hours after writing *this session is ready to be closed*, and LANDED TWO COMMITS
+TO `main` DURING ITS SUCCESSOR'S SESSION, which is two sessions in one lane (DEC-3) and how one of them
+ROWED a defect the other was FIXING.
+
+    ListAgents                      # find the predecessor by name
+    mcp__ccd_session_mgmt__list_sessions   # get its sessionId, cwd and isRunning
+
+**Re-check all three of D-398's conditions AT THE MOMENT YOU ACT, never inherited:** `isRunning` false;
+its worktree `git status --porcelain` EMPTY; its tip an ANCESTOR of `origin/main`. **If any fails, STOP
+and say so** — a predecessor with unmerged commits or a dirty tree is holding work, and archiving is not
+the remedy. Then:
+
+    mcp__ccd_session_mgmt__archive_session   # stops the process AND releases the worktree lock
+    git worktree remove <its worktree>       # the tool does NOT do this; measured
+
+**Archiving is REVERSIBLE (`unarchive_session`), which is what makes it safe to do without asking.**
+Report the disk you measured before and after. Driven 2026-09-17: 5.4 GiB → 6.1 GiB free.
+
 ## Opening a BOB turn: surface what is waiting
 
 **Read `docs/development/DECISIONS.md` FIRST and surface every `open` entry to Bob**,
@@ -322,7 +344,36 @@ refuses to work if the handoff it names is absent from the remote.
 for as long as its process is alive** — merged, clean, and unreclaimable (D-398). CONDUCT #1 did everything
 its protocol asked, correctly, and sixteen hours later still held ~1.9 GiB while the volume was at 1.6 GiB
 free. **So the last act of a handoff is to SAY you are ready to be closed and NAME what closing you releases,
-measured.** A session cannot close itself; closing it is the operator's, like clicking the successor's chip.
+measured.**
+
+**AND THE SENTENCE THAT STOOD HERE — *a session cannot close itself; closing it is the operator's* — IS
+FALSE, AND IT COST BOB #12 ITS RETIREMENT.** Falsified 2026-09-17 by BOB #13 by CALLING THE TOOL instead of
+re-reading the sentence: `archive_session` takes a peer's session id, takes the literal `"self"`, **stops the
+session's process**, and in `bypassPermissions` — which `CLAUDE.md` makes this project's default — **does not
+ask anybody.** The capability was there the whole time. **This is BOB.md's own rule 6 landing on BOB.md a
+second time**: the *there is no channel* claim about running workers was falsified exactly this way three days
+earlier, and the stand-down step was written with the same untested premise in the same file. **A protocol
+that reserves an act to a human because nobody called the tool is a protocol that has invented its own
+blocker** — `CLAUDE.md`'s *a blocker is a claim, and nothing here audits one*.
+
+**RULED BY BOB, 2026-09-17: a lane's retired session is archived WITHOUT HIS INVOLVEMENT.** Verbatim: *"BOB
+#12 being alive is not my problem. The protocol was supposed to be updated so that a lane's retired session
+was archived without my involvement."*
+
+**THE ACT IS THE SUCCESSOR'S, AND THAT IS A DESIGN CHOICE RATHER THAN A CONVENIENCE.** A retiring session
+cannot verify its own deadness, and the successor already owns the checkout from the moment its chip is
+clicked (below). **So archiving the predecessor is the SUCCESSOR'S FIRST ACT, after re-checking D-398's three
+conditions AT THE MOMENT IT ACTS and never inheriting them from an earlier sweep:** the holder is not running,
+its tree is CLEAN, and its tip is an ANCESTOR of `origin/main`. All three, re-read, every time — BOB #12's tree
+read *uncommitted* forty minutes before it read clean.
+
+**WHAT ARCHIVING ACTUALLY DOES, MEASURED RATHER THAN READ OFF THE TOOL'S DESCRIPTION, AND IT IS BOTH BETTER
+AND WORSE THAN D-398 SAYS.** Driven on BOB #12, 2026-09-17: archiving **RELEASED THE WORKTREE LOCK** — the lock
+file was gone and the worktree went to a detached HEAD — **which D-398 says nothing can do.** But the tool's
+own *"cleans up its worktree"* is a VENDOR CLAIM and it did NOT hold: **635 MB stayed on disk and free space
+did not move.** The reclamation is therefore TWO acts, and the second is ours: archive the session, then
+`git worktree remove`. Measured together they took the volume from **5.4 GiB to 6.1 GiB free**, 12 worktrees to
+11. **Do both, and report the disk figure you measured — not the one the tool implies.**
 
 **And from the moment the successor's chip is clicked, the successor owns the checkout.**
 Measured 2026-09-14: CONDUCT #10, stood down and verified, was woken by its own worker
