@@ -854,11 +854,68 @@ function currentBranch(repo) {
   } catch { return "unknown"; }
 }
 
+/* -------------------------------------------------- THE ARGUMENT SURFACE, M0-52
+ *
+ * AN ALLOCATION MUST BE UNAMBIGUOUS TO ITS CALLER, AND IT WAS AMBIGUOUS IN BOTH
+ * DIRECTIONS.  Measured 2026-09-17, two doors onto one defect:
+ *
+ *   DOOR ONE  the caller asked to LOOK and the tool WROTE.  `main` built its
+ *             positional list by DISCARDING every `--`-prefixed token it did not
+ *             recognise, so `mintid.mjs M0 --show` dropped `--show`, saw a valid
+ *             namespace, and fell through to the IRREVERSIBLE allocating default.
+ *             The guard existed — `mintid.mjs --definitely-not-a-flag` printed
+ *             usage and minted nothing — and a VALID NAMESPACE bypassed it.
+ *             `IC-111`, `IC-113` and `M0-53` were burned this way.
+ *   DOOR TWO  the caller WROTE and could not tell WHAT, so wrote again.  See the
+ *             restatement at the foot of `main`.
+ *
+ * WHY A WHITELIST RATHER THAN A CLEARER WARNING, and it is this tool's own thesis
+ * turned on itself.  `D-289` recorded door two's mechanism on 2026-08-10, called
+ * itself *the second time in two days*, and prescribed the practice "run `mintid`
+ * bare and read all of it".  That was written down, it was correct, and the third
+ * occurrence happened anyway (`D-395`).  This file's own header records that a
+ * VIGILANCE FIX WAS ALREADY TRIED AND DOES NOT WORK — every brief for two days told
+ * workers to measure first and EVERY ONE OF THEM DID — and that the remedy was to
+ * write the COMMAND, not a better warning.  A command that punishes a typo with a
+ * silent irreversible write reintroduces the vigilance it was built to retire, in
+ * the one place this project has already decided vigilance does not work.  So the
+ * fix is a mechanism: an option this tool does not read REFUSES, and nothing moves.
+ *
+ * THE SET IS DERIVED FROM THE TOOL AND NOT RECALLED — it is every `flag(...)` and
+ * `val(...)` read in `main` and in `audit`, grepped rather than remembered, and the
+ * hygiene arm in `mintid.test.mjs` re-derives it from the source so this list
+ * cannot go stale the way every hand-carried list in this repository has.
+ *
+ * AND THE OVER-STRICTNESS HALF IS THE ONE THAT DECIDES IT.  The cheapest green here
+ * is a parser that refuses everything unfamiliar, which makes the arm pass and the
+ * tool unusable — a tool that starts REFUSING where it answered is a worse failure
+ * than a burned id, because it strands a worker mid-item.  Two consequences: the
+ * VALUE of a value-taking option is skipped, so `--why --anything` is still a why
+ * and not an option; and single-dash tokens are left exactly as they were, falling
+ * through to the unknown-namespace refusal that already fails closed. */
+const VALUE_FLAGS = new Set(["--count", "--who", "--why", "--base"]);
+export const KNOWN_FLAGS = new Set(["--help", "--list", "--audit", "--floor-only", "--json",
+                             ...VALUE_FLAGS]);
+
+/** Every `--`-prefixed token this tool does not read, in order, skipping the VALUE
+ *  of a value-taking option so a value that looks like an option is still a value. */
+export function unknownFlags(argv) {
+  const bad = [];
+  for (let i = 0; i < argv.length; i++) {
+    if (i > 0 && VALUE_FLAGS.has(argv[i - 1])) continue;  /* this token is a VALUE */
+    if (argv[i].startsWith("--") && !KNOWN_FLAGS.has(argv[i])) bad.push(argv[i]);
+  }
+  return bad;
+}
+
 function usage() {
   console.log("usage: node tools/mintid.mjs <NAMESPACE> [--count N] [--who <id>] [--why <text>] [--json]");
   console.log("       node tools/mintid.mjs --list [<NAMESPACE>]");
   console.log("       node tools/mintid.mjs <NAMESPACE> --floor-only");
   console.log("       node tools/mintid.mjs --audit [--base <ref>]   the integration-side check (D-243)");
+  console.log("\nAn option this tool does not read is REFUSED and nothing is minted (M0-52). To LOOK");
+  console.log("without allocating use --floor-only; the minted id is repeated on stderr and on the");
+  console.log("LAST line, so a filter over stdout cannot hide what you were given.");
   console.log("\nNAMESPACES (the shared id spaces this project allocates into):");
   for (const [ns, s] of Object.entries(NAMESPACES))
     console.log(`  ${ns.padEnd(5)} ${s.kind.padEnd(10)} ${s.what}`);
@@ -1059,6 +1116,21 @@ function main(argv) {
   const positional = argv.filter((a, i) => !a.startsWith("--")
     && !(i > 0 && ["--count", "--who", "--why"].includes(argv[i - 1])));
 
+  /* M0-52. BEFORE ANYTHING ELSE, because everything below this line can allocate.
+     The refusal names the token and names the READ-ONLY form, which is the whole
+     failure mode: a caller who wanted to LOOK and mistyped the name of looking. */
+  const bad = unknownFlags(argv);
+  if (bad.length) {
+    console.error(`REFUSED: unrecognised option ${bad.map((b) => JSON.stringify(b)).join(", ")}. NOTHING WAS MINTED and the ledger did not move.`);
+    console.error(`An unrecognised option used to be DISCARDED, and with a valid namespace present this tool then fell`);
+    console.error(`through to its ALLOCATING default — so a caller who meant to LOOK got an irreversible WRITE (M0-52).`);
+    console.error(`  to LOOK without allocating:      node tools/mintid.mjs <NAMESPACE> --floor-only`);
+    console.error(`  to read it programmatically:     node tools/mintid.mjs <NAMESPACE> --json`);
+    console.error(`  to see floors and held ids:      node tools/mintid.mjs --list [<NAMESPACE>]`);
+    usage();
+    return 2;
+  }
+
   if (flag("--help") || (!positional.length && !flag("--list") && !flag("--audit"))) { usage(); return flag("--help") ? 0 : 2; }
 
   if (flag("--audit")) return audit(argv);
@@ -1125,6 +1197,40 @@ function main(argv) {
   /* D-242. The happy path is where a false belief is formed, so the happy path is
      where the sentence has to be — not only in a comment and a debt row. */
   for (const l of scopeLines(r.scope)) console.log(l);
+
+  /* ------------------------------------------------------------- M0-52, DOOR TWO
+   *
+   * THE ID SURVIVES A FILTER, BECAUSE THE OUTPUT BEING UNREADABLE IS WHAT CAUSED
+   * THE SECOND ALLOCATION.  `MINTED <id>` is the FIRST line and the ledger, scope
+   * and D-242 detail follow it, so `mintid <NS> | tail -1` shows a scope line and
+   * NEVER the id.  M0-51's worker hit exactly that, could not see what it had been
+   * given, and RE-RAN AN ALLOCATING COMMAND to find out — burning `D-395`.  That is
+   * this project's own pipe trap (a pipeline reports the LAST stage, so every filter
+   * you add to make long output readable also throws away the answer you were
+   * filtering for) fused to an irreversible write, and the causation runs the wrong
+   * way round: the unreadable output is the CAUSE of the extra allocation, not a
+   * cosmetic consequence of it.  `D-289` recorded the same mechanism on 2026-08-10
+   * and prescribed "run it bare and read all of it"; that is a practice, and the
+   * practice did not hold.  So the id is restated by MECHANISM, twice, and the two
+   * are INDEPENDENT rather than belt-and-braces decoration — each covers the filter
+   * the other loses:
+   *
+   *   on STDERR      survives `| tail`, `| head`, `| grep`, `| jq`, `> file` — any
+   *                  filter or redirect of STDOUT, because it is not on stdout.
+   *                  Lost only under `2>/dev/null`, which is where the next one is.
+   *   on the LAST    survives `2>/dev/null` and `2>&1 | tail -1`.  `| head -1`
+   *   STDOUT LINE    already saw the first line, so the two ends are both covered.
+   *
+   * WHAT IS DELIBERATELY NOT TOUCHED.  The first `MINTED` line and every line
+   * between it and here are BYTE-IDENTICAL, so nothing that reads this output today
+   * stops working — this is purely ADDITIVE.  `--json` returns above and is left
+   * exactly as it was: a single-line object on stdout is already unambiguous under
+   * `tail -1`, it is the documented programmatic form, and changing it would break
+   * the one caller shape that never had this defect.  And the `ALREADY HELD and
+   * stepped over` note was checked rather than added — the tool already computes and
+   * prints those ids, which is the only reason `M0-53` was ever recoverable. */
+  console.error(`MINTED ${r.ids.join(" ")}   (repeated on STDERR: a STDOUT filter cannot eat this line — M0-52)`);
+  console.log(`MINTED ${r.ids.join(" ")}   (repeated on the LAST line, so \`| tail -1\` shows the id — M0-52)`);
   return 0;
 }
 

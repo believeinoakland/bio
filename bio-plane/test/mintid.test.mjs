@@ -76,6 +76,51 @@
  * once is NOT flagged" arm FAILS and the live corpus lights up, which is what proves
  * this is a detector of ALLOCATIONS and not a counter of tokens.
  *
+ * ARMS (14)-(16) ARE M0-52's, added 2026-09-17. THE SUBJECT WIDENED AGAIN: the tool now
+ * REFUSES an option it does not read, and RESTATES the minted id where a filter cannot
+ * eat it. The arms are split the way the defect was — one per DOOR, plus the
+ * over-strictness arm, which is the one that decides the row.
+ * (14) DOOR ONE — delete the `unknownFlags(argv)` refusal block from `main` in
+ * `tools/mintid.mjs` -> the six "REFUSES — and the LEDGER DID NOT MOVE" arms FAIL, and
+ * they fail NAMING THE ALLOCATED ID AND THE LEDGER DELTA rather than merely an exit
+ * status, because a tool that prints a refusal and mints anyway is the same defect one
+ * layer deeper and an exit-status arm cannot see it;
+ * (15) DOOR TWO — delete the two trailing `MINTED` restatements at the foot of `main`
+ * -> the "`| tail -1` NOW carries the id" and "stderr names it" arms FAIL, which is the
+ * pair that proves the id survives a filter over EITHER stream. Deleting only ONE of the
+ * two must still fail an arm, which is what makes them two mechanisms rather than one
+ * written twice;
+ * (16) THE OVER-STRICTNESS ARM, armed from the STRICT side and the one that decides this
+ * row — drop `--who` (or any member) from `KNOWN_FLAGS` -> the `M0 --who someone`
+ * over-strictness arm FAILS with exit 2 and ZERO minted, and the "whitelist declares
+ * nothing the tool does not read" derivation arm FAILS by name. This is the cheapest-green
+ * refutation made to fire: a parser that refuses everything unfamiliar passes every
+ * refusal arm above and makes the tool unusable, and without this arm nothing notices.
+ *
+ * RUN 2026-09-17 in worktree agent-a49aa3914466cfa1e, EACH ARM ALONE, restored by cp-back
+ * from a pristine copy and verified by sha256 AND `cmp` at 76,331 bytes (9f0c9e75...),
+ * never by `git checkout --`. Baseline 113 pass, 0 fail, 12/12 sections.
+ * (14) 104 pass, 9 FAIL — and the six ledger arms failed reporting `[0,1,false]`: exit 0,
+ * THE LEDGER GREW BY ONE, claims not equal. The defect reproduced on demand and named the
+ * ALLOCATION rather than a status, which is the whole reason the criterion is the ledger.
+ * `M0 --list-only --count 2` grew it by TWO, the discarded flag having let `--count`
+ * through to an allocating default. (15) 110 pass, 3 FAIL. (15a) stderr half alone: 111
+ * pass, 2 FAIL; (15b) last-line half alone: 111 pass, 2 FAIL — DIFFERENT named arms each
+ * time, which is what establishes the two as INDEPENDENT mechanisms rather than one
+ * written twice. (16) 105 pass, 8 FAIL.
+ *
+ * ARM (16) FAILED WIDER THAN IT WAS DECLARED TO, AND THE SURPRISE IS RECORDED RATHER THAN
+ * SMOOTHED, because a surprising result is a finding about the ARM. Declared: the two
+ * `--who` over-strictness arms and the derivation arm. It ALSO took out the whole EIGHT-
+ * PROCESS RACE SECTION — `all 8 exited 0` became `[2,2,2,2,2,2,2,2]`, `0 printed a MINTED
+ * id`, and `the ledger holds 8 claims` became `0`. The cause is not a defect: the race
+ * driver passes `--who` to label its children, so dropping ONE legitimate option from the
+ * whitelist disarms this suite's own core mechanism arm. That is the over-strictness
+ * hazard demonstrated at full size — a parser that refuses one thing it should accept does
+ * not fail politely in one corner, it takes the subject's primary guarantee with it, and
+ * it is the concrete form of "a worker mid-item meeting a newly strict parser is a worse
+ * failure than a burned id".
+ *
  * RUN 2026-08-08 m0-17-mintid, each arm ALONE, restores verified by sha256 AND
  * by `cmp` against uniquely-named per-arm pristine copies (22,547 B tool /
  * 15,865 B brief, both digests printed and guarded against the empty-string
@@ -109,7 +154,8 @@ import { fileURLToPath } from "node:url";
 import { spawn, spawnSync, execFileSync } from "node:child_process";
 import { NAMESPACES, corpusFloor, ledgerRoot, mint, held, REPO_ROOT,
          allocations, collisions, KNOWN_COLLISIONS, unregisteredNamespaces,
-         exclusivityProbe, scopeOf, scopeLines, watermark } from "../../tools/mintid.mjs";
+         exclusivityProbe, scopeOf, scopeLines, watermark,
+         KNOWN_FLAGS, unknownFlags } from "../../tools/mintid.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const TOOL = join(REPO_ROOT, "tools/mintid.mjs");
@@ -125,7 +171,7 @@ const t = (label, got, want) => {
    went through no assertion at all, ending the module while the tally read
    clean. Every section bumps this; the last assertion in the file requires all
    of them, so a section that dies silently cannot leave a green count. */
-const SECTIONS = 11;
+const SECTIONS = 12;
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -647,6 +693,165 @@ section("the audit is in the loop CONDUCT actually runs");
   t("an unregistered namespace is still refused BY NAME", [bad.code, /REFUSED: unknown namespace/.test(bad.out)], [2, true]);
   t("...and the refusal now says what to DO, which is the half that was missing",
     /add a row to NAMESPACES/i.test(bad.out), true);
+}
+
+/* ========================================================================== */
+section("M0-52: an allocation is unambiguous to its caller, in BOTH directions");
+/* THE DEFECT HAD TWO DOORS AND A FIX CLOSING ONE CLOSES NOTHING, so both are driven
+   here. Door one: the caller asked to LOOK and the tool WROTE — an unrecognised flag
+   was DISCARDED, and with a valid namespace present the tool fell through to its
+   irreversible allocating default (`mintid.mjs M0 --show` minted `M0-53`; `IC-111`
+   and `IC-113` went the same way). Door two: the caller WROTE and could not tell
+   WHAT, so wrote again — `MINTED <id>` is the FIRST line and the scope detail
+   follows, so `mintid <NS> | tail -1` shows a scope line and never the id, which is
+   how `D-395` was burned.
+
+   THE ACCEPTANCE IS THE LEDGER, NOT THE MESSAGE. A tool that prints a refusal and
+   mints anyway is the identical defect one layer deeper, and a suite that asserted
+   on the refusal TEXT could not tell the two apart. So every door-one arm below
+   counts the ledger's claim files before and after and asserts the count did not
+   move; the message arms are extra, not the criterion.
+
+   AND THE OVER-STRICTNESS HALF IS THE ONE THAT DECIDES IT. State how a liar passes
+   first: the cheapest green here is a parser that REFUSES EVERYTHING UNFAMILIAR,
+   which makes every refusal arm pass and the tool unusable — a worker mid-item
+   meeting a newly strict parser is a worse failure than a burned id. So the
+   documented invocations are driven too, and they must still WORK, not merely not
+   crash: the minting ones must still put a claim file in the ledger. */
+{
+  const runIn = (dir, args) => {
+    const kid = spawnSync(process.execPath, [TOOL, ...args], {
+      encoding: "utf8", cwd: REPO_ROOT,
+      env: { ...process.env, BIO_IDALLOC_DIR: dir },
+    });
+    return { code: kid.status, out: kid.stdout, err: kid.stderr };
+  };
+  /* The ledger's own artifact: the claim files an allocation actually creates. Text
+     that merely MENTIONS an id cannot reach this, which matters — the first cut of
+     this measurement harvested ids from the output with a bare `M0-\d+` and matched
+     the string "M0-52" inside the new lines' own citation of the row, reporting a
+     move where nothing had moved. A control that perturbs a second variable produces
+     a refutation more confident than the finding it refutes. */
+  const claims = (dir) => {
+    const out = [];
+    for (const ns of readdirSync(dir, { withFileTypes: true }))
+      if (ns.isDirectory() && ns.name !== "_hosts")
+        for (const f of readdirSync(join(dir, ns.name)))
+          if (/^\d+$/.test(f)) out.push(`${ns.name}-${f}`);
+    return out.sort();
+  };
+  const freshLedger = (name) => ledgerFor(`m052-${name}`);
+
+  /* --- DOOR ONE: an unrecognised flag behind a VALID NAMESPACE ---------------- */
+  /* The exact invocation that burned M0-53, plus the two shapes that burned IC-111
+     and IC-113, plus a flag BEFORE the namespace, because argument ORDER is exactly
+     the kind of thing a fix gets right in one direction only. */
+  for (const [name, args] of [
+    ["M0 --show", ["M0", "--show"]],
+    ["IC --show", ["IC", "--show"]],
+    ["M0 --dry-run", ["M0", "--dry-run"]],
+    ["--show M0 (flag first)", ["--show", "M0"]],
+    ["M0 --floor-onlyy (a typo of the READ-ONLY form)", ["M0", "--floor-onlyy"]],
+    ["M0 --list-only --count 2", ["M0", "--list-only", "--count", "2"]],
+  ]) {
+    const dir = freshLedger(`d1-${name.replace(/[^a-z0-9]+/gi, "-")}`);
+    const before = claims(dir);
+    const r = runIn(dir, args);
+    const after = claims(dir);
+    t(`\`${name}\` REFUSES — and the LOAD-BEARING assertion is that THE LEDGER DID NOT MOVE`,
+      [r.code, after.length - before.length, JSON.stringify(after) === JSON.stringify(before)],
+      [2, 0, true]);
+  }
+
+  /* The message is not the criterion, but a refusal that does not say what to do is
+     how three unregistered families carried on allocating by hand. */
+  {
+    const dir = freshLedger("d1-msg");
+    const r = runIn(dir, ["M0", "--show"]);
+    t("...the refusal NAMES the unrecognised token rather than complaining in general",
+      /unrecognised option "--show"/.test(r.err), true);
+    t("...and NAMES the read-only form, because the failure mode IS a mistyped `--floor-only`",
+      /--floor-only/.test(r.err), true);
+    t("...and says plainly that nothing was minted, on stderr where a refusal belongs",
+      /NOTHING WAS MINTED/.test(r.err), true);
+  }
+
+  /* --- DOOR TWO: the id survives a filter over stdout ------------------------- */
+  /* D-289 recorded this mechanism on 2026-08-10 and prescribed the PRACTICE "run it
+     bare and read all of it". That was written down, it was correct, and the third
+     occurrence happened anyway. So these arms drive the MECHANISM: the id must be
+     recoverable from each stream ALONE, because that is what a filter leaves. */
+  {
+    const dir = freshLedger("d2");
+    const r = runIn(dir, ["M0"]);
+    const minted = claims(dir);
+    t("a bare mint still allocates exactly one id", minted.length, 1);
+    const id = minted[0];
+
+    const outLines = r.out.trimEnd().split("\n");
+    t("the FIRST stdout line is still `MINTED <id>` — byte-identical, nothing that reads it today breaks",
+      outLines[0], `MINTED ${id}`);
+    t("...and `| tail -1` NOW carries the id: the LAST stdout line names it too (this is what burned D-395)",
+      outLines[outLines.length - 1].includes(id), true);
+    t("...and a filter that swallows stdout ENTIRELY still cannot hide it, because stderr names it",
+      r.err.includes(`MINTED ${id}`), true);
+    t("...so the id is recoverable from EITHER stream alone — two independent mechanisms, not one restated",
+      [outLines[outLines.length - 1].includes(id), r.err.includes(id)], [true, true]);
+  }
+
+  /* --- THE OVER-STRICTNESS HALF, which is the half that decides this row ------ */
+  /* Armed from the STRICT side. A parser that refuses everything unfamiliar passes
+     every arm above and makes the tool unusable, so each documented invocation is
+     driven and the MINTING ones must still reach the ledger. */
+  for (const [name, args, wantCode, wantMinted] of [
+    ["--list", ["--list"], 0, 0],
+    ["--list M0", ["--list", "M0"], 0, 0],
+    ["M0 --floor-only", ["M0", "--floor-only"], 0, 0],
+    ["--audit", ["--audit"], 0, 0],
+    ["--audit --base <ref>", ["--audit", "--base", "origin/main"], 0, 0],
+    ["--help", ["--help"], 0, 0],
+    ["M0 (bare)", ["M0"], 0, 1],
+    ["M0 --json", ["M0", "--json"], 0, 1],
+    ["M0 --count 3", ["M0", "--count", "3"], 0, 3],
+    ["M0 --who someone", ["M0", "--who", "someone"], 0, 1],
+    ["M0 --why 'a reason'", ["M0", "--why", "a reason"], 0, 1],
+    ["M0 --count 2 --who w --why y", ["M0", "--count", "2", "--who", "w", "--why", "y"], 0, 2],
+  ]) {
+    const dir = freshLedger(`os-${name.replace(/[^a-z0-9]+/gi, "-")}`);
+    const r = runIn(dir, args);
+    t(`OVER-STRICTNESS: \`${name}\` still WORKS — exit unchanged and it still allocated what it should`,
+      [r.code, claims(dir).length], [wantCode, wantMinted]);
+  }
+
+  /* The value-skip, which is where a whitelist most easily goes wrong: a VALUE that
+     looks like an option is still a value, or `--why` stops accepting half the
+     sentences anybody would write. */
+  {
+    const dir = freshLedger("os-value");
+    const r = runIn(dir, ["M0", "--why", "--looks-like-a-flag"]);
+    t("a VALUE that looks like an option is still a value — `--why --looks-like-a-flag` MINTS",
+      [r.code, claims(dir).length], [0, 1]);
+  }
+
+  /* --- THE LIST CANNOT GO STALE, which is this repository's most-repeated defect - */
+  /* Every hand-carried list here has gone stale: a line reading ~4,900 against a real
+     16,287; "598 rulings" against 943; "36 of the 42 suites" against 203. A whitelist
+     of flags is exactly that shape, so it is DERIVED from the source and compared,
+     rather than trusted. If someone adds a `flag("--new")` read and forgets the
+     whitelist, the tool would refuse its own new option and this arm says so BY NAME. */
+  {
+    const src = readFileSync(TOOL, "utf8");
+    const readByTool = [...src.matchAll(/(?:flag|val)\("(--[a-z0-9-]+)"/g)].map((m) => m[1]);
+    const declared = [...KNOWN_FLAGS].sort();
+    const missing = [...new Set(readByTool)].filter((f) => !KNOWN_FLAGS.has(f)).sort();
+    console.log(`  flags READ by the tool: ${[...new Set(readByTool)].sort().join(" ")}`);
+    console.log(`  flags DECLARED known:   ${declared.join(" ")}`);
+    t("the read was of the real tool rather than an empty string", src.length > 40000, true);
+    t("every option the tool actually READS is in the whitelist — derived from the source, not recalled",
+      missing, []);
+    t("...and the whitelist declares nothing the tool does not read, so it cannot rot in the other direction",
+      declared.filter((f) => !readByTool.includes(f)), []);
+  }
 }
 
 /* ========================================================================== */
