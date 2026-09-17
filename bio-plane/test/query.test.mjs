@@ -575,7 +575,27 @@ console.log("\n--- D-258: the meaning descriptor carries exactly what op=meaning
      is not the class D-258 deleted; it is the opposite case, and the pin moves
      rather than loosens. The name is still enumerated, so the EIGHTH field has
      to come past this line too. */
-  const SIX = ["arm", "table", "level", "grain", "identity", "limit", "offset"];
+  /* REC-92 MOVES THIS TO NINE, AND BOTH ARRIVALS PASS D-258's TEST — the pin
+     MOVES rather than loosens, for the third time, which is the point of
+     enumerating the names instead of counting them.
+     `matched` says whether the rows are units that MATCHED a passage term or
+     every indexed unit in scope. Its READER EXISTED BEFORE IT WAS WRITTEN:
+     `store.mjs`'s `#meaningLevels` composes the sentence that tells a member
+     which of the two they are reading, and that sentence is pinned
+     behaviourally in `passage-arm.test.mjs` (S94-S96, the no-selector path).
+     Without the field the only thing on the wire separating those two very
+     different answers is a NULL in `snippet` — a member inferring a fact from
+     an absence, which is the move the whole arm exists to stop.
+     `fts` says the arm is backed by a text index at all. Its reader also
+     existed first: `meaningRows` gates the content-axis tally on it, so the
+     four arms that answer over ordinary tables do not pay for a fourth
+     statement and do not publish a census about a set they did not search.
+     NEITHER is a value published because it had already been computed, which is
+     the line D-258 drew and the reason `columns` and `refs` were DELETED from
+     this descriptor rather than given readers. The TENTH field has to come past
+     this line too. */
+  const SIX = ["arm", "table", "level", "grain", "identity", "limit", "offset",
+               "matched", "fts"];
   const arms = Object.keys(MEANING);
   console.log(`  corpus: ${arms.length} meaning arms · every one compiled and its descriptor read`);
   t("the corpus this sweep runs over is not empty", arms.length >= 3, true);

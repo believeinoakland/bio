@@ -11596,3 +11596,22 @@ CORRECTED rather than exempted — which is the behaviour those pins exist for.*
 `docs/development/INTERFACES.md` (the I3 bump is CONDUCT's), `newgroup/**`, `civicos-ui/**`.
 
 **open as of 2026-09-17** — raised by the REC-92 worker and not yet released.
+
+## CLAIM ADDENDUM 2026-09-17 RECORD (REC-92 — a sixth instrument-forced path, and it is D-258's pin doing exactly what it was built to do)
+
+- `bio-plane/test/query.test.mjs` — **D-258's structural pin on the `meaning` descriptor's
+  FIELD SET, moved from seven names to nine, with both arrivals justified at the site.**
+  `matched` and `fts` are new fields on the descriptor `op=meaningrows` reads. The pin
+  enumerates NAMES rather than counting them precisely so a field cannot join without a
+  session saying what READS it — D-258's own test, which is why `columns` and `refs` were
+  DELETED from this descriptor rather than given readers. Both arrivals pass it: `matched` is
+  read by `#meaningLevels` (and without it the only thing on the wire separating *these
+  passages matched your term* from *this is every indexed unit in scope* is a NULL in
+  `snippet`, which is a member inferring a fact from an absence); `fts` is read by
+  `meaningRows` to gate the content-axis tally, so the four arms over ordinary tables neither
+  pay for a fourth statement nor publish a census about a set they did not search.
+  **CAUGHT BY THE BATTERY AT `211` SUITES, NOT BY THE FOUR SUITES THIS ITEM RAN BY HAND** —
+  and the earlier partial run had not reached `q` alphabetically when it was read, which is
+  the reason the whole battery is the gate and not a selection from it.
+
+**open as of 2026-09-17** — raised by the REC-92 worker and not yet released.
