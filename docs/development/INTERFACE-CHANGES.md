@@ -8228,3 +8228,38 @@ not a time problem — it is the pre-REC-105 read surviving in a surface nobody 
 row of its own and NOT touched here. **That finding also corrects REC-105's own census in one
 line**, which recorded that the authored letter cannot be read back through any member-reachable
 op; it can.
+
+### RESOLUTION · IC-108 — 2026-09-16, CONDUCT #1 · ACCEPTED, I3 18.0.0 → **18.1.0**, ADDITIVE
+
+MINOR: a new `cached` block is added and no existing field moves, nothing is refused and
+nothing is weakened. The proposal named **17.0.0 → 17.1.0** and that base is STALE — I3 went
+to 18.0.0 at IC-105 hours after this branch forked. **The version was RE-READ on the merged
+tree rather than carried from the proposal**, which is the same class as the three floor
+collisions this wave and is worth naming as such: a version measured at a base commit is a
+claim about that commit, and an interface registry that inherits one publishes a number true
+of nobody's tree. The DELTA the proposal asked for is right; its BASE was not.
+
+**WHAT THIS BLOCK IS FOR, and it is the reason the census behind it matters more than the
+field.** The cached column has THREE routes, not the one D-379 named: the `capture:` selector
+a member typed, **the DEFAULT FACET** — `capture` is in `DEFAULT_FACETS`, so every page-mode
+search publishes per-letter counts to a member who never asked — and `sort=capture`. A
+`cached` block written against the selector alone would have named the route a member CHOSE
+and stayed silent on the one that answers unasked.
+
+**AND THE PRECEDENT IT RESTS ON DOES NOT EXTEND BY ITSELF:** `overdue`, which D-379 cites, is
+NOT in `DEFAULT_FACETS` — it is opt-in by typing. That measurement is what turned this from
+prose into a mechanism, and it is registered here so the next consumer does not re-derive it.
+
+**Consumers:** `UI` is named as a consumer to answer and **no surface consumes `cached` yet**,
+which is stated as a fact rather than as a clearance — an unread field is additive today and a
+contract tomorrow. `RECORD` is proposer and owner. `DIST` unaffected.
+
+**NOT SETTLED BY THIS BUMP, named so an ACCEPTED interface is not read as a settled design:**
+**D-383** — `op=meaningrows&rows=leg` publishes a leg's AUTHORED letter uncapped, the
+pre-REC-105 read surviving in a surface nobody swept, **which corrects REC-105's own census
+recording that letter as unreachable through any member-facing op.** Whether a leg listing
+shows what was AUTHORED or what is EARNED is a doctrine question with two defensible answers,
+it is rowed and not closed, and it may be Bob's to rule.
+
+**Registry:** I3 bumped in `INTERFACES.md` in this same commit (protocol step 4 → 5).
+

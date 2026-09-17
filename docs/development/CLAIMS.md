@@ -10941,6 +10941,8 @@ composer and the refusal have never met.
 
 **NOT EDITED BY THIS ITEM.** `agent-worker/**` is outside RECORD's claim and REC-100 read it only.
 
+**open as of 2026-09-16** — raised today by REC-100 and NOT yet discharged. **Recorded by CONDUCT #1 at integration because M0-37's own arm, which landed hours earlier, FAILED this block by name on its first live encounter** — the delegation arrived through a merge carrying neither a DISCHARGED line nor an `open as of` line, which is exactly the silence that arm exists to refuse. It is the instrument working on the day it shipped, on a block written by a worker who could not have known the rule had changed under it.
+
 ### FINDING 2026-09-16 RECORD (REC-100) — **THE ITEM DID NOT WIDEN THE CHECK, AND EVERY PRECONDITION ITS OWN ROW NAMED WAS WRONG**
 Recorded here as well as in the report, because a finding left in a report reaches one reader.
 REC-100's brief and D-366 both said the carve-out closes once REC-95's writers carry referents and
