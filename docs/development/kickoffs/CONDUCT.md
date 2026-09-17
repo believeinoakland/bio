@@ -695,6 +695,57 @@ defect it is.
    inside `C` or `M` (both NAMED as ungradable in its own output rather than scored
    clean); and a collision between two branches nobody has merged — which is exactly the
    one your merge creates, and therefore exactly why you run it AFTER merging.
+
+   **AND ONCE THE MERGE IS PUSHED, DELETE THE ITEM'S REMOTE BRANCH. PRUNE-ON-MERGE —
+   D-288 item 3, ruled by BOB #12 2026-09-16, landed here by M0-49 2026-09-17.** It is
+   the LAST act of the integration, after the push and after the push is verified:
+
+   ```
+   git push origin --delete <the item's branch>
+   git ls-remote --heads origin <the item's branch>     # must print NOTHING
+   ```
+
+   **Verify from `git ls-remote`, never from your own tree.** That is the discipline the
+   worker owes on the way in (`WORKER.md`, D-288 item 1) owed back on the way out, and for
+   the same reason: **a delete that silently did not happen is indistinguishable from one
+   that did** until somebody reads the branch list and believes it. A step that PUBLISHES a
+   claim and a step that MAKES it true are two steps.
+
+   **WHY IT IS WORTH AN ACT — IT INVERTS THE COST D-288 FEARED.** That row hesitated over
+   shape (a) for five weeks partly because pushing every worker branch *"would make the
+   remote's branch list useless as a signal"*. **With pruning the sign flips: a
+   `worktree-agent-*` branch ON THE REMOTE MEANS UNINTEGRATED WORK**, so the branch list
+   becomes a WORKLIST rather than noise. **M0-48 landed the detector and nothing maintained
+   the signal it reads; this step is what maintains it.** Skip it and the estate keeps the
+   detector and loses the thing detected.
+
+   **THE ORDER IS THE WHOLE SAFETY, BECAUSE THE USUAL JUSTIFICATION IS ONLY TRUE AFTER THE
+   PUSH.** *"Deleting the branch destroys nothing — the content is on `origin/main` by
+   definition of having merged it"* is true once the merge is ON THE REMOTE and **FALSE in
+   the window before it.** A local merge plus a remote delete leaves the content on this
+   disk alone, which is D-288's own exposure re-created by the act meant to close it. **So:
+   merge, gate, push, verify the push, and only then delete** — and if the push fails, or
+   you back the merge out with `git revert -m 1`, the remote branch must still be there.
+   **The local branch is NOT deleted and neither is the worktree**, so after a correct prune
+   the content is held twice, on `origin/main` and on this disk. That is what makes the act
+   cheap, and it is a reason to do it rather than a reason to do more.
+
+   **THIS IS NOT LICENCE TO REMOVE THE WORKTREE — THEY ARE DIFFERENT ACTS AND ONLY ONE OF
+   THEM CAN DESTROY ANYTHING.** Worktree removal is owned by *"WHEN THE DISK FORCES YOUR
+   HAND"* below, with its own criterion and its own hazard, and it is not unlocked by having
+   just pruned a branch. Deleting a REMOTE BRANCH you have merged, pushed and verified is
+   recoverable from two places. **REMOVING A WORKTREE can take a live worker's uncommitted
+   tree with it, and uncommitted work is the one window no push has ever closed.** Never do
+   the second because you just did the first.
+
+   **WHAT THIS MANUFACTURES, named here because `VERIFICATION.md` predicted it before the
+   step existed** (§"The population, not the spelling"): a plain `git fetch` does not prune,
+   so a branch deleted on the remote **lingers in every clone's remote-tracking refs**, and
+   `plancheck --local` reads tracking refs rather than `ls-remote`. **Checked against the
+   predicate rather than assumed: it costs nothing for a branch you merged**, because
+   `strandedwork` judges such a unit `ahead === 0` and stays silent whichever list it reads.
+   **Run `git fetch --prune` in your own tree after the delete** anyway, so your next
+   `--local` run is reading the world rather than a memory of it.
 3. **Enqueue decompositions from BOB** — you are the GATE that confirms each
    piece is genuinely independent before it becomes runnable. **And test every
    scope you write against CLAUDE.md's "CONTENT IS THE UNIT" section** (added by
@@ -938,6 +989,46 @@ merged nowhere. **Both look identical to a tool that only asks about ancestry**,
 what distinguishes them, and it is built from `ListAgents` plus the rows you have not yet
 flipped. **Verify the keep-list SURVIVED afterwards** — list each kept worktree and print its
 HEAD — because a prune that removed the wrong tree is silent until a worker's next command.
+
+**AND THE DANGEROUS CASE IS A WORKER THAT HAS STARTED, WHERE ANCESTRY DOES NOT MERELY FAIL TO
+DISTINGUISH — IT POSITIVELY ASSERTS THE WRONG ANSWER.** The paragraph above documents the
+worker that has REPORTED. **Measured 2026-09-16 by CONDUCT #1 under disk pressure and recorded
+in D-288: the criterion reported ALL SIX OF ITS LIVE WORKERS as prunable.** A worker that has
+not committed yet has its branch tip sitting exactly AT `origin/main`, so it is **trivially an
+ancestor** — **the criterion's output for a worker mid-item is not `unknown`, it is `PRUNE`**,
+and the tree it names that way may hold hours of uncommitted work. This is the estate's
+recurring shape with the sign flipped: not a reader concluding a value from an absence, but an
+instrument returning a confident wrong value from one. **`strandedwork`'s over-strictness arm
+reads the SAME FACT the opposite way an hour later** — a tip at `origin/main` means nothing is
+committed yet, and two instruments drew opposite wrong conclusions from it.
+
+**So the live-list is not a refinement of the criterion. It is the entire safety of the act**,
+and ancestry alone would have destroyed six live trees that day.
+
+**AND IT IS NOT A ONE-OFF — IT WAS REPRODUCED WHILE THIS PARAGRAPH WAS BEING WRITTEN.**
+Measured 2026-09-17 by M0-49's own worker, mid-wave, from `plancheck`'s `stranded work:` note:
+**6 EXPOSED of 27 units judged, and FOUR of them read `1234095a — N modified, nothing committed
+past origin/main`.** Every one of those four is a live worker of the running wave. **Their tips
+are the sha of `origin/main` itself**, so `git merge-base --is-ancestor <tip> origin/main` answers
+TRUE for all four — **the criterion says PRUNE, and each tree holds between one and four modified
+files that no push can reach.** That is the same fact in three different readings: ancestry calls
+them prunable, `strandedwork` calls them exposed, and the truth is that they are simply BUSY.
+
+**The population expires as you read it, which is the second half of the lesson.** The integrating
+session measured this same note minutes earlier and got a different split — 1 never-pushed and 5
+uncommitted against the 2 and 4 above — because one worker committed in between and moved from one
+window to the other. **A prune decision taken from a list you did not measure yourself, in this
+minute, is a decision about a world that has already moved.** M-38 learned this when its canonical
+over-strictness row started working minutes after being named.
+
+**Read the two clauses in the right direction, because the sentence above is easy to read the
+wrong way.** *Never prune by the worktree's own dirty state* means **a CLEAN tree is not a
+licence to prune.** It does NOT mean ignore dirtiness. **Ancestry is NECESSARY AND NEVER
+SUFFICIENT; a dirty tree is a VETO AND NEVER A LICENCE.** `plancheck`'s own `stranded work:`
+note re-reads both — committed work past `origin/main` and working-tree change — on every run
+and prints the units holding either, so the live-list has an instrument beside it rather than
+resting on your memory of whom you spawned. **Nothing in it authorises a removal; it only ever
+subtracts candidates.**
 
 **Expect the rule to keep more than you want.** A branch merged and then rebased away by a later
 `git rebase origin/main` on `main` stops being an ancestor even though its content landed. That

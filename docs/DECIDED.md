@@ -1864,11 +1864,11 @@ Settled in prose without an id allocated. Cite them by file and line.
 - never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
   `docs/development/kickoffs/CAPTURE.md:281`
 - **2026-09-16** — RULED 2026-09-16 by BOB #12 (mechanism, BOB's) on CONDUCT #1's report, which flagged the change instead of quietly working around it.  
-  `docs/development/kickoffs/CONDUCT.md:775`
+  `docs/development/kickoffs/CONDUCT.md:826`
 - **2026-09-17** — CORRECTED 2026-09-17, and the correction is BOB's own error caught one day later.** This bullet read *"dirty or off the tip"* and told you to stop and report on either.  
-  `docs/development/kickoffs/CONDUCT.md:801`
-- A CLAIM ABOUT THE WORLD IS CORRECTED BY GOING TO THE ARTIFACT.  
   `docs/development/kickoffs/CONDUCT.md:852`
+- A CLAIM ABOUT THE WORLD IS CORRECTED BY GOING TO THE ARTIFACT.  
+  `docs/development/kickoffs/CONDUCT.md:903`
 - **2026-07-31** — CORRECTED 2026-07-31 by session BOB: item (3) of the plan below is SUPERSEDED by the function-specific Worker topology decision.  
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  

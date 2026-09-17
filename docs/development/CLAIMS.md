@@ -11498,3 +11498,45 @@ message needs to name the resolution path PER MEMBER. I have taken neither, so n
 is blocked on the other.
 
 **open as of 2026-09-16** — raised by FLEET #1 and NOT discharged. **Recorded by CONDUCT #1 at integration, and this is the THIRD block M0-37's delegation arm has caught today** — after REC-100's and M0-48's. **It is the most interesting of the three: FLEET's session had ENDED before that arm existed**, so this block was written by a session that could not have known the rule, could not be asked, and could not correct itself. The arm audited it anyway. **That is the difference between a rule and a mechanism** — a rule reaches only sessions alive to read it, and this register now states its own state for work whose author is gone. The commit carrying it was itself STRANDED on a dead session's worktree until D-288's detection arm named it hours after both were written.
+
+## CLAIM 2026-09-17 M0 (M0-49 — D-288 item 3: CONDUCT deletes the remote branch when it merges the item)
+
+**RELEASED on push.** Paths:
+
+- `docs/development/kickoffs/CONDUCT.md` — the PRUNE-ON-MERGE step, written into the
+  INTEGRATION SEQUENCE (step 2, after the mintid audit and before step 3) rather than into a
+  design document; and the started-worker hazard stated beside the ancestry criterion in
+  *"WHEN THE DISK FORCES YOUR HAND"*.
+- `bio-plane/test/strandedwork.test.mjs` — section 10's arms, and the correction of that
+  section's own superseded comment.
+- `docs/development/VERIFICATION.md` — the M0-48 section's forward reference to this row,
+  which had gone stale on landing and is NARROWED rather than merely dated.
+- `docs/development/DEBT.md` — D-288's disposition, which asserted item 3 was not built.
+
+**CONTENDED, AND KNOWINGLY SO: `kickoffs/CONDUCT.md` IS THE INTEGRATING SESSION'S OWN LOOP
+FILE, AND IT WILL BE APPENDING TO IT WHILE THIS CLAIM IS OPEN.** The conflict is expected,
+append-only prose, and CONDUCT's to resolve by keeping BOTH — it was named at spawn rather
+than discovered at the merge. **Working around the file was the one thing that would have
+failed the item**, since the whole point of D-288 item 3 is that the step lives in the loop
+its owner actually runs.
+
+### FINDING 2026-09-17 M0 (M0-49) — **THE OBVIOUS ASSERTION KEY WAS A COSTS-NOTHING ASSERTION, AND IT WOULD HAVE PASSED BEFORE THE CHANGE**
+
+The natural way to test *did CONDUCT.md gain a pruning step* is `/prune/i`. **That word was
+already in the file three times**, in the worktree-removal section this item was explicitly
+told to keep separate — so the arm would have been green before the step existed, and green
+after it was deleted again. Measured at HEAD before writing anything: `prune` 3,
+`push origin --delete` 0, `D-288` 0, `prunable` 0, `PRUNE-ON-MERGE` 0. The arms are keyed on
+the ACT and on the ruling's id. **This is the costs-nothing rule arriving in a test key**, and
+it was one grep away from being the item's whole verification.
+
+### FINDING 2026-09-17 M0 (M0-49) — **`tools/strandedwork.mjs` HAS NO CLI, SO THE OBVIOUS CITATION WOULD HAVE BEEN A COMMAND THAT DOES NOT RUN**
+
+Drafting the hazard paragraph, the useful thing to point a disk-pressured reader at is an
+instrument that lists which worktrees hold uncommitted work. `strandedwork.mjs` computes
+exactly that — and it is a LIBRARY with no `main`, reachable only through `plancheck`'s arm.
+**A citation to `node tools/strandedwork.mjs` would have read as a verified instrument and
+produced nothing.** The text cites `plancheck`'s own `stranded work:` note instead. Caught by
+running the file rather than by reading its exports.
+
+### DECISIONS FOR BOB 2026-09-17 (M0-49): **NONE**
