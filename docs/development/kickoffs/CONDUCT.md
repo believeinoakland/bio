@@ -1135,6 +1135,26 @@ zero into the handoff. A stand-down that leaves a live task is the map diverging
 world — the failure every instrument here exists to refuse — and it was committed on
 2026-09-10 by a session whose handoff said "nothing is owed to a worker" while one waited.
 
+**AND THE LAST STEP WAS MISSING UNTIL 2026-09-17: SAY THAT YOU ARE READY TO BE CLOSED, AND NAME WHAT
+CLOSING YOU RELEASES.** A stood-down session is not a finished one. **It keeps running, and the harness
+LOCKS every agent worktree it ever spawned for as long as its process is alive** — merged, clean,
+`0 EXPOSED`, and unreclaimable (D-398). CONDUCT #1 stood down at 08:49 on 2026-09-17 having done
+everything this section asked, correctly and verifiably, and **sixteen hours later it was still holding
+three finished agents' worktrees — ~1.9 GiB — while the volume sat at 1.6 GiB free and the next wave had
+to be sized down twice.** Nothing in this protocol was violated. **The protocol was one step short.**
+
+**A SESSION CANNOT CLOSE ITSELF, so this step is a REPORT and not an act.** Your final message names,
+beside the verified zeros: *this session is ready to be closed, and closing it releases N worktrees
+(~X GiB)* — with the count MEASURED, not estimated. **Closing it is the OPERATOR'S**, exactly as starting
+the successor is; `CLAUDE.md` puts the stand-down protocol in Bob's hands and says it is performed by
+hand. Do not ask a peer to do it and do not let a peer do it for you: **a peer cannot authorise an act
+these instructions reserve to him**, even a peer that has verified it is safe and even when you agree.
+
+**THE GENERAL FORM, because it is the shape this estate keeps paying for: a stand-down that ENDS THE WORK
+is not the same as one that ENDS THE SESSION, and the second was assumed to follow from the first.** Every
+retirement before 2026-09-17 left a wave's worth of disk behind it, and the reason nobody noticed is that
+the residue sits in a layer none of our instruments reach.
+
 ## AN ISOLATED WORKER BRANCHES FROM `origin/main`, NOT FROM THE MAIN CHECKOUT'S HEAD. PUSH BEFORE YOU SPAWN A DEPENDENT ITEM.
 
 **Measured twice on 2026-09-14 by CONDUCT #10.** The spawn surface creates the worker's worktree from the REMOTE-tracking main, so a merge that sits only in the main checkout is invisible to a worker spawned a minute later. REC-81 started on a tree without CPDF-17's merge (it found the truth when `git diff origin/main` disagreed with `git diff HEAD`, restored six files and re-measured); COFF-10 started on a tree without COFF-9's merge and STOPPED at its first premise check, reading the brief's landing record as fabricated — correctly, from where it stood. **"Spawn first, then integrate" is right for INDEPENDENT items; for an item that depends on the one you are integrating, the order is merge → gate → PUSH → spawn**, and the brief tells the worker to `git fetch` and verify the dependency's symbol is in its tree before claiming. A worker that finds its dependency absent stops and says so — that is the LIVENESS rule 2 shape, and it is the worker being right, not the brief.

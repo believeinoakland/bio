@@ -101,6 +101,49 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-17 · BOB #12 · Q14 REFINED BY BOB INTO A THIRD CASE THAT IS NEITHER OF THE TWO I NAMED — and it is
+the one with an OBLIGATION attached.** My entry above split contradiction into the discrepancy finding
+(expressible today) and the irreconcilable pair (needs the claim object). **Bob named a third and it is about
+the RECORD rather than the world:**
+
+> *"It's one thing if the record says that an official said one thing in March and another in October. It's
+> another thing if one part of the record says that one thing happened at this point and another part of the
+> record says the opposite thing happened. In other words that the record is conflicting. While this can happen
+> for various reasons, it needs to be flagged and resolved... whatever causes a contradiction, there needs to be
+> mechanisms for identifying, presenting, and resolving these contradictions."*
+
+**THE DISTINCTION IS LOAD-BEARING AND CHANGES WHAT IS OWED.** A contradiction IN THE WORLD is a FINDING — the
+system's product, kept, published, never "fixed". **A contradiction IN THE RECORD is a DEFECT IN OUR OWN
+HOLDING and carries an obligation to resolve it**, because two parts of the record asserting opposite facts
+means the record is, in one of the two places, wrong — and this project's whole product is trustworthiness of
+the record. **That is the first contradiction case with a DUTY attached rather than a capability.**
+
+**AND BOB'S OWN EXAMPLES OF CAUSE ARE THE HARDEST PART OF THE DESIGN, not colour:** *"a difference of opinion
+('spending was reduced a little last year' and 'spending dropped a lot last year'), a misquote, or genuine
+double-speak by a politician."* **The first of those IS NOT A CONTRADICTION AT ALL** — two descriptions at
+different precision of the same fact — and a detector that cannot tell it from the third will bury members in
+false conflicts and be switched off inside a week. **So the identify step's over-strictness arm is the item, in
+the exact sense this estate already uses it: an arm that fires on a healthy state is worse than no arm.**
+
+**THE THIRD SHAPE IS WHERE THE CIVIC VALUE IS, and it is why resolution must be RECORDED rather than merely
+performed.** *Genuine double-speak* resolved and recorded is not housekeeping — **it is a finding about the
+subject**, produced as a by-product of keeping our own record straight. A resolution vocabulary that flattens
+all three causes to *resolved* would throw that away. So the resolution names its KIND, and at least one kind
+(*the sources genuinely conflict and the conflict is the point*) must be able to promote the conflict INTO a
+finding rather than closing it.
+
+**THREE MECHANISMS, and they are separable — Bob named them in the right order and they should be built in it:**
+IDENTIFY (detect candidate conflicts; the over-strictness arm is the acceptance test), PRESENT (a member sees
+both sides with enough context to judge, in the record's own words, never a machine verdict — DEC-24, D-82),
+RESOLVE (a member's act, attributed, naming the KIND, never silent, never deleting either side — content rows
+go `stale`, never away).
+
+**FOR YOU: nothing to row yet and I am saying so rather than letting it look drained.** The design act is mine
+and comes next; **what I want on the record now is that this is a THIRD case with an obligation, so nobody
+folds it into the discrepancy detector I described in the entry above.** They share a detector and they do not
+share a duty. No queue item is superseded and no worker should be stopped.
+
+
 **2026-09-17 · BOB #12 · FOUR RULINGS FROM BOB, ONE OF WHICH OVERTURNS A PARKED PREMISE AND IS THE MOST VALUABLE
 THING IN THIS ENTRY.** Doctrine is his; the scope determinations are mine under standing delegation. **Ids, gating
 and sequencing yours. Nothing here supersedes a queue item and no worker should be stopped.**

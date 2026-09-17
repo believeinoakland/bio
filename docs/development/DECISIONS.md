@@ -505,6 +505,31 @@ response: **ANSWERED 2026-09-17 by Bob, and the deferral's own trigger is what f
 
   **3 · COMPLETENESS IS ALREADY EXPRESSIBLE AND SHOULD BE REUSED, NOT INVENTED.** *As complete as possible, with what is missing clearly indicated* is the vocabulary this record already has — the `searched` section (IC-112, which now REFUSES a case document that omits it), undetermined-is-first-class, the strength walk naming its weakest legs, and the frontier's absence vocabulary. **A review copy states its own gaps in the same words a published case does**, and a gate that pressured a member into filling them would be a bug in the gate (DEC-69).
 
+**CORRECTED 2026-09-17 BY BOB, SAME DAY, AND HE OVERRULED THE TWO DETERMINATIONS THAT MATTERED.** Bob: *"An
+  'advance copy' or 'review copy' (both valid names) is mutable. Only a real publish is not. An editor must be able to
+  edit, right? (Mind you, the editor must have project permissions to do so.) Agreed that a review copy never leaves
+  the instance."*
+
+  **§1 IS REVERSED AND HIS BRANCH IS THE BETTER ONE. A review copy NEVER LEAVES THE INSTANCE.** I reasoned that since
+  the two-bucket fence is structural and there is no third bucket both outside the instance and private, a review copy
+  must therefore be PUBLISHED-BUT-UNLISTED. **That took the fence as fixed and moved the artifact. Bob took the
+  artifact as fixed and kept it behind the fence**, which costs nothing doctrinally and gives up only reach.
+
+  **§2 IS REVERSED AND IT FOLLOWS FROM §1 RATHER THAN CONTRADICTING IT — which is what makes his design coherent and
+  mine merely consistent.** I ruled the artifact IMMUTABLE because an unlisted copy in someone's hands cannot be
+  recalled, so versioning was the only honest answer to *when does a rendering someone acted on become a record*.
+  **If it never leaves, there is no copy to go stale, so mutability costs nothing and editing is exactly right** —
+  gated on project permissions, as he says. **Only a real publish is immutable**, which is also the cleaner rule: one
+  irreversible act, not two.
+
+  **THE ONE QUESTION HIS RULING OPENS, and it is mechanism rather than doctrine, so it is mine: HOW DOES THE RECIPIENT
+  REACH IT?** A copy that never leaves the instance must be read inside the instance, so the recipient needs a way in
+  — a scoped, revocable, read-and-comment grant against one production, which is nearer to the existing gate and
+  capability vocabulary than to publication. **And the original question SURVIVES IN A NARROWER FORM rather than
+  dissolving: the moment a member exports a PDF and emails it, a rendering someone acts on is loose again.** That is
+  outside the fence by the member's own act and the record can only say what it holds; worth stating on the surface
+  rather than designing against.
+
 decided: 2026-09-17 · Bob · reasoning in this entry; the mechanism decomposed to CONDUCT through the BOB INBOX the same day. **NAMING IS PUT BACK TO BOB and is not settled here:** *pre-publish for review* is descriptive but ASSERTS A FUTURE THAT MAY NOT HAPPEN — a confidential referral may never be published — and this record does not name acts for what they precede. `advance copy` and `review copy` are the recommendations, both terms of art a member already understands; the choice is Bob's because it is member-facing vocabulary (DEC-8).
 
 ### DEC-32 · answered

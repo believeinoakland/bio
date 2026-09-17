@@ -317,6 +317,13 @@ state from `origin/main`, claim before editing; (3) Bob clicks once and the sess
 exists, chatable and messageable. The same mechanism replaces a saturating session: the
 outgoing session writes its `<AREA>-NEXT.md` handoff FIRST, and the chip's prompt
 refuses to work if the handoff it names is absent from the remote.
+**A STAND-DOWN THAT ENDS THE WORK IS NOT ONE THAT ENDS THE SESSION, AND THIS LANE RETIRES TOO.** Added
+2026-09-17: a stood-down session keeps running, and **the harness LOCKS every agent worktree it ever spawned
+for as long as its process is alive** — merged, clean, and unreclaimable (D-398). CONDUCT #1 did everything
+its protocol asked, correctly, and sixteen hours later still held ~1.9 GiB while the volume was at 1.6 GiB
+free. **So the last act of a handoff is to SAY you are ready to be closed and NAME what closing you releases,
+measured.** A session cannot close itself; closing it is the operator's, like clicking the successor's chip.
+
 **And from the moment the successor's chip is clicked, the successor owns the checkout.**
 Measured 2026-09-14: CONDUCT #10, stood down and verified, was woken by its own worker
 subagents' late reports, wrote into the main checkout while CONDUCT #11 held it, and pushed
