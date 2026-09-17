@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1023 rulings across 85 documents.
+1024 rulings across 85 documents.
 
 ## DEC-
 
@@ -1014,6 +1014,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1591`
 - **REC-115** · 2026-09-17 — AMENDED 2026-09-17 by REC-115 — §4.4's *THE QUERY'S OTHER ARMS* NOW BINDS BOTH STATEMENTS, UI-62's DELEGATED FINDING IS DISCHARGED AND ITS INCOMPLETE BULLET IS STRUCK, under `IC-115` on I3.** `meaning({mode:"levels"})` builds its scope from `cte(false, armSet(rowArm))` — the query with the row's own arm STRIPPED —…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:7`
+- **REC-116** · 2026-09-17 — PRECISION MEASURED AND THEN CORRECTED DOWNWARD — 1 GENUINE OF 3 VERIFIED — and recorded that way because a precision figure that only improves in the telling is worthless.** REC-116 is the true positive: no governed design covers its construct at all, 39 days undetected.  
+  `docs/development/DEBT.md:336`
 - **REC-116** · 2026-09-17 — BLOCKED ON BOB, RULED 2026-09-17 BY BOB #13, AND THE ROW IS KEPT RATHER THAN DELETED BECAUSE THE REASON IS THE VALUABLE PART.** CONDUCT #2 rowed this as runnable; **BOB #13 ruled it is NOT, and took the design instead: *I take the design; the item follows the design, not the other way round.*** The ground is…  
   `docs/development/QUEUE.md:1551`
 - **REC-117** · 2026-09-17 — BOB RULED THAT `NO_FALSIFIER` MUST BECOME A STATED, ATTRIBUTED, OVERRIDABLE CONDITION AND `op=conclude` STILL REFUSES OUTRIGHT — so the gate pressures a member into INVENTING a falsifier, which is the exact bug the publication fence was moved off the content axis to avoid.** — waits on nothing; owner RECORD.  
