@@ -2,7 +2,7 @@
 
 **Status** · The record of the case-making design pass: the frame in Bob's words, the observations, the collapse of focus/finding/case into one recursive INQUIRY, naming and division, what a CLAIM is, the action plan, and the R1–R4 resolutions the adversarial pass forced. "Opened 2026-08-01 (session BOB) as the D-127 design pass Bob directed … Nothing here is settled unless it says so." Its 2026-08-10 status correction rules the file non-authoritative: the collapse HAS SHIPPED, and "what is authoritative is no longer this file. It is the plane, and the rulings the pass produced — DEC-15 through DEC-32 and the R1–R4 resolutions." Superseded as design authority (by the plane, `docs/development/DECISIONS.md`, and DEC-72 for the case section); complete as the reasoning record. Read it for WHY; several body sentences are now false as written (below). as of 2026-09-17.
 
-**Place in the system** · The reasoning behind construct 8 of `BIO_System_Design.md` §3 (intent and inquiry): "CASE-MAKING is undesigned, and it is what the whole system is for" (D-127). Its rulings feed M9 and M10; `BIO_Interaction_Constructs_v0_1.md` takes FINDING as case-making's substrate from it; the thread itself is paused behind DEC-33 until Bob reopens it.
+**Place in the system** · The reasoning behind construct 8 of `BIO_System_Design.md` §3 (intent and inquiry) **[audited 2026-09-17: the quotation below is Bob's framing of 2026-08-01 and the design has since LANDED — this document is it, and construct 8 reads built]**: "CASE-MAKING is undesigned, and it is what the whole system is for" (D-127). Its rulings feed M9 and M10; `BIO_Interaction_Constructs_v0_1.md` takes FINDING as case-making's substrate from it; the thread itself is paused behind DEC-33 until Bob reopens it.
 
 **Incomplete sections** ·
 - §Naming: three names for three phases, and the type name question — DEC-72 rules a case is a PRODUCTION of a project, not a phase; the open → concluded → published states are superseded.
@@ -619,11 +619,13 @@ that closed focus/finding/case.
 1. **Ergonomics, and it is MEASURABLE rather than arguable.** If every component proposition
    must become a full inquiry with its own falsifier, stating one finding may cost more than a
    volunteer's evening. That is observable once M9 ships and should be measured, not predicted.
-2. **CONTRADICTION, which is §4 Q14 and is undesigned.** Two claims that conflict, both held,
-   neither abandoned. `role: cuts_against` is one leg's polarity, not a structure for two claims
+2. **CONTRADICTION, which is §4 Q14. ANSWERED 2026-09-17 — see §CONTRADICTION below, which
+   inverted this premise: contradiction is an OUTPUT the system exists to find, not an edge case
+   to tolerate. What remains undesigned is only the IRRECONCILABLE PAIR **[audited 2026-09-17: STILL TRUE, as of 2026-09-17]** Two claims that
+   conflict, both held, neither abandoned. `role: cuts_against` is one leg's polarity, not a structure for two claims
    contradicting each other. **If a claim ever becomes an object, this is the reason it will** —
    and note the two cases are different: Bob's question is about COMPOSITION, which recursion
-   already answers, while Q14 is about CONTRADICTION, which nothing answers.
+   already answers, while Q14 is about CONTRADICTION — **which §CONTRADICTION now answers in two of its three cases (2026-09-17); the irreconcilable pair is what still needs this object.**
 
 `inquiry_basis` does not exist in the schema, so all of this is still free.
 **CLARIFIED 2026-08-03 by Bob, and the question sharpens rather than closes.** *"I'm not
@@ -636,7 +638,7 @@ with parallel distribution; a SECOND claim's legs cite rights enshrined in the s
 constitution and the court decisions that clarify them. **Two parallel claims — two
 independent bodies of support answering one question — not nesting.** That distinguishes it
 from the composition case above (which recursion already answers) and from Q14's
-contradiction case (which nothing answers): this is PLURALITY — same conclusion-shape, two
+contradiction case (**answered 2026-09-17 in §CONTRADICTION except for the irreconcilable pair**): this is PLURALITY — same conclusion-shape, two
 grounds. The two candidate shapes are `0..n` claims on one finding, or two inquiries under a
 parent whose published rendering reassembles them; forcing the example into two inquiries
 would split an answer a reader needs whole, which is the strongest argument yet against the
@@ -661,7 +663,7 @@ rendered together. DEC-32 remains open.**
 
 ## CONTRADICTION — Q14 ANSWERED, and the premise was INVERTED — Bob, 2026-09-17
 
-**Q14 sat undesigned for six weeks on the stated grounds that *the contradiction shape has no
+**Q14 sat undesigned **[audited 2026-09-17: historical narration, not a live gap]** for six weeks on the stated grounds that *the contradiction shape has no
 consumer*. Bob supplied the consumer and reversed the sign of the question.** Verbatim:
 
 > *"Why CAN'T a record hold two findings that flatly contradict each other… A situation like that
@@ -672,7 +674,7 @@ consumer*. Bob supplied the consumer and reversed the sign of the question.** Ve
 
 **That is doctrine, and it changes what this construct IS: contradiction is not an edge case the
 model must tolerate, it is an OUTPUT the system exists to find.** The section above reserved this
-question — *"CONTRADICTION, which is §4 Q14 and is undesigned… If a claim ever becomes an object,
+question **[audited 2026-09-17: quoting the reservation this section ANSWERS]** — *"CONTRADICTION, which is §4 Q14 and is undesigned… If a claim ever becomes an object,
 this is the reason it will"* — and this section answers the part that does not need the object.
 
 ### The three cases, and only one of them carries a DUTY

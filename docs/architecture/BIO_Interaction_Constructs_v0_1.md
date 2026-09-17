@@ -1,6 +1,6 @@
 # BIO interaction constructs — v0.2 (v0.1 derivation retained below)
 
-**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. as of 2026-09-14.
+**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. as of 2026-09-17.
 
 **Place in the system** · Owns construct 12 of `BIO_System_Design.md` §3 (member surfaces): it governs M8 (`docs/development/MILESTONES.md`; the UI area's governing design per `QUEUE.md`), hands queue content to `docs/development/NOTIFICATIONS.md`, and its pre-flight rule (DEC-8) is what the assistant construct and every act surface rest on. Distinct from `CONSTRUCTS.md`, the content inventory — the name collision is stated in the document.
 
@@ -102,7 +102,7 @@ the weight of the act, would be violated by sameness.**
 | **QUEUE** | *things that want me,* **grouped by the case they belong to.** Items are typed and say what they offer: an obligation I must dispatch (do / forward / resolve), or something the system noticed and nobody has judged yet (adopt / defer / dismiss). Items with no case sit ungrouped. |
 
 **The three classes are DOMAINS, not item types** (Bob, 2026-08-01): a FINDING is the substrate of
-case-making (D-127, undesigned — and it is what the system is for); an OBLIGATION is the civic system's own
+case-making (D-127 — *"undesigned"* is Bob's framing of **2026-08-01** and is no longer true of the estate: the design is `BIO_Case_Making_v0_1.md` and construct 8 reads **built**; what the row still carries is the doctrine that case-making is what the system is FOR); an OBLIGATION is the civic system's own
 declared flow, whose delta against the observed flow is the analytic product (D-128); a CONDITION is a signal,
 with three dispositions — recorded (never surfaces), noticed (status where the thing lives), actionable (earns
 a queue item). So each has its own HOME beyond the queue — a case, a flow model, a signal history — while the

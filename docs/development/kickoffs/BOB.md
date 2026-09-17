@@ -401,9 +401,25 @@ part: the instrument was built for someone else's idleness while the builder had
 failure mode and could not see it.**
 
 **THE RULE.** A finished act is not a stopping point. When something completes, the next thing on
-the list starts in the same turn: the owed design acts, the open `DECISIONS.md` entries, the rows
-this lane holds, the debt it owns. **Report at a BOUNDARY — when the list empties, when a decision
+the list starts in the same turn. **Report at a BOUNDARY — when the list empties, when a decision
 is genuinely Bob's, when something changes what another lane is running — not after each unit.**
+
+**AND THE LIST IS NOT A MEMORY, IT IS A COMMAND — because when this rule was first written THERE
+WAS NO LIST, and it was broken in the same turn:**
+
+    node tools/owed.mjs BOB
+
+**`plancheck` section 2g prints it on every run.** It reads the obligations that are ALREADY
+written down — `DEBT.md` dispositions that ROUTE work to this lane, rows whose disposition
+declares a residue (*STILL OPEN*, *NOT CLAIMED DONE*, *RESIDUE, NAMED*), open `DECISIONS.md`
+entries, and `QUEUE.md` rows blocked on BOB. **Its first honest run surfaced D-394 — a design act
+this lane had been TOLD it owed, had not done, and had not mentioned in hours of reporting.**
+
+**SO THE OBLIGATION IS: RUN IT, AND IF IT IS NON-EMPTY, KEEP GOING.** Sequencing among the items
+is this lane's own judgement and the tool deliberately does not rank them. What it removes is the
+one thing that was never reliable — a session REMEMBERING what it promised. **A commitment in a
+message is the same class as a mechanism in a document nobody executes: the repository is the
+channel, for obligations exactly as for code.**
 
 **WHAT DOES NOT COUNT AS AN EMPTY LIST:** owed design acts named in `<AREA>-NEXT.md`; open rows
 routed to this lane; debt rows whose disposition names BOB; a construct another lane is blocked on.

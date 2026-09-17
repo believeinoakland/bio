@@ -73,6 +73,7 @@
   - [16. How content is extracted today](#16-how-content-is-extracted-today)
   - [17. How content is organized and reached](#17-how-content-is-organized-and-reached)
   - [18. The central gap, and the six pieces to design](#18-the-central-gap-and-the-six-pieces-to-design)
+    - [18.1 THE CROSS-VERSION RELATION — D-394 DESIGNED, 2026-09-17](#181-the-cross-version-relation-d-394-designed-2026-09-17)
   - [19. Where this document is the authority, and who defers to it](#19-where-this-document-is-the-authority-and-who-defers-to-it)
   - [Appendix A · The evidence, as measured at `origin/main` `51d128a`](#appendix-a-the-evidence-as-measured-at-originmain-51d128a)
     - [A.1 The rulings](#a1-the-rulings)
@@ -1453,7 +1454,7 @@ Stated so the bend is recognised as a bend and not as a bug:
 - **Detecting CONTACT between aspirations.** §12.1 rules that contradiction is
   welcomed and that the system should surface contact rather than judge contradiction.
   What counts as contact — shared entities, shared progressions, competing order on one
-  queue — is named and not specified, and the surface that shows it is undesigned.
+  queue — is named and not specified, and the surface that shows it is undesigned. **[audited 2026-09-17: STILL TRUE — named, unspecified, no surface]**
 
 None of these needs solving now. They need to be visible so that the day one arrives,
 the response is a registry entry and not a rewrite.
@@ -1898,13 +1899,13 @@ MEANING arm now reaches legs and resolutions, and nothing else.
 
 | capability | at document grain | at reference or meaning grain | at content grain |
 | --- | --- | --- | --- |
-| **ADD** | BUILT — acquire → the register (the trust root) → promote; the deferred-link frontier is derived. The AUTHORED frontier — a member's lead, *"there should be a contract between X and Y — look for it"* — has no home (D-194) | BUILT — readings, references, terms and the chain written at promote; resolutions and connections by their ops. **WHERE a reference was read is recorded since FW-17 (IC-86), where the container itemised its own text**: `reading_refs` carries `pos_kind`/`pos`/`pos_ref` in IC-1's element-reference vocabulary, NULLABLE, and a reading that cannot say writes anyway with the absence STATED on its basis. A PDF's pages and an office container's paragraphs produce a position; HTML read back as one decoded string does not, and `dom` is refused by name while no producer exists. That a reading was attempted and found nothing is still not recorded | BUILT in part — the `content` table (REC-82) |
+| **ADD** | BUILT — acquire → the register (the trust root) → promote; the deferred-link frontier is derived. The AUTHORED frontier — a member's lead, *"there should be a contract between X and Y — look for it"* — has no home **[audited 2026-09-17: STILL TRUE, D-194 open]** (D-194) | BUILT — readings, references, terms and the chain written at promote; resolutions and connections by their ops. **WHERE a reference was read is recorded since FW-17 (IC-86), where the container itemised its own text**: `reading_refs` carries `pos_kind`/`pos`/`pos_ref` in IC-1's element-reference vocabulary, NULLABLE, and a reading that cannot say writes anyway with the absence STATED on its basis. A PDF's pages and an office container's paragraphs produce a position; HTML read back as one decoded string does not, and `dom` is refused by name while no producer exists. That a reading was attempted and found nothing is still not recorded | BUILT in part — the `content` table (REC-82) |
 | **SEARCH** | BUILT — the compiler. Full text over EXTRACTED text is not established: the reading is an opaque blob and per-page text is not stored | BUILT, partial — the MEANING arm reaches legs (by source, role, axis, grade, ground, target) and resolutions; readings, references, terms and connections are reachable only by fixed key, with no predicate, projection, sort or paging | ABSENT — *"which passages mention X"*, *"every leg citing page 14"*, *"every OCR'd region below cap C"* are unaskable |
 | **REFER** (an edge points at) | BUILT — bundle to bundle; legs and citations address whole bundles; the one sub-document address any edge stores is the SOURCE's URL fragment, not ours | BUILT at capture grain, and since FW-17 **a connection keeps the DETERMINING REFERENCE PAIR** (Bob's 5.4, D-161): the reference on each end that determined the grade — taken at the same collapse that chose the grade, so the two cannot disagree — with each end's position where the reading could say. Following a connection no longer necessarily lands the reader on a whole document. The ON-POINT choice among several mentions, and a member's NARROW of either end, are not built (REC-86) | BUILT in part — a basis leg addresses a content row (REC-82), and a PORTION of a document answers a connection grade where the determining reference was read inside it (FW-17, Bob's 5.1); UNDETERMINED and stated where the pair cannot be placed |
 | **CONSUME** | BUILT — the bundle page; the render companion with verified-bytes substitution | BUILT — the fixed-key reads; a document's chain and attestations; earned basis | PARTLY BUILT — a member can attest a region and see attested extents; no surface shows a passage AS content; the assistant's FIND is designed to name the level it searched, and reads only |
 | **OBSERVE** (record that a look happened) | ABSENT — the observation log, including looks that returned nothing new; designed as separate from the record with its own lifecycle | BUILT for one consumer — the investigative run's log carries level × subject × state × governed, and is the shape the general log needs | ABSENT — the content-axis states are named and stored nowhere; a reading's basis string and a `tier3_candidate` flag are the only trace |
 
-A member's **firsthand observation** — the reporter who attended the meeting — has no home
+A member's **firsthand observation** — the reporter who attended the meeting — has no home **[audited 2026-09-17: STILL TRUE, D-184 open]**
 as a basis leg either (D-184); the honest path today (author a witness statement, capture
 it, cite that) exists and is unnamed. The lead and the observation are the same member
 knowledge, unrepresentable before the search and after it, and are designed together.
@@ -1938,10 +1939,82 @@ The pieces to be designed, named here and designed nowhere in this document:
 | 5 | **homes for the member's lead and firsthand observation** | D-194 and D-184, designed together. RULED 2026-09-14: the observation is evidence, authored, grade D on the member's trust; its attribution in a published case is the attesting member's choice among the group, the project, the member's cover, or the member by name, and an off-the-record source's anonymity is valid — designed in Program B | the architect, under the ruling |
 | 6 | **the claim object** | **DESIGNED 2026-08-03 in `BIO_Case_Making_v0_1.md`, §What a CLAIM is, and why it is a field rather than an object** — a claim is a FIELD of an inquiry, not an object, and concluding is the inquiry ADOPTING it as its answer. **This row POINTS rather than restates: `BIO_System_Design.md` §3 construct 8 is the single authority on that status** (Bob, 2026-09-17), and this cell said *designed nowhere* for six weeks after the design existed — on the strength of which a session told Bob the claim class was undesigned. Bob's direction of 2026-09-14, confirmed against the record: the burden of proof attaches to the PRODUCTION and is set by the project's bar and the audience's needs, so no separate claim object is required for it to vary; the research owed is the catalogue of standards by audience and output act | the architect; Program B |
 
+### 18.1 THE CROSS-VERSION RELATION — D-394 DESIGNED, 2026-09-17
+
+**§18's ruling below says the correspondence is *proposed and never applied*. The never-applied
+half was ruled and built; THE PROPOSED HALF WAS DESIGNED NOWHERE**, measured 2026-09-17: zero
+occurrences of any cross-capture content relation in `store.mjs`, and no row anywhere. Bob asked
+the question that opened it — *is content updated when a refreshed version of a document is
+obtained* — and D-394 names the three decisions. They are decided here.
+
+**THE GAP IS NOT AN OVERCLAIM, WHICH IS WHY NO INSTRUMENT HERE CATCHES IT.** A member's citation
+stays honestly pointed at the capture it was made against, every grade stays earned, and nothing
+claims more than it can support — **while a case may rest on a passage the publisher has since
+revised, with the record holding BOTH captures and saying nothing.** Every gate in this estate
+watches the record claiming too much. **This is the record KNOWING something and not telling
+anyone**, and it is the first gap of that shape to be designed.
+
+#### The decomposition that makes it tractable: the valuable half does not need the hard half
+
+**The trustworthiness gap is *never told a newer version exists*. That is answerable TODAY with
+certainty** — `op=versionchain` already answers for a document address and captures carry their
+shas. **Which PASSAGE survives into the new version is a separate, harder, and much less valuable
+question**, and collapsing the two is what has kept both unbuilt. So they are split, and the
+first ships without the second.
+
+#### WHEN — lazily, at READ, never at capture
+
+**A correspondence derived at capture is a STORED CLAIM, and a stored claim goes stale the moment
+either extraction improves** — the failure this corpus has met more than any other. A read-time
+answer is computed against the current state of both captures and cannot go stale. It also costs
+nothing for the overwhelming majority of refreshed captures, which nobody ever cites. **The
+question is only ever asked about a passage a member is actually resting on.**
+
+#### WHAT — a read-time ANSWER about a pair, attached to nothing
+
+Not the content row: §14.4 puts the capture inside the row's identity, so hanging a cross-capture
+relation on it corrupts the thing the rule protects. Not the edge: an edge that gains a pointer to
+a newer capture **is** the re-pointing, whatever it is called.
+
+**So it is attached to NOTHING PERSISTENT, and that is the mechanism rather than an omission: the
+strongest guarantee that a proposal is never mistaken for a re-pointing is to make it impossible
+to persist one.** A proposal that cannot be stored cannot be followed by accident, re-projected on
+promotion, or inherited by a later reader as fact.
+
+#### HOW — a NOTICE on the citation, in three states, one of which is UNDETERMINED
+
+Shown where the member meets the citation, naming both captures, and stating that only a member's
+act can move anything:
+
+| state | when | what it says |
+| --- | --- | --- |
+| **no newer capture** | the version chain has nothing after this one | nothing; silence here is earned |
+| **newer capture, passage MATCHED** | the extent test holds across the two captures | *a newer version exists and a passage at the same extent is in it* — a candidate, never a move |
+| **newer capture, passage UNDETERMINED** | a newer capture exists and the extent test does not hold | **the honest and most common answer** — *a newer version of this document exists; whether your passage survives into it is undetermined* |
+
+**THE THIRD ROW IS THE DESIGN.** D-394 observes that `REC-82`'s extent-match test *is NOT
+obviously right across versions, where a revision may move a passage between pages* — and that is
+correct, so **extent-match is admitted as a SUFFICIENT signal for a candidate and never as
+evidence of identity.** Where it fails, the answer is UNDETERMINED rather than a guess.
+
+**And undetermined is not a degraded answer here, it is nearly the whole value.** *A newer version
+exists and I cannot tell you whether your passage is in it* is exactly what a member needs in
+order to go and look — which is the act the doctrine reserves to them anyway. A guessed
+correspondence would be worth less and could mislead a published case.
+
+#### What this does not decide
+
+Whether the notice also reaches a member whose case is already PUBLISHED, and through what surface,
+is a publication question and is not settled here. Nothing above changes §14.4, the row's identity,
+or the rule that an authored edge moves only by a member's act.
+
+---
+
 Two rulings to carry into every option for piece 1. An authored edge is never re-pointed to a
 newer capture without a member's act (§14.4) — so the content row's identity includes the
 capture, a new capture is a new row, and "the same passage across versions" is a derived
-relation between rows, proposed and never applied. **The same rule bit at the first landing,
+relation between rows, proposed and never applied **(the PROPOSED half is designed in §18.1
+above, 2026-09-17, as a read-time notice attached to nothing)**. **The same rule bit at the first landing,
 one level down:** the row's identity also includes the extraction CHAIN, so re-extracting a
 document under a better engine yields a new row for the same extent — and because the record
 re-projects a bundle's legs on every promotion, a naive projection would have silently moved

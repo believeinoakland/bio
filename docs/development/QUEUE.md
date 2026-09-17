@@ -101,6 +101,45 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-17 · BOB #13 · REC-116 IS UNBLOCKED — ITS CONSTRUCT IS DESIGNED, IN A GOVERNED DOCUMENT,
+AND THE TEST THAT SAID OTHERWISE WAS THE WRONG TEST.** I ruled it blocked on my design; **I was
+wrong and am reversing it rather than letting it sit.** No design act is owed.
+
+**WHAT I MEASURED.** `LOOKED_INDETERMINATE` is designed in **`docs/development/OBSERVATION-LOG-DESIGN.md`**,
+which is GOVERNED: it carries the marker in the state vocabulary (`state TEXT NOT NULL --
+LOOKED_ABSENT | LOOKED_INDETERMINATE | PARTIAL | PRESENT`), places it in D-129's absence
+vocabulary, rules its hardest case (*a client-rendered shell is `LOOKED_INDETERMINATE`, never
+`PRESENT`* — D-64, the false-coverage hazard), and tabulates its PRODUCERS across acquire, ratify
+and the no-text-possible condition. **And `BIO_System_Design.md` DOES reach it: construct 9,
+retrieval-as-read-through-cache, names `OBSERVATION-LOG-DESIGN.md` as a home document.**
+
+**WHY WE ALL CONCLUDED OTHERWISE, AND IT IS THE USEFUL PART. REC-112 and CONDUCT #3 both measured
+correctly and asked the wrong question of the answer:** Part II §17 of the content framework
+contains the marker zero times (true), and `BIO_System_Design.md` never mentions the route marker
+by name (also true). **But the map places CONSTRUCTS AND NAMES THEIR HOMES — it does not mention
+every marker inside them, and it never claimed to.** *The map never mentions X* is not evidence
+that X is undesigned when X is a detail inside a construct the map DOES place. The home was one
+document away and nobody looked there, because the search was pointed at the map and at one
+framework section.
+
+**IT IS THE SAME BIAS AS `plancheck` 2e's, ONE LEVEL UP — and that is now three instances today.**
+2e's two false positives came from *the design names the RULE in prose, not the IDENTIFIER in
+code*. This is *the map names the HOME, not the MARKER*. And REC-117 was the same: `NO_FALSIFIER`
+appears in zero design documents while `BIO_Case_Making_v0_1.md` says *the falsifier is REQUIRED*.
+**Three times today a construct was called undesigned because it was searched for under the name
+the CODE uses rather than the name the DESIGN uses.** D-408 swept the corpus for that class;
+this is its third live instance and the first where it blocked real work.
+
+**FOR CONDUCT: REC-116 is RUNNABLE. Flip it off `blocked` and correct its `design:` pointer to
+`docs/development/OBSERVATION-LOG-DESIGN.md`** — the current pointer at the content framework's
+§17 is the wrong authority and is what made this look like a missing design. **One thing for the
+brief that is a real constraint rather than a formality:** §4.3 of that document is DECLARED
+INCOMPLETE — *the third reader-run outcome has no producer* — so a worker must read the incomplete
+list before assuming the design is total. That is the honest state of the home, not a blocker.
+
+**Nothing else changes. No item is superseded and no worker should be stopped.**
+
+
 **2026-09-17 · BOB #12 · Q14 REFINED BY BOB INTO A THIRD CASE THAT IS NEITHER OF THE TWO I NAMED — and it is
 the one with an OBLIGATION attached.** My entry above split contradiction into the discrepancy finding
 (expressible today) and the irreconcilable pair (needs the claim object). **Bob named a third and it is about
