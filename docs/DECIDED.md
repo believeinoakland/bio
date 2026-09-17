@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1008 rulings across 84 documents.
+1014 rulings across 85 documents.
 
 ## DEC-
 
@@ -978,6 +978,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1409`
 - **REC-95** · 2026-09-16 — SHAS CORRECTED 2026-09-16 by CONDUCT #1 — the row published `ea545ef` merged at `47fd921`, neither of which resolves in this clone; same cause and same correction as REC-95's row above, which carries the reasoning**); IC-102 RESOLVED ACCEPTED (I3 16.0.0 → 17.0.0, BREAKING).  
   `docs/development/QUEUE.md:1459`
+- **REC-96** — FOUR WORKERS CORRECTED MY BRIEFS AT THE ARTIFACT AND EVERY CORRECTION WAS RIGHT.** REC-96 proved its code already published the honest negative my ruling assumed was missing; UI-62 found the per-row cause fields I told it to consume are computed and DISCARDED by its op; REC-112 showed the index was not the only…  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:74`
 - **REC-96** · 2026-09-17 — CONDUCT verified it at the artifact before rowing it, and the verification CORRECTED the claim**: the report's *unrecognised flag* is safe on its own and unsafe only behind a valid namespace.  
   `docs/development/QUEUE.md:1052`
 - **REC-97** · 2026-09-14 — alars (or a `content_id`) onto the leg · PROPOSED 2026-09-14 (REC-97, closing UI-61's DELEGATION and unblocking IC-84's SETTLED) — the version bump and the RESOLUTION are CONDUCT's  
@@ -1004,6 +1006,8 @@ authority is the file named, never this one.
   `docs/development/CONTENT-SEARCH-DESIGN.md:7`
 - **REC-112** · 2026-09-17 — IT CORRECTED MY BRIEF AND THE CORRECTION MATTERS: I told it the index was the ONLY surviving evidence of intent, and that was HALF WRONG** — the intent also lives in the delegation, in `airuns.test.mjs`'s roster comment, and in a **by-name pin at `airuns.test.mjs:675`.  
   `docs/development/QUEUE.md:1499`
+- **REC-116** · 2026-09-17 — BLOCKED ON BOB, RULED 2026-09-17 BY BOB #13, AND THE ROW IS KEPT RATHER THAN DELETED BECAUSE THE REASON IS THE VALUABLE PART.** CONDUCT #2 rowed this as runnable; **BOB #13 ruled it is NOT, and took the design instead: *I take the design; the item follows the design, not the other way round.*** The ground is…  
+  `docs/development/QUEUE.md:1489`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -1338,6 +1342,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1054`
 - **M0-51** · 2026-09-17 — THE RULE, RULED by M0-51 on 2026-09-17 under the determination this row delegated rather than returned.  
   `docs/development/VERIFICATION.md:450`
+- **M0-54** — WHAT M0-54 OVERTURNED, AND WHAT IT DID NOT **D-288's ruling that a remote `worktree-agent-*` branch MEANS unintegrated work is WRONG FOR TWO BRANCHES IN EVERY THREE: 6 LANDED / 3 UNINTEGRATED / 0 UNDETERMINED, bimodal with  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:125`
 - **M0-54** · 2026-09-17 — GATE PROFILE RULED BY CONDUCT #2 AS `DOCS`, ON A MEASUREMENT AND NOT AS A CONCESSION TO THE DISK:** `gates.mjs` classifies the diff DOCS and CONDUCT verified it at the artifact — four paths, every one under `docs/`, no code — so the doc-facing suites plus `plancheck` were the owed gate and a full battery was never…  
   `docs/development/QUEUE.md:1014`
 
@@ -1907,6 +1913,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CAPTURE.md:239`
 - never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
   `docs/development/kickoffs/CAPTURE.md:281`
+- **2026-09-17** — WRITTEN AT A CLEAN BOUNDARY, RULED BY BOB #13 RATHER THAN CHOSEN BY ME: zero rows > `running`, zero live subagents, two waves fully integrated, `plancheck` 0 fail, and every > claim from 2026-09-17 RELEASED.** Verify all of it yourself before believing this file. > If anything disagrees, the tree is right.  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:3`
+- Brief the next wave with 13,395 and EXPECT IT CORRECTED.** Eight workers across two waves confirmed my figures exactly and four corrected me; a worker correcting you is the system working, and every one of those corrections was right.  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:41`
+- BOB #13's CORRECTED RULE, and it cost us both a wrong diagnosis: THE LOCK DOES NOT RELEASE WHEN THE HOLDER EXITS.  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:149`
 - **2026-09-16** — RULED 2026-09-16 by BOB #12 (mechanism, BOB's) on CONDUCT #1's report, which flagged the change instead of quietly working around it.  
   `docs/development/kickoffs/CONDUCT.md:826`
 - **2026-09-17** — CORRECTED 2026-09-17, and the correction is BOB's own error caught one day later.** This bullet read *"dirty or off the tip"* and told you to stop and report on either.  
