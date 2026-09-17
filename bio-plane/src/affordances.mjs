@@ -1095,7 +1095,22 @@ export const ACTS = [
      rung enforced in code. The suite asserts that backing. The entry requirements (a conclusion, a falsifier, at least
      one basis leg) and the named-member rule are ACT-TIME refusals the store
      words itself, the release precedent: publishing the act says the state
-     machine permits the move, not that this caller's parameters will pass. */
+     machine permits the move, not that this caller's parameters will pass.
+     CORRECTED 2026-09-17 (REC-117), AND THE RUNG SURVIVES THE CHANGE THAT
+     BROKE THE SENTENCE. Bob ruled NO_FALSIFIER overridable, so `store.conclude`
+     no longer refuses it unconditionally: a member may conclude with no
+     falsifier by DECLARING the absence, which the record then carries in their
+     name and with a date. The sentence above is left standing because it is
+     still true of NO_CONCLUSION — which is refused unconditionally and has no
+     override — and REC-76's finding is what makes that enough: the rung is
+     graded by the FAMILY (JUSTIFICATION_REFUSALS, this file, ~line 492) and
+     never by one spelling, so an act that still demands an authored account for
+     WHAT was concluded is still `reasoned`. What the override changes is the
+     ACCOUNT the member must give, never whether one is required: stating that
+     no falsifier can honestly be given IS the authored account, and it is
+     attributed. The one thing that would drop this rung is an override the
+     plane could take SILENTLY, and that is the case C-2.8 and the store both
+     refuse by name. */
   { id: "conclude", label: "Conclude", weight: "single", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("concluded") },
   /* REC-31. An inquiry the group SET DOWN, whose own machine offers the way

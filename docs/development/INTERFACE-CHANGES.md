@@ -8617,6 +8617,86 @@ at the gate; and it is the reason this section is worth signing at all.
 
 **RESOLVED ACCEPTED 2026-09-17 by CONDUCT #2 at integration — BREAKING, MAJOR, AND RULED AGAINST BOTH THE DESIGN AND THE ROW, WHICH SAID MINOR.** C-41.10 now refuses a case document lacking the `searched` section, so a case authored-but-unsigned across this upgrade carries none and `op=caseratify` refuses it — **a refusal where none stood before, which IC-25 settles as breaking WHATEVER the measured impact.** The proposer measured impact as ZERO outside `bio-plane/test` and **declined to take the minor on that basis, routing it here** — precisely the judgement IC-25 removes from a proposer who can see the impact is zero. Overruling on those grounds would teach that the rule is negotiable when convenient, and a registry recording a break as a minor is a registry learning to lie. **The in-flight window is a KNOWN BREAK WITH NO MIGRATION** — the section must be in the SIGNED bytes and back-filling moves `doc_sha`, so there is no migration that is not re-authoring; already-ratified documents are NOT re-gated and keep verifying, MEASURED rather than assumed. **AND THE GATE REFUSES SILENCE, NEVER AN UNFAVOURABLE VALUE:** an honestly negative section (`never_looked` at every level) PUBLISHES, because a record stating its own weakness in signed bytes is the strongest act available and a gate that pressures a member into inventing an answer is a bug in the gate (`CLAUDE.md`). Both directions pinned as POSITIVE assertions. I3 18.2.0 → 19.0.0.
 
+## IC-118 · I3: `op=conclude` STOPS REFUSING `NO_FALSIFIER` OUTRIGHT — the member may state that NONE can be given, and the record carries that in their name, on every surface INCLUDING THE PUBLISHED ONE · PROPOSED 2026-09-17 (REC-117, enacting Bob's 2026-09-17 ruling) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`, not off the row or the brief: 19.0.0** (IC-110 + IC-112 +
+  IC-114 accepted in one bump, 2026-09-17). **Proposed as MAJOR — 19.0.0 → 20.0.0, BREAKING.**
+- **Proposer:** RECORD, worker `agent-aa7814dd8fb705958`, 2026-09-17, from QUEUE REC-117
+- **Owner to land it:** `RECORD` (owner and proposer)
+- **Consumers to answer:** `UI`, `SKILL`, `CASE`, `DIST`, `RECORD`.
+
+**THE RULING.** Bob, 2026-09-17, verbatim: *"NO_FALSIFIER is a condition that should be
+surfaced. But I think it should also be something a member can override either temporarily or
+in the published record."* `store.mjs conclude()` refused outright, and `affordances.mjs`
+recorded that the `reasoned` rung was assigned BECAUSE it did. **A gate that will not let a
+member past without a falsifier PRESSURES THEM INTO INVENTING ONE**, and an invented falsifier
+is a conclusion that LOOKS checkable and is not — the record claiming more than it can support
+by the shorter route. That is the same reasoning that moved the publication fence off the
+content axis, and DEC-69 forbids compelling a member.
+
+**WHAT MOVES ON THE WIRE.**
+
+- `op=conclude` accepts `no_falsifier=1`. **OPT-IN and never a default:** with the parameter
+  absent the refusal is UNCHANGED in code, in `detail`'s substance and in ordering, which is
+  what keeps the condition SURFACED. The `detail` now also NAMES THE DOOR.
+- `op=conclude`'s success answer gains `falsifier_override`: `{by, at}` or **`null`**, never
+  absent. A reader distinguishing the two cases by a missing key would be inferring the
+  condition this item exists to STATE.
+- `op=publishedcase` → `findings[].body.authored` gains `falsifier_override`, same shape, same
+  present-and-null rule, rendered from the SIGNED BYTES.
+- The bundle frontmatter gains `falsifier_override_by` / `falsifier_override_at`, written only
+  in the override case. `falsifier` itself stays EMPTY — the plane writes nothing into it,
+  because a falsifier the plane wrote is not one the group accepted.
+- **One new refusal:** `FALSIFIER_AND_NONE_STATED` (C-33.33, its own row in
+  `ACT_SHAPE_CHECKS` — DEC-49's guard caught it minted without one and was right).
+- **C-2.8 gains two error conditions:** a HALF-RECORDED override (actor without date, or date
+  without actor), and a document carrying BOTH a falsifier and an override pair.
+
+**WHY MAJOR, AND IT IS ARGUED RATHER THAN INHERITED.** IC-25 settles that a refusal where none
+stood before is BREAKING whatever the measured impact. **This item is the INVERSE — a refusal
+that stops refusing — so that ruling may not simply be read backwards, and the grade is argued
+from what this change does to a correct consumer.**
+
+**The impact WAS measured, in the direction that would have argued for a minor, and it is
+ZERO:** no production consumer anywhere in this repository branches on
+`reason: "NO_FALSIFIER"`. The only non-test sites are `affordances.mjs`'s
+`JUSTIFICATION_REFUSALS` (a FAMILY MEMBERSHIP for rung derivation, not a live branch) and a
+COMMENT in `civicos-ui/app.html` documenting the store's refusal ORDER. Every existing call site
+produces a byte-identical request and a byte-identical answer, and a finding that HAS a
+falsifier is byte-identical in the document — measured, not argued, by a suite arm comparing two
+documents concluded with the parameter absent and present-but-false.
+
+**Three things nonetheless make it BREAKING, and the first is the one that decides it.**
+
+1. **A CORRECT CONSUMER BECOMES WRONG WITHOUT CHANGING A LINE, ON THE PUBLIC READ PATH.** A
+   renderer of `authored.falsifier` was complete before this change: an empty falsifier could
+   only mean a document that predated the requirement or was never gated, and saying so was the
+   whole truth. After this change an empty falsifier has TWO causes, and that same renderer
+   prints one sentence over both — showing a reader a finding whose author deliberately and
+   accountably recorded that nothing would overturn it, as if it were a gap nobody accounted
+   for. **That is a SILENT OVERRIDE, which is the only outcome this ruling forbids, produced in
+   a consumer that did nothing wrong.** `civicos-ui`'s own cell was exactly such a consumer and
+   is fixed in the same landing; a group's own reader is not, and cannot be.
+2. **`FALSIFIER_AND_NONE_STATED` is IC-25 applying DIRECTLY** — a refusal where none stood
+   before. No pre-existing caller can reach it (the parameter did not exist), but IC-25 settles
+   that measured impact does not buy a minor.
+3. **C-2.8's two new conditions are refusals at the CATALOG.** A hand-edited document that
+   audits clean today can audit dirty after this change.
+
+**Taking the minor on the measured zero is exactly the judgement IC-25 exists to remove from a
+proposer who can see the impact is zero** — and CONDUCT #2 ruled on IC-112 that a registry
+recording a break as a minor is a registry learning to lie. Proposed MAJOR.
+
+**WHAT DOES NOT MOVE, stated so a consumer does not have to test it.** No op is removed, no key
+is renamed, no value changes position. `op=affordances` publishes `conclude` on exactly the
+documents it published it on before — the act's publication turns on the catalog's edge table
+and never on whether this caller's parameters will pass, which is the release precedent and is
+untouched. The `reasoned` rung is unchanged and the reasoning is corrected at its site: the rung
+is graded by the FAMILY (REC-76) and `NO_CONCLUSION` is still refused unconditionally.
+
+**RESOLUTION:** pending — CONDUCT's.
+
 ## IC-116 · I3: `op=airunlog` PROJECTS `result_kind` / `result_ref` AND **STATES** EACH ROW'S COVERAGE CLAIM — the READ half of D-366, without which "read back with the coverage claim STATED as undetermined" is unsatisfiable by construction · PROPOSED 2026-09-17 (REC-113) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS MERGED TREE's

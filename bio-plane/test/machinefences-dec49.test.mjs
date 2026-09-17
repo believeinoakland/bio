@@ -379,6 +379,14 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-33.30", "AI_RUN_NO_CONTEXT"],
     ["C-33.31", "AI_RUN_ALREADY_OPEN"],
     ["C-33.32", "SET_MOVED"],
+    /* REC-117, 2026-09-17. `op=conclude` refuses a caller who states a falsifier
+       AND asks to record that none was stated — two contradictory claims about
+       one finding, which the plane will not choose between. Pinned here in BOTH
+       directions, which is the point of this pair of arms: D-PIN-A caught
+       nothing when this row was added and D-PIN-B FAILED, because a copy that
+       silently shrinks against a growing catalogue is exactly the drift the
+       one-directional check cannot see. */
+    ["C-33.33", "FALSIFIER_AND_NONE_STATED"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -434,8 +442,15 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
   /* THE CORPUS FLOOR. Without it a families list that stopped resolving would
      run zero arms and report green — the "passes while asserting nothing" shape
      this whole block is written against. */
-  t("ARM D0: the row corpus is the size REC-64 landed — a walk that lost a family would run fewer "
-    + "arms and every one of them would still pass", rowsSeen, 43);
+  /* MOVED 43 -> 44 on 2026-09-17 (REC-117), FROM THE FIGURE THIS INSTRUMENT
+     PRINTED on the line above and never by adding one to the number in the
+     file. The row added is FALSIFIER_AND_NONE_STATED (C-33.33), which
+     `op=conclude` mints when a caller states a falsifier AND asks to record
+     that none was stated. A floor that RISES needs no excuse; this note exists
+     because the next reader should be able to attribute the rise to an act
+     rather than to drift. */
+  t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row — a walk that lost a "
+    + "family would run fewer arms and every one of them would still pass", rowsSeen, 44);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

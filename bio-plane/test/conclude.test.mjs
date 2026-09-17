@@ -1,3 +1,10 @@
+/* NEGATIVE CONTROL: (REC-117's own — FOUR ARMS, each broken ALONE with the others held open, each restored and VERIFIED byte-identical by sha256 AND cmp against a per-arm pristine copy; 68 pass, 0 fail when whole; ALL RUN 2026-09-17). DECLARED BEFORE ARMING, and each came back as declared.
+   (A) THE OVERRIDE REMOVED — in src/store.mjs conclude() change `if (!fals && !noFals)` back to `if (!fals)` -> 59 pass, 9 FAIL. The falsifier-less conclude REFUSES again and the suite fails BY NAME at "REC-117 (b): a finding with NO falsifier CONCLUDES when the member states the absence". Sections 1-7's original 49 assertions ALL STILL PASS, which is what says the arm hit this item and not the item REC-13 built.
+   (B) THE SILENT OVERRIDE, AND IT IS THE ARM THIS RULING IS ABOUT — in src/store.mjs conclude() delete the two `#setOrAddScalar` writes of falsifier_override_by/at, so the act SUCCEEDS and the record stores nothing. This is the cheapest green a liar could take: drop the refusal, store nothing, and the record silently stops distinguishing a finding whose falsifier was stated from one whose absence a member accepted. -> 63 pass, 5 FAIL, naming "the ABSENCE is asserted BESIDE it" and "what the op wrote AUDITS CLEAN" (C-2.8 refuses the bundle, which is the second enforcement doing its job).
+   **THE FINDING THIS ARM PRODUCED ABOUT THE INSTRUMENT, recorded rather than smoothed: "REC-117 (b): the ANSWER names who overrode and when" STILL PASSED under arm B.** The op's return value is computed from the parameter and is not read back from the document, so an assertion suite built only on the ANSWER would have passed a completely silent override. What catches it is reading the DOCUMENT and asking the CATALOG. Any future assertion added here for this item belongs on the record, not on the envelope.
+   (C) THE PUBLISHED SURFACE GOES SILENT — in src/index.mjs the publishedcase `authored` block, replace the falsifier_override expression with a bare `null` -> publishedcase.test.mjs 104 pass, 1 FAIL at "the published record is where Bob said this must be visible". The conclude suite stays 68/0, which is the point: the published surface has its own arm because it is its own failure.
+   (D) THE CATALOG ACCEPTS A HALF-RECORDED OVERRIDE — in checks/bio-checks.mjs checkInquiryExtension change `} else if (!falsStated && !(ovBy && ovAt)) {` to `} else if (false) {` -> 66 pass, 2 FAIL, exactly the two REC-117 (d) arms and nothing else. An actor with no date, or a date with no actor, is a record that has stopped requiring a falsifier without saying who decided that.
+   OVER-STRICTNESS is arm (f) IN THIS SUITE and runs on every green pass, not only under a control: a finding that HAS a falsifier is BYTE-IDENTICAL with the new parameter ABSENT and with it PRESENT-AND-FALSE, over a fixture asserted non-empty and asserted to really be concluded first — a byte equality over nothing agrees on nothing. */
 /* NEGATIVE CONTROL: (REC-13's own — remove the FALSIFIER requirement and an inquiry concludes with nothing that would falsify it) break BOTH gates together, since either alone is still refused by the other: in checks/bio-checks.mjs checkInquiryExtension delete the `concluded state requires a non-empty falsifier` arm, AND in src/store.mjs conclude() change `if (!fals)` to `if (false)` -> 42 pass, 7 FAIL. The headline is "a conclusion with no falsifier is refused before anything moves", which reports got [true,"concluded"]: op=conclude ACCEPTED falsifier="" and the inquiry is now concluded with nothing that would falsify it. "the catalog names a missing falsifier under C-2.8" reports false — the catalog finds nothing wrong with that document either, so nothing downstream would ever notice. The other five are the cascade (NO_FALSIFIER unnamed; the wrongly-concluded inquiry no longer publishes conclude and can no longer be concluded by pilar). Restore BOTH lines -> 49 pass, 0 fail. */
 /* REC-13: the `concluded` state, its ENTRY REQUIREMENTS, and op=conclude.
  * BUILD-ORDER.md §2 (REC-13) is the scope; DEC-22 and DEC-30 are the folded
@@ -20,6 +27,14 @@
  *      MACHINE_CANNOT_CONCLUDE. Each is checked BEFORE anything moves, and the
  *      inquiry is still open afterwards — a refusal that half-ran would be
  *      worse than the refusal.
+ *      CORRECTED 2026-09-17 (REC-117), never exempted — the sentence was right
+ *      when it was written and is now one word short. NO_FALSIFIER is still
+ *      refused by name and still before anything moves, for every caller that
+ *      does not ask for the override Bob ruled in; what it is no longer is
+ *      UNCONDITIONAL. A fifth refusal joins the four, FALSIFIER_AND_NONE_STATED,
+ *      and section 8 holds both. The reason the old assertions in this section
+ *      are UNCHANGED is that they never asked for the override, so they measure
+ *      exactly what they always measured.
  *   4. ONE MACHINE, THE CATALOG'S. `surfaced` (open's legal alias) concludes;
  *      `deferred` does not (it is reopened first); `concluded` does not
  *      conclude again; and a LEGACY focus document is refused, because its own
@@ -84,11 +99,15 @@ const POST = async (q, body) => (await mf.dispatchFetch(`http://x/api/?${q}`,
    route, and the literal `op=conclude` uninterpolated so coverage credits it
    there (D-43: op=invitelook shipped with a ReferenceError while 1276
    store-level assertions passed). */
-const conclude = async (tok, { target, conclusion, falsifier }) =>
+const conclude = async (tok, { target, conclusion, falsifier, noFalsifier }) =>
   rP(await GET(`op=conclude&token=${tok}`
     + (target !== undefined ? `&target=${encodeURIComponent(target)}` : "")
     + (conclusion !== undefined ? `&conclusion=${encodeURIComponent(conclusion)}` : "")
-    + (falsifier !== undefined ? `&falsifier=${encodeURIComponent(falsifier)}` : "")));
+    + (falsifier !== undefined ? `&falsifier=${encodeURIComponent(falsifier)}` : "")
+    /* REC-117: the override rides the SAME query string a real caller uses. It
+       is only appended when the caller asks for it, so every pre-existing call
+       site in this suite produces a byte-identical request. */
+    + (noFalsifier !== undefined ? `&no_falsifier=${encodeURIComponent(noFalsifier)}` : "")));
 const affordances = async (target, tok = "mem-rec13") =>
   await GET(`op=affordances&token=${tok}&target=${encodeURIComponent(target)}`);
 const actIds = (r) => (r.result?.acts ?? []).map((a) => a.id).sort();
@@ -215,6 +234,17 @@ const INQ_ALIAS = "INQ-2026-1300-alias";
 const INQ_DEFERRED = "INQ-2026-1300-deferred";
 const INQ_SECOND = "INQ-2026-1300-second";
 const FOCUS_LEGACY = "FOCUS-2026-1300-legacy";
+/* REC-117 fixtures. THREE, not one, and the reason is the over-strictness arm:
+   the item's own acceptance demands that a finding which HAS a falsifier be
+   BYTE-IDENTICAL to what this op wrote before the override existed, and a
+   byte comparison needs two documents concluded the same way for it to be
+   between. INQ_TWIN_A concludes with a falsifier and no override parameter at
+   all; INQ_TWIN_B concludes with a falsifier and `no_falsifier=0` — the same
+   act with the new parameter present-but-false — and the two must agree to the
+   byte once their ids and timestamps are normalised. INQ_NOFALS is the subject. */
+const INQ_NOFALS = "INQ-2026-1300-nofals";
+const INQ_TWIN_A = "INQ-2026-1300-twin-a";
+const INQ_TWIN_B = "INQ-2026-1300-twin-b";
 
 const withBasis = { refs: [DOC], legs: [{ target: DOC, role: "supports" }] };
 
@@ -227,6 +257,17 @@ await promote(INQ_ALIAS, inquiryMd(INQ_ALIAS,
 await promote(INQ_SECOND, inquiryMd(INQ_SECOND,
   { question: "What did the memo actually authorize?", ...withBasis }), "inquiry", "open");
 await promote(FOCUS_LEGACY, focusMd(FOCUS_LEGACY, withBasis), "focus", "surfaced");
+/* REC-117. The QUESTION on the subject fixture is chosen to be one for which no
+   honest falsifier exists, because that is the situation Bob's ruling is about:
+   it is not that the member could not be bothered, it is that demanding one
+   would make them invent it. */
+await promote(INQ_NOFALS, inquiryMd(INQ_NOFALS,
+  { question: "Did anyone raise a concern about the transfer that was never written down?", ...withBasis }),
+  "inquiry", "open");
+await promote(INQ_TWIN_A, inquiryMd(INQ_TWIN_A,
+  { question: "What did the memo actually authorize?", ...withBasis }), "inquiry", "open");
+await promote(INQ_TWIN_B, inquiryMd(INQ_TWIN_B,
+  { question: "What did the memo actually authorize?", ...withBasis }), "inquiry", "open");
 
 /* ------------------------------------------------- 1. DEC-22, the bound */
 console.log("\n--- 1. DEC-22: an OPEN inquiry may rest on nothing — legal, readable, never auto-anything ---");
@@ -488,6 +529,111 @@ console.log("\n--- 7. DEC-30: no owner gate, no ballot — any contribute holder
   t("and what she wrote audits clean too", await errorsOf(INQ_SECOND, md), []);
   t("the alias inquiry she concluded earlier reads back concluded",
     await stateOf(INQ_ALIAS), "concluded");
+}
+
+/* ------------------------------------- 8. REC-117: the OVERRIDE, and it is STATED */
+console.log("\n--- 8. REC-117 / BOB 2026-09-17: NO_FALSIFIER is overridable, and a SILENT override is the only wrong answer ---");
+/* HOW A LIAR WOULD SATISFY THIS ROW, stated before what the block checks,
+   because the cheapest green here is genuinely cheap and genuinely wrong:
+   DELETE THE REFUSAL AND STORE NOTHING. Every conclude then succeeds, this
+   suite goes quiet, and the record silently stops distinguishing a finding
+   whose falsifier was STATED from one whose absence a member ACCEPTED. Every
+   assertion below is therefore written against the RECORD rather than against
+   the op's `ok`, and the arm that would catch the liar is the one that demands
+   an ACTOR and a DATE be readable back out of the document and off the
+   published surface. An assertion that only checked `r.ok === true` would pass
+   the liar's implementation unchanged. */
+{
+  const Q_CONCL = "No written record of any objection exists, and none of the four officers recalls one";
+
+  /* (a) THE DEFAULT IS UNCHANGED, and it is asserted FIRST because it is what
+     keeps the condition SURFACED. Bob asked for the condition to be
+     overridable, not invisible — an implementation that simply stopped
+     mentioning a missing falsifier fails this row. */
+  const bare = await conclude(NADIA, { target: INQ_NOFALS, conclusion: Q_CONCL, falsifier: "" });
+  t("REC-117 (a): with no override asked for, the refusal is UNCHANGED — the condition is still surfaced",
+    [bare.ok, bare.reason, await stateOf(INQ_NOFALS)], [false, "NO_FALSIFIER", "open"]);
+  t("REC-117 (a): and the refusal TEACHES the door rather than hiding it — a member who is refused is told the absence can be stated",
+    /no_falsifier=1/.test(String(bare.detail)), true);
+
+  /* (b) THE ACT. Driven through op=conclude on the control plane, never at the
+     store: op=invitelook shipped with a ReferenceError while 1276 store-level
+     assertions passed. */
+  const ov = await conclude(NADIA, { target: INQ_NOFALS, conclusion: Q_CONCL, falsifier: "", noFalsifier: "1" });
+  t("REC-117 (b): a finding with NO falsifier CONCLUDES when the member states the absence",
+    [ov.ok, ov.from, ov.to, await stateOf(INQ_NOFALS)], [true, "open", "concluded", "concluded"]);
+  t("REC-117 (b): the ANSWER names who overrode and when — never a bare ok",
+    [ov.falsifier_override?.by, typeof ov.falsifier_override?.at === "string" && ov.falsifier_override.at.endsWith("Z")],
+    ["nadia", true]);
+
+  /* (c) IT READS BACK OFF THE DOCUMENT. `falsifier` itself is EMPTY — the plane
+     wrote nothing into it, because a falsifier the plane wrote is not a
+     falsifier the group accepted, and a sentinel there would be
+     indistinguishable downstream from an authored one. */
+  const md = await imageOf(INQ_NOFALS);
+  t("REC-117 (c): the plane put NOTHING in the falsifier field — it is empty, not filled in on the member's behalf",
+    /^falsifier: ""$/m.test(md), true);
+  t("REC-117 (c): the ABSENCE is asserted BESIDE it, naming the member and the date, never blank and never inferred",
+    [/^falsifier_override_by: "nadia"$/m.test(md),
+     /^falsifier_override_at: "\d{4}-\d\d-\d\dT[\d:]+Z"$/m.test(md)], [true, true]);
+  t("REC-117 (c): the Session Log STATES the absence rather than printing an empty Falsifier line",
+    [/^Falsifier: NO FALSIFIER STATED — recorded by nadia at \d{4}-/m.test(md),
+     /^Falsifier: *$/m.test(md)], [true, false]);
+  t("REC-117 (c): and what the op wrote AUDITS CLEAN — the override is accounted for, so the catalog does not reject it",
+    await errorsOf(INQ_NOFALS, md), []);
+
+  /* (d) THE SILENT-OVERRIDE ARM, and it is the arm this ruling is actually
+     about. A half-recorded override — an actor with no date, or a date with no
+     actor — is a record that has stopped requiring a falsifier without saying
+     who decided that. It cannot come out of op=conclude, which writes both or
+     neither; it is reachable by a hand-edited document, which is exactly what
+     the catalog exists to catch. Both halves are checked SEPARATELY so that a
+     check keyed on only one of them fails here. */
+  const stripOne = (text, key) => text.replace(new RegExp(`^${key}: .*$\n`, "m"), "");
+  const noActor = await errorsOf(INQ_NOFALS, stripOne(md, "falsifier_override_by"));
+  const noDate = await errorsOf(INQ_NOFALS, stripOne(md, "falsifier_override_at"));
+  t("REC-117 (d): an override with NO ACTOR is refused by the catalog — a silent override is the only wrong answer",
+    [noActor.length > 0, noActor.some((m) => /silent/i.test(m))], [true, true]);
+  t("REC-117 (d): an override with NO DATE is refused too — `who` alone does not say when the record stopped asking",
+    [noDate.length > 0, noDate.some((m) => /silent/i.test(m))], [true, true]);
+  const bothGone = await errorsOf(INQ_NOFALS, stripOne(stripOne(md, "falsifier_override_by"), "falsifier_override_at"));
+  t("REC-117 (d): and with the whole pair gone it is the ORIGINAL C-2.8 refusal, unchanged in words — the gate did not go missing, it grew a door",
+    bothGone.some((m) => /requires a non-empty falsifier/.test(m)), true);
+
+  /* (e) THE CONTRADICTION. Both at once says two different things about one
+     finding and the plane will not choose between them. */
+  const both = await conclude(NADIA, { target: INQ_TWIN_A, conclusion: CONCL, falsifier: FALS, noFalsifier: "1" });
+  t("REC-117 (e): a falsifier AND an assertion that none was stated is refused BY NAME, before anything moves",
+    [both.ok, both.reason, await stateOf(INQ_TWIN_A)], [false, "FALSIFIER_AND_NONE_STATED", "open"]);
+  t("REC-117 (e): the catalog refuses the same contradiction in a hand-edited document",
+    (await errorsOf(INQ_NOFALS, md.replace(/^falsifier: ""$/m, `falsifier: "${FALS}"`)))
+      .some((m) => /BOTH an authored falsifier/.test(m)), true);
+
+  /* (f) THE OVER-STRICTNESS ARM: a finding that HAS a falsifier is
+     BYTE-IDENTICAL to what this op wrote before the override existed. Measured
+     between two documents concluded the same way — one with the parameter
+     ABSENT, one with it present-and-false — with only the ids and the
+     timestamps normalised away, because those differ between any two acts and
+     always did. This is the arm that fails if the override leaked a key, a
+     blank line or a changed Session Log line into the ordinary path. */
+  const a = await conclude(NADIA, { target: INQ_TWIN_A, conclusion: CONCL, falsifier: FALS });
+  const bIt = await conclude(NADIA, { target: INQ_TWIN_B, conclusion: CONCL, falsifier: FALS, noFalsifier: "0" });
+  t("REC-117 (f): both ordinary concludes succeed and neither reports an override",
+    [a.ok, bIt.ok, a.falsifier_override, bIt.falsifier_override], [true, true, null, null]);
+  const norm = (s, id) => s.replace(new RegExp(id, "g"), "<ID>")
+                           .replace(/\d{4}-\d\d-\d\dT[\d:]+Z/g, "<WHEN>")
+                           .replace(/\d{8}T\d{6}Z_[0-9a-f]+/g, "<SNAP>");
+  const mdA = norm(await imageOf(INQ_TWIN_A), INQ_TWIN_A);
+  const mdB = norm(await imageOf(INQ_TWIN_B), INQ_TWIN_B);
+  t("REC-117 (f): the fixture is non-empty and really is a concluded document — a byte equality over nothing agrees on nothing",
+    [mdA.length > 400, /^current_state: concluded$/m.test(mdA)], [true, true]);
+  t("REC-117 (f): a finding that HAS a falsifier is BYTE-IDENTICAL with the new parameter absent and present-but-false",
+    mdA === mdB, true);
+  t("REC-117 (f): and it carries NO override key at all — the marker appears only where a member put it",
+    /falsifier_override/.test(mdA), false);
+  t("REC-117 (f): a stated falsifier still audits clean, and its Session Log line is the original one",
+    [(await errorsOf(INQ_TWIN_A, await imageOf(INQ_TWIN_A))).length,
+     (await imageOf(INQ_TWIN_A)).includes(`Falsifier: ${FALS}`)], [0, true]);
 }
 
 await mf.dispose();

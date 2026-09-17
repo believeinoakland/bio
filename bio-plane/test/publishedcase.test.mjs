@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: (REC-117's arm on THIS surface, RUN 2026-09-17, broken alone and restored byte-identical by sha256 AND cmp; 105 pass, 0 fail when whole): THE PUBLISHED SURFACE GOES SILENT — in src/index.mjs the publishedcase `authored` block, replace the `falsifier_override:` expression with a bare `null` -> 104 pass, 1 FAIL at "REC-117: and it STATES the override beside it, naming the member and the date — the published record is where Bob said this must be visible". The conclude suite stays 68/0 under this arm, which is exactly why the published surface needs an arm of its own: a finding can conclude correctly and still reach a reader with the condition stripped out, and that is a silent override on the one surface where silence costs most. OVER-STRICTNESS, in the block itself: the ordinary case published at the top of this suite states a real falsifier and NOTHING about its answer moves — its falsifier is served verbatim and its override reads PRESENT-AND-NULL, never absent, because a renderer telling the two cases apart by a missing key would be inferring the condition this item exists to state. */
 /* NEGATIVE CONTROL: (REC-22's three arms, each broken ALONE and restored; 72 pass when whole; ALL RUN 2026-08-04, rec22-agent, and the numbers below are what they MEASURED) (a) THE published_shas GUARD IS REMOVED — in src/index.mjs op=publishedbytes replace `if (!v || !v.published) return notFound();` with `if (false) return notFound();` -> 70 pass, 2 FAIL: the object PLANTED in the published bucket that no published_shas row names STREAMS 200 to an anonymous caller and the assertion reports the working capture's own sha where it wanted a 404. NOTE WHAT ELSE THIS MEASURED, because it is the reason block 3 has an adversary in it at all: "a working capture that was never ratified is not reachable" STILL PASSES under the broken guard, because the working corpus lives under <store>/captures/ and the published corpus under <store>/published/ — the key is not there to fetch. BUILD-ORDER's wording ("a working-corpus capture sha streams") is therefore unreachable by removing the guard alone, and what the guard actually defends is anything in the published bucket that ratification did not put there. (b) THE NAME-ONLY EDGE IS ADMITTED TO THE SERVED SET, two arms, because the classification and the restriction are two different rules and each is breakable alone. (b1) at the CLASSIFICATION — in src/index.mjs's edges[] change the two division arms from `disclosure: "name"` to `disclosure: "serve"` -> 69 pass, 3 FAIL: the published child names NEITHER its parent NOR its sibling, because the store's restriction then drops both (neither is published) — R4's disclosure vanishes from the exact surface R4 was written for, which is RECONCILED R4-e reproduced. (b2) at the RESTRICTION — in src/store.mjs #publishEdges replace `if (!nameOnly && !this.#one(` with `if (false && !nameOnly && !this.#one(` -> 71 pass, 1 FAIL naming all three working targets admitted as SERVE edges, the terminal parent among them (supersedes -> INQ-...-mixed): the published graph starts asserting it can serve material that was never published. (b2) FAILED TO FAIL ON THE FIRST RUN and that is why unresolved[] exists: serves[] was empty either way, so "every served edge names a published edition" passed on an empty list — an outcome that costs nothing to produce. The store now REPORTS an edge it classified servable and cannot resolve instead of dropping it, and the control bites. Restore after each. (d) UI-40 / IC-22, RUN 2026-08-05 by ui40-agent — `opened` RESTORED TO THE PUBLISHED SHAPE: put `opened: state.opened,` back into `Store.publishedCase()`'s success return in src/store.mjs -> 77 pass, 1 FAIL, naming it ("IC-22: `opened` is NOT PUBLISHED — removed from the answer, not blanked (the key is absent)"). THE ASSERTION IS `"opened" in c` AND NOT A VALUE COMPARISON, deliberately: `c.opened === undefined` is true of an answer that never carried the key AND of one carrying it set to undefined, so a value test cannot tell REMOVED from BLANKED, which is the entire distinction REC-41's form of removal rests on. It is also driven THROUGH THE OP rather than against source, because index.mjs answers `{ok:true, ...c, findings, verification}` — a SPREAD — so the field reached the wire without the control plane ever naming it and a source-level grep would have proved nothing. civicos-ui/test/publishedcase.test.mjs catches the same restoration independently at the surface (225 pass, 1 fail). src/store.mjs restored byte-identically, sha256 795d4f27… compared before and after. (M0-11, 2026-08-08, m011-loose-branch) BLOCK 8 — `#looseEditionState`, the LOOSE branch, driven through the op for the first time in this battery. FIVE ARMS, EACH RUN ALONE against a pristine `src/store.mjs` with the others held open, plus a BASELINE row that ran with NO patch at all so six-arms-failing-for-the-wrong-reason is distinguishable from six arms working; the harness printed each arm's ARMED state and its patch-match count, and restored the file after every arm against a PRE-ARM COPY NAMED PER ARM, verified by sha256 AND by `cmp` (final store.mjs sha256 64948896d038… identical to pristine). BASELINE ROW: 123/123 green, 7,774 assertions, publishedcase 100 pass, `civicos-ui` harness exit 0. (e) THE LOOSE BRANCH IS SWITCHED OFF — in `Store.publishedCase()` replace `if (st) { theCase = null; ed = r.edition; state = st; }` with `if (false) { … }` -> 85 pass, 15 FAIL, headed by "the LOOSE branch is REACHED THROUGH THE OP by an anonymous caller, and it ANSWERS". AND THIS ARM CARRIES THE MEASUREMENT THE ITEM EXISTS FOR: the `civicos-ui` harness stayed GREEN (exit 0) all the way through it, because the surface asserts this shape against a MOCK — so before block 8, switching this branch off turned NOTHING RED ANYWHERE IN THE REPOSITORY, which is sharper than the item's own premise that "today only the UI harness would". THE FIRST RUN OF THIS ARM ALSO FOUND A DEFECT IN BLOCK 8 ITSELF and it is recorded rather than smoothed: `c.findings.length` on the refusal threw a TypeError, the module died at the first assertion, and the battery reported `assertions unknown` — a crash NAMES NOTHING, and the acceptance is that the plane's own battery fails NAMING the branch. The block now reads defensively and the same arm reports 15 named failures with the suite reaching its own foot. (f) THE BRANCH MANUFACTURES A SCOPE — in `#looseEditionState` set `scope: "the ratified bytes and everything they touch"` -> 99 pass, 1 FAIL naming it ("it manufactures NO case identity, NO scope, NO completeness and NO bias acknowledgement"), which is D-187's conflation arriving one level down. (g) THE SUCCESS RETURN SPREADS THE STATE — add `...state,` to `publishedCase()`'s success return -> THREE PLANE SUITES catch it independently: publishedcase 97 pass / 3 FAIL (the key-set arm, the dropped-sentence arm, and IC-22's own), case-opened 25/3 and multifinding 73/1 — AND the `civicos-ui` harness at exit 1, the one arm of the five the surface does catch. (h) OVER-STRICTNESS I — the loose state's own `detail` sentence rewritten in wording nothing in this suite wrote -> 123/123 GREEN at 7,774, UI exit 0. That arm is also the FINDING's own control: the sentence reaches no caller, so rewriting it moves nothing anywhere. (i) OVER-STRICTNESS II — the PUBLISHED keys REORDERED in the success return, `bias_acknowledgement` ahead of `caseId`, same key set and same values, nothing changed on the wire -> block 8 stays at 100 pass, because the key set is compared SORTED and not as a sequence. The arm's measurement is that `case-opened.test.mjs` (25/3) and the UI's mock-envelope check go RED on a purely cosmetic reorder: REC-58's anchor is order-sensitive and reports its return as NOT FOUND, which is the SAFE direction — an anchor refusing to read what it cannot locate rather than passing on an empty slice — and it is DELEGATED rather than changed here. */
 /* REC-22: `op=publishedcase` and `op=publishedbytes` — the public read path, over EDITIONS.
  *
@@ -132,9 +133,12 @@ const publish = async (tok, body, { sign = true } = {}) => {
     await ratifyCase(async (q, b) => rP(await POST(q, b)), r, { dir, key: "vera", token: tok });
   return r;
 };
-const conclude = async (tok, { target, conclusion, falsifier }) =>
+/* REC-117: `noFalsifier` appended ONLY when asked for, so every pre-existing
+   call site in this suite produces a byte-identical request. */
+const conclude = async (tok, { target, conclusion, falsifier, noFalsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
-    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
+    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
+    + (noFalsifier !== undefined ? `&no_falsifier=${encodeURIComponent(noFalsifier)}` : "")));
 const divide = async (tok, { target, ...body }) =>
   rP(await POST(`op=inquirydivide&token=${tok}&target=${encodeURIComponent(target)}`, body));
 const reopen = async (tok, target, reason) =>
@@ -986,6 +990,76 @@ console.log("\n--- 8. M0-11: the LOOSE branch — ratified bytes in no case, dri
     JSON.stringify(nrAns) === JSON.stringify(await anonCase("id=INFO-2026-9999-nothing")), true);
   t("an edition of the loose bundle that does not exist is the same refusal again",
     (await anonCase(`id=${LOOSE}&edition=7`)).reason, "NOT_PUBLISHED");
+}
+
+/* ============ REC-117: the override ON THE PUBLISHED SURFACE, which is the case Bob named */
+console.log("\n--- REC-117 / BOB 2026-09-17: a finding concluded with NO falsifier says so IN THE PUBLISHED RECORD, and names who ---");
+/* Bob's ruling is that the override works "either temporarily or IN THE
+   PUBLISHED RECORD", so the assertion that matters is not that op=conclude
+   accepted it — the conclude suite drives that — but that the condition
+   SURVIVES INTO THE SIGNED BYTES and is served to an ANONYMOUS caller. A
+   published case whose falsifier is empty and which says nothing about why is a
+   silent override on the one surface where silence costs most. */
+{
+  const NOFALS = "INQ-2026-2200-nofalsifier";
+  await mustPromote(NOFALS, inquiryMd(NOFALS, {
+    question: "Did anyone raise a concern about the transfer that was never written down?",
+    /* `source: hunch` with an author and a date, because DEC-15 makes that the
+       honest name for an authored connection grade and the only authored source
+       above D. A grade with no account of where it came from is an invented one
+       and C-2.8 refuses the promote — measured, not guessed: the first version
+       of this fixture came back BASIS_REFUSED for exactly that. */
+    refs: [INFO_CONN], legs: [{ target: INFO_CONN, role: "supports", grade: "C", axis: "connection",
+                                source: "hunch", author: "vera", date: "2026-08-04" }],
+  }), "inquiry", "open");
+
+  const cc = await conclude(VERA, { target: NOFALS,
+    conclusion: "No written record of any objection exists and no officer recalls one.",
+    falsifier: "", noFalsifier: "1" });
+  /* THE FIXTURE IS CHECKED BEFORE ANYTHING IS ASSERTED ABOUT IT — REC-18's
+     lesson on this same suite: a conclude that silently failed surfaced six
+     blocks later as an ILLEGAL_TRANSITION at publish, with the setup step
+     reporting nothing while the dependent assertion read as a defect in the
+     subject. */
+  if (!cc.ok) throw new Error(`conclude ${NOFALS} under override: ${JSON.stringify(cc)}`);
+
+  const pubN = await publish(VERA, { target: NOFALS,
+    statement: "This finding covers the question of unrecorded objections only.",
+    /* An EMPTY list is a CLAIM — this finding left nothing material out — and an
+       absent field is silence, which op=publish refuses NO_EXCLUSION_FIELD. */
+    excluded: [],
+    subjectPosition: "sought_and_answered",
+    subjectJustification: "We asked the four officers of record on 2026-06-20 and printed what came back.",
+    biasAcknowledgement: "This group holds a declared position that transfers should be adopted in public session." });
+  if (!pubN.ok) throw new Error(`publish ${NOFALS}: ${JSON.stringify(pubN)}`);
+  const ratN = await ratify(NOFALS);
+  if (!ratN.ok) throw new Error(`ratify ${NOFALS}: ${JSON.stringify(ratN)}`);
+
+  const c = await anonCase(`id=${NOFALS}`);
+  /* Read defensively for this block's own reason, recorded above at the loose
+     branch: a refusal has no findings[], so an unguarded read THROWS and the
+     block goes through no assertion at all while the battery reports
+     "assertions unknown" rather than a named failure. */
+  const f0 = (c.findings && c.findings[0]) || {};
+  const au = (f0.body && f0.body.authored) || {};
+  t("REC-117: the fixture really is a PUBLISHED finding an anonymous caller can read — a surface assertion over a refusal asserts nothing",
+    [c.ok === true, (c.findings || []).length, f0.body && f0.body.state], [true, 1, "published"]);
+  t("REC-117: the published surface carries NO authored falsifier, because the member stated none — not a sentence the plane invented",
+    au.falsifier, "");
+  t("REC-117: and it STATES the override beside it, naming the member and the date — the published record is where Bob said this must be visible",
+    [au.falsifier_override && au.falsifier_override.by,
+     typeof (au.falsifier_override || {}).at === "string" && au.falsifier_override.at.endsWith("Z")],
+    ["vera", true]);
+  /* THE OVER-STRICTNESS ARM on this surface: the ordinary case published at the
+     top of this suite states a real falsifier, and NOTHING about its answer may
+     move. If this goes red, the override has leaked onto findings nobody
+     overrode. */
+  const ordinary = await anonCase(`id=${CASE}`);
+  const oAu = ((ordinary.findings || [])[0] || {}).body?.authored || {};
+  t("REC-117 over-strictness: the ordinary published case still serves its authored falsifier unchanged",
+    oAu.falsifier, "An adopted resolution naming the transfer would overturn this.");
+  t("REC-117 over-strictness: and reports the override as NULL — present so it can be read, null because nobody overrode anything",
+    [("falsifier_override" in oAu), oAu.falsifier_override], [true, null]);
 }
 
 await mf.dispose();

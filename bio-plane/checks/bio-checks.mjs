@@ -2412,9 +2412,42 @@ function checkInquiryExtension(ctx, findings) {
       findings.push(f('C-2.8', 'error', 'concluded state requires a non-empty conclusion',
         ['author the conclusion where the document stands: reopening does not pick a concluded inquiry back up (op=reopen answers NOT_SET_DOWN), so there is no act that undoes the conclusion and the repair is made in place']));
     }
-    if (typeof fm.falsifier !== 'string' || fm.falsifier.trim() === '') {
+    /* REC-117 / BOB 2026-09-17. THE FALSIFIER REQUIREMENT BECOMES A REQUIREMENT
+       TO ACCOUNT FOR THE FALSIFIER, which is not the same as dropping it.
+       Bob ruled NO_FALSIFIER overridable "either temporarily or in the
+       published record", and the store's conclude() opens the door; this arm is
+       the OTHER half, and the two must move together. conclude.test.mjs's own
+       header records why: the requirement is enforced twice on purpose, so
+       breaking the store alone leaves the catalog refusing the bundle
+       op=conclude just wrote, and breaking the catalog alone leaves op=conclude
+       refusing the call.
+       THREE OUTCOMES, and the middle one is the one this item is about:
+         a falsifier is stated                 -> clean, exactly as before;
+         none is stated and the ABSENCE is     -> clean, and the record says in
+           attributed to a member with a date     whose name and on what date;
+         none is stated and nothing accounts   -> the original error, unchanged
+           for it                                 in code, severity and words.
+       A HALF-RECORDED OVERRIDE IS AN ERROR IN ITS OWN RIGHT, and it is the arm
+       that matters most: an override missing its actor or its date is a SILENT
+       override — the record has stopped requiring a falsifier and has not said
+       who decided that — which is the only wrong answer this ruling admits. It
+       cannot arise from op=conclude, which writes both or neither; it is
+       reachable by a hand-edited document, and that is exactly what the catalog
+       is for. */
+    const ovBy = typeof fm.falsifier_override_by === 'string' ? fm.falsifier_override_by.trim() : '';
+    const ovAt = typeof fm.falsifier_override_at === 'string' ? fm.falsifier_override_at.trim() : '';
+    const falsStated = typeof fm.falsifier === 'string' && fm.falsifier.trim() !== '';
+    if (!falsStated && !ovBy && !ovAt) {
       findings.push(f('C-2.8', 'error', 'concluded state requires a non-empty falsifier: a conclusion that names nothing which would overturn it cannot be checked by anyone, including its author',
-        ['state what evidence would falsify this conclusion']));
+        ['state what evidence would falsify this conclusion',
+         'or, if none can honestly be stated, record the absence: conclude with no_falsifier=1 so the record carries who accepted it and when']));
+    } else if (!falsStated && !(ovBy && ovAt)) {
+      findings.push(f('C-2.8', 'error', 'concluded state has no falsifier and only a HALF-RECORDED override: an override missing its ' + (ovBy ? 'date' : 'member') + ' is a silent one, and a record that has stopped requiring a falsifier without saying who accepted that claims more than it can support',
+        ['record both falsifier_override_by and falsifier_override_at, or state a falsifier']));
+    } else if (falsStated && (ovBy || ovAt)) {
+      findings.push(f('C-2.8', 'error', 'concluded state carries BOTH an authored falsifier and a record that none was stated: those are two contradictory claims about this finding and nothing may choose between them',
+        ['remove the falsifier_override_by/at pair if the falsifier stands',
+         'or clear the falsifier if the absence is what the member meant to record']));
     }
     if (!Array.isArray(fm.basis) || fm.basis.length < 1) {
       findings.push(f('C-2.8', 'error', 'concluded state requires at least one basis leg: an open inquiry may rest on nothing (a standing objective), a conclusion may not',
@@ -8869,12 +8902,31 @@ export const ACT_SHAPE_CHECKS = {
       + 'answer is that the group could not settle it, write that down — an answer of undetermined '
       + 'is a real answer here and is stated rather than left blank.',
   },
+  /* REC-117 / BOB 2026-09-17: the translation now NAMES THE DOOR, and that is
+     the surfacing half of the ruling rather than a nicety. A member who is
+     refused here and told only that a falsifier is required is a member under
+     pressure to invent one; a member told they may instead state that none can
+     honestly be given has been offered the honest way through. */
   NO_FALSIFIER: {
     check: 'C-33.2',
     where: 'src/store.mjs conclude > is-conclude-answer',
     translation: 'A conclusion has to say what would overturn it. Without that nobody can check the '
       + 'finding, including the person who wrote it, and a finding that cannot be checked claims '
-      + 'more than the evidence behind it can carry.',
+      + 'more than the evidence behind it can carry. If no falsifier can honestly be named, say so '
+      + 'rather than inventing one: the record will carry that no falsifier was stated, in your '
+      + 'name and with the date, wherever this finding appears.',
+  },
+  /* REC-117. The one refusal the override ADDS, and it exists because the
+     alternative is the plane choosing which of a member's two statements it
+     meant. No caller written before this item can reach it: the parameter it
+     turns on did not exist. */
+  FALSIFIER_AND_NONE_STATED: {
+    check: 'C-33.33',
+    where: 'src/store.mjs conclude > is-conclude-answer',
+    translation: 'You have written a falsifier and also asked to record that none could be stated. '
+      + 'Those are two different things to say about this finding, and choosing between them is not '
+      + 'something the record should do on your behalf. Keep the falsifier, or clear it and record '
+      + 'the absence.',
   },
   NO_RESOLUTION: {
     check: 'C-33.3',
