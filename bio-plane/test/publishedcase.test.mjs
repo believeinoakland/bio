@@ -132,9 +132,12 @@ const publish = async (tok, body, { sign = true } = {}) => {
     await ratifyCase(async (q, b) => rP(await POST(q, b)), r, { dir, key: "vera", token: tok });
   return r;
 };
-const conclude = async (tok, { target, conclusion, falsifier }) =>
+/* REC-117: `noFalsifier` appended ONLY when asked for, so every pre-existing
+   call site in this suite produces a byte-identical request. */
+const conclude = async (tok, { target, conclusion, falsifier, noFalsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
-    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
+    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
+    + (noFalsifier !== undefined ? `&no_falsifier=${encodeURIComponent(noFalsifier)}` : "")));
 const divide = async (tok, { target, ...body }) =>
   rP(await POST(`op=inquirydivide&token=${tok}&target=${encodeURIComponent(target)}`, body));
 const reopen = async (tok, target, reason) =>
@@ -986,6 +989,76 @@ console.log("\n--- 8. M0-11: the LOOSE branch — ratified bytes in no case, dri
     JSON.stringify(nrAns) === JSON.stringify(await anonCase("id=INFO-2026-9999-nothing")), true);
   t("an edition of the loose bundle that does not exist is the same refusal again",
     (await anonCase(`id=${LOOSE}&edition=7`)).reason, "NOT_PUBLISHED");
+}
+
+/* ============ REC-117: the override ON THE PUBLISHED SURFACE, which is the case Bob named */
+console.log("\n--- REC-117 / BOB 2026-09-17: a finding concluded with NO falsifier says so IN THE PUBLISHED RECORD, and names who ---");
+/* Bob's ruling is that the override works "either temporarily or IN THE
+   PUBLISHED RECORD", so the assertion that matters is not that op=conclude
+   accepted it — the conclude suite drives that — but that the condition
+   SURVIVES INTO THE SIGNED BYTES and is served to an ANONYMOUS caller. A
+   published case whose falsifier is empty and which says nothing about why is a
+   silent override on the one surface where silence costs most. */
+{
+  const NOFALS = "INQ-2026-2200-nofalsifier";
+  await mustPromote(NOFALS, inquiryMd(NOFALS, {
+    question: "Did anyone raise a concern about the transfer that was never written down?",
+    /* `source: hunch` with an author and a date, because DEC-15 makes that the
+       honest name for an authored connection grade and the only authored source
+       above D. A grade with no account of where it came from is an invented one
+       and C-2.8 refuses the promote — measured, not guessed: the first version
+       of this fixture came back BASIS_REFUSED for exactly that. */
+    refs: [INFO_CONN], legs: [{ target: INFO_CONN, role: "supports", grade: "C", axis: "connection",
+                                source: "hunch", author: "vera", date: "2026-08-04" }],
+  }), "inquiry", "open");
+
+  const cc = await conclude(VERA, { target: NOFALS,
+    conclusion: "No written record of any objection exists and no officer recalls one.",
+    falsifier: "", noFalsifier: "1" });
+  /* THE FIXTURE IS CHECKED BEFORE ANYTHING IS ASSERTED ABOUT IT — REC-18's
+     lesson on this same suite: a conclude that silently failed surfaced six
+     blocks later as an ILLEGAL_TRANSITION at publish, with the setup step
+     reporting nothing while the dependent assertion read as a defect in the
+     subject. */
+  if (!cc.ok) throw new Error(`conclude ${NOFALS} under override: ${JSON.stringify(cc)}`);
+
+  const pubN = await publish(VERA, { target: NOFALS,
+    statement: "This finding covers the question of unrecorded objections only.",
+    /* An EMPTY list is a CLAIM — this finding left nothing material out — and an
+       absent field is silence, which op=publish refuses NO_EXCLUSION_FIELD. */
+    excluded: [],
+    subjectPosition: "sought_and_answered",
+    subjectJustification: "We asked the four officers of record on 2026-06-20 and printed what came back.",
+    biasAcknowledgement: "This group holds a declared position that transfers should be adopted in public session." });
+  if (!pubN.ok) throw new Error(`publish ${NOFALS}: ${JSON.stringify(pubN)}`);
+  const ratN = await ratify(NOFALS);
+  if (!ratN.ok) throw new Error(`ratify ${NOFALS}: ${JSON.stringify(ratN)}`);
+
+  const c = await anonCase(`id=${NOFALS}`);
+  /* Read defensively for this block's own reason, recorded above at the loose
+     branch: a refusal has no findings[], so an unguarded read THROWS and the
+     block goes through no assertion at all while the battery reports
+     "assertions unknown" rather than a named failure. */
+  const f0 = (c.findings && c.findings[0]) || {};
+  const au = (f0.body && f0.body.authored) || {};
+  t("REC-117: the fixture really is a PUBLISHED finding an anonymous caller can read — a surface assertion over a refusal asserts nothing",
+    [c.ok === true, (c.findings || []).length, f0.body && f0.body.state], [true, 1, "published"]);
+  t("REC-117: the published surface carries NO authored falsifier, because the member stated none — not a sentence the plane invented",
+    au.falsifier, "");
+  t("REC-117: and it STATES the override beside it, naming the member and the date — the published record is where Bob said this must be visible",
+    [au.falsifier_override && au.falsifier_override.by,
+     typeof (au.falsifier_override || {}).at === "string" && au.falsifier_override.at.endsWith("Z")],
+    ["vera", true]);
+  /* THE OVER-STRICTNESS ARM on this surface: the ordinary case published at the
+     top of this suite states a real falsifier, and NOTHING about its answer may
+     move. If this goes red, the override has leaked onto findings nobody
+     overrode. */
+  const ordinary = await anonCase(`id=${CASE}`);
+  const oAu = ((ordinary.findings || [])[0] || {}).body?.authored || {};
+  t("REC-117 over-strictness: the ordinary published case still serves its authored falsifier unchanged",
+    oAu.falsifier, "An adopted resolution naming the transfer would overturn this.");
+  t("REC-117 over-strictness: and reports the override as NULL — present so it can be read, null because nobody overrode anything",
+    [("falsifier_override" in oAu), oAu.falsifier_override], [true, null]);
 }
 
 await mf.dispose();

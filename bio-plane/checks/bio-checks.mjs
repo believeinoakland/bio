@@ -8902,12 +8902,31 @@ export const ACT_SHAPE_CHECKS = {
       + 'answer is that the group could not settle it, write that down — an answer of undetermined '
       + 'is a real answer here and is stated rather than left blank.',
   },
+  /* REC-117 / BOB 2026-09-17: the translation now NAMES THE DOOR, and that is
+     the surfacing half of the ruling rather than a nicety. A member who is
+     refused here and told only that a falsifier is required is a member under
+     pressure to invent one; a member told they may instead state that none can
+     honestly be given has been offered the honest way through. */
   NO_FALSIFIER: {
     check: 'C-33.2',
     where: 'src/store.mjs conclude > is-conclude-answer',
     translation: 'A conclusion has to say what would overturn it. Without that nobody can check the '
       + 'finding, including the person who wrote it, and a finding that cannot be checked claims '
-      + 'more than the evidence behind it can carry.',
+      + 'more than the evidence behind it can carry. If no falsifier can honestly be named, say so '
+      + 'rather than inventing one: the record will carry that no falsifier was stated, in your '
+      + 'name and with the date, wherever this finding appears.',
+  },
+  /* REC-117. The one refusal the override ADDS, and it exists because the
+     alternative is the plane choosing which of a member's two statements it
+     meant. No caller written before this item can reach it: the parameter it
+     turns on did not exist. */
+  FALSIFIER_AND_NONE_STATED: {
+    check: 'C-33.33',
+    where: 'src/store.mjs conclude > is-conclude-answer',
+    translation: 'You have written a falsifier and also asked to record that none could be stated. '
+      + 'Those are two different things to say about this finding, and choosing between them is not '
+      + 'something the record should do on your behalf. Keep the falsifier, or clear it and record '
+      + 'the absence.',
   },
   NO_RESOLUTION: {
     check: 'C-33.3',

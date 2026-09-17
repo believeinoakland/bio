@@ -18120,6 +18120,38 @@ function pubLegHtml(entry, ord, fid){
    PER FINDING (DEC-44): a division is a fact about one question being split,
    which is a statement about a FINDING and never about the case that carries
    it — a case may hold one divided finding and one that was never divided. */
+/* REC-117 / BOB 2026-09-17: WHAT WOULD OVERTURN THIS FINDING, AND THE THREE
+   ANSWERS ARE THREE DIFFERENT THINGS. This cell used to be one expression with
+   two fallbacks ending in "The published bytes carry no falsifier." — which was
+   right while a falsifier was REQUIRED, because reaching that string meant a
+   document that predated the requirement or was never gated. Bob has now ruled
+   the requirement overridable, so an empty falsifier has TWO causes, and
+   printing one sentence over both would make this page the place a SILENT
+   OVERRIDE happens: a reader would see "no falsifier" and could not tell a
+   member's considered acceptance from a gap nobody accounted for.
+     a member stated one          -> print it;
+     a member stated that NONE    -> say so, IN THEIR NAME and with the date,
+       could honestly be given       because that is the whole of the ruling;
+     neither is recorded          -> the old sentence, unchanged, which now
+                                     means only what it always meant.
+   The middle case is NOT a defect and is not drawn as one. A conclusion whose
+   author says plainly that nothing available would overturn it is more honest
+   than one carrying a falsifier they invented to get past a gate, and this page
+   is the surface where that honesty is worth the most. */
+function pubFalsifierHtml(f){
+  const au = (f && f.body && f.body.authored) || {};
+  const stated = String(au.falsifier || (f && f.body && f.body.falsifies) || "").trim();
+  if (stated) return `<div class="pub-excl" data-falsifier="stated">${esc(stated)}</div>`;
+  const ov = au.falsifier_override;
+  if (ov && ov.by && ov.at)
+    return `<div class="pub-excl" data-falsifier="none-stated" data-overrideby="${esc(String(ov.by))}" data-overrideat="${esc(String(ov.at))}">`
+         + `<b>No falsifier was stated for this finding.</b> `
+         + `${esc(String(ov.by))} recorded on ${esc(String(ov.at))} that none could honestly be given, and concluded it on that basis. `
+         + `That is a statement the member made and put their name to, not an omission: this record would rather say that nothing `
+         + `available would overturn a finding than carry a falsifier somebody invented to get past a requirement.</div>`;
+  return `<div class="pub-excl" data-falsifier="absent">The published bytes carry no falsifier.</div>`;
+}
+
 function pubDivisionHtml(f){
   const d = (f && f.division) || {};
   const sibs = Array.isArray(d.siblings) ? d.siblings : [];
@@ -18670,7 +18702,7 @@ function pubFindingPages(c, f, i, n, floors){
         ${th.dropped.map((x) => `<div class="pub-leg" data-dropped="1" data-leg="${esc(String(x.leg.target))}" data-of="${esc(fid)}"><span class="mono">${esc(String(x.leg.target))}</span> &middot; ${esc(ROLE_WORD[x.leg.role] || "recorded against this")} &middot; dropped because ${esc(x.reason)}.</div>`).join("")}
         </details>` : `<p class="subj-note">This threshold dropped nothing of ${esc(fid)}.</p>`}
      <h3>What would overturn finding ${esc(String(i + 1))}</h3>
-     <div class="pub-excl">${esc((f.body && f.body.authored && f.body.authored.falsifier) || (f.body && f.body.falsifies) || "The published bytes carry no falsifier.")}</div>
+     ${pubFalsifierHtml(f)}
      ${pubDivisionHtml(f)}
      ${pubGraphHtml(f, c)}
      <h3>This finding's own material and its signature</h3>
