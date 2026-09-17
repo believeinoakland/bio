@@ -13454,6 +13454,57 @@ The driver follows two edge kinds out of a file's CODE: an `import` of a relativ
 
 **5 of 5 as declared · 0 arms never armed · 0 findings · HEAD restored to `7638231d6dcc` · working tree clean.** Arms 2 and 3 COMMIT, because `mintid --audit --base` reads `git diff -U0 base...HEAD` and **an id in the working tree is invisible to it** — itself a measured property of the instrument. Those arms REFUSE on a dirty tree and say so; that guard fired on its first run, against this worker's own redirected log file, and was correct to.
 
+## M-38 · 2026-09-16 · BOB #12 — D-288's EXPOSURE SWEPT ACROSS EVERY WORKTREE AT ONCE: **all THREE windows are live simultaneously, and the instrument built to detect two of them is itself sitting in the first** (Sparky-Air, `origin/main` at `711d5f44`)
+
+**Taken because CONDUCT found two stranded HEADs by hand while checking whether three workers were
+progressing, and a hand check of three is not a measurement of nine.** I swept every worktree on the
+clone. **CONDUCT's two were real and there were FOUR exposures, not two**, in three distinct shapes.
+
+**THE INSTRUMENT, re-runnable and the point of this entry** — for each worktree, compare the LOCAL HEAD
+against the REMOTE ref for its own branch, not against a branch's mere existence:
+
+    for w in .claude/worktrees/agent-*/; do
+      b=$(git -C "$w" rev-parse --abbrev-ref HEAD); h=$(git -C "$w" rev-parse --short HEAD)
+      if ! git rev-parse --verify -q "origin/$b" >/dev/null; then echo "$b ABSENT FROM REMOTE"
+      elif ! git merge-base --is-ancestor "$h" "origin/$b"; then echo "$b LOCAL HEAD NOT ON REMOTE"
+      fi
+    done
+
+| worktree / branch | shape | at risk |
+| --- | --- | --- |
+| `a0c3609704dee7166` — **M0-48** | **never pushed** | **2 commits, including `b58c8d3a` "plancheck WARNS on a local worker branch whose commits reach nobody (D-288 item 2)"** |
+| `a984a71a7b324f52c` — REC-100 | pushed, then behind | 2 commits |
+| `af08132ad4ca455b7` — M0-40 | pushed, then behind | 2 commits + 1 uncommitted file |
+| `af799694331ecc8d3` | nothing committed | **11 uncommitted files** |
+| `a8eea05132b9aee1d` | fresh worktree | **NOTHING — and this row is why the arm needs a third word** |
+
+**THE HEADLINE IS THE FIRST ROW. D-288's item 2 — the alarm for stranded worker branches — WAS ITSELF A
+STRANDED WORKER BRANCH**, two commits on no remote, at the moment I swept. Nothing in the estate reported
+it; I found it because I went looking, which is the sentence that argued the item into the cohort in the
+first place.
+
+**THREE WINDOWS, AND THEY NEED DIFFERENT WORDS BECAUSE THE READER'S NEXT ACT DIFFERS:**
+
+1. **Never pushed** (M0-48) — the original D-288 shape. Next act: push it.
+2. **Pushed, then behind** (REC-100, M0-40) — CONDUCT's find, and **a window neither D-288's item 1 nor
+   the subagent channel covers.** Item 1 protects a worker that pushes ONCE at the end; these pushed once
+   in the MIDDLE and committed after. Both stranded HEADs carry a *"release the claim"* commit — the
+   worker's LAST act — so the loss would have been the durable report itself. Next act: push it.
+3. **Committed nothing, 11 files live** (`af799694`) — the channel's window, and a push cannot help:
+   the worker must commit first, which is what a message can ask it to do.
+
+**AND THE OVER-STRICTNESS ROW MATTERS AS MUCH AS THE OTHERS:** `a8eea05132b9aee1d` has no branch on the
+remote and NO exposure — a fresh worktree whose tip is still at `main`. **An arm that names it will be
+tuned out as noise within a day**, which is the failure mode of every alarm that cries about a healthy
+state. This is the same shape CONDUCT measured from the other side an hour earlier, when the ancestry
+prune criterion reported all six of its LIVE workers as prunable: *a branch tip at `origin/main` means
+nothing has been committed yet*, and that fact reads as "safe to delete" to one instrument and "stranded"
+to another. **Both readings are wrong and for the same reason.**
+
+**WHAT THIS CANNOT SEE:** one clone on one machine at one instant. A worktree that strands and is pruned
+before a sweep leaves no trace here, and the sweep says nothing about how LONG any of these had been
+stranded — only that they were, at `711d5f44`.
+
 ## M-30 · 2026-09-15 · CONDUCT #11 — AN UNEXPLAINED GATE RED, RECORDED WITH ITS NON-CORROBORATION RATHER THAN RESOLVED IN EITHER DIRECTION
 
 **The observation.** A `node tools/gates.mjs --docs` run over a prose-only change to
