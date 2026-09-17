@@ -10782,6 +10782,32 @@ function finderPassageArm(){
 function searchHasField(name){
   return !!(SEARCH_FIELDS.fields && Object.prototype.hasOwnProperty.call(SEARCH_FIELDS.fields, String(name||"").toLowerCase()));
 }
+/* UI-63 — THE OTHER HALF OF THE SAME ANSWER, ASKED THE SAME WAY. `op=searchfields`
+   publishes TWO vocabularies and `op=search` compiles BOTH: `query.mjs`'s selector
+   dispatch is `if (name in MEANING) return meaningAtom(...)` placed BEFORE the field
+   registry lookup, and `meaning:` is `meaningVocabulary()` derived from that same
+   `MEANING`. So the set of names this returns true for is, by construction, the set
+   of selectors the text route compiles through the meaning layer.
+
+   IT IS DELIBERATELY NOT `searchHasField || anything-with-a-colon`. The bucket this
+   moves a term OUT OF is the one that lets the cross-seam panel say *answered by
+   neither*, and that sentence is worth having: `grade:` is published as neither a
+   field nor an arm, it filters NOTHING on either route (the compiler's own warning
+   is `unknown field "grade"; read as free text`), and a member who is told otherwise
+   goes on believing they narrowed a set they did not narrow. A surface that treated
+   every unrecognised prefix as answered would report all three arms correctly and
+   destroy that sentence for every term at once — green, and strictly worse than the
+   defect it fixed. The criterion is what the PLANE PUBLISHES, in both halves, and
+   nothing else.
+
+   ASKED, NOT REMEMBERED: this reads the same loaded answer `searchHasField` reads,
+   so a plane that renames an arm makes the term fall back to `unpublished` — the
+   answer a member should get from THAT plane — rather than sending a selector
+   nothing compiles and rendering the answer as though the term had been honoured.
+   That is `finderPassageArm`'s rule, one construct over. */
+function searchHasMeaningArm(name){
+  return !!(SEARCH_FIELDS.meaning && Object.prototype.hasOwnProperty.call(SEARCH_FIELDS.meaning, String(name||"").toLowerCase()));
+}
 /* One selector in the published grammar, or NOTHING. This is the whole of what
    replaced the deleted scope map: a scope is a field name plus a value, and a field
    the plane does not publish yields no scope rather than a string sent hopefully.
@@ -10835,9 +10861,15 @@ function finderScopes(){
                         surface understands, and the reason it understands it is
                         that the query language demonstrably does not
           unpublished   a selector-shaped term over a name the plane publishes as
-                        neither. `grade:` is the standing example and it is not a
-                        typo: the record HAS grades, and no route can FILTER on
-                        one.
+                        neither — neither a FIELD nor a MEANING ARM. `grade:` is
+                        the standing example and it is not a typo: the record HAS
+                        grades, and no route can FILTER on one. UI-63: this bucket
+                        asks BOTH halves of `op=searchfields` because `op=search`
+                        compiles both, and the bucket is narrower for it. It is
+                        narrower and not empty ON PURPOSE — "answered by neither"
+                        is a true and useful thing to be able to say, and a parse
+                        that waved every unrecognised prefix through could never
+                        say it about anything.
 
         Quote-aware, because the plane's own syntax line says a quoted phrase is
         one unit; splitting on whitespace inside quotes would make this surface
@@ -10866,15 +10898,15 @@ function finderPlan(q){
        drops it, and an answer computed over a dropped term looks exactly like
        an answer computed over the term the member typed.
 
-       ONLY `passage:` IS ROUTED HERE, AND THE OTHER MEANING ARMS ARE LEFT
-       EXACTLY WHERE THEY WERE. `leg:`, `resolves:` and `content:` are meaning
-       arms too and `op=search` compiles all three, so they are currently
-       reported by the cross-seam panel as answered by neither — which is a
-       PRE-EXISTING inaccuracy this item found and deliberately did not fix.
-       Correcting it moves terms between seams on queries this item has no
-       business changing, and the over-strictness arm exists to prove those
-       walks did not move. It is in this item's report as a finding with its
-       own row owed, not smoothed over here. */
+       ONLY `passage:` IS ROUTED HERE, AND THAT IS STILL TRUE AND IS STILL THE
+       POINT. `leg:`, `resolves:` and `content:` are meaning arms too, but they
+       are answered by the TEXT route — `op=search` compiles them through the
+       meaning layer — whereas `passage:` is answered by `op=meaningrows` at
+       unit grain over `capture_text`. So this branch is about one seam and the
+       selector branch below is about the other, and they are not two spellings
+       of one test. UI-63 corrected where the other three are REPORTED without
+       touching where `passage:` is ROUTED; UI-62's over-strictness arm was the
+       fence and `meaning-arms.walks.mjs` is the measurement that it held. */
     const pas = /^-?([A-Za-z_][A-Za-z0-9_]*):(.+)$/.exec(term);
     if(pas && pas[1].toLowerCase() === PASSAGE_ARM && finderPassageArm()){
       passages.push({ term, arm: PASSAGE_ARM, value: pas[2] }); continue;
@@ -10882,7 +10914,16 @@ function finderPlan(q){
     const sel = /^-?([A-Za-z_][A-Za-z0-9_]*):/.exec(term);
     if(sel){
       const field = sel[1].toLowerCase();
-      if(searchHasField(field) || QUERY_PREFIXES.includes(field)) text.push({ term, field });
+      /* UI-63: BOTH HALVES OF THE PUBLISHED VOCABULARY, because the text route
+         is ONE op and `op=search` compiles both. Asking only the field half put
+         `leg:`, `resolves:` and `content:` in `unpublished`, so the cross-seam
+         panel told a member they were "Answered by neither" — false, and
+         falsified by this very function's next act, since `finderTextRoute`
+         then sends `text` AND `unpublished` down the route that answers them.
+         A member was told a capability was absent when it was present and sent
+         away from a question the record can answer. `passage:` is settled
+         above and never reaches here while the plane publishes it. */
+      if(searchHasField(field) || searchHasMeaningArm(field) || QUERY_PREFIXES.includes(field)) text.push({ term, field });
       else unpublished.push({ term, field });
       continue;
     }
