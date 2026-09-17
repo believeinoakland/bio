@@ -12431,3 +12431,46 @@ file it if the surface could not compose the act without a new plane answer. It 
 21.0.0's `no_falsifier` and the refusal `detail` REC-117 wrote were between them sufficient, and
 **the refusal's own sentence turned out to BE the surfacing half** — the surface renders those
 bytes and writes none of its own.
+## CLAIM 2026-09-17 M0 (M0-59 / D-406 — the push guard is installed once for the clone but resolved per-worktree, so it is INACTIVE in every checkout made before it landed)
+session: m059-pushguard-worktree-gap (worktree agent-a20ba9ff2880e1eae, branch `worktree-agent-a20ba9ff2880e1eae`)
+opened: 2026-09-17T23:00:00Z
+released: (held until CONDUCT integrates — M0-56's precedent and for M0-56's reason, one step
+  sharper. This claim covers `tools/plancheck.mjs`, which every sibling in this wave runs as a
+  gate, AND `.git/hooks/pre-push`, which every sibling PUSHES THROUGH. Releasing on my own report
+  would open both during exactly the window a sibling is using them.)
+
+**`.git/hooks` IS CLAIMED, LOUDLY, AND IT IS NOT AN ORDINARY PATH.** It is not tracked, so it
+  appears in no `git status` and no diff, and **no other claim in this register has ever covered
+  it**. It is also SHARED BY EVERY WORKTREE OF THIS CLONE — that sharing is the whole of what
+  M0-56 built and the whole of what D-406 reports as half-finished. **Two siblings are pushing
+  through that hook while I work (REC-118 in `bio-plane/src/`, UI-64 in `civicos-ui/app.html`),
+  so a hook I leave broken for a minute is a sibling's push failing in a way that surfaces in
+  THEIR session and looks like THEIR defect.** Consequences I am holding myself to, and they are
+  in the report as well as here: every write to that file is an ATOMIC RENAME rather than a
+  truncate-and-write, so a sibling mid-push reads either the old hook or the new one and never a
+  half-written one; and no arm of my negative control is driven against the live clone's hook —
+  every arm runs in a throwaway sandbox clone with its own bare remote.
+
+paths:
+  `tools/pushguard.mjs` — by SITE. `shim()` (the hook body, v1 -> v2), a new `commonDir()` and
+  `installCopy()`, and an atomic-write helper. **NOT `check()`** — the verdict logic is CORRECT
+  and is not this row's subject; this row changes WHERE the guard is FOUND, never WHAT it decides.
+  A `docs/DECIDED.md` verdict that differs by one byte because of this row would be a defect in it.
+  `bio-plane/test/pushguard.test.mjs` — new sections appended, plus the `NEGATIVE CONTROL:` line
+  updated to carry this row's arms. **NO existing assertion weakened or exempted**; the existing
+  arm that the shim bakes in no absolute path is one this row must KEEP passing, and does.
+  `tools/plancheck.mjs` — by SITE, not by file: the SAME block M0-56 appended after arm 2b, which
+  now also installs the clone-wide copy and reports it. **NOT arm 2b itself**, which stays the
+  detector this row is equally forbidden to weaken, untouched byte for byte.
+  `.git/hooks/pre-push` and `<git-common-dir>/bio-pushguard.mjs` — UNTRACKED machinery, claimed
+  above for the reason given.
+  `docs/development/DEBT.md` — D-406's disposition only.
+  `docs/development/VERIFICATION.md` — the M0 lane's design authority and M0-56's named home for
+  this mechanism; the coverage property and its remaining limits are appended there.
+  `docs/development/MEASUREMENTS.md` — new measurement rows only, appended.
+  **NOT `docs/development/QUEUE.md`** — flipping the M0-59 row is CONDUCT's act (`kickoffs/WORKER.md`).
+  **NOT `tools/decided.mjs`** — same reason M0-56 gave: the generator is correct and is not the subject.
+  **NOT `bio-plane/src/`** — REC-118 is in it and nothing this row builds reaches the plane.
+  **NOT `civicos-ui/`** — UI-64 is in it.
+
+**open as of 2026-09-17.**

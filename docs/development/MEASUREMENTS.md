@@ -15393,3 +15393,122 @@ naming `node tools/decided.mjs`. **The author of the mechanism reproduced the de
 mechanism exists for, minutes after driving five controls proving it would — which is exactly
 CONDUCT #2's finding that the rule was written down and then broken twice more.** No amount
 of care was going to catch this one; the tree looked finished.
+
+## 2026-09-17 · M0-59 / D-406 — PUSH-GUARD COVERAGE ACROSS EVERY WORKTREE OF THIS CLONE
+
+**Instrument:** a read-only census walking `git worktree list --porcelain` and testing
+`existsSync(<worktree>/tools/pushguard.mjs)` in each, run from worktree
+`agent-a20ba9ff2880e1eae` at `6f007692`. The guard's hook is shared by every worktree but
+resolves its SCRIPT per-worktree, so **the presence of that file in a checkout IS whether the
+guard runs there** — which is why the census measures the file rather than the hook.
+
+| measured | worktrees | guard ACTIVE | guard INACTIVE |
+| --- | --- | --- | --- |
+| 2026-09-17, BOB #13 (reported on D-406's row) | 9 | 3 | **6, incl. the MAIN CHECKOUT** |
+| 2026-09-17, M0-59 (this row, own tree) | **15** | **10** | **5, incl. the MAIN CHECKOUT** |
+
+**THE BRIEFED FIGURE WAS STALE IN ITS ARITHMETIC AND INTACT IN ITS CONCLUSION, and both halves
+are worth recording.** The population grew 9 -> 15 as the wave spawned workers, and the ratio
+improved as branches rebased past M0-56 — so *6 of 9* was a true statement about a tree that no
+longer existed hours later. **What did not move is the finding that matters: the guard built
+because CONDUCT pushed a stale `DECIDED.md` FOUR TIMES from the main checkout was still not
+running in the main checkout.** A coverage figure over a live worktree population is a
+measurement with a short half-life, which is the argument for re-measuring rather than relaying.
+
+### The false green that was hunted and NOT found
+
+A fallback is worthless if the old checkout's own `tools/decided.mjs` does not really support
+`--check`. **`decided.mjs` treats an unrecognised argument as a free-text QUERY** — the receipt
+is in its own header: `plancheck --local` once became `decided.mjs --local`, printed *no ruling
+mentions --local* and **exited 0 having checked nothing**. An old generator would therefore have
+certified every push it never read, and the guard would have reported `current` over nothing —
+this project's costs-nothing-equality defect wearing a green tick.
+
+**MEASURED, not reasoned: `node tools/decided.mjs --check` was RUN in all 5 unguarded worktrees.
+Every one performed a real check** (`DECIDED.md is current`, exit 0, no *no ruling mentions*
+line). The fallback produces real verdicts in exactly the trees it targets.
+
+### Resolution of the fallback path, measured both ways
+
+`git rev-parse --git-common-dir`, asked with cwd = the worktree top (which is how git invokes a
+hook), answers **relative `.git` from a main checkout** and an **absolute path from a linked
+worktree**. Both resolve to the same directory and both find the copy, confirmed through plain
+`/bin/sh` rather than through node. **That is what lets the shim locate the clone-wide copy while
+still baking in NO absolute path** — the property M0-56 earned a named arm for, and which this
+row had to preserve rather than spend.
+
+### Battery baseline, this worktree, at `6f007692`
+
+`219/219 suites green · 13715 assertions passing · 389.5s`, 0 skips, `provenance: 222 of 222`,
+`fleet: 3 members beside the plane · 3 member(s) actually RAN`. **Identical to the figure CONDUCT
+#3 briefed, and recorded as CONFIRMED rather than assumed** — the practice is to trust the
+measurement and report either way, and this time the brief was exactly right. Measured with three
+batteries contending on the machine, so the 389.5s wall-clock is a contended figure and not a
+clean one. `pushguard.test.mjs` alone: 60 assertions at M0-56, **81 after this row**.
+
+### ACCEPTANCE — coverage AFTER the fix, measured across every worktree
+
+D-406's row required *coverage MEASURED ACROSS EVERY WORKTREE, not a passing hook in the tree
+that built it*, because the defect is invisible from any single checkout. The instrument runs
+**the shim's own resolution, in `/bin/sh`, with cwd set to each worktree** (which is how git
+invokes a hook) and reports WHICH SOURCE would answer — so it measures the mechanism rather
+than a proxy for it.
+
+| source that answers a push | worktrees | note |
+| --- | --- | --- |
+| the worktree's own tracked script | 10 | unchanged from before — **no regression**, and worktree-first confirmed LIVE rather than by reading the shim |
+| the clone-wide copy (the fallback) | 5 | the previously-unguarded five, **including the MAIN CHECKOUT** |
+| **none — unguarded** | **0** | |
+
+**Before the fix the same instrument answered 10 / 0 / 5.** The five that changed are exactly
+the five that were inactive, and the ten that already worked resolve to the same source they
+resolved to before — which is the property the chosen order was picked for.
+
+**THIS FIGURE HAS A SHORT HALF-LIFE AND SHOULD BE RE-MEASURED, NOT RELAYED.** It is true of a
+live worktree population that grew 9 -> 15 during a single session. A worktree created from a
+commit that predates M0-56 *after* this was measured is covered by the fallback the moment it
+exists (the copy is already on disk); a FRESH CLONE is not covered until a gate runs in it once.
+
+### THE ACCEPTANCE MEASUREMENT WAS WRONG THE FIRST TIME, AND THE CORRECTION IS THE FINDING
+
+**The first coverage instrument answered `0 unguarded` while five checkouts were in fact
+unguarded.** It HARDCODED v2's resolution logic and asked what the shim WOULD do, rather than
+running the hook that was actually installed. **That is this project's costs-nothing rule
+arriving inside the acceptance check for the row about mechanisms believed on their existence
+rather than their behaviour** — an arm that could not see the regression it existed to catch.
+
+It was caught by a routine end-of-item sanity check reading the live hook's version line, not
+by the instrument. The corrected instrument **executes the installed `pre-push` with cwd set
+to each worktree** — how git invokes it — and reads what it says.
+
+| instrument | answer | true? |
+| --- | --- | --- |
+| simulated v2 resolution (first attempt) | 0 unguarded / 15 | **NO** |
+| driving the INSTALLED hook (corrected) | **5 unguarded / 15** | yes |
+
+### AND THE REGRESSION IT REVEALED IS A SECOND DEFECT, MEASURED IN THE WILD
+
+**`.git/hooks/pre-push` is ONE file shared by every worktree, and `plancheck` rewrites it on
+every run from whichever worktree is gating.** So a sibling running an OLDER checkout
+reinstalls an OLDER shim over a newer one. Measured on this clone, by timestamp:
+
+| time | event |
+| --- | --- |
+| 19:32:43 | this row installs shim **v2**; coverage becomes 15/15 |
+| ~19:41:18 | a sibling's `plancheck`, running **v1** code from a pre-M0-59 checkout, rewrites the hook to **v1** |
+| 19:42:54 | driving the installed hook: **5 checkouts unguarded again** |
+
+**IT IS D-406's OWN CLASS ONE LEVEL UP** — the guard's live behaviour depending on which
+checkout last ran a gate rather than on what was merged — and it is invisible for exactly the
+same reason: a reverted hook and a current one both produce a successful push.
+
+**WHAT WAS DONE ABOUT IT, AND WHAT COULD NOT BE.** `install()` now refuses to DOWNGRADE: an
+installer whose `HOOK_VERSION` is lower than the installed hook's leaves it alone and says so.
+**This CANNOT fix the v1 -> v2 flapping, and the row does not claim it does** — the overwriting
+code lives in the other checkouts and no edit here can reach it. **The flapping closes only when
+M0-59 reaches `main` and the worktrees carry it.** What the guard does is stop the NEXT one.
+
+**SO THE HONEST STATE OF THE ACCEPTANCE IS TWO-PART, and both parts are stated rather than the
+convenient one: the FIX is proved correct (driven at a real remote from a real pre-guard
+worktree, both directions, plus 86 suite assertions and four control arms), and the LIVE CLONE
+will keep flapping between 15/15 and 10/15 until this is merged and the worktrees rebase.**

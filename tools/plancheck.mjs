@@ -470,6 +470,30 @@ if (register) {
          + `        A push carrying a stale docs/DECIDED.md will not be refused in this clone,\n`
          + `        so the rebase case (a peer's rulings landing under a fresh index) is open.`);
     }
+
+    /* D-406. THE HOOK ALONE IS NOT THE GUARD.  It is installed once for the whole clone
+       but RESOLVES ITS SCRIPT PER-WORKTREE, so in a checkout whose commit predates M0-56
+       it fired, found nothing to run, printed one stderr line and allowed the push —
+       measured at 6 of 9 worktrees INCLUDING THE MAIN CHECKOUT, and again at 5 of 15 here.
+       The clone-wide copy is what closes that, so it is installed on the SAME schedule and
+       for the same reason: a mechanism that is not in the loop the reader runs is not a
+       mechanism.  Reported SEPARATELY from the hook — an arming that half happened must
+       not read as one that did. */
+    if (typeof pg.installCopy !== "function") {
+      warn(`pushguard.mjs has no installCopy — the clone-wide fallback is NOT armed.\n`
+         + `        Every worktree whose commit predates the guard pushes UNGUARDED (D-406).`);
+    } else {
+      const c = pg.installCopy({ repo: ROOT });
+      if (c.action === "installed" || c.action === "replaced") {
+        notes.push(`push guard copy: ${c.action.toUpperCase()} — WROTE ${c.path} (in .git/, not in the working tree)`);
+      } else if (c.action === "current") {
+        notes.push(`push guard copy: armed at ${c.path} — worktrees predating the guard are covered`);
+      } else {
+        warn(`push guard copy NOT armed — ${c.reason}.\n`
+           + `        The hook is shared by every worktree but resolves its script per-worktree,\n`
+           + `        so any checkout predating the guard pushes UNGUARDED (D-406).`);
+      }
+    }
   }
 }
 
