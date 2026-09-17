@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-977 rulings across 85 documents.
+979 rulings across 85 documents.
 
 ## DEC-
 
@@ -556,6 +556,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:10762`
 - **D-388** · 2026-09-16 — The three undecided files are ROUTED AND NOT RULED as **D-388**, each with the question it poses; only `MILESTONES.md` is judged worth Bob's attention.  
   `docs/development/QUEUE.md:869`
+- **D-391** · 2026-09-16 — WHY NEITHER IS CORRECTED HERE:** re-denominating another area's measurement from outside it is how a wrong number acquires a second author.  
+  `docs/development/DEBT.md:313`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
@@ -963,7 +965,7 @@ authority is the file named, never this one.
 - **REC-103** · 2026-09-16 — added: 2026-09-16 · CONDUCT #1 (draining BOB #12's `§4.3 CORRECTED` entry as an ITEM.  
   `docs/development/QUEUE.md:1322`
 - **REC-108** · 2026-09-16 — CLOSED 2026-09-16 by REC-108, BY ITS OWN RECOMMENDED OPTION (b) — AND THE OPTION WAS TAKEN ON EVIDENCE RATHER THAN ON DEFERENCE, WITH THE ROW'S OWN STATEMENT OF THE PROBLEM CORRECTED IN ONE RESPECT.** **The cache is untouched and that is the disposition, not an omission**: `#writeStrengthProjection` still derives…  
-  `docs/development/DEBT.md:320`
+  `docs/development/DEBT.md:321`
 - **REC-111** · 2026-09-16 — AMENDED 2026-09-16 by REC-111 — §4.3's OWED UNIT-COUNT BOUND IS BUILT, AND THE ROW'S OWN PREMISE WAS HALF WRONG, WHICH IS THE finding worth more than the bound.** *A container whose units are many and small is bounded by nothing this design specifies* is true of THIS DOCUMENT and false of the SYSTEM: M-35 measured…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:5`
 ## UI-
@@ -1278,6 +1280,8 @@ authority is the file named, never this one.
   `docs/development/DEBT.md:310`
 - **M0-34** · 2026-09-15 — `RULED by Bob` means DOCTRINE no session may revisit; a session's own name means MECHANISM a later session MAY revisit on evidence.  
   `docs/development/QUEUE.md:934`
+- **M0-35** · 2026-09-16 — CLAIM AMENDED 2026-09-16 M0 (M0-35 — three paths the original block did not name) session: M0-35 worker (worktree `agent-af799694331ecc8d3`, branch `worktree-agent-af799694331ecc8d3`) **Appended rather than edited in place**, per this file's own rule.  
+  `docs/development/CLAIMS.md:11257`
 - **M0-37** · 2026-09-16 — DISCHARGED 2026-09-16 by M0-37 — SUPERSEDED BY A LATER MEASUREMENT, which is the only way a floor notice can honestly close.** All five floors have been re-read and moved PAST the figures this block reported, by UI-45 on the same day, each *"from the figure this arm PRINTED"*: A3 19 → 20…  
   `docs/development/CLAIMS.md:129`
 - **M0-37** · 2026-09-16 — DISCHARGED 2026-09-16 by M0-37 — the comments were CORRECTED IN PLACE and the design call was taken, not deferred.** `pubBarHtml` and `pubIndex` no longer exist under those names; `civicos-ui/app.html:16968-17000` carries a replacement block headed *"THE BAR IS THE CASE'S, AND THIS FUNCTION WAS CORRECTED RATHER…  

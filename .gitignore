@@ -296,3 +296,9 @@ bio-plane/test/.nc-rec102-pristine/
 # behind by an interrupted run is a SECOND plane source for the next walk to
 # enrol. Added to this item's CLAIMS block at the close rather than taken silently.
 .rec111-control-pristine/
+
+# M0-35 worker scratch: the CPU-currency probes generate a worker script here.
+bio-plane/.m035-pen/
+m035-*.log
+m035-*.sh
+m035-census.txt

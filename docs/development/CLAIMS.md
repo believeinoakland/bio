@@ -11162,3 +11162,114 @@ released: 2026-09-16 by the REC-109 worker — **D-385 CLOSED: `#frontierContent
   against the real account** — no deploy, no scratch-namespace probe; everything is miniflare and
   source. (5) **No design document body was moved** — this item changes no construct, so
   `OBSERVATION-LOG-DESIGN.md` is untouched and no front-matter date moves with it.
+
+## CLAIM 2026-09-16 M0 (M0-35 — the reference-iteration CPU currency is not runtime-portable, D-368)
+session: M0-35 worker (worktree `agent-af799694331ecc8d3`, branch **`worktree-agent-af799694331ecc8d3`**, base `origin/main` `82ab002c`)
+opened: 2026-09-16T00:00:00Z
+paths:
+  `tools/m035-refiter-census.mjs` (NEW) — the census of every figure quoted in this currency.
+    A tool rather than a grep because the row asks how many figures exist, where they live and
+    how many are ATTRIBUTABLE NOW, and because the cheap defeat the row names is a sweep that
+    matches a convenient set and reports 100% over it. It prints its corpus and its reach
+    BEFORE any result and names its own blind spot on every run.
+  `bio-plane/test/m035-cpu-currency-probe.mjs` (NEW) — the 2x2 that separates RUNTIME from
+    CODE SHAPE. Deliberately NOT a `.test.mjs`: it is a timing probe that refuses a busy
+    machine, so the discovering runner must not pick it up and no suite floor moves (the
+    `ocr-measure-probe.mjs` / `fl1-cpu-probe.mjs` precedent, both of which sit in this
+    directory under exactly this convention).
+  `bio-plane/.m035-pen/` — scratch for the probe's generated worker, INSIDE this worktree
+    (WORKER.md: the shared scratchpad is not isolated between sessions). Gitignored, swept.
+  `docs/development/MEASUREMENTS.md` — **ONE APPENDED section** carrying the 2x2 and its
+    controls. **The existing M-20 block at ~12,536 and the CONTENT-PDF OCR block at ~1,373
+    are NOT edited by this item** — see the note below on why that is a boundary and not
+    timidity.
+  `docs/development/DEBT.md` — **the D-368 row's disposition only**, and any row this item's
+    measurement opens. No other row is edited.
+  `docs/development/CLAIMS.md` — this block, and a DELEGATION if the measurement obliges one.
+  `docs/development/QUEUE.md` — NOT TOUCHED. The M0-35 row's `landed:` names a merge sha that
+    does not exist until CONDUCT merges; writing it here would publish a claim ahead of the
+    act, which is the gap every wrong status in this project has lived in.
+note: **THE OCR ROW AND M-20 ARE ANOTHER AREA'S FIGURES AND THIS ITEM DOES NOT RE-TAKE THEM.**
+  `MEASUREMENTS.md` ~1,373 is CONTENT-PDF's (CPDF-9/CPDF-10, 2026-08-03) and ~12,536 is
+  M0-31's. The row is explicit — *do NOT re-take another area's figure from outside it; where
+  a figure needs re-denominating, file a DELEGATION to its owner* — and M0-31 declined exactly
+  this and was right to. Where this item finds a figure whose reading changes, it files the
+  DELEGATION with the measurement attached rather than editing the number.
+note: **THIS CLAIM IS ON A MEASUREMENT, SO IT COMMITS NO PLANE CODE.** No file under
+  `bio-plane/src/`, `bio-plane/checks/`, `bio-plane/scripts/`, `civicos-ui/`, `newgroup/` or
+  `release/` is opened. `bio-plane/src/cpu.mjs` is READ ONLY — the probe IMPORTS `burn()` from
+  it and never retypes it, for the reason M0-31 gave and this item is testing.
+
+## DELEGATION 2026-09-16 M0-35 -> CONTENT-PDF (the OCR per-page CPU row is denominated against the wrong ceiling — by 1.43x, and the verdict survives)
+raised-by: M0-35 worker (worktree `agent-af799694331ecc8d3`, branch `worktree-agent-af799694331ecc8d3`)
+**open as of 2026-09-16** — raised today with the measurement attached; CONTENT-PDF has not been in this file since, and no figure has moved.
+what: `docs/development/MEASUREMENTS.md`, the 2026-08-03 section "CPU per page — the same order
+  as the ENFORCED per-invocation ceiling". Its per-page costs are node-proxy milliseconds
+  converted at the NODE rate (26,036 iter/ms) and compared against the 40M kill window, which
+  `op=cpuprobe` measured on a DEPLOYED Worker. That prices the ceiling at 1,536 ms.
+  **FL-1 measured the deployed ceiling directly on 2026-08-08 — 40,000,000 reference
+  iterations = 1,071.01 ms of BILLED CPU, from Cloudflare's own Analytics API — so the window
+  is 1.43x too generous and every per-page cost is understated by 1.43x.**
+
+      page 1, best_int (2,064 ms)      row reads 134% of window · is 193%
+      page 4, tessdata_fast (646 ms)   row reads  42% of window · is  60%
+
+why it is yours: re-denominating another area's measurement from outside it is how a wrong
+  number acquires a second author. M0-31 declined exactly this row for exactly this reason and
+  was right to; M0-35 declines it too. The measurement is attached rather than applied.
+the good news, stated first because it changes the priority: **your VERDICT survives.** "One
+  300-dpi page per invocation is AT the ceiling's order, model- and content-dependent" is still
+  true after the correction — it shifts up ~1.4x, it does not flip. And **it is 1.43x, not the
+  6x D-368 predicted**: D-368 measured node against MINIFLARE, and miniflare runs the reference
+  loop 3.15–4.16x faster than the deployed runtime. Against DEPLOYED, node is only 1.43x off.
+what would close it: restate the per-page figures against the 1,071 ms deployed ceiling, or
+  measure tesseract in deployed workerd. **The substitution this rests on — that OCR wall-clock
+  in workerd is near node's — is UNMEASURED, and M0-35 did NOT measure wasm in either runtime.**
+  Five JS workloads say non-LCG work is within 0.82–1.00x of node, which supports it without
+  settling it.
+evidence: `MEASUREMENTS.md` 2026-09-16 (M0-35), D-391, D-368's closure.
+
+## DELEGATION 2026-09-16 M0-35 -> M0 / CONDUCT (M0-31's promote percentages are priced at miniflare's rate against a deployed ceiling)
+raised-by: M0-35 worker (worktree `agent-af799694331ecc8d3`, branch `worktree-agent-af799694331ecc8d3`)
+**open as of 2026-09-16** — raised today; M0-31 is landed and merged, so this needs an owner
+  assigned rather than a live worker notified. It is an ACT for CONDUCT, named here and not
+  left in a report.
+what: `docs/development/MEASUREMENTS.md` M-20 (2026-09-14, M0-31). It converts the 40M ceiling
+  at the MINIFLARE rate (155,538 iter/ms) to a **257 ms** window. The deployed ceiling is
+  **1,071 ms** (FL-1, billed CPU), so the window is 4.16x too small and every
+  `% of the window` figure is up to 4.16x too PESSIMISTIC — the corpus's worst docx reads
+  84.8% and would read 20.4%.
+**BUT THIS IS NOT A SIMPLE CORRECTION AND MUST NOT BE APPLIED AS ONE.** The promote was ALSO
+  measured in miniflare, so if miniflare is uniformly faster than deployed for SQLite writes
+  the two errors cancel and 84.8% is right. Whether they cancel is **UNMEASURED**, and M0-35's
+  workload spread (0.80x–6.40x across five workloads) is the reason to doubt uniformity.
+  **The honest reading today is UNDETERMINED between ~20% and ~85%.**
+why it matters: M0-31's conclusion — *THE CEILING IS NEAR*, so CONTENT-SEARCH-DESIGN §4.1's
+  chunking remedy is REQUIRED rather than optional — rests on the miniflare end of that range.
+  If the deployed end is right, a required design remedy becomes optional. **That is a product
+  decision resting on a figure whose denominator is undetermined**, which is why this is
+  delegated loudly rather than noted.
+what would close it: ONE measurement — the same promote ladder run against a DEPLOYED Worker.
+  It would establish whether the 3.15–4.16x miniflare-vs-deployed gap holds for SQLite writes,
+  or is, like the 6.4x, specific to the LCG loop. That needs a deploy, which is DIST's.
+evidence: `MEASUREMENTS.md` 2026-09-16 (M0-35), D-391, D-368's closure.
+
+## CLAIM AMENDED 2026-09-16 M0 (M0-35 — three paths the original block did not name)
+session: M0-35 worker (worktree `agent-af799694331ecc8d3`, branch `worktree-agent-af799694331ecc8d3`)
+**Appended rather than edited in place**, per this file's own rule. The original block named
+`m035-cpu-currency-probe.mjs` when the item was expected to need one probe. It needed two, and
+two further paths moved that the block did not anticipate:
+  `bio-plane/test/m035-workload-generality.mjs` (NEW) — the second probe, which asks whether the
+    6.4x is a property of the RUNTIME or of the LCG loop. It did not exist when the block was
+    written because the question only arose once the 2x2 had come back. Same convention as the
+    first: deliberately NOT a `.test.mjs`, refuses a busy machine, no suite floor moves.
+  `.gitignore` — two appended lines only, for this item's scratch. Nothing existing edited.
+  `docs/DECIDED.md` — REGENERATED by `node tools/decided.mjs`, never hand-edited, because
+    closing D-368 adds rulings and `plancheck` fails on the drift. 971 rulings, 274.7 KB.
+note: **THE RUN LOGS AND RUNNER SHIMS ARE DELIBERATELY NOT COMMITTED**, and the reason is this
+  project's own: the probes RE-RUN EVERY NUMBER, and `MEASUREMENTS.md` 2026-09-16 carries every
+  figure with its instrument and date. A committed log is a hand-carried number in a file
+  nobody re-measures — this repository's most-repeated finding. The precedent is
+  `ocr-measure-probe.mjs`, whose queue row says exactly that: *re-runs every number*. They are
+  gitignored rather than deleted, so they survive in this worktree for anyone who wants to
+  check the figures against the log's own `provenance:` line before CONDUCT reaps it.
