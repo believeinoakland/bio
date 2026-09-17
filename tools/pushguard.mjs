@@ -373,10 +373,21 @@ function run(stdin) {
       L.push("");
       L.push("      node tools/decided.mjs");
       L.push("");
-      L.push("  WHY THIS FIRED NOW, WHEN YOUR GATES WERE GREEN: a rebase lands a peer's");
-      L.push("  rulings UNDERNEATH an index you generated correctly, so nothing you did");
-      L.push("  made it stale. That is the case no gate before the commit can see, and");
-      L.push("  it is why this check is at the push.");
+      /* THIS GUARD CANNOT TELL THE TWO CAUSES APART AND MUST NOT PRETEND TO.  It compares
+         an index to a corpus; it has no idea whether you edited prose after regenerating
+         or a rebase landed a peer's rulings underneath you.  An earlier draft of this
+         message asserted the rebase, and driving cause (1) caught it telling a true story
+         about the wrong event — the record claiming more than it can support, in the
+         message of the mechanism built to stop exactly that. */
+      L.push("  IT CAN FIRE WITH GREEN GATES, AND THIS MESSAGE CANNOT TELL YOU WHICH CASE");
+      L.push("  YOU ARE IN — it compares an index to a corpus and sees only that they differ:");
+      L.push("");
+      L.push("    - you regenerated, then edited more prose; or");
+      L.push("    - you regenerated, then REBASED, and a peer's commit landed new rulings");
+      L.push("      underneath a correct index. NOTHING YOU DID MADE IT STALE.");
+      L.push("");
+      L.push("  The second is why this check is at the push: it is the only moment that is");
+      L.push("  after the last rebase, and no gate before the commit can see it.");
     } else {
       L.push("  This is NOT a stale index and regenerating will not clear it.");
       L.push("  The generator's own output:");
