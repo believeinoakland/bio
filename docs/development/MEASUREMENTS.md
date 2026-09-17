@@ -14082,3 +14082,56 @@ answered before. **It says NOTHING about how common the class is** — the fixtu
 synthesised, so it cannot; frequency remains CPDF-20's census of 50 real documents, which
 found one, and that figure is unchanged by this entry. It also cannot say what a real pdf.js
 decode of page 0 would be, because the member is stubbed.
+
+## M-36 · 2026-09-16 · M0-43 — **THE HAND-FED HALF OF `corpuscheck` WAS BLIND TO 3 FILES, NOT 33, AND THE BLIND SPOT IS ENTIRELY PROSPECTIVE** (worktree `agent-a1bbf18d7612475d1`, `origin/main` at `f3f2acba`)
+
+**Instrument:** `node tools/corpuscheck.mjs --coverage` (written by this item), cross-checked
+against `find docs/development -name '*.md' -type f | wc -l` and `--list`, on a pristine
+worktree with `npm ci` in all three dependency-carrying packages, each `node_modules` verified
+a real directory rather than a symlink, volume 5.9 GiB free.
+
+| figure | value |
+| --- | --- |
+| `.md` files under `docs/development/`, RECURSIVE | **62** |
+| governed by CORPUS-STANDARD §5's hand-kept table | **29** |
+| excluded by §6's classes (ledgers 7, process documents 3, kickoffs 20) | **30** |
+| **classified by nothing** | **3** |
+| ungoverned files carrying ANY front-matter field | **0 of 33** |
+| governed set overall (architecture 21 + development 29) | **50, unchanged** |
+
+**THE ROW IS INHERITED FROM A CENSUS AND A CENSUS IS A CLAIM ABOUT THE DAY IT WAS TAKEN, SO
+THE HONEST ANSWER IS RECORDED: THE BLIND SPOT IS SMALLER THAN A READER OF THE ROW WOULD
+ASSUME, AND IT IS A DIFFERENT SHAPE.** Not one of the 33 ungoverned files carries so much as a
+single `**Status**`, `**Place in the system**`, `**Incomplete sections**` or `**Contents**`
+line — measured by running `parseFront` over all 33, not by reading them. So **nothing is
+silently half-governed today**: there is no document sitting under `docs/development/` that
+looks like a governed design and is checked by nothing. **30 of the 33 were already ruled
+excluded by §6 in prose** — the ledgers and the process documents and the kickoffs, by class,
+with reasons — which is why the residue is three and not thirty-three.
+
+**What M0-41's census got right is the EXPOSURE, not a backlog.** The defect is real and it is
+prospective: §5's table is hand-kept, it is correct today, and **nothing made it stay correct**.
+A design document written under `docs/development/` tomorrow is checked by NOTHING until
+somebody remembers the row — and because the tool is RIGHT about every document it is told
+about, the failure would be invisible. That is `optional-and-unaudited`, M0-41's common case,
+exactly as graded. It is measured here as an exposure with a bound rather than as a pile of
+neglected files, because those are different claims and only one of them is true.
+
+**THE THREE, which are this item's real output and are ROUTED (D-388) rather than ruled:**
+`MILESTONES.md` (ledger by behaviour, design document by content), `CIVICOS_UI_STATE.md`
+(a 2,229-line prepended UI ledger whose own backfill note records 45 days unwritten), and
+`SESSION-KICKOFF-UI.md` (an 18-line tombstone pointing at `kickoffs/UI.md`). **Which files are
+governed is CORPUS-STANDARD's decision and Bob owns it**, so they are listed with the question
+each poses. No file's governance moved and the governed count did not move: **50 before, 50
+after**, which is the correct outcome for an item that builds an audit and rules on nothing.
+
+**WHAT THIS MEASURES AND WHAT IT DOES NOT.** It measures the population, the classification,
+and that the walk is recursive (`research/` holds three governed documents and a flat read
+would have missed the subdirectory while passing every table-driven arm). **It says nothing
+about `docs/architecture/`**, which needs no audit because the directory itself decides
+governance there — and that asymmetry is the argument for AUDITING the table rather than
+REPLACING it: `docs/development/` is a MIXED directory, so a walk that governed what it found
+would assign a class to 33 files that §6 has already ruled the other way for 30 of them. **It
+also says nothing about whether the 30 exclusions are RIGHT.** It proves they are stated with
+reasons, not that the reasons are good; that is the reviewer's job, the same limit §6 already
+records about the honesty of a Status.
