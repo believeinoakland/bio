@@ -11398,3 +11398,101 @@ released: 2026-09-16 by the M0-40 worker — **THE ROW OFFERED TWO ROUTES AND TH
 **THE TWO ARMS THAT CAME BACK OTHER THAN DECLARED, RECORDED RATHER THAN SMOOTHED, AND THE CAUSE IS STRUCTURAL.** (19) and (22) each declared four failures and produced five; the extra in both is **REC-99's CENSUS CEILING (105 → 106)**, because **a method cannot join THIS class without also gaining an unbounded row source, so a class-count-neutral swap necessarily moves the census by one.** The declaration was incomplete, not the instrument — and the fact that the two ratchets in this file cannot move independently is worth more than the correction. (23) declared two specific failures and produced seven; the other five are all direct consequences of the roster falling 35 → 14 and every one is named in the run, including REC-66's own dispatched-members pin. Both notes are written into the driver and the suite header so the next reader inherits the correction.
 **NO PLANE SOURCE MOVED, ASSERTED AND VERIFIED:** `git diff origin/main -- bio-plane/src/ bio-plane/checks/` is EMPTY at commit time, after four arms that each edited `store.mjs` and restored it. `CLASS_MEASURED_2026_08_08` stays **35**, `SCANNING_MEASURED_2026_09_15` stays **105**, `REGISTER_FLOOR` stays **1093/197/198** — all three re-read from this tree's own printed output and none invalidated. `tools/` was not touched. `D-384` (`mintid D`) and `M-33` (`mintid M`) were both minted with `node tools/mintid.mjs`, never by reading the file and adding one; the allocator stepped over four and two already-held ids respectively.
 **FOR CONDUCT, stated as ACTS with their actor rather than implied.** (1) **`D-384` is a new OPEN row and the decision on it is NOT a worker's** — whether the 21 belong in the class is a question about what the ceiling MEANS. Three of them (`frontier`, `#frontierContent`, `#frontierMeaning`) were admitted by REC-93/94/95 for per-row reads inside HELPERS this walk declares it cannot see at all, so the right roster for them is not derivable from the classifier in either direction. It wants a queue row or Bob's ruling, not a worker. (2) **`bio-plane/src/store.mjs`'s REC-88 note at the `earnedBasisRegistry` call site now UNDER-DESCRIBES the finding** — it says the instrument is sensitive to a spelling, which is true, and implies the inline shape is the one the instrument can see, which is now known to be the FALSE-POSITIVE side. It was deliberately not edited from here (no plane source moves) and wants one sentence pointing at `D-384` and `HOIST_FRAGILE_2026_09_16`. Owner: whoever next holds a region of `store.mjs`. (3) **`M0-44` (D-378) is still queued on this same file**; this landing is additive and touches neither `TRUNC_RE` nor the UNREAD_FORMS reader, so the two do not interact. (4) **CONDUCT's own widening of the UNREAD_FORMS constant test (`^(?:true|false|\d+)\b`) was NOT on `origin/main` at `497af84a` when this branch was rebased**, so no conflict arose and none was resolved; it is a different region from this item's and nothing here makes it unnecessary or wrong — **this worker's answer to CONDUCT's offer is: keep yours.** (5) This worktree ran two full batteries with other workers live on the machine and **killed nothing**; the volume was at 97% throughout (8.0 GiB free falling to 7.4 GiB).
+
+## CLAIM 2026-09-16 FLEET (FLEET #1 stand-up — THE FLEET'S `miniflare` RESOLUTION ESTABLISHED BY MEASUREMENT, AND THE SKIP MESSAGE FOUND TO MISDIRECT THE ONE MEMBER IT NAMES)
+session: FLEET #1, the standing area session. Worktree
+  `.claude/worktrees/objective-elgamal-295877`, branch `claude/objective-elgamal-295877`,
+  base `origin/main` at `d981598e`.
+opened: 2026-09-16
+authority: the FLEET kickoff's stand-up instruction and the kickoff brief's named
+  measurement — *"a member that skips silently is a coverage hole that reads green;
+  establish HOW it resolves rather than guessing"*. **This claim carries NO code change
+  and adds no op, no check and no suite.** It records what was measured and routes the
+  defect that measuring found. `ORCHESTRATION.md` "COMMUNICATING A CHANGE" picks the
+  channels: a NUMBER goes to `MEASUREMENTS.md`, a DEFECT goes to `DEBT.md`, and work
+  inside another area's paths goes to a DELEGATION — never to a note.
+paths:
+  - `docs/development/MEASUREMENTS.md` — **M-31 only**, appended.
+  - `docs/development/DEBT.md` — **D-380 only**, appended.
+  - `docs/development/CLAIMS.md` — this block and the DELEGATION below it.
+  - `docs/development/kickoffs/FLEET-NEXT.md` — rewritten at the close of this turn, as
+    the area's own handoff (`ORCHESTRATION.md` channel table, row 3).
+  **TWO IDS MINTED AND NOT USED, said here rather than left as phantom allocations**: the
+  NEXT id after each one this claim uses, in the D and M namespaces both, is held in the
+  ledger and unused. `mintid` was run twice because the first run's id printed below the
+  reader's window. **They are named by position rather than spelled out, and that is this
+  turn's own finding rather than a stylistic choice**: spelling them cost a RED gate here
+  — `mintid.test.mjs` failed *no live floor is driven by prose (["D"])*, because an
+  id-shaped token in a corpus file becomes the floor and the allocator then skips a real
+  number. The check is right and the sentence was reworded, not exempted. The tool's own
+  line covers the residue — *gaps are expected and cost nothing* — and this note exists so
+  a later audit does not read the two as allocations whose rows went missing.
+  **NOT** `bio-plane/scripts/battery.mjs` (READ ONLY — FL-9 set FLEET's own precedent that
+  the battery runner is not this area's ground, and the fix there is DELEGATED below rather
+  than taken), **NOT** `ocr-worker/test/**` or any member source (the remedy is D-380's and
+  is Bob's to route — this session reports it), **NOT** `docs/development/QUEUE.md`
+  (CONDUCT's), **NOT** any bundle, version bump, tag or deploy.
+
+**WHAT WAS MEASURED, and the headline is that the brief's two statements were never in
+tension.** `CLAUDE.md` is right that `agent-worker` carries no dependencies, and the
+battery's skip message is right that its suite could not resolve `miniflare`. Both hold
+because the member's suites resolve `miniflare` FROM THE PLANE'S INSTALL through an
+explicit two-step loader (bare `import`, then
+`createRequire(bio-plane/package.json).resolve`), and the skip fired on a fresh worktree
+where the PLANE's install was absent too, so the fallback had nothing to fall back to.
+Full figures and instruments are M-31.
+
+**THE DEFECT MEASURING FOUND, and it is why this stand-up produced a row rather than a
+clean bill.** The remediation sentence names the member's OWN directory and hardcodes
+`agent-worker` as the exemplar, so for that member both halves are wrong and the first is
+IMPOSSIBLE TO FOLLOW: `npm ci` in `agent-worker/` exits `EUSAGE`, because a package with
+no dependencies has no lockfile. D-380 carries it, with the second finding beside it —
+the fleet now runs TWO resolution idioms, and `ocr-worker` has the one that goes DARK on a
+fresh worktree.
+
+**BASELINE FOR THIS WORKTREE, measured and not inherited**: `plancheck` **0 fail, 0 warn**
+(50 governed documents, decided index current); battery **206/206 suites green · 12,887
+assertions · 0 skipped · 351.9s**, read from the battery's OWN completion line and not from
+the wrapper's exit status — the notification for this run reported `exit code 0` from a
+trailing `echo`, which is the piped-exit trap in the costume `CLAIMS.md` already recorded
+once. **The brief's baseline was 205/206 · 12,886**; this tree is one suite and one
+assertion greener, stated as a DIFFERENCE rather than reconciled, since a baseline is a
+fact about a tree. Live: all three members answered `/version` at **0.58.0** on the pinned
+account (`ocr-worker` `engine_loaded: true`), re-probed 2026-09-16.
+
+released: 2026-09-16, same turn, for the three RECORD paths — no code. Nothing in this claim
+changes a shape, an op or a suite; the remedy it found is D-380's and is routed, not taken.
+**`kickoffs/FLEET-NEXT.md` is held open and is the ONE path still owed**, because the area's
+handoff is written at the CLOSE of the session by the session it describes
+(`ORCHESTRATION.md` channel table, row 3) and this turn is a stand-up. Named here rather
+than left implicit, since a path claimed and silently untouched is indistinguishable from
+one forgotten.
+
+### DELEGATION 2026-09-16 FLEET -> whoever owns `bio-plane/scripts/battery.mjs`: **YOUR FLEET SKIP MESSAGE GIVES THE ONE MEMBER IT NAMES AN INSTRUCTION THAT CANNOT BE FOLLOWED, AND THE COMMENT ABOVE IT CLAIMS A REACHABILITY THAT I REPRODUCED TODAY**
+
+I am FLEET and `battery.mjs` is not my ground — FL-9 said so in its own claim, so this is a
+delegation rather than an edit. Two things, both measured on `origin/main` at `d981598e`,
+both detailed in **D-380** and **M-31** (read those rather than this summary; this entry is
+a notification and deliberately not a second copy).
+
+1. **`fleetDepSkip` builds its remediation from the member's own directory and a hardcoded
+   exemplar.** For `agent-worker` it says *run `npm ci` in agent-worker/, or have the suite
+   resolve it from the plane's install as agent-worker's does* — the first is impossible
+   (`EUSAGE`: no dependencies, therefore no lockfile), the second tells the file to adopt the
+   idiom it already implements. The correct instruction for that member is `npm ci` in
+   **`bio-plane/`**. The message is CORRECT for `ocr-worker`, which is why this is a
+   per-member question and not a wording fix.
+2. **The comment above it states "THIS PATH IS NOW UNREACHABLE FOR EVERY MEMBER THAT EXISTS",
+   resting on *the plane's install is present wherever this battery can run at all*. That
+   premise is FALSE and I reproduced the path today** on a pristine worktree: the battery has
+   no dependencies of its own, it ran, the plane's install was absent, and four `agent-worker`
+   suites went dark at **exit 0**. The comment also PREDICTED exactly how it would become
+   reachable — *the landing pad for the NEXT member, which will be written before it has
+   adopted the idiom* — and member three arrived without the idiom. The landing pad worked;
+   nobody then adopted it.
+
+**What I need is a ruling on the shape, not a wording change**, because the two are coupled:
+if `ocr-worker` adopts the fallback idiom (FLEET's ground, D-380's remedy, Bob's to route)
+the message's exemplar becomes accurate for all three members, and if it does not, the
+message needs to name the resolution path PER MEMBER. I have taken neither, so nothing here
+is blocked on the other.

@@ -14796,3 +14796,121 @@ here: the two ratchets in this file cannot move independently.** A method cannot
 derivation class without also gaining an unbounded row source, so a class-count-neutral swap
 necessarily moves REC-99's census by one (105 → 106). Two arms declared four failures and got
 five for that reason; the declaration was incomplete, not the instrument.
+
+## M-31 · 2026-09-16 · FLEET #1 — **THE FLEET RUNS TWO `miniflare` RESOLUTION IDIOMS, NOT ONE: `agent-worker` AND `pdf-worker` BORROW THE PLANE'S INSTALL AND RUN WITH THEIR OWN DIRECTORY EMPTY, WHILE `ocr-worker` GOES DARK — AND THE SKIP MESSAGE THAT REPORTS IT HANDS `agent-worker` AN INSTRUCTION THAT EXITS `EUSAGE`** (instruments: `bio-plane/scripts/battery.mjs` run per member, `npm ci` per package, `node -e` over the four `package.json` files; worktree `.claude/worktrees/objective-elgamal-295877` on `origin/main` at `d981598e`)
+
+**Why this was measured.** The FLEET #1 brief carried two statements that looked to be in
+tension: the battery reporting *"agent-worker's suite cannot resolve 'miniflare'"*, and
+`CLAUDE.md`'s record (measured 2026-09-14 off the four `package.json` files) that
+`agent-worker` carries NO dependencies. The brief asked for the resolution path to be
+ESTABLISHED rather than guessed, on the grounds that a member which skips silently is a
+coverage hole that reads green. **The two statements were never in tension**, and the
+measuring turned up a defect in the instrument that reports the condition.
+
+### 1. The dependency facts, re-measured off the manifests rather than recalled
+
+| package | `dependencies` | `devDependencies` | lockfile |
+| --- | --- | --- | --- |
+| `bio-plane` | none | `miniflare`, `wrangler`, `esbuild` | yes |
+| `pdf-worker` | `unpdf` | `esbuild`, `miniflare` | yes |
+| `ocr-worker` | none | `esbuild`, `miniflare`, `tesseract-wasm` | yes |
+| `agent-worker` | **none** | **none** | **NO** |
+
+`CLAUDE.md` is confirmed: `agent-worker` carries no dependencies. **The consequence nobody
+had written down is the lockfile column** — a package with no dependencies has no
+`package-lock.json`, and that is what makes the skip message's advice impossible below.
+
+### 2. How `agent-worker` resolves `miniflare`: it borrows the PLANE's install, explicitly
+
+Four of its five suites (`agent-worker`, `cascade`, `fanout`, `harness`) open with the same
+two-step loader, present since FL-2 and commented as deliberate:
+
+    try { return await import("miniflare"); } catch { /* fall through */ }
+    const planePkg = fileURLToPath(new URL("../../bio-plane/package.json", import.meta.url));
+    const resolved  = createRequire(planePkg).resolve("miniflare");
+
+`pdf-worker/test/pdf-worker.test.mjs` and `pagepixels.test.mjs` carry the same shape (CPDF-9).
+**`ocr-worker/test/ocr-worker.test.mjs:46` does NOT** — it imports `miniflare` bare at module
+top level with no fallback.
+
+### 3. The three arms, measured in order on ONE tree
+
+Each arm states what was installed, so the variable is isolated rather than asserted.
+
+| arm | `bio-plane/node_modules` | member's own `node_modules` | result |
+| --- | --- | --- | --- |
+| A1 — pristine worktree, nothing installed | absent | absent | `agent-worker` **1/5 green · 4 SKIPPED · exit 0** |
+| A2 — plane only | **present** | **absent** | `agent-worker` **5/5 green · 628 assertions** |
+| A3 — plane only, `ocr-worker`'s install moved aside | present | absent | `ocr-worker` **0/1 · 1 skipped · `DARK: ocr-worker`** |
+
+**A2 is the load-bearing arm.** With `agent-worker/node_modules` still absent and only the
+plane installed, every suite ran — so the fallback is not a theory, it is the path in use.
+A1 explains the brief's observation completely: the skip fired because the PLANE's install
+was absent too, which is the one condition the fallback cannot survive.
+
+A3's restore was verified rather than assumed (26 entries before, 26 after, real directory,
+`git status` clean). The install was moved with `mv`, **never `git checkout --`** — this
+file's own 2026-09-11/12 entries record that trap twice.
+
+### 4. THE DEFECT: the remediation names the member's own directory and a hardcoded exemplar
+
+`battery.mjs`'s `fleetDepSkip` composes:
+
+    `${entry.fleet}'s suite cannot resolve '${m[1]}' — run \`npm ci\` in ${entry.cwd.split("/").pop()}/, `
+    + `or have the suite resolve it from the plane's install as agent-worker's does. `
+
+For `agent-worker` **both halves are wrong, and the first is impossible to follow**:
+
+    $ npm ci            # in agent-worker/
+    npm error code EUSAGE
+    npm error The `npm ci` command can only install with an existing package-lock.json
+
+No `node_modules` is created; the member stays dark. The second half tells the file to adopt
+the idiom it has implemented since FL-2. **The instruction that actually works is `npm ci` in
+`bio-plane/`**, which no version of the message names. For `ocr-worker` the SAME message is
+correct — it has a lockfile and `miniflare` as a devDependency — which is why the remedy is
+per-member and not a wording fix.
+
+### 5. The comment's unreachability claim, reproduced false the same day
+
+The block above `fleetDepSkip` states, from CPDF-9 on 2026-08-08, *"THIS PATH IS NOW
+UNREACHABLE FOR EVERY MEMBER THAT EXISTS"*, resting on *"The plane's install is present
+wherever this battery can run at all."* **A1 reproduces the path.** The battery has no
+dependencies of its own, so it runs perfectly well with nothing installed — the premise is
+false, and the run reports **exit 0** with four suites dark.
+
+Two things worth carrying. The comment **predicted its own falsification** — it keeps the
+branch as *"the landing pad for the NEXT member, which will be written before it has adopted
+the idiom"* — and `ocr-worker` (CPDF-10) is exactly that member. The landing pad worked as
+designed; what did not happen is anyone adopting the idiom afterwards. And the residual the
+comment names as *the fleet's to weigh* now has a receipt: **a named skip leaves the battery
+GREEN and exiting 0 while a member is dark**, and only the `fleet:` line says so — it reads
+`0 member(s) actually RAN · DARK: ocr-worker` in A3.
+
+### 6. What `ocr-worker` would need to adopt the idiom, measured rather than assumed
+
+Its suite's ONLY bare import is `miniflare`. `tesseract-wasm` is **not** imported by the
+suite at all — the engine's wasm and language model are COMMITTED ASSETS
+(`ocr-worker/assets/tesseract-core.wasm` 1,839,004 B, `eng.traineddata` 4,113,088 B, both in
+`git ls-files`, hashed by IC-79's `assets` arm). So the fallback loader would be sufficient
+for the suite; the member's own install stays necessary for its BUILD. Recorded here so the
+remedy in **D-380** rests on a measurement rather than on an inference from the other two
+members.
+
+### 7. Baseline for this worktree, and one difference from the brief stated rather than reconciled
+
+`plancheck` **0 fail, 0 warn** — 50 governed documents, decided index current, 0 open
+decisions. Battery **206/206 suites green · 12,887 assertions · 0 skipped · 351.9s**, with
+`fleet: 3 members beside the plane · 8 suite(s) discovered · 3 member(s) actually RAN`.
+**Read from the battery's own completion line, not from the exit status** — the background
+notification for this very run reported `exit code 0` from a trailing `echo`, the piped-exit
+trap in a new costume, which `CLAIMS.md` recorded once before on 2026-09-15.
+
+The brief's baseline for this machine was **205/206 · 12,886**. This tree is one suite and
+one assertion greener. **Stated as a difference and NOT reconciled**: a baseline is a fact
+about a tree, and nothing here depends on which is right.
+
+Live, re-probed 2026-09-16 against the pinned account `20b533579290b9b93168345edd3b7f72`
+(subdomain `believeinoakland`): `agent-worker` `0.58.0`, `pdf-worker` `0.58.0`, `ocr-worker`
+`0.58.0` with `engine_loaded: true`. The handoff marked these `(live)`; they are re-verified
+rather than inherited, because a deployment is a fact about an account and not about a tree.
