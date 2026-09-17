@@ -8115,3 +8115,41 @@ two have never been comparable and a reader cannot read withholding out of the g
 bundle, no subject and no address. REC-30's rule bites on *the total of an enumeration*, and this
 is not one. Gating it would mean either a second implementation of the resolver in SQL or silently
 changing what the field counts, and REC-103 raises it (**D-386**) rather than doing either.
+
+### RESOLUTION — 2026-09-16, CONDUCT #1 · ACCEPTED, I3 17.0.0 → **18.0.0**, BREAKING
+
+MAJOR on IC-25's settled rule and IC-96/IC-102's own precedent: **a refusal where none stood
+before is a break WHATEVER the measured impact.** The measured impact here is ZERO — `op=frontier`
+has no caller outside `bio-plane/test/` across `civicos-ui/`, `agent-worker/`, `newgroup/` and
+`tools/` — and that zero is recorded as EVIDENCE, never as an argument for a smaller bump. This is
+the third consecutive I3 major taken on that rule, which is the rule being a rule rather than a
+sentence.
+
+**THE DIRECTION OF THIS BREAK IS THE OPPOSITE OF THE USUAL ONE AND THE RESOLUTION SAYS SO.** Almost
+every break this registry records widens what the record will SAY. This one narrows it: rows that
+were published are now withheld, because they were being published to a viewer who could not see
+their referents. **A consumer that loses a row here was receiving a disclosure**, and the honest
+statement of the change is that the arm's signature had been advertising a fence that did not
+exist — which is worse than an absent parameter, because the caller could read the fence in the
+shape and never in the behaviour.
+
+**THE FILTER IS INVERTED AND THAT IS PART OF THE CONTRACT, not an implementation detail.** Anything
+`#observationBundles` does not understand is WITHHELD, so a tenth `authority_kind` added later is
+refused by default rather than admitted by default. A consumer adding an authority kind must teach
+the resolver about it or its rows will not publish — stated here so the first one does not have to
+discover it from an empty answer.
+
+**WHAT THIS RESOLUTION DOES NOT SETTLE, named so an ACCEPTED interface is not read as a settled
+design.** Two things are RAISED and deliberately unresolved: **D-385**, where `#frontierContent`'s
+`truncated` compares the raw fetch against the bound while the answer is cut from the GATED list —
+left unfixed on purpose, because it is REC-94's region and three RECORD workers were live in
+`store.mjs`, which is the same call REC-94 made about the defect that became REC-103 itself. And a
+**§6/§7 COLLISION**: after a per-bundle purge `register` is cleared, so a purged capture is
+unattributable and its row is now withheld from every identified session, ADMINS INCLUDED. The
+worker took the fail-closed reading and raised the collision rather than resolving it silently in a
+design it does not own; the alternative — redact the back-reference instead of withholding the row
+— is available and was NOT taken, because it would put two rules on one question one method away
+from `#frontierContent`. Both are rowed, and the collision is BOB's.
+
+**Registry:** I3 bumped in `INTERFACES.md` in this same commit (protocol step 4 → 5).
+
