@@ -83,9 +83,36 @@
  * Section 6 asserts the correction rather than pinning the old bytes.
  *
  * NEGATIVE CONTROL: `node civicos-ui/test/conclude-nofalsifier.control.mjs`
- * — four arms, each broken ALONE with the others held open, each restored and
- * verified by sha256 AND `cmp` against a per-arm pristine copy. The arms and
- * their RUN results are recorded in that file's own header.
+ * — FIVE arms, RUN 2026-09-17, each broken ALONE with the others held open,
+ * each restored from its own uniquely-named pristine copy and verified by
+ * sha256 AND `cmp`; app.html returned to
+ * a6e6e9ba52c74b8fbf457ef09b90e68d00afcea19639f9df4311bbb0676412a1 (1363306
+ * bytes) after every one. WHOLE: 75 pass, 0 fail.
+ *
+ *   (A) THE DOOR REMOVED — the commit slot stops offering it -> 51/24, failing
+ *       by name from "THE DOOR IS OFFERED" through the document read-back.
+ *   (B) THE GUARD REMOVED — the liar's checkbox, the override settable whenever
+ *       it is called -> 72/3, and section 3 is what catches it.
+ *   (C) SHOWN ONCE AND THEN HIDDEN — the standing block keeps its button and
+ *       drops the record's sentence -> 74/1, EXACTLY the one assertion, with
+ *       every other clause of this item still green. That is the arm the row
+ *       calls the one that matters, and its narrowness is the finding.
+ *   (D) THE RECEIPT FORGETS -> 73/2, while the DOCUMENT stays right.
+ *   (E) THE PARAMETER NEVER LEAVES THE BROWSER -> 61/14.
+ *   (F) OVER-STRICTNESS, no edit, runs on every green pass: sections 6 and 6b.
+ *       It HELD under all five arms.
+ *
+ * TWO OF THIS SUITE'S OWN DECLARATIONS CAME BACK WRONG AND BOTH WERE DEFECTS IN
+ * THE INSTRUMENT, corrected here rather than edited out of the declarations.
+ * Arm A first left sections 4 and 5 entirely GREEN with the door gone, because
+ * this suite was calling `concludeNoFalsifier(true)` DIRECTLY — asserting
+ * against a handler, which the row forbids in as many words; it now pulls the
+ * handler out of the RENDERED markup and runs it. Arm D first left "the
+ * receipt's who and when are the DOCUMENT'S" green with the override cell
+ * deleted, because `falsifier_override_at` and the receipt's ordinary `at` are
+ * the same value, so `rc.includes(at)` was satisfied by a line that says
+ * nothing about the override — an equality that cost nothing to produce. Both
+ * are recorded in the control's own header beside the arms that found them.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
@@ -308,6 +335,31 @@ const overrideStanding = (h) => /data-nofals="taken"/.test(h);
 const commitPresent = (h) => /id="cx-go"/.test(h);
 const RENDERED = [];
 const capture = (h) => { for (const m of h.matchAll(/<div class="intent-ref-why">([^<]*)<\/div>/g)) RENDERED.push(m[1]); return h; };
+
+/* CLICKING WHAT WAS RENDERED, AND THIS IS *DRIVEN THROUGH THE SURFACE* RATHER
+   THAN A PHRASE. The handler is pulled OUT OF THE MARKUP the surface just
+   produced and evaluated in the page's own scope — exactly what a browser does
+   with that attribute — so the chain from *the control is rendered* to *the act
+   happens* is a real link rather than two facts sitting next to each other.
+   THE CONTROL FOUND THIS, and it is recorded rather than smoothed: this suite
+   first called `concludeNoFalsifier(true)` directly, and arm A — which removes
+   the door from the commit slot and leaves everything else standing — came back
+   with the whole of sections 4 and 5 STILL GREEN. A member could not reach the
+   override at all and the suite said the override worked, because it was
+   asserting against a handler the row explicitly says not to assert against. */
+/* IT ASSERTS ITS OWN PRECONDITION RATHER THAN THROWING, and that too came from
+   the control. Written to throw when the control is absent, arm A ended the
+   module before its foot and the driver reported `-1 pass, -1 fail` — the
+   harness being honest about a run that did not finish, but a WORSE instrument
+   than one that fails by name, which is what the row asks for. A missing
+   control is now a named failure and the suite carries on to say what else
+   broke. */
+function clickRendered(html, id){
+  const m = new RegExp(`<button[^>]*id="${id}"[^>]*onclick="([^"]*)"`).exec(html);
+  ok(`the surface RENDERED a control with id="${id}" for the member to use — a click needs something to land on`, !!m);
+  if (!m) return undefined;
+  return vm.runInContext(m[1], ctx);
+}
 const wireFor = (op) => WIRE.filter((w) => w.op === op);
 const lastConclude = () => wireFor("conclude").slice(-1)[0];
 
@@ -386,7 +438,7 @@ await U.openConclude(INQ_NOFALS, "Did anyone raise a concern that was never writ
 await U.concludeAuthor("conclusion", "Nothing in the record shows a concern was raised, and nothing shows one was not.");
 const d2 = capture(dlg());
 ok("back at the surfaced condition, with the door offered", doorOffered(d2));
-await U.concludeNoFalsifier(true);
+await clickRendered(d2, "cx-nofals");      // the rendered control, run the way a browser runs it
 const d3 = capture(dlg());
 ok("THE OVERRIDE IS TAKEN and the commit becomes reachable", overrideStanding(d3) && commitPresent(d3));
 ok("THE CONDITION IS STILL ON SCREEN AT THE MOMENT OF COMMIT, in the plane's own words — not shown once and hidden",
@@ -416,6 +468,21 @@ await U.concludeAuthor("falsifier", "");
 const d5 = capture(dlg());
 ok("clearing the falsifier themselves returns the member to a committable draft",
   overrideStanding(d5) && commitPresent(d5));
+/* THE WAY BACK IS DRIVEN, NOT MERELY PRESENT — a mechanism believed on the
+   strength of its EXISTENCE rather than its behaviour is the defect this
+   project meets most, and an override a member cannot actually withdraw is a
+   gate wearing the other costume. It is taken again straight afterwards so
+   the rest of the section proceeds from where it was. */
+await clickRendered(d5, "cx-nofals-off");
+const d6 = capture(dlg());
+ok("WITHDRAWING REALLY WITHDRAWS: the standing block goes, the door is offered again, and the plane refuses once more",
+  !overrideStanding(d6) && doorOffered(d6) && !commitPresent(d6));
+ok("and the withdrawn override leaves the wire — the next request carries no parameter at all",
+  !("no_falsifier" in lastConclude().params));
+await clickRendered(d6, "cx-nofals");
+const d7 = capture(dlg());
+ok("taking it again from the rendered door returns the member to a committable draft",
+  overrideStanding(d7) && commitPresent(d7));
 
 /* ============================================================
    5. THE ACT, AND THE DOCUMENT READ BACK — NEVER THE ENVELOPE
@@ -447,8 +514,18 @@ ok("the falsifier field is EMPTY, and the absence is asserted BESIDE it rather t
 ok("the Session Log STATES the absence rather than printing a blank line a reader cannot tell from an unfilled field",
   /Falsifier: NO FALSIFIER STATED — recorded by pilar at \d{4}-\d{2}-\d{2}T/.test(DOCTEXT),
   (/Falsifier:.*/.exec(DOCTEXT) || ["<no Falsifier line>"])[0]);
-ok("the receipt's who and when are the DOCUMENT'S who and when — the two agree because both came from the record",
-  rc.includes(fmScalar(DOCTEXT, "falsifier_override_at")));
+/* SCOPED TO THE OVERRIDE BLOCK, AND THE CONTROL IS WHY. Written as
+   `rc.includes(<the document's override timestamp>)` it passed under arm D,
+   which deletes the override block from the receipt entirely — because
+   `falsifier_override_at` and the receipt's ordinary `at` are THE SAME VALUE,
+   so the check was satisfied by a line that says nothing about the override.
+   An equality that costs nothing to produce is not evidence, and this one cost
+   nothing. It now reads the `data-nofals="receipt"` cell and nothing else. */
+const RCELL = /<div data-nofals="receipt">([\s\S]*?)<\/div>/.exec(rc);
+ok("the receipt's who and when are the DOCUMENT'S who and when — read out of the override cell itself, not out of the receipt at large",
+  !!RCELL && RCELL[1].includes(fmScalar(DOCTEXT, "falsifier_override_by"))
+  && RCELL[1].includes(fmScalar(DOCTEXT, "falsifier_override_at")),
+  RCELL ? RCELL[1] : "<no override cell in the receipt>");
 ok("committing sent exactly ONE more request to op=conclude — the commit, not a second act",
   wireFor("conclude").length === before);
 
@@ -497,6 +574,36 @@ ok("AND THEIR DOCUMENT CARRIES NO OVERRIDE PAIR AT ALL — the marker can only a
 ok("their Session Log carries their own sentence and not the absence's",
   /Falsifier: A general-ledger export showing no transfer from fund 601\./.test(STATEDDOC)
   && !/NO FALSIFIER STATED/.test(STATEDDOC));
+
+/* THE OVER-STRICTNESS ARM IN THE SPELLING THIS ITEM DID NOT ANTICIPATE, AND IT
+   IS THE ONE HARD 2 ACTUALLY BUILT. A member states a falsifier by POINTING —
+   ticking the legs that would break the finding if they went the other way —
+   and types nothing at all. `concludeFalsifier` composes from the selection and
+   the text, so this member's falsifier is non-empty while their textarea is
+   empty, which is precisely the shape a door keyed on *the textarea is blank*
+   would get wrong. The door must close for them exactly as it closes for
+   someone who typed. */
+console.log("\n--- 6b. a member who states it by POINTING, having typed nothing ---");
+const pointBefore = WIRE.length;
+await U.openConclude(INQ_GUARD, "Who authorised the transfer, if anyone?", ACT);
+await U.concludeAuthor("conclusion", "The memo names no authorising officer, and no other record does either.");
+const b1 = capture(dlg());
+ok("with nothing ticked and nothing typed, the door is offered", doorOffered(b1));
+await U.concludeToggle(DOC);
+const b2 = capture(dlg());
+ok("TICKING A LEG STATES A FALSIFIER, and the textarea is still empty — the derivation HARD 2 built",
+  U.concludeFalsifier() === DOC && U.CONCL().falsifierText === "");
+ok("THE ADDED PATH CLOSES FOR THEM TOO — a door keyed on the textarea rather than on the plane's answer would still be standing open here",
+  !/data-nofals/.test(b2) && !/cx-nofals/.test(b2));
+ok("and their commit is present, because the plane has nothing left to refuse", commitPresent(b2));
+await U.doConclude();
+const POINTDOC = await imageOf(INQ_GUARD);
+ok("the record carries the leg they pointed at as the falsifier, verbatim",
+  fmScalar(POINTDOC, "falsifier") === DOC, `got ${JSON.stringify(fmScalar(POINTDOC, "falsifier"))}`);
+ok("and no override pair, because they stated one",
+  !fmHasKey(POINTDOC, "falsifier_override_by") && !fmHasKey(POINTDOC, "falsifier_override_at"));
+ok("no request of theirs carried the parameter either",
+  WIRE.slice(pointBefore).filter((w) => w.op === "conclude").every((w) => !("no_falsifier" in w.params)));
 
 /* ============================================================
    7. DEC-8 — NO SENTENCE ABOUT THE CONDITION ORIGINATES IN THE SURFACE
