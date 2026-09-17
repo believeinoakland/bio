@@ -930,6 +930,18 @@ item 3 (M0-49) makes CONDUCT delete the remote branch on merge**, so the estate 
 start manufacturing exactly those stale refs. Under `--local` the tracking refs are used and
 **the finding says so in its own text** rather than presenting a cache as a measurement.
 
+**M0-49 LANDED THAT STEP 2026-09-17, AND THE PREDICTION ABOVE IS NARROWED BY READING THE
+PREDICATE RATHER THAN RE-STATING THE WORRY.** The stale refs are manufactured exactly as
+described — but **prune-on-merge cannot produce the false negative**, because the only branch
+it ever deletes is one that has just been MERGED, and `judge()` resolves such a unit
+`onMain === true -> ahead === 0`, which pushes neither `unpushed` nor `behind` whichever list
+supplied `remoteSha`. **The unit is silent on remote-ref grounds before the ref goes stale and
+after.** The false negative this paragraph names is real for a remote branch deleted while
+UNMERGED, which is not an act this loop performs. So the cost is hygiene rather than blindness,
+and `kickoffs/CONDUCT.md`'s step answers it with `git fetch --prune` after the delete.
+**Recorded this way because the opposite habit — carrying a worry forward because a document
+already said it — is the agreement-of-several-documents failure with one document.**
+
 ### The defeat it was designed against arrived twice inside its own construction
 
 M0-48's acceptance names how a liar would satisfy it: **a walk that matches nothing and

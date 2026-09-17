@@ -74,6 +74,21 @@
  *   (A7) plancheck's arm unloadable -> S9 fails: the arm proving the GATE, not the library.
  *   (A8) plancheck's `warn(...)` promoted to `fail(...)` -> S9's never-FAIL and exit-0 arms
  *        fail, which is the consequence BOB #12's ruling forbids.
+ *
+ * M0-49 ADDS TWO ARMS TO SECTION 10, AND THEY ARE DRIVEN BY HAND RATHER THAN BY THE DRIVER
+ * ABOVE, because their subject is a COMMITTED document and `g(REPO, "show", "HEAD:…")` cannot
+ * see a working-tree edit. Both were RUN on 2026-09-17; the method is recorded beside the
+ * result because the obvious way to re-drive it gives a confident wrong answer:
+ *   (B1) the PRUNE-ON-MERGE step deleted from `kickoffs/CONDUCT.md` and COMMITTED -> the four
+ *        key arms and the positional arm fail. Presence is real.
+ *   (B2) the step MOVED, byte-for-byte, from the integration sequence to the end of the file
+ *        and committed -> **only the positional arm fails, every key arm still passes.** This
+ *        is the arm that matters: the row's point is WHERE the step lives, and without B2 the
+ *        positional arm could be passing for free alongside the presence arms.
+ *   METHOD, and it is the trap in CLAUDE.md: restore by `cp` from a copy taken aside, NEVER by
+ *   `git checkout --`, which restores to HEAD and silently discards uncommitted work; undo the
+ *   temporary commit with `git reset --soft HEAD~1` (never `--hard`, which is denied outright)
+ *   and verify the restore by sha256 rather than by the absence of a complaint.
  */
 
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard its own output */
@@ -368,13 +383,60 @@ section("9 — THE GATE. `plancheck` must actually RUN this and must NOT fail on
 section("10 — THE MECHANISM IS IN THE LOOP THE READER ACTUALLY RUNS");
 /* CLAUDE.md: a mechanism that is not in the loop the reader runs is not a mechanism. Both
    readers of this one already run `plancheck` — WORKER.md step 4, CONDUCT.md step 1 — which is
-   why this item adds no step to either file. Asserted from the COMMIT, not the working tree. */
+   why M0-48 added no step to either file. Asserted from the COMMIT, not the working tree.
+
+   CORRECTED 2026-09-17 by M0-49, and the old wording is wrong rather than merely narrow: it
+   read "this ITEM adds no step", which was true of M0-48's DETECTION half and was then read as
+   a property of D-288. D-288 item 3 — PRUNE-ON-MERGE — IS a step, in CONDUCT.md's integration
+   sequence, and it is what MAINTAINS the signal the detector above reads. M0-48 landed an arm
+   that judges a remote branch list; nothing kept that list meaningful. So this section now
+   covers both halves, and the keys below were each measured at ZERO occurrences in CONDUCT.md
+   before the change — `prune`, the obvious key, was already in the file three times over the
+   worktree-removal section and would have been an assertion that costs nothing to satisfy. */
 {
   const worker = g(REPO, "show", "HEAD:docs/development/kickoffs/WORKER.md");
   const conduct = g(REPO, "show", "HEAD:docs/development/kickoffs/CONDUCT.md");
   t("WORKER.md runs plancheck", /plancheck/.test(worker), true);
   t("...and tells the worker to PUSH (D-288 item 1, the PREVENTION half)", /push/i.test(worker), true);
   t("CONDUCT.md runs plancheck too", /plancheck/.test(conduct), true);
+
+  /* D-288 item 3 (M0-49). Keyed on the ACT — the command — and not on the word "prune". */
+  t("CONDUCT.md carries PRUNE-ON-MERGE, the act and not only the intention",
+    /git push origin --delete/.test(conduct), true);
+  t("...attributed to the ruling it implements, so the step is not free-floating advice",
+    /D-288 item 3/.test(conduct), true);
+  t("...and verified from the REMOTE, the same discipline the worker owes on the way in",
+    /ls-remote --heads origin/.test(conduct), true);
+
+  /* WHERE it sits is the half CLAUDE.md's rule is actually about: a step in an appendix is
+     documentation, and the reader performing the integration never reaches it. Positional, so
+     moving the step out of the sequence FAILS even though every key above still matches. */
+  {
+    const stepTwo   = conduct.indexOf("2. **When a worker reports:");
+    const stepThree = conduct.indexOf("3. **Enqueue decompositions from BOB**");
+    const prune     = conduct.indexOf("git push origin --delete");
+    t("step 2 and step 3 both located, so the positional arm is measuring something",
+      stepTwo > 0 && stepThree > stepTwo, true);
+    t("PRUNE-ON-MERGE is INSIDE the integration sequence, not filed elsewhere in the file",
+      prune > stepTwo && prune < stepThree, true);
+  }
+
+  /* The two acts must stay separate at the site. Pruning a REMOTE BRANCH destroys nothing once
+     the merge is pushed; REMOVING A WORKTREE can take a live worker's uncommitted tree. */
+  t("...and the step refuses to read as licence for worktree removal",
+    /LICENCE TO REMOVE THE WORKTREE/.test(conduct), true);
+
+  /* The hazard M0-49 was told to state beside the ancestry criterion. The measurement is that
+     ancestry called six LIVE workers prunable — a positively wrong answer, not an unknown. */
+  {
+    const disk     = conduct.indexOf("WHEN THE DISK FORCES YOUR HAND");
+    const prunable = conduct.indexOf("prunable");
+    t("the disk-pressure section is located", disk > 0, true);
+    t("the started-worker hazard is stated BESIDE the ancestry criterion it defeats",
+      prunable > disk, true);
+    t("...and ancestry is named as necessary-never-sufficient rather than as the criterion",
+      /NECESSARY AND NEVER\s+SUFFICIENT/.test(conduct), true);
+  }
 }
 
 console.log(`\nsections reached ${reached}/${SECTIONS}`);
