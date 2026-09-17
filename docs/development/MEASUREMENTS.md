@@ -15085,3 +15085,77 @@ four readers at `store.mjs:9345`, `:9694`, `:9843`, `:9974` and the op registrat
 **`index.mjs:876`**. The CLAIM is unchanged and was re-verified at the artifact; only the
 coordinates drifted, which is `CLAUDE.md`'s own rule about citing a section rather than a line
 arriving in a ledger instead of a design document.
+## M-43 — `op=meaningrows` answers *in scope* two different ways in one envelope, and the half a member reads is the wrong one
+
+> **RENUMBERED FROM `M-41` TO `M-43` BY CONDUCT #2 AT INTEGRATION, 2026-09-17, AND IT WAS A REAL ID COLLISION RATHER THAN A MERGE DUPLICATE.** REC-112 and UI-62 ran in the SAME WAVE and each took `M-41` for a DIFFERENT measurement — REC-112's is the `provenance_route_marks_finding` query-plan census, this one is the `op=meaningrows` scope defect. **Both workers measured the number free on their own tree and BOTH WERE RIGHT WHEN THEY LOOKED**, which is the check-then-act with no atomicity that `tools/mintid.mjs` exists to refuse — and neither worker was careless: `M` is allocated per-tree and the collision can only appear at the merge, which is why this is CONDUCT's act and not theirs. **Resolved by the rule's own order: the two bodies were read FIRST to establish they describe different defects (they do), so this is an ID COLLISION and NOT a duplicate to be de-duplicated — deleting either would have lost a measurement, and the id would still have resolved to something plausible.** **THIS one was renumbered rather than REC-112's for a stated reason: REC-112's `M-41` is cited from `bio-plane/src/schema.mjs` AND from the committed bundle, so moving it would touch code and force a rebuild, while every reference to this one is prose.** All four sites moved in the same commit — this heading, `CIVICOS_UI_STATE.md`, the `CLAIMS.md` delegation and `CONTENT-SEARCH-DESIGN.md` §4.4's front matter — each matched on its surrounding text rather than by a blanket replace, because a blanket replace would have taken REC-112's with it.
+
+
+**Taken 2026-09-17 by UI-62 (worker `agent-a79a0995d1af935bb`), instrument a six-query
+probe against the real plane under miniflare; the finding is re-run in one step by
+`node civicos-ui/test/passage-surface.test.mjs`, which PRINTS it as `REPORT ·` lines
+beside its own assertions.**
+
+**Why it was taken.** UI-62 renders the four-level absence statement and needed four
+genuinely different empties to prove the surface distinguishes them. Three of the four
+came back carrying the SAME sentence, and it was the wrong one — so the question became
+whether the surface had collapsed them or the plane had.
+
+**The corpus:** two `information` bundles. `INFO-A` promoted with a three-page reading,
+so its capture is `indexed_full`; `INFO-B` registered with no reading at all, so its
+capture is `not_extracted`. Both visible to one member credential.
+
+| query (`rows=passage`) | `total` | `scope.documents` | `captures_counted` | `says` branch reached |
+| --- | --- | --- | --- | --- |
+| `passage:hydrostatic` | 1 | 1 | 2 | `total > 0` |
+| `passage:zzzznotaword` | 0 | **0** | 2 | `documents === 0` |
+| `authority:neverlookedauthority passage:zzzznotaword` | 0 | **0** | 1 | `documents === 0` |
+| `type:action passage:zzzznotaword` | 0 | 0 | 0 | `documents === 0` |
+| `passage:zzzznotaword type:information` | 0 | **0** | 2 | `documents === 0` |
+| `type:information` (no passage term) | 3 | **2** | 2 | `total > 0` |
+
+**What it says, and the last two rows are the measurement.** `type:information` alone
+puts TWO documents in scope. Add `passage:zzzznotaword` and `scope.documents` becomes
+**0** while `captures_counted` stays **2** — so the two halves of one envelope disagree
+about what *in scope* means, and they disagree by exactly the passage arm.
+
+**The cause, read in the source rather than inferred.** `bio-plane/src/query.mjs`:
+`meaning({mode:"axis"})` builds its scope from `cte(false, armSet(rowArm))` — the query
+with this arm STRIPPED, which is `CONTENT-SEARCH-DESIGN.md` §4.4's *the query's OTHER
+arms* and REC-92's own correction. `meaning({mode:"levels"})` uses the ORDINARY cte with
+the arm still applied, **while its own comment says it counts "how many documents the
+query's other arms put in scope at all"** — a comment describing a constraint nothing
+enforces, which `CLAUDE.md` names as the defect this project meets most.
+
+**The consequence, and it is the reason this is a measurement and not a note.**
+`Store.#meaningLevels` tests `documents === 0` BEFORE `searchable === 0`, so for ANY
+passage miss the first branch wins and the two honest branches below it are
+**UNREACHABLE**. A member who searched two documents, one of them fully indexed, is told:
+
+> nothing matched, and no document was in scope to match in — this is an empty DOCUMENT
+> level, not an empty record
+
+Two documents WERE in scope. The sentence sends a member to go and capture material when
+the correct next move is to read the one capture nobody has read. **It is the false
+absence this whole construct exists to refuse, produced by the mechanism itself for the
+second time and through the second statement** — REC-92 caught the first instance in the
+axis tally and fixed that statement alone.
+
+**Why REC-92's suite did not see it.** `passage-arm.test.mjs` S8 asserts
+`levels.content.why`, which on the axis branch is composed FROM THE TALLY and is
+therefore correct; it never compares the three empties' `says` to each other. The two
+assertions that would have caught it are "the three empties are distinguishable by `says`"
+and "`documents` agrees with `captures_counted` about the same scope", and neither
+existed.
+
+**Disposition.** RECORD's, in `query.mjs`, and DELEGATED in `CLAIMS.md`. UI-62 did NOT
+work around it: DEC-8 forbids a surface rewording the record's sentence, and a surface
+choosing between two of the plane's own numbers would be making a judgement it cannot
+support. The surface renders the plane's sentence verbatim AND the tally beside it, so
+the distinction survives on screen in the field that still carries it — which is what
+`passage-surface.test.mjs` pins.
+
+**What this measurement cannot see:** it drove ONE arm (`passage`) over a two-document
+corpus. Whether `rows=content`, `rows=leg`, `rows=resolves` and `rows=concerns` show the
+same disagreement was NOT measured — `mode:"levels"` is shared by all five and `armSet`
+is applied by `mode:"axis"` only, so the same shape is *available* to every arm whose
+selector narrows the scope, but only the passage arm was driven.

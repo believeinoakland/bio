@@ -11892,3 +11892,110 @@ expected: the question ANSWERED WITH EVIDENCE — which of the three outcomes th
   at the artifact and by query plan rather than by reading the SQL.
 
 **open as of 2026-09-17** — held while this worker runs.
+## CLAIM 2026-09-17 UI (UI-62 — SEARCH §7 row 6: the search surface at content grain, and the absence statement by level)
+
+session: ui62-passage-surface (worktree agent-a79a0995d1af935bb, branch `worktree-agent-a79a0995d1af935bb`)
+opened: 2026-09-17T00:00:00Z
+
+**PATHS CLAIMED, BY SITE AND BY REGION. The disjointness was MEASURED against `origin/main` at
+`78ef0efc` rather than assumed:** the three live 2026-09-17 RECORD claims — REC-107, REC-92 (with
+its four addenda) and REC-96 — every one names `civicos-ui/**` in its own **NOT TOUCHED** list, so
+this item's ground is reserved by their exclusions as well as by this block, and no unreleased UI
+claim exists on `origin/main`.
+
+- `civicos-ui/app.html` — **claimed by SITE, not by file** (it is shared ground and `CLAIMS.md`'s
+  UI-42 precedent governs): the FINDER's own region — `renderFinder`, `runSearch`,
+  `finderPaintResults` and the panel renderers beneath them — plus the new passage-route code and
+  the new entries in the guarded CATALOG block. **NOT** the composer's own body (`citePaint`,
+  `doCite`) beyond the one call site that opens it, **NOT** `legReferentHtml` / `legJumpHtml` /
+  `legMintLabelHtml` (UI-61's, REUSED rather than rewritten), **NOT** `__DOCPROFILE__`, **NOT**
+  `__ELICITATION__`, **NOT** any other marked block.
+- `civicos-ui/test/passage-surface.test.mjs` (NEW, this item's suite) and
+  `civicos-ui/test/passage-surface.control.mjs` (NEW, the control driver).
+- `civicos-ui/check-semantics.mjs` — **only the pin this item's newly mirrored vocabulary needs.**
+- `docs/development/CONTENT-SEARCH-DESIGN.md` — §4.4's Incomplete bullet (the bounded tally's
+  presentation question, which REC-92 left open BECAUSE IT IS THIS ROW'S), §7 row 6, and the front
+  matter (Status and Incomplete sections), per `CORPUS-STANDARD.md`.
+- `docs/development/CIVICOS_UI_STATE.md` (PREPENDED — UI-59 restored this ledger as the area's log),
+  `docs/development/MEASUREMENTS.md` (appended), this file.
+
+**NOT TOUCHED:** `docs/development/QUEUE.md` (CONDUCT's sole writer), `bio-plane/**` in its
+entirety (this item adds NO op, NO check and NO column — it is an I3 CONSUMER of `op=meaningrows`
+as REC-92 shipped it), `newgroup/**`, any version bump, tag or deploy.
+
+**open as of 2026-09-17** — raised by the UI-62 worker and not yet released.
+
+### DELEGATION 2026-09-17 UI (UI-62) -> RECORD: **`op=meaningrows` MEANS TWO DIFFERENT THINGS BY *IN SCOPE* IN ONE ENVELOPE, AND THE HALF THAT FEEDS THE MEMBER-FACING SENTENCE IS THE WRONG ONE**
+
+**What is needed:** in `bio-plane/src/query.mjs`, `meaning({mode:"levels"})` should build its
+scope the way `meaning({mode:"axis"})` already does — from `cte(false, armSet(rowArm))`, the
+query with this arm STRIPPED — which is `CONTENT-SEARCH-DESIGN.md` §4.4's *the query's OTHER
+arms* and is what the `levels` statement's OWN COMMENT already claims it does ("how many
+documents the query's other arms put in scope at all"). Today it uses the ordinary cte with
+the arm still applied.
+
+**Why it matters, and it is not a tidy-up.** `Store.#meaningLevels` tests `documents === 0`
+BEFORE `searchable === 0`, so when `scope.documents` collapses on a passage miss the first
+branch wins and **the two honest branches of `says` are unreachable by any passage miss at
+all.** Measured 2026-09-17 (`MEASUREMENTS.md` **M-43**, six queries against the live plane): a
+miss over a scope holding two documents — one of them fully indexed and searched — publishes
+
+> nothing matched, and no document was in scope to match in — this is an empty DOCUMENT level,
+> not an empty record
+
+while the SAME envelope's `captures_counted` says 2. **This is the false absence the whole
+content-search construct exists to refuse, produced by the mechanism itself for the second
+time and through the second statement** — REC-92 found the first instance in the axis tally,
+fixed that statement, and the `levels` statement four hundred lines up was not moved with it.
+The member-facing cost is the wrong next move: a member is told to go and capture material
+when what the record needs is for somebody to READ the one capture nobody has read.
+
+**Why UI-62 did not fix it and must not have:** `bio-plane/**` is outside this item's claim and
+`query.mjs` is REC-92's ground; DEC-8 forbids a surface rewording the record's sentence; and a
+surface adjudicating between two of the plane's own numbers would be making a judgement it
+cannot support. The surface renders the plane's sentence VERBATIM and the tally BESIDE it, so
+the distinction survives on screen in the field that still carries it, and
+`civicos-ui/test/passage-surface.test.mjs` pins that and PRINTS the collapse as a `REPORT ·`
+line on every run rather than failing over it.
+
+**What a fixer should add beside the fix**, because the gap is why it survived REC-92's own
+suite: `passage-arm.test.mjs` S8 asserts `levels.content.why`, which is composed FROM the
+tally and is therefore already correct, and never compares the three empties' `says` to each
+other. The two assertions that would have caught this are *the three empties are
+distinguishable by `says`* and *`scope.documents` agrees with `captures_counted` about the same
+scope*.
+
+**And one thing this measurement did NOT establish, stated so nobody widens it:** only the
+`passage` arm was driven. `mode:"levels"` is shared by all five arms and `armSet` is applied by
+`mode:"axis"` alone, so the same shape is AVAILABLE to every arm whose selector narrows the
+scope — but whether `content:`, `leg:`, `resolves:` and `concerns:` actually exhibit it was not
+measured and is not claimed.
+
+**open as of 2026-09-17** — raised by the UI-62 worker; RECORD's to take, and CONDUCT's to row.
+
+### DELEGATION 2026-09-17 UI (UI-62) -> CONDUCT: **THE OTHER MEANING ARMS ARE MIS-REPORTED BY THE FINDER'S CROSS-SEAM PANEL, AND THIS ITEM DELIBERATELY DID NOT FIX IT**
+
+`leg:`, `resolves:` and `content:` are MEANING ARMS that `op=search` compiles — its own published
+`syntax` lines say so — but `finderPlan` in `civicos-ui/app.html` tests only `searchHasField`,
+which asks the FIELD half of `op=searchfields`. So all three land in the `unpublished` bucket and
+the cross-seam panel reports them to a member as *"Answered by neither"*, which is false: they are
+answered by the text route, which is where the surface then sends them anyway.
+
+**UI-62 routed `passage:` and left the other three exactly where they were, on purpose.** Widening
+the parse moves terms between seams on queries this item has no business changing, and this item's
+over-strictness arm exists to prove those walks did not move. It is a small, contained UI item of
+its own; it wants a row rather than a quiet fix inside somebody else's landing.
+
+**open as of 2026-09-17** — raised by the UI-62 worker; needs a QUEUE row, which is CONDUCT's act.
+
+## CLAIM ADDENDUM 2026-09-17 UI (UI-62 — one path the original claim did not reserve, and it was FORCED by an instrument)
+
+- `docs/DECIDED.md` — **regenerated by `node tools/decided.mjs`, never hand-edited.** Not
+  foreseen and not chosen: this item's amendment to `CONTENT-SEARCH-DESIGN.md` §4.4 RULES on the
+  bounded tally's presentation, which is a marker-word ruling, so `plancheck` went red on
+  `STALE — docs/DECIDED.md does not match the corpus it indexes` and named the remedy itself.
+  The index moved to **1,000 rulings, 284.0 KB** (the figure the tool PRINTED on the run, not a
+  recollection). It is the same arrival CLAUDE.md predicts — *regenerate it in any turn that
+  rules on anything* — reached by paying for it rather than by remembering it.
+
+**open as of 2026-09-17** — part of the UI-62 claim above and released with it.

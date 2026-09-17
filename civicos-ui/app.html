@@ -260,6 +260,14 @@ td.upd{color:var(--muted);font-size:12.5px;font-family:var(--font-fact)}
 .subj-grade.g-unconf{background:var(--tint-note);color:var(--signal-dk);border:1px solid #d6a48c}
 .subj-how{display:block;font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4}
 .subj-ref{font-size:12px;color:var(--muted)}
+/* UI-62 — A PASSAGE OF A CAPTURED DOCUMENT, quoted on the finder. It gets its
+   OWN class rather than borrowing `.pub-casebar-ref`, which the first draft did:
+   that class is the published case bar's, and somebody tuning the case bar would
+   otherwise silently restyle the one place a member reads a document's own words.
+   The face is the FACT font, because these are the document's words and not the
+   surface's. */
+.pass-snip{font-family:var(--font-fact);font-size:12.5px;line-height:1.55;color:var(--ink);
+  border-left:2px solid var(--verdigris-dk);padding:4px 0 4px 10px}
 .subj-note{font-size:12.5px;color:var(--muted);max-width:var(--measure-work);margin:0 0 14px;line-height:1.5}
 .subj-conn .ends{font-size:13.5px;color:var(--ink);margin-bottom:3px}
 .subj-conn .weaker{font-size:12px;color:var(--muted)}
@@ -2026,10 +2034,20 @@ const SURFACES = {
     /* UI-21: inquiries, monitoring and actions are FINDER ROUTES with a scope,
        not screens of their own, and all four keys land on this one surface. */
     routes: ["screen:search", "screen:inquiries", "screen:monitoring", "screen:actions"],
-    purpose: "One query surface over the record. Text and published field selectors reach documents and their extracted content; `concerns:` reaches the meaning layer. It refuses a query that crosses seams rather than silently answering half of it.",
+    /* UI-62 CORRECTED THIS SENTENCE RATHER THAN EXTENDING IT, and the reason is
+       a finding rather than a tidy-up: it claimed that text and field selectors
+       "reach documents and their extracted content", and they never did.
+       `op=search` compiles over `bundles_fts`, which holds the title, the
+       group's own body and notes, the locator and the authority — every one of
+       them PROJECTED FROM FRONTMATTER. Not one word of a captured PDF's own
+       text was reachable from this surface, while this registry declared
+       `content` among its levels and a recipe step below promised the same
+       thing. The `content` level in that list is TRUE as of this item and was
+       an overclaim before it. */
+    purpose: "One query surface over the record, asking three questions at once and reporting them apart. Text and published field selectors reach what the record PROJECTS about a document; `passage:` reaches what the captured documents themselves SAY, one indexed unit at a time; `concerns:` reaches the meaning layer. It refuses a query that crosses seams rather than silently answering half of it, and it states which level was empty rather than letting one zero speak for all of them.",
     levels: ["documents", "content", "meaning"],
     acts: [],
-    reads: ["search", "searchfields", "concerns"],
+    reads: ["search", "searchfields", "concerns", "meaningrows"],
   },
   subjects: {
     routes: ["screen:subjects"],
@@ -2223,8 +2241,14 @@ const RECIPES = [
     steps: [
       { surface: "finder", op: "searchfields",
         why: "Learn which fields the record publishes as searchable, so the answer can name what it could and could not filter on." },
+      /* UI-62: this step's `why` said "search the documents AND the content
+         extracted from them" and `op=search` does only the first half. The two
+         reads are now two steps, because they are two levels and this recipe's
+         whole purpose is to say which levels were searched. */
       { surface: "finder", op: "search",
-        why: "Search the documents and the content extracted from them." },
+        why: "Search what the record projects about each document — its title, the group's notes on it, its frontmatter fields." },
+      { surface: "finder", op: "meaningrows",
+        why: "The content level: search what the captured documents themselves say. An empty answer here names which captures were never read, so a miss is not mistaken for silence." },
       { surface: "subjects", op: "concerns",
         why: "The meaning layer: what the record connects to this subject. Nothing found here is not evidence that nothing was extracted." },
       { surface: "bundle", op: "image",
@@ -9981,6 +10005,73 @@ async function citeCandidates(){
 async function openCite(id, title, act){
   return citeOpen({ ids:[id], handle:null, act, title });
 }
+/* ============================================================
+   UI-62 / CONTENT-SEARCH-DESIGN.md §4.5 — CITING A PASSAGE, WHICH IS THE ONE
+   THING THIS WHOLE CHAIN WAS BUILT FOR.
+
+   §4.5: *a hit is an address, never a row. Nothing is minted by searching:
+   minting is a member's act through the composer — "cite this" emits the
+   extent and REC-82's writer mints or finds the row.* So the search does not
+   write, and this control is where the member's own act begins.
+
+   THIS CLOSES THE HALF UI-61 HAD TO LEAVE OPEN, and the reason it can is that
+   a member searching for a passage HAS ALREADY CHOSEN ONE. UI-61 built the leg
+   display and the page jump and then found it could offer no extent PICKER: a
+   page picker needs the document's page set and a rectangle needs a canvas the
+   surface does not have, so the composer states the `document` default and
+   prefills nothing. Reached from HERE there is nothing to pick — the address
+   is the row the record just answered with — and the composer carries it.
+
+   `op=cite` REALLY DOES TAKE IT, AND THAT WAS MEASURED ON THIS TREE RATHER
+   THAN INHERITED. UI-61's own note says REC-97/IC-90 widened the act; the act
+   destructures `extent` and its dispatcher builds that bag from every query
+   parameter named `content_id` or beginning `extent_`, refusing by name any
+   field it does not carry (`UNKNOWN_EXTENT_FIELD`). That refusal is what makes
+   the mapping below safe to derive rather than hand-keep.
+
+   THE ID OR THE ADDRESS, NEVER BOTH. `checkLegExtentGrammar` refuses a leg
+   naming both a `content_id` and an extent, and the row tells us which we
+   have: the plane computes `content_id` as a scalar subquery over the content
+   row at this address UNDER THE CURRENT CHAIN, and answers null where none
+   exists. A row that exists is REUSED — citing it a second time must not mint
+   a second passage at one address — and where there is none the address goes
+   and REC-82's writer mints or finds it. Neither value is composed here.
+   ============================================================ */
+function passageCiteAct(){
+  const cat = (ACT_SOURCE && Array.isArray(ACT_SOURCE.catalog)) ? ACT_SOURCE.catalog : [];
+  return cat.find(a => a && a.id === "cite" && actReachable(a)) || null;
+}
+/* THE WIRE PARAMETERS FOR ONE PASSAGE, DERIVED AND NOT LISTED. Every key of the
+   canonical extent becomes `extent_<key>` — `kind`→`extent_kind`,
+   `page`→`extent_page`, `cell`→`extent_cell` — which is the act's own naming
+   rule and therefore not a second table to keep in step. A key the act does not
+   carry is REFUSED BY NAME by the plane and shown to the member in the plane's
+   words, so an extent form that grows a field fails loudly at the one place a
+   member would otherwise get a citation that looks like the one they made and
+   is not. `extent_ref` IS DELIBERATELY NOT SENT: the record derives the human
+   form from the address through `describeExtent`, and sending this row's `ref`
+   back would be a second source for one sentence. A null or absent field is
+   OMITTED rather than sent empty — the act reads an empty string as "not
+   stated", and sending one would be this surface authoring that. */
+function passageCiteParams(row){
+  if(!row) return null;
+  if(row.content_id) return { content_id: String(row.content_id) };
+  const e = passageExtent(row);
+  if(!e) return null;
+  const out = {};
+  for(const k of Object.keys(e)){
+    const v = e[k];
+    if(v === null || v === undefined) continue;
+    if(Array.isArray(v)){ if(!v.length) continue; out[`extent_${k}`] = `[${v.join(",")}]`; }
+    else { const s = String(v); if(!s.trim()) continue; out[`extent_${k}`] = s; }
+  }
+  return Object.keys(out).length ? out : null;
+}
+async function citePassage(row){
+  const act = passageCiteAct();
+  if(!act || !row || !row.bundle_id) return;
+  return citeOpen({ ids:[row.bundle_id], handle:null, act, title:String(row.bundle_id), passage:row });
+}
 /* From a SELECTION the finder already holds (UI-21's entry point): the lease is
    the finder's and this flow neither renews nor releases it. `ids` is what the
    member was shown; the MEMBERS the act runs over are the plane's, resolved
@@ -10001,6 +10092,11 @@ async function citeOverSelection(handle, ids, act, title, sel){
 }
 async function citeOpen(init){
   CITE = { ids: init.ids || [], handle: init.handle || null, act: init.act, title: init.title || null,
+           /* UI-62: the PASSAGE this act was opened over, or null. Every other
+              entry point into this dialog passes none and reaches byte-
+              identical output — the extent block below branches on it and the
+              default arm is untouched. */
+           passage: init.passage || null,
            selKind: init.selKind || null, criterion: init.criterion || null,
            selN: (typeof init.selN === "number") ? init.selN : null,
            targets: null, targetsErr: null, target: null, targetType: null, role: null,
@@ -10063,6 +10159,20 @@ async function doCite(){
        "not stated" but which would still be this page authoring a value. */
     const params = { project: CITE.target, handle, note: CITE.note };
     if(citeOntoInquiry() && CITE.role) params.role = CITE.role;
+    /* UI-62 — THE PASSAGE, ON THE QUESTION ARM ONLY, for exactly the reason
+       `role` is sent on the question arm only one line up: the store refuses a
+       part of a document on a case BY NAME (`EXTENT_NOT_APPLICABLE`) because a
+       case's edge has no slot for one, and a field stated in one place and
+       honoured nowhere is how the record and its projections drift apart. The
+       composer has already TOLD the member this above; not sending it is the
+       other half of the same statement, and the two cannot disagree because
+       both branch on `citeOntoInquiry()`.
+       The act's dispatcher gathers these off the query string by name, so they
+       go on `params` flat rather than as a nested object. */
+    if(citeOntoInquiry() && CITE.passage){
+      const ext = passageCiteParams(CITE.passage);
+      if(ext) Object.assign(params, ext);
+    }
     const a = await actAsk("cite", params);
     if(!CITE || CITE.act !== act) return;
     CITE.busy = false;
@@ -10188,7 +10298,37 @@ function citePaint(){
           already renders every arm of IC-1's union from the plane's own `ref`,
           and the act on the other side of the wire is now waiting for it.
           ---- */
-  const extentBlock = !citeOntoInquiry() ? "" : `
+  /* ---- UI-62 — THE PASSAGE ARM OF THIS BLOCK, and it is the picker's job done
+          without a picker. Reached from the passages route the member has
+          ALREADY chosen the part of the document: it is the row the record
+          answered with. So the address is STATED in the record's own `ref`
+          (DEC-49, verbatim, exactly as the leg display will render it
+          afterwards) and there is nothing to fill in — which is what DEC-69
+          asks for and is not the same as an empty control.
+
+          THE CASE ARM IS THE ONE THAT MATTERS AND IT IS NOT SILENT. A case's
+          citation edge names a DOCUMENT and has no slot for a passage — the
+          act refuses `EXTENT_NOT_APPLICABLE` over one — so this surface does
+          not send it there. A member who picked a passage and then picked a
+          case would otherwise get a citation that looks like the one they made
+          and is not, which is the precise failure UI-61 refused to ship when
+          the act was dropping extents in silence. It is stated BEFORE they
+          commit, not discovered on the edge afterwards. ---- */
+  const passageBlock = !CITE.passage ? "" : (citeOntoInquiry() ? `
+    <h3 class="cx-h">What part of the document this leg rests on</h3>
+    <p class="subj-note">You reached this from a passage, so the part is already chosen and there is nothing here to fill in.</p>
+    <div class="card" id="cx-passage" style="margin:8px 0"><div class="kv"><span class="k">This leg will rest on</span><span class="v plain">${esc(String(CITE.passage.ref||""))}${EXTENT_KIND_WORD[CITE.passage.extent_kind]?` <span style="color:var(--muted)">(${esc(EXTENT_KIND_WORD[CITE.passage.extent_kind])})</span>`:""}</span></div>
+      ${CITE.passage.content_id
+        ? `<div class="kv"><span class="k">Using the passage the record already holds</span><span class="v plain"><span class="mono">${esc(String(CITE.passage.content_id))}</span> &mdash; the record has a citable passage at this address already, so this cites that one rather than making a second.</span></div>`
+        : `<div class="kv"><span class="k">Nothing is cited here yet</span><span class="v plain">The record holds no passage at this address. Committing this act is what makes one; searching for it made nothing.</span></div>`}</div>`
+    : `
+    <h3 class="cx-h">What part of the document this citation rests on</h3>
+    <div class="card undet" id="cx-passage-dropped" style="margin:8px 0">
+      <div class="subj-grade g-unconf">the passage will not be recorded</div>
+      <div class="subj-how">You reached this from a passage &mdash; ${esc(String(CITE.passage.ref||""))} &mdash; and a <b>case</b> keeps its citations as edges naming a whole document, with no slot for a part of one. So citing onto a case records the document and <b>not that passage</b>. It is said here rather than left to be discovered on the citation afterwards. A <b>question</b> keeps its citations as legs of the basis its answer rests on, and a leg does hold the passage.</div>
+    </div>`);
+
+  const extentBlock = (!citeOntoInquiry() || CITE.passage) ? "" : `
     <h3 class="cx-h">What part of the document this leg rests on</h3>
     <p class="subj-note">A citation that points at the sentence answering the question refers to <b>that portion</b> of the document, not to all of it. The record holds that distinction and can address a page of a PDF as well as a whole document.</p>
     <div class="empty" id="cx-extent">This act writes a leg resting on the <b>whole document</b>, and that is stated here rather than left to be discovered on the leg afterwards. The record&rsquo;s citation act now carries a part of a document, and <b>this page does not yet offer a way to pick one</b> &mdash; the control is a separate piece of work on this surface, and nothing is filled in on your behalf in the meantime. Narrowing an existing citation to a passage is its own act on the record&rsquo;s own plan, and it is not this one.</div>`;
@@ -10218,6 +10358,7 @@ function citePaint(){
     <p class="subj-note">Every case and question below is one the record publishes this act on. This page adds none.</p>
     <div class="dz-choose">${targets}</div>
     ${roleBlock}
+    ${passageBlock}
     ${extentBlock}
 
     <h3 class="cx-h">A note, if you want one</h3>
@@ -10590,21 +10731,53 @@ function edgePaint(){
    `op=affordances`' precedent at a different layer: the surface keeps no copy of
    the field list, loads it once, and offers nothing the plane did not name. When
    the plane cannot be asked there are NO scopes rather than guessed ones. */
-const SEARCH_FIELDS = { loaded:false, fields:null, syntax:[], idsMax:null, err:null };
+const SEARCH_FIELDS = { loaded:false, fields:null, meaning:null, syntax:[], idsMax:null, err:null };
 async function loadSearchFields(force){
   if(SEARCH_FIELDS.loaded && !force) return SEARCH_FIELDS;
   try{
     const r = await recR("searchfields");
     SEARCH_FIELDS.fields = (r && r.fields && typeof r.fields === "object") ? r.fields : null;
+    /* UI-62 — THE MEANING ARMS, AND THEY ARE NOT FIELDS. `op=searchfields`
+       publishes two different halves and the plane's own comment on them says
+       why the difference must stay visible: `fields` filter COLUMNS on the
+       bundle row, `meaning` filters through a join into the meaning layer and
+       each arm declares the LEVEL it answers at. `searchHasField` asks the
+       first half and must keep asking only that — a meaning arm folded into
+       the field list would be offered as a scope, and a scope over
+       `passage:` would be this surface inventing a query the record does not
+       compile that way. */
+    SEARCH_FIELDS.meaning = (r && r.meaning && typeof r.meaning === "object") ? r.meaning : null;
     SEARCH_FIELDS.syntax = Array.isArray(r && r.syntax) ? r.syntax : [];
     SEARCH_FIELDS.idsMax = (r && r.idsMax != null) ? r.idsMax : null;
     SEARCH_FIELDS.err = null;
   }catch(e){
-    SEARCH_FIELDS.fields = null; SEARCH_FIELDS.syntax = []; SEARCH_FIELDS.idsMax = null;
+    SEARCH_FIELDS.fields = null; SEARCH_FIELDS.meaning = null;
+    SEARCH_FIELDS.syntax = []; SEARCH_FIELDS.idsMax = null;
     SEARCH_FIELDS.err = (e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) };
   }
   SEARCH_FIELDS.loaded = true;
   return SEARCH_FIELDS;
+}
+/* UI-62 / CONTENT-SEARCH-DESIGN.md §4.2 — THE PASSAGE ARM, OR NOTHING.
+   `finderScopes`' rule one construct over: the surface offers nothing the plane
+   did not name. This returns the plane's OWN published descriptor for the arm
+   that searches what documents SAY — its grain, its level and the columns a row
+   carries — or null, and a null means this finder runs two routes exactly as it
+   did before this item. A plane that has not landed REC-92 therefore gets no
+   passage panel and no apology: an absent capability is absent, never
+   present-and-refused (UI-15's rule).
+
+   THE NAME IS READ BACK FROM THE PLANE AND IS NOT A LITERAL THIS FILE TRUSTS.
+   `PASSAGE_ARM` is spelled once, here, and every other site asks THIS function —
+   so an arm the plane renames fails by disappearing (no route, no panel) rather
+   than by sending a selector nothing compiles and rendering the empty answer as
+   though the record held nothing. */
+const PASSAGE_ARM = "passage";
+function finderPassageArm(){
+  const m = SEARCH_FIELDS.meaning;
+  const arm = (m && typeof m === "object" && m[PASSAGE_ARM] && typeof m[PASSAGE_ARM] === "object")
+    ? m[PASSAGE_ARM] : null;
+  return arm;
 }
 function searchHasField(name){
   return !!(SEARCH_FIELDS.fields && Object.prototype.hasOwnProperty.call(SEARCH_FIELDS.fields, String(name||"").toLowerCase()));
@@ -10680,10 +10853,32 @@ function finderTerms(q){
   return out;
 }
 function finderPlan(q){
-  const text = [], subjects = [], unpublished = [], words = [];
+  const text = [], subjects = [], unpublished = [], words = [], passages = [];
   for(const term of finderTerms(q)){
     const con = /^-?concerns:(.+)$/i.exec(term);
     if(con){ subjects.push({ term, subject: con[1] }); continue; }
+    /* UI-62 — THE PASSAGES SEAM, AND IT IS RECOGNISED ONLY WHEN THE PLANE
+       PUBLISHES THE ARM. Against a plane that has not landed REC-92 this test
+       fails and the term falls through to the selector branch below, where it
+       is reported as a name the record publishes as neither a field nor an arm
+       — which is TRUE of that plane and is the answer a member should get.
+       Recognising it unconditionally would send `passage:` to a compiler that
+       drops it, and an answer computed over a dropped term looks exactly like
+       an answer computed over the term the member typed.
+
+       ONLY `passage:` IS ROUTED HERE, AND THE OTHER MEANING ARMS ARE LEFT
+       EXACTLY WHERE THEY WERE. `leg:`, `resolves:` and `content:` are meaning
+       arms too and `op=search` compiles all three, so they are currently
+       reported by the cross-seam panel as answered by neither — which is a
+       PRE-EXISTING inaccuracy this item found and deliberately did not fix.
+       Correcting it moves terms between seams on queries this item has no
+       business changing, and the over-strictness arm exists to prove those
+       walks did not move. It is in this item's report as a finding with its
+       own row owed, not smoothed over here. */
+    const pas = /^-?([A-Za-z_][A-Za-z0-9_]*):(.+)$/.exec(term);
+    if(pas && pas[1].toLowerCase() === PASSAGE_ARM && finderPassageArm()){
+      passages.push({ term, arm: PASSAGE_ARM, value: pas[2] }); continue;
+    }
     const sel = /^-?([A-Za-z_][A-Za-z0-9_]*):/.exec(term);
     if(sel){
       const field = sel[1].toLowerCase();
@@ -10693,7 +10888,7 @@ function finderPlan(q){
     }
     text.push({ term, field:null }); words.push(term.replace(/"/g, ""));
   }
-  return { q: String(q||"").trim(), text, subjects, unpublished, words,
+  return { q: String(q||"").trim(), text, subjects, unpublished, words, passages,
            /* NO PRE-JOINED QUERY STRINGS ON THE PLAN. Each consumer joins the
               terms IT will send — `finderTextRoute` sends text + unpublished
               (the plane words what it cannot place), the refusal's alternatives
@@ -10704,11 +10899,20 @@ function finderPlan(q){
            /* THE REFUSAL CONDITION, and it is exactly "terms from more than one
               seam in one query". An unpublished term counts as the text side's
               problem to state, not as a third seam to intersect with. */
-           crossSeam: subjects.length > 0 && (text.length > 0 || unpublished.length > 0) };
+           /* UI-62: the passages seam joins the refusal's condition rather than
+              being quietly exempted from it. The reasoning is the header's,
+              unchanged and now with a third set: `passage:` answers at UNIT
+              grain over `capture_text` and the subjects route answers at
+              DOCUMENT grain over the registry, both capped, and an intersection
+              of two capped answers under-reports INVISIBLY. A seam added to the
+              page and not to the refusal would be the one query shape this
+              screen approximates. */
+           crossSeam: subjects.length > 0
+                   && (text.length > 0 || unpublished.length > 0 || passages.length > 0) };
 }
 
 let FIND = { q:"", scope:null, plan:null, refused:null, text:null, subjects:null,
-             overlap:null, running:false };
+             passages:null, overlap:null, running:false };
 
 function quickSearch(){
   const q = (($("#m-search") && $("#m-search").value) || "").trim();
@@ -10732,7 +10936,7 @@ function sxClear(w){
   i.value = ""; sxSync(w); if(i.focus) i.focus();
   /* CLEARS THE RESULTS AND STAYS PUT. `backFromEmptySearch` navigated away from
      here, which a finder holding a live lease must never do (see the header). */
-  FIND.q = ""; FIND.plan = null; FIND.refused = null; FIND.text = null; FIND.subjects = null; FIND.overlap = null;
+  FIND.q = ""; FIND.plan = null; FIND.refused = null; FIND.text = null; FIND.subjects = null; FIND.passages = null; FIND.overlap = null;
   const r = $("#f-res"); if(r) r.innerHTML = "";
   /* UI-25: with no query asked there is no criterion to hold, so the
      hold-everything control must go with the results rather than stand there
@@ -10744,7 +10948,7 @@ async function renderFinder(opts){
   setActive("search");
   if(opts && opts.scope !== undefined) FIND.scope = opts.scope;
   $("#content").innerHTML = `<h1 class="rec">The evidence finder</h1>
-    <p class="lede">Two ways of finding material, asked at the same time and reported separately. <b>Text and fields</b> is the record&rsquo;s query language over what documents say and what the record projects about them. <b>Subjects</b> is the reverse index: every document the record has resolved to a subject in the registry. They are different systems over different tables, so you get two counts and never one total.</p>
+    <p class="lede">Three ways of finding material, asked at the same time and reported separately. <b>Text and fields</b> is the record&rsquo;s query language over what the record projects about a document &mdash; its title, its frontmatter, the group&rsquo;s own notes on it. <b>Passages</b> reads what the captured documents themselves SAY, one page or paragraph at a time. <b>Subjects</b> is the reverse index: every document the record has resolved to a subject in the registry. They are different systems over different tables, and the first two do not even answer at the same grain &mdash; one names documents, one names passages inside them &mdash; so you get three counts and never one total.</p>
     <div class="msearch sm-only" style="width:auto;max-width:520px;margin-bottom:12px"><svg width="14" height="14" viewBox="0 0 20 20" style="flex:none;color:var(--muted)"><use href="#i-search"/></svg><input id="s-q" placeholder="e.g. sewer fund, or concerns:ENT-0031" oninput="sxSync('s')" onkeydown="if(event.key==='Enter')runSearch()"><span class="sx hidden" id="sx-s" onclick="sxClear('s')" title="clear">&times;</span></div>
     <div id="f-scopes"></div>
     <div id="f-sel"></div>
@@ -10817,6 +11021,101 @@ async function finderTextRoute(plan){
              widen: (r && r.widen) || null };
   }catch(e){ return { asked:true, q, err:(e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) } }; }
 }
+/* ============================================================
+   UI-62 / CONTENT-SEARCH-DESIGN.md §7 row 6 — THE PASSAGES ROUTE.
+
+   THE THIRD SEAM, AND IT IS THE ONE THE RECORD EXISTS FOR. `CLAUDE.md`: *a
+   search that returns documents has not finished.* The two routes above this
+   one answer at DOCUMENT grain — what the record PROJECTS about a document
+   (title, frontmatter, the fields), and which documents it has RESOLVED to a
+   subject. Neither of them has ever read a word of what a captured document
+   SAYS. `passage:` does, over `capture_text` — the units REC-91 writes at
+   promote from the extractors' own output — and it answers at UNIT grain: one
+   page, one paragraph, one shape.
+
+   WHY A BARE WORD REACHES THIS ROUTE TOO, and it is the whole point of the
+   item. Part II §14.3's four levels are not a menu a member should have to
+   learn before they can find a sentence in a PDF. A member who types `sewer
+   fund` is asking the record a question, and the honest answer runs at BOTH
+   grains: the documents whose projections match, AND the passages whose text
+   does. They are reported APART, with their own counts, for the same reason
+   the two routes above are — three questions over three tables are not
+   addable — and no overlap is computed against this one at all, because an
+   overlap between a set of DOCUMENTS and a set of UNITS is not a set.
+
+   `text:` IS UNTOUCHED AND MEANS WHAT IT ALWAYS MEANT (§4.2: *the surface
+   labels the two; the vocabulary does not rename a settled arm*). `text:`
+   compiles over `bundles_fts`, which is the group's own notes and the
+   projected frontmatter; `passage:` compiles over `capture_text_fts`, which is
+   the document's own words. The panel labels them; this file renames nothing.
+
+   THE SCOPE SELECTOR IS SENT, AND §4.4's *the query's OTHER arms* IS WHY IT
+   MATTERS. The envelope's tally is taken over the documents the query's other
+   arms put in scope, deliberately excluding the passage arm's own narrowing —
+   so a scope button on this screen narrows the DENOMINATOR the absence
+   statement is read against, exactly as a member would expect, while the
+   passage terms do not. Sending the scope is therefore not a convenience: it
+   is what makes "nothing matched over 412 searchable captures" a sentence
+   about the set the member is looking at.
+   ============================================================ */
+async function finderPassageRoute(plan){
+  /* THE ARM, OR NOTHING ASKED. Not "asked and empty" — a plane that does not
+     publish this arm has not been asked a question, and saying otherwise would
+     put a zero on the screen that a member would read as a fact about the
+     documents. */
+  const arm = finderPassageArm();
+  if(!arm) return { asked:false, armUnpublished:true };
+  const scoped = finderScopeQ();
+  /* THE BARE WORDS, IN THE SPELLING THE MEMBER TYPED. `plan.words` has its
+     quotes STRIPPED (it exists for the registry's exact-alias lookup, which
+     wants a name and not a phrase query), and a phrase that lost its quotes
+     would silently become an AND of two words against an index where the
+     member asked for a phrase. So this reads the TEXT seam's own untouched
+     terms instead, which is the only place the member's spelling survives. */
+  const bare = plan.text.filter(t => t.field === null).map(t => t.term);
+  /* THE MEMBER'S OWN FIELD SELECTORS GO TOO, AND LEAVING THEM OUT WAS A REAL
+     DEFECT rather than a simplification. `type:information`, `state:collected`,
+     `authority:…` are ordinary scope filters and the ONE compiler applies them
+     in the same CTE for this arm as for `op=search`. Sent only to the text
+     route, they would make the two routes answer over DIFFERENT SETS while
+     reporting under one question — and worse than the counts diverging, §4.4's
+     tally is taken over *the query's other arms*, so the absence statement's
+     DENOMINATOR would silently become the whole record rather than the scope
+     the member asked about. "Nothing matched over 412 searchable captures"
+     would then be a true sentence about a set nobody asked for.
+     `plan.unpublished` is deliberately NOT sent: the plane drops a term it
+     cannot place, so the scope is identical either way, and sending them here
+     would only make the record word the same complaint twice. */
+  const fields = plan.text.filter(t => t.field !== null).map(t => t.term);
+  const terms = plan.passages.map(t => t.term)
+    .concat(bare.map(w => `${PASSAGE_ARM}:${w}`));
+  /* A SCOPE WITH NO TERMS IS STILL A QUESTION — `rows=passage` with no
+     `passage:` selector lists what has been READ in that scope and says so. */
+  const q = [scoped].concat(fields).concat(terms).filter(Boolean).join(" ").trim();
+  if(!q) return { asked:false };
+  try{
+    const r = await recR("meaningrows", { q, rows: PASSAGE_ARM, limit:String(MEANING_ASK_LIMIT) });
+    /* A REFUSAL ARRIVES AS A VALUE, not as a throw — `op=meaningrows` refuses
+       inside the envelope (`{ok:false, reason, check, translation, detail}`)
+       and the control plane answers 200 over it. A surface reading only the
+       transport would render a refusal as an empty answer, which is this
+       item's own defect wearing the plane's clothes. */
+    if(r && r.ok === false) return { asked:true, q, err:r };
+    const rows = Array.isArray(r && r.rows) ? r.rows : [];
+    return { asked:true, q, rows, env:r,
+             /* Whether the member's terms reached the index at all. The plane
+                answers `rows=passage` with NO `passage:` selector rather than
+                refusing it — it lists every indexed unit in scope, with
+                `snippet` null — and it STATES which shape it is on
+                `levels.content.matched`. Read from there and never inferred
+                from a null snippet, which is the same value in both shapes. */
+             matched: !!(r && r.levels && r.levels.content && r.levels.content.matched),
+             total: (r && typeof r.total === "number") ? r.total : null,
+             totalKnown: !!(r && typeof r.total === "number"),
+             limit: (r && typeof r.limit === "number") ? r.limit : null,
+             warnings: (r && r.query && Array.isArray(r.query.warnings)) ? r.query.warnings : [] };
+  }catch(e){ return { asked:true, q, err:(e && typeof e === "object") ? e : { reason:"NO_ANSWER", detail:String(e) } }; }
+}
 async function finderSubjectsRoute(plan){
   /* BY ID, when the member named one. No registry lookup, no spelling bound. */
   if(plan.subjects.length){
@@ -10886,7 +11185,7 @@ async function runSearch(){
   if(CUR.type==="screen" && CUR.key==="search"){ CUR.q = FIND.q; CUR.sc = FIND.scope || null; }
   const res = $("#f-res"); if(!res) return;
   if(!FIND.q && !FIND.scope){
-    FIND.plan = null; FIND.refused = null; FIND.text = null; FIND.subjects = null; FIND.overlap = null;
+    FIND.plan = null; FIND.refused = null; FIND.text = null; FIND.subjects = null; FIND.passages = null; FIND.overlap = null;
     res.innerHTML = `<p class="subj-note">Type something above, or pick a scope. Nothing has been asked of the record yet &mdash; this is an empty box, not an empty record.</p>`;
     return;
   }
@@ -10897,16 +11196,17 @@ async function runSearch(){
      merge": the member is told what cannot be asked, and neither half is run
      under a description its answer would not match. */
   if(plan.crossSeam){
-    FIND.refused = plan; FIND.text = null; FIND.subjects = null; FIND.overlap = null;
+    FIND.refused = plan; FIND.text = null; FIND.subjects = null; FIND.passages = null; FIND.overlap = null;
     res.innerHTML = finderCrossSeamHtml(plan);
     return;
   }
   FIND.refused = null;
   FIND.running = true;
-  res.innerHTML = `<p class="count-line">Asking both routes&hellip;</p>`;
-  const [text, subjects] = await Promise.all([finderTextRoute(plan), finderSubjectsRoute(plan)]);
+  res.innerHTML = `<p class="count-line">Asking the record&hellip;</p>`;
+  const [text, subjects, passages] = await Promise.all(
+    [finderTextRoute(plan), finderSubjectsRoute(plan), finderPassageRoute(plan)]);
   FIND.running = false;
-  FIND.text = text; FIND.subjects = subjects;
+  FIND.text = text; FIND.subjects = subjects; FIND.passages = passages;
   /* THE OVERLAP, MERGED BY `bundle_id`, and it is the ONLY figure this page
      derives from both routes at once. A set intersection over ids the two routes
      each named: nothing is added, nothing is re-ranked, and it is labelled as
@@ -10921,8 +11221,13 @@ async function runSearch(){
    terms are spelled out in the button, so nothing changes quietly. */
 function finderRunOnly(which){
   const plan = FIND.plan; if(!plan) return;
-  FIND.q = which === "text" ? plan.text.map(t=>t.term).join(" ")
-                            : plan.subjects.map(t=>t.term).join(" ");
+  /* ONE SEAM'S TERMS, AND THE PASSAGES SEAM IS ONE OF THEM (UI-62). Left out,
+     a member whose refused query carried `passage:` terms would click "run the
+     text route" and have those terms silently deleted from their question —
+     which is the one thing this whole refusal exists to prevent, arriving
+     through the remedy instead of through the answer. */
+  const seam = { text: plan.text, subjects: plan.subjects, passages: plan.passages };
+  FIND.q = (seam[which] || []).map(t=>t.term).join(" ");
   const m=$("#m-search"), sq=$("#s-q");
   if(m) m.value = FIND.q; if(sq) sq.value = FIND.q;
   return runSearch();
@@ -10932,6 +11237,7 @@ function finderCrossSeamHtml(plan){
   const list = arr => arr.map(t=>`<span class="mono">${esc(t.term)}</span>`).join(", ");
   const textAlt = plan.text.map(t=>t.term).join(" ");
   const subjAlt = plan.subjects.map(t=>t.term).join(" ");
+  const pasAlt = plan.passages.map(t=>t.term).join(" ");
   return `<div class="intent-ref">
       <div class="intent-ref-why">This asks for the intersection of two different retrieval systems, and this page will not approximate one.</div>
       <div class="intent-ref-code mono">CROSS_SEAM_QUERY</div>
@@ -10939,14 +11245,16 @@ function finderCrossSeamHtml(plan){
     <div class="card" style="margin-top:8px">
       ${plan.subjects.length?`<div class="kv"><span class="k">Answered only by the subjects route</span><span class="v">${list(plan.subjects)}</span></div>`:""}
       ${plan.text.length?`<div class="kv"><span class="k">Answered only by the text and fields route</span><span class="v">${list(plan.text)}</span></div>`:""}
+      ${plan.passages.length?`<div class="kv"><span class="k">Answered only by the passages route</span><span class="v">${list(plan.passages)}</span></div>`:""}
       ${plan.unpublished.length?`<div class="kv"><span class="k">Answered by neither</span><span class="v">${list(plan.unpublished)}</span></div>`:""}
     </div>
     <p class="subj-note">The record&rsquo;s query language runs over what documents say and the fields the record projects about them. The subjects route is a separate index over which documents the record has RESOLVED to a registered subject. Neither can filter on the other&rsquo;s terms &mdash; not slowly, not partially.</p>
     <p class="subj-note"><b>Why this is refused rather than computed.</b> This page could ask both routes and keep the documents that appeared in both. Each route&rsquo;s answer is capped, so that intersection would be missing whatever fell past either cap &mdash; and it would look exactly like a complete answer. Material found this way ends up in a case, and a case makes a claim about how complete its evidence is. A short answer that cannot be told apart from a full one is the one failure this record will not ship.</p>
     ${plan.unpublished.length?`<p class="subj-note">${plan.unpublished.map(t=>`<span class="mono">${esc(t.field)}</span>`).join(", ")} ${plan.unpublished.length===1?"is not a field":"are not fields"} the record&rsquo;s query language publishes, so ${plan.unpublished.length===1?"it filters":"they filter"} nothing on either route. The subjects route does report the record&rsquo;s own grade <b>per document</b>, so you can read it there even though you cannot filter on it.</p>`:""}
-    <h3 class="cx-h">Two things you can run instead</h3>
+    <h3 class="cx-h">What you can run instead</h3>
     <div class="dz-choose" style="display:flex;flex-direction:column;gap:8px">
       ${textAlt?`<button class="btn ghost" id="f-alt-text" onclick="finderRunOnly('text')" style="text-align:left">Run <span class="mono">${esc(textAlt)}</span> on the text and fields route</button>`:""}
+      ${pasAlt?`<button class="btn ghost" id="f-alt-passages" onclick="finderRunOnly('passages')" style="text-align:left">Run <span class="mono">${esc(pasAlt)}</span> on the passages route</button>`:""}
       ${subjAlt?`<button class="btn ghost" id="f-alt-subjects" onclick="finderRunOnly('subjects')" style="text-align:left">Run <span class="mono">${esc(subjAlt)}</span> on the subjects route</button>`:""}
     </div>`;
 }
@@ -11088,15 +11396,294 @@ function finderOverlapHtml(t, s, overlap){
   return `<div class="card" id="f-overlap" style="margin:12px 0">
     <div class="kv"><span class="k">Found by both routes</span><span class="v plain"><b>${esc(String(overlap.n))}</b> ${overlap.n===1?"document":"documents"}${bounded?" <b>of the documents on this page</b>":""}</span></div>
     <div class="kv"><span class="k">Why there is no single number</span><span class="v plain">These are two questions asked of two different indexes. A document can answer one, the other, or both, so adding the counts would produce a figure that measures nothing and counts the overlap twice. The overlap is the honest third figure, and it is an overlap and not a total.</span></div>
+    <div class="kv"><span class="k">And why the passages route is not in it</span><span class="v plain">This figure is an overlap of two sets of <b>documents</b>. The passages route answers at a different grain altogether &mdash; it names <b>parts</b> of documents, and one document can hold twenty of them &mdash; so there is no set here to intersect it with. A number comparing the two would be comparing a count of documents with a count of pages and reading as though it meant something.</span></div>
     ${bounded?`<div class="kv"><span class="k">And what this figure is bounded by</span><span class="v plain">It is worked out from the <b>${esc(String(shown))}</b> documents the text and fields route put on this page, not from its whole answer. A document past the page that the subjects route also found is <b>not</b> counted here. This number can only ever be too low, and it cannot tell you by how much.</span></div>`:""}
   </div>`;
+}
+/* ============================================================
+   UI-62 — THE ABSENCE STATEMENT, BY LEVEL, RENDERED AND NEVER HIDDEN.
+
+   THIS IS THE ITEM, not a footnote on it. `CLAUDE.md`: *sparse is the normal
+   condition at every level. Absence at one level is not evidence of absence at
+   the next: no meaning derived may mean nothing was extracted; nothing
+   extracted may mean the document was never read; no document may mean nobody
+   looked. Saying which of those is true is a first-class obligation, not a
+   diagnostic detail.* A surface that answers "nothing found" without saying
+   WHICH of those is true is under-specified, and a member who reads a
+   content-level miss as a document-level miss makes the wrong next move —
+   concluding the documents are silent when nobody has opened them.
+
+   EVERY SENTENCE HERE IS THE PLANE'S (DEC-8, DEC-49). This function composes
+   NO explanation of its own about what an absence means: `state` and `why` are
+   rendered verbatim off `levels`, and `says` is rendered verbatim as the
+   answer's one-sentence summary. What this file contributes is a NOUN PHRASE
+   per level and the LAYOUT — `EXTENT_KIND_WORD`'s precedent exactly, where the
+   noun stands beside the record's sentence and never in place of it.
+
+   IT RENDERS ON A HIT AS WELL AS ON A MISS, and that is deliberate rather than
+   incidental. The plane's own passage sentence on a HIT reads *"…and 38
+   capture(s) in that scope have NOT been read at passage grain — so this is
+   what the searched part of the record says, not all of it"*. A statement shown
+   only when the answer is empty would hide the single most important fact a
+   member holding four results needs: how much of the scope was never looked at.
+   Absence is a property of the ANSWER, not of the empty answer.
+
+   A LEVEL THIS FILE HAS NO WORD FOR IS STILL RENDERED. The plane names four
+   levels today; if it names a fifth, it appears here with its own key and its
+   own sentence and no noun, rather than dropping out of a hand-kept list. A
+   walk that silently scores an unknown thing zero is the defect
+   `kickoffs/WORKER.md` names; the level order below is a PREFERENCE and never
+   a filter.
+   ============================================================ */
+/* The member's word for each level, a NOUN PHRASE naming what the level IS and
+   never a sentence about what its emptiness means — that sentence is the
+   plane's `why` and is rendered whole. Ordered as `CLAUDE.md` states the rule:
+   from the most derived down to the least, which is the order the chain of
+   "may mean" runs in and therefore the order a member reads it in. */
+const FOUR_LEVEL_WORD = {
+  meaning:  "What anything RESTS ON",
+  content:  "What has been read OUT of the documents",
+  document: "The documents themselves",
+  internet: "Whether anybody LOOKED",
+};
+const FOUR_LEVEL_ORDER = ["meaning", "content", "document", "internet"];
+function finderLevelsHtml(env){
+  const lv = (env && env.levels && typeof env.levels === "object") ? env.levels : null;
+  if(!lv) return "";
+  /* THE PLANE'S KEYS, in this file's preferred order, with anything it does not
+     know APPENDED rather than dropped. */
+  const known = FOUR_LEVEL_ORDER.filter(k => Object.prototype.hasOwnProperty.call(lv, k));
+  const extra = Object.keys(lv).filter(k => !FOUR_LEVEL_ORDER.includes(k));
+  const rows = known.concat(extra).map(k => {
+    const l = lv[k] && typeof lv[k] === "object" ? lv[k] : null;
+    if(!l) return "";
+    const word = FOUR_LEVEL_WORD[k] || null;
+    /* The numbers the plane put ON the level, in the plane's own field names.
+       Nothing is derived from them here and nothing is added to them. */
+    const nums = [
+      (typeof l.documents === "number") ? `${l.documents} document(s)` : null,
+      (typeof l.documents_with_rows === "number") ? `${l.documents_with_rows} with rows` : null,
+      (typeof l.rows_matched === "number") ? `${l.rows_matched} row(s) matched` : null,
+    ].filter(Boolean).join(" &middot; ");
+    return `<div class="kv" data-level="${esc(k)}">
+      <span class="k">${word ? esc(word) : `<span class="mono">${esc(k)}</span>`}</span>
+      <span class="v plain"><span class="subj-grade ${l.state === "COUNTED" ? "g-conf" : "g-unconf"}" data-state="${esc(String(l.state||""))}">${esc(String(l.state||"").toLowerCase())}</span>
+        ${nums ? `<span class="mono" style="font-size:12px;color:var(--muted)"> ${nums}</span>` : ""}
+        <div class="subj-how" style="margin-top:4px">${esc(String(l.why||""))}</div></span></div>`;
+  }).join("");
+  return `<h3 class="cx-h">Which level was empty, and which was not</h3>
+    <p class="subj-note">The record answers at four levels and they are different facts. Nothing found at one of them is not evidence of nothing at the next &mdash; no passage extracted may mean nobody has read the document, and no document may mean nobody has looked. Every line below is the record&rsquo;s own, in its own words.</p>
+    <div class="card" id="f-pass-levels" style="margin:8px 0">${rows}</div>`;
+}
+/* ---- THE CONTENT-AXIS TALLY, AND THE PRESENTATION QUESTION §4.4 LEFT OPEN.
+        DECIDED HERE, 2026-09-17 (UI-62), because REC-92 left it open saying in
+        terms that it is UI's: the section ships `MEANING_AXIS_CAP` = 500 with
+        `captures_counted` / `captures_truncated` / `captures_bound` published,
+        and does not say WHAT A MEMBER SEES WHEN THE BOUND BITES.
+
+        THE ANSWER, and the reasoning is recorded rather than only the rule:
+
+        1. THE DENOMINATOR IS NAMED IN THE HEADING, ALWAYS — "all 412 captures
+           in scope" or "the first 500 of the captures in scope". Not in a
+           footnote and not on hover. A tally whose denominator is stated
+           somewhere else is read as a census by everyone who does not scroll,
+           and REC-92's own words for why the bound is published at all are
+           that *a number that looks like a census and is a sample is worse
+           than a smaller number that says what it is*.
+
+        2. NO PROPORTIONS, EVER — no percentages, no bars, no "most of". A
+           percentage computed over a sample and shown against a scope is the
+           invisible under-report this repository refuses everywhere else, and
+           unlike a raw count it cannot be checked by eye. Counts only.
+
+        3. WHEN THE BOUND BITES, THE WORD *SAMPLE* APPEARS BESIDE THE FIGURES
+           and the unbounded reading is explicitly withdrawn: the surface says
+           the record stopped counting and that the captures past the bound are
+           not represented in any bucket. Saying only "the first 500" leaves a
+           reader to infer that the rest resemble them, which is the inference
+           the bound cannot support.
+
+        4. THE BUCKET SENTENCES ARE THE PLANE'S `content_axis.vocabulary`,
+           NEVER A COPY. PL-17's rule, and the reason it is load-bearing here:
+           a fifth state added beside the writer reaches a member the same day,
+           and a surface matching learned literals would silently score it
+           zero. The KEYS drive the render, so the five buckets are whatever
+           the plane says they are.
+
+        WHAT THIS SURFACE COULD NOT DO, STATED RATHER THAN PAPERED OVER.
+        `op=meaningrows` publishes the content axis as an AGGREGATE ONLY. The
+        per-capture cause — REC-107's `not_ruled_out` / `evidence_one_sided`,
+        which says whether a capture was never looked at, logged before the log
+        existed, or purged — is COMPUTED inside `#contentAxisTally` and then
+        DISCARDED: only the bucket totals survive onto the wire. So where
+        `not_extracted` is non-zero this panel says which read carries that
+        detail and does not invent it. Measured on this tree, not inherited. */
+function finderTallyHtml(env){
+  const sc = (env && env.scope && typeof env.scope === "object") ? env.scope : null;
+  const ax = (env && env.content_axis && typeof env.content_axis === "object") ? env.content_axis : null;
+  if(!sc || !ax || typeof sc.captures_counted !== "number") return "";
+  const vocab = (ax.vocabulary && typeof ax.vocabulary === "object") ? ax.vocabulary : {};
+  const undet = (typeof ax.undetermined_value === "string") ? ax.undetermined_value : null;
+  const capped = !!sc.captures_truncated;
+  const keys = Object.keys(vocab).concat(undet && !(undet in vocab) ? [undet] : []);
+  const rows = keys.map(k => {
+    const n = (typeof sc[k] === "number") ? sc[k] : null;
+    if(n === null) return "";
+    const says = (typeof vocab[k] === "string") ? vocab[k] : null;
+    return `<div class="kv" data-axis="${esc(k)}">
+      <span class="k"><b>${esc(String(n))}</b> <span class="mono" style="font-weight:400">${esc(k)}</span></span>
+      <span class="v plain">${says ? esc(says)
+        /* NO SENTENCE IS INVENTED FOR A STATE THE PLANE PUBLISHES NO SENTENCE
+           FOR. `content_axis.vocabulary` carries words for four states and
+           `undetermined_value` arrives as a bare token beside them — so the
+           fifth bucket gets its count, its name, and a note in THIS SURFACE's
+           own words saying the record published no wording for it and naming
+           where the record does explain it. Reported as a design gap. */
+        : `The record publishes no sentence for this state, only its name. What it means for this answer is in the record&rsquo;s own words at the content level above.`}</span></div>`;
+  }).join("");
+  return `<h3 class="cx-h">What was searchable, of what was in scope</h3>
+    <p class="subj-note" id="f-pass-denominator">${capped
+      ? `Counted over <b>the first ${esc(String(sc.captures_bound))}</b> of the captures in scope, which is where the record stopped counting.`
+      : `Counted over <b>all ${esc(String(sc.captures_counted))}</b> of the captures in scope.`}</p>
+    ${capped ? `<div class="card undet" id="f-pass-sample" style="margin:8px 0">
+      <div class="subj-grade g-unconf">a sample, not a census</div>
+      <div class="subj-how">The record counts at most <b>${esc(String(sc.captures_bound))}</b> captures for this tally and this scope has more, so it counted <b>${esc(String(sc.captures_counted))}</b> and stopped. <b>The captures past that point are in none of the figures below</b> &mdash; not in the searched buckets and not in the unsearched ones. They are not "probably like these"; they are uncounted, and this screen cannot tell you what they hold.</div>
+    </div>` : ""}
+    <div class="card" id="f-pass-axis" style="margin:8px 0">${rows}</div>
+    ${/* THE ONE STATE NAME THIS FILE SPELLS, AND IT IS PINNED RATHER THAN TRUSTED.
+          Everything above is driven off `content_axis.vocabulary`, so the buckets
+          are whatever the plane says they are. This note is different: it is a
+          statement about ONE state's meaning — that a capture was never extracted
+          and the record is not saying WHY on this answer — so it has to name that
+          state, and there is no published predicate for "this is the never-
+          extracted bucket". A rename would therefore drop the note in SILENCE,
+          which is the drift this file guards everywhere else. So
+          `passage-surface.test.mjs` pins the literal against
+          `CONTENT_AXIS_STATES`' own key in both directions: a plane that renames
+          it fails the harness BY NAME instead of quietly telling a member less. */
+      /* WHICH CAUSE, AND THE HONEST ANSWER IS THAT THIS READ DOES NOT CARRY IT.
+          Measured on this tree rather than inherited: `#contentAxisTally`
+          computes a per-capture cause and then COUNTS AND DISCARDS it, so only
+          the bucket totals cross the wire. Naming the reads that do carry it is
+          what keeps this a stated limit rather than a silence. */
+      (typeof sc.not_extracted === "number" && sc.not_extracted > 0) ? `<p class="subj-note" id="f-pass-cause">Which of the three reasons a capture was never extracted applies &mdash; nobody ever looked, or the record&rsquo;s log did not yet cover its lifetime, or its entries were purged &mdash; is <b>not on this answer</b>. This search publishes the totals above and not the reason behind each one, and this screen will not guess between them. The record does hold that distinction: the frontier read and the content-axis read over a single capture are what carry it.</p>` : ""}`;
+}
+/* ---- ONE PASSAGE, AS CONTENT AND WITH ITS `ref`. UI-61's leg display is the
+        sibling of this and the same three rules govern both: the `ref` is the
+        RECORD's sentence about what this address points at and is rendered
+        VERBATIM (DEC-49); `EXTENT_KIND_WORD` supplies a NOUN beside it and
+        never a replacement, so an extent arm this file has no word for renders
+        the record's `ref` and no noun rather than nothing at all; and the jump
+        is offered ONLY where it can be completed.
+
+        THE EXTENT ARRIVES AS JSON TEXT HERE AND AS AN OBJECT THERE, and that
+        difference is real rather than cosmetic. `capture_text.extent` is a TEXT
+        column holding `canonicalExtent`'s output, so this row's `extent` is a
+        STRING; UI-61's leg standing is composed by the store and arrives
+        parsed. A file that assumed one shape for both would read `.page` off a
+        string, get `undefined`, and silently offer no jump on every PDF page in
+        the record — a whole capability absent with nothing reporting it. Parsed
+        once, here, and a parse that fails yields no jump and no claim. ---- */
+function passageExtent(row){
+  const raw = row && row.extent;
+  if(typeof raw !== "string") return (raw && typeof raw === "object") ? raw : null;
+  try{ const e = JSON.parse(raw); return (e && typeof e === "object") ? e : null; }catch(_){ return null; }
+}
+function passageJumpHtml(row){
+  const e = passageExtent(row);
+  if(!e || row.extent_kind !== "pdf-page" || !Number.isInteger(e.page)) return "";
+  /* 0-BASED IN THE RECORD, 1-BASED TO A READER, converted HERE and once —
+     `legJumpHtml` states the same rule for the same reason one screen over. */
+  return ` &middot; <a onclick="openBundleAtPage(${esc(JSON.stringify(String(row.bundle_id||"")))},${e.page+1})">open the document at page ${e.page+1}</a>`;
+}
+function passageRowHtml(row, i){
+  const noun = EXTENT_KIND_WORD[row.extent_kind] || null;
+  const snip = (typeof row.snippet === "string" && row.snippet) ? row.snippet : null;
+  return `<div class="card" data-passage="${esc(String(i))}" style="margin:0 0 10px">
+    <div class="kv"><span class="k">In</span><span class="v plain">
+      <a onclick="openBundle(${esc(JSON.stringify(String(row.bundle_id||"")))})" class="mono">${esc(String(row.bundle_id||""))}</a></span></div>
+    <div class="subj-how" style="margin-top:6px"><b>rests on</b> &middot; ${esc(String(row.ref||""))}${noun?` <span style="color:var(--muted)">(${esc(noun)})</span>`:""}${passageJumpHtml(row)}</div>
+    ${snip ? `<div class="pass-snip" data-snippet="1" style="margin-top:8px">${esc(snip)}</div>` : ""}
+    <div class="subj-ref" style="margin-top:6px">
+      ${row.chain_kind ? `read by <span class="mono">${esc(String(row.chain_kind))}</span> &middot; ` : ""}unit ${esc(String(row.seq))} in reading order${
+        row.truncated ? ` &middot; <b>this unit&rsquo;s text was cut short</b> when the record indexed it, so words past that point are not searched and are not shown here` : ""}</div>
+    ${row.content_id
+      ? `<div class="subj-ref" data-minted="1">The record already holds a citable passage at this address &mdash; <span class="mono">${esc(String(row.content_id))}</span>. Citing it uses that one rather than making a second.</div>`
+      : `<div class="subj-ref" data-minted="0">Nothing has been cited at this address yet. Searching mints nothing; the record makes a passage here only when you cite it.</div>`}
+    ${/* ABSENT, NEVER PRESENT-AND-GREYED (UI-15). A credential the record does
+          not publish this act for gets no button and no explanation of one it
+          could not have used — `actReachable` reads the act's OWN published
+          `needs` and `mode` rather than a copy of them kept here. */
+      passageCiteAct()
+        ? `<div style="margin-top:8px"><button class="btn ghost" data-cite-passage="${esc(String(i))}">Cite this passage</button></div>`
+        : ""}
+  </div>`;
+}
+/* ---- THE PASSAGES PANEL. ---- */
+function finderPassagePanelHtml(p){
+  const head = `<h2 class="sec">Passages</h2>`;
+  /* AN ARM THE PLANE DOES NOT PUBLISH IS ABSENT AND SAYS SO ONCE. Not a zero,
+     not an apology, and not a refusal this surface composed. */
+  if(p && p.armUnpublished)
+    return head + `<p class="subj-note">This record does not publish a way to search what its captured documents SAY, so this route was not asked. It is not empty; it was never a question this plane could answer.</p>`;
+  if(!p || !p.asked)
+    return head + `<p class="subj-note">Not asked: nothing you typed is a term this route can answer.</p>`;
+  if(p.err) return head + actRefusalHtml(p.err);
+  const env = p.env || null;
+  const shown = (p.rows||[]).length;
+  const capped = p.totalKnown && p.total > shown;
+  const atLimit = !capped && p.limit !== null && shown >= p.limit;
+  return head
+    + `<p class="count-line" id="f-pass-count">${p.totalKnown
+        ? `<b>${esc(String(p.total))}</b> ${p.total===1?"passage":"passages"} on this route${capped?` &middot; showing the first ${esc(String(shown))}`:""}`
+        : `<b>${esc(String(shown))}</b> ${shown===1?"passage":"passages"} shown on this route &middot; the record did not say how many it found`}</p>`
+    + `<p class="subj-note">What the captured documents themselves say, one page or paragraph at a time. This is a different question from the route above, over a different table: that one searches what the record <b>projects</b> about a document, this one searches the document&rsquo;s own words. A passage found here is an <b>address</b> and not a citation &mdash; nothing is added to the record by searching for it.</p>`
+    /* THE ANSWER'S OWN SENTENCE, VERBATIM AND BEFORE ANY ROW. It is the record
+       telling a member what this answer is and is not, and on a hit it is the
+       line that says how much of the scope was never read. */
+    + (env && env.says ? `<div class="card" id="f-pass-says" style="margin:8px 0"><div class="kv"><span class="k">The record&rsquo;s own account of this answer</span><span class="v plain">${esc(String(env.says))}</span></div></div>` : "")
+    /* WHETHER THE MEMBER'S WORDS REACHED THE INDEX AT ALL. `matched: false` is
+       an answer and not an empty one — the record listed what it has read
+       rather than what matched, because nothing was asked to match. The plane
+       says so itself on the content level; this line is the surface making it
+       impossible to miss above a list of rows with no snippets. */
+    + (env && p.asked && !p.matched && shown
+        ? `<div class="card undet" id="f-pass-unmatched" style="margin:8px 0"><div class="subj-grade g-unconf">not a search</div><div class="subj-how">You have not asked this route for any words, so it is showing what the record has READ in this scope rather than what matched. There is nothing highlighted below because there was nothing to highlight.</div></div>`
+        : "")
+    + ((capped || atLimit)
+        ? `<div class="card" id="f-pass-cap" style="margin:8px 0"><div class="kv"><span class="k">You are looking at part of the answer</span><span class="v plain">${capped
+              ? `The record found <b>${esc(String(p.total))}</b> and this page is showing <b>${esc(String(shown))}</b> of them${p.limit!==null?` &mdash; the most it will send in one go is ${esc(String(p.limit))}`:""}.`
+              : `This page came back exactly at the record&rsquo;s own limit of <b>${esc(String(p.limit))}</b>, and the record did not say how many it found in total. There may be nothing past this page and there may be a great deal; <b>this screen cannot tell you which</b>.`}</span></div></div>`
+        : "")
+    + ((p.warnings||[]).length ? `<div class="card" style="margin:8px 0">${p.warnings.map(w=>`<div class="kv"><span class="k">The record&rsquo;s note on this query</span><span class="v plain">${esc(String(w))}</span></div>`).join("")}</div>` : "")
+    + (shown
+        ? `<p class="subj-note">The record marks the words it matched with square brackets, and an ellipsis where it cut the passage short. Those marks are the record&rsquo;s own and are left exactly as it wrote them &mdash; a document that itself contains a bracket would otherwise be reshaped by this screen, silently and in the one place a member is reading its words.</p>`
+          + (p.rows||[]).map((r,i)=>passageRowHtml(r,i)).join("")
+        : `<div class="empty">This route matched nothing.</div>`)
+    /* THE ABSENCE STATEMENT, AND IT IS THE LAST THING ON THE PANEL RATHER THAN
+       THE FIRST FOR ONE REASON: it is what a member reads AFTER seeing however
+       many results there were, and its job is to say what those results are
+       and are not evidence OF. It renders whether there were four hundred of
+       them or none. */
+    + finderTallyHtml(env)
+    + finderLevelsHtml(env);
 }
 function finderPaintResults(){
   const res = $("#f-res"); if(!res) return;
   const overlapIds = new Set((FIND.overlap && FIND.overlap.ids) || []);
   res.innerHTML = finderTextPanelHtml(FIND.text, overlapIds)
                 + finderOverlapHtml(FIND.text, FIND.subjects, FIND.overlap || { n:0, ids:[] })
+                + finderPassagePanelHtml(FIND.passages)
                 + finderSubjectsPanelHtml(FIND.subjects, overlapIds);
+  /* THE CITE CONTROL IS WIRED TO THE ROW OBJECT THE PLANE SENT, by index into
+     the answer this panel was painted from — never by reading values back out
+     of the markup. A control that re-parsed its own HTML would be citing what
+     this screen managed to render rather than what the record answered. */
+  res.querySelectorAll("[data-cite-passage]").forEach(b=>b.onclick=()=>{
+    const rows = (FIND.passages && FIND.passages.rows) || [];
+    const row = rows[Number(b.dataset.citePassage)];
+    if(row) citePassage(row);
+  });
   res.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openBundle(b.dataset.open));
   res.querySelectorAll("tr.row").forEach(r=>{ if(r.dataset.id) r.onclick=()=>openBundle(r.dataset.id); });
   /* THE HOLD STRIP FOLLOWS THE ANSWER (UI-25). It offers a control whose whole

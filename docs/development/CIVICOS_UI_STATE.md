@@ -50,6 +50,54 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v90, 2026-09-17 session, thread UI, UI-62. Landed on `worktree-agent-a79a0995d1af935bb`.
+SURFACE: `app.html`, the evidence finder and the cite composer. THE MEMBER CAN READ A
+PASSAGE, AND THE SURFACE SAYS WHICH LEVEL WAS EMPTY. The finder asked two questions and
+neither of them had ever read a word of a captured document: `op=search` compiles over
+`bundles_fts`, which is projected frontmatter and the group's own notes. It now asks a
+THIRD — `passage:` through `op=meaningrows&rows=passage`, REC-92's arm — so a bare word
+reaches both grains at once and the three answers are reported apart. No overlap is
+computed against the passages route, because an overlap between a set of DOCUMENTS and a
+set of UNITS is not a set, and the surface says so where the other overlap is stated.
+THE ABSENCE STATEMENT IS THE ITEM: four levels rendered with the plane's own `state` and
+`why` verbatim, the answer's own `says` whole, and the FIVE-bucket content-axis tally
+driven off `content_axis.vocabulary` rather than learned literals — rendered on a HIT as
+well as on a miss, because the plane's hit sentence is the one that says how much of the
+scope was never read at all. §4.4's open presentation question is ANSWERED with the
+reasoning at the site: when `MEANING_AXIS_CAP` bites the denominator is named in the
+HEADING, the word SAMPLE appears beside the figures, the uncounted captures are stated to
+be in no bucket, and there are no proportions anywhere. CITING A PASSAGE CLOSES THE HALF
+UI-61 LEFT OPEN — reached from a search there is no extent to pick, so the composer
+carries the address, states it in the record's own `ref`, prefills nothing, and sends it
+on the QUESTION arm only, because a case's edge has no slot for a part of a document and
+`op=cite` refuses one by name. The wire fields are DERIVED (`extent_<key>`), so a
+canonical form that grows a field is refused by name rather than dropped in silence.
+TWO CLAIMS THIS SURFACE WAS ALREADY MAKING WERE CORRECTED, not extended: the `finder`
+registry declared `content` among its levels and promised "documents and their extracted
+content" while reaching no captured text at all, and the FIND recipe made the same
+promise in one step — now two steps, because they are two levels. Measured on the branch:
+UI harness 51 suites / 0 fail / exit 0 (own baseline 50/0); the new suite 94 assertions
+driving the REAL plane through miniflare, mocking nothing; battery 213/213 · 13,344
+identical to `78ef0efc`; `--strict` exit 0; plancheck 0 fail; corpuscheck 50/0. Controls
+10 arms, all declared before arming, all run, restores by sha256 + `cmp` at 1,348,297
+bytes: baseline 94/0; `levelhidden` 89/5 naming both scopes; `tallyfour` 93/1;
+`reworded` 93/1; `prefilled` 93/1; `proportions` 93/1; `sampleunmarked` 92/2;
+`extentdropped` 91/3 — the act still SUCCEEDS, which is what makes it dangerous;
+`offbyone` 93/1; `reordered` 94/0, the over-strictness arm, taking nothing down.
+`member-respect.test.mjs` CAUGHT TWO REAL DEFECTS in this item's first draft — a DEC-68
+diligence word and an unclassified repeated control — and is extended rather than
+exempted; `passageRowHtml` is registered as a SET OF DECISIONS whose bulk path is CARRIED
+with its reason, because `op=cite` refuses `EXTENT_ON_MANY` by name. THE FINDING WORTH
+MORE THAN THE SURFACE is a plane defect this item did NOT work around: `op=meaningrows`
+means two different things by *in scope* in one envelope — `mode:"axis"` strips the row
+arm from its scope and `mode:"levels"` does not, though its own comment says it does — so
+`scope.documents` collapses to 0 on any passage miss and the two honest branches of
+`says` become unreachable, publishing "no document was in scope" over a scope holding two.
+`MEASUREMENTS.md` M-43, DELEGATED to RECORD, and the suite PRINTS the collapse on every
+run rather than failing over it.
+
+NOTE ON THE NUMBER: this entry takes `v90` and UI-61 (`7cf7443`, the leg extent display and the page jump, merged by CONDUCT #11) HAS NO LEDGER ENTRY — UI-59's backfill closed at UI-57/`v89` and UI-61 landed after it. The gap is named here rather than absorbed by this number, because a ledger whose sequence is continuous reads as complete. Writing UI-61's entry is UI-61's owed act and not this one's: its reasoning is in its `QUEUE.md` `landed:` line, and inventing a summary of somebody else's landing is exactly what this ledger's own backfill banner refuses to do.
+
 v89, 2026-09-10 session, thread UI, UI-57. Landed `ab9449e` (arm retirement `8e61e8f`,
 merged `77d8361`). SURFACE: `app.html`, `publicationEntryHtml`. THE GATE MOVED FROM THE
 ACT'S PRESENCE TO THE OBJECT'S STATE. The whole "Publishing this case" section had been
