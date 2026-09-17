@@ -1084,9 +1084,22 @@ const REGISTER_FLOOR = {
      necessarily moves the census by one — the two ratchets in that file cannot move
      independently. Arithmetic on these figures is wrong in more ways than one.
      ONE KEY SET, grepped after writing: `^  arms:` matches twice, here and FLEET_FLOOR (76). */
-  arms: 1129,
-  classified: 201,
-  corpus: 202,
+  /* REC-96, 2026-09-17: 1129 -> 1134 / 201 -> 202 / 202 -> 203, ALL THREE MOVED IN
+     THE SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN RUN
+     PRINTED after committing (`arms 1134/1129 · classified 202/201 · corpus
+     203/202 · GREW by 5 arm(s)`), never by adding to the numbers above. One new
+     suite, `test/casesearched.test.mjs`, whose declaration states FIVE arms — a
+     baseline plus four, driven by `test/casesearched.control.mjs` and every one
+     RUN — so `corpus` and `classified` each rise by one and `arms` by five.
+     ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file,
+     once here and once in an unrelated object at the foot; this block has one.
+     THE FIGURE WAS TAKEN AFTER THE COMMIT ON PURPOSE: before it, the register
+     reported the suite as NOT IN ANY COMMIT and refused to count work no other
+     checkout can see (D-238), so a floor moved then would have been a figure
+     nobody else reproduces. CONDUCT re-reads this on the MERGED tree. */
+  arms: 1134,
+  classified: 202,
+  corpus: 203,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
