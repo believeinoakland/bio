@@ -12263,7 +12263,7 @@ paths: `bio-plane/src/store.mjs` — **named by SITE**: (1) `meaningRows()`, whi
    IC-25's rule whatever the measured impact, and the measured impact is **zero non-test consumers**
    — deliberately not argued down, on IC-112's precedent from this interface's own last bump.
    `INTERFACE-CHANGES.md` carries the row with its reversal.
-2. **FLIP AND SPAWN REC-118 (D-406) and REC-119 (D-407)** — the fifth and sixth readers of the
+2. **FLIP AND SPAWN REC-118 (D-410) and REC-119 (D-411)** — the fifth and sixth readers of the
    capture axis, both member-facing, both found by the census REC-114's row demanded and both DRIVEN
    rather than grepped. They are ROWED with scope, accepts-when and negative controls. **REC-119
    carries a freeze constraint that makes it a design question and possibly BOB's** — its scope says
