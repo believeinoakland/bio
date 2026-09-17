@@ -84,7 +84,6 @@ export const OWNER_RE = (lane) => new RegExp(
   + String.raw`|owed by (?:the\s+)?${lane}\b`
   + String.raw`|blocked on (?:the\s+)?${lane}\b`
   + String.raw`|${lane}(?:'s to |'s call| owns | to decide| to design)`
-  + String.raw`|owed by this lane`
   + String.raw`|is ${lane}'s\b`, "i");
 
 /* TIGHTENED TWICE, BOTH TIMES BY DRIVING IT. A bare `RESIDUE` matched the word wherever it
@@ -92,7 +91,14 @@ export const OWNER_RE = (lane) => new RegExp(
    ABOUT a residue, not a declaration of one. These are the forms that ANNOUNCE an unfinished
    obligation, and they are the forms this lane actually writes. **A marker that matches
    description as well as declaration turns a worklist into a reading list.** */
-export const RESIDUE_RE = /\bSTILL OPEN\b|\bSTILL OWED\b|\bNOT CLAIMED (?:DONE|CLOSED|FIXED)\b|\bRESIDUE[,:]? (?:NAMED|STATED|AND NOT)\b|\bOUTSTANDING\b/i;
+/* `owed by this lane` IS NOT AN ATTRIBUTION AND WAS THE LAST LEAK — it matched for EVERY lane,
+   because the phrase means *the lane that wrote this row*, which this tool cannot determine.
+   With it in the owner pattern, a NONEXISTENT lane still came back with one attributed item.
+   It is real open work, so it moves to the residue population where its owner is honestly
+   stated as unknown — and the row that used it has been rewritten to NAME its lane, because the
+   fix for an unresolvable self-reference is to make the record explicit, not to make the tool
+   guess. */
+export const RESIDUE_RE = /\bowed by this lane\b|\bSTILL OPEN\b|\bSTILL OWED\b|\bNOT CLAIMED (?:DONE|CLOSED|FIXED)\b|\bRESIDUE[,:]? (?:NAMED|STATED|AND NOT)\b|\bOUTSTANDING\b/i;
 
 const rowsOf = (text, prefix) => {
   const out = [];
@@ -120,7 +126,8 @@ export function owedFor(lane = "BOB", { repo = ROOT, reader = null } = {}) {
     const owned = owner.test(r.disposition);
     const residue = RESIDUE_RE.test(r.disposition);
     if (owned || residue)
-      items.push({ source: "DEBT", id: r.id, why: residue ? "residue stated on the row" : `names ${lane}`,
+      items.push({ source: "DEBT", id: r.id, attributed: owned,
+                   why: owned ? `names ${lane}` : "open residue on the row — NOT attributed to any lane",
                    text: (residue ? r.disposition.match(new RegExp(RESIDUE_RE.source + "[^.]{0,180}", "i"))?.[0]
                                   : r.disposition.trim().slice(0, 180)) || "" });
   }
@@ -128,15 +135,30 @@ export function owedFor(lane = "BOB", { repo = ROOT, reader = null } = {}) {
   const dec = read(SOURCES.decisions);
   if (dec === null) unreadable.push(SOURCES.decisions);
   else for (const m of dec.matchAll(/^### (DEC-\d+) · (\w+)/gm))
-    if (m[2] === "open") items.push({ source: "DECISIONS", id: m[1], why: "open decision", text: "awaiting Bob" });
+    if (m[2] === "open") items.push({ source: "DECISIONS", id: m[1], attributed: true,
+                                      why: "open decision", text: "awaiting Bob" });
 
   const q = read(SOURCES.queue);
   if (q === null) unreadable.push(SOURCES.queue);
   else for (const m of q.matchAll(/^### ([A-Z0-9-]+) · blocked(.{0,220})/gm))
-    if (owner.test(m[2])) items.push({ source: "QUEUE", id: m[1], why: `blocked on ${lane}`, text: m[2].trim().slice(0, 160) });
+    if (owner.test(m[2])) items.push({ source: "QUEUE", id: m[1], attributed: true,
+                                       why: `blocked on ${lane}`, text: m[2].trim().slice(0, 160) });
 
-  return { lane, items, unreadable,
-           counts: { owed: items.length, unreadable: unreadable.length } };
+  /* TWO POPULATIONS, AND SUMMING ACROSS THEM WAS A FIGURE THAT COST NOTHING TO PRODUCE.
+     Found 2026-09-17 by CONDUCT #3 running a DISCRIMINATION CONTROL this file should have had
+     from the start: `owed.mjs ZZZNOTALANE` returned ELEVEN items. A lane that does not exist
+     cannot owe anything, so eleven of thirteen were never lane-attributed at all — they are
+     OPEN RESIDUE on rows, which is real and worth printing and is NOT a statement about any
+     lane. **The per-item output already carried the distinction (`names <LANE>` versus
+     `residue stated on the row`); the summary line summed across it under one label, and the
+     author carried the wrong figure into a message to another lane within the hour.**
+     The fix is the LABEL, never the items: an arm that only checks real lanes cannot tell a
+     working filter from no filter. */
+  const attributed = items.filter((i) => i.attributed);
+  const residue = items.filter((i) => !i.attributed);
+  return { lane, items, attributed, residue, unreadable,
+           counts: { owed: items.length, attributed: attributed.length,
+                     residue: residue.length, unreadable: unreadable.length } };
 }
 
 export function owedMessage(o) {
@@ -144,17 +166,35 @@ export function owedMessage(o) {
     return `OWED BY ${o.lane} — UNKNOWN: could not read ${o.unreadable.join(", ")}. `
          + `An unreadable ledger is not an empty one.`;
   if (!o.items.length)
-    return `OWED BY ${o.lane} — nothing. The list is empty, which is the only condition under `
-         + `which this lane stops (kickoffs/BOB.md rule 10).`;
-  let out = `OWED BY ${o.lane} — ${o.items.length} item(s). The list is NOT empty, so there is no\n`
-    + `        boundary to stop at (kickoffs/BOB.md rule 10). Sequencing is this lane's own.\n`;
-  for (const i of o.items) out += `\n          ${i.source} ${i.id} — ${i.why}\n            ${i.text}\n`;
+    return `OWED BY ${o.lane} — nothing attributed and no open residue. The list is empty `
+         + `(kickoffs/BOB.md rule 10).`;
+  let out = `OWED BY ${o.lane} — ${o.counts.attributed} ATTRIBUTED to this lane, plus `
+    + `${o.counts.residue} open residue\n        row(s) attributed to NOBODY. The two are counted apart because a `
+    + `lane that does\n        not exist returns the residue population too — summing them is a figure that\n`
+    + `        costs nothing to produce. Sequencing is this lane's own (rule 10).\n`;
+  if (o.attributed.length) {
+    out += `\n        ATTRIBUTED TO ${o.lane} — ${o.attributed.length}\n`;
+    for (const i of o.attributed) out += `\n          ${i.source} ${i.id} — ${i.why}\n            ${i.text}\n`;
+  }
+  if (o.residue.length) {
+    out += `\n        OPEN RESIDUE, OWNER NOT STATED — ${o.residue.length}\n`;
+    for (const i of o.residue) out += `\n          ${i.source} ${i.id} — ${i.why}\n            ${i.text}\n`;
+  }
   return out;
 }
 
 if (process.argv[1] && process.argv[1].endsWith("owed.mjs")) {
-  const lane = process.argv[2] || "BOB";
+  /* A FLAG IS NOT A LANE NAME. `--lane=CONDUCT` was swallowed as the lane itself and returned
+     the nonexistent-lane answer — a second way to get a confident wrong number, found in the
+     same pass (CONDUCT #3, 2026-09-17). */
+  const arg = process.argv[2] || "BOB";
+  const lane = arg.startsWith("--lane=") ? arg.slice(7) : arg;
+  if (arg.startsWith("--") && !arg.startsWith("--lane=")) {
+    console.error(`owed: unrecognised flag ${arg} — usage: owed.mjs [LANE | --lane=LANE]`);
+    process.exit(2);
+  }
   const o = owedFor(lane);
-  console.log(`owed: ${o.counts.owed} item(s) owed by ${lane}; ${o.counts.unreadable} ledger(s) unreadable`);
+  console.log(`owed: ${o.counts.attributed} attributed to ${lane}, ${o.counts.residue} open residue `
+    + `attributed to nobody (${o.counts.owed} listed); ${o.counts.unreadable} ledger(s) unreadable`);
   console.log(`\n${owedMessage(o)}`);
 }

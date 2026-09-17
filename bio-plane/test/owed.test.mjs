@@ -42,6 +42,13 @@
  *   (A6) THE PRECISION ARM — every judged row returned as owed, so the list is complete and
  *        useless. A sensitivity control does not notice; only this does.
  *
+ * **AND SECTION 7 IS A DISCRIMINATION CONTROL THE TOOL SHIPPED WITHOUT, which is why it was
+ * WRONG.** `owed.mjs ZZZNOTALANE` returned ELEVEN items — a lane that does not exist cannot
+ * owe anything — because the summary summed two populations under one label. The author read
+ * that headline and told another lane it owed 12 things within the hour. Found by CONDUCT #3.
+ * **An assertion that only ever asks about REAL lanes cannot tell a working filter from no
+ * filter at all**, which is M0-54's liar's check: it passed 9/9 with no power.
+ *
  * **THE SUBJECT'S HEADER FIRST CITED THAT DRIVER BEFORE IT EXISTED** — a citation to a control
  * nobody could run, which is the false-absence class this family exists to catch, committed by a
  * file in the family. Corrected to say so, then built. A declared control is a CLAIM; the
@@ -58,7 +65,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 6;
+const SECTIONS = 7;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -169,13 +176,51 @@ section("6 — THE LIVE ESTATE. An arm that found nothing here would satisfy eve
   t("the walk is NON-EMPTY — the estate does owe this lane something", o.counts.owed > 0, true);
   t("...and every item carries a source, an id and a reason",
     o.items.every((i) => i.source && i.id && i.why), true);
-  t("...and the message tells the lane not to stop", /no\n        boundary to stop at/.test(owedMessage(o)), true);
+  /* CORRECTED 2026-09-17, not exempted: the message was rewritten to count the two populations
+     apart (the discrimination-control fix), so the old phrase "no boundary to stop at" is gone.
+     The old assertion was pinning WORDING; this one pins the two things that must survive any
+     rewrite — the rule it serves, and the fact that it names both populations. */
+  t("...and the message names the rule it serves", /rule 10/.test(owedMessage(o)), true);
+  t("...and reports BOTH populations rather than one summed figure",
+    /ATTRIBUTED to this lane, plus \d+ open residue/.test(owedMessage(o)), true);
   /* The empty case must still be expressible, or "keep going" could never terminate. */
   const empty = owedFor("NOSUCHLANE", { reader: () => DEBT([]) });
   t("a lane owing nothing gets the EMPTY message, so the rule can terminate",
     /the list is empty/i.test(owedMessage(empty)), true);
   t("the owner and residue patterns are declared once",
     [OWNER_RE("BOB") instanceof RegExp, RESIDUE_RE instanceof RegExp], [true, true]);
+}
+
+/* ========================================================================== */
+section("7 — THE DISCRIMINATION CONTROL. A NONEXISTENT LANE MUST BE ATTRIBUTED NOTHING — and "
+      + "this arm exists because the tool shipped WITHOUT it and was wrong: `owed.mjs "
+      + "ZZZNOTALANE` returned ELEVEN items, the author read the headline, and told another "
+      + "lane it owed 12 things within the hour.");
+{
+  const debt = DEBT([
+    "| D-30 | gap | 2026-09-17 | body | M0 · open — routed to BOB |",
+    "| D-31 | gap | 2026-09-17 | body | M0 · open — STILL OPEN: nobody's name on this |",
+    "| D-32 | gap | 2026-09-17 | body | M0 · open — owed by this lane |",
+  ]);
+  const files = { [SOURCES.debt]: debt, [SOURCES.decisions]: "", [SOURCES.queue]: "" };
+  const real = owedFor("BOB", { reader: fixture(files) });
+  const fake = owedFor("ZZZNOTALANE", { reader: fixture(files) });
+
+  t("a real lane IS attributed its own row", real.attributed.map((i) => i.id), ["D-30"]);
+  t("A NONEXISTENT LANE IS ATTRIBUTED NOTHING", fake.attributed.length, 0);
+  /* Without this pairing the arm is a liar's check: an assertion that only ever asks about REAL
+     lanes cannot tell a working filter from no filter at all. */
+  t("...while BOTH still see the same lane-independent residue, which is real and must not be "
+  + "dropped", [real.counts.residue, fake.counts.residue], [2, 2]);
+  t("`owed by this lane` is RESIDUE, not attribution — it means the lane that WROTE the row, "
+  + "which this tool cannot determine", fake.residue.some((i) => i.id === "D-32"), true);
+  t("...so the totals differ by exactly the attributed item",
+    real.counts.owed - fake.counts.owed, 1);
+  /* The headline is the thing that was wrong, so the headline is asserted. */
+  t("the message counts the two populations APART", 
+    /ATTRIBUTED to this lane, plus 2 open residue/.test(owedMessage(real)), true);
+  t("...and says why they are counted apart, so the next reader does not re-sum them",
+    /costs nothing to produce/.test(owedMessage(real)), true);
 }
 
 console.log(`\nsections reached ${reached}/${SECTIONS}`);

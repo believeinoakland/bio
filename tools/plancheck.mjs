@@ -693,8 +693,14 @@ if (conduct && inbox && !/INBOX/.test(conduct))
       const o = owedFor(lane, { repo: ROOT });
       if (o.unreadable.length) { warn(`OWED BY ${lane} is UNKNOWN — could not read `
         + `${o.unreadable.join(", ")}. An unreadable ledger is not an empty one.`); continue; }
-      notes.push(`owed by ${lane}: ${o.counts.owed} item(s)`
-        + (o.counts.owed ? ` — ${o.items.map((i) => i.id).join(", ")}` : " — the list is empty"));
+      /* THE TWO POPULATIONS ARE PRINTED APART, because summing them is a figure that costs
+         nothing to produce: a lane that DOES NOT EXIST comes back with the whole residue list.
+         Found 2026-09-17 by CONDUCT #3's discrimination control, after this arm's first version
+         printed the summed count and its author repeated the wrong figure to another lane. */
+      notes.push(`owed by ${lane}: ${o.counts.attributed} ATTRIBUTED`
+        + (o.counts.attributed ? ` — ${o.attributed.map((i) => i.id).join(", ")}` : "")
+        + `; ${o.counts.residue} open residue attributed to NOBODY`
+        + (o.counts.residue ? ` — ${o.residue.map((i) => i.id).join(", ")}` : ""));
     }
   }
 }
