@@ -12047,3 +12047,22 @@ what changed: the original block reserved **`docs/development/kickoffs/CONDUCT.m
 why this is an addendum and not an edit: `CLAIMS.md` is APPEND ONLY and the one field that changes on an
   existing block is `released:`. A claim quietly widened in place is a register that no longer records
   who held what, which is the only thing a claim register has to support.
+
+## CLAIM ADDENDUM 2026-09-17 M0 (M0-56 — this row FALSIFIED a measurement in `m041-instrument-census.mjs`, and the path was not reserved)
+session: m056-decided-index-pushguard (worktree agent-a3378dc3df6e90e46)
+opened: 2026-09-17T00:00:00Z
+path added: `bio-plane/test/m041-instrument-census.mjs` — **unclaimed, not another area's**, and taken
+  rather than delegated because this row is what made it wrong. The census stated, as a hard-coded
+  sentence in two places, *this repository has no git hook and no CI (measured — `.git/hooks` holds
+  only samples, `core.hooksPath` unset, no `.github/`)*. **Installing a `pre-push` hook made the first
+  half FALSE.** Leaving it would have planted this project's most-repeated defect — a hand-carried fact
+  in a document nobody re-measures — **inside the very instrument built to detect it**.
+what changed: a `hookState()` helper and the paragraph that printed the sentence; the sentence is now
+  MEASURED on every run and prints what it found. The second site is a comment, corrected in place with
+  the reason. **NOTHING ELSE IN THE FILE MOVED** — no arm, no matcher, no corpus, no ENTRY_LOOPS row.
+  **The conclusion the census draws is UNCHANGED and that is the point:** the hook composes the PUSH,
+  not the five gates, so every entry loop remains convention-only and skipping one still leaves no trace.
+a trap paid for and not repeated: the first draft of `hookState()` used `readdirSync`, and **this file's
+  own header promises NO DIRECTORY WALK precisely so it stays out of `hygiene.test.mjs`'s `readdirSync`
+  census, which fails BY NAME on a new member.** It probes a NAMED LIST of standard git hook names
+  instead, and the resulting blind spot — a hook under a non-standard name — is STATED at the site.

@@ -103,6 +103,47 @@ import { fileURLToPath } from "node:url";
 export const REPO = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 const read = (rel) => { try { return readFileSync(join(REPO, rel), "utf8"); } catch { return null; } };
+
+/* WHAT ACTUALLY COMPOSES AN ENTRY LOOP, ASKED OF THE TREE RATHER THAN RECITED.
+   M0-41 measured "`.git/hooks` holds only samples, `core.hooksPath` unset, no
+   `.github/`" and wrote the answer into this file as a SENTENCE. M0-56 then
+   installed a `pre-push` hook and the sentence became false — the exact defect
+   this census exists to expose, inside the census. It is a measurement now.
+   `--git-common-dir`, never `--git-dir`: hooks are shared by every worktree of a
+   clone, and `--git-dir` in a worktree answers a directory git reads no hooks
+   from, so asking it would report "no hooks" from inside a guarded worktree.
+
+   NO `readdirSync`, AND THAT IS NOT A STYLE CHOICE — this file's own header
+   promises it performs NO DIRECTORY WALK, precisely so it stays out of
+   `hygiene.test.mjs`'s `readdirSync` census, which fails BY NAME on a new member.
+   The first draft of this helper walked the directory and would have broken the
+   census this file exists to be part of. So it probes a NAMED LIST instead.
+
+   THE LIMIT THAT BUYS: it sees only hooks with STANDARD git names. A hook under a
+   name not listed here is invisible to this census, which is stated rather than
+   left for a reader to assume completeness — the same absence-with-two-causes rule
+   this whole census is written under. */
+const GIT_HOOK_NAMES = [
+  "applypatch-msg", "pre-applypatch", "post-applypatch", "pre-commit",
+  "pre-merge-commit", "prepare-commit-msg", "commit-msg", "post-commit",
+  "pre-rebase", "post-checkout", "post-merge", "pre-push", "pre-receive",
+  "update", "proc-receive", "post-receive", "post-update", "push-to-checkout",
+  "pre-auto-gc", "post-rewrite", "sendemail-validate", "fsmonitor-watchman",
+  "reference-transaction",
+];
+function hookState() {
+  const configured = git(["config", "--get", "core.hooksPath"]);
+  const common = git(["rev-parse", "--git-common-dir"]);
+  const dir = configured
+    ? (configured.startsWith("/") ? configured : join(REPO, configured))
+    : (common ? join(common.startsWith("/") ? common : join(REPO, common), "hooks") : null);
+  if (!dir || !existsSync(dir)) return { any: false, summary: `no hooks directory (${dir || "git did not name one"})` };
+  const live = GIT_HOOK_NAMES.filter((n) => existsSync(join(dir, n)));
+  const where = configured ? `core.hooksPath ${configured}` : dir;
+  return live.length
+    ? { any: true, live, summary: `${live.length} LIVE hook(s) in ${where}: ${live.join(", ")} (standard names only)` }
+    : { any: false, live, summary: `no live hook under any standard name in ${where} (samples do not count)` };
+}
 const git = (args) => {
   try { return execFileSync("git", args, { cwd: REPO, encoding: "utf8" }).trim(); }
   catch { return null; }
@@ -267,9 +308,17 @@ export const ENTRY_LOOPS = [
 ];
 
 /* The instruments the row names, plus the entry loops themselves — a loop is an
-   instrument too, and the census that left them out would miss that NOTHING
-   composes them: this repository has no git hook and no CI (measured; see the
-   published table), so every entry loop is itself convention-only. */
+   instrument too, and the census that left them out would miss that nothing
+   composes THEM.
+
+   CORRECTED 2026-09-17 (M0-56). This comment used to say *this repository has no
+   git hook and no CI (measured)*, and the first half is no longer true: a
+   `pre-push` hook now refuses a push carrying a stale `docs/DECIDED.md`. **The
+   conclusion is unchanged and the reason is worth keeping** — that hook composes
+   the PUSH, not the five gates, so every entry loop below is STILL
+   convention-only and skipping one still leaves no trace. The state is printed
+   from `hookState()` on every run rather than asserted here, because this sentence
+   going stale inside the census that measures staleness is exactly the defect. */
 export const INSTRUMENTS = [
   "tools/mintid.mjs",
   "tools/plancheck.mjs",
@@ -511,10 +560,25 @@ function main() {
       else { conventionOnly++; console.log(`  CONVENTION    ${row.instrument}  ${by || "— reached by no entry loop"}`); }
     }
     console.log(`  ${usedN} used by a loop · ${testedOnly} TESTED ONLY · ${conventionOnly} convention-only · ${missing} missing`);
-    console.log(`  CONVENTION-ONLY includes every ENTRY LOOP ITSELF: this repository has no git`);
-    console.log(`  hook and no CI (measured — .git/hooks holds only samples, core.hooksPath unset,`);
-    console.log(`  no .github/), so NOTHING composes the loops. Every gate here is a gate a`);
-    console.log(`  session chooses to run, and skipping one leaves no trace anywhere.`);
+    /* M0-56, 2026-09-17: THIS PARAGRAPH USED TO BE A HARD-CODED SENTENCE SAYING
+       `.git/hooks holds only samples`, AND M0-56 MADE IT FALSE by installing one.
+       A hand-carried fact in a document nobody re-measures is this project's
+       most-repeated finding, and the census that exists to measure what composes
+       the loops is the last place it belongs. So it MEASURES now, every run. */
+    const hooks = hookState();
+    console.log(`  CONVENTION-ONLY includes every ENTRY LOOP ITSELF. What composes them is`);
+    console.log(`  MEASURED on the tree this ran against, never recited:`);
+    console.log(`    git hooks   ${hooks.summary}`);
+    console.log(`    CI          ${existsSync(join(REPO, ".github")) ? ".github/ EXISTS — read it before claiming nothing composes a loop" : "no .github/"}`);
+    if (!hooks.any) {
+      console.log(`  So NOTHING composes the loops. Every gate here is a gate a session chooses`);
+      console.log(`  to run, and skipping one leaves no trace anywhere.`);
+    } else {
+      console.log(`  So SOMETHING composes at least one loop, and the five gates are STILL`);
+      console.log(`  convention-only: the hook above guards the PUSH, not the gates. Skipping a`);
+      console.log(`  gate still leaves no trace. This line is measured so that a second hook`);
+      console.log(`  cannot land here unnoticed the way the first one nearly did.`);
+    }
     if (r.unresolved.length) {
       console.log(`  EDGES THIS READER COULD NOT RESOLVE TO A TRACKED FILE — named, never dropped:`);
       for (const u of r.unresolved.slice(0, 20)) console.log(`    ${u.from} -${u.kind}-> ${u.to}`);
