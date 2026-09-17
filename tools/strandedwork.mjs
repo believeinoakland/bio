@@ -36,7 +36,8 @@
  * They are reported in DIFFERENT WORDS because **the reader's next act differs in each**,
  * and a single "stranded" warning would make the reader work that out every time:
  *
- *   1. NEVER PUSHED         commits past `origin/main`, no remote ref for the branch
+ *   1. NEVER PUSHED         commits past `origin/main` that NO remote ref contains — asked by
+ *                           REACHABILITY, never by the branch's name (see THE SPELLING LESSON)
  *                           -> PUSH IT. D-288's original shape.
  *   2. PUSHED, THEN BEHIND  a remote ref exists and the local HEAD is not on it
  *                           -> PUSH IT. Neither D-288 item 1 nor the spawn channel covers
@@ -97,6 +98,71 @@
  * Measured on this clone 2026-09-16: six such branches, every one already merged into
  * `origin/main` and therefore silent, so the pass costs nothing in noise today and closes the
  * case that cost a day.
+ *
+ * ------------------------------------- THE SPELLING LESSON, UNLEARNED ON THE OTHER SIDE
+ *
+ * **The section above says to key on what a thing IS rather than what it is CALLED. The
+ * remote side of the comparison did the opposite for a day, and nobody noticed because the
+ * enumeration half had been fixed so carefully.** `remoteSha` was `rem.map.get(u.branch)` — a
+ * lookup by the local branch's NAME — so the predicate answered *is there a remote branch
+ * SPELLED like mine* while reporting the answer to *does this work exist anywhere but this
+ * disk*. Work pushed under any other name read as NEVER PUSHED.
+ *
+ * MEASURED 2026-09-17 by BOB #13 on this estate, and confirmed at the artifact by CONDUCT #2
+ * walking every origin head independently: worktree `ecstatic-napier-fef9bc`, branch
+ * `claude/ecstatic-napier-fef9bc`, HEAD `a8553af0` — reported *7 commit(s) past origin/main,
+ * no remote ref at all*, while `a8553af0` was **exactly the tip of
+ * `origin/conduct2-wip-20260917`**. Two witnesses by different routes, so not one source
+ * copied.
+ *
+ * **WHY IT WAS CREDIBLE: A TRUE FINDING SITS BESIDE THE FALSE ONE, AND IT IS EASY TO READ THE
+ * PAIR AS ONE CORROBORATED VERDICT.** `plancheck` has TWO arms that can name one tree.
+ * *7 commit(s) past origin/main* is TRUE — those commits genuinely were not integrated — and a
+ * reader who checks that half confirms it and stops, which is the same shape as a stale debt
+ * row reading like a fact: **the true finding is what stops the check on the false one.** Two
+ * different questions are in play — *does this reach anybody* (reachability, this arm's) and
+ * *is this integrated* (ahead of `main`, the other arm's) — and only the first is this arm's.
+ *
+ * **AND THE TWO ARMS HAVE DIFFERENT SCOPES, WHICH IS A SHARPER FINDING THAN THE DEFECT THAT
+ * EXPOSED IT** (CONDUCT #2, 2026-09-17, and it is a CORRECTION OF THIS FILE'S OWN FIRST
+ * ACCOUNT). This arm walks the WHOLE ESTATE, so it names every worktree from wherever it is
+ * run. `plancheck`'s `UNPUSHED` check is scoped to the LOCAL HEAD — `origin/main..HEAD` in the
+ * tree it runs in — so it can only ever name the branch you are standing on.
+ *
+ * **THE RECEIPT IS THIS FILE'S AUTHOR GETTING IT WRONG WHILE OBEYING THE RULE.** BOB #13
+ * grepped `plancheck`'s full output for the tree in question, found exactly ONE line, and
+ * published *there is one finding, containing a true clause* as a correction to CONDUCT #2.
+ * The grep was accurate. The generalisation was false: BOB #13's own worktree was ZERO commits
+ * ahead of `origin/main`, so the `UNPUSHED` arm **did not fire there at all** — from that
+ * vantage the second finding cannot exist. CONDUCT #2, standing in the tree that was 7 ahead,
+ * saw both lines. **Two sessions deliberately checking each other, both going to the artifact
+ * as the rule demands, reached opposite answers within ten minutes — because they asked a
+ * correctly-scoped question from differently-scoped places and NOTHING IN THE OUTPUT SAID SO.**
+ *
+ * **GOING TO THE ARTIFACT DOES NOT SETTLE A CLAIM IF THE INSTRUMENT'S ANSWER DEPENDS ON WHERE
+ * YOU RAN IT AND THE INSTRUMENT DOES NOT DECLARE ITS VANTAGE.** That is `CLAUDE.md`'s
+ * world-claim rule meeting its own limit, and it is this whole defect one level up: a question
+ * asked about the wrong unit. The remedy is cheap and is now implemented — **every finding
+ * states the scope it was taken at**, estate-wide or this-checkout-only — because the reader
+ * this arm exists to serve is precisely the one who greps from one tree and acts on behalf of
+ * another.
+ *
+ * **AND THE COST WAS NOT A NOISY WARNING, WHICH IS WHY THIS IS NOT MERELY A TUNING FIX**
+ * (CONDUCT #2's finding, and it is the stronger half): the window's remedy line says
+ * `PUSH IT — git push origin HEAD:<branch>`. A session acting on it in good faith would have
+ * pushed a LIVE integrator's tree under a second name — publishing a merge with a row flip
+ * that was deliberately held back from `main` with a doc gate and a claims release still owed.
+ * **A false NEVER-PUSHED makes the detector MANUFACTURE a strand: a second head of ungated
+ * work under a name nobody tracks.** That is the arm-that-fires-at-the-wrong-thing class
+ * (`CLAUDE.md`), and its output looks exactly like diligence.
+ *
+ * **THE CONTROL ARM THAT DISCRIMINATES IS NOT THE OBVIOUS ONE** (CONDUCT #2 again). An arm
+ * that pushes a branch under its OWN name and requires the warning to go quiet **cannot tell
+ * the fixed predicate from the broken one** — the broken one also goes quiet, because the
+ * names match. The discriminating arm pushes under a DIFFERENT name. Its twin is the
+ * over-strictness guard: a tree with genuinely unpushed commits must still be NAMED, or the
+ * false positive has been traded for a false negative in the direction that loses work. Both
+ * are in the suite (section 11) and both are armed by the control driver.
  *
  * --------------------------------------------------------- WHERE THE REMOTE'S LIST COMES FROM
  *
@@ -247,6 +313,37 @@ export function workingTree({ repo, path }) {
 const ancestor = (repo, a, b) =>
   git(["merge-base", "--is-ancestor", a, b], { repo, allowFail: true }) !== null;
 
+/* Is this HEAD carried by ANY ref on the remote, whatever that ref is CALLED? Returns the
+   carrier `{ ref, sha }` or null. See the header section on SPELLING for why this exists and
+   what it cost. The same-named ref is tried FIRST so the ordinary case costs one ancestry
+   call and reports the ref the reader expects; the walk is the fallback, and 19 heads on this
+   clone (measured 2026-09-17) makes its cost irrelevant beside the `ls-remote` it follows.
+
+   IT FAILS TOWARD *STRANDED*, ON PURPOSE AND STATED RATHER THAN LEFT TO BE DISCOVERED. A
+   remote sha whose object this clone has never fetched cannot be tested for ancestry, so
+   `ancestor` returns false through `allowFail` and the unit reads as NOT carried. That is a
+   FALSE POSITIVE — the direction that costs a reader a second look — where the opposite
+   default would be a false negative, which is the direction that loses work. The window this
+   sits in warns and never fails (BOB #12's ruling), so a second look is all it can cost. */
+export function carriedBy(repo, head, remoteMap, preferName = null) {
+  if (!head || !remoteMap) return null;
+  const tryRef = (ref) => {
+    const sha = remoteMap.get(ref);
+    if (!sha) return null;
+    return (sha === head || ancestor(repo, head, sha)) ? { ref, sha } : null;
+  };
+  if (preferName) {
+    const hit = tryRef(preferName);
+    if (hit) return hit;
+  }
+  for (const ref of remoteMap.keys()) {
+    if (ref === preferName) continue;
+    const hit = tryRef(ref);
+    if (hit) return hit;
+  }
+  return null;
+}
+
 export function strandedAudit({
   repo = ROOT, main = "origin/main", network = true, remote = "origin",
 } = {}) {
@@ -266,16 +363,35 @@ export function strandedAudit({
       : 0;
     const onRemote = remoteSha && u.head
       ? (remoteSha === u.head || ancestor(repo, u.head, remoteSha)) : false;
+    /* THE QUESTION THE TWO PUSH WINDOWS ACTUALLY ASK IS *DOES THIS REACH ANYBODY*, AND
+       REACHABILITY — NOT THE BRANCH'S NAME — IS WHAT ANSWERS IT. `carrier` is null only when
+       no ref on the remote contains this HEAD. When it is non-null under a DIFFERENT name the
+       work is on origin and is not stranded, so neither push window opens. */
+    const carrier = ahead > 0 ? carriedBy(repo, u.head, rem.map, u.branch) : null;
+    const carriedElsewhere = !!carrier && carrier.ref !== u.branch;
     /* Each condition states its OWN precondition rather than leaning on the `else` above it.
        Found by this item's own control driver: with the first branch disabled, a unit with NO
        remote ref fell through to `behind`, and `strandedMessage` then dereferenced a null
        `remoteSha` and THREW — taking the whole of `plancheck` down from inside a WARN path,
        which is worse than the missing warning it was standing in for. A classifier whose arms
-       are only correct in the presence of each other is one edit from that. */
-    if (ahead > 0 && !remoteSha) windows.push("unpushed");
-    else if (ahead > 0 && remoteSha && !onRemote) windows.push("behind");
+       are only correct in the presence of each other is one edit from that.
+
+       The NAME still separates the two push windows, and there it is the right key: both
+       remedies are *push it*, and the distinction is a statement about this branch's own
+       history — *you pushed it and then moved past it* — which only its own ref can answer.
+
+       `onRemote` IS NO LONGER PART OF THE CONDITION, AND THE NEGATIVE CONTROL IS WHAT SAID SO.
+       `!carrier` already means NO ref contains this HEAD — the same-named one is the FIRST
+       thing `carriedBy` tries — so `!onRemote` was implied by it and could never change a
+       verdict. A3 caught that by arming `onRemote` to sha-equality and finding S8 still
+       green: **an arm that cannot fail, created by this very edit.** The over-strictness
+       protection did not disappear, it MOVED into `carriedBy`'s ancestry call, and A3 moved
+       with it. `onRemote` stays in the returned object because it is still true reported data
+       — *does this branch's OWN ref contain this head* — but nothing classifies on it. */
+    if (ahead > 0 && !carrier && !remoteSha) windows.push("unpushed");
+    else if (ahead > 0 && !carrier && remoteSha) windows.push("behind");
     if (u.tree && (u.tree.modified > 0 || u.tree.untracked > 0)) windows.push("uncommitted");
-    return { ...u, remoteSha, onMain, ahead, onRemote, windows };
+    return { ...u, remoteSha, onMain, ahead, onRemote, carrier, carriedElsewhere, windows };
   };
 
   /* Pass A — WORKTREES. Only these can carry the third window. */
@@ -305,6 +421,9 @@ export function strandedAudit({
     counts: {
       worktrees: units.length, orphanBranches: orphans.length,
       exposed: exposed.length, idle: all.length - exposed.length,
+      /* REPORTED so the quiet over these units is a JUDGEMENT rather than an empty walk —
+         the same reasoning the header gives for never reporting an idle worktree as clean. */
+      carriedElsewhere: all.filter((u) => u.carriedElsewhere).length,
       ...Object.fromEntries(WINDOW_ORDER.map((w) => [w, byWindow[w].length])),
     },
   };

@@ -929,6 +929,63 @@ half. **IT WARNS AND NEVER FAILS** — BOB #12's ruling, not caution: the inheri
 are deliberately not retroactively pushed, and **a gate that goes red on inherited state gets
 switched off**, which is this estate's own recorded failure mode for ratchets.
 
+### A CORRECT FIX CAN DISARM A CONTROL ARM, AND THE ARM GOES ON REPORTING *ARMED* (2026-09-17)
+
+**This is the arm-that-did-not-arm class with a new cause, and the cause is not carelessness —
+it is a REFACTOR.** Measured by BOB #13 while fixing `strandedwork`'s reachability defect, and
+recorded here at CONDUCT #2's request because a driver header is not durable enough for it.
+
+The fix moved the over-strictness protection out of `onRemote` and into a new `carriedBy` walk.
+`onRemote` stayed in the returned object, still true, still correct — and **read by no window at
+all.** The control driver's A3 arm went on patching `onRemote`, matched exactly once, printed
+**`A3 · the arm ARMED`** — and its downstream assertion stayed **GREEN**, because nothing read
+what it had broken. **An arm that cannot fail, manufactured by a correct fix to the subject.**
+
+**IT WAS INVISIBLE TO EVERY CHECK EXCEPT RUNNING IT.** Re-reading A3 shows an arm that still
+names a real symbol, still patches a real line, still reports success. `hits === 1` proves a
+patch APPLIED; only the downstream assertion proves it had an EFFECT — a distinction the driver's
+own header already stated, arriving in the driver that stated it. A4's patch string went stale
+the same way in the same edit, and that one at least failed loudly.
+
+**THE GENERALISATION, which is worth more than the instance: A CONTROL ARM IS COUPLED TO WHERE
+THE BEHAVIOUR LIVES, SO ANY CHANGE THAT MOVES THE BEHAVIOUR SILENTLY DISARMS EVERY ARM POINTED AT
+ITS OLD HOME.** The suite is coupled to the subject's BEHAVIOUR and survives a refactor; the
+control is coupled to its SHAPE and does not. So a green suite after a refactor says nothing
+about whether the controls still guard it.
+
+**THE OBLIGATION THIS CREATES, and it is cheap: RE-RUN THE CONTROL DRIVER AFTER CHANGING THE
+SUBJECT, AND READ THE ARMS' OWN RESULTS RATHER THAN THE SUBJECT'S.** A control driver is not a
+one-time artifact filed with the item that built it — it is a thing that rots against its
+subject, silently, in the direction that makes everything look fine.
+
+### TWO SESSIONS AT THE ARTIFACT CAN DISAGREE IF THE INSTRUMENT WILL NOT SAY WHERE IT STOOD (2026-09-17)
+
+**`CLAUDE.md` says a world claim is settled by going to the artifact. This is that rule meeting
+its limit, and it cost two sessions a contradiction in ten minutes while both were obeying it.**
+
+`plancheck` has two arms that can name one worktree. **STRANDED WORK is ESTATE-WIDE** — it walks
+every worktree on the clone, so it names them all from wherever it runs. **UNPUSHED is
+LOCAL-HEAD** — `origin/main..HEAD` in the tree it runs in, so it can only ever name the branch
+you are standing on. Neither output said so.
+
+CONDUCT #2, in a tree 7 commits ahead of `origin/main`, saw both lines and read them as one
+false verdict beside one true finding. BOB #13 grepped the full output from its own tree, found
+exactly ONE line, and published *there is one finding containing a true clause* as a correction.
+**The grep was accurate; the generalisation was false.** BOB #13's tree was ZERO ahead, so the
+local-head arm **did not fire there at all** — from that vantage the second finding cannot exist.
+
+**GOING TO THE ARTIFACT DOES NOT SETTLE A CLAIM WHEN THE INSTRUMENT'S ANSWER DEPENDS ON WHERE IT
+WAS RUN AND THE INSTRUMENT DOES NOT DECLARE ITS VANTAGE.** It is the same defect as the one that
+exposed it — a question asked about the wrong unit — one level up, and it defeats care, a second
+witness, and the artifact rule all at once. **The corroboration rule is what fails here: two
+readings that disagree look like one being wrong, when both can be true of different places.**
+
+**THE REMEDY, implemented rather than described: every finding states the scope it was taken at.**
+`stranded work [SCOPE: ESTATE-WIDE, every worktree on this clone]` and `SCOPE: THIS CHECKOUT ONLY
+(origin/main..HEAD in <branch>)`, each pointing at the other, both pinned by assertions in
+`strandedwork.test.mjs` §9. **A reader who greps from one tree and acts on behalf of another is
+exactly the reader a stranded-work alarm exists to serve.**
+
 ### Three windows, in three different sets of words
 
 **Because the reader's next act differs in each**, and one undifferentiated "stranded" warning

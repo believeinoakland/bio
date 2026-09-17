@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* M0-48's NEGATIVE CONTROL DRIVER — eight arms plus an opening and closing baseline — over
+/* M0-48's NEGATIVE CONTROL DRIVER — NINE arms plus an opening and closing baseline — over
  * the stranded-work predicate in `tools/strandedwork.mjs`, its arm in `tools/plancheck.mjs`,
  * and the suite that drives both, `bio-plane/test/strandedwork.test.mjs`.
  *
@@ -28,9 +28,12 @@
  *                                                 work, not the size of the walk.
  *   A2  the `nothing committed` exemption gone  -> S5 FAILS. The quiet over an idle worktree is
  *                                                 a JUDGEMENT, not an empty corpus.
- *   A3  `onRemote` made sha-EQUALITY only       -> S8 FAILS: a remote that is AHEAD reads as
- *       (OVER-STRICTNESS)                          stranded and the arm starts crying wolf,
- *                                                 which is how a WARN gets switched off.
+ *   A3  `carriedBy`'s ancestry fallback made     -> S8 FAILS: a remote that is AHEAD reads as
+ *       sha-EQUALITY only                           stranded and the arm starts crying wolf,
+ *       (OVER-STRICTNESS)                           which is how a WARN gets switched off.
+ *                                                   IT ARMED `onRemote` UNTIL 2026-09-17 — see
+ *                                                   the note under A9 for why that stopped
+ *                                                   being able to fail.
  *   A4  `behind` collapsed into clear           -> S3 FAILS. D-288's literal name-presence
  *       (D-288's LITERAL reading)                  reading, and the receipt for comparing the
  *                                                 local HEAD against the REMOTE REF: both HEADs
@@ -50,6 +53,10 @@
  *                                                 than the library.
  *   A8  plancheck's `warn(...)` -> `fail(...)`  -> S9's never-FAIL and exit-0 arms FAIL, which
  *       (BOB #12's ruling, inverted)               is the consequence the ruling forbids.
+ *   A9  the carrier walk reverted to a lookup   -> S11 FAILS and its OVER-STRICTNESS TWIN DOES
+ *       by BRANCH NAME                             NOT. The defect as the estate actually had
+ *       (THE SPELLING DEFECT, RE-ARMED)            it on 2026-09-17, and the arm that proves
+ *                                                  S11 is not passing for free.
  *
  * **THIS DRIVER FOUND TWO REAL DEFECTS IN THE SUBJECT, AND THEY ARE THE JUSTIFICATION FOR IT
  * EXISTING RATHER THAN A FOOTNOTE.** With A1 armed, a unit with no remote ref fell through the
@@ -74,6 +81,19 @@
  * asserts on the WORKTREE. Kept because `hits === 1` proves a patch APPLIED and only the
  * downstream assertion proves it had an EFFECT, and that distinction is the whole value of a
  * control driver.
+ *
+ * **A9 ADDED 2026-09-17, AND ARMING IT BROKE A3 — WHICH IS THE THIRD REAL DEFECT THIS DRIVER HAS
+ * FOUND AND THE ONLY ONE IT FOUND IN ITSELF.** The fix that added `carriedBy` moved the
+ * over-strictness protection out of `onRemote` and into the carrier walk, leaving `onRemote`
+ * read by no window at all. A3 went on arming `onRemote`, matched exactly once, reported *the
+ * arm ARMED* — and S8 stayed GREEN, because nothing downstream read what it had broken.
+ * **An arm that cannot fail, manufactured by a correct fix to the subject, and invisible to
+ * anyone who re-read the arm rather than running it.** `hits === 1` said the patch applied and
+ * only the downstream assertion could say it had an EFFECT — the distinction this header
+ * already named, arriving in the file that named it. The lesson generalises past this driver:
+ * **a control arm is coupled to WHERE the behaviour lives, so a refactor that moves the
+ * behaviour silently disarms every arm pointed at its old home.** Re-run the control after
+ * changing the subject, and read the arms' results rather than the subject's.
  *
  * MUST NOT fail in any arm: the suite's section 1 (the sandbox is outside the estate) and
  * section 10 (the mechanism is in the loop the reader runs) — neither is downstream of any arm,
@@ -156,7 +176,7 @@ console.log("\n--- ARM BASELINE · nothing armed ---");
 /* ---------------------------------------------- A1 · the naming path for window 1 */
 console.log("\n--- ARM A1 · `unpushed` never classified (armed ALONE) ---");
 {
-  const hits = armPatch(PRED, `if (ahead > 0 && !remoteSha) windows.push("unpushed");`,
+  const hits = armPatch(PRED, `if (ahead > 0 && !carrier && !remoteSha) windows.push("unpushed");`,
                               `if (false) windows.push("unpushed");`);
   t("A1 · the arm ARMED (patch matched exactly once)", hits, 1);
   const s = suiteRun();
@@ -175,8 +195,8 @@ console.log("\n--- ARM A2 · the `nothing committed` exemption REMOVED (armed AL
      the commit count is 0 either way. It reported `the arm ARMED` on a patch that had matched
      once and had no effect: the arm-that-did-not-arm class, caught by the downstream
      assertion rather than by the patch count. */
-  const hits = armPatch(PRED, `if (ahead > 0 && !remoteSha) windows.push("unpushed");`,
-                              `if (!remoteSha) windows.push("unpushed");`);
+  const hits = armPatch(PRED, `if (ahead > 0 && !carrier && !remoteSha) windows.push("unpushed");`,
+                              `if (!carrier && !remoteSha) windows.push("unpushed");`);
   t("A2 · the arm ARMED", hits, 1);
   const s = suiteRun();
   t("A2 · S5 FAILS — an idle worktree is named", broke(s, "an idle worktree is NOT named"), true);
@@ -189,13 +209,23 @@ console.log("\n--- ARM A2 · the `nothing committed` exemption REMOVED (armed AL
 console.log("\n--- ARM A3 · `onRemote` made sha-EQUALITY only, dropping the ancestry "
           + "fallback (armed ALONE) ---");
 {
+  /* THE ARM MOVED WITH THE PROTECTION, AND THE MOVE IS THE FINDING. This armed `onRemote`
+     until 2026-09-17, when `carriedBy` took over the classification and `onRemote` stopped
+     being read by any window — at which point THIS ARM COULD NO LONGER FAIL and reported a
+     green S8 over a broken predicate. It was caught by running the control after the change
+     rather than by anyone re-reading the arm. The ancestry fallback that protects against
+     over-strictness now lives in `carriedBy`, so that is what this arms. */
   const hits = armPatch(PRED,
-    `      ? (remoteSha === u.head || ancestor(repo, u.head, remoteSha)) : false;`,
-    `      ? (remoteSha === u.head) : false;`);
+    `    return (sha === head || ancestor(repo, head, sha)) ? { ref, sha } : null;`,
+    `    return (sha === head) ? { ref, sha } : null;`);
   t("A3 · the arm ARMED", hits, 1);
   const s = suiteRun();
   t("A3 · S8 FAILS — a remote that is AHEAD now reads as stranded",
     broke(s, "a remote that is AHEAD is NOT stranding"), true);
+  /* S11 pushes to a sha EQUAL to the head, so dropping the ancestry fallback must not touch
+     it. If it did, this arm would be perturbing reachability as well as over-strictness. */
+  t("A3 · S11 does NOT fail — this arm is over-strictness alone, not the spelling defect",
+    broke(s, "THE DEFECT: it is NOT named as stranded"), false);
   t("A3 · S2 does NOT fail — the naming path for window 1 is untouched, so this arm is "
   + "over-strictness and not a second break", broke(s, "the worktree is NAMED"), false);
   t("A3 · ...and the failure is not collateral", collateral(s), false);
@@ -206,7 +236,7 @@ console.log("\n--- ARM A3 · `onRemote` made sha-EQUALITY only, dropping the anc
 console.log("\n--- ARM A4 · `behind` collapsed into clear — the NAME-PRESENCE reading of "
           + "D-288's phrase (armed ALONE) ---");
 {
-  const hits = armPatch(PRED, `else if (ahead > 0 && remoteSha && !onRemote) windows.push("behind");`,
+  const hits = armPatch(PRED, `else if (ahead > 0 && !carrier && remoteSha) windows.push("behind");`,
                               `else if (false) windows.push("behind");`);
   t("A4 · the arm ARMED", hits, 1);
   const s = suiteRun();
@@ -276,6 +306,39 @@ console.log("\n--- ARM A8 · plancheck's WARN promoted to a FAIL (armed ALONE) -
     broke(s, "plancheck --local exits 0"), true);
   t("A8 · ...and the failure is not collateral", collateral(s), false);
   t("A8 · RESTORED byte-identically", restore(PLANCHECK), true);
+}
+
+/* ------------------------------- A9 · REACHABILITY REVERTED TO THE SPELLING (the real defect) */
+console.log("\n--- ARM A9 · the carrier walk removed, so the remote is asked by BRANCH NAME "
+          + "again — the state the estate was actually in on 2026-09-17 (armed ALONE) ---");
+{
+  /* THIS ARM IS THE DEFECT ITSELF, NOT A HYPOTHETICAL: reverting `carriedBy` to the same-name
+     lookup restores the predicate that called `origin/conduct2-wip-20260917`'s own tip *no
+     remote ref at all* and told the reader to push a live integrator's ungated tree under a
+     second name. **The obvious arm — push under the branch's OWN name and require silence —
+     cannot fail here, because the broken predicate is silent there too** (CONDUCT #2). S11 is
+     built on a push under a DIFFERENT name for exactly that reason, and this arm is what
+     proves S11 is not passing for free. */
+  const hits = armPatch(PRED,
+    `    const carrier = ahead > 0 ? carriedBy(repo, u.head, rem.map, u.branch) : null;`,
+    `    const carrier = remoteSha && onRemote ? { ref: u.branch, sha: remoteSha } : null;`);
+  t("A9 · the arm ARMED", hits, 1);
+  const s = suiteRun();
+  t("A9 · S11 FAILS — work pushed under another name reads as stranded again",
+    broke(s, "THE DEFECT: it is NOT named as stranded"), true);
+  t("A9 · ...and the carrier is no longer identified, so the silence had a REASON and not "
+  + "merely an outcome", broke(s, "the carrier is IDENTIFIED"), true);
+  /* The discriminating half, stated as an assertion rather than as a hope: the over-strictness
+     twin must be UNAFFECTED. If it broke too, the arm has moved a second variable and its
+     refutation is not believable — the arm-that-fired-at-the-wrong-thing class. */
+  t("A9 · S11's over-strictness twin does NOT fail — a genuinely stranded tree is still "
+  + "named, so this arm is the spelling defect and not a second break",
+    broke(s, "a tree NO ref carries is still NAMED"), false);
+  t("A9 · S2 does NOT fail either — window 1's naming path is untouched",
+    broke(s, "the worktree is NAMED"), false);
+  t("A9 · ...and the suite survived to report it", s.reachedFoot, true);
+  t("A9 · ...and the failure is not collateral", collateral(s), false);
+  t("A9 · RESTORED byte-identically", restore(PRED), true);
 }
 
 /* --------------------------------------------------------------- CLOSING BASELINE */

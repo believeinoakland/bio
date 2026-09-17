@@ -113,10 +113,19 @@ if (!LOCAL_ONLY) {
          that misnames the reader's own branch teaches them to distrust the gate. The
          branch is now READ rather than assumed. */
       const branch = sh("git rev-parse --abbrev-ref HEAD") || "HEAD";
+      /* SCOPE IS STATED, and the reason is a measurement rather than tidiness. This arm is
+         LOCAL-HEAD scoped and the stranded-work arm below is ESTATE-WIDE, so the two give
+         different answers about the same tree depending on where plancheck was run — and on
+         2026-09-17 that cost two sessions a contradiction they could not resolve by going to
+         the artifact, because both artifacts were telling the truth about different places.
+         A reader who greps from one tree and acts on behalf of another is exactly this gate's
+         reader (CONDUCT #2; the receipt is in strandedwork.mjs's header). */
       fail(`UNPUSHED — ${ahead} commit(s) on ${branch} are not on origin/main. Verify from\n`
          + `        the REMOTE, never from your own tree: a local commit is not a published one.\n`
          + `        (On a worker's own branch this is EXPECTED — workers commit and CONDUCT\n`
-         + `        integrates. It is a failure on main and a note anywhere else.)`);
+         + `        integrates. It is a failure on main and a note anywhere else.)\n`
+         + `        SCOPE: THIS CHECKOUT ONLY (origin/main..HEAD in ${branch}). It says nothing\n`
+         + `        about any other worktree — the STRANDED WORK arm is the estate-wide one.`);
     } else {
       warn(`local main is behind origin/main — fetch and rebase before writing.`);
     }
@@ -717,10 +726,17 @@ if (conduct && inbox && !/INBOX/.test(conduct))
        comes from the tracking refs and the finding says so. It still RUNS in both modes: a
        worker running `--local` mid-turn is the reader whose tree this most often is. */
     const a = strandedAudit({ repo: ROOT, network: !LOCAL_ONLY });
-    notes.push(`stranded work: ${a.counts.worktrees} worktree(s) + ${a.counts.orphanBranches} `
+    notes.push(`stranded work [SCOPE: ESTATE-WIDE, every worktree on this clone]: `
+      + `${a.counts.worktrees} worktree(s) + ${a.counts.orphanBranches} `
       + `branch(es) with no worktree judged, ${a.counts.exposed} EXPOSED `
       + `(${a.counts.unpushed} never pushed, ${a.counts.behind} behind, `
-      + `${a.counts.uncommitted} uncommitted) — evidence: ${a.source}`);
+      + `${a.counts.uncommitted} uncommitted) — evidence: ${a.source}`
+      /* PRINTED rather than left silent: these are units the walk judged NOT stranded because
+         some remote ref carries their HEAD under ANOTHER NAME. Reported so the quiet over them
+         is visibly a judgement — a reader who knows a tree holds unmerged work and sees it in
+         no window can tell *considered and carried* from *never looked at*. */
+      + (a.counts.carriedElsewhere
+          ? `; ${a.counts.carriedElsewhere} carried by a differently-named remote ref` : ""));
     /* A walk that FAILED is never reported as a clean estate. This predicate's own first draft
        did exactly that — the receipt is in its header — and the rule is CLAUDE.md's: do not
        conclude a value from an absence that has two causes. */
