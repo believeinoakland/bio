@@ -249,7 +249,7 @@ authority is the file named, never this one.
 - **DEC-72** — DEC-72's definition of done was met IN THE LANDING TURN — `BIO_DATAPLANE_STATE.md` at v33 on the case-as-production model, `CASE-AS-PRODUCTION.md` archived with its one unbuilt clause STATED in the banner (D-309), `DECIDED` regenerated.**  
   `docs/development/QUEUE.md:1673`
 - **DEC-74** · 2026-09-14 — DECIDED 2026-09-14 by BOB #11 at Bob's delegation: not funded.** The tesseract member at cap C is the tier-3 path; the external tier is reconsidered only when an image-only document is LOAD-BEARING in a real case and C is below that project's bar — a funding request with the document and the bar attached, brought…  
-  `docs/development/EXTRACTION-BREADTH-DESIGN.md:122`
+  `docs/development/EXTRACTION-BREADTH-DESIGN.md:126`
 ## D-
 
 - **D-10** · 2026-08-02 — SETTLED 2026-08-02 by the design pass this question asked for (session BOB).** Not doctrine: it is an application of the assembly rule already in `BIO_Interaction_Constructs_v0_1.md:258-268`, so it needed a design pass and not a ruling.  
@@ -1125,7 +1125,7 @@ authority is the file named, never this one.
 - **COFF-9** · 2026-09-14 — — its ODF recommendation was honoured, overtaken, and then RE-WARRANTED FROM A DIFFERENT DIRECTION, and this bullet is CORRECTED on 2026-09-14 rather than left standing, because its last sentence became false the day COFF-9 landed.  
   `docs/development/OFFICE-FORMATS.md:11`
 - **COFF-11** · 2026-09-15 — (CORRECTED 2026-09-15 at BOB #11's check: the allocator DOES allocate `M`; the AUDIT cannot, because `M` declares no allocation site — so these four were a BYPASS of a working allocator, not a gap in it), so nothing refused the second use and the merge would have carried two `M-21` sections silently — the id…  
-  `docs/development/MEASUREMENTS.md:12947`
+  `docs/development/MEASUREMENTS.md:12950`
 - **COFF-11** · 2026-09-15 — CORRECTED 2026-09-15 at BOB #11's check, and the sentence is kept because getting it wrong changed a proposed fix: the allocator DOES allocate `M`; the AUDIT cannot, because `M` declares no allocation site.  
   `docs/development/QUEUE.md:1973`
 ## PL-

@@ -12936,7 +12936,10 @@ reports a real 33/12.
 **WHAT THE SUITE CANNOT SEE, STATED.** It drives two ops and not the frontier reads; it
 cannot see a document that reaches BOTH the tier-2 and the tier-3 merge (D-372 — no fixture,
 because the only such document in CPDF-20's census sample is a private individual's resume
-and was rightly not committed); and the merge's REFUSAL branch is driven at the merge but is
+and was rightly not committed) — **STILL TRUE OF THIS SUITE, AND NO LONGER TRUE OF THE
+ESTATE: M-34 (REC-102, 2026-09-16) SYNTHESISED that class rather than taking it, and drives
+it. This blind spot is a statement about `tier2-wire.test.mjs`, not about what can be
+reached** —; and the merge's REFUSAL branch is driven at the merge but is
 **unreachable through either op today**, because `pdfstructure` emits a `pages[]` entry for
 every page it ordered and its one pageless return carries zero characters, which takes the
 WHOLESALE branch rather than the refusal. That branch is a guard against a future pageless
@@ -13930,3 +13933,79 @@ diagnostic: it now reports **67 of 69 discovered items are in the commit at HEAD
 (`82ffae30`)**, naming its own two uncommitted files, so a reader about to quote *53
 writers repaired* is told which total another checkout reproduces. Battery arithmetic:
 `hygiene` went 752 pass / 1 fail → **753 pass / 0 fail**, the same 753 assertions.
+
+
+## M-34 · 2026-09-16 · REC-102 — THE DOCUMENT THAT REACHES **BOTH** EXTRACTION MERGES, SYNTHESISED RATHER THAN TAKEN: **the per-page tier statement was measurably collapsed by the tier-3 merge before the fix and measurably survives it after, and the class D-372 said had no fixture is now driven through `op=acquire`** (worktree `agent-a87f25eda8bad3a73`, `origin/main` at `92d15614`)
+
+**WHY THIS IS A MEASUREMENT AND NOT JUST A LANDING.** D-372 rested on a REACHABILITY
+ARGUMENT — two merge sites read side by side — and said plainly that it was verified by
+reading rather than by driving, because the only document in CPDF-20's 50-document census
+that reaches both merges is a private individual's resume and was rightly not committed.
+**A blocker is a claim, and nothing in this repository audits one.** This entry is that
+audit: the class was built instead of taken, and the argument turned out to be exactly right.
+
+**THE INSTRUMENT.** `bio-plane/test/tier3-layer-parts.test.mjs`, driven through `op=acquire`
+on the real plane under miniflare, with the real `pdfstructure.mjs` reading real PDF bytes and
+BOTH fleet members stubbed. What is real and what is a stub is stated in the suite's own
+header; the stubs are the two network members and nothing between the bytes and the recorded
+chain.
+
+**THE FIXTURE, and the three shapes the class needs.** A three-page PDF:
+
+| page | structure | what tier 1 reports | fate |
+| --- | --- | --- | --- |
+| 0 | a font resource with **no `/ToUnicode`**, 20 show operations | 20 `no_tounicode` markers, **0 characters** | tier 2 WINS it |
+| 1 | **no font resource**, one full-page `DCTDecode` image | 1 `no_text_layer` marker, 0 characters | tier 2 keeps it at tier 1; **the marker survives, and it is what `needsTier3` then reads**; tier 3 fills it |
+| 2 | identity-CMap font, one short line (`Item 3.1`) | **8 characters**, 0 markers | tier 1 KEEPS it — **the page the defect was about** |
+
+**THE ESCALATION MARGIN, measured on the fixture itself rather than arranged and forgotten:**
+`needsTier2` compares MARKERS against decoded CHARACTERS document-wide, and this document
+reads **21 markers over 8 characters**. That margin is asserted in the suite, and the negative
+control's A4 arm lengthens page 2's line until the document stops escalating — at which point
+the suite FAILS naming the premise instead of passing over a document that never reached merge
+one. **That arm exists because three headline totality assertions in this estate have passed
+over an empty corpus.**
+
+**THE DEFECT, REPRODUCED BEFORE THE FIX.** The suite run against the pristine tree at
+`92d15614`, index.mjs sha `2423a66e`, read **22 pass / 3 fail**, and the failure is D-372's
+sentence in the record's own shape — the chain as a consumer reads it, `[step, tier, pages]`:
+
+    want [["layer",1,[2]],["layer",2,[0]],["pixels",…,[1]],["ocr",…,[1]]]
+    got  [["layer",2,[0,2]],                ["pixels",…,[1]],["ocr",…,[1]]]
+
+**Page 2 — which tier 1 read, byte for byte, and which the tier-2 merge deliberately kept —
+came back stamped `tier: 2`.** After the fix, sha `8282ab92`, the same run reads **25 pass /
+0 fail** and the chain carries both layer parts.
+
+**THE NEGATIVE CONTROL: `node bio-plane/test/nc-rec102.mjs`, 5/5 arms agreeing**, each armed
+ALONE, each restored from a uniquely-named per-arm pristine copy verified by sha256 AND by
+`cmp` with the byte count printed and floored.
+
+| arm | what it breaks | declared | actual |
+| --- | --- | --- | --- |
+| BASELINE | nothing | PASS | **PASS, 25 assertions** — never a bare 0 |
+| A1 | the partition emptied: one part at one `baseTier`, the pre-item code exactly | FAIL | **FAIL 22/3**, by name on the D-372 assertions, and it did NOT stray into either over-strictness section |
+| A2 | the CARRY dropped at the tier-2 site, so the tier-3 site has nothing to partition by | FAIL | **FAIL 22/3**, the same three assertions — the same collapse through a different door |
+| A3 | **OVER-STRICTNESS** — the same partition spelled the other way round (walking the layer pages rather than filtering the lists) | PASS | **PASS 25/0** |
+| A4 | **the FIXTURE's own margin** — page 2's line lengthened past the marker count, in the SUITE | FAIL | **FAIL 17/8**, naming the premise assertions, a DIFFERENT set from A1's and A2's |
+
+**A1 AND A2 ARE SEPARATE ARMS ON PURPOSE**, for the reason M-21 gives one section up: the
+composition and the carry are two halves, and a landing that shipped only one would pass the
+other's arm completely. **They fail on the SAME assertions here and that is the finding, not
+a redundancy** — it says the two halves have exactly one observable consequence between them,
+which is what makes either one a complete break.
+
+**ONE ASSERTION CAME BACK GREEN UNDER THE DEFECT AND IS RECORDED RATHER THAN SMOOTHED.**
+*"every page that produced text is covered exactly once"* PASSES on the pre-fix tree: the
+collapsed chain still covers pages 0 and 2 with one layer step and page 1 with the engine's,
+so the COVERAGE is right while the ATTRIBUTION is wrong. That is a true statement about what
+the assertion measures — **a partition can be complete and still be wrong about who did
+what** — and it is why the tier assertions are separate from the coverage one.
+
+**WHAT THIS MEASURES AND WHAT IT DOES NOT.** It measures that the class is reachable, that
+the plane records it honestly, and that both over-strictness directions (a document reaching
+only the tier-3 merge, and one reaching only the tier-2 merge) answer exactly what they
+answered before. **It says NOTHING about how common the class is** — the fixture is
+synthesised, so it cannot; frequency remains CPDF-20's census of 50 real documents, which
+found one, and that figure is unchanged by this entry. It also cannot say what a real pdf.js
+decode of page 0 would be, because the member is stubbed.

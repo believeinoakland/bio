@@ -278,3 +278,13 @@ _work-ab0036/
 # battery's discovery both read directories rather than a list. Added to this
 # item's CLAIMS block at the close rather than taken silently.
 .rec91-control-pristine/
+# REC-102's control pen (`bio-plane/test/nc-rec102.mjs`), on its own line for the
+# reason the note at `.rec84-control-pristine/` gives and that every pen above it
+# repeats: a glob over `.*-pristine/` would silently cover a pen nobody declared.
+# It sits INSIDE `bio-plane/test/`, so an untracked copy of `src/index.mjs` or of
+# the suite itself left behind by an interrupted run is a second file for the next
+# walk to enrol — and both `coverage.mjs`'s register and the battery's discovery
+# read that directory rather than a list, which is why the leading dot is not
+# enough on its own. Added to this item's CLAIMS block at the close rather than
+# taken silently.
+bio-plane/test/.nc-rec102-pristine/

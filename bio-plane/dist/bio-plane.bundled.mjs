@@ -59582,7 +59582,7 @@ var index_default = {
         };
       } else {
         let wired = null, wiredTier = null, pageCount = null, containerExtent = null;
-        let chain2 = null, ocrNote = null, tier2note = null;
+        let chain2 = null, ocrNote = null, tier2note = null, tier2PerPage = null;
         const fmt = profile.format && profile.format.format;
         if (!multipart && fmt && fmt !== "undetermined") {
           try {
@@ -59617,6 +59617,7 @@ var index_default = {
                         if (m.ok) {
                           const tier1Text = i2text;
                           i2text = tier1Text && tier1Text.producer && !m.text.producer ? { ...m.text, producer: tier1Text.producer } : m.text;
+                          tier2PerPage = m.perPageTier;
                           if (m.replaced.length) wiredTier = 2;
                           if (m.replaced.length && m.kept.length) {
                             const merged = mergedChain([
@@ -59672,14 +59673,22 @@ var index_default = {
                           i2text = m.text;
                           const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page) && typeof p.text === "string" && p.text.length).map((p) => p.page);
                           const parts2 = [];
-                          if (layerPages.length)
+                          const layerSet = new Set(layerPages);
+                          const spokenFor = tier2PerPage ? [
+                            [1, (tier2PerPage.tier1 || []).filter((p) => layerSet.has(p))],
+                            [2, (tier2PerPage.tier2 || []).filter((p) => layerSet.has(p))]
+                          ] : [];
+                          const spoken = new Set(spokenFor.flatMap(([, ps]) => ps));
+                          for (const [tier, ps] of spokenFor)
+                            if (ps.length)
+                              parts2.push({
+                                pages: ps,
+                                chain: layerChainFor(baseText, { tier, container: fmt })
+                              });
+                          const unspoken = layerPages.filter((p) => !spoken.has(p));
+                          if (unspoken.length)
                             parts2.push({
-                              pages: layerPages,
-                              /* D-251: the layer PART of a mixed document is
-                                 still a text layer somebody made, and the file
-                                 says who. `baseText` is the pre-merge shape, so
-                                 the marker is read off the document rather than
-                                 off the OCR member's answer. */
+                              pages: unspoken,
                               chain: layerChainFor(baseText, { tier: baseTier, container: fmt })
                             });
                           if (m.filled.length) parts2.push({ pages: m.filled, chain: built.chain });
