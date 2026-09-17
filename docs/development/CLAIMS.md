@@ -12369,7 +12369,7 @@ only when that derivation is empty.
 - `civicos-ui/test/conclude-nofalsifier.control.mjs` — NEW, the negative-control driver.
 - `civicos-ui/test/conclude-act.test.mjs` — extended only if its mock must learn the parameter;
   the ordinary journey it drives must stay byte-identical and that is measured, not asserted.
-- `docs/development/CIVICOS_UI_STATE.md` — the area ledger entry.
+- `docs/development/CIVICOS_UI_STATE.md` — the area ledger entry (`v91`).
 - `docs/development/CLAIMS.md` (this block), `docs/DECIDED.md` on regeneration.
 
 **NOT CLAIMED AND DELIBERATELY NOT TOUCHED:** all of `bio-plane/**` — REC-118 is in `bio-plane/src/`
@@ -12378,4 +12378,28 @@ STOP and file it rather than widening. It can: I3 21.0.0 already carries the par
 this is a CONSUMER catching up. Also untouched: `tools/**` and `.git/hooks` (D-406's worker),
 `newgroup/**`. `docs/development/QUEUE.md` is CONDUCT's and is not flipped by this worker.
 
-**open as of 2026-09-17.**
+**RELEASED 2026-09-17.** Landed on `worktree-agent-a3e2efc5bdd9b529e`, pushed and verified from
+the REMOTE (`ls-remote` agrees with the local head) rather than from this tree.
+
+**PATHS ADDED AFTER OPENING, and recorded because a claim that quietly grows has stopped keeping
+other sessions out of what it actually holds:**
+
+- `civicos-ui/test/conclude-nofalsifier.control.mjs` — foreseen and named on opening.
+- **NOTHING ELSE.** `civicos-ui/test/conclude-act.test.mjs` was reserved as *extended only if its
+  mock must learn the parameter* and was **NOT TOUCHED**: it stayed green untouched, which is the
+  over-strictness result rather than a path saved — the ordinary journey it drives is the journey
+  this item promised not to alter.
+- `civicos-ui/test/analyst-vocabulary.test.mjs` was **NOT** edited, and that is a decision rather
+  than an omission. Its ARM C consumer census fired on the new suite because one comment cited
+  `DEC-32` while identifying which flow a same-named function belongs to. The instrument was
+  RIGHT — it keys on the ruling on purpose — and the citation was incidental to what the comment
+  was for, so the citation was dropped rather than an entry added to that arm's
+  `DIFFERENT_QUESTION` map. **An exemption for a file that merely name-drops a ruling in prose
+  would set the precedent that every such file earns one, which is the list-of-spellings disease
+  that arm exists to treat.**
+
+**A PATH THIS ITEM DELIBERATELY DID NOT NEED: all of `bio-plane/**`.** The row said to STOP and
+file it if the surface could not compose the act without a new plane answer. It could: I3
+21.0.0's `no_falsifier` and the refusal `detail` REC-117 wrote were between them sufficient, and
+**the refusal's own sentence turned out to BE the surfacing half** — the surface renders those
+bytes and writes none of its own.
