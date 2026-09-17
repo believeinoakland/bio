@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1022 rulings across 85 documents.
+1024 rulings across 85 documents.
 
 ## DEC-
 
@@ -1771,6 +1771,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:11746`
 - `tools/plancheck.mjs` — by SITE, not by file: ONE new block appended after arm 2b (the DECIDED index arm), which INSTALLS the hook and reports its state.  
   `docs/development/CLAIMS.md:12135`
+- block 7 ONLY, CORRECTED not exempted.** That block is the probe that FOUND this defect, so it asserts the defect's presence: `grade` publishing `"B"` while the record derives `"C"`, and a source pin on the `grade:` sub-field literal this item edits. Both are SUPERSEDED by this landing and both are rewritten with…  
+  `docs/development/CLAIMS.md:12196`
+- Both are SUPERSEDED by this landing and both are rewritten with the reason at the site, per `CLAUDE.md`'s rule that an exempted test is a rule nobody is enforcing.  
+  `docs/development/CLAIMS.md:12199`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
