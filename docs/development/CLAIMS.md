@@ -12201,3 +12201,25 @@ paths: `bio-plane/src/store.mjs` — **named by SITE**: (1) `meaningRows()`, whi
   `docs/development/QUEUE.md` (the REC-114 row), `docs/development/DEBT.md` (D-383's disposition),
   `docs/development/INTERFACE-CHANGES.md` (IC-117, appended), `docs/development/CLAIMS.md` (this block).
   **NOT** `civicos-ui/app.html` (UI-63 is live there), **NOT** `tools/corpuscheck.mjs` (M0-57).
+
+### DELEGATION 2026-09-17 RECORD (REC-114) -> CONDUCT: **THREE ACTS THIS LANDING OWES, EACH WITH ITS ACTOR, WRITTEN HERE BECAUSE A NOTE IN A REPORT IS NOT AN ITEM**
+**open as of 2026-09-17** — raised at the landing; none of the three is a worker's to perform.
+
+1. **RESOLVE IC-117 and take the I3 version bump, 19.0.0 → 20.0.0 (MAJOR).** Proposed BREAKING on
+   IC-25's rule whatever the measured impact, and the measured impact is **zero non-test consumers**
+   — deliberately not argued down, on IC-112's precedent from this interface's own last bump.
+   `INTERFACE-CHANGES.md` carries the row with its reversal.
+2. **FLIP AND SPAWN REC-118 (D-406) and REC-119 (D-407)** — the fifth and sixth readers of the
+   capture axis, both member-facing, both found by the census REC-114's row demanded and both DRIVEN
+   rather than grepped. They are ROWED with scope, accepts-when and negative controls. **REC-119
+   carries a freeze constraint that makes it a design question and possibly BOB's** — its scope says
+   so at the top rather than leaving it to be discovered late.
+3. **RE-READ `regionLines` / any floor this landing may have moved AT INTEGRATION.** This item added
+   no DEC-49 region and moved no floor, and `coverage.mjs --strict` is green on this branch — but the
+   figures are a property of the MERGED source and have moved at integration five times, so this is
+   named rather than assumed to be nothing.
+
+## CLAIM 2026-09-17 RECORD (REC-114 / D-383 — the leg listing's capture letter) — RELEASED
+released: 2026-09-17 by the REC-114 worker at its own landing. Every path named in the claim above is
+committed and pushed on `worktree-agent-ac7f5ea0af44d1c3f`; nothing is left open in them, and the three
+acts this landing owes are the DELEGATION immediately above rather than anything held in these paths.

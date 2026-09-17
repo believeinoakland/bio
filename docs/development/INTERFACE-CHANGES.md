@@ -8763,3 +8763,67 @@ explicitly did not claim the others. **M-44 measured them: `content:`, `leg:`, `
 consequence was invisible there only because their misses do not compose a sentence a member reads
 — but their published `documents_with_rows` was a TAUTOLOGY (equal to `documents` by construction)
 and is now a measurement.
+
+---
+
+## IC-117 · I3 `op=meaningrows&rows=leg`: the leg's `grade` becomes the EARNED letter, with the AUTHORED letter published beside it · PROPOSED
+
+- **Interface:** I3 (plane → UI, the op contracts), read **19.0.0 STABLE ON THIS TREE**.
+- **Item:** REC-114 (D-383). **Owner:** `RECORD`.
+
+### The change
+
+`op=meaningrows&rows=leg` published `grade` straight off `inquiry_basis.grade` — the letter a
+member AUTHORED, uncapped by the capture registry — and `leg:grade=` and `leg:axis=capture` are
+selectors over that same column, so all three routes published it. After this item:
+
+- **`grade` is the EARNED letter** — the authored letter capped by `earnedBasisRegistry` through
+  `Store.#capturedAt`, the same function `strengthOf()`'s walk applies. Capture axis only; it only
+  ever lowers, and it is `null` where DEC-4 bounds the axis to nothing.
+- **`grade_authored` is NEW and always present** — what the member typed, verbatim, never capped.
+- **`grade_why` is NEW and always present** — why the two differ, or `null` when nothing was capped.
+- **`op=searchfields` names both new columns** in `meaning.leg.rows.columns`, derived by
+  `rowColumns` from a `rowDerived` declaration rather than listed, and the `grade` and `axis`
+  sub-fields gain a `selects` sentence.
+
+### Version: I3 19.0.0 → **20.0.0** — MAJOR
+
+**BREAKING ON IC-25's RULE, AND DELIBERATELY NOT ARGUED DOWN ON MEASURED IMPACT.** A consumer
+reading `grade` receives a WEAKER letter than before for a leg whose document the record has since
+re-read. That is a published value changing, and IC-25 settles it as breaking **whatever the
+measured impact** — the rule IC-112 was ruled major on in this interface's own last bump, where a
+worker measured zero impact and correctly declined to take the minor on that basis. **A registry
+that records a break as a minor is a registry learning to lie.** The two added fields are additive
+and do not govern; the strongest classification does.
+
+### Consumer impact, MEASURED and not estimated
+
+**ZERO non-test consumers.** `civicos-ui` calls `op=meaningrows` **nowhere** — grepped on this tree,
+and D-258 independently recorded the same measurement on 2026-08-09 when it deleted two fields from
+this same descriptor for exactly that reason. The agent harness does not call it either. The only
+readers are `bio-plane/test/**`, and the one that asserted the old value — `rec108-cache-asof.test.mjs`
+block 7, which *found* this defect and therefore pinned its PRESENCE — is CORRECTED in this landing
+with the reason at the site, never exempted.
+
+**THE BASE WAS RE-READ OFF THE TREE AND THE ROW'S IMPLIED BASE WAS STALE.** REC-114's lineage points
+at I3 18.x (REC-108 resolved IC-108 at 18.0.0 → 18.1.0); `INTERFACES.md` reads **19.0.0** at
+`7ebe2dd1`, after IC-110 + IC-112 + IC-114 landed together. Minted against the tree, which is the
+same correction REC-108 itself had to make and the reason its row says so.
+
+### What does NOT move, stated because silence here reads as an omission
+
+`op=inquirystrength` — **the authority** — carries no new key and no changed value; this item did not
+touch it and must not. The strength walk, `#capturedAt`, `#captureBoundsFor` and `earnedBasisRegistry`
+are READ and reused, never edited. The other meaning arms (`resolves`, `concerns`, `content`,
+`passage`) are byte-identical: `rowDerived` belongs to the `leg` descriptor alone, asserted rather
+than asserted-about. And the FILTER still selects on the authored column — that disagreement cannot
+be removed, because the ceiling is a JS derivation with no column to select on, so it is STATED at
+`op=searchfields` instead of hidden.
+
+### Reversal
+
+One line: `#legEarnedCapture` returns `rows` unchanged, and drop the `rowDerived` block. That is
+control arm (a), which is RUN and recorded — 24 pass, 12 fail, with the headline naming both letters
+and the surface. Reversing re-opens D-383.
+
+**RESOLUTION: (CONDUCT takes the version bump and the resolution.)**
