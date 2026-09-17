@@ -14082,3 +14082,98 @@ answered before. **It says NOTHING about how common the class is** — the fixtu
 synthesised, so it cannot; frequency remains CPDF-20's census of 50 real documents, which
 found one, and that figure is unchanged by this entry. It also cannot say what a real pdf.js
 decode of page 0 would be, because the member is stubbed.
+
+## M-35 · 2026-09-16 · REC-111 — **HOW MANY INDEXED UNITS A PROMOTE CAN ACTUALLY CARRY: 4,064 through the acquire wire and 13,720 through a caller-authored provenance document — so the unit count was ALREADY BOUNDED ON BOTH ROUTES, BY ACCIDENT, AND NEITHER ACCIDENT WAS WRITTEN DOWN** (worktree `agent-ab9f22802cd2cdb44`, `origin/main` at `f3f2acba`)
+
+**Why this was taken.** `CONTENT-SEARCH-DESIGN.md` §4.3's third correction (BOB #12,
+2026-09-16) says the content index costs ROWS and FTS ENTRIES while every bound the section
+sets counts BYTES, and cites M-20's worst docx — 20,571 units at 1,187,253 B, inside the byte
+bound, at 84.8 % of the CPU window — for the claim that **a container whose units are many and
+small is bounded by nothing this design specifies.** REC-111 was rowed to close that with a
+unit budget, and its first act was to measure the claim rather than build against it.
+**CLAUDE.md's rule: verify a blocker the way you verify a capability.**
+
+**Instrument.** Two arms, both on this tree, neither requiring the network or a deploy.
+
+    node -e '<the JSON-size bisection below>'            # arm 1, the caller-authored ceiling
+    node bio-plane/test/capture-text-index.test.mjs      # arm 2, both ceilings driven through op=promote
+
+Arm 1 bisects the largest `{documents:[{... text_units:[...] }]}` whose serialisation stays
+under `INLINE_MAX`, with each unit carrying a DISTINCT extent (a colliding address is counted
+`unaddressable` and dropped by `#writeCaptureText`, so a fixture of identical extents would
+have measured a ceiling nothing can reach) and one byte of text. Arm 2 is section G of the
+suite, which promotes documents at these shapes through the real op on miniflare-hosted
+workerd.
+
+### 1 · The two route ceilings
+
+| route | what bounds it | ceiling, in UNITS | predicted ms | % of the 257 ms window |
+| --- | --- | --- | --- | --- |
+| `op=acquire` → `op=promote` (the product's own) | `ACQUIRE_TEXT_UNITS_BUDGET` 524,288 B, charging `ACQUIRE_TEXT_UNIT_ENVELOPE` 128 B **per unit** | **4,064** | 58.5 | **22.8 %** |
+| a caller-authored `data/provenance.json` → `op=promote` | `INLINE_MAX` 1,048,576 B on the whole file | **13,720** | 105.0 | **40.9 %** |
+| §4.3's `CAPTURE_TEXT_CAPTURE_BOUND`, 2,097,152 B | — | unreachable (REC-91, M-32) | — | — |
+
+- **4,064 and not 4,096.** `floor(524288 / 128)` is 4,096, but the wire's `arm()` helper never
+  emits a unit with empty text, so the smallest chargeable unit is `1 + 128` B. The difference
+  is 32 units and it is the difference between a ceiling and an estimate.
+- **13,720 is a ceiling on UNITS and the maximising shape is all-units, not all-bytes.** Against
+  M-20's fit a unit costs ~1.0e-4 ms per JSON byte spent on it and a text byte ~5.3e-5, so units
+  dominate; a mixed document cannot beat the all-tiny-units figure. JSON escaping cannot help a
+  caller either — an escape is more JSON bytes per text byte, never fewer.
+- **An R2-backed `data/provenance.json` is NOT a third route.** `#writeReadings` and the
+  `text_units` read both require `typeof prov.text === "string"`, so a spilled file is not read
+  at all and contributes no units. Checked in the source on this tree, not inferred.
+- **The predicted milliseconds are M-20's two-point fit** (`0.0076 × units + 0.054 × KiB`)
+  applied to these shapes. **They are a PREDICTION and not a reading**, and nothing here
+  re-takes M-20's calibration; the 257 ms window is M-20's own conversion of `op=cpuprobe`'s
+  40M-reference-iteration budget at the workerd rate, and that currency is not runtime-portable.
+
+### 2 · What that means, and it is not what the row expected
+
+**The premise is true of the DESIGN and false of the SYSTEM.** Both reachable routes are
+bounded, and both bounds sit comfortably inside the CPU window — the worse of them at 40.9 %,
+against the 45.7 % §4.3 itself called acceptable. **Nothing was broken and nothing was going to
+overflow.**
+
+**What was wrong is that both bounds were ACCIDENTS.** 4,064 falls out of a JSON envelope
+ESTIMATE — the comment at the site says "about eight indented lines" — and 13,720 falls out of
+an inline-file limit that knows nothing about indexing. Neither is written anywhere. Either
+moves the day an unrelated constant moves, and §4.1 already names `sheet-range` as a coming unit
+arm with a larger extent, which is exactly the change that would move the first one. §4.3 asked
+for both bounds *"stated in one place"* so that *"neither hides the other"*; **the byte bound was
+hiding the unit bound, and a bound nobody can state without doing arithmetic across two files is
+not a decision about what a member's promote may cost — it is a side effect wearing one.**
+
+**And the same measurement decides the remedy.** §4.1's alternative is to chunk the write across
+ticks as `capture_sessions` resumes. Chunking is for a write that does not FIT a tick, and
+neither route can produce one: to make chunking necessary you would first have to RAISE the
+wire's byte budget, which is the regression §4.3 was corrected for on 2026-09-16. So the bound
+built is a unit BUDGET — `CAPTURE_TEXT_CAPTURE_UNIT_BOUND`, 4,096, from M-20's own *"the largest
+promote that fits is ~3,900 units"*, at the resolution the adjacent constants use.
+
+**M-20's worst docx is not a counter-example to any of this, and reading it as one is the trap.**
+Its 20,571 units and 218 ms are a figure about a document's TEXT, not about a promote: through
+the wire its 60 B mean paragraph costs 188 B against a 524,288 B budget, so ~2,788 units are kept
+and it lands `partial` today, before this item and after it. **A cost quoted for a document the
+wire never sends whole is a cost nothing pays.**
+
+### 3 · WHAT THIS MEASUREMENT CANNOT SEE
+
+- **No real CPU was measured.** Every millisecond above is M-20's fit applied to a unit count,
+  on a machine running other workers. A deployed-Worker reading of a promote at these shapes has
+  not been taken by anybody, and M-20's own note that the reference-iteration currency is not
+  runtime-portable is inherited here unchanged.
+- **No real many-tiny-unit DOCUMENT.** The 13,720-unit fixture is synthesised. M-20's census
+  holds no container that produces units at that count — its worst is 20,571 `doc-para` units,
+  and those are not tiny enough to survive the wire. **So this says what the ROUTE admits and
+  nothing about how often anything travels it.**
+- **The workbook case is still absent, and it is the one that would matter.** §4.3's own example
+  of the hazard is "a spreadsheet of one-character cells", and a workbook has NO unit arm
+  (`EXTRACTION-BREADTH-DESIGN.md` §3.2's `sheet-range`). M-20 measured 288 workbooks holding
+  72,651,441 B of text over 1,056 sheets with not one indexable unit between them. **When that
+  arm lands, this measurement is the one to re-take**, because a `sheet-range` unit changes both
+  the envelope estimate and the unit count at once.
+- **It cannot see a caller that is not this plane.** Arm 1 models the provenance document this
+  repository's own writers produce; a caller emitting a leaner shape would fit more units, and
+  the ceiling would rise without any constant moving. That is an argument FOR the stated bound
+  rather than a limit of it, and it is the reason the bound is on the STORE's side of the wire.

@@ -10730,3 +10730,110 @@ released: 2026-09-16 by the REC-102 worker, after the full gate and after the pu
   true of the merged tree. **No DELEGATION is owed, no IC is owed** (the published chain shape did
   not move — it gains a second scoped part for one class and is otherwise byte-identical, which is
   the case the row anticipated), **no new debt row was opened, and nothing is left for Bob.**
+
+## CLAIM 2026-09-16 RECORD (REC-111 — the UNIT-COUNT bound: a unit budget beside the byte budget, at both wires that state a byte budget)
+
+session: rec111-unit-count-bound (worktree agent-ab9f22802cd2cdb44)
+opened: 2026-09-16T00:00:00Z
+
+**PATHS CLAIMED, BY REGION — the contended-file cap was MEASURED on this tree before claiming,
+not assumed.** The only OPEN claim in this file naming `bio-plane/src/store.mjs` is REC-103's, and
+it names `#frontierNeverLooked` and `frontier()`'s DOCUMENT arm — disjoint from every region below.
+REC-102's `index.mjs` claim is RELEASED. So this is well inside `ORCHESTRATION.md`'s cap of five
+workers in `store.mjs` / `bio-checks.mjs` / `index.mjs`.
+
+- `bio-plane/src/store.mjs` — **THREE REGIONS AND NOTHING ELSE**: (1) the two-line constant block
+  at `CAPTURE_TEXT_CAPTURE_BOUND`, which gains its unit sibling; (2) `#writeCaptureText`'s doc
+  comment and its per-unit loop; (3) `#observeIndexed`'s `partial` branch, whose `bound` sentence
+  must name WHICH bound bit. **NOT** `frontier()`, **NOT** `#frontierNeverLooked`, **NOT** any
+  extent arm, **NOT** the schema.
+- `bio-plane/src/index.mjs` — **ONE REGION AND ONE CONSTANT BLOCK**: the acquire wire's text-unit
+  budget block at `ACQUIRE_TEXT_UNITS_BUDGET`, and the emission loop between
+  `/*__REC91_TEXT_UNITS_START__*/`-equivalent anchors ending at `/*__REC91_TEXT_UNITS_END__*/`.
+  **NOT** the op table, **NOT** any tier-2/tier-3 escalation, **NOT** `needsTier2`.
+- `bio-plane/test/capture-text-index.test.mjs` — REC-91's suite, extended with this item's
+  section. `bio-plane/test/nc-rec111.mjs` (NEW, the negative-control driver).
+- `docs/development/CONTENT-SEARCH-DESIGN.md` — §4.3 and the front matter's Status + Incomplete
+  sections, moved in the SAME EDIT (the `corpuscheck` date arm cannot fire before the commit).
+- `docs/development/MEASUREMENTS.md` (M-35, appended), `docs/development/CLAIMS.md`.
+- `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` ONLY, ONE key set, from this item's own
+  POST-COMMIT print.
+
+**NOT TOUCHED:** `docs/development/QUEUE.md` (CONDUCT's sole writer — this item's row is flipped by
+CONDUCT at integration, and that act is named in the report), `bio-plane/src/schema.mjs` (no column
+moves), `bio-plane/checks/bio-checks.mjs` (no new refusal — the bound TRIMS and reports `partial`,
+it does not refuse, so no C-number and no IC), `newgroup/**`, `civicos-ui/**`.
+
+released: 2026-09-16 by the REC-111 worker — **§4.3's OWED UNIT-COUNT BOUND IS BUILT AS A UNIT
+  BUDGET, NOT AS §4.1's CHUNK-ACROSS-TICKS, AND THE CHOICE WAS MADE FROM THE LADDER RATHER THAN
+  FROM JUDGEMENT.** `CAPTURE_TEXT_CAPTURE_UNIT_BOUND` = **4,096 units**, in `store.mjs` beside
+  `CAPTURE_TEXT_CAPTURE_BOUND` and tested in the SAME BRANCH; over it a capture is indexed TO it
+  in reading order and reads `partial`, and `#observeIndexed`'s sentence says WHICH bound bit.
+  Landed on branch `rec111-unit-count-bound`, PUSHED (never to `main`, never merged).
+  **THE ROW'S PREMISE WAS HALF WRONG AND THAT IS THE FINDING WORTH MORE THAN THE BOUND.**
+  *A container whose units are many and small is bounded by nothing this design specifies* is
+  true of the DOCUMENT and false of the SYSTEM. **M-35** measured both routes that reach the
+  index writer and both were already bounded: the acquire wire at **4,064** units (its 524,288 B
+  budget charges a 128 B envelope per unit and a unit with no text is never emitted) — 22.8 % of
+  the CPU window; a caller-authored `data/provenance.json` at **13,720** (`INLINE_MAX` refuses
+  the file, and an R2-backed one is not read at all) — 40.9 %. **What was wrong is that BOTH
+  BOUNDS WERE ACCIDENTS** — a JSON envelope ESTIMATE and an inline-file limit that knows nothing
+  about indexing — written down nowhere and free to move the day an unrelated constant moves.
+  §4.3 asked that neither bound hide the other; the byte bound was hiding the unit bound.
+  **WHY NOT CHUNK-ACROSS-TICKS, from the ladder:** chunking is the remedy for a write that does
+  not FIT a tick and neither route can produce one; making one would mean RAISING the wire's byte
+  budget first, which is the exact regression §4.3 was corrected for the same day. It would also
+  have to coin a fifth `indexed` state against a vocabulary `store.mjs` states is CLOSED.
+  **NO CHECK WAS ADDED AT THE ACQUIRE WIRE AND THE ABSENCE IS MEASURED, NOT AN OMISSION:** the
+  largest unit budget that regresses nothing (4,096) is ABOVE the most the wire can send (4,064),
+  so a wire-side budget provably cannot fire, and a check that cannot fire is a mechanism a reader
+  would believe on its existence. The ceiling is PINNED by assertion instead (`G1` reads the two
+  operands out of `index.mjs` and the bound out of `store.mjs`), and `nc-rec111.mjs`'s `pinoff`
+  arm drives that pin.
+  **GATES, all on the tree pushed.** Own baseline **208/208 suites green · 13,013 assertions** at
+  `f3f2acba`, zero skips, 3 of 3 fleet members RAN — **exactly CONDUCT's briefed figure, confirmed
+  rather than corrected.** Final **208/208 · 13,027**, the +14 being this item's own section G and
+  nothing else. `coverage.mjs --strict` run DIRECTLY, `$?` unpiped, **exit 0**;
+  `civicos-ui/test/run.mjs` from the repo root, unpiped, **exit 0**; `plancheck --local` 0 fail
+  0 warn and BARE after committing. **`REGISTER_FLOOR` DID NOT MOVE and `coverage.mjs` WAS NOT
+  EDITED** — arms 1109/1109 · classified 199/199 · corpus 200/200, FLEET 3/6/8/76, identical to
+  baseline, because `control-register.mjs`'s `readControl` records *"the fullest single statement,
+  never the sum"* and this suite's tally stays REC-91's seven arms. Stated rather than worked
+  around; the instrument was not touched.
+  **SIX CONTROL ARMS, ALL RUN, ALL AS DECLARED, with one declaration CORRECTED by its own result.**
+  `tighten` — the over-strictness arm that decides this item is safe to ship — was declared with
+  eight failures and returned five, and the three surprising greens are recorded at the arm: `G5`,
+  `G6b` and `G7` read the bound OUT OF THE PRODUCT, so both sides move with it and they are blind
+  to its VALUE by construction. **An assertion written against the product's own constant can
+  prove the MECHANISM right and can never prove the NUMBER right.** That is why `G1`, `G2`, `G6`
+  and `G8` carry independent figures, and all four went red.
+  **FL-10's bundle guard fired and the bundle is REBUILT** — `dist/bio-plane.bundled.mjs`
+  3,223,787 B sha256 `60dfe8f5…`, 50 first-party inputs — with nothing bumped, signed, tagged or
+  deployed.
+  **A CONTAMINATED RUN WAS KILLED AND DISCARDED RATHER THAN REPORTED.** The first post-change
+  battery was started before the bundle was rebuilt, so FL-10's arm would have gone red against a
+  stale artifact. It was killed BY PID (71654, then the orphaned 71656/71676 read out of a process
+  table filtered to this worktree — never `pkill -f`, which on this machine reaches four other
+  workers' batteries), a sibling worker's battery at PID 27406 was verified still running and
+  untouched, and the gate was re-measured on the rebuilt tree.
+  **FOR CONDUCT, as ACTS with their actor:** (1) flip REC-111's QUEUE row to `done` with the merge
+  sha — the row is untouched here on purpose, since the sha it must record does not exist until
+  the merge; (2) re-read `REGISTER_FLOOR` from a green `--strict` on the MERGED tree, since other
+  RECORD items are live in the plane's sources and only the merged print is ever true of the
+  merged tree. **No DELEGATION is owed** (REC-103's `store.mjs` regions are disjoint and untouched);
+  **no IC is owed** — the bound TRIMS and reports `partial`, it does not refuse, no wire shape moves,
+  and the product's own route is unchanged byte-for-byte, which is the case the row anticipated;
+  **no new debt row was opened, and nothing is left for Bob.**
+  **WHAT I COULD NOT DO, STATED PLAINLY.** (1) **No real CPU was measured** — every millisecond in
+  M-35 is M-20's two-point fit applied to a unit count, on a machine running four other workers; a
+  deployed-Worker reading of a promote at these shapes has not been taken by anybody, and M-20's
+  own note that the reference-iteration currency is not runtime-portable is inherited unchanged.
+  (2) **No real many-tiny-unit DOCUMENT exists in any census I could reach** — the 13,720-unit
+  fixture is synthesised, so this says what the ROUTE admits and nothing about how often anything
+  travels it. (3) **The workbook case, which is §4.3's own example of the hazard, is still
+  absent** — a workbook has no unit arm at all (`EXTRACTION-BREADTH-DESIGN.md` §3.2's
+  `sheet-range`), and M-20 measured 288 of them holding 72,651,441 B of text over 1,056 sheets with
+  not one indexable unit between them. **When that arm lands, M-35 is the measurement to re-take**,
+  because a `sheet-range` unit moves the envelope estimate and the unit count at once. (4)
+  **Nothing was live-verified against the real account** — no deploy, no scratch-namespace probe;
+  everything here is miniflare and source.

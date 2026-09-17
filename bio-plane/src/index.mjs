@@ -336,6 +336,55 @@ const ACQUIRE_TEXT_UNITS_BUDGET = 512 * 1024;
    of twenty thousand short paragraphs cannot pass a byte budget on its words and
    then blow `INLINE_MAX` on its punctuation. */
 const ACQUIRE_TEXT_UNIT_ENVELOPE = 128;
+/* REC-111 -- THE UNIT CEILING THIS WIRE ALREADY HAS, WRITTEN DOWN. IT IS A
+ * STATED CONSEQUENCE, NOT A SECOND CHECK, AND THE ABSENCE OF A CHECK HERE IS THE
+ * ITEM'S OWN MEASURED RESULT RATHER THAN AN OMISSION.
+ *
+ * `CONTENT-SEARCH-DESIGN.md` section 4.3 asks for a unit budget "beside the byte
+ * budget ... so both are stated in one place and neither hides the other",
+ * because the index costs ROWS and FTS ENTRIES while every bound in that section
+ * counts BYTES. The premise REC-111 was given -- *a container whose units are
+ * many and small is bounded by nothing* -- is TRUE OF THE DESIGN AND FALSE OF
+ * THIS WIRE, and that was found by measuring rather than by reading: the budget
+ * above charges `ACQUIRE_TEXT_UNIT_ENVELOPE` per unit and a unit with no text is
+ * never emitted at all (see the `arm` helper), so the smallest chargeable unit
+ * is 1 + 128 B and this wire can emit AT MOST
+ *
+ *     floor(524288 / 129) = 4,064 units
+ *
+ * whatever the document is. M-20's fit (0.0076 ms/unit + 0.054 ms/KiB against a
+ * 257 ms window) puts that worst case at 58.5 ms -- 22.8 % of the window. So the
+ * many-small-unit overflow cannot happen HERE. It can happen one step down, in
+ * `op=promote`, which reads `data/provenance.json` from a caller who may author
+ * it: M-35 measured 13,720 units through that route before `INLINE_MAX` refuses
+ * the file. That is where `store.mjs`'s `CAPTURE_TEXT_CAPTURE_UNIT_BOUND` bites,
+ * and it is the bound that fires.
+ *
+ * WHY NO SECOND `if` IN THE LOOP BELOW, stated because adding one is the obvious
+ * move and it is wrong. The largest unit budget that REGRESSES NOTHING is 4,096
+ * (M-20's own *"largest promote that fits is ~3,900 units"*, at the resolution
+ * these constants use), and 4,096 is ABOVE the 4,064 this wire can reach -- so a
+ * wire-side unit budget provably cannot fire on this tree. Set it lower and it
+ * starts trimming real documents: M-20's median `doc-para` is 10 B, so a
+ * document of ~3,800 short paragraphs passes today, and a budget of 3,000 would
+ * silently stop indexing part of it. **A refusal invented without measuring what
+ * the record already accepts takes capability away silently** -- section 4.3 has
+ * shipped exactly that once and this item exists partly to undo it. A check that
+ * cannot fire is worse than no check, because it is a mechanism a reader would
+ * believe on the strength of its existence.
+ *
+ * WHAT IS LIVE INSTEAD IS AN ASSERTION, and there is deliberately NO
+ * `ACQUIRE_TEXT_UNITS_CEILING` constant here to go with this paragraph: a
+ * constant nothing reads is the same dead mechanism one sentence up, wearing a
+ * name. The ceiling is DERIVED where it can be checked --
+ * `capture-text-index.test.mjs` reads the two operands out of THIS FILE and the
+ * bound out of `store.mjs`, does the division itself, and pins
+ * `ceiling <= CAPTURE_TEXT_CAPTURE_UNIT_BOUND`. **That is the whole point.** The
+ * ceiling is a side effect of an ENVELOPE ESTIMATE -- "about eight indented
+ * lines" -- and section 4.1 already names `sheet-range` as a coming unit arm
+ * whose extent is larger, so that estimate WILL be revised. Without the pin, a
+ * change about BYTES would silently change what a member's promote may COST,
+ * which is the drift this item exists to stop. */
 const OPS = {
   //  op          class allowed              mutating
   selftest:   { classes: ["admin", "member", "probe"],           mutating: false },

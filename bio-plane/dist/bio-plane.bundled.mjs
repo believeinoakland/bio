@@ -24168,6 +24168,7 @@ var INLINE_MAX = 1024 * 1024;
 var TASK_KINDS = ["authority-undetermined"];
 var CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
 var CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
+var CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
 var CAPTURE_TEXT_UNIT_CONTAINERS = /* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp"]);
 var SOURCE_OUTCOMES = ["success", "source_refused", "fetch_failed", "governed"];
 var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
@@ -34341,7 +34342,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    *  deck-grain SEARCH ships complete while deck-grain CONNECTIONS wait on
    *  `pptx.mjs` emitting per-shape text -- FW-17's axis, not this one.
    *
-   *  TWO BOUNDS, BOTH FROM M-20 AND NEITHER INVENTED HERE (section 4.3):
+   *  THREE BOUNDS, ALL THREE FROM M-20 AND NONE INVENTED HERE (section 4.3):
    *
    *   - PER UNIT, `CAPTURE_TEXT_UNIT_CAP` (131,072 B). Over M-20's 148,413 units
    *     the largest was 21,224 B, so the cap is 6.2x the largest unit that
@@ -34355,6 +34356,18 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    *     `indexed` observation reads `partial` -- which is why `seq` exists and
    *     why the units are sorted before they are written: a partial index must
    *     be a PREFIX a reader can reason about, not an arbitrary subset.
+   *   - PER CAPTURE, `CAPTURE_TEXT_CAPTURE_UNIT_BOUND` (4,096 units), REC-111.
+   *     The index costs ROWS AND FTS ENTRIES and the two bounds above count
+   *     BYTES, so until this one existed a container of many tiny units was
+   *     bounded only by accident -- see the long note at the constant for the
+   *     two accidents, their measured sizes and why a unit budget was built
+   *     rather than section 4.1's chunk-across-ticks. Over it the capture is
+   *     indexed TO it IN READING ORDER and reads `partial`, exactly as the byte
+   *     bound does: one state, one vocabulary, and the sentence says which bound
+   *     bit. **It bites nothing the product's own wire can send** (that wire
+   *     admits at most 4,064 units), which is deliberate -- a bound that refused
+   *     a document the record accepts today would be a regression wearing the
+   *     costume of caution, and section 4.3 has already shipped one of those.
    *
    *  Returns what it did, for the observation below and for the caller's own
    *  surface. It refuses nothing and can fail no promotion: a document whose
@@ -34386,7 +34399,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       const full = u.text;
       const capped = full.length > CAPTURE_TEXT_UNIT_CAP ? full.slice(0, CAPTURE_TEXT_UNIT_CAP) : full;
       const size = new TextEncoder().encode(capped).length;
-      if (bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) {
+      if (written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND || bytes + size > CAPTURE_TEXT_CAPTURE_BOUND) {
         overBound++;
         continue;
       }
@@ -34487,7 +34500,8 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       detail = `text was extracted and this record cannot address a passage of it: ${bound}. That is not an absence of text and must not be read as one`;
     } else if (r.over_bound > 0) {
       state = "partial";
-      bound = `the per-capture text bound, ${CAPTURE_TEXT_CAPTURE_BOUND} B (CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20) or the acquire answer's own budget, whichever bit first -- the second is the smaller and is what the promote path's inline-file limit forces`;
+      const byUnits = r.written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND;
+      bound = (byUnits ? `the per-capture UNIT bound, ${CAPTURE_TEXT_CAPTURE_UNIT_BOUND} units (CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20's largest-promote-that-fits and M-35's two route ceilings) -- the index costs ROWS, not only bytes, and this capture offered more pieces than a promote may spend its CPU window on` : `the per-capture text bound, ${CAPTURE_TEXT_CAPTURE_BOUND} B (CONTENT-SEARCH-DESIGN.md section 4.3, set from MEASUREMENTS.md M-20)`) + " or the acquire answer's own budget, whichever bit first -- the last is the smaller in bytes and is what the promote path's inline-file limit forces";
       detail = `${r.written} of ${r.offered} unit(s) indexed in reading order, ${r.bytes} B; ${r.over_bound} unit(s) past the bound are NOT indexed`;
     } else if (r.written > 0) {
       state = "PRESENT";

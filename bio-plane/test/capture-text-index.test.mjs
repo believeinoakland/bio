@@ -1,5 +1,7 @@
 /* NEGATIVE CONTROL: SIX arms and a baseline live in `test/nc-rec91.mjs` and are re-run in one step with `node test/nc-rec91.mjs [arm]` from `bio-plane/`. Each arm EDITS A REAL SOURCE, is armed ALONE with every other defence held open, and is restored from a UNIQUELY-NAMED per-arm pristine copy verified by sha256 AND by content (`cmp`) with a byte count printed and a minimum guarded — never `git checkout --`, which restores to HEAD and has twice discarded a session's own uncommitted work. Declared before arming, and every one RUN; results are in this item's report and in CLAIMS.md's release line. (a) `baseline` — nothing armed; MUST be green, the row that distinguishes six-arms-broken from six-arms-working. (b) `nopurge` — drop `"capture_text"` from `purge`'s TABLES array; MUST fail the purge arms BY NAME in BOTH directions (the per-bundle arm and the whole-store arm) and MUST fail `hygiene.test.mjs`'s D-113 census, which is the check that would have caught it at the moment the mistake was made. (c) `nodelete` — in `#writeCaptureText` remove the leading `DELETE FROM capture_text WHERE capture_sha=?`; MUST fail the CHAIN-MOVE arm by name — the superseded text is still indexed, which is a search answering out of an engine that did not produce it — and MUST NOT move any first-promote arm, because on a first promotion there is nothing to delete and the defect is invisible. (d) `replace` — change that same plain `INSERT` to `INSERT OR REPLACE` and drop the delete with it; MUST fail the chain-move arm AND the stats-parity arm (`textIndexed` exceeds `textUnits`), because SQLite does not fire delete triggers for REPLACE conflict resolution and the superseded row's index entry is ORPHANED — this is the arm that proves the measured hazard is real in the product and not only in a probe. (e) `noobs` — neuter `#observeIndexed` to return without appending; MUST fail every content-axis arm and MUST NOT move the row-count arms, which separates the OBSERVATION from the WRITE. (f) `armsopen` — treat every container as having a unit arm (`CAPTURE_TEXT_UNIT_CONTAINERS` becomes a Set that answers true); MUST fail the WORKBOOK arm alone, because a workbook would then be recorded as extracted-and-indexed-nothing rather than as having no unit arm — the false-absence direction this item's whole vocabulary exists to refuse. (g) `overstrict` — THE OVER-STRICTNESS DIRECTION, and it is armed against the BOUND rather than against the writer: drop the per-capture bound to 64 B so an ordinary document goes `partial`; MUST fail the FULL arms and MUST NOT fail the partial arm or any refusal, because a bound tighter than its rule is not a safer bound — it makes the record say it holds less than it does, and a member reading `partial` would re-extract a document that was already whole. */
 /* RESULTS: see this item's report and the CLAIMS.md release line. */
+/* RESULTS, REC-111's arms RE-RUN 2026-09-16 on the final tree, each ALONE, every restore byte-identical by sha256 AND by content (`store.mjs` 2,242,874 B sha256 e03a95882562… four times; `index.mjs` 586,300 B sha256 b90c31c4f2ad…): baseline 55/0 green · nounitbound 51/4 · sentencebytesonly 54/1 · gtnotge 52/3 · tighten 50/5 · pinoff 54/1 — ALL SIX AS DECLARED, every declared failure present and ZERO UNDECLARED failures, which this harness CHECKS rather than describes afterwards. ONE RESULT CAME BACK DIFFERENT FROM ITS DECLARATION AND IS RECORDED RATHER THAN SMOOTHED: `tighten` was declared with EIGHT failures and returned FIVE, and the three surprising greens (`G5`, `G6b`, `G7`) are a finding about the SUITE — they read `CAPTURE_TEXT_CAPTURE_UNIT_BOUND` out of the product, so both sides of each assertion move with it and they are blind to its VALUE by construction. That is not fixed by hand-copying the constant, which agrees for free; it is why `G1`, `G2`, `G6` and `G8` carry independent figures (the wire's derived ceiling, M-20's literals, and two real documents by name), and all four went red. The declaration is corrected to what the arm does. AND THE REGISTER DOES NOT COUNT THIS DECLARATION, which is stated rather than worked around: `control-register.mjs`'s `readControl` records "the fullest single statement, never the sum", so this suite's tally stays REC-91's seven arms and `REGISTER_FLOOR` did not move (arms 1109/1109 · classified 199/199 · corpus 200/200, exit 0 — unchanged from the baseline). The instrument was not touched. */
+/* NEGATIVE CONTROL: FIVE arms and a baseline live in `test/nc-rec111.mjs` for SECTION G (REC-111, the UNIT-COUNT bound) and are re-run in one step with `node test/nc-rec111.mjs [arm]` from `bio-plane/`. Each arm EDITS A REAL SOURCE, is armed ALONE with every other defence held open, and is restored from a UNIQUELY-NAMED per-arm pristine copy verified by sha256 AND by content with a byte count printed and a minimum guarded — never `git checkout --`. The harness also fails an arm on any UNDECLARED failure, so an arm measuring something wider than its subject is caught rather than described afterwards. Declared before arming, and every one RUN. (a) `baseline` — nothing armed; MUST be green, the row that distinguishes five-arms-broken from five-arms-working. (b) `nounitbound` — THE ITEM'S OWN: drop the unit half of `#writeCaptureText`'s bound branch so the constant is computed and thrown away, which is the tree exactly as it was before this item; MUST fail `G3`, `G5`, `G6` and `G6b` BY NAME, and between them those lines print the UNIT COUNT and the BYTE COUNT — `G6b` is asserted as a WHOLE SENTENCE rather than as a pair of regexes precisely so the failure names both, since a failure naming one is a failure a reader cannot act on; MUST NOT move `G1` or `G2`, which is the finding this arm carries — DECLARING a bound and ENFORCING one are two acts and this arm is the gap between them. (c) `sentencebytesonly` — revert `#observeIndexed`'s `partial` sentence to the pre-item wording naming only the byte bound, leaving the trimming intact; MUST fail `G6` ALONE, which separates the BOUND from what the record SAYS about it — two defences, and a suite whose halves fall together cannot tell which one is enforcing. (d) `gtnotge` — compare `written >` instead of `>=`, indexing one unit past the bound; MUST fail `G3`, `G5` and `G6b` and MUST NOT move `G7`, and that held-open half is the point: the exactly-at-the-bound test an author would naturally write does NOT catch this defect. (e) `tighten` — THE ARM THAT DECIDES THIS ITEM IS SAFE TO SHIP, and it is the over-strictness direction because §4.3's own bound was not merely too tight but a REGRESSION: lower the unit bound to 512, the round number an author reasoning from §4.1's worked example would reach for instead of from M-20's ladder; MUST fail `G1`, `G2`, `G6` and BOTH worst-docx arms, and MUST NOT move `G5`, `G6b`, `G7` or the worst-PDF arm. Its first run was declared with eight failures and returned five, and the three surprising greens are recorded at the arm rather than smoothed: they read the bound OUT OF THE PRODUCT, so both sides of each assertion move with it, and an assertion written that way can prove the MECHANISM right and can never prove the NUMBER right — which is why `G1`, `G2`, `G6` and `G8` carry independent figures and are the entire defence against a wrong constant. (f) `pinoff` — halve `ACQUIRE_TEXT_UNIT_ENVELOPE` to 64, doubling the acquire wire's unit ceiling past the store's bound; MUST fail `G1` ALONE and move NO store arm. This is the arm that justifies shipping no unit check at the wire at all: the wire's ceiling is a side effect of an envelope ESTIMATE, the argument for stating it in an assertion rather than a constant is that the assertion fires when the estimate moves, and a pin that did not fire would be a paragraph. */
 
 /* REC-91 — `capture_text` AND `capture_text_fts`: THE CONTENT-GRAIN TEXT INDEX,
  * WRITTEN AT PROMOTE.  `CONTENT-SEARCH-DESIGN.md` §4.1, §4.3 and §7 row 4.
@@ -46,6 +48,7 @@ import { canonicalExtent, describeExtent } from "../checks/bio-checks.mjs";
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
 const SCHEMA_SRC = readFileSync(new URL("../src/schema.mjs", import.meta.url), "utf8");
+const INDEX_SRC = readFileSync(new URL("../src/index.mjs", import.meta.url), "utf8");
 
 /* THE VOCABULARY IS THE IMPORTED CONSTANT AND NO MEMBER IS SPELLED HERE — the
    ruling CONDUCT made on 2026-09-14, which `observation-content.test.mjs` §A
@@ -625,6 +628,205 @@ t("D2b: and the FTS index moved with it — the superseded text is not merely un
   + "against INLINE_MAX 1,048,576 — an index that made the record unable to FILE a document would "
   + "be the worst direction available (DESIGN GAP, §4.3)",
     HEAD.has("INFO-2026-9310-overbound"), true);
+}
+
+/* ========================================================================= *
+ *  G · REC-111 — THE UNIT-COUNT BOUND, AND THE TWO ACCIDENTS IT REPLACES
+ * ========================================================================= */
+console.log("\n--- G · the unit bound: bytes do not bound the unit count (REC-111, §4.3) ---");
+
+/* WHY THIS SECTION EXISTS, AND THE FIRST THING IT FOUND WAS THAT ITS OWN PREMISE
+   WAS HALF FALSE. §4.3's third correction says the index costs ROWS and FTS
+   ENTRIES while every bound it sets counts BYTES, and REC-111 was rowed to close
+   that with a unit budget. Measuring first (M-35) found the unit count already
+   bounded on BOTH routes that can reach `#writeCaptureText` — at 4,064 by the
+   acquire wire's per-unit envelope charge, and at 13,720 by `INLINE_MAX` on a
+   caller-authored `data/provenance.json` — and both inside the CPU window.
+
+   SO THE DEFECT WAS NOT AN UNBOUNDED COUNT. IT WAS THAT BOTH BOUNDS WERE
+   ACCIDENTS: one falls out of a JSON envelope ESTIMATE, the other out of an
+   inline-file limit that knows nothing about indexing, neither is written down,
+   and either moves the day an unrelated constant moves. §4.3 asked for both
+   bounds "stated in one place" so "neither hides the other"; the byte bound was
+   hiding the unit bound. G1 is therefore the load-bearing assertion of this
+   section and it is a PIN, not a probe: it reads the operands out of the product
+   and fails if any of the three drifts. */
+{
+  const num = (src, name) => {
+    const m = new RegExp(`const ${name} = ([^;]+);`).exec(src);
+    /* EVALUATED FROM THE PRODUCT'S OWN EXPRESSION, never retyped as a literal —
+       `512 * 1024` and `524288` are the same bound and a hand copy of either
+       agrees for free (WORKER.md's costs-nothing rule, measured five times). */
+    return m ? Function(`"use strict";return (${m[1]})`)() : null;
+  };
+  const wireBudget   = num(INDEX_SRC, "ACQUIRE_TEXT_UNITS_BUDGET");
+  const wireEnvelope = num(INDEX_SRC, "ACQUIRE_TEXT_UNIT_ENVELOPE");
+  const storeUnits   = num(STORE_SRC, "CAPTURE_TEXT_CAPTURE_UNIT_BOUND");
+  const storeBytes   = num(STORE_SRC, "CAPTURE_TEXT_CAPTURE_BOUND");
+  /* FLOORED BEFORE ANYTHING IS DIVIDED BY IT. A regex that stopped matching
+     would give `null`, and `floor(null / 1)` is 0 — which is <= any bound and
+     would pass G1 silently over a constant this suite never found. */
+  t("G0: all four constants were READ OUT OF THE PRODUCT, not assumed — a miss here would score "
+  + "the pin over a number nothing in the tree carries",
+    [typeof wireBudget, typeof wireEnvelope, typeof storeUnits, typeof storeBytes,
+     wireBudget > 0, wireEnvelope > 0, storeUnits > 0, storeBytes > 0],
+    ["number", "number", "number", "number", true, true, true, true]);
+  /* The smallest chargeable unit is ONE text byte plus the envelope: `arm()`
+     never emits a unit with empty text, which is what makes this a ceiling and
+     not an estimate. */
+  const ceiling = Math.floor(wireBudget / (1 + wireEnvelope));
+  t("G1: THE WIRE CAN NEVER SEND MORE UNITS THAN THE STORE WILL KEEP. The acquire wire's unit "
+  + "ceiling is DERIVED here from its own two constants rather than declared in the product, "
+  + "because a constant nothing reads is a mechanism believed on its existence. If the envelope "
+  + "estimate is ever revised — §4.1 names `sheet-range` as a coming arm with a larger extent — "
+  + "this fails rather than silently changing what a member's promote may COST",
+    [ceiling, storeUnits, ceiling <= storeUnits], [4064, 4096, true]);
+  t("G2: and the unit bound is the figure M-20's ladder gives, not a judgement — M-20's own "
+  + "sentence is that the largest promote that fits is ~3,900 units, and 4,096 is that at the "
+  + "resolution the byte budget already uses (524,288 / 128). At 4,096 units with the byte bound "
+  + "ALSO at its maximum, M-20's fit predicts 141.7 ms against a 257 ms window",
+    [storeUnits, storeBytes,
+     Math.round((0.0076 * storeUnits + 0.054 * (storeBytes / 1024)) * 10) / 10],
+    [4096, 2097152, 141.7]);
+  t("G3: the constants sit BESIDE each other and the loop tests them in the SAME BRANCH — a "
+  + "reader asking what stops a promote finds one place, not two. §4.3's `neither hides the "
+  + "other` is a placement requirement and this is the assertion that holds it",
+    [/const CAPTURE_TEXT_CAPTURE_BOUND = [^\n]+\nconst CAPTURE_TEXT_CAPTURE_UNIT_BOUND =/.test(STORE_SRC),
+     /written >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND\s*\n\s*\|\| bytes \+ size > CAPTURE_TEXT_CAPTURE_BOUND/
+       .test(STORE_SRC)],
+    [true, true]);
+
+  /* ---- THE BOUND DRIVEN THROUGH THE OP, on the route that can actually reach
+     it: a caller-authored provenance document of many tiny units. This is the
+     case §4.3 named ("a spreadsheet of one-character cells is small in bytes and
+     enormous in units") and the case nothing bounded. */
+  const OVER = storeUnits + 504;                      /* 4,600 — over, and not by one */
+  const shOver = sha("a capture over the per-capture UNIT bound");
+  const doc = {
+    file: "snapshots/many.docx", locator: "https://www.oaklandca.gov/many.docx", retrieved: NOW,
+    capture: { sha256: shOver, encoding: "binary", bytes: 1 << 20 },
+    reading: { content_type: "meeting_packet", reader_version: 1, read_from_text: true,
+               found: false, entities: [], facts: {}, at: NOW,
+               text_source: [{ step: "layer", tier: 1, container: "docx" }],
+               text_tier: 1, text_container: "docx", page_count: 1, container_extent: null,
+               basis: "a synthetic reading of a container with many tiny units" },
+    text_units: Array.from({ length: OVER }, (_, i) => ({
+      extent: { kind: "doc-para", para: i, run: null }, seq: i, text: "a" })),
+  };
+  const provBytes = JSON.stringify({ documents: [doc] }).length;
+  t("G4: THE FIXTURE IS A DOCUMENT THE PRODUCT'S OWN PROMOTE PATH ACCEPTS, which is what makes "
+  + "this a bound being driven rather than a branch being poked. Its provenance file is UNDER "
+  + "`INLINE_MAX` (1,048,576 B), so nothing upstream refuses it — the whole finding is that this "
+  + "document is small in BYTES and enormous in UNITS",
+    [provBytes < 1048576, doc.text_units.length], [true, OVER]);
+  const stBefore = await get("stats", "", "adm-rec91");
+  await promote("INFO-2026-9311-manyunits", { document: doc });
+  const stAfter = await get("stats", "", "adm-rec91");
+  t("G5: exactly the unit bound is indexed and the rest are NOT — the index is trimmed on UNIT "
+  + "COUNT, which is the thing no bound in §4.3 could do before this item",
+    stAfter.textUnits - stBefore.textUnits, storeUnits);
+  t("G5b: AND THE PROMOTE WAS NOT REFUSED. A bound is a refusal, and a bound that made the record "
+  + "unable to FILE a document would be the worst direction available — §4.3 shipped exactly that "
+  + "mistake once and the correction is the reason this arm exists",
+    HEAD.has("INFO-2026-9311-manyunits"), true);
+  const axOver = await axisOf(shOver);
+  t("G6: the capture reads PARTIAL and the sentence NAMES THE UNIT BOUND AND ITS FIGURE — a "
+  + "`partial` that named only bytes is a failure a reader cannot act on, because *too big* and "
+  + "*too many pieces* want different answers from a member and only the first could be said "
+  + "before now",
+    [axOver.indexed, axOver.determined,
+     /UNIT bound/.test(String(axOver.index?.bound)), /4096 units/.test(String(axOver.index?.bound)),
+     /ROWS, not only bytes/.test(String(axOver.index?.bound))],
+    [PARTIAL, true, true, true, true]);
+  /* ASSERTED AS THE WHOLE SENTENCE AND NOT AS TWO BOOLEANS, because this is the
+     assertion the negative control reads. The row's control demands that
+     removing the bound produce a failure naming the UNIT COUNT **and** the BYTE
+     COUNT — "a failure naming one is a failure a reader cannot act on" — and a
+     regex pair fails with `[false, false]`, which names neither. Compared whole,
+     the failure line PRINTS the record's own sentence with both numbers in it. */
+  t("G6b: and the detail carries BOTH counts — how many of how many units, and how many bytes, in "
+  + "reading order. A partial index must be a PREFIX a reader can reason about and not an "
+  + "arbitrary subset, which is why `seq` exists and why the units are sorted before they are "
+  + "written",
+    String(axOver.index?.detail),
+    `${storeUnits} of ${OVER} unit(s) indexed in reading order, ${storeUnits} B; `
+    + `${OVER - storeUnits} unit(s) past the bound are NOT indexed`);
+
+  /* ---- THE OFF-BY-ONE, IN THE DIRECTION THAT OVER-REPORTS. A capture at EXACTLY
+     the bound is whole, and reporting it `partial` would make a member re-extract
+     a document the record already holds entire — the over-strictness direction of
+     this very bound, and the one `>=` versus `>` decides. */
+  const shExact = sha("a capture at exactly the per-capture UNIT bound");
+  await promote("INFO-2026-9311-exact", { document: {
+    ...doc, capture: { ...doc.capture, sha256: shExact },
+    text_units: doc.text_units.slice(0, storeUnits) } });
+  const axExact = await axisOf(shExact);
+  t("G7: a capture of EXACTLY the bound is FULL, not partial. `>=` is tested against `written` — "
+  + "the count already in the table — so the unit under consideration is the (bound + 1)th; "
+  + "reading this `partial` would tell a member to re-extract a document the record holds whole",
+    [axExact.indexed, axExact.determined, /unit\(s\) indexed,/.test(String(axExact.index?.detail))],
+    [FULL, true, true]);
+}
+
+/* ---- THE ARM THAT DECIDES THIS ITEM IS SAFE TO SHIP, and it is the
+   OVER-STRICTNESS one rather than the overflow one. §4.3's own bound was not a
+   limit that would merely have been too tight — LEFT ALONE IT WAS A REGRESSION,
+   and M-20's census holds two real documents that promote today and would have
+   stopped. So both of them are driven HERE, BY NAME and at their measured sizes,
+   and must come through exactly as they do without this item. */
+{
+  const cases = [
+    { name: "the census's worst PDF",  kind: "pdf-page", units: 1181,  bytes: 1354686,
+      id: "INFO-2026-9311-worstpdf" },
+    { name: "the census's worst docx", kind: "doc-para", units: 20571, bytes: 1187253,
+      id: "INFO-2026-9311-worstdocx" },
+  ];
+  for (const c of cases) {
+    /* THE DOCUMENT IS BUILT TO M-20's MEASURED SHAPE — its unit count AND its
+       total text bytes — because those two numbers together are what decides
+       whether either bound bites. A fixture with the right bytes and the wrong
+       unit count would be a fixture standing in for a different document, which
+       is the exact error §4.3 made when it reasoned about bytes alone. */
+    const per = Math.floor(c.bytes / c.units);
+    const all = Array.from({ length: c.units }, (_, i) => ({
+      extent: { kind: c.kind,
+                ...(c.kind === "pdf-page" ? { page: i, rect: null } : { para: i, run: null }) },
+      seq: i, text: "z".repeat(per) }));
+    /* THE WIRE'S BUDGET APPLIED BY HAND, exactly as D4 does and for the same
+       reason: this document is authored rather than acquired, so it must spend
+       what a real capture of that size spends or it is not standing in for one. */
+    let budget = 512 * 1024, kept = [], dropped = 0;
+    for (const u of all) {
+      const size = Buffer.byteLength(u.text, "utf8") + 128;
+      if (size > budget) { dropped++; continue; }
+      budget -= size; kept.push(u);
+    }
+    const shM20 = sha(`M-20 ${c.name}`);
+    const container = c.kind === "pdf-page" ? "pdf" : "docx";
+    const stBefore = await get("stats", "", "adm-rec91");
+    await promote(c.id, { document: {
+      file: "snapshots/m20.bin", locator: `https://www.oaklandca.gov/${c.id}`, retrieved: NOW,
+      capture: { sha256: shM20, encoding: "binary", bytes: c.bytes },
+      reading: { content_type: "meeting_packet", reader_version: 1, read_from_text: true,
+                 found: false, entities: [], facts: {}, at: NOW,
+                 text_source: [{ step: "layer", tier: 1, container }],
+                 text_tier: 1, text_container: container,
+                 page_count: kept.length, container_extent: null, basis: "M-20's census, by name" },
+      text_units: kept, text_units_over_bound: dropped } });
+    const stAfter = await get("stats", "", "adm-rec91");
+    t(`G8 (${c.name}): IT STILL PROMOTES, and the STORE indexed every unit the wire offered — the `
+    + `unit bound did not bite. ${c.units} units at ${c.bytes} B is a document the record accepts `
+    + `TODAY, and a bound that stopped it would take capability away silently`,
+      [HEAD.has(c.id), stAfter.textUnits - stBefore.textUnits, kept.length <= 4096],
+      [true, kept.length, true]);
+    const axM20 = await axisOf(shM20);
+    t(`G8b (${c.name}): and its state is decided by the WIRE's byte budget exactly as it was `
+    + `before this item — the sentence does NOT name the unit bound, because the unit bound is `
+    + `not what stopped it. Naming a cause that did not fire is the record claiming to know more `
+    + `than it does`,
+      [axM20.indexed, /UNIT bound/.test(String(axM20.index?.bound))],
+      [dropped > 0 ? PARTIAL : FULL, false]);
+  }
 }
 
 /* ========================================================================= *
