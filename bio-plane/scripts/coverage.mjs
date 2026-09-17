@@ -1049,7 +1049,26 @@ const REGISTER_FLOOR = {
      print differ by exactly the kind of thing nobody notices.
      ONE KEY SET, grepped after writing: `^  arms:` matches twice in this file, here and in
      FLEET_FLOOR below (76, unmoved). */
-  arms: 1114,
+  /* MOVED `arms` 1114 -> 1119 by CONDUCT #1, 2026-09-16, at REC-109's and M0-35's merge,
+     from THE MERGED TREE'S OWN POST-COMMIT `--strict` PRINT — `arms 1119/1114 · classified
+     200/200 · corpus 201/201 · GREW by 5 arm(s)`. `classified` and `corpus` correctly do not
+     move: neither item adds a suite.
+     THE FIFTH COLLISION OF THIS WAVE AND THE MOST DECEPTIVE FORM IT TAKES. REC-109's branch
+     printed `arms 1114` off a 1109 base. This tree ALREADY CARRIED 1114, from REC-108's
+     merge, reached by a DIFFERENT FIVE ARMS. **Two equal figures that are not the same
+     claim** — and the merged truth is 1119, neither of them. Taking either side wholesale
+     would have looked correct, matched the other, and been four arms low forever, because a
+     floor that is too LOW never fails. That merge's `Dropped-from-branch:` trailer says so in
+     advance; this is the payment.
+     AND REC-109 FOUND WHY THE PRINT ITSELF CAN LIE, which is the reason this figure was
+     re-read rather than trusted: a paragraph in its declaration QUOTED the register's marker
+     phrase, and a quotation of a marker IS a marker, so one declaration split in two and the
+     suite reported `GREW by 1` after FIVE arms were added — on a green run at exit 0. A floor
+     taken from that print would have been four arms low, permanently and invisibly. It was
+     caught only by running `countArms` against both versions (D-233's shape, inside the
+     instrument that reports the floor).
+     ONE KEY SET, grepped after writing: `^  arms:` matches twice, here and FLEET_FLOOR (76). */
+  arms: 1119,
   classified: 200,
   corpus: 201,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
