@@ -1084,9 +1084,23 @@ const REGISTER_FLOOR = {
      necessarily moves the census by one — the two ratchets in that file cannot move
      independently. Arithmetic on these figures is wrong in more ways than one.
      ONE KEY SET, grepped after writing: `^  arms:` matches twice, here and FLEET_FLOOR (76). */
-  arms: 1129,
-  classified: 201,
-  corpus: 202,
+  /* MOVED 2026-09-17 by REC-92: 1129 -> 1135 / 201 -> 202 / 202 -> 203, ALL THREE IN THE
+     SAME TURN and every one taken from the figure THIS ITEM'S OWN GREEN `--strict` RUN
+     PRINTED AS REPRODUCIBLE **after committing** — never counted, never added to the
+     numbers above, and deliberately NOT read from the run taken before the commit, whose
+     CONTAMINATED line carried exactly these values while the suite was still a phantom no
+     other checkout had (D-238: a floor moved while a phantom is present is permanently too
+     high). The cause is ONE new suite, `test/passage-arm.test.mjs`, whose `NEGATIVE
+     CONTROL:` declaration states six arms — five in `test/nc-rec92.mjs` plus the baseline —
+     and every one of them was RUN, with three arms exactly as declared and two declarations
+     corrected at the arm rather than smoothed. So `corpus` and `classified` each rise by one
+     and `arms` by six. Nothing FELL.
+     (A FLOOR DID FALL ELSEWHERE IN THIS COMMIT and is not this file's: `airuns.test.mjs`'s
+     unread-index roster went 15 -> 14 because `content(extent_kind)` GAINED A READER, with
+     the reason at that site as the rule requires.) */
+  arms: 1135,
+  classified: 202,
+  corpus: 203,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
@@ -1103,7 +1117,11 @@ const REGISTER_FLOOR = {
      edit. **It is deliberately NOT a requirement that every declaration carry one:
      a gate that failed 34 honest suites on the day it landed would be switched off,
      and a register nobody runs measures nothing.** The 34 are NAMED instead. */
-  run: 164,
+  /* MOVED 2026-09-17 by REC-92: 164 -> 165, from the same green print. The cause is the
+     one new suite above, whose declaration carries a dated run token because its arms were
+     RUN and the results — including the two declarations that were WRONG — are recorded in
+     it. This figure can still only fall by a token being REMOVED. */
+  run: 165,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
