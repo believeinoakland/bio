@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1024 rulings across 85 documents.
+1025 rulings across 85 documents.
 
 ## DEC-
 
@@ -371,7 +371,7 @@ authority is the file named, never this one.
 - **D-157** · 2026-08-02 — `test/members.test.mjs:192` asserts the current behaviour and must be CORRECTED, never exempted** (`CLAUDE.md`), with a comment saying why the old assertion was wrong.  
   `docs/archive/ledgers/QUEUE-2026-08.md:973`
 - **D-164** · 2026-09-14 — RULED 2026-09-14; no surface (Program B) | | the catalogue of standards by audience and output act | OWED (§5.5 of the D-164 study); does not exist | | certification and persistence divergences | unmade | | addressed delivery | DEFERRED (DEC-31); the in-band rule binding |  
-  `docs/architecture/BIO_Publication_v0_1.md:97`
+  `docs/architecture/BIO_Publication_v0_1.md:150`
 - **D-164** · 2026-09-14 — Bob RULED 2026-09-14 that the record never moves an authored edge's target without a member's act, even when the passage is byte-identical — folded into Part II §14.4/§18 and the D-164 study §5.8; it shapes the D-164 IC when it arrives (act 6).  
   `docs/development/QUEUE.md:826`
 - **D-173** — ving app.html against the REAL plane in miniflare), civicos-ui/test/subject-view.test.mjs (ONLY the mock's reply shape, CORRECTED with a dated comment and never exempted — see D-173), docs/development/CLAIMS.md (this entry)  
@@ -1037,7 +1037,7 @@ authority is the file named, never this one.
 - **UI-16** · 2026-08-04 — status: WITHDRAWN 2026-08-04 by UI-16 — nothing consumes it any more, and RECORD should not build it.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:418`
 - **UI-18** — RULED and BUILT | | the case as a production, its document, its signing ceremony, the published projection, the public verify surface | BUILT (CASE arc; UI-18, UI-35–40) | | the ceremony (UI-17) and the preflight (REC-15) | DEFERRED (DEC-33) — UI-18 has landed; the second clause is unmet by measurement; reopens…  
-  `docs/architecture/BIO_Publication_v0_1.md:94`
+  `docs/architecture/BIO_Publication_v0_1.md:147`
 - **UI-18** — plus the `@media print{…}` rules whose selectors that region uses), civicos-ui/test/publishedcase.test.mjs (the suite, CORRECTED at UI-18's single-inquiry pins with dated reasons and never exempted), civicos-ui/check-mock-envelope.mjs (ONLY the one FLAT_OPS evidence string for `publishedcase`, which quotes a return…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1469`
 - **UI-20** — wn `citingObjectType`), civicos-ui/test/finder.test.mjs (NEW — this item's harness), civicos-ui/test/cite-act.test.mjs (CORRECTED, never exempted, dated: UI-20's measured surface gaps (iii') are CLOSED by this item, so the two assertions that pinned them are corrected to their opposite with the reason),…  
@@ -1435,6 +1435,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/architecture/BIO_Membership_Architecture_v1.md:3`
 - **2026-08-10** — ⚠ SUPERSEDED BY v2, July 26 2026. DO NOT WORK FROM THIS FILE. > > **Banner added 2026-08-10 (session BOB), moving into this file what > `architecture/README.md` has said since July** — a reader who opens this document  
   `docs/architecture/BIO_Membership_Architecture_v1.md:32`
+- §6A — the review copy is RULED and DESIGNED at doctrine level and NOTHING IS BUILT.  
+  `docs/architecture/BIO_Publication_v0_1.md:10`
 - **2026-07-30** — st" is REVISED: accepted so long as it is disclosed in the provenance chain (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30); not annotated here. - §6 — sessions and execution modes are priced against a June 2026 billing change and no ruling or dataplane entry carries the Session abstraction. - §7.7 —…  
   `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:11`
 - **2026-07-30** — It is the inventory that has to exist before a design document can be written honestly." One RULED marker (Bob, 2026-07-30, Step 0's scope).  
