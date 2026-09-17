@@ -4772,7 +4772,8 @@ export class Store extends DurableObject {
    * `## Conclusion` to put one in — is refused ILLEGAL_TRANSITION rather than
    * quietly given a state its contract never had. Modernizing such a document
    * is a promotion, and then it concludes like any other. */
-  conclude({ target, conclusion = "", falsifier = "", viewer = null, author = null } = {}) {
+  conclude({ target, conclusion = "", falsifier = "", noFalsifier = false,
+             viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-conclude — REC-64/C-32.2. The fence alone; the
        conclusion's own payload conditions below are governed by nothing here. */
@@ -4784,8 +4785,17 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-machine-conclude */
     const concl = String(conclusion ?? "").trim();
     const fals = String(falsifier ?? "").trim();
-    /* DEC-49 REGION is-conclude-answer — REC-64/C-33.1-2. The two conditions on
-       the ANSWER itself. The loop below refuses through a template-literal code
+    /* REC-117 / BOB 2026-09-17: THE MEMBER'S OVERRIDE, READ ONCE HERE. Bob's
+       words: "NO_FALSIFIER is a condition that should be surfaced. But I think
+       it should also be something a member can override either temporarily or
+       in the published record." It is OPT-IN AND NEVER A DEFAULT — the refusal
+       below still fires for every caller that does not ask for it, which is
+       what keeps the condition SURFACED. `1`/`true` because the control plane
+       hands this over a query string, where every value arrives a string. */
+    const noFals = noFalsifier === true || noFalsifier === 1
+                || noFalsifier === "1" || noFalsifier === "true";
+    /* DEC-49 REGION is-conclude-answer — REC-64/C-33.1-2. The conditions on the
+       ANSWER itself. The loop below refuses through a template-literal code
        and is deliberately outside the span: arm C cannot compare a code it
        cannot read, and a span it reads past is worse than one it never entered. */
     if (!concl)
@@ -4793,11 +4803,37 @@ export class Store extends DurableObject {
                detail: "concluding records WHAT was concluded. C-2.8 requires a non-empty conclusion in the "
                      + "concluded state, so a conclusion with nothing in it would produce a bundle the "
                      + "catalog rejects. An undetermined answer is stated as undetermined, never left blank." };
-    if (!fals)
+    /* REC-117: THE REFUSAL NOW HAS A DOOR, AND THE DOOR IS A DECLARATION RATHER
+       THAN A HOLE IN THE GATE. It used to refuse outright, and that is exactly
+       the shape this project calls a bug in the gate: requiring a falsifier
+       PRESSURES A MEMBER INTO INVENTING ONE, and an invented falsifier is a
+       conclusion that LOOKS checkable and is not — the record claiming more
+       than it can support, by the shorter route. The same reasoning moved the
+       publication fence off the content axis; DEC-69 forbids compelling a
+       member and DEC-24 forbids the machine authoring the answer.
+       THE DETAIL NAMES THE DOOR, which is the SURFACING half of Bob's ruling:
+       a member who is refused here is TOLD the absence can be stated instead,
+       so the refusal teaches the override rather than hiding it. */
+    if (!fals && !noFals)
       return { ok: false, reason: "NO_FALSIFIER",
                detail: "a conclusion states what would OVERTURN it. Without that the finding cannot be "
                      + "checked by anyone, including its author, and a record that cannot be checked claims "
-                     + "more than it can support." };
+                     + "more than it can support. If no falsifier can honestly be stated, SAY SO rather than "
+                     + "inventing one: conclude again with no_falsifier=1 and the record will carry `no "
+                     + "falsifier stated` in your name and with today's date, on every surface this finding "
+                     + "appears on and in the signed bytes if it is ever published." };
+    /* REC-117: BOTH AT ONCE IS REFUSED, and this is the one refusal the item
+       ADDS. A document carrying an authored falsifier AND an assertion that
+       none was stated says two contradictory things about itself, and the
+       plane picking a winner would be the record deciding which of a member's
+       two statements it meant. No pre-existing caller can reach this: the
+       parameter did not exist before this item, so `no_falsifier` cannot have
+       been set by anything already written. */
+    if (fals && noFals)
+      return { ok: false, reason: "FALSIFIER_AND_NONE_STATED",
+               detail: "you have both stated a falsifier and asked to record that none was stated. Those are "
+                     + "two different claims about this finding and the plane will not choose between them. "
+                     + "Send the falsifier, or send no_falsifier=1 with the falsifier empty." };
     /* END DEC-49 REGION is-conclude-answer */
     for (const [name, v] of [["conclusion", concl], ["falsifier", fals]])
       if (v.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(v))
@@ -4873,15 +4909,49 @@ export class Store extends DurableObject {
        unmet, minting exactly the bundle the catalog rejects. */
     text = Store.#setOrAddScalar(text, "conclusion", `"${concl}"`);
     text = Store.#setOrAddScalar(text, "falsifier", `"${fals}"`);
+    /* REC-117: THE OVERRIDE IS WRITTEN AS ITS OWN PAIR AND NEVER INTO THE
+       FALSIFIER FIELD. Property 2 above is untouched by this item — the text
+       is caller-supplied and NEVER PREFILLED — so the plane does not put a
+       sentence like "(none stated)" where a falsifier goes. A falsifier the
+       plane wrote is not a falsifier the group accepted, and it would be
+       indistinguishable downstream from one a member authored, which is
+       precisely the silent override this ruling forbids. `falsifier` stays
+       EMPTY; the ABSENCE is asserted beside it, in the `_by`/`_at` shape this
+       record already uses for `state_*`, `route_*`, `regroup_*` and `minted_*`.
+       WHY THE PRESENCE OF THE PAIR IS THE VALUE, rather than a third tri-state
+       key: a finding that HAS a falsifier must be BYTE-IDENTICAL to what this
+       op wrote before this item, so the marker can only appear in the override
+       case. That is not inference from an empty field — an empty `falsifier`
+       with no pair is still refused by C-2.8 exactly as before. It is a
+       POSITIVE assertion a member made, and it is never blank when present.
+       #setScalar, NOT #setOrAdd, on the else arm: it returns the text
+       UNCHANGED for an absent key, so a normal conclude adds nothing (the
+       byte-identity requirement), while a RE-conclude of a question that was
+       previously concluded under an override clears the stale pair rather than
+       leaving a former member's name on a falsifier somebody has now stated. */
+    if (noFals) {
+      text = Store.#setOrAddScalar(text, "falsifier_override_by", `"${Store.#fmSafe(who)}"`);
+      text = Store.#setOrAddScalar(text, "falsifier_override_at", `"${when}"`);
+    } else {
+      text = Store.#setScalar(text, "falsifier_override_by", `""`);
+      text = Store.#setScalar(text, "falsifier_override_at", `""`);
+    }
     text = Store.#setScalar(text, "last_updated", `"${when}"`);
     /* C-13.2: last_updated moving requires a Session Log entry, and DEC-30's
        attribution lives here — who concluded is part of the record even though
        no one owns the question. */
+    /* REC-117: the log's Falsifier line STATES the absence rather than printing
+       an empty one. A blank `Falsifier:` is exactly the silent override — the
+       reader cannot tell it from a field nobody filled in — so the override
+       branch says what happened and who is answerable for it. The stated-
+       falsifier branch is the original line, unchanged to the byte. */
     const entry = `### Session ${when} | Concluded | ${who}\n`
                 + `Trigger: op=conclude on ${target}\n`
                 + `Changes: state ${b.current_state} to concluded.\n`
                 + `Conclusion: ${concl}\n`
-                + `Falsifier: ${fals}\n`;
+                + (noFals
+                    ? `Falsifier: NO FALSIFIER STATED — recorded by ${who} at ${when}\n`
+                    : `Falsifier: ${fals}\n`);
     const at = text.indexOf("## Session Log");
     if (at < 0) text += "\n## Session Log\n\n" + entry;
     else {
@@ -4909,8 +4979,14 @@ export class Store extends DurableObject {
               criticality: fm.criticality ?? null },
     });
     if (!promoted.ok) return { ...promoted, target };
+    /* REC-117: the ANSWER carries the override too, so a caller that never
+       re-reads the document still learns the condition. `null` when a falsifier
+       was stated — an absent key would make the two cases differ by silence,
+       and a reader distinguishing them by `undefined` is the inference this
+       item exists to remove. */
     return { ok: true, target, from: b.current_state, to: "concluded",
              conclusion: concl, falsifier: fals, basis_legs: legs.length,
+             falsifier_override: noFals ? { by: who, at: when } : null,
              author: who, at: when, weight: "single" };
   }
 
@@ -7750,6 +7826,15 @@ export class Store extends DurableObject {
          conclusion on an open question nobody has answered. */
       text = Store.#setOrAddScalar(text, "conclusion", `""`);
       text = Store.#setOrAddScalar(text, "falsifier", `""`);
+      /* REC-117, AND IT IS THE SECOND HALF OF THE SAME RULE THE THREE LINES
+         ABOVE STATE. A parent concluded under a falsifier override carries the
+         pair; carrying it into a child would put a member's name, and their
+         acceptance that no falsifier could be stated, on an OPEN question
+         nobody has answered — the parent's answer arriving on the child by the
+         one route the lines above exist to close. Swept rather than noticed:
+         these are the only two sites in this file that write `falsifier`. */
+      text = Store.#setOrAddScalar(text, "falsifier_override_by", `""`);
+      text = Store.#setOrAddScalar(text, "falsifier_override_at", `""`);
       text = Store.#setOrAddScalar(text, "disposition_reason", `""`);
       /* THE DISCLOSURE (R4), in the keys REC-14 RESERVED for it with no
          producer. This act is the producer. */
@@ -35666,9 +35751,14 @@ export class Store extends DurableObject {
         /* REC-13. No `handle` and no `owner`: concluding is not a set
            application (see conclude() above), so it takes the ONE target and
            the viewer/author stamps the control plane sets. */
+        /* REC-117: `no_falsifier` is the member's OWN assertion that none can
+           be stated, so it arrives from the caller like `conclusion` and
+           `falsifier` do — never stamped by the control plane, which stamps
+           only identity. */
         conclude: () => this.conclude({ target: url.searchParams.get("target"),
           conclusion: url.searchParams.get("conclusion"),
           falsifier: url.searchParams.get("falsifier"),
+          noFalsifier: url.searchParams.get("no_falsifier"),
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
         /* REC-31, conclude's shape exactly: ONE target, no handle and no

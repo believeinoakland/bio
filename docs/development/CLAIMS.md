@@ -12213,3 +12213,37 @@ region nothing drains is not even a note.
 work and a fence you may edit is not a fence. It is RUN and its walks are measured, never amended.
 
 **open as of 2026-09-17.**
+
+## CLAIM 2026-09-17 RECORD (REC-117 — `NO_FALSIFIER` becomes a STATED, ATTRIBUTED, OVERRIDABLE condition)
+
+worker `agent-aa7814dd8fb705958`, branch `worktree-agent-aa7814dd8fb705958`.
+opened: 2026-09-17
+
+**PATHS CLAIMED:**
+
+- `bio-plane/src/store.mjs` — **ONLY** `conclude()` and its DEC-49 region
+  `is-conclude-answer`, plus the `conclude:` arm of the store's own op router. **The strength
+  area is NOT touched** — REC-114 holds `bio-plane/src/query.mjs` and the leg listing, and this
+  item stays in the conclude/falsifier path.
+- `bio-plane/checks/bio-checks.mjs` — **ONLY** the C-2.8 falsifier arm of
+  `checkInquiryExtension`. The requirement is enforced TWICE on purpose (conclude.test.mjs's own
+  header records that a one-sided break is caught by the other side), so both halves must move
+  together or the store mints a bundle the catalog rejects.
+- `bio-plane/src/affordances.mjs` — **ONLY** the `conclude` act's rung-derivation comment, which
+  today says the rung is assigned because the store refuses `NO_FALSIFIER`. That sentence stops
+  being true unconditionally and is corrected in place rather than deleted.
+- `bio-plane/src/index.mjs` — **ONLY** the `authored:` block of the `publishedcase` renderer.
+- `civicos-ui/app.html` — **ONLY** the published-finding falsifier cell and the conclude act's
+  falsifier pane. No route, no panel, no wire.
+- `bio-plane/test/conclude.test.mjs`, `bio-plane/test/publishedcase.test.mjs` — extended.
+- `bio-plane/test/falsifier-override.control.mjs` — new, the negative-control driver.
+- `docs/architecture/BIO_Case_Making_v0_1.md` — the § *What a CLAIM is* threshold ARGUMENT and
+  the front matter, in the same commit (`node tools/corpuscheck.mjs`).
+- `docs/development/INTERFACE-CHANGES.md` (IC-118), `docs/development/CLAIMS.md` (this block),
+  `docs/DECIDED.md` on regeneration.
+
+**NOT CLAIMED AND DELIBERATELY NOT TOUCHED:** `bio-plane/src/query.mjs` (REC-114), `tools/**`
+(M0-57), `newgroup/**`. `docs/development/QUEUE.md` is CONDUCT's and is not flipped by this
+worker; the flip is named as an act with its actor in the report.
+
+**open as of 2026-09-17.**

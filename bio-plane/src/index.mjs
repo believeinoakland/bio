@@ -3546,10 +3546,28 @@ export default {
                    division writes its account and where a person reads. Returning
                    only one of them would either drop the gated claim or drop the
                    explanation; a renderer needs to know which is which. */
+                /* REC-117 / BOB 2026-09-17, AND THIS SURFACE IS THE ONE HE NAMED.
+                   "a member can override either temporarily or IN THE PUBLISHED
+                   RECORD" — so the override travels into the signed bytes and is
+                   rendered from them here, beside the falsifier it stands in for.
+                   `falsifier_override` is `{by, at}` or NULL and never absent: a
+                   renderer that had to tell the two cases apart by a missing key
+                   would be inferring the condition, and the whole of this item is
+                   that the condition is STATED. A published finding whose
+                   falsifier is empty and whose override is null is a document
+                   that predates this item or was never gated — NOT a silent
+                   override, and a renderer must not print one as the other. */
                 authored: { conclusion: typeof fm?.conclusion === "string" ? fm.conclusion : null,
-                            falsifier: typeof fm?.falsifier === "string" ? fm.falsifier : null },
+                            falsifier: typeof fm?.falsifier === "string" ? fm.falsifier : null,
+                            falsifier_override:
+                              (typeof fm?.falsifier_override_by === "string" && fm.falsifier_override_by.trim()
+                               && typeof fm?.falsifier_override_at === "string" && fm.falsifier_override_at.trim())
+                                ? { by: fm.falsifier_override_by.trim(), at: fm.falsifier_override_at.trim() }
+                                : null },
                 detail: "`authored` is what op=conclude wrote into the frontmatter and what the gate holds "
-                      + "the finding to; the section fields are the prose printed beside it in the signed bytes." }
+                      + "the finding to; the section fields are the prose printed beside it in the signed "
+                      + "bytes. `falsifier_override`, when it is not null, is the member who recorded that "
+                      + "NO falsifier could be stated for this finding, and when they did so." }
             : { state: "unavailable", from_sha: fnd.bundle_sha,
                 reason: typeof env.PUBLISHED?.get === "function" ? "OBJECT_MISSING" : "NO_PUBLISHED_STORE",
                 detail: "this instance cannot hand over the bytes of that edition, so its conclusion is not "
