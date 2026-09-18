@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1117 rulings across 87 documents.
+1118 rulings across 87 documents.
 
 ## DEC-
 
@@ -1118,6 +1118,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-closed.md:248`
 - **REC-127** · 2026-09-18 — AMENDED 2026-09-18 by REC-127 — §4.2's `cap` FILTER HAS THE SAME THREE ANSWERS, under `IC-138` on I3; the sibling REC-121 measured is CLOSED.** A `cited_as = 'bytes'` row has no transcription, so there is no derivation step for a cap to be the weakest of and its `derivation_cap` is NULL BY MEANING.  
   `docs/development/CONTENT-SEARCH-DESIGN.md:13`
+- **REC-129** · 2026-09-18 — RULED by BOB (design): both keys go to the ADMIN class only, and member and probe receive NO such key.  
+  `docs/development/QUEUE.md:1464`
 - **REC-130** — CORRECTED by BOB #15: fixed on `main` by REC-130 at `a32fda24`, 17 minutes before this file was written**; CONDUCT #4's handoff adds REC-125 and MK-1, so FOUR exposures are fixed on `main` and open on any plane running 0.58.0).  
   `docs/development/kickoffs/BOB-NEXT.md:29`
 - **REC-130** · 2026-09-18 — ALL THREE DECIDED BY BOB #14 the same hour, as applications of existing doctrine; BOB is writing them into `BIO_Publication_v0_1.md` §6A — this row UNBLOCKS against that text.** (1) unsigned case documents were readable anonymously → `REC-130`, which goes FIRST; (2) a non-member recipient reaches the copy by a…  
