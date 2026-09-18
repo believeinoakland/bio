@@ -16512,3 +16512,72 @@ by `content-chain-kind.test.mjs` §3.
   `node:sqlite`'s.
 - **The write cost.** One B-tree insert per mint (a VIRTUAL column's index stores the value), and nothing on
   re-promotion because a content row is never rewritten (REC-82) — priced in B-trees, not timed.
+## M-55 · 2026-09-18 · CPDF-18 — A TABLE-RECOGNITION STEP ON THE RUNTIME: **NO-GO**, and the PDF image rectangle cross-read against an independent renderer (worktree `agent-a445cd855cdde44ea`, base `694f0a7f`)
+
+**What was asked.** `EXTRACTION-BREADTH-DESIGN.md` §3.3 item 3 / §7 row 4: before any table reader on PDF is
+rowed, a GO/NO-GO on a table-recognition step ON THE RUNTIME — does the STRUCTURE reproduce across runs on identical
+bytes (the anchor rule, CPDF-14's discipline), and what does it cost. **No table reader is built here and none is
+built whatever the verdict** (the row's scope). Nothing was deployed, no account or credential was used, no network
+was touched.
+
+**Instrument.** `pdf-worker/test/table-recognition.probe.mjs` (a probe — not a `.test.mjs`, the battery never
+discovers it), driving `pdf-worker/test/table-candidate.mjs` through `pdf-worker/test/table-recognition-worker.mjs`,
+bundled with esbuild and run INSIDE WORKERD via miniflare, plus one node run of the same code. One run of
+`node test/table-recognition.probe.mjs --runs 5` from `pdf-worker/`, 2026-09-18. `unpdf` 1.8.0 (pdf.js) supplies
+text positions; the stderr lines `Warning: TT: undefined function: 32` (36 of them) are pdf.js's font-hinting
+noise on the node arm and do not bear on the figures.
+
+**Why the candidate is a GEOMETRIC step, and why that changed what the measurement had to be.** The only component
+on this runtime that knows where text sits on a PDF page is pdf.js, which recognises no tables. The one
+account-free, network-free table step the runtime can run is therefore the classical geometric ("stream") method —
+Tabula's stream mode and pdfplumber's text strategy are that family — reduced to its core with FIVE constants
+declared and frozen before the run (`LINE_TOL 2.5 pt`, `CELL_GAP 10 pt`, `MAX_ROW_GAP 40 pt`, `MIN_ROWS 2`,
+`MIN_COLS 2`). **It is deterministic by construction, so §3.3's reproducibility question is an equality that costs
+nothing to produce for it** (CLAUDE.md's rule): a GO on reproducibility alone would be a verdict the code wrote for
+itself. So the verdict was PRE-REGISTERED in the probe's header on three criteria — (R) reproducible across 5 workerd
+runs AND equal to node (not free: CPDF-12 measured the two runtimes emitting different deflate for one input);
+(A) every ground-truth table found with EXACT rows x cols and >= 95% of cells exact; (F) zero tables on
+table-free pages. GO iff all three.
+
+**Ground truth, and its bound.** Hand-read, NOT produced by the code: each of the 15 pages of the four committed
+CPDF-20 fixtures (public Oakland Legistar attachments) was rendered with **Ghostscript** (`gs`, an independent
+renderer sharing no code with pdf.js) and read by eye. Two pages carry a data table — `legistar-73450` p2 (an
+UNRULED 4x2 grant table) and `legistar-73550` p1 (a RULED 3x3 table whose header cells wrap onto two lines); 13 carry
+none, one of them (`73545` p5) a two-column block of signature lines named as the page a geometric step is most
+likely to misread. **n = 2 real tables.** A NO-GO needs one failure; a GO at this n would have had to say "at n=2".
+
+| criterion | result |
+| --- | --- |
+| (R) structure digest identical across 5 workerd runs and equal to node, every one of 15 pages | **YES — 15/15** |
+| (A) `73450` p2, unruled, 4x2 | found **4x2**, cells exact **8/8 (100%)** — PASS |
+| (A) `73550` p1, ruled, 3x3 | found **NOTHING** — cells exact **0/9** — FAIL |
+| (F) tables reported on the 13 table-free pages | **0** — including the signature-block page |
+| cost | harness WALL per page per call: median **18 ms**, max **908 ms** (the first call, bundle start-up), over 75 calls — the whole document parsed per call; NOT a Worker CPU figure (a Worker cannot time itself, D-56) |
+
+**VERDICT: NO-GO.** Not on reproducibility — which held and, for this class of step, could not have failed — but on
+the criterion that could: the step does not recover a RULED table at all. The mechanism was read off pdf.js's own
+positions rather than guessed: the ruled table's body rows sit **45.6 pt apart** (baselines 477.3 and 431.7), past
+the stream method's row-pitch bound, and its header is a two-line cell beside a vertically-centred one, so no two
+consecutive lines share a column set. That is the known failure of the stream family on ruled grids; the family
+that reads ruling LINES ("lattice") needs path geometry from the operator list, which nothing on this runtime yet
+extracts and which this measurement did not build. **The constants were NOT re-tuned after the scores were seen** —
+widening `MAX_ROW_GAP` to pass the one failing table would be fitting n=2, not measuring. **What the NO-GO means for
+the record, per §3.3:** no `table(engine)` step is minted and none appears in any chain; a table on a PDF page stays a
+`pdf-page` rectangle whose text is the page's own. **What would reopen it:** a lattice step over path geometry, or
+any candidate, measured against a larger hand-read set with ruled tables in it — the probe takes a new candidate by
+swapping one import and the ground truth is in its header.
+
+### The PDF image rectangle, cross-read against Ghostscript (the other half of the row)
+
+`pdfstructure.mjs` now reports each painted image's rectangle by interpreting `q`/`Q`/`cm`/`Do` (and Form XObject
+`/Matrix`). The one rectangle pinned on REAL bytes in `bio-plane/test/cpdf18-pdf-images.test.mjs` is the Legistar
+agenda's page-0 masthead: hand-derived from its content stream (`1 0 0 1 0 792 cm q q 118.8 0 0 117.35 244.8 -307.1
+cm /img0 Do Q Q`) as **[244.8, 484.9, 363.6, 602.25]**. Cross-read 2026-09-18 by rendering that page with
+Ghostscript at 72 dpi (one pixel per point), drawing the rectangle with ImageMagick at (x, 792 − y), and viewing it:
+**the box encloses the City of Oakland logo edge to edge.** Image counts on the committed fixtures, from the same
+walk (`extractPdfStructure` over each file, 2026-09-18): agenda 1 image on 1 of 33 pages; `73450` 1 (page 0);
+`73545` 2 on page 0 and 5 on page 6; `73550` and `73618` NONE (a measured empty list); the CCITT scan fixture 1 at
+**[0, 0, 612, 792]** — a full-page scan placed at exactly the page, which is the second sanity check the geometry
+gets for free. **Three of `73545` p6's five images are SLIVERS** (0.12 pt wide or tall — rules drawn as images): the
+walk reports what is painted and does not judge what is a "figure", which is stated here so nobody reads a count of
+images as a count of pictures. The suite pins the agenda, `73545` and `73550`.

@@ -16632,7 +16632,8 @@ function anchorRecord(doc, targetPage, source, destName) {
 function undeterminedRecord(source, why, extra = {}) {
   return { partition: "undetermined", wrapper: null, target: { why, ...extra }, source };
 }
-function tokenizeContent(s) {
+function tokenizeContent(s, opts = {}) {
+  const skipInline = opts.inlineImages === true;
   const toks = [];
   let i = 0;
   const n = s.length;
@@ -16696,8 +16697,16 @@ function tokenizeContent(s) {
       if (isWhitespace(cc) || isDelimiter(cc)) break;
       i++;
     }
-    if (i > start) toks.push({ t: "op", v: s.slice(start, i) });
-    else i++;
+    if (i > start) {
+      const op = s.slice(start, i);
+      toks.push({ t: "op", v: op });
+      if (skipInline && op === "ID") {
+        const re = /\sEI(?=[\s/[<(]|$)/g;
+        re.lastIndex = i + 1;
+        const m = re.exec(s);
+        i = m ? m.index + 1 : n;
+      }
+    } else i++;
   }
   return toks;
 }
@@ -17129,6 +17138,169 @@ async function extractText(doc, pageOrder) {
     producer
   };
 }
+var IMAGE_FILE_MIME = Object.freeze({
+  DCTDecode: "image/jpeg",
+  DCT: "image/jpeg",
+  JPXDecode: "image/jp2"
+});
+var FORM_DEPTH_LIMIT = 8;
+var r3 = (v) => {
+  const x = Math.round(v * 1e3) / 1e3;
+  return x === 0 ? 0 : x;
+};
+function pdfImageRef(page, rect, extra = {}) {
+  return { kind: "image", ref: `an image on page ${page + 1}`, page, rect, ...extra };
+}
+function mulMatrix(m, c) {
+  return [
+    m[0] * c[0] + m[1] * c[2],
+    m[0] * c[1] + m[1] * c[3],
+    m[2] * c[0] + m[3] * c[2],
+    m[2] * c[1] + m[3] * c[3],
+    m[4] * c[0] + m[5] * c[2] + c[4],
+    m[4] * c[1] + m[5] * c[3] + c[5]
+  ];
+}
+function unitSquareRect(ctm) {
+  const pts = [[0, 0], [1, 0], [0, 1], [1, 1]].map(([x, y]) => [ctm[0] * x + ctm[2] * y + ctm[4], ctm[1] * x + ctm[3] * y + ctm[5]]);
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  return [r3(Math.min(...xs)), r3(Math.min(...ys)), r3(Math.max(...xs)), r3(Math.max(...ys))];
+}
+function matrixOf(doc, v) {
+  const a = doc.resolve(v);
+  if (!a || a.t !== "arr" || a.items.length !== 6) return null;
+  const n = a.items.map((x) => doc.resolve(x));
+  return n.every((x) => typeof x === "number" && Number.isFinite(x)) ? n : null;
+}
+function imageFilters(doc, dict) {
+  const f2 = doc.resolve(dict.Filter);
+  if (!f2) return [];
+  if (f2.t === "name") return [f2.v];
+  if (f2.t === "arr") return f2.items.map((x) => nameOf(doc, x)).filter(Boolean);
+  return [];
+}
+async function decodeContentStreams(doc, contents) {
+  const c = doc.resolve(contents);
+  if (!c) return { text: "" };
+  const streams = c.t === "arr" ? c.items.map((x) => doc.resolve(x)) : [c];
+  const parts = [];
+  for (const st of streams) {
+    if (!st || st.t !== "stream") continue;
+    const data = await doc.streamDecoded(st);
+    if (!data) return { text: null };
+    parts.push(LATIN12.decode(data));
+  }
+  return { text: parts.join("\n") };
+}
+async function pdfPageImages(doc, pageIdx) {
+  const order = doc._pageOrder || [];
+  const pageMap = pageIdx >= 0 && pageIdx < order.length ? doc.dictOf({ t: "ref", n: order[pageIdx] }) : null;
+  if (!pageMap) return { images: null, why: `page_unreadable:${pageIdx}` };
+  const top = await decodeContentStreams(doc, pageMap.Contents);
+  if (top.text == null) return { images: null, why: `content_stream_undecodable:page ${pageIdx}` };
+  const images = [];
+  const walk = async (content, resources, ctm0, depth, formChain) => {
+    const xobjects = resources ? doc.dictOf(resources.XObject) : null;
+    const toks = tokenizeContent(content, { inlineImages: true });
+    let ctm = ctm0;
+    const saved = [];
+    const operands = [];
+    for (const tk of toks) {
+      if (tk.t !== "op") {
+        operands.push(tk);
+        continue;
+      }
+      switch (tk.v) {
+        case "q":
+          saved.push(ctm);
+          break;
+        case "Q":
+          if (saved.length) ctm = saved.pop();
+          break;
+        case "cm": {
+          const nums = operands.filter((o) => o.t === "num").slice(-6).map((o) => o.v);
+          if (nums.length === 6) ctm = mulMatrix(nums, ctm);
+          break;
+        }
+        case "Do": {
+          const nameTok = [...operands].reverse().find((o) => o.t === "name");
+          const ref = nameTok && xobjects ? xobjects[nameTok.v] : null;
+          const st = ref ? doc.resolve(ref) : null;
+          if (!st || st.t !== "stream")
+            throw new Error(`xobject_unresolvable:page ${pageIdx}:${nameTok ? nameTok.v : "?"}`);
+          const sub = nameOf(doc, st.dict.Subtype);
+          if (sub === "Image") {
+            const filters = imageFilters(doc, st.dict);
+            const last = filters[filters.length - 1] || null;
+            const placement = pdfImageRef(pageIdx, unitSquareRect(ctm), {
+              mime: IMAGE_FILE_MIME[last] ?? null,
+              name: nameTok.v,
+              inline: false,
+              width: typeof doc.resolve(st.dict.Width) === "number" ? doc.resolve(st.dict.Width) : null,
+              height: typeof doc.resolve(st.dict.Height) === "number" ? doc.resolve(st.dict.Height) : null,
+              filters,
+              axis_aligned: ctm[1] === 0 && ctm[2] === 0
+            });
+            Object.defineProperty(placement, "_stream", { value: st, enumerable: false });
+            Object.defineProperty(placement, "_ctm", { value: ctm, enumerable: false });
+            images.push(placement);
+          } else if (sub === "Form") {
+            const key = ref && ref.t === "ref" ? ref.n : null;
+            if (depth >= FORM_DEPTH_LIMIT || key != null && formChain.includes(key)) {
+              throw new Error(`form_nesting_unwalkable:page ${pageIdx}`);
+            }
+            const data = await doc.streamDecoded(st);
+            if (!data) throw new Error(`form_stream_undecodable:page ${pageIdx}`);
+            const m = matrixOf(doc, st.dict.Matrix) || [1, 0, 0, 1, 0, 0];
+            const formRes = doc.dictOf(st.dict.Resources) || resources;
+            await walk(
+              LATIN12.decode(data),
+              formRes,
+              mulMatrix(m, ctm),
+              depth + 1,
+              key != null ? [...formChain, key] : formChain
+            );
+          }
+          break;
+        }
+        case "EI": {
+          const placement = pdfImageRef(pageIdx, unitSquareRect(ctm), {
+            mime: null,
+            name: null,
+            inline: true,
+            width: null,
+            height: null,
+            filters: [],
+            axis_aligned: ctm[1] === 0 && ctm[2] === 0
+          });
+          Object.defineProperty(placement, "_stream", { value: null, enumerable: false });
+          Object.defineProperty(placement, "_ctm", { value: ctm, enumerable: false });
+          images.push(placement);
+          break;
+        }
+        default:
+          break;
+      }
+      operands.length = 0;
+    }
+  };
+  try {
+    await walk(top.text, pageResources(doc, pageMap), [1, 0, 0, 1, 0, 0], 0, []);
+  } catch (e) {
+    return { images: null, why: String(e && e.message || e).slice(0, 120) };
+  }
+  return { images, why: null };
+}
+async function extractImages(doc, pageOrder) {
+  if (doc.isEncrypted()) return { images: null, why: "encrypted" };
+  const all = [];
+  for (let idx = 0; idx < pageOrder.length; idx++) {
+    const got = await pdfPageImages(doc, idx);
+    if (!got.images) return { images: null, why: got.why };
+    for (const im of got.images) all.push(im);
+  }
+  return { images: all, why: null };
+}
 async function extractPdfStructure(bytes) {
   if (!(bytes instanceof Uint8Array)) {
     return { ok: false, container: "pdf", reason: "NOT_BYTES" };
@@ -17195,6 +17367,7 @@ async function extractPdfStructure(bytes) {
   const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
   for (const l of links) counts[l.partition]++;
   const text = await extractText(doc, pageOrder);
+  const imgs = await extractImages(doc, pageOrder);
   return {
     ok: true,
     container: "pdf",
@@ -17203,6 +17376,8 @@ async function extractPdfStructure(bytes) {
     links,
     counts,
     text,
+    images: imgs.images,
+    ...imgs.images ? {} : { imagesWhy: imgs.why },
     notes: doc.notes
   };
 }

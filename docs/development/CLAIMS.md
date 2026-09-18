@@ -13219,3 +13219,51 @@ released: 2026-09-18 by the REC-87 worker. Every claimed path is committed on br
 `plancheck --local` 0 fail. The step kind landed as `typed(member)` rather than the row's
 `member(handle)` spelling — the query compiler already owns `content:member` (IC-127 says why).
 The UI DELEGATION above stays open — it is UI's act, not this claim's.
+
+## CLAIM 2026-09-18 CONTENT-PDF (CPDF-18 — BREADTH §7 row 4: PDF images as content, the crop as a derived rendition, and the table-recognition GO/NO-GO)
+
+Worker spawned by CONDUCT #4, isolated worktree `agent-a445cd855cdde44ea`, branch
+`worktree-agent-a445cd855cdde44ea`, base `694f0a7f`. Premise falsified before building: no
+image-rectangle emitter exists — `pdfstructure.mjs` has only `pageDrawsImage` (a boolean over
+DECLARED resources) and `pdf-worker/src/pagepixels.mjs` counts image XObjects without placing
+them; neither interprets `cm`. Baseline on this tree before any edit: **226/226 suites green ·
+14109 assertions**, 3 fleet members RAN, no skip. Paths:
+
+- CONTENT-PDF (own): `bio-plane/src/pdfstructure.mjs` (the image walk, `pdfImageRef`,
+  `pdfPageImages`, `images`/`imagesWhy` on the structure output; the tokenizer gains an
+  inline-image option OFF for the text walk); `pdf-worker/src/imagecrop.mjs` (new);
+  `pdf-worker/src/pagepixels.mjs` (ONE word: `export` on `decodeImage`, CPDF-12's `PdfDoc`
+  precedent); `pdf-worker/test/table-recognition.probe.mjs`, `table-recognition-worker.mjs`,
+  `table-candidate.mjs` (new, probe-only, not discovered by the battery).
+- Tests: a new `bio-plane/test/cpdf18-pdf-images.test.mjs` and `bio-plane/test/nc-cpdf18.mjs`.
+- Generated: `bio-plane/dist/*` and `pdf-worker/dist/*` rebuilt (pdfstructure is an input of both).
+- Docs: `MEASUREMENTS.md` (the table GO/NO-GO), `INTERFACE-CHANGES.md` (IC-124's CONTENT-PDF
+  response only), `EXTRACTION-BREADTH-DESIGN.md` and `BIO_Content_Framework_v0_10.md` front
+  matter/rows, `DEBT.md` if residue is filed, `kickoffs/CONTENT-PDF.md`, `docs/DECIDED.md` on
+  regeneration, this block.
+
+NOT `bio-plane/src/index.mjs` (CPDF-19's moved tier-3 code is on an unmerged branch; nothing here
+needs the acquire path), NOT `checks/bio-checks.mjs` (IC-125's grammar already admits
+`image {page, rect}`), NOT `QUEUE.md` (CONDUCT's), NOT `pdf-worker/src/index.mjs` (no I6 route).
+
+**AMENDED during the item:** `ocr-worker/dist/ocr-worker.bundled.mjs` + `ocr-worker.bundle.json` — rebuilt with
+`npm run build` in `ocr-worker/`. The ocr-worker's bundle INLINES `pdf-worker/src/pagepixels.mjs` and
+`bio-plane/src/pdfstructure.mjs`, both edited here, and `fleetbundles.test.mjs` failed 4 on the first full battery
+(226/227) until it was rebuilt. The claim above named two bundles and there are three — the same shape as the
+`npm ci` trap's "one package short".
+
+## CLAIM 2026-09-18 CONTENT-PDF (CPDF-18) — RELEASED
+
+released: 2026-09-18 by the CPDF-18 worker, branch `worktree-agent-a445cd855cdde44ea`. Baseline before the first
+edit: 226/226 · 14109, 3 fleet members RAN. Final tree: one suite added (`cpdf18-pdf-images.test.mjs`, 29
+assertions); the full-battery figure on the FINAL commit is in the worker's report to CONDUCT, because this line is
+part of that commit. Two intermediate full batteries each read 226/227 and each failure was this item's own and is
+recorded rather than smoothed: `fleetbundles` (the ocr-worker bundle inlines two edited sources — rebuilt, see the
+amendment above) and `strandedwork`'s `plancheck --local exits 0` arm (`docs/DECIDED.md` went stale when this block
+was amended after regeneration — regenerated). `node scripts/coverage.mjs --strict` exit **0** unpiped (no op added);
+`node civicos-ui/test/run.mjs` exit **0**. NEGATIVE CONTROL `node test/nc-cpdf18.mjs` from `bio-plane/`: five arms
+and a baseline, ALL AS DECLARED, every restore byte-identical (`src/pdfstructure.mjs` 77,612 B, sha256
+`64fcc691c774…`): baseline 29/0 · droprect 17/12 · nocm 19/10 · inlineleak 24/5 · emptynull 28/1 · textpin 28/1.
+The table probe: `node test/table-recognition.probe.mjs --runs 5` from `pdf-worker/` — **NO-GO** (M-55). IDs minted
+with `tools/mintid.mjs`: M-55, D-419, D-420. `bio-plane/src/index.mjs` was NOT edited, so nothing here needs
+sequencing against CPDF-19's moved tier-3 code.

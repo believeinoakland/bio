@@ -362,3 +362,31 @@ dressed up as a clean one.
 decide than Bob, and they are decided in the code with the reasoning at the site: the
 vocabulary has two values, the marker table is one-directional, the cap stays null, and the
 engine is named from the document. An empty list is a real answer (`kickoffs/README.md`).
+
+## What CPDF-18 landed (2026-09-18): images as content, and the table measurement
+
+**`pdfstructure.mjs` reports every image a page PAINTS as IC-1's `image {page, rect}`** (`images` on the
+structure output, top-level, NULL with `imagesWhy` when not walked, an empty list a measured zero), and
+`pdf-worker/src/imagecrop.mjs` turns a content row's extent into the crop — a DERIVED rendition that says so.
+Suite `bio-plane/test/cpdf18-pdf-images.test.mjs`; controls `node test/nc-cpdf18.mjs` from `bio-plane/`.
+The table step is **NO-GO** (`MEASUREMENTS.md` M-55); the probe that measured it is
+`pdf-worker/test/table-recognition.probe.mjs` and takes a new candidate by swapping one import.
+
+Four things worth knowing before touching it:
+
+- **The image walk is a SECOND interpreter on purpose.** It reads `q`/`Q`/`cm`/`Do`/`EI` and Form `/Matrix`
+  and nothing else; the Tier-1 text walk is untouched and its output over two fixtures is DIGEST-PINNED against
+  the pristine tree. The shared tokenizer gained an `inlineImages` option that is OFF for text — without it an
+  inline image's sample bytes are read as operators, which the `inlineleak` control arm proves.
+- **Painted, not declared.** `pageDrawsImage` (CPDF-10) asks whether a page DECLARES an image; this walk asks
+  what it PAINTS, and the suite has a page that declares one and paints nothing. They answer different questions
+  and neither replaces the other.
+- **`mime` is null for raw samples BY MEANING** — only a DCT or JPX stream is a file of a type. And a count of
+  images is not a count of pictures: `legistar-73545` p6 paints three 0.12 pt slivers.
+- **The crop is the image the FILE stores, not a render of the page region** (no rasteriser, CPDF-12): overlays
+  and clipping are not composited, and `upright` is null for any placement that is not a positive
+  scale-and-translate. Reachable by no op yet (D-419). A PDF image row is bounded by the page set only (D-420).
+
+**No decision item.** The two calls this item made — the absence rule (IC-124's, adopted) and a NO-GO that
+refused to re-tune five constants after seeing n=2 scores — are this area's to make and are recorded at the
+sites. An empty list is a real answer.
