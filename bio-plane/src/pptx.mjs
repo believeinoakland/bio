@@ -107,7 +107,7 @@ import { linkWrapper } from "./subresources.mjs";
 import {
   hasZipMagic, readContainer, readPart, normalizePartName,
   discriminate, walkRels, relsPartFor, sizeGuard,
-  CORE_PROPERTIES_PART, readCoreProperties,
+  CORE_PROPERTIES_PART, readCoreProperties, withContainerImages,
 } from "./ooxml.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
@@ -837,6 +837,7 @@ export const pptxEntry = {
     const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
       ? await pptxParts(partsOrBytes)
       : partsOrBytes;
-    return pptxText(parts);
+    /* FW-19 / IC-124: `images` under ppt/media/, exhaustive or NULL. */
+    return withContainerImages(pptxText(parts), parts, "ppt/media/");
   },
 };

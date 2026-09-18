@@ -6166,15 +6166,44 @@ export default {
                     }
                     return out;
                   };
+                  /* FW-19 / IC-124 — TWO MORE LEVELS, `tables` and `images`, for
+                     the `doc-table` arm and the `image` reference. THEIR ABSENCE
+                     RULE IS NOT THE THREE ABOVE'S, and the difference is what the
+                     producers emit rather than a preference: the three lists
+                     above come back EMPTY from an over-the-bound branch, so an
+                     empty one must be read as NULL; these two come back NULL from
+                     every branch that did not walk (`tables: null` beside the
+                     guard, `images: null` with `imagesWhy`), so an EMPTY list is
+                     a MEASURED ZERO — the body was walked and held no table, the
+                     media directory was looked in and held no image — and a
+                     citation of table 1 of a document with none is refused by
+                     name. The LEVEL is named whenever the KEY is present, null
+                     or not, because the key's presence is the notion and its
+                     value is whether the record holds it (the rule stated one
+                     paragraph up). */
+                  const own = (k) => Object.prototype.hasOwnProperty.call(i2text, k);
+                  const tablesOf = (list) => (Array.isArray(list)
+                    ? list.map((t) => ({ rows: int(t && t.rows), cols: int(t && t.cols) })) : null);
+                  /* EXHAUSTIVE OR NULL, on the producer's own rule: one entry
+                     this wire cannot read as a content address makes the whole
+                     list undetermined, because dropping it would let the arm
+                     refuse a true citation of that image as absent. */
+                  const imagesOf = (list) => (Array.isArray(list)
+                      && list.every((x) => x && typeof x.part === "string" && /^[0-9a-f]{64}$/.test(x.part))
+                    ? list.map((x) => ({ part: x.part, mime: typeof x.mime === "string" ? x.mime : null }))
+                    : null);
                   containerExtent = {
                     container: typeof i2text.container === "string" ? i2text.container : null,
-                    levels: ["sheets", "paragraphs", "slides"].filter(has),
+                    levels: [...["sheets", "paragraphs", "slides"].filter(has),
+                             ...["tables", "images"].filter(own)],
                     sheets: sh ? sh.map((s) => ({
                       name: s && typeof s.name === "string" ? s.name : null,
                       rows: int(s && s.rows), cols: int(s && s.cols),
                       usedRows: int(s && s.usedRows), usedCols: int(s && s.usedCols) })) : null,
                     paragraphs: pa ? pa.length : null,
                     slides: sl ? slideExtents(sl) : null,
+                    ...(own("tables") ? { tables: tablesOf(i2text.tables) } : {}),
+                    ...(own("images") ? { images: imagesOf(i2text.images) } : {}),
                   };
                 }
               }
@@ -6204,7 +6233,7 @@ export default {
                * is a PDF; `paragraphs[]` a word-processing container; `slides[]`
                * a deck. A workbook returns `sheets[]`, which is none of these
                * and correctly yields nothing -- a cell is not a passage and
-               * `sheet-range` waits on EXTRACTION-BREADTH section 3.2.
+               * the `sheet-range` extent arm (FW-19) has no unit writer here yet.
                *
                * THE DECK IS ONE UNIT PER SLIDE, RULED BY BOB 2026-09-15, written
                * as a `slide-shape` extent with the SHAPE OMITTED -- which

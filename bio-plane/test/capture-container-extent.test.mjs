@@ -476,9 +476,18 @@ t("the deck's reading carries one entry per SLIDE the fixture was BUILT with",
 
 /* THE LEVEL A CONTAINER HAS NO NOTION OF IS NOT AN EMPTY LEVEL IN IT, and
    `levels` is what keeps the store from reporting one as a gap. */
+/* CORRECTED BY FW-19 (IC-124), NOT EXEMPTED, and the label is kept byte-identical
+   so `nc-cap12.mjs`'s `notion` declaration still names it. The expectation read
+   `[["sheets"], ["paragraphs"], ["slides"]]`, which was exact while each office
+   entry itemised one level. FW-19 adds two levels the producers now emit —
+   `tables` on a word-processing container (the `doc-table` bound) and `images`
+   on every office container (the `image` bound) — so a DOCX genuinely itemises
+   three levels and every container itemises its images. The rule this asserts
+   is unchanged: only the levels THIS container has a notion of, and a workbook
+   still declares no paragraphs and no tables. */
 t("each container declares the level it itemises AT ALL, and only that one",
   [ext(book)?.levels ?? null, ext(doc)?.levels ?? null, ext(deck)?.levels ?? null],
-  [["sheets"], ["paragraphs"], ["slides"]]);
+  [["sheets", "images"], ["paragraphs", "tables", "images"], ["slides", "images"]]);
 /* `lvl` distinguishes an ABSENT key from a NULL value, which `??` cannot: the
    whole point of this field is that the two are different facts. */
 const lvl = (o, k) => (o ? (k in o ? o[k] : "KEY-ABSENT") : "NO-EXTENT");
@@ -824,7 +833,9 @@ const odsbook = (await acquire("/budget.ods")).document;
 t("the ODF workbook acquires and the FORMAT axis recognised it",
   [odsbook.profile.format.format, ext(odsbook)?.levels ?? null,
    Array.isArray(ext(odsbook)?.sheets) ? ext(odsbook).sheets.map((x) => x && x.name) : null],
-  ["ods", ["sheets"], [ODS_SHEET_NAME]]);
+  /* FW-19 (IC-124): `images` joins `sheets` — every office entry now itemises
+     its image list. Corrected, not exempted; the sheet half is unchanged. */
+  ["ods", ["sheets", "images"], [ODS_SHEET_NAME]]);
 /* THE NULL IS THE ASSERTION. A passthrough that coerced — `Number(v) || null`, a
    `?? 0`, an OOXML default borrowed because one was handy — would turn a stated
    UNDETERMINED into a bound this wire invented, at the one seam where the
@@ -981,7 +992,8 @@ t("a workbook whose entry itemised NO sheets records NULL and never 0 — undete
      ? null : emptyDoc.reading.container_extent.sheets,
    emptyDoc.reading.container_extent === null
      ? null : emptyDoc.reading.container_extent.levels],
-  [null, ["sheets"]]);
+  /* FW-19 (IC-124): the image level is declared too — corrected, not exempted. */
+  [null, ["sheets", "images"]]);
 await mf2.dispose();
 
 /* D-186: the sandbox is this process's own and `sandbox.mjs` removes it on exit,

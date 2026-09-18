@@ -335,3 +335,7 @@ m035-census.txt
 # `src/store.mjs` here and restores from it, verifying the restore by sha256 AND by
 # `cmp` AND by size against a floor before the next arm measures the tree.
 .rec118-control-pristine/
+# FW-19's control pen, named rather than globbed for the reason the note at
+# `.rec84-control-pristine/` gives. `bio-plane/test/nc-fw19.mjs` keeps per-arm pristine
+# copies of `checks/bio-checks.mjs` here and verifies every restore by sha256 AND content.
+.fw19-control-pristine/

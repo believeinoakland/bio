@@ -9221,3 +9221,155 @@ itself agrees at zero cost.
 **RESOLUTION:** unresolved at the time of writing. CONDUCT takes the version bump and the
 RESOLUTION at integration, against I3's version AS READ AT RESOLUTION — IC-118's receipt is that
 a proposal's base can move underneath it while the item runs.
+
+## IC-124 · I2: IC-1's UNION GAINS `sheet-range` AND `doc-table`, AND THE `image` REFERENCE — the office entries' `text()` emits them (with I1's `container_extent` carrying the two new bounds) · PROPOSED 2026-09-18 (FW-19, building `EXTRACTION-BREADTH-DESIGN.md` §3.2 / §3.3 item 1 / §7 row 3) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I2 (content → framework), the element-reference union and the TEXT shape.
+  **Secondary: I1** — `document.reading.container_extent` (IC-87 as amended at CAP-12) gains two
+  levels. Filed here rather than as a separate I1 IC because nothing on I1 is asked of a producer
+  that is not this row's own output, on CAP-12's reasoning run the other way.
+- **Proposer:** FW-19 worker (`agent-ad4cf6fb4e08b180f`), 2026-09-18. FRAMEWORK is dormant; CONDUCT
+  answers-for on the row, as the row itself says.
+- **Owner to land it:** FRAMEWORK (the union), CONTENT-OFFICE (the producers) — both landed in this
+  branch, on the row's own three-area grant.
+- **Consumers to answer:** RECORD (the content writer and `covers`, landed in the same branch under
+  IC-125), CONTENT-PDF (item 4, CPDF-18, which emits `image {page, rect}` and waits on this), UI.
+- **Change class:** **ADDITIVE.** Two new arms and one new reference kind; every existing arm, and
+  every existing key on every existing `text()` unit, is byte-identical. A consumer discriminating
+  on `kind` (IC-1's whole reason for a required discriminator) meets an unknown kind loudly, never a
+  misread. **The id was MINTED with `node tools/mintid.mjs IC`** (IC-122, IC-123 held and stepped over).
+
+### THE SHAPE
+
+```
+source: …IC-1's five arms, unchanged…
+      | { kind: "sheet-range", ref: "Summary!A1:B3", sheet, range }        // range: A1:A1, top-left first
+      | { kind: "doc-table",   ref: "table 3[, B4]", table, cell? }        // table: 0-based ordinal in document order; cell: A1 over the table's grid
+image:  { kind: "image", ref: "image <12 hex>", part: <sha256>, mime, name }   // a REFERENCE, not an arm of the text union (§3.2)
+```
+
+Builders, one per arm (COFF-10's rule): `sheetRangeRef` (`src/formats-xlsx.mjs`, reused by `.ods`),
+`docTableRef` (`src/docx.mjs`, reused by `.odt`), `imageRef` / `containerImages` /
+`withContainerImages` (`src/ooxml.mjs`, used by all six entries).
+
+**`text()` gains, per entry:**
+
+| entry | key | value |
+| --- | --- | --- |
+| `docx`, `odt` | `tables` | `[{ table, ref, rows, cols }]` — EVERY table, nested ones included, numbered as it OPENS; `cols` is the declared grid (`w:gridCol` / `table:table-column` accumulated through repeats), because a merged cell makes a row's cell count smaller than the grid. `null` in every branch that walked nothing (the size guard, an unreadable main part). |
+| `xlsx`, `ods` | per sheet `range` | `sheetRangeRef(name, "A1:<used far corner>")` — the whole sheet as a UNIT over the USED range, or `null` when the used range was not measured or is empty. The BOUND a citation is refused against stays the grid (`rows`/`cols`, IC-100). |
+| all six | `images` | the EXHAUSTIVE list of image members under the container's media directory (`word/media/`, `xl/media/`, `ppt/media/`, `Pictures/`), each content-addressed — or `null` with `imagesWhy` when one member is unreadable or media exceed the measured bound. A non-image media member (audio, video) is not enumerated. |
+
+**THE ABSENCE RULE FOR THE TWO NEW LEVELS IS NOT THE THREE OLD ONES', and this is the decision a
+later reader is most likely to "fix" the wrong way.** `sheets`/`paragraphs`/`slides` come back EMPTY
+from an over-the-bound branch, so an empty one is read as NULL (CAP-12). `tables` and `images` come
+back `null` from every branch that did not walk, so an EMPTY list is a MEASURED ZERO — the body was
+walked and held no table, the media directory was looked in and held no image — and it BOUNDS: table
+1 of a document with none is refused.
+
+**`ref` for an image is derived from the ADDRESS (the part hash), not from the member's file name**,
+because `describeExtent` composes the same string for a member's citation and can see only the
+address — IC-1's parity rule, pinned in `fw19-extent-arms.test.mjs`. The name rides beside it.
+
+**THE ADDRESS IS THE CONTENT HASH, NEVER THE PART NAME:** a name is a producer's filing choice and two
+saves of one document may renumber `image1.png`; the bytes are the image.
+
+### I1 — `container_extent` (secondary)
+
+```
+  container_extent: { …, levels: [ …, "tables"?, "images"? ],
++   tables: [{ rows, cols }] | null,     // present iff the entry emitted the key
++   images: [{ part, mime }] | null }    // present iff the entry emitted the key; one malformed entry makes it null
+```
+
+A level is named whenever the KEY is present, null or not (the key's presence is the notion). A
+capture acquired before this landing has neither, and `#containerExtentForCapture` now NAMES that gap
+in its `empty_level` rather than letting its `why` claim the extent is held while the new arms skip.
+
+### WHAT THIS DOES NOT DO
+
+- `image {page, rect}` for a PDF is designed (§3.2) and ADMITTED by IC-125's grammar, and is NOT
+  emitted here — it is CONTENT-PDF's (§7 item 4, CPDF-18).
+- A workbook's DEFINED tables and named ranges are not emitted as `sheet-range` units — **D-415**.
+- No table-recognition step on PDF (§3.3 item 3, NO-GO until measured).
+
+### RESPONSES (to be recorded by CONDUCT)
+
+- **FRAMEWORK** (dormant): answered-for by CONDUCT, per the row.
+- **CONTENT-OFFICE:** AGREE — the producers are this branch's.
+- **RECORD:** AGREE — consumed through IC-125 in this branch.
+- **CONTENT-PDF:** owed at CPDF-18.
+- **UI:** NOT-AFFECTED by measurement at this interface (`civicos-ui` reads no `text()` output).
+
+**RESOLUTION:** unresolved at the time of writing. CONDUCT takes I2's (and I1's) bump at integration.
+
+## IC-125 · I5: THE `content` TABLE ADMITS `sheet-range`, `doc-table` AND `image` WITH `covers` PER ARM, AND GAINS `cited_as` · AND I3: the leg grammar and `op=cite` carry the new fields, and every content-row projection carries `cited_as` · PROPOSED 2026-09-18 (FW-19) — the version bumps and the RESOLUTION are CONDUCT's
+
+- **Interface:** I5 (the store schema) — one column. **Secondary: I3** — additive fields on the
+  leg grammar, on `op=cite`, and on the content-row projections.
+- **Proposer / owner to land it:** RECORD, on the FW-19 row; landed in this branch.
+- **Change class:** **ADDITIVE on both.** **The id was MINTED with `node tools/mintid.mjs IC`.**
+
+### I5
+
+```
+content (
+  …,
+  extent_kind  -- gains: sheet-range | doc-table | image
+  cited_as     TEXT NOT NULL DEFAULT 'text'   -- text | bytes
+)
+```
+
+Migrated on existing stores by `ALTER TABLE … ADD COLUMN` with the default, which is the TRUE value for
+every row that can exist: no `image` kind was admissible before this landing, so every prior row
+addresses text. No new table, so `op=purge` is unchanged.
+
+**`cited_as` is the column EXTRACTION-BREADTH §3.1 asks for** — *expressed as a column rather than an
+overloaded NULL* (D-129). A `bytes` row is an image cited AS ITSELF: its `chain` and
+`derivation_cap` are written NULL **by meaning**, it is never staled by a re-read (`#markContentStale`
+already skips a NULL chain), and its address hashes a NULL chain so it does not move when the capture
+is re-read. A `text` row keeps every existing rule.
+
+### THE GRAMMAR (the C-45 family, no new code)
+
+| kind | fields | shape refusal (C-45.3) | container refusal (C-45.1) |
+| --- | --- | --- | --- |
+| `sheet-range` | `sheet`, `range` (A1:A1, `$`/case/order normalised; `B3` ≡ `B3:B3`) | unreadable range | unknown sheet; far corner past the sheet's GRID (never the used range — IC-100's decision) |
+| `doc-table` | `table` (0-based), `cell?` (A1) | non-integer table, bad cell | table past the count (an empty list is a measured zero); cell past that table's grid |
+| `image` | EXACTLY ONE of `part` (sha256) or `page` (+ `rect?`); `cited_as` | both or neither; malformed part/page/rect | part not in the container's image list; page past the page set |
+
+`cited_as`: defaults to `bytes` on `image` and `text` elsewhere (Bob's 5.3 shape: an absent field is
+the kind's own meaning); a value other than `text`/`bytes` is C-45.3; **`bytes` on a text kind is
+REFUSED, never read as text** (it would silently change the claim). The chain arm (C-45.2) EXEMPTS a
+`bytes` row and still refuses the same row as `text` with no chain — §8's "two nulls are different
+facts". **`cited_as: text` on an embedded `{part}` image is refused C-45.2 outright**: a container's
+chain transcribes its text parts and never its media, so admitting it would mint a transcription
+nobody made.
+
+`canonicalExtent` carries `cited_as` in the `image` address ONLY; the five older arms' canonical
+bytes, human forms, content addresses and verdicts are **byte-identical to `92f4c64e`** — pinned by
+digest for REC-85's three (`fw19-rec85-digest.mjs`, 144 rows) and for REC-82's two by the existing
+`rec85-arm-digest.mjs` pin.
+
+### I3 (secondary, additive)
+
+- **The leg grammar (C-2.8 / C-25.10)** reads `extent_range`, `extent_table`, `extent_part` and
+  `extent_cited_as`, and `legHasAuthoredExtent` counts them (so a leg naming a `content_id` and any of
+  them is still refused as one fact stated twice). `extent_cell` is shared by name between
+  `sheet-cell` and `doc-table` — one notation, read only under its own kind.
+- **`op=cite`** accepts the same four in its `EXTENT_PARAMS`; before this they were refused
+  `UNKNOWN_EXTENT_FIELD` (C-45.7) — honest, but it left the composer unable to author an extent the
+  record admits at promote.
+- **Projections:** `op=content`, `earned.content` on `op=earnedbasis`, and `contentRow` carry
+  `cited_as`; a `bytes` row's `transcription` says `applies: false` and why, instead of the
+  "cannot evaluate" undetermined sentence.
+
+### RESPONSES (to be recorded by CONDUCT)
+
+- **RECORD:** AGREE (owner, landed here).
+- **UI:** **one act owed** — a content-row surface must render `cited_as` and must NOT render a
+  `bytes` row's null chain/cap as *undetermined*; DELEGATION written in `CLAIMS.md` beside FW-19's
+  claim.
+- **SKILL / FRAMEWORK / DIST:** NOT-AFFECTED by measurement (no reader of the new kinds).
+
+**RESOLUTION:** unresolved at the time of writing. CONDUCT takes I5's and I3's bumps at integration.

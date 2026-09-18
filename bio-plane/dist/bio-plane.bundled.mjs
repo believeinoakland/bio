@@ -2972,7 +2972,7 @@ CREATE TABLE IF NOT EXISTS content (
   content_id     TEXT PRIMARY KEY,  -- sha256 over capture_sha + canonical extent + chain
   capture_sha    TEXT NOT NULL,     -- the document. The register's trust root
   bundle_id      TEXT NOT NULL,     -- purge, and the compiler's join (D-222)
-  extent_kind    TEXT NOT NULL,     -- document | pdf-page | sheet-cell | slide-shape | doc-para
+  extent_kind    TEXT NOT NULL,     -- document | pdf-page | sheet-cell | slide-shape | doc-para | sheet-range | doc-table | image (the last three FW-19)
   extent         TEXT NOT NULL,     -- the per-arm fields as canonical JSON
   ref            TEXT NOT NULL,     -- IC-1's REQUIRED human form, e.g. page 14, top half
   chain          TEXT,              -- the transcription chain over the extent, as it stood at mint
@@ -2980,7 +2980,8 @@ CREATE TABLE IF NOT EXISTS content (
   page_count     INTEGER,           -- the page set the record held at mint. NULL = undetermined, STATED
   minted_by      TEXT NOT NULL,     -- a member id, 'plane', or a machine credential (5.7, DEC-24 rule 3)
   at             TEXT NOT NULL,
-  stale          INTEGER NOT NULL DEFAULT 0  -- the capture's chain moved since mint. The row and its edges still resolve
+  stale          INTEGER NOT NULL DEFAULT 0, -- the capture's chain moved since mint. The row and its edges still resolve
+  cited_as       TEXT    NOT NULL DEFAULT 'text'  -- FW-19 / IC-125: text | bytes. bytes = an image cited as itself, so chain and cap are NULL by meaning and never undetermined
 );
 -- The two reads this table exists to answer, and neither may be a scan. By
 -- CAPTURE: which passages of this document has anybody cited (the content axis
@@ -3226,8 +3227,8 @@ CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
 -- vocabulary in one place (section 4.3).
 --
 -- WHAT HAS NO UNIT ARM AND IS THEREFORE ABSENT RATHER THAN EMPTY: a WORKBOOK
--- (a cell is not a passage and a sheet-range does not exist until
--- EXTRACTION-BREADTH section 3.2 lands -- 288 workbooks in M-20's census hold
+-- (a cell is not a passage, and the sheet-range extent arm landed with FW-19 but no unit writer uses it -- written before
+-- that, when EXTRACTION-BREADTH section 3.2 had not landed -- 288 workbooks in M-20 census hold
 -- 72,651,441 bytes of text over 1,056 sheets and not one indexable unit), and
 -- HTML (no dom producer, Part II section 15). Neither is scored zero: the
 -- capture's indexed observation says none with the reason.
@@ -3242,7 +3243,7 @@ CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
 CREATE TABLE IF NOT EXISTS capture_text (
   capture_sha  TEXT    NOT NULL,   -- the document. The register's trust root
   bundle_id    TEXT    NOT NULL,   -- the join every query arm makes (section 2)
-  extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape. sheet-range when EXTRACTION-BREADTH 3.2 lands
+  extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape. sheet-range once a unit writer uses the FW-19 arm
   extent       TEXT    NOT NULL,   -- canonicalExtent's output. The SAME bytes the content address is taken over
   ref          TEXT    NOT NULL,   -- IC-1's required human form, from describeExtent
   seq          INTEGER NOT NULL,   -- reading order within the capture, so a partial index is a PREFIX and says so
@@ -3530,6 +3531,7 @@ __export(bio_checks_exports, {
   CONTENT_EXTENT_DOCUMENT_ONLY: () => CONTENT_EXTENT_DOCUMENT_ONLY,
   CONTENT_EXTENT_KINDS: () => CONTENT_EXTENT_KINDS,
   CONTENT_EXTENT_KIND_NO_PRODUCER: () => CONTENT_EXTENT_KIND_NO_PRODUCER,
+  CONTENT_EXTENT_RANGE_RE: () => CONTENT_EXTENT_RANGE_RE,
   CONTENT_ID_RE: () => CONTENT_ID_RE,
   CONTENT_MINTED_BY_PLANE: () => CONTENT_MINTED_BY_PLANE,
   CONTENT_MINT_STATES: () => CONTENT_MINT_STATES,
@@ -3590,6 +3592,7 @@ __export(bio_checks_exports, {
   biasAcknowledgementOf: () => biasAcknowledgementOf,
   canonicalExtent: () => canonicalExtent,
   canonicalJson: () => canonicalJson,
+  canonicalRange: () => canonicalRange,
   caseEditionClaimed: () => caseEditionClaimed,
   checkBiasExtension: () => checkBiasExtension,
   checkBundle: () => checkBundle,
@@ -3604,6 +3607,7 @@ __export(bio_checks_exports, {
   classifyDivergence: () => classifyDivergence,
   completenessFields: () => completenessFields,
   consequenceState: () => consequenceState,
+  contentCitedAs: () => contentCitedAs,
   contentIdFor: () => contentIdFor,
   contentMintState: () => contentMintState,
   correspondenceFindings: () => correspondenceFindings,
@@ -3630,6 +3634,7 @@ __export(bio_checks_exports, {
   parseFrontmatter: () => parseFrontmatter,
   parseSignerTimestamp: () => parseSignerTimestamp,
   parseSshSig: () => parseSshSig,
+  rangeCorners: () => rangeCorners,
   releaseMessage: () => releaseMessage,
   respondsToEdgeFindings: () => respondsToEdgeFindings,
   sectionText: () => sectionText,
@@ -10484,8 +10489,48 @@ var CONTENT_EXTENT_KINDS = {
   "pdf-page": { landed: true, human: "a page of a PDF" },
   "sheet-cell": { landed: true, human: "a cell of a spreadsheet" },
   "slide-shape": { landed: true, human: "a shape on a slide" },
-  "doc-para": { landed: true, human: "a paragraph of a document" }
+  "doc-para": { landed: true, human: "a paragraph of a document" },
+  /* FW-19 / IC-125 — EXTRACTION-BREADTH §3.2's two arms and one reference,
+     landed together because the design grows them together. `image` is a
+     REFERENCE rather than an arm of IC-1's text union (§3.2's own table), and
+     it sits in this map anyway because the content table's `extent_kind` is
+     the one vocabulary a row is addressed in: an image cited as itself is
+     content (§3.1) and a row must be able to say so. What makes it different
+     is not its kind but `cited_as` — see `contentCitedAs` below. */
+  "sheet-range": { landed: true, human: "a range of cells in a spreadsheet" },
+  "doc-table": { landed: true, human: "a table in a document" },
+  image: { landed: true, human: "an image in a document" }
 };
+var CONTENT_EXTENT_RANGE_RE = /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}(:\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6})?$/;
+function rangeCorners(range) {
+  const t = String(range == null ? "" : range).trim();
+  if (!CONTENT_EXTENT_RANGE_RE.test(t)) return null;
+  const [a, b = a] = t.split(":");
+  const p = a1ToRowCol(a), q = a1ToRowCol(b);
+  if (!p || !q) return null;
+  return {
+    r0: Math.min(p.row, q.row),
+    c0: Math.min(p.col, q.col),
+    r1: Math.max(p.row, q.row),
+    c1: Math.max(p.col, q.col)
+  };
+}
+function a1Letters(n) {
+  let out = "";
+  for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + (c - 1) % 26) + out;
+  return out;
+}
+function canonicalRange(range) {
+  const k = rangeCorners(range);
+  if (!k) return null;
+  return `${a1Letters(k.c0)}${k.r0}:${a1Letters(k.c1)}${k.r1}`;
+}
+function contentCitedAs(extent) {
+  const e = extent && typeof extent === "object" ? extent : {};
+  const v = e.cited_as;
+  if (v === void 0 || v === null || v === "") return e.kind === "image" ? "bytes" : "text";
+  return v;
+}
 var CONTENT_EXTENT_A1_RE = /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}$/;
 function a1ToRowCol(cell) {
   const t = String(cell == null ? "" : cell).replace(/\$/g, "").toUpperCase();
@@ -10610,6 +10655,21 @@ function legExtent(leg) {
     if (l.extent_para !== void 0 && l.extent_para !== null) out.para = l.extent_para;
     if (l.extent_run !== void 0 && l.extent_run !== null) out.run = l.extent_run;
   }
+  if (kind === "sheet-range") {
+    if (l.extent_sheet !== void 0 && l.extent_sheet !== null) out.sheet = l.extent_sheet;
+    if (l.extent_range !== void 0 && l.extent_range !== null) out.range = l.extent_range;
+  }
+  if (kind === "doc-table") {
+    if (l.extent_table !== void 0 && l.extent_table !== null) out.table = l.extent_table;
+    if (l.extent_cell !== void 0 && l.extent_cell !== null) out.cell = l.extent_cell;
+  }
+  if (kind === "image") {
+    if (l.extent_part !== void 0 && l.extent_part !== null) out.part = l.extent_part;
+    if (l.extent_page !== void 0 && l.extent_page !== null) out.page = l.extent_page;
+    if (l.extent_rect !== void 0 && l.extent_rect !== null) out.rect = l.extent_rect;
+  }
+  if (l.extent_cited_as !== void 0 && l.extent_cited_as !== null && l.extent_cited_as !== "")
+    out.cited_as = l.extent_cited_as;
   return out;
 }
 function legHasAuthoredExtent(leg) {
@@ -10624,7 +10684,12 @@ function legHasAuthoredExtent(leg) {
     "extent_slide",
     "extent_shape",
     "extent_para",
-    "extent_run"
+    "extent_run",
+    /* FW-19 / IC-125 */
+    "extent_range",
+    "extent_table",
+    "extent_part",
+    "extent_cited_as"
   ]) {
     const v = l[k];
     if (v === void 0 || v === null || v === "") continue;
@@ -10671,6 +10736,33 @@ function canonicalExtent(extent) {
       para: Number.isInteger(e.para) ? e.para : null,
       run: Number.isInteger(e.run) ? e.run : null
     });
+  if (e.kind === "sheet-range")
+    return canonicalJson({
+      kind: "sheet-range",
+      sheet: typeof e.sheet === "string" && e.sheet.trim() ? e.sheet.trim() : null,
+      range: typeof e.range === "string" ? canonicalRange(e.range) : null
+    });
+  if (e.kind === "doc-table")
+    return canonicalJson({
+      kind: "doc-table",
+      table: Number.isInteger(e.table) ? e.table : null,
+      cell: typeof e.cell === "string" && CONTENT_EXTENT_A1_RE.test(e.cell.trim()) ? e.cell.trim().replace(/\$/g, "").toUpperCase() : null
+    });
+  if (e.kind === "image") {
+    const ok = Array.isArray(e.rect) && e.rect.length === 4 && e.rect.every((n) => typeof n === "number" && Number.isFinite(n));
+    return canonicalJson({
+      kind: "image",
+      cited_as: contentCitedAs(e),
+      part: typeof e.part === "string" ? e.part.trim().toLowerCase() : null,
+      page: Number.isInteger(e.page) ? e.page : null,
+      rect: ok ? [
+        Math.min(e.rect[0], e.rect[2]),
+        Math.min(e.rect[1], e.rect[3]),
+        Math.max(e.rect[0], e.rect[2]),
+        Math.max(e.rect[1], e.rect[3])
+      ] : null
+    });
+  }
   return canonicalJson({ kind: e.kind ?? null, fields: e.fields ?? null });
 }
 function describeExtent(extent) {
@@ -10692,6 +10784,21 @@ function describeExtent(extent) {
     return Number.isInteger(e.para) ? `\xB6${e.para + 1}` : "a paragraph of this document";
   if (e.kind === "slide-shape")
     return Number.isInteger(e.slide) ? `slide ${e.slide}` : "a shape in this deck";
+  if (e.kind === "sheet-range") {
+    const sheet = typeof e.sheet === "string" && e.sheet.trim() ? e.sheet.trim() : null;
+    const range = typeof e.range === "string" ? canonicalRange(e.range) : null;
+    return sheet && range ? `${sheet}!${range}` : "a range of cells in this spreadsheet";
+  }
+  if (e.kind === "doc-table") {
+    if (!Number.isInteger(e.table)) return "a table in this document";
+    const cell = typeof e.cell === "string" && e.cell.trim() ? e.cell.trim().replace(/\$/g, "").toUpperCase() : null;
+    return `table ${e.table + 1}${cell ? `, ${cell}` : ""}`;
+  }
+  if (e.kind === "image") {
+    if (typeof e.part === "string" && e.part.trim()) return `image ${e.part.trim().toLowerCase().slice(0, 12)}`;
+    if (Number.isInteger(e.page)) return `an image on page ${e.page + 1}`;
+    return "an image in this document";
+  }
   const row = CONTENT_EXTENT_KINDS[e.kind];
   return row ? row.human : "a part of this document the record cannot name";
 }
@@ -10777,7 +10884,84 @@ function checkContentExtent(extent, ctx = {}) {
     const outside = coversSlideShape(e, ctx.container);
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
-  if (ctx.known !== false && e.kind !== "document" && !(Array.isArray(ctx.chain) && ctx.chain.length))
+  const citedAs = contentCitedAs(e);
+  if (citedAs !== "text" && citedAs !== "bytes")
+    return refusal(
+      "CONTENT_EXTENT_UNREADABLE",
+      `cited_as says whether a part is cited for its TEXT or as its own BYTES, and is one of text, bytes. This one says '${String(citedAs).slice(0, 40)}'`
+    );
+  if (citedAs === "bytes" && e.kind !== "image")
+    return refusal(
+      "CONTENT_EXTENT_UNREADABLE",
+      `only an image can be cited as its bytes. A ${e.kind} extent addresses text, and reading 'bytes' here as 'text' would silently change what the citation claims, so it is refused`
+    );
+  if (e.kind === "sheet-range") {
+    if (typeof e.sheet !== "string" || !e.sheet.trim())
+      return refusal(
+        "CONTENT_EXTENT_UNREADABLE",
+        `a sheet-range extent names which sheet, as the workbook spells it. This one names '${String(e.sheet).slice(0, 40)}'`
+      );
+    if (typeof e.range !== "string" || !rangeCorners(e.range))
+      return refusal(
+        "CONTENT_EXTENT_UNREADABLE",
+        `a sheet-range extent names which cells in A1:A1 notation (A1:C10, $A$1:$C$10). This one names '${String(e.range).slice(0, 40)}'`
+      );
+    const outside = coversSheetRange(e, ctx.container);
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+  }
+  if (e.kind === "doc-table") {
+    if (!Number.isInteger(e.table) || e.table < 0)
+      return refusal(
+        "CONTENT_EXTENT_UNREADABLE",
+        `a doc-table extent names which table, as a 0-based ordinal in document order. This one names '${String(e.table).slice(0, 40)}'`
+      );
+    if (e.cell !== void 0 && e.cell !== null && !(typeof e.cell === "string" && CONTENT_EXTENT_A1_RE.test(e.cell.trim())))
+      return refusal(
+        "CONTENT_EXTENT_UNREADABLE",
+        `a doc-table extent's cell is A1 notation over the table's grid (B3) or absent. A cell that is present and unreadable is worse than none, because it looks like one somebody chose`
+      );
+    const outside = coversDocTable(e, ctx.container);
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+  }
+  if (e.kind === "image") {
+    const hasPart = e.part !== void 0 && e.part !== null && e.part !== "";
+    const hasPage = e.page !== void 0 && e.page !== null && e.page !== "";
+    if (hasPart === hasPage)
+      return refusal(
+        "CONTENT_EXTENT_UNREADABLE",
+        hasPart ? `an image extent names EITHER the embedded part's content hash OR a page and rectangle, and this one names both \u2014 one image stated twice, where the two can disagree` : `an image extent names the embedded part's content hash (in a container) or the page it is on (in a PDF), and this one names neither`
+      );
+    if (hasPart && !(typeof e.part === "string" && /^[0-9a-fA-F]{64}$/.test(e.part.trim())))
+      return refusal(
+        "CONTENT_EXTENT_UNREADABLE",
+        `an image's part is the SHA-256 of the embedded media member, 64 hexadecimal characters. This one names '${String(e.part).slice(0, 40)}'`
+      );
+    if (hasPage) {
+      if (!Number.isInteger(e.page) || e.page < 0)
+        return refusal(
+          "CONTENT_EXTENT_UNREADABLE",
+          `an image extent's page is a 0-based integer. This one names '${String(e.page).slice(0, 40)}'`
+        );
+      if (e.rect !== void 0 && e.rect !== null && !(Array.isArray(e.rect) && e.rect.length === 4 && e.rect.every((n) => typeof n === "number" && Number.isFinite(n))))
+        return refusal(
+          "CONTENT_EXTENT_UNREADABLE",
+          `an image extent's rect is four finite numbers or absent. A rect that is present and unreadable is worse than none, because it looks like a region somebody chose`
+        );
+      if (ctx.known !== false && Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
+        return refusal(
+          "CONTENT_EXTENT_OUT_OF_RANGE",
+          `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the image extent names page ${e.page}`
+        );
+    }
+    const outside = hasPart ? coversImage(e, ctx.container) : null;
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+    if (hasPart && citedAs === "text")
+      return refusal(
+        "CONTENT_EXTENT_NO_CHAIN",
+        `this citation asks for the TEXT of an embedded image, and nothing in this record has read text off an embedded image \u2014 the container's transcription covers its text parts and never its media. Cite the image as itself (cited_as: bytes), or cite the passage that quotes it`
+      );
+  }
+  if (ctx.known !== false && citedAs !== "bytes" && e.kind !== "document" && !(Array.isArray(ctx.chain) && ctx.chain.length))
     return refusal(
       "CONTENT_EXTENT_NO_CHAIN",
       `this record holds no extraction chain for the capture this leg cites, so there is no transcription over ${describeExtent(e)} for the citation to point at`
@@ -10816,6 +11000,44 @@ function coversSlideShape(e, container) {
   if (Number.isInteger(e.shape) && Number.isInteger(n) && n > 0 && e.shape >= n)
     return `slide ${e.slide} of this capture holds ${n} shape(s) (0-${n - 1}) and the extent names shape ${e.shape}`;
   return null;
+}
+function coversSheetRange(e, container) {
+  const held = container && Array.isArray(container.sheets) ? container.sheets : null;
+  if (!held || !held.length) return null;
+  const sheets = held;
+  const want = String(e.sheet).trim();
+  const sheet = sheets.find((x) => x && typeof x.name === "string" && x.name === want);
+  if (!sheet)
+    return `this capture's workbook holds ${sheets.length} sheet(s) (${sheets.map((x) => x && typeof x.name === "string" ? x.name : "?").slice(0, 12).join(", ")}${sheets.length > 12 ? ", \u2026" : ""}) and the extent names a sheet called '${want.slice(0, 40)}'`;
+  const k = rangeCorners(e.range);
+  if (!k) return null;
+  if (Number.isInteger(sheet.rows) && sheet.rows > 0 && k.r1 > sheet.rows)
+    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) and the range reaches row ${k.r1}`;
+  if (Number.isInteger(sheet.cols) && sheet.cols > 0 && k.c1 > sheet.cols)
+    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the range reaches column ${k.c1}`;
+  return null;
+}
+function coversDocTable(e, container) {
+  const tables = container && Array.isArray(container.tables) ? container.tables : null;
+  if (!tables) return null;
+  if (e.table >= tables.length)
+    return `this capture's document holds ${tables.length} table(s)${tables.length ? ` (0-${tables.length - 1})` : ""} and the extent names table ${e.table}`;
+  if (typeof e.cell !== "string" || !e.cell.trim()) return null;
+  const t = tables[e.table] || {};
+  const at = a1ToRowCol(e.cell);
+  if (!at) return null;
+  if (Number.isInteger(t.rows) && t.rows > 0 && at.row > t.rows)
+    return `table ${e.table} of this capture holds ${t.rows} row(s) (1-${t.rows}) and the extent names row ${at.row}`;
+  if (Number.isInteger(t.cols) && t.cols > 0 && at.col > t.cols)
+    return `table ${e.table} of this capture holds ${t.cols} column(s) and the extent names column ${at.col}`;
+  return null;
+}
+function coversImage(e, container) {
+  const images = container && Array.isArray(container.images) ? container.images : null;
+  if (!images) return null;
+  const want = String(e.part).trim().toLowerCase();
+  if (images.some((x) => x && typeof x.part === "string" && x.part.toLowerCase() === want)) return null;
+  return `this capture's container holds ${images.length} image(s) and none of them has the content hash ${want.slice(0, 16)}\u2026 that the extent names`;
 }
 var CONNECTION_PAIR_CHECKS = {
   /* THE FORGED PAIR. A pair whose recorded position is NOT inside the extent
@@ -12883,6 +13105,65 @@ async function readCoreProperties(bytes, container) {
   const read = await readPart(bytes, container, CORE_PROPERTIES_PART);
   if (!read.ok) return { ok: false, why: read.why };
   return parseCoreProperties(UTF8.decode(read.bytes));
+}
+var IMAGE_MIME_BY_EXT = Object.freeze({
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  jpe: "image/jpeg",
+  gif: "image/gif",
+  bmp: "image/bmp",
+  tif: "image/tiff",
+  tiff: "image/tiff",
+  svg: "image/svg+xml",
+  webp: "image/webp",
+  emf: "image/emf",
+  wmf: "image/wmf",
+  emz: "image/x-emz",
+  wmz: "image/x-wmz"
+});
+var IMAGE_HEX = "0123456789abcdef";
+async function imageSha256(u8) {
+  const d = new Uint8Array(await crypto.subtle.digest("SHA-256", u8));
+  let out = "";
+  for (let i = 0; i < d.length; i++) out += IMAGE_HEX[d[i] >> 4] + IMAGE_HEX[d[i] & 15];
+  return out;
+}
+function imageRef(part, mime = null, name = null) {
+  return { kind: "image", ref: `image ${String(part).slice(0, 12)}`, part, mime, name };
+}
+async function containerImages(bytes, container, dir) {
+  const want = normalizePartName(dir);
+  const members = [];
+  let declared = 0;
+  for (const e of container.entries) {
+    const name = normalizePartName(e.name);
+    if (!name.startsWith(want) || name === want || name.endsWith("/")) continue;
+    const dot = name.lastIndexOf(".");
+    const mime = dot > name.lastIndexOf("/") ? IMAGE_MIME_BY_EXT[name.slice(dot + 1).toLowerCase()] ?? null : null;
+    if (!mime) continue;
+    members.push({ name, mime });
+    declared += e.uncompressedSize;
+  }
+  const g = sizeGuard(declared);
+  if (!g.ok) return { images: null, why: `media_over_size_bound:${declared}>${g.bound}` };
+  const images = [];
+  for (const m of members) {
+    const read = await readPart(bytes, container, m.name);
+    if (!read.ok) return { images: null, why: `media_part_unreadable:${m.name}:${read.why}` };
+    images.push(imageRef(
+      await imageSha256(read.bytes),
+      m.mime,
+      m.name.slice(m.name.lastIndexOf("/") + 1)
+    ));
+  }
+  return { images, why: null };
+}
+async function withContainerImages(outOrPromise, parts, dir) {
+  const out = await outOrPromise;
+  if (!out || !out.ok || !parts || !parts.ok || !parts.container) return out;
+  const got = await containerImages(parts.bytes, parts.container, dir);
+  return got.images ? { ...out, images: got.images } : { ...out, images: null, imagesWhy: got.why };
 }
 
 // src/container.mjs
@@ -16604,6 +16885,11 @@ function docParaRef(para, run = null) {
   if (run != null) ref.run = run;
   return ref;
 }
+function docTableRef(table, cell = null) {
+  const out = { kind: "doc-table", ref: `table ${table + 1}${cell != null ? `, ${cell}` : ""}`, table };
+  if (cell != null) out.cell = cell;
+  return out;
+}
 function decodeEntities(s) {
   return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
     if (e[0] === "#") {
@@ -16851,6 +17137,50 @@ async function docxParts(bytes) {
   }
   return { ok: true, format: "docx", bytes: b, container, mainPart, documentXml, commentsXml, rels, core, guard, undetermined };
 }
+function walkDocumentTables(xml) {
+  const done = [];
+  const stack = [];
+  let next = 0;
+  TOKEN_RE.lastIndex = 0;
+  let m;
+  while ((m = TOKEN_RE.exec(xml)) !== null) {
+    if (m[1] === void 0) continue;
+    const name = localOf(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    const top = stack.length ? stack[stack.length - 1] : null;
+    if (closing) {
+      if (name === "tbl" && stack.length) {
+        const t = stack.pop();
+        done[t.table] = {
+          table: t.table,
+          rows: t.rows,
+          cols: t.gridCols > 0 ? t.gridCols : t.maxTc > 0 ? t.maxTc : null
+        };
+      } else if (name === "tr" && top) {
+        if (top.tc > top.maxTc) top.maxTc = top.tc;
+      }
+      continue;
+    }
+    if (name === "tbl" && !selfClosed) stack.push({ table: next++, rows: 0, gridCols: 0, tc: 0, maxTc: 0 });
+    else if (name === "tbl") done[next] = { table: next++, rows: 0, cols: null };
+    else if (!top) continue;
+    else if (name === "gridCol") top.gridCols++;
+    else if (name === "tr") {
+      top.rows++;
+      top.tc = 0;
+    } else if (name === "tc") top.tc++;
+  }
+  while (stack.length) {
+    const t = stack.pop();
+    done[t.table] = {
+      table: t.table,
+      rows: t.rows || null,
+      cols: t.gridCols > 0 ? t.gridCols : t.maxTc > 0 ? t.maxTc : null
+    };
+  }
+  return done;
+}
 async function docxStructure(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
@@ -17002,6 +17332,7 @@ async function docxText(parts) {
       container: "docx",
       document: null,
       paragraphs: [],
+      tables: null,
       undetermined: [parts.guard],
       counts: { chars: 0, undetermined: 1 }
     };
@@ -17013,6 +17344,7 @@ async function docxText(parts) {
       container: "docx",
       document: null,
       paragraphs: [],
+      tables: null,
       undetermined: [{ reason: "main_part_unreadable", part: parts.mainPart, why: stated?.why ?? "unreadable" }],
       counts: { chars: 0, undetermined: 1 }
     };
@@ -17020,11 +17352,13 @@ async function docxText(parts) {
   const walk = walkDocumentBody(parts.documentXml);
   const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `\xB6${p.para + 1}`, text: p.text }));
   const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
+  const tables = walkDocumentTables(parts.documentXml).filter(Boolean).map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols }));
   return {
     ok: true,
     container: "docx",
     document,
     paragraphs,
+    tables,
     undetermined: [],
     counts: { chars: document.length, undetermined: 0 }
   };
@@ -17062,7 +17396,7 @@ var docxEntry = {
   },
   text: async (partsOrBytes) => {
     const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await docxParts(partsOrBytes) : partsOrBytes;
-    return docxText(parts);
+    return withContainerImages(docxText(parts), parts, "word/media/");
   }
 };
 
@@ -17121,6 +17455,18 @@ async function sha256Hex3(u8) {
 }
 function sheetCellRef(sheet, cell) {
   return { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell };
+}
+function sheetRangeRef(sheet, range) {
+  return { kind: "sheet-range", ref: `${sheet}!${range}`, sheet, range };
+}
+function columnLetters(n) {
+  let out = "";
+  for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + (c - 1) % 26) + out;
+  return out;
+}
+function usedSheetRange(name, usedRows, usedCols) {
+  if (!(Number.isInteger(usedRows) && usedRows > 0 && Number.isInteger(usedCols) && usedCols > 0)) return null;
+  return sheetRangeRef(name, `A1:${columnLetters(usedCols)}${usedRows}`);
 }
 var XLSX_GRID_ROWS = 1048576;
 var XLSX_GRID_COLS = 16384;
@@ -17504,6 +17850,7 @@ function xlsxText(parts) {
         cols: XLSX_GRID_COLS,
         usedRows: null,
         usedCols: null,
+        range: null,
         text: "",
         undetermined: [marker]
       });
@@ -17537,6 +17884,8 @@ function xlsxText(parts) {
       cols: XLSX_GRID_COLS,
       usedRows: walked.usedRows,
       usedCols: walked.usedCols,
+      /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
+      range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
       text,
       undetermined
     });
@@ -17592,7 +17941,7 @@ var xlsxEntry = {
   },
   text: async (partsOrBytes) => {
     const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await xlsxParts(partsOrBytes) : partsOrBytes;
-    return xlsxText(parts);
+    return withContainerImages(xlsxText(parts), parts, "xl/media/");
   }
 };
 
@@ -18142,7 +18491,7 @@ var pptxEntry = {
   },
   text: async (partsOrBytes) => {
     const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await pptxParts(partsOrBytes) : partsOrBytes;
-    return pptxText(parts);
+    return withContainerImages(pptxText(parts), parts, "ppt/media/");
   }
 };
 
@@ -18608,6 +18957,45 @@ function odtStructure(parts) {
     notes
   };
 }
+function walkOdfTables(bodyXml) {
+  const done = [];
+  const stack = [];
+  let next = 0;
+  const RE = tokens();
+  const rep = (v) => {
+    const n = parseInt(v ?? "1", 10);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  };
+  let m;
+  while ((m = RE.exec(bodyXml)) !== null) {
+    if (m[1] === void 0) continue;
+    const name = localOf3(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    const top = stack.length ? stack[stack.length - 1] : null;
+    if (closing) {
+      if (name === "table" && stack.length) {
+        const t = stack.pop();
+        done[t.table] = { table: t.table, rows: t.rows, cols: t.cols > 0 ? t.cols : null };
+      }
+      continue;
+    }
+    if (name === "table") {
+      if (selfClosed) done[next] = { table: next++, rows: 0, cols: null };
+      else stack.push({ table: next++, rows: 0, cols: 0 });
+      continue;
+    }
+    if (!top) continue;
+    const attrs = m[2] && m[2].includes("=") ? attrsOf4(m[2]) : {};
+    if (name === "table-column") top.cols += rep(attrs["number-columns-repeated"]);
+    else if (name === "table-row") top.rows += rep(attrs["number-rows-repeated"]);
+  }
+  while (stack.length) {
+    const t = stack.pop();
+    done[t.table] = { table: t.table, rows: t.rows || null, cols: t.cols > 0 ? t.cols : null };
+  }
+  return done.filter(Boolean);
+}
 function odtText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
@@ -18618,6 +19006,7 @@ function odtText(parts) {
       container: "odt",
       document: null,
       paragraphs: [],
+      tables: null,
       undetermined: [parts.guard],
       // the marker VERBATIM, never a truncation
       counts: { chars: 0, undetermined: 1 }
@@ -18631,6 +19020,7 @@ function odtText(parts) {
       container: "odt",
       document: null,
       paragraphs: [],
+      tables: null,
       undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_text_body" }],
       counts: { chars: 0, undetermined: 1 }
     };
@@ -18638,11 +19028,13 @@ function odtText(parts) {
   const walk = walkTextBody(body);
   const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `\xB6${p.para + 1}`, text: p.text }));
   const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
+  const tables = walkOdfTables(stripElement(body, "tracked-changes")).map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols }));
   return {
     ok: true,
     container: "odt",
     document,
     paragraphs,
+    tables,
     undetermined: [],
     counts: { chars: document.length, undetermined: 0 }
   };
@@ -18856,6 +19248,8 @@ function odsText(parts) {
       cols: null,
       usedRows,
       usedCols,
+      /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
+      range: usedSheetRange(sheet.name, usedRows, usedCols),
       text,
       undetermined: []
     });
@@ -19068,9 +19462,16 @@ function entryFor(row, structureOf, textOf2) {
     structure: async (partsOrBytes) => structureOf(
       partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await odfParts(row, partsOrBytes) : partsOrBytes
     ),
-    text: async (partsOrBytes) => textOf2(
-      partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await odfParts(row, partsOrBytes) : partsOrBytes
-    )
+    /* FW-19 / IC-124: `images` under the package's `Pictures/` directory,
+       exhaustive or NULL, through the one enumerator the OOXML entries use.
+       Read off the central directory, so it does NOT depend on
+       META-INF/manifest.xml — the `outside_content_xml_not_read` marker about
+       the manifest stays TRUE and stays emitted: it speaks about `intra`
+       embedded objects, which this does not content-address. */
+    text: async (partsOrBytes) => {
+      const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer ? await odfParts(row, partsOrBytes) : partsOrBytes;
+      return withContainerImages(textOf2(parts), parts, "Pictures/");
+    }
   };
 }
 var odtEntry = entryFor(ODT_ROW, odtStructure, odtText);
@@ -25167,7 +25568,12 @@ var Store = class _Store extends DurableObject {
       ["connections", "b_ref", "TEXT"],
       ["connections", "b_pos_kind", "TEXT"],
       ["connections", "b_pos", "TEXT"],
-      ["connections", "b_pos_ref", "TEXT"]
+      ["connections", "b_pos_ref", "TEXT"],
+      /* FW-19 / IC-125: `cited_as` on a content row. Every row that can exist
+         before this column did was minted against a TEXT arm (no `image` kind
+         was admissible), so the default IS the true value for all of them —
+         a backfill by construction, not a guess. */
+      ["content", "cited_as", "TEXT NOT NULL DEFAULT 'text'"]
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -32568,6 +32974,14 @@ ${lines.join("\n")}
       extent_shape: "int",
       extent_para: "int",
       extent_run: "int",
+      /* FW-19 / IC-125: the two new arms and the image reference. Without
+         these the act would refuse them BY NAME (C-45.7) — honest, but it
+         would leave the composer unable to author an extent the record admits
+         at promote, which is the gap REC-97 was written to close. */
+      extent_range: "text",
+      extent_table: "int",
+      extent_part: "text",
+      extent_cited_as: "text",
       content_id: "text"
     };
     const bag = extent && typeof extent === "object" ? extent : {};
@@ -35549,7 +35963,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         author,
         hadText: reading.read_from_text === true,
         unitArm: armed,
-        armReason: armed ? null : container ? `a ${container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage and \`sheet-range\` waits on EXTRACTION-BREADTH section 3.2; HTML has no \`dom\` producer)` : "this record does not hold which container this capture is, so it has no unit arm to name"
+        armReason: armed ? null : container ? `a ${container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage, and the \`sheet-range\` extent arm exists (FW-19) but nothing yet writes a workbook's sheet-range units into the index; HTML has no \`dom\` producer)` : "this record does not hold which container this capture is, so it has no unit arm to name"
       });
       this.#observeExtraction(bundleId, sha, reading, { author });
       this.#observeReaderRun(bundleId, sha, reading, { author });
@@ -36222,11 +36636,19 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     const sheets = held && Array.isArray(held.sheets) && held.sheets.length ? held.sheets : null;
     const paragraphs = held && Number.isInteger(held.paragraphs) && held.paragraphs > 0 ? held.paragraphs : null;
     const slides = held && Array.isArray(held.slides) && held.slides.length ? held.slides : null;
+    const tables = held && Array.isArray(held.tables) ? held.tables : null;
+    const images = held && Array.isArray(held.images) ? held.images : null;
     const notion = held && Array.isArray(held.levels) ? held.levels : [];
     const missing = [];
     if (notion.includes("sheets") && !sheets) missing.push("the workbook's sheet list");
     if (notion.includes("paragraphs") && paragraphs === null) missing.push("the paragraph count");
     if (notion.includes("slides") && !slides) missing.push("the deck's slide list");
+    if (notion.includes("tables") && !tables) missing.push("the document's table list");
+    if (notion.includes("images") && !images) missing.push("the container's image list");
+    if (held && notion.includes("paragraphs") && !notion.includes("tables"))
+      missing.push("the document's table list (this capture was acquired before the wire carried it \u2014 FW-19)");
+    if (held && notion.length && !notion.includes("images"))
+      missing.push("the container's image list (this capture was acquired before the wire carried it \u2014 FW-19)");
     if (sheets && !sheets.some((s) => Number.isInteger(s && s.rows) || Number.isInteger(s && s.cols)))
       missing.push("every sheet's row and column extent (this capture was acquired before the wire read that figure, or its format fixes no grid \u2014 OpenDocument sets no maximum table size, so a .ods workbook states a NULL bound rather than borrowing one \u2014 D-359), so an unknown SHEET is bounded and a cell within a known sheet is not");
     if (slides && !slides.some((s) => Number.isInteger(s && s.shapes)))
@@ -36236,7 +36658,9 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       sheets,
       paragraphs,
       slides,
-      held: !!(sheets || paragraphs !== null || slides),
+      tables,
+      images,
+      held: !!(sheets || paragraphs !== null || slides || tables || images),
       empty_level: missing.length ? missing.join("; ") : null,
       why: missing.length ? `this record does not hold ${missing.join("; ")} for the capture ${String(captureSha).slice(0, 12)}\u2026, so whether an address falls inside it is UNDETERMINED and is stated rather than guessed. It is not a refusal: refusing a citation for a bound nobody measured would push a member toward citing the whole document, which claims more and not less` : `the record holds this capture's container extent as the format entry itemised it at acquire (CAP-12), so an address outside it is refused by name and one inside it mints`
     };
@@ -36443,33 +36867,38 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     const ctx = given || this.contentContextFor(captureSha);
     const bad = checkContentExtent(extent, ctx);
     if (bad) return bad;
-    const id = contentIdFor(captureSha, extent, ctx.chain);
+    const citedAs = contentCitedAs(extent);
+    const chain2 = citedAs === "bytes" ? null : ctx.chain;
+    const id = contentIdFor(captureSha, extent, chain2);
     const before = this.#one(`SELECT content_id FROM content WHERE content_id=?`, id);
     if (!before) {
       this.sql.exec(
         `INSERT OR IGNORE INTO content
            (content_id,capture_sha,bundle_id,extent_kind,extent,ref,chain,derivation_cap,
-            page_count,minted_by,at,stale)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,0)`,
+            page_count,minted_by,at,stale,cited_as)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,0,?)`,
         id,
         captureSha,
         bundleId,
         extent.kind,
         canonicalExtent(extent),
         describeExtent(extent),
-        ctx.chain == null ? null : JSON.stringify(ctx.chain),
+        chain2 == null ? null : JSON.stringify(chain2),
         /* THE CAP IS ASKED ABOUT THE EXTENT, not about the document — D-252's
            whole point, and `gradeCeiling`'s own reading. A leg citing the OCR'd
            exhibit gets the engine's measured letter and a leg citing the
            text-layer report gets undetermined, each about itself. NULL is
-           undetermined and STATED, never "fine". */
-        derivationCap(
-          ctx.chain,
-          extent.kind === "pdf-page" ? { page: extent.page, rect: extent.rect ?? null } : null
+           undetermined and STATED, never "fine" — except on a `bytes` row,
+           where it is `cited_as` speaking (above). An image cited as TEXT on a
+           PDF page asks about its page and rectangle, like `pdf-page`. */
+        citedAs === "bytes" ? null : derivationCap(
+          chain2,
+          extent.kind === "pdf-page" || extent.kind === "image" && Number.isInteger(extent.page) ? { page: extent.page, rect: extent.rect ?? null } : null
         ),
         ctx.pageCount,
         mintedBy,
-        at || (/* @__PURE__ */ new Date()).toISOString()
+        at || (/* @__PURE__ */ new Date()).toISOString(),
+        citedAs
       );
     }
     return { ok: true, content_id: id, minted: !before };
@@ -37168,7 +37597,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
   contentRow(contentId) {
     const r = this.#one(
       `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
-              derivation_cap, page_count, minted_by, at, stale
+              derivation_cap, page_count, minted_by, at, stale, cited_as
          FROM content WHERE content_id=?`,
       contentId
     );
@@ -37233,7 +37662,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
    *  document's cap, which is the overclaim this whole item is about. */
   static #contentTarget(kind, extent) {
     if (kind === "document") return {};
-    if (kind === "pdf-page")
+    if (kind === "pdf-page" || kind === "image" && Number.isInteger(extent && extent.page))
       return {
         page: Number.isInteger(extent && extent.page) ? extent.page : null,
         rect: Array.isArray(extent && extent.rect) ? extent.rect : null
@@ -37300,7 +37729,13 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     const chain2 = safeJson(r.chain);
     const target = _Store.#contentTarget(r.extent_kind, extent);
     const covering = (atts.by.get(r.capture_sha) || []).filter((a) => !(a.chain != null && r.chain != null && a.chain !== r.chain)).map((a) => ({ member: a.attestor, at: a.at, extent: _Store.#attestationShape(a) }));
-    const transcription = target == null ? {
+    const transcription = r.cited_as === "bytes" ? {
+      ceiling: null,
+      determinant: null,
+      by: [],
+      applies: false,
+      why: `this row cites ${describeExtent(extent)} AS ITSELF \u2014 the image's bytes, not text read off it \u2014 so no transcription stands between the citation and what it points at. Its fidelity is the capture's own, established on the provenance chain; a transcription ceiling does not apply, which is a different fact from one that is undetermined`
+    } : target == null ? {
       ceiling: null,
       determinant: null,
       by: [],
@@ -37335,6 +37770,8 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       minted_by: r.minted_by,
       at: r.at,
       stale: !!r.stale,
+      /* FW-19 / IC-125: text | bytes — what the NULL chain and cap on a bytes row MEAN. */
+      cited_as: r.cited_as ?? "text",
       /* SK-7 / 14.4's 5.7: WHO MARKED THIS PASSAGE CITABLE, in words rather
          than in the control plane's identity grammar. `minted_by` above is kept
          byte-identical beside it — the label does not replace the field, it
@@ -37393,7 +37830,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     const marks = ids.map(() => "?").join(",");
     const rows = this.#rows(
       `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
-              derivation_cap, page_count, minted_by, at, stale
+              derivation_cap, page_count, minted_by, at, stale, cited_as
          FROM content WHERE content_id IN (${marks}) LIMIT ?`,
       ...ids,
       ids.length
@@ -37493,7 +37930,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       return { ok: false, reason: "NO_ID", detail: "content requires ?id=<content_id>" };
     const r = this.#one(
       `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
-              derivation_cap, page_count, minted_by, at, stale
+              derivation_cap, page_count, minted_by, at, stale, cited_as
          FROM content WHERE content_id=?`,
       id
     );
@@ -61473,9 +61910,15 @@ var index_default = {
                     }
                     return out;
                   };
+                  const own = (k) => Object.prototype.hasOwnProperty.call(i2text, k);
+                  const tablesOf = (list) => Array.isArray(list) ? list.map((t) => ({ rows: int(t && t.rows), cols: int(t && t.cols) })) : null;
+                  const imagesOf = (list) => Array.isArray(list) && list.every((x) => x && typeof x.part === "string" && /^[0-9a-f]{64}$/.test(x.part)) ? list.map((x) => ({ part: x.part, mime: typeof x.mime === "string" ? x.mime : null })) : null;
                   containerExtent = {
                     container: typeof i2text.container === "string" ? i2text.container : null,
-                    levels: ["sheets", "paragraphs", "slides"].filter(has),
+                    levels: [
+                      ...["sheets", "paragraphs", "slides"].filter(has),
+                      ...["tables", "images"].filter(own)
+                    ],
                     sheets: sh ? sh.map((s) => ({
                       name: s && typeof s.name === "string" ? s.name : null,
                       rows: int(s && s.rows),
@@ -61484,7 +61927,9 @@ var index_default = {
                       usedCols: int(s && s.usedCols)
                     })) : null,
                     paragraphs: pa ? pa.length : null,
-                    slides: sl ? slideExtents(sl) : null
+                    slides: sl ? slideExtents(sl) : null,
+                    ...own("tables") ? { tables: tablesOf(i2text.tables) } : {},
+                    ...own("images") ? { images: imagesOf(i2text.images) } : {}
                   };
                 }
               }

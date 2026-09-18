@@ -415,7 +415,12 @@ const DRIVEN = ["document", "pdf-page"];
 ok("the arms this suite DROVE are landed arms (document, pdf-page)", DRIVEN.every((k) => landed.includes(k)));
 eq("every arm of IC-1's union is landed as of REC-85 - none refused as unlanded today",
   unlanded, []);
-eq("the landed set is IC-1's whole union", landed, ["doc-para", "document", "pdf-page", "sheet-cell", "slide-shape"]);
+/* CORRECTED BY FW-19 (IC-125), NOT EXEMPTED: the union grew by `sheet-range`,
+   `doc-table` and the `image` reference (EXTRACTION-BREADTH §3.2). The assertion's
+   point — the landed set IS the whole union, nothing named and unevaluable — is
+   unchanged; the roster moved. */
+eq("the landed set is IC-1's whole union", landed,
+  ["doc-para", "doc-table", "document", "image", "pdf-page", "sheet-cell", "sheet-range", "slide-shape"]);
 ok("the surface carries a member-facing noun for every LANDED arm, so REC-85's landing needed no edit here",
   landed.every((k) => typeof U.EXTENT_KIND_WORD[k] === "string" && U.EXTENT_KIND_WORD[k].length > 0));
 eq("the surface's kind set IS the catalog's, which check-semantics.mjs guards in both directions",

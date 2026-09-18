@@ -172,9 +172,16 @@ const ARMS = {
     mustFail: ["each container declares the level it itemises AT ALL, and only that one",
                "a workbook whose entry itemised NO sheets records NULL and never 0"],
     mustPass: "every refusal and every mint — `levels` is a statement about what is absent and bounds nothing, so breaking it must not move a single gate. That is itself the finding this arm records",
+    /* ANCHOR CORRECTED BY FW-19, NOT EXEMPTED: FW-19 split the `levels` line so
+       the two new levels (`tables`, `images`) are named by KEY presence beside
+       the three named by array presence, and the old anchor then matched 0x —
+       the arm read `ARMED NO`, the dead-control failure this file's header
+       records twice already. The patch still does exactly what the arm is
+       for: the three original levels declared regardless of what the entry
+       itemised. */
     patch: () => arm(INDEX,
-      `                    levels: ["sheets", "paragraphs", "slides"].filter(has),`,
-      `                    levels: ["sheets", "paragraphs", "slides"],`),
+      `                    levels: [...["sheets", "paragraphs", "slides"].filter(has),`,
+      `                    levels: [...["sheets", "paragraphs", "slides"],`),
   },
   reader: {
     files: [STORE],

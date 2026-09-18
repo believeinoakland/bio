@@ -840,3 +840,108 @@ export async function readCoreProperties(bytes, container) {
   if (!read.ok) return { ok: false, why: read.why };
   return parseCoreProperties(UTF8.decode(read.bytes));
 }
+
+/* ------------------------------------------------------------------ *
+ * FW-19 / IC-124 — THE `image` REFERENCE (EXTRACTION-BREADTH §3.2)
+ * ------------------------------------------------------------------ *
+ *
+ * An image cited AS ITSELF is bytes, not text (§3.1): a map, a signature, a
+ * chart cited for what it shows. Its address inside a container is the
+ * CONTENT HASH of the media part, never the part NAME — a name is the
+ * producer's filing choice and two saves of one document may renumber
+ * `image1.png`, while the bytes are the image. So the reference is
+ *
+ *   { kind:"image", ref:"image <first 12 hex of part>", part:<sha256>, mime, name }
+ *
+ * `ref` is DERIVED FROM THE ADDRESS and not from the name, and that is IC-1's
+ * parity rule rather than taste: `describeExtent` in the checker composes the
+ * human form a member's citation gets when they author none, it can see only
+ * the address, and REC-85's rule is that the two strings are the same string.
+ * The name rides beside it for a person to recognise.
+ *
+ * ONE ENUMERATOR FOR ALL SIX ENTRIES, living here beside `readPart` because
+ * it is a CONTAINER fact: which members are images is a question about the
+ * package, and each entry supplies only its media directory (`word/media/`,
+ * `xl/media/`, `ppt/media/`, OpenDocument's `Pictures/`).
+ *
+ * THE LIST IS EXHAUSTIVE OR IT IS NULL, and that is the property the
+ * out-of-range refusal rests on. The checker refuses a part the container
+ * does not hold; if one media member could not be read and this returned the
+ * others, a citation of the unread one (a member can hash the file themselves)
+ * would be refused as absent when it is present — the record refusing a true
+ * citation. So a single unreadable member, or media over the size bound, makes
+ * the whole list NULL with the reason stated, and NULL is SKIPPED by the
+ * checker rather than read as "no images". An EMPTY list is a real zero: the
+ * directory was looked in and held no image.
+ *
+ * WHAT IS NOT ENUMERATED, stated: a media member whose extension is not an
+ * image type (audio, video, an OLE blob) — it is not an image, and the
+ * embedded-object path (`intra`) already content-addresses embeddings. */
+
+/** Extension -> MIME for the image types office containers carry. A member
+ *  whose extension is not here is not enumerated as an image. */
+export const IMAGE_MIME_BY_EXT = Object.freeze({
+  png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", jpe: "image/jpeg",
+  gif: "image/gif", bmp: "image/bmp", tif: "image/tiff", tiff: "image/tiff",
+  svg: "image/svg+xml", webp: "image/webp", emf: "image/emf", wmf: "image/wmf",
+  emz: "image/x-emz", wmz: "image/x-wmz",
+});
+
+const IMAGE_HEX = "0123456789abcdef";
+async function imageSha256(u8) {
+  const d = new Uint8Array(await crypto.subtle.digest("SHA-256", u8));
+  let out = "";
+  for (let i = 0; i < d.length; i++) out += IMAGE_HEX[d[i] >> 4] + IMAGE_HEX[d[i] & 15];
+  return out;
+}
+
+/** The IC-1 `image` reference for a container media part. */
+export function imageRef(part, mime = null, name = null) {
+  return { kind: "image", ref: `image ${String(part).slice(0, 12)}`, part, mime, name };
+}
+
+/** Every image member under `dir`, content-addressed, in central-directory
+ *  order. Returns `{ images: [imageRef...], why: null }` or
+ *  `{ images: null, why }` — never a partial list. */
+export async function containerImages(bytes, container, dir) {
+  const want = normalizePartName(dir);
+  const members = [];
+  let declared = 0;
+  for (const e of container.entries) {
+    const name = normalizePartName(e.name);
+    if (!name.startsWith(want) || name === want || name.endsWith("/")) continue;
+    const dot = name.lastIndexOf(".");
+    const mime = dot > name.lastIndexOf("/") ? IMAGE_MIME_BY_EXT[name.slice(dot + 1).toLowerCase()] ?? null : null;
+    if (!mime) continue;
+    members.push({ name, mime });
+    declared += e.uncompressedSize;
+  }
+  /* The same bound and the same metric as the text parts (declared
+     uncompressed bytes, from the central directory, before inflation):
+     hashing inflates every member, and an unbounded inflate on a Worker is
+     what COFF-6 measured the bound for. Over it the list is NULL and SAYS SO
+     — never a prefix of it. */
+  const g = sizeGuard(declared);
+  if (!g.ok) return { images: null, why: `media_over_size_bound:${declared}>${g.bound}` };
+  const images = [];
+  for (const m of members) {
+    const read = await readPart(bytes, container, m.name);
+    if (!read.ok) return { images: null, why: `media_part_unreadable:${m.name}:${read.why}` };
+    images.push(imageRef(await imageSha256(read.bytes), m.mime,
+      m.name.slice(m.name.lastIndexOf("/") + 1)));
+  }
+  return { images, why: null };
+}
+
+/** An entry's SUCCESSFUL `text()` output with `images` added — the one way
+ *  all six entries attach it, so the key's meaning cannot drift per entry.
+ *  A failed text() (`ok:false`) is returned untouched: no container was read,
+ *  so there is no media directory to have looked in. On a successful read
+ *  `images` is the exhaustive list or NULL, and a NULL carries `imagesWhy`. */
+export async function withContainerImages(outOrPromise, parts, dir) {
+  const out = await outOrPromise;
+  if (!out || !out.ok || !parts || !parts.ok || !parts.container) return out;
+  const got = await containerImages(parts.bytes, parts.container, dir);
+  return got.images ? { ...out, images: got.images }
+                    : { ...out, images: null, imagesWhy: got.why };
+}

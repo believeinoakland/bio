@@ -262,11 +262,17 @@ console.log(`  corpus: 3 captured office documents (xlsx · docx · pptx), each 
 t("the fixture is non-empty and is the three arms' three containers",
   [Object.keys(CONTENT_EXTENT_KINDS).length >= 5, [DOC_BOOK, DOC_TEXT, DOC_DECK].length], [true, 3]);
 
-t("ALL FIVE KINDS ARE NOW LANDED — REC-82 landed two, this item landed the other three",
+/* CORRECTED BY FW-19 (IC-125), NOT EXEMPTED. This read "ALL FIVE KINDS ARE NOW
+   LANDED" with a five-kind roster, which was exact until EXTRACTION-BREADTH §3.2
+   landed `sheet-range`, `doc-table` and the `image` reference. The TOTALITY is
+   what this asserts — every kind the grammar names is evaluable — so the roster
+   moves and the shape of the check does not. FW-19's three are driven end to
+   end in `fw19-extent-arms.test.mjs`. */
+t("ALL EIGHT KINDS ARE NOW LANDED — REC-82 landed two, this item three, FW-19 the last three",
   [Object.keys(CONTENT_EXTENT_KINDS).sort(),
    Object.entries(CONTENT_EXTENT_KINDS).filter(([, v]) => v.landed).map(([k]) => k).sort()],
-  [["doc-para", "document", "pdf-page", "sheet-cell", "slide-shape"],
-   ["doc-para", "document", "pdf-page", "sheet-cell", "slide-shape"]]);
+  [["doc-para", "doc-table", "document", "image", "pdf-page", "sheet-cell", "sheet-range", "slide-shape"],
+   ["doc-para", "doc-table", "document", "image", "pdf-page", "sheet-cell", "sheet-range", "slide-shape"]]);
 
 /* ===================== 1. EACH ARM MINTS, THROUGH THE OP ================ */
 
@@ -444,7 +450,12 @@ t("the CHECKER's own verdict is C-45.3 and the leg grammar RELAYS it at C-2.8 �
   [checkContentExtent({ kind: "sheet-cell", cell: "B14" }, { chain: layerChain }).check,
    checkContentExtent({ kind: "sheet-cell", cell: "B14" }, { chain: layerChain }).code,
    checkContentExtent({ kind: "doc-para", para: "two" }, { chain: layerChain }).check,
-   checkContentExtent({ kind: "slide-shape", slide: 0 }, { chain: layerChain }).check,
+   /* `?.` added by FW-19, which re-ran `nc-rec85.mjs` and found its `onebased`
+      arm reading `-1 pass, -1 fail`: under that arm this call returns NULL and a
+      bare `.check` THREW, so the suite never reached its foot — a throw goes
+      through no assertion at all. Pre-existing (the line predates FW-19); the
+      defensive read turns it back into a measured FAIL. */
+   checkContentExtent({ kind: "slide-shape", slide: 0 }, { chain: layerChain })?.check ?? null,
    codes(rNoSheet)],
   ["C-45.3", "CONTENT_EXTENT_UNREADABLE", "C-45.3", "C-45.3", ["C-2.8"]]);
 

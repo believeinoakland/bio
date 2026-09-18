@@ -201,8 +201,14 @@ await mustPromote(CASE, projectMd(CASE), "project");
    has passed three times in this repository. */
 console.log(`  corpus: ${DOCS.length} captured documents (3-page sets, chain cap C) + 8 questions `
           + `+ 1 case; extent kinds in the grammar: ${Object.keys(CONTENT_EXTENT_KINDS).join(", ")}`);
+/* CORRECTED BY FW-19 (IC-125), NOT EXEMPTED: the floor read `=== 5`, exact
+   until `sheet-range`, `doc-table` and `image` landed. Section 2 below still
+   drives the FIVE kinds REC-97 was written for; FW-19's three go through this
+   same act in `fw19-extent-arms.test.mjs`, which is where the act's widened
+   `EXTENT_PARAMS` is asserted — so between the two suites the act reaches every
+   landed kind, and this floor says how many there are. */
 ok_("the fixture is non-empty and reaches every landed extent kind",
-  DOCS.length >= 7 && Object.values(CONTENT_EXTENT_KINDS).filter((v) => v.landed).length === 5,
+  DOCS.length >= 7 && Object.values(CONTENT_EXTENT_KINDS).filter((v) => v.landed).length === 8,
   `docs=${DOCS.length} landed kinds=${Object.values(CONTENT_EXTENT_KINDS).filter((v) => v.landed).length}`);
 t("the ground holds no content rows yet — nothing has cited anything", (await get("stats")).content, 0);
 

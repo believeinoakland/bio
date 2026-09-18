@@ -75,6 +75,7 @@ import {
   hasZipMagic, readContainer, readPart, discriminate,
   CONTENT_TYPES_PART, parseRels, relsPartFor, normalizePartName,
   sizeGuard, declaredTextBytes, CORE_PROPERTIES_PART, readCoreProperties,
+  withContainerImages,
 } from "./ooxml.mjs";
 import { linkWrapper } from "./subresources.mjs";
 
@@ -157,6 +158,35 @@ async function sha256Hex(u8) {
  * outputs are byte-identical across the change. */
 export function sheetCellRef(sheet, cell) {
   return { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell };
+}
+
+/** FW-19 / IC-124 — `{kind:"sheet-range", ref:"Sheet1!A1:C10", sheet, range}`
+ *  (EXTRACTION-BREADTH §3.2): a table in a workbook, or a sheet as a unit
+ *  (`CONTENT-SEARCH-DESIGN.md` §4.1's workbook unit). `range` is A1:A1
+ *  notation with the top-left corner first. EXPORTED for `odf.mjs`'s `.ods`
+ *  entry — one builder per arm (COFF-10's rule, which is why `sheetCellRef`
+ *  above is exported too). */
+export function sheetRangeRef(sheet, range) {
+  return { kind: "sheet-range", ref: `${sheet}!${range}`, sheet, range };
+}
+
+/** A 1-based column number -> its A1 letters (1 -> A, 27 -> AA). Bijective
+ *  base 26 — there is no zero digit, which is the mistake available here. */
+export function columnLetters(n) {
+  let out = "";
+  for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + ((c - 1) % 26)) + out;
+  return out;
+}
+
+/** The WHOLE-SHEET unit a sheet's walk can honestly name: A1 to the far
+ *  corner of its USED range, or NULL when that range was not measured or is
+ *  empty. The used range and not the grid, deliberately and unlike the
+ *  `sheet-cell` BOUND: this is a UNIT a reader is shown ("the sheet"), and a
+ *  unit of a million blank rows is not what anybody means by the sheet. The
+ *  bound a citation is REFUSED against stays the grid (`rows`/`cols`). */
+export function usedSheetRange(name, usedRows, usedCols) {
+  if (!(Number.isInteger(usedRows) && usedRows > 0 && Number.isInteger(usedCols) && usedCols > 0)) return null;
+  return sheetRangeRef(name, `A1:${columnLetters(usedCols)}${usedRows}`);
 }
 
 /* ------------------------------------------------------------------ *
@@ -636,7 +666,7 @@ function xlsxText(parts) {
          holds nothing", which is the one thing an unread sheet cannot say. */
       outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden,
         rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS, usedRows: null, usedCols: null,
-        text: "", undetermined: [marker] });
+        range: null, text: "", undetermined: [marker] });
       allUndetermined.push(marker);
       continue;
     }
@@ -667,6 +697,8 @@ function xlsxText(parts) {
     outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden,
       rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS,
       usedRows: walked.usedRows, usedCols: walked.usedCols,
+      /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
+      range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
       text, undetermined });
     for (const u of undetermined) allUndetermined.push(u);
   }
@@ -728,6 +760,7 @@ export const xlsxEntry = {
     const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
       ? await xlsxParts(partsOrBytes)
       : partsOrBytes;
-    return xlsxText(parts);
+    /* FW-19 / IC-124: `images` under xl/media/, exhaustive or NULL. */
+    return withContainerImages(xlsxText(parts), parts, "xl/media/");
   },
 };

@@ -535,7 +535,11 @@ const { mint: _mintBlock, ...ebDocWithoutLabel } = ebDoc;
 t("and its earned-basis answer, with this item's one new field removed, carries every field "
 + "REC-83 landed and nothing else — the label ADDS, it does not rewrite",
   Object.keys(ebDocWithoutLabel).sort(),
-  ["at", "bundle_id", "capture", "capture_sha", "chain", "connection", "content_id",
+  /* CORRECTED BY FW-19 (IC-125), NOT EXEMPTED: `cited_as` joins the roster —
+     text | bytes, the column that says what a NULL chain and cap on a row MEAN.
+     The point this asserts survives exactly: the mint label ADDS and rewrites
+     nothing, and every field REC-83 landed is still here, unrenamed. */
+  ["at", "bundle_id", "capture", "capture_sha", "chain", "cited_as", "connection", "content_id",
    "derivation_cap", "extent", "extent_kind", "minted_by", "page_count", "ref", "says",
    "stale", "transcription"]);
 
