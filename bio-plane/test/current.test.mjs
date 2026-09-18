@@ -418,7 +418,11 @@ const accept = async (version, target = INQ) =>
      because the language has two, not a list of spellings that goes stale the
      next time a producer needs to carry something home. */
   const wiredIntoItems = (name) => {
-    const call = new RegExp(`this\\.#${name}\\s*\\(viewer, now\\)`).test(STORE_SRC);
+    /* CORRECTED 2026-09-18 by REC-132 (D-422), never exempted: the generators gained a third
+       argument, `identity` (the queue's D-310 owner fact asks WHO, not what the caller sees), so
+       the call is matched with or without it — the property (the producer is CALLED with the
+       feed's own viewer and clock) is unchanged. */
+    const call = new RegExp(`this\\.#${name}\\s*\\(viewer, now(?:, identity)?\\)`).test(STORE_SRC);
     const direct = new RegExp(`items\\.push\\(\\s*\\.\\.\\.\\s*this\\.#${name}\\s*\\(`).test(STORE_SRC);
     const decl = new RegExp(`(?:const|let)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*this\\.#${name}\\s*\\(`).exec(STORE_SRC);
     const viaLocal = !!(decl && new RegExp(`items\\.push\\(\\s*\\.\\.\\.\\s*${decl[1]}\\b`).test(STORE_SRC));
@@ -426,8 +430,8 @@ const accept = async (version, target = INQ) =>
   };
   t("both slugs have a NAMED PRODUCER wired into queueFeed's FINDING half — a kind with no "
   + "generator is a word, and this record has shipped one of those before",
-    [/#findingsStanceDiverged\s*\(viewer, now\)/.test(STORE_SRC),
-     /#findingsVersionFromAnotherTeam\s*\(viewer, now\)/.test(STORE_SRC),
+    [/#findingsStanceDiverged\s*\(viewer, now(?:, identity)?\)/.test(STORE_SRC),
+     /#findingsVersionFromAnotherTeam\s*\(viewer, now(?:, identity)?\)/.test(STORE_SRC),
      wiredIntoItems("findingsStanceDiverged"),
      wiredIntoItems("findingsVersionFromAnotherTeam")],
     [true, true, true, true]);

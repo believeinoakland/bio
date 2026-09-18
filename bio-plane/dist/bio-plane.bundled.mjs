@@ -68244,6 +68244,7 @@ var index_default = {
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
     inner.searchParams.delete("identity");
     if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "frontier"];
     const REC30_VIEWER_READS = [
       "dangling",
       "tasks",
@@ -68281,7 +68282,7 @@ var index_default = {
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
       );
-      inner.searchParams.set(
+      if (IDENTITY_READS.includes(op)) inner.searchParams.set(
         "identity",
         viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
       );

@@ -241,8 +241,10 @@ arm("6", "OVER-STRICTNESS, AND IT MUST STAY GREEN. `#findingsStanceDiverged` is 
   + "literal `items.push(...this.#findingsX(`, and a correct wiring failed it. If the corrected "
   + "matcher has merely traded one spelling for two, this arm goes red and says so. "
   + "DECLARED: BOTH SUITES GREEN. A fence tighter than its rule is not a safer fence.",
-  [["store", `    items.push(...this.#findingsStanceDiverged(viewer, now));`,
-              `    const stanceItems = this.#findingsStanceDiverged(viewer, now);
+  /* RE-ANCHORED 2026-09-18 by REC-132: the generators gained `identity` (D-422, the queue's
+     owner fact), so the call reads `(viewer, now, identity)`; the arm is the same rewrite. */
+  [["store", `    items.push(...this.#findingsStanceDiverged(viewer, now, identity));`,
+              `    const stanceItems = this.#findingsStanceDiverged(viewer, now, identity);
     items.push(...stanceItems);`]],
   [], [], true);
 

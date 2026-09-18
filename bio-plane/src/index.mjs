@@ -8735,6 +8735,10 @@ export default {
        would otherwise disclose that a document sits in a project the caller was
        never invited to, by telling them what produced its text. `attesttext`
        is NOT here: it is a WRITE and takes its own member route. */
+    /* REC-132 / D-422: the ops whose store method reads the POSITIONAL `identity` stamp
+       (`#positionalMember`). `affordances` and `queue` build their own inner requests
+       above and stamp it there. A new reader of `identity` joins this list. */
+    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "frontier"];
     const REC30_VIEWER_READS = ["dangling", "tasks", "reading", "readingref", "readingname",
                                 "textprovenance", "textattest",
                                 /* CPDF-13: the drift obligation's rows NAME the bundle each
@@ -8938,13 +8942,17 @@ export default {
         viaSession ? sessViewer
         : cls === "ai" ? aiCred.principal
         : `${MACHINE_CLASS_PREFIX}${cls}`);
-      /* REC-132 / D-422: THE POSITIONAL HALF, stamped beside the viewer for every op in
-         this list. It differs from the viewer for exactly ONE principal — the founder's
-         session, whose viewer is the administrator's and whose identity is
+      /* REC-132 / D-422: THE POSITIONAL HALF, stamped beside the viewer for the ops whose
+         store method READS it. It differs from the viewer for exactly ONE principal — the
+         founder's session, whose viewer is the administrator's and whose identity is
          `member:admin` — and the store reads it only where a ruling names a person: the
          lead reads (`#leadReach`: author, or a participant it was shared to) and the
-         internet frontier built on them. */
-      inner.searchParams.set("identity",
+         internet frontier built on them.
+         NAMED OPS, NOT EVERY OP IN THIS LIST, and that is measured rather than tidy: the
+         first build stamped it on every op here and `op=content` — a FIXED-KEY read that
+         refuses any parameter it does not name (D-222) — refused every call, which six
+         content suites caught. A param a route does not read is not free. */
+      if (IDENTITY_READS.includes(op)) inner.searchParams.set("identity",
         viaSession ? sessIdentity
         : cls === "ai" ? aiCred.principal
         : `${MACHINE_CLASS_PREFIX}${cls}`);

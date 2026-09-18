@@ -66,8 +66,8 @@ const ARMS = {
     mustFail: ["C1: sam's WHOLE internet frontier", "C1: vera's WHOLE internet frontier",
                "C1: otto's WHOLE internet frontier", "C3: ruth's WHOLE frontier is byte-identical"],
     mustPass: "the no_member arms (a credential with no member still reaches nothing)",
-    patch: () => arm([[STORE, "    const reach = this.#leadReach(viewer);\n    const notRead = [",
-      "    const reach0 = this.#leadReach(viewer);\n    const reach = reach0 && { sql: \"(1=1 OR ? IS NULL OR ? IS NULL)\", args: reach0.args };\n    const notRead = ["]]),
+    patch: () => arm([[STORE, "    const reach = this.#leadReach(viewer, identity);\n    const notRead = [", /* RE-ANCHORED 2026-09-18 by REC-132: #leadReach gained the positional identity */
+      "    const reach0 = this.#leadReach(viewer, identity);\n    const reach = reach0 && { sql: \"(1=1 OR ? IS NULL OR ? IS NULL)\", args: reach0.args };\n    const notRead = ["]]),
   },
   grouplate: {
     files: [STORE],
