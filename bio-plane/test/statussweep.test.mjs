@@ -45,6 +45,17 @@
  *  (8) ON DISK — the sweep must NOT be wired into `plancheck` as a gate. A checker that FAILED
  *      here would force the per-case authority judgement onto whoever was next to push, which is
  *      precisely what the row forbids.
+ *  (9) LIVE — M0-62: `BIO_Content_Framework_v0_10.md` §18 item 5 POINTS at `BIO_System_Design.md`
+ *      §3 construct 10 rather than restating the lead's design status, and KEEPS its ruling. The
+ *      liar is named first: the cheapest green is to DELETE item 5, so the arm asserts the item
+ *      is still there under its key, still one of six, and still carries D-194, D-184 and the
+ *      2026-09-14 ruling. TO RE-ARM IN ONE STEP: in a `cp`-aside copy of the framework, replace
+ *      item 5's cell with its pre-M0-62 text (`… valid — designed in Program B | the architect,
+ *      under the ruling |`) -> the verdict reads `no-covering-heading-elsewhere` and the
+ *      authority-pointer arm FAILS, while every other §18 item's verdict is unchanged. Verified
+ *      2026-09-18: 38 pass / 3 fail (verdict, authority pointer, restatement). And THE LIAR,
+ *      driven: item 5's row DELETED -> 36 pass / 5 fail, both GUARDs among them. Restored by `cp`
+ *      from a uniquely-named aside copy, verified by sha256 AND `cmp` -> 41 pass / 0 fail.
  *
  * TO RE-ARM (2) BY HAND IN ONE STEP: in `tools/statussweep.mjs` change signal 4's
  * `h.path !== p` to `h.path === p` (so a covering heading is only ever looked for in the claiming
@@ -76,7 +87,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 6;
+const SECTIONS = 7;
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -245,6 +256,39 @@ section("ON DISK — the predicates are IMPORTED, and the sweep is NOT a gate");
     /Child/.test(two[0].body), true);
   t("citedByTheMap reads the REAL map and finds the one pair §3 states",
     citedByTheMap(readFileSync(join(REPO_ROOT, "docs/architecture/BIO_System_Design.md"), "utf8")).size >= 1, true);
+}
+
+/* ------------------------------------ (9) M0-62 — §18 item 5 POINTS at construct 10, LIVE */
+section("M0-62 — §18 item 5 POINTS at the construct map, and keeps its ruling");
+{
+  const CF = "docs/architecture/BIO_Content_Framework_v0_10.md";
+  const live = sweep();
+  const s18 = live.claims.filter((c) => c.path === CF && c.sec === "18");
+  const five = s18.find((c) => c.item === "5") ?? null;
+  /* THE LIAR FIRST: deleting item 5 removes the duplicate AND the piece the corpus still owes. */
+  t("GUARD: §18 still lists SIX pieces — nothing was deleted to silence the duplicate",
+    s18.map((c) => c.item), ["1", "2", "3", "4", "5", "6"]);
+  t("GUARD: item 5 is still there under its own key",
+    five && five.key, "homes for the member's lead and firsthand observation");
+  /* The sweep's verdict MOVED from `no-covering-heading-elsewhere` — the finding CLOSED, not
+     merely absent. NOTE, said rather than implied: `points-at-its-design` is the shared
+     predicate's name and it fires on any backticked `.md`. For item 5 there is no design yet;
+     what the cell points at is the STATUS AUTHORITY, which the next arm pins specifically. */
+  t("the sweep's verdict on item 5 is `points-at-its-design` (it read `no-covering-heading-elsewhere` before M0-62)",
+    five && five.verdict, "points-at-its-design");
+  const text = readFileSync(join(REPO_ROOT, CF), "utf8");
+  const row = text.split("\n").find((l) => l.startsWith("| 5 | **homes for the member's lead")) ?? "";
+  t("item 5 names the AUTHORITY — `BIO_System_Design.md` §3 construct 10 — not merely some `.md`",
+    /`BIO_System_Design\.md` §3 construct 10 is the single authority/.test(row), true);
+  t("and it no longer restates the status itself (the pre-M0-62 `— designed in Program B |` clause)",
+    /designed in Program B \|/.test(row), false);
+  t("the SUBSTANCE is kept: D-194 and D-184, and the 2026-09-14 ruling it carries",
+    ["D-194", "D-184", "grade D on the member's trust", "off-the-record source's anonymity is valid"]
+      .every((w) => row.includes(w)), true);
+  /* OVER-STRICTNESS: no other §18 item moved. */
+  t("every OTHER §18 item still reads `points-at-its-design`",
+    s18.filter((c) => c.item !== "5").map((c) => c.verdict),
+    ["points-at-its-design", "points-at-its-design", "points-at-its-design", "points-at-its-design", "points-at-its-design"]);
 }
 
 t("every section reached an assertion (the FOOT sentinel)", reached, SECTIONS);

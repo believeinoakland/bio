@@ -12785,3 +12785,20 @@ Worker spawned by CONDUCT #4 into an isolated `agent-*` worktree. Paths:
 released: 2026-09-18 by the M0-63 worker, work at `a9ffa456` on branch `worktree-agent-aaa96b17819fdda02`
 (battery 223/223 green · 13937 assertions on that tree; `coverage.mjs --strict` exit 0; `plancheck --local`
 0 fail). **For CONDUCT:** merge the branch, and flip M0-63 in `QUEUE.md` — both are CONDUCT's acts.
+
+## CLAIM 2026-09-18 M0 (M0-62 — §18 item 5 POINTS at `BIO_System_Design.md` §3 construct 10 instead of restating the lead's design status)
+
+paths:
+  `docs/architecture/BIO_Content_Framework_v0_10.md` — §18 item 5's cell, the front matter's §18
+  Incomplete bullet where it restates the same piece, and the Status line's dated note. **Nothing
+  else in the document moves.**
+  `bio-plane/test/statussweep.test.mjs` — ONE new section appended (the live-corpus arm for §18
+  item 5) and its `NEGATIVE CONTROL:` line extended. No existing arm is edited.
+  `docs/development/CLAIMS.md` (this block).
+  **NOT `docs/architecture/BIO_System_Design.md`** — construct 10 is the authority and is not wrong.
+  **NOT `tools/corpuscheck.mjs`** (M0-61's) and **NOT `tools/statussweep.mjs`**.
+  **NOT `docs/development/QUEUE.md`** — flipping the row is CONDUCT's act.
+  `docs/DECIDED.md` — regenerated only (the D-194 ruling's indexed line moved with item 5's cell).
+
+released: 2026-09-18 by the M0-62 worker at its report. Every path above is free. `BIO_System_Design.md`
+verified untouched (sha256 b5ef3e7a… before and after).
