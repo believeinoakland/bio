@@ -13720,3 +13720,22 @@ THE ACTS, stated as acts with their actor. **UI builds four surfaces**, each ren
 4. **Comment (both doors).** `POST op=reviewcomment` (`draft=` + session, or `secret=`) with `{text}`; render
    `comments[]` with `author_kind` visible — a recipient's comment is labelled as a recipient's (with `recipient`,
    the name the issuer gave), never as a member's.
+
+## CLAIM 2026-09-18 RECORD (REC-126 — THE REVIEW COPY) — RELEASED
+
+released: 2026-09-18 by the REC-126 worker, branch `worktree-agent-abd7c5e99752beec6`, base `27ad8b4f`, merged with
+`origin/main` at `9ea2eb02` (REC-128 was NOT on `main` — CONDUCT held it off — so it is NOT merged here). Baseline
+at `27ad8b4f`: **239/239 suites green · 14764 assertions passing**, no suite skipped. After: **240/240 suites green**
+on the tree this block is committed with (the one red of the last full run was `strandedwork`'s plancheck arm on a
+stale `DECIDED.md`, regenerated in this commit); `node scripts/coverage.mjs --strict` exit **0** unpiped (193/193 ops
+reached; REGISTER_FLOOR 1332 -> 1337, classified 230 -> 231, corpus 231 -> 232, run 193 -> 194, from its print);
+`node civicos-ui/test/run.mjs` exit **0**; `node tools/status.mjs --check` 0 drift (13.review-copy ABSENT ->
+PARTIAL; census 188/94 -> 193/97); `node tools/corpuscheck.mjs` 0 fail. NEGATIVE CONTROL `node
+test/reviewcopy.control.mjs` from `bio-plane/`: baseline 52/0, (a) 48/4, (b) 51/1, (c) 50/2, (d) 51/1, every restore
+sha256 MATCH. IDs minted with `tools/mintid.mjs`: IC-145 (I3), IC-146 (I5). C-32.16 added to MACHINE_FENCE_CHECKS.
+Paths as claimed, plus `bio-plane/src/affordances.mjs` (NON_ACTS / RUNG_ABSENT rows), `bio-plane/checks/bio-checks.mjs`
+(C-32.16), `bio-plane/scripts/coverage.mjs` (the floors) and the instrument suites named in IC-145.
+**FOR CONDUCT:** RESOLVE IC-145 (proposed MINOR) and IC-146 (proposed MINOR) against I3 / I5 as read at resolution;
+fold the DESIGN GAP (who may issue a grant — running provisionally at the project OWNER) into
+`BIO_Publication_v0_1.md`'s Incomplete sections if Bob has not ruled (it is already written there); the UI DELEGATION
+above is open.
