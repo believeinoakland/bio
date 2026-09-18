@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1066 rulings across 84 documents.
+1067 rulings across 84 documents.
 
 ## DEC-
 
@@ -1024,6 +1024,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1721`
 - **REC-104** · 2026-09-18 — AMENDED 2026-09-18 (same worker, REC-104):** `bio-plane/src/schema.mjs` is widened by THREE COMMENT LINES outside the content block — lines citing REC-90's measurement as `M-21`, which was renumbered to `M-23` at integration (M-21 is D-367's diff).  
   `docs/development/CLAIMS.md:13046`
+- **REC-104** · 2026-09-18 — AMENDED AFTER RELEASE, 2026-09-18 (same worker, REC-104): `bio-plane/test/airuns.test.mjs` ADDED.** The final battery on the rebased tree failed ONE suite: `airuns.test.mjs`'s unread-index CEILING (13), because this item's `content_chain_kind` index joins the roster through the sweep's DECLARED registry blind spot…  
+  `docs/development/CLAIMS.md:13061`
 - **REC-104** · 2026-09-18 — AMENDED 2026-09-18 by REC-104 — §4.2's `chain` FILTER ANSWERS OFF A COLUMN AND THE READ-TIME PARSE IS RETIRED; the Incomplete bullet REC-90 raised is STRUCK rather than annotated (`CORPUS-STANDARD.md` §3).** `content` gains `chain_kind`, the chain's LAST step kind — §4.1's own answer for `capture_text`, given to…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:9`
 - **REC-107** · 2026-09-17 — IT CORRECTED MY BRIEF AT THE ARTIFACT RATHER THAN INHERITING IT:** I told it to consume REC-107's `not_ruled_out`/`evidence_one_sided`, and for THIS op that was false — `#contentAxisTally` computes a per-capture `missing_cause` and **DISCARDS it**; only bucket totals cross this wire, and those fields live on…  

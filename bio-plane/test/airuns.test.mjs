@@ -609,7 +609,7 @@ t("SWEEP: `ai_runs_context` — THE INDEX THIS ITEM WAS ABOUT — now has a read
  *
  * THE ARRIVALS. REC-90 built the `content:` arm (D-222 stage C,
  * `CONTENT-SEARCH-DESIGN.md` §4.2) and, on a measurement recorded as
- * `MEASUREMENTS.md` M-21, declared four indexes on `content`. TWO of them land on
+ * `MEASUREMENTS.md` M-23 (filed as M-21; corrected by REC-104), declared four indexes on `content`. TWO of them land on
  * this roster: `content(extent_kind)` and `content(derivation_cap)`. The other
  * two do not, and the difference is instructive rather than lucky — `stale` and
  * `minted_by` appear as literal column names in OTHER statements in `store.mjs`
@@ -647,7 +647,11 @@ t("SWEEP: `ai_runs_context` — THE INDEX THIS ITEM WAS ABOUT — now has a read
 t("SWEEP: and the finding is RATCHETED as a CEILING — an index added tomorrow with no statement "
 + "filtering its leading column pushes this over and fails HERE, naming the index, which is the "
 + "one thing UI-49 had to find by trying to build a surface",
-  unread.length <= 13, true);   /* REC-116: 14 -> 13. REC-92: 15 -> 14. The CEILING is tightened
+  unread.length <= 14, true);   /* REC-104: 13 -> 14, and the arrival is NAMED and EXCULPATED below:
+                                   `content_chain_kind`, filtered by `content:chain` through the
+                                   compiler's registry, which this reader cannot see — the same
+                                   declared blind spot as `content_derivation_cap`, not a gap.
+                                   REC-116: 14 -> 13. REC-92: 15 -> 14. The CEILING is tightened
                                    with the floor rather than left carrying a row of slack — a
                                    ceiling a real departure has already walked under is not a
                                    ratchet. */
@@ -678,7 +682,11 @@ t("SWEEP: a FLOOR beside the ceiling — the list shrinking without this figure 
      WHERE this regex cannot see); it is now an ordinary READ index and needs no exculpation
      at all. The departure is therefore real in BOTH readers, which is why the exculpation
      roster below drops from three names to two in the same commit. */
-  unread.length >= 13, true);
+  /* REC-104 MOVES THIS FLOOR UP WITH THE CEILING, 13 -> 14, from the figure this reader
+     PRINTED: `content_chain_kind` arrived (REC-104's index for the `content:chain` filter, which
+     reads it through a WHERE composed from `MEANING.content.sub.chain.col`). A floor left at 13
+     would carry a row of slack the next departure could hide in. */
+  unread.length >= 14, true);
 /* AND THE TWO NAMED ARRIVALS ARE PINNED BY NAME, not only by count. A ceiling of
    13 is satisfied by ANY thirteen, so a real gap could be swapped for a blind
    spot and the figure would never move — which is how a roster stops being about
@@ -744,9 +752,12 @@ t("SWEEP: THREE roster entries are this reader's blind spot firing, not gaps —
      roster entirely. It is left in the COLUMN half below on purpose — it is
      still a meaning arm's filter column, and asserting that has not stopped
      being true is what would catch a later item deleting `content:kind`. */
-  [["content_derivation_cap", "inquiry_basis_grade_source"]
+  /* REC-104: TWO became THREE again, and this arrival is the blind spot and not a gap —
+     `content_chain_kind` is read by `content:<step>` (`chain_kind = ?`) through the registry,
+     and the column half below asserts `chain_kind` IS a meaning arm's filter column. */
+  [["content_derivation_cap", "inquiry_basis_grade_source", "content_chain_kind"]
      .filter((n) => !unread.some((ix) => ix.index === n)),
-   ["extent_kind", "derivation_cap", "grade_source"].filter((c) => !MEANING_FILTER_COLS.has(c)),
+   ["extent_kind", "derivation_cap", "grade_source", "chain_kind"].filter((c) => !MEANING_FILTER_COLS.has(c)),
    SRC_STORE.includes("meaningrows:"), SRC_STORE.includes("search:")],
   [[], [], true, true]);
 t("SWEEP: POLARITY on THAT exculpation — the registry-aware reader does NOT claim a column no arm "
