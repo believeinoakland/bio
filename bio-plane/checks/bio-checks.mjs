@@ -3209,6 +3209,9 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
       findings.push(f('C-2.8', 'error', `basis[${i}] is not an object`));
       continue;
     }
+    /* MK-4 / C-54.1: a LEAD is refused BY NAME before the generic target grammar
+       can answer "not a canonical bundle id" about it — see `leadLegFindings`. */
+    if (leadLegFindings(`basis[${i}]`, leg, findings)) continue;
     const t = leg.target;
     /* Hoisted out of the else below by REC-31: the capture-axis arm at the end
        of this loop asks the SAME question (what does this leg rest on), and a
@@ -4090,6 +4093,8 @@ export function actionBasisFindings(fm, findings) {
       findings.push(f('C-2.10', 'error', `action_basis[${i}] is not a leg block of {target, kind}`, REPAIRS));
       return;
     }
+    /* MK-4 / C-54.1: an action resting on a LEAD rests on nothing found. */
+    if (leadLegFindings(`action_basis[${i}]`, l, findings)) return;
     const target = typeof l.target === 'string' ? l.target : '';
     if (!BUNDLE_ID_RE.test(target)) {
       findings.push(f('C-2.10', 'error',
@@ -7479,6 +7484,8 @@ export function basisVersionFindings(fm, findings) {
     let unlabelled = 0;
 
     for (const [li, leg] of legs) {
+      /* MK-4 / C-54.1: the same named refusal at the version's grain. */
+      if (leadLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
       const t = leg.target;
       if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
         push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical bundle id`);
@@ -11091,6 +11098,118 @@ export const TRANSCRIBE_CHECKS = {
       + 'your own typing costs nothing and proves nothing. Ask another member to check it.',
   },
 };
+
+/* =====================================================================
+ * MK-4 / IC-135 / IC-136 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5):
+ * the same member knowledge BEFORE the search. C-54, minted with
+ * `node tools/mintid.mjs C`.
+ *
+ * ITS OWN FAMILY because its subject is its own: the ways a member's LEAD could
+ * come to claim more than it is. §5 rules a lead is an authored row and NEVER
+ * EVIDENCE — it cannot be a basis leg — and following it is a LOOK recorded in
+ * `observation_log` under `authority_kind = 'lead'`. The observation log's own
+ * refusals (C-22.x, `checkObservation` in `airun.mjs`) apply to that look
+ * unchanged and are NOT restated here; what is here is the lead's own:
+ *
+ *   is-lead-not-evidence   THE REFUSAL THE ITEM EXISTS FOR (§7): a lead cited as
+ *                          a leg, at every leg grammar, BY NAME
+ *   is-lead-act            who wrote it (stamped, never a machine) and the words
+ *   is-lead-source         which lead a look or a read names
+ *   is-lead-look           who looked, what state, and what the look points at
+ *
+ * THE LIAR THIS FAMILY REFUSES is a lead that is merely an UNLABELLED
+ * OBSERVATION — stored as a bundle or a content row, so a leg could cite it as
+ * evidence. The first fence is STRUCTURAL: a lead lives in `leads` under a
+ * `LEAD-` id that no leg grammar accepts as a target or a content id. The second
+ * is this family's C-54.1, which names the lead instead of answering "not a
+ * canonical bundle id" — a member told their lead is malformed would re-author
+ * it as a document, which is exactly the liar arriving by the front door.
+ * ===================================================================== */
+export const LEAD_ID_RE = /^LEAD-\d{4}-\d{4}-[a-z0-9]+$/;
+
+export const LEAD_CHECKS = {
+  LEAD_NOT_EVIDENCE: {
+    check: 'C-54.1',
+    where: 'checks/bio-checks.mjs leadLegFindings > is-lead-not-evidence',
+    translation: 'That leg points at a LEAD. A lead is somewhere to look — what a member was told or '
+      + 'suspects — and it is never evidence, so nothing can rest on it. Follow the lead: if the '
+      + 'look finds the document, capture it and cite THAT; if you saw the thing yourself, write it '
+      + 'up as your own observation.',
+  },
+  LEAD_NOT_A_MEMBER: {
+    check: 'C-54.2',
+    where: 'src/store.mjs lead > is-lead-act',
+    translation: 'A lead is a person saying what they were told or have reason to believe, in their '
+      + 'own name. The credential that asked is an automated one, which has nobody behind it to have '
+      + 'been told anything. Sign in and write it yourself.',
+  },
+  LEAD_NO_WORDS: {
+    check: 'C-54.3',
+    where: 'src/store.mjs lead > is-lead-act',
+    translation: 'The lead is empty. Write what you were told or suspect, and where it might be found; '
+      + 'nothing is filled in for you.',
+  },
+  LEAD_TOO_LONG: {
+    check: 'C-54.4',
+    where: 'src/store.mjs lead > is-lead-act',
+    translation: 'The lead, or the place to look you suggested, is longer than one passage this record '
+      + 'stores. It is refused rather than cut, because a lead silently shortened would be words you '
+      + 'did not write standing in your name. Write it more briefly or split it into two leads.',
+  },
+  LEAD_NOT_FOUND: {
+    check: 'C-54.5',
+    where: 'src/store.mjs #leadFor > is-lead-source',
+    translation: 'That request does not name a lead this record holds and you can read. A lead is named '
+      + 'by the id its own act returned, and a lead is readable by the member who wrote it.',
+  },
+  LEAD_LOOK_STATE: {
+    check: 'C-54.6',
+    where: 'src/store.mjs leadLook > is-lead-look',
+    translation: 'Say what the look found: that the thing is not there, that you could not tell, that '
+      + 'you found part of it, or that it is there. "Nobody looked" is never recorded — it is what '
+      + 'the record says when there is no look at all.',
+  },
+  LEAD_LOOK_REFERENT: {
+    check: 'C-54.7',
+    where: 'src/store.mjs leadLook > is-lead-look',
+    translation: 'What the look found has to be something this record holds and you can read — a '
+      + 'captured document or a part of one — and only a look that found something can point at '
+      + 'anything. Capture the document first, then record the look against it.',
+  },
+  LEAD_LOOK_NOT_A_MEMBER: {
+    check: 'C-54.8',
+    where: 'src/store.mjs leadLook > is-lead-look',
+    translation: 'Following a lead is recorded in the name of the member who looked. The credential '
+      + 'that asked is an automated one; an automated search is recorded under its own run, not '
+      + 'under a member\'s lead.',
+  },
+};
+
+/** C-54.1 — ONE LEG, ASKED WHETHER IT RESTS ON A LEAD. The one checker every
+ *  leg grammar consults (`checkInquiryBasis`' basis[], the version legs, the
+ *  action basis), so the rule has one spelling and three doors. It asks BOTH
+ *  fields a leg can name a referent through — the target and the REC-82 content
+ *  id — because a lead cited through the second is still a lead cited. Returns
+ *  true when it pushed a finding, so the caller skips its own target complaint
+ *  about the same leg rather than answering twice with the wrong name. */
+export function leadLegFindings(label, leg, findings) {
+  const l = leg && typeof leg === 'object' ? leg : {};
+  /* DEC-49 REGION is-lead-not-evidence */
+  for (const field of ['target', 'content_id']) {
+    const v = typeof l[field] === 'string' ? l[field].trim() : '';
+    if (v && LEAD_ID_RE.test(v)) {
+      findings.push(f(LEAD_CHECKS.LEAD_NOT_EVIDENCE.check, 'error',
+        `${label}.${field} '${v}' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, `
+        + `§7): it says where to look, not what was found, so no leg can rest on it`,
+        ['follow the lead and cite the document the look captured instead',
+         'or, if you saw the thing yourself, author it as your own observation and cite that'],
+        'LEAD_NOT_EVIDENCE'));
+      return true;
+    }
+  }
+  /* END DEC-49 REGION is-lead-not-evidence */
+  return false;
+}
 
 /** THE ONE CHECKER. Both gates run it: `store.mjs`'s op=promote write path and,
  *  through it, the catalogue — the `checkInquiryBasis` / `checkGatheringGrammar`

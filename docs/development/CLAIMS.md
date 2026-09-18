@@ -13468,3 +13468,28 @@ conflicted on this file and `INTERFACE-CHANGES.md` (both sides appended) and the
 unresolved on the local branch — caught by `plancheck --local` before any push, resolved KEEP-BOTH. (2) Row the sibling defect this item measured and did not close: `content:cap=undetermined`
 matches an image cited as bytes, and `rows=content`'s `derivation_cap` shows its NULL unlabelled (measured in
 `rec121-chain-bytes.test.mjs` §4, whose assertion is the one that item must correct).
+
+
+## CLAIM 2026-09-18 RECORD (MK-4 — THE LEAD, D-194, MEMBER-KNOWLEDGE-DESIGN.md §5)
+session: MK-4 worker (worktree `agent-a6de3e82fcfd8bd2a`), spawned by CONDUCT #4, Opus 5.
+expected: QUEUE.md MK-4 — the `leads` table, its writer into `observation_log` (`authority_kind = 'lead'`),
+  `LOOKED_ABSENT` against a lead recorded and read back, a lead cited as a basis leg refused BY NAME (§7).
+  Ids minted before building: IC-135 (I5, the table), IC-136 (I3, the ops), C-54 (the lead's refusal family).
+paths (edits kept LOCAL — MK-1 is concurrently in `store.mjs` / `schema.mjs`):
+  - `bio-plane/src/schema.mjs` — ONE new table `leads`, placed immediately before `host_governor`.
+  - `bio-plane/src/store.mjs` — new methods `lead`, `leadLook`, `leadRead` and their DO dispatch
+    entries; the whole-store purge arm (one `DELETE FROM leads`); `#observationBundles`' `lead` arm
+    COMMENT; `frontier`'s not-built `internet` note.
+  - `bio-plane/src/index.mjs` — OPS rows, session sets, NEEDS rows, author/viewer stamps for the three ops.
+  - `bio-plane/src/affordances.mjs` — the three ops' rows.
+  - `bio-plane/checks/bio-checks.mjs` — the C-54 family (`LEAD_CHECKS`), `LEAD_ID_RE`, and the named
+    lead-as-leg refusal at the basis, version-leg and action-basis leg grammars.
+  - `bio-plane/test/lead.test.mjs`, `bio-plane/test/nc-mk4.mjs` — new.
+  - any suite that pins an op/table census or a registry, CORRECTED with its reason, never exempted.
+  - `bio-plane/scripts/coverage.mjs` floors if the instrument moves them; `bio-plane/dist/**` rebuilt.
+  - `docs/architecture/construct-status.json` (`10.lead`, `3.census`, and `9.internet`'s text),
+    `docs/development/INTERFACE-CHANGES.md` (IC-135, IC-136), `docs/development/INTERFACES.md` if the
+    op list requires it, `docs/DECIDED.md` (regenerated only).
+  **NOT** `docs/development/QUEUE.md` (CONDUCT's), **NOT** `civicos-ui/**`, **NOT** `newgroup/**`,
+  no version bump.
+released:

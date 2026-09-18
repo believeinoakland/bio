@@ -484,8 +484,13 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
    constants were moved BELOW their method so the detector's own premise holds (a class member's
    constants belong to the member they serve), and BOTH readings corrected themselves at once. The
    reason is recorded at the site in `store.mjs`, so the next person to tidy that declaration order
-   knows what it costs. */
-  OPS.size, 34);
+   knows what it costs.
+   MK-4 / IC-136, 2026-09-18: **34 -> 35, taken from THIS ARM'S OWN FAILURE OUTPUT (`want 34 / got
+   35`).** The arrival is `op=leadread`, one member's lead and the looks recorded against it — a
+   KEYED read (one lead) whose answer is a list that grows with every look, so it is capped and
+   says `truncated`. Its constants sit BELOW its method, on REC-116's finding above. DRIVEN in the
+   map below. */
+  OPS.size, 35);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1229,7 +1234,12 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      driven in `answersByOp` below, on this set's own terms; the
                                      BITE arms need a corpus of MARKED documents and live in
                                      `test/rec116-route-marked.test.mjs` section F. */
-                                  "extractproposals", "provenanceroutes"]);
+                                  "extractproposals", "provenanceroutes",
+                                  /* MK-4 / IC-136: op=leadread's BITE arms need a LEAD, which only a
+                                     signed-in member can write (C-54.2), and this suite drives machine
+                                     tokens only. The bite, the clamp and `truncated` both ways are driven
+                                     in `test/lead.test.mjs` section 7; the envelope arm is below. */
+                                  "leadread"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1395,6 +1405,8 @@ const answersByOp = new Map([
      REC-116 built it to do: an empty answer here carries `cause:
      "never_assessed"` rather than reading as a corpus nobody needs to look at. */
   ["provenanceroutes", await GET("op=provenanceroutes&token=mem-r57&limit=1")],
+  /* MK-4: the envelope of a keyed read with no lead to key on — an answer object, never an array. */
+  ["leadread", await GET("op=leadread&token=mem-r57&id=LEAD-2026-0918-000000000000&limit=1")],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

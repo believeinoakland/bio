@@ -895,6 +895,13 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "document the caller may not see exactly as an absent one (TRANSCRIPTION_NOT_FOUND). The id is a hash "
       + "of capture, extent and chain, so an answer that told hidden from absent would confirm a passage exists "
       + "in a project the caller was never invited to — op=content's reason.",
+    leadread: "MK-4: one member's LEAD by id — their words, where they suggested looking, and every look "
+      + "recorded against it. GATED, and more narrowly than a bundle: a lead names no bundle "
+      + "(MEMBER-KNOWLEDGE-DESIGN.md §5), so it is readable by its AUTHOR and by an unfiltered machine "
+      + "credential only, and takes the fail-closed viewer stamp beside op=leadlook in index.mjs. A lead the "
+      + "caller may not read answers exactly as an absent one (LEAD_NOT_FOUND), and a look's referent the "
+      + "caller can no longer see is not published — the lead discloses what a member was told and where they "
+      + "went looking, which is a line of inquiry.",
     provenanceroutes: "REC-116: which documents in this instance carry a STANDING LOOKED_INDETERMINATE "
       + "marker — the roster REC-69's 2026-08-09 delegation asked for and nobody built. GATED, and the "
       + "disclosure is worth naming precisely: each row names a DOCUMENT the group holds and says the "
