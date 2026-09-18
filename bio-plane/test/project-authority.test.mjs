@@ -1,5 +1,5 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/project-authority.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/project-authority.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once) and the real sources are hashed before and after; what each arm MUST fail is declared in the driver before it arms.
-   RESULTS, RUN 2026-09-18 in worktree agent-a78e80263e9738d43 on the merge of origin/main f16b9b49 (real src/index.mjs 657,700 B sha256 5503f0b281c5…, src/store.mjs 2,597,155 B sha256 a7147b680298…, src/affordances.mjs 140,708 B sha256 0b097eebac16…, untouched: YES): (a) baseline 56/0 · (b) no-check 31/25 — every REFUSED arm is an act that SUCCEEDS without the check, which is the pre-fix defect measured · (c) cite-unchecked 49/7 — only cite's arms · (d) rescue-checked 52/4 — the check applied to §7.13 breaks every rescue arm · (e) stamp-dropped 53/3 — versioncurrent opens when the control plane's stamp is removed · (f) position-from-viewer 47/9 · (g) refuse-every-admin 38/18 — every refusal arm stays GREEN (the lie) and the in-project arms catch it · (h) preflight-unnarrowed 54/2. (f) and (g) came back NOT AS DECLARED on the first run and were corrected in the DECLARATION/METHOD, not the subject (reasons at each arm in the driver); re-run, both AS DECLARED.
+   RESULTS, RUN 2026-09-18 in worktree agent-a78e80263e9738d43 on the merge of origin/main f16b9b49 (real src/index.mjs 657,700 B sha256 5503f0b281c5…, src/store.mjs 2,597,155 B sha256 a7147b680298…, src/affordances.mjs 140,708 B sha256 0b097eebac16…, untouched: YES): (a) baseline 59/0 · (b) no-check 31/28 — every REFUSED arm is an act that SUCCEEDS without the check, which is the pre-fix defect measured · (c) cite-unchecked 50/9 — only cite's arms · (d) rescue-checked 55/4 — the check applied to §7.13 breaks every rescue arm · (e) stamp-dropped 56/3 — versioncurrent opens when the control plane's stamp is removed · (f) position-from-viewer 50/9 · (g) refuse-every-admin 41/18 — every refusal arm stays GREEN (the lie) and the in-project arms catch it · (h) preflight-unnarrowed 57/2. (f) and (g) came back NOT AS DECLARED on the first run and were corrected in the DECLARATION/METHOD, not the subject (reasons at each arm in the driver); re-run, both AS DECLARED. RE-RUN after the D-426 pin and the two literal C-56 arms were added (figures above are that run), every arm AS DECLARED, sources untouched: YES.
  * =========================================================================
  * REC-134 / IC-152 / C-56 — SIGHT IS NOT AUTHORITY, AT EVERY ACT ON A PROJECT.
  * Membership Architecture v2 §7, the block *"SIGHT IS NOT AUTHORITY — and this is
@@ -268,6 +268,13 @@ for (const [who, tok] of [["the founder", FOUNDER], ["ruth", RUTH]]) {
 }
 {
   const r = await ACTS.cite(RUTH, P_OUT);
+  /* The two checks named as LITERALS, so the coverage register credits each with an assertion that
+     proves it FIRES on a violation (a check named only through a computed key is not credited). */
+  t("C-56.1 fires: ruth's cite into P_OUT answers the JOINED check",
+    [codeOf(r), r && r.check], ["PROJECT_ACT_NOT_A_PARTICIPANT", "C-56.1"]);
+  const o = await ACTS.biasadopt(RUTH, P_OUT);
+  t("C-56.2 fires: ruth's project-scoped bias adoption on P_OUT answers the OWNER check",
+    [codeOf(o), o && o.check], ["PROJECT_ACT_NOT_THE_OWNER", "C-56.2"]);
   t("the refusal carries the catalogue's canned translation (DEC-49) and names the act and the position needed",
     [r && r.translation === PROJECT_AUTHORITY_CHECKS[NOT_IN].translation, r && r.act, r && r.needs, r && r.project],
     [true, "cite", "joined", P_OUT]);
