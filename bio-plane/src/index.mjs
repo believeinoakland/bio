@@ -47,6 +47,9 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
          /* CPDF-19 / C-51: the read-time re-extraction's DEC-49 rows (D-319). */
          REEXTRACT_CHECKS,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX,
+         /* REC-123: the ONE machine-identity predicate (REC-46), asked by the two
+            ratification fences of the stamp an `ai` credential acts under. */
+         isMachineIdentity,
          /* CASE-4 / DEC-72: THE CASE RELATION, asked of signed bytes. Imported
             rather than restated so the ratify committer and the catalog that
             refuses on the same fact cannot answer it differently. */
@@ -2776,6 +2779,16 @@ const reextractRow = (code) => {
   const row = REEXTRACT_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`reextractRow: ${code} has no REEXTRACT_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
+/* REC-123: the C-32 row for a machine fence that lives in THIS file (op=ratify,
+   op=caseratify). Same shape and same refusal-to-invent as `reextractRow`. */
+const machineFenceRow = (code) => {
+  const row = CHECK_CATALOGUE.MACHINE_FENCE_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`machineFenceRow: ${code} has no MACHINE_FENCE_CHECKS row with a canned translation `
                   + `(DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
@@ -7364,6 +7377,24 @@ export default {
        of the case document, which is the signature those facts had nowhere to
        move to before this item. */
     if (op === "caseratify") {
+      /* DEC-49 REGION is-machine-ratify-case — REC-123 / C-32.13. The fence alone,
+         FIRST and before the payload is read, so it is the FENCE that answers a
+         machine and never a payload complaint behind it (REC-73's lesson). Driven:
+         before this, an `ai` credential whose scope named this op, carrying a
+         registered member's valid signature, COMMITTED THE CASE and the record
+         named the member. The `ai` class only — see the row's note for why the
+         operator's env-binding classes are not refused here.
+         THE GUARD'S SHAPE IS REC-46's AND NOT STYLE: `aiCred` is resolved only for a
+         minted agent credential (it is what makes the caller the `ai` class), and
+         WHETHER the identity it acts under is a machine is asked of the ONE
+         predicate over the stamp the plane writes for it — never decided here by a
+         string comparison (`hygiene.test.mjs` D1). */
+      if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))
+        return json({ ok: false, reason: "MACHINE_CANNOT_RATIFY_CASE", ...machineFenceRow("MACHINE_CANNOT_RATIFY_CASE"),
+          op, tokenClass: cls,
+          detail: "committing a case is a member's signed act. An assistant's credential may assemble the "
+                + "case document and may never commit it, whoever's signature it carries (DEC-24 rule 4)." }, 403);
+      /* END DEC-49 REGION is-machine-ratify-case */
       const body = await req.json().catch(() => null);
       if (!body?.caseId || !Number.isInteger(body?.edition) || !body?.expectedSha
           || typeof body?.sig !== "string")
@@ -7455,6 +7486,17 @@ export default {
        commit the published rows, then copy bytes to the published bucket.
        A failure mid-copy leaves rows that a re-ratification converges. */
     if (op === "ratify") {
+      /* DEC-49 REGION is-machine-ratify-bundle — REC-123 / C-32.12. The fence alone, first,
+         for `caseratify`'s reason above. Driven: before this, an `ai` credential whose
+         scope named this op, carrying a registered member's valid signature,
+         PUBLISHED THE FINDING and the record named the member as its attestor. The
+         guard's shape is `caseratify`'s, for REC-46's reason stated there. */
+      if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))
+        return json({ ok: false, reason: "MACHINE_CANNOT_RATIFY", ...machineFenceRow("MACHINE_CANNOT_RATIFY"),
+          op, tokenClass: cls,
+          detail: "ratifying is a member's signed act. An assistant's credential may prepare the finding and "
+                + "may never carry the signature in, whoever's key made it (DEC-24 rule 4)." }, 403);
+      /* END DEC-49 REGION is-machine-ratify-bundle */
       const body = await req.json().catch(() => null);
       if (!body?.bundleId || !body?.expectedSha || typeof body?.sig !== "string")
         return json({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);

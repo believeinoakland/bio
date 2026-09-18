@@ -13378,3 +13378,63 @@ building concurrently:
 (CONDUCT flips the row), `INTERFACES.md` (CONDUCT's at RESOLUTION), `newgroup/**`, `tools/**`.
 
 **open as of 2026-09-18** — MK-1 is being built.
+
+## CLAIM 2026-09-18 M0 (LED-1 — the ledger reader audit; moves no row)
+
+Worker spawned by CONDUCT #4, branch `worktree-agent-a811f19cc02e2aa59`. Paths: `docs/development/MEASUREMENTS.md`
+(one new M-entry, minted), `docs/DECIDED.md` only if regeneration is owed, this block. NOT `QUEUE.md` (CONDUCT's),
+NOT `DEBT.md` (no row moves in this item), no code unless a reader is found broken today — and then reported, not
+silently fixed.
+
+## CLAIM 2026-09-18 M0 (LED-1) — RELEASED
+
+released: 2026-09-18 by the LED-1 worker, branch `worktree-agent-a811f19cc02e2aa59`. Deliverable: `MEASUREMENTS.md`
+M-57 (minted with `tools/mintid.mjs M`). NO row moved; no code changed. Baseline before the first edit: 232/232 suites
+green · 14392 assertions, 3 fleet members RAN. Two readers found BROKEN TODAY and reported, not fixed:
+`rowdesign.control.mjs` arm A1 (names M0-33, expects M0-29) and `tools/.ui59/*.mjs` (a hardcoded worktree path that
+does not exist). The move was simulated only in scratch clones outside this repository.
+
+## CLAIM 2026-09-18 RECORD (REC-123 — CAN AN `ai` CREDENTIAL ATTEST OR RATIFY? traced by driving, fenced where it could)
+
+Worker spawned by CONDUCT #4 into worktree `agent-ad37cd8c19b30bf8b`, branch
+`worktree-agent-ad37cd8c19b30bf8b`. Minted with `node tools/mintid.mjs` BEFORE the fix: **IC-132**
+(I3 — two named refusals at op=ratify and op=caseratify). The two new rows extend the RECORD-owned
+C-32 family (`MACHINE_FENCE_CHECKS`) as C-32.12 and C-32.13.
+
+Paths, named precisely:
+
+- `bio-plane/src/index.mjs` — ONLY the top of the `op=caseratify` and `op=ratify` handler blocks
+  (one DEC-49 region each, the `ai` class refused by name) and one row helper beside `reextractRow`.
+  No OPS row, no table, no other handler.
+- `bio-plane/checks/bio-checks.mjs` — two rows in `MACHINE_FENCE_CHECKS` (C-32.12, C-32.13).
+- `bio-plane/test/machine-attest.test.mjs`, `bio-plane/test/machine-attest.control.mjs` — new.
+  Any existing suite pinning the C-32 family is CORRECTED at its site, never exempted.
+- `bio-plane/scripts/coverage.mjs`, `civicos-ui/check-refusal-codes.mjs` — floor tables only, from
+  printed figures, if the new codes move one.
+- `bio-plane/dist/**` — `npm run build` output.
+- `docs/architecture/construct-status.json` (claim `11.machine-fence`),
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` (front matter and §3/§8 where the fence's
+  state is stated), `docs/architecture/BIO_System_Design.md` if `tools/status.mjs --write` regenerates
+  it, `docs/development/INTERFACE-CHANGES.md` (IC-132), `docs/DECIDED.md` on regeneration, this block.
+
+**NOT CLAIMED:** `bio-plane/src/store.mjs` (no store method is edited — both handlers live in the
+control plane), `civicos-ui/**` beyond the guard's floor table, `docs/development/QUEUE.md`
+(CONDUCT flips the row), `INTERFACES.md` (CONDUCT's at RESOLUTION), `newgroup/**`, `tools/**`.
+
+**open as of 2026-09-18** — REC-123 is being built.
+
+## CLAIM 2026-09-18 RECORD (REC-123 — CAN AN `ai` CREDENTIAL ATTEST OR RATIFY?) — RELEASED
+
+released: 2026-09-18 by the REC-123 worker, branch `worktree-agent-ad37cd8c19b30bf8b`. Every claimed path
+is committed on that branch; `bio-plane/src/store.mjs` was NOT edited. THE TRACE, measured by driving an
+`ai` credential whose scope named each op: `op=ratify` and `op=caseratify` were ACCEPTED on the pre-item
+tree (the record named the signing member) and are now refused by name (C-32.12 / C-32.13, IC-132);
+`op=attesttext` and `op=transcriptionattest` already refused by name (C-35.10); `op=expertiseconfirm` by
+`ADMIN_ONLY`; `adminendorse` / `signeradd` / `signerset` by the scope check alone, by shape;
+`op=textattest` is a read; `op=attest` is ACCEPTED and permitted (`BIO_Intake_Doctrine_v1_1.md` §3).
+Baseline before the first edit 232/232 · 14392; final tree 233/233 · 14433 (machine-attest +35,
+hygiene +3, machinefences-dec49 +2, planning-hygiene +1). `node scripts/coverage.mjs --strict` exit 0
+unpiped; `node civicos-ui/test/run.mjs` exit 0; `node tools/status.mjs --check` 0 drift. NEGATIVE CONTROL
+`node test/machine-attest.control.mjs` from `bio-plane/`: baseline 35/0 · ratify 32/3 · caseratify 32/3 ·
+overstrict 33/2, all as declared, every restore byte-identical. Minted: IC-132, D-421 (a DECISION FOR
+BOB — the operator's env-binding tokens still ratify with a member's signature; provisional: not refused).

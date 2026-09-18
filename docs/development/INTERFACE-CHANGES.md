@@ -9912,8 +9912,9 @@ equal whenever nothing is refused, which was every case before this IC.
 ## IC-133 · I3: TESTIFY — `op=testify`, a member records a firsthand observation, which becomes an authored INFO bundle whose bytes are their words (D-184) · PROPOSED 2026-09-18 (MK-1, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
-  `docs/development/INTERFACES.md`: 24.0.0** (IC-130 ACCEPTED). **Proposed as MINOR — 24.0.0 → 24.1.0,
-  ADDITIVE.** One new op; one new refusal family **C-53** (`TESTIMONY_CHECKS`, nine rows), six reachable
+  `docs/development/INTERFACES.md`: 25.0.0** (IC-132 ACCEPTED — re-read after merging `origin/main` at
+  `fbcefa1b`; the brief's 24.0.0 was the base at spawn and IC-132 landed underneath it). **Proposed as
+  MINOR — 25.0.0 → 25.1.0, ADDITIVE.** One new op; one new refusal family **C-53** (`TESTIMONY_CHECKS`, nine rows), six reachable
   through the new op and three through `op=promote` (below); `op=earnedbasis`'s capture-axis entry gains
   ONE new `undetermined_because` value on documents that could not exist before this IC. **Read the base
   AT RESOLUTION** — MK-4 is proposing against I3 concurrently.
@@ -10011,3 +10012,59 @@ document's claim, which is what makes the column the one fact in the check a cal
 produced.
 
 **ANSWERS REQUESTED:** RECORD (self). No other area reads `register`.
+
+
+## IC-132 · I3: `op=ratify` and `op=caseratify` REFUSE an `ai` credential BY NAME — `MACHINE_CANNOT_RATIFY` (C-32.12), `MACHINE_CANNOT_RATIFY_CASE` (C-32.13) · PROPOSED 2026-09-18 (REC-123, minted with `node tools/mintid.mjs IC` BEFORE the fix) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 — MAJOR, I3 25.0.0**
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`: 24.0.0** (IC-130 ACCEPTED; read 23.6.0 at proposal, and re-read after merging origin/main — the base moved underneath this row, which is why it is read AT RESOLUTION). **Proposed as MAJOR — 24.0.0 → 25.0.0.**
+  No op, field, table or response key is added or removed; two ops that ACCEPTED a class of caller now
+  REFUSE it. **Read the base AT RESOLUTION.**
+- **Proposer:** RECORD, worker `agent-ad37cd8c19b30bf8b`, 2026-09-18, from QUEUE REC-123
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `SKILL` (the pack's boundary layer harvests every `MACHINE_CANNOT_*` row, so it
+  now renders two more fences — imported, never authored; `skillpack`, `skilldoctrine` and
+  `skillprohibitions` suites green unchanged), `FLEET` (NOT-AFFECTED measured: no `ratify` string anywhere
+  in `agent-worker/src`), `UI` (NOT-AFFECTED measured: no UI call site sends `ratify` or `caseratify` —
+  `construct-status.json` 12.publish's `uinone` probe), `DIST` (NOT-AFFECTED: the operator's env-binding
+  tokens are not refused).
+- **Design:** `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 — *"No machine credential performs the attested
+  act ... The AI holds no op that ACCEPTS"* (DEC-24 rule 4, DEC-60). Both ops sit at the `attested` rung.
+
+**WHAT WAS MEASURED, BY DRIVING (the trace is the finding).** An `ai` credential minted by a member with a
+scope naming `ratify` and `caseratify`, carrying a registered member's VALID ssh signature over the exact
+statement, answered `ok: true` at both ops on the pre-item tree (6e50b260): the finding was PUBLISHED and the
+case COMMITTED, and the record named the MEMBER as attestor (`attestor: iris`, `tokenClass: ai`). The scope
+check was the only thing in front of either, and a scope that names the op passes it.
+
+**THE SHAPE.** At the top of each handler, before the payload is read, a caller whose credential resolved
+as a minted agent credential (`aiCred`) and whose stamp `class:ai/<tokenId>` is a machine by the ONE
+predicate (`isMachineIdentity`, REC-46) is refused `403 { ok: false, reason, code, check, translation,
+detail, op, tokenClass }` — `MACHINE_CANNOT_RATIFY` at `op=ratify`, `MACHINE_CANNOT_RATIFY_CASE` at
+`op=caseratify`, each in its own DEC-49 region (`src/index.mjs fetch > is-machine-ratify-bundle`,
+`… > is-machine-ratify-case`). Nothing is written. A member session and the operator's env-binding tokens
+(ADMIN/MEMBER/PROBE) answer exactly as before.
+
+**WHY MAJOR, with the consumer count measured at ZERO and not argued down** (IC-25's rule, IC-121's
+precedent): an input these ops accepted yesterday is refused today, so a caller that was working stops
+working without changing a line. That the caller was violating doctrine is the reason for the change, not
+a reason to call it additive.
+
+**WHAT IS DELIBERATELY NOT IN THIS IC.** (1) The env-binding tokens: an ADMIN/MEMBER/PROBE token carrying a
+member's signature still ratifies (`ratify.test.mjs`, `reuse-ratify.test.mjs`, `ratify-envelope.test.mjs`
+drive it) — that is the operator's publication path, and whether §3 rule 4's *"no machine credential"*
+reaches it is a DECISION FOR BOB (D-421), named in the design document rather than taken
+here. (2) The declaration: a member may still AUTHOR a scope naming `ratify`; the credential is refused at the
+act. (3) `op=attest` (a third party's timestamp) stays open to an `ai` credential, as
+`BIO_Intake_Doctrine_v1_1.md` §3 requires of the fetch layer. (4) `op=expertiseconfirm` gains no named fence:
+it already refuses a machine through the membership guard (`ADMIN_ONLY`), and `index.mjs`'s expertise block
+records why no fence is added there.
+
+**Suites:** `bio-plane/test/machine-attest.test.mjs` (new — the trace table, derived from the plane under
+three names), negative control `node test/machine-attest.control.mjs` from `bio-plane/` (four arms, all as
+declared); `machinefences-dec49.test.mjs` pins C-32.12/C-32.13 in both directions and its row-corpus floor
+moved 44 → 46 from the printed figure.
+
+**RESPONSES · 2026-09-18, collected by CONDUCT #4 at the ARTIFACT, not by assumption:** every caller of `op=ratify`/`op=caseratify` outside the plane was grepped — `civicos-ui/app.html` ratifies through a signed-in MEMBER session (unaffected: a member is not an `ai` credential); `tools/sign-release.html` is DIST's release signer (not an `ai` credential); `agent-worker/`, `scripts/`, `tools/` hold no machine caller. UI, SKILL, DIST, FLEET: NOT-AFFECTED — CONDUCT answering FOR each on that grep, named as such.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 as MAJOR — I3 24.0.0 → 25.0.0.** A formerly accepted input is refused, so it is breaking whatever the caller count; the count of LEGITIMATE callers broken is zero, which is the point — the only caller this refuses is the one that should never have been admitted. **What it closed, for the record:** before this landing an `ai` credential whose scope named `op=ratify` or `op=caseratify`, carrying a member's valid signature, PUBLISHED a finding and COMMITTED a case, and the record named the MEMBER as the actor — a machine performing the attested act while the record attributed it to a person, against `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4. **Left open and routed, not waived:** D-421 — the operator's own ADMIN/MEMBER/PROBE tokens still ratify when they carry a member's signature; rule 4's wording covers them too; that is BOB's (and possibly Bob's) to rule.
