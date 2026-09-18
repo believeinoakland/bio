@@ -15541,9 +15541,23 @@ measured what a reader WOULD do, because no reader existed: it had to RETYPE the
 of the delegated question and plan those. That was the only thing available to it and it said so.
 **A retyped query is a hand copy, and a hand copy agrees with its author at zero cost** — this
 repository has measured that five times. `REC-116` built the reader, so the subject is no longer
-hypothetical: `test/nc-rec116-plan.mjs` EXTRACTS `Store.ROUTE_MARKED_PAGE_SQL` out of
-`bio-plane/src/store.mjs` with a regex and plans **those exact bytes**. The op's SQL and the
-measured SQL cannot diverge, because they are the same string.
+hypothetical: `test/nc-rec116-plan.mjs` finds `provenanceRoutesMarked` in
+`bio-plane/src/store.mjs`, EXTRACTS the page statement out of that method's own `#rows(` call, and
+plans **those exact bytes**. The op's SQL and the measured SQL cannot diverge, because they are
+the same string.
+
+**AND THE STATEMENT IS INLINE AT THAT CALL BECAUSE AN INSTRUMENT INSISTED — a finding about
+source-walking graders rather than about this query.** It was first held in a named constant,
+`Store.ROUTE_MARKED_PAGE_SQL`, which read well and extracted just as easily. But
+`derivation-bounds`' D-365 arm grades every published `truncated` against **the SQL OF THE ROW
+SOURCE IT WAS MEASURED OVER**, and it reads that SQL at the `#rows(` call — so with the statement
+behind a constant it reported `provenanceRoutesMarked:raw (no SQL LIMIT)` over a source that had
+carried `LIMIT ?` all along. **A bound that is real but invisible is an unbounded read for every
+purpose that instrument serves**, so the statement was moved to this file's house shape rather
+than the arm being widened. This is the SECOND of two instruments REC-116's declaration style
+tripped, the first being `bounds`' `segments()` walk reading a `static` line into the preceding
+method — **both were the same mistake: a source written for a human reader in a file three
+instruments read by walking it.**
 
 **THE INSTRUMENT IS M-41's, UNCHANGED AND DELIBERATELY SO.** `EXPLAIN QUERY PLAN`, sqlite3
 **3.51.0** (macOS system binary), against table and index DDL **extracted from `schema.mjs`

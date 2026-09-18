@@ -9041,10 +9041,22 @@ plane's after-cursor paging key. For 39 days `op=provenanceroute` was `mutating:
 doubted had to page the whole store and count for itself.
 
 **WHAT THE OP ANSWERS.** `op=provenanceroutes` → `{ ok, finding, means, documents[], returned,
-limit, after, nextAfter, more, census, cause, complete, says, completeness }`. Each entry in
+limit, after, cursor, truncated, census, cause, complete, says, completeness }`. Each entry in
 `documents` is `{ bundleId, state, ...Store.routeFinding(...) }` — the SAME composition every
 other route reader publishes, through the same one function, because a hand copy agrees with its
 author at zero cost and this repository has measured that five times.
+
+**THE PAGING KEYS ARE `limit` / `truncated` / `cursor`, AND THAT IS A CORRECTION THIS ITEM WAS
+FORCED INTO RATHER THAN A CHOICE IT MADE.** The op's first draft published `more` and `nextAfter`.
+They read perfectly well and are used nowhere else in this plane. `meaning-bounds.test.mjs`
+classified the op **BARE** — *a collection off an unbounded row source with no bound published* —
+and it was RIGHT by its own published vocabulary, which knows `truncated`, `cursor`, `hasMore` and
+five more, and knew neither invented spelling. **The ratchet was NOT widened to admit them.**
+REC-57's whole point is that every capped op settles its two questions in ONE shape, so a new read
+inventing a second spelling is the hand-copy defect arriving in a key name — and the instrument
+caught it on its first run. Renamed, the op is classified BOUNDED (`bound=[limit]
+more=[cursor,truncated]`) and the bare-collection ceiling **does not move at all**, which is the
+outcome a correctly-bounded new read should produce.
 
 **THE THREE DECISIONS THAT ARE THE INTERFACE, rather than implementation.**
 

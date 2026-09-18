@@ -33850,6 +33850,217 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       detail: same ? "this assessment found exactly what the last one found, so nothing was appended: the record adds when something changed rather than repeating itself" : finding === "LOOKED_INDETERMINATE" ? "recorded: this document's route cannot be shown from the evidence held. Its state has NOT moved and no byte of it was touched" : "recorded: every document in this register can show its route"
     };
   }
+  /* ===================================================================== *
+   * REC-116 / IC-120 — THE READ THE MARKER NEVER HAD.
+   * ===================================================================== *
+   *
+   * REC-69's DELEGATION of 2026-08-09 asked one question — *which documents in
+   * this instance carry a standing `LOOKED_INDETERMINATE` marker* — and the
+   * INDEX for it landed 2026-08-08, one day before the sweep that would have
+   * caught it. The reader never did. For 39 days `op=provenanceroute` was
+   * `mutating: true`, a WRITE, `query.mjs` named this table ZERO times, and a
+   * group wanting to know where its own record's provenance was doubted had to
+   * page the whole store and count for itself. This is that reader.
+   *
+   * IT ANSWERS THE DELEGATED QUESTION AND NOT A WIDER ONE, AND THAT IS A
+   * DECISION RATHER THAN AN OMISSION. `finding` is NOT a caller parameter: it is
+   * bound from the constant below. A caller-chosen finding would have needed a
+   * refusal for a value outside the stored vocabulary, and therefore a fifth
+   * DEC-49 code minted for a READ — but the stronger reason is the row's own
+   * warning. The cheapest wrong answer here is *an op that returns every
+   * document with any route row at all*: non-empty, plausible, and not the
+   * question. An op that cannot be ASKED for that cannot drift into it.
+   *
+   * ============ WHY THIS IS NOT `WHERE finding = 'LOOKED_INDETERMINATE'` =====
+   *
+   * THE TABLE IS APPEND-ONLY AND CORRECTION MOVES FORWARD (DEC-19, and the
+   * schema comment says so). A document marked at `seq` 1 and re-assessed
+   * showable at `seq` 2 has NO STANDING MARKER — the doubt was raised and then
+   * answered. A bare `finding = ?` returns every document that EVER carried the
+   * marker, which would publish a standing doubt over documents whose route the
+   * record can now show. That is the record claiming more than it can support,
+   * which `CLAUDE.md` ranks worse than a missing feature. So the predicate
+   * carries the same `MAX(seq)` clause `auditPass` and `#latestRouteMark`
+   * already use — three readers, one rule about what "current" means.
+   *
+   * ============ THE TWO FACTS THIS CONSTRUCT EXISTS TO SEPARATE =============
+   *
+   * *The op returned nothing* and *no document carries a marker* are DIFFERENT
+   * FACTS, and an empty list that cannot say which is the unearned absence this
+   * whole design was written against — D-129's vocabulary, `OBSERVATION-LOG-
+   * DESIGN.md` §5.1's three causes, and `Store.routeFinding`'s own NEVER_LOOKED
+   * branch are all the same rule. An empty page therefore always carries a
+   * CAUSE, taken in order, and each one is a different statement about the
+   * world:
+   *
+   *   `no_documents_visible`  this viewer can see no captured document at all,
+   *                           so the question is not askable of them. Covers a
+   *                           DENY stamp and an empty store, and those two are
+   *                           deliberately indistinguishable — REC-25/D-15.
+   *   `never_assessed`        documents exist and NOT ONE has ever been
+   *                           assessed. NEVER_LOOKED, at the level of the whole
+   *                           instance. This is the cause that is NOT "no
+   *                           document carries a marker".
+   *   `none_standing`         assessments exist and every one of them found the
+   *                           route showable. THIS, and only this, is the
+   *                           earned statement that no document carries a
+   *                           marker — earned because somebody looked.
+   *   `page_exhausted`        the caller paged past the last marked document.
+   *                           An artefact of the cursor, not a fact about the
+   *                           record, and saying so stops a reader banking it.
+   *
+   * AND `never_assessed` IS PUBLISHED EVEN WHEN THE PAGE IS FULL, because a
+   * roster of marked documents drawn over a corpus half of which nobody ever
+   * assessed is an answer whose COMPLETENESS is undetermined. `complete` says
+   * which of those two the caller is holding. Sparse is the normal condition at
+   * every level and absence at one level is not evidence of absence at the next.
+   *
+   * ============ THE FENCE =================================================
+   *
+   * A route mark names a DOCUMENT the group holds, so the page is resolved
+   * through the viewer gate and a row naming a bundle this viewer cannot see —
+   * or one that no longer exists — is WITHHELD WHOLE and counted nowhere. That
+   * is REC-103's row-whole withholding at the document level and `op=airuns`'
+   * rule for a collection read: absent, byte-identically to a row that never
+   * existed. Nothing here publishes how many rows were withheld, because that
+   * count is itself the disclosure.
+   *
+   * MEASURED RATHER THAN ASSUMED, because it changes what this fence is DOING:
+   * `viewerPredicate` filters PROJECT bundles and nothing else (`query.mjs`,
+   * and its own comment says the evidence corpus stays shared), and a route mark
+   * can only ever name an `information` bundle — the write refuses every other
+   * type with ROUTE_MARK_NOT_A_DOCUMENT. So for any RECOGNISED viewer this gate
+   * withholds nothing, and the case it is load-bearing for is the UNRECOGNISED
+   * one, where `viewerPredicate` returns `0=1` and the read fails closed. It is
+   * applied anyway rather than reasoned away: the gate is the only place that
+   * rule lives, and an op that skipped it would be correct today and wrong the
+   * day the predicate widens. */
+  provenanceRoutesMarked({ after = "", limit = null, viewer = null } = {}) {
+    const gate = viewerPredicate(viewer);
+    const asked = _Store.ROUTE_MARKED_FINDING;
+    const after0 = String(after ?? "");
+    const want = Number(limit);
+    const n = Number.isFinite(want) && want > 0 ? Math.min(Math.floor(want), _Store.ROUTE_MARKED_LIMIT_MAX) : _Store.ROUTE_MARKED_LIMIT_DEFAULT;
+    const raw = this.#rows(
+      `SELECT m.* FROM provenance_route_marks m
+        WHERE m.finding = ?
+          AND m.bundle_id > ?
+          AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)
+        ORDER BY m.bundle_id
+        LIMIT ?`,
+      asked,
+      after0,
+      n + 1
+    );
+    const truncated = raw.length > n;
+    const page = truncated ? raw.slice(0, n) : raw;
+    const seen = /* @__PURE__ */ new Map();
+    if (page.length)
+      for (const b of this.#rows(
+        `SELECT b.bundle_id, b.current_state, b.object_type FROM bundles b
+          WHERE b.bundle_id > ? AND b.bundle_id <= ? AND (${gate.sql})`,
+        after0,
+        page[page.length - 1].bundle_id,
+        ...gate.args
+      ))
+        seen.set(b.bundle_id, b);
+    const documents = [];
+    for (const m of page) {
+      const b = seen.get(m.bundle_id);
+      if (!b) continue;
+      documents.push({
+        bundleId: m.bundle_id,
+        state: b.current_state,
+        ..._Store.routeFinding(b.object_type, m)
+      });
+    }
+    const cursor = truncated && page.length ? page[page.length - 1].bundle_id : null;
+    const standing = {};
+    for (const r of this.#rows(
+      `SELECT m.finding AS f, COUNT(*) AS n FROM provenance_route_marks m
+         JOIN bundles b ON b.bundle_id = m.bundle_id
+        WHERE m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)
+          AND b.object_type = 'information'
+          AND (${gate.sql})
+        GROUP BY m.finding`,
+      ...gate.args
+    ))
+      standing[r.f] = r.n;
+    const documentsVisible = this.#one(
+      `SELECT COUNT(*) AS n FROM bundles b WHERE b.object_type = 'information' AND (${gate.sql})`,
+      ...gate.args
+    ).n;
+    const assessed = Object.values(standing).reduce((a, b) => a + b, 0);
+    const marked = standing[asked] || 0;
+    const neverAssessed = Math.max(0, documentsVisible - assessed);
+    let cause = null;
+    if (!documents.length) {
+      cause = documentsVisible === 0 ? "no_documents_visible" : assessed === 0 ? "never_assessed" : marked === 0 ? "none_standing" : "page_exhausted";
+    }
+    return {
+      ok: true,
+      finding: asked,
+      means: OBSERVATION_STATES[asked],
+      documents,
+      returned: documents.length,
+      limit: n,
+      after: after0,
+      cursor,
+      truncated,
+      /* `marked` is the TOTAL standing at this finding, beside a page bounded at
+         `limit` — the two are different numbers and publishing only the page's
+         would be REC-57's defect. */
+      census: {
+        documents_visible: documentsVisible,
+        assessed,
+        never_assessed: neverAssessed,
+        standing,
+        marked
+      },
+      /* WHY THE ANSWER LOOKS THE WAY IT DOES, IN WORDS, ALWAYS. */
+      cause,
+      complete: neverAssessed === 0,
+      says: !documents.length ? _Store.ROUTE_MARKED_CAUSES[cause] : `${marked} document${marked === 1 ? "" : "s"} in this record carry a standing marker saying their route cannot be shown from the evidence held`,
+      completeness: neverAssessed === 0 ? "every captured document this viewer can see has been assessed at least once, so this roster is complete over the corpus" : `${neverAssessed} of ${documentsVisible} captured documents have NEVER been assessed \u2014 NEVER_LOOKED, which is the ABSENCE OF THE QUESTION HAVING BEEN ASKED and not a finding that their routes can be shown. This roster is complete over what was assessed and says nothing about the rest`
+    };
+  }
+  /* ================= WHERE THESE CONSTANTS SIT, AND WHY IT IS NOT COSMETIC ===
+     They are declared AFTER the method that uses them rather than before it,
+     which is the opposite of this file's usual habit, so the reason is recorded
+     at the site. THREE SUITES WALK THIS SOURCE BY SEGMENT — `bounds`,
+     `derivation-bounds` and `meaning-bounds` each split `store.mjs` on lines
+     matching a METHOD SIGNATURE and treat everything up to the next signature as
+     one method's body. A `static NAME = value;` line has no parentheses, so it
+     matches no signature and is absorbed into whichever segment PRECEDES it.
+     MEASURED, NOT REASONED: with this block ABOVE the method, bounds.test.mjs
+     read ROUTE_MARKED_LIMIT_MAX and the page statement's bound as belonging to
+     `provenanceRouteAssess` and put op=provenanceroute — a WRITE that applies no
+     bound at all — on the capped-op roster, while `provenanceRoutesMarked`,
+     which really is capped, was INVISIBLE to it. A false positive on one method
+     and a false negative on another, from nothing but declaration order.
+     THE SOURCE IS NOT BEING REWORDED TO FLATTER A DETECTOR, which is REC-57's
+     standing rule for that walk. It is being written so the detector's own
+     premise holds: a class member's constants belong to the member they serve.
+     Moving them here makes BOTH readings true — the write op is uncapped, this
+     read op is capped — and not one of the three suites was touched to get it. */
+  /** The one finding this op asks about. Bound as a PARAMETER rather than
+   *  inlined, so the statement below reads `m.finding = ?` and the planner sees
+   *  the leading-column equality `provenance_route_marks_finding` was declared
+   *  for (M-41, M-49). */
+  static ROUTE_MARKED_FINDING = "LOOKED_INDETERMINATE";
+  static ROUTE_MARKED_LIMIT_DEFAULT = 50;
+  static ROUTE_MARKED_LIMIT_MAX = 200;
+  /** REC-116 / IC-120: which documents in this instance carry a STANDING
+   *  `LOOKED_INDETERMINATE` marker. Bounded, gated, and an empty answer always
+   *  says WHY it is empty. See the block above for every decision in here. */
+  /** The canned sentence per cause, held beside the ladder rather than typed at
+   *  the site, so the four answers cannot drift apart. */
+  static ROUTE_MARKED_CAUSES = {
+    no_documents_visible: "there is no captured document in this record that this viewer may see, so the question cannot be asked of them. This says NOTHING about whether any document carries a marker",
+    never_assessed: "no document in this record has EVER been assessed for its provenance route. This is NEVER_LOOKED \u2014 the absence of the question having been asked \u2014 and it is NOT a finding that every route can be shown. Nobody has looked",
+    none_standing: "documents in this record HAVE been assessed, and every assessment that still stands found the route showable. This is the earned statement that no document carries a marker: somebody looked",
+    page_exhausted: "there are no further marked documents after this cursor. Documents DO carry standing markers in this record \u2014 this page is past the last of them, which is a fact about the cursor and not about the record"
+  };
   /** The byte-complete image the gate consumes. One bundle, one call, no
    *  per-file resolution. This is the operation that cost ~43s on Drive.
    *
@@ -57066,6 +57277,16 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author")
         }),
+        /* REC-116 / IC-120. The READ beside the two writes above — the `airun`
+           / `airuns` shape one construct over: the singular acts on one bundle,
+           the plural answers about the instance. No `author`, because reading
+           who was doubted is not itself a named act; `viewer` is the control
+           plane's server-side stamp exactly as it is for its two siblings. */
+        provenanceroutes: () => this.provenanceRoutesMarked({
+          after: url.searchParams.get("after"),
+          limit: url.searchParams.get("limit"),
+          viewer: url.searchParams.get("viewer")
+        }),
         dispose: () => this.dispose({
           handle: url.searchParams.get("handle"),
           to: url.searchParams.get("to"),
@@ -57883,6 +58104,9 @@ var OPS = {
      record, and a standing statement in the record with nobody's name on it is
      not a statement. */
   provenanceroute: { classes: ["admin", "member", "probe"], mutating: true },
+  /* REC-116 / IC-120: the READ half. `mutating: false` is the whole point of the
+     row — for 39 days the only op over this table was the WRITE above. */
+  provenanceroutes: { classes: ["admin", "member", "probe"], mutating: false },
   /* Write arc. Ratification's authority is the SSHSIG itself, checked
      against the registered signers; the token or session only reaches the
      surface. Member and signer administration is admin-only. Probe class
@@ -62492,7 +62716,7 @@ var index_default = {
          reader (DEC-17) — only the names are withheld. */
       "strengthbarof"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? `member:${sessMember}` : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`

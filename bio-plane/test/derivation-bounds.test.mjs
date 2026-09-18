@@ -742,9 +742,9 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    numbers rather than about work. The figure moved; the order stayed.
    THE FIGURE IS TAKEN FROM THIS ARM'S OWN FAILURE OUTPUT (`35 methods derive
    over an unbounded scan`), never by adding one to the number in the file. */
-const CLASS_MEASURED_2026_08_08 = 36;
+const CLASS_MEASURED_2026_08_08 = 37;
 console.log(`  RATCHET: ${CLASS.size} methods derive over an unbounded scan, `
-          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196). THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work`);
+          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196), moved to 37 on 2026-09-17 by REC-116 (the arrival is provenanceRoutesMarked, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for 39 days). REC-116'S ARRIVAL IS LEGITIMATE AND THE REASON IS WORTH THE LINE: its PAGE is bounded and uses an index on both columns, but its CENSUS deliberately is not — a GROUP BY over every standing row, because a finding-equals-one count can only report what it was told to look for and a third finding arriving in that table would be silently missing from the assessed count. Inverting the question costs the census the index and puts the method in this class, and that trade was taken deliberately rather than discovered. THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
 + "this over the figure measured on 2026-08-08 and fails here, with the roster printed above so the "
 + "failure names it",
@@ -762,6 +762,11 @@ t("RATCHET: the dispatched members are pinned BY NAME, not merely counted — a 
                  name says WHAT. */
               "frontier->frontier",
               "proposals->proposalsFeed",
+              /* REC-116: the standing-marker roster. Its PAGE is bounded; its
+                 CENSUS is the unbounded scan that puts it in this class, and
+                 that is a stated trade rather than an oversight — see the
+                 movement note above the ceiling. */
+              "provenanceroutes->provenanceRoutesMarked",
               "publishedcase->publishedCase", "queue->queueFeed", "readingname->documentsNamingEntity",
               "reevaluations->reevaluations", "select->selectionCreate", "selection->selectionResolve",
               "selectionrelease->selectionRelease"]);
@@ -876,7 +881,16 @@ const HOIST_FRAGILE_2026_09_16 = [
      `#searchedForCase` writes its row sources inside `chunked()` callbacks, which is
      the spelling this classifier is sensitive to. */
   "#searchedForCase", "auditPass",
-  "danglingRefs", "earnedBasisRegistry", "frontier", "publishedCaseRegistryFor", "queueFeed",
+  "danglingRefs", "earnedBasisRegistry", "frontier",
+  /* REC-116, 2026-09-17 — the arrival is NAMED as this roster's own comment demands.
+     `provenanceRoutesMarked` writes its census row source in the loop's own HEADER
+     (`for (const r of this.#rows(...))`), which is exactly the spelling M0-40
+     measured this classifier is sensitive to. The inline shape is KEPT rather than
+     hoisted, on REC-88's precedent: hoisting it would move the method out of the
+     class for no reason but the spelling, which is the blind spot this roster
+     exists to make visible rather than to reward. */
+  "provenanceRoutesMarked",
+  "publishedCaseRegistryFor", "queueFeed",
 ];
 t("M0-40: the HOIST-FRAGILE roster is pinned BY NAME — this is the second arm the row asked for, "
 + "and it is by name because the FLOOR that caught REC-88 could only say the count fell. A member "
@@ -905,7 +919,12 @@ const CLASS_ROSTER_2026_09_16 = [
   /* REC-96, 2026-09-17 — the arrival, named beside the ceiling it moved. */
   "#searchedForCase", "#sweepSelections", "auditPass",
   "biasManifest", "danglingRefs", "documentsNamingEntity", "earnedBasisRegistry",
-  "exportManifest", "frontier", "proposalsFeed", "publishedCase", "publishedCaseRegistryFor",
+  "exportManifest", "frontier", "proposalsFeed",
+  /* REC-116, 2026-09-17 — the arrival, named beside the ceiling it moved. The
+     standing-marker roster: its PAGE is bounded and index-served on both
+     columns, its CENSUS deliberately is not. */
+  "provenanceRoutesMarked",
+  "publishedCase", "publishedCaseRegistryFor",
   "publishedRegistryFor", "queueFeed", "reevaluations", "selectionCreate", "selectionRelease",
   "selectionResolve",
 ];
@@ -1044,7 +1063,11 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    method's per-subject reads into one `MAX(seq) GROUP BY` per level cut its real statement count
    by ~50x and RAISED its `scans-per-row` score, because this census counts row sources inside
    loops and not amplification. The faster code was kept and the figure moved. */
-const SCANNING_MEASURED_2026_09_15 = 106;
+/* REC-116 / IC-120, 2026-09-17: 106 -> 107, TAKEN FROM THE CORPUS LINE THIS RUN PRINTED
+   (`107 scanning UNBOUNDED`) and not by adding one to the figure that was here. The arrival is
+   `provenanceRoutesMarked`, and it is the SAME arrival the class ceiling above moved for — one
+   method, two ratchets, both moved in the same turn from their own printed output. */
+const SCANNING_MEASURED_2026_09_15 = 107;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
@@ -1403,7 +1426,16 @@ t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is b
 + "cannot defend, instead of a reader having to re-derive it from a debt row",
   CENSUS_BLIND,
   ["#calDriftFor", "#frontierContent", "#frontierMeaning", "biasManifest",
-   "documentsNamingEntity", "frontier", "queueFeed"]);
+   "documentsNamingEntity", "frontier",
+   /* REC-116, 2026-09-17 — the arrival, and it joins the DEFENDED half rather
+      than D-369's set 2: `provenanceRoutesMarked` publishes a bound AND scans
+      unbounded, so the CENSUS COUNT cannot move if its paging LIMIT is lost —
+      but REC-99's inversion DOES grade its row source by name, which is why the
+      PARTITIONED arm below stays at six and this roster goes to eight. The
+      unbounded half is the census GROUP BY, kept unbounded deliberately so a
+      third finding arriving in the marks table cannot go missing from the
+      assessed count; the PAGE beside it is bounded and index-served. */
+   "provenanceRoutesMarked", "queueFeed"]);
 t("SET 2, PARTITIONED — and the partition is the point. `#calDriftFor` is blind to the COUNT but "
 + "DEFENDED by REC-99's inversion, which grades its row source by name; the other five are blind "
 + "to BOTH halves and are D-369's set 2 exactly. Reporting six as one number would put a method "

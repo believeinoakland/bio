@@ -48,10 +48,21 @@ catch { console.log("SKIP (NAMED, not green): sqlite3 binary absent — no arm r
 const SQLITE_VERSION = execFileSync("sqlite3", ["--version"], { encoding: "utf8" }).trim().split(" ")[0];
 
 /* ============ THE SUBJECT IS EXTRACTED FROM THE OP, NOT RETYPED ============ */
-const sqlMatch = STORE_SRC.match(
-  /static ROUTE_MARKED_PAGE_SQL\s*=\s*\n?\s*`([\s\S]*?)`;/);
+/* EXTRACTED FROM THE `#rows(` CALL INSIDE THE METHOD, not from a named constant,
+   and the reason is itself a finding worth carrying: the statement WAS a
+   constant, and `derivation-bounds`' D-365 arm — which grades a published
+   `truncated` against the SQL of the row source it was measured over — could not
+   see the `LIMIT ?` behind that constant and reported the source as UNBOUNDED.
+   It was right about what it could read, and a bound that is real but invisible
+   is an unbounded read for every purpose that instrument serves. The statement is
+   now inline, which is this file's house shape for every other `#rows` call, and
+   this driver anchors on the METHOD NAME first so it cannot drift onto some other
+   query that happens to name the same table. */
+const methodAt = STORE_SRC.indexOf("provenanceRoutesMarked({");
+const sqlMatch = methodAt < 0 ? null
+  : STORE_SRC.slice(methodAt).match(/this\.#rows\(\s*`([\s\S]*?)`/);
 if (!sqlMatch) {
-  console.log("ARM DID NOT ARM: could not extract Store.ROUTE_MARKED_PAGE_SQL from store.mjs");
+  console.log("ARM DID NOT ARM: could not extract the page statement from provenanceRoutesMarked");
   process.exit(2);
 }
 const PAGE_SQL = sqlMatch[1];
@@ -60,9 +71,9 @@ t("ARM-THAT-DID-NOT-ARM GUARD: the extracted statement is the op's own and is no
   [/provenance_route_marks/.test(PAGE_SQL), /m\.finding\s*=\s*\?/.test(PAGE_SQL),
    /m\.bundle_id\s*>\s*\?/.test(PAGE_SQL), PAGE_SQL.length > 150],
   [true, true, true, true]);
-t("POLARITY on that extraction — a constant that is NOT in store.mjs does not match, so the four "
+t("POLARITY on that extraction — a method that is NOT in store.mjs does not match, so the four "
 + "trues above are a measurement rather than a matcher that matches anything",
-  /static ZZZ_NO_SUCH_CONSTANT\s*=/.test(STORE_SRC), false);
+  STORE_SRC.indexOf("zzzNoSuchMethodAnywhere({"), -1);
 
 /* The DDL is EXTRACTED from the artifact, never retyped — M-41's rule. */
 const table = SCHEMA_SRC.match(/CREATE TABLE IF NOT EXISTS provenance_route_marks \([\s\S]*?\n\);/);

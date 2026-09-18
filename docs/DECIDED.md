@@ -1806,7 +1806,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - Both are SUPERSEDED by this landing and both are rewritten with the reason at the site, per `CLAUDE.md`'s rule that an exempted test is a rule nobody is enforcing.  
   `docs/development/CLAIMS.md:12253`
 - CORRECTED, NOT EXEMPTED**: `provenance_route_marks_finding` leaves the roster because this item gives it a reader.  
-  `docs/development/CLAIMS.md:12502`
+  `docs/development/CLAIMS.md:12518`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2036,7 +2036,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-17** — THE PUSH-TIME DECIDED GUARD — both causes driven against a real remote, and the estate's hook premises re-verified** *(Id minted with `node tools/mintid.mjs M`, run bare.  
   `docs/development/MEASUREMENTS.md:15329`
 - The degradation is real and is what the assertion was CORRECTED to measure:** `finding` stops being an index predicate and becomes a row-by-row test over **the whole tail of the table after the cursor**, to return the few rows standing at one finding.  
-  `docs/development/MEASUREMENTS.md:15586`
+  `docs/development/MEASUREMENTS.md:15600`
 - **2026-08-01** — CORRECTED 2026-08-01 — this hole is CLOSED and the paragraph below is kept as the > reasoning that closed it.** One reconciling Durable Object alarm now serves FIVE > consumers (selection-sweep, task-drain, archive-monitor, connection-derive, > overdue-scan), three of which landed within a week of the decision.  
   `docs/development/MILESTONES.md:118`
 - Bob already RULED the doctrine** — content > produced by a third-party script, if it is ever evidence, is recorded as produced by > THAT party and not by the hosting site.  

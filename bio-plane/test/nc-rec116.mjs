@@ -138,16 +138,20 @@ const ARMS = [
   {
     id: "c", name: "THE LIAR THE ROW NAMES — the standing clause dropped, so EVER-marked is returned",
     file: STORE,
-    anchor: "        AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)\n      ORDER BY m.bundle_id",
-    patch: "        AND 1 = 1\n      ORDER BY m.bundle_id",
+    /* THE ANCHORS TRACK THE STATEMENT'S CURRENT INDENTATION, which moved when the
+       page SQL was inlined out of a constant. An anchor that no longer matches
+       makes the arm match ZERO times and PASS while testing nothing, which is why
+       `armOnce` asserts EXACTLY ONE hit rather than trusting the patch. */
+    anchor: "          AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)\n        ORDER BY m.bundle_id",
+    patch: "          AND 1 = 1\n        ORDER BY m.bundle_id",
     mustFail: /^D1: /,
     declared: "section D1 — a document CORRECTED FORWARD is published as still doubted",
   },
   {
     id: "d", name: "THE SECOND LIAR — every document with any route row at all",
     file: STORE,
-    anchor: "      WHERE m.finding = ?\n        AND m.bundle_id > ?",
-    patch: "      WHERE (m.finding = ? OR 1 = 1)\n        AND m.bundle_id > ?",
+    anchor: "        WHERE m.finding = ?\n          AND m.bundle_id > ?",
+    patch: "        WHERE (m.finding = ? OR 1 = 1)\n          AND m.bundle_id > ?",
     mustFail: /^(B: |D[12]: )/,
     declared: "section B's over-strictness arm and section D2 — a document assessed PRESENT and "
             + "never doubted appears on a roster of doubted documents",
@@ -212,11 +216,28 @@ mkdirSync(preDir, { recursive: true });
 const REPO = execFileSync("git", ["-C", ROOT, "rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim();
 const movedSinceBase = execFileSync("git", ["-C", REPO, "diff", "--name-only", BASE, "--", "bio-plane"],
   { encoding: "utf8" }).trim().split("\n").filter(Boolean)
-  .filter((p) => !p.startsWith("bio-plane/src/") && !p.startsWith("bio-plane/test/"));
-t("ARM (f) GUARD: the MIXED BUILD is legitimate — nothing outside `src/` and `test/` has moved "
-+ "since the merge-base, so the current `checks/` and `docprofile/` the pre-item `src/` resolves "
-+ "against ARE the pre-item ones. Verified, never assumed",
+  .filter((p) => !p.startsWith("bio-plane/src/") && !p.startsWith("bio-plane/test/")
+               /* `dist/` IS EXCLUDED, AND NARROWLY, WITH ITS REASON. It is a build
+                  OUTPUT: `npm run build` regenerates it from `src/`, this item
+                  necessarily moves it, and the guard's subject is what the pre-item
+                  `src/` RESOLVES AGAINST at import time. Verified rather than
+                  asserted — `grep` over `src/` returns ZERO imports from `dist/`,
+                  so nothing in either build reads it. The exclusion is by prefix on
+                  this one directory and not a general relaxation: `checks/`,
+                  `docprofile/` and every other sibling still fail this arm loudly if
+                  they move, which is the whole point of it. */
+               && !p.startsWith("bio-plane/dist/"));
+t("ARM (f) GUARD: the MIXED BUILD is legitimate — nothing outside `src/`, `test/` and the `dist/` "
++ "BUILD OUTPUT has moved since the merge-base, so the current `checks/` and `docprofile/` that "
++ "the pre-item `src/` resolves against ARE the pre-item ones. Verified, never assumed",
   movedSinceBase, []);
+t("ARM (f) GUARD, POLARITY: the guard can still SEE a moved sibling — a path outside the three "
++ "excluded prefixes is NOT filtered away, so the empty list above is a measurement rather than a "
++ "filter that empties everything",
+  ["bio-plane/checks/bio-checks.mjs", "bio-plane/docprofile/registry.mjs", "bio-plane/dist/x"]
+    .filter((p) => !p.startsWith("bio-plane/src/") && !p.startsWith("bio-plane/test/")
+                && !p.startsWith("bio-plane/dist/")),
+  ["bio-plane/checks/bio-checks.mjs", "bio-plane/docprofile/registry.mjs"]);
 
 /* The pathspec is relative to `ROOT` (`bio-plane/`); `git show` takes the FULL
    path from the repository root. Getting that wrong is how this arm first listed

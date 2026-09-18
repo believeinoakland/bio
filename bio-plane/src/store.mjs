@@ -10669,36 +10669,10 @@ export class Store extends DurableObject {
    * rule lives, and an op that skipped it would be correct today and wrong the
    * day the predicate widens. */
 
-  /** The one finding this op asks about. Bound as a PARAMETER rather than
-   *  inlined, so the statement below reads `m.finding = ?` and the planner sees
-   *  the leading-column equality `provenance_route_marks_finding` was declared
-   *  for (M-41, M-49). */
-  static ROUTE_MARKED_FINDING = "LOOKED_INDETERMINATE";
-  static ROUTE_MARKED_LIMIT_DEFAULT = 50;
-  static ROUTE_MARKED_LIMIT_MAX = 200;
-
-  /* THE PAGE STATEMENT, HELD AS A CONSTANT SO THE QUERY-PLAN MEASUREMENT READS
-     THE STATEMENT THIS OP ACTUALLY RUNS. `test/nc-rec116-plan.mjs` EXTRACTS this
-     literal from this file and plans it verbatim. REC-112 had to RETYPE the
-     spellings it measured, because no reader existed to read them off — and a
-     retyped query is a hand copy, which agrees with its author at zero cost.
-     Now that there IS a reader, the measurement is taken from it. A reflow is
-     safe; a change to the SQL moves the measured plan, which is the point. */
-  static ROUTE_MARKED_PAGE_SQL =
-    `SELECT m.* FROM provenance_route_marks m
-      WHERE m.finding = ?
-        AND m.bundle_id > ?
-        AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)
-      ORDER BY m.bundle_id
-      LIMIT ?`;
-
-  /** REC-116 / IC-120: which documents in this instance carry a STANDING
-   *  `LOOKED_INDETERMINATE` marker. Bounded, gated, and an empty answer always
-   *  says WHY it is empty. See the block above for every decision in here. */
   provenanceRoutesMarked({ after = "", limit = null, viewer = null } = {}) {
     const gate = viewerPredicate(viewer);
     const asked = Store.ROUTE_MARKED_FINDING;
-    const cursor = String(after ?? "");
+    const after0 = String(after ?? "");
     /* THE BOUND IS APPLIED AND PUBLISHED. A bound applied and not published is
        REC-57's defect and it is not being re-created here. */
     const want = Number(limit);
@@ -10709,9 +10683,28 @@ export class Store extends DurableObject {
     /* One row over the bound, so `more` is MEASURED rather than inferred from a
        full page — a page that happens to be exactly `n` long is not evidence
        that there is another one. */
-    const raw = this.#rows(Store.ROUTE_MARKED_PAGE_SQL, asked, cursor, n + 1);
-    const more = raw.length > n;
-    const page = more ? raw.slice(0, n) : raw;
+    /* THE PAGE STATEMENT IS WRITTEN INLINE, AND IT WAS A CONSTANT UNTIL AN
+       INSTRUMENT SAID OTHERWISE. Holding it in `Store.ROUTE_MARKED_PAGE_SQL` read
+       well and let the query-plan driver extract it — but `derivation-bounds`'
+       D-365 arm grades every published `truncated` against the SQL OF THE ROW
+       SOURCE IT WAS MEASURED OVER, and it reads that SQL at the `#rows(` call.
+       With the statement behind a constant the arm reported
+       `provenanceRoutesMarked:raw (no SQL LIMIT)` — a TRUE reading of what it
+       could see, over a source that has carried `LIMIT ?` all along. The bound
+       was real and invisible, which is the same defect as an unbounded read for
+       every purpose that instrument serves. Inlining is this file's house shape
+       for every other `#rows` call, so the deviation was mine; the driver still
+       extracts these exact bytes (M-49), just from the call rather than from a
+       constant. */
+    const raw = this.#rows(
+      `SELECT m.* FROM provenance_route_marks m
+        WHERE m.finding = ?
+          AND m.bundle_id > ?
+          AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)
+        ORDER BY m.bundle_id
+        LIMIT ?`, asked, after0, n + 1);
+    const truncated = raw.length > n;
+    const page = truncated ? raw.slice(0, n) : raw;
 
     /* The gate, over the PAGE'S OWN ID RANGE so this cannot become an unbounded
        scan of the bundles table — `auditPass`' shape, and for the same reason. */
@@ -10720,7 +10713,7 @@ export class Store extends DurableObject {
       for (const b of this.#rows(
         `SELECT b.bundle_id, b.current_state, b.object_type FROM bundles b
           WHERE b.bundle_id > ? AND b.bundle_id <= ? AND (${gate.sql})`,
-        cursor, page[page.length - 1].bundle_id, ...gate.args))
+        after0, page[page.length - 1].bundle_id, ...gate.args))
         seen.set(b.bundle_id, b);
 
     const documents = [];
@@ -10736,8 +10729,20 @@ export class Store extends DurableObject {
     /* THE CURSOR ADVANCES OVER WHAT WAS EXAMINED, NOT OVER WHAT WAS RETURNED.
        If it advanced over the returned rows, a withheld row would be re-read on
        every page and a caller whose whole page was withheld would loop forever
-       on the same cursor. */
-    const nextAfter = more && page.length ? page[page.length - 1].bundle_id : null;
+       on the same cursor.
+
+       THE KEYS ARE `limit` / `truncated` / `cursor` AND NOT A NEW SPELLING, AND
+       THAT WAS A CORRECTION RATHER THAN A CHOICE. This op's first draft published
+       `more` and `nextAfter`, which read perfectly well and are used nowhere else
+       in this plane. `meaning-bounds.test.mjs` judged the op BARE — *a collection
+       off an unbounded row source with no bound published* — and it was RIGHT by
+       its own vocabulary: `MORE_KEY` knows `truncated`, `cursor`, `hasMore` and
+       five more, and knows neither of the two this method had invented. The
+       ratchet was not widened to admit them. REC-57's whole point is that every
+       capped op settles its two questions IN ONE SHAPE, so a new read inventing a
+       second spelling is the hand-copy defect arriving in a key name — and the
+       instrument caught it the first time it ran. */
+    const cursor = truncated && page.length ? page[page.length - 1].bundle_id : null;
 
     /* ============ THE CENSUS, ALL OF IT THROUGH THE SAME GATE ==============
        It is a GROUP BY over the standing rows rather than a count of the asked
@@ -10778,7 +10783,7 @@ export class Store extends DurableObject {
       ok: true,
       finding: asked, means: OBSERVATION_STATES[asked],
       documents, returned: documents.length,
-      limit: n, after: cursor, nextAfter, more,
+      limit: n, after: after0, cursor, truncated,
       /* `marked` is the TOTAL standing at this finding, beside a page bounded at
          `limit` — the two are different numbers and publishing only the page's
          would be REC-57's defect. */
@@ -10803,6 +10808,37 @@ export class Store extends DurableObject {
           + "nothing about the rest",
     };
   }
+
+  /* ================= WHERE THESE CONSTANTS SIT, AND WHY IT IS NOT COSMETIC ===
+     They are declared AFTER the method that uses them rather than before it,
+     which is the opposite of this file's usual habit, so the reason is recorded
+     at the site. THREE SUITES WALK THIS SOURCE BY SEGMENT — `bounds`,
+     `derivation-bounds` and `meaning-bounds` each split `store.mjs` on lines
+     matching a METHOD SIGNATURE and treat everything up to the next signature as
+     one method's body. A `static NAME = value;` line has no parentheses, so it
+     matches no signature and is absorbed into whichever segment PRECEDES it.
+     MEASURED, NOT REASONED: with this block ABOVE the method, bounds.test.mjs
+     read ROUTE_MARKED_LIMIT_MAX and the page statement's bound as belonging to
+     `provenanceRouteAssess` and put op=provenanceroute — a WRITE that applies no
+     bound at all — on the capped-op roster, while `provenanceRoutesMarked`,
+     which really is capped, was INVISIBLE to it. A false positive on one method
+     and a false negative on another, from nothing but declaration order.
+     THE SOURCE IS NOT BEING REWORDED TO FLATTER A DETECTOR, which is REC-57's
+     standing rule for that walk. It is being written so the detector's own
+     premise holds: a class member's constants belong to the member they serve.
+     Moving them here makes BOTH readings true — the write op is uncapped, this
+     read op is capped — and not one of the three suites was touched to get it. */
+  /** The one finding this op asks about. Bound as a PARAMETER rather than
+   *  inlined, so the statement below reads `m.finding = ?` and the planner sees
+   *  the leading-column equality `provenance_route_marks_finding` was declared
+   *  for (M-41, M-49). */
+  static ROUTE_MARKED_FINDING = "LOOKED_INDETERMINATE";
+  static ROUTE_MARKED_LIMIT_DEFAULT = 50;
+  static ROUTE_MARKED_LIMIT_MAX = 200;
+
+  /** REC-116 / IC-120: which documents in this instance carry a STANDING
+   *  `LOOKED_INDETERMINATE` marker. Bounded, gated, and an empty answer always
+   *  says WHY it is empty. See the block above for every decision in here. */
 
   /** The canned sentence per cause, held beside the ladder rather than typed at
    *  the site, so the four answers cannot drift apart. */
