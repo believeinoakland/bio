@@ -1,6 +1,6 @@
 # Member knowledge — the firsthand observation, the lead, and attribution (D-184, D-194)
 
-**Status** · v0.1 DESIGN, written by session BOB #14 under Bob's standing delegation (mechanism is the architect's; the doctrine it serves was ruled by Bob on 2026-09-14 and is quoted, not restated). Amended the same day with five decisions from MK-1's build (§2, §3, §7). It closes the design act D-184 and D-194 owed — which BOB #14 had wrongly marked "verified: Program B" in a build order, until CONDUCT #4 found no such design at the artifact. **§2 and the §7 refusals that fall to MK-1 are BUILT by MK-1 (IC-133, IC-134, C-53) — `op=testify` writing the canonical-header bytes (`bio-testimony/1`, `Store.testimonyBytes`), the register's `authored` flag and its fence at `op=promote`, and the publication fence at `op=ratify`/`op=caseratify` (C-53.10–.12), which MK-3 lifts; §3–§6 are not built; §5 (THE LEAD) IS BUILT by MK-4 (2026-09-18, IC-135 on I5, IC-136 on I3): the `leads` table, `op=lead`, `op=leadlook` writing `observation_log` under `authority_kind = 'lead'`, `op=leadread`, `op=leadshare`, and §7's lead-as-leg refusal as C-54.1 at every leg grammar; its visibility is BOB #14's ruling of 2026-09-18 as built: the author, a project's joined participants after the author's `op=leadshare`, a machine credential only within a member's minted scope, and no one else. The rest is not built by MK-4.** `node tools/status.mjs 2.firsthand`, `10.lead` and `13.attribution` are the status authority. as of 2026-09-18
+**Status** · v0.1 DESIGN, written by session BOB #14 under Bob's standing delegation (mechanism is the architect's; the doctrine it serves was ruled by Bob on 2026-09-14 and is quoted, not restated). Amended the same day with five decisions from MK-1's build (§2, §3, §7). It closes the design act D-184 and D-194 owed — which BOB #14 had wrongly marked "verified: Program B" in a build order, until CONDUCT #4 found no such design at the artifact. **§2 and the §7 refusals that fall to MK-1 are BUILT by MK-1 (IC-133, IC-134, C-53) — `op=testify` writing the canonical-header bytes (`bio-testimony/1`, `Store.testimonyBytes`), the register's `authored` flag and its fence at `op=promote`, and the publication fence at `op=ratify`/`op=caseratify` (C-53.10–.12), which MK-3 lifts; §3–§6 are not built; §5 (THE LEAD) IS BUILT by MK-4 (2026-09-18, IC-135 on I5, IC-136 on I3): the `leads` table, `op=lead`, `op=leadlook` writing `observation_log` under `authority_kind = 'lead'`, `op=leadread`, `op=leadshare`, and §7's lead-as-leg refusal as C-54.1 at every leg grammar; its visibility is BOB #14's ruling of 2026-09-18 as built: the author, a project's joined participants after the author's `op=leadshare`, a machine credential only within a member's minted scope, and no one else. The rest is not built by MK-4.** Amended 2026-09-18 by BOB #15 with two decisions: §3, an observation leg carries a connection grade like any leg; §5, a counter over leads is the `admin` class's only, and the unbuilt internet-level frontier reader must gate lead rows. `node tools/status.mjs 2.firsthand`, `10.lead` and `13.attribution` are the status authority. as of 2026-09-18
 
 **Place in the system** · Level 2. Serves construct 2 (intake), construct 8 (the inquiry's legs and strength), construct 10 (the frontier — the lead is its authored half) and construct 13 (attribution in a published case) of `docs/architecture/BIO_System_Design.md` §3. The doctrine is `docs/architecture/BIO_Content_Framework_v0_10.md` §14.4 and `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §5.6 as amended; the attribution rule is `docs/architecture/BIO_Publication_v0_1.md` §7. It extends the capture-or-testify structure already built for correspondence (`schema.mjs`, the `correspondence` table, C-2.10) rather than inventing a second one.
 
@@ -85,6 +85,17 @@ who saw the same thing authors their own observation; the case then rests on two
 **The register's capture-grade requirement (C-18.1) gains an AUTHORED arm** — an authored bundle carries no capture grade
 because none applies, and the check says so rather than demanding one (built that way by MK-1).
 
+**Decision: a leg on an authored bundle carries a CONNECTION grade, graded exactly as any leg's is — neither refused nor
+exempt** (decided 2026-09-18 by BOB #15 on MK-2's design gap). The two axes answer different questions: `testimony: D` says
+WHOSE WORD the evidence is; `connection` says HOW DIRECTLY those words bear on the proposition — *"I saw the vendor's truck
+at the Clerk's house"* is testimony D either way, and bears on *"the vendor was favoured"* only by inference. DEC-21 keeps
+axes apart for exactly this reason, so a direct connection reported beside testimony D is the honest statement, not a
+contradiction. **Refusing the connection grade would be the overclaiming direction**: with capture not applicable, an
+observation leg would carry nothing on either axis the bar reads (the bar stays capture + connection), and a leg the bar
+cannot see is a leg it cannot fail. The existing `grade_source = 'testimony'` on a CONNECTION grade — a member vouching for a
+link between two documents — is a different thing that shares the word; MK-2's refusal of a bare `leg:testimony` naming both
+readings is endorsed as the resolution. Reversal is small until a published case freezes a testimony leg's grades.
+
 Strength arithmetic is unchanged in rule — DEC-32's weakest leg across AND, strongest branch across OR — and simply sees one
 more axis. The interface consequence is §Incomplete's first entry.
 
@@ -116,7 +127,20 @@ the table's vocabulary already reserves (`schema.mjs` `observation_log.authority
 participants only after the author SHARES it to that project, as an authored, dated act; a machine credential only within
 the scope a member minted for it — never an unfiltered machine read; and **everyone else receives exactly the answer a lead
 that does not exist would receive**, so a lead's existence is not itself disclosed. A lead is a tip, and a tip leaked is a
-source exposed. **Authoring writes only the row; the look is a separate op that MK-4 builds** (§3 forbids a look entry at authoring). What the look finds enters the record the ordinary way (a capture, then content); a lead
+source exposed.
+
+**A COUNT IS A DISCLOSURE OF EXISTENCE, so the rule above binds counters too** (decided 2026-09-18 by BOB #15, from REC-129's
+unverified candidate, CONFIRMED at the code: `op=stats` admits `admin`, `member` and `probe` and returned `leads` instance-wide,
+so a member diffing it across a colleague's authoring learns a lead was just written). **Decision: a counter whose row set
+includes rows the caller could not read is returned only to a caller who could read them all — for an instance-wide count,
+the `admin` class.** `leads`, and `observations` (whose whole-log count includes lead looks), are withheld from `member` and
+`probe`: the KEY is absent, never re-meant per class, because one key counting different things for different callers is
+two quantities under one name. The operator keeps them because D-113's purge proof is why they exist; an aggregate to the
+instance's own operator is the stated residue of *everyone else*, not an oversight.
+**And a precondition on the INTERNET level of the frontier, which is not yet built:** `op=leadlook` writes `observation_log`
+at level `internet` with the LEAD'S WORDS as `subject`, so whoever builds that level's reader MUST gate `authority_kind =
+'lead'` rows by this visibility rule before serving them — an ungated reader there discloses the tip itself, not merely its
+count. The document, content and meaning readers never see these rows (each filters on its own level; checked 2026-09-18). **Authoring writes only the row; the look is a separate op that MK-4 builds** (§3 forbids a look entry at authoring). What the look finds enters the record the ordinary way (a capture, then content); a lead
 that finds nothing records `LOOKED_ABSENT` against itself, which is the internet level of the frontier (`status.mjs
 9.internet`) finally having a writer.
 

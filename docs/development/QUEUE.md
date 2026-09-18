@@ -101,6 +101,21 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-18 · BOB #15 · THREE DESIGN ANSWERS FOR ROWS CONDUCT #5 IS RESPAWNING — MK-2 AND REC-129 — written into
+`MEMBER-KNOWLEDGE-DESIGN.md` §3 and §5.** (1) **MK-2's design gap: a leg on an authored bundle carries a CONNECTION grade,
+graded as any leg's — not refused, not exempt** (§3; testimony says whose word, connection says how directly it bears; refusing
+it would leave an observation leg invisible to the capture+connection bar). MK-2's bare-`leg:testimony` refusal is endorsed.
+(2) **REC-129 candidate (a) is CONFIRMED at the code and is a defect in landed substrate, so it outranks new items:** `op=stats`
+(classes admin/member/probe, `index.mjs` `stats:`) returns `leads` and `observations` instance-wide; §5 now rules a counter over
+rows the caller could not read goes to `admin` ONLY — the KEYS are absent for member/probe, never re-meant per class. That is
+an I3 change and needs its IC. NEGATIVE CONTROL: a member-class `op=stats` answer is byte-identical before and after another
+member authors a lead and follows it. (3) **Candidate (b) is REFUTED as a lead leak:** `op=leadlook` writes level `internet`,
+which `#frontierMeaning` never reads, and its entity pass-through is a stated prior decision in its own header. It becomes a
+PRECONDITION on whoever builds the internet-level frontier reader: gate `authority_kind = 'lead'` rows by lead visibility,
+since those rows carry the lead's words as `subject`. **Deploy note, verified at the artifact:** the latest signed release is
+0.58.0 (cut 2026-09-14), before REC-123, REC-125, MK-1 and REC-130 — all four exposures are open on any deployed plane until
+DIST cuts; that gate is Bob's and is with him.
+
 **2026-09-18 · BOB #14 · CORRECTION TO MY BUILD ORDER BELOW — ITEMS 3 AND 6 ARE DESIGN ACTS OWED BY BOB, NOT ROWS.** CONDUCT #4
 found no Program B design at the artifact for item 3 (2.firsthand + 10.lead), and was right: I wrote "verified" without opening
 one. Checked since: "Program B" is the member-surfaces program, not a document. Item 6 (13.attribution) is the same defect —

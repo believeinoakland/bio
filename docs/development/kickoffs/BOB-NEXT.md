@@ -26,7 +26,7 @@ nothing unpushed.
   belongs to a PROJECT — its adoption of an accepted version's claim.** REC-124 is blocked on it. Put 2026-09-18.
 - **THE NEXT DEPLOY (his gate).** Deployed planes still carry two exposures fixed on `main`: an `ai` credential could
   ratify under a member's name (REC-123, fixed), and an UNSIGNED case document is readable and enumerable by anyone
-  (REC-126 gap 1 — its correction is queued FIRST, not yet built). **And the plane and `agent-worker` MUST deploy
+  (REC-126 gap 1 — **CORRECTED by BOB #15: fixed on `main` by REC-130 at `a32fda24`, 17 minutes before this file was written**; CONDUCT #4's handoff adds REC-125 and MK-1, so FOUR exposures are fixed on `main` and open on any plane running 0.58.0). **And the plane and `agent-worker` MUST deploy
   together at I3 ≥ 24.0.0** (IC-130: an old agent-worker silently loses model-judged PRESENT steps).
 - **THE SHORT CLAUDE.md DRAFT.** 8 KB against today's 45 KB; sent to Bob for review; **not yet in the repository**, and
   it must not replace `CLAUDE.md` until he has read it. Its core: *look it up in the one source; do not guess.* If he
