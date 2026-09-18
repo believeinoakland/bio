@@ -13011,3 +13011,34 @@ released: 2026-09-18 by the REC-86 worker. Every claimed path is committed on br
 `worktree-agent-a3fbd59a3fef1a961`; the final tree ran the battery 224/224 · 13,984 green,
 `coverage --strict` exit 0, UI harness exit 0, `plancheck --local` 0 fail. The UI DELEGATION above
 stays open — it is UI's act, not this claim's.
+
+
+## REC-104 · RECORD · the `content:` arm's `chain` filter answers off a `chain_kind` COLUMN, and the read-time parse is RETIRED
+
+**Claimed 2026-09-18 by the REC-104 worker (CONDUCT #4, wave 1), worktree `agent-a697a8fb2a50b3f2f`.**
+The row (`QUEUE.md` REC-104) is REC-90's DESIGN GAP against `CONTENT-SEARCH-DESIGN.md` §4.2: the
+filter parses `json_extract(chain, '$[#-1].step')` at read time while §4.1 gives `capture_text` a
+`chain_kind` column for the identical question.
+
+**paths:**
+- `bio-plane/src/schema.mjs` — the `content` table's DDL and its index block ONLY (a `chain_kind`
+  column and its index, plus the REC-90 gap comment rewritten as the decision). Nothing else.
+- `bio-plane/src/store.mjs` — `#migrate` ONLY: one block that adds the column to a `content` table
+  created before this item. **NOT** `mintContent` (a generated column has no writer), not any read.
+- `bio-plane/src/query.mjs` — the `MEANING.content` entry's `chain` sub-field and its
+  `rowComputed.chain_last` ONLY.
+- `bio-plane/test/content-arm.test.mjs` — sections 6 and 10 corrected (not exempted), one section
+  added; `NEGATIVE CONTROL:` line extended.
+- `bio-plane/test/nc-rec104.mjs` — new, the negative-control driver.
+- `bio-plane/test/content-index-probe.mjs` — the REC-90 instrument, re-pointed at the column so the
+  improvement is measured by the same instrument REC-90 used.
+- `bio-plane/dist/**` — `npm run build` output.
+- `docs/development/CONTENT-SEARCH-DESIGN.md` — §4.2's Incomplete entry and the front matter.
+- `docs/development/MEASUREMENTS.md` — one appended section (the before/after at both corpus sizes).
+- `docs/development/CLAIMS.md` (this block), `docs/DECIDED.md` on regeneration.
+
+**NOT CLAIMED:** `INTERFACES.md` / `INTERFACE-CHANGES.md` — the arm's answer shape and the
+`rows=content` column list do not move, so no IC is expected; if one becomes due it is minted
+before building. `QUEUE.md` (CONDUCT's), `civicos-ui/**`, `tools/**`, `newgroup/**`.
+
+**open as of 2026-09-18** — the worker is building.
