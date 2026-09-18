@@ -9812,6 +9812,7 @@ DIFFERENT worker's HTTP path and not a plane op. Zero consumers of the new ops.
 **RESPONSES:** not yet collected. UI to answer on the act; SKILL and DIST expected NOT-AFFECTED.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at REC-87's integration — I3 23.5.0 → 23.6.0, MINOR (additive, as classed).** Base read AT RESOLUTION: 23.5.0, not the 23.3.0 proposed against (IC-126 and IC-129 each took a minor meanwhile). CONDUCT answers FOR SKILL and DIST: NOT-AFFECTED (no caller of the new ops), named as such. **UI's act is OWED, not waived** (the delegation in `CLAIMS.md`); `construct-status.json` now carries `4.transcribe` BUILT and `4.transcribe-ui` ABSENT. **Found by a control arm and fixed in this landing:** C-45.2 refused a typing of any capture with no extraction chain — Bob's own case, a scan no engine could read.
+<<<<<<< HEAD
 ---
 
 ## IC-130 · I3: THE ROLLUP REFERENT — `op=airunlog`'s `result_kind` gains `observation`, and `op=airuntick` / `op=airunclose` now REFUSE a `run` `PRESENT` that names nothing (C-22.10's `run` carve-out DELETED, D-366 CLOSED) · PROPOSED 2026-09-18 (REC-100, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 — MAJOR, I3 24.0.0**
@@ -9908,3 +9909,61 @@ APPENDED; (3) section R of `agent-worker/test/harness.test.mjs` drives the tick 
 rather than a mock, with a negative control per half. **agent-worker's answer gains two keys,
 `log_refused` and `present_unbacked`, and `logged` now counts appended entries rather than ticks** —
 equal whenever nothing is refused, which was every case before this IC.
+=======
+
+## IC-131 · I3: THE `content:` ARM'S `chain` FILTER GAINS A THIRD ANSWER — `content:chain=does-not-apply` names an image cited as its own bytes, `content:chain=undetermined` STOPS matching one, and `rows=content`'s `chain_last` says `does-not-apply` on such a row · PROPOSED 2026-09-18 (REC-121, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (the query language of `op=search` / `op=meaningrows`, and the `rows=content` row).
+- **Proposer / owner to land it:** RECORD, on the REC-121 row; landed in this branch.
+- **Change class: proposed MINOR — additive in its vocabulary, and ONE ANSWER NARROWS, stated rather
+  than argued down.** Built on I3 **23.6.0** (`e09f5be0`) and REBASED before push onto `0719e82f`, where
+  I3 already read **24.0.0** (IC-130, REC-100, MAJOR) — so the base is 24.0.0, and CONDUCT reads it
+  again AT RESOLUTION. IC-130 does not touch the `content:` arm: measured, `git diff e09f5be0 0719e82f` leaves
+  `bio-plane/src/query.mjs` unchanged (it moves `store.mjs` and `schema.mjs` only).
+
+**WHAT MOVES, and only for a row with `cited_as = 'bytes'` (FW-19 / IC-125):**
+
+| question | before | after |
+| --- | --- | --- |
+| `content:chain=undetermined` | `chain IS NULL` — text rows with no chain AND every image cited as its own bytes | `chain IS NULL AND cited_as <> 'bytes'` — text rows only |
+| `content:chain=does-not-apply` | not a value (fell through to `chain_kind = 'does-not-apply'`, matching nothing) | `cited_as = 'bytes'` |
+| `rows=content` → `chain_last` on a bytes row | `NULL` (indistinguishable from undetermined) | `"does-not-apply"` |
+| `op=searchfields` → `syntax` | — | one line stating the third answer |
+
+Every text row's answer is unchanged. `does-not-apply`, like `undetermined`, is a statement ABOUT the
+chain and not a step kind, so it is NOT in the published `fields.chain.values` (which stays
+`STEP_KINDS`) and is NOT a bare word — both exactly as `undetermined` already was. The literal travels
+as a bound ARGUMENT.
+
+**WHY IT NARROWS, and why that is the correction rather than the regression.** A bytes row's chain
+is NULL BY MEANING (EXTRACTION-BREADTH §3.1: the null "must not be read as undetermined"); `op=content`
+already says so (`transcription.applies: false`, IC-125). `content:chain=undetermined` was the one read
+still counting it as undetermined. **A consumer that used `chain=undetermined` to find "rows whose
+provenance question is open" gets FEWER rows, and every row it loses is one whose question was never
+open** — the answer stops overclaiming. It is therefore classed additive-with-a-correction rather than
+breaking; CONDUCT rules. The image is NOT dropped anywhere: it answers `chain=does-not-apply`, and
+every other `content:` question (`has:content`, `content:image`, `content:member`, `content:uncited`,
+`op=content`) still reaches it — `rec121-chain-bytes.test.mjs` §3, whose `dropall` control arms
+exactly that liar and fails.
+
+**THE OVER-STRICTNESS PIN.** `content-arm.test.mjs` §11's digest over 40 `content:` questions on a
+fixture with no bytes row is **byte-identical** (`c39f4e8adf1960c2…`) on this tree and on
+`src/query.mjs` as at `e09f5be0` (`node test/nc-rec121.mjs`, arm `preitem`, after `baseline2` shows
+two untouched runs agree).
+
+**CONSUMER IMPACT, MEASURED.** A recursive grep for `chain_last`, `chain=undetermined` and
+`content:chain` over `civicos-ui/`, `agent-worker/`, `pdf-worker/src/`, `ocr-worker/src/` and
+`newgroup/` answers **zero** lines. The only readers are the plane's own suites
+(`content-arm`, `content-chain-kind`, this item's), and `content-chain-kind.test.mjs`'s two pins on the
+old SQL and the old `chain_last` spelling are CORRECTED, not exempted, with the reason at the site.
+
+**WHAT IS DELIBERATELY NOT IN THIS IC.** `content:cap=undetermined` (`derivation_cap IS NULL`) STILL
+matches a bytes row — the same class on the cap axis, measured in `rec121-chain-bytes.test.mjs` §4 and
+reported to CONDUCT as a finding. It is outside REC-121's scope ("no other `content:` answer may
+move"), and `rows=content`'s `derivation_cap` shows the same NULL. Nor does `rows=content` gain a
+`cited_as` column: that would move EVERY row of every `rows=content` answer and break the pin above.
+
+**RESPONSES:** not yet collected. UI: the `cited_as` rendering act IC-125 already delegated covers this
+(a bytes row's null must not render as undetermined) and gains one word it can read, `chain_last:
+"does-not-apply"`; no new act. SKILL / FRAMEWORK / DIST expected NOT-AFFECTED (zero readers, above).
+>>>>>>> c634ba7d (rec-121: content:chain=undetermined stops matching an image cited as its own bytes — a THIRD chain answer, does-not-apply (IC-131))

@@ -131,7 +131,11 @@ const ARMS = {
                "the rows=content projection reads `chain_last` off the column too"],
     mustPass: "every behavioural assertion in both suites — they agree for free when both answers are "
             + "right, which is exactly why the structural pin exists",
-    patch: () => arm(QUERY, "chain_last: `m.chain_kind`,", "chain_last: `json_extract(m.chain, '$[#-1].step')`,"),
+    /* RE-ANCHORED BY REC-121: `chain_last` became a CASE (a bytes row says
+       `does-not-apply`), so the old anchor `chain_last: \`m.chain_kind\`,` matched
+       ZERO times and this arm would have read ARMED NO. The parse goes back into
+       the text-row branch, which is where it would bite. */
+    patch: () => arm(QUERY, "+ `ELSE m.chain_kind END`,", "+ `ELSE json_extract(m.chain, '$[#-1].step') END`,"),
   },
   nomigrate: {
     files: [STORE],

@@ -2354,6 +2354,12 @@ export class Store extends DurableObject {
         + "citable in them, so an empty answer is a fact about citation and never about what a document says",
         "content:cap=undetermined and content:chain=undetermined are their own values, never folded into a "
         + "letter or a step; a comparison like content:cap<=B does not match them, because NULL compares to nothing",
+        /* REC-121 / IC-131: the chain's THIRD answer, stated in the published grammar
+           beside the other two, because a member who asks `chain=undetermined` and
+           does not see an image they cited must be able to learn where it went. */
+        "content:chain=does-not-apply names the images cited as their own bytes -- no transcription stands "
+        + "between such a citation and what it points at, so its chain is not undetermined and "
+        + "content:chain=undetermined does not match it",
         "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison "
         + "(resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
         "has:leg asks whether the bundle carries any row in the meaning table at all",

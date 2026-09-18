@@ -105,10 +105,22 @@ console.log("\n--- 1. the parse is retired, not kept beside the column ---");
      different question from "the chain has no last step kind". Reading it off
      `chain_kind IS NULL` would fold the second into the first, and the pre-item
      answer did not. */
-  t("`content:chain=undetermined` still asks whether the record holds a chain at all",
-    frag("content:chain=undetermined"), "FROM content WHERE chain IS NULL");
+  /* CORRECTED BY REC-121, NOT EXEMPTED. This pinned the bare `chain IS NULL`, which
+     was right for every row that could exist when REC-104 wrote it and became
+     WRONG when FW-19 admitted an image cited as its own bytes, whose chain is NULL
+     BY MEANING (EXTRACTION-BREADTH §3.1). The half of the decision above that
+     REC-104 made still stands and is still pinned — undetermined reads `chain`, not
+     `chain_kind` — and the exclusion of a bytes row is the new half. The bytes
+     literal travels as an ARGUMENT. */
+  t("`content:chain=undetermined` still asks whether the record holds a chain at all — over TEXT rows",
+    frag("content:chain=undetermined"), "FROM content WHERE chain IS NULL AND cited_as <> ?");
+  /* CORRECTED BY REC-121: `chain_last` still reads the COLUMN for every text row —
+     no JSON parse returned, which the `parseback` arm of `nc-rec104.mjs` exists to
+     catch — and a bytes row says `does-not-apply`, the word its filter answers it
+     under. The pin is widened to the CASE rather than dropped, so a parse put back
+     in either branch still fails here. */
   t("the rows=content projection reads `chain_last` off the column too — one answer, not two",
-    /chain_last:\s*`m\.chain_kind`/.test(QUERY_SRC), true);
+    /chain_last:\s*`CASE WHEN m\.cited_as = '\$\{CONTENT_CITED_AS_BYTES\}' THEN '\$\{CHAIN_DOES_NOT_APPLY\}' `\s*\+\s*`ELSE m\.chain_kind END`/.test(QUERY_SRC), true);
 }
 
 /* ==================================================================== 2
