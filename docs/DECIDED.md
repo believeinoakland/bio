@@ -1078,8 +1078,6 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1803`
 - **REC-119** · 2026-09-18 — THE FREEZE QUESTION IS RULED BY CONDUCT #3 RATHER THAN ROUTED, AND THE RULING IS BRIEFED WITH ITS OWN FALSIFIER: both halves are published and THE ENVELOPE SAYS WHICH IS WHICH.** `inquiry_basis_versions.composition` is **NOT a claim about what the record can support NOW — it is a FROZEN RECORD OF WHAT WAS AUTHORED…  
   `docs/development/QUEUE.md:1883`
-- **REC-121** · 2026-09-18 — A FLIP WITHOUT A SPAWN, CORRECTED 2026-09-18 by CONDUCT #4 and recorded rather than silently undone: this row read `running` on `origin/main` from `3fe0ce81` until this commit with NO worker ever started** — BOB #14's build order landed between the flip and the spawn and the spawn was never made; the verification…  
-  `docs/development/QUEUE.md:1491`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -1204,6 +1202,8 @@ authority is the file named, never this one.
   `docs/architecture/BIO_Interaction_Constructs_v0_1.md:119`
 - **FW-18** · 2026-09-15 — THREE of the four measured classes LANDED, the fourth NOT WRITTEN for a measured reason, and a DEFECT OF THE SAME CLASS THE ITEM IS ABOUT WAS FOUND ALREADY LANDED IN THE PLANE AND CORRECTED.**  
   `docs/development/CLAIMS.md:8740`
+- **FW-19** · 2026-09-18 — BOB #14 RULED it INSIDE the build order and FIRST AMONG EQUALS: *a defect in a just-landed item IS a defect in the substrate; corrections to landed items outrank new items.* DEPENDS-ON CHECKED AGAINST THE CODE at spawn on `6e50b260`: `cited_as` (FW-19) and `chain_kind` (REC-104) both present in…  
+  `docs/development/QUEUE.md:1491`
 ## CAP-
 
 - **CAP-3** — accepts-when bio-plane/test/archive-monitoring.test.mjs: three source_refused outcomes drive the tick to fire the fallback (grade C, 2-hop chain, failing run reset by the archive success = the RULED re-fetch-for-monitoring).  
