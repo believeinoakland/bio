@@ -14098,7 +14098,7 @@ the editor 62/1; every restore sha256 MATCH. IC minted with `tools/mintid.mjs`: 
 administrator-revoke widening, built from §6A.2's first version. **FOR CONDUCT:** RESOLVE IC-151 against I3 as read at
 resolution (30.0.0 when written); the REC-126 → UI DELEGATION stays open with its point-1 authority line superseded.
 
-## CLAIM 2026-09-18 M0 (M0-67 — D-425: can the battery report green over a suite that printed FAIL?)
+## CLAIM 2026-09-18 M0 (M0-67 — D-425: can the battery report green over a suite that printed FAIL?) — RELEASED
 
 Worker spawned by CONDUCT #5, isolated worktree `agent-aeae827f6d7997fa5`, branch
 `worktree-agent-aeae827f6d7997fa5`, base `30f1bd6b` (origin/main carrying the M0-67 flip). `npm ci` in all three
@@ -14111,3 +14111,11 @@ and DEBT D-425. Paths:
   verdict rule), this block.
 
 NOT `QUEUE.md` (CONDUCT's), NOT `civicos-ui/` source, NOT `newgroup/`.
+
+released: 2026-09-18 by the M0-67 worker. Baseline at `2f63de5e`: **247/247 suites green · 15043 assertions**, none
+skipped, exit 0. After, at `3e881e96`: **248/248 suites green · 15071 assertions · run 39343.7d1b47**, none skipped,
+exit 0, `log: … holds this run alone`; `node scripts/coverage.mjs --strict` exit **0** unpiped (REGISTER FLOOR 1399/1399 ·
+239/239 · 240/240 · run 202/202, moved from the print); `node civicos-ui/test/run.mjs` exit **0** (53 PASS);
+`node tools/plancheck.mjs --local` 0 fail; `node tools/decided.mjs` regenerated. D-425 CLOSED and archived; M-61 records
+the measurement. **FOR CONDUCT:** `battery.mjs`'s headline now ends `· run <id>` and a new exit status 3 means REFUSED
+(another battery holds the output file); `REGISTER_FLOOR` in `coverage.mjs` moved — re-read on the merged tree.
