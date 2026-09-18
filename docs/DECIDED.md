@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1119 rulings across 87 documents.
+1120 rulings across 87 documents.
 
 ## DEC-
 
@@ -533,7 +533,7 @@ authority is the file named, never this one.
 - **D-329** · 2026-09-13 — AND THE ROW'S OWN CONCLUSION IS OVERTURNED ON A MEASUREMENT: A STATIC INSTRUMENT CAN SEE THIS.** This row held that *"an assertion label composed at run time exists in no file, so no static instrument can see it and only a periodic census can."* That is true of the RENDERED label and FALSE OF THE TEMPLATE, which…  
   `docs/archive/ledgers/DEBT-closed.md:53`
 - **D-329** — D-329 — the row's own conclusion OVERTURNED on a measurement: a run-time-composed label exists in no file only as RENDERED; its TEMPLATE does, and `composedSpan()` (new `scripts/armdecay.mjs`) catches a fragment that resolves against a suite's template only by eating its `${…}` slot — reach 2,700 label quotes from…  
-  `docs/development/QUEUE.md:1239`
+  `docs/development/QUEUE.md:1228`
 - **D-330** · 2026-09-13 — AMENDED MID-ITEM, 2026-09-13: `docs/development/DEBT.md` gains a SECOND row beyond D-330's disposition — **D-333**, the class this item's measurement establishes and its repair does not close: a driver's declared TALLY decays while every one of its anchors stays live, and no static check can see the difference…  
   `docs/development/CLAIMS.md:3273`
 - **D-331** · 2026-09-13 — RULED AS THIS ROW RECOMMENDED, AND THE RULING DECLINES BOTH HALVES OF THE FALSE CHOICE: A THROWING DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING.** `scripts/armdecay.mjs`'s `preflight()` is the shared dry pass — it counts every arm's quote in the file that arm will write, prints the WHOLE table, and only…  
@@ -742,6 +742,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:12377`
 - **IC-122** — (grammar arm extended; `codesUsed` CORRECTED, not exempted), `bio-plane/dist/**` (rebuild; `src/signpage.mjs` byte-identical), `docs/development/INTERFACE-CHANGES.md` (IC-122 PROPOSED), the Part II §16 Drive paragraph of `docs/architecture/BIO_Content_Framework_v0_10.md` (one parenthetical; front matter unchanged —…  
   `docs/development/CLAIMS.md:12973`
+- **IC-136** — (IC-136 added `leads` to `op=stats`), RULED by BOB #15 in `MEMBER-KNOWLEDGE-DESIGN.md` §5 (*A COUNT IS A DISCLOSURE OF EXISTENCE*). - **Owner to land it:** `RECORD` - **Consumers to answer:** `UI` (NOT-AFFECTED measured: `civicos-ui/` calls neither `op=stats` nor  
+  `docs/development/INTERFACE-CHANGES.md:10591`
 - **IC-138** — `bio-plane/test/rec121-chain-bytes.test.mjs` §4 CORRECTED at its site with the reason. - Generated: `bio-plane/dist/*` rebuilt. - Docs: `INTERFACE-CHANGES.md` (IC-138, minted with `node tools/mintid.mjs IC`), `CONTENT-SEARCH-DESIGN.md` (§4.2 and front matter), `docs/DECIDED.md` on regeneration, `.gitignore` (the…  
   `docs/development/CLAIMS.md:13576`
 ## C-
@@ -1047,15 +1049,15 @@ authority is the file named, never this one.
 - **REC-100** · 2026-09-18 — [SUPERSEDED 2026-09-18: BOB #14 RULED the rollup referent (§3) and REC-100 BUILT it (IC-130 on I3) — the carve-out is DELETED, both rollup writers carry an `observation` referent, and D-366 is CLOSED.  
   `docs/development/OBSERVATION-LOG-DESIGN.md:3`
 - **REC-100** · 2026-09-18 — THE ROLLUP REFERENT IS RULED (2026-09-18, BOB #14) AND BUILT (2026-09-18, REC-100, IC-130 on I3).  
-  `docs/development/OBSERVATION-LOG-DESIGN.md:20`
+  `docs/development/OBSERVATION-LOG-DESIGN.md:22`
 - **REC-100** · 2026-09-18 — [SUPERSEDED 2026-09-18 by REC-100: the ruling was made and the carve-out is deleted — the §3 / §4.4 entry above.]** Byte-identity against a pre-change build is MEASURED rather than self-pinned (`test/rec113-identity.mjs`, 3,236 bytes, sha256 `75a9946f2512…`, identical once the added keys are stripped).  
-  `docs/development/OBSERVATION-LOG-DESIGN.md:21`
+  `docs/development/OBSERVATION-LOG-DESIGN.md:23`
 - **REC-100** · 2026-09-18 — RULED 2026-09-18 by BOB #14 (mechanism, under Bob's standing delegation), closing the gap REC-100 found.  
-  `docs/development/OBSERVATION-LOG-DESIGN.md:123`
+  `docs/development/OBSERVATION-LOG-DESIGN.md:126`
 - **REC-103** · 2026-09-16 — added: 2026-09-16 · CONDUCT #1 (draining BOB #12's `§4.3 CORRECTED` entry as an ITEM.  
   `docs/archive/ledgers/QUEUE-closed.md:844`
 - **REC-103** · 2026-09-16 — CORRECTED 2026-09-16 by REC-103: the document arm now applies the fence row-whole (IC-105), so the withholding differs across three levels for THREE stated reasons rather than because one arm was never built — the entity partition is deliberately unfenced and still wants a ruling, and that is the only open half of…  
-  `docs/development/OBSERVATION-LOG-DESIGN.md:26`
+  `docs/development/OBSERVATION-LOG-DESIGN.md:28`
 - **REC-104** · 2026-09-18 — AMENDED 2026-09-18 (same worker, REC-104):** `bio-plane/src/schema.mjs` is widened by THREE COMMENT LINES outside the content block — lines citing REC-90's measurement as `M-21`, which was renumbered to `M-23` at integration (M-21 is D-367's diff).  
   `docs/development/CLAIMS.md:13119`
 - **REC-104** · 2026-09-18 — AMENDED AFTER RELEASE, 2026-09-18 (same worker, REC-104): `bio-plane/test/airuns.test.mjs` ADDED.** The final battery on the rebased tree failed ONE suite: `airuns.test.mjs`'s unread-index CEILING (13), because this item's `content_chain_kind` index joins the roster through the sweep's DECLARED registry blind spot…  
@@ -1079,7 +1081,7 @@ authority is the file named, never this one.
 - **REC-113** · 2026-09-17 — IT CORRECTED THE BRIEFED BASELINE AND CAUGHT THE QUIET TRAP DOING IT:** its first pristine run read `213/214 · 1 skipped · 13370`, **exit 0 and a healthy-looking headline with a whole fleet member's 76 assertions missing** — `ocr-worker` unresolvable without `npm ci` in all three packages.  
   `docs/archive/ledgers/QUEUE-closed.md:846`
 - **REC-113** — `partial` IS THE ONE STATE WHOSE COVERAGE CLAIM THIS DESIGN HAS NOT DECIDED, AND REC-113 DECLINED TO DECIDE IT SILENTLY.** §3 writes the rule as *"`PRESENT` with no `result_ref` is refused"*, and C-22.10 implements exactly that — it keys on `PRESENT` alone.  
-  `docs/development/OBSERVATION-LOG-DESIGN.md:22`
+  `docs/development/OBSERVATION-LOG-DESIGN.md:24`
 - **REC-114** · 2026-09-17 — CLOSED 2026-09-17 by REC-114 — RULED *EARNED*, WITH THE AUTHORED LETTER PUBLISHED BESIDE IT RATHER THAN ERASED.** The row offered two defensible answers and this is the one taken: `op=meaningrows&rows=leg` now publishes the letter the record can SUPPORT, capped through the SAME `Store.#capturedAt` the strength walk…  
   `docs/archive/ledgers/DEBT-closed.md:70`
 - **REC-114** · 2026-09-17 — RULED *EARNED*, AND THE RULING WAS FALSIFIED AT THE ARTIFACT BEFORE IT WAS IMPLEMENTED.** The listing publishes the letter the record can SUPPORT, capped through the SAME `Store.#capturedAt` the strength walk applies, with the AUTHORED letter published BESIDE it (`grade_authored`) and `grade_why` saying why they…  
@@ -1119,11 +1121,11 @@ authority is the file named, never this one.
 - **REC-127** · 2026-09-18 — AMENDED 2026-09-18 by REC-127 — §4.2's `cap` FILTER HAS THE SAME THREE ANSWERS, under `IC-138` on I3; the sibling REC-121 measured is CLOSED.** A `cited_as = 'bytes'` row has no transcription, so there is no derivation step for a cap to be the weakest of and its `derivation_cap` is NULL BY MEANING.  
   `docs/development/CONTENT-SEARCH-DESIGN.md:13`
 - **REC-129** · 2026-09-18 — RULED by BOB (design): both keys go to the ADMIN class only, and member and probe receive NO such key.  
-  `docs/development/QUEUE.md:1084`
+  `docs/archive/ledgers/QUEUE-closed.md:2285`
 - **REC-130** — CORRECTED by BOB #15: fixed on `main` by REC-130 at `a32fda24`, 17 minutes before this file was written**; CONDUCT #4's handoff adds REC-125 and MK-1, so FOUR exposures are fixed on `main` and open on any plane running 0.58.0).  
   `docs/development/kickoffs/BOB-NEXT.md:29`
 - **REC-130** · 2026-09-18 — ALL THREE DECIDED BY BOB #14 the same hour, as applications of existing doctrine; BOB is writing them into `BIO_Publication_v0_1.md` §6A — this row UNBLOCKS against that text.** (1) unsigned case documents were readable anonymously → `REC-130`, which goes FIRST; (2) a non-member recipient reaches the copy by a…  
-  `docs/development/QUEUE.md:1095`
+  `docs/development/QUEUE.md:1084`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -1563,8 +1565,6 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/architecture/BIO_Membership_Architecture_v1.md:32`
 - §6A — the review copy is RULED and DESIGNED at doctrine level and NOTHING IS BUILT.  
   `docs/architecture/BIO_Publication_v0_1.md:10`
-- **2026-09-18** — CORRECTED 2026-09-18 by MK-4 and the state did NOT move: this also said the internet level had no member WRITER (its writer is the LEAD) — the lead now writes there (op=leadlook, 10.lead), so that half was false and is removed; the two halves that remain are still absent; a member surface for the frontier and the…  
-  `docs/architecture/BIO_System_Design.md:89`
 - **2026-07-30** — st" is REVISED: accepted so long as it is disclosed in the provenance chain (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30); not annotated here. - §6 — sessions and execution modes are priced against a June 2026 billing change and no ruling or dataplane entry carries the Session abstraction. - §7.7 —…  
   `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:11`
 - **2026-07-30** — It is the inventory that has to exist before a design document can be written honestly." One RULED marker (Bob, 2026-07-30, Step 0's scope).  
@@ -1949,6 +1949,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:13649`
 - — the one superseded assertion ("testimony not yet carried") CORRECTED at its site.  
   `docs/development/CLAIMS.md:13693`
+- arm whose find-string the refactor moves, CORRECTED with the reason, never exempted. - any suite pinning a registry or roster the change moves, corrected with its reason. - `bio-plane/dist/**` rebuilt if the battery requires it. - `docs/architecture/construct-status.json` (`9.internet`, `3.census` reviewed),…  
+  `docs/development/CLAIMS.md:13759`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2226,7 +2228,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - version that the content is extracted from."* RULED, folded into Part II §16.  
   `docs/development/QUEUE.md:876`
 - D, driven through the op; the six keys are gone from finding bytes and `caseflip.test.mjs`'s still-there assertions are CORRECTED (never exempted) to say so; the stranger-verification path still passes end to end with the instance unreachable.  
-  `docs/development/QUEUE.md:1203`
+  `docs/development/QUEUE.md:1192`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:240`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  

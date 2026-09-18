@@ -733,13 +733,21 @@ console.log("\n--- E · the frontier is a view over the log (§5) ---");
      both ways: if a built level silently stops answering, and if the not-built
      branch ever swallows one. An arm that could only go red by the feature
      ARRIVING is the shape that gets exempted; this one cannot be. */
-  for (const lvl of ["internet"]) {
+  /* CORRECTED A THIRD TIME 2026-09-18 BY REC-129 (IC-143), NEVER EXEMPTED, on the
+     grounds both corrections above state. `internet` was the last level with no
+     READ; REC-129 built it over the LEAD's looks, so every one of the four levels
+     now answers and the arm as written asserted that a level which answers must
+     not. THE RULE IS UNCHANGED — *a level this reader does not read says so in
+     words and never with an empty list* — and with no unbuilt level left it is
+     asserted over a level that DOES NOT EXIST, which is the only input the
+     not-built branch can still receive; the converse below gains `internet`. */
+  for (const lvl of ["cosmos"]) {
     const g = await GET(`op=frontier&token=${TOK}&level=${lvl}`);
-    t(`E5: the ${lvl} level answers NOT BUILT rather than an empty frontier`,
+    t(`E5: a level this reader does not know (${lvl}) answers NOT BUILT rather than an empty frontier`,
       [g.built, (g.looked || []).length, typeof g.note === "string" && g.note.length > 40],
       [false, 0, true]);
   }
-  for (const lvl of ["content", "meaning"]) {
+  for (const lvl of ["content", "meaning", "internet"]) {
     const g = await GET(`op=frontier&token=${TOK}&level=${lvl}`);
     t(`E5b: the ${lvl.toUpperCase()} level is BUILT and says so — the converse of E5, so this arm `
     + `fails if that level's writer is ever removed as well as if the not-built branch swallows it`,

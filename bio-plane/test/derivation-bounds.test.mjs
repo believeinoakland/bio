@@ -1270,7 +1270,14 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    (`107 scanning UNBOUNDED`) and not by adding one to the figure that was here. The arrival is
    `provenanceRoutesMarked`, and it is the SAME arrival the class ceiling above moved for — one
    method, two ratchets, both moved in the same turn from their own printed output. */
-const SCANNING_MEASURED_2026_09_15 = 107;
+/* REC-129 / IC-143, 2026-09-18: 107 -> 108, TAKEN FROM THE CORPUS LINE THIS RUN PRINTED
+   (`108 methods scanning UNBOUNDED`), not by adding one. The arrival is `#frontierInternet` — the
+   frontier reader a FIFTH time, at the internet level, over the LEAD's looks — and there is no
+   departure. Same D-369 second-set shape as its siblings: its PAGE and its never-followed list are
+   fetched at `cap + 1` (graded by name below as `#frontierInternet:page`), while the viewer-scoped
+   TALLY is one GROUP BY over the readable looks and deliberately unbounded, as the other three
+   levels' tallies are. */
+const SCANNING_MEASURED_2026_09_15 = 108;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
@@ -1628,7 +1635,11 @@ t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is b
 + "and each still PASSES; what changes is that the instrument now SAYS which methods its count "
 + "cannot defend, instead of a reader having to re-derive it from a debt row",
   CENSUS_BLIND,
-  ["#calDriftFor", "#frontierContent", "#frontierMeaning", "biasManifest",
+  ["#calDriftFor", "#frontierContent",
+   /* REC-129, 2026-09-18 — the arrival, and like `provenanceRoutesMarked` it joins the DEFENDED
+      half: its page is graded by name (`#frontierInternet:page`), so the PARTITIONED arm below
+      does not move. Its unbounded half is the viewer-scoped tally GROUP BY. */
+   "#frontierInternet", "#frontierMeaning", "biasManifest",
    "documentsNamingEntity", "frontier",
    /* REC-116, 2026-09-17 — the arrival, and it joins the DEFENDED half rather
       than D-369's set 2: `provenanceRoutesMarked` publishes a bound AND scans

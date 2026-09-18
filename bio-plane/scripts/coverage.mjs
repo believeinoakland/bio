@@ -1236,8 +1236,13 @@ const REGISTER_FLOOR = {
      failure mode (a dropped floor move goes SLACK, not broken). classified and corpus are
      UNMOVED and that is stated rather than implied: the arriving arm joined an already-counted
      declaration rather than adding a suite. */
-  arms: 1346,
+  /* MOVED 2026-09-18 by REC-129 (1332 -> 1345 · 230 -> 232 · 231 -> 233 · run 193 -> 195): this
+     item's own green `--strict` run at its commit PRINTED `arms 1345/1332 · classified 232/230 · corpus
+     (suites read) 233/231 · GREW by 13 arm(s)` and `floor 195/193 reproducible` — taken from the print,
+     never by adding. The arrivals are two suites: frontier-internet.test.mjs (8 arms, (a)-(h)) and
+     stats-disclosure.test.mjs (5 arms, (a)-(e)), both driven by nc-rec129.mjs. */
   // [branch record | MK-2 resumed, on origin/main 27ad8b4f] MOVED 1332 -> 1346, classified 230 -> 231, corpus 231 -> 232, run 193 -> 194, from this item's own `--strict` print on the committed tree 8fe3fc8e (`arms 1346/1332 · classified 231/230 · corpus (suites read) 232/231 · GREW by 14 arm(s)`, `floor 194/193 reproducible`), exit 0. Cause: ONE new suite, `testimonyaxis.test.mjs`, whose declaration the register counts at 14 arms. ONE KEY SET.
+  arms: 1346,
   // [CONDUCT #4 at REC-130's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1332/1318 · classified 230/230 · corpus (suites read) 231/231`, `floor 193/193 reproducible`.
   // [CONDUCT #4 at MK-4's merge onto MK-1] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1327/1314 · classified 230/229 · corpus (suites read) 231/230`, `floor 193/192 reproducible`; 188/188 ops reached, 327/327 checks named.
   // [branch record | REC-130 on origin/main f426f519] MOVED 1314 -> 1318 from this item's own post-commit `--strict` print at 5a3a836c (`arms 1318/1314 · classified 229/229 · corpus (suites read) 230/230 · GREW by 4 arm(s)`, `floor 192/192 reproducible`). Cause: `casesign.test.mjs`'s declaration gained arms (e)-(h). classified, corpus and run UNMOVED — the arms joined an already-counted declaration.

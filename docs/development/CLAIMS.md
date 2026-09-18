@@ -13744,3 +13744,42 @@ what is owed: PRESENTING the axis. Every per-axis strength answer now carries `t
   cannot meet a testimony row until then: C-53.10–.12). The floors must STAY capture + connection (§3: the bar does).
 why it is yours: surfaces are Program B's (`MEMBER-KNOWLEDGE-DESIGN.md` §8), and the MK-2 row owns the plane half only.
 evidence: IC-142 in `INTERFACE-CHANGES.md`; `bio-plane/test/testimonyaxis.test.mjs`; `app.html`'s `PAIR_AXES` comment.
+
+### CLAIM 2026-09-18 RECORD (REC-129) — THE FRONTIER'S INTERNET-LEVEL READ
+
+Worker spawned by CONDUCT #4 into worktree `agent-af99c832f7860f664`. Builds the internet-level row of
+`OBSERVATION-LOG-DESIGN.md` §6's reader table over §4.5's lead looks, honouring MK-4's lead visibility.
+Id minted before building: IC-143 (I3).
+paths:
+  - `bio-plane/src/store.mjs` — `frontier`'s internet arm (new `#frontierInternet`), the one lead-visibility
+    rule factored so the frontier and `#leadVisibleTo` share ONE spelling, the not-built note.
+  - `bio-plane/src/airun.mjs` — the internet level's evidence-sidedness constant, if needed.
+  - `bio-plane/test/frontier-internet.test.mjs`, `bio-plane/test/nc-rec129.mjs` — new.
+  - `bio-plane/test/lead.test.mjs`, `bio-plane/test/nc-mk4.mjs` — the superseded not-built assertion and any
+    arm whose find-string the refactor moves, CORRECTED with the reason, never exempted.
+  - any suite pinning a registry or roster the change moves, corrected with its reason.
+  - `bio-plane/dist/**` rebuilt if the battery requires it.
+  - `docs/architecture/construct-status.json` (`9.internet`, `3.census` reviewed), `docs/architecture/BIO_System_Design.md`
+    §3 (rendered only), `docs/development/OBSERVATION-LOG-DESIGN.md` (§5.1 / §6 / Status / Incomplete),
+    `docs/development/INTERFACE-CHANGES.md` (IC-143), `docs/DECIDED.md` (regenerated only).
+  **NOT** `docs/development/QUEUE.md` (CONDUCT's), **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, no version bump.
+addendum 2026-09-18: STOPPED AT STAND-DOWN (CONDUCT #4). The claim stays OPEN; branch `worktree-agent-af99c832f7860f664` holds the WIP commit. IC-143 stays reserved to REC-129.
+addendum 2026-09-18: RESUMED by CONDUCT #5's respawn — worker `agent-a844762fac5c3f533`, branch
+`worktree-agent-a844762fac5c3f533`, the WIP branch merged onto `origin/main` `27ad8b4f`. The claim is this worker's now.
+Paths ADDED for scope (a), BOB #15's §5 counter ruling (IC-144, minted with `node tools/mintid.mjs IC`):
+  - `bio-plane/src/index.mjs` — the `operator` stamp on op=stats, op=selftest's relay, op=livefire's call.
+  - `bio-plane/src/livefire.mjs` — its relayed stats take the stamp.
+  - `bio-plane/src/store.mjs` — `stats()` (the two keys), `purge`'s two `stats()` calls, the DO route.
+  - `bio-plane/test/stats-disclosure.test.mjs` — new; `bio-plane/test/nc-rec129.mjs` gains its arms.
+  - `bio-plane/test/derivation-bounds.test.mjs` — the census ratchet and the census-blind roster, moved
+    from the printed figures for `#frontierInternet`'s arrival.
+released: 2026-09-18 by the resuming REC-129 worker (`agent-a844762fac5c3f533`), branch `worktree-agent-a844762fac5c3f533`.
+(a) IC-144 (MAJOR proposed): op=stats' `leads`/`observations` to the admin CLASS only, the same stamp on op=selftest
+and op=livefire, purge's proof kept. (b) IC-143 (MINOR proposed): op=frontier&level=internet run for the first time,
+corrected (30/3 -> 33/0) and controlled. Battery 240/241 at `cc7f906f` with the one red `strandedwork.test.mjs`
+caused by `docs/DECIDED.md` staleness, regenerated in this release commit. `node test/nc-rec129.mjs`: 13 arms, all
+AS DECLARED. Floors moved from the printed figures: REGISTER 1345/232/233, RUN 195. **FOR CONDUCT:** RESOLVE
+IC-143 and IC-144 against I3 as read at resolution (27.0.0 when proposed); DECIDE with BOB whether an admin-ROLE
+member (class `member`, `administer` right) should receive the two counts (provisional: no — the ruling names the
+class); fold the two DESIGN GAPS in `OBSERVATION-LOG-DESIGN.md` Incomplete sections (REC-110's tally premise 1;
+§4.5's run/acquire sources with no internet-level arm) — already written there.
