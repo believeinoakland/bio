@@ -1185,16 +1185,23 @@ one alone changed nothing**, so a single-variable control returned *no effect* f
 different sessions each published a false refutation from a correctly-run experiment. **When a control shows no
 effect here, suspect a SECOND blocker before recording a refutation.**
 
-**THE TWO THAT ACTUALLY BIT, AND BOTH ARE PREVENTABLE BY THE RETIRING SESSION:**
+**THE TWO THAT WERE BLAMED — ONE REAL AND PREVENTABLE BY THE RETIRING SESSION, ONE NOW IN DOUBT:**
 1. **A WEDGED TOOL CALL.** An unbounded `until … ; do sleep N; done` poller waiting on a condition that never
    arrived held a turn open for **5h15m** while `ListAgents` read `idle` and `isRunning` read `false`. **BOUND
    EVERY POLLER: `until <cond> || [ $SECONDS -gt N ]; do sleep 5; done`.** The harness steers you into the
    unbounded form — it refuses a bare `sleep` and recommends an until-loop — so the deadline is a habit, not a
    judgement call.
-2. **YOUR OWN REMOTE CONTROL. TURN IT OFF AS THE LAST ACT OF YOUR STAND-DOWN** —
-   `set_remote_control(session_id: "self", enabled: false)`. You may change your OWN; you may NOT change a
-   session you do not own, because that connection is the operator's and may be his phone. **RC stays ON for
-   every LIVE lane — that is how Bob reaches these lanes from other machines — and goes off only at retirement.**
+2. **REMOTE CONTROL — LEAVE IT ALONE. WITHDRAWN 2026-09-18 BY BOB #14, and CONDUCT #3 reached the same
+   conclusion independently.** This step used to say *turn your own RC off as the last act of stand-down*. Two
+   things were wrong with it. **The tool's own contract reserves `set_remote_control` for *"Only when the user
+   asks"*** — the connection is the operator's and may be his phone, and a kickoff is not the user asking.
+   **And the evidence that RC blocks an archive was CONFOUNDED:** D-405's *poller dead + RC on → refused* cell
+   was taken after killing the poller made CONDUCT #2 RESUME ITS TURN, so that session was mid-turn, which
+   blocks an archive by itself. **The one cell that isolates RC — `remoteControlActive: true`, `isRunning`
+   false — was driven by BOB #14 and ARCHIVED on the first call.** n=1, not settled; enough that no session
+   overrides a tool's contract to clear a blocker that may not exist. **So: the successor archives, and if it
+   is refused, READS THE ERROR** — *a turn in progress* is a wedge (item 1). Only if RC is plausibly the cause
+   does it go to Bob as a one-click ask; never retry in a loop, never touch another session's RC.
 
 **ALSO REAP WHAT YOUR BATTERIES LEAK.** Nine `workerd` processes, `PPID 1`, ~5h old, were left holding one dead
 agent's worktree by runs whose parent died without reaping them. The safe discriminator is **`PPID 1` + an age in
