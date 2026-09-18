@@ -21,6 +21,9 @@
  *   RE-RUN the same day with A7 added (an ABSENT claim resting only on a comment): seven arms, 38 pass / 0 fail.
  *   RE-RUN with A8 added (a rendering that leaves the Status date behind): eight arms.
  *   RE-RUN with A9 added (a key set that ignores additions): nine arms.
+ * AND A SECOND BY-HAND ARM ON THE PUSH GUARD (2026-09-18): `corpusCheck` made to accept any completion
+ *   line regardless of its fail count -> section 8's "A STALE STATUS DATE REFUSES THE PUSH" FAILS (51/1);
+ *   `tools/pushguard.mjs` restored by `cp`, verified byte-identical (sha256 7d978c73…).
  *   (A2 was RE-AIMED after its first run: forcing the op probe's CONDITION true also dereferenced a
  *   null match, so the suite CRASHED instead of failing the named assertion — a second variable.)
  * AND ONE ARM ON THE PUSH GUARD, run by hand because it arms a different file: `statusCheck`'s
@@ -39,7 +42,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { evalProbe, judge, renderCell, renderMap, lookup, bumpAsOf, UI_HELPERS, ROOT, STATES }
   from "../../tools/status.mjs";
-import { statusCheck } from "../../tools/pushguard.mjs";
+import { statusCheck, corpusCheck } from "../../tools/pushguard.mjs";
 import { copyFileSync } from "node:fs";
 
 let pass = 0, fail = 0;
@@ -48,7 +51,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 7;
+const SECTIONS = 8;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -225,6 +228,20 @@ section("7 — THE PUSH IS WHERE IT CANNOT BE SKIPPED: the guard REFUSES a drift
   t("a tree with no status tool is NOT silently verified — it says UNVERIFIED",
     [statusCheck({ repo: none }).kind, /UNVERIFIED/.test(statusCheck({ repo: none }).message)], ["absent", true]);
   for (const x of [agree, drift, none]) rmSync(x, { recursive: true, force: true });
+}
+/* ========================================================================== */
+section("8 — THE PUSH ALSO SEES THE DESIGN CORPUS: a Status date the body moved past is refused BEFORE main goes red");
+{
+  /* Driven through the guard's `run` seam with corpuscheck's REAL line shapes: a stale-date fail
+     cannot be staged without committing to a repository carrying the whole governed corpus. */
+  const stale = corpusCheck({ run: () => ({ status: 1, stdout:
+    "  FAIL  docs/architecture/CORPUS-STANDARD.md: Status says `as of 2026-09-17` but the file last changed 2026-09-18 — the body moved and the front matter did not\n"
+    + "corpuscheck: 51 governed document(s); under docs/development/ 63 document(s) — 30 governed, 30 excluded, 3 undecided, 0 unclassified; 1 fail\n" }) });
+  t("A STALE STATUS DATE REFUSES THE PUSH — the defect that left main red twice", [stale.ok, stale.kind], [false, "fail"]);
+  const silent = corpusCheck({ run: () => ({ status: 0, stdout: "" }) });
+  t("a corpuscheck that exits 0 WITHOUT its completion line verified nothing, and is refused", [silent.ok, silent.kind], [false, "silent"]);
+  const live = corpusCheck();
+  t("the real corpus on this tree is current (a guard that refused everything would pass the arm above)", [live.ok, live.kind], [true, "current"]);
 }
 } finally {
   rmSync(repo, { recursive: true, force: true });

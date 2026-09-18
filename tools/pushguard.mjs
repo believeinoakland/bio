@@ -511,6 +511,28 @@ export function statusCheck({ repo = REPO, run = null } = {}) {
            message: "THE SOURCE OF TRUTH FOR WHAT IS BUILT DISAGREES WITH THE CODE (tools/status.mjs --check)." };
 }
 
+/* ------------------------------------------------ THE DESIGN CORPUS, CHECKED WHERE IT CAN SEE THE COMMIT
+ *
+ * Added 2026-09-18 by BOB #14 after the SAME defect left `main` red twice in one afternoon: a
+ * governed document's body changed while its Status `as of` date did not. corpuscheck's date arm
+ * compares against the file's LAST COMMIT, so it cannot fire before the commit exists, and
+ * `plancheck --local` skips it — every pre-push run passed, and only the bare run AFTER the push
+ * failed. At the push the commit exists, so the check fires in time. The repository's own
+ * corpuscheck is run, and its completion line is required, not its exit status. */
+export function corpusCheck({ repo = REPO, run = null } = {}) {
+  const tool = join(repo, "tools/corpuscheck.mjs");
+  if (!existsSync(tool)) {
+    return { ok: true, kind: "absent", message: `tools/corpuscheck.mjs is not present in ${repo} — the design corpus is UNVERIFIED for this push.` };
+  }
+  const r = run ? run(tool) : spawnSync(process.execPath, [tool], { cwd: repo, encoding: "utf8" });
+  const out = `${r.stdout || ""}${r.stderr || ""}`;
+  const line = (out.match(/corpuscheck: \d+ governed document\(s\)[^\n]*/) || [])[0];
+  if (line && / 0 fail\s*$/.test(line)) return { ok: true, kind: "current", message: "the design corpus front matter is current." };
+  return { ok: false, kind: line ? "fail" : "silent", output: out,
+           message: line ? "THE DESIGN CORPUS FAILS corpuscheck — most often a Status `as of` the body moved past."
+                         : "tools/corpuscheck.mjs ran WITHOUT its completion line — nothing was verified." };
+}
+
 /* ------------------------------------------------------------------ scope of the verdict
  *
  * Whether the working tree the check read is the same thing as the commits being
@@ -590,6 +612,15 @@ function run(stdin) {
     return 1;
   }
 
+  const cc = corpusCheck({ repo });
+  if (!cc.ok) {
+    const L = ["", `  PUSH REFUSED — ${HOOK_MARKER}`, "", `  ${cc.message}`, ""];
+    for (const ln of (cc.output || "").split("\n")) if (/FAIL|fail/.test(ln)) L.push(`      ${ln.trim()}`);
+    L.push("", "  Move the named document's Status `as of` to today (one date, at the END of the Status),", "  commit, and push again.", "");
+    process.stderr.write(L.join("\n") + "\n");
+    return 1;
+  }
+
   const st = statusCheck({ repo });
   if (!st.ok) {
     const L = ["", `  PUSH REFUSED — ${HOOK_MARKER}`, "", `  ${st.message}`, ""];
@@ -612,7 +643,7 @@ function run(stdin) {
   }
   if (v.kind === "absent") notes.push("the generator is absent, so nothing was verified");
   const tail = notes.length ? ` (${notes.join("; ")})` : "";
-  process.stderr.write(`${HOOK_MARKER}: docs/DECIDED.md current; construct status agrees with the code${tail}\n`);
+  process.stderr.write(`${HOOK_MARKER}: docs/DECIDED.md current; design corpus current; construct status agrees with the code${tail}\n`);
   return 0;
 }
 
