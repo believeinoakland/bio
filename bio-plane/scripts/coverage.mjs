@@ -1243,7 +1243,8 @@ const REGISTER_FLOOR = {
      stats-disclosure.test.mjs (5 arms, (a)-(e)), both driven by nc-rec129.mjs. */
   // [branch record | MK-2 resumed, on origin/main 27ad8b4f] MOVED 1332 -> 1346, classified 230 -> 231, corpus 231 -> 232, run 193 -> 194, from this item's own `--strict` print on the committed tree 8fe3fc8e (`arms 1346/1332 · classified 231/230 · corpus (suites read) 232/231 · GREW by 14 arm(s)`, `floor 194/193 reproducible`), exit 0. Cause: ONE new suite, `testimonyaxis.test.mjs`, whose declaration the register counts at 14 arms. ONE KEY SET.
   // [REC-134] 2026-09-18: MOVED 1392 -> 1400, classified 238 -> 239, corpus 239 -> 240, run 201 -> 202, from this item's own `--strict` print on its committed tree 254404d1 (`arms 1400/1392 · classified 239/238 · corpus (suites read) 240/239 · GREW by 8 arm(s)`, `floor 202/201 reproducible`). Cause: ONE new suite, project-authority.test.mjs, driven by project-authority.control.mjs. ONE KEY SET.
-  arms: 1400,
+  arms: 1407,
+  // [CONDUCT #5 at M0-67's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1407/1400 · classified 240/239 · corpus (suites read) 241/240 · GREW by 7`, `floor 203/202 reproducible` (battery-verdict), from the print.
   // [branch record | M0-67] 2026-09-18: 1392 -> 1399 / 238 -> 239 / 239 -> 240 / run 201 -> 202, ALL FOUR from this item's own green --strict run PRINTED AFTER its commit b53c54c5 (`REGISTER FLOOR  arms 1399/1392 · classified 239/238 · corpus (suites read) 240/239 · GREW by 7 arm(s)`, `floor 202/201 reproducible`): battery-verdict.test.mjs (new, four arms) and livefire.test.mjs (one arm added to its declaration). CONDUCT re-reads on the merged tree.
   // [CONDUCT #5 at REC-124's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1392/1388 · classified 238/237 · corpus (suites read) 239/238 · GREW by 4`, `floor 201/200 reproducible`, from the print (conclude-project); the branch's own 1376/237/238/200 is replaced, never added.
   // [CONDUCT #5 at REC-132's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1388/1378 · classified 237/236 · corpus (suites read) 238/237 · GREW by 10`, `floor 200/199 reproducible`, from the print (founder-sight); the branch's own 1380/199 is replaced, never added.
@@ -1331,8 +1332,8 @@ const REGISTER_FLOOR = {
   // [branch record | REC-96 read arms 1134 on its own tree] reported the suite as NOT IN ANY COMMIT and refused to count work no other
   // [branch record | REC-96 read arms 1134 on its own tree] checkout can see (D-238), so a floor moved then would have been a figure
   // [branch record | REC-96 read arms 1134 on its own tree] nobody else reproduces. CONDUCT re-reads this on the MERGED tree. 
-  classified: 239,
-  corpus: 240,
+  classified: 240,
+  corpus: 241,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
@@ -1360,7 +1361,7 @@ const REGISTER_FLOOR = {
      EXACT, so nothing about that item moved either figure. It is the sixth consecutive
      item to find a floor already stale BY MEASURING IT, which is the argument for
      measuring rather than for trusting the number in the file. */
-  run: 202,
+  run: 203,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
