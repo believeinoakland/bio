@@ -23679,19 +23679,29 @@ export class Store extends DurableObject {
     });
   }
 
-  /** REC-131 / IC-148 — THE WIRE'S COUNTS TAKE NO ARGUMENT, so no door and no caller can select
-   *  a wider answer. `op=stats`, `op=selftest` and `op=livefire` all read this, and every class
-   *  receives the same bytes (BOB #15's corrected ruling, `MEMBER-KNOWLEDGE-DESIGN.md` §5). It
-   *  REPLACES REC-129's server-set `operator` stamp (IC-144), which selected an admin-only answer:
-   *  under the corrected ruling there is no second answer to select, and a switch with one
-   *  position reads as a fence while fencing nothing. */
-  stats() { return this.#counts({ proof: false }); }
+  /** REC-131 / IC-148 — THE WIRE'S COUNTS. `op=stats`, `op=selftest` and `op=livefire` all read
+   *  this. Every COUNT is the same for every class (BOB #15's corrected ruling,
+   *  `MEMBER-KNOWLEDGE-DESIGN.md` §5): `leads` is on it for no class, and the log is published as
+   *  `observationsNonLead`. It REPLACES REC-129's `operator` stamp (IC-144), which selected an
+   *  admin-only answer over COUNTS.
+   *
+   *  `capacity` IS THE ONE CLASS DISCRIMINATION LEFT, AND IT GOVERNS `dbBytes` AND NOTHING ELSE
+   *  (BOB #15, resuming REC-131). The database's size moves in whole pages on EVERY write, a
+   *  lead's included, so a member diffing it across a colleague's authoring can detect a large
+   *  lead; capacity is an operator need, so the admin class keeps it and member and probe do not.
+   *  It is the SERVER'S word: `index.mjs` sets it from the authenticated class AFTER copying the
+   *  caller's parameters (op=stats, op=selftest's relay, op=livefire's call), so a caller's
+   *  `capacity=` is overwritten, never honoured. An absent stamp is `false` — a door that forgets
+   *  to stamp loses `dbBytes` rather than leaking it. It is a stamp and not a second method
+   *  because it must ride the one DO route every door already fetches. */
+  stats({ capacity = false } = {}) { return this.#counts({ proof: false, capacity: capacity === true }); }
 
   /** The one body behind both answers, so the wire's counts and purge's proof cannot drift apart
-   *  on any key but the two the ruling names. `proof` is PRIVATE: only `purge` passes it, because
+   *  on any key but the ones the ruling names. `proof` is PRIVATE: only `purge` passes it, because
    *  its before/after ARE D-113's proof that it took what it says it took, and that proof stays
-   *  WHOLE (§5: *the purge proof's own count stays whole*). No route reaches this method. */
-  #counts({ proof }) {
+   *  WHOLE (§5: *the purge proof's own count stays whole*) — `observations` over the whole log,
+   *  `leads`, and `dbBytes`, exactly as `op=purge` has always answered. No route reaches it. */
+  #counts({ proof, capacity = false }) {
     const n = (t) => this.#one(`SELECT count(*) c FROM ${t}`).c;
     return {
       bundles: n("bundles"), files: n("files"), history: n("history"),
@@ -23814,21 +23824,26 @@ export class Store extends DurableObject {
          counted WHOLE beside it: the log is the coverage record and its size is
          an operator fact, while what any single row was looking for is not. */
       aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`).c,
-      /* REC-131 / IC-148 — `leads` IS NOT ON THE WIRE FOR ANY CLASS, AND `observations` COUNTS THE
-         LOG WITHOUT LEAD LOOKS, THE SAME NUMBER FOR EVERY CALLER. BOB #15's CORRECTED ruling
-         (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A COUNT IS A DISCLOSURE OF EXISTENCE*): a counter over
-         rows a caller could not all read goes only to a caller who could read them all, and for
-         leads THAT CALLER DOES NOT EXIST — `#leadVisibleTo` reaches no `class:*` credential and
-         skips the administrator arm on purpose, so the admin token reads no lead either. REC-129
-         (IC-144) handed both keys to the admin class; that was the overclaim, and this supersedes it.
-         `observations` HERE MEANS: rows of `observation_log` whose `authority_kind` is not 'lead' —
-         one meaning for every caller, never re-meant per class. It stays on the wire because
-         OBSERVATION-LOG-DESIGN §6's REC-110 ruling rests on it (premise 1): the three built
-         frontier levels' tallies count no lead row either, so the two answer the same question to
-         the same audience. `purge`'s proof (`proof: true`) keeps the WHOLE log and `leads`, in the
-         positions they always had. `aiRunLog` above is untouched: no lead act writes a 'run' row. */
-      observations: proof ? n("observation_log")   /* the WIRE KEY stays `observations` (a count of observations, and moving it would be an I3 change nobody owed); the TABLE it counts is `observation_log` — renamed by CONDUCT #11 at integration on BOB #11's correction, because one word over three unrelated things is the defect, not the noun */
-        : this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c,
+      /* REC-131 / IC-148 — `leads` IS NOT ON THE WIRE FOR ANY CLASS, AND THE WIRE'S LOG COUNT IS A
+         DIFFERENT KEY FROM PURGE'S. BOB #15's CORRECTED ruling (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A
+         COUNT IS A DISCLOSURE OF EXISTENCE*): a counter over rows a caller could not all read goes
+         only to a caller who could read them all, and for leads THAT CALLER DOES NOT EXIST —
+         `#leadVisibleTo` reaches no `class:*` credential and skips the administrator arm on purpose,
+         so the admin token reads no lead either. REC-129 (IC-144) handed both keys to the admin
+         class; that was the overclaim, and this supersedes it.
+         *
+         * ONE KEY NEVER CARRIES TWO MEANINGS (BOB.md rule 7, BOB #15 resuming REC-131). The wire's
+         * count EXCLUDES lead looks, so it is published as `observationsNonLead` — a name that
+         * states its predicate (`authority_kind <> 'lead'`), so that a later construct ruled
+         * existence-private cannot join the exclusion without a rename, i.e. without an IC. Purge's
+         * `observations` keeps the WHOLE-log meaning it has always had. The wire carries no
+         * `observations` key at all, so no reader can compare the two under one name. It stays on
+         * the wire because OBSERVATION-LOG-DESIGN §6's REC-110 ruling rests on it (premise 1): the
+         * three built frontier levels' tallies count no lead row either. `aiRunLog` above is
+         * untouched: no lead act writes a 'run' row. */
+      ...(proof
+        ? { observations: n("observation_log") }   /* PURGE'S PROOF: the WHOLE log. The TABLE it counts is `observation_log` — renamed by CONDUCT #11 at integration on BOB #11's correction, because one word over three unrelated things is the defect, not the noun */
+        : { observationsNonLead: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c }),
       /* MK-4 / IC-136: a COUNT of members' leads and nothing else, so a purge can
          PROVE it took them (D-113). What any lead says is not an operator fact —
          and since REC-131, neither is how many there are: purge's proof only. */
@@ -23862,7 +23877,11 @@ export class Store extends DurableObject {
          purge can PROVE it took them (D-113) and so an operator can see that the
          record is carrying doubts at all without having to sweep for them. */
       routeMarks: n("provenance_route_marks"),
-      dbBytes: this.ctx.storage.sql.databaseSize,
+      /* REC-131 / IC-148: the ADMIN class's and purge's only — see `stats()`. THE RESIDUE, STATED
+         RATHER THAN HIDDEN (BOB #15): the admin class still receives a figure that moves in whole
+         pages on every write, a large lead's included, so the operator can detect that SOMETHING
+         large was written; it cannot tell a lead from any other write, and no lead is readable to it. */
+      ...((proof || capacity) ? { dbBytes: this.ctx.storage.sql.databaseSize } : {}),
     };
   }
 
@@ -39413,7 +39432,7 @@ export class Store extends DurableObject {
         projectionclear: () => this.projectionClear(body || {}),
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
-        stats: () => this.stats(),
+        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),
         bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
         claim: () => this.claim({ ...(body || {}), tokenFp: url.searchParams.get("fp") }),
         login: async () => {

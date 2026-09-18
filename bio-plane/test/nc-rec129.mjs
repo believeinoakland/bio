@@ -15,8 +15,9 @@
  * `/tmp` are not isolated between sessions), used by nothing else.
  *
  * TWO SUITES, one driver: the internet frontier's arms run
- * `frontier-internet.test.mjs`; the op=stats arms (`stats*`, `routeproof`, `purgethin` —
- * IC-148's, REC-131, replacing IC-144's) run `stats-disclosure.test.mjs`. Each arm names its suite.
+ * `frontier-internet.test.mjs`; the op=stats arms (`stats*`, `routeproof`, `purgethin`, `dbbytes*`,
+ * `capacitycaller`, `keyboth` — IC-148's, REC-131, replacing IC-144's) run `stats-disclosure.test.mjs`.
+ * Each arm names its suite.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -129,9 +130,14 @@ const ARMS = {
 /* IC-148's arms (REC-131) — CORRECTED 2026-09-18, NEVER EXEMPTED. REC-129 wrote these arms for IC-144
    (`statsopen`, `statsdropall`, `statsstamp`, `selftestopen`), which broke an admin-CLASS stamp that
    BOB #15's corrected §5 ruling removed: no class receives `leads`, and every class receives the same
-   `observations`, which excludes lead looks. There is no stamp left to break, so `statsstamp` and
-   `selftestopen` have no subject; the arms below break what the corrected rule rests on instead. */
-const STATS_NONLEAD = "        : this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c,";
+   log count, which excludes lead looks. `statsstamp` and `selftestopen` had no subject left and were
+   replaced. RE-CORRECTED THE SAME DAY (REC-131 resumed): the wire's count is `observationsNonLead` (BOB.md
+   rule 7 — purge's `observations` keeps the whole log), and `dbBytes` is the admin class's only, under a
+   server-set `capacity` stamp — so the anchors below moved, and five arms were added for the two rulings. */
+const STATS_NONLEAD = "        : { observationsNonLead: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c }),";
+const STATS_ROUTE = '        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),';
+const STATS_STAMP = '    if (op === "stats") inner.searchParams.set("capacity", cls === "admin" ? "1" : "0");\n';
+const DB_GATE = "      ...((proof || capacity) ? { dbBytes: this.ctx.storage.sql.databaseSize } : {}),";
 Object.assign(ARMS, {
   statsbaseline: {
     suite: "stats-disclosure", files: [], why: "nothing armed — the stats suite's own baseline row",
@@ -139,54 +145,94 @@ Object.assign(ARMS, {
   },
   statsleadrows: {
     suite: "stats-disclosure", files: [STORE],
-    why: "THE ROW'S FIRST CONTROL: the lead rows put back into the wire's `observations` (the whole log, as "
-       + "before REC-131) — a lead look then moves every live-store caller's answer",
+    why: "THE ROW'S FIRST CONTROL: the lead rows put back into the wire's log count — a lead look then moves "
+       + "every live-store caller's answer",
     mustFail: ["A1: the admin TOKEN's WHOLE", "A1: the member TOKEN's WHOLE", "A1: sam's member SESSION's WHOLE",
-               "E2: and its `observations` is the WHOLE log"],
-    mustPass: "A1 for the probe TOKEN (it reads SCRATCH, where no lead can be written — NON-DISCRIMINATING, named), "
-            + "B (the key is still present), C (it still moves on a non-lead row)",
-    patch: () => arm([[STORE, STATS_NONLEAD, '        : n("observation_log"),']]),
+               "F1: the member TOKEN's WHOLE", "E2: and its proof carries"],
+    mustPass: "A1/F1 for the probe TOKEN (it reads SCRATCH — NON-DISCRIMINATING, named), B (the key is still "
+            + "present), C (it still moves on a non-lead row)",
+    patch: () => arm([[STORE, STATS_NONLEAD,
+      "        : { observationsNonLead: n(\"observation_log\") }),"]]),
   },
   statsadminleads: {
-    suite: "stats-disclosure", files: [INDEX, STORE],
-    why: "THE ROW'S SECOND CONTROL: `leads` put back for the admin CLASS — REC-129's stamp restored in index.mjs "
-       + "and honoured at the route, with `observations` left as it is",
+    suite: "stats-disclosure", files: [STORE],
+    why: "THE ROW'S SECOND CONTROL: `leads` put back for the admin CLASS (honoured at the route off the "
+       + "server's own capacity stamp, which only the admin class carries), everything else as it is",
     mustFail: ["FIXTURE:", "A1: the admin TOKEN's WHOLE", "B1: the admin TOKEN receives"],
     mustPass: "every member, session and probe arm — they never receive the key under this arm",
-    patch: () => arm([
-      [INDEX, '    if (op === "memberlist")\n',
-       '    if (op === "stats") inner.searchParams.set("operator", cls === "admin" ? "1" : "0");\n    if (op === "memberlist")\n'],
-      [STORE, "        stats: () => this.stats(),",
-       '        stats: () => url.searchParams.get("operator") === "1" ? { ...this.stats(), leads: this.#counts({ proof: true }).leads } : this.stats(),']]),
+    patch: () => arm([[STORE, STATS_ROUTE,
+      '        stats: () => url.searchParams.get("capacity") === "1" ? { ...this.stats({ capacity: true }), leads: this.#counts({ proof: true }).leads } : this.stats(),']]),
   },
   statsdropall: {
     suite: "stats-disclosure", files: [STORE],
-    why: "THE LIAR the row names: `observations` dropped for EVERYONE — every A answer is then byte-identical "
+    why: "THE LIAR the row names: the log count dropped for EVERYONE — every A answer is then byte-identical "
        + "too, so A alone cannot tell it from the fix; the presence and MOVES arms must",
     mustFail: ["FIXTURE:", "B1: the admin TOKEN receives", "B1: the probe TOKEN receives", "C0:",
-               "C1: the admin TOKEN's `observations` MOVED", "C2:", "D2:", "D3:"],
-    mustPass: "every A1 arm (the liar passes the headline — which is why C exists), and E (purge's proof is separate)",
-    patch: () => arm([[STORE, "  stats() { return this.#counts({ proof: false }); }",
-      "  stats() { const { observations, ...rest } = this.#counts({ proof: false }); return rest; }"]]),
+               "C1: the admin TOKEN's `observationsNonLead` MOVED", "C2:", "D2:", "D3:"],
+    mustPass: "every A1 arm (the liar passes the headline — which is why C exists)",
+    patch: () => arm([[STORE, STATS_NONLEAD, "        : {}),"]]),
   },
   routeproof: {
     suite: "stats-disclosure", files: [STORE],
-    why: "the wire route wired to PURGE'S PROOF (the whole log and `leads`) — the regression the private "
-       + "#counts exists to make unlikely: one short edit at the route re-opens both keys for every class",
-    mustFail: ["FIXTURE:", "A1: the admin TOKEN's WHOLE", "A1: the member TOKEN's WHOLE",
-               "B1: the member TOKEN receives", "B1: sam's member SESSION receives"],
-    mustPass: "C (it still moves) and E",
-    patch: () => arm([[STORE, "        stats: () => this.stats(),", "        stats: () => this.#counts({ proof: true }),"]]),
+    why: "the wire route wired to PURGE'S PROOF (the whole log, `leads`, `dbBytes`) — the regression the private "
+       + "#counts exists to make unlikely: one short edit at the route re-opens every withheld key for every class",
+    mustFail: ["FIXTURE:", "A1: the member TOKEN's WHOLE", "B1: the member TOKEN receives",
+               "B1: sam's member SESSION receives", "F1: the member TOKEN's WHOLE"],
+    mustPass: "C1a",
+    patch: () => arm([[STORE, STATS_ROUTE, "        stats: () => this.#counts({ proof: true }),"]]),
   },
   purgethin: {
     suite: "stats-disclosure", files: [STORE],
     why: "THE OVER-STRICTNESS DIRECTION: purge's proof read from the WIRE's counts — it then cannot prove "
        + "it took the leads or their looks (D-113)",
-    mustFail: ["E1: a whole-store purge", "E2: and its `observations` is the WHOLE log"],
-    mustPass: "A, B, C, D — the wire is unchanged",
+    mustFail: ["E1: a whole-store purge", "E2: and its proof carries"],
+    mustPass: "A, B, C, D, F — the wire is unchanged",
     patch: () => arm([
       [STORE, "    const before = this.#counts({ proof: true });", "    const before = this.stats();"],
       [STORE, "    const after = this.#counts({ proof: true });", "    const after = this.stats();"]]),
+  },
+  dbbytesmember: {
+    suite: "stats-disclosure", files: [INDEX],
+    why: "THE dbBytes CONTROL the resumed row names: `dbBytes` put back for the MEMBER class (the server stamp "
+       + "widened to member) — a colleague's large lead then moves a member's answer",
+    mustFail: ["F1: the member TOKEN's WHOLE", "F1: sam's member SESSION's WHOLE", "B1: the member TOKEN receives",
+               "B1: sam's member SESSION receives"],
+    mustPass: "every admin arm and every probe arm (the probe is not member class)",
+    patch: () => arm([[INDEX, STATS_STAMP,
+      '    if (op === "stats") inner.searchParams.set("capacity", (cls === "admin" || cls === "member") ? "1" : "0");\n']]),
+  },
+  dbbytesall: {
+    suite: "stats-disclosure", files: [STORE],
+    why: "the store ignoring its stamp — `dbBytes` for every class and every door (op=stats, selftest, livefire)",
+    mustFail: ["B1: the member TOKEN receives", "B1: the probe TOKEN receives", "F1: the member TOKEN's WHOLE",
+               "D2:", "D3:"],
+    mustPass: "every admin arm (the admin keeps it either way)",
+    patch: () => arm([[STORE, DB_GATE, "      ...(true ? { dbBytes: this.ctx.storage.sql.databaseSize } : {}),"]]),
+  },
+  dbbytesnone: {
+    suite: "stats-disclosure", files: [STORE],
+    why: "THE OVER-STRICTNESS DIRECTION: `dbBytes` dropped for the ADMIN too (and every door) — capacity is an "
+       + "operator need the ruling keeps",
+    mustFail: ["FIXTURE:", "B1: the admin TOKEN receives", "B3:", "D2:", "D4:", "F0: THE ARM IS ARMED"],
+    mustPass: "every member, session and probe arm — refusing more cannot leak",
+    patch: () => arm([[STORE, DB_GATE, "      ...(proof ? { dbBytes: this.ctx.storage.sql.databaseSize } : {}),"]]),
+  },
+  capacitycaller: {
+    suite: "stats-disclosure", files: [INDEX],
+    why: "the server's `capacity` stamp removed on op=stats: the caller's own `capacity=` is forwarded as copied, "
+       + "so a member who asks is honoured and the admin who does not ask loses `dbBytes`",
+    mustFail: ["B2: the member TOKEN sending", "B2: sam's member SESSION sending", "FIXTURE:", "B1: the admin TOKEN receives"],
+    mustPass: "D (selftest and livefire stamp their own fetch) and every member arm that does not ask",
+    patch: () => arm([[INDEX, STATS_STAMP, ""]]),
+  },
+  keyboth: {
+    suite: "stats-disclosure", files: [STORE],
+    why: "BOB.md rule 7's liar: the wire publishes the narrower count under BOTH names — `observations` "
+       + "beside `observationsNonLead` — so one name carries two meanings across op=stats and op=purge",
+    mustFail: ["FIXTURE:", "B1: the admin TOKEN receives", "B1: the member TOKEN receives", "D2:", "D3:"],
+    mustPass: "A (the numbers do not move), C (they still move together), E",
+    patch: () => arm([[STORE, STATS_NONLEAD,
+      "        : { observations: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c, observationsNonLead: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c }),"]]),
   },
 });
 const want = process.argv[2] || null;

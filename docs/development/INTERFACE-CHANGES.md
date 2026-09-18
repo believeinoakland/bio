@@ -10783,87 +10783,88 @@ arms `founder-standing` and `everyone-admin`, recorded in the suite's `NEGATIVE 
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR — I3 29.2.0 → 29.3.0**, landing in the same merge as IC-139 and ordered after it. The base was read at resolution; it was proposed against the held merge's 27.1.0. Nothing that answered before is refused; one principal, the founder's own session, is answered where it was refused. REC-130's stranger properties are unchanged: `casesign.control.mjs` e/f/g/h reproduce REC-130's figures, and `deliverer.control.mjs` `everyone-admin` shows a too-broad fix fails. **Not closed here:** D-422, every OTHER session-stamped read still treating the founder as `member:admin`, and `memberAdd` accepting the id `admin`. Both are with BOB #15 for a design pass before they are rowed.
 
-## IC-148 · I3: `op=stats` publishes `leads` to NO class, the admin token included; `observations` is published to EVERY class and counts the log WITHOUT `authority_kind = 'lead'` rows — one meaning for every caller; `op=selftest` and `op=livefire` relay the same answer; SUPERSEDES IC-144's admin-class stamp · PROPOSED 2026-09-18 (REC-131, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+## IC-148 · I3: `op=stats` publishes `leads` to NO class, the admin token included; its log count is RENAMED `observationsNonLead` (the log WITHOUT `authority_kind = 'lead'` rows), published to EVERY class, and the wire carries no `observations` key; `dbBytes` is published to the ADMIN class ONLY; `op=selftest` and `op=livefire` relay the same answer; SUPERSEDES IC-144's admin-class stamp · PROPOSED 2026-09-18 (REC-131, minted with `node tools/mintid.mjs IC` BEFORE building; AMENDED IN PLACE the same day when CONDUCT #5 resumed REC-131 with two more BOB #15 rulings, before integration) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's `docs/development/INTERFACES.md`
-  (base `a6bdfcbb`): 29.3.0. Proposed as MAJOR — 29.3.0 → 30.0.0.** **Read the base AT RESOLUTION.**
+  (merged with origin/main `e23daea9`): 29.4.0. Proposed as MAJOR — 29.4.0 → 30.0.0.** **Read the base AT RESOLUTION.**
+  (First proposed against 29.3.0; REC-126's IC-145 moved it to 29.4.0 underneath this row.)
 - **Proposer:** RECORD, REC-131 worker `agent-aec29069af12e5c3f`, 2026-09-18 — a CORRECTION TO LANDED REC-129 (IC-144),
-  on BOB #15's CORRECTED ruling in `MEMBER-KNOWLEDGE-DESIGN.md` §5 (`852ccc7d`).
+  on BOB #15's CORRECTED ruling in `MEMBER-KNOWLEDGE-DESIGN.md` §5, and on the two rulings CONDUCT #5 carried when it
+  resumed the row (the key rename under `kickoffs/BOB.md` rule 7, and `dbBytes`). §5 now carries both, written by this
+  worker from the row, because they were NOT in §5 at `5ea27761` as the resume brief said (measured: `grep dbBytes` over
+  `MEMBER-KNOWLEDGE-DESIGN.md` on `e23daea9` returned nothing; the rulings were in the QUEUE row's RESUMED paragraph only).
 - **Owner to land it:** `RECORD`
 - **Supersedes:** IC-144's class stamp, IN PART. IC-144's substance — no member-class caller receives a lead count —
-  stands and is widened to every class; its MECHANISM (the server-set `operator` stamp, `cls === "admin"`) is removed.
+  stands and is widened to every class; its MECHANISM (the `operator` stamp over counts) is removed.
 - **Consumers to answer (MEASURED on this tree, grepped, not recalled):** `UI` (NOT-AFFECTED: `civicos-ui/` calls
   neither `op=stats`, `op=selftest` nor `op=livefire`), `DIST` (NOT-AFFECTED: `newgroup/src/index.mjs`'s
-  `verifyInstall` reads only `ok` and `bindings.STORE` off `op=selftest`; `release/` carries the old bundle until
-  DIST's next cut, so a deployed instance still answers as it did before IC-144 until then), `SKILL`, `agent-worker`
-  (NOT-AFFECTED, grepped). **Suites that read either key off `op=stats`**: `lead.test.mjs` (read `leads` and the
-  whole-log `observations` with the ADMIN token to prove rows were and were not written — CORRECTED at its sites,
-  below), `observation-log.test.mjs`, `reextract.test.mjs`, `rec93-migrate-probe.mjs` (read `observations` with the
-  admin token over NON-lead rows only — none writes a lead — so their figures do not move; re-run green).
+  `verifyInstall` reads only `ok` and `bindings.STORE` off `op=selftest`, with the PROBE token; `release/` carries the old
+  bundle until DIST's next cut), `SKILL`, `agent-worker` (NOT-AFFECTED, grepped). **`dbBytes` readers**: only
+  measurement scripts, all with an ADMIN token (`fl1-cpu-probe.mjs`, `connections-growth.measure.mjs`,
+  `tools/m031-index-measure.mjs`'s cited figure) or a local token file (`scaling.mjs`, `retrieval-scale.mjs` — an operator
+  must now hand them the ADMIN token to read `dbBytes`); none is a suite. **`observations` readers off op=stats**:
+  `lead.test.mjs`, `observation-log.test.mjs`, `reextract.test.mjs`, `rec93-migrate-probe.mjs` — all read with the admin
+  token and all CORRECTED to `observationsNonLead` at their sites (the last is a manual probe needing a pre-item checkout
+  and was not run; its change is the key name only).
 
-**THE RULING, in the document's own terms.** `#leadVisibleTo` reaches no `class:*` credential and deliberately skips
-`viewerPredicate`'s administrator arm, so **no caller can read every lead** — the admin token included — and a counter
-over leads therefore has no class it may be shown to. `observations` stays on `op=stats` for every class, counting
-only rows without `authority_kind = 'lead'`: the same number for every caller, which is the opposite of the defect
-IC-144 guarded against (one key re-meant per class). `purge`'s D-113 proof is taken from the store's own counts, not
-from the wire op, and stays whole.
+**THE RULINGS, in the document's own terms (§5).** (1) `#leadVisibleTo` reaches no `class:*` credential and skips the
+administrator arm, so no caller can read every lead — a counter over leads has no class it may be shown to. (2) The log
+count stays on the wire for every class, counting rows without `authority_kind = 'lead'`, one meaning for every caller —
+and since one key never carries two meanings (BOB.md rule 7), the key whose meaning CHANGED is renamed. (3) `dbBytes`
+moves in whole pages on every write, a lead's included, so it leaves member and probe; capacity is an operator need, so
+the admin class keeps it, and the residue is stated. `purge`'s D-113 proof reads the store's own counts and stays whole.
 
 **THE SHAPE.**
-- `Store#stats()` takes NO argument. `observations` = `count(*) FROM observation_log WHERE authority_kind <> 'lead'`;
-  `leads` is not a key. The DO `stats` route calls `stats()` and reads no parameter.
-- `purge`'s `before`/`after` come from a PRIVATE `Store#counts({ proof: true })`, unreachable from any route, which
-  carries `leads` and the WHOLE-log `observations` in the positions they always had. **`op=purge`'s answer is
-  byte-for-byte unchanged by this IC.** `stats()` is `#counts({ proof: false })`, so the two cannot drift apart on any
-  other key.
-- `index.mjs`: the REC-129 `operator` stamp on `op=stats` is REMOVED, and `op=selftest`'s relay fetches plain `/stats`.
-  `livefire.mjs`: the `operator` option is REMOVED and it fetches plain `stats`. **Why removed rather than kept:**
-  its readers were grepped (`operator` in `src/`): the stamp's only readers were the DO `stats` route (which it
-  selected between two answers) and `livefire`'s relay. Under the corrected ruling every class receives the same
-  answer, so the stamp would select between two identical answers — a switch with no second position is a mechanism
-  that reads as a fence and fences nothing, and the next session would reasonably "fix" it back into one. Nothing else
-  in `src/` reads it. A caller who still sends `operator=1` is answered byte-identically (asserted, B2).
-- `aiRunLog` is unchanged (its row set is `authority_kind = 'run'`, which no lead act writes).
+- `op=stats` (and `op=selftest`'s `store`, `op=livefire`'s `storeState`): **no `leads`; no `observations`; a new
+  `observationsNonLead`** = `count(*) FROM observation_log WHERE authority_kind <> 'lead'`, in the position `observations`
+  had; **`dbBytes` only for the `admin` class** (the ADMIN_TOKEN and the root-admin session; an admin-ROLE member signs in
+  as class `member` and does not receive it). Every other key unchanged.
+- **The class discrimination, and why it is back.** `Store#stats({ capacity })` governs `dbBytes` and NOTHING ELSE.
+  `capacity` is set by the SERVER in `index.mjs` from the authenticated class AFTER the caller's parameters are copied
+  (op=stats), and by `index.mjs` on op=selftest's relay fetch and op=livefire's call; the store's default is `false`, so a
+  door that forgets to stamp loses `dbBytes` rather than leaking it. A caller's `capacity=` / `operator=` / anything else
+  is overwritten or ignored (asserted, B2/B3). It is a stamp on the one DO route, rather than a second method, because
+  every door already fetches that route; it is the smallest discrimination the ruling needs, and REC-129's `operator`
+  stamp over COUNTS stays removed (no count differs by class).
+- `op=purge`'s `before`/`after`: **byte-for-byte unchanged** — `observations` over the WHOLE log, `leads`, `dbBytes`, in
+  the positions they always had, from a private `Store#counts({ proof: true })` no route reaches. So after this IC,
+  `observations` means one thing wherever it appears (purge's whole log), and the wire's narrower count has its own name.
+- **Why `observationsNonLead`.** It states its predicate literally. A neutral name (`observationsVisible`,
+  `observationsPublic`) would stay "true" if a later construct were ruled existence-private and joined the exclusion — and
+  that is precisely a meaning change under an unchanged key, rule 7's defect again. With the predicate in the name, a
+  wider exclusion forces a rename, i.e. an IC. It also sits beside `aiRunLog` (the `'run'` slice) as the other named
+  slice of the same table.
 
-**WHY MAJOR — the argument both ways, since this IC is a correction whose direction differs per class.**
-- **The `admin` class LOSES a key** (`leads`) that IC-144 returned to it, and its `observations` CHANGES MEANING (whole
-  log → log without lead looks). A removed key is breaking for that class's reader whatever the measured impact
-  (IC-25), and a silent value change inside an unchanged key is breaking on IC-118's rule — *a correct consumer
-  becomes wrong without changing a line*: an operator script differencing `observations` against a known write count
-  now undercounts by the lead looks. Measured impact is ZERO non-test consumers; it is breaking anyway.
-- **`member` and `probe` REGAIN `observations`**, which IC-144 withdrew — additive against 29.x. **But it is not the key
-  they had before IC-144**: before 29.0.0 it counted the whole log; now it excludes lead looks, which is NARROWER. A
-  reader written against 28.x that compared `observations` to the log's true size would read a smaller number under
-  the same name. Against the CURRENT base (29.3.0) the change for member/probe is additive; against the contract
-  they last held the key under, it is a narrower meaning.
-- **The strongest classification governs**, as IC-110/112/114 were folded: MAJOR, 29.3.0 → 30.0.0. **What a lighter
-  reading would argue, stated so it is not re-litigated from silence:** nothing is deployed with IC-144 (DIST has not
-  cut), so 29.0.0 was never served, and relative to the last SERVED contract (28.x) the admin loses only a key that
-  every class then held and every class's `observations` narrows — still a meaning change inside an unchanged key,
-  still MAJOR. There is no reading on which this is MINOR.
+**WHY MAJOR — the argument per class.**
+- **Admin:** loses `leads` (IC-144 gave it) and `observations` (renamed). A removed key is breaking whatever the measured
+  impact (IC-25). Keeps `dbBytes`.
+- **Member and probe:** lose `dbBytes`, which they have had since the plane's first `op=stats` — breaking. They gain
+  `observationsNonLead` (additive), NOT `observations` back: against the contract they last held that key under (28.x,
+  the whole log) the count they now receive is narrower and differently named.
+- The strongest classification governs: MAJOR, 29.4.0 → 30.0.0. There is no reading on which this is MINOR — every class
+  loses at least one key. Measured impact is zero non-test consumers; operator measurement scripts need the admin token.
 
-**THE SWEEP, and what it could not see.** Matcher: every SQL `count(` over `observation_log` or `leads` in `store.mjs`,
-every op whose answer embeds `stats()` (`op=stats`, `op=selftest`, `op=livefire`, `op=purge`), and every `operator` read
-in `src/`. `op=purge` keeps the whole counts BY THE RULING (its before/after are the D-113 proof; a probe reaches purge
-in SCRATCH only, and every lead act is refused to a machine credential; an admin purging the live store learns the count of leads it destroys,
-which is the residue REC-129 named and the ruling accepts). **Cannot see:** a count computed in JS over rows fetched
-elsewhere, `.length` of an unpublished list, disclosure by TIMING — **and `dbBytes`, which IS a disclosure channel this
-IC does not close**: `op=stats` publishes `ctx.storage.sql.databaseSize` to every class, and a lead of up to one
-passage (128 KiB, C-54.4) grows the database by whole pages, so a member diffing `dbBytes` across a colleague's
-authoring can detect a large lead. The suite's A arm passes because a short lead fits pages already allocated. The
-ruling's scope is COUNTERS over existence-private constructs; `dbBytes` is a size, not a counter, and whether it falls
-under *a count is a disclosure of existence* is a design question — raised as a DESIGN GAP for BOB, not swept.
+**THE SWEEP, and what it could not see.** Matcher: every SQL `count(` over `observation_log` or `leads` in `store.mjs`;
+every op whose answer embeds `stats()` (`op=stats`, `op=selftest`, `op=livefire`, `op=purge`); every `operator`/`capacity`
+read in `src/`; every reader of `dbBytes` and of `.observations` off an `op=stats` answer in the repository. `op=purge`
+keeps the whole counts and `dbBytes` BY THE RULING (a probe reaches purge in SCRATCH only, and every lead act is refused
+to a machine credential; an admin purging the live store learns the count of leads it destroys — REC-129's named residue).
+**Cannot see:** a count computed in JS over rows fetched elsewhere, `.length` of an unpublished list, disclosure by
+TIMING (a large lead's write takes longer), and any SIZE figure other than `dbBytes` — `textIndexOk` and the counts are not
+sizes; nothing else in the answer reads `databaseSize`. **The admin's residue is stated rather than closed** (§5): a large
+write moves `dbBytes` by whole pages for the operator — measured +372,736 B across one ~124 KiB lead in the suite.
 
-**Suites:** `bio-plane/test/stats-disclosure.test.mjs` — CORRECTED at its sites with the dated reason (never exempted):
-A the byte-identical headline control for the ADMIN token, member token, a member session and the probe (the probe's
-arm non-discriminating, said); B `leads` absent and `observations` present for every class, including an admin-ROLE
-member's session, and no parameter moves the answer; C THE LIAR ARM — `observations` moves by one on a non-lead
-observation for every live-store caller and for the probe over scratch, and reads the same number for every caller;
-D `op=selftest` and `op=livefire`; E `purge`'s proof whole (`leads` carried; `before.observations` = the wire count + the
-one lead look). `bio-plane/test/lead.test.mjs` — its `op=stats` arms CORRECTED at their sites: `leads` and the lead
-looks are counted through the AUTHOR's own `op=frontier&level=internet` (viewer-scoped: her never-followed leads and
-her looks' tally), the admin's `observations` asserted NOT to move on a lead look, and `purge`'s `removed.leads` as the
-whole-store total. NEGATIVE CONTROL: `node test/nc-rec129.mjs statsbaseline|statsleadrows|statsadminleads|statsdropall|routeproof|purgethin`
-from `bio-plane/`.
+**Suites:** `bio-plane/test/stats-disclosure.test.mjs` — CORRECTED at its sites twice, with dated reasons (never
+exempted): A the byte-identical headline control for the ADMIN token (with `dbBytes` set aside, its stated residue), the
+member token, a member session and the probe; B `leads` and `observations` absent and `observationsNonLead` present for
+every class, `dbBytes` for the admin class only, and no parameter moves any of it (B3 the over-strictness direction);
+C THE LIAR ARM — `observationsNonLead` moves by one on a non-lead observation for every caller and reads the same number
+for all; D `op=selftest` (member, probe, admin) and `op=livefire` (probe, admin); F THE dbBytes CONTROL — a ~124 KiB lead
+GROWS the database (F0, the arm is armed), a member's, a member session's and the probe's whole answer is byte-identical
+across it, and the admin's differs only in `dbBytes`; E `purge`'s proof whole. `bio-plane/test/lead.test.mjs`,
+`observation-log.test.mjs`, `reextract.test.mjs`, `rec93-migrate-probe.mjs` — corrected at their sites. NEGATIVE CONTROL:
+`node test/nc-rec129.mjs statsbaseline|statsleadrows|statsadminleads|statsdropall|routeproof|purgethin|dbbytesmember|dbbytesall|dbbytesnone|capacitycaller|keyboth`
+from `bio-plane/` — 19 arms with the frontier's, 0 findings.
 
 **RESPONSES:** not yet collected.
 

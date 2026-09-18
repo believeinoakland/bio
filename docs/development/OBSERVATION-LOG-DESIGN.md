@@ -231,9 +231,11 @@ artifact rather than carried from D-386, and each is named so a later session RE
 of re-deriving it: **if any one of them stops being true, this ruling is the thing to reopen.**
 
 1. **The channel is already open through a door of identical width, by a ruling already taken.**
-   `op=stats` publishes `observations` — `count(*)` over the table, every level, **excluding
-   `authority_kind = 'lead'` rows since REC-131 (IC-148, `MEMBER-KNOWLEDGE-DESIGN.md` §5 as corrected
-   by BOB #15), exactly the rows the three bundle-level tallies never count either** — and
+   `op=stats` publishes the log's size — `count(*)` over the table, every level, **excluding
+   `authority_kind = 'lead'` rows and published under the key `observationsNonLead` since REC-131
+   (IC-148, `MEMBER-KNOWLEDGE-DESIGN.md` §5 as corrected by BOB #15; the old key `observations` now
+   names only `op=purge`'s whole-log proof), exactly the rows the three bundle-level tallies never
+   count either** — and
    `aiRunLog`, its `authority_kind = 'run'` slice, with its reason at that site: *the log is the
    coverage record and its size is an operator fact, while what any single row was looking for is
    not*. `op=stats` and `op=frontier` are classed **IDENTICALLY** in `index.mjs`:
@@ -302,8 +304,9 @@ leads can carry identical words, so a hidden look at the same subject would beco
 remove or re-date what the viewer sees. **Premise 1 still holds, as corrected:** REC-129 first
 returned `op=stats`' `observations` to the `admin` class only (IC-144), which would have closed the
 "door of identical width" to member and probe; BOB #15 corrected that ruling the same day
-(`MEMBER-KNOWLEDGE-DESIGN.md` §5) and REC-131 built it (IC-148): `observations` is published to EVERY
-class and counts the log WITHOUT lead looks, and `leads` is on `op=stats` for no class. The three
+(`MEMBER-KNOWLEDGE-DESIGN.md` §5) and REC-131 built it (IC-148): the log count is published to EVERY
+class as `observationsNonLead`, counting the log WITHOUT lead looks, and `leads` is on `op=stats` for no
+class. The three
 bundle-level tallies count no lead row either, so the two still answer one question to one audience,
 and REC-110's ruling stands unreopened.
 

@@ -13962,3 +13962,12 @@ Paths as claimed, plus `bio-plane/src/affordances.mjs` (NON_ACTS / RUNG_ABSENT r
 fold the DESIGN GAP (who may issue a grant — running provisionally at the project OWNER) into
 `BIO_Publication_v0_1.md`'s Incomplete sections if Bob has not ruled (it is already written there); the UI DELEGATION
 above is open.
+addendum 2026-09-18: RE-OPENED by CONDUCT #5's resume (two more BOB #15 rulings, before integration) on the same branch,
+merged with origin/main `e23daea9`. Paths ADDED: `bio-plane/test/observation-log.test.mjs`, `bio-plane/test/reextract.test.mjs`,
+`bio-plane/test/rec93-migrate-probe.mjs` (the key rename, at their sites); `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5
+(the two rulings written into it — they were not there at `5ea27761`).
+released (second time): 2026-09-18 by the same worker. IC-148 AMENDED IN PLACE (MAJOR, 29.4.0 → 30.0.0): `dbBytes` for the
+admin class only under a server-set `capacity` stamp; the wire's log count renamed `observationsNonLead`, no `observations`
+key on the wire, purge's proof unchanged. `nc-rec129.mjs`: 19 arms, 0 findings. **FOR CONDUCT:** RESOLVE IC-148 against I3
+as read at resolution; operator measurement scripts (`scaling.mjs`, `retrieval-scale.mjs`) now need the ADMIN token to read
+`dbBytes`.

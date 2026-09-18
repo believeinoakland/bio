@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1138 rulings across 91 documents.
+1139 rulings across 91 documents.
 
 ## DEC-
 
@@ -748,12 +748,14 @@ authority is the file named, never this one.
   `docs/development/INTERFACE-CHANGES.md:10591`
 - **IC-138** — `bio-plane/test/rec121-chain-bytes.test.mjs` §4 CORRECTED at its site with the reason. - Generated: `bio-plane/dist/*` rebuilt. - Docs: `INTERFACE-CHANGES.md` (IC-138, minted with `node tools/mintid.mjs IC`), `CONTENT-SEARCH-DESIGN.md` (§4.2 and front matter), `docs/DECIDED.md` on regeneration, `.gitignore` (the…  
   `docs/development/CLAIMS.md:13576`
-- **IC-144** — on BOB #15's CORRECTED ruling in `MEMBER-KNOWLEDGE-DESIGN.md` §5 (`852ccc7d`). - **Owner to land it:** `RECORD` - **Supersedes:** IC-144's class stamp, IN PART.  
-  `docs/development/INTERFACE-CHANGES.md:10791`
+- **IC-144** · 2026-09-18 — EDES IC-144's admin-class stamp · PROPOSED 2026-09-18 (REC-131, minted with `node tools/mintid.mjs IC` BEFORE building; AMENDED IN PLACE the same day when CONDUCT #5 resumed REC-131 with two more BOB #15 rulings, before integration) — the version bump and the RESOLUTION are CONDUCT's  
+  `docs/development/INTERFACE-CHANGES.md:10786`
 - **IC-144** · 2026-09-14 — `op=stats`/`op=selftest`/`op=livefire` withhold `leads` and `observations` from member and probe, keeping both for the admin class (IC-144 — SUPERSEDED IN PART by the corrected ruling below).  
   `docs/development/MEMBER-KNOWLEDGE-DESIGN.md:3`
 - **IC-144** — t levels' tallies never count lead rows): replace it with a pointer to MEMBER-KNOWLEDGE §5; (6) IC-144's text is marked SUPERSEDED IN PART by the new IC.  
   `docs/development/QUEUE.md:1105`
+- **IC-148** · 2026-09-18 — IC-148 AMENDED IN PLACE (MAJOR, 29.4.0 → 30.0.0): `dbBytes` for the admin class only under a server-set `capacity` stamp; the wire's log count renamed `observationsNonLead`, no `observations` key on the wire, purge's proof unchanged.  
+  `docs/development/CLAIMS.md:13969`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
@@ -2119,14 +2121,14 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:10439`
 - `bio-plane/test/deliverer.test.mjs` — its direct store read of an UNSIGNED case document CORRECTED to stamp the owner's viewer, with the dated reason (never exempted); new §1b (the founder reads an unsigned case through `op=casedocument`; vera, a member of no project, gets a stranger's bytes) and a §2 arm (vera…  
   `docs/development/INTERFACE-CHANGES.md:10778`
-- whole-log `observations` with the ADMIN token to prove rows were and were not written — CORRECTED at its sites, below), `observation-log.test.mjs`, `reextract.test.mjs`, `rec93-migrate-probe.mjs` (read `observations` with the admin token over NON-lead rows only — none writes a lead — so their figures do not move;…  
-  `docs/development/INTERFACE-CHANGES.md:10800`
-- `bio-plane/test/stats-disclosure.test.mjs` — CORRECTED at its sites with the dated reason (never exempted): A the byte-identical headline control for the ADMIN token, member token, a member session and the probe (the probe's arm non-discriminating, said); B `leads` absent and `observations` present for every class,…  
-  `docs/development/INTERFACE-CHANGES.md:10856`
-- `bio-plane/test/lead.test.mjs` — its `op=stats` arms CORRECTED at their sites: `leads` and the lead looks are counted through the AUTHOR's own `op=frontier&level=internet` (viewer-scoped: her never-followed leads and her looks' tally), the admin's `observations` asserted NOT to move on a lead look, and `purge`'s…  
-  `docs/development/INTERFACE-CHANGES.md:10862`
+- on BOB #15's CORRECTED ruling in `MEMBER-KNOWLEDGE-DESIGN.md` §5, and on the two rulings CONDUCT #5 carried when it resumed the row (the key rename under `kickoffs/BOB.md` rule 7, and `dbBytes`). §5 now carries both, written by this worker from the row, because they were NOT in §5 at `5ea27761` as the resume brief…  
+  `docs/development/INTERFACE-CHANGES.md:10792`
+- token and all CORRECTED to `observationsNonLead` at their sites (the last is a manual probe needing a pre-item checkout and was not run; its change is the key name only). **THE RULINGS, in the document's own terms (§5).** (1) `#leadVisibleTo` reaches no `class:*` credential and skips the  
+  `docs/development/INTERFACE-CHANGES.md:10807`
+- `bio-plane/test/stats-disclosure.test.mjs` — CORRECTED at its sites twice, with dated reasons (never exempted): A the byte-identical headline control for the ADMIN token (with `dbBytes` set aside, its stated residue), the member token, a member session and the probe; B `leads` and `observations` absent and…  
+  `docs/development/INTERFACE-CHANGES.md:10857`
 - rethrowing everything else), `caseproduction` (the `publishCase(` anchor CORRECTED to the definition — a new CALL site had put the ratify committer's `INSERT INTO cases` inside its window), and `casesign.control.mjs` arms (e)(f)(g) RE-ANCHORED over the three-line gate and re-run at their recorded figures (66/8,…  
-  `docs/development/INTERFACE-CHANGES.md:10937`
+  `docs/development/INTERFACE-CHANGES.md:10938`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  
