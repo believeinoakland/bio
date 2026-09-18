@@ -402,6 +402,15 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        silently shrinks against a growing catalogue is exactly the drift the
        one-directional check cannot see. */
     ["C-33.33", "FALSIFIER_AND_NONE_STATED"],
+    /* REC-124 / INVESTIGATIVE-SESSION.md §7.1, 2026-09-18: a conclusion ADOPTS
+       the claim of the reading a project stands on. NO_CLAIM is every door to
+       "nothing to adopt"; CONCLUSION_IS_THE_CLAIM refuses a free conclusion
+       text beside a project; UNSPLICEABLE_CONCLUSIONS is the project row's
+       writer failing in place. D-PIN-B failed on all three when they landed,
+       which is this pair of arms doing its job. */
+    ["C-33.34", "NO_CLAIM"],
+    ["C-33.35", "CONCLUSION_IS_THE_CLAIM"],
+    ["C-33.36", "UNSPLICEABLE_CONCLUSIONS"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -474,9 +483,14 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
   /* MOVED 48 -> 49 on 2026-09-18 (REC-126), FROM THE FIGURE THIS INSTRUMENT PRINTED
      ("corpus: 49 rows across 2 families") and not by adding to the number in the
      file: C-32.16 MACHINE_CANNOT_REVIEW. */
-  t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row, REC-123's two, REC-125's two and "
-    + "REC-126's one — a walk that lost a family would run fewer arms and every one of them would still pass",
-    rowsSeen, 49);
+  /* MOVED 49 -> 52 on 2026-09-18 (REC-124), FROM THE FIGURE THIS INSTRUMENT PRINTED
+     ("corpus: 52 rows across 2 families") and not by adding to the number in the
+     file: C-33.34 NO_CLAIM, C-33.35 CONCLUSION_IS_THE_CLAIM and C-33.36
+     UNSPLICEABLE_CONCLUSIONS. */
+  t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row, REC-123's two, REC-125's two, "
+    + "REC-126's one and REC-124's three — a walk that lost a family would run fewer arms and every one of them "
+    + "would still pass",
+    rowsSeen, 52);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

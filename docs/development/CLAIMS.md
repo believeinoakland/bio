@@ -13953,6 +13953,13 @@ THE ACTS, stated as acts with their actor. **UI builds four surfaces**, each ren
    `comments[]` with `author_kind` visible — a recipient's comment is labelled as a recipient's (with `recipient`,
    the name the issuer gave), never as a member's.
 
+**ADDENDUM 2026-09-18 RECORD (REC-133, IC-151) — point 1's AUTHORITY line above is SUPERSEDED by
+`BIO_Publication_v0_1.md` §6A.2 as built:** the draft form is offered to the project's EDITORS — an owner or a JOINED
+participant holding `contribute` — not to the owner alone. Point 3 is UNCHANGED: grant AND revoke stay the OWNER's
+(§6A.2 as corrected by BOB #15 the same day — administrators direct nothing). The refusal code for all three is still
+`REVIEW_NOT_PROJECT_OWNER`; render its `detail`, which names the act's authority, never a sentence built from the
+code's name. The delegation stays **open**.
+
 ## CLAIM 2026-09-18 RECORD (REC-126 — THE REVIEW COPY) — RELEASED
 
 released: 2026-09-18 by the REC-126 worker, branch `worktree-agent-abd7c5e99752beec6`, base `27ad8b4f`, merged with
@@ -14021,6 +14028,75 @@ re-pointed (`deliverer.control.mjs`, `d266.control.mjs`, `capturerequests.contro
 argued in the IC). (2) Flip REC-132 and close D-422 at integration. (3) Carry IC-149's DECISION to BOB: whether §7's
 "administrators direct nothing" should be enforced on acts whose only fence on a project target is the visibility gate
 (it is not, for enrolled administrators or now the founder).
+
+## CLAIM 2026-09-18 RECORD (REC-124 — a CONCLUSION belongs to the project's relationship with the inquiry, INVESTIGATIVE-SESSION.md §7.1)
+
+claimed: 2026-09-18 by the REC-124 worker (spawned by CONDUCT #5), branch `worktree-agent-a16f5d75eb9d8097c`, base
+`e23daea9`. Paths: `bio-plane/src/store.mjs` (conclude, the project conclusion writer/reader, op=basisversions'
+answer, the queue producer), `bio-plane/src/queuestate.mjs` (one FINDING kind), `bio-plane/checks/bio-checks.mjs`
+(C-33 rows for the new refusals), `bio-plane/scripts/coverage.mjs` (floors only, from its own print),
+`bio-plane/dist/**` (the rebuilt bundle), `bio-plane/test/conclude-project.test.mjs` (new) plus any suite the change
+breaks, corrected at its site, `docs/architecture/construct-status.json` (`8.claim` only),
+`docs/development/INVESTIGATIVE-SESSION.md` (front matter and §7.1's built/not-built note),
+`docs/development/INTERFACE-CHANGES.md` (this item's IC rows).
+
+### DELEGATION 2026-09-18 RECORD (REC-124) -> UI: **A PROJECT NOW CONCLUDES FOR ITSELF, AND THE SURFACE CANNOT YET SAY SO**
+**open as of 2026-09-18** — nothing on the surface sends `project=` to `op=conclude` or renders the new keys.
+
+`INVESTIGATIVE-SESSION.md` §7.1 is built in the plane (IC-150). The existing conclude flow in `civicos-ui/app.html`
+(`concludeParams`) sends no `project` and is NOT broken — it reaches the unchanged no-project act, and
+`node civicos-ui/test/run.mjs` exits 0. What the surface owes:
+1. **The project's act.** From a project's view of an inquiry it draws on, `op=conclude&target=<INQ>&project=<PROJ>`
+   with the falsifier (or `no_falsifier=1`) and an optional `commentary=`. **Send NO `conclusion=`** beside a project
+   (refused `CONCLUSION_IS_THE_CLAIM`): the claim of the reading the project stands on IS the conclusion. Show that
+   claim to the member BEFORE they commit (read it from `op=basisversions&project=`'s `current` version's `claim`),
+   label the commentary field as the member's own words that are never evidence, and render `NO_CLAIM`'s detail as
+   the door (state a claim on a reading, make it current).
+2. **The reads.** `op=basisversions&project=` answers `conclusion` beside `current` (null when this project concluded
+   nothing — never show another project's); every answer carries `no_project_conclusion`, whose `claim.state` is
+   `undetermined` — render it as UNDETERMINED (the `undeterminedPane` primitive), never as the conclusion text.
+3. **The notice.** `shared-inquiry-concluded-by-another-project` reaches the queue as a FINDING and renders through
+   the generic item renderer (no per-kind wording, `notifications.test.mjs` §1).
+
+## CLAIM 2026-09-18 RECORD (REC-124) — RELEASED
+
+released: 2026-09-18 by the REC-124 worker, branch `worktree-agent-a16f5d75eb9d8097c`, base `e23daea9`. Figures and
+the report are in the commit that carries this block and in REC-124's report. **FOR CONDUCT:** RESOLVE IC-150
+(proposed MINOR, I3 29.4.0 -> 29.5.0, read the base at resolution); no I5 IC (no table, column or case byte moves);
+the UI DELEGATION above is open; §7.1 item 4 (the case path reading a project's conclusion) is unbuilt and wants its
+own row; the no-project adoption gap is recorded in `INVESTIGATIVE-SESSION.md`'s Incomplete sections for BOB.
+
+## CLAIM 2026-09-18 RECORD (REC-133 — the review copy's authority as §6A.2 decides it: author = the project's edit permission; issue and revoke stay at the owner, per BOB #15's same-day correction)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-a6516bd6e484436ba`, branch
+`worktree-agent-a6516bd6e484436ba`, base `e23daea9`. `npm ci` in all three packages, each `node_modules` a real
+directory (6.3 GiB free before, 5.3 GiB after). Design authority: `BIO_Publication_v0_1.md` §6A.2 (BOB #15). Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` (the authoring check inside `#caseDraft`, the review refusal's detail,
+  and the dry run's publisher in `#reviewGates`); `bio-plane/src/index.mjs` (the NEEDS row for `casedraft`, and the
+  OPS comment); `bio-plane/src/affordances.mjs` (the `casedraft` NON_ACTS sentence).
+- Tests: `bio-plane/test/reviewcopy.test.mjs` and `bio-plane/test/reviewcopy.control.mjs`; any suite pinning the
+  NEEDS table, corrected with its reason.
+- Generated: `bio-plane/dist/*` rebuilt; `bio-plane/scripts/coverage.mjs` floors only if its print moves them.
+- Docs: `INTERFACE-CHANGES.md` (an IC minted with `node tools/mintid.mjs IC`), `BIO_Publication_v0_1.md` front matter
+  and §4, this block, and the REC-126 → UI DELEGATION's authority lines (an addendum in that block).
+
+NOT `QUEUE.md` (CONDUCT's), NOT `civicos-ui/`, NOT `newgroup/`.
+
+## CLAIM 2026-09-18 RECORD (REC-133) — RELEASED
+
+released: 2026-09-18 by the REC-133 worker, branch `worktree-agent-a6516bd6e484436ba`, base `e23daea9`, merged with
+`origin/main` at `0a58dee1` (which carries BOB #15's same-day correction of §6A.2: revoke is OWNER ONLY). Baseline at
+`d5aa3ec9`: **245/245 suites green · 14918 assertions passing**, no suite skipped. After, at `cb475127`: **245/245 suites
+green · 14950 assertions passing**, no suite skipped; `node scripts/coverage.mjs --strict` exit **0** unpiped (REGISTER
+FLOOR unmoved, 1378/1378); `node civicos-ui/test/run.mjs` exit **0**; `node tools/status.mjs --check` 0;
+`node tools/corpuscheck.mjs` 0; `node tools/plancheck.mjs --local` 0 fail. NEGATIVE CONTROL `node
+test/reviewcopy.control.mjs` from `bio-plane/`: baseline 63/0, (a) 58/5, (b) 62/1, (c) 61/2, (d) 61/2, (e) revoke widened
+to administrators 61/2, (f) issue widened to editors 62/1, (g) authoring widened to any member 59/4, (h) the dry run as
+the editor 62/1; every restore sha256 MATCH. IC minted with `tools/mintid.mjs`: IC-151 (I3, proposed MAJOR).
+**Built:** authoring = the project's edit permission (`contribute` + owner-or-joined). **Reverted before landing:** the
+administrator-revoke widening, built from §6A.2's first version. **FOR CONDUCT:** RESOLVE IC-151 against I3 as read at
+resolution (30.0.0 when written); the REC-126 → UI DELEGATION stays open with its point-1 authority line superseded.
 
 ## CLAIM 2026-09-18 RECORD (REC-134 — *administrators direct nothing*, enforced: every act that changes a project carries a POSITIONAL check, never the visibility gate alone; §7.13 the one administrator path)
 

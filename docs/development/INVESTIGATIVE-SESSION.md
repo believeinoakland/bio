@@ -1,6 +1,6 @@
 # The investigative session — proactive AI claim formulation
 
-**Status** · The design for the investigative session — a skilled AI run that reads an inquiry, searches evidence across four levels, and writes SUGGESTED basis versions a member accepts or rejects — by Bob with session BOB, 2026-08-05, rewritten twice that day, v3 on 2026-08-07 absorbing the IS sweep. It carries the reasoning for DEC-60 (proactive claim formulation), DEC-61 (device-local transcripts) and DEC-62 (pursue and investigate are one session), inline `[BOB-2/3/4]` rulings of 2026-08-07 and four SETTLED delegations; §16 lists fifteen withdrawn positions and §18's hold sentence is struck as SUPERSEDED. Complete as design and superseded by the build: `IS-BUILD-PLAN.md` decomposed §18 into 43 rows and `QUEUE.md`'s IS BUILD PLAN status records COMPLETE 2026-09-13. The caveat: the preconditions the text still calls open — D-222, D-216, D-218, the `[BOB-4]` provisional — have since landed, been answered or been overtaken (DEC-52 final, DEC-72's reshaping of the published case), so its "what is NOT settled" list is history. **§14c's "Related finding" paragraph was CORRECTED IN PLACE on 2026-09-15 by REC-99** — it said in the present tense that the three meaning-layer reads "are uncapped", false since REC-60 capped them on 2026-08-07 under IC-25, and it is one of the two citations that put already-finished work back on the queue (REC-89). Nothing else in the document moved and no section's completeness changed. §7.1 (a conclusion belongs to the project's relationship with the inquiry, BOB #15) added 2026-09-18. as of 2026-09-18.
+**Status** · The design for the investigative session — a skilled AI run that reads an inquiry, searches evidence across four levels, and writes SUGGESTED basis versions a member accepts or rejects — by Bob with session BOB, 2026-08-05, rewritten twice that day, v3 on 2026-08-07 absorbing the IS sweep. It carries the reasoning for DEC-60 (proactive claim formulation), DEC-61 (device-local transcripts) and DEC-62 (pursue and investigate are one session), inline `[BOB-2/3/4]` rulings of 2026-08-07 and four SETTLED delegations; §16 lists fifteen withdrawn positions and §18's hold sentence is struck as SUPERSEDED. Complete as design and superseded by the build: `IS-BUILD-PLAN.md` decomposed §18 into 43 rows and `QUEUE.md`'s IS BUILD PLAN status records COMPLETE 2026-09-13. The caveat: the preconditions the text still calls open — D-222, D-216, D-218, the `[BOB-4]` provisional — have since landed, been answered or been overtaken (DEC-52 final, DEC-72's reshaping of the published case), so its "what is NOT settled" list is history. **§14c's "Related finding" paragraph was CORRECTED IN PLACE on 2026-09-15 by REC-99** — it said in the present tense that the three meaning-layer reads "are uncapped", false since REC-60 capped them on 2026-08-07 under IC-25, and it is one of the two citations that put already-finished work back on the queue (REC-89). Nothing else in the document moved and no section's completeness changed. §7.1 (a conclusion belongs to the project's relationship with the inquiry, BOB #15) added 2026-09-18, and BUILT IN PART the same day by REC-124 (IC-150): items 1, 2, 3 and 5 are in the plane; item 4 is not, and the no-project relationship's adoption is a named gap (Incomplete sections). as of 2026-09-18.
 
 **Place in the system** · Level-2 design serving `BIO_System_Design.md` §3 row 8 (intent and inquiry; home `BIO_Content_Framework_v0_10.md` Part I §12 and `BIO_Case_Making_v0_1.md`) and row 11 (the assistant; home `BIO_Assistant_and_AI_Roles_v0_1.md` since 2026-09-14, whose §4 places this design as the first AI integration built). `IS-BUILD-PLAN.md`, `kickoffs/SKILL.md`, `agent-worker`, `airun.mjs` and the DEC-60/61/62 enactments depend on it; the landed plan rows, DEC-52 final, DEC-72 and Part II §14.3/§17 supersede parts of it.
 
@@ -18,6 +18,7 @@
 - §Decomposition — every IS-n superseded by a named PL/FL row and all 43 landed; the C-number allocation promise is discharged in `bio-checks.mjs`, not recorded here.
 - §The final Claude Code comparison — F10 built (FL-3), F9 never rewritten, F11 open.
 - §What a SUGGESTION is — the five kinds are built (PL-3); D-324 (VF-4) found `new-version` is not one of the five, unrecorded here.
+- §7.1 — BUILT IN PART by REC-124 (IC-150, 2026-09-18). Built: items 1-2 (`op=conclude&project=` writes the project's dated `conclusions[]` row adopting its CURRENT reading's claim verbatim; `NO_CLAIM`, `CONCLUSION_IS_THE_CLAIM`; commentary attributed, never evidence), item 3 (the FINDING `shared-inquiry-concluded-by-another-project`) and item 5 (legacy conclusions read as the no-project relationship's, claim undetermined). NOT BUILT: item 4 — `op=publish`'s `NOT_CONCLUDED`, `op=reopen` and a leg resting on an inquiry still read the inquiry's OWN state, so a project's conclusion cannot yet enter a case. DESIGN GAP: the section rules that an inquiry outside any project keeps its own conclusion as the no-project relationship's, and that a conclusion adopts the claim of the version THE PROJECT stands on — but the no-project relationship stands on no version (CURRENT is only a project's pointer), so which claim it adopts is unruled; it concludes as before and its claim reads UNDETERMINED. Also unruled: how a PROJECT withdraws its conclusion (there is no per-project reopen; a re-conclude replaces the row).
 
 **Contents**
 - [0 · Vocabulary — four words this document had been using loosely (D-226)](#0-vocabulary-four-words-this-document-had-been-using-loosely-d-226)
@@ -530,8 +531,28 @@ and stopped (the claim-adoption act cannot be built until someone says whose ado
    no-project relationship where none can be established — stated as such. Ratified bytes are never edited (the
    `published` legacy-set precedent in State Rules' 2026-09-10 amendment).
 
+**Three more, decided 2026-09-18 by BOB #15 from REC-124's build (each follows a ruling above; none is returned to Bob):**
+6. **An inquiry concluded OUTSIDE any project NAMES the version whose claim it adopts.** It has no CURRENT to stand on,
+   so the act states it; no version named, or a version with no claim, is refused `NO_CLAIM`. A conclusion whose claim
+   reads *undetermined* asserts nothing a reader can check, which is the overclaim item 2 refuses. The callers this
+   breaks are corrected, never exempted; conclusions already written read undetermined and are STATED so (item 5). The
+   stakes are bounded: a case needs a project (DEC-72), so a no-project conclusion is never published.
+7. **A project WITHDRAWS its conclusion by a dated, authored act that APPENDS to the relationship's history — it never
+   overwrites.** The latest entry is what the project stands on; every earlier conclusion and every withdrawal stays
+   readable (DEC-19 as ruled by Bob: *"An attestation must be reversible to correct mistakes. (Though there may be a
+   record of the attestation and reversal in the record.)"*). Replacing the row, as first built, erases that record and is
+   a defect. A withdrawal never edits a published case; the case's next edition carries it.
+8. **A conclusion counts ONLY for the relationship that made it.** A leg in project P resting on inquiry X reads P's own
+   conclusion on X; a no-project conclusion on X, or another project's, is visible as information and is never read as
+   P's. So item 4 does not depend on item 6.
+
 **Reversal cost:** low now; it rises once published cases freeze per-project conclusions into their bytes. **Built by:**
 REC-124, unblocked by this section (RECORD; an I3 change with its own IC; I5 if the case bytes carry the adoption).
+
+**Built, 2026-09-18 (REC-124, IC-150) — in part.** Items 1, 2, 3 and 5 are in the plane: the project's `conclusions[]`
+row, `NO_CLAIM` and `CONCLUSION_IS_THE_CLAIM`, attributed commentary, the FINDING notice, and legacy conclusions read with
+their claim undetermined (`bio-plane/test/conclude-project.test.mjs`). Item 4 is NOT built, and the no-project
+relationship's adoption is unruled (front matter, Incomplete sections).
 
 ## 8 · The inquiry's QUESTION is a first-class object
 

@@ -11052,3 +11052,129 @@ founder narrower than every enrolled administrator. Recommendation: parity here,
 positional fence for EVERY administrator if §7's "direct nothing" is meant to be enforced. Reversing costs a line per site.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 30.0.0 → 31.0.0.** The base was read at resolution: 30.0.0, where IC-148 moved it after this row was proposed against 29.4.0. `op=memberadd` with the id `admin` used to succeed and is now refused (`MEMBER_ID_RESERVED`, C-55.1), which IC-137 settles as breaking whatever the measured impact (no consumer sends that id). The founder's session gains an administrator's SIGHT through ONE resolver, and the POSITIONAL identity is kept apart for leads, the D-310 owner fact and every authorship stamp. `op=audit` always carries a `membership` block. **Carried as its own item:** *administrators direct nothing* is Bob's doctrine (Membership v2 §4), and the acts whose only barrier is the visibility gate are REC-134, ahead of features. DIST: batches (the `admin`-id hazard needs an administrator's own enrolment).
+
+## IC-150 · I3: a CONCLUSION belongs to a PROJECT's relationship with the inquiry — `op=conclude` takes `project=` (adopting the claim of the reading that project stands on, NO_CLAIM refused) and `commentary=`; `op=basisversions` answers `conclusion` beside `current` and the inquiry's own `no_project_conclusion` with its claim UNDETERMINED; a FINDING `shared-inquiry-concluded-by-another-project` · PROPOSED 2026-09-18 (REC-124, minted with `node tools/mintid.mjs IC` BEFORE writing this row) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`: 29.4.0. Proposed as MINOR, ADDITIVE — 29.4.0 → 29.5.0.** Read the base AT
+  RESOLUTION (REC-131 may land an I3 MAJOR first). **Why MINOR:** IC-25's test is whether anything that answered
+  before is refused or changes meaning now. Every call that could be made before this lands — `op=conclude`
+  with `target`, `conclusion`, `falsifier`, `no_falsifier` — is judged, written and answered exactly as before
+  (the inquiry's own bytes are byte-identical to what the old act wrote; `conclude.test.mjs` is unedited and
+  green). The new refusals are reachable only through the two NEW parameters: `NO_CLAIM` (C-33.34) with
+  `project=` or with `commentary=` and no project, `CONCLUSION_IS_THE_CLAIM` (C-33.35) with `project=` and a
+  `conclusion=`. `op=basisversions` gains keys and loses none. **What a stricter reading would rule MAJOR, stated
+  so it is not re-litigated from silence:** State Rules §4 as amended by §7.1 changes what an inquiry's own
+  `current_state: concluded` MEANS — it is now the NO-PROJECT relationship's conclusion, and a project's
+  conclusion is not visible there. A consumer that reads the inquiry's own state as "this question is
+  concluded for everyone" is not refused anything, but after a project concludes it would read `open` over a
+  question a team has concluded. No consumer in this repository does that for a project conclusion today,
+  because none can exist before this lands (grepped below).
+- **Proposer:** RECORD, REC-124 worker `agent-a16f5d75eb9d8097c`, 2026-09-18 — building
+  `INVESTIGATIVE-SESSION.md` §7.1 (BOB #15, at Bob's direction).
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` — NOT BROKEN, measured: `civicos-ui/app.html`'s conclude flow
+  (`concludeParams`) sends `target`, `conclusion`, `falsifier`, `no_falsifier` and no `project`, so it reaches
+  the unchanged no-project act; its pre-flight withholds `target` and is judged before any new check;
+  `node civicos-ui/test/run.mjs` exits 0 on this tree. The surface OWES the project-scoped act and the reads —
+  DELEGATION in `CLAIMS.md`. The new FINDING kind renders through the generic queue renderer
+  (`notifications.test.mjs` §1 forbids a per-kind wording table). `DIST`, `SKILL`, `agent-worker`,
+  `newgroup` — NOT-AFFECTED, grepped: none calls `op=conclude` or reads `op=basisversions`' conclusion keys.
+
+**THE SHAPE.**
+- `op=conclude&project=<PROJ>` (optional; absent means the no-project relationship). With a project: the
+  machine fence first (unchanged); `conclusion=` refused `CONCLUSION_IS_THE_CLAIM`; the falsifier rules
+  unchanged (`NO_FALSIFIER`, `no_falsifier=1`, `FALSIFIER_AND_NONE_STATED`); the project must be readable and
+  a project (`NOT_A_PROJECT`); then, inside `DEC-49 REGION is-conclude-claim`, `NO_CLAIM` for a project that
+  does not draw on the question (the `versionAct` predicate, severed excluded), one that stands on no reading
+  (PL-2's `#currentVersionOf`), or one whose reading is not carried, not accepted, or states no claim; then
+  `NO_BASIS` over the ADOPTED reading's legs. The inquiry may be `open`/`surfaced` OR already `concluded`
+  (that state is another relationship's); deferred, dismissed, divided and legacy focus/problem are refused
+  `ILLEGAL_TRANSITION` as before. **It writes ONLY the project:** one `conclusions[]` row in the project's own
+  frontmatter — `inquiry`, `version`, `claim` (frozen verbatim), `falsifier`, `falsifier_override_by/_at`
+  when the override was taken, `commentary` when given, `at`, `by` — re-written in place by a re-conclude, plus
+  a `Concluded` Session Log entry. The inquiry's bytes and state do not move. Answer: `relationship: "project"`,
+  `inquiry_moved: false`, `inquiry_state`, `version`, `claim: {state: "adopted", text, version}`,
+  `commentary: {text, by, at, evidence: false} | null`, `prior` (the row it replaced, or null).
+- `op=conclude` without a project: unchanged, and its answer gains `relationship: "no_project"`,
+  `project: null` and `claim: {state: "undetermined", text: null, version: null, detail}`.
+  `commentary=` without a project is refused `NO_CLAIM` (there is no adopted claim to comment beyond).
+- `op=basisversions&project=<PROJ>` gains `conclusion` (that project's row, through the ONE reader, or null)
+  beside `current`; EVERY answer gains `no_project_conclusion` — the inquiry's own conclusion when its state is
+  `concluded`, with `relationship_established: false` and its claim undetermined (§7.1 item 5), else null.
+- `op=queue` may carry `shared-inquiry-concluded-by-another-project` (FINDING, `queuestate.mjs`), one item per
+  (shared inquiry, concluding project), filed under the OTHER projects drawing on it with the concluding one
+  declared in `case.excluded`; derived on read, no table.
+
+**NOT IN THIS IC — §7.1 item 4 is NOT BUILT.** `op=publish`'s `NOT_CONCLUDED`, `op=reopen` and a leg resting on
+an inquiry still read the INQUIRY's own state, so a project's conclusion cannot yet enter a case. That is the
+case-bytes change (I5 if the case records the adoption) and is routed in REC-124's report as its own row.
+**No I5 IC:** no table or column moves and no case byte carries the adoption.
+
+**Suites:** `bio-plane/test/conclude-project.test.mjs` (new, 43/0; its liar is the shared state echoed per
+project, so the two projects adopt DIFFERENT claims). Negative control: `node test/conclude-project.control.mjs`
+from `bio-plane/` — baseline 43/0, (a) per-project collapsed to one shared state 35/8, (b) NO_CLAIM removed 40/3,
+(c) legacy claim back-filled 41/2, (d) over-strictness 42/1; every restore sha256 MATCH. Corrected at the site:
+`machinefences-dec49.test.mjs` (three new C-33 pins; corpus 49 -> 52 from its print).
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR, ADDITIVE — I3 31.0.0 → 31.1.0.** The base was read at resolution: 31.0.0, where IC-148 and IC-149 moved it after this row was proposed against 29.4.0. Every call possible before behaves identically: the no-project `op=conclude` is unchanged, and its answer only GAINS `relationship` and `claim: {state: "undetermined"}`. The new refusals (`NO_CLAIM` C-33.34, `CONCLUSION_IS_THE_CLAIM` C-33.35, `UNSPLICEABLE_CONCLUSIONS` C-33.36) are reachable only through the new `project=`/`commentary=` parameters, so IC-25's test for breaking is not met. The worker's case for MAJOR (an inquiry's own `concluded` no longer means concluded for every project) is a change of MEANING that no answer carries yet, because §7.1 item 4 (publish, reopen and legs) is unbuilt. When item 4 lands (REC-135), THAT IC decides whether the meaning change is breaking. **With BOB #15:** which claim a no-project conclusion adopts, and how a project withdraws its conclusion.
+
+## IC-151 · I3: THE REVIEW COPY'S AUTHORING, AS `BIO_Publication_v0_1.md` §6A.2 DECIDES IT — `op=casedraft` opens to the project's EDIT permission (NEEDS `contribute`; an owner or a JOINED participant); `op=reviewgrant` and `op=reviewrevoke` UNCHANGED at the owner · PROPOSED 2026-09-18 (REC-133, minted with `node tools/mintid.mjs IC` BEFORE writing this row) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off this tree's `docs/development/INTERFACES.md`
+  after merging `origin/main` `0a58dee1`: 30.0.0** (IC-148 moved it from 29.4.0 while this item ran — **read the base
+  AT RESOLUTION**).
+- **Proposed as MAJOR, BREAKING — for ONE caller configuration, measured, and argued rather than argued down.** One
+  act WIDENS and nothing else moves, with one exception: `op=casedraft`'s capability moves from `publish` to
+  `contribute`, so **an OWNER holding `publish` WITHOUT `contribute` — a configuration the plane accepts (measured:
+  `reviewcopy.test.mjs` enrols `uma` with `["publish"]` alone) — could author a draft yesterday and is refused
+  `NOT_CAPABLE` today.** That is the ruling applied, not a side effect: §6A.2 makes authoring the EDIT permission, and a
+  member who may edit nothing in the working corpus may not edit the draft either. Consumer impact measured at ZERO
+  (`git grep` over `civicos-ui/`, `agent-worker/`, `pdf-worker/`, `ocr-worker/`, `newgroup/` for the three ops and the
+  refusal code: no hit). **MAJOR anyway on IC-25's rule and IC-117's precedent: a consumer count is a fact about this
+  moment and a contract is a promise about every moment after it.** MINOR is defensible ONLY if CONDUCT judges that
+  edge vacuous; the proposer does not.
+- **Proposer:** RECORD, worker `agent-a6516bd6e484436ba`, 2026-09-18, from QUEUE REC-133.
+- **Owner to land it:** `RECORD`.
+- **Consumers to answer:** `UI` (AFFECTED as the builder of the still-DELEGATED surface — `CLAIMS.md` REC-126 → UI,
+  whose point-1 authority line this landing corrects in an addendum); `SKILL`, `DIST`, `FRAMEWORK` NOT-AFFECTED.
+- **Design:** `BIO_Publication_v0_1.md` §6A.2, *"WHO MAY AUTHOR, ISSUE AND REVOKE"* (BOB #15, 2026-09-18, the revoke
+  line CORRECTED the same day to owner-only); Membership v2 §5 (`contribute`), §7.5 (*a joined member has the working
+  rights their capabilities allow*) and §4 (administrators direct nothing).
+
+**THE SHAPE.** No op, parameter, field or refusal code is added, renamed or removed.
+- `POST op=casedraft` — NEEDS `publish` → **`contribute`**. The store admits `#isProjectEditor`: an owner
+  (`#isProjectOwner`, unchanged) or a participant whose state is `joined` (`#participation`, the record's one
+  membership predicate). An invited-not-joined member (§7.5: view rights only), a member who has asked to leave, a
+  non-participant and an administrator who holds no position are refused as before. Editing a draft in place
+  follows the same rule.
+- `POST op=reviewgrant`, `POST op=reviewrevoke` — UNCHANGED: NEEDS `publish`, the owner only, no administrator
+  bypass. **This worker first built §6A.2's original revoke line (owner OR any administrator) and REVERTED it before
+  landing, on CONDUCT #5's relay of BOB #15's correction;** nothing of it survives on the branch tip.
+- **The refusal code is KEPT: `REVIEW_NOT_PROJECT_OWNER` for all three acts.** Its name is exact for issuing and
+  revoking and narrower than the rule for authoring; its `detail` now names the authority each act needs. Renaming it
+  would change an answer a caller branches on for a refusal whose MEANING (no such authority, or no such thing — still
+  one answer) is unchanged.
+- **`op=reviewcopy`'s `missing` for a NON-OWNER editor's draft.** `publishCase` runs its owner fence first, so the
+  dry run is now run as the member who would PUBLISH — the last editor if an owner, else the first of the project's
+  owners (`#owners`, sorted), else (a project with no owner) the editor, whose `NOT_THE_PROJECT_OWNER` is then the true
+  first gap. Without this, every editor's draft would list `NOT_THE_PROJECT_OWNER` and hide its real gaps. No field
+  changes; for an owner-edited draft the answer is byte-identical to REC-126's.
+
+**Suites:** `bio-plane/test/reviewcopy.test.mjs` 52 → 63 (the editor authors, and edits the owner's draft in place;
+the plain member, invited and not joined, can do none of the three; a joined member without `contribute` is refused
+at the control plane; the editor cannot issue, on the owner's draft or her own; neither the plain member nor a
+non-owner administrator can issue; the editor, the plain member and a non-owner administrator cannot revoke and the
+grant is still live after all three tried; the owner revokes it and the secret then answers byte-identically to one
+never issued; an editor's draft is judged as its publisher would meet the gates). Two labels CORRECTED with their
+reason in a comment (block 2's heading and the non-participant arm said the authority was publish's).
+`src/affordances.mjs`'s NON_ACTS sentence for `casedraft` restated. NEGATIVE CONTROL: `node test/reviewcopy.control.mjs
+[e|f|g|h]` from `bio-plane/` — (e) revoke widened to administrators 61/2, (f) issue widened to editors 62/1, (g)
+authoring widened to any member 59/4, (h) the dry run as the editor 62/1; baseline 63/0; REC-126's (a)-(d)
+re-measured (58/5, 62/1, 61/2, 61/2).
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 31.1.0 → 32.0.0.** The base was read at resolution: 31.1.0, where IC-148, IC-149 and IC-150 moved it after this row was proposed against 30.0.0. `op=casedraft` moves from the `publish` capability to `contribute` plus editor POSITION (`#isProjectEditor`: an owner, or a JOINED participant, per Membership v2 §7.5), so an owner holding `publish` without `contribute` could draft before and is refused `NOT_CAPABLE` now. The plane accepts that configuration, so IC-25/IC-117 settle it as breaking whatever the measured impact (no consumer found). **Checked at integration against the row's correction:** revoke is OWNER ONLY in the code (`#reviewRevoke`), and the administrator arm the worker built first was reverted before its tip. Issue is unchanged. "What is missing" is now judged as the person who would PUBLISH would meet the gates, so an editor's draft does not list `NOT_THE_PROJECT_OWNER` over its real gaps.

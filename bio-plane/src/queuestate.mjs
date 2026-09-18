@@ -178,6 +178,14 @@ export const QUEUE_FINDING_KINDS = {
                               + "ANOTHER project's work, so it arrived without anybody here authoring it "
                               + "(§7, D-216 — one question beneath several projects) "
                               + "— LIVE: store.mjs #findingsVersionFromAnotherTeam",
+  /* REC-124 / INVESTIGATIVE-SESSION.md §7.1 item 3. FINDING for §7's reason:
+     another team concluding the question you share is a fact about the work,
+     and no member may silence it for the team. */
+  "shared-inquiry-concluded-by-another-project":
+                                "another project drawing on a SHARED question concluded it, adopting "
+                              + "the claim of the reading it stands on; nothing this project stands on "
+                              + "or concluded has moved (§7.1 — a conclusion is per-project) "
+                              + "— LIVE: store.mjs #findingsConcludedElsewhere",
 };
 
 /* The ONE class lookup. Returns "CONDITION" | "OBLIGATION" | "FINDING", or null
