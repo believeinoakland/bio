@@ -13341,3 +13341,18 @@ suite. The rebase onto `origin/main` at `2d51e5d3` happened FIRST, and every fig
 rebased tree.
 
 released: 2026-09-18 by the REC-100 worker — the consumer migration is BUILT and committed on `worktree-agent-a249f66820def3efd` (rebased onto `2d51e5d3` first). `stepLog` records a model-judged PRESENT as `LOOKED_INDETERMINATE` with the judgement stated; the drive loop reads `refused[]` and publishes `log_refused` / `present_unbacked`; section R drives the tick against the REAL plane. Controls `aw-steplog` and `aw-refused` AS DECLARED (the second after a first-run finding about the arm and R2b, recorded at both sites). REC-100's 2026-09-16 DELEGATION is DISCHARGED above.
+
+## CLAIM 2026-09-18 M0 (LED-1 — the ledger reader audit; moves no row)
+
+Worker spawned by CONDUCT #4, branch `worktree-agent-a811f19cc02e2aa59`. Paths: `docs/development/MEASUREMENTS.md`
+(one new M-entry, minted), `docs/DECIDED.md` only if regeneration is owed, this block. NOT `QUEUE.md` (CONDUCT's),
+NOT `DEBT.md` (no row moves in this item), no code unless a reader is found broken today — and then reported, not
+silently fixed.
+
+## CLAIM 2026-09-18 M0 (LED-1) — RELEASED
+
+released: 2026-09-18 by the LED-1 worker, branch `worktree-agent-a811f19cc02e2aa59`. Deliverable: `MEASUREMENTS.md`
+M-57 (minted with `tools/mintid.mjs M`). NO row moved; no code changed. Baseline before the first edit: 232/232 suites
+green · 14392 assertions, 3 fleet members RAN. Two readers found BROKEN TODAY and reported, not fixed:
+`rowdesign.control.mjs` arm A1 (names M0-33, expects M0-29) and `tools/.ui59/*.mjs` (a hardcoded worktree path that
+does not exist). The move was simulated only in scratch clones outside this repository.
