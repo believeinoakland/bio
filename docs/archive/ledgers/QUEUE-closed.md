@@ -2312,3 +2312,12 @@ accepts-when: through the ops: a grant is issued to a named recipient for one pr
 NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with the colon**) — scope widened to the project → a second production is readable and the arm FAILS; revocation made cosmetic → access survives and the arm FAILS. **Liar:** a *published-but-unlisted* copy — the design Bob OVERRULED; it must never touch the published bucket.
 added: 2026-09-18 · CONDUCT #4 (build-order item 8; queued, not spawned — the slot it would fill went to REC-125, a correction to landed substrate, which outranks it.)
 
+### LED-4 · superseded — by LED-6 (BOB #15 at Bob's direction, 2026-09-18: its cut and its ordering are steps 2–3 of `WORK-PIPELINE.md` §5's migration). **Prior state, kept as the record: queued** — **THE OPEN ROWS CUT TO THEIR FIELDS AND ORDERED AS THEY WILL BE PROCESSED — CONDUCT's own act on CONDUCT's own file; BOB checks the order against `tools/status.mjs` before it lands.** — waits on LED-3. **EXEMPT FROM THE M0 HOLD BY NAME.**
+milestone: M0 (process, Bob's direction 2026-09-18)
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with BOB #14's inbox entry (LED-4's paragraph) and BOB's BUILD ORDER of 2026-09-18 (the BOB INBOX), which is the order's input.
+depends-on: LED-3
+scope: each open row keeps heading, `milestone`, `design` (a section), `depends-on`, `scope`, `accepts-when`, `NEGATIVE CONTROL`; everything else — prior state, landing narratives, correction histories — moves to the archive under the row's id, verbatim; the file is ordered top-runnable first, dependents after what they rest on. Same treatment for `DEBT.md`'s open rows: one paragraph of cost, one of disposition as it stands NOW.
+accepts-when: every open row carries only its fields; the history is in the archive verbatim (diffed); BOB has checked the order; LED-2's size budget passes and its WARN becomes FAIL in the same landing.
+NEGATIVE CONTROL: LED-2's budget arm is the control — a row restored to its full history must FAIL the per-row budget.
+added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox entry. Performed by CONDUCT itself, not a worker: the order is judgement over CONDUCT's own file.)
