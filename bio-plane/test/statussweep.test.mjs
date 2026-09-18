@@ -35,9 +35,22 @@
  *      REMOVED -> 0 candidates. Run beside arm (2) this is what shows the CANDIDATE came from the
  *      duplication rather than from anything else in the fixture — one arm asserting a find is not
  *      evidence that the find is the thing it is named after.
- *  (6) THE CROSS-LINE TRIP, armed from the real corpus rather than asserted: `UNDESIGNED` is built
- *      from `\s`, which matches a NEWLINE, so a sentence broken across two lines fires it. The
- *      sweep must FLAG such a trip rather than counting its table into the population silently.
+ *  (6) THE REMOTE TRIP (M0-61; it was THE CROSS-LINE TRIP until then, and the reason it changed is
+ *      the point). The predicate runs UNGATED here, so a trip in prose far above a table drags the
+ *      table in. M0-58 flagged that by whether the match spanned a NEWLINE — a CORRELATE: the same
+ *      sentence re-wrapped onto one line trips identically, and 2 of the corpus's 3 cross-line
+ *      trips are genuine claims. So the arm RE-WRAPS the real receipt (`research/RECONCILED.md`
+ *      §2.2) onto one line in memory and demands the same flag, and a genuine list introduced by a
+ *      soft-wrapped sentence must land in the REAL population.
+ *      NEGATIVE CONTROL: `node bio-plane/test/m061-undesigned-gap.control.mjs` — run 2026-09-18 by
+ *      the M0-61 worker, 4/4 arms as declared, every file restored byte-identically by sha256:
+ *      (A) `UNDESIGNED`'s gap reverted to `\s+` -> this suite 37/1 and corpuscheck.test 107/1, both
+ *      on the paragraph-break arm; (B) the classifier reverted to `/\n/.test(mm[0])` -> this suite
+ *      36/2, "re-wrapped onto ONE line: …RECONCILED.md §2.2 … all 10 of its items" wanting
+ *      [true,10,10] and getting [false,10,0], and the soft-wrapped list mislabelled [1,1,1];
+ *      (C) THE LIAR, the gap narrowed to a literal space -> the receipt VANISHES ([false,0,0], the
+ *      cheapest green) and this suite fails on it, while corpuscheck.test fails 105/3 on the
+ *      corpus's own genuine soft-wrapped claims; (D) nothing armed -> 108/0 and 38/0.
  *  (7) ON DISK — `tools/statussweep.mjs` is the subject and `tools/corpuscheck.mjs` is the
  *      instrument it imports. The arm asserts the three predicates are IMPORTED and not copied:
  *      a `UNDESIGNED` re-declared in the sweep would be this row's own subject — a second source
@@ -78,8 +91,8 @@ import { fileURLToPath } from "node:url";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(DIR, "..", "..");
-const { sweep, spans, citedByTheMap } = await import(join(REPO_ROOT, "tools/statussweep.mjs"));
-const { governed, UNDESIGNED } = await import(join(REPO_ROOT, "tools/corpuscheck.mjs"));
+const { sweep, spans, citedByTheMap, diskRead, introducingBlock } = await import(join(REPO_ROOT, "tools/statussweep.mjs"));
+const { governed, UNDESIGNED, firstTable } = await import(join(REPO_ROOT, "tools/corpuscheck.mjs"));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -223,18 +236,54 @@ section("CAUSE — withdraw the cover and the candidate must disappear");
      duplication. That PAIR is the evidence; either arm alone is an assertion. */
 }
 
-/* --------------------------------------------------------------- (6) the CROSS-LINE TRIP */
-section("THE CROSS-LINE TRIP — the shared predicate matches over a newline, and it is FLAGGED");
+/* ------------------------------------------------------------------ (6) the REMOTE TRIP */
+section("THE REMOTE TRIP — a claim not ABOUT the table is flagged, wherever the editor wrapped it (M0-61)");
 {
-  t("the predicate really does match across a line break (the defect, driven not asserted)",
-    UNDESIGNED.test("designed wrongly once and not\ndesigned once."), true);
-  const live = sweep();
-  t("the live sweep FLAGS such trips rather than counting their tables in silently",
-    live.crossLineTrips.length >= 1, true);
-  t("and every flagged trip carries the text it matched, so a reader can judge it",
-    live.crossLineTrips.every((x) => /\n/.test(x.matched)), true);
-  t("items under a cross-line trip are marked, keeping the REAL population separable",
-    live.claims.some((c) => c.crossLineTrip === true) && live.claims.some((c) => c.crossLineTrip === false), true);
+  /* M0-58 flagged this population by whether the match SPANNED A NEWLINE. That is a correlate:
+     the same sentence wrapped two words earlier trips on one line. The arm that proves the
+     classifier keys on the CAUSE re-wraps the receipt onto ONE line and demands the same flag. */
+  const REC = "docs/development/research/RECONCILED.md";
+  const recText = diskRead(REC);
+  const WRAPPED = "designed wrongly once and not\ndesigned once.";
+  t("the receipt is still in the corpus as M0-58 measured it (else this arm drives nothing)",
+    typeof recText === "string" && recText.includes(WRAPPED), true);
+  const oneLine = recText.replace(WRAPPED, "designed wrongly once and not designed once.");
+  t("and the re-wrap TOOK (the arm-that-did-not-arm guard)", oneLine !== recText && !oneLine.includes(WRAPPED), true);
+  const expect = (text) => {
+    const sect = spans(text).find((s) => /^2\.2 · CORRECTNESS/.test(s.heading));
+    return sect ? firstTable(sect.own).rows.filter((r) => /^\d+$/.test(r.cells[0])).length : -1;
+  };
+  const n = expect(recText);
+  t(`${REC} §2.2 still carries its table of items (floor)`, n >= 1, true);
+  for (const [label, text] of [["as wrapped in the corpus", recText], ["re-wrapped onto ONE line", oneLine]]) {
+    const r = sweep({ set: [REC], read: (p) => (p === REC ? text : null) });
+    const under = r.claims.filter((c) => /^2\.2 · CORRECTNESS/.test(c.heading));
+    t(`${label}: ${REC} §2.2 is a REMOTE trip and all ${n} of its items are counted apart`,
+      [r.remoteTrips.some((x) => x.path === REC && /^2\.2/.test(x.heading)), under.length, under.filter((c) => c.remoteTrip).length],
+      [true, n, n]);
+  }
+
+  /* OVER-STRICTNESS: a GENUINE list whose introducing sentence happens to wrap mid-phrase is the
+     REAL population. The cross-line flag called exactly this "probable false". */
+  const soft = `${FRONT("Fixture S", "A list introduced by a soft-wrapped sentence.")}
+## 3. Open work
+
+Some context that says nothing about design.
+
+The pieces still to be
+designed, named here:
+
+| # | piece |
+| --- | --- |
+| 1 | **the ledger reconciliation object** — owed |
+`;
+  const s = sweep({ set: ["docs/fixture-s.md"], read: (p) => (p === "docs/fixture-s.md" ? soft : null) });
+  t("a genuine soft-wrapped introduction: its item is in the REAL population, not flagged",
+    [s.claims.length, s.claims.filter((c) => c.remoteTrip).length, s.remoteTrips.length], [1, 0, 0]);
+  t("the shared predicate is NOT loosened to get there — a paragraph break is never spanned",
+    UNDESIGNED.test("not\n\ndesigned"), false);
+  t("introducingBlock skips a horizontal rule and returns the paragraph above the table",
+    introducingBlock("## H\n\nfar away: undesigned\n\n---\n\nThe canonical list.\n"), "The canonical list.");
 }
 
 /* ------------------------------------------------- (7) and (8) the INSTRUMENT ON DISK */

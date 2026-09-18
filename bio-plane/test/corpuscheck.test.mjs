@@ -80,6 +80,16 @@
  * wrong answer here: every arm drives `corpuscheck` DIRECTLY, which has no publication check and so
  * cannot fail for a reason the arm did not cause, and the one plancheck arm runs `--local`.
  *
+ * NEGATIVE CONTROL: (M0-61, the `UNDESIGNED` predicate's gap, 2026-09-18) re-runnable in ONE STEP
+ * with `node bio-plane/test/m061-undesigned-gap.control.mjs` — 4/4 arms as declared, files restored
+ * byte-identically by sha256. The gap reverted to `\s+` -> this suite 107 pass 1 fail, "a PARAGRAPH
+ * break is never spanned" wanting [false,false,false,false] and getting all true. THE LIAR — the gap
+ * narrowed to a literal space, the fix the row warned against -> 105 pass 3 fail, on the Content
+ * Framework's and the Functional Architecture's own genuine soft-wrapped claims and on tab/CRLF.
+ * The predicate change moved NO live output: `corpuscheck` in all six modes and `statussweep` in
+ * all three were byte-identical before and after (measured against HEAD's copies run over the same
+ * docs/), because no match in the governed set crossed a paragraph break.
+ *
  * NEGATIVE CONTROL, THE OTHER DIRECTION — the checker armed against a REAL retrofitted
  * document rather than a fixture. Run 2026-09-14 by M0-26 in worktree
  * agent-a64d514be75dea71a, re-runnable in one step with
@@ -114,7 +124,7 @@ const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(DIR, "..", "..");
 const { ROOT, governed, checkFile, writeContents, parseFront, bodyHeadings, renderContents,
   population, coverage, matchPattern, statusAuthority, constructMap, numberedSection, keyWords,
-  MAP_DOC } =
+  MAP_DOC, UNDESIGNED } =
   await import(join(REPO_ROOT, "tools/corpuscheck.mjs"));
 
 let pass = 0, fail = 0;
@@ -123,7 +133,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 9;   /* M0-43 added the coverage section; M0-57 the design-status authority */
+const SECTIONS = 10;  /* M0-43 added the coverage section; M0-57 the design-status authority; M0-61 the predicate's gap */
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -543,6 +553,31 @@ It is earned.
     /statusAuthority\(\)/.test(pc2), true);
   t("and the standard's §3 ruling is written where a reader of the map meets it",
     /SINGLE AUTHORITY ON DESIGN STATUS/i.test(real(MAP_DOC)), true);
+}
+
+/* ------------------------------------------ the UNDESIGNED predicate's gap (M0-61) */
+section("UNDESIGNED spans a SOFT line break on purpose and a PARAGRAPH break never (M0-61)");
+{
+  /* THE LIAR, NAMED FIRST: the cheapest green was a literal space in place of `\s`, which clears
+     M0-58's one receipt and silently loses every genuine claim whose wrap fell mid-phrase. So the
+     over-strictness arms come first and quote the corpus's own genuine claims verbatim. */
+  t("a genuine SINGLE-LINE claim is still matched (the TRUE match this row must not remove)",
+    UNDESIGNED.test("the claim object is not designed anywhere"), true);
+  t("a genuine claim SOFT-WRAPPED mid-phrase is matched — Content Framework Part II's own words",
+    UNDESIGNED.test("how it can be reached, and what remains to be\ndesigned — in that order"), true);
+  t("and Functional Architecture's — the wrap column must not decide a claim's visibility",
+    UNDESIGNED.test("it then moves first to the UI, which still needs to be\ndesigned; once"), true);
+  t("tabs, runs of spaces, an indented continuation and CRLF are all one gap",
+    ["not\tdesigned", "not   yet  designed", "to be\n   designed", "not\r\ndesigned"].map((s) => UNDESIGNED.test(s)),
+    [true, true, true, true]);
+  /* THE NARROWING — the arm the negative control breaks. */
+  t("a PARAGRAPH break is never spanned: words either side belong to different statements",
+    ["not\n\ndesigned", "to be\n \t\ndesigned", "## Not\n\nDesigned here", "pieces to\n\n\ndesign"].map((s) => UNDESIGNED.test(s)),
+    [false, false, false, false]);
+  t("a break into another block is not spanned (the marker is not whitespace)",
+    UNDESIGNED.test("not\n| designed |"), false);
+  t("the reason is written AT THE SITE, where the next caller meets it",
+    /SPANS ONE SOFT LINE BREAK, DELIBERATELY/.test(readFileSync(join(ROOT, "tools/corpuscheck.mjs"), "utf8")), true);
 }
 
 

@@ -401,7 +401,7 @@ authority is the file named, never this one.
 - **D-194** · 2026-09-14 — What is RULED, and binds whichever home is built (§14.4, 2026-09-14): the observation is evidence, authored, grade D on the member's trust; its attribution in a published case is the attesting member's choice among the group, the project, the member's cover, or the member by name, and an off-the-record source's…  
   `docs/architecture/BIO_Content_Framework_v0_10.md:1939`
 - **D-194** · 2026-09-14 — RULED 2026-09-14 … designed in Program B"*. - **SITE B** — `docs/architecture/BIO_System_Design.md` §3 construct 10 STATE cell: *"built (M1); the authored frontier — a member's LEAD — has no home (D-194) **[audited 2026-09-17: STILL TRUE, D-194 open]**"*.  
-  `docs/development/MEASUREMENTS.md:15949`
+  `docs/development/MEASUREMENTS.md:15954`
 - **D-197** — (g) HAD TO BE CORRECTED MID-RUN AND IS REPORTED, NOT SMOOTHED**: the first sweep-neutering arm stayed 46/46 GREEN because with all guards removed there is no `.answered` anywhere and a whole-file region equals a scoped one — it measured nothing.  
   `docs/archive/ledgers/QUEUE-2026-08.md:2109`
 - **D-206** — D-206 RIDER DECIDED IN FAVOUR OF CARRYING THE DISTINCTION:** an optional `code` on the finding plus a derived `tallyDetail` beside `tally`, with `tally` not moving by one byte and `tallyDetail` absent when nothing carried a code; reasoning recorded in the code at BOTH sites, and settled by CLAUDE.md itself —…  
@@ -1414,6 +1414,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1620`
 - **M0-59** · 2026-09-17 — CORRECTED 2026-09-17 by M0-59 (D-406), and the correction is the point rather than a > footnote.** The sentence above said *closed for this clone AND ITS WORKTREES*.  
   `docs/development/VERIFICATION.md:1324`
+- **M0-61** · 2026-09-18 — [SUPERSEDED IN PART by M-54, 2026-09-18 (M0-61): the three facts below re-measured true, but the NEWLINE is a correlate, not the cause — 2 of the 3 cross-line trips are genuine claims, and the RECONCILED sentence trips identically on one line.  
+  `docs/development/MEASUREMENTS.md:15930`
 
 ## Rulings carrying no id
 
@@ -2062,7 +2064,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-17** — THE PUSH-TIME DECIDED GUARD — both causes driven against a real remote, and the estate's hook premises re-verified** *(Id minted with `node tools/mintid.mjs M`, run bare.  
   `docs/development/MEASUREMENTS.md:15329`
 - The degradation is real and is what the assertion was CORRECTED to measure:** `finding` stops being an index predicate and becomes a row-by-row test over **the whole tail of the table after the cursor**, to return the few rows standing at one finding.  
-  `docs/development/MEASUREMENTS.md:16167`
+  `docs/development/MEASUREMENTS.md:16172`
 - **2026-08-01** — CORRECTED 2026-08-01 — this hole is CLOSED and the paragraph below is kept as the > reasoning that closed it.** One reconciling Durable Object alarm now serves FIVE > consumers (selection-sweep, task-drain, archive-monitor, connection-derive, > overdue-scan), three of which landed within a week of the decision.  
   `docs/development/MILESTONES.md:118`
 - Bob already RULED the doctrine** — content > produced by a third-party script, if it is ever evidence, is recorded as produced by > THAT party and not by the hosting site.  

@@ -12802,3 +12802,21 @@ paths:
 
 released: 2026-09-18 by the M0-62 worker at its report. Every path above is free. `BIO_System_Design.md`
 verified untouched (sha256 b5ef3e7a… before and after).
+
+## CLAIM 2026-09-18 M0 (M0-61 — `corpuscheck`'s `UNDESIGNED` predicate and the line break; worktree `agent-a8dafc3592e03bc2a`)
+
+Paths:
+- `tools/corpuscheck.mjs` — the `UNDESIGNED` predicate and its comment ONLY. Nothing else in the file.
+- `tools/statussweep.mjs` — its comment and CLI text about the predicate, and the classifier that
+  separates the probable false population (the only ungated caller).
+- `bio-plane/test/corpuscheck.test.mjs`, `bio-plane/test/statussweep.test.mjs` — the arms;
+  `bio-plane/test/m061-undesigned-gap.control.mjs` — NEW, the one-step negative control.
+- `docs/development/MEASUREMENTS.md` — the re-measurement, appended (M-54), and a superseded-in-part
+  note on M-48's predicate paragraph.
+- `docs/development/CLAIMS.md` (this block).
+
+**NOT CLAIMED AND NOT TOUCHED:** every governed document — in particular
+`BIO_Content_Framework_v0_10.md` §18 and `BIO_System_Design.md` §3, which M0-62 is correcting
+concurrently. **NOT `docs/development/QUEUE.md`** — flipping the row is CONDUCT's act.
+
+released: 2026-09-18 by the M0-61 worker — landed on branch `worktree-agent-a8dafc3592e03bc2a` for CONDUCT to integrate.
