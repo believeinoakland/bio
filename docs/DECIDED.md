@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1113 rulings across 84 documents.
+1112 rulings across 84 documents.
 
 ## DEC-
 
@@ -1559,8 +1559,6 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/architecture/BIO_Membership_Architecture_v1.md:32`
 - §6A — the review copy is RULED and DESIGNED at doctrine level and NOTHING IS BUILT.  
   `docs/architecture/BIO_Publication_v0_1.md:10`
-- **2026-09-18** — CORRECTED 2026-09-18 by MK-4 and the state did NOT move: this also said the internet level had no member WRITER (its writer is the LEAD) — the lead now writes there (op=leadlook, 10.lead), so that half was false and is removed; the two halves that remain are still absent; a member surface for the frontier and the…  
-  `docs/architecture/BIO_System_Design.md:89`
 - **2026-07-30** — st" is REVISED: accepted so long as it is disclosed in the provenance chain (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30); not annotated here. - §6 — sessions and execution modes are priced against a June 2026 billing change and no ruling or dataplane entry carries the Session abstraction. - §7.7 —…  
   `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:11`
 - **2026-07-30** — It is the inventory that has to exist before a design document can be written honestly." One RULED marker (Bob, 2026-07-30, Step 0's scope).  
