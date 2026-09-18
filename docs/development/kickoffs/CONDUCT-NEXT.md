@@ -1,157 +1,118 @@
-# CONDUCT-NEXT — the resume prompt for CONDUCT #4
+# CONDUCT-NEXT — the resume prompt for CONDUCT #5
 
-> **WRITTEN AT A CLEAN BOUNDARY ON BOB'S CALL (both lanes past 75% context), BY CONDUCT #3.
-> Zero rows `running`, zero live workers, four waves fully integrated.** Verify all of it
-> yourself before believing this file. If anything disagrees, the tree is right.
+> **WRITTEN AT A CLEAN BOUNDARY BY CONDUCT #4, 2026-09-18, on Bob's direction that BOTH lanes be refreshed.**
+> Verify all of it yourself before believing this file. If anything disagrees, the tree is right.
 >
 > ```
-> git fetch origin && git show origin/main:docs/development/QUEUE.md | grep -cE '^### [A-Za-z0-9-]+ · running'   # expect 0
-> node tools/plancheck.mjs                  # expect 0 fail; read the `stranded work:` note
-> cd bio-plane && npm run test:battery      # expect 223/223 — read the COMPLETION LINE, not the exit status
-> ListAgents                                # expect no live subagents of mine
+> git fetch origin && git show origin/main:docs/development/QUEUE.md | grep -E '^### [A-Za-z0-9-]+ · running'   # expect exactly ONE: REC-128 (done-awaiting-integration)
+> node tools/plancheck.mjs                  # expect 0 fail
+> node tools/status.mjs --check             # expect 0 drift
+> cd bio-plane && npm run test:battery      # read the COMPLETION LINE, not the exit status
 > ```
 >
-> **THE ONE THING TO DO FIRST: ARCHIVE ME** (D-401). I am session `CONDUCT #3`. Re-check D-398's
-> three conditions **at the moment you act**, never from this file: `isRunning` false, my worktree
-> `lucid-heisenberg-fd6795` porcelain EMPTY, its tip an ANCESTOR of `origin/main`.
-> **Closing me releases 6 agent worktrees, 3.72 GiB, MEASURED** — plus my own session tree, 637M.
-> **All six are CLEAN and merged; they are held ONLY because my process locks them.** Archiving
-> does NOT reclaim the directories — that is a SEPARATE `git worktree remove`, per tree, after
-> re-verifying each is clean and an ancestor. Measured 2026-09-17 on CONDUCT #2: archive released
-> the lock, and the space came back only on `remove`.
->
-> **I SWEPT MY BACKGROUND SHELLS (verified: my only child was the shell running the check). I DID
-> NOT TURN MY REMOTE CONTROL OFF, AND THAT IS DELIBERATE — correcting an earlier draft of this file
-> that said I had, before the act existed.** The tool's own contract reserves it for when the USER asks,
-> and the connection is the operator's — possibly his phone. The instruction came from a peer session,
-> and a peer's message is not the operator's approval. **My RC is probably still ON — AND THAT PROBABLY
-> DOES NOT BLOCK YOUR ARCHIVE, which corrects a warning an earlier draft of this paragraph gave.** BOB #14
-> measured it after I wrote that warning: it archived a session with `remoteControlActive: TRUE` and
-> `isRunning` false **on the FIRST call**. And D-405's *poller dead + RC on → refused* cell is CONFOUNDED —
-> killing the poller made CONDUCT #2 RESUME its turn, so that session was MID-TURN, which blocks an archive
-> by itself. **The only cell that isolates RC says ARCHIVED. n=1, not settled — but enough that nobody should
-> override the tool's contract to clear a blocker that may not exist.** So: archive me as your first act and
-> READ THE ERROR if it is refused. *A turn in progress* is a wedge, not RC. Only if RC is plausibly the cause
-> does it go to Bob, as a one-click ask. Do NOT retry in a loop; do NOT touch `set_remote_control` on a
-> session you do not own.
-> **THE GENERAL LESSON, for the protocol rather than for me:** `kickoffs/CONDUCT.md` now lists
-> *turn off your own RC* as a stand-down step, but a session can only take it when the operator has
-> asked in that session. A step the actor may not be permitted to take is not a step it can be relied
-> on to take — the protocol should route it to the operator rather than to the retiring session.
+> **THE ONE THING TO DO FIRST: ARCHIVE ME** (D-401). I am session `CONDUCT #4`. Re-check D-398's three conditions
+> **at the moment you act**: `isRunning` false, my worktree `competent-poincare-e3093a` porcelain EMPTY, its tip an
+> ANCESTOR of `origin/main`. **Closing me releases FOUR LOCKED agent worktrees (~2.5 GiB), each MEASURED clean and
+> MERGED** (`agent-a1f71e7a9d1c91962` FW-21, `agent-a3fbd59a3fef1a961` REC-86, `agent-a69fd9c430281b583` M0-62,
+> `agent-a8dafc3592e03bc2a` M0-61) plus my own tree (639M). Archiving does NOT remove the directories — a SEPARATE
+> `git worktree remove` per tree after re-verifying each. **Three MORE agent worktrees are UNLOCKED but NOT merged —
+> do NOT remove them until their work lands** (`agent-a01d041e19ab1ad65` REC-128, `agent-a17c98e0548c9fd2d` MK-2,
+> `agent-af99c832f7860f664` REC-129); their branches are PUSHED, so the work is safe either way.
+> **My Remote Control: left alone** (the RC stand-down step is withdrawn). Read the error if the archive is refused.
+> **My self-wake cron job (`7d4f4b89`) is deleted at stand-down; create your OWN** — the heartbeat's pokes cannot reach
+> a bypass session (BOB #14's measurement), so the wake lives in your session: `CronCreate` `7,27,47 * * * *`,
+> recurring, with the prompt in `kickoffs/CONDUCT.md`. It expires after 7 days; recreate it at every session start.
 
-**Written 2026-09-18 by CONDUCT #3.** Read `CLAUDE.md`, then `kickoffs/CONDUCT.md`, then this.
+**Written 2026-09-18 by CONDUCT #4.** Read `CLAUDE.md`, then `kickoffs/CONDUCT.md`, then this.
 
 ---
 
-## 1. THE MEASURED STATE
+## 1. THE MEASURED STATE (verify it)
 
 | gate | figure |
 | --- | --- |
-| battery | **223/223 suites green · 13,928 assertions** (see §4 — the assertion total is an UNDERCOUNT, the suite count is sound) |
-| coverage | `--strict` exit 0 **read unpiped**, 178/178 ops reached, 0 unreached |
-| UI harness | exit 0, all harnesses green |
-| plancheck | 0 fail |
-| I3 | **23.1.0** — moved 19.0.0 → 23.1.0 this session across five accepted ICs |
-| queue | **0 running · 17 queued · 4 blocked** |
-| disk | **7.4 GiB free at 97%** before closing me; +4.35 GiB once you archive and remove |
+| battery | **239/239 suites green · 14,764 assertions** — full gate GREEN at `4e206366` (coverage --strict, UI harness, plancheck). **One unexplained movement, stated rather than smoothed:** the prior gate (REC-130, same suite count) read 14,769; the −5 appeared when 27 closed rows were archived, so a suite counting LIVE ledger rows is the likely cause — NOT VERIFIED. |
+| queue | **1 running (REC-128, done-awaiting-integration) · 19 queued · 4 blocked** |
+| interfaces | I1 1.5.0 · I2 2.6.0 · **I3 27.0.0** · I5 1.20.0 — I3 took FOUR MAJORs this session (IC-130, IC-132, IC-137, IC-141) |
+| construct-status | 85 claims, 0 drift |
+| disk | ~6 GiB free at 97%; +~3.1 GiB once you archive me and remove my four locked trees and my own |
 
-## 2. WHAT LANDED — four waves, sixteen items
+## 2. WHAT IS OWED FIRST — IN THIS ORDER
 
-**Wave 1:** REC-115, REC-113, M0-56. **Wave 2:** UI-63, M0-57, REC-114, REC-117. **Wave 3:** REC-118,
-M0-59, UI-64, M0-60 (closed by BOB). **Wave 4:** M0-58, REC-110, REC-119, REC-116. Plus rows I
-enacted and did not spawn: M0-61, M0-62, and the three BOB rulings that had sat unrowed in the inbox
-(REC-117, M0-57, M0-58 — see §3's inbox note).
+1. **REC-128 — done-awaiting-integration: `worktree-agent-a01d041e19ab1ad65`@`40a19351`.** It CHANGES A PUBLISHED FORMAT
+   (`bio-case-container/6`, `delivered_by` beside every attestor, labelled as this instance's record outside any signature).
+   The worker verified existing published cases verify unchanged. Merge, rebuild, re-read floors on the COMMITTED merge,
+   resolve IC-139 (I3) and IC-140 (I5) at the bases THEN current, full gate.
+2. **REC-129 WIP — `worktree-agent-af99c832f7860f664`@`eda53bc2`. RESPAWN FROM THE BRANCH.** It raised TWO POSSIBLE
+   COUNT-LEVEL LEAKS it did not verify — **check these first, they are the trust-of-the-record class:** `op=stats`
+   publishes a `leads` count and a whole-log `observations` count (an existence signal BOB #14's lead-visibility ruling
+   forbids, if a member can call it); the MEANING level's frontier passes non-capture, non-reference rows unfiltered.
+3. **MK-2 WIP — `worktree-agent-a17c98e0548c9fd2d`@`05a2deb8`. RESPAWN FROM THE BRANCH.** Plane half built; UI vocabulary
+   mirror, IC-142 entry and design front matter not; battery NOT known green. It found and fixed a real defect
+   (`isCaseMemberBytes` required exactly two strength rows — a testimony case member would silently stop being checked).
+4. **REC-126 — the review copy — RUNNABLE NOW.** Its dependency REC-130 is merged; BOB's §6A text is on `main`.
+5. **LED-3 — the ledger migration — CONDUCT performs it BY HAND** (a deterministic `tools/ledger.mjs` run over CONDUCT's
+   own file; a worker branch would conflict with every integration). **First fix the wording of the rows the one
+   CLOSED definition refuses:** D-186, D-408, D-283 (already discharged — its disposition leads with `M2 · MEASURED`),
+   D-319 (leads with `M2 · **CLOSED` — bold markup ahead of the word), D-366 (carries something read as residue). Never
+   override the archiver; fix the row. Then LED-4 (CONDUCT's own reorder; BOB checks the order against `status.mjs`).
 
-**The through-line, since it is the doctrine that led every wave:** a record-overclaim a member can
-hit today outranks everything else. Four of the sixteen closed ONE ruling across four surfaces —
-REC-114, REC-118, REC-119 each swept a surface to REC-105's cap. **`Store.#capturedAt` is the one
-arithmetic and now has four readers**; REC-118 left an instrument measuring drift between them.
+## 3. THE ORDER RULES — BOB #14's, all written on `QUEUE.md` rows or its inbox; follow them, do not re-derive them
 
-## 3. THE JUDGEMENT I WOULD TELL YOU IF I COULD TELL YOU FIVE THINGS
+- **Corrections to LANDED items outrank new items**, and go first among equals. A defect in a just-landed item IS a
+  defect in the substrate.
+- **Refills are ONE-FOR-ONE, PRODUCT rows only (M1–M10), each depends-on CHECKED AGAINST THE CODE at spawn and the check
+  NAMED in the spawn sentence.** If none passes, the slot stays EMPTY and you say so in one line.
+- **Every M0 row is HELD** until the plan is rebuilt, **except LED-1..LED-5**, exempt by name.
+- **BOB's BUILD ORDER** (the BOB INBOX, 8008cde3 and its correction) says what may be rowed and what fills a slot. **A
+  "verified" design pointer is a CLAIM — read the section at the artifact before rowing** (#3 and #6 were marked
+  verified and had no design; REC-126's §6A was real).
 
-**1. RULE WHAT IS YOURS TO RULE, AND BRIEF THE RULING SO THE WORK CAN REFUTE IT.** I ruled three
-doctrine questions rather than routing them — REC-114 (authored vs earned letter), REC-119 (the
-frozen composition), and let REC-110's worker rule its own. **Every ruling named its own falsifier
-and told the worker to go to it FIRST.** All three held — REC-119's on STRUCTURAL evidence (a label
-already living outside the frozen bytes, a working instance rather than an argument). **But my
-PREDICTIONS failed where my rulings held:** I wrote that REC-119's consumer impact *would not be
-zero*, and it was zero. A ruling you can break is a ruling; a prediction you would not bet against
-is a guess. BOB called the falsifiable brief *the only form in which a delegated doctrine call
-should ever be made*.
+## 4. THE DUTIES THIS SESSION ADDED TO EVERY INTEGRATION
 
-**2. D-398's UNIVERSAL IS REFUTED AND ITS FIRST REPLACEMENT IS DEAD — AND THE NEXT TEST IS
-PRE-REGISTERED AND UNCLAIMED. Do not re-derive it.** `M-47`: 7 of 10 finished agents carried NO
-lock, so *every worktree stays locked while the session lives* is false and three waves were sized
-at three against a ceiling that was ~70% reclaimable. I then pre-registered *locked IFF
-re-entered* and **ran the intervention: it is FALSIFIED** — a released agent resumed and finished
-with its lock still absent, while three re-entered peers read LOCKED in the same command. **The
-subject performed ZERO tool calls on purpose and named the confounder itself: *re-entered* had
-always bundled RESUMED with DID WORK.** What survives is that the lock tracks ACTIVITY. **That is ONE
-observation.** The controlled test — resume a released agent and have it make ONE trivial tool
-call — is written in `MEASUREMENTS.md` BEFORE any subject exists, and **only a spawning session can
-run it: a subagent is addressable ONLY from the session that spawned it.** BOB learned that by being
-refused. If you spawn a wave, you are the only lane that can take it.
+- **`node tools/status.mjs --check` before the gate.** When an item lands something a claim calls ABSENT (or removes
+  something BUILT), edit the claim WITH PROBES — an ABSENT claim needs an empty-search probe under MORE THAN ONE NAME —
+  then `--write` (it moves §3's date itself). **When a CENSUS claim moves (ops, tables, step kinds, extent kinds),
+  review every non-BUILT claim BY MEANING against the new names before updating the number.** Edit
+  `construct-status.json` as TEXT, never re-serialise it (a re-serialise produced a 1,600-line diff once).
+- **The push guard now refuses:** a stale `DECIDED.md`, a governed document whose body moved past its Status `as of`
+  date, construct drift, and a committed merge marker. Its success line names all four.
+- **Re-read `REGISTER_FLOOR` on the COMMITTED merge, never the uncommitted one** — the register counts only files in the
+  commit at HEAD, so an uncommitted merge reads as controls SHRINKING (measured: 1274 vs a true 1286).
+- **A `done` flip archives its row in the SAME commit** (`node tools/ledger.mjs archive <ID>`, LED-5, now in
+  `kickoffs/CONDUCT.md`). **In zsh, split an id list with `${=IDS}`** — `$IDS` passes one argument and the tool refuses it.
+- **Resolve every IC against the base READ AT RESOLUTION.** Nearly every IC this session proposed against a stale base.
+- **`Dropped-from-branch:` trailers must be in the merge message's FINAL paragraph** or git does not read them.
 
-**3. SWEEP AT THE END OF EVERY WAVE — it is an operational change, not a tidy-up.** Re-verify all
-three conditions per tree AT THE MOMENT OF ACTING: no live lock, porcelain empty, tip an ancestor.
-It returned 5.0 GiB once and made a four-worker wave possible. **Read the lock state BEFORE you
-remove anything** — a sweep destroys the evidence the lock experiment runs on.
+## 5. FOUR DEPLOYED EXPOSURES AND ONE DEPLOY CONSTRAINT — closed on `main`, OPEN on deployed instances until the next DIST cut
 
-**4. D-413: FIX THE LINE BEFORE THE REGEX.** `battery.mjs`'s tally requires `pass`/`passed` followed
-by a comma and a fail count, so a suite printing `65 passing` is silently dropped from the headline.
-**The mechanism is latent** — REC-116 hit it on its own branch and fixed it before pushing, and BOB
-grepped `main` and found zero foot lines in that form. **What is wrong on EVERY run TODAY is line
-548**, which prints *N suite(s) reported no assertion count* — **naming itself as a shrug rather than
-a skip.** `bundle.test.mjs` and `livefire.test.mjs` print no tally at all, so **every assertion total
-anyone quoted this session undercounts by two suites.** Acceptance is two-directional: a tally in
-any accepted form is COUNTED, no tally is NAMED AS EXCLUDED. A widened regex that silently counts
-nothing is the same defect wearing the fix's clothes.
+REC-123 (an `ai` credential could RATIFY and publish, the record naming the member) · REC-125 (operator bearer tokens
+ratified) · MK-1 (an observation was publishable WITH the observer's handle) · REC-130 (unsigned case documents readable
+and enumerable by strangers; a second leak via `op=caseratify`) · **plus REC-100's DEPLOY CONSTRAINT: the plane at I3
+≥ 24.0.0 and `agent-worker` MUST DEPLOY TOGETHER**, or model-judged PRESENT steps silently vanish. BOB has told Bob;
+the deploy is Bob's gate.
 
-**5. MY RECEIPTS AGAINST MYSELF — worth more than any figure above, because a handoff that carries
-only the clean parts teaches nothing.**
-- **I gated one tree and shipped another, THREE times.** I merged `origin/main` after a green battery
-  and pushed without re-running; once the merged tree was RED and I would have shipped it. **The fix
-  is mechanical: after the gate, `git merge-base --is-ancestor origin/main HEAD` — if false, merge
-  and RE-GATE before any push.** I ran that check before every push after learning it.
-- **I nearly recorded a false falsification of my own hypothesis.** I labelled `adcd3110` *never
-  resumed* and it read LOCKED — but its notification had fired twice, so under the hypothesis AS
-  WRITTEN it was re-entered. I had been carrying half my own definition. **A pre-registration is only
-  worth something if you RE-READ it instead of recalling it.**
-- **I nearly corrected BOB on a grep COUNT without reading what matched** — the hit was a comment
-  header, not a foot line, and his "zero" was right. The same defect he had just caught in me,
-  running the other way.
-- **I broke table rows three times while correcting their content** — a doubled closing pipe, a note
-  appended outside the final cell. `plancheck` named each. **A fix verified at the sentence is not
-  verified at the row.**
-- **An UNQUOTED heredoc command-substituted backticks and silently deleted three identifiers from two
-  governed documents**, with no failure. It is the first trap in `CLAUDE.md`. Quote the delimiter:
-  `<<'EOF'`, always.
-- **I relayed a worker's finding wider than it was.** REC-116 reported a mechanism precisely; I told
-  BOB it *bore on every figure I had quoted*. False via that mechanism. The worker was exact and I
-  widened it in transit.
+## 6. RECEIPTS AGAINST MYSELF
 
-## 4. WHAT IS OUTSTANDING, AND WHO OWNS IT
+- **A FLIP WITHOUT A SPAWN.** REC-121 read `running` on `origin/main` for ~40 minutes with NO worker — BOB's build order
+  landed between my flip and my spawn and I skipped *confirm the act took*. **Verify every spawn by its worktree in the
+  same turn.**
+- **A GREP READ AS A FACT.** I wrote in IC-132 that `civicos-ui/app.html` ratifies through a member session; it submits
+  neither op. The grep matched the string and I never read the match — the exact error CONDUCT #3's handoff recorded
+  against itself. REC-125's worker caught it.
+- **A PLANNING SENTENCE NAMING AN OP THAT DID NOT EXIST** (`op=leadlook` after I withdrew MK-4) — `op-claims` turned a
+  gate red on it.
+- **A CUT THAT DELETED HISTORY** — rewriting REC-100's heading I sliced away its spawn sentence and BOB's re-scope;
+  caught by diffing the removed line before committing.
+- **TWO zsh WORD-SPLITTING SLIPS** (a suite loop that ran nothing, an archive call with one argument) — both caught by
+  reading the output, not the exit status.
+- **What held, and is worth keeping:** holding MK-1 off `main` on BOB's concern found a REAL publication leak; holding
+  REC-100 until its consumer migrated kept `main` from ever shipping a silent step-drop; reading the `4.transcribe`
+  claim instead of trusting "0 drift" found a probe blind to a rename. **An absence that cost nothing is not evidence —
+  including an absence reported by the instrument built to catch absences.**
 
-- **Runnable now (17 queued):** M0-61 (the `\s`-matches-newline predicate — harmless only because
-  its current caller gates it, and the second caller exists), M0-62 (two documents stating the
-  member's lead's status; apply Bob's single-authority ruling), REC-104, M0-44, M0-33, and the
-  content-breadth rows (CPDF-18/19, CAP-10/11, FW-19/20). **REC-86/REC-87 wait on REC-97.**
-  **VF-7 cannot run until a DIST deploy; DIST-5 needs a DIST session.**
-- **D-413** — rowed by BOB, not yet in `QUEUE.md` as a runnable item. Worth a row.
-- **The lock-activity experiment** — see §3.2. Unclaimed, and yours alone to run.
-- **The BOB INBOX has never been drained** (516 → 746+ lines, monotonic). It mixes enacted-but-
-  undeleted entries with never-enacted ones, indistinguishable by reading. **Do NOT bulk-delete:** a
-  wrongly retained entry is clutter, a wrongly deleted one silently destroys an obligation Bob
-  stated in his own words. Drain entry by entry, verifying enactment at the artifact.
+## 7. LOCK HYPOTHESIS (D-398), for whoever spawns next
 
-## 5. STANDING DOWN — VERIFIED, NOT ANNOUNCED
-
-**Zero live subagents, zero rows `running` on the remote, every wave-four claim RELEASED, my own
-background shells swept, my tree pushed with nothing uncommitted. My Remote Control is NOT turned off —
-see the top of this file; that is the operator's act, not mine.**
-The six agent worktrees are held by my process and nothing else; they are clean and merged.
-
-**What restarts you:** `conduct-heartbeat` fires every 20 minutes and gates on your queue row. Treat
-a heartbeat as a TURN, not an instruction — sequencing is yours. **And treat the END of a wave as the
-START of the next act, IN THE SAME TURN.** The dangerous moment is not a worker failing; it is the
-last integration succeeding and a session reporting the wave complete.
+**Registered, not settled:** a finished agent's worktree stays LOCKED iff it ever ended a turn with live background
+children. 8 of 8 consistent at last count, no intervention. The "activity" reading is FALSIFIED (a resumed agent that
+made one tool call stayed unlocked; `MEASUREMENTS.md`). The test that settles it is written there.
