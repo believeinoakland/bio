@@ -1400,6 +1400,10 @@ const RUN = "RUN-2026-0807-rec70";
   const entries = [];
   for (let i = 1; i <= 6; i++) entries.push({
     level: "document", subject: `observation:rec70-${i}`, state: "PRESENT",
+    /* The referent is REC-100's correction (2026-09-18, IC-130), not an
+       exemption: C-22.10's `run` carve-out is deleted, so a bare `run` PRESENT
+       is refused. The fixture's subject — six rows to cut — is unchanged. */
+    result_kind: "capture", result_ref: String(i).repeat(64),
     detail: `REC-70 fixture observation ${i} — the log grows one row per tick and nothing capped it` });
   const ticked = await POST("op=airuntick&token=mem-r60", { run: RUN, at: NOW, leaseMs: 600000, log: entries });
   t("REC-70 FIXTURE: and it records SIX observations, so a bound of 2 CUTS and a bound of 5000 does not",

@@ -13191,5 +13191,8 @@ resolution), no version bump, no tag, no deploy.
   `#observe`'s call line, which gained a third argument; `bio-plane/test/nc-rec93.mjs` — its
   `overstrict` arm RETIRED (its anchor, the carve-out, is gone); `bio-plane/test/nc-rec100.mjs` —
   this item's control driver; `.gitignore` — one line for its pen `.rec100-control-pristine/`.
+  `bio-plane/test/bounds.test.mjs` and `bio-plane/test/meaning-bounds.test.mjs` — each one REC-70
+  fixture that ticked bare `run` PRESENT rows (found by this item's first full battery, 224/226);
+  each now names a referent, CORRECTED with its reason, never exempted.
 
 **open as of 2026-09-18** — REC-100 is being built.
