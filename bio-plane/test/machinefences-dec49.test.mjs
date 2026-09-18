@@ -337,6 +337,12 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-32.9", "MACHINE_CANNOT_DECLARE"],
     ["C-32.10", "MACHINE_CANNOT_FORWARD"],
     ["C-32.11", "MACHINE_CANNOT_RESOLVE"],
+    /* REC-123 / IC-132, 2026-09-18 — the two ratification fences, the first of
+       this family whose region lives in the CONTROL PLANE (`src/index.mjs fetch`)
+       rather than at the top of a store method. D-PIN-B failed until they were
+       written here, which is the pair of arms doing its job. */
+    ["C-32.12", "MACHINE_CANNOT_RATIFY"],
+    ["C-32.13", "MACHINE_CANNOT_RATIFY_CASE"],
     /* ACT_SHAPE_CHECKS — the single-homed tail, plus §14a's capability sentence */
     ["C-33.1", "NO_CONCLUSION"],
     ["C-33.2", "NO_FALSIFIER"],
@@ -449,8 +455,11 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
      that none was stated. A floor that RISES needs no excuse; this note exists
      because the next reader should be able to attribute the rise to an act
      rather than to drift. */
-  t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row — a walk that lost a "
-    + "family would run fewer arms and every one of them would still pass", rowsSeen, 44);
+  /* MOVED 44 -> 46 on 2026-09-18 (REC-123), FROM THE FIGURE THIS INSTRUMENT PRINTED
+     on its corpus line and not by adding to the number in the file: C-32.12
+     MACHINE_CANNOT_RATIFY and C-32.13 MACHINE_CANNOT_RATIFY_CASE. */
+  t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row and REC-123's two — a "
+    + "walk that lost a family would run fewer arms and every one of them would still pass", rowsSeen, 46);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`
