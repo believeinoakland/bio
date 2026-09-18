@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1049 rulings across 85 documents.
+1050 rulings across 85 documents.
 
 ## DEC-
 
@@ -558,6 +558,8 @@ authority is the file named, never this one.
   `docs/development/INTERFACE-CHANGES.md:8257`
 - **D-386** — THE FINDING THAT DECIDED IT, VERIFIED AT THE ARTIFACT AND NOT CARRIED FROM D-386:** `op=stats` already publishes `observations` — `count(*)` over the WHOLE `observation_log`, every level — and `aiRunLog`, its `authority_kind = 'run'` slice.  
   `docs/development/CLAIMS.md:12525`
+- **D-386** · 2026-09-18 — D-386 RULED (a): THE TALLY STAYS UNGATED AT ALL THREE LEVELS, and the worker TOOK the ruling rather than routing it — then wrote down what would have to be TRUE FOR IT TO BE WRONG and checked each at the artifact.** That method is the item.  
+  `docs/development/QUEUE.md:1720`
 - **D-386** — accepts-when: the tally's behaviour is DECIDED with its reasoning at the site, and whichever way it goes is DRIVEN — if gated, a viewer who cannot see rows gets a total that excludes them, driven end to end; if left ungated, an assertion PINS that it is ungated ON PURPOSE with the reason, so the next reader meets…  
   `docs/development/QUEUE.md:1725`
 - **D-388** — WHICH FILES ARE GOVERNED WAS NOT DECIDED HERE.** The row put that with CORPUS-STANDARD and Bob; the three files the walk found unclassified are LISTED with the question each poses and routed as D-388, not assigned a class.  
