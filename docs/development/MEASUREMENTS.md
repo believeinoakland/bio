@@ -15533,3 +15533,190 @@ M0-59 reaches `main` and the worktrees carry it.** What the guard does is stop t
 convenient one: the FIX is proved correct (driven at a real remote from a real pre-guard
 worktree, both directions, plus 86 suite assertions and four control arms), and the LIVE CLONE
 will keep flapping between 15/15 and 10/15 until this is merged and the worktrees rebase.**
+
+---
+
+## M-48 · 2026-09-17 · THE SWEEP FOR A SECOND STATEMENT OF DESIGN STATUS — RUN ACROSS THE GOVERNED SET, AND THE HEADLINE IS ABOUT THE ARM'S REACH RATHER THAN THE CORPUS'S HEALTH (M0-58)
+
+**Instruments** · `node tools/corpuscheck.mjs --authority` (M0-57's arm, UNCHANGED by this row
+and proved so: its output is byte-identical before and after), `node tools/statussweep.mjs`
+(NEW, this row), `node tools/undesignedclaims.mjs` (D-408's, run to establish what it already
+covers rather than assumed). Worktree `agent-a93ad890406651eff` at `e340600a`.
+**Every figure below is read from the tool's own output. None is carried from a row** — the
+M0-58 row's own "50 governed documents" was re-read rather than trusted, and it happened to be
+right today.
+
+### What Bob asked, and the two statements this row exists to keep apart
+
+Bob, 2026-09-17: *"other areas to confirm that there aren't multiple sources of truth elsewhere
+in the record."* **`corpuscheck --authority` reports `0 fail` over the governed set. That
+sentence and *the corpus has no second authorities* are NOT the same statement, and this
+measurement exists to say which one was earned.**
+
+### The corpus, as the instruments count it
+
+| figure | value | instrument |
+| --- | --- | --- |
+| governed documents | **50** | `corpuscheck` |
+| documents under `docs/development/` classified | 62 — 29 governed, 30 excluded, 3 undecided, **0 unclassified** | `corpuscheck --coverage` |
+| §3 construct rows | **15** | `corpuscheck --authority` |
+| cited pairs the authority arm can evaluate | **1** | `corpuscheck --authority` |
+| unresolved citations | **0** | `corpuscheck --authority` |
+| authority-arm failures | **0** | `corpuscheck --authority` |
+| verdict on the one pair it can see | `points-at-its-design` | `corpuscheck --authority` |
+| *undesigned*-shaped claims enumerated corpus-wide | **27**, of which **0 UNAUDITED** | `undesignedclaims` |
+
+### THE HEADLINE, AND IT IS ABOUT REACH
+
+**`corpuscheck --authority`'s LIVE REACH IS ONE PAIR IN FIFTY DOCUMENTS**, because signal 1
+requires `BIO_System_Design.md` §3 to have CITED the claim as `§N item M`, and **across all 15
+construct rows exactly one such citation exists** (construct 8 → `Part II §18 item 6`). That
+citation is what makes the arm safe enough to FAIL rather than warn, and it is equally what
+makes it narrow. M0-57 published this bound; **this row went and measured it, and it is 1 of 15
+rows, not a figure anyone had counted.**
+
+So: **the arm ran over 50 governed documents and found no second statement of design status —
+and it asked about ONE.** Both halves belong in the same sentence.
+
+### `tools/statussweep.mjs` — M0-57's signals 2, 3 and 4 WITHOUT signal 1
+
+Built to measure the bound rather than to widen the gate. **It REPORTS and exits 0; it is
+deliberately NOT wired into `plancheck`**, and a suite arm asserts that it is not, because
+which of two copies is the authority is a judgement per case and a gate here would force that
+judgement onto whoever was next to push.
+
+| figure | value |
+| --- | --- |
+| governed documents read | 50 of 50, **0 unreadable** |
+| body headings indexed (signal 4's haystack) | 883 |
+| sections claiming pieces undesigned | 16 |
+| table items examined | 16 |
+| — under a clean single-line trip (**the real population**) | **6** |
+| — under a CROSS-LINE trip (**probable false population**) | 10 |
+| visible to `corpuscheck --authority` | **1** |
+| INVISIBLE to it | **15** |
+| verdicts: `points-at-its-design` / no bold key / short key / no covering heading | 9 / 5 / 1 / 1 |
+| **CANDIDATE pairs** | **0** |
+| sections claiming undesignedness IN PROSE, with no table — NOT EXAMINED | **14, named individually** |
+
+### THE MEASUREMENT THAT MAKES THE ZERO MEAN SOMETHING
+
+**A sweep reporting nothing is indistinguishable from a sweep that sees nothing, so the zero was
+driven rather than accepted.** With signal 3 (the pointer exemption) removed from the sweep and
+NOTHING else changed, **the live corpus yields exactly ONE candidate, and it is M0-57's own
+receipt reproduced**: `BIO_Content_Framework_v0_10.md` §18 item 6 *"the claim object"* against
+`BIO_Case_Making_v0_1.md`'s heading *"What a CLAIM is, and why it is a field rather than an
+object — 2026-08-03"*.
+
+**That is the evidence that signal 4 is LIVE against the real corpus rather than dead.** The
+baseline 0 is therefore a MEASURED absence — the one historically true pair is found the moment
+its fix is removed, and is correctly exempt while the fix stands — and not the unearned kind.
+
+### WHAT THIS SWEEP CANNOT SEE — the bounds, stated rather than implied closed
+
+1. **A claim made in PROSE rather than in a table.** 14 sections, named in the tool's own
+   output. **This bound is largely closed by a SIBLING instrument rather than by this row**:
+   `tools/undesignedclaims.mjs` (D-408, landed the same day, run by `plancheck` section 2f)
+   enumerates *undesigned*-shaped claims wherever they appear and reports **27 total, 0
+   unaudited, every one carrying a dated verdict.** Verified by running it, not by reading its
+   row — whose own headline figure of 21 is now stale at 27.
+2. **A piece two documents call by DIFFERENT NAMES.** Signal 4 is a heading-word match, so it
+   inherits the corpus's own habit exactly: §3 calls construct 8 *Intent and inquiry* while §18
+   calls the piece *the claim object* — **zero shared content words.** **An identifier-shaped
+   search over a prose corpus produces confident FALSE ABSENCES**, measured three separate times
+   on 2026-09-17, every one of them *the design names the RULE, not the IDENTIFIER*. **This
+   sweep is an identifier-shaped search over a prose corpus and is exposed to exactly that
+   class.** Its clean run is evidence about the matcher, never about the record.
+3. **A table whose rows carry no bold key** — 5 items, unreachable by a matcher that keys on a
+   bold span, counted and named rather than scored zero in silence.
+4. **A document's own `Incomplete sections` front matter is not swept, and that is CORRECT**:
+   §4.8 permits a document to say what IT lacks; what it forbids is restating another
+   construct's status.
+
+### A DEFECT FOUND IN THE SHARED PREDICATE, REPORTED AND NOT FIXED
+
+**`corpuscheck`'s `UNDESIGNED` regex matches ACROSS A LINE BREAK.** It is built from `\s`, which
+matches a newline, so `"...designed wrongly once and not\ndesigned once."` fires it. Three
+sections trip this way, and on `research/RECONCILED.md` §2.2 one such sentence dragged a table of
+**ten CONSTRAINT rows** into the population — which is where the sweep's raw 16 comes from
+against a real 6.
+
+**This is HARMLESS inside `corpuscheck`**, where signal 1 gates everything the predicate proposes,
+and it is **NOT fixed by this row**: the row forbids fixing, and the predicate belongs to M0-57.
+The sweep FLAGS such trips and counts their items apart instead. **Anyone reusing `UNDESIGNED`
+ungated should know it is not a reliable classifier on its own.**
+
+### A SECOND-AUTHORITY PAIR FOUND BY READING, NOT BY THE TOOL — REPORTED, NOT ADJUDICATED
+
+Found by hand-reading the tool's `no-covering-heading-elsewhere` verdict. **Both sites and both
+claims, so a reader can adjudicate without re-deriving the pair:**
+
+- **SITE A** — `docs/architecture/BIO_Content_Framework_v0_10.md` §18 item 5, in a table whose
+  preamble reads *"The pieces to be designed, named here and designed nowhere in this document"*:
+  *"**homes for the member's lead and firsthand observation** | D-194 and D-184, designed
+  together. RULED 2026-09-14 … designed in Program B"*.
+- **SITE B** — `docs/architecture/BIO_System_Design.md` §3 construct 10 STATE cell: *"built (M1);
+  the authored frontier — a member's LEAD — has no home (D-194) **[audited 2026-09-17: STILL
+  TRUE, D-194 open]**"*.
+
+**Two governed documents state the design status of the same piece.** They are not flatly
+contradictory — *ruled but homeless* reconciles them — but §4.8's rule is that a to-do list
+**POINTS and never re-asserts**, precisely because a copy rots. **NOT ADJUDICATED HERE and not
+edited: which is authoritative is a judgement, and this row reports.**
+
+**AND IT IS THE FINDING THAT MATTERS MOST ABOUT THE ARM.** `corpuscheck --authority` cannot flag
+this pair, and not only because no §3 row cites §18 item 5. **Signal 4 requires a COVERING
+heading, so the arm fires only once the restatement has ALREADY gone stale.** A second statement
+that is still TRUE today passes it untouched — and that is exactly the copy that will rot
+tomorrow. **The arm detects the damage, never the exposure.** Widening it is NOT proposed here:
+an arm that fired on a healthy state would be switched off inside a week and would take its true
+positives with it (M0-57's own reasoning, and it holds). **Stated so the next session inherits a
+measured bound rather than a comfortable silence.**
+
+### NEGATIVE CONTROL — 3 arms declared, 3 ARMED, all as declared
+
+`bio-plane/test/statussweep.test.mjs`, **34 pass / 0 fail** at baseline, `NEGATIVE CONTROL:` line
+in the suite (WITH the colon). Every fixture arm runs against an INJECTED corpus, so **no arm
+touches a governed document**; the on-disk arms `cp` aside and `cp` back, verified by sha256 AND
+`cmp` AND a floored byte count — never the checkout form this repository forbids.
+
+| arm | armed | result |
+| --- | --- | --- |
+| 0 · baseline, nothing armed | — | 34 pass / 0 fail |
+| 1 · signal 4 looks only inside the CLAIMING document (`h.path !== p` → `===`) | anchor matched **exactly once**, substitution asserted to have TAKEN | **6 fail** — exactly the planted-duplicate assertions; 28 pass |
+| 2 · signal 3 (the pointer exemption) removed | anchor matched exactly once | **3 fail** — the over-strictness arm, as declared; and the live corpus yields the 1 receipt candidate |
+| 3 · over-strictness baseline, nothing armed | — | 34 pass / 0 fail; `corpuscheck --authority` byte-identical |
+
+**THE PLANTED DUPLICATE IS THE LOAD-BEARING ARM** — a wholly synthetic pair sharing no construct
+number, document, section, item or content word with the real corpus is FOUND and named with
+BOTH sites. **AND THE ARM-THAT-DID-NOT-ARM GUARD IS EXPLICIT**: the injected reader RECORDS every
+path it was asked for and the suite asserts the planted document is in that list, because a run
+that SKIPPED it reports a clean result identical to success.
+
+**THE CONTROL FOUND A DEFECT IN THE SUITE ITSELF AND IT IS RECORDED RATHER THAN SMOOTHED.** On
+arm 1's first run the emptied `candidates` array made `r.candidates[0].path` throw a
+**TypeError, which ended the MODULE** — so the run printed **no tally line and never reached the
+FOOT sentinel**, reporting nothing at all instead of six honest failures. That is
+`kickoffs/WORKER.md`'s measured receipt reproduced inside the suite written to avoid it. Every
+dereference is now guarded and arm 1 was re-driven to the result above.
+
+### WHAT WAS ASSERTED, NOT PROMISED
+
+**Nothing in the design corpus was edited by this row.** The working tree at the end shows **zero
+changes under `docs/architecture/`** and **zero governed design documents modified**, checked by
+intersecting the tree's modified paths with `corpuscheck`'s own `governed()` list rather than by
+eye. The only tracked edits are `CLAIMS.md` and `MEASUREMENTS.md` (ledgers, outside
+`CORPUS-STANDARD` by §6), two new files, and **three `export` keywords added to
+`tools/corpuscheck.mjs`** so the sweep IMPORTS `UNDESIGNED`, `POINTS_AT_A_DESIGN` and
+`firstTable` rather than copying them — **a copied predicate would be this row's own subject
+arriving inside its instrument.** That edit is proved behaviour-neutral by byte-identical
+`--authority` and full-run output before and after, and a suite arm asserts the predicates are
+imported and not re-declared.
+
+### Battery baseline, measured in this worktree
+
+**220/220 suites green · 13781 assertions passing · 429.3s**, **0 skips**, provenance **223 of
+223** at `e340600a`. CONDUCT #3's brief carried **13780**; mine reads **13781** and mine is the
+one taken, per *measure your own baseline and trust it over your brief*. `npm ci` run in
+`bio-plane/`, `pdf-worker/` and `ocr-worker/`; each `node_modules` confirmed a REAL DIRECTORY and
+not a symlink; disk 6.5–7.2 GiB free throughout.

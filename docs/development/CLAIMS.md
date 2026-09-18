@@ -12476,3 +12476,42 @@ paths:
   **NOT `civicos-ui/`** — UI-64 is in it.
 
 **open as of 2026-09-17.**
+
+---
+
+## CLAIM 2026-09-17 M0 (M0-58 — the sweep for a SECOND statement of design status across the governed set: it REPORTS, it does not fix)
+
+**THIS ROW EDITS NOTHING IN THE DESIGN CORPUS, AND THAT IS THE CLAIM'S FIRST LINE RATHER THAN ITS
+LAST.** M0-57 built the arm; this row runs it across the governed set and MEASURES ITS REACH.
+Which of two copies is the authority is a judgement per case, so a sweep that silently picked one
+would be the second-authority defect arriving dressed as a remedy. **Every finding is reported
+with BOTH sites and what each claims**, and the adjudication is left to a reader who can weigh it.
+
+**The reach measurement is the item, not a footnote to it.** `corpuscheck --authority`'s live
+reach is ONE cited pair over fifty governed documents, because it resolves only a `§N item M`
+citation written by `BIO_System_Design.md` §3 itself. **An undesignedness claim no §3 row cites is
+invisible to it** — M0-57 published that bound and it is this row's input. So the headline this
+row is most likely to produce is about the ARM'S REACH rather than the CORPUS'S HEALTH, and
+conflating those two is the exact defect this pair of rows exists to end.
+
+paths:
+  `tools/statussweep.mjs` — NEW. The reporting sweep: signals 2, 3 and 4 of M0-57's arm run
+  WITHOUT signal 1, so it reaches the claims no citation points at. It REPORTS and exits 0 by
+  design and is **not a gate** — the row forbids fixing, and a checker that failed here would be
+  choosing an authority per case on nobody's behalf.
+  **NOT `tools/corpuscheck.mjs`** — M0-57's arm is the subject of this measurement and a sweep
+  that edited its own instrument would be measuring itself. Its exports are IMPORTED, never
+  changed; a `--authority` verdict that differed by one byte because of this row is a defect in it.
+  **NOT `tools/plancheck.mjs`** — every sibling runs it, and this row adds no gate to it.
+  `bio-plane/test/statussweep.test.mjs` — NEW, with its own `NEGATIVE CONTROL:` line (with the
+  colon — a control was invisible to the register for writing `NEGATIVE CONTROL (`).
+  `docs/development/MEASUREMENTS.md` — new measurement rows only, appended, with date and
+  instrument. This is where the sweep's result is recorded for the next session.
+  **NOT any file under `docs/architecture/`, and NOT any governed design document under
+  `docs/development/`** — asserted rather than promised, and driven as a control: the sweep is run
+  against a SCRATCH COPY of the corpus, never against the live tree, whenever a planted duplicate
+  is involved, and the working tree is proved unchanged by `git status` at the end.
+  **NOT `docs/development/QUEUE.md`** — flipping the M0-58 row is CONDUCT's act (`kickoffs/WORKER.md`).
+  **NOT `bio-plane/src/`** — REC-119 and REC-116 are in it and nothing this row builds reaches the plane.
+
+**open as of 2026-09-17.**
