@@ -22,6 +22,11 @@ or BOB (design, doctrine) and continue with the rest. A question only Bob can an
 **Refresh, when context is too full:** write `<LANE>-NEXT.md` from the measured state, push it, verify it on the
 remote, and tell BOB — whose successor protocol retires a predecessor only after D-398's three conditions hold.
 
+**WHAT WAKES FLEET.** Its work arrives as rows CONDUCT routes to it and as DIST's release (a fleet member ships with
+the plane when it consumes a changed interface — DIST names which). Both reach it by `SendMessage`. At session start it
+arms a recurring self-wake with `CronCreate` (every 6 hours) to read `node tools/owed.mjs FLEET` and its rows; if
+nothing is owed, it ends the turn with one line saying so.
+
 ## What this area owns
 
 The fleet members — Workers that live BESIDE the plane in the group's account and are

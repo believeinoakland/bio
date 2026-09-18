@@ -1,0 +1,57 @@
+/* readbudget.test — the reading budget (`CLAUDE.md` §1; Bob, 2026-09-18).
+ *
+ * NEGATIVE CONTROL: RUN 2026-09-18 by BOB #15, both arms ON THE SUBJECT'S INPUTS rather than by editing
+ * the tool, so nothing on disk needs restoring: (a) a budget set BELOW a file's size -> the file must be
+ * NAMED with its byte count; (b) the same over-budget file marked CUT -> its verdict must be FAIL, and
+ * unmarked it must be WARN. Break the tool instead (make `check` return []) and sections 1, 2 and 4 fail.
+ */
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { check, readSet, BUDGET, CUT, ROOT } from "../../tools/readbudget.mjs";
+
+let pass = 0, fail = 0;
+const t = (name, got, want) => {
+  const ok = JSON.stringify(got) === JSON.stringify(want);
+  ok ? pass++ : fail++;
+  console.log(`${ok ? "PASS" : "FAIL"}  ${name}${ok ? "" : `\n      got ${JSON.stringify(got)}\n     want ${JSON.stringify(want)}`}`);
+};
+
+const root = mkdtempSync(join(tmpdir(), "readbudget-"));
+const kd = join(root, "docs/development/kickoffs");
+mkdirSync(kd, { recursive: true });
+writeFileSync(join(root, "CLAUDE.md"), "x".repeat(1000));
+writeFileSync(join(kd, "LANE.md"), "x".repeat(3000));
+writeFileSync(join(kd, "LANE-NEXT.md"), "x".repeat(500));
+writeFileSync(join(kd, "README.md"), "x".repeat(99999));
+const small = { "CLAUDE.md": 2000, kickoff: 2000, next: 2000 };
+
+console.log("1 — an over-budget kickoff is NAMED, with its size");
+{
+  const o = check(root, { budget: small, cut: new Set() });
+  t("exactly one file is over", o.map((x) => x.file), ["docs/development/kickoffs/LANE.md"]);
+  t("...with its measured bytes and budget", [o[0].bytes, o[0].budget], [3000, 2000]);
+  t("...and it WARNs while its cut has not landed", o[0].verdict, "WARN");
+}
+console.log("2 — a file past its cut FAILS when it grows back");
+{
+  const o = check(root, { budget: small, cut: new Set(["docs/development/kickoffs/LANE.md"]) });
+  t("the cut file's verdict is FAIL", o[0].verdict, "FAIL");
+}
+console.log("3 — what is in the read-whole set, and what is not");
+{
+  const files = readSet(root).map((r) => r.file);
+  t("CLAUDE.md, the kickoff and its -NEXT are read whole", files,
+    ["CLAUDE.md", "docs/development/kickoffs/LANE-NEXT.md", "docs/development/kickoffs/LANE.md"]);
+  t("README.md (the kickoff index) is not a lane's reading", files.includes("docs/development/kickoffs/README.md"), false);
+  t("a -NEXT handoff gets the handoff budget", readSet(root).find((r) => r.file.endsWith("-NEXT.md")).budget, BUDGET.next);
+}
+console.log("4 — the budgets, declared once, and the live CLAUDE.md is inside its own");
+{
+  t("the budgets", BUDGET, { "CLAUDE.md": 16384, kickoff: 24576, next: 12288 });
+  t("CLAUDE.md is marked CUT", CUT.has("CLAUDE.md"), true);
+  t("the live CLAUDE.md is NOT over its budget", check(ROOT).some((o) => o.file === "CLAUDE.md"), false);
+}
+rmSync(root, { recursive: true, force: true });
+console.log(`\nreadbudget: ${pass} pass, ${fail} fail`);
+process.exit(fail ? 1 : 0);

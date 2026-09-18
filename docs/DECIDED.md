@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1130 rulings across 89 documents.
+1132 rulings across 91 documents.
 
 ## DEC-
 
@@ -120,12 +120,12 @@ authority is the file named, never this one.
   `docs/development/research/RECONCILED.md:1551`
 - **DEC-30** · 2026-08-03 — Q10 · SETTLED by DEC-30 (Bob, 2026-08-03).** Author-scoped division, no ballot on concluding — one name on every judgment; dissent before the act is a veto, dissent on the record after it is evidence.  
   `docs/development/research/RECONCILED.md:1609`
+- **DEC-32** — Its ARITHMETIC is now RULED by Bob — legs relate by AND or OR; weakest leg governs across AND, strongest branch across OR (weakest within a branch).  
+  `docs/archive/BOB-kickoff-2026-09-18.md:75`
 - **DEC-32** — AND THE WORKAROUND IS CLOSED BY DEC-32, RULED THIS SAME DAY**, which is what turns this from a preference into an inconsistency.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:2507`
 - **DEC-32** — ; the route exists through this act, so nothing blocks); the operational-test wording RULED by CONDUCT to belong on the SURFACE per DEC-32's own assignment (noted on UI-27, no DEC needed); IC-19 recorded, I3 → 5.12.0.  
   `docs/archive/ledgers/QUEUE-2026-08.md:1170`
-- **DEC-32** — Its ARITHMETIC is now RULED by Bob — legs relate by AND or OR; weakest leg governs across AND, strongest branch across OR (weakest within a branch).  
-  `docs/development/kickoffs/BOB.md:75`
 - **DEC-33** · 2026-09-10 — the seven are DECIDED (they stay), and what is open is folding them in**; no deadline, and explicitly NOT a blocker for DEC-33 the way D-310 was |  
   `docs/development/DEBT.md:248`
 - **DEC-33** · 2026-09-18 — BOB #14 RULED the founder question the same hour:** a founder's PASSWORD SESSION is a human authenticating deliberately and is the ONLY live publishing route (DEC-33) — it STAYS ALLOWED; D-421's wording is corrected to *a HUMAN's own authenticated session (a member's, or the founder's), never a bearer token or…  
@@ -1509,12 +1509,8 @@ authority is the file named, never this one.
 
 Settled in prose without an id allocated. Cite them by file and line.
 
-- **2026-09-16** — PUSHING IS NO LONGER GATED, RULED BY BOB 2026-09-16, and the reason is worth more than the change.** This sentence said THREE and named pushing first.  
-  `CLAUDE.md:47`
-- **2026-09-16** — RULED by Bob, 2026-09-16: the protocol is his, performed by hand, and there is no instrument.  
-  `CLAUDE.md:163`
-- BEFORE RAISING A QUESTION, OR WRITING A DECISION ITEM, ASK WHAT IS ALREADY DECIDED:** node tools/decided.mjs "<the subject>"  
-  `CLAUDE.md:206`
+- what has been DECIDED | every ruling in the corpus, indexed | `node tools/decided.mjs "<subject>"` | | what a lane OWES | the ledgers' dispositions | `node tools/owed.mjs <LANE>` | | a ledger row by id (D-, REC-, IC-, M-…) | the live ledger or its archive | `node tools/ledger.mjs find <ID>` | | what is RUNNABLE…  
+  `CLAUDE.md:17`
 - **2026-09-14** — DECIDED 2026-09-14 (§7.3): the run, not the pilot; no new credential or fence; mints bounded and the uncited row named a proposal | | AI-proposed readings — the `ai(function, version)` step EMITTED | **BUILT 2026-09-14 (SK-8)**: `op=extractpropose` inside an EXTRACT run, the step appended through `appendStep` so…  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:149`
 - **2026-08-10** — ⚠ SUPERSEDED IMPLEMENTATION, INHERITED FORMAT > > **Banner added 2026-08-10 (session BOB), moving into this file what > `architecture/README.md` has said about it since July and no reader of this document  
@@ -1585,8 +1581,24 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/architecture/README.md:103`
 - DECIDED and only misleading about what is READABLE, and rewriting six documents' prose to remove a name risks changing what they meant. What survives of it, and where the answers actually live:  
   `docs/architecture/README.md:171`
+- and present the areas that are NOT the paused thread, each with: what it needs DECIDED (vs what is already answered), what deciding it unblocks, and your recommendation.  
+  `docs/archive/BOB-kickoff-2026-09-18.md:85`
+- NOTATION IS SETTLED: classDiagram for structure, stateDiagram-v2 for lifecycle, edges labelled with the ACT.  
+  `docs/archive/BOB-kickoff-2026-09-18.md:105`
+- **2026-09-18** — WITHDRAWN 2026-09-18 BY BOB #14, and CONDUCT #3 reached the same conclusion independently.** This step used to say *turn your own RC off as the last act of stand-down*.  
+  `docs/archive/BOB-kickoff-2026-09-18.md:165`
+- Report what was DONE and what was DECIDED.  
+  `docs/archive/BOB-kickoff-2026-09-18.md:469`
+- **2026-09-17** — RULED BY BOB, 2026-09-17: a lane's retired session is archived WITHOUT HIS INVOLVEMENT.** Verbatim: *"BOB #12 being alive is not my problem.  
+  `docs/archive/BOB-kickoff-2026-09-18.md:504`
 - so its update rides the landing, never precedes it; (b) the RULED-AND-NOT-YET-BUILT banner at the head of THIS document comes down and the document is archived per the working-surface rule (`docs/archive/`, where `decided.mjs` keeps its rulings findable); and (c) `node tools/decided.mjs` is regenerated so the index…  
   `docs/archive/CASE-AS-PRODUCTION.md:151`
+- **2026-09-16** — PUSHING IS NO LONGER GATED, RULED BY BOB 2026-09-16, and the reason is worth more than the change.** This sentence said THREE and named pushing first.  
+  `docs/archive/CLAUDE-2026-09-18.md:47`
+- **2026-09-16** — RULED by Bob, 2026-09-16: the protocol is his, performed by hand, and there is no instrument.  
+  `docs/archive/CLAUDE-2026-09-18.md:163`
+- BEFORE RAISING A QUESTION, OR WRITING A DECISION ITEM, ASK WHAT IS ALREADY DECIDED:** node tools/decided.mjs "<the subject>"  
+  `docs/archive/CLAUDE-2026-09-18.md:206`
 - **2026-08-10** — SUPERSEDED 2026-08-10, the same day, by Bob's instruction: "Remove all references to > Google Drive and App Script, as that's not part of the system architecture."** Move 1's > banners were the cheap repair; his instruction is the real one, and the banners came out > with the text they warned about.  
   `docs/archive/CORPUS-STUDY.md:186`
 - a `RULED` / `DECIDED` / `AMENDED` / `CORRECTED` / `OVERTURNED` marker.  
@@ -2131,16 +2143,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/BOB-NEXT.md:13`
 - "<subject>"` (what is RULED), `node tools/owed.mjs BOB` (what this lane OWES).  
   `docs/development/kickoffs/BOB-NEXT.md:16`
-- and present the areas that are NOT the paused thread, each with: what it needs DECIDED (vs what is already answered), what deciding it unblocks, and your recommendation.  
-  `docs/development/kickoffs/BOB.md:85`
-- NOTATION IS SETTLED: classDiagram for structure, stateDiagram-v2 for lifecycle, edges labelled with the ACT.  
-  `docs/development/kickoffs/BOB.md:105`
-- **2026-09-18** — WITHDRAWN 2026-09-18 BY BOB #14, and CONDUCT #3 reached the same conclusion independently.** This step used to say *turn your own RC off as the last act of stand-down*.  
-  `docs/development/kickoffs/BOB.md:165`
-- Report what was DONE and what was DECIDED.  
-  `docs/development/kickoffs/BOB.md:469`
-- **2026-09-17** — RULED BY BOB, 2026-09-17: a lane's retired session is archived WITHOUT HIS INVOLVEMENT.** Verbatim: *"BOB #12 being alive is not my problem.  
-  `docs/development/kickoffs/BOB.md:504`
+- `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
+  `docs/development/kickoffs/BOB.md:74`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
   `docs/development/kickoffs/CAPTURE.md:99`
 - debt that can be avoided; superseded rules in tests are CORRECTED, never exempted.** All of these earned their place; the ledger has the receipts. ## Bob's rulings, already made.  
@@ -2148,11 +2152,11 @@ Settled in prose without an id allocated. Cite them by file and line.
 - never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
   `docs/development/kickoffs/CAPTURE.md:281`
 - **2026-09-16** — RULED 2026-09-16 by BOB #12 (mechanism, BOB's) on CONDUCT #1's report, which flagged the change instead of quietly working around it.  
-  `docs/development/kickoffs/CONDUCT.md:855`
+  `docs/development/kickoffs/CONDUCT.md:861`
 - **2026-09-17** — CORRECTED 2026-09-17, and the correction is BOB's own error caught one day later.** This bullet read *"dirty or off the tip"* and told you to stop and report on either.  
-  `docs/development/kickoffs/CONDUCT.md:881`
+  `docs/development/kickoffs/CONDUCT.md:887`
 - A CLAIM ABOUT THE WORLD IS CORRECTED BY GOING TO THE ARTIFACT.  
-  `docs/development/kickoffs/CONDUCT.md:932`
+  `docs/development/kickoffs/CONDUCT.md:938`
 - **2026-07-31** — CORRECTED 2026-07-31 by session BOB: item (3) of the plan below is SUPERSEDED by the function-specific Worker topology decision.  
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
