@@ -11609,6 +11609,33 @@ export const MEMBER_ID_CHECKS = {
   },
 };
 
+/* REC-134 / C-56 — SIGHT IS NOT AUTHORITY (Membership Architecture v2 §7, the block of that
+ * name, BOB #15, 2026-09-18; §4.9: *"the custodial role can audit everything and direct
+ * nothing"*). An act that changes a project, its productions or their grants asks the ACTOR'S
+ * OWN POSITION IN THAT PROJECT — never what the actor may SEE. An administrator (enrolled, or
+ * the founder) sees every project and so passed every act whose only barrier was the
+ * visibility gate; these two rows are what such an act now answers when the position is
+ * missing. The positions are §7's: a JOINED participant holds the working rights (§7.5 —
+ * invited-not-joined is view only), and an OWNER holds the acts §7 and DEC-72 reserve to the
+ * owner. §7.13's add-an-owner is the one administrator path and is NOT behind this family.
+ * A machine credential carries no position and is not asked (the fences on machines are
+ * their own and unchanged). */
+export const PROJECT_AUTHORITY_CHECKS = {
+  PROJECT_ACT_NOT_A_PARTICIPANT: {
+    check: 'C-56.1',
+    where: 'src/store.mjs #projectAuthority > is-project-authority',
+    translation: 'Only someone working in this project can do that. You can see the project, but you '
+      + 'have not joined it, and seeing a project does not let you change it — administrators included. '
+      + 'Nothing was changed. Ask an owner of the project to invite you, then join it.',
+  },
+  PROJECT_ACT_NOT_THE_OWNER: {
+    check: 'C-56.2',
+    where: 'src/store.mjs #projectAuthority > is-project-authority',
+    translation: 'Only an owner of this project can do that. You are not one of its owners, and seeing '
+      + 'a project does not let you direct it — administrators included. Nothing was changed.',
+  },
+};
+
 /** C-54.1 — ONE LEG, ASKED WHETHER IT RESTS ON A LEAD. The one checker every
  *  leg grammar consults (`checkInquiryBasis`' basis[], the version legs, the
  *  action basis), so the rule has one spelling and three doors. It asks BOTH

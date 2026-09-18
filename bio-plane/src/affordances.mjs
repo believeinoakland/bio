@@ -1516,9 +1516,19 @@ export const ACTS = [
   { id: "versionhide", label: "Hide a reading from the display (it stays in the record)", weight: "single",
     types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && (f.basis_versions ?? 0) >= 1 },
+  /* REC-134 / C-56: `f.project_participant !== false` on the PROJECT arm of cite, sever and
+     reinstate, and only there. Each of the three edits the project's own document, and the
+     store now refuses an actor who has not JOINED that project (`#projectAuthority`, §7.5) —
+     which reaches every administrator, because an administrator SEES every project and so
+     reached these acts through the sight gate alone. Offering them to such a caller would be
+     the pre-flight disagreeing with the refusal it fronts (DEC-8). `!== false` for D-310's
+     reason exactly: the fact is three-valued and a caller with no roster position (a `class:*`
+     credential) reads null and is byte-unchanged. The information and question arms are not
+     narrowed — citing FROM them is not an act on a project. */
   { id: "cite", label: "Cite material into a case or a question", weight: "report",
     types: ["information", "project", "inquiry"],
-    applies: (f, ty) => ty === "information" || ty === "project" || ty === "inquiry" },
+    applies: (f, ty) => ty === "information" || (ty === "project" && f.project_participant !== false)
+                     || ty === "inquiry" },
   /* S-11 step 2: withdrawing a citation without deleting it. From the CITED
      side: some CASE holds a live cites edge to it. From the case's own side:
      its references carry a confirmed cites edge.
@@ -1558,11 +1568,11 @@ export const ACTS = [
   { id: "sever", label: "Sever a citation", weight: "refuse",
     types: ["information", "inquiry", "project"],
     applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.confirmed ?? 0) > 0)
-                     || (ty === "project" && f.cites_out.confirmed > 0) },
+                     || (ty === "project" && f.cites_out.confirmed > 0 && f.project_participant !== false) },
   { id: "reinstate", label: "Reinstate a severed citation", weight: "refuse",
     types: ["information", "inquiry", "project"],
     applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.severed ?? 0) > 0)
-                     || (ty === "project" && f.cites_out.severed > 0) },
+                     || (ty === "project" && f.cites_out.severed > 0 && f.project_participant !== false) },
 ];
 
 /* Every op in NEEDS that is NOT an object-directed act, with the reason — so

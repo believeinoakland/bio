@@ -288,8 +288,13 @@ const mDis = await POST("op=proposedispose&token=mem-rec65",
     reason: "not now, revisit after the budget cycle closes" });
 t("(j) OPEN and measured: a machine DISPOSES the record's own derived question today",
   [val(mDis, "ok"), val(mDis, "decided_by")], [true, "class:member"]);
+/* CORRECTED 2026-09-18 by REC-134, and the old selector was the wrong half: it took the FIRST
+   stamp site whose writes include proposedispose, which was the `decidedBy` site only because it
+   was the only one. REC-134 stamps the POSITIONAL `identity` on proposedispose too (a CLEAR site —
+   it claims no authorship, it answers who holds a position in the project), and `find` then
+   returned that site. The claim this arm pins is about the DECIDER, so it names that field. */
 t("(j) which is why it is pinned OPEN above rather than blessed by analogy with DEC-52",
-  (sites.find((s) => s.writeOps.includes("proposedispose")) || {}).verdict, "OPEN");
+  (sites.find((s) => s.field === "decidedBy" && s.writeOps.includes("proposedispose")) || {}).verdict, "OPEN");
 
 /* =====================================================================
    BLOCK 3 — REACH. What the matcher can and cannot see, as numbers.
