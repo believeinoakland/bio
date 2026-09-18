@@ -32878,11 +32878,8 @@ Subject position: ${pos} \u2014 ${just}
      transaction is rolled back. */
   #draftPublisher(row) {
     if (this.#isProjectOwner(row.project_id, row.updated_by)) return row.updated_by;
-    const owner = this.#rows(
-      `SELECT member_id FROM project_participants WHERE project_id=? ORDER BY member_id`,
-      row.project_id
-    ).find((p) => this.#isProjectOwner(row.project_id, p.member_id));
-    return owner ? owner.member_id : row.updated_by;
+    const [first] = this.#owners(row.project_id);
+    return first ?? row.updated_by;
   }
   /* THE LIVE-GRANT PREDICATE — the one place a grant is judged, read by the review
      copy, its comment and `op=casedocument` alike, so they cannot disagree. Live

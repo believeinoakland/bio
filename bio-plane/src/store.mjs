@@ -7878,9 +7878,11 @@ export class Store extends DurableObject {
      transaction is rolled back. */
   #draftPublisher(row) {
     if (this.#isProjectOwner(row.project_id, row.updated_by)) return row.updated_by;
-    const owner = this.#rows(`SELECT member_id FROM project_participants WHERE project_id=? ORDER BY member_id`,
-                             row.project_id).find((p) => this.#isProjectOwner(row.project_id, p.member_id));
-    return owner ? owner.member_id : row.updated_by;
+    /* `#owners` is the record's existing owner roster (sorted), REUSED rather than a
+       new scan written here: `derivation-bounds`' census ceiling caught this method's
+       first draft carrying its own unbounded row source over the participants. */
+    const [first] = this.#owners(row.project_id);
+    return first ?? row.updated_by;
   }
 
   /* THE LIVE-GRANT PREDICATE — the one place a grant is judged, read by the review
