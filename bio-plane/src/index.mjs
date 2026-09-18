@@ -990,11 +990,13 @@ const OPS = {
      an addressed act BESIDE publish that never leaves the instance.
 
      `casedraft`, `reviewgrant` and `reviewrevoke` are GATED to the classes that
-     reach `publish`, and ride its capability in NEEDS: authoring the group's draft
-     and handing it to a named person is the publication surface, one act short of
-     publishing. The store then asks the project-OWNER question (`publishCase`'s
-     own predicate) and refuses a machine by name, so a machine class reaching the
-     op is refused at the act rather than here.
+     reach `publish`. Their capabilities and authority are §6A.2's (BOB #15, built
+     by REC-133; the NEEDS rows carry the reasoning): AUTHOR = the project's edit
+     permission (`contribute` in NEEDS, owner-or-joined in the store); ISSUE = the
+     project OWNER (`publish` in NEEDS, `publishCase`'s owner predicate in the
+     store, no administrator bypass); REVOKE = the same, unchanged (§6A.2 as
+     corrected: administrators direct nothing). The store refuses a machine by name,
+     so a machine class reaching the op is refused at the act rather than here.
 
      `reviewcopy` and `reviewcomment` are UNGATED (`classes: null`) on
      `casedocument`'s reasoning, because their whole point is a RECIPIENT who
@@ -2071,11 +2073,21 @@ const NEEDS = {
      publication surface, and a member who may not publish may not author it
      either. No fifth capability token is minted (CAPABILITIES.md section 4). */
   publish:          "publish",
-  /* REC-126 / DEC-31: the review copy's three authoring acts ride the SAME surface
-     as publish, because they are the act that stands beside it — a member who may
-     not publish may not hand the group's draft to a named outsider either. No
-     fifth capability token is minted. */
-  casedraft:        "publish",
+  /* REC-126 / DEC-31, as REC-133 builds `BIO_Publication_v0_1.md` §6A.2 (BOB #15).
+     No fifth capability token is minted for any of the three.
+     - ISSUING and REVOKING a grant ride `publish`, UNCHANGED: handing the group's
+       unratified draft to a named outsider is the act that stands beside
+       publishing, and a member who may not publish may not do it either; the store
+       adds the OWNER, with no administrator bypass for either act (§6A.2 as
+       corrected by BOB #15 the same day: administrators direct nothing).
+     - AUTHORING a draft rides `contribute`: §6A.2 makes it the project's EDIT
+       permission (*"editing needs project permissions and is the editor's act"*),
+       and `contribute` is Membership v2 §5's *"create and revise bundles in the
+       working corpus"* — the capability half; the store checks the positional half
+       (an owner or a joined participant, §7.5). REC-126 had it at `publish`, so an
+       owner holding `publish` WITHOUT `contribute` no longer authors a draft: that
+       is the ruling applied, since such an owner may edit nothing in the corpus. */
+  casedraft:        "contribute",
   reviewgrant:      "publish",
   reviewrevoke:     "publish",
   /* DEC-17: the group's declared bar is about what publishing REQUIRES, so it

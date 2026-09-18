@@ -14777,7 +14777,7 @@ var RUNG_ABSENT = {
      and they are NOT `reversible` — a draft is edited in place and a comment is
      answered by another, but no act takes either back. Neither is ever published:
      publication stays the one irreversible act (§6A.1). */
-  casedraft: { ground: "undetermined", is: "the project's owner holds the arguments of a case publication under a draft id BEFORE any gate runs; mutable, never published, the review copy's production (BIO_Publication \xA76A.4)" },
+  casedraft: { ground: "undetermined", is: "an editor of the project (an owner or a joined participant holding contribute, \xA76A.2) holds the arguments of a case publication under a draft id BEFORE any gate runs; mutable, never published, the review copy's production (BIO_Publication \xA76A.4)" },
   reviewgrant: { ground: "credential", is: "the owner grants one named recipient READ-AND-COMMENT on one draft at one case edition, by a per-grant read secret" },
   reviewrevoke: { ground: "credential", is: "the owner withdraws a review grant; the secret then answers as one never issued" },
   reviewcomment: { ground: "undetermined", is: "a recipient (through a live grant) or a member with standing comments on a draft; attributed, and a recipient's comment is recorded as a recipient's" },
@@ -33306,14 +33306,26 @@ Subject position: ${pos} \u2014 ${just}
            because none has ever held one (`aicredentialmint`'s shape, PL-11).
          - THE COMMENT is attributed, and a recipient's is a RECIPIENT's.
   
-       WHO MAY AUTHOR A DRAFT, ISSUE A GRANT AND REVOKE ONE — PROVISIONAL, AND A
-       DESIGN GAP REPORTED RATHER THAN A RULING MADE. §6A says the grant names who
-       issued it and that EDITING needs project permissions; it does not say who may
-       issue. This runs at the NARROWEST authority the record already rules for the
-       sibling act — the project OWNER, DEC-72's publisher, through the same
-       `#isProjectOwner` `publishCase` consults, with no administrator bypass — so a
-       later ruling can only WIDEN it, and widening is one predicate. A machine is
-       refused by name: an addressed act is attributed to a person. */
+       WHO MAY AUTHOR A DRAFT, ISSUE A GRANT AND REVOKE ONE — DECIDED in §6A.2 by
+       BOB #15 (2026-09-18) and built by REC-133. REC-126 ran all three at the project
+       OWNER provisionally; the decision widens ONE of them and leaves the other two:
+         - AUTHOR (`#caseDraft`): the project's EDIT permission, `#isProjectEditor` —
+           Bob's *"editing needs project permissions and is the editor's act"*. The
+           draft is the production, and editing it is editing. Its capability half,
+           `contribute`, is checked at the control plane (NEEDS), where capabilities
+           live; its positional half is checked here.
+         - ISSUE (`#reviewGrant`): the project OWNER only, NO administrator bypass —
+           UNCHANGED. Sending unratified material outside the group is the same kind
+           of act as publishing, and DEC-72 makes publishing the owner's.
+         - REVOKE (`#reviewRevoke`): the project OWNER only — UNCHANGED. §6A.2 first
+           said *the owner or any administrator* and BOB #15 CORRECTED it the same
+           day: administrators *"audit everything and direct nothing"* (Membership v2
+           §4), with the one exception of §7.13, which is also how a grant outliving
+           its owners is handled — an administrator adds an owner, and that owner
+           revokes. REC-133 briefly built the administrator arm and reverted it.
+       No two-person rule: none is ruled, and inventing one would be a fence tighter
+       than its rule. A machine is refused by name: an addressed act is attributed to
+       a person. */
   static REVIEW_DRAFT_FIELDS = [
     "targets",
     "target",
@@ -33374,14 +33386,27 @@ Subject position: ${pos} \u2014 ${just}
       detail: "the review copy's authoring acts are draft, grant and revoke."
     };
   }
-  /* NOT THE OWNER, AND NOT THERE, ARE ONE ANSWER: a caller who does not own the
-     producing project cannot learn from this refusal whether the project, the
-     draft or the grant exists. */
-  static #notReviewOwner() {
+  /* NOT PERMITTED, AND NOT THERE, ARE ONE ANSWER: a caller without the act's
+       authority cannot learn from this refusal whether the project, the draft or the
+       grant exists. The DETAIL varies with the ACT (which the caller chose) and with
+       nothing the record holds.
+  
+       THE CODE KEEPS REC-126's NAME, `REVIEW_NOT_PROJECT_OWNER`, for all three acts —
+       REC-133's choice, stated rather than left to be noticed. The name is exact for
+       ISSUE and narrower than the rule for AUTHOR and REVOKE; renaming it would change
+       the answer a caller already branches on, for a refusal whose MEANING (you lack
+       this act's authority over this project) is unchanged, and the detail names the
+       authority each act needs. */
+  static #REVIEW_AUTHORITY = {
+    draft: "authoring a review copy's draft is EDITING the production, and needs the project's edit permission: an owner, or a JOINED participant, holding `contribute` (BIO_Publication \xA76A.2; Membership v2 \xA77.5).",
+    grant: "handing the group's draft to someone outside it is the producing project's own act and is wielded by an OWNER of it, as publishing is (DEC-72). An administrator sees every project and directs none of them.",
+    revoke: "withdrawing a grant is the producing project's own act and is wielded by an OWNER of it, as issuing one is (BIO_Publication \xA76A.2). An administrator sees every project and directs none of them."
+  };
+  static #notReviewOwner(act) {
     return {
       ok: false,
       reason: "REVIEW_NOT_PROJECT_OWNER",
-      detail: "a review copy is the producing project's own act and is wielded by an OWNER of it, as publishing is (DEC-72). An administrator sees every project and directs none of them. A project, draft or grant you do not own is answered exactly as one that does not exist."
+      detail: `${_Store.#REVIEW_AUTHORITY[act]} A project, draft or grant you hold no such authority over is answered exactly as one that does not exist.`
     };
   }
   /* THE EDITION IS READ FROM THE PUBLISHED RECORD EVERY TIME, never stored and
@@ -33403,7 +33428,7 @@ Subject position: ${pos} \u2014 ${just}
     const a = { who };
     const proj = String(project ?? "").trim();
     const existing = draft ? this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft).trim()) : null;
-    if (draft && !existing) return _Store.#notReviewOwner();
+    if (draft && !existing) return _Store.#notReviewOwner("draft");
     const owning = existing ? existing.project_id : proj;
     if (!owning)
       return {
@@ -33417,7 +33442,7 @@ Subject position: ${pos} \u2014 ${just}
         reason: "REVIEW_DRAFT_CHANGES_PROJECT",
         detail: `this draft is ${existing.project_id}'s production, and a case does not change hands (DEC-72). Draft this material as a new case under the other project instead.`
       };
-    if (!this.#isProjectOwner(owning, a.who)) return _Store.#notReviewOwner();
+    if (!this.#isProjectEditor(owning, a.who)) return _Store.#notReviewOwner("draft");
     const params = {};
     for (const k of _Store.REVIEW_DRAFT_FIELDS) if (k in rest) params[k] = rest[k];
     const named = typeof params.caseId === "string" && params.caseId.trim() ? params.caseId.trim() : null;
@@ -33483,11 +33508,12 @@ Subject position: ${pos} \u2014 ${just}
     let out = null;
     try {
       this.ctx.storage.transactionSync(() => {
+        const by = this.#draftPublisher(row);
         out = this.publishCase({
           ...JSON.parse(row.params),
           project: row.project_id,
-          viewer: `member:${row.updated_by}`,
-          author: row.updated_by
+          viewer: `member:${by}`,
+          author: by
         });
         throw _Store.#ROLLBACK;
       });
@@ -33510,6 +33536,22 @@ Subject position: ${pos} \u2014 ${just}
       missing: [refused],
       evaluated: "the publish gates run in order and stop at the first refusal, so this is the first refusal only. Whether any later gate would also refuse is UNDETERMINED, not absent."
     };
+  }
+  /* WHO THE GATES ARE RUN AS. REC-133: a draft's last editor need not be an owner
+     any more, and `publishCase` runs its OWNER fence first — so a dry run as a
+     non-owner editor would answer NOT_THE_PROJECT_OWNER for every such draft and
+     hide the gaps the copy exists to show. Publishing is an owner's act (DEC-72),
+     so the gates are run as the member who would PUBLISH: the last editor when
+     they own the project, otherwise an owner of it (the lowest member id, so the
+     answer is deterministic), and only when the project has NO owner (a
+     machine-created project honestly may not) the editor, whose
+     NOT_THE_PROJECT_OWNER is then the TRUE first gap: nobody can publish this.
+     Nothing about the choice reaches the answer but the gates' verdict, and the
+     transaction is rolled back. */
+  #draftPublisher(row) {
+    if (this.#isProjectOwner(row.project_id, row.updated_by)) return row.updated_by;
+    const [first] = this.#owners(row.project_id);
+    return first ?? row.updated_by;
   }
   /* THE LIVE-GRANT PREDICATE — the one place a grant is judged, read by the review
      copy, its comment and `op=casedocument` alike, so they cannot disagree. Live
@@ -33546,7 +33588,7 @@ Subject position: ${pos} \u2014 ${just}
   #reviewGrant(who, { draft = null, recipient = "", secretSha = null } = {}) {
     const a = { who };
     const d = this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft ?? "").trim());
-    if (!d || !this.#isProjectOwner(d.project_id, a.who)) return _Store.#notReviewOwner();
+    if (!d || !this.#isProjectOwner(d.project_id, a.who)) return _Store.#notReviewOwner("grant");
     const to = String(recipient ?? "").trim();
     if (!to || to.length > _Store.REVIEW_RECIPIENT_MAX || /[\r\n]/.test(to))
       return {
@@ -33589,7 +33631,7 @@ Subject position: ${pos} \u2014 ${just}
       };
     const g = this.#one(`SELECT g.*, d.project_id FROM review_grants g JOIN case_drafts d ON d.draft_id=g.draft_id
                          WHERE g.grant_id=?`, gid);
-    if (!g || !this.#isProjectOwner(g.project_id, a.who)) return _Store.#notReviewOwner();
+    if (!g || !this.#isProjectOwner(g.project_id, a.who)) return _Store.#notReviewOwner("revoke");
     if (g.revoked_at)
       return { ok: true, existed: true, grantId: g.grant_id, revokedBy: g.revoked_by, revokedAt: g.revoked_at };
     const when = (/* @__PURE__ */ new Date()).toISOString();
@@ -50654,6 +50696,22 @@ ${words}`;
   #ownsAnyProject(memberId) {
     return this.#rows(`SELECT project_id FROM project_participants WHERE member_id=?`, memberId).some((p) => this.#isProjectOwner(p.project_id, memberId));
   }
+  /* REC-133 / BIO_Publication §6A.2: THE PROJECT'S EDIT PERMISSION, positional half.
+     Membership v2 §7.5: *"A joined member has the working rights their capabilities
+     allow"*, and an invited member who has not joined has VIEW rights only; a member
+     who has asked to leave (7.6) has asked to stop working. So: an OWNER (the rule
+     `#isProjectOwner` states, consumed rather than restated) or a participant whose
+     state is `joined`, read through `#participation`, the record's one membership
+     predicate. The CAPABILITY half, `contribute` (*"create and revise bundles in the
+     working corpus"*, §5), is a SESSION's and is enforced at the control plane's
+     NEEDS table, where every other corpus write is gated. An administrator gains
+     nothing here: sight of every project is not a position in any of them (§7.3).
+     No new right is minted; this is §7.5 said once. */
+  #isProjectEditor(projectId, memberId) {
+    if (this.#isProjectOwner(projectId, memberId)) return true;
+    const p = this.#participation(projectId, memberId);
+    return !!(p && p.state === "joined");
+  }
   #participation(projectId, memberId) {
     return this.#one(
       `SELECT state, owner FROM project_participants WHERE project_id=? AND member_id=?`,
@@ -64027,11 +64085,13 @@ var OPS = {
        an addressed act BESIDE publish that never leaves the instance.
   
        `casedraft`, `reviewgrant` and `reviewrevoke` are GATED to the classes that
-       reach `publish`, and ride its capability in NEEDS: authoring the group's draft
-       and handing it to a named person is the publication surface, one act short of
-       publishing. The store then asks the project-OWNER question (`publishCase`'s
-       own predicate) and refuses a machine by name, so a machine class reaching the
-       op is refused at the act rather than here.
+       reach `publish`. Their capabilities and authority are §6A.2's (BOB #15, built
+       by REC-133; the NEEDS rows carry the reasoning): AUTHOR = the project's edit
+       permission (`contribute` in NEEDS, owner-or-joined in the store); ISSUE = the
+       project OWNER (`publish` in NEEDS, `publishCase`'s owner predicate in the
+       store, no administrator bypass); REVOKE = the same, unchanged (§6A.2 as
+       corrected: administrators direct nothing). The store refuses a machine by name,
+       so a machine class reaching the op is refused at the act rather than here.
   
        `reviewcopy` and `reviewcomment` are UNGATED (`classes: null`) on
        `casedocument`'s reasoning, because their whole point is a RECIPIENT who
@@ -64950,11 +65010,21 @@ var NEEDS = {
      publication surface, and a member who may not publish may not author it
      either. No fifth capability token is minted (CAPABILITIES.md section 4). */
   publish: "publish",
-  /* REC-126 / DEC-31: the review copy's three authoring acts ride the SAME surface
-     as publish, because they are the act that stands beside it — a member who may
-     not publish may not hand the group's draft to a named outsider either. No
-     fifth capability token is minted. */
-  casedraft: "publish",
+  /* REC-126 / DEC-31, as REC-133 builds `BIO_Publication_v0_1.md` §6A.2 (BOB #15).
+     No fifth capability token is minted for any of the three.
+     - ISSUING and REVOKING a grant ride `publish`, UNCHANGED: handing the group's
+       unratified draft to a named outsider is the act that stands beside
+       publishing, and a member who may not publish may not do it either; the store
+       adds the OWNER, with no administrator bypass for either act (§6A.2 as
+       corrected by BOB #15 the same day: administrators direct nothing).
+     - AUTHORING a draft rides `contribute`: §6A.2 makes it the project's EDIT
+       permission (*"editing needs project permissions and is the editor's act"*),
+       and `contribute` is Membership v2 §5's *"create and revise bundles in the
+       working corpus"* — the capability half; the store checks the positional half
+       (an owner or a joined participant, §7.5). REC-126 had it at `publish`, so an
+       owner holding `publish` WITHOUT `contribute` no longer authors a draft: that
+       is the ruling applied, since such an owner may edit nothing in the corpus. */
+  casedraft: "contribute",
   reviewgrant: "publish",
   reviewrevoke: "publish",
   /* DEC-17: the group's declared bar is about what publishing REQUIRES, so it

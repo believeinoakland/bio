@@ -11120,3 +11120,61 @@ from `bio-plane/` — baseline 43/0, (a) per-project collapsed to one shared sta
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR, ADDITIVE — I3 31.0.0 → 31.1.0.** The base was read at resolution: 31.0.0, where IC-148 and IC-149 moved it after this row was proposed against 29.4.0. Every call possible before behaves identically: the no-project `op=conclude` is unchanged, and its answer only GAINS `relationship` and `claim: {state: "undetermined"}`. The new refusals (`NO_CLAIM` C-33.34, `CONCLUSION_IS_THE_CLAIM` C-33.35, `UNSPLICEABLE_CONCLUSIONS` C-33.36) are reachable only through the new `project=`/`commentary=` parameters, so IC-25's test for breaking is not met. The worker's case for MAJOR (an inquiry's own `concluded` no longer means concluded for every project) is a change of MEANING that no answer carries yet, because §7.1 item 4 (publish, reopen and legs) is unbuilt. When item 4 lands (REC-135), THAT IC decides whether the meaning change is breaking. **With BOB #15:** which claim a no-project conclusion adopts, and how a project withdraws its conclusion.
+
+## IC-151 · I3: THE REVIEW COPY'S AUTHORING, AS `BIO_Publication_v0_1.md` §6A.2 DECIDES IT — `op=casedraft` opens to the project's EDIT permission (NEEDS `contribute`; an owner or a JOINED participant); `op=reviewgrant` and `op=reviewrevoke` UNCHANGED at the owner · PROPOSED 2026-09-18 (REC-133, minted with `node tools/mintid.mjs IC` BEFORE writing this row) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off this tree's `docs/development/INTERFACES.md`
+  after merging `origin/main` `0a58dee1`: 30.0.0** (IC-148 moved it from 29.4.0 while this item ran — **read the base
+  AT RESOLUTION**).
+- **Proposed as MAJOR, BREAKING — for ONE caller configuration, measured, and argued rather than argued down.** One
+  act WIDENS and nothing else moves, with one exception: `op=casedraft`'s capability moves from `publish` to
+  `contribute`, so **an OWNER holding `publish` WITHOUT `contribute` — a configuration the plane accepts (measured:
+  `reviewcopy.test.mjs` enrols `uma` with `["publish"]` alone) — could author a draft yesterday and is refused
+  `NOT_CAPABLE` today.** That is the ruling applied, not a side effect: §6A.2 makes authoring the EDIT permission, and a
+  member who may edit nothing in the working corpus may not edit the draft either. Consumer impact measured at ZERO
+  (`git grep` over `civicos-ui/`, `agent-worker/`, `pdf-worker/`, `ocr-worker/`, `newgroup/` for the three ops and the
+  refusal code: no hit). **MAJOR anyway on IC-25's rule and IC-117's precedent: a consumer count is a fact about this
+  moment and a contract is a promise about every moment after it.** MINOR is defensible ONLY if CONDUCT judges that
+  edge vacuous; the proposer does not.
+- **Proposer:** RECORD, worker `agent-a6516bd6e484436ba`, 2026-09-18, from QUEUE REC-133.
+- **Owner to land it:** `RECORD`.
+- **Consumers to answer:** `UI` (AFFECTED as the builder of the still-DELEGATED surface — `CLAIMS.md` REC-126 → UI,
+  whose point-1 authority line this landing corrects in an addendum); `SKILL`, `DIST`, `FRAMEWORK` NOT-AFFECTED.
+- **Design:** `BIO_Publication_v0_1.md` §6A.2, *"WHO MAY AUTHOR, ISSUE AND REVOKE"* (BOB #15, 2026-09-18, the revoke
+  line CORRECTED the same day to owner-only); Membership v2 §5 (`contribute`), §7.5 (*a joined member has the working
+  rights their capabilities allow*) and §4 (administrators direct nothing).
+
+**THE SHAPE.** No op, parameter, field or refusal code is added, renamed or removed.
+- `POST op=casedraft` — NEEDS `publish` → **`contribute`**. The store admits `#isProjectEditor`: an owner
+  (`#isProjectOwner`, unchanged) or a participant whose state is `joined` (`#participation`, the record's one
+  membership predicate). An invited-not-joined member (§7.5: view rights only), a member who has asked to leave, a
+  non-participant and an administrator who holds no position are refused as before. Editing a draft in place
+  follows the same rule.
+- `POST op=reviewgrant`, `POST op=reviewrevoke` — UNCHANGED: NEEDS `publish`, the owner only, no administrator
+  bypass. **This worker first built §6A.2's original revoke line (owner OR any administrator) and REVERTED it before
+  landing, on CONDUCT #5's relay of BOB #15's correction;** nothing of it survives on the branch tip.
+- **The refusal code is KEPT: `REVIEW_NOT_PROJECT_OWNER` for all three acts.** Its name is exact for issuing and
+  revoking and narrower than the rule for authoring; its `detail` now names the authority each act needs. Renaming it
+  would change an answer a caller branches on for a refusal whose MEANING (no such authority, or no such thing — still
+  one answer) is unchanged.
+- **`op=reviewcopy`'s `missing` for a NON-OWNER editor's draft.** `publishCase` runs its owner fence first, so the
+  dry run is now run as the member who would PUBLISH — the last editor if an owner, else the first of the project's
+  owners (`#owners`, sorted), else (a project with no owner) the editor, whose `NOT_THE_PROJECT_OWNER` is then the true
+  first gap. Without this, every editor's draft would list `NOT_THE_PROJECT_OWNER` and hide its real gaps. No field
+  changes; for an owner-edited draft the answer is byte-identical to REC-126's.
+
+**Suites:** `bio-plane/test/reviewcopy.test.mjs` 52 → 63 (the editor authors, and edits the owner's draft in place;
+the plain member, invited and not joined, can do none of the three; a joined member without `contribute` is refused
+at the control plane; the editor cannot issue, on the owner's draft or her own; neither the plain member nor a
+non-owner administrator can issue; the editor, the plain member and a non-owner administrator cannot revoke and the
+grant is still live after all three tried; the owner revokes it and the secret then answers byte-identically to one
+never issued; an editor's draft is judged as its publisher would meet the gates). Two labels CORRECTED with their
+reason in a comment (block 2's heading and the non-participant arm said the authority was publish's).
+`src/affordances.mjs`'s NON_ACTS sentence for `casedraft` restated. NEGATIVE CONTROL: `node test/reviewcopy.control.mjs
+[e|f|g|h]` from `bio-plane/` — (e) revoke widened to administrators 61/2, (f) issue widened to editors 62/1, (g)
+authoring widened to any member 59/4, (h) the dry run as the editor 62/1; baseline 63/0; REC-126's (a)-(d)
+re-measured (58/5, 62/1, 61/2, 61/2).
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 31.1.0 → 32.0.0.** The base was read at resolution: 31.1.0, where IC-148, IC-149 and IC-150 moved it after this row was proposed against 30.0.0. `op=casedraft` moves from the `publish` capability to `contribute` plus editor POSITION (`#isProjectEditor`: an owner, or a JOINED participant, per Membership v2 §7.5), so an owner holding `publish` without `contribute` could draft before and is refused `NOT_CAPABLE` now. The plane accepts that configuration, so IC-25/IC-117 settle it as breaking whatever the measured impact (no consumer found). **Checked at integration against the row's correction:** revoke is OWNER ONLY in the code (`#reviewRevoke`), and the administrator arm the worker built first was reverted before its tip. Issue is unchanged. "What is missing" is now judged as the person who would PUBLISH would meet the gates, so an editor's draft does not list `NOT_THE_PROJECT_OWNER` over its real gaps.
