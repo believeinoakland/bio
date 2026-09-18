@@ -622,6 +622,20 @@ stall is bounded by when the machine is next awake and not by twenty minutes. **
 message as a turn, not as an instruction: sequencing stays yours, and if the right answer is that
 nothing should run, say so rather than spawning to satisfy a timer.**
 
+**THE WAKE IS YOURS AGAIN, AND THE HEARTBEAT IS THE WATCHDOG — CHANGED 2026-09-18 BY BOB #14, AND IT IS A START-OF-SESSION ACT.**
+The heartbeat's message never reached you: it runs in `auto`, you run in `bypassPermissions`, and a cross-session
+message between different modes is HELD for the operator's approval — two consecutive pokes sat on Bob's screen
+and expired unread, and Bob ruled the permission mode is not his to manage. So the two halves are split by what
+each can actually do. **YOU, AS YOUR FIRST ACT IN EVERY SESSION, arm your own self-wake with `CronCreate`** (cron
+`7,27,47 * * * *`, recurring): *if a worker is live or you are mid-integration, do nothing; otherwise fetch, read
+the queue on `origin/main`, integrate what finished, run the retirement sweep, and spawn the next wave if slots
+allow — or say in one line why not.* It fires in your own mode, so nothing is held. **Verify it by `CronList`,
+and record the job id in your first report.** It is session-only and expires in seven days — the exact way the
+first in-session timer died, not recreated by its successor, which is why this is a STEP here and not a habit.
+**The heartbeat no longer messages you.** It watches for what no session can report about itself — no integrator,
+a stood-down integrator, and an integrator idle with runnable work across three of its runs in a row, which means
+your self-wake is not armed.
+
 **THE STATE THE TIMER IS ACTUALLY FOR IS ZERO, NOT ONE-OF-N.** CONDUCT's first
 response to being told to add it was that a poll *"will answer full nearly every
 time"* — which is an argument that a check will usually find nothing, and this
