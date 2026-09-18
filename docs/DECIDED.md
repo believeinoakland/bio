@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1118 rulings across 87 documents.
+1119 rulings across 87 documents.
 
 ## DEC-
 
@@ -2069,6 +2069,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:10357`
 - `bio-plane/test/casesign.test.mjs` — the anonymous-read assertion CORRECTED with its dated reason; block 1b compares the RAW answer (status, content type, body bytes) against the same op's answer for the same id read BEFORE `op=publish` minted it, for anonymous, an unknown token, a member of another project, the…  
   `docs/development/INTERFACE-CHANGES.md:10439`
+- `bio-plane/test/deliverer.test.mjs` — its direct store read of an UNSIGNED case document CORRECTED to stamp the owner's viewer, with the dated reason (never exempted); new §1b (the founder reads an unsigned case through `op=casedocument`; vera, a member of no project, gets a stranger's bytes) and a §2 arm (vera…  
+  `docs/development/INTERFACE-CHANGES.md:10587`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  

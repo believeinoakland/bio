@@ -60,7 +60,14 @@ const L = {
   legacyRow: "LEGACY, a finding row",
   legacyCase: "LEGACY, a case document",
   table: "THE TABLE:",
+  founderRead: "STANDING, the FOUNDER's session reads",
+  containerDone: "THE CONTAINER: the edition completed",
+  containerWords: "THE CONTAINER says",
+  veraRead: "STANDING, a member of NO project (vera) is answered",
+  veraDeliver: "STANDING, a member of NO project cannot deliver",
 };
+/* The founder's resolution in `sessionCaseViewer`, exactly as it stands. */
+const FOUNDER_LINE = '  if (r === "admin") return "admin";   /* the founder — Store.ROOT_ADMIN, an administrator (7.3) */';
 
 const ARMS = {
   baseline: { edits: [], mustFail: [] },
@@ -91,6 +98,38 @@ const ARMS = {
   "session-member": {
     edits: bothActs("`member:${sessMember}`"),
     mustFail: [L.structActs, L.caseAnswer, L.caseDoc, L.pubcase, L.container, L.looseAnswer, L.looseReads],
+  },
+  /* REC-128's merge onto REC-130 — THE FOUNDER'S STANDING REVERTED, and ONLY
+     that: `sessionCaseViewer` loses its founder line, so a founder session folds
+     to `member:admin` again exactly as both case reads spelled it before the fix.
+     DECLARED BEFORE ARMING: the founder cannot read the unsigned bio case
+     (founderRead), cannot deliver iris's case signature (caseAnswer), so the case
+     document stays unratified (caseDoc), the public case read and the container
+     never complete (pubcase, container, containerDone, containerWords). vera's two
+     STANDING arms STAY GREEN — she never had standing — and so do the loose
+     founder delivery (op=ratify asks no case standing) and gus's. */
+  "founder-standing": {
+    edits: [["index", FOUNDER_LINE, "  /* ARMED: founder resolution removed */"]],
+    mustFail: [L.founderRead, L.caseAnswer, L.caseDoc, L.pubcase, L.container, L.containerDone, L.containerWords],
+  },
+  /* THE OVER-BROAD FIX, the failure in the other direction: every session is
+     resolved to the root-administrator viewer, so standing is everybody's. The
+     founder arms STAY GREEN (a fix that is too wide passes every assertion about
+     the founder), and ONLY vera's two STANDING arms can tell it from the right
+     fix. DECLARATION CORRECTED after its first run (15/5, NOT AS DECLARED), and
+     the correction is the instrument's, not the subject's: it was declared as
+     vera's two arms alone, but under this arm vera's delivery SUCCEEDS — she
+     carries iris's valid signature in before the founder does — so the case
+     document is ratified with VERA as deliverer, and the three reads that expect
+     the FOUNDER as the case's deliverer (caseDoc, pubcase, container) fail too,
+     rightly. The founder's own answer (caseAnswer) stays green, and that is
+     REC-128's design rather than a gap: ed25519 SSHSIG is deterministic, so the
+     founder's retry carries the SAME signature, the store answers `existed: true`
+     and writes nothing, and the answer's `deliveredBy` names who delivered THIS
+     request (its comment at op=caseratify's answer) while the RECORD names vera. */
+  "everyone-admin": {
+    edits: [["index", "  return `member:${r.startsWith(\"member:\") ? r.slice(7) : r}`;", "  return \"admin\"; /* ARMED */"]],
+    mustFail: [L.veraRead, L.veraDeliver, L.caseDoc, L.pubcase, L.container],
   },
 };
 

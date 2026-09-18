@@ -2551,6 +2551,54 @@ function aiTaskScope(cred, op, spec) {
  * `admin` and `member` bindings are instance-level and read as they read every
  * other piece of working material. An `ai` credential stands as its declared
  * principal, through the same `aiTaskScope` the gated path runs. */
+/* REC-128 x REC-130 — THE ONE PLACE A SIGNED-IN SESSION BECOMES THE VIEWER AN
+ * UNSIGNED CASE DOCUMENT ANSWERS TO. Both readers of one — `op=casedocument`
+ * (through `caseReader` below) and `op=caseratify`'s facts read — call THIS,
+ * so the two cannot disagree about who a session is.
+ *
+ * THE DEFECT IT CLOSES, measured on CONDUCT #5's merge of REC-128 onto REC-130:
+ * both sites spelled the viewer as `member:` plus the FOLDED session role, and
+ * the FOUNDER's session role is the bare `admin` (Store.ROOT_ADMIN), so the
+ * founder read as `member:admin` — a member NAMED admin with no participation
+ * and no members row — and was answered NO_CASE_DOCUMENT. That refused the
+ * founder a case ratification BOB #14 ruled ALLOWED (D-421 as corrected: a
+ * HUMAN's own authenticated session, a member's or the founder's), and hid every
+ * unsigned case document from the instance's root administrator.
+ *
+ * THE RULING APPLIED, no new doctrine. IC-141 gives standing to a participant in
+ * the owning project, an ACTIVE ADMINISTRATOR (Membership Architecture 7.3), or
+ * an instance-level credential; 7.3 says administrators see ALL projects; 4.1
+ * makes the solo founder THE administrator, and 4.6 puts the ADMIN_TOKEN holder
+ * above every membership rule. The store already counts the founder as an active
+ * administrator by that name (`#activeAdmins`, `#isAdminMember`). So the
+ * founder has standing, as an administrator, in every project.
+ *
+ * WHY THE BARE `admin` VIEWER AND NOT `member:admin` OR `class:admin`.
+ * `viewerPredicate` compiles bare `admin` UNFILTERED — its root-administrator
+ * spelling — which is the founder's standing exactly. `member:admin` cannot
+ * carry it: the predicate's administrator arm reads a `members` row the founder
+ * never has, and in `store=scratch` (where acts are addressed while sessions
+ * live in `bio`) nothing was ever claimed either, so no store-side check could
+ * find the founder. `class:admin` would stamp a MACHINE class on a human's
+ * session — the inner URL lying about who is asking, which REC-29 closed. And
+ * the founder is told apart by the session ROLE, never by the folded name: a
+ * member ENROLLED with the id `admin` has role `member:admin` and stays an
+ * ordinary member here.
+ *
+ * SCOPE, stated so it is not mistaken for a sweep: this is the viewer for the
+ * two case-document reads REC-130 gated. Every other session-stamped read in
+ * this file still spells `member:` plus `sessMember` — deliberately untouched
+ * here, because several of them also ask POSITIONAL questions of that id
+ * (D-310), and changing what the founder sees across the corpus is a contract
+ * change of its own — rowed as D-422 (MEASURED: the founder session is not shown
+ * a project it does not participate in by op=list either), with IC-147 carrying
+ * only this half. */
+function sessionCaseViewer(role) {
+  const r = typeof role === "string" ? role : "";
+  if (r === "admin") return "admin";   /* the founder — Store.ROOT_ADMIN, an administrator (7.3) */
+  return `member:${r.startsWith("member:") ? r.slice(7) : r}`;
+}
+
 async function caseReader(url, env, storeName) {
   const t = url.searchParams.get("token");
   if (!t) return { viewer: "" };
@@ -2573,7 +2621,7 @@ async function caseReader(url, env, storeName) {
     if (!sOut.answered) return { silent: "session" };
     const sess = sOut.result?.session;
     if (!sess) return { viewer: "" };
-    return { viewer: `member:${sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role}` };
+    return { viewer: sessionCaseViewer(sess.role) };
   }
   return { viewer: "" };
 }
@@ -7529,12 +7577,16 @@ export default {
       const factsOut = await doAnswer(stub.fetch(
         `http://do/casedocfacts?case=${encodeURIComponent(body.caseId)}`
         + `&edition=${encodeURIComponent(String(body.edition))}`
-        /* REC-130: the SAME standing `op=casedocument` answers to. Only a
-           member's own session reaches this line (the region above), so the
-           viewer is that member; one without standing in the owning project is
-           answered NO_CASE_DOCUMENT exactly as for a case that does not exist,
-           rather than CASE_RATIFY_STALE with the document's sha. */
-        + `&viewer=${encodeURIComponent(`member:${sessMember}`)}`));
+        /* REC-130: the SAME standing `op=casedocument` answers to, resolved by
+           the SAME function (`sessionCaseViewer`). Only a HUMAN's own session
+           reaches this line (the region above) — a member's, or the FOUNDER's,
+           which BOB #14 ruled may deliver (D-421). A member without standing in
+           the owning project is answered NO_CASE_DOCUMENT exactly as for a case
+           that does not exist, rather than CASE_RATIFY_STALE with the document's
+           sha. REC-128's merge CORRECTED this comment and the viewer: it said
+           "only a member's own session" and stamped `member:` plus sessMember,
+           and so answered the founder as a member named admin with no standing. */
+        + `&viewer=${encodeURIComponent(sessionCaseViewer(sessRights.role))}`));
       /* REC-53's chokepoint, and the same judgement `op=ratify` records once for
          its whole block: BEFORE the commit a silence refuses the act outright,
          because nothing has been written and 502's sentence — nothing here is a

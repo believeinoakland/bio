@@ -63362,6 +63362,11 @@ function aiTaskScope(cred, op, spec) {
     );
   return { ok: true, viewer: cred.principal };
 }
+function sessionCaseViewer(role) {
+  const r = typeof role === "string" ? role : "";
+  if (r === "admin") return "admin";
+  return `member:${r.startsWith("member:") ? r.slice(7) : r}`;
+}
 async function caseReader(url, env, storeName) {
   const t = url.searchParams.get("token");
   if (!t) return { viewer: "" };
@@ -63384,7 +63389,7 @@ async function caseReader(url, env, storeName) {
     if (!sOut.answered) return { silent: "session" };
     const sess = sOut.result?.session;
     if (!sess) return { viewer: "" };
-    return { viewer: `member:${sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role}` };
+    return { viewer: sessionCaseViewer(sess.role) };
   }
   return { viewer: "" };
 }
@@ -66359,7 +66364,7 @@ var index_default = {
           detail: "caseratify requires caseId, edition (integer), expectedSha, and sig (armored SSH signature over the case document's sha)"
         }, 400);
       const factsOut = await doAnswer(stub.fetch(
-        `http://do/casedocfacts?case=${encodeURIComponent(body2.caseId)}&edition=${encodeURIComponent(String(body2.edition))}&viewer=${encodeURIComponent(`member:${sessMember}`)}`
+        `http://do/casedocfacts?case=${encodeURIComponent(body2.caseId)}&edition=${encodeURIComponent(String(body2.edition))}&viewer=${encodeURIComponent(sessionCaseViewer(sessRights.role))}`
       ));
       if (!factsOut.answered) return storeSilent("caseratify/facts");
       const facts = factsOut.result;

@@ -13735,3 +13735,22 @@ wording above it corrected; REC-128's sentence placed after it as BUILT), and th
 (proposed 1.21.0). On the merged commit `cf0480a5`: **240/240 suites green · 14774 assertions passing**, no skip;
 coverage `--strict` exit 0 unpiped; UI harness exit 0; `status --check` 0 drift; `plancheck --local` 0 fail; the
 deliverer control re-run, all four arms as declared, restores byte-identical.
+
+### ADDENDUM 2026-09-18 RECORD (REC-128 — the founder's standing, the semantic conflict with REC-130)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-a2c230e047820e35a`, branch
+`worktree-agent-a2c230e047820e35a`, from `origin/conduct/rec-128-merge` (`7e9fcd16`) merged with origin/main
+`9ea2eb02`. `npm ci` in all three packages, each `node_modules` a real directory (5.6 GiB free). Defect re-measured
+before any edit: `deliverer.test.mjs` 10 pass / 7 fail. ID minted with `node tools/mintid.mjs IC`: IC-147 (I3).
+Paths: `bio-plane/src/index.mjs` (a new `sessionCaseViewer`, `caseReader`'s session branch, `op=caseratify`'s facts
+read), `bio-plane/test/deliverer.test.mjs` and its control,
+`bio-plane/dist/*` rebuilt, `INTERFACE-CHANGES.md` (IC-147), `DEBT.md` (D-422, minted), `docs/DECIDED.md` on
+regeneration, this block. NOT
+`QUEUE.md`, NOT `INTERFACES.md`, NOT `civicos-ui/**`, NOT `newgroup/**`.
+
+**RELEASED 2026-09-18** by the same worker. Every claimed path is committed on `worktree-agent-a2c230e047820e35a`;
+`QUEUE.md`, `INTERFACES.md`, `civicos-ui/**` and `newgroup/**` were NOT edited. On the merged tree: **240/240 suites
+green · 14789 assertions passing**, no skip; `node scripts/coverage.mjs --strict` exit **0**, read unpiped;
+`node civicos-ui/test/run.mjs` exit **0**; `status --check` 0 drift. `deliverer.control.mjs` ran all six arms AS DECLARED,
+and every restore was byte-identical. `casesign.control.mjs` e/f/g/h re-ran at REC-130's recorded figures. **FOR CONDUCT:**
+resolve IC-147 against I3 as it reads at resolution (it was proposed MINOR on 27.1.0). D-422 is rowed and unscheduled.

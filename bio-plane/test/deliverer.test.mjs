@@ -1,5 +1,6 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/deliverer.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES (src/index.mjs, src/store.mjs) while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/deliverer.control.mjs [arm]`. Each arm armed ALONE and restored from a uniquely-named per-arm pristine copy verified by sha256 AND byte comparison (never `git checkout --`). DECLARED BEFORE ARMING — (a) `baseline`, nothing armed: MUST be green. (b) `fromsig` — THE LIAR THE ROW NAMES: at both acts the deliverer is taken from the SIGNATURE (`member:<the signer's member id>`) instead of from the session: the founder-delivered case document and the founder-delivered bundle then record iris, and gus's delivery records iris, so every DELIVERED arm MUST FAIL (the answers, the read-backs, the container, the public reads) and the structural pin that both acts hand the SESSION to `deliveringPrincipal` MUST FAIL; the legacy arms and the ground STAY GREEN. (c) `backfill` — the legacy liar: the store's one read chokepoint coalesces a NULL deliverer to the signer: both LEGACY arms MUST FAIL, and THE TABLE with them (a back-filled legacy row reads `member:iris` beside signer iris — the first declaration omitted the table and was corrected after its run; the subject was right, the declaration was not), and nothing else. (d) `session-member` — the deliverer taken from `sessMember` (the folded string) instead of the session ROW: the founder's deliveries then record `member:admin`, a member nobody enrolled, so the FOUNDER arms MUST FAIL while gus's delivery STAYS GREEN — which is what tells "from the session" from "from the right field of the session". RESULTS: see the RESULTS line below, written from the harness's own output.
    RESULTS, RUN 2026-09-18 in worktree agent-a01d041e19ab1ad65, every restore byte-identical (src/index.mjs 623,578 B sha256 cc60e5c87b7d…, src/store.mjs 2,430,967 B sha256 dc9188affdf9…): baseline 17/0 · fromsig 6/11 · backfill 14/3 · session-member 10/7 — ALL FOUR AS DECLARED, no arm failed to arm. RE-RUN on the source merged with origin/main e1434b06 (commit cf0480a5; src/index.mjs 632,230 B sha256 e4ed28f6b104…, src/store.mjs 2,490,761 B sha256 9e03344a86a1…): the same four figures, all as declared, every restore byte-identical.
+   ADDED 2026-09-18 by REC-128's merge fix (the founder's standing for an UNSIGNED case document, a semantic conflict with REC-130), two arms: (e) `founder-standing` — `sessionCaseViewer` loses its founder line, so a founder session folds to `member:admin` exactly as both case reads spelled it before the fix: DECLARED to fail the founder's op=casedocument read, the founder's case delivery, and everything downstream of the case never being ratified (caseDoc, pubcase, all three CONTAINER arms), with vera's two STANDING arms and the loose/gus deliveries green. (f) `everyone-admin` — the over-broad fix, every session resolved to the root-administrator viewer: ONLY vera's arms can tell it from the right fix; declared to fail vera's two STANDING arms plus caseDoc/pubcase/container (vera's delivery then SUCCEEDS and the record names her) — that declaration was CORRECTED once after its first run omitted the downstream three, the instrument's error recorded at the arm. RUN 2026-09-18 in worktree agent-a2c230e047820e35a on the merged tree, every restore byte-identical (src/index.mjs 640,589 B sha256 80058a9e12c1…, src/store.mjs 2,495,915 B sha256 faa877d28a16…): baseline 20/0 · fromsig 9/11 · backfill 17/3 · session-member 13/7 · founder-standing 13/7 · everyone-admin 15/5 — ALL SIX AS DECLARED.
  * =========================================================================
  * REC-128 — THE RECORD STATES WHO AUTHORISED AND WHO DELIVERED (BOB #14,
  * 2026-09-18, the honesty half of D-421).
@@ -99,11 +100,12 @@ const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 /* The scratch store's own object, for the reads that answer from `bio` at the
    control plane (public reads) and for writing a LEGACY row exactly as a
    pre-REC-128 plane did — the store's own committer, handed no deliverer. */
-const DO = async (path, body) => {
+const DOIN = async (store, path, body) => {
   const ns = await mf.getDurableObjectNamespace("STORE");
   const init = body === undefined ? undefined : { method: "POST", body: JSON.stringify(body) };
-  return rP(await (await ns.get(ns.idFromName("scratch")).fetch(`http://x/${path}`, init)).json());
+  return rP(await (await ns.get(ns.idFromName(store)).fetch(`http://x/${path}`, init)).json());
 };
+const DO = (path, body) => DOIN("scratch", path, body);
 
 try {
 
@@ -148,6 +150,10 @@ const enrol = async (memberId, roles, capabilities) => {
 await enrol("ruth", { bio: "admin", scratch: "admin" }, ["contribute", "publish", "create_projects"]);
 const GUS = await enrol("gus", { bio: "member", scratch: "admin" }, ["contribute", "publish"]);
 const IRIS = await enrol("iris", { bio: "member", scratch: "member" }, ["contribute", "publish"]);
+/* VERA: an ordinary member of the SAME instance who participates in NO project
+   here — "a member of another project" in IC-141's terms. She is the arm that
+   proves the founder's standing is the founder's and not everybody's. */
+const VERA = await enrol("vera", { bio: "member", scratch: "member" }, ["contribute", "publish"]);
 const IRIS_KEY = mkKey("iris");
 const reg = await POST(`op=signeradd&token=${ADM}${S}`, { keyB64: IRIS_KEY, memberId: "iris", comment: "iris laptop" });
 if (!reg || reg.ok === false) throw new Error(`signeradd: ${JSON.stringify(reg)}`);
@@ -189,8 +195,8 @@ const inquiryMd = (id, question, target) => ["---",
   "## Session Log", "", `### Session ${LATER} | Formation | agent`,
   "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
 let snapSeq = 0;
-const promote = async (id, text, objectType, state) => {
-  const r = await POST(`op=promote&token=${ADM}${S}`, {
+const promote = async (id, text, objectType, state, st = S) => {
+  const r = await POST(`op=promote&token=${ADM}${st}`, {
     bundleId: id, base: null,
     snapKey: `20260918T${String(700000 + (++snapSeq)).slice(-6)}Z_${sha(id).slice(0, 8)}`,
     meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
@@ -209,17 +215,18 @@ const shaOf = async (id) => {
 /* One project, one inquiry, concluded and published by iris: a case document
    authored by her and awaiting a signature. Built twice — the second case is the
    LEGACY one. */
-const authorCase = async (project, lead, info) => {
-  await promote(project, projectFixtureMd(project, { created: NOW, updated: LATER }), "project", "investigating");
-  const c = await DO("projectclaimowner", { projectId: project, memberId: "iris" });
+const authorCase = async (project, lead, info, st = S) => {
+  const storeName = st ? "scratch" : "bio";
+  await promote(project, projectFixtureMd(project, { created: NOW, updated: LATER }), "project", "investigating", st);
+  const c = await DOIN(storeName, "projectclaimowner", { projectId: project, memberId: "iris" });
   if (!c || c.ok !== true) throw new Error(`projectclaimowner: ${JSON.stringify(c)}`);
-  await promote(info, infoMd(info), "information", "collected");
-  await promote(lead, inquiryMd(lead, `Was the transfer ${lead} authorised?`, info), "inquiry", "open");
-  const cc = await GET(`op=conclude&token=${IRIS}${S}&target=${lead}`
+  await promote(info, infoMd(info), "information", "collected", st);
+  await promote(lead, inquiryMd(lead, `Was the transfer ${lead} authorised?`, info), "inquiry", "open", st);
+  const cc = await GET(`op=conclude&token=${IRIS}${st}&target=${lead}`
     + `&conclusion=${encodeURIComponent("The transfer rests on a memo nobody adopted.")}`
     + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`);
   if (!cc || cc.ok === false) throw new Error(`conclude ${lead}: ${JSON.stringify(cc)}`);
-  const pub = await POST(`op=publish&token=${IRIS}${S}`, {
+  const pub = await POST(`op=publish&token=${IRIS}${st}`, {
     project, targets: [lead], roles: allLoadBearing({ targets: [lead] }),
     scope: "Whether the FY2024 transfer was authorised, on the documents in hand.",
     statement: "This case covers the FY2024 transfer only, on the documents in hand at edition 1.",
@@ -232,12 +239,52 @@ const authorCase = async (project, lead, info) => {
 };
 const PROJECT = "PROJ-2026-9128-deliver", INFO = "INFO-2026-9128-memo", LEAD = "INQ-2026-9128-lead";
 const D = await authorCase(PROJECT, LEAD, INFO);
-const caseDoc = async (d) => DO(`casedocument?case=${encodeURIComponent(d.case_id)}&edition=${d.edition}`);
+/* CORRECTED 2026-09-18 (REC-128's merge onto REC-130), never exempted: this read
+   went to the store with NO viewer, which REC-130 (IC-141) now rightly answers
+   NO_CASE_DOCUMENT for an UNSIGNED document — an absent viewer is a stranger.
+   The suite reads the record as the case's OWNER, iris (projectclaimowner above),
+   who has standing in the owning project; the stamp is what the control plane
+   would stamp for her session. A ratified document answers anybody, so the
+   read-backs after ratification are unchanged by it. */
+const caseDoc = async (d) => DO(`casedocument?case=${encodeURIComponent(d.case_id)}&edition=${d.edition}&viewer=member:iris`);
 t("the ground: a case document authored by iris awaits its signature, and it is not ratified",
   [(await caseDoc(D)).ratified, (await caseDoc(D)).delivered_by], [false, null]);
 
+/* ============ 1b. WHO MAY READ AN UNSIGNED CASE DOCUMENT — the FOUNDER may */
+console.log("\n--- 1b. op=casedocument — the FOUNDER's session reads an unsigned case; a member of no project does not ---");
+{
+  /* `op=casedocument` reads `bio`, so this case is authored THERE; the acts
+     below stay in scratch as the rest of the suite does. The founder is an
+     ADMINISTRATOR (Membership Architecture 4.1, 4.6), administrators see every
+     project (7.3), and IC-141 gives an active administrator standing — so the
+     founder reads the unsigned document WHOLE, while vera, an ordinary member
+     who participates in no project, gets the byte-identical not-found a
+     stranger gets. Before REC-128's merge fix the founder read as `member:admin`
+     and got that same not-found. */
+  const DB = await authorCase("PROJ-2026-9128-biocase", "INQ-2026-9128-biolead", "INFO-2026-9128-biomemo", "");
+  const q = `op=casedocument&case=${encodeURIComponent(DB.case_id)}&edition=${DB.edition}`;
+  const raw = async (tok) => { const r = await mf.dispatchFetch(`http://x/api/?${q}${tok ? `&token=${tok}` : ""}`);
+                               return { status: r.status, body: await r.text() }; };
+  const fr = await raw(FOUNDER), vr = await raw(VERA), an = await raw(null);
+  const fj = (() => { try { return rP(JSON.parse(fr.body)); } catch { return null; } })();
+  t("STANDING, the FOUNDER's session reads an UNSIGNED case document through op=casedocument — whole, unratified, the sha to sign",
+    [fr.status, fj && fj.ok, fj && fj.ratified, fj && fj.doc_sha === DB.doc_sha], [200, true, false, true]);
+  t("STANDING, a member of NO project (vera) is answered the not-found a stranger gets, BYTE FOR BYTE — the founder's standing is not everybody's",
+    [vr.status, /NO_CASE_DOCUMENT/.test(vr.body), vr.status === an.status && vr.body === an.body], [404, true, true]);
+}
+
 /* ================================== 2. op=caseratify — THE FOUNDER DELIVERS */
 console.log("\n--- 2. op=caseratify — iris SIGNS, the FOUNDER's session DELIVERS ---");
+/* A member of NO project carrying iris's valid signature is answered exactly as
+   for a case that does not exist (IC-141) — so the founder's delivery below is
+   standing, not an open door. Asked BEFORE the founder ratifies: a ratified
+   document is public and would answer anybody. */
+{
+  const vc = await POST(`op=caseratify&token=${VERA}${S}`, { caseId: D.case_id, edition: D.edition, expectedSha: D.doc_sha,
+    sig: signBytes("iris", `bio-ratify-case ${D.case_id} ${D.edition} ${D.doc_sha}\n`) });
+  t("STANDING, a member of NO project cannot deliver a case ratification: NO_CASE_DOCUMENT, and nothing is committed",
+    [vc && vc.ok, vc && vc.reason, (await caseDoc(D)).ratified], [false, "NO_CASE_DOCUMENT", false]);
+}
 const hc = await POST(`op=caseratify&token=${FOUNDER}${S}`, { caseId: D.case_id, edition: D.edition, expectedSha: D.doc_sha,
   sig: signBytes("iris", `bio-ratify-case ${D.case_id} ${D.edition} ${D.doc_sha}\n`) });
 t("DELIVERED, op=caseratify's answer: iris signed and the FOUNDER delivered — two principals, two fields",

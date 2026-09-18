@@ -10545,3 +10545,47 @@ their sites, never exempted: the exact-version pins in `caseflip`, `casesign`, `
   `ratifyCaseDocument()`, as the control plane hands it (`deliveredBy`), never defaulted to `attestorMember`.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR, ADDITIVE — I5 1.20.0 → 1.21.0.** The base was read at resolution and is unchanged since the proposal (1.20.0). Two nullable columns are added by the additive-column migration; neither is a derived table, so `purge` is unaffected (D-113). There is no backfill, and NULL reads UNDETERMINED by design.
+
+## IC-147 · I3: the FOUNDER's session has an administrator's standing to read an UNSIGNED case document — `op=casedocument` answers it whole and `op=caseratify`'s facts read admits it, where both answered NO_CASE_DOCUMENT · PROPOSED 2026-09-18 (REC-128's merge fix, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (`conduct/rec-128-merge` merged with
+  origin/main `9ea2eb02`): 27.1.0** (IC-139's resolution in the held merge; `main` itself reads 27.0.0). **Proposed
+  MINOR — 27.1.0 → 27.2.0** (or 27.0.0 → 27.1.0 folded into IC-139's bump if CONDUCT lands both at once). **Read the
+  base AT RESOLUTION.**
+- **Proposer:** RECORD, worker `agent-a2c230e047820e35a`, 2026-09-18, respawned by CONDUCT #5 for REC-128.
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (NOT-AFFECTED: no surface calls `op=casedocument` — IC-141's measurement, unchanged —
+  and the founder's signing route gains an answer rather than losing one), `DIST`, `SKILL`, `FRAMEWORK`
+  (NOT-AFFECTED: no reader).
+- **Design:** IC-141's own standing rule, unchanged — *a participant in the owning project, an ACTIVE ADMINISTRATOR
+  (Membership Architecture 7.3), or an instance-level credential*; Membership Architecture 4.1 (the solo founder IS the
+  administrator), 4.6 (the ADMIN_TOKEN holder is the root of trust), 7.3 (administrators see all projects); D-421 as
+  BOB #14 corrected it (a founder's password session may deliver a ratification).
+
+**THE DEFECT, MEASURED BEFORE ANY EDIT.** On the merge of REC-128 onto REC-130, `deliverer.test.mjs` read **10 pass,
+7 fail**. Both case reads spelled the session's viewer `member:` plus the folded role; the founder's role is the bare
+`admin`, so the founder read as `member:admin`, which `viewerPredicate` answers as a member with no participation and
+no `members` row. So the founder was answered NO_CASE_DOCUMENT for every unsigned case document and could not deliver a
+case ratification — a refusal of an act BOB #14 ruled ALLOWED, arriving through a gate built for a different question.
+
+**THE SHAPE.** One function, `sessionCaseViewer(role)` in `src/index.mjs`, resolves a session for BOTH readers
+(`caseReader`'s session branch for `op=casedocument`, and `op=caseratify`'s facts read): the founder's role `admin`
+→ the bare viewer `admin`, which `viewerPredicate` compiles unfiltered (its root-administrator spelling); every other
+session → `member:<id>` exactly as before. The founder is told apart by its session ROLE, never by the folded name, so a
+member enrolled with the id `admin` (role `member:admin`) is still an ordinary member here. **Nothing else moves:**
+strangers, members of other projects, `probe` and `daemon` get the byte-identical not-found answer (`casesign.test.mjs`
+74/0; `casesign.control.mjs` e/f/g/h re-run at 66/8, 67/7, 72/2, 13/7, the figures REC-130 recorded).
+
+**WHY MINOR** (IC-25's test): nothing that answered before is refused or changes meaning; one principal is answered
+where it was refused, which is the design's answer for that principal.
+
+**WHAT IT DELIBERATELY DOES NOT DO — D-422.** Every OTHER session-stamped read still folds the founder to
+`member:admin`, and it was MEASURED to matter: in `bio`, `op=list` shows the ADMIN_TOKEN a project the founder's own
+session does not see. Closing that changes what the founder sees across the corpus and touches sites that ask
+POSITIONAL questions of the same id (D-310), so it is rowed, not swept.
+
+**Suites:** `bio-plane/test/deliverer.test.mjs` — its direct store read of an UNSIGNED case document CORRECTED to stamp
+the owner's viewer, with the dated reason (never exempted); new §1b (the founder reads an unsigned case through
+`op=casedocument`; vera, a member of no project, gets a stranger's bytes) and a §2 arm (vera carrying iris's valid
+signature is answered NO_CASE_DOCUMENT and nothing is committed). NEGATIVE CONTROL: `node test/deliverer.control.mjs`
+arms `founder-standing` and `everyone-admin`, recorded in the suite's `NEGATIVE CONTROL:` line.
