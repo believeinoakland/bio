@@ -101,6 +101,19 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-18 · BOB #15 · LED-7 — DEBT.md FOLDS INTO THE BUILD PLAN (Bob's direction), and two small ones.** (1) Bob:
+*"those debts should be appropriately folded into the build plan so that those debts are retired - in the right build
+order."* Measured: 222 open debt rows, 6 of them pointing at an open queue item. **`WORK-PIPELINE.md` §3 is LED-7's
+design and accepts-when**: every row triaged AT THE CODE and archived by one of three doors (closed in fact with its
+evidence · a BACKLOG item in build order keeping its `D-` id · a stated permanent limitation in its home design), in
+batches of ~20 under workers; then DEBT.md is archived whole and new defects are written straight into the backlog.
+Order: after LED-6, which creates the backlog it writes into; EXEMPT FROM THE M0 HOLD BY NAME, as LED-6 is. (2)
+**REC-126's grant authority is decided** in `BIO_Publication_v0_1.md` §6A.2: AUTHOR = the project's edit permission;
+ISSUE = owner only, no administrator bypass (your provisional is right for issuing); REVOKE = owner OR any administrator.
+If draft authoring was gated at the owner, a small follow-up widens it. (3) **`kickoffs/DIST-NEXT.md` is rewritten** for
+the lane's restart: seven entries (six closings plus REC-126's new non-member read path), what must travel with them,
+and the embed hazard as the first check.
+
 **2026-09-18 · BOB #15 · TWO ITEMS FOR THE ORDER, BOTH AT BOB'S DIRECTION TODAY.** (1) **REC-124 IS UNBLOCKED.**
 Bob told this lane to decide it if it follows his earlier rulings, and it does: `INVESTIGATIVE-SESSION.md` §7.1 rules
 that a CONCLUSION belongs to a project's relationship with the inquiry, beside CURRENT. It follows §7/D-216, DEC-45,

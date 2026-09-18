@@ -42,22 +42,39 @@ and history belong in the design document the row cites, or in the archive.
 closed id is in either; the cache holds ≤ 8 rows and no `blocked` row; every cache row's `depends-on` is met; both files
 are within budget.
 
-## 3. DEBT.md — only what supports development
+## 3. DEBT.md FOLDS INTO THE BUILD PLAN, and is retired as a live file
 
-`DEBT.md` stays the register of what we KNOW is wrong or owed, but a session never needs to read it to follow the
-process, because **every debt row that needs work gets a BACKLOG item, and the row's disposition names it.** So:
-- **An open row is FIELDS**: id · class · date · what it costs (≤ 3 lines) · what closing it takes (≤ 3 lines) ·
-  disposition — a BACKLOG/QUEUE id, or *accepted, not scheduled, because …* (one line). ≤ 1 KB.
-- **Its narrative moves VERBATIM to the archive** (`docs/archive/ledgers/DEBT-narrative-2026-09.md`) with the row
-  keeping a one-line pointer — the same move that made archiving closed rows safe: `decided.mjs` and
-  `ledger.mjs find` still reach every word.
-- **A closed row leaves in the commit that closes it** (LED-5, unchanged).
-- It is a LOOKED-UP file (by id). The actionable part of it reaches sessions through the backlog.
+Bob, 2026-09-18: *"those debts should be appropriately folded into the build plan so that those debts are retired - in
+the right build order. Once in the build plan, they'll eventually be worked on when they are included in a tranche of
+QUEUE.md entries."* **Measured that day:** 222 open rows, of which **6** had a disposition naming an open queue item,
+**~200** carried a milestone label and nothing that would ever schedule them, and **54** dated from July. A register
+nothing drains is a list of work nobody does, and the estate had already measured one row outliving its own remedy by
+38 days (D-225). The earlier version of this section kept DEBT.md as a register beside the backlog; Bob's direction
+replaces it.
+
+**LED-7 — THE FOLD.** Every open row is TRIAGED AT THE CODE (a row is a claim about the day it was written, `CLAUDE.md`
+§5) and leaves DEBT.md by exactly one of three doors, recorded on the row as it goes to the archive:
+1. **ALREADY CLOSED IN FACT** — the remedy exists on the tree; the evidence (the file, the check, the sha) is written on
+   the row and it is archived closed.
+2. **REAL WORK** — it becomes a BACKLOG item in build order, keeping its `D-` id so every citation still resolves, with
+   the row's cost and closing text as its scope, its `depends-on` checked against `node tools/status.mjs`, and its
+   place in the order set by BOB. It reaches a session only when a refill brings it into the cache.
+3. **A DELIBERATE, PERMANENT LIMITATION** — stated in its construct's home design document (its Incomplete sections, or
+   a stated limitation), then archived pointing there. Measured before triage: about 6 of 222 dispositions read this way
+   (D-28, D-38, D-45, D-111, D-306, half of D-396).
+
+**After the fold, a newly found defect is written DIRECTLY as a BACKLOG item** (class `defect`, a `D-` id minted as
+today) — there is no second list for work to wait in. `DEBT.md` is archived whole once empty; `owed.mjs`, `plancheck`'s
+disposition arm and `ledger.mjs` are retargeted to the backlog in the same item, and `CLAUDE.md` §4's *write it in
+DEBT.md* changes to the backlog in LED-7's own landing, not before. **Performed in batches of ~20 rows** by workers
+under CONDUCT, each row verified at the code; **accepts when** every open row has left by one of the three doors with its
+evidence, the id multiset (live, archive and backlog together) is identical before and after, and BOB has ordered the
+new backlog items.
 
 ## 4. What this replaces
 
 LED-4 (*open rows cut to their fields and ordered*) is subsumed: its cut and its ordering are steps 2–3 of the migration
-below. The QUEUE budget in `tools/ledger.mjs` (150 KB) moves to `BACKLOG.md`; the cache gets 40 KB.
+below. LED-7 (the fold, §3) follows LED-6, since it writes into the backlog LED-6 creates. The QUEUE budget in `tools/ledger.mjs` (150 KB) moves to `BACKLOG.md`; the cache gets 40 KB.
 
 ## 5. The migration — one item, CONDUCT's own act on CONDUCT's own files, performed by hand with the tool
 
@@ -65,6 +82,6 @@ below. The QUEUE budget in `tools/ledger.mjs` (150 KB) moves to `BACKLOG.md`; th
 each with a negative control. (2) Move every non-row block of `QUEUE.md` (handover, per-area narrative, drained inbox
 entries) VERBATIM to the archive, conserving line multisets as LED-3 did. (3) Cut every open row to its fields — the cut
 text moving verbatim to the archive — and order them (BOB checks the order against `status.mjs` before it lands). (4)
-Split: `running` + the first runnable rows to the cache, the rest to `BACKLOG.md`. (5) The same for `DEBT.md` (§3).
+Split: `running` + the first runnable rows to the cache, the rest to `BACKLOG.md`.
 **Accepts when:** every invariant arm passes and fails on its control; the id multiset of open ∪ archived is identical
 before and after; `QUEUE.md` ≤ 40 KB; `tools/readbudget.mjs` adds `QUEUE.md` to the read-whole set.

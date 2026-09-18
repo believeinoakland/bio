@@ -1,81 +1,47 @@
-# DIST — resume here. Rewritten 2026-09-13 as a STAND-DOWN handoff.
+# DIST — resume here. Rewritten 2026-09-18 by BOB #15, standing the lane up again.
 
-> **STAND-DOWN, 2026-09-13: 0 stopped, 0 alive, listed.**
-> This session spawned no tasks and no subagents — all work ran in-session — so
-> there were none to stop, and none are alive. No deploy was in flight at
-> stand-down: `node tools/waitquiet.mjs --check` read QUIET, and no
-> `deploy.mjs` / `deploy-fleet.mjs` / `wrangler deploy` process existed.
-> Working tree clean, nothing unpushed, `HEAD == origin/main`.
+The previous version of this file (2026-09-13) described 0.57.0 and is superseded; it is in git history. The only DIST
+session since then (2026-09-16) confirmed `main` green and cuttable, asked *"standing by for your sequencing"* of a
+window nobody was reading, and was swept idle. **DIST is now a STANDING LANE and decides WHEN to cut by rule**
+(`kickoffs/DIST.md`, *WHEN DIST CUTS*). Read `CLAUDE.md`, then `kickoffs/DIST.md`, then this.
 
-## READ THIS BEFORE ANYTHING ELSE: THE STAND-DOWN ORDER'S PREMISE WAS OUT OF DATE
+## Where things stand — POINTERS, measured by BOB #15 on 2026-09-18; re-measure every one before acting on it
 
-The order describes DS-4 as *"half done: 0.57.0 cut and signed at ba05e9c,
-deploy+serve-wait+row-landing+VF-4 handoff remaining."* **That was true for about
-an hour on 2026-09-13 and is not true now.** The order also said to rewrite this
-file *from the actual current state*, and this is that state, measured at
-stand-down rather than remembered:
+- The latest signed release is **0.58.0**: `release/RELEASE.json` committed at `db7589b8` (2026-09-14); the tag `v0.58.0`
+  points at `9ed18019`, which is OFF the mainline (measured: not an ancestor of `origin/main`). `origin/main` was
+  **834 commits** past the manifest when this was written.
+- **A CUT IS OWED NOW under the rule.** Six integrated fixes close security or disclosure defects that are in no signed
+  release. This is a STARTING list from two sources that each missed something, so rebuild it from
+  `git log db7589b8..origin/main` against the rows (`node tools/ledger.mjs find <ID>`) before you trust it:
+  1. **REC-103** — the frontier's unread viewer was a leak. Merge `4263696a` (2026-09-16). CONDUCT's list omitted it; BOB found it in the log.
+  2. **REC-123** — an `ai` credential could RATIFY and publish in a member's name. `85a5dd7a`, IC-132.
+  3. **REC-125** — the operator's bearer tokens could ratify (D-421). `85ce9511`, IC-137.
+  4. **MK-1** — an observation could be published with the observer's handle. `103c62c0`, IC-133 (I3), IC-134 (I5).
+  5. **REC-130** — unsigned case documents were readable and enumerable by strangers, with a second leak through
+     `op=caseratify`'s refusal details. `a32fda24`, IC-141, I3 MAJOR.
+  6. **REC-129** — `op=stats`/`selftest`/`livefire` gave members and probes instance-wide lead and observation counts.
+     `9d705bdb`, IC-144 MAJOR, **superseded in part by REC-131 (running when this was written)**. REC-129 alone
+     discloses strictly less than 0.58.0 does, so **do NOT hold the cut for REC-131.** Cut with what has landed, and
+     cut again when REC-131 lands, under the same rule.
 
-```
-origin/main                3607b5c      (ba05e9c is an ancestor — the cut, then the deploy fix)
-release/RELEASE.json       0.57.0 · 4 assets · fleetSig present
-biosmoke7    /version      0.57.0
-pdf-worker   /version      {"ok":true,"version":"0.57.0"}
-agent-worker /version      {"ok":true,"version":"0.57.0"}   service PLANE -> biosmoke7
-ocr-worker   /version      {"ok":true,"version":"0.57.0","engine":"tesseract-wasm",...}
-plancheck                  0 fail, 0 warn
-gate                       GREEN class FULL — 180/181 suites, 1 skipped, 11,008 assertions
-```
+  7. **REC-126** — the review copy: a NEW READ PATH FOR NON-MEMBERS (a grant's bearer secret reads one unratified case).
+     Not a closing but security-relevant: it must be in a release only after its gate and its negative controls ran, and
+     the release notes name it. Integrated by CONDUCT #5 after this list was first written — confirm from the log.
 
-**DS-4's deploy, serve-wait and fleet rollout are DONE.** Do not re-run them
-expecting them to be missing. If you want to re-verify rather than trust this
-file — and you should, that is the standing rule — the four probes above are the
-whole check and take under a minute.
+  **They must travel with:** REC-128 plus its fix-up (`dcb726fb`; IC-139, IC-140 on I5, IC-147). Without IC-147, a
+  build carrying REC-130 refuses case ratification delivered by the founder. Also REC-100's constraint (`8bb422e4`,
+  IC-130): the plane at I3 ≥ 24.0.0 and `agent-worker` deploy TOGETHER. I3 was 29.3.0 and I5 1.21.0 at `a6bdfcbb`.
+- **Interfaces moved a long way** — I3 is at 29.x (IC-130 MAJOR at 24.0.0 requires `agent-worker` to ship WITH the plane:
+  an old one silently drops model-judged steps). Read every IC since 0.58.0 in `INTERFACE-CHANGES.md` and state which
+  fleet members move with the plane; FLEET builds a member if one needs building.
+- **FIRST, before cutting: the embed hazard** (`kickoffs/DIST.md`, last paragraph) — verify whether `newgroup`'s
+  `npm run embed` replaces the signed embed with an unsigned rebuild. It was reported 2026-09-16 and never recorded.
+- Carried from the 2026-09-13 file and NOT re-verified: D-297 (the installer does not fetch, verify or upload fleet
+  member bundles — a group installing receives the plane but not the fleet); five copies of the generated-embed
+  recogniser across five suites; tags 0.56.0/0.57.0 never pushed and `v0.58.0` off-mainline.
 
-## WHAT IS ACTUALLY LEFT
+## The one gated act
 
-- **VF-4 — the finale, and the only thing DS-4 was blocking.** Everything it
-  needs is live at one coherent version. Its gate is a full CHECK run against a
-  concluded inquiry in the instance's own scratch namespace, swept afterwards.
-- **D-297 — the installer's half, and the honest caveat on this release.**
-  `RELEASE.json` on `main` is what `newgroup` serves to any future install, so a
-  group installing today receives 0.57.0 **and a manifest naming three members it
-  cannot yet install**: the installer does not fetch, verify or upload member
-  bundles or their upload parts. The plane installs correctly; the fleet does
-  not. That is D-115's "quietly doing less" and it is stated here rather than
-  discovered later. The signed manifest it will need already exists.
-- **Five copies of one predicate.** The structural generated-embed recogniser and
-  its count live in `bounds.test.mjs`, `case-opened.test.mjs`, `op-claims.mjs`,
-  `op-claims.test.mjs` and `publishedcase.test.mjs`. Publishing the fleet moved
-  the count in all five and each had to be amended by hand. Consolidating them is
-  worth an item.
-
-## WHAT THIS LANE BUILT, so you do not rebuild it
-
-| tool | what it is for |
-| --- | --- |
-| `tools/deploy-fleet.mjs` | deploys ONE member to ONE instance, every service target templated from the slug. Refuses a non-member, a missing `--instance` (no default, deliberately), and a binding target that does not exist — pre-flight, so the refusal is ours and not Cloudflare's 10143 |
-| `tools/release-assemble.mjs` | assembles + signs a release carrying the whole fleet. Eight refusals, all driven |
-| `tools/sign-sshsig.mjs` | signs from the `BIOKEY-RAW1` seed. `ssh-keygen -Y sign` CANNOT: it wants an OpenSSH private key file. Stock `ssh-keygen -Y verify` remains the acceptance authority and checks everything |
-| `bio-plane/scripts/resolve-version.mjs` | ONE version across plane and every member, both directions. `deploy.mjs` refuses on skew |
-| `bio-plane/src/tokens.mjs` | DS-3's cascade third level: `instanceClaudeStatus` / `instanceClaudeToken`, no write path anywhere |
-| `tools/jsonc.mjs` | one string-aware JSONC parser, shared |
-
-## THE TRAPS THIS LANE PAID FOR
-
-- **`ssh-keygen -Y sign` does not accept this project's seed.** Use
-  `tools/sign-sshsig.mjs`. Verify with stock `ssh-keygen` — always.
-- **Re-cut the installer in the same act as the release.** It embedded 0.56.0
-  while the release was 0.57.0 until a suite caught it. That is D-106 exactly.
-- **`git checkout --` restores to HEAD, not to what you had** — now in CLAUDE.md's
-  traps after biting twice.
-- **Never suppress stderr on `git add`.** A failed add plus `2>/dev/null` gave a
-  no-op commit and a push reporting "Everything up-to-date" over an empty release.
-- **Read exit status unpiped.** This session got that wrong six times and caught
-  it six times; the mechanical fix is still unbuilt (D-293 names a pre-push hook).
-
-## AUTHORITY, unchanged
-
-The baton is held by **DIST**, `granted_by: bob`, scope `plane`, and its note
-records: *"Bob authorised DIST 2026-08-04 to deploy the accumulated work."* This
-session held DS-4 back three times asking for a decision that was already
-recorded and already its own. **Read the baton before you ask.**
+Cut, sign, tag and push are yours and need nobody. **Deploying the plane and the installer are gated** (`CLAUDE.md` §4):
+send the request to the BOB session by `SendMessage` — version, what it closes, the members that move with it, the gate's
+evidence — and continue. BOB carries it to Bob.
