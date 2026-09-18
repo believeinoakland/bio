@@ -696,22 +696,56 @@ export function nextStep(state) {
  * governed split, the condition vocabulary. Nothing here decides whether an
  * entry is legal — this member composes it and the plane refuses it if it is
  * not, which is the same division as every other fence in this Worker. */
+/* REC-100 / IC-130 — A MODEL-JUDGED `PRESENT` IS NOT RECORDED AS `PRESENT`,
+ * because this entry has nothing to point at, and the record now refuses a
+ * `PRESENT` that names nothing (C-22.10, whose `run` carve-out REC-100 deleted
+ * under BOB #14's ruling, D-366).
+ *
+ * `OBSERVATION-LOG-DESIGN.md` §4.4 gives this caller exactly two options: supply
+ * the referent of what the model judged PRESENT (the capture or content it
+ * found), or do not record PRESENT. THE FIRST IS NOT AVAILABLE HONESTLY, and why
+ * is the decision:
+ *   - This entry is a CONTROL-FLOW entry (`subject` is the transition). The
+ *     model's `observed` is a JUDGEMENT; nothing in `JUDGEABLE` carries what was
+ *     found, and adding a field for it would take a capture sha from the MODEL —
+ *     which the plane does not verify for any authority, so it would be a
+ *     referent that costs nothing to produce: invented to get past the gate.
+ *   - An `observation` referent (a PRESENT row of this run, which the plane DOES
+ *     verify) is the ROLLUP's form. Picking "the latest PRESENT row" here would be
+ *     this member asserting the model's judgement rests on a row it never named —
+ *     an association nobody made, and the same invention one level up.
+ * So the SECOND option, and the state is `LOOKED_INDETERMINATE`, not
+ * `NEVER_LOOKED`: something DID look (the model says so), and what the RECORD can
+ * establish from it is that it cannot tell — the weaker, true claim. The model's
+ * own word is kept verbatim in `detail`, prefixed so no reader mistakes the
+ * state for the judgement, and the run's output COUNTS every such entry
+ * (`present_unbacked`) so the downgrade is visible rather than silent. When a
+ * look that can carry a referent exists (a sub-session's capture), it is the
+ * PLANE's writers that record it with one — the capture drain already does. */
+export const PRESENT_UNBACKED_NOTE =
+  "the model judged PRESENT at this step, but this entry can name nothing that was found, "
+  + "and the record refuses a PRESENT that names nothing (C-22.10) — so it is recorded as "
+  + "LOOKED_INDETERMINATE: a look happened, and the record cannot tell from it that the thing is there";
+
 export function stepLog(state, decision) {
   const s = state || {};
   const d = decision || {};
+  const judgedPresent = s.observed === "PRESENT";
+  const why = String(d.why || "");
   return {
     level:   s.level || null,
     subject: `${String(s.step || FIRST_STEP)} -> ${String(d.step || "?")}`,
     /* NEVER_LOOKED is the honest default for a control-flow entry: the step's
        own transition establishes nothing about the world. A step that DID look
        supplies its own state, and D-129's whole point is that the four are
-       different claims. */
-    state:   s.observed || "NEVER_LOOKED",
+       different claims — EXCEPT `PRESENT`, which this entry cannot back (see
+       the note above `PRESENT_UNBACKED_NOTE`). */
+    state:   judgedPresent ? "LOOKED_INDETERMINATE" : (s.observed || "NEVER_LOOKED"),
     governed: s.governed === true,
     condition: s.condition || null,
     terminal: d.step === "close",
     bound:    d.step === "close" ? (d.bound || null) : null,
-    detail:  String(d.why || "").slice(0, 500),
+    detail:  (judgedPresent ? `${PRESENT_UNBACKED_NOTE}. ${why}` : why).slice(0, 500),
   };
 }
 

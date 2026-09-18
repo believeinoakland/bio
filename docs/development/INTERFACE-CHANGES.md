@@ -9650,7 +9650,7 @@ I5 + I3 change with a UI affordance, its own row and its own IC. And the single-
 ## IC-130 · I3: THE ROLLUP REFERENT — `op=airunlog`'s `result_kind` gains `observation`, and `op=airuntick` / `op=airunclose` now REFUSE a `run` `PRESENT` that names nothing (C-22.10's `run` carve-out DELETED, D-366 CLOSED) · PROPOSED 2026-09-18 (REC-100, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS tree's `INTERFACES.md`:
-  23.3.0.** **PROPOSED AS MAJOR — 23.3.0 → 24.0.0 — AND THAT DEPARTS FROM THE SPAWN BRIEF, WHICH
+  23.5.0 (re-read after the rebase onto `2d51e5d3`; it was 23.3.0 at proposal).** **PROPOSED AS MAJOR — 23.5.0 → 24.0.0 — AND THAT DEPARTS FROM THE SPAWN BRIEF, WHICH
   SAID ADDITIVE.** The brief named only the read half (*"`result_kind` gains a value on
   `op=airunlog`'s read"*), and that half IS additive. The tree says the item has a second half the
   brief's one-line classification did not cover: deleting the carve-out makes `op=airuntick`
@@ -9728,3 +9728,14 @@ the design's Incomplete sections, not decided here.
   expected NOT-AFFECTED, to be answered.
 
 **RESPONSES:** not yet collected.
+
+**MIGRATION (step 6 of the protocol), DONE ON THE SAME BRANCH — 2026-09-18, REC-100 under CONDUCT #4's
+authorization to widen into FLEET's `agent-worker/**`.** CONDUCT #4 ACCEPTED the MAJOR class and
+declined to merge the plane half alone, because the one affected consumer would have dropped entries
+silently. Its migration: (1) `stepLog` records a model-judged PRESENT as `LOOKED_INDETERMINATE` with
+the judgement stated, never with an invented referent; (2) the drive loop reads `refused[]`, publishes
+every refused entry (`log_refused`, and in `refusals`) and counts `logged` from what the plane
+APPENDED; (3) section R of `agent-worker/test/harness.test.mjs` drives the tick against the REAL plane
+rather than a mock, with a negative control per half. **agent-worker's answer gains two keys,
+`log_refused` and `present_unbacked`, and `logged` now counts appended entries rather than ticks** —
+equal whenever nothing is refused, which was every case before this IC.

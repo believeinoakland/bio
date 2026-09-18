@@ -285,22 +285,26 @@ function nextStep(state) {
   }
   return { step: "close", why: `'${at}' has no transition`, bound: "completed" };
 }
+var PRESENT_UNBACKED_NOTE = "the model judged PRESENT at this step, but this entry can name nothing that was found, and the record refuses a PRESENT that names nothing (C-22.10) \u2014 so it is recorded as LOOKED_INDETERMINATE: a look happened, and the record cannot tell from it that the thing is there";
 function stepLog(state, decision) {
   const s = state || {};
   const d = decision || {};
+  const judgedPresent = s.observed === "PRESENT";
+  const why = String(d.why || "");
   return {
     level: s.level || null,
     subject: `${String(s.step || FIRST_STEP)} -> ${String(d.step || "?")}`,
     /* NEVER_LOOKED is the honest default for a control-flow entry: the step's
        own transition establishes nothing about the world. A step that DID look
        supplies its own state, and D-129's whole point is that the four are
-       different claims. */
-    state: s.observed || "NEVER_LOOKED",
+       different claims — EXCEPT `PRESENT`, which this entry cannot back (see
+       the note above `PRESENT_UNBACKED_NOTE`). */
+    state: judgedPresent ? "LOOKED_INDETERMINATE" : s.observed || "NEVER_LOOKED",
     governed: s.governed === true,
     condition: s.condition || null,
     terminal: d.step === "close",
     bound: d.step === "close" ? d.bound || null : null,
-    detail: String(d.why || "").slice(0, 500)
+    detail: (judgedPresent ? `${PRESENT_UNBACKED_NOTE}. ${why}` : why).slice(0, 500)
   };
 }
 var JUDGEABLE = [
@@ -651,6 +655,8 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   const trace = [];
   const refusals = [];
   let logged = 0, submitted = 0, adjusted = 0, verbatimResubmits = 0;
+  const logRefused = [];
+  let presentUnbacked = 0;
   const runRead = planeAnswer(await call("airun", { run: runId }), "airun");
   if (runRead.silent)
     return { refusal: planeSilent(runRead.silent) };
@@ -755,15 +761,32 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     });
     const spentThisStep = calls - callsAtStepStart + 1;
     const consume = { ...work.consume || {}, runtime: spentThisStep };
+    const entry = stepLog(state, decision);
+    if (state.observed === "PRESENT") presentUnbacked += 1;
     const tick = await call(
       "airuntick",
       null,
-      { run: runId, log: [stepLog(state, decision)], consume }
+      { run: runId, log: [entry], consume }
     );
     if (!tick.reached) return { refusal: planeSilent(tick) };
     if (tick.status === 200 && tick.body?.ok === true) {
-      logged += 1;
       const t = tick.body.result ?? tick.body;
+      const refusedEntries = Array.isArray(t?.refused) ? t.refused : [];
+      const appendedNow = t?.appended != null && Number.isFinite(Number(t.appended)) ? Number(t.appended) : t?.ticked === false ? 0 : Math.max(0, 1 - refusedEntries.length);
+      logged += appendedNow;
+      for (const r of refusedEntries) {
+        const named = {
+          at: "airuntick.log",
+          step: state.step,
+          to: decision.step,
+          code: r?.code ?? r?.reason ?? null,
+          check: r?.check ?? null,
+          ...r?.referent_fault ? { referent_fault: r.referent_fault } : {},
+          plane: r ?? null
+        };
+        logRefused.push(named);
+        refusals.push(named);
+      }
       state = { ...state, budget: { ...state.budget } };
       for (const [k, v] of Object.entries(consume))
         if (state.budget[k]) state.budget[k] = { ...state.budget[k], consumed: state.budget[k].consumed + Number(v) };
@@ -818,6 +841,8 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     adjusted,
     verbatimResubmits,
     resumedFrom,
+    logRefused,
+    presentUnbacked,
     /* FL-5's FACTS, PUBLISHED RATHER THAN HELD. FL-3 computed the fence's answer
        into a local nobody could read and asserted it by grepping a note — which
        measured nothing (see the fan-out step). What a suite, and a later reader,
@@ -1132,6 +1157,13 @@ async function handleRun(req, env) {
     passes: drive.passes,
     ended: drive.ended,
     logged: drive.logged,
+    /* REC-100 / IC-130 — WHAT THE LOG DID NOT TAKE, AND WHAT IT TOOK AS LESS.
+       `log_refused` names every step entry the plane refused (also in
+       `refusals`), so `logged` + `log_refused.length` is what this segment SENT;
+       `present_unbacked` counts steps where the model judged PRESENT and the
+       entry could name nothing, so it was recorded LOOKED_INDETERMINATE. */
+    log_refused: drive.logRefused,
+    present_unbacked: drive.presentUnbacked,
     submitted: drive.submitted,
     refusals: drive.refusals,
     adjusted: drive.adjusted,

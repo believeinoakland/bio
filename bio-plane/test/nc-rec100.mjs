@@ -43,11 +43,20 @@ const STORE = join(PLANE, "src/store.mjs");
 const AIRUN = join(PLANE, "src/airun.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 10000;
+const AW = join(REPO, "agent-worker");
+const AW_HARNESS = join(AW, "src/harness.mjs");
+const AW_INDEX = join(AW, "src/index.mjs");
+/* The plane arms run the three plane suites; the two `aw-*` arms (added when
+   CONDUCT #4 extended REC-100 to its consumer migration) run agent-worker's
+   `harness` suite, whose section R drives the REAL plane's tick. Both baselines
+   run all four. */
 const SUITES = ["observation-log", "airun", "scheduler"];
+const AW_SUITES = ["aw:harness"];
 
-const runSuites = () => SUITES.map((s) => {
-  const r = spawnSync(process.execPath, [`test/${s}.test.mjs`],
-    { cwd: PLANE, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+const runSuites = (list = SUITES) => list.map((s) => {
+  const aw = s.startsWith("aw:");
+  const r = spawnSync(process.execPath, [`test/${aw ? s.slice(3) : s}.test.mjs`],
+    { cwd: aw ? AW : PLANE, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   const out = `${r.stdout || ""}${r.stderr || ""}`;
   const m = /(\d+) pass(?:ed)?, (\d+) fail(?:ed)?/.exec(out);
   return { suite: s, pass: m ? +m[1] : -1, fail: m ? +m[2] : -1, exit: r.status,
@@ -65,7 +74,7 @@ function arm(file, find, replace) {
   return { armed: true, matches: n };
 }
 
-const BASELINE = { why: "nothing armed", files: [AIRUN, STORE], mustFail: [], mustNotFail: [],
+const BASELINE = { why: "nothing armed", files: [AIRUN, STORE, AW_HARNESS, AW_INDEX], mustFail: [], mustNotFail: [],
                    patch: () => ({ armed: false, matches: 0 }) };
 
 const ARMS = {
@@ -194,6 +203,36 @@ const ARMS = {
                             "  return \"unresolved\";"),
   },
 
+  /* THE CONSUMER MIGRATION'S TWO HALVES, each reverted ALONE. */
+  "aw-steplog": {
+    why: "agent-worker's stepLog writes the model's PRESENT verbatim again (REC-100's (1) reverted)",
+    files: [AW_HARNESS], suites: AW_SUITES,
+    mustFail: ["aw:harness: R1:", "aw:harness: R1b", "aw:harness: A8 (REC-100)"],
+    mustNotFail: ["aw:harness: R2:", "aw:harness: R2b"],
+    patch: () => arm(AW_HARNESS,
+      '    state:   judgedPresent ? "LOOKED_INDETERMINATE" : (s.observed || "NEVER_LOOKED"),',
+      '    state:   s.observed || "NEVER_LOOKED",'),
+  },
+  "aw-refused": {
+    why: "agent-worker never reads refused[] and counts a tick logged off the envelope (REC-100's (2) reverted)",
+    files: [AW_INDEX], suites: AW_SUITES,
+    mustFail: ["aw:harness: R2:", "aw:harness: R2b"],
+    mustNotFail: ["aw:harness: R1:"],
+    /* BOTH HALVES OF THE OLD SITE ARE RESTORED, and that is a correction the
+       first run forced: arming only `refusedEntries = []` left `logged` counted
+       from the plane's `appended`, so the arm was half the old behaviour, and
+       R2b (then a free 0 = 0 comparison) stayed green. Now `refused[]` is unread
+       AND `logged` counts the tick, exactly the pre-REC-100 site. */
+    patch: () => {
+      const a1 = arm(AW_INDEX,
+        "      const refusedEntries = Array.isArray(t?.refused) ? t.refused : [];",
+        "      const refusedEntries = [];");
+      if (!a1.armed) return a1;
+      const a2 = arm(AW_INDEX, "      logged += appendedNow;", "      logged += 1;");
+      return { armed: a2.armed, matches: a2.matches };
+    },
+  },
+
   baseline_end: BASELINE,
 };
 
@@ -221,7 +260,7 @@ for (const name of names) {
   const armed = a.patch();
   console.log(`  ARMED         ${armed.armed ? "yes" : "NO"}  (patch matched ${armed.matches}×)`);
   if (!armed.armed && !isBase) { console.log("  FINDING       the arm DID NOT ARM — a finding, never a retry"); finding++; }
-  const rs = runSuites();
+  const rs = runSuites(a.suites || (isBase ? [...SUITES, ...AW_SUITES] : SUITES));
   for (const r of rs) console.log(`  RESULT        ${r.suite}: ${r.pass} pass, ${r.fail} fail, exit ${r.exit}`);
   const failing = rs.flatMap((r) => r.failing);
   for (const l of failing) console.log(`                ${l.slice(0, 150)}`);

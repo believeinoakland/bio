@@ -470,6 +470,16 @@ console.log("\n--- A8 · log-always: every row logs, and the entry is in the PLA
   /* D-104's split travels: our governor holding a host is a fact about US. */
   t("a governed observation carries the flag the plane's C-22.2 reads",
     stepLog({ step: "plan", governed: true }, { step: "fanout", why: "w" }).governed, true);
+  /* REC-100 / IC-130 — THE UNIT HALF OF SECTION R. A model-judged PRESENT is
+     not written as PRESENT: this entry can name nothing that was found, and the
+     plane now refuses a PRESENT that names nothing (C-22.10). */
+  const judged = stepLog({ step: "collect", level: "document", observed: "PRESENT" },
+                         { step: "compose", why: "the reports are in" });
+  t("A8 (REC-100): a model-judged PRESENT is recorded LOOKED_INDETERMINATE, carries no invented "
+    + "referent, and STATES the judgement in its detail",
+    [judged.state, "result_ref" in judged, "result_kind" in judged,
+     judged.detail.startsWith("the model judged PRESENT"), judged.detail.endsWith("the reports are in")],
+    ["LOOKED_INDETERMINATE", false, false, true, true]);
   t("every state this harness can emit is in the plane's D-129 vocabulary",
     ["NEVER_LOOKED", "LOOKED_ABSENT", "LOOKED_INDETERMINATE", "PRESENT", "partial"]
       .filter((s) => !new RegExp(`^\\s{2}${s}:`, "m").test(PLANE_AIRUN)), []);
@@ -1228,6 +1238,152 @@ console.log("\n--- B12 · OVER-STRICTNESS: correct work in a spelling the guard 
   }
   t("two identical runs produce the identical trace", traces[0], traces[1]);
   t("and the trace actually went somewhere", (traces[0] || []).length > 5, true);
+}
+
+/* ========================================================================= *
+ *  R · REC-100 / IC-130 — THE STEP LOG AGAINST THE REAL PLANE'S REFUSAL.
+ *
+ *  THE BLINDNESS THIS SECTION CLOSES, measured by REC-100 on 2026-09-16 and
+ *  recorded in its DELEGATION: every mock of `op=airuntick` in this member's
+ *  suites ACCEPTS ANY ENTRY, so the day C-22.10's `run` carve-out was deleted
+ *  a model-judged bare PRESENT started being refused by the plane, this member
+ *  did not read `refused[]`, and the entry vanished — with every suite green.
+ *
+ *  SO THE TICK IS NOT MOCKED HERE. A `plane-front` worker forwards every op to
+ *  the ordinary mock EXCEPT `airuntick`, which goes to the REAL plane
+ *  (`bio-plane/src/index.mjs` under miniflare, its own Durable Object and
+ *  SQLite), with a run opened there lazily on the first tick. The verdict on
+ *  each entry — `appended`, `refused[]` and each refusal's shape — is therefore
+ *  the plane's own `checkObservation` through its own `#aiRunAppend`, not a
+ *  copy of it. The budget spend is NOT forwarded (the real run's bounds are the
+ *  fixture's, not the mock's), which is stated so nobody reads R as a budget arm.
+ *
+ *  NEGATIVE CONTROL (declared and RUN 2026-09-18, REC-100, via
+ *  `node ../bio-plane/test/nc-rec100.mjs aw-steplog` and `aw-refused`):
+ *    `aw-steplog` — revert `stepLog` to write the model's PRESENT verbatim.
+ *        Declared MUST FAIL R1 and R1b; MUST NOT FAIL R2.
+ *    `aw-refused` — revert the tick site to `logged += 1` with `refused[]`
+ *        unread. Declared MUST FAIL R2 and R2b; MUST NOT FAIL R1.
+ *  ACTUAL: `aw-steplog` — A8 (REC-100), R1, R1b red (224/3), R2/R2b green: AS
+ *  DECLARED. `aw-refused` — FIRST RUN NOT AS DECLARED and it was BOTH the arm
+ *  and the suite: the arm restored only the unread `refused[]`, not the
+ *  envelope count, and R2b compared two fields the same code fills, so it
+ *  stayed green 0 = 0. The arm now restores both halves of the old site, R2b
+ *  counts off the trace and the REAL plane's log, and the re-run is R2 R2b red
+ *  (225/2): AS DECLARED. Baseline both ends 227/0. Restores byte-identical.
+ * ========================================================================= */
+console.log("\n--- R · REC-100: the step log meets the REAL plane's refusal (IC-130) ---");
+{
+  const PLANE_IDX_PATH = fileURLToPath(new URL("../../bio-plane/src/index.mjs", import.meta.url));
+  const MEM = "mem-rec100-aw";
+  const RB = "INQ-2026-0918-rec100-aw";
+  const PROMOTE = {
+    bundleId: RB, base: null, snapKey: "20260918T090000Z_inbox", author: "ruth",
+    meta: { object_type: "inquiry", group: "believe-in-oakland", title: "does the step log land?",
+            current_state: "open", created: "2026-09-18T09:00:00Z", last_updated: "2026-09-18T09:00:00Z" },
+    files: [{ path: "bundle.md", text: `---\nid: ${RB}\n---\n\n## Question\n\nDoes it land?\n`,
+              bytes: 90, sha256: "a".repeat(64) }],
+    register: [] };
+  const OPEN = { contextType: "inquiry", contextId: RB, label: "REC-100's agent-worker fixture",
+    mode: "check", principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1", biasManifest: null,
+    bounds: [{ bound: "fetches", allowed: 100000, unit: "requests" }], leaseMs: 3600000 };
+  const FRONT = `
+export default {
+  async fetch(req, env) {
+    const url = new URL(req.url);
+    if (url.searchParams.get("op") !== "airuntick") return env.MOCK.fetch(req);
+    const body = await req.json();
+    const T = env.MEMBER;
+    const post = (op, b) => env.REAL.fetch("http://real/api/?op=" + op + "&token=" + T,
+      { method: "POST", body: JSON.stringify(b) });
+    if (!globalThis.__opened) {
+      await post("promote", ${JSON.stringify(PROMOTE)});
+      globalThis.__opened = await (await post("airunopen", { ...${JSON.stringify(OPEN)}, run: body.run })).json();
+    }
+    return post("airuntick", { run: body.run, log: body.log, leaseMs: 3600000 });
+  },
+};`;
+  const realMf = (cfg) => new Miniflare({
+    workers: [
+      { name: "agent-worker", modules: true, modulesRoot: "/", scriptPath: WORKER_SRC_PATH, script: WORKER_SRC,
+        modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
+        compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+        bindings: { VERSION: "test" }, serviceBindings: { PLANE: "plane-front" } },
+      { name: "plane-front", modules: true, script: FRONT,
+        compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+        bindings: { MEMBER: MEM }, serviceBindings: { MOCK: "plane-mock", REAL: "real-plane" } },
+      { name: "plane-mock", modules: true, script: PLANE_MOCK,
+        compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+        bindings: { MOCK: JSON.stringify(cfg) } },
+      { name: "real-plane", modules: true, modulesRoot: "/", scriptPath: PLANE_IDX_PATH, script: PLANE_INDEX,
+        compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+        durableObjects: { STORE: { className: "Store", useSQLite: true } },
+        r2Buckets: ["CAPTURES", "PUBLISHED"],
+        bindings: { ADMIN_TOKEN: "adm-rec100-aw", MEMBER_TOKEN: MEM, PROBE_TOKEN: "prb-rec100-aw",
+                    VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" } },
+    ],
+  });
+  const realLog = async (mf) => {
+    const w = await mf.getWorker("real-plane");
+    const j = await (await w.fetch(`http://real/api/?op=airunlog&token=${MEM}&run=${base.run_id}&limit=500`)).json();
+    return (j && typeof j === "object" && "result" in j ? j.result : j) || {};
+  };
+
+  /* R1 — (1): A MODEL-JUDGED PRESENT IS CARRIED, NEVER REFUSED AND NEVER LOST.
+     The judgement at `plan` sets `observed: PRESENT`, which the state carries
+     to every later step. Each of those entries reaches the REAL plane. */
+  {
+    const mf = realMf({ mode: "check", maxPasses: 1, budget: wide });
+    const out = await (await runOp(mf, { ...base,
+      judgements: [{ targets: [], level: "document", observed: "PRESENT" }] })).json();
+    const log = await realLog(mf);
+    const entries = Array.isArray(log.entries) ? log.entries : [];
+    t("R0: the fixture ARMED — the run completed and the REAL plane holds this run's entries (a real "
+      + "log with nothing in it would make every assertion below free)",
+      [out.ok, log.found, entries.length > 0, (out.present_unbacked ?? 0) > 0], [true, true, true, true]);
+    t("R1: a model-judged PRESENT is CARRIED — the REAL plane refused NONE of this run's step entries, "
+      + "and not one of them is a bare PRESENT the record would have had to take on the model's word",
+      [out.log_refused ?? "(not published)", entries.filter((e) => e.state === "PRESENT").length],
+      [[], 0]);
+    t("R1b: …it is recorded as LOOKED_INDETERMINATE with the judgement STATED, once per judged step, "
+      + "and `logged` equals what the record actually holds — nothing counted that did not land",
+      [entries.filter((e) => e.state === "LOOKED_INDETERMINATE"
+                        && String(e.detail || "").startsWith("the model judged PRESENT")).length,
+       out.logged],
+      [out.present_unbacked, entries.length]);
+    await mf.dispose();
+  }
+
+  /* R2 — (2), THE CLASS AND NOT THE INSTANCE: ANY entry the plane refuses is
+     SURFACED. A judged `condition` outside the record's vocabulary is refused
+     by the REAL plane per entry (C-22.4) — the member does not validate it and
+     should not (the plane does). Before REC-100 this member counted each such
+     tick `logged` and the run's own output said nothing. */
+  {
+    const mf = realMf({ mode: "check", maxPasses: 1, budget: wide });
+    const out = await (await runOp(mf, { ...base,
+      judgements: [{ targets: [], level: "document", condition: "no-such-condition-rec100" }] })).json();
+    const log = await realLog(mf);
+    const entries = Array.isArray(log.entries) ? log.entries : [];
+    const lr = Array.isArray(out.log_refused) ? out.log_refused : [];
+    t("R2: every step entry the REAL plane refused is SURFACED in the run's own output — named by the "
+      + "plane's code and C-number and the step it came from — and none is silently dropped",
+      [lr.length > 0, [...new Set(lr.map((r) => `${r.code}/${r.check}`))], lr.every((r) => typeof r.step === "string")],
+      [true, ["AI_RUN_CONDITION_UNKNOWN/C-22.4"], true]);
+    /* THE EXPECTATION IS COUNTED OFF THE RECORD AND THE TRACE, NOT OFF `log_refused`.
+       The first draft compared `refusals` against `log_refused` — two fields the
+       same code fills — and the `aw-refused` control arm (refused[] unread) left
+       it GREEN, 0 = 0: an equality that cost nothing. Sent is one tick per trace
+       step, landed is what the REAL plane holds, and the difference is what must
+       be named. */
+    const sent = (out.trace || []).length;
+    t("R2b: …and they are in `refusals` too, while `logged` counts ONLY what landed — every entry "
+      + "SENT (one per trace step) is either held by the REAL plane or named as refused, none neither",
+      [sent > entries.length, (out.refusals || []).filter((r) => r.at === "airuntick.log").length, out.logged],
+      [true, sent - entries.length, entries.length]);
+    await mf.dispose();
+  }
 }
 
 console.log(`\nharness: ${pass} passed, ${fail} failed`);
