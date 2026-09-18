@@ -14097,3 +14097,17 @@ the editor 62/1; every restore sha256 MATCH. IC minted with `tools/mintid.mjs`: 
 **Built:** authoring = the project's edit permission (`contribute` + owner-or-joined). **Reverted before landing:** the
 administrator-revoke widening, built from §6A.2's first version. **FOR CONDUCT:** RESOLVE IC-151 against I3 as read at
 resolution (30.0.0 when written); the REC-126 → UI DELEGATION stays open with its point-1 authority line superseded.
+
+## CLAIM 2026-09-18 M0 (M0-67 — D-425: can the battery report green over a suite that printed FAIL?)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-aeae827f6d7997fa5`, branch
+`worktree-agent-aeae827f6d7997fa5`, base `30f1bd6b` (origin/main carrying the M0-67 flip). `npm ci` in all three
+packages, each `node_modules` a real directory (6.6 GiB free after). Design authority: `VERIFICATION.md` (the battery)
+and DEBT D-425. Paths:
+
+- M0 (own): `bio-plane/scripts/battery.mjs` (the tally and the verdict); any suite whose exit path can miss a counted
+  failure; a new suite or control under `bio-plane/test/` for the cross-check.
+- Docs: `DEBT.md` (D-425's row and disposition), `MEASUREMENTS.md` (the measurement), `VERIFICATION.md` (the battery's
+  verdict rule), this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `civicos-ui/` source, NOT `newgroup/`.
