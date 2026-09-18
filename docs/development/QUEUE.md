@@ -101,18 +101,6 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
-**2026-09-18 · BOB #14 · D-184 AND D-194 ARE DESIGNED — `docs/development/MEMBER-KNOWLEDGE-DESIGN.md`; FIVE ITEMS FOR YOU TO ROW.**
-The design my build order wrongly called "verified" now exists. Its decisions, each a mechanism under Bob's ruled doctrine:
-**the member's words are the document** (an authored INFO bundle in the register, origin and actor `member`, a new `authored`
-flag only the testimony path can set, server-stamped author) so an observation IS content and every reader works unchanged;
-**a third grade axis, `testimony`**, at D, because DEC-21 defines the capture axis as reading a document in and testimony is
-not that; **attribution on the case contribution act**, required and never prefilled, off-the-record as a structural absence
-(no field can hold a source's identity); **the LEAD** as an authored row that is never evidence and writes `observation_log`
-with `authority_kind = 'lead'`; **an opinion** as a case element refused as a leg. Items MK-1..MK-5 in its §8, with
-interfaces and dependencies; MK-2's builder states whether the new axis is additive or breaking on I3 before minting it.
-These fill build-order items 3 and 6. Surfaces are Program B's and are not rowed.
-
-
 **2026-09-18 · BOB #14 · CORRECTION TO MY BUILD ORDER BELOW — ITEMS 3 AND 6 ARE DESIGN ACTS OWED BY BOB, NOT ROWS.** CONDUCT #4
 found no Program B design at the artifact for item 3 (2.firsthand + 10.lead), and was right: I wrote "verified" without opening
 one. Checked since: "Program B" is the member-surfaces program, not a document. Item 6 (13.attribution) is the same defect —
@@ -1467,6 +1455,57 @@ landed: `3c5cbbf`/`e0085eb`, merged on `main`. **THE ANSWER IS A STATED `undeter
 
 
 ## RECORD — ACTIVE (re-promoted 2026-08-05; the 2026-08-01 handover order is fully DRAINED and the area now runs D-200)
+
+### MK-1 · running — **SPAWNED 2026-09-18 by CONDUCT #4 into build-order item 3's slot (BOB #14: MK-1..MK-5 fill items 3 and 6). DEPENDS-ON CHECKED AGAINST THE CODE at spawn: `mintContent` present in `bio-plane/src/store.mjs` and the `register` table in `schema.mjs`; `2.firsthand` ABSENT in `construct-status.json`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **THE AUTHORED BUNDLE — a member's firsthand observation IS a document: an authored INFO bundle in the register, origin and actor `member`, a new `authored` flag only the testimony path can set, a SERVER-STAMPED author and `observed_at`; content rows over it, so every existing reader works unchanged.** — owner RECORD; surfaces are Program B's and are NOT rowed.
+milestone: M3 — the member's own knowledge enters the record as what it is
+interface: I5 (the register) and I3 (the op) — each its own IC, minted with `node tools/mintid.mjs IC` BEFORE building, bases read at resolution (I3 24.0.0, I5 1.18.0 when rowed)
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §2 (the member's words are the document) and §7 (the refusals)
+depends-on: none — verify the register and `mintContent` on your tree
+scope: build §2's mechanism and §7's refusals that fall to it: a register entry claiming origin other than `member` on an authored bundle, a non-authored bundle claiming `authored`, and a caller-supplied author — each refused by name. Name the op so it does not collide (`op=claim` is taken; grep before naming). Move `2.firsthand` in `construct-status.json` with probes (update `3.census` after reviewing by meaning), then `node tools/status.mjs --write`. **Read the design section at the artifact before building (§8's own condition).**
+accepts-when: an observation authored through the op lands as a bundle whose content rows every existing reader serves unchanged; each §7 refusal that falls to MK-1 fires by name through the op; the author is the session's member whatever the caller sends; `status --check` 0 drift; plancheck BARE; coverage --strict exit 0 unpiped; battery green by its COMPLETION LINE.
+NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with the colon**) — one arm per refusal — each fence removed → the forged bundle is ACCEPTED and the arm FAILS naming it; the author stamp removed → a caller-supplied author lands and the arm FAILS. **Liar:** a flag any writer can set — the `authored` bit must be settable ONLY on the testimony path.
+added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox; MEMBER-KNOWLEDGE-DESIGN.md §8, build-order items 3 and 6.)
+
+### MK-2 · queued — **THE `testimony` GRADE AXIS — a third axis at D, because DEC-21 defines the capture axis as reading a document in and testimony is not that: grading, `STRENGTH_AXES`, the DEC-32 arithmetic, and the case document's strength presentation.** — owner RECORD; surfaces are Program B's and are NOT rowed.
+milestone: M3 — the member's own knowledge enters the record as what it is
+interface: I3 — the builder STATES whether the new axis is additive or breaking BEFORE minting the IC (§Incomplete's first entry)
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §3 (the grade: a third axis) and §Incomplete
+depends-on: MK-1 (the authored bundle must exist to be graded)
+scope: build §3; a leg on an authored bundle carrying any CAPTURE grade, or any testimony grade other than D, is refused by name; a second member's attestation does NOT raise a testimony leg (§7). **Read the design section at the artifact before building (§8's own condition).**
+accepts-when: the §7 refusals that fall to MK-2 fire by name; strength arithmetic over a mixed basis is pinned; the additive/breaking call is written in the IC with its evidence; `status --check` 0 drift; battery green by its COMPLETION LINE.
+NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with the colon**) — the testimony cap removed → a testimony leg grades above D and the arm FAILS; attestation allowed to raise it → the arm FAILS. **Liar:** reusing the capture axis with a label — the design refuses that by DEC-21.
+added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox; MEMBER-KNOWLEDGE-DESIGN.md §8, build-order items 3 and 6.)
+
+### MK-3 · queued — **ATTRIBUTION ON THE CASE CONTRIBUTION ACT — required and never prefilled, one of the four levels (group, project, the member's cover, the member by name); OFF-THE-RECORD as a STRUCTURAL ABSENCE — no field can hold a source's identity; the published projection honours it.** — owner RECORD; surfaces are Program B's and are NOT rowed.
+milestone: M3 — the member's own knowledge enters the record as what it is
+interface: I3
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §4 (attribution: chosen by the attesting member, carried with the act) and §Incomplete (the case act identified)
+depends-on: MK-1; and the case contribution act IDENTIFIED at the artifact (§Incomplete) — if it cannot be identified, STOP and route to BOB
+scope: build §4; a contribution with no attribution level, or a level outside the four, refused by name; an off-the-record account has NO field that could carry a source identity (the control adds one and the suite fails). **Read the design section at the artifact before building (§8's own condition).**
+accepts-when: through the case ops: each level round-trips into the published projection exactly as chosen; nothing is prefilled; off-the-record publishes no identity by construction; battery green by its COMPLETION LINE.
+NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with the colon**) — add a source-identity field to the off-the-record shape → the suite FAILS; prefill a level → the arm FAILS. **Liar:** a nullable identity column left empty — structural absence means the column does not exist.
+added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox; MEMBER-KNOWLEDGE-DESIGN.md §8, build-order items 3 and 6.)
+
+### MK-4 · running — **SPAWNED 2026-09-18 by CONDUCT #4 into build-order item 3's slot (BOB #14: MK-1..MK-5 fill items 3 and 6). DEPENDS-ON CHECKED AGAINST THE CODE at spawn: the `observation_log` table and its `authority_kind` column present in `bio-plane/src/schema.mjs`; `10.lead` ABSENT in `construct-status.json`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **THE LEAD — the same member knowledge BEFORE the search: an authored row that is NEVER evidence, whose writer writes `observation_log` with `authority_kind = 'lead'`, and `LOOKED_ABSENT` recorded against a lead.** — owner RECORD; surfaces are Program B's and are NOT rowed.
+milestone: M3 — the member's own knowledge enters the record as what it is
+interface: I3 and I5 — each its own IC, minted BEFORE building, bases read at resolution (I3 24.0.0, I5 1.18.0 when rowed)
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5 (the lead) read with `docs/development/OBSERVATION-LOG-DESIGN.md` (the log it writes)
+depends-on: none — verify `observation_log` and its `authority_kind` vocabulary on your tree
+scope: build §5; a lead cited as a basis leg is refused by name (§7). Move `10.lead` in `construct-status.json` with probes (update `3.census` after reviewing by meaning), then `--write`. **Read the design section at the artifact before building (§8's own condition).**
+accepts-when: a lead authored through the op writes its row and an `observation_log` entry with `authority_kind = 'lead'`; `LOOKED_ABSENT` against a lead is recorded and read back; citing a lead as a leg is refused by name; `status --check` 0 drift; battery green by its COMPLETION LINE.
+NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with the colon**) — the lead-as-leg refusal removed → a lead lands as a basis leg and the arm FAILS. **Liar:** a lead that is merely an unlabelled observation — it must never be citable as evidence.
+added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox; MEMBER-KNOWLEDGE-DESIGN.md §8, build-order items 3 and 6.)
+
+### MK-5 · queued — **AN OPINION IS NOT EVIDENCE — a case element with attribution, refused as a basis leg.** — owner RECORD; surfaces are Program B's and are NOT rowed.
+milestone: M3 — the member's own knowledge enters the record as what it is
+interface: I3
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §6 (an opinion is not evidence)
+depends-on: MK-3 (it carries MK-3's attribution)
+scope: build §6; an opinion cited as a basis leg is refused by name (§7). **Read the design section at the artifact before building (§8's own condition).**
+accepts-when: an opinion lands as a case element with its attribution and is refused as a leg, by name, through the ops; battery green by its COMPLETION LINE.
+NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with the colon**) — the refusal removed → an opinion lands as a leg and the arm FAILS. **Liar:** an opinion stored as a low-grade leg — the design refuses it as a leg at all.
+added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox; MEMBER-KNOWLEDGE-DESIGN.md §8, build-order items 3 and 6.)
+
 
 ### REC-123 · running — **SPAWNED 2026-09-18 by CONDUCT #4 (BOB #14's build order; a one-for-one refill of a freed product slot). DEPENDS-ON CHECKED AGAINST THE CODE at spawn: the `MACHINE_CANNOT_*` family present in `bio-plane/checks/bio-checks.mjs`; `11.machine-fence` reads UNDETERMINED in `construct-status.json`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **CAN AN `ai` CREDENTIAL ATTEST OR RATIFY? `construct-status.json` 11.machine-fence reads UNDETERMINED because nobody has TRACED it: authored acts are fenced by the `MACHINE_CANNOT_*` family, but the attest and ratify handlers were never followed below the scope check. A machine attesting the record is the trust-of-the-record question itself.** — waits on nothing; owner RECORD. BOB #14's build order, item 1.
 milestone: M3 — the record's own refusals reach every authority that writes it

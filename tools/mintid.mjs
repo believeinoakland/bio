@@ -331,6 +331,8 @@ export const NAMESPACES = {
   DS: item("DIST track rows in IS-BUILD-PLAN.md — the SAME lane as DIST under a second prefix, which is worth knowing and is not this item's to reconcile"),
   /* Registered 2026-09-18 by CONDUCT #4 when BOB #14 decomposed Bob's ledger restructure into LED-1..LED-5,
      the headings written in the same commit, so the prefix never allocated unregistered (CASE's precedent). */
+  /* Registered 2026-09-18 by CONDUCT #4 with the MK-1..MK-5 headings (MEMBER-KNOWLEDGE-DESIGN.md §8), same commit. */
+  MK: item("member-knowledge queue items (D-184/D-194, MEMBER-KNOWLEDGE-DESIGN.md)"),
   LED: item("ledger-restructure queue items (Bob's 2026-09-18 direction: small, ordered, always-current ledgers)"),
   /* Registered 2026-08-10 when DEC-72's decomposition arrived. The design doc
      `CASE-AS-PRODUCTION.md` names CASE-1..CASE-6 as a BULLET LIST, which matches
