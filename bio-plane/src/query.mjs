@@ -398,6 +398,16 @@ const citedExists = (alias) =>
   `(EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.content_id = ${alias}.content_id)`
   + ` OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl WHERE vl.content_id = ${alias}.content_id))`;
 
+/* REC-121: the `cited_as` value of an image cited AS ITSELF, READ OFF THE CHECKER'S
+   OWN DEFAULT for an image rather than typed — `contentCitedAs` is the function the
+   mint path writes the column through, so the filter and the writer cannot spell
+   it two ways. And the word the `chain` filter and `chain_last` both answer for
+   such a row (IC-131), exported so a suite and a surface read ONE spelling.
+   DECLARED ABOVE `MEANING` because `chain_last` below interpolates both while the
+   registry is being built, and a `const` below it would be in its dead zone. */
+const CONTENT_CITED_AS_BYTES = contentCitedAs({ kind: "image" });
+export const CHAIN_DOES_NOT_APPLY = "does-not-apply";
+
 export const MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
      EVERY VOCABULARY HERE IS IMPORTED FROM THE CHECK CATALOG, never listed. The
@@ -643,9 +653,29 @@ export const MEANING = {
          question it always asked (and `cap`'s reason: say so, never guess a
          step); and presence is `chain_kind IS NOT NULL`, exactly the pre-item
          meaning, where the ordinary arm would add `<> ''`. Every comparison
-         falls to the ordinary `chain_kind <cmp> ?`. */
+         falls to the ordinary `chain_kind <cmp> ?`.
+         REC-121 / IC-131 — A NULL CHAIN HAS TWO CAUSES AND THEY ARE TWO ANSWERS.
+         FW-19's `cited_as = 'bytes'` row is an image cited AS ITSELF: its chain
+         is NULL BY MEANING (EXTRACTION-BREADTH §3.1 — the null "must not be read
+         as undetermined"), so `chain:undetermined` is `chain IS NULL` over TEXT
+         rows only and never reaches it. DECIDED AT THIS SITE: A BYTES ROW IS
+         REACHABLE BY THE `chain` FILTER, under its own stated value
+         `chain:does-not-apply` (`cited_as = 'bytes'`). The alternative — reachable
+         by no chain value at all — was refused because it leaves the chain
+         question with rows it answers NOTHING about: a member walking the answers
+         (each step, undetermined, present) would never meet the images, which is
+         the silent drop the row forbids, one layer up. With the third value every
+         row answers exactly one chain question (`rec121-chain-bytes.test.mjs`
+         drives that partition), and `chain_last` below says the same word, so the
+         filter and the row label are one definition read twice. `does-not-apply`
+         is NOT in `vocab`, exactly as `undetermined` is not: both are statements
+         about the chain rather than step kinds, so neither becomes a bare word
+         (`content:does-not-apply` would read as a kind of content). The literal
+         travels as an ARGUMENT, as every value here does. */
       chain:  { col: "chain_kind", case: "lower", vocab: Object.keys(STEP_KINDS),
-                pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL`, args: [] }
+                pred: (cmp, v) => v === "undetermined"
+                    ? { sql: `chain IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] }
+                  : v === CHAIN_DOES_NOT_APPLY ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] }
                   : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : null },
       /* DEC-24 — THE MACHINE DOES THE LOOKING, THE MEMBER DOES THE CONCLUDING.
          A content row is an ADDRESS; it becomes part of a finding only when a
@@ -676,8 +706,14 @@ export const MEANING = {
        says "cited or citable, and it says which", and without this column a
        reader would have to ask a second op per row to tell which. */
     rowComputed: {
-      /* REC-104: off the same column the filter reads — one answer, not two. */
-      chain_last: `m.chain_kind`,
+      /* REC-104: off the same column the filter reads — one answer, not two.
+         REC-121 / IC-131: and a `bytes` row says `does-not-apply` rather than a
+         NULL a list reader takes for undetermined — the SAME word the `chain`
+         filter answers it under, so label and filter are one definition. Only a
+         bytes row's value moves; every text row reads `chain_kind` exactly as
+         before. The two constants are the module's own, never a member's string. */
+      chain_last: `CASE WHEN m.cited_as = '${CONTENT_CITED_AS_BYTES}' THEN '${CHAIN_DOES_NOT_APPLY}' `
+                + `ELSE m.chain_kind END`,
       cited: citedExists("m"),
     },
     identity: ["content_id"],
@@ -912,7 +948,7 @@ import { parseFrontmatter, normalizeType, MACHINE_CLASS_PREFIX,
             go quietly unanswerable while every test written from the same copy
             passed, which is exactly how the `leg:` arm's first version lost two
             of five grade sources. */
-         CONTENT_EXTENT_KINDS, CONTENT_MINTED_BY_PLANE } from "../checks/bio-checks.mjs";
+         CONTENT_EXTENT_KINDS, CONTENT_MINTED_BY_PLANE, contentCitedAs } from "../checks/bio-checks.mjs";
 /* REC-90: the chain's step kinds, from the module that CLASSIFIES them. Nothing
    here tests a step name against a literal — `content:chain=ocr` reads its
    vocabulary out of `STEP_KINDS` so a step kind added there is askable the same
