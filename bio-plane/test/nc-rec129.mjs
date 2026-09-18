@@ -10,8 +10,13 @@
  * fail before it runs; each reports whether it ARMED (a match count other than
  * the one declared is a finding, never a retry); every restore is verified
  * against a uniquely-named per-arm pristine copy by sha256 AND by content —
- * never `git checkout --`. Pristine copies live in `$REC129_PEN`
- * (default /tmp/conduct4-rec129/pen), used by nothing else.
+ * never `git checkout --`. Pristine copies live in `$REC129_PEN` (default: a
+ * `.rec129-harness/pen` inside THIS worktree — WORKER.md: the shared scratchpad and
+ * `/tmp` are not isolated between sessions), used by nothing else.
+ *
+ * TWO SUITES, one driver: the internet frontier's arms run
+ * `frontier-internet.test.mjs`; IC-144's op=stats arms (`stats*`, `selftestopen`) run
+ * `stats-disclosure.test.mjs`. Each arm names its suite.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -22,17 +27,18 @@ import { dirname, join } from "node:path";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
 const REPO = join(PLANE, "..");
-const SAFE = process.env.REC129_PEN || "/tmp/conduct4-rec129/pen";
+const SAFE = process.env.REC129_PEN || join(REPO, ".rec129-harness", "pen");
 mkdirSync(SAFE, { recursive: true });
 const STORE = join(PLANE, "src/store.mjs");
+const INDEX = join(PLANE, "src/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;
 
-const runSuite = () => {
-  const r = spawnSync(process.execPath, ["test/frontier-internet.test.mjs"],
+const runSuite = (suite = "frontier-internet") => {
+  const r = spawnSync(process.execPath, [`test/${suite}.test.mjs`],
     { cwd: PLANE, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   const out = `${r.stdout || ""}${r.stderr || ""}`;
-  const m = /\nfrontier-internet: (\d+) pass, (\d+) fail/.exec(out);
+  const m = new RegExp(`\\n${suite}: (\\d+) pass, (\\d+) fail`).exec(out);
   return { pass: m ? +m[1] : -1, fail: m ? +m[2] : -1, exit: r.status,
            failing: out.split("\n").filter((l) => l.includes("FAIL  ")).map((l) => l.trim().slice(0, 300)) };
 };
@@ -120,6 +126,48 @@ const ARMS = {
       "      sql: `(l.author = ? OR 0=1 AND EXISTS (SELECT 1 AS x FROM lead_shares s JOIN project_participants pp"]]),
   },
 };
+/* IC-144's arms — op=stats' two instance-wide counts, withheld from every class but admin. */
+Object.assign(ARMS, {
+  statsbaseline: {
+    suite: "stats-disclosure", files: [], why: "nothing armed — the stats suite's own baseline row",
+    mustFail: [], mustPass: "everything", patch: () => ({ armed: true, matches: 0 }),
+  },
+  statsopen: {
+    suite: "stats-disclosure", files: [STORE],
+    why: "THE ROW'S CONTROL: the operator gate removed in Store#stats — every class receives `leads` and "
+       + "`observations` again, which is MK-4 as it landed",
+    mustFail: ["A1: the member TOKEN's WHOLE op=stats answer", "A1: sam's member SESSION's WHOLE op=stats answer",
+               "B1: the member TOKEN receives", "B1: the probe TOKEN receives", "D2: the member's selftest"],
+    mustPass: "C (the operator still receives both) — and A1 for the probe TOKEN, which reads the SCRATCH store "
+            + "and so cannot see a live lead either way (a non-discriminating arm, named rather than trusted)",
+    patch: () => arm([[STORE, "      ...(operator ? {\n      observations:", "      ...(true ? {\n      observations:"]]),
+  },
+  statsdropall: {
+    suite: "stats-disclosure", files: [STORE],
+    why: "THE OVER-STRICTNESS DIRECTION: the keys dropped for EVERYONE, the operator included — passes every "
+       + "no-leak assertion and must fail the operator's",
+    mustFail: ["C1: the admin TOKEN still receives both", "D2: the member's selftest",
+               "FIXTURE: the admin's op=stats answers"],
+    mustPass: "A and B (refusing more cannot leak)",
+    patch: () => arm([[STORE, "      ...(operator ? {\n      observations:", "      ...(false ? {\n      observations:"]]),
+  },
+  statsstamp: {
+    suite: "stats-disclosure", files: [INDEX],
+    why: "the server's stamp removed: the caller's own `operator=` is forwarded as copied, so a member who "
+       + "asks operator=1 is honoured and an admin who sends operator=0 loses the counts",
+    mustFail: ["B2: the member TOKEN asking operator=1", "B2: sam's member SESSION asking operator=1", "C3:"],
+    mustPass: "B1 and A (a member who does not ask still gets nothing: the store's default is closed)",
+    patch: () => arm([[INDEX, `    if (op === "stats") inner.searchParams.set("operator", cls === "admin" ? "1" : "0");\n`, ""]]),
+  },
+  selftestopen: {
+    suite: "stats-disclosure", files: [INDEX],
+    why: "the SECOND DOOR left open: op=selftest relays the store's stats stamped as operator for every class",
+    mustFail: ["D2: the member's selftest"],
+    mustPass: "every op=stats arm (a different door)",
+    patch: () => arm([[INDEX, '.fetch(`http://x/stats?operator=${cls === "admin" ? "1" : "0"}`));',
+                               '.fetch(`http://x/stats?operator=1`));']]),
+  },
+});
 const want = process.argv[2] || null;
 const names = want ? [want] : Object.keys(ARMS);
 if (want && !ARMS[want]) { console.error(`unknown arm '${want}'. arms: ${Object.keys(ARMS).join(", ")}`); process.exit(2); }
@@ -141,11 +189,11 @@ for (const name of names) {
   }
   const armed = a.patch();
   console.log(`  ARMED      ${armed.armed ? "yes" : "NO"}  (patch matched ${armed.matches})`);
-  if (!armed.armed && name !== "baseline") {
+  if (!armed.armed && !/baseline$/.test(name)) {
     console.log(`  FINDING    the arm DID NOT ARM. An arm that did not arm is a finding, never a retry.`);
     finding++;
   }
-  const r = runSuite();
+  const r = runSuite(a.suite);
   console.log(`  RESULT     ${r.pass} pass, ${r.fail} fail, exit ${r.exit}`);
   for (const l of r.failing) console.log(`             ${l}`);
   for (const s of saved) {
@@ -155,7 +203,7 @@ for (const name of names) {
     console.log(`  RESTORED   ${s.f.replace(REPO + "/", "")}  byte-identically: ${back === s.sha && sameBytes ? "YES" : "NO"}  ${statSync(s.f).size} bytes  sha256 ${back.slice(0, 12)}…`);
     if (!(back === s.sha && sameBytes)) { console.log("  FINDING    restore FAILED — stopping before the next arm measures the wrong tree"); process.exit(2); }
   }
-  if (name === "baseline") {
+  if (name === "baseline" || name === "statsbaseline") {
     const ok = r.fail === 0 && r.pass > 0;
     console.log(`  VERDICT    ${ok ? "AS DECLARED — green" : "NOT AS DECLARED"}`);
     if (!ok) finding++;

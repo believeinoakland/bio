@@ -23207,7 +23207,13 @@ export class Store extends DurableObject {
     });
   }
 
-  stats() {
+  /** REC-129 / IC-144 — `operator` IS THE ONE INPUT, and it is the SERVER'S word, never the
+   *  caller's: `index.mjs` sets it from the credential class AFTER copying the caller's
+   *  parameters (op=stats, op=selftest, op=livefire), and `purge` passes it true because its
+   *  before/after ARE the D-113 proof the two keys exist for. It governs exactly two keys, below,
+   *  and nothing else. An absent or unrecognised stamp is `false`, so a door that forgets to
+   *  stamp loses the two keys rather than leaking them. */
+  stats({ operator = false } = {}) {
     const n = (t) => this.#one(`SELECT count(*) c FROM ${t}`).c;
     return {
       bundles: n("bundles"), files: n("files"), history: n("history"),
@@ -23330,10 +23336,22 @@ export class Store extends DurableObject {
          counted WHOLE beside it: the log is the coverage record and its size is
          an operator fact, while what any single row was looking for is not. */
       aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`).c,
+      /* REC-129 / IC-144 — `observations` AND `leads` ARE THE OPERATOR'S, AND THE KEY IS ABSENT
+         FOR EVERYONE ELSE. RULED by BOB #15 (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A COUNT IS A
+         DISCLOSURE OF EXISTENCE*): a counter whose row set includes rows the caller could not
+         read goes only to a caller who could read them all — for an instance-wide count, the
+         `admin` class. `leads` counts every member's tips, and the whole-log `observations`
+         count moves on every `op=leadlook`, so a member diffing either across a colleague's
+         authoring learned a lead had just been written or followed. The KEY is withheld, never
+         re-meant: one key counting different rows for different callers is two quantities
+         under one name. `aiRunLog` above stays — its row set is `authority_kind = 'run'`, which
+         no lead act writes, and `lead.test.mjs` pins that it never moves across one. */
+      ...(operator ? {
       observations: n("observation_log"),   /* the WIRE KEY stays `observations` (a count of observations, and moving it would be an I3 change nobody owed); the TABLE it counts is `observation_log` — renamed by CONDUCT #11 at integration on BOB #11's correction, because one word over three unrelated things is the defect, not the noun */
       /* MK-4 / IC-136: a COUNT of members' leads and nothing else, so a purge can
          PROVE it took them (D-113). What any lead says is not an operator fact. */
       leads: n("leads"),
+      } : {}),
       /* PL-1 / IS-1: the inquiry's alternative accounts of its evidence and
          their legs, reported so a purge can PROVE it took them (D-113). A COUNT
          AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
@@ -24835,7 +24853,7 @@ export class Store extends DurableObject {
                        holds this list against schema.mjs. */
                     "capture_text"];
                     /*__REC91_PURGE_END__*/
-    const before = this.stats();
+    const before = this.stats({ operator: true });
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
         /* The text index row goes with the bundle it describes, and it goes
@@ -25162,7 +25180,7 @@ export class Store extends DurableObject {
         this.sql.exec(`DELETE FROM capture_requests`);
       }
     });
-    const after = this.stats();
+    const after = this.stats({ operator: true });
     const d = (k) => before[k] - after[k];
     return {
       ok: true, scope: bundleId || "ALL", before, after,
@@ -38815,7 +38833,7 @@ export class Store extends DurableObject {
         projectionclear: () => this.projectionClear(body || {}),
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
-        stats: () => this.stats(),
+        stats: () => this.stats({ operator: url.searchParams.get("operator") === "1" }),
         bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
         claim: () => this.claim({ ...(body || {}), tokenFp: url.searchParams.get("fp") }),
         login: async () => {

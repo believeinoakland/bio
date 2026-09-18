@@ -1,5 +1,17 @@
-/* NEGATIVE CONTROL: see the header's last paragraph — recorded after the arms are run.
+/* NEGATIVE CONTROL: (run 2026-09-18) `node test/nc-rec129.mjs` from `bio-plane/`: (a) `baseline` 33/0 green.
+ * (b) `nofence` — THE ROW'S CONTROL, the visibility filter removed from the internet arm: 25/8, incl. C1
+ * sam/vera/otto and C3. (c) `grouplate` — fence applied after the latest-per-subject grouping: 32/1, C3.
+ * (d) `tallywide` — whole-level tally: 27/6, incl. C1, C3, C4. (e) `neverwide` — never-followed list unfenced:
+ * 27/6, incl. C1 sam/vera. (f) `nocause` — THE LIAR, an empty answer with no cause: 28/5, incl. A1, A3, B1.
+ * (g) `refleak` — referent always published: 32/1, E1. (h) `overstrict` — the share arm dropped from
+ * #leadReach: 31/2, incl. D1. Every arm ARMED on exactly one match, every arm AS DECLARED, every restore sha256+cmp YES.
  *
+ * FIRST RUN OF THIS DRAFT (2026-09-18, the resuming worker), recorded rather than smoothed: 30/3. B1 and D1
+ * compared an ORDER the code never promised (a same-`at` tie, a GROUP BY's key order) and now compare sets;
+ * E1 was a FIXTURE defect — sam was enrolled as an ADMINISTRATOR, so `#viewerSees` took viewerPredicate's
+ * admin disjunct and E1 measured the role rather than the share. Sam is now a plain member.
+ */
+/* *
  * REC-129 / IC-143 — THE FRONTIER'S INTERNET-LEVEL READ (`OBSERVATION-LOG-DESIGN.md`
  * §6's frontier row at the internet level, over §4.5's member half: the LEAD's
  * looks, which MK-4 writes through `op=leadlook`).
@@ -60,6 +72,8 @@ const get = async (op, qs, tok) => rP(await (await mf.dispatchFetch(
 const F = async (tok, qs = "") => get("frontier", `level=internet${qs}`, tok);
 const digest = (r) => sha(JSON.stringify(r));
 const causeOf = (r) => (r && r.empty) ? r.empty.cause : null;
+/* A tally is a MAP; its key order is the GROUP BY's and not a claim, so it is compared sorted. */
+const tallyOf = (r) => Object.fromEntries(Object.entries((r && r.tally) || {}).sort());
 
 const NOW = "2026-09-18T00:00:00Z";
 const LATER = "2026-09-18T01:00:00Z";
@@ -77,7 +91,12 @@ const enrol = async (memberId, role = "admin") => {
   return lg.token;
 };
 const RUTH = await enrol("ruth");
-const SAM = await enrol("sam");
+/* SAM IS A PLAIN MEMBER, NOT AN ADMINISTRATOR — corrected 2026-09-18 on the draft's first run: enrolled
+   as `admin` (this fixture's default), sam's `#viewerSees` took `viewerPredicate`'s admin disjunct and read
+   P3's capture, so E1 measured the ROLE rather than the share. The lead rule itself names no admin arm.
+   A group's second member must be an administrator (ADMINS_FIRST), so ada is enrolled to make that so. */
+await enrol("ada");
+const SAM = await enrol("sam", "member");
 const VERA = await enrol("vera", "member");
 const OTTO = await enrol("otto", "member");
 
@@ -173,8 +192,8 @@ const L1 = (await post("lead", { words: W }, RUTH)).lead_id;
 const L2 = (await post("lead", { words: W2 }, RUTH)).lead_id;
 const rB0 = await F(RUTH);
 t("B1: two leads, neither followed: `looked` empty, both in `never_looked`, cause never_followed",
-  [rB0.looked.length, rB0.never_looked.map((x) => x.lead), rB0.never_looked_count, causeOf(rB0)],
-  [0, [L1, L2], 2, "never_followed"]);
+  [rB0.looked.length, rB0.never_looked.map((x) => x.lead).sort(), rB0.never_looked_count, causeOf(rB0)],
+  [0, [L1, L2].sort(), 2, "never_followed"]);
 t("B2: §5.1 cause (3) is ESTABLISHED for a lead nobody followed — not_ruled_out is the one cause, "
   + "because a lead and its looks are born after the log and purged with it",
   rB0.never_looked.map((x) => [x.missing_cause, x.not_ruled_out, x.evidence_one_sided, x.subject_kind]),
@@ -229,8 +248,8 @@ t("D1: OVER-STRICTNESS — sam, JOINED to P1, now reads the shared lead's looks:
   + "the subject's latest, but ruth's PRESENT now DATES it (last_verified) and his indeterminate after it is "
   + "`unreachable_since`; his tally counts the three looks he may now read",
   [rD.looked.length, dRow && [dRow.lead, dRow.state, dRow.last_verified === lk2.at,
-                              dRow.unreachable_since === lks.at], rD.tally],
-  [1, [LS, "LOOKED_INDETERMINATE", true, true], { LOOKED_ABSENT: 1, PRESENT: 1, LOOKED_INDETERMINATE: 1 }]);
+                              dRow.unreachable_since === lks.at], tallyOf(rD)],
+  [1, [LS, "LOOKED_INDETERMINATE", true, true], { LOOKED_ABSENT: 1, LOOKED_INDETERMINATE: 1, PRESENT: 1 }]);
 t("D2: L2, never shared, stays out of sam's reach — not in `never_looked`, not anywhere",
   JSON.stringify(rD).includes(L2), false);
 const rDai = await F(AI_SAM);

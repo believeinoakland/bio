@@ -10448,3 +10448,111 @@ test/casesign.control.mjs e|f|g|h` from `bio-plane/`, all four as declared (reco
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 as MAJOR — I3 26.3.0 → 27.0.0.** Base read at resolution (26.3.0; proposed against 26.2.0 — MK-4's IC-136 took a minor meanwhile). A formerly answered anonymous read (an unsigned case document) is refused, with the refusal BYTE-IDENTICAL to a nonexistent id's answer by construction (one function answers both). The builder closed a SECOND disclosure it found at the same boundary: `op=caseratify` refusals (`CASE_RATIFY_STALE`'s document sha, `TESTIMONY_CASE_UNPUBLISHABLE`'s finding ids) told a member of another project that a case existed. **No UI surface loses anything** (`civicos-ui` does not call `op=casedocument`). `release/` and the installer still carry the pre-change bundle until DIST's next cut — like every fix of this session, the exposure is closed on `main` and open on deployed instances until then. UI/SKILL/DIST NOT-AFFECTED at the interface, CONDUCT answering for each.
+
+## IC-143 · I3: `op=frontier&level=internet` IS BUILT — the internet level's frontier answers from the LEAD's looks, fenced by the lead's own visibility rule BEFORE grouping, every figure viewer-scoped, an empty answer naming its cause · PROPOSED 2026-09-18 (REC-129, minted with `node tools/mintid.mjs IC` BEFORE building, by the first REC-129 worker) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`: 27.0.0. Proposed as MINOR — 27.0.0 → 27.1.0**, and the reason is
+  stated rather than assumed: the input `level=internet` answered `{ built: false, found: false }` with a
+  not-built note and now answers a built frontier. No key an existing answer carried is removed or
+  re-meant at the document, content or meaning levels; the not-built branch still answers, in words, a
+  level the reader does not know. A consumer that branched on `built: false` for `internet` would now see
+  `true` — **measured: none exists** (below). **Read the base AT RESOLUTION** — IC-144 (this same item)
+  and REC-128's IC-139 may land beside it.
+- **Proposer:** RECORD, REC-129 (resumed by worker `agent-a844762fac5c3f533` from `worktree-agent-af99c832f7860f664`@`eda53bc2`), 2026-09-18
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (NOT-AFFECTED measured: `civicos-ui/` calls no `op=frontier` at any level —
+  zero matches for `op=frontier`/`"frontier"` in `app.html`; the frontier surface is Program B's and unbuilt),
+  `SKILL`, `DIST`, `agent-worker` (NOT-AFFECTED: no caller, grepped).
+- **Design:** `OBSERVATION-LOG-DESIGN.md` §6 (the reader table; the fourth-reader paragraph added in this
+  landing) read with §4.5 and §5.1; `MEMBER-KNOWLEDGE-DESIGN.md` §5 (visibility, and the PRECONDITION that
+  rows with `authority_kind = 'lead'` carry the lead's WORDS and must be gated before serving).
+
+**THE SHAPE.** `op=frontier&level=internet[&limit=]` — classes unchanged (admin/member/probe), viewer
+stamped as for every other level. Answers `{ level: "internet", found: true, built: true, limit, truncated,
+reads: { authority_kind: "lead", subject_kind: "description" }, not_read: [...], tally_scope:
+"visible_to_viewer", evidence_one_sided: { description: false }, looked: [...], never_looked: [...],
+never_looked_count, missing_unexplained: [], missing_unexplained_count: 0, tally, empty, empty_causes, note }`.
+A `looked` row is the latest look per subject over the looks THIS VIEWER may read, with `lead`,
+`last_verified`, `unreachable_since`, `coverage`, `found_nothing`, and `result_kind`/`result_ref` nulled
+when the referent is in a bundle the viewer cannot read (`leadRead`'s rule, the same helper). A
+`never_looked` row is a readable lead nobody has followed, with `not_ruled_out: ["never_looked"]` —
+§5.1's cause (3) established, because a lead and its looks are born after the log and purged with it.
+`empty` is `null` or `{ level: "internet", partition: "description", cause, says }`, `cause` one of
+`no_member` / `no_leads_visible` / `never_followed`.
+
+**THE FENCE.** `#leadReach` is the lead-visibility ruling (BOB #14) spelled ONCE as a SQL predicate over
+`leads l`; `#leadVisibleTo` (op=leadread/leadlook/leadshare) and `#frontierInternet` both consume it. It is
+applied to the looks inside a CTE BEFORE the latest-per-subject grouping — so a hidden look under a second
+lead with IDENTICAL words cannot become the viewer's "latest row" or re-date it — and the tally, the
+never-followed list and `truncated` are all computed from that CTE. `no_leads_visible` is the same answer
+for "no leads" and "leads you may not read", on purpose.
+
+**Suites:** `bio-plane/test/frontier-internet.test.mjs` (33 assertions, sections A–F; C asserts BY DIGEST
+that seven viewers' whole answers are byte-identical across every act on a lead outside their reach;
+D/E prove a caller who CAN see a lead gets it, so an answer empty for everyone fails). Corrected, never
+exempted: `lead.test.mjs` (the not-built assertion), `observation-log.test.mjs` E5/E5b and
+`observation-meaning.test.mjs` F1 (asked `internet` as the unbuilt level; now ask a nonexistent one),
+`derivation-bounds.test.mjs` (census 107 → 108, the arrival `#frontierInternet`, from the printed line).
+Negative control: `node test/nc-rec129.mjs` from `bio-plane/` (arms recorded in the suite header).
+
+**RESPONSES:** not yet collected.
+
+## IC-144 · I3: `op=stats`' `leads` AND `observations` ARE RETURNED TO THE `admin` CLASS ONLY — member and probe receive NEITHER KEY; `op=selftest` and `op=livefire`, which relay the store's stats, take the same rule · PROPOSED 2026-09-18 (REC-129, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`: 27.0.0. Proposed as MAJOR — 27.0.0 → 28.0.0** (or folded with IC-143
+  into ONE bump, the strongest classification governing, as IC-110/112/114 were). **Why MAJOR, honestly:**
+  two keys an op RETURNED yesterday to member and probe are ABSENT today — a removed key for a class is
+  breaking for that class's reader, whatever the measured impact (IC-25's rule). **Read the base AT
+  RESOLUTION.**
+- **Proposer:** RECORD, REC-129 worker `agent-a844762fac5c3f533`, 2026-09-18 — a CORRECTION TO LANDED MK-4
+  (IC-136 added `leads` to `op=stats`), RULED by BOB #15 in `MEMBER-KNOWLEDGE-DESIGN.md` §5 (*A COUNT IS A
+  DISCLOSURE OF EXISTENCE*).
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (NOT-AFFECTED measured: `civicos-ui/` calls neither `op=stats` nor
+  `op=selftest`; its two `observations:` matches are a SIGHTINGS field in fixtures, unrelated), `DIST`
+  (NOT-AFFECTED: `newgroup/src/index.mjs`'s `verifyInstall` calls `op=selftest` with the PROBE token and
+  reads only `ok` and `bindings.STORE`; `release/` carries the old bundle until DIST's next cut — the
+  disclosure is closed on `main` and open on deployed instances until then), `SKILL`, `agent-worker`
+  (NOT-AFFECTED, grepped). Every suite reading either key reads it with the ADMIN token (`lead.test.mjs`,
+  `observation-log.test.mjs`, `reextract.test.mjs`, `rec93-migrate-probe.mjs`) — grepped, all unchanged.
+
+**THE DEFECT, reproduced before the fix.** `stats-disclosure.test.mjs` run against the unedited tree failed
+9 assertions: a member TOKEN's and a member SESSION's whole `op=stats` answer CHANGED when another member
+wrote a lead and followed it, and member, probe and a member session all received both keys (as did a
+member's `op=selftest`).
+
+**THE SHAPE.** `Store#stats({ operator })` includes `observations` and `leads` only when `operator` is
+true; an absent stamp is false (a door that forgets to stamp loses the keys rather than leaking them).
+`index.mjs` sets `operator` from the authenticated class (`cls === "admin"`: the ADMIN_TOKEN class and the
+ROOT-admin session; a member whose ROLE is admin signs in as class `member` with an `administer` right and
+does NOT receive them — PROVISIONAL, the ruling names the class; a decision for BOB in REC-129's report) AFTER copying the caller's parameters, so a caller's `operator=` is overwritten. The
+SAME stamp is taken by `op=selftest` (admin/member/probe; it embeds the stats as `store`) and `op=livefire`
+(admin/probe; `storeState`). `purge` passes `operator: true` — its `before`/`after` ARE the D-113 proof the
+counts exist for. No other key of `op=stats` moves.
+
+**THE SWEEP, and what it could not see.** Matcher: every SQL `count(` / `COUNT(` over `observation_log` or
+`leads` in `store.mjs`, and every op whose answer embeds `stats()`. Found: `op=stats` (fixed);
+`op=selftest` and `op=livefire` (fixed, same stamp); `purge`'s `before`/`after`/`removed` (probe reaches
+purge in SCRATCH only; left as the D-113 proof — a probe that may delete every scratch lead learns their
+count, named here as the residue); `stats.aiRunLog` (a count over `authority_kind = 'run'` rows — no lead
+act writes one, `lead.test.mjs` pins it unmoved across every lead act; left, and its site says why); the
+three bundle-level frontier tallies (level-filtered, so they count no lead row; REC-110's ruling on them
+cites the `observations` key as its first premise — recorded in `OBSERVATION-LOG-DESIGN.md` Incomplete
+sections for BOB, NOT reopened here); the internet frontier's tally (viewer-scoped, IC-143);
+`op=leadread` (per lead, gated). **Cannot see:** a count computed in JS over a row set fetched elsewhere,
+a count spelled as `.length` on a list an answer does not publish, and any disclosure by TIMING; and the
+general §5 rule (*any* counter over rows a caller cannot all read) reaches beyond leads and observations
+— `op=stats`' other keys count bundles, runs and content members cannot all read — which the ruling's
+residue sentence covers for the operator and does not address for member/probe. Stated as a design gap,
+not swept.
+
+**Suites:** `bio-plane/test/stats-disclosure.test.mjs` (new; A the byte-identical headline control for the
+member TOKEN, a member SESSION and the probe TOKEN — the probe's arm is NON-DISCRIMINATING, it reads the
+SCRATCH store and cannot see a live lead either way; B absent-not-zero, and a caller's `operator=1`
+refused; C over-strictness — the admin TOKEN keeps both and they COUNT, a caller's `operator=0` cannot take
+them, and an admin-ROLE member's session (class `member`) receives neither; D `op=selftest`; E purge's proof intact). Negative control: `node
+test/nc-rec129.mjs statsbaseline|statsopen|statsdropall|statsstamp|selftestopen` from `bio-plane/`.
+
+**RESPONSES:** not yet collected.

@@ -13690,3 +13690,12 @@ paths:
     `docs/development/INTERFACE-CHANGES.md` (IC-143), `docs/DECIDED.md` (regenerated only).
   **NOT** `docs/development/QUEUE.md` (CONDUCT's), **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, no version bump.
 addendum 2026-09-18: STOPPED AT STAND-DOWN (CONDUCT #4). The claim stays OPEN; branch `worktree-agent-af99c832f7860f664` holds the WIP commit. IC-143 stays reserved to REC-129.
+addendum 2026-09-18: RESUMED by CONDUCT #5's respawn — worker `agent-a844762fac5c3f533`, branch
+`worktree-agent-a844762fac5c3f533`, the WIP branch merged onto `origin/main` `27ad8b4f`. The claim is this worker's now.
+Paths ADDED for scope (a), BOB #15's §5 counter ruling (IC-144, minted with `node tools/mintid.mjs IC`):
+  - `bio-plane/src/index.mjs` — the `operator` stamp on op=stats, op=selftest's relay, op=livefire's call.
+  - `bio-plane/src/livefire.mjs` — its relayed stats take the stamp.
+  - `bio-plane/src/store.mjs` — `stats()` (the two keys), `purge`'s two `stats()` calls, the DO route.
+  - `bio-plane/test/stats-disclosure.test.mjs` — new; `bio-plane/test/nc-rec129.mjs` gains its arms.
+  - `bio-plane/test/derivation-bounds.test.mjs` — the census ratchet and the census-blind roster, moved
+    from the printed figures for `#frontierInternet`'s arrival.
