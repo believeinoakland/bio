@@ -10375,3 +10375,74 @@ at}]` — every share for the author, only the viewer's own joined projects for 
 every one as declared on the final tree (recorded in the suite's `NEGATIVE CONTROL:` line).
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at MK-4's integration — I3 26.2.0 → 26.3.0, MINOR (additive: `op=lead`, `op=leadlook`, `op=leadread`, `op=leadshare`; C-54 incl. C-54.9/.10).** Base read at resolution (26.2.0; the IC proposed against 25.1.0 — four integrations moved I3 while MK-4 was built and corrected). **MK-4 was HELD OFF `main` once for BOB #14's visibility ruling** and landed with it: the author; a project's JOINED participants after the author's `op=leadshare`; a machine credential only through a member-scoped `ai` key that reaches exactly what its member reaches (instance tokens and org-scoped keys reach no lead); everyone else the byte-identical answer for a lead that does not exist. **The merge onto MK-1 was the session's first real CODE conflict** — both added to the OPS table, the session and capability lists, the affordance tables, the check catalogue and `store.mjs`'s imports — resolved keep-both by hand, the check catalogue's shared comment opener restored so each family keeps its own, and proved by the full battery. UI/SKILL/DIST NOT-AFFECTED, CONDUCT answering for each.
+
+## IC-141 · I3: an UNSIGNED case document answers ONLY to standing in its owning project — `op=casedocument` answers every other caller byte for byte as for a case that does not exist, and `op=caseratify`'s facts read carries the same rule; a SIGNED case document stays public · PROPOSED 2026-09-18 (REC-130, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`: 26.2.0. Proposed as MAJOR — 26.2.0 → 27.0.0.** No op, field, table or
+  response key is added or removed; an anonymous read that ANSWERED yesterday is answered NO_CASE_DOCUMENT
+  today. **Read the base AT RESOLUTION.**
+- **Proposer:** RECORD, worker `agent-a7b9294a66f1df4b0`, 2026-09-18, from QUEUE REC-130
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (NOT-AFFECTED measured: no surface in `civicos-ui/` calls `op=casedocument` —
+  the only string match is a fixture key in `civicos-ui/test/publishedcase.test.mjs` naming an example
+  attestor key; the published case page reads `op=publishedcase`, which reads only the published projection
+  and is unchanged. **A UI surface loses nothing**, because none reads an unsigned case document; the one
+  that will — the signing surface for `op=caseratify`, which has no submitting surface yet (IC-137's
+  measurement) — must send the member's session token, and an owner, participant or administrator reads
+  exactly as before), `DIST` (NOT-AFFECTED: no procedure reads the op; `release/` and `newgroup/src/release.mjs`
+  carry the OLD bundle until DIST's next cut), `SKILL`, `FRAMEWORK` (NOT-AFFECTED: no reader, grepped).
+- **Design:** `BIO_Publication_v0_1.md` §4 (updated in this landing) — the publication fence of 2026-07-31
+  applied by BOB #14 with no new doctrine: unratified working material never crosses to the public.
+
+**WHAT WAS MEASURED ON THE UNEDITED TREE (`def64d91`).** `casesign.test.mjs` read the unsigned document of
+a freshly published case with NO TOKEN and got it whole — `ratified: false`, and every authored sentence
+(scope, completeness statement, subject justification, bias acknowledgement, the exclusion and its reason)
+verbatim. Case ids come from `allocId("CASE", year)`, a per-year sequence, so `CASE-2026-0001`, `-0002`, …
+are walkable by anybody.
+
+**THE SHAPE.**
+- `op=casedocument` stays `classes: null` (the signed half must stay public). The control plane resolves the
+  caller WITHOUT EVER REFUSING (`caseReader` in `src/index.mjs`): a session → `member:<id>`; an `ai`
+  credential → its declared principal through `aiTaskScope`; an operator binding → `class:<cls>` only if
+  `OPS.index` admits the class AND `scopeFor` addresses it to the store the op reads (`bio`) — so `daemon`
+  and the scratch-confined `probe` read as strangers; anything absent or unrecognised → no viewer. The viewer
+  is STAMPED on the inner URL; nothing of the caller's reaches it.
+- `Store#caseDocumentFacts(caseId, edition, viewer)`: an UNRATIFIED document is returned only when
+  `Store#hasCaseStanding` holds — `viewerPredicate` (D-15's one compilation point) run against the owning
+  project's bundle, where the owning project is the `cases` row and the document's own `case_project`
+  (standing required in each). Otherwise it returns `Store.#noCaseDocument(id, ed)`, the SAME function the
+  genuinely-absent branch returns, so the two cannot drift. A RATIFIED document is untouched.
+- **Who has standing** is D-15's answer unchanged: a participant in the owning project (invited, joined or
+  leaving), an active administrator (Membership Architecture 7.3), or an instance-level credential. Not a
+  narrower rule invented here — "a fence tighter than its rule is not a safer fence".
+- `op=caseratify` stamps `member:<session member>` on its facts read. Before this, a member of ANOTHER
+  project could probe an unsigned case through it: `CASE_RATIFY_STALE` carried the document's `expected` sha,
+  and `TESTIMONY_CASE_UNPUBLISHABLE` its finding ids. Now such a caller gets the not-found answer, byte for
+  byte. (This also means only a member who may READ the document may sign it — "a member cannot sign what
+  they have not read", the ceremony's own premise.)
+
+**THE SWEEP — every other reader of an unsigned case, and everything that enumerates case ids.**
+`op=publishedcase` / `op=publishedmanifest` / `op=verify` / `op=publishedbytes` / `op=caseflags` read only
+the published projection or `case_revision_flags` (written only for RATIFIED pins), so an unsigned case is
+absent there by construction and `publishedcase` already answers NOT_PUBLISHED identically for both.
+`#caseClaimInBytes` (the PREPARED arm of `#caseRelationOf`, and `#caseClaimsOf`) is a refusal input for acts
+on a finding the caller can already reach, and every refusal it feeds names the TARGET and never the case —
+stated at its site. `op=allocid&prefix=CASE` discloses a COUNT of case ids drawn, to members only, naming
+no case — stated at the OPS row. `op=export` is root-of-trust only. `op=publish`'s answer names the case to
+its publisher, who is the project owner (DEC-72 clause 5). `op=index` lists bundles, and a case id is not a
+bundle.
+
+**WHY MAJOR** (IC-25's rule, IC-137's precedent): a read that answered yesterday is refused today — even
+though the refusal is spelled as not-found on purpose.
+
+**Suites:** `bio-plane/test/casesign.test.mjs` — the anonymous-read assertion CORRECTED with its dated reason;
+block 1b compares the RAW answer (status, content type, body bytes) against the same op's answer for the same
+id read BEFORE `op=publish` minted it, for anonymous, an unknown token, a member of another project, the
+probe class, another member's agent, and `op=caseratify`; over-strictness for the owner, an administrator,
+an invited and a joined participant, the instance member binding, the owner's agent, and the signed
+document read publicly. `gate-reads.test.mjs` moves `casedocument` from UNGATED to GATED with the corrected
+reason; `operator-attest.test.mjs`'s direct DO read stamps `class:admin`. Negative control: `node
+test/casesign.control.mjs e|f|g|h` from `bio-plane/`, all four as declared (recorded in the suite's header).
+
+**RESPONSES:** not yet collected.

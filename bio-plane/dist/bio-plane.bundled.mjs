@@ -29515,7 +29515,16 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
    *
    * IT IS A REFUSAL INPUT ONLY. Nothing here commits a case fact, which is what
    * kept the old version clear of CASE-5b's wall and what keeps this one clear
-   * of it too. Returns null when no claim is made. */
+   * of it too. Returns null when no claim is made.
+   *
+   * REC-130's SWEEP, stated here because this is the other reader of an
+   * UNSIGNED case document: it does NOT carry the standing rule, and need not.
+   * It answers a FINDING-side question for acts on a finding the caller can
+   * already reach, and every refusal it feeds (ALREADY_A_CASE_MEMBER,
+   * PUBLISHED_CANNOT_DIVIDE / _RESTRUCTURE / _MOVE_VERSION, the reopen gate, the
+   * affordance fact `case_member`) names the TARGET and never the case id, the
+   * scope or anything the case document says. Checked at each site 2026-09-18.
+   * If a refusal ever starts naming the case, it inherits the rule. */
   #caseClaimInBytes(bundleId) {
     const b = this.#one(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, bundleId);
     if (!b) return null;
@@ -32269,7 +32278,7 @@ Subject position: ${pos} \u2014 ${just}
   
        THE TEXT COMES BACK WHOLE. A ceremony whose subject is "a thing a member
        actually reviewed" cannot hand the member a summary of the thing. */
-  caseDocumentFacts(caseId, edition) {
+  caseDocumentFacts(caseId, edition, viewer) {
     const id = String(caseId ?? "").trim();
     const ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1) return { ok: false, reason: "MALFORMED" };
@@ -32280,13 +32289,8 @@ Subject position: ${pos} \u2014 ${just}
       id,
       ed
     );
-    if (!doc) return {
-      ok: false,
-      reason: "NO_CASE_DOCUMENT",
-      caseId: id,
-      edition: ed,
-      detail: `no case document has been authored for ${id} edition ${ed}. A case document is written by op=publish, which is the act that authors the assertions it carries \u2014 this plane does not compose one.`
-    };
+    if (!doc) return _Store.#noCaseDocument(id, ed);
+    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)) return _Store.#noCaseDocument(id, ed);
     return {
       ok: true,
       doc,
@@ -32311,12 +32315,59 @@ Subject position: ${pos} \u2014 ${just}
       })())
     };
   }
-  /* Read-only, for the member who is about to sign. Scoped to nothing, because
-     an UNRATIFIED case document is working material and a RATIFIED one is the
-     signed bytes a stranger is entitled to check — the same posture
-     `op=publishedbytes` already takes one altitude down. */
-  caseDocument(caseId, edition) {
-    const facts = this.caseDocumentFacts(caseId, edition);
+  /* THE ONE "NO SUCH CASE DOCUMENT" ANSWER (REC-130). Both the genuinely-absent
+     branch and the no-standing branch return THIS, so "does not exist" and "you
+     may not see it" are the same bytes by construction rather than by care. */
+  static #noCaseDocument(id, ed) {
+    return {
+      ok: false,
+      reason: "NO_CASE_DOCUMENT",
+      caseId: id,
+      edition: ed,
+      detail: `no case document has been authored for ${id} edition ${ed}. A case document is written by op=publish, which is the act that authors the assertions it carries \u2014 this plane does not compose one.`
+    };
+  }
+  /* REC-130: STANDING IN THE OWNING PROJECT, ASKED THROUGH D-15's ONE
+       COMPILATION POINT rather than restated. `viewerPredicate` already answers
+       "may this viewer see this project" — an identified member sees it if they
+       participate in it (invited, joined or leaving) or are an active
+       administrator (Membership Architecture 7.3/7.9), an instance-level machine
+       credential sees it unfiltered, and anything else is DENY. A second
+       implementation of that rule here would be this repository's most-repeated
+       defect class, so the predicate is run against the project's own bundle row.
+  
+       THE OWNING PROJECT is every project the record names for this case: the
+       `cases` row, written at an earlier edition's ratification, and the document's
+       own `case_project`, which is what this edition's signature would commit.
+       Standing is required in EACH — they agree on every case the ceremony can
+       produce, and where they did not, reading the document would need both.
+  
+       A DOCUMENT NAMING NO PROJECT answers only the unfiltered scope. The ceremony
+       cannot author one (DEC-72 removed the project-less path before CASE-5b built
+       case documents), so this arm is defence rather than policy, and it fails
+       closed for every identified member rather than guessing an owner. */
+  #hasCaseStanding(doc, viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "DENY") return false;
+    if (gate.scope === "member") return true;
+    const named = String((parseFrontmatter(doc.text).data || {}).case_project ?? "").trim();
+    const row = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, doc.case_id);
+    const projects = [...new Set([named, row?.project_id ?? ""].filter(Boolean))];
+    if (!projects.length) return false;
+    return projects.every((p) => !!this.#one(
+      `SELECT 1 AS seen FROM bundles b WHERE b.bundle_id=? AND b.object_type='project' AND ${gate.sql}`,
+      p,
+      ...gate.args
+    ));
+  }
+  /* Read-only, for the member who is about to sign — and, once RATIFIED, for
+     anybody, because a ratified document is the signed bytes a stranger is
+     entitled to check (the posture `op=publishedbytes` takes one altitude
+     down). REC-130 CORRECTED the other half of this comment: it said "scoped to
+     nothing" of the UNRATIFIED document too, which was a mechanism choice with
+     no ruling behind it. The scoping now lives in `caseDocumentFacts`. */
+  caseDocument(caseId, edition, viewer) {
+    const facts = this.caseDocumentFacts(caseId, edition, viewer);
     if (!facts.ok) return facts;
     const d = facts.doc;
     return {
@@ -61304,13 +61355,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         /* CASE-5b: the case ceremony's three hops, beside `gatefacts` and
            `publish` because they are the same three acts one altitude up —
            hand out the facts, read the document, commit from the signed bytes. */
+        /* REC-130: both carry the viewer the control plane STAMPS, and fail
+           closed on its absence — an unsigned document is working material. */
         casedocfacts: () => this.caseDocumentFacts(
           url.searchParams.get("case"),
-          url.searchParams.get("edition")
+          url.searchParams.get("edition"),
+          url.searchParams.get("viewer")
         ),
         casedocument: () => this.caseDocument(
           url.searchParams.get("case"),
-          url.searchParams.get("edition")
+          url.searchParams.get("edition"),
+          url.searchParams.get("viewer")
         ),
         caseratify: () => this.ratifyCaseDocument(body || {}),
         audit: () => this.auditPass({
@@ -61839,6 +61894,15 @@ var OPS = {
   dangling: { classes: ["admin", "member", "probe"], mutating: false },
   stats: { classes: ["admin", "member", "probe"], mutating: false },
   promote: { classes: ["admin", "member", "probe"], mutating: true },
+  /* REC-130's sweep, stated at the site because the row asked for it: `allocid`
+     with `prefix=CASE` tells its caller the NEXT number off the CASE sequence, so
+     it discloses how many case identities this year has minted. It does NOT fall
+     under the unsigned-case rule, and the reason is the rule's own: that rule is
+     about a stranger learning a case's EXISTENCE AND CONTENT, and this op is
+     gated to the instance's own members (never anonymous), names no case, carries
+     no scope, roster or title, and burns the number it reveals. A count of
+     sequence draws is the same disclosure for every namespace (INQ, INFO, …) and
+     is instance-level knowledge a member already holds. */
   allocid: { classes: ["admin", "member", "probe"], mutating: true },
   lease: { classes: ["admin", "member", "probe"], mutating: true },
   purge: { classes: ["admin", "probe"], mutating: true },
@@ -62015,11 +62079,17 @@ var OPS = {
        bytes a stranger is entitled to check — it is the artifact the container
        carries, and gating it would make the stranger-verification path depend on
        this instance's goodwill, which is the one thing that path exists to refute.
-       AN UNRATIFIED one is working material and it is answered too, deliberately:
-       the answer says `ratified: false` in its own field, so what a reader learns
-       from an unsigned case document is that somebody started a ceremony, which is
-       exactly as much as the record knows. Nothing in it is a claim the record
-       stands behind until the signature is there, and it says so.
+       AN UNRATIFIED one is working material and — CORRECTED by REC-130 / IC-141,
+       2026-09-18 — it answers ONLY to standing in the owning project. This comment
+       used to say it was answered to anybody, "deliberately", because the answer
+       says `ratified: false`; that was a mechanism choice with no ruling behind it,
+       and it handed a stranger the group's scope, roster, exclusions and bias
+       acknowledgement before any member had signed them, over ids that come off a
+       sequence. BOB #14 ruled it as the publication fence applied: every caller
+       without standing is answered EXACTLY as for a case that does not exist, so
+       enumeration learns nothing. The op stays `classes: null` because the signed
+       half must stay public; `caseReader` resolves who is asking without refusing
+       anybody, and the store's `caseDocumentFacts` decides.
   
        `caseratify` is GATED like `ratify`, and to the same classes: it is the
        publication surface, and the registered signing key governs the authority on
@@ -63226,6 +63296,32 @@ function aiTaskScope(cred, op, spec) {
     );
   return { ok: true, viewer: cred.principal };
 }
+async function caseReader(url, env, storeName) {
+  const t = url.searchParams.get("token");
+  if (!t) return { viewer: "" };
+  const cls = await classify(t, env);
+  if (cls) {
+    const scope = scopeFor(cls, url);
+    const inScope = OPS.index.classes.includes(cls) && !scope.error && scope.name === storeName;
+    return { viewer: inScope ? `${MACHINE_CLASS_PREFIX}${cls}` : "" };
+  }
+  const st = env.STORE.get(env.STORE.idFromName("bio"));
+  if (AI_TOKEN_SHAPE.test(t)) {
+    const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex5(t)}`));
+    if (!aOut.answered) return { silent: "aicredentiallook" };
+    const cred = aOut.result?.found ? aOut.result.credential : null;
+    const scoped = cred ? aiTaskScope(cred, "index", OPS.index) : null;
+    return { viewer: scoped && !scoped.error ? scoped.viewer : "" };
+  }
+  if (/^[0-9a-f]{64}$/.test(t)) {
+    const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
+    if (!sOut.answered) return { silent: "session" };
+    const sess = sOut.result?.session;
+    if (!sess) return { viewer: "" };
+    return { viewer: `member:${sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role}` };
+  }
+  return { viewer: "" };
+}
 var json = (o, status = 200) => new Response(JSON.stringify(dec49Attach(o), null, 1), {
   status,
   headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
@@ -63843,8 +63939,10 @@ var index_default = {
             reason: "MALFORMED",
             detail: "casedocument requires case=<CASE-YYYY-NNNN> and edition=<n>"
           }, 400);
+        const reader = await caseReader(url, env, "bio");
+        if (reader.silent) return storeSilent(reader.silent);
         const out2 = await doAnswer(stub2.fetch(
-          `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}`
+          `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}&viewer=${encodeURIComponent(reader.viewer)}`
         ));
         if (!out2.answered) return storeSilent("casedocument");
         const r = out2.result;
@@ -66195,7 +66293,7 @@ var index_default = {
           detail: "caseratify requires caseId, edition (integer), expectedSha, and sig (armored SSH signature over the case document's sha)"
         }, 400);
       const factsOut = await doAnswer(stub.fetch(
-        `http://do/casedocfacts?case=${encodeURIComponent(body2.caseId)}&edition=${encodeURIComponent(String(body2.edition))}`
+        `http://do/casedocfacts?case=${encodeURIComponent(body2.caseId)}&edition=${encodeURIComponent(String(body2.edition))}&viewer=${encodeURIComponent(`member:${sessMember}`)}`
       ));
       if (!factsOut.answered) return storeSilent("caseratify/facts");
       const facts = factsOut.result;

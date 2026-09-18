@@ -774,8 +774,17 @@ const OPS = {
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
+  /* REC-130's sweep, stated at the site because the row asked for it: `allocid`
+     with `prefix=CASE` tells its caller the NEXT number off the CASE sequence, so
+     it discloses how many case identities this year has minted. It does NOT fall
+     under the unsigned-case rule, and the reason is the rule's own: that rule is
+     about a stranger learning a case's EXISTENCE AND CONTENT, and this op is
+     gated to the instance's own members (never anonymous), names no case, carries
+     no scope, roster or title, and burns the number it reveals. A count of
+     sequence draws is the same disclosure for every namespace (INQ, INFO, …) and
+     is instance-level knowledge a member already holds. */
   allocid:    { classes: ["admin", "member", "probe"],           mutating: true  },
-  lease:      { classes: ["admin", "member", "probe"],           mutating: true  },
+  lease:     { classes: ["admin", "member", "probe"],           mutating: true  },
   purge:      { classes: ["admin", "probe"],                     mutating: true  },
   capture:    { classes: ["admin", "member", "probe"],           mutating: true  },
   /* A pure read, and computed at read time on purpose: which partition a link
@@ -951,11 +960,17 @@ const OPS = {
      bytes a stranger is entitled to check — it is the artifact the container
      carries, and gating it would make the stranger-verification path depend on
      this instance's goodwill, which is the one thing that path exists to refute.
-     AN UNRATIFIED one is working material and it is answered too, deliberately:
-     the answer says `ratified: false` in its own field, so what a reader learns
-     from an unsigned case document is that somebody started a ceremony, which is
-     exactly as much as the record knows. Nothing in it is a claim the record
-     stands behind until the signature is there, and it says so.
+     AN UNRATIFIED one is working material and — CORRECTED by REC-130 / IC-141,
+     2026-09-18 — it answers ONLY to standing in the owning project. This comment
+     used to say it was answered to anybody, "deliberately", because the answer
+     says `ratified: false`; that was a mechanism choice with no ruling behind it,
+     and it handed a stranger the group's scope, roster, exclusions and bias
+     acknowledgement before any member had signed them, over ids that come off a
+     sequence. BOB #14 ruled it as the publication fence applied: every caller
+     without standing is answered EXACTLY as for a case that does not exist, so
+     enumeration learns nothing. The op stays `classes: null` because the signed
+     half must stay public; `caseReader` resolves who is asking without refusing
+     anybody, and the store's `caseDocumentFacts` decides.
 
      `caseratify` is GATED like `ratify`, and to the same classes: it is the
      publication surface, and the registered signing key governs the authority on
@@ -2512,6 +2527,55 @@ function aiTaskScope(cred, op, spec) {
   return { ok: true, viewer: cred.principal };
 }
 
+/* REC-130 / IC-141 — WHO IS ASKING, FOR AN OP THAT ANSWERS ANYBODY BUT ANSWERS
+ * WORKING MATERIAL ONLY TO SOME. `op=casedocument` stays UNGATED because a
+ * RATIFIED case document is what a stranger verifies, and an unsigned one answers
+ * only to standing in its owning project. So the op cannot demand a credential and
+ * cannot ignore one: this resolves the caller the way the gated path does and
+ * returns the VIEWER STRING the store's D-15 predicate reads — or "" for nobody.
+ *
+ * IT NEVER REFUSES. An absent, unknown, expired or out-of-scope credential is
+ * resolved to "" and the caller is answered as a stranger, because a refusal
+ * here would be a second shape of answer, and the whole property is that a
+ * caller without standing cannot tell an unsigned case from no case. The ONLY
+ * non-answer is a store silence during the lookup, which is a fact about the
+ * instance and is the same whatever case was named.
+ *
+ * "OUTSIDE SCOPE" FOR A MACHINE CREDENTIAL, decided rather than left open: a
+ * binding class stands only if the OPS table admits it to the working-corpus
+ * listing (`index`, whose own comment is why a title is working material) AND
+ * `scopeFor` addresses it to the store this op reads. So `daemon` (two verbs)
+ * and `probe` (confined to scratch) are outside it and read as strangers; the
+ * `admin` and `member` bindings are instance-level and read as they read every
+ * other piece of working material. An `ai` credential stands as its declared
+ * principal, through the same `aiTaskScope` the gated path runs. */
+async function caseReader(url, env, storeName) {
+  const t = url.searchParams.get("token");
+  if (!t) return { viewer: "" };
+  const cls = await classify(t, env);
+  if (cls) {
+    const scope = scopeFor(cls, url);
+    const inScope = OPS.index.classes.includes(cls) && !scope.error && scope.name === storeName;
+    return { viewer: inScope ? `${MACHINE_CLASS_PREFIX}${cls}` : "" };
+  }
+  const st = env.STORE.get(env.STORE.idFromName("bio"));
+  if (AI_TOKEN_SHAPE.test(t)) {
+    const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex(t)}`));
+    if (!aOut.answered) return { silent: "aicredentiallook" };
+    const cred = aOut.result?.found ? aOut.result.credential : null;
+    const scoped = cred ? aiTaskScope(cred, "index", OPS.index) : null;
+    return { viewer: scoped && !scoped.error ? scoped.viewer : "" };
+  }
+  if (/^[0-9a-f]{64}$/.test(t)) {
+    const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
+    if (!sOut.answered) return { silent: "session" };
+    const sess = sOut.result?.session;
+    if (!sess) return { viewer: "" };
+    return { viewer: `member:${sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role}` };
+  }
+  return { viewer: "" };
+}
+
 const json = (o, status = 200) =>
   new Response(JSON.stringify(dec49Attach(o), null, 1), {
     status, headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
@@ -4002,8 +4066,16 @@ export default {
         if (!caseId || !ed)
           return json({ ok: false, reason: "MALFORMED",
                         detail: "casedocument requires case=<CASE-YYYY-NNNN> and edition=<n>" }, 400);
+        /* REC-130: the viewer is STAMPED here from the credential and never read
+           from the request — the inner URL is built from nothing of the caller's
+           but the two keys. The store answers an unsigned document to standing
+           and answers everybody else exactly as it answers a case that does not
+           exist. */
+        const reader = await caseReader(url, env, "bio");
+        if (reader.silent) return storeSilent(reader.silent);
         const out = await doAnswer(stub.fetch(
-          `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}`));
+          `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}`
+          + `&viewer=${encodeURIComponent(reader.viewer)}`));
         if (!out.answered) return storeSilent("casedocument");
         const r = out.result;
         /* THE VERDICT IS DECLARED AS A LITERAL, FIRST, rather than inherited
@@ -7454,7 +7526,13 @@ export default {
 
       const factsOut = await doAnswer(stub.fetch(
         `http://do/casedocfacts?case=${encodeURIComponent(body.caseId)}`
-        + `&edition=${encodeURIComponent(String(body.edition))}`));
+        + `&edition=${encodeURIComponent(String(body.edition))}`
+        /* REC-130: the SAME standing `op=casedocument` answers to. Only a
+           member's own session reaches this line (the region above), so the
+           viewer is that member; one without standing in the owning project is
+           answered NO_CASE_DOCUMENT exactly as for a case that does not exist,
+           rather than CASE_RATIFY_STALE with the document's sha. */
+        + `&viewer=${encodeURIComponent(`member:${sessMember}`)}`));
       /* REC-53's chokepoint, and the same judgement `op=ratify` records once for
          its whole block: BEFORE the commit a silence refuses the act outright,
          because nothing has been written and 502's sentence — nothing here is a

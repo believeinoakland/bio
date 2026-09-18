@@ -13636,3 +13636,37 @@ Same paths as the claim above (no new area's). Added: the `lead_shares` table in
 `bio-checks.mjs`, six control arms in `test/nc-mk4.mjs`. `MEMBER-KNOWLEDGE-DESIGN.md`: the Status line ONLY — §5's
 body is BOB #14's to write and was not touched.
 released: 2026-09-18 by the MK-4 worker — committed and pushed on `worktree-agent-a6de3e82fcfd8bd2a`.
+
+## CLAIM 2026-09-18 RECORD (REC-130 — an UNSIGNED case document answers only to standing in its owning project)
+
+Worker spawned by CONDUCT #4, isolated worktree `agent-a7b9294a66f1df4b0`, branch
+`worktree-agent-a7b9294a66f1df4b0`, base `f426f519`. `npm ci` in all three packages, each `node_modules` a real
+directory (4.7 GiB free). Paths:
+
+- RECORD (own): `bio-plane/src/index.mjs` (the `casedocument` OPS row and its handler; the `caseratify` handler's
+  facts read; comments at the OPS rows the sweep names); `bio-plane/src/store.mjs` (`caseDocumentFacts`,
+  `caseDocument`, a new private standing predicate beside them, and the DO route for both).
+- Tests: `bio-plane/test/casesign.test.mjs` (the anonymous-read assertion CORRECTED with a dated reason, a new block
+  for the no-existence-leak property), plus any suite that read an unsigned case document anonymously — each
+  re-pointed with its reason, never exempted; a new committed control driver if the arms need one.
+- Generated: `bio-plane/dist/*` rebuilt.
+- Docs: `INTERFACE-CHANGES.md` (IC-141, minted with `node tools/mintid.mjs IC`), `docs/DECIDED.md` on
+  regeneration, this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `civicos-ui/` (read only, to say what a surface loses), NOT `newgroup/`,
+NOT `BIO_Publication_v0_1.md` §6A (BOB is writing it).
+
+## CLAIM 2026-09-18 RECORD (REC-130) — RELEASED
+
+released: 2026-09-18 by the REC-130 worker, branch `worktree-agent-a7b9294a66f1df4b0`, base `f426f519`. PREMISE
+FALSIFIED BEFORE BUILDING on the unedited tree: `casesign.test.mjs` read a freshly published, UNSIGNED case
+document with no token and got every authored sentence verbatim. Baseline in a pristine scratch checkout of
+`def64d91` (a first baseline was killed by process group and discarded — `src/` was edited under it): **238/238
+suites green · 14678 assertions passing**. After, at `af974191`: **238/238 suites green · 14694 assertions
+passing** (+16, all `casesign.test.mjs`, 58 -> 74); `node scripts/coverage.mjs --strict` exit **0** unpiped,
+REGISTER_FLOOR arms 1314 -> 1318 from its print; `node tools/status.mjs --check` 0 drift; `node
+tools/plancheck.mjs --local` 0 fail; `node civicos-ui/test/run.mjs` exit 0. NEGATIVE CONTROL `node
+test/casesign.control.mjs e|f|g|h` from `bio-plane/`: all four AS DECLARED, every restore sha256 MATCH.
+Paths as claimed, plus `bio-plane/scripts/coverage.mjs` (the floor) and `BIO_Publication_v0_1.md` §4 and its
+Status date (the construct's home). IDs minted with `tools/mintid.mjs`: IC-141. **FOR CONDUCT:** RESOLVE IC-141
+against I3 as read at resolution (proposed MAJOR on 26.2.0).

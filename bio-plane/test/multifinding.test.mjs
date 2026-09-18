@@ -118,8 +118,10 @@ const publish = async (tok, body, { sign = true } = {}) => {
 const caseSign = async (pub) =>
   ratifyCase(async (q, b) => rP(await POST(q, b)), pub, { dir, key: "wren", token: WREN });
 /* CASE-5b: the CASE DOCUMENT, read back through the ANONYMOUS surface — no
-   token, because `op=casedocument` is ungated on `op=publishedcase`'s reasoning
-   and because a stranger is exactly who this document exists for. */
+   token, because a stranger is exactly who a SIGNED case document exists for.
+   REC-130, 2026-09-18: that holds only for a RATIFIED document, and every read
+   here is of one (`caseSign` runs first); an unsigned one now answers only to
+   standing in its owning project, and a stranger gets NO_CASE_DOCUMENT. */
 const caseDocOf = async (caseId, edition) =>
   rP(await GET(`op=casedocument&case=${encodeURIComponent(caseId)}&edition=${edition}`));
 const conclude = async (tok, { target, conclusion, falsifier }) =>

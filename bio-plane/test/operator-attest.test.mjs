@@ -244,12 +244,19 @@ if (!pub || pub.ok === false || !pub.caseDocument || !/^[0-9a-f]{64}$/.test(Stri
 const D = pub.caseDocument;
 const caseBody = { caseId: D.case_id, edition: D.edition, expectedSha: D.doc_sha,
                    sig: signBytes("iris", `bio-ratify-case ${D.case_id} ${D.edition} ${D.doc_sha}\n`) };
-/* Read from the SCRATCH store's own object: `op=casedocument` is a public read
-   (classes: null) and answers from `bio`, where this case does not live. */
+/* Read from the SCRATCH store's own object: `op=casedocument` answers from `bio`,
+   where this case does not live.
+   CORRECTED 2026-09-18 by REC-130: the read now STAMPS AN INSTANCE-LEVEL VIEWER
+   (`class:admin`, the operator's own). It used to send none, which worked only
+   because an unsigned case document answered anybody; the store now fails closed
+   on an absent viewer for an UNSIGNED document, and this probe's whole subject is
+   the window in which the document is unsigned — so without the stamp both
+   "not ratified" arms read UNREAD instead of measuring anything. */
 const caseRatified = async () => {
   const ns = await mf.getDurableObjectNamespace("STORE");
   const r = rP(await (await ns.get(ns.idFromName("scratch")).fetch(
-    `http://x/casedocument?case=${encodeURIComponent(D.case_id)}&edition=${D.edition}`)).json());
+    `http://x/casedocument?case=${encodeURIComponent(D.case_id)}&edition=${D.edition}`
+    + `&viewer=${encodeURIComponent("class:admin")}`)).json());
   return (r && typeof r.ratified === "boolean") ? r.ratified : "UNREAD";
 };
 t("the ground: a case document authored by iris awaits its signature, and it is not ratified", await caseRatified(), false);

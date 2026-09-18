@@ -1,5 +1,5 @@
-/* CASE-5b's NEGATIVE CONTROL DRIVER — five arms plus a baseline, re-runnable in
- * one step:
+/* CASE-5b's NEGATIVE CONTROL DRIVER — five arms plus a baseline, and REC-130's four
+ * (e)-(h) at the foot of the table, re-runnable in one step:
  *
  *     node test/casesign.control.mjs            # every arm, in order
  *     node test/casesign.control.mjs a          # one arm
@@ -200,6 +200,43 @@ const ARMS = {
        apply: () => edit(STORE,
          "        WHERE m.bundle_id=? AND m.version_sha=?\n",
          "        WHERE m.bundle_id=? AND (m.version_sha=? OR 1=1)\n") },
+
+  /* ===== REC-130's FOUR ARMS, 2026-09-18. The subject is ONE LINE in
+     `caseDocumentFacts`, so every arm edits that line or the predicate it calls,
+     and each asks a different question of it. */
+  e: { files: [STORE],
+       label: "(e) THE STANDING CHECK REMOVED — the tree as CASE-5b left it. An unsigned case document "
+            + "answers anybody again, so every stranger arm in block 1b (anonymous, unknown token, member of "
+            + "another project, probe, another member's agent) and the op=caseratify oracle arm must FAIL",
+       apply: () => edit(STORE,
+         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)) return Store.#noCaseDocument(id, ed);",
+         "    if (false) return Store.#noCaseDocument(id, ed);") },
+
+  f: { files: [STORE],
+       label: "(f) THE LIAR — a DISTINGUISHABLE refusal. The text is still withheld from every stranger, but "
+            + "the answer says NOT_PERMITTED instead of what a missing case says, so an enumerator walking the "
+            + "sequence learns exactly which ids are live. The byte-for-byte arms must FAIL; an arm that only "
+            + "checked the text was withheld would stay green, which is why none of them does",
+       apply: () => edit(STORE,
+         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)) return Store.#noCaseDocument(id, ed);",
+         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)) return { ok: false, reason: \"NOT_PERMITTED\", caseId: id, edition: ed };") },
+
+  g: { files: [STORE],
+       label: "(g) OVER-STRICTNESS ON THE SIGNED SIDE — the gate applied to a RATIFIED document too. The "
+            + "stranger-verification path then depends on this instance's goodwill; the signed-public arms "
+            + "must FAIL while every unsigned-side arm stays green",
+       apply: () => edit(STORE,
+         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)) return Store.#noCaseDocument(id, ed);",
+         "    if (!this.#hasCaseStanding(doc, viewer)) return Store.#noCaseDocument(id, ed);") },
+
+  h: { files: [STORE],
+       label: "(h) OVER-STRICTNESS ON THE UNSIGNED SIDE — standing narrowed to the instance-level machine "
+            + "credential, so no identified member reads the document they are about to sign. The owner, the "
+            + "administrator, the participant and the owner's agent arms must FAIL (and the ceremony cannot "
+            + "proceed past them); the stranger arms stay green, which is why they cannot be the only arms",
+       apply: () => edit(STORE,
+         "    if (gate.scope === \"member\") return true;\n    const named =",
+         "    if (gate.scope === \"member\") return true;\n    if (gate.scope === \"participant\") return false;\n    const named =") },
 };
 
 const want = process.argv[2];
