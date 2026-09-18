@@ -4274,7 +4274,16 @@ export class Store extends DurableObject {
    *
    * IT IS A REFUSAL INPUT ONLY. Nothing here commits a case fact, which is what
    * kept the old version clear of CASE-5b's wall and what keeps this one clear
-   * of it too. Returns null when no claim is made. */
+   * of it too. Returns null when no claim is made.
+   *
+   * REC-130's SWEEP, stated here because this is the other reader of an
+   * UNSIGNED case document: it does NOT carry the standing rule, and need not.
+   * It answers a FINDING-side question for acts on a finding the caller can
+   * already reach, and every refusal it feeds (ALREADY_A_CASE_MEMBER,
+   * PUBLISHED_CANNOT_DIVIDE / _RESTRUCTURE / _MOVE_VERSION, the reopen gate, the
+   * affordance fact `case_member`) names the TARGET and never the case id, the
+   * scope or anything the case document says. Checked at each site 2026-09-18.
+   * If a refusal ever starts naming the case, it inherits the rule. */
   #caseClaimInBytes(bundleId) {
     const b = this.#one(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, bundleId);
     if (!b) return null;
@@ -7479,7 +7488,7 @@ export class Store extends DurableObject {
 
      THE TEXT COMES BACK WHOLE. A ceremony whose subject is "a thing a member
      actually reviewed" cannot hand the member a summary of the thing. */
-  caseDocumentFacts(caseId, edition) {
+  caseDocumentFacts(caseId, edition, viewer) {
     const id = String(caseId ?? "").trim();
     const ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1) return { ok: false, reason: "MALFORMED" };
@@ -7487,10 +7496,33 @@ export class Store extends DurableObject {
       `SELECT case_id, edition, doc_sha, text, authored_at, authored_by,
               sig_armored, attestor_key, attestor_member, gate_version, ratified_at
          FROM case_documents WHERE case_id=? AND edition=?`, id, ed);
-    if (!doc) return { ok: false, reason: "NO_CASE_DOCUMENT", caseId: id, edition: ed,
-                       detail: `no case document has been authored for ${id} edition ${ed}. A case document `
-                             + `is written by op=publish, which is the act that authors the assertions it `
-                             + `carries — this plane does not compose one.` };
+    if (!doc) return Store.#noCaseDocument(id, ed);
+    /* REC-130 / IC-141, 2026-09-18 — AN UNSIGNED CASE DOCUMENT IS WORKING
+       MATERIAL, AND IT ANSWERS ONLY TO STANDING IN ITS OWNING PROJECT. DECIDED by
+       BOB #14 as an application of the publication fence (unratified working
+       material never crosses to the public), no new doctrine. CASE-5b answered it
+       to anybody, and case ids come off a sequence, so a stranger could walk
+       CASE-2026-0001, -0002, … and read every group's scope, roster, exclusions
+       and bias acknowledgement before any member had signed a word of it.
+
+       ABSENT AND INVISIBLE ARE ONE ANSWER — `contentRead`'s rule and
+       `#queueCaseFor`'s. A caller without standing gets the object the branch
+       above returns, built by the SAME function from the SAME two values, so the
+       two cannot drift apart: a refusal saying FORBIDDEN or NOT_PERMITTED would
+       tell an enumerator that the case exists, which is the one thing the
+       enumerator is looking for.
+
+       A RATIFIED document is untouched: it is signed published bytes a stranger
+       is entitled to check, and the stranger-verification path must not depend
+       on this instance's goodwill.
+
+       THIS SITE SERVES BOTH `op=casedocument` AND `op=caseratify`'s facts read,
+       and the second is not incidental. `caseratify` answers a session member
+       CASE_RATIFY_STALE with the document's `expected` sha, and
+       TESTIMONY_CASE_UNPUBLISHABLE with finding ids, so a member of ANOTHER
+       project could otherwise probe an unsigned case through the signing op. A
+       member cannot sign what they may not read, so the one gate covers both. */
+    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)) return Store.#noCaseDocument(id, ed);
     return {
       ok: true, doc,
       signers: this.#rows(
@@ -7511,12 +7543,56 @@ export class Store extends DurableObject {
     };
   }
 
-  /* Read-only, for the member who is about to sign. Scoped to nothing, because
-     an UNRATIFIED case document is working material and a RATIFIED one is the
-     signed bytes a stranger is entitled to check — the same posture
-     `op=publishedbytes` already takes one altitude down. */
-  caseDocument(caseId, edition) {
-    const facts = this.caseDocumentFacts(caseId, edition);
+  /* THE ONE "NO SUCH CASE DOCUMENT" ANSWER (REC-130). Both the genuinely-absent
+     branch and the no-standing branch return THIS, so "does not exist" and "you
+     may not see it" are the same bytes by construction rather than by care. */
+  static #noCaseDocument(id, ed) {
+    return { ok: false, reason: "NO_CASE_DOCUMENT", caseId: id, edition: ed,
+             detail: `no case document has been authored for ${id} edition ${ed}. A case document `
+                   + `is written by op=publish, which is the act that authors the assertions it `
+                   + `carries — this plane does not compose one.` };
+  }
+
+  /* REC-130: STANDING IN THE OWNING PROJECT, ASKED THROUGH D-15's ONE
+     COMPILATION POINT rather than restated. `viewerPredicate` already answers
+     "may this viewer see this project" — an identified member sees it if they
+     participate in it (invited, joined or leaving) or are an active
+     administrator (Membership Architecture 7.3/7.9), an instance-level machine
+     credential sees it unfiltered, and anything else is DENY. A second
+     implementation of that rule here would be this repository's most-repeated
+     defect class, so the predicate is run against the project's own bundle row.
+
+     THE OWNING PROJECT is every project the record names for this case: the
+     `cases` row, written at an earlier edition's ratification, and the document's
+     own `case_project`, which is what this edition's signature would commit.
+     Standing is required in EACH — they agree on every case the ceremony can
+     produce, and where they did not, reading the document would need both.
+
+     A DOCUMENT NAMING NO PROJECT answers only the unfiltered scope. The ceremony
+     cannot author one (DEC-72 removed the project-less path before CASE-5b built
+     case documents), so this arm is defence rather than policy, and it fails
+     closed for every identified member rather than guessing an owner. */
+  #hasCaseStanding(doc, viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "DENY") return false;
+    if (gate.scope === "member") return true;
+    const named = String((parseFrontmatter(doc.text).data || {}).case_project ?? "").trim();
+    const row = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, doc.case_id);
+    const projects = [...new Set([named, row?.project_id ?? ""].filter(Boolean))];
+    if (!projects.length) return false;
+    return projects.every((p) => !!this.#one(
+      `SELECT 1 AS seen FROM bundles b WHERE b.bundle_id=? AND b.object_type='project' AND ${gate.sql}`,
+      p, ...gate.args));
+  }
+
+  /* Read-only, for the member who is about to sign — and, once RATIFIED, for
+     anybody, because a ratified document is the signed bytes a stranger is
+     entitled to check (the posture `op=publishedbytes` takes one altitude
+     down). REC-130 CORRECTED the other half of this comment: it said "scoped to
+     nothing" of the UNRATIFIED document too, which was a mechanism choice with
+     no ruling behind it. The scoping now lives in `caseDocumentFacts`. */
+  caseDocument(caseId, edition, viewer) {
+    const facts = this.caseDocumentFacts(caseId, edition, viewer);
     if (!facts.ok) return facts;
     const d = facts.doc;
     return { ok: true, case_id: d.case_id, edition: d.edition, doc_sha: d.doc_sha, text: d.text,
@@ -38438,10 +38514,14 @@ export class Store extends DurableObject {
         /* CASE-5b: the case ceremony's three hops, beside `gatefacts` and
            `publish` because they are the same three acts one altitude up —
            hand out the facts, read the document, commit from the signed bytes. */
+        /* REC-130: both carry the viewer the control plane STAMPS, and fail
+           closed on its absence — an unsigned document is working material. */
         casedocfacts: () => this.caseDocumentFacts(url.searchParams.get("case"),
-                                                   url.searchParams.get("edition")),
+                                                   url.searchParams.get("edition"),
+                                                   url.searchParams.get("viewer")),
         casedocument: () => this.caseDocument(url.searchParams.get("case"),
-                                              url.searchParams.get("edition")),
+                                              url.searchParams.get("edition"),
+                                              url.searchParams.get("viewer")),
         caseratify: () => this.ratifyCaseDocument(body || {}),
         audit: () => this.auditPass({ after: url.searchParams.get("after") || "",
                                       limit: url.searchParams.get("limit"),

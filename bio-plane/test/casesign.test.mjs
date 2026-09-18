@@ -216,6 +216,13 @@ const enrol = async (memberId, password, role, capabilities) => {
 await enrol("nadia", "nadia-passphrase-5b", "admin", ["contribute", "publish", "create_projects"]);
 const OMAR = await enrol("omar", "omar-passphrase-5b", "admin", ["contribute", "publish"]);
 const IRIS = await enrol("iris", "iris-passphrase-5b", "member", ["contribute", "publish"]);
+/* REC-130: A MEMBER OF ANOTHER PROJECT — signed in, holding `publish`, owning a
+   project of her own, and with NO standing in the one that produces this suite's
+   case. She is the caller the no-existence-leak block asks on behalf of. */
+const VIC = await enrol("vic", "vic-passphrase-5b", "member", ["contribute", "publish"]);
+/* REC-130: and a PLAIN member who will be invited into the owning project, for the
+   over-strictness arm — standing is participation, not ownership. */
+const WEN = await enrol("wen", "wen-passphrase-5b", "member", ["contribute"]);
 rP(await POST("op=signeradd&token=adm-c5b", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" }));
 /* A SECOND REGISTERED SIGNER, for one arm only: the second-attestation refusal
    cannot be reached with one key, because re-signing the same statement with the
@@ -233,6 +240,18 @@ const imageOf = async (id) => {
 const PUBLISHING_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-c5b", owner: "iris",
   id: "PROJ-2026-7700-auditor", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+const VICS_PROJECT = await makePublishingProject({
+  post: POST, mf, sha, machineToken: "adm-c5b", owner: "vic",
+  id: "PROJ-2026-7701-elsewhere", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+
+/* REC-130: THE RAW ANSWER — status, content type and the BODY'S BYTES, read as
+   text and never parsed. "The same response" means the same bytes; two JSON
+   objects that deep-equal after parsing can still differ in a field order or a
+   header an enumerator reads. */
+const rawOf = async (q, init) => {
+  const r = await mf.dispatchFetch(`http://x/api/?${q}`, init);
+  return { status: r.status, type: r.headers.get("content-type"), body: await r.text() };
+};
 
 /* ---- the corpus: one capture, one connection, two concluded findings ---- */
 let snapSeq = 0;
@@ -360,9 +379,20 @@ console.log("\n--- casesign ---");
  * THE WINDOW: op=publish AUTHORS AND COMMITS NOTHING.
  * ========================================================================= */
 console.log("\n--- 1. op=publish authors a case document and commits NOT ONE case fact ---");
+/* REC-130: THE ENUMERATOR'S VIEW, TAKEN BEFORE THE CASE EXISTS. Case ids come off
+   a sequence, so the id this publish will mint is PREDICTABLE — which is the
+   whole exposure. Reading that id now gives the answer for a case that genuinely
+   does not exist, from the same op, at the same id and edition, so block 1b can
+   compare bytes against it with nothing substituted. The prediction is ASSERTED
+   below rather than trusted: if the id comes out different the fixture says so. */
+const PREDICTED = `CASE-${new Date().toISOString().slice(0, 4)}-0001`;
+const NEVER_READ = await rawOf(`op=casedocument&case=${PREDICTED}&edition=1`);
+const NEVER_RATIFY = await rawOf(`op=caseratify&token=${VIC}`, { method: "POST",
+  body: JSON.stringify({ caseId: PREDICTED, edition: 1, expectedSha: "0".repeat(64), sig: "not-a-signature" }) });
 const pub = await publish({ targets: [LEAD, SUPP],
   roles: { [LEAD]: "load_bearing", [SUPP]: "supporting" } });
 if (!pub.ok) bail("publish the two-finding case", pub);
+if (pub.caseId !== PREDICTED) bail(`the minted case id was not the predicted ${PREDICTED}`, pub.caseId);
 /* AND THE ANSWER MUST CARRY A CASE DOCUMENT, checked HERE rather than let to throw
    forty lines down. Control arm (2b) removes the ceremony entirely, and on its
    first run this suite died with NO TALLY AT ALL —
@@ -394,17 +424,112 @@ const CASE = pub.caseId;
     [(idx0.cases || []).length, (idx0.caseMembers || []).length,
      (await anon(`op=publishedcase&id=${CASE}`))?.reason ?? null],
     [0, 0, "NOT_PUBLISHED"]);
-  t("and the document is READABLE while unsigned, saying so IN ITS OWN FIELD rather than leaving a "
-  + "reader to infer a ceremony-in-progress from a null",
-    [(await anon(`op=casedocument&case=${CASE}&edition=1`)).ratified,
-     (await anon(`op=casedocument&case=${CASE}&edition=1`)).sig_armored], [false, null]);
+  /* CORRECTED 2026-09-18 by REC-130 / IC-141, never exempted. This assertion read
+     the unsigned document ANONYMOUSLY and demanded that it answer — "the document
+     is READABLE while unsigned". That was CASE-5b's mechanism choice with no
+     ruling behind it, and it was wrong: an unsigned case document is a group's
+     WORKING MATERIAL (its scope, roster, exclusions and bias acknowledgement,
+     before any member has signed them), case ids come off a sequence, and so any
+     stranger could walk the ids and read every case in preparation. BOB #14 ruled
+     it as the publication fence applied. The half of the old assertion that was
+     RIGHT — the window is stated in its own field rather than inferred from a
+     null — is kept, asked of the reader who is now entitled to it: a member with
+     standing in the owning project. The stranger's half is block 1b. */
+  t("and the document is READABLE while unsigned TO A MEMBER WITH STANDING in the owning project, "
+  + "saying so IN ITS OWN FIELD rather than leaving a reader to infer a ceremony-in-progress from a null",
+    [rP(await GET(`op=casedocument&token=${IRIS}&case=${CASE}&edition=1`)).ratified,
+     rP(await GET(`op=casedocument&token=${IRIS}&case=${CASE}&edition=1`)).sig_armored], [false, null]);
+}
+
+/* ========================================================================== 1b
+ * REC-130 — AN UNSIGNED CASE DOCUMENT ANSWERS ONLY TO STANDING, AND EVERYONE
+ * ELSE CANNOT TELL IT FROM A CASE THAT DOES NOT EXIST.
+ *
+ * THE LIAR THIS REFUSES: a refusal that says FORBIDDEN, NOT_PERMITTED, or any
+ * code of its own. It would keep the text from a stranger and still tell an
+ * enumerator walking CASE-2026-0001, -0002, … exactly which ids are live. So
+ * nothing here asserts a REASON: every arm compares the whole raw answer —
+ * status, content type, body bytes — against the answer the SAME op gave for
+ * the SAME id before `op=publish` minted it.
+ * ========================================================================= */
+console.log("\n--- 1b. an unsigned case answers only to standing; a stranger cannot tell it from no case ---");
+{
+  t("the baseline is a genuine not-found, so the comparisons below are against something real",
+    [NEVER_READ.status, JSON.parse(NEVER_READ.body).reason, NEVER_RATIFY.status,
+     JSON.parse(NEVER_RATIFY.body).reason], [404, "NO_CASE_DOCUMENT", 404, "NO_CASE_DOCUMENT"]);
+  const strangers = [
+    ["ANONYMOUS — no token at all", ""],
+    ["an UNKNOWN token, which is answered as a stranger rather than refused", "&token=not-a-credential"],
+    ["a signed-in MEMBER OF ANOTHER PROJECT, holding `publish`", `&token=${VIC}`],
+    ["a MACHINE CREDENTIAL OUTSIDE SCOPE — the probe class, confined to scratch", "&token=prb-c5b"],
+  ];
+  for (const [who, tok] of strangers)
+    t(`${who}: the unsigned case answers BYTE FOR BYTE as the same id did before it existed`,
+      await rawOf(`op=casedocument${tok}&case=${CASE}&edition=1`), NEVER_READ);
+  /* THE `ai` CLASS STANDS AS ITS DECLARED PRINCIPAL (D-199 (4)) — so an agent a
+     member of another project minted is a stranger, and one the owner minted
+     reads what the owner reads. Both arms, because either alone is satisfied by
+     a rule that ignores the principal. */
+  const aiFor = async (tok, member) => rP(await POST(`op=aicredentialmint&token=${tok}`, {
+    tokenId: `rec130-${member}`, principalKind: "member", principalMember: member,
+    taskScope: "investigative", writes: [], note: "REC-130: reads as its principal" }));
+  const vicAgent = await aiFor(VIC, "vic"), irisAgent = await aiFor(IRIS, "iris");
+  if (!/^aik-/.test(String(vicAgent?.token)) || !/^aik-/.test(String(irisAgent?.token)))
+    bail("mint the two member-scoped agent credentials", { vicAgent, irisAgent });
+  t("an AGENT credential whose principal is the member of another project answers BYTE FOR BYTE as for "
+  + "a case that did not exist",
+    await rawOf(`op=casedocument&token=${vicAgent.token}&case=${CASE}&edition=1`), NEVER_READ);
+  t("while an agent credential whose principal is the OWNER reads the unsigned document",
+    rP(await GET(`op=casedocument&token=${irisAgent.token}&case=${CASE}&edition=1`)).ratified, false);
+  t("and a stranger's answer carries NOTHING the document says — not the scope, not a finding id",
+    [(await rawOf(`op=casedocument&case=${CASE}&edition=1`)).body.includes(SCOPE),
+     (await rawOf(`op=casedocument&case=${CASE}&edition=1`)).body.includes(LEAD)], [false, false]);
+  /* THE SIGNING OP IS THE SECOND READER. `op=caseratify` reads the same facts and
+     used to answer a member of another project CASE_RATIFY_STALE with the
+     document's own sha in `expected` — an existence oracle behind a login. */
+  t("`op=caseratify` from a member of another project answers BYTE FOR BYTE as for a case that did not "
+  + "exist — not CASE_RATIFY_STALE, and not the document's sha",
+    await rawOf(`op=caseratify&token=${VIC}`, { method: "POST",
+      body: JSON.stringify({ caseId: CASE, edition: 1, expectedSha: "0".repeat(64), sig: "not-a-signature" }) }),
+    NEVER_RATIFY);
+  /* OVER-STRICTNESS: standing is D-15's, not a narrower rule invented here. */
+  const reads = async (tok) => {
+    const r = rP(await GET(`op=casedocument&token=${tok}&case=${CASE}&edition=1`));
+    return [r.ok, r.case_id, r.ratified, typeof r.text === "string" && r.text.includes(SCOPE)];
+  };
+  t("THE OWNER, signed in, reads the whole unsigned document", await reads(IRIS), [true, CASE, false, true]);
+  t("an ADMINISTRATOR, signed in, reads it — Membership Architecture 7.3: an administrator sees every "
+  + "project (and directs none)", await reads(OMAR), [true, CASE, false, true]);
+  t("the instance-level MEMBER binding reads it, as it reads all working material (D-15's machine carve-out)",
+    await reads("mem-c5b"), [true, CASE, false, true]);
+  /* STANDING IS PARTICIPATION, NOT OWNERSHIP: a plain member the owner invites
+     reads it as soon as D-15 lets her see the project, which is at the
+     invitation (7.9: invited and joined both see that the project exists). */
+  const inv = rP(await GET(`op=projectinvite&token=${IRIS}&projectId=${encodeURIComponent(PUBLISHING_PROJECT)}&handle=wen`));
+  if (!inv.ok) bail("invite wen into the publishing project", inv);
+  t("a PARTICIPANT who is not an owner — invited into the owning project — reads it",
+    await reads(WEN), [true, CASE, false, true]);
+  const jn = rP(await GET(`op=projectjoin&token=${WEN}&projectId=${encodeURIComponent(PUBLISHING_PROJECT)}`));
+  t("and still reads it once joined", [jn.ok, ...(await reads(WEN))], [true, true, CASE, false, true]);
+  t("while the member of another project — who OWNS a project of her own — still cannot, so the rule "
+  + "is standing in THIS case's project and not being an owner somewhere",
+    [VICS_PROJECT !== PUBLISHING_PROJECT,
+     JSON.stringify(await rawOf(`op=casedocument&token=${VIC}&case=${CASE}&edition=1`)) === JSON.stringify(NEVER_READ)],
+    [true, true]);
 }
 
 /* =========================================================================== 2
  * WHAT IS SIGNED IS A THING A MEMBER REVIEWED.
  * ========================================================================= */
 console.log("\n--- 2. the document carries what a person AUTHORED, not a summary this plane composed ---");
-const doc1 = await anon(`op=casedocument&case=${CASE}&edition=1`);
+/* REC-130, 2026-09-18: read by the OWNER, who is who reviews it before signing.
+   It was read anonymously, which only worked because an unsigned document
+   answered anybody — the defect block 1b now refuses. */
+const doc1 = rP(await GET(`op=casedocument&token=${IRIS}&case=${CASE}&edition=1`));
+/* Named rather than left to throw forty lines down: control arm (h) narrows
+   standing until the owner cannot read, and a bare TypeError here would end the
+   suite with NO TALLY — CASE-4's arm (d) shape, which this file already paid for. */
+if (!doc1?.ok || typeof doc1.text !== "string") bail("the OWNER could not read the unsigned case document", doc1);
 {
   t("the document declares its format, so a stranger holding these bytes knows what they are reading",
     parseFrontmatter(doc1.text).data.format, CASE_DOCUMENT_FORMAT);
@@ -554,6 +679,16 @@ const SIGNED_DOC_SHA = pub.caseDocument.doc_sha;   /* captured BEFORE ratificati
     [false, "CASE_EDITION_ALREADY_RATIFIED", CASE, 1]);
   t("and the record still names the FIRST attestor, unchanged — the refusal protected an answer rather than merely declining a request",
     (await anon(`op=casedocument&case=${CASE}&edition=1`)).attestor_member, "iris");
+  /* REC-130's OVER-STRICTNESS ARM ON THE OTHER SIDE OF THE SIGNATURE: once
+     ratified, the document is the signed bytes a stranger verifies, and it must
+     answer ANYBODY in full — anonymous and the member of another project alike. */
+  const signedAnon = await anon(`op=casedocument&case=${CASE}&edition=1`);
+  const signedVic = rP(await GET(`op=casedocument&token=${VIC}&case=${CASE}&edition=1`));
+  t("a SIGNED case document stays PUBLIC: anonymous and a member of another project both read the whole "
+  + "signed text, because a stranger needs it to verify",
+    [signedAnon.ok, signedAnon.ratified, signedAnon.doc_sha === SIGNED_DOC_SHA, signedAnon.text.includes(SCOPE),
+     signedVic.ok, signedVic.doc_sha === SIGNED_DOC_SHA],
+    [true, true, true, true, true, true]);
 }
 
 /* =========================================================================== 4

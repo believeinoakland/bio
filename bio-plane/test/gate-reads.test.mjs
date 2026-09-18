@@ -729,6 +729,18 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
   const GATED = {
     list: "REC-25", index: "REC-25", projection: "REC-25", image: "REC-25", file: "REC-25",
     search: "the first gated read", backlinks: "REC-25", affordances: "REC-25",
+    /* CORRECTED 2026-09-18 BY REC-130 / IC-141, NEVER EXEMPTED: MOVED HERE FROM
+       THE UNGATED LIST, and the entry it replaces was wrong. It read "An UNRATIFIED
+       one is answered too, deliberately … touches no working material, so there is
+       no working material for a missing predicate to leak." An unsigned case
+       document IS working material — scope, roster, exclusions, bias
+       acknowledgement, before anyone signed — and it was answered to anybody over
+       ids that come off a sequence. That sentence was CASE-5b's mechanism choice
+       with no ruling behind it. */
+    casedocument: "REC-130: the UNSIGNED half is gated by the D-15 predicate run against the OWNING "
+      + "PROJECT's bundle (Store#hasCaseStanding), and a caller without standing is answered exactly "
+      + "as for a case that does not exist. The SIGNED half stays public on op=publishedcase's reasoning "
+      + "— a stranger verifies it — which is why the op keeps `classes: null`.",
     /* PL-9 / D-222 option C, 2026-08-07. It is a SEVENTH STATEMENT SHAPE on
        op=search's own compiler, so it inherits op=search's gate rather than
        carrying one — D-15's single compilation point, enforced by the throw in
@@ -1138,19 +1150,6 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "superseded measurement would tell them a document sits in a project they were never "
       + "invited to.",
 
-    /* CASE-5b / DEC-72, 2026-09-10: the CASE DOCUMENT — the thing a member signs
-       when what is being asserted is the case's own. */
-    casedocument: "PUBLISHED PROJECTION (CASE-5b / DEC-72), on op=publishedcase's own reasoning and "
-      + "not a new one. A RATIFIED case document IS signed published bytes: it is the artifact the "
-      + "container carries and the one a stranger re-hashes to check the case's signature, so gating "
-      + "it would make the stranger-verification path depend on this instance's goodwill — which is "
-      + "the single claim that path exists to refute. An UNRATIFIED one is answered too, deliberately, "
-      + "and it says `ratified: false` IN ITS OWN FIELD: what a reader learns from an unsigned case "
-      + "document is that somebody started a ceremony, which is exactly as much as the record knows. "
-      + "Nothing in it is a claim the record stands behind until the signature is there, and the answer "
-      + "says so rather than leaving the reader to infer it from a null. It reads one table written "
-      + "only by op=publish and op=caseratify and touches no working material, so there is no working "
-      + "material for a missing predicate to leak.",
     /* names no bundle: there is no identity in the answer to gate */
     stats: "COUNTS ONLY, an operator surface. A count that names nothing is not identity — and the "
       + "counts REC-25 did gate were the TOTALS OF AN ENUMERATION, where a total bigger than the "
