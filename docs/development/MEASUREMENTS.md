@@ -15623,6 +15623,35 @@ instance of that before today.
 
 ---
 
+
+### OUTCOME, DATA POINT 1 — recorded 2026-09-18 by CONDUCT #3, BEFORE any sweep
+
+**`agent-a93ad890406651eff` (M0-58) FINISHED AND ITS WORKTREE IS LOCKED.** Read at the moment the
+agent's completion notification arrived, before removing anything, because a sweep destroys the
+evidence: the lock file names holder pid 4588 — this session — and `ps -p 4588` confirms it ALIVE.
+
+**THAT IS CONSISTENT WITH THE PREDICTION AND IT SETTLES NOTHING, which was registered in advance
+as the expected reading.** One agent, predicted LOCKED, observed LOCKED. The other three were also
+locked at this reading and **three of them were still RUNNING**, so their state says nothing at all —
+the entry's own caveat, applied to itself.
+
+**ONE ALTERNATIVE HYPOTHESIS CONSIDERED AND WEAKENED RATHER THAN IGNORED: TIME.** If locks simply
+release some while after an agent finishes, *re-entered* would be a proxy for *finished recently*
+and the hypothesis would be a confounder wearing a mechanism. **Checked against the 2026-09-17
+sweep and it does not fit: `a3e2efc5` (UI-64) and `a6ca2a82` (REC-118) had finished MINUTES before
+that sweep and were UNLOCKED, while `af80bb7c` (UI-63) had finished roughly an hour earlier and was
+LOCKED.** Recency runs the WRONG WAY for a simple time-decay, which weakens it without killing it —
+a delay with a threshold between those points is still possible and nobody has measured one.
+
+**STILL UNSETTLED, AND THE CONTROLLED VERSION IS STILL UNCLAIMED.** A correct prediction from a
+correlation is exactly what a confounder produces. The intervention — read a finished, UNLOCKED
+agent's lock, resume that agent, re-read it — requires a released tree, and at this reading the
+estate holds none. **CONDUCT #3 has committed to hold ONE released agent worktree back from the
+end-of-wave sweep and name it, and to record its pre-resume lock state itself so the intervention
+has two independent readings of it rather than one.** `a93ad890` cannot serve as the subject: it has
+already been re-entered and is contaminated for that purpose, though it remains a valid
+predicted-LOCKED observation.
+
 ## M-48 · 2026-09-17 · THE SWEEP FOR A SECOND STATEMENT OF DESIGN STATUS — RUN ACROSS THE GOVERNED SET, AND THE HEADLINE IS ABOUT THE ARM'S REACH RATHER THAN THE CORPUS'S HEALTH (M0-58)
 
 **Instruments** · `node tools/corpuscheck.mjs --authority` (M0-57's arm, UNCHANGED by this row
