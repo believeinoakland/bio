@@ -14004,3 +14004,18 @@ directory (6.3 GiB free before, 5.3 GiB after). Design authority: `BIO_Publicati
   and §4, this block, and the REC-126 → UI DELEGATION's authority lines (an addendum in that block).
 
 NOT `QUEUE.md` (CONDUCT's), NOT `civicos-ui/`, NOT `newgroup/`.
+
+## CLAIM 2026-09-18 RECORD (REC-133) — RELEASED
+
+released: 2026-09-18 by the REC-133 worker, branch `worktree-agent-a6516bd6e484436ba`, base `e23daea9`, merged with
+`origin/main` at `0a58dee1` (which carries BOB #15's same-day correction of §6A.2: revoke is OWNER ONLY). Baseline at
+`d5aa3ec9`: **245/245 suites green · 14918 assertions passing**, no suite skipped. After, at `cb475127`: **245/245 suites
+green · 14950 assertions passing**, no suite skipped; `node scripts/coverage.mjs --strict` exit **0** unpiped (REGISTER
+FLOOR unmoved, 1378/1378); `node civicos-ui/test/run.mjs` exit **0**; `node tools/status.mjs --check` 0;
+`node tools/corpuscheck.mjs` 0; `node tools/plancheck.mjs --local` 0 fail. NEGATIVE CONTROL `node
+test/reviewcopy.control.mjs` from `bio-plane/`: baseline 63/0, (a) 58/5, (b) 62/1, (c) 61/2, (d) 61/2, (e) revoke widened
+to administrators 61/2, (f) issue widened to editors 62/1, (g) authoring widened to any member 59/4, (h) the dry run as
+the editor 62/1; every restore sha256 MATCH. IC minted with `tools/mintid.mjs`: IC-151 (I3, proposed MAJOR).
+**Built:** authoring = the project's edit permission (`contribute` + owner-or-joined). **Reverted before landing:** the
+administrator-revoke widening, built from §6A.2's first version. **FOR CONDUCT:** RESOLVE IC-151 against I3 as read at
+resolution (30.0.0 when written); the REC-126 → UI DELEGATION stays open with its point-1 authority line superseded.
