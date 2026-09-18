@@ -13546,3 +13546,25 @@ test/nc-rec127.mjs` from `bio-plane/`: five arms and a baseline run twice, ALL A
 byte-identical, content-arm's §11 digest `c39f4e8adf1960c2…` IDENTICAL under `preitem`; sibling harnesses
 `nc-rec121`, `nc-rec90 pred`, `nc-rec104` all AS DECLARED. IDs minted with `tools/mintid.mjs`: IC-138. **FOR
 CONDUCT:** RESOLVE IC-138 against I3 as read at resolution (built on 25.1.0, proposed MINOR on IC-131's shape).
+
+## CLAIM 2026-09-18 RECORD (REC-128 — the record states who AUTHORISED and who DELIVERED a ratification)
+
+Worker spawned by CONDUCT #4, isolated worktree `agent-a01d041e19ab1ad65`, branch
+`worktree-agent-a01d041e19ab1ad65`, base `b0c1f22d`. `npm ci` in all three packages, each `node_modules` a real
+directory (4.7 GiB free). IDs minted BEFORE building with `node tools/mintid.mjs IC`: IC-139 (I3), IC-140 (I5).
+Paths:
+
+- RECORD (own): `bio-plane/src/index.mjs` (`op=ratify` / `op=caseratify` bodies after REC-125's fences, their
+  answers, and the case container's manifest); `bio-plane/src/store.mjs` (`publish()`, `ratifyCaseDocument()`,
+  the published reads that carry `attestor`, the additive-column list); `bio-plane/src/schema.mjs`
+  (`published_bundles`, `case_documents`: one nullable column each).
+- Tests: a new `bio-plane/test/deliverer.test.mjs` and `bio-plane/test/deliverer.control.mjs`; any suite pinning
+  the container format corrected at its site with the reason.
+- Generated: `bio-plane/dist/*` rebuilt.
+- Docs: `INTERFACE-CHANGES.md` (IC-139, IC-140), `BIO_Assistant_and_AI_Roles_v0_1.md` (§3 rule 4 and front
+  matter), `DEBT.md` (D-421's disposition note), `docs/DECIDED.md` on regeneration, this block.
+
+NOT `setup.mjs`, NOT `civicos-ui/**` (renderers: DELEGATION), NOT `QUEUE.md` (CONDUCT's), NOT `INTERFACES.md`
+(CONDUCT takes the bumps), NOT `newgroup/**`.
+
+**open as of 2026-09-18** — REC-128 is being built.
