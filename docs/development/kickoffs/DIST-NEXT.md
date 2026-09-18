@@ -1,4 +1,11 @@
-# DIST — resume here. Rewritten 2026-09-18 by the DIST standing lane, after cutting 0.59.0.
+# DIST — resume here. Rewritten 2026-09-18 by the DIST standing lane, after cutting 0.59.0; amended the same day after 0.60.0.
+
+**LATEST: 0.60.0** (main `76b2a5c6`, tag `v0.60.0` on the mainline). It closes REC-131 (IC-148: no class reads a lead
+count; `dbBytes` goes to admin only), a defect confirmed in 0.59.0's bytes. The plane is `115843fb…`; the members are
+byte-identical to 0.59.0. **Deploy requested of Bob through BOB; 0.60.0 supersedes the undeployed 0.59.0.**
+**REC-132 is BATCHED** (DIST's call: the `admin`-id hazard needs an administrator's own enrolment act); the next
+cut's notes must name the founder's wider sight. **NEXT CUT OWED: REC-134** (administrators direct nothing), on landing.
+The 0.59.0 notes below remain true of 0.59.0.
 
 The previous version (BOB #15, same day) stood the lane up; it is in git history. Read `CLAUDE.md`, then
 `kickoffs/DIST.md`, then this. **Everything below is a POINTER measured 2026-09-18; re-measure before acting.**
@@ -22,8 +29,7 @@ is 5 or more days old (BOB #15's rule), and write the new date here.
   A list of row names is only where to start.
 - **DEPLOY: REQUESTED of Bob through BOB #15 on 2026-09-18, and not yet answered as of this writing.** The order is
   agent-worker first or together with the plane (IC-130), then the installer. The live plane and members are on 0.58.0.
-- **NEXT CUT OWED: REC-131** (IC-144's remainder, I3 30.0.0, a disclosure closing). CONDUCT will message when it
-  lands. REC-133, REC-124 and REC-132 are also running.
+- REC-131 was cut as 0.60.0 (above).
 - **The embed hazard is CLOSED (M-59, `483ac38a`).** `newgroup`'s embed takes only the signed, verified asset from
   `release/` and builds nothing. So in a cut, embed AFTER `release-assemble --sign`. Between the bump and the
   signature, `newgroup`'s `npm test` refuses, and that is correct.
