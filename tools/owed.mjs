@@ -54,6 +54,9 @@
  *        the lane, and the rule this whole family turns on.
  *   (A6) THE PRECISION ARM — every judged row returned as owed, so the list is complete and
  *        useless. A sensitivity control does not notice; only this does.
+ *   (A7) the owner pattern case-INSENSITIVE again -> Bob the PERSON is read as the BOB lane.
+ *   (A8) a blocked queue heading read only to 220 characters -> a routing past that point is lost.
+ *   (A7 and A8 added and all eight RUN 2026-09-18 by BOB #14, exit 0, 43 pass / 0 fail.)
  *
  * **THE HEADER FIRST CITED THIS FILE BEFORE IT EXISTED**, which is the false-absence class this
  * family exists to catch, committed by a file in the family. Corrected to say so, then built.
@@ -145,7 +148,11 @@ export function owedFor(lane = "BOB", { repo = ROOT, reader = null } = {}) {
 
   const q = read(SOURCES.queue);
   if (q === null) unreadable.push(SOURCES.queue);
-  else for (const m of q.matchAll(/^### ([A-Z0-9-]+) · blocked(.{0,220})/gm))
+  /* THE WHOLE HEADING LINE, NOT ITS FIRST 220 CHARACTERS. Found 2026-09-18 by BOB #14: REC-100 is
+     blocked on a design ruling *Routed to BOB*, deep in a heading that carries its history, and the
+     truncated read returned 0 while the row sat routed to this lane. Measured over every lane before
+     the change: the full line adds exactly REC-100 for BOB and nothing for anybody else. */
+  else for (const m of q.matchAll(/^### ([A-Z0-9-]+) · blocked(.*)$/gm))
     if (owner.test(m[2])) items.push({ source: "QUEUE", id: m[1], attributed: true,
                                        why: `blocked on ${lane}`, text: m[2].trim().slice(0, 160) });
 

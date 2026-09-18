@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-409's NEGATIVE CONTROL DRIVER — seven arms plus an opening and closing baseline — over
+/* D-409's NEGATIVE CONTROL DRIVER — eight arms plus an opening and closing baseline — over
  * `tools/owed.mjs` and `bio-plane/test/owed.test.mjs`.
  *
  *   node bio-plane/test/owed.control.mjs        (from the repo root)
@@ -131,6 +131,12 @@ const ARMS = [
     from: "  + String.raw`|(?i:is )${lane}(?i:'s)\\b`);",
     to:   "  + String.raw`|(?i:is )${lane}(?i:'s)\\b`, \"i\");",
     mustBreak: "BOB THE PERSON IS NOT THE BOB LANE" },
+
+  { id: "A8", title: "a blocked queue row read only to its first 220 characters again — REC-100's "
+                   + "routing to BOB sat past that point and the lane was told it owed nothing",
+    from: "  else for (const m of q.matchAll(/^### ([A-Z0-9-]+) · blocked(.*)$/gm))",
+    to:   "  else for (const m of q.matchAll(/^### ([A-Z0-9-]+) · blocked(.{0,220})/gm))",
+    mustBreak: "A ROUTING DEEP IN A LONG BLOCKED HEADING IS STILL OWED" },
 ];
 
 for (const a of ARMS) {
