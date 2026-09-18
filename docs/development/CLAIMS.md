@@ -14116,3 +14116,21 @@ v2 §7 *"SIGHT IS NOT AUTHORITY"*, §4.9, §7.5, §7.13. IDs minted with `tools/
 - Docs: `INTERFACE-CHANGES.md` (IC-152), `BIO_Membership_Architecture_v2.md` front matter and §7's block, this block.
 
 NOT `QUEUE.md` (CONDUCT's), NOT the review-copy acts (REC-133's), NOT `op=conclude` (REC-124's), NOT `newgroup/`.
+
+## CLAIM 2026-09-18 RECORD (REC-134) — RELEASED
+
+released: 2026-09-18 by the REC-134 worker, branch `worktree-agent-a78e80263e9738d43`, base `12349df0`, merged with
+origin/main `f16b9b49` (REC-124, REC-133, IC-150/151) before close-out. Baseline at `c10b999e` (pristine but for this
+claim): **246/246 suites green · 14982 assertions**, no skip. After: the final battery line, strict coverage, the UI
+harness and the gates are in the worker's report to CONDUCT and IC-152. Paths as claimed, PLUS one the claim's NOT-list
+named and REC-124's landing mid-item brought into scope: `op=conclude&project=` (`conclude`'s project arm and its
+dispatch) — the brief said to include it if it had landed, and it had. Also: `bio-plane/scripts/coverage.mjs`
+REGISTER_FLOOR moved from the strict print (1392 -> 1400 · 238 -> 239 · 239 -> 240 · run 201 -> 202); `DEBT.md` D-426
+(raised); `test/citeinquiry.test.mjs` and `test/identity-claims.test.mjs` CORRECTED at their sites with dated reasons.
+`civicos-ui/check-refusal-codes.mjs` floors NOT moved (the harness is green; its figures had grown before this item).
+IDs minted with `tools/mintid.mjs`: IC-152, C-56, D-426.
+**FOR CONDUCT:** (1) RESOLVE IC-152 against I3 as read at resolution (proposed MAJOR on 32.0.0, IC-137's precedent).
+(2) Flip REC-134 at integration. (3) Carry IC-152's DESIGN GAP to BOB: whether the member who DELIVERS `op=caseratify`
+must hold a position in the project (Membership v2 §7 Incomplete sections). (4) Place D-426 (RECORD, a sight defect
+left open on purpose). (5) REC-136 (running) writes conclusion withdrawal: if it adds an act that writes a project's
+conclusion, that act joins `POSITIONAL_ACTS` and asks `#projectAuthority(..., "joined", ...)` — say so at its merge.

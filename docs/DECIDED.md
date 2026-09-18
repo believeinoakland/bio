@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1149 rulings across 91 documents.
+1152 rulings across 91 documents.
 
 ## DEC-
 
@@ -318,6 +318,8 @@ authority is the file named, never this one.
   `docs/development/CIVICOS_UI_STATE.md:906`
 - **D-98** · 2026-07-30 — §RULED 2026-07-30 — STALE in its closing paragraph.  
   `docs/development/INBOX-GRAMMAR.md:8`
+- **D-98** — `taskforward`/`taskresolve` keep their RULED group-admin fallback (D-98 routing): a task is an instance obligation, not a project production.  
+  `docs/development/INTERFACE-CHANGES.md:11248`
 - **D-98** — authority undetermined at capture `[OBLIGATION]` (D-98, RULED: created automatically) - monitor tick: source modified `[FINDING]` · source removed (404/410) `[FINDING]` - source unreachable, and distinguishably: governed by our own pacing `[CONDITION]` (D-104) - duplicate document detected `[FINDING]` (D-60)  
   `docs/development/NOTIFICATIONS.md:184`
 - **D-102** · 2026-07-30 — RULED 2026-07-30: the installer wizard must PROMPT the operator for an installation name at setup, and that name becomes the INSTANCE_NAME component of the UA string.  
@@ -1997,6 +1999,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:14024`
 - (or any non-participant) acting on a project it is not in — CORRECTED at its site with a dated reason, never exempted. `bio-plane/scripts/coverage.mjs` and `civicos-ui/check-refusal-codes.mjs` floors only, moved from their own prints. - Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration. -…  
   `docs/development/CLAIMS.md:14113`
+- (raised); `test/citeinquiry.test.mjs` and `test/identity-claims.test.mjs` CORRECTED at their sites with dated reasons.  
+  `docs/development/CLAIMS.md:14129`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2147,6 +2151,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:11144`
 - Two labels CORRECTED with their reason in a comment (block 2's heading and the non-participant arm said the authority was publish's).  
   `docs/development/INTERFACE-CHANGES.md:11171`
+- CORRECTED at their sites with dated reasons, never exempted: `citeinquiry.test.mjs` (the DO dispatch's parameter roster gains the server-stamped `identity`) and `identity-claims.test.mjs` arm (j) (it selected the first stamp site whose writes include `proposedispose`, which is now the CLEAR positional stamp; it…  
+  `docs/development/INTERFACE-CHANGES.md:11277`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  
