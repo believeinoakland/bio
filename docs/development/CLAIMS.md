@@ -13936,3 +13936,20 @@ Paths as claimed, plus `bio-plane/src/affordances.mjs` (NON_ACTS / RUNG_ABSENT r
 fold the DESIGN GAP (who may issue a grant — running provisionally at the project OWNER) into
 `BIO_Publication_v0_1.md`'s Incomplete sections if Bob has not ruled (it is already written there); the UI DELEGATION
 above is open.
+
+## CLAIM 2026-09-18 RECORD (REC-133 — the review copy's authority as §6A.2 decides it: author = edit, issue = owner, revoke = owner or any administrator)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-a6516bd6e484436ba`, branch
+`worktree-agent-a6516bd6e484436ba`, base `e23daea9`. `npm ci` in all three packages, each `node_modules` a real
+directory (6.3 GiB free before, 5.3 GiB after). Design authority: `BIO_Publication_v0_1.md` §6A.2 (BOB #15). Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` (the review copy's three authority checks inside `#caseDraft` /
+  `#reviewGrant` / `#reviewRevoke`, their refusal, and the dry run's publisher in `#reviewGates`);
+  `bio-plane/src/index.mjs` (the NEEDS rows for `casedraft` and `reviewrevoke`, and the OPS comment).
+- Tests: `bio-plane/test/reviewcopy.test.mjs` and `bio-plane/test/reviewcopy.control.mjs`; any suite pinning the
+  NEEDS table, corrected with its reason.
+- Generated: `bio-plane/dist/*` rebuilt; `bio-plane/scripts/coverage.mjs` floors only if its print moves them.
+- Docs: `INTERFACE-CHANGES.md` (an IC minted with `node tools/mintid.mjs IC`), `BIO_Publication_v0_1.md` front matter
+  and §4, this block, and the REC-126 → UI DELEGATION's authority lines (an addendum in that block).
+
+NOT `QUEUE.md` (CONDUCT's), NOT `civicos-ui/`, NOT `newgroup/`.
