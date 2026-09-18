@@ -813,7 +813,7 @@ authority is the file named, never this one.
 - **REC-16** — — author-scoped (any `contribute` holder, act attributed) is SETTLED, not provisional.  
   `docs/archive/ledgers/QUEUE-2026-08.md:856`
 - **REC-16** · 2026-08-04 — attest act through REC-16's prompt mechanism, imported from where the rule is enforced, the drafted wording verbatim — CORRECTED 2026-08-04 at REC-43's landing: this line first said "Bob's sentence verbatim", which this entry's own words contradict.  
-  `docs/development/DECISIONS.md:840`
+  `docs/development/DECISIONS.md:846`
 - **REC-19** · 2026-08-01 — reasoning recorded in: docs/architecture/BIO_Interaction_Constructs_v0_1.md, "RULED 2026-08-01: the pre-flight is plane-sourced — publication by default, dry-run when the refusal needs unseen state", inside the ACT ladder where the defining property is stated. for CONDUCT to enact: nothing new in the queue — REC-19…  
   `docs/archive/ledgers/DECISIONS-2026-08.md:475`
 - **REC-21** — ane/test/queue.test.mjs (ONLY: the HOLE-1 pin that asserts no CONDITION item and an empty-of-nothing classes_deferred — CORRECTED with a dated comment, never exempted), bio-plane/test/queue-state.test.mjs (ONLY: the head-comment statement that CONDITION has no producer, and the two live-item clauses that can now…  

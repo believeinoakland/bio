@@ -67,8 +67,8 @@ can put all of this aside for a time and turn our focus elsewhere."
 content-extent design is no longer parked; its scope is
 `docs/architecture/BIO_Content_Framework_v0_10.md` Part II §18 (six pieces: four are design
 and this session's to decompose, D-184 and the claim object are doctrine and Bob's).
-Case-making, the study document and S11's state inventory REMAIN PARKED until Bob rules
-DEC-33's re-entry (put to him 2026-09-14, unanswered). The review document is current and
+Case-making, the study document and S11's state inventory REMAIN PARKED until
+the substrate beneath them is solid — DEC-33 is NOT pending on Bob (its entry said *no further ruling is needed* on 2026-09-14, and Bob confirmed 2026-09-18: *"we need a solid substrate before building on top of it"*). The review document is current and
 published; leave it unless a decision this session takes belongs in its Part 4.
 
 YOUR FIRST JOB IS THE STANDING ONE: read DECISIONS.md and surface every `open` entry.
