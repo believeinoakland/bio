@@ -13464,3 +13464,17 @@ directory (4.3 GiB free). Paths:
 
 NOT `schema.mjs` or `checks/bio-checks.mjs`, NOT `QUEUE.md` (CONDUCT's), NOT `content-arm.test.mjs` §11 (the
 over-strictness pin is read, never edited).
+
+## CLAIM 2026-09-18 RECORD (REC-127) — RELEASED
+
+released: 2026-09-18 by the REC-127 worker, branch `worktree-agent-ab81d2ae5244e06a7`. Baseline before any edit, on a
+pristine tree: **234/234 suites green · 14484 assertions passing**, no skip (a first baseline run was STOPPED and
+discarded because `query.mjs` was edited while it ran; the edit was set aside by cp + sha256 and the baseline re-run
+clean). PREMISE FALSIFIED BEFORE BUILDING, through `op=meaningrows` on the unedited source: `content:cap=undetermined`
+returned all five fixture rows, both bytes rows among them, and named the image-only document. After, on the work
+commit `d8d0854a`: **235/235 suites green · 14510 assertions passing**; `node scripts/coverage.mjs --strict` exit **0**
+unpiped; `node tools/status.mjs --check` 0 drift; `node tools/plancheck.mjs --local` 0 fail. NEGATIVE CONTROL `node
+test/nc-rec127.mjs` from `bio-plane/`: five arms and a baseline run twice, ALL AS DECLARED, every restore
+byte-identical, content-arm's §11 digest `c39f4e8adf1960c2…` IDENTICAL under `preitem`; sibling harnesses
+`nc-rec121`, `nc-rec90 pred`, `nc-rec104` all AS DECLARED. IDs minted with `tools/mintid.mjs`: IC-138. **FOR
+CONDUCT:** RESOLVE IC-138 against I3 as read at resolution (built on 25.1.0, proposed MINOR on IC-131's shape).
