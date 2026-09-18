@@ -241,7 +241,7 @@ authority is the file named, never this one.
 - **DEC-72** · 2026-08-10 — op=publish` REQUIRES A PUBLISHING PROJECT AND AN AUTHORED LOAD-BEARING PARTITION, `op=strengthbarof`'s `target=` ARM IS WITHDRAWN FOR A `project=` ARM, AND THE STAMPED `required_strength` BLOCK STOPS COMPOSING ACROSS CITERS · PROPOSED 2026-08-10 (CASE-2, enacting DEC-72) — the version bump and the RESOLUTION are…  
   `docs/development/INTERFACE-CHANGES.md:4203`
 - **DEC-72** — WHAT IT DECIDED.** DEC-72 clause 6 rules that a finding can serve many cases; CASE-5's suite framed lifting `FINDING_IN_ANOTHER_CASE` as *"a surface question"* and handed it to CASE-6.  
-  `docs/development/MEASUREMENTS.md:9108`
+  `docs/development/MEASUREMENTS.md:9129`
 - **DEC-72** — REDESIGN, RULED BY BOB.** A notification, not a copy (ORCHESTRATION's rule, and this entry was trimmed the same day for violating it): **the ruling is DEC-72; the design, its implications, the supersession table, AND the decomposition (CASE-1 … CASE-6, all M10, IC protocol against I3/I5) are…  
   `docs/development/QUEUE.md:623`
 - **DEC-72** — SUPERSEDED THE SAME DAY BY DEC-72, AND THE WORK IS MOOT RATHER THAN WRONG — stated here rather than left for a reader to collide with.** `CASE-AS-PRODUCTION.md`'s supersession table: *"D-280's severed-citer fix — moot rather than wrong: the code it fixed is removed with the composition."* Bars never attach to…  
@@ -459,15 +459,15 @@ authority is the file named, never this one.
 - **D-255** — D-255's ARM C was CORRECTED, not exempted** (its anchor no longer occurs, so it would have exited 3 and taken the run down).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:6731`
 - **D-255** — ARM C WAS CORRECTED RATHER THAN EXEMPTED, and it would otherwise have taken the whole run down.** D-255 wrote it against a tree where `columns` still existed; this item deleted it, so its anchor occurs zero times and `uniq` exits 3 — **an arm that cannot arm is worse than one that fails.** It puts the field back…  
-  `docs/development/MEASUREMENTS.md:5351`
+  `docs/development/MEASUREMENTS.md:5372`
 - **D-257** · 2026-08-08 — THE ROW'S OWN MEASUREMENT WAS WRONG AND IS CORRECTED HERE:** it said the suite floors on `DISPATCH.size > 100` and `BODIES.size > 200`; measured, those come from a `readFileSync` of the single named path `bio-plane/src/store.mjs`, which no arrival can inflate.  
   `docs/development/DEBT.md:195`
 - **D-258** · 2026-08-09 — WHAT DECIDED IT, and it is a measurement rather than a preference: the fact `columns`/`refs` carry is ALREADY PUBLISHED, per arm, by `op=searchfields`** — `meaningVocabulary()` emits `rows: { grain, identity, columns, refs }` off the same registry, and that is the vocabulary route surfaces actually compose from.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:116`
 - **D-258** · 2026-08-09 — 2026-08-09 · D-258 — DELETE OR PUBLISH, decided by measurement; and the class DECIDED rather than listed **Instrument:** `bio-plane/test/fieldread.control.mjs`, D-255's, EXTENDED — a second subject (`src/store.mjs`), a `--tripwire-sweep` that returns a VERDICT per field, a `--digest` mode, and  
-  `docs/development/MEASUREMENTS.md:5256`
+  `docs/development/MEASUREMENTS.md:5277`
 - **D-258** — CORRECTED by D-258, not exempted** | EXACTLY `query.test.mjs` | AS DECLARED · 141/142 · 9,189 | | R | D-255's ratchet: `phrase` as an ordinary field | RED | RED · `query.test.mjs` 128 pass, 4 fail | | **R2** | **`refs` put back + tripwire — the arm the D-258 row says was missing** | EXACTLY `query.test.mjs` | **AS…  
-  `docs/development/MEASUREMENTS.md:5343`
+  `docs/development/MEASUREMENTS.md:5364`
 - **D-263** · 2026-08-09 — D-263: THE DROPPED PROVENANCE SENTENCE, RECOVERED AND AMENDED** item: D-263 (existing row, raised by M0-20).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:7344`
 - **D-263** — DECLARATION IS CORRECTED, and it is D-263's arm and not mine.** Re-running the harness found it declaring A5 to FAIL when A5 now stays GREEN: the corpus grew 146 -> 198 and A5's `readable > 100` floor stopped biting.  
@@ -491,7 +491,7 @@ authority is the file named, never this one.
 - **D-288** · 2026-09-16 — CORRECTED 2026-09-16 (D-288, ruled by BOB #12) — this line read *do not push* for five weeks and that is the instruction that strands the work: `CLAUDE.md`'s rule is that a change is made when it is COMMITTED AND PUSHED, `plancheck` enforces it for `main` and for the planning surfaces, and NOTHING enforced it for a…  
   `docs/development/kickoffs/WORKER.md:91`
 - **D-288** · 2026-09-16 — all nine branches predate 2026-09-16, when `kickoffs/WORKER.md`'s *do not push* was CORRECTED under D-288 so that every worker now pushes its own branch.  
-  `docs/development/MEASUREMENTS.md:15040`
+  `docs/development/MEASUREMENTS.md:15061`
 - **D-288** · 2026-09-16 — 2026-09-16 · BOB #12 · D-288 IS RULED AND DECOMPOSED — THREE ITEMS, NO INTERFACE, M0.  
   `docs/development/QUEUE.md:318`
 - **D-289** · 2026-09-17 — THE SHAPE WAS DECIDED BY THE RECURRENCE RATHER THAN BY PREFERENCE: `D-289` prescribed *run it bare and read all of it* — correct, written down, and the third occurrence happened anyway — so the fix had to be a MECHANISM and not a better warning**, which is `kickoffs/CONDUCT.md`'s own finding about vigilance…  
@@ -819,7 +819,7 @@ authority is the file named, never this one.
 - **REC-33** — THREE PINS CORRECTED WITH DATED REASONS, NEVER EXEMPTED, and two of them were WEAKER THAN THEY LOOKED. queue-conditions' prefix pin matched two hand-typed literals and checked they agreed — the best a proof-by-parsing can do, and still weaker than not having a copy; it now asserts that NEITHER file spells a prefix…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1788`
 - **REC-33** — `daemon-token.test.mjs` holds at 56 (one assertion CORRECTED in place, not added): its REC-33 pin matched the literal text of `#monitorToken()`, and that literal text WAS the defect, so the pin was holding the defect in place by name.  
-  `docs/development/MEASUREMENTS.md:10697`
+  `docs/development/MEASUREMENTS.md:10718`
 - **REC-35** — MOCKS CORRECTED IN THE SAME TURN, dated, never exempted: cite-act (`select`), release-flow (`select`, `release`), document-structure (`resolutions`, `connections`, `captureprogressions`, `entity`; `links` left FLAT because it genuinely is).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1122`
 - **REC-35** — Delegations routed: REC-35, REC-36; the refusal-probe RULED a standing DEC-8 reading by CONDUCT; the wording tension recorded as D-174.  
@@ -1075,9 +1075,9 @@ authority is the file named, never this one.
 - **UI-33** — FIVE PINS CORRECTED, ALL FOUND BY RUNNING RATHER THAN READING, and two would have failed a guard on a file nobody had changed: the lexicon matched substrings and duly matched `member id` inside "it carries no member IDENTITY", a sentence about tokens naming no identifier; and the sweep read ATTRIBUTES, so…  
   `docs/archive/ledgers/QUEUE-2026-08.md:2065`
 - **UI-33** · 2026-08-04 — SUPERSEDED IN PART BY UI-33, 2026-08-04 — see the next entry.** The thirteen above are the state UI-31 measured.  
-  `docs/development/MEASUREMENTS.md:2086`
+  `docs/development/MEASUREMENTS.md:2107`
 - **UI-34** · 2026-08-04 — SUPERSEDED IN PART BY UI-34, 2026-08-04 — see the next entry, and the part superseded is the BASIS rather than a number.** The reading above was taken over TEN scenarios.  
-  `docs/development/MEASUREMENTS.md:2154`
+  `docs/development/MEASUREMENTS.md:2175`
 - **UI-36** · 2026-08-04 — civicos-ui/test/preauth-vocabulary.test.mjs (UI-36's defect pin CORRECTED at the site with a dated reason and never exempted; new arms for every refusal `op=verify` can emit and for the two sibling public reads; a NOT-PUBLISHED arm kept and strengthened so the two cannot collapse the other way either;…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1860`
 - **UI-36** — ; UI-36's defect pin CORRECTED at the site with a dated reason; `DEC49_SUBJECT` updated DELIBERATELY with every new row named; both guards green; if `apiQ` changes, every caller swept with the sweep's reach asserted as a delta and `cd bio-plane && npm run test:battery` still green.  
@@ -1087,11 +1087,11 @@ authority is the file named, never this one.
 - **UI-36** — THE FIX WAS DECIDED ON EVIDENCE AND IT IS NOT THE ONE THE ITEM LEANED TOWARD:** `apiQ` is UNCHANGED and `pubVerify` reads the refusal itself, because `index.mjs` §7a answers `json({ ok: true, ...out.result }, 200)` **without checking `out.ok`** — so a Durable Object failure arrives as `{ok:true}` at HTTP 200 with…  
   `docs/archive/ledgers/QUEUE-2026-08.md:2083`
 - **UI-36** · 2026-08-04 — SUPERSEDED IN PART BY UI-36, 2026-08-04 — see the next entry, and what is superseded is BOTH the basis AND the headline of "every plane-sourced row unchanged".** The reading above was taken over a walk that never asked a public op.  
-  `docs/development/MEASUREMENTS.md:2258`
+  `docs/development/MEASUREMENTS.md:2279`
 - **UI-37** — , UI-37's `SEVENA_SPREAD` source pin of section 7a's spread, CORRECTED at the site with a dated reason and never deleted, exactly as UI-37 wrote it expecting.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1894`
 - **UI-37** · 2026-08-04 — SUPERSEDED IN PART BY UI-37, 2026-08-04 — and the part that is superseded is the SURFACE, not the reading.** Every number in this entry stands: it was taken against an app.html this item did not touch, which is exactly why it was worth taking.  
-  `docs/development/MEASUREMENTS.md:2386`
+  `docs/development/MEASUREMENTS.md:2407`
 - **UI-38** · 2026-08-07 — expected: QUEUE.md UI-38 as AMENDED 2026-08-07.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2134`
 - **UI-38** — `civicos-ui/test/surface-registry.test.mjs` (UI-38's suite: ARMS X4, X5, Y1 and Y14 are SUPERSEDED BY IS-6 LANDING and are CORRECTED with dated reasons, never exempted).  
@@ -1221,7 +1221,7 @@ authority is the file named, never this one.
 - **COFF-10** · 2026-09-16 — open as of 2026-09-16 — THE SENTENCES ARE CORRECTED AND THE SECOND HALF OF THE ASK WAS NOT PERFORMED.** All three falsified sentences are fixed in place with their dated reason and the old text kept: `BIO_Content_Framework_v0_10.md:1793-1796` (the flavour row, *"CORRECTED rather than deleted"*), `:1805-1810` (both…  
   `docs/development/CLAIMS.md:4245`
 - **COFF-11** · 2026-09-15 — (CORRECTED 2026-09-15 at BOB #11's check: the allocator DOES allocate `M`; the AUDIT cannot, because `M` declares no allocation site — so these four were a BYPASS of a working allocator, not a gap in it), so nothing refused the second use and the merge would have carried two `M-21` sections silently — the id…  
-  `docs/development/MEASUREMENTS.md:12996`
+  `docs/development/MEASUREMENTS.md:13017`
 - **COFF-11** · 2026-09-15 — CORRECTED 2026-09-15 at BOB #11's check, and the sentence is kept because getting it wrong changed a proposed fix: the allocator DOES allocate `M`; the AUDIT cannot, because `M` declares no allocation site.  
   `docs/development/QUEUE.md:2359`
 ## PL-
@@ -1235,7 +1235,7 @@ authority is the file named, never this one.
 - **PL-1** · 2026-08-07 — PL-1 landed on `main` while this item was running and its entry took IC-29, which is now SETTLED above.  
   `docs/development/INTERFACE-CHANGES.md:1934`
 - **PL-1** — A PIN CORRECTED, NOT EXEMPTED, and it is the defect in miniature.** Control (r2) pinned **32** — `main`'s figure on the PL-1-only tree — and measured **33** once PL-12 landed, because PL-12 added a refusal to `promote`.  
-  `docs/development/MEASUREMENTS.md:3096`
+  `docs/development/MEASUREMENTS.md:3117`
 - **PL-2** — SETTLED. I3 10.3.0 → 10.4.0; I5 gains its tables.** Open against it: **PL-2 owns wiring the transitive basis-cycle check at the accept path** — self-reference is refused here, but a leg naming an inquiry that transitively rests on this one is refused only when a version's legs BECOME the basis, and **that path is…  
   `docs/development/INTERFACE-CHANGES.md:1929`
 - **PL-4** — THREE OTHER SUITES, EACH CORRECTED AND NEVER EXEMPTED, each with a comment at the site saying why the old one was right when written:** `bio-plane/test/airun.test.mjs` (ARM S1's registry delta 9→10, plus ONE new arm S3c pinning that the wake was APPENDED after the drain); `bio-plane/test/leadslug.test.mjs` (its…  
@@ -1992,47 +1992,47 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-07-30** — RULED by Bob, 2026-07-30. Once monitoring is enabled, the system looks at a document again on a schedule, and the ordinary outcome of looking is "unchanged", which means identical bytes and therefore the same content-addressed capture. This is a regular occurrence and not an exception, and the correct handling…  
   `docs/development/LINK-FIDELITY.md:591`
 - THE BRIEFED FIGURE WAS 215/215 · 13527 AND IT WAS WRONG; CONDUCT #3 CORRECTED IT MID-ITEM TO 216/216 · 13555 AT `7ebe2dd1`, AND THIS WORKTREE CONFIRMS THAT FIGURE INDEPENDENTLY.** The first run here read 216 suites with 13554 assertions passing and exactly ONE red, which is 216/216 · 13555 on a clean tree — arrived…  
-  `docs/development/MEASUREMENTS.md:147`
+  `docs/development/MEASUREMENTS.md:168`
 - are the RULED numbers from `AUTHORITY-AND-TRUST.md`, recorded here so they have one home and are not restated inline.  
-  `docs/development/MEASUREMENTS.md:496`
+  `docs/development/MEASUREMENTS.md:517`
 - WHAT THE MEASUREMENT DECIDED, and the reasoning, so nobody re-derives it.** Finding 1 kills the normalised-label index ON ITS OWN: keying the whole label and looking a name up answers **nothing** on the only real document we hold.  
-  `docs/development/MEASUREMENTS.md:1658`
+  `docs/development/MEASUREMENTS.md:1679`
 - 23 CORRECTED in `bio-plane/**`, which now reads **zero**; the rest ledgered and delegated | | ledger registrations after the item | **64** pairs · **79** sites | held EXACTLY, in both directions | | routing attributions found and checked | **6** | prose of the form "op=X dispatches to `Y()`" |  
-  `docs/development/MEASUREMENTS.md:3723`
+  `docs/development/MEASUREMENTS.md:3744`
 - The class, DECIDED — nine whole-battery rows, each armed alone | target | declared | actual | suites failed | |---|---|---|---|  
-  `docs/development/MEASUREMENTS.md:5278`
+  `docs/development/MEASUREMENTS.md:5299`
 - §7's three superseded pins CORRECTED, one replaced by three | | `suggest.test.mjs` | 93 | 95 | CHECK 6's machine arm replaced by three, F10's count re-measured | ### The floors, and one of them was already stale on arrival  
-  `docs/development/MEASUREMENTS.md:5909`
+  `docs/development/MEASUREMENTS.md:5930`
 - THE CLASS IS FOUR TIMES THE SIZE OF THE ELEVEN, AND THAT IS WHAT DECIDED THE MECHANISM.** The eleven machine fences are 11 of **47** hand-built sites naming a catalogued code with no translation of their own, and the figure GROWS on its own every time a refusal is written by hand.  
-  `docs/development/MEASUREMENTS.md:6612`
+  `docs/development/MEASUREMENTS.md:6633`
 - THE MEASUREMENT THAT DECIDED THE ITEM, and it is the one §14b.6 demands before anything is minted: does `RUN_STATUS` already carry an honest term for a run that never started?** Instrument: `grep -arn` over every tree with `node_modules` and built artifacts excluded, plus reading each term's PRODUCER in…  
-  `docs/development/MEASUREMENTS.md:8221`
+  `docs/development/MEASUREMENTS.md:8242`
 - schema word reserved by another item's pin — and each was CORRECTED at its site with a dated reason.  
-  `docs/development/MEASUREMENTS.md:8619`
+  `docs/development/MEASUREMENTS.md:8640`
 - sentences in append-only history and a SETTLED IC. **THE GUARDED COLUMN WAS INVERTED ON THIS ESTATE — MEASURED, NOT INFERRED.** Until today `walkfloor.mjs` graded a floor site by a regex asking whether the file CARRYING the floor imports  
-  `docs/development/MEASUREMENTS.md:8662`
+  `docs/development/MEASUREMENTS.md:8683`
 - THE MECHANIZATION, DECIDED — AND THE DECLINED OPTION PRICED **IT CAN BE DONE STATICALLY, FOR A MEASURED FRACTION, AND THE FRACTION IS PRINTED ON EVERY RUN RATHER THAN CLAIMED.** `bio-plane/test/m025-arm-anchor-witness.test.mjs` is battery-discovered,  
-  `docs/development/MEASUREMENTS.md:10381`
+  `docs/development/MEASUREMENTS.md:10402`
 - RECORD · open |` and the gate's token set is `M\d+|DOCTRINE|ACCEPTED|WATCH|SUPERSEDED| NOT OURS|BOB's`.  
-  `docs/development/MEASUREMENTS.md:10464`
+  `docs/development/MEASUREMENTS.md:10485`
 - changes with author, date and the SUPERSEDED WORDING (`<text:tracked-changes>` + `<office:change-info>`, the body's change-start/change-end/change marks locating them); annotations as comments, inline in the paragraph they annotate; a formula beside its cached value; hidden rows and columns; speaker notes nested in…  
-  `docs/development/MEASUREMENTS.md:11052`
+  `docs/development/MEASUREMENTS.md:11073`
 - pointers surviving with a CORRECTED quote | **1** | | pointers surviving with a byte-identical quote after the anchor moved | **2** | **The 49, itemised by what they carried** — 11 under a namespace id, 2 under a date alone, 36 under  
-  `docs/development/MEASUREMENTS.md:12797`
+  `docs/development/MEASUREMENTS.md:12818`
 - its headline, now quoted from the `RULED` further in.  
-  `docs/development/MEASUREMENTS.md:12819`
+  `docs/development/MEASUREMENTS.md:12840`
 - from `DECIDED` to `RULED`, quote **byte-identical**, because `statementAround` resolved to the same sentence span from both positions.  
-  `docs/development/MEASUREMENTS.md:12821`
+  `docs/development/MEASUREMENTS.md:12842`
 - `grep -rhoE "\b(RULED|DECIDED|…)\.[A-Za-z]{1,5}\b" docs CLAUDE.md` over the whole scanned corpus returns **exactly one distinct string: `DECIDED.md`.** No other marker word is followed by an extension anywhere in it — so excluding `.md` closes the class rather than one instance, and the narrow clause is not a…  
-  `docs/development/MEASUREMENTS.md:12827`
+  `docs/development/MEASUREMENTS.md:12848`
 - OVER-STRICTNESS: a real `RULED` sentence carrying `DECISIONS.md` elsewhere in it | 1 row | **1** | | A4 | OVER-STRICTNESS: a marker ENDING its sentence (`… was SETTLED.`) | 1 row | **1** | | A5 | OVER-STRICTNESS over the REAL corpus, nothing armed | 0 of 8 named rows quote the filename; index FLOORED >850 | **0 of…  
-  `docs/development/MEASUREMENTS.md:12860`
+  `docs/development/MEASUREMENTS.md:12881`
 - OVER-STRICTNESS: a marker ENDING its sentence (`… was SETTLED.`) | 1 row | **1** | | A5 | OVER-STRICTNESS over the REAL corpus, nothing armed | 0 of 8 named rows quote the filename; index FLOORED >850 | **0 of 8; 902 rulings** | | A6 | THE CLAUSE'S OWN ARM: clause removed over the real corpus | all 8 named rows…  
-  `docs/development/MEASUREMENTS.md:12861`
+  `docs/development/MEASUREMENTS.md:12882`
 - regex tail, `CONCEDED)\b(?!\.md\b)/;`, asserted to occur exactly once.  
-  `docs/development/MEASUREMENTS.md:12878`
+  `docs/development/MEASUREMENTS.md:12899`
 - **2026-09-17** — THE PUSH-TIME DECIDED GUARD — both causes driven against a real remote, and the estate's hook premises re-verified** *(Id minted with `node tools/mintid.mjs M`, run bare.  
-  `docs/development/MEASUREMENTS.md:15308`
+  `docs/development/MEASUREMENTS.md:15329`
 - **2026-08-01** — CORRECTED 2026-08-01 — this hole is CLOSED and the paragraph below is kept as the > reasoning that closed it.** One reconciling Durable Object alarm now serves FIVE > consumers (selection-sweep, task-drain, archive-monitor, connection-derive, > overdue-scan), three of which landed within a week of the decision.  
   `docs/development/MILESTONES.md:118`
 - Bob already RULED the doctrine** — content > produced by a third-party script, if it is ever evidence, is recorded as produced by > THAT party and not by the hosting site.  

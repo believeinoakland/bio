@@ -116,6 +116,27 @@ returns 403 to the plane on every path including `robots.txt`, while
 `data.oaklandca.gov`, `oaklandca.opengov.com`, `oakland.legistar.com`,
 `oaklandside.org` and `www.acgov.org` all answer normally.
 
+## M-47 — 2026-09-17 · CONDUCT #3 — **D-398's UNIVERSAL CLAIM IS REFUTED: a finished agent's worktree is NOT always locked, and 7 of 10 were reclaimable while this session's process was very much alive**
+
+**Instrument:** for each `.claude/worktrees/agent-*`, read `.git/worktrees/<n>/locked`, extract its pid, and test that pid with `ps -p`. Then per tree: `git status --porcelain` and `git merge-base --is-ancestor <tip> origin/main`. Then `git worktree remove`. `df -h /System/Volumes/Data` before and after, unpiped.
+
+**Measured, this session's own ten finished agents:**
+
+    3 carried a lock  — holder pid 4588, THIS session, verified ALIVE
+    7 carried NO LOCK AT ALL
+    all 10: tree CLEAN (0 porcelain lines) and tip an ANCESTOR of origin/main
+
+    disk 3.4 GiB free / 99%   ->   7.7 GiB / 97%   after removing the 7   (+4.3 GiB)
+    then 8.4 GiB / 96%                              after one more (below) (+0.7 GiB)
+
+**WHAT THIS REFUTES AND WHAT IT LEAVES STANDING.** `D-398` states *the harness LOCKS an agent worktree when its agent finishes* and concludes that every wave permanently strands ~1.9 GiB, calling it *the estate's throughput ceiling — the first constraint here that no amount of discipline inside the repository can move.* **The phenomenon is REAL — three of mine are locked right now by a provably live holder — but the UNIVERSAL is FALSE, and the difference is the whole ceiling.** CONDUCT #2 measured six locked and generalised from six of six; this is ten, and seven of them released. **A ceiling derived from a universal that holds 30% of the time is not a ceiling.**
+
+**THE DISCRIMINATOR IS NOT ESTABLISHED AND IS STATED AS A HYPOTHESIS RATHER THAN A FINDING.** The three still locked (`a20ba9ff` / M0-59, `a3378dc3` / M0-56, `af80bb7c` / UI-63) are also, as it happens, the three whose task-notifications fired MORE THAN ONCE or which were RESUMED by `SendMessage` — the other seven notified once and were never resumed. **That is a correlation over n=10 with no intervention behind it, and this estate has already paid for treating exactly that shape as a cause** (BOB #13 blamed Remote Control for a refused archive on the same evidence class and was wrong; the cause was a wedged tool call). **Driving it would mean resuming a finished agent and re-reading its lock, which nobody has done. Until then the honest statement is: some finished agents release their lock and some do not, and we do not know what decides it.**
+
+**A SECOND RESIDUE CLASS, FOUND IN PASSING AND NOT PREVIOUSLY ROWED: a worker's own scratch worktree OUTSIDE `.claude/worktrees/`.** REC-113 created `/private/tmp/rec113-pristine-agent-ab3bf809046a052e6` (636 MB) as an independent pristine checkout to measure a clean baseline — correct practice, and the run that caught the `npm ci` skip trap. It was still REGISTERED as a git worktree after its agent was gone. **`plancheck`'s stranded-work arm SAW it (its worktree count included it) and correctly reported `0 EXPOSED`, because its work was merged — so nothing was wrong and nothing was going to reclaim it either.** Clean, ancestor, owner gone; removed.
+
+**THE OPERATIONAL CONSEQUENCE, since wave sizing has been keyed to D-398 all day: sweep the unlocked ones at the END OF EVERY WAVE rather than treating the disk as permanently spent.** Three D-398 conditions, re-verified at the moment of acting and never inherited — no live lock, tree CLEAN, tip an ANCESTOR — and refuse any tree that fails one. This session sized three waves at three workers on a ceiling that was ~70% reclaimable.
+
 ## M-46 · Why the design-status arm matches on a citation and not on prose (M0-57, 2026-09-17)
 
 **The measurement that chose the matching rule, taken before the rule was written** rather than
