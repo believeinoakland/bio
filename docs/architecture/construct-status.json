@@ -1,0 +1,128 @@
+{
+  "_about": "THE SINGLE SOURCE OF TRUTH FOR WHAT IS BUILT. One claim per fact about a construct of BIO_System_Design.md §3, each carrying PROBES that `node tools/status.mjs --check` re-runs against the code; the push guard refuses a push when any probe disagrees. §3's state column is RENDERED from this file (`node tools/status.mjs --write`) and never hand-edited. Other documents POINT here; they never restate status. Look anything up with `node tools/status.mjs <topic>`. Established 2026-09-18 by BOB #14 at Bob's direction; the initial claims were verified at the code by three independent reads and a spot-check of five.",
+  "_probes": {
+    "op": "the op is declared in bio-plane/src/index.mjs's OPS table",
+    "table": "the table is declared (CREATE [VIRTUAL] TABLE IF NOT EXISTS) in schema.mjs or store.mjs",
+    "file": "the file exists",
+    "hit": "the regex matches at least once in the named file(s)",
+    "none": "NONE of the regexes match in any of the named file(s) — the evidence for an ABSENT claim; search under more than one name",
+    "uinone": "the member UI (civicos-ui/app.html) makes no LITERAL call of these ops through any of its call helpers"
+  },
+  "sets": {
+    "@plane": ["bio-plane/src/store.mjs", "bio-plane/src/index.mjs", "bio-plane/src/schema.mjs", "bio-plane/checks/bio-checks.mjs", "bio-plane/src/query.mjs"],
+    "@ui": ["civicos-ui/app.html"],
+    "@planeui": ["bio-plane/src/store.mjs", "bio-plane/src/index.mjs", "bio-plane/src/schema.mjs", "bio-plane/checks/bio-checks.mjs", "bio-plane/src/query.mjs", "civicos-ui/app.html"]
+  },
+  "constructs": [
+    { "n": 1, "name": "Membership and authority", "claims": [
+      { "id": "1.admin-floor", "state": "BUILT", "text": "the two-administrator floor, with endorsement and removal votes", "probes": [ {"op": "adminarith"}, {"op": "adminendorse"}, {"table": "admin_votes"} ] },
+      { "id": "1.invitations", "state": "BUILT", "text": "burner-URL invitations and enrolment", "probes": [ {"op": "invitelook"}, {"op": "enroll"} ] },
+      { "id": "1.projects", "state": "BUILT", "text": "project participation, ownership votes, fork and rescue", "probes": [ {"table": "project_participants"}, {"op": "projectjoin"}, {"op": "projectownerrescue"}, {"op": "projectfork"} ] },
+      { "id": "1.capabilities", "state": "BUILT", "text": "member capabilities and declared expertise", "probes": [ {"op": "membercaps"}, {"op": "expertisedeclare"} ] },
+      { "id": "1.export", "state": "BUILT", "text": "secure verified export, logged", "probes": [ {"op": "export"}, {"table": "export_log"} ] },
+      { "id": "1.machine-credentials", "state": "BUILT", "text": "machine credentials minted and revoked by members", "probes": [ {"table": "ai_credentials"}, {"op": "aicredentialmint"}, {"op": "aicredentialrevoke"} ] },
+      { "id": "1.root-of-trust", "state": "DEFERRED", "text": "the root of trust is the ADMIN_TOKEN holder and cannot be voted out; custody is deliberately unmodelled (DEC-2, deferred)", "probes": [ {"hit": "static ROOT_ADMIN", "in": ["bio-plane/src/store.mjs"]} ] }
+    ]},
+    { "n": 2, "name": "Intake, capture and provenance", "claims": [
+      { "id": "2.capture", "state": "BUILT", "text": "capture and acquire, with grades A/B/C enforced as a check", "probes": [ {"op": "capture"}, {"op": "acquire"}, {"hit": "CAPTURE_GRADES", "in": ["bio-plane/checks/bio-checks.mjs"]} ] },
+      { "id": "2.provenance", "state": "BUILT", "text": "the provenance chain, its rebuild, and provenance-route markers", "probes": [ {"op": "provenancechain"}, {"op": "provenanceroutes"}, {"table": "provenance_route_marks"}, {"hit": "provenanceChainRebuild", "in": ["bio-plane/src/store.mjs"]} ] },
+      { "id": "2.links", "state": "BUILT", "text": "link discovery with fidelity verdicts", "probes": [ {"op": "links"}, {"table": "link_verdicts"} ] },
+      { "id": "2.requests", "state": "BUILT", "text": "named capture requests and their drain", "probes": [ {"table": "capture_requests"}, {"op": "capturerequestdrain"} ] },
+      { "id": "2.attest", "state": "BUILT", "text": "TSA co-attestation", "probes": [ {"op": "attest"}, {"file": "bio-plane/src/tsa.mjs"} ] },
+      { "id": "2.governor", "state": "BUILT", "text": "the per-host governor", "probes": [ {"table": "host_governor"}, {"op": "governorstate"} ] },
+      { "id": "2.daemon", "state": "BUILT", "text": "a narrowly scoped `daemon` credential class exists in the plane (acquire's archive arm, monitor, capturerequestdrain) — the intake doctrine's retired daemon is a different thing", "probes": [ {"hit": "DAEMON_TOKEN", "in": ["bio-plane/src/index.mjs"]} ] }
+    ]},
+    { "n": 3, "name": "The record", "claims": [
+      { "id": "3.gate", "state": "BUILT", "text": "the gate and the case gate run the check catalogue on every write", "probes": [ {"hit": "export (async )?function runGate", "in": ["bio-plane/src/gate.mjs"]}, {"hit": "export (async )?function runCaseGate", "in": ["bio-plane/src/gate.mjs"]} ] },
+      { "id": "3.vocab", "state": "BUILT", "text": "the closed relationship vocabulary and the violation-to-repair map", "probes": [ {"hit": "REL_VOCAB", "in": ["bio-plane/checks/bio-checks.mjs"]}, {"hit": "repairs", "in": ["bio-plane/checks/bio-checks.mjs"]} ] },
+      { "id": "3.published", "state": "BUILT", "text": "the edition-keyed published projection", "probes": [ {"table": "published_bundles"}, {"table": "published_shas"}, {"table": "published_edges"} ] },
+      { "id": "3.live", "state": "UNDETERMINED", "text": "whether a given instance serves this build is not a fact about the code; ask the instance (`/version`)", "reason": "a live fact, not a code fact", "probes": [] }
+    ]},
+    { "n": 4, "name": "CONTENT", "claims": [
+      { "id": "4.object", "state": "BUILT", "text": "the content object: a content-addressed row minted lazily on first edge, readable and machine-mintable", "probes": [ {"table": "content"}, {"op": "content"}, {"op": "contentmint"} ] },
+      { "id": "4.edge", "state": "BUILT", "text": "D-164's central gap is CLOSED: basis legs and version legs carry a content_id, and op=cite accepts one", "probes": [ {"hit": "inquiry_basis_content ON inquiry_basis\\(content_id\\)", "in": ["bio-plane/src/schema.mjs"]}, {"op": "cite"} ] },
+      { "id": "4.extents", "state": "BUILT", "text": "all five extent arms are landed: document, pdf-page, sheet-cell, slide-shape, doc-para", "probes": [ {"hit": "'doc-para':\\s*\\{ landed: true", "in": ["bio-plane/checks/bio-checks.mjs"]}, {"hit": "'slide-shape':\\s*\\{ landed: true", "in": ["bio-plane/checks/bio-checks.mjs"]} ] },
+      { "id": "4.on-point", "state": "ABSENT", "text": "REC-86's on-point narrowing (specificity of reference worked for)", "probes": [ {"none": ["\\bon[-_]point\\b", "\\bonpoint\\b"], "flags": "i", "in": ["bio-plane/src/store.mjs", "bio-plane/src/index.mjs", "bio-plane/src/schema.mjs"]} ] },
+      { "id": "4.transcribe", "state": "ABSENT", "text": "REC-87's member transcription step on a content row's chain", "probes": [ {"none": ["^\\s*member\\s*:\\s*\\{\\s*role"], "flags": "m", "in": ["bio-plane/src/textchain.mjs"]} ] }
+    ]},
+    { "n": 5, "name": "Document profile and the extraction substrate", "claims": [
+      { "id": "5.handlers", "state": "BUILT", "text": "host-stack handlers and the three digests", "probes": [ {"file": "docprofile/handlers/aspnet-webforms.mjs"}, {"file": "docprofile/handlers/client-rendered.mjs"}, {"hit": "digests", "in": ["docprofile/index.mjs"]} ] },
+      { "id": "5.tiers", "state": "BUILT", "text": "three extraction tiers: in-plane, the PDF worker, the OCR worker", "probes": [ {"hit": "PDF_WORKER", "in": ["bio-plane/src/index.mjs"]}, {"hit": "OCR_WORKER", "in": ["bio-plane/src/index.mjs"]} ] },
+      { "id": "5.readers", "state": "BUILT", "text": "SIX doctype readers: meeting calendar, agenda, minutes, staff report, regulation, and the generic fallback", "probes": [ {"file": "docprofile/doctypes/meeting-minutes.mjs"}, {"file": "docprofile/doctypes/staff-report.mjs"}, {"file": "docprofile/doctypes/regulation.mjs"} ] },
+      { "id": "5.ai-readings", "state": "BUILT", "text": "AI-proposed readings, kept out of coverage (the EXTRACT role's plane half)", "probes": [ {"table": "proposed_readings"}, {"op": "extractpropose"} ] },
+      { "id": "5.tables-images", "state": "ABSENT", "text": "tables and images as content — no sheet-range, doc-table or image extent arm", "probes": [ {"none": ["'sheet-range'\\s*:\\s*\\{", "'doc-table'\\s*:\\s*\\{", "\\bimage\\s*:\\s*\\{\\s*landed"], "in": ["bio-plane/checks/bio-checks.mjs"]} ] },
+      { "id": "5.reextract", "state": "ABSENT", "text": "read-time re-extraction to tier 3 (D-319); tier 3 is reached only from op=acquire", "probes": [ {"hit": "does not exist on this tree", "in": ["bio-plane/src/store.mjs"]} ], "note": "probe reads the code's own statement of the absence; a weaker kind of evidence than a search, stated as such" }
+    ]},
+    { "n": 6, "name": "Meaning: entities, connections, progressions", "claims": [
+      { "id": "6.entities", "state": "BUILT", "text": "the entity registry, aliases, constitutive relations, and graded resolutions (at document grain)", "probes": [ {"table": "entities"}, {"table": "entity_aliases"}, {"table": "resolutions"}, {"op": "resolve"}, {"op": "concerns"} ] },
+      { "id": "6.anchor", "state": "BUILT", "text": "a connection keeps its determining reference pair and each end's position (D-161 closed)", "probes": [ {"hit": "a_pos_kind", "in": ["bio-plane/src/schema.mjs"]}, {"table": "connections"} ] },
+      { "id": "6.progressions", "state": "BUILT", "text": "progressions, with missing-predecessor and overdue-successor findings", "probes": [ {"table": "progression_defs"}, {"hit": "missing_predecessor", "in": ["bio-plane/src/store.mjs"]}, {"op": "progressiondefine"} ] },
+      { "id": "6.identifier-spaces", "state": "ABSENT", "text": "identifier spaces where grade collapses", "probes": [ {"none": ["identifier[ _]space", "\\bid_space\\b", "\\bidspace\\b"], "flags": "i", "in": "@plane"} ] }
+    ]},
+    { "n": 7, "name": "Declared bias", "claims": [
+      { "id": "7.statements", "state": "BUILT", "text": "bias statements in three kinds, adoptions with revision pins, manifest and inhale", "probes": [ {"table": "bias_statements"}, {"table": "bias_adoptions"}, {"op": "biasmanifest"}, {"op": "biasadopt"}, {"op": "biasinhale"} ] },
+      { "id": "7.acknowledgement", "state": "BUILT", "text": "the bias acknowledgement is required at publication", "probes": [ {"hit": "NO_BIAS_ACKNOWLEDGEMENT", "in": ["bio-plane/src/store.mjs"]} ] },
+      { "id": "7.hunch", "state": "BUILT", "text": "hunch debt: an uncleared hunch refuses publication", "probes": [ {"hit": "UNCLEARED_HUNCH", "in": ["bio-plane/src/store.mjs"]} ] },
+      { "id": "7.regrade", "state": "ABSENT", "text": "regrade / cross-group rerun under another lens", "probes": [ {"none": ["^\\s{2}(regrade|rerun|biasregrade|biasrerun|lensdiff|biasdiff):\\s*\\{"], "flags": "m", "in": ["bio-plane/src/index.mjs"]} ] },
+      { "id": "7.ui", "state": "ABSENT", "text": "a member surface for bias (the ops have no UI caller)", "probes": [ {"uinone": ["biasmanifest", "biasadopt", "biasinhale"]} ] }
+    ]},
+    { "n": 8, "name": "Intent and inquiry — from goal to case", "claims": [
+      { "id": "8.inquiry", "state": "BUILT", "text": "the inquiry lifecycle: cite, dispose, conclude, reopen, divide, ground, versions", "probes": [ {"op": "cite"}, {"op": "conclude"}, {"op": "reopen"}, {"op": "inquirydivide"}, {"op": "inquiryground"}, {"table": "inquiry_basis"} ] },
+      { "id": "8.falsifier", "state": "BUILT", "text": "a concluded inquiry requires a conclusion and a falsifier, or the member's stated override (UI-64/REC-117)", "probes": [ {"hit": "NO_FALSIFIER", "in": ["bio-plane/checks/bio-checks.mjs"]} ] },
+      { "id": "8.cases", "state": "BUILT", "text": "cases, their documents, ratification and revision flags", "probes": [ {"table": "cases"}, {"op": "caseratify"}, {"op": "casedocument"}, {"op": "caseflags"} ] },
+      { "id": "8.action", "state": "BUILT", "text": "the action plan and its correspondence", "probes": [ {"table": "action_basis"}, {"table": "correspondence"}, {"op": "actionmove"} ] },
+      { "id": "8.claim", "state": "PARTIAL", "text": "the claim is only the `conclusion` field; a distinct claim field that concluding ADOPTS is not built", "probes": [ {"none": ["fm\\.claim\\b", "meta\\.claim\\b", "claim_text", "claimText"], "in": "@planeui"} ] },
+      { "id": "8.contradiction", "state": "ABSENT", "text": "Q14's contradiction case", "probes": [ {"hit": "CONTRADICTION CASE IS NOT MODELLED", "in": ["bio-plane/src/store.mjs"]} ], "note": "probe reads the code's own statement of the absence" },
+      { "id": "8.goals", "state": "ABSENT", "text": "goals and aspirations as objects (an objective is a zero-leg open inquiry)", "probes": [ {"none": ["aspiration"], "flags": "i", "in": ["bio-plane/src/store.mjs", "bio-plane/checks/bio-checks.mjs", "civicos-ui/app.html"]} ] },
+      { "id": "8.proof-standard", "state": "ABSENT", "text": "a standard of proof per production or audience (only the project's strength bar exists)", "probes": [ {"none": ["standard_of_proof", "standardOfProof"], "in": "@planeui"}, {"table": "group_strength_bar"} ] },
+      { "id": "8.preflight", "state": "ABSENT", "text": "op=publishpreflight (REC-15), deferred by DEC-33 until the substrate beneath it is solid", "probes": [ {"none": ["^\\s{2}publishpreflight:\\s*\\{"], "flags": "m", "in": ["bio-plane/src/index.mjs"]} ] }
+    ]},
+    { "n": 9, "name": "Retrieval — the store as a read-through cache", "claims": [
+      { "id": "9.document-search", "state": "BUILT", "text": "document-grain search over FTS5 with the query compiler", "probes": [ {"table": "bundles_fts"}, {"op": "search"}, {"file": "bio-plane/src/query.mjs"} ] },
+      { "id": "9.content-search", "state": "BUILT", "text": "content-grain search: the `content:` arm and the `passage:` arm over indexed captured text", "probes": [ {"table": "capture_text"}, {"table": "capture_text_fts"}, {"hit": "passage:", "in": ["bio-plane/src/query.mjs"]}, {"hit": "content:", "in": ["bio-plane/src/query.mjs"]} ] },
+      { "id": "9.meaning-search", "state": "BUILT", "text": "the meaning arms (resolves:, concerns:, leg:)", "probes": [ {"hit": "resolves:", "in": ["bio-plane/src/query.mjs"]}, {"op": "meaningrows"} ] },
+      { "id": "9.observation-log", "state": "BUILT", "text": "the observation log with one append site, and the frontier over the document, content and meaning levels", "probes": [ {"table": "observation_log"}, {"hit": "#observe\\(", "in": ["bio-plane/src/store.mjs"]}, {"op": "frontier"}, {"op": "contentaxis"} ] },
+      { "id": "9.internet", "state": "ABSENT", "text": "the internet level of the frontier and of search", "probes": [ {"hit": "THE ONLY LEVEL STILL UNBUILT IS `internet`", "in": ["bio-plane/src/store.mjs"]}, {"none": ["internet"], "in": ["bio-plane/src/query.mjs"]} ] },
+      { "id": "9.ui", "state": "ABSENT", "text": "a member surface for the frontier and the content axis", "probes": [ {"uinone": ["frontier", "contentaxis", "contentmint"]} ] }
+    ]},
+    { "n": 10, "name": "Standing intent and monitoring", "claims": [
+      { "id": "10.scheduler", "state": "BUILT", "text": "monitoring on the alarm scheduler, with digest-based change detection", "probes": [ {"op": "monitor"}, {"table": "monitor_fired"}, {"hit": "archive-monitor", "in": ["bio-plane/src/store.mjs"]} ] },
+      { "id": "10.frontier-links", "state": "BUILT", "text": "the frontier of deferred links", "probes": [ {"table": "links"} ] },
+      { "id": "10.lead", "state": "ABSENT", "text": "a member's LEAD (D-194) — reserved vocabulary only, no table, op or writer", "probes": [ {"none": ["CREATE TABLE IF NOT EXISTS leads\\b", "\\blead_id\\b"], "in": ["bio-plane/src/schema.mjs", "bio-plane/src/store.mjs"]}, {"none": ["^\\s{2}lead:\\s*\\{"], "flags": "m", "in": ["bio-plane/src/index.mjs"]} ] }
+    ]},
+    { "n": 11, "name": "The assistant and the AI roles", "claims": [
+      { "id": "11.session", "state": "BUILT", "text": "the investigative session: runs, bounds, ticks, close, spawn, suggest", "probes": [ {"table": "ai_runs"}, {"table": "ai_run_bounds"}, {"op": "airunopen"}, {"op": "airuntick"}, {"op": "airunclose"}, {"op": "suggest"} ] },
+      { "id": "11.cascade", "state": "BUILT", "text": "the credential cascade (member, project, instance)", "probes": [ {"hit": "CASCADE_ORDER", "in": ["agent-worker/src/cascade.mjs"]} ] },
+      { "id": "11.check-deployed", "state": "BUILT", "text": "the CHECK runner is deployed in the fleet", "probes": [ {"hit": "check:\\s*\\{\\s*deployed: true", "in": ["agent-worker/src/harness.mjs"]} ] },
+      { "id": "11.extract-deployed", "state": "ABSENT", "text": "the EXTRACT role is NOT deployed in the fleet (its plane half is built — 5.ai-readings)", "probes": [ {"hit": "extract:\\s*\\{\\s*deployed: false", "in": ["agent-worker/src/harness.mjs"]} ] },
+      { "id": "11.pilot", "state": "ABSENT", "text": "the assistant pilot's flow: a prompt entry, INTERPRET, the classifier and the wizard", "probes": [ {"none": ["function\\s+(assistant|interpret)\\w*\\s*\\("], "flags": "i", "in": ["civicos-ui/app.html"]} ] },
+      { "id": "11.ui-extract", "state": "ABSENT", "text": "a member surface for AI-proposed readings", "probes": [ {"uinone": ["extractpropose", "extractproposals"]} ] },
+      { "id": "11.machine-fence", "state": "UNDETERMINED", "text": "whether an `ai` credential scoped to attest or ratify is refused below the scope check", "reason": "not traced; authored acts are fenced by MACHINE_CANNOT_* but the attest/ratify handlers were not followed", "probes": [] }
+    ]},
+    { "n": 12, "name": "Member surfaces and the interaction constructs", "claims": [
+      { "id": "12.u1-u7", "state": "BUILT", "text": "U1–U7: tokens, semantics, byte verification, release, snapshot resolution, the /build route", "probes": [ {"file": "civicos-ui/tokens.css"}, {"hit": "resolveSnapshot", "in": ["civicos-ui/app.html"]}, {"hit": "SEMANTICS", "in": ["civicos-ui/app.html"]} ] },
+      { "id": "12.undetermined", "state": "BUILT", "text": "the UNDETERMINED display primitive", "probes": [ {"hit": "undeterminedPane", "in": ["civicos-ui/app.html"]} ] },
+      { "id": "12.publish", "state": "ABSENT", "text": "a member cannot publish or ratify from the UI — publishing runs through the operator", "probes": [ {"uinone": ["publish", "ratify", "caseratify"]} ], "note": "literal call sites only; the UI's dynamic dispatch sites (roster acts, entity intents, project edges) were checked 2026-09-18 and send none of these" },
+      { "id": "12.check-start", "state": "ABSENT", "text": "a member cannot start a CHECK run from the UI (it only reads runs)", "probes": [ {"uinone": ["airunopen", "airunspawn"]} ] }
+    ]},
+    { "n": 13, "name": "Publication, audiences and communications", "claims": [
+      { "id": "13.fence", "state": "BUILT", "text": "the fence and one-way publication, editions, and the signed case document", "probes": [ {"op": "publish"}, {"op": "ratify"}, {"op": "caseratify"}, {"table": "published_cases"}, {"table": "published_case_members"} ] },
+      { "id": "13.verify", "state": "BUILT", "text": "the public read and verify surface, usable with no account", "probes": [ {"op": "verify"}, {"op": "publishedcase"}, {"hit": "function pubVerify", "in": ["civicos-ui/app.html"]} ] },
+      { "id": "13.searched", "state": "BUILT", "text": "the completeness statement carries a computed `searched` section", "probes": [ {"hit": "CASE_SEARCHED_UNCOMPUTABLE", "in": ["bio-plane/src/store.mjs"]} ] },
+      { "id": "13.ceremony", "state": "ABSENT", "text": "the member-facing publication ceremony (UI-17) — see 12.publish and 8.preflight", "probes": [ {"uinone": ["publish"]} ] },
+      { "id": "13.review-copy", "state": "ABSENT", "text": "the review copy (DEC-31, designed in BIO_Publication_v0_1.md §6A)", "probes": [ {"none": ["review[_.]?copy", "reviewcopy", "advance[_.]copy"], "flags": "i", "in": "@planeui"} ] },
+      { "id": "13.attribution", "state": "ABSENT", "text": "attribution levels for a member's observation (group, project, cover, name; off-the-record)", "probes": [ {"none": ["attribution_level", "attribute_as", "attributed_as", "attributionLevel", "off_record"], "in": "@planeui"} ] },
+      { "id": "13.directory", "state": "ABSENT", "text": "the directory and cross-group discussion", "probes": [ {"none": ["^\\s{2}directory:\\s*\\{"], "flags": "m", "in": ["bio-plane/src/index.mjs"]} ] }
+    ]},
+    { "n": 14, "name": "Scheduler and operations", "claims": [
+      { "id": "14.alarm", "state": "BUILT", "text": "one reconciling Durable Object alarm driving the named consumers", "probes": [ {"hit": "async alarm\\(", "in": ["bio-plane/src/store.mjs"]}, {"hit": "#schedConsumers", "in": ["bio-plane/src/store.mjs"]} ] },
+      { "id": "14.inbox", "state": "BUILT", "text": "the inbox (knock / resolve) and the audit pass", "probes": [ {"table": "inbox"}, {"op": "knock"}, {"op": "audit"} ] }
+    ]},
+    { "n": 15, "name": "Distribution: installer, releases, fleet, multi-instance", "claims": [
+      { "id": "15.fleet-source", "state": "BUILT", "text": "the installer's source installs the signed fleet", "probes": [ {"hit": "fleetSig", "in": ["newgroup/src/index.mjs"]}, {"hit": "ARMED_SIGNERS", "in": ["newgroup/src/index.mjs"]} ] },
+      { "id": "15.release", "state": "BUILT", "text": "the plane release is signed and carries the fleet", "probes": [ {"hit": "fleetSig", "in": ["release/RELEASE.json"]} ] },
+      { "id": "15.installer-bundle", "state": "ABSENT", "text": "the COMMITTED installer bundle predates the fleet (0.56.0-era) — the fleet-installing installer is not built into the artifact, and deploying it is Bob's gate", "probes": [ {"none": ["fleetSig"], "in": ["newgroup/dist/newgroup.bundled.mjs"]} ] },
+      { "id": "15.multi-instance", "state": "ABSENT", "text": "multi-instance isolation — account-global names are still fixed", "probes": [ {"hit": "bucket_name: \"bio-captures\"", "in": ["newgroup/src/index.mjs"]} ] }
+    ]}
+  ]
+}

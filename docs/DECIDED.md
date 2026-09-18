@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1067 rulings across 84 documents.
+1065 rulings across 84 documents.
 
 ## DEC-
 
@@ -126,8 +126,6 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-2026-08.md:1170`
 - **DEC-32** — Its ARITHMETIC is now RULED by Bob — legs relate by AND or OR; weakest leg governs across AND, strongest branch across OR (weakest within a branch).  
   `docs/development/kickoffs/BOB.md:75`
-- **DEC-33** · 2026-09-14 — fence and one-way publication built; the ceremony deferred on Bob's trigger (DEC-33); public/verify surface a stub; three output-act divergences unmade; RULED 2026-09-14: attribution of a member's observation or opinion in a published case is the attesting member's choice among group, project, cover, or name, and…  
-  `docs/architecture/BIO_System_Design.md:89`
 - **DEC-33** · 2026-09-10 — the seven are DECIDED (they stay), and what is open is folding them in**; no deadline, and explicitly NOT a blocker for DEC-33 the way D-310 was |  
   `docs/development/DEBT.md:279`
 - **DEC-34** · 2026-08-04 — io-plane/test/ratify.test.mjs (the published-parts count 3 -> 4: DEC-34's MANIFEST is now a part of every ratification; CORRECTED, never exempted, with the reason), + bio-plane/test/conclude.test.mjs and bio-plane/test/affordances.test.mjs (three superseded assertions corrected with their reasons: the…  
@@ -680,8 +678,6 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:2552`
 - **IC-82** · 2026-09-14 — QUEUE row flips and IC-82's SETTLED are CONDUCT's. ## CLAIM 2026-09-14 RECORD (REC-80 — RECORD's two designs get front matter: the FTS5-in-the-DO specification and the alarm model, read against the plane rather than against themselves) session: corpus-retrofit worker, one worktree for REC-80 + FW-16 + COFF-8…  
   `docs/development/CLAIMS.md:3580`
-- **IC-83** · 2026-09-14 — model RULED; Part II REVIEWED by Bob 2026-09-14 and its eight doctrine items RULED the same day; the object is BUILDING — IC-83 (I5) and IC-84 (I3) ACCEPTED, REC-82…87, SK-7, FW-17 rowed; content-grain search, the observation log and extraction breadth remain the design frontier |  
-  `docs/architecture/BIO_System_Design.md:80`
 - **IC-83** — its (1) and (2); IC-83 as AMENDED at REC-82's landing. Paths claimed BY REGION, never whole files:  
   `docs/development/CLAIMS.md:5002`
 - **IC-83** · 2026-09-14 — CHANGING — IC-83 ACCEPTED 2026-09-14 (protocol step 4): the 1.10.0 shape keeps working; nothing NEW is built against the old or the new shape until REC-82 lands the table and writer; SETTLED (STABLE again) when REC-82 and REC-83 have landed and the two `content_id` columns are NOT NULL.  

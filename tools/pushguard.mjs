@@ -483,6 +483,34 @@ export function check({ repo = REPO, run = null } = {}) {
                   + `not the index — regenerating will not help until it is fixed.` };
 }
 
+/* ------------------------------------------------ THE SINGLE SOURCE OF TRUTH FOR WHAT IS BUILT
+ *
+ * Added 2026-09-18 by BOB #14 at Bob's direction: *"there must be a single source of truth ...
+ * as long as that single source of truth is always kept updated."* `tools/status.mjs --check`
+ * re-runs every probe in `docs/architecture/construct-status.json` against the code. A status
+ * file that must be REMEMBERED to be updated goes stale exactly as the prose it replaced did,
+ * so this is checked where no session can skip it: at the push. Land a table the file calls
+ * ABSENT, or delete an op it calls BUILT, and the push names the claim to update. */
+export function statusCheck({ repo = REPO, run = null } = {}) {
+  const tool = join(repo, "tools/status.mjs");
+  if (!existsSync(tool)) {
+    return { ok: true, kind: "absent",
+             message: `tools/status.mjs is not present in ${repo} — what is built is UNVERIFIED for this push.` };
+  }
+  const r = run ? run(tool) : spawnSync(process.execPath, [tool, "--check"], { cwd: repo, encoding: "utf8" });
+  const out = `${r.stdout || ""}${r.stderr || ""}`;
+  /* Exit 0 is NOT the verdict; the tool's own completion line is. A check that never ran exits 0
+     too (measured 2026-09-18 — a symlinked path made the CLI a no-op), so the absence of
+     complaint is refused as evidence here. */
+  if (r.status === 0 && /status: \d+ claims, \d+ probes .* 0 drift/.test(out))
+    return { ok: true, kind: "current", message: "construct-status.json agrees with the code." };
+  if (r.status === 0)
+    return { ok: false, kind: "silent", output: out,
+             message: "tools/status.mjs --check exited 0 WITHOUT its completion line — it did not run, so nothing was verified." };
+  return { ok: false, kind: "drift", output: out,
+           message: "THE SOURCE OF TRUTH FOR WHAT IS BUILT DISAGREES WITH THE CODE (tools/status.mjs --check)." };
+}
+
 /* ------------------------------------------------------------------ scope of the verdict
  *
  * Whether the working tree the check read is the same thing as the commits being
@@ -562,7 +590,18 @@ function run(stdin) {
     return 1;
   }
 
+  const st = statusCheck({ repo });
+  if (!st.ok) {
+    const L = ["", `  PUSH REFUSED — ${HOOK_MARKER}`, "", `  ${st.message}`, ""];
+    for (const ln of (st.output || "").split("\n")) if (ln.trim()) L.push(`      ${ln}`);
+    L.push("", "  Update docs/architecture/construct-status.json to what the code now says (and say why in",
+           "  the commit), then `node tools/status.mjs --write` and commit. Never delete a probe to pass.", "");
+    process.stderr.write(L.join("\n") + "\n");
+    return 1;
+  }
+
   const notes = [];
+  if (st.kind === "absent") notes.push("tools/status.mjs is absent, so what is built was not verified");
   if (dirty) {
     notes.push("the corpus is DIRTY in the working tree, so this verdict describes the TREE"
              + " and is UNDETERMINED for the commits being pushed");
@@ -573,7 +612,7 @@ function run(stdin) {
   }
   if (v.kind === "absent") notes.push("the generator is absent, so nothing was verified");
   const tail = notes.length ? ` (${notes.join("; ")})` : "";
-  process.stderr.write(`${HOOK_MARKER}: docs/DECIDED.md current${tail}\n`);
+  process.stderr.write(`${HOOK_MARKER}: docs/DECIDED.md current; construct status agrees with the code${tail}\n`);
   return 0;
 }
 
