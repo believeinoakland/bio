@@ -15578,6 +15578,43 @@ re-read its lock.** That is a genuine intervention and the only thing that would
 could not be run at registration time — the estate held no finished unlocked agent worktree, all
 seven having been swept or being live.
 
+### The CONTROLLED experiment, its protocol REGISTERED before it runs
+
+**Agreed between CONDUCT #3 and BOB #13 on 2026-09-18, and written here rather than left in
+messages, because a protocol that lives in a conversation is the D-409 defect — a commitment
+nobody can enumerate is a commitment nobody keeps.**
+
+**THE SUBJECT:** one agent worktree that has FINISHED and RELEASED its lock, held back from the
+end-of-wave sweep. CONDUCT #3 reads every `agent-*` lock BEFORE removing anything, removes the
+others, leaves that one, and names it. Cost priced rather than waved through: **~636 MB**, and it
+says it will tell BOB #13 rather than quietly sweep it if disk gets tight.
+
+**THE ORDER IS LOAD-BEARING AND IS THE WHOLE EXPERIMENT (CONDUCT #3's condition, and it is right):**
+
+    1. READ the lock state.   2. RECORD it.   3. RESUME the agent.   4. RE-READ the lock.
+
+**If the lock is only read AFTER the resume, the measurement cannot distinguish *resuming caused
+the lock* from *it was locked all along and the earlier sweep reading was wrong*.** That is the
+two-causes-for-one-absence shape arriving INSIDE the experiment built to settle a correlation.
+**Two independent pre-resume readings** are taken — CONDUCT #3's when it names the tree, BOB #13's
+before resuming — so a single misread cannot carry the result.
+
+**CONTAMINATION RULE, stated before a subject is chosen so it cannot be rationalised afterwards:**
+a tree whose agent was resumed for any OPERATIONAL reason is **not a valid subject** and a
+different one is held, even at the cost of another wave. **`a93ad890406651eff` (M0-58) is already
+re-entered — it can serve as the predicted-LOCKED observation and is USELESS as the intervention
+target.**
+
+**WHAT EACH OUTCOME MEANS:** a released tree that LOCKS on resume supports the hypothesis and is
+the first evidence with an intervention behind it. A released tree that stays UNLOCKED after a
+resume KILLS it. **Neither result is reported as settling the mechanism** — it settles whether
+re-entry is *sufficient*, not whether it is the only cause.
+
+**AND THE ONE OBSERVATION THAT MUST NOT BE QUOTED AS SUPPORT:** at registration all seven agent
+worktrees read LOCKED, and every one of them was RUNNING. CONDUCT #3's own words on this entry:
+*that is exactly the observation a later reader would have quoted as support, and it supports
+nothing.*
+
 **AND IF THE OBSERVATION COMES OUT AS PREDICTED IT IS STILL UNSETTLED**, because a correct
 prediction from a correlation is precisely what a confounder produces. That sentence is the
 reason this entry is worth the space: **the value here is the METHOD — a falsifiable claim written
