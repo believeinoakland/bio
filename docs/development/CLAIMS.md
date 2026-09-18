@@ -13584,3 +13584,19 @@ prints `r.attestor`) says who delivered when it is not the signer. Consumer impa
 measured NOT BREAKING (no reader of `manifest.format`; `attestor` unchanged).
 
 **open as of 2026-09-18** — raised by REC-128; nothing renders the deliverer yet.
+
+## CLAIM 2026-09-18 RECORD (REC-128) — RELEASED
+
+released: 2026-09-18 by the REC-128 worker, branch `worktree-agent-a01d041e19ab1ad65`. Every claimed path is committed
+on that branch; `setup.mjs`, `civicos-ui/**`, `QUEUE.md`, `INTERFACES.md` and `newgroup/**` were NOT edited. Baseline
+before any edit, pristine tree at `d0951a2b`: **237/237 suites green · 14619 assertions passing**, no skip. After, at
+`d5a7386b`: **238/238 suites green · 14640 assertions passing**, no skip; `node scripts/coverage.mjs --strict` exit **0**
+unpiped; `node civicos-ui/test/run.mjs` exit **0**; `node tools/status.mjs --check` 0 drift; `node tools/plancheck.mjs
+--local` 0 fail (3 pre-existing ledger WARNs). NEGATIVE CONTROL `node test/deliverer.control.mjs` from `bio-plane/`:
+baseline 17/0 · fromsig 6/11 · backfill 14/3 · session-member 10/7, ALL AS DECLARED (the backfill declaration was
+corrected once, after its first run, to include THE TABLE — the instrument's error, recorded at the arm), every restore
+byte-identical. Found and fixed on the way: the first spelling of the `case_documents` UPDATE moved the line
+`casepin.control.mjs` arm (b) anchors on; `m025-arm-anchor-witness` A4 caught it and the edit was re-spelled. IDs minted
+with `tools/mintid.mjs`: IC-139, IC-140. **FOR CONDUCT:** RESOLVE IC-139 against I3 and IC-140 against I5 as read at
+resolution (built on I3 26.1.0 and I5 1.18.0, both proposed MINOR); the PUBLISHED container format moved `/5` -> `/6`
+and IC-139 argues it separately. **FOR UI:** the DELEGATION above (render the deliverer).
