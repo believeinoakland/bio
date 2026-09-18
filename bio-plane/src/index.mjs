@@ -44,6 +44,8 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
             not be fetched, and a caller trying to author the hop (D-112). The
             item's rule is that none of these is ever a silent skip. */
          DRIVE_CAPTURE_CHECKS,
+         /* CPDF-19 / C-51: the read-time re-extraction's DEC-49 rows (D-319). */
+         REEXTRACT_CHECKS,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX,
          /* CASE-4 / DEC-72: THE CASE RELATION, asked of signed bytes. Imported
             rather than restated so the ratify committer and the catalog that
@@ -2708,6 +2710,15 @@ const driveRow = (code) => {
   return { code, check: row.check, translation: row.translation };
 };
 
+/* CPDF-19 / C-51: the re-extraction family's row reader, `driveRow`'s shape. */
+const reextractRow = (code) => {
+  const row = REEXTRACT_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`reextractRow: ${code} has no REEXTRACT_CHECKS row with a canned translation `
+                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
 const admissionRow = (code) => {
   const row = ADMISSION_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
@@ -3039,6 +3050,523 @@ function tier3Note(m, memberNote) {
            + `about, and were dropped rather than allowed to overwrite text this document already had`);
   if (memberNote) say.push(memberNote);
   return say.length ? say.join("; ") : null;
+}
+
+/* ===================================================================== *
+ * CPDF-19 / D-319 — THE TIER-3 SEAM AS ONE FUNCTION, SO THE ACQUIRE PATH AND
+ * THE READ PATH COMPOSE ONE CHAIN BY ONE RULE.
+ * ===================================================================== *
+ *
+ * EVERY LINE BELOW WAS MOVED, NOT REWRITTEN, out of `op=acquire`'s format wire,
+ * where it was CPDF-10's seam, D-252's page-wise merge and REC-102's per-page
+ * layer partition. D-319 is that `op=pdfstructure` — the READ-time op — had no
+ * route to it, and `EXTRACTION-BREADTH-DESIGN.md` §5.1 lifts the seam into the
+ * read op "behind the same `needsTier3`/`tier3Pages` predicates and the same
+ * page-wise merge". A second copy in the read op would be two spellings of the
+ * one rule REC-102 exists to keep single, so the rule now lives here and both
+ * call sites hand it what they hold.
+ *
+ * FOUR EDITS AND ONLY FOUR, each so a caller can tell what happened:
+ *   - `chainSet` says the merge composed a chain. `chain` is left UNDEFINED
+ *     otherwise, because the acquire path's caller may already hold the tier-2
+ *     merge's scoped chain and "this block did not touch it" is not "null".
+ *   - `filled` and `engine` report WHICH pages the member transcribed and WHO
+ *     it was, which the read path's observation and answer name.
+ *   - D-417: the calibration join addressed the Durable Object as
+ *     `http://x/?op=calibrations`. The store routes on the PATH (`op-claims.mjs`
+ *     states the two levels), so the lookup answered `unknown op` every time and
+ *     read a field the answer does not have — the join NEVER FIRED and every
+ *     chain named no calibration, which reads exactly like "this store holds
+ *     none". It now asks `/calibrations` and reads `result.calibrations`.
+ *
+ * WHAT IT RETURNS: the text (merged or unchanged), the tier, the chain when one
+ * was composed, the reason when OCR could not help, the pages filled and the
+ * engine that filled them. It never throws for a member's failure: that is an
+ * `ocrNote`, exactly as it always was. */
+async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt }) {
+  let chain, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered = [];
+  const wanted = !!(i2text && needsTier3(i2text));
+  if (i2text && needsTier3(i2text)) {
+    /* D-252: WHICH pages, established before the member is called
+       and kept for the merge. The list travels in the request so a
+       member need not transcribe pages that already have text — the
+       cost half — and it is checked again on the way back, because
+       the correctness half cannot rest on the member having read it.
+       `baseTier` is remembered here because `wiredTier` becomes 3
+       below and the text-layer part of a MIXED document still came
+       through the tier it came through. */
+    const wantPages = tier3Pages(i2text);
+    const baseTier = wiredTier;
+    const baseText = i2text;
+    if (env.OCR_WORKER) {
+      try {
+        const r = await env.OCR_WORKER.fetch("https://ocr-worker/transcribe", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ capture_sha: sha, store: storeName,
+                                 pages: wantPages }),
+        });
+        /* THE STATUS IS READ BEFORE THE BODY, and that ordering is
+           the fix for a real defect this suite caught: parsing the
+           body of a 500 THROWS, so the catch below reported "could
+           not be reached" for a member that answered perfectly well
+           and answered an error. Two different findings — the member
+           is down, and the member failed on this document — were
+           collapsing into the first, which is the wrong one to
+           report because only the second is about the document. */
+        if (!r.ok) {
+          ocrNote = `the OCR member answered ${r.status}, so this document stays unread`;
+        } else {
+          /* CPDF-13 / D-253 — THE CALIBRATION THE MEMBER'S OWN
+             FIDELITY RESTS ON, joined here so the chain NAMES it.
+             Without this the chain records the ENGINE and the grade
+             rests on a MEASUREMENT with nothing between them, which
+             is D-253 in one sentence.
+  
+             THE COST IS ONE STORE READ ON A BRANCH THAT ALREADY
+             MADE A NETWORK CALL, and it is taken HERE rather than
+             once per acquire on purpose. A capture with a text
+             layer never reaches this line, so an instance with no
+             OCR member pays nothing at all for this feature on the
+             capture path.
+  
+             CORRECTED 2026-09-14 (CPDF-17): that sentence used to
+             read "an instance with no OCR member — WHICH IS EVERY
+             INSTANCE TODAY". The clause has been false since
+             CPDF-10 (`698a07b`) and release 0.58.0 (`e67e275`) —
+             the project's own instance HAS the member and reaches
+             this line, and a sovereign group's does not until Bob
+             releases the installer's fleet. The COST ARGUMENT is
+             unchanged and still holds for the un-fleeted instance;
+             only the false claim about how many instances that is
+             has gone. Part II §16.4 of
+             `docs/architecture/BIO_Content_Framework_v0_10.md`
+             carries the verified state.
+  
+             IT FAILS OPEN TO NULL, NEVER TO A GUESS. A store that
+             does not answer, an engine with no calibration, or a
+             calibration that has been superseded all produce `null`
+             — the pre-CPDF-13 chain, with `cap` and `measured_by`
+             and no reference. A transcription that cannot name its
+             measurement says so by not naming one; it never names
+             the nearest available number, which would be the
+             record claiming a join it does not have. */
+          const ocrAnswer = await r.json();
+          let calRef = null;
+          try {
+            const stCal = env.STORE.get(env.STORE.idFromName(storeName));
+            const cOut = await doAnswer(stCal.fetch(
+              `http://x/calibrations?engine=${
+                encodeURIComponent(String(ocrAnswer && ocrAnswer.engine || ""))}`));
+            const live = ((cOut && cOut.answered && cOut.result && cOut.result.calibrations) || [])
+              .find((c) => c.superseded_by == null
+                        && c.version === (ocrAnswer && ocrAnswer.version));
+            calRef = live ? live.calibration_id : null;
+          } catch { /* a calibration this record cannot read is a
+                       calibration this chain does not name. */ }
+          const built = ocrTextFromMember(ocrAnswer, { calibration: calRef });
+          if (built.ok) {
+            engine = { engine: String(ocrAnswer.engine), version: String(ocrAnswer.version), calibration: calRef };
+            /* D-252 — PAGE-WISE, NEVER WHOLESALE. This line was
+               `i2text = built.text`, which threw away a text layer
+               the moment one scanned exhibit was stapled to the
+               back of a report. */
+            const m = mergeTier3Text(baseText, built.text, wantPages);
+            if (!m.ok) ocrNote = m.why;
+            else {
+              i2text = m.text;
+              /* The pages that kept their own text: what is LEFT of
+                 the base after the fill, computed FROM THE TEXT
+                 rather than from the page list, so a page carrying
+                 text is in this part whether or not anything
+                 predicted it would be. A selected page nobody
+                 transcribed carries no text and therefore belongs to
+                 neither part — it has no provenance to record,
+                 because nothing produced anything for it. */
+              const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : [])
+                .filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page)
+                            && typeof p.text === "string" && p.text.length)
+                .map((p) => p.page);
+              const parts = [];
+              /*__REC102_TIER3_LAYER_PARTS_START__*/
+              /* REC-102 / D-372 — THE LAYER PART IS PARTITIONED BY
+                 THE TIER-2 MERGE'S OWN PER-PAGE STATEMENT, NOT
+                 COLLAPSED ONTO ONE DOCUMENT-LEVEL TIER.
+                 This block used to be a single part at `baseTier`,
+                 and that single tier is a DOCUMENT-level answer to a
+                 PER-PAGE question — the very shape D-252 closed one
+                 tier up and REC-98 closed one merge earlier. A
+                 document that escalates to tier 2 per page and THEN
+                 re-extracts to tier 3 had its per-page statement
+                 rebuilt as `tier: 2` over every page the tier-2
+                 merge had deliberately KEPT at tier 1, so the record
+                 named a derivation those pages do not have. Not a
+                 regression (before REC-98 the escalation assigned
+                 tier 2 wholesale anyway) and that is why it is a row
+                 rather than a revert — but it is the record
+                 overclaiming, which is the direction this project
+                 cares about most.
+                 THE FALL-BACK IS THE OLD BEHAVIOUR EXACTLY. With no
+                 per-page partition (`tier2PerPage` null — tier 2
+                 never ran, or took the document wholesale) every
+                 layer page is `unspoken` and this composes the one
+                 part at `baseTier` that it always composed, in the
+                 same position, so a document reaching only ONE of
+                 the two merges answers byte-identically.
+                 A PAGE THE PARTITION DOES NOT SPEAK FOR IS NAMED,
+                 NEVER SCORED TO A TIER. It goes to the `baseTier`
+                 part rather than being guessed into tier 1 or tier
+                 2: undetermined is first-class, and the document's
+                 own wired tier is the honest answer for a page the
+                 merge said nothing about.
+                 `baseText` is the pre-merge shape at every site, so
+                 D-251's producer marker is still read off the
+                 DOCUMENT rather than off the OCR member's answer —
+                 unchanged, and true of all three parts. */
+              const layerSet = new Set(layerPages);
+              const spokenFor = tier2PerPage
+                ? [[1, (tier2PerPage.tier1 || []).filter((p) => layerSet.has(p))],
+                   [2, (tier2PerPage.tier2 || []).filter((p) => layerSet.has(p))]]
+                : [];
+              const spoken = new Set(spokenFor.flatMap(([, ps]) => ps));
+              /* IN THE ORDER THE ATTEMPTS HAPPENED, which is what
+                 `tiersEvidenced` reads the chain as and what the
+                 content-level writer walks cumulatively: the tier-1
+                 decode had its go before the tier-2 one, which had
+                 its go before the engine. */
+              for (const [tier, ps] of spokenFor)
+                if (ps.length)
+                  parts.push({ pages: ps,
+                    chain: layerChainFor(baseText, { tier, container: fmt }) });
+              const unspoken = layerPages.filter((p) => !spoken.has(p));
+              if (unspoken.length)
+                parts.push({ pages: unspoken,
+                  chain: layerChainFor(baseText, { tier: baseTier, container: fmt }) });
+              /*__REC102_TIER3_LAYER_PARTS_END__*/
+              if (m.filled.length) parts.push({ pages: m.filled, chain: built.chain });
+              /* ONE part gives that part's chain back unscoped, so a
+                 wholly-scanned document records exactly what it
+                 recorded before D-252; TWO give the scoped, mixed
+                 chain whose derivation cap is UNDETERMINED rather
+                 than the engine's letter. */
+              const merged = mergedChain(parts);
+              /* A refusal from the chain builder records NO chain
+                 rather than filing merged text under one part's
+                 provenance. */
+              chain = Array.isArray(merged) ? merged : null; chainSet = true;
+              if (m.filled.length) wiredTier = 3;
+              filled = m.filled; unanswered = m.unanswered || [];
+              ocrNote = tier3Note(m, built.note);
+            }
+          } else ocrNote = built.why;
+        }
+      } catch {
+        ocrNote = "the OCR member could not be reached, so this document stays unread";
+      }
+    } else {
+      ocrNote = "this document has no text layer to read and no OCR engine is installed "
+              + "in this instance, so nothing is claimed about what it says";
+    }
+  }
+  /* D-418 — WHETHER THIS DOCUMENT STILL WANTS OCR, stated as its own fact.
+     `tier3_candidate` was set from `ocrNote`'s TRUTHINESS, which was right when
+     CPDF-10 wrote it (the note only ever said why a document was LEFT unread) and
+     wrong from D-252 on, when `tier3Note` began carrying the SUCCESS sentence too
+     ("N scanned page(s) were transcribed … and merged"). So every document the
+     member transcribed page-wise was filed as still wanting OCR: REC-94's writer
+     read that flag as a shortfall and recorded `partial`, and the content-axis
+     frontier listed it as a re-extraction candidate for ever — the list D-319's
+     re-read is chosen from, which a re-read could then never empty. A document
+     wants OCR when it was selected and some selected page is still unread. */
+  const stillWanting = wanted && (!filled.length || unanswered.length > 0);
+  return { i2text, wiredTier, chain, chainSet, ocrNote, filled, engine, stillWanting };
+}
+
+/*__REC91_TEXT_UNITS_START__*/
+/* CPDF-19: REC-91's block, MOVED VERBATIM into a function so the read path's
+   re-extraction (D-319) derives a capture's indexable units by the SAME rule and
+   the SAME wire budget as the acquire path. The assignments below are to this
+   function's locals; the caller copies them. */
+function textUnitsFor(i2text) {
+  let textUnits = null, textUnitsOverBound = 0;
+  /* REC-91 / `CONTENT-SEARCH-DESIGN.md` section 4.1 -- THE INDEXABLE
+   * UNITS OF THIS CAPTURE'S TEXT, taken off the I2 shape at the one
+   * place `i2text` is final, exactly where CAP-12's container extent
+   * is taken and for the same reason. **It reads the same object and
+   * touches not one line of that block**, which is deliberate: that
+   * region is COFF-12's live claim.
+   *
+   * WHY THIS EXISTS AT ALL. Section 4.1 says the units are written
+   * at promote "from the I2 shape the acquire path already holds" --
+   * and the acquire path HOLDS it here and, until this line, carried
+   * none of it forward. `readings.reading` holds `entities`,
+   * `facts`, the chain, the tier, the page count and the container
+   * extent, and NO TEXT; `reading_text_source` stores the chain and
+   * not the text; per-page text was persisted nowhere at all. So the
+   * store had no text to index and the design's own sentence had no
+   * mechanism under it. This is that mechanism, and it is a SIBLING
+   * of `reading` rather than a field ON it, which is the one shape
+   * decision in this block and is load-bearing -- see below.
+   *
+   * RECOGNISED BY SHAPE, NEVER BY A LIST OF CONTAINER NAMES, which
+   * is CAP-12's own rule and the reason a seventh producer landing
+   * in the same I2 shape is fed by this code with no edit. `pages[]`
+   * is a PDF; `paragraphs[]` a word-processing container; `slides[]`
+   * a deck. A workbook returns `sheets[]`, which is none of these
+   * and correctly yields nothing -- a cell is not a passage and
+   * `sheet-range` waits on EXTRACTION-BREADTH section 3.2.
+   *
+   * THE DECK IS ONE UNIT PER SLIDE, RULED BY BOB 2026-09-15, written
+   * as a `slide-shape` extent with the SHAPE OMITTED -- which
+   * `covers()` already accepts as covering the whole slide, so no
+   * grammar change is owed and `pptx.mjs` needs no change either: it
+   * emits one text string per slide today. A shape is not a passage,
+   * exactly as a cell is not one.
+   *
+   * SPEAKER NOTES ARE NOT INDEXED, AND THAT IS STATED RATHER THAN
+   * LEFT TO BE NOTICED. `pptxText` emits `speakerNotes[]` per slide
+   * and DEC-5 requires them "DISTINGUISHABLE from slide text
+   * EVERYWHERE shown, cited or indexed, never merged" -- so they
+   * cannot be folded into the slide's unit. Nor can they have a unit
+   * of their own: the only address that reaches a slide is
+   * `slide-shape`, whose shape-omitted form is now THE SLIDE, so a
+   * notes unit would collide with the slide's own primary key. There
+   * is no extent arm for a slide's notes, so the most candid text in
+   * a deck is not searchable at content grain. Reported as a DESIGN
+   * GAP against section 4.1.
+   *
+   * THE RECT IS DEGENERATE ON PURPOSE. Section 4.1 says `pdf-page`
+   * "with the page's full rectangle"; I2's text shape carries no
+   * rectangle, and inventing one would be worse than not having it —
+   * `canonicalExtent` hashes the rect INTO the content address, so a
+   * literal rectangle would give the indexed unit a different
+   * `contentIdFor` from the one a member citing "page 14" produces,
+   * and the hit would stop being the citation's own identity
+   * (section 4.5). The absent rect IS the whole page, in the
+   * record's own spelling, and `describeExtent` already reads it
+   * that way.
+   *
+   * A UNIT WITH NO TEXT IS NOT EMITTED. M-20 measured 26.3 % of PDF
+   * pages recovering nothing at all -- scans and image-only pages --
+   * and they are indexed as NOTHING rather than as empty, which is
+   * why section 4.4's `scope` tally exists. Text below the OCR floor
+   * never reaches here at all: it is discarded rather than carried
+   * beside a flag (Part II section 16, chain rule 4). */
+  if (i2text) {
+    const arm = (list, kind, fields) => (Array.isArray(list) ? list : [])
+      .map((u, i) => (u && typeof u === "object" && typeof u.text === "string" && u.text.length
+        ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null))
+      .filter(Boolean);
+    /* The index each producer ALREADY assigns is carried, never
+       re-counted from the array position: `pages[].page`,
+       `paragraphs[].para` and `slides[].slide` are the producer's own
+       numbering and are what every other reference into these
+       containers is written against. A re-count would silently
+       disagree the first time a producer skipped one. */
+    const units =
+        Array.isArray(i2text.pages)      ? arm(i2text.pages, "pdf-page",
+          (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null }))
+      : Array.isArray(i2text.paragraphs) ? arm(i2text.paragraphs, "doc-para",
+          (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null }))
+      : Array.isArray(i2text.slides)     ? arm(i2text.slides, "slide-shape",
+          (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null }))
+      : null;
+    /* AN EMPTY LIST IS NULL AND NEVER A ZERO, which is CAP-12's rule
+       twelve lines up applied to this key. A container whose entry
+       returned `pages: []` because it was over the size bound has not
+       told us it holds no pages, and emitting `[]` would let the
+       store record "extracted, unit arm present, nothing to index"
+       for a document nobody managed to read. The absent key and the
+       empty array are two different facts; only one of them belongs
+       on the wire. */
+    /* THE WIRE'S OWN BUDGET, AND IT IS NOT §4.3's BOUND — IT IS THE
+       ONE THAT ACTUALLY BINDS, MEASURED BY THIS ITEM'S OWN SUITE
+       RATHER THAN REASONED.
+       *
+       * §4.3 sets a PER-CAPTURE bound of 2,097,152 B from M-20, and
+       * `#writeCaptureText` applies exactly that. But the route the
+       * design names for getting the units to the store is
+       * `data/provenance.json`, and `op=promote` REFUSES an inline
+       * bundle file over `INLINE_MAX` — 1,048,576 B — with
+       * `OVERSIZE_INLINE`. So a capture carrying more text than that
+       * would not be indexed to the bound and reported `partial`: THE
+       * WHOLE PROMOTION WOULD BE REFUSED. Measured at 2,460,076 B on
+       * this item's first run of its own bound arm.
+       *
+       * THAT WOULD BE A REGRESSION AND NOT A NEW LIMIT, which is why
+       * it is fixed here rather than reported and left. M-20's census
+       * holds real documents over it — the largest PDF at 1,354,686 B
+       * of text and the largest docx at 1,187,253 B — and every one of
+       * them promotes today. Emitting their text unbounded would make
+       * this item REFUSE documents the record currently accepts, which
+       * is the worst direction available: a capture the group cannot
+       * file at all, because of an index.
+       *
+       * THE FIGURE, and it is half of `INLINE_MAX` on purpose. The
+       * other half is headroom for the rest of the document — the
+       * reading, the chain, the provenance hops — and for JSON
+       * ESCAPING, which is not a constant factor: a quote or a control
+       * byte expands, so a budget set close to the limit would fail on
+       * text rather than on size and would do it unpredictably. At
+       * M-20's percentiles 524,288 B admits the PDF sample past its
+       * 99th (396,328 B) and every docx and pptx but the largest two.
+       *
+       * AND WHAT IS DROPPED IS COUNTED, NEVER SILENT. The count rides
+       * beside the units so the store's `indexed` observation reads
+       * `partial` and names this bound — otherwise a capture truncated
+       * at the wire would be recorded as fully indexed, which is the
+       * record claiming coverage it does not have at the one level a
+       * member reads absence from. Reported as a DESIGN GAP against
+       * §4.3: the bound the design sets is not the bound that binds. */
+    let budget = ACQUIRE_TEXT_UNITS_BUDGET, kept = [], dropped = 0;
+    for (const u of (units || [])) {
+      /* THE ENVELOPE IS CHARGED WITH THE TEXT, AND THAT IS NOT
+         FASTIDIOUSNESS — a unit costs the wire its JSON STRUCTURE as
+         well as its words, and the structure is the half that bites.
+         `civicos-ui/app.html` serialises the acquire document with
+         `JSON.stringify(..., null, 1)`, so every unit spends about
+         eight indented lines on its extent, its seq and its keys
+         whatever its text weighs. M-20's worst docx carries 20,571
+         paragraph units at a mean of 60 B: charged on text alone
+         they are 1.2 MB and fit the budget twice over, while their
+         ENVELOPES ALONE are about 1.8 MB and would take the promote
+         past `INLINE_MAX` on their own. A budget that counted only
+         the words would have been a bound that did not bound.
+         AND IT LANDS NEAR A NUMBER NOBODY AIMED AT, which is worth
+         the line: 512 KiB at 128 B of envelope admits about 4,000
+         units, and M-20 measured the largest promote that fits the
+         CPU window at ~3,900 units at that corpus's mean unit size.
+         Two independent limits agreeing is not evidence of either —
+         it is a coincidence worth noticing and not resting on. */
+      const size = new TextEncoder().encode(u.text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
+      if (size > budget) { dropped++; continue; }
+      budget -= size; kept.push(u);
+    }
+    textUnits = kept.length ? kept : null;
+    textUnitsOverBound = dropped;
+  }
+  return { textUnits, textUnitsOverBound };
+}
+/*__REC91_TEXT_UNITS_END__*/
+
+/* CPDF-19: MOVED VERBATIM from `op=acquire` (its explanation stays at the acquire site). */
+const readEntities = (list) => (Array.isArray(list) ? list : []).map((e) => ({
+  key: e && e.key != null ? String(e.key) : null,
+  kind: e && e.kind != null ? e.kind : null,
+  label: e && e.label != null ? e.label : null,
+  facts: e && e.facts && typeof e.facts === "object" ? e.facts : {},
+  /* The reference exactly as the reading carries it: kind:key, raw. */
+  ref: `${e && e.kind != null ? e.kind : ""}:${e && e.key != null ? e.key : ""}`,
+  /* FW-17 / IC-86: WHERE the reference was read, in IC-1's union and no
+     other vocabulary. Validated here rather than trusted, for the reason
+     IC-1 states as its own load-bearing part — a required `kind`
+     discriminator turns a silent misread into a loud one, and this is the
+     boundary where a reader's answer becomes the record's. An unrecognised
+     kind, a missing human form or a missing per-arm field yields null: the
+     reading still writes and the position is absent, which is the honest
+     direction. NULL IS NEVER "the whole document was meant". */
+  source: readingSource(e && e.source),
+})).filter((e) => e.key != null || e.kind != null);
+
+/* CPDF-19: THE READING A WIRED TEXT PRODUCES, as one function. MOVED VERBATIM
+   out of `op=acquire` — the `determined` branch and the failed branch — so a
+   read-time re-extraction (D-319) persists a reading composed by exactly the rule
+   an acquire composes it by: the same basis sentence, the same tier-3 candidacy,
+   the same position statement. `docType` is only read on the FAILED branch, which
+   is why the re-extraction can hand it the stored reading's own type. */
+function readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote,
+                           tier3Candidate = !!ocrNote }) {
+  let reading = null;
+  if (wired && wired.determined) {
+    const { entities: wiredEntities, ...wrest } = (wired.parsed || {});
+    const wfacts = (wrest && typeof wrest.facts === "object" && Object.keys(wrest).length === 1)
+      ? wrest.facts : wrest;
+    const entities = wired.parse_error ? [] : readEntities(wiredEntities);
+    const wtype = wired.doctype.type;
+    /* FW-17 / IC-86 — THE POSITION SENTENCE, and it is written whichever
+       way the answer came out. A reading whose references carry no
+       position must SAY SO: a null column that nobody explained reads as a
+       reader that did not bother, and a reader that could not say is a
+       different fact from a reader that was not asked. Three cases and
+       they are three different findings — the container itemised and the
+       reader placed every reference; the container itemised and the reader
+       placed some (a reference read in a stretch no part claims); the
+       container never itemised at all, which is the PRODUCER's absence and
+       carries the producer's own reason. */
+    const positioned = entities.filter((e) => e.source).length;
+    const posNote = !entities.length ? null
+      : positioned === entities.length
+        ? `every reference carries where it was read (${positioned} of ${entities.length})`
+        : positioned
+          ? `${positioned} of ${entities.length} references carry where they were read; the rest were `
+            + `read in stretches of text no part of the container claims, so their position is not stated`
+          : `no reference carries where it was read — ${wired.position_why
+              || "this reader does not say where"}`;
+    reading = {
+      content_type: wtype.key, reader_version: wtype.version ?? null,
+      read_from_text: true, found: entities.length > 0,
+      entities, facts: wired.parse_error ? {} : (wfacts || {}), at: retrieved,
+      /* D-152's provenance rule, and CPDF-10's correction of how it was
+         carried. This was the STRING "layer" — right about the fact and
+         wrong about the shape, because the moment a second derivation
+         exists a single label cannot say which engine produced the text
+         or how many hands it passed through. It is now the CHAIN
+         `textchain.mjs` owns: an ordered list of steps, each naming what
+         performed it, each only able to weaken what it received. A text
+         layer is itself an unverified transcription (CPDF-9 measured
+         ABBYY FineReader in 3 of 14 recent Legistar attachments), so
+         `layer` is a derivation step like any other rather than the
+         absence of one. `text_tier`/`text_container` stay exactly as they
+         were — a consumer reading only those is unaffected (IC-39). */
+      text_source: chain, text_tier: wiredTier, text_container: fmt,
+      basis: (wired.parse_error
+        ? `the ${wtype.key} reader could not parse the ${fmt} text-layer text (${wired.parse_error}), so nothing is claimed about its entities`
+        : (entities.length
+            ? `read by the ${wtype.key} reader v${wtype.version} over ${fmt} ${describeChain(chain)} (tier ${wiredTier}); ${wired.why}`
+            : `the ${wtype.key} reader found no entities in this document's ${fmt} text-layer text (tier ${wiredTier}); recorded as an empty reading, never an emptied document`))
+        /* D-252: A DOCUMENT THAT READ IS STILL ALLOWED TO HAVE PAGES IT
+           COULD NOT READ, and until now only the FAILED branch carried
+           that sentence. A mixed document — a report with scanned exhibits
+           — reads perfectly well off its text layer and reached here with
+           `ocrNote` computed and then dropped on the floor, so the record
+           said nothing at all about the exhibits. Same class as the merge
+           above: the document-level answer stood in for a per-page fact. */
+        /* REC-98 / D-283: and the same sentence one tier down. A document
+           whose text layer is a MERGE of two decodes says so on the basis
+           the record keeps, rather than presenting a merge as one tier's
+           reading. Kept a separate clause from `ocrNote` for D-252's own
+           stated reason — collapsing them loses the one a reader needs. */
+        + (tier2note ? ` — ${tier2note}` : "")
+        + (ocrNote ? ` — ${ocrNote}` : "")
+        + (posNote ? ` — ${posNote}` : ""),
+      ...(tier3Candidate ? { tier3_candidate: true } : {}),
+      /* FW-17 / IC-86: the producer-side facts about position, carried on
+         the reading so a later reader can tell an absent position that was
+         never available from one a reader declined to give. */
+      position_parts: wired.position_parts ?? 0,
+      position_why: positioned ? null : (wired.position_why || null),
+    };
+  } else if (wired) {
+    /* text-undetermined: a FAILED reading, recorded as such — the tier
+       that could not decode says so, and no refs are invented. */
+    reading = {
+      content_type: docType.type.key, reader_version: docType.type.version ?? null,
+      read_from_text: false, found: false, entities: [], facts: {}, at: retrieved,
+      text_source: chain, text_tier: wiredTier, text_container: fmt,
+      /* CPDF-10: a Tier-3 candidate says WHY it is unread, and the two
+         reasons are different findings. `ocrNote` names the scan case —
+         there was nothing to decode and no engine to read it — where
+         `wired.why` names a decode that was attempted and failed. Reading
+         them as one would file a scanned budget book beside a broken font
+         map, and only one of those is waiting on a capability. */
+      /* REC-98 / D-283: the tier-2 merge's finding rides here too. A
+         document that stayed unread AND had a tier-2 escalation refused has
+         two different things to say and only one of them is `wired.why`. */
+      basis: [tier2note, ocrNote ? `${ocrNote} (${wired.why})` : wired.why]
+               .filter(Boolean).join(" — "),
+      ...(tier3Candidate ? { tier3_candidate: true } : {}),
+    };
+  }
+  return reading;
 }
 
 /* ===================================================================== *
@@ -4383,6 +4911,60 @@ export default {
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
         return json({ ok: false, error: "pdfstructure requires sha256=<64 lowercase hex>" }, 400);
+      /* CPDF-19 / D-319 — THE OPT-IN RE-READ TO TIER 3 (`EXTRACTION-BREADTH-DESIGN.md`
+         §5.1). WITHOUT `ocr` NOTHING BELOW THIS BLOCK CHANGES, AND NOTHING IN IT RUNS:
+         the answer is byte-identical to the read this op always was, which is the
+         design's own over-strictness control and `reextract.test.mjs`'s digest arm.
+         *
+         * WITH `ocr=1` every way the request can be wrong is refused HERE, before a
+         * byte is read or an engine is called, because two of the five cost
+         * something (a ~10 s engine call per image-only page, CPDF-10's figure) and
+         * the other three would otherwise leave a member believing the record had
+         * looked again when it had not. */
+      const ocrAsked = url.searchParams.has("ocr");
+      let reBasis = null, reAuthor = null, reViewer = null;
+      /* DEC-49 REGION is-reextract
+       *
+       * THE SPAN C-51's five codes name. Helper `reextractRow`, every code a
+       * STRING LITERAL at its site. */
+      if (ocrAsked) {
+        if (url.searchParams.get("ocr") !== "1")
+          return json({ ok: false, reason: "REEXTRACT_FLAG_MALFORMED", ...reextractRow("REEXTRACT_FLAG_MALFORMED"),
+            op, detail: `ocr=${JSON.stringify(String(url.searchParams.get("ocr")).slice(0, 40))} is not a value `
+                      + `this op reads. Send ocr=1 to re-read the document with the OCR member, or leave the `
+                      + `parameter off for the ordinary read.` }, 400);
+        if (cls === "ai")
+          return json({ ok: false, reason: "REEXTRACT_AGENT_REFUSED", ...reextractRow("REEXTRACT_AGENT_REFUSED"),
+            op, detail: `op=pdfstructure is declared a read, so no agent task scope can name it as a write, `
+                      + `and ocr=1 writes this capture's reading. An agent is confined to the writes its `
+                      + `member declared (D-199).` }, 403);
+        if (viaSession && !(sessCaps && sessCaps.has("contribute")))
+          return json({ ok: false, reason: "REEXTRACT_NOT_CAPABLE", ...reextractRow("REEXTRACT_NOT_CAPABLE"),
+            op, needs: "contribute", held: [...(sessCaps || [])].sort(),
+            detail: `a re-read replaces this capture's reading, its text units and the standing of `
+                  + `content rows cited under the old one, which is a write to the record and asks the `
+                  + `capability a promotion asks.` }, 403);
+        if (!env.OCR_WORKER)
+          return json({ ok: false, reason: "REEXTRACT_NO_OCR_MEMBER", ...reextractRow("REEXTRACT_NO_OCR_MEMBER"),
+            op, sha256: sha,
+            detail: `no OCR member is bound to this instance (the OCR_WORKER service binding is absent), `
+                  + `so there is no tier 3 to reach. Nothing was read, called or written. An instance `
+                  + `that installs the member later can re-read this capture then (D-115, D-319).` }, 501);
+        reViewer = viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+        reAuthor = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
+        const reStore = env.STORE.get(env.STORE.idFromName(storeName));
+        const bOut = await doAnswer(reStore.fetch(
+          `http://do/reextractbasis?sha256=${sha}&viewer=${encodeURIComponent(reViewer)}`));
+        if (!bOut.answered) return storeSilent(op);
+        if (!(bOut.result && bOut.result.held))
+          return json({ ok: false, reason: "REEXTRACT_NOT_READ", ...reextractRow("REEXTRACT_NOT_READ"),
+            op, sha256: sha,
+            detail: `this record holds no reading of that capture that you can see, so there is nothing `
+                  + `for a re-read to replace. A capture is read when a bundle carrying it is promoted; `
+                  + `a capture in a project you are not part of answers exactly as one never filed.` }, 409);
+        reBasis = bOut.result;
+      }
+      /* END DEC-49 REGION is-reextract */
       const obj = await env.CAPTURES.get(captureKey(storeName, sha));
       if (!obj)
         return json({ ok: false, reason: "NOT_FOUND", sha256: sha, store: storeName, tokenClass: cls }, 404);
@@ -4456,6 +5038,9 @@ export default {
        * reads `tier: 1` with Tier 2 having been asked and having added nothing —
        * which is what happened, rather than a `2` true of no page. */
       let structureTier = 1;
+      /* CPDF-19: what the tier-2 merge decided, kept for the `ocr=1` re-read below, which
+         composes the chain and the basis by the acquire path's rule and needs both. */
+      let readT2PerPage = null, readT2Note = null;
       if (env.PDF_WORKER && needsTier2(structure.text)) {
         try {
           const r = await env.PDF_WORKER.fetch("https://pdf-worker/structure", {
@@ -4490,12 +5075,14 @@ export default {
               structureTier = m.replaced.length ? 2 : 1;
               const n = tier2Note(m);
               if (n) structure.notes = [...structure.notes, n];
+              readT2PerPage = m.perPageTier || null; readT2Note = n || null;
             } else {
               /* The merge REFUSED — the Tier-1 reading has no page grain to merge
                  on and already holds text. Tier 1 stands and the refusal says so
                  in the record's own words, because refusing costs an unread
                  document and accepting costs an overwritten one. */
               structure.notes = [...structure.notes, m.why];
+              readT2Note = m.why || null;
             }
           } else {
             /* The member answered but could not help (not a PDF to it, an error):
@@ -4510,6 +5097,107 @@ export default {
       }
       structure.tier = structureTier;
       /*__REC98_TIER2_WIRE_STRUCTURE_END__*/
+      /* CPDF-19 / D-319 — THE RE-READ, reached only with `ocr=1` and only after
+         every refusal above has had its chance. THE SAME SEAM, THE SAME MERGE, THE
+         SAME CHAIN RULE AND THE SAME READING RULE AS `op=acquire`, because each is
+         now one function both paths call (`tier3Extend`, `textUnitsFor`,
+         `readingFromWire`) — so a capture re-read here records exactly what it
+         would have recorded had the member been installed when it was captured.
+         *
+         * WHAT IS WRITTEN, AND BY WHAT. The new reading goes to the store's
+         * `reextract` path, which hands it to promote's own per-capture writer:
+         * the chain projection, REC-82's stale mark on content rows minted under
+         * the OLD chain (marked, never deleted — Bob's 5.8), REC-91's text units
+         * replaced, and REC-94's content-level observation under
+         * `authority_kind = extract` with the asking member as `actor`. No bundle
+         * version is minted — see `Store.reextract` for why and for the guard that
+         * cost buys.
+         *
+         * NOTHING IS WRITTEN WHEN NOTHING WAS TRANSCRIBED. A document with no
+         * image-only page is not a tier-3 candidate and the engine is never
+         * called; a member that declined or failed leaves the document exactly as
+         * it was read. Both answer `performed: false` WITH THE REASON — the
+         * absence of a re-read is a finding and is stated, never an empty field. */
+      if (ocrAsked) {
+        const stored = (reBasis && reBasis.reading) || {};
+        const t3 = await tier3Extend(env, { sha, storeName, i2text: structure.text, wiredTier: structureTier,
+                                            tier2PerPage: readT2PerPage, fmt: "pdf" });
+        const cost = "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, MEASUREMENTS.md)";
+        /* ONE RETURN FOR EVERY ANSWER OF THIS OP, the plain read's own, below. The
+           re-read only DECORATES `structure`; it adds no `json()` site of its own,
+           so `plane-envelope.test.mjs`'s unclassified-site census (D-240 (e)) is not
+           asked to take on two more variables it cannot grade. */
+        if (!t3.filled.length) {
+          structure.reextraction = {
+            performed: false, written: false, cost,
+            candidate: needsTier3(structure.text),
+            why: t3.ocrNote
+              || "no page of this document lacks a text layer, so there is nothing for OCR to read; the "
+               + "engine was not called and nothing about this capture was changed",
+          };
+        } else {
+          /* THE CHAIN, by the acquire path's own two lines: the merge's composed
+             chain, or — if the chain builder refused to compose one — the layer
+             chain at the tier the document now reads at. */
+          let chain = t3.chainSet ? t3.chain : null;
+          if (!chain) chain = layerChainFor(t3.i2text, { tier: t3.wiredTier, container: "pdf" });
+          /* THE READING, over the NEW text, through the content-type registry — so a
+             type that is registered for a class nobody could read before (FW-20's
+             staff directory, D-376) is consulted the moment a re-read makes the text
+             exist. `at` STAYS THE CAPTURE INSTANT: it is when these bytes were
+             retrieved, and the re-read is stamped separately below. */
+          /* NO CONTENT TYPE AND NO HEADERS ARE HANDED ON, because this op does not hold
+             the served ones and inventing them would put a fact on the reading nobody
+             observed. Measured rather than assumed: nothing under `docprofile/` reads
+             `ctx.content_type`, and the one handler that reads headers treats their
+             absence as empty. The LOCATOR is the acquire's own, read back from the
+             bundle's provenance document. */
+          const wired = readText(t3.i2text, { headers: null, locator: reBasis.locator || null,
+                                               content_type: null, at: stored.at ?? null });
+          const reading = readingFromWire({
+            wired, docType: { type: { key: stored.content_type ?? null, version: stored.reader_version ?? null } },
+            chain, wiredTier: t3.wiredTier, fmt: "pdf", retrieved: stored.at ?? null,
+            tier2note: readT2Note, ocrNote: t3.ocrNote, tier3Candidate: t3.stillWanting });
+          reading.page_count = Number.isInteger(structure.pages) && structure.pages > 0
+            ? structure.pages : (Number.isInteger(stored.page_count) ? stored.page_count : null);
+          reading.container_extent = Object.prototype.hasOwnProperty.call(stored, "container_extent")
+            ? stored.container_extent : null;
+          /* THE RE-READ, STATED ON THE READING ITSELF: when, at whose request, by
+             which engine, over which pages. It is also what `Store.#heldByReextraction`
+             keys on, so an ordinary revision of the bundle cannot silently put the
+             acquire-time reading back. */
+          reading.reextracted = {
+            at: new Date().toISOString().split(".")[0] + "Z", by: reAuthor,
+            engine: t3.engine ? t3.engine.engine : null, version: t3.engine ? t3.engine.version : null,
+            calibration: t3.engine ? t3.engine.calibration ?? null : null,
+            pages: t3.filled, via: "op=pdfstructure&ocr=1",
+          };
+          const u = textUnitsFor(t3.i2text);
+          const reStore = env.STORE.get(env.STORE.idFromName(storeName));
+          const wOut = await doAnswer(reStore.fetch("http://do/reextract", {
+            method: "POST", body: JSON.stringify({ captureSha: sha, viewer: reViewer, author: reAuthor, reading,
+                                                   textUnits: u.textUnits, textUnitsOverBound: u.textUnitsOverBound }) }));
+          if (!wOut.answered) return storeSilent(op);
+          const w = wOut.result || {};
+          structure.text = t3.i2text;
+          structure.tier = t3.wiredTier;
+          if (t3.ocrNote) structure.notes = [...structure.notes, t3.ocrNote];
+          structure.reextraction = {
+            performed: true, written: w.ok === true, cost,
+            ...(w.ok === true ? {} : { why: "the record's reading of this capture could not be written (it was no "
+                                          + "longer held for this caller when the write arrived), so the text above "
+                                          + "was read and NOT recorded" }),
+            pages: t3.filled, engine: t3.engine,
+            text_source: chain, chain: describeChain(chain),
+            reading: { content_type: reading.content_type, read_from_text: reading.read_from_text,
+                       found: reading.found, entities: Array.isArray(reading.entities) ? reading.entities.length : 0,
+                       text_tier: reading.text_tier },
+            staled: w.staled ?? 0, units: w.indexed ?? null, observed: w.observed ?? null,
+            candidates: "the content-axis frontier (op=frontier&level=content) lists the captures still below "
+                      + "what this instance's fleet can read; this one is re-read now",
+          };
+        }
+      }
       return json(structure, 200);
     }
 
@@ -5577,23 +6265,9 @@ export default {
          are Step 4 / D-83 and are deliberately not built here. The reference is
          what op=promote indexes so a later lookup by reference returns the
          documents whose readings carry it. */
-      const readEntities = (list) => (Array.isArray(list) ? list : []).map((e) => ({
-        key: e && e.key != null ? String(e.key) : null,
-        kind: e && e.kind != null ? e.kind : null,
-        label: e && e.label != null ? e.label : null,
-        facts: e && e.facts && typeof e.facts === "object" ? e.facts : {},
-        /* The reference exactly as the reading carries it: kind:key, raw. */
-        ref: `${e && e.kind != null ? e.kind : ""}:${e && e.key != null ? e.key : ""}`,
-        /* FW-17 / IC-86: WHERE the reference was read, in IC-1's union and no
-           other vocabulary. Validated here rather than trusted, for the reason
-           IC-1 states as its own load-bearing part — a required `kind`
-           discriminator turns a silent misread into a loud one, and this is the
-           boundary where a reader's answer becomes the record's. An unrecognised
-           kind, a missing human form or a missing per-arm field yields null: the
-           reading still writes and the position is absent, which is the honest
-           direction. NULL IS NEVER "the whole document was meant". */
-        source: readingSource(e && e.source),
-      })).filter((e) => e.key != null || e.kind != null);
+      /* CPDF-19: `readEntities` is now a MODULE-LEVEL function (moved verbatim, just above
+         `readingFromWire`), because the read path's re-extraction composes a reading by the
+         same rule and a second copy would be two spellings of one boundary. */
       let reading;
       /* REC-91: declared BESIDE `reading` and not beside `containerExtent`, and
          the difference is a scope rather than a preference. `wired`,
@@ -5702,6 +6376,8 @@ export default {
            took the document WHOLESALE — and the tier-3 block's fall-back to the
            single document-level tier is then exactly what it always did. */
         let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null;
+        /* D-418: whether the tier-3 seam left this document still wanting OCR. */
+        let t3Wanting = false;
         const fmt = profile.format && profile.format.format;
         if (!multipart && fmt && fmt !== "undetermined") {
           try {
@@ -5853,184 +6529,15 @@ export default {
                  copied from this comment — is Part II §16.4 of
                  `docs/architecture/BIO_Content_Framework_v0_10.md`, which is
                  the authority if this text and the tree ever disagree again. */
-              if (i2text && needsTier3(i2text)) {
-                /* D-252: WHICH pages, established before the member is called
-                   and kept for the merge. The list travels in the request so a
-                   member need not transcribe pages that already have text — the
-                   cost half — and it is checked again on the way back, because
-                   the correctness half cannot rest on the member having read it.
-                   `baseTier` is remembered here because `wiredTier` becomes 3
-                   below and the text-layer part of a MIXED document still came
-                   through the tier it came through. */
-                const wantPages = tier3Pages(i2text);
-                const baseTier = wiredTier;
-                const baseText = i2text;
-                if (env.OCR_WORKER) {
-                  try {
-                    const r = await env.OCR_WORKER.fetch("https://ocr-worker/transcribe", {
-                      method: "POST", headers: { "content-type": "application/json" },
-                      body: JSON.stringify({ capture_sha: sha, store: storeName,
-                                             pages: wantPages }),
-                    });
-                    /* THE STATUS IS READ BEFORE THE BODY, and that ordering is
-                       the fix for a real defect this suite caught: parsing the
-                       body of a 500 THROWS, so the catch below reported "could
-                       not be reached" for a member that answered perfectly well
-                       and answered an error. Two different findings — the member
-                       is down, and the member failed on this document — were
-                       collapsing into the first, which is the wrong one to
-                       report because only the second is about the document. */
-                    if (!r.ok) {
-                      ocrNote = `the OCR member answered ${r.status}, so this document stays unread`;
-                    } else {
-                      /* CPDF-13 / D-253 — THE CALIBRATION THE MEMBER'S OWN
-                         FIDELITY RESTS ON, joined here so the chain NAMES it.
-                         Without this the chain records the ENGINE and the grade
-                         rests on a MEASUREMENT with nothing between them, which
-                         is D-253 in one sentence.
-
-                         THE COST IS ONE STORE READ ON A BRANCH THAT ALREADY
-                         MADE A NETWORK CALL, and it is taken HERE rather than
-                         once per acquire on purpose. A capture with a text
-                         layer never reaches this line, so an instance with no
-                         OCR member pays nothing at all for this feature on the
-                         capture path.
-
-                         CORRECTED 2026-09-14 (CPDF-17): that sentence used to
-                         read "an instance with no OCR member — WHICH IS EVERY
-                         INSTANCE TODAY". The clause has been false since
-                         CPDF-10 (`698a07b`) and release 0.58.0 (`e67e275`) —
-                         the project's own instance HAS the member and reaches
-                         this line, and a sovereign group's does not until Bob
-                         releases the installer's fleet. The COST ARGUMENT is
-                         unchanged and still holds for the un-fleeted instance;
-                         only the false claim about how many instances that is
-                         has gone. Part II §16.4 of
-                         `docs/architecture/BIO_Content_Framework_v0_10.md`
-                         carries the verified state.
-
-                         IT FAILS OPEN TO NULL, NEVER TO A GUESS. A store that
-                         does not answer, an engine with no calibration, or a
-                         calibration that has been superseded all produce `null`
-                         — the pre-CPDF-13 chain, with `cap` and `measured_by`
-                         and no reference. A transcription that cannot name its
-                         measurement says so by not naming one; it never names
-                         the nearest available number, which would be the
-                         record claiming a join it does not have. */
-                      const ocrAnswer = await r.json();
-                      let calRef = null;
-                      try {
-                        const stCal = env.STORE.get(env.STORE.idFromName(storeName));
-                        const cOut = await doAnswer(stCal.fetch(
-                          `http://x/?op=calibrations&engine=${
-                            encodeURIComponent(String(ocrAnswer && ocrAnswer.engine || ""))}`));
-                        const live = ((cOut && cOut.calibrations) || [])
-                          .find((c) => c.superseded_by == null
-                                    && c.version === (ocrAnswer && ocrAnswer.version));
-                        calRef = live ? live.calibration_id : null;
-                      } catch { /* a calibration this record cannot read is a
-                                   calibration this chain does not name. */ }
-                      const built = ocrTextFromMember(ocrAnswer, { calibration: calRef });
-                      if (built.ok) {
-                        /* D-252 — PAGE-WISE, NEVER WHOLESALE. This line was
-                           `i2text = built.text`, which threw away a text layer
-                           the moment one scanned exhibit was stapled to the
-                           back of a report. */
-                        const m = mergeTier3Text(baseText, built.text, wantPages);
-                        if (!m.ok) ocrNote = m.why;
-                        else {
-                          i2text = m.text;
-                          /* The pages that kept their own text: what is LEFT of
-                             the base after the fill, computed FROM THE TEXT
-                             rather than from the page list, so a page carrying
-                             text is in this part whether or not anything
-                             predicted it would be. A selected page nobody
-                             transcribed carries no text and therefore belongs to
-                             neither part — it has no provenance to record,
-                             because nothing produced anything for it. */
-                          const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : [])
-                            .filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page)
-                                        && typeof p.text === "string" && p.text.length)
-                            .map((p) => p.page);
-                          const parts = [];
-                          /*__REC102_TIER3_LAYER_PARTS_START__*/
-                          /* REC-102 / D-372 — THE LAYER PART IS PARTITIONED BY
-                             THE TIER-2 MERGE'S OWN PER-PAGE STATEMENT, NOT
-                             COLLAPSED ONTO ONE DOCUMENT-LEVEL TIER.
-                             This block used to be a single part at `baseTier`,
-                             and that single tier is a DOCUMENT-level answer to a
-                             PER-PAGE question — the very shape D-252 closed one
-                             tier up and REC-98 closed one merge earlier. A
-                             document that escalates to tier 2 per page and THEN
-                             re-extracts to tier 3 had its per-page statement
-                             rebuilt as `tier: 2` over every page the tier-2
-                             merge had deliberately KEPT at tier 1, so the record
-                             named a derivation those pages do not have. Not a
-                             regression (before REC-98 the escalation assigned
-                             tier 2 wholesale anyway) and that is why it is a row
-                             rather than a revert — but it is the record
-                             overclaiming, which is the direction this project
-                             cares about most.
-                             THE FALL-BACK IS THE OLD BEHAVIOUR EXACTLY. With no
-                             per-page partition (`tier2PerPage` null — tier 2
-                             never ran, or took the document wholesale) every
-                             layer page is `unspoken` and this composes the one
-                             part at `baseTier` that it always composed, in the
-                             same position, so a document reaching only ONE of
-                             the two merges answers byte-identically.
-                             A PAGE THE PARTITION DOES NOT SPEAK FOR IS NAMED,
-                             NEVER SCORED TO A TIER. It goes to the `baseTier`
-                             part rather than being guessed into tier 1 or tier
-                             2: undetermined is first-class, and the document's
-                             own wired tier is the honest answer for a page the
-                             merge said nothing about.
-                             `baseText` is the pre-merge shape at every site, so
-                             D-251's producer marker is still read off the
-                             DOCUMENT rather than off the OCR member's answer —
-                             unchanged, and true of all three parts. */
-                          const layerSet = new Set(layerPages);
-                          const spokenFor = tier2PerPage
-                            ? [[1, (tier2PerPage.tier1 || []).filter((p) => layerSet.has(p))],
-                               [2, (tier2PerPage.tier2 || []).filter((p) => layerSet.has(p))]]
-                            : [];
-                          const spoken = new Set(spokenFor.flatMap(([, ps]) => ps));
-                          /* IN THE ORDER THE ATTEMPTS HAPPENED, which is what
-                             `tiersEvidenced` reads the chain as and what the
-                             content-level writer walks cumulatively: the tier-1
-                             decode had its go before the tier-2 one, which had
-                             its go before the engine. */
-                          for (const [tier, ps] of spokenFor)
-                            if (ps.length)
-                              parts.push({ pages: ps,
-                                chain: layerChainFor(baseText, { tier, container: fmt }) });
-                          const unspoken = layerPages.filter((p) => !spoken.has(p));
-                          if (unspoken.length)
-                            parts.push({ pages: unspoken,
-                              chain: layerChainFor(baseText, { tier: baseTier, container: fmt }) });
-                          /*__REC102_TIER3_LAYER_PARTS_END__*/
-                          if (m.filled.length) parts.push({ pages: m.filled, chain: built.chain });
-                          /* ONE part gives that part's chain back unscoped, so a
-                             wholly-scanned document records exactly what it
-                             recorded before D-252; TWO give the scoped, mixed
-                             chain whose derivation cap is UNDETERMINED rather
-                             than the engine's letter. */
-                          const merged = mergedChain(parts);
-                          /* A refusal from the chain builder records NO chain
-                             rather than filing merged text under one part's
-                             provenance. */
-                          chain = Array.isArray(merged) ? merged : null;
-                          if (m.filled.length) wiredTier = 3;
-                          ocrNote = tier3Note(m, built.note);
-                        }
-                      } else ocrNote = built.why;
-                    }
-                  } catch {
-                    ocrNote = "the OCR member could not be reached, so this document stays unread";
-                  }
-                } else {
-                  ocrNote = "this document has no text layer to read and no OCR engine is installed "
-                          + "in this instance, so nothing is claimed about what it says";
-                }
+              /* CPDF-19 / D-319: THE SEAM LIVES IN `tier3Extend` NOW, moved verbatim so
+                 `op=pdfstructure&ocr=1` composes by the same rule. Nothing about what
+                 the acquire path records changed except D-417's calibration join. */
+              {
+                const t3 = await tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt });
+                i2text = t3.i2text; wiredTier = t3.wiredTier;
+                if (t3.chainSet) chain = t3.chain;
+                if (t3.ocrNote != null) ocrNote = t3.ocrNote;
+                t3Wanting = t3.stillWanting;
               }
               /* CAP-12 / D-354 — THE CONTAINER'S OWN EXTENT, TAKEN OFF THE I2
                  SHAPE THE ENTRY ALREADY RETURNED, at the one place `i2text` is
@@ -6178,164 +6685,8 @@ export default {
                   };
                 }
               }
-              /*__REC91_TEXT_UNITS_START__*/
-              /* REC-91 / `CONTENT-SEARCH-DESIGN.md` section 4.1 -- THE INDEXABLE
-               * UNITS OF THIS CAPTURE'S TEXT, taken off the I2 shape at the one
-               * place `i2text` is final, exactly where CAP-12's container extent
-               * is taken and for the same reason. **It reads the same object and
-               * touches not one line of that block**, which is deliberate: that
-               * region is COFF-12's live claim.
-               *
-               * WHY THIS EXISTS AT ALL. Section 4.1 says the units are written
-               * at promote "from the I2 shape the acquire path already holds" --
-               * and the acquire path HOLDS it here and, until this line, carried
-               * none of it forward. `readings.reading` holds `entities`,
-               * `facts`, the chain, the tier, the page count and the container
-               * extent, and NO TEXT; `reading_text_source` stores the chain and
-               * not the text; per-page text was persisted nowhere at all. So the
-               * store had no text to index and the design's own sentence had no
-               * mechanism under it. This is that mechanism, and it is a SIBLING
-               * of `reading` rather than a field ON it, which is the one shape
-               * decision in this block and is load-bearing -- see below.
-               *
-               * RECOGNISED BY SHAPE, NEVER BY A LIST OF CONTAINER NAMES, which
-               * is CAP-12's own rule and the reason a seventh producer landing
-               * in the same I2 shape is fed by this code with no edit. `pages[]`
-               * is a PDF; `paragraphs[]` a word-processing container; `slides[]`
-               * a deck. A workbook returns `sheets[]`, which is none of these
-               * and correctly yields nothing -- a cell is not a passage and
-               * `sheet-range` waits on EXTRACTION-BREADTH section 3.2.
-               *
-               * THE DECK IS ONE UNIT PER SLIDE, RULED BY BOB 2026-09-15, written
-               * as a `slide-shape` extent with the SHAPE OMITTED -- which
-               * `covers()` already accepts as covering the whole slide, so no
-               * grammar change is owed and `pptx.mjs` needs no change either: it
-               * emits one text string per slide today. A shape is not a passage,
-               * exactly as a cell is not one.
-               *
-               * SPEAKER NOTES ARE NOT INDEXED, AND THAT IS STATED RATHER THAN
-               * LEFT TO BE NOTICED. `pptxText` emits `speakerNotes[]` per slide
-               * and DEC-5 requires them "DISTINGUISHABLE from slide text
-               * EVERYWHERE shown, cited or indexed, never merged" -- so they
-               * cannot be folded into the slide's unit. Nor can they have a unit
-               * of their own: the only address that reaches a slide is
-               * `slide-shape`, whose shape-omitted form is now THE SLIDE, so a
-               * notes unit would collide with the slide's own primary key. There
-               * is no extent arm for a slide's notes, so the most candid text in
-               * a deck is not searchable at content grain. Reported as a DESIGN
-               * GAP against section 4.1.
-               *
-               * THE RECT IS DEGENERATE ON PURPOSE. Section 4.1 says `pdf-page`
-               * "with the page's full rectangle"; I2's text shape carries no
-               * rectangle, and inventing one would be worse than not having it —
-               * `canonicalExtent` hashes the rect INTO the content address, so a
-               * literal rectangle would give the indexed unit a different
-               * `contentIdFor` from the one a member citing "page 14" produces,
-               * and the hit would stop being the citation's own identity
-               * (section 4.5). The absent rect IS the whole page, in the
-               * record's own spelling, and `describeExtent` already reads it
-               * that way.
-               *
-               * A UNIT WITH NO TEXT IS NOT EMITTED. M-20 measured 26.3 % of PDF
-               * pages recovering nothing at all -- scans and image-only pages --
-               * and they are indexed as NOTHING rather than as empty, which is
-               * why section 4.4's `scope` tally exists. Text below the OCR floor
-               * never reaches here at all: it is discarded rather than carried
-               * beside a flag (Part II section 16, chain rule 4). */
-              if (i2text) {
-                const arm = (list, kind, fields) => (Array.isArray(list) ? list : [])
-                  .map((u, i) => (u && typeof u === "object" && typeof u.text === "string" && u.text.length
-                    ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null))
-                  .filter(Boolean);
-                /* The index each producer ALREADY assigns is carried, never
-                   re-counted from the array position: `pages[].page`,
-                   `paragraphs[].para` and `slides[].slide` are the producer's own
-                   numbering and are what every other reference into these
-                   containers is written against. A re-count would silently
-                   disagree the first time a producer skipped one. */
-                const units =
-                    Array.isArray(i2text.pages)      ? arm(i2text.pages, "pdf-page",
-                      (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null }))
-                  : Array.isArray(i2text.paragraphs) ? arm(i2text.paragraphs, "doc-para",
-                      (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null }))
-                  : Array.isArray(i2text.slides)     ? arm(i2text.slides, "slide-shape",
-                      (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null }))
-                  : null;
-                /* AN EMPTY LIST IS NULL AND NEVER A ZERO, which is CAP-12's rule
-                   twelve lines up applied to this key. A container whose entry
-                   returned `pages: []` because it was over the size bound has not
-                   told us it holds no pages, and emitting `[]` would let the
-                   store record "extracted, unit arm present, nothing to index"
-                   for a document nobody managed to read. The absent key and the
-                   empty array are two different facts; only one of them belongs
-                   on the wire. */
-                /* THE WIRE'S OWN BUDGET, AND IT IS NOT §4.3's BOUND — IT IS THE
-                   ONE THAT ACTUALLY BINDS, MEASURED BY THIS ITEM'S OWN SUITE
-                   RATHER THAN REASONED.
-                   *
-                   * §4.3 sets a PER-CAPTURE bound of 2,097,152 B from M-20, and
-                   * `#writeCaptureText` applies exactly that. But the route the
-                   * design names for getting the units to the store is
-                   * `data/provenance.json`, and `op=promote` REFUSES an inline
-                   * bundle file over `INLINE_MAX` — 1,048,576 B — with
-                   * `OVERSIZE_INLINE`. So a capture carrying more text than that
-                   * would not be indexed to the bound and reported `partial`: THE
-                   * WHOLE PROMOTION WOULD BE REFUSED. Measured at 2,460,076 B on
-                   * this item's first run of its own bound arm.
-                   *
-                   * THAT WOULD BE A REGRESSION AND NOT A NEW LIMIT, which is why
-                   * it is fixed here rather than reported and left. M-20's census
-                   * holds real documents over it — the largest PDF at 1,354,686 B
-                   * of text and the largest docx at 1,187,253 B — and every one of
-                   * them promotes today. Emitting their text unbounded would make
-                   * this item REFUSE documents the record currently accepts, which
-                   * is the worst direction available: a capture the group cannot
-                   * file at all, because of an index.
-                   *
-                   * THE FIGURE, and it is half of `INLINE_MAX` on purpose. The
-                   * other half is headroom for the rest of the document — the
-                   * reading, the chain, the provenance hops — and for JSON
-                   * ESCAPING, which is not a constant factor: a quote or a control
-                   * byte expands, so a budget set close to the limit would fail on
-                   * text rather than on size and would do it unpredictably. At
-                   * M-20's percentiles 524,288 B admits the PDF sample past its
-                   * 99th (396,328 B) and every docx and pptx but the largest two.
-                   *
-                   * AND WHAT IS DROPPED IS COUNTED, NEVER SILENT. The count rides
-                   * beside the units so the store's `indexed` observation reads
-                   * `partial` and names this bound — otherwise a capture truncated
-                   * at the wire would be recorded as fully indexed, which is the
-                   * record claiming coverage it does not have at the one level a
-                   * member reads absence from. Reported as a DESIGN GAP against
-                   * §4.3: the bound the design sets is not the bound that binds. */
-                let budget = ACQUIRE_TEXT_UNITS_BUDGET, kept = [], dropped = 0;
-                for (const u of (units || [])) {
-                  /* THE ENVELOPE IS CHARGED WITH THE TEXT, AND THAT IS NOT
-                     FASTIDIOUSNESS — a unit costs the wire its JSON STRUCTURE as
-                     well as its words, and the structure is the half that bites.
-                     `civicos-ui/app.html` serialises the acquire document with
-                     `JSON.stringify(..., null, 1)`, so every unit spends about
-                     eight indented lines on its extent, its seq and its keys
-                     whatever its text weighs. M-20's worst docx carries 20,571
-                     paragraph units at a mean of 60 B: charged on text alone
-                     they are 1.2 MB and fit the budget twice over, while their
-                     ENVELOPES ALONE are about 1.8 MB and would take the promote
-                     past `INLINE_MAX` on their own. A budget that counted only
-                     the words would have been a bound that did not bound.
-                     AND IT LANDS NEAR A NUMBER NOBODY AIMED AT, which is worth
-                     the line: 512 KiB at 128 B of envelope admits about 4,000
-                     units, and M-20 measured the largest promote that fits the
-                     CPU window at ~3,900 units at that corpus's mean unit size.
-                     Two independent limits agreeing is not evidence of either —
-                     it is a coincidence worth noticing and not resting on. */
-                  const size = new TextEncoder().encode(u.text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
-                  if (size > budget) { dropped++; continue; }
-                  budget -= size; kept.push(u);
-                }
-                textUnits = kept.length ? kept : null;
-                textUnitsOverBound = dropped;
-              }
-              /*__REC91_TEXT_UNITS_END__*/
+              /* REC-91's units, by `textUnitsFor` (CPDF-19: one rule for both paths). */
+              { const u = textUnitsFor(i2text); textUnits = u.textUnits; textUnitsOverBound = u.textUnitsOverBound; }
               if (i2text) wired = readText(i2text, { headers: profHeaders,
                 locator: documentAddress, content_type: ct || null, at: retrieved });
               /* The chain, at last, and only if a text surface actually
@@ -6354,95 +6705,11 @@ export default {
           } catch { /* a wire failure must not fail the capture: fall through to
                        the honest no-reading below */ }
         }
-        if (wired && wired.determined) {
-          const { entities: wiredEntities, ...wrest } = (wired.parsed || {});
-          const wfacts = (wrest && typeof wrest.facts === "object" && Object.keys(wrest).length === 1)
-            ? wrest.facts : wrest;
-          const entities = wired.parse_error ? [] : readEntities(wiredEntities);
-          const wtype = wired.doctype.type;
-          /* FW-17 / IC-86 — THE POSITION SENTENCE, and it is written whichever
-             way the answer came out. A reading whose references carry no
-             position must SAY SO: a null column that nobody explained reads as a
-             reader that did not bother, and a reader that could not say is a
-             different fact from a reader that was not asked. Three cases and
-             they are three different findings — the container itemised and the
-             reader placed every reference; the container itemised and the reader
-             placed some (a reference read in a stretch no part claims); the
-             container never itemised at all, which is the PRODUCER's absence and
-             carries the producer's own reason. */
-          const positioned = entities.filter((e) => e.source).length;
-          const posNote = !entities.length ? null
-            : positioned === entities.length
-              ? `every reference carries where it was read (${positioned} of ${entities.length})`
-              : positioned
-                ? `${positioned} of ${entities.length} references carry where they were read; the rest were `
-                  + `read in stretches of text no part of the container claims, so their position is not stated`
-                : `no reference carries where it was read — ${wired.position_why
-                    || "this reader does not say where"}`;
-          reading = {
-            content_type: wtype.key, reader_version: wtype.version ?? null,
-            read_from_text: true, found: entities.length > 0,
-            entities, facts: wired.parse_error ? {} : (wfacts || {}), at: retrieved,
-            /* D-152's provenance rule, and CPDF-10's correction of how it was
-               carried. This was the STRING "layer" — right about the fact and
-               wrong about the shape, because the moment a second derivation
-               exists a single label cannot say which engine produced the text
-               or how many hands it passed through. It is now the CHAIN
-               `textchain.mjs` owns: an ordered list of steps, each naming what
-               performed it, each only able to weaken what it received. A text
-               layer is itself an unverified transcription (CPDF-9 measured
-               ABBYY FineReader in 3 of 14 recent Legistar attachments), so
-               `layer` is a derivation step like any other rather than the
-               absence of one. `text_tier`/`text_container` stay exactly as they
-               were — a consumer reading only those is unaffected (IC-39). */
-            text_source: chain, text_tier: wiredTier, text_container: fmt,
-            basis: (wired.parse_error
-              ? `the ${wtype.key} reader could not parse the ${fmt} text-layer text (${wired.parse_error}), so nothing is claimed about its entities`
-              : (entities.length
-                  ? `read by the ${wtype.key} reader v${wtype.version} over ${fmt} ${describeChain(chain)} (tier ${wiredTier}); ${wired.why}`
-                  : `the ${wtype.key} reader found no entities in this document's ${fmt} text-layer text (tier ${wiredTier}); recorded as an empty reading, never an emptied document`))
-              /* D-252: A DOCUMENT THAT READ IS STILL ALLOWED TO HAVE PAGES IT
-                 COULD NOT READ, and until now only the FAILED branch carried
-                 that sentence. A mixed document — a report with scanned exhibits
-                 — reads perfectly well off its text layer and reached here with
-                 `ocrNote` computed and then dropped on the floor, so the record
-                 said nothing at all about the exhibits. Same class as the merge
-                 above: the document-level answer stood in for a per-page fact. */
-              /* REC-98 / D-283: and the same sentence one tier down. A document
-                 whose text layer is a MERGE of two decodes says so on the basis
-                 the record keeps, rather than presenting a merge as one tier's
-                 reading. Kept a separate clause from `ocrNote` for D-252's own
-                 stated reason — collapsing them loses the one a reader needs. */
-              + (tier2note ? ` — ${tier2note}` : "")
-              + (ocrNote ? ` — ${ocrNote}` : "")
-              + (posNote ? ` — ${posNote}` : ""),
-            ...(ocrNote ? { tier3_candidate: true } : {}),
-            /* FW-17 / IC-86: the producer-side facts about position, carried on
-               the reading so a later reader can tell an absent position that was
-               never available from one a reader declined to give. */
-            position_parts: wired.position_parts ?? 0,
-            position_why: positioned ? null : (wired.position_why || null),
-          };
-        } else if (wired) {
-          /* text-undetermined: a FAILED reading, recorded as such — the tier
-             that could not decode says so, and no refs are invented. */
-          reading = {
-            content_type: docType.type.key, reader_version: docType.type.version ?? null,
-            read_from_text: false, found: false, entities: [], facts: {}, at: retrieved,
-            text_source: chain, text_tier: wiredTier, text_container: fmt,
-            /* CPDF-10: a Tier-3 candidate says WHY it is unread, and the two
-               reasons are different findings. `ocrNote` names the scan case —
-               there was nothing to decode and no engine to read it — where
-               `wired.why` names a decode that was attempted and failed. Reading
-               them as one would file a scanned budget book beside a broken font
-               map, and only one of those is waiting on a capability. */
-            /* REC-98 / D-283: the tier-2 merge's finding rides here too. A
-               document that stayed unread AND had a tier-2 escalation refused has
-               two different things to say and only one of them is `wired.why`. */
-            basis: [tier2note, ocrNote ? `${ocrNote} (${wired.why})` : wired.why]
-                     .filter(Boolean).join(" — "),
-            ...(ocrNote ? { tier3_candidate: true } : {}),
-          };
+        if (wired) {
+          /* CPDF-19: the two wired branches, by `readingFromWire` (one rule for the
+             acquire path and the read path's re-extraction). */
+          reading = readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote,
+                                      tier3Candidate: t3Wanting });
         } else {
           reading = {
             content_type: docType.type.key, reader_version: docType.type.version ?? null,

@@ -90,9 +90,11 @@
    exercises a second instance, a real network fetch, a real OCR engine, or the per-unit text
    index — `capture_text` is REC-91's and does not exist, which is why every `indexed` answer
    below that is not at the two ends of the vocabulary reads UNDETERMINED, asserted rather than
-   assumed. Nothing here drives D-319's read-time seam either: that seam is CPDF-19's and has no
-   call site on this tree, so what is driven is the WRITER it will call, through the re-promotion
-   path that moves a chain today.
+   assumed. Nothing here drives D-319's read-time seam either: what is driven is the WRITER it
+   calls, through the re-promotion path that moves a chain. (CORRECTED 2026-09-18 by CPDF-19: this
+   said the seam "has no call site on this tree", true when written; `op=pdfstructure&ocr=1` is
+   that call site now, it reaches this same writer through `Store.reextract`, and it is driven in
+   `reextract.test.mjs` rather than here.)
 
    ===== REC-107's SECTION H IS DRIVEN FROM `nc-rec107.mjs`, AND ITS ARMS ARE DECLARED IN
    `observation-meaning.test.mjs` RATHER THAN HERE. That is deliberate and is not laziness:
@@ -733,8 +735,8 @@ console.log("\n--- F · a moved chain appends a row and rewrites none (§3: appe
   const before = await rowsFor(SHA_SHORT);
   await promote("INF-2026-0915-short", {
     /* The chain MOVED: an engine read the pages tier 1 could not, and the
-       shortfall is gone. This is what D-319's read-time seam will produce, and
-       it is the path that exists TODAY — CPDF-19 builds the seam that calls it. */
+       shortfall is gone. This is what D-319's read-time seam produces, through
+       the same writer — CPDF-19 built the seam that calls it (2026-09-18). */
     reading: readingOf({ text_source: mixed([0, 1], [2]), text_tier: 3, page_count: 3 }),
     captureSha: SHA_SHORT, register: reg(SHA_SHORT) });
   const after = await rowsFor(SHA_SHORT);

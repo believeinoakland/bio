@@ -3559,6 +3559,7 @@ __export(bio_checks_exports, {
   NON_MEMBER_AUTHORS: () => NON_MEMBER_AUTHORS,
   OBJECT_TYPES: () => OBJECT_TYPES,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
+  REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
   RESOLUTIONS: () => RESOLUTIONS,
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
   ROUTE_MARK_CHECKS: () => ROUTE_MARK_CHECKS,
@@ -10281,6 +10282,49 @@ var DRIVE_CAPTURE_CHECKS = {
     check: "C-48.6",
     where: "src/index.mjs fetch > is-drive-export",
     translation: "The OpenDocument export of that Drive document could not be fetched, so nothing was captured. The application page at the same address is NOT captured instead: a record holding the app in place of the document would look like evidence and be none."
+  }
+};
+var REEXTRACT_CHECKS = {
+  /* The flag is present and is not `1`. Refused rather than read as absent:
+     an `ocr=yes` answered with the plain read would tell a member the record
+     re-read a document it never re-read. */
+  REEXTRACT_FLAG_MALFORMED: {
+    check: "C-51.1",
+    where: "src/index.mjs fetch > is-reextract",
+    translation: "That request asked for a re-read in a form this instance does not recognise. It answers ocr=1 or nothing, so that a request for a re-read is never quietly answered with the old text."
+  },
+  /* An agent credential. `op=pdfstructure` is declared a READ, so no task scope
+     can name it as a write, and an agent is confined to the writes its member
+     declared (D-199). The re-read is a member's act. */
+  REEXTRACT_AGENT_REFUSED: {
+    check: "C-51.2",
+    where: "src/index.mjs fetch > is-reextract",
+    translation: "Re-reading a document with OCR changes what the record holds about it, and an agent credential cannot declare that as one of its writes. A member can ask for it."
+  },
+  /* A signed-in member without `contribute`. The re-read writes the record the
+     way a promotion does, so it asks the same capability a promotion asks. */
+  REEXTRACT_NOT_CAPABLE: {
+    check: "C-51.3",
+    where: "src/index.mjs fetch > is-reextract",
+    translation: "Re-reading a document with OCR changes what the record holds about it, which needs the contribute capability. An administrator grants it."
+  },
+  /* THE HONEST BRANCH THE DESIGN NAMES: no OCR member is bound to this
+     instance. Refused by name rather than pretending — the ordinary read would
+     return the tier-1/tier-2 text and a member could not tell that from a
+     re-read that found nothing new. */
+  REEXTRACT_NO_OCR_MEMBER: {
+    check: "C-51.4",
+    where: "src/index.mjs fetch > is-reextract",
+    translation: "This instance has no OCR engine installed, so it cannot re-read a scanned page as text. Nothing was changed. The document stays as it was read when it was captured."
+  },
+  /* The record holds no reading of this capture that this caller may see. A
+     capture that was never filed has no reading to replace, and a capture in a
+     project the caller cannot see answers EXACTLY the same (D-15): a write that
+     answered differently would be an oracle for the hidden document. */
+  REEXTRACT_NOT_READ: {
+    check: "C-51.5",
+    where: "src/index.mjs fetch > is-reextract",
+    translation: "This record holds no reading of that document for you to re-read. A capture is read when it is filed into the record, so file it first; re-reading replaces a reading that already exists."
   }
 };
 var CASE_DOCUMENT_FORMAT = "bio-case-document/1";
@@ -35531,73 +35575,172 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       const sha = doc && doc.capture && doc.capture.sha256;
       const reading = doc && doc.reading;
       if (typeof sha !== "string" || !sha || !reading || typeof reading !== "object") continue;
-      const entities = Array.isArray(reading.entities) ? reading.entities : [];
-      this.sql.exec(`DELETE FROM reading_refs WHERE capture_sha=?`, sha);
-      this.sql.exec(`DELETE FROM reading_ref_terms WHERE capture_sha=?`, sha);
-      this.sql.exec(`DELETE FROM reading_text_source WHERE capture_sha=?`, sha);
-      this.#writeTextSource(bundleId, sha, reading.text_source);
-      this.#markContentStale(sha, Array.isArray(reading.text_source) ? reading.text_source : null);
-      const textUnits = Array.isArray(doc && doc.text_units) ? doc.text_units : null;
-      const indexed = this.#writeCaptureText(bundleId, sha, textUnits, reading.text_source);
-      if (Number.isInteger(doc && doc.text_units_over_bound) && doc.text_units_over_bound > 0) {
-        indexed.over_bound += doc.text_units_over_bound;
-        indexed.offered += doc.text_units_over_bound;
-      }
-      const container = typeof reading.text_container === "string" ? reading.text_container : null;
-      const armed = CAPTURE_TEXT_UNIT_CONTAINERS.has(container);
-      this.#observeIndexed(bundleId, sha, indexed, {
-        author,
-        hadText: reading.read_from_text === true,
-        unitArm: armed,
-        armReason: armed ? null : container ? `a ${container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage and \`sheet-range\` waits on EXTRACTION-BREADTH section 3.2; HTML has no \`dom\` producer)` : "this record does not hold which container this capture is, so it has no unit arm to name"
-      });
-      this.#observeExtraction(bundleId, sha, reading, { author });
-      this.#observeReaderRun(bundleId, sha, reading, { author });
-      this.sql.exec(
-        `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at)
+      if (this.#heldByReextraction(sha, reading)) continue;
+      this.#writeOneReading(bundleId, sha, doc, reading, author);
+    }
+  }
+  /* CPDF-19 — the guard's one read. A primary-key lookup, and only for a
+     capture that has a reading at all. */
+  #heldByReextraction(sha, reading) {
+    if (reading && reading.reextracted) return false;
+    const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, sha);
+    const prior = row ? safeJson(row.reading) : null;
+    return !!(prior && prior.reextracted && typeof prior.at === "string" && typeof reading.at === "string" && prior.at === reading.at);
+  }
+  /* CPDF-19: THE PER-CAPTURE BODY OF `#writeReadings`, MOVED VERBATIM into its
+     own method so the read-time re-extraction (`reextract`, D-319) persists a
+     reading through EXACTLY the writer promote uses — the chain projection, the
+     stale mark (REC-82), the text units (REC-91), the content-level observations
+     (REC-94) and the reference index — rather than a second copy of the sequence
+     that would drift from it. It returns what each of those did, which only the
+     re-extraction reads. */
+  #writeOneReading(bundleId, sha, doc, reading, author) {
+    const entities = Array.isArray(reading.entities) ? reading.entities : [];
+    this.sql.exec(`DELETE FROM reading_refs WHERE capture_sha=?`, sha);
+    this.sql.exec(`DELETE FROM reading_ref_terms WHERE capture_sha=?`, sha);
+    this.sql.exec(`DELETE FROM reading_text_source WHERE capture_sha=?`, sha);
+    this.#writeTextSource(bundleId, sha, reading.text_source);
+    const staled = this.#markContentStale(sha, Array.isArray(reading.text_source) ? reading.text_source : null);
+    const textUnits = Array.isArray(doc && doc.text_units) ? doc.text_units : null;
+    const indexed = this.#writeCaptureText(bundleId, sha, textUnits, reading.text_source);
+    if (Number.isInteger(doc && doc.text_units_over_bound) && doc.text_units_over_bound > 0) {
+      indexed.over_bound += doc.text_units_over_bound;
+      indexed.offered += doc.text_units_over_bound;
+    }
+    const container = typeof reading.text_container === "string" ? reading.text_container : null;
+    const armed = CAPTURE_TEXT_UNIT_CONTAINERS.has(container);
+    this.#observeIndexed(bundleId, sha, indexed, {
+      author,
+      hadText: reading.read_from_text === true,
+      unitArm: armed,
+      armReason: armed ? null : container ? `a ${container} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage and \`sheet-range\` waits on EXTRACTION-BREADTH section 3.2; HTML has no \`dom\` producer)` : "this record does not hold which container this capture is, so it has no unit arm to name"
+    });
+    const extraction = this.#observeExtraction(bundleId, sha, reading, { author });
+    this.#observeReaderRun(bundleId, sha, reading, { author });
+    this.sql.exec(
+      `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at)
          VALUES (?,?,?,?,?,?,?,?)`,
+      sha,
+      bundleId,
+      typeof reading.content_type === "string" ? reading.content_type : null,
+      Number.isInteger(reading.reader_version) ? reading.reader_version : null,
+      reading.found ? 1 : 0,
+      entities.length,
+      JSON.stringify(reading),
+      typeof reading.at === "string" ? reading.at : null
+    );
+    for (const e of entities) {
+      if (!e || e.key == null && e.kind == null) continue;
+      const ref = typeof e.ref === "string" && e.ref ? e.ref : `${e.kind == null ? "" : e.kind}:${e.key == null ? "" : e.key}`;
+      const pos = readingSource(e.source);
+      this.sql.exec(
+        `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref)
+           VALUES (?,?,?,?,?,?,?,?,?)`,
         sha,
         bundleId,
-        typeof reading.content_type === "string" ? reading.content_type : null,
-        Number.isInteger(reading.reader_version) ? reading.reader_version : null,
-        reading.found ? 1 : 0,
-        entities.length,
-        JSON.stringify(reading),
-        typeof reading.at === "string" ? reading.at : null
+        ref,
+        e.kind == null ? null : String(e.kind),
+        e.key == null ? null : String(e.key),
+        e.label == null ? null : String(e.label),
+        pos ? pos.kind : null,
+        pos ? readingSourceJson(pos) : null,
+        pos ? pos.ref : null
       );
-      for (const e of entities) {
-        if (!e || e.key == null && e.kind == null) continue;
-        const ref = typeof e.ref === "string" && e.ref ? e.ref : `${e.kind == null ? "" : e.kind}:${e.key == null ? "" : e.key}`;
-        const pos = readingSource(e.source);
-        this.sql.exec(
-          `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label,pos_kind,pos,pos_ref)
-           VALUES (?,?,?,?,?,?,?,?,?)`,
-          sha,
-          bundleId,
-          ref,
-          e.kind == null ? null : String(e.kind),
-          e.key == null ? null : String(e.key),
-          e.label == null ? null : String(e.label),
-          pos ? pos.kind : null,
-          pos ? readingSourceJson(pos) : null,
-          pos ? pos.ref : null
-        );
-        for (const [src, text] of _Store.#refTermSources({
-          ref,
-          ref_key: e.key == null ? null : String(e.key),
-          label: e.label == null ? null : String(e.label)
-        }))
-          for (const term of _Store.#labelTerms(text))
-            this.sql.exec(
-              `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
-              sha,
-              bundleId,
-              ref,
-              src,
-              term
-            );
-      }
+      for (const [src, text] of _Store.#refTermSources({
+        ref,
+        ref_key: e.key == null ? null : String(e.key),
+        label: e.label == null ? null : String(e.label)
+      }))
+        for (const term of _Store.#labelTerms(text))
+          this.sql.exec(
+            `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
+            sha,
+            bundleId,
+            ref,
+            src,
+            term
+          );
     }
+    return { staled, indexed, extraction };
+  }
+  /* ===================================================================== *
+   * CPDF-19 / D-319 — READ-TIME RE-EXTRACTION, THE STORE'S HALF.
+   * ===================================================================== *
+   *
+   * `EXTRACTION-BREADTH-DESIGN.md` §5.1: a member asks `op=pdfstructure` with
+   * `ocr=1`, the control plane runs the tier-3 seam over bytes the record
+   * already holds, and the NEW reading replaces this capture's — so its text
+   * units are replaced (REC-91), its content rows go `stale` by REC-82's
+   * mechanism, and a content-level observation says who asked, when, under
+   * which engine (REC-94). **This method adds no writer.** It hands the new
+   * reading to `#writeOneReading`, which is promote's own per-capture body,
+   * so every one of those effects happens by the rule that already governs a
+   * re-promotion with a moved chain — the design's own sentence for it.
+   *
+   * WHY NOT A NEW BUNDLE VERSION. A re-read of bytes the record already holds
+   * is not an edit of the finding: the member's words, legs and state do not
+   * move, and minting a version would flag every case pinning the finding for
+   * a change in nothing it says. What moved is the record's READING of the
+   * evidence, which is exactly what the stale mark exists to surface (Bob's
+   * 5.8: a member who cited page 14 under `layer` sees the flag and nothing
+   * moves under them). The cost of that choice is that the bundle's
+   * `data/provenance.json` still carries the acquire-time reading, and
+   * `#heldByReextraction` is what stops an ordinary revision from quietly
+   * undoing the re-read with it. That residue is stated in the design's
+   * Incomplete sections rather than here alone.
+   *
+   * D-15 AT THIS DOOR: a capture whose bundle the viewer may not see answers
+   * exactly as a capture the record never read. Re-reading is a write, and a
+   * write that answered differently for a hidden document would be an oracle
+   * for its existence. */
+  reextractBasis({ captureSha = null, viewer = null } = {}) {
+    const sha = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
+    const row = sha ? this.#one(`SELECT bundle_id, reading FROM readings WHERE capture_sha=?`, sha) : null;
+    if (!row || !this.#viewerSees(row.bundle_id, viewer)) return { held: false };
+    const f2 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, row.bundle_id);
+    const docs = (safeJson(f2 && f2.content) || {}).documents;
+    const doc = Array.isArray(docs) ? docs.find((d) => d && d.capture && d.capture.sha256 === sha) : null;
+    return {
+      held: true,
+      reading: safeJson(row.reading) || {},
+      locator: doc && typeof doc.locator === "string" ? doc.locator : null
+    };
+  }
+  reextract(pkg = {}) {
+    const sha = typeof pkg.captureSha === "string" ? pkg.captureSha.trim().toLowerCase() : "";
+    const reading = pkg.reading;
+    if (!sha || !reading || typeof reading !== "object" || !reading.reextracted)
+      return { ok: false, held: false };
+    return this.ctx.storage.transactionSync(() => {
+      const row = this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, sha);
+      if (!row || !this.#viewerSees(row.bundle_id, pkg.viewer)) return { ok: false, held: false };
+      const doc = {
+        capture: { sha256: sha },
+        reading,
+        ...Array.isArray(pkg.textUnits) ? { text_units: pkg.textUnits } : {},
+        ...Number.isInteger(pkg.textUnitsOverBound) && pkg.textUnitsOverBound > 0 ? { text_units_over_bound: pkg.textUnitsOverBound } : {}
+      };
+      const author = typeof pkg.author === "string" && pkg.author ? pkg.author : null;
+      const out = this.#writeOneReading(row.bundle_id, sha, doc, reading, author);
+      const ex = out.extraction || {};
+      return {
+        ok: true,
+        held: true,
+        staled: out.staled || 0,
+        indexed: out.indexed ? {
+          written: out.indexed.written ?? 0,
+          offered: out.indexed.offered ?? 0,
+          over_bound: out.indexed.over_bound ?? 0
+        } : null,
+        observed: {
+          written: ex.written ?? 0,
+          states: ex.states || [],
+          reextraction: !!ex.reextraction,
+          refused: Array.isArray(ex.refused) ? ex.refused.length : 0,
+          unclassified: ex.unclassified ?? null
+        }
+      };
+    });
   }
   /* CPDF-10: PROJECT THE TRANSCRIPTION CHAIN INTO COLUMNS.
    *
@@ -52020,10 +52163,12 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  field that says who looked.
    *
    *  THIS IS ALSO THE DOOR A READ-TIME RE-EXTRACTION COMES THROUGH (D-319,
-   *  `EXTRACTION-BREADTH-DESIGN.md` section 5.1). That seam is CPDF-19's and
-   *  does not exist on this tree — verified by grep rather than inherited from a
-   *  ledger: the read-time structure op stops at tier 2 and there is no call
-   *  site. What section 5.1 requires of the WRITER is here and driven: a new
+   *  `EXTRACTION-BREADTH-DESIGN.md` section 5.1). CORRECTED 2026-09-18 by CPDF-19,
+   *  which built that seam: this sentence read *"does not exist on this tree"*,
+   *  true when REC-94 wrote it and false from `op=pdfstructure&ocr=1` onward — the
+   *  store's `reextract` path hands the re-read to `#writeOneReading`, which calls
+   *  THIS method, so the prediction below held with no change here. What section
+   *  5.1 requires of the WRITER is here and driven: a new
    *  chain arriving for a capture that already has rows writes a NEW row under
    *  `authority_kind = extract` with the member who asked as `actor`, which is
    *  exactly what a re-promotion with a moved chain does today. `reextraction`
@@ -56623,6 +56768,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            caller's own parameters there, and an absent one fails closed — the
            bundle back-reference is withheld rather than the answer refused. */
         reading: () => this.readingFor(url.searchParams.get("sha256"), url.searchParams.get("viewer")),
+        /* CPDF-19 / D-319: the read-time re-extraction's two DO paths. Neither is an
+           op a caller can name — `op=pdfstructure` with `ocr=1` is the only route,
+           and the control plane stamps `viewer` and `author` from the credential. */
+        reextractbasis: () => this.reextractBasis({
+          captureSha: url.searchParams.get("sha256"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        reextract: () => this.reextract(body || {}),
         readingref: () => this.documentsByReference(url.searchParams.get("ref"), url.searchParams.get("viewer")),
         /* CPDF-10. Three arms, and the split is the item's own doctrine.
            `textprovenance` READS which documents' text a machine produced — the
@@ -59495,6 +59648,12 @@ var driveRow = (code) => {
     throw new Error(`driveRow: ${code} has no DRIVE_CAPTURE_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
+var reextractRow = (code) => {
+  const row = REEXTRACT_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`reextractRow: ${code} has no REEXTRACT_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
 var admissionRow = (code) => {
   const row = ADMISSION_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
@@ -59632,6 +59791,212 @@ function tier3Note(m, memberNote) {
     say.push(`${m.refused.length} page(s) the OCR member returned were not pages it was asked about, and were dropped rather than allowed to overwrite text this document already had`);
   if (memberNote) say.push(memberNote);
   return say.length ? say.join("; ") : null;
+}
+async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt }) {
+  let chain2, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered = [];
+  const wanted = !!(i2text && needsTier3(i2text));
+  if (i2text && needsTier3(i2text)) {
+    const wantPages = tier3Pages(i2text);
+    const baseTier = wiredTier;
+    const baseText = i2text;
+    if (env.OCR_WORKER) {
+      try {
+        const r = await env.OCR_WORKER.fetch("https://ocr-worker/transcribe", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            capture_sha: sha,
+            store: storeName,
+            pages: wantPages
+          })
+        });
+        if (!r.ok) {
+          ocrNote = `the OCR member answered ${r.status}, so this document stays unread`;
+        } else {
+          const ocrAnswer = await r.json();
+          let calRef = null;
+          try {
+            const stCal = env.STORE.get(env.STORE.idFromName(storeName));
+            const cOut = await doAnswer(stCal.fetch(
+              `http://x/calibrations?engine=${encodeURIComponent(String(ocrAnswer && ocrAnswer.engine || ""))}`
+            ));
+            const live = (cOut && cOut.answered && cOut.result && cOut.result.calibrations || []).find((c) => c.superseded_by == null && c.version === (ocrAnswer && ocrAnswer.version));
+            calRef = live ? live.calibration_id : null;
+          } catch {
+          }
+          const built = ocrTextFromMember(ocrAnswer, { calibration: calRef });
+          if (built.ok) {
+            engine = { engine: String(ocrAnswer.engine), version: String(ocrAnswer.version), calibration: calRef };
+            const m = mergeTier3Text(baseText, built.text, wantPages);
+            if (!m.ok) ocrNote = m.why;
+            else {
+              i2text = m.text;
+              const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page) && typeof p.text === "string" && p.text.length).map((p) => p.page);
+              const parts = [];
+              const layerSet = new Set(layerPages);
+              const spokenFor = tier2PerPage ? [
+                [1, (tier2PerPage.tier1 || []).filter((p) => layerSet.has(p))],
+                [2, (tier2PerPage.tier2 || []).filter((p) => layerSet.has(p))]
+              ] : [];
+              const spoken = new Set(spokenFor.flatMap(([, ps]) => ps));
+              for (const [tier, ps] of spokenFor)
+                if (ps.length)
+                  parts.push({
+                    pages: ps,
+                    chain: layerChainFor(baseText, { tier, container: fmt })
+                  });
+              const unspoken = layerPages.filter((p) => !spoken.has(p));
+              if (unspoken.length)
+                parts.push({
+                  pages: unspoken,
+                  chain: layerChainFor(baseText, { tier: baseTier, container: fmt })
+                });
+              if (m.filled.length) parts.push({ pages: m.filled, chain: built.chain });
+              const merged = mergedChain(parts);
+              chain2 = Array.isArray(merged) ? merged : null;
+              chainSet = true;
+              if (m.filled.length) wiredTier = 3;
+              filled = m.filled;
+              unanswered = m.unanswered || [];
+              ocrNote = tier3Note(m, built.note);
+            }
+          } else ocrNote = built.why;
+        }
+      } catch {
+        ocrNote = "the OCR member could not be reached, so this document stays unread";
+      }
+    } else {
+      ocrNote = "this document has no text layer to read and no OCR engine is installed in this instance, so nothing is claimed about what it says";
+    }
+  }
+  const stillWanting = wanted && (!filled.length || unanswered.length > 0);
+  return { i2text, wiredTier, chain: chain2, chainSet, ocrNote, filled, engine, stillWanting };
+}
+function textUnitsFor(i2text) {
+  let textUnits = null, textUnitsOverBound = 0;
+  if (i2text) {
+    const arm = (list, kind, fields) => (Array.isArray(list) ? list : []).map((u, i) => u && typeof u === "object" && typeof u.text === "string" && u.text.length ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null).filter(Boolean);
+    const units = Array.isArray(i2text.pages) ? arm(
+      i2text.pages,
+      "pdf-page",
+      (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null })
+    ) : Array.isArray(i2text.paragraphs) ? arm(
+      i2text.paragraphs,
+      "doc-para",
+      (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null })
+    ) : Array.isArray(i2text.slides) ? arm(
+      i2text.slides,
+      "slide-shape",
+      (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null })
+    ) : null;
+    let budget = ACQUIRE_TEXT_UNITS_BUDGET, kept = [], dropped = 0;
+    for (const u of units || []) {
+      const size = new TextEncoder().encode(u.text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
+      if (size > budget) {
+        dropped++;
+        continue;
+      }
+      budget -= size;
+      kept.push(u);
+    }
+    textUnits = kept.length ? kept : null;
+    textUnitsOverBound = dropped;
+  }
+  return { textUnits, textUnitsOverBound };
+}
+var readEntities = (list) => (Array.isArray(list) ? list : []).map((e) => ({
+  key: e && e.key != null ? String(e.key) : null,
+  kind: e && e.kind != null ? e.kind : null,
+  label: e && e.label != null ? e.label : null,
+  facts: e && e.facts && typeof e.facts === "object" ? e.facts : {},
+  /* The reference exactly as the reading carries it: kind:key, raw. */
+  ref: `${e && e.kind != null ? e.kind : ""}:${e && e.key != null ? e.key : ""}`,
+  /* FW-17 / IC-86: WHERE the reference was read, in IC-1's union and no
+     other vocabulary. Validated here rather than trusted, for the reason
+     IC-1 states as its own load-bearing part — a required `kind`
+     discriminator turns a silent misread into a loud one, and this is the
+     boundary where a reader's answer becomes the record's. An unrecognised
+     kind, a missing human form or a missing per-arm field yields null: the
+     reading still writes and the position is absent, which is the honest
+     direction. NULL IS NEVER "the whole document was meant". */
+  source: readingSource(e && e.source)
+})).filter((e) => e.key != null || e.kind != null);
+function readingFromWire({
+  wired,
+  docType,
+  chain: chain2,
+  wiredTier,
+  fmt,
+  retrieved,
+  tier2note,
+  ocrNote,
+  tier3Candidate = !!ocrNote
+}) {
+  let reading = null;
+  if (wired && wired.determined) {
+    const { entities: wiredEntities, ...wrest } = wired.parsed || {};
+    const wfacts = wrest && typeof wrest.facts === "object" && Object.keys(wrest).length === 1 ? wrest.facts : wrest;
+    const entities = wired.parse_error ? [] : readEntities(wiredEntities);
+    const wtype = wired.doctype.type;
+    const positioned = entities.filter((e) => e.source).length;
+    const posNote = !entities.length ? null : positioned === entities.length ? `every reference carries where it was read (${positioned} of ${entities.length})` : positioned ? `${positioned} of ${entities.length} references carry where they were read; the rest were read in stretches of text no part of the container claims, so their position is not stated` : `no reference carries where it was read \u2014 ${wired.position_why || "this reader does not say where"}`;
+    reading = {
+      content_type: wtype.key,
+      reader_version: wtype.version ?? null,
+      read_from_text: true,
+      found: entities.length > 0,
+      entities,
+      facts: wired.parse_error ? {} : wfacts || {},
+      at: retrieved,
+      /* D-152's provenance rule, and CPDF-10's correction of how it was
+         carried. This was the STRING "layer" — right about the fact and
+         wrong about the shape, because the moment a second derivation
+         exists a single label cannot say which engine produced the text
+         or how many hands it passed through. It is now the CHAIN
+         `textchain.mjs` owns: an ordered list of steps, each naming what
+         performed it, each only able to weaken what it received. A text
+         layer is itself an unverified transcription (CPDF-9 measured
+         ABBYY FineReader in 3 of 14 recent Legistar attachments), so
+         `layer` is a derivation step like any other rather than the
+         absence of one. `text_tier`/`text_container` stay exactly as they
+         were — a consumer reading only those is unaffected (IC-39). */
+      text_source: chain2,
+      text_tier: wiredTier,
+      text_container: fmt,
+      basis: (wired.parse_error ? `the ${wtype.key} reader could not parse the ${fmt} text-layer text (${wired.parse_error}), so nothing is claimed about its entities` : entities.length ? `read by the ${wtype.key} reader v${wtype.version} over ${fmt} ${describeChain(chain2)} (tier ${wiredTier}); ${wired.why}` : `the ${wtype.key} reader found no entities in this document's ${fmt} text-layer text (tier ${wiredTier}); recorded as an empty reading, never an emptied document`) + (tier2note ? ` \u2014 ${tier2note}` : "") + (ocrNote ? ` \u2014 ${ocrNote}` : "") + (posNote ? ` \u2014 ${posNote}` : ""),
+      ...tier3Candidate ? { tier3_candidate: true } : {},
+      /* FW-17 / IC-86: the producer-side facts about position, carried on
+         the reading so a later reader can tell an absent position that was
+         never available from one a reader declined to give. */
+      position_parts: wired.position_parts ?? 0,
+      position_why: positioned ? null : wired.position_why || null
+    };
+  } else if (wired) {
+    reading = {
+      content_type: docType.type.key,
+      reader_version: docType.type.version ?? null,
+      read_from_text: false,
+      found: false,
+      entities: [],
+      facts: {},
+      at: retrieved,
+      text_source: chain2,
+      text_tier: wiredTier,
+      text_container: fmt,
+      /* CPDF-10: a Tier-3 candidate says WHY it is unread, and the two
+         reasons are different findings. `ocrNote` names the scan case —
+         there was nothing to decode and no engine to read it — where
+         `wired.why` names a decode that was attempted and failed. Reading
+         them as one would file a scanned budget book beside a broken font
+         map, and only one of those is waiting on a capability. */
+      /* REC-98 / D-283: the tier-2 merge's finding rides here too. A
+         document that stayed unread AND had a tier-2 escalation refused has
+         two different things to say and only one of them is `wired.why`. */
+      basis: [tier2note, ocrNote ? `${ocrNote} (${wired.why})` : wired.why].filter(Boolean).join(" \u2014 "),
+      ...tier3Candidate ? { tier3_candidate: true } : {}
+    };
+  }
+  return reading;
 }
 function ocrTextFromMember(res, { calibration = null } = {}) {
   const r = res && typeof res === "object" ? res : {};
@@ -60524,6 +60889,62 @@ var index_default = {
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
         return json({ ok: false, error: "pdfstructure requires sha256=<64 lowercase hex>" }, 400);
+      const ocrAsked = url.searchParams.has("ocr");
+      let reBasis = null, reAuthor = null, reViewer = null;
+      if (ocrAsked) {
+        if (url.searchParams.get("ocr") !== "1")
+          return json({
+            ok: false,
+            reason: "REEXTRACT_FLAG_MALFORMED",
+            ...reextractRow("REEXTRACT_FLAG_MALFORMED"),
+            op,
+            detail: `ocr=${JSON.stringify(String(url.searchParams.get("ocr")).slice(0, 40))} is not a value this op reads. Send ocr=1 to re-read the document with the OCR member, or leave the parameter off for the ordinary read.`
+          }, 400);
+        if (cls === "ai")
+          return json({
+            ok: false,
+            reason: "REEXTRACT_AGENT_REFUSED",
+            ...reextractRow("REEXTRACT_AGENT_REFUSED"),
+            op,
+            detail: `op=pdfstructure is declared a read, so no agent task scope can name it as a write, and ocr=1 writes this capture's reading. An agent is confined to the writes its member declared (D-199).`
+          }, 403);
+        if (viaSession && !(sessCaps && sessCaps.has("contribute")))
+          return json({
+            ok: false,
+            reason: "REEXTRACT_NOT_CAPABLE",
+            ...reextractRow("REEXTRACT_NOT_CAPABLE"),
+            op,
+            needs: "contribute",
+            held: [...sessCaps || []].sort(),
+            detail: `a re-read replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.`
+          }, 403);
+        if (!env.OCR_WORKER)
+          return json({
+            ok: false,
+            reason: "REEXTRACT_NO_OCR_MEMBER",
+            ...reextractRow("REEXTRACT_NO_OCR_MEMBER"),
+            op,
+            sha256: sha,
+            detail: `no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).`
+          }, 501);
+        reViewer = viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+        reAuthor = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
+        const reStore = env.STORE.get(env.STORE.idFromName(storeName));
+        const bOut = await doAnswer(reStore.fetch(
+          `http://do/reextractbasis?sha256=${sha}&viewer=${encodeURIComponent(reViewer)}`
+        ));
+        if (!bOut.answered) return storeSilent(op);
+        if (!(bOut.result && bOut.result.held))
+          return json({
+            ok: false,
+            reason: "REEXTRACT_NOT_READ",
+            ...reextractRow("REEXTRACT_NOT_READ"),
+            op,
+            sha256: sha,
+            detail: `this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a bundle carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.`
+          }, 409);
+        reBasis = bOut.result;
+      }
       const obj = await env.CAPTURES.get(captureKey(storeName, sha));
       if (!obj)
         return json({ ok: false, reason: "NOT_FOUND", sha256: sha, store: storeName, tokenClass: cls }, 404);
@@ -60539,6 +60960,7 @@ var index_default = {
       const structure = await pdfEntry.structure(bytes);
       if (!structure.ok) return json(structure, 422);
       let structureTier = 1;
+      let readT2PerPage = null, readT2Note = null;
       if (env.PDF_WORKER && needsTier2(structure.text)) {
         try {
           const r = await env.PDF_WORKER.fetch("https://pdf-worker/structure", {
@@ -60557,8 +60979,11 @@ var index_default = {
               structureTier = m.replaced.length ? 2 : 1;
               const n = tier2Note(m);
               if (n) structure.notes = [...structure.notes, n];
+              readT2PerPage = m.perPageTier || null;
+              readT2Note = n || null;
             } else {
               structure.notes = [...structure.notes, m.why];
+              readT2Note = m.why || null;
             }
           } else {
             structure.notes = [...structure.notes, "tier2_no_improvement"];
@@ -60568,6 +60993,97 @@ var index_default = {
         }
       }
       structure.tier = structureTier;
+      if (ocrAsked) {
+        const stored = reBasis && reBasis.reading || {};
+        const t3 = await tier3Extend(env, {
+          sha,
+          storeName,
+          i2text: structure.text,
+          wiredTier: structureTier,
+          tier2PerPage: readT2PerPage,
+          fmt: "pdf"
+        });
+        const cost = "about 10 s per image-only page on the deployed OCR member (CPDF-10's measurement, MEASUREMENTS.md)";
+        if (!t3.filled.length) {
+          structure.reextraction = {
+            performed: false,
+            written: false,
+            cost,
+            candidate: needsTier3(structure.text),
+            why: t3.ocrNote || "no page of this document lacks a text layer, so there is nothing for OCR to read; the engine was not called and nothing about this capture was changed"
+          };
+        } else {
+          let chain2 = t3.chainSet ? t3.chain : null;
+          if (!chain2) chain2 = layerChainFor(t3.i2text, { tier: t3.wiredTier, container: "pdf" });
+          const wired = readText(t3.i2text, {
+            headers: null,
+            locator: reBasis.locator || null,
+            content_type: null,
+            at: stored.at ?? null
+          });
+          const reading = readingFromWire({
+            wired,
+            docType: { type: { key: stored.content_type ?? null, version: stored.reader_version ?? null } },
+            chain: chain2,
+            wiredTier: t3.wiredTier,
+            fmt: "pdf",
+            retrieved: stored.at ?? null,
+            tier2note: readT2Note,
+            ocrNote: t3.ocrNote,
+            tier3Candidate: t3.stillWanting
+          });
+          reading.page_count = Number.isInteger(structure.pages) && structure.pages > 0 ? structure.pages : Number.isInteger(stored.page_count) ? stored.page_count : null;
+          reading.container_extent = Object.prototype.hasOwnProperty.call(stored, "container_extent") ? stored.container_extent : null;
+          reading.reextracted = {
+            at: (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z",
+            by: reAuthor,
+            engine: t3.engine ? t3.engine.engine : null,
+            version: t3.engine ? t3.engine.version : null,
+            calibration: t3.engine ? t3.engine.calibration ?? null : null,
+            pages: t3.filled,
+            via: "op=pdfstructure&ocr=1"
+          };
+          const u = textUnitsFor(t3.i2text);
+          const reStore = env.STORE.get(env.STORE.idFromName(storeName));
+          const wOut = await doAnswer(reStore.fetch("http://do/reextract", {
+            method: "POST",
+            body: JSON.stringify({
+              captureSha: sha,
+              viewer: reViewer,
+              author: reAuthor,
+              reading,
+              textUnits: u.textUnits,
+              textUnitsOverBound: u.textUnitsOverBound
+            })
+          }));
+          if (!wOut.answered) return storeSilent(op);
+          const w = wOut.result || {};
+          structure.text = t3.i2text;
+          structure.tier = t3.wiredTier;
+          if (t3.ocrNote) structure.notes = [...structure.notes, t3.ocrNote];
+          structure.reextraction = {
+            performed: true,
+            written: w.ok === true,
+            cost,
+            ...w.ok === true ? {} : { why: "the record's reading of this capture could not be written (it was no longer held for this caller when the write arrived), so the text above was read and NOT recorded" },
+            pages: t3.filled,
+            engine: t3.engine,
+            text_source: chain2,
+            chain: describeChain(chain2),
+            reading: {
+              content_type: reading.content_type,
+              read_from_text: reading.read_from_text,
+              found: reading.found,
+              entities: Array.isArray(reading.entities) ? reading.entities.length : 0,
+              text_tier: reading.text_tier
+            },
+            staled: w.staled ?? 0,
+            units: w.indexed ?? null,
+            observed: w.observed ?? null,
+            candidates: "the content-axis frontier (op=frontier&level=content) lists the captures still below what this instance's fleet can read; this one is re-read now"
+          };
+        }
+      }
       return json(structure, 200);
     }
     if (op === "archivelookup") {
@@ -61266,23 +61782,6 @@ var index_default = {
           basis: profileBytes ? `the ${stackId.handler.key} stack was not identified with certainty (${stackId.confidence}); its normalisation is not trusted to assert sameness, so the substance digest is undetermined` : `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}); no normalisation was applied, so the substance digest is undetermined`
         };
       }
-      const readEntities = (list) => (Array.isArray(list) ? list : []).map((e) => ({
-        key: e && e.key != null ? String(e.key) : null,
-        kind: e && e.kind != null ? e.kind : null,
-        label: e && e.label != null ? e.label : null,
-        facts: e && e.facts && typeof e.facts === "object" ? e.facts : {},
-        /* The reference exactly as the reading carries it: kind:key, raw. */
-        ref: `${e && e.kind != null ? e.kind : ""}:${e && e.key != null ? e.key : ""}`,
-        /* FW-17 / IC-86: WHERE the reference was read, in IC-1's union and no
-           other vocabulary. Validated here rather than trusted, for the reason
-           IC-1 states as its own load-bearing part — a required `kind`
-           discriminator turns a silent misread into a loud one, and this is the
-           boundary where a reader's answer becomes the record's. An unrecognised
-           kind, a missing human form or a missing per-arm field yields null: the
-           reading still writes and the position is absent, which is the honest
-           direction. NULL IS NEVER "the whole document was meant". */
-        source: readingSource(e && e.source)
-      })).filter((e) => e.key != null || e.kind != null);
       let reading;
       let textUnits = null, textUnitsOverBound = 0;
       const canRead = !!profileText && typeof docType.type.parse === "function";
@@ -61333,6 +61832,7 @@ var index_default = {
       } else {
         let wired = null, wiredTier = null, pageCount = null, containerExtent = null;
         let chain2 = null, ocrNote = null, tier2note = null, tier2PerPage = null;
+        let t3Wanting = false;
         const fmt = profile.format && profile.format.format;
         if (!multipart && fmt && fmt !== "undetermined") {
           try {
@@ -61386,75 +61886,13 @@ var index_default = {
                   }
                 }
               }
-              if (i2text && needsTier3(i2text)) {
-                const wantPages = tier3Pages(i2text);
-                const baseTier = wiredTier;
-                const baseText = i2text;
-                if (env.OCR_WORKER) {
-                  try {
-                    const r = await env.OCR_WORKER.fetch("https://ocr-worker/transcribe", {
-                      method: "POST",
-                      headers: { "content-type": "application/json" },
-                      body: JSON.stringify({
-                        capture_sha: sha,
-                        store: storeName,
-                        pages: wantPages
-                      })
-                    });
-                    if (!r.ok) {
-                      ocrNote = `the OCR member answered ${r.status}, so this document stays unread`;
-                    } else {
-                      const ocrAnswer = await r.json();
-                      let calRef = null;
-                      try {
-                        const stCal = env.STORE.get(env.STORE.idFromName(storeName));
-                        const cOut = await doAnswer(stCal.fetch(
-                          `http://x/?op=calibrations&engine=${encodeURIComponent(String(ocrAnswer && ocrAnswer.engine || ""))}`
-                        ));
-                        const live = (cOut && cOut.calibrations || []).find((c) => c.superseded_by == null && c.version === (ocrAnswer && ocrAnswer.version));
-                        calRef = live ? live.calibration_id : null;
-                      } catch {
-                      }
-                      const built = ocrTextFromMember(ocrAnswer, { calibration: calRef });
-                      if (built.ok) {
-                        const m = mergeTier3Text(baseText, built.text, wantPages);
-                        if (!m.ok) ocrNote = m.why;
-                        else {
-                          i2text = m.text;
-                          const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p) => p && Number.isInteger(p.page) && !m.filled.includes(p.page) && typeof p.text === "string" && p.text.length).map((p) => p.page);
-                          const parts2 = [];
-                          const layerSet = new Set(layerPages);
-                          const spokenFor = tier2PerPage ? [
-                            [1, (tier2PerPage.tier1 || []).filter((p) => layerSet.has(p))],
-                            [2, (tier2PerPage.tier2 || []).filter((p) => layerSet.has(p))]
-                          ] : [];
-                          const spoken = new Set(spokenFor.flatMap(([, ps]) => ps));
-                          for (const [tier, ps] of spokenFor)
-                            if (ps.length)
-                              parts2.push({
-                                pages: ps,
-                                chain: layerChainFor(baseText, { tier, container: fmt })
-                              });
-                          const unspoken = layerPages.filter((p) => !spoken.has(p));
-                          if (unspoken.length)
-                            parts2.push({
-                              pages: unspoken,
-                              chain: layerChainFor(baseText, { tier: baseTier, container: fmt })
-                            });
-                          if (m.filled.length) parts2.push({ pages: m.filled, chain: built.chain });
-                          const merged = mergedChain(parts2);
-                          chain2 = Array.isArray(merged) ? merged : null;
-                          if (m.filled.length) wiredTier = 3;
-                          ocrNote = tier3Note(m, built.note);
-                        }
-                      } else ocrNote = built.why;
-                    }
-                  } catch {
-                    ocrNote = "the OCR member could not be reached, so this document stays unread";
-                  }
-                } else {
-                  ocrNote = "this document has no text layer to read and no OCR engine is installed in this instance, so nothing is claimed about what it says";
-                }
+              {
+                const t3 = await tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt });
+                i2text = t3.i2text;
+                wiredTier = t3.wiredTier;
+                if (t3.chainSet) chain2 = t3.chain;
+                if (t3.ocrNote != null) ocrNote = t3.ocrNote;
+                t3Wanting = t3.stillWanting;
               }
               if (i2text) {
                 const has = (k) => Array.isArray(i2text[k]);
@@ -61488,33 +61926,10 @@ var index_default = {
                   };
                 }
               }
-              if (i2text) {
-                const arm = (list, kind, fields) => (Array.isArray(list) ? list : []).map((u, i) => u && typeof u === "object" && typeof u.text === "string" && u.text.length ? { extent: { kind, ...fields(u, i) }, seq: i, text: u.text } : null).filter(Boolean);
-                const units = Array.isArray(i2text.pages) ? arm(
-                  i2text.pages,
-                  "pdf-page",
-                  (u, i) => ({ page: Number.isInteger(u.page) ? u.page : i, rect: null })
-                ) : Array.isArray(i2text.paragraphs) ? arm(
-                  i2text.paragraphs,
-                  "doc-para",
-                  (u, i) => ({ para: Number.isInteger(u.para) ? u.para : i, run: null })
-                ) : Array.isArray(i2text.slides) ? arm(
-                  i2text.slides,
-                  "slide-shape",
-                  (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null })
-                ) : null;
-                let budget = ACQUIRE_TEXT_UNITS_BUDGET, kept = [], dropped = 0;
-                for (const u of units || []) {
-                  const size = new TextEncoder().encode(u.text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
-                  if (size > budget) {
-                    dropped++;
-                    continue;
-                  }
-                  budget -= size;
-                  kept.push(u);
-                }
-                textUnits = kept.length ? kept : null;
-                textUnitsOverBound = dropped;
+              {
+                const u = textUnitsFor(i2text);
+                textUnits = u.textUnits;
+                textUnitsOverBound = u.textUnitsOverBound;
               }
               if (i2text) wired = readText(i2text, {
                 headers: profHeaders,
@@ -61528,68 +61943,18 @@ var index_default = {
           } catch {
           }
         }
-        if (wired && wired.determined) {
-          const { entities: wiredEntities, ...wrest } = wired.parsed || {};
-          const wfacts = wrest && typeof wrest.facts === "object" && Object.keys(wrest).length === 1 ? wrest.facts : wrest;
-          const entities = wired.parse_error ? [] : readEntities(wiredEntities);
-          const wtype = wired.doctype.type;
-          const positioned = entities.filter((e) => e.source).length;
-          const posNote = !entities.length ? null : positioned === entities.length ? `every reference carries where it was read (${positioned} of ${entities.length})` : positioned ? `${positioned} of ${entities.length} references carry where they were read; the rest were read in stretches of text no part of the container claims, so their position is not stated` : `no reference carries where it was read \u2014 ${wired.position_why || "this reader does not say where"}`;
-          reading = {
-            content_type: wtype.key,
-            reader_version: wtype.version ?? null,
-            read_from_text: true,
-            found: entities.length > 0,
-            entities,
-            facts: wired.parse_error ? {} : wfacts || {},
-            at: retrieved,
-            /* D-152's provenance rule, and CPDF-10's correction of how it was
-               carried. This was the STRING "layer" — right about the fact and
-               wrong about the shape, because the moment a second derivation
-               exists a single label cannot say which engine produced the text
-               or how many hands it passed through. It is now the CHAIN
-               `textchain.mjs` owns: an ordered list of steps, each naming what
-               performed it, each only able to weaken what it received. A text
-               layer is itself an unverified transcription (CPDF-9 measured
-               ABBYY FineReader in 3 of 14 recent Legistar attachments), so
-               `layer` is a derivation step like any other rather than the
-               absence of one. `text_tier`/`text_container` stay exactly as they
-               were — a consumer reading only those is unaffected (IC-39). */
-            text_source: chain2,
-            text_tier: wiredTier,
-            text_container: fmt,
-            basis: (wired.parse_error ? `the ${wtype.key} reader could not parse the ${fmt} text-layer text (${wired.parse_error}), so nothing is claimed about its entities` : entities.length ? `read by the ${wtype.key} reader v${wtype.version} over ${fmt} ${describeChain(chain2)} (tier ${wiredTier}); ${wired.why}` : `the ${wtype.key} reader found no entities in this document's ${fmt} text-layer text (tier ${wiredTier}); recorded as an empty reading, never an emptied document`) + (tier2note ? ` \u2014 ${tier2note}` : "") + (ocrNote ? ` \u2014 ${ocrNote}` : "") + (posNote ? ` \u2014 ${posNote}` : ""),
-            ...ocrNote ? { tier3_candidate: true } : {},
-            /* FW-17 / IC-86: the producer-side facts about position, carried on
-               the reading so a later reader can tell an absent position that was
-               never available from one a reader declined to give. */
-            position_parts: wired.position_parts ?? 0,
-            position_why: positioned ? null : wired.position_why || null
-          };
-        } else if (wired) {
-          reading = {
-            content_type: docType.type.key,
-            reader_version: docType.type.version ?? null,
-            read_from_text: false,
-            found: false,
-            entities: [],
-            facts: {},
-            at: retrieved,
-            text_source: chain2,
-            text_tier: wiredTier,
-            text_container: fmt,
-            /* CPDF-10: a Tier-3 candidate says WHY it is unread, and the two
-               reasons are different findings. `ocrNote` names the scan case —
-               there was nothing to decode and no engine to read it — where
-               `wired.why` names a decode that was attempted and failed. Reading
-               them as one would file a scanned budget book beside a broken font
-               map, and only one of those is waiting on a capability. */
-            /* REC-98 / D-283: the tier-2 merge's finding rides here too. A
-               document that stayed unread AND had a tier-2 escalation refused has
-               two different things to say and only one of them is `wired.why`. */
-            basis: [tier2note, ocrNote ? `${ocrNote} (${wired.why})` : wired.why].filter(Boolean).join(" \u2014 "),
-            ...ocrNote ? { tier3_candidate: true } : {}
-          };
+        if (wired) {
+          reading = readingFromWire({
+            wired,
+            docType,
+            chain: chain2,
+            wiredTier,
+            fmt,
+            retrieved,
+            tier2note,
+            ocrNote,
+            tier3Candidate: t3Wanting
+          });
         } else {
           reading = {
             content_type: docType.type.key,
