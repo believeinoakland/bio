@@ -1236,7 +1236,8 @@ const REGISTER_FLOOR = {
      failure mode (a dropped floor move goes SLACK, not broken). classified and corpus are
      UNMOVED and that is stated rather than implied: the arriving arm joined an already-counted
      declaration rather than adding a suite. */
-  arms: 1262,
+  arms: 1264,
+  // [CONDUCT #4 at REC-100's merge] 2026-09-18: re-read on the merged tree — `--strict` exit 0 printed `arms 1264/1262 · classified 223/223 · corpus (suites read) 224/224` and `floor 186/185 reproducible`.
   // [CONDUCT #4 at REC-87 + CPDF-18's merge] 2026-09-18: re-read on the merged tree — `--strict` exit 0 printed `arms 1262/1243 · classified 223/220 · corpus (suites read) 224/221` and `floor 185/184 reproducible`.
   // [CONDUCT #4 at REC-120's merge] 2026-09-18: re-read on the merged tree (REC-104 + BOB's construct-status + REC-120) — `--strict` exit 0 printed `arms 1243/1234 · classified 220/218 · corpus (suites read) 221/219` and `floor 184/182 reproducible`.
   // [CONDUCT #4 at REC-104's merge] 2026-09-18: re-read on the merged tree — `--strict` exit 0 printed `arms 1234/1226 · classified 218/217 · corpus (suites read) 219/218` and `floor 182/181 reproducible`; REC-104 left the move to CONDUCT on purpose (its own tree printed 1234/1215).
@@ -1327,7 +1328,7 @@ const REGISTER_FLOOR = {
      EXACT, so nothing about that item moved either figure. It is the sixth consecutive
      item to find a floor already stale BY MEASURING IT, which is the argument for
      measuring rather than for trusting the number in the file. */
-  run: 185,
+  run: 186,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

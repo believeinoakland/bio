@@ -237,50 +237,16 @@ const ARMS = {
      are driven directly in section I of `observation-log.test.mjs`; this arm's
      own job — proving the fence is a fence and not a wall — is unchanged and
      its declaration below is correct as written. */
-  overstrict: {
-    files: [AIRUN],
-    why: "WIDEN C-22.10 to every authority including `run`, the over-strictness direction — "
-       + "correct work in a spelling the fence did not anticipate must not be refused. "
-       + "NOTE (REC-100): this arm sees ONE SUITE and is blind to the two rollup writers in "
-       + "store.mjs and to agent-worker's stepLog — its emptiness is not a fact about writers",
-    /* THIS ARM CAME BACK `NOT AS DECLARED` ON ITS FIRST RUN AND THE HARNESS WAS
-       RIGHT TO SAY SO — the fault was in the SUITE, not in the arm or the
-       subject. All three declared markers were present in the output, and the
-       tally read `-1`: with the run's entries refused, `entries[2]` was
-       undefined and a bare `.governed` threw a TypeError. **A TypeError inside
-       an assertion goes through no assertion at all** — it ended the module
-       while the tally read clean, so the verdict degraded from "three named
-       assertions went red" to "the suite did not reach its own foot". That is
-       WORKER.md's own receipt, reproduced here by this item and fixed at the
-       suite (`C4` is index-safe now) rather than tolerated in the driver.
-       The declaration is UNCHANGED, because it was correct; what changed is that
-       the suite can now report it. */
-    /* **I3 IS DECLARED BY REC-100 SO THIS ARM GRADES THE ROLLUP FINDING RATHER
-       THAN MERELY PRINTING IT** (REC-99's lesson: the census was never blind,
-       it was UNGRADED). With the carve-out widened, `op=airunclose` answers
-       `terminated: false, ok: false, code: OBS_PRESENT_NO_REFERENT` and the
-       run's terminal entry is NEVER WRITTEN — so **a run that observed anything
-       PRESENT cannot be closed at all**, and the reaper's wake entry is the same
-       rollup and fails the same way. That is a lifecycle deadlock in this plane,
-       and it is a far heavier consequence than the over-strictness this arm was
-       built to catch. Declaring it here means a future session that satisfies
-       the rollup (a ruling on §3) sees this arm go GREEN on I3 and knows the
-       carve-out is finally deletable — the arm becomes the gate on D-366. */
-    mustFail: ["OVER-STRICTNESS — a `run` PRESENT with no referent is ACCEPTED",
-               "the run's three entries all appended THROUGH THE FOLD — none refused",
-               "`seq` is 1,2,3 PER RUN",
-               "the run's TERMINAL entry is a bare `run` PRESENT"],
-    /* I1 and I2 MUST STAY GREEN under this arm and that is the half that makes
-       the finding precise: a run PRESENT that CARRIES a referent is accepted
-       either way (the door is open), and the read still does not project it. So
-       what the widening breaks is exactly the ROLLUP and the referent-less
-       caller — not the mechanism. */
-    mustPass: "every refusal arm — this arm breaks CORRECT WORK and nothing else, which is what "
-            + "makes it the over-strictness arm rather than a seventh way to break the subject",
-    patch: () => arm(AIRUN,
-      "  if (state === \"PRESENT\" && authorityKind !== \"run\"",
-      "  if (state === \"PRESENT\" && authorityKind !== \"__never__\""),
-  },
+  /* `overstrict` — RETIRED 2026-09-18 BY REC-100 (IC-130, D-366 CLOSED), and kept
+     here as a record rather than deleted, because its declaration was the gate on
+     D-366: *"a future session that satisfies the rollup (a ruling on §3) sees this
+     arm go GREEN on I3 and knows the carve-out is finally deletable"*. That is what
+     happened — BOB #14 ruled the rollup, REC-100 built it, and the carve-out this arm
+     widened is GONE, so its anchor (`authorityKind !== "run"` in `checkObservation`)
+     no longer exists and the arm could only report that it did not arm. The
+     over-strictness it guarded now lives in `test/nc-rec100.mjs` (arms `carveout`,
+     `noreferent` and `overstrict`) and in section K of `observation-log.test.mjs`.
+     Its body, verbatim, is in git history at the commit before REC-100. */
 };
 
 const want = process.argv[2];

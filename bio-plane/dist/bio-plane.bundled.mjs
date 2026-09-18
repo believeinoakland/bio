@@ -3124,7 +3124,7 @@ CREATE TABLE IF NOT EXISTS observation_log (
   condition      TEXT,              -- queuestate.mjs vocabulary, and no new words
   bound          TEXT,              -- which bound stopped it, if one did
   terminal       INTEGER NOT NULL DEFAULT 0,
-  result_kind    TEXT,              -- capture | content | entity | reading. What the look produced, if anything
+  result_kind    TEXT,              -- capture | content | entity | reading | observation (a rollup, REC-100). What the look produced, if anything
   result_ref     TEXT,              -- THE BACK-REFERENCE: the capture_sha, content_id, entity id
   detail         TEXT               -- unchanged | changed | the reason | the reader name
 );
@@ -8434,7 +8434,20 @@ var AI_RUN_CHECKS = {
        entry's referent is. The third is `agent-worker`'s `stepLog`, another area's
        path, which composes no referent field while a model may judge `PRESENT`.
        The full reasoning and the driven evidence are at the predicate in
-       `src/airun.mjs`; section I of `test/observation-log.test.mjs` drives it. */
+       `src/airun.mjs`; section I of `test/observation-log.test.mjs` drives it.
+  
+       **CLOSED 2026-09-18 BY REC-100 (IC-130, D-366).** BOB #14 ruled the rollup
+       (`OBSERVATION-LOG-DESIGN.md` §3): a rollup's PRESENT carries `result_kind =
+       observation` pointing at the latest non-terminal PRESENT row of its own run,
+       computed by the plane. The carve-out is DELETED, so this refusal now fires
+       on EVERY authority, and it GAINED AN ARM rather than a new code: an
+       `observation` referent that is not an EARLIER PRESENT row of the SAME
+       authority is refused here too, with `referent_fault` naming which of four
+       ways it failed (`OBSERVATION_REFERENT_FAULTS` in `src/airun.mjs`). One code,
+       because every fault is this row's condition — a PRESENT whose referent does
+       not back it — and a second code behind C-22.10 would be two conditions
+       behind one C-number, which `civicos-ui/check-refusal-codes.mjs` refuses.
+       Section K of `test/observation-log.test.mjs` drives all of it. */
   OBS_PRESENT_NO_REFERENT: {
     check: "C-22.10",
     where: "src/airun.mjs checkObservation, called from store.mjs #observe",
@@ -25126,11 +25139,34 @@ var RUN_CONTEXTS = {
   inquiry: "a question the group is working on, which any project may draw on",
   project: "a body of work with its own members, its own bar and its own lens"
 };
-function refusal3(key, detail) {
+function refusal3(key, detail, extra = null) {
   const row = AI_RUN_CHECKS[key];
-  return { ok: false, code: key, check: row.check, translation: row.translation, detail };
+  return {
+    ok: false,
+    code: key,
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra && typeof extra === "object" ? extra : {}
+  };
 }
-function checkObservation(entry, conditionKinds) {
+var OBSERVATION_REFERENT_FAULTS = {
+  not_earlier: "the referent names a row at or after the one being written, and a rollup can only rest on a look that already happened",
+  unresolved: "the referent names no row this log holds",
+  other_authority: "the referent is a row of a different authority, and a run's rollup can rest only on its own looks",
+  not_present: "the referent row does not read PRESENT, so it cannot be what makes this row PRESENT"
+};
+function observationReferentFault(entry, referent) {
+  const e = entry && typeof entry === "object" ? entry : {};
+  const ref = e.result_ref == null ? "" : String(e.result_ref);
+  const r = referent && typeof referent === "object" ? referent : null;
+  if (/^[1-9][0-9]*$/.test(ref) && r && Number.isFinite(Number(r.next_seq)) && Number(ref) >= Number(r.next_seq)) return "not_earlier";
+  if (!r || r.found !== true || String(r.seq) !== ref) return "unresolved";
+  if (String(r.authority_kind) !== String(e.authority_kind ?? "") || String(r.authority ?? "") !== String(e.authority ?? "")) return "other_authority";
+  if (r.state !== "PRESENT") return "not_present";
+  return null;
+}
+function checkObservation(entry, conditionKinds, referent = null) {
   const e = entry && typeof entry === "object" ? entry : {};
   if (e.bundle != null && String(e.bundle) !== "")
     return refusal3(
@@ -25160,11 +25196,21 @@ function checkObservation(entry, conditionKinds) {
       "AI_LOG_SHELL_PRESENT",
       "a client-rendered shell capture is LOOKED_INDETERMINATE and never PRESENT (\xA711, D-64): an evidentially empty capture that reads as coverage is the false-coverage hazard"
     );
-  if (state === "PRESENT" && authorityKind !== "run" && (e.result_ref == null || String(e.result_ref) === ""))
+  const resultKind = typeof e.result_kind === "string" && e.result_kind ? e.result_kind : null;
+  if (state === "PRESENT" && (e.result_ref == null || String(e.result_ref) === ""))
     return refusal3(
       "OBS_PRESENT_NO_REFERENT",
-      `a PRESENT observation under authority '${authorityKind}' names nothing it found. PRESENT asserts the subject IS there, so the row must point at what was produced (the capture_sha, the content id, the entity) -- a revisit that omits its referent loses which subject the bytes came from, which is the WARC lesson this refusal carries`
+      `a PRESENT observation under authority '${authorityKind}' names nothing it found. PRESENT asserts the subject IS there, so the row must point at what was produced (the capture_sha, the content id, the entity, or for a rollup the observation that makes it PRESENT) -- a revisit that omits its referent loses which subject the bytes came from, which is the WARC lesson this refusal carries`
     );
+  if (resultKind === "observation") {
+    const fault = observationReferentFault(e, referent);
+    if (fault)
+      return refusal3(
+        "OBS_PRESENT_NO_REFERENT",
+        `this row's referent is observation '${e.result_ref == null ? "(absent)" : String(e.result_ref)}' and it does not back the row: ${OBSERVATION_REFERENT_FAULTS[fault]} (OBSERVATION-LOG-DESIGN.md section 3, the rollup ruling)`,
+        { referent_fault: fault }
+      );
+  }
   const badCondition = checkCondition(condition, conditionKinds);
   if (badCondition) return badCondition;
   return null;
@@ -54209,7 +54255,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       detail,
       bundle
     };
-    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS);
+    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));
     if (bad) return bad;
     const now = at || (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
     this.sql.exec(
@@ -54235,6 +54281,32 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       entry.detail == null ? null : String(entry.detail)
     );
     return null;
+  }
+  /** REC-100 / IC-130 — RESOLVE AN `observation` REFERENT FOR THE CHECKER, and
+   *  decide nothing. `checkObservation` in `airun.mjs` is pure and holds the
+   *  whole judgement (`observationReferentFault`); this reads the one row the
+   *  referent names plus the `seq` the new row will take, so the checker can say
+   *  which of the four faults it is. Any other `result_kind` resolves nothing
+   *  and costs no read. A referent that is not a positive integer is answered
+   *  `found: false` WITHOUT a query — it cannot name a row. */
+  #observationReferent(entry) {
+    if (!entry || entry.result_kind !== "observation") return null;
+    const ref = entry.result_ref == null ? "" : String(entry.result_ref);
+    const top = this.#one(`SELECT MAX(seq) m FROM observation_log`);
+    const next_seq = (top && top.m != null ? Number(top.m) : 0) + 1;
+    if (!/^[1-9][0-9]*$/.test(ref)) return { found: false, seq: null, next_seq };
+    const row = this.#one(
+      `SELECT seq, authority_kind, authority, state FROM observation_log WHERE seq = ?`,
+      Number(ref)
+    );
+    return row ? {
+      found: true,
+      seq: String(row.seq),
+      next_seq,
+      authority_kind: row.authority_kind,
+      authority: row.authority,
+      state: row.state
+    } : { found: false, seq: null, next_seq };
   }
   /** REC-94 / IC-95 — THE CONTENT-LEVEL WRITER. `OBSERVATION-LOG-DESIGN.md`
    *  section 4.2, and section 8's row 2.
@@ -55540,8 +55612,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  ITS BEHAVIOUR DID NOT CHANGE AND THAT IS ASSERTED RATHER THAN CLAIMED:
    *  every entry that was accepted before this landing is accepted now, the
    *  refusal object comes back in the same shape, and `op=airunlog` answers
-   *  byte-identically over rows written before the fold. C-22.10 deliberately
-   *  does not fire on `run` for exactly this reason — see its catalogue row. */
+   *  byte-identically over rows written before the fold. C-22.10 did not fire
+   *  on `run` for exactly this reason UNTIL REC-100 (2026-09-18, IC-130): the
+   *  rollup ruling gave the run's two rollup writers a referent, and a bare
+   *  `run` PRESENT is now refused here like any other — see its catalogue row. */
   #aiRunAppend(run, entry, at, terminal = 0, actor = null) {
     return this.#observe({
       actorClass: "machine",
@@ -55600,15 +55674,31 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  NEVER_LOOKED both become LOOKED_INDETERMINATE on a bounded stop. PRESENT
    *  survives, because a document the run did hold does not stop existing
    *  because the run ran out of time afterwards. */
+  /*  REC-100 / IC-130 — AND THE ROLLUP'S REFERENT COMES OUT OF THE SAME READ.
+   *  `OBSERVATION-LOG-DESIGN.md` §3, RULED 2026-09-18 by BOB #14: a rollup's
+   *  PRESENT carries `result_kind = observation` and `result_ref` = the `seq` of
+   *  the LATEST non-terminal PRESENT row of this run, computed HERE and never
+   *  supplied by a caller. So this returns `{ state, result_kind, result_ref }`
+   *  and both rollup writers (`#aiRunTerminate`, `#aiRunWake`) spread it, rather
+   *  than each deriving the pointer beside a state derived elsewhere.
+   *
+   *  THE INVARIANT THE RULING RESTS ON, and it is structural rather than
+   *  checked: `state` is PRESENT exactly when the grouped read returned a PRESENT
+   *  group, and that group's `MAX(seq)` IS the referent — one row of one query,
+   *  so there is no second read for the two to disagree across. The bound
+   *  override below only ever turns LOOKED_ABSENT / NEVER_LOOKED into
+   *  LOOKED_INDETERMINATE and never produces or removes PRESENT. A rollup that
+   *  is not PRESENT owes no referent and carries none. */
   #aiRunSearchState(run, stoppedByBound) {
-    const seen = new Set(this.#rows(
-      `SELECT DISTINCT state FROM observation_log
-        WHERE authority_kind = 'run' AND authority = ? AND terminal = 0`,
+    const latest = new Map(this.#rows(
+      `SELECT state, MAX(seq) seq FROM observation_log
+        WHERE authority_kind = 'run' AND authority = ? AND terminal = 0
+        GROUP BY state`,
       run
-    ).map((r) => r.state));
-    let s = seen.has("PRESENT") ? "PRESENT" : seen.has("partial") ? "partial" : seen.has("LOOKED_INDETERMINATE") ? "LOOKED_INDETERMINATE" : seen.has("LOOKED_ABSENT") ? "LOOKED_ABSENT" : "NEVER_LOOKED";
+    ).map((r) => [r.state, r.seq]));
+    let s = latest.has("PRESENT") ? "PRESENT" : latest.has("partial") ? "partial" : latest.has("LOOKED_INDETERMINATE") ? "LOOKED_INDETERMINATE" : latest.has("LOOKED_ABSENT") ? "LOOKED_ABSENT" : "NEVER_LOOKED";
     if (stoppedByBound && (s === "LOOKED_ABSENT" || s === "NEVER_LOOKED")) s = "LOOKED_INDETERMINATE";
-    return s;
+    return s === "PRESENT" ? { state: s, result_kind: "observation", result_ref: String(latest.get("PRESENT")) } : { state: s, result_kind: null, result_ref: null };
   }
   /** THE ONE EXIT. Every ending goes through here, and the terminal log entry
    *  is written in the same transaction as the status change.
@@ -55656,7 +55746,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     const badCondition = checkCondition(condition, QUEUE_CONDITION_KINDS);
     if (badCondition) return { run, found: true, terminated: false, ...badCondition };
     const stoppedByBound = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, bound);
-    const state = this.#aiRunSearchState(run, stoppedByBound);
+    const rollup = this.#aiRunSearchState(run, stoppedByBound);
+    const state = rollup.state;
     const last = this.#one(
       `SELECT level FROM observation_log
         WHERE authority_kind = 'run' AND authority = ? AND terminal = 0
@@ -55667,7 +55758,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       const bad = this.#aiRunAppend(run, {
         level: last ? last.level : "document",
         subject: row.context_id,
-        state,
+        /* `state`, `result_kind`, `result_ref` — the rollup and its referent
+           from ONE read (REC-100; see `#aiRunSearchState`). */
+        ...rollup,
         governed: false,
         condition,
         bound,
@@ -56229,7 +56322,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         const refusal7 = this.#aiRunAppend(r.run, {
           level: "internet",
           subject: r.context_id,
-          state: this.#aiRunSearchState(r.run, false),
+          /* The rollup AND its `observation` referent (REC-100, IC-130): a wake
+             entry is a rollup like the terminal one, so it points at the latest
+             PRESENT look it restates, computed in the same read. */
+          ...this.#aiRunSearchState(r.run, false),
           governed: false,
           detail: `the daemon answered ${done.length} capture request(s) this run was waiting on (${captured} captured, ${refused} refused). The run is resumable: its own log carries what each request established, and \xA714b.7's resumed run reads it and continues rather than restarting`
         }, iso2, 0);
@@ -56790,6 +56886,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       run,
       cap + 1
     );
+    const ordinal = new Map(page.slice(0, cap).map((e, i) => [String(e.seq), i + 1]));
     const entries = page.slice(0, cap).map((e, i) => ({
       ...e,
       seq: i + 1,
@@ -56799,7 +56896,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          a key that serialises away is the absence-with-two-causes this
          whole item is about, one layer down. */
       result_kind: e.result_kind ?? null,
-      result_ref: e.result_ref ?? null,
+      result_ref: e.result_kind === "observation" && ordinal.has(String(e.result_ref)) ? String(ordinal.get(String(e.result_ref))) : e.result_ref ?? null,
       coverage: observationCoverage({ state: e.state, resultRef: e.result_ref })
     }));
     return {

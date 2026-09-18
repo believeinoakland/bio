@@ -217,9 +217,9 @@ const ARMS = {
             + "exactly the point: this defect is invisible to all of them, which is why it needs "
             + "an arm of its own rather than trusting the successful path to reveal it",
     patch: () => arm(STORE,
-      "    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS);",
+      "    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));",
       "    if (entry.level === \"meaning\" && entry.state === \"LOOKED_ABSENT\") return null;\n"
-      + "    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS);"),
+      + "    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));"),
   },
 
   /* §5.1's ORDER AT THIS LEVEL. REC-94 shipped exactly this collapse at the

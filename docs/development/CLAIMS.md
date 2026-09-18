@@ -10966,9 +10966,33 @@ composer and the refusal have never met.
 
 **NOT EDITED BY THIS ITEM.** `agent-worker/**` is outside RECORD's claim and REC-100 read it only.
 
-**open as of 2026-09-16** — raised today by REC-100 and NOT yet discharged.
+Raised 2026-09-16 by REC-100 (it stayed open until the DISCHARGED line below, 2026-09-18).
 
-**STILL OPEN as of 2026-09-17, RE-AFFIRMED by REC-113 rather than left to be inferred from silence.** REC-113 landed the OTHER half of D-366 — `op=airunlog` now projects `result_kind` / `result_ref` and STATES each row's coverage claim (IC-116 on I3, additive) — and **deliberately did not open `agent-worker/**`**, which is outside RECORD's claim. Nothing in this delegation is discharged by that landing and its urgency is UNCHANGED: `stepLog` still composes no referent field, the four mocks still accept any entry, and the contract arm this block asks for still does not exist. **One thing REC-113 measured that sharpens it:** `agent-worker/src/index.mjs` (~326–340) is a live consumer of `op=airunlog` and reads `entries` for its LENGTH only, so IC-116's added keys are transparent to it and this landing required no change there — but that is a fact about the READ, and it says nothing about the WRITE side this block is about. **Recorded by CONDUCT #1 at integration because M0-37's own arm, which landed hours earlier, FAILED this block by name on its first live encounter** — the delegation arrived through a merge carrying neither a DISCHARGED line nor an `open as of` line, which is exactly the silence that arm exists to refuse. It is the instrument working on the day it shipped, on a block written by a worker who could not have known the rule had changed under it.
+**URGENT AS OF 2026-09-18, and the reason changed from prospective to live: REC-100 DELETED THE
+CARVE-OUT (IC-130, D-366 closed).** A `stepLog` entry whose model-judged `observed` is `PRESENT`
+now reaches `op=airuntick` with no `result_ref` and is REFUSED in `refused[]` with
+`OBS_PRESENT_NO_REFERENT` (C-22.10). **`agent-worker/src/index.mjs` does not read `refused[]`** —
+it tests `status === 200 && body.ok === true` and counts the step as logged — so the step's
+PRESENT is SILENTLY ABSENT from the run's log and the run's rollup reads whatever the remaining
+rows support. The tick still succeeds (budget spent, lease extended), so nothing visibly breaks.
+**The act is unchanged and is agent-worker's:** `stepLog` supplies the referent of what the model
+judged PRESENT (the capture or content it found), or does not compose PRESENT at all (§4.4's
+individual-look rule); and the harness reads `refused[]` rather than inferring success from the
+status. A contract arm that runs `stepLog`'s output through the real `checkObservation` is still
+the cheap way to make the mocks stop hiding this. (Open at that moment; DISCHARGED below the same day.)
+
+**DISCHARGED 2026-09-18 by the REC-100 worker, under CONDUCT #4's authorization to widen REC-100's
+claim into FLEET's `agent-worker/**` (the addendum on REC-100's claim).** Both halves of the act:
+(1) `stepLog` no longer composes a PRESENT it cannot back — a model-judged PRESENT is recorded
+`LOOKED_INDETERMINATE` with the judgement stated verbatim in `detail`, and never with a referent this
+member invented; the reasoning (why neither referent form is available honestly) is at the site.
+(2) the drive loop READS `refused[]`: every refused entry is published in `log_refused` and in
+`refusals` in the plane's words, and `logged` counts only what the plane APPENDED — which closes the
+CLASS (any per-entry refusal), not only this instance. And the blindness is closed: section R of
+`agent-worker/test/harness.test.mjs` sends the tick to the REAL plane under miniflare instead of a mock,
+with a negative control per half (`aw-steplog`, `aw-refused` in `bio-plane/test/nc-rec100.mjs`).
+
+**RE-AFFIRMED 2026-09-17 by REC-113 rather than left to be inferred from silence (it was still open then; DISCHARGED 2026-09-18).** REC-113 landed the OTHER half of D-366 — `op=airunlog` now projects `result_kind` / `result_ref` and STATES each row's coverage claim (IC-116 on I3, additive) — and **deliberately did not open `agent-worker/**`**, which is outside RECORD's claim. Nothing in this delegation is discharged by that landing and its urgency is UNCHANGED: `stepLog` still composes no referent field, the four mocks still accept any entry, and the contract arm this block asks for still does not exist. **One thing REC-113 measured that sharpens it:** `agent-worker/src/index.mjs` (~326–340) is a live consumer of `op=airunlog` and reads `entries` for its LENGTH only, so IC-116's added keys are transparent to it and this landing required no change there — but that is a fact about the READ, and it says nothing about the WRITE side this block is about. **Recorded by CONDUCT #1 at integration because M0-37's own arm, which landed hours earlier, FAILED this block by name on its first live encounter** — the delegation arrived through a merge carrying neither a DISCHARGED line nor an `open as of` line, which is exactly the silence that arm exists to refuse. It is the instrument working on the day it shipped, on a block written by a worker who could not have known the rule had changed under it.
 
 ### FINDING 2026-09-16 RECORD (REC-100) — **THE ITEM DID NOT WIDEN THE CHECK, AND EVERY PRECONDITION ITS OWN ROW NAMED WAS WRONG**
 Recorded here as well as in the report, because a finding left in a report reaches one reader.
@@ -13267,3 +13291,53 @@ and a baseline, ALL AS DECLARED, every restore byte-identical (`src/pdfstructure
 The table probe: `node test/table-recognition.probe.mjs --runs 5` from `pdf-worker/` — **NO-GO** (M-55). IDs minted
 with `tools/mintid.mjs`: M-55, D-419, D-420. `bio-plane/src/index.mjs` was NOT edited, so nothing here needs
 sequencing against CPDF-19's moved tier-3 code.
+## CLAIM 2026-09-18 RECORD (REC-100 — the ROLLUP referent BUILT: D-366's ruling, C-22.10's `run` carve-out deleted)
+
+Worker `agent-a249f66820def3efd`, spawned by CONDUCT #4, branch `worktree-agent-a249f66820def3efd`.
+IC-130 on I3 minted with `node tools/mintid.mjs IC` BEFORE building. Paths, and within the two shared
+plane files ONLY the ai-run / observation regions named (REC-104, REC-120 and REC-87 are concurrently
+in `store.mjs`):
+  - `bio-plane/src/store.mjs` — `#observe`, `#aiRunSearchState`, `#aiRunTerminate`, `#aiRunWake` only.
+  - `bio-plane/src/airun.mjs` — `checkObservation`'s C-22.10 arm and the coverage note beside it.
+  - `bio-plane/checks/bio-checks.mjs` — the `OBS_PRESENT_NO_REFERENT` row only.
+  - `bio-plane/test/observation-log.test.mjs`, `bio-plane/test/airun.test.mjs`, and any suite whose
+    FIXTURE ticks a bare `run` PRESENT (corrected, never exempted); `bio-plane/dist/**` if the bundle
+    pin requires the rebuild.
+  - `docs/development/INTERFACE-CHANGES.md` (IC-130 appended), `docs/development/DEBT.md` (D-366's
+    row), `docs/development/OBSERVATION-LOG-DESIGN.md` (front matter), `docs/DECIDED.md` (regenerated).
+**NOT** `agent-worker/**` (its `stepLog` half stays with REC-100's 2026-09-16 DELEGATION),
+**NOT** `docs/development/QUEUE.md`, **NOT** `INTERFACES.md` (the I3 version is CONDUCT's at
+resolution), no version bump, no tag, no deploy.
+- **AMENDED while building, each for a stated reason rather than taken silently:**
+  `bio-plane/src/schema.mjs` — ONE `--` comment on `observation_log.result_kind` (gains
+  `observation`), no semicolon, no backtick; `bio-plane/test/scheduler.test.mjs` — one assertion,
+  the only battery arm that drives the WAKE writer; `bio-plane/test/nc-rec95.mjs` — its anchor on
+  `#observe`'s call line, which gained a third argument; `bio-plane/test/nc-rec93.mjs` — its
+  `overstrict` arm RETIRED (its anchor, the carve-out, is gone); `bio-plane/test/nc-rec100.mjs` —
+  this item's control driver; `.gitignore` — one line for its pen `.rec100-control-pristine/`.
+  `bio-plane/test/bounds.test.mjs` and `bio-plane/test/meaning-bounds.test.mjs` — each one REC-70
+  fixture that ticked bare `run` PRESENT rows (found by this item's first full battery, 224/226);
+  each now names a referent, CORRECTED with its reason, never exempted.
+
+released: 2026-09-18 by the REC-100 worker. Every claimed path is committed on branch `worktree-agent-a249f66820def3efd`. **BOB #14's rollup ruling is BUILT and D-366 is CLOSED** (IC-130 on I3, PROPOSED MAJOR — the brief said additive; `op=airuntick` now refuses a bare `run` PRESENT it accepted, which this file's precedent classes a break). The falsifier was re-verified at the code BEFORE building and is pinned (K0). Battery: baseline 226/226 · 14,109; code tree 225/226 · 14,126 with the one red `strandedwork` = `plancheck --local` failing on DECIDED.md drift from a docs edit, regenerated here and re-run on the final tree (the report quotes that line). `coverage --strict` exit 0 (unpiped). `node test/nc-rec100.mjs`: nine arms + baseline both ends, EVERY ARM AS DECLARED after three first-run findings about the arms and the suite, each recorded at the site. The `agent-worker` DELEGATION above stays OPEN and is now URGENT — it is agent-worker's act, not this claim's.
+
+### ADDENDUM 2026-09-18 RECORD (REC-100) — THE CLAIM IS RE-OPENED AND WIDENED INTO `agent-worker/**`, AUTHORIZED BY CONDUCT #4
+
+**The owner of `agent-worker/**` is FLEET; this widening is CONDUCT #4's authorization, not RECORD's
+reach.** CONDUCT #4 accepted IC-130 as MAJOR and declined to merge REC-100 alone: a `main` that could
+be deployed while agent-worker silently drops PRESENT steps is the record losing entries with no trace.
+So the IC protocol's MIGRATION step for this breaking change — the consumer's half — is done here, on
+this branch, by this worker. Paths added:
+  - `agent-worker/src/harness.mjs` — `stepLog` only (and the note/constant beside it).
+  - `agent-worker/src/index.mjs` — the `op=airuntick` site in the drive loop, and the two published
+    fields (`log_refused`, `present_unbacked`).
+  - `agent-worker/test/harness.test.mjs` — one arm in A8 and a new section R.
+  - `agent-worker/dist/**` — the committed bundle, rebuilt (FL-9's guard requires it).
+  - `bio-plane/test/nc-rec100.mjs` — two arms added (`aw-steplog`, `aw-refused`).
+  - `agent-worker/test/harness.control.mjs` — arm H6's anchor MOVED with the line it quotes (found by
+    `m025-arm-anchor-witness` A4 on the first full battery; H6 re-run AS DECLARED).
+NOT touched in FLEET's area: the version (`agent-worker/package.json`), `wrangler.jsonc`, every other
+suite. The rebase onto `origin/main` at `2d51e5d3` happened FIRST, and every figure below is off the
+rebased tree.
+
+released: 2026-09-18 by the REC-100 worker — the consumer migration is BUILT and committed on `worktree-agent-a249f66820def3efd` (rebased onto `2d51e5d3` first). `stepLog` records a model-judged PRESENT as `LOOKED_INDETERMINATE` with the judgement stated; the drive loop reads `refused[]` and publishes `log_refused` / `present_unbacked`; section R drives the tick against the REAL plane. Controls `aw-steplog` and `aw-refused` AS DECLARED (the second after a first-run finding about the arm and R2b, recorded at both sites). REC-100's 2026-09-16 DELEGATION is DISCHARGED above.

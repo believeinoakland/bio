@@ -750,8 +750,13 @@ const R70_RUN = "RUN-2026-0807-bounds70";
     bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 });
   if (opened?.started !== true) throw new Error(`REC-70 fixture airunopen: ${JSON.stringify(opened)}`);
   const ticked = await POST(`op=airuntick&token=mem-r57`, { run: R70_RUN, leaseMs: 600000,
+    /* `result_kind` / `result_ref` added 2026-09-18 by REC-100 (IC-130), a
+       correction and not an exemption: C-22.10's `run` carve-out is deleted, so
+       a bare `run` PRESENT is refused and this fixture's three rows would not
+       land. The fixture's subject — a log long enough to be cut — is unchanged. */
     log: [1, 2, 3].map((i) => ({ level: "document", subject: `observation:r70-${i}`,
-      state: "PRESENT", detail: `REC-70 fixture observation ${i}` })) });
+      state: "PRESENT", result_kind: "capture", result_ref: String(i).repeat(64),
+      detail: `REC-70 fixture observation ${i}` })) });
   if (ticked?.ticked !== true) throw new Error(`REC-70 fixture airuntick: ${JSON.stringify(ticked)}`);
 }
 /* REC-93 / IC-92, 2026-09-14 — THE FRONTIER'S OWN FIXTURE, AND IT IS HERE

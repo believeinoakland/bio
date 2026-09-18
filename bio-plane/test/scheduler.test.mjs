@@ -514,6 +514,21 @@ const FAST = 1_000_000, SLOW = 2_500_000;   // far larger than the test's wall-t
        is the one that matters, rather than in the shape the column holds. */
     t("the wake entry is at the internet level, ungoverned, non-terminal, and states what the SEARCH established",
       [wl?.level, wl?.governed, wl?.terminal, wl?.state], ["internet", false, false, "PRESENT"]);
+    /* REC-100 / IC-130 — THE WAKE ENTRY IS A ROLLUP, and since the rollup ruling
+       (OBSERVATION-LOG-DESIGN.md §3) its PRESENT carries an `observation`
+       referent: the run's latest PRESENT look, computed by the plane in the same
+       read as the state. This is the ONE arm in the battery that drives the wake
+       writer (`#aiRunWake`) — with C-22.10's `run` carve-out deleted, a wake
+       whose rollup carried no referent would be refused and `woken` above would
+       read false. The referent is published in THIS op's own per-run `seq`. */
+    {
+      const capLook = ((await logOf()).entries || [])
+        .find((e) => e.result_kind === "capture" && e.state === "PRESENT");
+      t("REC-100: the wake entry's rollup PRESENT names the capture look it restates — an `observation` "
+        + "referent, by op=airunlog's own seq, and it reads `backed`",
+        [wl?.result_kind, wl?.result_ref, wl?.coverage, typeof capLook?.seq],
+        ["observation", String(capLook?.seq), "backed", "number"]);
+    }
     t("the completed request is stamped with WHEN the run was told; the outstanding one is not",
       [typeof (await reqOf(rqA.request)).run_woken_at, (await reqOf(rqH.request)).run_woken_at],
       ["string", null]);
