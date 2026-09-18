@@ -16468,7 +16468,11 @@ by `content-chain-kind.test.mjs` §3.
   reading the output and corrected before any figure here was taken.
 - **Committed fixture, inside workerd:** `content-arm.test.mjs` §11 digests every `content:` answer at both
   grains over 33 questions. `nc-rec104.mjs` ran it on this tree twice (A/A: IDENTICAL) and on `92f4c64e`'s
-  three plane sources (`preitem`): **`6149db2c47c99778…` on all three runs.**
+  three plane sources (`preitem`): **`6149db2c47c99778…` on all three runs.** The branch was then rebased
+  onto `694f0a7f` (FW-19 had landed three new extent kinds and a `cited_as` column on the same table), the
+  harness re-pinned to that base and re-run whole: 38 questions, **`2e4796eb93c347d9…` on all three runs**,
+  every other arm as declared. The timings above were taken on the `92f4c64e` base; `query.mjs` — the
+  only source that decides the compiled statement — is unchanged between the two bases.
 
 ### WHAT THIS INSTRUMENT CANNOT SEE
 

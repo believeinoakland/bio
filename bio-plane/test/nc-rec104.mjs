@@ -50,7 +50,7 @@ mkdirSync(SAFE, { recursive: true });
 /* THE COMMIT THIS ITEM WAS BUILT ON. Pinned, never `origin/main`: a moving ref
    would make `preitem` measure whatever landed since, and the digest comparison
    would stop being about this item. */
-const PRE_ITEM = "92f4c64e009aef1ce5e466eee5332a47fa06b8a1";
+const PRE_ITEM = "694f0a7fc53ca550624a308d01864a5ae18e0e28";
 
 const STORE = join(PLANE, "src/store.mjs");
 const QUERY = join(PLANE, "src/query.mjs");

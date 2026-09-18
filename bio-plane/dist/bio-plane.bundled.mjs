@@ -2981,7 +2981,8 @@ CREATE TABLE IF NOT EXISTS content (
   minted_by      TEXT NOT NULL,     -- a member id, 'plane', or a machine credential (5.7, DEC-24 rule 3)
   at             TEXT NOT NULL,
   stale          INTEGER NOT NULL DEFAULT 0, -- the capture's chain moved since mint. The row and its edges still resolve
-  cited_as       TEXT    NOT NULL DEFAULT 'text'  -- FW-19 / IC-125: text | bytes. bytes = an image cited as itself, so chain and cap are NULL by meaning and never undetermined
+  cited_as       TEXT    NOT NULL DEFAULT 'text', -- FW-19 / IC-125: text | bytes. bytes = an image cited as itself, so chain and cap are NULL by meaning and never undetermined
+  chain_kind     TEXT GENERATED ALWAYS AS (json_extract(chain, '$[#-1].step')) VIRTUAL  -- REC-104. the LAST step kind of chain, derived by the engine and never written. See the index block below
 );
 -- The two reads this table exists to answer, and neither may be a scan. By
 -- CAPTURE: which passages of this document has anybody cited (the content axis
@@ -3026,16 +3027,29 @@ CREATE INDEX IF NOT EXISTS content_extent_kind ON content(extent_kind, bundle_id
 CREATE INDEX IF NOT EXISTS content_stale ON content(stale, bundle_id);
 CREATE INDEX IF NOT EXISTS content_minted_by ON content(minted_by, bundle_id);
 CREATE INDEX IF NOT EXISTS content_derivation_cap ON content(derivation_cap, bundle_id);
--- NO INDEX FOR content:chain, AND IT IS A STATED GAP RATHER THAN AN OMISSION.
--- The arm filters on the chain's LAST STEP and this column holds the WHOLE chain
--- as JSON, so the predicate is json_extract(chain, ...) -- an expression, which no
--- ordinary index can serve. It is the SLOWEST single-column filter on this table
--- (8.579 ms against 2.3-5.4 for the others, and it does not improve). Section 4.1
--- of the design gives capture_text a chain_kind COLUMN for exactly this predicate,
--- in its own words so that every OCRd unit is a predicate and not a parse -- and
--- section 4.2 asks the same question of content without giving it the same column.
--- REPORTED AS A DESIGN GAP by REC-90, which does not own the mint path that would
--- write such a column.
+-- REC-104 -- content:chain ANSWERS OFF A COLUMN, AND THE READ-TIME PARSE IS RETIRED.
+-- Until REC-104 the chain filter compiled to a JSON parse of the whole chain on
+-- every row it looked at -- an expression no ordinary index can serve, and the
+-- SLOWEST single-column filter on this table (M-23). REC-90 reported it as a
+-- DESIGN GAP against section 4.2, because section 4.1 gives capture_text a
+-- chain_kind COLUMN for the identical question. REC-104 gives content the same.
+--
+-- IT IS A GENERATED COLUMN, AND THAT IS THE DECISION RATHER THAN A DETAIL. The
+-- row asked that a stale chain_kind be impossible by construction or refused by
+-- name, and a generated column is the first: the engine computes it from chain
+-- in the same statement that writes chain, an INSERT or UPDATE that names it is
+-- REFUSED by SQLite itself, and there is ONE definition of the last step in the
+-- whole plane -- the expression on the column line above. A plain column written
+-- by mintContent would have needed a second definition in JS, a backfill that is
+-- a third, and a promise that no later writer forgets it. VIRTUAL rather than
+-- STORED because SQLite cannot ADD a STORED column to an existing table, and a
+-- fresh store and a migrated one must have the same shape (store.mjs #migrate
+-- adds it to a table created before REC-104, reading THIS line to do so). The
+-- index below stores the value, so the filter seeks it and parses nothing at read.
+--
+-- undetermined STAYS ON chain (chain IS NULL): it asks whether the record holds
+-- a chain AT ALL, which is not the same question as a chain with no last step.
+CREATE INDEX IF NOT EXISTS content_chain_kind ON content(chain_kind, bundle_id);
 -- =========================================================================
 
 -- =========================================================================
@@ -23037,25 +23051,26 @@ var MEANING = {
         pred: (cmp, v) => v === "UNDETERMINED" ? { sql: `derivation_cap IS NULL`, args: [] } : null
       },
       /* THE LAST STEP OF THE CHAIN — "every OCR'd region below cap C" is §1's
-         own example and this is its first half. THE COLUMN HOLDS THE WHOLE
-         CHAIN AS JSON and there is no column holding the last step's kind, so
-         this is a READ-TIME PARSE and it is therefore UNINDEXABLE. That is a
-         measured cost recorded in `MEASUREMENTS.md` and a stated DESIGN GAP
-         against §4.2, not a silent choice: §4.1 gives `capture_text` a
-         `chain_kind` COLUMN for exactly this predicate and says why ("so 'every
-         OCR'd unit' is a predicate and not a parse"), and §4.2 asks the same
-         question of `content` without giving it the same column. The column is
-         owed; this item does not own the mint path that would write it.
-         `chain:undetermined` is `IS NULL` for `cap`'s reason — the record holds
-         no chain for that row and says so instead of guessing a step. */
+         own example and this is its first half. REC-104: IT READS THE
+         `chain_kind` COLUMN, and the read-time JSON parse it replaced is RETIRED
+         rather than kept beside it. Until REC-104 this compiled to a parse of the
+         whole chain per row — unindexable, the slowest filter on the table
+         (M-23), and REC-90's stated DESIGN GAP against §4.2, since §4.1 gives
+         `capture_text` a `chain_kind` column for the identical question.
+         `chain_kind` is a GENERATED column over `chain` (schema.mjs says why), so
+         it cannot disagree with the chain it describes.
+         ONLY TWO VALUES KEEP A PREDICATE OF THEIR OWN, each for a reason:
+         `chain:undetermined` is `chain IS NULL` — the record holds NO chain, a
+         different fact from a chain with no last step, so it stays on the
+         question it always asked (and `cap`'s reason: say so, never guess a
+         step); and presence is `chain_kind IS NOT NULL`, exactly the pre-item
+         meaning, where the ordinary arm would add `<> ''`. Every comparison
+         falls to the ordinary `chain_kind <cmp> ?`. */
       chain: {
-        col: "chain",
+        col: "chain_kind",
         case: "lower",
         vocab: Object.keys(STEP_KINDS),
-        pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL`, args: [] } : {
-          sql: `json_extract(chain, '$[#-1].step') ${cmp === "present" ? "IS NOT NULL" : `${cmp} ?`}`,
-          args: cmp === "present" ? [] : [v]
-        }
+        pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL`, args: [] } : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : null
       },
       /* DEC-24 — THE MACHINE DOES THE LOOKING, THE MEMBER DOES THE CONCLUDING.
          A content row is an ADDRESS; it becomes part of a finding only when a
@@ -23098,7 +23113,8 @@ var MEANING = {
        says "cited or citable, and it says which", and without this column a
        reader would have to ask a second op per row to tell which. */
     rowComputed: {
-      chain_last: `json_extract(m.chain, '$[#-1].step')`,
+      /* REC-104: off the same column the filter reads — one answer, not two. */
+      chain_last: `m.chain_kind`,
       cited: citedExists("m")
     },
     identity: ["content_id"],
@@ -25465,6 +25481,14 @@ var Store = class _Store extends DurableObject {
       const cols = [...this.sql.exec(`PRAGMA table_info(published_bundles)`)].map((r) => r.name);
       if (cols.length && !cols.includes("edition"))
         this.sql.exec(`ALTER TABLE published_bundles RENAME TO published_bundles_preeditions`);
+    }
+    {
+      const have = [...this.sql.exec(`PRAGMA table_xinfo(content)`)].map((r) => r.name);
+      if (have.length && !have.includes("chain_kind")) {
+        const stmt = bare.split(";").map((x) => x.trim()).find((x) => x.startsWith("CREATE TABLE IF NOT EXISTS content ("));
+        const col = stmt && stmt.split("\n").map((l) => l.replace(/--.*$/, "").trim()).find((l) => /^chain_kind\s/.test(l));
+        if (col) this.sql.exec(`ALTER TABLE content ADD COLUMN ${col.replace(/,$/, "")}`);
+      }
     }
     for (const s of bare.split(";")) {
       const t = s.trim();

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1064 rulings across 84 documents.
+1066 rulings across 84 documents.
 
 ## DEC-
 
@@ -633,7 +633,7 @@ authority is the file named, never this one.
 - **IC-25** · 2026-08-07 — under `IC-25` (SETTLED, I3 → 10.0.0). (b) The line numbers are stale by about three thousand lines — the real sites are `resolutionsForCapture` **:14113**, `documentsConcerning` **:14141**, `connectionsFor` **:14454** (`store.mjs` is 31,349 lines). The row beneath it, `D-222's staging and D-225's caps →…  
   `docs/development/CLAIMS.md:8022`
 - **IC-25** · 2026-09-14 — the interface change is `IC-25`, SETTLED** (I3 8.1.0 → 9.0.0 → 10.0.0 — recorded as a BREAK, not additive, because a caller that received everything now receives the first 500).  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:396`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:389`
 - **IC-25** · 2026-08-07 — ounds.test.mjs`'s roster (`op=resolutions`, `op=concerns`, `op=connections`, each with `&limit=`), and `IC-25` on I3 is SETTLED (8.1.0 → 9.0.0 → 10.0.0, recorded by CONDUCT 2026-08-07).  
   `docs/development/DEBT.md:185`
 - **IC-25** — One test pins the exact sorted leg key set (`suggest.test.mjs`); it is CORRECTED, not loosened. **SO THE ROW'S PREMISE WAS RIGHT ABOUT THE CONSUMERS AND WRONG ABOUT THE IMPACT: both consumers are real and neither reads the field that moves.** It is breaking anyway, on IC-25's rule and on  
@@ -975,19 +975,19 @@ authority is the file named, never this one.
 - **REC-88** · 2026-09-15 — CORRECTED 2026-09-15 by REC-88 (IC-96), because that last clause was ASPIRATIONAL WHEN IT WAS WRITTEN AND IS NOW TRUE.** `captureBound` had ZERO callers under `src/` when this sentence was drafted (D-349, measured by REC-83 the day after), so the bound it names was computed by nothing and a leg citing a document…  
   `docs/development/INTERFACE-CHANGES.md:6047`
 - **REC-89** · 2026-09-14 — SATISFIED ALREADY, CORRECTED 2026-09-14 (REC-89): the caps LANDED at REC-60 on 2026-08-07** — `resolutionsForCapture`, `documentsConcerning` and `connectionsFor` clamp to 500/5000 and publish `limit` after clamping beside `truncated`, `IC-25` on I3 is SETTLED, and all three are driven on `bounds.test.mjs`'s roster.  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:114`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:105`
 - **REC-91** · 2026-09-16 — CORRECTED 2026-09-16 by BOB #12 — §4.3 WAS WRONG IN THREE INDEPENDENT WAYS and REC-91 found all three by BUILDING it.** The per-capture bound was MIS-SITED (it sits downstream of `INLINE_MAX`, which refuses the whole promotion first, so it could never fire); its headline claim that it *admits 100 % of the measured…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:3`
 - **REC-91** · 2026-09-16 — CORRECTED 2026-09-16 by BOB #12, folding what REC-91 BUILT AND MEASURED rather than restating what this section said — the document follows the code here, and the code follows the design decision, in that order.  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:180`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:173`
 - **REC-91** · 2026-09-16 — 2026-09-16 · BOB #12 · §4.3 CORRECTED — ONE ITEM OWED, and the correction itself is LANDED so nothing waits on you to read it.** `CONTENT-SEARCH-DESIGN.md` §4.3's per-capture bound was wrong in THREE independent ways; REC-91 found all three by BUILDING it, and BOB-NEXT §1 carried only two.  
   `docs/development/QUEUE.md:269`
 - **REC-92** — NOT moved, and an index was WITHDRAWN instead.** `capture_text(chain_kind)` was declared for "every OCR'd unit", the sweep named it on the roster of access paths no op asks for, and it was RIGHT: the reader is REC-92's `passage:` arm and it does not exist.  
   `docs/development/CLAIMS.md:10328`
 - **REC-92** · 2026-09-17 — AMENDED 2026-09-17 by REC-92 — §7 row 5 IS BUILT, and the amendment changes what §4.4 SPECIFIES rather than only recording that something shipped.** The `passage:` arm and `rows=passage` landed under `IC-110` on I3, ADDITIVE: `snippet()`, the `content_id` as a scalar subquery, `truncated` and `seq` per unit,…  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:11`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:13`
 - **REC-92** · 2026-09-17 — CORRECTED 2026-09-17 by REC-92, folding what it BUILT AND MEASURED — three of this section's four sentences were right and the shape it specifies could not be shipped as written.** Every `passage:` answer's envelope carries, beside `limit`/`total`/`truncated`:  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:307`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:300`
 - **REC-92** · 2026-09-17 — TWO CONTROL DECLARATIONS WERE WRONG AND WERE CORRECTED AT THE ARM RATHER THAN SMOOTHED, and one of them is the more valuable finding: `withhold` was declared must-not-fail and FAILED, because S24 pins the very property the arm removes — and its FIRST RUN reported only 3 failures BECAUSE THE SUITE DIED AT SECTION 4…  
   `docs/development/QUEUE.md:1444`
 - **REC-92** · 2026-09-14 — SHARED VOCABULARY, RULED 2026-09-14 by CONDUCT #11 at BOB #11's raising — and it is a MECHANISM, not a convention.** REC-92 (the `passage:` arm's `scope` tally), REC-94 (the content-level writers and the per-capture state) and CPDF-19 (D-319's re-extraction, which moves a capture between states) all write or read…  
@@ -1022,6 +1022,10 @@ authority is the file named, never this one.
   `docs/development/OBSERVATION-LOG-DESIGN.md:26`
 - **REC-103** · 2026-09-16 — added: 2026-09-16 · CONDUCT #1 (draining BOB #12's `§4.3 CORRECTED` entry as an ITEM.  
   `docs/development/QUEUE.md:1721`
+- **REC-104** · 2026-09-18 — AMENDED 2026-09-18 (same worker, REC-104):** `bio-plane/src/schema.mjs` is widened by THREE COMMENT LINES outside the content block — lines citing REC-90's measurement as `M-21`, which was renumbered to `M-23` at integration (M-21 is D-367's diff).  
+  `docs/development/CLAIMS.md:13046`
+- **REC-104** · 2026-09-18 — AMENDED 2026-09-18 by REC-104 — §4.2's `chain` FILTER ANSWERS OFF A COLUMN AND THE READ-TIME PARSE IS RETIRED; the Incomplete bullet REC-90 raised is STRUCK rather than annotated (`CORPUS-STANDARD.md` §3).** `content` gains `chain_kind`, the chain's LAST step kind — §4.1's own answer for `capture_text`, given to…  
+  `docs/development/CONTENT-SEARCH-DESIGN.md:9`
 - **REC-107** · 2026-09-17 — IT CORRECTED MY BRIEF AT THE ARTIFACT RATHER THAN INHERITING IT:** I told it to consume REC-107's `not_ruled_out`/`evidence_one_sided`, and for THIS op that was false — `#contentAxisTally` computes a per-capture `missing_cause` and **DISCARDS it**; only bucket totals cross this wire, and those fields live on…  
   `docs/development/QUEUE.md:2848`
 - **REC-108** · 2026-09-16 — CLOSED 2026-09-16 by REC-108, BY ITS OWN RECOMMENDED OPTION (b) — AND THE OPTION WAS TAKEN ON EVIDENCE RATHER THAN ON DEFERENCE, WITH THE ROW'S OWN STATEMENT OF THE PROBLEM CORRECTED IN ONE RESPECT.** **The cache is untouched and that is the disposition, not an omission**: `#writeStrengthProjection` still derives…  
@@ -1033,7 +1037,7 @@ authority is the file named, never this one.
 - **REC-110** · 2026-09-17 — CLOSED 2026-09-17 by REC-110 — RULED (a), AND THE INTERIM POSTURE IS NOW A DECISION.** Raised by REC-103 2026-09-16, which wrote both arguments and declined to decide: correct, and inherited rather than re-litigated.  
   `docs/development/DEBT.md:321`
 - **REC-111** · 2026-09-16 — AMENDED 2026-09-16 by REC-111 — §4.3's OWED UNIT-COUNT BOUND IS BUILT, AND THE ROW'S OWN PREMISE WAS HALF WRONG, WHICH IS THE finding worth more than the bound.** *A container whose units are many and small is bounded by nothing this design specifies* is true of THIS DOCUMENT and false of the SYSTEM: M-35 measured…  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:9`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:11`
 - **REC-112** · 2026-09-17 — IT CORRECTED MY BRIEF AND THE CORRECTION MATTERS: I told it the index was the ONLY surviving evidence of intent, and that was HALF WRONG** — the intent also lives in the delegation, in `airuns.test.mjs`'s roster comment, and in a **by-name pin at `airuns.test.mjs:675`.  
   `docs/development/QUEUE.md:1703`
 - **REC-113** — `partial` IS THE ONE STATE WHOSE COVERAGE CLAIM THIS DESIGN HAS NOT DECIDED, AND REC-113 DECLINED TO DECIDE IT SILENTLY.** §3 writes the rule as *"`PRESENT` with no `result_ref` is refused"*, and C-22.10 implements exactly that — it keys on `PRESENT` alone.  
@@ -1159,7 +1163,7 @@ authority is the file named, never this one.
 - **UI-62** · 2026-09-17 — AMENDED 2026-09-17 by UI-62 — §7 ROW 6 IS BUILT AND THIS DOCUMENT'S LAST OPEN DECOMPOSITION ROW BUT ONE IS CLOSED; §4.4's OWN OPEN QUESTION IS ANSWERED, AND ONE OF ITS SENTENCES IS NOW KNOWN TO BE UNREACHABLE IN THE CODE.** The member-facing surface landed in `civicos-ui/**` only, adding no op, no check and no…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:5`
 - **UI-62** · 2026-09-17 — WHAT A MEMBER SEES WHEN THE BOUND BITES — DECIDED 2026-09-17 BY UI-62, which is the item this question was left open for.** REC-92 shipped `MEANING_AXIS_CAP` = 500 with `captures_counted` / `captures_truncated` / `captures_bound` published and said in terms that the PRESENTATION was UI's.  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:339`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:332`
 - **UI-62** — SETTLED when UI-62 or a successor emits an extent from the composer end to end; CONDUCT writes it then.  
   `docs/development/INTERFACE-CHANGES.md:6910`
 - **UI-63** · 2026-09-17 — IT CORRECTED CONDUCT'S BASELINE AND THE CORRECTION EXPOSED AN INTEGRATOR ERROR WORTH MORE THAN THE FIGURE — see this row's integration note in the commit: the briefed 215/215 · 13527 was true of `df4fb394` and NOT of the tree that was pushed.** True baseline at `7ebe2dd1`: **216/216 suites green · 13555 assertions…  
@@ -1381,7 +1385,7 @@ authority is the file named, never this one.
 - **M0-27** · 2026-09-14 — CORRECTED 2026-09-14 (M0-27). THIS SECTION'S PAUSE IS HISTORY, AND THE SENTENCE ABOVE MUST NOT BE READ AS A LIVE PROHIBITION.** It was written 2026-07-30 and the pause it declares held for one day: UI work resumed on 2026-08-01 and **53 UI rows have landed `done` against `QUEUE.md` since**, adding capability…  
   `docs/development/UI-PLAN.md:296`
 - **M0-31** · 2026-09-15 — DECIDED 2026-09-15, the fork M0-31's measurement opened and this section left open for one day — one unit per SLIDE for a deck**, written as a `slide-shape` extent with the SHAPE OMITTED, which `covers()` already accepts as covering the whole slide (`textchain.mjs`).  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:154`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:145`
 - **M0-31** · 2026-09-16 — TWO LIVE DERIVATIONS CORRECTED OR NARROWED:** CONTENT-PDF's OCR row understated 1.43× not 6×, **its verdict SURVIVES**; and M0-31's promote percentages are honestly **UNDETERMINED between ~20% and ~85%**, with its conclusion that §4.1's chunking is REQUIRED resting on the miniflare end.  
   `docs/development/QUEUE.md:1188`
 - **M0-32** · 2026-09-14 — Found by M0-32's worker (2026-09-14) while reading the instrument rather than its output, and CONFIRMED at integration: `tools/decided.mjs`'s `MARKER` is `/\b(RULED|DECIDED|AMENDED|CORRECTED|OVERTURNED|SETTLED|SUPERSEDED|WITHDRAWN|CONCEDED)\b/` and **`.` IS A WORD BOUNDARY**, so the literal string `DECIDED.md`…  
@@ -1882,9 +1886,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-14** — RULED 2026-09-14 by Bob:** *"the record never moves an authored edge's target without a member's act, even when the passage is byte-identical."* The recommendation below is therefore the mechanism, and the proposal is the whole of it.  
   `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:301`
 - WHAT IS DECIDED HERE, so the next reader is not left with four findings and no rule:** - **The operative per-capture bound is expressed at the WIRE, in bytes, RELATIVE TO WHAT PROMOTE ALREADY REFUSES.** That is not a preference: any bound sited after `INLINE_MAX` is unreachable by construction,  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:230`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:223`
 - unbounded reading is explicitly WITHDRAWN: the surface says the captures past the bound are in NO bucket — not in the searched ones and not in the unsearched ones.  
-  `docs/development/CONTENT-SEARCH-DESIGN.md:356`
+  `docs/development/CONTENT-SEARCH-DESIGN.md:349`
 - approved."* Nothing is built and the watch item itself is WITHDRAWN as premise-rejected, not merely unmeasurable.  
   `docs/development/DECISIONS.md:189`
 - THE DOCTRINE IS RULED AND THE MECHANISM IS THE ARCHITECT'S.  
