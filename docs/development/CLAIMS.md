@@ -13605,3 +13605,22 @@ canonical header on the authored bytes, C-53.6 narrowed. origin/main `2c4a5c11` 
 
 released: 2026-09-18 by the MK-1 worker — every path committed on `worktree-agent-a1137b844e6d23aed`; the
 final figures are in the worker's report and in `testify.test.mjs`'s NEGATIVE CONTROL line.
+
+## CLAIM 2026-09-18 RECORD (REC-130 — an UNSIGNED case document answers only to standing in its owning project)
+
+Worker spawned by CONDUCT #4, isolated worktree `agent-a7b9294a66f1df4b0`, branch
+`worktree-agent-a7b9294a66f1df4b0`, base `f426f519`. `npm ci` in all three packages, each `node_modules` a real
+directory (4.7 GiB free). Paths:
+
+- RECORD (own): `bio-plane/src/index.mjs` (the `casedocument` OPS row and its handler; the `caseratify` handler's
+  facts read; comments at the OPS rows the sweep names); `bio-plane/src/store.mjs` (`caseDocumentFacts`,
+  `caseDocument`, a new private standing predicate beside them, and the DO route for both).
+- Tests: `bio-plane/test/casesign.test.mjs` (the anonymous-read assertion CORRECTED with a dated reason, a new block
+  for the no-existence-leak property), plus any suite that read an unsigned case document anonymously — each
+  re-pointed with its reason, never exempted; a new committed control driver if the arms need one.
+- Generated: `bio-plane/dist/*` rebuilt.
+- Docs: `INTERFACE-CHANGES.md` (IC-141, minted with `node tools/mintid.mjs IC`), `docs/DECIDED.md` on
+  regeneration, this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `civicos-ui/` (read only, to say what a surface loses), NOT `newgroup/`,
+NOT `BIO_Publication_v0_1.md` §6A (BOB is writing it).
