@@ -44,10 +44,12 @@ progressions — is substrate for that path.
 
 - **Content is the unit**: a reference to a PART of a document, up to the whole (DEC-23). Documents are
   harvested; content is extracted; meaning derives from both. Holding a document is not holding an answer.
-- **Never assume the lower levels are complete.** When anything goes looking it may need to search
-  **meaning, content, documents, AND the open internet**, in any order. **Sparse is normal**, and saying
-  WHICH absence is true — nothing derived, nothing extracted, never read, nobody looked — is a
-  first-class obligation.
+- **NEVER ASSUME THE LOWER LEVELS ARE COMPLETE.** When anything goes looking it may need to search
+  **meaning, content, documents, AND the open internet**, in any order. **Sparse is normal.** Absence at
+  one level is not evidence of absence at the next: no meaning derived may mean nothing was extracted;
+  nothing extracted may mean the document was never read; no document may mean nobody looked. Saying
+  WHICH is true is a first-class obligation. (Two suites and the skill pack quote these sentences
+  verbatim — reword them only together.)
 - **The stance is doctrine:** better government through greater understanding, less narrative, and
   accountability. No structural prior against any class of actor; bad actors are identified by
   evidence. **"Less narrative" binds us first**: the whole product is TRUSTWORTHINESS OF THE RECORD, so a
