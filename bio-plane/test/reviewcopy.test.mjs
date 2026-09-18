@@ -46,13 +46,17 @@
    2026-09-18 in worktree agent-a6516bd6e484436ba, every restore sha256 MATCH, content
    IDENTICAL, size ok. (0) BASELINE -> **63 pass, 0 fail**. Arms (a)-(d) re-measured: (a)
    58/5, (b) 62/1, (c) 61/2, (d) 61/2 — (a) and (d) each fail ONE MORE than REC-126
-   recorded, and it is the same new arm in both: the administrator-revoked secret's
+   recorded, and it is the same new arm in both: the owner-revoked G3 secret's
    byte-identical comparison, which is a revoked-secret arm like the others they break.
 
-   (e) REVOKE RE-GATED AT OWNER-ONLY — `#reviewRevoke` drops `|| this.#isAdminMember`.
-   Declared: MUST FAIL the administrator-revokes arm and the byte-identical arm after it;
-   MUST NOT fail the editor/plain-member cannot-revoke arm -> **61 pass, 2 fail**, those
-   two. AS DECLARED.
+   (e) REVOKE WIDENED TO ADMINISTRATORS — `#reviewRevoke` admits `|| this.#isAdminMember`,
+   which is §6A.2's FIRST version, corrected by BOB #15 the same day (administrators
+   direct nothing). REC-133 built that version first and REVERTED it; this arm is the
+   inverse of the control it then carried. Declared: MUST FAIL the administrator-cannot-
+   revoke arm; MUST NOT fail the editor/plain-member arm -> **61 pass, 2 fail**: that arm,
+   AND the owner-revokes arm after it, because the administrator's attempt succeeded
+   first and the owner's revocation then reports `revokedBy: omar`. One more than
+   declared, in the declared direction.
 
    (f) ISSUE WIDENED TO EDITORS — `#reviewGrant` asks `#isProjectEditor` instead of
    `#isProjectOwner`. Declared: MUST FAIL the editor-cannot-issue arm; MUST NOT fail the
@@ -566,9 +570,13 @@ t("the same holds for the COMMENT: revoked, never-issued and malformed secrets a
   [await rawPost(`op=reviewcomment&secret=${encodeURIComponent("rv1_" + "B".repeat(43))}`, { text: "x" }),
    await rawPost(`op=reviewcomment&secret=${encodeURIComponent("rv1_" + "B".repeat(43))}`, { text: "x" })]);
 {
-  /* REC-133: REVOKING IS THE OWNER'S OR ANY ADMINISTRATOR'S (§6A.2). A fresh grant,
-     read LIVE first so that the dead answer afterwards is a change and not a fixture
-     that never worked. */
+  /* REC-133: REVOKING STAYS THE OWNER'S (§6A.2, CORRECTED by BOB #15 the same day —
+     its first version said *the owner or any administrator*, which contradicted
+     Membership v2 §4: administrators direct nothing). This worker built the
+     administrator arm from the first version and reverted it on CONDUCT #5's
+     correction; the arms below assert the refusals instead. A fresh grant, read LIVE
+     first, so "still live after they tried" is a measurement and not a fixture that
+     never worked; then the OWNER revokes it and the dead answer is byte-identical. */
   const G3 = await grant(IRIS, { draft: D1, recipient: "Lee Park, ethics commission" });
   if (!G3?.ok || !G3.secret) bail("reviewgrant G3", G3);
   const liveBefore = parsed(await recipientRead(G3.secret))?.kind;
@@ -576,17 +584,16 @@ t("the same holds for the COMMENT: revoked, never-issued and malformed secrets a
     rP(await POST(`op=reviewrevoke&token=${ELLA}`, { grant: G3.grantId }))?.reason,
     rP(await POST(`op=reviewrevoke&token=${PAT}`, { grant: G3.grantId }))?.reason,
   ];
+  const adminTried = rP(await POST(`op=reviewrevoke&token=${OMAR}`, { grant: G3.grantId }))?.reason;
   const stillLive = parsed(await recipientRead(G3.secret))?.kind;
-  t("REC-133: THE EDITOR AND THE PLAIN MEMBER CANNOT REVOKE — neither is an owner or an administrator — "
-  + "and the grant is still live after both tried",
-    [liveBefore, refusedTo, stillLive],
-    ["review-copy", ["REVIEW_NOT_PROJECT_OWNER", "REVIEW_NOT_PROJECT_OWNER"], "review-copy"]);
-  const RVA = rP(await POST(`op=reviewrevoke&token=${OMAR}`, { grant: G3.grantId }));
-  t("REC-133: AN ADMINISTRATOR WHO IS NOT THE OWNER REVOKES — attributed to him — so a grant never outlives "
-  + "an owner who has left",
-    [RVA?.ok, RVA?.existed, RVA?.revokedBy], [true, false, "omar"]);
-  t("and the secret he revoked answers BYTE-IDENTICALLY to one that was never issued",
-    await recipientRead(G3.secret), never);
+  t("REC-133: THE EDITOR AND THE PLAIN MEMBER CANNOT REVOKE — neither owns the project",
+    [liveBefore, refusedTo], ["review-copy", ["REVIEW_NOT_PROJECT_OWNER", "REVIEW_NOT_PROJECT_OWNER"]]);
+  t("REC-133: AN ADMINISTRATOR WHO IS NOT THE OWNER CANNOT REVOKE — administrators direct nothing "
+  + "(§6A.2 as corrected) — and the grant is still live after all three tried",
+    [adminTried, stillLive], ["REVIEW_NOT_PROJECT_OWNER", "review-copy"]);
+  const RVO = rP(await POST(`op=reviewrevoke&token=${IRIS}`, { grant: G3.grantId }));
+  t("the OWNER revokes it, and the secret then answers BYTE-IDENTICALLY to one that was never issued",
+    [RVO?.ok, RVO?.revokedBy, await recipientRead(G3.secret)], [true, "iris", never]);
 }
 t("a member with NO standing in the producing project is answered exactly as for a draft that does not exist",
   (await rawOf(`op=reviewcopy&draft=${D1}&token=${VIC}`)).body,

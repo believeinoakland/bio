@@ -7671,7 +7671,7 @@ export class Store extends DurableObject {
 
      WHO MAY AUTHOR A DRAFT, ISSUE A GRANT AND REVOKE ONE — DECIDED in §6A.2 by
      BOB #15 (2026-09-18) and built by REC-133. REC-126 ran all three at the project
-     OWNER provisionally; the decision widens two of them and leaves the third:
+     OWNER provisionally; the decision widens ONE of them and leaves the other two:
        - AUTHOR (`#caseDraft`): the project's EDIT permission, `#isProjectEditor` —
          Bob's *"editing needs project permissions and is the editor's act"*. The
          draft is the production, and editing it is editing. Its capability half,
@@ -7680,9 +7680,12 @@ export class Store extends DurableObject {
        - ISSUE (`#reviewGrant`): the project OWNER only, NO administrator bypass —
          UNCHANGED. Sending unratified material outside the group is the same kind
          of act as publishing, and DEC-72 makes publishing the owner's.
-       - REVOKE (`#reviewRevoke`): the owner OR ANY active ADMINISTRATOR. Revoking
-         only narrows exposure, so widening it harms nobody, and a grant never
-         outlives an owner who has left the group.
+       - REVOKE (`#reviewRevoke`): the project OWNER only — UNCHANGED. §6A.2 first
+         said *the owner or any administrator* and BOB #15 CORRECTED it the same
+         day: administrators *"audit everything and direct nothing"* (Membership v2
+         §4), with the one exception of §7.13, which is also how a grant outliving
+         its owners is handled — an administrator adds an owner, and that owner
+         revokes. REC-133 briefly built the administrator arm and reverted it.
      No two-person rule: none is ruled, and inventing one would be a fence tighter
      than its rule. A machine is refused by name: an addressed act is attributed to
      a person. */
@@ -7754,8 +7757,8 @@ export class Store extends DurableObject {
          + "an owner, or a JOINED participant, holding `contribute` (BIO_Publication §6A.2; Membership v2 §7.5).",
     grant: "handing the group's draft to someone outside it is the producing project's own act and is wielded by an "
          + "OWNER of it, as publishing is (DEC-72). An administrator sees every project and directs none of them.",
-    revoke: "withdrawing a grant is for an OWNER of the producing project or any active ADMINISTRATOR, because "
-          + "revoking only narrows exposure (BIO_Publication §6A.2).",
+    revoke: "withdrawing a grant is the producing project's own act and is wielded by an OWNER of it, as issuing "
+          + "one is (BIO_Publication §6A.2). An administrator sees every project and directs none of them.",
   };
   static #notReviewOwner(act) {
     return { ok: false, reason: "REVIEW_NOT_PROJECT_OWNER",
@@ -7953,8 +7956,7 @@ export class Store extends DurableObject {
                detail: "name the grant to withdraw: grant=<the grant id op=reviewgrant answered with>." };
     const g = this.#one(`SELECT g.*, d.project_id FROM review_grants g JOIN case_drafts d ON d.draft_id=g.draft_id
                          WHERE g.grant_id=?`, gid);
-    if (!g || !(this.#isProjectOwner(g.project_id, a.who) || this.#isAdminMember(a.who)))
-      return Store.#notReviewOwner("revoke");
+    if (!g || !this.#isProjectOwner(g.project_id, a.who)) return Store.#notReviewOwner("revoke");
     if (g.revoked_at)
       return { ok: true, existed: true, grantId: g.grant_id, revokedBy: g.revoked_by, revokedAt: g.revoked_at };
     const when = new Date().toISOString();
@@ -23725,13 +23727,29 @@ export class Store extends DurableObject {
     });
   }
 
-  /** REC-129 / IC-144 — `operator` IS THE ONE INPUT, and it is the SERVER'S word, never the
-   *  caller's: `index.mjs` sets it from the credential class AFTER copying the caller's
-   *  parameters (op=stats, op=selftest, op=livefire), and `purge` passes it true because its
-   *  before/after ARE the D-113 proof the two keys exist for. It governs exactly two keys, below,
-   *  and nothing else. An absent or unrecognised stamp is `false`, so a door that forgets to
-   *  stamp loses the two keys rather than leaking them. */
-  stats({ operator = false } = {}) {
+  /** REC-131 / IC-148 — THE WIRE'S COUNTS. `op=stats`, `op=selftest` and `op=livefire` all read
+   *  this. Every COUNT is the same for every class (BOB #15's corrected ruling,
+   *  `MEMBER-KNOWLEDGE-DESIGN.md` §5): `leads` is on it for no class, and the log is published as
+   *  `observationsNonLead`. It REPLACES REC-129's `operator` stamp (IC-144), which selected an
+   *  admin-only answer over COUNTS.
+   *
+   *  `capacity` IS THE ONE CLASS DISCRIMINATION LEFT, AND IT GOVERNS `dbBytes` AND NOTHING ELSE
+   *  (BOB #15, resuming REC-131). The database's size moves in whole pages on EVERY write, a
+   *  lead's included, so a member diffing it across a colleague's authoring can detect a large
+   *  lead; capacity is an operator need, so the admin class keeps it and member and probe do not.
+   *  It is the SERVER'S word: `index.mjs` sets it from the authenticated class AFTER copying the
+   *  caller's parameters (op=stats, op=selftest's relay, op=livefire's call), so a caller's
+   *  `capacity=` is overwritten, never honoured. An absent stamp is `false` — a door that forgets
+   *  to stamp loses `dbBytes` rather than leaking it. It is a stamp and not a second method
+   *  because it must ride the one DO route every door already fetches. */
+  stats({ capacity = false } = {}) { return this.#counts({ proof: false, capacity: capacity === true }); }
+
+  /** The one body behind both answers, so the wire's counts and purge's proof cannot drift apart
+   *  on any key but the ones the ruling names. `proof` is PRIVATE: only `purge` passes it, because
+   *  its before/after ARE D-113's proof that it took what it says it took, and that proof stays
+   *  WHOLE (§5: *the purge proof's own count stays whole*) — `observations` over the whole log,
+   *  `leads`, and `dbBytes`, exactly as `op=purge` has always answered. No route reaches it. */
+  #counts({ proof, capacity = false }) {
     const n = (t) => this.#one(`SELECT count(*) c FROM ${t}`).c;
     return {
       bundles: n("bundles"), files: n("files"), history: n("history"),
@@ -23854,22 +23872,30 @@ export class Store extends DurableObject {
          counted WHOLE beside it: the log is the coverage record and its size is
          an operator fact, while what any single row was looking for is not. */
       aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`).c,
-      /* REC-129 / IC-144 — `observations` AND `leads` ARE THE OPERATOR'S, AND THE KEY IS ABSENT
-         FOR EVERYONE ELSE. RULED by BOB #15 (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A COUNT IS A
-         DISCLOSURE OF EXISTENCE*): a counter whose row set includes rows the caller could not
-         read goes only to a caller who could read them all — for an instance-wide count, the
-         `admin` class. `leads` counts every member's tips, and the whole-log `observations`
-         count moves on every `op=leadlook`, so a member diffing either across a colleague's
-         authoring learned a lead had just been written or followed. The KEY is withheld, never
-         re-meant: one key counting different rows for different callers is two quantities
-         under one name. `aiRunLog` above stays — its row set is `authority_kind = 'run'`, which
-         no lead act writes, and `lead.test.mjs` pins that it never moves across one. */
-      ...(operator ? {
-      observations: n("observation_log"),   /* the WIRE KEY stays `observations` (a count of observations, and moving it would be an I3 change nobody owed); the TABLE it counts is `observation_log` — renamed by CONDUCT #11 at integration on BOB #11's correction, because one word over three unrelated things is the defect, not the noun */
+      /* REC-131 / IC-148 — `leads` IS NOT ON THE WIRE FOR ANY CLASS, AND THE WIRE'S LOG COUNT IS A
+         DIFFERENT KEY FROM PURGE'S. BOB #15's CORRECTED ruling (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A
+         COUNT IS A DISCLOSURE OF EXISTENCE*): a counter over rows a caller could not all read goes
+         only to a caller who could read them all, and for leads THAT CALLER DOES NOT EXIST —
+         `#leadVisibleTo` reaches no `class:*` credential and skips the administrator arm on purpose,
+         so the admin token reads no lead either. REC-129 (IC-144) handed both keys to the admin
+         class; that was the overclaim, and this supersedes it.
+         *
+         * ONE KEY NEVER CARRIES TWO MEANINGS (BOB.md rule 7, BOB #15 resuming REC-131). The wire's
+         * count EXCLUDES lead looks, so it is published as `observationsNonLead` — a name that
+         * states its predicate (`authority_kind <> 'lead'`), so that a later construct ruled
+         * existence-private cannot join the exclusion without a rename, i.e. without an IC. Purge's
+         * `observations` keeps the WHOLE-log meaning it has always had. The wire carries no
+         * `observations` key at all, so no reader can compare the two under one name. It stays on
+         * the wire because OBSERVATION-LOG-DESIGN §6's REC-110 ruling rests on it (premise 1): the
+         * three built frontier levels' tallies count no lead row either. `aiRunLog` above is
+         * untouched: no lead act writes a 'run' row. */
+      ...(proof
+        ? { observations: n("observation_log") }   /* PURGE'S PROOF: the WHOLE log. The TABLE it counts is `observation_log` — renamed by CONDUCT #11 at integration on BOB #11's correction, because one word over three unrelated things is the defect, not the noun */
+        : { observationsNonLead: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c }),
       /* MK-4 / IC-136: a COUNT of members' leads and nothing else, so a purge can
-         PROVE it took them (D-113). What any lead says is not an operator fact. */
-      leads: n("leads"),
-      } : {}),
+         PROVE it took them (D-113). What any lead says is not an operator fact —
+         and since REC-131, neither is how many there are: purge's proof only. */
+      ...(proof ? { leads: n("leads") } : {}),
       /* PL-1 / IS-1: the inquiry's alternative accounts of its evidence and
          their legs, reported so a purge can PROVE it took them (D-113). A COUNT
          AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
@@ -23899,7 +23925,11 @@ export class Store extends DurableObject {
          purge can PROVE it took them (D-113) and so an operator can see that the
          record is carrying doubts at all without having to sweep for them. */
       routeMarks: n("provenance_route_marks"),
-      dbBytes: this.ctx.storage.sql.databaseSize,
+      /* REC-131 / IC-148: the ADMIN class's and purge's only — see `stats()`. THE RESIDUE, STATED
+         RATHER THAN HIDDEN (BOB #15): the admin class still receives a figure that moves in whole
+         pages on every write, a large lead's included, so the operator can detect that SOMETHING
+         large was written; it cannot tell a lead from any other write, and no lead is readable to it. */
+      ...((proof || capacity) ? { dbBytes: this.ctx.storage.sql.databaseSize } : {}),
     };
   }
 
@@ -25414,7 +25444,7 @@ export class Store extends DurableObject {
                        holds this list against schema.mjs. */
                     "capture_text"];
                     /*__REC91_PURGE_END__*/
-    const before = this.stats({ operator: true });
+    const before = this.#counts({ proof: true });
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
         /* The text index row goes with the bundle it describes, and it goes
@@ -25750,7 +25780,7 @@ export class Store extends DurableObject {
         this.sql.exec(`DELETE FROM capture_requests`);
       }
     });
-    const after = this.stats({ operator: true });
+    const after = this.#counts({ proof: true });
     const d = (k) => before[k] - after[k];
     return {
       ok: true, scope: bundleId || "ALL", before, after,
@@ -39467,7 +39497,7 @@ export class Store extends DurableObject {
         projectionclear: () => this.projectionClear(body || {}),
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
-        stats: () => this.stats({ operator: url.searchParams.get("operator") === "1" }),
+        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),
         bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
         claim: () => this.claim({ ...(body || {}), tokenFp: url.searchParams.get("fp") }),
         login: async () => {

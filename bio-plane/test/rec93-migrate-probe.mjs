@@ -158,7 +158,8 @@ let beforeText;
 
   const stats = await GET(`op=stats&token=adm-rec93`);
   t("they are counted as folded RUN rows in the new table", stats.aiRunLog, LOG.length);
-  t("…and `observations` counts them too — one table, not two", stats.observations >= LOG.length, true);
+  /* CORRECTED 2026-09-18 BY REC-131 (IC-148), NEVER EXEMPTED: op=stats' log count is published as `observationsNonLead` (the log WITHOUT lead looks) and the wire carries no `observations` key — one key never carries two meanings (BOB.md rule 7), and purge's `observations` keeps the whole log. This suite writes no lead, so the figure it reads is unchanged; only the name moved. */
+  t("…and `observationsNonLead` counts them too — one table, not two", stats.observationsNonLead >= LOG.length, true);
 
   /* THE OLD TABLE IS GONE. If it were still there, the store would be in the
      two-writers state §4.4 forbids and the next boot would migrate again. */

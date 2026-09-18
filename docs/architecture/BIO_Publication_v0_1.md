@@ -7,7 +7,7 @@
 **Incomplete sections** ·
 - §5 — the ceremony (UI-17) and the preflight (REC-15) are DEFERRED on DEC-33's trigger; the section says what they are, that UI-18 has landed (the trigger's first clause), that the second is unmet by measurement, and when the rows reopen (decided 2026-09-14).
 - §6 — the certification and persistence divergences are named and unmade. **ADDRESSING IS NO LONGER DEFERRED: DEC-31's trigger fired 2026-09-17 and §6A is its design.**
-- §6A — the review copy is RULED and DESIGNED, and its PLANE HALF IS BUILT (REC-126, IC-145/IC-146, 2026-09-18): the draft case, the grant with its hashed per-grant read secret, revocation, the edition binding, the comment, and the missing-list taken from the publish gates' own refusal — see §4. What is NOT built: the SURFACE (delegated to UI, `CLAIMS.md` REC-126 → UI); the member-facing statement at the export act (§6A.3 point 2), which belongs to that surface; and the missing-list names the gates' FIRST refusal only, because `publishCase` stops at its first (stated in every copy as undetermined beyond it). The capability-vocabulary question is answered by the build: the grant is its OWN construct (a table and a secret), not a capability token. **Who may author, issue and revoke is DECIDED in §6A.2 (BOB #15, 2026-09-18) and BUILT (REC-133, IC-151, 2026-09-18):** authoring = the project's edit permission (`contribute` + owner-or-joined), issuing = the owner only, revoking = the owner or any administrator — see §4.
+- §6A — the review copy is RULED and DESIGNED, and its PLANE HALF IS BUILT (REC-126, IC-145/IC-146, 2026-09-18): the draft case, the grant with its hashed per-grant read secret, revocation, the edition binding, the comment, and the missing-list taken from the publish gates' own refusal — see §4. What is NOT built: the SURFACE (delegated to UI, `CLAIMS.md` REC-126 → UI); the member-facing statement at the export act (§6A.3 point 2), which belongs to that surface; and the missing-list names the gates' FIRST refusal only, because `publishCase` stops at its first (stated in every copy as undetermined beyond it). The capability-vocabulary question is answered by the build: the grant is its OWN construct (a table and a secret), not a capability token. **Who may author, issue and revoke is DECIDED in §6A.2 (BOB #15, 2026-09-18, revoke corrected the same day) and BUILT (REC-133, IC-151, 2026-09-18):** authoring = the project's edit permission (`contribute` + owner-or-joined); issuing and revoking = the owner only, no administrator bypass — see §4.
 - §7 — the attribution levels are ruled and have no surface; the catalogue of standards by audience and output act is owed and does not exist; both are Program B's.
 - §8 — the risk tiers are half-built: the UI writes placeholder values that satisfy the check (D-182); stated, not fixed here.
 
@@ -75,11 +75,11 @@ Three consequences give the construct its shape. The record must be able to prov
   draft moves to another edition. `casedocument` admits a live grant holder to the unsigned document of exactly the
   bound edition — §6A.2's precondition's second party. **Who may act is §6A.2's decision, BUILT by REC-133 (IC-151,
   2026-09-18):** AUTHORING a draft (and editing one in place) is the project's EDIT permission — `contribute` at the
-  control plane and, in the store, an owner or a JOINED participant (Membership v2 §7.5); ISSUING a grant is the
-  project OWNER's, no administrator bypass; REVOKING is the owner's or any active administrator's, with no capability
-  gate because the authority is positional. The refusal code stays `REVIEW_NOT_PROJECT_OWNER` for all three, its
-  detail naming each act's authority. A non-owner editor's draft has its gates run as the member who would PUBLISH
-  (an owner), so `missing` shows its real gaps rather than the editor's want of ownership. The machine fence is C-32.16.
+  control plane and, in the store, an owner or a JOINED participant (Membership v2 §7.5); ISSUING and REVOKING a grant
+  stay the project OWNER's, with no administrator bypass, exactly as REC-126 built them (§6A.2 as corrected by BOB #15:
+  administrators direct nothing). The refusal code stays `REVIEW_NOT_PROJECT_OWNER` for all three, its detail naming
+  each act's authority. A non-owner editor's draft has its gates run as the member who would PUBLISH (an owner), so
+  `missing` shows its real gaps rather than the editor's want of ownership. The machine fence is C-32.16.
 - **The checks** (`bio-checks.mjs`): C-18.9 the fence (three distinct refusal codes for an absent, malformed or empty chain); C-21.1 the completeness gate (statement and acknowledgement fresh per edition); C-21.2 inheritance per axis; C-41.1–.12 the case-document family; C-2.8 the published-state entry requirements (edition ≥ 1, `published_strength` on both axes, grounds per branch); C-3.1 the required headings; C-29.1 the store's refusal of a machine stamp.
 - **The projection and the fence, structurally**: the `published_*` tables and the `PUBLISHED` bucket, a second store the public path reads and nothing writes except the publish act; the installer creates the bucket. The fence across GROUPS is not yet structural — one account's instances share one bucket today (`MULTI-INSTANCE-ISOLATION.md` row 2).
 - **The surfaces**: O2, the published case (UI-18); the public verification surface (UI-35/36/37/40 — including the correction that a plane refusal must never render as a substantive negative); the DEC-33 placeholder entry point (UI-17a).
@@ -148,8 +148,11 @@ the project owner.** Each answer follows a ruling already made, so none is retur
   project permissions and is the editor's act*. The draft is the production, and editing it is editing.
 - **ISSUE a grant:** the project OWNER only, and NO administrator bypass. Sending unratified material to someone outside
   the group is the same kind of act as publishing, and DEC-72 makes publishing the owner's.
-- **REVOKE a grant:** the owner OR ANY ADMINISTRATOR. Revoking only narrows exposure, so widening who may do it can harm
-  nobody, and it means a grant never outlives an owner who has left the group.
+- **REVOKE a grant:** the project OWNER. **CORRECTED the same day by BOB #15 — the first version said *the owner or any
+  administrator*, and that contradicted Bob's doctrine** in `BIO_Membership_Architecture_v2.md` §4: administrators
+  *"audit everything and direct nothing"* on a project, with ONE exception, §7.13 (*"that is the whole of the
+  exception"*). The case it was meant for — a grant outliving an owner who has left — is §7.13's own: an administrator
+  adds an owner when every owner is inactive, and that owner revokes.
 - **No two-person rule.** No ruling asks for one, and inventing one would be a fence tighter than its rule.
 
 **What the grant is NOT, stated because the near-miss is easy:** it is not an account, not membership, and not a weaker class of member. A recipient holding a grant has no standing in the project beyond reading one production and saying something about it.

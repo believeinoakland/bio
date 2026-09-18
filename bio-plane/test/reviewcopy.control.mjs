@@ -83,11 +83,12 @@ const ARMS = {
 
   /* REC-133 — §6A.2's authority (BOB #15). Declarations in the suite's header. */
   e: { files: [STORE],
-       label: "(e) REVOKE RE-GATED AT OWNER-ONLY (REC-126's provisional): an administrator who is not the owner "
-            + "can no longer withdraw a grant",
+       label: "(e) REVOKE WIDENED TO ADMINISTRATORS (§6A.2's first, corrected version): an administrator who is "
+            + "not the owner withdraws a grant",
        apply: () => edit(STORE,
-         "if (!g || !(this.#isProjectOwner(g.project_id, a.who) || this.#isAdminMember(a.who)))",
-         "if (!g || !this.#isProjectOwner(g.project_id, a.who))") },
+         "if (!g || !this.#isProjectOwner(g.project_id, a.who)) return Store.#notReviewOwner(\"revoke\");",
+         "if (!g || !(this.#isProjectOwner(g.project_id, a.who) || this.#isAdminMember(a.who))) "
+       + "return Store.#notReviewOwner(\"revoke\");") },
 
   f: { files: [STORE],
        label: "(f) ISSUE WIDENED TO EDITORS: a joined participant who is not an owner hands the draft outside",
@@ -187,11 +188,12 @@ console.log(`\npen removed: ${PEN}`);
    RE-MEASURED 2026-09-18 by REC-133 (worktree agent-a6516bd6e484436ba), all nine arms,
    every restore sha256 MATCH / content IDENTICAL / size ok:
      baseline  reviewcopy: 63 pass, 0 fail
-     a         reviewcopy: 58 pass, 5 fail   +1: the administrator-revoked secret's byte-identical arm
+     a         reviewcopy: 58 pass, 5 fail   +1: the owner-revoked G3 secret's byte-identical arm
      b         reviewcopy: 62 pass, 1 fail
      c         reviewcopy: 61 pass, 2 fail
      d         reviewcopy: 61 pass, 2 fail   +1: the same new arm
-     e         reviewcopy: 61 pass, 2 fail   as declared (revoke re-gated at owner-only)
+     e         reviewcopy: 61 pass, 2 fail   revoke widened to administrators: the admin-refusal arm, and the
+                                             owner-revokes arm after it (revokedBy reads omar) — one more than declared
      f         reviewcopy: 62 pass, 1 fail   as declared (issue widened to editors)
      g         reviewcopy: 59 pass, 4 fail   as declared (authoring widened to any member)
      h         reviewcopy: 62 pass, 1 fail   as declared (dry run as the editor) */

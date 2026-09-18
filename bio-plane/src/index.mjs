@@ -987,8 +987,8 @@ const OPS = {
      by REC-133; the NEEDS rows carry the reasoning): AUTHOR = the project's edit
      permission (`contribute` in NEEDS, owner-or-joined in the store); ISSUE = the
      project OWNER (`publish` in NEEDS, `publishCase`'s owner predicate in the
-     store, no administrator bypass); REVOKE = the owner or any active
-     administrator (positional, in the store). The store refuses a machine by name,
+     store, no administrator bypass); REVOKE = the same, unchanged (§6A.2 as
+     corrected: administrators direct nothing). The store refuses a machine by name,
      so a machine class reaching the op is refused at the act rather than here.
 
      `reviewcopy` and `reviewcomment` are UNGATED (`classes: null`) on
@@ -2057,25 +2057,21 @@ const NEEDS = {
   publish:          "publish",
   /* REC-126 / DEC-31, as REC-133 builds `BIO_Publication_v0_1.md` §6A.2 (BOB #15).
      No fifth capability token is minted for any of the three.
-     - ISSUING a grant rides `publish`, UNCHANGED: handing the group's unratified
-       draft to a named outsider is the act that stands beside publishing, and a
-       member who may not publish may not do it either (the store adds the OWNER).
+     - ISSUING and REVOKING a grant ride `publish`, UNCHANGED: handing the group's
+       unratified draft to a named outsider is the act that stands beside
+       publishing, and a member who may not publish may not do it either; the store
+       adds the OWNER, with no administrator bypass for either act (§6A.2 as
+       corrected by BOB #15 the same day: administrators direct nothing).
      - AUTHORING a draft rides `contribute`: §6A.2 makes it the project's EDIT
        permission (*"editing needs project permissions and is the editor's act"*),
        and `contribute` is Membership v2 §5's *"create and revise bundles in the
        working corpus"* — the capability half; the store checks the positional half
        (an owner or a joined participant, §7.5). REC-126 had it at `publish`, so an
        owner holding `publish` WITHOUT `contribute` no longer authors a draft: that
-       is the ruling applied, since such an owner may edit nothing in the corpus.
-     - REVOKING needs NO capability (null), and that is the ruling rather than an
-       oversight: the authority is POSITIONAL — an owner or any active
-       administrator, checked in the store — and revoking only narrows exposure, so
-       a capability gate here would be a fence tighter than its rule (a co-owner
-       who does not hold `publish` could not withdraw a grant a fellow owner
-       issued). A machine is still refused by name at the store's one door. */
+       is the ruling applied, since such an owner may edit nothing in the corpus. */
   casedraft:        "contribute",
   reviewgrant:      "publish",
-  reviewrevoke:     null,
+  reviewrevoke:     "publish",
   /* DEC-17: the group's declared bar is about what publishing REQUIRES, so it
      rides the publication surface too. Lowering your own bar is legitimate and
      is an authored, dated, on-the-record act; what it may not be is quiet. */
@@ -5003,10 +4999,10 @@ export default {
            undefined` and left `out.ok` TRUE — a deployment health check
            reporting healthy because the failure it was looking for arrived in
            the one shape it did not read. Only a thrown fetch was caught. */
-        /* REC-129 / IC-144: selftest RELAYS the store's stats, so it is the same answer through a
-           second door and takes the same stamp op=stats does (see there). */
+        /* REC-131 / IC-148: selftest RELAYS the store's stats — the same answer through a second
+           door, under op=stats' one stamp: `dbBytes` for the admin class only (see op=stats). */
         const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName))
-          .fetch(`http://x/stats?operator=${cls === "admin" ? "1" : "0"}`));
+          .fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}`));
         if (!sOut.answered) { out.ok = false; out.store = "ERR the store did not answer /stats"; }
         else out.store = sOut.result;
       } catch (e) { out.ok = false; out.store = "ERR " + String(e && e.message || e); }
@@ -5042,7 +5038,7 @@ export default {
     }
 
     if (op === "livefire") {
-      const out = await livefire(env, storeName, { operator: cls === "admin" });
+      const out = await livefire(env, storeName, { capacity: cls === "admin" });
       return json(out, out.ok ? 200 : 500);
     }
 
@@ -8964,15 +8960,14 @@ export default {
        fence op=publishedcase already draws for the bias acknowledgement. */
     if (op === "biasadopt")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-    /* REC-129 / IC-144 — WHETHER THIS CALLER IS THE INSTANCE'S OPERATOR, for op=stats' two
-       instance-wide counts over rows no member may all read (`leads`, `observations`;
-       `MEMBER-KNOWLEDGE-DESIGN.md` §5, ruled by BOB #15). Decided by the SERVER from the class
-       that authenticated and set AFTER the caller's parameters were copied, so a caller-supplied
-       `operator=1` is overwritten rather than honoured. `admin` is the ADMIN_TOKEN class and the
-       ROOT-admin session (`cls = kind` above). A member whose ROLE is admin signs in as class
-       `member` with an `administer` right (D-157) and is NOT the admin class — the ruling names the
-       class, and no administrator member may read another member's lead. Member, probe, ai: not. */
-    if (op === "stats") inner.searchParams.set("operator", cls === "admin" ? "1" : "0");
+    /* REC-131 / IC-148: THERE IS NO `operator` STAMP ON op=stats ANY MORE — every COUNT is the same for
+       every class (`MEMBER-KNOWLEDGE-DESIGN.md` §5, BOB #15), and a caller's `operator=` is not read.
+       What remains is `capacity`, which governs `dbBytes` ONLY (the admin class's: capacity is an
+       operator need, and the figure moves in whole pages on every write, a lead's included). Set by
+       the SERVER from the class that authenticated, AFTER the caller's parameters were copied, so a
+       caller's `capacity=1` is overwritten. `admin` is the ADMIN_TOKEN class and the ROOT-admin
+       session; an admin-ROLE member signs in as class `member` and does not receive it. */
+    if (op === "stats") inner.searchParams.set("capacity", cls === "admin" ? "1" : "0");
     if (op === "memberlist")
       inner.searchParams.set("administer",
         (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0");

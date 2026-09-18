@@ -13877,6 +13877,32 @@ green · 14789 assertions passing**, no skip; `node scripts/coverage.mjs --stric
 and every restore was byte-identical. `casesign.control.mjs` e/f/g/h re-ran at REC-130's recorded figures. **FOR CONDUCT:**
 resolve IC-147 against I3 as it reads at resolution (it was proposed MINOR on 27.1.0). D-422 is rowed and unscheduled.
 
+### CLAIM 2026-09-18 RECORD (REC-131) — THE CORRECTION TO IC-144: `leads` off `op=stats` for EVERY class; `observations` for every class, lead rows excluded
+
+Worker spawned by CONDUCT #5 into worktree `agent-aec29069af12e5c3f`, branch `worktree-agent-aec29069af12e5c3f`, base
+`a6bdfcbb`. Design: `MEMBER-KNOWLEDGE-DESIGN.md` §5 as corrected by BOB #15 (`852ccc7d`). Id minted before building:
+IC-148 (I3), superseding IC-144's class stamp.
+paths:
+  - `bio-plane/src/store.mjs` — `stats()` (the two keys), `purge`'s two `stats()` calls, the DO `stats` route.
+  - `bio-plane/src/index.mjs` — the REC-129 `operator` stamp on op=stats and op=selftest's relay, op=livefire's call.
+  - `bio-plane/src/livefire.mjs` — its relayed stats.
+  - `bio-plane/test/stats-disclosure.test.mjs`, `bio-plane/test/nc-rec129.mjs` (its stats arms) — CORRECTED at their sites.
+  - `bio-plane/test/lead.test.mjs` — its op=stats `leads`/`observations` arms, CORRECTED with the reason.
+  - any suite reading `leads`/`observations` off op=stats, corrected with its reason.
+  - `bio-plane/dist/**` rebuilt.
+  - `docs/development/OBSERVATION-LOG-DESIGN.md` (§6 premise 1, the internet-level paragraph, Status `as of`, the stale
+    Incomplete entry), `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` (Status only, REC-131 built),
+    `docs/development/INTERFACE-CHANGES.md` (IC-148; IC-144 pointer), `docs/architecture/construct-status.json` if a
+    claim moves, `docs/DECIDED.md` (regenerated only).
+  **NOT** `docs/development/QUEUE.md` (CONDUCT's), **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, no version bump.
+released: 2026-09-18 by the REC-131 worker (`agent-aec29069af12e5c3f`), branch `worktree-agent-aec29069af12e5c3f`.
+IC-148 (MAJOR proposed, 29.3.0 → 30.0.0): `leads` off op=stats/selftest/livefire for every class; `observations` for
+every class, lead looks excluded; REC-129's `operator` stamp removed; purge's proof whole through a private count.
+Battery 243/243 · 14858 at `c23e03f1` (baseline 243/243 · 14847; +11 is stats-disclosure 17 → 28). `nc-rec129.mjs`
+stats arms (6) all AS DECLARED. **FOR CONDUCT:** RESOLVE IC-148 against I3 as read at resolution and mark IC-144's
+class stamp superseded in the I3 version line; rebuild note — REC-129's admin-ROLE question (class vs `administer`) is
+MOOT under this ruling (no class receives `leads`); the `dbBytes` DESIGN GAP in IC-148's sweep is for BOB.
+
 ## CLAIM 2026-09-18 RECORD (REC-126 — THE REVIEW COPY, DEC-31: the draft case, the read-and-comment grant, the per-grant read secret)
 
 Worker spawned by CONDUCT #5, isolated worktree `agent-abd7c5e99752beec6`, branch
@@ -13927,10 +13953,10 @@ THE ACTS, stated as acts with their actor. **UI builds four surfaces**, each ren
    `comments[]` with `author_kind` visible — a recipient's comment is labelled as a recipient's (with `recipient`,
    the name the issuer gave), never as a member's.
 
-**ADDENDUM 2026-09-18 RECORD (REC-133, IC-151) — the AUTHORITY lines in points 1 and 3 above are SUPERSEDED by
-`BIO_Publication_v0_1.md` §6A.2 as built:** point 1's draft form is offered to the project's EDITORS — an owner or a
-JOINED participant holding `contribute` — not to the owner alone; point 3's GRANT stays the OWNER's; point 3's REVOKE
-is offered to the owner AND to any active administrator. The refusal code for all three is still
+**ADDENDUM 2026-09-18 RECORD (REC-133, IC-151) — point 1's AUTHORITY line above is SUPERSEDED by
+`BIO_Publication_v0_1.md` §6A.2 as built:** the draft form is offered to the project's EDITORS — an owner or a JOINED
+participant holding `contribute` — not to the owner alone. Point 3 is UNCHANGED: grant AND revoke stay the OWNER's
+(§6A.2 as corrected by BOB #15 the same day — administrators direct nothing). The refusal code for all three is still
 `REVIEW_NOT_PROJECT_OWNER`; render its `detail`, which names the act's authority, never a sentence built from the
 code's name. The delegation stays **open**.
 
@@ -13952,16 +13978,25 @@ Paths as claimed, plus `bio-plane/src/affordances.mjs` (NON_ACTS / RUNG_ABSENT r
 fold the DESIGN GAP (who may issue a grant — running provisionally at the project OWNER) into
 `BIO_Publication_v0_1.md`'s Incomplete sections if Bob has not ruled (it is already written there); the UI DELEGATION
 above is open.
+addendum 2026-09-18: RE-OPENED by CONDUCT #5's resume (two more BOB #15 rulings, before integration) on the same branch,
+merged with origin/main `e23daea9`. Paths ADDED: `bio-plane/test/observation-log.test.mjs`, `bio-plane/test/reextract.test.mjs`,
+`bio-plane/test/rec93-migrate-probe.mjs` (the key rename, at their sites); `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5
+(the two rulings written into it — they were not there at `5ea27761`).
+released (second time): 2026-09-18 by the same worker. IC-148 AMENDED IN PLACE (MAJOR, 29.4.0 → 30.0.0): `dbBytes` for the
+admin class only under a server-set `capacity` stamp; the wire's log count renamed `observationsNonLead`, no `observations`
+key on the wire, purge's proof unchanged. `nc-rec129.mjs`: 19 arms, 0 findings. **FOR CONDUCT:** RESOLVE IC-148 against I3
+as read at resolution; operator measurement scripts (`scaling.mjs`, `retrieval-scale.mjs`) now need the ADMIN token to read
+`dbBytes`.
 
-## CLAIM 2026-09-18 RECORD (REC-133 — the review copy's authority as §6A.2 decides it: author = edit, issue = owner, revoke = owner or any administrator)
+## CLAIM 2026-09-18 RECORD (REC-133 — the review copy's authority as §6A.2 decides it: author = the project's edit permission; issue and revoke stay at the owner, per BOB #15's same-day correction)
 
 Worker spawned by CONDUCT #5, isolated worktree `agent-a6516bd6e484436ba`, branch
 `worktree-agent-a6516bd6e484436ba`, base `e23daea9`. `npm ci` in all three packages, each `node_modules` a real
 directory (6.3 GiB free before, 5.3 GiB after). Design authority: `BIO_Publication_v0_1.md` §6A.2 (BOB #15). Paths:
 
-- RECORD (own): `bio-plane/src/store.mjs` (the review copy's three authority checks inside `#caseDraft` /
-  `#reviewGrant` / `#reviewRevoke`, their refusal, and the dry run's publisher in `#reviewGates`);
-  `bio-plane/src/index.mjs` (the NEEDS rows for `casedraft` and `reviewrevoke`, and the OPS comment).
+- RECORD (own): `bio-plane/src/store.mjs` (the authoring check inside `#caseDraft`, the review refusal's detail,
+  and the dry run's publisher in `#reviewGates`); `bio-plane/src/index.mjs` (the NEEDS row for `casedraft`, and the
+  OPS comment); `bio-plane/src/affordances.mjs` (the `casedraft` NON_ACTS sentence).
 - Tests: `bio-plane/test/reviewcopy.test.mjs` and `bio-plane/test/reviewcopy.control.mjs`; any suite pinning the
   NEEDS table, corrected with its reason.
 - Generated: `bio-plane/dist/*` rebuilt; `bio-plane/scripts/coverage.mjs` floors only if its print moves them.

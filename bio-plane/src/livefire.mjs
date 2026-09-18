@@ -23,7 +23,7 @@ const sha256 = async (s) => {
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 };
 
-export async function livefire(env, storeName, { operator = false } = {}) {
+export async function livefire(env, storeName, { capacity = false } = {}) {
   const t0 = Date.now();
   const stub = env.STORE.get(env.STORE.idFromName(storeName));
   const post = async (op, body) => {
@@ -169,8 +169,9 @@ export async function livefire(env, storeName, { operator = false } = {}) {
 
   /* ---- whole-store pass on real storage ---- */
   const tw = Date.now();
-  /* REC-129 / IC-144: relayed stats take op=stats' operator stamp (index.mjs sets it). */
-  const stats = await get(`stats?operator=${operator ? "1" : "0"}`);
+  /* REC-131 / IC-148: the store's stats under op=stats' one stamp — `dbBytes` for the admin class only
+     (index.mjs decides `capacity` from the authenticated class). */
+  const stats = await get(`stats?capacity=${capacity ? "1" : "0"}`);
   const dang = await get("dangling");
   const wholeMs = Date.now() - tw;
 

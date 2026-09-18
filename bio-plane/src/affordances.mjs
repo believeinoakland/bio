@@ -934,7 +934,7 @@ export const RUNG_ABSENT = {
      publication stays the one irreversible act (§6A.1). */
   casedraft:            { ground: "undetermined", is: "an editor of the project (an owner or a joined participant holding contribute, §6A.2) holds the arguments of a case publication under a draft id BEFORE any gate runs; mutable, never published, the review copy's production (BIO_Publication §6A.4)" },
   reviewgrant:          { ground: "credential", is: "the owner grants one named recipient READ-AND-COMMENT on one draft at one case edition, by a per-grant read secret" },
-  reviewrevoke:         { ground: "credential", is: "an owner of the project or any active administrator withdraws a review grant (§6A.2); the secret then answers as one never issued" },
+  reviewrevoke:         { ground: "credential", is: "the owner withdraws a review grant; the secret then answers as one never issued" },
   reviewcomment:        { ground: "undetermined", is: "a recipient (through a live grant) or a member with standing comments on a draft; attributed, and a recipient's comment is recorded as a recipient's" },
   leadlook:             { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" },
 };

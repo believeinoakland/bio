@@ -10638,7 +10638,7 @@ test/nc-rec129.mjs statsbaseline|statsopen|statsdropall|statsstamp|selftestopen`
 
 **RESPONSES:** not yet collected.
 
-**SUPERSEDED IN PART, 2026-09-18, BY BOB #15's CORRECTED RULING (`MEMBER-KNOWLEDGE-DESIGN.md` §5), which arrived during this IC's integration. `leads` leaves `op=stats` for EVERY class, the admin token included, and `observations` stays published to every class but excludes lead rows. The admin-class stamp below is therefore NOT the final shape. The correction is REC-131, which carries its own IC; this IC landed as built because it discloses strictly less than the tree before it.** **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 28.0.0 → 29.0.0.** The base was read at resolution: 28.0.0, where IC-142 moved it after this row was proposed against 27.0.0. Member and probe callers lose two keys they received before, so this is breaking by IC-25. **Provisional, and carried to BOB #15 for ruling:** the fence keys on the admin CLASS, so a member whose ROLE is admin, signing in as class `member`, does not receive the counts. The alternative is the `administer` right; reversing it is one line at the stamp. The worker also found that `OBSERVATION-LOG-DESIGN.md` §6's REC-110 ruling rested on the premise this IC removes, and recorded that in the document's Incomplete sections; it is a disclosure call, with BOB.
+**SUPERSEDED IN PART, 2026-09-18, BY BOB #15's CORRECTED RULING (`MEMBER-KNOWLEDGE-DESIGN.md` §5), which arrived during this IC's integration. `leads` leaves `op=stats` for EVERY class, the admin token included, and `observations` stays published to every class but excludes lead rows. The admin-class stamp below is therefore NOT the final shape. The correction is REC-131, which carries its own IC — **IC-148**, below; this IC landed as built because it discloses strictly less than the tree before it.** **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 28.0.0 → 29.0.0.** The base was read at resolution: 28.0.0, where IC-142 moved it after this row was proposed against 27.0.0. Member and probe callers lose two keys they received before, so this is breaking by IC-25. **Provisional, and carried to BOB #15 for ruling:** the fence keys on the admin CLASS, so a member whose ROLE is admin, signing in as class `member`, does not receive the counts. The alternative is the `administer` right; reversing it is one line at the stamp. The worker also found that `OBSERVATION-LOG-DESIGN.md` §6's REC-110 ruling rested on the premise this IC removes, and recorded that in the document's Incomplete sections; it is a disclosure call, with BOB.
 
 ## IC-139 · I3: A RATIFICATION STATES WHO AUTHORISED AND WHO DELIVERED — `op=ratify` / `op=caseratify` answer `deliveredBy`, every read that serves a ratification carries `delivered_by` beside `attestor`, and the PUBLISHED case container moves `bio-case-container/5` → `/6` to carry it · PROPOSED 2026-09-18 (REC-128, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
@@ -10783,6 +10783,93 @@ arms `founder-standing` and `everyone-admin`, recorded in the suite's `NEGATIVE 
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR — I3 29.2.0 → 29.3.0**, landing in the same merge as IC-139 and ordered after it. The base was read at resolution; it was proposed against the held merge's 27.1.0. Nothing that answered before is refused; one principal, the founder's own session, is answered where it was refused. REC-130's stranger properties are unchanged: `casesign.control.mjs` e/f/g/h reproduce REC-130's figures, and `deliverer.control.mjs` `everyone-admin` shows a too-broad fix fails. **Not closed here:** D-422, every OTHER session-stamped read still treating the founder as `member:admin`, and `memberAdd` accepting the id `admin`. Both are with BOB #15 for a design pass before they are rowed.
 
+## IC-148 · I3: `op=stats` publishes `leads` to NO class, the admin token included; its log count is RENAMED `observationsNonLead` (the log WITHOUT `authority_kind = 'lead'` rows), published to EVERY class, and the wire carries no `observations` key; `dbBytes` is published to the ADMIN class ONLY; `op=selftest` and `op=livefire` relay the same answer; SUPERSEDES IC-144's admin-class stamp · PROPOSED 2026-09-18 (REC-131, minted with `node tools/mintid.mjs IC` BEFORE building; AMENDED IN PLACE the same day when CONDUCT #5 resumed REC-131 with two more BOB #15 rulings, before integration) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's `docs/development/INTERFACES.md`
+  (merged with origin/main `e23daea9`): 29.4.0. Proposed as MAJOR — 29.4.0 → 30.0.0.** **Read the base AT RESOLUTION.**
+  (First proposed against 29.3.0; REC-126's IC-145 moved it to 29.4.0 underneath this row.)
+- **Proposer:** RECORD, REC-131 worker `agent-aec29069af12e5c3f`, 2026-09-18 — a CORRECTION TO LANDED REC-129 (IC-144),
+  on BOB #15's CORRECTED ruling in `MEMBER-KNOWLEDGE-DESIGN.md` §5, and on the two rulings CONDUCT #5 carried when it
+  resumed the row (the key rename under `kickoffs/BOB.md` rule 7, and `dbBytes`). §5 now carries both, written by this
+  worker from the row, because they were NOT in §5 at `5ea27761` as the resume brief said (measured: `grep dbBytes` over
+  `MEMBER-KNOWLEDGE-DESIGN.md` on `e23daea9` returned nothing; the rulings were in the QUEUE row's RESUMED paragraph only).
+- **Owner to land it:** `RECORD`
+- **Supersedes:** IC-144's class stamp, IN PART. IC-144's substance — no member-class caller receives a lead count —
+  stands and is widened to every class; its MECHANISM (the `operator` stamp over counts) is removed.
+- **Consumers to answer (MEASURED on this tree, grepped, not recalled):** `UI` (NOT-AFFECTED: `civicos-ui/` calls
+  neither `op=stats`, `op=selftest` nor `op=livefire`), `DIST` (NOT-AFFECTED: `newgroup/src/index.mjs`'s
+  `verifyInstall` reads only `ok` and `bindings.STORE` off `op=selftest`, with the PROBE token; `release/` carries the old
+  bundle until DIST's next cut), `SKILL`, `agent-worker` (NOT-AFFECTED, grepped). **`dbBytes` readers**: only
+  measurement scripts, all with an ADMIN token (`fl1-cpu-probe.mjs`, `connections-growth.measure.mjs`,
+  `tools/m031-index-measure.mjs`'s cited figure) or a local token file (`scaling.mjs`, `retrieval-scale.mjs` — an operator
+  must now hand them the ADMIN token to read `dbBytes`); none is a suite. **`observations` readers off op=stats**:
+  `lead.test.mjs`, `observation-log.test.mjs`, `reextract.test.mjs`, `rec93-migrate-probe.mjs` — all read with the admin
+  token and all CORRECTED to `observationsNonLead` at their sites (the last is a manual probe needing a pre-item checkout
+  and was not run; its change is the key name only).
+
+**THE RULINGS, in the document's own terms (§5).** (1) `#leadVisibleTo` reaches no `class:*` credential and skips the
+administrator arm, so no caller can read every lead — a counter over leads has no class it may be shown to. (2) The log
+count stays on the wire for every class, counting rows without `authority_kind = 'lead'`, one meaning for every caller —
+and since one key never carries two meanings (BOB.md rule 7), the key whose meaning CHANGED is renamed. (3) `dbBytes`
+moves in whole pages on every write, a lead's included, so it leaves member and probe; capacity is an operator need, so
+the admin class keeps it, and the residue is stated. `purge`'s D-113 proof reads the store's own counts and stays whole.
+
+**THE SHAPE.**
+- `op=stats` (and `op=selftest`'s `store`, `op=livefire`'s `storeState`): **no `leads`; no `observations`; a new
+  `observationsNonLead`** = `count(*) FROM observation_log WHERE authority_kind <> 'lead'`, in the position `observations`
+  had; **`dbBytes` only for the `admin` class** (the ADMIN_TOKEN and the root-admin session; an admin-ROLE member signs in
+  as class `member` and does not receive it). Every other key unchanged.
+- **The class discrimination, and why it is back.** `Store#stats({ capacity })` governs `dbBytes` and NOTHING ELSE.
+  `capacity` is set by the SERVER in `index.mjs` from the authenticated class AFTER the caller's parameters are copied
+  (op=stats), and by `index.mjs` on op=selftest's relay fetch and op=livefire's call; the store's default is `false`, so a
+  door that forgets to stamp loses `dbBytes` rather than leaking it. A caller's `capacity=` / `operator=` / anything else
+  is overwritten or ignored (asserted, B2/B3). It is a stamp on the one DO route, rather than a second method, because
+  every door already fetches that route; it is the smallest discrimination the ruling needs, and REC-129's `operator`
+  stamp over COUNTS stays removed (no count differs by class).
+- `op=purge`'s `before`/`after`: **byte-for-byte unchanged** — `observations` over the WHOLE log, `leads`, `dbBytes`, in
+  the positions they always had, from a private `Store#counts({ proof: true })` no route reaches. So after this IC,
+  `observations` means one thing wherever it appears (purge's whole log), and the wire's narrower count has its own name.
+- **Why `observationsNonLead`.** It states its predicate literally. A neutral name (`observationsVisible`,
+  `observationsPublic`) would stay "true" if a later construct were ruled existence-private and joined the exclusion — and
+  that is precisely a meaning change under an unchanged key, rule 7's defect again. With the predicate in the name, a
+  wider exclusion forces a rename, i.e. an IC. It also sits beside `aiRunLog` (the `'run'` slice) as the other named
+  slice of the same table.
+
+**WHY MAJOR — the argument per class.**
+- **Admin:** loses `leads` (IC-144 gave it) and `observations` (renamed). A removed key is breaking whatever the measured
+  impact (IC-25). Keeps `dbBytes`.
+- **Member and probe:** lose `dbBytes`, which they have had since the plane's first `op=stats` — breaking. They gain
+  `observationsNonLead` (additive), NOT `observations` back: against the contract they last held that key under (28.x,
+  the whole log) the count they now receive is narrower and differently named.
+- The strongest classification governs: MAJOR, 29.4.0 → 30.0.0. There is no reading on which this is MINOR — every class
+  loses at least one key. Measured impact is zero non-test consumers; operator measurement scripts need the admin token.
+
+**THE SWEEP, and what it could not see.** Matcher: every SQL `count(` over `observation_log` or `leads` in `store.mjs`;
+every op whose answer embeds `stats()` (`op=stats`, `op=selftest`, `op=livefire`, `op=purge`); every `operator`/`capacity`
+read in `src/`; every reader of `dbBytes` and of `.observations` off an `op=stats` answer in the repository. `op=purge`
+keeps the whole counts and `dbBytes` BY THE RULING (a probe reaches purge in SCRATCH only, and every lead act is refused
+to a machine credential; an admin purging the live store learns the count of leads it destroys — REC-129's named residue).
+**Cannot see:** a count computed in JS over rows fetched elsewhere, `.length` of an unpublished list, disclosure by
+TIMING (a large lead's write takes longer), and any SIZE figure other than `dbBytes` — `textIndexOk` and the counts are not
+sizes; nothing else in the answer reads `databaseSize`. **The admin's residue is stated rather than closed** (§5): a large
+write moves `dbBytes` by whole pages for the operator — measured +372,736 B across one ~124 KiB lead in the suite.
+
+**Suites:** `bio-plane/test/stats-disclosure.test.mjs` — CORRECTED at its sites twice, with dated reasons (never
+exempted): A the byte-identical headline control for the ADMIN token (with `dbBytes` set aside, its stated residue), the
+member token, a member session and the probe; B `leads` and `observations` absent and `observationsNonLead` present for
+every class, `dbBytes` for the admin class only, and no parameter moves any of it (B3 the over-strictness direction);
+C THE LIAR ARM — `observationsNonLead` moves by one on a non-lead observation for every caller and reads the same number
+for all; D `op=selftest` (member, probe, admin) and `op=livefire` (probe, admin); F THE dbBytes CONTROL — a ~124 KiB lead
+GROWS the database (F0, the arm is armed), a member's, a member session's and the probe's whole answer is byte-identical
+across it, and the admin's differs only in `dbBytes`; E `purge`'s proof whole. `bio-plane/test/lead.test.mjs`,
+`observation-log.test.mjs`, `reextract.test.mjs`, `rec93-migrate-probe.mjs` — corrected at their sites. NEGATIVE CONTROL:
+`node test/nc-rec129.mjs statsbaseline|statsleadrows|statsadminleads|statsdropall|routeproof|purgethin|dbbytesmember|dbbytesall|dbbytesnone|capacitycaller|keyboth`
+from `bio-plane/` — 19 arms with the frontier's, 0 findings.
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 29.4.0 → 30.0.0.** The base was read at resolution: 29.4.0, unchanged since the amended proposal. Every class loses at least one key: the admin loses `leads` and `observations` and keeps `dbBytes`; member and probe lose `dbBytes` and gain `observationsNonLead` in place of the `observations` they last held. So it is breaking under IC-25 and IC-118. This SUPERSEDES IC-144's class stamp. There is exactly one class distinction left, the server-set `capacity` stamp, which governs `dbBytes` only and defaults closed. The stated residue: the admin can see that something large was written (~364 KiB for one near-cap lead). NOT addressed and carried as found: a large lead's write takes longer, which is a timing signal. The operator measurement scripts `scaling.mjs` and `retrieval-scale.mjs` now need the admin token to read `dbBytes`.
+
 ## IC-145 · I3: THE REVIEW COPY — `op=casedraft`, `op=reviewgrant`, `op=reviewrevoke`, `op=reviewcopy`, `op=reviewcomment`; and `op=casedocument` admits a LIVE GRANT HOLDER to the unsigned document of the one case edition the grant is bound to · PROPOSED 2026-09-18 (REC-126, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's `docs/development/INTERFACES.md`
@@ -10881,58 +10968,58 @@ revocation `credential`, draft and comment `undetermined`). NEGATIVE CONTROL: `n
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR, ADDITIVE — I5 1.21.0 → 1.22.0.** The base was read at resolution: 1.21.0, where IC-140 moved it after this row was proposed against 1.20.0. Three new tables before `host_governor`, all in `purge`; `review_grants` holds `secret_sha` only.
 
-## IC-151 · I3: THE REVIEW COPY'S AUTHORITY, AS `BIO_Publication_v0_1.md` §6A.2 DECIDES IT — `op=casedraft` opens to the project's EDIT permission (NEEDS `contribute`, an owner or a JOINED participant), `op=reviewrevoke` to the owner OR ANY active ADMINISTRATOR (NEEDS nothing; positional), `op=reviewgrant` UNCHANGED at the owner · PROPOSED 2026-09-18 (REC-133, minted with `node tools/mintid.mjs IC` BEFORE writing this row) — the version bump and the RESOLUTION are CONDUCT's
+## IC-151 · I3: THE REVIEW COPY'S AUTHORING, AS `BIO_Publication_v0_1.md` §6A.2 DECIDES IT — `op=casedraft` opens to the project's EDIT permission (NEEDS `contribute`; an owner or a JOINED participant); `op=reviewgrant` and `op=reviewrevoke` UNCHANGED at the owner · PROPOSED 2026-09-18 (REC-133, minted with `node tools/mintid.mjs IC` BEFORE writing this row) — the version bump and the RESOLUTION are CONDUCT's
 
-- **Interface:** I3 (plane → UI, the op contracts). **Version read off `origin/main`'s `docs/development/INTERFACES.md`
-  when written: 29.4.0** (REC-131 may land a MAJOR ahead of this — **read the base AT RESOLUTION**).
-- **Proposed as MAJOR, BREAKING — for ONE caller configuration, measured, and argued rather than argued down.**
-  Two acts WIDEN and nothing that answered them before is refused, with one exception: `op=casedraft`'s capability
-  moves from `publish` to `contribute`, so **an OWNER holding `publish` WITHOUT `contribute` — a configuration the
-  plane accepts (measured: `reviewcopy.test.mjs` enrols `uma` with `["publish"]` alone) — could author a draft
-  yesterday and is refused `NOT_CAPABLE` today.** That is the ruling applied, not a side effect: §6A.2 makes authoring
-  the EDIT permission, and a member who may edit nothing in the working corpus may not edit the draft either. Consumer
-  impact measured at ZERO (grepped `civicos-ui/`, `agent-worker/`, `pdf-worker/`, `ocr-worker/`, `newgroup/`
-  for the three ops and the refusal code: no hit; there is no top-level `skills/`). **MAJOR anyway on IC-25's rule and IC-117's precedent: a
-  consumer count is a fact about this moment and a contract is a promise about every moment after it** — a caller
-  that could draft and now cannot has been broken whether or not it exists yet. MINOR is defensible ONLY if CONDUCT
-  judges that edge vacuous; the proposer does not.
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off this tree's `docs/development/INTERFACES.md`
+  after merging `origin/main` `0a58dee1`: 30.0.0** (IC-148 moved it from 29.4.0 while this item ran — **read the base
+  AT RESOLUTION**).
+- **Proposed as MAJOR, BREAKING — for ONE caller configuration, measured, and argued rather than argued down.** One
+  act WIDENS and nothing else moves, with one exception: `op=casedraft`'s capability moves from `publish` to
+  `contribute`, so **an OWNER holding `publish` WITHOUT `contribute` — a configuration the plane accepts (measured:
+  `reviewcopy.test.mjs` enrols `uma` with `["publish"]` alone) — could author a draft yesterday and is refused
+  `NOT_CAPABLE` today.** That is the ruling applied, not a side effect: §6A.2 makes authoring the EDIT permission, and a
+  member who may edit nothing in the working corpus may not edit the draft either. Consumer impact measured at ZERO
+  (`git grep` over `civicos-ui/`, `agent-worker/`, `pdf-worker/`, `ocr-worker/`, `newgroup/` for the three ops and the
+  refusal code: no hit). **MAJOR anyway on IC-25's rule and IC-117's precedent: a consumer count is a fact about this
+  moment and a contract is a promise about every moment after it.** MINOR is defensible ONLY if CONDUCT judges that
+  edge vacuous; the proposer does not.
 - **Proposer:** RECORD, worker `agent-a6516bd6e484436ba`, 2026-09-18, from QUEUE REC-133.
 - **Owner to land it:** `RECORD`.
 - **Consumers to answer:** `UI` (AFFECTED as the builder of the still-DELEGATED surface — `CLAIMS.md` REC-126 → UI,
-  whose authority lines this landing corrects in an addendum: the draft form is the EDITOR's, grant is the OWNER's,
-  revoke is the owner's or an administrator's); `SKILL`, `DIST`, `FRAMEWORK` NOT-AFFECTED (no reader, grepped).
-- **Design:** `BIO_Publication_v0_1.md` §6A.2, *"WHO MAY AUTHOR, ISSUE AND REVOKE"* (BOB #15, 2026-09-18); Membership
-  v2 §5 (`contribute`) and §7.5 (*a joined member has the working rights their capabilities allow*).
+  whose point-1 authority line this landing corrects in an addendum); `SKILL`, `DIST`, `FRAMEWORK` NOT-AFFECTED.
+- **Design:** `BIO_Publication_v0_1.md` §6A.2, *"WHO MAY AUTHOR, ISSUE AND REVOKE"* (BOB #15, 2026-09-18, the revoke
+  line CORRECTED the same day to owner-only); Membership v2 §5 (`contribute`), §7.5 (*a joined member has the working
+  rights their capabilities allow*) and §4 (administrators direct nothing).
 
 **THE SHAPE.** No op, parameter, field or refusal code is added, renamed or removed.
 - `POST op=casedraft` — NEEDS `publish` → **`contribute`**. The store admits `#isProjectEditor`: an owner
   (`#isProjectOwner`, unchanged) or a participant whose state is `joined` (`#participation`, the record's one
   membership predicate). An invited-not-joined member (§7.5: view rights only), a member who has asked to leave, a
-  non-participant and an administrator who holds no position are refused as before. Editing an existing draft in
-  place follows the same rule.
-- `POST op=reviewgrant` — UNCHANGED: NEEDS `publish`, the owner only, no administrator bypass (DEC-72).
-- `POST op=reviewrevoke` — NEEDS `publish` → **none (null)**, and the store admits the owner **or any active
-  administrator** (`#isAdminMember`, the founder included). The authority is positional and revoking only narrows
-  exposure, so a capability gate would be a fence tighter than the rule (a co-owner without `publish` could not
-  withdraw a grant a fellow owner issued). A machine is still refused by name (C-32.16, unchanged, one door).
+  non-participant and an administrator who holds no position are refused as before. Editing a draft in place
+  follows the same rule.
+- `POST op=reviewgrant`, `POST op=reviewrevoke` — UNCHANGED: NEEDS `publish`, the owner only, no administrator
+  bypass. **This worker first built §6A.2's original revoke line (owner OR any administrator) and REVERTED it before
+  landing, on CONDUCT #5's relay of BOB #15's correction;** nothing of it survives on the branch tip.
 - **The refusal code is KEPT: `REVIEW_NOT_PROJECT_OWNER` for all three acts.** Its name is exact for issuing and
-  narrower than the rule for authoring and revoking; its `detail` now names the authority each act needs. Renaming
-  it would change an answer a caller branches on for a refusal whose MEANING (no such authority, or no such thing —
-  still one answer) is unchanged. Recorded here so nobody reads the name as the rule.
+  revoking and narrower than the rule for authoring; its `detail` now names the authority each act needs. Renaming it
+  would change an answer a caller branches on for a refusal whose MEANING (no such authority, or no such thing — still
+  one answer) is unchanged.
 - **`op=reviewcopy`'s `missing` for a NON-OWNER editor's draft.** `publishCase` runs its owner fence first, so the
-  dry run is now run as the member who would PUBLISH — the last editor if an owner, else the lowest-id owner, else
-  (a project with no owner) the editor, whose `NOT_THE_PROJECT_OWNER` is then the true first gap. Without this, every
-  editor's draft would list `NOT_THE_PROJECT_OWNER` and hide its real gaps. No field changes; for an owner-edited
-  draft the answer is byte-identical to REC-126's.
+  dry run is now run as the member who would PUBLISH — the last editor if an owner, else the first of the project's
+  owners (`#owners`, sorted), else (a project with no owner) the editor, whose `NOT_THE_PROJECT_OWNER` is then the true
+  first gap. Without this, every editor's draft would list `NOT_THE_PROJECT_OWNER` and hide its real gaps. No field
+  changes; for an owner-edited draft the answer is byte-identical to REC-126's.
 
-**Suites:** `bio-plane/test/reviewcopy.test.mjs` 52 → 63 (the editor authors and edits; the plain member, invited and
-not joined, can do none of the three; a joined member without `contribute` is refused at the control plane; the
-editor cannot issue, on the owner's draft or her own; the administrator cannot issue; an administrator who is not the
-owner revokes and the secret then answers byte-identically to one never issued; an editor's draft is judged as its
-publisher would meet the gates). Two labels CORRECTED with their reason in a comment (block 2's heading and the
-non-participant arm said the authority was publish's). `src/affordances.mjs`'s NON_ACTS sentences for `casedraft`
-and `reviewrevoke` restated. NEGATIVE CONTROL: `node test/reviewcopy.control.mjs [e|f|g|h]` from `bio-plane/` — (e)
-revoke re-gated at owner-only 61/2, (f) issue widened to editors 62/1, (g) authoring widened to any member 59/4, (h)
-the dry run as the editor 62/1; baseline 63/0; REC-126's (a)-(d) re-measured.
+**Suites:** `bio-plane/test/reviewcopy.test.mjs` 52 → 63 (the editor authors, and edits the owner's draft in place;
+the plain member, invited and not joined, can do none of the three; a joined member without `contribute` is refused
+at the control plane; the editor cannot issue, on the owner's draft or her own; neither the plain member nor a
+non-owner administrator can issue; the editor, the plain member and a non-owner administrator cannot revoke and the
+grant is still live after all three tried; the owner revokes it and the secret then answers byte-identically to one
+never issued; an editor's draft is judged as its publisher would meet the gates). Two labels CORRECTED with their
+reason in a comment (block 2's heading and the non-participant arm said the authority was publish's).
+`src/affordances.mjs`'s NON_ACTS sentence for `casedraft` restated. NEGATIVE CONTROL: `node test/reviewcopy.control.mjs
+[e|f|g|h]` from `bio-plane/` — (e) revoke widened to administrators 61/2, (f) issue widened to editors 62/1, (g)
+authoring widened to any member 59/4, (h) the dry run as the editor 62/1; baseline 63/0; REC-126's (a)-(d)
+re-measured (58/5, 62/1, 61/2, 61/2).
 
 **RESPONSES:** not yet collected.

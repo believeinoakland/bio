@@ -95,7 +95,9 @@ design, doctrine, anything for Bob → BOB) and continue.
   (append a DELEGATION); interfaces change only through `INTERFACE-CHANGES.md`. Work in your own worktree.
 - **Only DIST cuts plane releases**, from a green `main`. **The standing lanes — CONDUCT, BOB, DIST,
   FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18); a lane's session is refreshed only when its
-  context is too full, by its successor.
+  context is too full, by its successor. **Its self-wake expires:** a session-only `CronCreate` lasts 7 days, so when
+  you arm it, also arm a ONE-SHOT reminder 5 days out that deletes it, arms a fresh one, and arms the next reminder
+  (FLEET's form, 2026-09-18).
 - **Undetermined is first-class and must be STATED.** Never invent an attribution, a referent or a figure
   to get past a gate; a gate that pressures someone into inventing one is a bug in the gate.
 - **A defect you find is diagnosed until its FIX can be named**, then sent to SCHEDULER to be placed in the build plan
@@ -122,7 +124,9 @@ design, doctrine, anything for Bob → BOB) and continue.
   store-level test is not evidence a caller can reach the feature. **A deploy verified is not a build
   serving**: rollout is per-isolate — if a live probe contradicts the suite, establish which build answered.
 - **A fix verified only where you changed it is not verified.** Ask who else reads it — the gate's note,
-  the suite's assertion, the row that cites it, the kickoff that quotes it — and check THERE.
+  the suite's assertion, the row that cites it, the kickoff that quotes it — and check THERE. **And re-run the
+  subject's negative control after changing it**: a suite coupled to behaviour survives a refactor that disarms the
+  control coupled to shape (M-60 Q9).
 - **Verify by the positive artifact, never the absence of an error.** A full battery ends with
   `N/N suites green · M assertions passing`; a run without that line did not finish. **Never read an exit
   status through a pipe or a wrapper** — `cmd | tail` reports tail's.

@@ -350,7 +350,8 @@ const obj = ns.get(ns.idFromName("bio"));
    Read through the op rather than by querying the DO, because a store-level
    read and a caller-reachable one are different claims and only one of them is
    what an operator actually gets. */
-const obsCount = async () => (await GET(`op=stats&token=${ADM}`)).observations;
+/* CORRECTED 2026-09-18 BY REC-131 (IC-148), NEVER EXEMPTED: op=stats' log count is published as `observationsNonLead` (the log WITHOUT lead looks) and the wire carries no `observations` key — one key never carries two meanings (BOB.md rule 7), and purge's `observations` keeps the whole log. This suite writes no lead, so the figure it reads is unchanged; only the name moved. */
+const obsCount = async () => (await GET(`op=stats&token=${ADM}`)).observationsNonLead;
 
 /* ========================================================================= *
  *  A · THE TABLE — §3. Its shape, its indexes, and BOTH purge arms.
