@@ -1,6 +1,6 @@
 # The investigative session — proactive AI claim formulation
 
-**Status** · The design for the investigative session — a skilled AI run that reads an inquiry, searches evidence across four levels, and writes SUGGESTED basis versions a member accepts or rejects — by Bob with session BOB, 2026-08-05, rewritten twice that day, v3 on 2026-08-07 absorbing the IS sweep. It carries the reasoning for DEC-60 (proactive claim formulation), DEC-61 (device-local transcripts) and DEC-62 (pursue and investigate are one session), inline `[BOB-2/3/4]` rulings of 2026-08-07 and four SETTLED delegations; §16 lists fifteen withdrawn positions and §18's hold sentence is struck as SUPERSEDED. Complete as design and superseded by the build: `IS-BUILD-PLAN.md` decomposed §18 into 43 rows and `QUEUE.md`'s IS BUILD PLAN status records COMPLETE 2026-09-13. The caveat: the preconditions the text still calls open — D-222, D-216, D-218, the `[BOB-4]` provisional — have since landed, been answered or been overtaken (DEC-52 final, DEC-72's reshaping of the published case), so its "what is NOT settled" list is history. **§14c's "Related finding" paragraph was CORRECTED IN PLACE on 2026-09-15 by REC-99** — it said in the present tense that the three meaning-layer reads "are uncapped", false since REC-60 capped them on 2026-08-07 under IC-25, and it is one of the two citations that put already-finished work back on the queue (REC-89). Nothing else in the document moved and no section's completeness changed. as of 2026-09-15.
+**Status** · The design for the investigative session — a skilled AI run that reads an inquiry, searches evidence across four levels, and writes SUGGESTED basis versions a member accepts or rejects — by Bob with session BOB, 2026-08-05, rewritten twice that day, v3 on 2026-08-07 absorbing the IS sweep. It carries the reasoning for DEC-60 (proactive claim formulation), DEC-61 (device-local transcripts) and DEC-62 (pursue and investigate are one session), inline `[BOB-2/3/4]` rulings of 2026-08-07 and four SETTLED delegations; §16 lists fifteen withdrawn positions and §18's hold sentence is struck as SUPERSEDED. Complete as design and superseded by the build: `IS-BUILD-PLAN.md` decomposed §18 into 43 rows and `QUEUE.md`'s IS BUILD PLAN status records COMPLETE 2026-09-13. The caveat: the preconditions the text still calls open — D-222, D-216, D-218, the `[BOB-4]` provisional — have since landed, been answered or been overtaken (DEC-52 final, DEC-72's reshaping of the published case), so its "what is NOT settled" list is history. **§14c's "Related finding" paragraph was CORRECTED IN PLACE on 2026-09-15 by REC-99** — it said in the present tense that the three meaning-layer reads "are uncapped", false since REC-60 capped them on 2026-08-07 under IC-25, and it is one of the two citations that put already-finished work back on the queue (REC-89). Nothing else in the document moved and no section's completeness changed. §7.1 (a conclusion belongs to the project's relationship with the inquiry, BOB #15) added 2026-09-18. as of 2026-09-18.
 
 **Place in the system** · Level-2 design serving `BIO_System_Design.md` §3 row 8 (intent and inquiry; home `BIO_Content_Framework_v0_10.md` Part I §12 and `BIO_Case_Making_v0_1.md`) and row 11 (the assistant; home `BIO_Assistant_and_AI_Roles_v0_1.md` since 2026-09-14, whose §4 places this design as the first AI integration built). `IS-BUILD-PLAN.md`, `kickoffs/SKILL.md`, `agent-worker`, `airun.mjs` and the DEC-60/61/62 enactments depend on it; the landed plan rows, DEC-52 final, DEC-72 and Part II §14.3/§17 supersede parts of it.
 
@@ -28,6 +28,7 @@
 - [5 · How the legs come together — and why this is not a schema problem](#5-how-the-legs-come-together-and-why-this-is-not-a-schema-problem)
 - [6 · VERSIONS — the mechanism](#6-versions-the-mechanism)
 - [7 · CURRENT belongs to the project's relationship with the inquiry](#7-current-belongs-to-the-projects-relationship-with-the-inquiry)
+  - [7.1 · A CONCLUSION belongs to the project's relationship with the inquiry too — decided 2026-09-18 (BOB #15, at Bob's direction: *"If it agrees/follows earlier decisions, then do that"*)](#71-a-conclusion-belongs-to-the-projects-relationship-with-the-inquiry-too-decided-2026-09-18-bob-15-at-bobs-direction-if-it-agreesfollows-earlier-decisions-then-do-that)
 - [8 · The inquiry's QUESTION is a first-class object](#8-the-inquirys-question-is-a-first-class-object)
 - [9 · What a SUGGESTION is](#9-what-a-suggestion-is)
 - [10 · The two modes — one piece of work, two ways in](#10-the-two-modes-one-piece-of-work-two-ways-in)
@@ -482,6 +483,55 @@ one member could silently mute what a team must see.
 the edge-based association found here — one stance that every referencing project must
 share — then cloning is the only honest answer and this section is wrong. That check belongs
 to whoever builds IS-3. → **D-216**
+
+### 7.1 · A CONCLUSION belongs to the project's relationship with the inquiry too — decided 2026-09-18 (BOB #15, at Bob's direction: *"If it agrees/follows earlier decisions, then do that"*)
+
+**The conflict it resolves.** `op=conclude` writes ONE conclusion onto the inquiry itself, so on a shared inquiry one
+team concluding moved every team's stance — exactly what this section forbids for CURRENT. REC-124's builder found it
+and stopped (the claim-adoption act cannot be built until someone says whose adoption it is).
+
+**Checked against every earlier decision before deciding, and it FOLLOWS Bob's rulings:**
+- **This section (D-216, Bob 2026-08-08):** *one team's decision must never silently move another team's stance.*
+  Concluding is the strongest stance a team takes; applying the rule to CURRENT and not to the conclusion was an
+  omission, not a choice.
+- **DEC-45 (Bob, 2026-08-04):** adding a finding to a project *"may cause the conclusions to change if the source bias
+  and the bias of the project/instance differ"* — Bob already treats a conclusion as depending on the project it is
+  drawn in, and declared bias is per project (`BIO_Declared_Bias_v0_1.md`).
+- **DEC-17:** the strength bar a conclusion must clear is the PROJECT's (`required_strength`, strictest-wins).
+- **DEC-72:** a case is a production OF A PROJECT over finding-versions — publication is already per project.
+- **D-217b / DEC-22:** claims live on the shared versions, and an unsupported claim is a standing objective — both
+  unchanged: the inquiry, its versions, its claims and its evidence stay SHARED; only the adoption moves.
+
+**What it AMENDS — two design determinations, neither a ruling of Bob's, both written before inquiries could be shared:**
+- `BIO_State_Rules_Consistency_v1_5.md` §4 / the catalog's `STATES.inquiry`: `concluded` was one state of the inquiry.
+  It becomes a state of a (project, inquiry) relationship. An inquiry OUTSIDE any project (DEC-17 allows one) keeps its
+  own, as the relationship with no project.
+- DEC-44's determination 1 (BOB's, 2026-08-04, four days before §7): *"each finding keeps its own conclusion"*. Its point
+  — a case composes no super-conclusion over its findings — stands untouched. Read literally as *one conclusion per
+  inquiry*, it is superseded: each finding carries a conclusion PER PROJECT that adopts it.
+
+**The design:**
+1. **A conclusion is a project-authored, DATED act on the relationship, beside CURRENT** and in the same form (§7:
+   never a settings row): the project, the inquiry, the VERSION adopted, that version's CLAIM frozen verbatim at the
+   moment of adoption, the falsifier (or the member's stated override, REC-117), the author, the time. A machine never
+   authors it (DEC-24).
+2. **Concluding adopts the claim of the version the project stands on, and the claim IS what was concluded.** A free
+   conclusion text that can say what no claim said is the overclaim this record exists to refuse ("less narrative" binds
+   us first). What a member wants to add beyond the claim is COMMENTARY, attributed and never evidence — the same line
+   `MEMBER-KNOWLEDGE-DESIGN.md` §6 draws for an opinion. Concluding with no claim on the adopted version is refused
+   (`NO_CLAIM`), naming the door: state the claim on a version first (DEC-22 makes an unsupported claim legal to add).
+3. **Other projects are told, never moved** — a FINDING-class notice, §7's notification pattern: *project P concluded
+   this shared inquiry on version N*. Their stance is unchanged until they act.
+4. **Everything that asked "is this inquiry concluded?" asks it FOR A PROJECT:** `NOT_CONCLUDED` at `op=caseratify`
+   reads the publishing project's relationship; a leg resting on inquiry X reads X's conclusion FOR THE SAME PROJECT, and
+   where that project has none the leg's inquiry is unconcluded for it — stated, not inferred from another team's.
+5. **What was already concluded is not rewritten.** Existing inquiries carrying a conclusion in their own bytes (some
+   inside ratified, signed cases) are read as the conclusion of the relationship that concluded them, or of the
+   no-project relationship where none can be established — stated as such. Ratified bytes are never edited (the
+   `published` legacy-set precedent in State Rules' 2026-09-10 amendment).
+
+**Reversal cost:** low now; it rises once published cases freeze per-project conclusions into their bytes. **Built by:**
+REC-124, unblocked by this section (RECORD; an I3 change with its own IC; I5 if the case bytes carry the adoption).
 
 ## 8 · The inquiry's QUESTION is a first-class object
 

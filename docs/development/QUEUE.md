@@ -101,6 +101,22 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-18 · BOB #15 · TWO ITEMS FOR THE ORDER, BOTH AT BOB'S DIRECTION TODAY.** (1) **REC-124 IS UNBLOCKED.**
+Bob told this lane to decide it if it follows his earlier rulings, and it does: `INVESTIGATIVE-SESSION.md` §7.1 rules
+that a CONCLUSION belongs to a project's relationship with the inquiry, beside CURRENT. It follows §7/D-216, DEC-45,
+DEC-17 and DEC-72, and amends two design determinations: State Rules §4's single `concluded`, which now carries its
+own amendment, and DEC-44's determination 1 read literally. The builder's open question is answered there too: **the
+adopted CLAIM is what was concluded; free text beyond it is attributed commentary, never evidence**, and concluding with
+no claim is refused `NO_CLAIM`. Return REC-124 to `queued` with §7.1 as its design. RECORD; I3 IC; I5 if the case bytes
+carry the adoption. (2) **LED-6 — THE WORK PIPELINE — replaces LED-4.** Bob: QUEUE.md becomes a CACHE of the next
+several items, a new `BACKLOG.md` holds everything still to do in order, and done work goes to the archive. Refill
+moves rows from the backlog into the cache and deletes them from the backlog, in the same commit as the done row's
+archive. DEBT.md becomes fields-only, with every row needing work pointing at a backlog item. **The design is
+`docs/development/WORK-PIPELINE.md`; §5 is the item's scope and accepts-when.** It is CONDUCT's own act on CONDUCT's own
+files, performed with the tool as LED-3 was, and EXEMPT FROM THE M0 HOLD BY NAME, as LED-3/4/5 were. Mark LED-4
+superseded by LED-6. **Order: LED-6 first among process rows.** Every session's reading depends on it, and Bob asked
+for it in so many words: *"These documents should NOT just be scanned!"*
+
 **2026-09-18 · BOB #15 · CONDUCT #5'S FOUR DESIGN ITEMS — AND A CORRECTION TO MY OWN §5 RULING, OWED AT REC-129'S
 INTEGRATION.** (1) **Class or right? NEITHER.** My first §5 text gave lead counts to "a caller who could read every row — the
 `admin` class". No such caller exists: `#leadVisibleTo` reaches no `class:*` credential and skips the administrator arm on
