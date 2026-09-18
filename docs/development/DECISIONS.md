@@ -772,6 +772,12 @@ enacted: 2026-08-03 · CONDUCT — 5318b53: REC-15 and UI-17 moved to blocked wi
   inside Program B when Bob turns to the member surfaces, and REC-15 / UI-17 reopen then or
   when a sovereign group is installed, whichever comes first. No further ruling is needed;
   folded into `BIO_Publication_v0_1.md` §5 and §9.
+  CONFIRMED BY BOB 2026-09-18, and the reason is the one that governs everything above it: *"DEC-33
+  is another case of my saying 'we need a solid substrate before building on top of it.'"* The
+  ceremony waits on the substrate beneath it, not on a further answer from him. **A sentence
+  claiming this re-entry was "put to him 2026-09-14, unanswered" was copied through `kickoffs/BOB.md`
+  and `QUEUE.md` for four days while this entry said the opposite; BOB #14 surfaced it to Bob as
+  pending on 2026-09-18 without reading this entry, and he corrected it. It is not pending.**
 
 ### DEC-39 · answered
 raised: 2026-08-04 · CONDUCT (lifted from REC-38's report)
