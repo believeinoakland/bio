@@ -76,6 +76,41 @@
    fails. A fixture where the two agree cannot see this defect, and that is an
    instrument limit rather than a defence holding.
 
+   REC-130's FOUR, RUN 2026-09-18 against THIS file with the driver, each armed
+   ALONE, every restore of `src/store.mjs` sha256 MATCH and content IDENTICAL.
+   The suite is 74 assertions whole, and the new BASELINE measured **74 pass,
+   0 fail**. Declared before arming: (e) and (f) must fail the stranger arms and
+   leave the standing arms green; (g) and (h) must fail the over-strictness arms
+   and leave the stranger arms green.
+
+   (e) THE STANDING CHECK REMOVED — the tree as CASE-5b left it -> **66 pass,
+   8 fail**: all five stranger shapes (anonymous, an unknown token, a member of
+   another project, the probe class, another member's agent), the "carries
+   nothing the document says" arm, the `op=caseratify` oracle arm and the
+   owns-a-project-elsewhere arm. AS DECLARED.
+
+   (f) THE LIAR — withhold the text but answer `NOT_PERMITTED` -> **67 pass,
+   7 fail**: every BYTE-FOR-BYTE arm fails, and the one arm that only checks the
+   text is withheld STAYS GREEN. That green is the finding the arm exists for: a
+   suite asking only "did the stranger see the scope" passes a refusal that tells
+   an enumerator exactly which ids are live. AS DECLARED.
+
+   (g) OVER-STRICTNESS, SIGNED SIDE — the gate applied to a ratified document
+   too -> **72 pass, 2 fail**: the first-attestor read and the signed-stays-public
+   arm. **ITS FIRST RUN PRODUCED NO TALLY AT ALL**: the signed-public arm called
+   `.text.includes` on a not-found answer and the TypeError ended the module. The
+   arm was right and the instrument was not; the assertion now reads
+   `String(text ?? "")`, and the re-run gave the count above.
+
+   (h) OVER-STRICTNESS, UNSIGNED SIDE — standing narrowed to the machine
+   credential, so no identified member reads what they are about to sign ->
+   **13 pass, 7 fail** [FIXTURE ABORTED]: the owner, the administrator, the
+   invited and the joined participant, the owner's agent, block 1's standing
+   read, and the fixture guard on block 2's read, which stops the suite rather
+   than letting forty assertions measure an undefined document. The instance
+   MEMBER binding's arm stays green under it, which is why it cannot be the only
+   standing arm. AS DECLARED.
+
    See `test/casesign.control.mjs` for each arm's exact edit and its reasoning. */
 
 /* CASE-5b / DEC-72 — THE CASE-LEVEL SIGNING CEREMONY, AND THEN THE DELETION IT IS
@@ -686,7 +721,7 @@ const SIGNED_DOC_SHA = pub.caseDocument.doc_sha;   /* captured BEFORE ratificati
   const signedVic = rP(await GET(`op=casedocument&token=${VIC}&case=${CASE}&edition=1`));
   t("a SIGNED case document stays PUBLIC: anonymous and a member of another project both read the whole "
   + "signed text, because a stranger needs it to verify",
-    [signedAnon.ok, signedAnon.ratified, signedAnon.doc_sha === SIGNED_DOC_SHA, signedAnon.text.includes(SCOPE),
+    [signedAnon.ok, signedAnon.ratified, signedAnon.doc_sha === SIGNED_DOC_SHA, String(signedAnon.text ?? "").includes(SCOPE),
      signedVic.ok, signedVic.doc_sha === SIGNED_DOC_SHA],
     [true, true, true, true, true, true]);
 }
