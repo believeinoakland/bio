@@ -13011,3 +13011,23 @@ released: 2026-09-18 by the REC-86 worker. Every claimed path is committed on br
 `worktree-agent-a3fbd59a3fef1a961`; the final tree ran the battery 224/224 · 13,984 green,
 `coverage --strict` exit 0, UI harness exit 0, `plancheck --local` 0 fail. The UI DELEGATION above
 stays open — it is UI's act, not this claim's.
+
+## CLAIM 2026-09-18 RECORD (REC-100 — the ROLLUP referent BUILT: D-366's ruling, C-22.10's `run` carve-out deleted)
+
+Worker `agent-a249f66820def3efd`, spawned by CONDUCT #4, branch `worktree-agent-a249f66820def3efd`.
+IC-130 on I3 minted with `node tools/mintid.mjs IC` BEFORE building. Paths, and within the two shared
+plane files ONLY the ai-run / observation regions named (REC-104, REC-120 and REC-87 are concurrently
+in `store.mjs`):
+  - `bio-plane/src/store.mjs` — `#observe`, `#aiRunSearchState`, `#aiRunTerminate`, `#aiRunWake` only.
+  - `bio-plane/src/airun.mjs` — `checkObservation`'s C-22.10 arm and the coverage note beside it.
+  - `bio-plane/checks/bio-checks.mjs` — the `OBS_PRESENT_NO_REFERENT` row only.
+  - `bio-plane/test/observation-log.test.mjs`, `bio-plane/test/airun.test.mjs`, and any suite whose
+    FIXTURE ticks a bare `run` PRESENT (corrected, never exempted); `bio-plane/dist/**` if the bundle
+    pin requires the rebuild.
+  - `docs/development/INTERFACE-CHANGES.md` (IC-130 appended), `docs/development/DEBT.md` (D-366's
+    row), `docs/development/OBSERVATION-LOG-DESIGN.md` (front matter), `docs/DECIDED.md` (regenerated).
+**NOT** `agent-worker/**` (its `stepLog` half stays with REC-100's 2026-09-16 DELEGATION),
+**NOT** `docs/development/QUEUE.md`, **NOT** `INTERFACES.md` (the I3 version is CONDUCT's at
+resolution), no version bump, no tag, no deploy.
+
+**open as of 2026-09-18** — REC-100 is being built.
