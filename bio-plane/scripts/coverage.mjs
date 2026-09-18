@@ -1236,7 +1236,8 @@ const REGISTER_FLOOR = {
      failure mode (a dropped floor move goes SLACK, not broken). classified and corpus are
      UNMOVED and that is stated rather than implied: the arriving arm joined an already-counted
      declaration rather than adding a suite. */
-  arms: 1314,
+  arms: 1318,
+  // [branch record | REC-130 on origin/main f426f519] MOVED 1314 -> 1318 from this item's own post-commit `--strict` print at 5a3a836c (`arms 1318/1314 · classified 229/229 · corpus (suites read) 230/230 · GREW by 4 arm(s)`, `floor 192/192 reproducible`). Cause: `casesign.test.mjs`'s declaration gained arms (e)-(h). classified, corpus and run UNMOVED — the arms joined an already-counted declaration.
   // [CONDUCT #4 at MK-1's merge, second landing] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1314/1302 · classified 229/227 · corpus (suites read) 230/228`, `floor 192/190 reproducible`.
   // [CONDUCT #4 at REC-125 + REC-127's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1295/1284 · classified 228/226 · corpus (suites read) 229/227`, `floor 191/189 reproducible`.
   // [branch record | MK-1 after CONDUCT #4's (A)/(B), on origin/main 2c4a5c11] MOVED 1281 -> 1292, classified 225 -> 226, corpus 226 -> 227, run 188 -> 189, from the post-commit `--strict` print (`arms 1292/1281 · classified 226/225 · corpus (suites read) 226/225 · GREW by 11`, `floor 189/188 reproducible`). The arrivals: MK-1's own declaration grew from 12 to 18 arms (+6: header, pubbundle, pubcited, pubcase, pubdirect, pubover), and REC-121's `rec121-chain-bytes.test.mjs` came in on main with its declaration (the +1 suite and the other arms). ONE KEY SET. CONDUCT re-reads on the merged tree.
