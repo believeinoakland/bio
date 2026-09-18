@@ -162,7 +162,12 @@ export function renderCell(construct) {
   const by = {};
   for (const cl of construct.claims || []) (by[cl.state] = by[cl.state] || []).push(cl.text);
   const parts = STATES.filter((s) => by[s]).map((s) => `**${s}:** ${by[s].join("; ")}`);
-  return (parts.join(" · ") + ` — verified at the code: \`node tools/status.mjs ${construct.n}\``)
+  /* A construct's DESIGN POINTER is carried through the rendering verbatim. It is not status —
+     it says where the construct is designed — and other instruments read it from §3: `statussweep`
+     and `corpuscheck --authority` cite the map's `X.md` + "§N item M" pairs. The first rendering
+     dropped it and turned both red; who else reads a column is part of changing it. */
+  const design = construct.design ? ` ${construct.design}` : "";
+  return (parts.join(" · ") + ` — verified at the code: \`node tools/status.mjs ${construct.n}\`` + design)
     .replace(/\|/g, "/").replace(/\n/g, " ");
 }
 

@@ -25,7 +25,7 @@
     ]},
     { "n": 2, "name": "Intake, capture and provenance", "claims": [
       { "id": "2.capture", "state": "BUILT", "text": "capture and acquire, with grades A/B/C enforced as a check", "probes": [ {"op": "capture"}, {"op": "acquire"}, {"hit": "CAPTURE_GRADES", "in": ["bio-plane/checks/bio-checks.mjs"]} ] },
-      { "id": "2.provenance", "state": "BUILT", "text": "the provenance chain, its rebuild, and provenance-route markers", "probes": [ {"op": "provenancechain"}, {"op": "provenanceroutes"}, {"table": "provenance_route_marks"}, {"hit": "provenanceChainRebuild", "in": ["bio-plane/src/store.mjs"]} ] },
+      { "id": "2.provenance", "state": "BUILT", "text": "the provenance chain, its rebuild, and the per-document provenance route marks (`provenance_route_marks`) — a status line, not a design home: construct 2 names no home for them", "probes": [ {"op": "provenancechain"}, {"op": "provenanceroutes"}, {"table": "provenance_route_marks"}, {"hit": "provenanceChainRebuild", "in": ["bio-plane/src/store.mjs"]} ] },
       { "id": "2.links", "state": "BUILT", "text": "link discovery with fidelity verdicts", "probes": [ {"op": "links"}, {"table": "link_verdicts"} ] },
       { "id": "2.requests", "state": "BUILT", "text": "named capture requests and their drain", "probes": [ {"table": "capture_requests"}, {"op": "capturerequestdrain"} ] },
       { "id": "2.attest", "state": "BUILT", "text": "TSA co-attestation", "probes": [ {"op": "attest"}, {"file": "bio-plane/src/tsa.mjs"} ] },
@@ -66,7 +66,7 @@
       { "id": "7.regrade", "state": "ABSENT", "text": "regrade / cross-group rerun under another lens", "probes": [ {"none": ["^\\s{2}(regrade|rerun|biasregrade|biasrerun|lensdiff|biasdiff):\\s*\\{"], "flags": "m", "in": ["bio-plane/src/index.mjs"]} ] },
       { "id": "7.ui", "state": "ABSENT", "text": "a member surface for bias (the ops have no UI caller)", "probes": [ {"uinone": ["biasmanifest", "biasadopt", "biasinhale"]} ] }
     ]},
-    { "n": 8, "name": "Intent and inquiry — from goal to case", "claims": [
+    { "n": 8, "name": "Intent and inquiry — from goal to case", "design": "**Designed in:** the CLAIM is designed, and has been since 2026-08-03 — a FIELD of an inquiry rather than an object, with concluding as the inquiry ADOPTING it (`BIO_Case_Making_v0_1.md`), and its standard of proof attaching to the PRODUCTION (Bob, 2026-09-14); Part II §18 item 6 POINTS here rather than restating it, and what remains owed is RESEARCH, not design — the catalogue of standards by audience and output act.", "claims": [
       { "id": "8.inquiry", "state": "BUILT", "text": "the inquiry lifecycle: cite, dispose, conclude, reopen, divide, ground, versions", "probes": [ {"op": "cite"}, {"op": "conclude"}, {"op": "reopen"}, {"op": "inquirydivide"}, {"op": "inquiryground"}, {"table": "inquiry_basis"} ] },
       { "id": "8.falsifier", "state": "BUILT", "text": "a concluded inquiry requires a conclusion and a falsifier, or the member's stated override (UI-64/REC-117)", "probes": [ {"hit": "NO_FALSIFIER", "in": ["bio-plane/checks/bio-checks.mjs"]} ] },
       { "id": "8.cases", "state": "BUILT", "text": "cases, their documents, ratification and revision flags", "probes": [ {"table": "cases"}, {"op": "caseratify"}, {"op": "casedocument"}, {"op": "caseflags"} ] },
