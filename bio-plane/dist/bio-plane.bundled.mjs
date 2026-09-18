@@ -3760,6 +3760,7 @@ __export(bio_checks_exports, {
   NARROW_CHECKS: () => NARROW_CHECKS,
   NON_MEMBER_AUTHORS: () => NON_MEMBER_AUTHORS,
   OBJECT_TYPES: () => OBJECT_TYPES,
+  PROJECT_AUTHORITY_CHECKS: () => PROJECT_AUTHORITY_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
   RESOLUTIONS: () => RESOLUTIONS,
@@ -11557,6 +11558,18 @@ var MEMBER_ID_CHECKS = {
     translation: "That member id is reserved. `admin` is the name this instance gives its founding administrator, and anything that checks whether someone is an administrator by name would read a member enrolled as `admin` as the founder. Nothing was written. Choose a different id for this person."
   }
 };
+var PROJECT_AUTHORITY_CHECKS = {
+  PROJECT_ACT_NOT_A_PARTICIPANT: {
+    check: "C-56.1",
+    where: "src/store.mjs #projectAuthority > is-project-authority",
+    translation: "Only someone working in this project can do that. You can see the project, but you have not joined it, and seeing a project does not let you change it \u2014 administrators included. Nothing was changed. Ask an owner of the project to invite you, then join it."
+  },
+  PROJECT_ACT_NOT_THE_OWNER: {
+    check: "C-56.2",
+    where: "src/store.mjs #projectAuthority > is-project-authority",
+    translation: "Only an owner of this project can do that. You are not one of its owners, and seeing a project does not let you direct it \u2014 administrators included. Nothing was changed."
+  }
+};
 function leadLegFindings(label, leg, findings) {
   const l = leg && typeof leg === "object" ? leg : {};
   const refusal7 = (code, message, repairs) => f(LEAD_CHECKS[code].check, "error", message, repairs, code);
@@ -15308,12 +15321,21 @@ var ACTS = [
     types: ["inquiry"],
     applies: (f2, ty) => ty === "inquiry" && (f2.basis_versions ?? 0) >= 1
   },
+  /* REC-134 / C-56: `f.project_participant !== false` on the PROJECT arm of cite, sever and
+     reinstate, and only there. Each of the three edits the project's own document, and the
+     store now refuses an actor who has not JOINED that project (`#projectAuthority`, §7.5) —
+     which reaches every administrator, because an administrator SEES every project and so
+     reached these acts through the sight gate alone. Offering them to such a caller would be
+     the pre-flight disagreeing with the refusal it fronts (DEC-8). `!== false` for D-310's
+     reason exactly: the fact is three-valued and a caller with no roster position (a `class:*`
+     credential) reads null and is byte-unchanged. The information and question arms are not
+     narrowed — citing FROM them is not an act on a project. */
   {
     id: "cite",
     label: "Cite material into a case or a question",
     weight: "report",
     types: ["information", "project", "inquiry"],
-    applies: (f2, ty) => ty === "information" || ty === "project" || ty === "inquiry"
+    applies: (f2, ty) => ty === "information" || ty === "project" && f2.project_participant !== false || ty === "inquiry"
   },
   /* S-11 step 2: withdrawing a citation without deleting it. From the CITED
        side: some CASE holds a live cites edge to it. From the case's own side:
@@ -15356,14 +15378,14 @@ var ACTS = [
     label: "Sever a citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && f2.cites_out.confirmed > 0
+    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && f2.cites_out.confirmed > 0 && f2.project_participant !== false
   },
   {
     id: "reinstate",
     label: "Reinstate a severed citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 || ty === "project" && f2.cites_out.severed > 0
+    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 || ty === "project" && f2.cites_out.severed > 0 && f2.project_participant !== false
   }
 ];
 var ACT_IDS = new Set(ACTS.map((a) => a.id));
@@ -28150,6 +28172,19 @@ var Store = class _Store extends DurableObject {
         const who = this.#positionalMember(viewer, identity);
         return who === null ? null : this.#ownsAnyProject(who);
       })(),
+      /* REC-134 / C-56: WHETHER THE CALLER HAS JOINED THIS PROJECT — a POSITIONAL fact on a
+         PROJECT target, asked of `identity` through the SAME predicate the acts' refusal
+         runs (`#isJoinedParticipant`, via `#projectAuthority`), so a published act and the
+         refusal it fronts cannot disagree (DEC-8). It exists because an administrator SEES
+         every project, so `cite`/`sever`/`reinstate` on a project it never joined would be
+         offered and then refused. THREE-VALUED, `project_owner`'s shape exactly: null on
+         any target that is not a project and for a caller with no roster position (a
+         `class:*` credential), whose act set is therefore byte-unchanged. */
+      project_participant: (() => {
+        if (normalizeType(b.object_type) !== "project") return null;
+        const who = this.#positionalMember(viewer, identity);
+        return who === null ? null : this.#isJoinedParticipant(b.bundle_id, who);
+      })(),
       basis_legs: Array.isArray(docFm.basis) ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
       rested_on: {
         working: rested.confirmed.length,
@@ -29214,7 +29249,8 @@ var Store = class _Store extends DurableObject {
     from,
     to,
     verb,
-    resultKey
+    resultKey,
+    identity = null
   }) {
     const sel = this.selectionResolve({ handle, viewer, owner, weight: "refuse" });
     if (!sel.ok) return sel;
@@ -29228,6 +29264,8 @@ var Store = class _Store extends DurableObject {
         got: p.object_type,
         detail: "cites lives on the citing object and this action edits a Project's edges"
       };
+    const denied = this.#projectAuthority(p.bundle_id, identity, "joined", resultKey === "severed" ? "sever" : "reinstate");
+    if (denied) return denied;
     const why = String(reason ?? "").trim();
     if (!why)
       return {
@@ -29378,7 +29416,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       gate: sel.gate
     };
   }
-  sever({ project, handle, viewer = null, owner = null, reason = "", author = null } = {}) {
+  sever({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
     return this.#edgeTransition({
       project,
       handle,
@@ -29386,13 +29424,14 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       owner,
       reason,
       author,
+      identity,
       from: ["confirmed", "proposed"],
       to: "severed",
       verb: "Severed",
       resultKey: "severed"
     });
   }
-  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null } = {}) {
+  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
     return this.#edgeTransition({
       project,
       handle,
@@ -29400,6 +29439,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       owner,
       reason,
       author,
+      identity,
       from: ["severed"],
       to: "confirmed",
       verb: "Reinstated",
@@ -30527,7 +30567,8 @@ Mitigation: ${mit}
     project = null,
     commentary = "",
     viewer = null,
-    author = null
+    author = null,
+    identity = null
   } = {}) {
     const who = String(author ?? "").trim();
     if (!who || isMachineIdentity(who))
@@ -30633,6 +30674,8 @@ Mitigation: ${mit}
           project: pid,
           detail: `${pid.slice(0, 60)} is not a project readable here, so there is no relationship with this question to conclude in.`
         };
+      const denied = this.#projectAuthority(pid, identity, "joined", "conclude");
+      if (denied) return denied;
       const pmd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
       if (!pmd || pmd.content === null)
         return {
@@ -35120,7 +35163,8 @@ ${lines.join("\n")}
     note = "",
     author = null,
     role = null,
-    extent = null
+    extent = null,
+    identity = null
   } = {}) {
     const sel = this.selectionResolve({ handle, viewer, owner, weight: "report" });
     if (!sel.ok) return sel;
@@ -35140,6 +35184,10 @@ ${lines.join("\n")}
         got: p.object_type,
         detail: "citations live on the CITING object, and this is neither a case nor a question. A case keeps them in its references; a question keeps them in the basis its answer rests on (State Rules 5.2). Nothing else in the record holds either."
       };
+    if (!ontoInquiry) {
+      const denied = this.#projectAuthority(p.bundle_id, identity, "joined", "cite");
+      if (denied) return denied;
+    }
     const nt = String(note ?? "");
     if (nt.length > 200 || /["\\\r\n]/.test(nt))
       return {
@@ -37939,6 +37987,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
               detail: deactivating ? "only an owner of this project may deactivate it, which is what closing it as abandoned means. Closing it as resolved or superseded is ordinary record work." : "only an owner of this project may reactivate it."
             };
         }
+        const denied = this.#projectAuthority(bundleId, pkg.actorIdentity ?? null, "joined", "promote");
+        if (denied) return denied;
       }
       if (cur && cur.bundle_sha !== base)
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
@@ -48166,7 +48216,8 @@ ${words}`;
     state,
     reason,
     decidedBy = null,
-    viewer = null
+    viewer = null,
+    identity = null
   } = {}) {
     const proj = typeof project === "string" ? project.trim() : "";
     const find = typeof finding === "string" ? finding.trim() : "";
@@ -48253,6 +48304,8 @@ ${words}`;
           finding: find,
           detail: "the project a judgment-layer disposition is scoped to must be a PROJECT bundle this viewer can see. Absent and invisible answer identically here and that is deliberate (REC-25): a refusal that told them apart would disclose the existence of a project the caller was not invited to."
         };
+      const denied = this.#projectAuthority(proj, identity, "joined", "proposedispose");
+      if (denied) return denied;
       const atS = (/* @__PURE__ */ new Date()).toISOString();
       const kd = typeof kind === "string" && kind.trim() ? kind.trim().slice(0, 120) : null;
       this.sql.exec(
@@ -50390,6 +50443,79 @@ ${words}`;
   #isProjectOwner(projectId, memberId) {
     const p = this.#participation(projectId, memberId);
     return !!(p && p.owner);
+  }
+  /** REC-134: does this member hold the WORKING position in this project — a JOINED
+   *  participant (§7.5: *"An invited member who has not joined has view rights only. A
+   *  joined member has the working rights their capabilities allow"*). `leaving` counts:
+   *  §7.6 says a request to leave *"does not remove them"*, and BOB #14's lead ruling
+   *  already reads joined-or-leaving as the two states of full participation
+   *  (`#leadReach`). An owner is a joined participant with the owner flag (§7.10), so
+   *  every owner passes. `invited` does not. */
+  #isJoinedParticipant(projectId, memberId) {
+    const p = this.#participation(projectId, memberId);
+    return !!(p && (p.state === "joined" || p.state === "leaving"));
+  }
+  /* ===== REC-134 / C-56 — SIGHT IS NOT AUTHORITY, AT EVERY ACT ON A PROJECT ================
+   *
+   * Membership Architecture v2 §7, *"SIGHT IS NOT AUTHORITY — and this is Bob's doctrine,
+   * not a new ruling"* (BOB #15, 2026-09-18), quoting §4.9: *"the custodial role can audit
+   * everything and direct nothing"*. The defect it closes, found by REC-132 and measured by
+   * REC-134 through the ops: several acts that change a project took the VISIBILITY gate as
+   * their only barrier (or had none at all), and every administrator — enrolled, and since
+   * IC-149 the founder — passes that gate for every project. So an administrator who was
+   * never invited could revise a project's document, move its citation edges, move what it
+   * stands on, record a judgement in its feed, and adopt a bias set into its scope.
+   *
+   * THE QUESTION IS ASKED OF WHO THE ACTOR IS, NEVER OF WHAT IT MAY SEE. `identity` is the
+   * POSITIONAL half of the control plane's one session resolver (`resolveSession`, IC-149):
+   * `member:<id>` for a signed-in session (the founder's is `member:admin`), a member-scoped
+   * `ai` credential's principal, and `class:<cls>` for every instance credential. It is read
+   * through `#positionalMember`, the one place a viewer-shaped string becomes a member, so a
+   * `class:*` credential answers null and is NOT ASKED — machine credentials hold no roster
+   * position, and their fences are their own and unchanged (DEC-63's reasoning at the run
+   * verbs, and the brief's). An ABSENT identity is also not asked: that is every internal
+   * caller (`cite` promoting its own edit, `forkProject`, the version pointer's own write),
+   * and the control plane stamps it on every enumerated act, deleted first so a caller can
+   * never name one. The suite's negative control removes the stamp from one act and its arm
+   * goes red, which is what makes "the control plane always stamps it" a measurement.
+   *
+   * WHAT IT DOES NOT TOUCH, and each is deliberate: §7.13's add-an-owner (`projectOwnerRescue`)
+   * is the ONE administrator path and keeps its condition, its vote and its record — it never
+   * calls this. The roster acts, publication, the review copy, the run verbs and the lead share
+   * already asked a position and still ask their own. Sight is unchanged: nothing here is a
+   * visibility predicate and no read calls it.
+   *
+   * Returns null to proceed, or the refusal. The CODE is written HERE and only here, as a
+   * literal inside the region DEC-49's guard reads; the call sites RELAY it (`projectGate`'s
+   * precedent at the run verbs). */
+  #projectAuthority(projectId, identity, need, act) {
+    const who = this.#positionalMember(null, identity);
+    if (who === null) return null;
+    const refusal7 = (code, detail) => {
+      const row = PROJECT_AUTHORITY_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        project: projectId,
+        act,
+        needs: need
+      };
+    };
+    if (need === "owner" && !this.#isProjectOwner(projectId, who))
+      return refusal7(
+        "PROJECT_ACT_NOT_THE_OWNER",
+        `${act} on ${String(projectId).slice(0, 80)} is an act an OWNER of that project performs, and ${who} is not one. Seeing a project is not directing it: an administrator sees every project and directs none (Membership Architecture v2 \xA74.9, \xA77). Nothing was written.`
+      );
+    if (need === "joined" && !this.#isJoinedParticipant(projectId, who))
+      return refusal7(
+        "PROJECT_ACT_NOT_A_PARTICIPANT",
+        `${act} on ${String(projectId).slice(0, 80)} is work inside that project, and ${who} has not joined it (\xA77.5: an invited member has view rights only; an uninvited one, none). Seeing a project is not directing it: an administrator sees every project and directs none (\xA74.9, \xA77). Nothing was written.`
+      );
+    return null;
   }
   /** D-310: DOES THIS MEMBER HOLD THE OWNER POSITION ANYWHERE — the question
    *  `op=affordances` has to answer before it offers `publish`, because the
@@ -54647,7 +54773,10 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       affirmed: q("affirmed"),
       /* server-stamped, never the caller's */
       author: url.searchParams.get("author"),
-      viewer: url.searchParams.get("viewer")
+      viewer: url.searchParams.get("viewer"),
+      /* REC-134: the POSITIONAL identity make-current's project check reads — server-stamped,
+         and read from the URL only, so a body cannot supply it. */
+      identity: url.searchParams.get("identity")
     };
   }
   /* The six acts' target states, in ONE table read from the catalog's own
@@ -54822,6 +54951,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           `${projectId.slice(0, 60)} is not a project readable here, so it holds no stance to move.`,
           { target, version: vname, project: projectId }
         );
+      const denied = this.#projectAuthority(projectId, a.identity ?? null, "joined", "versioncurrent");
+      if (denied) return denied;
       const pmd = this.#one(
         `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`,
         projectId
@@ -61327,7 +61458,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  manifest below requires BOTH this row AND the bundle standing at `adopted`
    *  before it reports a lens in force — which is the fail-closed direction: at
    *  no point does one act alone put a lens over somebody's work. */
-  biasAdopt({ bundleId = null, scope = "instance", scopeId = "", author = null, at = null } = {}) {
+  biasAdopt({ bundleId = null, scope = "instance", scopeId = "", author = null, at = null, identity = null } = {}) {
     const who = typeof author === "string" ? author.trim() : "";
     if (!who || who.startsWith(_Store.BIAS_MACHINE_PREFIX))
       return this.#biasRefuse(
@@ -61355,6 +61486,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         "BIAS_ADOPTION_NOT_PROPOSED",
         "a project-scoped adoption names the project it is scoped to: pass scopeId=<PROJ-...>."
       );
+    if (st === "project") {
+      const denied = this.#projectAuthority(sid, identity, "owner", "biasadopt");
+      if (denied) return denied;
+    }
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
     const fm = md && typeof md.content === "string" ? parseFrontmatter(md.content).data || {} : {};
     const now = at ? String(at) : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
@@ -62186,7 +62321,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            could record a judgment under a team it was never invited to. */
         proposedispose: () => this.proposeDispose({
           ...body || {},
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          /* REC-134: from the URL, AFTER the body spread,
+             so a body can never supply it. */
+          identity: url.searchParams.get("identity")
         }),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
@@ -62270,7 +62408,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           bundleId: url.searchParams.get("bundleId"),
           scope: url.searchParams.get("scope"),
           scopeId: url.searchParams.get("scopeId"),
-          author: url.searchParams.get("author")
+          author: url.searchParams.get("author"),
+          identity: url.searchParams.get("identity")
+          /* REC-134 */
         }),
         /* The policy arrives in the BODY. A policy document in a query string
            would be truncated by the first proxy with an opinion about URL
@@ -62656,6 +62796,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           owner: url.searchParams.get("owner"),
           note: url.searchParams.get("note") ?? "",
           author: url.searchParams.get("author"),
+          /* REC-134: the positional identity — the control plane's stamp, never the caller's. */
+          identity: url.searchParams.get("identity"),
           /* REC-37: the basis leg's ROLE, read only on the inquiry arm and
              REFUSED rather than dropped on the other. Absent stays null so a
              case-arm caller that never heard of it is byte-identical. */
@@ -62688,7 +62830,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           viewer: url.searchParams.get("viewer"),
           owner: url.searchParams.get("owner"),
           reason: url.searchParams.get("reason") ?? "",
-          author: url.searchParams.get("author")
+          author: url.searchParams.get("author"),
+          identity: url.searchParams.get("identity")
+          /* REC-134 */
         }),
         reinstate: () => this.reinstate({
           project: url.searchParams.get("project"),
@@ -62696,7 +62840,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           viewer: url.searchParams.get("viewer"),
           owner: url.searchParams.get("owner"),
           reason: url.searchParams.get("reason") ?? "",
-          author: url.searchParams.get("author")
+          author: url.searchParams.get("author"),
+          identity: url.searchParams.get("identity")
+          /* REC-134 */
         }),
         selectionlist: () => this.selectionList({ owner: url.searchParams.get("owner") }),
         selectionrelease: () => this.selectionRelease({
@@ -62843,7 +62989,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           project: url.searchParams.get("project"),
           commentary: url.searchParams.get("commentary"),
           viewer: url.searchParams.get("viewer"),
-          author: url.searchParams.get("author")
+          author: url.searchParams.get("author"),
+          identity: url.searchParams.get("identity")
+          /* REC-134: server-stamped */
         }),
         /* REC-31, conclude's shape exactly: ONE target, no handle and no
            owner, with the viewer and author stamps the control plane sets. */
@@ -64280,6 +64428,7 @@ var AI_RUN_ACTIONS = [
   "extractpropose"
 ];
 var RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
+var POSITIONAL_ACTS = ["cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt", "conclude"];
 var BIAS_ACTIONS = ["biasadopt"];
 var RECOGNISER_ACTIONS = ["resolve", "resolvetestify", "resolutions", "concerns"];
 var PROGRESSION_ACTIONS = [
@@ -66130,7 +66279,7 @@ var index_default = {
       }
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const affViewer = viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`;
-      const affIdentity = viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`;
+      const affIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
       const fOut = await doAnswer(st.fetch(
         `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}&identity=${encodeURIComponent(affIdentity)}`
       ));
@@ -68913,6 +69062,11 @@ var index_default = {
       inner.searchParams.set("owner", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "provenancechain" || op === "provenanceroute" || op === "narrow")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    if (POSITIONAL_ACTS.includes(op))
+      inner.searchParams.set(
+        "identity",
+        viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
     if (PROJECT_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "airunopen")
@@ -68935,6 +69089,8 @@ var index_default = {
           b.author = sessMember;
           b.actorMemberId = sessMember;
         } else b.author = `${MACHINE_AUTHOR_PREFIX}${cls}`;
+        delete b.actorIdentity;
+        b.actorIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           if (!sessCaps.has("create_projects"))
             return json({

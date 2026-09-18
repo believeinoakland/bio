@@ -437,6 +437,8 @@ import { NARROW_CHECKS, extentRelation, VERSION_NAME_RE } from "../checks/bio-ch
 import { TRANSCRIBE_CHECKS, LEAD_CHECKS, sha256HexSync } from "../checks/bio-checks.mjs";
 /* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
 import { MEMBER_ID_CHECKS } from "../checks/bio-checks.mjs";
+/* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
+import { PROJECT_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-1 / D-184 / IC-133: the authored bundle's refusals (C-53). */
 import { TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-2 / IC-142: the one letter a testimony is worth, composed from the
@@ -2656,6 +2658,18 @@ export class Store extends DurableObject {
                 would offer the founder `publish` while it owns nothing. */
              project_owner: (() => { const who = this.#positionalMember(viewer, identity);
                                      return who === null ? null : this.#ownsAnyProject(who); })(),
+             /* REC-134 / C-56: WHETHER THE CALLER HAS JOINED THIS PROJECT — a POSITIONAL fact on a
+                PROJECT target, asked of `identity` through the SAME predicate the acts' refusal
+                runs (`#isJoinedParticipant`, via `#projectAuthority`), so a published act and the
+                refusal it fronts cannot disagree (DEC-8). It exists because an administrator SEES
+                every project, so `cite`/`sever`/`reinstate` on a project it never joined would be
+                offered and then refused. THREE-VALUED, `project_owner`'s shape exactly: null on
+                any target that is not a project and for a caller with no roster position (a
+                `class:*` credential), whose act set is therefore byte-unchanged. */
+             project_participant: (() => {
+               if (normalizeType(b.object_type) !== "project") return null;
+               const who = this.#positionalMember(viewer, identity);
+               return who === null ? null : this.#isJoinedParticipant(b.bundle_id, who); })(),
              basis_legs: Array.isArray(docFm.basis)
                ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
              rested_on: { working: rested.confirmed.length, frozen: rested.frozen.length,
@@ -3716,7 +3730,7 @@ export class Store extends DurableObject {
    *  same grammar, and two copies of a frontmatter splice is how the two
    *  reference sources drifted apart in the first place (D-21). */
   #edgeTransition({ project, handle, viewer, owner, reason, author,
-                    from, to, verb, resultKey }) {
+                    from, to, verb, resultKey, identity = null }) {
     /* Weight `refuse`, hard-coded exactly as `cite` hard-codes `report`. A
        caller that could choose the weight would make the distinction advisory. */
     const sel = this.selectionResolve({ handle, viewer, owner, weight: "refuse" });
@@ -3727,6 +3741,9 @@ export class Store extends DurableObject {
     if (p.object_type !== "project")
       return { ok: false, reason: "NOT_A_PROJECT", project, got: p.object_type,
                detail: "cites lives on the citing object and this action edits a Project's edges" };
+    /* REC-134: moving a project's own citation edge is work inside that project (§7.5). */
+    const denied = this.#projectAuthority(p.bundle_id, identity, "joined", resultKey === "severed" ? "sever" : "reinstate");
+    if (denied) return denied;
 
     const why = String(reason ?? "").trim();
     if (!why)
@@ -3886,13 +3903,13 @@ export class Store extends DurableObject {
              bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion, gate: sel.gate };
   }
 
-  sever({ project, handle, viewer = null, owner = null, reason = "", author = null } = {}) {
-    return this.#edgeTransition({ project, handle, viewer, owner, reason, author,
+  sever({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
+    return this.#edgeTransition({ project, handle, viewer, owner, reason, author, identity,
       from: ["confirmed", "proposed"], to: "severed", verb: "Severed", resultKey: "severed" });
   }
 
-  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null } = {}) {
-    return this.#edgeTransition({ project, handle, viewer, owner, reason, author,
+  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
+    return this.#edgeTransition({ project, handle, viewer, owner, reason, author, identity,
       from: ["severed"], to: "confirmed", verb: "Reinstated", resultKey: "reinstated" });
   }
 
@@ -4987,7 +5004,7 @@ export class Store extends DurableObject {
    * the inquiry's own bytes exactly as before and every read of it states its
    * claim UNDETERMINED (§7.1 item 5) rather than inventing an adoption. */
   conclude({ target, conclusion = "", falsifier = "", noFalsifier = false,
-             project = null, commentary = "", viewer = null, author = null } = {}) {
+             project = null, commentary = "", viewer = null, author = null, identity = null } = {}) {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-conclude — REC-64/C-32.2. The fence alone; the
        conclusion's own payload conditions below are governed by nothing here. */
@@ -5138,6 +5155,13 @@ export class Store extends DurableObject {
         return { ok: false, reason: "NOT_A_PROJECT", target, project: pid,
                  detail: `${pid.slice(0, 60)} is not a project readable here, so there is no relationship `
                        + "with this question to conclude in." };
+      /* REC-134: the gate above is SIGHT, and every administrator sees every project. A
+         conclusion is *"a project-authored, DATED act on the relationship, beside CURRENT and in
+         the same form"* (INVESTIGATIVE-SESSION §7.1 item 1), so it takes CURRENT's position: the
+         actor must have JOINED the project (Membership v2 §7.5). The no-project relationship is
+         untouched — it names no project. */
+      const denied = this.#projectAuthority(pid, identity, "joined", "conclude");
+      if (denied) return denied;
       const pmd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
       if (!pmd || pmd.content === null)
         return { ok: false, reason: "NO_DOCUMENT", target, project: pid,
@@ -9935,7 +9959,7 @@ export class Store extends DurableObject {
    * checked, but it is a backstop here rather than the only guard.
    */
   cite({ project = null, handle = null, viewer = null, owner = null,
-         note = "", author = null, role = null, extent = null } = {}) {
+         note = "", author = null, role = null, extent = null, identity = null } = {}) {
     /* The gate first, so an unknown or someone else's selection is refused
        before this method has looked at a project at all. */
     const sel = this.selectionResolve({ handle, viewer, owner, weight: "report" });
@@ -9956,6 +9980,14 @@ export class Store extends DurableObject {
                detail: "citations live on the CITING object, and this is neither a case nor a question. A case "
                      + "keeps them in its references; a question keeps them in the basis its answer rests on "
                      + "(State Rules 5.2). Nothing else in the record holds either." };
+    /* REC-134: citing INTO A PROJECT edits that project's document — work inside it, so the
+       actor must have JOINED it (§7.5). The question arm is untouched: an inquiry is shared
+       material, not a project's (§7 of INVESTIGATIVE-SESSION: the inquiry, its versions and
+       its evidence stay shared), and its gate is the capability like every other leg. */
+    if (!ontoInquiry) {
+      const denied = this.#projectAuthority(p.bundle_id, identity, "joined", "cite");
+      if (denied) return denied;
+    }
 
     /* A note is written into the restricted frontmatter grammar, whose scalar
        parser strips surrounding quotes and understands no escapes at all. A
@@ -13040,6 +13072,17 @@ export class Store extends DurableObject {
                        + "abandoned means. Closing it as resolved or superseded is ordinary record work."
                        : "only an owner of this project may reactivate it." };
         }
+        /* REC-134: EVERY OTHER REVISION of a project's own document is work inside that project,
+           so the actor must have JOINED it (Membership v2 §7.5). Nothing gated it before — any
+           member holding `contribute`, and every administrator, could rewrite a project they
+           were never invited to by naming its id. Asked of the POSITIONAL identity the control
+           plane stamps (`actorIdentity`, deleted first there), never of what the actor may see;
+           an absent stamp is an internal write (`cite`'s own edit, the version pointer, a fork's
+           clone is a CREATION and never reaches here) and a machine credential holds no position
+           — both unchanged. After the 7.11 arm above, so an owner-only transition keeps
+           answering NOT_THE_OWNER in its own words. */
+        const denied = this.#projectAuthority(bundleId, pkg.actorIdentity ?? null, "joined", "promote");
+        if (denied) return denied;
       }
       /* DEC-49 REGION is-promote-cas — REC-64/C-33.21. THE COMPARE-AND-SWAP, and
          it is one of the 32 refusals PL-1's whole-function `where` conscripted
@@ -24003,7 +24046,7 @@ export class Store extends DurableObject {
      IS checked is that the project is a real project bundle THIS VIEWER CAN SEE, so a caller
      cannot write a decision under a team it was never invited to. */
   proposeDispose({ progressionKey, stageKey, key, project, finding, kind,
-                   to, state, reason, decidedBy = null, viewer = null } = {}) {
+                   to, state, reason, decidedBy = null, viewer = null, identity = null } = {}) {
     const proj = typeof project === "string" ? project.trim() : "";
     const find = typeof finding === "string" ? finding.trim() : "";
     /* WHICH ACT THIS IS, decided by what the caller SENT and never by inspecting the id's shape.
@@ -24100,6 +24143,13 @@ export class Store extends DurableObject {
                        + "bundle this viewer can see. Absent and invisible answer identically here "
                        + "and that is deliberate (REC-25): a refusal that told them apart would "
                        + "disclose the existence of a project the caller was not invited to." };
+      /* REC-134: the gate above is SIGHT, and every administrator sees every project. The
+         judgment it records is that TEAM's (D-266: *"a stance is expressly one project's own
+         property"*), so the decider must have JOINED the project it acts for (Membership v2
+         §7.5). Asked after the sight gate, so a caller who cannot see the project still gets
+         the absent answer above and learns nothing here. */
+      const denied = this.#projectAuthority(proj, identity, "joined", "proposedispose");
+      if (denied) return denied;
       const atS = new Date().toISOString();
       const kd = typeof kind === "string" && kind.trim() ? kind.trim().slice(0, 120) : null;
       this.sql.exec(
@@ -26706,6 +26756,73 @@ export class Store extends DurableObject {
   #isProjectOwner(projectId, memberId) {
     const p = this.#participation(projectId, memberId);
     return !!(p && p.owner);
+  }
+  /** REC-134: does this member hold the WORKING position in this project — a JOINED
+   *  participant (§7.5: *"An invited member who has not joined has view rights only. A
+   *  joined member has the working rights their capabilities allow"*). `leaving` counts:
+   *  §7.6 says a request to leave *"does not remove them"*, and BOB #14's lead ruling
+   *  already reads joined-or-leaving as the two states of full participation
+   *  (`#leadReach`). An owner is a joined participant with the owner flag (§7.10), so
+   *  every owner passes. `invited` does not. */
+  #isJoinedParticipant(projectId, memberId) {
+    const p = this.#participation(projectId, memberId);
+    return !!(p && (p.state === "joined" || p.state === "leaving"));
+  }
+
+  /* ===== REC-134 / C-56 — SIGHT IS NOT AUTHORITY, AT EVERY ACT ON A PROJECT ================
+   *
+   * Membership Architecture v2 §7, *"SIGHT IS NOT AUTHORITY — and this is Bob's doctrine,
+   * not a new ruling"* (BOB #15, 2026-09-18), quoting §4.9: *"the custodial role can audit
+   * everything and direct nothing"*. The defect it closes, found by REC-132 and measured by
+   * REC-134 through the ops: several acts that change a project took the VISIBILITY gate as
+   * their only barrier (or had none at all), and every administrator — enrolled, and since
+   * IC-149 the founder — passes that gate for every project. So an administrator who was
+   * never invited could revise a project's document, move its citation edges, move what it
+   * stands on, record a judgement in its feed, and adopt a bias set into its scope.
+   *
+   * THE QUESTION IS ASKED OF WHO THE ACTOR IS, NEVER OF WHAT IT MAY SEE. `identity` is the
+   * POSITIONAL half of the control plane's one session resolver (`resolveSession`, IC-149):
+   * `member:<id>` for a signed-in session (the founder's is `member:admin`), a member-scoped
+   * `ai` credential's principal, and `class:<cls>` for every instance credential. It is read
+   * through `#positionalMember`, the one place a viewer-shaped string becomes a member, so a
+   * `class:*` credential answers null and is NOT ASKED — machine credentials hold no roster
+   * position, and their fences are their own and unchanged (DEC-63's reasoning at the run
+   * verbs, and the brief's). An ABSENT identity is also not asked: that is every internal
+   * caller (`cite` promoting its own edit, `forkProject`, the version pointer's own write),
+   * and the control plane stamps it on every enumerated act, deleted first so a caller can
+   * never name one. The suite's negative control removes the stamp from one act and its arm
+   * goes red, which is what makes "the control plane always stamps it" a measurement.
+   *
+   * WHAT IT DOES NOT TOUCH, and each is deliberate: §7.13's add-an-owner (`projectOwnerRescue`)
+   * is the ONE administrator path and keeps its condition, its vote and its record — it never
+   * calls this. The roster acts, publication, the review copy, the run verbs and the lead share
+   * already asked a position and still ask their own. Sight is unchanged: nothing here is a
+   * visibility predicate and no read calls it.
+   *
+   * Returns null to proceed, or the refusal. The CODE is written HERE and only here, as a
+   * literal inside the region DEC-49's guard reads; the call sites RELAY it (`projectGate`'s
+   * precedent at the run verbs). */
+  #projectAuthority(projectId, identity, need, act) {
+    const who = this.#positionalMember(null, identity);
+    if (who === null) return null;
+    const refusal = (code, detail) => {
+      const row = PROJECT_AUTHORITY_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+               project: projectId, act, needs: need };
+    };
+    /* DEC-49 REGION is-project-authority */
+    if (need === "owner" && !this.#isProjectOwner(projectId, who))
+      return refusal("PROJECT_ACT_NOT_THE_OWNER",
+        `${act} on ${String(projectId).slice(0, 80)} is an act an OWNER of that project performs, and ${who} is not `
+        + `one. Seeing a project is not directing it: an administrator sees every project and directs none `
+        + `(Membership Architecture v2 §4.9, §7). Nothing was written.`);
+    if (need === "joined" && !this.#isJoinedParticipant(projectId, who))
+      return refusal("PROJECT_ACT_NOT_A_PARTICIPANT",
+        `${act} on ${String(projectId).slice(0, 80)} is work inside that project, and ${who} has not joined it `
+        + `(§7.5: an invited member has view rights only; an uninvited one, none). Seeing a project is not `
+        + `directing it: an administrator sees every project and directs none (§4.9, §7). Nothing was written.`);
+    /* END DEC-49 REGION is-project-authority */
+    return null;
   }
   /** D-310: DOES THIS MEMBER HOLD THE OWNER POSITION ANYWHERE — the question
    *  `op=affordances` has to answer before it offers `publish`, because the
@@ -31272,7 +31389,10 @@ export class Store extends DurableObject {
                 `op=versionstrength` already takes for `states`. */
              affirmed: q("affirmed"),
              /* server-stamped, never the caller's */
-             author: url.searchParams.get("author"), viewer: url.searchParams.get("viewer") };
+             author: url.searchParams.get("author"), viewer: url.searchParams.get("viewer"),
+             /* REC-134: the POSITIONAL identity make-current's project check reads — server-stamped,
+                and read from the URL only, so a body cannot supply it. */
+             identity: url.searchParams.get("identity") };
   }
 
   /* The six acts' target states, in ONE table read from the catalog's own
@@ -31569,6 +31689,12 @@ export class Store extends DurableObject {
         return refuse("VERSION_CURRENT_UNRELATED",
           `${projectId.slice(0, 60)} is not a project readable here, so it holds no stance to move.`,
           { target, version: vname, project: projectId });
+      /* REC-134: the gate above answers what the caller may SEE, and every administrator sees
+         every project. What a project stands on is its TEAM's decision (INVESTIGATIVE-SESSION §7:
+         *"everyone working in a project works as a team"*; a member changes what *their* project
+         stands on), so the actor must have JOINED it (Membership v2 §7.5). */
+      const denied = this.#projectAuthority(projectId, a.identity ?? null, "joined", "versioncurrent");
+      if (denied) return denied;
       const pmd = this.#one(
         `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, projectId);
       const pfm = pmd && pmd.content !== null ? (parseFrontmatter(pmd.content).data || {}) : {};
@@ -38702,7 +38828,7 @@ export class Store extends DurableObject {
    *  manifest below requires BOTH this row AND the bundle standing at `adopted`
    *  before it reports a lens in force — which is the fail-closed direction: at
    *  no point does one act alone put a lens over somebody's work. */
-  biasAdopt({ bundleId = null, scope = "instance", scopeId = "", author = null, at = null } = {}) {
+  biasAdopt({ bundleId = null, scope = "instance", scopeId = "", author = null, at = null, identity = null } = {}) {
     const who = typeof author === "string" ? author.trim() : "";
     if (!who || who.startsWith(Store.BIAS_MACHINE_PREFIX))
       return this.#biasRefuse("BIAS_ADOPTION_NOT_AUTHORED",
@@ -38723,6 +38849,15 @@ export class Store extends DurableObject {
     if (st === "project" && !sid)
       return this.#biasRefuse("BIAS_ADOPTION_NOT_PROPOSED",
         "a project-scoped adoption names the project it is scoped to: pass scopeId=<PROJ-...>.");
+    /* REC-134: a lens put over ONE PROJECT's work is that project's managers' act —
+       `BIO_Declared_Bias_v0_1.md` §Bias bundles and adoption: *"Project managers define project
+       bias"*, and DEC-72 clause 5 rules that MANAGER IS THE EXISTING PROJECT OWNER ROLE. Nothing
+       gated it before: any member, and every administrator, could adopt a set into any project's
+       scope. The instance scope is untouched (*"Admins define instance bias"*). */
+    if (st === "project") {
+      const denied = this.#projectAuthority(sid, identity, "owner", "biasadopt");
+      if (denied) return denied;
+    }
 
     /* DEC-54 (d)'s pin, read from the DOCUMENT rather than from the request, so
        a caller cannot claim a provenance the bundle does not carry. Absent is
@@ -39508,7 +39643,10 @@ export class Store extends DurableObject {
            the reason op=queuemute states two entries up: a caller who could name its own viewer
            could record a judgment under a team it was never invited to. */
         proposedispose: () => this.proposeDispose({ ...(body || {}),
-                                                    viewer: url.searchParams.get("viewer") }),
+                                                    viewer: url.searchParams.get("viewer"),
+                                                    /* REC-134: from the URL, AFTER the body spread,
+                                                       so a body can never supply it. */
+                                                    identity: url.searchParams.get("identity") }),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
         cpuprobestate: () => this.cpuProbeState(),
@@ -39591,6 +39729,7 @@ export class Store extends DurableObject {
           scope: url.searchParams.get("scope"),
           scopeId: url.searchParams.get("scopeId"),
           author: url.searchParams.get("author"),
+          identity: url.searchParams.get("identity"),   /* REC-134 */
         }),
         /* The policy arrives in the BODY. A policy document in a query string
            would be truncated by the first proxy with an opinion about URL
@@ -39937,6 +40076,8 @@ export class Store extends DurableObject {
           owner: url.searchParams.get("owner"),
           note: url.searchParams.get("note") ?? "",
           author: url.searchParams.get("author"),
+          /* REC-134: the positional identity — the control plane's stamp, never the caller's. */
+          identity: url.searchParams.get("identity"),
           /* REC-37: the basis leg's ROLE, read only on the inquiry arm and
              REFUSED rather than dropped on the other. Absent stays null so a
              case-arm caller that never heard of it is byte-identical. */
@@ -39971,6 +40112,7 @@ export class Store extends DurableObject {
           owner: url.searchParams.get("owner"),
           reason: url.searchParams.get("reason") ?? "",
           author: url.searchParams.get("author"),
+          identity: url.searchParams.get("identity"),   /* REC-134 */
         }),
         reinstate: () => this.reinstate({
           project: url.searchParams.get("project"),
@@ -39979,6 +40121,7 @@ export class Store extends DurableObject {
           owner: url.searchParams.get("owner"),
           reason: url.searchParams.get("reason") ?? "",
           author: url.searchParams.get("author"),
+          identity: url.searchParams.get("identity"),   /* REC-134 */
         }),
         selectionlist: () => this.selectionList({ owner: url.searchParams.get("owner") }),
         selectionrelease: () => this.selectionRelease({
@@ -40115,7 +40258,8 @@ export class Store extends DurableObject {
           project: url.searchParams.get("project"),
           commentary: url.searchParams.get("commentary"),
           viewer: url.searchParams.get("viewer"),
-          author: url.searchParams.get("author") }),
+          author: url.searchParams.get("author"),
+          identity: url.searchParams.get("identity") /* REC-134: server-stamped */ }),
         /* REC-31, conclude's shape exactly: ONE target, no handle and no
            owner, with the viewer and author stamps the control plane sets. */
         reopen: () => this.reopen({ target: url.searchParams.get("target"),

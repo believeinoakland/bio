@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1148 rulings across 91 documents.
+1152 rulings across 91 documents.
 
 ## DEC-
 
@@ -318,6 +318,8 @@ authority is the file named, never this one.
   `docs/development/CIVICOS_UI_STATE.md:906`
 - **D-98** · 2026-07-30 — §RULED 2026-07-30 — STALE in its closing paragraph.  
   `docs/development/INBOX-GRAMMAR.md:8`
+- **D-98** — `taskforward`/`taskresolve` keep their RULED group-admin fallback (D-98 routing): a task is an instance obligation, not a project production.  
+  `docs/development/INTERFACE-CHANGES.md:11248`
 - **D-98** — authority undetermined at capture `[OBLIGATION]` (D-98, RULED: created automatically) - monitor tick: source modified `[FINDING]` · source removed (404/410) `[FINDING]` - source unreachable, and distinguishably: governed by our own pacing `[CONDITION]` (D-104) - duplicate document detected `[FINDING]` (D-60)  
   `docs/development/NOTIFICATIONS.md:184`
 - **D-102** · 2026-07-30 — RULED 2026-07-30: the installer wizard must PROMPT the operator for an installation name at setup, and that name becomes the INSTANCE_NAME component of the UA string.  
@@ -535,7 +537,7 @@ authority is the file named, never this one.
 - **D-329** · 2026-09-13 — AND THE ROW'S OWN CONCLUSION IS OVERTURNED ON A MEASUREMENT: A STATIC INSTRUMENT CAN SEE THIS.** This row held that *"an assertion label composed at run time exists in no file, so no static instrument can see it and only a periodic census can."* That is true of the RENDERED label and FALSE OF THE TEMPLATE, which…  
   `docs/archive/ledgers/DEBT-closed.md:53`
 - **D-329** — D-329 — the row's own conclusion OVERTURNED on a measurement: a run-time-composed label exists in no file only as RENDERED; its TEMPLATE does, and `composedSpan()` (new `scripts/armdecay.mjs`) catches a fragment that resolves against a suite's template only by eating its `${…}` slot — reach 2,700 label quotes from…  
-  `docs/development/QUEUE.md:1242`
+  `docs/development/QUEUE.md:1233`
 - **D-330** · 2026-09-13 — AMENDED MID-ITEM, 2026-09-13: `docs/development/DEBT.md` gains a SECOND row beyond D-330's disposition — **D-333**, the class this item's measurement establishes and its repair does not close: a driver's declared TALLY decays while every one of its anchors stays live, and no static check can see the difference…  
   `docs/development/CLAIMS.md:3282`
 - **D-331** · 2026-09-13 — RULED AS THIS ROW RECOMMENDED, AND THE RULING DECLINES BOTH HALVES OF THE FALSE CHOICE: A THROWING DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING.** `scripts/armdecay.mjs`'s `preflight()` is the shared dry pass — it counts every arm's quote in the file that arm will write, prints the WHOLE table, and only…  
@@ -1995,6 +1997,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:14004`
 - the superseded pins CORRECTED with dated reasons (`affordances.test.mjs`, `current.test.mjs`) and control anchors re-pointed (`deliverer.control.mjs`, `d266.control.mjs`, `capturerequests.control.mjs`, `nc-rec129.mjs`), and the `9.internet` probe in `construct-status.json` (claim unchanged).  
   `docs/development/CLAIMS.md:14024`
+- (or any non-participant) acting on a project it is not in — CORRECTED at its site with a dated reason, never exempted. `bio-plane/scripts/coverage.mjs` and `civicos-ui/check-refusal-codes.mjs` floors only, moved from their own prints. - Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration. -…  
+  `docs/development/CLAIMS.md:14113`
+- (raised); `test/citeinquiry.test.mjs` and `test/identity-claims.test.mjs` CORRECTED at their sites with dated reasons.  
+  `docs/development/CLAIMS.md:14129`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2145,6 +2151,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:11144`
 - Two labels CORRECTED with their reason in a comment (block 2's heading and the non-participant arm said the authority was publish's).  
   `docs/development/INTERFACE-CHANGES.md:11171`
+- CORRECTED at their sites with dated reasons, never exempted: `citeinquiry.test.mjs` (the DO dispatch's parameter roster gains the server-stamped `identity`) and `identity-claims.test.mjs` arm (j) (it selected the first stamp site whose writes include `proposedispose`, which is now the CLEAR positional stamp; it…  
+  `docs/development/INTERFACE-CHANGES.md:11277`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  
@@ -2284,7 +2292,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - version that the content is extracted from."* RULED, folded into Part II §16.  
   `docs/development/QUEUE.md:878`
 - D, driven through the op; the six keys are gone from finding bytes and `caseflip.test.mjs`'s still-there assertions are CORRECTED (never exempted) to say so; the stranger-verification path still passes end to end with the instance unreachable.  
-  `docs/development/QUEUE.md:1206`
+  `docs/development/QUEUE.md:1197`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:240`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  
