@@ -5,6 +5,8 @@
  * NAMED with its byte count; (b) the same over-budget file marked CUT -> its verdict must be FAIL, and
  * unmarked it must be WARN. Break the tool instead (make `check` return []) and sections 1, 2 and 4 fail.
  */
+import "./stdio.mjs";
+import "./sandbox.mjs";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
