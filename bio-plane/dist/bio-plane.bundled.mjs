@@ -23305,6 +23305,7 @@ var RESOLUTION_ROW = {
 var citedExists = (alias) => `(EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.content_id = ${alias}.content_id) OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl WHERE vl.content_id = ${alias}.content_id))`;
 var CONTENT_CITED_AS_BYTES = contentCitedAs({ kind: "image" });
 var CHAIN_DOES_NOT_APPLY = "does-not-apply";
+var CAP_DOES_NOT_APPLY = CHAIN_DOES_NOT_APPLY;
 var MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
      EVERY VOCABULARY HERE IS IMPORTED FROM THE CHECK CATALOG, never listed. The
@@ -23563,12 +23564,27 @@ var MEANING = {
          different questions here, and a caller that wants both asks
          `content:cap<=B OR content:cap=undetermined`. Folding NULL into the
          comparison in either direction would be the record answering about
-         rows whose cap it does not know. */
+         rows whose cap it does not know.
+         REC-127 / IC-138 — THE CHAIN'S TWO-CAUSES NULL, ON THE CAP AXIS. A
+         `cited_as = 'bytes'` row (FW-19) is an image cited AS ITSELF: no
+         transcription stands between the citation and its target, so there is
+         no derivation step for a cap to be the weakest of — its
+         `derivation_cap` is NULL BY MEANING, exactly as its chain is
+         (EXTRACTION-BREADTH §3.1). `cap:undetermined` is therefore
+         `derivation_cap IS NULL` over TEXT rows only, and the bytes rows answer
+         under their own stated value `cap:does-not-apply` (`cited_as = 'bytes'`)
+         — REC-121's decision for `chain`, taken for the same reason and not
+         re-argued: reachable by NO cap value would leave the cap question with
+         rows it answers nothing about, the silent drop one layer up. The value
+         arrives UPPER-CASED (`case: "upper"`, as `UNDETERMINED` does), so it is
+         compared to the constant's upper form; the literal travels as an
+         ARGUMENT. A comparison (`cap<=B`) is untouched: a bytes row's NULL
+         already compared to nothing, and it still does. */
       cap: {
         col: "derivation_cap",
         case: "upper",
         vocab: [],
-        pred: (cmp, v) => v === "UNDETERMINED" ? { sql: `derivation_cap IS NULL`, args: [] } : null
+        pred: (cmp, v) => v === "UNDETERMINED" ? { sql: `derivation_cap IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] } : v === CAP_DOES_NOT_APPLY.toUpperCase() ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] } : null
       },
       /* THE LAST STEP OF THE CHAIN — "every OCR'd region below cap C" is §1's
          own example and this is its first half. REC-104: IT READS THE
@@ -23645,6 +23661,20 @@ var MEANING = {
       "at",
       "stale"
     ],
+    /* REC-127 / IC-138 — A STORED COLUMN PROJECTED THROUGH AN EXPRESSION, IN ITS
+       OWN SLOT. `derivation_cap` on a bytes row says `does-not-apply` instead of
+       the NULL a list reader takes for undetermined — the word the `cap` filter
+       answers it under, so label and filter are one definition, as `chain_last`
+       and `chain` are. It is a LABEL ON THE EXISTING COLUMN and not a new
+       computed column ON PURPOSE: a new column would move the shape of EVERY
+       `rows=content` row, where this moves only a bytes row's value and leaves
+       every text row's key order and value byte-identical (a text row reads
+       `m.derivation_cap` exactly as before). Only columns named here are
+       projected through an expression; the SQL is the registry's and carries no
+       member input. */
+    rowLabel: {
+      derivation_cap: `CASE WHEN m.cited_as = '${CONTENT_CITED_AS_BYTES}' THEN '${CAP_DOES_NOT_APPLY}' ELSE m.derivation_cap END`
+    },
     /* Facts a row cannot state about itself, computed in the projection for
        `target_present`'s reason exactly: existence is REPORTED, never inferred
        from a null. `cited` is what makes the published grain below honest — it
@@ -24580,7 +24610,7 @@ SELECT count(*) AS n ${from}`,
     const reached = m.rowJoin ? m.rowJoin.cols.map((c2) => `, ${m.rowJoin.alias}.${c2} AS ${c2}`).join("") : "";
     const snip = m.ftsTable ? fts ? `, snippet(${fts.name}, ${fts.col}, '[', ']', '\u2026', ?) AS snippet` : `, NULL AS snippet` : "";
     const snipArgs = m.ftsTable && fts ? [Math.max(4, Math.min(64, Math.floor(snippetChars)))] : [];
-    const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, ` + m.row.map((c2) => `m.${c2} AS ${c2}`).join(", ") + reached + present + computed + snip;
+    const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, ` + m.row.map((c2) => m.rowLabel?.[c2] ? `(${m.rowLabel[c2]}) AS ${c2}` : `m.${c2} AS ${c2}`).join(", ") + reached + present + computed + snip;
     const order2 = [
       "b.bundle_id ASC",
       ...m.identity.filter((c2) => c2 !== m.key).map((c2) => `m.${c2} ASC`)
@@ -27414,6 +27444,9 @@ var Store = class _Store extends DurableObject {
            beside the other two, because a member who asks `chain=undetermined` and
            does not see an image they cited must be able to learn where it went. */
         "content:chain=does-not-apply names the images cited as their own bytes -- no transcription stands between such a citation and what it points at, so its chain is not undetermined and content:chain=undetermined does not match it",
+        /* REC-127 / IC-138: the cap axis's same third answer, stated beside the
+           chain's for the same reason. */
+        "content:cap=does-not-apply names the same images -- with nothing transcribed there is no derivation step for a cap to be the weakest of, so their cap is not undetermined and content:cap=undetermined does not match them",
         "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
         "has:leg asks whether the bundle carries any row in the meaning table at all",
         "sort:field and sort:-field order the result"

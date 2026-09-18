@@ -13515,3 +13515,34 @@ REC-123's `machine-attest.control.mjs` declaration (its read-back arms no longer
 fenced). NEGATIVE CONTROL `node test/operator-attest.control.mjs` from `bio-plane/`: baseline 18/0 · admin 13/5 ·
 member 13/5 · probe 13/5 · overstrict 14/4 · tokenstring 11/7, all as declared, every restore byte-identical.
 Minted: IC-137.
+## CLAIM 2026-09-18 RECORD (REC-127 — `content:cap=undetermined` stops matching an image cited as its own bytes)
+
+Worker spawned by CONDUCT #4, isolated worktree `agent-ab81d2ae5244e06a7`, branch
+`worktree-agent-ab81d2ae5244e06a7`, base `2c4a5c11`. `npm ci` in all three packages, each `node_modules` a real
+directory (4.3 GiB free). Paths:
+
+- RECORD (own): `bio-plane/src/query.mjs` (the `content:` arm's `cap` sub-field, and `rows=content`'s projection
+  of `derivation_cap` only); `bio-plane/src/store.mjs` (ONE line in `searchFields()`'s published `syntax`).
+- Tests: a new `bio-plane/test/rec127-cap-bytes.test.mjs` and `bio-plane/test/nc-rec127.mjs`;
+  `bio-plane/test/rec121-chain-bytes.test.mjs` §4 CORRECTED at its site with the reason.
+- Generated: `bio-plane/dist/*` rebuilt.
+- Docs: `INTERFACE-CHANGES.md` (IC-138, minted with `node tools/mintid.mjs IC`), `CONTENT-SEARCH-DESIGN.md`
+  (§4.2 and front matter), `docs/DECIDED.md` on regeneration, `.gitignore` (the harness's pristine directory),
+  this block.
+
+NOT `schema.mjs` or `checks/bio-checks.mjs`, NOT `QUEUE.md` (CONDUCT's), NOT `content-arm.test.mjs` §11 (the
+over-strictness pin is read, never edited).
+
+## CLAIM 2026-09-18 RECORD (REC-127) — RELEASED
+
+released: 2026-09-18 by the REC-127 worker, branch `worktree-agent-ab81d2ae5244e06a7`. Baseline before any edit, on a
+pristine tree: **234/234 suites green · 14484 assertions passing**, no skip (a first baseline run was STOPPED and
+discarded because `query.mjs` was edited while it ran; the edit was set aside by cp + sha256 and the baseline re-run
+clean). PREMISE FALSIFIED BEFORE BUILDING, through `op=meaningrows` on the unedited source: `content:cap=undetermined`
+returned all five fixture rows, both bytes rows among them, and named the image-only document. After, on the work
+commit `d8d0854a`: **235/235 suites green · 14510 assertions passing**; `node scripts/coverage.mjs --strict` exit **0**
+unpiped; `node tools/status.mjs --check` 0 drift; `node tools/plancheck.mjs --local` 0 fail. NEGATIVE CONTROL `node
+test/nc-rec127.mjs` from `bio-plane/`: five arms and a baseline run twice, ALL AS DECLARED, every restore
+byte-identical, content-arm's §11 digest `c39f4e8adf1960c2…` IDENTICAL under `preitem`; sibling harnesses
+`nc-rec121`, `nc-rec90 pred`, `nc-rec104` all AS DECLARED. IDs minted with `tools/mintid.mjs`: IC-138. **FOR
+CONDUCT:** RESOLVE IC-138 against I3 as read at resolution (built on 25.1.0, proposed MINOR on IC-131's shape).

@@ -407,6 +407,11 @@ const citedExists = (alias) =>
    registry is being built, and a `const` below it would be in its dead zone. */
 const CONTENT_CITED_AS_BYTES = contentCitedAs({ kind: "image" });
 export const CHAIN_DOES_NOT_APPLY = "does-not-apply";
+/* REC-127 / IC-138: the SAME WORD on the cap axis, bound to the chain's constant
+   rather than typed a second time — a bytes row's cap is null for the reason its
+   chain is (nothing was transcribed, so no derivation step caps anything), and a
+   member reading both columns of one row must read one word for one fact. */
+export const CAP_DOES_NOT_APPLY = CHAIN_DOES_NOT_APPLY;
 
 export const MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
@@ -634,10 +639,27 @@ export const MEANING = {
          different questions here, and a caller that wants both asks
          `content:cap<=B OR content:cap=undetermined`. Folding NULL into the
          comparison in either direction would be the record answering about
-         rows whose cap it does not know. */
+         rows whose cap it does not know.
+         REC-127 / IC-138 — THE CHAIN'S TWO-CAUSES NULL, ON THE CAP AXIS. A
+         `cited_as = 'bytes'` row (FW-19) is an image cited AS ITSELF: no
+         transcription stands between the citation and its target, so there is
+         no derivation step for a cap to be the weakest of — its
+         `derivation_cap` is NULL BY MEANING, exactly as its chain is
+         (EXTRACTION-BREADTH §3.1). `cap:undetermined` is therefore
+         `derivation_cap IS NULL` over TEXT rows only, and the bytes rows answer
+         under their own stated value `cap:does-not-apply` (`cited_as = 'bytes'`)
+         — REC-121's decision for `chain`, taken for the same reason and not
+         re-argued: reachable by NO cap value would leave the cap question with
+         rows it answers nothing about, the silent drop one layer up. The value
+         arrives UPPER-CASED (`case: "upper"`, as `UNDETERMINED` does), so it is
+         compared to the constant's upper form; the literal travels as an
+         ARGUMENT. A comparison (`cap<=B`) is untouched: a bytes row's NULL
+         already compared to nothing, and it still does. */
       cap:    { col: "derivation_cap", case: "upper", vocab: [],
                 pred: (cmp, v) => v === "UNDETERMINED"
-                  ? { sql: `derivation_cap IS NULL`, args: [] } : null },
+                    ? { sql: `derivation_cap IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] }
+                  : v === CAP_DOES_NOT_APPLY.toUpperCase() ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] }
+                  : null },
       /* THE LAST STEP OF THE CHAIN — "every OCR'd region below cap C" is §1's
          own example and this is its first half. REC-104: IT READS THE
          `chain_kind` COLUMN, and the read-time JSON parse it replaced is RETIRED
@@ -700,6 +722,21 @@ export const MEANING = {
        the blob stays where it is already answered. */
     row: ["content_id", "capture_sha", "extent_kind", "extent", "ref",
           "derivation_cap", "page_count", "minted_by", "at", "stale"],
+    /* REC-127 / IC-138 — A STORED COLUMN PROJECTED THROUGH AN EXPRESSION, IN ITS
+       OWN SLOT. `derivation_cap` on a bytes row says `does-not-apply` instead of
+       the NULL a list reader takes for undetermined — the word the `cap` filter
+       answers it under, so label and filter are one definition, as `chain_last`
+       and `chain` are. It is a LABEL ON THE EXISTING COLUMN and not a new
+       computed column ON PURPOSE: a new column would move the shape of EVERY
+       `rows=content` row, where this moves only a bytes row's value and leaves
+       every text row's key order and value byte-identical (a text row reads
+       `m.derivation_cap` exactly as before). Only columns named here are
+       projected through an expression; the SQL is the registry's and carries no
+       member input. */
+    rowLabel: {
+      derivation_cap: `CASE WHEN m.cited_as = '${CONTENT_CITED_AS_BYTES}' THEN '${CAP_DOES_NOT_APPLY}' `
+                    + `ELSE m.derivation_cap END`,
+    },
     /* Facts a row cannot state about itself, computed in the projection for
        `target_present`'s reason exactly: existence is REPORTED, never inferred
        from a null. `cited` is what makes the published grain below honest — it
@@ -2431,7 +2468,8 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
       : "";
     const snipArgs = m.ftsTable && fts ? [Math.max(4, Math.min(64, Math.floor(snippetChars)))] : [];
     const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, `
-              + m.row.map((c2) => `m.${c2} AS ${c2}`).join(", ") + reached + present + computed + snip;
+              + m.row.map((c2) => m.rowLabel?.[c2] ? `(${m.rowLabel[c2]}) AS ${c2}` : `m.${c2} AS ${c2}`).join(", ")
+              + reached + present + computed + snip;
     /* The ORDER BY is the GRAIN's own identity, which is what makes paging over
        meaning rows total rather than merely tidy — without it a leg can appear on
        two pages or on none, exactly as the bundle page's id tiebreak prevents. */
