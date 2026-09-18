@@ -107,6 +107,9 @@ body below the inbox, and not any area's code.
     every row it ROUTED to itself — not the estate's standing debt going quiet, which never happens. Report
     at that boundary, or when a decision is genuinely Bob's, or when something changes what another lane
     is running. Never report tactical state; fix it or route it.
+    **A question only Bob can answer is not a report to hold for a boundary**: this lane IS his room, so
+    bring it to him in this conversation now, in the `kickoffs/README.md` shape, and keep working on the rest
+    (M-60 Q1 found the two rules read against each other).
 
 ## Spawning and retiring lanes
 

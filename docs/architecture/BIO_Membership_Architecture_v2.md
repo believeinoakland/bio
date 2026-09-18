@@ -1,6 +1,6 @@
 # BIO Membership Architecture
 
-**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." §7 gained the design for D-422 (the founder's session sees what an administrator sees; one session resolver; the id `admin` reserved) on 2026-09-18, not yet built. as of 2026-09-18.
+**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." §7 gained the design for D-422 (the founder's session sees what an administrator sees; one session resolver; the id `admin` reserved) on 2026-09-18, built by REC-132, and the enforcement of §4's *direct nothing* for every administrator as its own task. as of 2026-09-18.
 
 **Place in the system** · Owns construct 1 of `BIO_System_Design.md` §3 (membership and authority). It supersedes one decision of `BIO_Technical_Architecture_Decisions_v10.md` §10 (per-member tokens) and depends on `BIO_State_Rules_Consistency_v1_5.md` §4.3 (the project object) and §5.1–5.3 (the relationship vocabulary and edge ownership). It adds accountability and access control, not integrity; the store schema realises it.
 
@@ -523,6 +523,16 @@ token and not to the founder's session). **Design:**
 - **The id `admin` is RESERVED.** `memberAdd` refuses it, because every name-keyed check (`#isAdminMember`, `#activeAdmins`)
   would read such a member as the founder. An instance already holding a member with that id is REPORTED by `op=audit`,
   never renamed silently.
+- **SIGHT IS NOT AUTHORITY — and this is Bob's doctrine, not a new ruling** (§4: *"Sight and authority are separated
+  here on purpose: the custodial role can audit everything and direct nothing"*; the single exception is §7.13). The
+  founder's session matches an enrolled administrator for what it may SEE. REC-132's builder found that several acts on a
+  project take the visibility gate as their ONLY barrier, so every administrator — enrolled or founder — can already DO
+  them on a project it is not in. **That is a defect against this doctrine, decided 2026-09-18 by BOB #15, and its fix is
+  its own task:** every act that changes a project, its participation, its productions or their grants carries a
+  POSITIONAL check (the actor's own role in that project), never the visibility gate alone; §7.13's add-an-owner act is
+  the one administrator path, and it keeps its condition, its vote and its record. Narrowing only the founder would make it
+  narrower than every enrolled administrator and fix nothing. The builder enumerates the acts by grep and states, per act,
+  which positional role it requires.
 - **Contract:** the founder gains sight, so it is an I3 change with its own IC (classification is the integrator's).
   **Negative controls:** the founder's session lists a project it was never invited to; it still cannot read another
   member's unshared lead; `memberAdd` with id `admin` is refused; the admin token's answers are byte-identical before and after.

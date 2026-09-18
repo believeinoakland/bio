@@ -1,47 +1,42 @@
-# DIST — resume here. Rewritten 2026-09-18 by BOB #15, standing the lane up again.
+# DIST — resume here. Rewritten 2026-09-18 by the DIST standing lane, after cutting 0.59.0.
 
-The previous version of this file (2026-09-13) described 0.57.0 and is superseded; it is in git history. The only DIST
-session since then (2026-09-16) confirmed `main` green and cuttable, asked *"standing by for your sequencing"* of a
-window nobody was reading, and was swept idle. **DIST is now a STANDING LANE and decides WHEN to cut by rule**
-(`kickoffs/DIST.md`, *WHEN DIST CUTS*). Read `CLAUDE.md`, then `kickoffs/DIST.md`, then this.
+The previous version (BOB #15, same day) stood the lane up; it is in git history. Read `CLAUDE.md`, then
+`kickoffs/DIST.md`, then this. **Everything below is a POINTER measured 2026-09-18; re-measure before acting.**
 
-## Where things stand — POINTERS, measured by BOB #15 on 2026-09-18; re-measure every one before acting on it
+## Self-wake
 
-- The latest signed release is **0.58.0**: `release/RELEASE.json` committed at `db7589b8` (2026-09-14); the tag `v0.58.0`
-  points at `9ed18019`, which is OFF the mainline (measured: not an ancestor of `origin/main`). `origin/main` was
-  **834 commits** past the manifest when this was written.
-- **A CUT IS OWED NOW under the rule.** Six integrated fixes close security or disclosure defects that are in no signed
-  release. This is a STARTING list from two sources that each missed something, so rebuild it from
-  `git log db7589b8..origin/main` against the rows (`node tools/ledger.mjs find <ID>`) before you trust it:
-  1. **REC-103** — the frontier's unread viewer was a leak. Merge `4263696a` (2026-09-16). CONDUCT's list omitted it; BOB found it in the log.
-  2. **REC-123** — an `ai` credential could RATIFY and publish in a member's name. `85a5dd7a`, IC-132.
-  3. **REC-125** — the operator's bearer tokens could ratify (D-421). `85ce9511`, IC-137.
-  4. **MK-1** — an observation could be published with the observer's handle. `103c62c0`, IC-133 (I3), IC-134 (I5).
-  5. **REC-130** — unsigned case documents were readable and enumerable by strangers, with a second leak through
-     `op=caseratify`'s refusal details. `a32fda24`, IC-141, I3 MAJOR.
-  6. **REC-129** — `op=stats`/`selftest`/`livefire` gave members and probes instance-wide lead and observation counts.
-     `9d705bdb`, IC-144 MAJOR, **superseded in part by REC-131 (running when this was written)**. REC-129 alone
-     discloses strictly less than 0.58.0 does, so **do NOT hold the cut for REC-131.** Cut with what has landed, and
-     cut again when REC-131 lands, under the same rule.
+`CronCreate` job, every 6 h at :17, prompt *"DIST: apply WHEN DIST CUTS in kickoffs/DIST.md"*. **ARMED 2026-09-18.**
+It is session-only and expires after 7 days, so re-arm (CronDelete the old one, then CronCreate) once the arm date
+is 5 or more days old (BOB #15's rule), and write the new date here.
 
-  7. **REC-126** — the review copy: a NEW READ PATH FOR NON-MEMBERS (a grant's bearer secret reads one unratified case).
-     Not a closing but security-relevant: it must be in a release only after its gate and its negative controls ran, and
-     the release notes name it. Integrated by CONDUCT #5 after this list was first written — confirm from the log.
+## Where things stand
 
-  **They must travel with:** REC-128 plus its fix-up (`dcb726fb`; IC-139, IC-140 on I5, IC-147). Without IC-147, a
-  build carrying REC-130 refuses case ratification delivered by the founder. Also REC-100's constraint (`8bb422e4`,
-  IC-130): the plane at I3 ≥ 24.0.0 and `agent-worker` deploy TOGETHER. I3 was 29.3.0 and I5 1.21.0 at `a6bdfcbb`.
-- **Interfaces moved a long way** — I3 is at 29.x (IC-130 MAJOR at 24.0.0 requires `agent-worker` to ship WITH the plane:
-  an old one silently drops model-judged steps). Read every IC since 0.58.0 in `INTERFACE-CHANGES.md` and state which
-  fleet members move with the plane; FLEET builds a member if one needs building.
-- **FIRST, before cutting: the embed hazard** (`kickoffs/DIST.md`, last paragraph) — verify whether `newgroup`'s
-  `npm run embed` replaces the signed embed with an unsigned rebuild. It was reported 2026-09-16 and never recorded.
-- Carried from the 2026-09-13 file and NOT re-verified: D-297 (the installer does not fetch, verify or upload fleet
-  member bundles — a group installing receives the plane but not the fleet); five copies of the generated-embed
-  recogniser across five suites; tags 0.56.0/0.57.0 never pushed and `v0.58.0` off-mainline.
+- **The latest signed release is 0.59.0**: `release/RELEASE.json` on main at `c53d9d92`, annotated tag `v0.59.0` ON
+  THE MAINLINE (unlike `v0.58.0`, which points at `9ed18019` off it). Plane `9efea448…`; agent-worker `a7e5f590…`,
+  ocr-worker `0d99f5d0…` (+2 parts), pdf-worker `b26dee19…`. The release commit's message carries the gate evidence
+  and the negative controls.
+- **It closes five defects that shipped in 0.58.0**, each checked against 0.58.0's bytes: REC-123, REC-125, REC-129,
+  REC-130 and **SK-7** (`op=attesttext` took the attestor from the body, `c2760e00`; no earlier list had it).
+  REC-103, REC-109, MK-1 and MK-4 fixed surfaces ABSENT from 0.58.0, so they are not closings. REC-126 (the review
+  copy) ships as a new read path for non-members. **Method:** grep the prior signed asset for the op/handler.
+  A list of row names is only where to start.
+- **DEPLOY: REQUESTED of Bob through BOB #15 on 2026-09-18, and not yet answered as of this writing.** The order is
+  agent-worker first or together with the plane (IC-130), then the installer. The live plane and members are on 0.58.0.
+- **NEXT CUT OWED: REC-131** (IC-144's remainder, I3 30.0.0, a disclosure closing). CONDUCT will message when it
+  lands. REC-133, REC-124 and REC-132 are also running.
+- **The embed hazard is CLOSED (M-59, `483ac38a`).** `newgroup`'s embed takes only the signed, verified asset from
+  `release/` and builds nothing. So in a cut, embed AFTER `release-assemble --sign`. Between the bump and the
+  signature, `newgroup`'s `npm test` refuses, and that is correct.
 
-## The one gated act
+## The cut, as run for 0.59.0 (about 45 minutes, most of it the gate)
 
-Cut, sign, tag and push are yours and need nobody. **Deploying the plane and the installer are gated** (`CLAUDE.md` §4):
-send the request to the BOB session by `SendMessage` — version, what it closes, the members that move with it, the gate's
-evidence — and continue. BOB carries it to Bob.
+Bump all 8 version sites (plane plus 3 members, package.json and wrangler VERSION), then `npm run build` in
+`bio-plane/`, then `release-assemble --dry-run`, then `--sign` with `.env` sourced (the seed is never printed),
+then the five ssh-keygen negative controls, then `npm run embed` in `newgroup/`, then `node tools/gates.mjs` on the
+exact tree with the diff hashed before and after, then `newgroup`'s `npm test`, then commit, rebase, push, tag, and
+verify from the remote.
+
+## Carried and NOT re-verified
+
+D-297 (the installer does not install fleet member bundles); five copies of the generated-embed recogniser across
+five suites; tags 0.56.0 and 0.57.0 never pushed. **Disk: 6.4 GiB free on Sparky-Air at the cut, 97% used.**
