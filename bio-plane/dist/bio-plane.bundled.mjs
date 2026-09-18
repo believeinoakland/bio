@@ -11172,10 +11172,18 @@ var TESTIMONY_CHECKS = {
     where: "src/store.mjs testify > is-testify-words",
     translation: "An observation needs the date you saw it, as a calendar date (for example 2026-09-10) or a date and time, and not a date later than now. The record keeps that date apart from the moment you wrote it down, because they are two different facts."
   },
+  /* NARROWED BY BOB #14's RULING (2026-09-18), NOT DELETED. This refused a
+     second member's IDENTICAL words, because the register is keyed by bytes.
+     The ruling: two identical observations are two testimonies, and the bytes
+     carry a canonical header holding the testimony's own id — so identical
+     words never collide. What is left is the case only an adversary produces:
+     somebody registering, ahead of time, the exact bytes the NEXT testimony
+     will have (the id is sequential, so it can be predicted). Recording over
+     them would re-file their register row under the observation. */
   TESTIMONY_WORDS_REGISTERED: {
     check: "C-53.6",
-    where: "src/store.mjs testify > is-testify-words",
-    translation: "These exact words, byte for byte, are already held in this record, and the record keys what it holds by its bytes \u2014 so recording them again would overwrite what the record says about the copy it already has. If you saw this yourself, say it in your own words: two members who saw the same thing record two observations."
+    where: "src/store.mjs testify > is-testify-bytes",
+    translation: "The record already holds, under another document, the exact bytes this observation would be stored as \u2014 which can only happen if somebody registered them in advance. Nothing was recorded. Try again: the next attempt is stored under a new identifier and new bytes."
   },
   TESTIMONY_ORIGIN_NOT_MEMBER: {
     check: "C-53.7",
@@ -11191,6 +11199,29 @@ var TESTIMONY_CHECKS = {
     check: "C-53.9",
     where: "src/store.mjs #testimonyFence > is-testimony-fence",
     translation: "This document is a member's own observation, and this revision no longer says so. Removing that would let a member's word read as a captured document. What the document is cannot be revised; to withdraw an observation, record a new one."
+  },
+  /* MK-1 (A) — THE PUBLICATION FENCE, measured before it was built
+     (`test/mk1-publish-probe.mjs`): op=ratify on an observation whose bytes were
+     in the working bucket PUBLISHED its words, its provenance document and the
+     observer's handle; a finding resting on one, and a case over that finding,
+     ratified. MEMBER-KNOWLEDGE-DESIGN.md §4 puts WHAT a published case may show
+     of a member's observation at the attesting member's chosen level, and that
+     is MK-3's — so until MK-3's projection honours it, nothing carrying an
+     observation crosses. LIFTING THESE THREE IS MK-3's ACT, not a caller's. */
+  TESTIMONY_UNPUBLISHABLE: {
+    check: "C-53.10",
+    where: "src/index.mjs fetch > is-testimony-publish-bundle",
+    translation: "This document is a member's own firsthand observation, and it cannot be published yet. What a published case shows of an observation \u2014 the group, the project, the member's cover or their name \u2014 is the observing member's choice, and the record cannot yet honour that choice in what it publishes. Until it can, publishing the observation would publish its author."
+  },
+  TESTIMONY_CITED_UNPUBLISHABLE: {
+    check: "C-53.11",
+    where: "src/index.mjs fetch > is-testimony-publish-bundle",
+    translation: "This finding rests, directly or through another finding, on a member's own firsthand observation, and it cannot be published yet. How a published case attributes an observation is the observing member's choice, and the record cannot yet honour that choice. Publish the finding without that observation in its basis, or wait until attribution is supported."
+  },
+  TESTIMONY_CASE_UNPUBLISHABLE: {
+    check: "C-53.12",
+    where: "src/index.mjs fetch > is-testimony-publish-case",
+    translation: "A finding in this case rests, directly or through another finding, on a member's own firsthand observation, so the case cannot be published yet. How a published case attributes an observation is the observing member's choice, and the record cannot yet honour that choice."
   }
 };
 function checkContentExtent(extent, ctx = {}) {
@@ -32087,7 +32118,15 @@ Subject position: ${pos} \u2014 ${just}
           WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL ORDER BY edition DESC LIMIT 1`,
         id,
         ed
-      )
+      ),
+      /* MK-1 (A): whether any finding THIS DOCUMENT names rests on a member's
+         authored observation (C-53.12). The roster is read from the document's
+         own bytes — `case_findings`, the same field `ratifyCaseDocument` commits
+         from — so the fence judges exactly what the signature would publish. */
+      testimony: this.testimonyReach((() => {
+        const cf = (parseFrontmatter(doc.text).data || {}).case_findings;
+        return (Array.isArray(cf) ? cf : []).map((x) => String(x ?? "").trim());
+      })())
     };
   }
   /* Read-only, for the member who is about to sign. Scoped to nothing, because
@@ -38667,7 +38706,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    * trust held by that member.*
    *
    * WHAT IT IS, BUILT OUT OF WHAT EXISTED. An INFO bundle, written through
-   * `promote` — the one write path — with the member's words as a file under
+   * `promote` — the one write path — with the member's words — below the canonical header (`Store.testimonyBytes`) — as a file under
    * `snapshots/`, a `data/provenance.json` document declaring origin `member`,
    * actor class `member` and `authored: true`, and a register row over the
    * words' bytes. In the SAME transaction: one passage-index unit over the whole
@@ -38684,7 +38723,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *     naming one is refused (C-53.2), and a machine is refused (C-53.1);
    *   - two dates, kept apart: `observed_at` is the member's statement,
    *     `recorded_at` is this record's own clock and is not taken from the caller;
-   *   - the bytes are the member's words AS WRITTEN — nothing trims, paraphrases
+   *   - the words are the member's AS WRITTEN, after a canonical header of the testimony's id and observed_at (BOB #14, 2026-09-18) — nothing trims, paraphrases
    *     or cleans them. An edit is a new observation, never a rewrite.
    *
    * HOW IT READS ON THE AXES THAT EXIST TODAY, stated because the testimony axis
@@ -38699,8 +38738,83 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *  unit to, for `TRANSCRIPTION_MAX_BYTES`'s reason — REFUSED over it, never
    *  cut, because words silently truncated are words the member did not write. */
   static TESTIMONY_MAX_BYTES = CAPTURE_TEXT_UNIT_CAP;
+  /** THE CANONICAL AUTHORED BYTES — PERMANENT ONCE ON MAIN, so stated exactly.
+   *
+   *  Ruled by BOB #14, 2026-09-18 (MK-1 design gap 1): identical words from two
+   *  members are two testimonies, and the register is keyed by the bytes' sha,
+   *  so the bytes carry a header that makes them unique per testimony. The
+   *  format, byte for byte, UTF-8:
+   *
+   *      bio-testimony/1\n
+   *      id: <the testimony's own bundle id>\n
+   *      observed_at: <the member's observedAt, exactly as accepted>\n
+   *      \n
+   *      <the member's words, exactly as written — nothing added after them>
+   *
+   *  Three header lines in THIS order, each `key: value` with one space, LF line
+   *  ends, then ONE empty line; the words begin at the first byte after the first
+   *  "\n\n" and run to the end of the file. `bio-testimony/1` names the format so
+   *  a later one is a new version line, never a silent change. Both values are
+   *  single-line by construction (`id` is canonical, `observed_at` is validated
+   *  to a date or instant), so the header cannot be forged from inside the words.
+   *
+   *  NO AUTHOR IDENTITY IS IN THE BYTES, by the same ruling: who the author is
+   *  and what a published case shows of them is the attribution level's to
+   *  govern (§4), and bytes are what verification publishes. The author is in
+   *  the register and the provenance document, where MK-3's projection decides
+   *  what crosses. */
+  static TESTIMONY_FORMAT = "bio-testimony/1";
+  static testimonyBytes({ id, observedAt, words }) {
+    return `${_Store.TESTIMONY_FORMAT}
+id: ${id}
+observed_at: ${observedAt}
+
+${words}`;
+  }
+  /** MK-1 (A) — WHAT WOULD CARRY A MEMBER'S AUTHORED OBSERVATION INTO THE
+   *  PUBLISHED RECORD, for the publication fence at op=ratify / op=caseratify
+   *  (C-53.10–.12, `src/index.mjs`).
+   *
+   *  From each root, the evidence graph is walked through every basis leg AND
+   *  every version leg — a finding resting on a finding that rests on an
+   *  observation carries it just as surely, and an older reading of the basis is
+   *  still bytes a published finding can point at. An observation is a bundle
+   *  holding an AUTHORED register row, read from the register's flag, which only
+   *  the testimony path writes. `self` names roots that ARE observations; `via`
+   *  names a finding and the observation it rests on.
+   *
+   *  ONE bounded statement: the roots travel as one JSON array (D-36), the walk
+   *  stops at depth 64 (a basis is acyclic by C-2.8, so this is a guard, not a
+   *  bound anyone meets), and the answer is capped at 200 rows — enough to NAME
+   *  why a publication is refused, which is all the fence needs; one row refuses. */
+  testimonyReach(ids) {
+    const roots = [...new Set((Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && x))].slice(0, 200);
+    if (!roots.length) return { self: [], via: [] };
+    const rows = this.#rows(
+      `WITH RECURSIVE reach(root, id, depth) AS (
+         SELECT value, value, 0 FROM json_each(?)
+         UNION
+         SELECT r.root, e.target_id, r.depth + 1 FROM reach r
+           JOIN (SELECT bundle_id, target_id FROM inquiry_basis
+                 UNION SELECT bundle_id, target_id FROM inquiry_basis_version_legs) e
+             ON e.bundle_id = r.id
+          WHERE r.depth < 64)
+       SELECT DISTINCT reach.root AS root, reach.id AS observation, MIN(reach.depth) AS depth
+         FROM reach JOIN register g ON g.bundle_id = reach.id AND g.authored = 1
+        GROUP BY reach.root, reach.id
+        LIMIT ?`,
+      JSON.stringify(roots),
+      200
+    );
+    return {
+      self: rows.filter((r) => r.depth === 0).map((r) => r.root),
+      via: rows.filter((r) => r.depth > 0).map((r) => ({ finding: r.root, observation: r.observation }))
+    };
+  }
   /** When the member says they observed it: a calendar date or a UTC instant,
-   *  a real one (2026-02-31 is refused, not rolled over), as epoch ms — or null. */
+   *  a real one (2026-02-31 is refused, not rolled over), as epoch ms — or null.
+   *  REQUIRED, and that STANDS by BOB #14's ruling of 2026-09-18: the record does
+   *  not date a member's observation for them. */
   static #observedMs(v) {
     const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?Z)?$/.exec(v);
     if (!m) return null;
@@ -38721,6 +38835,10 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *       (C-53.7) — reachable only by a REVISION, since `testify` writes both;
    *   (3) an authored document that stops saying `authored: true`, or whose
    *       provenance document is gone from the revision (C-53.9).
+   *
+   *  IMPORT AND REPLAY GO THROUGH THE TESTIMONY PATH (BOB #14, 2026-09-18, §7):
+   *  there is no replay exemption here, so a migration carrying an authored
+   *  bundle must re-author it through `testify`, never promote it verbatim.
    *
    *  "AUTHORED" IS READ FROM THE REGISTER, NEVER FROM THE DOCUMENT. The register
    *  row's flag is written only under `TESTIMONY_PATH`, so it is the one fact
@@ -38853,14 +38971,16 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         obsMs == null ? `observedAt ${obs ? `'${obs.slice(0, 40)}' is not a real calendar date (YYYY-MM-DD) or UTC instant (YYYY-MM-DDTHH:MM[:SS]Z)` : `was not given`}. It is the member's own statement of when they saw it, and the record does not supply one` : `observedAt '${obs}' is later than this record's own clock (${recorded})`,
         { observed_at: obs || null }
       );
-    const sha = createSha256().update(bytes).hex();
+    const heading = (typeof title === "string" ? title : "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200) || `Firsthand observation, observed ${obs}`;
+    const id = `${this.allocId("INFO", recorded.slice(0, 4)).id}-observation`;
+    const fileText = _Store.testimonyBytes({ id, observedAt: obs, words: text });
+    const fileBytes = new TextEncoder().encode(fileText);
+    const sha = createSha256().update(fileBytes).hex();
     if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha))
       return refusal7(
         "TESTIMONY_WORDS_REGISTERED",
-        `these exact bytes (${sha.slice(0, 16)}\u2026) are already registered in this record`
+        `the canonical bytes of ${id} (${sha.slice(0, 16)}\u2026) are already registered in this record`
       );
-    const heading = (typeof title === "string" ? title : "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200) || `Firsthand observation, observed ${obs}`;
-    const id = `${this.allocId("INFO", recorded.slice(0, 4)).id}-observation`;
     const file = `snapshots/observation-${sha.slice(0, 16)}.txt`;
     const locator = "a member's firsthand observation, authored in this record";
     const md = [
@@ -38898,7 +39018,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       "",
       "## Summary",
       "",
-      `A member's firsthand observation. Their words are \`${file}\`, exactly as written; nothing here paraphrases or summarises them.`,
+      `A member's firsthand observation. Their words are \`${file}\`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.`,
       "",
       "## Provenance Notes",
       "",
@@ -38934,14 +39054,14 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         bound: false
       }],
       capture: {
-        method: "authored by a member through op=testify; the bytes are the member's words as written, hashed at receipt",
+        method: "authored by a member through op=testify; the bytes are a canonical header (bio-testimony/1: id, observed_at) and then the member's words as written, hashed at receipt",
         /* NO `grade`, and the absence is the statement (§3, and C-18.1's authored
            arm): the capture axis measures reading a document in, and nothing was
            read in. */
         actor_class: "member",
         sha256: sha,
         encoding: "utf8",
-        bytes: bytes.length,
+        bytes: fileBytes.length,
         content_type: "text/plain; charset=utf-8"
       },
       origin: { kind: "member" },
@@ -38963,7 +39083,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       files: [
         { path: "bundle.md", ...enc2(md) },
         { path: "data/provenance.json", ...enc2(provText) },
-        { path: file, text, bytes: bytes.length, sha256: sha }
+        { path: file, text: fileText, bytes: fileBytes.length, sha256: sha }
       ],
       meta: {
         object_type: "information",
@@ -38975,7 +39095,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         last_updated: recorded,
         criticality: "supporting"
       },
-      register: [{ sha256: sha, path: file, encoding: "utf8", bytes: bytes.length }],
+      register: [{ sha256: sha, path: file, encoding: "utf8", bytes: fileBytes.length }],
       [TESTIMONY_PATH]: {
         captureSha: sha,
         author: who,
@@ -39024,7 +39144,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       bundle_sha: promoted.bundleSha ?? null,
       capture_sha: sha,
       file,
-      bytes: bytes.length,
+      bytes: fileBytes.length,
+      words_bytes: bytes.length,
       content_id: promoted.testimony ? promoted.testimony.content_id : null,
       authored: true,
       origin: "member",
@@ -49599,6 +49720,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       manifest: this.#rows(`SELECT snap_key, kind, base, created FROM manifest WHERE bundle_id=? ORDER BY created`, bundleId),
       history: this.#rows(`SELECT snap_key, sha256 FROM history WHERE bundle_id=? AND path='bundle.md'`, bundleId),
       registers: this.#rows(`SELECT capture_sha, path, bytes FROM register WHERE bundle_id=?`, bundleId),
+      /* MK-1 (A): whether this bundle IS, or RESTS ON, a member's authored
+         observation — the publication fence's one fact (C-53.10/.11). */
+      testimony: this.testimonyReach([bundleId]),
       dangling: this.#rows(
         `SELECT r.target_id FROM refs r LEFT JOIN bundles b ON b.bundle_id=r.target_id
          WHERE r.bundle_id=? AND b.bundle_id IS NULL`,
@@ -62550,6 +62674,12 @@ var reextractRow = (code) => {
     throw new Error(`reextractRow: ${code} has no REEXTRACT_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
+var testimonyFenceRow = (code) => {
+  const row = TESTIMONY_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`testimonyFenceRow: ${code} has no TESTIMONY_CHECKS row with a canned translation (DEC-49).`);
+  return { code, check: row.check, translation: row.translation };
+};
 var machineFenceRow = (code) => {
   const row = MACHINE_FENCE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
@@ -65417,6 +65547,18 @@ var index_default = {
       if (!factsOut.answered) return storeSilent("caseratify/facts");
       const facts = factsOut.result;
       if (!facts.ok) return json({ ok: false, ...facts, store: storeName, tokenClass: cls }, 404);
+      if (facts.testimony && facts.testimony.via.concat(facts.testimony.self).length)
+        return json({
+          ok: false,
+          reason: "TESTIMONY_CASE_UNPUBLISHABLE",
+          ...testimonyFenceRow("TESTIMONY_CASE_UNPUBLISHABLE"),
+          caseId: facts.doc.case_id,
+          edition: facts.doc.edition,
+          rests_on: facts.testimony.via,
+          detail: `a finding in ${facts.doc.case_id} rests on a member's authored observation (${[...facts.testimony.via.map((v) => `${v.finding} -> ${v.observation}`), ...facts.testimony.self].slice(0, 5).join(", ")}); what a published case shows of an observation is the attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md \xA74), and this build cannot yet honour it (MK-3)`,
+          store: storeName,
+          tokenClass: cls
+        }, 409);
       if (facts.doc.doc_sha !== body2.expectedSha)
         return json({
           ok: false,
@@ -65524,6 +65666,27 @@ var index_default = {
       if (!factsOut.answered) return storeSilent("ratify/gatefacts");
       const facts = factsOut.result;
       if (!facts.ok) return json({ ...facts, store: storeName, tokenClass: cls }, 404);
+      if (facts.testimony && facts.testimony.self.length)
+        return json({
+          ok: false,
+          reason: "TESTIMONY_UNPUBLISHABLE",
+          ...testimonyFenceRow("TESTIMONY_UNPUBLISHABLE"),
+          bundleId: body2.bundleId,
+          detail: `${body2.bundleId} is a member's authored observation; what a published case shows of it is the attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md \xA74), and this build cannot yet honour it (MK-3)`,
+          store: storeName,
+          tokenClass: cls
+        }, 409);
+      if (facts.testimony && facts.testimony.via.length)
+        return json({
+          ok: false,
+          reason: "TESTIMONY_CITED_UNPUBLISHABLE",
+          ...testimonyFenceRow("TESTIMONY_CITED_UNPUBLISHABLE"),
+          bundleId: body2.bundleId,
+          rests_on: facts.testimony.via,
+          detail: `${body2.bundleId} rests on a member's authored observation (${facts.testimony.via.slice(0, 5).map((v) => v.observation).join(", ")}); what a published case shows of it is the attesting member's choice, and this build cannot yet honour it (MK-3)`,
+          store: storeName,
+          tokenClass: cls
+        }, 409);
       if (facts.row.bundle_sha !== body2.expectedSha)
         return json({
           ok: false,

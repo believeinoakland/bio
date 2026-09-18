@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: RUN 2026-09-18 with `node test/nc-mk1.mjs [arm]` from `bio-plane/`, every arm ALONE with the others held open, each EDITING A REAL SOURCE and restored from a uniquely-named per-arm pristine copy verified by sha256 AND by content (store.mjs 2,457,775 B sha256 5ef52ef67584…, index.mjs 614,575 B 017d8d3e37b3…, bio-checks.mjs 747,630 B 496bb173c2c1…; 11 of 11 restores byte-identical; never `git checkout --`). Figures are the FINAL tree's run. Declared BEFORE arming, and the result: (a) `baseline` — nothing armed, MUST be green: 46/0. (b) `unearned` — THE LIAR, the fence stops refusing a document that CLAIMS authored without the testimony path: "THE LIAR" and "ANY truthy spelling" MUST FAIL — 43/3, the forged bundle LANDS (the third failure is "nothing landed"). (c) `hijack` — a register entry re-filing an authored observation's bytes under another bundle: MUST FAIL — 41/5; the re-filing then moves the register row, so the observation's own later revision and its capture-axis entry fail too, which is the harm the refusal prevents, measured. (d) `origin` — §7's first refusal removed: both C-53.7 arms MUST FAIL — 44/2. (e) `dropped` — both C-53.9 sites removed: both MUST FAIL — 44/2. (f) `stamp` — THE AUTHOR STAMP REMOVED at the control plane: "THE STAMP" MUST FAIL — 8/20, and the failure is the one declared rather than a cascade standing in for it: re-driven by hand with a cp-aside/cp-back of index.mjs (sha 017d8d3e… before and after, `cmp` same), the stamp assertion read got [true,"mallory"] — a caller-supplied author LANDED; the rest are every unstamped call arriving with no author and being refused C-53.1. (g) `supplied` — C-53.2 removed: both body-author arms MUST FAIL — 44/2, while THE STAMP stays green (the store reads the stamp). (h) `machine` — C-53.1 removed: the machine-credential arm MUST FAIL — 45/1. (i) `axis` — an authored capture counted as a capture again: the capture-axis arm and the B-leg refusal MUST FAIL — 42/4, the leg claiming B on a member's own words is ACCEPTED under the arm. (j) `extractrow` — the authored capture's extraction observation not written: the op=contentaxis arm MUST FAIL — 45/1, and re-driven by hand (store.mjs cp-aside/cp-back, sha 5ef52ef6… before and after, `cmp` same) it read missing_cause "never_looked" — the record saying nobody looked at a document whose words ARE its text, which is why the row is written. (k) `c181` — C-18.1's authored arm removed: the whole-catalogue arm and the graded arm MUST FAIL — 43/3. (l) `overstrict` — THE OVER-STRICTNESS DIRECTION, every member-origin document treated as a claim: the member-UPLOADED and `authored: false` arms MUST FAIL while THE LIAR stays green — 42/4, as declared. EVERY ARM AS DECLARED.
+/* NEGATIVE CONTROL: RUN 2026-09-18 with `node test/nc-mk1.mjs [arm]` from `bio-plane/`, every arm ALONE with the others held open, each EDITING A REAL SOURCE and restored from a uniquely-named per-arm pristine copy verified by sha256 AND by content (store.mjs 2,464,219 B sha256 b38fdab43118…, index.mjs 621,496 B cc5e4a97367c…, bio-checks.mjs 753,055 B be929828d9ac…; 17 of 17 restores byte-identical; never `git checkout --`). Figures are the FINAL tree's run, after CONDUCT #4's corrections (A) and (B). Declared BEFORE arming, and the result: (a) `baseline` — nothing armed, MUST be green: 56/0. (b) `unearned` — THE LIAR, a document CLAIMING authored accepted without the testimony path: "THE LIAR" and "ANY truthy spelling" MUST FAIL — 53/3 (the forged bundle LANDS). (c) `hijack` — an authored observation's bytes re-filed under another bundle: MUST FAIL — 46/10; the re-filing moves the register row, so the observation stops being one and every later arm that rests on it fails too, the harm the refusal prevents, measured. (d) `origin` — C-53.7 removed: both arms MUST FAIL — 54/2. (e) `dropped` — both C-53.9 sites removed: both MUST FAIL — 54/2. (f) `stamp` — THE AUTHOR STAMP REMOVED at the control plane: "THE STAMP" MUST FAIL — 7/24; re-driven by hand (index.mjs cp-aside/cp-back, `cmp` same) the stamp assertion read got [true,"mallory"] — a caller-supplied author LANDED; the rest are unstamped calls refused C-53.1. (g) `supplied` — C-53.2 removed: both body-author arms MUST FAIL — 54/2, THE STAMP stays green. (h) `machine` — C-53.1 removed: MUST FAIL — 55/1. (i) `axis` — an authored capture counted as a capture: the capture-axis arm and the B-leg refusal MUST FAIL — 52/4. (j) `extractrow` — the extraction observation not written: op=contentaxis MUST FAIL — 55/1; by hand it read missing_cause "never_looked". (k) `header` — BOB #14's ruling undone, the bytes the words alone: "canonical bytes" and "TWO MEMBERS, IDENTICAL WORDS" MUST FAIL — 42/14 (the second testimony collides and every later arm meets its register row). (l) `pubbundle` — (A) the fence for the observation ITSELF removed: MUST FAIL — 51/5; re-driven by hand (index.mjs cp-aside/cp-back, sha cc5e4a97… before and after, `cmp` same) the bucket read {words:1, authored:1, handle:1} and the words verified PUBLISHED — the path the probe found, crossing; the finding and case arms then fail too because the observation is now a published target. THIS ARM'S FIRST DRAFT CAME BACK WRONG AND IT IS THE FINDING: the "nothing published" half asked op=verify about the sha of op=image's provenance text, which is a rendering and not the stored file, so it answered false for free while the provenance document WAS in the bucket — the assertion now reads the bucket object by object. (m) `pubcited` — the cited-finding fence removed: both C-53.11 arms MUST FAIL — 54/2. (n) `pubcase` — the case fence removed: MUST FAIL — 55/1. (o) `pubdirect` — the walk made direct-only: "THROUGH ANOTHER FINDING" MUST FAIL — 55/1. (p) `pubover` — THE OVER-STRICTNESS DIRECTION, every ratification refused: the ordinary-document arm MUST FAIL while the observation's own refusal stays green — 53/3. (q) `c181` — C-18.1's authored arm removed: MUST FAIL — 53/3. (r) `overstrict` — every member-origin document treated as a claim: the member-UPLOADED and `authored: false` arms MUST FAIL, THE LIAR green — 51/5. EVERY ARM AS DECLARED. THE PUBLICATION PROBE (`node test/mk1-publish-probe.mjs`) is the measurement (A) rests on and is re-runnable in one step.
  *
  * MK-1 / D-184 / IC-133 / IC-134 — THE AUTHORED BUNDLE: a member's firsthand
  * observation IS a document (`docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §2, §7).
@@ -7,7 +7,7 @@
  * against the real plane in miniflare, under SIGNED-IN members:
  *
  *   1. an observation authored through `op=testify` lands as an INFO bundle whose
- *      bytes are exactly the member's words, registered, flagged `authored`, with
+ *      bytes are a canonical header then exactly the member's words, registered, flagged `authored`, with
  *      a content row over it — and every EXISTING reader serves it unchanged:
  *      `op=image` (the bytes), `op=content` (the row), `op=search passage:` (the
  *      text index), `op=registeraudit` (the register is sound);
@@ -25,15 +25,25 @@
  *      authored arm the gate will read at release;
  *   5. OVER-STRICTNESS: a member-uploaded document (origin `member`, NOT authored)
  *      stays exactly what it is today, and a revision of an authored bundle that
- *      keeps its register entry is accepted and keeps the flag.
+ *      keeps its register entry is accepted and keeps the flag;
+ *   6. BOB #14's RULING: the bytes are a canonical header (id, observed_at, no
+ *      author) then the words, so two members' identical words land as TWO bundles;
+ *   7. THE PUBLICATION FENCE (C-53.10–.12): an observation, a finding resting on
+ *      one (directly or through another finding), and a case over such a finding
+ *      are refused at op=ratify / op=caseratify under a real member's signature,
+ *      and nothing of the observation reaches the published bucket — while an
+ *      ordinary document, its finding and its case publish exactly as before.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
+import { execFileSync, spawnSync } from "node:child_process";
+import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { TESTIMONY_CHECKS, EARNED_CAPTURE_CEILING, checkBundle, BUNDLE_ID_RE } from "../checks/bio-checks.mjs";
 
 const SRC_DIR = fileURLToPath(new URL("../src", import.meta.url));
@@ -128,15 +138,22 @@ console.log("\n--- 1. ruth records what she saw; every existing reader serves it
 const tx = await post("testify", { words: WORDS, observedAt: OBSERVED,
                                    title: "Contract stamped received before the vote" }, RUTH);
 const OBS = tx && tx.bundle_id;
-const OSHA = sha(WORDS);
+/* THE CANONICAL BYTES, written out HERE in ASCII rather than taken from
+   `Store.testimonyBytes` — an expectation read off the thing under test agrees
+   with it for free. BOB #14's ruling, 2026-09-18: a header holding the
+   testimony's own id and observed_at, then the words; NO author in the bytes. */
+const canon = (id, observed, words) => `bio-testimony/1\nid: ${id}\nobserved_at: ${observed}\n\n${words}`;
+const OBYTES = canon(OBS, OBSERVED, WORDS);
+const OSHA = sha(OBYTES);
 t("op=testify lands: an INFO bundle under a CANONICAL id, authored, origin and actor member, the author RUTH, both dates apart",
   [tx && tx.ok, typeof OBS === "string" && BUNDLE_ID_RE.test(OBS) && OBS.startsWith("INFO-"), tx && tx.authored, tx && tx.origin,
    tx && tx.actor_class, tx && tx.author, tx && tx.observed_at,
    typeof (tx && tx.recorded_at) === "string" && tx.recorded_at !== OBSERVED],
   [true, true, true, "member", "member", "ruth", OBSERVED, true]);
-t("the capture IS the words: capture_sha is sha256 of exactly the bytes ruth sent, and it names a file",
-  [tx && tx.capture_sha, tx && tx.bytes, typeof (tx && tx.file) === "string" && tx.file.startsWith("snapshots/")],
-  [OSHA, Buffer.byteLength(WORDS), true]);
+t("the capture IS the canonical bytes: the header (format, id, observed_at) then EXACTLY the words ruth sent — its sha, its sizes, a file",
+  [tx && tx.capture_sha, tx && tx.bytes, tx && tx.words_bytes,
+   typeof (tx && tx.file) === "string" && tx.file.startsWith("snapshots/")],
+  [OSHA, Buffer.byteLength(OBYTES), Buffer.byteLength(WORDS), true]);
 t("its axes are STATED, not shown: capture undetermined (CAPTURE_AXIS_AUTHORED), testimony not yet carried",
   [tx && tx.axes && tx.axes.capture.grade, tx && tx.axes && tx.axes.capture.undetermined_because,
    tx && tx.axes && tx.axes.testimony.grade, typeof (tx && tx.axes && tx.axes.testimony.why)],
@@ -145,8 +162,10 @@ t("its axes are STATED, not shown: capture undetermined (CAPTURE_AXIS_AUTHORED),
 const img = await get("image", `id=${encodeURIComponent(OBS)}`, RUTH);
 const prov = img && typeof img["data/provenance.json"] === "string" ? JSON.parse(img["data/provenance.json"]) : null;
 const d0 = prov && prov.documents && prov.documents[0];
-t("READER op=image: the words file holds EXACTLY what ruth wrote — byte-identical, nothing cleaned",
-  img && tx ? img[tx.file] : null, WORDS);
+t("READER op=image: the file holds EXACTLY the canonical header and what ruth wrote — byte-identical, nothing cleaned",
+  img && tx ? img[tx.file] : null, OBYTES);
+t("…and NO AUTHOR IDENTITY is in the bytes (the attribution level governs that, §4)",
+  img && tx && typeof img[tx.file] === "string" ? /ruth/.test(img[tx.file].split("\n\n")[0]) : null, false);
 t("the register entry declares authored, origin member, actor member, the stamped author, observed_at — and NO capture grade",
   d0 ? [d0.authored, d0.origin && d0.origin.kind, d0.capture && d0.capture.actor_class, d0.author,
         d0.observed_at, d0.capture && d0.capture.sha256, "grade" in (d0.capture || {})] : null,
@@ -218,11 +237,36 @@ const instant = await post("testify", { words: "Seen at a stated instant.", obse
 t("OVER-STRICTNESS: a UTC instant is accepted as well as a calendar date, and is kept as written",
   [instant && instant.ok, instant && instant.observed_at, instant && instant.author],
   [true, "2026-09-10T14:05Z", "sam"]);
+/* BOB #14's RULING (2026-09-18): two members' IDENTICAL observations are TWO
+   testimonies (§3). Superseded here, not exempted: this arm used to assert the
+   second one was REFUSED (C-53.6), because the register is keyed by bytes and
+   the bytes were the words alone. The header makes the bytes unique per
+   testimony, so the second lands as its own bundle. */
 const dup = await post("testify", { words: WORDS, observedAt: OBSERVED }, SAM);
-t("the EXACT bytes already registered are refused (C-53.6) — re-registering would re-file ruth's row",
-  refusedAs(dup, "TESTIMONY_WORDS_REGISTERED"), want("TESTIMONY_WORDS_REGISTERED"));
-t("…and the refusal does not name the bundle that holds them (it may be one the caller cannot see)",
-  JSON.stringify(dup).includes(OBS), false);
+t("TWO MEMBERS, IDENTICAL WORDS, TWO TESTIMONIES: sam's lands as its OWN bundle, its own bytes, its own author",
+  [dup && dup.ok, dup && dup.bundle_id !== OBS, dup && dup.capture_sha !== OSHA, dup && dup.author,
+   dup && dup.capture_sha === sha(canon(dup.bundle_id, OBSERVED, WORDS))],
+  [true, true, true, "sam", true]);
+const both = (await get("search", `q=${encodeURIComponent("passage:deputy")}&mode=ids`, RUTH))?.ids ?? [];
+t("…and both are found by the same words, each an authored document — ruth's is unmoved",
+  [both.includes(OBS), both.includes(dup && dup.bundle_id),
+   (await get("content", `id=${tx && tx.content_id}`, RUTH))?.minted_by], [true, true, "ruth"]);
+/* C-53.6, NARROWED: the one way left to collide is somebody registering, in
+   advance, the exact bytes the NEXT testimony will have — the id is sequential,
+   so it can be predicted. */
+const nextId = dup && dup.bundle_id
+  ? dup.bundle_id.replace(/^(INFO-\d{4}-)(\d{4})(-observation)$/, (_, a, n, c) => `${a}${String(+n + 1).padStart(4, "0")}${c}`)
+  : null;
+const W3 = "I saw the agenda posted on the door at 4:55 pm, five minutes before the deadline.";
+const PRE = sha(canon(nextId, OBSERVED, W3));
+const squat = await promoteDoc("INFO-2026-5301-squatter", { docs: [uploadDoc(PRE)],
+  register: [{ sha256: PRE, path: "snapshots/upload.pdf", encoding: "binary", bytes: 10 }] });
+const pre = await post("testify", { words: W3, observedAt: OBSERVED }, RUTH);
+t("PRE-REGISTERED BYTES: somebody who registered the next testimony's exact bytes in advance cannot make it re-file their row — REFUSED (C-53.6)",
+  [squat && squat.ok, ...refusedAs(pre, "TESTIMONY_WORDS_REGISTERED")], [true, ...want("TESTIMONY_WORDS_REGISTERED")]);
+t("…naming no bundle (the squatter may be one the caller cannot see) — and the retry lands under a new id",
+  [JSON.stringify(pre).includes("squatter"), (await post("testify", { words: W3, observedAt: OBSERVED }, RUTH))?.ok],
+  [false, true]);
 
 /* ===================== 4. THE FENCE, THROUGH op=promote ==================== */
 console.log("\n--- 4. the §7 refusals, through the one write path ---");
@@ -289,7 +333,7 @@ const hijack = await promoteDoc("INFO-2026-5301-hijack", { docs: [uploadDoc(OSHA
 t("a DIFFERENT bundle registering an authored observation's bytes is REFUSED (C-53.8) — no re-filing",
   refusedAs(hijack, "TESTIMONY_AUTHORED_UNEARNED"), want("TESTIMONY_AUTHORED_UNEARNED"));
 const keep = await reviseObs(() => {},
-  { register: [{ sha256: OSHA, path: tx.file, encoding: "utf8", bytes: Buffer.byteLength(WORDS) }] });
+  { register: [{ sha256: OSHA, path: tx.file, encoding: "utf8", bytes: Buffer.byteLength(OBYTES) }] });
 t("OVER-STRICTNESS: a revision of the authored bundle that keeps its register entry — and re-sends the register row — is ACCEPTED",
   [keep && keep.ok], [true]);
 if (keep && keep.ok) OBS_BASE = keep.bundleSha;
@@ -382,8 +426,129 @@ if (d0 && head0) {
   fail++;
 }
 
-console.log(`\n  corpus: 3 observations authored (ruth x2, sam x1), 3 member-uploaded documents, `
-  + `1 forged promote, 4 refused revisions of one observation, 1 accepted revision; members ruth and sam`);
+/* ===================== 6. THE PUBLICATION FENCE (A) ======================= */
+console.log("\n--- 6. nothing carrying an observation crosses into the published record (C-53.10–.12) ---");
+/* MEASURED BEFORE THE FENCE EXISTED (`test/mk1-publish-probe.mjs`): op=ratify
+   on an observation whose bytes were in the working bucket PUBLISHED its words,
+   its provenance document and the observer's handle; a finding resting on one
+   ratified; a case over that finding ratified. Each is driven here as a REAL
+   member's REAL signature, because a refusal over a signature nobody could
+   present proves nothing. */
+if (spawnSync("ssh-keygen", ["-Q"]).error) {
+  console.log("  SKIP  section 6 — ssh-keygen is not on PATH; ratification needs a real member signature");
+} else {
+  const kdir = mkdtempSync(join(tmpdir(), "mk1-pub-"));
+  execFileSync("ssh-keygen", ["-t", "ed25519", "-N", "", "-C", "ruth", "-f", join(kdir, "ruth"), "-q"]);
+  const signBytes = (text) => {
+    const f = join(kdir, `stmt-${Math.random().toString(36).slice(2)}`);
+    writeFileSync(f, text);
+    execFileSync("ssh-keygen", ["-Y", "sign", "-f", join(kdir, "ruth"), "-n", "bio-ratify", f],
+      { stdio: ["ignore", "ignore", "ignore"] });
+    return readFileSync(f + ".sig", "utf8");
+  };
+  const keyB64 = readFileSync(join(kdir, "ruth.pub"), "utf8").trim().split(/\s+/)[1];
+  const sr = await post("signeradd", { keyB64, memberId: "ruth", comment: "ruth laptop" }, "adm-mk1");
+  const shaOf = async (id) => {
+    const l = await get("list", "limit=1000", RUTH);
+    return (Array.isArray(l) ? l : (l && l.bundles) || []).find((b) => b.bundle_id === id)?.bundle_sha ?? null;
+  };
+  const ratify = async (id) => {
+    const s = await shaOf(id);
+    return post("ratify", { bundleId: id, expectedSha: s, sig: signBytes(`bio-ratify ${id} ${s}\n`) }, RUTH);
+  };
+  const published = async (s) => (await get("verify", `sha256=${s}`, RUTH))?.published ?? null;
+  /* THE WORDS PUT INTO THE WORKING BUCKET FIRST, by the ordinary capture route
+     any member has — the probe measured this is what let an observation through
+     the gate, so the fence is tested on the path that actually crossed. */
+  const put = await (await mf.dispatchFetch(`http://x/api/?op=capture&token=${RUTH}&sha256=${OSHA}`,
+    { method: "PUT", body: new TextEncoder().encode(OBYTES) })).json();
+  const r1 = await ratify(OBS);
+  t("op=ratify on the OBSERVATION ITSELF (its bytes in the working bucket, a real member's signature): REFUSED BY NAME (C-53.10)",
+    [sr && sr.ok, put && put.ok, ...refusedAs(r1, "TESTIMONY_UNPUBLISHABLE")],
+    [true, true, ...want("TESTIMONY_UNPUBLISHABLE")]);
+  /* READ THE PUBLISHED BUCKET ITSELF, object by object, rather than asking
+     op=verify about a provenance sha: `op=image` hands back a rendering of
+     data/provenance.json whose digest is not the stored file's, so a verify on
+     it answers false for free — measured when this arm's first draft stayed
+     green under the `pubbundle` control while the provenance document WAS in the
+     bucket. What is asserted is the thing the fence protects: no published object
+     carries the words, an authored provenance document, or the author's handle. */
+  const bucket = await mf.getR2Bucket("PUBLISHED");
+  const carried = { words: 0, authored: 0, handle: 0 };
+  for (const o of (await bucket.list()).objects) {
+    const body = await (await bucket.get(o.key)).text();
+    if (body.includes("deputy clerk stamp")) carried.words++;
+    if (/"authored":\s*true/.test(body)) carried.authored++;
+    if (/"author":\s*"ruth"/.test(body)) carried.handle++;
+  }
+  t("…and NOTHING of it is published: the words' bytes do not verify, and no published object carries the words, an authored provenance document or the author's handle",
+    [await published(OSHA), carried], [false, { words: 0, authored: 0, handle: 0 }]);
+
+  const legMd = (id, target, grade = true) => qMd(id, []).replace("references: []",
+      ["references:", `  - target: ${target}`, "    rel: cites", "    status: confirmed"].join("\n"))
+    .replace("---\n\n## Question", ["basis:", `  - target: ${target}`, "    role: supports",
+      ...(grade ? ["    grade: D", "    grade_axis: connection", "    grade_source: testimony"] : []),
+      "---", "", "## Question"].join("\n"));
+  const makeFinding = async (id, target, grade = true) => {
+    const md = legMd(id, target, grade);
+    const p = await post("promote", { bundleId: id, base: null, snapKey: snapKey(),
+      meta: { object_type: "inquiry", group: "believe-in-oakland", title: "What did the clerk do?",
+              current_state: "open", created: NOW, last_updated: NOW },
+      files: [fileOf("bundle.md", md)] }, RUTH);
+    const c = await get("conclude", `target=${id}&conclusion=${encodeURIComponent("It was stamped first.")}`
+      + `&falsifier=${encodeURIComponent("A received-log showing a later stamp would overturn this.")}`, RUTH);
+    return [p && p.ok, c && c.ok];
+  };
+  const F1 = "INQ-2026-5301-rests-on-obs", F2 = "INQ-2026-5301-rests-on-f1";
+  const PLAIN = "INFO-2026-5301-plain", F3 = "INQ-2026-5301-rests-on-plain";
+  const mk = [await makeFinding(F1, OBS), await makeFinding(F2, F1, false)];
+  const r2 = await ratify(F1);
+  t("op=ratify on a FINDING whose basis cites the observation: REFUSED BY NAME (C-53.11), naming what it rests on",
+    [mk, ...refusedAs(r2, "TESTIMONY_CITED_UNPUBLISHABLE"), r2 && Array.isArray(r2.rests_on) && r2.rests_on[0]?.observation],
+    [[[true, true], [true, true]], ...want("TESTIMONY_CITED_UNPUBLISHABLE"), OBS]);
+  const r3 = await ratify(F2);
+  t("…and one that rests on it THROUGH ANOTHER FINDING (F2 -> F1 -> the observation): REFUSED (C-53.11)",
+    [...refusedAs(r3, "TESTIMONY_CITED_UNPUBLISHABLE"), r3 && r3.rests_on && r3.rests_on[0]?.observation],
+    [...want("TESTIMONY_CITED_UNPUBLISHABLE"), OBS]);
+  const PROJECT = await makePublishingProject({ post: (q, b) => rP(mf.dispatchFetch(`http://x/api/?${q}`,
+      { method: "POST", body: JSON.stringify(b ?? {}) }).then((r) => r.json())), mf, sha, machineToken: "adm-mk1",
+    owner: "ruth", id: "PROJ-2026-5301-publisher", created: NOW, updated: NOW });
+  const pubBody = (targets) => ({ project: PROJECT, targets, roles: allLoadBearing({ targets }),
+    scope: "Whether the contract was stamped before the vote, on the documents in hand.",
+    statement: "This case covers the stamp only, on the documents in hand at edition 1.",
+    excluded: [], subjectPosition: "sought_and_answered",
+    subjectJustification: "We put the claim to the Clerk on 2026-06-20 and printed what came back.",
+    biasAcknowledgement: "This group holds that contracts should be adopted in public session." });
+  const caseRatify = async (targets) => {
+    const p = await post("publish", pubBody(targets), RUTH);
+    const D = p && p.caseDocument;
+    if (!D) return { authored: p };
+    return post("caseratify", { caseId: D.case_id, edition: D.edition, expectedSha: D.doc_sha,
+      sig: signBytes(`bio-ratify-case ${D.case_id} ${D.edition} ${D.doc_sha}\n`) }, RUTH);
+  };
+  const r4 = await caseRatify([F1]);
+  t("op=caseratify on a CASE whose finding rests on the observation: REFUSED BY NAME (C-53.12)",
+    refusedAs(r4, "TESTIMONY_CASE_UNPUBLISHABLE"), want("TESTIMONY_CASE_UNPUBLISHABLE"));
+  const pubObs = await post("publish", pubBody([OBS]), RUTH);
+  t("…and the observation itself cannot be a case member at all (op=publish: NOT_AN_INQUIRY, the existing rule)",
+    codeOf(pubObs), "NOT_AN_INQUIRY");
+  /* OVER-STRICTNESS: an ordinary, non-authored document and a finding and case over it still publish. */
+  const pp = await promoteDoc(PLAIN, { files: [fileOf("bundle.md", infoMd(PLAIN))] });
+  const mk3 = await makeFinding(F3, PLAIN);
+  /* ORDER MATTERS AND IS THE RECORD'S, NOT THE FENCE'S: once the plain document
+     is itself published, a leg carrying its own grade on it is C-21.2's to refuse
+     (it must inherit) — so the finding and its case go first. */
+  const r6 = await ratify(F3);
+  const r7 = await caseRatify([F3]);
+  const r5 = await ratify(PLAIN);
+  t("OVER-STRICTNESS: a finding resting on an ORDINARY document, a case over it, and the document itself all RATIFY exactly as before",
+    [pp && pp.ok, mk3, r6 && r6.ok, codeOf(r7), r7 && r7.ok, r5 && r5.ok],
+    [true, [true, true], true, null, true, true]);
+}
+
+console.log(`\n  corpus: 5 observations authored (ruth x3, sam x2), 4 member-uploaded documents, 1 squatter, `
+  + `1 forged promote, 4 refused revisions of one observation, 1 accepted revision; `
+  + `publication: 1 observation, 3 findings, 2 cases, 1 plain document; members ruth and sam`);
 console.log(`\n${pass} pass, ${fail} fail`);
 await mf.dispose();
 process.exit(fail ? 1 : 0);

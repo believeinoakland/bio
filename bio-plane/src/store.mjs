@@ -7495,6 +7495,14 @@ export class Store extends DurableObject {
       priorCase: this.#one(
         `SELECT edition, completeness, bias_acknowledgement FROM published_cases
           WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL ORDER BY edition DESC LIMIT 1`, id, ed),
+      /* MK-1 (A): whether any finding THIS DOCUMENT names rests on a member's
+         authored observation (C-53.12). The roster is read from the document's
+         own bytes — `case_findings`, the same field `ratifyCaseDocument` commits
+         from — so the fence judges exactly what the signature would publish. */
+      testimony: this.testimonyReach((() => {
+        const cf = (parseFrontmatter(doc.text).data || {}).case_findings;
+        return (Array.isArray(cf) ? cf : []).map((x) => String(x ?? "").trim());
+      })()),
     };
   }
 
@@ -14869,7 +14877,7 @@ export class Store extends DurableObject {
    * trust held by that member.*
    *
    * WHAT IT IS, BUILT OUT OF WHAT EXISTED. An INFO bundle, written through
-   * `promote` — the one write path — with the member's words as a file under
+   * `promote` — the one write path — with the member's words — below the canonical header (`Store.testimonyBytes`) — as a file under
    * `snapshots/`, a `data/provenance.json` document declaring origin `member`,
    * actor class `member` and `authored: true`, and a register row over the
    * words' bytes. In the SAME transaction: one passage-index unit over the whole
@@ -14886,7 +14894,7 @@ export class Store extends DurableObject {
    *     naming one is refused (C-53.2), and a machine is refused (C-53.1);
    *   - two dates, kept apart: `observed_at` is the member's statement,
    *     `recorded_at` is this record's own clock and is not taken from the caller;
-   *   - the bytes are the member's words AS WRITTEN — nothing trims, paraphrases
+   *   - the words are the member's AS WRITTEN, after a canonical header of the testimony's id and observed_at (BOB #14, 2026-09-18) — nothing trims, paraphrases
    *     or cleans them. An edit is a new observation, never a rewrite.
    *
    * HOW IT READS ON THE AXES THAT EXIST TODAY, stated because the testimony axis
@@ -14903,8 +14911,79 @@ export class Store extends DurableObject {
    *  cut, because words silently truncated are words the member did not write. */
   static TESTIMONY_MAX_BYTES = CAPTURE_TEXT_UNIT_CAP;
 
+  /** THE CANONICAL AUTHORED BYTES — PERMANENT ONCE ON MAIN, so stated exactly.
+   *
+   *  Ruled by BOB #14, 2026-09-18 (MK-1 design gap 1): identical words from two
+   *  members are two testimonies, and the register is keyed by the bytes' sha,
+   *  so the bytes carry a header that makes them unique per testimony. The
+   *  format, byte for byte, UTF-8:
+   *
+   *      bio-testimony/1\n
+   *      id: <the testimony's own bundle id>\n
+   *      observed_at: <the member's observedAt, exactly as accepted>\n
+   *      \n
+   *      <the member's words, exactly as written — nothing added after them>
+   *
+   *  Three header lines in THIS order, each `key: value` with one space, LF line
+   *  ends, then ONE empty line; the words begin at the first byte after the first
+   *  "\n\n" and run to the end of the file. `bio-testimony/1` names the format so
+   *  a later one is a new version line, never a silent change. Both values are
+   *  single-line by construction (`id` is canonical, `observed_at` is validated
+   *  to a date or instant), so the header cannot be forged from inside the words.
+   *
+   *  NO AUTHOR IDENTITY IS IN THE BYTES, by the same ruling: who the author is
+   *  and what a published case shows of them is the attribution level's to
+   *  govern (§4), and bytes are what verification publishes. The author is in
+   *  the register and the provenance document, where MK-3's projection decides
+   *  what crosses. */
+  static TESTIMONY_FORMAT = "bio-testimony/1";
+  static testimonyBytes({ id, observedAt, words }) {
+    return `${Store.TESTIMONY_FORMAT}\nid: ${id}\nobserved_at: ${observedAt}\n\n${words}`;
+  }
+
+  /** MK-1 (A) — WHAT WOULD CARRY A MEMBER'S AUTHORED OBSERVATION INTO THE
+   *  PUBLISHED RECORD, for the publication fence at op=ratify / op=caseratify
+   *  (C-53.10–.12, `src/index.mjs`).
+   *
+   *  From each root, the evidence graph is walked through every basis leg AND
+   *  every version leg — a finding resting on a finding that rests on an
+   *  observation carries it just as surely, and an older reading of the basis is
+   *  still bytes a published finding can point at. An observation is a bundle
+   *  holding an AUTHORED register row, read from the register's flag, which only
+   *  the testimony path writes. `self` names roots that ARE observations; `via`
+   *  names a finding and the observation it rests on.
+   *
+   *  ONE bounded statement: the roots travel as one JSON array (D-36), the walk
+   *  stops at depth 64 (a basis is acyclic by C-2.8, so this is a guard, not a
+   *  bound anyone meets), and the answer is capped at 200 rows — enough to NAME
+   *  why a publication is refused, which is all the fence needs; one row refuses. */
+  testimonyReach(ids) {
+    const roots = [...new Set((Array.isArray(ids) ? ids : [])
+      .filter((x) => typeof x === "string" && x))].slice(0, 200);
+    if (!roots.length) return { self: [], via: [] };
+    const rows = this.#rows(
+      `WITH RECURSIVE reach(root, id, depth) AS (
+         SELECT value, value, 0 FROM json_each(?)
+         UNION
+         SELECT r.root, e.target_id, r.depth + 1 FROM reach r
+           JOIN (SELECT bundle_id, target_id FROM inquiry_basis
+                 UNION SELECT bundle_id, target_id FROM inquiry_basis_version_legs) e
+             ON e.bundle_id = r.id
+          WHERE r.depth < 64)
+       SELECT DISTINCT reach.root AS root, reach.id AS observation, MIN(reach.depth) AS depth
+         FROM reach JOIN register g ON g.bundle_id = reach.id AND g.authored = 1
+        GROUP BY reach.root, reach.id
+        LIMIT ?`, JSON.stringify(roots), 200);
+    return {
+      self: rows.filter((r) => r.depth === 0).map((r) => r.root),
+      via: rows.filter((r) => r.depth > 0).map((r) => ({ finding: r.root, observation: r.observation })),
+    };
+  }
+
   /** When the member says they observed it: a calendar date or a UTC instant,
-   *  a real one (2026-02-31 is refused, not rolled over), as epoch ms — or null. */
+   *  a real one (2026-02-31 is refused, not rolled over), as epoch ms — or null.
+   *  REQUIRED, and that STANDS by BOB #14's ruling of 2026-09-18: the record does
+   *  not date a member's observation for them. */
   static #observedMs(v) {
     const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?Z)?$/.exec(v);
     if (!m) return null;
@@ -14926,6 +15005,10 @@ export class Store extends DurableObject {
    *       (C-53.7) — reachable only by a REVISION, since `testify` writes both;
    *   (3) an authored document that stops saying `authored: true`, or whose
    *       provenance document is gone from the revision (C-53.9).
+   *
+   *  IMPORT AND REPLAY GO THROUGH THE TESTIMONY PATH (BOB #14, 2026-09-18, §7):
+   *  there is no replay exemption here, so a migration carrying an authored
+   *  bundle must re-author it through `testify`, never promote it verbatim.
    *
    *  "AUTHORED" IS READ FROM THE REGISTER, NEVER FROM THE DOCUMENT. The register
    *  row's flag is written only under `TESTIMONY_PATH`, so it is the one fact
@@ -15062,15 +15145,6 @@ export class Store extends DurableObject {
               + `saw it, and the record does not supply one`
           : `observedAt '${obs}' is later than this record's own clock (${recorded})`,
         { observed_at: obs || null });
-    const sha = createSha256().update(bytes).hex();
-    /* THE REGISTER IS KEYED BY THE BYTES, so these words already held — as
-       another member's observation OR as a captured document — would have their
-       register row re-filed under this bundle by promote's upsert. Refused, and
-       the answer does not say WHICH bundle holds them, because that bundle may be
-       one the caller cannot see (D-15). */
-    if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha))
-      return refusal("TESTIMONY_WORDS_REGISTERED",
-        `these exact bytes (${sha.slice(0, 16)}…) are already registered in this record`);
     /* END DEC-49 REGION is-testify-words */
 
     const heading = (typeof title === "string" ? title : "")
@@ -15081,6 +15155,25 @@ export class Store extends DurableObject {
        the title or the words, so an id — which travels further than a document
        does — says what KIND of thing it names and nothing of what it says. */
     const id = `${this.allocId("INFO", recorded.slice(0, 4)).id}-observation`;
+    /* THE AUTHORED BYTES: A CANONICAL HEADER, THEN THE WORDS. Ruled by BOB #14,
+       2026-09-18: two members' identical observations are TWO testimonies
+       (MEMBER-KNOWLEDGE-DESIGN.md §3), and the register — keyed by the bytes —
+       must not collide them; the answer is NOT an I5 key change but bytes that
+       are unique per testimony. `Store.testimonyBytes` is the one definition. */
+    const fileText = Store.testimonyBytes({ id, observedAt: obs, words: text });
+    const fileBytes = new TextEncoder().encode(fileText);
+    const sha = createSha256().update(fileBytes).hex();
+    /* DEC-49 REGION is-testify-bytes
+       THE REGISTER IS KEYED BY THE BYTES, and with the header those bytes are
+       unique to this testimony — so a hit here is somebody having registered,
+       IN ADVANCE, the exact bytes the next observation would have (the id is
+       sequential and therefore predictable). Recording over them would re-file
+       their register row under this bundle. Refused, naming no bundle (D-15);
+       the id is spent and the next attempt gets new bytes. */
+    if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha))
+      return refusal("TESTIMONY_WORDS_REGISTERED",
+        `the canonical bytes of ${id} (${sha.slice(0, 16)}…) are already registered in this record`);
+    /* END DEC-49 REGION is-testify-bytes */
     const file = `snapshots/observation-${sha.slice(0, 16)}.txt`;
     const locator = "a member's firsthand observation, authored in this record";
     const md = ["---",
@@ -15096,7 +15189,7 @@ export class Store extends DurableObject {
       `  retrieved: ${recorded}`,
       "monitoring:", "  enabled: false", "  frequency: none",
       "---", "", "## Summary", "",
-      `A member's firsthand observation. Their words are \`${file}\`, exactly as written; nothing here `
+      `A member's firsthand observation. Their words are \`${file}\`, below its canonical header, exactly as written; nothing here `
       + `paraphrases or summarises them.`, "",
       "## Provenance Notes", "",
       `Authored through op=testify. Observed ${obs}, in the member's own statement; recorded ${recorded}, `
@@ -15123,12 +15216,12 @@ export class Store extends DurableObject {
         bound: false,
       }],
       capture: {
-        method: "authored by a member through op=testify; the bytes are the member's words as written, "
+        method: "authored by a member through op=testify; the bytes are a canonical header (bio-testimony/1: id, observed_at) and then the member's words as written, "
               + "hashed at receipt",
         /* NO `grade`, and the absence is the statement (§3, and C-18.1's authored
            arm): the capture axis measures reading a document in, and nothing was
            read in. */
-        actor_class: "member", sha256: sha, encoding: "utf8", bytes: bytes.length,
+        actor_class: "member", sha256: sha, encoding: "utf8", bytes: fileBytes.length,
         content_type: "text/plain; charset=utf-8",
       },
       origin: { kind: "member" },
@@ -15153,11 +15246,11 @@ export class Store extends DurableObject {
         bundleId: id, base: null, snapKey: `${recorded.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
         author: who,
         files: [{ path: "bundle.md", ...enc(md) }, { path: "data/provenance.json", ...enc(provText) },
-                { path: file, text, bytes: bytes.length, sha256: sha }],
+                { path: file, text: fileText, bytes: fileBytes.length, sha256: sha }],
         meta: { object_type: "information", group: "believe-in-oakland", title: heading,
                 current_state: "collected", prior_state: null, created: recorded, last_updated: recorded,
                 criticality: "supporting" },
-        register: [{ sha256: sha, path: file, encoding: "utf8", bytes: bytes.length }],
+        register: [{ sha256: sha, path: file, encoding: "utf8", bytes: fileBytes.length }],
         [TESTIMONY_PATH]: {
           captureSha: sha, author: who, observedAt: obs,
           /* Inside promote's transaction. ONE unit over the whole words, at the
@@ -15196,7 +15289,7 @@ export class Store extends DurableObject {
     if (!promoted.ok) return promoted;
     return {
       ok: true, bundle_id: id, bundle_sha: promoted.bundleSha ?? null, capture_sha: sha, file,
-      bytes: bytes.length, content_id: promoted.testimony ? promoted.testimony.content_id : null,
+      bytes: fileBytes.length, words_bytes: bytes.length, content_id: promoted.testimony ? promoted.testimony.content_id : null,
       authored: true, origin: "member", actor_class: "member",
       author: who, observed_at: obs, recorded_at: recorded,
       axes: {
@@ -26328,6 +26421,9 @@ export class Store extends DurableObject {
       manifest: this.#rows(`SELECT snap_key, kind, base, created FROM manifest WHERE bundle_id=? ORDER BY created`, bundleId),
       history: this.#rows(`SELECT snap_key, sha256 FROM history WHERE bundle_id=? AND path='bundle.md'`, bundleId),
       registers: this.#rows(`SELECT capture_sha, path, bytes FROM register WHERE bundle_id=?`, bundleId),
+      /* MK-1 (A): whether this bundle IS, or RESTS ON, a member's authored
+         observation — the publication fence's one fact (C-53.10/.11). */
+      testimony: this.testimonyReach([bundleId]),
       dangling: this.#rows(
         `SELECT r.target_id FROM refs r LEFT JOIN bundles b ON b.bundle_id=r.target_id
          WHERE r.bundle_id=? AND b.bundle_id IS NULL`, bundleId).map((r) => r.target_id),

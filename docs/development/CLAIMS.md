@@ -13495,3 +13495,14 @@ conflicted on this file and `INTERFACE-CHANGES.md` (both sides appended) and the
 unresolved on the local branch — caught by `plancheck --local` before any push, resolved KEEP-BOTH. (2) Row the sibling defect this item measured and did not close: `content:cap=undetermined`
 matches an image cited as bytes, and `rows=content`'s `derivation_cap` shows its NULL unlabelled (measured in
 `rec121-chain-bytes.test.mjs` §4, whose assertion is the one that item must correct).
+
+### ADDENDUM 2026-09-18 RECORD (MK-1) — CONDUCT #4 corrections (A) and (B), inside the same landing
+
+The MK-1 claim was re-opened on CONDUCT #4's instruction for two corrections, over the SAME paths plus
+`bio-plane/test/mk1-publish-probe.mjs` (new, the measurement for (A)) and the two `op=ratify`/`op=caseratify`
+regions of `bio-plane/src/index.mjs` (`is-testimony-publish-bundle`, `is-testimony-publish-case`). (A) the
+PUBLICATION FENCE, C-53.10–.12, after the probe DROVE an observation into the published bucket; (B) BOB #14's
+canonical header on the authored bytes, C-53.6 narrowed. origin/main `2c4a5c11` merged first.
+
+released: 2026-09-18 by the MK-1 worker — every path committed on `worktree-agent-a1137b844e6d23aed`; the
+final figures are in the worker's report and in `testify.test.mjs`'s NEGATIVE CONTROL line.

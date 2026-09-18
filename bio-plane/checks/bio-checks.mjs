@@ -1883,7 +1883,8 @@ function checkReleaseAuthority(ctx, findings) {
          a member's own words were not read in from anywhere — so a letter here
          would be true of the bytes (we hold exactly what the member wrote) and
          would read as strength the observation does not have. Its grade is
-         testimony, which is MK-2's axis. `authored === true` is the ONLY
+         testimony, which is MK-2's axis. RULED RIGHT by BOB #14, 2026-09-18 (§3
+         will say so). `authored === true` is the ONLY
          spelling that switches the arm: the store's fence (C-53.8) refuses the
          flag on any document the testimony path did not write, so the catalogue
          can read it as said. */
@@ -11119,7 +11120,7 @@ export const TRANSCRIBE_CHECKS = {
 /* =====================================================================
  * MK-1 / D-184 / IC-133 / IC-134 — THE AUTHORED BUNDLE (`MEMBER-KNOWLEDGE-
  * DESIGN.md` §2 and §7): a member's firsthand observation IS a document — an
- * INFO bundle whose bytes are exactly the member's words, registered like any
+ * INFO bundle whose bytes are a canonical header then the member's words, registered like any
  * capture and flagged `authored`. C-53, minted with `node tools/mintid.mjs C`.
  *
  * ITS OWN FAMILY, because the subject is its own: the ways a member's own
@@ -11130,9 +11131,14 @@ export const TRANSCRIBE_CHECKS = {
  *
  *   is-testify-act       who is testifying — a signed-in member, stamped by the
  *                        plane; a machine, or a caller naming the author, refused
- *   is-testify-words     the words, the date the member says they observed it,
- *                        and whether these exact bytes are already registered
- *   is-testimony-fence   THE REFUSALS THE ITEM EXISTS FOR, at op=promote — the one
+ *   is-testify-words     the words and the date the member says they observed it
+ *   is-testify-bytes     whether the canonical bytes (header + words) are already
+ *                        registered — reachable only by pre-registering them
+ *   is-testimony-publish-bundle / is-testimony-publish-case (src/index.mjs)
+ *                        THE PUBLICATION FENCE (C-53.10–.12): an observation, a
+ *                        finding resting on one, or a case over such a finding
+ *                        does not cross until MK-3's attribution does
+ *   is-testimony-fence  THE REFUSALS THE ITEM EXISTS FOR, at op=promote — the one
  *                        write path — so no route but op=testify can set the flag,
  *                        and no revision can quietly change what it says: an
  *                        authored document claiming an origin or actor other than
@@ -11179,13 +11185,20 @@ export const TESTIMONY_CHECKS = {
       + 'or a date and time, and not a date later than now. The record keeps that date apart from the '
       + 'moment you wrote it down, because they are two different facts.',
   },
+  /* NARROWED BY BOB #14's RULING (2026-09-18), NOT DELETED. This refused a
+     second member's IDENTICAL words, because the register is keyed by bytes.
+     The ruling: two identical observations are two testimonies, and the bytes
+     carry a canonical header holding the testimony's own id — so identical
+     words never collide. What is left is the case only an adversary produces:
+     somebody registering, ahead of time, the exact bytes the NEXT testimony
+     will have (the id is sequential, so it can be predicted). Recording over
+     them would re-file their register row under the observation. */
   TESTIMONY_WORDS_REGISTERED: {
     check: 'C-53.6',
-    where: 'src/store.mjs testify > is-testify-words',
-    translation: 'These exact words, byte for byte, are already held in this record, and the record keys '
-      + 'what it holds by its bytes — so recording them again would overwrite what the record says '
-      + 'about the copy it already has. If you saw this yourself, say it in your own words: two members '
-      + 'who saw the same thing record two observations.',
+    where: 'src/store.mjs testify > is-testify-bytes',
+    translation: 'The record already holds, under another document, the exact bytes this observation '
+      + 'would be stored as — which can only happen if somebody registered them in advance. Nothing was '
+      + 'recorded. Try again: the next attempt is stored under a new identifier and new bytes.',
   },
   TESTIMONY_ORIGIN_NOT_MEMBER: {
     check: 'C-53.7',
@@ -11209,6 +11222,37 @@ export const TESTIMONY_CHECKS = {
     translation: 'This document is a member\'s own observation, and this revision no longer says so. '
       + 'Removing that would let a member\'s word read as a captured document. What the document is '
       + 'cannot be revised; to withdraw an observation, record a new one.',
+  },
+  /* MK-1 (A) — THE PUBLICATION FENCE, measured before it was built
+     (`test/mk1-publish-probe.mjs`): op=ratify on an observation whose bytes were
+     in the working bucket PUBLISHED its words, its provenance document and the
+     observer's handle; a finding resting on one, and a case over that finding,
+     ratified. MEMBER-KNOWLEDGE-DESIGN.md §4 puts WHAT a published case may show
+     of a member's observation at the attesting member's chosen level, and that
+     is MK-3's — so until MK-3's projection honours it, nothing carrying an
+     observation crosses. LIFTING THESE THREE IS MK-3's ACT, not a caller's. */
+  TESTIMONY_UNPUBLISHABLE: {
+    check: 'C-53.10',
+    where: 'src/index.mjs fetch > is-testimony-publish-bundle',
+    translation: 'This document is a member\'s own firsthand observation, and it cannot be published yet. '
+      + 'What a published case shows of an observation — the group, the project, the member\'s cover or '
+      + 'their name — is the observing member\'s choice, and the record cannot yet honour that choice in '
+      + 'what it publishes. Until it can, publishing the observation would publish its author.',
+  },
+  TESTIMONY_CITED_UNPUBLISHABLE: {
+    check: 'C-53.11',
+    where: 'src/index.mjs fetch > is-testimony-publish-bundle',
+    translation: 'This finding rests, directly or through another finding, on a member\'s own firsthand '
+      + 'observation, and it cannot be published yet. How a published case attributes an observation is '
+      + 'the observing member\'s choice, and the record cannot yet honour that choice. Publish the finding '
+      + 'without that observation in its basis, or wait until attribution is supported.',
+  },
+  TESTIMONY_CASE_UNPUBLISHABLE: {
+    check: 'C-53.12',
+    where: 'src/index.mjs fetch > is-testimony-publish-case',
+    translation: 'A finding in this case rests, directly or through another finding, on a member\'s own '
+      + 'firsthand observation, so the case cannot be published yet. How a published case attributes an '
+      + 'observation is the observing member\'s choice, and the record cannot yet honour that choice.',
   },
 };
 

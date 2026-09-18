@@ -9983,7 +9983,27 @@ carried before this IC, or on bundles only this op can create; an earned-registr
 documents. A member-uploaded document (origin `member`, NOT authored) and `authored: false` are
 accepted exactly as today — pinned by the over-strictness arms.
 
-**ANSWERS REQUESTED:** UI — NOT-AFFECTED today (no caller; Program B's surface); SKILL, DIST —
+**ADDENDUM, same landing, on CONDUCT #4's two corrections (2026-09-18):**
+- **THE AUTHORED BYTES ARE A CANONICAL HEADER THEN THE WORDS** (BOB #14's ruling): `bio-testimony/1\n`,
+  `id: <bundle id>\n`, `observed_at: <as accepted>\n`, one empty line, then the words exactly as written —
+  defined once at `Store.testimonyBytes`, permanent once on main. No author identity is in the bytes.
+  `capture_sha` is over the whole file; the answer gains `words_bytes` beside `bytes`. The passage index holds
+  the WORDS only. Two members' identical words are now two bundles with two shas. **C-53.6 is NARROWED**, not
+  removed: it now fires only when somebody registered the next testimony's exact bytes in advance (the id is
+  sequential), in region `is-testify-bytes`.
+- **THE PUBLICATION FENCE (C-53.10–.12), measured necessary before it was built** (`test/mk1-publish-probe.mjs`:
+  an observation whose bytes were in the working bucket RATIFIED and published its words, its provenance
+  document and the observer's handle; a finding resting on one ratified; a case over it ratified).
+  `op=ratify` refuses `TESTIMONY_UNPUBLISHABLE` (the bundle is an observation) and
+  `TESTIMONY_CITED_UNPUBLISHABLE` (its basis or version legs reach one at any depth, with `rests_on`);
+  `op=caseratify` refuses `TESTIMONY_CASE_UNPUBLISHABLE` (a finding the document names reaches one). All
+  three below the scope check and the machine fence, before the signature is weighed, 409. The facts come
+  from the store (`gatefacts` and `casedocfacts` gain a `testimony` key, from `Store.testimonyReach`).
+  **Lifting the fence is MK-3's act**, once its projection honours §4's attribution level. Every ordinary
+  document, finding and case publishes exactly as before (driven in `testify.test.mjs` §6).
+
+**ANSWERS REQUESTED:** UI — NOT-AFFECTED today (no caller; Program B's surface) — but a surface offering
+ratify on a finding now meets three new refusal codes, each with its canned sentence; SKILL, DIST —
 NOT-AFFECTED expected.
 
 ## IC-134 · I5: the register gains `authored`, `author`, `observed_at` — a member's own words are registered like any capture and never pass for one (D-184) · PROPOSED 2026-09-18 (MK-1, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's

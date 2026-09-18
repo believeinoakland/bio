@@ -2785,6 +2785,15 @@ const reextractRow = (code) => {
 
 /* REC-123: the C-32 row for a machine fence that lives in THIS file (op=ratify,
    op=caseratify). Same shape and same refusal-to-invent as `reextractRow`. */
+/* MK-1 (A): the publication fence's catalogue rows (C-53.10–.12), on
+   `machineFenceRow`'s shape and for its reason — a code with no canned sentence
+   behind it must not reach a member. */
+const testimonyFenceRow = (code) => {
+  const row = CHECK_CATALOGUE.TESTIMONY_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`testimonyFenceRow: ${code} has no TESTIMONY_CHECKS row with a canned translation (DEC-49).`);
+  return { code, check: row.check, translation: row.translation };
+};
 const machineFenceRow = (code) => {
   const row = CHECK_CATALOGUE.MACHINE_FENCE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
@@ -7413,6 +7422,22 @@ export default {
       const facts = factsOut.result;
       if (!facts.ok) return json({ ok: false, ...facts, store: storeName, tokenClass: cls }, 404);
 
+      /* DEC-49 REGION is-testimony-publish-case — MK-1 (A) / C-53.12. A case whose
+         findings rest, at any depth, on a member's authored observation does not
+         cross until MK-3's attribution-honouring projection lifts this; lifting it
+         is MK-3's act. MEASURED before it existed (`test/mk1-publish-probe.mjs`,
+         path 3): such a case RATIFIED. Refused before the signature is weighed, so
+         the answer is the same whoever signed. */
+      if (facts.testimony && facts.testimony.via.concat(facts.testimony.self).length)
+        return json({ ok: false, reason: "TESTIMONY_CASE_UNPUBLISHABLE", ...testimonyFenceRow("TESTIMONY_CASE_UNPUBLISHABLE"),
+          caseId: facts.doc.case_id, edition: facts.doc.edition, rests_on: facts.testimony.via,
+          detail: `a finding in ${facts.doc.case_id} rests on a member's authored observation `
+                + `(${[...facts.testimony.via.map((v) => `${v.finding} -> ${v.observation}`), ...facts.testimony.self].slice(0, 5).join(", ")}); `
+                + `what a published case shows of an observation is the attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md §4), `
+                + `and this build cannot yet honour it (MK-3)`,
+          store: storeName, tokenClass: cls }, 409);
+      /* END DEC-49 REGION is-testimony-publish-case */
+
       if (facts.doc.doc_sha !== body.expectedSha)
         return json({ ok: false, reason: "CASE_RATIFY_STALE",
                       detail: "the case document has changed since it was reviewed; read it again and re-sign",
@@ -7540,6 +7565,29 @@ export default {
       if (!factsOut.answered) return storeSilent("ratify/gatefacts");
       const facts = factsOut.result;
       if (!facts.ok) return json({ ...facts, store: storeName, tokenClass: cls }, 404);
+      /* DEC-49 REGION is-testimony-publish-bundle — MK-1 (A) / C-53.10, C-53.11.
+         MEASURED before it existed (`test/mk1-publish-probe.mjs`): op=ratify on an
+         observation whose bytes were in the working bucket PUBLISHED its words,
+         its provenance document and the observer's handle; a finding resting on
+         one ratified. What a published case shows of an observation is the
+         attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md §4), which this
+         build cannot yet honour — so neither crosses until MK-3's projection
+         lifts this, and lifting it is MK-3's act. Below the scope check and the
+         machine fence, before the signature is weighed. */
+      if (facts.testimony && facts.testimony.self.length)
+        return json({ ok: false, reason: "TESTIMONY_UNPUBLISHABLE", ...testimonyFenceRow("TESTIMONY_UNPUBLISHABLE"),
+          bundleId: body.bundleId,
+          detail: `${body.bundleId} is a member's authored observation; what a published case shows of it is the `
+                + `attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md §4), and this build cannot yet honour it (MK-3)`,
+          store: storeName, tokenClass: cls }, 409);
+      if (facts.testimony && facts.testimony.via.length)
+        return json({ ok: false, reason: "TESTIMONY_CITED_UNPUBLISHABLE", ...testimonyFenceRow("TESTIMONY_CITED_UNPUBLISHABLE"),
+          bundleId: body.bundleId, rests_on: facts.testimony.via,
+          detail: `${body.bundleId} rests on a member's authored observation `
+                + `(${facts.testimony.via.slice(0, 5).map((v) => v.observation).join(", ")}); what a published case `
+                + `shows of it is the attesting member's choice, and this build cannot yet honour it (MK-3)`,
+          store: storeName, tokenClass: cls }, 409);
+      /* END DEC-49 REGION is-testimony-publish-bundle */
       if (facts.row.bundle_sha !== body.expectedSha)
         return json({ ok: false, reason: "RATIFY_STALE",
                       detail: "the bundle has changed since it was reviewed; read it again and re-sign",
