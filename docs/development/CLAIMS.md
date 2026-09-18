@@ -13670,3 +13670,23 @@ test/casesign.control.mjs e|f|g|h` from `bio-plane/`: all four AS DECLARED, ever
 Paths as claimed, plus `bio-plane/scripts/coverage.mjs` (the floor) and `BIO_Publication_v0_1.md` §4 and its
 Status date (the construct's home). IDs minted with `tools/mintid.mjs`: IC-141. **FOR CONDUCT:** RESOLVE IC-141
 against I3 as read at resolution (proposed MAJOR on 26.2.0).
+
+### CLAIM 2026-09-18 RECORD (REC-129) — THE FRONTIER'S INTERNET-LEVEL READ
+
+Worker spawned by CONDUCT #4 into worktree `agent-af99c832f7860f664`. Builds the internet-level row of
+`OBSERVATION-LOG-DESIGN.md` §6's reader table over §4.5's lead looks, honouring MK-4's lead visibility.
+Id minted before building: IC-143 (I3).
+paths:
+  - `bio-plane/src/store.mjs` — `frontier`'s internet arm (new `#frontierInternet`), the one lead-visibility
+    rule factored so the frontier and `#leadVisibleTo` share ONE spelling, the not-built note.
+  - `bio-plane/src/airun.mjs` — the internet level's evidence-sidedness constant, if needed.
+  - `bio-plane/test/frontier-internet.test.mjs`, `bio-plane/test/nc-rec129.mjs` — new.
+  - `bio-plane/test/lead.test.mjs`, `bio-plane/test/nc-mk4.mjs` — the superseded not-built assertion and any
+    arm whose find-string the refactor moves, CORRECTED with the reason, never exempted.
+  - any suite pinning a registry or roster the change moves, corrected with its reason.
+  - `bio-plane/dist/**` rebuilt if the battery requires it.
+  - `docs/architecture/construct-status.json` (`9.internet`, `3.census` reviewed), `docs/architecture/BIO_System_Design.md`
+    §3 (rendered only), `docs/development/OBSERVATION-LOG-DESIGN.md` (§5.1 / §6 / Status / Incomplete),
+    `docs/development/INTERFACE-CHANGES.md` (IC-143), `docs/DECIDED.md` (regenerated only).
+  **NOT** `docs/development/QUEUE.md` (CONDUCT's), **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, no version bump.
+addendum 2026-09-18: STOPPED AT STAND-DOWN (CONDUCT #4). The claim stays OPEN; branch `worktree-agent-af99c832f7860f664` holds the WIP commit. IC-143 stays reserved to REC-129.

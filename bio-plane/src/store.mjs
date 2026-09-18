@@ -288,6 +288,8 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
             §8's fourth item is being built as this lands, and a second level
             spelling this rule a second way is the drift. */
          CONTENT_EVIDENCE_IS_ONE_SIDED, causesNotRuledOut,
+         /* REC-129 / IC-143: the internet level's sidedness and its empty-answer ladder. */
+         INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES,
          readerRunObservation, resolutionObservation, derivationObservation,
          /* REC-96 / D-196 / IC-112: THE COMPLETENESS STATEMENT'S `searched`
             SECTION, decided in `airun.mjs` for the reason every vocabulary above
@@ -15699,15 +15701,42 @@ export class Store extends DurableObject {
    *  Everyone else is answered by the caller exactly as for a lead that does not
    *  exist. Participation is read from `project_participants` directly and NOT
    *  through `viewerPredicate`'s project arm, whose `admin` disjunct would let
-   *  every administrator read every shared lead — the ruling names participants. */
+   *  every administrator read every shared lead — the ruling names participants.
+   *
+   *  REC-129 / IC-143 — THE RULE IS NOW SPELLED ONCE, IN `#leadReach`, AND THIS
+   *  METHOD ASKS IT OF ONE LEAD. The frontier's internet level has to apply the
+   *  SAME rule to a whole level at once and INSIDE the statement — it groups the
+   *  latest look per subject over the looks this viewer may read, and gating after
+   *  the grouping would let a hidden look change which row a viewer sees (an
+   *  existence signal). A second spelling of the rule in SQL beside this JS one
+   *  would be the mirror-and-drift class in the one place it would leak, so both
+   *  consume the one predicate. The three answers are unchanged: `lead.test.mjs`
+   *  and `nc-mk4.mjs`'s visibility arms are re-pointed at this text, not exempted. */
   #leadVisibleTo(row, viewer) {
-    const gate = viewerPredicate(viewer);
-    if (gate.scope === "DENY" || gate.member == null) return false;
-    if (gate.member === row.author) return true;
+    const reach = this.#leadReach(viewer);
+    if (!reach) return false;
     return !!this.#one(
-      `SELECT 1 AS x FROM lead_shares s JOIN project_participants pp ON pp.project_id = s.bundle_id
-        WHERE s.lead_id = ? AND pp.member_id = ? AND pp.state IN ('joined', 'leaving') LIMIT 1`,
-      row.lead_id, gate.member);
+      `SELECT 1 AS x FROM leads l WHERE l.lead_id = ? AND ${reach.sql} LIMIT 1`,
+      row.lead_id, ...reach.args);
+  }
+
+  /** REC-129 — BOB #14's LEAD-VISIBILITY RULING AS ONE SQL PREDICATE over a
+   *  `leads` row aliased `l`, or `null` when this viewer reaches NO lead at all.
+   *  The two positive arms — the AUTHOR; a JOINED (or leaving) participant of a
+   *  project the author SHARED it to — and nothing else. The third arm (a
+   *  machine credential only within a member's minted scope) is satisfied by the
+   *  viewer stamp rather than here: a member-scoped `ai` key is stamped as its
+   *  member, and a `class:*` credential carries `member: null` and reaches
+   *  nothing. `#leadVisibleTo` and `#frontierInternet` are its only callers. */
+  #leadReach(viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "DENY" || gate.member == null) return null;
+    return {
+      sql: `(l.author = ? OR EXISTS (SELECT 1 AS x FROM lead_shares s JOIN project_participants pp
+              ON pp.project_id = s.bundle_id
+             WHERE s.lead_id = l.lead_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))`,
+      args: [gate.member, gate.member],
+    };
   }
 
   /** op=leadshare — THE AUTHOR SHARES ONE LEAD TO ONE PROJECT: authored, dated,
@@ -34259,6 +34288,158 @@ export class Store extends DurableObject {
     };
   }
 
+  /** REC-129 / IC-143 — THE BOUNDED INTERNET-LEVEL FRONTIER. §6's first reader at
+   *  the internet level, over §4.5's member half: the LEAD's looks (`op=leadlook`,
+   *  MK-4), `authority_kind = lead`, `subject_kind = description`, the member's
+   *  words as the subject.
+   *
+   *  THE FENCE IS THE LEAD'S AND IT RUNS INSIDE THE STATEMENT, BEFORE THE GROUPING.
+   *  §6's *"REC-36's withholding applies row-whole across the fence"* is a BUNDLE
+   *  fence and a lead names no bundle (`#observationBundles` answers `lead` as
+   *  unresolved), so this level's fence is BOB #14's lead-visibility ruling,
+   *  consumed through `#leadReach` — the ONE predicate `#leadVisibleTo` also asks.
+   *  And it is applied to the LOOKS before the latest-per-subject grouping, not to
+   *  the grouped rows after it, for a reason specific to this level: two leads can
+   *  carry identical words, so one subject can be looked at under a lead this
+   *  viewer reads and under one they do not. Gating after the grouping would let
+   *  the hidden look become "the latest row" and remove — or re-date — what the
+   *  viewer sees, which is an existence signal. **EVERY NUMBER, LIST AND CAUSE IN
+   *  THIS ANSWER IS A FUNCTION OF THE ROWS THIS VIEWER MAY READ AND NOTHING ELSE**:
+   *  the page, `last_verified`, `unreachable_since`, `never_looked`, `truncated`,
+   *  the tally and the empty cause. So a lead outside the viewer's reach cannot
+   *  move any of them, and that is what `frontier-internet.test.mjs` asserts by
+   *  digest rather than by field.
+   *
+   *  THE TALLY IS THEREFORE SCOPED TO THE VIEWER AT THIS LEVEL, and that departs
+   *  from REC-110's ruling for the other three ON PURPOSE. REC-110 rests on four
+   *  facts, the first being that `op=stats` already publishes the same count
+   *  through a door of identical width. At this level the rows are LEADS, and
+   *  BOB #14's later ruling is that a lead's existence is not disclosed to anyone
+   *  outside its reach — so a whole-level count is exactly the disclosure the
+   *  ruling forbids, and `op=stats`' own `leads` count is raised as a defect
+   *  against that ruling rather than cited as a precedent for repeating it.
+   *  `tally_scope` says so on every answer.
+   *
+   *  WHAT THIS LEVEL DOES NOT READ, SAID ON EVERY ANSWER (`not_read`). §4.5 names
+   *  two more sources: an investigative run's open-internet searches — folded
+   *  rows of subject kind `unstated`, which no built frontier arm reads and which
+   *  `op=airunlog` serves per run through the run's own gate — and an acquisition
+   *  attempt at an address nothing is held for, which this build writes at the
+   *  DOCUMENT level (`op=frontier&level=document`). Stated rather than silently
+   *  absent, because an internet frontier that omitted them without saying so
+   *  would read as a claim that nothing else looked at the open internet.
+   *
+   *  NEVER_LOOKED HERE IS A LEAD NOBODY HAS FOLLOWED — keyed on the LEAD, because
+   *  a look is recorded AGAINST a lead (its authority), and §5.1's cause (3) is
+   *  established for it (`INTERNET_EVIDENCE_IS_ONE_SIDED`). */
+  #frontierInternet(cap, viewer = null) {
+    const reach = this.#leadReach(viewer);
+    const notRead = [
+      { subject_kind: "unstated", authority_kind: "run",
+        why: "an investigative run's open-internet searches are folded run-log rows whose subject kind was "
+           + "never recorded; they are read per run through op=airunlog, which gates each on the run's "
+           + "context. This read does not include them, and says nothing about whether any exist" },
+      { subject_kind: "address", authority_kind: "acquire",
+        why: "an acquisition attempt at an address nothing is held for is written at the DOCUMENT level on "
+           + "this build (op=frontier&level=document), not here" },
+    ];
+    const base = { level: "internet", found: true, built: true, limit: cap,
+                   reads: { authority_kind: "lead", subject_kind: "description" }, not_read: notRead,
+                   tally_scope: "visible_to_viewer",
+                   evidence_one_sided: INTERNET_EVIDENCE_IS_ONE_SIDED,
+                   missing_unexplained: [], missing_unexplained_count: 0,
+                   empty_causes: INTERNET_FRONTIER_EMPTY_CAUSES };
+    const empty = (cause) => ({ level: "internet", partition: "description", cause,
+                                says: INTERNET_FRONTIER_EMPTY_CAUSES[cause] });
+    if (!reach)
+      return { ...base, truncated: false, looked: [], never_looked: [], never_looked_count: 0, tally: {},
+               empty: empty("no_member"), note: Store.FRONTIER_INTERNET_NOTE };
+    /* THE LOOKS THIS VIEWER MAY READ, and only those, as one CTE every later
+       clause reads — so no clause can reach a row the fence withheld. */
+    const V = `WITH v AS (
+        SELECT o.seq, o.at, o.subject_kind, o.subject, o.state, o.governed, o.condition,
+               o.authority_kind, o.authority, o.actor_class, o.result_kind, o.result_ref, o.detail
+          FROM observation_log o JOIN leads l ON l.lead_id = o.authority
+         WHERE o.level = 'internet' AND o.authority_kind = 'lead' AND ${reach.sql})`;
+    const page = this.#rows(
+      `${V}
+       SELECT v.*,
+              (SELECT p.at FROM v p WHERE p.subject_kind = v.subject_kind AND p.subject IS v.subject
+                  AND p.state = 'PRESENT' ORDER BY p.seq DESC LIMIT 1) AS last_verified,
+              (SELECT u.at FROM v u WHERE u.subject_kind = v.subject_kind AND u.subject IS v.subject
+                  AND u.state = 'LOOKED_INDETERMINATE'
+                  AND u.seq > (SELECT p.seq FROM v p WHERE p.subject_kind = v.subject_kind
+                                  AND p.subject IS v.subject AND p.state = 'PRESENT'
+                                ORDER BY p.seq DESC LIMIT 1)
+                ORDER BY u.seq ASC LIMIT 1) AS unreachable_since
+         FROM v
+        WHERE v.seq = (SELECT MAX(w.seq) FROM v w
+                        WHERE w.subject_kind = v.subject_kind AND w.subject IS v.subject)
+        ORDER BY v.seq DESC
+        LIMIT ?`, ...reach.args, cap + 1);
+    const looked = page.slice(0, cap).map((r) => {
+      /* A REFERENT THIS VIEWER CANNOT READ IS NOT PUBLISHED; THE ROW IS — `leadRead`'s
+         rule exactly, through the same helper, so the frontier and the lead's own
+         read cannot disagree about one look. A lead shared into a project can
+         carry a look whose capture sits in another the reader has not joined. */
+      const refSeen = !r.result_kind || this.#leadReferentVisible(r.result_kind, r.result_ref, viewer);
+      return {
+        subject: r.subject, subject_kind: r.subject_kind, state: r.state,
+        governed: r.governed === 1, condition: r.condition,
+        authority_kind: r.authority_kind, authority: r.authority, lead: r.authority,
+        actor_class: r.actor_class,
+        result_kind: refSeen ? r.result_kind : null, result_ref: refSeen ? r.result_ref : null,
+        coverage: observationCoverage({ state: r.state, resultRef: r.result_ref }),
+        found_nothing: r.state === "LOOKED_ABSENT",
+        detail: r.detail, at: r.at,
+        last_verified: r.last_verified ?? null, unreachable_since: r.unreachable_since ?? null,
+      };
+    });
+    const never = this.#rows(
+      `SELECT l.lead_id AS lead, l.words AS subject, l.at AS at FROM leads l
+        WHERE ${reach.sql}
+          AND NOT EXISTS (SELECT 1 FROM observation_log o
+                           WHERE o.authority_kind = 'lead' AND o.authority = l.lead_id
+                             AND o.level = 'internet')
+        ORDER BY l.at, l.lead_id
+        LIMIT ?`, ...reach.args, cap + 1);
+    const neverOut = never.slice(0, cap).map((r) => ({
+      lead: r.lead, subject: r.subject, subject_kind: "description", at: r.at,
+      missing_cause: "never_looked",
+      ...this.#missingCauseSet(INTERNET_EVIDENCE_IS_ONE_SIDED, "description", "never_looked") }));
+    const tally = {};
+    for (const row of this.#rows(
+      `${V} SELECT state, COUNT(*) AS n FROM v GROUP BY state`, ...reach.args))
+      tally[row.state] = row.n;
+    /* THE CAUSE LADDER, over the visible sets only. `looked` empty with a visible
+       lead standing is `never_followed`; nothing visible at all is
+       `no_leads_visible` — whether or not leads exist beyond this viewer's reach,
+       and it must not be possible to tell those apart from here. */
+    const cause = looked.length ? null
+                : neverOut.length ? "never_followed"
+                : "no_leads_visible";
+    return { ...base,
+             /* THE CUT AND THE CLAIM AGREE: both disjuncts compare the collections this
+                method pages, and both are fetched ALREADY GATED at `cap + 1`, so the flag
+                describes only rows this viewer may read — never the supply beyond them. */
+             truncated: page.length > cap || never.length > cap,
+             looked, never_looked: neverOut, never_looked_count: neverOut.length, tally,
+             empty: cause ? empty(cause) : null, note: Store.FRONTIER_INTERNET_NOTE };
+  }
+
+  /* `#frontierInternet`'s note, BELOW its method for REC-116's reason (a class
+     constant belongs to the member it serves, and the segment walkers read it so). */
+  static FRONTIER_INTERNET_NOTE =
+    "the internet level's frontier reads a member's LEADS (section 4.5): the latest look per subject over "
+    + "the looks at leads THIS VIEWER MAY READ, and each lead nobody has followed. Visibility is the lead's "
+    + "own rule — its author, the joined participants of a project it was shared to, a machine key only "
+    + "within a member's minted scope — applied to the looks BEFORE they are grouped, so every list, date, "
+    + "count and cause here is computed from what you may read and nothing else: a lead outside your reach "
+    + "moves none of them. `tally` is therefore scoped to you (`tally_scope`), unlike the other three "
+    + "levels. An empty answer carries `empty` with its cause, because an empty frontier and one that looked "
+    + "and found nothing are different facts. `not_read` names what else sits at this level and is not in "
+    + "this read. A lead is never evidence";
+
   /** op=frontier — WHAT HAVE WE LOOKED FOR AT THIS LEVEL, AND WHAT CAME OF IT.
    *  §6's first reader: the candidate list for FETCH / EXTRACT / DERIVE.
    *
@@ -34289,26 +34470,23 @@ export class Store extends DurableObject {
        partitions and a one-sided-evidence statement — and one method computing
        all three would be three readers wearing one name. */
     if (level === "meaning") return this.#frontierMeaning(cap, viewer);
+    /* REC-129 / IC-143: the internet level is BUILT, over its member half (the
+       LEAD's looks), fenced by the lead's own visibility rule. Its own method, on
+       the reason the other two arms give. */
+    if (level === "internet") return this.#frontierInternet(cap, viewer);
     if (level !== "document")
       return { level, found: false, built: false, limit: cap, truncated: false,
                looked: [], never_looked: [], tally: {},
-               /* THE ONLY LEVEL STILL UNBUILT IS `internet`, and this answer is
-                  kept rather than deleted for exactly the reason REC-93 wrote it:
-                  an empty list and "nobody built this yet" are the two facts this
-                  whole table exists to keep apart, and answering the second with
-                  the first inside the log's own reader would be the joke writing
-                  itself. CORRECTED 2026-09-18 by MK-4: this said the level's authored
-                  writer was Program B's and unbuilt. The WRITER now exists
-                  (`op=leadlook` writes `level = internet` under `authority_kind =
-                  lead`), so rows can stand at this level; what is not built is this
-                  READ, which is why the answer still says not-built rather than
-                  reading as an empty frontier over rows it never looked at. */
-               note: `the ${level} level of the frontier is not built yet. This is NOT an empty `
-                   + `frontier: this reader does not read the ${level} level, which is a different `
-                   + `fact from having looked and found nothing. The document, content and meaning `
-                   + `levels are built (REC-93, REC-94, REC-95). At the internet level a member's `
-                   + `LEAD now has a writer (op=leadlook, MK-4) and its looks are read per lead with `
-                   + `op=leadread; the level-wide frontier read is not built` };
+               /* ALL FOUR LEVELS ARE NOW BUILT (REC-129 closed the last), so this
+                  answers only a level this reader does not know. It is kept rather
+                  than deleted for the reason REC-93 wrote it: an empty list and
+                  "there is no such reader" are different facts, and answering the
+                  second with the first inside the log's own reader would be the
+                  joke writing itself. */
+               note: `there is no ${level} level of the frontier. This is NOT an empty frontier: `
+                   + `this reader does not read a level called ${level}, which is a different fact `
+                   + `from having looked and found nothing. The levels are document, content, `
+                   + `meaning and internet (REC-93, REC-94, REC-95, REC-129)` };
     /* REC-103 / IC-105 — REC-36'S WITHHOLDING, ROW-WHOLE, AND IT IS APPLIED HERE
        RATHER THAN ADVERTISED BY THE SIGNATURE. `#observationBundles` above carries
        the whole rule and the measured leak it closes. THE RAW PAGE IS OVER-FETCHED
