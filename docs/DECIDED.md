@@ -565,9 +565,9 @@ authority is the file named, never this one.
 - **D-391** · 2026-09-16 — WHY NEITHER IS CORRECTED HERE:** re-denominating another area's measurement from outside it is how a wrong number acquires a second author.  
   `docs/development/DEBT.md:315`
 - **D-398** · 2026-09-17 — CORRECTED 2026-09-17 BY BOB #13, AND THE CORRECTION IS A MECHANISM THIS ROW SAYS DOES NOT EXIST: ARCHIVING THE SESSION RELEASES THE LOCK.** This row and BOB-NEXT's amendment both say the lock does not release when the process exits and becomes a stale lock nothing cleans up, so reclamation was framed as an…  
-  `docs/development/DEBT.md:344`
+  `docs/development/DEBT.md:345`
 - **D-401** · 2026-09-17 — RULED BY BOB THE SAME DAY:** *"BOB #12 being alive is not my problem.  
-  `docs/development/DEBT.md:335`
+  `docs/development/DEBT.md:336`
 - **D-411** — NOT SETTLED BY THIS ITEM: D-411 / REC-119**, the sixth reader (`#versionCollections`, feeding `op=basisversions` and `op=suggest`).  
   `docs/development/INTERFACE-CHANGES.md:9008`
 ## IC-
@@ -1021,7 +1021,7 @@ authority is the file named, never this one.
 - **REC-115** · 2026-09-17 — AMENDED 2026-09-17 by REC-115 — §4.4's *THE QUERY'S OTHER ARMS* NOW BINDS BOTH STATEMENTS, UI-62's DELEGATED FINDING IS DISCHARGED AND ITS INCOMPLETE BULLET IS STRUCK, under `IC-115` on I3.** `meaning({mode:"levels"})` builds its scope from `cte(false, armSet(rowArm))` — the query with the row's own arm STRIPPED —…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:7`
 - **REC-116** · 2026-09-17 — PRECISION MEASURED AND THEN CORRECTED DOWNWARD — 1 GENUINE OF 3 VERIFIED — and recorded that way because a precision figure that only improves in the telling is worthless.** REC-116 is the true positive: no governed design covers its construct at all, 39 days undetected.  
-  `docs/development/DEBT.md:338`
+  `docs/development/DEBT.md:339`
 - **REC-116** · 2026-09-17 — BLOCKED ON BOB, RULED 2026-09-17 BY BOB #13, AND THE ROW IS KEPT RATHER THAN DELETED BECAUSE THE REASON IS THE VALUABLE PART.** CONDUCT #2 rowed this as runnable; **BOB #13 ruled it is NOT, and took the design instead: *I take the design; the item follows the design, not the other way round.*** The ground is…  
   `docs/development/QUEUE.md:1620`
 - **REC-117** · 2026-09-17 — One of them was CORRECTED IN PLACE 2026-09-17 (REC-117) rather than left to the list — *the falsifier is REQUIRED* in §What a CLAIM is, which Bob overruled the same day; a non-authoritative reasoning record may carry stale sentences, but a sentence that states the OPPOSITE of a live ruling misleads a reader about…  
