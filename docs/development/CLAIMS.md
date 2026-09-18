@@ -13886,3 +13886,10 @@ paths:
     `docs/development/INTERFACE-CHANGES.md` (IC-148; IC-144 pointer), `docs/architecture/construct-status.json` if a
     claim moves, `docs/DECIDED.md` (regenerated only).
   **NOT** `docs/development/QUEUE.md` (CONDUCT's), **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, no version bump.
+released: 2026-09-18 by the REC-131 worker (`agent-aec29069af12e5c3f`), branch `worktree-agent-aec29069af12e5c3f`.
+IC-148 (MAJOR proposed, 29.3.0 → 30.0.0): `leads` off op=stats/selftest/livefire for every class; `observations` for
+every class, lead looks excluded; REC-129's `operator` stamp removed; purge's proof whole through a private count.
+Battery 243/243 · 14858 at `c23e03f1` (baseline 243/243 · 14847; +11 is stats-disclosure 17 → 28). `nc-rec129.mjs`
+stats arms (6) all AS DECLARED. **FOR CONDUCT:** RESOLVE IC-148 against I3 as read at resolution and mark IC-144's
+class stamp superseded in the I3 version line; rebuild note — REC-129's admin-ROLE question (class vs `administer`) is
+MOOT under this ruling (no class receives `leads`); the `dbBytes` DESIGN GAP in IC-148's sweep is for BOB.
