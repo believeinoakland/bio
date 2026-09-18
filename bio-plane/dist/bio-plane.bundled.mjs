@@ -48464,20 +48464,114 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  what says the answer was cut. A DISTINCT scan of its own would report parts
    *  belonging to legs this answer does not contain. */
   #versionCollections(bundleId, row) {
-    const legs = this.#rows(
+    const legs = this.#versionLegsEarned(this.#rows(
       `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground
          FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
       bundleId,
       row.name,
       _Store.BASIS_VERSION_LEGS_MAX
-    );
+    ));
     const grounds = [...new Set(legs.map((l) => String(l.ground ?? "").trim()).filter(Boolean))].sort();
     return {
       legs,
       grounds,
       leg_count: row.leg_count,
-      legs_complete: legs.length === row.leg_count
+      legs_complete: legs.length === row.leg_count,
+      /* REC-119 / D-411 — WHICH LETTERS THE FROZEN STRING HOLDS, SAID ON
+         THE ANSWER RATHER THAN LEFT FOR A READER TO INFER FROM A
+         DISAGREEMENT. See `#versionLegsEarned` for the whole reasoning:
+         `legs[]` publishes what the record EARNS and `composition`
+         keeps what was AUTHORED, deliberately, because PL-1 compares it
+         byte for byte. A reader diffing the two without this label would
+         find them disagreeing and have nothing telling them which is
+         which — which the row calls lying more precisely. */
+      composition_grades: "authored"
     };
+  }
+  /** REC-119 / D-411 · THE EARNED CAPTURE LETTER FOR A RECORDED VERSION'S LEGS —
+   *  THE FOURTH READER OF ONE RULE, AND AN UNCAPPED TWIN OF A READ ~650 LINES
+   *  LOWER IN THIS FILE.
+   *
+   *  THE DEFECT, AS D-411 MEASURED IT: `#versionCollections` issued
+   *  BYTE-FOR-BYTE THE SAME SELECT over the same table with the same LIMIT
+   *  constant that `#versionLegsAsMembers` has routed through
+   *  `earnedBasisRegistry` since REC-88 — and returned the rows WHOLE, asking
+   *  the registry nothing. Two readers of one column in one file, one capped and
+   *  one not, feeding `op=basisversions` and `op=suggest`.
+   *
+   *  THE RULING IS INHERITED, NOT RE-LITIGATED. REC-105 capped the walk, REC-114
+   *  swept the leg listing, REC-118 swept `op=reevaluations`. This is the same
+   *  rule reaching a fourth reader: publish what the record can SUPPORT, never
+   *  erase what a member AUTHORED, and say why they differ.
+   *
+   *  IT REUSES `Store.#capturedAt` AND THAT IS THE LOAD-BEARING DECISION, in
+   *  REC-114's words: the ARITHMETIC lives in `captureBound`, the SENTENCE in
+   *  `earnedBasisRegistry`, the three-case policy in `#capturedAt`. This
+   *  method decides NOTHING — it collects, calls, and labels.
+   *
+   *  THE THREE CONDITIONS ARE THE WALK'S, THE LISTING'S AND THE OBLIGATION
+   *  SWEEP'S, RE-STATED RATHER THAN INHERITED, because this is a fourth loop
+   *  over one rule and silent drift between the four is the whole failure mode.
+   *  That restatement is not left to care: `rec118-reeval-earned.test.mjs`
+   *  block 5 asserts every resolver carries the same three conditions and calls
+   *  `#capturedAt`, and REC-119 EXTENDED that instrument from three to four
+   *  rather than adding a reader it could not see. Capture axis only (a
+   *  connection leg's earned answer is a VALUE the write pins, not a ceiling a
+   *  read applies); a leg actually carrying a letter (null stays null — nothing
+   *  is invented); and a target that is NOT an inquiry (the walk's
+   *  `noReferent` arm).
+   *
+   *  AND THE HALF THAT IS THIS ITEM'S OWN RATHER THAN INHERITED — THE FREEZE.
+   *  `inquiry_basis_versions.composition` EMBEDS THE AUTHORED LETTERS AS TEXT,
+   *  is republished verbatim by the same op, and is BYTE-COMPARED by PL-1's
+   *  freeze at every promotion. So the composition MUST keep its authored bytes
+   *  and must NOT be capped, while `legs[]` must publish what the record earns.
+   *  Two halves of one answer, deliberately allowed to differ.
+   *
+   *  THAT IS SAFE HERE FOR A STRUCTURAL REASON AND NOT BY CARE: this is a READ
+   *  path. The freeze compares the STORED column against bytes the canonical
+   *  builder computed at the WRITE, and nothing below writes anything. The cap
+   *  is applied to rows on their way OUT; `inquiry_basis_version_legs` is
+   *  untouched, and the suite proves that by reading the authored letter back
+   *  through a SECOND surface rather than trusting this method's own return.
+   *
+   *  THE ENVELOPE SAYS WHICH IS WHICH, WHICH IS WHAT KEEPS THE DIVERGENCE
+   *  HONEST. `composition_grades` names the frozen string as AUTHORED, and
+   *  `grade_authored`/`grade_why` name the leg's own two letters and the
+   *  reason they differ. A frozen artifact does not become a lie by being
+   *  frozen; it becomes one by being presented as current.
+   *
+   *  ONE REGISTRY CALL FOR THE WHOLE VERSION, never one per leg — the shape
+   *  `earnedBasisRegistry` was built in. The legs are already bounded by
+   *  `BASIS_VERSION_LEGS_MAX`, so this adds two indexed reads per version
+   *  rather than a probe per row.
+   *
+   *  THE SUBJECT IS NULL ON PURPOSE, for `#captureBoundsFor`'s stated reason:
+   *  the registry's CAPTURE arm is computed from `register` and `readings`
+   *  alone and does not branch on a subject entity. Passing null returns the
+   *  same capture answer and invents no subject.
+   *
+   *  BOTH DERIVED FIELDS ARE ALWAYS PRESENT, including on a leg that needed no
+   *  cap. A field appearing only when the record disagreed with its author is a
+   *  one-bit signal of exactly that, and a consumer would have to read absence
+   *  as a value — the absence-with-two-causes shape CLAUDE.md names. So a
+   *  version whose legs are all at or under their ceiling answers byte-identically
+   *  but for the added fields. */
+  #versionLegsEarned(rows) {
+    if (!Array.isArray(rows) || !rows.length) return rows;
+    const bounded = (r) => !!r && r.grade_axis === "capture" && r.grade != null && typeof r.target_id === "string" && !!r.target_id && normalizeType(r.target_type) !== "inquiry";
+    const targets = /* @__PURE__ */ new Set();
+    for (const r of rows) if (bounded(r)) targets.add(r.target_id);
+    const cap = targets.size ? this.earnedBasisRegistry(null, [...targets])?.earned?.capture || {} : {};
+    return rows.map((r) => {
+      const res = bounded(r) ? _Store.#capturedAt(r.grade, cap[r.target_id], r.target_id) : null;
+      return {
+        ...r,
+        grade: res ? res.grade : r ? r.grade : null,
+        grade_authored: r ? r.grade : null,
+        grade_why: res ? res.why : null
+      };
+    });
   }
   /** D-271 / D-195 — THE INDEPENDENCE DERIVATION, ONE IMPLEMENTATION, TWO
    *  CONSUMERS: `op=suggest`'s CHECK 4 (which REFUSES on it) and
@@ -48624,6 +48718,17 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         affirmed: r.affirmed_parts ? String(r.affirmed_parts).split("	") : null,
         regroup: r.regroup_by ? { by: r.regroup_by, at: r.regroup_at, note: r.regroup_note } : null,
         composition: r.composition,
+        /* REC-119 / D-411 — THE LABEL THAT MAKES THE TWO HALVES HONEST, and it
+           is published BESIDE the frozen string rather than inside it, which is
+           the whole of why this item was implementable at all. `composition`
+           embeds the AUTHORED letters as text and PL-1 compares it BYTE FOR
+           BYTE at every promotion, so capping it would make an old case
+           unratifiable; `legs[]` publishes what the record EARNS. Two halves
+           of one answer that differ on purpose, and an answer that did not say
+           WHICH IS WHICH would be lying more precisely rather than less.
+           The precedent for a label living outside the frozen bytes is
+           REC-75's `composition_of`, one op over. */
+        composition_grades: rec.composition_grades,
         /* The RECORD's own count, stored at the write, beside the legs actually
            carried — and the question settled outright rather than left to a
            consumer comparing them. A basis returned in part reads as a basis. */
@@ -50088,7 +50193,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       wrote: true,
       read_back: !!recorded
     };
-    const fields_of = { fields_of: "label", composition_of: "label" };
+    const fields_of = {
+      fields_of: "label",
+      composition_of: "label",
+      composition_grades: "label"
+    };
     for (const [src, group] of [["record", fromRecord], ["derived", derived], ["call", call]])
       for (const k of Object.keys(group)) fields_of[k] = src;
     return {
@@ -50100,7 +50209,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          must keep reading it. It is the same answer `fields_of.composition`
          gives, and the suite asserts the two agree rather than letting one
          question have two answers. */
-      composition_of: recorded ? "record" : "unread"
+      composition_of: recorded ? "record" : "unread",
+      /* REC-119 / D-411 — WHICH LETTERS THE FROZEN STRING HOLDS. Read from the
+         SAME `#versionCollections` `op=basisversions` reads, so the two ops
+         cannot come to disagree about one version — D-235's whole argument, and
+         the reason this is not a literal typed at this site. `null` when the
+         read-back came back empty, never a substitute: an undetermined value
+         STATED is first-class here. */
+      composition_grades: rc ? rc.composition_grades : null
     };
   }
   /* REC-75 / D-234 — THE VALUES THE RECORD WILL ACTUALLY HOLD, DERIVED ONCE.

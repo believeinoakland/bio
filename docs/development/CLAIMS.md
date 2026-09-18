@@ -12527,3 +12527,26 @@ publish), `bio-plane/src/schema.mjs` (no new table; the cap is a READ-TIME resol
 worker.**
 
 **open as of 2026-09-17.**
+## AMENDMENT 2026-09-17 REC-119 — the plane BUNDLE is added to this item's claim, after the gate caught it
+Amends the `REC-119 · RECORD · D-411` block above. Appended rather than edited into it, per this
+register's append-only rule.
+
+`bio-plane/dist/bio-plane.bundled.mjs` and `bio-plane/dist/bio-plane.bundle.json` — **the
+committed build artifact, REBUILT with `node scripts/build-plane.mjs` because a `src/store.mjs`
+change leaves it stale.** Not signed, not versioned, not deployed: this is keeping a committed
+DERIVED file in step with its source, and it is **not** a release act — `DIST.md`'s gate on
+bumping, signing, tagging and deploying the plane is untouched.
+
+**IT WAS THE GATE THAT CAUGHT THIS AND NOT ME, WHICH IS THE POINT OF THE GATE AND ALSO THE POINT
+OF READING THE COMPLETION LINE.** The full battery read `220/221 suites green` with
+`fleetbundles.test.mjs` at 83 pass / 4 FAIL. **REC-114 and REC-118 both hit this same thing and
+both recorded it** — REC-118's rebuild commit notes that in ITS run the WRAPPER exited 0 while
+the suite was red, so a session scanning the tail for a non-zero exit would have recorded a pass.
+In this run the wrapper exited 1, so the two exits disagree across two runs of one gate: further
+reason the completion line and the suite total are the authority and the exit status is not.
+
+**THAT THIS IS THE THIRD CONSECUTIVE RECORD-LANE ITEM TO REBUILD THIS ARTIFACT BY HAND, EACH
+DISCOVERING IT FROM A RED SUITE, IS ITSELF WORTH SAYING:** it is a step every `src/`-touching
+worker owes, it is in no worker kickoff, and it is found only by paying for it. Named here as an
+observation for CONDUCT rather than fixed, since the remedy is a process change and not mine to
+make.
