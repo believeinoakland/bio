@@ -16211,3 +16211,28 @@ the heartbeat no longer calls any session-mutating tool.
 **Also observed at the same opening, bearing on D-405:** two archives of NOT-running sessions succeeded on
 the first call — `remoteControlActive: true` on one (`local_be057cd8…`), false on the other (BOB #13). One
 observation each; it says RC alone did not refuse an idle session, and nothing about a busy one.
+
+## M-53 · 2026-09-18 · M0-63 — **D-384 ENACTED: REC-66's DERIVATION CLASS WITH THE `for`-HEADER CREDIT REMOVED, 37 → 14 BY THE WALK, 24 WITH THE ADMITTED**
+
+**Instrument:** `bio-plane/test/derivation-bounds.test.mjs`'s own classifier, run on the tree M0-63
+branched from (`b1cf2aae`), `store.mjs` 36,587 lines, 504 method segments, 107 scanning unbounded.
+The correction drove the suite's classifier text; a second reader (a scratch copy of the classifier
+with `perRowScan` restricted to loop bodies, plus REC-88's hoist applied to every method) agreed.
+
+| reading | walk | departures | arrivals |
+|---|---|---|---|
+| before (header credit in) | **37** | — | — |
+| after (a scan per row only in a loop BODY) | **14** | **23** | 0 |
+
+**The population was 23, not the 22 the row carried:** `HOIST_FRAGILE_2026_09_16` held M0-40's 21,
+REC-96's `#searchedForCase` and REC-116's `provenanceRoutesMarked` — the same 23 on `d3ac7ae9`. The
+23 departures are exactly those names. **Hoist parity after the correction, over ALL of `store.mjs`:**
+no method with an inline `for`-header row source classifies differently when that source is hoisted
+to a local.
+
+Each of the 23 was read, not re-scored: **10 STAY** as admitted members with a helper-hidden per-row
+read named at its call site, **13 LEAVE** (a row source read once, or per-row work over a
+`LIMIT`-bounded published page). The lists and their reasons are in the suite (`D384_STAYS`,
+`D384_LEAVES`) and in `DEBT.md` D-384's closing. **Ceiling 37 → 24** (14 + 10). Dispatched members of
+the class: 13 → 10 (`audit`, `frontier`, `provenanceroutes` left; `queue` stays as admitted).
+Negative controls: `cd bio-plane && node test/nc-m063.mjs`, five arms, baseline 72/0.

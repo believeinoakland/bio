@@ -12730,7 +12730,9 @@ Worker spawned by CONDUCT #4 into an isolated `agent-*` worktree. Paths:
   the ceiling, the HOIST-FRAGILE block and its fixtures.
 - `bio-plane/test/nc-m063.mjs` — NEW, this item's negative-control driver (the M0-40 precedent,
   `test/nc-m040.mjs`); it runs nothing in the battery.
-- `docs/development/DEBT.md` — D-384 closing, and one row for an instrument gap found in passing.
+- `docs/development/DEBT.md` — D-384 closing, and one row for an instrument gap found in passing
+  (D-414, minted).
+- `docs/development/MEASUREMENTS.md` — M-53 (minted), the re-measured class, appended.
 - `docs/development/CLAIMS.md` (this block), `docs/DECIDED.md` on regeneration.
 
 **NOT `docs/development/QUEUE.md`** — CONDUCT is its sole writer; flipping M0-63 is CONDUCT's act.
