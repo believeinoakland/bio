@@ -15927,6 +15927,11 @@ its fix is removed, and is correctly exempt while the fix stands — and not the
 
 ### A DEFECT FOUND IN THE SHARED PREDICATE, REPORTED AND NOT FIXED
 
+**[SUPERSEDED IN PART by M-54, 2026-09-18 (M0-61): the three facts below re-measured true, but the
+NEWLINE is a correlate, not the cause — 2 of the 3 cross-line trips are genuine claims, and the
+RECONCILED sentence trips identically on one line. The sweep now separates the ten by a REMOTE-trip
+flag; the counts are unchanged.]**
+
 **`corpuscheck`'s `UNDESIGNED` regex matches ACROSS A LINE BREAK.** It is built from `\s`, which
 matches a newline, so `"...designed wrongly once and not\ndesigned once."` fires it. Three
 sections trip this way, and on `research/RECONCILED.md` §2.2 one such sentence dragged a table of
@@ -16211,3 +16216,69 @@ the heartbeat no longer calls any session-mutating tool.
 **Also observed at the same opening, bearing on D-405:** two archives of NOT-running sessions succeeded on
 the first call — `remoteControlActive: true` on one (`local_be057cd8…`), false on the other (BOB #13). One
 observation each; it says RC alone did not refuse an idle session, and nothing about a busy one.
+
+## M-54 · 2026-09-18 · M0-61 — THE `UNDESIGNED` PREDICATE AND THE LINE BREAK: THE NEWLINE WAS A CORRELATE, AND THE 16-AGAINST-6 IS NOW EXPLAINED BY ITS CAUSE
+
+Instrument: `tools/corpuscheck.mjs` (`UNDESIGNED`), `tools/statussweep.mjs`, a scratch script that
+ran the predicate globally over `governed()`, and HEAD's copies of both tools run over the same
+`docs/` for the byte-identity comparison. Worktree `agent-a8dafc3592e03bc2a`.
+
+**THE ROW'S PREMISE, MEASURED, AND HALF OF IT DID NOT SURVIVE.** M-48 reported that `UNDESIGNED`'s
+`\s` matches a newline, that three sections trip that way, and that one of them —
+`research/RECONCILED.md` §2.2 — dragged ten constraint rows into the sweep (raw 16, real 6). All
+three facts re-measured TRUE. The inference that the NEWLINE is the defect did not:
+
+| the predicate over the 50 governed documents | value |
+| --- | --- |
+| matches | 50 |
+| matches spanning a line break | 3 |
+| — of those, GENUINE undesignedness claims whose wrap fell mid-phrase | **2** (`BIO_Content_Framework_v0_10.md` Part II, *"what remains to be\ndesigned"*; `BIO_Functional_Architecture_v3.md` §The three-layer workflow, *"the UI, which still needs to be\ndesigned"*) |
+| — false | 1 (`RECONCILED.md:564`, *"designed wrongly once and not\ndesigned once."*) |
+| matches spanning a PARAGRAPH break (blank line) | **0** |
+| matches containing a tab or a run of spaces | 0 |
+
+**The false one is false for a reason that has nothing to do with the wrap.** Re-wrapped onto one
+line, the same sentence trips identically — it is a real statement that a UI case was not designed,
+and it is 187 lines ABOVE the table it was attributed to (line 751, ten constraints under
+*"THE CANONICAL LIST"*). The sweep read *any undesignedness phrase anywhere in a section's prose* as
+a claim about that section's first table. So a literal space — the fix the row warned against —
+would have cleared the receipt BY ACCIDENT OF THE WRAP COLUMN and silently lost both genuine claims.
+Driven in the control (arm C): the receipt vanishes to `[false,0,0]` and the genuine claims stop
+matching.
+
+**WHAT LANDED.** (1) `UNDESIGNED`'s gap now spans spaces, tabs and **at most one soft line break**
+— deliberately, with the reason at the site (Markdown renders a soft break as a space; the wrap
+column must not decide a claim's visibility) — and **never a paragraph break**. (2) `statussweep`'s
+cross-line flag is replaced by a REMOTE-trip classifier keyed on the cause: a trip is remote when
+the predicate matches neither the section's heading nor the paragraph that introduces the table.
+
+**THE RE-MEASUREMENT, which is the receipt the row asked to be moved or explained:**
+
+| figure | before (M-48, cross-line flag) | after (remote-trip flag) |
+| --- | --- | --- |
+| sections tripped / table items examined | 16 / 16 | 16 / 16 |
+| probable false population | 10 (cross-line) | **10 (remote)** — the same ten, RECONCILED §2.2 |
+| real population | 6 | **6** — Content Framework §18 |
+| candidates / verdicts / prose sections | 0 / 9·5·1·1 / 14 | identical |
+| genuine claims mislabelled "probable false" | 2 (both prose sections, listed under the cross-line warning) | **0** |
+| receipt re-wrapped onto one line | counted as REAL (the correlate misses it) | still REMOTE, all 10 apart |
+
+**16 against 6 is therefore EXPLAINED rather than moved to agreement:** the raw figure counts every
+item under any trip, the real figure excludes the ten under a remote one, and both numbers are right
+about what they count. What changed is that the separation now survives an editor's reflow.
+
+**BYTE-IDENTITY, the over-strictness evidence for the predicate:** `corpuscheck` plain, `--list`,
+`--coverage`, `--authority`, `--json`, `--verbose` and `statussweep` plain, `--json`, `--verbose` were
+byte-identical between HEAD's predicate and the new one over the live corpus, all exits 0. The
+predicate narrowing moved NO live result; it removes a fuse before a caller reaches it.
+`statussweep`'s text output then differs ONLY in the flag's label and the list under it (by design);
+every count is unchanged.
+
+**`undesignedclaims.mjs` does not import `UNDESIGNED`** (it carries its own pattern) and is
+unaffected: **28 total, 0 unaudited** before and after. The row's *"its 27"* is stale — it was 27
+when M-48 was written and is 28 on this tree; the arm the row asked for (it still reports all with 0
+unaudited) holds.
+
+**BOUNDS, stated.** A genuine list whose undesignedness is said two or more paragraphs above its
+table reads as REMOTE: under-reach into a column a reader sees, never over-reach into the headline.
+A soft break inside a blockquote (`not\n> designed`) is not spanned — nor was it by `\s+`.

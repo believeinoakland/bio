@@ -131,6 +131,15 @@ export function citedByTheMap(mapText) {
 /* A table row that is a header or the |---| separator, not an item. */
 const isItemRow = (cells) => /^\d+$/.test((cells[0] ?? "").trim());
 
+/* The block that INTRODUCES a table: the last paragraph of the text above it, with a horizontal
+   rule (`---`, `***`, `___`) skipped because a rule separates rather than introduces. When the
+   heading sits directly over the table, the heading line is that block. (M0-61) */
+export function introducingBlock(preamble) {
+  const blocks = preamble.split(/\n[ \t]*\n/).map((b) => b.trim())
+    .filter((b) => b && !/^([-*_])(?:[ \t]*\1){2,}$/.test(b));
+  return blocks.length ? blocks[blocks.length - 1] : "";
+}
+
 export function sweep({ set = governed(), read = diskRead } = {}) {
   const texts = new Map();
   const unreadable = [];
@@ -152,7 +161,7 @@ export function sweep({ set = governed(), read = diskRead } = {}) {
   const claims = [];      /* every table item under an undesignedness heading */
   const candidates = [];  /* those with a covering heading in ANOTHER governed document */
   const prosey = [];      /* sections that CLAIM undesignedness and carry no table at all */
-  const crossLineTrips = [];  /* the predicate matched ACROSS A LINE BREAK — likely prose */
+  const remoteTrips = [];  /* the predicate matched prose that does NOT introduce the table */
   let sectionsTripped = 0;
 
   for (const [p, t] of texts) {
@@ -164,17 +173,35 @@ export function sweep({ set = governed(), read = diskRead } = {}) {
       sectionsTripped++;
       /* WHAT THE PREDICATE ACTUALLY MATCHED, CARRIED RATHER THAN DISCARDED. `UNDESIGNED` is
          `corpuscheck`'s and is imported rather than copied — copying it would be this sweep's
-         own subject arriving in its instrument. But it is built from `\s`, which matches a
-         NEWLINE, so `"...designed wrongly once and not\ndesigned once."` trips it. That is
-         harmless inside `corpuscheck`, where signal 1 (a §3 citation) gates everything the
-         predicate proposes; it is NOT harmless here, where the predicate runs ungated and a
-         false trip drags a whole unrelated table into the population. Measured on
-         `research/RECONCILED.md` §2.2, a table of ten CONSTRAINTS with a `status` column,
-         swept in entire by one sentence about a UI case. So a trip whose matched text spans a
-         line break is FLAGGED, and the items under it are counted apart — a population
-         inflated by its own predicate is a corpus figure that reads confident and is wrong. */
-      const crossLine = /\n/.test(mm[0]);
-      if (crossLine) crossLineTrips.push({ path: p, heading: s.heading, line: s.line, matched: mm[0] });
+         own subject arriving in its instrument.
+
+         THE REMOTE TRIP — M0-61, and it replaces a CROSS-LINE flag that measured a CORRELATE.
+         Here the predicate runs UNGATED (`corpuscheck` has signal 1, a §3 citation, in front
+         of it), so a trip anywhere in a section's prose drags that section's first table into
+         the population. Measured on `research/RECONCILED.md` §2.2: one sentence about a UI
+         case, 187 lines above a table of ten CONSTRAINTS, swept all ten in. M0-58 found it and
+         flagged it by the one thing it could see — the matched text spanned a newline. **That
+         was the symptom, not the cause:** the same sentence wrapped two words earlier trips
+         identically on one line, and 2 of the 3 cross-line trips in the governed set are
+         GENUINE claims whose wrap merely fell mid-phrase (see `UNDESIGNED`'s own comment). A
+         classifier keyed on the wrap column is one an editor's reflow can switch off.
+
+         The cause is DISTANCE: the claim was not ABOUT the table. So a trip is REMOTE when the
+         predicate matches neither the section's HEADING nor the block that INTRODUCES the
+         table — its last paragraph above it, a horizontal rule skipped. Items under a remote
+         trip are still examined and counted, but APART, as probable false population; nothing
+         is dropped silently. Bound, stated: a genuine list whose undesignedness is said two
+         paragraphs above its table reads as remote — under-reach into the flagged column, which
+         a reader sees, rather than over-reach into the headline, which nobody questions. */
+      /* Judged only where the trip would PUT ITEMS INTO THE POPULATION; a section with no item
+         rows is already named apart as prose, below, and flagging it twice would say nothing. */
+      const remote = rows.some((r) => isItemRow(r.cells)) && !UNDESIGNED.test(s.heading) && !UNDESIGNED.test(introducingBlock(preamble));
+      if (remote) {
+        remoteTrips.push({
+          path: p, heading: s.heading, line: s.line, matched: mm[0],
+          matchLine: s.line + (preamble.slice(0, mm.index).match(/\n/g) || []).length,
+        });
+      }
       const items = rows.filter((r) => isItemRow(r.cells));
       if (!items.length) {
         prosey.push({ path: p, heading: s.heading, line: s.line });
@@ -190,7 +217,7 @@ export function sweep({ set = governed(), read = diskRead } = {}) {
           path: p, heading: s.heading, line: s.line, sec: secNo, item: itemNo,
           key: bold, visibleToTheArm: visible, verdict: null, covering: [],
           claimText: r.cells.slice(1).join(" | ").slice(0, 400),
-          crossLineTrip: crossLine,
+          remoteTrip: remote,
         };
         claims.push(claim);
 
@@ -221,7 +248,7 @@ export function sweep({ set = governed(), read = diskRead } = {}) {
 
   return {
     governed: set.length, read: texts.size, unreadable,
-    headings: headings.length, sectionsTripped, prosey, claims, candidates, crossLineTrips,
+    headings: headings.length, sectionsTripped, prosey, claims, candidates, remoteTrips,
     citedPairs: cited.size,
   };
 }
@@ -239,9 +266,9 @@ function main(argv) {
   console.log(`  body headings indexed        ${r.headings}`);
   console.log(`  sections claiming pieces undesigned  ${r.sectionsTripped}`);
   console.log(`  table items examined         ${r.claims.length}`);
-  console.log(`    of those, under a CROSS-LINE trip  ${r.claims.filter((c) => c.crossLineTrip).length}`
-    + `   — the predicate matched over a line break; treat as PROBABLE FALSE POPULATION`);
-  console.log(`    under a clean, single-line trip    ${r.claims.filter((c) => !c.crossLineTrip).length}`
+  console.log(`    of those, under a REMOTE trip      ${r.claims.filter((c) => c.remoteTrip).length}`
+    + `   — the claim is in prose that does not introduce the table; treat as PROBABLE FALSE POPULATION`);
+  console.log(`    under a heading or intro trip      ${r.claims.filter((c) => !c.remoteTrip).length}`
     + `   — this is the sweep's REAL population`);
   console.log("");
   console.log(`  visible to corpuscheck --authority   ${r.claims.filter((c) => c.visibleToTheArm).length}`
@@ -258,14 +285,14 @@ function main(argv) {
   console.log(`    no covering heading elsewhere     ${by("no-covering")}`);
   console.log(`    CANDIDATE                         ${r.candidates.length}`);
 
-  if (r.crossLineTrips.length) {
-    console.log(`\n  ${r.crossLineTrips.length} section(s) tripped the undesignedness predicate ACROSS A LINE BREAK.`);
-    console.log(`  \`UNDESIGNED\` is built from \`\\s\`, which matches a newline, so ordinary prose can fire it.`);
-    console.log(`  This is harmless inside corpuscheck, where a §3 citation gates every proposal; it is NOT`);
-    console.log(`  harmless in an ungated sweep, where one sentence drags a whole unrelated table in:`);
-    for (const t of r.crossLineTrips) {
+  if (r.remoteTrips.length) {
+    console.log(`\n  ${r.remoteTrips.length} section(s) tripped the undesignedness predicate REMOTELY — in prose that is neither`);
+    console.log(`  the heading nor the paragraph introducing the table. Harmless inside corpuscheck, where a §3`);
+    console.log(`  citation gates every proposal; NOT harmless in an ungated sweep, where one sentence would drag`);
+    console.log(`  a whole unrelated table in. Their items are counted APART, above:`);
+    for (const t of r.remoteTrips) {
       console.log(`    ${t.path}:${t.line}  ${t.heading}`);
-      console.log(`      matched: ${JSON.stringify(t.matched)}`);
+      console.log(`      matched at line ${t.matchLine}: ${JSON.stringify(t.matched)}`);
     }
   }
 

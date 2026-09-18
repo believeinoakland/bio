@@ -316,8 +316,46 @@ export const MAP_DOC = "docs/architecture/BIO_System_Design.md";
 export const MAP_SECTION = /^(\d+\.\s*)?The major constructs/i;
 
 /* The vocabulary in which this corpus says a thing is not designed. Kept literal and short:
-   every alternative below is lifted from a governed document's own words. */
-export const UNDESIGNED = /\bundesigned\b|\bnot\s+(?:yet\s+)?designed\b|\bto\s+be\s+designed\b|\bpieces?\s+to\s+design\b|\bdesigned\s+nowhere\b|\bDOCTRINE\s+still\b/i;
+   every alternative below is lifted from a governed document's own words.
+
+   WHAT THE GAP BETWEEN TWO WORDS MAY SPAN — M0-61, argued here rather than assumed, because the
+   row that cut it named the symptom as "`\s` matches a NEWLINE" and the obvious fix (a literal
+   space) was measured to be WRONG.
+
+   **IT SPANS ONE SOFT LINE BREAK, DELIBERATELY.** This corpus is hard-wrapped prose, and in
+   Markdown a single newline inside a paragraph is a SOFT BREAK that renders as a space: the
+   editor's wrap column decides where it falls, not the author. So "to be\ndesigned" is the same
+   phrase as "to be designed", and a predicate that refused it would make a claim's visibility
+   depend on the wrap column. Measured 2026-09-18 over the 50 governed documents: 50 matches, 3
+   of them across a line break, and **2 of those 3 are GENUINE claims** —
+   `BIO_Content_Framework_v0_10.md` Part II's "what remains to be\ndesigned" and
+   `BIO_Functional_Architecture_v3.md`'s "the UI, which still needs to be\ndesigned". A literal
+   space would have lost both.
+
+   **AND THE THIRD, THE ONE THAT FOUND THIS, IS NOT A WHITESPACE DEFECT AT ALL.**
+   `research/RECONCILED.md` §2.2's "...designed wrongly once and not\ndesigned once." would trip
+   IDENTICALLY had the editor wrapped two words earlier; the newline is a CORRELATE of that false
+   trip, not its cause. Its cause is that `statussweep` attributed a sentence 187 lines above a
+   table to that table — see the remote-trip classifier there, which is where it is now handled.
+   Excluding the newline would have "fixed" that one receipt by accident of the wrap position and
+   left every other misattributed trip in place: the cheapest green, which the row named first.
+
+   **WHAT IT DOES NOT SPAN, AND THAT IS THE NARROWING:** a PARAGRAPH BREAK — a blank line, or any
+   run of two or more newlines. Words either side of one belong to different statements (a
+   heading's last word and the next paragraph's first, a table row and the prose under it), and
+   `\s+` joined them. A break into another block (a line opening `|`, `#`, `>`, a list marker)
+   was never spanned by either form, because the marker is not whitespace. The narrowing
+   moved NO live result on 2026-09-18 — no match in the governed set crossed either — so
+   `corpuscheck` and `statussweep` output is byte-identical; it is a fuse removed before a caller
+   reaches it, not a correction of a figure. Tabs and runs of spaces remain legitimate.
+
+   Bound, stated: a soft break inside a BLOCKQUOTE ("not\n> designed") is not spanned — the old
+   `\s+` did not span it either, since `>` is not whitespace, so this is inherited, not new. */
+const GAP = String.raw`(?:[ \t]+(?:\r?\n)?|\r?\n)[ \t]*`;
+export const UNDESIGNED = new RegExp(
+  [String.raw`\bundesigned\b`, String.raw`\bnot${GAP}(?:yet${GAP})?designed\b`, String.raw`\bto${GAP}be${GAP}designed\b`,
+    String.raw`\bpieces?${GAP}to${GAP}design\b`, String.raw`\bdesigned${GAP}nowhere\b`, String.raw`\bDOCTRINE${GAP}still\b`].join("|"),
+  "i");
 
 /* An item that NAMES where its design lives is pointing, not restating — signal 3. */
 export const POINTS_AT_A_DESIGN = (cell) => /\bDESIGNED\b/.test(cell) || /`[^`]+\.md`/.test(cell);
