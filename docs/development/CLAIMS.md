@@ -13867,3 +13867,22 @@ green · 14789 assertions passing**, no skip; `node scripts/coverage.mjs --stric
 `node civicos-ui/test/run.mjs` exit **0**; `status --check` 0 drift. `deliverer.control.mjs` ran all six arms AS DECLARED,
 and every restore was byte-identical. `casesign.control.mjs` e/f/g/h re-ran at REC-130's recorded figures. **FOR CONDUCT:**
 resolve IC-147 against I3 as it reads at resolution (it was proposed MINOR on 27.1.0). D-422 is rowed and unscheduled.
+
+### CLAIM 2026-09-18 RECORD (REC-131) — THE CORRECTION TO IC-144: `leads` off `op=stats` for EVERY class; `observations` for every class, lead rows excluded
+
+Worker spawned by CONDUCT #5 into worktree `agent-aec29069af12e5c3f`, branch `worktree-agent-aec29069af12e5c3f`, base
+`a6bdfcbb`. Design: `MEMBER-KNOWLEDGE-DESIGN.md` §5 as corrected by BOB #15 (`852ccc7d`). Id minted before building:
+IC-148 (I3), superseding IC-144's class stamp.
+paths:
+  - `bio-plane/src/store.mjs` — `stats()` (the two keys), `purge`'s two `stats()` calls, the DO `stats` route.
+  - `bio-plane/src/index.mjs` — the REC-129 `operator` stamp on op=stats and op=selftest's relay, op=livefire's call.
+  - `bio-plane/src/livefire.mjs` — its relayed stats.
+  - `bio-plane/test/stats-disclosure.test.mjs`, `bio-plane/test/nc-rec129.mjs` (its stats arms) — CORRECTED at their sites.
+  - `bio-plane/test/lead.test.mjs` — its op=stats `leads`/`observations` arms, CORRECTED with the reason.
+  - any suite reading `leads`/`observations` off op=stats, corrected with its reason.
+  - `bio-plane/dist/**` rebuilt.
+  - `docs/development/OBSERVATION-LOG-DESIGN.md` (§6 premise 1, the internet-level paragraph, Status `as of`, the stale
+    Incomplete entry), `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` (Status only, REC-131 built),
+    `docs/development/INTERFACE-CHANGES.md` (IC-148; IC-144 pointer), `docs/architecture/construct-status.json` if a
+    claim moves, `docs/DECIDED.md` (regenerated only).
+  **NOT** `docs/development/QUEUE.md` (CONDUCT's), **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, no version bump.
