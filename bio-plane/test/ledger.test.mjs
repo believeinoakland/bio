@@ -151,7 +151,14 @@ section("2 — THE FULL MIGRATION, SIMULATED ON A COPY OF THE REAL LEDGERS: ever
   const owedSnap = () => lanes.map((lane) => owedFor(lane, { repo: root }).items.map((i) => `${i.id}${i.attributed ? "*" : ""}`).join(","));
   const lineCounts = (texts) => { const m = new Map(); for (const x of texts) for (const l of x.split("\n")) if (l.trim()) m.set(l, (m.get(l) || 0) + 1); return m; };
   const headerLines = lineCounts(Object.values(L.ARCHIVE_HEADER));
-  const linesBefore = lineCounts(Object.values(L.LEDGERS).map((l) => read(root, l.live)));
+  /* CORRECTED 2026-09-18 by CONDUCT #4: this counted the LIVE ledgers only, while `linesAfter` counts live + archive —
+     so it silently assumed the archive starts EMPTY. The first real use of LED-5's standing step (22 QUEUE and 5 DEBT
+     rows archived at CONDUCT #4's stand-down) broke that assumption and the arm read 209 lines "lost" that had been
+     conserved all along. Both sides now count live + archive, the archive header subtracted from both. */
+  const linesBefore = lineCounts([...Object.values(L.LEDGERS).map((l) => read(root, l.live)),
+                                  ...Object.values(L.LEDGERS).map((l) => read(root, l.archive))]);
+  for (const [l, n] of headerLines) linesBefore.set(l, (linesBefore.get(l) || 0) - n);
+
   const b = snap(), ob = owedSnap(), cb = collisions({ repo: root });
   const audit0 = L.ledgerAudit({ repo: root });
   const ids = [...new Set(Object.values(audit0.closedLive).flat())];
@@ -169,7 +176,7 @@ section("2 — THE FULL MIGRATION, SIMULATED ON A COPY OF THE REAL LEDGERS: ever
   const linesAfter = lineCounts([...Object.values(L.LEDGERS).map((l) => read(root, l.live)),
                                  ...Object.values(L.LEDGERS).map((l) => read(root, l.archive))]);
   for (const [l, n] of headerLines) linesAfter.set(l, (linesAfter.get(l) || 0) - n);
-  const lost = [...linesBefore].filter(([l, n]) => (linesAfter.get(l) || 0) !== n).length
+  const lost = [...linesBefore].filter(([l, n]) => n > 0 && (linesAfter.get(l) || 0) !== n).length
              + [...linesAfter].filter(([l, n]) => n > 0 && !linesBefore.has(l)).length;
   t("every non-blank LINE of the two live ledgers is in live or archive exactly as often as before", lost, 0);
   const audit1 = L.ledgerAudit({ repo: root });
