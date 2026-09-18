@@ -3521,7 +3521,7 @@ var sha256 = async (s) => {
   const b = await crypto.subtle.digest("SHA-256", typeof s === "string" ? new TextEncoder().encode(s) : s);
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 };
-async function livefire(env, storeName, { operator = false } = {}) {
+async function livefire(env, storeName, { capacity = false } = {}) {
   const t0 = Date.now();
   const stub = env.STORE.get(env.STORE.idFromName(storeName));
   const post = async (op, body) => {
@@ -3671,7 +3671,7 @@ rev ${rev}
     assert("R2 exercised without error", false, true);
   }
   const tw = Date.now();
-  const stats = await get(`stats?operator=${operator ? "1" : "0"}`);
+  const stats = await get(`stats?capacity=${capacity ? "1" : "0"}`);
   const dang = await get("dangling");
   const wholeMs = Date.now() - tw;
   const passed = A.filter((a) => a.ok).length;
@@ -47797,13 +47797,30 @@ ${words}`;
       return { ok: true, actor, expires, base: b ? b.bundle_sha : null };
     });
   }
-  /** REC-129 / IC-144 — `operator` IS THE ONE INPUT, and it is the SERVER'S word, never the
-   *  caller's: `index.mjs` sets it from the credential class AFTER copying the caller's
-   *  parameters (op=stats, op=selftest, op=livefire), and `purge` passes it true because its
-   *  before/after ARE the D-113 proof the two keys exist for. It governs exactly two keys, below,
-   *  and nothing else. An absent or unrecognised stamp is `false`, so a door that forgets to
-   *  stamp loses the two keys rather than leaking them. */
-  stats({ operator = false } = {}) {
+  /** REC-131 / IC-148 — THE WIRE'S COUNTS. `op=stats`, `op=selftest` and `op=livefire` all read
+   *  this. Every COUNT is the same for every class (BOB #15's corrected ruling,
+   *  `MEMBER-KNOWLEDGE-DESIGN.md` §5): `leads` is on it for no class, and the log is published as
+   *  `observationsNonLead`. It REPLACES REC-129's `operator` stamp (IC-144), which selected an
+   *  admin-only answer over COUNTS.
+   *
+   *  `capacity` IS THE ONE CLASS DISCRIMINATION LEFT, AND IT GOVERNS `dbBytes` AND NOTHING ELSE
+   *  (BOB #15, resuming REC-131). The database's size moves in whole pages on EVERY write, a
+   *  lead's included, so a member diffing it across a colleague's authoring can detect a large
+   *  lead; capacity is an operator need, so the admin class keeps it and member and probe do not.
+   *  It is the SERVER'S word: `index.mjs` sets it from the authenticated class AFTER copying the
+   *  caller's parameters (op=stats, op=selftest's relay, op=livefire's call), so a caller's
+   *  `capacity=` is overwritten, never honoured. An absent stamp is `false` — a door that forgets
+   *  to stamp loses `dbBytes` rather than leaking it. It is a stamp and not a second method
+   *  because it must ride the one DO route every door already fetches. */
+  stats({ capacity = false } = {}) {
+    return this.#counts({ proof: false, capacity: capacity === true });
+  }
+  /** The one body behind both answers, so the wire's counts and purge's proof cannot drift apart
+   *  on any key but the ones the ruling names. `proof` is PRIVATE: only `purge` passes it, because
+   *  its before/after ARE D-113's proof that it took what it says it took, and that proof stays
+   *  WHOLE (§5: *the purge proof's own count stays whole*) — `observations` over the whole log,
+   *  `leads`, and `dbBytes`, exactly as `op=purge` has always answered. No route reaches it. */
+  #counts({ proof, capacity = false }) {
     const n = (t) => this.#one(`SELECT count(*) c FROM ${t}`).c;
     return {
       bundles: n("bundles"),
@@ -47943,23 +47960,28 @@ ${words}`;
          counted WHOLE beside it: the log is the coverage record and its size is
          an operator fact, while what any single row was looking for is not. */
       aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`).c,
-      /* REC-129 / IC-144 — `observations` AND `leads` ARE THE OPERATOR'S, AND THE KEY IS ABSENT
-         FOR EVERYONE ELSE. RULED by BOB #15 (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A COUNT IS A
-         DISCLOSURE OF EXISTENCE*): a counter whose row set includes rows the caller could not
-         read goes only to a caller who could read them all — for an instance-wide count, the
-         `admin` class. `leads` counts every member's tips, and the whole-log `observations`
-         count moves on every `op=leadlook`, so a member diffing either across a colleague's
-         authoring learned a lead had just been written or followed. The KEY is withheld, never
-         re-meant: one key counting different rows for different callers is two quantities
-         under one name. `aiRunLog` above stays — its row set is `authority_kind = 'run'`, which
-         no lead act writes, and `lead.test.mjs` pins that it never moves across one. */
-      ...operator ? {
-        observations: n("observation_log"),
-        /* the WIRE KEY stays `observations` (a count of observations, and moving it would be an I3 change nobody owed); the TABLE it counts is `observation_log` — renamed by CONDUCT #11 at integration on BOB #11's correction, because one word over three unrelated things is the defect, not the noun */
-        /* MK-4 / IC-136: a COUNT of members' leads and nothing else, so a purge can
-           PROVE it took them (D-113). What any lead says is not an operator fact. */
-        leads: n("leads")
-      } : {},
+      /* REC-131 / IC-148 — `leads` IS NOT ON THE WIRE FOR ANY CLASS, AND THE WIRE'S LOG COUNT IS A
+         DIFFERENT KEY FROM PURGE'S. BOB #15's CORRECTED ruling (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A
+         COUNT IS A DISCLOSURE OF EXISTENCE*): a counter over rows a caller could not all read goes
+         only to a caller who could read them all, and for leads THAT CALLER DOES NOT EXIST —
+         `#leadVisibleTo` reaches no `class:*` credential and skips the administrator arm on purpose,
+         so the admin token reads no lead either. REC-129 (IC-144) handed both keys to the admin
+         class; that was the overclaim, and this supersedes it.
+         *
+         * ONE KEY NEVER CARRIES TWO MEANINGS (BOB.md rule 7, BOB #15 resuming REC-131). The wire's
+         * count EXCLUDES lead looks, so it is published as `observationsNonLead` — a name that
+         * states its predicate (`authority_kind <> 'lead'`), so that a later construct ruled
+         * existence-private cannot join the exclusion without a rename, i.e. without an IC. Purge's
+         * `observations` keeps the WHOLE-log meaning it has always had. The wire carries no
+         * `observations` key at all, so no reader can compare the two under one name. It stays on
+         * the wire because OBSERVATION-LOG-DESIGN §6's REC-110 ruling rests on it (premise 1): the
+         * three built frontier levels' tallies count no lead row either. `aiRunLog` above is
+         * untouched: no lead act writes a 'run' row. */
+      ...proof ? { observations: n("observation_log") } : { observationsNonLead: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c },
+      /* MK-4 / IC-136: a COUNT of members' leads and nothing else, so a purge can
+         PROVE it took them (D-113). What any lead says is not an operator fact —
+         and since REC-131, neither is how many there are: purge's proof only. */
+      ...proof ? { leads: n("leads") } : {},
       /* PL-1 / IS-1: the inquiry's alternative accounts of its evidence and
          their legs, reported so a purge can PROVE it took them (D-113). A COUNT
          AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
@@ -47990,7 +48012,11 @@ ${words}`;
          purge can PROVE it took them (D-113) and so an operator can see that the
          record is carrying doubts at all without having to sweep for them. */
       routeMarks: n("provenance_route_marks"),
-      dbBytes: this.ctx.storage.sql.databaseSize
+      /* REC-131 / IC-148: the ADMIN class's and purge's only — see `stats()`. THE RESIDUE, STATED
+         RATHER THAN HIDDEN (BOB #15): the admin class still receives a figure that moves in whole
+         pages on every write, a large lead's included, so the operator can detect that SOMETHING
+         large was written; it cannot tell a lead from any other write, and no lead is readable to it. */
+      ...proof || capacity ? { dbBytes: this.ctx.storage.sql.databaseSize } : {}
     };
   }
   /* REC-11 / R3: would writing edges bundleId -> each of `targets` close a
@@ -49253,7 +49279,7 @@ ${words}`;
          holds this list against schema.mjs. */
       "capture_text"
     ];
-    const before = this.stats({ operator: true });
+    const before = this.#counts({ proof: true });
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
         const r = this.#one(`SELECT fts_id FROM bundles WHERE bundle_id=?`, bundleId);
@@ -49314,7 +49340,7 @@ ${words}`;
         this.sql.exec(`DELETE FROM capture_requests`);
       }
     });
-    const after = this.stats({ operator: true });
+    const after = this.#counts({ proof: true });
     const d = (k) => before[k] - after[k];
     return {
       ok: true,
@@ -62075,7 +62101,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         projectionclear: () => this.projectionClear(body || {}),
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
-        stats: () => this.stats({ operator: url.searchParams.get("operator") === "1" }),
+        stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),
         bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
         claim: () => this.claim({ ...body || {}, tokenFp: url.searchParams.get("fp") }),
         login: async () => {
@@ -65588,7 +65614,7 @@ var index_default = {
         out.r2 = "MISCONFIGURED: one bucket bound without the other; the fence requires both or neither";
       }
       try {
-        const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(`http://x/stats?operator=${cls === "admin" ? "1" : "0"}`));
+        const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}`));
         if (!sOut.answered) {
           out.ok = false;
           out.store = "ERR the store did not answer /stats";
@@ -65628,7 +65654,7 @@ var index_default = {
         }, 400);
     }
     if (op === "livefire") {
-      const out = await livefire(env, storeName, { operator: cls === "admin" });
+      const out = await livefire(env, storeName, { capacity: cls === "admin" });
       return json(out, out.ok ? 200 : 500);
     }
     if (op === "runtime") {
@@ -68210,7 +68236,7 @@ var index_default = {
       inner.searchParams.set("address", normalizeAddress(url.searchParams.get("address") || ""));
     if (op === "biasadopt")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-    if (op === "stats") inner.searchParams.set("operator", cls === "admin" ? "1" : "0");
+    if (op === "stats") inner.searchParams.set("capacity", cls === "admin" ? "1" : "0");
     if (op === "memberlist")
       inner.searchParams.set(
         "administer",
