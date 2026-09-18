@@ -15871,7 +15871,7 @@ the word STALE, which is why this cost minutes rather than the hour the wrong me
 change would expect a `dist/` diff in its commit, not see one, and reasonably conclude the rebuild
 had not taken — chasing a build problem that does not exist. Here the rebuild produced NO diff in
 the artifact and a four-line diff in the manifest, and that is the correct, complete outcome.
-## M-48 · 2026-09-17 · REC-119 — `store.mjs` IS 36,079 LINES, AND THE CONSUMER IMPACT THE ROW PREDICTED WOULD NOT BE ZERO IS ZERO
+## M-50 · 2026-09-17 · REC-119 — `store.mjs` IS 36,079 LINES, AND THE CONSUMER IMPACT THE ROW PREDICTED WOULD NOT BE ZERO IS ZERO **[ID COLLISION AT INTEGRATION, RENUMBERED FROM `M-48` BY CONDUCT #3 AND RECORDED RATHER THAN QUIETLY FIXED: M0-58 independently allocated `M-48` on its own branch the same day. Both were correct on their own branch and wrong in the union — each read the corpus floor and added one. M0-58's merged FIRST and keeps the id. `plancheck`'s DUPLICATE ID arm caught it at the merge, not a human; this is the second id collision of the day, after D-406/D-407.]**
 
 **Instrument and tree:** worktree `agent-a5f807eada28ece7f`, branch
 `worktree-agent-a5f807eada28ece7f`, rebased onto `c6b40ba4`. Every figure below was run rather

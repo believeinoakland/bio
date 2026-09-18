@@ -9012,7 +9012,11 @@ text, so capping there is a design question rather than a sweep.
 
 **RESOLUTION: (CONDUCT takes the version bump and the resolution.)**
 
-## IC-121 · I3 `op=basisversions` AND `op=suggest`: a version leg's `grade` becomes the EARNED capture letter, with the AUTHORED letter beside it — and the FROZEN `composition` is LABELLED as authored rather than capped · PROPOSED 2026-09-17 (REC-119, closing D-411) — the version bump and the RESOLUTION are CONDUCT's
+## IC-121 · I3 `op=basisversions` AND `op=suggest`: a version leg's `grade` becomes the EARNED capture letter, with the AUTHORED letter beside it — and the FROZEN `composition` is LABELLED as authored rather than capped · RESOLVED ACCEPTED 2026-09-18 by CONDUCT #3 at integration — I3 22.0.0 → **23.0.0**, MAJOR 2026-09-17 (REC-119, closing D-411) — the version bump and the RESOLUTION are CONDUCT's
+
+> **ACCEPTED, AND THE CONSUMER MEASUREMENT CONTRADICTED ITS OWN ROW — WHICH IS WHY IT IS RECORDED HERE RATHER THAN QUIETLY MATCHING THE PREDICTION.** The row stated flatly that *the measured impact here will NOT be zero*, because `op=basisversions` has real consumers unlike `op=meaningrows`. **Both consumers ARE real and NEITHER READS THE FIELD THAT MOVES:** `civicos-ui`'s two doors read only `target`, `target_id`, `ground` and array shape; `agent-worker` never touches `legs`; and the other `l.grade` hits in that file belong to **three DIFFERENT `legs[]` arrays**. Measured impact: **ZERO**. CONDUCT wrote the prediction and the worker refuted it at the artifact.
+>
+> **BREAKING ANYWAY, on an argument this op owns and which survives a zero consumer count: `op=basisversions` PUBLISHES `composition` SO A CONSUMER CAN CHECK THE FREEZING ITSELF — and such a consumer now finds the two halves disagreeing without changing a line.** That is IC-118's rule applied to a consumer the op exists to serve.
 
 **BASE READ OFF THE TREE, NOT INHERITED FROM THE ROW.** `INTERFACES.md` reads I3 **22.0.0**
 on this worktree at `c6b40ba4`. Three ICs landed on 2026-09-17 and moved I3 19.0.0 → 20.0.0

@@ -236,6 +236,17 @@ number" into a corpus file**; the tool caught its own debt row poisoning its own
 
 ## Before you finish
 
+0. **IF YOU TOUCHED ANYTHING UNDER `bio-plane/src/`, REBUILD THE BUNDLE FIRST: `cd bio-plane && npm run build`.** The
+   committed `dist/bio-plane.bundled.mjs` is a TRACKED ARTIFACT and `FL-10`'s freshness guard fires when it does not
+   match `src/`. **This step is owed by every `src/`-touching worker, it was in NO kickoff until 2026-09-18, and THREE
+   CONSECUTIVE `RECORD` ITEMS EACH DISCOVERED IT FROM A RED SUITE** — REC-119 counted them and said the remedy is a
+   process change rather than a better warning, which is what this line is. Rebuild BEFORE the battery, because the
+   guard is what turns red and the failure names the artifact rather than your change.
+   **A COMMENT-ONLY `src/` CHANGE IS THE EXCEPTION AND IT IS MEASURED, NOT ASSUMED: the bundler STRIPS COMMENTS, so the
+   emitted bundle is BYTE-IDENTICAL while the manifest's INPUT RECORD still moves** (REC-110 measured both, twice). So
+   rebuild anyway — but if you are hunting a diff in `bundled.mjs` after a comment-only change, there isn't one, and a
+   session expecting one will chase a build problem that does not exist.
+
 1. `cd bio-plane && npm run test:battery` — the WHOLE battery, green.
 2. `node scripts/coverage.mjs --strict` — run **DIRECTLY**, `$?` read **UNPIPED**, exit 0.
 3. `node civicos-ui/test/run.mjs` — **from the REPO ROOT**, exit read UNPIPED, 0. Run it
