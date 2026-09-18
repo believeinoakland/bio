@@ -13401,3 +13401,35 @@ unpiped; `node civicos-ui/test/run.mjs` exit 0; `node tools/status.mjs --check` 
 `node test/machine-attest.control.mjs` from `bio-plane/`: baseline 35/0 · ratify 32/3 · caseratify 32/3 ·
 overstrict 33/2, all as declared, every restore byte-identical. Minted: IC-132, D-421 (a DECISION FOR
 BOB — the operator's env-binding tokens still ratify with a member's signature; provisional: not refused).
+
+## CLAIM 2026-09-18 RECORD (REC-125 — D-421 DECIDED: the operator's bearer tokens may not deliver an attested act)
+
+Worker spawned by CONDUCT #4 into worktree `agent-aac5bdb9dea9c048e`. Minted with
+`node tools/mintid.mjs IC` BEFORE building: **IC-137** (I3 MAJOR — a formerly accepted delivery is
+refused). The two new rows extend the RECORD-owned C-32 family (`MACHINE_FENCE_CHECKS`) as C-32.14
+and C-32.15, beside REC-123's C-32.12 / C-32.13.
+
+THE PRECONDITION, run before this claim: no documented or live operator procedure submits
+`op=ratify` or `op=caseratify` with a bearer token (the report carries what was searched).
+
+Paths, named precisely:
+
+- `bio-plane/src/index.mjs` — ONLY REC-123's two DEC-49 regions at the top of `op=caseratify` and
+  `op=ratify`, and the `classify()` neighbourhood if a class list is derived there. No OPS row.
+- `bio-plane/checks/bio-checks.mjs` — two rows in `MACHINE_FENCE_CHECKS` (C-32.14, C-32.15).
+- `bio-plane/test/operator-attest.test.mjs`, `bio-plane/test/operator-attest.control.mjs` — new.
+- `bio-plane/test/ratify.test.mjs`, `reuse-ratify.test.mjs`, `ratify-envelope.test.mjs` — re-pointed
+  at a member session with the reason written; and any OTHER suite the fence breaks, corrected at its
+  site, never exempted. `machine-attest.test.mjs` only where it pins the fence's shape.
+- `bio-plane/scripts/coverage.mjs`, `civicos-ui/check-refusal-codes.mjs` — floor tables only.
+- `bio-plane/dist/**` — `npm run build` output.
+- `docs/architecture/construct-status.json` (claim `11.machine-fence`),
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` (front matter and where the fence's state is
+  stated), `docs/architecture/BIO_System_Design.md` on regeneration, `docs/development/INTERFACE-CHANGES.md`
+  (IC-137), `docs/development/DEBT.md` (D-421's disposition), `docs/DECIDED.md` on regeneration, this block.
+
+**NOT CLAIMED:** `bio-plane/src/store.mjs`, `bio-plane/src/setup.mjs`, `civicos-ui/**` beyond the
+floor table, `docs/development/QUEUE.md` (CONDUCT flips the row), `INTERFACES.md`, `newgroup/**`,
+`tools/**`.
+
+**open as of 2026-09-18** — REC-125 is being built.
