@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1090 rulings across 84 documents.
+1096 rulings across 84 documents.
 
 ## DEC-
 
@@ -97,9 +97,9 @@ authority is the file named, never this one.
 - **DEC-23** · 2026-08-03 — RULED by DEC-23: content — a piece of information extracted from a document, up to and including the whole document — is the unit the record points at.  
   `docs/development/DEBT.md:141`
 - **DEC-24** · 2026-08-04 — 1 · The pilot's exclusion is CORRECTED, not lifted.** The pilot is READ-ONLY and stays so: its own hazard table names the defence — *the pilot token cannot execute any mutating op* — and minting a content row is a write.  
-  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:107`
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:106`
 - **DEC-24** — RULED and enforced in code where the record has an act to fence |  
-  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:131`
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:130`
 - **DEC-24** — WHAT IS ALREADY RULED, so this entry only adds what is missing:** - **DEC-24 — the boundary**: *"the machine may do the LOOKING; the member does the CONCLUDING"*, with FOUR roles on the path verbs: **EXTRACT** (document → content), **PURSUE** (find material bearing on an unsupported claim, supporting AND cutting…  
   `docs/archive/ledgers/DECISIONS-2026-08.md:3396`
 - **DEC-24** · 2026-09-14 — exclusion 1 is CORRECTED IN PLACE as of 2026-09-14 (SK-8, on BOB #11's delegation) and is no longer stale; exclusion 3 still is.** Exclusion 1 previously gave the wrong REASON for excluding PURSUE/EXTRACT/CHECK (*"those are DEC-24 roles with their own scopes"*) and a CHECK-sequencing clause SK-4 had already made false.  
@@ -547,7 +547,7 @@ authority is the file named, never this one.
 - **D-358** · 2026-09-14 — DECIDED 2026-09-14** (D-358 answered: the run, not the pilot).  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:10`
 - **D-358** · 2026-09-14 — RULED and **BUILT, with a CALLER as of 2026-09-14** — `op=contentmint`, the four-state MINT LABEL on every content-row projection and on the leg surface, the attest fence made reachable (SK-7); D-358 ANSWERED at §7.3 — the caller is a RUN, not the pilot, whose exclusion is corrected rather than lifted; SK-8 landed…  
-  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:136`
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:135`
 - **D-358** · 2026-09-14 — its §7.3 answered D-358 on 2026-09-14: the role runs in DEC-62's RUN, not on the pilot's credential, whose exclusion is CORRECTED rather than lifted (the pilot is read-only and writes nothing).  
   `docs/development/EXTRACTION-BREADTH-DESIGN.md:89`
 - **D-358** · 2026-09-14 — SETTLED when a product caller exists for either op — the assistant's EXTRACT act (blocked: D-358) or UI's transcription-check surface — and confirms the shape live; CONDUCT writes it. ### AMENDED at CAP-12's landing — 2026-09-14 (the second key this entry was written to carry; the version stays **1.5.0** and the…  
@@ -596,6 +596,10 @@ authority is the file named, never this one.
   `docs/development/DEBT.md:328`
 - **D-411** — NOT SETTLED BY THIS ITEM: D-411 / REC-119**, the sixth reader (`#versionCollections`, feeding `op=basisversions` and `op=suggest`).  
   `docs/development/INTERFACE-CHANGES.md:9008`
+- **D-421** · 2026-09-18 — that question (D-421) was DECIDED by BOB #14 — REFUSE — and the operator's bearer tokens no longer deliver either act (C-32.14 / C-32.15, IC-137). as of 2026-09-18  
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:3`
+- **D-421** · 2026-09-18 — And the operator's bearer tokens, DECIDED 2026-09-18 by BOB #14 (D-421, applying this rule, no new doctrine):** an attested act is performed ONLY by a named member's OWN AUTHENTICATED SESSION — *the signature proves who AUTHORISED; the credential that delivers it decides WHEN the record changes, and the record…  
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:56`
 - **D-421** · 2026-09-18 — DECIDED 2026-09-18 by BOB #14 (BOB lane, applying rule 4, no new doctrine): REFUSE — an attested act is performed ONLY by a named member's own authenticated session; operator bearer tokens may no longer deliver one, even with a member's valid signature.  
   `docs/development/DEBT.md:356`
 - **D-421** · 2026-09-18 — D-421 DECIDED BY BOB #14 (BOB lane, applying rule 4, no new doctrine): REFUSE.  
@@ -800,6 +804,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:817`
 - **C-32** — Any existing suite pinning the C-32 family is CORRECTED at its site, never exempted. - `bio-plane/scripts/coverage.mjs`, `civicos-ui/check-refusal-codes.mjs` — floor tables only, from printed figures, if the new codes move one. - `bio-plane/dist/**` — `npm run build` output.  
   `docs/development/CLAIMS.md:13374`
+- **C-32.15** · 2026-09-18 — RATOR_TOKEN_CANNOT_RATIFY_CASE` (C-32.15); an attested act is delivered ONLY by a signed-in member's own session (D-421 DECIDED) · PROPOSED 2026-09-18 (REC-125, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's  
+  `docs/development/INTERFACE-CHANGES.md:9968`
 - **C-35.1** — — ONE superseded assertion CORRECTED with the reason at the site.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4843`
 - **C-35.14** — Inside the plane, `textchain.test.mjs`'s family-totality list was CORRECTED (not exempted) for C-35.14 and a CHECK_ARMS row drives it. **RESPONSES:** not yet collected.  
@@ -1094,6 +1100,10 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1875`
 - **REC-119** · 2026-09-18 — THE FREEZE QUESTION IS RULED BY CONDUCT #3 RATHER THAN ROUTED, AND THE RULING IS BRIEFED WITH ITS OWN FALSIFIER: both halves are published and THE ENVELOPE SAYS WHICH IS WHICH.** `inquiry_basis_versions.composition` is **NOT a claim about what the record can support NOW — it is a FROZEN RECORD OF WHAT WAS AUTHORED…  
   `docs/development/QUEUE.md:1955`
+- **REC-125** · 2026-09-18 — The operator's bearer tokens are refused too (REC-125, D-421 DECIDED; C-32.14 / C-32.15, IC-137) — an attested act is delivered only by a signed-in member's own session |  
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:132`
+- **REC-125** · 2026-09-18 — d permitted by design, BIO_Intake_Doctrine_v1_1.md §3; and NO OPERATOR BEARER TOKEN delivers either act (REC-125, D-421 DECIDED by BOB #14, 2026-09-18, `bio-plane/test/operator-attest.test.mjs`): the ADMIN, MEMBER and PROBE tokens each carrying a member's VALID signature were ACCEPTED at op=ratify and op=caseratify…  
+  `docs/architecture/BIO_System_Design.md:91`
 - **REC-125** · 2026-09-18 — CLAIM 2026-09-18 RECORD (REC-125 — D-421 DECIDED: the operator's bearer tokens may not deliver an attested act) Worker spawned by CONDUCT #4 into worktree `agent-aac5bdb9dea9c048e`.  
   `docs/development/CLAIMS.md:13405`
 ## UI-
@@ -1472,7 +1482,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - BEFORE RAISING A QUESTION, OR WRITING A DECISION ITEM, ASK WHAT IS ALREADY DECIDED:** node tools/decided.mjs "<the subject>"  
   `CLAUDE.md:206`
 - **2026-09-14** — DECIDED 2026-09-14 (§7.3): the run, not the pilot; no new credential or fence; mints bounded and the uncited row named a proposal | | AI-proposed readings — the `ai(function, version)` step EMITTED | **BUILT 2026-09-14 (SK-8)**: `op=extractpropose` inside an EXTRACT run, the step appended through `appendStep` so…  
-  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:141`
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:140`
 - **2026-08-10** — ⚠ SUPERSEDED IMPLEMENTATION, INHERITED FORMAT > > **Banner added 2026-08-10 (session BOB), moving into this file what > `architecture/README.md` has said about it since July and no reader of this document  
   `docs/architecture/BIO_Bundle_Skill_Composite_Design_v1_7.md:47`
 - CORRECTED — the administrator is not an inverted threat model, and the threat is symmetric](#4-corrected-the-administrator-is-not-an-inverted-threat-model-and-the-threat-is-symmetric) - [4a. "Less narrative" is a design constraint, and it cuts against how such tools usually…  
@@ -2017,6 +2027,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:9677`
 - SPELLED `typed`, NOT THE ROW'S `member(handle)`, AND THE TREE DECIDED IT.** The query compiler DERIVES `content:chain`'s vocabulary from `STEP_KINDS` (`query.mjs`), and `member` is already a bare word of the same `content:` arm — `content:member`, a row a MEMBER marked.  
   `docs/development/INTERFACE-CHANGES.md:9688`
+- DECIDED): *the signature proves who AUTHORISED; the credential that delivers it decides WHEN the record changes, and the record names the actor.* **THE PRECONDITION, MEASURED AT THE ARTIFACT BEFORE ANY CODE (the row's first act).** Searched for anything  
+  `docs/development/INTERFACE-CHANGES.md:9983`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  

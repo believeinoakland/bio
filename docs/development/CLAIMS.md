@@ -13433,3 +13433,17 @@ floor table, `docs/development/QUEUE.md` (CONDUCT flips the row), `INTERFACES.md
 `tools/**`.
 
 **open as of 2026-09-18** — REC-125 is being built.
+
+## CLAIM 2026-09-18 RECORD (REC-125 — D-421 DECIDED: the operator's bearer tokens may not deliver an attested act) — RELEASED
+
+released: 2026-09-18 by the REC-125 worker, branch `worktree-agent-aac5bdb9dea9c048e`. Every claimed path is
+committed on that branch; `bio-plane/src/store.mjs` and `setup.mjs` were NOT edited. THE PRECONDITION: no
+kickoff, script, tool, installer, DIST procedure or UI submits `op=ratify`/`op=caseratify` with a bearer
+token — the only submitter is the instance page (`setup.mjs` ratifyPanel) through the member's session — so
+it was BUILT. THE TRACE on the pre-item tree: ADMIN, MEMBER and PROBE each ACCEPTED at both acts carrying a
+member's signature; now refused by name (C-32.14 / C-32.15, IC-137), keyed on `!viaSession`. Also corrected at
+its site, never exempted: `machinefences-dec49.test.mjs` (pins + floor 46 -> 48 from the printed figure) and
+REC-123's `machine-attest.control.mjs` declaration (its read-back arms no longer fail: the act is now doubly
+fenced). NEGATIVE CONTROL `node test/operator-attest.control.mjs` from `bio-plane/`: baseline 18/0 · admin 13/5 ·
+member 13/5 · probe 13/5 · overstrict 14/4 · tokenstring 11/7, all as declared, every restore byte-identical.
+Minted: IC-137.

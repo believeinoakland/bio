@@ -7365,8 +7365,8 @@ export default {
          machine and never a payload complaint behind it (REC-73's lesson). Driven:
          before this, an `ai` credential whose scope named this op, carrying a
          registered member's valid signature, COMMITTED THE CASE and the record
-         named the member. The `ai` class only — see the row's note for why the
-         operator's env-binding classes are not refused here.
+         named the member. The `ai` class only HERE; the operator's env-binding
+         classes are refused by the region directly below (REC-125, D-421).
          THE GUARD'S SHAPE IS REC-46's AND NOT STYLE: `aiCred` is resolved only for a
          minted agent credential (it is what makes the caller the `ai` class), and
          WHETHER the identity it acts under is a machine is asked of the ONE
@@ -7378,6 +7378,22 @@ export default {
           detail: "committing a case is a member's signed act. An assistant's credential may assemble the "
                 + "case document and may never commit it, whoever's signature it carries (DEC-24 rule 4)." }, 403);
       /* END DEC-49 REGION is-machine-ratify-case */
+      /* DEC-49 REGION is-operator-ratify-case — REC-125 / C-32.15, D-421 DECIDED by
+         BOB #14. See `op=ratify`'s twin region for the whole reasoning: an attested
+         act is delivered ONLY by a signed-in member's own session, so every caller
+         that did not arrive through one — every env-binding bearer class `classify()`
+         resolves, today ADMIN / MEMBER / PROBE — is refused here, NAMING its class,
+         whoever's valid signature it carries. Keyed on HOW the caller arrived and
+         never on a list of token classes or token strings, so a fifth binding
+         admitted to this op later is refused without anybody remembering this line. */
+      if (!viaSession)
+        return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_RATIFY_CASE",
+          ...machineFenceRow("OPERATOR_TOKEN_CANNOT_RATIFY_CASE"), op, tokenClass: cls,
+          detail: `committing a case is a member's own signed act, delivered through that member's own `
+                + `signed-in session. The credential that asked is the operator's \`${cls}\`-class bearer `
+                + `token: the signature says who authorised the case, and the credential that delivers it `
+                + `decides when the record changes, so a bearer token may not carry it in (D-421).` }, 403);
+      /* END DEC-49 REGION is-operator-ratify-case */
       const body = await req.json().catch(() => null);
       if (!body?.caseId || !Number.isInteger(body?.edition) || !body?.expectedSha
           || typeof body?.sig !== "string")
@@ -7462,8 +7478,9 @@ export default {
 
     /* Ratification: the act that moves a bundle into the published corpus.
        The authority is the SSHSIG over the canonical statement, verified
-       against the registered active signers; the token or session only
-       reached this surface. The caller states the sha it reviewed, so
+       against the registered active signers. WHO may carry that signature in
+       is a separate question with a separate answer (REC-125, D-421): a
+       signed-in member's own session and nothing else. The caller states the sha it reviewed, so
        ratification has its own CAS: nobody can ratify a revision they have
        not seen. Order of operations is deliberate: verify everything, then
        commit the published rows, then copy bytes to the published bucket.
@@ -7480,6 +7497,34 @@ export default {
           detail: "ratifying is a member's signed act. An assistant's credential may prepare the finding and "
                 + "may never carry the signature in, whoever's key made it (DEC-24 rule 4)." }, 403);
       /* END DEC-49 REGION is-machine-ratify-bundle */
+      /* DEC-49 REGION is-operator-ratify-bundle — REC-125 / C-32.14. D-421, DECIDED by
+         BOB #14 applying `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 (no new
+         doctrine): an ATTESTED act is performed ONLY by a named member's OWN
+         AUTHENTICATED SESSION. REC-123 fenced the `ai` class above and deliberately
+         left the operator's env-binding tokens open, because the AUTHORITY is the
+         member's signature and those tokens were the operator's publication path as
+         built. The ruling closes that: *the signature proves who AUTHORISED; the
+         credential that delivers it decides WHEN the record changes, and the record
+         names the actor.* A bearer token held in the hosting account is not the
+         member it would name.
+         THE PRECONDITION WAS MEASURED BEFORE THIS LINE WAS WRITTEN: the only surface
+         that submits op=ratify is the instance page (`setup.mjs` ratifyPanel), and it
+         posts with the SESSION from op=login; no kickoff, script, tool, installer or
+         DIST procedure submits either op with a bearer token.
+         THE PREDICATE IS HOW THE CALLER ARRIVED, NOT WHICH TOKEN IT HELD. `viaSession`
+         is set only by the session lookup in the admission block; every class
+         `classify()` resolves from an env binding leaves it false, so the fence covers
+         ADMIN, MEMBER and PROBE today and any binding added tomorrow, and no token
+         string or class list appears here to go stale. The refusal NAMES the class
+         (`tokenClass`), so a caller learns which of its credentials was refused. */
+      if (!viaSession)
+        return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_RATIFY",
+          ...machineFenceRow("OPERATOR_TOKEN_CANNOT_RATIFY"), op, tokenClass: cls,
+          detail: `ratifying is a member's own signed act, delivered through that member's own signed-in `
+                + `session. The credential that asked is the operator's \`${cls}\`-class bearer token: the `
+                + `signature says who authorised publication, and the credential that delivers it decides `
+                + `when the record changes, so a bearer token may not carry it in (D-421).` }, 403);
+      /* END DEC-49 REGION is-operator-ratify-bundle */
       const body = await req.json().catch(() => null);
       if (!body?.bundleId || !body?.expectedSha || typeof body?.sig !== "string")
         return json({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);

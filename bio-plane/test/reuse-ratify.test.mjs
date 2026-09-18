@@ -117,6 +117,16 @@ const signRatify = (bundleId, bundleSha) => {
 const add = await POST("op=memberadd&token=adm-rr", { memberId: "sparky", cover: "Bob", role: "admin" });
 await POST("op=enroll", { invite: add.result.invite, handle: "sparky", password: "sparky-passphrase" });
 await POST("op=signeradd&token=adm-rr", { keyB64, memberId: "sparky", comment: "sparky laptop" });
+/* REC-125 / D-421 (IC-137): RE-POINTED, NEVER EXEMPTED. Each ratification here
+   was delivered by the ADMIN_TOKEN bearer ("adm-rr") carrying sparky's
+   signature. BOB #14 ruled that an ATTESTED act is delivered ONLY by the signing
+   member's OWN AUTHENTICATED SESSION, and the bearer token is now refused by name
+   (C-32.14) before the reuse re-fetch this suite measures is ever reached. So the
+   same ratifications go through sparky's own signed-in session; nothing asserted
+   about re-fetching reused parts changed. `operator-attest.test.mjs` owns the fence. */
+const SESS = (await POST("op=login", { role: "member:sparky", password: "sparky-passphrase" })).result.token;
+if (!SESS) throw new Error("reuse-ratify: sparky could not sign in, so no ratification below could be delivered");
+const RAT = `op=ratify&token=${SESS}`;
 
 /* ---- a conformant bundle carrying a registered primary capture ---- */
 const NOW = "2026-07-24T00:00:00Z";
@@ -181,7 +191,7 @@ console.log("\n=== Bundle 1: an outcome for EVERY reused part; a dark source sti
   const rp = (await call(`/reusedparts?id=${B.id}`)).result;
   t("the store enumerates the bundle's reused parts", rp.count, 3);
 
-  const rat = await POST("op=ratify&token=adm-rr", { bundleId: B.id, expectedSha: B.live, sig: signRatify(B.id, B.live) });
+  const rat = await POST(RAT, { bundleId: B.id, expectedSha: B.live, sig: signRatify(B.id, B.live) });
   t("ratification succeeds even though a reused source has gone dark", rat.ok, true);
   t("the response carries a reuse report", !!rat.reuse, true);
   t("every reused part is accounted for on the response", rat.reuse.reused_parts, 3);
@@ -214,7 +224,7 @@ console.log("\n=== Bundle 2: a bundle whose ONLY reused part is dark still ratif
 {
   const parts = [{ address: `https://${HOST}/vanished.css`, reusedSha: sha(CSS("nav{}")) }];
   const B = await buildBundle("INFO-2026-7102-all-dark", 5, parts);
-  const rat = await POST("op=ratify&token=adm-rr", { bundleId: B.id, expectedSha: B.live, sig: signRatify(B.id, B.live) });
+  const rat = await POST(RAT, { bundleId: B.id, expectedSha: B.live, sig: signRatify(B.id, B.live) });
   t("it ratifies", rat.ok, true);
   t("the sole reused part is unavailable", [rat.reuse.reused_parts, rat.reuse.unavailable], [1, 1]);
   t("the record holds something nobody can re-fetch, and says so",
@@ -237,7 +247,7 @@ console.log("\n=== Bundle 3: reuse count exceeds the calibrated ceiling -> resid
     { address: `https://${HOST}/confirmed-3.css`, reusedSha: sha(BODIES.get("/confirmed-3.css")) },
   ];
   const B = await buildBundle("INFO-2026-7103-over-ceiling", 3, parts);
-  const rat = await POST("op=ratify&token=adm-rr", { bundleId: B.id, expectedSha: B.live, sig: signRatify(B.id, B.live) });
+  const rat = await POST(RAT, { bundleId: B.id, expectedSha: B.live, sig: signRatify(B.id, B.live) });
   t("it ratifies", rat.ok, true);
   t("the budget was bounded by the calibrated ceiling", [rat.reuse.ceiling, rat.reuse.budget], [2, 2]);
   t("two parts attempted (confirmed), one residue not_attempted", [rat.reuse.confirmed, rat.reuse.not_attempted], [2, 1]);
@@ -289,7 +299,7 @@ console.log("\n=== a bundle that reused nothing ratifies exactly as before (no r
             { path: "snapshots/evidence.bin", blobSha: capSha, bytes: capBytes.length, sha256: capSha }],
     register: [{ sha256: capSha, path: "snapshots/evidence.bin", encoding: "binary", bytes: capBytes.length }],
   });
-  const rat = await POST("op=ratify&token=adm-rr", { bundleId: id, expectedSha: c.result.bundleSha, sig: signRatify(id, c.result.bundleSha) });
+  const rat = await POST(RAT, { bundleId: id, expectedSha: c.result.bundleSha, sig: signRatify(id, c.result.bundleSha) });
   t("it ratifies", rat.ok, true);
   t("and carries no reuse report, so nothing overclaims a verification that did not happen", "reuse" in rat, false);
 }
