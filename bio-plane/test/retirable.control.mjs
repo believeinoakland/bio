@@ -170,10 +170,15 @@ const ARMS = [
     mustBreak: "and says unknown is not clean",
     mustNotBreak: ["an UNREADABLE status is HOLD"] },
 
-  { id: "A6", title: "the DRIVING-LANE protection removed — a live CONDUCT archived for disk",
-    from: `    if (DRIVING_LANES.includes(lane) && !isTaskRun(s) && newest && newest.id === s.sessionId)`,
+  { id: "A6", title: "the STANDING-LANE protection removed — a live CONDUCT archived for disk",
+    from: `    if (STANDING_LANES.includes(lane) && !isTaskRun(s) && newest && newest.id === s.sessionId)`,
     to: `    if (false)`,
     mustBreak: "the NEWEST CONDUCT is PROTECTED even at 9h idle" },
+
+  { id: "A6b", title: "DIST and FLEET dropped from the standing lanes — the 2026-09-16 archive of both, reproduced",
+    from: `export const STANDING_LANES = ["CONDUCT", "BOB", "DIST", "FLEET"];`,
+    to: `export const STANDING_LANES = ["CONDUCT", "BOB"];`,
+    mustBreak: "the NEWEST DIST is PROTECTED even at 72h idle" },
 
   { id: "A7", title: "the IDLE THRESHOLD removed — a session mid-task between turns is not a corpse",
     from: `    if (idleH < idleHours)`,

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1125 rulings across 87 documents.
+1126 rulings across 88 documents.
 
 ## DEC-
 
@@ -2151,6 +2151,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
   `docs/development/kickoffs/CONTENT-PDF.md:129`
+- **2026-09-18** — RULED BY BOB, 2026-09-18:** *"Don't archive DIST or FLEET sessions just because they've been idle for some period of time.  
+  `docs/development/kickoffs/DIST.md:23`
 - **2026-09-16** — RULED by Bob, 2026-09-16: one account develops this repository at a time, enforced by him rather than by an instrument.** He stands development down in one account — the BOB session retires itself and every lane and worker under it — and only once that account confirms everything is stopped does he open the other…  
   `docs/development/kickoffs/NEW-MACHINE.md:59`
 - `op=strengthbarof&target=` IS WITHDRAWN** and refused `BAR_IS_A_PROJECT_PROPERTY`.  

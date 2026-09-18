@@ -57,7 +57,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
-import { classify, summarise, treeState, laneOf, isTaskRun, DRIVING_LANES,
+import { classify, summarise, treeState, laneOf, isTaskRun, STANDING_LANES,
          DEFAULT_IDLE_HOURS } from "../../tools/retirable.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -169,7 +169,7 @@ section("3 — WORK NOT SAVED IS *HOLD*, NEVER RETIRABLE. Bob's clause is 'their
   const unpushedWt = linked(work, "wt-unpushed", { commits: 2 });
 
   const rows = run([
-    S({ sessionId: "d", title: "DIST", cwd: dirtyWt }),
+    S({ sessionId: "d", title: "CONTENT-PDF", cwd: dirtyWt }),
     S({ sessionId: "u", title: "CAPTURE", cwd: unpushedWt }),
   ], { repo: work });
 
@@ -197,20 +197,20 @@ section("4 — AN UNREADABLE TREE IS 'HOLD', NOT 'CLEAN'. Concluding a value fro
       + "two causes, inside the safety check itself.");
 {
   const { work } = scratch();
-  const rows = run([S({ sessionId: "gone", title: "DIST", cwd: join(SANDBOX, "does-not-exist") })],
+  const rows = run([S({ sessionId: "gone", title: "CONTENT-PDF", cwd: join(SANDBOX, "does-not-exist") })],
                    { repo: work });
   /* A path that does not exist holds nothing — that is a real absence, not an unknown one. */
   t("a cwd that does not exist holds nothing and is RETIRABLE", verdictOf(rows, "gone"), "RETIRABLE");
 
   /* A path that EXISTS but whose status cannot be read is the dangerous one. */
-  const rows2 = classify([S({ sessionId: "unread", title: "DIST", cwd: work })],
+  const rows2 = classify([S({ sessionId: "unread", title: "CONTENT-PDF", cwd: work })],
     { now: NOW, repo: work, remoteMap: new Map(),
       treeReader: () => ({ head: "deadbeef", dirty: null, saved: null, unreadable: true,
                            isPrimary: false, ownsWorktree: true }) });
   t("an UNREADABLE status is HOLD", verdictOf(rows2, "unread"), "HOLD");
   t("...and says unknown is not clean", /could NOT BE READ — unknown is not clean/.test(reasonOf(rows2, "unread")), true);
 
-  const rows3 = classify([S({ sessionId: "nomain", title: "DIST", cwd: work })],
+  const rows3 = classify([S({ sessionId: "nomain", title: "CONTENT-PDF", cwd: work })],
     { now: NOW, repo: work, remoteMap: new Map(),
       treeReader: () => ({ head: "deadbeef", dirty: 0, saved: null, unreadable: false,
                            isPrimary: false, ownsWorktree: true }) });
@@ -219,7 +219,7 @@ section("4 — AN UNREADABLE TREE IS 'HOLD', NOT 'CLEAN'. Concluding a value fro
 }
 
 /* ========================================================================== */
-section("5 — THE DRIVING LANES. Retiring a live CONDUCT to reclaim disk would trade the estate's "
+section("5 — THE STANDING LANES. Retiring a live CONDUCT to reclaim disk would trade the estate's "
       + "throughput for a worktree, by a robot, with nobody watching.");
 {
   const { work } = scratch();
@@ -237,7 +237,19 @@ section("5 — THE DRIVING LANES. Retiring a live CONDUCT to reclaim disk would 
   t("but a PREDECESSOR in a driving lane IS retirable", verdictOf(rows, "c-old"), "RETIRABLE");
   t("...which is the over-strictness half: protecting the lane must not protect its corpses",
     summarise(rows).counts.retirable, 1);
-  t("the driving lanes are declared once", DRIVING_LANES, ["CONDUCT", "BOB"]);
+  /* CORRECTED 2026-09-18 (Bob's ruling): DIST and FLEET are standing lanes too. This asserted
+     ["CONDUCT", "BOB"], and the fixtures in sections 3, 4, 6 and 7 used "DIST" as their example of an
+     ORDINARY area session — which is exactly the treatment that archived the only DIST and FLEET
+     sessions with a question unanswered. Those fixtures now use CONTENT-PDF / CONTENT-HTML. */
+  t("the standing lanes are declared once", STANDING_LANES, ["CONDUCT", "BOB", "DIST", "FLEET"]);
+  const rowsDF = run([
+    S({ sessionId: "d-new", title: "DIST", cwd: work, lastActivityAt: ago(72) }),
+    S({ sessionId: "f-new", title: "FLEET #2", cwd: work, lastActivityAt: ago(96) }),
+    S({ sessionId: "f-old", title: "FLEET #1", cwd: wt, lastActivityAt: ago(200) }),
+  ], { repo: work });
+  t("the NEWEST DIST is PROTECTED even at 72h idle", verdictOf(rowsDF, "d-new"), "PROTECTED");
+  t("the NEWEST FLEET is PROTECTED even at 96h idle", verdictOf(rowsDF, "f-new"), "PROTECTED");
+  t("but a PREDECESSOR FLEET IS retirable", verdictOf(rowsDF, "f-old"), "RETIRABLE");
   t("laneOf strips the instance number", [laneOf({ title: "CONDUCT #2" }), laneOf({ title: "BOB" })],
     ["CONDUCT", "BOB"]);
 }
@@ -249,7 +261,7 @@ section("6 — SELF, RUNNING, AND THE IDLE THRESHOLD. A session mid-task between
   const { work } = scratch();
   const wt = linked(work, "wt-fresh");
   const rows = run([
-    S({ sessionId: "me", title: "DIST", cwd: wt, lastActivityAt: ago(99) }),
+    S({ sessionId: "me", title: "CONTENT-PDF", cwd: wt, lastActivityAt: ago(99) }),
     S({ sessionId: "busy", title: "CAPTURE", cwd: wt, isRunning: true, lastActivityAt: ago(99) }),
     S({ sessionId: "fresh", title: "RECORD", cwd: wt, lastActivityAt: ago(1) }),
     S({ sessionId: "stale", title: "RECORD", cwd: wt, lastActivityAt: ago(20) }),
@@ -274,8 +286,8 @@ section("7 — THE SUMMARY SEPARATES 'HOLDING UNSAVED WORK' FROM 'NOT RETIRABLE'
   const dirtyWt = linked(work, "wt-sum", { commits: 1, dirty: 2 });
   const cleanWt = linked(work, "wt-sum2");
   const rows = run([
-    S({ sessionId: "h", title: "DIST", cwd: dirtyWt }),
-    S({ sessionId: "r", title: "DIST2", cwd: cleanWt }),
+    S({ sessionId: "h", title: "CONTENT-PDF", cwd: dirtyWt }),
+    S({ sessionId: "r", title: "CONTENT-HTML", cwd: cleanWt }),
     S({ sessionId: "p", title: "CONDUCT #2", cwd: work, lastActivityAt: ago(1) }),
   ], { repo: work });
   const s = summarise(rows);

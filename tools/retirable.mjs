@@ -29,8 +29,15 @@
  *
  * -------------------------------------------------- WHAT IS NEVER AUTO-RETIRED, AND WHY
  *
- * **THE TWO DRIVING LANES — CONDUCT AND BOB — ARE NEVER AUTO-RETIRED AT THEIR NEWEST SESSION**,
- * however long they have been idle. An idle CONDUCT is the estate's normal state between waves,
+ * **THE STANDING LANES — CONDUCT, BOB, DIST AND FLEET — ARE NEVER AUTO-RETIRED AT THEIR NEWEST
+ * SESSION**, however long they have been idle. DIST and FLEET were added 2026-09-18, RULED BY BOB:
+ * *"Don't archive DIST or FLEET sessions just because they've been idle for some period of time.
+ * They should stay alive because they will always eventually be needed again. Only refresh them
+ * if/when their context windows are too full."* The receipt: the only DIST and FLEET sessions
+ * (2026-09-16) oriented, asked a question nobody was present to answer, went idle past the
+ * threshold, and were archived by this sweep with the question unanswered — so no release was cut
+ * for four days while four disclosure fixes sat on `main`. Idleness is their NORMAL state between
+ * releases, exactly as it is CONDUCT's between waves. An idle CONDUCT is the estate's normal state between waves,
  * and a sweep that archived it would delete the integrator to reclaim a worktree — the estate's
  * throughput traded for disk, by a robot, at 3am. Their retirement runs through the successor
  * chip (D-401): a PREDECESSOR is retirable, the newest never is.
@@ -60,9 +67,10 @@
 import { git, carriedBy, remoteHeads, ROOT } from "./strandedwork.mjs";
 import { existsSync } from "node:fs";
 
-/* The lanes whose NEWEST session drives the estate. Retiring one stops work rather than
-   releasing a resource, so the sweep never does it — the successor chip does (D-401). */
-export const DRIVING_LANES = ["CONDUCT", "BOB"];
+/* The lanes whose NEWEST session is kept alive however long it idles. Retiring one stops work
+   rather than releasing a resource, so the sweep never does it — a successor retires it, and for
+   DIST and FLEET only when the session's context is too full (Bob, 2026-09-18). */
+export const STANDING_LANES = ["CONDUCT", "BOB", "DIST", "FLEET"];
 
 /* A run-session of a scheduled task. It holds no worktree and carries nothing forward, so it is
    retirable the moment it is not running. This is the highest-VOLUME producer by far and the one
@@ -118,7 +126,7 @@ export function classify(sessions, {
   const newestOfLane = new Map();
   for (const s of sessions) {
     const lane = laneOf(s);
-    if (!DRIVING_LANES.includes(lane) || isTaskRun(s)) continue;
+    if (!STANDING_LANES.includes(lane) || isTaskRun(s)) continue;
     const t = Date.parse(s.lastActivityAt || 0) || 0;
     const cur = newestOfLane.get(lane);
     if (!cur || t > cur.t) newestOfLane.set(lane, { id: s.sessionId, t });
@@ -136,11 +144,11 @@ export function classify(sessions, {
     if (s.isRunning) return verdict("PROTECTED", "running");
     if (s.isArchived) return verdict("PROTECTED", "already archived");
 
-    /* Driving lanes: only a PREDECESSOR is ever a candidate. */
+    /* Standing lanes: only a PREDECESSOR is ever a candidate. */
     const newest = newestOfLane.get(lane);
-    if (DRIVING_LANES.includes(lane) && !isTaskRun(s) && newest && newest.id === s.sessionId)
+    if (STANDING_LANES.includes(lane) && !isTaskRun(s) && newest && newest.id === s.sessionId)
       return verdict("PROTECTED",
-        `live holder of the ${lane} lane — an idle driving lane is normal, and retiring it stops `
+        `live holder of the ${lane} lane — an idle standing lane is normal, and retiring it stops `
         + `work rather than releasing a resource; its successor chip retires it (D-401)`);
 
     /* A TASK RUN IS JUDGED BEFORE ANY TREE IS READ, because it owns no tree to judge. Its cwd

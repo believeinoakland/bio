@@ -5,6 +5,23 @@ in their own sessions, as designed — an area Bob can talk to, not a lane absor
 CONDUCT or BOB. Read `CLAUDE.md` first, then this, then `WORKER.md` if you spawn
 sub-work. The coordination skill is `ORCHESTRATION.md`, "COMMUNICATING A CHANGE".
 
+## A STANDING LANE — never idle-archived, and never ends a turn on a question nobody will read
+
+**RULED BY BOB, 2026-09-18:** *"Don't archive DIST or FLEET sessions just because they've been idle for some
+period of time. They should stay alive because they will always eventually be needed again. Only refresh them
+if/when their context windows are too full."* `tools/retirable.mjs` enforces it: this lane's NEWEST session is
+PROTECTED however long it idles (`STANDING_LANES`, negative-control arm A6b). **Idle is this lane's normal state.**
+
+**The receipt, and the half the tool cannot fix.** The only DIST and FLEET sessions (2026-09-16) oriented, then
+ended their turns on a question — *"Standing by for your sequencing"*, *"may I push it?"* — addressed to a human
+who was not in the session. Nobody read either; both were archived idle four hours later; no release was cut for
+four days while four disclosure fixes sat on `main`. **So: never end a turn on a question.** Pushing is not gated
+(`CLAUDE.md`); decide what is yours; route what is genuinely another lane's by `SendMessage` to CONDUCT (sequencing)
+or BOB (design, doctrine) and continue with the rest. A question only Bob can answer goes to BOB, which carries it.
+
+**Refresh, when context is too full:** write `<LANE>-NEXT.md` from the measured state, push it, verify it on the
+remote, and tell BOB — whose successor protocol retires a predecessor only after D-398's three conditions hold.
+
 ## What this area owns
 
 The fleet members — Workers that live BESIDE the plane in the group's account and are
