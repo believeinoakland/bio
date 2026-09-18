@@ -874,6 +874,9 @@ const OPS = {
      record, and a standing statement in the record with nobody's name on it is
      not a statement. */
   provenanceroute: { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* REC-116 / IC-120: the READ half. `mutating: false` is the whole point of the
+     row — for 39 days the only op over this table was the WRITE above. */
+  provenanceroutes: { classes: ["admin", "member", "probe"],     mutating: false },
   /* Write arc. Ratification's authority is the SSHSIG itself, checked
      against the registered signers; the token or session only reaches the
      surface. Member and signer administration is admin-only. Probe class
@@ -7941,6 +7944,13 @@ export default {
            matters here: a marker on a document the caller may not see must not
            be establishable by asking to make one. */
         || op === "provenanceroute"
+        /* REC-116: the COLLECTION read over the same marks, and it is the shape
+           that LEAKS if the stamp is missing rather than the shape that merely
+           refuses — a marker names a document the group holds, so a row the
+           caller may not see must be ABSENT from the roster byte-identically to
+           one that does not exist (op=airuns' rule, REC-30/REC-25's leak). The
+           store fails closed on an absent stamp, like every op in this list. */
+        || op === "provenanceroutes"
         || QUEUE_ACTIONS.includes(op)
         /* IS-6: a run names an inquiry or a project bundle, so a run over a
            project the caller was never invited to must answer exactly as a

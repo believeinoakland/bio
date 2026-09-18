@@ -878,6 +878,33 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "MEMBER'S OWN SEARCH is not in this table at all. Section 4.6's provisional keeps it out at the "
       + "vocabulary — there is no `authority_kind` a member's ad hoc search could take — so the "
       + "strongest form of this classification is again that the material does not exist here to leak.",
+
+    /* REC-116 / IC-120, 2026-09-17 — THE STANDING-MARKER ROSTER, classified by
+       the item that adds it. It is the first READ this table has ever had: for
+       39 days `op=provenanceroute` was `mutating: true` and nothing read the
+       marks at all. */
+    provenanceroutes: "REC-116: which documents in this instance carry a STANDING LOOKED_INDETERMINATE "
+      + "marker — the roster REC-69's 2026-08-09 delegation asked for and nobody built. GATED, and the "
+      + "disclosure is worth naming precisely: each row names a DOCUMENT the group holds and says the "
+      + "record itself doubts that document's route. That is a statement about the group's own evidence, "
+      + "which is why the row is WITHHELD WHOLE rather than redacted when the viewer cannot see the "
+      + "bundle — REC-103's row-whole rule at the document level, and op=airuns' rule for a collection "
+      + "read: absent, byte-identically to a row that never existed. It is stamped with the same "
+      + "fail-closed viewer as op=provenanceroute beside it, in the same list in index.mjs, so an "
+      + "absent stamp answers empty rather than answering at all. "
+      + "MEASURED RATHER THAN ASSERTED, because it changes what this fence is DOING and REC-103's "
+      + "entry one above is the receipt for why that distinction matters: viewerPredicate filters "
+      + "PROJECT bundles and NOTHING ELSE, and a route mark can only ever name an `information` bundle "
+      + "(the write refuses every other type with ROUTE_MARK_NOT_A_DOCUMENT). So for any RECOGNISED "
+      + "viewer this gate withholds nothing today, and the case it is load-bearing for is the "
+      + "UNRECOGNISED one. It is applied anyway rather than reasoned away — the gate is the only place "
+      + "that rule lives, and an op that skipped it would be correct today and wrong the day the "
+      + "predicate widens. rec116-route-marked.test.mjs section E DRIVES both directions through the "
+      + "Durable Object rather than resting on that reasoning. "
+      + "AND WHAT IS DELIBERATELY NOT PUBLISHED: the count of rows WITHHELD. A roster that said `3 "
+      + "documents are marked but you may not see them` would leak exactly what the withholding "
+      + "exists to withhold, so the census is computed THROUGH the same gate and no ungated total is "
+      + "compared against it anywhere in the op.",
     /* REC-94 / IC-95, 2026-09-15 — THE PER-CAPTURE CONTENT AXIS, classified by
        the item that adds it, and it is `frontier`'s disclosure one capture at a
        time. */
