@@ -31073,6 +31073,20 @@ export class Store extends DurableObject {
        what this instance cannot say about itself. */
     const never = missing.filter((r) => r.missing_cause === "never_looked");
     const unexplained = missing.filter((r) => r.missing_cause !== "never_looked");
+    /* THE TALLY IS DELIBERATELY NOT GATED, AND IT IS THE SAME RULING AT ALL THREE
+       LEVELS — REC-110, 2026-09-17, D-386 CLOSED. **THE WHOLE REASONING IS AT THE
+       DOCUMENT ARM'S TALLY IN `frontier` AND IS DELIBERATELY NOT RESTATED HERE:**
+       one rule carrying three spellings is the mirror-and-drift class, and a file
+       that refuses it for GATES must refuse it for the statements that explain
+       them — otherwise the three drift and a reader cannot tell which is current.
+       **THE RULING WAS UNRECORDED AT THIS SITE UNTIL REC-110, AND THAT WAS THE
+       GAP D-386 DID NOT NAME.** REC-103 stated the posture at the document arm
+       ALONE, so a reader who arrived HERE met an ungated aggregate over a table
+       whose rows are withheld row-whole, with nothing beside it saying why —
+       which is the *reader meets the defect rather than the decision* condition
+       REC-110's row exists to end, one method away from where it was being
+       prevented. Pinned by `observation-content.test.mjs` section J, which goes
+       red if a later session quietly gates this or narrows it to the page. */
     const tally = {};
     for (const row of this.#rows(
       `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'content' GROUP BY state`))
@@ -31570,6 +31584,23 @@ export class Store extends DurableObject {
 
     const never = missing.filter((r) => r.missing_cause === "never_looked");
     const unexplained = missing.filter((r) => r.missing_cause !== "never_looked");
+    /* THE TALLY IS DELIBERATELY NOT GATED, AND IT IS THE SAME RULING AT ALL THREE
+       LEVELS — REC-110, 2026-09-17, D-386 CLOSED. **THE WHOLE REASONING IS AT THE
+       DOCUMENT ARM'S TALLY IN `frontier` AND IS DELIBERATELY NOT RESTATED HERE**,
+       for the reason `#frontierContent` gives one method up: one rule carrying
+       three spellings is the mirror-and-drift class. **THIS SITE CARRIED NO
+       STATEMENT AT ALL UNTIL REC-110** — and it is the level where the silence
+       cost most, because two of this level's three subject kinds have ONE-SIDED
+       pre-log evidence (§5.1), so a reader here is already being asked to hold a
+       careful distinction about what an absence means. An unexplained ungated
+       aggregate sitting beside that is the worst place in this file to leave a
+       decision unrecorded. **AND NOTE WHAT IS PINNED AND WHAT IS NOT:**
+       `by_subject_kind` below is a PROJECTION OF `looked` and therefore moves
+       with the viewer and with the bound BY CONSTRUCTION — it is gated because
+       the list it projects is gated, and it is NOT part of this ruling. `tally`
+       is the whole-level count and is. Pinned by `observation-meaning.test.mjs`
+       section J, which goes red if a later session quietly gates this or narrows
+       it to the page. */
     const tally = {};
     for (const row of this.#rows(
       `SELECT state, COUNT(*) n FROM observation_log WHERE level = 'meaning' GROUP BY state`))
@@ -31740,7 +31771,77 @@ export class Store extends DurableObject {
        It names no bundle, no subject and no address, which is `op=stats`' own
        classification. Gating it would mean either a second implementation of
        `#observationBundles` in SQL or silently changing what the field counts —
-       and REC-103 raises it rather than doing either. */
+       and REC-103 raises it rather than doing either.
+
+       **RULED (a) BY REC-110 ON 2026-09-17, AND D-386 IS CLOSED.** REC-103 was
+       right to raise it and not to take it; this is the ruling, recorded where
+       the field is rather than in a report. FOUR THINGS WERE CHECKED THAT COULD
+       HAVE REFUTED IT, named so the next reader RE-DRIVES them instead of
+       re-deriving them — and if any one of them stops being true, this ruling is
+       the thing to reopen:
+
+       (1) **THE CHANNEL IS ALREADY OPEN THROUGH A DOOR OF IDENTICAL WIDTH, by a
+       ruling already taken.** `op=stats` publishes `observations` — `count(*)`
+       over this WHOLE table, every level — and `aiRunLog`, its
+       `authority_kind = 'run'` slice, with the reason at that site: *the log is
+       the coverage record and its size is an operator fact, while what any single
+       row was looking for is not*. `op=stats` and `op=frontier` are classed
+       **IDENTICALLY** — `["admin", "member", "probe"]`, read out of `index.mjs`
+       and not recalled. So every caller who can read this tally can already read
+       a coarser count of the same rows. Gating here would leave a fence with a
+       documented hole beside it AND make two ops answer differently about one
+       fact, which is the mirror-and-drift class this file refuses everywhere.
+
+       (2) **THERE IS NO BUNDLE COLUMN ON `observation_log`** — read the schema,
+       not remembered. `#bundleGate(col, viewer)`, this plane's ONE SQL bundle
+       gate, REQUIRES a qualified column holding a `bundle_id` and THROWS on
+       anything else. The bundle here is reachable only through
+       `#observationBundles`' kind-dependent switch over `register`, `bundles` and
+       `capture_requests`, with `run` DELEGATED to `aiRunLog`. Writing that in SQL
+       IS the second implementation REC-92 refused and REC-110's row forbids
+       outright — so the SQL route is not merely expensive, it is unavailable.
+
+       (3) **APPLYING THE ONE RESOLVER PER ROW IS THE AMPLIFICATION CLASS THE
+       ESTATE ALREADY INSTRUMENTS AGAINST.** `#observationBundles` issues one to
+       three indexed SELECTs per row; running it over every row at a level puts a
+       per-row scan inside an unbounded one — `derivation-bounds.test.mjs`'s class
+       exactly (*a LINEAR read over an unbounded scan is NOT in the class; this
+       class is amplification, not size*). `frontier` is ALREADY on that file's
+       named list of five methods that LEGITIMATELY hold an unbounded scan while
+       publishing a bound, passing byte-identically at baseline. Gating by the one
+       resolver moves it OUT of the blessed form and INTO the refused one.
+
+       (4) **COUNTING THIS PAGE'S STATES INSTEAD is a silent value change inside
+       an unchanged envelope** — IC-118's rule, *a correct consumer becomes wrong
+       without changing a line* — and a tally that starts refusing where it
+       answered is a BREAK on IC-25 whatever the measured impact.
+
+       **AND THE DESIGNED CONSUMER WANTS A VIEWER-INDEPENDENT NUMBER.** The
+       schema's own index comment on `observation_log_tally` says *THE TALLIES are
+       the per-level counts a completeness statement is computed from*, and §6 /
+       D-196 publishes that statement WITH THE SIGNED CASE. A viewer-dependent
+       tally would make a signed completeness claim depend on who computed it —
+       two signings of one case disagreeing about what was searched.
+       **AND THIS ARGUMENT'S STRENGTH IS STATED EXACTLY RATHER THAN ROUNDED UP,
+       BECAUSE CHECKING IT WEAKENED IT.** Item 4 IS built (REC-96, IC-112) — but
+       `searchedSection` in `airun.mjs` takes its `levels` FROM THE CALLER and
+       does not read this tally at all, so **NO LIVE CONSUMER DEPENDS ON THE
+       TALLY'S VIEWER-INDEPENDENCE TODAY.** It is design intent carried by the
+       schema's own index comment, NOT a caller that would break. Recorded at its
+       true weight: it CORROBORATES the ruling and does not carry it. The ruling
+       rests on (1)–(4) above, each a fact about the code on this tree.
+
+       **THE RESIDUAL, STATED RATHER THAN HIDDEN, because D-386 did not name it
+       and it is the honest cost of ruling (a):** this tally is FINER than
+       `op=stats` — it decomposes by level and by state where `stats` gives one
+       whole-table number. That decomposition is genuinely not obtainable
+       elsewhere. What it still does not disclose is any read of the WITHHELD SET,
+       which is what REC-36's fence protects: the tally counts every row at the
+       level while `looked` is the latest row per subject cut at `limit`, so the
+       gap between them is not diagnostic of withholding, and it names no bundle,
+       no subject and no address. **If that decomposition is ever judged to be the
+       leak, the answer is to REOPEN THIS RULING — not to gate the field quietly,
+       which `observation-log.test.mjs` section J now makes impossible.** */
     return { level: "document", found: true, built: true, limit: cap,
              /* THE CUT AND THE CLAIM AGREE, and both disjuncts compare against
                 collections this method actually pages — CONDUCT #11's correction of

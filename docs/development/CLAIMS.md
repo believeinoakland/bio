@@ -12515,3 +12515,69 @@ paths:
   **NOT `bio-plane/src/`** — REC-119 and REC-116 are in it and nothing this row builds reaches the plane.
 
 **open as of 2026-09-17.**
+## CLAIM 2026-09-17 RECORD (REC-110 — D-386: the frontier's `tally` is ungated at all three levels)
+
+**THE RULING IS (a), TAKEN RATHER THAN RETURNED: THE TALLY STAYS UNGATED, AND IT IS PINNED SO THE
+NEXT READER MEETS THE DECISION RATHER THAN THE DEFECT.** REC-103 wrote both arguments into D-386
+and declined to decide, which was correct; that judgement is inherited and not re-litigated. What
+this claim reserves is the three tally SITES and the three suites that pin them.
+
+**THE FINDING THAT DECIDED IT, VERIFIED AT THE ARTIFACT AND NOT CARRIED FROM D-386:** `op=stats`
+already publishes `observations` — `count(*)` over the WHOLE `observation_log`, every level — and
+`aiRunLog`, its `authority_kind = 'run'` slice. `op=stats` and `op=frontier` are classed
+**IDENTICALLY** in `index.mjs`: `["admin", "member", "probe"]`. Same audience, same table, coarser
+count, already ruled ungated with its reason at the site. Gating here leaves a fence with a
+documented hole beside it and makes two ops answer differently about one fact.
+
+**AND THE SECOND FINDING, WHICH IS WHY NO ROUTE TO GATING WAS AVAILABLE: `observation_log` HAS NO
+BUNDLE COLUMN.** `#bundleGate(col, viewer)` REQUIRES a qualified column holding a `bundle_id` and
+THROWS on anything else. The bundle is reachable only through `#observationBundles`' kind-dependent
+switch over `register`, `bundles` and `capture_requests`, with `run` DELEGATED to `aiRunLog`. So
+the SQL route IS the second implementation this row forbids outright, and the per-row route puts an
+amplifying scan inside an unbounded one — `derivation-bounds.test.mjs`'s own class, which already
+NAMES `frontier` among the five methods that legitimately hold an unbounded scan while publishing a
+bound. **No resolver is implemented twice by this row, because no resolver is implemented at all.**
+
+**A GAP THIS ROW FOUND THAT D-386 DID NOT NAME: the posture was stated at ONE of the three sites.**
+The document arm carries the reasoning; `#frontierContent` and `#frontierMeaning` carry an
+identical ungated aggregate with NOTHING beside it, so a reader arriving at either met the defect
+rather than the decision — the precise condition this row exists to end.
+
+**paths, METHOD-SCOPED:**
+- `bio-plane/src/store.mjs` — **BY SITE, THREE TALLY BLOCKS AND NOTHING ELSE, COMMENT-ONLY**: the
+  `tally` block inside `frontier` (the document arm), the `tally` block inside `#frontierContent`,
+  and the `tally` block inside `#frontierMeaning`. **No executable byte of this file changes.**
+  **NOT** `#versionCollections` (REC-119's region), **NOT** any new read op (REC-116's), **NOT**
+  `#observationBundles`, `#frontierDocumentVisible`, `#bundleGate` or `#bundleRedactor` — the gate
+  is correct and this row is forbidden to spell it a second time.
+- `bio-plane/test/observation-log.test.mjs` — a new section J appended (the document pin), plus
+  this row's arms added to the file's `NEGATIVE CONTROL:` line. No existing assertion weakened.
+- `bio-plane/test/observation-content.test.mjs` — a new section J appended (the content pin).
+- `bio-plane/test/observation-meaning.test.mjs` — a new section J appended (the meaning pin).
+- `bio-plane/test/nc-rec110.mjs` — new, the negative-control driver.
+- `bio-plane/dist/**` — REBUILT, because a COMMENT-ONLY plane-source change still moves the bundle
+  (REC-100's measurement: it is unminified and retains comments), and `fleetbundles.test.mjs` goes
+  red on a stale one.
+- `docs/development/DEBT.md` — **D-386's disposition only.**
+- `docs/development/OBSERVATION-LOG-DESIGN.md` — §6, where the ruling is recorded for the next
+  session, and the front matter that `corpuscheck` enforces.
+- `docs/development/CLAIMS.md` (this block), `docs/DECIDED.md` on regeneration.
+
+**NOT CLAIMED AND DELIBERATELY NOT TOUCHED:** `docs/development/INTERFACES.md` and
+`INTERFACE-CHANGES.md` — **I3 IS UNCHANGED IN SHAPE and no IC is minted, because the tally's
+answers DO NOT MOVE.** The row says "I3 if the tally's answers move"; they do not, and minting an
+IC for a change that does not exist burns an id and creates a resolution obligation nobody owes.
+Recorded as unchanged on decomposition item 1's own precedent. `docs/development/QUEUE.md` is
+CONDUCT's sole writer and is not flipped by this worker. `civicos-ui/**`, `tools/**`, `newgroup/**`.
+
+**open as of 2026-09-17.**
+
+**AMENDED 2026-09-17 (same worker, REC-110): `docs/development/MEASUREMENTS.md` ADDED to the paths
+above, appended rows only.** The item produced a measurement it is obliged to record: a COMMENT-ONLY
+plane-source change moves the bundle MANIFEST's input record and leaves the emitted bundle
+BYTE-IDENTICAL, because the bundler strips comments — checked at the artifact (the added text is
+present once in `src/store.mjs` and 0 times in `dist/bio-plane.bundled.mjs`). This QUALIFIES the
+Traps entry that says such a change *still moves `dist/`*: the remedy is unchanged and correct, the
+stated mechanism is one step off, and a session expecting an artifact diff would chase a build
+problem that does not exist. Recording a number with its date and instrument is a standing
+obligation rather than a widening of this claim.

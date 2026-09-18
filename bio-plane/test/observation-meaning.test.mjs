@@ -1,3 +1,24 @@
+/* NEGATIVE CONTROL: (declared and RUN 2026-09-17, REC-110 / D-386, worktree
+   agent-adcd3110010904330) FOUR arms over section J's pin — `node test/nc-rec110.mjs
+   [arm|all]`, which drives THIS suite on every arm as well as the document and content
+   suites, because REC-110's ruling is ONE ruling at THREE sites. The full declaration is at
+   the head of `observation-log.test.mjs` and is deliberately not restated here. Baseline
+   both ends for THIS suite: 74 pass / 0 fail.
+   (a) `gate` (b) `bound` (c) `unsay` — all three arm sites ONE LEVEL OVER and this suite is
+       GREEN under every one of them. **That is reported as a RESULT and not as a gap**: it
+       is the evidence those arms are local to the site they patch, which is what makes
+       `break only the thing` true here rather than asserted.
+   (d) `overstrict` — the tally's VALUES changed legitimately: GREEN, 74/0.
+   **THE FINDING THIS SUITE CONTRIBUTED, AND IT CORRECTED THE ITEM'S OWN ASSUMPTION RATHER
+   THAN ITS CODE.** J0 and J4 were first written as the DOCUMENT level's arms — *the DENY
+   caller receives NO rows* — and BOTH FAILED, 1 looked and 2 never_looked. The cause is
+   neither a leak nor a defect: `#frontierMeaning` DELIBERATELY DOES NOT GATE AN ENTITY,
+   REC-95's decision stated at the site and raised to be ruled rather than inherited. **The
+   assumption that three levels fence alike is the thing that was wrong**, and the arms were
+   CORRECTED to the measured truth rather than loosened until they passed — a loosened J0
+   would have silently pinned a fence nobody had checked. J0 is now kind-scoped to the two
+   kinds this level actually gates, and J4 asserts that `by_subject_kind` MUST follow the
+   reader, because pinning it invariant beside `tally` would pin a leak into place. */
 /* NEGATIVE CONTROL: (declared 2026-09-15, REC-95, worktree agent-aa10d195065b703e8) SIX arms,
    RUN in one step through `node test/nc-rec95.mjs [arm]` (the driver lives INSIDE this worktree),
    each armed ALONE with every other defence held open, each DECLARED must-fail or must-not-fail
@@ -942,6 +963,99 @@ t("H6: and every set this function can return is a SUBSET of the published vocab
      (m.missing_unexplained || []).some((r) => r.subject_kind === "entity"
                                             && r.missing_cause === "purged")],
     [true, true, false]);
+}
+
+/* ===================================================================== *
+ * J · REC-110 / D-386 — THE `tally` IS UNGATED ON PURPOSE AT THIS LEVEL TOO,
+ *     AND THIS IS THE LEVEL WHERE THE SILENCE COST MOST.
+ *
+ * **THIS SITE CARRIED NO STATEMENT AT ALL UNTIL REC-110.** REC-103 stated the
+ * posture at the DOCUMENT arm alone. Here that gap was worst: two of this
+ * level's three subject kinds have ONE-SIDED pre-log evidence (§5.1), so a
+ * reader at `#frontierMeaning` is ALREADY being asked to hold a careful
+ * distinction about what an absence means — and an unexplained ungated
+ * aggregate sitting beside that is the worst place in the file to leave a
+ * decision unrecorded. The reasoning itself is at the document arm and is
+ * deliberately not restated: one rule with three spellings is mirror-and-drift.
+ *
+ * AND THE SCOPE OF THE RULING IS PINNED AS NARROWLY AS THE RULING ITSELF, which
+ * matters here and at no other level: `by_subject_kind` is a PROJECTION OF
+ * `looked`, so it moves with the viewer and with the bound BY CONSTRUCTION. It
+ * is gated because the list it projects is gated, and it is NOT part of D-386.
+ * J4 asserts that difference, because a future reader who pins *the meaning
+ * level's counts do not follow the reader* one field too wide would be pinning
+ * a leak into place — the over-strictness direction of this row.
+ * ===================================================================== */
+{
+  const T = (f) => Object.values(f.tally || {}).reduce((a, b) => a + b, 0);
+  const J = (f) => JSON.stringify(f.tally || {});
+
+  const machine = await DO("frontier", `level=meaning&viewer=class:member&limit=500`);
+  const nobody  = await DO("frontier", `level=meaning&limit=500`);
+
+  /* THIS ARM IS KIND-SCOPED, AND THAT IS A CORRECTION THIS RUN FORCED RATHER
+     THAN A REFINEMENT. It was first written as the DOCUMENT level's arm —
+     *the DENY caller receives NO rows at all* — and it FAILED, 1 looked and 2
+     never_looked. The cause is not a leak and not a defect: `#frontierMeaning`
+     DELIBERATELY DOES NOT GATE AN ENTITY, REC-95's decision stated at the site
+     (*the subject registry is instance-wide and `op=concerns` already serves an
+     entity to any reader … a fence here and nowhere else would be tighter than
+     its rule*), and REC-95 raised it to be ruled rather than inherited. **THE
+     ASSUMPTION THAT THREE LEVELS FENCE ALIKE IS THE THING THAT WAS WRONG**, and
+     the arm is corrected to the measured truth instead of being loosened until
+     it passed — which would have silently pinned a fence this suite never
+     checked. So the data arm is aimed where withholding ACTUALLY happens at
+     this level: the CAPTURE and REFERENCE kinds. */
+  t("J0: THE ARM IS ARMED AGAINST THE DATA, AND IT IS KIND-SCOPED BECAUSE THIS LEVEL'S FENCE IS "
+  + "— the DENY caller receives NOT ONE capture row and NOT ONE reference row, the two kinds "
+  + "`#frontierMeaning` gates, while the entitled viewer receives some. (An ENTITY row is "
+  + "ungated BY REC-95'S STATED DECISION, not by omission, so it is excluded here rather than "
+  + "asserted away.) Without this, J1 is an equality between answers that were never different",
+    [(nobody.looked || []).filter((r) => r.subject_kind === "capture").length,
+     (nobody.looked || []).filter((r) => r.subject_kind === "reference").length,
+     (machine.looked || []).filter((r) => r.subject_kind !== "entity").length > 0,
+     T(machine) > 0],
+    [0, 0, true, true]);
+
+  t("J1: THE RULING, DRIVEN THROUGH THE OP — a caller DEMONSTRABLY denied every capture and "
+  + "every reference row at this level (J0) still receives a "
+  + "`tally` BYTE-IDENTICAL to the entitled viewer's. It counts every row at this level and does "
+  + "not follow the reader. D-386 RULED (a) by REC-110, reasoning at the document arm in "
+  + "`store.mjs`. **BOTH TALLIES ARE IN THE TUPLE ON PURPOSE**: gate this later and the failure "
+  + "prints the withheld tally beside the full one, because a failure naming one is unactionable",
+    J(nobody), J(machine));
+
+  const at1   = await DO("frontier", `level=meaning&viewer=class:member&limit=1`);
+  const at500 = await DO("frontier", `level=meaning&viewer=class:member&limit=500`);
+  t("J2: …AND IT DOES NOT FOLLOW THE BOUND EITHER — the arm against D-386's OTHER refused route, "
+  + "*count this page's states*, which moves every viewer together and walks straight past J1. "
+  + "The same viewer at `limit=1` and `limit=500` gets the same tally while the page really is "
+  + "cut; the cut length is in the tuple so this cannot pass over a bound that never bit",
+    [J(at1), at1.looked.length <= 1, at500.looked.length > 1],
+    [J(at500), true, true]);
+
+  t("J3: AND THE DECISION IS AT THIS SITE — `#frontierMeaning`'s tally names REC-110 and D-386 "
+  + "and POINTS at the document arm rather than restating it. A session that gated the field "
+  + "would delete this comment too, so the arm reads the SOURCE and not only the answer",
+    [/REC-110, 2026-09-17, D-386 CLOSED/.test(
+       SRC.store.slice(SRC.store.indexOf("#frontierMeaning(cap, viewer"))),
+     /level = 'meaning' GROUP BY state/.test(SRC.store)],
+    [true, true]);
+
+  /* J4 — THE OVER-STRICTNESS ARM, AND IT IS THE ONE THAT MATTERS MOST HERE.
+     The ruling is about `tally` and about NOTHING ELSE. `by_subject_kind` is a
+     projection of the GATED `looked`, so it MUST move with the reader — pinning
+     it invariant alongside `tally` would pin a leak into place, and it is the
+     mistake a reader who skims J1 is most likely to make. */
+  t("J4: OVER-STRICTNESS — THE RULING IS ABOUT `tally` AND NOTHING ELSE. `by_subject_kind` is a "
+  + "PROJECTION of the gated `looked`, so it DOES follow the reader and MUST: the DENY caller "
+  + "sees ONLY the `entity` kind (the one this level does not gate), where the entitled viewer "
+  + "sees more than one. **A pin that held this invariant alongside `tally` would be pinning a "
+  + "leak into place**, which is the mistake a reader who skims J1 is most likely to make, so "
+  + "the arm asserts the DIFFERENCE rather than trusting nobody will widen it",
+    [Object.keys(nobody.by_subject_kind || {}).sort().join(","),
+     Object.keys(machine.by_subject_kind || {}).length > 1],
+    ["entity", true]);
 }
 
 } catch (e) {

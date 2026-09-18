@@ -27,7 +27,6 @@
 - §4.2 / §4.3 — **the per-capture `indexed` state is only half answerable until REC-91 lands.** §4.2 says the state is *"this row read through the index's own predicate"*, and the index is `capture_text` (`CONTENT-SEARCH-DESIGN.md` §4.1), which does not exist. Two of §4.4's four states ARE answerable from the observation alone and are answered; the middle two need the unit index, and the read returns a FIFTH value — undetermined, stated, naming what it waits on — rather than collapsing them into *none*. The design should say which of its states are claims about EXTRACTION and which about the INDEX, because they are not the same axis and this item had to separate them to answer honestly.
 - §6 row 1 — **DISCHARGED 2026-09-16 by REC-103 (IC-105 on I3, PROPOSED BREAKING 17.0.0 → 18.0.0), and the design was right: the landing was one arm short of it and now is not.** REC-94 measured `Store#frontier` accepting a `viewer` its document arm never read; REC-103 DROVE what that cost before building anything, because the row admitted both outcomes. **It was a leak and not a dead parameter, through three writers at once:** ratify writes `authority = bundleId`, so an uninvited member read **the project bundle id verbatim**; `result_ref` named a capture registered to that project, which is `op=contentaxis`' own disclosure by an op that gates it; and the `deferred` partition published that capture sha as `from_document`. The absent stamp was answered in full. The fence is now applied ROW-WHOLE over every bundle-scoped referent a document-level row carries — the back-reference, a ratify or link authority, a run's `context_id`, a sweep's capture request — with an unattributable referent withholding the row, and the resolver INVERTED so a tenth `authority_kind` is refused by default rather than waved through by omission. **§6's sentence needs no change; what it needs is for its last unfenced arm to be gone, and it is.**
 - §6 row 1 vs §7 — **THE TWO CANNOT BOTH BE SATISFIED FOR A MEMBER AFTER A PER-BUNDLE PURGE, AND REC-103 TOOK THE FAIL-CLOSED ONE RATHER THAN RESOLVING IT SILENTLY.** §7 says *a `result_ref` to a PURGED capture is annotated at read time (`purged`), never rewritten*. A per-bundle purge clears `register` — it is in `purge`'s own TABLES list, measured not assumed — so after one the capture cannot be attributed to a bundle, and §6's row-whole withholding then withholds the row from **every identified session, admins included**. The annotation survives for the machine credential, which is the operator path it was written for, and the item's own `machine` control arm is what proved that: `#bundleRedactor` already carves out a machine credential for the RESOLVABLE path, so the document arm's carve-out is load-bearing **only** for the unresolved one. **§7 should say who its annotation is for**, or §6 should say that an unattributable back-reference is redacted rather than withholding the row — and that second reading is available and was NOT taken, because it would put two rules on one question one method apart from `#frontierContent`, which withholds.
-- §5 / §6 — **THE `tally` IS UNGATED AT ALL THREE LEVELS AND THE DESIGN DOES NOT SAY WHETHER IT SHOULD BE.** Raised by REC-103 as **D-386** with both arguments and a recommendation rather than decided by a worker. It counts every row at a level while `looked` is the latest row per subject cut at `limit`, so the two have never been comparable and REC-30's *total of an enumeration* rule does not obviously bite; but the number does move when a project the caller cannot see is looked at, and REC-103 has just put a fence beside it. §6's reader table names what each read ANSWERS and is silent on what its aggregates may disclose.
 - §4.5 — the internet level's authored writer (a member's lead, D-194) is Program B's design; only the column is here.
 - §6 — the member-facing frontier surface is Program B's; this document names what it reads and not what it looks like.
 - §7 — **DISCHARGED 2026-09-14 by REC-93 as M-14.** The sweep-volume measurement was named and not taken; it is now taken over COFF-6's census corpus (43,283 keys, anonymous `ListObjectsV2`, no credential and no body downloaded) and **it CONFIRMS the edge-triggered rule**: the naive rule writes 43,283 rows/day (15,798,295 a year) and the edge rule writes **15.14 rows/day** over the 2,859-day span — a **2,859x** reduction, 0.0350% of the naive volume — with a **2,713-row busiest day** that is what the table is actually sized on. The figure is a FLOOR and is labelled as one: `LastModified` keeps only the latest write per key, deletions are invisible to a listing, and a byte-identical rewrite still moves the timestamp. Instrument: `tools/measure-office-corpus.py sweepvolume`.
@@ -212,6 +211,73 @@ This is the one place the design had the defect it was written to prevent, and i
 | the run's log | unchanged, through `op=airunlog` | §4.4 |
 | **the completeness statement's `searched` section** (D-196) | at case signing: which levels were searched for the case's subjects, under which authorities, with which outcomes and where each stopped — computed from the log, published with the case, the first thing behind a completeness claim that is not prose | an addition to the case document's completeness block (C-41.10); the format `bio-case-document/1` is signed, so the addition is an IC on I3 and a format minor |
 | the member-facing surface | what the group has looked for and what it found, by level; where a lead stands | Program B — not rowed here |
+
+**THE `tally` IS UNGATED AT ALL THREE LEVELS, AND THAT IS NOW A RULING RATHER THAN A POSTURE —
+REC-110, 2026-09-17, D-386 CLOSED (a).** This table said what each read ANSWERS and was silent on
+what its aggregates may DISCLOSE, which is the gap D-386 named; this paragraph closes it. REC-103
+wrote both arguments and declined to decide, which was correct — it is a disclosure ruling, not an
+implementation choice — and that judgement is inherited rather than re-litigated.
+
+**THE RULING, AND THE FOUR THINGS CHECKED THAT COULD HAVE REFUTED IT.** Each was verified at the
+artifact rather than carried from D-386, and each is named so a later session RE-DRIVES it instead
+of re-deriving it: **if any one of them stops being true, this ruling is the thing to reopen.**
+
+1. **The channel is already open through a door of identical width, by a ruling already taken.**
+   `op=stats` publishes `observations` — `count(*)` over the whole table, every level — and
+   `aiRunLog`, its `authority_kind = 'run'` slice, with its reason at that site: *the log is the
+   coverage record and its size is an operator fact, while what any single row was looking for is
+   not*. `op=stats` and `op=frontier` are classed **IDENTICALLY** in `index.mjs`:
+   `["admin", "member", "probe"]`. Gating the tally while `op=stats` answers the same question to
+   the same audience is a fence with a documented hole beside it, and makes two ops answer
+   differently about one fact — the mirror-and-drift class.
+2. **`observation_log` has no bundle column.** `#bundleGate(col, viewer)` requires a qualified
+   `bundle_id` column and THROWS on anything else; the bundle is reachable only through
+   `#observationBundles`' kind-dependent switch over `register`, `bundles` and `capture_requests`,
+   with `run` DELEGATED to `aiRunLog`. **So the SQL route is not merely expensive — it IS the
+   second implementation of the resolver that REC-92 refused**, and REC-110's row forbids outright.
+3. **The one resolver applied per row is the amplification class the estate already instruments
+   against.** `derivation-bounds.test.mjs` already NAMES `frontier` among the five methods that
+   LEGITIMATELY hold an unbounded scan while publishing a bound (*a LINEAR read over an unbounded
+   scan is NOT in the class; this class is amplification, not size*). Gating by the one resolver
+   moves it out of the blessed form into the refused one.
+4. **Counting this page's states instead** is a silent value change inside an unchanged envelope —
+   IC-118's rule, *a correct consumer becomes wrong without changing a line* — and a tally that
+   starts refusing where it answered is a BREAK on IC-25 whatever the measured impact.
+
+**AND THE DESIGNED CONSUMER WANTS A VIEWER-INDEPENDENT NUMBER.** The schema's own index comment on
+`observation_log_tally` says *the TALLIES are the per-level counts a completeness statement is
+computed from*, and this section's own D-196 row publishes that statement **with the SIGNED case**.
+A viewer-dependent tally would make a signed completeness claim depend on who computed it — two
+signings of one case disagreeing about what was searched.
+
+**AND THE STRENGTH OF THAT ARGUMENT IS STATED EXACTLY RATHER THAN ROUNDED UP, because checking it
+weakened it.** Item 4 IS built (REC-96, IC-112) — but `searchedSection` in `airun.mjs` takes its
+`levels` FROM THE CALLER and does not read this tally at all. **So no live consumer depends on the
+tally's viewer-independence today**, and this is DESIGN INTENT carried by the schema's own index
+comment, not a live caller that would break. It is recorded here at its true weight: it corroborates
+the ruling and does not carry it. The ruling rests on points 1–4 above, each of which is a fact about
+the code on this tree.
+
+**THE RESIDUAL, STATED RATHER THAN HIDDEN, because D-386 did not name it and it is the honest cost
+of (a):** the tally is FINER than `op=stats` — it decomposes by level and by state where `stats`
+gives one whole-table number, and that decomposition is genuinely not obtainable elsewhere. What it
+does not disclose is any read of the WITHHELD SET, which is what §6's row-whole fence protects: the
+tally counts every row at a level while `looked` is the latest row per subject cut at `limit`, so
+the gap between them is not diagnostic of withholding, and it names no bundle, no subject and no
+address. **If that decomposition is ever judged to be the leak, REOPEN THIS RULING — do not gate
+the field quietly.** An undocumented change of mind on a disclosure question is the thing REC-110
+existed to prevent, and section J of all three observation suites now makes one fail loudly.
+
+**A GAP D-386 ITSELF DID NOT NAME, AND IT WAS HALF THE WORK.** The posture was recorded at ONE of
+the three sites. `#frontierContent` and `#frontierMeaning` carried an identical ungated aggregate
+with NOTHING beside it, so a reader arriving at either met the defect rather than the decision —
+one method away from where that was being prevented. All three now carry it, with the two derived
+arms POINTING at the document arm rather than restating it, because one rule with three spellings
+is the mirror-and-drift class this plane refuses for gates.
+
+**I3 IS UNCHANGED IN SHAPE AND NO IC WAS MINTED**, because the tally's answers do not move — proven
+rather than asserted: block comments stripped from both HEAD and the landing hash identically
+(`19cdc8d2bbecf173`, 945,145 B).
 
 ## 7. Lifecycle, purge and growth
 

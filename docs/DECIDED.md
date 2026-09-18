@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1046 rulings across 85 documents.
+1049 rulings across 85 documents.
 
 ## DEC-
 
@@ -556,6 +556,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1196`
 - **D-383** — NOT SETTLED BY THIS BUMP, named so an ACCEPTED interface is not read as a settled design:** **D-383** — `op=meaningrows&rows=leg` publishes a leg's AUTHORED letter uncapped, the pre-REC-105 read surviving in a surface nobody swept, **which corrects REC-105's own census recording that letter as unreachable through…  
   `docs/development/INTERFACE-CHANGES.md:8257`
+- **D-386** — THE FINDING THAT DECIDED IT, VERIFIED AT THE ARTIFACT AND NOT CARRIED FROM D-386:** `op=stats` already publishes `observations` — `count(*)` over the WHOLE `observation_log`, every level — and `aiRunLog`, its `authority_kind = 'run'` slice.  
+  `docs/development/CLAIMS.md:12525`
 - **D-386** — accepts-when: the tally's behaviour is DECIDED with its reasoning at the site, and whichever way it goes is DRIVEN — if gated, a viewer who cannot see rows gets a total that excludes them, driven end to end; if left ungated, an assertion PINS that it is ungated ON PURPOSE with the reason, so the next reader meets…  
   `docs/development/QUEUE.md:1725`
 - **D-388** — WHICH FILES ARE GOVERNED WAS NOT DECIDED HERE.** The row put that with CORPUS-STANDARD and Bob; the three files the walk found unclassified are LISTED with the question each poses and routed as D-388, not assigned a class.  
@@ -1008,6 +1010,10 @@ authority is the file named, never this one.
   `docs/development/DEBT.md:323`
 - **REC-109** · 2026-09-16 — TWO ARMS CORRECTED THE WORKER'S REASONING RATHER THAN ITS CODE:** `overfetch` was declared structural-only and behaviourally invisible, and actually failed three arms — **at a bound of 2 an uninvited member got TWO ROWS WHILE ENTITLED TO THREE and was told the list was complete**, so the over-fetch protects the…  
   `docs/development/QUEUE.md:1710`
+- **REC-110** · 2026-09-17 — AMENDED 2026-09-17 (same worker, REC-110): `docs/development/MEASUREMENTS.md` ADDED to the paths above, appended rows only.** The item produced a measurement it is obliged to record: a COMMENT-ONLY plane-source change moves the bundle MANIFEST's input record and leaves the emitted bundle BYTE-IDENTICAL, because the…  
+  `docs/development/CLAIMS.md:12575`
+- **REC-110** · 2026-09-17 — CLOSED 2026-09-17 by REC-110 — RULED (a), AND THE INTERIM POSTURE IS NOW A DECISION.** Raised by REC-103 2026-09-16, which wrote both arguments and declined to decide: correct, and inherited rather than re-litigated.  
+  `docs/development/DEBT.md:321`
 - **REC-111** · 2026-09-16 — AMENDED 2026-09-16 by REC-111 — §4.3's OWED UNIT-COUNT BOUND IS BUILT, AND THE ROW'S OWN PREMISE WAS HALF WRONG, WHICH IS THE finding worth more than the bound.** *A container whose units are many and small is bounded by nothing this design specifies* is true of THIS DOCUMENT and false of the SYSTEM: M-35 measured…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:9`
 - **REC-112** · 2026-09-17 — IT CORRECTED MY BRIEF AND THE CORRECTION MATTERS: I told it the index was the ONLY surviving evidence of intent, and that was HALF WRONG** — the intent also lives in the delegation, in `airuns.test.mjs`'s roster comment, and in a **by-name pin at `airuns.test.mjs:675`.  

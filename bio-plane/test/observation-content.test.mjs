@@ -1,3 +1,23 @@
+/* NEGATIVE CONTROL: (declared and RUN 2026-09-17, REC-110 / D-386, worktree
+   agent-adcd3110010904330) FOUR arms over section J's pin — `node test/nc-rec110.mjs
+   [arm|all]`, which drives THIS suite on every arm as well as the document and meaning
+   suites, because REC-110's ruling is ONE ruling at THREE sites and an arm that ran one
+   suite would call the other two levels pinned without looking. The full declaration, with
+   what each arm must and must not fail, is at the head of `observation-log.test.mjs` and
+   is deliberately not restated here. Baseline both ends for THIS suite: 74 pass / 0 fail.
+   (a) `gate` — the document tally gated: this suite GREEN (the arm is one level over, and
+       that it does not fire here is the evidence the arm is local).
+   (b) `bound` — the document tally narrowed to the bound: this suite GREEN, same reason.
+   (c) `unsay` — the ruling DELETED from `#frontierContent`'s tally, behaviour untouched:
+       **content J3 FAILS**, as declared. This is the arm this suite owes the estate — the
+       row's requirement is that the next reader meets the DECISION, so a pin watching only
+       behaviour would pass over a site that quietly stopped saying why.
+   (d) `overstrict` — the tally's VALUES changed legitimately, no gating and no narrowing:
+       GREEN, 74/0. The pin asserts invariance across reader and bound, never a number.
+   J0 IS WHAT MAKES J1 WORTH ANYTHING HERE, and this level supplies the sharpest form of it
+   in the estate: section G has already driven a member withheld from a REAL capture
+   (`SHA_PROJ`) BY NAME, so J1 is not *two viewers happen to agree* but *a viewer provably
+   denied a row still receives the count that includes it*. */
 /* NEGATIVE CONTROL: (declared 2026-09-15, REC-94, worktree agent-aca2a5e9a42abc8fa) SIX arms,
    RUN in one step through `node test/nc-rec94.mjs [arm]` (the driver lives INSIDE this worktree),
    each armed ALONE with every other defence held open, each DECLARED must-fail or must-not-fail
@@ -891,6 +911,76 @@ const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private proje
        .test(SRC.store),
      /truncated: page\.length > cap \|\| missing\.length > cap/.test(SRC.store)],
     [true, false]);
+}
+
+/* ===================================================================== *
+ * J · REC-110 / D-386 — THE `tally` IS UNGATED ON PURPOSE AT THIS LEVEL TOO.
+ *
+ * **THIS SITE CARRIED NO STATEMENT AT ALL UNTIL REC-110, AND THAT IS THE GAP
+ * D-386 DID NOT NAME.** REC-103 stated the posture at the DOCUMENT arm alone,
+ * so a reader who arrived at `#frontierContent` met an identical ungated
+ * aggregate over a table whose rows this very file proves are withheld
+ * row-whole (section G), with nothing beside it saying why — the *reader meets
+ * the defect rather than the decision* condition, one method away from where it
+ * was being prevented.
+ *
+ * THE REASONING IS IN `store.mjs` AT THE DOCUMENT ARM and is deliberately not
+ * restated here or there: one rule with three spellings is the mirror-and-drift
+ * class. THE ARMS ARE WHAT THIS FILE OWES — a decided-not-to-act outcome is
+ * worth exactly what its pin is worth.
+ *
+ * AND THIS LEVEL GIVES THE SHARPEST ARM IN THE ESTATE FOR IT, which is why the
+ * pin lives here as well as at the document level rather than only there:
+ * section G has already DRIVEN a member who is withheld from a REAL capture
+ * (`SHA_PROJ`) by name. So J1 below is not *two viewers happen to agree* — it
+ * is *a viewer provably denied a row still receives the count that includes
+ * it*, which is the ruling stated as an experiment.
+ * ===================================================================== */
+{
+  const T = (f) => Object.values(f.tally || {}).reduce((a, b) => a + b, 0);
+  const J = (f) => JSON.stringify(f.tally || {});
+
+  const mAll = await DO("frontier", `level=content&viewer=class:member&limit=500`);
+  const nAll = await DO("frontier", `level=content&viewer=member:not-invited&limit=500`);
+
+  t("J0: THE ARM IS ARMED AGAINST THE DATA, NEVER AGAINST THE FLAG — the uninvited member is "
+  + "REALLY being withheld from a REAL capture here (`SHA_PROJ`, by name, section G's fixture) "
+  + "and really receives fewer rows than the entitled viewer. Without this, J1 is an equality "
+  + "between two answers that were never different — the costs-nothing rule, and REC-94's leak "
+  + "passed a flag-only arm for exactly this reason",
+    [nAll.looked.length < mAll.looked.length,
+     JSON.stringify(nAll.looked).includes(SHA_PROJ),
+     JSON.stringify(mAll.looked).includes(SHA_PROJ),
+     T(mAll) > 0],
+    [true, false, true, true]);
+
+  t("J1: THE RULING, DRIVEN THROUGH THE OP — a member DEMONSTRABLY denied a row (J0) still "
+  + "receives a `tally` BYTE-IDENTICAL to the entitled viewer's, because it counts every row at "
+  + "this level and does not follow the reader. D-386 RULED (a) by REC-110; the reasoning is at "
+  + "the document arm in `store.mjs`. **BOTH TALLIES ARE IN THE TUPLE ON PURPOSE: if a later "
+  + "session gates this, the failure prints the withheld tally beside the full one**, because a "
+  + "failure naming one is a failure a reader cannot act on",
+    J(nAll), J(mAll));
+
+  const at1   = await DO("frontier", `level=content&viewer=class:member&limit=1`);
+  const at500 = await DO("frontier", `level=content&viewer=class:member&limit=500`);
+  t("J2: …AND IT DOES NOT FOLLOW THE BOUND EITHER — D-386's option (b) had a SECOND spelling, "
+  + "*change what the field counts to this page's states*, which moves every viewer together and "
+  + "so walks straight past J1. What it cannot walk past is the bound: the same viewer at "
+  + "`limit=1` and `limit=500` gets the same tally while the page really is cut. The cut length "
+  + "is in the tuple so this cannot pass over a bound that never bit",
+    [J(at1), at1.looked.length <= 1, at500.looked.length > 1],
+    [J(at500), true, true]);
+
+  t("J3: AND THE DECISION IS AT THIS SITE, which is the half of this row that was missing — "
+  + "`#frontierContent`'s tally now names REC-110 and D-386 and POINTS at the document arm for "
+  + "the reasoning rather than restating it. An assertion that the field is ungated is only half "
+  + "a pin: a session that gated it would delete the comment too, so the arm reads the SOURCE",
+    [/REC-110, 2026-09-17, D-386 CLOSED/.test(
+       SRC.store.slice(SRC.store.indexOf("#frontierContent("),
+                       SRC.store.indexOf("#frontierMeaning("))),
+     /level = 'content' GROUP BY state/.test(SRC.store)],
+    [true, true]);
 }
 
 /* ===================================================================== *
