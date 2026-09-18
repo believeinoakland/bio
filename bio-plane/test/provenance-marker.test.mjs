@@ -530,7 +530,17 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
      one instrument that could report it unavailable. That is the worse
      direction, and it is the same argument `safeJson`'s entry makes one
      construct over. */
-  const CEILING = 26;
+  /* MOVED 26 -> 27 BY REC-126, 2026-09-18, FROM THE FIGURE THIS WALK PRINTED,
+     and the new site was LOOKED AT: `#reviewGates`, the review copy's dry run of
+     the publish gates. It runs `publishCase` inside `transactionSync` and THROWS
+     A PRIVATE SENTINEL to force the rollback — the Durable Object's SQL API has no
+     other way to undo a transaction — and the catch RETHROWS every value that is
+     not that sentinel (`if (e !== Store.#ROLLBACK) throw e`). Nothing is smoothed:
+     a real failure inside the gates propagates exactly as it would from
+     `op=publish`, and the only thing caught is the rollback this method threw
+     itself. It is the class's shape by syntax and not by meaning, which is why
+     it is admitted here with its reason rather than rewritten to hide from the walk. */
+  const CEILING = 27;
   t(`swallowed reads in store.mjs are at or below the ratchet (${found.length} of ${CEILING})`,
     found.length <= CEILING, true);
 

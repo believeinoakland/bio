@@ -937,9 +937,21 @@ console.log("\n--- 8. the record commits what was SIGNED: `cases` and the member
      this item creates no draft state and the condition CASE-1 named for
      revisiting the exemption ("if a later item lets a case exist as a DRAFT
      before publication") has not been met. */
+  /* CORRECTED 2026-09-18 (REC-126), NOT EXEMPTED. The regex was anchored on
+     `publishCase(` — ANY occurrence, which read the method's DEFINITION only while
+     nothing else in store.mjs CALLED it. REC-126's review copy calls it (the dry run
+     of the publish gates, rolled back), and from that call site the ratify
+     committer's `INSERT INTO cases` sits within the window, so the arm went red over
+     a publishCase that still writes no `cases` row. It now anchors on the
+     DEFINITION's own signature, which is what it always meant. And CASE-1's
+     condition is re-read rather than assumed: the review copy's DRAFT lives in
+     `case_drafts` (purged), never in `cases`, so a case still does not exist as a
+     draft in `cases` and the exemption stands. */
   t("`op=publish` WRITES NO `cases` ROW — the row is the ratify committer's, which is why CASE-1's "
   + "stated purge exemption is undisturbed and `purge` is untouched by this item",
-    /publishCase\([\s\S]{0,40000}?INSERT INTO cases/.test(STORE_SRC), false);
+    /\n {2}publishCase\(\{ target = null[\s\S]{0,40000}?INSERT INTO cases/.test(STORE_SRC), false);
+  t("and the corrected anchor still FINDS the definition — an anchor that matched nothing would pass the arm above "
+  + "for free", /\n {2}publishCase\(\{ target = null/.test(STORE_SRC), true);
 }
 
 /* ========= 9. the design doc is the expectation, PARSED rather than restated */

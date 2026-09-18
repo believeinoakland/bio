@@ -499,7 +499,11 @@ t("D-240 (e) THE UNCLASSIFIED RESIDUAL IS NAMED AND CEILINGED, and CROSS-CHECKED
 t("D-240 (f) THE DECLARED REFUSALS THAT SPREAD A STORE RESULT ARE PINNED BY SITE — they are outside "
 + "this detector's subject because they cannot report a success, and saying so with the sites is what "
 + "keeps that a measurement rather than an assumption",
-  A_CENSUS.refusalSpreadingResult.length <= 2, true);
+  /* MOVED 2 -> 3 on 2026-09-18 by REC-126: `op=reviewgrant`'s refusal branch
+     (`issued`) is `op=aicredentialmint`'s (`minted`) shape exactly — the read
+     secret is generated at the edge and the store's refusal is spread under a
+     LITERAL `ok: false`, so it cannot report a success. Named here, not absorbed. */
+  A_CENSUS.refusalSpreadingResult.length <= 3, true);
 
 const bBad = detectB(SRC);
 t(`DETECTOR B — no answer takes its reason or error from a fallback over a Durable Object value `

@@ -238,6 +238,8 @@ const stateOf = async (id) =>
 const MACHINE_OPS = ["release", "conclude", "reopen", "publish", "actionmove", "actioncorrespond",
                      "inquirydivide", "inquiryground", "strengthbar", "versionaccept",
                      "taskforward", "taskresolve",
+                     /* REC-126 / C-32.16: the review copy's draft act. */
+                     "casedraft",
                      /* `select` is not one of the twelve. It is here because a
                         selection is readable ONLY by the credential that made
                         it (`owner` is server-stamped, `class:ai` for this one),
@@ -625,14 +627,41 @@ const fence = (code, payload, machineAnswer) => {
   t("  and the SAME payload resolves it for the signed-in assignee", [rr.ok, rr.status], [true, "resolved"]);
 }
 
+/* -------------------------------------------------------- (xiii) REVIEW */
+{
+  /* REC-126 / C-32.16. The review copy's authoring acts refuse a machine before
+     anything else, because the act is ADDRESSED and ATTRIBUTED (§6A.2). The
+     payload is one the project's OWNER succeeds with two lines below — a project
+     she owns and every argument `op=publish` would take — so only the credential
+     can be what refuses it. The fence also stands at the top of `reviewgrant` and
+     `reviewrevoke`; `casedraft` is the governed region and the one driven here,
+     and `reviewcopy.test.mjs` drives the grant's fence by name. */
+  const REV_PRJ = await makePublishingProject({
+    post: POST, mf, sha, machineToken: "adm-rec73", owner: "ruth",
+    id: "PROJ-2026-7300-review", created: NOW, updated: LATER });
+  const BODY = { project: REV_PRJ, targets: ["INQ-2026-7300-review"], roles: { "INQ-2026-7300-review": "load_bearing" },
+    scope: "Whether the transfer was authorised.", statement: "This draft covers the transfer only.",
+    excluded: [], subjectPosition: "sought_and_answered", subjectJustification: "We asked and printed the answer.",
+    biasAcknowledgement: "This group holds that transfers should be adopted in public." };
+  const m = await POST(`op=casedraft&token=${AI}`, BODY);
+  fence("MACHINE_CANNOT_REVIEW",
+    "a project the member OWNS and every argument op=publish would take — the payload the owner drafts "
+    + "with on the next line",
+    codeOf(m));
+  const r = await POST(`op=casedraft&token=${RUTH}`, BODY);
+  t("  and the SAME payload drafts the case for the signed-in owner",
+    [r.ok, typeof r.draftId, r.project], [true, "string", REV_PRJ]);
+}
+
 /* ====================================================================== 3
  * THE SWEEP AND THE COMPLETENESS ARM.
  * ==================================================================== */
 console.log("\n--- 3. the driven set IS the harvested set: a thirteenth fence cannot arrive unmeasured ---");
 {
   const drivenCodes = DRIVEN.map((d) => d.code).sort();
-  t("(twelve acts were actually driven — the guard before the equality, because two empty sets are "
-  + "equal and prove nothing)", drivenCodes.length, 12);
+  /* MOVED 12 -> 13 on 2026-09-18 by REC-126 (C-32.16 MACHINE_CANNOT_REVIEW, block xiii). */
+  t("(thirteen acts were actually driven — the guard before the equality, because two empty sets are "
+  + "equal and prove nothing)", drivenCodes.length, 13);
   t("EVERY MACHINE_CANNOT_* the plane can mint was driven under a COMPLETE payload",
     HARVEST.filter((c) => !drivenCodes.includes(c)), []);
   t("and nothing was driven that the plane does not mint", drivenCodes.filter((c) => !HARVEST.includes(c)), []);

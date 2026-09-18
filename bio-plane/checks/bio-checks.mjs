@@ -8964,6 +8964,21 @@ export const MACHINE_FENCE_CHECKS = {
       + 'asked here is one of the operator\'s access tokens for this copy, not a person, and a valid '
       + 'signature does not change that. Sign in as the member whose key signed it and ratify it there.',
   },
+  /* REC-126 / DEC-31 / IC-145 — THE REVIEW COPY's three authoring acts (draft,
+     grant, revoke) share ONE fence, because they are one doctrine: the act is
+     ADDRESSED and ATTRIBUTED (`BIO_Publication_v0_1.md` §6A.2), so the record
+     must name the person who handed the group's draft to somebody. One row; the
+     governed region is `caseDraft`'s, and `reviewGrant` / `reviewRevoke` carry the
+     same literal in front of their own acts (machine-fences.test.mjs requires each
+     site to shadow the payload complaints behind it). */
+  MACHINE_CANNOT_REVIEW: {
+    check: 'C-32.16',
+    where: 'src/store.mjs caseDraft > is-machine-review',
+    translation: 'Handing a draft of the group\'s case to a named person, or withdrawing it, is an act '
+      + 'somebody in the group answers for, and the record names who did it. The credential that asked '
+      + 'here is an automated one: it can help prepare the draft, and it cannot address it to anyone. '
+      + 'Sign in to do this yourself.',
+  },
 };
 
 /* =========================================================================

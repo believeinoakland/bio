@@ -7,7 +7,7 @@
 **Incomplete sections** ·
 - §5 — the ceremony (UI-17) and the preflight (REC-15) are DEFERRED on DEC-33's trigger; the section says what they are, that UI-18 has landed (the trigger's first clause), that the second is unmet by measurement, and when the rows reopen (decided 2026-09-14).
 - §6 — the certification and persistence divergences are named and unmade. **ADDRESSING IS NO LONGER DEFERRED: DEC-31's trigger fired 2026-09-17 and §6A is its design.**
-- §6A — the review copy is RULED and DESIGNED at doctrine level and NOTHING IS BUILT. The scoped revocable read-and-comment GRANT is specified by its properties and has no surface, no op and no schema; whether it reuses the existing capability vocabulary or needs its own construct is UNDECIDED. The member-facing statement at the export act is specified and unbuilt.
+- §6A — the review copy is RULED and DESIGNED, and its PLANE HALF IS BUILT (REC-126, IC-145/IC-146, 2026-09-18): the draft case, the grant with its hashed per-grant read secret, revocation, the edition binding, the comment, and the missing-list taken from the publish gates' own refusal — see §4. What is NOT built: the SURFACE (delegated to UI, `CLAIMS.md` REC-126 → UI); the member-facing statement at the export act (§6A.3 point 2), which belongs to that surface; and the missing-list names the gates' FIRST refusal only, because `publishCase` stops at its first (stated in every copy as undetermined beyond it). The capability-vocabulary question is answered by the build: the grant is its OWN construct (a table and a secret), not a capability token. **DESIGN GAP, running provisionally:** §6A does not say WHO may issue or revoke a grant or author a draft; the plane runs it at the project OWNER (DEC-72's publisher, the sibling act's authority, no administrator bypass) — the narrowest reading, widened later by one predicate if Bob rules wider.
 - §7 — the attribution levels are ruled and have no surface; the catalogue of standards by audience and output act is owed and does not exist; both are Program B's.
 - §8 — the risk tiers are half-built: the UI writes placeholder values that satisfy the check (D-182); stated, not fixed here.
 
@@ -64,6 +64,17 @@ Three consequences give the construct its shape. The record must be able to prov
 ## 4. What is built
 
 - **The acts and the reads** (`index.mjs`): `publish` (the state act, REC-14), `ratify`, `caseratify` (the case-document signing ceremony, CASE-5b), `caseflags`, `casedocument`, `publishedcase`, `publishedbytes` (with the container form), `publishedmanifest`, `verify`, `basisversions`, `versionchain`, `affordances`; `export` is refused via a session because the public record needs no credential. **`casedocument` has two halves (REC-130 / IC-141, 2026-09-18, BOB #14 applying the publication fence of 2026-07-31):** a RATIFIED case document answers anybody, because it is what a stranger verifies; an UNSIGNED one is working material and answers only to standing in the owning project (D-15's predicate over that project), while every other caller — anonymous, a member of another project, a machine credential outside scope — gets byte for byte the answer a case id that does not exist gets, so walking the sequential case ids learns nothing. `caseratify`'s facts read carries the same rule.
+- **The review copy, plane half (REC-126 / IC-145 / IC-146, 2026-09-18 — §6A):** `casedraft` (the DRAFT CASE, the
+  publish arguments held under an id before any gate runs; mutable; the edition read from the published record),
+  `reviewgrant` (a grant bound to one draft AND one case edition, attributed to its issuer and recipient; its READ
+  SECRET generated at the control plane and stored only as a SHA-256), `reviewrevoke`, `reviewcopy` (the copy,
+  MARKED, never signed, with each finding's document, the authored arguments, the comments, and `missing` — the
+  publish gates' own refusal, obtained by running `publishCase` inside a transaction that is always rolled back)
+  and `reviewcomment` (a recipient's comment stored as a recipient's). The last two are UNGATED and answer every
+  caller without a live grant or standing with ONE byte-identical refusal; a grant is dead when revoked AND when its
+  draft moves to another edition. `casedocument` admits a live grant holder to the unsigned document of exactly the
+  bound edition — §6A.2's precondition's second party. Authoring, issuing and revoking run at the project OWNER,
+  provisionally (front matter). The machine fence is C-32.16.
 - **The checks** (`bio-checks.mjs`): C-18.9 the fence (three distinct refusal codes for an absent, malformed or empty chain); C-21.1 the completeness gate (statement and acknowledgement fresh per edition); C-21.2 inheritance per axis; C-41.1–.12 the case-document family; C-2.8 the published-state entry requirements (edition ≥ 1, `published_strength` on both axes, grounds per branch); C-3.1 the required headings; C-29.1 the store's refusal of a machine stamp.
 - **The projection and the fence, structurally**: the `published_*` tables and the `PUBLISHED` bucket, a second store the public path reads and nothing writes except the publish act; the installer creates the bucket. The fence across GROUPS is not yet structural — one account's instances share one bucket today (`MULTI-INSTANCE-ISOLATION.md` row 2).
 - **The surfaces**: O2, the published case (UI-18); the public verification surface (UI-35/36/37/40 — including the correction that a plane refusal must never render as a substantive negative); the DEC-33 placeholder entry point (UI-17a).
@@ -174,7 +185,7 @@ Evidence packages are classified in three tiers — file freely; file with cauti
 | attribution levels; off-the-record sources | RULED 2026-09-14; no surface (Program B) |
 | the catalogue of standards by audience and output act | OWED (§5.5 of the D-164 study); does not exist |
 | certification and persistence divergences | unmade |
-| addressed delivery | DEFERRED (DEC-31); the in-band rule binding |
+| addressed delivery | RULED 2026-09-17 (§6A) — the review copy's PLANE HALF BUILT (REC-126); its surface delegated to UI; the in-band rule binding on any export |
 | the completeness statement's search record | DESIGNED (`OBSERVATION-LOG-DESIGN.md` §6, D-196); not built |
 | risk tiers | half-built and dishonest (D-182) |
 | the directory (Function 3) and cross-group discussion (Function 1) | selection recorded in `BIO_Communications_Platforms.md`; no built surface serves the directory |
