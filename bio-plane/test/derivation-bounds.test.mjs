@@ -220,6 +220,34 @@
    the arm that says M0-40 chose not to do something rather than failed to see it**: the
    correction is available, it is one substitution, and what it costs is a ceiling falling by
    twenty-one methods, which is a decision about what the class MEANS and not a worker's.
+   (That decision was made — BOB #14, 2026-09-18 — and M0-63 made the correction; arms (18)-(23)
+   and `test/nc-m040.mjs` are kept as the record of the classifier BEFORE it, and their declared
+   outcomes no longer describe this file. `nc-m040.mjs` still arms and restores cleanly.)
+
+   NEGATIVE CONTROL: (run 2026-09-18, M0-63 worker, D-384 ENACTED) `cd bio-plane && node test/nc-m063.mjs`
+   — FIVE arms, each armed ALONE, each part asserted to match exactly once, `store.mjs` (2,341,184 B)
+   and this file restored from pristine copies verified by sha256 AND `cmp`, 0 copies left behind,
+   CLOSING baseline equal to OPENING. BASELINE ROW: **72/0, class 24 (walk 14 + 10 admitted)**.
+   **HOW A LIAR WOULD SATISFY THIS ROW, stated first:** delete the credit and re-pin every roster at
+   whatever count falls out — 37 -> 14, twenty-three departures unexamined, and the helper-hidden
+   per-row reads of the ten that STAY silently lost with them. Arms (1) and (4) are what refuse that.
+   (1) THE HEADER CREDIT RE-ADDED (`inBody` -> `inLoop` in `perRowScan`): **62/10, walk 37** — the
+   CEILING, the ops pin, HOIST-FRAGILE-is-empty, the all-of-store hoist parity, the admitted-are-
+   not-walk-seen check, the worked example, both roster pins, `ncLinearInline` and the per-row
+   fixtures (which then count TWO scans per row, header and body) all RED, each naming its members.
+   (2) `ncLinearInline` FLIPPED BACK IN (its pin's want set to `[true, false]`): **71/1**, the
+   `ncLinearInline` line alone.
+   (3) OVER-CORRECTION (`perRowScan = 0`, every per-row scan dropped): **66/6, walk 13** — the
+   FLOOR, the roster pins, the body/inner-header fixtures and `ncPerRow` RED by name. So a genuine
+   per-row scan in a loop BODY is still IN, and `ncLinear` stays OUT under both (1) and (3).
+   (4) AN ADMISSION'S AMPLIFICATION REMOVED from the SUBJECT (`#citesInto`'s per-row
+   `#refEdgeSevered` call replaced by `false`): **71/1**, the admission check naming `#citesInto`.
+   A STAYS entry is held by the call it names, not by its old membership.
+   (5) A DEPARTED MEMBER REGAINS A REAL PER-ROW SCAN (a `#rows(` in `#queueRenotifyWake`'s loop
+   body): **67/5, walk 15** — the CEILING, the LEAVES-is-out check and both roster pins name it.
+   **One failure more than declared, and named:** HOIST-STABLE also gains it, because the method
+   has an inline row source AND now a body amplification — the (19a) shape, the declaration
+   incomplete and not the instrument.
 */
 /* REC-66 · D-224 / D-227 — THE BOUND ON THE DERIVATION, AND THE WALK FOR ITS CLASS.
  * ============================================================================
@@ -420,7 +448,19 @@ const analyse = (body) => {
      be called one; that is an over-strictness arm below. */
   const nested = [...body.matchAll(/\b(?:for|while)\s*\(/g)].filter((x) => inLoop(x.index)).length;
   const writes = [...body.matchAll(/this\.sql\.exec\(/g)].filter((x) => inLoop(x.index)).length;
-  const perRowScan = sc.filter((s) => inLoop(s.from)).length;
+  /* D-384, ENACTED BY M0-63 (2026-09-18, BOB #14's ruling): A SCAN PER ROW IS A SCAN IN A LOOP'S
+     BODY, NEVER ONE IN ITS OWN HEADER. A scan written in `for (… of this.#rows(…))` is that loop's
+     ROW SOURCE and runs exactly ONCE; crediting it as a scan per row graded where the call was
+     written rather than what it costs, and it held 23 of 37 memberships (the HOIST-FRAGILE block
+     below dispositions every one BY NAME). A loop's BODY begins after its header for a `for`, and
+     after the call's own `(` for a callback form. A scan in an INNER loop's header still counts for
+     the OUTER loop whose body it lies in — that one does run per row, and an over-strictness
+     fixture below pins it. `inLoop` keeps the whole extent for `nested`, `writes` and the taint:
+     the ruling removed one credit, and nothing else here was re-graded. */
+  const bodyFrom = (L) => /^for\b/.test(body.slice(L.from, L.from + 3))
+    ? closeParen(body, L.from) : body.indexOf("(", L.from) + 1;
+  const inBody = (i) => loops.some((L) => i >= bodyFrom(L) && i < L.to);
+  const perRowScan = sc.filter((s) => inBody(s.from)).length;
   return { scans: sc.length, unbounded: unbounded.length, tainted: [...tainted],
            loops: loops.length, nested, writes, perRowScan, amplified: nested + writes + perRowScan };
 };
@@ -445,14 +485,125 @@ const dispatchedOps = (code) => {
 const CODE = decomment(SRC_STORE);
 const SEGMENTS = segments(CODE);
 const CLASS = classMembers(CODE);
+
+/* ============================ D-384 ENACTED (M0-63, 2026-09-18) — EVERY MEMBER THE HEADER CREDIT
+ * HELD, DISPOSITIONED BY NAME. The ruling is BOB #14's and is not re-opened here: the class keeps
+ * its definition — AMPLIFICATION over an UNBOUNDED scan, not size — and the header credit goes.
+ *
+ * THE POPULATION WAS 23, NOT THE 22 THE ROW CARRIED, AND THE DIFFERENCE IS NAMED. Measured on this
+ * tree off `HOIST_FRAGILE_2026_09_16` and the suite's own printed roster, and the same 23 on
+ * `d3ac7ae9`: M0-40's 21, REC-96's `#searchedForCase` (2026-09-17) AND REC-116's
+ * `provenanceRoutesMarked`. The row counted REC-116's arrival and not REC-96's. Removing the credit
+ * takes the walk 37 -> 14, and the 23 departures are exactly those 23 names — no arrival.
+ *
+ * EACH MEMBER WAS READ, NOT RE-SCORED, and the two lists below are the verdicts. A member STAYS
+ * only with its amplification NAMED: a per-row read the walk cannot see, because it happens in a
+ * HELPER (this walk reads one method at a time — see the header) or in a callback form it does not
+ * follow. It LEAVES when what the credit was counting was a row source read ONCE, or when its
+ * per-row work runs over a LIMIT-bounded, PUBLISHED page — real work, but bounded work, which is
+ * REC-60's question and not this class's. **Three members REC-93/94/95 admitted for helper-hidden
+ * per-row reads — `frontier`, `#frontierContent`, `#frontierMeaning` — LEAVE, and that is the
+ * finding the reading produced rather than a loss:** their own admissions (the movement notes above
+ * the ratchet) state that the scan UNDER the per-row reads is `LIMIT`-bounded at the published
+ * `FRONTIER_LIMIT_MAX`. The walk never saw those reads at all; what held all three in the class was
+ * the `tally` GROUP BY written in a `for` header — a row source read once.
+ *
+ * A STAYS entry is not taken on its word. Each carries the per-row call AS WRITTEN (`site`), which
+ * must still occur in the member's comment-stripped segment, and the helpers it names must still
+ * reach a read within three calls. Move the call and the admission reds and must be re-examined —
+ * which is the property this row exists for: no membership held by say-so. */
+const D384_STAYS = [
+  { name: "#citesInto", site: `this.#refEdgeSevered(r.bundle_id, id, "cites")`, helpers: ["#refEdgeSevered"],
+    amplification: "per citing row, #refEdgeSevered reads the citer's bundle.md and parses its "
+      + "frontmatter — `refs` drops the withdrawal status, so it can only be read from the document (D-267)" },
+  { name: "#conditionsCaptureRequested", site: "case: this.#conditionHomes([r.target], viewer),",
+    helpers: ["#conditionHomes", "#queueOptions"],
+    amplification: "per captured request, #conditionHomes walks ancestors (#queueAncestors: up to "
+      + "QUEUE_ANCESTOR_DEPTH rounds, each node two unbounded edge scans and a document read per edge) "
+      + "and #queueOptions runs affordanceFacts per subject" },
+  { name: "#conditionsCaptureUnattended", site: "case: this.#conditionHomes([b.bundle_id], viewer),",
+    helpers: ["#conditionHomes", "#queueOptions"],
+    amplification: "per machine-authored bundle, three #one reads of manifest and bundles, then the "
+      + "same #conditionHomes ancestor walk and #queueOptions" },
+  { name: "#conditionsGovernorHolding", site: "const subj = this.#conditionBundlesForHost(r.host, viewer);",
+    helpers: ["#conditionBundlesForHost", "#conditionHomes", "#queueOptions"],
+    amplification: "per host in cool-off, a captured_locators x register scan for the host's bundles, "
+      + "then #conditionHomes' ancestor walk and #queueOptions over up to QUEUE_OPTION_SUBJECTS_MAX of them" },
+  { name: "#conditionsPartialCapture", site: "case: this.#conditionHomes(bundleId ? [bundleId] : [], viewer),",
+    helpers: ["#conditionHomes", "#queueOptions"],
+    amplification: "per live capture session, a register read, then #conditionHomes' ancestor walk "
+      + "and #queueOptions" },
+  { name: "#findingsOutOfInquiryLead", site: "const basisEntry = this.#leadBasisAbsence(r.capture_sha);",
+    helpers: ["#leadBasisAbsence", "#queueAncestors", "#queueOptions"],
+    amplification: "per captured lead, #leadBasisAbsence's four reads, a bundles read, the "
+      + "#queueAncestors walk and #queueOptions" },
+  { name: "#queueAncestorEdges", site: "!this.#refEdgeSevered(id, nodeId, rel)", helpers: ["#refEdgeSevered"],
+    amplification: "per basis and per citing row, `consider` reads the citer's document through "
+      + "#refEdgeSevered — and this method is itself called per node per round by #queueAncestors" },
+  { name: "#restsOnLive", site: "(this.#caseRelationOf(r.bundle_id).member ? frozen : confirmed)",
+    helpers: ["#caseRelationOf", "#refEdgeSevered", "#caseClaimInBytes"],
+    amplification: "per basis leg, #refEdgeSevered's document read and #caseRelationOf — two reads "
+      + "PLUS #caseClaimInBytes, itself an UNBOUNDED scan of every unsigned case document, parsed: a "
+      + "scan per row, the quadratic shape this class exists for" },
+  { name: "#routeTask", site: "kinds.every((k) => this.#refEdgeSevered(pid, bundleId, k || null))",
+    helpers: ["#refEdgeSevered"],
+    amplification: "per citing project edge, #refEdgeSevered's document read, inside a `.find` — a "
+      + "callback form this walk does not follow. It stops at the first live citer, so the read is paid "
+      + "once per consecutively-withdrawn citer ahead of it (D-280's own note)" },
+  { name: "queueFeed", site: "for (const inst of p.instances)", helpers: ["proposalsFeed", "#queueAncestors", "#queueOptions"],
+    amplification: "per proposal — proposalsFeed's output, itself derived over an unbounded scan and "
+      + "in this class — one progression_instances scan per instance, and #queueAncestors and "
+      + "#queueOptions per proposal; it also composes #findingsOutOfInquiryLead and the four "
+      + "#conditions* producers, whose per-row reads stay above" },
+];
+const D384_LEAVES = [
+  { name: "#caseClaimInBytes", why: "one pass over unsigned case documents parsing each row's OWN text — "
+      + "linear, no read per row. Where it IS amplified is named: #restsOnLive reaches it once per leg" },
+  { name: "#frontierContent", why: "every per-row read (#frontierVerification, the register read in "
+      + "`seen`, #missingContentCause) runs over a LIMIT-bounded page under the published "
+      + "FRONTIER_LIMIT_MAX; its unbounded scans — the index-state read over the page's own subjects and "
+      + "the tally GROUP BY — are each read ONCE. REC-94's admission states the bound itself" },
+  { name: "#frontierMeaning", why: "the same shape: #frontierVerification and #missingMeaningCause per "
+      + "row over a (cap+1)*3 page and three LIMIT cap+1 scans; the only unbounded scan is the tally, "
+      + "read ONCE. REC-95's admission states the bound itself" },
+  { name: "#monitorCadencePlan", why: "one linear pass over monitored bundles, arithmetic per row" },
+  { name: "#queueMutes", why: "one linear pass, a parse of each row's own column" },
+  { name: "#queueRenotifyWake", why: "one linear pass computing a minimum" },
+  { name: "#searchedForCase", why: "every scan is batched per chunk of 50 subjects (linear in "
+      + "statements), and the per-subject cause reads run over capList, capped at the published "
+      + "SEARCHED_SUBJECT_MAX. The classifier scored REC-96's batching HIGHER than the per-subject draft; "
+      + "that was the header credit, and it is gone" },
+  { name: "auditPass", why: "its per-row work (readImage, checkBundle, an inquiry_basis read and "
+      + "earnedBasisRegistry per bundle) iterates a LIMIT-bounded page (cap <= 1000, published); the "
+      + "unbounded `known` set is built once and used as a lookup, and the route-mark scan is read once" },
+  { name: "danglingRefs", why: "its own body is one anti-join, returned. Its membership was the NEXT "
+      + "segment's: `*eachImage` is a generator the segmenter's signature regex cannot see, so its "
+      + "header scan was credited here. eachImage does read an image per bundle, and has no caller in "
+      + "src/ — the segmenter gap is D-414" },
+  { name: "earnedBasisRegistry", why: "one pass folding the union scan into a Map, then one pass over "
+      + "the Map — linear, no read per row. REC-88's worked example: inline and hoisted now agree" },
+  { name: "frontier", why: "#frontierVerification and a register read per row over a LIMIT-bounded "
+      + "page under the published FRONTIER_LIMIT_MAX; the only unbounded scan is the tally GROUP BY, "
+      + "read ONCE. REC-93's own admission: \"the scan underneath it is LIMIT-bounded\"" },
+  { name: "provenanceRoutesMarked", why: "its page is LIMIT-bounded and its census is ONE GROUP BY — "
+      + "linear; the correlated MAX(seq) in it is work INSIDE SQL, which this walk states it cannot see, "
+      + "and no row is read again in JS. REC-116's note that the census puts it in this class was the "
+      + "header credit speaking" },
+  { name: "publishedCaseRegistryFor", why: "one pass folding editions per case, a parse per row" },
+];
+const ADMITTED = new Map(D384_STAYS.map((s) => [s.name, s]));
+/* THE CLASS IS THE WALK'S MEMBERS AND THE ADMITTED ONES, and the ceiling below grades the union —
+   a member the walk cannot see is still a member, and it is named, not counted into a hole. */
+const CLASS_ALL = new Set([...CLASS.keys(), ...ADMITTED.keys()]);
 const DISPATCHED = dispatchedOps(CODE);
 const SCANNING = [...SEGMENTS].filter(([, b]) => scans(b).some((s) => !s.bounded)).length;
-const CLASS_OPS = [...DISPATCHED].filter(([, meth]) => CLASS.has(meth))
+const CLASS_OPS = [...DISPATCHED].filter(([, meth]) => CLASS_ALL.has(meth))
   .map(([op, meth]) => `${op}->${meth}`).sort();
 
 console.log("\n--- WALK: every method that DERIVES over an unbounded scan (REC-66's class) ---");
 console.log(`  CORPUS: store.mjs ${SRC_STORE.split("\n").length} lines, ${SEGMENTS.size} method segments, `
-          + `${SCANNING} scanning UNBOUNDED, ${CLASS.size} in the class, reaching ${CLASS_OPS.length} of `
+          + `${SCANNING} scanning UNBOUNDED, ${CLASS_ALL.size} in the class (${CLASS.size} by the walk + `
+          + `${ADMITTED.size} admitted by name), reaching ${CLASS_OPS.length} of `
           + `${DISPATCHED.size} DISPATCHED ops`);
 for (const [name, a] of CLASS)
   console.log(`    ${name.padEnd(30)} unbounded=${a.unbounded} loops=${a.loops} `
@@ -741,32 +892,40 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    removing the rule it was sent to build is a ratchet being read as a rule about
    numbers rather than about work. The figure moved; the order stayed.
    THE FIGURE IS TAKEN FROM THIS ARM'S OWN FAILURE OUTPUT (`35 methods derive
-   over an unbounded scan`), never by adding one to the number in the file. */
-const CLASS_MEASURED_2026_08_08 = 37;
-console.log(`  RATCHET: ${CLASS.size} methods derive over an unbounded scan, `
-          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196), moved to 37 on 2026-09-17 by REC-116 (the arrival is provenanceRoutesMarked, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for 39 days). REC-116'S ARRIVAL IS LEGITIMATE AND THE REASON IS WORTH THE LINE: its PAGE is bounded and uses an index on both columns, but its CENSUS deliberately is not — a GROUP BY over every standing row, because a finding-equals-one count can only report what it was told to look for and a third finding arriving in that table would be silently missing from the assessed count. Inverting the question costs the census the index and puts the method in this class, and that trade was taken deliberately rather than discovered. THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work`);
+   over an unbounded scan`), never by adding one to the number in the file.
+
+   37 -> 24, 2026-09-18 by M0-63 (D-384 ENACTED, BOB #14's ruling). NOT an arrival or a
+   departure of work: the header credit left `perRowScan`, the walk fell 37 -> 14, and the 23
+   members it had held were READ one by one — TEN STAY, admitted by name with the per-row read
+   the walk cannot see (`D384_STAYS`, beside `CLASS` above), and THIRTEEN LEAVE with the reason
+   each was never amplification over an unbounded scan (`D384_LEAVES`). 14 + 10 = 24, and this
+   figure now grades the WALK AND THE ADMITTED TOGETHER (`CLASS_ALL`). Several movement notes above
+   describe arrivals that have since LEFT — `frontier`, `#frontierContent`, `#frontierMeaning`,
+   `#caseClaimInBytes`, `#searchedForCase`, `provenanceRoutesMarked`, `auditPass` — and they are
+   kept as the record of what each item believed the walk had caught; `D384_LEAVES` says what it
+   had actually caught. The figure is this arm's own output, not arithmetic on the old one. */
+const CLASS_MEASURED_2026_08_08 = 24;
+console.log(`  RATCHET: ${CLASS_ALL.size} methods derive over an unbounded scan (${CLASS.size} seen by the walk, ${ADMITTED.size} admitted by name), `
+          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196), moved to 37 on 2026-09-17 by REC-116 (the arrival is provenanceRoutesMarked, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for 39 days). REC-116'S ARRIVAL IS LEGITIMATE AND THE REASON IS WORTH THE LINE: its PAGE is bounded and uses an index on both columns, but its CENSUS deliberately is not — a GROUP BY over every standing row, because a finding-equals-one count can only report what it was told to look for and a third finding arriving in that table would be silently missing from the assessed count. Inverting the question costs the census the index and puts the method in this class, and that trade was taken deliberately rather than discovered. THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work. MOVED 37 -> 24 on 2026-09-18 by M0-63 (D-384 enacted: the for-header credit left perRowScan; 14 seen by the walk + 10 admitted BY NAME with their helper-hidden per-row reads; 13 left, each named with its reason in D384_LEAVES)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
 + "this over the figure measured on 2026-08-08 and fails here, with the roster printed above so the "
 + "failure names it",
-  CLASS.size <= CLASS_MEASURED_2026_08_08, true);
+  CLASS_ALL.size <= CLASS_MEASURED_2026_08_08, true);
 t("RATCHET: and a FLOOR beside it — the roster shrinking without this figure being moved means the "
 + "READER lost sight of methods, not that the plane got better. REC-60's 27 was a shrunken "
 + "measurement nobody could distinguish from progress, and it went unnoticed for two days",
-  CLASS.size >= CLASS_MEASURED_2026_08_08, true);
+  CLASS_ALL.size >= CLASS_MEASURED_2026_08_08, true);
 t("RATCHET: the dispatched members are pinned BY NAME, not merely counted — a bare count of ten is "
 + "satisfied by ANY ten, and what a caller can reach is the half that matters",
-  CLASS_OPS, ["audit->auditPass", "biasmanifest->biasManifest", "export->exportManifest",
-              /* REC-93: the observation log's frontier read. Pinned BY NAME here
-                 and not merely counted, which is this arm's whole point — the
-                 ceiling moving by one says "something arrived", and only the
-                 name says WHAT. */
-              "frontier->frontier",
+  /* M0-63 (D-384): THREE DISPATCHED MEMBERS LEFT, each named with its reason in `D384_LEAVES` —
+     `audit->auditPass`, `frontier->frontier` (REC-93's arrival) and
+     `provenanceroutes->provenanceRoutesMarked` (REC-116's). All three do their per-row work over
+     a LIMIT-bounded, published page; what held them was a row source in a `for` header. And
+     `queue->queueFeed` STAYS as an ADMITTED member: the walk no longer sees its amplification,
+     and `D384_STAYS` names it. This pin reads the union, because what a caller can reach is the
+     half that matters whichever instrument saw it. */
+  CLASS_OPS, ["biasmanifest->biasManifest", "export->exportManifest",
               "proposals->proposalsFeed",
-              /* REC-116: the standing-marker roster. Its PAGE is bounded; its
-                 CENSUS is the unbounded scan that puts it in this class, and
-                 that is a stated trade rather than an oversight — see the
-                 movement note above the ceiling. */
-              "provenanceroutes->provenanceRoutesMarked",
               "publishedcase->publishedCase", "queue->queueFeed", "readingname->documentsNamingEntity",
               "reevaluations->reevaluations", "select->selectionCreate", "selection->selectionResolve",
               "selectionrelease->selectionRelease"]);
@@ -817,6 +976,10 @@ t("RATCHET: the dispatched members are pinned BY NAME, not merely counted — a 
  * question, and it is `DEBT.md` D-384's, not this block's. Naming them is what makes that
  * question askable at all: before this, nothing in the estate could say which memberships were
  * spelling-held.
+ *
+ * SETTLED 2026-09-18 (BOB #14 ruled, M0-63 enacted): the credit is gone and the classifier is
+ * NO LONGER byte-identical to what this block describes — see `perRowScan`. The population was 23
+ * by then, and each member's verdict is in `D384_STAYS` / `D384_LEAVES` beside `CLASS`.
  * ====================================================================================== */
 
 /* REC-88's HOIST, RECONSTRUCTED AS A TRANSFORM AND DRIVEN — not described. Every `for…of`
@@ -866,76 +1029,113 @@ t("M0-40: the hoist partition is TOTAL over the class and disjoint — a member 
    new Set([...HOIST.fragile, ...HOIST.stable, ...HOIST.noInlineSource]).size],
   [CLASS.size, CLASS.size, CLASS.size]);
 
-/* THE ARM THE ROW EXISTS FOR, AND IT IS BY NAME BECAUSE A COUNT IS WHAT FAILED REC-88.
-   The floor above fires on `34 of 35` and says nothing about WHICH method the reader lost.
-   This roster names every membership a hoist can take away, so the failure reads
-   `earnedBasisRegistry left`. Moving it means naming the arrival or the departure, exactly as
-   the ceiling's own comments demand — and an ARRIVAL here is a new method written in the
-   spelling, which is a fact worth knowing even though it grades nothing. */
+/* THE POPULATION D-384 DISPOSITIONED, KEPT AS THE RECORD. M0-40 pinned this roster so the
+   question "do these belong in the class?" was askable at all; M0-63 answered it, member by
+   member, in `D384_STAYS` and `D384_LEAVES` beside `CLASS` above. It is no longer what the hoist
+   produces — with the header credit gone the hoist moves NOTHING (asserted below) — so it is
+   pinned here as the population the two lists must partition exactly, and nowhere else. */
 const HOIST_FRAGILE_2026_09_16 = [
   "#caseClaimInBytes", "#citesInto", "#conditionsCaptureRequested", "#conditionsCaptureUnattended",
   "#conditionsGovernorHolding", "#conditionsPartialCapture", "#findingsOutOfInquiryLead",
   "#frontierContent", "#frontierMeaning", "#monitorCadencePlan", "#queueAncestorEdges",
   "#queueMutes", "#queueRenotifyWake", "#restsOnLive", "#routeTask",
-  /* REC-96, 2026-09-17 — the arrival is NAMED as this roster's own comment demands.
-     `#searchedForCase` writes its row sources inside `chunked()` callbacks, which is
-     the spelling this classifier is sensitive to. */
+  /* REC-96, 2026-09-17 — the arrival the M0-63 row's count of 22 missed; the population is 23. */
   "#searchedForCase", "auditPass",
   "danglingRefs", "earnedBasisRegistry", "frontier",
-  /* REC-116, 2026-09-17 — the arrival is NAMED as this roster's own comment demands.
-     `provenanceRoutesMarked` writes its census row source in the loop's own HEADER
-     (`for (const r of this.#rows(...))`), which is exactly the spelling M0-40
-     measured this classifier is sensitive to. The inline shape is KEPT rather than
-     hoisted, on REC-88's precedent: hoisting it would move the method out of the
-     class for no reason but the spelling, which is the blind spot this roster
-     exists to make visible rather than to reward. */
+  /* REC-116, 2026-09-17. */
   "provenanceRoutesMarked",
   "publishedCaseRegistryFor", "queueFeed",
 ];
-t("M0-40: the HOIST-FRAGILE roster is pinned BY NAME — this is the second arm the row asked for, "
-+ "and it is by name because the FLOOR that caught REC-88 could only say the count fell. A member "
-+ "leaving this roster means the reader's grip on it changed; one arriving means a method was "
-+ "written in the spelling the classifier is sensitive to",
-  HOIST.fragile, HOIST_FRAGILE_2026_09_16);
+console.log(`\n--- D-384 (M0-63): the ${HOIST_FRAGILE_2026_09_16.length} members the header credit held, by name ---`);
+for (const s of D384_STAYS) console.log(`  STAYS   ${s.name.padEnd(30)} ${s.amplification}`);
+for (const l of D384_LEAVES) console.log(`  LEAVES  ${l.name.padEnd(30)} ${l.why}`);
 
-t("M0-40: `earnedBasisRegistry` is the WORKED EXAMPLE and is pinned on its own — REC-88's draft "
-+ "hoisted exactly this method's scan and it left the class for no reason but the spelling. The "
-+ "transform is driven here, not recalled, and it must still take the method out",
-  [CLASS.has("earnedBasisRegistry"),
+t("M0-63 (D-384): the header credit is GONE — REC-88's hoist moves no membership, so HOIST-FRAGILE is "
++ "EMPTY. A member arriving here means the classifier grades where a call is written again",
+  HOIST.fragile, []);
+/* AND NOT ONLY OVER THE CLASS: over EVERY method with an inline row source in a `for` header, the
+   inline and hoisted forms classify identically. The partition above iterates `CLASS` and cannot
+   see a method the credit would have ENROLLED; this arm can. */
+const HOIST_MOVES = [...SEGMENTS].filter(([, b]) => {
+  const h = hoistRowSources(b);
+  if (!h.hoists) return false;
+  const q = (a) => Boolean(a.unbounded && a.loops && a.amplified);
+  return q(analyse(b)) !== q(analyse(h.body));
+}).map(([n]) => n);
+t("M0-63 (D-384): across ALL of store.mjs, hoisting a for-header row source to a local changes NO "
++ "method's classification — same query, same rows, same work, same verdict",
+  [HOIST_MOVES, [...SEGMENTS].filter(([, b]) => hoistRowSources(b).hoists > 0).length > 20], [[], true]);
+
+const D384_NAMES = [...D384_STAYS.map((s) => s.name), ...D384_LEAVES.map((l) => l.name)];
+t("M0-63 (D-384): every member appears in EXACTLY ONE of the two by-name lists, and the lists sum to "
++ "the measured population — 10 STAY + 13 LEAVE = 23. A member in neither list, or both, is the "
++ "defect this row exists to remove",
+  [D384_STAYS.length, D384_LEAVES.length, new Set(D384_NAMES).size, [...D384_NAMES].sort()],
+  [10, 13, HOIST_FRAGILE_2026_09_16.length, [...HOIST_FRAGILE_2026_09_16].sort()]);
+t("M0-63 (D-384): no disposition is bare — every STAYS names its amplification and every LEAVES its "
++ "reason, in words at the site",
+  [...D384_STAYS.map((s) => [s.name, s.amplification.length > 40]),
+   ...D384_LEAVES.map((l) => [l.name, l.why.length > 20])].filter(([, ok]) => !ok), []);
+t("M0-63 (D-384): every LEAVES member is OUT of the class, and every STAYS member is IN it — as an "
++ "ADMITTED member the walk does NOT see, which is the only ground on which one may stay",
+  [D384_LEAVES.filter((l) => CLASS_ALL.has(l.name)).map((l) => l.name),
+   D384_STAYS.filter((s) => !CLASS_ALL.has(s.name) || CLASS.has(s.name)).map((s) => s.name)],
+  [[], []]);
+
+/* THE ADMISSION IS CHECKED, NOT TAKEN ON ITS WORD. A STAYS member must still (1) hold an unbounded
+   row source and a loop over it by the walk's own reading, (2) contain the per-row call its entry
+   names, exactly as written, and (3) name helpers that still reach a read within three calls. */
+const readsThrough = (name, depth = 3, seen = new Set()) => {
+  if (seen.has(name)) return false;
+  seen.add(name);
+  const b = SEGMENTS.get(name);
+  if (!b) return false;
+  if (/#rows\(|#one\(|this\.sql\.exec\(/.test(b)) return true;
+  if (!depth) return false;
+  return [...b.matchAll(/this\.(#?[A-Za-z_$][\w$]*)\s*\(/g)].some((m) => readsThrough(m[1], depth - 1, seen));
+};
+t("M0-63 (D-384): each ADMITTED member still holds an unbounded row source and a loop over it, still "
++ "makes the per-row call its entry names AS WRITTEN, and every helper it names still reaches a read. "
++ "Move the call and this reds naming the member — its admission must then be re-read, not re-pinned",
+  D384_STAYS.map((s) => {
+    const body = SEGMENTS.get(s.name) || "";
+    const a = analyse(body);
+    return [s.name, a.unbounded > 0 && a.loops > 0, body.includes(s.site),
+            s.helpers.filter((h) => !readsThrough(h))];
+  }).filter(([, src, site, dead]) => !src || !site || dead.length),
+  []);
+
+t("M0-40 -> M0-63: `earnedBasisRegistry` is the WORKED EXAMPLE and is pinned on its own — REC-88's "
++ "draft hoisted exactly this method's scan and it left the class for no reason but the spelling. With "
++ "the credit gone it is OUT in BOTH spellings, which is the agreement D-384 asked for",
+  [CLASS_ALL.has("earnedBasisRegistry"),
+   (() => { const a = analyse(SEGMENTS.get("earnedBasisRegistry") || "");
+            return Boolean(a.unbounded && a.loops && a.amplified); })(),
    (() => { const h = hoistRowSources(SEGMENTS.get("earnedBasisRegistry") || "");
             const a = analyse(h.body);
             return [h.hoists, Boolean(a.unbounded && a.loops && a.amplified)]; })()],
-  [true, [1, false]]);
+  [false, false, [1, false]]);
 
 /* AND THE CLASS ITSELF, BY NAME. The ceiling and the floor between them say only that the size
    did not move, and every comment above this pin has had to name an arrival or a departure BY
-   HAND for that reason. With the roster pinned, the instrument names it. */
-const CLASS_ROSTER_2026_09_16 = [
-  "#assembleInstance", "#caseClaimInBytes", "#citesInto", "#conditionsCaptureRequested",
-  "#conditionsCaptureUnattended", "#conditionsGovernorHolding", "#conditionsPartialCapture",
-  "#findingsOutOfInquiryLead", "#flagCasesOnRevision", "#frontierContent", "#frontierMeaning",
-  "#monitorCadencePlan", "#overdueScan", "#queueAncestorEdges", "#queueMutes",
-  "#queueRenotifyWake", "#restsOnLive", "#routeTask",
-  /* REC-96, 2026-09-17 — the arrival, named beside the ceiling it moved. */
-  "#searchedForCase", "#sweepSelections", "auditPass",
-  "biasManifest", "danglingRefs", "documentsNamingEntity", "earnedBasisRegistry",
-  "exportManifest", "frontier", "proposalsFeed",
-  /* REC-116, 2026-09-17 — the arrival, named beside the ceiling it moved. The
-     standing-marker roster: its PAGE is bounded and index-served on both
-     columns, its CENSUS deliberately is not. */
-  "provenanceRoutesMarked",
-  "publishedCase", "publishedCaseRegistryFor",
-  "publishedRegistryFor", "queueFeed", "reevaluations", "selectionCreate", "selectionRelease",
+   HAND for that reason. With the roster pinned, the instrument names it. M0-63: this is now the
+   WALK's roster — 14 — and the admitted ten are pinned by `D384_STAYS`; the two together are the
+   figure the ceiling grades. */
+const CLASS_ROSTER_2026_09_18 = [
+  "#assembleInstance", "#flagCasesOnRevision", "#overdueScan", "#sweepSelections",
+  "biasManifest", "documentsNamingEntity", "exportManifest", "proposalsFeed",
+  "publishedCase", "publishedRegistryFor", "reevaluations", "selectionCreate", "selectionRelease",
   "selectionResolve",
 ];
 t("M0-40: the class roster is pinned BY NAME beside the ceiling and the floor, so a departure "
 + "names itself instead of reading `34 of 35`. Every movement comment above had to name its "
 + "arrival by hand precisely because this pin did not exist",
-  [...CLASS.keys()].sort(), CLASS_ROSTER_2026_09_16);
-t("M0-40: and the by-name roster and the counted ratchet are ONE reader — a pin that could "
+  [...CLASS.keys()].sort(), CLASS_ROSTER_2026_09_18);
+t("M0-40: and the by-name rosters and the counted ratchet are ONE reader — a pin that could "
 + "disagree with the figure beside it would be two instruments, and this file has already paid "
 + "once for a by-name arm satisfiable by the healthy half of what it pinned (control 9b)",
-  CLASS_ROSTER_2026_09_16.length, CLASS.size);
+  [CLASS_ROSTER_2026_09_18.length + D384_STAYS.length, CLASS_ALL.size],
+  [CLASS_ALL.size, CLASS_MEASURED_2026_08_08]);
 
 /* OVER-STRICTNESS FOR THE NEW ARM, and it is the half the row weighted most heavily. Nothing
    added above can enrol a method: the partition iterates `CLASS` and cannot reach outside it,
@@ -1757,26 +1957,52 @@ const NOT_THE_CLASS = [
 for (const [name, src] of NOT_THE_CLASS)
   t(`OVER-STRICTNESS: \`${name}\` is NOT in the class, and the reason is in this file's header`,
     classMembers(`class Z {\n${src}\n  end() { return 1; }\n}`).has(name), false);
-/* M0-40: THE CONTRADICTION ITSELF, PINNED RATHER THAN EXEMPTED OR SMOOTHED. `ncLinear` above is
-   declared NOT this class and that verdict is right — one linear pass over an unbounded scan is
-   REC-60's class and not this one. **The SAME read with the scan left INLINE in the for-header IS
-   in the class**, because `perRowScan` counts a scan lying inside a loop's extent and a loop's
-   extent begins at its `for` keyword. Same query, same rows, same work, opposite verdicts, and the
-   only difference is where the call is written. That is the whole of M0-40's finding stated as two
-   fixtures, and it is asserted in the state the instrument is ACTUALLY in rather than exempted:
-   a session that corrects the header credit reds THIS line and reads the reason here, and
-   `DEBT.md` D-384 is where that correction is priced (roster 35 -> 14, twenty-one departures). */
+/* M0-40: THE CONTRADICTION ITSELF, and M0-63 RESOLVED IT. `ncLinear` above is declared NOT this
+   class and that verdict is right — one linear pass over an unbounded scan is REC-60's class and
+   not this one. Under M0-40 the SAME read with the scan left INLINE in the for-header WAS in the
+   class, because `perRowScan` counted a scan anywhere in a loop's extent and a loop's extent
+   begins at its `for` keyword: same query, same rows, same work, opposite verdicts. D-384 was
+   ruled by BOB #14 (the class keeps its definition, the header credit goes) and M0-63 enacted it,
+   so the pair now AGREES — both OUT — and this line is the one that reds if the credit returns. */
 const NC_LINEAR_INLINE = `  ncLinearInline({ id } = {}) {
     const out = [];
     for (const r of this.#rows(\`SELECT a FROM t WHERE id=?\`, id)) out.push(r.a);
     return { ok: true, count: out.length, out };
   }`;
-t("M0-40: `ncLinearInline` — `ncLinear`'s own read with the scan left in the for-header — IS in the "
-+ "class, while `ncLinear` is NOT. The pair is the defect M0-40 measured, pinned so that neither "
-+ "direction of correcting it can happen silently",
+t("M0-63 (D-384): `ncLinearInline` — `ncLinear`'s own read with the scan left in the for-header — is "
++ "OUT of the class, as `ncLinear` is. A row source is read once wherever it is written",
   [classMembers(`class Z {\n${NC_LINEAR_INLINE}\n  end() { return 1; }\n}`).has("ncLinearInline"),
    classMembers(`class Z {\n${NOT_THE_CLASS[0][1]}\n  end() { return 1; }\n}`).has("ncLinear")],
-  [true, false]);
+  [false, false]);
+/* OVER-STRICTNESS OF THE CORRECTION, the direction that matters: removing the header credit must
+   not remove the credit for a scan that DOES run per row. Two shapes, both with the row source in
+   the outer header (so that credit is gone) and a real scan per row: one in the loop BODY, and one
+   in an INNER loop's header — which is the inner loop's row source but lies in the OUTER loop's
+   body, so it runs once per outer row. */
+const NC_PER_ROW_BODY = `  ncPerRowBody({ id } = {}) {
+    const out = [];
+    for (const r of this.#rows(\`SELECT k FROM t WHERE id=?\`, id)) {
+      const v = this.#rows(\`SELECT v FROM u WHERE k=? LIMIT 10\`, r.k);
+      out.push(v);
+    }
+    return { ok: true, count: out.length, out };
+  }`;
+const NC_PER_ROW_INNER_HEADER = `  ncPerRowInnerHeader({ id } = {}) {
+    const out = [];
+    for (const r of this.#rows(\`SELECT k FROM t WHERE id=?\`, id)) {
+      for (const v of this.#rows(\`SELECT v FROM u WHERE k=? LIMIT 10\`, r.k)) out.push(v);
+    }
+    return { ok: true, count: out.length, out };
+  }`;
+t("M0-63 (D-384) OVER-STRICTNESS: a genuine scan per row is STILL IN — in the loop BODY, and in an "
++ "INNER loop's header inside the outer body — each with exactly one per-row scan counted, and the "
++ "outer row source never counted as one",
+  [NC_PER_ROW_BODY, NC_PER_ROW_INNER_HEADER].map((src) => {
+    const m = classMembers(`class Z {\n${src}\n  end() { return 1; }\n}`);
+    const [name] = /nc\w+/.exec(src);
+    return [m.has(name), m.get(name)?.perRowScan];
+  }),
+  [[true, 1], [true, 1]]);
 
 /* And the classifier must still SEE the class in a phrasing this file never wrote — an
    over-strictness block that only rejects proves nothing about what it accepts. */

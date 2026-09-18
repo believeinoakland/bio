@@ -12764,3 +12764,24 @@ The claim above says **NOT arm (3)**. Arm (3) gained a COMMENT and nothing else 
 **NOT FIXED HERE, AND THE REASON IS THE CLAIM'S SCOPE.** It is an edit to M0-25's `.test.mjs`, with its own reach figures to re-measure (currently 185 anchors from 44 of 99 drivers) and its own control to extend — `stripComments` on the anchor half could hide a REAL anchor that lives in a commented-out arm, so the over-strictness direction needs driving before it lands. This claim moves no `.test.mjs`. **The workaround is NAMED at the site rather than performed silently:** prose in this driver spells those shape names with an ellipsis so the extractor does not read them.
 
 **DISCHARGED 2026-09-18 by CONDUCT #4 — rowed as `M0-66`, exactly as filed:** a row, not a fix, because the over-strictness direction (`stripComments` hiding a real anchor in a commented-out arm) must be driven before it lands.
+
+## CLAIM 2026-09-18 M0 (M0-63 — D-384 ENACTED: the `for`-header credit leaves `perRowScan`, and every HOIST-FRAGILE member is dispositioned BY NAME)
+
+Worker spawned by CONDUCT #4 into an isolated `agent-*` worktree. Paths:
+
+- `bio-plane/test/derivation-bounds.test.mjs` — the classifier's header credit, the class roster,
+  the ceiling, the HOIST-FRAGILE block and its fixtures.
+- `bio-plane/test/nc-m063.mjs` — NEW, this item's negative-control driver (the M0-40 precedent,
+  `test/nc-m040.mjs`); it runs nothing in the battery.
+- `docs/development/DEBT.md` — D-384 closing, and one row for an instrument gap found in passing
+  (D-414, minted).
+- `docs/development/MEASUREMENTS.md` — M-53 (minted), the re-measured class, appended.
+- `docs/development/CLAIMS.md` (this block), `docs/DECIDED.md` on regeneration.
+
+**NOT `docs/development/QUEUE.md`** — CONDUCT is its sole writer; flipping M0-63 is CONDUCT's act.
+**NOT `bio-plane/src/**`** — no plane byte moves; this is an instrument correction.
+**NOT `bio-plane/test/nc-m040.mjs`** — M0-40's driver, kept as the record of the arms it ran.
+
+released: 2026-09-18 by the M0-63 worker, work at `a9ffa456` on branch `worktree-agent-aaa96b17819fdda02`
+(battery 223/223 green · 13937 assertions on that tree; `coverage.mjs --strict` exit 0; `plancheck --local`
+0 fail). **For CONDUCT:** merge the branch, and flip M0-63 in `QUEUE.md` — both are CONDUCT's acts.
