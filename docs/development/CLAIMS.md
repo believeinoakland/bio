@@ -14134,3 +14134,23 @@ IDs minted with `tools/mintid.mjs`: IC-152, C-56, D-426.
 must hold a position in the project (Membership v2 §7 Incomplete sections). (4) Place D-426 (RECORD, a sight defect
 left open on purpose). (5) REC-136 (running) writes conclusion withdrawal: if it adds an act that writes a project's
 conclusion, that act joins `POSITIONAL_ACTS` and asks `#projectAuthority(..., "joined", ...)` — say so at its merge.
+
+## CLAIM 2026-09-18 RECORD (REC-137 — a case ratification's AUTHORITY is its signatures, which must include an OWNER of the publishing project; DELIVERY is carriage: a member with a role in the project, or the founder, never an administrator with no role)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-aee812fe065a38e23`, branch `worktree-agent-aee812fe065a38e23`,
+base `dd52609b`. `npm ci` in all three packages, each `node_modules` a real directory (4.8 GiB free after). Design:
+Membership v2 §7 *"A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it"* (BOB #15), §4.9; DEC-72 cl. 5;
+DEC-33; AI Roles §3 rule 4. IDs minted with `tools/mintid.mjs`: C-57, IC-154. Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` (`ratifyCaseDocument` only — the owner-signer check and the delivery check
+  through `#projectAuthority`, unchanged); `bio-plane/src/index.mjs` (`op=caseratify`'s handler only);
+  `bio-plane/checks/bio-checks.mjs` (refusal family C-57).
+- Tests: a new `bio-plane/test/case-authority.test.mjs` and its control driver; any suite that ratified a case without
+  an owner's signature or delivered it from outside the project — CORRECTED at its site with a dated reason, never
+  exempted. `bio-plane/scripts/coverage.mjs` and `civicos-ui/check-refusal-codes.mjs` floors only, moved from their
+  own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-154), `BIO_Membership_Architecture_v2.md` front matter and §7's block, this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `#projectAuthority`'s body (REC-134's, consumed unchanged), NOT `cite`/`sever`/
+`reinstate`/`promote` visibility (REC-138's, D-426), NOT `newgroup/`.
