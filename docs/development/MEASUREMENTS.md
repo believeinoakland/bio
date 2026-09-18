@@ -16326,3 +16326,31 @@ unaudited) holds.
 **BOUNDS, stated.** A genuine list whose undesignedness is said two or more paragraphs above its
 table reads as REMOTE: under-reach into a column a reader sees, never over-reach into the headline.
 A soft break inside a blockquote (`not\n> designed`) is not spanned — nor was it by `\s+`.
+## M-51 · 2026-09-18 · FW-21 — A CONNECTION'S DETERMINING PAIR IS THE STRONGEST-GRADED MENTION, NOT THE ON-POINT ONE, AND A PORTION CITING A REAL UNCHOSEN MENTION IS TOLD A DEFINITE `outside` (D-161)
+
+**Instrument:** `node tools/fw21-onpoint-probe.mjs; echo $?` — the running plane under miniflare, driven
+through `op=promote`, `op=resolve`, `op=connect` and `op=connections&content=`; the ground is written out in
+the probe's header. Tree: `origin/main` at `b1cf2aae` plus FW-21's docs-only change (no plane source changed).
+
+- **Ground:** document A resolves to one ordinance TWICE, both at grade A (`ordinance:13579` read on p.2,
+  `ordinance:13579-amended` read on p.9, both aliases of `ENT-2026-0001`, confirmed through `op=resolutions`);
+  document B once (p.5). One connection A–B.
+- **The pair `op=connect` wrote:** `a_ref: ordinance:13579` at p.2. The p.9 mention is on no row.
+- **Page 2 cited (the kept mention):** `connection_grade: "A"`, reaching 1. The ground holds.
+- **Page 9 cited (a GENUINE mention at grade A):** `connection_grade: null`, reaching 0, undetermined 0,
+  **outside 1** — *"all 1 of this document's connections were established by references read outside page 9,
+  so none of them reaches this citation"*.
+- **Page 7 cited (NO mention at all):** **byte-identical counts to page 9.** The record cannot tell a citation of
+  a real unchosen mention from a citation of a page that never mentions the entity. Exit 0, verdict
+  `STRONGEST-GRADED, NOT ON-POINT`.
+- **Control arm (break exactly the choice):** `Store.deriveConnections`' collapse (`store.mjs`, the
+  `GRADE_RANK[r.grade] > GRADE_RANK[cur.grade]` line inside `deriveConnections`, the second of the three
+  identical collapse lines in the file) changed `>` to `>=` — a tie-break flip carrying NO relevance input.
+  The pair moved to `ordinance:13579-amended` at p.9; page 9 then REACHED at A and page 2 was told `outside`;
+  the probe reported `GROUND BROKEN` and exited 2 as its header declares. **One character of tie-break decides
+  which real mention a member's citation is honoured for.** Restored by `cp` from a copy set aside; sha256
+  `abd340a0…9c8` before and after, byte-identical.
+
+**Method note, so the next re-drive does not inherit it:** the arm was applied while this worker's own baseline
+battery was still running in the same tree, for the length of one probe run (not timed). The baseline is therefore NOT cited as
+evidence; the battery was re-run on the final tree after the restore and that run is the one reported.
