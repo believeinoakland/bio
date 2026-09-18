@@ -237,6 +237,14 @@ CREATE TABLE IF NOT EXISTS signers (
 -- container needs exactly that: assembling edition N of a case means gathering
 -- edition N's parts from every member, including members ratified minutes
 -- earlier. Nothing else holds it.
+--
+-- REC-128 (BOB #14, the honesty half of D-421): attestor_member is who SIGNED,
+-- taken from the signature. delivered_by is who DELIVERED it, taken from the
+-- authenticated session that performed the act -- member:<id>, or founder for
+-- the instance founder's password session. They are two facts and neither is
+-- ever copied from the other. NULL is a row written before the column existed
+-- and reads back as UNDETERMINED, stated, and is never back-filled from the signer.
+-- case_documents carries the same column for op=caseratify, for the same reason.
 CREATE TABLE IF NOT EXISTS published_bundles (
   bundle_id       TEXT NOT NULL,
   edition         INTEGER NOT NULL,
@@ -245,6 +253,7 @@ CREATE TABLE IF NOT EXISTS published_bundles (
   ratified_at     TEXT NOT NULL,
   attestor_key    TEXT NOT NULL,
   attestor_member TEXT,
+  delivered_by    TEXT,            -- REC-128 WHO DELIVERED, from the session. NULL means not recorded, never the signer
   gate_version    TEXT NOT NULL,
   sig_armored     TEXT NOT NULL,
   strength        TEXT,
@@ -1773,6 +1782,7 @@ CREATE TABLE IF NOT EXISTS case_documents (
   sig_armored     TEXT,            -- NULL until op=caseratify. NULL means AUTHORED AND UNSIGNED
   attestor_key    TEXT,
   attestor_member TEXT,
+  delivered_by    TEXT,            -- REC-128 WHO DELIVERED, from the session. NULL means not recorded, never the signer
   gate_version    TEXT,
   ratified_at     TEXT,
   PRIMARY KEY (case_id, edition)

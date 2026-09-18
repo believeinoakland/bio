@@ -13670,3 +13670,68 @@ test/casesign.control.mjs e|f|g|h` from `bio-plane/`: all four AS DECLARED, ever
 Paths as claimed, plus `bio-plane/scripts/coverage.mjs` (the floor) and `BIO_Publication_v0_1.md` §4 and its
 Status date (the construct's home). IDs minted with `tools/mintid.mjs`: IC-141. **FOR CONDUCT:** RESOLVE IC-141
 against I3 as read at resolution (proposed MAJOR on 26.2.0).
+
+## CLAIM 2026-09-18 RECORD (REC-128 — the record states who AUTHORISED and who DELIVERED a ratification)
+
+Worker spawned by CONDUCT #4, isolated worktree `agent-a01d041e19ab1ad65`, branch
+`worktree-agent-a01d041e19ab1ad65`, base `b0c1f22d`. `npm ci` in all three packages, each `node_modules` a real
+directory (4.7 GiB free). IDs minted BEFORE building with `node tools/mintid.mjs IC`: IC-139 (I3), IC-140 (I5).
+Paths:
+
+- RECORD (own): `bio-plane/src/index.mjs` (`op=ratify` / `op=caseratify` bodies after REC-125's fences, their
+  answers, and the case container's manifest); `bio-plane/src/store.mjs` (`publish()`, `ratifyCaseDocument()`,
+  the published reads that carry `attestor`, the additive-column list); `bio-plane/src/schema.mjs`
+  (`published_bundles`, `case_documents`: one nullable column each).
+- Tests: a new `bio-plane/test/deliverer.test.mjs` and `bio-plane/test/deliverer.control.mjs`; any suite pinning
+  the container format corrected at its site with the reason.
+- Generated: `bio-plane/dist/*` rebuilt.
+- Docs: `INTERFACE-CHANGES.md` (IC-139, IC-140), `BIO_Assistant_and_AI_Roles_v0_1.md` (§3 rule 4 and front
+  matter), `DEBT.md` (D-421's disposition note), `docs/DECIDED.md` on regeneration, this block.
+
+NOT `setup.mjs`, NOT `civicos-ui/**` (renderers: DELEGATION), NOT `QUEUE.md` (CONDUCT's), NOT `INTERFACES.md`
+(CONDUCT takes the bumps), NOT `newgroup/**`.
+
+**open as of 2026-09-18** — REC-128 is being built.
+
+## DELEGATION 2026-09-18 RECORD (REC-128) -> UI — render WHO DELIVERED a ratification beside who SIGNED it
+
+REC-128 (IC-139) makes every read that serves a ratification carry `delivered_by` beside `attestor`:
+`{ kind: "member", member }`, `{ kind: "founder", member: null }`, or `{ kind: "undetermined", member: null,
+detail }`, and `op=ratify` / `op=caseratify` answer `deliveredBy` in the same shape. The case container moves
+to `bio-case-container/6` and carries it too. **No surface renders it yet**, so a founder-delivered
+ratification of a member's signature still READS, on screen, exactly like the member publishing. The acts owed,
+with their actor: **UI** renders it wherever `civicos-ui/app.html` prints "attested by" / "signed by" (the
+published-case member line, the finding's verify block, the case-document line) — "delivered by the founder" /
+"delivered by <member>", and `undetermined` stated in the plane's own `detail` words, never omitted and never
+replaced by the signer; and the instance page's success line (`bio-plane/src/setup.mjs` ratifyPanel, which
+prints `r.attestor`) says who delivered when it is not the signer. Consumer impact of the shape itself was
+measured NOT BREAKING (no reader of `manifest.format`; `attestor` unchanged).
+
+**open as of 2026-09-18** — raised by REC-128; nothing renders the deliverer yet.
+
+## CLAIM 2026-09-18 RECORD (REC-128) — RELEASED
+
+released: 2026-09-18 by the REC-128 worker, branch `worktree-agent-a01d041e19ab1ad65`. Every claimed path is committed
+on that branch; `setup.mjs`, `civicos-ui/**`, `QUEUE.md`, `INTERFACES.md` and `newgroup/**` were NOT edited. Baseline
+before any edit, pristine tree at `d0951a2b`: **237/237 suites green · 14619 assertions passing**, no skip. After, at
+`d5a7386b`: **238/238 suites green · 14640 assertions passing**, no skip; `node scripts/coverage.mjs --strict` exit **0**
+unpiped; `node civicos-ui/test/run.mjs` exit **0**; `node tools/status.mjs --check` 0 drift; `node tools/plancheck.mjs
+--local` 0 fail (3 pre-existing ledger WARNs). NEGATIVE CONTROL `node test/deliverer.control.mjs` from `bio-plane/`:
+baseline 17/0 · fromsig 6/11 · backfill 14/3 · session-member 10/7, ALL AS DECLARED (the backfill declaration was
+corrected once, after its first run, to include THE TABLE — the instrument's error, recorded at the arm), every restore
+byte-identical. Found and fixed on the way: the first spelling of the `case_documents` UPDATE moved the line
+`casepin.control.mjs` arm (b) anchors on; `m025-arm-anchor-witness` A4 caught it and the edit was re-spelled. IDs minted
+with `tools/mintid.mjs`: IC-139, IC-140. **FOR CONDUCT:** RESOLVE IC-139 against I3 and IC-140 against I5 as read at
+resolution (built on I3 26.1.0 and I5 1.18.0, both proposed MINOR); the PUBLISHED container format moved `/5` -> `/6`
+and IC-139 argues it separately. **FOR UI:** the DELEGATION above (render the deliverer).
+
+### ADDENDUM 2026-09-18 RECORD (REC-128) — merged with origin/main `e1434b06` after release
+
+origin/main moved while REC-128 was verifying (MK-1 / MK-4 integration, BOB #14's rule-4 paragraph). Merged into
+the branch rather than rebased (no force-push). Conflicts resolved keep-both by hand: `store.mjs`'s additive-column
+list, `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 (BOB's paragraph kept whole; the stale "named member's own"
+wording above it corrected; REC-128's sentence placed after it as BUILT), and the append-only `CLAIMS.md` /
+`INTERFACE-CHANGES.md`. IC-139 / IC-140 bases RE-READ on the merged tree: I3 26.3.0 (proposed 26.4.0), I5 1.20.0
+(proposed 1.21.0). On the merged commit `cf0480a5`: **240/240 suites green · 14774 assertions passing**, no skip;
+coverage `--strict` exit 0 unpiped; UI harness exit 0; `status --check` 0 drift; `plancheck --local` 0 fail; the
+deliverer control re-run, all four arms as declared, restores byte-identical.

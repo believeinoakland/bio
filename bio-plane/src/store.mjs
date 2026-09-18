@@ -353,6 +353,9 @@ import { checkCalibration, checkSignal, compare, drifted, driftObligations,
    this file is — the rule has ONE implementation and this file holds no copy of
    it. `skillpack.mjs` is pure; nothing but the check crosses into the store. */
 import { checkSkillVersion } from "./skillpack.mjs";
+/* REC-128: the READ shape of who DELIVERED a ratification, from the stored
+   column alone — one function, so every read says the same thing about it. */
+import { delivererOf } from "./deliverer.mjs";
 /* PL-12 / D-84: the bias object's refusals and — this is the part that is not
    housekeeping — the MALFORMEDNESS and BAR predicates themselves. DEC-54's
    constraint 2 is that "the malformedness rule binds the machine exactly as it
@@ -1072,6 +1075,15 @@ export class Store extends DurableObject {
       ["register", "authored", "INTEGER NOT NULL DEFAULT 0"],
       ["register", "author", "TEXT"],
       ["register", "observed_at", "TEXT"],
+      /* REC-128 / IC-140: WHO DELIVERED a ratification — the authenticated
+         session that performed the act, beside the signature's signer. NULLABLE
+         AND NEVER BACK-FILLED, and that is the item rather than a convenience:
+         a row ratified before this column existed recorded no deliverer, and
+         the one value a backfill could reach for is the SIGNER, which is the
+         liar D-421 exists to separate (two names for one fact). NULL reads back
+         as UNDETERMINED, stated, through `#deliveredBy`. */
+      ["published_bundles", "delivered_by", "TEXT"],
+      ["case_documents", "delivered_by", "TEXT"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -7494,7 +7506,7 @@ export class Store extends DurableObject {
     if (!id || !Number.isInteger(ed) || ed < 1) return { ok: false, reason: "MALFORMED" };
     const doc = this.#one(
       `SELECT case_id, edition, doc_sha, text, authored_at, authored_by,
-              sig_armored, attestor_key, attestor_member, gate_version, ratified_at
+              sig_armored, attestor_key, attestor_member, delivered_by, gate_version, ratified_at
          FROM case_documents WHERE case_id=? AND edition=?`, id, ed);
     if (!doc) return Store.#noCaseDocument(id, ed);
     /* REC-130 / IC-141, 2026-09-18 — AN UNSIGNED CASE DOCUMENT IS WORKING
@@ -7602,6 +7614,10 @@ export class Store extends DurableObject {
                 rather than inferred from a null. */
              ratified: !!d.ratified_at, ratified_at: d.ratified_at ?? null,
              sig_armored: d.sig_armored ?? null, attestor_member: d.attestor_member ?? null,
+             /* REC-128: who DELIVERED the signature, beside who MADE it. Null
+                while the document is unsigned — there is no delivery yet, which
+                is a different fact from a delivery nobody recorded. */
+             delivered_by: d.ratified_at ? this.#deliveredBy(d) : null,
              gate_version: d.gate_version ?? null };
   }
 
@@ -7640,7 +7656,7 @@ export class Store extends DurableObject {
      attestations of one edition would leave a reader unable to say who stood
      behind it. */
   ratifyCaseDocument({ caseId, edition, docSha, sigArmored, attestorKey, attestorMember,
-                       gateVersion } = {}) {
+                       gateVersion, deliveredBy = null } = {}) {
     const id = String(caseId ?? "").trim();
     const ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1 || !docSha) return { ok: false, reason: "MALFORMED" };
@@ -7743,9 +7759,14 @@ export class Store extends DurableObject {
           id, ed, i, m, r.version_sha ?? null, r.role ?? null);
       });
       this.sql.exec(
-        `UPDATE case_documents SET sig_armored=?, attestor_key=?, attestor_member=?, gate_version=?,
+        `UPDATE case_documents SET sig_armored=?, attestor_key=?, attestor_member=?, gate_version=?, delivered_by=?,
            ratified_at=? WHERE case_id=? AND edition=? AND sig_armored IS NULL`,
-        sigArmored, attestorKey, attestorMember ?? null, gateVersion, now, id, ed);
+        /* REC-128: `deliveredBy` is the control plane's reading of the SESSION
+           and is written as handed — never defaulted to `attestorMember`. The
+           column is added on the FIRST line so the second stays byte-identical:
+           `casepin.control.mjs` arm (b) anchors on it (M0-25's witness caught
+           the first spelling of this edit moving it). */
+        sigArmored, attestorKey, attestorMember ?? null, gateVersion, deliveredBy ?? null, now, id, ed);
       return { ok: true, caseId: id, edition: ed, project, roster,
                members: roster.map((m) => {
                  const r = rows.find((x) => x.target === m) || {};
@@ -26899,7 +26920,7 @@ export class Store extends DurableObject {
      the parameters rather than ignoring them is deliberate — an argument a caller
      can still pass is an argument a caller will eventually believe is read. */
   publish({ bundleId, bundleSha, attestorKey, attestorMember, gateVersion, sigArmored, shas,
-            edition, title, completeness, strength, edges, group = null } = {}) {
+            edition, title, completeness, strength, edges, group = null, deliveredBy = null } = {}) {
     if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
       return { ok: false, reason: "MALFORMED" };
     return this.ctx.storage.transactionSync(() => {
@@ -27179,10 +27200,14 @@ export class Store extends DurableObject {
         ? JSON.parse(distinctBars[0])
         : null;
       this.sql.exec(
-        `INSERT INTO published_bundles (bundle_id,edition,title,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored,strength,required,parts)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+        `INSERT INTO published_bundles (bundle_id,edition,title,bundle_sha,ratified_at,attestor_key,attestor_member,delivered_by,gate_version,sig_armored,strength,required,parts)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
          ON CONFLICT(bundle_id,edition) DO NOTHING`,
-        bundleId, ed, title ?? null, bundleSha, now, attestorKey, attestorMember ?? null, gateVersion, sigArmored,
+        /* REC-128: who DELIVERED, as the control plane read it off the SESSION;
+           never defaulted to the signer. A retry of bytes already published
+           writes nothing (DO NOTHING), so the first delivery stands. */
+        bundleId, ed, title ?? null, bundleSha, now, attestorKey, attestorMember ?? null, deliveredBy ?? null,
+        gateVersion, sigArmored,
         strength ? JSON.stringify(strength) : null,
         required ? JSON.stringify(required) : null,
         JSON.stringify(shas.map((s) => ({ path: s.path, sha256: s.sha256, kind: s.kind, bytes: s.bytes ?? null }))));
@@ -27315,7 +27340,7 @@ export class Store extends DurableObject {
       `SELECT ord, bundle_id, version_sha, role FROM published_case_members
        WHERE case_id=? AND edition=? ORDER BY ord`, caseId, ed);
     const MEMBER_COLS = `bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
-                         gate_version, sig_armored, strength, required, parts`;
+                         delivered_by, gate_version, sig_armored, strength, required, parts`;
     const findings = [], awaiting = [];
     for (const m of roster) {
       const r = m.version_sha
@@ -27340,6 +27365,8 @@ export class Store extends DurableObject {
                       role: m.role ?? null,
                       ratified_at: r.ratified_at, gate_version: r.gate_version, sig_armored: r.sig_armored,
                       attestor: { member: r.attestor_member, key_b64: r.attestor_key },
+                      /* REC-128: who SIGNED is `attestor`; who DELIVERED is this. */
+                      delivered_by: this.#deliveredBy(r),
                       strength: r.strength ? JSON.parse(r.strength) : null,
                       required: r.required ? JSON.parse(r.required) : null,
                       parts: r.parts ? JSON.parse(r.parts) : [] });
@@ -27389,11 +27416,12 @@ export class Store extends DurableObject {
                 stranger to check in it. */
              document: (() => {
                const d = this.#one(
-                 `SELECT doc_sha, text, sig_armored, attestor_key, attestor_member, gate_version, ratified_at
+                 `SELECT doc_sha, text, sig_armored, attestor_key, attestor_member, delivered_by, gate_version, ratified_at
                     FROM case_documents WHERE case_id=? AND edition=? AND ratified_at IS NOT NULL`,
                  caseId, ed);
                return d ? { doc_sha: d.doc_sha, text: d.text, sig_armored: d.sig_armored,
                             attestor: { member: d.attestor_member, key_b64: d.attestor_key },
+                            delivered_by: this.#deliveredBy(d),
                             gate_version: d.gate_version, ratified_at: d.ratified_at } : null;
              })(),
              /* REC-47 / DEC-46 (a): the bias the case was produced under travels
@@ -27543,7 +27571,7 @@ export class Store extends DurableObject {
      the bytes to learn what each case is called. */
   publishedList() {
     return { bundles: this.#rows(
-      `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_member, gate_version
+      `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_member, delivered_by, gate_version
        FROM published_bundles ORDER BY bundle_id, edition`)
       /* REC-44: each published FINDING names the case it was published in, so a
          public index can be read as the cases it actually is. The finding rows
@@ -27563,7 +27591,8 @@ export class Store extends DurableObject {
       .map((r) => {
         const cms = this.#casesOfSha(r.bundle_id, r.bundle_sha, r.edition);
         const sole = this.#soleCase(cms);
-        return { ...r, case_id: sole ? sole.case_id : null, case_edition: sole ? sole.edition : null,
+        return { ...r, delivered_by: this.#deliveredBy(r),
+                 case_id: sole ? sole.case_id : null, case_edition: sole ? sole.edition : null,
                  cases: cms };
       }),
       cases: this.#rows(
@@ -27582,7 +27611,7 @@ export class Store extends DurableObject {
     if (!bundleId) return { ok: false, reason: "NO_ID", detail: "publishededitions requires ?id=" };
     const rows = this.#rows(
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
-              gate_version, sig_armored, strength, required
+              delivered_by, gate_version, sig_armored, strength, required
        FROM published_bundles WHERE bundle_id=? ORDER BY edition`, bundleId);
     /* REC-44: `completeness` is no longer here and that is the correction — it
        is a CASE assertion, so it is fetched from the case each edition belongs
@@ -27611,7 +27640,8 @@ export class Store extends DurableObject {
         `SELECT scope, completeness, bias_acknowledgement, bar, manifest_sha
          FROM published_cases WHERE case_id=? AND edition=?`,
         cm.case_id, cm.edition) : null;
-      return { ...r, case_id: cid, case_edition: cm ? cm.edition : null, cases: cms,
+      return { ...r, delivered_by: this.#deliveredBy(r),
+               case_id: cid, case_edition: cm ? cm.edition : null, cases: cms,
                bar: c && c.bar ? safeJson(c.bar) : null,
                /* The container's manifest is the CASE edition's, so it is
                   reported from there — one manifest per case per edition,
@@ -27936,6 +27966,15 @@ export class Store extends DurableObject {
                          + "rather than dropped; it should be empty." };
   }
 
+  /* REC-128 — THE ONE READ CHOKEPOINT FOR WHO DELIVERED A RATIFICATION. Every
+     read that serves a ratification (the finding rows, the case document, the
+     public case read and so the container that travels) answers through here,
+     from the stored `delivered_by` column and from NOTHING ELSE: in particular
+     never from `attestor_member`, so a row written before the column existed
+     reads UNDETERMINED, stated, rather than back-filled from its signer.
+     `deliverer.control.mjs`'s `backfill` arm edits exactly this line. */
+  #deliveredBy(row) { return delivererOf(row ? row.delivered_by : null); }
+
   /* A ratified bundle that belongs to NO case, in the same shape as a case
      edition so one renderer serves both — with `caseId: null`, no scope and no
      completeness, because it is not a case and saying otherwise is the exact
@@ -27943,7 +27982,7 @@ export class Store extends DurableObject {
      is: verifiable bytes with a signature and no case-level assertion. */
   #looseEditionState(bundleId, ed) {
     const r = this.#one(
-      `SELECT bundle_id, title, bundle_sha, ratified_at, attestor_key, attestor_member, gate_version,
+      `SELECT bundle_id, title, bundle_sha, ratified_at, attestor_key, attestor_member, delivered_by, gate_version,
               sig_armored, strength, required, parts
        FROM published_bundles WHERE bundle_id=? AND edition=?`, bundleId, ed);
     if (!r) return null;
@@ -27976,6 +28015,7 @@ export class Store extends DurableObject {
                           version_sha: null, role: null, edition: ed,
                           ratified_at: r.ratified_at, gate_version: r.gate_version, sig_armored: r.sig_armored,
                           attestor: { member: r.attestor_member, key_b64: r.attestor_key },
+                          delivered_by: this.#deliveredBy(r),
                           strength: r.strength ? JSON.parse(r.strength) : null,
                           required: r.required ? JSON.parse(r.required) : null,
                           parts: r.parts ? JSON.parse(r.parts) : [] }],
