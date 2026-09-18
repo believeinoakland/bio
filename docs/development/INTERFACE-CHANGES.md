@@ -9320,6 +9320,8 @@ in its `empty_level` rather than letting its `why` claim the extent is held whil
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at FW-19's integration — I2 2.2.0 → 2.3.0, I1 1.4.0 → 1.5.0, both MINOR (additive, as classed).** CONDUCT answers FOR FRAMEWORK (dormant), in writing and named as such: AGREE — the union grows by discriminated arms and no existing arm moves. CONTENT-PDF's response is owed at CPDF-18, which is the producer of `image {page, rect}` and cannot answer before it exists; nothing on CONTENT-PDF's side is broken by an arm it does not yet emit. UI NOT-AFFECTED by measurement as stated. The base was read at resolution, not proposal.
 
+**ADDENDUM · 2026-09-18 · CPDF-18 EMITS THE PDF HALF, booked by CONDUCT #4 as I2 2.5.0 → 2.6.0, MINOR (additive).** `op=pdfstructure` now returns a top-level `images` list of `image {page, rect}` references for every image a page PAINTS (placed at the top level because pdf-worker replaces `text` with its tier-2 result), under IC-124's own absence rule: `null` plus `imagesWhy` when a page was not walked, `[]` a measured zero. CONTENT-PDF's response is recorded above as AGREE. **Two gaps named by the builder and left as debt:** D-419 (the crop exists and no op asks for it — display only) and D-420 (an `image {page, rect}` row is checked against the page COUNT only, not against what the page actually paints — a claim about the kind of thing addressed, caught today only when the crop is asked for).
+
 ## IC-125 · I5: THE `content` TABLE ADMITS `sheet-range`, `doc-table` AND `image` WITH `covers` PER ARM, AND GAINS `cited_as` · AND I3: the leg grammar and `op=cite` carry the new fields, and every content-row projection carries `cited_as` · PROPOSED 2026-09-18 (FW-19) — the version bumps and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4**
 
 - **Interface:** I5 (the store schema) — one column. **Secondary: I3** — additive fields on the
@@ -9662,7 +9664,7 @@ I5 + I3 change with a UI affordance, its own row and its own IC. And the single-
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at REC-120's integration — I5 1.17.0 → 1.18.0, I3 23.4.0 → 23.5.0, both MINOR (additive, as classed).** Bases read AT RESOLUTION: I3 was 23.4.0, not the 23.3.0 proposed against (CPDF-19's IC-126 took 23.4.0). **The builder went one step past act (1)'s wording and CONDUCT accepts it on the row's own terms:** a REACH won only on a TIE is also UNDETERMINED, because the row's negative control required that flipping the tie-break (`>` → `>=`) must not move an answer to *reached* — and an answer that flips on one character carries no relevance. That moved page 2 of M-51's fixture from *reaches at A* to UNDETERMINED; FW-21's probe asserts the old page-2 reach and now reports GROUND BROKEN, delegated to FRAMEWORK in `CLAIMS.md`.
 
-## IC-127 · I2: THE CHAIN GRAMMAR GAINS A STEP KIND — `typed(member)`, a member TYPED the text of a portion, a DERIVATION whose cap is UNDETERMINED by the kind's own declaration and on which a letter is REFUSED · PROPOSED 2026-09-18 (REC-87, enacting Bob's 5.2; minted at spawn with `node tools/mintid.mjs IC`) — the version bump and the RESOLUTION are CONDUCT's
+## IC-127 · I2: THE CHAIN GRAMMAR GAINS A STEP KIND — `typed(member)`, a member TYPED the text of a portion, a DERIVATION whose cap is UNDETERMINED by the kind's own declaration and on which a letter is REFUSED · PROPOSED 2026-09-18 (REC-87, enacting Bob's 5.2; minted at spawn with `node tools/mintid.mjs IC`) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 (I2 2.5.0)**
 
 - **Interface:** I2 (the reader/chain grammar, `bio-plane/src/textchain.mjs` `STEP_KINDS`). **Version
   read off THIS TREE's `docs/development/INTERFACES.md`: 2.4.0** (IC-122 ACCEPTED). **Proposed as
@@ -9729,7 +9731,9 @@ exempted) for C-35.14 and a CHECK_ARMS row drives it.
 
 **RESPONSES:** not yet collected. FRAMEWORK dormant (CONDUCT answers); UI expected NOT-AFFECTED.
 
-## IC-128 · I3: TRANSCRIBE — `op=transcribe` (a member types a selected portion's text), `op=transcriptionattest` (a SECOND member attests it; the typist's own is refused by name), `op=transcription` (the read) · PROPOSED 2026-09-18 (REC-87, minted at spawn with `node tools/mintid.mjs IC`) — the version bump and the RESOLUTION are CONDUCT's
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at REC-87's integration — I2 2.4.0 → 2.5.0, MINOR (additive, as classed); base read at resolution and unchanged since proposal.** CONDUCT answers FOR FRAMEWORK (dormant), named as such: AGREE — a second new step kind this wave (after CAP-10's `convert`), carrying the same undetermined-cap property CAP-10 introduced so a measured letter elsewhere cannot bound what a person typed. **The spelling `typed`, not the row's `member`, is accepted with the worker's reason:** `member` is already a word on the `content:` query arm, and a kind of that name made an existing query ambiguous. UI NOT-AFFECTED.
+
+## IC-128 · I3: TRANSCRIBE — `op=transcribe` (a member types a selected portion's text), `op=transcriptionattest` (a SECOND member attests it; the typist's own is refused by name), `op=transcription` (the read) · PROPOSED 2026-09-18 (REC-87, minted at spawn with `node tools/mintid.mjs IC`) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 (I3 23.6.0)**
 
 - **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
   `docs/development/INTERFACES.md`: 23.3.0** (IC-123 ACCEPTED). **Proposed as MINOR — 23.3.0 →
@@ -9806,3 +9810,5 @@ DIFFERENT worker's HTTP path and not a plane op. Zero consumers of the new ops.
 `test/transcribe.test.mjs` drives all three ops end to end under signed-in members.
 
 **RESPONSES:** not yet collected. UI to answer on the act; SKILL and DIST expected NOT-AFFECTED.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at REC-87's integration — I3 23.5.0 → 23.6.0, MINOR (additive, as classed).** Base read AT RESOLUTION: 23.5.0, not the 23.3.0 proposed against (IC-126 and IC-129 each took a minor meanwhile). CONDUCT answers FOR SKILL and DIST: NOT-AFFECTED (no caller of the new ops), named as such. **UI's act is OWED, not waived** (the delegation in `CLAIMS.md`); `construct-status.json` now carries `4.transcribe` BUILT and `4.transcribe-ui` ABSENT. **Found by a control arm and fixed in this landing:** C-45.2 refused a typing of any capture with no extraction chain — Bob's own case, a scan no engine could read.

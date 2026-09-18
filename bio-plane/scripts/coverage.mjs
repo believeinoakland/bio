@@ -1236,7 +1236,8 @@ const REGISTER_FLOOR = {
      failure mode (a dropped floor move goes SLACK, not broken). classified and corpus are
      UNMOVED and that is stated rather than implied: the arriving arm joined an already-counted
      declaration rather than adding a suite. */
-  arms: 1243,
+  arms: 1262,
+  // [CONDUCT #4 at REC-87 + CPDF-18's merge] 2026-09-18: re-read on the merged tree — `--strict` exit 0 printed `arms 1262/1243 · classified 223/220 · corpus (suites read) 224/221` and `floor 185/184 reproducible`.
   // [CONDUCT #4 at REC-120's merge] 2026-09-18: re-read on the merged tree (REC-104 + BOB's construct-status + REC-120) — `--strict` exit 0 printed `arms 1243/1234 · classified 220/218 · corpus (suites read) 221/219` and `floor 184/182 reproducible`.
   // [CONDUCT #4 at REC-104's merge] 2026-09-18: re-read on the merged tree — `--strict` exit 0 printed `arms 1234/1226 · classified 218/217 · corpus (suites read) 219/218` and `floor 182/181 reproducible`; REC-104 left the move to CONDUCT on purpose (its own tree printed 1234/1215).
   // [CONDUCT #4 at the merge of CPDF-19 onto REC-86/CAP-10/FW-19] 2026-09-18: RE-READ ON THE MERGED TREE, as both branch records asked — `node scripts/coverage.mjs --strict` exit 0 printed `arms 1226/1217 · classified 217/215 · corpus (suites read) 218/216` and `floor 181/178 reproducible`; the branches' own 1215 and 1217 were each true of a tree without the other's suites.
@@ -1297,8 +1298,8 @@ const REGISTER_FLOOR = {
   // [branch record | REC-96 read arms 1134 on its own tree] reported the suite as NOT IN ANY COMMIT and refused to count work no other
   // [branch record | REC-96 read arms 1134 on its own tree] checkout can see (D-238), so a floor moved then would have been a figure
   // [branch record | REC-96 read arms 1134 on its own tree] nobody else reproduces. CONDUCT re-reads this on the MERGED tree. 
-  classified: 220,
-  corpus: 221,
+  classified: 223,
+  corpus: 224,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
@@ -1326,7 +1327,7 @@ const REGISTER_FLOOR = {
      EXACT, so nothing about that item moved either figure. It is the sixth consecutive
      item to find a floor already stale BY MEASURING IT, which is the argument for
      measuring rather than for trusting the number in the file. */
-  run: 184,
+  run: 185,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

@@ -128,58 +128,6 @@ act for BOB, never a row. Use it to order LED-4's file, and to decide what fills
 **Nothing running is superseded.**
 
 
-**2026-09-18 · BOB #14 · THE LEDGERS BECOME SMALL, ORDERED AND ALWAYS CURRENT — BOB'S DIRECTION, DECOMPOSED FOR YOU.**
-
-**BOB, 2026-09-18:** *"the order of items in those documents also matter, as the right order would allow them to
-be read and processed serially. As each item is processed, that item can be moved out of that document into an
-archive. So those truth documents can be made small and always kept small — allowing fresh sessions to not just
-scan them but read them in their entirety."*
-
-**MEASURED 2026-09-18 on `origin/main`:** `QUEUE.md` is 1,099 KB, of which **868 KB (79%) is 315 `done` rows**;
-the 25 open rows are 87 KB, ~3.5 KB each because every row carries its whole history. `DEBT.md` is 763 KB over 277
-rows, 58 of them closed (289 KB). **THIS WAS DONE ONCE AND GREW BACK:** `docs/archive/ledgers/QUEUE-2026-08.md`
-and `DEBT-closed-2026-08.md` are an August archiving — a one-off cleanup, not a standing step, so nothing kept the
-files small afterwards. **The fix is the STEP and the GATE, not another cleanup.** 19 instruments read `QUEUE.md`
-and 14 read `DEBT.md` (listed in LED-1), so nothing moves before each reader is audited.
-
-**EXEMPT FROM THE M0 HOLD, BY NAME:** these five are the process work Bob asked for; the hold was on instrument
-work he did not.
-
-- **LED-1 · the reader audit, BEFORE anything moves.** Every reader of the two ledgers — QUEUE: `tools/{owed,
-  nc-m039,mintid,plancheck,rowdesign}.mjs`, `bio-plane/scripts/op-claims.mjs`, tests `acquire, check-firing,
-  corpuscheck(+control), m041-instrument-census(+control), mintid, op-claims, planning-hygiene, publish,
-  refselectivity.control, rowdesign.control, scheduler`; DEBT: `tools/{decided,owed,mergecarry,mintid,plancheck,
-  nc-m039}.mjs`, `bio-plane/scripts/armdecay.mjs`, tests `caseflip, corpuscheck, dec65-strength-reach.control,
-  derivation-bounds, m025-arm-anchor-witness, mintid, planning-hygiene`. For each: what it reads, and whether it
-  needs a CLOSED row to exist (id allocation, a ruling's source line, a pinned count). **Accepts-when:** a table
-  in the row naming each reader and its dependency; every reader that needs history reads `docs/archive/ledgers/`
-  too (mintid already does — verify, do not assume); battery green; NO row moved yet. **Depends on nothing.**
-- **LED-2 · the archiver and its gate.** `tools/ledger.mjs`: `archive <ID>` moves one closed row (a `done` or
-  `superseded` QUEUE row; a CLOSED DEBT row with no declared residue) to `docs/archive/ledgers/<FILE>-closed.md`,
-  appended verbatim, the id set of live + archive conserved exactly. `plancheck` arms: (a) no closed row in a
-  live ledger; (b) a size budget per ledger and per open row, named in the row (start: QUEUE ≤ 150 KB, row ≤ 3 KB)
-  — WARN first, FAIL once LED-4 lands; (c) every `depends-on` resolves to an open row, an archived done row, or a
-  `tools/status.mjs` claim id reading BUILT. Suite + negative control (one arm per property; the conservation arm
-  is the one that matters — a mover that drops a row is the D-288 loss shape). **Depends on LED-1.**
-- **LED-3 · the migration.** Move every closed row with LED-2's tool. **Accepts-when:** id sets before and after
-  (live ∪ archive) are EQUAL, counted and diffed rather than eyeballed; `decided.mjs`, `owed.mjs`, `mintid.mjs`
-  answer identically for a sample of archived ids before and after; battery green. **Depends on LED-2.**
-- **LED-4 · the open rows cut to their fields, in processing order.** Each open row: heading, `milestone`,
-  `design` (a section, per corpus standard), `depends-on` (checked by LED-2(c)), `scope`, `accepts-when`,
-  `NEGATIVE CONTROL`. Everything else — *prior state kept as the record*, landing narratives, correction
-  histories — moves to the archive under the row's id, verbatim. **Order the file as it will be processed:**
-  the top runnable row first, dependents after what they depend on, so a session reads it top to bottom. This is
-  judgement and it is CONDUCT's file, so CONDUCT performs it; BOB checks the order against `status.mjs` before it
-  lands. **Depends on LED-3.** Same treatment for `DEBT.md`'s open rows: one paragraph of cost, one of
-  disposition as it stands NOW; history to the archive.
-- **LED-5 · the standing step, where it will be performed.** `kickoffs/CONDUCT.md`: integration ends with
-  `node tools/ledger.mjs archive <ID>` in the SAME commit as the `done` flip — not a later sweep, which is what
-  let August's archiving grow back. `kickoffs/BOB.md` and the DEBT disposition convention likewise. LED-2(a) makes
-  a forgotten archive a failing gate rather than a slow regrowth. **Depends on LED-2.**
-
-**Nothing running is superseded and no worker should be stopped.**
-
-
 **2026-09-17 · BOB #13 · REC-116 IS UNBLOCKED — ITS CONSTRUCT IS DESIGNED, IN A GOVERNED DOCUMENT,
 AND THE TEST THAT SAID OTHERWISE WAS THE WRONG TEST.** I ruled it blocked on my design; **I was
 wrong and am reversing it rather than letting it sit.** No design act is owed.
@@ -1081,6 +1029,56 @@ Test-estate work spanning every area. CONDUCT spawns a worker per item with a cl
 the specific files. These are cheap, they touch no plane behaviour, and they raise the
 floor everything else is judged against.
 
+### LED-1 · running — **SPAWNED 2026-09-18 by CONDUCT #4 (exempt from the M0 hold by name; holds no product slot). DEPENDS-ON CHECKED AGAINST THE CODE at spawn: nothing — an audit that moves no row. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **THE LEDGER READER AUDIT, BEFORE ANYTHING MOVES: 19 instruments read `QUEUE.md` and 14 read `DEBT.md`; for each, what it reads and whether it needs a CLOSED row to exist.** — waits on nothing. **EXEMPT FROM THE M0 HOLD BY NAME (BOB #14, 2026-09-18).**
+milestone: M0 (process, Bob's direction 2026-09-18) — the ledgers become small, ordered and always current
+interface: none
+design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY NAME by `tools/rowdesign.mjs`; read with the BOB INBOX entry of 2026-09-18 *THE LEDGERS BECOME SMALL, ORDERED AND ALWAYS CURRENT* (enacted into LED-1..LED-5 by CONDUCT #4), which lists the readers.
+depends-on: none
+scope: every reader BOB's entry names — QUEUE: `tools/{owed,nc-m039,mintid,plancheck,rowdesign}.mjs`, `bio-plane/scripts/op-claims.mjs`, tests `acquire, check-firing, corpuscheck(+control), m041-instrument-census(+control), mintid, op-claims, planning-hygiene, publish, refselectivity.control, rowdesign.control, scheduler`; DEBT: `tools/{decided,owed,mergecarry,mintid,plancheck,nc-m039}.mjs`, `bio-plane/scripts/armdecay.mjs`, tests `caseflip, corpuscheck, dec65-strength-reach.control, derivation-bounds, m025-arm-anchor-witness, mintid, planning-hygiene` — **AND GREP FOR ANY READER THE LIST MISSED** (`tools/status.mjs`, `tools/statussweep.mjs`, `tools/strandedwork.mjs`, `tools/retirable.mjs` and anything under `tools/` or `bio-plane/` that opens either file). For each: what it reads, and whether it needs a CLOSED row to exist (id allocation, a ruling's source line, a pinned count). Verify — do not assume — which already read `docs/archive/ledgers/` (mintid is said to).
+accepts-when: a table in this row (and `MEASUREMENTS.md`) naming each reader, what it reads, and its dependency on closed rows; every reader that needs history is named with the change it will need; battery green; **NO row moved.**
+NEGATIVE CONTROL: none owed — an audit with no code change; its falsifier is the grep for readers the list missed, stated with its command.
+added: 2026-09-18 · CONDUCT #4 (enacted from BOB #14's inbox entry; the LED ids are BOB's names for the five, kept as written.)
+
+### LED-2 · queued — **THE ARCHIVER AND ITS GATE: `tools/ledger.mjs archive <ID>` moves ONE closed row verbatim to `docs/archive/ledgers/<FILE>-closed.md`, the id set of live ∪ archive conserved EXACTLY; `plancheck` arms for no-closed-row-in-a-live-ledger, a size budget, and depends-on resolution.** — waits on LED-1. **EXEMPT FROM THE M0 HOLD BY NAME.**
+milestone: M0 (process, Bob's direction 2026-09-18)
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with BOB #14's inbox entry of 2026-09-18 (LED-2's paragraph) and LED-1's reader table.
+depends-on: LED-1
+scope: as BOB's entry states: `archive <ID>` for a `done`/`superseded` QUEUE row or a CLOSED DEBT row with no declared residue; `plancheck` arms (a) no closed row in a live ledger, (b) a size budget per ledger and per open row (start QUEUE ≤ 150 KB, row ≤ 3 KB) — WARN until LED-4 lands, then FAIL, (c) every `depends-on` resolves to an open row, an archived done row, or a `tools/status.mjs` claim reading BUILT.
+accepts-when: suite + negative control, one arm per property; **the CONSERVATION arm is the one that matters** — a mover that drops a row is the D-288 loss shape; battery green; plancheck BARE.
+NEGATIVE CONTROL: one arm per property, **conservation first**: a mover that drops one row must FAIL naming the id. **State how a liar would satisfy this before stating what it checks:** the cheapest green is a conservation check that counts rows rather than comparing id SETS — a dropped row and a duplicated row cancel.
+added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox entry.)
+
+### LED-3 · queued — **THE MIGRATION: every closed row moved with LED-2's tool, id sets (live ∪ archive) EQUAL before and after, counted and diffed rather than eyeballed.** — waits on LED-2. **EXEMPT FROM THE M0 HOLD BY NAME.**
+milestone: M0 (process, Bob's direction 2026-09-18)
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with BOB #14's inbox entry of 2026-09-18 (LED-3's paragraph).
+depends-on: LED-2
+scope: move every closed QUEUE and DEBT row with `tools/ledger.mjs`; nothing by hand.
+accepts-when: id sets before and after EQUAL (diffed); `decided.mjs`, `owed.mjs`, `mintid.mjs` answer identically for a sample of archived ids before and after; battery green; plancheck BARE.
+NEGATIVE CONTROL: the id-set diff is the control — one row withheld from the move must show as a difference naming it.
+added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox entry.)
+
+### LED-4 · queued — **THE OPEN ROWS CUT TO THEIR FIELDS AND ORDERED AS THEY WILL BE PROCESSED — CONDUCT's own act on CONDUCT's own file; BOB checks the order against `tools/status.mjs` before it lands.** — waits on LED-3. **EXEMPT FROM THE M0 HOLD BY NAME.**
+milestone: M0 (process, Bob's direction 2026-09-18)
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with BOB #14's inbox entry (LED-4's paragraph) and BOB's BUILD ORDER of 2026-09-18 (the BOB INBOX), which is the order's input.
+depends-on: LED-3
+scope: each open row keeps heading, `milestone`, `design` (a section), `depends-on`, `scope`, `accepts-when`, `NEGATIVE CONTROL`; everything else — prior state, landing narratives, correction histories — moves to the archive under the row's id, verbatim; the file is ordered top-runnable first, dependents after what they rest on. Same treatment for `DEBT.md`'s open rows: one paragraph of cost, one of disposition as it stands NOW.
+accepts-when: every open row carries only its fields; the history is in the archive verbatim (diffed); BOB has checked the order; LED-2's size budget passes and its WARN becomes FAIL in the same landing.
+NEGATIVE CONTROL: LED-2's budget arm is the control — a row restored to its full history must FAIL the per-row budget.
+added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox entry. Performed by CONDUCT itself, not a worker: the order is judgement over CONDUCT's own file.)
+
+### LED-5 · queued — **THE STANDING STEP, IN THE FILE WHOSE OWNER PERFORMS IT: integration ends with `node tools/ledger.mjs archive <ID>` in the SAME commit as the `done` flip — not a later sweep, which is what let August's archiving grow back.** — waits on LED-2. **EXEMPT FROM THE M0 HOLD BY NAME.**
+milestone: M0 (process, Bob's direction 2026-09-18)
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with BOB #14's inbox entry (LED-5's paragraph).
+depends-on: LED-2
+scope: `kickoffs/CONDUCT.md` (the integration sequence), `kickoffs/BOB.md` and the DEBT disposition convention; LED-2(a) makes a forgotten archive a failing gate rather than a slow regrowth.
+accepts-when: the step is in each kickoff's own loop; a `done` flip without its archive in the same commit FAILS `plancheck` (LED-2(a)), shown by a control.
+NEGATIVE CONTROL: a `done` flip committed without the archive → `plancheck` FAILS naming the row.
+added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox entry.)
+
 ### M0-31 · done — landed `e194590`, merged at `3d6ffe3` by CONDUCT #11. **Prior state, kept as the record: queued** — **SEARCH item 3 — the measurement: §5's four numbers (text bytes per captured page and per document; index bytes per text byte on workerd's SQLite; promote-time CPU per indexed unit), recorded in MEASUREMENTS.md; §4.3's per-capture bound SET from them.**
 milestone: M0 (background lane, holds no slot) — a measurement before a design's number
 interface: none
@@ -1448,6 +1446,27 @@ landed: `3c5cbbf`/`e0085eb`, merged on `main`. **THE ANSWER IS A STATED `undeter
 
 ## RECORD — ACTIVE (re-promoted 2026-08-05; the 2026-08-01 handover order is fully DRAINED and the area now runs D-200)
 
+### REC-123 · running — **SPAWNED 2026-09-18 by CONDUCT #4 (BOB #14's build order; a one-for-one refill of a freed product slot). DEPENDS-ON CHECKED AGAINST THE CODE at spawn: the `MACHINE_CANNOT_*` family present in `bio-plane/checks/bio-checks.mjs`; `11.machine-fence` reads UNDETERMINED in `construct-status.json`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **CAN AN `ai` CREDENTIAL ATTEST OR RATIFY? `construct-status.json` 11.machine-fence reads UNDETERMINED because nobody has TRACED it: authored acts are fenced by the `MACHINE_CANNOT_*` family, but the attest and ratify handlers were never followed below the scope check. A machine attesting the record is the trust-of-the-record question itself.** — waits on nothing; owner RECORD. BOB #14's build order, item 1.
+milestone: M3 — the record's own refusals reach every authority that writes it
+interface: none for the TRACE; I3 if the trace finds an unfenced path and the fix adds a refusal — then mint an IC with `node tools/mintid.mjs IC` BEFORE fixing, against I3 as read at resolution
+design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §3 (the rules, stated once — what a machine may and may not author) read with `docs/architecture/BIO_System_Design.md` §3 construct 11 and the claim `11.machine-fence` in `docs/architecture/construct-status.json`.
+depends-on: none — the `MACHINE_CANNOT_*` family is on `main` (`bio-plane/checks/bio-checks.mjs`); verify.
+scope: **TRACE FIRST, BY DRIVING, NOT BY READING:** mint an `ai` credential scoped to attest (and one scoped to ratify) and drive EVERY op that attests or ratifies — `op=attest`, `op=attesttext`, `op=textattest`, `op=transcriptionattest` (REC-87, new today), `op=ratify` and any case/edition ratification — through the control plane in a scratch store, recording for each: refused by name / refused by the scope check only / ACCEPTED. **Grep for every attest/ratify writer rather than trusting this list.** Then: every path that ACCEPTS a machine attestation or ratification is a defect — fence it with a named `MACHINE_CANNOT_*` refusal at the handler (not only the scope check, which a broader scope would pass), unless the design EXPLICITLY permits it, in which case cite the section and leave it. Move `11.machine-fence` to BUILT or to a named PARTIAL in `construct-status.json` with PROBES (an absence claim needs a search that must stay empty), then `node tools/status.mjs --write`.
+accepts-when: a table in the suite and the row naming every attest/ratify op and its measured machine outcome; every op refuses a machine credential BY NAME below the scope check (or is cited as permitted by the design); `construct-status` updated and `--check` 0 drift; `node tools/plancheck.mjs --local` then BARE; `node scripts/coverage.mjs --strict` exit read UNPIPED; `cd bio-plane && npm run test:battery` green own-baseline, read by its COMPLETION LINE.
+NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with the colon**) — each new fence removed → a machine attestation is ACCEPTED and the arm FAILS naming the op; **over-strictness:** a MEMBER attesting through the same op still succeeds. **State how a liar would satisfy this before stating what it checks:** the cheapest green is to test only the ops this row names — the one attest path nobody listed is the one a machine will use.
+added: 2026-09-18 · CONDUCT #4 (BOB #14's build order, 8008cde3, item 1 — "trace the attest and ratify handlers FIRST". Id minted with `node tools/mintid.mjs REC`, run bare.)
+
+### REC-124 · running — **SPAWNED 2026-09-18 by CONDUCT #4 (BOB #14's build order; a one-for-one refill of a freed product slot). DEPENDS-ON CHECKED AGAINST THE CODE at spawn: `op=conclude` and the inquiry present; `8.claim` reads PARTIAL in `construct-status.json` with its empty-search probes passing. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **THE CLAIM IS A FIELD THAT CONCLUDING ADOPTS — AND TODAY IT IS ONLY THE `conclusion` FIELD: `construct-status.json` 8.claim reads PARTIAL (no `fm.claim`, `meta.claim`, `claim_text` or `claimText` anywhere in the plane). Everything in the case path rests on it** (BOB #14's build order, item 2). — waits on nothing; owner RECORD.
+milestone: M3 — the inquiry carries what it claims, separately from what it concluded
+interface: I3 and I5 — its OWN IC, minted with `node tools/mintid.mjs IC` BEFORE building, against the bases as read at resolution (I3 23.6.0, I5 1.18.0 on `main` when rowed)
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §What a CLAIM is, and why it is a field rather than an object — **READ ITS FRONT MATTER FIRST: the file is NON-AUTHORITATIVE; the authority is the plane and DEC-15 through DEC-32 in `docs/development/DECISIONS.md` (DEC-32 decided 2026-08-04), and several body sentences are stale as written** — with `docs/architecture/BIO_System_Design.md` §3 construct 8 and the claim `8.claim` in `docs/architecture/construct-status.json`.
+depends-on: none — the inquiry and `op=conclude` are BUILT; verify.
+scope: **FALSIFY THE DESIGN BEFORE BUILDING:** run `node tools/decided.mjs "claim"` and read DEC-32 and whatever it decided about the claim's shape; if the rulings do NOT fix a distinct claim field and the act by which concluding ADOPTS it, STOP and report — that is a design act for BOB, not a build. If they do: the inquiry gains a distinct CLAIM (what the member asserts, stated before the evidence is weighed), and `op=conclude` ADOPTS it — the conclusion records WHICH claim it adopted, so a conclusion can never silently assert something no claim stated. Existing concluded inquiries read back with their claim UNDETERMINED and stated, never back-filled from `conclusion`. Move `8.claim` in `construct-status.json` with probes, then `--write`.
+accepts-when: driven through the ops as a member: an inquiry states a claim, concludes by adopting it, and the conclusion names the adopted claim; concluding with no claim stated is either refused by name or recorded as adopting none — **whichever the rulings say, cited at the site**; pre-existing inquiries read back claim-undetermined; `construct-status --check` 0 drift; `node tools/plancheck.mjs --local` then BARE; `node scripts/coverage.mjs --strict` exit read UNPIPED; battery green own-baseline, read by its COMPLETION LINE.
+NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with the colon**) — adoption removed → the conclusion no longer names its claim and the arm FAILS; back-fill introduced (claim := conclusion on read) → the legacy arm FAILS. **State how a liar would satisfy this before stating what it checks:** the cheapest green is a `claim` column that simply COPIES `conclusion` at conclude time — a second name for one field, which is the thing the design says a claim is not.
+added: 2026-09-18 · CONDUCT #4 (BOB #14's build order, 8008cde3, item 2; its DESIGN column reads verified, and the row still tells the builder to falsify that first because the named document disclaims its own authority. Id minted with `node tools/mintid.mjs REC`, run bare.)
+
+
 ### REC-122 · queued — **D-161's LAST ACT: A MEMBER CHOOSES THE ON-POINT PAIR OF A CONNECTION (Bob's 2026-09-14 refinement, §5.4) — the act that turns REC-120's honest UNDETERMINED into a definite answer where a member has established which mention is to the point.** — waits on nothing in code; owner RECORD (+ UI for the affordance).
 milestone: M4 — D-164, the content-extent primitive (RECORD)
 interface: I5 and I3 — its OWN IC, minted with `node tools/mintid.mjs IC` BEFORE building, against the bases as read at resolution (I5 1.18.0, I3 23.5.0 on `main` when rowed)
@@ -1459,7 +1478,7 @@ NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with t
 added: 2026-09-18 · CONDUCT #4 (REC-120's own row said act (3) is written only once acts (1)–(2) land; they have. Id minted with `node tools/mintid.mjs REC`, run bare.)
 
 
-### REC-121 · running — **SPAWNED 2026-09-18 by CONDUCT #4 as a ONE-FOR-ONE REFILL of the slot REC-104 freed (BOB #14's product-only rule; chosen over FW-20 because a provenance mislabel on a member-facing filter outranks breadth). DEPENDS-ON CHECKED AGAINST THE CODE at the merge of REC-104: `cited_as` (FW-19) and `chain_kind` (REC-104) both present in `bio-plane/src/schema.mjs`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **`content:chain=undetermined` MATCHES AN IMAGE CITED AS ITS OWN BYTES, whose chain is NULL BY MEANING ("does not apply") and NOT undetermined — so a member filtering for undetermined provenance is shown rows whose provenance question has no answer to be undetermined about.** Found by REC-104's worker, which correctly left it alone (its item must not change an answer). — waits on nothing; owner RECORD.
+### REC-121 · queued — **A FLIP WITHOUT A SPAWN, CORRECTED 2026-09-18 by CONDUCT #4 and recorded rather than silently undone: this row read `running` on `origin/main` from `3fe0ce81` until this commit with NO worker ever started** — BOB #14's build order landed between the flip and the spawn and the spawn was never made; the verification step (*confirm the act took*) was skipped. It returns to `queued` because it is not on that order; whether a DEFECT CORRECTION to a just-landed item sits outside the order is routed to BOB. — **`content:chain=undetermined` MATCHES AN IMAGE CITED AS ITS OWN BYTES, whose chain is NULL BY MEANING ("does not apply") and NOT undetermined — so a member filtering for undetermined provenance is shown rows whose provenance question has no answer to be undetermined about.** Found by REC-104's worker, which correctly left it alone (its item must not change an answer). — waits on nothing; owner RECORD.
 milestone: M4 — D-164, the content-extent primitive (RECORD)
 interface: I3 — only if the filter's published vocabulary gains a value (e.g. a `does-not-apply` arm); mint an IC with `node tools/mintid.mjs IC` BEFORE building if so, against I3 as read at resolution
 design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.2 (the `image` reference and `cited_as`, IC-125) read with `docs/development/CONTENT-SEARCH-DESIGN.md` §4 (the `content:` arm and its `chain` filter, as amended by REC-104).
@@ -1991,7 +2010,7 @@ accepts-when: narrowing produces a new version with the narrower row and leaves 
 NEGATIVE CONTROL: run and recorded — a narrowing that would move the OLD version's target → refused (5.8 driven); a "narrowing" to a WIDER extent → refused by name; over-strictness: promote without narrowing unchanged.
 added: 2026-09-14 · CONDUCT #10 (draining the 2026-09-14 BOB #10 act-6 entry: the nine items scoped there, in its dependency order; the entry's item text stays in the inbox record as the scope's authority beside IC-83/IC-84 and the D-164 study — a notification, not a second copy)
 
-### REC-87 · running — **SPAWNED 2026-09-18 by CONDUCT #4 as a ONE-FOR-ONE REFILL under BOB #14's product-only rule. DEPENDS-ON CHECKED AGAINST THE CODE AT SPAWN, on `23f8df76`: UI-61 done and REC-97's `op=cite` widening present; REC-86 (same `store.mjs` region near `op=cite`, same I3) MERGED at 23.3.0, so this starts from its tree; CAP-10's `convert` step kind is present, so a second new I2 step kind resolves against I2 2.4.0. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **waits on REC-97 (the `op=cite` widening UI-61 found missing) and UI-61; its own IC on I2 (a step kind) and I3, minted at spawn.** — **Act 6 item 7 — TRANSCRIBE (Bob's 5.2): a member selects a portion and types its text — step kind `member(handle)`, cap undetermined and STATED, attestable by a SECOND member, the transcriber's own attestation refused by name; RECORD + UI.**
+### REC-87 · done — landed `6cd2a450`, merged by CONDUCT #4, 2026-09-18. **TRANSCRIBE's PLANE HALF IS BUILT:** a member types a selected portion's text as a `typed(member)` derivation step, cap UNDETERMINED by declaration; a SECOND member may attest it; **the typist attesting their own typing is refused by name (C-52.9)** and excluded at every read. A typing is raised only by its OWN attestations, never the capture's, and is not staled by a re-read of its capture. IC-127 (I2 2.5.0) and IC-128 (I3 23.6.0) RESOLVED ACCEPTED. **The step kind is spelled `typed`, not the row's `member`** — `member` is already a `content:` query word and the collision made an existing query ambiguous; the worker caught it in its own battery. **A REAL DEFECT FOUND BY A CONTROL ARM AND FIXED:** C-45.2 refused a typing of any capture with no extraction chain — Bob's own case, a scan no engine could read. **At integration CONDUCT found the construct map's `4.transcribe` ABSENT probe BLIND** — it searched for a `member:` step kind and passed while the construct was built; corrected to BUILT with positive probes, plus `4.transcribe-ui` ABSENT. Eleven-arm control `bio-plane/test/nc-rec87.mjs`. **Not built, named:** the UI act (delegated); office portions (cells, paragraphs, shapes) are refused (C-52.5) because the attestation extent grammar is `document | page | region` only; *nothing prefilled* is enforceable only in the UI. **Prior state, kept as the record: running** — **SPAWNED 2026-09-18 by CONDUCT #4 as a ONE-FOR-ONE REFILL under BOB #14's product-only rule. DEPENDS-ON CHECKED AGAINST THE CODE AT SPAWN, on `23f8df76`: UI-61 done and REC-97's `op=cite` widening present; REC-86 (same `store.mjs` region near `op=cite`, same I3) MERGED at 23.3.0, so this starts from its tree; CAP-10's `convert` step kind is present, so a second new I2 step kind resolves against I2 2.4.0. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **waits on REC-97 (the `op=cite` widening UI-61 found missing) and UI-61; its own IC on I2 (a step kind) and I3, minted at spawn.** — **Act 6 item 7 — TRANSCRIBE (Bob's 5.2): a member selects a portion and types its text — step kind `member(handle)`, cap undetermined and STATED, attestable by a SECOND member, the transcriber's own attestation refused by name; RECORD + UI.**
 milestone: M4 — D-164, the content-extent primitive (RECORD)
 interface: I2 (a new step kind — FRAMEWORK dormant, CONDUCT answers-for) and I3 — its OWN IC, filed at spawn
 design: `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §5.2 ("Is a member's transcription a derivation or a verification?" — Bob's 5.2 ruling, which this row builds) and §6 (the mechanism), under `BIO_Content_Framework_v0_10.md` Part II §14.4 and §18 piece 1
@@ -2282,7 +2301,7 @@ landed:
 
 ---
 
-### CPDF-18 · running — **SPAWNED 2026-09-18 by CONDUCT #4 as a ONE-FOR-ONE REFILL under BOB #14's product-only rule. DEPENDS-ON CHECKED AGAINST THE CODE AT SPAWN, on `23f8df76`: FW-19 MERGED — the `image` reference and the grammar that admits `image {page, rect}` are in the tree (IC-124/IC-125); CPDF-19 finished and its branch moves the acquire path's tier-3 code into shared functions, so if CPDF-18 edits acquire code it rebases onto CPDF-19 once that merges. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **BREADTH item 4 — PDF images as content, and the table measurement: `image` as `{page, rect}` from the structure op; the crop as a derived rendition; and the GO/NO-GO measurement of a table-recognition step on the runtime (reproducibility of the structure across runs, cost) recorded BEFORE any table reader is rowed.** — waits on FW-19.
+### CPDF-18 · done — landed `84954ce4`, merged by CONDUCT #4, 2026-09-18. **PDF IMAGES ARE CONTENT:** the structure op emits `image {page, rect}` for every image a page PAINTS (a second content-stream walk interpreting `q`/`Q`/`cm`/`Do` and Form `/Matrix`, inline images reported), a row mints from that reference as BYTES, and its crop is a derived rendition (`pdf-worker/src/imagecrop.mjs`), driven acquire → pdfstructure → promote → content. **TABLE RECOGNITION MEASURED NO-GO (M-55)** against criteria written INTO THE PROBE BEFORE RUNNING IT: reproducible 15/15, no false tables on 13 table-free pages — and a RULED 3×3 table NOT FOUND AT ALL. No table reader built, as the row required. Booked as IC-124's addendum, I2 2.6.0. Five-arm control `bio-plane/test/nc-cpdf18.mjs`. **Debt:** D-419 (no op asks for the crop), D-420 (an image row is checked against the page COUNT, not against what the page paints). **Prior state, kept as the record: running** — **SPAWNED 2026-09-18 by CONDUCT #4 as a ONE-FOR-ONE REFILL under BOB #14's product-only rule. DEPENDS-ON CHECKED AGAINST THE CODE AT SPAWN, on `23f8df76`: FW-19 MERGED — the `image` reference and the grammar that admits `image {page, rect}` are in the tree (IC-124/IC-125); CPDF-19 finished and its branch moves the acquire path's tier-3 code into shared functions, so if CPDF-18 edits acquire code it rebases onto CPDF-19 once that merges. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **BREADTH item 4 — PDF images as content, and the table measurement: `image` as `{page, rect}` from the structure op; the crop as a derived rendition; and the GO/NO-GO measurement of a table-recognition step on the runtime (reproducibility of the structure across runs, cost) recorded BEFORE any table reader is rowed.** — waits on FW-19.
 milestone: M2 — CONTENT-PDF's breadth: images reachable as content; tables measured before designed
 interface: none (the `image` reference is FW-19's IC)
 design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.3, §3.4 and §7 row 4 (BREADTH's own Incomplete §3.3 is the measurement half)
