@@ -3288,6 +3288,52 @@ CREATE INDEX IF NOT EXISTS capture_text_bundle ON capture_text(bundle_id);
 -- measurement, the way REC-90 did for the content table.
 -- =========================================================================
 
+-- =========================================================================
+-- REC-87 / IC-128 -- TRANSCRIBE (Bob's 5.2). A member selects a portion of a
+-- document and types what it says. The PORTION is a content row (content_id
+-- is the hash of the capture, the canonical extent and a chain whose one step
+-- is typed(member) carrying the digest of the text), so the row says WHERE and
+-- WHO. This table holds the one thing a content row has no column for -- the
+-- TEXT the member typed -- keyed by that row.
+--
+-- ONE ROW PER CONTENT ROW, AND NEVER REWRITTEN. The digest is in the chain and
+-- the chain is in the id, so different text is a different row by construction
+-- and a re-typing of the same text by the same member finds the same row. The
+-- write is INSERT OR IGNORE, on the content table's own rule.
+--
+-- NOT DERIVED, AND PURGED. A member's typing is authored and nothing re-derives
+-- it, but it carries bundle_id, so it rides op=purge's TABLES list and clears
+-- in both arms (D-113) with the content rows it describes.
+CREATE TABLE IF NOT EXISTS transcriptions (
+  content_id   TEXT PRIMARY KEY,  -- the content row the member minted by typing
+  capture_sha  TEXT NOT NULL,     -- the exact copy the text was typed from
+  bundle_id    TEXT NOT NULL,     -- purge, and the viewer gate
+  transcriber  TEXT NOT NULL,     -- a member id, never a machine stamp (C-52.1)
+  text         TEXT NOT NULL,     -- what the member typed, byte for byte
+  text_sha256  TEXT NOT NULL,     -- the digest the chain step carries
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS transcriptions_bundle ON transcriptions(bundle_id);
+-- By CAPTURE: the stale pass excludes a capture's transcriptions on every
+-- re-read, and that exclusion must be a seek rather than a scan.
+CREATE INDEX IF NOT EXISTS transcriptions_capture ON transcriptions(capture_sha, content_id);
+-- A SECOND MEMBER'S ATTESTATION OF ONE TRANSCRIPTION. Separate from
+-- text_attestations and on purpose: those attest the CAPTURE's machine text
+-- over an extent, and an attestation of a member's typing is testimony about
+-- DIFFERENT text. Folding them together would let a check of the OCR raise a
+-- member's typing, or the reverse. The transcriber is never an attestor here
+-- (C-52.9, refused at the act and excluded again at every read).
+CREATE TABLE IF NOT EXISTS transcription_attestations (
+  content_id   TEXT NOT NULL,
+  bundle_id    TEXT NOT NULL,     -- purge
+  attestor     TEXT NOT NULL,     -- a member id, never a machine stamp (C-35.10)
+  at           TEXT NOT NULL,
+  note         TEXT,
+  PRIMARY KEY (content_id, attestor)
+);
+CREATE INDEX IF NOT EXISTS transcription_attestations_bundle ON transcription_attestations(bundle_id);
+-- =========================================================================
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest

@@ -182,6 +182,54 @@ export const STEP_KINDS = {
      how the BYTES came to be; the `layer` step after it is the extraction. */
   convert:  { role: "derivation", label: "the document as converted by the host that served it",
               tier: null, names: ["engine", "format"], unmeasured: "undetermined", letter: "calibrated" },
+  /* REC-87 / IC-127 — A MEMBER TYPED THE TEXT (Bob's 5.2, CONTENT-EXTENT-DESIGN-
+     SPACE.md §5.2). The case it exists for is his: a hundred-year-old title, a
+     photocopy of a mimeograph, terms in cursive no engine reads and a person can.
+     The member selects a portion and types what it says.
+
+     A DERIVATION, NOT A VERIFICATION, and that is the ruling rather than a
+     classification of convenience: there is no machine text the member is
+     checking — they PRODUCED the text, so it is authored with the provenance of an
+     authored act, and rule 2 governs it like any other step that produced text.
+     What RAISES it is a SECOND member's attestation (`gradeCeiling`, unchanged),
+     never the transcriber's own — the store refuses that by name (C-52).
+
+     `typed(member)` is carried as `{ step: "typed", member: <handle>,
+     text_sha256: <digest of the typed text> }`. The digest binds the step to the
+     text it produced, so a content row's id (hash of capture, extent, chain)
+     differs for different text and an attestation of one typing can never be read
+     as an attestation of another.
+
+     THREE DECLARED PROPERTIES, each read by a rule rather than by a test against
+     the word "member":
+
+       `names`      the member must be named (C-35.5) — a transcription nobody
+                    typed is not one.
+       `unmeasured` "undetermined", CAP-10's property, and HERE IT IS NOT AN EDGE
+                    CASE — it is the whole of the member's cap. A person is not an
+                    engine with a calibration; the sequence rule (an unmeasured step
+                    neither raises nor lowers) would let an OCR letter measured on
+                    OTHER text silently bound what the member typed, which is the
+                    swallow this property exists to refuse. `derivationCap` answers
+                    UNDETERMINED over the member's extent, and so `captureBound`
+                    does too, with no code beyond the kind.
+       `letter`     "never": a letter on this step is refused (C-35.14). Not
+                    "calibrated" — there is no calibration of a person to name, so
+                    the permitted route to a letter is the attestation, and only
+                    that.
+
+     `tier: null` — typing is not a rung on the extraction ladder.
+
+     THE KIND IS SPELLED `typed`, NOT `member`, AND THE ROW SAID `member(handle)`.
+     Measured, not preferred: the query compiler DERIVES its `content:chain`
+     vocabulary from these keys (`query.mjs`), and `member` is already a bare word
+     of the same arm — `content:member`, a document a MEMBER marked (`minted`).
+     A kind named `member` made that published query AMBIGUOUS and refused it
+     (content-arm.test and meaningquery.test went red on exactly that). The
+     handle still rides the step's `member` field, so the notation is
+     `typed(member)`. */
+  typed:    { role: "derivation", label: "a member typed the text",
+              tier: null, names: ["member"], unmeasured: "undetermined", letter: "never" },
 };
 
 /** The BASES a per-region confidence number may have, and this enum IS the
@@ -431,6 +479,15 @@ export function checkChain(chain) {
         `the ${step.step} step claims fidelity ${JSON.stringify(step.cap)} and names no calibration. `
         + `A ${step.step} step's cap is UNDETERMINED until a measurement of it exists, and a letter `
         + `written here without one would be the record claiming a fidelity nobody measured`);
+    /* REC-87 / IC-127: a kind whose letter is NEVER a caller's to write (`member`).
+       A person's typing has no calibration, so a letter here could only be the
+       transcriber grading their own act — the equality that costs nothing, one
+       altitude below the attestation fence that refuses the same thing by name. */
+    if (STEP_KINDS[step.step].letter === "never" && step.cap != null)
+      return refusal("TEXT_CHAIN_LETTER_ON_PERSON",
+        `the ${step.step} step claims fidelity ${JSON.stringify(step.cap)}. What a member typed is `
+        + `UNDETERMINED until a SECOND member attests it against the page; a letter on the step itself `
+        + `would be the typist grading their own work`);
   }
   /* END DEC-49 REGION is-text-chain-shape */
   return null;
@@ -736,7 +793,9 @@ export function describeChain(chain) {
        sentence it was. */
     const into = (STEP_KINDS[s.step].names || []).includes("format") && s.format ? ` to ${s.format}` : "";
     const who = s.engine ? ` (${s.engine}${s.version ? ` ${s.version}` : ""}${into})` : "";
-    const by = s.step === "attested" && s.member ? ` (${s.member}${s.at ? `, ${s.at}` : ""})` : "";
+    /* REC-87: a `typed` step says WHO typed, beside the label, as `attested` does. */
+    const by = (s.step === "attested" || s.step === "typed") && s.member
+      ? ` (${s.member}${s.at ? `, ${s.at}` : ""})` : "";
     /* D-252: a SCOPED step says which pages it covers, and it has to. Without
        it a mixed document's chain reads as a sequence — "the text layer was
        turned into pixels and OCR'd" — which is not what happened to any page

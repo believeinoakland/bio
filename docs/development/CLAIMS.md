@@ -13153,3 +13153,69 @@ control showed it flips with one character (`MEASUREMENTS.md` M-56). THE ACT: FR
 probe's ground to something the fix does not move — the WHOLE-document citation of A reaching at A is
 one — and its verdict line to read p.9 undetermined / p.7 outside as the fixed state. Until then the
 probe's exit 2 on a post-REC-120 tree is expected and is NOT evidence of a broken fixture.
+
+## CLAIM 2026-09-18 RECORD (REC-87 — TRANSCRIBE: a member selects a portion of a document and types its text)
+
+Worker spawned by CONDUCT #4 into worktree `agent-a4f337d8455ba96c8`, branch
+`worktree-agent-a4f337d8455ba96c8`. Minted at spawn with `node tools/mintid.mjs`: **IC-127** (I2 —
+the chain grammar gains the `typed(member)` step kind), **IC-128** (I3 — the transcribe ops),
+**C-52** (the act's refusal family).
+
+Paths, named precisely because `store.mjs` is shared ground with REC-104, REC-120 and REC-100:
+
+- `bio-plane/src/textchain.mjs` — ONE new `STEP_KINDS` entry (`typed`), the `letter: "never"`
+  arm in `checkChain`, and `describeChain`'s naming of who typed. No other rule edited.
+- `bio-plane/src/store.mjs` — NEW methods `transcribe()`, `transcriptionAttest()`,
+  `transcriptionRead()` and their private helpers in their own DEC-49 regions; `#contentStanding`,
+  `#contentEarned`, `contentRead` and `#markContentStale` edited ONLY to route a TRANSCRIPTION row
+  to its own attestations and keep it from going stale on a machine re-read. Existing rows'
+  answers are unchanged.
+- `bio-plane/src/schema.mjs` — two NEW tables (`transcriptions`, `transcription_attestations`),
+  before `host_governor`; both in `purge`.
+- `bio-plane/src/index.mjs` — three OPS rows (`transcribe`, `transcriptionattest`,
+  `transcription`), their SESSION_OPS/NEEDS/viewer/author stamps; the dispatch.
+- `bio-plane/src/affordances.mjs` — the new ops in `RUNG_ABSENT` / `NON_ACTS`.
+- `bio-plane/checks/bio-checks.mjs` — `TRANSCRIBE_CHECKS` (C-52) and ONE row in
+  `TEXT_CHAIN_CHECKS` (C-35.14).
+- `bio-plane/test/transcribe.test.mjs`, `bio-plane/test/nc-rec87.mjs` — new. Any existing suite
+  pinning a vocabulary this item grows is CORRECTED at its site, never exempted.
+- `bio-plane/scripts/coverage.mjs`, `civicos-ui/check-refusal-codes.mjs` — floor tables only, from
+  printed figures.
+- `bio-plane/dist/**` — `npm run build` output.
+- `docs/development/INTERFACE-CHANGES.md` (IC-127, IC-128),
+  `docs/architecture/BIO_Content_Framework_v0_10.md` (front matter, §14/§18 where TRANSCRIBE's
+  state is stated), `docs/DECIDED.md` on regeneration, this block.
+
+**NOT CLAIMED:** `civicos-ui/**` other than the guard's floor table (the UI act is DELEGATED
+below), `docs/development/QUEUE.md` (CONDUCT flips the row), `INTERFACES.md` (CONDUCT's at
+RESOLUTION), `newgroup/**`, `tools/**`.
+
+**open as of 2026-09-18** — REC-87 is being built.
+
+### DELEGATION 2026-09-18 RECORD (REC-87) -> UI: **the TRANSCRIBE act on the page viewer — the half of REC-87's scope this worker did not build**
+
+**open as of 2026-09-18** — the plane half landed on branch `worktree-agent-a4f337d8455ba96c8` (IC-127, IC-128); nothing in `civicos-ui/**` offers it yet.
+
+THE ACT, stated as an act with its actor: **UI builds the transcribe affordance** in `civicos-ui/app.html`
+where a document's page is shown (the page canvas and region selection UI-61/UI-62 built for the
+citation picker). The act is Bob's 5.2 in his words — *"select a section of a document and type in their
+transcription of that content"*: the member selects a page or a region of one, and a TEXT FIELD takes what
+they read. **Nothing prefilled** (DEC-69): the field starts EMPTY and is never seeded with the capture's OCR
+or text-layer text — a typing copied from the machine is the machine's reading in a member's name.
+`POST op=transcribe` with `{bundleId, extent: {kind:"pdf-page", page, rect?} | {kind:"document"}, text}`.
+Render from the answer, verbatim (DEC-49): `chain_says`, and `transcription.why` — the typing's fidelity is
+UNDETERMINED until a DIFFERENT member attests it, and that sentence must be shown, not a blank grade.
+For a SECOND member: `GET op=transcription&id=` shows the text beside the page region; `POST
+op=transcriptionattest {contentId}` is their check. The typist's own attestation is refused by the plane as
+C-52.9 — do not offer the control to the typist (the answer's `transcriber` says who). Refusals carry C-52
+canned translations; a malformed region is C-45's. A leg may cite a typing by its `content_id` through
+`op=cite`, which already carries it.
+
+## CLAIM 2026-09-18 RECORD (REC-87 — TRANSCRIBE) — RELEASED
+
+released: 2026-09-18 by the REC-87 worker. Every claimed path is committed on branch
+`worktree-agent-a4f337d8455ba96c8`; the final tree ran the battery 227/227 · 14,168 green,
+`coverage --strict` exit 0 (183/183 ops through the control plane), UI harness exit 0,
+`plancheck --local` 0 fail. The step kind landed as `typed(member)` rather than the row's
+`member(handle)` spelling — the query compiler already owns `content:member` (IC-127 says why).
+The UI DELEGATION above stays open — it is UI's act, not this claim's.

@@ -1048,6 +1048,16 @@ const OPS = {
   textprovenance: { classes: ["admin", "member", "probe"],         mutating: false },
   textattest:   { classes: ["admin", "member", "probe"],           mutating: false },
   attesttext:   { classes: ["admin", "member"],                    mutating: true  },
+  /* REC-87 / IC-128 — TRANSCRIBE (Bob's 5.2), and the class cut is `attesttext`'s
+     one row up for `attesttext`'s reason: typing what a page says, and attesting
+     somebody else's typing, are both a person's word carrying their name for as
+     long as the record lasts. `mutating: true` keeps a machine credential off
+     the session route, and the store refuses a machine stamp BY NAME again
+     (C-52.1 for the typist, C-35.10 for the attestor) — two fences on purpose.
+     The READ is open to every class that may read, on `op=content`'s terms. */
+  transcribe:          { classes: ["admin", "member"],             mutating: true  },
+  transcriptionattest: { classes: ["admin", "member"],             mutating: true  },
+  transcription:       { classes: ["admin", "member", "probe"],    mutating: false },
   /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
      different cut from CPDF-10's above because a different thing is at stake.
 
@@ -1670,6 +1680,9 @@ const SESSION_OPS = {
                    /* REC-86: NARROW and its candidate read — a member's act on a
                       reading of a question, reached by a signed-in member. */
                    "narrow", "narrowcandidates",
+                   /* REC-87: TRANSCRIBE and the attestation of a typing — a person's
+                      word in their own name, `attesttext`'s route and reason. */
+                   "transcribe", "transcriptionattest",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1695,6 +1708,7 @@ const SESSION_OPS = {
                       is named beside `contentmint`, whose act it reads back. */
                    "extractproposals",
                    "narrow", "narrowcandidates",
+                   "transcribe", "transcriptionattest",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1767,6 +1781,15 @@ const NEEDS = {
      group putting its name on anything — the new reading is born `suggested`. */
   narrow:           "contribute",
   narrowcandidates: "contribute",
+  /* REC-87: NO FIFTH CAPABILITY TOKEN. Typing a portion's text writes a content
+     row and its text into the working corpus, and attesting a typing is
+     `attesttext`'s act on different text — both ride `contribute`, as
+     `attesttext` does. Nothing either writes is the group putting its name on
+     anything. The READ takes none, on `op=content`'s reasoning: resolving what a
+     citation points at, including what a member typed, is reading the record. */
+  transcribe:          "contribute",
+  transcriptionattest: "contribute",
+  transcription:       null,
   monitor:          "contribute",
   cite:             "contribute",
   sever:            "contribute",
@@ -8391,6 +8414,12 @@ export default {
            answer exactly as one that does not exist — the version acts' reason
            one screen up. Fails closed on an absent stamp. */
         || op === "narrow" || op === "narrowcandidates"
+        /* REC-87: all three TRANSCRIBE ops name a DOCUMENT (the act) or a content
+           row filed in one (the attestation and the read), so a document the
+           caller was never invited to must answer exactly as one that does not
+           exist — `contentmint`'s and `content`'s reason. Fails closed on an
+           absent stamp. */
+        || op === "transcribe" || op === "transcriptionattest" || op === "transcription"
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -8517,6 +8546,29 @@ export default {
        * straight back in wearing a server-side stamp. The principal answers what
        * a credential may SEE (D-199 (4)); it is not who acted. */
     if (op === "attesttext")
+      inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* REC-87 / IC-128 — WHO TYPED, AND WHO ATTESTED THE TYPING, stamped by the
+       server on `attesttext`'s rule one stamp up and for its measured reason: a
+       body field is a name a machine can post. Typing a page's text is a
+       member's own act in their own name, and so is attesting another member's
+       typing. The caller's own `transcriber`/`attestor` was copied in the loop
+       above and is overwritten here rather than honoured. A machine credential
+       of ANY class stamps `class:<cls>`, which `isMachineIdentity` answers TRUE
+       for, so the store refuses it BY NAME — C-52.1 at `transcribe`, C-35.10
+       (`checkAttestation`, unchanged) at `transcriptionAttest`. NEVER the
+       principal: `member:<id>` is not a machine identity by this record's own
+       predicate, and stamping it would let an `ai` credential type in a
+       member's name. */
+    if (op === "transcribe")
+      inner.searchParams.set("transcriber", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* The ATTESTOR of a typing, stamped on `attesttext`'s rule exactly and in its
+       shape. Its machine fence is C-35.10 inside `checkAttestation` — the SAME
+       function `attesttext` reaches, imported from textchain.mjs, which
+       `scripts/identity-claims.mjs` states it cannot follow (it reads the store
+       method and one private helper). Driven, not assumed: transcribe.test.mjs
+       section 3 refuses the MEMBER_TOKEN machine credential here as
+       TEXT_ATTEST_MACHINE, including when its body names a person. */
+    if (op === "transcriptionattest")
       inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* SK-7 / framework Part II §14.4 (Bob's 5.7) — WHO MARKED THIS PASSAGE AS
        CITABLE, stamped by the server on the same rule as every authorship field

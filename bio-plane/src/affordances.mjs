@@ -905,6 +905,15 @@ export const RUNG_ABSENT = {
      rather than undoing the first. The act writes a NEW reading, born `suggested`,
      and moves nothing existing — so it is corrected forward and never signed. */
   narrow:               { ground: "undetermined", is: "a member writes a NEW reading of a question's evidence with one citation pointing at LESS of its document; the old reading and its citation are untouched, and the new one is born suggested (Bob's 5.3)" },
+  /* REC-87 / IC-128 — TRANSCRIBE and the attestation of a typing. Ground
+     `undetermined` on `attesttext`'s and `narrow`'s measurement: neither act's
+     refusals are in `JUSTIFICATION_REFUSALS` (an empty typing, C-52.6, is not a
+     missing justification), and widening that class to admit them would be this
+     item re-grading the ladder to suit itself. NOT `reversible`: nothing takes a
+     typing back — a member types again, which is a DIFFERENT content row, and an
+     attestation is superseded by the same attestor's later one, never withdrawn. */
+  transcribe:           { ground: "undetermined", is: "a member types what a selected portion of a document says, in their own name; the typing is a content row whose chain is typed(member), its fidelity undetermined and stated until a DIFFERENT member attests it (Bob's 5.2)" },
+  transcriptionattest:  { ground: "undetermined", is: "a member's TESTIMONY that ANOTHER member's typing of a portion matches the page; raises what a leg citing that typing may claim, and is refused to the typist themself (C-52.9)" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -1579,6 +1588,16 @@ export const NON_ACTS = {
   narrow: "leg-directed: makes ONE leg of ONE reading point at less of its document, keyed by (inquiry, reading, ordinal); writes a new reading and moves nothing existing",
   /* REC-86: the candidate list is a READ, on `extractproposals`' reasoning below. */
   narrowcandidates: "read: the machine's proposals for making one leg more specific, keyed by (inquiry, reading, ordinal); labelled machine work and writes nothing",
+  /* REC-87 / IC-128. TRANSCRIBE is NOT an object-directed act, on `contentmint`'s
+     reason: its subject is a PORTION of a document — (document, extent) — and
+     `affordanceFacts` carries no page and no region, so an applies() over those
+     facts would offer it on every document whether or not a page was selected.
+     The surface that offers it is the page viewer with a region selected (UI's,
+     DELEGATED), which is where the portion is in hand. The attestation's subject
+     is ONE TYPING, keyed by content id, which is further still from an object. */
+  transcribe: "content-directed: a member types what a selected portion of a document says, keyed by (document, extent); mints a content row carrying the typing and writes no edge",
+  transcriptionattest: "content-directed: a second member attests another member's typing, keyed by content id; the typist's own attestation is refused",
+  transcription: "read: one member's typing by content id — the text, who typed it, who attested it, and what a leg citing it may claim",
   /* SK-8 — THE EXTRACT RUN'S TWO OPS, and the reason they are NON_ACTS is a
      stronger version of `contentmint`'s directly above rather than a weaker one.
      `extractpropose` is keyed by (RUN, document): its subject is a run's

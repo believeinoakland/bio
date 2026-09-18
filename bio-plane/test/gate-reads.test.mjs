@@ -889,6 +889,12 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "see exactly as an absent one (NARROW_NO_INQUIRY), before any leg or candidate is read. The "
       + "candidates are drawn only from the capture that one leg already rests on, so a caller who can "
       + "see the question can already read that leg's document; nothing wider is reached.",
+    transcription: "REC-87: one member's TYPING of a portion of a document, by content id — its text, who "
+      + "typed it and who attested it. GATED: the typing is filed in a DOCUMENT, so it takes the fail-closed "
+      + "viewer stamp beside op=transcribe and op=transcriptionattest in index.mjs and answers a typing in a "
+      + "document the caller may not see exactly as an absent one (TRANSCRIPTION_NOT_FOUND). The id is a hash "
+      + "of capture, extent and chain, so an answer that told hidden from absent would confirm a passage exists "
+      + "in a project the caller was never invited to — op=content's reason.",
     provenanceroutes: "REC-116: which documents in this instance carry a STANDING LOOKED_INDETERMINATE "
       + "marker — the roster REC-69's 2026-08-09 delegation asked for and nobody built. GATED, and the "
       + "disclosure is worth naming precisely: each row names a DOCUMENT the group holds and says the "
