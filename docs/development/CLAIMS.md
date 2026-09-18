@@ -13641,3 +13641,8 @@ REC-128/REC-130, building concurrently:
 RESOLUTION), `newgroup/**`, `tools/**`, MK-1's publication fence (C-53.10–.12 — lifting it is MK-3's act).
 
 **open as of 2026-09-18** — MK-2 is being built.
+
+**stopped at stand-down 2026-09-18** (CONDUCT #4's instruction) — the claim stays OPEN; branch
+`worktree-agent-a17c98e0548c9fd2d` holds the WIP commit `mk-2: WIP at stand-down — NOT DONE`, whose body
+says what is built, what is not, and the next step. IC-142 is minted and NOT yet written into
+INTERFACE-CHANGES.md.

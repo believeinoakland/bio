@@ -4228,7 +4228,9 @@ export default {
               cited_edition: cited
                 ? { edition: cited.edition, title: cited.title, bundle_sha: cited.bundle_sha,
                     ratified_at: cited.ratified_at, case_id: cited.case_id ?? null,
-                    capture: cited.capture, connection: cited.connection }
+                    capture: cited.capture, connection: cited.connection,
+                    /* MK-2 / IC-142: present only where the edition froze one. */
+                    ...(cited.testimony ? { testimony: cited.testimony } : {}) }
                 : null,
               detail: cited
                 ? "this leg rests on a published finding, so it can be served from this surface."
