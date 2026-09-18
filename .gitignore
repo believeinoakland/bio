@@ -326,6 +326,8 @@ m035-census.txt
 .d402-harness/
 .d404-harness/
 .d409-harness/
+# tools/status.mjs's negative control pen (bio-plane/test/status.control.mjs), 2026-09-18.
+.status-harness/
 .d408-harness/
 
 # REC-118's negative-control pen, on its OWN line rather than under a glob, for the

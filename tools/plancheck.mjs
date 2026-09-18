@@ -433,6 +433,25 @@ if (register) {
   }
 }
 
+/* ------------------------------------------- 2b'. WHAT IS BUILT AGREES WITH THE CODE (2026-09-18)
+
+   `docs/architecture/construct-status.json` is the single source of truth for what is BUILT,
+   ruled necessary by Bob 2026-09-18, and `BIO_System_Design.md` §3's state column is rendered
+   from it. `tools/status.mjs --check` re-runs every probe; any disagreement, in either
+   direction, or a §3 column that differs from its rendering, fails here as it fails at the push. */
+{
+  let out = "", code = 0;
+  try {
+    out = execSync(`${JSON.stringify(process.execPath)} ${JSON.stringify(join(ROOT, "tools/status.mjs"))} --check`,
+      { cwd: ROOT, stdio: "pipe", encoding: "utf8" });
+  } catch (e) { code = e.status || 1; out = `${e.stdout || ""}${e.stderr || ""}`; }
+  const line = (out.match(/status: \d+ claims, \d+ probes[^\n]*/) || [])[0];
+  if (code === 0 && line) notes.push(`construct status: ${line.replace(/^status: /, "")}`);
+  else fail(`CONSTRUCT STATUS DISAGREES WITH THE CODE (or did not run) — \`node tools/status.mjs --check\`:\n`
+          + out.split("\n").filter((l) => /^(DRIFT|STALE|MISSING|  )/.test(l)).slice(0, 12).map((l) => `        ${l}`).join("\n")
+          + `\n        Update docs/architecture/construct-status.json to what the code says, then --write.`);
+}
+
 /* ------------------------------------------- 2c. AND THE SAME CHECK, ARMED AT THE PUSH (M0-56)
 
    ARM 2b ABOVE IS CORRECT AND IS UNTOUCHED.  It caught all five of the occurrences that
