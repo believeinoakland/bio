@@ -13296,3 +13296,19 @@ control plane), `civicos-ui/**` beyond the guard's floor table, `docs/developmen
 (CONDUCT flips the row), `INTERFACES.md` (CONDUCT's at RESOLUTION), `newgroup/**`, `tools/**`.
 
 **open as of 2026-09-18** — REC-123 is being built.
+
+## CLAIM 2026-09-18 RECORD (REC-123 — CAN AN `ai` CREDENTIAL ATTEST OR RATIFY?) — RELEASED
+
+released: 2026-09-18 by the REC-123 worker, branch `worktree-agent-ad37cd8c19b30bf8b`. Every claimed path
+is committed on that branch; `bio-plane/src/store.mjs` was NOT edited. THE TRACE, measured by driving an
+`ai` credential whose scope named each op: `op=ratify` and `op=caseratify` were ACCEPTED on the pre-item
+tree (the record named the signing member) and are now refused by name (C-32.12 / C-32.13, IC-132);
+`op=attesttext` and `op=transcriptionattest` already refused by name (C-35.10); `op=expertiseconfirm` by
+`ADMIN_ONLY`; `adminendorse` / `signeradd` / `signerset` by the scope check alone, by shape;
+`op=textattest` is a read; `op=attest` is ACCEPTED and permitted (`BIO_Intake_Doctrine_v1_1.md` §3).
+Baseline before the first edit 232/232 · 14392; final tree 233/233 · 14433 (machine-attest +35,
+hygiene +3, machinefences-dec49 +2, planning-hygiene +1). `node scripts/coverage.mjs --strict` exit 0
+unpiped; `node civicos-ui/test/run.mjs` exit 0; `node tools/status.mjs --check` 0 drift. NEGATIVE CONTROL
+`node test/machine-attest.control.mjs` from `bio-plane/`: baseline 35/0 · ratify 32/3 · caseratify 32/3 ·
+overstrict 33/2, all as declared, every restore byte-identical. Minted: IC-132, D-421 (a DECISION FOR
+BOB — the operator's env-binding tokens still ratify with a member's signature; provisional: not refused).

@@ -9812,3 +9812,54 @@ DIFFERENT worker's HTTP path and not a plane op. Zero consumers of the new ops.
 **RESPONSES:** not yet collected. UI to answer on the act; SKILL and DIST expected NOT-AFFECTED.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at REC-87's integration — I3 23.5.0 → 23.6.0, MINOR (additive, as classed).** Base read AT RESOLUTION: 23.5.0, not the 23.3.0 proposed against (IC-126 and IC-129 each took a minor meanwhile). CONDUCT answers FOR SKILL and DIST: NOT-AFFECTED (no caller of the new ops), named as such. **UI's act is OWED, not waived** (the delegation in `CLAIMS.md`); `construct-status.json` now carries `4.transcribe` BUILT and `4.transcribe-ui` ABSENT. **Found by a control arm and fixed in this landing:** C-45.2 refused a typing of any capture with no extraction chain — Bob's own case, a scan no engine could read.
+
+## IC-132 · I3: `op=ratify` and `op=caseratify` REFUSE an `ai` credential BY NAME — `MACHINE_CANNOT_RATIFY` (C-32.12), `MACHINE_CANNOT_RATIFY_CASE` (C-32.13) · PROPOSED 2026-09-18 (REC-123, minted with `node tools/mintid.mjs IC` BEFORE the fix) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`: 23.6.0** (IC-128 ACCEPTED). **Proposed as MAJOR — 23.6.0 → 24.0.0.**
+  No op, field, table or response key is added or removed; two ops that ACCEPTED a class of caller now
+  REFUSE it. **Read the base AT RESOLUTION.**
+- **Proposer:** RECORD, worker `agent-ad37cd8c19b30bf8b`, 2026-09-18, from QUEUE REC-123
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `SKILL` (the pack's boundary layer harvests every `MACHINE_CANNOT_*` row, so it
+  now renders two more fences — imported, never authored; `skillpack`, `skilldoctrine` and
+  `skillprohibitions` suites green unchanged), `FLEET` (NOT-AFFECTED measured: no `ratify` string anywhere
+  in `agent-worker/src`), `UI` (NOT-AFFECTED measured: no UI call site sends `ratify` or `caseratify` —
+  `construct-status.json` 12.publish's `uinone` probe), `DIST` (NOT-AFFECTED: the operator's env-binding
+  tokens are not refused).
+- **Design:** `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 — *"No machine credential performs the attested
+  act ... The AI holds no op that ACCEPTS"* (DEC-24 rule 4, DEC-60). Both ops sit at the `attested` rung.
+
+**WHAT WAS MEASURED, BY DRIVING (the trace is the finding).** An `ai` credential minted by a member with a
+scope naming `ratify` and `caseratify`, carrying a registered member's VALID ssh signature over the exact
+statement, answered `ok: true` at both ops on the pre-item tree (6e50b260): the finding was PUBLISHED and the
+case COMMITTED, and the record named the MEMBER as attestor (`attestor: iris`, `tokenClass: ai`). The scope
+check was the only thing in front of either, and a scope that names the op passes it.
+
+**THE SHAPE.** At the top of each handler, before the payload is read, a caller whose credential resolved
+as a minted agent credential (`aiCred`) and whose stamp `class:ai/<tokenId>` is a machine by the ONE
+predicate (`isMachineIdentity`, REC-46) is refused `403 { ok: false, reason, code, check, translation,
+detail, op, tokenClass }` — `MACHINE_CANNOT_RATIFY` at `op=ratify`, `MACHINE_CANNOT_RATIFY_CASE` at
+`op=caseratify`, each in its own DEC-49 region (`src/index.mjs fetch > is-machine-ratify-bundle`,
+`… > is-machine-ratify-case`). Nothing is written. A member session and the operator's env-binding tokens
+(ADMIN/MEMBER/PROBE) answer exactly as before.
+
+**WHY MAJOR, with the consumer count measured at ZERO and not argued down** (IC-25's rule, IC-121's
+precedent): an input these ops accepted yesterday is refused today, so a caller that was working stops
+working without changing a line. That the caller was violating doctrine is the reason for the change, not
+a reason to call it additive.
+
+**WHAT IS DELIBERATELY NOT IN THIS IC.** (1) The env-binding tokens: an ADMIN/MEMBER/PROBE token carrying a
+member's signature still ratifies (`ratify.test.mjs`, `reuse-ratify.test.mjs`, `ratify-envelope.test.mjs`
+drive it) — that is the operator's publication path, and whether §3 rule 4's *"no machine credential"*
+reaches it is a DECISION FOR BOB (D-421), named in the design document rather than taken
+here. (2) The declaration: a member may still AUTHOR a scope naming `ratify`; the credential is refused at the
+act. (3) `op=attest` (a third party's timestamp) stays open to an `ai` credential, as
+`BIO_Intake_Doctrine_v1_1.md` §3 requires of the fetch layer. (4) `op=expertiseconfirm` gains no named fence:
+it already refuses a machine through the membership guard (`ADMIN_ONLY`), and `index.mjs`'s expertise block
+records why no fence is added there.
+
+**Suites:** `bio-plane/test/machine-attest.test.mjs` (new — the trace table, derived from the plane under
+three names), negative control `node test/machine-attest.control.mjs` from `bio-plane/` (four arms, all as
+declared); `machinefences-dec49.test.mjs` pins C-32.12/C-32.13 in both directions and its row-corpus floor
+moved 44 → 46 from the printed figure.
