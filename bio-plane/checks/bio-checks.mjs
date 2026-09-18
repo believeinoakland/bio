@@ -11194,16 +11194,17 @@ export const LEAD_CHECKS = {
  *  about the same leg rather than answering twice with the wrong name. */
 export function leadLegFindings(label, leg, findings) {
   const l = leg && typeof leg === 'object' ? leg : {};
+  /* The family helper, by name: DEC-49's guard judges `refusal("CODE"` at the site. */
+  const refusal = (code, message, repairs) => f(LEAD_CHECKS[code].check, 'error', message, repairs, code);
   /* DEC-49 REGION is-lead-not-evidence */
   for (const field of ['target', 'content_id']) {
     const v = typeof l[field] === 'string' ? l[field].trim() : '';
     if (v && LEAD_ID_RE.test(v)) {
-      findings.push(f(LEAD_CHECKS.LEAD_NOT_EVIDENCE.check, 'error',
+      findings.push(refusal("LEAD_NOT_EVIDENCE",
         `${label}.${field} '${v}' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, `
         + `§7): it says where to look, not what was found, so no leg can rest on it`,
         ['follow the lead and cite the document the look captured instead',
-         'or, if you saw the thing yourself, author it as your own observation and cite that'],
-        'LEAD_NOT_EVIDENCE'));
+         'or, if you saw the thing yourself, author it as your own observation and cite that']));
       return true;
     }
   }

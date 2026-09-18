@@ -60,8 +60,8 @@ function arm(patches) {
 }
 
 /* THE ROW'S REFUSAL: C-54.1 removed — `leadLegFindings` never pushes. */
-const NO_LEG_REFUSAL = [CHECKS, "    if (v && LEAD_ID_RE.test(v)) {\n      findings.push(f(LEAD_CHECKS.LEAD_NOT_EVIDENCE.check,",
-                                "    if (false) {\n      findings.push(f(LEAD_CHECKS.LEAD_NOT_EVIDENCE.check,"];
+const NO_LEG_REFUSAL = [CHECKS, "    if (v && LEAD_ID_RE.test(v)) {\n      findings.push(refusal(\"LEAD_NOT_EVIDENCE\",",
+                                "    if (false) {\n      findings.push(refusal(\"LEAD_NOT_EVIDENCE\","];
 /* THE LIAR: a lead that is merely an unlabelled observation — its id shape made
    CITABLE (a bundle-id prefix, typed as information). With C-54.1 also gone,
    nothing names it and nothing stops it: a lead lands as a basis leg. */
