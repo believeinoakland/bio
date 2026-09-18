@@ -9910,7 +9910,7 @@ rather than a mock, with a negative control per half. **agent-worker's answer ga
 `log_refused` and `present_unbacked`, and `logged` now counts appended entries rather than ticks** —
 equal whenever nothing is refused, which was every case before this IC.
 
-## IC-133 · I3: TESTIFY — `op=testify`, a member records a firsthand observation, which becomes an authored INFO bundle whose bytes are their words (D-184) · PROPOSED 2026-09-18 (MK-1, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+## IC-133 · I3: TESTIFY — `op=testify`, a member records a firsthand observation, which becomes an authored INFO bundle whose bytes are their words (D-184) · PROPOSED 2026-09-18 (MK-1, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 (I3 26.2.0)**
 
 - **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
   `docs/development/INTERFACES.md`: 25.0.0** (IC-132 ACCEPTED — re-read after merging `origin/main` at
@@ -10006,7 +10006,9 @@ accepted exactly as today — pinned by the over-strictness arms.
 ratify on a finding now meets three new refusal codes, each with its canned sentence; SKILL, DIST —
 NOT-AFFECTED expected.
 
-## IC-134 · I5: the register gains `authored`, `author`, `observed_at` — a member's own words are registered like any capture and never pass for one (D-184) · PROPOSED 2026-09-18 (MK-1, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at MK-1's integration — I3 26.1.0 → 26.2.0, MINOR (additive: `op=testify`, the C-53 family).** Base read at resolution (26.1.0). **MK-1 was HELD OFF `main` once, deliberately, and the hold was right:** its worker then DROVE every path to the published bucket and found path 1b OPEN — after any member PUT the bytes, `op=ratify` PUBLISHED the member's words, the authored provenance document and the observer's HANDLE, and `op=verify` reported them published; a finding citing one and a case containing one also ratified. This landing carries the fence: C-53.10 (the observation), C-53.11 (a finding reaching one at any depth), C-53.12 (a case whose findings reach one), after the scope check and the machine fence, before the signature is weighed; lifting it is MK-3's act. And the canonical header (`bio-testimony/1`, `id:`, `observed_at:`, a blank line, the words; NO author) so identical words are two testimonies. UI/SKILL/DIST NOT-AFFECTED, CONDUCT answering for each.
+
+## IC-134 · I5: the register gains `authored`, `author`, `observed_at` — a member's own words are registered like any capture and never pass for one (D-184) · PROPOSED 2026-09-18 (MK-1, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 (I5 1.19.0)**
 
 - **Interface:** I5 (the store schema). **Version read off THIS TREE's `docs/development/INTERFACES.md`:
   1.18.0.** **Proposed as MINOR — 1.18.0 → 1.19.0, ADDITIVE.** Three columns on `register`; no new
@@ -10034,6 +10036,8 @@ produced.
 
 **ANSWERS REQUESTED:** RECORD (self). No other area reads `register`.
 
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at MK-1's integration — I5 1.18.0 → 1.19.0, MINOR (additive: `register` gains `authored`, `author`, `observed_at`, migrated).** The collision BOB #14 ruled on is closed WITHOUT a key change (the canonical header makes the sha unique per testimony); C-53.6 is narrowed to pre-registering a testimony's exact next bytes. MK-4's IC-135 also proposes an I5 minor; it resolves against whatever I5 reads when it lands.
 
 ## IC-132 · I3: `op=ratify` and `op=caseratify` REFUSE an `ai` credential BY NAME — `MACHINE_CANNOT_RATIFY` (C-32.12), `MACHINE_CANNOT_RATIFY_CASE` (C-32.13) · PROPOSED 2026-09-18 (REC-123, minted with `node tools/mintid.mjs IC` BEFORE the fix) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 — MAJOR, I3 25.0.0**
 
