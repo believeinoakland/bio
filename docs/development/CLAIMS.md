@@ -12773,3 +12773,10 @@ purpose and the new reading is not the one the question stands on until `op=vers
 prefilled (DEC-69): the extent is chosen, never defaulted to the first candidate. Refusals carry C-50
 canned translations. The candidate list is empty and says why (`absence.level`) where the machine had
 nothing — render the sentence, not a blank.
+
+## CLAIM 2026-09-18 RECORD (REC-86 — NARROW) — RELEASED
+
+released: 2026-09-18 by the REC-86 worker. Every claimed path is committed on branch
+`worktree-agent-a3fbd59a3fef1a961`; the final tree ran the battery 224/224 · 13,984 green,
+`coverage --strict` exit 0, UI harness exit 0, `plancheck --local` 0 fail. The UI DELEGATION above
+stays open — it is UI's act, not this claim's.
