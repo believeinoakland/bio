@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: RUN 2026-09-18 with `node test/nc-rec87.mjs [arm]` from `bio-plane/`, every arm ALONE with the others held open, each EDITING A REAL SOURCE and restored from a uniquely-named per-arm pristine copy verified by sha256 AND cmp (store.mjs 2,404,535 B, textchain.mjs 79,770 B; never `git checkout --`). Declared BEFORE arming, and the result: (a) `baseline` — nothing armed, MUST be green: 54/0. (b) `selfact` — neuter the self-attestation refusal AT THE ACT only; "REFUSED BY NAME" MUST FAIL and "the ceiling DID NOT MOVE" MUST PASS (the read-side exclusion holds alone): 52/2, as declared. (c) `selfboth` — THE ROW'S ARM, neuter BOTH fences so the ceiling rises on one member's word; the refusal AND "did not move" MUST FAIL: 47/7, as declared. (d) `portion` — neuter C-52.4; both no-portion arms MUST FAIL (still refused, but by C-45 under the wrong name): 52/2. (e) `machine` — neuter C-52.1; the member-token and admin-token arms MUST FAIL: 52/2. (f) `routing` — stop routing a typing to its own attestations; "THE ROUTING ARM, WHERE IT BITES" MUST FAIL: 47/7. ITS FIRST RUN CAME BACK WRONG AND IS THE FINDING: it declared the page-2 routing assertion, which stayed GREEN — that capture's chain is recorded, so the chain-inequality filter already excluded the capture attestation and the route was never exercised; the chainless-capture fixture was added, and building it found a REAL DEFECT: C-45.2 refused a typing of a capture with no extraction chain, which is Bob's own case (a document no engine could read), fixed by asking the extent grammar under the typing's own chain. (g) `chainless` — revert that fix; "WHERE IT BITES" MUST FAIL: 53/1. (h) `swallow` — drop `unmeasured: "undetermined"` from the member kind; the CAP-10 swallow arm and the STEP_KINDS pin MUST FAIL: 52/2. (i) `stale` — remove the typing exclusion from the stale pass; "the member's typing does NOT" go stale MUST FAIL: 53/1. (j) `pin` — change one key of op=attesttext's answer; the over-strictness pin MUST SEE it: 53/1. (k) `overstrict` — THE OVER-STRICTNESS DIRECTION, the self-attestation fence refuses EVERY attestor; sam's legitimate attestation and the ceiling move MUST FAIL while "REFUSED BY NAME" MUST PASS: 47/7, as declared.
+/* NEGATIVE CONTROL: RUN 2026-09-18 with `node test/nc-rec87.mjs [arm]` from `bio-plane/`, every arm ALONE with the others held open, each EDITING A REAL SOURCE and restored from a uniquely-named per-arm pristine copy verified by sha256 AND cmp (store.mjs 2,404,730 B, textchain.mjs 80,338 B; 10 of 10 restores byte-identical; never `git checkout --`). Figures are the FINAL tree's run. Declared BEFORE arming, and the result: (a) `baseline` — nothing armed, MUST be green: 55/0. (b) `selfact` — neuter the self-attestation refusal AT THE ACT only; "REFUSED BY NAME" MUST FAIL and "the ceiling DID NOT MOVE" MUST PASS (the read-side exclusion holds alone): 53/2, as declared. (c) `selfboth` — THE ROW'S ARM, neuter BOTH fences so the ceiling rises on one member's word; the refusal AND "did not move" MUST FAIL: 48/7. (d) `portion` — neuter C-52.4; both no-portion arms MUST FAIL (still refused, but by C-45 under the wrong name): 53/2. (e) `machine` — neuter C-52.1; the member-token and admin-token arms MUST FAIL: 53/2. (f) `routing` — stop routing a typing to its own attestations; "THE ROUTING ARM, WHERE IT BITES" MUST FAIL: 48/7. IT CAME BACK WRONG TWICE AND BOTH ARE THE FINDING: first it declared the page-2 assertion, which stayed GREEN because that capture's chain is recorded and the chain-inequality filter already excluded the capture attestation — so a CHAINLESS capture fixture was added, and building it found a REAL DEFECT (C-45.2 refused a typing of a capture with no extraction chain, Bob's own case, fixed by asking the extent grammar under the typing's own chain); then, after `contentRead` stopped reading capture attestations for a typing at all, the op=content half went green under the arm again (protected twice) and the assertion was extended to the LEG path through op=earnedbasis, where the route is the only protection — that half fails as declared. (g) `chainless` — revert the C-45.2 fix; both "WHERE IT BITES" arms MUST FAIL: 53/2. (h) `swallow` — drop `unmeasured: "undetermined"` from the `typed` kind; the CAP-10 swallow arm and the STEP_KINDS pin MUST FAIL: 53/2. (i) `stale` — remove the typing exclusion from the stale pass; "the member's typing does NOT" go stale MUST FAIL: 54/1. (j) `pin` — add one key to op=attesttext's answer; the over-strictness pin MUST SEE it: 54/1. (k) `overstrict` — THE OVER-STRICTNESS DIRECTION, the self-attestation fence refuses EVERY attestor; sam's legitimate attestation and the ceiling move MUST FAIL while "REFUSED BY NAME" MUST PASS: 48/7, as declared.
  *
  * REC-87 / IC-127 / IC-128 — TRANSCRIBE (Bob's 5.2): a member selects a portion
  * of a document and types what it says.
@@ -9,7 +9,7 @@
  * member TOKEN would drive only the refusal:
  *
  *   - a member TRANSCRIBES a portion: the typing is a content row whose chain is
- *     `member(handle)`, its cap UNDETERMINED and STATED;
+ *     `typed(member)`, its cap UNDETERMINED and STATED;
  *   - a SECOND member ATTESTS it and the ceiling moves as ruled (to the earned
  *     capture ceiling, determinant `attestation`), on op=content, on
  *     op=transcription AND on a leg citing the typing through op=earnedbasis;
@@ -196,24 +196,24 @@ t("OVER-STRICTNESS: op=content on a machine-marked row answers BYTE-IDENTICALLY 
   digests.machineContent, PIN_MACHINE_CONTENT);
 
 /* ===================== 1. THE GRAMMAR (I2, IC-127) ======================== */
-console.log("\n--- 1. the member(handle) step kind ---");
-t("STEP_KINDS.member is a DERIVATION, off the extraction ladder, naming its member, unmeasured => undetermined, letter never",
-  STEP_KINDS.member, { role: "derivation", label: "a member typed the text", tier: null,
+console.log("\n--- 1. the typed(member) step kind ---");
+t("STEP_KINDS.typed is a DERIVATION, off the extraction ladder, naming its member, unmeasured => undetermined, letter never",
+  STEP_KINDS.typed, { role: "derivation", label: "a member typed the text", tier: null,
                        names: ["member"], unmeasured: "undetermined", letter: "never" });
-const one = [{ step: "member", member: "ruth", text_sha256: sha(TYPED) }];
+const one = [{ step: "typed", member: "ruth", text_sha256: sha(TYPED) }];
 t("a one-step member chain is well-formed, is a transcription, and its cap is UNDETERMINED (null)",
   [checkChain(one), isTranscribed(one), derivationCap(one), captureBound(one, "B")], [null, true, null, null]);
-t("THE SWALLOW CAP-10 FOUND, REFUSED FOR THIS KIND: an OCR letter beside a member step does NOT bound "
+t("THE SWALLOW CAP-10 FOUND, REFUSED FOR THIS KIND: an OCR letter beside a typed step does NOT bound "
   + "the typing — the chain's cap stays undetermined, and so does the capture bound",
   [derivationCap([{ step: "ocr", engine: "tesseract", cap: "C" }, one[0]]),
    captureBound([{ step: "ocr", engine: "tesseract", cap: "C" }, one[0]], "B")], [null, null]);
-const lettered = checkChain([{ step: "member", member: "ruth", cap: "A" }]);
-t("a LETTER on a member step is refused BY NAME (C-35.14) — nobody grades their own typing",
+const lettered = checkChain([{ step: "typed", member: "ruth", cap: "A" }]);
+t("a LETTER on a typed step is refused BY NAME (C-35.14) — nobody grades their own typing",
   [codeOf(lettered), lettered && lettered.check,
    lettered && lettered.translation === TEXT_CHAIN_CHECKS.TEXT_CHAIN_LETTER_ON_PERSON.translation],
   ["TEXT_CHAIN_LETTER_ON_PERSON", "C-35.14", true]);
-t("a member step naming nobody is refused as unnamed (C-35.5)",
-  codeOf(checkChain([{ step: "member" }])), "TEXT_CHAIN_STEP_UNNAMED");
+t("a typed step naming nobody is refused as unnamed (C-35.5)",
+  codeOf(checkChain([{ step: "typed" }])), "TEXT_CHAIN_STEP_UNNAMED");
 t("describeChain names who typed", describeChain(one), "a member typed the text (ruth)");
 t("typing is not an extraction tier: tiersEvidenced skips it and classifies it",
   tiersEvidenced(one), { tiers: [], unclassified: [] });
@@ -225,9 +225,9 @@ const TX = tx && tx.content_id;
 t("op=transcribe lands: a NEW content row, typed by ruth, over the region she selected",
   [tx && tx.ok, tx && tx.minted, tx && tx.transcriber, tx && tx.capture_sha, tx && tx.extent_kind,
    tx && tx.text_sha256], [true, true, "ruth", SHA_T, "pdf-page", sha(TYPED)]);
-t("its chain is member(ruth) carrying the text's digest, and says so in words",
+t("its chain is typed(ruth) carrying the text's digest, and says so in words",
   [tx && tx.chain, tx && tx.chain_says],
-  [[{ step: "member", member: "ruth", text_sha256: sha(TYPED) }], "a member typed the text (ruth)"]);
+  [[{ step: "typed", member: "ruth", text_sha256: sha(TYPED) }], "a member typed the text (ruth)"]);
 t("its cap is UNDETERMINED and STATED — derivation_cap null, the ceiling null by derivation, with a sentence",
   [tx && tx.derivation_cap, ceil(tx), typeof (tx && tx.transcription && tx.transcription.why)],
   [null, [null, "derivation", []], "string"]);
@@ -259,6 +259,18 @@ t("THE ROUTING ARM, WHERE IT BITES: sam's WHOLE-DOCUMENT attestation of a captur
   + "recorded does NOT raise ruth's typing of page 1 — and is not listed as covering it",
   [atN && atN.ok, atN && atN.chain_at_attestation, txN && txN.ok, ceil(cN),
    (cN && cN.attestations && cN.attestations.all || []).length], [true, null, true, [null, "derivation", []], 0]);
+/* AND ON THE LEG PATH, which is the one a gate reads. `op=content` no longer even
+   READS the capture's attestations for a typing, so it is protected twice; the
+   registry behind `op=earnedbasis` reads them for every row in a basis and is
+   protected by the route ALONE — so this is where the route is proved. (The
+   `routing` control arm's second run stayed green on the op=content half alone.) */
+const QN = "INQ-2026-8700-qn";
+await mustPromote(QN, inquiryMd(QN, [{ target: DOC_N, cid: txN && txN.content_id }]), "inquiry");
+const ebN = await get("earnedbasis", `id=${QN}`, RUTH);
+t("THE ROUTING ARM, WHERE IT BITES, ON A LEG: a leg citing ruth's typing of the chainless capture earns "
+  + "NOTHING from sam's attestation of the capture — through op=earnedbasis",
+  ceil(ebN && ebN.earned && ebN.earned.content ? ebN.earned.content[txN && txN.content_id] : null),
+  [null, "derivation", []]);
 const r0 = await get("transcription", `id=${TX}`, SAM);
 t("op=transcription reads the typing back BYTE FOR BYTE, to another member",
   [r0 && r0.ok, r0 && r0.text, r0 && r0.transcriber, r0 && r0.text_sha256, r0 && r0.attestations],
@@ -295,7 +307,7 @@ t("op=content agrees — the ceiling, and sam alone covering",
   [ceil(c2), (c2 && c2.attestations && c2.attestations.covering || []).map((a) => a.attestor)],
   [[EARNED_CAPTURE_CEILING, "attestation", ["sam"]], ["sam"]]);
 t("the chain is UNCHANGED by the attestation — verification supersedes as grade determinant, never as record",
-  [c2 && c2.chain, c2 && c2.derivation_cap], [[{ step: "member", member: "ruth", text_sha256: sha(TYPED) }], null]);
+  [c2 && c2.chain, c2 && c2.derivation_cap], [[{ step: "typed", member: "ruth", text_sha256: sha(TYPED) }], null]);
 const r1 = await get("transcription", `id=${TX}`, RUTH);
 t("op=transcription lists sam's attestation as counting, and carries the same ceiling",
   [(r1 && r1.attestations || []).map((a) => [a.attestor, a.counts, a.note]), ceil(r1)],

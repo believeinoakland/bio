@@ -912,7 +912,7 @@ export const RUNG_ABSENT = {
      item re-grading the ladder to suit itself. NOT `reversible`: nothing takes a
      typing back — a member types again, which is a DIFFERENT content row, and an
      attestation is superseded by the same attestor's later one, never withdrawn. */
-  transcribe:           { ground: "undetermined", is: "a member types what a selected portion of a document says, in their own name; the typing is a content row whose chain is member(handle), its fidelity undetermined and stated until a DIFFERENT member attests it (Bob's 5.2)" },
+  transcribe:           { ground: "undetermined", is: "a member types what a selected portion of a document says, in their own name; the typing is a content row whose chain is typed(member), its fidelity undetermined and stated until a DIFFERENT member attests it (Bob's 5.2)" },
   transcriptionattest:  { ground: "undetermined", is: "a member's TESTIMONY that ANOTHER member's typing of a portion matches the page; raises what a leg citing that typing may claim, and is refused to the typist themself (C-52.9)" },
 };
 

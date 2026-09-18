@@ -125,9 +125,9 @@ const ARMS = {
   },
   swallow: {
     files: [CHAIN],
-    why: "drop `unmeasured: \"undetermined\"` from the member kind: an OCR letter measured on OTHER text bounds what a person typed (the swallow CAP-10 found)",
+    why: "drop `unmeasured: \"undetermined\"` from the typed kind: an OCR letter measured on OTHER text bounds what a person typed (the swallow CAP-10 found)",
     mustFail: ["THE SWALLOW CAP-10 FOUND",
-               "STEP_KINDS.member is a DERIVATION"],
+               "STEP_KINDS.typed is a DERIVATION"],
     mustPass: "every op-level arm — a one-step member chain is undetermined either way, which is WHY the grammar arm exists",
     patch: () => arm([[CHAIN, "tier: null, names: [\"member\"], unmeasured: \"undetermined\", letter: \"never\" },",
                               "tier: null, names: [\"member\"], letter: \"never\" },"]]),

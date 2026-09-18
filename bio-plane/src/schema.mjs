@@ -3270,7 +3270,7 @@ CREATE INDEX IF NOT EXISTS capture_text_bundle ON capture_text(bundle_id);
 -- REC-87 / IC-128 -- TRANSCRIBE (Bob's 5.2). A member selects a portion of a
 -- document and types what it says. The PORTION is a content row (content_id
 -- is the hash of the capture, the canonical extent and a chain whose one step
--- is member(handle) carrying the digest of the text), so the row says WHERE and
+-- is typed(member) carrying the digest of the text), so the row says WHERE and
 -- WHO. This table holds the one thing a content row has no column for -- the
 -- TEXT the member typed -- keyed by that row.
 --

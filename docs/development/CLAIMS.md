@@ -13016,12 +13016,12 @@ stays open — it is UI's act, not this claim's.
 
 Worker spawned by CONDUCT #4 into worktree `agent-a4f337d8455ba96c8`, branch
 `worktree-agent-a4f337d8455ba96c8`. Minted at spawn with `node tools/mintid.mjs`: **IC-127** (I2 —
-the chain grammar gains the `member(handle)` step kind), **IC-128** (I3 — the transcribe ops),
+the chain grammar gains the `typed(member)` step kind), **IC-128** (I3 — the transcribe ops),
 **C-52** (the act's refusal family).
 
 Paths, named precisely because `store.mjs` is shared ground with REC-104, REC-120 and REC-100:
 
-- `bio-plane/src/textchain.mjs` — ONE new `STEP_KINDS` entry (`member`), the `letter: "never"`
+- `bio-plane/src/textchain.mjs` — ONE new `STEP_KINDS` entry (`typed`), the `letter: "never"`
   arm in `checkChain`, and `describeChain`'s naming of who typed. No other rule edited.
 - `bio-plane/src/store.mjs` — NEW methods `transcribe()`, `transcriptionAttest()`,
   `transcriptionRead()` and their private helpers in their own DEC-49 regions; `#contentStanding`,

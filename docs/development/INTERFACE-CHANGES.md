@@ -9538,7 +9538,7 @@ NOT-AFFECTED.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at REC-86's integration — I3 23.2.0 → 23.3.0, MINOR (additive, as classed).** Base read AT RESOLUTION: 23.2.0 (FW-19's IC-125 took 23.2.0 in the same wave). SKILL and DIST NOT-AFFECTED — CONDUCT answers FOR both (neither calls a new op; an op nobody asks for cannot be observed), named as such. **UI's act is OWED, not waived:** the NARROW affordance on a leg is delegated in `CLAIMS.md` and, per the worker, also waits on UI-62's page picker. **One scope note recorded at resolution:** REC-86's draft of the content framework's connection-pair row claimed the ON-POINT connection choice built; CONDUCT declined that cell at merge — REC-86 narrows a LEG, and the connection-side choice is `REC-120`.
 
-## IC-127 · I2: THE CHAIN GRAMMAR GAINS A STEP KIND — `member(handle)`, a member TYPED the text of a portion, a DERIVATION whose cap is UNDETERMINED by the kind's own declaration and on which a letter is REFUSED · PROPOSED 2026-09-18 (REC-87, enacting Bob's 5.2; minted at spawn with `node tools/mintid.mjs IC`) — the version bump and the RESOLUTION are CONDUCT's
+## IC-127 · I2: THE CHAIN GRAMMAR GAINS A STEP KIND — `typed(member)`, a member TYPED the text of a portion, a DERIVATION whose cap is UNDETERMINED by the kind's own declaration and on which a letter is REFUSED · PROPOSED 2026-09-18 (REC-87, enacting Bob's 5.2; minted at spawn with `node tools/mintid.mjs IC`) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I2 (the reader/chain grammar, `bio-plane/src/textchain.mjs` `STEP_KINDS`). **Version
   read off THIS TREE's `docs/development/INTERFACES.md`: 2.4.0** (IC-122 ACCEPTED). **Proposed as
@@ -9554,17 +9554,26 @@ NOT-AFFECTED.
   attestation raises it, no member grading their own act); `BIO_Content_Framework_v0_10.md` Part II
   §14.2 and §14.4.
 
-**THE SHAPE.** `{ step: "member", member: <handle>, text_sha256: <sha256 of the typed text> }`.
-`STEP_KINDS.member = { role: "derivation", label: "a member typed the text", tier: null,
+**THE SHAPE.** `{ step: "typed", member: <handle>, text_sha256: <sha256 of the typed text> }`.
+`STEP_KINDS.typed = { role: "derivation", label: "a member typed the text", tier: null,
 names: ["member"], unmeasured: "undetermined", letter: "never" }`. Every property is one a rule
-already reads — nothing tests the word `member`:
+already reads — nothing tests the word `typed`.
+
+**SPELLED `typed`, NOT THE ROW'S `member(handle)`, AND THE TREE DECIDED IT.** The query compiler DERIVES
+`content:chain`'s vocabulary from `STEP_KINDS` (`query.mjs`), and `member` is already a bare word of the
+same `content:` arm — `content:member`, a row a MEMBER marked. A kind named `member` made that published
+query AMBIGUOUS (refused with a warning); `content-arm.test` and `meaningquery.test` failed on exactly
+that in this item's first full battery. The handle rides the step's `member` field, so the notation is
+`typed(member)` and `content:typed` / `content:chain=typed` finds every typing.
+
+The properties:
 
 1. **`role: "derivation"`** — the typing PRODUCED the text; there is no machine output it verifies.
    Rule 2 governs it like every step that produced text. What raises it is `gradeCeiling` over a
    covering attestation, unchanged.
-2. **`names: ["member"]`** — a member step naming nobody is refused C-35.5 (existing row).
+2. **`names: ["member"]`** — a typed step naming nobody is refused C-35.5 (existing row).
 3. **`unmeasured: "undetermined"`** — CAP-10's property, and for this kind it is the WHOLE cap, not an
-   edge case: `derivationCap` answers UNDETERMINED over a member step's extent even beside a measured
+   edge case: `derivationCap` answers UNDETERMINED over a typed step's extent even beside a measured
    OCR letter, so a letter measured on OTHER text can never bound what a person typed (the swallow
    CAP-10 found; driven, `transcribe.test.mjs` §1). `captureBound` follows with no code.
 4. **`letter: "never"`** — a NEW declared value. `checkChain` refuses any `cap` on such a step as
@@ -9577,12 +9586,12 @@ already reads — nothing tests the word `member`:
 
 **WHY IT IS ADDITIVE.** No existing step changes; no chain the record holds changes (the over-
 strictness pins in `transcribe.test.mjs` §0 are byte-identical against an archive of 694f0a7f's
-tracked tree). The member step is written ONLY by `op=transcribe` (IC-128) and only into a CONTENT
+tracked tree). The typed step is written ONLY by `op=transcribe` (IC-128) and only into a CONTENT
 ROW's chain — it is NEVER appended to a capture's reading chain, so `reading_text_source`,
 `op=textprovenance`'s rows, `captureBound` on the capture axis and every reading are untouched.
 
 **THE ONE PLACE A CONSUMER COULD SEE IT WITHOUT ASKING:** two published vocabularies are DERIVED from
-`Object.keys(STEP_KINDS)` and each gains the value `member` — `op=textprovenance`'s `kinds` list and
+`Object.keys(STEP_KINDS)` and each gains the value `typed` — `op=textprovenance`'s `kinds` list and
 the query compiler's `content:chain` vocabulary (`query.mjs`). Both were built to follow the registry
 (`query.mjs` says so at the site); a consumer rendering the list renders one more entry.
 
@@ -9619,7 +9628,7 @@ plane (a caller's own is overwritten; a machine credential stamps `class:<cls>`)
 object form, `op=contentmint`'s. Answers `{ ok, minted, content_id, bundle_id, capture_sha,
 extent_kind, extent, ref, transcriber, text_sha256, bytes, chain, chain_says, derivation_cap,
 transcription: {ceiling, determinant, by, why}, says }`. The typing is a content row minted through
-`mintContent` with `chain = [member(handle)]`, so its id differs from every machine row over the
+`mintContent` with `chain = [typed(member)]`, so its id differs from every machine row over the
 same passage; the same member re-typing the same text over the same portion FINDS their row
 (`minted: false`); different text is a different row; and a different member's identical text is
 their own row. A leg cites it by `content_id` exactly as any row.
@@ -9666,8 +9675,8 @@ can cover them yet (`checkAttestation`'s grammar is `document | page | region`);
 is a separate I2 change nobody has asked for. (3) Withdrawing a typing — there is no such act; a member
 types again (a new row).
 
-**CONSUMER IMPACT, MEASURED.** `grep -rn -E 'op=transcri|"transcribe"|transcriptionattest|op=transcription'`
-over `civicos-ui/`, `agent-worker/`, `pdf-worker/`, `ocr-worker/`, `newgroup/` answers THREE lines, all
+**CONSUMER IMPACT, MEASURED.** A recursive grep for the three op names — as an `op=` parameter
+prefix, as the quoted string `"transcribe"`, and the bare word `transcriptionattest` — over `civicos-ui/`, `agent-worker/`, `pdf-worker/`, `ocr-worker/`, `newgroup/` answers THREE lines, all
 in `ocr-worker/` — that fleet member's own `POST /transcribe` route (src, its test, its bundle), a
 DIFFERENT worker's HTTP path and not a plane op. Zero consumers of the new ops.
 `test/transcribe.test.mjs` drives all three ops end to end under signed-in members.

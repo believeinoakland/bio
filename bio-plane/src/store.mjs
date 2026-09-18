@@ -425,7 +425,7 @@ import { CONNECTION_PAIR_CHECKS, checkConnectionPairCovers } from "../checks/bio
    the version-name grammar its new reading must meet (C-25.2's own regex, so a
    name this act accepts is one op=promote accepts). */
 import { NARROW_CHECKS, extentRelation, VERSION_NAME_RE } from "../checks/bio-checks.mjs";
-/* REC-87 / IC-128: TRANSCRIBE's refusals, and the digest the `member` step
+/* REC-87 / IC-128: TRANSCRIBE's refusals, and the digest the `typed` step
    carries — the catalogue's own sync sha256, so the text digest and the content
    address are computed by one implementation. */
 import { TRANSCRIBE_CHECKS, sha256HexSync } from "../checks/bio-checks.mjs";
@@ -14547,7 +14547,7 @@ export class Store extends DurableObject {
    *
    * WHAT IT IS, BUILT OUT OF WHAT EXISTED. The portion is a CONTENT ROW, minted
    * through `mintContent` — the one writer, the one extent checker (C-45,
-   * verbatim), the one address — with the chain `[member(handle)]` in place of
+   * verbatim), the one address — with the chain `[typed(member)]` in place of
    * the capture's machine chain. So the row's id differs from every machine
    * row's over the same passage BY CONSTRUCTION, its derivation cap is
    * `derivationCap`'s answer over that chain (undetermined, by the kind's own
@@ -14696,7 +14696,7 @@ export class Store extends DurableObject {
     const typed = typeof text === "string" ? text : "";
     const bytes = new TextEncoder().encode(typed).length;
     const digest = sha256HexSync(typed);
-    const chain = [{ step: "member", member: who, text_sha256: digest }];
+    const chain = [{ step: "typed", member: who, text_sha256: digest }];
     /* THE EXTENT GRAMMAR IS C-45's, VERBATIM — one checker, the one every
        content writer runs, and not a family this act restates. IT IS ASKED
        UNDER THE TYPING'S OWN CHAIN, NOT THE CAPTURE'S, and that is Bob's case
@@ -15370,7 +15370,7 @@ export class Store extends DurableObject {
        is taken first as an AGGREGATE, one row whatever the corpus holds, because
        the caller wants to know what moved and `sql.exec` does not say. */
     /* REC-87: A MEMBER'S TRANSCRIPTION IS NEVER STALED BY A MACHINE RE-READ. Its
-       chain is `member(handle)` over the BYTES, not a step of the capture's
+       chain is `typed(member)` over the BYTES, not a step of the capture's
        machine chain, so it always differs from the live one — and without this
        clause the first re-promotion of the document would mark every member's
        typing as "cited under an earlier transcription", which is false: nothing
@@ -15800,12 +15800,14 @@ export class Store extends DurableObject {
                detail: `no content row is addressed by this id in this record. A content id is `
                      + `hash(capture, canonical extent, chain) — it is minted when a leg first cites `
                      + `the passage, so an id nothing has cited does not exist yet` };
-    const atts = this.#attestationsOver([r.capture_sha]);
     /* REC-87: a TRANSCRIPTION row answers with its OWN attestations, on every
        line below — the ceiling, `all` and `covering` must be about one set, or
-       the list a member reads and the letter a gate enforces disagree. */
+       the list a member reads and the letter a gate enforces disagree. The
+       capture's attestations are then not READ at all, so a truncation of that
+       read can never be reported against a typing it had nothing to do with. */
     const txs = this.#transcriptionsOver([r.content_id]);
     const tx = txs.by.get(r.content_id) || null;
+    const atts = tx ? { by: new Map(), truncated: false } : this.#attestationsOver([r.capture_sha]);
     const standing = this.#contentStanding(r, atts, {}, txs);
     /* THE ATTESTATIONS COVERING THIS ROW, and only those (IC-84's words). The
        coverage rule is `extentCovers`', asked here for the same target the
@@ -15843,7 +15845,7 @@ export class Store extends DurableObject {
            + `independent of a question` },
       capture,
       attestations: { covering, all, count: all.length,
-        ...((tx ? txs.truncated : atts.truncated) ? { truncated: true } : {}),
+        ...(atts.truncated || txs.truncated ? { truncated: true } : {}),
         why: tx
           ? `this row is a member's TYPING (op=transcription reads its text). Only an attestation OF `
             + `THAT TYPING, by a member other than ${tx.transcriber} who typed it, raises its ceiling. `

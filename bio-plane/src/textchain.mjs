@@ -194,7 +194,7 @@ export const STEP_KINDS = {
      What RAISES it is a SECOND member's attestation (`gradeCeiling`, unchanged),
      never the transcriber's own — the store refuses that by name (C-52).
 
-     `member(handle)` is carried as `{ step: "member", member: <handle>,
+     `typed(member)` is carried as `{ step: "typed", member: <handle>,
      text_sha256: <digest of the typed text> }`. The digest binds the step to the
      text it produced, so a content row's id (hash of capture, extent, chain)
      differs for different text and an attestation of one typing can never be read
@@ -218,8 +218,17 @@ export const STEP_KINDS = {
                     the permitted route to a letter is the attestation, and only
                     that.
 
-     `tier: null` — typing is not a rung on the extraction ladder. */
-  member:   { role: "derivation", label: "a member typed the text",
+     `tier: null` — typing is not a rung on the extraction ladder.
+
+     THE KIND IS SPELLED `typed`, NOT `member`, AND THE ROW SAID `member(handle)`.
+     Measured, not preferred: the query compiler DERIVES its `content:chain`
+     vocabulary from these keys (`query.mjs`), and `member` is already a bare word
+     of the same arm — `content:member`, a document a MEMBER marked (`minted`).
+     A kind named `member` made that published query AMBIGUOUS and refused it
+     (content-arm.test and meaningquery.test went red on exactly that). The
+     handle still rides the step's `member` field, so the notation is
+     `typed(member)`. */
+  typed:    { role: "derivation", label: "a member typed the text",
               tier: null, names: ["member"], unmeasured: "undetermined", letter: "never" },
 };
 
@@ -784,8 +793,8 @@ export function describeChain(chain) {
        sentence it was. */
     const into = (STEP_KINDS[s.step].names || []).includes("format") && s.format ? ` to ${s.format}` : "";
     const who = s.engine ? ` (${s.engine}${s.version ? ` ${s.version}` : ""}${into})` : "";
-    /* REC-87: a `member` step says WHO typed, beside the label, as `attested` does. */
-    const by = (s.step === "attested" || s.step === "member") && s.member
+    /* REC-87: a `typed` step says WHO typed, beside the label, as `attested` does. */
+    const by = (s.step === "attested" || s.step === "typed") && s.member
       ? ` (${s.member}${s.at ? `, ${s.at}` : ""})` : "";
     /* D-252: a SCOPED step says which pages it covers, and it has to. Without
        it a mixed document's chain reads as a sequence — "the text layer was

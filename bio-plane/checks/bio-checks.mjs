@@ -9433,7 +9433,7 @@ export const TEXT_CHAIN_CHECKS = {
       + '"not yet determined" rather than giving a grade it has not earned.',
   },
   /* REC-87 / IC-127. A step kind whose letter is NEVER written on the step
-     (`STEP_KINDS[k].letter === "never"`) — today only `member`, a member typing
+     (`STEP_KINDS[k].letter === "never"`) — today only `typed`, a member typing
      a portion's text (Bob's 5.2). A person has no calibration, so the one route
      to a letter is a SECOND member's attestation; a letter on the step would be
      the typist grading their own work. */

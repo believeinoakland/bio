@@ -3277,7 +3277,7 @@ CREATE INDEX IF NOT EXISTS capture_text_bundle ON capture_text(bundle_id);
 -- REC-87 / IC-128 -- TRANSCRIBE (Bob's 5.2). A member selects a portion of a
 -- document and types what it says. The PORTION is a content row (content_id
 -- is the hash of the capture, the canonical extent and a chain whose one step
--- is member(handle) carrying the digest of the text), so the row says WHERE and
+-- is typed(member) carrying the digest of the text), so the row says WHERE and
 -- WHO. This table holds the one thing a content row has no column for -- the
 -- TEXT the member typed -- keyed by that row.
 --
@@ -10171,7 +10171,7 @@ var TEXT_CHAIN_CHECKS = {
     translation: 'This step says how faithful a conversion of the document was, but nobody has measured that. When a site hands us its own converted copy of a file, the record cannot tell what the conversion changed until it has compared the copies \u2014 so until then it says "not yet determined" rather than giving a grade it has not earned.'
   },
   /* REC-87 / IC-127. A step kind whose letter is NEVER written on the step
-     (`STEP_KINDS[k].letter === "never"`) — today only `member`, a member typing
+     (`STEP_KINDS[k].letter === "never"`) — today only `typed`, a member typing
      a portion's text (Bob's 5.2). A person has no calibration, so the one route
      to a letter is a SECOND member's attestation; a letter on the step would be
      the typist grading their own work. */
@@ -14105,7 +14105,7 @@ var RUNG_ABSENT = {
      item re-grading the ladder to suit itself. NOT `reversible`: nothing takes a
      typing back — a member types again, which is a DIFFERENT content row, and an
      attestation is superseded by the same attestor's later one, never withdrawn. */
-  transcribe: { ground: "undetermined", is: "a member types what a selected portion of a document says, in their own name; the typing is a content row whose chain is member(handle), its fidelity undetermined and stated until a DIFFERENT member attests it (Bob's 5.2)" },
+  transcribe: { ground: "undetermined", is: "a member types what a selected portion of a document says, in their own name; the typing is a content row whose chain is typed(member), its fidelity undetermined and stated until a DIFFERENT member attests it (Bob's 5.2)" },
   transcriptionattest: { ground: "undetermined", is: "a member's TESTIMONY that ANOTHER member's typing of a portion matches the page; raises what a leg citing that typing may claim, and is refused to the typist themself (C-52.9)" }
 };
 var CAPTURE_ACTS = [
@@ -19907,7 +19907,7 @@ var STEP_KINDS = {
        What RAISES it is a SECOND member's attestation (`gradeCeiling`, unchanged),
        never the transcriber's own — the store refuses that by name (C-52).
   
-       `member(handle)` is carried as `{ step: "member", member: <handle>,
+       `typed(member)` is carried as `{ step: "typed", member: <handle>,
        text_sha256: <digest of the typed text> }`. The digest binds the step to the
        text it produced, so a content row's id (hash of capture, extent, chain)
        differs for different text and an attestation of one typing can never be read
@@ -19931,8 +19931,17 @@ var STEP_KINDS = {
                       the permitted route to a letter is the attestation, and only
                       that.
   
-       `tier: null` — typing is not a rung on the extraction ladder. */
-  member: {
+       `tier: null` — typing is not a rung on the extraction ladder.
+  
+       THE KIND IS SPELLED `typed`, NOT `member`, AND THE ROW SAID `member(handle)`.
+       Measured, not preferred: the query compiler DERIVES its `content:chain`
+       vocabulary from these keys (`query.mjs`), and `member` is already a bare word
+       of the same arm — `content:member`, a document a MEMBER marked (`minted`).
+       A kind named `member` made that published query AMBIGUOUS and refused it
+       (content-arm.test and meaningquery.test went red on exactly that). The
+       handle still rides the step's `member` field, so the notation is
+       `typed(member)`. */
+  typed: {
     role: "derivation",
     label: "a member typed the text",
     tier: null,
@@ -20165,7 +20174,7 @@ function describeChain(chain2) {
     const base = STEP_KINDS[s.step].label;
     const into = (STEP_KINDS[s.step].names || []).includes("format") && s.format ? ` to ${s.format}` : "";
     const who = s.engine ? ` (${s.engine}${s.version ? ` ${s.version}` : ""}${into})` : "";
-    const by = (s.step === "attested" || s.step === "member") && s.member ? ` (${s.member}${s.at ? `, ${s.at}` : ""})` : "";
+    const by = (s.step === "attested" || s.step === "typed") && s.member ? ` (${s.member}${s.at ? `, ${s.at}` : ""})` : "";
     const ext = extentOf(s);
     const over = STEP_KINDS[s.step].role === "derivation" && ext !== "all" ? ext === "unreadable" ? " (over an extent this record cannot read)" : ` (${pageList(ext)})` : "";
     return base + who + by + over;
@@ -37930,7 +37939,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *
    * WHAT IT IS, BUILT OUT OF WHAT EXISTED. The portion is a CONTENT ROW, minted
    * through `mintContent` — the one writer, the one extent checker (C-45,
-   * verbatim), the one address — with the chain `[member(handle)]` in place of
+   * verbatim), the one address — with the chain `[typed(member)]` in place of
    * the capture's machine chain. So the row's id differs from every machine
    * row's over the same passage BY CONSTRUCTION, its derivation cap is
    * `derivationCap`'s answer over that chain (undetermined, by the kind's own
@@ -38082,7 +38091,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const typed = typeof text === "string" ? text : "";
     const bytes = new TextEncoder().encode(typed).length;
     const digest = sha256HexSync(typed);
-    const chain2 = [{ step: "member", member: who, text_sha256: digest }];
+    const chain2 = [{ step: "typed", member: who, text_sha256: digest }];
     const ctx = { ...this.contentContextFor(sha), chain: chain2 };
     const bad = checkContentExtent(extent && typeof extent === "object" && !Array.isArray(extent) ? extent : null, ctx);
     if (bad) return bad;
@@ -39234,9 +39243,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         target: id,
         detail: `no content row is addressed by this id in this record. A content id is hash(capture, canonical extent, chain) \u2014 it is minted when a leg first cites the passage, so an id nothing has cited does not exist yet`
       };
-    const atts = this.#attestationsOver([r.capture_sha]);
     const txs = this.#transcriptionsOver([r.content_id]);
     const tx = txs.by.get(r.content_id) || null;
+    const atts = tx ? { by: /* @__PURE__ */ new Map(), truncated: false } : this.#attestationsOver([r.capture_sha]);
     const standing = this.#contentStanding(r, atts, {}, txs);
     const target = _Store.#contentTarget(r.extent_kind, standing.extent);
     const txScope = tx ? _Store.#transcriptionAttestExtent(r.extent_kind, standing.extent) : null;
@@ -39275,7 +39284,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         covering,
         all,
         count: all.length,
-        ...(tx ? txs.truncated : atts.truncated) ? { truncated: true } : {},
+        ...atts.truncated || txs.truncated ? { truncated: true } : {},
         why: tx ? `this row is a member's TYPING (op=transcription reads its text). Only an attestation OF THAT TYPING, by a member other than ${tx.transcriber} who typed it, raises its ceiling. Attestations of the capture's machine text are about different text and are not listed` : `an attestation raises this row's ceiling only if its extent COVERS this row's extent (textchain's extentCovers) AND it was made against the transcription this row was minted under. A page attestation does not cover a whole-document row, and an attestation over another page does not cover this one`
       }
     };

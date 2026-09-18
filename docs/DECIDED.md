@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1068 rulings across 84 documents.
+1069 rulings across 84 documents.
 
 ## DEC-
 
@@ -793,7 +793,7 @@ authority is the file named, never this one.
 - **C-35.1** — — ONE superseded assertion CORRECTED with the reason at the site.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4843`
 - **C-35.14** — Inside the plane, `textchain.test.mjs`'s family-totality list was CORRECTED (not exempted) for C-35.14 and a CHECK_ARMS row drives it. **RESPONSES:** not yet collected.  
-  `docs/development/INTERFACE-CHANGES.md:9594`
+  `docs/development/INTERFACE-CHANGES.md:9603`
 - **C-41** — CORRECTED IN THIS ITEM, never exempted.** The predicate's own comment named this item as where the change would arrive, and it arrives there.  
   `docs/development/INTERFACE-CHANGES.md:5333`
 - **C-41.10** · 2026-09-17 — RESOLVED ACCEPTED 2026-09-17 by CONDUCT #2 at integration — BREAKING, MAJOR, AND RULED AGAINST BOTH THE DESIGN AND THE ROW, WHICH SAID MINOR.** C-41.10 now refuses a case document lacking the `searched` section, so a case authored-but-unsigned across this upgrade carries none and `op=caseratify` refuses it — **a…  
@@ -1977,6 +1977,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:9465`
 - **2026-09-14** — `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §5.2 (RULED 2026-09-14: *"there should be a direct means for a member to select a section of a document and type in their transcription of that content"* — authored text, cap undetermined and stated, a SECOND member's attestation raises it, no member grading their…  
   `docs/development/INTERFACE-CHANGES.md:9551`
+- SPELLED `typed`, NOT THE ROW'S `member(handle)`, AND THE TREE DECIDED IT.** The query compiler DERIVES `content:chain`'s vocabulary from `STEP_KINDS` (`query.mjs`), and `member` is already a bare word of the same `content:` arm — `content:member`, a row a MEMBER marked.  
+  `docs/development/INTERFACE-CHANGES.md:9562`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  

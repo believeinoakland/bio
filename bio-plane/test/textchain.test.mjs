@@ -498,7 +498,7 @@ const codesUsed = ["TEXT_CHAIN_COLLAPSED", "TEXT_CHAIN_EMPTY", "TEXT_CHAIN_STEP_
   "TEXT_CHAIN_LETTER_UNCALIBRATED",
   /* CORRECTED 2026-09-18 by REC-87 (Bob's 5.2, IC-127), never exempted, for the
      same reason as the two lines above: `checkChain` now refuses a letter on a
-     step kind whose letter is NEVER written on the step (`member` — a person's
+     step kind whose letter is NEVER written on the step (`typed` — a person's
      typing, raised only by a SECOND member's attestation). The totality
      assertion below caught this list going stale on the first run. */
   "TEXT_CHAIN_LETTER_ON_PERSON"];
@@ -541,7 +541,7 @@ const CHECK_ARMS = [
   ["C-35.13", () => checkChain([{ step: "convert", engine: "google-export", format: "odt", cap: "B" }])],
   /* REC-87 / IC-127. A MEMBER's typing claiming a letter — the typist grading
      their own work, one altitude below C-52.9's refusal of the same thing. */
-  ["C-35.14", () => checkChain([{ step: "member", member: "ruth", text_sha256: "0".repeat(64), cap: "A" }])],
+  ["C-35.14", () => checkChain([{ step: "typed", member: "ruth", text_sha256: "0".repeat(64), cap: "A" }])],
 ];
 for (const [number, drive] of CHECK_ARMS) {
   const r = drive();
