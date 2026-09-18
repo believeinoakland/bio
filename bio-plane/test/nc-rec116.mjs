@@ -65,7 +65,10 @@ const runSuite = (file) => {
   try {
     out = execFileSync("node", [join(HERE, file)], { encoding: "utf8", cwd: ROOT, timeout: 600000 });
   } catch (e) { out = String(e.stdout || "") + String(e.stderr || ""); }
-  const foot = out.match(/([\d]+) passing, ([\d]+) failing/);
+  /* Reads BOTH spellings: the subject suite's foot is `N pass, M fail` (the
+     spelling `battery.mjs` can count), while this driver's own is `passing,
+     failing`. A reader that knew only one would report -1 for the other. */
+  const foot = out.match(/([\d]+) pass(?:ing)?, ([\d]+) fail(?:ing)?/);
   /* A MISSING TALLY IS REPORTED AS -1 AND NEVER AS 0. A TypeError inside an
      assertion goes through no assertion at all and ends the module while the
      count still reads clean; reporting 0 failures for a suite that never
@@ -226,17 +229,26 @@ const movedSinceBase = execFileSync("git", ["-C", REPO, "diff", "--name-only", B
                   this one directory and not a general relaxation: `checks/`,
                   `docprofile/` and every other sibling still fail this arm loudly if
                   they move, which is the whole point of it. */
-               && !p.startsWith("bio-plane/dist/"));
-t("ARM (f) GUARD: the MIXED BUILD is legitimate — nothing outside `src/`, `test/` and the `dist/` "
-+ "BUILD OUTPUT has moved since the merge-base, so the current `checks/` and `docprofile/` that "
+               && !p.startsWith("bio-plane/dist/")
+               /* `scripts/` IS EXCLUDED ON THE SAME NARROW TERMS AS `dist/`, and
+                  verified the same way: `grep` over `src/` returns ZERO imports
+                  from it. It holds the estate's TOOLING — `coverage.mjs`'s
+                  REGISTER_FLOOR is in it, and any item that moves a floor moves
+                  this directory. Nothing in either worker build reads it at
+                  import time, so it cannot change what the pre-item `src/`
+                  resolves against. */
+               && !p.startsWith("bio-plane/scripts/"));
+t("ARM (f) GUARD: the MIXED BUILD is legitimate — nothing outside `src/`, `test/`, the `dist/` BUILD "
++ "OUTPUT and the `scripts/` TOOLING has moved since the merge-base, so the current `checks/` and `docprofile/` that "
 + "the pre-item `src/` resolves against ARE the pre-item ones. Verified, never assumed",
   movedSinceBase, []);
 t("ARM (f) GUARD, POLARITY: the guard can still SEE a moved sibling — a path outside the three "
 + "excluded prefixes is NOT filtered away, so the empty list above is a measurement rather than a "
 + "filter that empties everything",
-  ["bio-plane/checks/bio-checks.mjs", "bio-plane/docprofile/registry.mjs", "bio-plane/dist/x"]
+  ["bio-plane/checks/bio-checks.mjs", "bio-plane/docprofile/registry.mjs",
+   "bio-plane/dist/x", "bio-plane/scripts/x"]
     .filter((p) => !p.startsWith("bio-plane/src/") && !p.startsWith("bio-plane/test/")
-                && !p.startsWith("bio-plane/dist/")),
+                && !p.startsWith("bio-plane/dist/") && !p.startsWith("bio-plane/scripts/")),
   ["bio-plane/checks/bio-checks.mjs", "bio-plane/docprofile/registry.mjs"]);
 
 /* The pathspec is relative to `ROOT` (`bio-plane/`); `git show` takes the FULL
