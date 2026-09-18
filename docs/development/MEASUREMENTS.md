@@ -15533,3 +15533,58 @@ M0-59 reaches `main` and the worktrees carry it.** What the guard does is stop t
 convenient one: the FIX is proved correct (driven at a real remote from a real pre-guard
 worktree, both directions, plus 86 suite assertions and four control arms), and the LIVE CLONE
 will keep flapping between 15/15 and 10/15 until this is merged and the worktrees rebase.**
+
+## M-48 · 2026-09-17 · REC-119 — `store.mjs` IS 36,079 LINES, AND THE CONSUMER IMPACT THE ROW PREDICTED WOULD NOT BE ZERO IS ZERO
+
+**Instrument and tree:** worktree `agent-a5f807eada28ece7f`, branch
+`worktree-agent-a5f807eada28ece7f`, rebased onto `c6b40ba4`. Every figure below was run rather
+than recalled.
+
+**`wc -l < bio-plane/src/store.mjs` = 36,079.** Recorded because `CLAUDE.md` replaced the
+hand-carried figure with the command precisely so this number stops going stale, and because it
+is the fifth distinct value this line has held (~4,900 against a real 16,287; corrected twice on
+2026-08-04 with a third site still stale a day later; ~16,300 against a real 21,248). The file
+was **2,316,766 bytes** at `4b653e8c275451f2` after this item landed; `nc-rec119.mjs` floors its
+restore check at 500 kB against that size.
+
+**Own baseline, measured before any edit, completion line read rather than exit status:**
+`220/220 suites green · 13781 assertions passing · 424.7s`, **0 skips**, **3 fleet members
+actually RAN**, provenance `223 of 223` at `e340600a`, 2 suites reporting no assertion count
+(`bundle.test.mjs`, `livefire.test.mjs`, both pre-existing). CONDUCT #3 briefed **13780** from
+`dfc3cc27`; **the +1 is attributed rather than left as residue** — `e340600a` is docs-only and
+adds the D-412 row to `DEBT.md`, which a doc-facing suite counts.
+
+**`node tools/decided.mjs` prints 1044 rulings, 297.4 KB** on this tree. Noted only because
+`CLAIMS.md` and `CLAUDE.md` both record that this figure has been carried by hand and gone stale;
+the tool prints its own count and that is what to read.
+
+**THE CONSUMER MEASUREMENT, AND IT REFUTES THE PREMISE OF THE ROW THAT COMMISSIONED IT.** REC-119's
+queue row and its brief both state that `op=basisversions` has REAL consumers *"so the measured
+impact here will NOT be zero and must be measured rather than assumed"*. Measured at the artifact,
+in the direction that would argue the break DOWN:
+
+| Consumer | Calls the op? | Reads a leg's grade? |
+| --- | --- | --- |
+| `civicos-ui/app.html` version-review door (`:20227`) | yes | **no** |
+| `civicos-ui/app.html` stance door (`:20953`) | yes | **no** |
+| `agent-worker/src/index.mjs` (`:781`) | yes | **never touches `legs`** |
+
+Method, so it can be re-driven: every `l.<field>` access in the span the two UI doors occupy was
+enumerated, and the complete set is `target`, `target_id`, `ground` plus array methods — `.grade`
+appears nowhere in it. The file's other `l.grade` reads belong to `op=cite`'s legs,
+`op=earnedbasis`'s legs and document frontmatter: **three different `legs[]` arrays, none of them
+this op's**, which is exactly the shape that makes a naive grep say the opposite. `agent-worker`
+reads `versions[].name` only, to dedup version names.
+
+**SO THE ROW WAS RIGHT THAT THE CONSUMERS ARE REAL AND WRONG THAT THE IMPACT IS NON-ZERO: both
+consumers exist and neither reads the field that moves.** The change is still BREAKING, on
+IC-25's rule and on an argument this op owns — it publishes `composition` so that a consumer can
+check freezing for itself, and such a consumer now finds the two halves of one answer disagreeing
+without having changed a line. **The distinction matters because a count of consumers is not an
+argument about a contract, and a row asserting a non-zero impact is a CLAIM like any other.**
+
+**AND THE WRITE-PATH ASYMMETRY, MEASURED RATHER THAN ASSUMED:** a version leg authored ABOVE the
+capture ceiling on an already-transcribed document is **ACCEPTED** by `op=suggest`, where the
+`basis:` leg path refuses the same shape with C-2.8. Driven in
+`rec119-version-legs-earned.test.mjs` block 3. Raised in D-411's disposition as residue; not
+settled by that item.

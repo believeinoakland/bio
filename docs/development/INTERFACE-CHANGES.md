@@ -9011,3 +9011,94 @@ byte-compares `inquiry_basis_versions.composition`, which embeds the authored le
 text, so capping there is a design question rather than a sweep.
 
 **RESOLUTION: (CONDUCT takes the version bump and the resolution.)**
+
+## IC-121 · I3 `op=basisversions` AND `op=suggest`: a version leg's `grade` becomes the EARNED capture letter, with the AUTHORED letter beside it — and the FROZEN `composition` is LABELLED as authored rather than capped · PROPOSED 2026-09-17 (REC-119, closing D-411) — the version bump and the RESOLUTION are CONDUCT's
+
+**BASE READ OFF THE TREE, NOT INHERITED FROM THE ROW.** `INTERFACES.md` reads I3 **22.0.0**
+on this worktree at `c6b40ba4`. Three ICs landed on 2026-09-17 and moved I3 19.0.0 → 20.0.0
+→ 21.0.0 → 22.0.0 in one day, so a base inherited from a row is stale within hours — IC-108,
+REC-114 and IC-119 each found this and each caught it the same way. **Proposed against
+22.0.0, and if another IC moves I3 underneath this one it resolves against the base as read
+at RESOLUTION, not at proposal** (IC-118's rule, adopted).
+
+**THE ID:** the brief implied the next free IC; `mintid` allocated **IC-121**, IC-120 having
+been taken by a sibling in this same wave. Allocated before a document was written, which is
+the point of the allocator.
+
+**WHAT MOVES.** Both ops answer with a version's `legs[]`, assembled by the one
+`#versionCollections` they share. Each published leg's `grade`, when it is on the **capture**
+axis, stops being the letter the member AUTHORED (read straight off
+`inquiry_basis_version_legs.grade`) and becomes the letter the record can EARN for that leg's
+target, resolved through `earnedBasisRegistry` by `Store.#capturedAt` — the same function the
+walk has used since REC-105, the leg listing since REC-114 and `op=reevaluations` since
+REC-118. Two fields are ADDED and are **always present on every published leg**:
+
+- `grade_authored` — the letter the member wrote, never erased.
+- `grade_why` — why the two differ, naming the target and the ceiling; `null` when nothing
+  was capped.
+
+One field is ADDED at version grain on `op=basisversions`, and at top level on `op=suggest`:
+
+- `composition_grades` — always `"authored"`. It says which letters the frozen `composition`
+  string holds. On `op=suggest` it joins the **`label`** group in `fields_of`, beside REC-75's
+  `composition_of`, for that field's own reason: a field whose job is to describe another
+  field is not itself one of the version's facts. `fields_of` stayed TOTAL with no edit to its
+  arm, which is that arm working as designed.
+
+Unchanged: connection-axis legs, legs carrying no letter, legs whose target is an inquiry, the
+`composition` string itself, `leg_count`, `legs_complete`, `grounds`, and every other part of
+both envelopes.
+
+**AND THE HALF THAT MAKES THIS ITEM DIFFERENT FROM ITS THREE PREDECESSORS: `composition` KEEPS
+ITS AUTHORED BYTES AND IS NOT CAPPED.** It embeds the authored letters as text and PL-1's freeze
+BYTE-COMPARES it at every promotion. So one answer carries two letters for one leg on purpose —
+the earned one in `legs[]`, the authored one inside the frozen string — and `composition_grades`
+is what stops that being a contradiction a reader has to resolve for themselves. CONDUCT #3
+ruled this and briefed its own falsifier: *if the label cannot live OUTSIDE the frozen string,
+the ruling is unimplementable and the item is BOB's.* **It survived, and the evidence is
+structural rather than argued — the freeze compares the STORED column against bytes the builder
+computed at the WRITE, this is a READ path, and a label already lives outside those bytes
+(REC-75's `composition_of`).** The byte-identity is DRIVEN, not reasoned: block 4 captures the
+string before the document is re-read weaker and compares it after.
+
+**BREAKING (MAJOR), AND THE MEASURED IMPACT IS ZERO — WHICH CONTRADICTS THE ROW AND IS REPORTED
+RATHER THAN SMOOTHED.** The row states that `op=basisversions` has REAL consumers *"so the
+measured impact here will NOT be zero and must be measured rather than assumed"*. It was
+measured, at the artifact, in the direction that would argue the break DOWN:
+
+- **`civicos-ui/app.html` — ZERO reads of any leg grade field on either door.** The version-review
+  door (`:20227`) and the stance door (`:20953`) read only `target_id`/`target`, `ground`,
+  `legs.length`, `leg_count` and `legs_complete`. Measured by sweeping every `l.*` access in the
+  region the two doors occupy: the set is `target`, `target_id`, `ground` plus array methods, and
+  no `.grade` appears anywhere in it. The file's other `l.grade` reads belong to `op=cite`'s legs,
+  `op=earnedbasis`'s, and document frontmatter — three different `legs[]` that this IC does not
+  touch.
+- **`agent-worker/` — ZERO reads of `legs` in `src/`.** It calls `op=basisversions` at
+  `src/index.mjs:781` and reads `versions[].name` only, to dedup against existing version names.
+- One test pins the exact sorted leg key set (`suggest.test.mjs`); it is CORRECTED, not loosened.
+
+**SO THE ROW'S PREMISE WAS RIGHT ABOUT THE CONSUMERS AND WRONG ABOUT THE IMPACT: both consumers
+are real and neither reads the field that moves.** It is breaking anyway, on IC-25's rule and on
+IC-112's and IC-117's precedent — a consumer count is a fact about this moment and a contract is a
+promise about every moment after it — and on REC-118's argument, which applies here in a sharper
+form than it did there: **a correct consumer becomes wrong without changing a line.** The op
+publishes `composition` precisely so a consumer can check freezing FOR ITSELF rather than taking
+the plane's word for it. Such a consumer, comparing the composition's leg letters against
+`legs[]`, was correct before this change and finds them disagreeing after it. That consumer is not
+hypothetical: it is the one the op's own documentation invites.
+
+**AND ONE FINDING THE ROW DID NOT ANTICIPATE, WHICH SHARPENS THE ITEM RATHER THAN WIDENING IT.**
+On `op=suggest` the two letters appear IN ONE OBJECT WRITTEN BY ONE ACT. **The version-leg write
+path does NOT apply C-2.8's ceiling refusal the way the `basis:` leg path does** — driven, not
+assumed: a leg authored above the ceiling on an already-transcribed document is ACCEPTED. So this
+overclaim can be AUTHORED FRESH today and is not merely inherited from a document re-read after
+the fact, which is what makes this reader live rather than latent. Whether that write-side
+asymmetry is itself a defect is NOT settled here and is not this item's to settle; it is raised in
+D-411's disposition so it is not lost.
+
+**WHAT IT COSTS IF IT IS WRONG:** one resolution on a read path and three published fields. The
+frozen bytes are untouched, so nothing about ratification or the freeze changes and no stored row
+moves. Reversing it is deleting `#versionLegsEarned`, dropping its call, and removing
+`composition_grades` from the two publish sites.
+
+**RESOLUTION: (CONDUCT takes the version bump and the resolution.)**
