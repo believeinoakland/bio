@@ -1462,7 +1462,13 @@ console.log("\n--- 8. D-235: the answer names the source of every field it publi
   + "with the AUTHORED one beside it",
     [Array.isArray(quoted.legs), quoted.legs?.length, quoted.legs?.[0]?.ord,
      Object.keys(quoted.legs?.[0] ?? {}).sort().join(",")],
-    [true, 1, 0, "at,grade,grade_authored,grade_axis,grade_source,grade_why,ground,note,ord,role,"
+    /* CORRECTED 2026-09-18 BY REC-86 (IC-123, closing D-350), NOT EXEMPTED, and the
+       arm stays an EXACT key set for its own stated reason: `content_id` — WHICH
+       PART each leg rests on — is now served, because a reading narrowed to one
+       page used to display exactly like one resting on the whole document. The
+       field was added SAYING SO (an IC), which is the one way this arm exists to
+       admit a new key. */
+    [true, 1, 0, "at,content_id,grade,grade_authored,grade_axis,grade_source,grade_why,ground,note,ord,role,"
      + "target_id,target_type"]);
   /* REC-119 — AND THE LABEL ON THE HALF THAT CANNOT MOVE. `composition`
      embeds the AUTHORED letters as text and PL-1 compares it BYTE FOR BYTE, so

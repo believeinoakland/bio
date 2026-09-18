@@ -10710,6 +10710,176 @@ export function describeExtent(extent) {
   return row ? row.human : 'a part of this document the record cannot name';
 }
 
+/* =====================================================================
+ * REC-86 / IC-123 — NARROW (Bob's 5.3): a member makes an existing citation
+ * more specific. THE PREDICATE, AND WHY IT IS HERE AND NOT IN THE STORE.
+ *
+ * `extentRelation(outer, inner)` answers how two extents of ONE capture stand
+ * to each other: `same`, `narrower` (inner lies strictly inside outer),
+ * `wider` (the reverse), `disjoint` (neither contains the other) or
+ * `unreadable` (either side names something this file cannot evaluate). It
+ * lives beside `canonicalExtent` because it is a question about the SAME
+ * canonical fields and nothing else — two readings of "what part of a document
+ * is this" in two files is D-164's own lesson.
+ *
+ * THE DEFAULT IS NOT-NARROWER, for `extentCovers`' reason one construct over:
+ * an extent nobody can evaluate must never read as "inside", because the act
+ * this gates would then let a citation be re-described as more precise than
+ * anybody established. Every unrecognised, partial or cross-kind case answers
+ * something other than `narrower`, and the act refuses on anything other than
+ * `narrower`.
+ *
+ * WHAT COUNTS AS NARROWER, PER ARM — the finer field of each arm, and only it:
+ *   document    -> any landed arm (a part of the whole is narrower than it)
+ *   pdf-page    -> the same page with a rect, or a rect strictly inside a rect
+ *   doc-para    -> the same paragraph with a run
+ *   slide-shape -> the same slide with a shape
+ *   sheet-cell  -> the same sheet with a cell
+ * A different page, paragraph, slide or sheet is DISJOINT, never narrower:
+ * moving a citation sideways is a different claim, not a more precise one.
+ * ===================================================================== */
+export function extentRelation(outer, inner) {
+  const a = outer && typeof outer === 'object' ? outer : null;
+  const b = inner && typeof inner === 'object' ? inner : null;
+  if (!a || !b) return 'unreadable';
+  const landed = (k) => Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, k)
+    && CONTENT_EXTENT_KINDS[k].landed;
+  if (!landed(a.kind) || !landed(b.kind)) return 'unreadable';
+  const ca = JSON.parse(canonicalExtent(a));
+  const cb = JSON.parse(canonicalExtent(b));
+  if (JSON.stringify(ca) === JSON.stringify(cb)) return 'same';
+  if (ca.kind === 'document') return 'narrower';
+  if (cb.kind === 'document') return 'wider';
+  if (ca.kind !== cb.kind) return 'disjoint';
+  /* Each arm: the COARSE field must be present on both sides and equal, or the
+     two are about different places; then the FINE field decides. */
+  const byFine = (coarse, fine, inside) => {
+    if (ca[coarse] == null || cb[coarse] == null) return 'unreadable';
+    if (ca[coarse] !== cb[coarse]) return 'disjoint';
+    const fa = ca[fine], fb = cb[fine];
+    if (fa == null && fb != null) return 'narrower';
+    if (fa != null && fb == null) return 'wider';
+    if (fa == null && fb == null) return 'same';
+    if (inside) {
+      if (inside(fa, fb)) return 'narrower';
+      if (inside(fb, fa)) return 'wider';
+    }
+    return 'disjoint';
+  };
+  if (ca.kind === 'pdf-page')
+    return byFine('page', 'rect', (o, i) =>
+      i[0] >= o[0] && i[1] >= o[1] && i[2] <= o[2] && i[3] <= o[3]);
+  if (ca.kind === 'doc-para') return byFine('para', 'run', null);
+  if (ca.kind === 'slide-shape') return byFine('slide', 'shape', null);
+  if (ca.kind === 'sheet-cell') return byFine('sheet', 'cell', null);
+  return 'unreadable';
+}
+
+/* REC-86 / IC-123 — THE ACT'S REFUSALS, C-50 (minted with `node tools/mintid.mjs C`).
+ *
+ * ITS OWN FAMILY AND NOT A SUB-NUMBER OF C-45, because the subject is its own.
+ * C-45 is *the ways the record could come to point at nothing*; this family is
+ * *the ways a member's re-description of a citation could claim more precision
+ * than was established, or move a citation nobody moved* (Bob's 5.3 and 5.8).
+ * The extent GRAMMAR is not here: a malformed extent is refused by
+ * `checkLegExtentGrammar`, REC-84's one checker, under `BASIS_REFUSED` — the
+ * name `op=cite` and `op=promote` already answer it under.
+ *
+ * THREE REGIONS. `is-narrow-source` holds the four refusals the act and its
+ * candidate read share (which citation is meant); the act's own are split
+ * two ways — `is-narrow-extent` (who and which part) and `is-narrow-claim` (is
+ * it narrower, and is the new reading nameable) — because
+ * REC-84's grammar verdict (`BASIS_REFUSED`, another family's name) must sit
+ * BETWEEN the first two and a governed region may hold only its own family's
+ * codes. One helper each, named `refusal`, codes written as literals.
+ *
+ * THERE IS NO ROW FOR AN UNWRITABLE DOCUMENT, and that was decided by trying to
+ * drive one: the restricted grammar's version blocks are always appendable once
+ * the document PARSED (a key with an inline value other than `[]` cannot hold
+ * the rows the source reading needs), so a twelfth row would be a refusal no
+ * suite can reach — a catalogue entry that could never be named by an assertion.
+ * The defensive branch answers `op=cite`'s own `UNSPLICEABLE_BASIS` instead. */
+export const NARROW_CHECKS = {
+  NARROW_NO_INQUIRY: {
+    check: 'C-50.1',
+    where: 'src/store.mjs #narrowSource > is-narrow-source',
+    translation: 'That request does not name a question this record holds and you can read. Making '
+      + 'a citation more specific happens on a question\'s reading of its evidence, so it needs the '
+      + 'question first.',
+  },
+  NARROW_NO_SUCH_VERSION: {
+    check: 'C-50.2',
+    where: 'src/store.mjs #narrowSource > is-narrow-source',
+    translation: 'That question has no reading of its evidence by that name. A citation is made more '
+      + 'specific in a NEW reading taken from an existing one, so the reading it starts from has to '
+      + 'be named exactly as the question holds it.',
+  },
+  NARROW_NO_SUCH_LEG: {
+    check: 'C-50.3',
+    where: 'src/store.mjs #narrowSource > is-narrow-source',
+    translation: 'That reading has no piece of evidence at the position named. Pieces are counted '
+      + 'from zero, in the order the reading lists them.',
+  },
+  NARROW_NO_PART: {
+    check: 'C-50.4',
+    where: 'src/store.mjs #narrowSource > is-narrow-source',
+    translation: 'That piece of evidence has no part to point at more precisely. It either rests on '
+      + 'another question, which has no pages or passages, or on a document this record holds no '
+      + 'copy of — and a part of something nobody captured cannot be named.',
+  },
+  NARROW_NOT_A_MEMBER: {
+    check: 'C-50.5',
+    where: 'src/store.mjs narrow > is-narrow-extent',
+    translation: 'Making a citation more specific is a member\'s own act, done in their name. A '
+      + 'machine may PROPOSE passages that look relevant, and they are listed for you to choose from, '
+      + 'but choosing which passage is on point is a judgment a person signs for.',
+  },
+  NARROW_NO_EXTENT: {
+    check: 'C-50.6',
+    where: 'src/store.mjs narrow > is-narrow-extent',
+    translation: 'That request does not say which part of the document the citation should point at. '
+      + 'Name the part — a page, a region of a page, a cell, a paragraph or a slide — or choose one of '
+      + 'the proposed passages by its content id.',
+  },
+  NARROW_BAD_EXTENT: {
+    check: 'C-50.7',
+    where: 'src/store.mjs narrow > is-narrow-extent',
+    translation: 'The part named cannot be recorded as sent: it names a field this act does not take, '
+      + 'a value that cannot be written into the record, a content id this record does not hold, or '
+      + 'both a content id and a description of the same part. It is refused rather than guessed at, '
+      + 'because a citation quietly re-read would not be the one you made.',
+  },
+  NARROW_OTHER_CAPTURE: {
+    check: 'C-50.8',
+    where: 'src/store.mjs narrow > is-narrow-extent',
+    translation: 'The part named is not in the copy of the document this citation rests on. Pointing '
+      + 'the citation at a different document, or at a later copy of the same one, is not making it '
+      + 'more specific — it is moving it, and a citation is never moved except by its own separate act.',
+  },
+  NARROW_NOT_NARROWER: {
+    check: 'C-50.9',
+    where: 'src/store.mjs narrow > is-narrow-claim',
+    translation: 'The part named is not inside what the citation already points at — it is the same '
+      + 'part, a wider one, or a different place in the document. Making a citation more specific '
+      + 'can only ever point it at LESS of the document than before; anything else would claim a '
+      + 'precision nobody established.',
+  },
+  NARROW_NAME: {
+    check: 'C-50.10',
+    where: 'src/store.mjs narrow > is-narrow-claim',
+    translation: 'The new reading needs a name of its own, one the question does not already use. The '
+      + 'reading it starts from keeps its name and stays exactly as it was: changing an existing '
+      + 'reading in place would move a citation somebody else may be relying on.',
+  },
+  NARROW_NO_DESCRIPTION: {
+    check: 'C-50.11',
+    where: 'src/store.mjs narrow > is-narrow-claim',
+    translation: 'The new reading needs a short account of what changed and why — which citation now '
+      + 'points at less of its document, and what makes that part the one that matters. That account '
+      + 'is what a later reader has to go on.',
+  },
+};
+
 /** THE ONE CHECKER. Both gates run it: `store.mjs`'s op=promote write path and,
  *  through it, the catalogue — the `checkInquiryBasis` / `checkGatheringGrammar`
  *  precedent, and for their reason (two implementations of one rule is the

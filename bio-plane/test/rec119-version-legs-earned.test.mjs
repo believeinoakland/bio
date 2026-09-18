@@ -415,7 +415,10 @@ console.log("\n--- 7. OVER-STRICTNESS — NOTHING IS CAPPED THAT MUST NOT BE ---
   t("the rest of the leg object is UNMOVED — this item resolves ONE field and rebuilds nothing, so `note`, `at` and `ground` still travel",
     { keys: Object.keys(MOVED || {}).sort().join(","), ground: MOVED && MOVED.ground,
       at: MOVED && MOVED.at, target_type: MOVED && MOVED.target_type },
-    { keys: "at,grade,grade_authored,grade_axis,grade_source,grade_why,ground,note,ord,role,"
+    /* CORRECTED 2026-09-18 BY REC-86 (IC-123, closing D-350), NOT EXEMPTED: the leg
+       now also carries `content_id` — which part it rests on — selected in the SAME
+       statement and resolved by nothing, so "rebuilds nothing" still holds exactly. */
+    { keys: "at,content_id,grade,grade_authored,grade_axis,grade_source,grade_why,ground,note,ord,role,"
         + "target_id,target_type",
       ground: "paper trail", at: NOW, target_type: "information" });
   /* THE ARM THE NEGATIVE CONTROL DEMANDED. A CONNECTION-axis leg on the SAME document whose
