@@ -16835,6 +16835,8 @@ CLAUDE.md's *never end a turn on an unread question* (and the key itself was wri
 lane it was partly wrong — stated, not smoothed). **What it does not establish:** anything about CONDUCT, SCHEDULER, DIST,
 FLEET or workers (untested); the OLD arm's 4 lost points are mostly rules added today (the defect rule, `status.mjs`), so
 it is not a fair score of the old corpus on its own terms; and the questions and the new corpus have one author (BOB #15),
-which the blind grader and the old-corpus arm limit and do not remove. **Owed:** the same exam per lane, a re-run after
-the two corrections, and field counts of process failures per lane against this day's baseline.
+which the blind grader and the old-corpus arm limit and do not remove. **RE-RUN after the two corrections (same instrument, a fresh NEW arm on the corrected files): Q1 and Q9 both answered
+with the key action** — Q1 *"the BOB lane is Bob's room, so I bring the question into this conversation now"*; Q9 *"…and I
+re-run the subject's negative control"*. **Owed:** the same exam per lane, and field counts of process failures per lane
+against this day's baseline.
 
