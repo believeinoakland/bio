@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1112 rulings across 84 documents.
+1113 rulings across 84 documents.
 
 ## DEC-
 
@@ -1927,6 +1927,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:13497`
 - any suite that pins an op/table census or a registry, CORRECTED with its reason, never exempted. - `bio-plane/scripts/coverage.mjs` floors if the instrument moves them; `bio-plane/dist/**` rebuilt. - `docs/architecture/construct-status.json` (`10.lead`, `3.census`, and `9.internet`'s text),…  
   `docs/development/CLAIMS.md:13623`
+- arm whose find-string the refactor moves, CORRECTED with the reason, never exempted. - any suite pinning a registry or roster the change moves, corrected with its reason. - `bio-plane/dist/**` rebuilt if the battery requires it. - `docs/architecture/construct-status.json` (`9.internet`, `3.census` reviewed),…  
+  `docs/development/CLAIMS.md:13651`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
