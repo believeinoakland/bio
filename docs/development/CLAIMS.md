@@ -13867,3 +13867,25 @@ green · 14789 assertions passing**, no skip; `node scripts/coverage.mjs --stric
 `node civicos-ui/test/run.mjs` exit **0**; `status --check` 0 drift. `deliverer.control.mjs` ran all six arms AS DECLARED,
 and every restore was byte-identical. `casesign.control.mjs` e/f/g/h re-ran at REC-130's recorded figures. **FOR CONDUCT:**
 resolve IC-147 against I3 as it reads at resolution (it was proposed MINOR on 27.1.0). D-422 is rowed and unscheduled.
+
+## CLAIM 2026-09-18 RECORD (REC-132 — D-422: ONE session resolver; the founder sees as an administrator except where a ruling names authors or participants; the member id `admin` reserved)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-a0f6ffd4522bb36bd`, branch
+`worktree-agent-a0f6ffd4522bb36bd`, base `a6bdfcbb`. `npm ci` in all three packages, each `node_modules` a real
+directory (9.0 GiB free). Design: Membership v2 §7 *"THE FOUNDER IS AN ADMINISTRATOR HERE TOO"*. Paths:
+
+- RECORD (own): `bio-plane/src/index.mjs` (`sessionCaseViewer` becomes the one session resolver; the session-stamped
+  viewer stamps at `affordances`, `queue`, the `pdfstructure` re-read, `monitor`, `ratify`, `caseratify` and the
+  passthrough viewer block — the viewer stamp ONLY in any handler REC-131 owns); `bio-plane/src/store.mjs`
+  (`affordanceFacts`, `#queueOptions`, the lead reads `#leadFor`/`leadLook`/`leadShare`/`leadRead`, `frontier`'s internet
+  level, `memberAdd`, `auditPass`, and their DO routes); `bio-plane/checks/bio-checks.mjs` (a new refusal family,
+  C-55, minted with `tools/mintid.mjs`).
+- Tests: a new `bio-plane/test/founder-sight.test.mjs` and its control driver; any suite asserting the founder's old
+  narrower sight — CORRECTED with a dated reason, never exempted. `bio-plane/scripts/coverage.mjs` and
+  `civicos-ui/check-refusal-codes.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-149), `DEBT.md` (D-422's disposition), `BIO_Membership_Architecture_v2.md` front
+  matter and §7's block, `docs/architecture/construct-status.json` if a claim moves, this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `op=stats`/`op=selftest`/`op=livefire` beyond a viewer stamp (REC-131's), NOT
+`#hasCaseStanding` (REC-126's), NOT `civicos-ui/` beyond the one floor, NOT `newgroup/`.
