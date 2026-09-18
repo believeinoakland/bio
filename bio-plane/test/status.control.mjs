@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* The NEGATIVE CONTROL DRIVER for `tools/status.mjs` and `bio-plane/test/status.test.mjs` —
- * six arms plus an opening and closing baseline.
+ * seven arms plus an opening and closing baseline.
  *
  *   node bio-plane/test/status.control.mjs        (from the repo root)
  *
@@ -97,6 +97,10 @@ const ARMS = [
     from: "        if (m) return { ok: false, evidence: `/${pat}/ FOUND",
     to:   "        if (false) return { ok: false, evidence: `/${pat}/ FOUND",
     mustBreak: "AN ABSENT CLAIM WHOSE THING WAS BUILT DRIFTS" },
+  { id: "A7", title: "an ABSENT claim allowed to rest on a comment — the probe that passed on a fixed defect",
+    from: "    if (cl.state === \"ABSENT\" && !(cl.probes || []).some((p) => p.none || p.uinone))",
+    to:   "    if (false && !(cl.probes || []).some((p) => p.none || p.uinone))",
+    mustBreak: "AN ABSENT CLAIM RESTING ONLY ON A `hit` DRIFTS" },
 ];
 
 for (const a of ARMS) {

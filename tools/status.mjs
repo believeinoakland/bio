@@ -149,6 +149,12 @@ export function judge({ repo = ROOT, data = null } = {}) {
     if (!STATES.includes(cl.state)) problems.push(`state "${cl.state}" is not one of ${STATES.join(", ")}`);
     if (cl.state === "UNDETERMINED") { if (!cl.reason) problems.push("UNDETERMINED with no stated reason"); }
     else if (!cl.probes || !cl.probes.length) problems.push(`a ${cl.state} claim with NO probe is prose, and prose is what drifted`);
+    /* AN ABSENCE NEEDS A SEARCH THAT MUST STAY EMPTY. Measured 2026-09-18: three ABSENT claims
+       rested on a `hit` over the code's own comment saying the thing was missing, and when CPDF-19
+       built one of them, its correction comment QUOTED the old sentence — so the probe passed on a
+       fixed defect. A comment is not evidence of absence; only a `none` or `uinone` search is. */
+    if (cl.state === "ABSENT" && !(cl.probes || []).some((p) => p.none || p.uinone))
+      problems.push("an ABSENT claim needs at least one `none` or `uinone` search — a `hit` on a comment saying so is not evidence");
     const results = (cl.probes || []).map((p) => ({ p, ...evalProbe(p, { repo, sets: d.sets || {} }) }));
     for (const r of results) if (!r.ok) problems.push(r.evidence);
     out.push({ n: c.n, construct: c.name, id: cl.id, state: cl.state, text: cl.text, note: cl.note,

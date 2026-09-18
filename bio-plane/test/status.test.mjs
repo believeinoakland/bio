@@ -18,6 +18,7 @@
  * NEGATIVE CONTROL: `node bio-plane/test/status.control.mjs` from the repo root — each arm
  * breaks one property of the tool and must turn a NAMED assertion here red.
  *   RUN 2026-09-18 by BOB #14: six arms, 33 pass / 0 fail, exit 0, every restore byte-identical.
+ *   RE-RUN the same day with A7 added (an ABSENT claim resting only on a comment): seven arms, 38 pass / 0 fail.
  *   (A2 was RE-AIMED after its first run: forcing the op probe's CONDITION true also dereferenced a
  *   null match, so the suite CRASHED instead of failing the named assertion — a second variable.)
  * AND ONE ARM ON THE PUSH GUARD, run by hand because it arms a different file: `statusCheck`'s
@@ -105,11 +106,14 @@ section("3 — JUDGEMENT: DRIFT IN BOTH DIRECTIONS, AND NO CLAIM WITHOUT A PROBE
     { id: "1.und-ok", state: "UNDETERMINED", text: "f", reason: "live fact", probes: [] },
     { id: "1.und-bare", state: "UNDETERMINED", text: "g", probes: [] },
     { id: "1.bad-state", state: "MOSTLY", text: "h", probes: [{ op: "cite" }] },
+    { id: "1.absent-by-comment", state: "ABSENT", text: "i", probes: [{ hit: "compilation", in: ["bio-plane/src/store.mjs"] }] },
   ]}]};
   const j = judge({ repo, data });
   const drifted = j.claims.filter((c) => c.problems.length).map((c) => c.id).sort();
   t("exactly the unsound claims drift — discrimination, not an empty or full walk", drifted,
-    ["1.absent-built", "1.bad-state", "1.built-gone", "1.prose", "1.und-bare"]);
+    ["1.absent-built", "1.absent-by-comment", "1.bad-state", "1.built-gone", "1.prose", "1.und-bare"]);
+  t("AN ABSENT CLAIM RESTING ONLY ON A `hit` DRIFTS — a comment saying so is not evidence (CPDF-19's quoted sentence passed one)",
+    drifted.includes("1.absent-by-comment"), true);
   t("A BUILT CLAIM WHOSE THING IS GONE DRIFTS", drifted.includes("1.built-gone"), true);
   t("AN ABSENT CLAIM WHOSE THING WAS BUILT DRIFTS — the direction nothing else audits",
     drifted.includes("1.absent-built"), true);

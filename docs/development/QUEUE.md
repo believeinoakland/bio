@@ -101,6 +101,58 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-18 · BOB #14 · THE LEDGERS BECOME SMALL, ORDERED AND ALWAYS CURRENT — BOB'S DIRECTION, DECOMPOSED FOR YOU.**
+
+**BOB, 2026-09-18:** *"the order of items in those documents also matter, as the right order would allow them to
+be read and processed serially. As each item is processed, that item can be moved out of that document into an
+archive. So those truth documents can be made small and always kept small — allowing fresh sessions to not just
+scan them but read them in their entirety."*
+
+**MEASURED 2026-09-18 on `origin/main`:** `QUEUE.md` is 1,099 KB, of which **868 KB (79%) is 315 `done` rows**;
+the 25 open rows are 87 KB, ~3.5 KB each because every row carries its whole history. `DEBT.md` is 763 KB over 277
+rows, 58 of them closed (289 KB). **THIS WAS DONE ONCE AND GREW BACK:** `docs/archive/ledgers/QUEUE-2026-08.md`
+and `DEBT-closed-2026-08.md` are an August archiving — a one-off cleanup, not a standing step, so nothing kept the
+files small afterwards. **The fix is the STEP and the GATE, not another cleanup.** 19 instruments read `QUEUE.md`
+and 14 read `DEBT.md` (listed in LED-1), so nothing moves before each reader is audited.
+
+**EXEMPT FROM THE M0 HOLD, BY NAME:** these five are the process work Bob asked for; the hold was on instrument
+work he did not.
+
+- **LED-1 · the reader audit, BEFORE anything moves.** Every reader of the two ledgers — QUEUE: `tools/{owed,
+  nc-m039,mintid,plancheck,rowdesign}.mjs`, `bio-plane/scripts/op-claims.mjs`, tests `acquire, check-firing,
+  corpuscheck(+control), m041-instrument-census(+control), mintid, op-claims, planning-hygiene, publish,
+  refselectivity.control, rowdesign.control, scheduler`; DEBT: `tools/{decided,owed,mergecarry,mintid,plancheck,
+  nc-m039}.mjs`, `bio-plane/scripts/armdecay.mjs`, tests `caseflip, corpuscheck, dec65-strength-reach.control,
+  derivation-bounds, m025-arm-anchor-witness, mintid, planning-hygiene`. For each: what it reads, and whether it
+  needs a CLOSED row to exist (id allocation, a ruling's source line, a pinned count). **Accepts-when:** a table
+  in the row naming each reader and its dependency; every reader that needs history reads `docs/archive/ledgers/`
+  too (mintid already does — verify, do not assume); battery green; NO row moved yet. **Depends on nothing.**
+- **LED-2 · the archiver and its gate.** `tools/ledger.mjs`: `archive <ID>` moves one closed row (a `done` or
+  `superseded` QUEUE row; a CLOSED DEBT row with no declared residue) to `docs/archive/ledgers/<FILE>-closed.md`,
+  appended verbatim, the id set of live + archive conserved exactly. `plancheck` arms: (a) no closed row in a
+  live ledger; (b) a size budget per ledger and per open row, named in the row (start: QUEUE ≤ 150 KB, row ≤ 3 KB)
+  — WARN first, FAIL once LED-4 lands; (c) every `depends-on` resolves to an open row, an archived done row, or a
+  `tools/status.mjs` claim id reading BUILT. Suite + negative control (one arm per property; the conservation arm
+  is the one that matters — a mover that drops a row is the D-288 loss shape). **Depends on LED-1.**
+- **LED-3 · the migration.** Move every closed row with LED-2's tool. **Accepts-when:** id sets before and after
+  (live ∪ archive) are EQUAL, counted and diffed rather than eyeballed; `decided.mjs`, `owed.mjs`, `mintid.mjs`
+  answer identically for a sample of archived ids before and after; battery green. **Depends on LED-2.**
+- **LED-4 · the open rows cut to their fields, in processing order.** Each open row: heading, `milestone`,
+  `design` (a section, per corpus standard), `depends-on` (checked by LED-2(c)), `scope`, `accepts-when`,
+  `NEGATIVE CONTROL`. Everything else — *prior state kept as the record*, landing narratives, correction
+  histories — moves to the archive under the row's id, verbatim. **Order the file as it will be processed:**
+  the top runnable row first, dependents after what they depend on, so a session reads it top to bottom. This is
+  judgement and it is CONDUCT's file, so CONDUCT performs it; BOB checks the order against `status.mjs` before it
+  lands. **Depends on LED-3.** Same treatment for `DEBT.md`'s open rows: one paragraph of cost, one of
+  disposition as it stands NOW; history to the archive.
+- **LED-5 · the standing step, where it will be performed.** `kickoffs/CONDUCT.md`: integration ends with
+  `node tools/ledger.mjs archive <ID>` in the SAME commit as the `done` flip — not a later sweep, which is what
+  let August's archiving grow back. `kickoffs/BOB.md` and the DEBT disposition convention likewise. LED-2(a) makes
+  a forgotten archive a failing gate rather than a slow regrowth. **Depends on LED-2.**
+
+**Nothing running is superseded and no worker should be stopped.**
+
+
 **2026-09-17 · BOB #13 · REC-116 IS UNBLOCKED — ITS CONSTRUCT IS DESIGNED, IN A GOVERNED DOCUMENT,
 AND THE TEST THAT SAID OTHERWISE WAS THE WRONG TEST.** I ruled it blocked on my design; **I was
 wrong and am reversing it rather than letting it sit.** No design act is owed.
