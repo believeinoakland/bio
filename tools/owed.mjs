@@ -57,6 +57,8 @@
  *   (A7) the owner pattern case-INSENSITIVE again -> Bob the PERSON is read as the BOB lane.
  *   (A8) a blocked queue heading read only to 220 characters -> a routing past that point is lost.
  *   (A7 and A8 added and all eight RUN 2026-09-18 by BOB #14, exit 0, 43 pass / 0 fail.)
+ *   (All eight RE-RUN 2026-09-18 by the LED-2 worker after A3's anchor was repointed to the one
+ *   `isClosedDebtRow` call site, exit 0, 43 pass / 0 fail, restore verified by sha256.)
  *
  * **THE HEADER FIRST CITED THIS FILE BEFORE IT EXISTED**, which is the false-absence class this
  * family exists to catch, committed by a file in the family. Corrected to say so, then built.
@@ -108,13 +110,58 @@ export const OWNER_RE = (lane) => new RegExp(
    guess. */
 export const RESIDUE_RE = /\bowed by this lane\b|\bSTILL OPEN\b|\bSTILL OWED\b|\bNOT CLAIMED (?:DONE|CLOSED|FIXED)\b|\bRESIDUE[,:]? (?:NAMED|STATED|AND NOT)\b|\bOUTSTANDING\b/i;
 
+/* ------------------------------------------------ THE ONE DEFINITION OF A CLOSED DEBT ROW (LED-2)
+
+   `tools/ledger.mjs` IMPORTS THESE TWO FUNCTIONS AND DEFINES NOTHING OF ITS OWN, so the archiver
+   and this instrument cannot disagree about which DEBT row owes nothing: a row the archiver may
+   move out of the live ledger is, by construction, a row this file would have skipped. It lives
+   HERE because "closed" for archiving means exactly "owes nothing to anybody", and this file is
+   the one that defines what is owed. `ledger.test.mjs` runs both over the same ledger.
+
+   THE DISPOSITION IS THE LAST CELL. Until LED-2 this file read `cells[5]`, which is the last cell
+   only on a five-column row — and 17 live rows carry a `|` inside their body, so for them it read
+   a fragment of the BODY as the disposition. `plancheck` and `planning-hygiene` have always read
+   the last cell. Measured 2026-09-18: D-305, D-354, D-367 and D-385 are closed by their real
+   disposition and were being judged on a body fragment.
+
+   CLOSED IS A LEADING STATUS WORD, NOT THE WORD ANYWHERE IN THE CELL. The previous test here was
+   `/\bCLOSED\b/i` anywhere, and as an ARCHIVE predicate that is a mover that deletes open work:
+   measured 2026-09-18 over the live DEBT.md it called D-376 (*open, and its BLOCK IS LIFTED …
+   CPDF-19 closed D-319*), D-242 (*NARROWED rather than closed*), D-361 (*not yet closed*), D-300,
+   D-161 and D-292 (*DEPLOY HALF CLOSED, INSTALLER HALF IS …*) closed — 13 rows in all whose disposition does not lead with a closure word (M-58). And the
+   August roll's test, *the cell lacks `open`*, is wrong the other way (M-57: D-330, D-401, D-405
+   and D-407 carry a residue and would have left the owed list with nothing going red).
+   So: strip the leading classification tags (`M4 ·`, `ACCEPTED ·`, `DOCTRINE · SKILL ·`, the
+   tokens `plancheck` reads), and the row is closed iff the FIRST word after them is a closure word
+   (CLOSED, FIXED, RESOLVED, SUPERSEDED — any case), it does not say it closed only in PART or by
+   HALF, AND no residue marker appears anywhere in the disposition. Anything else is OPEN, which
+   is the safe direction for a mover: a row wrongly kept live costs bytes; a row wrongly moved
+   costs the owed list. */
+export function debtDisposition(line) {
+  const cells = String(line).replace(/\s+$/, "").replace(/\|$/, "").split("|");
+  return cells.length > 1 ? cells[cells.length - 1].trim() : "";
+}
+const CLOSURE_HEAD = /^(?:CLOSED|FIXED|RESOLVED|SUPERSEDED)\b/i;
+const PARTIAL_HEAD = /^(?:CLOSED|FIXED|RESOLVED)\s+(?:IN PART|PARTLY|PARTIALLY|HALF)\b/i;
+const TAG_SEGMENT = /^[A-Z][A-Za-z0-9'-]*(?: [A-Z][A-Z]+)?$/;
+export function isClosedDebtRow(disposition) {
+  const d = String(disposition || "").replace(/\*\*/g, "").trim();
+  if (!d || RESIDUE_RE.test(d)) return false;
+  let head = "";
+  for (const seg of d.split(/\s+[·]\s+|\s+-\s+/)) {
+    const s = seg.trim();
+    if (CLOSURE_HEAD.test(s) || !TAG_SEGMENT.test(s)) { head = s; break; }
+  }
+  return CLOSURE_HEAD.test(head) && !PARTIAL_HEAD.test(head);
+}
+
 const rowsOf = (text, prefix) => {
   const out = [];
   for (const line of text.split("\n")) {
     if (!line.startsWith(prefix)) continue;
     const cells = line.split("|");
     if (cells.length < 6) continue;
-    out.push({ id: cells[1].trim(), body: cells[4] || "", disposition: cells[5] || "", line });
+    out.push({ id: cells[1].trim(), body: cells[4] || "", disposition: debtDisposition(line), line });
   }
   return out;
 };
@@ -128,7 +175,7 @@ export function owedFor(lane = "BOB", { repo = ROOT, reader = null } = {}) {
   if (debt === null) unreadable.push(SOURCES.debt);
   else for (const r of rowsOf(debt, "| D-")) {
     /* A CLOSED row owes nothing, however many owner words it carries. */
-    if (/\bCLOSED\b|\bFIXED AND CONFIRMED\b/i.test(r.disposition) && !RESIDUE_RE.test(r.disposition)) continue;
+    if (isClosedDebtRow(r.disposition)) continue;
     /* DISPOSITION ONLY. The body quotes Bob in nearly every row; a mention is not an
        assignment, and conflating them produced a 58-item list that was mostly noise. */
     const owned = owner.test(r.disposition);

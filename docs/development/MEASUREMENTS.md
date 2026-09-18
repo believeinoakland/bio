@@ -16697,3 +16697,56 @@ exactly; a file under `docs/development/` needs a CORPUS-STANDARD §6 row). (e) 
 headings verbatim (m041's anchor), and `## BOB INBOX`. (f) three pins to correct in the same commit that moves rows:
 `rowdesign.control` A2b (`>= 50` closed rows live), `mintid.test` `sites > 400` (464 after), and `corpuscheck.test`'s
 D-388 if that row ever closes.
+
+## M-58 · 2026-09-18 · LED-2 — THE ARCHIVER'S DEFINITION OF CLOSED, AND THE FULL MIGRATION SIMULATED THROUGH THE TOOL THAT WILL PERFORM IT
+
+**Instruments.** `tools/ledger.mjs` (the archiver and the gate's three arms), `tools/owed.mjs`
+(`isClosedDebtRow`/`debtDisposition`, the ONE definition of a closed DEBT row, which the archiver
+imports), `bio-plane/test/ledger.test.mjs` section 2 (the migration on a copy of the real ledgers,
+re-run by every battery), and `bio-plane/test/ledger.control.mjs` (ten arms plus a baseline). All
+on this item's branch at `612860fe`, baseline before any edit `232/232 suites green · 14416
+assertions passing`, 3 fleet manifests.
+
+**1. THE DEFINITION OF A CLOSED DEBT ROW, measured three ways over the live `DEBT.md` (284 rows).**
+
+| definition | rows it calls closed | what is wrong with it |
+| --- | --- | --- |
+| August roll: *the last cell lacks `open`* | — (M-57) | moves D-330, D-401, D-405, D-407 off the owed list: each carries a residue |
+| `owed.mjs` before LED-2: `CLOSED`/`FIXED AND CONFIRMED` **anywhere** in `cells[5]`, no residue | 66 | calls **13 rows** closed whose disposition does not LEAD with a closure word, at least six plainly open — D-376 (*open … CPDF-19 closed D-319*), D-242 (*NARROWED rather than closed*), D-361 (*not yet closed*), D-300, D-161, D-292 (*DEPLOY HALF CLOSED*), D-54, D-83, D-127, D-186, D-283, D-408, D-413 — and misses 6 closed ones |
+| LED-2: the **last** cell; the first word after the leading tags (`M4 ·`, `ACCEPTED ·`, `DOCTRINE · SKILL ·`) is CLOSED/FIXED/RESOLVED/SUPERSEDED, not *in part*/*half*, and no residue marker anywhere | **59** | errs OPEN by design: D-186 (*M0-8 CLOSED IT*) and D-408 (*SWEPT TO ZERO*) stay live until their dispositions lead with a closure word |
+
+**`cells[5]` WAS THE WRONG CELL FOR 17 ROWS**, each carrying a `|` inside its body, so `owed.mjs` judged a
+fragment of the BODY as the disposition. Two consequences, both measured: D-305, D-354, D-367, D-385 are
+closed by their real disposition and were not; and **D-285 and D-400 — each with STILL OPEN in its real
+disposition — were INVISIBLE to the owed list**. `owed BOB` moves 17 → 20 items on the corrected read:
+D-285 and D-400 (open residue, correct), and D-127 ATTRIBUTED to BOB — a false attribution by `OWNER_RE`,
+which matches *IS BOB'S FRAMING* (the person, in capitals), surfaced because D-127 is no longer skipped
+as closed. `owed CONDUCT` gains D-283 (*the correction is CONDUCT's at integration*) the same way. Neither
+owner match is this item's to fix; both are reported.
+
+**2. THE FULL MIGRATION, THROUGH THE TOOL, on a copy of `QUEUE.md`, `DEBT.md`, `DECISIONS.md`, every
+`docs/archive/ledgers/*.md`, `IS-BUILD-PLAN.md` and `construct-status.json`** (ledger.test section 2; the
+first run was in `/tmp/conduct4-led2/`, outside the repository):
+
+- **382 closed ids, 397 rows moved, 0 refused, 8.4 s.** QUEUE 1,173,375 → 221,888 B; DEBT 791,382 → 530,743 B.
+- **Id multisets of live ∪ archive IDENTICAL** for both ledgers; **every non-blank line** of both live files
+  present exactly as often afterwards (0 lost, 0 extra, over 2,883 and 324 distinct lines).
+- **`owedFor` IDENTICAL** for BOB, CONDUCT, DIST and a nonexistent lane.
+- **`mintid` collisions IDENTICAL**: D-121, D-124, IC-30, CPDF-9, FW-15, M0-16 before and after, 842 sites
+  both — because the duplicate check now reads the archiver's two files (M-57 breakage 2).
+- **0 closed rows live afterwards**; the 14 dependency ids of the open rows all still resolve.
+- **THE FIRST RUN LEFT 17 CLOSED QUEUE ROWS LIVE, and that was a finding about the tool**: 17 QUEUE items
+  are headed `### D-n · done`, and the first draft routed every `D-` id to DEBT alone. A `D-n` is now a row
+  of both ledgers. Found by running the migration, not by reading the grammar.
+
+**3. THE CONTROL FOUND THE SECOND CONSERVATION PROPERTY.** Arm C2 (the mover takes one line too many) on its
+first run reddened the suite but **the archiver did not refuse**: the swallowed line was an `## AREA`
+heading, which the id multiset cannot see. The move is now also refused unless every LINE of the live file
+is conserved (`linesConserved`). Final run: `ledger.control: 58 pass, 0 fail (10 arms plus a baseline)`,
+every restore byte-identical by sha256 and `cmp`.
+
+**4. THE GATE ON THE REAL TREE** (`plancheck --local`, 0 fail): (a) 397 closed rows live (338 QUEUE,
+59 DEBT) — WARN until LED-3 is `done`; (b) QUEUE 1,173,375 B against 153,600 and **58 open rows over
+3,072 B** (8 QUEUE, 50 DEBT; largest D-288 at 11,983 B) — WARN until LED-4 is `done`; (c) 14 dependency
+ids checked, 0 unresolved, 2 prose dependencies printed (VF-7, SK-5). `rowdesign.control` 26/0 after A1
+was derived rather than pinned (it named LED-2, the first judged row, on this run).

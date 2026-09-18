@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1094 rulings across 84 documents.
+1095 rulings across 84 documents.
 
 ## DEC-
 
@@ -396,6 +396,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:4326`
 - **D-186** · 2026-08-08 — D-186 UNDER GENUINE CONCURRENCY IS SETTLED — the question M0-13 named and could not answer.** Per-process `$TMPDIR` ownership **HOLDS**: 12 truly overlapping processes, distinct sandbox each, `$TMPDIR` redirected in each, every `mkdtemp` nested inside its own, every marker surviving all siblings, no foreign pid's…  
   `docs/archive/ledgers/QUEUE-2026-08.md:19`
+- **D-186** — cell; the first word after the leading tags (`M4 ·`, `ACCEPTED ·`, `DOCTRINE · SKILL ·`) is CLOSED/FIXED/RESOLVED/SUPERSEDED, not *in part*/*half*, and no residue marker anywhere | **59** | errs OPEN by design: D-186 (*M0-8 CLOSED IT*) and D-408 (*SWEPT TO ZERO*) stay live until their dispositions lead with a…  
+  `docs/development/MEASUREMENTS.md:16716`
 - **D-188** · 2026-08-01 — RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT > *Heading corrected 2026-08-05 (D-188 / DEC-46 (d)).  
   `docs/architecture/BIO_Declared_Bias_v0_1.md:304`
 - **D-188** · 2026-08-05 — CORRECTED 2026-08-05 (D-188 / DEC-46 (d)), and this paragraph is where the > whole confusion started.** The sentence it leans on has since been STRUCK by > DEC-20: ordinary bias debt does NOT block, so it can no longer carry the hunch > rule on its back.  
@@ -799,7 +801,7 @@ authority is the file named, never this one.
 - **C-27.13** · 2026-07-30 — , RULED BY BOB 2026-07-30: *"the appearance of an assistant-surfaced focus should communicate that it is one."* The plane holds the STATE half and SK-3 cites it (`C-27.13`: a suggestion may only ever arrive as something put forward; `C-32.2`/`C-32.8`: the acts that would make it the record's own  
   `docs/development/CLAIMS.md:817`
 - **C-32** — Any existing suite pinning the C-32 family is CORRECTED at its site, never exempted. - `bio-plane/scripts/coverage.mjs`, `civicos-ui/check-refusal-codes.mjs` — floor tables only, from printed figures, if the new codes move one. - `bio-plane/dist/**` — `npm run build` output.  
-  `docs/development/CLAIMS.md:13412`
+  `docs/development/CLAIMS.md:13434`
 - **C-35.1** — — ONE superseded assertion CORRECTED with the reason at the site.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4843`
 - **C-35.14** — Inside the plane, `textchain.test.mjs`'s family-totality list was CORRECTED (not exempted) for C-35.14 and a CHECK_ARMS row drives it. **RESPONSES:** not yet collected.  
@@ -1896,9 +1898,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - vocabulary this item grows is CORRECTED at its site, never exempted. - `bio-plane/scripts/coverage.mjs`, `civicos-ui/check-refusal-codes.mjs` — floor tables only, from printed figures. - `bio-plane/dist/**` — `npm run build` output.  
   `docs/development/CLAIMS.md:13369`
 - AMENDED during the item:** `bio-plane/src/store.mjs` — ONE line added to `searchFields()`'s published `syntax` stating the third chain answer (the block above said NOT `store.mjs`; the published grammar is where a member learns where an image went, so the claim was one path short).  
-  `docs/development/CLAIMS.md:13472`
+  `docs/development/CLAIMS.md:13494`
 - `bio-plane/test/content-chain-kind.test.mjs` (two pins CORRECTED with the reason at the site), `bio-plane/test/nc-rec104.mjs` (the `parseback` arm RE-ANCHORED — its anchor matched zero times after `chain_last` became a CASE), and `.gitignore` (the harness's pristine directory).  
-  `docs/development/CLAIMS.md:13475`
+  `docs/development/CLAIMS.md:13497`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
