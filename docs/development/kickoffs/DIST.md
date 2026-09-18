@@ -35,6 +35,41 @@ or BOB (design, doctrine) and continue with the rest. A question only Bob can an
 **Refresh, when context is too full:** write `<LANE>-NEXT.md` from the measured state, push it, verify it on the
 remote, and tell BOB — whose successor protocol retires a predecessor only after D-398's three conditions hold.
 
+## WHEN DIST CUTS, AND WHAT WAKES IT — decided 2026-09-18 by BOB #15 (Bob: *"I should not be involved in the decision whether and how DIST cut and sign the next release. There's plenty of protocol definition for how a release gets cut."*)
+
+This file defined HOW to cut (the gate below) and never WHEN, and nothing woke DIST. The receipt: 0.58.0 was
+cut 2026-09-14; the only DIST session (2026-09-16) confirmed `main` green and cuttable, ended *"Standing by
+for your sequencing"* to nobody, and was swept idle; by 2026-09-18 four disclosure fixes (REC-123, REC-125,
+MK-1, REC-130) sat on `main` and on no deployed plane. **So DIST decides when, by this rule, and asks nobody:**
+
+- **CUT NOW** when `main` carries any integrated change that closes a SECURITY OR DISCLOSURE defect —
+  something a stranger, a machine credential or the wrong member could read or do — that is not in the
+  latest signed release. CONDUCT names such a change when it integrates it (its merge commit says so, and it
+  messages DIST); DIST also checks for itself: `git log <last release tag>..origin/main` against the rows.
+- **OTHERWISE BATCH**: cut when `main` is green and differs from the latest release in any shipped path
+  (`bio-plane/src`, `bio-plane/checks`, a fleet member's source), at most once a day.
+- **The plane and the fleet members that consume a changed interface ship TOGETHER** (IC-130: an old
+  `agent-worker` silently drops model-judged steps). DIST reads `INTERFACE-CHANGES.md` for every IC since
+  the last release and states which members must move with the plane.
+
+**WHAT WAKES IT.** DIST is a STANDING LANE (above): its session stays alive. At session start it arms its own
+recurring self-wake with `CronCreate` (every 6 hours) whose prompt is *"DIST: apply WHEN DIST CUTS"*; CONDUCT
+also messages it on integrating a security fix. On each wake, apply the rule; if nothing is owed, end the turn
+with one line saying so.
+
+**THE ONE GATED ACT, AND WHERE ITS QUESTION GOES.** Cutting, signing and tagging are DIST's and need nobody.
+**Deploying the plane and the installer are gated by `CLAUDE.md`**, and Bob is not in this session — so DIST
+brings the deploy to him THROUGH BOB: `SendMessage` to the BOB session naming the version, what it closes,
+the members that move with it, and the gate's evidence. BOB carries it into Bob's conversation. **Never end a
+turn waiting on that answer**; the cut, signature and tag are already landed either way.
+
+**FIRST CHECK FOR THE NEXT CUT — found 2026-09-16 by the last DIST session and recorded nowhere until now:**
+`newgroup`'s `npm test` and `build` both run `npm run embed` (`scripts/embed-release.mjs`), which the session
+reported *silently replaces the signed 0.58.0 embed with an unsigned rebuild*, and
+`newgroup/test/embed.test.mjs` carries no negative control. **Unverified since — verify it before cutting**,
+because a gate step that can put an unsigned plane in front of a sovereign group is the one defect that
+outranks the cut itself. If it holds, it is a DIST-owned fix (newgroup is DIST's) with its own control.
+
 ## Why this area exists
 
 Cutting a plane release is five indivisible acts on GLOBAL state: bump the

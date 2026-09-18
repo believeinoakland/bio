@@ -241,15 +241,17 @@ section("5 — THE STANDING LANES. Retiring a live CONDUCT to reclaim disk would
      ["CONDUCT", "BOB"], and the fixtures in sections 3, 4, 6 and 7 used "DIST" as their example of an
      ORDINARY area session — which is exactly the treatment that archived the only DIST and FLEET
      sessions with a question unanswered. Those fixtures now use CONTENT-PDF / CONTENT-HTML. */
-  t("the standing lanes are declared once", STANDING_LANES, ["CONDUCT", "BOB", "DIST", "FLEET"]);
+  t("the standing lanes are declared once", STANDING_LANES, ["CONDUCT", "BOB", "DIST", "FLEET", "SCHEDULER"]);
   const rowsDF = run([
     S({ sessionId: "d-new", title: "DIST", cwd: work, lastActivityAt: ago(72) }),
     S({ sessionId: "f-new", title: "FLEET #2", cwd: work, lastActivityAt: ago(96) }),
     S({ sessionId: "f-old", title: "FLEET #1", cwd: wt, lastActivityAt: ago(200) }),
+    S({ sessionId: "s-new", title: "SCHEDULER", cwd: work, lastActivityAt: ago(50) }),
   ], { repo: work });
   t("the NEWEST DIST is PROTECTED even at 72h idle", verdictOf(rowsDF, "d-new"), "PROTECTED");
   t("the NEWEST FLEET is PROTECTED even at 96h idle", verdictOf(rowsDF, "f-new"), "PROTECTED");
   t("but a PREDECESSOR FLEET IS retirable", verdictOf(rowsDF, "f-old"), "RETIRABLE");
+  t("the NEWEST SCHEDULER is PROTECTED even at 50h idle", verdictOf(rowsDF, "s-new"), "PROTECTED");
   t("laneOf strips the instance number", [laneOf({ title: "CONDUCT #2" }), laneOf({ title: "BOB" })],
     ["CONDUCT", "BOB"]);
 }

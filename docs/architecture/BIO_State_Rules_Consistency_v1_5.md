@@ -1,6 +1,6 @@
 # Believe in Oakland
 
-**Status** · The data-store rules every implementation writes against: the id grammar, bundle anatomy, the universal frontmatter core, per-type schemas and state machines, the closed relationship vocabulary, cascade semantics, the invariant set I-1…I-20, the violation-to-repair mapping and the Mechanical Verification Law. "Working Document, v1.5, July 2026", "Ratified July 20, 2026 on the operator's word." Partially complete and partly historical, by its own 2026-08-10 banner: **the store this document describes is not the store that was built** — read §1, §2.4 and §2.6 as history; everything from §3 on is SHAPE and RULES, which transferred to the plane's `schema.mjs`, `store.mjs` and `bio-checks.mjs`. Amended in place three times (v1.5a vocabulary, the bias cross-reference, DEC-72's `published` amendment of 2026-09-10). Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane state is the system, and the check catalog is the authority for the edge set. as of 2026-09-14.
+**Status** · The data-store rules every implementation writes against: the id grammar, bundle anatomy, the universal frontmatter core, per-type schemas and state machines, the closed relationship vocabulary, cascade semantics, the invariant set I-1…I-20, the violation-to-repair mapping and the Mechanical Verification Law. "Working Document, v1.5, July 2026", "Ratified July 20, 2026 on the operator's word." Partially complete and partly historical, by its own 2026-08-10 banner: **the store this document describes is not the store that was built** — read §1, §2.4 and §2.6 as history; everything from §3 on is SHAPE and RULES, which transferred to the plane's `schema.mjs`, `store.mjs` and `bio-checks.mjs`. Amended in place three times (v1.5a vocabulary, the bias cross-reference, DEC-72's `published` amendment of 2026-09-10). Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane state is the system, and the check catalog is the authority for the edge set. Amended 2026-09-18: `concluded` is read for a project's relationship with an inquiry (INVESTIGATIVE-SESSION.md §7.1). as of 2026-09-18.
 
 **Place in the system** · Owns construct 3 of `BIO_System_Design.md` §3 (the record): bundle shape and the rules the plane checks. `BIO_Intake_Doctrine_v1_1.md` defers to it for shape; `BIO_Membership_Architecture_v2.md` builds on its §4.3 and §5.1–5.3; the intake provenance register and I-18 realise the intake doctrine inside it. README calls it "the most operationally load-bearing document in the corpus."
 
@@ -54,6 +54,7 @@
   - [9. Write protocol obligations (summary binding on the bundle skill)](#9-write-protocol-obligations-summary-binding-on-the-bundle-skill)
   - [10. Deviations from Alpha Pipeline, recorded](#10-deviations-from-alpha-pipeline-recorded)
   - [Cross-reference: declared bias and workproduct_state (July 27, 2026)](#cross-reference-declared-bias-and-workproduct_state-july-27-2026)
+  - [Amendment: `concluded` is a state of a PROJECT'S relationship with an inquiry (2026-09-18, BOB #15)](#amendment-concluded-is-a-state-of-a-projects-relationship-with-an-inquiry-2026-09-18-bob-15)
   - [Amendment: `published` leaves the INQUIRY state machine (2026-09-10, DEC-72 / CASE-4)](#amendment-published-leaves-the-inquiry-state-machine-2026-09-10-dec-72-case-4)
 
 ---
@@ -1579,6 +1580,16 @@ drift apart.
 > answers it. **The drift this row was written to prevent is exactly the drift
 > that happened** — the state-rules corpus went on asserting the blanket rule
 > for three days after the bias corpus stopped.
+
+## Amendment: `concluded` is a state of a PROJECT'S relationship with an inquiry (2026-09-18, BOB #15)
+
+**Section 4's inquiry machine keeps its states; what one of them belongs to changes.** `concluded` was a single state of
+the inquiry. On a shared inquiry that let one team's concluding move every team's stance, which
+`docs/development/INVESTIGATIVE-SESSION.md` §7 forbids. `concluded` is now read FOR A PROJECT: the project's dated,
+authored adoption of a version's claim, beside the version it stands on. An inquiry outside any project keeps its own,
+as the relationship with no project. Conclusions already written into an inquiry's bytes are read as the concluding
+relationship's, and ratified bytes are never edited, on the `published` amendment's precedent below. The design and
+the decisions it follows are in INVESTIGATIVE-SESSION.md §7.1. It is built by REC-124.
 
 ## Amendment: `published` leaves the INQUIRY state machine (2026-09-10, DEC-72 / CASE-4)
 

@@ -29,8 +29,8 @@
  *
  * -------------------------------------------------- WHAT IS NEVER AUTO-RETIRED, AND WHY
  *
- * **THE STANDING LANES — CONDUCT, BOB, DIST AND FLEET — ARE NEVER AUTO-RETIRED AT THEIR NEWEST
- * SESSION**, however long they have been idle. DIST and FLEET were added 2026-09-18, RULED BY BOB:
+ * **THE STANDING LANES — CONDUCT, BOB, DIST, FLEET AND SCHEDULER — ARE NEVER AUTO-RETIRED AT THEIR
+ * NEWEST SESSION** (SCHEDULER added the same day, when Bob created the lane), however long they have been idle. DIST and FLEET were added 2026-09-18, RULED BY BOB:
  * *"Don't archive DIST or FLEET sessions just because they've been idle for some period of time.
  * They should stay alive because they will always eventually be needed again. Only refresh them
  * if/when their context windows are too full."* The receipt: the only DIST and FLEET sessions
@@ -70,7 +70,7 @@ import { existsSync } from "node:fs";
 /* The lanes whose NEWEST session is kept alive however long it idles. Retiring one stops work
    rather than releasing a resource, so the sweep never does it — a successor retires it, and for
    DIST and FLEET only when the session's context is too full (Bob, 2026-09-18). */
-export const STANDING_LANES = ["CONDUCT", "BOB", "DIST", "FLEET"];
+export const STANDING_LANES = ["CONDUCT", "BOB", "DIST", "FLEET", "SCHEDULER"];
 
 /* A run-session of a scheduled task. It holds no worktree and carries nothing forward, so it is
    retirable the moment it is not running. This is the highest-VOLUME producer by far and the one
