@@ -13291,7 +13291,7 @@ and a baseline, ALL AS DECLARED, every restore byte-identical (`src/pdfstructure
 The table probe: `node test/table-recognition.probe.mjs --runs 5` from `pdf-worker/` — **NO-GO** (M-55). IDs minted
 with `tools/mintid.mjs`: M-55, D-419, D-420. `bio-plane/src/index.mjs` was NOT edited, so nothing here needs
 sequencing against CPDF-19's moved tier-3 code.
-<<<<<<< HEAD
+
 ## CLAIM 2026-09-18 RECORD (REC-100 — the ROLLUP referent BUILT: D-366's ruling, C-22.10's `run` carve-out deleted)
 
 Worker `agent-a249f66820def3efd`, spawned by CONDUCT #4, branch `worktree-agent-a249f66820def3efd`.
@@ -13357,7 +13357,6 @@ M-57 (minted with `tools/mintid.mjs M`). NO row moved; no code changed. Baseline
 green · 14392 assertions, 3 fleet members RAN. Two readers found BROKEN TODAY and reported, not fixed:
 `rowdesign.control.mjs` arm A1 (names M0-33, expects M0-29) and `tools/.ui59/*.mjs` (a hardcoded worktree path that
 does not exist). The move was simulated only in scratch clones outside this repository.
-=======
 
 ## CLAIM 2026-09-18 RECORD (REC-121 — `content:chain=undetermined` stops matching an image cited as its own bytes)
 
@@ -13398,7 +13397,8 @@ civicos-ui/test/run.mjs` exit **0**. NEGATIVE CONTROL `node test/nc-rec121.mjs` 
 a baseline run twice, ALL AS DECLARED, every restore byte-identical (`src/query.mjs` 157,943 B, sha256
 `b813a8163746…`), content-arm's §11 digest `c39f4e8adf1960c2…` over 40 questions IDENTICAL under `preitem`. IDs
 minted with `tools/mintid.mjs`: IC-131. **FOR CONDUCT:** (1) RESOLVE IC-131 against I3 as read at resolution
-(proposed on 23.6.0). (2) Row the sibling defect this item measured and did not close: `content:cap=undetermined`
+(built on 23.6.0, rebased onto `0719e82f` where I3 reads 24.0.0 — see IC-131's base note). The rebase
+conflicted on this file and `INTERFACE-CHANGES.md` (both sides appended) and the markers were first COMMITTED
+unresolved on the local branch — caught by `plancheck --local` before any push, resolved KEEP-BOTH. (2) Row the sibling defect this item measured and did not close: `content:cap=undetermined`
 matches an image cited as bytes, and `rows=content`'s `derivation_cap` shows its NULL unlabelled (measured in
 `rec121-chain-bytes.test.mjs` §4, whose assertion is the one that item must correct).
->>>>>>> c634ba7d (rec-121: content:chain=undetermined stops matching an image cited as its own bytes — a THIRD chain answer, does-not-apply (IC-131))

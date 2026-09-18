@@ -9812,7 +9812,7 @@ DIFFERENT worker's HTTP path and not a plane op. Zero consumers of the new ops.
 **RESPONSES:** not yet collected. UI to answer on the act; SKILL and DIST expected NOT-AFFECTED.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at REC-87's integration — I3 23.5.0 → 23.6.0, MINOR (additive, as classed).** Base read AT RESOLUTION: 23.5.0, not the 23.3.0 proposed against (IC-126 and IC-129 each took a minor meanwhile). CONDUCT answers FOR SKILL and DIST: NOT-AFFECTED (no caller of the new ops), named as such. **UI's act is OWED, not waived** (the delegation in `CLAIMS.md`); `construct-status.json` now carries `4.transcribe` BUILT and `4.transcribe-ui` ABSENT. **Found by a control arm and fixed in this landing:** C-45.2 refused a typing of any capture with no extraction chain — Bob's own case, a scan no engine could read.
-<<<<<<< HEAD
+
 ---
 
 ## IC-130 · I3: THE ROLLUP REFERENT — `op=airunlog`'s `result_kind` gains `observation`, and `op=airuntick` / `op=airunclose` now REFUSE a `run` `PRESENT` that names nothing (C-22.10's `run` carve-out DELETED, D-366 CLOSED) · PROPOSED 2026-09-18 (REC-100, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 — MAJOR, I3 24.0.0**
@@ -9909,7 +9909,6 @@ APPENDED; (3) section R of `agent-worker/test/harness.test.mjs` drives the tick 
 rather than a mock, with a negative control per half. **agent-worker's answer gains two keys,
 `log_refused` and `present_unbacked`, and `logged` now counts appended entries rather than ticks** —
 equal whenever nothing is refused, which was every case before this IC.
-=======
 
 ## IC-131 · I3: THE `content:` ARM'S `chain` FILTER GAINS A THIRD ANSWER — `content:chain=does-not-apply` names an image cited as its own bytes, `content:chain=undetermined` STOPS matching one, and `rows=content`'s `chain_last` says `does-not-apply` on such a row · PROPOSED 2026-09-18 (REC-121, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
@@ -9966,4 +9965,3 @@ move"), and `rows=content`'s `derivation_cap` shows the same NULL. Nor does `row
 **RESPONSES:** not yet collected. UI: the `cited_as` rendering act IC-125 already delegated covers this
 (a bytes row's null must not render as undetermined) and gains one word it can read, `chain_last:
 "does-not-apply"`; no new act. SKILL / FRAMEWORK / DIST expected NOT-AFFECTED (zero readers, above).
->>>>>>> c634ba7d (rec-121: content:chain=undetermined stops matching an image cited as its own bytes — a THIRD chain answer, does-not-apply (IC-131))

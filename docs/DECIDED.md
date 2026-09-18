@@ -1888,9 +1888,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - AMENDED while building, each for a stated reason rather than taken silently:** `bio-plane/src/schema.mjs` — ONE `--` comment on `observation_log.result_kind` (gains `observation`), no semicolon, no backtick; `bio-plane/test/scheduler.test.mjs` — one assertion, the only battery arm that drives the WAKE writer;…  
   `docs/development/CLAIMS.md:13312`
 - AMENDED during the item:** `bio-plane/src/store.mjs` — ONE line added to `searchFields()`'s published `syntax` stating the third chain answer (the block above said NOT `store.mjs`; the published grammar is where a member learns where an image went, so the claim was one path short).  
-  `docs/development/CLAIMS.md:13380`
+  `docs/development/CLAIMS.md:13379`
 - `bio-plane/test/content-chain-kind.test.mjs` (two pins CORRECTED with the reason at the site), `bio-plane/test/nc-rec104.mjs` (the `parseback` arm RE-ANCHORED — its anchor matched zero times after `chain_last` became a CASE), and `.gitignore` (the harness's pristine directory).  
-  `docs/development/CLAIMS.md:13383`
+  `docs/development/CLAIMS.md:13382`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2016,7 +2016,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - SPELLED `typed`, NOT THE ROW'S `member(handle)`, AND THE TREE DECIDED IT.** The query compiler DERIVES `content:chain`'s vocabulary from `STEP_KINDS` (`query.mjs`), and `member` is already a bare word of the same `content:` arm — `content:member`, a row a MEMBER marked.  
   `docs/development/INTERFACE-CHANGES.md:9688`
 - old SQL and the old `chain_last` spelling are CORRECTED, not exempted, with the reason at the site. **WHAT IS DELIBERATELY NOT IN THIS IC.** `content:cap=undetermined` (`derivation_cap IS NULL`) STILL matches a bytes row — the same class on the cap axis, measured in `rec121-chain-bytes.test.mjs` §4 and  
-  `docs/development/INTERFACE-CHANGES.md:9958`
+  `docs/development/INTERFACE-CHANGES.md:9957`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  
