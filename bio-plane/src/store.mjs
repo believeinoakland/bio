@@ -4953,9 +4953,32 @@ export class Store extends DurableObject {
    * own vocabulary has no `concluded` and whose heading set has no
    * `## Conclusion` to put one in — is refused ILLEGAL_TRANSITION rather than
    * quietly given a state its contract never had. Modernizing such a document
-   * is a promotion, and then it concludes like any other. */
+   * is a promotion, and then it concludes like any other.
+   *
+   * REC-124 / INVESTIGATIVE-SESSION.md §7.1 (BOB #15, 2026-09-18, at Bob's
+   * direction): A CONCLUSION BELONGS TO THE PROJECT'S RELATIONSHIP WITH THE
+   * INQUIRY, BESIDE CURRENT. With `project=` this act no longer touches the
+   * shared inquiry at all: it writes ONE dated, authored `conclusions[]` row into
+   * the PROJECT's own frontmatter — §7's form for CURRENT, never a settings row —
+   * naming the version the project stands on and that version's CLAIM, frozen
+   * verbatim. The claim IS what was concluded (§7.1 item 2), so a free
+   * `conclusion` text beside a project is refused (CONCLUSION_IS_THE_CLAIM) and
+   * what a member adds beyond the claim travels as COMMENTARY — attributed to
+   * the author, and never evidence. A project standing on no reading, or on a
+   * reading carrying no claim, is refused NO_CLAIM and nothing is written.
+   * Another project drawing on the same inquiry is told (a FINDING, §7.1 item
+   * 3) and never moved.
+   *
+   * WITHOUT `project=` the act is the one it was, and that is a DESIGN GAP
+   * stated rather than resolved here: §7.1 says an inquiry outside any project
+   * keeps its own conclusion "as the relationship with no project", and says
+   * the conclusion adopts the claim of the version THE PROJECT STANDS ON — but
+   * the no-project relationship stands on nothing (CURRENT is only ever a
+   * project's pointer), so which version it adopts is unruled. It concludes on
+   * the inquiry's own bytes exactly as before and every read of it states its
+   * claim UNDETERMINED (§7.1 item 5) rather than inventing an adoption. */
   conclude({ target, conclusion = "", falsifier = "", noFalsifier = false,
-             viewer = null, author = null } = {}) {
+             project = null, commentary = "", viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-conclude — REC-64/C-32.2. The fence alone; the
        conclusion's own payload conditions below are governed by nothing here. */
@@ -4967,6 +4990,12 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-machine-conclude */
     const concl = String(conclusion ?? "").trim();
     const fals = String(falsifier ?? "").trim();
+    /* REC-124: the RELATIONSHIP this conclusion is drawn in. Empty means the
+       no-project relationship (§7.1's amendment of State Rules §4), never a
+       default project — there is none, and a guessed one would move a team's
+       stance that team never took. */
+    const pid = String(project ?? "").trim();
+    const comm = String(commentary ?? "").trim();
     /* REC-117 / BOB 2026-09-17: THE MEMBER'S OVERRIDE, READ ONCE HERE. Bob's
        words: "NO_FALSIFIER is a condition that should be surfaced. But I think
        it should also be something a member can override either temporarily or
@@ -4980,11 +5009,26 @@ export class Store extends DurableObject {
        ANSWER itself. The loop below refuses through a template-literal code
        and is deliberately outside the span: arm C cannot compare a code it
        cannot read, and a span it reads past is worse than one it never entered. */
-    if (!concl)
+    /* REC-124: NO_CONCLUSION is the NO-PROJECT relationship's condition only.
+       A project's conclusion states nothing free: the claim it adopts IS what
+       was concluded (§7.1 item 2), so there is no conclusion text to be empty. */
+    if (!concl && !pid)
       return { ok: false, reason: "NO_CONCLUSION",
                detail: "concluding records WHAT was concluded. C-2.8 requires a non-empty conclusion in the "
                      + "concluded state, so a conclusion with nothing in it would produce a bundle the "
                      + "catalog rejects. An undetermined answer is stated as undetermined, never left blank." };
+    /* REC-124 / §7.1 item 2: A FREE CONCLUSION BESIDE A PROJECT IS REFUSED,
+       NEVER QUIETLY RELABELLED. "A free conclusion text that can say what no
+       claim said is the overclaim this record exists to refuse." Recording the
+       member's words as commentary instead would change what they meant to
+       say, so they are told the door and choose. */
+    if (concl && pid)
+      return { ok: false, reason: "CONCLUSION_IS_THE_CLAIM",
+               detail: "a project concludes by ADOPTING the claim of the reading it stands on, and that claim "
+                     + "is what was concluded (INVESTIGATIVE-SESSION.md §7.1). A separate conclusion text could "
+                     + "say what no claim said. Send what you want to add beyond the claim as commentary= — it "
+                     + "is recorded in your name and is never evidence — or state the claim itself on a "
+                     + "reading first." };
     /* REC-117: THE REFUSAL NOW HAS A DOOR, AND THE DOOR IS A DECLARATION RATHER
        THAN A HOLE IN THE GATE. It used to refuse outright, and that is exactly
        the shape this project calls a bug in the gate: requiring a falsifier
@@ -5017,7 +5061,7 @@ export class Store extends DurableObject {
                      + "two different claims about this finding and the plane will not choose between them. "
                      + "Send the falsifier, or send no_falsifier=1 with the falsifier empty." };
     /* END DEC-49 REGION is-conclude-answer */
-    for (const [name, v] of [["conclusion", concl], ["falsifier", fals]])
+    for (const [name, v] of [["conclusion", concl], ["falsifier", fals], ["commentary", comm]])
       if (v.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(v))
         return { ok: false, reason: `BAD_${name.toUpperCase()}`,
                  detail: `${name} is at most ${Store.RELEASE_ACK_MAX} characters and cannot contain a `
@@ -5054,7 +5098,14 @@ export class Store extends DurableObject {
        authored under, which has no `concluded` in it. */
     const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
     const legalFrom = (spec?.edges?.[b.current_state]) || [];
-    if (!legalFrom.includes("concluded"))
+    /* REC-124: a PROJECT may conclude an inquiry whose OWN state already reads
+       `concluded`, because that state is the no-project relationship's (or a
+       legacy conclusion's, §7.1 item 5) and one relationship's conclusion must
+       not bar another's. Everything else is judged exactly as before: a
+       deferred, dismissed or divided question, or a legacy focus/problem
+       document with no `concluded` in its vocabulary, is refused for a project
+       too. */
+    if (!legalFrom.includes("concluded") && !(pid && b.current_state === "concluded"))
       return { ok: false, reason: "ILLEGAL_TRANSITION", to: "concluded", target,
                from: b.current_state, object_type: fm.object_type ?? b.object_type,
                detail: "this is not a legal move in the catalog's state table for this document's own "
@@ -5065,13 +5116,108 @@ export class Store extends DurableObject {
     /* Entry requirement 3, checked against the DOCUMENT before anything moves.
        DEC-22: zero legs is legal while OPEN — that is a standing objective —
        and is exactly what may not be concluded. */
+    /* REC-124: THE PROJECT, READ BEFORE THE CLAIM IS RESOLVED. The same
+       fail-closed viewer gate the make-current act takes: a project the caller
+       may not see answers exactly as one that does not exist. */
+    let projRow = null, pfm = null;
+    if (pid) {
+      const pgate = viewerPredicate(viewer);
+      projRow = this.#one(
+        `SELECT b.bundle_id, b.object_type, b.bundle_sha FROM bundles b
+         WHERE b.bundle_id=? AND (${pgate.sql})`, pid, ...pgate.args);
+      if (!projRow || normalizeType(projRow.object_type) !== "project")
+        return { ok: false, reason: "NOT_A_PROJECT", target, project: pid,
+                 detail: `${pid.slice(0, 60)} is not a project readable here, so there is no relationship `
+                       + "with this question to conclude in." };
+      const pmd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
+      if (!pmd || pmd.content === null)
+        return { ok: false, reason: "NO_DOCUMENT", target, project: pid,
+                 detail: "this project has no readable bundle.md, so its conclusion cannot be recorded" };
+      pfm = parseFrontmatter(pmd.content).data || {};
+    }
+
+    /* DEC-49 REGION is-conclude-claim — REC-124/C-33.34. WHAT IS ADOPTED, and
+       the one refusal that says nothing can be (§7.1 items 1-2). Every arm
+       below is NO_CLAIM, because every arm is the same fact seen from a
+       different door: there is no claim this relationship could adopt. */
+    let adopted = null;
+    if (!pid && comm)
+      return { ok: false, reason: "NO_CLAIM", target,
+               detail: "commentary is what a member adds BEYOND an adopted claim, and a conclusion drawn "
+                     + "with no project adopts none — it stands on no reading, because what a reading "
+                     + "stands on is a project's own pointer (§7). Conclude for the project whose reading "
+                     + "carries the claim (project=), or send no commentary." };
+    if (pid) {
+      /* The versionAct predicate, character for character — a project that
+         does not draw on the question, or that SEVERED it, stands on no
+         reading of it and has nothing to adopt. */
+      const prefs = Array.isArray(pfm.references) ? pfm.references : [];
+      const draws = prefs.some((x) => x && typeof x === "object" && x.rel === "cites"
+                                   && x.status !== "severed" && String(x.target ?? "").trim() === target);
+      if (!draws)
+        return { ok: false, reason: "NO_CLAIM", target, project: pid,
+                 detail: `${pid} does not draw on ${target}, so it stands on no reading of it and has no `
+                       + "claim to adopt. Cite the question into the project, make a reading current, then "
+                       + "conclude." };
+      /* PL-2's ONE reader of the pointer. Never a second parse of the block. */
+      const cur = this.#currentVersionOf(pid, target, viewer);
+      if (!cur)
+        return { ok: false, reason: "NO_CLAIM", target, project: pid,
+                 detail: `${pid} stands on no reading of ${target}. Concluding adopts the claim of the `
+                       + "reading a project stands on (§7.1), so make an accepted reading current "
+                       + "(op=versioncurrent) first." };
+      const v = this.#one(
+        `SELECT name, state, claim, leg_count FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`,
+        target, cur.version);
+      const claimText = String(v?.claim ?? "").trim();
+      if (!v || v.state !== "accepted" || !claimText)
+        return { ok: false, reason: "NO_CLAIM", target, project: pid, version: cur.version,
+                 detail: !v
+                   ? `${pid} stands on reading '${cur.version}', which ${target} no longer carries, so there `
+                     + "is no claim to adopt. Make a reading it does carry current first."
+                   : v.state !== "accepted"
+                   ? `${pid} stands on reading '${cur.version}', which is ${v.state || "in no recorded state"}, `
+                     + "not accepted. A conclusion adopts only what the group accepted."
+                   : `reading '${cur.version}' states no claim, and the claim is what a conclusion adopts `
+                     + "(§7.1). State the claim on a reading first — a claim with no support yet is legal "
+                     + "to add (DEC-22) — then make that reading current and conclude." };
+      adopted = { version: v.name, claim: claimText, leg_count: Number(v.leg_count) || 0 };
+    }
+    /* END DEC-49 REGION is-conclude-claim */
+
     const legs = Array.isArray(fm.basis) ? fm.basis : [];
-    if (legs.length < 1)
+    /* REC-124: a project's conclusion rests on the READING it adopts, so its
+       legs are that reading's; the no-project relationship's are the live
+       basis, as before. One refusal, one site. */
+    if ((adopted ? adopted.leg_count : legs.length) < 1)
       return { ok: false, reason: "NO_BASIS", target,
                detail: "a conclusion rests on something. An open inquiry may hold a claim with no legs at "
                      + "all — a standing objective the group means to pursue — but concluding one that "
                      + "rests on nothing would put the record's name to an assertion nothing supports. "
                      + "Add a basis[] leg (and the same target in references[]) first." };
+
+    /* REC-124: THE PROJECT'S CONCLUSION IS WRITTEN ON THE PROJECT AND NOWHERE
+       ELSE. The shared inquiry's bytes, its state and every other project's
+       stance are left exactly where they were (§7.1 item 3: told, never moved). */
+    if (adopted) {
+      const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+      const prior = this.#conclusionOf(pid, target, viewer);
+      const w = this.#setProjectConclusion(projRow, target, {
+        version: adopted.version, claim: adopted.claim, falsifier: fals, noFals,
+        commentary: comm, who, when });
+      if (!w.ok) return { ...w, target, project: pid };
+      return { ok: true, target, project: pid, relationship: "project", to: "concluded",
+               /* The inquiry's OWN state, unmoved and said so, so a caller
+                  cannot read this answer as the question having moved. */
+               inquiry_state: b.current_state, inquiry_moved: false,
+               version: adopted.version,
+               claim: { state: "adopted", text: adopted.claim, version: adopted.version },
+               falsifier: fals, basis_legs: adopted.leg_count,
+               falsifier_override: noFals ? { by: who, at: when } : null,
+               commentary: comm ? { text: comm, by: who, at: when, evidence: false } : null,
+               prior: prior ? { version: prior.version, claim: prior.claim, at: prior.at, by: prior.by } : null,
+               author: who, at: when, weight: "single" };
+    }
 
     const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
     const withHistory = Store.#appendStateHistory(text, {
@@ -5169,7 +5315,172 @@ export class Store extends DurableObject {
     return { ok: true, target, from: b.current_state, to: "concluded",
              conclusion: concl, falsifier: fals, basis_legs: legs.length,
              falsifier_override: noFals ? { by: who, at: when } : null,
+             /* REC-124 / §7.1 item 5: the NO-PROJECT relationship, and its claim
+                STATED undetermined rather than inferred from the conclusion text
+                (a claim := conclusion back-fill is the second name for one field
+                that §7.1 says a claim is not). */
+             relationship: "no_project", project: null,
+             claim: Store.#undeterminedClaim(),
              author: who, at: when, weight: "single" };
+  }
+
+  /* REC-124 / §7.1 item 5 — THE ONE SENTENCE every read gives for a conclusion
+     that adopted no claim: the no-project relationship's, and every conclusion
+     written before §7.1 existed. ONE builder so the write's answer and every
+     read say the same words. */
+  static #undeterminedClaim() {
+    return { state: "undetermined", text: null, version: null,
+             detail: "this conclusion adopted no claim. It was drawn in the no-project relationship, or before "
+                   + "a conclusion adopted one (INVESTIGATIVE-SESSION.md §7.1), so WHICH claim it concluded "
+                   + "is undetermined — never back-filled from its conclusion text, which is the member's "
+                   + "words and not a claim any reading stated." };
+  }
+
+  /* REC-124 / §7.1 item 1 — THE PROJECT'S CONCLUSION ROW, beside CURRENT and in
+   * the same form: a project-authored, DATED `conclusions[]` row in the
+   * project's OWN frontmatter, never a settings row (DEC-17's reasoning, which
+   * §7 transplanted and §7.1 inherits). One row per inquiry, re-written in place
+   * by a re-conclude, with the act kept in the project's append-only history and
+   * its Session Log.
+   *
+   * THE CLAIM IS FROZEN VERBATIM: it is copied out of the reading at the moment
+   * of adoption and never re-read, so a later rewording of the reading (a NEW
+   * version, D-217b) cannot change what this project concluded. */
+  static #setConclusionRow(text, inquiryId, f) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    const q = (s) => `"${Store.#fmSafe(String(s ?? ""))}"`;
+    const block = [`  - inquiry: ${q(inquiryId)}`, `    version: ${q(f.version)}`,
+                   `    claim: ${q(f.claim)}`, `    falsifier: ${q(f.falsifier)}`,
+                   ...(f.noFals ? [`    falsifier_override_by: ${q(f.who)}`,
+                                   `    falsifier_override_at: ${q(f.when)}`] : []),
+                   ...(f.commentary ? [`    commentary: ${q(f.commentary)}`] : []),
+                   `    at: ${q(f.when)}`, `    by: ${q(f.who)}`];
+    let at = -1;
+    for (let i = 1; i < end; i++) if (/^conclusions:/.test(lines[i])) { at = i; break; }
+    if (at === -1)
+      return [...lines.slice(0, end), "conclusions:", ...block, ...lines.slice(end)].join("\n");
+    const rest = lines[at].slice("conclusions:".length).trim();
+    if (rest === "[]")
+      return [...lines.slice(0, at), "conclusions:", ...block, ...lines.slice(at + 1)].join("\n");
+    if (rest !== "") return null;
+    const unquote = (s) => String(s).trim().replace(/^"(.*)"$/, "$1").trim();
+    let i = at + 1, rowStart = -1, rowEnd = -1;
+    while (i < end && /^\s{2,}(- )?\S/.test(lines[i])) {
+      if (/^\s{2}- /.test(lines[i])) {
+        if (rowStart !== -1 && rowEnd === -1) rowEnd = i;
+        const m = /^\s{2}- inquiry:\s*(.+)$/.exec(lines[i]);
+        if (m && unquote(m[1]) === inquiryId) rowStart = i;
+      }
+      i++;
+    }
+    if (rowStart === -1) return [...lines.slice(0, i), ...block, ...lines.slice(i)].join("\n");
+    if (rowEnd === -1) rowEnd = i;
+    return [...lines.slice(0, rowStart), ...block, ...lines.slice(rowEnd)].join("\n");
+  }
+
+  /* The conclusion row's ONE writer, paired with `#conclusionOf`, its ONE reader
+     — the make-current pair's discipline (DEC-8): the act and every read go
+     through one implementation each, so they cannot come apart. */
+  #setProjectConclusion(projectRow, inquiryId, f) {
+    const pid = projectRow.bundle_id;
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
+    if (!md || md.content === null)
+      return { ok: false, reason: "NO_DOCUMENT",
+               detail: `${pid} has no readable file, so its conclusion cannot be recorded` };
+    const pfm = parseFrontmatter(md.content).data || {};
+    let text = Store.#setConclusionRow(md.content, inquiryId, f);
+    if (text === null)
+      /* DEC-49 REGION is-conclusion-row — REC-124/C-33.36. */
+      return { ok: false, reason: "UNSPLICEABLE_CONCLUSIONS",
+               detail: `${pid}'s conclusions block could not be rewritten in place` };
+      /* END DEC-49 REGION is-conclusion-row */
+    text = Store.#setScalar(text, "last_updated", `"${f.when}"`);
+    text = Store.#appendSessionLog(text,
+      `### Session ${f.when} | Concluded | ${f.who}\n`
+      + `Trigger: op=conclude on ${inquiryId} for ${pid}\n`
+      + `Changes: this project concluded ${inquiryId} on reading '${f.version}', adopting its claim.\n`
+      + `Claim: ${f.claim}\n`
+      + (f.noFals ? `Falsifier: NO FALSIFIER STATED — recorded by ${f.who} at ${f.when}\n`
+                  : `Falsifier: ${f.falsifier}\n`)
+      + (f.commentary ? `Commentary (${f.who}, not evidence): ${f.commentary}\n` : ""));
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, pid))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    return this.promote({
+      bundleId: pid, base: projectRow.bundle_sha,
+      snapKey: `${f.when.replace(/[-:]/g, "")}_${Store.#rand(4)}`, author: f.who,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: pfm.object_type ?? "project", group: pfm.group || "believe-in-oakland",
+              title: pfm.title, current_state: pfm.current_state ?? "forming",
+              prior_state: pfm.prior_state ?? null, created: pfm.created, last_updated: f.when,
+              criticality: pfm.criticality ?? null },
+    });
+  }
+
+  /* REC-124 — WHAT A PROJECT CONCLUDED ABOUT AN INQUIRY, read from the
+   * project's own `bundle.md`. THE ONE READER (op=conclude's prior, op=basisversions,
+   * the shared-question producer). Null for a project the gate hides, a project
+   * with no document, and a project that has concluded nothing about this
+   * question — one answer deliberately, `#currentVersionOf`'s posture.
+   * COMMENTARY IS RETURNED LABELLED: attributed to the row's author and marked
+   * `evidence: false`, so no consumer can mistake it for a leg or a claim. */
+  #conclusionOf(projectId, inquiryId, viewer) {
+    const pid = String(projectId ?? "").trim();
+    if (!pid) return null;
+    const gate = this.#bundleGate("bx.bundle_id", viewer);
+    const seen = this.#one(
+      `SELECT bx.bundle_id FROM bundles bx WHERE bx.bundle_id=? AND (${gate.sql})`, pid, ...gate.args);
+    if (!seen) return null;
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
+    if (!md || md.content === null) return null;
+    const fm = parseFrontmatter(md.content).data || {};
+    const rows = Array.isArray(fm.conclusions) ? fm.conclusions : [];
+    const s = (v) => (typeof v === "string" ? v : null);
+    for (const r of rows) {
+      if (!r || typeof r !== "object") continue;
+      if (String(r.inquiry ?? "").trim() !== String(inquiryId ?? "").trim()) continue;
+      const by = s(r.by), at = s(r.at);
+      const commentary = s(r.commentary);
+      return { project: pid, inquiry: String(inquiryId), relationship: "project", state: "concluded",
+               version: s(r.version), claim: s(r.claim),
+               claim_state: s(r.claim) ? "adopted" : "undetermined",
+               falsifier: s(r.falsifier) ?? "",
+               falsifier_override: s(r.falsifier_override_by)
+                 ? { by: s(r.falsifier_override_by), at: s(r.falsifier_override_at) } : null,
+               commentary: commentary ? { text: commentary, by, at, evidence: false } : null,
+               at, by };
+    }
+    return null;
+  }
+
+  /* REC-124 / §7.1 item 5 — THE INQUIRY'S OWN CONCLUSION, read as the
+     no-project relationship's. Nothing in a conclusion written by the old act
+     names a project, so the relationship that drew it cannot be established and
+     is SAID so; its claim is undetermined (never back-filled). Null when the
+     inquiry's own state is not `concluded`. The inquiry's bytes are never
+     edited to say any of this — ratified bytes especially (the `published`
+     amendment's precedent). */
+  #noProjectConclusionOf(inquiryId) {
+    const b = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, inquiryId);
+    if (!b || b.current_state !== "concluded") return null;
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, inquiryId);
+    const fm = md && md.content !== null ? (parseFrontmatter(md.content).data || {}) : {};
+    const s = (v) => (typeof v === "string" ? v : null);
+    return { project: null, inquiry: String(inquiryId), relationship: "no_project", state: "concluded",
+             relationship_established: false,
+             relationship_detail: "this conclusion is written in the inquiry's own bytes and names no project, "
+                                + "so the relationship that drew it cannot be established; it is read as the "
+                                + "no-project relationship's (INVESTIGATIVE-SESSION.md §7.1 item 5).",
+             conclusion: s(fm.conclusion), falsifier: s(fm.falsifier) ?? "",
+             claim: Store.#undeterminedClaim() };
   }
 
   /* REC-24 (c): MOVING AN ACTION THROUGH ITS OWN STATE MACHINE — the first op
@@ -22461,6 +22772,98 @@ export class Store extends DurableObject {
     return out;
   }
 
+  /** `shared-inquiry-concluded-by-another-project` (REC-124 / INVESTIGATIVE-SESSION.md
+   *  §7.1 item 3) — *"Other projects are told, never moved — a FINDING-class
+   *  notice, §7's notification pattern: project P concluded this shared inquiry
+   *  on version N. Their stance is unchanged until they act."*
+   *
+   *  ONE ITEM PER (QUESTION, PROJECT THAT CONCLUDED IT), filed under every OTHER
+   *  project drawing on the question and NOT under the one that concluded —
+   *  `#findingsVersionFromAnotherTeam`'s exclusion, declared on the item for the
+   *  same reason (a home set quietly shorter is indistinguishable from nobody
+   *  caring). DERIVED ON READ from the projects' own `conclusions[]` rows through
+   *  the ONE reader, so it adds no table, needs no purge arm (D-113), and cannot
+   *  disagree with op=basisversions about what a project concluded.
+   *
+   *  FINDING AND NOT CONDITION, for §7's reason: another team having concluded
+   *  the question you share is a fact about the world of the work, and one
+   *  member's inbox hygiene must not make it vanish for the team. */
+  #findingsConcludedElsewhere(viewer, now) {
+    const out = [];
+    const shared = this.#queueSharedInquiryCandidates();
+    for (const inq of shared) {
+      const q = this.#queueSharedInquiry(inq, viewer);
+      if (!q) continue;
+      const drawing = this.#projectsDrawingOn(inq, viewer);
+      if (drawing.length < 2) continue;
+      const qname = q.title || inq;
+      for (const p of drawing) {
+        const c = this.#conclusionOf(p.id, inq, viewer);
+        if (!c) continue;
+        const receiving = drawing.filter((x) => x.id !== p.id);
+        if (receiving.length === 0) continue;
+        const homes = this.#queueAncestors([inq], viewer);
+        const kept = homes.ancestors.filter((a) => a.id !== p.id);
+        const atMs = Date.parse(c.at ?? "");
+        out.push({
+          id: `FINDING::shared-inquiry-concluded-by-another-project::${inq}::${p.id}`,
+          class: "FINDING",
+          kind: "shared-inquiry-concluded-by-another-project",
+          case: {
+            ...homes,
+            ancestors: kept,
+            ungrouped: homes.state === "determined" && kept.length === 0,
+            excluded: [{ id: p.id, reason: "concluded_here",
+                         detail: "the project that concluded is not a team this was concluded ELSEWHERE "
+                               + "for, so this item is not filed under it. Stated rather than performed "
+                               + "silently (DEC-16)." }],
+          },
+          subject: { kind: "project_conclusion", id: p.id, inquiry: inq, version: c.version },
+          summary: `${p.title || p.id} concluded ${qname} on reading '${c.version}'`,
+          detail: `${qname} is drawn on by ${drawing.length} projects. ${p.id} concluded it on reading `
+                + `'${c.version}'${c.by ? ` (${c.by})` : ""}${c.at ? ` on ${c.at}` : ""}, adopting that `
+                + `reading's claim. A conclusion belongs to the project that drew it (§7.1): NOTHING `
+                + `about what any other project stands on or has concluded has moved, and nothing here `
+                + `will move it — this is a report, and concluding is each project's own act.`,
+          basis: {
+            source: "project frontmatter (conclusions[]) + refs",
+            inquiry: inq,
+            concluded_by_project: p.id, concluded_by_project_title: p.title ?? null,
+            version: c.version, claim: c.claim, by: c.by, at: c.at,
+            to_projects: receiving.map((x) => x.id),
+            /* The receiving projects' OWN conclusions, read through the same
+               reader and enumerated, never summarised: a team needs to know
+               whether it concluded on the same reading, a different one, or not
+               at all. */
+            elsewhere: receiving.map((x) => {
+              const o = this.#conclusionOf(x.id, inq, viewer);
+              return { project: x.id, title: x.title ?? null,
+                       state: o ? "concluded" : "not_concluded",
+                       version: o ? o.version : null, at: o ? o.at : null };
+            }),
+            bounds: {
+              inquiries_examined: shared.length, inquiries_bound: shared.bound,
+              inquiries_truncated: shared.truncated === true,
+              projects_named: drawing.length, projects_bound: drawing.bound,
+              projects_truncated: drawing.truncated === true,
+              detail: "a bounded number of shared questions and of projects per question are read. A "
+                    + "conclusion reported over a truncated set is still true; an ABSENCE over one is "
+                    + "not, which is why the flags are published.",
+            },
+          },
+          age: Number.isFinite(atMs)
+            ? { state: "determined", since: c.at, ms: Math.max(0, now - atMs) }
+            : { state: "undetermined", reason: "unparseable_conclusion_date",
+                detail: "the conclusion row carries no authored instant this producer can read" },
+          assignee: null,
+          assignee_role: null,
+          options: this.#queueOptions([inq], viewer),
+        });
+      }
+    }
+    return out;
+  }
+
   /* ======================================================================
    * PL-13 — **WHAT IDENTITY A QUEUE ITEM CAN BE DISPOSITIONED ON, ANSWERED BY
    * THE PLANE AND PUBLISHED, INSTEAD OF BEING GUESSED AT A SURFACE.**
@@ -22817,6 +23220,9 @@ export class Store extends DurableObject {
        until now they rendered as the same one. */
     const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, now);
     items.push(...fromAnotherTeam);
+    /* REC-124 / §7.1 item 3: a project concluding a shared question is TOLD to
+       the others and moves none of them. Above the mint, like its siblings. */
+    items.push(...this.#findingsConcludedElsewhere(viewer, now));
 
     /* ------------------------------------------ CONDITION · REC-32
        The three generators, derived on read from the producing subsystems' own
@@ -30021,6 +30427,18 @@ export class Store extends DurableObject {
          Gated: a project the viewer may not see answers `null`, exactly as one
          that never named a version does. */
       ...(project ? { current: this.#currentVersionOf(project, inq, viewer) } : {}),
+      /* REC-124 / §7.1: AND WHAT THIS PROJECT CONCLUDED, beside what it stands
+         on and under the same rule — present only when a project is named,
+         null when it has concluded nothing, and read through the ONE reader the
+         act's own `prior` uses. Another project's conclusion is never this
+         project's answer (item 4: "stated, not inferred from another team's"). */
+      ...(project ? { conclusion: this.#conclusionOf(project, inq, viewer) } : {}),
+      /* REC-124 / §7.1 item 5: the inquiry's OWN conclusion, the no-project
+         relationship's, with its claim STATED undetermined. Published whether or
+         not a project is named, because it is a different relationship from any
+         project's and a reader must never take one for the other. Behind the
+         same gate as the rest of this answer. */
+      no_project_conclusion: present ? this.#noProjectConclusionOf(inq) : null,
     };
   }
 
@@ -39521,6 +39939,11 @@ export class Store extends DurableObject {
           conclusion: url.searchParams.get("conclusion"),
           falsifier: url.searchParams.get("falsifier"),
           noFalsifier: url.searchParams.get("no_falsifier"),
+          /* REC-124 / §7.1: the RELATIONSHIP (a project, or none) and what a
+             member adds beyond the adopted claim. Both caller-supplied like the
+             conclusion itself; the control plane stamps only identity. */
+          project: url.searchParams.get("project"),
+          commentary: url.searchParams.get("commentary"),
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
         /* REC-31, conclude's shape exactly: ONE target, no handle and no

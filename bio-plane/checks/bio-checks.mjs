@@ -9227,6 +9227,40 @@ export const ACT_SHAPE_CHECKS = {
       + 'something the record should do on your behalf. Keep the falsifier, or clear it and record '
       + 'the absence.',
   },
+  /* REC-124 / INVESTIGATIVE-SESSION.md §7.1 (BOB #15, 2026-09-18): a conclusion
+     ADOPTS the claim of the reading a project stands on, and the claim is what
+     was concluded. NO_CLAIM is every door to "there is nothing to adopt" — the
+     project stands on no reading, the reading is not accepted or states no
+     claim, or commentary arrives with no adopted claim to comment beyond. */
+  NO_CLAIM: {
+    check: 'C-33.34',
+    where: 'src/store.mjs conclude > is-conclude-claim',
+    translation: 'Concluding for a project adopts the claim of the reading the project stands on, and '
+      + 'that claim is what the group concluded. There is no claim to adopt here. State the claim on a '
+      + 'reading first — a claim nothing supports yet is allowed — make that reading the one the project '
+      + 'stands on, and conclude again.',
+  },
+  /* REC-124 / §7.1 item 2. A free conclusion text beside a project could say
+     what no claim said; the member is told the door rather than having their
+     words quietly relabelled as commentary. */
+  CONCLUSION_IS_THE_CLAIM: {
+    check: 'C-33.35',
+    where: 'src/store.mjs conclude > is-conclude-answer',
+    translation: 'When a project concludes, the claim it adopts is the conclusion, so a separate '
+      + 'conclusion text is not accepted — it could say something no claim said. Anything you want to '
+      + 'add beyond the claim can be sent as commentary: it is recorded in your name and is never '
+      + 'treated as evidence.',
+  },
+  /* REC-124. The project's own frontmatter could not take the conclusion row
+     in place, so nothing was written — the make-current writer's condition, on
+     the conclusion row. */
+  UNSPLICEABLE_CONCLUSIONS: {
+    check: 'C-33.36',
+    where: 'src/store.mjs #setProjectConclusion > is-conclusion-row',
+    translation: 'The project\'s own record is laid out in a way this act cannot add a conclusion to '
+      + 'without rewriting parts of it nobody asked to change, so nothing was recorded. The project\'s '
+      + 'file needs its list of conclusions tidied before it can conclude.',
+  },
   NO_RESOLUTION: {
     check: 'C-33.3',
     where: 'src/store.mjs actionMove > is-move-resolution',
