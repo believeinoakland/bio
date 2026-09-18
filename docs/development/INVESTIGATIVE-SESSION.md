@@ -531,6 +531,21 @@ and stopped (the claim-adoption act cannot be built until someone says whose ado
    no-project relationship where none can be established — stated as such. Ratified bytes are never edited (the
    `published` legacy-set precedent in State Rules' 2026-09-10 amendment).
 
+**Three more, decided 2026-09-18 by BOB #15 from REC-124's build (each follows a ruling above; none is returned to Bob):**
+6. **An inquiry concluded OUTSIDE any project NAMES the version whose claim it adopts.** It has no CURRENT to stand on,
+   so the act states it; no version named, or a version with no claim, is refused `NO_CLAIM`. A conclusion whose claim
+   reads *undetermined* asserts nothing a reader can check, which is the overclaim item 2 refuses. The callers this
+   breaks are corrected, never exempted; conclusions already written read undetermined and are STATED so (item 5). The
+   stakes are bounded: a case needs a project (DEC-72), so a no-project conclusion is never published.
+7. **A project WITHDRAWS its conclusion by a dated, authored act that APPENDS to the relationship's history — it never
+   overwrites.** The latest entry is what the project stands on; every earlier conclusion and every withdrawal stays
+   readable (DEC-19 as ruled by Bob: *"An attestation must be reversible to correct mistakes. (Though there may be a
+   record of the attestation and reversal in the record.)"*). Replacing the row, as first built, erases that record and is
+   a defect. A withdrawal never edits a published case; the case's next edition carries it.
+8. **A conclusion counts ONLY for the relationship that made it.** A leg in project P resting on inquiry X reads P's own
+   conclusion on X; a no-project conclusion on X, or another project's, is visible as information and is never read as
+   P's. So item 4 does not depend on item 6.
+
 **Reversal cost:** low now; it rises once published cases freeze per-project conclusions into their bytes. **Built by:**
 REC-124, unblocked by this section (RECORD; an I3 change with its own IC; I5 if the case bytes carry the adoption).
 
