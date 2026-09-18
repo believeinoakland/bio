@@ -12721,3 +12721,25 @@ no column, no index, and the REC-112 annotation is not reflowed**), `bio-plane/c
 **NOT `docs/development/QUEUE.md`** — flipping the REC-116 row is CONDUCT's act (`kickoffs/WORKER.md`).
 
 **open as of 2026-09-17.**
+
+## CLAIM 2026-09-18 FRAMEWORK (FW-21 — did Bob's 2026-09-14 ON-POINT refinement reach FW-17 and SK-7?)
+
+worker `agent-a1f71e7a9d1c91962`, branch `worktree-agent-a1f71e7a9d1c91962`.
+opened: 2026-09-18
+
+**PATHS CLAIMED:**
+
+- `docs/architecture/BIO_Content_Framework_v0_10.md` — Part II §14.5's connection-pair row and §18's
+  closing sentence on the on-point choice, plus the front-matter line that states it. FRAMEWORK's own path.
+- `docs/development/DEBT.md` — **D-161's row ONLY** (narrowed: FW-17 closed its carry half; the on-point
+  half stays open with the measurement).
+- `tools/fw21-onpoint-probe.mjs` — NEW, the measurement instrument (in no battery; it reports, it does not gate).
+- `docs/development/MEASUREMENTS.md` — M-51 appended, nothing else.
+- `docs/development/CLAIMS.md` (this block) and `docs/DECIDED.md` if a regeneration is owed.
+
+**NOT CLAIMED AND DELIBERATELY NOT TOUCHED:** `bio-plane/**` — the defect this row measures lives in
+`Store.deriveConnections` / `connectionGradeForContent`, which are RECORD's, and REC-86 is being built
+concurrently in `bio-plane/src/store.mjs`. `docs/development/QUEUE.md` is CONDUCT's; the row this finding
+owes is named as an act with its actor in the report, not written here.
+
+**open as of 2026-09-18.**
