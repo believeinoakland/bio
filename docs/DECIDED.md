@@ -513,7 +513,7 @@ authority is the file named, never this one.
 - **D-315** — Then the mechanization question, DECIDED not deferred: whether a cheap arm-anchoring check (each arm's anchor occurs exactly once in its subject, the D-315 exactly-once shape) can run battery-side without running the arms — or argue at the site why the census stays periodic.  
   `docs/development/QUEUE.md:2268`
 - **D-319** — `bio-plane/test/ocr-member-e2e.test.mjs` — the D-319 PIN in section 2 is CORRECTED, never exempted. - `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` only, from the figures a green `--strict` run prints. - `bio-plane/dist/bio-plane.bundled.mjs` + `bio-plane.bundle.json` — `npm run build` output. - any suite an…  
-  `docs/development/CLAIMS.md:12787`
+  `docs/development/CLAIMS.md:12788`
 - **D-319** · 2026-09-12 — The pin in `ocr-member-e2e.test.mjs` is CORRECTED, not exempted: the plain read still stops short of tier 3, now as the opt-out half, and a new section drives the opt-in half on the REAL engine.  
   `docs/development/DEBT.md:285`
 - **D-323** · 2026-09-13 — `level-empty-<level>` (FLEET's, one line in `harness.mjs`, plus the three mock-backed assertions CORRECTED rather than exempted, plus the `reportsAs()` bridge re-checked).  
