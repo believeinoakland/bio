@@ -127,11 +127,16 @@ client, deploy, verify a real run, then remove the old.
 
 ## The release payload
 
-`newgroup/scripts/embed-release.mjs` bundles the sibling `bio-plane` tree
-and embeds it into the wizard as a string, so an install uploads exactly one
-module and depends on no repository and no second fetch. The script refuses
-to embed a bundle containing any published token value. Rebuilding the
-wizard after a bio-plane change is `npm run build` in `newgroup/`.
+`newgroup/scripts/embed-release.mjs` embeds the SIGNED plane asset from
+`release/` into the wizard as a string, so an install uploads exactly one
+module and depends on no repository and no second fetch. It builds nothing:
+it refuses unless the asset hashes to `RELEASE.json`'s sha256, the signature
+verifies against the wizard's own `ARMED_SIGNERS` (`newgroup/src/signers.mjs`),
+and the version equals `bio-plane/package.json`'s. It also refuses a bundle
+containing any published token value. (Until 2026-09-18 it built the working
+tree instead, so between releases `npm test` replaced the signed embed with an
+unsigned build under the signed version's name.) So the wizard is re-cut only
+AFTER a release is signed: `npm run build` in `newgroup/`.
 
 ## Order of operations from here
 

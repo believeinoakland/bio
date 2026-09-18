@@ -25,6 +25,7 @@
 
 import { WIZARD_HTML, UPDATE_HTML, PAGE_CSS } from "./ui.mjs";
 import { RELEASE_SOURCE, RELEASE_VERSION } from "./release.mjs";
+import { ARMED_SIGNERS } from "./signers.mjs";
 /* One verifier, shared with the plane. The installer and the instance
    agree on what a valid signature is because they run the same code. */
 import { verifySshsig, NS_RELEASE, NS_FLEET, fleetStatement } from "../../bio-plane/src/sshsig.mjs";
@@ -55,23 +56,10 @@ const vcmp = (a, b) => {
   return 0;
 };
 
-/* The keys this installer will trust to have signed a release.
- *
- * A hash in RELEASE.json proves the bytes were not corrupted in transit.
- * It proves nothing about who put them there: whoever can write the
- * repository can write both the asset and the hash of the asset. A
- * signature is the part that names a person, and the only copy of the
- * public key that matters is this one, compiled into the installer the
- * group is already trusting to touch their account.
- *
- * Empty means unarmed: the installer verifies hashes, notes plainly that
- * releases are not yet signed, and installs. Once a key is listed, an
- * unsigned or wrongly signed repository release is refused outright and
- * the built-in copy installs instead. Adding the first key is a
- * deliberate act by the maintainer, not a default. */
-export const ARMED_SIGNERS = [
-  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGfzETopBeZe5mbD7ukYwaZczyBPjJ4S3sX+Ly3rN3Vl bio-release",
-];
+/* The keys this installer trusts to have signed a release live in
+ * `signers.mjs`, so the embed step can verify the built-in copy against the
+ * SAME list without importing the module it generates (2026-09-18, DIST). */
+export { ARMED_SIGNERS };
 
 const relHeaders = { "user-agent": "bio-installer" };
 async function fetchRepoManifest() {

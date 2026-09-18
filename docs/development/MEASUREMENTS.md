@@ -16780,3 +16780,26 @@ REC-129, the REC-128 fix-up, and REC-126 still running) — the three FINISHED o
 completion notice arrived, and were removed without an unlock, under a LIVE holder. None was resumed by
 message. That is consistent with the registered hypothesis (a lock survives iff the agent ended a turn with
 live background children) and does not test it, because none of the three is known to have had one.
+
+## M-59 · 2026-09-18 · DIST — THE INSTALLER'S EMBED STEP REPLACED THE SIGNED PLANE WITH AN UNSIGNED BUILD UNDER THE SIGNED VERSION'S NAME: CONFIRMED, THEN CLOSED (worktree `goofy-moore-1cb655`, base `5ea27761`)
+
+**Instrument:** sha256 of `RELEASE_SOURCE` in `newgroup/src/release.mjs` (imported, hashed as UTF-8), against
+`release/RELEASE.json`'s `sha256` and `shasum -a 256 release/bio-plane.bundled.mjs`.
+
+| state | embed sha256 | label |
+| --- | --- | --- |
+| committed (`db7589b8`, the 0.58.0 cut) | `72fce1e9156163ad…` = the signed asset | 0.58.0 |
+| after one `npm run embed` on `5ea27761` (old script) | `9efea44867278f90…`, 3,629,437 chars, UNSIGNED | 0.58.0 |
+| after `npm run embed` (new script) | `72fce1e9156163ad…`; `src/release.mjs` byte-identical (`99e18af4…`) | 0.58.0 |
+
+**Confirmed as reported 2026-09-16.** The old script built the WORKING TREE and labelled it with
+`package.json`'s version; `npm test` and `npm run build` in `newgroup/` both ran it. The wizard installs its
+built-in copy WITHOUT a signature check (it is the fallback when the repository's copy is absent or not newer),
+so a wizard re-cut between releases would have installed 834 commits of unsigned plane as "0.58.0".
+**Closed:** the embed now copies `release/<asset>` and refuses unless the bytes hash to `RELEASE.json`, the SSHSIG
+verifies against the wizard's own `ARMED_SIGNERS` (moved to `newgroup/src/signers.mjs` so the embed need not
+import the module it generates), and the version equals `package.json`'s. It builds nothing. Negative control
+on `newgroup/test/embed.test.mjs`: old script → FAILED at *"the committed embed IS the signed release asset"*
+while *"its label is RELEASE.json's version"* PASSED — the defect exactly. Restored, verified by hash.
+**Consequence for the gate:** after the version bump, the wizard cannot be embedded until the release is SIGNED;
+the embed is step 9's act, not step 2's.

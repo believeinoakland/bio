@@ -7,12 +7,13 @@ This session runs the work. Renamed from `ARCH` on 2026-07-31. Read
 the channels, the rules that make them work, and the receipts. Read it before
 making a change another session must know about.**
 
-0. **Drain the `BOB INBOX` at the top of `QUEUE.md` FIRST.** It is append-only and BOB
-   is its producer; you are the sole writer of everything below it. Enact each entry
-   into the queue proper, then delete it. This is what lets an architectural change
-   land WITHOUT pausing you (`ORCHESTRATION.md`). An entry may say that a queued or
-   in-flight item is superseded — whether to stop a running worker or let it land is
-   YOURS to decide; BOB's duty was only to make the supersession visible.
+0. **THE PLAN IS SCHEDULER'S, FROM 2026-09-18 (Bob's direction; `kickoffs/SCHEDULER.md`).** SCHEDULER drains the
+   `BOB INBOX`, owns what is in `QUEUE.md` (the cache) and the backlog and in what order, and marks a task `done`,
+   archives it and REPLENISHES the cache in one commit. **You write ONE word in `QUEUE.md`: a cached task's state
+   `queued` → `running`, pushed before its worker spawns.** When you integrate a task, `SendMessage` SCHEDULER naming it
+   and its integration sha — that message is how it reaches the archive and how the next task enters the cache. If the
+   cache ever holds no runnable task, tell SCHEDULER; never re-order or re-write the plan yourself. (This step read
+   *drain the BOB INBOX* until 2026-09-18; the reasoning behind the old step is in git history.)
 1. **Read `QUEUE.md`.** For each ACTIVE area (max two), if no worker is running
    for it and its top item is runnable (status `queued`, depends-on all `done`),
    spawn a worktree-isolated worker for that ONE item, with a self-contained
@@ -55,7 +56,7 @@ making a change another session must know about.**
    code, suites, claims and reports — one of which already missed a REGEX LITERAL, where
    `C-29\.` is not the text `C-29.`.
 
-**A `done` FLIP ARCHIVES ITS ROW IN THE SAME COMMIT — LED-5, Bob's direction of 2026-09-18 (small, ordered, always-current ledgers).** When integration flips a QUEUE row to `done` (or `superseded`), or closes a DEBT row with no declared residue, run `node tools/ledger.mjs archive <ID>` IN THE SAME COMMIT — the same command `kickoffs/BOB.md` names for BOB's lane. Not a later sweep: August's one-off archiving grew back because nothing performed it at the moment a row closed. `plancheck` §2h(a) makes a forgotten archive a failing gate once LED-3 has migrated the backlog. The archiver checks conservation twice (id multiset and every live line, on the plan and on the read-back) and restores both files if either fails — read its refusal, never work around it. *Closed* is ONE definition, `isClosedDebtRow`/`debtDisposition` in `tools/owed.mjs`; a row whose disposition does not LEAD with a closure word is open, whatever else it says.
+**[SUPERSEDED 2026-09-18 for QUEUE rows: the `done` flip, its archive and the replenish are SCHEDULER's single commit — step 0.]** **A `done` FLIP ARCHIVES ITS ROW IN THE SAME COMMIT — LED-5, Bob's direction of 2026-09-18 (small, ordered, always-current ledgers).** When integration flips a QUEUE row to `done` (or `superseded`), or closes a DEBT row with no declared residue, run `node tools/ledger.mjs archive <ID>` IN THE SAME COMMIT — the same command `kickoffs/BOB.md` names for BOB's lane. Not a later sweep: August's one-off archiving grew back because nothing performed it at the moment a row closed. `plancheck` §2h(a) makes a forgotten archive a failing gate once LED-3 has migrated the backlog. The archiver checks conservation twice (id multiset and every live line, on the plan and on the read-back) and restores both files if either fails — read its refusal, never work around it. *Closed* is ONE definition, `isClosedDebtRow`/`debtDisposition` in `tools/owed.mjs`; a row whose disposition does not LEAD with a closure word is open, whatever else it says.
 
 **THE REFILL RULE, AND IT IS STEP 2's LAST ACT — NOT A SEPARATE HABIT.** A slot that has
 just been freed by an integration is filled BEFORE the turn ends, in the same turn, from

@@ -69,6 +69,10 @@ reported *silently replaces the signed 0.58.0 embed with an unsigned rebuild*, a
 `newgroup/test/embed.test.mjs` carries no negative control. **Unverified since — verify it before cutting**,
 because a gate step that can put an unsigned plane in front of a sovereign group is the one defect that
 outranks the cut itself. If it holds, it is a DIST-owned fix (newgroup is DIST's) with its own control.
+**VERIFIED AND CLOSED 2026-09-18 (M-59):** it held. The embed now copies only the signed, hash- and
+signature-verified asset from `release/` and builds nothing; `embed.test.mjs` carries the control. So, in the
+gate below, the wizard is embedded only AFTER step 5 signs — `newgroup`'s `npm test` refuses between the bump
+and the signature, which is correct.
 
 ## Why this area exists
 

@@ -1,6 +1,8 @@
 # The work queue
 
-CONDUCT owns this file and is its only writer. **Exception, 2026-07-31: session BOB
+**SCHEDULER owns this file from 2026-09-18 (`kickoffs/SCHEDULER.md`): it drains the BOB INBOX, orders the rows,
+and marks, archives and replenishes. CONDUCT writes one word — a row's `queued` → `running`.** The history below is
+kept as it was. Until then: CONDUCT owned this file and was its only writer. **Exception, 2026-07-31: session BOB
 restructured it once, with Bob's explicit authorisation, while CONDUCT was paused for
 that purpose.** Ownership returns to CONDUCT with this rewrite; BOB hands
 decompositions over rather than editing here (`ORCHESTRATION.md`).

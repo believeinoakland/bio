@@ -10,7 +10,8 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { resolveVersion, publishedTokens } from "../scripts/embed-release.mjs";
+import { createHash } from "node:crypto";
+import { resolveVersion, publishedTokens, checkSignedAsset } from "../scripts/embed-release.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -68,6 +69,42 @@ console.log("\n--- the real tree agrees (the D-106 guard) ---");
     wranglerJsonc: readFileSync(join(plane, "wrangler.jsonc"), "utf8"),
   }));
   t("the checked-in bio-plane resolves without refusing", version, null);
+}
+
+/* THE EMBED IS THE SIGNED RELEASE (2026-09-18, DIST). The embed used to build
+   the working tree and label it with package.json's version, so between cuts
+   `npm test` replaced the signed plane with an unsigned one under the same
+   name. These run BEFORE `npm run embed` in `npm test`, so the last block reads
+   the COMMITTED embed, which is what a release of the installer ships.
+   NEGATIVE CONTROL: RUN 2026-09-18 — the pre-fix embed-release.mjs restored
+   aside, `npm run embed` run, then this suite: FAILED at "the committed embed IS
+   the signed release asset" (9efea448... vs 72fce1e9...) and "and its label is
+   RELEASE.json's version" held, which is the lie exactly: right name, wrong
+   bytes. Restored by cp, verified by hash (src/release.mjs 99e18af4...). */
+console.log("\n--- only the signed asset is embedded ---");
+{
+  const root = fileURLToPath(new URL("../..", import.meta.url));
+  const manifest = JSON.parse(readFileSync(join(root, "release", "RELEASE.json"), "utf8"));
+  const bytes = readFileSync(join(root, "release", manifest.asset));
+  t("the real release/ asset passes", await checkSignedAsset({ manifest, bytes, version: manifest.version }), null);
+  const flipped = Buffer.from(bytes); flipped[flipped.length - 2] ^= 1;
+  const m1 = await checkSignedAsset({ manifest, bytes: flipped, version: manifest.version });
+  t("one flipped byte is refused, naming the hash", !!m1 && m1.includes("REFUSING") && m1.includes("hashes"), true);
+  const m2 = await checkSignedAsset({ manifest, bytes, version: "99.0.0" });
+  t("a version the release does not carry is refused (a bump is not a signature)",
+    !!m2 && m2.includes("99.0.0") && m2.includes("release-assemble"), true);
+  const m3 = await checkSignedAsset({ manifest: { ...manifest, sig: "" }, bytes, version: manifest.version });
+  t("an unsigned manifest is refused", !!m3 && m3.includes("no signature"), true);
+  const other = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIsvYEq6HIlXZtcJ7N02tiP63u3n1Rj27dR6NNLzeZUk other";
+  const m4 = await checkSignedAsset({ manifest, bytes, version: manifest.version, signers: [other] });
+  t("a signature from a key the installer does not trust is refused", !!m4 && m4.includes("does not verify"), true);
+  t("an installer with no keys refuses rather than embedding unvouched bytes",
+    typeof (await checkSignedAsset({ manifest, bytes, version: manifest.version, signers: [] })), "string");
+
+  const emb = await import("../src/release.mjs");
+  t("the committed embed IS the signed release asset",
+    createHash("sha256").update(emb.RELEASE_SOURCE, "utf8").digest("hex"), manifest.sha256);
+  t("and its label is RELEASE.json's version", emb.RELEASE_VERSION, manifest.version);
 }
 
 console.log(`\nembed: ${pass} passed, ${fail} failed`);

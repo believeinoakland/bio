@@ -42,6 +42,15 @@ The format is the one `PARALLELISM.md` fixes:
 
 **Not repaired by rewriting history.** `CLAUDE.md`: never force-push. The commit stands, this entry names what is inside it, and the next reader of `576dd52` has somewhere to land. Recorded here rather than only in a commit message because a commit message is exactly the surface that failed.
 
+## CLAIM 2026-09-18 DIST (the embed hazard, then the cut after 0.58.0)
+released:
+session: DIST standing lane (worktree goofy-moore-1cb655, Sparky-Air)
+opened: 2026-09-18
+paths: `newgroup/**` (the embed step: `scripts/embed-release.mjs`, `test/embed.test.mjs`, `package.json`, the
+  generated `src/release.mjs`), `release/**`, the version in `bio-plane/package.json` and `bio-plane/wrangler.jsonc`,
+  the committed plane build `bio-plane/dist/**` at the cut, `docs/development/kickoffs/DIST-NEXT.md`, and appended
+  entries in `MEASUREMENTS.md` / `DEBT.md` / `INTERFACE-CHANGES.md` for what this lane lands. All tags.
+
 ## CLAIM 2026-09-17 M0 (M0-57 — design status has ONE authority, and the arm that refuses a second)
 released: 2026-09-17 by CONDUCT #3 at integration, merged at `8d54e426`. **Every path this claim reserved is free.** Gated on the MERGED tree — `216/216 suites green · 13588 assertions passing`, provenance 219/219 at `58a28a7a`, 3 fleet members RAN, 0 skips; `corpuscheck` 0 fail over 50 governed documents. **Merged from `m057-design-status-authority` @ `c007471f` and NOT the worktree-agent branch, with the supersession verified at the artifact rather than taken on trust.**
 session: m057-design-status-authority (worktree agent-aa383f4f0259d59f2)
