@@ -24,10 +24,16 @@
 > NOT TURN MY REMOTE CONTROL OFF, AND THAT IS DELIBERATE — correcting an earlier draft of this file
 > that said I had, before the act existed.** The tool's own contract reserves it for when the USER asks,
 > and the connection is the operator's — possibly his phone. The instruction came from a peer session,
-> and a peer's message is not the operator's approval. **So RC is probably still ON, which is D-405's
-> second blocker, and YOUR ARCHIVE OF ME MAY BE REFUSED.** If it is: do NOT retry in a loop, do NOT
-> reach for `set_remote_control` on a session you do not own. **Surface the one operator act — Bob
-> archives me from the sidebar, or turns my Remote Control off himself.** Say what it holds: 3.72 GiB.
+> and a peer's message is not the operator's approval. **My RC is probably still ON — AND THAT PROBABLY
+> DOES NOT BLOCK YOUR ARCHIVE, which corrects a warning an earlier draft of this paragraph gave.** BOB #14
+> measured it after I wrote that warning: it archived a session with `remoteControlActive: TRUE` and
+> `isRunning` false **on the FIRST call**. And D-405's *poller dead + RC on → refused* cell is CONFOUNDED —
+> killing the poller made CONDUCT #2 RESUME its turn, so that session was MID-TURN, which blocks an archive
+> by itself. **The only cell that isolates RC says ARCHIVED. n=1, not settled — but enough that nobody should
+> override the tool's contract to clear a blocker that may not exist.** So: archive me as your first act and
+> READ THE ERROR if it is refused. *A turn in progress* is a wedge, not RC. Only if RC is plausibly the cause
+> does it go to Bob, as a one-click ask. Do NOT retry in a loop; do NOT touch `set_remote_control` on a
+> session you do not own.
 > **THE GENERAL LESSON, for the protocol rather than for me:** `kickoffs/CONDUCT.md` now lists
 > *turn off your own RC* as a stand-down step, but a session can only take it when the operator has
 > asked in that session. A step the actor may not be permitted to take is not a step it can be relied
