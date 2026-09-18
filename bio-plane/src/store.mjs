@@ -7670,15 +7670,29 @@ export class Store extends DurableObject {
                    + "as one that was never issued." };
   }
 
-  /* THE MACHINE FENCE (C-32.16) IS WRITTEN AT THE TOP OF EACH OF THE THREE
-     AUTHORING ACTS rather than in a shared helper, and that is measured rather
-     than stylistic: `machine-fences.test.mjs` requires every MACHINE_CANNOT_*
-     site to SHADOW the payload complaints behind it in its own method, which a
-     helper holding only the fence cannot do — the fence must stand in front of
-     the act it guards. The sentence is one constant so the three cannot drift. */
-  static #MACHINE_REVIEW_DETAIL = "a review copy is an addressed act: somebody in this group hands a draft to a "
-    + "named person and the record says who. A machine credential may prepare the material and may not put "
-    + "the group's draft in front of anyone. Sign in as a member.";
+  /* THE THREE AUTHORING ACTS — draft, grant, revoke — ENTER THROUGH ONE DOOR, and
+     the door is where the MACHINE FENCE (C-32.16) stands. That is measured rather
+     than stylistic: the DEC-49 guard wants every MACHINE_CANNOT_* inside ONE named
+     region with a catalogue row pointing at it, and `machine-fences.test.mjs` wants
+     every such site to stand in front of the payload complaints it shadows. One
+     fence at one door satisfies both without a second implementation of the rule.
+     A machine is refused BY NAME before any act is chosen: the act is ADDRESSED
+     and ATTRIBUTED (§6A.2), so the record must name the person who did it. */
+  reviewAct({ act = "", author = null, ...args } = {}) {
+    const who = String(author ?? "").trim();
+    /* DEC-49 REGION is-machine-review — REC-126/C-32.16. The fence alone. */
+    if (!who || isMachineIdentity(who))
+      return { ok: false, reason: "MACHINE_CANNOT_REVIEW",
+               detail: "a review copy is an addressed act: somebody in this group hands a draft to a named "
+                     + "person and the record says who. A machine credential may prepare the material and "
+                     + "may not put the group's draft in front of anyone. Sign in as a member." };
+    /* END DEC-49 REGION is-machine-review */
+    if (act === "draft") return this.#caseDraft(who, args);
+    if (act === "grant") return this.#reviewGrant(who, args);
+    if (act === "revoke") return this.#reviewRevoke(who, args);
+    return { ok: false, reason: "REVIEW_UNKNOWN_ACT", act,
+             detail: "the review copy's authoring acts are draft, grant and revoke." };
+  }
 
   /* NOT THE OWNER, AND NOT THERE, ARE ONE ANSWER: a caller who does not own the
      producing project cannot learn from this refusal whether the project, the
@@ -7709,12 +7723,7 @@ export class Store extends DurableObject {
 
   /* THE DRAFT ACT — create, or edit in place (a review copy is MUTABLE; Bob,
      2026-09-17: *"An editor must be able to edit"*). */
-  caseDraft({ draft = null, project = null, author = null, ...rest } = {}) {
-    const who = String(author ?? "").trim();
-    /* DEC-49 REGION is-machine-review — REC-126/C-32.16. The fence alone. */
-    if (!who || isMachineIdentity(who))
-      return { ok: false, reason: "MACHINE_CANNOT_REVIEW", detail: Store.#MACHINE_REVIEW_DETAIL };
-    /* END DEC-49 REGION is-machine-review */
+  #caseDraft(who, { draft = null, project = null, ...rest } = {}) {
     const a = { who };
     const proj = String(project ?? "").trim();
     const existing = draft ? this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft).trim()) : null;
@@ -7829,11 +7838,7 @@ export class Store extends DurableObject {
                      d.project_id, ...gate.args) ? d : null;
   }
 
-  reviewGrant({ draft = null, recipient = "", secretSha = null, author = null } = {}) {
-    const who = String(author ?? "").trim();
-    /* C-32.16, the same fence as `caseDraft`'s governed region, in front of this act. */
-    if (!who || isMachineIdentity(who))
-      return { ok: false, reason: "MACHINE_CANNOT_REVIEW", detail: Store.#MACHINE_REVIEW_DETAIL };
+  #reviewGrant(who, { draft = null, recipient = "", secretSha = null } = {}) {
     const a = { who };
     const d = this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft ?? "").trim());
     if (!d || !this.#isProjectOwner(d.project_id, a.who)) return Store.#notReviewOwner();
@@ -7858,11 +7863,7 @@ export class Store extends DurableObject {
                     + `else. It ends when it is revoked, and when that edition is published and signed.` };
   }
 
-  reviewRevoke({ grant = null, author = null } = {}) {
-    const who = String(author ?? "").trim();
-    /* C-32.16, the same fence as `caseDraft`'s governed region, in front of this act. */
-    if (!who || isMachineIdentity(who))
-      return { ok: false, reason: "MACHINE_CANNOT_REVIEW", detail: Store.#MACHINE_REVIEW_DETAIL };
+  #reviewRevoke(who, { grant = null } = {}) {
     const a = { who };
     const gid = String(grant ?? "").trim();
     /* An ABSENT argument says nothing about what exists, so it is named as the
@@ -7885,7 +7886,7 @@ export class Store extends DurableObject {
      grant's secret (and only the draft that grant names), or a MEMBER with standing
      in the producing project — D-15's predicate, as `#hasCaseStanding` asks it.
      `draft`, when a recipient names one, must be the grant's own. */
-  reviewCopy({ draft = null, secretSha = null, viewer = null, bySecret = false } = {}) {
+  reviewCopy({ draft = null, secretSha = null, viewer = null, bySecret = false, limit = null } = {}) {
     let d, reader, grant = null;
     if (bySecret) {
       const live = this.#liveReviewGrant(secretSha);
@@ -7917,12 +7918,18 @@ export class Store extends DurableObject {
                text: md ? md.content : null };
     });
     const gates = this.#reviewGates(d);
+    /* THE CALLER MAY ASK FOR LESS, NEVER FOR MORE: `limit` is clamped to
+       [1, REVIEW_LIST_MAX], the CLAMPED value is what is published as
+       `list_limit`, and an absent or unreadable one is the ceiling. */
+    const askedCap = Number.parseInt(String(limit ?? ""), 10);
+    const cap = Number.isInteger(askedCap) && askedCap >= 1 ? Math.min(askedCap, Store.REVIEW_LIST_MAX)
+              : Store.REVIEW_LIST_MAX;
     const commentRows = this.#rows(`SELECT c.comment_id, c.author_kind, c.author, c.grant_id, c.text, c.at,
                                         g.recipient FROM review_comments c
                                  LEFT JOIN review_grants g ON g.grant_id=c.grant_id
-                                 WHERE c.draft_id=? ORDER BY c.comment_id LIMIT ?`, d.draft_id, Store.REVIEW_LIST_MAX + 1);
-    const commentsTruncated = commentRows.length > Store.REVIEW_LIST_MAX;
-    const comments = commentRows.slice(0, Store.REVIEW_LIST_MAX)
+                                 WHERE c.draft_id=? ORDER BY c.comment_id LIMIT ?`, d.draft_id, cap + 1);
+    const commentsTruncated = commentRows.length > cap;
+    const comments = commentRows.slice(0, cap)
       .map((c) => ({ comment_id: c.comment_id, author_kind: c.author_kind, author: c.author,
                      grant_id: c.grant_id ?? null, recipient: c.author_kind === "recipient" ? c.recipient : null,
                      text: c.text, at: c.at }));
@@ -7938,10 +7945,10 @@ export class Store extends DurableObject {
     } else {
       const grantRows = this.#rows(`SELECT grant_id, case_id, edition, recipient, secret_sha, issued_by, issued_at,
                                            revoked_by, revoked_at FROM review_grants WHERE draft_id=?
-                                    ORDER BY issued_at, grant_id LIMIT ?`, d.draft_id, Store.REVIEW_LIST_MAX + 1);
-      const grants = grantRows.slice(0, Store.REVIEW_LIST_MAX).map((g) => ({ ...g,
+                                    ORDER BY issued_at, grant_id LIMIT ?`, d.draft_id, cap + 1);
+      const grants = grantRows.slice(0, cap).map((g) => ({ ...g,
         live: !g.revoked_at && (g.case_id ?? null) === (ident.caseId ?? null) && Number(g.edition) === ident.edition }));
-      grantPart = { grants, grants_truncated: grantRows.length > Store.REVIEW_LIST_MAX };
+      grantPart = { grants, grants_truncated: grantRows.length > cap };
     }
     return {
       ok: true, kind: "review-copy", marking: Store.REVIEW_MARKING, published: false,
@@ -7955,7 +7962,7 @@ export class Store extends DurableObject {
                   subjectJustification: params.subjectJustification ?? null,
                   biasAcknowledgement: params.biasAcknowledgement ?? null },
       findings, gates: gates.gates, missing: gates.missing, evaluated: gates.evaluated,
-      comments, comments_truncated: commentsTruncated, list_limit: Store.REVIEW_LIST_MAX,
+      comments, comments_truncated: commentsTruncated, list_limit: cap,
       updated_by: d.updated_by, updated_at: d.updated_at,
       ...grantPart,
     };
@@ -39283,15 +39290,15 @@ export class Store extends DurableObject {
         /* REC-126: the review copy's five routes. Every identity — `author`,
            `viewer`, `secretSha`, `bySecret` — is STAMPED by the control plane and
            spread SECOND, so a body naming one is overwritten, never honoured. */
-        casedraft: () => this.caseDraft({ ...(body || {}), author: url.searchParams.get("author") }),
-        reviewgrant: () => this.reviewGrant({ draft: (body || {}).draft ?? url.searchParams.get("draft"),
+        casedraft: () => this.reviewAct({ ...(body || {}), act: "draft", author: url.searchParams.get("author") }),
+        reviewgrant: () => this.reviewAct({ act: "grant", draft: (body || {}).draft ?? url.searchParams.get("draft"),
           recipient: (body || {}).recipient ?? url.searchParams.get("recipient"),
           author: url.searchParams.get("author"), secretSha: url.searchParams.get("secretSha") }),
-        reviewrevoke: () => this.reviewRevoke({ grant: (body || {}).grant ?? url.searchParams.get("grant"),
+        reviewrevoke: () => this.reviewAct({ act: "revoke", grant: (body || {}).grant ?? url.searchParams.get("grant"),
           author: url.searchParams.get("author") }),
         reviewcopy: () => this.reviewCopy({ draft: url.searchParams.get("draft"),
           secretSha: url.searchParams.get("secretSha"), viewer: url.searchParams.get("viewer"),
-          bySecret: url.searchParams.get("bySecret") === "1" }),
+          bySecret: url.searchParams.get("bySecret") === "1", limit: url.searchParams.get("limit") }),
         reviewcomment: () => this.reviewComment({ draft: url.searchParams.get("draft"),
           secretSha: url.searchParams.get("secretSha"), viewer: url.searchParams.get("viewer"),
           bySecret: url.searchParams.get("bySecret") === "1", text: (body || {}).text }),

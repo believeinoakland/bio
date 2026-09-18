@@ -4,22 +4,22 @@
    and every restore of `src/store.mjs` is verified by sha256 AND by content against a
    uniquely-named per-arm pristine copy taken inside this worktree (never
    `git checkout --`, which restores to HEAD). ALL FIVE RUN 2026-09-18 in worktree
-   agent-abd7c5e99752beec6, RE-RUN the same day after the fence moved into each act
-   and the copy's lists were bounded; the counts below are the RE-MEASURED ones and
+   agent-abd7c5e99752beec6, RE-RUN the same day after the fence moved to one door
+   (`reviewAct`) and the copy's lists were bounded; the counts below are the RE-MEASURED ones and
    every restore read sha256 MATCH, content IDENTICAL, size ok:
 
-   (0) BASELINE, nothing armed -> **51 pass, 0 fail**.
+   (0) BASELINE, nothing armed -> **52 pass, 0 fail**.
 
    (a) THE REVOCATION CHECK REMOVED — in `src/store.mjs`'s `#liveReviewGrant`, drop
    `revoked_at IS NULL` from the lookup, so a withdrawn grant still answers. Declared:
-   MUST FAIL the revoked-secret arms and MUST NOT fail the edition arms -> **47 pass,
+   MUST FAIL the revoked-secret arms and MUST NOT fail the edition arms -> **48 pass,
    4 fail**: the revoked recipient reads the copy, the byte-identical comparison, the
    carries-nothing arm and the comment's byte-identical arm. AS DECLARED.
 
    (b) THE EDITION BINDING REMOVED — in the same method, stop comparing the grant's
    case edition with the edition the draft stands at now. Declared: MUST FAIL the
    edition-moved arms (the review copy AND the next edition's unsigned case document)
-   -> **50 pass, 1 fail**: the review copy arm only. **THE CASE-DOCUMENT ARM STAYED
+   -> **51 pass, 1 fail**: the review copy arm only. **THE CASE-DOCUMENT ARM STAYED
    GREEN AND THAT IS A FINDING ABOUT THE SUBJECT, NOT THE ARM:** `#grantAdmitsCaseEdition`
    compares the requested edition with the grant's BOUND edition on its own, so the
    unsigned document of edition 3 stays shut even with the draft-side binding gone.
@@ -28,7 +28,7 @@
 
    (c) OVER-STRICTNESS — `#liveReviewGrant` also demands that the draft's gates PASS,
    the gate pressuring a member into filling a gap to send the copy (§6A.4). Declared:
-   MUST FAIL the recipient-reads-an-incomplete-draft arm -> **49 pass, 2 fail**: that
+   MUST FAIL the recipient-reads-an-incomplete-draft arm -> **50 pass, 2 fail**: that
    arm, and ALSO the gap-1 arm, because once edition 2 has been authored by a real
    `op=publish` the draft's own dry run refuses (its finding is claimed by the
    unsigned document), so a gates-must-pass grant dies at exactly the moment a
@@ -38,7 +38,7 @@
    (d) THE LIAR'S REFUSAL — a revoked grant's READ answers `REVIEW_GRANT_REVOKED`
    instead of the one dead answer. Declared: MUST FAIL the byte-identical arms and ONLY
    those; the arm asserting that the revoked recipient reads nothing STAYS GREEN, which
-   is the finding the arm exists for -> **50 pass, 1 fail**: the read's byte-identical
+   is the finding the arm exists for -> **51 pass, 1 fail**: the read's byte-identical
    arm, and the reads-nothing arm green exactly as declared. The COMMENT's byte-identical
    arm stays green because the liar was written into the read only. */
 
@@ -416,6 +416,21 @@ t("a member's comment is recorded as the member's",
     (back?.comments || []).map((c) => [c.author_kind, c.text, c.recipient ?? null]),
     [["recipient", "Page 3 cites a memo I have not seen.", "Dana Ruiz, City Auditor's office"],
      ["member", "We will attach the memo.", null]]);
+}
+{
+  /* THE LISTS' BOUND, DRIVEN in `bounds.test.mjs`'s loop shape (that suite lists
+     `reviewcopy` in DRIVEN_ELSEWHERE and points here): a bite of 1 against two
+     comments, `list_limit` read back as the CLAMPED cap, `comments_truncated`
+     TRUE on the bite and FALSE at the default, and an over-ask answered at the
+     ceiling. */
+  const bite = rP(await GET(`op=reviewcopy&draft=${D1}&token=${IRIS}&limit=1`));
+  const whole = rP(await GET(`op=reviewcopy&draft=${D1}&token=${IRIS}`));
+  const over = rP(await GET(`op=reviewcopy&draft=${D1}&token=${IRIS}&limit=99999`));
+  t("THE COPY'S LISTS ARE BOUNDED AND SAY SO: a bite of 1 over two comments is cut and says it was; the "
+  + "default reads both and says it was not; an over-ask is answered at the published ceiling",
+    [bite?.comments?.length, bite?.comments_truncated, bite?.list_limit,
+     whole?.comments?.length, whole?.comments_truncated, over?.list_limit],
+    [1, true, 1, 2, false, 500]);
 }
 t("a comment is refused with no text",
   parsed(await rawPost(`op=reviewcomment&secret=${encodeURIComponent(S1)}`, { text: "  " }))?.reason,

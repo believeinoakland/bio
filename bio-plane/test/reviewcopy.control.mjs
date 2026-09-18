@@ -149,9 +149,9 @@ console.log(`\npen removed: ${PEN}`);
 
 /* MEASURED 2026-09-18, from this driver's own printed SUMMARY (worktree
    agent-abd7c5e99752beec6), every restore sha256 MATCH / content IDENTICAL:
-     baseline  reviewcopy: 51 pass, 0 fail
-     a         reviewcopy: 47 pass, 4 fail   as declared
-     b         reviewcopy: 50 pass, 1 fail   the case-document arm HELD — a second, independent defence
-     c         reviewcopy: 49 pass, 2 fail   one more than declared, same direction
-     d         reviewcopy: 50 pass, 1 fail   the reads-nothing arm green, as declared
+     baseline  reviewcopy: 52 pass, 0 fail
+     a         reviewcopy: 48 pass, 4 fail   as declared
+     b         reviewcopy: 51 pass, 1 fail   the case-document arm HELD — a second, independent defence
+     c         reviewcopy: 50 pass, 2 fail   one more than declared, same direction
+     d         reviewcopy: 51 pass, 1 fail   the reads-nothing arm green, as declared
    The reasoning for each is in the suite's own NEGATIVE CONTROL header. */

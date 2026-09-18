@@ -4161,6 +4161,7 @@ export default {
         const q = new URLSearchParams();
         const draftParam = (url.searchParams.get("draft") || "").trim();
         if (draftParam) q.set("draft", draftParam);
+        if (op === "reviewcopy" && url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
         if (bySecret) {
           q.set("bySecret", "1");
           q.set("secretSha", await sha256Hex(url.searchParams.get("secret") || ""));

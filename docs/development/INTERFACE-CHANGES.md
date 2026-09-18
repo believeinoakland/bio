@@ -10490,7 +10490,9 @@ test/casesign.control.mjs e|f|g|h` from `bio-plane/`, all four as declared (reco
   [{target, present, object_type, state, role, text}], gates: "passed"|"refused"|"undetermined", missing: [the
   publish gates' own refusal object, whole], evaluated, comments: [{comment_id, author_kind, author, grant_id,
   recipient, text, at}], updated_by, updated_at}` plus `grant` (recipient door: its own grant, never others') or
-  `grants` (member door: every grant with `secret_sha`, never the value, and `live`). **`missing` is `publishCase`
+  `grants` (member door: every grant with `secret_sha`, never the value, and `live`). Both lists are BOUNDED:
+  `limit=` is clamped to [1, 500], the applied value is published as `list_limit`, and `comments_truncated` /
+  `grants_truncated` say whether a list was cut. **`missing` is `publishCase`
   RUN over the draft inside a transaction that is always rolled back** — the gates' own refusal in their own words,
   the first one only, which `evaluated` states. Every caller without a live grant or standing receives ONE answer,
   `NO_REVIEW_COPY` at 404, built from no argument, so revoked / never-issued / malformed / edition-moved / another
@@ -10512,7 +10514,8 @@ their own prints, each with its reason at the site, none exempted: `machinefence
 48 → 49), `machine-fences` (block xiii drives C-32.16 under a complete payload, 12 → 13), `fence-e2e` (12 → 13
 explained on the wire, through the unchanged decoration), `aicredential` (C-32.16 in the sweep), `gate-reads`
 (`reviewcopy` classified GATED), `plane-envelope` (D-240 (f) 2 → 3, `reviewgrant`'s refusal spread is
-`aicredentialmint`'s shape), `provenance-marker` (swallow ceiling 26 → 27: the dry run's rollback sentinel,
+`aicredentialmint`'s shape), `bounds` (capped roster 35 → 36: `reviewcopy`, its envelope driven there and its bite
+in `reviewcopy.test.mjs` via DRIVEN_ELSEWHERE), `provenance-marker` (swallow ceiling 26 → 27: the dry run's rollback sentinel,
 rethrowing everything else), `caseproduction` (the `publishCase(` anchor CORRECTED to the definition — a new CALL
 site had put the ratify committer's `INSERT INTO cases` inside its window), and `casesign.control.mjs` arms (e)(f)(g)
 RE-ANCHORED over the three-line gate and re-run at their recorded figures (66/8, 67/7, 72/2). `src/affordances.mjs`

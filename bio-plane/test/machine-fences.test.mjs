@@ -633,9 +633,10 @@ const fence = (code, payload, machineAnswer) => {
      anything else, because the act is ADDRESSED and ATTRIBUTED (§6A.2). The
      payload is one the project's OWNER succeeds with two lines below — a project
      she owns and every argument `op=publish` would take — so only the credential
-     can be what refuses it. The fence also stands at the top of `reviewgrant` and
-     `reviewrevoke`; `casedraft` is the governed region and the one driven here,
-     and `reviewcopy.test.mjs` drives the grant's fence by name. */
+     can be what refuses it. All three authoring acts (`casedraft`, `reviewgrant`,
+     `reviewrevoke`) enter through the store's `reviewAct`, where the fence stands
+     once; `casedraft` is the one driven here, and `reviewcopy.test.mjs` drives the
+     grant's fence by name. */
   const REV_PRJ = await makePublishingProject({
     post: POST, mf, sha, machineToken: "adm-rec73", owner: "ruth",
     id: "PROJ-2026-7300-review", created: NOW, updated: LATER });
