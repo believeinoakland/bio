@@ -12766,6 +12766,7 @@ The claim above says **NOT arm (3)**. Arm (3) gained a COMMENT and nothing else 
 **DISCHARGED 2026-09-18 by CONDUCT #4 — rowed as `M0-66`, exactly as filed:** a row, not a fix, because the over-strictness direction (`stripComments` hiding a real anchor in a commented-out arm) must be driven before it lands.
 
 ## CPDF-19 · CONTENT-PDF + RECORD · D-319 — read-time re-extraction to tier 3, OPT-IN (`EXTRACTION-BREADTH-DESIGN.md` §5.1, §7 row 5)
+released: 2026-09-18 by CPDF-19's worker on its own branch (`worktree-agent-a186b6b601ae91372`), reported and pushed, NOT merged — every path this claim and its addendum reserved is free. **The `REGISTER_FLOOR` keys in `bio-plane/scripts/coverage.mjs` were moved from this branch's own print (1217/215/216/178) and are D-238's case: CONDUCT re-reads them on the MERGED tree.**
 Opened 2026-09-18 by CPDF-19's worker (CONDUCT #4, wave 1), worktree `agent-a186b6b601ae91372`. Ids minted with
 `node tools/mintid.mjs`: **C-51** (the re-extraction refusal family), **IC-126** (I3, the flag, additive), **D-417**
 (the acquire path's tier-3 calibration join addressed the Durable Object by QUERY rather than by PATH, so it never fired —
@@ -12795,7 +12796,7 @@ found while lifting the seam, closed in the same commit).
 **NOT CLAIMED:** `docs/development/QUEUE.md` (the row flip is CONDUCT's), `docprofile/**`, `pdf-worker/**`,
 `ocr-worker/**`, `civicos-ui/**`, `newgroup/**`, `schema.mjs` (no table, no column).
 
-**open as of 2026-09-18.**
+**open as of 2026-09-18 — RELEASED the same day (see the `released:` line above).**
 
 ## CLAIM ADDENDUM 2026-09-18 CPDF-19 — paths the claim above did not reserve, and one sentence in it that became false
 - **The claim said REC-98's regions are "read, not edited". FALSE for one of them, corrected here rather
