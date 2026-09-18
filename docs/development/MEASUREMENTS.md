@@ -16398,3 +16398,89 @@ step.
 **Operational consequence, which does not wait on the mechanism:** a brief that tells workers to background their
 batteries and wait on a Monitor is, on this hypothesis, a brief that pins every worker's worktree for the life of
 this session. The sweep must read the lock, not assume it.
+
+## M-52 · 2026-09-18 · REC-104 — **THE `content:` ARM'S `chain` FILTER OFF A COLUMN: −37.6 % AT 5,000 BUNDLES AND −43.4 % AT 20,000 AGAINST THE RETIRED PARSE IN THE SAME RUN, THE ANSWERS IDENTICAL ROW FOR ROW — and against REC-90's own recorded 20,000-bundle figure the absolute number shows NOTHING, because today's machine read the parse 1.8× slower than REC-90's did** (worktree `agent-a697a8fb2a50b3f2f`, built on `92f4c64e`)
+
+**Instruments.** `bio-plane/test/content-index-probe.mjs` — REC-90's own instrument (M-23), node v26.0.0,
+darwin/arm64, `node:sqlite` 3.53.1 — run on THIS tree and on a pristine extraction of `92f4c64e`'s
+`bio-plane/src`, `checks` and the probe (`git archive`), back to back at each size:
+
+    node test/content-index-probe.mjs 5000 5        # both trees
+    node test/content-index-probe.mjs 20000 9       # both trees
+
+REC-104 changed the probe in three ways and each is load-bearing. (1) The `chain_kind` column is READ OUT of
+`schema.mjs`'s DDL, never typed. (2) `content(chain_kind, bundle_id)` is a candidate, held back from the
+BEFORE phase like REC-90's six. (3) **The noise control moved:** `content:ocr` now reads a column an index
+serves, so it can no longer be the row nothing touches; the RETIRED statement inherits the role. It is not
+typed — it is derived from the statement the plane now compiles by substituting the retired predicate for
+`chain_kind = ?`, and that derivation was checked BYTE-IDENTICAL (sql AND args) to what `92f4c64e`'s
+compiler emits for `content:ocr`, `content:ocr content:cap<C` and `content:layer content:stale`.
+
+### THE LOAD, STATED BECAUSE IT DECIDES WHICH COMPARISON MEANS ANYTHING
+
+`tools/waitquiet.mjs --check` read **BUSY at every sample**: 11 processes (ten batteries from other
+worktrees) shortly before round 1, 7 at its start and 3 at its end; 3 at round 2's start and 7 at its end. The machine never went quiet. Cross-run comparisons are therefore
+reported but NOT relied on: the pristine tree's own control row swung **138.4 %** at 20,000 in round 1 and
+**51.4 %** in round 2, where REC-90 measured 20.5 %. **The comparison this section rests on is the SAME-RUN
+one** — column and retired parse timed by one process against one corpus, minutes apart — whose own control
+swung 7.0 % (5,000) and 6.2 % (20,000) in round 2.
+
+### THE FIGURES — round 2, both trees back to back
+
+| size | `content:ocr`, column + index | retired parse, same run | delta | same-run noise | pristine tree's parse (all its indexes) |
+| --- | --- | --- | --- | --- | --- |
+| 5,000 bundles · 10,002 rows · 5 reps | **1.962 ms** | 3.145 ms | **−37.6 %** | 7.0 % | 3.044 ms |
+| 20,000 bundles · 40,002 rows · 9 reps | **6.798 ms** | 12.000 ms | **−43.4 %** | 6.2 % | 17.190 ms (control swung 51.4 %) |
+
+Round 1, under the heavier load, read −21.4 % at 5,000 (noise 10.8 %) and −63.8 % at 20,000 (noise 37.1 %):
+same sign, clears its noise at both sizes, and too noisy to quote as a size. §4.2's worked example
+(`content:ocr content:cap<C`) went 19.572 → 11.658 ms with the index at 20,000 (−40.4 %), against the retired
+statement's 17.0 ms. **The proportion GROWS with the corpus (−37.6 % → −43.4 %)**, which is the property M-23
+recorded for every other index on this table and the reason two sizes were owed.
+
+**WHERE THE SAVING COMES FROM, measured rather than assumed:** with NO index, the column alone is no faster
+than the parse (5,000: 3.382 ms column vs 2.940 ms parse in the BEFORE phase). A VIRTUAL generated column is
+computed on read like the expression it replaces; **what the item buys is the INDEX the column makes
+possible**, which is a seek (`SEARCH content USING INDEX content_chain_kind (chain_kind=?)`, printed per row)
+where the parse was a scan. The same plan line is asserted INSIDE workerd on the op's own compiled statement
+by `content-chain-kind.test.mjs` §3.
+
+### AGAINST REC-90'S OWN RECORDED FIGURES, which the row asks for and which are stated as they are
+
+- **20,000 bundles:** M-23 recorded the parse at **8.579 ms** (no-index phase) and **6.819 ms** (with
+  REC-90's indexes), on a machine its control row measured at 20.5 % noise. Today's column + index reads
+  **6.798 ms** — equal to REC-90's parse figure in absolute terms. **That is NOT evidence of no improvement
+  and must not be read as one:** the same run measured the parse at 12.000 ms, so today's machine read the
+  identical statement 1.76× slower than REC-90's did. An absolute figure from another day's machine is a
+  measurement of that day.
+- **5,000 bundles:** **M-23 recorded NO `content:ocr` figure at this size** — its 5,000-bundle paragraph
+  quotes only `content:pdf-page` and `content:document`. So there is no REC-90 figure to measure against at
+  this size, and the comparison is to the pristine tree measured today (3.044 ms) and the same run
+  (3.145 ms). Stated rather than filled.
+
+### THE ANSWERS DO NOT MOVE — the over-strictness half, at two scales
+
+- **Probe corpus:** for `content:layer`, `content:ocr`, `content:ai`, `content:pixels`,
+  `content:ocr content:cap<C` and `content:layer content:stale`, the `ids` statement (every id in scope,
+  refused if it reaches IDS_MAX) and the `count` statement return IDENTICAL results off the column and off
+  the retired parse — 6,667 / 4,400 / 1,213 ids at 20,000. **The first draft compared the paged statement,
+  which carries LIMIT 50, and every row read "SAME 50 rows"**: a comparison of the first page only, caught on
+  reading the output and corrected before any figure here was taken.
+- **Committed fixture, inside workerd:** `content-arm.test.mjs` §11 digests every `content:` answer at both
+  grains over 33 questions. `nc-rec104.mjs` ran it on this tree twice (A/A: IDENTICAL) and on `92f4c64e`'s
+  three plane sources (`preitem`): **`6149db2c47c99778…` on all three runs.** The branch was then rebased
+  onto `694f0a7f` (FW-19 had landed three new extent kinds and a `cited_as` column on the same table), the
+  harness re-pinned to that base and re-run whole: 38 questions, **`2e4796eb93c347d9…` on all three runs**,
+  every other arm as declared. The timings above were taken on the `92f4c64e` base; `query.mjs` — the
+  only source that decides the compiled statement — is unchanged between the two bases.
+
+### WHAT THIS INSTRUMENT CANNOT SEE
+
+- **The real distribution.** The synthetic corpus cycles four steps, so `ocr` is last on a quarter of rows
+  and every content-bearing document holds every step. An index is worth MOST where the value is rare; on a
+  real corpus `ocr`-last is likely rarer than a quarter and the seek relatively cheaper. Not measured, because
+  no instance holds enough content rows.
+- **Workerd's timings.** The plan is SQLite core and is asserted inside workerd; the milliseconds are
+  `node:sqlite`'s.
+- **The write cost.** One B-tree insert per mint (a VIRTUAL column's index stores the value), and nothing on
+  re-promotion because a content row is never rewritten (REC-82) — priced in B-trees, not timed.

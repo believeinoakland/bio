@@ -86,7 +86,13 @@ const ARMS = {
     mustFail: ["`content:machine` names the DOCUMENT holding a machine-marked passage",
                "`content:member` names the document a MEMBER marked",
                "`content:cap=undetermined` names the documents holding a row whose cap the record does not know",
-               "`content:layer` filters on the chain's LAST STEP",
+               /* CORRECTED BY REC-104: this line named `content:layer`, which
+                  failed here only because the chain filter was a predicate of its
+                  own (the JSON parse). It is now `chain_kind = ?` through the
+                  ORDINARY path, which this arm leaves alone, so it passes under
+                  the arm by design. `chain=undetermined` still owns a predicate
+                  (`chain IS NULL`) and is the chain assertion that must fail. */
+               "`content:chain=undetermined` is a DIFFERENT fact from a cap it cannot determine",
                "`content:uncited` names the documents holding a passage no finding rests on"],
     mustPass: "the ORDINARY sub-field — `content:pdf-page` reads `extent_kind = ?` through the "
             + "untouched path and must stay green, which is what shows the arm broke the new "

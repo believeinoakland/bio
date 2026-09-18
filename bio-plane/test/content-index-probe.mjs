@@ -64,6 +64,18 @@ const PLANE_SHARE = 0.45;        // promote's own projection
 const CAP_NULL_SHARE = 0.35;     // UNDETERMINED is first-class and common
 const UNCITED_SHARE = 0.22;      // machine mints nobody has cited — SK-8 §7.3 (6)'s numerator
 
+/* REC-104: THE `chain_kind` COLUMN IS READ OUT OF THE PRODUCT'S OWN DDL, never
+   typed — the same rule this file applies to indexes below, for the same reason.
+   A probe that declared the column its own way would be measuring a column the
+   plane does not have. */
+const CHAIN_KIND_DDL = (() => {
+  const i = SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS content (");
+  const stmt = SCHEMA.slice(i, SCHEMA.indexOf("\n);", i));
+  const line = stmt.split("\n").map((l) => l.replace(/--.*$/, "").trim()).find((l) => /^chain_kind\s/.test(l));
+  if (!line) throw new Error("schema.mjs's content table declares no chain_kind -- REC-104's column is missing");
+  return line.replace(/,$/, "");
+})();
+console.log(`chain_kind, driven from schema.mjs: ${CHAIN_KIND_DDL}`);
 const db = new DatabaseSync(":memory:");
 /* Only the columns these arms touch. A synthetic table is a synthetic table and
    saying so is better than pretending the whole schema is here. */
@@ -71,7 +83,8 @@ db.exec(`
   CREATE TABLE bundles (fts_id INTEGER, ${PROVENANCE_COLS.map((c) => c + (c === 'bundle_id' ? ' TEXT PRIMARY KEY' : ' TEXT')).join(', ')}, fm_json TEXT);
   CREATE TABLE content (content_id TEXT PRIMARY KEY, capture_sha TEXT NOT NULL, bundle_id TEXT NOT NULL,
     extent_kind TEXT NOT NULL, extent TEXT NOT NULL, ref TEXT NOT NULL, chain TEXT, derivation_cap TEXT,
-    page_count INTEGER, minted_by TEXT NOT NULL, at TEXT NOT NULL, stale INTEGER NOT NULL DEFAULT 0);
+    page_count INTEGER, minted_by TEXT NOT NULL, at TEXT NOT NULL, stale INTEGER NOT NULL DEFAULT 0,
+    ${CHAIN_KIND_DDL});
   CREATE TABLE inquiry_basis (bundle_id TEXT NOT NULL, ord INTEGER NOT NULL, target_id TEXT NOT NULL,
     target_type TEXT, role TEXT, grade TEXT, grade_axis TEXT, grade_source TEXT, note TEXT, at TEXT,
     ground TEXT, content_id TEXT, PRIMARY KEY (bundle_id, ord));
@@ -111,6 +124,10 @@ const CANDIDATES = [
   ["content(derivation_cap, bundle_id)", "CREATE INDEX IF NOT EXISTS content_derivation_cap ON content(derivation_cap, bundle_id)"],
   ["inquiry_basis(content_id)",        "CREATE INDEX IF NOT EXISTS inquiry_basis_content ON inquiry_basis(content_id)"],
   ["inquiry_basis_version_legs(content_id)", "CREATE INDEX IF NOT EXISTS inquiry_basis_version_legs_content ON inquiry_basis_version_legs(content_id)"],
+  /* REC-104. Held back from the BEFORE phase like the six above, so the two
+     phases separate what the COLUMN buys (no parse per row) from what its INDEX
+     buys (no scan). */
+  ["content(chain_kind, bundle_id)",   "CREATE INDEX IF NOT EXISTS content_chain_kind ON content(chain_kind, bundle_id)"],
 ];
 const SHIPPING = new Set(indexDdl.map(([n]) => n));
 for (const [name, , ddl] of indexDdl) if (!CANDIDATES.some(([, d]) => d === ddl)) db.exec(ddl);
@@ -186,11 +203,30 @@ const CASES = [
   ["content:plane",              "the same column, its commonest value"],
   ["content:cap=undetermined",   "UNDETERMINED as its own value -- IS NULL, never folded into a letter"],
   ["content:cap<C",             "the derivation cap compared: half of §4.2's worked example"],
-  ["content:ocr",                "the chain's LAST STEP -- a JSON PARSE, and the other half of that example"],
+  ["content:ocr",                "the chain's LAST STEP -- off the chain_kind COLUMN since REC-104, and the other half of that example"],
   ["content:uncited",            "marked citable and used by no finding: SK-8 §7.3 (6) as a SET"],
   ["content:cited",              "its complement, the common case"],
   ["content:ocr content:cap<C",  "§4.2's worked example entire: every OCR'd region below cap C"],
 ];
+
+/* REC-104 — THE RETIRED STATEMENT, KEPT IN THE INSTRUMENT AND NOWHERE ELSE. Until
+   REC-104 `content:<step>` compiled to `json_extract(chain, '$[#-1].step') = ?`.
+   The plane no longer produces it, so it cannot be compiled — it is DERIVED from
+   the statement the plane DOES produce by substituting the retired predicate for
+   the column's, and the substitution is asserted to have happened exactly once.
+   It is the row this probe has always used as its noise floor (no index can
+   touch a parse), and it is the same-run BEFORE for the column. */
+const RETIRED_PRED = "json_extract(chain, '$[#-1].step')";
+const RETIRED = [
+  ["RETIRED content:ocr",               "content:ocr"],
+  ["RETIRED content:ocr content:cap<C", "content:ocr content:cap<C"],
+];
+const retiredOf = (q) => {
+  const st = compile({ q, viewer: VIEWER, facets: [] }).statements.page();
+  const n = st.sql.split("chain_kind = ?").length - 1;
+  if (n !== 1) throw new Error(`${q}: the column predicate occurs ${n}x, not once -- cannot derive the retired statement`);
+  return { sql: st.sql.replace("chain_kind = ?", `${RETIRED_PRED} = ?`), args: st.args };
+};
 
 const time = (stmt) => {
   const t0 = process.hrtime.bigint();
@@ -205,10 +241,11 @@ const planOf = (sql, args) => db.prepare("EXPLAIN QUERY PLAN " + sql).all(...arg
 const measure = (label, showWhy) => {
   console.log(`--- ${label} ---`);
   const out = new Map();
-  for (const [q, why] of CASES) {
-    const plan = compile({ q, viewer: VIEWER, facets: [] });
-    if (!plan.meaningArms.length) throw new Error(`${q} compiled NO meaning arm -- the probe is measuring free text`);
-    const st = plan.statements.page();
+  for (const [q, why] of [...CASES, ...RETIRED.map(([l, src]) => [l, `the pre-REC-104 statement for ${src}`])]) {
+    const retired = RETIRED.find(([l]) => l === q);
+    const plan = retired ? null : compile({ q, viewer: VIEWER, facets: [] });
+    if (plan && !plan.meaningArms.length) throw new Error(`${q} compiled NO meaning arm -- the probe is measuring free text`);
+    const st = retired ? retiredOf(retired[1]) : plan.statements.page();
     const stmt = db.prepare(st.sql);
     const bound = { all: () => stmt.all(...st.args) };
     const { ms, rows } = time(bound);
@@ -239,10 +276,13 @@ const sign = (x) => `${x >= 0 ? "-" : "+"}${Math.abs(x).toFixed(1)}%`;
    at two corpus sizes for the same reason `inquiry_basis_grade_source` was: the
    quantity being bought is the PROPORTION, and the proportion grows with the
    corpus, so a single size cannot tell a real effect from a lucky one. */
-const NOISE_CASE = "content:ocr";
+/* REC-104 MOVED THE CONTROL, and said so: `content:ocr` now reads a column that a
+   candidate index DOES serve, so it can no longer be the row nothing touches. The
+   retired parse can, so it inherits the role unchanged. */
+const NOISE_CASE = "RETIRED content:ocr";
 const noise = Math.abs(pc(before.get(NOISE_CASE), after.get(NOISE_CASE)));
 console.log(`  ${"query".padEnd(30)} ${"no index".padStart(11)} ${"with".padStart(10)}      delta   vs noise`);
-for (const [q] of CASES) {
+for (const [q] of [...CASES, ...RETIRED]) {
   const d = pc(before.get(q), after.get(q));
   const verdict = q === NOISE_CASE ? "THE CONTROL"
                 : Math.abs(d) <= noise ? "inside noise"
@@ -251,6 +291,43 @@ for (const [q] of CASES) {
 }
 console.log(`\nNOISE FLOOR: ${noise.toFixed(1)}% — the swing on \`${NOISE_CASE}\`, which NO candidate index can affect`);
 console.log(`(it filters on json_extract over the chain column, so its two phases differ only by chance)`);
+
+/* REC-104 — THE COLUMN AGAINST THE PARSE IT REPLACED, IN THE SAME RUN, and the
+   OVER-STRICTNESS half first: the column must change how the question is
+   answered and NEVER which rows answer it. Every step value, presence and the
+   worked example are asked both ways over the whole corpus and must agree row for
+   row; a single disagreement stops the probe, because a faster wrong answer is
+   not an improvement. */
+console.log("\n--- REC-104: the column against the retired parse ---");
+{
+  /* THE WHOLE SET, NOT A PAGE. The first draft compared `statements.page()`, which
+     carries LIMIT 50 — every row read "SAME 50 rows", a comparison of the first
+     page only. It compares the `ids` statement (every id in scope, bounded at
+     IDS_MAX) and the `count` statement, and refuses a set that reached the bound. */
+  const both = (q) => {
+    const plan = compile({ q, viewer: VIEWER, facets: [] }).statements;
+    const swap = (st) => {
+      const n = st.sql.split("chain_kind = ?").length - 1;
+      if (n !== 1) throw new Error(`${q}: column predicate occurs ${n}x in a statement -- cannot derive`);
+      return { sql: st.sql.replace("chain_kind = ?", `${RETIRED_PRED} = ?`), args: st.args };
+    };
+    const ids = plan.ids(), cnt = plan.count();
+    const a = db.prepare(ids.sql).all(...ids.args), o = swap(ids);
+    const b = db.prepare(o.sql).all(...o.args);
+    const ca = db.prepare(cnt.sql).get(...cnt.args), oc = swap(cnt), cb = db.prepare(oc.sql).get(...oc.args);
+    if (a.length >= 50000) throw new Error(`${q}: the id set reached IDS_MAX -- not a whole-set comparison`);
+    return [JSON.stringify(a) === JSON.stringify(b) && JSON.stringify(ca) === JSON.stringify(cb), a.length];
+  };
+  for (const q of [...STEPS.map((x) => `content:${x}`), "content:ocr content:cap<C", "content:layer content:stale"]) {
+    const [same, n] = both(q);
+    console.log(`  ${same ? "SAME" : "DIFFERENT"}  ${String(n).padStart(5)} rows  ${q}`);
+    if (!same) throw new Error(`${q}: the column and the retired parse DISAGREE -- the column is not the same question`);
+  }
+  const col = after.get("content:ocr"), par = after.get("RETIRED content:ocr");
+  console.log(`\n  content:ocr   column+index ${col.toFixed(3)} ms   retired parse ${par.toFixed(3)} ms   `
+            + `${sign(pc(par, col))} same run, both phases' indexes present`);
+  console.log(`  REC-90's recorded figure for the parse (M-23, 20,000 bundles, 9 reps): 8.579 ms no-index phase, 6.819 ms with`);
+}
 
 /* THE COST SIDE, because an index is not free and a decision that priced only
    the benefit is half a decision. THE ASYMMETRY WITH `inquiry_basis` IS THE

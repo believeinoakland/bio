@@ -13060,3 +13060,58 @@ found while lifting the seam, closed in the same commit).
 - **The D-418 fix** (`tier3_candidate` no longer set on a successful tier-3 fill) moves ONE line of the
   acquire path's behaviour — `readingFromWire` takes the seam's `stillWanting` instead of the note's
   truthiness. Named here because it is a behaviour change on `op=acquire`, not only on the new flag.
+
+
+## REC-104 · RECORD · the `content:` arm's `chain` filter answers off a `chain_kind` COLUMN, and the read-time parse is RETIRED
+
+**Claimed 2026-09-18 by the REC-104 worker (CONDUCT #4, wave 1), worktree `agent-a697a8fb2a50b3f2f`.**
+The row (`QUEUE.md` REC-104) is REC-90's DESIGN GAP against `CONTENT-SEARCH-DESIGN.md` §4.2: the
+filter parses `json_extract(chain, '$[#-1].step')` at read time while §4.1 gives `capture_text` a
+`chain_kind` column for the identical question.
+
+**paths:**
+- `bio-plane/src/schema.mjs` — the `content` table's DDL and its index block ONLY (a `chain_kind`
+  column and its index, plus the REC-90 gap comment rewritten as the decision). Nothing else.
+- `bio-plane/src/store.mjs` — `#migrate` ONLY: one block that adds the column to a `content` table
+  created before this item. **NOT** `mintContent` (a generated column has no writer), not any read.
+- `bio-plane/src/query.mjs` — the `MEANING.content` entry's `chain` sub-field and its
+  `rowComputed.chain_last` ONLY.
+- `bio-plane/test/content-arm.test.mjs` — sections 6 and 10 corrected (not exempted), one section
+  added; `NEGATIVE CONTROL:` line extended.
+- `bio-plane/test/nc-rec104.mjs` — new, the negative-control driver.
+- `bio-plane/test/content-index-probe.mjs` — the REC-90 instrument, re-pointed at the column so the
+  improvement is measured by the same instrument REC-90 used.
+- `bio-plane/dist/**` — `npm run build` output.
+- `docs/development/CONTENT-SEARCH-DESIGN.md` — §4.2's Incomplete entry and the front matter.
+- `docs/development/MEASUREMENTS.md` — one appended section (the before/after at both corpus sizes).
+- `docs/development/CLAIMS.md` (this block), `docs/DECIDED.md` on regeneration.
+
+**NOT CLAIMED:** `INTERFACES.md` / `INTERFACE-CHANGES.md` — the arm's answer shape and the
+`rows=content` column list do not move, so no IC is expected; if one becomes due it is minted
+before building. `QUEUE.md` (CONDUCT's), `civicos-ui/**`, `tools/**`, `newgroup/**`.
+
+**open as of 2026-09-18** — the worker is building.
+
+**AMENDED 2026-09-18 (same worker, REC-104):** `bio-plane/src/schema.mjs` is widened by THREE COMMENT
+LINES outside the content block — lines citing REC-90's measurement as `M-21`, which was renumbered to
+`M-23` at integration (M-21 is D-367's diff). Same class as the one inside the claimed block; comment-only,
+no executable byte. Two more sites in files this item does not own still say `M-21` for REC-90's measurement
+and are REPORTED, not edited: `bio-plane/test/passage-axis-probe.mjs` (and one in `airuns.test.mjs`, corrected after all when that file had to move for the reason below).
+`bio-plane/test/nc-rec90.mjs` is also touched: its `pred` arm's declaration named `content:layer`, which this
+item moves onto the ordinary path, so that arm could no longer fail it — corrected, not exempted.
+`bio-plane/test/content-chain-kind.test.mjs` is the new suite (the claim above named only the harness).
+
+**released: 2026-09-18 by the REC-104 worker** — landed on branch `worktree-agent-a697a8fb2a50b3f2f`
+for CONDUCT to integrate. For CONDUCT: flip the REC-104 row; move `REGISTER_FLOOR` in
+`bio-plane/scripts/coverage.mjs` from the MERGED run's own print if it chooses to (this branch printed
+arms 1234/1215 · classified 218/215 · corpus 219/216 on the rebased tree, and did NOT move it); the stale `M-21` reference in
+`passage-axis-probe.mjs` belongs to its owner.
+
+**AMENDED AFTER RELEASE, 2026-09-18 (same worker, REC-104): `bio-plane/test/airuns.test.mjs` ADDED.** The
+final battery on the rebased tree failed ONE suite: `airuns.test.mjs`'s unread-index CEILING (13), because
+this item's `content_chain_kind` index joins the roster through the sweep's DECLARED registry blind spot
+(`content:chain` filters it through a WHERE composed from `MEANING.content.sub.chain.col`, which that
+regex cannot see) — exactly `content_derivation_cap`'s standing. Ceiling AND floor moved 13 -> 14 from the
+figure the reader printed, the arrival named at the site, and `content_chain_kind` / `chain_kind` added to
+the registry exculpation so it is pinned by name rather than absorbed by the count. Its stale `M-21`
+citation was corrected in the same edit.
