@@ -399,7 +399,7 @@ authority is the file named, never this one.
 - **D-194** · 2026-09-14 — RULED 2026-09-14: the observation is evidence, authored, grade D on the member's trust; its attribution in a published case is the attesting member's choice among the group, the project, the member's cover, or the member by name, and an off-the-record source's anonymity is valid — designed in Program B | the…  
   `docs/architecture/BIO_Content_Framework_v0_10.md:1939`
 - **D-194** · 2026-09-14 — RULED 2026-09-14 … designed in Program B"*. - **SITE B** — `docs/architecture/BIO_System_Design.md` §3 construct 10 STATE cell: *"built (M1); the authored frontier — a member's LEAD — has no home (D-194) **[audited 2026-09-17: STILL TRUE, D-194 open]**"*.  
-  `docs/development/MEASUREMENTS.md:15773`
+  `docs/development/MEASUREMENTS.md:15811`
 - **D-197** — (g) HAD TO BE CORRECTED MID-RUN AND IS REPORTED, NOT SMOOTHED**: the first sweep-neutering arm stayed 46/46 GREEN because with all guards removed there is no `.answered` anywhere and a whole-file region equals a scoped one — it measured nothing.  
   `docs/archive/ledgers/QUEUE-2026-08.md:2109`
 - **D-206** — D-206 RIDER DECIDED IN FAVOUR OF CARRYING THE DISTINCTION:** an optional `code` on the finding plus a derived `tallyDetail` beside `tally`, with `tally` not moving by one byte and `tallyDetail` absent when nothing carried a code; reasoning recorded in the code at BOTH sites, and settled by CLAUDE.md itself —…  

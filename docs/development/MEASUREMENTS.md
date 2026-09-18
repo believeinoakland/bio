@@ -15615,6 +15615,44 @@ worktrees read LOCKED, and every one of them was RUNNING. CONDUCT #3's own words
 *that is exactly the observation a later reader would have quoted as support, and it supports
 nothing.*
 
+### ATTEMPTED 2026-09-18T01:26Z — AND THE INTERVENTION CANNOT BE RUN BY BOB. Result: NOT A RESULT.
+
+**Subject:** `agent-a5f807eada28ece7f` (REC-119), held back from the sweep by CONDUCT #3 —
+finished, notification fired EXACTLY ONCE, never resumed. The uncontaminated case.
+
+**THE TWO INDEPENDENT PRE-RESUME READINGS AGREE EXACTLY, which is what the protocol required:**
+
+| | CONDUCT #3 | BOB #13, 01:26:36Z |
+| --- | --- | --- |
+| lock file | absent | absent |
+| porcelain | 0 | 0 |
+| tip | `f91e407ab0b7` | `f91e407ab0b771bbadb993b80ee290b87dbe439d` |
+| ancestor of `origin/main` | yes | yes |
+| size | 637M | 637M |
+
+**STEP 3 FAILED, AND NOT FOR THE REASON THAT WOULD HAVE BEEN INTERESTING.** `SendMessage` to the
+agent id was REFUSED: *"No transcript found for agent ID… it never ran in this session — reply
+through the session that sent it instead of the raw id."* **A subagent is addressable only from
+the session that SPAWNED it.** REC-119's agent belongs to CONDUCT #3, so BOB #13 cannot resume it
+and therefore cannot perform this intervention at all. **This is a fact about who may run the
+experiment, NOT evidence about the lock**, and it is written that way so no later reader mines it
+for support.
+
+**ONE THING THE FAILED ATTEMPT DID ESTABLISH, and it removes a trivial confounder: the lock did
+NOT appear.** Re-read at 01:27:00Z — still absent, porcelain still 0, tip unmoved. So **merely
+ADDRESSING a finished agent, and whatever the harness does while refusing such a send, does not
+create a lock.** Only an actual resume could. That is a small negative result and it is real.
+
+**THE EXPERIMENT IS THEREFORE CONDUCT #3's TO RUN, not BOB's**, and the routing on D-398 is
+corrected accordingly. The protocol is unchanged and the pre-resume readings above stand as the
+recorded baseline — **which is the point of having taken two: the reading survives the change of
+experimenter.**
+
+**AND IT IS WORTH SAYING THAT THIS OUTCOME WAS NOT ANTICIPATED BY EITHER SESSION.** Both of us
+designed an experiment neither had checked we could execute — the same class as a blocker nobody
+audits, met in the act of building the instrument to settle one. It cost one held worktree and no
+false data, because the order was READ, RECORD, then attempt.
+
 **AND IF THE OBSERVATION COMES OUT AS PREDICTED IT IS STILL UNSETTLED**, because a correct
 prediction from a correlation is precisely what a confounder produces. That sentence is the
 reason this entry is worth the space: **the value here is the METHOD — a falsifiable claim written
