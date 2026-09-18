@@ -127,6 +127,61 @@ const ARMS = {
                       [STORE, "    if (rk && !this.#leadReferentVisible(rk, rr, viewer))",
                               "    if (rk && rk !== \"observation\" && !this.#leadReferentVisible(rk, rr, viewer))"]]),
   },
+  /* ===== BOB #14's VISIBILITY RULING (2026-09-18), added when MK-4 was corrected to it ===== */
+  machinewide: {
+    files: [STORE],
+    why: "THE RULING'S CONTROL: widen the machine read back to UNFILTERED — MK-4's first provisional. A "
+       + "machine credential nobody minted for the lead (the member token, an organisation-scoped ai key) "
+       + "then reads it",
+    mustFail: ["NO EXISTENCE LEAK: the member TOKEN", "NO EXISTENCE LEAK: an ORGANISATION-scoped ai key",
+               "AFTER the share, the member TOKEN"],
+    mustPass: "the member-scoped arms — ruth's own key still reads, sam's still does not",
+    patch: () => arm([[STORE, "    if (gate.scope === \"DENY\" || gate.member == null) return false;",
+                              "    if (gate.scope === \"DENY\") return false;\n    if (gate.member == null) return true;"]]),
+  },
+  aiscope: {
+    files: [INDEX],
+    why: "THE OVER-STRICTNESS CONTROL: stop an ai key carrying its minted principal — every ai key reads "
+       + "as `class:ai`. A key whose minted scope DOES include the lead must then fail to read it",
+    mustFail: ["OVER-STRICTNESS: ruth's member-scoped ai key reads ruth's lead",
+               "and sam's member-scoped ai key reaches it too"],
+    mustPass: "every refused-viewer arm — refusing more cannot leak",
+    patch: () => arm([[INDEX, "        : cls === \"ai\" ? aiCred.principal\n        : `${MACHINE_CLASS_PREFIX}${cls}`);",
+                              "        : cls === \"ai\" ? \"class:ai\"\n        : `${MACHINE_CLASS_PREFIX}${cls}`);"]]),
+  },
+  noshare: {
+    files: [STORE],
+    why: "the share reaches nobody: a joined participant of the project it was shared to cannot read it",
+    mustFail: ["AFTER the share, sam (joined to P1) reads the lead"],
+    mustPass: "every refusal arm",
+    patch: () => arm([[STORE, "    if (gate.member === row.author) return true;\n    return !!this.#one(",
+                              "    if (gate.member === row.author) return true;\n    return false && !!this.#one("]]),
+  },
+  sharewide: {
+    files: [STORE],
+    why: "the share reaches EVERY participant state, `invited` included — skeleton-only visibility "
+       + "widened into a member's words",
+    mustFail: ["AFTER the share, vera (invited, not joined) still answers EXACTLY"],
+    mustPass: "otto, the tokens and the org key — they hold no position at all",
+    patch: () => arm([[STORE, "        WHERE s.lead_id = ? AND pp.member_id = ? AND pp.state IN ('joined', 'leaving') LIMIT 1`,",
+                              "        WHERE s.lead_id = ? AND pp.member_id = ? LIMIT 1`,"]]),
+  },
+  shareauthor: {
+    files: [STORE],
+    why: "a non-author who can READ a shared lead may re-share it",
+    mustFail: ["only its author does (C-54.10)"],
+    mustPass: "the author's own share",
+    patch: () => arm([[STORE, "    if (who !== L.author)\n      return refusal(\"LEAD_SHARE_NOT_AUTHOR\",",
+                              "    if (false)\n      return refusal(\"LEAD_SHARE_NOT_AUTHOR\","]]),
+  },
+  sharepart: {
+    files: [STORE],
+    why: "the author may share to a project she has not joined — or to one that does not exist",
+    mustFail: ["ruth cannot share to a project she has not joined (C-54.9)"],
+    mustPass: "the share to P1",
+    patch: () => arm([[STORE, "    if (!joined)\n      return refusal(\"LEAD_SHARE_NOT_A_PARTICIPANT\",",
+                              "    if (false)\n      return refusal(\"LEAD_SHARE_NOT_A_PARTICIPANT\","]]),
+  },
   overstrict: {
     files: [CHECKS],
     why: "THE OVER-STRICTNESS DIRECTION: C-54.1 claims any value merely CONTAINING 'lead' — a fence "

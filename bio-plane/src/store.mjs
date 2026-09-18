@@ -15055,15 +15055,14 @@ export class Store extends DurableObject {
    * and content only); `op=airunlog` and `op=stats`' run slice read `run` only.
    * Each is asserted in `test/lead.test.mjs` rather than trusted from this note.
    *
-   * VISIBILITY IS A PROVISIONAL, STATED. §5's field list gives a lead no bundle,
-   * so no participation rule can scope it. It is readable by its AUTHOR and by
-   * an unfiltered machine credential (D-15's operator carve-out) and by no one
-   * else, and a lead another member cannot read answers exactly as one that does
-   * not exist. The frontier's `#observationBundles` keeps answering `lead` as
-   * unresolved, so a lead's looks are withheld from every identified session on
-   * any frontier arm that ever reads the internet level. Reversing this — a lead
-   * filed under a question so its project can follow it — is one nullable
-   * column and one arm in `#leadFor`, and is a DESIGN GAP against §5, reported. */
+   * VISIBILITY IS BOB #14's RULING (2026-09-18), which replaced MK-4's first
+   * provisional (author plus ANY unfiltered machine credential): the author; a
+   * project's participants once the author SHARES it there (`op=leadshare`); a
+   * machine credential only within a member's minted scope; nobody else, and
+   * everybody else answered exactly as for a lead that does not exist. See
+   * `#leadVisibleTo`. The frontier's `#observationBundles` keeps answering `lead`
+   * as unresolved, so a lead's looks are withheld on any frontier arm that ever
+   * reads the internet level. */
   static #leadRefusal(code, detail, extra) {
     const row = LEAD_CHECKS[code];
     return { ok: false, reason: code, code, check: row.check, translation: row.translation,
@@ -15077,8 +15076,7 @@ export class Store extends DurableObject {
     const lid = typeof id === "string" ? id.trim() : "";
     const row = lid ? this.#one(
       `SELECT lead_id, author, words, locator, at FROM leads WHERE lead_id = ?`, lid) : null;
-    const gate = viewerPredicate(viewer);
-    const sees = !!row && gate.scope !== "DENY" && (gate.member == null || gate.member === row.author);
+    const sees = !!row && this.#leadVisibleTo(row, viewer);
     /* DEC-49 REGION is-lead-source */
     if (!sees)
       return refusal("LEAD_NOT_FOUND",
@@ -15086,6 +15084,74 @@ export class Store extends DurableObject {
             : `pass lead=<LEAD-…>: the id op=lead returned`, { lead: lid || null });
     /* END DEC-49 REGION is-lead-source */
     return { ok: true, row };
+  }
+
+  /** MAY THIS VIEWER READ THIS LEAD? BOB #14's ruling (2026-09-18), in its three
+   *  positive arms and nothing else:
+   *
+   *    1. the AUTHOR;
+   *    2. a PARTICIPANT of a project the author SHARED it to (`lead_shares`, the
+   *       authored dated act) — joined or leaving, the two states Membership
+   *       Architecture §7 gives full visibility; `invited` is skeleton-only and
+   *       does not reach a lead;
+   *    3. a MACHINE credential ONLY WITHIN THE SCOPE A MEMBER MINTED FOR IT. The
+   *       control plane stamps an `ai` credential's viewer as its PRINCIPAL
+   *       (`aiTaskScope`: `member:<id>` for a member-scoped key), so such a key
+   *       answers arms 1 and 2 exactly as its member would, and no further. A
+   *       `class:*` credential — the instance tokens, and an ORGANISATION-scoped
+   *       `ai` key — carries no member, so `viewerPredicate` answers `member:
+   *       null` and it reaches NOTHING here. That is the correction of MK-4's
+   *       provisional, which let an unfiltered machine read every lead.
+   *
+   *  Everyone else is answered by the caller exactly as for a lead that does not
+   *  exist. Participation is read from `project_participants` directly and NOT
+   *  through `viewerPredicate`'s project arm, whose `admin` disjunct would let
+   *  every administrator read every shared lead — the ruling names participants. */
+  #leadVisibleTo(row, viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "DENY" || gate.member == null) return false;
+    if (gate.member === row.author) return true;
+    return !!this.#one(
+      `SELECT 1 AS x FROM lead_shares s JOIN project_participants pp ON pp.project_id = s.bundle_id
+        WHERE s.lead_id = ? AND pp.member_id = ? AND pp.state IN ('joined', 'leaving') LIMIT 1`,
+      row.lead_id, gate.member);
+  }
+
+  /** op=leadshare — THE AUTHOR SHARES ONE LEAD TO ONE PROJECT: authored, dated,
+   *  never rewritten. `sharer` is the control plane's stamp. */
+  leadShare({ lead = null, project = null, sharer = null, viewer = null } = {}) {
+    const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
+    const who = typeof sharer === "string" ? sharer.trim() : "";
+    const pid = typeof project === "string" ? project.trim() : "";
+    const src = this.#leadFor(lead, viewer);
+    if (!src.ok) return src;
+    const L = src.row;
+    const joined = who && pid ? this.#one(
+      `SELECT 1 AS x FROM project_participants pp JOIN bundles b ON b.bundle_id = pp.project_id
+        WHERE pp.project_id = ? AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')
+          AND b.object_type = 'project' LIMIT 1`, pid, who) : null;
+    /* DEC-49 REGION is-lead-share */
+    if (who !== L.author)
+      return refusal("LEAD_SHARE_NOT_AUTHOR",
+        `${L.lead_id} was written by another member; only its author shares it. A machine credential `
+        + `is never the author (the author is a member id, stamped when the lead was written)`,
+        { lead: L.lead_id });
+    /* ONE ANSWER for a project that does not exist, one the author cannot see, and one they
+       have not joined — so the act is no oracle for which projects exist. */
+    if (!joined)
+      return refusal("LEAD_SHARE_NOT_A_PARTICIPANT",
+        pid ? `you are not a joined participant of a project addressed by ${pid.slice(0, 60)}`
+            : `pass project=<PROJ-…>: the project to share this lead to`,
+        { lead: L.lead_id, project: pid || null });
+    /* END DEC-49 REGION is-lead-share */
+    const at = new Date().toISOString().split(".")[0] + "Z";
+    this.sql.exec(`INSERT OR IGNORE INTO lead_shares (lead_id, bundle_id, sharer, at) VALUES (?, ?, ?, ?)`,
+                  L.lead_id, pid, who, at);
+    const r = this.#one(`SELECT sharer, at FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L.lead_id, pid);
+    return { ok: true, lead_id: L.lead_id, project: pid, shared_by: r.sharer, at: r.at,
+             already: r.at !== at, evidence: false,
+             says: `${L.lead_id} is shared to ${pid}: its joined participants can now read it and record `
+                 + `looks against it. It is still never evidence` };
   }
 
   /** op=lead — THE ACT. `author` is the control plane's stamp and never the
@@ -15235,13 +15301,22 @@ export class Store extends DurableObject {
                result_kind: visible ? r.result_kind : null, result_ref: visible ? r.result_ref : null,
                coverage: observationCoverage({ state: r.state, resultRef: r.result_ref }) };
     });
+    /* WHERE IT IS SHARED, as far as this viewer may know: the author sees every
+       share; a participant sees only the projects they are joined to, so the read
+       is no oracle for which OTHER projects a member works in. */
+    const me = viewerPredicate(viewer).member;
+    const shared_to = this.#rows(
+      `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at FROM lead_shares s
+        WHERE s.lead_id = ? AND (? = 1 OR EXISTS (SELECT 1 FROM project_participants pp
+          WHERE pp.project_id = s.bundle_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))
+        ORDER BY s.at, s.bundle_id`, L.lead_id, me === L.author ? 1 : 0, me ?? "");
     const last = this.#one(
       `SELECT state FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
         ORDER BY seq DESC LIMIT 1`, L.lead_id);
     const latest = last ? last.state : null;
     return {
       ok: true, lead_id: L.lead_id, author: L.author, words: L.words, locator: L.locator, at: L.at,
-      evidence: false, limit: cap, truncated: rows.length > cap, looks,
+      evidence: false, shared_to, limit: cap, truncated: rows.length > cap, looks,
       /* §5.1 AT THIS SUBJECT, and the strong answer is licensed here rather than
          assumed: a lead and its looks are written by this plane after the log
          existed, and only the whole-store purge deletes either — which deletes
@@ -24058,6 +24133,10 @@ export class Store extends DurableObject {
                        document would be text standing for a page nobody holds, and an
                        attestation outliving it would leave a member's name behind it. */
                     "transcriptions", "transcription_attestations",
+                    /* MK-4 / D-113: a lead's SHARES, keyed on the PROJECT. Per-bundle: a share
+                       outliving its project would admit whoever is next allocated that id to a
+                       member's lead. Whole-store: the leads themselves go in the arm below. */
+                    "lead_shares",
                     /* SK-8 / D-113: the PROPOSED READINGS. They ride both arms for the
                        reason `content` above does and for one more that is specific to
                        them: a proposal is a claim about what a DOCUMENT names, so a
@@ -37624,6 +37703,12 @@ export class Store extends DurableObject {
           condition: body ? body.condition : null,
           detail: body ? body.detail : null,
           looker: url.searchParams.get("looker"),
+          viewer: url.searchParams.get("viewer"),
+        }),
+        leadshare: () => this.leadShare({
+          lead: (body && body.lead) || url.searchParams.get("lead"),
+          project: (body && body.project) || url.searchParams.get("project"),
+          sharer: url.searchParams.get("sharer"),
           viewer: url.searchParams.get("viewer"),
         }),
         leadread: () => this.leadRead({ id: url.searchParams.get("id"),

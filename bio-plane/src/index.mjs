@@ -1070,6 +1070,9 @@ const OPS = {
      viewer may not read exactly as one that does not exist (C-54.5). */
   lead:                { classes: ["admin", "member"],             mutating: true  },
   leadlook:            { classes: ["admin", "member"],             mutating: true  },
+  /* BOB #14's ruling (2026-09-18): the AUTHOR shares a lead to a project, an
+     authored dated act — `lead`'s class cut and reason. */
+  leadshare:           { classes: ["admin", "member"],             mutating: true  },
   leadread:            { classes: ["admin", "member", "probe"],    mutating: false },
   /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
      different cut from CPDF-10's above because a different thing is at stake.
@@ -1698,8 +1701,8 @@ const SESSION_OPS = {
                    "transcribe", "transcriptionattest",
                    /* MK-4: THE LEAD and a look recorded against it — a person's word
                       in their own name, `transcribe`'s route and reason. */
-                   "lead", "leadlook",
-                   "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
+                   "lead", "leadlook", "leadshare",
+                   "inbox",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
@@ -1725,7 +1728,7 @@ const SESSION_OPS = {
                    "extractproposals",
                    "narrow", "narrowcandidates",
                    "transcribe", "transcriptionattest",
-                   "lead", "leadlook",
+                   "lead", "leadlook", "leadshare",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1813,6 +1816,7 @@ const NEEDS = {
      carrying their name for as long as the record lasts. The read takes none. */
   lead:                "contribute",
   leadlook:            "contribute",
+  leadshare:           "contribute",
   leadread:            null,
   monitor:          "contribute",
   cite:             "contribute",
@@ -8487,7 +8491,7 @@ export default {
            and the look names what it found (a capture or a content row), which is
            gated like every other reference to a document. Fails closed on an
            absent stamp. */
-        || op === "leadlook" || op === "leadread"
+        || op === "leadlook" || op === "leadread" || op === "leadshare"
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -8647,6 +8651,8 @@ export default {
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "leadlook")
       inner.searchParams.set("looker", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "leadshare")
+      inner.searchParams.set("sharer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* SK-7 / framework Part II §14.4 (Bob's 5.7) — WHO MARKED THIS PASSAGE AS
        CITABLE, stamped by the server on the same rule as every authorship field
        in this block. The body's own `mintedBy` is not read at the store at all

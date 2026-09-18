@@ -897,8 +897,9 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "in a project the caller was never invited to — op=content's reason.",
     leadread: "MK-4: one member's LEAD by id — their words, where they suggested looking, and every look "
       + "recorded against it. GATED, and more narrowly than a bundle: a lead names no bundle "
-      + "(MEMBER-KNOWLEDGE-DESIGN.md §5), so it is readable by its AUTHOR and by an unfiltered machine "
-      + "credential only, and takes the fail-closed viewer stamp beside op=leadlook in index.mjs. A lead the "
+      + "(MEMBER-KNOWLEDGE-DESIGN.md §5), so it is readable by its AUTHOR, by the JOINED participants of a project "
+      + "the author SHARED it to, and by a machine credential only within a member's minted scope (BOB #14, "
+      + "2026-09-18) — never by an unfiltered one; it takes the fail-closed viewer stamp beside op=leadlook in index.mjs. A lead the "
       + "caller may not read answers exactly as an absent one (LEAD_NOT_FOUND), and a look's referent the "
       + "caller can no longer see is not published — the lead discloses what a member was told and where they "
       + "went looking, which is a line of inquiry.",

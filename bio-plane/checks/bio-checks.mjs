@@ -11183,6 +11183,20 @@ export const LEAD_CHECKS = {
       + 'that asked is an automated one; an automated search is recorded under its own run, not '
       + 'under a member\'s lead.',
   },
+  /* BOB #14's ruling, 2026-09-18: a lead reaches a project's participants only
+     through an AUTHORED, DATED share by its author. */
+  LEAD_SHARE_NOT_A_PARTICIPANT: {
+    check: 'C-54.9',
+    where: 'src/store.mjs leadShare > is-lead-share',
+    translation: 'You can share a lead only to a project you have joined. Sharing it somewhere you are '
+      + 'not working would put your words in front of people you are not working with.',
+  },
+  LEAD_SHARE_NOT_AUTHOR: {
+    check: 'C-54.10',
+    where: 'src/store.mjs leadShare > is-lead-share',
+    translation: 'Only the member who wrote a lead can share it. A lead is what one person was told; '
+      + 'passing someone else\'s on is theirs to decide.',
+  },
 };
 
 /** C-54.1 — ONE LEG, ASKED WHETHER IT RESTS ON A LEAD. The one checker every

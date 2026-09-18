@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: RUN 2026-09-18 with `node test/nc-mk4.mjs [arm]` from `bio-plane/`, every arm ALONE with the others held open, each EDITING A REAL SOURCE and restored from a uniquely-named per-arm pristine copy verified by sha256 AND cmp (RE-RUN on the tree rebased onto fbcefa1b: bio-checks.mjs 748,951 B, store.mjs 2,444,747 B, index.mjs 618,162 B, after the refusals were routed through a helper named `refusal` for the UI harness DEC-49 guard; 6 of 6 restores byte-identical, same results as the first run; never `git checkout --`). Declared BEFORE arming, and the result: (a) `baseline` — nothing armed, MUST be green: 50/0. (b) `legonly` — THE ROW'S CONTROL, C-54.1 removed and nothing else; every BY-NAME arm MUST FAIL while the id shape still keeps the lead out: 45/5, as declared — the lead is still refused, by the WRONG name ("not a canonical bundle id"), which is the second fence. (c) `liar` — a lead that is merely an unlabelled observation: its id made citable (LEAD added to BUNDLE_ID_RE, typed information) AND C-54.1 removed; the lead LANDS AS A BASIS LEG and "the refused inquiry was not written" MUST FAIL: 44/6. IT CAME BACK WRONG FIRST AND THAT IS THE FINDING: its first run left that assertion GREEN because it asked the plane for a `bundle` op that does not exist, so it answered "not ok" for every id and could never fail — corrected to op=list with a positive control, then failing as declared. (d) `stamp` — the control plane stops stamping `author`; §7's server-stamp arms MUST FAIL: 5/20. (e) `logatauthor` — authoring writes a look (the accepts-when read literally); "NOTHING is written to the log" MUST FAIL: 44/6. (f) `rollup` — a member's look admits an `observation` referent at BOTH lead fences; the C-54.7 rollup arm MUST FAIL: 49/1. FIRST RUN GREEN, and the finding is about the arm: the kind check was not the only fence (the referent resolution refuses a non-capture kind by the same code), so it was re-armed at both. (g) `overstrict` — C-54.1 claims anything containing "lead"; the two over-strictness arms MUST FAIL: 48/2 — first declared against "an ordinary INFO leg still lands", which cannot see this widening (the fixture id holds no "lead"), and corrected.
+/* NEGATIVE CONTROL: RUN 2026-09-18 with `node test/nc-mk4.mjs [arm]` from `bio-plane/`, THIRTEEN arms, every one ALONE with the others held open, each EDITING A REAL SOURCE and restored from a uniquely-named per-arm pristine copy verified by sha256 AND cmp (bio-checks.mjs 749,665 B, store.mjs 2,450,533 B, index.mjs 618,516 B; every restore byte-identical; never `git checkout --`). Final-tree results, each AS DECLARED: (a) `baseline` 69/0. (b) `legonly` — THE ROW'S CONTROL, C-54.1 removed: 64/5, every BY-NAME arm fails while the id shape still keeps the lead out (the second fence, wrong name). (c) `liar` — a lead made citable AND C-54.1 removed: the lead LANDS AS A BASIS LEG, 63/6. First run left "the refused inquiry was not written" GREEN because it asked for a `bundle` op that does not exist — corrected to op=list with a positive control. (d) `stamp` 5/20. (e) `logatauthor` 63/6. (f) `rollup` 68/1 — first run GREEN (a second fence also refused it), re-armed at both. (g) BOB #14's RULING, `machinewide` — the machine read widened back to UNFILTERED (MK-4's first provisional): 64/5, failing NAMING the member token, the admin token and an organisation-scoped ai key reading a lead nobody minted them a scope over, before and after the share. The probe row stays green under it: the probe is confined to the scratch store and is blind to this rule, which its label says. (h) `aiscope` — THE OVER-STRICTNESS arm: every ai key stamped `class:ai`, so a key whose minted scope DOES include the lead loses it: 67/2. (i) `noshare` 66/3. (j) `sharewide` — the share reaches an INVITED-only member: 68/1. (k) `shareauthor` 68/1. (l) `sharepart` 67/2. (m) `overstrict` — C-54.1 claims anything containing "lead": 67/2, first declared against an arm that cannot see it and corrected.
  *
  * MK-4 / IC-135 / IC-136 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5):
  * the same member knowledge BEFORE the search. An authored row that is NEVER
@@ -20,6 +20,10 @@
  *   3. a lead cited as a leg is refused BY NAME (C-54.1) — through op=promote at
  *      basis[].target and basis[].content_id, and at the version-leg and
  *      action-basis grammars;
+ *   3b. VISIBILITY, BOB #14's ruling (2026-09-18): the author; a project's JOINED
+ *      participants once the author SHARES it there (op=leadshare, authored and
+ *      dated); a machine credential only within a member's MINTED scope; nobody
+ *      else — and every refused viewer answers exactly as for an absent lead;
  *   4. THE LIAR: a lead is not an unlabelled observation — no bundle and no
  *      content row answers for its id, so nothing can cite it as evidence;
  *   5. a lead's looks do NOT fall into the run-rollup rules (op=stats' run slice,
@@ -44,7 +48,8 @@ const mf = new Miniflare({
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { ADMIN_TOKEN: "adm-mk4", MEMBER_TOKEN: "mem-mk4", PROBE_TOKEN: "prb-mk4", VERSION: "test" },
+  bindings: { ADMIN_TOKEN: "adm-mk4", MEMBER_TOKEN: "mem-mk4", PROBE_TOKEN: "prb-mk4",
+              AI_TOKEN: "ai-mk4", VERSION: "test" },
 });
 
 let pass = 0, fail = 0;
@@ -82,8 +87,8 @@ const LATER = "2026-09-18T01:00:00Z";
 try {
 
 /* ------------------------------------------------------------------ fixture */
-const enrol = async (memberId) => {
-  const add = await post("memberadd", { memberId, cover: `cover for ${memberId}`, role: "admin",
+const enrol = async (memberId, role = "admin") => {
+  const add = await post("memberadd", { memberId, cover: `cover for ${memberId}`, role,
                                         capabilities: ["contribute", "publish"] }, "adm-mk4");
   const en = await post("enroll", { invite: add.invite, handle: memberId, password: `${memberId}-passphrase-1` });
   if (!en.ok) throw new Error(`enroll ${memberId}: ${JSON.stringify(en)}`);
@@ -261,19 +266,107 @@ t("read back: two looks in order, the latest PRESENT and backed",
   [r2 && r2.looks.map((l) => l.state), r2 && r2.state, r2 && r2.looks[1].coverage],
   [["LOOKED_ABSENT", "PRESENT"], "PRESENT", "backed"]);
 
-/* ===================== 3. VISIBILITY ====================================== */
-console.log("\n--- 3. a lead is its author's ---");
+/* ===================== 3. VISIBILITY — BOB #14's RULING ==================
+   CORRECTED 2026-09-18 on BOB #14's ruling of MK-4's design gap, and the old arm
+   is kept here in words because it asserted the opposite: it read "a machine
+   credential reads it (D-15's operator carve-out)" and PASSED with the member
+   TOKEN, an UNFILTERED machine credential nobody minted for this lead. The
+   ruling: the author; a project's joined participants once the author SHARES
+   it; a machine only within a member's minted scope; nobody else — and every
+   refused viewer gets EXACTLY the answer for a lead that does not exist. */
+console.log("\n--- 3. who may read a lead ---");
 const ghost = "LEAD-2026-0918-000000000000";
-const samRead = await get("leadread", `id=${LID}`, SAM);
-const samGhost = await get("leadread", `id=${ghost}`, SAM);
 const norm = (r, id) => JSON.stringify(r).split(id).join("<id>");
-t("sam reading ruth's lead answers EXACTLY as a lead that does not exist (C-54.5)",
-  [codeOf(samRead), norm(samRead, LID) === norm(samGhost, ghost)], ["LEAD_NOT_FOUND", true]);
+const mintAi = async (tokenId, principalKind, principalMember, by) => {
+  const r = await post("aicredentialmint", { tokenId, principalKind, principalMember, taskScope: "investigative",
+    writes: [], note: "MK-4: a read-only key, to measure what a minted scope reaches" }, by);
+  if (!r || !r.token) throw new Error(`mint ${tokenId}: ${JSON.stringify(r).slice(0, 400)}`);
+  return r.token;
+};
+const AI_RUTH = await mintAi("mk4-ruth", "member", "ruth", RUTH);
+const AI_SAM = await mintAi("mk4-sam", "member", "sam", SAM);
+const AI_ORG = await mintAi("mk4-org", "organisation", null, RUTH);
+const aiOwn = await get("leadread", `id=${LID}`, AI_RUTH);
+t("OVER-STRICTNESS: ruth's member-scoped ai key reads ruth's lead — the minted scope reaches it",
+  [aiOwn && aiOwn.ok, aiOwn && aiOwn.author], [true, "ruth"]);
+/* THE REFUSED VIEWERS, and every one answers the ghost's answer byte for byte. */
+const refused = { "sam (a member, no share)": SAM, "the member TOKEN (unfiltered, nobody minted it)": "mem-mk4",
+                  "the admin TOKEN": "adm-mk4",
+                  /* The probe is CONFINED TO THE SCRATCH STORE (`scopeFor`), a different store holding
+                     no lead, so it answers not-found by NAMESPACE: the `machinewide` arm cannot see
+                     this row, and it is kept only as a check that the door answers identically. */
+                  "the probe TOKEN (scratch store; blind to the visibility rule)": "prb-mk4",
+                  "an ORGANISATION-scoped ai key": AI_ORG, "sam's member-scoped ai key": AI_SAM };
+for (const [who, tok] of Object.entries(refused)) {
+  const r = await get("leadread", `id=${LID}`, tok);
+  const g = await get("leadread", `id=${ghost}`, tok);
+  t(`NO EXISTENCE LEAK: ${who} reading ruth's lead answers EXACTLY as a lead that does not exist (C-54.5)`,
+    [codeOf(r), norm(r, LID) === norm(g, ghost)], ["LEAD_NOT_FOUND", true]);
+}
 t("sam cannot record a look against ruth's lead (C-54.5)",
   codeOf(await post("leadlook", { lead: LID, state: "LOOKED_ABSENT" }, SAM)), "LEAD_NOT_FOUND");
-const opRead = await get("leadread", `id=${LID}`, "mem-mk4");
-t("a machine credential reads it (D-15's operator carve-out)", [opRead && opRead.ok, opRead && opRead.author],
-  [true, "ruth"]);
+
+console.log("\n--- 3b. the SHARE: an authored, dated act to one project ---");
+/* `member`, not `admin`: a THIRD administrator needs the consensus of the existing ones (4.7). */
+const VERA = await enrol("vera", "member"), OTTO = await enrol("otto", "member");
+const projMd = (id) => ["---", `id: ${id}`, "object_type: project", "current_state: forming",
+  `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
+  "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");
+const mkProject = async (id, tok) => {
+  const md = projMd(id);
+  const r = await post("promote", { bundleId: id, base: null,
+    snapKey: `20260918T${String(500000 + (++snapSeq)).slice(-6)}Z_${sha(id).slice(0, 8)}`,
+    meta: { object_type: "project", group: "believe-in-oakland", title: `title for ${id}`,
+            current_state: "forming", created: NOW, last_updated: LATER },
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }, tok);
+  if (!r || r.ok === false) throw new Error(`project ${id}: ${JSON.stringify(r).slice(0, 400)}`);
+};
+const P1 = "PROJ-2026-0918-contract", P2 = "PROJ-2026-0918-elsewhere";
+await mkProject(P1, RUTH);
+await mkProject(P2, SAM);
+const inv = async (owner, p, handle) => get("projectinvite", `projectId=${p}&handle=${handle}`, owner);
+const join = async (tok, p) => get("projectjoin", `projectId=${p}`, tok);
+const i1 = await inv(RUTH, P1, "sam"), j1 = await join(SAM, P1);
+const i2 = await inv(RUTH, P1, "vera");            /* invited, never joins: skeleton only */
+t("FIXTURE: sam invited and JOINED to P1, vera invited only — through the acts, not by hand",
+  [i1 && i1.ok, j1 && j1.state, i2 && i2.ok], [true, "joined", true]);
+const before = await get("leadread", `id=${LID}`, SAM);
+t("before any share, sam — a JOINED participant of ruth's project — still cannot read it (no share, no reach)",
+  [codeOf(before), norm(before, LID) === norm(await get("leadread", `id=${ghost}`, SAM), ghost)],
+  ["LEAD_NOT_FOUND", true]);
+const shSam = await post("leadshare", { lead: LID, project: P1 }, SAM);
+t("sam cannot share ruth's lead (C-54.5 — he cannot even see it yet)", codeOf(shSam), "LEAD_NOT_FOUND");
+const shP2 = await post("leadshare", { lead: LID, project: P2 }, RUTH);
+const shNone = await post("leadshare", { lead: LID, project: "PROJ-2026-0918-nosuch" }, RUTH);
+t("ruth cannot share to a project she has not joined (C-54.9), and a project that does not exist gets "
+  + "the SAME code — the act is no oracle for which projects exist",
+  [codeOf(shP2), shP2 && shP2.check, codeOf(shNone)],
+  ["LEAD_SHARE_NOT_A_PARTICIPANT", "C-54.9", "LEAD_SHARE_NOT_A_PARTICIPANT"]);
+const sh = await post("leadshare", { lead: LID, project: P1, sharer: "sam" }, RUTH);
+t("ruth SHARES her lead to P1: authored (stamped ruth, a body `sharer` is not honoured) and dated",
+  [sh && sh.ok, sh && sh.project, sh && sh.shared_by, typeof (sh && sh.at), sh && sh.evidence],
+  [true, P1, "ruth", "string", false]);
+const again = await post("leadshare", { lead: LID, project: P1 }, RUTH);
+t("sharing twice finds the same row — the date does not move", [again && again.ok, again && again.at],
+  [true, sh && sh.at]);
+const samAfter = await get("leadread", `id=${LID}`, SAM);
+t("AFTER the share, sam (joined to P1) reads the lead, and sees the share that reached him",
+  [samAfter && samAfter.ok, samAfter && samAfter.author,
+   samAfter && samAfter.shared_to && samAfter.shared_to.map((x) => x.project)], [true, "ruth", [P1]]);
+const aiSamAfter = await get("leadread", `id=${LID}`, AI_SAM);
+t("and sam's member-scoped ai key reaches it too — exactly as far as sam's own scope, no further",
+  [aiSamAfter && aiSamAfter.ok], [true]);
+for (const [who, tok] of Object.entries({ "vera (invited, not joined)": VERA, "otto (no position in P1)": OTTO,
+                                          "the member TOKEN": "mem-mk4", "an ORGANISATION-scoped ai key": AI_ORG })) {
+  const r = await get("leadread", `id=${LID}`, tok);
+  t(`AFTER the share, ${who} still answers EXACTLY as for a lead that does not exist`,
+    [codeOf(r), norm(r, LID) === norm(await get("leadread", `id=${ghost}`, tok), ghost)], ["LEAD_NOT_FOUND", true]);
+}
+const reshare = await post("leadshare", { lead: LID, project: P2 }, SAM);
+t("sam, who can now READ it, still cannot SHARE it: only its author does (C-54.10)",
+  [codeOf(reshare), reshare && reshare.check], ["LEAD_SHARE_NOT_AUTHOR", "C-54.10"]);
+t("an UNSHARED lead of ruth's stays out of sam's reach even after another lead was shared to him",
+  codeOf(await get("leadread", `id=${LID2}`, SAM)), "LEAD_NOT_FOUND");
 
 /* ===================== 4. THE REFUSAL (§7) AND THE LIAR ==================== */
 console.log("\n--- 4. a lead cited as a basis leg ---");

@@ -10041,6 +10041,7 @@ move"), and `rows=content`'s `derivation_cap` shows the same NULL. Nor does `row
   and the WHOLE-STORE purge clears it in the same arm that clears `observation_log` (D-113). The LOOK
   is NOT stored here: it is a row of `observation_log` under `authority_kind = 'lead'`, a value that
   table's vocabulary already reserved — so `observation_log` is UNCHANGED in shape.
+- **AMENDED 2026-09-18 on BOB #14's visibility ruling:** a SECOND table, `lead_shares` (`lead_id`, `bundle_id` — the PROJECT, `sharer`, `at`; PRIMARY KEY (`lead_id`, `bundle_id`); index on `bundle_id`), the authored dated share. It carries `bundle_id` so it rides `op=purge`'s TABLES list and clears in BOTH arms.
 
 ## IC-136 · I3: THE LEAD — `op=lead` (write one), `op=leadlook` (record following it, as an observation), `op=leadread` (the lead and its looks); C-54 refuses a lead cited as ANY leg BY NAME · PROPOSED 2026-09-18 (MK-4, minted at spawn with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
@@ -10048,7 +10049,7 @@ move"), and `rows=content`'s `derivation_cap` shows the same NULL. Nor does `row
   `docs/development/INTERFACES.md`: 25.1.0** (IC-131 ACCEPTED, read after rebasing onto `d49e71c6`; this
   line read 24.0.0 and then 25.0.0 as REC-123 and REC-121 landed underneath it — read it again at
   resolution). **Proposed as MINOR — 25.1.0 → 25.2.0.**
-  Three new ops, one new refusal family **C-54** (`LEAD_CHECKS`, eight rows), and two additive keys on
+  Three new ops (FOUR after the amendment below), one new refusal family **C-54** (`LEAD_CHECKS`, eight rows, TEN after it), and two additive keys on
   existing answers. **ONE EXISTING REFUSAL CHANGES ITS NAME ON ONE INPUT, stated rather than hidden:** a
   leg whose `target` or `content_id` is a `LEAD-…` id was refused before this IC too — as C-2.8 *not a
   canonical bundle id* (basis[]), `VERSION_LEG_NOT_CITABLE` (version legs), C-2.10 (action basis) or the
@@ -10097,5 +10098,22 @@ action-basis leg, by `target` or `content_id`, **the refusal §7 names**), `LEAD
 viewer can read, only on `PRESENT`/`partial`; an `observation` referent — a rollup's — is refused, so
 C-22.10's rollup arm is unreachable through a lead), `LEAD_LOOK_NOT_A_MEMBER` (.8).
 
-**MEASURED:** `bio-plane/test/lead.test.mjs` 50/0 through the ops; `node test/nc-mk4.mjs` seven arms,
+**AMENDED 2026-09-18 — VISIBILITY IS BOB #14's RULING, replacing MK-4's provisional.** The provisional let ANY
+unfiltered machine credential read every lead; that is gone. `op=leadread` / `op=leadlook` / `op=leadshare` reach a
+lead for: its AUTHOR; a JOINED (or `leaving`) participant of a project the author SHARED it to — `invited` is
+skeleton-only and does not; an `ai` credential ONLY through its minted member principal (it answers exactly as that
+member would); nobody else. Every `class:*` credential — the instance tokens and an organisation-scoped `ai` key —
+reaches no lead. **Every refused viewer gets the answer for an absent lead, byte-identical, asserted per viewer.**
+Participation is read from `project_participants` directly, NOT through `viewerPredicate`'s admin disjunct: an
+administrator who is not a participant does not see a shared lead.
+
+`POST op=leadshare` body `{ lead, project }` — classes admin/member, SESSION route, capability `contribute`,
+`sharer` stamped. Answers `{ ok, lead_id, project, shared_by, at, already, evidence: false, says }`; sharing twice
+finds the same row and its date does not move. Refuses `LEAD_SHARE_NOT_AUTHOR` (**C-54.10**, anyone but the author,
+including every machine) and `LEAD_SHARE_NOT_A_PARTICIPANT` (**C-54.9**, one answer for a project that does not
+exist, one the author cannot see, and one she has not joined). `op=leadread` gains `shared_to: [{project, shared_by,
+at}]` — every share for the author, only the viewer's own joined projects for anyone else. **C-54 is now ten rows.**
+**Proposed version unchanged: MINOR** (additive; the provisional's machine read was never on `main`).
+
+**MEASURED:** `bio-plane/test/lead.test.mjs` 69/0 through the ops; `node test/nc-mk4.mjs` thirteen arms,
 every one as declared on the final tree (recorded in the suite's `NEGATIVE CONTROL:` line).

@@ -3366,6 +3366,22 @@ CREATE TABLE IF NOT EXISTS leads (
   at        TEXT NOT NULL       -- when the record received the lead
 );
 CREATE INDEX IF NOT EXISTS leads_author ON leads(author, at);
+-- A LEAD SHARED TO A PROJECT. RULED 2026-09-18 by BOB #14 on MK-4's design gap: a
+-- lead is visible to its AUTHOR, to a project's participants ONLY after the author
+-- SHARES it to that project, to a machine credential only within the scope a member
+-- minted for it, and to nobody else. The share is an AUTHORED, DATED act and this
+-- row is it. Never rewritten: sharing twice finds the same row.
+-- bundle_id IS THE PROJECT, named so it rides op=purge TABLES list and clears in
+-- BOTH arms (D-113) -- a share outliving its project would admit whoever holds that
+-- id next.
+CREATE TABLE IF NOT EXISTS lead_shares (
+  lead_id    TEXT NOT NULL,
+  bundle_id  TEXT NOT NULL,     -- the PROJECT the lead is shared to
+  sharer     TEXT NOT NULL,     -- the lead author, server-stamped (C-54.10)
+  at         TEXT NOT NULL,
+  PRIMARY KEY (lead_id, bundle_id)
+);
+CREATE INDEX IF NOT EXISTS lead_shares_bundle ON lead_shares(bundle_id);
 -- =========================================================================
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
@@ -11195,6 +11211,18 @@ var LEAD_CHECKS = {
     check: "C-54.8",
     where: "src/store.mjs leadLook > is-lead-look",
     translation: "Following a lead is recorded in the name of the member who looked. The credential that asked is an automated one; an automated search is recorded under its own run, not under a member's lead."
+  },
+  /* BOB #14's ruling, 2026-09-18: a lead reaches a project's participants only
+     through an AUTHORED, DATED share by its author. */
+  LEAD_SHARE_NOT_A_PARTICIPANT: {
+    check: "C-54.9",
+    where: "src/store.mjs leadShare > is-lead-share",
+    translation: "You can share a lead only to a project you have joined. Sharing it somewhere you are not working would put your words in front of people you are not working with."
+  },
+  LEAD_SHARE_NOT_AUTHOR: {
+    check: "C-54.10",
+    where: "src/store.mjs leadShare > is-lead-share",
+    translation: "Only the member who wrote a lead can share it. A lead is what one person was told; passing someone else's on is theirs to decide."
   }
 };
 function leadLegFindings(label, leg, findings) {
@@ -14374,6 +14402,7 @@ var RUNG_ABSENT = {
      nothing takes a lead or a look back — a member writes another lead, and a
      later look is a new row, never a rewrite of the earlier one. */
   lead: { ground: "undetermined", is: "a member writes a LEAD in their own words \u2014 what they were told or suspect, and where it might be found; an authored row that is NEVER evidence and can never be a basis leg (C-54.1)" },
+  leadshare: { ground: "undetermined", is: "a lead's AUTHOR shares it to one project they have joined, an authored dated act; the project's joined participants can then read it and record looks against it (BOB #14, 2026-09-18)" },
   leadlook: { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" }
 };
 var CAPTURE_ACTS = [
@@ -38938,15 +38967,14 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    * and content only); `op=airunlog` and `op=stats`' run slice read `run` only.
    * Each is asserted in `test/lead.test.mjs` rather than trusted from this note.
    *
-   * VISIBILITY IS A PROVISIONAL, STATED. §5's field list gives a lead no bundle,
-   * so no participation rule can scope it. It is readable by its AUTHOR and by
-   * an unfiltered machine credential (D-15's operator carve-out) and by no one
-   * else, and a lead another member cannot read answers exactly as one that does
-   * not exist. The frontier's `#observationBundles` keeps answering `lead` as
-   * unresolved, so a lead's looks are withheld from every identified session on
-   * any frontier arm that ever reads the internet level. Reversing this — a lead
-   * filed under a question so its project can follow it — is one nullable
-   * column and one arm in `#leadFor`, and is a DESIGN GAP against §5, reported. */
+   * VISIBILITY IS BOB #14's RULING (2026-09-18), which replaced MK-4's first
+   * provisional (author plus ANY unfiltered machine credential): the author; a
+   * project's participants once the author SHARES it there (`op=leadshare`); a
+   * machine credential only within a member's minted scope; nobody else, and
+   * everybody else answered exactly as for a lead that does not exist. See
+   * `#leadVisibleTo`. The frontier's `#observationBundles` keeps answering `lead`
+   * as unresolved, so a lead's looks are withheld on any frontier arm that ever
+   * reads the internet level. */
   static #leadRefusal(code, detail, extra) {
     const row = LEAD_CHECKS[code];
     return {
@@ -38968,8 +38996,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       `SELECT lead_id, author, words, locator, at FROM leads WHERE lead_id = ?`,
       lid
     ) : null;
-    const gate = viewerPredicate(viewer);
-    const sees = !!row && gate.scope !== "DENY" && (gate.member == null || gate.member === row.author);
+    const sees = !!row && this.#leadVisibleTo(row, viewer);
     if (!sees)
       return refusal7(
         "LEAD_NOT_FOUND",
@@ -38977,6 +39004,86 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         { lead: lid || null }
       );
     return { ok: true, row };
+  }
+  /** MAY THIS VIEWER READ THIS LEAD? BOB #14's ruling (2026-09-18), in its three
+   *  positive arms and nothing else:
+   *
+   *    1. the AUTHOR;
+   *    2. a PARTICIPANT of a project the author SHARED it to (`lead_shares`, the
+   *       authored dated act) — joined or leaving, the two states Membership
+   *       Architecture §7 gives full visibility; `invited` is skeleton-only and
+   *       does not reach a lead;
+   *    3. a MACHINE credential ONLY WITHIN THE SCOPE A MEMBER MINTED FOR IT. The
+   *       control plane stamps an `ai` credential's viewer as its PRINCIPAL
+   *       (`aiTaskScope`: `member:<id>` for a member-scoped key), so such a key
+   *       answers arms 1 and 2 exactly as its member would, and no further. A
+   *       `class:*` credential — the instance tokens, and an ORGANISATION-scoped
+   *       `ai` key — carries no member, so `viewerPredicate` answers `member:
+   *       null` and it reaches NOTHING here. That is the correction of MK-4's
+   *       provisional, which let an unfiltered machine read every lead.
+   *
+   *  Everyone else is answered by the caller exactly as for a lead that does not
+   *  exist. Participation is read from `project_participants` directly and NOT
+   *  through `viewerPredicate`'s project arm, whose `admin` disjunct would let
+   *  every administrator read every shared lead — the ruling names participants. */
+  #leadVisibleTo(row, viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "DENY" || gate.member == null) return false;
+    if (gate.member === row.author) return true;
+    return !!this.#one(
+      `SELECT 1 AS x FROM lead_shares s JOIN project_participants pp ON pp.project_id = s.bundle_id
+        WHERE s.lead_id = ? AND pp.member_id = ? AND pp.state IN ('joined', 'leaving') LIMIT 1`,
+      row.lead_id,
+      gate.member
+    );
+  }
+  /** op=leadshare — THE AUTHOR SHARES ONE LEAD TO ONE PROJECT: authored, dated,
+   *  never rewritten. `sharer` is the control plane's stamp. */
+  leadShare({ lead = null, project = null, sharer = null, viewer = null } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#leadRefusal(code, detail, extra);
+    const who = typeof sharer === "string" ? sharer.trim() : "";
+    const pid = typeof project === "string" ? project.trim() : "";
+    const src = this.#leadFor(lead, viewer);
+    if (!src.ok) return src;
+    const L = src.row;
+    const joined = who && pid ? this.#one(
+      `SELECT 1 AS x FROM project_participants pp JOIN bundles b ON b.bundle_id = pp.project_id
+        WHERE pp.project_id = ? AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')
+          AND b.object_type = 'project' LIMIT 1`,
+      pid,
+      who
+    ) : null;
+    if (who !== L.author)
+      return refusal7(
+        "LEAD_SHARE_NOT_AUTHOR",
+        `${L.lead_id} was written by another member; only its author shares it. A machine credential is never the author (the author is a member id, stamped when the lead was written)`,
+        { lead: L.lead_id }
+      );
+    if (!joined)
+      return refusal7(
+        "LEAD_SHARE_NOT_A_PARTICIPANT",
+        pid ? `you are not a joined participant of a project addressed by ${pid.slice(0, 60)}` : `pass project=<PROJ-\u2026>: the project to share this lead to`,
+        { lead: L.lead_id, project: pid || null }
+      );
+    const at = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    this.sql.exec(
+      `INSERT OR IGNORE INTO lead_shares (lead_id, bundle_id, sharer, at) VALUES (?, ?, ?, ?)`,
+      L.lead_id,
+      pid,
+      who,
+      at
+    );
+    const r = this.#one(`SELECT sharer, at FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L.lead_id, pid);
+    return {
+      ok: true,
+      lead_id: L.lead_id,
+      project: pid,
+      shared_by: r.sharer,
+      at: r.at,
+      already: r.at !== at,
+      evidence: false,
+      says: `${L.lead_id} is shared to ${pid}: its joined participants can now read it and record looks against it. It is still never evidence`
+    };
   }
   /** op=lead — THE ACT. `author` is the control plane's stamp and never the
    *  caller's (§7: *an author field supplied by the caller rather than stamped*
@@ -39170,6 +39277,16 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         coverage: observationCoverage({ state: r.state, resultRef: r.result_ref })
       };
     });
+    const me = viewerPredicate(viewer).member;
+    const shared_to = this.#rows(
+      `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at FROM lead_shares s
+        WHERE s.lead_id = ? AND (? = 1 OR EXISTS (SELECT 1 FROM project_participants pp
+          WHERE pp.project_id = s.bundle_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))
+        ORDER BY s.at, s.bundle_id`,
+      L.lead_id,
+      me === L.author ? 1 : 0,
+      me ?? ""
+    );
     const last = this.#one(
       `SELECT state FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
         ORDER BY seq DESC LIMIT 1`,
@@ -39184,6 +39301,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       locator: L.locator,
       at: L.at,
       evidence: false,
+      shared_to,
       limit: cap,
       truncated: rows.length > cap,
       looks,
@@ -47552,6 +47670,10 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
          attestation outliving it would leave a member's name behind it. */
       "transcriptions",
       "transcription_attestations",
+      /* MK-4 / D-113: a lead's SHARES, keyed on the PROJECT. Per-bundle: a share
+         outliving its project would admit whoever is next allocated that id to a
+         member's lead. Whole-store: the leads themselves go in the arm below. */
+      "lead_shares",
       /* SK-8 / D-113: the PROPOSED READINGS. They ride both arms for the
          reason `content` above does and for one more that is specific to
          them: a proposal is a claim about what a DOCUMENT names, so a
@@ -59861,6 +59983,12 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           looker: url.searchParams.get("looker"),
           viewer: url.searchParams.get("viewer")
         }),
+        leadshare: () => this.leadShare({
+          lead: body && body.lead || url.searchParams.get("lead"),
+          project: body && body.project || url.searchParams.get("project"),
+          sharer: url.searchParams.get("sharer"),
+          viewer: url.searchParams.get("viewer")
+        }),
         leadread: () => this.leadRead({
           id: url.searchParams.get("id"),
           limit: url.searchParams.get("limit"),
@@ -61293,6 +61421,9 @@ var OPS = {
      viewer may not read exactly as one that does not exist (C-54.5). */
   lead: { classes: ["admin", "member"], mutating: true },
   leadlook: { classes: ["admin", "member"], mutating: true },
+  /* BOB #14's ruling (2026-09-18): the AUTHOR shares a lead to a project, an
+     authored dated act — `lead`'s class cut and reason. */
+  leadshare: { classes: ["admin", "member"], mutating: true },
   leadread: { classes: ["admin", "member", "probe"], mutating: false },
   /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
        different cut from CPDF-10's above because a different thing is at stake.
@@ -61722,13 +61853,8 @@ var SESSION_OPS = {
        in their own name, `transcribe`'s route and reason. */
     "lead",
     "leadlook",
+    "leadshare",
     "inbox",
-    "inboxget",
-    "inboxresolve",
-    "audit",
-    "select",
-    "selectionrelease",
-    "governorstate",
     ...RETRIEVAL_READS,
     ...READING_READS,
     ...REGISTRY_ACTIONS,
@@ -61780,6 +61906,7 @@ var SESSION_OPS = {
     "transcriptionattest",
     "lead",
     "leadlook",
+    "leadshare",
     "inbox",
     "inboxget",
     "inboxresolve",
@@ -61870,6 +61997,7 @@ var NEEDS = {
      carrying their name for as long as the record lasts. The read takes none. */
   lead: "contribute",
   leadlook: "contribute",
+  leadshare: "contribute",
   leadread: null,
   monitor: "contribute",
   cite: "contribute",
@@ -66040,7 +66168,7 @@ var index_default = {
          reader (DEC-17) — only the names are withheld. */
       "strengthbarof"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? `member:${sessMember}` : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -66067,6 +66195,8 @@ var index_default = {
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "leadlook")
       inner.searchParams.set("looker", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "leadshare")
+      inner.searchParams.set("sharer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "contentmint")
       inner.searchParams.set(
         "mintedBy",

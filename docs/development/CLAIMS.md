@@ -13493,3 +13493,11 @@ paths (edits kept LOCAL — MK-1 is concurrently in `store.mjs` / `schema.mjs`):
   **NOT** `docs/development/QUEUE.md` (CONDUCT's), **NOT** `civicos-ui/**`, **NOT** `newgroup/**`,
   no version bump.
 released: 2026-09-18 by the MK-4 worker. Every claimed path is committed on branch `worktree-agent-a6de3e82fcfd8bd2a` (rebased onto `fbcefa1b`). BUILT: the `leads` table (IC-135, I5), op=lead / op=leadlook / op=leadread (IC-136, I3), C-54 (eight rows), the lead-as-leg refusal C-54.1 at basis[], version legs and action basis. Also touched, beyond the list above: `civicos-ui` was NOT edited; `bio-plane/test/bounds.test.mjs` and `gate-reads.test.mjs` each gained the new read op (roster 34 -> 35 from the arm's own failure output; one GATED classification). The row flip, the IC resolutions and D-194's disposition are CONDUCT's acts, named in the report.
+
+### ADDENDUM 2026-09-18 RECORD (MK-4) — THE CLAIM IS RE-OPENED FOR BOB #14's VISIBILITY RULING, ON CONDUCT #4's INSTRUCTION
+
+Same paths as the claim above (no new area's). Added: the `lead_shares` table in `schema.mjs`, `leadShare` and
+`#leadVisibleTo` in `store.mjs`, `op=leadshare` in `index.mjs` / `affordances.mjs`, C-54.9 / C-54.10 in
+`bio-checks.mjs`, six control arms in `test/nc-mk4.mjs`. `MEMBER-KNOWLEDGE-DESIGN.md`: the Status line ONLY — §5's
+body is BOB #14's to write and was not touched.
+released: 2026-09-18 by the MK-4 worker — committed and pushed on `worktree-agent-a6de3e82fcfd8bd2a`.
