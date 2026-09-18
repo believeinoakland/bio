@@ -4987,10 +4987,10 @@ export default {
            undefined` and left `out.ok` TRUE — a deployment health check
            reporting healthy because the failure it was looking for arrived in
            the one shape it did not read. Only a thrown fetch was caught. */
-        /* REC-129 / IC-144: selftest RELAYS the store's stats, so it is the same answer through a
-           second door and takes the same stamp op=stats does (see there). */
+        /* REC-131 / IC-148: selftest RELAYS the store's stats — the same answer through a second
+           door, under op=stats' one stamp: `dbBytes` for the admin class only (see op=stats). */
         const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName))
-          .fetch(`http://x/stats?operator=${cls === "admin" ? "1" : "0"}`));
+          .fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}`));
         if (!sOut.answered) { out.ok = false; out.store = "ERR the store did not answer /stats"; }
         else out.store = sOut.result;
       } catch (e) { out.ok = false; out.store = "ERR " + String(e && e.message || e); }
@@ -5026,7 +5026,7 @@ export default {
     }
 
     if (op === "livefire") {
-      const out = await livefire(env, storeName, { operator: cls === "admin" });
+      const out = await livefire(env, storeName, { capacity: cls === "admin" });
       return json(out, out.ok ? 200 : 500);
     }
 
@@ -8948,15 +8948,14 @@ export default {
        fence op=publishedcase already draws for the bias acknowledgement. */
     if (op === "biasadopt")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-    /* REC-129 / IC-144 — WHETHER THIS CALLER IS THE INSTANCE'S OPERATOR, for op=stats' two
-       instance-wide counts over rows no member may all read (`leads`, `observations`;
-       `MEMBER-KNOWLEDGE-DESIGN.md` §5, ruled by BOB #15). Decided by the SERVER from the class
-       that authenticated and set AFTER the caller's parameters were copied, so a caller-supplied
-       `operator=1` is overwritten rather than honoured. `admin` is the ADMIN_TOKEN class and the
-       ROOT-admin session (`cls = kind` above). A member whose ROLE is admin signs in as class
-       `member` with an `administer` right (D-157) and is NOT the admin class — the ruling names the
-       class, and no administrator member may read another member's lead. Member, probe, ai: not. */
-    if (op === "stats") inner.searchParams.set("operator", cls === "admin" ? "1" : "0");
+    /* REC-131 / IC-148: THERE IS NO `operator` STAMP ON op=stats ANY MORE — every COUNT is the same for
+       every class (`MEMBER-KNOWLEDGE-DESIGN.md` §5, BOB #15), and a caller's `operator=` is not read.
+       What remains is `capacity`, which governs `dbBytes` ONLY (the admin class's: capacity is an
+       operator need, and the figure moves in whole pages on every write, a lead's included). Set by
+       the SERVER from the class that authenticated, AFTER the caller's parameters were copied, so a
+       caller's `capacity=1` is overwritten. `admin` is the ADMIN_TOKEN class and the ROOT-admin
+       session; an admin-ROLE member signs in as class `member` and does not receive it. */
+    if (op === "stats") inner.searchParams.set("capacity", cls === "admin" ? "1" : "0");
     if (op === "memberlist")
       inner.searchParams.set("administer",
         (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0");

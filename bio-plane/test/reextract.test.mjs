@@ -216,7 +216,8 @@ const session = async (inst, memberId, role, capabilities) => {
   if (!lg?.token) throw new Error(`login ${memberId}: ${JSON.stringify(lg).slice(0, 300)}`);
   return lg.token;
 };
-const obsCount = async (inst) => (await api(inst, "op=stats&token=adm-cpdf19"))?.result?.observations ?? -1;
+/* CORRECTED 2026-09-18 BY REC-131 (IC-148), NEVER EXEMPTED: op=stats' log count is published as `observationsNonLead` (the log WITHOUT lead looks) and the wire carries no `observations` key — one key never carries two meanings (BOB.md rule 7), and purge's `observations` keeps the whole log. This suite writes no lead, so the figure it reads is unchanged; only the name moved. */
+const obsCount = async (inst) => (await api(inst, "op=stats&token=adm-cpdf19"))?.result?.observationsNonLead ?? -1;
 const reading = async (inst, s) => (await api(inst, `op=reading&token=mem-cpdf19&sha256=${s}`))?.result ?? null;
 /* a refusal envelope graded AGAINST THE CATALOGUE ROW, never against a copy of it */
 const row = (code) => ({ code, check: REEXTRACT_CHECKS[code]?.check, translation: REEXTRACT_CHECKS[code]?.translation });

@@ -170,9 +170,30 @@ const LOCATOR = "https://example.org/clerk/agendas/2026-03";
 console.log("  corpus: 1 document at one capture; members ruth and sam; the member, admin and probe tokens");
 
 const statsOf = async () => get("stats", "", "adm-mk4");
+/* CORRECTED 2026-09-18 BY REC-131 (IC-148), NEVER EXEMPTED. These arms counted the rows an act
+   wrote through op=stats' `leads` and whole-log `observations`, read with the ADMIN token. BOB #15's
+   corrected §5 ruling took `leads` off op=stats for EVERY class (no caller can read every lead, the
+   admin token included) and made `observations` count the log WITHOUT lead looks. So the arms now
+   count what they were always about — the AUTHOR's leads and looks — through the one op that
+   answers it viewer-scoped: ruth's own `op=frontier&level=internet` (her never-followed leads, the
+   leads her looks name, and the tally of her looks). The WHOLE-STORE total is still pinned, by
+   purge's proof at section 6 (`removed.leads` 2): a refused act that wrote a row anywhere, under
+   any author, would make it 3. And the admin's log count is now asserted NOT to move on a
+   lead look — that is REC-131's rule, driven here as well as in stats-disclosure.test.mjs.
+   RE-CORRECTED THE SAME DAY (REC-131 resumed, BOB #15, BOB.md rule 7): that count is published as
+   `observationsNonLead`, and op=stats carries NO `observations` key — one key, one meaning. */
+const ruthsLeads = async () => {
+  const f = await get("frontier", "level=internet", RUTH);
+  if (!f || !f.built) return { leads: -1, looks: -1 };
+  return { leads: f.never_looked_count + new Set((f.looked || []).map((x) => x.lead)).size,
+           looks: Object.values(f.tally || {}).reduce((a, b) => a + b, 0) };
+};
 const s0 = await statsOf();
-t("the ground: op=stats counts leads (0) and the observation log exists to be written to",
-  [s0 && s0.leads, typeof (s0 && s0.observations)], [0, "number"]);
+const rl0 = await ruthsLeads();
+t("the ground: ruth has no lead and no look, and op=stats publishes `observationsNonLead` and neither `leads` "
+  + "nor `observations` (REC-131)",
+  [rl0.leads, rl0.looks, typeof (s0 && s0.observationsNonLead), !!s0 && "leads" in s0, !!s0 && "observations" in s0],
+  [0, 0, "number", false, false]);
 
 /* ===================== 1. THE ACT: op=lead ================================ */
 console.log("\n--- 1. ruth writes a lead ---");
@@ -189,9 +210,10 @@ t("§7: nor is a QUERY-STRING `author=sam` — the control plane overwrites it w
   [L1q && L1q.ok, L1q && L1q.author], [true, "ruth"]);
 const LID2 = L1q && L1q.lead_id;
 const s1 = await statsOf();
-t("the rows are written (leads 0 -> 2) and NOTHING is written to the log: nobody has looked, and "
+const rl1 = await ruthsLeads();
+t("the rows are written (ruth's leads 0 -> 2) and NOTHING is written to the log: nobody has looked, and "
   + "NEVER_LOOKED is never stored",
-  [s1 && s1.leads, s1 && s1.observations - s0.observations], [2, 0]);
+  [rl1.leads, rl1.looks, s1 && s1.observationsNonLead - s0.observationsNonLead], [2, 0, 0]);
 const r0 = await get("leadread", `id=${LID}`, RUTH);
 t("op=leadread reads it back with no looks, and says NEVER_LOOKED as an ESTABLISHED fact",
   [r0 && r0.ok, r0 && r0.author, r0 && r0.words, r0 && r0.looks && r0.looks.length, r0 && r0.state,
@@ -208,7 +230,8 @@ const empty = await post("lead", { words: "   " }, RUTH);
 t("an empty lead is refused (C-54.3)", [codeOf(empty), empty && empty.check], ["LEAD_NO_WORDS", "C-54.3"]);
 const big = await post("lead", { words: "x".repeat(128 * 1024 + 1) }, RUTH);
 t("a lead over one passage is refused rather than cut (C-54.4)", codeOf(big), "LEAD_TOO_LONG");
-t("none of the refused acts wrote a row", (await statsOf()).leads, 2);
+t("none of the refused acts wrote a row (ruth's; the whole-store total is purge's, section 6)",
+  (await ruthsLeads()).leads, 2);
 
 /* ===================== 2. FOLLOWING IT: op=leadlook ======================= */
 console.log("\n--- 2. ruth follows her lead and finds nothing ---");
@@ -218,8 +241,10 @@ t("op=leadlook records LOOKED_ABSENT against the lead, at the internet level, in
   [lk1 && lk1.ok, lk1 && lk1.lead_id, lk1 && lk1.state, lk1 && lk1.level, lk1 && lk1.looked_by,
    typeof (lk1 && lk1.seq)], [true, LID, "LOOKED_ABSENT", "internet", "ruth", "number"]);
 const s2 = await statsOf();
-t("exactly ONE observation_log row was written, and it is NOT a run's (aiRunLog unchanged)",
-  [s2.observations - s1.observations, s2.aiRunLog - s0.aiRunLog], [1, 0]);
+const rl2 = await ruthsLeads();
+t("exactly ONE observation_log row was written, and it is NOT a run's (aiRunLog unchanged) — and op=stats' "
+  + "`observationsNonLead` does NOT count it, for any caller (REC-131: a count of lead looks discloses them)",
+  [rl2.looks - rl1.looks, s2.aiRunLog - s0.aiRunLog, s2.observationsNonLead - s1.observationsNonLead], [1, 0, 0]);
 const r1 = await get("leadread", `id=${LID}`, RUTH);
 const look = r1 && r1.looks && r1.looks[0];
 t("READ BACK: the row carries authority_kind 'lead', authority = the lead id, level internet, "
@@ -253,7 +278,7 @@ t("a LOOKED_ABSENT look pointing at something it found is refused (C-54.7)",
                                   resultRef: SHA_AGENDA }, RUTH)), "LEAD_LOOK_REFERENT");
 t("the MEMBER token cannot record a member's look (C-54.8)",
   codeOf(await post("leadlook", { lead: LID, state: "LOOKED_ABSENT" }, "mem-mk4")), "LEAD_LOOK_NOT_A_MEMBER");
-t("none of the refused looks wrote a row", (await statsOf()).observations, s2.observations);
+t("none of the refused looks wrote a row", (await ruthsLeads()).looks, rl2.looks);
 
 console.log("\n--- 2c. a look that finds it ---");
 const lk2 = await post("leadlook", { lead: LID, state: "PRESENT", resultKind: "capture",

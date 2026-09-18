@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1133 rulings across 91 documents.
+1140 rulings across 91 documents.
 
 ## DEC-
 
@@ -334,10 +334,10 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:1812`
 - **D-113** — — roster/classification/ratchet rows for the ONE new op, each CORRECTED with a dated reason, never exempted.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2390`
+- **D-113** · 2026-09-18 — design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5 AS CORRECTED BY BOB #15 on 2026-09-18 (the text is being pushed by BOB; the brief pastes the ruling if it is not yet on `main`).  
+  `docs/archive/ledgers/QUEUE-closed.md:2328`
 - **D-113** — CORRECTED at its site with a dated reason, never loosened to a floor. - `bio-plane/test/hygiene.test.mjs` — the `EXEMPT` map only (D-113's purge-or-exempt census). - `bio-plane/test/bounds.test.mjs` — a fixture (two calibrations, so a cap of 1 provably bites), one `DRIVEN` row, and the capped-op roster pin 30 → 31,…  
   `docs/development/CLAIMS.md:2051`
-- **D-113** · 2026-09-18 — design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5 AS CORRECTED BY BOB #15 on 2026-09-18 (the text is being pushed by BOB; the brief pastes the ruling if it is not yet on `main`).  
-  `docs/development/QUEUE.md:1105`
 - **D-114** · 2026-07-31 — The conformance suite was CORRECTED rather than exempted, both ways, and now asserts that a two-hop archive chain passes, which is the point of disclosure.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:73`
 - **D-117** — 2 · STALE RECORD CORRECTED BY THIS SWEEP (already pushed, batch 1) `VERIFICATION.md`'s floor table (0/42 → measured 105/105 suites declaring negative controls) · D-117 resolved (coverage.mjs gates the fleet under `--strict`) · D-213's close  
@@ -535,7 +535,7 @@ authority is the file named, never this one.
 - **D-329** · 2026-09-13 — AND THE ROW'S OWN CONCLUSION IS OVERTURNED ON A MEASUREMENT: A STATIC INSTRUMENT CAN SEE THIS.** This row held that *"an assertion label composed at run time exists in no file, so no static instrument can see it and only a periodic census can."* That is true of the RENDERED label and FALSE OF THE TEMPLATE, which…  
   `docs/archive/ledgers/DEBT-closed.md:53`
 - **D-329** — D-329 — the row's own conclusion OVERTURNED on a measurement: a run-time-composed label exists in no file only as RENDERED; its TEMPLATE does, and `composedSpan()` (new `scripts/armdecay.mjs`) catches a fragment that resolves against a suite's template only by eating its `${…}` slot — reach 2,700 label quotes from…  
-  `docs/development/QUEUE.md:1244`
+  `docs/development/QUEUE.md:1235`
 - **D-330** · 2026-09-13 — AMENDED MID-ITEM, 2026-09-13: `docs/development/DEBT.md` gains a SECOND row beyond D-330's disposition — **D-333**, the class this item's measurement establishes and its repair does not close: a driver's declared TALLY decays while every one of its anchors stays live, and no static check can see the difference…  
   `docs/development/CLAIMS.md:3282`
 - **D-331** · 2026-09-13 — RULED AS THIS ROW RECOMMENDED, AND THE RULING DECLINES BOTH HALVES OF THE FALSE CHOICE: A THROWING DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING.** `scripts/armdecay.mjs`'s `preflight()` is the shared dry pass — it counts every arm's quote in the file that arm will write, prints the WHOLE table, and only…  
@@ -748,10 +748,16 @@ authority is the file named, never this one.
   `docs/development/INTERFACE-CHANGES.md:10591`
 - **IC-138** — `bio-plane/test/rec121-chain-bytes.test.mjs` §4 CORRECTED at its site with the reason. - Generated: `bio-plane/dist/*` rebuilt. - Docs: `INTERFACE-CHANGES.md` (IC-138, minted with `node tools/mintid.mjs IC`), `CONTENT-SEARCH-DESIGN.md` (§4.2 and front matter), `docs/DECIDED.md` on regeneration, `.gitignore` (the…  
   `docs/development/CLAIMS.md:13585`
-- **IC-144** · 2026-09-14 — `op=stats`/`op=selftest`/`op=livefire` withhold `leads` and `observations` from member and probe, keeping both for the admin class (IC-144 — SUPERSEDED IN PART by the corrected ruling below; REC-131 brings the code to it), and `op=frontier&level=internet` applies lead visibility before grouping through `#leadReach`…  
-  `docs/development/MEMBER-KNOWLEDGE-DESIGN.md:3`
 - **IC-144** — t levels' tallies never count lead rows): replace it with a pointer to MEMBER-KNOWLEDGE §5; (6) IC-144's text is marked SUPERSEDED IN PART by the new IC.  
-  `docs/development/QUEUE.md:1107`
+  `docs/archive/ledgers/QUEUE-closed.md:2330`
+- **IC-144** · 2026-09-18 — EDES IC-144's admin-class stamp · PROPOSED 2026-09-18 (REC-131, minted with `node tools/mintid.mjs IC` BEFORE building; AMENDED IN PLACE the same day when CONDUCT #5 resumed REC-131 with two more BOB #15 rulings, before integration) — the version bump and the RESOLUTION are CONDUCT's  
+  `docs/development/INTERFACE-CHANGES.md:10786`
+- **IC-144** · 2026-09-14 — `op=stats`/`op=selftest`/`op=livefire` withhold `leads` and `observations` from member and probe, keeping both for the admin class (IC-144 — SUPERSEDED IN PART by the corrected ruling below).  
+  `docs/development/MEMBER-KNOWLEDGE-DESIGN.md:3`
+- **IC-148** · 2026-09-18 — BOB #15's CORRECTED §5 IS BUILT, WITH BOTH LATER RULINGS FOLDED INTO ONE MAJOR (IC-148, I3 → 30.0.0):** no class receives a lead count; the narrower log count is `observationsNonLead` (one key, one meaning); `dbBytes` goes to the admin class only, through a server-set `capacity` stamp that defaults closed;…  
+  `docs/archive/ledgers/QUEUE-closed.md:2325`
+- **IC-148** · 2026-09-18 — IC-148 AMENDED IN PLACE (MAJOR, 29.4.0 → 30.0.0): `dbBytes` for the admin class only under a server-set `capacity` stamp; the wire's log count renamed `observationsNonLead`, no `observations` key on the wire, purge's proof unchanged.  
+  `docs/development/CLAIMS.md:13978`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
@@ -1132,8 +1138,6 @@ authority is the file named, never this one.
   `docs/development/CONTENT-SEARCH-DESIGN.md:13`
 - **REC-129** · 2026-09-18 — RULED by BOB (design): both keys go to the ADMIN class only, and member and probe receive NO such key.  
   `docs/archive/ledgers/QUEUE-closed.md:2285`
-- **REC-129** · 2026-09-18 — A CORRECTION TO JUST-LANDED REC-129 (IC-144), ON BOB #15's CORRECTED RULING — FIRST AMONG EQUALS: `leads` LEAVES `op=stats` FOR EVERY CLASS, THE ADMIN TOKEN INCLUDED; `observations` STAYS ON `op=stats` FOR EVERY CLASS BUT COUNTS ONLY ROWS WITHOUT `authority_kind='lead'`, THE SAME MEANING FOR EVERY CALLER.** — owner…  
-  `docs/development/QUEUE.md:1102`
 - **REC-130** · 2026-09-18 — ALL THREE DECIDED BY BOB #14 the same hour, as applications of existing doctrine; BOB is writing them into `BIO_Publication_v0_1.md` §6A — this row UNBLOCKS against that text.** (1) unsigned case documents were readable anonymously → `REC-130`, which goes FIRST; (2) a non-member recipient reaches the copy by a…  
   `docs/archive/ledgers/QUEUE-closed.md:2305`
 - **REC-130** — CORRECTED by BOB #15: fixed on `main` by REC-130 at `a32fda24`, 17 minutes before this file was written**; CONDUCT #4's handoff adds REC-125 and MK-1, so FOUR exposures are fixed on `main` and open on any plane running 0.58.0).  
@@ -1975,6 +1979,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:13702`
 - arm whose find-string the refactor moves, CORRECTED with the reason, never exempted. - any suite pinning a registry or roster the change moves, corrected with its reason. - `bio-plane/dist/**` rebuilt if the battery requires it. - `docs/architecture/construct-status.json` (`9.internet`, `3.census` reviewed),…  
   `docs/development/CLAIMS.md:13768`
+- `bio-plane/test/stats-disclosure.test.mjs`, `bio-plane/test/nc-rec129.mjs` (its stats arms) — CORRECTED at their sites. - `bio-plane/test/lead.test.mjs` — its op=stats `leads`/`observations` arms, CORRECTED with the reason. - any suite reading `leads`/`observations` off op=stats, corrected with its reason. -…  
+  `docs/development/CLAIMS.md:13889`
+- `bio-plane/test/lead.test.mjs` — its op=stats `leads`/`observations` arms, CORRECTED with the reason. - any suite reading `leads`/`observations` off op=stats, corrected with its reason. - `bio-plane/dist/**` rebuilt. - `docs/development/OBSERVATION-LOG-DESIGN.md` (§6 premise 1, the internet-level paragraph, Status…  
+  `docs/development/CLAIMS.md:13890`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2113,8 +2121,14 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:10439`
 - `bio-plane/test/deliverer.test.mjs` — its direct store read of an UNSIGNED case document CORRECTED to stamp the owner's viewer, with the dated reason (never exempted); new §1b (the founder reads an unsigned case through `op=casedocument`; vera, a member of no project, gets a stranger's bytes) and a §2 arm (vera…  
   `docs/development/INTERFACE-CHANGES.md:10778`
+- on BOB #15's CORRECTED ruling in `MEMBER-KNOWLEDGE-DESIGN.md` §5, and on the two rulings CONDUCT #5 carried when it resumed the row (the key rename under `kickoffs/BOB.md` rule 7, and `dbBytes`). §5 now carries both, written by this worker from the row, because they were NOT in §5 at `5ea27761` as the resume brief…  
+  `docs/development/INTERFACE-CHANGES.md:10792`
+- token and all CORRECTED to `observationsNonLead` at their sites (the last is a manual probe needing a pre-item checkout and was not run; its change is the key name only). **THE RULINGS, in the document's own terms (§5).** (1) `#leadVisibleTo` reaches no `class:*` credential and skips the  
+  `docs/development/INTERFACE-CHANGES.md:10807`
+- `bio-plane/test/stats-disclosure.test.mjs` — CORRECTED at its sites twice, with dated reasons (never exempted): A the byte-identical headline control for the ADMIN token (with `dbBytes` set aside, its stated residue), the member token, a member session and the probe; B `leads` and `observations` absent and…  
+  `docs/development/INTERFACE-CHANGES.md:10857`
 - rethrowing everything else), `caseproduction` (the `publishCase(` anchor CORRECTED to the definition — a new CALL site had put the ratify committer's `INSERT INTO cases` inside its window), and `casesign.control.mjs` arms (e)(f)(g) RE-ANCHORED over the three-line gate and re-run at their recorded figures (66/8,…  
-  `docs/development/INTERFACE-CHANGES.md:10853`
+  `docs/development/INTERFACE-CHANGES.md:10940`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  
@@ -2254,7 +2268,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - version that the content is extracted from."* RULED, folded into Part II §16.  
   `docs/development/QUEUE.md:878`
 - D, driven through the op; the six keys are gone from finding bytes and `caseflip.test.mjs`'s still-there assertions are CORRECTED (never exempted) to say so; the stranger-verification path still passes end to end with the instance unreachable.  
-  `docs/development/QUEUE.md:1208`
+  `docs/development/QUEUE.md:1199`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:240`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  
