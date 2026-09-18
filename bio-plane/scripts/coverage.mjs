@@ -1236,7 +1236,8 @@ const REGISTER_FLOOR = {
      failure mode (a dropped floor move goes SLACK, not broken). classified and corpus are
      UNMOVED and that is stated rather than implied: the arriving arm joined an already-counted
      declaration rather than adding a suite. */
-  arms: 1332,
+  arms: 1337,
+  // [branch record | REC-126 on origin/main 9ea2eb02] MOVED arms 1332 -> 1337, classified 230 -> 231, corpus 231 -> 232, run 193 -> 194, from this item's own post-commit `--strict` print (`arms 1337/1332 · classified 231/230 · corpus (suites read) 232/231 · GREW by 5 arm(s)`, `floor 194/193 reproducible · GREW by 1`). Cause: one new suite, `reviewcopy.test.mjs`, declaring (0) plus four arms (a)-(d), all RUN 2026-09-18 by `test/reviewcopy.control.mjs`. Nothing FELL.
   // [CONDUCT #4 at REC-130's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1332/1318 · classified 230/230 · corpus (suites read) 231/231`, `floor 193/193 reproducible`.
   // [CONDUCT #4 at MK-4's merge onto MK-1] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1327/1314 · classified 230/229 · corpus (suites read) 231/230`, `floor 193/192 reproducible`; 188/188 ops reached, 327/327 checks named.
   // [branch record | REC-130 on origin/main f426f519] MOVED 1314 -> 1318 from this item's own post-commit `--strict` print at 5a3a836c (`arms 1318/1314 · classified 229/229 · corpus (suites read) 230/230 · GREW by 4 arm(s)`, `floor 192/192 reproducible`). Cause: `casesign.test.mjs`'s declaration gained arms (e)-(h). classified, corpus and run UNMOVED — the arms joined an already-counted declaration.
@@ -1314,8 +1315,8 @@ const REGISTER_FLOOR = {
   // [branch record | REC-96 read arms 1134 on its own tree] reported the suite as NOT IN ANY COMMIT and refused to count work no other
   // [branch record | REC-96 read arms 1134 on its own tree] checkout can see (D-238), so a floor moved then would have been a figure
   // [branch record | REC-96 read arms 1134 on its own tree] nobody else reproduces. CONDUCT re-reads this on the MERGED tree. 
-  classified: 230,
-  corpus: 231,
+  classified: 231,
+  corpus: 232,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
@@ -1343,7 +1344,7 @@ const REGISTER_FLOOR = {
      EXACT, so nothing about that item moved either figure. It is the sixth consecutive
      item to find a floor already stale BY MEASURING IT, which is the argument for
      measuring rather than for trusting the number in the file. */
-  run: 193,
+  run: 194,   // REC-126 2026-09-18: 193 -> 194 from the post-commit print (`floor 194/193 reproducible`), reviewcopy.test.mjs
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
