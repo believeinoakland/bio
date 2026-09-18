@@ -497,13 +497,37 @@ console.log("\n--- 9. THE FIFTH-READER CENSUS, DRIVEN THROUGH THE OPS AND NAMED 
      columns and the same LIMIT constant as the path `op=versionstrength` uses
      — and that one resolves through `#versionLegsAsMembers` and has since
      REC-88. Two readers of one column in one file, ~650 lines apart, one
-     capped and one not. Pinned by SOURCE here because building a recorded
-     version is a ceremony this fixture does not perform. */
-  t("A SIXTH READER, NAMED: `#versionCollections` reads the version legs' grade RAW and asks the registry NOTHING",
+     capped and one not.
+
+     CORRECTED 2026-09-17 BY REC-119, WHICH CLOSED D-411 — NOT EXEMPTED, AND
+     THE WAY THE OLD ARM WOULD HAVE FAILED IS WORTH MORE THAN THE CORRECTION.
+
+     The arm below used to assert `asks_registry: false` — the defect PINNED
+     OPEN as a finding, which was right while it stood. **It would have gone on
+     passing after the fix.** It asked whether `#versionCollections`'s OWN
+     BODY spells `earnedBasisRegistry`, and REC-119 resolved the legs the way
+     REC-114 and REC-118 both did — through a NAMED private resolver beside it.
+     So the body does not spell the registry, the regex answers `false`, and
+     the arm keeps reporting a defect that is gone, GREEN, for ever.
+
+     That is an assertion passing for the wrong reason, which is worse here than
+     a failing one: this suite is the census that FOUND D-411, so a stale arm in
+     it would have told the next census the sixth reader was still raw. The arm
+     now asks the question that survives the fix — is the letter RESOLVED on the
+     way out, by the one arithmetic — rather than asking where one identifier
+     happens to be spelled. */
+  const VC_BODY = /#versionCollections\(bundleId, row\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)?.[0] ?? "";
+  const VLE_BODY = /#versionLegsEarned\(rows\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)?.[0] ?? "";
+  t("THE SIXTH READER IS CLOSED (REC-119/D-411): `#versionCollections` still reads the same columns, and now RESOLVES them through the named resolver, which asks the registry and applies the ONE arithmetic",
     { reads_grade: /#versionCollections\(bundleId, row\) \{[\s\S]{0,900}?grade, grade_axis/.test(STORE_SRC),
-      asks_registry: /#versionCollections\(bundleId, row\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)
-        ? /earnedBasisRegistry/.test(/#versionCollections\(bundleId, row\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)[0]) : null },
-    { reads_grade: true, asks_registry: false });
+      routes_through_resolver: /#versionLegsEarned\(/.test(VC_BODY),
+      resolver_exists: VLE_BODY.length > 0,
+      resolver_asks_registry: /earnedBasisRegistry\(/.test(VLE_BODY),
+      resolver_calls_one_arithmetic: /Store\.#capturedAt\(/.test(VLE_BODY),
+      labels_the_frozen_half: /composition_grades/.test(VC_BODY) },
+    { reads_grade: true, routes_through_resolver: true, resolver_exists: true,
+      resolver_asks_registry: true, resolver_calls_one_arithmetic: true,
+      labels_the_frozen_half: true });
   t("...and its CAPPED TWIN reads the SAME table in the SAME shape, which is what makes this a defect rather than a design",
     /#versionLegsAsMembers[\s\S]{0,4000}?earnedBasisRegistry\(/.test(STORE_SRC), true);
   t("both of its consumers are MEMBER-CLASS ops, so this is member-reachable and not a DO-internal read",

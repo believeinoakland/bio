@@ -378,19 +378,35 @@ console.log("\n--- 5. SOURCE PINS — ONE ARITHMETIC, AND A THREE-SITE DRIFT DET
      MEASURED that. It does now: an edit to one site that does not reach the
      others fails here, by name. A traps entry is a defect nobody instrumented;
      this is the instrument. */
+  /* EXTENDED FROM THREE TO FOUR 2026-09-17 BY REC-119 (D-411), WHICH ADDED THE
+     FOURTH READER — `#versionLegsEarned`, feeding `op=basisversions` and
+     `op=suggest`. **Extending this instrument is owed by the item that adds a
+     reader, and that obligation is the point of the instrument existing.** A
+     fourth loop over one rule that this detector could not see would be exactly
+     the silent drift REC-114 named and REC-118 built this to measure — an
+     instrument that does not grow with its subject stops being one. */
   const sites = { walk: /#strengthWalk/.test(STORE_SRC),
                   listing: /#legEarnedCapture\(arm, rows\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)?.[0] ?? "",
-                  reeval: m };
+                  reeval: m,
+                  versions: /#versionLegsEarned\(rows\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)?.[0] ?? "" };
   const conditions = (src) => ({
     axis: /grade_axis === "capture"/.test(src),
     carries: /grade != null/.test(src),
     not_inquiry: /normalizeType\([a-z]\.target_type\) !== "inquiry"/.test(src),
     one_arithmetic: /Store\.#capturedAt\(/.test(src) });
-  t("ALL THREE READERS OF ONE RULE CARRY THE SAME THREE CONDITIONS AND THE SAME ONE ARITHMETIC — the drift between them is measured, not trusted",
-    { listing: conditions(sites.listing), reevaluations: conditions(sites.reeval) },
+  t("ALL FOUR READERS OF ONE RULE CARRY THE SAME THREE CONDITIONS AND THE SAME ONE ARITHMETIC — the drift between them is measured, not trusted",
+    { listing: conditions(sites.listing), reevaluations: conditions(sites.reeval),
+      versions: conditions(sites.versions) },
     { listing: { axis: true, carries: true, not_inquiry: true, one_arithmetic: true },
-      reevaluations: { axis: true, carries: true, not_inquiry: true, one_arithmetic: true } });
-  t("the WALK is untouched by this item — `#capturedAt` is READ, never edited, which is what keeps the three readers one rule",
+      reevaluations: { axis: true, carries: true, not_inquiry: true, one_arithmetic: true },
+      versions: { axis: true, carries: true, not_inquiry: true, one_arithmetic: true } });
+  t("and the FOURTH reader (REC-119) asks the registry ONCE for the whole version and mints no letter of its own, on the same terms as the other three",
+    { found: sites.versions.length > 0,
+      registry_calls: (sites.versions.match(/earnedBasisRegistry\(/g) || []).length,
+      mints_no_letter: /["']\s*[ABCD]\s*["']/.test(sites.versions),
+      no_strengthOf: /strengthOf\(/.test(sites.versions) },
+    { found: true, registry_calls: 1, mints_no_letter: false, no_strengthOf: false });
+  t("the WALK is untouched by this item — `#capturedAt` is READ, never edited, which is what keeps the four readers one rule",
     /static #capturedAt\(stated, earned, targetId\) \{/.test(STORE_SRC), true);
   t("and REC-114's listing resolver is untouched by this item — its body still stands as that item landed it",
     sites.listing.includes("#legEarnedCapture(arm, rows)"), true);
