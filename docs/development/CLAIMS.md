@@ -13221,6 +13221,8 @@ this branch, by this worker. Paths added:
   - `agent-worker/test/harness.test.mjs` — one arm in A8 and a new section R.
   - `agent-worker/dist/**` — the committed bundle, rebuilt (FL-9's guard requires it).
   - `bio-plane/test/nc-rec100.mjs` — two arms added (`aw-steplog`, `aw-refused`).
+  - `agent-worker/test/harness.control.mjs` — arm H6's anchor MOVED with the line it quotes (found by
+    `m025-arm-anchor-witness` A4 on the first full battery; H6 re-run AS DECLARED).
 NOT touched in FLEET's area: the version (`agent-worker/package.json`), `wrangler.jsonc`, every other
 suite. The rebase onto `origin/main` at `2d51e5d3` happened FIRST, and every figure below is off the
 rebased tree.
