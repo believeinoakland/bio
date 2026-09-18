@@ -140,11 +140,20 @@ section("2 — THE FULL MIGRATION, SIMULATED ON A COPY OF THE REAL LEDGERS: ever
       + "nothing refused, id multisets and every non-blank LINE conserved, owed identical");
 {
   const root = mkdtempSync(join(tmpdir(), "ledger-real-"));
+  /* CORRECTED 2026-09-18 by CONDUCT #5, at LED-3: this section copied the WORKING TREE's ledgers, and LED-3 then
+     PERFORMED the migration it simulates, so the live ledgers hold no closed row and the arm below read 0 — the
+     section became vacuous by construction, not because anything broke. It now reads its input from the LAST
+     PRE-MIGRATION tree, PINNED by sha and read out of git, so it goes on proving what it always proved (that the
+     whole migration over the real ledgers conserves every id and line and changes no owed answer), and it stays
+     non-vacuous for as long as the history exists. A file the pinned tree did not have is skipped, never faked. */
+  const PRE_MIGRATION = "9ea2eb02";
+  const atPin = (f) => { const r = spawnSync("git", ["-C", REPO, "show", `${PRE_MIGRATION}:${f}`], { encoding: "utf8", maxBuffer: 1 << 28 });
+                         return r.status === 0 ? r.stdout : null; };
   const files = ["docs/development/QUEUE.md", "docs/development/DEBT.md", "docs/development/DECISIONS.md",
                  "docs/archive/IS-BUILD-PLAN.md", "docs/architecture/construct-status.json",
                  /* the archive family through the ARCHIVER's own lister, not a second walk (hygiene's walk census) */
                  ...Object.values(L.LEDGERS).flatMap((l) => L.archiveFiles(l, { repo: REPO }))];
-  for (const f of files) { mkdirSync(dirname(join(root, f)), { recursive: true }); copyFileSync(join(REPO, f), join(root, f)); }
+  for (const f of files) { const x = atPin(f); if (x === null) continue; mkdirSync(dirname(join(root, f)), { recursive: true }); writeFileSync(join(root, f), x); }
   const snap = () => Object.fromEntries(Object.values(L.LEDGERS).map((l) =>
     [l.name, L.idCounts(l, [l.live, ...L.archiveFiles(l, { repo: root })].map((f) => read(root, f)))]));
   const lanes = ["BOB", "CONDUCT", "DIST", "ZZZNOTALANE"];
