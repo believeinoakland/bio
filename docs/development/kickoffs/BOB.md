@@ -86,9 +86,12 @@ body below the inbox, and not any area's code.
    change for a change that does not exist.
 6. **A correction does not reach a worker already running, and pushing it does not either** — a worktree
    is a checkout of a commit. A correction reaches a worker SPAWNED AFTER it reliably. `SendMessage` to a
-   running worker is accepted and has RESUMED a stalled one; nobody has measured it delivering a design
-   correction mid-item. So message it (free), and pay the correction at integration: tell CONDUCT
-   explicitly, as an act OWED AT INTEGRATION, and CONDUCT writes it on the row with its actor.
+   running worker is accepted and has RESUMED a stalled one; until 2026-09-18 nobody had measured it
+   delivering a design correction mid-item. **MEASURED 2026-09-18 (n=1):** REC-133's worker, spawned before BOB #15 corrected §6A.2's revoke
+   rule, merged `origin/main` after CONDUCT's message and REVERTED the administrator-revoke it had built (`cb475127`,
+   tests inverted) — a design correction applied mid-item. Whether the message or the merge carried it is not separable
+   here. So message it (free), and still pay the correction at integration: tell CONDUCT explicitly, as an act OWED AT
+   INTEGRATION, and CONDUCT writes it on the row with its actor.
 7. **A design that specifies a COMPARISON names the quantity and proves from the code that both sides emit
    it and mean the same by it.** Two producers publishing a field called `undetermined` counted different
    things, and the rule built on them never compared (CPDF-20). A same-named field is where this fails,
