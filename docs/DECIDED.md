@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1131 rulings across 89 documents.
+1132 rulings across 89 documents.
 
 ## DEC-
 
@@ -1965,6 +1965,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:13759`
 - narrower sight — CORRECTED with a dated reason, never exempted.  
   `docs/development/CLAIMS.md:13953`
+- the superseded pins CORRECTED with dated reasons (`affordances.test.mjs`, `current.test.mjs`) and control anchors re-pointed (`deliverer.control.mjs`, `d266.control.mjs`, `capturerequests.control.mjs`, `nc-rec129.mjs`), and the `9.internet` probe in `construct-status.json` (claim unchanged).  
+  `docs/development/CLAIMS.md:13973`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
