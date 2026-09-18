@@ -3755,10 +3755,12 @@ __export(bio_checks_exports, {
   MACHINE_STAMP_PREFIXES: () => MACHINE_STAMP_PREFIXES,
   MEANING_READ_CHECKS: () => MEANING_READ_CHECKS,
   MECHANICAL_FIELD_SETS: () => MECHANICAL_FIELD_SETS,
+  MEMBER_ID_CHECKS: () => MEMBER_ID_CHECKS,
   MONITOR_FREQ: () => MONITOR_FREQ,
   NARROW_CHECKS: () => NARROW_CHECKS,
   NON_MEMBER_AUTHORS: () => NON_MEMBER_AUTHORS,
   OBJECT_TYPES: () => OBJECT_TYPES,
+  PROJECT_AUTHORITY_CHECKS: () => PROJECT_AUTHORITY_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
   RESOLUTIONS: () => RESOLUTIONS,
@@ -10144,6 +10146,32 @@ var ACT_SHAPE_CHECKS = {
     where: "src/store.mjs conclude > is-conclude-answer",
     translation: "You have written a falsifier and also asked to record that none could be stated. Those are two different things to say about this finding, and choosing between them is not something the record should do on your behalf. Keep the falsifier, or clear it and record the absence."
   },
+  /* REC-124 / INVESTIGATIVE-SESSION.md §7.1 (BOB #15, 2026-09-18): a conclusion
+     ADOPTS the claim of the reading a project stands on, and the claim is what
+     was concluded. NO_CLAIM is every door to "there is nothing to adopt" — the
+     project stands on no reading, the reading is not accepted or states no
+     claim, or commentary arrives with no adopted claim to comment beyond. */
+  NO_CLAIM: {
+    check: "C-33.34",
+    where: "src/store.mjs conclude > is-conclude-claim",
+    translation: "Concluding for a project adopts the claim of the reading the project stands on, and that claim is what the group concluded. There is no claim to adopt here. State the claim on a reading first \u2014 a claim nothing supports yet is allowed \u2014 make that reading the one the project stands on, and conclude again."
+  },
+  /* REC-124 / §7.1 item 2. A free conclusion text beside a project could say
+     what no claim said; the member is told the door rather than having their
+     words quietly relabelled as commentary. */
+  CONCLUSION_IS_THE_CLAIM: {
+    check: "C-33.35",
+    where: "src/store.mjs conclude > is-conclude-answer",
+    translation: "When a project concludes, the claim it adopts is the conclusion, so a separate conclusion text is not accepted \u2014 it could say something no claim said. Anything you want to add beyond the claim can be sent as commentary: it is recorded in your name and is never treated as evidence."
+  },
+  /* REC-124. The project's own frontmatter could not take the conclusion row
+     in place, so nothing was written — the make-current writer's condition, on
+     the conclusion row. */
+  UNSPLICEABLE_CONCLUSIONS: {
+    check: "C-33.36",
+    where: "src/store.mjs #setProjectConclusion > is-conclusion-row",
+    translation: "The project's own record is laid out in a way this act cannot add a conclusion to without rewriting parts of it nobody asked to change, so nothing was recorded. The project's file needs its list of conclusions tidied before it can conclude."
+  },
   NO_RESOLUTION: {
     check: "C-33.3",
     where: "src/store.mjs actionMove > is-move-resolution",
@@ -11521,6 +11549,25 @@ var LEAD_CHECKS = {
     check: "C-54.10",
     where: "src/store.mjs leadShare > is-lead-share",
     translation: "Only the member who wrote a lead can share it. A lead is what one person was told; passing someone else's on is theirs to decide."
+  }
+};
+var MEMBER_ID_CHECKS = {
+  MEMBER_ID_RESERVED: {
+    check: "C-55.1",
+    where: "src/store.mjs memberAdd > is-member-id-reserved",
+    translation: "That member id is reserved. `admin` is the name this instance gives its founding administrator, and anything that checks whether someone is an administrator by name would read a member enrolled as `admin` as the founder. Nothing was written. Choose a different id for this person."
+  }
+};
+var PROJECT_AUTHORITY_CHECKS = {
+  PROJECT_ACT_NOT_A_PARTICIPANT: {
+    check: "C-56.1",
+    where: "src/store.mjs #projectAuthority > is-project-authority",
+    translation: "Only someone working in this project can do that. You can see the project, but you have not joined it, and seeing a project does not let you change it \u2014 administrators included. Nothing was changed. Ask an owner of the project to invite you, then join it."
+  },
+  PROJECT_ACT_NOT_THE_OWNER: {
+    check: "C-56.2",
+    where: "src/store.mjs #projectAuthority > is-project-authority",
+    translation: "Only an owner of this project can do that. You are not one of its owners, and seeing a project does not let you direct it \u2014 administrators included. Nothing was changed."
   }
 };
 function leadLegFindings(label, leg, findings) {
@@ -14728,7 +14775,7 @@ var RUNG_ABSENT = {
      and they are NOT `reversible` — a draft is edited in place and a comment is
      answered by another, but no act takes either back. Neither is ever published:
      publication stays the one irreversible act (§6A.1). */
-  casedraft: { ground: "undetermined", is: "the project's owner holds the arguments of a case publication under a draft id BEFORE any gate runs; mutable, never published, the review copy's production (BIO_Publication \xA76A.4)" },
+  casedraft: { ground: "undetermined", is: "an editor of the project (an owner or a joined participant holding contribute, \xA76A.2) holds the arguments of a case publication under a draft id BEFORE any gate runs; mutable, never published, the review copy's production (BIO_Publication \xA76A.4)" },
   reviewgrant: { ground: "credential", is: "the owner grants one named recipient READ-AND-COMMENT on one draft at one case edition, by a per-grant read secret" },
   reviewrevoke: { ground: "credential", is: "the owner withdraws a review grant; the secret then answers as one never issued" },
   reviewcomment: { ground: "undetermined", is: "a recipient (through a live grant) or a member with standing comments on a draft; attributed, and a recipient's comment is recorded as a recipient's" },
@@ -15274,12 +15321,21 @@ var ACTS = [
     types: ["inquiry"],
     applies: (f2, ty) => ty === "inquiry" && (f2.basis_versions ?? 0) >= 1
   },
+  /* REC-134 / C-56: `f.project_participant !== false` on the PROJECT arm of cite, sever and
+     reinstate, and only there. Each of the three edits the project's own document, and the
+     store now refuses an actor who has not JOINED that project (`#projectAuthority`, §7.5) —
+     which reaches every administrator, because an administrator SEES every project and so
+     reached these acts through the sight gate alone. Offering them to such a caller would be
+     the pre-flight disagreeing with the refusal it fronts (DEC-8). `!== false` for D-310's
+     reason exactly: the fact is three-valued and a caller with no roster position (a `class:*`
+     credential) reads null and is byte-unchanged. The information and question arms are not
+     narrowed — citing FROM them is not an act on a project. */
   {
     id: "cite",
     label: "Cite material into a case or a question",
     weight: "report",
     types: ["information", "project", "inquiry"],
-    applies: (f2, ty) => ty === "information" || ty === "project" || ty === "inquiry"
+    applies: (f2, ty) => ty === "information" || ty === "project" && f2.project_participant !== false || ty === "inquiry"
   },
   /* S-11 step 2: withdrawing a citation without deleting it. From the CITED
        side: some CASE holds a live cites edge to it. From the case's own side:
@@ -15322,14 +15378,14 @@ var ACTS = [
     label: "Sever a citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && f2.cites_out.confirmed > 0
+    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && f2.cites_out.confirmed > 0 && f2.project_participant !== false
   },
   {
     id: "reinstate",
     label: "Reinstate a severed citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 || ty === "project" && f2.cites_out.severed > 0
+    applies: (f2, ty) => (ty === "information" || ty === "inquiry") && (f2.cited_by_case?.severed ?? 0) > 0 || ty === "project" && f2.cites_out.severed > 0 && f2.project_participant !== false
   }
 ];
 var ACT_IDS = new Set(ACTS.map((a) => a.id));
@@ -23576,7 +23632,11 @@ var QUEUE_FINDING_KINDS = {
        act — and `test/current.test.mjs` DRIVES the mute refusal rather than
        asserting the classification. */
   "stance-changed-here-not-elsewhere": "a project moved what it stands on for a SHARED question and the other projects drawing on it did not: one question, two live readings, refused by nothing (\xA77, D-216 \u2014 per-project stance) \u2014 LIVE: store.mjs #findingsStanceDiverged",
-  "new-version-arrived-from-another-team": "a new reading of a question this project draws on was proposed under ANOTHER project's work, so it arrived without anybody here authoring it (\xA77, D-216 \u2014 one question beneath several projects) \u2014 LIVE: store.mjs #findingsVersionFromAnotherTeam"
+  "new-version-arrived-from-another-team": "a new reading of a question this project draws on was proposed under ANOTHER project's work, so it arrived without anybody here authoring it (\xA77, D-216 \u2014 one question beneath several projects) \u2014 LIVE: store.mjs #findingsVersionFromAnotherTeam",
+  /* REC-124 / INVESTIGATIVE-SESSION.md §7.1 item 3. FINDING for §7's reason:
+     another team concluding the question you share is a fact about the work,
+     and no member may silence it for the team. */
+  "shared-inquiry-concluded-by-another-project": "another project drawing on a SHARED question concluded it, adopting the claim of the reading it stands on; nothing this project stands on or concluded has moved (\xA77.1 \u2014 a conclusion is per-project) \u2014 LIVE: store.mjs #findingsConcludedElsewhere"
 };
 function classOfKind(kind) {
   if (typeof kind !== "string" || !kind) return null;
@@ -28010,7 +28070,7 @@ var Store = class _Store extends DurableObject {
    *  so the publication and the refusal cannot disagree. The DERIVATION (which
    *  acts those facts admit) happens at the control plane, where NEEDS and
    *  SESSION_OPS live; this method holds no copy of any act rule. */
-  affordanceFacts({ target, viewer = null } = {}) {
+  affordanceFacts({ target, viewer = null, identity = null } = {}) {
     if (!target) return {
       ok: false,
       reason: "NO_TARGET",
@@ -28102,7 +28162,29 @@ var Store = class _Store extends DurableObject {
          fires first in publishCase()); folding the two into one gate here
          would make this fence tighter than its rule, which is an
          undeclared interface change wearing the costume of caution. */
-      project_owner: gate.member === null ? null : this.#ownsAnyProject(gate.member),
+      /* REC-132 / D-422: a POSITIONAL fact, so it is asked of WHO the caller is
+         (`identity`, the control plane's stamp) and never of what it may SEE. The
+         founder's session sees as an administrator (the bare `admin` viewer, which
+         carries no member) and still owns exactly the projects it owns — read
+         through the visibility half, this would answer null and the act catalogue
+         would offer the founder `publish` while it owns nothing. */
+      project_owner: (() => {
+        const who = this.#positionalMember(viewer, identity);
+        return who === null ? null : this.#ownsAnyProject(who);
+      })(),
+      /* REC-134 / C-56: WHETHER THE CALLER HAS JOINED THIS PROJECT — a POSITIONAL fact on a
+         PROJECT target, asked of `identity` through the SAME predicate the acts' refusal
+         runs (`#isJoinedParticipant`, via `#projectAuthority`), so a published act and the
+         refusal it fronts cannot disagree (DEC-8). It exists because an administrator SEES
+         every project, so `cite`/`sever`/`reinstate` on a project it never joined would be
+         offered and then refused. THREE-VALUED, `project_owner`'s shape exactly: null on
+         any target that is not a project and for a caller with no roster position (a
+         `class:*` credential), whose act set is therefore byte-unchanged. */
+      project_participant: (() => {
+        if (normalizeType(b.object_type) !== "project") return null;
+        const who = this.#positionalMember(viewer, identity);
+        return who === null ? null : this.#isJoinedParticipant(b.bundle_id, who);
+      })(),
       basis_legs: Array.isArray(docFm.basis) ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
       rested_on: {
         working: rested.confirmed.length,
@@ -29167,7 +29249,8 @@ var Store = class _Store extends DurableObject {
     from,
     to,
     verb,
-    resultKey
+    resultKey,
+    identity = null
   }) {
     const sel = this.selectionResolve({ handle, viewer, owner, weight: "refuse" });
     if (!sel.ok) return sel;
@@ -29181,6 +29264,8 @@ var Store = class _Store extends DurableObject {
         got: p.object_type,
         detail: "cites lives on the citing object and this action edits a Project's edges"
       };
+    const denied = this.#projectAuthority(p.bundle_id, identity, "joined", resultKey === "severed" ? "sever" : "reinstate");
+    if (denied) return denied;
     const why = String(reason ?? "").trim();
     if (!why)
       return {
@@ -29331,7 +29416,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       gate: sel.gate
     };
   }
-  sever({ project, handle, viewer = null, owner = null, reason = "", author = null } = {}) {
+  sever({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
     return this.#edgeTransition({
       project,
       handle,
@@ -29339,13 +29424,14 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       owner,
       reason,
       author,
+      identity,
       from: ["confirmed", "proposed"],
       to: "severed",
       verb: "Severed",
       resultKey: "severed"
     });
   }
-  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null } = {}) {
+  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
     return this.#edgeTransition({
       project,
       handle,
@@ -29353,6 +29439,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       owner,
       reason,
       author,
+      identity,
       from: ["severed"],
       to: "confirmed",
       verb: "Reinstated",
@@ -30448,14 +30535,40 @@ Mitigation: ${mit}
    * own vocabulary has no `concluded` and whose heading set has no
    * `## Conclusion` to put one in — is refused ILLEGAL_TRANSITION rather than
    * quietly given a state its contract never had. Modernizing such a document
-   * is a promotion, and then it concludes like any other. */
+   * is a promotion, and then it concludes like any other.
+   *
+   * REC-124 / INVESTIGATIVE-SESSION.md §7.1 (BOB #15, 2026-09-18, at Bob's
+   * direction): A CONCLUSION BELONGS TO THE PROJECT'S RELATIONSHIP WITH THE
+   * INQUIRY, BESIDE CURRENT. With `project=` this act no longer touches the
+   * shared inquiry at all: it writes ONE dated, authored `conclusions[]` row into
+   * the PROJECT's own frontmatter — §7's form for CURRENT, never a settings row —
+   * naming the version the project stands on and that version's CLAIM, frozen
+   * verbatim. The claim IS what was concluded (§7.1 item 2), so a free
+   * `conclusion` text beside a project is refused (CONCLUSION_IS_THE_CLAIM) and
+   * what a member adds beyond the claim travels as COMMENTARY — attributed to
+   * the author, and never evidence. A project standing on no reading, or on a
+   * reading carrying no claim, is refused NO_CLAIM and nothing is written.
+   * Another project drawing on the same inquiry is told (a FINDING, §7.1 item
+   * 3) and never moved.
+   *
+   * WITHOUT `project=` the act is the one it was, and that is a DESIGN GAP
+   * stated rather than resolved here: §7.1 says an inquiry outside any project
+   * keeps its own conclusion "as the relationship with no project", and says
+   * the conclusion adopts the claim of the version THE PROJECT STANDS ON — but
+   * the no-project relationship stands on nothing (CURRENT is only ever a
+   * project's pointer), so which version it adopts is unruled. It concludes on
+   * the inquiry's own bytes exactly as before and every read of it states its
+   * claim UNDETERMINED (§7.1 item 5) rather than inventing an adoption. */
   conclude({
     target,
     conclusion = "",
     falsifier = "",
     noFalsifier = false,
+    project = null,
+    commentary = "",
     viewer = null,
-    author = null
+    author = null,
+    identity = null
   } = {}) {
     const who = String(author ?? "").trim();
     if (!who || isMachineIdentity(who))
@@ -30466,12 +30579,20 @@ Mitigation: ${mit}
       };
     const concl = String(conclusion ?? "").trim();
     const fals = String(falsifier ?? "").trim();
+    const pid = String(project ?? "").trim();
+    const comm = String(commentary ?? "").trim();
     const noFals = noFalsifier === true || noFalsifier === 1 || noFalsifier === "1" || noFalsifier === "true";
-    if (!concl)
+    if (!concl && !pid)
       return {
         ok: false,
         reason: "NO_CONCLUSION",
         detail: "concluding records WHAT was concluded. C-2.8 requires a non-empty conclusion in the concluded state, so a conclusion with nothing in it would produce a bundle the catalog rejects. An undetermined answer is stated as undetermined, never left blank."
+      };
+    if (concl && pid)
+      return {
+        ok: false,
+        reason: "CONCLUSION_IS_THE_CLAIM",
+        detail: "a project concludes by ADOPTING the claim of the reading it stands on, and that claim is what was concluded (INVESTIGATIVE-SESSION.md \xA77.1). A separate conclusion text could say what no claim said. Send what you want to add beyond the claim as commentary= \u2014 it is recorded in your name and is never evidence \u2014 or state the claim itself on a reading first."
       };
     if (!fals && !noFals)
       return {
@@ -30485,7 +30606,7 @@ Mitigation: ${mit}
         reason: "FALSIFIER_AND_NONE_STATED",
         detail: "you have both stated a falsifier and asked to record that none was stated. Those are two different claims about this finding and the plane will not choose between them. Send the falsifier, or send no_falsifier=1 with the falsifier empty."
       };
-    for (const [name, v] of [["conclusion", concl], ["falsifier", fals]])
+    for (const [name, v] of [["conclusion", concl], ["falsifier", fals], ["commentary", comm]])
       if (v.length > _Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(v))
         return {
           ok: false,
@@ -30526,7 +30647,7 @@ Mitigation: ${mit}
     const fm = parseFrontmatter(text).data || {};
     const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
     const legalFrom = spec?.edges?.[b.current_state] || [];
-    if (!legalFrom.includes("concluded"))
+    if (!legalFrom.includes("concluded") && !(pid && b.current_state === "concluded"))
       return {
         ok: false,
         reason: "ILLEGAL_TRANSITION",
@@ -30536,14 +30657,124 @@ Mitigation: ${mit}
         object_type: fm.object_type ?? b.object_type,
         detail: "this is not a legal move in the catalog's state table for this document's own vocabulary. An inquiry concludes from open (or its `surfaced` alias); something deferred or dismissed is reopened first, and a legacy focus/problem document has no concluded state at all until its frontmatter is modernized."
       };
+    let projRow = null, pfm = null;
+    if (pid) {
+      const pgate = viewerPredicate(viewer);
+      projRow = this.#one(
+        `SELECT b.bundle_id, b.object_type, b.bundle_sha FROM bundles b
+         WHERE b.bundle_id=? AND (${pgate.sql})`,
+        pid,
+        ...pgate.args
+      );
+      if (!projRow || normalizeType(projRow.object_type) !== "project")
+        return {
+          ok: false,
+          reason: "NOT_A_PROJECT",
+          target,
+          project: pid,
+          detail: `${pid.slice(0, 60)} is not a project readable here, so there is no relationship with this question to conclude in.`
+        };
+      const denied = this.#projectAuthority(pid, identity, "joined", "conclude");
+      if (denied) return denied;
+      const pmd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
+      if (!pmd || pmd.content === null)
+        return {
+          ok: false,
+          reason: "NO_DOCUMENT",
+          target,
+          project: pid,
+          detail: "this project has no readable bundle.md, so its conclusion cannot be recorded"
+        };
+      pfm = parseFrontmatter(pmd.content).data || {};
+    }
+    let adopted = null;
+    if (!pid && comm)
+      return {
+        ok: false,
+        reason: "NO_CLAIM",
+        target,
+        detail: "commentary is what a member adds BEYOND an adopted claim, and a conclusion drawn with no project adopts none \u2014 it stands on no reading, because what a reading stands on is a project's own pointer (\xA77). Conclude for the project whose reading carries the claim (project=), or send no commentary."
+      };
+    if (pid) {
+      const prefs = Array.isArray(pfm.references) ? pfm.references : [];
+      const draws = prefs.some((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed" && String(x.target ?? "").trim() === target);
+      if (!draws)
+        return {
+          ok: false,
+          reason: "NO_CLAIM",
+          target,
+          project: pid,
+          detail: `${pid} does not draw on ${target}, so it stands on no reading of it and has no claim to adopt. Cite the question into the project, make a reading current, then conclude.`
+        };
+      const cur = this.#currentVersionOf(pid, target, viewer);
+      if (!cur)
+        return {
+          ok: false,
+          reason: "NO_CLAIM",
+          target,
+          project: pid,
+          detail: `${pid} stands on no reading of ${target}. Concluding adopts the claim of the reading a project stands on (\xA77.1), so make an accepted reading current (op=versioncurrent) first.`
+        };
+      const v = this.#one(
+        `SELECT name, state, claim, leg_count FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`,
+        target,
+        cur.version
+      );
+      const claimText = String(v?.claim ?? "").trim();
+      if (!v || v.state !== "accepted" || !claimText)
+        return {
+          ok: false,
+          reason: "NO_CLAIM",
+          target,
+          project: pid,
+          version: cur.version,
+          detail: !v ? `${pid} stands on reading '${cur.version}', which ${target} no longer carries, so there is no claim to adopt. Make a reading it does carry current first.` : v.state !== "accepted" ? `${pid} stands on reading '${cur.version}', which is ${v.state || "in no recorded state"}, not accepted. A conclusion adopts only what the group accepted.` : `reading '${cur.version}' states no claim, and the claim is what a conclusion adopts (\xA77.1). State the claim on a reading first \u2014 a claim with no support yet is legal to add (DEC-22) \u2014 then make that reading current and conclude.`
+        };
+      adopted = { version: v.name, claim: claimText, leg_count: Number(v.leg_count) || 0 };
+    }
     const legs = Array.isArray(fm.basis) ? fm.basis : [];
-    if (legs.length < 1)
+    if ((adopted ? adopted.leg_count : legs.length) < 1)
       return {
         ok: false,
         reason: "NO_BASIS",
         target,
         detail: "a conclusion rests on something. An open inquiry may hold a claim with no legs at all \u2014 a standing objective the group means to pursue \u2014 but concluding one that rests on nothing would put the record's name to an assertion nothing supports. Add a basis[] leg (and the same target in references[]) first."
       };
+    if (adopted) {
+      const when2 = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+      const prior = this.#conclusionOf(pid, target, viewer);
+      const w = this.#setProjectConclusion(projRow, target, {
+        version: adopted.version,
+        claim: adopted.claim,
+        falsifier: fals,
+        noFals,
+        commentary: comm,
+        who,
+        when: when2
+      });
+      if (!w.ok) return { ...w, target, project: pid };
+      return {
+        ok: true,
+        target,
+        project: pid,
+        relationship: "project",
+        to: "concluded",
+        /* The inquiry's OWN state, unmoved and said so, so a caller
+           cannot read this answer as the question having moved. */
+        inquiry_state: b.current_state,
+        inquiry_moved: false,
+        version: adopted.version,
+        claim: { state: "adopted", text: adopted.claim, version: adopted.version },
+        falsifier: fals,
+        basis_legs: adopted.leg_count,
+        falsifier_override: noFals ? { by: who, at: when2 } : null,
+        commentary: comm ? { text: comm, by: who, at: when2, evidence: false } : null,
+        prior: prior ? { version: prior.version, claim: prior.claim, at: prior.at, by: prior.by } : null,
+        author: who,
+        at: when2,
+        weight: "single"
+      };
+    }
     const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
     const withHistory = _Store.#appendStateHistory(text, {
       timestamp: when,
@@ -30625,9 +30856,213 @@ Conclusion: ${concl}
       falsifier: fals,
       basis_legs: legs.length,
       falsifier_override: noFals ? { by: who, at: when } : null,
+      /* REC-124 / §7.1 item 5: the NO-PROJECT relationship, and its claim
+         STATED undetermined rather than inferred from the conclusion text
+         (a claim := conclusion back-fill is the second name for one field
+         that §7.1 says a claim is not). */
+      relationship: "no_project",
+      project: null,
+      claim: _Store.#undeterminedClaim(),
       author: who,
       at: when,
       weight: "single"
+    };
+  }
+  /* REC-124 / §7.1 item 5 — THE ONE SENTENCE every read gives for a conclusion
+     that adopted no claim: the no-project relationship's, and every conclusion
+     written before §7.1 existed. ONE builder so the write's answer and every
+     read say the same words. */
+  static #undeterminedClaim() {
+    return {
+      state: "undetermined",
+      text: null,
+      version: null,
+      detail: "this conclusion adopted no claim. It was drawn in the no-project relationship, or before a conclusion adopted one (INVESTIGATIVE-SESSION.md \xA77.1), so WHICH claim it concluded is undetermined \u2014 never back-filled from its conclusion text, which is the member's words and not a claim any reading stated."
+    };
+  }
+  /* REC-124 / §7.1 item 1 — THE PROJECT'S CONCLUSION ROW, beside CURRENT and in
+   * the same form: a project-authored, DATED `conclusions[]` row in the
+   * project's OWN frontmatter, never a settings row (DEC-17's reasoning, which
+   * §7 transplanted and §7.1 inherits). One row per inquiry, re-written in place
+   * by a re-conclude, with the act kept in the project's append-only history and
+   * its Session Log.
+   *
+   * THE CLAIM IS FROZEN VERBATIM: it is copied out of the reading at the moment
+   * of adoption and never re-read, so a later rewording of the reading (a NEW
+   * version, D-217b) cannot change what this project concluded. */
+  static #setConclusionRow(text, inquiryId, f2) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    const q = (s) => `"${_Store.#fmSafe(String(s ?? ""))}"`;
+    const block = [
+      `  - inquiry: ${q(inquiryId)}`,
+      `    version: ${q(f2.version)}`,
+      `    claim: ${q(f2.claim)}`,
+      `    falsifier: ${q(f2.falsifier)}`,
+      ...f2.noFals ? [
+        `    falsifier_override_by: ${q(f2.who)}`,
+        `    falsifier_override_at: ${q(f2.when)}`
+      ] : [],
+      ...f2.commentary ? [`    commentary: ${q(f2.commentary)}`] : [],
+      `    at: ${q(f2.when)}`,
+      `    by: ${q(f2.who)}`
+    ];
+    let at = -1;
+    for (let i2 = 1; i2 < end; i2++) if (/^conclusions:/.test(lines[i2])) {
+      at = i2;
+      break;
+    }
+    if (at === -1)
+      return [...lines.slice(0, end), "conclusions:", ...block, ...lines.slice(end)].join("\n");
+    const rest = lines[at].slice("conclusions:".length).trim();
+    if (rest === "[]")
+      return [...lines.slice(0, at), "conclusions:", ...block, ...lines.slice(at + 1)].join("\n");
+    if (rest !== "") return null;
+    const unquote = (s) => String(s).trim().replace(/^"(.*)"$/, "$1").trim();
+    let i = at + 1, rowStart = -1, rowEnd = -1;
+    while (i < end && /^\s{2,}(- )?\S/.test(lines[i])) {
+      if (/^\s{2}- /.test(lines[i])) {
+        if (rowStart !== -1 && rowEnd === -1) rowEnd = i;
+        const m = /^\s{2}- inquiry:\s*(.+)$/.exec(lines[i]);
+        if (m && unquote(m[1]) === inquiryId) rowStart = i;
+      }
+      i++;
+    }
+    if (rowStart === -1) return [...lines.slice(0, i), ...block, ...lines.slice(i)].join("\n");
+    if (rowEnd === -1) rowEnd = i;
+    return [...lines.slice(0, rowStart), ...block, ...lines.slice(rowEnd)].join("\n");
+  }
+  /* The conclusion row's ONE writer, paired with `#conclusionOf`, its ONE reader
+     — the make-current pair's discipline (DEC-8): the act and every read go
+     through one implementation each, so they cannot come apart. */
+  #setProjectConclusion(projectRow, inquiryId, f2) {
+    const pid = projectRow.bundle_id;
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
+    if (!md || md.content === null)
+      return {
+        ok: false,
+        reason: "NO_DOCUMENT",
+        detail: `${pid} has no readable file, so its conclusion cannot be recorded`
+      };
+    const pfm = parseFrontmatter(md.content).data || {};
+    let text = _Store.#setConclusionRow(md.content, inquiryId, f2);
+    if (text === null)
+      return {
+        ok: false,
+        reason: "UNSPLICEABLE_CONCLUSIONS",
+        detail: `${pid}'s conclusions block could not be rewritten in place`
+      };
+    text = _Store.#setScalar(text, "last_updated", `"${f2.when}"`);
+    text = _Store.#appendSessionLog(
+      text,
+      `### Session ${f2.when} | Concluded | ${f2.who}
+Trigger: op=conclude on ${inquiryId} for ${pid}
+Changes: this project concluded ${inquiryId} on reading '${f2.version}', adopting its claim.
+Claim: ${f2.claim}
+` + (f2.noFals ? `Falsifier: NO FALSIFIER STATED \u2014 recorded by ${f2.who} at ${f2.when}
+` : `Falsifier: ${f2.falsifier}
+`) + (f2.commentary ? `Commentary (${f2.who}, not evidence): ${f2.commentary}
+` : "")
+    );
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`,
+      pid
+    ))
+      carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    return this.promote({
+      bundleId: pid,
+      base: projectRow.bundle_sha,
+      snapKey: `${f2.when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
+      author: f2.who,
+      files: [{
+        path: "bundle.md",
+        text,
+        bytes: bytes.length,
+        sha256: createSha256().update(bytes).hex()
+      }, ...carried],
+      meta: {
+        object_type: pfm.object_type ?? "project",
+        group: pfm.group || "believe-in-oakland",
+        title: pfm.title,
+        current_state: pfm.current_state ?? "forming",
+        prior_state: pfm.prior_state ?? null,
+        created: pfm.created,
+        last_updated: f2.when,
+        criticality: pfm.criticality ?? null
+      }
+    });
+  }
+  /* REC-124 — WHAT A PROJECT CONCLUDED ABOUT AN INQUIRY, read from the
+   * project's own `bundle.md`. THE ONE READER (op=conclude's prior, op=basisversions,
+   * the shared-question producer). Null for a project the gate hides, a project
+   * with no document, and a project that has concluded nothing about this
+   * question — one answer deliberately, `#currentVersionOf`'s posture.
+   * COMMENTARY IS RETURNED LABELLED: attributed to the row's author and marked
+   * `evidence: false`, so no consumer can mistake it for a leg or a claim. */
+  #conclusionOf(projectId, inquiryId, viewer) {
+    const pid = String(projectId ?? "").trim();
+    if (!pid) return null;
+    const gate = this.#bundleGate("bx.bundle_id", viewer);
+    const seen = this.#one(
+      `SELECT bx.bundle_id FROM bundles bx WHERE bx.bundle_id=? AND (${gate.sql})`,
+      pid,
+      ...gate.args
+    );
+    if (!seen) return null;
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
+    if (!md || md.content === null) return null;
+    const fm = parseFrontmatter(md.content).data || {};
+    const rows = Array.isArray(fm.conclusions) ? fm.conclusions : [];
+    const s = (v) => typeof v === "string" ? v : null;
+    for (const r of rows) {
+      if (!r || typeof r !== "object") continue;
+      if (String(r.inquiry ?? "").trim() !== String(inquiryId ?? "").trim()) continue;
+      const by = s(r.by), at = s(r.at);
+      const commentary = s(r.commentary);
+      return {
+        project: pid,
+        inquiry: String(inquiryId),
+        relationship: "project",
+        state: "concluded",
+        version: s(r.version),
+        claim: s(r.claim),
+        claim_state: s(r.claim) ? "adopted" : "undetermined",
+        falsifier: s(r.falsifier) ?? "",
+        falsifier_override: s(r.falsifier_override_by) ? { by: s(r.falsifier_override_by), at: s(r.falsifier_override_at) } : null,
+        commentary: commentary ? { text: commentary, by, at, evidence: false } : null,
+        at,
+        by
+      };
+    }
+    return null;
+  }
+  /* REC-124 / §7.1 item 5 — THE INQUIRY'S OWN CONCLUSION, read as the
+     no-project relationship's. Nothing in a conclusion written by the old act
+     names a project, so the relationship that drew it cannot be established and
+     is SAID so; its claim is undetermined (never back-filled). Null when the
+     inquiry's own state is not `concluded`. The inquiry's bytes are never
+     edited to say any of this — ratified bytes especially (the `published`
+     amendment's precedent). */
+  #noProjectConclusionOf(inquiryId) {
+    const b = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, inquiryId);
+    if (!b || b.current_state !== "concluded") return null;
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, inquiryId);
+    const fm = md && md.content !== null ? parseFrontmatter(md.content).data || {} : {};
+    const s = (v) => typeof v === "string" ? v : null;
+    return {
+      project: null,
+      inquiry: String(inquiryId),
+      relationship: "no_project",
+      state: "concluded",
+      relationship_established: false,
+      relationship_detail: "this conclusion is written in the inquiry's own bytes and names no project, so the relationship that drew it cannot be established; it is read as the no-project relationship's (INVESTIGATIVE-SESSION.md \xA77.1 item 5).",
+      conclusion: s(fm.conclusion),
+      falsifier: s(fm.falsifier) ?? "",
+      claim: _Store.#undeterminedClaim()
     };
   }
   /* REC-24 (c): MOVING AN ACTION THROUGH ITS OWN STATE MACHINE — the first op
@@ -32637,14 +33072,26 @@ Subject position: ${pos} \u2014 ${just}
            because none has ever held one (`aicredentialmint`'s shape, PL-11).
          - THE COMMENT is attributed, and a recipient's is a RECIPIENT's.
   
-       WHO MAY AUTHOR A DRAFT, ISSUE A GRANT AND REVOKE ONE — PROVISIONAL, AND A
-       DESIGN GAP REPORTED RATHER THAN A RULING MADE. §6A says the grant names who
-       issued it and that EDITING needs project permissions; it does not say who may
-       issue. This runs at the NARROWEST authority the record already rules for the
-       sibling act — the project OWNER, DEC-72's publisher, through the same
-       `#isProjectOwner` `publishCase` consults, with no administrator bypass — so a
-       later ruling can only WIDEN it, and widening is one predicate. A machine is
-       refused by name: an addressed act is attributed to a person. */
+       WHO MAY AUTHOR A DRAFT, ISSUE A GRANT AND REVOKE ONE — DECIDED in §6A.2 by
+       BOB #15 (2026-09-18) and built by REC-133. REC-126 ran all three at the project
+       OWNER provisionally; the decision widens ONE of them and leaves the other two:
+         - AUTHOR (`#caseDraft`): the project's EDIT permission, `#isProjectEditor` —
+           Bob's *"editing needs project permissions and is the editor's act"*. The
+           draft is the production, and editing it is editing. Its capability half,
+           `contribute`, is checked at the control plane (NEEDS), where capabilities
+           live; its positional half is checked here.
+         - ISSUE (`#reviewGrant`): the project OWNER only, NO administrator bypass —
+           UNCHANGED. Sending unratified material outside the group is the same kind
+           of act as publishing, and DEC-72 makes publishing the owner's.
+         - REVOKE (`#reviewRevoke`): the project OWNER only — UNCHANGED. §6A.2 first
+           said *the owner or any administrator* and BOB #15 CORRECTED it the same
+           day: administrators *"audit everything and direct nothing"* (Membership v2
+           §4), with the one exception of §7.13, which is also how a grant outliving
+           its owners is handled — an administrator adds an owner, and that owner
+           revokes. REC-133 briefly built the administrator arm and reverted it.
+       No two-person rule: none is ruled, and inventing one would be a fence tighter
+       than its rule. A machine is refused by name: an addressed act is attributed to
+       a person. */
   static REVIEW_DRAFT_FIELDS = [
     "targets",
     "target",
@@ -32705,14 +33152,27 @@ Subject position: ${pos} \u2014 ${just}
       detail: "the review copy's authoring acts are draft, grant and revoke."
     };
   }
-  /* NOT THE OWNER, AND NOT THERE, ARE ONE ANSWER: a caller who does not own the
-     producing project cannot learn from this refusal whether the project, the
-     draft or the grant exists. */
-  static #notReviewOwner() {
+  /* NOT PERMITTED, AND NOT THERE, ARE ONE ANSWER: a caller without the act's
+       authority cannot learn from this refusal whether the project, the draft or the
+       grant exists. The DETAIL varies with the ACT (which the caller chose) and with
+       nothing the record holds.
+  
+       THE CODE KEEPS REC-126's NAME, `REVIEW_NOT_PROJECT_OWNER`, for all three acts —
+       REC-133's choice, stated rather than left to be noticed. The name is exact for
+       ISSUE and narrower than the rule for AUTHOR and REVOKE; renaming it would change
+       the answer a caller already branches on, for a refusal whose MEANING (you lack
+       this act's authority over this project) is unchanged, and the detail names the
+       authority each act needs. */
+  static #REVIEW_AUTHORITY = {
+    draft: "authoring a review copy's draft is EDITING the production, and needs the project's edit permission: an owner, or a JOINED participant, holding `contribute` (BIO_Publication \xA76A.2; Membership v2 \xA77.5).",
+    grant: "handing the group's draft to someone outside it is the producing project's own act and is wielded by an OWNER of it, as publishing is (DEC-72). An administrator sees every project and directs none of them.",
+    revoke: "withdrawing a grant is the producing project's own act and is wielded by an OWNER of it, as issuing one is (BIO_Publication \xA76A.2). An administrator sees every project and directs none of them."
+  };
+  static #notReviewOwner(act) {
     return {
       ok: false,
       reason: "REVIEW_NOT_PROJECT_OWNER",
-      detail: "a review copy is the producing project's own act and is wielded by an OWNER of it, as publishing is (DEC-72). An administrator sees every project and directs none of them. A project, draft or grant you do not own is answered exactly as one that does not exist."
+      detail: `${_Store.#REVIEW_AUTHORITY[act]} A project, draft or grant you hold no such authority over is answered exactly as one that does not exist.`
     };
   }
   /* THE EDITION IS READ FROM THE PUBLISHED RECORD EVERY TIME, never stored and
@@ -32734,7 +33194,7 @@ Subject position: ${pos} \u2014 ${just}
     const a = { who };
     const proj = String(project ?? "").trim();
     const existing = draft ? this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft).trim()) : null;
-    if (draft && !existing) return _Store.#notReviewOwner();
+    if (draft && !existing) return _Store.#notReviewOwner("draft");
     const owning = existing ? existing.project_id : proj;
     if (!owning)
       return {
@@ -32748,7 +33208,7 @@ Subject position: ${pos} \u2014 ${just}
         reason: "REVIEW_DRAFT_CHANGES_PROJECT",
         detail: `this draft is ${existing.project_id}'s production, and a case does not change hands (DEC-72). Draft this material as a new case under the other project instead.`
       };
-    if (!this.#isProjectOwner(owning, a.who)) return _Store.#notReviewOwner();
+    if (!this.#isProjectEditor(owning, a.who)) return _Store.#notReviewOwner("draft");
     const params = {};
     for (const k of _Store.REVIEW_DRAFT_FIELDS) if (k in rest) params[k] = rest[k];
     const named = typeof params.caseId === "string" && params.caseId.trim() ? params.caseId.trim() : null;
@@ -32814,11 +33274,12 @@ Subject position: ${pos} \u2014 ${just}
     let out = null;
     try {
       this.ctx.storage.transactionSync(() => {
+        const by = this.#draftPublisher(row);
         out = this.publishCase({
           ...JSON.parse(row.params),
           project: row.project_id,
-          viewer: `member:${row.updated_by}`,
-          author: row.updated_by
+          viewer: `member:${by}`,
+          author: by
         });
         throw _Store.#ROLLBACK;
       });
@@ -32841,6 +33302,22 @@ Subject position: ${pos} \u2014 ${just}
       missing: [refused],
       evaluated: "the publish gates run in order and stop at the first refusal, so this is the first refusal only. Whether any later gate would also refuse is UNDETERMINED, not absent."
     };
+  }
+  /* WHO THE GATES ARE RUN AS. REC-133: a draft's last editor need not be an owner
+     any more, and `publishCase` runs its OWNER fence first — so a dry run as a
+     non-owner editor would answer NOT_THE_PROJECT_OWNER for every such draft and
+     hide the gaps the copy exists to show. Publishing is an owner's act (DEC-72),
+     so the gates are run as the member who would PUBLISH: the last editor when
+     they own the project, otherwise an owner of it (the lowest member id, so the
+     answer is deterministic), and only when the project has NO owner (a
+     machine-created project honestly may not) the editor, whose
+     NOT_THE_PROJECT_OWNER is then the TRUE first gap: nobody can publish this.
+     Nothing about the choice reaches the answer but the gates' verdict, and the
+     transaction is rolled back. */
+  #draftPublisher(row) {
+    if (this.#isProjectOwner(row.project_id, row.updated_by)) return row.updated_by;
+    const [first] = this.#owners(row.project_id);
+    return first ?? row.updated_by;
   }
   /* THE LIVE-GRANT PREDICATE — the one place a grant is judged, read by the review
      copy, its comment and `op=casedocument` alike, so they cannot disagree. Live
@@ -32877,7 +33354,7 @@ Subject position: ${pos} \u2014 ${just}
   #reviewGrant(who, { draft = null, recipient = "", secretSha = null } = {}) {
     const a = { who };
     const d = this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft ?? "").trim());
-    if (!d || !this.#isProjectOwner(d.project_id, a.who)) return _Store.#notReviewOwner();
+    if (!d || !this.#isProjectOwner(d.project_id, a.who)) return _Store.#notReviewOwner("grant");
     const to = String(recipient ?? "").trim();
     if (!to || to.length > _Store.REVIEW_RECIPIENT_MAX || /[\r\n]/.test(to))
       return {
@@ -32920,7 +33397,7 @@ Subject position: ${pos} \u2014 ${just}
       };
     const g = this.#one(`SELECT g.*, d.project_id FROM review_grants g JOIN case_drafts d ON d.draft_id=g.draft_id
                          WHERE g.grant_id=?`, gid);
-    if (!g || !this.#isProjectOwner(g.project_id, a.who)) return _Store.#notReviewOwner();
+    if (!g || !this.#isProjectOwner(g.project_id, a.who)) return _Store.#notReviewOwner("revoke");
     if (g.revoked_at)
       return { ok: true, existed: true, grantId: g.grant_id, revokedBy: g.revoked_by, revokedAt: g.revoked_at };
     const when = (/* @__PURE__ */ new Date()).toISOString();
@@ -34686,7 +35163,8 @@ ${lines.join("\n")}
     note = "",
     author = null,
     role = null,
-    extent = null
+    extent = null,
+    identity = null
   } = {}) {
     const sel = this.selectionResolve({ handle, viewer, owner, weight: "report" });
     if (!sel.ok) return sel;
@@ -34706,6 +35184,10 @@ ${lines.join("\n")}
         got: p.object_type,
         detail: "citations live on the CITING object, and this is neither a case nor a question. A case keeps them in its references; a question keeps them in the basis its answer rests on (State Rules 5.2). Nothing else in the record holds either."
       };
+    if (!ontoInquiry) {
+      const denied = this.#projectAuthority(p.bundle_id, identity, "joined", "cite");
+      if (denied) return denied;
+    }
     const nt = String(note ?? "");
     if (nt.length > 200 || /["\\\r\n]/.test(nt))
       return {
@@ -36210,7 +36692,27 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
          "the first 200 are clean" published the same shape. */
       limit: cap,
       cursor: page.length === cap ? last : null,
-      total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n
+      total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n,
+      /* REC-132 / D-422 / C-55: A MEMBER HOLDING THE RESERVED ID IS REPORTED, NEVER
+         RENAMED. `memberAdd` now refuses the id `admin`, but an instance that enrolled
+         one before the reservation still holds it, and every name-keyed check reads it
+         as the founder. Renaming it here would rewrite who the record says acted, so the
+         audit SAYS it and an administrator decides. ALWAYS PRESENT, so "none held" and
+         "this build does not look" never read alike. A stated finding like `route`
+         above, not a conformance error: `ok`, `tally` and `withErrors` are about
+         bundles and do not move for it. It names only the reserved id, which is public,
+         and that row's role and status. */
+      membership: (() => {
+        const m = this.#one(`SELECT role, status FROM members WHERE member_id = ?`, _Store.ROOT_ADMIN);
+        return {
+          reservedId: _Store.ROOT_ADMIN,
+          held: !!m,
+          role: m ? m.role : null,
+          status: m ? m.status : null,
+          check: MEMBER_ID_CHECKS.MEMBER_ID_RESERVED.check,
+          says: m ? `a member is enrolled under the reserved id '${_Store.ROOT_ADMIN}' (role ${m.role}, status ${m.status}). Every check that asks whether someone administers by name reads it as the founding administrator. It was enrolled before the id was reserved and has NOT been renamed: an administrator should decide what it is and re-enrol the person under another id` : `no member holds the reserved id '${_Store.ROOT_ADMIN}'`
+        };
+      })()
     };
   }
   /* REC-54 / D-200: DERIVE a provenance chain from what the capture record
@@ -37485,6 +37987,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
               detail: deactivating ? "only an owner of this project may deactivate it, which is what closing it as abandoned means. Closing it as resolved or superseded is ordinary record work." : "only an owner of this project may reactivate it."
             };
         }
+        const denied = this.#projectAuthority(bundleId, pkg.actorIdentity ?? null, "joined", "promote");
+        if (denied) return denied;
       }
       if (cur && cur.bundle_sha !== base)
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
@@ -40429,14 +40933,14 @@ ${words}`;
   }
   /** WHICH LEAD, and may this viewer read it. The one visibility decision for
    *  all three acts, so the act, the look and the read cannot disagree. */
-  #leadFor(id, viewer) {
+  #leadFor(id, viewer, identity = null) {
     const refusal7 = (code, detail, extra) => _Store.#leadRefusal(code, detail, extra);
     const lid = typeof id === "string" ? id.trim() : "";
     const row = lid ? this.#one(
       `SELECT lead_id, author, words, locator, at FROM leads WHERE lead_id = ?`,
       lid
     ) : null;
-    const sees = !!row && this.#leadVisibleTo(row, viewer);
+    const sees = !!row && this.#leadVisibleTo(row, viewer, identity);
     if (!sees)
       return refusal7(
         "LEAD_NOT_FOUND",
@@ -40476,8 +40980,8 @@ ${words}`;
    *  would be the mirror-and-drift class in the one place it would leak, so both
    *  consume the one predicate. The three answers are unchanged: `lead.test.mjs`
    *  and `nc-mk4.mjs`'s visibility arms are re-pointed at this text, not exempted. */
-  #leadVisibleTo(row, viewer) {
-    const reach = this.#leadReach(viewer);
+  #leadVisibleTo(row, viewer, identity = null) {
+    const reach = this.#leadReach(viewer, identity);
     if (!reach) return false;
     return !!this.#one(
       `SELECT 1 AS x FROM leads l WHERE l.lead_id = ? AND ${reach.sql} LIMIT 1`,
@@ -40493,23 +40997,38 @@ ${words}`;
    *  viewer stamp rather than here: a member-scoped `ai` key is stamped as its
    *  member, and a `class:*` credential carries `member: null` and reaches
    *  nothing. `#leadVisibleTo` and `#frontierInternet` are its only callers. */
-  #leadReach(viewer) {
-    const gate = viewerPredicate(viewer);
-    if (gate.scope === "DENY" || gate.member == null) return null;
+  #leadReach(viewer, identity = null) {
+    const who = this.#positionalMember(viewer, identity);
+    if (who == null) return null;
     return {
       sql: `(l.author = ? OR EXISTS (SELECT 1 AS x FROM lead_shares s JOIN project_participants pp
               ON pp.project_id = s.bundle_id
              WHERE s.lead_id = l.lead_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))`,
-      args: [gate.member, gate.member]
+      args: [who, who]
     };
+  }
+  /** REC-132 / D-422 — WHO IS ASKING, as distinct from WHAT THEY MAY SEE.
+   *  `identity` is the POSITIONAL half of the control plane's one session resolver
+   *  (`resolveSession` in `src/index.mjs`): `member:<id>` for a signed-in session,
+   *  the founder's included (`member:admin`), and the same string as the viewer for
+   *  every credential that is not a session. When it is absent — a caller that never
+   *  stamps it, the store's own internal reads — the viewer is asked, which is exactly
+   *  what every site here asked before, so such a caller is byte-unchanged. A
+   *  `class:*` or unrecognised identity answers null: no roster position, no author.
+   *  EVERY positional question a viewer-carrying read asks in this file goes through
+   *  here, and a visibility question never does. */
+  #positionalMember(viewer, identity = null) {
+    const asked = typeof identity === "string" && identity !== "" ? identity : viewer;
+    const g = viewerPredicate(asked);
+    return g.scope === "DENY" ? null : g.member;
   }
   /** op=leadshare — THE AUTHOR SHARES ONE LEAD TO ONE PROJECT: authored, dated,
    *  never rewritten. `sharer` is the control plane's stamp. */
-  leadShare({ lead = null, project = null, sharer = null, viewer = null } = {}) {
+  leadShare({ lead = null, project = null, sharer = null, viewer = null, identity = null } = {}) {
     const refusal7 = (code, detail, extra) => _Store.#leadRefusal(code, detail, extra);
     const who = typeof sharer === "string" ? sharer.trim() : "";
     const pid = typeof project === "string" ? project.trim() : "";
-    const src = this.#leadFor(lead, viewer);
+    const src = this.#leadFor(lead, viewer, identity);
     if (!src.ok) return src;
     const L = src.row;
     const joined = who && pid ? this.#one(
@@ -40608,7 +41127,8 @@ ${words}`;
     condition = null,
     detail = null,
     looker = null,
-    viewer = null
+    viewer = null,
+    identity = null
   } = {}) {
     const refusal7 = (code, detail2, extra) => _Store.#leadRefusal(code, detail2, extra);
     const who = typeof looker === "string" ? looker.trim() : "";
@@ -40621,7 +41141,7 @@ ${words}`;
         "LEAD_LOOK_NOT_A_MEMBER",
         who ? `'${who.slice(0, 60)}' is a machine credential; a machine's search is recorded under its own run (authority_kind run), never under a member's lead` : `this call carries nobody. The plane stamps who looked from the credential that asked`
       );
-    const src = this.#leadFor(lead, viewer);
+    const src = this.#leadFor(lead, viewer, identity);
     if (!src.ok) return src;
     const L = src.row;
     if (!_Store.LEAD_LOOK_OUTCOMES.includes(st))
@@ -40708,8 +41228,8 @@ ${words}`;
     return !!r && this.#viewerSees(r.bundle_id, viewer);
   }
   /** op=leadread — the lead and its looks, bounded, the bound published. */
-  leadRead({ id = null, limit = null, viewer = null } = {}) {
-    const src = this.#leadFor(id, viewer);
+  leadRead({ id = null, limit = null, viewer = null, identity = null } = {}) {
+    const src = this.#leadFor(id, viewer, identity);
     if (!src.ok) return src;
     const L = src.row;
     const cap = Math.max(1, Math.min(
@@ -40743,7 +41263,7 @@ ${words}`;
         coverage: observationCoverage({ state: r.state, resultRef: r.result_ref })
       };
     });
-    const me = viewerPredicate(viewer).member;
+    const me = this.#positionalMember(viewer, identity);
     const sharesRaw = this.#rows(
       `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at FROM lead_shares s
         WHERE s.lead_id = ? AND (? = 1 OR EXISTS (SELECT 1 FROM project_participants pp
@@ -45660,10 +46180,10 @@ ${words}`;
    *
    *  Union order is ACTS order, preserved: a single-subject item's options are
    *  byte-for-byte op=affordances' `acts`. */
-  #queueOptions(subjectIds, viewer) {
+  #queueOptions(subjectIds, viewer, identity = null) {
     const byId = /* @__PURE__ */ new Map();
     for (const id of (subjectIds || []).slice(0, _Store.QUEUE_OPTION_SUBJECTS_MAX)) {
-      const facts = this.affordanceFacts({ target: id, viewer });
+      const facts = this.affordanceFacts({ target: id, viewer, identity });
       if (!facts || facts.ok !== true) continue;
       for (const a of deriveActs(facts))
         if (!byId.has(a.id)) byId.set(a.id, { id: a.id, label: a.label, weight: a.weight });
@@ -45784,7 +46304,7 @@ ${words}`;
    *  IT RESOLVES BY THE HOLD ENDING, and for everyone at once. There is no act
    *  to take and none is offered: `options[]` are the acts available on the
    *  DOCUMENTS behind it, derived exactly as every other item's are. */
-  #conditionsGovernorHolding(viewer, now) {
+  #conditionsGovernorHolding(viewer, now, identity = null) {
     const out = [];
     for (const r of this.#rows(
       `SELECT * FROM host_governor WHERE cooloff_until > ? ORDER BY host`,
@@ -45829,7 +46349,7 @@ ${words}`;
         },
         assignee: null,
         assignee_role: null,
-        options: this.#queueOptions(subj.ids, viewer)
+        options: this.#queueOptions(subj.ids, viewer, identity)
       });
     }
     return out;
@@ -45855,7 +46375,7 @@ ${words}`;
    *  they were not, the session names no bundle at all (the intake doctrine's
    *  own words), so there is nothing to withhold and the item stands ungrouped
    *  about a capture rather than about a document. */
-  #conditionsPartialCapture(viewer, now) {
+  #conditionsPartialCapture(viewer, now, identity = null) {
     const out = [];
     const nowIso = new Date(now).toISOString().split(".")[0] + "Z";
     const redact = this.#bundleRedactor(viewer);
@@ -45907,7 +46427,7 @@ ${words}`;
         },
         assignee: null,
         assignee_role: null,
-        options: bundleId ? this.#queueOptions([bundleId], viewer) : []
+        options: bundleId ? this.#queueOptions([bundleId], viewer, identity) : []
       });
     }
     return out;
@@ -45942,7 +46462,7 @@ ${words}`;
    *  order, because `snap_key` is an opaque caller-chosen string and its lexical
    *  order is not a clock: two snapshots stamped at the same instant would
    *  otherwise be ordered by a hash. Same first key, a truthful second one. */
-  #conditionsCaptureUnattended(viewer, now) {
+  #conditionsCaptureUnattended(viewer, now, identity = null) {
     const out = [];
     const machine = `${_Store.QUEUE_MACHINE_AUTHOR_PREFIX}*`;
     const seen = this.#bundleGate("m.bundle_id", viewer);
@@ -45999,7 +46519,7 @@ ${words}`;
         },
         assignee: null,
         assignee_role: null,
-        options: this.#queueOptions([b.bundle_id], viewer)
+        options: this.#queueOptions([b.bundle_id], viewer, identity)
       });
     }
     return out;
@@ -46035,7 +46555,7 @@ ${words}`;
    *  authored record act (D-125, DEC-16), and moving one to match a sentence in
    *  a plan would be changing doctrine to fix a citation. The discrepancy is
    *  reported rather than silently absorbed. */
-  #conditionsCaptureRequested(viewer, now) {
+  #conditionsCaptureRequested(viewer, now, identity = null) {
     const out = [];
     const seen = this.#bundleGate("cr.target", viewer);
     for (const r of this.#rows(
@@ -46075,7 +46595,7 @@ ${words}`;
         },
         assignee: null,
         assignee_role: null,
-        options: this.#queueOptions([r.target], viewer)
+        options: this.#queueOptions([r.target], viewer, identity)
       });
     }
     return out;
@@ -46201,7 +46721,7 @@ ${words}`;
    *  lead a member can act on: the point of D-213's answer is that the DOCUMENT
    *  IS IN THE STORE, and announcing one before the bytes arrive would offer a
    *  member acts over something that may still be refused at the drain. */
-  #findingsOutOfInquiryLead(viewer, now) {
+  #findingsOutOfInquiryLead(viewer, now, identity = null) {
     const out = [];
     const seen = this.#bundleGate("cr.lead_inquiry", viewer);
     for (const r of this.#rows(
@@ -46268,7 +46788,7 @@ ${words}`;
            are real acts a member can actually take rather than a promise the
            surface would have to break. The gap is DECLARED on the item rather
            than hidden by an empty array. */
-        options: this.#queueOptions([r.lead_inquiry], viewer),
+        options: this.#queueOptions([r.lead_inquiry], viewer, identity),
         options_grain: {
           offered: "document",
           missing: "inquiry",
@@ -46485,7 +47005,7 @@ ${words}`;
    *  to know WHICH reading the other team is on to decide whether the
    *  difference matters, and "2 projects differ" is the shape that reads as
    *  disagreement when it may be one project that simply has not caught up. */
-  #findingsStanceDiverged(viewer, now) {
+  #findingsStanceDiverged(viewer, now, identity = null) {
     const out = [];
     const shared = this.#queueSharedInquiryCandidates();
     for (const inq of shared) {
@@ -46571,7 +47091,7 @@ ${words}`;
           },
           assignee: null,
           assignee_role: null,
-          options: this.#queueOptions([inq], viewer),
+          options: this.#queueOptions([inq], viewer, identity),
           options_grain: {
             offered: "document",
             missing: "stance",
@@ -46619,7 +47139,7 @@ ${words}`;
    *  HIDDEN VERSIONS ARE INCLUDED AND FLAGGED, NEVER FILTERED (D-214,
    *  DEC-29(b)). Hiding is a display decision one project made; it is not a
    *  reason another project should never learn the reading was proposed. */
-  #findingsVersionFromAnotherTeam(viewer, now) {
+  #findingsVersionFromAnotherTeam(viewer, now, identity = null) {
     const out = [];
     let unattributed = 0;
     const unattributedIn = [];
@@ -46734,7 +47254,7 @@ ${words}`;
           },
           assignee: null,
           assignee_role: null,
-          options: this.#queueOptions([inq], viewer),
+          options: this.#queueOptions([inq], viewer, identity),
           options_grain: {
             offered: "document",
             missing: "version",
@@ -46745,6 +47265,103 @@ ${words}`;
     }
     out.unattributed = unattributed;
     out.unattributed_inquiries = unattributedIn;
+    return out;
+  }
+  /** `shared-inquiry-concluded-by-another-project` (REC-124 / INVESTIGATIVE-SESSION.md
+   *  §7.1 item 3) — *"Other projects are told, never moved — a FINDING-class
+   *  notice, §7's notification pattern: project P concluded this shared inquiry
+   *  on version N. Their stance is unchanged until they act."*
+   *
+   *  ONE ITEM PER (QUESTION, PROJECT THAT CONCLUDED IT), filed under every OTHER
+   *  project drawing on the question and NOT under the one that concluded —
+   *  `#findingsVersionFromAnotherTeam`'s exclusion, declared on the item for the
+   *  same reason (a home set quietly shorter is indistinguishable from nobody
+   *  caring). DERIVED ON READ from the projects' own `conclusions[]` rows through
+   *  the ONE reader, so it adds no table, needs no purge arm (D-113), and cannot
+   *  disagree with op=basisversions about what a project concluded.
+   *
+   *  FINDING AND NOT CONDITION, for §7's reason: another team having concluded
+   *  the question you share is a fact about the world of the work, and one
+   *  member's inbox hygiene must not make it vanish for the team. */
+  #findingsConcludedElsewhere(viewer, now) {
+    const out = [];
+    const shared = this.#queueSharedInquiryCandidates();
+    for (const inq of shared) {
+      const q = this.#queueSharedInquiry(inq, viewer);
+      if (!q) continue;
+      const drawing = this.#projectsDrawingOn(inq, viewer);
+      if (drawing.length < 2) continue;
+      const qname = q.title || inq;
+      for (const p of drawing) {
+        const c = this.#conclusionOf(p.id, inq, viewer);
+        if (!c) continue;
+        const receiving = drawing.filter((x) => x.id !== p.id);
+        if (receiving.length === 0) continue;
+        const homes = this.#queueAncestors([inq], viewer);
+        const kept = homes.ancestors.filter((a) => a.id !== p.id);
+        const atMs = Date.parse(c.at ?? "");
+        out.push({
+          id: `FINDING::shared-inquiry-concluded-by-another-project::${inq}::${p.id}`,
+          class: "FINDING",
+          kind: "shared-inquiry-concluded-by-another-project",
+          case: {
+            ...homes,
+            ancestors: kept,
+            ungrouped: homes.state === "determined" && kept.length === 0,
+            excluded: [{
+              id: p.id,
+              reason: "concluded_here",
+              detail: "the project that concluded is not a team this was concluded ELSEWHERE for, so this item is not filed under it. Stated rather than performed silently (DEC-16)."
+            }]
+          },
+          subject: { kind: "project_conclusion", id: p.id, inquiry: inq, version: c.version },
+          summary: `${p.title || p.id} concluded ${qname} on reading '${c.version}'`,
+          detail: `${qname} is drawn on by ${drawing.length} projects. ${p.id} concluded it on reading '${c.version}'${c.by ? ` (${c.by})` : ""}${c.at ? ` on ${c.at}` : ""}, adopting that reading's claim. A conclusion belongs to the project that drew it (\xA77.1): NOTHING about what any other project stands on or has concluded has moved, and nothing here will move it \u2014 this is a report, and concluding is each project's own act.`,
+          basis: {
+            source: "project frontmatter (conclusions[]) + refs",
+            inquiry: inq,
+            concluded_by_project: p.id,
+            concluded_by_project_title: p.title ?? null,
+            version: c.version,
+            claim: c.claim,
+            by: c.by,
+            at: c.at,
+            to_projects: receiving.map((x) => x.id),
+            /* The receiving projects' OWN conclusions, read through the same
+               reader and enumerated, never summarised: a team needs to know
+               whether it concluded on the same reading, a different one, or not
+               at all. */
+            elsewhere: receiving.map((x) => {
+              const o = this.#conclusionOf(x.id, inq, viewer);
+              return {
+                project: x.id,
+                title: x.title ?? null,
+                state: o ? "concluded" : "not_concluded",
+                version: o ? o.version : null,
+                at: o ? o.at : null
+              };
+            }),
+            bounds: {
+              inquiries_examined: shared.length,
+              inquiries_bound: shared.bound,
+              inquiries_truncated: shared.truncated === true,
+              projects_named: drawing.length,
+              projects_bound: drawing.bound,
+              projects_truncated: drawing.truncated === true,
+              detail: "a bounded number of shared questions and of projects per question are read. A conclusion reported over a truncated set is still true; an ABSENCE over one is not, which is why the flags are published."
+            }
+          },
+          age: Number.isFinite(atMs) ? { state: "determined", since: c.at, ms: Math.max(0, now - atMs) } : {
+            state: "undetermined",
+            reason: "unparseable_conclusion_date",
+            detail: "the conclusion row carries no authored instant this producer can read"
+          },
+          assignee: null,
+          assignee_role: null,
+          options: this.#queueOptions([inq], viewer)
+        });
+      }
+    }
     return out;
   }
   /* ======================================================================
@@ -46901,12 +47518,12 @@ ${words}`;
   }
   /** The four generators, in catalogue order, and the ONE place a CONDITION
    *  item is minted. Every one of them is a pure read. */
-  #queueConditions(viewer, now) {
+  #queueConditions(viewer, now, identity = null) {
     return [
-      ...this.#conditionsGovernorHolding(viewer, now),
-      ...this.#conditionsPartialCapture(viewer, now),
-      ...this.#conditionsCaptureUnattended(viewer, now),
-      ...this.#conditionsCaptureRequested(viewer, now)
+      ...this.#conditionsGovernorHolding(viewer, now, identity),
+      ...this.#conditionsPartialCapture(viewer, now, identity),
+      ...this.#conditionsCaptureUnattended(viewer, now, identity),
+      ...this.#conditionsCaptureRequested(viewer, now, identity)
     ];
   }
   /** op=queue: the member's ONE feed.
@@ -46931,6 +47548,7 @@ ${words}`;
     const cap = Math.max(1, Math.min(500, Math.floor(Number(limit) || 200)));
     const now = this.#nowMs(nowMs);
     const me = typeof member === "string" && member.trim() ? member.trim() : null;
+    const identity = me ? `member:${me}` : null;
     const items = [];
     const taskSeen = this.#bundleGate("tk.refers_to", viewer);
     for (const row of this.#rows(
@@ -46965,7 +47583,7 @@ ${words}`;
         },
         assignee: row.assignee,
         assignee_role: row.assignee_role,
-        options: this.#queueOptions([subject], viewer)
+        options: this.#queueOptions([subject], viewer, identity)
       });
     }
     const feed = this.proposalsFeed(nowMs);
@@ -47021,14 +47639,15 @@ ${words}`;
         },
         assignee: null,
         assignee_role: null,
-        options: this.#queueOptions(subjects, viewer)
+        options: this.#queueOptions(subjects, viewer, identity)
       });
     }
-    items.push(...this.#findingsOutOfInquiryLead(viewer, now));
-    items.push(...this.#findingsStanceDiverged(viewer, now));
-    const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, now);
+    items.push(...this.#findingsOutOfInquiryLead(viewer, now, identity));
+    items.push(...this.#findingsStanceDiverged(viewer, now, identity));
+    const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, now, identity);
     items.push(...fromAnotherTeam);
-    items.push(...this.#queueConditions(viewer, now));
+    items.push(...this.#findingsConcludedElsewhere(viewer, now));
+    items.push(...this.#queueConditions(viewer, now, identity));
     const refusal7 = (code, detail, extra) => {
       const row = QUEUE_MINT_CHECKS[code];
       return {
@@ -47597,7 +48216,8 @@ ${words}`;
     state,
     reason,
     decidedBy = null,
-    viewer = null
+    viewer = null,
+    identity = null
   } = {}) {
     const proj = typeof project === "string" ? project.trim() : "";
     const find = typeof finding === "string" ? finding.trim() : "";
@@ -47684,6 +48304,8 @@ ${words}`;
           finding: find,
           detail: "the project a judgment-layer disposition is scoped to must be a PROJECT bundle this viewer can see. Absent and invisible answer identically here and that is deliberate (REC-25): a refusal that told them apart would disclose the existence of a project the caller was not invited to."
         };
+      const denied = this.#projectAuthority(proj, identity, "joined", "proposedispose");
+      if (denied) return denied;
       const atS = (/* @__PURE__ */ new Date()).toISOString();
       const kd = typeof kind === "string" && kind.trim() ? kind.trim().slice(0, 120) : null;
       this.sql.exec(
@@ -49822,6 +50444,79 @@ ${words}`;
     const p = this.#participation(projectId, memberId);
     return !!(p && p.owner);
   }
+  /** REC-134: does this member hold the WORKING position in this project — a JOINED
+   *  participant (§7.5: *"An invited member who has not joined has view rights only. A
+   *  joined member has the working rights their capabilities allow"*). `leaving` counts:
+   *  §7.6 says a request to leave *"does not remove them"*, and BOB #14's lead ruling
+   *  already reads joined-or-leaving as the two states of full participation
+   *  (`#leadReach`). An owner is a joined participant with the owner flag (§7.10), so
+   *  every owner passes. `invited` does not. */
+  #isJoinedParticipant(projectId, memberId) {
+    const p = this.#participation(projectId, memberId);
+    return !!(p && (p.state === "joined" || p.state === "leaving"));
+  }
+  /* ===== REC-134 / C-56 — SIGHT IS NOT AUTHORITY, AT EVERY ACT ON A PROJECT ================
+   *
+   * Membership Architecture v2 §7, *"SIGHT IS NOT AUTHORITY — and this is Bob's doctrine,
+   * not a new ruling"* (BOB #15, 2026-09-18), quoting §4.9: *"the custodial role can audit
+   * everything and direct nothing"*. The defect it closes, found by REC-132 and measured by
+   * REC-134 through the ops: several acts that change a project took the VISIBILITY gate as
+   * their only barrier (or had none at all), and every administrator — enrolled, and since
+   * IC-149 the founder — passes that gate for every project. So an administrator who was
+   * never invited could revise a project's document, move its citation edges, move what it
+   * stands on, record a judgement in its feed, and adopt a bias set into its scope.
+   *
+   * THE QUESTION IS ASKED OF WHO THE ACTOR IS, NEVER OF WHAT IT MAY SEE. `identity` is the
+   * POSITIONAL half of the control plane's one session resolver (`resolveSession`, IC-149):
+   * `member:<id>` for a signed-in session (the founder's is `member:admin`), a member-scoped
+   * `ai` credential's principal, and `class:<cls>` for every instance credential. It is read
+   * through `#positionalMember`, the one place a viewer-shaped string becomes a member, so a
+   * `class:*` credential answers null and is NOT ASKED — machine credentials hold no roster
+   * position, and their fences are their own and unchanged (DEC-63's reasoning at the run
+   * verbs, and the brief's). An ABSENT identity is also not asked: that is every internal
+   * caller (`cite` promoting its own edit, `forkProject`, the version pointer's own write),
+   * and the control plane stamps it on every enumerated act, deleted first so a caller can
+   * never name one. The suite's negative control removes the stamp from one act and its arm
+   * goes red, which is what makes "the control plane always stamps it" a measurement.
+   *
+   * WHAT IT DOES NOT TOUCH, and each is deliberate: §7.13's add-an-owner (`projectOwnerRescue`)
+   * is the ONE administrator path and keeps its condition, its vote and its record — it never
+   * calls this. The roster acts, publication, the review copy, the run verbs and the lead share
+   * already asked a position and still ask their own. Sight is unchanged: nothing here is a
+   * visibility predicate and no read calls it.
+   *
+   * Returns null to proceed, or the refusal. The CODE is written HERE and only here, as a
+   * literal inside the region DEC-49's guard reads; the call sites RELAY it (`projectGate`'s
+   * precedent at the run verbs). */
+  #projectAuthority(projectId, identity, need, act) {
+    const who = this.#positionalMember(null, identity);
+    if (who === null) return null;
+    const refusal7 = (code, detail) => {
+      const row = PROJECT_AUTHORITY_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        project: projectId,
+        act,
+        needs: need
+      };
+    };
+    if (need === "owner" && !this.#isProjectOwner(projectId, who))
+      return refusal7(
+        "PROJECT_ACT_NOT_THE_OWNER",
+        `${act} on ${String(projectId).slice(0, 80)} is an act an OWNER of that project performs, and ${who} is not one. Seeing a project is not directing it: an administrator sees every project and directs none (Membership Architecture v2 \xA74.9, \xA77). Nothing was written.`
+      );
+    if (need === "joined" && !this.#isJoinedParticipant(projectId, who))
+      return refusal7(
+        "PROJECT_ACT_NOT_A_PARTICIPANT",
+        `${act} on ${String(projectId).slice(0, 80)} is work inside that project, and ${who} has not joined it (\xA77.5: an invited member has view rights only; an uninvited one, none). Seeing a project is not directing it: an administrator sees every project and directs none (\xA74.9, \xA77). Nothing was written.`
+      );
+    return null;
+  }
   /** D-310: DOES THIS MEMBER HOLD THE OWNER POSITION ANYWHERE — the question
    *  `op=affordances` has to answer before it offers `publish`, because the
    *  project is a PARAMETER of that act and the pre-flight cannot know which one
@@ -49847,6 +50542,22 @@ ${words}`;
    *  never a corpus. */
   #ownsAnyProject(memberId) {
     return this.#rows(`SELECT project_id FROM project_participants WHERE member_id=?`, memberId).some((p) => this.#isProjectOwner(p.project_id, memberId));
+  }
+  /* REC-133 / BIO_Publication §6A.2: THE PROJECT'S EDIT PERMISSION, positional half.
+     Membership v2 §7.5: *"A joined member has the working rights their capabilities
+     allow"*, and an invited member who has not joined has VIEW rights only; a member
+     who has asked to leave (7.6) has asked to stop working. So: an OWNER (the rule
+     `#isProjectOwner` states, consumed rather than restated) or a participant whose
+     state is `joined`, read through `#participation`, the record's one membership
+     predicate. The CAPABILITY half, `contribute` (*"create and revise bundles in the
+     working corpus"*, §5), is a SESSION's and is enforced at the control plane's
+     NEEDS table, where every other corpus write is gated. An administrator gains
+     nothing here: sight of every project is not a position in any of them (§7.3).
+     No new right is minted; this is §7.5 said once. */
+  #isProjectEditor(projectId, memberId) {
+    if (this.#isProjectOwner(projectId, memberId)) return true;
+    const p = this.#participation(projectId, memberId);
+    return !!(p && p.state === "joined");
   }
   #participation(projectId, memberId) {
     return this.#one(
@@ -50939,6 +51650,15 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const label = typeof cover === "string" && cover.trim() ? cover : name;
     if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(memberId || ""))
       return { ok: false, reason: "BAD_MEMBER_ID", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
+    const refusal7 = (code, detail) => {
+      const row = MEMBER_ID_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, memberId };
+    };
+    if (memberId === _Store.ROOT_ADMIN)
+      return refusal7(
+        "MEMBER_ID_RESERVED",
+        `'${_Store.ROOT_ADMIN}' names this instance's founding administrator; no member may be enrolled under it`
+      );
     if (!label || typeof label !== "string")
       return {
         ok: false,
@@ -53440,7 +54160,19 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
                through — one implementation, so the answer and the act cannot disagree.
                Gated: a project the viewer may not see answers `null`, exactly as one
                that never named a version does. */
-      ...project ? { current: this.#currentVersionOf(project, inq, viewer) } : {}
+      ...project ? { current: this.#currentVersionOf(project, inq, viewer) } : {},
+      /* REC-124 / §7.1: AND WHAT THIS PROJECT CONCLUDED, beside what it stands
+         on and under the same rule — present only when a project is named,
+         null when it has concluded nothing, and read through the ONE reader the
+         act's own `prior` uses. Another project's conclusion is never this
+         project's answer (item 4: "stated, not inferred from another team's"). */
+      ...project ? { conclusion: this.#conclusionOf(project, inq, viewer) } : {},
+      /* REC-124 / §7.1 item 5: the inquiry's OWN conclusion, the no-project
+         relationship's, with its claim STATED undetermined. Published whether or
+         not a project is named, because it is a different relationship from any
+         project's and a reader must never take one for the other. Behind the
+         same gate as the rest of this answer. */
+      no_project_conclusion: present ? this.#noProjectConclusionOf(inq) : null
     };
   }
   /* PL-2 / IS-2 — WHAT A PROJECT STANDS ON, read from the project's own
@@ -54041,7 +54773,10 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       affirmed: q("affirmed"),
       /* server-stamped, never the caller's */
       author: url.searchParams.get("author"),
-      viewer: url.searchParams.get("viewer")
+      viewer: url.searchParams.get("viewer"),
+      /* REC-134: the POSITIONAL identity make-current's project check reads — server-stamped,
+         and read from the URL only, so a body cannot supply it. */
+      identity: url.searchParams.get("identity")
     };
   }
   /* The six acts' target states, in ONE table read from the catalog's own
@@ -54216,6 +54951,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           `${projectId.slice(0, 60)} is not a project readable here, so it holds no stance to move.`,
           { target, version: vname, project: projectId }
         );
+      const denied = this.#projectAuthority(projectId, a.identity ?? null, "joined", "versioncurrent");
+      if (denied) return denied;
       const pmd = this.#one(
         `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`,
         projectId
@@ -57739,8 +58476,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  NEVER_LOOKED HERE IS A LEAD NOBODY HAS FOLLOWED — keyed on the LEAD, because
    *  a look is recorded AGAINST a lead (its authority), and §5.1's cause (3) is
    *  established for it (`INTERNET_EVIDENCE_IS_ONE_SIDED`). */
-  #frontierInternet(cap, viewer = null) {
-    const reach = this.#leadReach(viewer);
+  #frontierInternet(cap, viewer = null, identity = null) {
+    const reach = this.#leadReach(viewer, identity);
     const notRead = [
       {
         subject_kind: "unstated",
@@ -57885,14 +58622,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  BOUNDED, AND THE BOUND IS PUBLISHED ON EVERY ANSWER INCLUDING THE EMPTY ONE
    *  (REC-70, REC-30): a reader that got nothing must not have to guess which
    *  bound it would have been answered at. */
-  frontier({ level = "document", limit = null, viewer = null } = {}) {
+  frontier({ level = "document", limit = null, viewer = null, identity = null } = {}) {
     const cap = Math.max(1, Math.min(
       Math.floor(Number(limit) || _Store.FRONTIER_LIMIT_DEFAULT),
       _Store.FRONTIER_LIMIT_MAX
     ));
     if (level === "content") return this.#frontierContent(cap, viewer);
     if (level === "meaning") return this.#frontierMeaning(cap, viewer);
-    if (level === "internet") return this.#frontierInternet(cap, viewer);
+    if (level === "internet") return this.#frontierInternet(cap, viewer, identity);
     if (level !== "document")
       return {
         level,
@@ -60721,7 +61458,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  manifest below requires BOTH this row AND the bundle standing at `adopted`
    *  before it reports a lens in force — which is the fail-closed direction: at
    *  no point does one act alone put a lens over somebody's work. */
-  biasAdopt({ bundleId = null, scope = "instance", scopeId = "", author = null, at = null } = {}) {
+  biasAdopt({ bundleId = null, scope = "instance", scopeId = "", author = null, at = null, identity = null } = {}) {
     const who = typeof author === "string" ? author.trim() : "";
     if (!who || who.startsWith(_Store.BIAS_MACHINE_PREFIX))
       return this.#biasRefuse(
@@ -60749,6 +61486,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         "BIAS_ADOPTION_NOT_PROPOSED",
         "a project-scoped adoption names the project it is scoped to: pass scopeId=<PROJ-...>."
       );
+    if (st === "project") {
+      const denied = this.#projectAuthority(sid, identity, "owner", "biasadopt");
+      if (denied) return denied;
+    }
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
     const fm = md && typeof md.content === "string" ? parseFrontmatter(md.content).data || {} : {};
     const now = at ? String(at) : (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
@@ -61580,7 +62321,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            could record a judgment under a team it was never invited to. */
         proposedispose: () => this.proposeDispose({
           ...body || {},
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          /* REC-134: from the URL, AFTER the body spread,
+             so a body can never supply it. */
+          identity: url.searchParams.get("identity")
         }),
         recordruntime: () => this.recordRuntimeObservation(body || {}),
         runtimeobservations: () => this.runtimeObservations(),
@@ -61664,7 +62408,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           bundleId: url.searchParams.get("bundleId"),
           scope: url.searchParams.get("scope"),
           scopeId: url.searchParams.get("scopeId"),
-          author: url.searchParams.get("author")
+          author: url.searchParams.get("author"),
+          identity: url.searchParams.get("identity")
+          /* REC-134 */
         }),
         /* The policy arrives in the BODY. A policy document in a query string
            would be truncated by the first proxy with an opinion about URL
@@ -61774,18 +62520,21 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           condition: body ? body.condition : null,
           detail: body ? body.detail : null,
           looker: url.searchParams.get("looker"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          identity: url.searchParams.get("identity")
         }),
         leadshare: () => this.leadShare({
           lead: body && body.lead || url.searchParams.get("lead"),
           project: body && body.project || url.searchParams.get("project"),
           sharer: url.searchParams.get("sharer"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          identity: url.searchParams.get("identity")
         }),
         leadread: () => this.leadRead({
           id: url.searchParams.get("id"),
           limit: url.searchParams.get("limit"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          identity: url.searchParams.get("identity")
         }),
         suggest: () => this.suggestVersion({
           ...body || {},
@@ -61905,6 +62654,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         frontier: () => this.frontier({
           level: url.searchParams.get("level") || "document",
           viewer: url.searchParams.get("viewer"),
+          identity: url.searchParams.get("identity"),
           limit: url.searchParams.get("limit")
         }),
         /* REC-94 / IC-95: the per-capture content-axis read (section 4.2, section
@@ -62014,7 +62764,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            holds about the object. */
         affordancefacts: () => this.affordanceFacts({
           target: url.searchParams.get("target"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          identity: url.searchParams.get("identity")
         }),
         /* Selections. `viewer` and `owner` are both stamped by the control plane
            from the authenticated credential and are never taken from the
@@ -62045,6 +62796,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           owner: url.searchParams.get("owner"),
           note: url.searchParams.get("note") ?? "",
           author: url.searchParams.get("author"),
+          /* REC-134: the positional identity — the control plane's stamp, never the caller's. */
+          identity: url.searchParams.get("identity"),
           /* REC-37: the basis leg's ROLE, read only on the inquiry arm and
              REFUSED rather than dropped on the other. Absent stays null so a
              case-arm caller that never heard of it is byte-identical. */
@@ -62077,7 +62830,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           viewer: url.searchParams.get("viewer"),
           owner: url.searchParams.get("owner"),
           reason: url.searchParams.get("reason") ?? "",
-          author: url.searchParams.get("author")
+          author: url.searchParams.get("author"),
+          identity: url.searchParams.get("identity")
+          /* REC-134 */
         }),
         reinstate: () => this.reinstate({
           project: url.searchParams.get("project"),
@@ -62085,7 +62840,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           viewer: url.searchParams.get("viewer"),
           owner: url.searchParams.get("owner"),
           reason: url.searchParams.get("reason") ?? "",
-          author: url.searchParams.get("author")
+          author: url.searchParams.get("author"),
+          identity: url.searchParams.get("identity")
+          /* REC-134 */
         }),
         selectionlist: () => this.selectionList({ owner: url.searchParams.get("owner") }),
         selectionrelease: () => this.selectionRelease({
@@ -62226,8 +62983,15 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           conclusion: url.searchParams.get("conclusion"),
           falsifier: url.searchParams.get("falsifier"),
           noFalsifier: url.searchParams.get("no_falsifier"),
+          /* REC-124 / §7.1: the RELATIONSHIP (a project, or none) and what a
+             member adds beyond the adopted claim. Both caller-supplied like the
+             conclusion itself; the control plane stamps only identity. */
+          project: url.searchParams.get("project"),
+          commentary: url.searchParams.get("commentary"),
           viewer: url.searchParams.get("viewer"),
-          author: url.searchParams.get("author")
+          author: url.searchParams.get("author"),
+          identity: url.searchParams.get("identity")
+          /* REC-134: server-stamped */
         }),
         /* REC-31, conclude's shape exactly: ONE target, no handle and no
            owner, with the viewer and author stamps the control plane sets. */
@@ -63160,11 +63924,13 @@ var OPS = {
        an addressed act BESIDE publish that never leaves the instance.
   
        `casedraft`, `reviewgrant` and `reviewrevoke` are GATED to the classes that
-       reach `publish`, and ride its capability in NEEDS: authoring the group's draft
-       and handing it to a named person is the publication surface, one act short of
-       publishing. The store then asks the project-OWNER question (`publishCase`'s
-       own predicate) and refuses a machine by name, so a machine class reaching the
-       op is refused at the act rather than here.
+       reach `publish`. Their capabilities and authority are §6A.2's (BOB #15, built
+       by REC-133; the NEEDS rows carry the reasoning): AUTHOR = the project's edit
+       permission (`contribute` in NEEDS, owner-or-joined in the store); ISSUE = the
+       project OWNER (`publish` in NEEDS, `publishCase`'s owner predicate in the
+       store, no administrator bypass); REVOKE = the same, unchanged (§6A.2 as
+       corrected: administrators direct nothing). The store refuses a machine by name,
+       so a machine class reaching the op is refused at the act rather than here.
   
        `reviewcopy` and `reviewcomment` are UNGATED (`classes: null`) on
        `casedocument`'s reasoning, because their whole point is a RECIPIENT who
@@ -63662,6 +64428,7 @@ var AI_RUN_ACTIONS = [
   "extractpropose"
 ];
 var RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
+var POSITIONAL_ACTS = ["cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt", "conclude"];
 var BIAS_ACTIONS = ["biasadopt"];
 var RECOGNISER_ACTIONS = ["resolve", "resolvetestify", "resolutions", "concerns"];
 var PROGRESSION_ACTIONS = [
@@ -64070,11 +64837,21 @@ var NEEDS = {
      publication surface, and a member who may not publish may not author it
      either. No fifth capability token is minted (CAPABILITIES.md section 4). */
   publish: "publish",
-  /* REC-126 / DEC-31: the review copy's three authoring acts ride the SAME surface
-     as publish, because they are the act that stands beside it — a member who may
-     not publish may not hand the group's draft to a named outsider either. No
-     fifth capability token is minted. */
-  casedraft: "publish",
+  /* REC-126 / DEC-31, as REC-133 builds `BIO_Publication_v0_1.md` §6A.2 (BOB #15).
+     No fifth capability token is minted for any of the three.
+     - ISSUING and REVOKING a grant ride `publish`, UNCHANGED: handing the group's
+       unratified draft to a named outsider is the act that stands beside
+       publishing, and a member who may not publish may not do it either; the store
+       adds the OWNER, with no administrator bypass for either act (§6A.2 as
+       corrected by BOB #15 the same day: administrators direct nothing).
+     - AUTHORING a draft rides `contribute`: §6A.2 makes it the project's EDIT
+       permission (*"editing needs project permissions and is the editor's act"*),
+       and `contribute` is Membership v2 §5's *"create and revise bundles in the
+       working corpus"* — the capability half; the store checks the positional half
+       (an owner or a joined participant, §7.5). REC-126 had it at `publish`, so an
+       owner holding `publish` WITHOUT `contribute` no longer authors a draft: that
+       is the ruling applied, since such an owner may edit nothing in the corpus. */
+  casedraft: "contribute",
   reviewgrant: "publish",
   reviewrevoke: "publish",
   /* DEC-17: the group's declared bar is about what publishing REQUIRES, so it
@@ -64396,10 +65173,15 @@ function aiTaskScope(cred, op, spec) {
     );
   return { ok: true, viewer: cred.principal };
 }
-function sessionCaseViewer(role) {
-  const r = typeof role === "string" ? role : "";
-  if (r === "admin") return "admin";
-  return `member:${r.startsWith("member:") ? r.slice(7) : r}`;
+function resolveSession(sess) {
+  const r = sess && typeof sess.role === "string" ? sess.role : "";
+  const member = r.startsWith("member:") ? r.slice(7) : r;
+  return {
+    viewer: r === "admin" ? "admin" : `member:${member}`,
+    /* the founder — Store.ROOT_ADMIN, an administrator (7.3) */
+    identity: `member:${member}`,
+    member
+  };
 }
 async function caseReader(url, env, storeName) {
   const t = url.searchParams.get("token");
@@ -64423,7 +65205,7 @@ async function caseReader(url, env, storeName) {
     if (!sOut.answered) return { silent: "session" };
     const sess = sOut.result?.session;
     if (!sess) return { viewer: "" };
-    return { viewer: sessionCaseViewer(sess.role) };
+    return { viewer: resolveSession(sess).viewer };
   }
   return { viewer: "" };
 }
@@ -65373,6 +66155,7 @@ var index_default = {
     let cls = await classify(url.searchParams.get("token"), env);
     let viaSession = false;
     let sessMember = null, sessRights = null, sessCaps = null;
+    let sessViewer = null, sessIdentity = null;
     let aiCred = null;
     if (!cls) {
       const t = url.searchParams.get("token");
@@ -65413,7 +66196,7 @@ var index_default = {
               op
             }, 403);
           cls = kind;
-          sessMember = sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role;
+          ({ member: sessMember, viewer: sessViewer, identity: sessIdentity } = resolveSession(sess));
           sessRights = sess;
           viaSession = true;
         }
@@ -65495,9 +66278,10 @@ var index_default = {
         }, store: storeName, tokenClass: cls }, 200);
       }
       const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const affViewer = viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+      const affViewer = viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`;
+      const affIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
       const fOut = await doAnswer(st.fetch(
-        `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}`
+        `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}&identity=${encodeURIComponent(affIdentity)}`
       ));
       if (!fOut.answered) return storeSilent("affordances");
       const facts = fOut.result;
@@ -65528,7 +66312,7 @@ var index_default = {
     if (op === "queue") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const inner2 = new URL("http://do/queue");
-      inner2.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
+      inner2.searchParams.set("viewer", viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
       inner2.searchParams.set("member", viaSession ? sessMember : "");
       for (const k of ["now", "limit"]) {
         const v = url.searchParams.get(k);
@@ -65842,7 +66626,7 @@ var index_default = {
             sha256: sha,
             detail: `no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).`
           }, 501);
-        reViewer = viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+        reViewer = viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`;
         reAuthor = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
         const reStore = env.STORE.get(env.STORE.idFromName(storeName));
         const bOut = await doAnswer(reStore.fetch(
@@ -67232,7 +68016,7 @@ var index_default = {
       if (typeof bundleId !== "string" || !bundleId)
         return json({ ok: false, error: "monitor needs a bundleId" }, 400);
       const stub0 = env.STORE.get(env.STORE.idFromName(storeName));
-      const imgOut = await doAnswer(stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`)}`));
+      const imgOut = await doAnswer(stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`)}`));
       if (!imgOut.answered) return storeSilent("monitor");
       const img = imgOut.result;
       if (!img || typeof img["bundle.md"] !== "string")
@@ -67434,7 +68218,7 @@ var index_default = {
           detail: "caseratify requires caseId, edition (integer), expectedSha, and sig (armored SSH signature over the case document's sha)"
         }, 400);
       const factsOut = await doAnswer(stub.fetch(
-        `http://do/casedocfacts?case=${encodeURIComponent(body2.caseId)}&edition=${encodeURIComponent(String(body2.edition))}&viewer=${encodeURIComponent(sessionCaseViewer(sessRights.role))}`
+        `http://do/casedocfacts?case=${encodeURIComponent(body2.caseId)}&edition=${encodeURIComponent(String(body2.edition))}&viewer=${encodeURIComponent(sessViewer)}`
       ));
       if (!factsOut.answered) return storeSilent("caseratify/facts");
       const facts = factsOut.result;
@@ -67629,7 +68413,7 @@ var index_default = {
           tokenClass: cls
         }, 403);
       const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
-      const ratViewer = encodeURIComponent(viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
+      const ratViewer = encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
       const imgOut = await doAnswer(stub.fetch(`http://do/image?id=${encodeURIComponent(body2.bundleId)}&viewer=${ratViewer}`));
       if (!imgOut.answered) return storeSilent("ratify/image");
       const image = imgOut.result;
@@ -68193,7 +68977,9 @@ var index_default = {
     };
     const inner = new URL("http://x/" + (DO_PATH[op] || op));
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
+    inner.searchParams.delete("identity");
     if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "frontier"];
     const REC30_VIEWER_READS = [
       "dangling",
       "tasks",
@@ -68229,7 +69015,11 @@ var index_default = {
     if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
-        viaSession ? `member:${sessMember}` : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
+        viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+      if (IDENTITY_READS.includes(op)) inner.searchParams.set(
+        "identity",
+        viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
       );
     }
     if (op === "versionchain")
@@ -68269,15 +69059,20 @@ var index_default = {
         viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
       );
     if (op === "select" || op === "selection" || op === "selectionlist" || op === "selectionrelease" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op))
-      inner.searchParams.set("owner", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
+      inner.searchParams.set("owner", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "provenancechain" || op === "provenanceroute" || op === "narrow")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    if (POSITIONAL_ACTS.includes(op))
+      inner.searchParams.set(
+        "identity",
+        viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
     if (PROJECT_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "airunopen")
       inner.searchParams.set(
         "principal",
-        viaSession ? `member:${sessMember}` : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+        viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
       );
     if (RUN_VERB_ACTIONS.includes(op)) {
       inner.searchParams.delete("actor");
@@ -68294,6 +69089,8 @@ var index_default = {
           b.author = sessMember;
           b.actorMemberId = sessMember;
         } else b.author = `${MACHINE_AUTHOR_PREFIX}${cls}`;
+        delete b.actorIdentity;
+        b.actorIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           if (!sessCaps.has("create_projects"))
             return json({
