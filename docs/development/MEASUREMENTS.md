@@ -16803,3 +16803,38 @@ on `newgroup/test/embed.test.mjs`: old script → FAILED at *"the committed embe
 while *"its label is RELEASE.json's version"* PASSED — the defect exactly. Restored, verified by hash.
 **Consequence for the gate:** after the version bump, the wizard cannot be embedded until the release is SIGNED;
 the embed is step 9's act, not step 2's.
+
+## M-60 · 2026-09-18 · THE READINESS EXAM — does a session that reads its required reading KNOW what it needs? New vs old vs nothing (BOB #15)
+
+**Why.** Bob, 2026-09-18: every session must KNOW everything it needs to work flawlessly — *"no guessing, not scanning,
+no assuming"* — and *"We need real world measurements in order for a true confirmation."* A byte budget shows a file CAN
+be read whole; it does not show a session that reads it knows what it must. This measures the second.
+
+**Instrument.** 20 questions for the shared layer + the BOB lane, each drawn from a failure that actually happened and
+keyed to the file and section that answers it (the question file and key: this session's scratchpad, reproduced by the
+arms below). Three ARMS, each a fresh headless `claude -p --model claude-opus-5 --allowedTools Read` started in an EMPTY
+directory OUTSIDE the repository — so the project's CLAUDE.md could not leak in (the confound that would have made the
+old and no-reading arms read the new rules), and no user-level CLAUDE.md exists on the machine (checked):
+**NEW** = today's `CLAUDE.md` (13,099 B, auto-loaded as a real session loads it) + `kickoffs/BOB.md` (9,859 B);
+**OLD** = the archived `CLAUDE-2026-09-18.md` (44,539 B) + `BOB-kickoff-2026-09-18.md` (41,168 B);
+**NONE** = nothing — the NEGATIVE CONTROL: a question answered without reading tests general sense, not the documents.
+Graded BLIND by a fourth clean-room session: answer sets relabelled A/B/C, the key stripped of which-corpus notes,
+scored 2/1/0 per question against the key.
+
+| arm | score /40 | cache tokens created (≈ what the reading added) | turns | cost |
+| --- | --- | --- | --- | --- |
+| NONE (control) | **3** | 12,295 (baseline: system and tools) | 3 | $0.21 |
+| NEW | **38** | 24,181 → the reading ≈ **11.9k tokens** | 4 | $0.40 |
+| OLD | **36** | 46,193 → the reading ≈ **33.9k tokens** | 8 | $0.82 |
+
+**What it establishes.** The control holds (3/40), so the scores measure the documents. The rewrite lost no measured
+knowledge at about a third of the reading cost, and the old corpus had to be read in pieces (8 turns vs 4). **What it
+found in the NEW corpus, both since corrected:** Q9 — the session did not know to re-run the negative control after
+fixing a check (BOB.md said it, CLAUDE.md's rule did not); Q1 — BOB.md's *report at a boundary* was read against
+CLAUDE.md's *never end a turn on an unread question* (and the key itself was written for a generic session, so for the BOB
+lane it was partly wrong — stated, not smoothed). **What it does not establish:** anything about CONDUCT, SCHEDULER, DIST,
+FLEET or workers (untested); the OLD arm's 4 lost points are mostly rules added today (the defect rule, `status.mjs`), so
+it is not a fair score of the old corpus on its own terms; and the questions and the new corpus have one author (BOB #15),
+which the blind grader and the old-corpus arm limit and do not remove. **Owed:** the same exam per lane, a re-run after
+the two corrections, and field counts of process failures per lane against this day's baseline.
+
