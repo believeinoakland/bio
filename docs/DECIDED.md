@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1055 rulings across 85 documents.
+1050 rulings across 84 documents.
 
 ## DEC-
 
@@ -988,8 +988,6 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1470`
 - **REC-95** · 2026-09-16 — SHAS CORRECTED 2026-09-16 by CONDUCT #1 — the row published `ea545ef` merged at `47fd921`, neither of which resolves in this clone; same cause and same correction as REC-95's row above, which carries the reasoning**); IC-102 RESOLVED ACCEPTED (I3 16.0.0 → 17.0.0, BREAKING).  
   `docs/development/QUEUE.md:1520`
-- **REC-96** — FOUR WORKERS CORRECTED MY BRIEFS AT THE ARTIFACT AND EVERY CORRECTION WAS RIGHT.** REC-96 proved its code already published the honest negative my ruling assumed was missing; UI-62 found the per-row cause fields I told it to consume are computed and DISCARDED by its op; REC-112 showed the index was not the only…  
-  `docs/development/kickoffs/CONDUCT-NEXT.md:74`
 - **REC-96** · 2026-09-17 — CONDUCT verified it at the artifact before rowing it, and the verification CORRECTED the claim**: the report's *unrecognised flag* is safe on its own and unsafe only behind a valid namespace.  
   `docs/development/QUEUE.md:1113`
 - **REC-97** · 2026-09-14 — alars (or a `content_id`) onto the leg · PROPOSED 2026-09-14 (REC-97, closing UI-61's DELEGATION and unblocking IC-84's SETTLED) — the version bump and the RESOLUTION are CONDUCT's  
@@ -1388,8 +1386,6 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1115`
 - **M0-51** · 2026-09-17 — THE RULE, RULED by M0-51 on 2026-09-17 under the determination this row delegated rather than returned.  
   `docs/development/VERIFICATION.md:450`
-- **M0-54** — WHAT M0-54 OVERTURNED, AND WHAT IT DID NOT **D-288's ruling that a remote `worktree-agent-*` branch MEANS unintegrated work is WRONG FOR TWO BRANCHES IN EVERY THREE: 6 LANDED / 3 UNINTEGRATED / 0 UNDETERMINED, bimodal with  
-  `docs/development/kickoffs/CONDUCT-NEXT.md:125`
 - **M0-54** · 2026-09-17 — GATE PROFILE RULED BY CONDUCT #2 AS `DOCS`, ON A MEASUREMENT AND NOT AS A CONCESSION TO THE DISK:** `gates.mjs` classifies the diff DOCS and CONDUCT verified it at the artifact — four paths, every one under `docs/`, no code — so the doc-facing suites plus `plancheck` were the owed gate and a full battery was never…  
   `docs/development/QUEUE.md:1075`
 - **M0-56** · 2026-09-17 — CLAIM 2026-09-17 M0 (M0-56 — the DECIDED index goes stale on any prose edit, and a rebase stales it with nobody touching anything) session: m056-decided-index-pushguard (worktree agent-a3378dc3df6e90e46, branch `worktree-agent-a3378dc3df6e90e46`) opened: 2026-09-17T00:00:00Z released: (held until CONDUCT integrates…  
@@ -1985,12 +1981,6 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CAPTURE.md:239`
 - never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
   `docs/development/kickoffs/CAPTURE.md:281`
-- **2026-09-17** — WRITTEN AT A CLEAN BOUNDARY, RULED BY BOB #13 RATHER THAN CHOSEN BY ME: zero rows > `running`, zero live subagents, two waves fully integrated, `plancheck` 0 fail, and every > claim from 2026-09-17 RELEASED.** Verify all of it yourself before believing this file. > If anything disagrees, the tree is right.  
-  `docs/development/kickoffs/CONDUCT-NEXT.md:3`
-- Brief the next wave with 13,395 and EXPECT IT CORRECTED.** Eight workers across two waves confirmed my figures exactly and four corrected me; a worker correcting you is the system working, and every one of those corrections was right.  
-  `docs/development/kickoffs/CONDUCT-NEXT.md:41`
-- BOB #13's CORRECTED RULE, and it cost us both a wrong diagnosis: THE LOCK DOES NOT RELEASE WHEN THE HOLDER EXITS.  
-  `docs/development/kickoffs/CONDUCT-NEXT.md:149`
 - **2026-09-16** — RULED 2026-09-16 by BOB #12 (mechanism, BOB's) on CONDUCT #1's report, which flagged the change instead of quietly working around it.  
   `docs/development/kickoffs/CONDUCT.md:839`
 - **2026-09-17** — CORRECTED 2026-09-17, and the correction is BOB's own error caught one day later.** This bullet read *"dirty or off the tip"* and told you to stop and report on either.  
@@ -2058,7 +2048,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-17** — THE PUSH-TIME DECIDED GUARD — both causes driven against a real remote, and the estate's hook premises re-verified** *(Id minted with `node tools/mintid.mjs M`, run bare.  
   `docs/development/MEASUREMENTS.md:15329`
 - The degradation is real and is what the assertion was CORRECTED to measure:** `finding` stops being an index predicate and becomes a row-by-row test over **the whole tail of the table after the cursor**, to return the few rows standing at one finding.  
-  `docs/development/MEASUREMENTS.md:16135`
+  `docs/development/MEASUREMENTS.md:16167`
 - **2026-08-01** — CORRECTED 2026-08-01 — this hole is CLOSED and the paragraph below is kept as the > reasoning that closed it.** One reconciling Durable Object alarm now serves FIVE > consumers (selection-sweep, task-drain, archive-monitor, connection-derive, > overdue-scan), three of which landed within a week of the decision.  
   `docs/development/MILESTONES.md:118`
 - Bob already RULED the doctrine** — content > produced by a third-party script, if it is ever evidence, is recorded as produced by > THAT party and not by the hosting site.  
