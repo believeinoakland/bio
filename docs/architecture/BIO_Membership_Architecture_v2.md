@@ -534,6 +534,15 @@ token and not to the founder's session). **Design:**
   the one administrator path, and it keeps its condition, its vote and its record. Narrowing only the founder would make it
   narrower than every enrolled administrator and fix nothing. The builder enumerates the acts by grep and states, per act,
   which positional role it requires.
+- **A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it** (decided 2026-09-18 by BOB #15 on REC-134's gap; it
+  reconciles two of Bob's rulings rather than making a new one). **The authority is the SIGNATURES, and they must include
+  an OWNER of the publishing project** — DEC-72 clause 5 makes publishing the owner's act; the handler today asks only
+  for the instance-wide `publish` capability, so the builder verifies at the code whether an owner signature is required
+  and adds it if not. **Delivering is carriage, not direction** (AI Roles rule 4: the record states signer and deliverer
+  apart): a member with a role in the project may deliver, and so may the FOUNDER, as DEC-33's interim publishing route
+  (*"publishing currently runs through the group's operator"*) until the member-facing ceremony exists. **An enrolled
+  administrator with no role in the project may not deliver** — DEC-33 names the group's operator, not every
+  administrator, and administrators direct nothing (§4).
 - **Contract:** the founder gains sight, so it is an I3 change with its own IC (classification is the integrator's).
   **Negative controls:** the founder's session lists a project it was never invited to; it still cannot read another
   member's unshared lead; `memberAdd` with id `admin` is refused; the admin token's answers are byte-identical before and after.
