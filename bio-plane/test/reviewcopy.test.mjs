@@ -40,7 +40,38 @@
    those; the arm asserting that the revoked recipient reads nothing STAYS GREEN, which
    is the finding the arm exists for -> **51 pass, 1 fail**: the read's byte-identical
    arm, and the reads-nothing arm green exactly as declared. The COMMENT's byte-identical
-   arm stays green because the liar was written into the read only. */
+   arm stays green because the liar was written into the read only.
+
+   REC-133 (§6A.2, BOB #15) ADDED FOUR ARMS AND ELEVEN ASSERTIONS; ALL NINE ARMS RE-RUN
+   2026-09-18 in worktree agent-a6516bd6e484436ba, every restore sha256 MATCH, content
+   IDENTICAL, size ok. (0) BASELINE -> **63 pass, 0 fail**. Arms (a)-(d) re-measured: (a)
+   58/5, (b) 62/1, (c) 61/2, (d) 61/2 — (a) and (d) each fail ONE MORE than REC-126
+   recorded, and it is the same new arm in both: the owner-revoked G3 secret's
+   byte-identical comparison, which is a revoked-secret arm like the others they break.
+
+   (e) REVOKE WIDENED TO ADMINISTRATORS — `#reviewRevoke` admits `|| this.#isAdminMember`,
+   which is §6A.2's FIRST version, corrected by BOB #15 the same day (administrators
+   direct nothing). REC-133 built that version first and REVERTED it; this arm is the
+   inverse of the control it then carried. Declared: MUST FAIL the administrator-cannot-
+   revoke arm; MUST NOT fail the editor/plain-member arm -> **61 pass, 2 fail**: that arm,
+   AND the owner-revokes arm after it, because the administrator's attempt succeeded
+   first and the owner's revocation then reports `revokedBy: omar`. One more than
+   declared, in the declared direction.
+
+   (f) ISSUE WIDENED TO EDITORS — `#reviewGrant` asks `#isProjectEditor` instead of
+   `#isProjectOwner`. Declared: MUST FAIL the editor-cannot-issue arm; MUST NOT fail the
+   plain-member/administrator arm (neither is an editor) -> **62 pass, 1 fail**, that arm.
+   AS DECLARED. The editor holds `publish`, which is what lets this arm reach the store.
+
+   (g) THE LIAR'S WIDENING — authoring a draft admitted to ANY signed-in member (the
+   `#isProjectEditor` line removed). Declared: MUST FAIL every authoring REFUSAL arm that
+   the control plane does not answer first -> **59 pass, 4 fail**: VIC, OMAR, the plain
+   member's draft and her edit. The UMA arm stays GREEN, correctly: she lacks
+   `contribute`, and the control plane refuses her before the store is asked.
+
+   (h) THE DRY RUN AS THE EDITOR — `#reviewGates` runs as `row.updated_by` again, not as
+   `#draftPublisher`. Declared: MUST FAIL the editor's-draft-judged-as-publisher arm ->
+   **62 pass, 1 fail**, that arm. AS DECLARED. */
 
 /* REC-126 / DEC-31 — THE REVIEW COPY: AN ADDRESSED ACT BESIDE PUBLISH THAT NEVER
  * LEAVES THE INSTANCE. `BIO_Publication_v0_1.md` §6A is the authority, and every
@@ -166,6 +197,29 @@ await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r126", owner: "vic",
   id: "PROJ-2026-1261-elsewhere", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 
+/* REC-133 — THE ROSTER §6A.2's THREE AUTHORITIES ARE DRIVEN AGAINST. Each holds the
+   STRONGEST capabilities its position allows, so a refusal can only come from the
+   POSITION the store checks and never from a capability the control plane lacked:
+     ella — a JOINED participant of PROJ, not an owner, holding contribute AND
+            publish: the EDITOR. She may author; she may not issue (publish is
+            held, so only the owner rule can refuse her) and may not revoke.
+     pat  — INVITED to PROJ and NOT joined, holding contribute AND publish: the
+            PLAIN MEMBER with neither right (§7.5: view rights only).
+     uma  — a JOINED participant holding publish WITHOUT contribute: the capability
+            half of the edit permission, refused at the control plane.
+   omar (above) is the ADMINISTRATOR who is not an owner and not a participant. */
+const ELLA = await enrol("ella", "ella-passphrase-133", "member", ["contribute", "publish"]);
+const PAT = await enrol("pat", "pat-passphrase-133", "member", ["contribute", "publish"]);
+const UMA = await enrol("uma", "uma-passphrase-133", "member", ["publish"]);
+for (const [h, tok, join] of [["ella", ELLA, true], ["pat", PAT, false], ["uma", UMA, true]]) {
+  const inv = rP(await GET(`op=projectinvite&token=${IRIS}&projectId=${encodeURIComponent(PROJ)}&handle=${h}`));
+  if (!inv?.ok) bail(`projectinvite ${h}`, inv);
+  if (join) {
+    const jn = rP(await GET(`op=projectjoin&token=${tok}&projectId=${encodeURIComponent(PROJ)}`));
+    if (jn?.state !== "joined") bail(`projectjoin ${h}`, jn);
+  }
+}
+
 /* ---- the corpus: the shapes are casesign.test.mjs's, lifted rather than invented ---- */
 let snapSeq = 0;
 const promote = async (id, text, objectType, state) => rP(await POST("op=promote&token=adm-r126", {
@@ -270,7 +324,11 @@ t("the ground: the case the drafts will name is signed at edition 1 and is what 
 /* =========================================================================== 2
  * THE DRAFT: authored by the project's owner, identified BEFORE any gate runs.
  * ========================================================================= */
-console.log("\n--- 2. the draft case: an owner's act, and nobody else's ---");
+/* CORRECTED by REC-133: this block's heading read "an owner's act, and nobody
+   else's", which was REC-126's PROVISIONAL authority. §6A.2 (BOB #15) makes
+   authoring the project's EDIT permission; the owner arms below still hold (an
+   owner is an editor) and the editor arms are added after them. */
+console.log("\n--- 2. the draft case: the project's editors' act (§6A.2), and nobody else's ---");
 const draft = async (token, body) => rP(await POST(`op=casedraft&token=${token}`, body));
 const D1r = await draft(IRIS, withRoles({ ...args(2), caseId: C1, targets: [LEAD2] }));
 const D2r = await draft(IRIS, withRoles({ ...args(1), targets: [OPENQ] }));
@@ -286,11 +344,48 @@ t("a draft naming no case is a NEW case at edition 1, and its identity is STATED
 + "rather than invented — a case id is minted only by publication",
   [D2r.caseId, D2r.edition, typeof D2r.caseIdentity === "string" && /not yet allocated/i.test(D2r.caseIdentity)],
   [null, 1, true]);
-t("a draft is REFUSED to a member who does not own the producing project (the authority is publish's, "
-+ "DEC-72: the act stands beside publish)",
+/* CORRECTED by REC-133: the first label said the authority was publish's (DEC-72).
+   It is the project's EDIT permission now (§6A.2); VIC is still refused, because she
+   holds no position in PROJ at all — the reason changed, the answer did not. */
+t("a draft is REFUSED to a member with no position in the producing project, whatever she holds "
++ "(§6A.2: authoring needs the project's edit permission)",
   (await draft(VIC, withRoles({ ...args(2), caseId: C1, targets: [LEAD2] })))?.reason, "REVIEW_NOT_PROJECT_OWNER");
 t("and to an administrator who is not an owner — an administrator sees every project and directs none",
   (await draft(OMAR, withRoles({ ...args(2), caseId: C1, targets: [LEAD2] })))?.reason, "REVIEW_NOT_PROJECT_OWNER");
+
+/* REC-133: AUTHORING IS THE EDITOR'S ACT (§6A.2). */
+const DEr = await draft(ELLA, withRoles({ ...args(1), targets: [LEAD5] }));
+t("REC-133: A NON-OWNER EDITOR AUTHORS A DRAFT — a joined participant holding contribute, the draft "
++ "attributed to her project and standing as a new case",
+  [DEr?.ok, DEr?.project, DEr?.edited, DEr?.edition], [true, PROJ, false, 1]);
+const D6r = await draft(IRIS, withRoles({ ...args(1), targets: [LEAD3] }));
+if (!D6r?.ok) bail("casedraft D6", D6r);
+const D6e = await draft(ELLA, { draft: D6r.draftId, ...withRoles({ ...args(1), targets: [LEAD3] }) });
+t("and she EDITS the owner's draft IN PLACE — a review copy is mutable, and editing is the editor's act",
+  [D6e?.ok, D6e?.draftId, D6e?.edited], [true, D6r.draftId, true]);
+t("THE PLAIN MEMBER — invited, NOT joined, holding contribute AND publish — may NOT author: §7.5 gives an "
++ "invited member view rights only",
+  (await draft(PAT, withRoles({ ...args(1), targets: [LEAD5] })))?.reason, "REVIEW_NOT_PROJECT_OWNER");
+t("nor edit an existing draft of the project",
+  (await draft(PAT, { draft: D6r.draftId, ...withRoles({ ...args(1), targets: [LEAD3] }) }))?.reason,
+  "REVIEW_NOT_PROJECT_OWNER");
+t("THE CAPABILITY HALF: a JOINED participant without `contribute` is refused at the control plane, "
++ "before the store — the edit permission is position AND capability, and neither alone",
+  (await draft(UMA, withRoles({ ...args(1), targets: [LEAD5] })))?.reason, "NOT_CAPABLE");
+{
+  /* THE GATES ARE RUN AS THE PUBLISHER. `publishCase` runs its owner fence first, so
+     a dry run as the non-owner editor would answer NOT_THE_PROJECT_OWNER for every
+     editor's draft and hide the real gaps. A complete editor's draft must PASS, and
+     an incomplete one must name ITS gap. */
+  const DE_read = rP(await GET(`op=reviewcopy&draft=${DEr.draftId}&token=${IRIS}`));
+  const DEo = await draft(ELLA, withRoles({ ...args(1), targets: [OPENQ] }));
+  const DEo_read = rP(await GET(`op=reviewcopy&draft=${DEo.draftId}&token=${ELLA}`));
+  t("REC-133: AN EDITOR'S DRAFT IS JUDGED BY THE GATES AS ITS PUBLISHER WOULD MEET THEM — complete passes; "
+  + "over an open question names NOT_CONCLUDED, never the editor's want of ownership",
+    [DE_read?.gates, DE_read?.missing?.length, DE_read?.updated_by,
+     DEo_read?.gates, DEo_read?.missing?.[0]?.reason],
+    ["passed", 0, "ella", "refused", "NOT_CONCLUDED"]);
+}
 t("and to a machine credential, BY NAME — a review copy is an attributed act addressed to a person",
   (await draft("mem-r126", withRoles({ ...args(2), caseId: C1, targets: [LEAD2] })))?.reason,
   "MACHINE_CANNOT_REVIEW");
@@ -351,6 +446,17 @@ t("a grant is REFUSED to a member who does not own the producing project",
   (await grant(VIC, { draft: D1, recipient: "x" }))?.reason, "REVIEW_NOT_PROJECT_OWNER");
 t("and to a machine credential, by name",
   (await grant("mem-r126", { draft: D1, recipient: "x" }))?.reason, "MACHINE_CANNOT_REVIEW");
+/* REC-133: ISSUING IS THE OWNER'S, UNCHANGED (§6A.2), and each refusal is asserted,
+   because widening all three acts to any member would pass every positive arm. */
+t("REC-133: A NON-OWNER EDITOR CANNOT ISSUE A GRANT — not on the owner's draft and not on HER OWN — though "
++ "she holds publish, so only the owner rule can be what refuses her",
+  [(await grant(ELLA, { draft: D1, recipient: "x" }))?.reason,
+   (await grant(ELLA, { draft: DEr.draftId, recipient: "x" }))?.reason],
+  ["REVIEW_NOT_PROJECT_OWNER", "REVIEW_NOT_PROJECT_OWNER"]);
+t("nor can the plain member, nor an administrator who is not an owner (no administrator bypass: DEC-72)",
+  [(await grant(PAT, { draft: D1, recipient: "x" }))?.reason,
+   (await grant(OMAR, { draft: D1, recipient: "x" }))?.reason],
+  ["REVIEW_NOT_PROJECT_OWNER", "REVIEW_NOT_PROJECT_OWNER"]);
 t("and a grant names its recipient — an addressed act with no addressee is not attributed",
   (await grant(IRIS, { draft: D1, recipient: "" }))?.reason, "REVIEW_NO_RECIPIENT");
 {
@@ -463,6 +569,32 @@ t("the same holds for the COMMENT: revoked, never-issued and malformed secrets a
    await rawPost(`op=reviewcomment&secret=not-a-secret`, { text: "x" })],
   [await rawPost(`op=reviewcomment&secret=${encodeURIComponent("rv1_" + "B".repeat(43))}`, { text: "x" }),
    await rawPost(`op=reviewcomment&secret=${encodeURIComponent("rv1_" + "B".repeat(43))}`, { text: "x" })]);
+{
+  /* REC-133: REVOKING STAYS THE OWNER'S (§6A.2, CORRECTED by BOB #15 the same day —
+     its first version said *the owner or any administrator*, which contradicted
+     Membership v2 §4: administrators direct nothing). This worker built the
+     administrator arm from the first version and reverted it on CONDUCT #5's
+     correction; the arms below assert the refusals instead. A fresh grant, read LIVE
+     first, so "still live after they tried" is a measurement and not a fixture that
+     never worked; then the OWNER revokes it and the dead answer is byte-identical. */
+  const G3 = await grant(IRIS, { draft: D1, recipient: "Lee Park, ethics commission" });
+  if (!G3?.ok || !G3.secret) bail("reviewgrant G3", G3);
+  const liveBefore = parsed(await recipientRead(G3.secret))?.kind;
+  const refusedTo = [
+    rP(await POST(`op=reviewrevoke&token=${ELLA}`, { grant: G3.grantId }))?.reason,
+    rP(await POST(`op=reviewrevoke&token=${PAT}`, { grant: G3.grantId }))?.reason,
+  ];
+  const adminTried = rP(await POST(`op=reviewrevoke&token=${OMAR}`, { grant: G3.grantId }))?.reason;
+  const stillLive = parsed(await recipientRead(G3.secret))?.kind;
+  t("REC-133: THE EDITOR AND THE PLAIN MEMBER CANNOT REVOKE — neither owns the project",
+    [liveBefore, refusedTo], ["review-copy", ["REVIEW_NOT_PROJECT_OWNER", "REVIEW_NOT_PROJECT_OWNER"]]);
+  t("REC-133: AN ADMINISTRATOR WHO IS NOT THE OWNER CANNOT REVOKE — administrators direct nothing "
+  + "(§6A.2 as corrected) — and the grant is still live after all three tried",
+    [adminTried, stillLive], ["REVIEW_NOT_PROJECT_OWNER", "review-copy"]);
+  const RVO = rP(await POST(`op=reviewrevoke&token=${IRIS}`, { grant: G3.grantId }));
+  t("the OWNER revokes it, and the secret then answers BYTE-IDENTICALLY to one that was never issued",
+    [RVO?.ok, RVO?.revokedBy, await recipientRead(G3.secret)], [true, "iris", never]);
+}
 t("a member with NO standing in the producing project is answered exactly as for a draft that does not exist",
   (await rawOf(`op=reviewcopy&draft=${D1}&token=${VIC}`)).body,
   (await rawOf(`op=reviewcopy&draft=DRAFT-2026-9999&token=${VIC}`)).body);
