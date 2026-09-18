@@ -12721,3 +12721,20 @@ no column, no index, and the REC-112 annotation is not reflowed**), `bio-plane/c
 **NOT `docs/development/QUEUE.md`** — flipping the REC-116 row is CONDUCT's act (`kickoffs/WORKER.md`).
 
 **open as of 2026-09-17.**
+
+## CLAIM 2026-09-18 M0 (M0-63 — D-384 ENACTED: the `for`-header credit leaves `perRowScan`, and every HOIST-FRAGILE member is dispositioned BY NAME)
+
+Worker spawned by CONDUCT #4 into an isolated `agent-*` worktree. Paths:
+
+- `bio-plane/test/derivation-bounds.test.mjs` — the classifier's header credit, the class roster,
+  the ceiling, the HOIST-FRAGILE block and its fixtures.
+- `bio-plane/test/nc-m063.mjs` — NEW, this item's negative-control driver (the M0-40 precedent,
+  `test/nc-m040.mjs`); it runs nothing in the battery.
+- `docs/development/DEBT.md` — D-384 closing, and one row for an instrument gap found in passing.
+- `docs/development/CLAIMS.md` (this block), `docs/DECIDED.md` on regeneration.
+
+**NOT `docs/development/QUEUE.md`** — CONDUCT is its sole writer; flipping M0-63 is CONDUCT's act.
+**NOT `bio-plane/src/**`** — no plane byte moves; this is an instrument correction.
+**NOT `bio-plane/test/nc-m040.mjs`** — M0-40's driver, kept as the record of the arms it ran.
+
+**open as of 2026-09-18.**
