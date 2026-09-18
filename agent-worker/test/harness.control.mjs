@@ -508,11 +508,16 @@ arm({
   mustFail: "the one-entry-per-step arm and the terminal-entry arms; §14b.6's whole point is that the log's value is the FAILURE path",
   mustNot: "the gate arm, the dedup arms, or the F10 arms",
   file: DRIVER,
+  /* ANCHOR MOVED 2026-09-18 BY REC-100 (IC-130), with the line it quotes: the
+     entry is now built once as `entry` before the tick, so the drive loop can
+     count a model-judged PRESENT it records as indeterminate. The arm's subject
+     — skip the terminal step's tick — is unchanged. Found by
+     `m025-arm-anchor-witness` A4, which is that instrument doing its job. */
   find: `    const tick = await call("airuntick", null,
-      { run: runId, log: [stepLog(state, decision)], consume });`,
+      { run: runId, log: [entry], consume });`,
   replace: `    const tick = decision.step === "close"
       ? { reached: true, status: 200, body: { ok: true, result: {} } }
-      : await call("airuntick", null, { run: runId, log: [stepLog(state, decision)], consume });`,
+      : await call("airuntick", null, { run: runId, log: [entry], consume });`,
   run: () => {
     const r = runHarness();
     const logArm = anyFailed(r, /every step the trace names produced a log entry|last entry is terminal|and names the bound/);

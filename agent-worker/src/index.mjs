@@ -277,6 +277,11 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   const trace = [];
   const refusals = [];
   let logged = 0, submitted = 0, adjusted = 0, verbatimResubmits = 0;
+  /* REC-100 / IC-130: every log entry the plane REFUSED, named with its step,
+     and every step whose model-judged PRESENT was recorded as indeterminate
+     because it could name nothing (`stepLog`'s note). Both are published. */
+  const logRefused = [];
+  let presentUnbacked = 0;
 
   /* THE RUN'S OWN FACTS COME FROM THE RECORD, NEVER FROM THE CALLER.
      The MODE above all: SK-4's gate is only a gate while the mode is the
@@ -420,12 +425,39 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
        condition. */
     const spentThisStep = calls - callsAtStepStart + 1; /* +1: the tick is a subrequest too */
     const consume = { ...(work.consume || {}), runtime: spentThisStep };
+    const entry = stepLog(state, decision);
+    if (state.observed === "PRESENT") presentUnbacked += 1;
     const tick = await call("airuntick", null,
-      { run: runId, log: [stepLog(state, decision)], consume });
+      { run: runId, log: [entry], consume });
     if (!tick.reached) return { refusal: planeSilent(tick) };
     if (tick.status === 200 && tick.body?.ok === true) {
-      logged += 1;
       const t = tick.body.result ?? tick.body;
+      /* REC-100 / IC-130 — A TICK THAT ANSWERED ok IS NOT AN ENTRY THAT LANDED.
+         `op=airuntick` appends entry by entry and REFUSES per entry, returning
+         `appended` and `refused[]` beside `ok: true` — §14b.7's partial results,
+         so one bad entry cannot cost the budget spend or the lease. This site
+         used to count `logged += 1` off the envelope alone, so a refused entry
+         vanished: the run reported it logged and the record never held it. That
+         is the D-276 class (a refusal inside a well-formed answer) at the one
+         op whose refusals are PER ENTRY rather than per call.
+         So: count what the plane says it APPENDED, and carry every refused entry
+         into the run's own `refusals` (in the plane's words, never re-worded)
+         and into `log_refused`, naming the step it came from. A plane that does
+         not publish `appended` is read as having appended what it did not
+         refuse, which is the plane's own contract (appended + refused = sent). */
+      const refusedEntries = Array.isArray(t?.refused) ? t.refused : [];
+      const appendedNow = t?.appended != null && Number.isFinite(Number(t.appended))
+        ? Number(t.appended)
+        : (t?.ticked === false ? 0 : Math.max(0, 1 - refusedEntries.length));
+      logged += appendedNow;
+      for (const r of refusedEntries) {
+        const named = { at: "airuntick.log", step: state.step, to: decision.step,
+                        code: r?.code ?? r?.reason ?? null, check: r?.check ?? null,
+                        ...(r?.referent_fault ? { referent_fault: r.referent_fault } : {}),
+                        plane: r ?? null };
+        logRefused.push(named);
+        refusals.push(named);
+      }
       /* THE BUDGET AS THE RECORD NOW HOLDS IT. Re-read rather than decremented
          locally: a run resumes across invocations and a second copy of the
          count is a second answer that ages. */
@@ -491,7 +523,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
 
   return {
     mode: state.mode, trace, passes: state.pass, ended, logged, submitted,
-    refusals, adjusted, verbatimResubmits, resumedFrom,
+    refusals, adjusted, verbatimResubmits, resumedFrom, logRefused, presentUnbacked,
     /* FL-5's FACTS, PUBLISHED RATHER THAN HELD. FL-3 computed the fence's answer
        into a local nobody could read and asserted it by grepping a note — which
        measured nothing (see the fan-out step). What a suite, and a later reader,
@@ -1036,6 +1068,13 @@ async function handleRun(req, env) {
     passes: drive.passes,
     ended: drive.ended,
     logged: drive.logged,
+    /* REC-100 / IC-130 — WHAT THE LOG DID NOT TAKE, AND WHAT IT TOOK AS LESS.
+       `log_refused` names every step entry the plane refused (also in
+       `refusals`), so `logged` + `log_refused.length` is what this segment SENT;
+       `present_unbacked` counts steps where the model judged PRESENT and the
+       entry could name nothing, so it was recorded LOOKED_INDETERMINATE. */
+    log_refused: drive.logRefused,
+    present_unbacked: drive.presentUnbacked,
     submitted: drive.submitted,
     refusals: drive.refusals,
     adjusted: drive.adjusted,

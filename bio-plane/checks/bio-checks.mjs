@@ -6439,7 +6439,20 @@ export const AI_RUN_CHECKS = {
      entry's referent is. The third is `agent-worker`'s `stepLog`, another area's
      path, which composes no referent field while a model may judge `PRESENT`.
      The full reasoning and the driven evidence are at the predicate in
-     `src/airun.mjs`; section I of `test/observation-log.test.mjs` drives it. */
+     `src/airun.mjs`; section I of `test/observation-log.test.mjs` drives it.
+
+     **CLOSED 2026-09-18 BY REC-100 (IC-130, D-366).** BOB #14 ruled the rollup
+     (`OBSERVATION-LOG-DESIGN.md` §3): a rollup's PRESENT carries `result_kind =
+     observation` pointing at the latest non-terminal PRESENT row of its own run,
+     computed by the plane. The carve-out is DELETED, so this refusal now fires
+     on EVERY authority, and it GAINED AN ARM rather than a new code: an
+     `observation` referent that is not an EARLIER PRESENT row of the SAME
+     authority is refused here too, with `referent_fault` naming which of four
+     ways it failed (`OBSERVATION_REFERENT_FAULTS` in `src/airun.mjs`). One code,
+     because every fault is this row's condition — a PRESENT whose referent does
+     not back it — and a second code behind C-22.10 would be two conditions
+     behind one C-number, which `civicos-ui/check-refusal-codes.mjs` refuses.
+     Section K of `test/observation-log.test.mjs` drives all of it. */
   OBS_PRESENT_NO_REFERENT: {
     check: 'C-22.10',
     where: 'src/airun.mjs checkObservation, called from store.mjs #observe',

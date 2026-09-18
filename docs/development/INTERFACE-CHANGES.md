@@ -9812,11 +9812,108 @@ DIFFERENT worker's HTTP path and not a plane op. Zero consumers of the new ops.
 **RESPONSES:** not yet collected. UI to answer on the act; SKILL and DIST expected NOT-AFFECTED.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at REC-87's integration — I3 23.5.0 → 23.6.0, MINOR (additive, as classed).** Base read AT RESOLUTION: 23.5.0, not the 23.3.0 proposed against (IC-126 and IC-129 each took a minor meanwhile). CONDUCT answers FOR SKILL and DIST: NOT-AFFECTED (no caller of the new ops), named as such. **UI's act is OWED, not waived** (the delegation in `CLAIMS.md`); `construct-status.json` now carries `4.transcribe` BUILT and `4.transcribe-ui` ABSENT. **Found by a control arm and fixed in this landing:** C-45.2 refused a typing of any capture with no extraction chain — Bob's own case, a scan no engine could read.
+---
+
+## IC-130 · I3: THE ROLLUP REFERENT — `op=airunlog`'s `result_kind` gains `observation`, and `op=airuntick` / `op=airunclose` now REFUSE a `run` `PRESENT` that names nothing (C-22.10's `run` carve-out DELETED, D-366 CLOSED) · PROPOSED 2026-09-18 (REC-100, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 — MAJOR, I3 24.0.0**
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS tree's `INTERFACES.md`:
+  23.5.0 (re-read after the rebase onto `2d51e5d3`; it was 23.3.0 at proposal).** **PROPOSED AS MAJOR — 23.5.0 → 24.0.0 — AND THAT DEPARTS FROM THE SPAWN BRIEF, WHICH
+  SAID ADDITIVE.** The brief named only the read half (*"`result_kind` gains a value on
+  `op=airunlog`'s read"*), and that half IS additive. The tree says the item has a second half the
+  brief's one-line classification did not cover: deleting the carve-out makes `op=airuntick`
+  REFUSE an entry it ACCEPTED yesterday. This file's own precedent classes that a break whatever
+  the measured impact (IC-118: *a correct consumer becomes wrong without changing a line*; the
+  tally ruling in `store.mjs`: *a tally that starts refusing where it answered is a BREAK*). So it
+  is proposed MAJOR and the reasoning is stated; CONDUCT resolves the class.
+- **Proposer:** RECORD, worker `agent-a249f66820def3efd`, 2026-09-18, from QUEUE REC-100.
+- **Owner to land it:** `RECORD`.
+- **Consumers to answer:** `UI`, `SKILL`, `CASE`, `DIST`, `RECORD`, and the area owning
+  `agent-worker/**` (the one live writer affected).
+
+**THE RULING THIS BUILDS.** `OBSERVATION-LOG-DESIGN.md` §3 and §4.4, RULED 2026-09-18 by BOB #14
+(D-366): a ROLLUP's `PRESENT` — the run's terminal entry (`#aiRunTerminate`, reached by
+`op=airunclose`, by a tick that exhausts a bound, and by the reaper `#aiRunReap`) and the wake
+entry (`#aiRunWake`) — carries `result_kind = observation` and `result_ref` = the `seq` of the
+LATEST non-terminal `PRESENT` row of the same `(authority_kind, authority)`, computed by the PLANE
+in the same read as `#aiRunSearchState` and never supplied by a caller.
+
+**WHAT CHANGES ON THE WIRE — three things, one additive and two not.**
+1. **`op=airunlog` (ADDITIVE).** An entry's `result_kind` may now read `observation`. Its
+   `result_ref` is then **the `seq` OF ANOTHER ENTRY IN THE SAME ANSWER** — the op's own per-run
+   ordinal, NOT the store-wide `seq` the column stores. This is a decision this landing made and it
+   is stated rather than buried: `op=airunlog` already re-derives `seq` as the per-run ordinal
+   (REC-93's digest-pinned property), so publishing the store-wide number beside it would be a
+   pointer to no entry in the answer, which is the one thing the ruling says the referent must not
+   be. It is EXACT: the check admits only an EARLIER row of the SAME run, and the page is a prefix
+   of the run's rows in `seq` order. `coverage` reads `backed` for such a row, by REC-113's row-alone
+   rule. `op=frontier` publishes the store-wide `seq` and the stored value unchanged, so there the
+   referent is store-wide and consistent with the `seq` beside it.
+2. **`op=airuntick` (NOT ADDITIVE).** An entry with `state: "PRESENT"` and no `result_ref` is now
+   refused in `refused[]` with `code: OBS_PRESENT_NO_REFERENT` (C-22.10) instead of appended. An
+   entry carrying `result_kind: "observation"` is checked: its `result_ref` must be the store-wide
+   `seq` of an EARLIER `PRESENT` row of the SAME run, else refused under the same code with
+   `referent_fault` naming which of four ways it failed (`not_earlier` · `unresolved` ·
+   `other_authority` · `not_present`, published as `OBSERVATION_REFERENT_FAULTS` in `airun.mjs`).
+   `referent_fault` is an ADDED key on that refusal only; every other refusal is byte-unchanged.
+   **A caller-supplied `observation` referent that passes the check is ACCEPTED** — decided here
+   rather than refused outright: the ruling says the ROLLUP's referent is the plane's, and a
+   verified pointer from a caller costs something to produce and a reader can follow it, which is
+   the ruling's own test. Refusing it would be a fence tighter than its rule.
+3. **`op=airunclose`, the reaper, and the wake: behaviour a caller can observe does NOT move for
+   any run that could close before.** A run that observed `PRESENT` closes (terminal entry written,
+   `terminated: true`) — REC-100 measured on 2026-09-16 that, with the carve-out deleted and no
+   referent, it answered `terminated: false, code: OBS_PRESENT_NO_REFERENT`; that deadlock is the
+   thing this landing does not reintroduce, and section K of `observation-log.test.mjs` drives the
+   close, the reaper and (in `scheduler.test.mjs`) the wake. The answer's own shape is unchanged.
+
+**LEGACY ROWS ARE NOT FILLED.** A bare `run` `PRESENT` written before this landing stays as written
+and reads `coverage: "undetermined"` through REC-113's projection. A run holding one still closes:
+its rollup points at that row (it IS an earlier `PRESENT` row of the same run), and the legacy row
+still reads `undetermined` afterwards — the pointer does not launder it (K6, driven by writing the
+row with this tree's source under the OLD rule over a persisted store and reading it back through
+this build). **What a reader cannot see from the rollup row alone**, stated rather than hidden: a
+terminal row reads `backed` even when the row it points at is a legacy `undetermined` one. Following
+the pointer shows it. Whether `coverage` should follow the pointer is a READ-side question put to
+the design's Incomplete sections, not decided here.
+
+**MEASURED CONSUMER IMPACT — every call site on this tree, read, not counted.**
+- **`civicos-ui/`**: reads neither op anywhere outside comments (`app.html` ~19445–19540 are
+  comments; IC-116 pinned the absence in three UI tests). Impact **zero**.
+- **`agent-worker/src/index.mjs`** reads `op=airunlog`'s `entries` for its LENGTH only
+  (`resumedFrom`, ~340). The read half's impact is **zero**.
+- **`agent-worker/src/index.mjs:423`** sends `log: [stepLog(state, decision)]` to `op=airuntick`,
+  and **`stepLog` composes no `result_ref`** while `observed` sits in `JUDGEABLE`, so a model's
+  judgement can set `PRESENT`. **Such an entry is now REFUSED, and agent-worker does not read
+  `refused[]`** (it tests `status === 200 && body.ok === true` and counts the step as logged). The
+  tick itself still succeeds, the budget is still spent and the lease still extended, so nothing
+  stops — but the step's PRESENT is silently absent from the log, and the run's rollup then reads
+  what the remaining rows support. That is the design's individual-look rule (§4.4) reaching the
+  one caller that breaks it; the fix is agent-worker's, in REC-100's open DELEGATION in `CLAIMS.md`,
+  and its urgency is now real rather than prospective. **Its own suites MOCK `op=airuntick`, so no
+  battery anywhere shows this.**
+- **SKILL**: the investigative skill drives runs through agent-worker, not these ops directly —
+  expected NOT-AFFECTED, to be answered.
+
+**RESPONSES:** FLEET (`agent-worker`, the one caller that ticks a `run` PRESENT) — MIGRATED in this landing (below), answered by the migration itself rather than by a word; UI, SKILL, DIST — NOT-AFFECTED at the INTERFACE (no caller ticks a run), CONDUCT answering FOR each, named as such.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 as MAJOR — I3 23.6.0 → 24.0.0.** The worker's class is upheld: `op=airuntick` now REFUSES an entry it accepted before, and a refusal of a formerly accepted input is breaking regardless of how additive the read side is. Base read at resolution (23.6.0; proposed against 23.3.0). **CHANGING → CHANGED → SETTLED IN ONE ACT, deliberately:** REC-100 was HELD OFF `main` until its consumer's migration landed with it, so no commit of `main` ever carries a plane that refuses what a same-tree agent-worker sends. **THE DEPLOY CONSTRAINT THIS LEAVES, stated for DIST because it is the one place this can still go wrong:** the plane at I3 24.0.0 and `agent-worker` must be DEPLOYED TOGETHER from the same tree. A plane at 24.0.0 serving an agent-worker built before this landing silently loses every model-judged PRESENT step from the run log — the exact defect this item closed, re-opened by a partial rollout. The migrated agent-worker now reports every refusal (`log_refused`), so a partial rollout is at least LOUD from the new side; the old side cannot be made loud retroactively.
+
+**MIGRATION (step 6 of the protocol), DONE ON THE SAME BRANCH — 2026-09-18, REC-100 under CONDUCT #4's
+authorization to widen into FLEET's `agent-worker/**`.** CONDUCT #4 ACCEPTED the MAJOR class and
+declined to merge the plane half alone, because the one affected consumer would have dropped entries
+silently. Its migration: (1) `stepLog` records a model-judged PRESENT as `LOOKED_INDETERMINATE` with
+the judgement stated, never with an invented referent; (2) the drive loop reads `refused[]`, publishes
+every refused entry (`log_refused`, and in `refusals`) and counts `logged` from what the plane
+APPENDED; (3) section R of `agent-worker/test/harness.test.mjs` drives the tick against the REAL plane
+rather than a mock, with a negative control per half. **agent-worker's answer gains two keys,
+`log_refused` and `present_unbacked`, and `logged` now counts appended entries rather than ticks** —
+equal whenever nothing is refused, which was every case before this IC.
+
 
 ## IC-132 · I3: `op=ratify` and `op=caseratify` REFUSE an `ai` credential BY NAME — `MACHINE_CANNOT_RATIFY` (C-32.12), `MACHINE_CANNOT_RATIFY_CASE` (C-32.13) · PROPOSED 2026-09-18 (REC-123, minted with `node tools/mintid.mjs IC` BEFORE the fix) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
-  `docs/development/INTERFACES.md`: 23.6.0** (IC-128 ACCEPTED). **Proposed as MAJOR — 23.6.0 → 24.0.0.**
+  `docs/development/INTERFACES.md`: 24.0.0** (IC-130 ACCEPTED; read 23.6.0 at proposal, and re-read after merging origin/main — the base moved underneath this row, which is why it is read AT RESOLUTION). **Proposed as MAJOR — 24.0.0 → 25.0.0.**
   No op, field, table or response key is added or removed; two ops that ACCEPTED a class of caller now
   REFUSE it. **Read the base AT RESOLUTION.**
 - **Proposer:** RECORD, worker `agent-ad37cd8c19b30bf8b`, 2026-09-18, from QUEUE REC-123
