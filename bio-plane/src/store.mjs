@@ -670,6 +670,35 @@ export class Store extends DurableObject {
         this.sql.exec(`ALTER TABLE published_bundles RENAME TO published_bundles_preeditions`);
     }
 
+    /* REC-104: `content.chain_kind`, a GENERATED column (schema.mjs says why), added
+       to a `content` table created before it existed. THREE THINGS ABOUT THIS BLOCK
+       ARE LOAD-BEARING AND NONE IS STYLE.
+       (1) IT RUNS BEFORE THE SCHEMA, not in the additive ALTER list further down,
+           because the schema's CREATE INDEX on the column would otherwise hit the
+           OLD table and throw inside blockConcurrencyWhile — the failure the DROP
+           loop above records, which bricks the Durable Object rather than failing
+           a request.
+       (2) IT READS `table_xinfo`, NOT `table_info`. A generated column is HIDDEN
+           from `table_info`, which is what every other additive migration here
+           reads — so that spelling would never see the column it had added and
+           would re-ALTER on every boot, which SQLite refuses as a duplicate.
+       (3) THE COLUMN'S DEFINITION IS READ OUT OF THE SCHEMA TEXT, never restated.
+           A fresh store gets the column from CREATE TABLE and a migrated one from
+           this ALTER; a second copy of the expression here would be two
+           definitions of one column that could disagree, which is the exact
+           drift the generated column was chosen to make impossible.
+       No backfill: the engine computes the value for every existing row. */
+    {
+      const have = [...this.sql.exec(`PRAGMA table_xinfo(content)`)].map((r) => r.name);
+      if (have.length && !have.includes("chain_kind")) {
+        const stmt = bare.split(";").map((x) => x.trim())
+          .find((x) => x.startsWith("CREATE TABLE IF NOT EXISTS content ("));
+        const col = stmt && stmt.split("\n").map((l) => l.replace(/--.*$/, "").trim())
+          .find((l) => /^chain_kind\s/.test(l));
+        if (col) this.sql.exec(`ALTER TABLE content ADD COLUMN ${col.replace(/,$/, "")}`);
+      }
+    }
+
     for (const s of bare.split(";")) { const t = s.trim(); if (t) this.sql.exec(t); }
 
     /* ================================================================ *

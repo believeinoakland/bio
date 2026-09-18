@@ -629,22 +629,24 @@ export const MEANING = {
                 pred: (cmp, v) => v === "UNDETERMINED"
                   ? { sql: `derivation_cap IS NULL`, args: [] } : null },
       /* THE LAST STEP OF THE CHAIN — "every OCR'd region below cap C" is §1's
-         own example and this is its first half. THE COLUMN HOLDS THE WHOLE
-         CHAIN AS JSON and there is no column holding the last step's kind, so
-         this is a READ-TIME PARSE and it is therefore UNINDEXABLE. That is a
-         measured cost recorded in `MEASUREMENTS.md` and a stated DESIGN GAP
-         against §4.2, not a silent choice: §4.1 gives `capture_text` a
-         `chain_kind` COLUMN for exactly this predicate and says why ("so 'every
-         OCR'd unit' is a predicate and not a parse"), and §4.2 asks the same
-         question of `content` without giving it the same column. The column is
-         owed; this item does not own the mint path that would write it.
-         `chain:undetermined` is `IS NULL` for `cap`'s reason — the record holds
-         no chain for that row and says so instead of guessing a step. */
-      chain:  { col: "chain", case: "lower", vocab: Object.keys(STEP_KINDS),
-                pred: (cmp, v) => v === "undetermined"
-                  ? { sql: `chain IS NULL`, args: [] }
-                  : { sql: `json_extract(chain, '$[#-1].step') ${cmp === "present" ? "IS NOT NULL" : `${cmp} ?`}`,
-                      args: cmp === "present" ? [] : [v] } },
+         own example and this is its first half. REC-104: IT READS THE
+         `chain_kind` COLUMN, and the read-time JSON parse it replaced is RETIRED
+         rather than kept beside it. Until REC-104 this compiled to a parse of the
+         whole chain per row — unindexable, the slowest filter on the table
+         (M-23), and REC-90's stated DESIGN GAP against §4.2, since §4.1 gives
+         `capture_text` a `chain_kind` column for the identical question.
+         `chain_kind` is a GENERATED column over `chain` (schema.mjs says why), so
+         it cannot disagree with the chain it describes.
+         ONLY TWO VALUES KEEP A PREDICATE OF THEIR OWN, each for a reason:
+         `chain:undetermined` is `chain IS NULL` — the record holds NO chain, a
+         different fact from a chain with no last step, so it stays on the
+         question it always asked (and `cap`'s reason: say so, never guess a
+         step); and presence is `chain_kind IS NOT NULL`, exactly the pre-item
+         meaning, where the ordinary arm would add `<> ''`. Every comparison
+         falls to the ordinary `chain_kind <cmp> ?`. */
+      chain:  { col: "chain_kind", case: "lower", vocab: Object.keys(STEP_KINDS),
+                pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL`, args: [] }
+                  : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : null },
       /* DEC-24 — THE MACHINE DOES THE LOOKING, THE MEMBER DOES THE CONCLUDING.
          A content row is an ADDRESS; it becomes part of a finding only when a
          member's basis leg names it. `content:cited` is "passages some claim
@@ -674,7 +676,8 @@ export const MEANING = {
        says "cited or citable, and it says which", and without this column a
        reader would have to ask a second op per row to tell which. */
     rowComputed: {
-      chain_last: `json_extract(m.chain, '$[#-1].step')`,
+      /* REC-104: off the same column the filter reads — one answer, not two. */
+      chain_last: `m.chain_kind`,
       cited: citedExists("m"),
     },
     identity: ["content_id"],

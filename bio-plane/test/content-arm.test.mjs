@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: the arms live in `test/nc-rec90.mjs` and are re-run in one step with `node test/nc-rec90.mjs [arm]` from `bio-plane/`. Each arm EDITS A REAL SOURCE, is armed ALONE with the others held open, and is restored from a UNIQUELY-NAMED per-arm pristine copy verified by sha256 AND by `cmp` with a byte count printed and a minimum guarded (never `git checkout --`, which restores to HEAD and has twice discarded a session's own uncommitted work). Declared before arming, and every one RUN — results in this file's own RESULTS line and in the item's report. (a) `baseline` — nothing armed; MUST be green, and it is the row that distinguishes six-arms-working from six-arms-broken. (b) `pred` — in `src/query.mjs` `meaningWhere`, ignore the sub-field's own predicate (`if (false && sub && ...)`), so every non-ordinary filter degrades to `column <cmp> ?`: sections 4's `minted`, `cap=undetermined`, `chain` and `cited` arms MUST FAIL and the ordinary `kind` arm MUST STAY GREEN — the arm is what distinguishes a registry that carries four new predicates from one that carries four new NAMES. (c) `citeddrift` — in `src/query.mjs` make `rowComputed.cited` ask only `inquiry_basis` and not `inquiry_basis_version_legs`, which is the ONE-DEFINITION-TWO-CONSUMERS property stated at `citedExists`: the assertion that the `cited` COLUMN agrees with the `content:cited` FILTER row for row MUST FAIL, and every other section MUST STAY GREEN. (d) `nojoin` — in `src/query.mjs` delete `rows=leg`'s `rowJoin`, so `extent_kind` and `ref` leave the leg rows: section 6's three-column arms MUST FAIL BY NAME and section 5's `rows=content` arms MUST STAY GREEN, which is what shows the two row shapes are independent. (e) `levelsblind` — in `src/store.mjs` `#meaningLevels`, answer `internet` as `{ state: "COUNTED", documents: 0 }` instead of UNDETERMINED: section 7's arm that the unreachable level is NAMED AS UNDETERMINED MUST FAIL — this is CLAUDE.md's sparse rule and the statement IS the assertion, so an arm that left it green would mean the suite is testing something else. (f) `gateloss` — in `src/query.mjs` the `levels` projection takes `1=1` instead of the compiled predicate: `Store#runQuery`'s D-15 throw MUST fire and the op MUST answer `ok:false`, never an ungated tally — a third statement that could run without the gate would be the leak this projection is most able to produce. (g) OVER-STRICTNESS, section 10 and held open under every arm above: five correct spellings this implementation was not written around — `concerns:ENT<1` still a bare entity value and not a refusal, `resolves:>=B` on the bare field unchanged, `content:kind=pdf-page` as well as `content:pdf-page`, `content:minted=MEM-x` as a literal minter id beside the three class words, and `has:content` — all MUST PASS. */
+/* NEGATIVE CONTROL: the arms live in `test/nc-rec90.mjs` and are re-run in one step with `node test/nc-rec90.mjs [arm]` from `bio-plane/`. Each arm EDITS A REAL SOURCE, is armed ALONE with the others held open, and is restored from a UNIQUELY-NAMED per-arm pristine copy verified by sha256 AND by `cmp` with a byte count printed and a minimum guarded (never `git checkout --`, which restores to HEAD and has twice discarded a session's own uncommitted work). Declared before arming, and every one RUN — results in this file's own RESULTS line and in the item's report. (a) `baseline` — nothing armed; MUST be green, and it is the row that distinguishes six-arms-working from six-arms-broken. (b) `pred` — in `src/query.mjs` `meaningWhere`, ignore the sub-field's own predicate (`if (false && sub && ...)`), so every non-ordinary filter degrades to `column <cmp> ?`: sections 4's `minted`, `cap=undetermined`, `chain` and `cited` arms MUST FAIL and the ordinary `kind` arm MUST STAY GREEN — the arm is what distinguishes a registry that carries four new predicates from one that carries four new NAMES. (c) `citeddrift` — in `src/query.mjs` make `rowComputed.cited` ask only `inquiry_basis` and not `inquiry_basis_version_legs`, which is the ONE-DEFINITION-TWO-CONSUMERS property stated at `citedExists`: the assertion that the `cited` COLUMN agrees with the `content:cited` FILTER row for row MUST FAIL, and every other section MUST STAY GREEN. (d) `nojoin` — in `src/query.mjs` delete `rows=leg`'s `rowJoin`, so `extent_kind` and `ref` leave the leg rows: section 6's three-column arms MUST FAIL BY NAME and section 5's `rows=content` arms MUST STAY GREEN, which is what shows the two row shapes are independent. (e) `levelsblind` — in `src/store.mjs` `#meaningLevels`, answer `internet` as `{ state: "COUNTED", documents: 0 }` instead of UNDETERMINED: section 7's arm that the unreachable level is NAMED AS UNDETERMINED MUST FAIL — this is CLAUDE.md's sparse rule and the statement IS the assertion, so an arm that left it green would mean the suite is testing something else. (f) `gateloss` — in `src/query.mjs` the `levels` projection takes `1=1` instead of the compiled predicate: `Store#runQuery`'s D-15 throw MUST fire and the op MUST answer `ok:false`, never an ungated tally — a third statement that could run without the gate would be the leak this projection is most able to produce. (g) OVER-STRICTNESS, section 10 and held open under every arm above: five correct spellings this implementation was not written around — `concerns:ENT<1` still a bare entity value and not a refusal, `resolves:>=B` on the bare field unchanged, `content:kind=pdf-page` as well as `content:pdf-page`, `content:minted=MEM-x` as a literal minter id beside the three class words, and `has:content` — all MUST PASS. REC-104 ADDS ITS OWN ARMS, in `test/nc-rec104.mjs` (`node test/nc-rec104.mjs [arm]`), which drives THIS suite and `content-chain-kind.test.mjs` together: `firststep` makes the column describe the chain's FIRST step and section 6's witness MUST FAIL by name; `preitem` runs this suite on the pre-REC-104 plane sources and section 11's digest MUST EQUAL this tree's (the over-strictness arm the row names), after `baseline2` shows two untouched runs agree. REC-104 ALSO CORRECTED arm (b) `pred` above: `content:layer` no longer needs the chain sub-field's own predicate (it is `chain_kind = ?` through the ordinary path), so it cannot fail under that arm and `content:chain=undetermined` — which still owns a predicate — is the chain assertion that must. */
 /* RESULTS, run 2026-09-15 by the REC-90 worker, each arm ALONE, every restore byte-identical by sha256 AND cmp (query.mjs 109,363 bytes sha256 9f94c54927e8…; store.mjs 2,096,015 bytes sha256 348c0b0f349c… each time): baseline 107/0 green · pred 92/15 · citeddrift 106/1 · nojoin 104/3 · levelsblind 106/1 · gateloss 69/38 · qualified 100/7 — ALL SEVEN AS DECLARED on the final tree. **ONE CAME BACK WRONG ON THE FIRST RUN AND IS RECORDED RATHER THAN SMOOTHED: `citeddrift` was GREEN (107/0), and the finding was about the ARM'S CORPUS rather than about the plane.** The arm makes the `cited` column ask only the live leg table; the fixture had NO version legs at all, so the full definition and the crippled one agreed FOR FREE — WORKER.md's *arms that could never have been honoured*. The fixture now promotes a basis VERSION whose only leg rests on `DOC_VER`, a document no live leg cites, and the arm fails by name. That fixture also bought two assertions the suite did not have: that a document cited only by a recorded version IS cited, and that no live leg names it. **And `gateloss` fails 38 rather than its 2 declared, which is correct and is the point**: the D-15 throw fires, the op answers ok:false, and every ARMED corpus-floor assertion goes red with it — a suite whose fixture reads empty reports its own blindness instead of scoring zero. */
 
 /* REC-90 / CONTENT-SEARCH-DESIGN.md §4.2 — THE `content:` ARM, `rows=content`,
@@ -629,15 +629,37 @@ console.log("\n--- 6. rows=content: the grain, and `cited`/`chain_last` ---");
   + "machine-minted ones still knows what it did not take",
     byMachine.filter((x) => !("minted_by" in x)), []);
 
-  /* `chain_last` IS THE WORKERD PIN. The filter uses SQLite's `$[#-1]` JSON path
-     and node:sqlite is NOT the engine the plane runs on — this assertion is
-     taken THROUGH the op, inside workerd, which is the only place it counts. */
+  /* `chain_last` IS THE WORKERD PIN. CORRECTED BY REC-104: it no longer parses at
+     read — it and the filter both read `content.chain_kind`, a GENERATED column
+     whose `$[#-1]` JSON path is evaluated by the ENGINE when the row is written.
+     node:sqlite is still NOT the engine the plane runs on, so this assertion is
+     still taken THROUGH the op, inside workerd, which is the only place it counts. */
   const byId = new Map((r?.rows ?? []).map((x) => [x.content_id, x]));
   t("`chain_last` is computed INSIDE workerd — the `$[#-1]` JSON path resolves on the plane's own engine",
     [byId.get(PLANE_LAYER)?.chain_last, byId.get(MEMBER_ROW)?.chain_last], ["layer", null]);
   t("and it agrees with the `content:chain=` filter it is the published half of",
     ((await rows(`rows=content&q=${encodeURIComponent("content:layer")}`))?.rows ?? [])
       .filter((x) => x.chain_last !== "layer"), []);
+  /* REC-104 — THE COLUMN IS STILL TRUE, CROSS-READ RATHER THAN SELF-CONFIRMED.
+     `chain_last` and the filter now read ONE column, so their agreeing above costs
+     nothing — two readers of one value agree for free. The independent witness is
+     `op=content`, which parses the stored chain BLOB in JS (`safeJson`) and never
+     touches the column: every row's `chain_last` must equal the last step of the
+     chain that read returns. This is the assertion the row's own negative control
+     breaks (`nc-rec104.mjs firststep`), and it is what shows the column is not
+     merely faster but still describes the chain it claims to. */
+  const lastOf = (c) => Array.isArray(c) && c.length ? (c[c.length - 1]?.step ?? null) : null;
+  const witness = [];
+  for (const x of r?.rows ?? []) {
+    const one = await get("content", `id=${x.content_id}`);
+    witness.push({ id: x.content_id, col: x.chain_last, blob: one?.ok ? lastOf(one.chain) : "(unread)" });
+  }
+  t("ARMED: the witness read every row, and the corpus holds an OCR'd chain, a text-layer one and none",
+    [witness.length > 0 && witness.every((w) => w.blob !== "(unread)"),
+     witness.some((w) => w.blob === "ocr"), witness.some((w) => w.blob === "layer"),
+     witness.some((w) => w.blob === null)], [true, true, true, true]);
+  t("`chain_last` agrees with the LAST STEP of the chain `op=content` reads, row for row",
+    witness.filter((w) => w.col !== w.blob), []);
   /* The raw chain blob is NOT published here, and that is a decision: `op=content`
      answers it per row, in the sentence a member can read. */
   t("the chain BLOB is not in the row list — `op=content` answers it per row, in words",
@@ -791,15 +813,51 @@ console.log("\n--- 10. searching mints nothing; the measured indexes are declare
   t("and the four the per-column measurement bought, every one of which CLEARED the measured noise floor",
     [idx("content_extent_kind"), idx("content_stale"), idx("content_minted_by"),
      idx("content_derivation_cap")], [true, true, true, true]);
-  /* THE ONE THAT CANNOT EXIST, asserted so a later reader does not add it and
-     wonder why nothing got faster: `content:chain` filters on a JSON PARSE of the
-     chain column, so no ordinary index can serve it. The design gives
-     `capture_text` a `chain_kind` COLUMN for exactly this predicate and gives
-     `content` none — REC-90's DESIGN GAP. */
-  t("and NO index pretends to serve the chain filter, which is an expression and not a column",
-    idx("content_chain"), false);
-  t("the chain column's own comment names the gap rather than leaving it to be rediscovered",
-    /DESIGN GAP by REC-90/.test(SCHEMA_SRC), true);
+  /* CORRECTED BY REC-104, NOT EXEMPTED. These two assertions pinned REC-90's
+     DESIGN GAP: that NO index served `content:chain`, because it filtered on a
+     JSON parse, and that the schema's comment named the gap. Both were true of
+     REC-90's tree and are false of this one ON PURPOSE — REC-104 gives `content`
+     the `chain_kind` column §4.1 gives `capture_text`, and an index on it. The
+     old assertion would now be pinning the defect the item exists to remove, so
+     it is inverted rather than deleted, and the reason stays here. */
+  t("the chain filter's index IS declared — REC-104's column, which REC-90's tree lacked",
+    idx("content_chain_kind"), true);
+  t("and the schema records the decision, so the gap is not rediscovered as open",
+    /REC-104 -- content:chain ANSWERS OFF A COLUMN/.test(SCHEMA_SRC), true);
+}
+
+/* ==================================================================== 11
+ * REC-104'S OVER-STRICTNESS WITNESS: EVERY `content:` ANSWER, DIGESTED.
+ * ================================================================== */
+console.log("\n--- 11. every content: answer on this fixture, digested (REC-104's pre-item comparison) ---");
+{
+  /* REC-104 CHANGED HOW `content:chain` IS ANSWERED AND MUST NEVER CHANGE WHICH ROWS
+     ANSWER IT — nor any other `content:` question, since the table itself moved.
+     This section asks every sub-field at every value this fixture can separate,
+     at both grains, and prints ONE sha256 over the answers. It asserts nothing
+     about the digest's value: `nc-rec104.mjs` runs this suite on this tree and on
+     the plane sources as they stood before REC-104 (arm `preitem`) and requires
+     the two digests to be IDENTICAL, after first requiring two untouched runs to
+     agree (arm `baseline2`, the A/A arm). `at` is dropped from every row because
+     it is the mint's wall clock and would move the digest between ANY two runs. */
+  const Q = [
+    ...Object.keys(CONTENT_EXTENT_KINDS).map((k) => `content:${k}`),
+    "content:stale", "content:current", "content:machine", "content:plane", "content:member",
+    "content:minted=mina", "content:cap=undetermined", "content:cap<=D", "content:cap<D", "content:cap=C",
+    ...Object.keys(STEP_KINDS).map((k) => `content:chain=${k}`), ...Object.keys(STEP_KINDS).map((k) => `content:${k}`),
+    "content:chain=undetermined", "content:chain=*", "content:cited", "content:uncited",
+    "content:ocr content:cap<D", "content:layer content:uncited", "content:ocr content:stale", "has:content",
+  ];
+  const answers = [];
+  for (const q of Q) {
+    const bundles = (await arm(q)).sort();
+    const rs = ((await rows(`rows=content&q=${encodeURIComponent(q)}`))?.rows ?? [])
+      .map(({ at, ...rest }) => rest).sort((a, b) => String(a.content_id).localeCompare(String(b.content_id)));
+    answers.push([q, bundles, rs]);
+  }
+  t("ARMED: the chain questions are not all empty — a digest over empty answers compares nothing",
+    answers.filter(([q, b]) => /^content:(chain=)?(ocr|layer)$/.test(q) && b.length > 0).length, 4);
+  console.log(`  REPORT content-answers sha256 ${sha(JSON.stringify(answers))} over ${answers.length} queries`);
 }
 
 /* D-186 / hygiene: the Miniflare instance is DISPOSED. A suite that leaks one
