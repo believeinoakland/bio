@@ -25,17 +25,21 @@ A row is FIELDS, not narrative: id · state · title (one line) · milestone · 
 depends-on (ids) · owner · accepts-when (one paragraph) · why it is here in the order (one line). Reasoning, receipts
 and history belong in the design document the row cites, or in the archive.
 
-## 2. The cycle — CONDUCT's, as the sole writer of both files
+## 2. The cycle — SCHEDULER's, as the owner of both files (`kickoffs/SCHEDULER.md`; Bob, 2026-09-18)
+
+**CONDUCT writes one word — a cached task's `queued` → `running` — and reports each completion to SCHEDULER.** Where
+the steps below say CONDUCT refills or gates the plan, read SCHEDULER: the lane was created after this section was
+first written. SCHEDULER **replenishes** the cache; CONDUCT **fills slots**.
 
 1. **An item completes →** its row leaves the cache for the archive in the SAME commit as its `done` flip
    (`node tools/ledger.mjs archive <ID>` — LED-5, unchanged).
 2. **Refill, same commit →** the next runnable rows move from the top of `BACKLOG.md` into the cache until it holds 8
    (or the backlog has nothing runnable), and are DELETED from the backlog as they move (`node tools/ledger.mjs refill`).
    A `blocked` row is skipped, never moved; it stays where the order put it.
-3. **New work arrives →** BOB writes it into the BOB INBOX with its place in the order; CONDUCT gates it (the design is
+3. **New work arrives →** BOB writes it into the BOB INBOX with its place in the order; SCHEDULER gates it (the design is
    verified at the artifact, the depends-on resolve) and INSERTS it into `BACKLOG.md` at that place. A drained inbox
    entry moves to `docs/archive/ledgers/BOB-INBOX-drained.md` in the drain's commit — the inbox holds only what is waiting.
-4. **The order is BOB's; the gate and the file are CONDUCT's.** BOB re-orders by an inbox entry naming the new order,
+4. **The order and the files are SCHEDULER's; BOB supplies designs and brings Bob's priority calls.** BOB re-orders by an inbox entry naming the new order,
    checked against `node tools/status.mjs` (nothing before what it rests on).
 
 **The invariants, each a `plancheck` arm (FAIL):** every open id is in EXACTLY ONE of the cache and the backlog; no
@@ -63,8 +67,10 @@ replaces it.
    a stated limitation), then archived pointing there. Measured before triage: about 6 of 222 dispositions read this way
    (D-28, D-38, D-45, D-111, D-306, half of D-396).
 
-**After the fold, a newly found defect is written DIRECTLY as a BACKLOG item** (class `defect`, a `D-` id minted as
-today) — there is no second list for work to wait in. `DEBT.md` is archived whole once empty; `owed.mjs`, `plancheck`'s
+**After the fold, a newly found defect is DIAGNOSED UNTIL ITS FIX CAN BE NAMED, then placed by SCHEDULER as a
+BACKLOG item in build order** (class `defect`, a `D-` id minted as today; Bob: *"understood deeply enough that a fix
+can be identified and properly added (in the correct order) in the build plan"*; a fix that needs design goes to BOB
+first) — there is no second list for work to wait in. `DEBT.md` is archived whole once empty; `owed.mjs`, `plancheck`'s
 disposition arm and `ledger.mjs` are retargeted to the backlog in the same item, and `CLAUDE.md` §4's *write it in
 DEBT.md* changes to the backlog in LED-7's own landing, not before. **Performed in batches of ~20 rows** by workers
 under CONDUCT, each row verified at the code; **accepts when** every open row has left by one of the three doors with its

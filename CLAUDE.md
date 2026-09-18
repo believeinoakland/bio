@@ -78,8 +78,8 @@ decided, never tactical state.**
 
 **Never end a turn on a question nobody is present to read.** A session that stops to ask *"may I?"* in a
 window nobody watches has stopped, and the question is lost when the session is retired. Decide what is
-yours; route what is another lane's by `SendMessage` (sequencing → CONDUCT; design, doctrine, anything
-for Bob → BOB) and continue.
+yours; route what is another lane's by `SendMessage` (the build plan's order → SCHEDULER; running work → CONDUCT;
+design, doctrine, anything for Bob → BOB) and continue.
 
 ## 4. Rules that are not negotiable
 
@@ -94,11 +94,13 @@ for Bob → BOB) and continue.
 - **Claim your area in `docs/development/CLAIMS.md` before editing**; do not edit another area's paths
   (append a DELEGATION); interfaces change only through `INTERFACE-CHANGES.md`. Work in your own worktree.
 - **Only DIST cuts plane releases**, from a green `main`. **The standing lanes — CONDUCT, BOB, DIST,
-  FLEET — are never archived for idleness** (Bob, 2026-09-18); a lane's session is refreshed only when its
+  FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18); a lane's session is refreshed only when its
   context is too full, by its successor.
 - **Undetermined is first-class and must be STATED.** Never invent an attribution, a referent or a figure
   to get past a gate; a gate that pressures someone into inventing one is a bug in the gate.
-- **Do not create avoidable debt**; when you must, write it in `DEBT.md` with its cost and what closing it takes.
+- **A defect you find is diagnosed until its FIX can be named**, then sent to SCHEDULER to be placed in the build plan
+  in order — or to BOB first if the fix needs design (Bob, 2026-09-18). Never park it on a list. `DEBT.md` is being
+  folded into the plan (LED-7); until then a defect is still minted there, and its row must name its fix.
 
 ## 5. How to know a thing is true
 
@@ -163,7 +165,8 @@ what the service said. A token value published in the repo is denylisted by `tok
 | `bio-plane/test/` | the battery |
 | `newgroup/` | the installer — out of bounds without an explicit instruction |
 | `docs/architecture/BIO_System_Design.md` | the construct map; §3's state column is rendered from `construct-status.json` |
-| `docs/development/QUEUE.md` | what is runnable, in order (CONDUCT is its sole writer; the BOB INBOX at its top is BOB's) |
+| `docs/development/QUEUE.md` | the cache of the next tasks, in order (SCHEDULER owns it; CONDUCT flips `running`) |
+| `docs/development/WORK-PIPELINE.md` | how work moves: backlog → cache → archive |
 | `docs/development/MILESTONES.md` | the capability ladder |
 | `docs/development/ORCHESTRATION.md` | how lanes communicate — read "COMMUNICATING A CHANGE" before a change another session must know about |
 | `docs/development/kickoffs/` | each lane's instructions and its `-NEXT.md` handoff |

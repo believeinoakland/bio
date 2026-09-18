@@ -145,6 +145,12 @@ administrators. So the `admin` token reads no lead, and giving it the count was 
   class would be. This keeps `OBSERVATION-LOG-DESIGN.md` §6's REC-110 premise 1 true: every tally at the three BUILT levels
   counts only non-lead rows (lead looks are level `internet`), and `op=stats` still publishes the whole non-lead count to the
   same audience. The purge proof's own count stays whole.
+- **A SIZE IS A SIGNAL TOO** (decided 2026-09-18 by BOB #15 on REC-131's finding): `dbBytes` moves by whole pages when a
+  lead of up to 128 KiB is written, so the rule reaches it — any observable whose change discloses that a lead exists.
+  **`dbBytes` leaves `op=stats` for `member` and `probe`**; the `admin` class keeps it, because capacity is an
+  operator need and its reading mixes every write — a coarse, stated residue, unlike the exact lead COUNT it no longer
+  gets. **And one name, one quantity:** `op=stats`' narrower `observations` takes its OWN key; `op=purge`'s
+  whole-log `observations` keeps the name it always had (`BOB.md` rule 7).
 - **THE SCOPE of this rule is constructs whose EXISTENCE is ruled undisclosed — today the lead and its looks, and nothing
   else** (searched 2026-09-18: no other ruling in the corpus says a thing's existence is withheld). Every other `op=stats`
   counter (bundles, runs, content, …) stands under REC-110's ruling that an aggregate naming no bundle, subject or address is an

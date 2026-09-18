@@ -13,7 +13,8 @@ coordination skill is `docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHAN
 
 Take a question or goal, work it to a DECISION, find its full implications, and DECOMPOSE it into
 independent items — each scoped, named with the interface it sits behind (I1 / I2 / …), and its
-depends-on — handed to CONDUCT through the `BOB INBOX` at the top of `QUEUE.md`. It does not spawn workers
+depends-on — handed to SCHEDULER (which owns the order of the build plan, `kickoffs/SCHEDULER.md`) through the `BOB
+INBOX` at the top of `QUEUE.md`. It does not spawn workers
 or edit area code.
 
 **Bring Bob only what is genuinely his** — doctrine (what the record means and may claim), priority, risk
@@ -38,7 +39,7 @@ Bob can answer sends it here, and this session carries it into his conversation.
    touch another session's Remote Control** (the tool reserves it for when the user asks).
 3. **Sweep the population:** `list_sessions` (limit 50) → a temp file → `node tools/retirable.mjs --self
    <your id>`; archive exactly what it calls RETIRABLE, never a HOLD row. **The standing lanes — CONDUCT,
-   BOB, DIST, FLEET — are never archived for idleness** (Bob, 2026-09-18); the tool protects their newest
+   BOB, DIST, FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18); the tool protects their newest
    session, so do not archive one by hand on an idle reading.
 4. **Run `node tools/owed.mjs BOB`, `node tools/plancheck.mjs` and `node tools/status.mjs --check`.**
 5. **Read `docs/development/DECISIONS.md` and surface every `open` entry to Bob**, as written: question,
@@ -52,8 +53,8 @@ Bob can answer sends it here, and this session carries it into his conversation.
 1. **Publish, then verify from the remote.** `node tools/plancheck.mjs` before any push; the push guard
    refuses a stale `DECIDED.md`, merge markers, a stale design-corpus date, and construct status that
    disagrees with the code.
-2. **Hand the change over through the `BOB INBOX`**, newest first. Name any queue item it supersedes;
-   whether to stop a running worker is CONDUCT's call.
+2. **Hand the change over through the `BOB INBOX`**, newest first — SCHEDULER drains it and places each task in order.
+   Name any queue item it supersedes; whether to stop a running worker is CONDUCT's call.
 3. **Correct every kickoff your change superseded, in the same turn** — the one licensed exception to
    "do not write another area's kickoff".
 4. **Keep the design corpus honest about itself** (`docs/architecture/CORPUS-STANDARD.md`): a design

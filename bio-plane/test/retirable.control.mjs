@@ -176,7 +176,7 @@ const ARMS = [
     mustBreak: "the NEWEST CONDUCT is PROTECTED even at 9h idle" },
 
   { id: "A6b", title: "DIST and FLEET dropped from the standing lanes — the 2026-09-16 archive of both, reproduced",
-    from: `export const STANDING_LANES = ["CONDUCT", "BOB", "DIST", "FLEET"];`,
+    from: `export const STANDING_LANES = ["CONDUCT", "BOB", "DIST", "FLEET", "SCHEDULER"];`,
     to: `export const STANDING_LANES = ["CONDUCT", "BOB"];`,
     mustBreak: "the NEWEST DIST is PROTECTED even at 72h idle" },
 
