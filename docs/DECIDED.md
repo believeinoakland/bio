@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1080 rulings across 84 documents.
+1081 rulings across 84 documents.
 
 ## DEC-
 
@@ -792,6 +792,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:2641`
 - **C-27.13** · 2026-07-30 — , RULED BY BOB 2026-07-30: *"the appearance of an assistant-surfaced focus should communicate that it is one."* The plane holds the STATE half and SK-3 cites it (`C-27.13`: a suggestion may only ever arrive as something put forward; `C-32.2`/`C-32.8`: the acts that would make it the record's own  
   `docs/development/CLAIMS.md:817`
+- **C-32** — Any existing suite pinning the C-32 family is CORRECTED at its site, never exempted. - `bio-plane/scripts/coverage.mjs`, `civicos-ui/check-refusal-codes.mjs` — floor tables only, from printed figures, if the new codes move one. - `bio-plane/dist/**` — `npm run build` output.  
+  `docs/development/CLAIMS.md:13285`
 - **C-35.1** — — ONE superseded assertion CORRECTED with the reason at the site.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4843`
 - **C-35.14** — Inside the plane, `textchain.test.mjs`'s family-totality list was CORRECTED (not exempted) for C-35.14 and a CHECK_ARMS row drives it. **RESPONSES:** not yet collected.  
