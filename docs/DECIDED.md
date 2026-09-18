@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1108 rulings across 84 documents.
+1109 rulings across 84 documents.
 
 ## DEC-
 
@@ -1923,6 +1923,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:13494`
 - `bio-plane/test/content-chain-kind.test.mjs` (two pins CORRECTED with the reason at the site), `bio-plane/test/nc-rec104.mjs` (the `parseback` arm RE-ANCHORED — its anchor matched zero times after `chain_last` became a CASE), and `.gitignore` (the harness's pristine directory).  
   `docs/development/CLAIMS.md:13497`
+- Tests: `bio-plane/test/casesign.test.mjs` (the anonymous-read assertion CORRECTED with a dated reason, a new block for the no-existence-leak property), plus any suite that read an unsigned case document anonymously — each re-pointed with its reason, never exempted; a new committed control driver if the arms need…  
+  `docs/development/CLAIMS.md:13618`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
