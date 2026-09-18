@@ -1061,6 +1061,16 @@ const OPS = {
   transcribe:          { classes: ["admin", "member"],             mutating: true  },
   transcriptionattest: { classes: ["admin", "member"],             mutating: true  },
   transcription:       { classes: ["admin", "member", "probe"],    mutating: false },
+  /* MK-4 / IC-136 — THE LEAD (D-194, MEMBER-KNOWLEDGE-DESIGN.md §5). Writing a
+     lead and recording that you followed it are a PERSON's acts in their own
+     name — what they were told, where they looked — so both are `transcribe`'s
+     class cut: `mutating: true` keeps a machine credential off the session route
+     and the store refuses a machine stamp BY NAME again (C-54.2, C-54.8). The
+     READ is open to every class that may read; the store answers a lead the
+     viewer may not read exactly as one that does not exist (C-54.5). */
+  lead:                { classes: ["admin", "member"],             mutating: true  },
+  leadlook:            { classes: ["admin", "member"],             mutating: true  },
+  leadread:            { classes: ["admin", "member", "probe"],    mutating: false },
   /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
      different cut from CPDF-10's above because a different thing is at stake.
 
@@ -1686,6 +1696,9 @@ const SESSION_OPS = {
                    /* REC-87: TRANSCRIBE and the attestation of a typing — a person's
                       word in their own name, `attesttext`'s route and reason. */
                    "transcribe", "transcriptionattest",
+                   /* MK-4: THE LEAD and a look recorded against it — a person's word
+                      in their own name, `transcribe`'s route and reason. */
+                   "lead", "leadlook",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1712,6 +1725,7 @@ const SESSION_OPS = {
                    "extractproposals",
                    "narrow", "narrowcandidates",
                    "transcribe", "transcriptionattest",
+                   "lead", "leadlook",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1793,6 +1807,13 @@ const NEEDS = {
   transcribe:          "contribute",
   transcriptionattest: "contribute",
   transcription:       null,
+  /* MK-4: NO FIFTH CAPABILITY TOKEN, on `transcribe`'s reasoning. A lead and a
+     look against it are writes into the record in a member's name and ride
+     `contribute`; a VIEW-ONLY member must not, because either leaves a row
+     carrying their name for as long as the record lasts. The read takes none. */
+  lead:                "contribute",
+  leadlook:            "contribute",
+  leadread:            null,
   monitor:          "contribute",
   cite:             "contribute",
   sever:            "contribute",
@@ -8462,6 +8483,11 @@ export default {
            exist — `contentmint`'s and `content`'s reason. Fails closed on an
            absent stamp. */
         || op === "transcribe" || op === "transcriptionattest" || op === "transcription"
+        /* MK-4: the look and the read name a LEAD, readable by its author only,
+           and the look names what it found (a capture or a content row), which is
+           gated like every other reference to a document. Fails closed on an
+           absent stamp. */
+        || op === "leadlook" || op === "leadread"
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -8612,6 +8638,15 @@ export default {
        TEXT_ATTEST_MACHINE, including when its body names a person. */
     if (op === "transcriptionattest")
       inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* MK-4 / IC-136 — WHO WROTE THE LEAD, AND WHO FOLLOWED IT, stamped on
+       `transcribe`'s rule one stamp up and for its measured reason (§7: an author
+       field supplied by the caller rather than stamped is refused). A machine
+       credential of any class stamps `class:<cls>`, and the store refuses it BY
+       NAME (C-54.2 at the act, C-54.8 at the look). Never the principal. */
+    if (op === "lead")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "leadlook")
+      inner.searchParams.set("looker", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* SK-7 / framework Part II §14.4 (Bob's 5.7) — WHO MARKED THIS PASSAGE AS
        CITABLE, stamped by the server on the same rule as every authorship field
        in this block. The body's own `mintedBy` is not read at the store at all

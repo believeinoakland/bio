@@ -10022,3 +10022,79 @@ move"), and `rows=content`'s `derivation_cap` shows the same NULL. Nor does `row
 "does-not-apply"`; no new act. SKILL / FRAMEWORK / DIST expected NOT-AFFECTED (zero readers, above).
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 as MINOR — I3 25.0.0 → 25.1.0.** Base read AT RESOLUTION: 25.0.0 (IC-130 and IC-132 each took a MAJOR meanwhile; IC-130 was measured by the builder not to touch the `content:` arm). **MINOR, not MAJOR, with the reason:** the one answer that NARROWS (`chain:undetermined` no longer returns bytes rows) only stops OVER-REPORTING — it removes rows that were labelled with a question they have no answer to, and every one of them stays reachable under its own stated value `does-not-apply`; no consumer was found (civicos-ui, agent-worker, the pdf and ocr workers, newgroup), so no caller's answer loses a row it could legitimately have wanted. UI answers through IC-125's standing `cited_as` delegation. **Left open and rowed:** the same mislabel on the CAP axis (`content:cap=undetermined` still matches bytes rows) → `REC-127`.
+
+
+## IC-135 · I5: THE `leads` TABLE — a member's LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5), an authored row that is NEVER evidence · PROPOSED 2026-09-18 (MK-4, minted at spawn with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I5 (the store schema). **Version read off THIS TREE's `docs/development/INTERFACES.md`:
+  1.18.0** (IC-129 ACCEPTED). **Proposed as MINOR — 1.18.0 → 1.19.0, ADDITIVE.** One new table, no
+  column added to or removed from any existing table. **Read the base AT RESOLUTION** — MK-1 is
+  concurrently adding to I5.
+- **Proposer:** RECORD, worker `agent-a6de3e82fcfd8bd2a`, 2026-09-18, from QUEUE MK-4
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `RECORD` (the only writer and reader). `UI`, `SKILL`, `DIST`: NOT AFFECTED —
+  nothing outside the plane reads the schema directly.
+- **Design:** §5's field list exactly — `lead_id` (PRIMARY KEY, `LEAD-YYYY-MMDD-hex`, minted by the
+  plane), `author` (a member id, server-stamped), `words` (as written), `locator` (nullable: a place to
+  look the member suggests), `at` — plus one index `leads_author(author, at)`. Placed before
+  `host_governor`. **NO `bundle_id`, by the design's field list**, so a per-bundle purge leaves a lead
+  and the WHOLE-STORE purge clears it in the same arm that clears `observation_log` (D-113). The LOOK
+  is NOT stored here: it is a row of `observation_log` under `authority_kind = 'lead'`, a value that
+  table's vocabulary already reserved — so `observation_log` is UNCHANGED in shape.
+
+## IC-136 · I3: THE LEAD — `op=lead` (write one), `op=leadlook` (record following it, as an observation), `op=leadread` (the lead and its looks); C-54 refuses a lead cited as ANY leg BY NAME · PROPOSED 2026-09-18 (MK-4, minted at spawn with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`: 25.0.0** (IC-132 ACCEPTED, read after rebasing onto `fbcefa1b`; the
+  first draft read 24.0.0 before REC-123 landed underneath it). **Proposed as MINOR — 25.0.0 → 25.1.0.**
+  Three new ops, one new refusal family **C-54** (`LEAD_CHECKS`, eight rows), and two additive keys on
+  existing answers. **ONE EXISTING REFUSAL CHANGES ITS NAME ON ONE INPUT, stated rather than hidden:** a
+  leg whose `target` or `content_id` is a `LEAD-…` id was refused before this IC too — as C-2.8 *not a
+  canonical bundle id* (basis[]), `VERSION_LEG_NOT_CITABLE` (version legs), C-2.10 (action basis) or the
+  content-id grammar — and is now refused as **C-54.1 `LEAD_NOT_EVIDENCE`**. No input that was accepted
+  is refused and none that was refused is accepted, and no `LEAD-` id could exist before this IC, so the
+  measured impact on a correct consumer is zero. **Read the base AT RESOLUTION.**
+- **Proposer:** RECORD, worker `agent-a6de3e82fcfd8bd2a`, 2026-09-18, from QUEUE MK-4
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (the member surface is Program B's and is NOT built by this item),
+  `SKILL` and `DIST` (NOT AFFECTED expected: neither calls a new op), `RECORD`.
+- **Design:** `MEMBER-KNOWLEDGE-DESIGN.md` §5 and §7, read with `OBSERVATION-LOG-DESIGN.md` §3 / §4.5.
+
+**THE SHAPE.**
+
+`POST op=lead` body `{ words, locator? }` — classes admin/member, `mutating: true`, SESSION route,
+capability `contribute`; `author` is STAMPED by the control plane (a caller's body or query `author` is
+never honoured; a machine credential stamps `class:<cls>` and is refused BY NAME, C-54.2). Answers `{ ok,
+lead_id, author, words, locator, at, evidence: false, looks: 0, state: "NEVER_LOOKED", says }`. **It writes
+NOTHING to `observation_log`**: nobody has looked, and NEVER_LOOKED is never stored (§3).
+
+`POST op=leadlook` body `{ lead, state, resultKind?, resultRef?, condition?, detail? }` — classes
+admin/member, SESSION route, `looker` and `viewer` stamped. Writes ONE `observation_log` row through the
+ONE append site (`#observe`): `actor_class member`, `actor` the looker, `authority_kind lead`, `authority`
+the lead id, `level internet`, `subject_kind description`, `subject` the lead's words — §4.5's row. Every
+C-22 refusal applies unchanged (a `PRESENT` naming nothing is C-22.10, not a lead rule). Answers `{ ok,
+lead_id, seq, at, level, state, looked_by, result_kind, result_ref, evidence: false, says }`.
+
+`GET op=leadread&id=<lead_id>[&limit=]` — classes admin/member/probe, viewer-GATED: readable by its
+AUTHOR and by an unfiltered machine credential; anyone else is answered exactly as for an absent lead
+(C-54.5). Capped 200/2000 with `limit` and `truncated`. Answers `{ ok, lead_id, author, words, locator,
+at, evidence: false, limit, truncated, looks: [{seq, at, looked_by, authority_kind, authority, level,
+subject_kind, state, condition, detail, result_kind, result_ref, coverage}], state, says }` — `state` is
+the LATEST look's, or `NEVER_LOOKED`, which is ESTABLISHED here rather than inferred (a lead and its
+looks are cleared only together, by the whole-store purge). A look's referent the viewer can no longer
+read is not published.
+
+**ADDITIVE ON EXISTING OPS:** `op=stats` gains `leads` (a count); `op=purge` ALL's `removed` gains
+`leads`. `op=frontier` for a level it does not build keeps `built: false` and its keys; its `note`
+PROSE now says the internet level HAS a writer (the lead) and that the level-wide read is what is unbuilt.
+
+**WHAT IT REFUSES, C-54:** `LEAD_NOT_EVIDENCE` (.1 — a lead cited as a basis leg, a version leg or an
+action-basis leg, by `target` or `content_id`, **the refusal §7 names**), `LEAD_NOT_A_MEMBER` (.2),
+`LEAD_NO_WORDS` (.3), `LEAD_TOO_LONG` (.4, over `CAPTURE_TEXT_UNIT_CAP`, refused never cut),
+`LEAD_NOT_FOUND` (.5, absent and unreadable answer alike), `LEAD_LOOK_STATE` (.6, including
+`NEVER_LOOKED` by name), `LEAD_LOOK_REFERENT` (.7 — a referent must be a capture or content row the
+viewer can read, only on `PRESENT`/`partial`; an `observation` referent — a rollup's — is refused, so
+C-22.10's rollup arm is unreachable through a lead), `LEAD_LOOK_NOT_A_MEMBER` (.8).
+
+**MEASURED:** `bio-plane/test/lead.test.mjs` 50/0 through the ops; `node test/nc-mk4.mjs` seven arms,
+every one as declared on the final tree (recorded in the suite's `NEGATIVE CONTROL:` line).

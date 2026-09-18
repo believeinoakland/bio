@@ -3333,6 +3333,33 @@ CREATE TABLE IF NOT EXISTS transcription_attestations (
 );
 CREATE INDEX IF NOT EXISTS transcription_attestations_bundle ON transcription_attestations(bundle_id);
 -- =========================================================================
+-- MK-4 / IC-135 / D-194 -- THE LEAD. MEMBER-KNOWLEDGE-DESIGN.md section 5: the
+-- same member knowledge BEFORE the search. I was told the contract was amended,
+-- look at the Clerk March agenda. An AUTHORED ROW and NEVER EVIDENCE.
+--
+-- WHY A TABLE OF ITS OWN AND NOT A CONTENT ROW OR A BUNDLE. Everything a basis
+-- leg can cite is a bundle or a content row. A lead stored as either would be an
+-- unlabelled observation a member could cite as evidence, which is the one thing
+-- section 5 rules it is not. So it lives here, under an id (LEAD-...) that no leg
+-- grammar accepts, and C-54.1 refuses it BY NAME at every leg grammar as well.
+--
+-- FOLLOWING A LEAD IS A LOOK, and the look is NOT stored here. It is a row of
+-- observation_log with authority_kind = lead and authority = lead_id (section 5,
+-- OBSERVATION-LOG-DESIGN.md section 4.5). Nothing is written to the log when a
+-- lead is AUTHORED: nobody has looked yet, and NEVER_LOOKED is never stored.
+--
+-- NO bundle_id, BY THE DESIGN'S FIELD LIST. So a per-bundle purge leaves it and
+-- the whole-store purge clears it (D-113). Visibility is the AUTHOR's (a
+-- provisional, stated in store.mjs leadRead) because no bundle scopes it.
+CREATE TABLE IF NOT EXISTS leads (
+  lead_id   TEXT PRIMARY KEY,   -- LEAD-YYYY-MMDD-hex, minted by the plane
+  author    TEXT NOT NULL,      -- a member id, server-stamped, never a machine (C-54.2)
+  words     TEXT NOT NULL,      -- the member words AS WRITTEN, never paraphrased
+  locator   TEXT,               -- an optional place to look the member suggests. NULL = none suggested
+  at        TEXT NOT NULL       -- when the record received the lead
+);
+CREATE INDEX IF NOT EXISTS leads_author ON leads(author, at);
+-- =========================================================================
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
