@@ -511,6 +511,27 @@ export function statusCheck({ repo = REPO, run = null } = {}) {
            message: "THE SOURCE OF TRUTH FOR WHAT IS BUILT DISAGREES WITH THE CODE (tools/status.mjs --check)." };
 }
 
+/* ------------------------------------------------ A COMMITTED CONFLICT IS REFUSED AT THE PUSH
+ *
+ * Added 2026-09-18 by BOB #14 after committing three merge markers to origin/main (0c7e4ed5): a rebase
+ * script resolved one conflicted file and `git add -A` swept a second one in unresolved. plancheck's
+ * arm 0 finds markers, but it ran AFTER the push. The same scan as plancheck's — line starts only,
+ * the sequences BUILT rather than written so this file cannot trip itself — run where it cannot be
+ * skipped. A marker is never intentional, so there is no exception. */
+export function markerCheck({ repo = REPO, files = null, read = null } = {}) {
+  const list = files || (git(["ls-files", "--", ":!*.png", ":!*.jpg", ":!*.pdf", ":!*.gz", ":!*.zip"], repo) || "").split("\n").filter(Boolean);
+  const rd = read || ((f) => { try { return readFileSync(join(repo, f), "utf8"); } catch { return null; } });
+  const open = "<".repeat(7), mid = "=".repeat(7), close = ">".repeat(7);
+  const marked = [];
+  for (const f of list) {
+    const body = rd(f); if (body === null) continue;
+    for (const [i, line] of body.split("\n").entries())
+      if (line.startsWith(open + " ") || line === mid || line.startsWith(close + " ")) marked.push(`${f}:${i + 1}`);
+  }
+  return marked.length ? { ok: false, marked, message: `UNRESOLVED MERGE MARKERS in ${marked.length} place(s) — a conflict was committed, not resolved.` }
+                       : { ok: true, marked: [], message: "no merge markers in the tracked tree." };
+}
+
 /* ------------------------------------------------ THE DESIGN CORPUS, CHECKED WHERE IT CAN SEE THE COMMIT
  *
  * Added 2026-09-18 by BOB #14 after the SAME defect left `main` red twice in one afternoon: a
@@ -612,6 +633,14 @@ function run(stdin) {
     return 1;
   }
 
+  const mk = markerCheck({ repo });
+  if (!mk.ok) {
+    const L = ["", `  PUSH REFUSED — ${HOOK_MARKER}`, "", `  ${mk.message}`, "", ...mk.marked.slice(0, 20).map((m) => `      ${m}`),
+      "", "  Resolve each conflict (keep what both sides meant), commit, and push again.", ""];
+    process.stderr.write(L.join("\n") + "\n");
+    return 1;
+  }
+
   const cc = corpusCheck({ repo });
   if (!cc.ok) {
     const L = ["", `  PUSH REFUSED — ${HOOK_MARKER}`, "", `  ${cc.message}`, ""];
@@ -643,7 +672,7 @@ function run(stdin) {
   }
   if (v.kind === "absent") notes.push("the generator is absent, so nothing was verified");
   const tail = notes.length ? ` (${notes.join("; ")})` : "";
-  process.stderr.write(`${HOOK_MARKER}: docs/DECIDED.md current; design corpus current; construct status agrees with the code${tail}\n`);
+  process.stderr.write(`${HOOK_MARKER}: docs/DECIDED.md current; no merge markers; design corpus current; construct status agrees with the code${tail}\n`);
   return 0;
 }
 
