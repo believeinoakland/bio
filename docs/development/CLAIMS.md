@@ -13055,5 +13055,5 @@ item moves onto the ordinary path, so that arm could no longer fail it — corre
 **released: 2026-09-18 by the REC-104 worker** — landed on branch `worktree-agent-a697a8fb2a50b3f2f`
 for CONDUCT to integrate. For CONDUCT: flip the REC-104 row; move `REGISTER_FLOOR` in
 `bio-plane/scripts/coverage.mjs` from the MERGED run's own print if it chooses to (this branch printed
-arms 1216/1194 · classified 215/212 · corpus 216/213 and did NOT move it); the stale `M-21` references in
+arms 1234/1215 · classified 218/215 · corpus 219/216 on the rebased tree, and did NOT move it); the stale `M-21` references in
 `passage-axis-probe.mjs` and `airuns.test.mjs` belong to their owners.
