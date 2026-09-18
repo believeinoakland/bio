@@ -132,6 +132,23 @@ import { hostname } from "node:os";
 import { execFileSync } from "node:child_process";
 import { dirname, join, resolve, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ARCHIVE_TARGETS } from "./ledger.mjs";
+
+/* THE DUPLICATE CHECK READS THE ARCHIVER'S FILES (LED-2, M-57 breakage 2). `allocations()` and
+   `unregisteredNamespaces()` iterate a corpus RAW, so the `docs/archive/` DIRECTORY entry was a
+   `readFileSync` that threw and landed in `missing`: 109 D, 195 queue and 55 DEC allocations sat
+   outside duplicate detection, and the moment `tools/ledger.mjs` moved ONE half of a registered
+   collision (D-124, CPDF-9, FW-15, M0-16) the pair would have stopped being one, the register gone
+   stale, and `plancheck` failed on a collision that still existed. So the directory entry now
+   yields exactly the files `ledger.mjs archive` writes, and a pair split between live and archive
+   is still one collision here.
+   WHY NOT THE WHOLE DIRECTORY, which `corpusFloor` expands: the August roll left every archived
+   QUEUE row's heading BOTH in `QUEUE-2026-08.md` and as a stub in the live register — ~190 pairs
+   that are one allocation written twice, not two. Reading them would report ~190 false duplicates
+   (M-57). They stay outside this check, and that is NAMED here rather than scored clean: a
+   collision between a live id and one that exists ONLY in the August files is not seen. The
+   floors are unaffected (they have always expanded the directory). */
+const allocationCorpus = (corpus) => corpus.flatMap((rel) => (rel === "docs/archive/" ? ARCHIVE_TARGETS : [rel]));
 
 export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -500,7 +517,7 @@ export function allocations(ns, { repo = REPO_ROOT } = {}) {
 
   const sites = [];
   const missing = [];
-  for (const rel of spec.corpus) {
+  for (const rel of allocationCorpus(spec.corpus)) {
     const p = isAbsolute(rel) ? rel : join(repo, rel);
     let src;
     try { src = readFileSync(p, "utf8"); } catch { missing.push(rel); continue; }
@@ -596,7 +613,7 @@ export function collisions({ repo = REPO_ROOT } = {}) {
 export function unregisteredNamespaces({ repo = REPO_ROOT } = {}) {
   const seen = new Map(), where = new Map();
   let read = 0;
-  for (const rel of QUEUE_CORPUS) {
+  for (const rel of allocationCorpus(QUEUE_CORPUS)) {
     let src;
     try { src = readFileSync(join(repo, rel), "utf8"); } catch { continue; }
     read++;

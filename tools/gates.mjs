@@ -78,6 +78,28 @@ if (!FORCE_FULL && changed) {
 }
 
 /* ---- 2 · the doc-facing suite set, derived ------------------------------ */
+/* A SUITE READS docs/ THROUGH A TOOL AS SURELY AS DIRECTLY. Corrected 2026-09-18 (LED-2) from
+   M-57's finding that `owed.test.mjs` — which reads DEBT.md, DECISIONS.md and QUEUE.md live
+   through `tools/owed.mjs` — was NOT in the doc-facing set: its own source never spells `docs/`,
+   because the path lives in the tool's `SOURCES`. The fix is the CLASS, not a hand entry for one
+   suite (a list is the D-93 defect this header refuses): a suite is doc-facing iff it, its control,
+   or any `tools/<name>.mjs` it names — followed through that tool's own `./x.mjs` imports — mentions
+   `docs/`. REACH, stated: a tool reached only through `bio-plane/scripts/` is not followed. */
+const toolReachesDocs = (() => {
+  const memo = new Map();
+  const reaches = (name, seen = new Set()) => {
+    if (memo.has(name)) return memo.get(name);
+    if (seen.has(name)) return false;
+    seen.add(name);
+    let src = "";
+    try { src = readFileSync(join(REPO, "tools", name), "utf-8"); } catch { memo.set(name, false); return false; }
+    const hit = src.includes("docs/")
+      || [...src.matchAll(/["']\.\/([\w.-]+\.mjs)["']/g)].some((m) => reaches(m[1], seen));
+    memo.set(name, hit);
+    return hit;
+  };
+  return reaches;
+})();
 function docFacing(dir) {
   const out = [];
   let files = [];
@@ -86,7 +108,8 @@ function docFacing(dir) {
     const src = readFileSync(join(REPO, dir, f), "utf-8");
     const ctrl = join(REPO, dir, f.replace(/\.test\.mjs$/, ".control.mjs"));
     const ctrlSrc = existsSync(ctrl) ? readFileSync(ctrl, "utf-8") : "";
-    if (src.includes("docs/") || ctrlSrc.includes("docs/")) out.push(f);
+    const viaTool = [...(src + ctrlSrc).matchAll(/tools\/([\w.-]+\.mjs)/g)].some((m) => toolReachesDocs(m[1]));
+    if (src.includes("docs/") || ctrlSrc.includes("docs/") || viaTool) out.push(f);
   }
   return out;
 }

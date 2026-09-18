@@ -96,15 +96,32 @@ console.log("\n--- ARM BASELINE · nothing armed ---");
 }
 
 /* ------------------------------------------------- A1 · the arm this item exists for */
+/* THE TARGET ROW IS DERIVED, NOT ANCHORED ON AN ID. CORRECTED 2026-09-18 (LED-2) from M-57's
+   finding: this arm found "the first `design:` line citing VERIFICATION.md §\"A THROWING…\"" and
+   expected M0-29. M0-29 went `done`, the first line matching the anchor became queued M0-33's, and
+   the arm read `want ["M0-29"] got ["M0-33"]` — a pass/fail decided by which rows happened to be
+   open, the anchor-on-a-row-state class `m041-instrument-census.control`'s header already records,
+   and one LED-3's migration would have re-broken. So: the FIRST JUDGED row (by the same
+   `openRows`/`JUDGED` the check uses) carrying exactly ONE `design:` line, and that line removed BY
+   ITS LINE NUMBER — a text replace hits the first identical line, which may belong to another row. */
+const { openRows, JUDGED } = await import(join(REPO, "tools/rowdesign.mjs"));
+const armTarget = (text) => {
+  const row = openRows(text).find((r) => JUDGED.has(r.state) && r.body.filter((l) => /^design:/.test(l)).length === 1);
+  if (!row) return null;
+  const at = row.at + row.body.findIndex((l) => /^design:/.test(l));
+  return { id: row.id, at };
+};
 console.log("\n--- ARM A1 · one open row's `design:` line REMOVED (armed ALONE) ---");
 {
   const before = readFileSync(QUEUE, "utf8");
-  const line = before.split("\n").find((l) => /^design: `docs\/development\/VERIFICATION\.md` §"A THROWING/.test(l));
-  t("A1 · the arm ARMED (the pointer line was found — an arm that did not arm is a finding)",
-    typeof line === "string" && line.length > 40, true);
-  writeFileSync(QUEUE, before.replace(line + "\n", ""));
+  const target = armTarget(before);
+  t("A1 · the arm ARMED (a judged row with one pointer line was found — an arm that did not arm is a finding)",
+    target !== null && /^design:/.test(before.split("\n")[target.at]), true);
+  const lines = before.split("\n");
+  lines.splice(target.at, 1);
+  writeFileSync(QUEUE, lines.join("\n"));
   const p = plancheck();
-  t("A1 · plancheck FAILS naming M0-30's swept row M0-29, and ONLY it", p.named, ["M0-29"]);
+  t(`A1 · plancheck FAILS naming the stripped row ${target.id}, and ONLY it`, p.named, [target.id]);
   t("A1 · the failure carries §4.7's own sentence, not a paraphrase",
     /A queue row names the design it builds from/.test(p.out), true);
   t("A1 · RESTORED byte-identically", restore(QUEUE), true);
@@ -114,10 +131,12 @@ console.log("\n--- ARM A1 · one open row's `design:` line REMOVED (armed ALONE)
 console.log("\n--- ARM A2 · the same row's pointer replaced by an EXPLICIT ROUTED GAP (armed ALONE) ---");
 {
   const before = readFileSync(QUEUE, "utf8");
-  const line = before.split("\n").find((l) => /^design: `docs\/development\/VERIFICATION\.md` §"A THROWING/.test(l));
+  const target = armTarget(before);
   const routed = "design: MISSING — routed to BOB (CLAIMS.md DELEGATION 2026-09-14 M0 (M0-30) -> BOB)";
-  t("A2 · the arm ARMED", typeof line === "string", true);
-  writeFileSync(QUEUE, before.replace(line, routed));
+  t("A2 · the arm ARMED", target !== null, true);
+  const lines = before.split("\n");
+  lines[target.at] = routed;
+  writeFileSync(QUEUE, lines.join("\n"));
   const p = plancheck();
   t("A2 · an admitted gap PASSES — no row is named", p.named, []);
   t("A2 · and plancheck REPORTS the routing rather than swallowing it",
@@ -128,14 +147,26 @@ console.log("\n--- ARM A2 · the same row's pointer replaced by an EXPLICIT ROUT
 /* -------------------------------------- A2b · over-strictness, a closed row is not judged */
 console.log("\n--- ARM A2b · a `done` row with no pointer (nothing armed — the live state) ---");
 {
+  /* DECLARATION CORRECTED 2026-09-18 (LED-2). This arm asserted `>= 50` closed rows carrying no
+     pointer IN THE LIVE QUEUE — a property of the ledger's history, not of the check, and one the
+     archiver exists to make false: M-57 measured it failing after a simulated migration. The
+     property is "a CLOSED row is not judged", so the arm now PLANTS one — a `done` and a
+     `superseded` row with no pointer, appended to the live text in memory (nothing written) — and
+     requires both skipped and neither in the findings. The live count is printed, not floored. */
   const { rowDesignAudit } = await import(join(REPO, "tools/rowdesign.mjs"));
-  const a = rowDesignAudit({ repo: REPO });
-  const noPointer = a.skipped.filter((r) => !r.body.some((l) => /^design:/.test(l)));
-  t("A2b · the live queue HAS closed rows carrying no pointer (else this arm is vacuous)",
-    noPointer.length >= 50, true);
-  t("A2b · not one of them is judged, and none appears in the findings",
-    a.findings.filter((f) => noPointer.some((r) => r.id === f.id)), []);
-  console.log(`  ${noPointer.length} closed row(s) carry no \`design:\` line and none is judged`);
+  const planted = readFileSync(QUEUE, "utf8")
+    + "\n### ZZ-901 · done — a closed row planted with no pointer\nscope: nothing\n"
+    + "\n### ZZ-902 · superseded — a second, in the other closed state\nscope: nothing\n";
+  const a = rowDesignAudit({ repo: REPO, queue: planted });
+  const plantedIds = ["ZZ-901", "ZZ-902"];
+  t("A2b · both planted closed rows were READ as rows and skipped (else this arm is vacuous)",
+    plantedIds.map((id) => a.skipped.some((r) => r.id === id)), [true, true]);
+  t("A2b · neither is judged, and neither appears in the findings",
+    a.findings.filter((f) => plantedIds.includes(f.id)), []);
+  const liveNoPointer = a.skipped.filter((r) => !plantedIds.includes(r.id) && !r.body.some((l) => /^design:/.test(l)));
+  t("A2b · no live closed row without a pointer is in the findings either",
+    a.findings.filter((f) => liveNoPointer.some((r) => r.id === f.id)), []);
+  console.log(`  ${liveNoPointer.length} live closed row(s) carry no \`design:\` line (printed, not floored) and none is judged`);
 }
 
 /* ----------------------------------------------------- A3 · the arm's own arm */
