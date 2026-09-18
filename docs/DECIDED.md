@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1053 rulings across 85 documents.
+1055 rulings across 85 documents.
 
 ## DEC-
 
@@ -1007,7 +1007,7 @@ authority is the file named, never this one.
 - **REC-100** · 2026-09-16 — CORRECTED WHILE RUNNING — THREE TIMES, ALL THREE MINE, AND THE ACT IS CONDUCT #1's TO PAY AT INTEGRATION IF THE WORKER'S REPORT DOES NOT ALREADY CARRY THEM** (written as an act with its actor, because a session can be replaced mid-flight and a correction owed by a session that ends is a correction nobody performs).  
   `docs/development/QUEUE.md:1143`
 - **REC-103** · 2026-09-16 — CORRECTED 2026-09-16 by REC-103: the document arm now applies the fence row-whole (IC-105), so the withholding differs across three levels for THREE stated reasons rather than because one arm was never built — the entity partition is deliberately unfenced and still wants a ruling, and that is the only open half of…  
-  `docs/development/OBSERVATION-LOG-DESIGN.md:24`
+  `docs/development/OBSERVATION-LOG-DESIGN.md:26`
 - **REC-103** · 2026-09-16 — added: 2026-09-16 · CONDUCT #1 (draining BOB #12's `§4.3 CORRECTED` entry as an ITEM.  
   `docs/development/QUEUE.md:1668`
 - **REC-107** · 2026-09-17 — IT CORRECTED MY BRIEF AT THE ARTIFACT RATHER THAN INHERITING IT:** I told it to consume REC-107's `not_ruled_out`/`evidence_one_sided`, and for THIS op that was false — `#contentAxisTally` computes a per-capture `missing_cause` and **DISCARDS it**; only bucket totals cross this wire, and those fields live on…  
@@ -1025,7 +1025,7 @@ authority is the file named, never this one.
 - **REC-112** · 2026-09-17 — IT CORRECTED MY BRIEF AND THE CORRECTION MATTERS: I told it the index was the ONLY surviving evidence of intent, and that was HALF WRONG** — the intent also lives in the delegation, in `airuns.test.mjs`'s roster comment, and in a **by-name pin at `airuns.test.mjs:675`.  
   `docs/development/QUEUE.md:1650`
 - **REC-113** — `partial` IS THE ONE STATE WHOSE COVERAGE CLAIM THIS DESIGN HAS NOT DECIDED, AND REC-113 DECLINED TO DECIDE IT SILENTLY.** §3 writes the rule as *"`PRESENT` with no `result_ref` is refused"*, and C-22.10 implements exactly that — it keys on `PRESENT` alone.  
-  `docs/development/OBSERVATION-LOG-DESIGN.md:20`
+  `docs/development/OBSERVATION-LOG-DESIGN.md:22`
 - **REC-113** · 2026-09-17 — IT CORRECTED THE BRIEFED BASELINE AND CAUGHT THE QUIET TRAP DOING IT:** its first pristine run read `213/214 · 1 skipped · 13370`, **exit 0 and a healthy-looking headline with a whole fleet member's 76 assertions missing** — `ocr-worker` unresolvable without `npm ci` in all three packages.  
   `docs/development/QUEUE.md:1670`
 - **REC-114** · 2026-09-17 — CLOSED 2026-09-17 by REC-114 — RULED *EARNED*, WITH THE AUTHORED LETTER PUBLISHED BESIDE IT RATHER THAN ERASED.** The row offered two defensible answers and this is the one taken: `op=meaningrows&rows=leg` now publishes the letter the record can SUPPORT, capped through the SAME `Store.#capturedAt` the strength walk…  
@@ -1827,6 +1827,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:12253`
 - the census arm at ~:495 is CORRECTED, NOT EXEMPTED:** it asserts `asks_registry: false` against `#versionCollections`, which is this defect PINNED OPEN as a finding.  
   `docs/development/CLAIMS.md:12612`
+- CORRECTED, NOT EXEMPTED**: `provenance_route_marks_finding` leaves the roster because this item gives it a reader.  
+  `docs/development/CLAIMS.md:12696`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2055,6 +2057,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/MEASUREMENTS.md:12899`
 - **2026-09-17** — THE PUSH-TIME DECIDED GUARD — both causes driven against a real remote, and the estate's hook premises re-verified** *(Id minted with `node tools/mintid.mjs M`, run bare.  
   `docs/development/MEASUREMENTS.md:15329`
+- The degradation is real and is what the assertion was CORRECTED to measure:** `finding` stops being an index predicate and becomes a row-by-row test over **the whole tail of the table after the cursor**, to return the few rows standing at one finding.  
+  `docs/development/MEASUREMENTS.md:16135`
 - **2026-08-01** — CORRECTED 2026-08-01 — this hole is CLOSED and the paragraph below is kept as the > reasoning that closed it.** One reconciling Durable Object alarm now serves FIVE > consumers (selection-sweep, task-drain, archive-monitor, connection-derive, > overdue-scan), three of which landed within a week of the decision.  
   `docs/development/MILESTONES.md:118`
 - Bob already RULED the doctrine** — content > produced by a third-party script, if it is ever evidence, is recorded as produced by > THAT party and not by the hosting site.  

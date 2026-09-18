@@ -647,13 +647,27 @@ t("SWEEP: `ai_runs_context` — THE INDEX THIS ITEM WAS ABOUT — now has a read
 t("SWEEP: and the finding is RATCHETED as a CEILING — an index added tomorrow with no statement "
 + "filtering its leading column pushes this over and fails HERE, naming the index, which is the "
 + "one thing UI-49 had to find by trying to build a surface",
-  unread.length <= 14, true);   /* REC-92: 15 -> 14. The CEILING is tightened with the floor
-                                   rather than left carrying a row of slack — a ceiling a real
-                                   departure has already walked under is not a ratchet. */
+  unread.length <= 13, true);   /* REC-116: 14 -> 13. REC-92: 15 -> 14. The CEILING is tightened
+                                   with the floor rather than left carrying a row of slack — a
+                                   ceiling a real departure has already walked under is not a
+                                   ratchet. */
 t("SWEEP: a FLOOR beside the ceiling — the list shrinking without this figure being moved means the "
 + "READER lost sight of indexes, not that the plane got better. REC-70's ratchet spent two days "
 + "reporting 27 over a corpus it could not see",
-  /* REC-92 MOVES THIS FLOOR DOWN, 15 -> 14, AND A FALLING FLOOR NEEDS ITS REASON AT THE SITE
+  /* REC-116 MOVES THIS FLOOR DOWN, 14 -> 13, AND A FALLING FLOOR NEEDS ITS REASON AT THE SITE.
+     THE ARRIVAL IS NAMED: `provenance_route_marks_finding` LEFT the roster because REC-116 built
+     `op=provenanceroutes`, whose page statement filters the index's LEADING column through a
+     STATIC `WHERE m.finding = ?` that this reader can see. That is THE PLANE GETTING BETTER —
+     the index had no reader for 39 days and now has one — and not the reader losing sight of an
+     index, which is the one direction this row exists to catch. The departure is REAL rather
+     than a matcher artefact and is measured three ways: this reader says READ, the query plan
+     says `SEARCH m USING INDEX provenance_route_marks_finding (finding=? AND bundle_id>?)`
+     (M-49, driven over the op's OWN extracted SQL), and the op is DISPATCHED so a caller can
+     reach the statement (D-43). It is NOT a new declared blind spot and needs no exculpation:
+     the predicate is an ordinary static WHERE, deliberately NOT a runtime-composed fragment,
+     which is why the `pushesFragment("finding")` polarity arm below still reads FALSE and still
+     measures what it was written to measure.
+     PRIOR ENTRY, KEPT AS THE RECORD — REC-92 MOVED THIS FLOOR 15 -> 14, AND ITS REASON AT THE SITE
      (CLAUDE.md) — this one falls because THE PLANE GOT BETTER, not because the reader lost
      sight of an index, which is the one direction this row exists to catch.
      `content_extent_kind` LEFT the roster: REC-92's `rows=passage` projects each unit's
@@ -664,16 +678,30 @@ t("SWEEP: a FLOOR beside the ceiling — the list shrinking without this figure 
      WHERE this regex cannot see); it is now an ordinary READ index and needs no exculpation
      at all. The departure is therefore real in BOTH readers, which is why the exculpation
      roster below drops from three names to two in the same commit. */
-  unread.length >= 14, true);
+  unread.length >= 13, true);
 /* AND THE TWO NAMED ARRIVALS ARE PINNED BY NAME, not only by count. A ceiling of
    13 is satisfied by ANY thirteen, so a real gap could be swapped for a blind
    spot and the figure would never move — which is how a roster stops being about
    the plane and starts being about its own arithmetic. */
-t("SWEEP: the roster is pinned BY NAME as well as by count — the two indexes that took this figure "
-+ "from 11 to 13 are both ON it, so a real gap cannot be swapped for a blind spot under a ceiling "
-+ "that never moves",
-  ["provenance_route_marks_finding", "reading_text_source_kind"]
+/* CORRECTED BY REC-116, NEVER EXEMPTED, AND THE REASON THE OLD ASSERTION WAS RIGHT WHEN IT WAS
+   WRITTEN IS THE USEFUL PART. It pinned TWO names ON the roster so a real gap could not be
+   swapped for a blind spot under a ceiling that never moves. One of those two,
+   `provenance_route_marks_finding`, was a REAL GAP — an index declared 2026-08-08 for a reader
+   nobody built — and REC-116 built the reader, so it has LEFT the roster. Deleting the pin
+   would have left the ceiling satisfiable by any thirteen, which is the arithmetic this arm
+   exists to refuse, so the pin is INVERTED instead of shortened: the name that departed is
+   asserted ABSENT and the name that remains is asserted PRESENT. An exempted test is a rule
+   nobody is enforcing and nobody remembers deleting. */
+t("SWEEP: the roster is still pinned BY NAME as well as by count — `reading_text_source_kind` is "
++ "ON it (it is the DECLARED BLIND SPOT, driven three ways below), so a real gap cannot be "
++ "swapped for a blind spot under a ceiling that never moves",
+  ["reading_text_source_kind"]
     .filter((n) => !unread.some((ix) => ix.index === n)), []);
+t("SWEEP: and the DEPARTURE is pinned by name too — `provenance_route_marks_finding` is OFF the "
++ "roster because REC-116 gave it the reader it waited 39 days for. Pinning the departure is what "
++ "stops the floor falling for the OTHER reason: a name asserted absent cannot be quietly "
++ "replaced by the reader losing sight of some third index",
+  unread.some((ix) => ix.index === "provenance_route_marks_finding"), false);
 /* THE BLIND SPOT, DRIVEN RATHER THAN ASSERTED. The comment above claims
    `reading_text_source_kind` is on the roster because this reader cannot see a
    dynamically composed WHERE, not because no op asks the question. A claim about

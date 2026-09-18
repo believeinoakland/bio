@@ -467,8 +467,25 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
    got 32`) and not by adding one to the number above it, which is the only way
    a roster figure stays a measurement rather than a running total. The op is
    DRIVEN in the loop below, which is what the PIN arm demands of every capped
-   op and what stops a roster from growing into a list nobody exercises. */
-  OPS.size, 33);
+   op and what stops a roster from growing into a list nobody exercises.
+   REC-116 / IC-120, 2026-09-17: **33 -> 34, and the figure is taken from THIS ARM'S OWN FAILURE
+   OUTPUT (`want 33 / got 34`) rather than by adding one to the number above it.** The arrival is
+   `op=provenanceroutes`, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for
+   39 days while the index for it sat declared in `schema.mjs`. It is DRIVEN in the map below.
+   **AND THE WAY THIS ARM FIRST FAILED IS WORTH MORE THAN THE FIGURE, BECAUSE IT WAS A FALSE
+   POSITIVE ON A DIFFERENT METHOD.** REC-116's first draft declared its constants ABOVE its method,
+   as this file's neighbours do. `segments()` splits on METHOD SIGNATURES, and a
+   `static NAME = value;` line has no parentheses — so those constants were absorbed into the
+   PRECEDING segment, and this walk reported **`op=provenanceroute`, a WRITE that applies no bound
+   at all, as a capped op** while the read that really is capped was INVISIBLE to it. One false
+   arrival and one false absence, from nothing but declaration order.
+   **The detector was NOT widened and this file was NOT touched to absorb it.** REC-57's standing
+   rule here is that the source is not reworded to suit the detector; the converse applied — the
+   constants were moved BELOW their method so the detector's own premise holds (a class member's
+   constants belong to the member they serve), and BOTH readings corrected themselves at once. The
+   reason is recorded at the site in `store.mjs`, so the next person to tidy that declaration order
+   knows what it costs. */
+  OPS.size, 34);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1203,7 +1220,11 @@ console.log("\n--- PIN: the ops driven are the ops the walk found ---");
 const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "suggest",
                                   "capturerequests", "capturerequestdrain", "versionstrength",
                                   "textprovenance", "textattest", "caseflags",
-                                  "extractproposals"]);
+                                  /* REC-116 / IC-120: the ENVELOPE and bound-published arms are
+                                     driven in `answersByOp` below, on this set's own terms; the
+                                     BITE arms need a corpus of MARKED documents and live in
+                                     `test/rec116-route-marked.test.mjs` section F. */
+                                  "extractproposals", "provenanceroutes"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1355,6 +1376,20 @@ const answersByOp = new Map([
      it. This suite's store holds no proposal at all; the op is SCOPED, so it is
      asked about a document, and it answers the envelope either way. */
   ["extractproposals", await GET("op=extractproposals&token=mem-r57&bundle=INFO-2026-0001-r57&limit=1")],
+  /* REC-116 / IC-120: driven HERE with an explicit `limit`, for CPDF-10's and
+     SK-8's reason immediately above and in their exact shape. What this block's
+     pins ask is whether the op answers with an ENVELOPE rather than a bare array
+     and whether it publishes the bound it applied — both properties of the
+     RETURN and not of how many rows the store happens to hold. The BITE arms for
+     this op — a page of 2 out of 4 with `more` MEASURED by reading one row past
+     the bound, and a cursor that carries forward without repeating a row — need
+     a corpus of MARKED documents, which needs promotes and member assessments;
+     that corpus lives in `test/rec116-route-marked.test.mjs` section F and the
+     bound is driven there against it. This suite's store holds no route mark at
+     all and the op answers its envelope either way — which is itself what
+     REC-116 built it to do: an empty answer here carries `cause:
+     "never_assessed"` rather than reading as a corpus nobody needs to look at. */
+  ["provenanceroutes", await GET("op=provenanceroutes&token=mem-r57&limit=1")],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

@@ -12655,3 +12655,68 @@ DISCOVERING IT FROM A RED SUITE, IS ITSELF WORTH SAYING:** it is a step every `s
 worker owes, it is in no worker kickoff, and it is found only by paying for it. Named here as an
 observation for CONDUCT rather than fixed, since the remedy is a process change and not mine to
 make.
+## REC-116 · RECORD · the READ op for a standing `LOOKED_INDETERMINATE` marker (the 2026-08-09 delegation, 39 days unbuilt)
+Opened 2026-09-17 by REC-116's worker (CONDUCT #3), worktree `agent-aa29968dac7cc0e37`.
+**REC-112's measurements are INHERITED (`M-41`) and are NOT re-derived here:** the index
+`provenance_route_marks_finding` was specified FOR this reader, its four existing readers all
+resolve via the PRIMARY KEY autoindex, and `bundle_id` — the index's second column — is this
+plane's after-cursor paging key. **The index is NOT deleted and its annotation is NOT reflowed**
+(`test/nc-rec69-selects.mjs` patches two of its lines as EXACT STRING LITERALS).
+
+- `bio-plane/src/store.mjs` — **by SITE, not by file:** (1) ONE NEW method
+  `provenanceRoutesMarked()` and its private helpers, inserted immediately after
+  `provenanceRouteAssess()`; (2) ONE new line in the op dispatch table beside `provenanceroute`.
+  **`provenanceRouteAssess`, `#latestRouteMark`, `Store.routeFinding`, `auditPass` and
+  `listBundles` are READ AND NOT EDITED** — that is what keeps the readers one rule and what
+  makes the over-strictness arm (every existing provenance-route answer byte-identical) mean
+  something. **NOT `#versionCollections`** (REC-119's region). **NOT the observation-log tally**
+  (REC-110's region). **NOT `meaningRows()`**.
+- `bio-plane/src/index.mjs` — **by SITE:** the `provenanceroutes` row in the op registry, and its
+  name added to the viewer-stamp list beside `provenanceroute`. Nothing else.
+- `bio-plane/test/rec116-route-marked.test.mjs` — new, the driven suite (through the OP, via
+  `dispatchFetch`, never at the store).
+- `bio-plane/test/nc-rec116.mjs` — new, the negative-control driver.
+- `bio-plane/scripts/coverage.mjs` — **`REGISTER_FLOOR` ONLY**, and only the four keys this item's
+  own green `--strict` run invalidated: `arms` 1173 → 1194, `classified` 208 → 212, `corpus`
+  209 → 213, `run` 171 → 176, each taken from the figure that run PRINTED rather than by adding to
+  the number in the file. `FLEET_FLOOR` is UNMOVED and was read EXACT (3/6/8/76). **`^  arms:`
+  grepped BEFORE and AFTER writing: 2 matches both times** (here and `FLEET_FLOOR`) — the
+  duplicate-key hazard that has bitten this block six times.
+- `bio-plane/test/bounds.test.mjs` — the capped-op roster figure 33 → 34, `provenanceroutes` added
+  to `DRIVEN_ELSEWHERE` and driven in `answersByOp`. No existing assertion weakened or exempted.
+- `bio-plane/test/derivation-bounds.test.mjs` — `CLASS_MEASURED_2026_08_08` 36 → 37,
+  `SCANNING_MEASURED_2026_09_15` 106 → 107, and three by-name rosters gaining
+  `provenanceRoutesMarked` with its reason at each site. **The D-365 truncation arm is left
+  UNTOUCHED** — it was satisfied by inlining the page SQL in `store.mjs` so the bound is VISIBLE to
+  it, never by moving a figure.
+- `bio-plane/test/gate-reads.test.mjs` — the new op's GATED classification, appended.
+- `bio-plane/dist/bio-plane.bundled.mjs` + `bio-plane.bundle.json` — `npm run build` output, which
+  `fleetbundles.test.mjs` requires to track `src/`. `src/signpage.mjs` verified byte-identical.
+- `bio-plane/test/airuns.test.mjs` — the unread-index roster's CEILING and FLOOR move 14 → 13 and
+  the by-name pin at :675 is **CORRECTED, NOT EXEMPTED**: `provenance_route_marks_finding` leaves
+  the roster because this item gives it a reader. The `pushesFragment("finding")` POLARITY arm is
+  deliberately left asserting `false` and still passes — this item's predicate is a STATIC SQL
+  literal, not a runtime-composed fragment, so that arm keeps measuring what it was written to.
+- `docs/development/INTERFACES.md` (I3) and `docs/development/INTERFACE-CHANGES.md` (**IC-120**,
+  minted with `node tools/mintid.mjs IC`). **CONDUCT takes the version bump and the RESOLUTION.**
+- `docs/development/MEASUREMENTS.md` — the query-plan measurement, appended as a new row.
+- `docs/development/OBSERVATION-LOG-DESIGN.md` — front matter only (`CORPUS-STANDARD.md`: a
+  landing that changes a construct updates its home document's front matter in the same commit).
+- `docs/development/CLAIMS.md` (this block), `docs/DECIDED.md` on regeneration.
+
+**NOT CLAIMED AND DELIBERATELY NOT TOUCHED:** `bio-plane/test/meaning-bounds.test.mjs` — **its
+bare-collection ceiling is NOT moved, and that is this item's best instrument finding rather than
+an omission.** It judged this op BARE on its first run and was RIGHT: the op published `more` and
+`nextAfter`, two spellings used nowhere else in this plane, and `MORE_KEY` knows neither. The keys
+were renamed to the plane's own `limit` / `truncated` / `cursor`, after which the op classifies
+BOUNDED and that ratchet does not move at all. **The instrument was not widened to admit an
+invented spelling.** Also NOT touched: `bio-plane/src/query.mjs` (it references this table
+ZERO times and this item does not change that — the predicate belongs beside the other three
+route readers in `store.mjs`, not in the search compiler), `bio-plane/src/schema.mjs` (**no table,
+no column, no index, and the REC-112 annotation is not reflowed**), `bio-plane/checks/bio-checks.mjs`
+(**this op REFUSES a finding outside the stored vocabulary and that refusal reuses
+`ROUTE_MARK_CHECKS`' existing family rather than minting a C-number for a read**),
+`bio-plane/src/airun.mjs`, `civicos-ui/**` (UI-64's), `tools/**`, `newgroup/**`.
+**NOT `docs/development/QUEUE.md`** — flipping the REC-116 row is CONDUCT's act (`kickoffs/WORKER.md`).
+
+**open as of 2026-09-17.**

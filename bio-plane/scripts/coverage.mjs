@@ -1236,7 +1236,22 @@ const REGISTER_FLOOR = {
      failure mode (a dropped floor move goes SLACK, not broken). classified and corpus are
      UNMOVED and that is stated rather than implied: the arriving arm joined an already-counted
      declaration rather than adding a suite. */
-  arms: 1173,
+  arms: 1194,
+  // [branch record | REC-116 read arms 1194 on its own tree] REC-116, 2026-09-17: 1173 -> 1194 / 208 -> 212 / 209 -> 213 / run 171 -> 176,
+  // [branch record | REC-116 read arms 1194 on its own tree] ALL FOUR MOVED IN THE SAME TURN and every one taken from the figure THIS
+  // [branch record | REC-116 read arms 1194 on its own tree] item's own green --strict run PRINTED, never by adding to the number in the
+  // [branch record | REC-116 read arms 1194 on its own tree] file: `REGISTER FLOOR  arms 1194/1173 - classified 212/208 - corpus (suites
+  // [branch record | REC-116 read arms 1194 on its own tree] read) 213/209 - GREW by 21 arm(s)` and `176 RUN (dated token) - floor
+  // [branch record | REC-116 read arms 1194 on its own tree] 176/171 reproducible - GREW by 5`. The arrivals are THREE files, not one:
+  // [branch record | REC-116 read arms 1194 on its own tree] `test/rec116-route-marked.test.mjs` (the driven suite, one declaration with
+  // [branch record | REC-116 read arms 1194 on its own tree] six arms), `test/nc-rec116.mjs` and `test/nc-rec116-plan.mjs` (the two
+  // [branch record | REC-116 read arms 1194 on its own tree] drivers). corpus and classified BOTH move because a whole SUITE arrived,
+  // [branch record | REC-116 read arms 1194 on its own tree] unlike REC-114's arm joining an already-counted declaration. ONE KEY SET,
+  // [branch record | REC-116 read arms 1194 on its own tree] grepped BEFORE and AFTER writing: `^  arms:` matches TWICE in this file,
+  // [branch record | REC-116 read arms 1194 on its own tree] here and in FLEET_FLOOR (76), which is UNMOVED along with the rest of the
+  // [branch record | REC-116 read arms 1194 on its own tree] fleet floors (3 members / 6 ops / 8 suites / 76 arms, read EXACT this run).
+  // [branch record | REC-116 read arms 1194 on its own tree] Provenance on that run: `229 of 229 discovered item(s) are in the commit at
+  // [branch record | REC-116 read arms 1194 on its own tree] HEAD`, so no phantom suite inflated the corpus. Nothing FELL.
   // [branch record | REC-114 read arms 1173 on its own tree]  REC-114, 2026-09-17: 1148 -> 1173 / 204 -> 208 / 205 -> 209 / run 167 -> 171,
   // [branch record | REC-114 read arms 1173 on its own tree] ALL FOUR MOVED IN THE SAME TURN and every one taken from the figure THIS
   // [branch record | REC-114 read arms 1173 on its own tree] ITEM'S OWN GREEN `--strict` RUN PRINTED AFTER COMMITTING (`arms 1173/1148 ·
@@ -1267,8 +1282,8 @@ const REGISTER_FLOOR = {
   // [branch record | REC-96 read arms 1134 on its own tree] reported the suite as NOT IN ANY COMMIT and refused to count work no other
   // [branch record | REC-96 read arms 1134 on its own tree] checkout can see (D-238), so a floor moved then would have been a figure
   // [branch record | REC-96 read arms 1134 on its own tree] nobody else reproduces. CONDUCT re-reads this on the MERGED tree. 
-  classified: 208,
-  corpus: 209,
+  classified: 212,
+  corpus: 213,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
@@ -1296,7 +1311,7 @@ const REGISTER_FLOOR = {
      EXACT, so nothing about that item moved either figure. It is the sixth consecutive
      item to find a floor already stale BY MEASURING IT, which is the argument for
      measuring rather than for trusting the number in the file. */
-  run: 171,
+  run: 176,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

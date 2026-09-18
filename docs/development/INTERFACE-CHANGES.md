@@ -9106,3 +9106,114 @@ moves. Reversing it is deleting `#versionLegsEarned`, dropping its call, and rem
 `composition_grades` from the two publish sites.
 
 **RESOLUTION: (CONDUCT takes the version bump and the resolution.)**
+## IC-120 · I3: `op=provenanceroutes` — THE READ HALF OF THE PROVENANCE-ROUTE MARKER. Which documents in this instance carry a STANDING `LOOKED_INDETERMINATE` marker, with an empty answer that says WHY it is empty · PROPOSED 2026-09-17 (REC-116, building the reader REC-69's 2026-08-09 delegation asked for and nobody built) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`, not off the row: 22.0.0** (IC-119 ACCEPTED, 2026-09-17).
+  **Proposed as MINOR — 22.0.0 → 22.1.0, ADDITIVE.** **Nothing moves.** One new op is added;
+  no existing op gains, loses or reorders a key; no refusal is added anywhere; no existing
+  refusal widens. Driven rather than argued — see THE OVER-STRICTNESS MEASUREMENT below.
+- **Proposer:** RECORD, worker `agent-aa29968dac7cc0e37`, 2026-09-17, from QUEUE REC-116
+- **Owner to land it:** `RECORD` (owner and proposer)
+- **Consumers to answer:** `UI`, `SKILL`, `CASE`, `DIST`, `RECORD`.
+
+**WHY THE CLASSIFICATION IS MINOR AND NOT MAJOR, STATED RATHER THAN ASSUMED.** IC-112's
+precedent is that a consumer count is a fact about this moment while a contract is a promise
+about every moment after it, so an additive claim is not made lightly here. This one is additive
+in the strong sense: the change is the ARRIVAL of `provenanceroutes` in the op registry and
+nothing else. A consumer written against I3 22.0.0 cannot observe it without asking for it. The
+measurement that backs that is in `test/nc-rec116.mjs` arm (f) and is described below.
+
+**THE GAP.** REC-69's DELEGATION of 2026-08-09 (`CLAIMS.md`) named one question verbatim —
+*which documents in this instance carry a standing `LOOKED_INDETERMINATE` marker* — and the
+INDEX for it, `provenance_route_marks_finding`, landed 2026-08-08, ONE DAY before the sweep that
+catches an index with no reader. The reader never did. REC-112 established the ground and its
+answer is inherited here rather than re-derived (`M-41`): the index is not dead weight and not
+mis-phrased, it was specified FOR this reader, and `bundle_id` — its second column — is this
+plane's after-cursor paging key. For 39 days `op=provenanceroute` was `mutating: true`, a WRITE,
+`query.mjs` named the table ZERO times, and a group asking where its own record's provenance was
+doubted had to page the whole store and count for itself.
+
+**WHAT THE OP ANSWERS.** `op=provenanceroutes` → `{ ok, finding, means, documents[], returned,
+limit, after, cursor, truncated, census, cause, complete, says, completeness }`. Each entry in
+`documents` is `{ bundleId, state, ...Store.routeFinding(...) }` — the SAME composition every
+other route reader publishes, through the same one function, because a hand copy agrees with its
+author at zero cost and this repository has measured that five times.
+
+**THE PAGING KEYS ARE `limit` / `truncated` / `cursor`, AND THAT IS A CORRECTION THIS ITEM WAS
+FORCED INTO RATHER THAN A CHOICE IT MADE.** The op's first draft published `more` and `nextAfter`.
+They read perfectly well and are used nowhere else in this plane. `meaning-bounds.test.mjs`
+classified the op **BARE** — *a collection off an unbounded row source with no bound published* —
+and it was RIGHT by its own published vocabulary, which knows `truncated`, `cursor`, `hasMore` and
+five more, and knew neither invented spelling. **The ratchet was NOT widened to admit them.**
+REC-57's whole point is that every capped op settles its two questions in ONE shape, so a new read
+inventing a second spelling is the hand-copy defect arriving in a key name — and the instrument
+caught it on its first run. Renamed, the op is classified BOUNDED (`bound=[limit]
+more=[cursor,truncated]`) and the bare-collection ceiling **does not move at all**, which is the
+outcome a correctly-bounded new read should produce.
+
+**THE THREE DECISIONS THAT ARE THE INTERFACE, rather than implementation.**
+
+1. **`finding` IS NOT A CALLER PARAMETER.** It is bound from a constant. A caller-chosen finding
+   would have needed a refusal for a value outside the stored vocabulary — a fifth DEC-49 code
+   minted for a READ — but the stronger reason is the row's own warning: the cheapest wrong
+   answer here is *an op that returns every document with any route row at all*, which is
+   non-empty, plausible, and not the question. **An op that cannot be ASKED for that cannot
+   drift into it.** A surface wider than its question is not a better surface.
+2. **`STANDING` MEANS THE LATEST ROW, NOT ANY ROW.** The table is append-only and correction
+   moves FORWARD (DEC-19). A document marked at `seq` 1 and re-assessed showable at `seq` 2 has
+   NO standing marker. A bare `WHERE finding = ?` would publish a standing doubt over documents
+   whose route the record can now show — the record claiming more than it can support, which
+   `CLAUDE.md` ranks worse than a missing feature. The predicate therefore carries the same
+   `MAX(seq)` clause `auditPass` and `#latestRouteMark` already use: three readers, one rule
+   about what *current* means.
+3. **AN EMPTY ANSWER ALWAYS CARRIES A CAUSE, AND THE CAUSES ARE DIFFERENT FACTS.** *The op
+   returned nothing* and *no document carries a marker* are the two facts this construct exists
+   to separate, and an empty list that cannot say which is the unearned-absence class arriving in
+   a brand-new surface. `cause` is one of:
+   - `no_documents_visible` — this viewer can see no captured document at all, so the question is
+     not askable of them. Covers a DENY stamp and an empty store, deliberately indistinguishable
+     (REC-25/D-15).
+   - `never_assessed` — documents exist and NOT ONE has ever been assessed. **NEVER_LOOKED at the
+     level of the whole instance**, and the cause that is NOT "no document carries a marker".
+   - `none_standing` — assessments exist and every one still standing found the route showable.
+     **This, and only this, is the earned statement that no document carries a marker**, earned
+     because somebody looked.
+   - `page_exhausted` — the caller paged past the last marked document. A fact about the cursor,
+     not about the record.
+
+   And `never_assessed` is published in the census **even when the page is full**, with
+   `complete` beside it, because a roster drawn over a corpus half of which nobody ever assessed
+   is an answer whose COMPLETENESS is undetermined. Sparse is the normal condition at every level
+   and absence at one level is not evidence of absence at the next.
+
+**THE FENCE.** A route mark names a DOCUMENT the group holds and says the record itself doubts
+that document's route. A row naming a bundle the viewer cannot see is **WITHHELD WHOLE** —
+REC-103's row-whole rule at the document level, and `op=airuns`' rule for a collection read:
+absent, byte-identically to a row that never existed. **Nothing publishes how many rows were
+withheld, because that count is itself the disclosure**, and the census is computed THROUGH the
+same gate so no ungated total sits beside it. Measured rather than assumed, because it changes
+what the fence is doing: `viewerPredicate` filters PROJECT bundles and nothing else, and a route
+mark can only ever name an `information` bundle, so for any RECOGNISED viewer this gate withholds
+nothing today and the case it is load-bearing for is the UNRECOGNISED one. It is applied anyway
+rather than reasoned away — the gate is the only place that rule lives, and an op that skipped it
+would be correct today and wrong the day the predicate widens.
+
+**THE QUERY PLAN IS MEASURED, AND THE MEASUREMENT IS TAKEN FROM THE OP RATHER THAN FROM A
+RETYPED STAND-IN — `M-49`.** REC-112 had to retype the spellings it measured because no reader
+existed to read them off. There is one now, so `test/nc-rec116-plan.mjs` EXTRACTS
+`Store.ROUTE_MARKED_PAGE_SQL` from `store.mjs` and plans those exact bytes:
+`SEARCH m USING INDEX provenance_route_marks_finding (finding=? AND bundle_id>?)` — **BOTH
+COLUMNS**, on the first page and on a paged call alike.
+
+**THE OVER-STRICTNESS MEASUREMENT, WHICH IS WHAT MAKES THE MINOR CLASSIFICATION EVIDENCE.**
+`test/nc-rec116.mjs` arm (f) extracts the PRE-ITEM build from the merge-base and runs the SAME
+probe bytes against both worker scripts, asserting every existing provenance-route answer is
+byte-identical: `op=provenanceroute` (the act, a repeat that appends nothing, and a missing
+bundle), `op=list` (both arms), `op=audit`, `op=provenancechain`, and `op=stats`' `routeMarks`.
+It is driven against a different build rather than self-pinned, because a build compared to
+itself agrees at zero cost.
+
+**RESOLUTION:** unresolved at the time of writing. CONDUCT takes the version bump and the
+RESOLUTION at integration, against I3's version AS READ AT RESOLUTION — IC-118's receipt is that
+a proposal's base can move underneath it while the item runs.

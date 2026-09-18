@@ -16069,3 +16069,85 @@ capture ceiling on an already-transcribed document is **ACCEPTED** by `op=sugges
 `basis:` leg path refuses the same shape with C-2.8. Driven in
 `rec119-version-legs-earned.test.mjs` block 3. Raised in D-411's disposition as residue; not
 settled by that item.
+## M-49 · 2026-09-17 · REC-116 — **THE READER THE INDEX WAS DECLARED FOR NOW EXISTS, AND ITS QUERY PLAN IS MEASURED FROM THE OP'S OWN BYTES RATHER THAN FROM A RETYPED STAND-IN** (worktree `agent-aa29968dac7cc0e37`, branch `worktree-agent-aa29968dac7cc0e37`)
+
+**WHAT THIS ADDS TO `M-41`, AND WHY IT IS A NEW MEASUREMENT RATHER THAN A RE-RUN.** REC-112
+measured what a reader WOULD do, because no reader existed: it had to RETYPE the three spellings
+of the delegated question and plan those. That was the only thing available to it and it said so.
+**A retyped query is a hand copy, and a hand copy agrees with its author at zero cost** — this
+repository has measured that five times. `REC-116` built the reader, so the subject is no longer
+hypothetical: `test/nc-rec116-plan.mjs` finds `provenanceRoutesMarked` in
+`bio-plane/src/store.mjs`, EXTRACTS the page statement out of that method's own `#rows(` call, and
+plans **those exact bytes**. The op's SQL and the measured SQL cannot diverge, because they are
+the same string.
+
+**AND THE STATEMENT IS INLINE AT THAT CALL BECAUSE AN INSTRUMENT INSISTED — a finding about
+source-walking graders rather than about this query.** It was first held in a named constant,
+`Store.ROUTE_MARKED_PAGE_SQL`, which read well and extracted just as easily. But
+`derivation-bounds`' D-365 arm grades every published `truncated` against **the SQL OF THE ROW
+SOURCE IT WAS MEASURED OVER**, and it reads that SQL at the `#rows(` call — so with the statement
+behind a constant it reported `provenanceRoutesMarked:raw (no SQL LIMIT)` over a source that had
+carried `LIMIT ?` all along. **A bound that is real but invisible is an unbounded read for every
+purpose that instrument serves**, so the statement was moved to this file's house shape rather
+than the arm being widened. This is the SECOND of two instruments REC-116's declaration style
+tripped, the first being `bounds`' `segments()` walk reading a `static` line into the preceding
+method — **both were the same mistake: a source written for a human reader in a file three
+instruments read by walking it.**
+
+**THE INSTRUMENT IS M-41's, UNCHANGED AND DELIBERATELY SO.** `EXPLAIN QUERY PLAN`, sqlite3
+**3.51.0** (macOS system binary), against table and index DDL **extracted from `schema.mjs`
+rather than retyped**, populated with 5,000 bundles and 500 marks of which **62 are
+`LOOKED_INDETERMINATE`** — a selective filter, which is the condition under which an index either
+earns its place or does not. **No `ANALYZE`**, which is this plane's live condition.
+
+**THE LIMIT, STATED RATHER THAN DISCOVERED LATER, and it is M-41's limit unchanged:** the plane
+runs on Durable Object SQLite inside `workerd`, not on this CLI binary, and the two may differ in
+version. What is measured is index ELIGIBILITY for a leading-column equality — core planner
+behaviour, not a version-dependent costing decision. **The arm was NOT driven inside `workerd`
+and this entry does not claim it was.**
+
+### ARM A — the op's own page statement, on both cursors. **BOTH COLUMNS.**
+
+```
+QUERY PLAN
+|--SEARCH m USING INDEX provenance_route_marks_finding (finding=? AND bundle_id>?)
+`--CORRELATED SCALAR SUBQUERY 1
+   `--SEARCH x USING COVERING INDEX sqlite_autoindex_provenance_route_marks_1 (bundle_id=?)
+```
+
+**Byte-identical for the first page (empty cursor) and for a paged call (real cursor)**, which is
+itself the finding worth recording: the op has ONE page statement, so there is no second shape
+that could drift away from the measured one. `M-41`'s central claim is now driven against the
+reader rather than against a stand-in — **`bundle_id` is this plane's after-cursor paging key and
+the planner uses the index's SECOND column for exactly that cursor.** The correlated subquery
+that makes *standing* mean *the latest row* resolves through the PRIMARY KEY autoindex as a
+COVERING INDEX, so the `MAX(seq)` clause that keeps the op honest costs no table access.
+
+### ARM B — POLARITY. **The degradation is NOT a full table scan, and the arm was declared wrong.**
+
+**DECLARED:** *drop the index and the paged call degrades to `SCAN provenance_route_marks`* — by
+analogy with `M-41`, whose bare `COUNT over finding = ?` does exactly that. **ACTUAL: FALSE.**
+Recorded rather than smoothed, because **a surprising result is a finding about the ARM.** The
+reason is the arm's and not the subject's: this statement also carries `m.bundle_id > ?`, so with
+the two-column index gone the planner still has the PRIMARY KEY autoindex to range-scan on
+`bundle_id` and never falls to a table scan.
+
+**The degradation is real and is what the assertion was CORRECTED to measure:** `finding` stops
+being an index predicate and becomes a row-by-row test over **the whole tail of the table after
+the cursor**, to return the few rows standing at one finding.
+
+```
+without the index:  SEARCH m USING INDEX sqlite_autoindex_provenance_route_marks_1 (bundle_id>?)
+```
+
+**Both plans are asserted to have MOVED**, so ARM A measured the index rather than a plan that
+reads the same either way. 10 of 10 arms green.
+
+### WHAT THIS DOES NOT MEASURE, NAMED SO NOBODY READS IT AS MORE
+
+The census statements beside the page — the gated `GROUP BY` over standing rows and the gated
+`COUNT` over `information` bundles — **do not use this index and are not expected to.** The
+`GROUP BY` deliberately has no `finding` predicate: it reports every finding actually standing,
+so a third finding arriving in the table would be visible rather than silently missing from
+`assessed`. That is the *invert, do not lengthen a list* rule, and it costs that one statement
+the index. **The index serves the PAGE, which is the read the 2026-08-09 delegation asked for.**
