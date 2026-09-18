@@ -13705,7 +13705,7 @@ REC-128/REC-130, building concurrently:
 **NOT CLAIMED:** `docs/development/QUEUE.md` (CONDUCT flips the row), `INTERFACES.md` (CONDUCT's at
 RESOLUTION), `newgroup/**`, `tools/**`, MK-1's publication fence (C-53.10–.12 — lifting it is MK-3's act).
 
-**open as of 2026-09-18** — MK-2 is being built.
+**open as of 2026-09-18** — MK-2 is being built. (Superseded by the `released:` line below.)
 
 **stopped at stand-down 2026-09-18** (CONDUCT #4's instruction) — the claim stays OPEN; branch
 `worktree-agent-a17c98e0548c9fd2d` holds the WIP commit `mk-2: WIP at stand-down — NOT DONE`, whose body
@@ -13716,6 +13716,16 @@ INTERFACE-CHANGES.md.
 `worktree-agent-af581e59b70a0e83f`), which merged the WIP branch onto `origin/main`@`27ad8b4f`. The claim is the same,
 plus two comment-only docstring corrections in `store.mjs` (`strengthOf`, `inquiryStrength`, the version-strength
 totality note) that still said "two axes". The cross-area touch to `civicos-ui/app.html` was made and is bounded below.
+
+released: 2026-09-18 by the resumed MK-2 worker — every claimed path committed and pushed on branch
+`worktree-agent-af581e59b70a0e83f` (merged onto `origin/main`@`27ad8b4f`). Battery at `8fe3fc8e`: **240/240 suites
+green · 14821 assertions passing**, no skip (243/243 discovered items in the commit); `node scripts/coverage.mjs
+--strict` exit **0** unpiped, REGISTER_FLOOR moved from its print (arms 1332 -> 1346, classified 230 -> 231, corpus
+231 -> 232, run 193 -> 194 — `bio-plane/scripts/coverage.mjs`, a path this claim named); `node civicos-ui/test/run.mjs`
+exit **0**; `node tools/status.mjs --check` 0 drift; `node tools/corpuscheck.mjs` 0 fail. NEGATIVE CONTROL `node
+test/nc-mk2.mjs` from `bio-plane/`: every arm AS DECLARED, `preitem` BYTE-IDENTICAL against `27ad8b4f`; the UI arm is
+recorded at `app.html`'s `PAIR_AXES` comment. **FOR CONDUCT:** RESOLVE IC-142 against I3 as read at resolution
+(proposed MAJOR on 27.0.0, both classifications argued in the entry); the UI DELEGATION below stays open.
 
 ## DELEGATION 2026-09-18 RECORD (MK-2) -> UI (PRESENT the `testimony` grade axis; IC-142)
 raised-by: MK-2 worker (worktree `agent-af581e59b70a0e83f`, branch `worktree-agent-af581e59b70a0e83f`)
