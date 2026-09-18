@@ -13636,3 +13636,22 @@ Same paths as the claim above (no new area's). Added: the `lead_shares` table in
 `bio-checks.mjs`, six control arms in `test/nc-mk4.mjs`. `MEMBER-KNOWLEDGE-DESIGN.md`: the Status line ONLY — §5's
 body is BOB #14's to write and was not touched.
 released: 2026-09-18 by the MK-4 worker — committed and pushed on `worktree-agent-a6de3e82fcfd8bd2a`.
+
+### CLAIM 2026-09-18 RECORD (REC-129) — THE FRONTIER'S INTERNET-LEVEL READ
+
+Worker spawned by CONDUCT #4 into worktree `agent-af99c832f7860f664`. Builds the internet-level row of
+`OBSERVATION-LOG-DESIGN.md` §6's reader table over §4.5's lead looks, honouring MK-4's lead visibility.
+Id minted before building: IC-143 (I3).
+paths:
+  - `bio-plane/src/store.mjs` — `frontier`'s internet arm (new `#frontierInternet`), the one lead-visibility
+    rule factored so the frontier and `#leadVisibleTo` share ONE spelling, the not-built note.
+  - `bio-plane/src/airun.mjs` — the internet level's evidence-sidedness constant, if needed.
+  - `bio-plane/test/frontier-internet.test.mjs`, `bio-plane/test/nc-rec129.mjs` — new.
+  - `bio-plane/test/lead.test.mjs`, `bio-plane/test/nc-mk4.mjs` — the superseded not-built assertion and any
+    arm whose find-string the refactor moves, CORRECTED with the reason, never exempted.
+  - any suite pinning a registry or roster the change moves, corrected with its reason.
+  - `bio-plane/dist/**` rebuilt if the battery requires it.
+  - `docs/architecture/construct-status.json` (`9.internet`, `3.census` reviewed), `docs/architecture/BIO_System_Design.md`
+    §3 (rendered only), `docs/development/OBSERVATION-LOG-DESIGN.md` (§5.1 / §6 / Status / Incomplete),
+    `docs/development/INTERFACE-CHANGES.md` (IC-143), `docs/DECIDED.md` (regenerated only).
+  **NOT** `docs/development/QUEUE.md` (CONDUCT's), **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, no version bump.
