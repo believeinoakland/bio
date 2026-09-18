@@ -403,7 +403,13 @@ section("design status has ONE authority — the construct map, and the arm that
      indistinguishable from an arm that is broken, which is this instrument's own family. */
   t("and it EVALUATED the receipt's pair rather than passing it by silence",
     live.pairs.map((p) => `${p.construct}·${p.citing}·${p.sec}·${p.item}·${p.verdict}`),
-    [`8·${FRAMEWORK}·18·6·points-at-its-design`]);
+    /* CORRECTED 2026-09-18 by REC-124, never exempted: construct 8's `8.claim` row now cites
+       `INVESTIGATIVE-SESSION.md` §7.1 item 4 (the half of §7.1 that is NOT built), so the map
+       carries a SECOND real pair and the instrument evaluated it — verdict
+       `list-claims-no-undesignedness`, a pass, because §7.1 is a design and says what it lacks.
+       The arm pins the WHOLE evaluated set, so a pair that stops being evaluated still fails. */
+    [`8·docs/development/INVESTIGATIVE-SESSION.md·7.1·4·list-claims-no-undesignedness`,
+     `8·${FRAMEWORK}·18·6·points-at-its-design`]);
   t("every citation in the map RESOLVED — an unresolved one is SAID, not skipped", live.unresolved, []);
 
   // -------------------------------------------- 2. THE RECEIPT, RE-ARMED AT THE REAL DOCUMENTS
@@ -434,7 +440,10 @@ section("design status has ONE authority — the construct map, and the arm that
   t("and it says where the correction belongs — at the source, never as an exemption",
     /AT ITS SOURCE/.test(f) && /Never exempt it/.test(f), true);
   t("the pair's verdict is RESTATED and its covering document named",
-    armed.pairs.map((p) => [p.verdict, p.covering]), [["RESTATED", CASEMAKING]]);
+    /* CORRECTED 2026-09-18 by REC-124: the second real pair (§7.1 item 4, see arm 1) is
+       evaluated here too and stays a pass; the receipt's pair is still the one RESTATED. */
+    armed.pairs.map((p) => [p.verdict, p.covering]),
+    [["list-claims-no-undesignedness", null], ["RESTATED", CASEMAKING]]);
 
   // --------------------- 3. THE LIAR'S ARM, EXCLUDED — a SECOND triple fires with NO TOOL EDIT
   /* The cheapest green for this row is an arm matching on a hand-written pair list holding
