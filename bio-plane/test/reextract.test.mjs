@@ -229,9 +229,16 @@ const graded = (b) => ({ code: b?.code, check: b?.check, translation: b?.transla
    byte-identical to what it was before the seam existed. If a later item moves the
    plain read ON PURPOSE, this literal is re-taken from a printout and the reason
    written here — never edited to match. */
+/* RE-TAKEN 2026-09-18 by CONDUCT #4 at the merge of CPDF-18 onto CPDF-19, AS THIS COMMENT
+   PRESCRIBES — a later item moved the plain read ON PURPOSE: CPDF-18 (IC-124's addendum) added
+   a top-level `images` list to `op=pdfstructure`. PROVED rather than assumed before re-pinning:
+   the merged tree's plain answer with ONLY its `"images": …` member removed from the RAW TEXT
+   hashes to EXACTLY the two literals it replaces (scan afc32aa9…98bd, layer f0124107…ead9), so
+   CPDF-18's key is the whole difference and CPDF-19's default path is still untouched. The new
+   literals are the printout on the merged tree (`printout:` line above the assertions). */
 const PRE_ITEM_DIGEST = {
-  scan: "afc32aa9d681efdc97305be10eced3fee82262afd4abf23863a3711bce9398bd",
-  layer: "f0124107d214aeaa23899348e334b57cba8142b3b2b696cf645f4f96cf8cead9",
+  scan: "335b802eb860373c15e4a10546909faf699d9a9235998be9a502e71f2f9ecc3a",
+  layer: "26c35ac54f8711835001556506736868a3c9739910c483a11aa8e00ecfe176b7",
 };
 
 try {
