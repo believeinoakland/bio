@@ -13115,3 +13115,41 @@ regex cannot see) — exactly `content_derivation_cap`'s standing. Ceiling AND f
 figure the reader printed, the arrival named at the site, and `content_chain_kind` / `chain_kind` added to
 the registry exculpation so it is pinned by name rather than absorbed by the count. Its stale `M-21`
 citation was corrected in the same edit.
+
+## CLAIM 2026-09-18 RECORD (REC-120 — THE UNCHOSEN MENTION: D-161 acts (1) and (2))
+
+Worker `agent-adf3ba7d5e1b95c38`, spawned by CONDUCT #4. IC-129 (I5 + I3), minted with
+`node tools/mintid.mjs IC`.
+
+**CLAIMED:** `bio-plane/src/store.mjs` — ONLY `deriveConnections`, `#connectionView` and
+`connectionGradeForContent` (the connection-grade code; three sibling RECORD workers are in the same
+file elsewhere), plus the one migration-list line for the new `connections.pair_rule` column.
+`bio-plane/src/schema.mjs` — the `connections` table only. `bio-plane/checks/bio-checks.mjs` — the
+`CONNECTION_PAIR_CHECKS` family (a new row C-49.4) and one new function beside
+`checkConnectionPairCovers`. `bio-plane/test/rec120-onpoint-undetermined.test.mjs` (new).
+`docs/development/DEBT.md` D-161 row, `docs/architecture/BIO_Content_Framework_v0_10.md` front matter
+and §14.5's pair row, `docs/development/INTERFACE-CHANGES.md` (IC-129 appended),
+`docs/development/MEASUREMENTS.md` (one appended entry). If the DEC-49 guard's floors move, the
+`FLOOR` table in `civicos-ui/check-refusal-codes.mjs` only (REC-97 / REC-86 precedent).
+
+**NOT CLAIMED:** `docs/development/QUEUE.md` (CONDUCT's), `docs/development/INTERFACES.md` (the
+version line is CONDUCT's at RESOLUTION), `tools/**` (FW-21's probe is FRAMEWORK's), `civicos-ui/**`
+beyond the floor table.
+
+**open as of 2026-09-18** — REC-120 is being built.
+
+released: 2026-09-18 by the REC-120 worker. Every claimed path is committed on branch
+`worktree-agent-adf3ba7d5e1b95c38` (work at `a531311f`); the final tree ran the battery
+227/227 suites green · 14,141 assertions, `coverage --strict` exit 0 (unpiped), UI harness exit 0,
+DEC-49 guard exit 0 (no floor moved — none was invalidated), `plancheck --local` 0 fail. The
+`civicos-ui` floor table was NOT touched. The FRAMEWORK DELEGATION below stays open.
+
+### DELEGATION 2026-09-18 RECORD (REC-120) -> FRAMEWORK: **FW-21's probe's ground check is stale by REC-120's landing**
+
+**open as of 2026-09-18.** `tools/fw21-onpoint-probe.mjs` exits 2 (`GROUND BROKEN`) on a tree
+carrying REC-120, because its control asserts that page 2 — where the stored pair was read — REACHES at
+grade A. REC-120 answers page 2 UNDETERMINED (C-49.4): that reach was won on a tie-break, and M-51's own
+control showed it flips with one character (`MEASUREMENTS.md` M-56). THE ACT: FRAMEWORK updates the
+probe's ground to something the fix does not move — the WHOLE-document citation of A reaching at A is
+one — and its verdict line to read p.9 undetermined / p.7 outside as the fixed state. Until then the
+probe's exit 2 on a post-REC-120 tree is expected and is NOT evidence of a broken fixture.

@@ -469,11 +469,17 @@ t("and UNDETERMINED is STATED as not-the-same-as-none, which is the whole differ
   /UNDETERMINED is the answer and it is not the same as none/.test(gC.why ?? ""), true);
 t("a content row the record does not hold is REFUSED by name, never answered undetermined",
   (await get("connections", "content=deadbeef"))?.check ?? null, "C-49.3");
-t("the three refusal codes are declared with translations a member can read",
+/* CORRECTED 2026-09-18 by REC-120, not exempted: the family was three rows and is
+   four. C-49.4 CONNECTION_PAIR_MENTION_UNCHOSEN is D-161 act (1) — a definite answer
+   resting on a pair that is one of several mentions of the subject (M-51). Its own
+   suite is `rec120-onpoint-undetermined.test.mjs`; this pin stays exact so a fifth
+   row still has to be named here. */
+t("the four refusal codes are declared with translations a member can read",
   Object.entries(CONNECTION_PAIR_CHECKS).map(([k, v]) => [k, v.check, v.translation.length > 80]),
   [["CONNECTION_PAIR_OUTSIDE_EXTENT", "C-49.1", true],
    ["CONNECTION_PAIR_UNPLACED", "C-49.2", true],
-   ["CONNECTION_PAIR_NO_CONTENT", "C-49.3", true]]);
+   ["CONNECTION_PAIR_NO_CONTENT", "C-49.3", true],
+   ["CONNECTION_PAIR_MENTION_UNCHOSEN", "C-49.4", true]]);
 
 /* The checker in isolation, so the three branches are pinned independently of
    the store that calls it. */

@@ -16356,6 +16356,34 @@ battery was still running in the same tree, for the length of one probe run (not
 evidence; the battery was re-run on the final tree after the restore and that run is the one reported.
 
 
+## M-56 · 2026-09-18 · REC-120 — M-51 RE-DRIVEN AFTER D-161 ACTS (1) AND (2): PAGE 9 IS UNDETERMINED, PAGE 7 STILL OUTSIDE, AND PAGE 2's "REACH" WAS A TIE-BREAK
+
+**Instruments:** `node tools/fw21-onpoint-probe.mjs; echo $?` (FW-21's, unedited) and
+`node bio-plane/test/rec120-onpoint-undetermined.test.mjs` (REC-120's suite, the same ground plus a
+third document with an unplaced mention), both through `op=promote`/`op=resolve`/`op=connect`/
+`op=connections`. Tree: `origin/main` at `694f0a7f` plus REC-120's change; the pristine-tree run of
+the same probe reproduced M-51 exactly first (page 9 and page 7 both `{null,0,0,1}`, exit 0).
+
+- **Page 9 (a genuine grade-A mention the pair did not keep):** `connection_grade: null`,
+  reaching 0, **undetermined 1**, outside 0 — C-49.4 `CONNECTION_PAIR_MENTION_UNCHOSEN`, naming
+  `ordinance:13579-amended` read at p.9.
+- **Page 7 (no mention):** outside 1 under C-49.1, sentence byte-identical to M-51's. **The two no
+  longer answer the same.**
+- **Page 2 (where the kept pair was read):** now **undetermined 1**, not reached. The probe
+  therefore prints `GROUND BROKEN` and **exits 2** — as its own header declares for that case. That
+  is not the ground breaking: the probe's ground was *page 2 reaches*, and M-51's own control arm
+  showed page 2's reach flips with `>` → `>=`. REC-120's row requires the p.9 answer not to flip on
+  that tie-break, and the only rule that satisfies it without an asymmetry the tie-break itself
+  decides is that a reach won on a TIE is undetermined too. **The probe's ground check is stale by
+  this landing and is DELEGATED (FW-21's file, `tools/**` is not RECORD's).**
+- **Tie-break control on the changed tree** (the suite's arm (b), `>` → `>=` in `deriveConnections`'
+  collapse): the pair moved to p.9 as in M-51, and page 9 and page 2 **both stayed UNDETERMINED**.
+  Seven assertions failed, every one of them pair identity (which mention a reason names). Restored
+  by `cp`, sha256 `e18eafcf…3f0bf` before and after.
+- **One-mention document (B):** its page-5 reach and page-3 outside answers are byte-identical to
+  the pristine tree's (golden captured on `694f0a7f` before any edit), less the added
+  `determining_pair.selection`.
+
 ## 2026-09-18 · D-398 LOCK, DATA POINT 3 — THE CONTROLLED RESUME RAN, AND "ACTIVITY" IS FALSIFIED TOO (CONDUCT #4)
 
 **This is the pre-registered controlled experiment above, run by the only session that could: the spawner.**
