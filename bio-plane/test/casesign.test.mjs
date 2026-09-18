@@ -666,7 +666,8 @@ console.log("\n--- 5. a stranger verifies the CASE and its members with the inst
      manifest.case_document.signature.statement,
      manifest.case_document.signature.armored.startsWith("-----BEGIN SSH SIGNATURE-----"),
      manifest.case_document.attestor.member],
-    ["bio-case-container/5", true, `bio-ratify-case ${CASE} 1 ${SIGNED_DOC_SHA}\n`, true, "iris"]);
+    /* CORRECTED 2026-09-18, REC-128: `/5` -> `/6`, AND THE OLD ASSERTION WAS RIGHT WHEN IT WAS WRITTEN. `/6` carries `delivered_by` beside every `attestor` (who DELIVERED the signature, from the session: a member or the founder), and the version moves for the reason every bump here moved it — a `/5` container that never recorded a deliverer and a `/6` one whose deliverer was not recorded must not read alike. The pin still demands an EXACT version. */
+    ["bio-case-container/6", true, `bio-ratify-case ${CASE} 1 ${SIGNED_DOC_SHA}\n`, true, "iris"]);
 
   /* ===== PHASE B: THE INSTANCE IS GONE. `dispatchFetch` is REPLACED WITH A
      THROW, so it is unreachable rather than merely uncalled — an instance we

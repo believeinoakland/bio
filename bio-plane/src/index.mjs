@@ -5,6 +5,8 @@ import { SIGN_HTML } from "./signpage.mjs";
 import { liveToken } from "./tokens.mjs";
 import { runGate, runCaseGate, GATE_VERSION } from "./gate.mjs";
 import { verifySshsig, ratifyStatement, caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
+/* REC-128: who DELIVERED an attested act, read off the SESSION, and its read shape. */
+import { deliveringPrincipal, delivererOf } from "./deliverer.mjs";
 /* The locator fence, taken from the catalog rather than restated: https only,
    public hosts only, no credentials in the authority, no bare IPs, no localhost.
    It is the one bound between a member typing a URL and this Worker fetching it,
@@ -7449,11 +7451,28 @@ export default {
         return json({ ok: false, reason: "GATE_REFUSED", gateVersion: gate.gateVersion,
                       findings: gate.findings, store: storeName, tokenClass: cls }, 409);
 
+      /* REC-128 — THE RECORD STATES WHO AUTHORISED AND WHO DELIVERED (BOB #14, the
+         honesty half of D-421). The SIGNATURE says who authorised (`attestor`, from
+         the verified key's registered member); the SESSION says who delivered — a
+         member, or the founder, whose password session is the only live publishing
+         route (DEC-33). They are two facts and each has ONE source:
+           - the deliverer comes from the session ROW the admission block resolved,
+             never from the signature, and never from `sessMember` (which folds the
+             founder's `admin` role into a bare string);
+           - the SIGNER no longer falls back to the session. It read
+             `attestor?.member_id ?? sessMember`: unreachable while `signers.member_id`
+             is NOT NULL and the key was matched out of the signer set, but it was
+             the same conflation pointed the other way — a session standing in for a
+             signature — and with a deliverer now recorded beside it, it would have
+             written one person under both names. Absent is stated as null.
+         REC-125's fence above guarantees a session here, so `sessRights` is the row. */
+      const deliveredBy = deliveringPrincipal(sessRights); /* REC-128: op=caseratify */
       const out = await doAnswer(stub.fetch("http://do/caseratify", {
         method: "POST", body: JSON.stringify({
           caseId: facts.doc.case_id, edition: Number(facts.doc.edition), docSha: facts.doc.doc_sha,
           sigArmored: body.sig, attestorKey: sv.keyB64,
-          attestorMember: attestor?.member_id ?? sessMember, gateVersion: gate.gateVersion,
+          attestorMember: attestor?.member_id ?? null, gateVersion: gate.gateVersion,
+          deliveredBy,
         }) }));
       if (!out.answered) return storeSilent("caseratify/commit");
       const r = out.result;
@@ -7462,6 +7481,11 @@ export default {
                       store: storeName, tokenClass: cls }, 409);
       return json({ ok: true, ...r, gateVersion: gate.gateVersion,
                     attestor: { member: attestor?.member_id ?? null, key_b64: sv.keyB64 },
+                    /* REC-128: who carried the signature in, beside who made it. On a
+                       retry of the same signature (`existed`) the store wrote nothing,
+                       so the RECORD's deliverer is the first one — read it back through
+                       op=casedocument; this field is who delivered THIS request. */
+                    deliveredBy: delivererOf(deliveredBy),
                     /* THE WINDOW, NAMED IN THE ANSWER RATHER THAN LEFT TO BE
                        INFERRED FROM AN EMPTY LIST. The case is committed and the
                        members still sign their own bytes, because the finding is
@@ -7801,10 +7825,14 @@ export default {
          below and is now honest, because it is reached only when the store
          ANSWERED with a result carrying no reason of its own — a description of
          what the store said rather than of a silence. */
+      /* REC-128: the deliverer from the SESSION ROW, the signer from the SIGNATURE,
+         each from its one source — `op=caseratify`'s twin block says why, including
+         why the signer's `?? sessMember` fallback is gone. */
+      const deliveredBy = deliveringPrincipal(sessRights); /* REC-128: op=ratify */
       const pubOut = await doAnswer(stub.fetch(new Request("http://do/publish", {
         method: "POST", body: JSON.stringify({
-          bundleId: body.bundleId, bundleSha: body.expectedSha,
-          attestorKey: sv.keyB64, attestorMember: attestor?.member_id ?? sessMember,
+          bundleId: body.bundleId, bundleSha: body.expectedSha, deliveredBy,
+          attestorKey: sv.keyB64, attestorMember: attestor?.member_id ?? null,
           gateVersion: gate.gateVersion, sigArmored: body.sig,
           /* Only a CASE names its edition, and it names it in the signed bytes.
              Everything else leaves it to the store, which appends the next one
@@ -7918,7 +7946,19 @@ export default {
              whose case facts were member-signed from a `/4` container whose case
              facts were nobody's. That distinction is the entire difference
              between this record and a press release. */
-          format: "bio-case-container/5",
+          /* REC-128 bumps 5 -> 6, ON THE ARGUMENT EVERY BUMP ABOVE MADE. `/6`
+             carries `delivered_by` beside every `attestor` — on the case document
+             and on each finding — naming whose authenticated session CARRIED the
+             signature in: a member, or the instance's founder. Without the move a
+             `/5` container (which never recorded a deliverer) and a `/6` one whose
+             deliverer was not recorded would read alike, and a stranger could not
+             tell "nobody said" from "the format had no place to say". EXISTING
+             containers are untouched: a manifest is built once, when an edition
+             completes, and is served by its own stored hash, so nothing already
+             published verifies against anything new. `delivered_by` is THIS
+             INSTANCE'S RECORD and not covered by any signature (a member signs
+             before anybody delivers), and `verify` below says so in words. */
+          format: "bio-case-container/6",
           case: cs.caseId,
           edition: cs.edition,
           group: cs.group ?? null,
@@ -7940,6 +7980,7 @@ export default {
             gate_version: cs.document.gate_version,
             ratified_at: cs.document.ratified_at,
             attestor: cs.document.attestor,
+            delivered_by: cs.document.delivered_by,
             signature: { namespace: NS_RATIFY,
                          statement: new TextDecoder().decode(
                            caseRatifyStatement(cs.caseId, cs.edition, cs.document.doc_sha)),
@@ -8017,6 +8058,7 @@ export default {
             role: f.role ?? null,
             ratified_at: f.ratified_at, gate_version: f.gate_version,
             attestor: f.attestor,
+            delivered_by: f.delivered_by,
             /* CASE-5 CORRECTS `statement`, AND IT IS THE ONE FIELD IN THIS
                ARTIFACT THAT WAS UNREADABLE BY THE READER IT EXISTS FOR.
                `ratifyStatement()` returns a Uint8Array — it is the message fed
@@ -8065,7 +8107,14 @@ export default {
                 + "it. `role` is the publisher's authored designation: only `load_bearing` members were "
                 + "held to the `bar` above, and a `supporting` member is part of the published work without "
                 + "being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is "
-                + "not a standard of zero — the case claims no cleared bar and says so.",
+                + "not a standard of zero — the case claims no cleared bar and says so. "
+                /* REC-128: the two principals of one ratification, told apart in
+                   the artifact that travels. */
+                + "`attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED "
+                + "that signature to this instance — the authenticated session that performed the act, a "
+                + "member or the instance's founder — and it is this instance's record, not covered by any "
+                + "signature. `undetermined` there means the delivery was not recorded; it never means the "
+                + "signer delivered it.",
         };
         const mText = JSON.stringify(manifest, null, 1);
         const mBytes = new TextEncoder().encode(mText);
@@ -8262,6 +8311,9 @@ export default {
                     graph: pub.edges ?? null,
                     existed: pub.existed, ratifiedAt: pub.ratifiedAt,
                     attestor: attestor?.member_id ?? null, gateVersion: gate.gateVersion,
+                    /* REC-128: who DELIVERED this request (a retry that `existed`
+                       wrote nothing; the record keeps its first deliverer). */
+                    deliveredBy: delivererOf(deliveredBy),
                     published: { shas: shas.length, copied, alreadyPresent: present, r2: r2state },
                     ...(reuseReport ? { reuse: reuseReport } : {}),
                     store: storeName, tokenClass: cls }, 200);

@@ -563,7 +563,8 @@ console.log("\n--- 2. a case edition is COMPLETE when its last member ratifies, 
     [manifest.format, manifest.case, manifest.edition,
      manifest.findings.map((f) => f.bundle_id),
      manifest.findings.every((f) => f.signature.armored.startsWith("-----BEGIN SSH SIGNATURE-----"))],
-    ["bio-case-container/5", CASE_ID, 1, [FIND_A, FIND_B], true]);
+    /* CORRECTED 2026-09-18, REC-128: `/5` -> `/6`, AND THE OLD ASSERTION WAS RIGHT WHEN IT WAS WRITTEN. `/6` carries `delivered_by` beside every `attestor` (who DELIVERED the signature, from the session: a member or the founder), and the version moves for the reason every bump here moved it — a `/5` container that never recorded a deliverer and a `/6` one whose deliverer was not recorded must not read alike. The pin still demands an EXACT version. */
+    ["bio-case-container/6", CASE_ID, 1, [FIND_A, FIND_B], true]);
   /* CASE-5, ADDED RATHER THAN CORRECTED: this suite's two members publish at the
      SAME case edition, so their own editions and their case's agree — which is
      the SLAVED shape, still perfectly legal and now one case among two. Pinned
@@ -1279,7 +1280,8 @@ console.log("\n--- 6. REC-49: the INDEX carries every RATIFIED member's own froz
     /* CORRECTED 2026-08-05, REC-47: /2 -> /3, for the reason recorded at the
        container assertion in block 2. CORRECTED AGAIN 2026-09-10, CASE-5: /3 ->
        /4, for the reason recorded at the same assertion. */
-    [["bio-case-container/5", [FIND_A, FIND_B], true], ["bio-case-container/5", [FIND_A, FIND_B], true]]);
+    /* CORRECTED 2026-09-18, REC-128: /5 -> /6, for the reason recorded at the container assertion in block 2. */
+    [["bio-case-container/6", [FIND_A, FIND_B], true], ["bio-case-container/6", [FIND_A, FIND_B], true]]);
   /* ===== THE THIRD STATE, CORRECTED 2026-09-10 BY CASE-5b, NEVER EXEMPTED, AND
      THE OLD ARM'S PRINCIPLE IS THE ONE THIS ITEM ENACTED. =====================
 
