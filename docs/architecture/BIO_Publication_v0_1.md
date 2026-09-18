@@ -1,6 +1,6 @@
 # BIO Publication, Audiences and Communications
 
-**Status** · v0.1 DRAFT, written 2026-09-14 by session BOB #11 as the level-1 home of construct 13 of `BIO_System_Design.md` §3 (publication, audiences and communications), which that map named as having no current level-1 document. Awaiting Bob's review. It RULES NOTHING: every rule below is restated from the ledger it was ruled in — DEC-12, DEC-13, DEC-19, DEC-20, DEC-31, DEC-33, DEC-44, DEC-72, the publication fence of 2026-07-31, the audiences ruling of 2026-09-13 and the attribution ruling of 2026-09-14 — and cited. Completeness: complete at its level for what is ruled and built; the ceremony (DEC-33), the addressed output acts (DEC-31), the attribution surface and the catalogue of standards by audience are the explicit frontier (§9), each on a named trigger or in Program B. The one caveat a reader needs: `BIO_Communications_Platforms.md`, the April 2026 document that owned the platform half of this construct, predates the plane entirely and disagrees with the Roadmap on one vendor; this document takes the construct and leaves that document the platform selection it still owns. as of 2026-09-17
+**Status** · v0.1 DRAFT, written 2026-09-14 by session BOB #11 as the level-1 home of construct 13 of `BIO_System_Design.md` §3 (publication, audiences and communications), which that map named as having no current level-1 document. Awaiting Bob's review. It RULES NOTHING: every rule below is restated from the ledger it was ruled in — DEC-12, DEC-13, DEC-19, DEC-20, DEC-31, DEC-33, DEC-44, DEC-72, the publication fence of 2026-07-31, the audiences ruling of 2026-09-13 and the attribution ruling of 2026-09-14 — and cited. Completeness: complete at its level for what is ruled and built; the ceremony (DEC-33), the addressed output acts (DEC-31), the attribution surface and the catalogue of standards by audience are the explicit frontier (§9), each on a named trigger or in Program B. The one caveat a reader needs: `BIO_Communications_Platforms.md`, the April 2026 document that owned the platform half of this construct, predates the plane entirely and disagrees with the Roadmap on one vendor; this document takes the construct and leaves that document the platform selection it still owns. as of 2026-09-18
 
 **Place in the system** · Level 1; the authority for construct 13. Depends on `BIO_Content_Framework_v0_10.md` Part I §12 and `BIO_Case_Making_v0_1.md` (the inquiry, the finding, the case as a production — construct 8), `BIO_Declared_Bias_v0_1.md` (the acknowledgement that accompanies every published case — construct 7), `BIO_Membership_Architecture_v2.md` §3 (cover and handle, on which the attribution levels rest — construct 1), `BIO_Intake_Doctrine_v1_1.md` and `docs/development/AUTHORITY-AND-TRUST.md` (the provenance chain the fence sits on — construct 2), `BIO_State_Rules_Consistency_v1_5.md` (the published states and `risk_tier` — construct 3). Level-2 beneath it: `BIO_Communications_Platforms.md` (the platform half: cross-group discussion, work-product hosting, the directory, the risk tiers) and `docs/archive/research/AUDIENCES.md` (the audiences pass, banner-corrected, cited as history). Depended on by `BIO_Interaction_Constructs_v0_1.md` (the rung ladder's top rung), `MILESTONES.md` M10, QUEUE REC-15 and UI-17, `MULTI-INSTANCE-ISOLATION.md` (the shared published bucket). Supersedes the construct-ownership claim in `BIO_Communications_Platforms.md`'s front matter and the scattered restatements in `BIO_Complete_Roadmap_v5.md` §8 and `BIO_Technical_Architecture_Decisions_v10.md` §Distribution risk tiering, which remain as the mission's and the decisions' words.
 
@@ -103,6 +103,17 @@ BOB #12 determined that a review copy must be **published-but-unlisted** and the
 
 ### 6A.2 How a recipient reaches something that never leaves
 
+**THE PRECONDITION, decided 2026-09-18 by BOB #14 from REC-126's stop (gap 1) — without it a grant scopes nothing and
+revokes nothing.** REC-126 found at the code that `op=casedocument` answered with NO login and returned an UNSIGNED case
+document in full — scope, findings, completeness statement, exclusions, bias acknowledgement — and that case ids are
+sequential, so a stranger could walk every group's unpublished working case. No ruling of Bob's stood behind that; it was a
+mechanism choice (CASE-5b). **The fence already rules the answer:** unratified working material never crosses to the
+public, and the ops table's own reasoning is that even a title *names what the group is looking into*. So: **an UNSIGNED
+case document answers only to members with standing in the owning project and to a live grant holder for that case;
+everyone else receives exactly the answer a case that does not exist receives**, so enumeration learns nothing. **A SIGNED
+case document stays public** — a stranger needs it to verify. Built as a correction to landed substrate, ahead of the
+review copy itself.
+
 **This is the mechanism question Bob's ruling opened, and it is the architect's rather than his.** A copy that stays inside the instance must be READ inside the instance, so the recipient needs a way in. **That way in is nearer the existing gate-and-capability vocabulary than it is to publication, and it must not be built as a small publish.**
 
 The shape: **a scoped, revocable, read-and-comment GRANT against one production.** Its properties, each chosen against a failure this record has already met:
@@ -116,6 +127,13 @@ The shape: **a scoped, revocable, read-and-comment GRANT against one production.
 | **never a bucket** | the grant is a capability over the private bucket, NOT a third bucket | there is no third bucket, and inventing one in implementation is how the fence dies quietly |
 
 **What the grant is NOT, stated because the near-miss is easy:** it is not an account, not membership, and not a weaker class of member. A recipient holding a grant has no standing in the project beyond reading one production and saying something about it.
+
+**HOW THE RECIPIENT GETS IN, decided 2026-09-18 (REC-126's gap 2).** The only credentialless path today, the invite link,
+makes its holder a member, which this section forbids. So a grant carries its own **bearer SECRET**, and its properties are
+the grant's own table applied to a credential: **a READ credential only** — it can never deliver an attested act (AI Roles
+rule 4 is untouched); **stored hashed**, never recoverable from the record; **bound to one case edition**; **killed on
+revocation**; and **a dead secret is indistinguishable from one that never existed**, so a revoked recipient learns nothing
+by trying. No members-only interim: it would ship a review copy that cannot reach the people it exists for.
 
 ### 6A.3 The original question survives in a narrower form, and is NOT dissolved
 
@@ -131,6 +149,12 @@ DEC-31 asked *when does a persistent rendering someone acted on become a record?
 *As complete as possible, with what is missing clearly indicated* is vocabulary this record already has, and inventing a second vocabulary for review copies would be the defect this construct exists to refuse. A review copy states its own gaps **in the same words a published case does**: the `searched` section (IC-112, which now refuses a case document that omits it), undetermined-is-first-class, the strength walk naming its weakest legs, and the frontier's absence vocabulary.
 
 **And the gate rule applies unchanged: a gate that pressured a member into filling a gap to get a review copy out would be a bug in the gate** (DEC-69, and `CLAUDE.md`'s rule that the publication fence moved off the content axis for exactly this reason). A review copy with honest gaps is the normal case, not a degraded one — it is very often the REASON for sending one.
+
+**AND SO THE PRODUCTION IS A DRAFT CASE, decided 2026-09-18 (REC-126's gap 3).** `publishCase` refuses an incomplete case
+(`BELOW_PROJECT_STRENGTH`, `NOT_CONCLUDED`, …), and a review copy must not be refused for exactly the gaps it is sent to show.
+So a review copy is taken from a **DRAFT case, identified BEFORE the publish gates run**, and **the gates' results become the
+draft's list of what is missing** — the same refusals, in the same words, shown to the recipient as the gaps rather than
+applied as a wall. Nothing about the draft is published, and publishing it later runs every gate as it does today.
 
 ## 7. Attribution, and the catalogue owed
 
