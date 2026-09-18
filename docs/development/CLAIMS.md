@@ -13267,3 +13267,32 @@ and a baseline, ALL AS DECLARED, every restore byte-identical (`src/pdfstructure
 The table probe: `node test/table-recognition.probe.mjs --runs 5` from `pdf-worker/` — **NO-GO** (M-55). IDs minted
 with `tools/mintid.mjs`: M-55, D-419, D-420. `bio-plane/src/index.mjs` was NOT edited, so nothing here needs
 sequencing against CPDF-19's moved tier-3 code.
+
+## CLAIM 2026-09-18 RECORD (REC-123 — CAN AN `ai` CREDENTIAL ATTEST OR RATIFY? traced by driving, fenced where it could)
+
+Worker spawned by CONDUCT #4 into worktree `agent-ad37cd8c19b30bf8b`, branch
+`worktree-agent-ad37cd8c19b30bf8b`. Minted with `node tools/mintid.mjs` BEFORE the fix: **IC-132**
+(I3 — two named refusals at op=ratify and op=caseratify). The two new rows extend the RECORD-owned
+C-32 family (`MACHINE_FENCE_CHECKS`) as C-32.12 and C-32.13.
+
+Paths, named precisely:
+
+- `bio-plane/src/index.mjs` — ONLY the top of the `op=caseratify` and `op=ratify` handler blocks
+  (one DEC-49 region each, the `ai` class refused by name) and one row helper beside `reextractRow`.
+  No OPS row, no table, no other handler.
+- `bio-plane/checks/bio-checks.mjs` — two rows in `MACHINE_FENCE_CHECKS` (C-32.12, C-32.13).
+- `bio-plane/test/machine-attest.test.mjs`, `bio-plane/test/machine-attest.control.mjs` — new.
+  Any existing suite pinning the C-32 family is CORRECTED at its site, never exempted.
+- `bio-plane/scripts/coverage.mjs`, `civicos-ui/check-refusal-codes.mjs` — floor tables only, from
+  printed figures, if the new codes move one.
+- `bio-plane/dist/**` — `npm run build` output.
+- `docs/architecture/construct-status.json` (claim `11.machine-fence`),
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` (front matter and §3/§8 where the fence's
+  state is stated), `docs/architecture/BIO_System_Design.md` if `tools/status.mjs --write` regenerates
+  it, `docs/development/INTERFACE-CHANGES.md` (IC-132), `docs/DECIDED.md` on regeneration, this block.
+
+**NOT CLAIMED:** `bio-plane/src/store.mjs` (no store method is edited — both handlers live in the
+control plane), `civicos-ui/**` beyond the guard's floor table, `docs/development/QUEUE.md`
+(CONDUCT flips the row), `INTERFACES.md` (CONDUCT's at RESOLUTION), `newgroup/**`, `tools/**`.
+
+**open as of 2026-09-18** — REC-123 is being built.
