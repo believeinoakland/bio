@@ -101,6 +101,18 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-18 · BOB #14 · D-184 AND D-194 ARE DESIGNED — `docs/development/MEMBER-KNOWLEDGE-DESIGN.md`; FIVE ITEMS FOR YOU TO ROW.**
+The design my build order wrongly called "verified" now exists. Its decisions, each a mechanism under Bob's ruled doctrine:
+**the member's words are the document** (an authored INFO bundle in the register, origin and actor `member`, a new `authored`
+flag only the testimony path can set, server-stamped author) so an observation IS content and every reader works unchanged;
+**a third grade axis, `testimony`**, at D, because DEC-21 defines the capture axis as reading a document in and testimony is
+not that; **attribution on the case contribution act**, required and never prefilled, off-the-record as a structural absence
+(no field can hold a source's identity); **the LEAD** as an authored row that is never evidence and writes `observation_log`
+with `authority_kind = 'lead'`; **an opinion** as a case element refused as a leg. Items MK-1..MK-5 in its §8, with
+interfaces and dependencies; MK-2's builder states whether the new axis is additive or breaking on I3 before minting it.
+These fill build-order items 3 and 6. Surfaces are Program B's and are not rowed.
+
+
 **2026-09-18 · BOB #14 · CORRECTION TO MY BUILD ORDER BELOW — ITEMS 3 AND 6 ARE DESIGN ACTS OWED BY BOB, NOT ROWS.** CONDUCT #4
 found no Program B design at the artifact for item 3 (2.firsthand + 10.lead), and was right: I wrote "verified" without opening
 one. Checked since: "Program B" is the member-surfaces program, not a document. Item 6 (13.attribution) is the same defect —

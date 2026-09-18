@@ -193,6 +193,7 @@ joins the table in the same commit that gives it front matter.
 | `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 | 2026-09-14 |
 | `docs/development/CONTENT-SEARCH-DESIGN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 piece 2 (construct 9 names no level-1 home) | 2026-09-14 |
 | `docs/development/OBSERVATION-LOG-DESIGN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 piece 3 (construct 9 names no level-1 home) | 2026-09-14 |
+| `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 piece 5 and §14.4 (D-184, D-194; constructs 2, 8, 10, 13) | 2026-09-18 |
 | `docs/development/EXTRACTION-BREADTH-DESIGN.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §18 piece 4 and Part I | 2026-09-14 |
 | `docs/development/MULTI-INSTANCE-ISOLATION.md` | 2 | `BIO_Distribution_v0_1.md` §7 | 2026-09-14 |
 | `docs/development/STORE-AS-CACHE.md` | 2 | `BIO_Content_Framework_v0_10.md` Part II §14.2–14.3 | 2026-09-14 |

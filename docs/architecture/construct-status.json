@@ -23,7 +23,7 @@
       {"id": "1.machine-credentials", "state": "BUILT", "text": "machine credentials minted and revoked by members", "probes": [{"table": "ai_credentials"}, {"op": "aicredentialmint"}, {"op": "aicredentialrevoke"}]},
       {"id": "1.root-of-trust", "state": "DEFERRED", "text": "the root of trust is the ADMIN_TOKEN holder and cannot be voted out; custody is deliberately unmodelled (DEC-2, deferred)", "probes": [{"hit": "static ROOT_ADMIN", "in": ["bio-plane/src/store.mjs"]}]}
     ]},
-    { "n": 2, "name": "Intake, capture and provenance", "claims": [
+    { "n": 2, "name": "Intake, capture and provenance", "design": "**Designed in:** firsthand observation (2.firsthand) and attribution — `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §2–§4 (2026-09-18).", "claims": [
       {"id": "2.capture", "state": "BUILT", "text": "capture and acquire, with grades A/B/C enforced as a check", "probes": [{"op": "capture"}, {"op": "acquire"}, {"hit": "CAPTURE_GRADES", "in": ["bio-plane/checks/bio-checks.mjs"]}]},
       {"id": "2.provenance", "state": "BUILT", "text": "the provenance chain, its rebuild, and the per-document provenance route marks (`provenance_route_marks`) — a status line, not a design home: construct 2 names no home for them", "probes": [{"op": "provenancechain"}, {"op": "provenanceroutes"}, {"table": "provenance_route_marks"}, {"hit": "provenanceChainRebuild", "in": ["bio-plane/src/store.mjs"]}]},
       {"id": "2.links", "state": "BUILT", "text": "link discovery with fidelity verdicts", "probes": [{"op": "links"}, {"table": "link_verdicts"}]},
@@ -90,7 +90,7 @@
       {"id": "9.internet", "state": "ABSENT", "text": "search has no internet arm, and the frontier's internet level has no member writer (its writer is the LEAD — 10.lead)", "probes": [{"none": ["internet"], "in": ["bio-plane/src/query.mjs"]}]},
       {"id": "9.ui", "state": "ABSENT", "text": "a member surface for the frontier and the content axis", "probes": [{"uinone": ["frontier", "contentaxis", "contentmint"]}]}
     ]},
-    { "n": 10, "name": "Standing intent and monitoring", "claims": [
+    { "n": 10, "name": "Standing intent and monitoring", "design": "**Designed in:** the LEAD (10.lead) — `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §5 (2026-09-18).", "claims": [
       {"id": "10.scheduler", "state": "BUILT", "text": "monitoring on the alarm scheduler, with digest-based change detection", "probes": [{"op": "monitor"}, {"table": "monitor_fired"}, {"hit": "archive-monitor", "in": ["bio-plane/src/store.mjs"]}]},
       {"id": "10.frontier-links", "state": "BUILT", "text": "the frontier of deferred links", "probes": [{"table": "links"}]},
       {"id": "10.lead", "state": "ABSENT", "text": "a member's LEAD (D-194) — reserved vocabulary only, no table, op or writer", "probes": [{"none": ["CREATE TABLE IF NOT EXISTS leads\\b", "\\blead_id\\b"], "in": ["bio-plane/src/schema.mjs", "bio-plane/src/store.mjs"]}, {"none": ["^\\s{2}lead:\\s*\\{"], "flags": "m", "in": ["bio-plane/src/index.mjs"]}]}
