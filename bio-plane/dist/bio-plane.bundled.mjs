@@ -10104,6 +10104,17 @@ var TEXT_CHAIN_CHECKS = {
     check: "C-35.12",
     where: "src/textchain.mjs checkChain > is-text-chain-shape",
     translation: "This step points at the measurement its fidelity rests on, but the pointer is not readable as one. A measurement nobody can look up is not a measurement this record can stand behind \u2014 and a broken pointer is worse than none, because it looks like one that works."
+  },
+  /* CAP-10 / DEC-75 / IC-122. A step kind that declares its letter must be
+     CALIBRATED (`STEP_KINDS[k].letter`) — today only `convert`, a conversion
+     the serving host made before any text was read — may carry a letter only
+     beside the calibration it rests on. The permitted move is UNDETERMINED
+     now, raised later by a calibration row (CAP-11 measures, a row raises);
+     a letter written now and lowered later is the move Bob's 5.8 forbids. */
+  TEXT_CHAIN_LETTER_UNCALIBRATED: {
+    check: "C-35.13",
+    where: "src/textchain.mjs checkChain > is-text-chain-shape",
+    translation: 'This step says how faithful a conversion of the document was, but nobody has measured that. When a site hands us its own converted copy of a file, the record cannot tell what the conversion changed until it has compared the copies \u2014 so until then it says "not yet determined" rather than giving a grade it has not earned.'
   }
 };
 var CALIBRATION_CHECKS = {
@@ -13168,6 +13179,19 @@ function driveHop(drive, { retrieved, resolved = null, detected = null } = {}) {
     drive_kind: drive.kind,
     document_address: drive.address,
     export_format_confirmed: detected ? !!confirmed : null
+  };
+}
+var DRIVE_CONVERT_ENGINE = "google-export";
+var DRIVE_CONVERT_CAP = null;
+var DRIVE_CONVERT_SOURCE = "unmeasured: Google's export is a conversion made at fetch time of a stored original nobody outside Google has seen, and its text stability and fidelity across fetches have not been measured (DEC-75; CAP-11 measures, a calibration row raises it; the byte instability is D-351's)";
+function driveConvertStep(drive) {
+  return {
+    step: "convert",
+    engine: DRIVE_CONVERT_ENGINE,
+    format: drive.format,
+    cap: DRIVE_CONVERT_CAP,
+    measured_by: DRIVE_CONVERT_SOURCE,
+    calibration: null
   };
 }
 var DRIVE_HOP_FACT_KEYS = [
@@ -19212,7 +19236,50 @@ var STEP_KINDS = {
   ai: { role: "derivation", label: "a model rewrote the text", tier: null },
   /* A member checked the text against the image and said so, over a stated
      extent. Not a derivation: see the header. */
-  attested: { role: "verification", label: "a member checked it against the image", tier: null }
+  attested: { role: "verification", label: "a member checked it against the image", tier: null },
+  /* CAP-10 / DEC-75 / IC-122 — A CONVERSION OF THE DOCUMENT, MADE BY WHOEVER
+       SERVED IT, BEFORE ANY TEXT WAS READ OUT OF IT. The case it exists for is a
+       Google Drive export: the record fetched Google's OpenDocument RENDERING of
+       a file nobody outside Google has seen, made at fetch time and not
+       reproducible (D-351). Capture grade is about the FETCH PATH and stays
+       `direct`/B (DEC-75); what Google did to the document is a transformation
+       of the TEXT, so it is a derivation step here and rule 2 governs it.
+  
+       `convert(producer, format)` is carried as `{ step: "convert", engine:
+       <producer>, format: <format> }`. THE PRODUCER RIDES `engine` DELIBERATELY:
+       `engine` is the one field this grammar already has for "what performed a
+       derivation", and it is what a calibration is OF (CPDF-13), what
+       `#writeTextSource` projects into `engines`, and what `describeChain`
+       prints. A second field name for the same fact would split every one of
+       those joins in two.
+  
+       THREE DECLARED PROPERTIES, and each is read by a rule below rather than by
+       a test against the word "convert":
+  
+         `names`      the fields the step must carry, non-empty. A conversion that
+                      does not say who converted, or into what, is rule 1's collapse
+                      one level down (C-35.5).
+         `unmeasured` "undetermined": an UNMEASURED conversion makes the whole
+                      document's cap UNDETERMINED, instead of the landed sequence
+                      rule where an unmeasured step neither raises nor lowers. The
+                      reason is where the step sits. Every later step measured the
+                      CONVERTED text against the CONVERTED bytes; none of them saw
+                      the original, so no downstream measurement bounds what the
+                      conversion lost. `derivationCap` explains it at the site.
+         `letter`     "calibrated": a letter on this step must NAME the calibration
+                      it rests on (C-35.13). DEC-75: the step is raised by a
+                      calibration row, never by a caller writing a letter.
+  
+       `tier: null` — a conversion is not a rung on the extraction ladder. It is
+       how the BYTES came to be; the `layer` step after it is the extraction. */
+  convert: {
+    role: "derivation",
+    label: "the document as converted by the host that served it",
+    tier: null,
+    names: ["engine", "format"],
+    unmeasured: "undetermined",
+    letter: "calibrated"
+  }
 };
 var CONFIDENCE_BASES = { engine: 1, none: 1 };
 var EXTENT_KINDS = { region: 1, page: 1, document: 1 };
@@ -19286,10 +19353,22 @@ function checkChain(chain2) {
         "TEXT_CHAIN_STEP_UNNAMED",
         `the ${step.step} step names no engine. What performed a derivation is the fact the chain exists to carry \u2014 a calibration is OF an engine and a version, and neither can be recovered from the word '${step.step}'`
       );
+    const mustName = STEP_KINDS[step.step].names || [];
+    const unnamed = mustName.filter((f2) => !(typeof step[f2] === "string" && step[f2].trim()));
+    if (unnamed.length)
+      return refusal2(
+        "TEXT_CHAIN_STEP_UNNAMED",
+        `the ${step.step} step does not name its ${unnamed.join(" or ")}. Who performed a derivation, and what it produced, are the facts the chain exists to carry \u2014 a calibration is OF a named producer and format, and neither can be recovered from the word '${step.step}'`
+      );
     if (step.calibration != null && !(typeof step.calibration === "string" && step.calibration.trim()))
       return refusal2(
         "TEXT_CHAIN_CAL_REF",
         `step ${i} names a calibration that is not a readable identifier (${JSON.stringify(step.calibration)}). A transcription names the MEASUREMENT its grade rests on so a superseded measurement can name exactly the transcriptions resting on it; a pointer nothing can resolve breaks that join while looking like it works`
+      );
+    if (STEP_KINDS[step.step].letter === "calibrated" && step.cap != null && !(typeof step.calibration === "string" && step.calibration.trim()))
+      return refusal2(
+        "TEXT_CHAIN_LETTER_UNCALIBRATED",
+        `the ${step.step} step claims fidelity ${JSON.stringify(step.cap)} and names no calibration. A ${step.step} step's cap is UNDETERMINED until a measurement of it exists, and a letter written here without one would be the record claiming a fidelity nobody measured`
       );
   }
   return null;
@@ -19319,6 +19398,18 @@ function layerChain({
 } = {}) {
   return [{ step: "layer", tier, container, cap, measured_by, calibration }];
 }
+function convertedChain(step, chain2) {
+  const one = checkChain([step]);
+  if (one) return one;
+  const bad = checkChain(chain2);
+  if (bad) return bad;
+  for (const s of chain2) {
+    if (STEP_KINDS[s.step].role !== "derivation") continue;
+    const r = appendStep([step], s);
+    if (!Array.isArray(r)) return r;
+  }
+  return [{ ...step }, ...chain2.map((s) => ({ ...s }))];
+}
 function calibrationsOf(chain2) {
   if (checkChain(chain2)) return [];
   const out = [];
@@ -19340,6 +19431,8 @@ function derivationCap(chain2, target = null) {
       unreadable = true;
       continue;
     }
+    if (STEP_KINDS[step.step].unmeasured === "undetermined" && measured(step) == null && (page == null || ext === "all" || ext.includes(page)))
+      unreadable = true;
     if (page != null) {
       if (ext !== "all" && !ext.includes(page)) continue;
       const m2 = measured(step);
@@ -19405,7 +19498,8 @@ function describeChain(chain2) {
   if (checkChain(chain2)) return "this text's provenance was not recorded";
   return chain2.map((s) => {
     const base = STEP_KINDS[s.step].label;
-    const who = s.engine ? ` (${s.engine}${s.version ? ` ${s.version}` : ""})` : "";
+    const into = (STEP_KINDS[s.step].names || []).includes("format") && s.format ? ` to ${s.format}` : "";
+    const who = s.engine ? ` (${s.engine}${s.version ? ` ${s.version}` : ""}${into})` : "";
     const by = s.step === "attested" && s.member ? ` (${s.member}${s.at ? `, ${s.at}` : ""})` : "";
     const ext = extentOf(s);
     const over = STEP_KINDS[s.step].role === "derivation" && ext !== "all" ? ext === "unreadable" ? " (over an extent this record cannot read)" : ` (${pageList(ext)})` : "";
@@ -61524,6 +61618,17 @@ var index_default = {
               });
               if (i2text && !chain2)
                 chain2 = layerChainFor(i2text, { tier: wiredTier, container: fmt });
+              if (driveCapture && Array.isArray(chain2)) {
+                const converted = convertedChain(driveConvertStep(driveCapture), chain2);
+                if (Array.isArray(converted)) chain2 = converted;
+                else {
+                  chain2 = null;
+                  wired = {
+                    determined: false,
+                    why: `the text chain of this Google Drive export could not be stated honestly (${converted.check} ${converted.code}: ${converted.detail}), so nothing is claimed about its text rather than claiming it was read from original bytes`
+                  };
+                }
+              }
             }
           } catch {
           }

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1054 rulings across 84 documents.
+1055 rulings across 84 documents.
 
 ## DEC-
 
@@ -716,6 +716,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1480`
 - **IC-119** — CORRECTED, NOT EXEMPTED**: they asserted the defect as a finding and this item removes the defect they assert. - `bio-plane/test/reevaluation.test.mjs` — the full-leg-shape assertion gains the two new fields. - `docs/development/INTERFACES.md` (I3), `docs/development/INTERFACE-CHANGES.md` (IC-119),  
   `docs/development/CLAIMS.md:12353`
+- **IC-122** — (grammar arm extended; `codesUsed` CORRECTED, not exempted), `bio-plane/dist/**` (rebuild; `src/signpage.mjs` byte-identical), `docs/development/INTERFACE-CHANGES.md` (IC-122 PROPOSED), the Part II §16 Drive paragraph of `docs/architecture/BIO_Content_Framework_v0_10.md` (one parenthetical; front matter unchanged —…  
+  `docs/development/CLAIMS.md:12753`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  

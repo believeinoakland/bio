@@ -70,7 +70,7 @@ import { serialiseContainer, containerEntries } from "./container.mjs";
    request body, and `callerSuppliedHopFacts` makes an attempt to supply one a
    NAMED refusal rather than a silent drop (D-112). */
 import { readDriveAddress, driveHop, callerSuppliedHopFacts,
-         DRIVE_PRODUCER } from "./drive.mjs";
+         DRIVE_PRODUCER, driveConvertStep } from "./drive.mjs";
 /* REC-19 / DEC-8: the act catalogue and derivation behind op=affordances. The
    catalogue reads the legal-edge table from the check catalogue (exported,
    never copied); `needs` and `mode` are composed HERE from NEEDS and
@@ -101,7 +101,7 @@ import { detectFormat, getFormat } from "./formats.mjs";
    This file supplies no fidelity letters of its own beyond the two measured
    constants below, and holds no opinion about any engine. */
 import { layerChain, appendStep, describeChain, checkChain, checkAnchor,
-         checkConfidence, applyConfidenceFloor, mergedChain,
+         checkConfidence, applyConfidenceFloor, mergedChain, convertedChain,
          /* FW-17 / IC-86: the reading-position normaliser lives beside the
             extent vocabulary it belongs to, for `checkAnchor`'s own stated
             reason — I2 already carries `source` for an element reference, and
@@ -6350,6 +6350,33 @@ export default {
                  did. */
               if (i2text && !chain)
                 chain = layerChainFor(i2text, { tier: wiredTier, container: fmt });
+              /* CAP-10 / DEC-75 / IC-122 — A DRIVE EXPORT'S TEXT PASSED THROUGH
+                 GOOGLE'S CONVERSION BEFORE ANY TIER READ IT, so the chain says so
+                 at its HEAD: `convert(google-export, <format>) -> layer`, cap
+                 UNDETERMINED. Placed HERE, after every branch above has settled
+                 its chain (the tier-2 merge, tier 3's parts, the tail's layer
+                 chain), so it is ONE site for all of them rather than one per
+                 branch that a future branch could miss.
+                 KEYED ON `driveCapture` AND NOTHING ELSE — the recogniser's own
+                 verdict, set only when the address was diverted to an export. An
+                 ordinary OpenDocument file is the same container and NOT a
+                 conversion; keying on the format would have given every city
+                 .odt a step nobody performed (the control's `overstrict` arm).
+                 A REFUSED prepend records NO chain and a FAILED reading naming
+                 the refusal. It must never fall back to the chain it was handed:
+                 that chain omits the conversion and would read as a direct
+                 capture of original bytes, which is the claim DEC-75 withdrew. */
+              if (driveCapture && Array.isArray(chain)) {
+                const converted = convertedChain(driveConvertStep(driveCapture), chain);
+                if (Array.isArray(converted)) chain = converted;
+                else {
+                  chain = null;
+                  wired = { determined: false,
+                            why: `the text chain of this Google Drive export could not be stated honestly `
+                               + `(${converted.check} ${converted.code}: ${converted.detail}), so nothing is `
+                               + `claimed about its text rather than claiming it was read from original bytes` };
+                }
+              }
             }
           } catch { /* a wire failure must not fail the capture: fall through to
                        the honest no-reading below */ }
