@@ -15690,6 +15690,65 @@ has two independent readings of it rather than one.** `a93ad890` cannot serve as
 already been re-entered and is contaminated for that purpose, though it remains a valid
 predicted-LOCKED observation.
 
+
+### OUTCOME, DATA POINT 2 — THE INTERVENTION RAN AND **THE HYPOTHESIS IS FALSIFIED**. Recorded 2026-09-18T01:29:37Z by CONDUCT #3.
+
+**PREDICTED: LOCKED. OBSERVED: ABSENT. The hypothesis as registered — *a finished agent's worktree
+stays locked IFF that agent was re-entered* — IS DEAD, and it is recorded in the words it was
+registered in.**
+
+**THE SUBJECT AND THE READINGS, all four, in order.** `agent-a5f807eada28ece7f` (REC-119): finished,
+released, notified exactly once, never resumed — the only uncontaminated subject on the estate.
+Reading #1 CONDUCT #3, pre-resume: lock ABSENT, 0 porcelain, tip `f91e407a`, ancestor of
+`origin/main`. Reading #2 BOB #13 at 01:26:36Z, independently: identical. **Reading #3 three seconds
+after the resume: ABSENT. Reading #4 at 01:29:37Z, agent FINISHED: ABSENT.**
+
+**THE CONTROL IS CLEAN AND IS WHY THE NULL MEANS ANYTHING.** At the moment of reading #4, the three
+other finished-and-re-entered trees — `a93ad890`, `adcd3110`, `aa29968d` — were ALL LOCKED. So the
+reading instrument works, the estate was not uniformly unlocked, and the subject genuinely differs
+from its peers. **A null result with no positive control beside it would have been indistinguishable
+from a broken reading.**
+
+**THE SUBJECT SEPARATED THE VARIABLES ITSELF, AND THAT IS WHY THIS IS INFORMATIVE RATHER THAN MERELY
+NEGATIVE.** Told it was the subject, REC-119's agent **deliberately performed ZERO TOOL CALLS** and
+said why: *the obvious instinct on being told a measurement is being taken of your tree is to go and
+read it, and that instinct is exactly wrong here — a subject that inspects itself is a subject that
+has changed the thing being measured.* It then named the confounder better than either designer had:
+***re-entered* bundles TWO things that had always travelled together — the session being RESUMED, and
+the agent then DOING WORK.** All six prior subjects had both. **This run had the first and not the
+second.**
+
+**SO THE FALSIFICATION IS SHARP RATHER THAN BLUNT: RE-ENTRY ALONE IS NOT SUFFICIENT.** What survives
+is the reading the agent named — *locked iff the agent was ACTIVE*, where re-entry mattered in the
+six only because it made them active again. **That subsumes the TIME hypothesis weakened at data
+point 1 rather than competing with it:** a lock tracking ACTIVITY, released some interval after
+activity stops, fits every observation — the seven long-idle trees unlocked, the re-entered ones
+locked because re-entry made them recently active, and this subject unlocked because re-entry
+without work left it untouched.
+
+**THAT REPLACEMENT IS A CANDIDATE AND IS NOT CLAIMED. It has had exactly one observation and no
+intervention of its own.** The obvious next test — resume a released agent and have it perform ONE
+trivial tool call in its worktree — is UNCLAIMED, and whoever takes it should pre-register it the
+way this one was.
+
+**A NEAR-MISS ON THE ROAD TO THIS RESULT, recorded because it nearly put a FALSE falsification on the
+record an hour before the true one arrived.** CONDUCT #3's first read of data point 2's context
+labelled `adcd3110` (REC-110) *finished, never resumed* — and it is LOCKED, which reads as an
+outright falsification, and the sentence was being composed. **It was not one: REC-110's
+task-notification fired TWICE, so under the hypothesis as WRITTEN it counts as re-entered and LOCKED
+was the predicted value.** The error was in the label, not the data: CONDUCT had been carrying only
+the `SendMessage` half of its own registered definition. **A PRE-REGISTRATION IS ONLY WORTH SOMETHING
+IF YOU RE-READ IT INSTEAD OF RECALLING IT** — the same defect as re-issuing a ruling without
+re-checking its target, which `CLAUDE.md` already records because BOB #13 did it the same day.
+
+**AND A BLOCKER NOBODY AUDITED, MET INSIDE THE INSTRUMENT BUILT TO SETTLE ONE.** BOB #13 attempted
+step 3 and was REFUSED: **a subagent is addressable only from the session that SPAWNED it.** Neither
+designer had asked whether the experimenter could reach the subject. **It cost one held worktree and
+produced NO false data only because the order was READ, RECORD, then attempt** — had the resume come
+first, a failed send could not have been told apart from a lock that was never there. One trivial
+confounder was removed by the failure itself: **merely ADDRESSING a finished agent does not create a
+lock** (BOB re-read at 01:27:00Z, absent).
+
 ## M-48 · 2026-09-17 · THE SWEEP FOR A SECOND STATEMENT OF DESIGN STATUS — RUN ACROSS THE GOVERNED SET, AND THE HEADLINE IS ABOUT THE ARM'S REACH RATHER THAN THE CORPUS'S HEALTH (M0-58)
 
 **Instruments** · `node tools/corpuscheck.mjs --authority` (M0-57's arm, UNCHANGED by this row
