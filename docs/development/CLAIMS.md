@@ -13936,3 +13936,14 @@ Paths as claimed, plus `bio-plane/src/affordances.mjs` (NON_ACTS / RUNG_ABSENT r
 fold the DESIGN GAP (who may issue a grant — running provisionally at the project OWNER) into
 `BIO_Publication_v0_1.md`'s Incomplete sections if Bob has not ruled (it is already written there); the UI DELEGATION
 above is open.
+
+## CLAIM 2026-09-18 RECORD (REC-124 — a CONCLUSION belongs to the project's relationship with the inquiry, INVESTIGATIVE-SESSION.md §7.1)
+
+claimed: 2026-09-18 by the REC-124 worker (spawned by CONDUCT #5), branch `worktree-agent-a16f5d75eb9d8097c`, base
+`e23daea9`. Paths: `bio-plane/src/store.mjs` (conclude, the project conclusion writer/reader, op=basisversions'
+answer, the queue producer), `bio-plane/src/queuestate.mjs` (one FINDING kind), `bio-plane/checks/bio-checks.mjs`
+(C-33 rows for the new refusals), `bio-plane/scripts/coverage.mjs` (floors only, from its own print),
+`bio-plane/dist/**` (the rebuilt bundle), `bio-plane/test/conclude-project.test.mjs` (new) plus any suite the change
+breaks, corrected at its site, `docs/architecture/construct-status.json` (`8.claim` only),
+`docs/development/INVESTIGATIVE-SESSION.md` (front matter and §7.1's built/not-built note),
+`docs/development/INTERFACE-CHANGES.md` (this item's IC rows).
