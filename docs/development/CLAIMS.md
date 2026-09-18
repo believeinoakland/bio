@@ -12533,3 +12533,13 @@ Recorded as unchanged on decomposition item 1's own precedent. `docs/development
 CONDUCT's sole writer and is not flipped by this worker. `civicos-ui/**`, `tools/**`, `newgroup/**`.
 
 **open as of 2026-09-17.**
+
+**AMENDED 2026-09-17 (same worker, REC-110): `docs/development/MEASUREMENTS.md` ADDED to the paths
+above, appended rows only.** The item produced a measurement it is obliged to record: a COMMENT-ONLY
+plane-source change moves the bundle MANIFEST's input record and leaves the emitted bundle
+BYTE-IDENTICAL, because the bundler strips comments — checked at the artifact (the added text is
+present once in `src/store.mjs` and 0 times in `dist/bio-plane.bundled.mjs`). This QUALIFIES the
+Traps entry that says such a change *still moves `dist/`*: the remedy is unchanged and correct, the
+stated mechanism is one step off, and a session expecting an artifact diff would chase a build
+problem that does not exist. Recording a number with its date and instrument is a standing
+obligation rather than a widening of this claim.

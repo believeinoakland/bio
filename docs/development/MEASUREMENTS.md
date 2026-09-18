@@ -15533,3 +15533,39 @@ M0-59 reaches `main` and the worktrees carry it.** What the guard does is stop t
 convenient one: the FIX is proved correct (driven at a real remote from a real pre-guard
 worktree, both directions, plus 86 suite assertions and four control arms), and the LIVE CLONE
 will keep flapping between 15/15 and 10/15 until this is merged and the worktrees rebase.**
+
+## 2026-09-17 · REC-110 — A COMMENT-ONLY PLANE-SOURCE CHANGE MOVES THE MANIFEST, NOT THE BUNDLE
+
+**Instrument:** `npm run build` in `bio-plane/`, then `git diff` over `bio-plane/dist/`, then
+`grep -ac` for the comment text in both source and artifact. Worktree `agent-adcd3110010904330`,
+base `e340600a`. Measured twice in one session, identical both times.
+
+**This QUALIFIES a Traps entry rather than contradicting it, and the difference is worth carrying
+because a reader acting on the entry's stated MECHANISM would conclude something false.**
+`CLAUDE.md`'s trap section and REC-100's landing record *a COMMENT-ONLY plane-source change still
+moves `dist/`, because the bundle is unminified and retains comments* — its `fleetbundles` went
+83/4 until it rebuilt. **The REMEDY is right and unchanged: the guard fires and a rebuild is owed.
+The stated MECHANISM is one step off.**
+
+| what | measured |
+| --- | --- |
+| `src/store.mjs`, before | 2,309,176 B · `961e4ac91c7a7eb4e` |
+| `src/store.mjs`, after (comments only) | 2,316,117 B · `465be9dabb76690d` |
+| executable text, both (block comments stripped, same transform both sides) | **IDENTICAL** — `19cdc8d2bbecf173`, 945,145 B |
+| `dist/bio-plane.bundled.mjs` before and after the rebuild | **BYTE-IDENTICAL** — 3,312,747 B · `cf42a21511a57ab4` |
+| `dist/bio-plane.bundle.json` | **4 lines moved — the INPUT record for `src/store.mjs` and nothing else** |
+| the added comment text, in `src/store.mjs` | 1 occurrence |
+| the added comment text, in `dist/bio-plane.bundled.mjs` | **0 occurrences** |
+
+**THE BUNDLER STRIPS COMMENTS — checked at the artifact, not inferred from the byte count.** A
+string present once in the source is absent from the bundle, as is an unrelated block comment
+sampled beside it. So what goes stale on a comment-only change is **the manifest's record of its
+input's sha256**, not the emitted artifact. `fleetbundles.test.mjs` is right to fail — it compares
+the recorded input hash against the source, which is the stronger check and the one that catches a
+source change whatever the bundler does with it — and its message names the member, the file and
+the word STALE, which is why this cost minutes rather than the hour the wrong mechanism would have.
+
+**WHY IT MATTERS ENOUGH TO RECORD:** a session that believed the emitted bundle moves on a comment
+change would expect a `dist/` diff in its commit, not see one, and reasonably conclude the rebuild
+had not taken — chasing a build problem that does not exist. Here the rebuild produced NO diff in
+the artifact and a four-line diff in the manifest, and that is the correct, complete outcome.

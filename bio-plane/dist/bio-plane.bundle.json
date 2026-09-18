@@ -243,8 +243,8 @@
     },
     {
       "path": "src/store.mjs",
-      "bytes": 2316117,
-      "sha256": "465be9dabb76690d88731b7d490ddb4450727f6c2757194f1093132f1eacf25a"
+      "bytes": 2316583,
+      "sha256": "05cd5211ff1d859cc3bc8685a3e15db2842baaf9cc9859511e17f20d0d288ce2"
     },
     {
       "path": "src/subresources.mjs",

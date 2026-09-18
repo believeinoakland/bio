@@ -31821,9 +31821,15 @@ export class Store extends DurableObject {
        the per-level counts a completeness statement is computed from*, and §6 /
        D-196 publishes that statement WITH THE SIGNED CASE. A viewer-dependent
        tally would make a signed completeness claim depend on who computed it —
-       two signings of one case disagreeing about what was searched. **That
-       consumer is decomposition item 4 and is NOT BUILT YET**, so it is stated as
-       design intent and NOT as a live caller, because the difference matters.
+       two signings of one case disagreeing about what was searched.
+       **AND THIS ARGUMENT'S STRENGTH IS STATED EXACTLY RATHER THAN ROUNDED UP,
+       BECAUSE CHECKING IT WEAKENED IT.** Item 4 IS built (REC-96, IC-112) — but
+       `searchedSection` in `airun.mjs` takes its `levels` FROM THE CALLER and
+       does not read this tally at all, so **NO LIVE CONSUMER DEPENDS ON THE
+       TALLY'S VIEWER-INDEPENDENCE TODAY.** It is design intent carried by the
+       schema's own index comment, NOT a caller that would break. Recorded at its
+       true weight: it CORROBORATES the ruling and does not carry it. The ruling
+       rests on (1)–(4) above, each a fact about the code on this tree.
 
        **THE RESIDUAL, STATED RATHER THAN HIDDEN, because D-386 did not name it
        and it is the honest cost of ruling (a):** this tally is FINER than

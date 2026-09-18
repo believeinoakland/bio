@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1043 rulings across 85 documents.
+1045 rulings across 85 documents.
 
 ## DEC-
 
@@ -1006,6 +1006,10 @@ authority is the file named, never this one.
   `docs/development/DEBT.md:323`
 - **REC-109** · 2026-09-16 — TWO ARMS CORRECTED THE WORKER'S REASONING RATHER THAN ITS CODE:** `overfetch` was declared structural-only and behaviourally invisible, and actually failed three arms — **at a bound of 2 an uninvited member got TWO ROWS WHILE ENTITLED TO THREE and was told the list was complete**, so the over-fetch protects the…  
   `docs/development/QUEUE.md:1690`
+- **REC-110** · 2026-09-17 — AMENDED 2026-09-17 (same worker, REC-110): `docs/development/MEASUREMENTS.md` ADDED to the paths above, appended rows only.** The item produced a measurement it is obliged to record: a COMMENT-ONLY plane-source change moves the bundle MANIFEST's input record and leaves the emitted bundle BYTE-IDENTICAL, because the…  
+  `docs/development/CLAIMS.md:12537`
+- **REC-110** · 2026-09-17 — CLOSED 2026-09-17 by REC-110 — RULED (a), AND THE INTERIM POSTURE IS NOW A DECISION.** Raised by REC-103 2026-09-16, which wrote both arguments and declined to decide: correct, and inherited rather than re-litigated.  
+  `docs/development/DEBT.md:321`
 - **REC-111** · 2026-09-16 — AMENDED 2026-09-16 by REC-111 — §4.3's OWED UNIT-COUNT BOUND IS BUILT, AND THE ROW'S OWN PREMISE WAS HALF WRONG, WHICH IS THE finding worth more than the bound.** *A container whose units are many and small is bounded by nothing this design specifies* is true of THIS DOCUMENT and false of the SYSTEM: M-35 measured…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:9`
 - **REC-112** · 2026-09-17 — IT CORRECTED MY BRIEF AND THE CORRECTION MATTERS: I told it the index was the ONLY surviving evidence of intent, and that was HALF WRONG** — the intent also lives in the delegation, in `airuns.test.mjs`'s roster comment, and in a **by-name pin at `airuns.test.mjs:675`.  
