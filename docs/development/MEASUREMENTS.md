@@ -15533,3 +15533,54 @@ M0-59 reaches `main` and the worktrees carry it.** What the guard does is stop t
 convenient one: the FIX is proved correct (driven at a real remote from a real pre-guard
 worktree, both directions, plus 86 suite assertions and four control arms), and the LIVE CLONE
 will keep flapping between 15/15 and 10/15 until this is merged and the worktrees rebase.**
+
+## 2026-09-18 · A PRE-REGISTERED PREDICTION ABOUT THE AGENT-WORKTREE LOCK (D-398)
+
+**REGISTERED BEFORE THE OUTCOME EXISTS, WHICH IS THE ONLY THING THAT MAKES IT WORTH ANYTHING.**
+Hypothesis by CONDUCT #3, baseline captured and recorded by BOB #13 at **2026-09-18T00:38:18Z**,
+while wave four was still RUNNING and no outcome was available to either of us. Post-hoc this
+would be worthless — which is exactly why a correlation over n=10 was not enough earlier the same
+day, when `remoteControlActive` reading true was taken for the cause of a refused archive and a
+wedged tool call turned out to be it.
+
+**THE HYPOTHESIS, stated so it can lose:** a finished agent's worktree retains its lock **IFF that
+agent was RE-ENTERED after finishing** — its task-notification fired more than once, or it was
+resumed by `SendMessage`. Agents that notified once and were never resumed release the lock.
+
+**THE PRIOR IT RESTS ON, and it is weak ON PURPOSE:** of CONDUCT #3's ten finished agents, the
+three still locked (`a20ba9ff`/M0-59, `a3378dc3`/M0-56, `af80bb7c`/UI-63) are exactly the three
+re-notified or resumed; the seven that released each notified once. **n=10, no intervention, and
+that is the same evidence class this estate misread twice on 2026-09-17.**
+
+**THE PREDICTIONS:**
+- `agent-a93ad890406651eff` (M0-58) — **ALREADY RE-ENTERED** before this was written: it paused on
+  an armed monitor, its battery finished green at `221/221 · 13816`, and it self-resumed.
+  **PREDICTED: LOCKED after it finishes.**
+- The other three wave-four agents — **PREDICTED: UNLOCKED**, provided each notifies once and is
+  never resumed.
+
+**WHAT FALSIFIES IT:** M0-58's tree unlocked, **or** any never-resumed agent's tree locked. Either
+kills it. CONDUCT #3 has committed to reporting the outcome whichever way it goes — *a prediction
+only registered when it wins is not a prediction*.
+
+**THE BASELINE, so the outcome is checkable against a state nobody can re-describe later.** At
+2026-09-18T00:38:18Z, `git worktree list` on this clone: **7 agent worktrees, ALL LOCKED** —
+`a20ba9ff2880e1eae`, `a3378dc3df6e90e46`, `a5f807eada28ece7f`, `a93ad890406651eff`,
+`aa29968dac7cc0e37`, `adcd3110010904330`, `af80bb7c93b1a381b` — and 3 session worktrees unlocked
+(`ecstatic-napier-fef9bc`, `epic-raman-a21136`, `lucid-heisenberg-fd6795`). **A lock on a RUNNING
+agent says nothing; the claim is about the lock AFTER the agent finishes**, which is why the
+running state is recorded rather than read as evidence.
+
+**THE STATED WEAKNESS, in CONDUCT #3's own words and not softened: this is an OBSERVATION WITH A
+PRIOR, NOT A CONTROLLED EXPERIMENT**, because nobody can control whether the other three get
+re-entered. **The controlled version is still unclaimed: RESUME a finished, UNLOCKED agent and
+re-read its lock.** That is a genuine intervention and the only thing that would settle it. It
+could not be run at registration time — the estate held no finished unlocked agent worktree, all
+seven having been swept or being live.
+
+**AND IF THE OBSERVATION COMES OUT AS PREDICTED IT IS STILL UNSETTLED**, because a correct
+prediction from a correlation is precisely what a confounder produces. That sentence is the
+reason this entry is worth the space: **the value here is the METHOD — a falsifiable claim written
+down before its outcome, by the person who would most like it to be true.** This estate had no
+instance of that before today.
+
