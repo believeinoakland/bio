@@ -9222,7 +9222,7 @@ itself agrees at zero cost.
 RESOLUTION at integration, against I3's version AS READ AT RESOLUTION — IC-118's receipt is that
 a proposal's base can move underneath it while the item runs.
 
-## IC-124 · I2: IC-1's UNION GAINS `sheet-range` AND `doc-table`, AND THE `image` REFERENCE — the office entries' `text()` emits them (with I1's `container_extent` carrying the two new bounds) · PROPOSED 2026-09-18 (FW-19, building `EXTRACTION-BREADTH-DESIGN.md` §3.2 / §3.3 item 1 / §7 row 3) — the version bump and the RESOLUTION are CONDUCT's
+## IC-124 · I2: IC-1's UNION GAINS `sheet-range` AND `doc-table`, AND THE `image` REFERENCE — the office entries' `text()` emits them (with I1's `container_extent` carrying the two new bounds) · PROPOSED 2026-09-18 (FW-19, building `EXTRACTION-BREADTH-DESIGN.md` §3.2 / §3.3 item 1 / §7 row 3) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4**
 
 - **Interface:** I2 (content → framework), the element-reference union and the TEXT shape.
   **Secondary: I1** — `document.reading.container_extent` (IC-87 as amended at CAP-12) gains two
@@ -9301,9 +9301,9 @@ in its `empty_level` rather than letting its `why` claim the extent is held whil
 - **CONTENT-PDF:** owed at CPDF-18.
 - **UI:** NOT-AFFECTED by measurement at this interface (`civicos-ui` reads no `text()` output).
 
-**RESOLUTION:** unresolved at the time of writing. CONDUCT takes I2's (and I1's) bump at integration.
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at FW-19's integration — I2 2.2.0 → 2.3.0, I1 1.4.0 → 1.5.0, both MINOR (additive, as classed).** CONDUCT answers FOR FRAMEWORK (dormant), in writing and named as such: AGREE — the union grows by discriminated arms and no existing arm moves. CONTENT-PDF's response is owed at CPDF-18, which is the producer of `image {page, rect}` and cannot answer before it exists; nothing on CONTENT-PDF's side is broken by an arm it does not yet emit. UI NOT-AFFECTED by measurement as stated. The base was read at resolution, not proposal.
 
-## IC-125 · I5: THE `content` TABLE ADMITS `sheet-range`, `doc-table` AND `image` WITH `covers` PER ARM, AND GAINS `cited_as` · AND I3: the leg grammar and `op=cite` carry the new fields, and every content-row projection carries `cited_as` · PROPOSED 2026-09-18 (FW-19) — the version bumps and the RESOLUTION are CONDUCT's
+## IC-125 · I5: THE `content` TABLE ADMITS `sheet-range`, `doc-table` AND `image` WITH `covers` PER ARM, AND GAINS `cited_as` · AND I3: the leg grammar and `op=cite` carry the new fields, and every content-row projection carries `cited_as` · PROPOSED 2026-09-18 (FW-19) — the version bumps and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4**
 
 - **Interface:** I5 (the store schema) — one column. **Secondary: I3** — additive fields on the
   leg grammar, on `op=cite`, and on the content-row projections.
@@ -9372,4 +9372,4 @@ digest for REC-85's three (`fw19-rec85-digest.mjs`, 144 rows) and for REC-82's t
   claim.
 - **SKILL / FRAMEWORK / DIST:** NOT-AFFECTED by measurement (no reader of the new kinds).
 
-**RESOLUTION:** unresolved at the time of writing. CONDUCT takes I5's and I3's bumps at integration.
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at FW-19's integration — I5 1.16.0 → 1.17.0, I3 23.1.0 → 23.2.0, both MINOR (additive, as classed).** SKILL / FRAMEWORK / DIST NOT-AFFECTED by measurement as stated; CONDUCT answers FOR FRAMEWORK (dormant), named as such. **UI's act is OWED, not waived:** the `cited_as` rendering delegation stands in `CLAIMS.md` until a UI item discharges it. REC-86 is concurrently changing I3; it resolves against 23.2.0 or later, read at its own resolution.
