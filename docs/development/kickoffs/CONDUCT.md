@@ -55,6 +55,8 @@ making a change another session must know about.**
    code, suites, claims and reports — one of which already missed a REGEX LITERAL, where
    `C-29\.` is not the text `C-29.`.
 
+**A `done` FLIP ARCHIVES ITS ROW IN THE SAME COMMIT — LED-5, Bob's direction of 2026-09-18 (small, ordered, always-current ledgers).** When integration flips a QUEUE row to `done` (or `superseded`), or closes a DEBT row with no declared residue, run `node tools/ledger.mjs archive <ID>` IN THE SAME COMMIT — the same command `kickoffs/BOB.md` names for BOB's lane. Not a later sweep: August's one-off archiving grew back because nothing performed it at the moment a row closed. `plancheck` §2h(a) makes a forgotten archive a failing gate once LED-3 has migrated the backlog. The archiver checks conservation twice (id multiset and every live line, on the plan and on the read-back) and restores both files if either fails — read its refusal, never work around it. *Closed* is ONE definition, `isClosedDebtRow`/`debtDisposition` in `tools/owed.mjs`; a row whose disposition does not LEAD with a closure word is open, whatever else it says.
+
 **THE REFILL RULE, AND IT IS STEP 2's LAST ACT — NOT A SEPARATE HABIT.** A slot that has
 just been freed by an integration is filled BEFORE the turn ends, in the same turn, from
 the area's own column. **Reporting that a slot is free is not the same as filling it, and
