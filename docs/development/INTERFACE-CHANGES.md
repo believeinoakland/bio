@@ -9298,7 +9298,24 @@ in its `empty_level` rather than letting its `why` claim the extent is held whil
 - **FRAMEWORK** (dormant): answered-for by CONDUCT, per the row.
 - **CONTENT-OFFICE:** AGREE — the producers are this branch's.
 - **RECORD:** AGREE — consumed through IC-125 in this branch.
-- **CONTENT-PDF:** owed at CPDF-18.
+- **CONTENT-PDF:** owed at CPDF-18. **ANSWERED 2026-09-18 by the CPDF-18 worker — AGREE, and the PDF form is
+  now EMITTED in the shape this IC designed.** `extractPdfStructure` (the pdf entry's `structure()`, so
+  `op=pdfstructure` and the pdf-worker's `/structure` alike) returns `images: [{ kind: "image", ref: "an image on
+  page <N+1>", page, rect: [x0, y0, x1, y1], mime, name, inline, width, height, filters, axis_aligned }]` — `page`
+  0-based, `rect` in default user space, lower-left then upper-right, the SAME space and order as `pdf-page`'s rect
+  (§3.2), rounded to 1/1000 pt. Builder `pdfImageRef` (`src/pdfstructure.mjs`); its `ref` is `describeExtent`'s
+  derived form for `{kind:"image", page}`, pinned in `cpdf18-pdf-images.test.mjs` (IC-1's parity rule). **THIS IS
+  IC-124's ABSENCE RULE, adopted as written:** `images` is NULL with `imagesWhy` from every branch that did not walk
+  (encrypted, an undecodable content stream, an unresolvable `Do`, runaway form nesting) and an EMPTY list is a
+  measured zero. **Two placements differ from the office form, each by meaning:** `mime` is set only where the stream
+  IS a file (`DCTDecode` -> `image/jpeg`, `JPXDecode` -> `image/jp2`) and is NULL for raw samples rather than an
+  invented type; and the list rides TOP-LEVEL on the structure object, not on `text`, because the pdf-worker
+  replaces `text` with its Tier-2 decode and an image list there would vanish on exactly the documents Tier 2
+  reads. Both are additive keys on I2's structure shape and move nothing existing (Tier 1's text over the fixtures
+  is digest-pinned against the pristine tree). **Not done here, named:** the acquire wire does not persist the list
+  for a PDF, so an `image {page, rect}` row is bounded by the page set and not by what the page paints — **D-420**;
+  and the crop is reachable by no op — **D-419**. Whether CONDUCT books the two additive structure keys as an I2
+  minor under this IC or asks for its own is CONDUCT's call; this response claims no version.
 - **UI:** NOT-AFFECTED by measurement at this interface (`civicos-ui` reads no `text()` output).
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at FW-19's integration — I2 2.2.0 → 2.3.0, I1 1.4.0 → 1.5.0, both MINOR (additive, as classed).** CONDUCT answers FOR FRAMEWORK (dormant), in writing and named as such: AGREE — the union grows by discriminated arms and no existing arm moves. CONTENT-PDF's response is owed at CPDF-18, which is the producer of `image {page, rect}` and cannot answer before it exists; nothing on CONTENT-PDF's side is broken by an arm it does not yet emit. UI NOT-AFFECTED by measurement as stated. The base was read at resolution, not proposal.

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1064 rulings across 84 documents.
+1067 rulings across 84 documents.
 
 ## DEC-
 
@@ -251,7 +251,7 @@ authority is the file named, never this one.
 - **DEC-72** — DEC-72's definition of done was met IN THE LANDING TURN — `BIO_DATAPLANE_STATE.md` at v33 on the case-as-production model, `CASE-AS-PRODUCTION.md` archived with its one unbuilt clause STATED in the banner (D-309), `DECIDED` regenerated.**  
   `docs/development/QUEUE.md:2132`
 - **DEC-74** · 2026-09-14 — DECIDED 2026-09-14 by BOB #11 at Bob's delegation: not funded.** The tesseract member at cap C is the tier-3 path; the external tier is reconsidered only when an image-only document is LOAD-BEARING in a real case and C is below that project's bar — a funding request with the document and the bar attached, brought…  
-  `docs/development/EXTRACTION-BREADTH-DESIGN.md:126`
+  `docs/development/EXTRACTION-BREADTH-DESIGN.md:127`
 ## D-
 
 - **D-10** · 2026-08-02 — SETTLED 2026-08-02 by the design pass this question asked for (session BOB).** Not doctrine: it is an application of the assembly rule already in `BIO_Interaction_Constructs_v0_1.md:258-268`, so it needed a design pass and not a ruling.  
@@ -543,7 +543,7 @@ authority is the file named, never this one.
 - **D-358** · 2026-09-14 — RULED and **BUILT, with a CALLER as of 2026-09-14** — `op=contentmint`, the four-state MINT LABEL on every content-row projection and on the leg surface, the attest fence made reachable (SK-7); D-358 ANSWERED at §7.3 — the caller is a RUN, not the pilot, whose exclusion is corrected rather than lifted; SK-8 landed…  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:134`
 - **D-358** · 2026-09-14 — its §7.3 answered D-358 on 2026-09-14: the role runs in DEC-62's RUN, not on the pilot's credential, whose exclusion is CORRECTED rather than lifted (the pilot is read-only and writes nothing).  
-  `docs/development/EXTRACTION-BREADTH-DESIGN.md:88`
+  `docs/development/EXTRACTION-BREADTH-DESIGN.md:89`
 - **D-358** · 2026-09-14 — SETTLED when a product caller exists for either op — the assistant's EXTRACT act (blocked: D-358) or UI's transcription-check surface — and confirms the shape live; CONDUCT writes it. ### AMENDED at CAP-12's landing — 2026-09-14 (the second key this entry was written to carry; the version stays **1.5.0** and the…  
   `docs/development/INTERFACE-CHANGES.md:6738`
 - **D-358** · 2026-09-14 — THE ANSWER CHANGED THE SHAPE OF THIS ITEM AND IS ITS AUTHORITY: `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 — the exclusion is CORRECTED, NOT LIFTED.  
@@ -1232,12 +1232,14 @@ authority is the file named, never this one.
   `docs/archive/ledgers/DECISIONS-2026-08.md:2404`
 - **CPDF-14** · 2026-09-10 — CPDF-14-on-verdict (CORRECTED 2026-09-10 by CONDUCT: the "CPDF-12-on-GO" this row carried was never satisfiable — CPDF-12's own landed line recorded NO-GO on the default path and re-scoped itself to the composed-shape measurement, which was never run and had no row; it is CPDF-14 now, and CONDUCT #8's handoff…  
   `docs/development/QUEUE.md:2351`
+- **CPDF-18** · 2026-09-18 — `MEASUREMENTS.md` M-55, 2026-09-18: a geometric step over pdf.js positions, deterministic, reproducible, and blind to a RULED table); no table reader on PDF is designed past the measurement, and what would reopen it — a lattice step over path geometry, measured on a larger hand-read set with ruled tables — is named…  
+  `docs/development/EXTRACTION-BREADTH-DESIGN.md:8`
 - **CPDF-20** · 2026-09-14 — MEASURED AND RULED 2026-09-14 by CPDF-20 — the fixture exists, the measurement is taken, and the rule is landed, driven AND WIRED.** **CORRECTED 2026-09-16 by CONDUCT #1: this cell read *but NOT WIRED* and that was FALSE on this tree** — `mergeTier2Text` is imported at `index.mjs:116` and CALLED at…  
   `docs/development/DEBT.md:254`
 - **CPDF-20** · 2026-09-14 — THE PER-PAGE TIER-2 RULE IS NO LONGER "COMPLETE AS WRITTEN" AND THE CLAIM ABOVE IS QUALIFIED RATHER THAN LEFT STANDING: it is MEASURED-AND-CORRECTED** — CPDF-20 falsified §5.2's rule against 203 pages of 28 real documents and the corrected rule is what shipped, and REC-98 then WIRED it into the plane's two call…  
   `docs/development/EXTRACTION-BREADTH-DESIGN.md:3`
 - **CPDF-20** · 2026-09-14 — Decided, AND CORRECTED 2026-09-14 BY THE MEASUREMENT THIS SECTION ASKED FOR — the original rule is kept below because what it got wrong is the useful part.** As written: *the decode with fewer undetermined characters on that page wins; a tie keeps tier 1*.  
-  `docs/development/EXTRACTION-BREADTH-DESIGN.md:118`
+  `docs/development/EXTRACTION-BREADTH-DESIGN.md:119`
 ## COFF-
 
 - **COFF-1** · 2026-09-14 — nk to a Google Drive file should keep the link and export an OpenDocument version that the content is extracted from."* RULED, folded into `BIO_Content_Framework_v0_10.md` Part II §16.  
@@ -1968,7 +1970,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - the distance between a CORRECTED read and an UNCORRECTED one, and this item corrects the second.  
   `docs/development/INTERFACE-CHANGES.md:7794`
 - `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §5.3 (RULED: a citation naming no part means the whole document, and a member may NARROW it by an authored act — a new basis version, the old retained), §5.4's second pass (specificity is WORKED FOR; only ON-POINT passages; a machine's proposal of relevance is…  
-  `docs/development/INTERFACE-CHANGES.md:9465`
+  `docs/development/INTERFACE-CHANGES.md:9482`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  
@@ -2077,6 +2079,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/MEASUREMENTS.md:15329`
 - The degradation is real and is what the assertion was CORRECTED to measure:** `finding` stops being an index predicate and becomes a row-by-row test over **the whole tail of the table after the cursor**, to return the few rows standing at one finding.  
   `docs/development/MEASUREMENTS.md:16172`
+- UNRULED 4x2 grant table) and `legistar-73550` p1 (a RULED 3x3 table whose header cells wrap onto two lines); 13 carry none, one of them (`73545` p5) a two-column block of signature lines named as the page a geometric step is most likely to misread.  
+  `docs/development/MEASUREMENTS.md:16432`
+- the criterion that could: the step does not recover a RULED table at all.  
+  `docs/development/MEASUREMENTS.md:16445`
 - **2026-08-01** — CORRECTED 2026-08-01 — this hole is CLOSED and the paragraph below is kept as the > reasoning that closed it.** One reconciling Durable Object alarm now serves FIVE > consumers (selection-sweep, task-drain, archive-monitor, connection-derive, > overdue-scan), three of which landed within a week of the decision.  
   `docs/development/MILESTONES.md:118`
 - Bob already RULED the doctrine** — content > produced by a third-party script, if it is ever evidence, is recorded as produced by > THAT party and not by the hosting site.  

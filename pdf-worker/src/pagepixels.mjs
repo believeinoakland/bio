@@ -371,7 +371,10 @@ export async function renderPageToPixels(bytes, pageIndex, opts = {}) {
   };
 }
 
-async function decodeImage(doc, im, opts) {
+/* CPDF-18 exports this ONE function so `imagecrop.mjs` decodes a cited image
+ * through the same decoder rather than growing a second one (CPDF-12's `PdfDoc`
+ * precedent, D-164's lesson). Its contract is unchanged. */
+export async function decodeImage(doc, im, opts) {
   const dict = im.obj.dict;
   const filters = im.filters;
   const last = filters[filters.length - 1] || null;

@@ -903,7 +903,13 @@ function undeterminedRecord(source, why, extra = {}) {
  * Tokens: { t:"str", bytes:[…0-255] } (raw shown bytes — NOT decoded as text,
  * because the bytes ARE the character codes the font maps), { t:"num", v },
  * { t:"name", v }, { t:"op", v }, and the array/dict delimiters. */
-function tokenizeContent(s) {
+function tokenizeContent(s, opts = {}) {
+  /* CPDF-18: `inlineImages` skips an inline image's binary data (the bytes
+     between `ID` and `EI`), which would otherwise be read as operators. It is
+     OFF for the Tier-1 text walk, whose output is measured and pinned, and ON
+     only for the image walk (`pdfPageImages`), which is where a stray `Q` or
+     `cm` inside sample bytes would move the graphics state. */
+  const skipInline = opts.inlineImages === true;
   const toks = [];
   let i = 0;
   const n = s.length;
@@ -933,7 +939,18 @@ function tokenizeContent(s) {
       if (isWhitespace(cc) || isDelimiter(cc)) break;
       i++;
     }
-    if (i > start) toks.push({ t: "op", v: s.slice(start, i) });
+    if (i > start) {
+      const op = s.slice(start, i);
+      toks.push({ t: "op", v: op });
+      if (skipInline && op === "ID") {
+        /* One whitespace byte ends `ID`; the data runs to the first `EI` that
+           stands alone after whitespace and before whitespace or a delimiter. */
+        const re = /\sEI(?=[\s/[<(]|$)/g;
+        re.lastIndex = i + 1;
+        const m = re.exec(s);
+        i = m ? m.index + 1 : n;
+      }
+    }
     else i++; // never stall
   }
   return toks;
@@ -1404,6 +1421,230 @@ async function extractText(doc, pageOrder) {
 }
 
 /* ------------------------------------------------------------------ *
+ * CPDF-18 — IMAGES AS CONTENT (EXTRACTION-BREADTH §3.3 item 2, §7 row 4)
+ * ------------------------------------------------------------------ *
+ *
+ * WHAT THIS EMITS. For every image a page PAINTS, the IC-1 `image` reference in
+ * its PDF form, the shape IC-124 designed and IC-125's grammar already admits:
+ *
+ *   { kind:"image", ref:"an image on page <N+1>", page, rect:[x0,y0,x1,y1],
+ *     mime, name, inline, width, height, filters, axis_aligned }
+ *
+ * `page` is 0-based (I2's own numbering) and `rect` is in the page's DEFAULT
+ * USER SPACE, in points, lower-left then upper-right — the SAME space and the
+ * SAME order as an annotation's /Rect, which is what `pdf-page`'s rect already
+ * carries, so one rectangle means one place whichever arm names it (§3.2: "the
+ * same fields as pdf-page").
+ *
+ * HOW THE RECTANGLE IS KNOWN, AND WHY IT IS NOT A GUESS. An image XObject paints
+ * the unit square through the current transformation matrix; that is the PDF's
+ * own definition of where an image goes (ISO 32000-1 §8.9.4). So the walk below
+ * is a small interpreter of exactly the operators that move the CTM — `q`, `Q`,
+ * `cm` — and of `Do` (and an inline image's `EI`), descending into Form XObjects
+ * through their /Matrix and their own /Resources. It interprets nothing else,
+ * and it is deliberately a SECOND walk rather than a change to the text
+ * interpreter above, whose output is measured and pinned and must stay
+ * byte-identical (the tokenizer's inline-image option is OFF for the text walk).
+ *
+ * WHAT THE RECTANGLE IS NOT, stated because a consumer would otherwise assume
+ * it: it is the image's PAINTED extent, not what survives clipping, and not a
+ * claim that nothing is drawn over it. A placement that rotates or skews the
+ * image yields its axis-aligned bounding box and says `axis_aligned:false`
+ * rather than pretending the box is the image's outline.
+ *
+ * THE ABSENCE RULE IS IC-124's, not the three older levels': `images` is NULL
+ * with `imagesWhy` from every branch that did not walk (an encrypted document, a
+ * content stream this reader cannot decode, a walk that threw), and an EMPTY
+ * list is a MEASURED ZERO — every page's content was interpreted and none
+ * painted an image. Never a partial list: one page that could not be walked
+ * makes the whole list null, because a list missing a page reads downstream as
+ * "that page has no images", which is the finding this reader is not entitled to.
+ *
+ * `mime` IS SET ONLY WHERE THE STREAM'S BYTES ARE A FILE OF THAT TYPE — a
+ * DCTDecode stream is a JPEG and a JPXDecode stream is a JPEG 2000 codestream.
+ * Every other image is SAMPLES, not a file, and its `mime` is null by meaning;
+ * `filters` names what it is instead. An invented `image/png` for raw samples
+ * would describe a file nobody made.
+ *
+ * `name` is the XObject's resource name on the page, for tracing; like an office
+ * member's file name it is a producer's filing choice and it is NOT the address.
+ * The address is page + rect (the canonical extent `canonicalExtent` takes).
+ */
+
+const IMAGE_FILE_MIME = Object.freeze({
+  DCTDecode: "image/jpeg", DCT: "image/jpeg", JPXDecode: "image/jp2",
+});
+const FORM_DEPTH_LIMIT = 8;
+
+/** Round a coordinate to 1/1000 pt so float noise in a composed matrix does
+ *  not give one placement two addresses. -0 is written 0. */
+const r3 = (v) => { const x = Math.round(v * 1000) / 1000; return x === 0 ? 0 : x; };
+
+/** The IC-1 `image` reference for a PDF page. Its `ref` is EXACTLY the human
+ *  form `describeExtent` derives for the same address (IC-1's parity rule —
+ *  pinned in `cpdf18-pdf-images.test.mjs`). */
+export function pdfImageRef(page, rect, extra = {}) {
+  return { kind: "image", ref: `an image on page ${page + 1}`, page, rect, ...extra };
+}
+
+/** CTM composition: `cm` sets CTM' = M x CTM (row-vector convention). */
+function mulMatrix(m, c) {
+  return [
+    m[0] * c[0] + m[1] * c[2], m[0] * c[1] + m[1] * c[3],
+    m[2] * c[0] + m[3] * c[2], m[2] * c[1] + m[3] * c[3],
+    m[4] * c[0] + m[5] * c[2] + c[4], m[4] * c[1] + m[5] * c[3] + c[5],
+  ];
+}
+
+/** The unit square through `ctm`, as an axis-aligned [x0,y0,x1,y1]. */
+function unitSquareRect(ctm) {
+  const pts = [[0, 0], [1, 0], [0, 1], [1, 1]].map(([x, y]) =>
+    [ctm[0] * x + ctm[2] * y + ctm[4], ctm[1] * x + ctm[3] * y + ctm[5]]);
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  return [r3(Math.min(...xs)), r3(Math.min(...ys)), r3(Math.max(...xs)), r3(Math.max(...ys))];
+}
+
+function matrixOf(doc, v) {
+  const a = doc.resolve(v);
+  if (!a || a.t !== "arr" || a.items.length !== 6) return null;
+  const n = a.items.map((x) => doc.resolve(x));
+  return n.every((x) => typeof x === "number" && Number.isFinite(x)) ? n : null;
+}
+
+function imageFilters(doc, dict) {
+  const f = doc.resolve(dict.Filter);
+  if (!f) return [];
+  if (f.t === "name") return [f.v];
+  if (f.t === "arr") return f.items.map((x) => nameOf(doc, x)).filter(Boolean);
+  return [];
+}
+
+/** Decode a list of content streams, or say which one could not be. */
+async function decodeContentStreams(doc, contents) {
+  const c = doc.resolve(contents);
+  if (!c) return { text: "" };
+  const streams = c.t === "arr" ? c.items.map((x) => doc.resolve(x)) : [c];
+  const parts = [];
+  for (const st of streams) {
+    if (!st || st.t !== "stream") continue;
+    const data = await doc.streamDecoded(st);
+    if (!data) return { text: null };
+    parts.push(LATIN1.decode(data));
+  }
+  return { text: parts.join("\n") };
+}
+
+/**
+ * Every image one page PAINTS, in painting order, with its rectangle.
+ * Returns `{ images:[placement…], why:null }` or `{ images:null, why }`.
+ * A placement carries `_stream` (the image XObject's stream object, or null for
+ * an inline image) and `_ctm` (the matrix it was painted through) as
+ * NON-ENUMERABLE properties, so the I2 output never holds a parser object while `pdf-worker`'s crop can still find the bytes it names.
+ */
+export async function pdfPageImages(doc, pageIdx) {
+  const order = doc._pageOrder || [];
+  const pageMap = pageIdx >= 0 && pageIdx < order.length ? doc.dictOf({ t: "ref", n: order[pageIdx] }) : null;
+  if (!pageMap) return { images: null, why: `page_unreadable:${pageIdx}` };
+  const top = await decodeContentStreams(doc, pageMap.Contents);
+  if (top.text == null) return { images: null, why: `content_stream_undecodable:page ${pageIdx}` };
+
+  const images = [];
+  const walk = async (content, resources, ctm0, depth, formChain) => {
+    const xobjects = resources ? doc.dictOf(resources.XObject) : null;
+    const toks = tokenizeContent(content, { inlineImages: true });
+    let ctm = ctm0;
+    const saved = [];
+    const operands = [];
+    for (const tk of toks) {
+      if (tk.t !== "op") { operands.push(tk); continue; }
+      switch (tk.v) {
+        case "q": saved.push(ctm); break;
+        case "Q": if (saved.length) ctm = saved.pop(); break;
+        case "cm": {
+          const nums = operands.filter((o) => o.t === "num").slice(-6).map((o) => o.v);
+          if (nums.length === 6) ctm = mulMatrix(nums, ctm);
+          break;
+        }
+        case "Do": {
+          const nameTok = [...operands].reverse().find((o) => o.t === "name");
+          const ref = nameTok && xobjects ? xobjects[nameTok.v] : null;
+          const st = ref ? doc.resolve(ref) : null;
+          /* A `Do` naming nothing this page can resolve may have painted an
+             image; reporting the page without it would be the partial list the
+             absence rule forbids, so the page is UNWALKABLE, by name. */
+          if (!st || st.t !== "stream")
+            throw new Error(`xobject_unresolvable:page ${pageIdx}:${nameTok ? nameTok.v : "?"}`);
+          const sub = nameOf(doc, st.dict.Subtype);
+          if (sub === "Image") {
+            const filters = imageFilters(doc, st.dict);
+            const last = filters[filters.length - 1] || null;
+            const placement = pdfImageRef(pageIdx, unitSquareRect(ctm), {
+              mime: IMAGE_FILE_MIME[last] ?? null,
+              name: nameTok.v,
+              inline: false,
+              width: typeof doc.resolve(st.dict.Width) === "number" ? doc.resolve(st.dict.Width) : null,
+              height: typeof doc.resolve(st.dict.Height) === "number" ? doc.resolve(st.dict.Height) : null,
+              filters,
+              axis_aligned: ctm[1] === 0 && ctm[2] === 0,
+            });
+            Object.defineProperty(placement, "_stream", { value: st, enumerable: false });
+            Object.defineProperty(placement, "_ctm", { value: ctm, enumerable: false });
+            images.push(placement);
+          } else if (sub === "Form") {
+            const key = ref && ref.t === "ref" ? ref.n : null;
+            if (depth >= FORM_DEPTH_LIMIT || (key != null && formChain.includes(key))) {
+              throw new Error(`form_nesting_unwalkable:page ${pageIdx}`);
+            }
+            const data = await doc.streamDecoded(st);
+            if (!data) throw new Error(`form_stream_undecodable:page ${pageIdx}`);
+            const m = matrixOf(doc, st.dict.Matrix) || [1, 0, 0, 1, 0, 0];
+            const formRes = doc.dictOf(st.dict.Resources) || resources;
+            await walk(LATIN1.decode(data), formRes, mulMatrix(m, ctm), depth + 1,
+                       key != null ? [...formChain, key] : formChain);
+          }
+          break;
+        }
+        case "EI": {
+          /* An inline image paints the unit square exactly as an XObject does.
+             Its bytes live inside the content stream and nothing downstream
+             extracts them yet, so it is REPORTED (it is on the page and a
+             reader asking "what images are here" must be told) with no name
+             and no file type, and `inline:true` says why. */
+          const placement = pdfImageRef(pageIdx, unitSquareRect(ctm), {
+            mime: null, name: null, inline: true, width: null, height: null,
+            filters: [], axis_aligned: ctm[1] === 0 && ctm[2] === 0,
+          });
+          Object.defineProperty(placement, "_stream", { value: null, enumerable: false });
+          Object.defineProperty(placement, "_ctm", { value: ctm, enumerable: false });
+          images.push(placement);
+          break;
+        }
+        default: break;
+      }
+      operands.length = 0;
+    }
+  };
+  try {
+    await walk(top.text, pageResources(doc, pageMap), [1, 0, 0, 1, 0, 0], 0, []);
+  } catch (e) {
+    return { images: null, why: String(e && e.message || e).slice(0, 120) };
+  }
+  return { images, why: null };
+}
+
+/** Every page's images, or NULL with the reason — never a partial list. */
+async function extractImages(doc, pageOrder) {
+  if (doc.isEncrypted()) return { images: null, why: "encrypted" };
+  const all = [];
+  for (let idx = 0; idx < pageOrder.length; idx++) {
+    const got = await pdfPageImages(doc, idx);
+    if (!got.images) return { images: null, why: got.why };
+    for (const im of got.images) all.push(im);
+  }
+  return { images: all, why: null };
+}
+
+/* ------------------------------------------------------------------ *
  * The public entry point
  * ------------------------------------------------------------------ */
 
@@ -1511,6 +1752,13 @@ export async function extractPdfStructure(bytes) {
   // Tier 1 text (CPDF-4): extends this same I2 output object; do not fork it.
   const text = await extractText(doc, pageOrder);
 
+  /* CPDF-18: the images each page PAINTS, as IC-1 `image {page, rect}`
+     references. TOP-LEVEL on the structure object rather than on `text`,
+     because the pdf-worker (I6) REPLACES `text` with its Tier-2 decode and an
+     image list riding there would vanish on exactly the documents Tier 2
+     reads. NULL with `imagesWhy` when not walked; an empty list is a zero. */
+  const imgs = await extractImages(doc, pageOrder);
+
   return {
     ok: true,
     container: "pdf",
@@ -1519,6 +1767,8 @@ export async function extractPdfStructure(bytes) {
     links,
     counts,
     text,
+    images: imgs.images,
+    ...(imgs.images ? {} : { imagesWhy: imgs.why }),
     notes: doc.notes,
   };
 }

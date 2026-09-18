@@ -13011,3 +13011,29 @@ released: 2026-09-18 by the REC-86 worker. Every claimed path is committed on br
 `worktree-agent-a3fbd59a3fef1a961`; the final tree ran the battery 224/224 · 13,984 green,
 `coverage --strict` exit 0, UI harness exit 0, `plancheck --local` 0 fail. The UI DELEGATION above
 stays open — it is UI's act, not this claim's.
+
+## CLAIM 2026-09-18 CONTENT-PDF (CPDF-18 — BREADTH §7 row 4: PDF images as content, the crop as a derived rendition, and the table-recognition GO/NO-GO)
+
+Worker spawned by CONDUCT #4, isolated worktree `agent-a445cd855cdde44ea`, branch
+`worktree-agent-a445cd855cdde44ea`, base `694f0a7f`. Premise falsified before building: no
+image-rectangle emitter exists — `pdfstructure.mjs` has only `pageDrawsImage` (a boolean over
+DECLARED resources) and `pdf-worker/src/pagepixels.mjs` counts image XObjects without placing
+them; neither interprets `cm`. Baseline on this tree before any edit: **226/226 suites green ·
+14109 assertions**, 3 fleet members RAN, no skip. Paths:
+
+- CONTENT-PDF (own): `bio-plane/src/pdfstructure.mjs` (the image walk, `pdfImageRef`,
+  `pdfPageImages`, `images`/`imagesWhy` on the structure output; the tokenizer gains an
+  inline-image option OFF for the text walk); `pdf-worker/src/imagecrop.mjs` (new);
+  `pdf-worker/src/pagepixels.mjs` (ONE word: `export` on `decodeImage`, CPDF-12's `PdfDoc`
+  precedent); `pdf-worker/test/table-recognition.probe.mjs`, `table-recognition-worker.mjs`,
+  `table-candidate.mjs` (new, probe-only, not discovered by the battery).
+- Tests: a new `bio-plane/test/cpdf18-pdf-images.test.mjs` and `bio-plane/test/nc-cpdf18.mjs`.
+- Generated: `bio-plane/dist/*` and `pdf-worker/dist/*` rebuilt (pdfstructure is an input of both).
+- Docs: `MEASUREMENTS.md` (the table GO/NO-GO), `INTERFACE-CHANGES.md` (IC-124's CONTENT-PDF
+  response only), `EXTRACTION-BREADTH-DESIGN.md` and `BIO_Content_Framework_v0_10.md` front
+  matter/rows, `DEBT.md` if residue is filed, `kickoffs/CONTENT-PDF.md`, `docs/DECIDED.md` on
+  regeneration, this block.
+
+NOT `bio-plane/src/index.mjs` (CPDF-19's moved tier-3 code is on an unmerged branch; nothing here
+needs the acquire path), NOT `checks/bio-checks.mjs` (IC-125's grammar already admits
+`image {page, rect}`), NOT `QUEUE.md` (CONDUCT's), NOT `pdf-worker/src/index.mjs` (no I6 route).

@@ -339,6 +339,7 @@ m035-census.txt
 # `.rec84-control-pristine/` gives. `bio-plane/test/nc-fw19.mjs` keeps per-arm pristine
 # copies of `checks/bio-checks.mjs` here and verifies every restore by sha256 AND content.
 .fw19-control-pristine/
+.cpdf18-control-pristine/
 
 # REC-86's negative-control pen, on its OWN line rather than under a glob, for the
 # reason the note at `.rec84-control-pristine/` gives: a glob over
