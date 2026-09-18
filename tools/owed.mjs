@@ -56,7 +56,8 @@
  *        useless. A sensitivity control does not notice; only this does.
  *   (A7) the owner pattern case-INSENSITIVE again -> Bob the PERSON is read as the BOB lane.
  *   (A8) a blocked queue heading read only to 220 characters -> a routing past that point is lost.
- *   (A7 and A8 added and all eight RUN 2026-09-18 by BOB #14, exit 0, 43 pass / 0 fail.)
+ *   (A9) the possessive allowed to be followed by a noun -> *IS BOB'S FRAMING* is attributed to the lane.
+ *   (A7..A9 added and all nine RUN 2026-09-18 by BOB #14, exit 0, 43 pass / 0 fail.)
  *   (All eight RE-RUN 2026-09-18 by the LED-2 worker after A3's anchor was repointed to the one
  *   `isClosedDebtRow` call site, exit 0, 43 pass / 0 fail, restore verified by sha256.)
  *
@@ -89,12 +90,19 @@ export const SOURCES = {
    four rows BOB #13 handed over as *attributed to BOB* was a false match: two quoted Bob the person
    (*the decision is Bob's or CONDUCT's*, *Bob's own words*), one named finished work, one a negation.
    Lane names in this estate are always written in capitals, and the person never is. */
+/* `is <LANE>'s` IS AN ASSIGNMENT ONLY WHEN THE POSSESSIVE ENDS THE CLAUSE. Found 2026-09-18 by LED-2's
+   worker once the CLOSED test was corrected: all-caps prose defeats the case-sensitive lane token —
+   *"IS BOB'S FRAMING"* is Bob the PERSON's framing, and *"commit 5df12c4 is CONDUCT's own…"* is a
+   possession. What follows decides it: a NOUN makes it a possession; punctuation, the end, or a
+   preposition makes it an assignment — *"the correction is CONDUCT's at integration"* (D-283) is a real
+   obligation and must stay. Measured over every lane before landing: exactly D-127 and D-296 drop. */
+const POSSESSIVE_ENDS = String.raw`(?![ \t]+(?!(?i:at|to|for|now|alone|and|or|as|by|in|on|until|once|when|from|after|before|first|next)\b)[A-Za-z])`;
 export const OWNER_RE = (lane) => new RegExp(
   String.raw`(?i:routed to (?:the\s+)?)${lane}\b`
   + String.raw`|(?i:owed by (?:the\s+)?)${lane}\b`
   + String.raw`|(?i:blocked on (?:the\s+)?)${lane}\b`
   + String.raw`|${lane}(?i:'s to |'s call| owns | to decide| to design)`
-  + String.raw`|(?i:is )${lane}(?i:'s)\b`);
+  + String.raw`|(?i:is )${lane}(?i:'s)` + POSSESSIVE_ENDS);
 
 /* TIGHTENED TWICE, BOTH TIMES BY DRIVING IT. A bare `RESIDUE` matched the word wherever it
    appeared in narration — *the residue that is ALREADY THERE*, *residue each* — which is prose

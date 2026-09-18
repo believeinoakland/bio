@@ -2078,9 +2078,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-18** — WITHDRAWN 2026-09-18 BY BOB #14, and CONDUCT #3 reached the same conclusion independently.** This step used to say *turn your own RC off as the last act of stand-down*.  
   `docs/development/kickoffs/BOB.md:165`
 - Report what was DONE and what was DECIDED.  
-  `docs/development/kickoffs/BOB.md:462`
+  `docs/development/kickoffs/BOB.md:469`
 - **2026-09-17** — RULED BY BOB, 2026-09-17: a lane's retired session is archived WITHOUT HIS INVOLVEMENT.** Verbatim: *"BOB #12 being alive is not my problem.  
-  `docs/development/kickoffs/BOB.md:497`
+  `docs/development/kickoffs/BOB.md:504`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
   `docs/development/kickoffs/CAPTURE.md:99`
 - debt that can be avoided; superseded rules in tests are CORRECTED, never exempted.** All of these earned their place; the ledger has the receipts. ## Bob's rulings, already made.  
