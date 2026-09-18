@@ -1002,6 +1002,12 @@ CREATE INDEX IF NOT EXISTS resolutions_bundle ON resolutions(bundle_id);
 -- pair with no positions is a real pair that cannot place itself, and a portion
 -- leg asking it for a connection grade gets UNDETERMINED and STATED -- per pair,
 -- never assumed for the connection as a whole.
+-- REC-120 / D-161 act (2), 2026-09-18: THE PAIR SAYS HOW IT WAS SELECTED, because
+-- it is the STRONGEST-GRADED mention and not the ON-POINT one Bob ruled (5.4 second
+-- pass, FW-21 measured M-51). pair_rule names the selection and its tie-break
+-- ('strongest-graded/first-reference-by-sort'). NULL on a row derived before REC-120,
+-- whose ties went to the scan's row order -- not a basis, and stated as such by the
+-- read rather than backfilled, since the rule that produced it cannot be recovered.
 CREATE TABLE IF NOT EXISTS connections (
   a_capture_sha TEXT NOT NULL,
   b_capture_sha TEXT NOT NULL,
@@ -1023,6 +1029,7 @@ CREATE TABLE IF NOT EXISTS connections (
   b_pos_kind    TEXT,
   b_pos         TEXT,
   b_pos_ref     TEXT,
+  pair_rule     TEXT,  -- REC-120: HOW the pair was selected. NULL = derived before REC-120, when ties went to scan order
   PRIMARY KEY (a_capture_sha, b_capture_sha, entity_id)
 );
 CREATE INDEX IF NOT EXISTS connections_entity ON connections(entity_id);

@@ -9537,3 +9537,57 @@ never narrowed lands exactly as before — its leg on the same whole-document ro
 NOT-AFFECTED.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at REC-86's integration — I3 23.2.0 → 23.3.0, MINOR (additive, as classed).** Base read AT RESOLUTION: 23.2.0 (FW-19's IC-125 took 23.2.0 in the same wave). SKILL and DIST NOT-AFFECTED — CONDUCT answers FOR both (neither calls a new op; an op nobody asks for cannot be observed), named as such. **UI's act is OWED, not waived:** the NARROW affordance on a leg is delegated in `CLAIMS.md` and, per the worker, also waits on UI-62's page picker. **One scope note recorded at resolution:** REC-86's draft of the content framework's connection-pair row claimed the ON-POINT connection choice built; CONDUCT declined that cell at merge — REC-86 narrows a LEG, and the connection-side choice is `REC-120`.
+
+## IC-129 · I5: `connections.pair_rule` — HOW a connection's pair was selected · AND I3: `determining_pair.selection` on every connection view, and a fourth C-49 refusal, `CONNECTION_PAIR_MENTION_UNCHOSEN`, on `op=connections&content=` · PROPOSED 2026-09-18 (REC-120, D-161 acts 1 and 2; minted with `node tools/mintid.mjs IC`) — the version bumps and the RESOLUTION are CONDUCT's
+
+- **Interfaces:** I5 (the store schema) and I3 (plane → UI). **Bases read off THIS TREE's
+  `INTERFACES.md` (`694f0a7f`): I5 1.17.0, I3 23.3.0.** Proposed as **MINOR on both, ADDITIVE in
+  shape** — I5 1.17.0 → 1.18.0, I3 23.3.0 → 23.4.0. **Read the bases AT RESOLUTION**; three
+  sibling RECORD workers are in flight.
+- **Proposer / owner to land it:** `RECORD`, worker `agent-adf3ba7d5e1b95c38`, from QUEUE REC-120.
+- **Consumers to answer:** `UI` (NOT-AFFECTED expected — measured below), `SKILL` (NOT-AFFECTED
+  expected: no assistant reads a connection's pair), `DIST` (NOT-AFFECTED), `RECORD`.
+- **Design:** `BIO_Content_Framework_v0_10.md` Part II §14.5 (the connection-pair row), `DEBT.md`
+  D-161 (acts 1 and 2 of its open half), `MEASUREMENTS.md` M-51 (FW-21's driven measurement).
+
+**THE SHAPE.**
+
+1. **I5 — one nullable column, `connections.pair_rule TEXT`**, migrated by the store's
+   column-add list. `deriveConnections` writes `strongest-graded/first-reference-by-sort` on every
+   row it writes. NULL on every row that exists before the column did, and NULL is the TRUE value:
+   those rows' ties went to SQLite's row order, which cannot be recovered. No new table, so nothing
+   joins `purge`. The derivation's scan now orders `capture_sha, ref` (it ordered `capture_sha`
+   alone), so the tie-break the column names is the one that actually ran.
+2. **I3 — `determining_pair.selection`**, on every connection view that carries a pair
+   (`op=connect`, `op=connections&id=`/`&sha256=`, and each entry of `op=connections&content=`):
+   `{ method: "strongest-graded", tie_break: "first-reference-by-sort" | null, chosen: false, says }`.
+   `chosen` is always `false` today and is published anyway — it is the fact act (3) will change.
+   `tie_break: null` with its reason in `says` on a pre-REC-120 row. No top-level key is added to
+   any connection view (`reading-position.test.mjs` pins the key set and stays green).
+3. **I3 — `op=connections&content=` answers UNDETERMINED where it used to answer definitely**,
+   under a fourth row of the existing C-49 family: **C-49.4 `CONNECTION_PAIR_MENTION_UNCHOSEN`**,
+   with a canned translation (DEC-49), a `detail` naming the mentions, and a `mentions[]` array on
+   the entry (`{ref, grade, position, inside}`, `inside: null` where unplaced). It fires when (a)
+   the pair was read OUTSIDE the part and another mention of the same entity in that capture is
+   inside it or cannot be placed, or (b) the pair was read INSIDE the part but was kept only on a
+   tie (or over a stronger mention from a later resolution) against a mention not inside it. A
+   weaker mention outside does not fire it. The answer's `why` names the kind when present and is
+   byte-identical otherwise.
+4. **The basis string** of a newly derived connection gains one clause: *"each is its document's
+   strongest-graded mention (ties: first reference by sort), not one chosen as on point"*.
+
+**WHY IT IS NOT A MAJOR, stated because an answer MOVES.** The shapes are additive and the moved
+answers move INTO a list and a state the op already published (`undetermined[]`, `connection_grade:
+null`, C-49.2's precedent). A consumer that honoured the published contract renders them correctly
+today; one that read `outside` as "not in this part" was reading an overclaim, which is the defect.
+
+**CONSUMER IMPACT, MEASURED 2026-09-18:** `grep -rn "connection_grade|determining_pair|CONNECTION_PAIR"`
+over `civicos-ui/app.html` and `civicos-ui/*.mjs` answers ZERO lines that read a connection; no
+surface renders a portion's connection grade yet. The DEC-49 guard (`civicos-ui/check-refusal-codes.mjs`)
+exits 0 with the new row in reach.
+
+**WHAT IS DELIBERATELY NOT IN THIS IC.** Act (3), the member's act of CHOOSING the on-point pair — an
+I5 + I3 change with a UI affordance, its own row and its own IC. And the single-position limit of
+`reading_refs` (one position per `(capture_sha, ref)`), which this check inherits.
+
+**RESPONSES:** not yet collected. UI, SKILL, DIST expected NOT-AFFECTED.

@@ -420,7 +420,8 @@ import { checkLegExtentGrammar } from "../checks/bio-checks.mjs";
 /* FW-17 / D-161: what a PORTION may earn from a connection's determining pair.
    Its own family because the question is its own — the extent checks above ask
    whether an address is legal, this asks whether a link REACHES an address. */
-import { CONNECTION_PAIR_CHECKS, checkConnectionPairCovers } from "../checks/bio-checks.mjs";
+import { CONNECTION_PAIR_CHECKS, checkConnectionPairCovers,
+         checkConnectionMentionUnchosen } from "../checks/bio-checks.mjs";
 /* REC-86 / IC-123: NARROW's refusals, its one predicate over two extents, and
    the version-name grammar its new reading must meet (C-25.2's own regex, so a
    name this act accepts is one op=promote accepts). */
@@ -1007,6 +1008,10 @@ export class Store extends DurableObject {
       ["connections", "b_pos_kind", "TEXT"],
       ["connections", "b_pos", "TEXT"],
       ["connections", "b_pos_ref", "TEXT"],
+      /* REC-120 / D-161 act (2): how the pair was SELECTED. Null on every row
+         that exists before this column did, and null is the TRUE value for them:
+         their ties went to the scan's row order, which no read can recover. */
+      ["connections", "pair_rule", "TEXT"],
       /* FW-19 / IC-125: `cited_as` on a content row. Every row that can exist
          before this column did was minted against a TEXT arm (no `image` kind
          was admissible), so the default IS the true value for all of them —
@@ -17339,6 +17344,34 @@ export class Store extends DurableObject {
      where" is a finding and must survive into the answer as one. A row derived before this
      landing has no pair at all and says so with `null`, which is a THIRD state and not the
      same as a pair that cannot place itself. */
+  /* REC-120 / D-161 act (2) — THE RULE THAT SELECTS THE PAIR, written onto every row
+     `deriveConnections` writes (`connections.pair_rule`) and read back by the view
+     below. One constant so the writer and the reader cannot spell it two ways. */
+  static #PAIR_RULE = "strongest-graded/first-reference-by-sort";
+
+  /* REC-120 / D-161 act (2) — WHAT THE PAIR IS, STATED ON THE PAIR. FW-17's pair is
+     the STRONGEST-GRADED mention on each end, not the ON-POINT one Bob ruled (5.4
+     second pass): nobody chose it, and nothing let anybody. `chosen: false` is
+     therefore always false today and is published anyway, because it is the fact a
+     reader most needs and the one act (3) will change. A row written before REC-120
+     carries no rule, and its tie-break was the scan's row order, so `tie_break` is
+     NULL there and `says` names why rather than inventing the rule it would have
+     had. */
+  static #pairSelection(rule) {
+    return {
+      method: "strongest-graded",
+      tie_break: typeof rule === "string" && rule ? (rule.split("/")[1] || null) : null,
+      chosen: false,
+      says: rule
+        ? "each end is the strongest-graded mention of the subject in its document; between equal "
+          + "grades the tie goes to the first reference by sort order, which says nothing about "
+          + "relevance. It is a machine selection and not the mention on point, which nobody has chosen"
+        : "each end is the strongest-graded mention of the subject in its document; this row was "
+          + "derived before the tie-break was recorded, when equal grades went to the scan's row "
+          + "order, which is not a basis. Re-deriving the subject's connections records it. It is "
+          + "a machine selection and not the mention on point, which nobody has chosen" };
+  }
+
   #connectionView(r) {
     const aPos = readingSourceFromColumns(r.a_pos_kind, r.a_pos, r.a_pos_ref);
     const bPos = readingSourceFromColumns(r.b_pos_kind, r.b_pos, r.b_pos_ref);
@@ -17354,7 +17387,8 @@ export class Store extends DurableObject {
                    why: aPos && bPos
                      ? "both ends record where in their document the determining reference was read"
                      : "the determining reference is recorded on both ends; where it was read is not, "
-                     + "so a citation of a PART of either document cannot yet earn from this connection" }
+                     + "so a citation of a PART of either document cannot yet earn from this connection",
+                   selection: Store.#pairSelection(r.pair_rule) }
                : null };
   }
 
@@ -17427,12 +17461,21 @@ export class Store extends DurableObject {
        discards the reference". Selecting one more column of a row the scan
        already reads costs no extra read and no extra bound: the LIMITs, the
        row budget and the partial-group drop below are untouched. */
+    /* REC-120 / D-161 act (2) — THE TIE-BREAK IS NAMED, which needs it to EXIST.
+       The outer ORDER BY was `capture_sha` alone, so between two mentions at the
+       same grade in one capture the pair went to whichever row SQLite returned
+       first: unspecified, unrecorded, and — FW-21's control — enough on its own to
+       move which real mention a member's citation was honoured for. `, ref` makes
+       it the first reference by sort, deterministically, and `pair_rule` below
+       writes that rule onto the row. It is NOT a relevance judgement and the row
+       says so: a deterministic tie-break is still not a basis, which is why
+       `connectionGradeForContent` answers UNDETERMINED where a tie decided it. */
     const scan = this.#rows(
       `SELECT capture_sha, bundle_id, grade, ref FROM resolutions
         WHERE entity_id=? AND capture_sha IN (
           SELECT capture_sha FROM resolutions WHERE entity_id=? GROUP BY capture_sha
            ORDER BY capture_sha LIMIT ?)
-        ORDER BY capture_sha LIMIT ?`, entityId, entityId, endsCap + 1, rowCap + 1);
+        ORDER BY capture_sha, ref LIMIT ?`, entityId, entityId, endsCap + 1, rowCap + 1);
     const rowsCut = scan.length > rowCap;
     const rows = rowsCut ? scan.slice(0, rowCap) : scan;
     if (rowsCut && rows.length) {
@@ -17508,6 +17551,10 @@ export class Store extends DurableObject {
                    : A.pos || B.pos
                      ? ` (read at ${(A.pos || B.pos).ref} on one end only; the other reading does not say where)`
                      : ` (neither reading says where in its document the reference was read)`)
+              /* REC-120 / D-161 act (2): the row's own account says what the pair IS,
+                 so no reader takes a grade collapse for a relevance judgement. Short
+                 on purpose: the basis is cut at 400 characters below. */
+              + `; each is its document's strongest-graded mention (ties: first reference by sort), not one chosen as on point`
             : `; which reference established it is not recorded on this row`;
           const basis = `both documents concern ${label} (${entityId}); grade is the weaker of the two ends `
                       + `(${A.grade}, ${B.grade}) -> ${grade}${pairNote}`;
@@ -17519,12 +17566,13 @@ export class Store extends DurableObject {
             a_ref: A.ref, a_pos_kind: A.pos ? A.pos.kind : null,
             a_pos: A.pos ? readingSourceJson(A.pos) : null, a_pos_ref: A.pos ? A.pos.ref : null,
             b_ref: B.ref, b_pos_kind: B.pos ? B.pos.kind : null,
-            b_pos: B.pos ? readingSourceJson(B.pos) : null, b_pos_ref: B.pos ? B.pos.ref : null };
+            b_pos: B.pos ? readingSourceJson(B.pos) : null, b_pos_ref: B.pos ? B.pos.ref : null,
+            pair_rule: Store.#PAIR_RULE };
           this.sql.exec(
             `INSERT INTO connections
                (a_capture_sha,b_capture_sha,entity_id,a_bundle_id,b_bundle_id,a_grade,b_grade,grade,established,asserted_by,basis,at,
-                a_ref,a_pos_kind,a_pos,a_pos_ref,b_ref,b_pos_kind,b_pos,b_pos_ref)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                a_ref,a_pos_kind,a_pos,a_pos_ref,b_ref,b_pos_kind,b_pos,b_pos_ref,pair_rule)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
              ON CONFLICT(a_capture_sha,b_capture_sha,entity_id) DO UPDATE SET
                a_bundle_id=excluded.a_bundle_id, b_bundle_id=excluded.b_bundle_id,
                a_grade=excluded.a_grade, b_grade=excluded.b_grade, grade=excluded.grade,
@@ -17533,11 +17581,11 @@ export class Store extends DurableObject {
                a_ref=excluded.a_ref, a_pos_kind=excluded.a_pos_kind,
                a_pos=excluded.a_pos, a_pos_ref=excluded.a_pos_ref,
                b_ref=excluded.b_ref, b_pos_kind=excluded.b_pos_kind,
-               b_pos=excluded.b_pos, b_pos_ref=excluded.b_pos_ref`,
+               b_pos=excluded.b_pos, b_pos_ref=excluded.b_pos_ref, pair_rule=excluded.pair_rule`,
             row.a_capture_sha, row.b_capture_sha, row.entity_id, row.a_bundle_id, row.b_bundle_id,
             row.a_grade, row.b_grade, row.grade, row.established, row.asserted_by, row.basis, row.at,
             row.a_ref, row.a_pos_kind, row.a_pos, row.a_pos_ref,
-            row.b_ref, row.b_pos_kind, row.b_pos, row.b_pos_ref);
+            row.b_ref, row.b_pos_kind, row.b_pos, row.b_pos_ref, row.pair_rule);
           connections.push(this.#connectionView(row));
         }
       }
@@ -17650,6 +17698,13 @@ export class Store extends DurableObject {
    * is told "no connection" when the truth is "this record has not read the document
    * closely enough to say" has been told something false about their own case.
    *
+   * AND A FOURTH, REC-120 (D-161 act 1, M-51): the pair is ONE of possibly several
+   * mentions of the subject in the document, selected by grade and then by sort order,
+   * never chosen as on point. So a pair outside the part is not a definite "outside"
+   * while another mention is inside it or cannot be placed, and a pair inside it is not a
+   * definite reach when it won only a tie against a mention that is not. Both answer
+   * UNDETERMINED under C-49.4, naming the mentions (`checkConnectionMentionUnchosen`).
+   *
    * THE DOCUMENT ARM TAKES NO POSITION TEST AT ALL, and that is doctrine rather than an
    * optimisation. A document-extent row's portion IS the whole document (5.3 — a citation
    * naming no part means the whole document), so every connection on that capture is
@@ -17702,6 +17757,27 @@ export class Store extends DurableObject {
     const keep = this.#bundleRedactor(viewer);
     const whole = row.extent_kind === "document";
     const reaching = [], undetermined = [], outside = [];
+    /* REC-120: EVERY resolution of this capture to one entity, with where its reading
+       placed it (null where it could not) — the mentions the pair was selected from.
+       Bounded like every meaning-layer read; a cut read is passed on as `cut` and the
+       check treats what it did not read as unplaced, never as absent. Cached per
+       entity: a capture's connections share few subjects. The alias is `rp` and not
+       `rr` because `readingname.test.mjs` counts the TERM lookup's join text to prove
+       it has one builder, and this is a different lookup (by PRIMARY KEY). */
+    const mentionCache = new Map();
+    const mentionsOf = (entityId) => {
+      if (mentionCache.has(entityId)) return mentionCache.get(entityId);
+      const rows = this.#rows(
+        `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref
+           FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
+          WHERE r.capture_sha=? AND r.entity_id=? ORDER BY r.ref LIMIT ?`,
+        row.capture_sha, entityId, Store.#MEANING_LIMIT_MAX + 1);
+      const cut = rows.length > Store.#MEANING_LIMIT_MAX;
+      const got = { cut, mentions: (cut ? rows.slice(0, Store.#MEANING_LIMIT_MAX) : rows).map((m) => ({
+        ref: m.ref, grade: m.grade, position: readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref) })) };
+      mentionCache.set(entityId, got);
+      return got;
+    };
     for (const c of conns) {
       /* WHICH END IS OURS. A capture may be BOTH ends only of a self-connection, which the
          canonical pair order (a < b) makes impossible, so this is exhaustive. */
@@ -17722,6 +17798,25 @@ export class Store extends DurableObject {
       }
       const bad = checkConnectionPairCovers(view.determining_pair, side, row.extent_kind, extent,
                                             readingPositionInExtent);
+      /* REC-120 / D-161 act (1) — THE PAIR IS NOT THE ONLY MENTION, so neither a
+         definite `outside` nor a definite reach may rest on it alone. FW-21 drove it
+         (M-51): page 9, where a second grade-A mention of the subject was read,
+         answered exactly as page 7, which never mentions it. Asked only when the
+         pair PLACED itself (an unplaced pair is already undetermined, C-49.2), and
+         the mentions are read once per entity, not once per connection. */
+      if (!bad || bad.code === "CONNECTION_PAIR_OUTSIDE_EXTENT") {
+        const unchosen = checkConnectionMentionUnchosen({
+          pairRef: side === "a" ? view.determining_pair.a_ref : view.determining_pair.b_ref,
+          pairGrade: side === "a" ? c.a_grade : c.b_grade, pairReached: !bad,
+          ...mentionsOf(c.entity_id), extentKind: row.extent_kind, extent,
+          covers: readingPositionInExtent, rank: (g) => Store.#GRADE_RANK[g] || 0 });
+        if (unchosen) {
+          undetermined.push({ ...entry, code: unchosen.code, check: unchosen.check,
+                              translation: unchosen.translation, why: unchosen.detail,
+                              mentions: unchosen.mentions });
+          continue;
+        }
+      }
       if (!bad) { reaching.push({ ...entry, why: `the determining reference was read at `
                                               + `${(side === "a" ? view.determining_pair.a_position
                                                                 : view.determining_pair.b_position).ref}, `
@@ -17736,6 +17831,9 @@ export class Store extends DurableObject {
     let grade = null;
     for (const r2 of reaching)
       if (grade == null || Store.#GRADE_RANK[r2.grade] > Store.#GRADE_RANK[grade]) grade = r2.grade;
+    /* REC-120: the answer's own sentence names the unchosen-mention kind when it is
+       present, and is the pre-item sentence byte for byte when it is not. */
+    const unchosenN = undetermined.filter((u) => u.code === "CONNECTION_PAIR_MENTION_UNCHOSEN").length;
     return {
       ok: true, content_id: row.content_id, capture_sha: row.capture_sha,
       bundle_id: keep(row.bundle_id), extent_kind: row.extent_kind, ref: row.ref,
@@ -17753,6 +17851,13 @@ export class Store extends DurableObject {
           + `established and nothing about how credible either document is`
         : conns.length === 0
           ? `this document is an end of no connection, so there is nothing for ${row.ref} to earn from`
+          : unchosenN
+            ? `no connection is established to reach ${row.ref}: ${unchosenN} rest on a pair that is this `
+              + `document's strongest-graded mention of the subject while another mention bears on `
+              + `${row.ref}, and nobody has chosen which mention is on point`
+              + (undetermined.length > unchosenN ? `; ${undetermined.length - unchosenN} cannot be placed` : ``)
+              + `; ${outside.length} were established elsewhere in this document. UNDETERMINED is the `
+              + `answer and it is not the same as none`
           : undetermined.length
             ? `no connection is established to reach ${row.ref}: ${undetermined.length} cannot be placed `
               + `(the record does not hold where the determining reference was read) and ${outside.length} `

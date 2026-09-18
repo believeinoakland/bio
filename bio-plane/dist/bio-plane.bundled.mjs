@@ -1009,6 +1009,12 @@ CREATE INDEX IF NOT EXISTS resolutions_bundle ON resolutions(bundle_id);
 -- pair with no positions is a real pair that cannot place itself, and a portion
 -- leg asking it for a connection grade gets UNDETERMINED and STATED -- per pair,
 -- never assumed for the connection as a whole.
+-- REC-120 / D-161 act (2), 2026-09-18: THE PAIR SAYS HOW IT WAS SELECTED, because
+-- it is the STRONGEST-GRADED mention and not the ON-POINT one Bob ruled (5.4 second
+-- pass, FW-21 measured M-51). pair_rule names the selection and its tie-break
+-- ('strongest-graded/first-reference-by-sort'). NULL on a row derived before REC-120,
+-- whose ties went to the scan's row order -- not a basis, and stated as such by the
+-- read rather than backfilled, since the rule that produced it cannot be recovered.
 CREATE TABLE IF NOT EXISTS connections (
   a_capture_sha TEXT NOT NULL,
   b_capture_sha TEXT NOT NULL,
@@ -1030,6 +1036,7 @@ CREATE TABLE IF NOT EXISTS connections (
   b_pos_kind    TEXT,
   b_pos         TEXT,
   b_pos_ref     TEXT,
+  pair_rule     TEXT,  -- REC-120: HOW the pair was selected. NULL = derived before REC-120, when ties went to scan order
   PRIMARY KEY (a_capture_sha, b_capture_sha, entity_id)
 );
 CREATE INDEX IF NOT EXISTS connections_entity ON connections(entity_id);
@@ -3598,6 +3605,7 @@ __export(bio_checks_exports, {
   checkBiasExtension: () => checkBiasExtension,
   checkBundle: () => checkBundle,
   checkCaseDocument: () => checkCaseDocument,
+  checkConnectionMentionUnchosen: () => checkConnectionMentionUnchosen,
   checkConnectionPairCovers: () => checkConnectionPairCovers,
   checkContentExtent: () => checkContentExtent,
   checkGatheringGrammar: () => checkGatheringGrammar,
@@ -10642,9 +10650,16 @@ var CONTENT_EXTENT_CHECKS = {
     translation: "One of the values describing which part of the document you mean cannot be written into the record as it stands \u2014 it is empty, too long, or contains a quotation mark, a backslash, a line break or a comment mark, and those characters would silently reshape the document rather than appear in it. It is declined instead of mangled."
   }
 };
-function refusal(key, detail) {
+function refusal(key, detail, extra = null) {
   const row = CONTENT_EXTENT_CHECKS[key] || CONNECTION_PAIR_CHECKS[key];
-  return { ok: false, code: key, check: row.check, translation: row.translation, detail };
+  return {
+    ok: false,
+    code: key,
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra && typeof extra === "object" ? extra : {}
+  };
 }
 function legExtent(leg) {
   const l = leg && typeof leg === "object" ? leg : {};
@@ -11180,6 +11195,26 @@ var CONNECTION_PAIR_CHECKS = {
        the honest answer. */
     where: "src/store.mjs connectionGradeForContent > pair-content-row-present",
     translation: "This record holds no passage with that address, so there is no part of a document whose connections could be weighed. A content address is minted when a citation first points at a passage \u2014 if you expected one here, the citation that would have made it has not been written yet."
+  },
+  /* REC-120 / D-161 act (1) / M-51 — THE UNCHOSEN MENTION. The pair is the
+     STRONGEST-GRADED mention of the subject in each document (FW-17's collapse),
+     never a mention anybody chose as ON POINT (Bob's 5.4 second pass). So when
+     the document holds MORE THAN ONE mention of the subject, the pair's place is
+     a machine selection and two answers built on it would claim more than the
+     record holds: a definite "outside" for a part where ANOTHER mention of the
+     subject was read (FW-21 drove it: page 9 of a document mentioning the
+     ordinance on 2 and 9 answered exactly as page 7, which never mentions it),
+     and a "reaches" for a part the pair won only on a TIE-BREAK against an
+     equal-grade mention read elsewhere (the tie-break is sort order, which says
+     nothing about relevance — flip it and the answer flips). Both are
+     UNDETERMINED, stated, with the mentions named. A mention the reading could
+     not place counts as possibly-inside and possibly-outside, for the same
+     reason C-49.2 exists. A WEAKER mention outside does not unsettle a reach:
+     grade decided that pair, and grade is a stated basis. */
+  CONNECTION_PAIR_MENTION_UNCHOSEN: {
+    check: "C-49.4",
+    where: "checks/bio-checks.mjs checkConnectionMentionUnchosen > is-mention-unchosen",
+    translation: "This document mentions the same subject in more than one place, and the record linked the two documents through the strongest-graded mention without anyone choosing which mention is the one on point. Because another mention bears on the part you cited, whether this connection reaches your citation is undetermined rather than yes or no. A citation of the document as a whole is answered today; choosing which mention is the on-point one for this connection is not yet something the record lets anyone do."
   }
 };
 function checkConnectionPairCovers(pair, side, extentKind, extent, covers) {
@@ -11197,6 +11232,40 @@ function checkConnectionPairCovers(pair, side, extentKind, extent, covers) {
       `the determining reference on end ${side === "b" ? "B" : "A"}${ref ? ` (${ref})` : ""} was read at ${position.ref}, which is outside ${describeExtent({ kind: extentKind, ...extent || {} })}`
     );
   return null;
+}
+function checkConnectionMentionUnchosen({
+  pairRef = null,
+  pairGrade = null,
+  pairReached = false,
+  mentions = [],
+  cut = false,
+  extentKind,
+  extent,
+  covers,
+  rank: rank4
+} = {}) {
+  const r = typeof rank4 === "function" ? rank4 : () => 0;
+  const place = (m) => m && m.position && typeof covers === "function" ? !!covers(m.position, extentKind, extent) : null;
+  const others = (Array.isArray(mentions) ? mentions : []).filter((m) => m && m.ref !== pairRef).map((m) => ({ ref: m.ref, grade: m.grade ?? null, position: m.position ?? null, inside: place(m) }));
+  const part = describeExtent({ kind: extentKind, ...extent || {} });
+  const name = (list) => list.map((m) => `${m.ref} (${m.position ? `read at ${m.position.ref}` : "where it was read is not recorded"})`).join(", ");
+  if (!pairReached) {
+    const bearing = others.filter((m) => m.inside !== false);
+    if (!bearing.length && !cut) return null;
+    const inside = bearing.filter((m) => m.inside === true);
+    return refusal(
+      "CONNECTION_PAIR_MENTION_UNCHOSEN",
+      `the connection's pair (${pairRef ?? "unnamed"}) is this document's strongest-graded mention of the subject and was read outside ${part}, but ` + (inside.length ? `another mention of the same subject, ${name(inside)}, was read inside it` : bearing.length ? `another mention of the same subject, ${name(bearing)}, cannot be placed and may be inside it` : `not every mention of the subject in this document was read, and one may be inside it`) + `. Nobody chose which mention is on point, so whether this connection reaches the citation is undetermined`,
+      { mentions: bearing }
+    );
+  }
+  const tied = others.filter((m) => r(m.grade) >= r(pairGrade) && m.inside !== true);
+  if (!tied.length && !cut) return null;
+  return refusal(
+    "CONNECTION_PAIR_MENTION_UNCHOSEN",
+    `the connection's pair (${pairRef ?? "unnamed"}) was read inside ${part}, but it was kept over ` + (tied.length ? `an equal-grade mention of the same subject, ${name(tied)}, that is not inside it,` : `mentions of the subject that were not all read,`) + ` by a tie-break \u2014 sort order, which says nothing about which mention is on point \u2014 so whether this connection reaches the citation is undetermined`,
+    { mentions: tied }
+  );
 }
 var SHA256_K = new Uint32Array([
   1116352408,
@@ -25764,6 +25833,10 @@ var Store = class _Store extends DurableObject {
       ["connections", "b_pos_kind", "TEXT"],
       ["connections", "b_pos", "TEXT"],
       ["connections", "b_pos_ref", "TEXT"],
+      /* REC-120 / D-161 act (2): how the pair was SELECTED. Null on every row
+         that exists before this column did, and null is the TRUE value for them:
+         their ties went to the scan's row order, which no read can recover. */
+      ["connections", "pair_rule", "TEXT"],
       /* FW-19 / IC-125: `cited_as` on a content row. Every row that can exist
          before this column did was minted against a TEXT arm (no `image` kind
          was admissible), so the default IS the true value for all of them —
@@ -40690,6 +40763,26 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
        where" is a finding and must survive into the answer as one. A row derived before this
        landing has no pair at all and says so with `null`, which is a THIRD state and not the
        same as a pair that cannot place itself. */
+  /* REC-120 / D-161 act (2) — THE RULE THAT SELECTS THE PAIR, written onto every row
+     `deriveConnections` writes (`connections.pair_rule`) and read back by the view
+     below. One constant so the writer and the reader cannot spell it two ways. */
+  static #PAIR_RULE = "strongest-graded/first-reference-by-sort";
+  /* REC-120 / D-161 act (2) — WHAT THE PAIR IS, STATED ON THE PAIR. FW-17's pair is
+     the STRONGEST-GRADED mention on each end, not the ON-POINT one Bob ruled (5.4
+     second pass): nobody chose it, and nothing let anybody. `chosen: false` is
+     therefore always false today and is published anyway, because it is the fact a
+     reader most needs and the one act (3) will change. A row written before REC-120
+     carries no rule, and its tie-break was the scan's row order, so `tie_break` is
+     NULL there and `says` names why rather than inventing the rule it would have
+     had. */
+  static #pairSelection(rule) {
+    return {
+      method: "strongest-graded",
+      tie_break: typeof rule === "string" && rule ? rule.split("/")[1] || null : null,
+      chosen: false,
+      says: rule ? "each end is the strongest-graded mention of the subject in its document; between equal grades the tie goes to the first reference by sort order, which says nothing about relevance. It is a machine selection and not the mention on point, which nobody has chosen" : "each end is the strongest-graded mention of the subject in its document; this row was derived before the tie-break was recorded, when equal grades went to the scan's row order, which is not a basis. Re-deriving the subject's connections records it. It is a machine selection and not the mention on point, which nobody has chosen"
+    };
+  }
   #connectionView(r) {
     const aPos = readingSourceFromColumns(r.a_pos_kind, r.a_pos, r.a_pos_ref);
     const bPos = readingSourceFromColumns(r.b_pos_kind, r.b_pos, r.b_pos_ref);
@@ -40713,7 +40806,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         b_ref: r.b_ref || null,
         b_position: bPos,
         positioned: !!(aPos && bPos),
-        why: aPos && bPos ? "both ends record where in their document the determining reference was read" : "the determining reference is recorded on both ends; where it was read is not, so a citation of a PART of either document cannot yet earn from this connection"
+        why: aPos && bPos ? "both ends record where in their document the determining reference was read" : "the determining reference is recorded on both ends; where it was read is not, so a citation of a PART of either document cannot yet earn from this connection",
+        selection: _Store.#pairSelection(r.pair_rule)
       } : null
     };
   }
@@ -40778,7 +40872,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         WHERE entity_id=? AND capture_sha IN (
           SELECT capture_sha FROM resolutions WHERE entity_id=? GROUP BY capture_sha
            ORDER BY capture_sha LIMIT ?)
-        ORDER BY capture_sha LIMIT ?`,
+        ORDER BY capture_sha, ref LIMIT ?`,
       entityId,
       entityId,
       endsCap + 1,
@@ -40828,7 +40922,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           }
           const grade = _Store.#weakerGrade(A.grade, B.grade);
           const est = _Store.#isEstablished(grade) ? 1 : 0;
-          const pairNote = A.ref && B.ref ? `; the connection is through the reference ${A.ref} in A and ${B.ref} in B` + (A.pos && B.pos ? ` (read at ${A.pos.ref} and ${B.pos.ref})` : A.pos || B.pos ? ` (read at ${(A.pos || B.pos).ref} on one end only; the other reading does not say where)` : ` (neither reading says where in its document the reference was read)`) : `; which reference established it is not recorded on this row`;
+          const pairNote = A.ref && B.ref ? `; the connection is through the reference ${A.ref} in A and ${B.ref} in B` + (A.pos && B.pos ? ` (read at ${A.pos.ref} and ${B.pos.ref})` : A.pos || B.pos ? ` (read at ${(A.pos || B.pos).ref} on one end only; the other reading does not say where)` : ` (neither reading says where in its document the reference was read)`) + `; each is its document's strongest-graded mention (ties: first reference by sort), not one chosen as on point` : `; which reference established it is not recorded on this row`;
           const basis = `both documents concern ${label} (${entityId}); grade is the weaker of the two ends (${A.grade}, ${B.grade}) -> ${grade}${pairNote}`;
           const row = {
             a_capture_sha: A.capture_sha,
@@ -40850,13 +40944,14 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             b_ref: B.ref,
             b_pos_kind: B.pos ? B.pos.kind : null,
             b_pos: B.pos ? readingSourceJson(B.pos) : null,
-            b_pos_ref: B.pos ? B.pos.ref : null
+            b_pos_ref: B.pos ? B.pos.ref : null,
+            pair_rule: _Store.#PAIR_RULE
           };
           this.sql.exec(
             `INSERT INTO connections
                (a_capture_sha,b_capture_sha,entity_id,a_bundle_id,b_bundle_id,a_grade,b_grade,grade,established,asserted_by,basis,at,
-                a_ref,a_pos_kind,a_pos,a_pos_ref,b_ref,b_pos_kind,b_pos,b_pos_ref)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                a_ref,a_pos_kind,a_pos,a_pos_ref,b_ref,b_pos_kind,b_pos,b_pos_ref,pair_rule)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
              ON CONFLICT(a_capture_sha,b_capture_sha,entity_id) DO UPDATE SET
                a_bundle_id=excluded.a_bundle_id, b_bundle_id=excluded.b_bundle_id,
                a_grade=excluded.a_grade, b_grade=excluded.b_grade, grade=excluded.grade,
@@ -40865,7 +40960,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
                a_ref=excluded.a_ref, a_pos_kind=excluded.a_pos_kind,
                a_pos=excluded.a_pos, a_pos_ref=excluded.a_pos_ref,
                b_ref=excluded.b_ref, b_pos_kind=excluded.b_pos_kind,
-               b_pos=excluded.b_pos, b_pos_ref=excluded.b_pos_ref`,
+               b_pos=excluded.b_pos, b_pos_ref=excluded.b_pos_ref, pair_rule=excluded.pair_rule`,
             row.a_capture_sha,
             row.b_capture_sha,
             row.entity_id,
@@ -40885,7 +40980,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             row.b_ref,
             row.b_pos_kind,
             row.b_pos,
-            row.b_pos_ref
+            row.b_pos_ref,
+            row.pair_rule
           );
           connections.push(this.#connectionView(row));
         }
@@ -40982,6 +41078,13 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    * is told "no connection" when the truth is "this record has not read the document
    * closely enough to say" has been told something false about their own case.
    *
+   * AND A FOURTH, REC-120 (D-161 act 1, M-51): the pair is ONE of possibly several
+   * mentions of the subject in the document, selected by grade and then by sort order,
+   * never chosen as on point. So a pair outside the part is not a definite "outside"
+   * while another mention is inside it or cannot be placed, and a pair inside it is not a
+   * definite reach when it won only a tie against a mention that is not. Both answer
+   * UNDETERMINED under C-49.4, naming the mentions (`checkConnectionMentionUnchosen`).
+   *
    * THE DOCUMENT ARM TAKES NO POSITION TEST AT ALL, and that is doctrine rather than an
    * optimisation. A document-extent row's portion IS the whole document (5.3 — a citation
    * naming no part means the whole document), so every connection on that capture is
@@ -41024,6 +41127,26 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const keep = this.#bundleRedactor(viewer);
     const whole = row.extent_kind === "document";
     const reaching = [], undetermined = [], outside = [];
+    const mentionCache = /* @__PURE__ */ new Map();
+    const mentionsOf = (entityId) => {
+      if (mentionCache.has(entityId)) return mentionCache.get(entityId);
+      const rows = this.#rows(
+        `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref
+           FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
+          WHERE r.capture_sha=? AND r.entity_id=? ORDER BY r.ref LIMIT ?`,
+        row.capture_sha,
+        entityId,
+        _Store.#MEANING_LIMIT_MAX + 1
+      );
+      const cut = rows.length > _Store.#MEANING_LIMIT_MAX;
+      const got = { cut, mentions: (cut ? rows.slice(0, _Store.#MEANING_LIMIT_MAX) : rows).map((m) => ({
+        ref: m.ref,
+        grade: m.grade,
+        position: readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref)
+      })) };
+      mentionCache.set(entityId, got);
+      return got;
+    };
     for (const c of conns) {
       const side = c.a_capture_sha === row.capture_sha ? "a" : "b";
       const view = this.#connectionView(c);
@@ -41054,6 +41177,29 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         extent,
         readingPositionInExtent
       );
+      if (!bad || bad.code === "CONNECTION_PAIR_OUTSIDE_EXTENT") {
+        const unchosen = checkConnectionMentionUnchosen({
+          pairRef: side === "a" ? view.determining_pair.a_ref : view.determining_pair.b_ref,
+          pairGrade: side === "a" ? c.a_grade : c.b_grade,
+          pairReached: !bad,
+          ...mentionsOf(c.entity_id),
+          extentKind: row.extent_kind,
+          extent,
+          covers: readingPositionInExtent,
+          rank: (g) => _Store.#GRADE_RANK[g] || 0
+        });
+        if (unchosen) {
+          undetermined.push({
+            ...entry,
+            code: unchosen.code,
+            check: unchosen.check,
+            translation: unchosen.translation,
+            why: unchosen.detail,
+            mentions: unchosen.mentions
+          });
+          continue;
+        }
+      }
       if (!bad) {
         reaching.push({ ...entry, why: `the determining reference was read at ${(side === "a" ? view.determining_pair.a_position : view.determining_pair.b_position).ref}, inside ${row.ref}` });
         continue;
@@ -41063,6 +41209,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     let grade = null;
     for (const r2 of reaching)
       if (grade == null || _Store.#GRADE_RANK[r2.grade] > _Store.#GRADE_RANK[grade]) grade = r2.grade;
+    const unchosenN = undetermined.filter((u) => u.code === "CONNECTION_PAIR_MENTION_UNCHOSEN").length;
     return {
       ok: true,
       content_id: row.content_id,
@@ -41085,7 +41232,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       },
       limit: cap,
       truncated,
-      why: grade != null ? `${reaching.length} connection(s) were established by a reference read inside ${row.ref}; the grade is the strongest of them (${grade}), which states how that connection was established and nothing about how credible either document is` : conns.length === 0 ? `this document is an end of no connection, so there is nothing for ${row.ref} to earn from` : undetermined.length ? `no connection is established to reach ${row.ref}: ${undetermined.length} cannot be placed (the record does not hold where the determining reference was read) and ${outside.length} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none \u2014 reading this document with positions is what would settle it` : `all ${outside.length} of this document's connections were established by references read outside ${row.ref}, so none of them reaches this citation`
+      why: grade != null ? `${reaching.length} connection(s) were established by a reference read inside ${row.ref}; the grade is the strongest of them (${grade}), which states how that connection was established and nothing about how credible either document is` : conns.length === 0 ? `this document is an end of no connection, so there is nothing for ${row.ref} to earn from` : unchosenN ? `no connection is established to reach ${row.ref}: ${unchosenN} rest on a pair that is this document's strongest-graded mention of the subject while another mention bears on ${row.ref}, and nobody has chosen which mention is on point` + (undetermined.length > unchosenN ? `; ${undetermined.length - unchosenN} cannot be placed` : ``) + `; ${outside.length} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none` : undetermined.length ? `no connection is established to reach ${row.ref}: ${undetermined.length} cannot be placed (the record does not hold where the determining reference was read) and ${outside.length} were established elsewhere in this document. UNDETERMINED is the answer and it is not the same as none \u2014 reading this document with positions is what would settle it` : `all ${outside.length} of this document's connections were established by references read outside ${row.ref}, so none of them reaches this citation`
     };
   }
   /* The closed vocabulary of stage requiredness (framework 8.2): unless_exception is the

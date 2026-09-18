@@ -678,7 +678,10 @@ t("REC-66 / D-227: the SQL bounds themselves, pinned off `deriveConnections`' co
 + "and both ask for one more than they may use so the answer can tell that more existed",
   [/SELECT capture_sha FROM resolutions WHERE entity_id=\? GROUP BY capture_sha\s+ORDER BY capture_sha LIMIT \?/
      .test(SEGMENTS.get("deriveConnections") || ""),
-   /ORDER BY capture_sha LIMIT \?`, entityId, entityId, endsCap \+ 1, rowCap \+ 1\)/
+   /* CORRECTED 2026-09-18 by REC-120, not exempted: the outer ORDER BY gained `, ref`
+      so the pair's tie-break is a named rule rather than SQLite's row order (D-161 act 2).
+      The BOUND this pins is unchanged — the same LIMIT with the same `rowCap + 1`. */
+   /ORDER BY capture_sha, ref LIMIT \?`, entityId, entityId, endsCap \+ 1, rowCap \+ 1\)/
      .test(SEGMENTS.get("deriveConnections") || "")], [true, true]);
 t("REC-66: the bound is the plane's OWN pair and is not a literal at the call site — the document "
 + "bound is DERIVED from the pair bound by #maxEndsForPairs, so the two can never disagree",

@@ -10387,7 +10387,7 @@ export const CONTENT_EXTENT_CHECKS = {
  *  `translation: undefined` to a member. This file otherwise quotes with single
  *  quotes throughout; the eight call sites below are the deliberate exception,
  *  and the reason is here rather than in a commit message. */
-function refusal(key, detail) {
+function refusal(key, detail, extra = null) {
   /* FW-17 widened the LOOKUP and deliberately did NOT add a second helper. The
      paragraph above says the name is exactly `refusal` because that is what
      `civicos-ui/check-refusal-codes.mjs` matches (`/\brefusal\s*\(\s*"CODE"/`),
@@ -10400,7 +10400,10 @@ function refusal(key, detail) {
      could go untranslated, and that is a missing row, which the guard also
      catches. */
   const row = CONTENT_EXTENT_CHECKS[key] || CONNECTION_PAIR_CHECKS[key];
-  return { ok: false, code: key, check: row.check, translation: row.translation, detail };
+  /* REC-120: `extra` carries a refusal's own evidence (C-49.4 names the mentions)
+     WITHOUT a spread at the call site, which the DEC-49 guard cannot score. */
+  return { ok: false, code: key, check: row.check, translation: row.translation, detail,
+           ...(extra && typeof extra === 'object' ? extra : {}) };
 }
 
 /** Read a basis leg's extent out of the RESTRICTED frontmatter grammar.
@@ -11403,6 +11406,31 @@ export const CONNECTION_PAIR_CHECKS = {
       + 'first points at a passage — if you expected one here, the citation that would have made it '
       + 'has not been written yet.',
   },
+  /* REC-120 / D-161 act (1) / M-51 — THE UNCHOSEN MENTION. The pair is the
+     STRONGEST-GRADED mention of the subject in each document (FW-17's collapse),
+     never a mention anybody chose as ON POINT (Bob's 5.4 second pass). So when
+     the document holds MORE THAN ONE mention of the subject, the pair's place is
+     a machine selection and two answers built on it would claim more than the
+     record holds: a definite "outside" for a part where ANOTHER mention of the
+     subject was read (FW-21 drove it: page 9 of a document mentioning the
+     ordinance on 2 and 9 answered exactly as page 7, which never mentions it),
+     and a "reaches" for a part the pair won only on a TIE-BREAK against an
+     equal-grade mention read elsewhere (the tie-break is sort order, which says
+     nothing about relevance — flip it and the answer flips). Both are
+     UNDETERMINED, stated, with the mentions named. A mention the reading could
+     not place counts as possibly-inside and possibly-outside, for the same
+     reason C-49.2 exists. A WEAKER mention outside does not unsettle a reach:
+     grade decided that pair, and grade is a stated basis. */
+  CONNECTION_PAIR_MENTION_UNCHOSEN: {
+    check: 'C-49.4',
+    where: 'checks/bio-checks.mjs checkConnectionMentionUnchosen > is-mention-unchosen',
+    translation: 'This document mentions the same subject in more than one place, and the record '
+      + 'linked the two documents through the strongest-graded mention without anyone choosing '
+      + 'which mention is the one on point. Because another mention bears on the part you cited, '
+      + 'whether this connection reaches your citation is undetermined rather than yes or no. A '
+      + 'citation of the document as a whole is answered today; choosing which mention is the '
+      + 'on-point one for this connection is not yet something the record lets anyone do.',
+  },
 };
 
 /** May this connection's determining pair grade THIS content row's extent?
@@ -11440,6 +11468,71 @@ export function checkConnectionPairCovers(pair, side, extentKind, extent, covers
       + `${describeExtent({ kind: extentKind, ...(extent || {}) })}`);
   /* END DEC-49 REGION is-connection-pair-covering */
   return null;
+}
+
+/** REC-120 / D-161 act (1): may this connection's answer at THIS extent be a
+ *  definite one, given EVERY mention of the subject in the cited document?
+ *
+ *  `pairReached` is `checkConnectionPairCovers`' verdict on the stored pair
+ *  (true = the pair was read inside the extent). `mentions` is every
+ *  resolution of the same capture to the same entity — `{ref, grade, position}`,
+ *  position null where the reading could not say; the pair's own reference is
+ *  dropped here. `cut` is true when the caller's bounded read of them was
+ *  truncated, and an unread mention counts as unplaced, never as absent.
+ *  `pairGrade` is the grade the pair's end carries, `rank` the store's grade
+ *  ranking, `covers` the ONE containment predicate (passed in, as above).
+ *
+ *  Returns null when the definite answer stands, else a C-49.4 refusal carrying
+ *  `mentions`: each one that bears on the verdict, with `inside` true/false, or
+ *  null where it cannot be placed.
+ *
+ *  THE TWO DIRECTIONS ARE NOT SYMMETRIC, AND ON PURPOSE. "Outside" is a claim
+ *  about the SUBJECT — nothing that ties this document to it is in the part — so
+ *  ANY other mention inside (of any grade), or any that cannot be placed,
+ *  unsettles it. "Reaches" is a claim about the PAIR, and grade is the stated
+ *  basis the pair was selected on (FW-17), so only a mention the pair did not
+ *  beat on grade — a TIE, or a stronger one from a resolution raised after the
+ *  derivation — unsettles it, and only when it is not itself inside the part. */
+export function checkConnectionMentionUnchosen({ pairRef = null, pairGrade = null, pairReached = false,
+                                                 mentions = [], cut = false, extentKind, extent,
+                                                 covers, rank } = {}) {
+  /* DEC-49 REGION is-mention-unchosen */
+  const r = typeof rank === 'function' ? rank : () => 0;
+  const place = (m) => (m && m.position && typeof covers === 'function')
+    ? !!covers(m.position, extentKind, extent) : null;
+  const others = (Array.isArray(mentions) ? mentions : [])
+    .filter((m) => m && m.ref !== pairRef)
+    .map((m) => ({ ref: m.ref, grade: m.grade ?? null, position: m.position ?? null, inside: place(m) }));
+  const part = describeExtent({ kind: extentKind, ...(extent || {}) });
+  const name = (list) => list.map((m) => `${m.ref} (${m.position
+    ? `read at ${m.position.ref}` : 'where it was read is not recorded'})`).join(', ');
+  if (!pairReached) {
+    const bearing = others.filter((m) => m.inside !== false);
+    if (!bearing.length && !cut) return null;
+    const inside = bearing.filter((m) => m.inside === true);
+    return refusal("CONNECTION_PAIR_MENTION_UNCHOSEN",
+      `the connection's pair (${pairRef ?? 'unnamed'}) is this document's strongest-graded mention of the `
+      + `subject and was read outside ${part}, but `
+      + (inside.length
+          ? `another mention of the same subject, ${name(inside)}, was read inside it`
+          : bearing.length
+            ? `another mention of the same subject, ${name(bearing)}, cannot be placed and may be inside it`
+            : `not every mention of the subject in this document was read, and one may be inside it`)
+      + `. Nobody chose which mention is on point, so whether this connection reaches the citation is `
+      + `undetermined`,
+      { mentions: bearing });
+  }
+  const tied = others.filter((m) => r(m.grade) >= r(pairGrade) && m.inside !== true);
+  if (!tied.length && !cut) return null;
+  return refusal("CONNECTION_PAIR_MENTION_UNCHOSEN",
+    `the connection's pair (${pairRef ?? 'unnamed'}) was read inside ${part}, but it was kept over `
+    + (tied.length
+        ? `an equal-grade mention of the same subject, ${name(tied)}, that is not inside it,`
+        : `mentions of the subject that were not all read,`)
+    + ` by a tie-break — sort order, which says nothing about which mention is on point — so whether `
+    + `this connection reaches the citation is undetermined`,
+    { mentions: tied });
+  /* END DEC-49 REGION is-mention-unchosen */
 }
 
 /* --------------------------------------------------------------------------
