@@ -10880,3 +10880,59 @@ revocation `credential`, draft and comment `undetermined`). NEGATIVE CONTROL: `n
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR, ADDITIVE — I5 1.21.0 → 1.22.0.** The base was read at resolution: 1.21.0, where IC-140 moved it after this row was proposed against 1.20.0. Three new tables before `host_governor`, all in `purge`; `review_grants` holds `secret_sha` only.
+
+## IC-151 · I3: THE REVIEW COPY'S AUTHORITY, AS `BIO_Publication_v0_1.md` §6A.2 DECIDES IT — `op=casedraft` opens to the project's EDIT permission (NEEDS `contribute`, an owner or a JOINED participant), `op=reviewrevoke` to the owner OR ANY active ADMINISTRATOR (NEEDS nothing; positional), `op=reviewgrant` UNCHANGED at the owner · PROPOSED 2026-09-18 (REC-133, minted with `node tools/mintid.mjs IC` BEFORE writing this row) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off `origin/main`'s `docs/development/INTERFACES.md`
+  when written: 29.4.0** (REC-131 may land a MAJOR ahead of this — **read the base AT RESOLUTION**).
+- **Proposed as MAJOR, BREAKING — for ONE caller configuration, measured, and argued rather than argued down.**
+  Two acts WIDEN and nothing that answered them before is refused, with one exception: `op=casedraft`'s capability
+  moves from `publish` to `contribute`, so **an OWNER holding `publish` WITHOUT `contribute` — a configuration the
+  plane accepts (measured: `reviewcopy.test.mjs` enrols `uma` with `["publish"]` alone) — could author a draft
+  yesterday and is refused `NOT_CAPABLE` today.** That is the ruling applied, not a side effect: §6A.2 makes authoring
+  the EDIT permission, and a member who may edit nothing in the working corpus may not edit the draft either. Consumer
+  impact measured at ZERO (grepped `civicos-ui/`, `agent-worker/`, `pdf-worker/`, `ocr-worker/`, `newgroup/`
+  for the three ops and the refusal code: no hit; there is no top-level `skills/`). **MAJOR anyway on IC-25's rule and IC-117's precedent: a
+  consumer count is a fact about this moment and a contract is a promise about every moment after it** — a caller
+  that could draft and now cannot has been broken whether or not it exists yet. MINOR is defensible ONLY if CONDUCT
+  judges that edge vacuous; the proposer does not.
+- **Proposer:** RECORD, worker `agent-a6516bd6e484436ba`, 2026-09-18, from QUEUE REC-133.
+- **Owner to land it:** `RECORD`.
+- **Consumers to answer:** `UI` (AFFECTED as the builder of the still-DELEGATED surface — `CLAIMS.md` REC-126 → UI,
+  whose authority lines this landing corrects in an addendum: the draft form is the EDITOR's, grant is the OWNER's,
+  revoke is the owner's or an administrator's); `SKILL`, `DIST`, `FRAMEWORK` NOT-AFFECTED (no reader, grepped).
+- **Design:** `BIO_Publication_v0_1.md` §6A.2, *"WHO MAY AUTHOR, ISSUE AND REVOKE"* (BOB #15, 2026-09-18); Membership
+  v2 §5 (`contribute`) and §7.5 (*a joined member has the working rights their capabilities allow*).
+
+**THE SHAPE.** No op, parameter, field or refusal code is added, renamed or removed.
+- `POST op=casedraft` — NEEDS `publish` → **`contribute`**. The store admits `#isProjectEditor`: an owner
+  (`#isProjectOwner`, unchanged) or a participant whose state is `joined` (`#participation`, the record's one
+  membership predicate). An invited-not-joined member (§7.5: view rights only), a member who has asked to leave, a
+  non-participant and an administrator who holds no position are refused as before. Editing an existing draft in
+  place follows the same rule.
+- `POST op=reviewgrant` — UNCHANGED: NEEDS `publish`, the owner only, no administrator bypass (DEC-72).
+- `POST op=reviewrevoke` — NEEDS `publish` → **none (null)**, and the store admits the owner **or any active
+  administrator** (`#isAdminMember`, the founder included). The authority is positional and revoking only narrows
+  exposure, so a capability gate would be a fence tighter than the rule (a co-owner without `publish` could not
+  withdraw a grant a fellow owner issued). A machine is still refused by name (C-32.16, unchanged, one door).
+- **The refusal code is KEPT: `REVIEW_NOT_PROJECT_OWNER` for all three acts.** Its name is exact for issuing and
+  narrower than the rule for authoring and revoking; its `detail` now names the authority each act needs. Renaming
+  it would change an answer a caller branches on for a refusal whose MEANING (no such authority, or no such thing —
+  still one answer) is unchanged. Recorded here so nobody reads the name as the rule.
+- **`op=reviewcopy`'s `missing` for a NON-OWNER editor's draft.** `publishCase` runs its owner fence first, so the
+  dry run is now run as the member who would PUBLISH — the last editor if an owner, else the lowest-id owner, else
+  (a project with no owner) the editor, whose `NOT_THE_PROJECT_OWNER` is then the true first gap. Without this, every
+  editor's draft would list `NOT_THE_PROJECT_OWNER` and hide its real gaps. No field changes; for an owner-edited
+  draft the answer is byte-identical to REC-126's.
+
+**Suites:** `bio-plane/test/reviewcopy.test.mjs` 52 → 63 (the editor authors and edits; the plain member, invited and
+not joined, can do none of the three; a joined member without `contribute` is refused at the control plane; the
+editor cannot issue, on the owner's draft or her own; the administrator cannot issue; an administrator who is not the
+owner revokes and the secret then answers byte-identically to one never issued; an editor's draft is judged as its
+publisher would meet the gates). Two labels CORRECTED with their reason in a comment (block 2's heading and the
+non-participant arm said the authority was publish's). `src/affordances.mjs`'s NON_ACTS sentences for `casedraft`
+and `reviewrevoke` restated. NEGATIVE CONTROL: `node test/reviewcopy.control.mjs [e|f|g|h]` from `bio-plane/` — (e)
+revoke re-gated at owner-only 61/2, (f) issue widened to editors 62/1, (g) authoring widened to any member 59/4, (h)
+the dry run as the editor 62/1; baseline 63/0; REC-126's (a)-(d) re-measured.
+
+**RESPONSES:** not yet collected.

@@ -7669,14 +7669,23 @@ export class Store extends DurableObject {
          because none has ever held one (`aicredentialmint`'s shape, PL-11).
        - THE COMMENT is attributed, and a recipient's is a RECIPIENT's.
 
-     WHO MAY AUTHOR A DRAFT, ISSUE A GRANT AND REVOKE ONE — PROVISIONAL, AND A
-     DESIGN GAP REPORTED RATHER THAN A RULING MADE. §6A says the grant names who
-     issued it and that EDITING needs project permissions; it does not say who may
-     issue. This runs at the NARROWEST authority the record already rules for the
-     sibling act — the project OWNER, DEC-72's publisher, through the same
-     `#isProjectOwner` `publishCase` consults, with no administrator bypass — so a
-     later ruling can only WIDEN it, and widening is one predicate. A machine is
-     refused by name: an addressed act is attributed to a person. */
+     WHO MAY AUTHOR A DRAFT, ISSUE A GRANT AND REVOKE ONE — DECIDED in §6A.2 by
+     BOB #15 (2026-09-18) and built by REC-133. REC-126 ran all three at the project
+     OWNER provisionally; the decision widens two of them and leaves the third:
+       - AUTHOR (`#caseDraft`): the project's EDIT permission, `#isProjectEditor` —
+         Bob's *"editing needs project permissions and is the editor's act"*. The
+         draft is the production, and editing it is editing. Its capability half,
+         `contribute`, is checked at the control plane (NEEDS), where capabilities
+         live; its positional half is checked here.
+       - ISSUE (`#reviewGrant`): the project OWNER only, NO administrator bypass —
+         UNCHANGED. Sending unratified material outside the group is the same kind
+         of act as publishing, and DEC-72 makes publishing the owner's.
+       - REVOKE (`#reviewRevoke`): the owner OR ANY active ADMINISTRATOR. Revoking
+         only narrows exposure, so widening it harms nobody, and a grant never
+         outlives an owner who has left the group.
+     No two-person rule: none is ruled, and inventing one would be a fence tighter
+     than its rule. A machine is refused by name: an addressed act is attributed to
+     a person. */
   static REVIEW_DRAFT_FIELDS = ["targets", "target", "caseId", "newCase", "scope", "statement", "excluded",
                                 "subjectPosition", "subjectJustification", "biasAcknowledgement", "roles"];
   static REVIEW_TEXT_MAX = 4000;
@@ -7729,14 +7738,29 @@ export class Store extends DurableObject {
              detail: "the review copy's authoring acts are draft, grant and revoke." };
   }
 
-  /* NOT THE OWNER, AND NOT THERE, ARE ONE ANSWER: a caller who does not own the
-     producing project cannot learn from this refusal whether the project, the
-     draft or the grant exists. */
-  static #notReviewOwner() {
+  /* NOT PERMITTED, AND NOT THERE, ARE ONE ANSWER: a caller without the act's
+     authority cannot learn from this refusal whether the project, the draft or the
+     grant exists. The DETAIL varies with the ACT (which the caller chose) and with
+     nothing the record holds.
+
+     THE CODE KEEPS REC-126's NAME, `REVIEW_NOT_PROJECT_OWNER`, for all three acts —
+     REC-133's choice, stated rather than left to be noticed. The name is exact for
+     ISSUE and narrower than the rule for AUTHOR and REVOKE; renaming it would change
+     the answer a caller already branches on, for a refusal whose MEANING (you lack
+     this act's authority over this project) is unchanged, and the detail names the
+     authority each act needs. */
+  static #REVIEW_AUTHORITY = {
+    draft: "authoring a review copy's draft is EDITING the production, and needs the project's edit permission: "
+         + "an owner, or a JOINED participant, holding `contribute` (BIO_Publication §6A.2; Membership v2 §7.5).",
+    grant: "handing the group's draft to someone outside it is the producing project's own act and is wielded by an "
+         + "OWNER of it, as publishing is (DEC-72). An administrator sees every project and directs none of them.",
+    revoke: "withdrawing a grant is for an OWNER of the producing project or any active ADMINISTRATOR, because "
+          + "revoking only narrows exposure (BIO_Publication §6A.2).",
+  };
+  static #notReviewOwner(act) {
     return { ok: false, reason: "REVIEW_NOT_PROJECT_OWNER",
-             detail: "a review copy is the producing project's own act and is wielded by an OWNER of it, as "
-                   + "publishing is (DEC-72). An administrator sees every project and directs none of them. "
-                   + "A project, draft or grant you do not own is answered exactly as one that does not exist." };
+             detail: `${Store.#REVIEW_AUTHORITY[act]} A project, draft or grant you hold no such authority over `
+                   + "is answered exactly as one that does not exist." };
   }
 
   /* THE EDITION IS READ FROM THE PUBLISHED RECORD EVERY TIME, never stored and
@@ -7762,7 +7786,7 @@ export class Store extends DurableObject {
     const a = { who };
     const proj = String(project ?? "").trim();
     const existing = draft ? this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft).trim()) : null;
-    if (draft && !existing) return Store.#notReviewOwner();
+    if (draft && !existing) return Store.#notReviewOwner("draft");
     const owning = existing ? existing.project_id : proj;
     if (!owning)
       return { ok: false, reason: "REVIEW_NO_PROJECT",
@@ -7772,7 +7796,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: "REVIEW_DRAFT_CHANGES_PROJECT",
                detail: `this draft is ${existing.project_id}'s production, and a case does not change hands `
                      + `(DEC-72). Draft this material as a new case under the other project instead.` };
-    if (!this.#isProjectOwner(owning, a.who)) return Store.#notReviewOwner();
+    if (!this.#isProjectEditor(owning, a.who)) return Store.#notReviewOwner("draft");
     const params = {};
     for (const k of Store.REVIEW_DRAFT_FIELDS) if (k in rest) params[k] = rest[k];
     const named = typeof params.caseId === "string" && params.caseId.trim() ? params.caseId.trim() : null;
@@ -7822,8 +7846,9 @@ export class Store extends DurableObject {
     let out = null;
     try {
       this.ctx.storage.transactionSync(() => {
+        const by = this.#draftPublisher(row);
         out = this.publishCase({ ...JSON.parse(row.params), project: row.project_id,
-                                 viewer: `member:${row.updated_by}`, author: row.updated_by });
+                                 viewer: `member:${by}`, author: by });
         throw Store.#ROLLBACK;
       });
     } catch (e) {
@@ -7838,6 +7863,24 @@ export class Store extends DurableObject {
     return { gates: "refused", missing: [refused],
       evaluated: "the publish gates run in order and stop at the first refusal, so this is the first refusal "
                + "only. Whether any later gate would also refuse is UNDETERMINED, not absent." };
+  }
+
+  /* WHO THE GATES ARE RUN AS. REC-133: a draft's last editor need not be an owner
+     any more, and `publishCase` runs its OWNER fence first — so a dry run as a
+     non-owner editor would answer NOT_THE_PROJECT_OWNER for every such draft and
+     hide the gaps the copy exists to show. Publishing is an owner's act (DEC-72),
+     so the gates are run as the member who would PUBLISH: the last editor when
+     they own the project, otherwise an owner of it (the lowest member id, so the
+     answer is deterministic), and only when the project has NO owner (a
+     machine-created project honestly may not) the editor, whose
+     NOT_THE_PROJECT_OWNER is then the TRUE first gap: nobody can publish this.
+     Nothing about the choice reaches the answer but the gates' verdict, and the
+     transaction is rolled back. */
+  #draftPublisher(row) {
+    if (this.#isProjectOwner(row.project_id, row.updated_by)) return row.updated_by;
+    const owner = this.#rows(`SELECT member_id FROM project_participants WHERE project_id=? ORDER BY member_id`,
+                             row.project_id).find((p) => this.#isProjectOwner(row.project_id, p.member_id));
+    return owner ? owner.member_id : row.updated_by;
   }
 
   /* THE LIVE-GRANT PREDICATE — the one place a grant is judged, read by the review
@@ -7876,7 +7919,7 @@ export class Store extends DurableObject {
   #reviewGrant(who, { draft = null, recipient = "", secretSha = null } = {}) {
     const a = { who };
     const d = this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft ?? "").trim());
-    if (!d || !this.#isProjectOwner(d.project_id, a.who)) return Store.#notReviewOwner();
+    if (!d || !this.#isProjectOwner(d.project_id, a.who)) return Store.#notReviewOwner("grant");
     const to = String(recipient ?? "").trim();
     if (!to || to.length > Store.REVIEW_RECIPIENT_MAX || /[\r\n]/.test(to))
       return { ok: false, reason: "REVIEW_NO_RECIPIENT",
@@ -7908,7 +7951,8 @@ export class Store extends DurableObject {
                detail: "name the grant to withdraw: grant=<the grant id op=reviewgrant answered with>." };
     const g = this.#one(`SELECT g.*, d.project_id FROM review_grants g JOIN case_drafts d ON d.draft_id=g.draft_id
                          WHERE g.grant_id=?`, gid);
-    if (!g || !this.#isProjectOwner(g.project_id, a.who)) return Store.#notReviewOwner();
+    if (!g || !(this.#isProjectOwner(g.project_id, a.who) || this.#isAdminMember(a.who)))
+      return Store.#notReviewOwner("revoke");
     if (g.revoked_at)
       return { ok: true, existed: true, grantId: g.grant_id, revokedBy: g.revoked_by, revokedAt: g.revoked_at };
     const when = new Date().toISOString();
@@ -26193,6 +26237,23 @@ export class Store extends DurableObject {
   #ownsAnyProject(memberId) {
     return this.#rows(`SELECT project_id FROM project_participants WHERE member_id=?`, memberId)
                .some((p) => this.#isProjectOwner(p.project_id, memberId));
+  }
+
+  /* REC-133 / BIO_Publication §6A.2: THE PROJECT'S EDIT PERMISSION, positional half.
+     Membership v2 §7.5: *"A joined member has the working rights their capabilities
+     allow"*, and an invited member who has not joined has VIEW rights only; a member
+     who has asked to leave (7.6) has asked to stop working. So: an OWNER (the rule
+     `#isProjectOwner` states, consumed rather than restated) or a participant whose
+     state is `joined`, read through `#participation`, the record's one membership
+     predicate. The CAPABILITY half, `contribute` (*"create and revise bundles in the
+     working corpus"*, §5), is a SESSION's and is enforced at the control plane's
+     NEEDS table, where every other corpus write is gated. An administrator gains
+     nothing here: sight of every project is not a position in any of them (§7.3).
+     No new right is minted; this is §7.5 said once. */
+  #isProjectEditor(projectId, memberId) {
+    if (this.#isProjectOwner(projectId, memberId)) return true;
+    const p = this.#participation(projectId, memberId);
+    return !!(p && p.state === "joined");
   }
 
   #participation(projectId, memberId) {

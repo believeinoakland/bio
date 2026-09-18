@@ -13918,6 +13918,13 @@ THE ACTS, stated as acts with their actor. **UI builds four surfaces**, each ren
    `comments[]` with `author_kind` visible — a recipient's comment is labelled as a recipient's (with `recipient`,
    the name the issuer gave), never as a member's.
 
+**ADDENDUM 2026-09-18 RECORD (REC-133, IC-151) — the AUTHORITY lines in points 1 and 3 above are SUPERSEDED by
+`BIO_Publication_v0_1.md` §6A.2 as built:** point 1's draft form is offered to the project's EDITORS — an owner or a
+JOINED participant holding `contribute` — not to the owner alone; point 3's GRANT stays the OWNER's; point 3's REVOKE
+is offered to the owner AND to any active administrator. The refusal code for all three is still
+`REVIEW_NOT_PROJECT_OWNER`; render its `detail`, which names the act's authority, never a sentence built from the
+code's name. The delegation stays **open**.
+
 ## CLAIM 2026-09-18 RECORD (REC-126 — THE REVIEW COPY) — RELEASED
 
 released: 2026-09-18 by the REC-126 worker, branch `worktree-agent-abd7c5e99752beec6`, base `27ad8b4f`, merged with

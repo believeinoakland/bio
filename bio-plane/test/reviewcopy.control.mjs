@@ -1,4 +1,5 @@
-/* REC-126's NEGATIVE CONTROL DRIVER — four arms plus a baseline, re-runnable in one step:
+/* REC-126's NEGATIVE CONTROL DRIVER — eight arms plus a baseline ((a)-(d) REC-126's, (e)-(h)
+ * REC-133's, §6A.2's authority), re-runnable in one step:
  *
  *     node test/reviewcopy.control.mjs            # every arm, in order
  *     node test/reviewcopy.control.mjs a          # one arm
@@ -79,6 +80,33 @@ const ARMS = {
        + "String(secretSha ?? \"\"))) return { ok: false, reason: \"REVIEW_GRANT_REVOKED\", detail: \"withdrawn\" };\n"
        + "      if (!live || (draft && String(draft).trim() !== live.draft.draft_id)) return Store.#noReviewCopy();\n"
        + "      d = live.draft; grant = live.grant; reader = \"recipient\";") },
+
+  /* REC-133 — §6A.2's authority (BOB #15). Declarations in the suite's header. */
+  e: { files: [STORE],
+       label: "(e) REVOKE RE-GATED AT OWNER-ONLY (REC-126's provisional): an administrator who is not the owner "
+            + "can no longer withdraw a grant",
+       apply: () => edit(STORE,
+         "if (!g || !(this.#isProjectOwner(g.project_id, a.who) || this.#isAdminMember(a.who)))",
+         "if (!g || !this.#isProjectOwner(g.project_id, a.who))") },
+
+  f: { files: [STORE],
+       label: "(f) ISSUE WIDENED TO EDITORS: a joined participant who is not an owner hands the draft outside",
+       apply: () => edit(STORE,
+         "if (!d || !this.#isProjectOwner(d.project_id, a.who)) return Store.#notReviewOwner(\"grant\");",
+         "if (!d || !this.#isProjectEditor(d.project_id, a.who)) return Store.#notReviewOwner(\"grant\");") },
+
+  g: { files: [STORE],
+       label: "(g) THE LIAR'S WIDENING: authoring a draft admitted to ANY signed-in member, position ignored",
+       apply: () => edit(STORE,
+         "    if (!this.#isProjectEditor(owning, a.who)) return Store.#notReviewOwner(\"draft\");\n",
+         "") },
+
+  h: { files: [STORE],
+       label: "(h) THE DRY RUN AS THE EDITOR: the gates run as the draft's last editor, so a non-owner editor's "
+            + "draft reads NOT_THE_PROJECT_OWNER instead of its real gaps",
+       apply: () => edit(STORE,
+         "        const by = this.#draftPublisher(row);",
+         "        const by = row.updated_by;") },
 };
 
 const want = process.argv[2];
@@ -154,4 +182,16 @@ console.log(`\npen removed: ${PEN}`);
      b         reviewcopy: 51 pass, 1 fail   the case-document arm HELD — a second, independent defence
      c         reviewcopy: 50 pass, 2 fail   one more than declared, same direction
      d         reviewcopy: 51 pass, 1 fail   the reads-nothing arm green, as declared
-   The reasoning for each is in the suite's own NEGATIVE CONTROL header. */
+   The reasoning for each is in the suite's own NEGATIVE CONTROL header.
+
+   RE-MEASURED 2026-09-18 by REC-133 (worktree agent-a6516bd6e484436ba), all nine arms,
+   every restore sha256 MATCH / content IDENTICAL / size ok:
+     baseline  reviewcopy: 63 pass, 0 fail
+     a         reviewcopy: 58 pass, 5 fail   +1: the administrator-revoked secret's byte-identical arm
+     b         reviewcopy: 62 pass, 1 fail
+     c         reviewcopy: 61 pass, 2 fail
+     d         reviewcopy: 61 pass, 2 fail   +1: the same new arm
+     e         reviewcopy: 61 pass, 2 fail   as declared (revoke re-gated at owner-only)
+     f         reviewcopy: 62 pass, 1 fail   as declared (issue widened to editors)
+     g         reviewcopy: 59 pass, 4 fail   as declared (authoring widened to any member)
+     h         reviewcopy: 62 pass, 1 fail   as declared (dry run as the editor) */
