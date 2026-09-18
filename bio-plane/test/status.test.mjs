@@ -19,6 +19,7 @@
  * breaks one property of the tool and must turn a NAMED assertion here red.
  *   RUN 2026-09-18 by BOB #14: six arms, 33 pass / 0 fail, exit 0, every restore byte-identical.
  *   RE-RUN the same day with A7 added (an ABSENT claim resting only on a comment): seven arms, 38 pass / 0 fail.
+ *   RE-RUN with A8 added (a rendering that leaves the Status date behind): eight arms.
  *   (A2 was RE-AIMED after its first run: forcing the op probe's CONDITION true also dereferenced a
  *   null match, so the suite CRASHED instead of failing the named assertion — a second variable.)
  * AND ONE ARM ON THE PUSH GUARD, run by hand because it arms a different file: `statusCheck`'s
@@ -35,7 +36,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "nod
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { evalProbe, judge, renderCell, renderMap, lookup, UI_HELPERS, ROOT, STATES }
+import { evalProbe, judge, renderCell, renderMap, lookup, bumpAsOf, UI_HELPERS, ROOT, STATES }
   from "../../tools/status.mjs";
 import { statusCheck } from "../../tools/pushguard.mjs";
 import { copyFileSync } from "node:fs";
@@ -135,6 +136,11 @@ section("4 — §3 IS A RENDERING: NO PIPE BREAKS THE TABLE, A STALE COLUMN IS S
   t("a hand-written state cell differs from its rendering, so --check can see it", r.text !== r.current, true);
   t("the rendering replaces ONLY the state cell", r.text.split("\n")[2].startsWith("| 7 | **Y** | "), true);
   t("a construct with no row in §3 is NAMED, never skipped", r.missing, [9]);
+  const fm = "**Status** · v0.1, as of 2026-09-01 (x)\n\n**Place in the system** · as of 2026-01-01 elsewhere\n| 7 |";
+  const bumped = bumpAsOf(fm, "2026-09-18");
+  t("A RENDERING MOVES THE STATUS DATE — the body changed, so the front matter must (bare plancheck failed on it)",
+    bumped.startsWith("**Status** · v0.1, as of 2026-09-18"), true);
+  t("...and ONLY the Status date: a date after the front matter is untouched", bumped.includes("as of 2026-01-01 elsewhere"), true);
 }
 
 /* ========================================================================== */

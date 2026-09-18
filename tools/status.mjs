@@ -196,6 +196,18 @@ export function renderMap({ repo = ROOT, data = null } = {}) {
   return { text: lines.join("\n"), current: text, missing };
 }
 
+/* THE MAP'S STATUS DATE MOVES WITH ITS BODY. The corpus standard fails a governed document whose
+   body changed after its `as of` date, and a rendering IS a body change — found 2026-09-18 when the
+   first render left `main` red on bare `plancheck` (the date arm reads git history, which `--local`
+   skips). So `--write` moves the ONE `as of` date in the Status front matter when it changes the file. */
+export function bumpAsOf(text, today) {
+  const end = text.indexOf("**Place in the system**");
+  const head = end < 0 ? text : text.slice(0, end);
+  const re = /as of \d{4}-\d{2}-\d{2}/;
+  if (!re.test(head)) return text;
+  return head.replace(re, `as of ${today}`) + (end < 0 ? "" : text.slice(end));
+}
+
 export function lookup(topic, { repo = ROOT } = {}) {
   const j = judge({ repo });
   if (j.error) return { error: j.error, hits: [] };
@@ -233,7 +245,7 @@ if (IS_CLI) {
     const r = renderMap({ data: j.data });
     if (r.error) { console.error(`status: ${r.error}`); process.exit(1); }
     if (arg === "--write") {
-      if (r.text !== r.current) writeFileSync(join(ROOT, MAP), r.text);
+      if (r.text !== r.current) writeFileSync(join(ROOT, MAP), bumpAsOf(r.text, new Date().toISOString().slice(0, 10)));
       console.log(`status: rendered ${MAP} §3 state column${r.text === r.current ? " (unchanged)" : ""}`);
     }
     const stale = arg === "--check" && r.text !== r.current;
