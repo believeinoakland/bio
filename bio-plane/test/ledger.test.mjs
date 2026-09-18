@@ -30,7 +30,7 @@
 
 import "./stdio.mjs";
 import "./sandbox.mjs";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, copyFileSync, existsSync, readdirSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, copyFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -142,7 +142,8 @@ section("2 — THE FULL MIGRATION, SIMULATED ON A COPY OF THE REAL LEDGERS: ever
   const root = mkdtempSync(join(tmpdir(), "ledger-real-"));
   const files = ["docs/development/QUEUE.md", "docs/development/DEBT.md", "docs/development/DECISIONS.md",
                  "docs/archive/IS-BUILD-PLAN.md", "docs/architecture/construct-status.json",
-                 ...readdirSync(join(REPO, "docs/archive/ledgers")).map((f) => `docs/archive/ledgers/${f}`)];
+                 /* the archive family through the ARCHIVER's own lister, not a second walk (hygiene's walk census) */
+                 ...Object.values(L.LEDGERS).flatMap((l) => L.archiveFiles(l, { repo: REPO }))];
   for (const f of files) { mkdirSync(dirname(join(root, f)), { recursive: true }); copyFileSync(join(REPO, f), join(root, f)); }
   const snap = () => Object.fromEntries(Object.values(L.LEDGERS).map((l) =>
     [l.name, L.idCounts(l, [l.live, ...L.archiveFiles(l, { repo: root })].map((f) => read(root, f)))]));
