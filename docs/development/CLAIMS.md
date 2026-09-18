@@ -13356,3 +13356,14 @@ M-57 (minted with `tools/mintid.mjs M`). NO row moved; no code changed. Baseline
 green · 14392 assertions, 3 fleet members RAN. Two readers found BROKEN TODAY and reported, not fixed:
 `rowdesign.control.mjs` arm A1 (names M0-33, expects M0-29) and `tools/.ui59/*.mjs` (a hardcoded worktree path that
 does not exist). The move was simulated only in scratch clones outside this repository.
+
+## CLAIM 2026-09-18 M0 (LED-2 — the archiver and its gate; moves no live row)
+
+Worker spawned by CONDUCT #4, branch `worktree-agent-a6d2b732150e83e8a`. Paths: `tools/ledger.mjs` (new),
+`tools/owed.mjs` (the ONE definition of a closed DEBT row, which the archiver imports), `tools/mintid.mjs`
+(the duplicate check reads the archiver's files), `tools/plancheck.mjs` (arms a/b/c), `tools/gates.mjs` (doc-facing
+derivation), `bio-plane/test/ledger.test.mjs` + `ledger.control.mjs` (new), `bio-plane/test/owed.control.mjs`,
+`bio-plane/test/rowdesign.control.mjs` (A1 anchor, A2b declaration), `bio-plane/test/planning-hygiene.test.mjs`
+(archive-aware `QUEUED <ID>` lookup), `docs/archive/ledgers/QUEUE-closed.md` + `DEBT-closed.md` (new, header only),
+`docs/development/MEASUREMENTS.md` (one M-entry), `docs/DECIDED.md` if regeneration is owed, this block. NOT
+`QUEUE.md` (CONDUCT's), NOT a row of `DEBT.md` (LED-3 migrates; this item moves none).
