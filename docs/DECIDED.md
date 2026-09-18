@@ -97,9 +97,9 @@ authority is the file named, never this one.
 - **DEC-23** · 2026-08-03 — RULED by DEC-23: content — a piece of information extracted from a document, up to and including the whole document — is the unit the record points at.  
   `docs/development/DEBT.md:141`
 - **DEC-24** · 2026-08-04 — 1 · The pilot's exclusion is CORRECTED, not lifted.** The pilot is READ-ONLY and stays so: its own hazard table names the defence — *the pilot token cannot execute any mutating op* — and minting a content row is a write.  
-  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:118`
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:114`
 - **DEC-24** — RULED and enforced in code where the record has an act to fence |  
-  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:142`
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:138`
 - **DEC-24** — WHAT IS ALREADY RULED, so this entry only adds what is missing:** - **DEC-24 — the boundary**: *"the machine may do the LOOKING; the member does the CONCLUDING"*, with FOUR roles on the path verbs: **EXTRACT** (document → content), **PURSUE** (find material bearing on an unsupported claim, supporting AND cutting…  
   `docs/archive/ledgers/DECISIONS-2026-08.md:3396`
 - **DEC-24** · 2026-09-14 — exclusion 1 is CORRECTED IN PLACE as of 2026-09-14 (SK-8, on BOB #11's delegation) and is no longer stale; exclusion 3 still is.** Exclusion 1 previously gave the wrong REASON for excluding PURSUE/EXTRACT/CHECK (*"those are DEC-24 roles with their own scopes"*) and a CHECK-sequencing clause SK-4 had already made false.  
@@ -551,7 +551,7 @@ authority is the file named, never this one.
 - **D-358** · 2026-09-14 — DECIDED 2026-09-14** (D-358 answered: the run, not the pilot).  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:10`
 - **D-358** · 2026-09-14 — RULED and **BUILT, with a CALLER as of 2026-09-14** — `op=contentmint`, the four-state MINT LABEL on every content-row projection and on the leg surface, the attest fence made reachable (SK-7); D-358 ANSWERED at §7.3 — the caller is a RUN, not the pilot, whose exclusion is corrected rather than lifted; SK-8 landed…  
-  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:147`
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:143`
 - **D-358** · 2026-09-14 — its §7.3 answered D-358 on 2026-09-14: the role runs in DEC-62's RUN, not on the pilot's credential, whose exclusion is CORRECTED rather than lifted (the pilot is read-only and writes nothing).  
   `docs/development/EXTRACTION-BREADTH-DESIGN.md:89`
 - **D-358** · 2026-09-14 — SETTLED when a product caller exists for either op — the assistant's EXTRACT act (blocked: D-358) or UI's transcription-check surface — and confirms the shape live; CONDUCT writes it. ### AMENDED at CAP-12's landing — 2026-09-14 (the second key this entry was written to carry; the version stays **1.5.0** and the…  
@@ -603,7 +603,7 @@ authority is the file named, never this one.
 - **D-421** · 2026-09-18 — that question (D-421) was DECIDED by BOB #14 — REFUSE — and the operator's bearer tokens no longer deliver either act (C-32.14 / C-32.15, IC-137). as of 2026-09-18  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:3`
 - **D-421** · 2026-09-18 — And the operator's bearer tokens, DECIDED 2026-09-18 by BOB #14 (D-421, applying this rule, no new doctrine):** an attested act is performed ONLY by a named member's OWN AUTHENTICATED SESSION — *the signature proves who AUTHORISED; the credential that delivers it decides WHEN the record changes, and the record…  
-  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:57`
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:56`
 - **D-421** · 2026-09-18 — DECIDED 2026-09-18 by BOB #14 (BOB lane, applying rule 4, no new doctrine): REFUSE — an attested act is performed ONLY by a named member's own authenticated session; operator bearer tokens may no longer deliver one, even with a member's valid signature.  
   `docs/development/DEBT.md:356`
 - **D-421** · 2026-09-18 — BOB #14 RULED the founder question:** a founder's password session stays ALLOWED (a human, and the only live publishing route); D-421's wording corrected to *a HUMAN's own authenticated session*; and the record must state who DELIVERED as well as who AUTHORISED → `REC-128`.  
@@ -1109,7 +1109,7 @@ authority is the file named, never this one.
 - **REC-121** · 2026-09-18 — AMENDED 2026-09-18 by REC-121 — §4.2's `chain` FILTER HAS THREE ANSWERS, NOT TWO, under `IC-131` on I3.** REC-104 kept `chain:undetermined` on `chain IS NULL`, which was right for every row that could exist when it was decided and became wrong when FW-19 (IC-125) admitted an image cited AS ITSELF: a `cited_as =…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:11`
 - **REC-125** · 2026-09-18 — The operator's bearer tokens are refused too (REC-125, D-421 DECIDED; C-32.14 / C-32.15, IC-137) — an attested act is delivered only by a signed-in member's own session |  
-  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:144`
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:140`
 - **REC-125** · 2026-09-18 — d permitted by design, BIO_Intake_Doctrine_v1_1.md §3; and NO OPERATOR BEARER TOKEN delivers either act (REC-125, D-421 DECIDED by BOB #14, 2026-09-18, `bio-plane/test/operator-attest.test.mjs`): the ADMIN, MEMBER and PROBE tokens each carrying a member's VALID signature were ACCEPTED at op=ratify and op=caseratify…  
   `docs/architecture/BIO_System_Design.md:91`
 - **REC-125** · 2026-09-18 — CLAIM 2026-09-18 RECORD (REC-125 — D-421 DECIDED: the operator's bearer tokens may not deliver an attested act) Worker spawned by CONDUCT #4 into worktree `agent-aac5bdb9dea9c048e`.  
@@ -1492,7 +1492,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - BEFORE RAISING A QUESTION, OR WRITING A DECISION ITEM, ASK WHAT IS ALREADY DECIDED:** node tools/decided.mjs "<the subject>"  
   `CLAUDE.md:206`
 - **2026-09-14** — DECIDED 2026-09-14 (§7.3): the run, not the pilot; no new credential or fence; mints bounded and the uncited row named a proposal | | AI-proposed readings — the `ai(function, version)` step EMITTED | **BUILT 2026-09-14 (SK-8)**: `op=extractpropose` inside an EXTRACT run, the step appended through `appendStep` so…  
-  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:152`
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:148`
 - **2026-08-10** — ⚠ SUPERSEDED IMPLEMENTATION, INHERITED FORMAT > > **Banner added 2026-08-10 (session BOB), moving into this file what > `architecture/README.md` has said about it since July and no reader of this document  
   `docs/architecture/BIO_Bundle_Skill_Composite_Design_v1_7.md:47`
 - CORRECTED — the administrator is not an inverted threat model, and the threat is symmetric](#4-corrected-the-administrator-is-not-an-inverted-threat-model-and-the-threat-is-symmetric) - [4a. "Less narrative" is a design constraint, and it cuts against how such tools usually…  
