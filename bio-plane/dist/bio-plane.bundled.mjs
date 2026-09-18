@@ -95,21 +95,7 @@ CREATE TABLE IF NOT EXISTS register (
   path        TEXT NOT NULL,
   encoding    TEXT NOT NULL,
   bytes       INTEGER NOT NULL,
-  registered  TEXT NOT NULL,
-  -- MK-1 / D-184 / IC-134 (MEMBER-KNOWLEDGE-DESIGN.md section 2). 1 when these
-  -- bytes are a MEMBER'S OWN WORDS authored through op=testify, never a capture
-  -- of something published. ONLY the testimony path writes 1, and promote's
-  -- fence (C-53.8) refuses the flag on any document it did not write, so a
-  -- caller cannot set it and cannot clear it. 0 is the true value for every row
-  -- that existed before this column did, because no authored bundle could.
-  authored    INTEGER NOT NULL DEFAULT 0,
-  -- The member who authored the words, STAMPED by the plane from the session
-  -- and never taken from the caller. NULL on every row that is not authored.
-  author      TEXT,
-  -- When the member says they OBSERVED it, which is THEIR statement. The
-  -- record's own time of writing is registered above, and the two are kept
-  -- apart as correspondence keeps them. NULL on every row that is not authored.
-  observed_at TEXT
+  registered  TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS register_bundle ON register(bundle_id);
 
@@ -3354,6 +3340,49 @@ CREATE TABLE IF NOT EXISTS transcription_attestations (
 );
 CREATE INDEX IF NOT EXISTS transcription_attestations_bundle ON transcription_attestations(bundle_id);
 -- =========================================================================
+-- MK-4 / IC-135 / D-194 -- THE LEAD. MEMBER-KNOWLEDGE-DESIGN.md section 5: the
+-- same member knowledge BEFORE the search. I was told the contract was amended,
+-- look at the Clerk March agenda. An AUTHORED ROW and NEVER EVIDENCE.
+--
+-- WHY A TABLE OF ITS OWN AND NOT A CONTENT ROW OR A BUNDLE. Everything a basis
+-- leg can cite is a bundle or a content row. A lead stored as either would be an
+-- unlabelled observation a member could cite as evidence, which is the one thing
+-- section 5 rules it is not. So it lives here, under an id (LEAD-...) that no leg
+-- grammar accepts, and C-54.1 refuses it BY NAME at every leg grammar as well.
+--
+-- FOLLOWING A LEAD IS A LOOK, and the look is NOT stored here. It is a row of
+-- observation_log with authority_kind = lead and authority = lead_id (section 5,
+-- OBSERVATION-LOG-DESIGN.md section 4.5). Nothing is written to the log when a
+-- lead is AUTHORED: nobody has looked yet, and NEVER_LOOKED is never stored.
+--
+-- NO bundle_id, BY THE DESIGN'S FIELD LIST. So a per-bundle purge leaves it and
+-- the whole-store purge clears it (D-113). Visibility is the AUTHOR's (a
+-- provisional, stated in store.mjs leadRead) because no bundle scopes it.
+CREATE TABLE IF NOT EXISTS leads (
+  lead_id   TEXT PRIMARY KEY,   -- LEAD-YYYY-MMDD-hex, minted by the plane
+  author    TEXT NOT NULL,      -- a member id, server-stamped, never a machine (C-54.2)
+  words     TEXT NOT NULL,      -- the member words AS WRITTEN, never paraphrased
+  locator   TEXT,               -- an optional place to look the member suggests. NULL = none suggested
+  at        TEXT NOT NULL       -- when the record received the lead
+);
+CREATE INDEX IF NOT EXISTS leads_author ON leads(author, at);
+-- A LEAD SHARED TO A PROJECT. RULED 2026-09-18 by BOB #14 on MK-4's design gap: a
+-- lead is visible to its AUTHOR, to a project's participants ONLY after the author
+-- SHARES it to that project, to a machine credential only within the scope a member
+-- minted for it, and to nobody else. The share is an AUTHORED, DATED act and this
+-- row is it. Never rewritten: sharing twice finds the same row.
+-- bundle_id IS THE PROJECT, named so it rides op=purge TABLES list and clears in
+-- BOTH arms (D-113) -- a share outliving its project would admit whoever holds that
+-- id next.
+CREATE TABLE IF NOT EXISTS lead_shares (
+  lead_id    TEXT NOT NULL,
+  bundle_id  TEXT NOT NULL,     -- the PROJECT the lead is shared to
+  sharer     TEXT NOT NULL,     -- the lead author, server-stamped (C-54.10)
+  at         TEXT NOT NULL,
+  PRIMARY KEY (lead_id, bundle_id)
+);
+CREATE INDEX IF NOT EXISTS lead_shares_bundle ON lead_shares(bundle_id);
+-- =========================================================================
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
@@ -3632,6 +3661,8 @@ __export(bio_checks_exports, {
   HEADINGS_WHEN: () => HEADINGS_WHEN,
   INQUIRY_TITLE_MAX: () => INQUIRY_TITLE_MAX,
   ISO_TS_RE: () => ISO_TS_RE,
+  LEAD_CHECKS: () => LEAD_CHECKS,
+  LEAD_ID_RE: () => LEAD_ID_RE,
   LEGACY_TYPE_ALIASES: () => LEGACY_TYPE_ALIASES,
   MACHINE_AUTHOR_PREFIX: () => MACHINE_AUTHOR_PREFIX,
   MACHINE_CLASS_PREFIX: () => MACHINE_CLASS_PREFIX,
@@ -3657,7 +3688,6 @@ __export(bio_checks_exports, {
   SUGGEST_CHECKS: () => SUGGEST_CHECKS,
   SUGGEST_KINDS: () => SUGGEST_KINDS,
   SUGGEST_LEVELS: () => SUGGEST_LEVELS,
-  TESTIMONY_CHECKS: () => TESTIMONY_CHECKS,
   TEXT_CHAIN_CHECKS: () => TEXT_CHAIN_CHECKS,
   TRANSCRIBE_CHECKS: () => TRANSCRIBE_CHECKS,
   UNREACHABLE_CAPTURE_GRADE: () => UNREACHABLE_CAPTURE_GRADE,
@@ -3713,6 +3743,7 @@ __export(bio_checks_exports, {
   isPublicHttpsLocator: () => isPublicHttpsLocator,
   isSufficiencyClaimed: () => isSufficiencyClaimed,
   isSufficiencyUnclaimed: () => isSufficiencyUnclaimed,
+  leadLegFindings: () => leadLegFindings,
   legContentId: () => legContentId,
   legExtent: () => legExtent,
   legHasAuthoredExtent: () => legHasAuthoredExtent,
@@ -4888,16 +4919,10 @@ function checkReleaseAuthority(ctx, findings) {
     if (!cap || typeof cap !== "object") findings.push(f("C-18.1", "error", `provenance documents[${i}] missing capture block`));
     else {
       if (!cap.method) findings.push(f("C-18.1", "error", `provenance documents[${i}].capture missing 'method'`));
-      if (d.authored === true) {
-        if (cap.grade !== void 0 && cap.grade !== null) findings.push(f("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and carries capture.grade '${cap.grade}': the capture axis does not apply to an authored document, and a letter on it would read as strength the observation does not have (MEMBER-KNOWLEDGE-DESIGN.md \xA73)`));
-        if (cap.actor_class !== "member") findings.push(f("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its capture.actor_class is '${cap.actor_class}', not 'member'`));
-      } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f("C-18.1", "error", `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(", ")}`));
+      if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f("C-18.1", "error", `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(", ")}`));
       if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f("C-18.1", "error", `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(", ")}`));
     }
     const or = d.origin;
-    if (d.authored === true && (!or || typeof or !== "object" || or.kind !== "member")) {
-      findings.push(f("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its origin.kind is '${or && typeof or === "object" ? or.kind : or}', not 'member'`));
-    }
     if (!or || typeof or !== "object" || !ORIGIN_KINDS.includes(or.kind)) {
       findings.push(f("C-18.1", "error", `provenance documents[${i}].origin.kind must be one of: ${ORIGIN_KINDS.join(", ")}`));
     } else if (or.kind === "sweep") {
@@ -5651,6 +5676,7 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
       findings.push(f("C-2.8", "error", `basis[${i}] is not an object`));
       continue;
     }
+    if (leadLegFindings(`basis[${i}]`, leg, findings)) continue;
     const t = leg.target;
     let targetType = null;
     if (typeof t !== "string" || !BUNDLE_ID_RE.test(t)) {
@@ -5900,11 +5926,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
       `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ""}`,
       [
         `state NO capture grade on basis[${i}] \u2014 an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on`,
-        /* MK-1: for a member's AUTHORED observation there is no transcription to
-           measure — the bytes ARE the words — so that repair would send a member
-           to do something that cannot be done. Omitted for that one cause, and
-           only for it. */
-        ...earned.undetermined_because === "CAPTURE_AXIS_AUTHORED" ? [] : ["or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns"],
+        "or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns",
         "or state this leg as testimony (grade D, with an author and a date) if it is a member's own account"
       ]
     ));
@@ -6303,6 +6325,7 @@ function actionBasisFindings(fm, findings) {
       findings.push(f("C-2.10", "error", `action_basis[${i}] is not a leg block of {target, kind}`, REPAIRS));
       return;
     }
+    if (leadLegFindings(`action_basis[${i}]`, l, findings)) return;
     const target = typeof l.target === "string" ? l.target : "";
     if (!BUNDLE_ID_RE.test(target)) {
       findings.push(f(
@@ -9085,6 +9108,7 @@ function basisVersionFindings(fm, findings) {
     const labels = /* @__PURE__ */ new Set();
     let unlabelled = 0;
     for (const [li, leg] of legs) {
+      if (leadLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
       const t = leg.target;
       if (typeof t !== "string" || !BUNDLE_ID_RE.test(t)) {
         push("VERSION_LEG_NOT_CITABLE", `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical bundle id`);
@@ -9859,10 +9883,11 @@ var MACHINE_FENCE_CHECKS = {
      thing in front of either, and a broader scope passes a scope check.
      `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4: *"No machine credential
      performs the attested act"*; both acts sit at the `attested` rung.
-     WHAT THESE TWO DO NOT REFUSE: the operator's own ENV-BINDING credentials
-     (ADMIN/MEMBER/PROBE tokens). REC-123 left them open as a provisional and
-     raised D-421; BOB #14 DECIDED it (REFUSE), and C-32.14 / C-32.15 below are
-     that ruling, landed by REC-125. */
+     WHAT THESE DO NOT REFUSE, and it is deliberate: the operator's own
+     ENV-BINDING credentials (ADMIN/MEMBER/PROBE tokens), which carry a member's
+     signature on the path `ratify.test.mjs` drives — publication runs through
+     the operator today, and those classes are not the assistant. Only the `ai`
+     class is the machine DEC-24 rule 4 speaks of, and that is what is fenced. */
   MACHINE_CANNOT_RATIFY: {
     check: "C-32.12",
     where: "src/index.mjs fetch > is-machine-ratify-bundle",
@@ -9872,26 +9897,6 @@ var MACHINE_FENCE_CHECKS = {
     check: "C-32.13",
     where: "src/index.mjs fetch > is-machine-ratify-case",
     translation: "Ratifying a case commits the group's own assertions about it \u2014 its scope, its completeness, its position on the people it concerns \u2014 under a member's signature. The credential that asked here is an assistant's: it can assemble the case document, and it cannot be the one who commits it. Sign in and ratify it yourself."
-  },
-  /* REC-125 / IC-137 — D-421, DECIDED by BOB #14 applying
-     `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 (no new doctrine): an
-     ATTESTED act is performed ONLY by a named member's OWN AUTHENTICATED
-     SESSION, and the operator's bearer tokens may no longer deliver one, even
-     carrying a member's valid signature. *The signature proves who AUTHORISED;
-     the credential that delivers it decides WHEN the record changes, and the
-     record names the actor.* ONE ROW PER ACT, like C-32.12 / C-32.13, and ONE
-     ROW FOR EVERY BEARER CLASS rather than one per class: the refusal is keyed
-     on how the caller ARRIVED (not through a session), so the class is named in
-     the answer's `tokenClass` and the rule does not need a row per token. */
-  OPERATOR_TOKEN_CANNOT_RATIFY: {
-    check: "C-32.14",
-    where: "src/index.mjs fetch > is-operator-ratify-bundle",
-    translation: "Ratifying puts a finding into the published record under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for this copy, not a person: a valid signature does not change that, because the credential that carries it in decides when the record changes. Sign in as the member whose key signed it and ratify it there."
-  },
-  OPERATOR_TOKEN_CANNOT_RATIFY_CASE: {
-    check: "C-32.15",
-    where: "src/index.mjs fetch > is-operator-ratify-case",
-    translation: "Ratifying a case commits the group's own assertions about it under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for this copy, not a person, and a valid signature does not change that. Sign in as the member whose key signed it and ratify it there."
   }
 };
 var ACT_SHAPE_CHECKS = {
@@ -11165,84 +11170,80 @@ var TRANSCRIBE_CHECKS = {
     translation: "You typed this transcription, so you cannot be the one who attests it. An attestation is a SECOND person checking the text against the page; your own agreement with your own typing costs nothing and proves nothing. Ask another member to check it."
   }
 };
-var TESTIMONY_CHECKS = {
-  TESTIMONY_NOT_A_MEMBER: {
-    check: "C-53.1",
-    where: "src/store.mjs testify > is-testify-act",
-    translation: "A firsthand observation is a person saying what they saw, in their own name, and it stands on that person's trust. The credential that asked is an automated one, and it has no eyes to have seen anything with. Sign in and record it yourself."
+var LEAD_ID_RE = /^LEAD-\d{4}-\d{4}-[a-z0-9]+$/;
+var LEAD_CHECKS = {
+  LEAD_NOT_EVIDENCE: {
+    check: "C-54.1",
+    where: "checks/bio-checks.mjs leadLegFindings > is-lead-not-evidence",
+    translation: "That leg points at a LEAD. A lead is somewhere to look \u2014 what a member was told or suspects \u2014 and it is never evidence, so nothing can rest on it. Follow the lead: if the look finds the document, capture it and cite THAT; if you saw the thing yourself, write it up as your own observation."
   },
-  TESTIMONY_AUTHOR_SUPPLIED: {
-    check: "C-53.2",
-    where: "src/store.mjs testify > is-testify-act",
-    translation: "That request names who the author is. The record takes the author of an observation from the account that is signed in, never from the request \u2014 a request that names its own author could sign as somebody else. Send the observation without an author and it is recorded as yours."
+  LEAD_NOT_A_MEMBER: {
+    check: "C-54.2",
+    where: "src/store.mjs lead > is-lead-act",
+    translation: "A lead is a person saying what they were told or have reason to believe, in their own name. The credential that asked is an automated one, which has nobody behind it to have been told anything. Sign in and write it yourself."
   },
-  TESTIMONY_NO_WORDS: {
-    check: "C-53.3",
-    where: "src/store.mjs testify > is-testify-words",
-    translation: "The observation is empty. Write what you saw, in your own words; nothing is filled in for you."
+  LEAD_NO_WORDS: {
+    check: "C-54.3",
+    where: "src/store.mjs lead > is-lead-act",
+    translation: "The lead is empty. Write what you were told or suspect, and where it might be found; nothing is filled in for you."
   },
-  TESTIMONY_WORDS_TOO_LONG: {
-    check: "C-53.4",
-    where: "src/store.mjs testify > is-testify-words",
-    translation: "The observation is longer than one passage this record stores. Record it as more than one observation; each is kept exactly as written and each can be cited."
+  LEAD_TOO_LONG: {
+    check: "C-54.4",
+    where: "src/store.mjs lead > is-lead-act",
+    translation: "The lead, or the place to look you suggested, is longer than one passage this record stores. It is refused rather than cut, because a lead silently shortened would be words you did not write standing in your name. Write it more briefly or split it into two leads."
   },
-  TESTIMONY_OBSERVED_AT_INVALID: {
-    check: "C-53.5",
-    where: "src/store.mjs testify > is-testify-words",
-    translation: "An observation needs the date you saw it, as a calendar date (for example 2026-09-10) or a date and time, and not a date later than now. The record keeps that date apart from the moment you wrote it down, because they are two different facts."
+  LEAD_NOT_FOUND: {
+    check: "C-54.5",
+    where: "src/store.mjs #leadFor > is-lead-source",
+    translation: "That request does not name a lead this record holds and you can read. A lead is named by the id its own act returned, and a lead is readable by the member who wrote it."
   },
-  /* NARROWED BY BOB #14's RULING (2026-09-18), NOT DELETED. This refused a
-     second member's IDENTICAL words, because the register is keyed by bytes.
-     The ruling: two identical observations are two testimonies, and the bytes
-     carry a canonical header holding the testimony's own id — so identical
-     words never collide. What is left is the case only an adversary produces:
-     somebody registering, ahead of time, the exact bytes the NEXT testimony
-     will have (the id is sequential, so it can be predicted). Recording over
-     them would re-file their register row under the observation. */
-  TESTIMONY_WORDS_REGISTERED: {
-    check: "C-53.6",
-    where: "src/store.mjs testify > is-testify-bytes",
-    translation: "The record already holds, under another document, the exact bytes this observation would be stored as \u2014 which can only happen if somebody registered them in advance. Nothing was recorded. Try again: the next attempt is stored under a new identifier and new bytes."
+  LEAD_LOOK_STATE: {
+    check: "C-54.6",
+    where: "src/store.mjs leadLook > is-lead-look",
+    translation: 'Say what the look found: that the thing is not there, that you could not tell, that you found part of it, or that it is there. "Nobody looked" is never recorded \u2014 it is what the record says when there is no look at all.'
   },
-  TESTIMONY_ORIGIN_NOT_MEMBER: {
-    check: "C-53.7",
-    where: "src/store.mjs #testimonyFence > is-testimony-fence",
-    translation: "This document is a member's own observation, and this revision of its record claims it came from somewhere else \u2014 a fetch, a sweep, or a machine. That would let a member's word pass for a captured publication. An observation's origin is the member who made it, and that cannot be revised."
+  LEAD_LOOK_REFERENT: {
+    check: "C-54.7",
+    where: "src/store.mjs leadLook > is-lead-look",
+    translation: "What the look found has to be something this record holds and you can read \u2014 a captured document or a part of one \u2014 and only a look that found something can point at anything. Capture the document first, then record the look against it."
   },
-  TESTIMONY_AUTHORED_UNEARNED: {
-    check: "C-53.8",
-    where: "src/store.mjs #testimonyFence > is-testimony-fence",
-    translation: "This document claims to be a member's own firsthand observation, but it did not come through the act that records one. Only that act can mark a document as an observation, because only that act takes the author from the signed-in account. Record the observation through it, or remove the claim."
+  LEAD_LOOK_NOT_A_MEMBER: {
+    check: "C-54.8",
+    where: "src/store.mjs leadLook > is-lead-look",
+    translation: "Following a lead is recorded in the name of the member who looked. The credential that asked is an automated one; an automated search is recorded under its own run, not under a member's lead."
   },
-  TESTIMONY_AUTHORED_DROPPED: {
-    check: "C-53.9",
-    where: "src/store.mjs #testimonyFence > is-testimony-fence",
-    translation: "This document is a member's own observation, and this revision no longer says so. Removing that would let a member's word read as a captured document. What the document is cannot be revised; to withdraw an observation, record a new one."
+  /* BOB #14's ruling, 2026-09-18: a lead reaches a project's participants only
+     through an AUTHORED, DATED share by its author. */
+  LEAD_SHARE_NOT_A_PARTICIPANT: {
+    check: "C-54.9",
+    where: "src/store.mjs leadShare > is-lead-share",
+    translation: "You can share a lead only to a project you have joined. Sharing it somewhere you are not working would put your words in front of people you are not working with."
   },
-  /* MK-1 (A) — THE PUBLICATION FENCE, measured before it was built
-     (`test/mk1-publish-probe.mjs`): op=ratify on an observation whose bytes were
-     in the working bucket PUBLISHED its words, its provenance document and the
-     observer's handle; a finding resting on one, and a case over that finding,
-     ratified. MEMBER-KNOWLEDGE-DESIGN.md §4 puts WHAT a published case may show
-     of a member's observation at the attesting member's chosen level, and that
-     is MK-3's — so until MK-3's projection honours it, nothing carrying an
-     observation crosses. LIFTING THESE THREE IS MK-3's ACT, not a caller's. */
-  TESTIMONY_UNPUBLISHABLE: {
-    check: "C-53.10",
-    where: "src/index.mjs fetch > is-testimony-publish-bundle",
-    translation: "This document is a member's own firsthand observation, and it cannot be published yet. What a published case shows of an observation \u2014 the group, the project, the member's cover or their name \u2014 is the observing member's choice, and the record cannot yet honour that choice in what it publishes. Until it can, publishing the observation would publish its author."
-  },
-  TESTIMONY_CITED_UNPUBLISHABLE: {
-    check: "C-53.11",
-    where: "src/index.mjs fetch > is-testimony-publish-bundle",
-    translation: "This finding rests, directly or through another finding, on a member's own firsthand observation, and it cannot be published yet. How a published case attributes an observation is the observing member's choice, and the record cannot yet honour that choice. Publish the finding without that observation in its basis, or wait until attribution is supported."
-  },
-  TESTIMONY_CASE_UNPUBLISHABLE: {
-    check: "C-53.12",
-    where: "src/index.mjs fetch > is-testimony-publish-case",
-    translation: "A finding in this case rests, directly or through another finding, on a member's own firsthand observation, so the case cannot be published yet. How a published case attributes an observation is the observing member's choice, and the record cannot yet honour that choice."
+  LEAD_SHARE_NOT_AUTHOR: {
+    check: "C-54.10",
+    where: "src/store.mjs leadShare > is-lead-share",
+    translation: "Only the member who wrote a lead can share it. A lead is what one person was told; passing someone else's on is theirs to decide."
   }
 };
+function leadLegFindings(label, leg, findings) {
+  const l = leg && typeof leg === "object" ? leg : {};
+  const refusal7 = (code, message, repairs) => f(LEAD_CHECKS[code].check, "error", message, repairs, code);
+  for (const field of ["target", "content_id"]) {
+    const v = typeof l[field] === "string" ? l[field].trim() : "";
+    if (v && LEAD_ID_RE.test(v)) {
+      findings.push(refusal7(
+        "LEAD_NOT_EVIDENCE",
+        `${label}.${field} '${v}' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md \xA75, \xA77): it says where to look, not what was found, so no leg can rest on it`,
+        [
+          "follow the lead and cite the document the look captured instead",
+          "or, if you saw the thing yourself, author it as your own observation and cite that"
+        ]
+      ));
+      return true;
+    }
+  }
+  return false;
+}
 function checkContentExtent(extent, ctx = {}) {
   const e = extent && typeof extent === "object" ? extent : null;
   if (!e)
@@ -14396,11 +14397,13 @@ var RUNG_ABSENT = {
      attestation is superseded by the same attestor's later one, never withdrawn. */
   transcribe: { ground: "undetermined", is: "a member types what a selected portion of a document says, in their own name; the typing is a content row whose chain is typed(member), its fidelity undetermined and stated until a DIFFERENT member attests it (Bob's 5.2)" },
   transcriptionattest: { ground: "undetermined", is: "a member's TESTIMONY that ANOTHER member's typing of a portion matches the page; raises what a leg citing that typing may claim, and is refused to the typist themself (C-52.9)" },
-  /* MK-1 / IC-133 — TESTIFY. Ground `undetermined` on `transcribe`'s measurement:
-     none of its refusals is a missing justification (an empty observation, C-53.3,
-     is not one). NOT `reversible`: nothing takes an observation back — a member
-     records a new one, never a rewrite (MEMBER-KNOWLEDGE-DESIGN.md section 2). */
-  testify: { ground: "undetermined", is: "a member records a firsthand observation in their own words; it becomes an authored document standing on that member's trust, the author stamped from the session and the words kept exactly as written (D-184)" }
+  /* MK-4 / IC-136 — THE LEAD. Ground `undetermined` on `transcribe`'s measurement:
+     neither act's refusals are in `JUSTIFICATION_REFUSALS`. NOT `reversible`:
+     nothing takes a lead or a look back — a member writes another lead, and a
+     later look is a new row, never a rewrite of the earlier one. */
+  lead: { ground: "undetermined", is: "a member writes a LEAD in their own words \u2014 what they were told or suspect, and where it might be found; an authored row that is NEVER evidence and can never be a basis leg (C-54.1)" },
+  leadshare: { ground: "undetermined", is: "a lead's AUTHOR shares it to one project they have joined, an authored dated act; the project's joined participants can then read it and record looks against it (BOB #14, 2026-09-18)" },
+  leadlook: { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" }
 };
 var CAPTURE_ACTS = [
   /* op=attest. The verb is "co-attest" because the group is not the only
@@ -23413,7 +23416,6 @@ var RESOLUTION_ROW = {
 var citedExists = (alias) => `(EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.content_id = ${alias}.content_id) OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl WHERE vl.content_id = ${alias}.content_id))`;
 var CONTENT_CITED_AS_BYTES = contentCitedAs({ kind: "image" });
 var CHAIN_DOES_NOT_APPLY = "does-not-apply";
-var CAP_DOES_NOT_APPLY = CHAIN_DOES_NOT_APPLY;
 var MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
      EVERY VOCABULARY HERE IS IMPORTED FROM THE CHECK CATALOG, never listed. The
@@ -23672,27 +23674,12 @@ var MEANING = {
          different questions here, and a caller that wants both asks
          `content:cap<=B OR content:cap=undetermined`. Folding NULL into the
          comparison in either direction would be the record answering about
-         rows whose cap it does not know.
-         REC-127 / IC-138 — THE CHAIN'S TWO-CAUSES NULL, ON THE CAP AXIS. A
-         `cited_as = 'bytes'` row (FW-19) is an image cited AS ITSELF: no
-         transcription stands between the citation and its target, so there is
-         no derivation step for a cap to be the weakest of — its
-         `derivation_cap` is NULL BY MEANING, exactly as its chain is
-         (EXTRACTION-BREADTH §3.1). `cap:undetermined` is therefore
-         `derivation_cap IS NULL` over TEXT rows only, and the bytes rows answer
-         under their own stated value `cap:does-not-apply` (`cited_as = 'bytes'`)
-         — REC-121's decision for `chain`, taken for the same reason and not
-         re-argued: reachable by NO cap value would leave the cap question with
-         rows it answers nothing about, the silent drop one layer up. The value
-         arrives UPPER-CASED (`case: "upper"`, as `UNDETERMINED` does), so it is
-         compared to the constant's upper form; the literal travels as an
-         ARGUMENT. A comparison (`cap<=B`) is untouched: a bytes row's NULL
-         already compared to nothing, and it still does. */
+         rows whose cap it does not know. */
       cap: {
         col: "derivation_cap",
         case: "upper",
         vocab: [],
-        pred: (cmp, v) => v === "UNDETERMINED" ? { sql: `derivation_cap IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] } : v === CAP_DOES_NOT_APPLY.toUpperCase() ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] } : null
+        pred: (cmp, v) => v === "UNDETERMINED" ? { sql: `derivation_cap IS NULL`, args: [] } : null
       },
       /* THE LAST STEP OF THE CHAIN — "every OCR'd region below cap C" is §1's
          own example and this is its first half. REC-104: IT READS THE
@@ -23769,20 +23756,6 @@ var MEANING = {
       "at",
       "stale"
     ],
-    /* REC-127 / IC-138 — A STORED COLUMN PROJECTED THROUGH AN EXPRESSION, IN ITS
-       OWN SLOT. `derivation_cap` on a bytes row says `does-not-apply` instead of
-       the NULL a list reader takes for undetermined — the word the `cap` filter
-       answers it under, so label and filter are one definition, as `chain_last`
-       and `chain` are. It is a LABEL ON THE EXISTING COLUMN and not a new
-       computed column ON PURPOSE: a new column would move the shape of EVERY
-       `rows=content` row, where this moves only a bytes row's value and leaves
-       every text row's key order and value byte-identical (a text row reads
-       `m.derivation_cap` exactly as before). Only columns named here are
-       projected through an expression; the SQL is the registry's and carries no
-       member input. */
-    rowLabel: {
-      derivation_cap: `CASE WHEN m.cited_as = '${CONTENT_CITED_AS_BYTES}' THEN '${CAP_DOES_NOT_APPLY}' ELSE m.derivation_cap END`
-    },
     /* Facts a row cannot state about itself, computed in the projection for
        `target_present`'s reason exactly: existence is REPORTED, never inferred
        from a null. `cited` is what makes the published grain below honest — it
@@ -24718,7 +24691,7 @@ SELECT count(*) AS n ${from}`,
     const reached = m.rowJoin ? m.rowJoin.cols.map((c2) => `, ${m.rowJoin.alias}.${c2} AS ${c2}`).join("") : "";
     const snip = m.ftsTable ? fts ? `, snippet(${fts.name}, ${fts.col}, '[', ']', '\u2026', ?) AS snippet` : `, NULL AS snippet` : "";
     const snipArgs = m.ftsTable && fts ? [Math.max(4, Math.min(64, Math.floor(snippetChars)))] : [];
-    const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, ` + m.row.map((c2) => m.rowLabel?.[c2] ? `(${m.rowLabel[c2]}) AS ${c2}` : `m.${c2} AS ${c2}`).join(", ") + reached + present + computed + snip;
+    const sel = `b.bundle_id AS bundle_id, b.object_type AS bundle_type, ` + m.row.map((c2) => `m.${c2} AS ${c2}`).join(", ") + reached + present + computed + snip;
     const order2 = [
       "b.bundle_id ASC",
       ...m.identity.filter((c2) => c2 !== m.key).map((c2) => `m.${c2} ASC`)
@@ -26147,7 +26120,6 @@ function mintRatio({ minted = 0, cited = 0 } = {}) {
 }
 
 // src/store.mjs
-var TESTIMONY_PATH = Symbol("mk1-testimony-path");
 function refusal6(key, extra = {}) {
   const row = CASE_DERIVATION_CHECKS[key];
   return { ok: false, reason: key, code: key, check: row.check, translation: row.translation, ...extra };
@@ -26512,16 +26484,7 @@ var Store = class _Store extends DurableObject {
          before this column did was minted against a TEXT arm (no `image` kind
          was admissible), so the default IS the true value for all of them —
          a backfill by construction, not a guess. */
-      ["content", "cited_as", "TEXT NOT NULL DEFAULT 'text'"],
-      /* MK-1 / D-184 / IC-134: the register's `authored` flag and its two
-         stamps. The default IS the true value for every row that can exist
-         before this column did — no route could author a bundle until
-         op=testify existed — so it is a backfill by construction, `cited_as`'s
-         reasoning one table over. `author` and `observed_at` are NULL on every
-         row that is not authored, which is what they mean. */
-      ["register", "authored", "INTEGER NOT NULL DEFAULT 0"],
-      ["register", "author", "TEXT"],
-      ["register", "observed_at", "TEXT"]
+      ["content", "cited_as", "TEXT NOT NULL DEFAULT 'text'"]
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -27562,9 +27525,6 @@ var Store = class _Store extends DurableObject {
            beside the other two, because a member who asks `chain=undetermined` and
            does not see an image they cited must be able to learn where it went. */
         "content:chain=does-not-apply names the images cited as their own bytes -- no transcription stands between such a citation and what it points at, so its chain is not undetermined and content:chain=undetermined does not match it",
-        /* REC-127 / IC-138: the cap axis's same third answer, stated beside the
-           chain's for the same reason. */
-        "content:cap=does-not-apply names the same images -- with nothing transcribed there is no derivation step for a cap to be the weakest of, so their cap is not undetermined and content:cap=undetermined does not match them",
         "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
         "has:leg asks whether the bundle carries any row in the meaning table at all",
         "sort:field and sort:-field order the result"
@@ -32170,15 +32130,7 @@ Subject position: ${pos} \u2014 ${just}
           WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL ORDER BY edition DESC LIMIT 1`,
         id,
         ed
-      ),
-      /* MK-1 (A): whether any finding THIS DOCUMENT names rests on a member's
-         authored observation (C-53.12). The roster is read from the document's
-         own bytes — `case_findings`, the same field `ratifyCaseDocument` commits
-         from — so the fence judges exactly what the signature would publish. */
-      testimony: this.testimonyReach((() => {
-        const cf = (parseFrontmatter(doc.text).data || {}).case_findings;
-        return (Array.isArray(cf) ? cf : []).map((x) => String(x ?? "").trim());
-      })())
+      )
     };
   }
   /* Read-only, for the member who is about to sign. Scoped to nothing, because
@@ -36600,9 +36552,6 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }
       if (cur && cur.bundle_sha !== base)
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
-      const testimony = pkg[TESTIMONY_PATH] || null;
-      const fenced = this.#testimonyFence(bundleId, files, register2, testimony);
-      if (fenced) return fenced;
       for (const f2 of files) {
         if (f2.text !== void 0 && f2.text.length > INLINE_MAX)
           return { ok: false, reason: "OVERSIZE_INLINE", path: f2.path, bytes: f2.text.length };
@@ -37374,33 +37323,20 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
            empty string" are the same fact and the column states it once. */
         basisFm && typeof basisFm.subject_entity === "string" && basisFm.subject_entity.trim() ? basisFm.subject_entity.trim() : null
       );
-      for (const c of register2) {
-        const own = testimony && testimony.captureSha === c.sha256;
+      for (const c of register2)
         this.sql.exec(
-          `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,authored,author,observed_at)
-           VALUES (?,?,?,?,?,?,?,?,?)
-           ON CONFLICT(capture_sha) DO UPDATE SET
-             bundle_id=excluded.bundle_id, path=excluded.path, encoding=excluded.encoding,
-             bytes=excluded.bytes, registered=excluded.registered,
-             authored=MAX(register.authored, excluded.authored),
-             author=COALESCE(excluded.author, register.author),
-             observed_at=COALESCE(excluded.observed_at, register.observed_at)`,
+          `INSERT OR REPLACE INTO register (capture_sha,bundle_id,path,encoding,bytes,registered) VALUES (?,?,?,?,?,?)`,
           c.sha256,
           bundleId,
           c.path,
           c.encoding ?? "utf8",
           c.bytes,
-          (/* @__PURE__ */ new Date()).toISOString(),
-          own ? 1 : 0,
-          own ? testimony.author : null,
-          own ? testimony.observedAt : null
+          (/* @__PURE__ */ new Date()).toISOString()
         );
-      }
       const bundleMd = files.find((f2) => f2.path === "bundle.md");
       this.#writeProjection(bundleId, bundleMd?.text ?? null);
       this.#writeText(bundleId, files);
       this.#writeReadings(bundleId, files, author);
-      const testimonyWrote = testimony ? testimony.within(bundleId) : null;
       const ownerMemberId = typeof pkg.ownerMemberId === "string" && pkg.ownerMemberId ? pkg.ownerMemberId : null;
       let owner = null;
       if (!cur && ownerMemberId && meta.object_type === "project") {
@@ -37428,9 +37364,6 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         bundleSha: after.bundle_sha,
         rowVersion: after.row_version,
         owner,
-        /* MK-1: present ONLY on the testimony path, which is a method of this
-           class, so no existing caller's answer gains a key. */
-        ...testimonyWrote ? { testimony: testimonyWrote } : {},
         /* REC-82 / IC-83: WHAT THE WRITER DID WITH EACH LEG'S REFERENT, on the
            write path's own surface. A mechanism believed on the strength of its
            EXISTENCE rather than its behaviour is the defect this project meets
@@ -38746,486 +38679,6 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       this.#transcriptionsOver([contentId])
     );
   }
-  /* ==================================================================== *
-   * MK-1 / D-184 / IC-133 / IC-134 — THE AUTHORED BUNDLE.
-   *
-   * `MEMBER-KNOWLEDGE-DESIGN.md` §2, read at the artifact before this was built
-   * (§8's condition): *an observation is an authored INFORMATION bundle whose
-   * bytes are exactly the member's words, registered like any capture, so that it
-   * IS content in the record's one sense of the word … and every reader already
-   * built works on it unchanged.* Bob's ruling it serves (§1, quoted there): *a
-   * member's own eyewitness knowledge can be evidence — though it stands on the
-   * trust held by that member.*
-   *
-   * WHAT IT IS, BUILT OUT OF WHAT EXISTED. An INFO bundle, written through
-   * `promote` — the one write path — with the member's words — below the canonical header (`Store.testimonyBytes`) — as a file under
-   * `snapshots/`, a `data/provenance.json` document declaring origin `member`,
-   * actor class `member` and `authored: true`, and a register row over the
-   * words' bytes. In the SAME transaction: one passage-index unit over the whole
-   * words (so `passage:` search finds them) and one `document` content row
-   * (so a leg can cite them by `content_id` exactly as it cites any row).
-   *
-   * WHAT KEEPS IT HONEST, and it is the half that matters (§2): a capture of a
-   * publisher's document and a member's authored statement are different acts
-   * and the register must never let one pass for the other.
-   *   - the `authored` flag is settable ONLY here — `TESTIMONY_PATH` is a Symbol,
-   *     which no JSON body can carry — and `#testimonyFence` refuses it at
-   *     `promote` on anything this method did not write (C-53.8);
-   *   - the author is STAMPED by the control plane from the session; a caller
-   *     naming one is refused (C-53.2), and a machine is refused (C-53.1);
-   *   - two dates, kept apart: `observed_at` is the member's statement,
-   *     `recorded_at` is this record's own clock and is not taken from the caller;
-   *   - the words are the member's AS WRITTEN, after a canonical header of the testimony's id and observed_at (BOB #14, 2026-09-18) — nothing trims, paraphrases
-   *     or cleans them. An edit is a new observation, never a rewrite.
-   *
-   * HOW IT READS ON THE AXES THAT EXIST TODAY, stated because the testimony axis
-   * (§3) is MK-2's and not built: the CAPTURE axis earns NO letter for an
-   * authored capture — undetermined and stated in `earnedBasisRegistry`
-   * (`CAPTURE_AXIS_AUTHORED`) — because the axis measures the act of reading a
-   * document in, which did not happen; the CONNECTION axis earns nothing, since
-   * no reader ran over the words and nothing resolved them. A leg citing an
-   * observation therefore claims nothing on either, and says why.
-   * ==================================================================== */
-  /** One passage: the same per-unit cap the content-grain text index stores a
-   *  unit to, for `TRANSCRIPTION_MAX_BYTES`'s reason — REFUSED over it, never
-   *  cut, because words silently truncated are words the member did not write. */
-  static TESTIMONY_MAX_BYTES = CAPTURE_TEXT_UNIT_CAP;
-  /** THE CANONICAL AUTHORED BYTES — PERMANENT ONCE ON MAIN, so stated exactly.
-   *
-   *  Ruled by BOB #14, 2026-09-18 (MK-1 design gap 1): identical words from two
-   *  members are two testimonies, and the register is keyed by the bytes' sha,
-   *  so the bytes carry a header that makes them unique per testimony. The
-   *  format, byte for byte, UTF-8:
-   *
-   *      bio-testimony/1\n
-   *      id: <the testimony's own bundle id>\n
-   *      observed_at: <the member's observedAt, exactly as accepted>\n
-   *      \n
-   *      <the member's words, exactly as written — nothing added after them>
-   *
-   *  Three header lines in THIS order, each `key: value` with one space, LF line
-   *  ends, then ONE empty line; the words begin at the first byte after the first
-   *  "\n\n" and run to the end of the file. `bio-testimony/1` names the format so
-   *  a later one is a new version line, never a silent change. Both values are
-   *  single-line by construction (`id` is canonical, `observed_at` is validated
-   *  to a date or instant), so the header cannot be forged from inside the words.
-   *
-   *  NO AUTHOR IDENTITY IS IN THE BYTES, by the same ruling: who the author is
-   *  and what a published case shows of them is the attribution level's to
-   *  govern (§4), and bytes are what verification publishes. The author is in
-   *  the register and the provenance document, where MK-3's projection decides
-   *  what crosses. */
-  static TESTIMONY_FORMAT = "bio-testimony/1";
-  static testimonyBytes({ id, observedAt, words }) {
-    return `${_Store.TESTIMONY_FORMAT}
-id: ${id}
-observed_at: ${observedAt}
-
-${words}`;
-  }
-  /** MK-1 (A) — WHAT WOULD CARRY A MEMBER'S AUTHORED OBSERVATION INTO THE
-   *  PUBLISHED RECORD, for the publication fence at op=ratify / op=caseratify
-   *  (C-53.10–.12, `src/index.mjs`).
-   *
-   *  From each root, the evidence graph is walked through every basis leg AND
-   *  every version leg — a finding resting on a finding that rests on an
-   *  observation carries it just as surely, and an older reading of the basis is
-   *  still bytes a published finding can point at. An observation is a bundle
-   *  holding an AUTHORED register row, read from the register's flag, which only
-   *  the testimony path writes. `self` names roots that ARE observations; `via`
-   *  names a finding and the observation it rests on.
-   *
-   *  ONE bounded statement: the roots travel as one JSON array (D-36), the walk
-   *  stops at depth 64 (a basis is acyclic by C-2.8, so this is a guard, not a
-   *  bound anyone meets), and the answer is capped at 200 rows — enough to NAME
-   *  why a publication is refused, which is all the fence needs; one row refuses. */
-  testimonyReach(ids) {
-    const roots = [...new Set((Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && x))].slice(0, 200);
-    if (!roots.length) return { self: [], via: [] };
-    const rows = this.#rows(
-      `WITH RECURSIVE reach(root, id, depth) AS (
-         SELECT value, value, 0 FROM json_each(?)
-         UNION
-         SELECT r.root, e.target_id, r.depth + 1 FROM reach r
-           JOIN (SELECT bundle_id, target_id FROM inquiry_basis
-                 UNION SELECT bundle_id, target_id FROM inquiry_basis_version_legs) e
-             ON e.bundle_id = r.id
-          WHERE r.depth < 64)
-       SELECT DISTINCT reach.root AS root, reach.id AS observation, MIN(reach.depth) AS depth
-         FROM reach JOIN register g ON g.bundle_id = reach.id AND g.authored = 1
-        GROUP BY reach.root, reach.id
-        LIMIT ?`,
-      JSON.stringify(roots),
-      200
-    );
-    return {
-      self: rows.filter((r) => r.depth === 0).map((r) => r.root),
-      via: rows.filter((r) => r.depth > 0).map((r) => ({ finding: r.root, observation: r.observation }))
-    };
-  }
-  /** When the member says they observed it: a calendar date or a UTC instant,
-   *  a real one (2026-02-31 is refused, not rolled over), as epoch ms — or null.
-   *  REQUIRED, and that STANDS by BOB #14's ruling of 2026-09-18: the record does
-   *  not date a member's observation for them. */
-  static #observedMs(v) {
-    const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?Z)?$/.exec(v);
-    if (!m) return null;
-    const ms = Date.parse(m[4] === void 0 ? `${v}T00:00:00Z` : v);
-    if (!Number.isFinite(ms)) return null;
-    const back = new Date(ms).toISOString();
-    if (back.slice(0, 10) !== v.slice(0, 10)) return null;
-    return ms;
-  }
-  /** THE AUTHORED FLAG'S FENCE, run by `promote` before its first write.
-   *
-   *  THREE REFUSALS, and each is a way the register could let a member's word
-   *  pass for a captured document or the other way round (§7):
-   *   (1) a document claiming `authored` that this record did not author through
-   *       the testimony path — including a register entry that would re-file an
-   *       authored capture's bytes under a DIFFERENT bundle (C-53.8, THE LIAR);
-   *   (2) an authored document whose origin or actor class is not `member`
-   *       (C-53.7) — reachable only by a REVISION, since `testify` writes both;
-   *   (3) an authored document that stops saying `authored: true`, or whose
-   *       provenance document is gone from the revision (C-53.9).
-   *
-   *  IMPORT AND REPLAY GO THROUGH THE TESTIMONY PATH (BOB #14, 2026-09-18, §7):
-   *  there is no replay exemption here, so a migration carrying an authored
-   *  bundle must re-author it through `testify`, never promote it verbatim.
-   *
-   *  "AUTHORED" IS READ FROM THE REGISTER, NEVER FROM THE DOCUMENT. The register
-   *  row's flag is written only under `TESTIMONY_PATH`, so it is the one fact
-   *  here a caller cannot have produced; the document's `authored` field is the
-   *  CLAIM being judged against it. ONE read, whatever the package holds: the
-   *  shas travel as one bound JSON array (D-36's ~100-variable ceiling). */
-  #testimonyFence(bundleId, files, register2, testimony) {
-    const refusal7 = (code, detail, extra) => {
-      const row = TESTIMONY_CHECKS[code];
-      return {
-        ok: false,
-        reason: code,
-        code,
-        check: row.check,
-        translation: row.translation,
-        detail,
-        ...extra || {}
-      };
-    };
-    const prov = Array.isArray(files) ? files.find((f2) => f2 && f2.path === "data/provenance.json") : null;
-    let docs = [], unreadable = false;
-    if (prov) {
-      const j = typeof prov.text === "string" ? safeJson(prov.text) : null;
-      if (j === null) unreadable = true;
-      else docs = Array.isArray(j.documents) ? j.documents : [];
-    }
-    const shaOf = (d) => d && typeof d === "object" && d.capture && typeof d.capture === "object" && typeof d.capture.sha256 === "string" && d.capture.sha256 ? d.capture.sha256 : null;
-    const regs = Array.isArray(register2) ? register2.filter((c) => c && typeof c.sha256 === "string") : [];
-    const asked = [.../* @__PURE__ */ new Set([...docs.map(shaOf).filter(Boolean), ...regs.map((c) => c.sha256)])];
-    const held = this.#rows(
-      `SELECT capture_sha, bundle_id FROM register
-        WHERE authored = 1 AND (bundle_id = ? OR capture_sha IN (SELECT value FROM json_each(?)))
-        LIMIT ?`,
-      bundleId,
-      JSON.stringify(asked),
-      asked.length + 1
-    );
-    const here = new Set(held.filter((r) => r.bundle_id === bundleId).map((r) => r.capture_sha));
-    const elsewhere = new Set(held.filter((r) => r.bundle_id !== bundleId).map((r) => r.capture_sha));
-    const own = (s) => !!(testimony && testimony.captureSha === s && !elsewhere.has(s));
-    for (const c of regs)
-      if (elsewhere.has(c.sha256))
-        return refusal7(
-          "TESTIMONY_AUTHORED_UNEARNED",
-          `this promotion registers capture ${c.sha256.slice(0, 16)}\u2026 under ${bundleId}, and those bytes are already registered as ANOTHER bundle's authored observation. Re-filing them here would move a member's word under a document that is not theirs`,
-          { bundleId, capture_sha: c.sha256 }
-        );
-    for (let i = 0; i < docs.length; i++) {
-      const d = docs[i];
-      if (!d || typeof d !== "object") continue;
-      const s = shaOf(d);
-      const claims = d.authored !== void 0 && d.authored !== null && d.authored !== false;
-      const authored = s != null && (here.has(s) || own(s));
-      if (claims && !authored)
-        return refusal7(
-          "TESTIMONY_AUTHORED_UNEARNED",
-          `data/provenance.json documents[${i}] claims authored: ${JSON.stringify(d.authored).slice(0, 40)}, and ${s ? `capture ${s.slice(0, 16)}\u2026 was not authored through op=testify` : `names no capture at all`}. Only the testimony act marks a document as a member's own observation`,
-          { bundleId, index: i }
-        );
-      if (!authored) continue;
-      if (d.authored !== true)
-        return refusal7(
-          "TESTIMONY_AUTHORED_DROPPED",
-          `data/provenance.json documents[${i}] is the member's authored observation ${s.slice(0, 16)}\u2026 and this revision sets authored to ${JSON.stringify(d.authored ?? null).slice(0, 40)}`,
-          { bundleId, index: i }
-        );
-      const origin = d.origin && typeof d.origin === "object" ? d.origin.kind : void 0;
-      const actor = d.capture.actor_class;
-      if (origin !== "member" || actor !== "member")
-        return refusal7(
-          "TESTIMONY_ORIGIN_NOT_MEMBER",
-          `data/provenance.json documents[${i}] is the member's authored observation ${s.slice(0, 16)}\u2026 and claims origin '${String(origin).slice(0, 40)}', actor class '${String(actor).slice(0, 40)}' \u2014 both must be 'member'`,
-          { bundleId, index: i, origin: origin ?? null, actor_class: actor ?? null }
-        );
-    }
-    const stated = new Set(docs.filter((d) => d && typeof d === "object" && d.authored === true).map(shaOf).filter(Boolean));
-    for (const s of here)
-      if (!stated.has(s))
-        return refusal7(
-          "TESTIMONY_AUTHORED_DROPPED",
-          unreadable ? `${bundleId} holds the member's authored observation ${s.slice(0, 16)}\u2026, and this revision's data/provenance.json cannot be read, so it cannot be shown to still say so` : `${bundleId} holds the member's authored observation ${s.slice(0, 16)}\u2026, and this revision's data/provenance.json no longer carries it as authored`,
-          { bundleId, capture_sha: s }
-        );
-    return null;
-  }
-  /** op=testify — A MEMBER RECORDS A FIRSTHAND OBSERVATION. */
-  testify({ words = null, observedAt = null, title = null, author = null, claimedAuthor = null } = {}) {
-    const refusal7 = (code, detail, extra) => {
-      const row = TESTIMONY_CHECKS[code];
-      return {
-        ok: false,
-        reason: code,
-        code,
-        check: row.check,
-        translation: row.translation,
-        detail,
-        ...extra || {}
-      };
-    };
-    const who = typeof author === "string" ? author.trim() : "";
-    if (!who || isMachineIdentity(who))
-      return refusal7(
-        "TESTIMONY_NOT_A_MEMBER",
-        who ? `'${who.slice(0, 60)}' is a machine credential. A firsthand observation is a person's word about what they saw, and it stands on that person's trust` : `this call carries nobody. The plane stamps the author from the credential that asked, so an empty one means the act arrived by a route that does not attribute it`
-      );
-    if (claimedAuthor !== null && claimedAuthor !== void 0)
-      return refusal7(
-        "TESTIMONY_AUTHOR_SUPPLIED",
-        `the request names an author (${JSON.stringify(claimedAuthor).slice(0, 60)}). The author of an observation is the signed-in member, stamped by the plane, and is never taken from the request`
-      );
-    const text = typeof words === "string" ? words : "";
-    const bytes = new TextEncoder().encode(text);
-    const recorded = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
-    const obs = typeof observedAt === "string" ? observedAt.trim() : "";
-    const obsMs = _Store.#observedMs(obs);
-    if (!text.trim())
-      return refusal7(
-        "TESTIMONY_NO_WORDS",
-        `the observation is empty. Nothing is prefilled: the words are what the member saw, in theirs`
-      );
-    if (bytes.length > _Store.TESTIMONY_MAX_BYTES)
-      return refusal7(
-        "TESTIMONY_WORDS_TOO_LONG",
-        `${bytes.length} B written, over the ${_Store.TESTIMONY_MAX_BYTES} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut: words silently truncated would be words the member did not write, standing in their name`,
-        { bytes: bytes.length, limit: _Store.TESTIMONY_MAX_BYTES }
-      );
-    if (obsMs == null || obsMs > Date.parse(recorded))
-      return refusal7(
-        "TESTIMONY_OBSERVED_AT_INVALID",
-        obsMs == null ? `observedAt ${obs ? `'${obs.slice(0, 40)}' is not a real calendar date (YYYY-MM-DD) or UTC instant (YYYY-MM-DDTHH:MM[:SS]Z)` : `was not given`}. It is the member's own statement of when they saw it, and the record does not supply one` : `observedAt '${obs}' is later than this record's own clock (${recorded})`,
-        { observed_at: obs || null }
-      );
-    const heading = (typeof title === "string" ? title : "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200) || `Firsthand observation, observed ${obs}`;
-    const id = `${this.allocId("INFO", recorded.slice(0, 4)).id}-observation`;
-    const fileText = _Store.testimonyBytes({ id, observedAt: obs, words: text });
-    const fileBytes = new TextEncoder().encode(fileText);
-    const sha = createSha256().update(fileBytes).hex();
-    if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha))
-      return refusal7(
-        "TESTIMONY_WORDS_REGISTERED",
-        `the canonical bytes of ${id} (${sha.slice(0, 16)}\u2026) are already registered in this record`
-      );
-    const file = `snapshots/observation-${sha.slice(0, 16)}.txt`;
-    const locator = "a member's firsthand observation, authored in this record";
-    const md = [
-      "---",
-      `id: ${id}`,
-      "object_type: information",
-      "schema: information@1",
-      `title: ${JSON.stringify(heading)}`,
-      "current_state: collected",
-      "prior_state: null",
-      `created: "${recorded}"`,
-      `last_updated: "${recorded}"`,
-      "produced_by:",
-      "  mode: human",
-      "  capability_tier: session",
-      "group: believe-in-oakland",
-      "references: []",
-      "state_history: []",
-      "annotations_open: 0",
-      "reeval_pending:",
-      "  flag: false",
-      "  since: null",
-      "  source: null",
-      "visuals: []",
-      "criticality: supporting",
-      "source_status: unchanged",
-      "source:",
-      `  locator: ${JSON.stringify(locator)}`,
-      "  authority: the observing member",
-      `  retrieved: ${recorded}`,
-      "monitoring:",
-      "  enabled: false",
-      "  frequency: none",
-      "---",
-      "",
-      "## Summary",
-      "",
-      `A member's firsthand observation. Their words are \`${file}\`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.`,
-      "",
-      "## Provenance Notes",
-      "",
-      `Authored through op=testify. Observed ${obs}, in the member's own statement; recorded ${recorded}, by this record's clock. The author is stamped by the plane from the signed-in session. It stands on that member's trust, graded as testimony (MEMBER-KNOWLEDGE-DESIGN.md section 3).`,
-      "",
-      "## Session Log",
-      "",
-      `### Session ${recorded} | Authored | ${who}`,
-      "Trigger: testify",
-      "Changes: created as a member's authored observation.",
-      "",
-      "## Review Notes",
-      ""
-    ].join("\n");
-    const doc = {
-      file,
-      locator,
-      retrieved: recorded,
-      /* THE THREE THE DESIGN NAMES, in the register entry. `authored` is honoured
-         only because this method wrote it (the fence reads the register's flag,
-         not this field); the author is the STAMP; the two dates are apart. */
-      authored: true,
-      author: who,
-      observed_at: obs,
-      recorded_at: recorded,
-      authority: "the observing member",
-      authority_state: "determined",
-      authority_basis: `the author of these bytes is the signed-in member the plane stamped from the session at op=testify, ${recorded}; the request could not name it`,
-      provenance_chain: [{
-        who: "the observing member (stamped from the session)",
-        asserts: `these are my own words, as written, about what I observed at ${obs}`,
-        evidence: "authored through op=testify under a signed-in member session, hashed at receipt",
-        bound: false
-      }],
-      capture: {
-        method: "authored by a member through op=testify; the bytes are a canonical header (bio-testimony/1: id, observed_at) and then the member's words as written, hashed at receipt",
-        /* NO `grade`, and the absence is the statement (§3, and C-18.1's authored
-           arm): the capture axis measures reading a document in, and nothing was
-           read in. */
-        actor_class: "member",
-        sha256: sha,
-        encoding: "utf8",
-        bytes: fileBytes.length,
-        content_type: "text/plain; charset=utf-8"
-      },
-      origin: { kind: "member" },
-      attestation_attempts: []
-    };
-    const provText = JSON.stringify({ documents: [doc] }, null, 2);
-    const enc2 = (t) => {
-      const b = new TextEncoder().encode(t);
-      return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() };
-    };
-    const unit = [{ extent: { kind: "document" }, text, seq: 0 }];
-    const extentBad = checkContentExtent({ kind: "document" }, this.contentContextFor(sha));
-    if (extentBad) return extentBad;
-    const promoted = this.promote({
-      bundleId: id,
-      base: null,
-      snapKey: `${recorded.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
-      author: who,
-      files: [
-        { path: "bundle.md", ...enc2(md) },
-        { path: "data/provenance.json", ...enc2(provText) },
-        { path: file, text: fileText, bytes: fileBytes.length, sha256: sha }
-      ],
-      meta: {
-        object_type: "information",
-        group: "believe-in-oakland",
-        title: heading,
-        current_state: "collected",
-        prior_state: null,
-        created: recorded,
-        last_updated: recorded,
-        criticality: "supporting"
-      },
-      register: [{ sha256: sha, path: file, encoding: "utf8", bytes: fileBytes.length }],
-      [TESTIMONY_PATH]: {
-        captureSha: sha,
-        author: who,
-        observedAt: obs,
-        /* Inside promote's transaction. ONE unit over the whole words, at the
-           `document` extent — the content row below is minted at that same
-           extent under that same (null) chain, so a `passage:` hit and a
-           citation address one passage under one id. The index observation
-           reads PRESENT because it is: the words are the whole document. No
-           READING is written, because no reader ran over the words — a
-           meaning-level row saying one looked would be a look nobody took. */
-        within: (bid) => {
-          const indexed = this.#writeCaptureText(bid, sha, unit, null);
-          this.#observeIndexed(bid, sha, indexed, { author: who, hadText: true, unitArm: true });
-          const m = this.mintContent({
-            bundleId: bid,
-            captureSha: sha,
-            extent: { kind: "document" },
-            mintedBy: who,
-            at: recorded
-          });
-          if (!m.ok) throw new Error(`MK-1: the observation's content row was refused after the extent was checked: ${m.code || m.reason}`);
-          const bad = this.#observe({
-            actorClass: "member",
-            actor: who,
-            authorityKind: "extract",
-            authority: bid,
-            level: "content",
-            subjectKind: "capture",
-            subject: sha,
-            state: "PRESENT",
-            condition: null,
-            resultKind: "content",
-            resultRef: m.content_id,
-            detail: "first extraction; a member's authored observation \u2014 its bytes ARE its text, as written, so the whole document is text and no extraction step stands between them"
-          });
-          if (bad) throw new Error(`MK-1: the observation's extraction row was refused: ${JSON.stringify(bad).slice(0, 200)}`);
-          return { content_id: m.content_id, indexed: indexed.written };
-        }
-      }
-    });
-    if (!promoted.ok) return promoted;
-    return {
-      ok: true,
-      bundle_id: id,
-      bundle_sha: promoted.bundleSha ?? null,
-      capture_sha: sha,
-      file,
-      bytes: fileBytes.length,
-      words_bytes: bytes.length,
-      content_id: promoted.testimony ? promoted.testimony.content_id : null,
-      authored: true,
-      origin: "member",
-      actor_class: "member",
-      author: who,
-      observed_at: obs,
-      recorded_at: recorded,
-      axes: {
-        capture: {
-          grade: null,
-          determined: false,
-          undetermined_because: "CAPTURE_AXIS_AUTHORED",
-          why: "the capture axis measures the act of reading a document in, and a member's own words were not read in from anywhere, so it earns no letter here"
-        },
-        connection: {
-          grade: null,
-          determined: false,
-          why: "no reader ran over these words and nothing resolved them to a subject"
-        },
-        testimony: {
-          grade: null,
-          determined: false,
-          why: "an observation is graded as testimony, D, on the member's trust (the ruling, MEMBER-KNOWLEDGE-DESIGN.md section 3); this build does not yet carry that axis (MK-2), so it is stated rather than shown"
-        }
-      },
-      says: `${who} recorded a firsthand observation, observed ${obs}. The words are held exactly as written and are the document; they stand on ${who}'s trust. This record takes the author from the signed-in account and never from the request.`
-    };
-  }
   /** THE BOUND ON ONE TYPING: the per-unit cap the content-grain text index
    *  already stores one passage to (`CAPTURE_TEXT_UNIT_CAP`, M-20's figure).
    *  A transcription IS one passage, and a second number for "how large may a
@@ -39481,6 +38934,393 @@ ${words}`;
       says: `${t.transcriber} typed ${standing ? standing.ref : "this portion"}. Authored text: its fidelity is undetermined until a different member attests it against the page`
     };
   }
+  /* ====================================================================== *
+   * MK-4 / IC-135 / IC-136 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5).
+   * ====================================================================== *
+   *
+   * *"I was told the contract was amended; look at the Clerk's March agenda."*
+   * The same member knowledge as an observation, BEFORE the search. Three acts:
+   *
+   *   op=lead      a member AUTHORS a lead — a row in `leads`, and NOTHING in
+   *                `observation_log`: nobody has looked yet, and NEVER_LOOKED is
+   *                never stored (OBSERVATION-LOG-DESIGN.md §3). The row-level
+   *                reading of MK-4's accepts-when ("writes its row and an
+   *                observation_log entry") would force a look nobody made into
+   *                the log, so the entry is written by the act that IS the look.
+   *   op=leadlook  FOLLOWING it: one row of `observation_log` with
+   *                `authority_kind = 'lead'`, `authority = <lead_id>`, level
+   *                `internet`, subject kind `description` and the member's words
+   *                as the subject — §4.5's row exactly, through REC-93's ONE
+   *                append site (`#observe`), which this neither duplicates nor
+   *                modifies. So every C-22 refusal applies to the look as it is:
+   *                a PRESENT that names nothing is C-22.10, not a lead rule.
+   *   op=leadread  the lead and every look recorded against it.
+   *
+   * A LEAD IS NEVER EVIDENCE, and that is held in two places on purpose: the id
+   * shape (`LEAD-…`) is not a bundle id or a content id, so no leg grammar can
+   * accept one; and C-54.1 (`leadLegFindings`) refuses one BY NAME at every leg
+   * grammar. Nothing here mints a bundle or a content row.
+   *
+   * WHY A LEAD'S LOOKS CANNOT FALL INTO THE RUN-ROLLUP RULES. `#aiRunSearchState`
+   * reads `authority_kind = 'run'` only; C-22.10's `observation` arm fires only on
+   * `result_kind = 'observation'`, which this act refuses (C-54.7 admits capture
+   * and content only); `op=airunlog` and `op=stats`' run slice read `run` only.
+   * Each is asserted in `test/lead.test.mjs` rather than trusted from this note.
+   *
+   * VISIBILITY IS BOB #14's RULING (2026-09-18), which replaced MK-4's first
+   * provisional (author plus ANY unfiltered machine credential): the author; a
+   * project's participants once the author SHARES it there (`op=leadshare`); a
+   * machine credential only within a member's minted scope; nobody else, and
+   * everybody else answered exactly as for a lead that does not exist. See
+   * `#leadVisibleTo`. The frontier's `#observationBundles` keeps answering `lead`
+   * as unresolved, so a lead's looks are withheld on any frontier arm that ever
+   * reads the internet level. */
+  static #leadRefusal(code, detail, extra) {
+    const row = LEAD_CHECKS[code];
+    return {
+      ok: false,
+      reason: code,
+      code,
+      check: row.check,
+      translation: row.translation,
+      detail,
+      ...extra || {}
+    };
+  }
+  /** WHICH LEAD, and may this viewer read it. The one visibility decision for
+   *  all three acts, so the act, the look and the read cannot disagree. */
+  #leadFor(id, viewer) {
+    const refusal7 = (code, detail, extra) => _Store.#leadRefusal(code, detail, extra);
+    const lid = typeof id === "string" ? id.trim() : "";
+    const row = lid ? this.#one(
+      `SELECT lead_id, author, words, locator, at FROM leads WHERE lead_id = ?`,
+      lid
+    ) : null;
+    const sees = !!row && this.#leadVisibleTo(row, viewer);
+    if (!sees)
+      return refusal7(
+        "LEAD_NOT_FOUND",
+        lid ? `no lead is addressed by ${lid.slice(0, 60)} in this record` : `pass lead=<LEAD-\u2026>: the id op=lead returned`,
+        { lead: lid || null }
+      );
+    return { ok: true, row };
+  }
+  /** MAY THIS VIEWER READ THIS LEAD? BOB #14's ruling (2026-09-18), in its three
+   *  positive arms and nothing else:
+   *
+   *    1. the AUTHOR;
+   *    2. a PARTICIPANT of a project the author SHARED it to (`lead_shares`, the
+   *       authored dated act) — joined or leaving, the two states Membership
+   *       Architecture §7 gives full visibility; `invited` is skeleton-only and
+   *       does not reach a lead;
+   *    3. a MACHINE credential ONLY WITHIN THE SCOPE A MEMBER MINTED FOR IT. The
+   *       control plane stamps an `ai` credential's viewer as its PRINCIPAL
+   *       (`aiTaskScope`: `member:<id>` for a member-scoped key), so such a key
+   *       answers arms 1 and 2 exactly as its member would, and no further. A
+   *       `class:*` credential — the instance tokens, and an ORGANISATION-scoped
+   *       `ai` key — carries no member, so `viewerPredicate` answers `member:
+   *       null` and it reaches NOTHING here. That is the correction of MK-4's
+   *       provisional, which let an unfiltered machine read every lead.
+   *
+   *  Everyone else is answered by the caller exactly as for a lead that does not
+   *  exist. Participation is read from `project_participants` directly and NOT
+   *  through `viewerPredicate`'s project arm, whose `admin` disjunct would let
+   *  every administrator read every shared lead — the ruling names participants. */
+  #leadVisibleTo(row, viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "DENY" || gate.member == null) return false;
+    if (gate.member === row.author) return true;
+    return !!this.#one(
+      `SELECT 1 AS x FROM lead_shares s JOIN project_participants pp ON pp.project_id = s.bundle_id
+        WHERE s.lead_id = ? AND pp.member_id = ? AND pp.state IN ('joined', 'leaving') LIMIT 1`,
+      row.lead_id,
+      gate.member
+    );
+  }
+  /** op=leadshare — THE AUTHOR SHARES ONE LEAD TO ONE PROJECT: authored, dated,
+   *  never rewritten. `sharer` is the control plane's stamp. */
+  leadShare({ lead = null, project = null, sharer = null, viewer = null } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#leadRefusal(code, detail, extra);
+    const who = typeof sharer === "string" ? sharer.trim() : "";
+    const pid = typeof project === "string" ? project.trim() : "";
+    const src = this.#leadFor(lead, viewer);
+    if (!src.ok) return src;
+    const L = src.row;
+    const joined = who && pid ? this.#one(
+      `SELECT 1 AS x FROM project_participants pp JOIN bundles b ON b.bundle_id = pp.project_id
+        WHERE pp.project_id = ? AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')
+          AND b.object_type = 'project' LIMIT 1`,
+      pid,
+      who
+    ) : null;
+    if (who !== L.author)
+      return refusal7(
+        "LEAD_SHARE_NOT_AUTHOR",
+        `${L.lead_id} was written by another member; only its author shares it. A machine credential is never the author (the author is a member id, stamped when the lead was written)`,
+        { lead: L.lead_id }
+      );
+    if (!joined)
+      return refusal7(
+        "LEAD_SHARE_NOT_A_PARTICIPANT",
+        pid ? `you are not a joined participant of a project addressed by ${pid.slice(0, 60)}` : `pass project=<PROJ-\u2026>: the project to share this lead to`,
+        { lead: L.lead_id, project: pid || null }
+      );
+    const at = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    this.sql.exec(
+      `INSERT OR IGNORE INTO lead_shares (lead_id, bundle_id, sharer, at) VALUES (?, ?, ?, ?)`,
+      L.lead_id,
+      pid,
+      who,
+      at
+    );
+    const r = this.#one(`SELECT sharer, at FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L.lead_id, pid);
+    return {
+      ok: true,
+      lead_id: L.lead_id,
+      project: pid,
+      shared_by: r.sharer,
+      at: r.at,
+      already: r.at !== at,
+      evidence: false,
+      says: `${L.lead_id} is shared to ${pid}: its joined participants can now read it and record looks against it. It is still never evidence`
+    };
+  }
+  /** op=lead — THE ACT. `author` is the control plane's stamp and never the
+   *  caller's (§7: *an author field supplied by the caller rather than stamped*
+   *  is refused — here by never being read from the body at all). */
+  lead({ words = null, locator = null, author = null } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#leadRefusal(code, detail, extra);
+    const who = typeof author === "string" ? author.trim() : "";
+    const typed = typeof words === "string" ? words : "";
+    const where = typeof locator === "string" && locator.trim() ? locator : null;
+    const bytes = (s) => new TextEncoder().encode(s).length;
+    if (!who || isMachineIdentity(who))
+      return refusal7(
+        "LEAD_NOT_A_MEMBER",
+        who ? `'${who.slice(0, 60)}' is a machine credential. A lead is what a PERSON was told or has reason to believe, in their own name` : `this call carries nobody. The plane stamps the author from the credential that asked`
+      );
+    if (!typed.trim())
+      return refusal7(
+        "LEAD_NO_WORDS",
+        `the lead is empty. Its words are what the member was told or suspects, as they write it`
+      );
+    if (bytes(typed) > CAPTURE_TEXT_UNIT_CAP || where && bytes(where) > CAPTURE_TEXT_UNIT_CAP)
+      return refusal7(
+        "LEAD_TOO_LONG",
+        `${bytes(typed)} B of words${where ? ` and ${bytes(where)} B of locator` : ""}, over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut`,
+        { limit: CAPTURE_TEXT_UNIT_CAP }
+      );
+    const at = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
+    const leadId = `LEAD-${at.slice(0, 4)}-${at.slice(5, 7)}${at.slice(8, 10)}-${_Store.#rand(6)}`;
+    this.sql.exec(
+      `INSERT INTO leads (lead_id, author, words, locator, at) VALUES (?, ?, ?, ?, ?)`,
+      leadId,
+      who,
+      typed,
+      where,
+      at
+    );
+    return {
+      ok: true,
+      lead_id: leadId,
+      author: who,
+      words: typed,
+      locator: where,
+      at,
+      evidence: false,
+      looks: 0,
+      state: "NEVER_LOOKED",
+      says: `${who}'s lead is recorded. It is somewhere to look and never evidence: no leg can rest on it. Following it is recorded with op=leadlook, and a look that finds nothing is itself a finding with this lead behind it`
+    };
+  }
+  /** op=leadlook — FOLLOWING A LEAD, recorded as §4.5's row. */
+  leadLook({
+    lead = null,
+    state = null,
+    resultKind = null,
+    resultRef = null,
+    condition = null,
+    detail = null,
+    looker = null,
+    viewer = null
+  } = {}) {
+    const refusal7 = (code, detail2, extra) => _Store.#leadRefusal(code, detail2, extra);
+    const who = typeof looker === "string" ? looker.trim() : "";
+    const st = typeof state === "string" ? state.trim() : "";
+    const rk = typeof resultKind === "string" && resultKind.trim() ? resultKind.trim() : null;
+    const rr = typeof resultRef === "string" && resultRef.trim() ? resultRef.trim() : null;
+    const note = typeof detail === "string" && detail.trim() ? detail : null;
+    if (!who || isMachineIdentity(who))
+      return refusal7(
+        "LEAD_LOOK_NOT_A_MEMBER",
+        who ? `'${who.slice(0, 60)}' is a machine credential; a machine's search is recorded under its own run (authority_kind run), never under a member's lead` : `this call carries nobody. The plane stamps who looked from the credential that asked`
+      );
+    const src = this.#leadFor(lead, viewer);
+    if (!src.ok) return src;
+    const L = src.row;
+    if (!_Store.LEAD_LOOK_OUTCOMES.includes(st))
+      return refusal7(
+        "LEAD_LOOK_STATE",
+        st === "NEVER_LOOKED" ? `NEVER_LOOKED is never stored: it is what the record says of a lead with no look at all (OBSERVATION-LOG-DESIGN.md \xA73). A look that happened found one of ${_Store.LEAD_LOOK_OUTCOMES.join(", ")}` : `'${st.slice(0, 40) || "(absent)"}' is not one of ${_Store.LEAD_LOOK_OUTCOMES.join(", ")}`,
+        { lead: L.lead_id }
+      );
+    if ((rk || rr) && !(rk && rr))
+      return refusal7(
+        "LEAD_LOOK_REFERENT",
+        `a referent is a KIND and an id together (resultKind capture|content, resultRef); one without the other names nothing`,
+        { lead: L.lead_id }
+      );
+    if (rk && st !== "PRESENT" && st !== "partial")
+      return refusal7(
+        "LEAD_LOOK_REFERENT",
+        `a look recorded as ${st} found nothing, so it cannot point at something it found`,
+        { lead: L.lead_id }
+      );
+    if (rk && rk !== "capture" && rk !== "content")
+      return refusal7(
+        "LEAD_LOOK_REFERENT",
+        `'${rk.slice(0, 40)}' is not something a look can find: capture or content. An observation referent is a rollup's (REC-100), and a member's look is never a rollup`,
+        { lead: L.lead_id }
+      );
+    if (rk && !this.#leadReferentVisible(rk, rr, viewer))
+      return refusal7(
+        "LEAD_LOOK_REFERENT",
+        `no ${rk} ${rr.slice(0, 64)} is held in this record where you can read it. Capture what the look found first, then record the look against it`,
+        { lead: L.lead_id }
+      );
+    if (note && new TextEncoder().encode(note).length > CAPTURE_TEXT_UNIT_CAP)
+      return refusal7(
+        "LEAD_TOO_LONG",
+        `the look's detail is over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to`,
+        { lead: L.lead_id, limit: CAPTURE_TEXT_UNIT_CAP }
+      );
+    const bad = this.#observe({
+      actorClass: "member",
+      actor: who,
+      authorityKind: "lead",
+      authority: L.lead_id,
+      level: "internet",
+      subjectKind: "description",
+      subject: L.words,
+      state: st,
+      condition,
+      resultKind: rk,
+      resultRef: rr,
+      detail: note
+    });
+    if (bad) return { ...bad, lead: L.lead_id };
+    const row = this.#one(
+      `SELECT seq, at FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
+        ORDER BY seq DESC LIMIT 1`,
+      L.lead_id
+    );
+    return {
+      ok: true,
+      lead_id: L.lead_id,
+      seq: row ? row.seq : null,
+      at: row ? row.at : null,
+      level: "internet",
+      state: st,
+      looked_by: who,
+      result_kind: rk,
+      result_ref: rr,
+      evidence: false,
+      says: st === "LOOKED_ABSENT" ? `recorded: ${who} followed this lead and it is not there. That absence has a name and a lead behind it, which is what makes it a finding rather than silence` : `recorded: ${who} followed this lead (${st}). The lead is still not evidence; ${rk ? `the ${rk} the look found is what a leg can cite` : "nothing it found is citable through it"}`
+    };
+  }
+  /* The states a look can STORE: `NEVER_LOOKED` is never one (§3). Declared BELOW
+     its method on REC-116's finding (`bounds.test.mjs`): a class constant belongs
+     to the member it serves, and the segment walker reads it that way. NAMED
+     `_OUTCOMES` AND NOT `_STATES` ON PURPOSE: `civicos-ui/check-semantics.mjs` reads
+     every array constant whose name ends in _STATES as BUNDLE lifecycle states, and these are
+     observation states (D-129) — the first draft was caught there by name. */
+  static LEAD_LOOK_OUTCOMES = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"];
+  /** Does a look's referent name something this viewer can read? One read per
+   *  kind, gated through `#viewerSees` — never a second gate. */
+  #leadReferentVisible(kind, ref, viewer) {
+    const r = kind === "capture" ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, ref) : this.#one(`SELECT bundle_id FROM content WHERE content_id = ? LIMIT 1`, ref);
+    return !!r && this.#viewerSees(r.bundle_id, viewer);
+  }
+  /** op=leadread — the lead and its looks, bounded, the bound published. */
+  leadRead({ id = null, limit = null, viewer = null } = {}) {
+    const src = this.#leadFor(id, viewer);
+    if (!src.ok) return src;
+    const L = src.row;
+    const cap = Math.max(1, Math.min(
+      Math.floor(Number(limit) || _Store.LEAD_READ_LIMIT_DEFAULT),
+      _Store.LEAD_READ_LIMIT_MAX
+    ));
+    const rows = this.#rows(
+      `SELECT seq, at, actor, authority_kind, authority, level, subject_kind, state, condition,
+              result_kind, result_ref, detail
+         FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
+        ORDER BY seq LIMIT ?`,
+      L.lead_id,
+      cap + 1
+    );
+    const page = rows.slice(0, cap);
+    const looks = page.map((r) => {
+      const visible = !r.result_kind || this.#leadReferentVisible(r.result_kind, r.result_ref, viewer);
+      return {
+        seq: r.seq,
+        at: r.at,
+        looked_by: r.actor,
+        authority_kind: r.authority_kind,
+        authority: r.authority,
+        level: r.level,
+        subject_kind: r.subject_kind,
+        state: r.state,
+        condition: r.condition,
+        detail: r.detail,
+        result_kind: visible ? r.result_kind : null,
+        result_ref: visible ? r.result_ref : null,
+        coverage: observationCoverage({ state: r.state, resultRef: r.result_ref })
+      };
+    });
+    const me = viewerPredicate(viewer).member;
+    const sharesRaw = this.#rows(
+      `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at FROM lead_shares s
+        WHERE s.lead_id = ? AND (? = 1 OR EXISTS (SELECT 1 FROM project_participants pp
+          WHERE pp.project_id = s.bundle_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))
+        ORDER BY s.at, s.bundle_id LIMIT ?`,
+      L.lead_id,
+      me === L.author ? 1 : 0,
+      me ?? "",
+      cap + 1
+    );
+    const shared_to = sharesRaw.slice(0, cap);
+    const last = this.#one(
+      `SELECT state FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
+        ORDER BY seq DESC LIMIT 1`,
+      L.lead_id
+    );
+    const latest = last ? last.state : null;
+    return {
+      ok: true,
+      lead_id: L.lead_id,
+      author: L.author,
+      words: L.words,
+      locator: L.locator,
+      at: L.at,
+      evidence: false,
+      shared_to,
+      shared_to_truncated: sharesRaw.length > cap,
+      limit: cap,
+      truncated: rows.length > cap,
+      looks,
+      /* §5.1 AT THIS SUBJECT, and the strong answer is licensed here rather than
+         assumed: a lead and its looks are written by this plane after the log
+         existed, and only the whole-store purge deletes either — which deletes
+         BOTH — so a lead standing with no look has had nobody look. Neither the
+         pre-log cause nor the purged cause is reachable for it. */
+      state: latest || "NEVER_LOOKED",
+      says: !looks.length ? `nobody has followed this lead yet. That is established rather than inferred: the lead and any look at it are cleared only together, by a whole-store purge` : `${looks.length}${rows.length > cap ? "+" : ""} look(s) recorded against this lead; the latest found ${latest}. The lead itself is never evidence`
+    };
+  }
+  /* op=leadread's bound, BELOW its method for the reason above. `op=frontier`'s
+     200/2000 pair, and for its reason: the population is looks at ONE subject. */
+  static LEAD_READ_LIMIT_DEFAULT = 200;
+  static LEAD_READ_LIMIT_MAX = 2e3;
   /* ====================================================================== *
    * SK-8 REGION — THE EXTRACT RUN'S PRODUCTIONS, AND THE FIRST CALLER OF THE
    * DOOR ABOVE.
@@ -43154,8 +42994,7 @@ ${words}`;
     const marks = ids.map(() => "?").join(",");
     const perBundle = /* @__PURE__ */ new Map();
     for (const r of this.#rows(
-      `SELECT u.bundle_id AS bundle_id, u.capture_sha AS capture_sha, ts.chain AS chain,
-              (SELECT ra.authored FROM register ra WHERE ra.capture_sha = u.capture_sha) AS authored FROM (
+      `SELECT u.bundle_id AS bundle_id, u.capture_sha AS capture_sha, ts.chain AS chain FROM (
          SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${marks})
          UNION
          SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${marks})
@@ -43165,12 +43004,8 @@ ${words}`;
     )) {
       if (!r.bundle_id) continue;
       if (!perBundle.has(r.bundle_id))
-        perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0, authored: 0 });
+        perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0 });
       const e = perBundle.get(r.bundle_id);
-      if (r.authored === 1) {
-        e.authored++;
-        continue;
-      }
       e.n++;
       const chain2 = safeJson(r.chain);
       const b = captureBound(chain2, EARNED_CAPTURE_CEILING);
@@ -43179,19 +43014,6 @@ ${words}`;
       e.bound = e.bound == null ? b : BASIS_GRADES.indexOf(b) < BASIS_GRADES.indexOf(e.bound) ? b : e.bound;
     }
     for (const [bundleId, e] of perBundle) {
-      if (!e.n && e.authored) {
-        out.earned.capture[bundleId] = {
-          mode: "ceiling",
-          grade: null,
-          captures: 0,
-          authored: e.authored,
-          determined: false,
-          undetermined_because: "CAPTURE_AXIS_AUTHORED",
-          empty_level: "testimony \u2014 this document is a member's own firsthand observation, graded on that member's trust (MEMBER-KNOWLEDGE-DESIGN.md section 3), and this build does not yet carry that axis",
-          why: `${bundleId} is a member's authored observation: its bytes are the member's own words, recorded through op=testify, and nothing was read in from anywhere. The capture axis measures that act, so it earns no letter here \u2014 a ${EARNED_CAPTURE_CEILING} would be true of the bytes and would read as strength the observation does not have. A leg may state NO capture grade, which suspends the axis and names it; it may not state a letter.`
-        };
-        continue;
-      }
       if (!e.n) continue;
       const captureWord = `${bundleId} holds ${e.n} capture(s) in the record`;
       const ceiling = `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which this plane cannot produce and does not claim (CAPTURE-FIDELITY.md).`;
@@ -46618,6 +46440,9 @@ ${words}`;
       aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`).c,
       observations: n("observation_log"),
       /* the WIRE KEY stays `observations` (a count of observations, and moving it would be an I3 change nobody owed); the TABLE it counts is `observation_log` — renamed by CONDUCT #11 at integration on BOB #11's correction, because one word over three unrelated things is the defect, not the noun */
+      /* MK-4 / IC-136: a COUNT of members' leads and nothing else, so a purge can
+         PROVE it took them (D-113). What any lead says is not an operator fact. */
+      leads: n("leads"),
       /* PL-1 / IS-1: the inquiry's alternative accounts of its evidence and
          their legs, reported so a purge can PROVE it took them (D-113). A COUNT
          AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
@@ -47848,6 +47673,10 @@ ${words}`;
          attestation outliving it would leave a member's name behind it. */
       "transcriptions",
       "transcription_attestations",
+      /* MK-4 / D-113: a lead's SHARES, keyed on the PROJECT. Per-bundle: a share
+         outliving its project would admit whoever is next allocated that id to a
+         member's lead. Whole-store: the leads themselves go in the arm below. */
+      "lead_shares",
       /* SK-8 / D-113: the PROPOSED READINGS. They ride both arms for the
          reason `content` above does and for one more that is specific to
          them: a proposal is a claim about what a DOCUMENT names, so a
@@ -47940,6 +47769,7 @@ ${words}`;
         this.sql.exec(`DELETE FROM finding_dispositions`);
         this.sql.exec(`DELETE FROM queue_state`);
         this.sql.exec(`DELETE FROM observation_log`);
+        this.sql.exec(`DELETE FROM leads`);
         this.sql.exec(`DELETE FROM ai_run_bounds`);
         this.sql.exec(`DELETE FROM ai_runs`);
         this.sql.exec(`DELETE FROM suggest_refusals`);
@@ -47993,6 +47823,8 @@ ${words}`;
         aiRuns: d("aiRuns"),
         aiRunBounds: d("aiRunBounds"),
         aiRunLog: d("aiRunLog"),
+        /* MK-4 / D-113: the leads a whole-store purge took. */
+        leads: d("leads"),
         /* PL-3 / IS-4 / D-113: the stored refusals a purge took, proved
            by consequence rather than asserted. */
         suggestRefusals: d("suggestRefusals"),
@@ -49772,9 +49604,6 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       manifest: this.#rows(`SELECT snap_key, kind, base, created FROM manifest WHERE bundle_id=? ORDER BY created`, bundleId),
       history: this.#rows(`SELECT snap_key, sha256 FROM history WHERE bundle_id=? AND path='bundle.md'`, bundleId),
       registers: this.#rows(`SELECT capture_sha, path, bytes FROM register WHERE bundle_id=?`, bundleId),
-      /* MK-1 (A): whether this bundle IS, or RESTS ON, a member's authored
-         observation — the publication fence's one fact (C-53.10/.11). */
-      testimony: this.testimonyReach([bundleId]),
       dangling: this.#rows(
         `SELECT r.target_id FROM refs r LEFT JOIN bundles b ON b.bundle_id=r.target_id
          WHERE r.bundle_id=? AND b.bundle_id IS NULL`,
@@ -55571,11 +55400,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           else unresolved = true;
           break;
         }
-        /* NEITHER HAS A WRITER ON THIS TREE — §4.5's authored writer is a member's
-           LEAD and is Program B's — so there is nothing to resolve and nothing to
-           be right about. UNRESOLVED is the honest answer and it fails in the
-           direction that withholds, which is what lets Program B land a reader
-           without inheriting a hole from this one. */
+        /* `objective` HAS NO WRITER ON THIS TREE, so there is nothing to resolve.
+           `lead` HAS ONE SINCE MK-4 (2026-09-18, `op=leadlook`) AND STAYS UNRESOLVED
+           ON PURPOSE: a lead names no bundle (MEMBER-KNOWLEDGE-DESIGN.md §5's field
+           list), its visibility is its AUTHOR's (`#leadFor`), and a row-whole gate
+           keyed on bundles has nothing to admit it by. Its looks are written at
+           level `internet`, which no frontier arm reads yet, so today this arm is
+           reached by no written row — and when one is, it withholds from every
+           identified session rather than inventing a bundle for a lead. */
         case "lead":
         case "objective":
           unresolved = true;
@@ -56293,9 +56125,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            an empty list and "nobody built this yet" are the two facts this
            whole table exists to keep apart, and answering the second with
            the first inside the log's own reader would be the joke writing
-           itself. Its authored writer is a member's LEAD (§4.5, D-194) and
-           is Program B's, not a RECORD row. */
-        note: `the ${level} level of the frontier is not built yet. This is NOT an empty frontier: nothing has been written at this level because no writer exists, which is a different fact from having looked and found nothing. The document, content and meaning levels are built (REC-93, REC-94, REC-95); the internet level's authored writer is a member's LEAD and is Program B's (\xA74.5, D-194)`
+           itself. CORRECTED 2026-09-18 by MK-4: this said the level's authored
+           writer was Program B's and unbuilt. The WRITER now exists
+           (`op=leadlook` writes `level = internet` under `authority_kind =
+           lead`), so rows can stand at this level; what is not built is this
+           READ, which is why the answer still says not-built rather than
+           reading as an empty frontier over rows it never looked at. */
+        note: `the ${level} level of the frontier is not built yet. This is NOT an empty frontier: this reader does not read the ${level} level, which is a different fact from having looked and found nothing. The document, content and meaning levels are built (REC-93, REC-94, REC-95). At the internet level a member's LEAD now has a writer (op=leadlook, MK-4) and its looks are read per lead with op=leadread; the level-wide frontier read is not built`
       };
     const seenRow = this.#frontierDocumentVisible(viewer);
     const page = this.#frontierLatest("document", { limit: (cap + 1) * 2, subjectKind: "address" }).filter(seenRow);
@@ -60113,18 +59949,6 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            QUERY STRING, where the control plane stamped them, and never from the
            body — `attesttext`'s correction, taken from the start rather than
            re-learned: a body field a caller can fill is a name a machine can post. */
-        /* MK-1 / IC-133: TESTIFY. The AUTHOR comes from the QUERY STRING, where the
-           control plane stamped it over anything the caller put there. The body's
-           own author field is read ONLY to be REFUSED (C-53.2): every spelling a
-           caller could use to name the person is collected, so naming it under a
-           synonym is not a way round the refusal. */
-        testify: () => this.testify({
-          words: body ? body.words : null,
-          observedAt: body ? body.observedAt : null,
-          title: body ? body.title : null,
-          author: url.searchParams.get("author"),
-          claimedAuthor: body ? ["author", "observer", "authoredBy", "authored_by", "by", "member", "memberId"].map((k) => body[k]).find((v) => v !== void 0 && v !== null) ?? null : null
-        }),
         transcribe: () => this.transcribe({
           bundleId: body && body.bundleId || null,
           extent: body && body.extent !== void 0 ? body.extent : null,
@@ -60142,6 +59966,35 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         }),
         transcription: () => this.transcriptionRead({
           id: url.searchParams.get("id"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        /* MK-4 / IC-136: THE LEAD. `author` and `looker` come from the QUERY STRING,
+           where the control plane stamped them, and never from the body — a body
+           field a caller can fill is a name a machine can post (§7). */
+        lead: () => this.lead({
+          words: body ? body.words : null,
+          locator: body ? body.locator : null,
+          author: url.searchParams.get("author")
+        }),
+        leadlook: () => this.leadLook({
+          lead: body && body.lead || url.searchParams.get("lead"),
+          state: body ? body.state : null,
+          resultKind: body ? body.resultKind : null,
+          resultRef: body ? body.resultRef : null,
+          condition: body ? body.condition : null,
+          detail: body ? body.detail : null,
+          looker: url.searchParams.get("looker"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        leadshare: () => this.leadShare({
+          lead: body && body.lead || url.searchParams.get("lead"),
+          project: body && body.project || url.searchParams.get("project"),
+          sharer: url.searchParams.get("sharer"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        leadread: () => this.leadRead({
+          id: url.searchParams.get("id"),
+          limit: url.searchParams.get("limit"),
           viewer: url.searchParams.get("viewer")
         }),
         suggest: () => this.suggestVersion({
@@ -61562,16 +61415,19 @@ var OPS = {
   transcribe: { classes: ["admin", "member"], mutating: true },
   transcriptionattest: { classes: ["admin", "member"], mutating: true },
   transcription: { classes: ["admin", "member", "probe"], mutating: false },
-  /* MK-1 / D-184 / IC-133 — TESTIFY: a member records a firsthand observation,
-     which becomes an authored INFO bundle whose bytes are their words
-     (MEMBER-KNOWLEDGE-DESIGN.md section 2). The class cut is `transcribe`'s one
-     row up and for its reason: a person's word in their own name. NAMED `testify`
-     because `op=claim` is the instance-claim op and the design's own word for
-     the route is "the testimony path"; `resolvetestify` is a DIFFERENT act (a
-     member's grade-D testimony that a document concerns a subject), and the two
-     share the verb because both are a member's word standing on their trust. The
-     store refuses a machine stamp BY NAME (C-53.1) — two fences, `transcribe`'s. */
-  testify: { classes: ["admin", "member"], mutating: true },
+  /* MK-4 / IC-136 — THE LEAD (D-194, MEMBER-KNOWLEDGE-DESIGN.md §5). Writing a
+     lead and recording that you followed it are a PERSON's acts in their own
+     name — what they were told, where they looked — so both are `transcribe`'s
+     class cut: `mutating: true` keeps a machine credential off the session route
+     and the store refuses a machine stamp BY NAME again (C-54.2, C-54.8). The
+     READ is open to every class that may read; the store answers a lead the
+     viewer may not read exactly as one that does not exist (C-54.5). */
+  lead: { classes: ["admin", "member"], mutating: true },
+  leadlook: { classes: ["admin", "member"], mutating: true },
+  /* BOB #14's ruling (2026-09-18): the AUTHOR shares a lead to a project, an
+     authored dated act — `lead`'s class cut and reason. */
+  leadshare: { classes: ["admin", "member"], mutating: true },
+  leadread: { classes: ["admin", "member", "probe"], mutating: false },
   /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
        different cut from CPDF-10's above because a different thing is at stake.
   
@@ -61996,8 +61852,11 @@ var SESSION_OPS = {
        word in their own name, `attesttext`'s route and reason. */
     "transcribe",
     "transcriptionattest",
-    /* MK-1: TESTIFY — a member's own word, `transcribe`'s route. */
-    "testify",
+    /* MK-4: THE LEAD and a look recorded against it — a person's word
+       in their own name, `transcribe`'s route and reason. */
+    "lead",
+    "leadlook",
+    "leadshare",
     "inbox",
     "inboxget",
     "inboxresolve",
@@ -62054,7 +61913,9 @@ var SESSION_OPS = {
     "narrowcandidates",
     "transcribe",
     "transcriptionattest",
-    "testify",
+    "lead",
+    "leadlook",
+    "leadshare",
     "inbox",
     "inboxget",
     "inboxresolve",
@@ -62139,10 +62000,14 @@ var NEEDS = {
   transcribe: "contribute",
   transcriptionattest: "contribute",
   transcription: null,
-  /* MK-1: an observation is written into the working corpus as an INFO bundle —
-     `contribute`, as capturing a document is. Nothing it writes is the group
-     putting its name on anything; attribution in a published case is MK-3's. */
-  testify: "contribute",
+  /* MK-4: NO FIFTH CAPABILITY TOKEN, on `transcribe`'s reasoning. A lead and a
+     look against it are writes into the record in a member's name and ride
+     `contribute`; a VIEW-ONLY member must not, because either leaves a row
+     carrying their name for as long as the record lasts. The read takes none. */
+  lead: "contribute",
+  leadlook: "contribute",
+  leadshare: "contribute",
+  leadread: null,
   monitor: "contribute",
   cite: "contribute",
   sever: "contribute",
@@ -62724,12 +62589,6 @@ var reextractRow = (code) => {
   const row = REEXTRACT_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`reextractRow: ${code} has no REEXTRACT_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row.check, translation: row.translation };
-};
-var testimonyFenceRow = (code) => {
-  const row = TESTIMONY_CHECKS[code];
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`testimonyFenceRow: ${code} has no TESTIMONY_CHECKS row with a canned translation (DEC-49).`);
   return { code, check: row.check, translation: row.translation };
 };
 var machineFenceRow = (code) => {
@@ -65586,15 +65445,6 @@ var index_default = {
           tokenClass: cls,
           detail: "committing a case is a member's signed act. An assistant's credential may assemble the case document and may never commit it, whoever's signature it carries (DEC-24 rule 4)."
         }, 403);
-      if (!viaSession)
-        return json({
-          ok: false,
-          reason: "OPERATOR_TOKEN_CANNOT_RATIFY_CASE",
-          ...machineFenceRow("OPERATOR_TOKEN_CANNOT_RATIFY_CASE"),
-          op,
-          tokenClass: cls,
-          detail: `committing a case is a member's own signed act, delivered through that member's own signed-in session. The credential that asked is the operator's \`${cls}\`-class bearer token: the signature says who authorised the case, and the credential that delivers it decides when the record changes, so a bearer token may not carry it in (D-421).`
-        }, 403);
       const body2 = await req.json().catch(() => null);
       if (!body2?.caseId || !Number.isInteger(body2?.edition) || !body2?.expectedSha || typeof body2?.sig !== "string")
         return json({
@@ -65608,18 +65458,6 @@ var index_default = {
       if (!factsOut.answered) return storeSilent("caseratify/facts");
       const facts = factsOut.result;
       if (!facts.ok) return json({ ok: false, ...facts, store: storeName, tokenClass: cls }, 404);
-      if (facts.testimony && facts.testimony.via.concat(facts.testimony.self).length)
-        return json({
-          ok: false,
-          reason: "TESTIMONY_CASE_UNPUBLISHABLE",
-          ...testimonyFenceRow("TESTIMONY_CASE_UNPUBLISHABLE"),
-          caseId: facts.doc.case_id,
-          edition: facts.doc.edition,
-          rests_on: facts.testimony.via,
-          detail: `a finding in ${facts.doc.case_id} rests on a member's authored observation (${[...facts.testimony.via.map((v) => `${v.finding} -> ${v.observation}`), ...facts.testimony.self].slice(0, 5).join(", ")}); what a published case shows of an observation is the attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md \xA74), and this build cannot yet honour it (MK-3)`,
-          store: storeName,
-          tokenClass: cls
-        }, 409);
       if (facts.doc.doc_sha !== body2.expectedSha)
         return json({
           ok: false,
@@ -65720,15 +65558,6 @@ var index_default = {
           tokenClass: cls,
           detail: "ratifying is a member's signed act. An assistant's credential may prepare the finding and may never carry the signature in, whoever's key made it (DEC-24 rule 4)."
         }, 403);
-      if (!viaSession)
-        return json({
-          ok: false,
-          reason: "OPERATOR_TOKEN_CANNOT_RATIFY",
-          ...machineFenceRow("OPERATOR_TOKEN_CANNOT_RATIFY"),
-          op,
-          tokenClass: cls,
-          detail: `ratifying is a member's own signed act, delivered through that member's own signed-in session. The credential that asked is the operator's \`${cls}\`-class bearer token: the signature says who authorised publication, and the credential that delivers it decides when the record changes, so a bearer token may not carry it in (D-421).`
-        }, 403);
       const body2 = await req.json().catch(() => null);
       if (!body2?.bundleId || !body2?.expectedSha || typeof body2?.sig !== "string")
         return json({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);
@@ -65736,27 +65565,6 @@ var index_default = {
       if (!factsOut.answered) return storeSilent("ratify/gatefacts");
       const facts = factsOut.result;
       if (!facts.ok) return json({ ...facts, store: storeName, tokenClass: cls }, 404);
-      if (facts.testimony && facts.testimony.self.length)
-        return json({
-          ok: false,
-          reason: "TESTIMONY_UNPUBLISHABLE",
-          ...testimonyFenceRow("TESTIMONY_UNPUBLISHABLE"),
-          bundleId: body2.bundleId,
-          detail: `${body2.bundleId} is a member's authored observation; what a published case shows of it is the attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md \xA74), and this build cannot yet honour it (MK-3)`,
-          store: storeName,
-          tokenClass: cls
-        }, 409);
-      if (facts.testimony && facts.testimony.via.length)
-        return json({
-          ok: false,
-          reason: "TESTIMONY_CITED_UNPUBLISHABLE",
-          ...testimonyFenceRow("TESTIMONY_CITED_UNPUBLISHABLE"),
-          bundleId: body2.bundleId,
-          rests_on: facts.testimony.via,
-          detail: `${body2.bundleId} rests on a member's authored observation (${facts.testimony.via.slice(0, 5).map((v) => v.observation).join(", ")}); what a published case shows of it is the attesting member's choice, and this build cannot yet honour it (MK-3)`,
-          store: storeName,
-          tokenClass: cls
-        }, 409);
       if (facts.row.bundle_sha !== body2.expectedSha)
         return json({
           ok: false,
@@ -66369,7 +66177,7 @@ var index_default = {
          reader (DEC-17) — only the names are withheld. */
       "strengthbarof"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? `member:${sessMember}` : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -66392,8 +66200,12 @@ var index_default = {
       inner.searchParams.set("transcriber", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "transcriptionattest")
       inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "testify")
+    if (op === "lead")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "leadlook")
+      inner.searchParams.set("looker", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "leadshare")
+      inner.searchParams.set("sharer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "contentmint")
       inner.searchParams.set(
         "mintedBy",

@@ -13605,3 +13605,34 @@ canonical header on the authored bytes, C-53.6 narrowed. origin/main `2c4a5c11` 
 
 released: 2026-09-18 by the MK-1 worker — every path committed on `worktree-agent-a1137b844e6d23aed`; the
 final figures are in the worker's report and in `testify.test.mjs`'s NEGATIVE CONTROL line.
+## CLAIM 2026-09-18 RECORD (MK-4 — THE LEAD, D-194, MEMBER-KNOWLEDGE-DESIGN.md §5)
+session: MK-4 worker (worktree `agent-a6de3e82fcfd8bd2a`), spawned by CONDUCT #4, Opus 5.
+expected: QUEUE.md MK-4 — the `leads` table, its writer into `observation_log` (`authority_kind = 'lead'`),
+  `LOOKED_ABSENT` against a lead recorded and read back, a lead cited as a basis leg refused BY NAME (§7).
+  Ids minted before building: IC-135 (I5, the table), IC-136 (I3, the ops), C-54 (the lead's refusal family).
+paths (edits kept LOCAL — MK-1 is concurrently in `store.mjs` / `schema.mjs`):
+  - `bio-plane/src/schema.mjs` — ONE new table `leads`, placed immediately before `host_governor`.
+  - `bio-plane/src/store.mjs` — new methods `lead`, `leadLook`, `leadRead` and their DO dispatch
+    entries; the whole-store purge arm (one `DELETE FROM leads`); `#observationBundles`' `lead` arm
+    COMMENT; `frontier`'s not-built `internet` note.
+  - `bio-plane/src/index.mjs` — OPS rows, session sets, NEEDS rows, author/viewer stamps for the three ops.
+  - `bio-plane/src/affordances.mjs` — the three ops' rows.
+  - `bio-plane/checks/bio-checks.mjs` — the C-54 family (`LEAD_CHECKS`), `LEAD_ID_RE`, and the named
+    lead-as-leg refusal at the basis, version-leg and action-basis leg grammars.
+  - `bio-plane/test/lead.test.mjs`, `bio-plane/test/nc-mk4.mjs` — new.
+  - any suite that pins an op/table census or a registry, CORRECTED with its reason, never exempted.
+  - `bio-plane/scripts/coverage.mjs` floors if the instrument moves them; `bio-plane/dist/**` rebuilt.
+  - `docs/architecture/construct-status.json` (`10.lead`, `3.census`, and `9.internet`'s text),
+    `docs/development/INTERFACE-CHANGES.md` (IC-135, IC-136), `docs/development/INTERFACES.md` if the
+    op list requires it, `docs/DECIDED.md` (regenerated only).
+  **NOT** `docs/development/QUEUE.md` (CONDUCT's), **NOT** `civicos-ui/**`, **NOT** `newgroup/**`,
+  no version bump.
+released: 2026-09-18 by the MK-4 worker. Every claimed path is committed on branch `worktree-agent-a6de3e82fcfd8bd2a` (rebased onto `fbcefa1b`). BUILT: the `leads` table (IC-135, I5), op=lead / op=leadlook / op=leadread (IC-136, I3), C-54 (eight rows), the lead-as-leg refusal C-54.1 at basis[], version legs and action basis. Also touched, beyond the list above: `civicos-ui` was NOT edited; `bio-plane/test/bounds.test.mjs` and `gate-reads.test.mjs` each gained the new read op (roster 34 -> 35 from the arm's own failure output; one GATED classification). The row flip, the IC resolutions and D-194's disposition are CONDUCT's acts, named in the report.
+
+### ADDENDUM 2026-09-18 RECORD (MK-4) — THE CLAIM IS RE-OPENED FOR BOB #14's VISIBILITY RULING, ON CONDUCT #4's INSTRUCTION
+
+Same paths as the claim above (no new area's). Added: the `lead_shares` table in `schema.mjs`, `leadShare` and
+`#leadVisibleTo` in `store.mjs`, `op=leadshare` in `index.mjs` / `affordances.mjs`, C-54.9 / C-54.10 in
+`bio-checks.mjs`, six control arms in `test/nc-mk4.mjs`. `MEMBER-KNOWLEDGE-DESIGN.md`: the Status line ONLY — §5's
+body is BOB #14's to write and was not touched.
+released: 2026-09-18 by the MK-4 worker — committed and pushed on `worktree-agent-a6de3e82fcfd8bd2a`.

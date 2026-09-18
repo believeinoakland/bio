@@ -429,7 +429,7 @@ import { NARROW_CHECKS, extentRelation, VERSION_NAME_RE } from "../checks/bio-ch
 /* REC-87 / IC-128: TRANSCRIBE's refusals, and the digest the `typed` step
    carries — the catalogue's own sync sha256, so the text digest and the content
    address are computed by one implementation. */
-import { TRANSCRIBE_CHECKS, sha256HexSync } from "../checks/bio-checks.mjs";
+import { TRANSCRIBE_CHECKS, LEAD_CHECKS, sha256HexSync } from "../checks/bio-checks.mjs";
 /* MK-1 / D-184 / IC-133: the authored bundle's refusals (C-53). */
 import { TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
 
@@ -15540,6 +15540,323 @@ export class Store extends DurableObject {
   }
 
   /* ====================================================================== *
+   * MK-4 / IC-135 / IC-136 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5).
+   * ====================================================================== *
+   *
+   * *"I was told the contract was amended; look at the Clerk's March agenda."*
+   * The same member knowledge as an observation, BEFORE the search. Three acts:
+   *
+   *   op=lead      a member AUTHORS a lead — a row in `leads`, and NOTHING in
+   *                `observation_log`: nobody has looked yet, and NEVER_LOOKED is
+   *                never stored (OBSERVATION-LOG-DESIGN.md §3). The row-level
+   *                reading of MK-4's accepts-when ("writes its row and an
+   *                observation_log entry") would force a look nobody made into
+   *                the log, so the entry is written by the act that IS the look.
+   *   op=leadlook  FOLLOWING it: one row of `observation_log` with
+   *                `authority_kind = 'lead'`, `authority = <lead_id>`, level
+   *                `internet`, subject kind `description` and the member's words
+   *                as the subject — §4.5's row exactly, through REC-93's ONE
+   *                append site (`#observe`), which this neither duplicates nor
+   *                modifies. So every C-22 refusal applies to the look as it is:
+   *                a PRESENT that names nothing is C-22.10, not a lead rule.
+   *   op=leadread  the lead and every look recorded against it.
+   *
+   * A LEAD IS NEVER EVIDENCE, and that is held in two places on purpose: the id
+   * shape (`LEAD-…`) is not a bundle id or a content id, so no leg grammar can
+   * accept one; and C-54.1 (`leadLegFindings`) refuses one BY NAME at every leg
+   * grammar. Nothing here mints a bundle or a content row.
+   *
+   * WHY A LEAD'S LOOKS CANNOT FALL INTO THE RUN-ROLLUP RULES. `#aiRunSearchState`
+   * reads `authority_kind = 'run'` only; C-22.10's `observation` arm fires only on
+   * `result_kind = 'observation'`, which this act refuses (C-54.7 admits capture
+   * and content only); `op=airunlog` and `op=stats`' run slice read `run` only.
+   * Each is asserted in `test/lead.test.mjs` rather than trusted from this note.
+   *
+   * VISIBILITY IS BOB #14's RULING (2026-09-18), which replaced MK-4's first
+   * provisional (author plus ANY unfiltered machine credential): the author; a
+   * project's participants once the author SHARES it there (`op=leadshare`); a
+   * machine credential only within a member's minted scope; nobody else, and
+   * everybody else answered exactly as for a lead that does not exist. See
+   * `#leadVisibleTo`. The frontier's `#observationBundles` keeps answering `lead`
+   * as unresolved, so a lead's looks are withheld on any frontier arm that ever
+   * reads the internet level. */
+  static #leadRefusal(code, detail, extra) {
+    const row = LEAD_CHECKS[code];
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+             detail, ...(extra || {}) };
+  }
+
+  /** WHICH LEAD, and may this viewer read it. The one visibility decision for
+   *  all three acts, so the act, the look and the read cannot disagree. */
+  #leadFor(id, viewer) {
+    const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
+    const lid = typeof id === "string" ? id.trim() : "";
+    const row = lid ? this.#one(
+      `SELECT lead_id, author, words, locator, at FROM leads WHERE lead_id = ?`, lid) : null;
+    const sees = !!row && this.#leadVisibleTo(row, viewer);
+    /* DEC-49 REGION is-lead-source */
+    if (!sees)
+      return refusal("LEAD_NOT_FOUND",
+        lid ? `no lead is addressed by ${lid.slice(0, 60)} in this record`
+            : `pass lead=<LEAD-…>: the id op=lead returned`, { lead: lid || null });
+    /* END DEC-49 REGION is-lead-source */
+    return { ok: true, row };
+  }
+
+  /** MAY THIS VIEWER READ THIS LEAD? BOB #14's ruling (2026-09-18), in its three
+   *  positive arms and nothing else:
+   *
+   *    1. the AUTHOR;
+   *    2. a PARTICIPANT of a project the author SHARED it to (`lead_shares`, the
+   *       authored dated act) — joined or leaving, the two states Membership
+   *       Architecture §7 gives full visibility; `invited` is skeleton-only and
+   *       does not reach a lead;
+   *    3. a MACHINE credential ONLY WITHIN THE SCOPE A MEMBER MINTED FOR IT. The
+   *       control plane stamps an `ai` credential's viewer as its PRINCIPAL
+   *       (`aiTaskScope`: `member:<id>` for a member-scoped key), so such a key
+   *       answers arms 1 and 2 exactly as its member would, and no further. A
+   *       `class:*` credential — the instance tokens, and an ORGANISATION-scoped
+   *       `ai` key — carries no member, so `viewerPredicate` answers `member:
+   *       null` and it reaches NOTHING here. That is the correction of MK-4's
+   *       provisional, which let an unfiltered machine read every lead.
+   *
+   *  Everyone else is answered by the caller exactly as for a lead that does not
+   *  exist. Participation is read from `project_participants` directly and NOT
+   *  through `viewerPredicate`'s project arm, whose `admin` disjunct would let
+   *  every administrator read every shared lead — the ruling names participants. */
+  #leadVisibleTo(row, viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "DENY" || gate.member == null) return false;
+    if (gate.member === row.author) return true;
+    return !!this.#one(
+      `SELECT 1 AS x FROM lead_shares s JOIN project_participants pp ON pp.project_id = s.bundle_id
+        WHERE s.lead_id = ? AND pp.member_id = ? AND pp.state IN ('joined', 'leaving') LIMIT 1`,
+      row.lead_id, gate.member);
+  }
+
+  /** op=leadshare — THE AUTHOR SHARES ONE LEAD TO ONE PROJECT: authored, dated,
+   *  never rewritten. `sharer` is the control plane's stamp. */
+  leadShare({ lead = null, project = null, sharer = null, viewer = null } = {}) {
+    const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
+    const who = typeof sharer === "string" ? sharer.trim() : "";
+    const pid = typeof project === "string" ? project.trim() : "";
+    const src = this.#leadFor(lead, viewer);
+    if (!src.ok) return src;
+    const L = src.row;
+    const joined = who && pid ? this.#one(
+      `SELECT 1 AS x FROM project_participants pp JOIN bundles b ON b.bundle_id = pp.project_id
+        WHERE pp.project_id = ? AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')
+          AND b.object_type = 'project' LIMIT 1`, pid, who) : null;
+    /* DEC-49 REGION is-lead-share */
+    if (who !== L.author)
+      return refusal("LEAD_SHARE_NOT_AUTHOR",
+        `${L.lead_id} was written by another member; only its author shares it. A machine credential `
+        + `is never the author (the author is a member id, stamped when the lead was written)`,
+        { lead: L.lead_id });
+    /* ONE ANSWER for a project that does not exist, one the author cannot see, and one they
+       have not joined — so the act is no oracle for which projects exist. */
+    if (!joined)
+      return refusal("LEAD_SHARE_NOT_A_PARTICIPANT",
+        pid ? `you are not a joined participant of a project addressed by ${pid.slice(0, 60)}`
+            : `pass project=<PROJ-…>: the project to share this lead to`,
+        { lead: L.lead_id, project: pid || null });
+    /* END DEC-49 REGION is-lead-share */
+    const at = new Date().toISOString().split(".")[0] + "Z";
+    this.sql.exec(`INSERT OR IGNORE INTO lead_shares (lead_id, bundle_id, sharer, at) VALUES (?, ?, ?, ?)`,
+                  L.lead_id, pid, who, at);
+    const r = this.#one(`SELECT sharer, at FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L.lead_id, pid);
+    return { ok: true, lead_id: L.lead_id, project: pid, shared_by: r.sharer, at: r.at,
+             already: r.at !== at, evidence: false,
+             says: `${L.lead_id} is shared to ${pid}: its joined participants can now read it and record `
+                 + `looks against it. It is still never evidence` };
+  }
+
+  /** op=lead — THE ACT. `author` is the control plane's stamp and never the
+   *  caller's (§7: *an author field supplied by the caller rather than stamped*
+   *  is refused — here by never being read from the body at all). */
+  lead({ words = null, locator = null, author = null } = {}) {
+    const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
+    const who = typeof author === "string" ? author.trim() : "";
+    const typed = typeof words === "string" ? words : "";
+    const where = typeof locator === "string" && locator.trim() ? locator : null;
+    const bytes = (s) => new TextEncoder().encode(s).length;
+    /* DEC-49 REGION is-lead-act */
+    if (!who || isMachineIdentity(who))
+      return refusal("LEAD_NOT_A_MEMBER",
+        who ? `'${who.slice(0, 60)}' is a machine credential. A lead is what a PERSON was told or has `
+              + `reason to believe, in their own name`
+            : `this call carries nobody. The plane stamps the author from the credential that asked`);
+    if (!typed.trim())
+      return refusal("LEAD_NO_WORDS",
+        `the lead is empty. Its words are what the member was told or suspects, as they write it`);
+    if (bytes(typed) > CAPTURE_TEXT_UNIT_CAP || (where && bytes(where) > CAPTURE_TEXT_UNIT_CAP))
+      return refusal("LEAD_TOO_LONG",
+        `${bytes(typed)} B of words${where ? ` and ${bytes(where)} B of locator` : ""}, over the `
+        + `${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather `
+        + `than cut`, { limit: CAPTURE_TEXT_UNIT_CAP });
+    /* END DEC-49 REGION is-lead-act */
+    const at = new Date().toISOString().split(".")[0] + "Z";
+    /* `LEAD-YYYY-MMDD-hex`: the bundle-id SHAPE with a prefix `BUNDLE_ID_RE` does
+       not admit, so the id reads as a record id to a person and as nothing
+       citable to every leg grammar. */
+    const leadId = `LEAD-${at.slice(0, 4)}-${at.slice(5, 7)}${at.slice(8, 10)}-${Store.#rand(6)}`;
+    this.sql.exec(`INSERT INTO leads (lead_id, author, words, locator, at) VALUES (?, ?, ?, ?, ?)`,
+                  leadId, who, typed, where, at);
+    return { ok: true, lead_id: leadId, author: who, words: typed, locator: where, at,
+             evidence: false, looks: 0, state: "NEVER_LOOKED",
+             says: `${who}'s lead is recorded. It is somewhere to look and never evidence: no leg can `
+                 + `rest on it. Following it is recorded with op=leadlook, and a look that finds `
+                 + `nothing is itself a finding with this lead behind it` };
+  }
+
+  /** op=leadlook — FOLLOWING A LEAD, recorded as §4.5's row. */
+  leadLook({ lead = null, state = null, resultKind = null, resultRef = null, condition = null,
+             detail = null, looker = null, viewer = null } = {}) {
+    const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
+    const who = typeof looker === "string" ? looker.trim() : "";
+    const st = typeof state === "string" ? state.trim() : "";
+    const rk = typeof resultKind === "string" && resultKind.trim() ? resultKind.trim() : null;
+    const rr = typeof resultRef === "string" && resultRef.trim() ? resultRef.trim() : null;
+    const note = typeof detail === "string" && detail.trim() ? detail : null;
+    /* DEC-49 REGION is-lead-look */
+    if (!who || isMachineIdentity(who))
+      return refusal("LEAD_LOOK_NOT_A_MEMBER",
+        who ? `'${who.slice(0, 60)}' is a machine credential; a machine's search is recorded under its `
+              + `own run (authority_kind run), never under a member's lead`
+            : `this call carries nobody. The plane stamps who looked from the credential that asked`);
+    const src = this.#leadFor(lead, viewer);
+    if (!src.ok) return src;
+    const L = src.row;
+    if (!Store.LEAD_LOOK_OUTCOMES.includes(st))
+      return refusal("LEAD_LOOK_STATE",
+        st === "NEVER_LOOKED"
+          ? `NEVER_LOOKED is never stored: it is what the record says of a lead with no look at all `
+            + `(OBSERVATION-LOG-DESIGN.md §3). A look that happened found one of `
+            + `${Store.LEAD_LOOK_OUTCOMES.join(", ")}`
+          : `'${st.slice(0, 40) || "(absent)"}' is not one of ${Store.LEAD_LOOK_OUTCOMES.join(", ")}`,
+        { lead: L.lead_id });
+    if ((rk || rr) && !(rk && rr))
+      return refusal("LEAD_LOOK_REFERENT",
+        `a referent is a KIND and an id together (resultKind capture|content, resultRef); one without `
+        + `the other names nothing`, { lead: L.lead_id });
+    if (rk && st !== "PRESENT" && st !== "partial")
+      return refusal("LEAD_LOOK_REFERENT",
+        `a look recorded as ${st} found nothing, so it cannot point at something it found`,
+        { lead: L.lead_id });
+    if (rk && rk !== "capture" && rk !== "content")
+      return refusal("LEAD_LOOK_REFERENT",
+        `'${rk.slice(0, 40)}' is not something a look can find: capture or content. An observation `
+        + `referent is a rollup's (REC-100), and a member's look is never a rollup`,
+        { lead: L.lead_id });
+    if (rk && !this.#leadReferentVisible(rk, rr, viewer))
+      return refusal("LEAD_LOOK_REFERENT",
+        `no ${rk} ${rr.slice(0, 64)} is held in this record where you can read it. Capture what the `
+        + `look found first, then record the look against it`, { lead: L.lead_id });
+    /* END DEC-49 REGION is-lead-look */
+    /* C-54.4, whose region is the act's (`is-lead-act`): the same rule — refused, never cut —
+       applied to the look's own words, and relayed here rather than given a second region. */
+    if (note && new TextEncoder().encode(note).length > CAPTURE_TEXT_UNIT_CAP)
+      return refusal("LEAD_TOO_LONG",
+        `the look's detail is over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to`,
+        { lead: L.lead_id, limit: CAPTURE_TEXT_UNIT_CAP });
+    const bad = this.#observe({
+      actorClass: "member", actor: who,
+      authorityKind: "lead", authority: L.lead_id,
+      level: "internet", subjectKind: "description", subject: L.words,
+      state: st, condition, resultKind: rk, resultRef: rr, detail: note,
+    });
+    if (bad) return { ...bad, lead: L.lead_id };
+    const row = this.#one(
+      `SELECT seq, at FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
+        ORDER BY seq DESC LIMIT 1`, L.lead_id);
+    return { ok: true, lead_id: L.lead_id, seq: row ? row.seq : null, at: row ? row.at : null,
+             level: "internet", state: st, looked_by: who, result_kind: rk, result_ref: rr,
+             evidence: false,
+             says: st === "LOOKED_ABSENT"
+               ? `recorded: ${who} followed this lead and it is not there. That absence has a name and `
+                 + `a lead behind it, which is what makes it a finding rather than silence`
+               : `recorded: ${who} followed this lead (${st}). The lead is still not evidence; `
+                 + `${rk ? `the ${rk} the look found is what a leg can cite` : "nothing it found is citable through it"}` };
+  }
+
+  /* The states a look can STORE: `NEVER_LOOKED` is never one (§3). Declared BELOW
+     its method on REC-116's finding (`bounds.test.mjs`): a class constant belongs
+     to the member it serves, and the segment walker reads it that way. NAMED
+     `_OUTCOMES` AND NOT `_STATES` ON PURPOSE: `civicos-ui/check-semantics.mjs` reads
+     every array constant whose name ends in _STATES as BUNDLE lifecycle states, and these are
+     observation states (D-129) — the first draft was caught there by name. */
+  static LEAD_LOOK_OUTCOMES = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"];
+
+  /** Does a look's referent name something this viewer can read? One read per
+   *  kind, gated through `#viewerSees` — never a second gate. */
+  #leadReferentVisible(kind, ref, viewer) {
+    const r = kind === "capture"
+      ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, ref)
+      : this.#one(`SELECT bundle_id FROM content WHERE content_id = ? LIMIT 1`, ref);
+    return !!r && this.#viewerSees(r.bundle_id, viewer);
+  }
+
+  /** op=leadread — the lead and its looks, bounded, the bound published. */
+  leadRead({ id = null, limit = null, viewer = null } = {}) {
+    const src = this.#leadFor(id, viewer);
+    if (!src.ok) return src;
+    const L = src.row;
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.LEAD_READ_LIMIT_DEFAULT),
+                                     Store.LEAD_READ_LIMIT_MAX));
+    const rows = this.#rows(
+      `SELECT seq, at, actor, authority_kind, authority, level, subject_kind, state, condition,
+              result_kind, result_ref, detail
+         FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
+        ORDER BY seq LIMIT ?`, L.lead_id, cap + 1);
+    const page = rows.slice(0, cap);
+    const looks = page.map((r) => {
+      /* A referent this viewer can no longer read is NOT published; the row is. */
+      const visible = !r.result_kind || this.#leadReferentVisible(r.result_kind, r.result_ref, viewer);
+      return { seq: r.seq, at: r.at, looked_by: r.actor, authority_kind: r.authority_kind,
+               authority: r.authority, level: r.level, subject_kind: r.subject_kind, state: r.state,
+               condition: r.condition, detail: r.detail,
+               result_kind: visible ? r.result_kind : null, result_ref: visible ? r.result_ref : null,
+               coverage: observationCoverage({ state: r.state, resultRef: r.result_ref }) };
+    });
+    /* WHERE IT IS SHARED, as far as this viewer may know: the author sees every
+       share; a participant sees only the projects they are joined to, so the read
+       is no oracle for which OTHER projects a member works in. */
+    const me = viewerPredicate(viewer).member;
+    const sharesRaw = this.#rows(
+      `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at FROM lead_shares s
+        WHERE s.lead_id = ? AND (? = 1 OR EXISTS (SELECT 1 FROM project_participants pp
+          WHERE pp.project_id = s.bundle_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))
+        ORDER BY s.at, s.bundle_id LIMIT ?`, L.lead_id, me === L.author ? 1 : 0, me ?? "", cap + 1);
+    /* BOUNDED by the read's own `limit`, and the cut is published: a lead shared to more projects than
+       the page holds says so rather than reading as shared nowhere else. */
+    const shared_to = sharesRaw.slice(0, cap);
+    const last = this.#one(
+      `SELECT state FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
+        ORDER BY seq DESC LIMIT 1`, L.lead_id);
+    const latest = last ? last.state : null;
+    return {
+      ok: true, lead_id: L.lead_id, author: L.author, words: L.words, locator: L.locator, at: L.at,
+      evidence: false, shared_to, shared_to_truncated: sharesRaw.length > cap,
+      limit: cap, truncated: rows.length > cap, looks,
+      /* §5.1 AT THIS SUBJECT, and the strong answer is licensed here rather than
+         assumed: a lead and its looks are written by this plane after the log
+         existed, and only the whole-store purge deletes either — which deletes
+         BOTH — so a lead standing with no look has had nobody look. Neither the
+         pre-log cause nor the purged cause is reachable for it. */
+      state: latest || "NEVER_LOOKED",
+      says: !looks.length
+        ? `nobody has followed this lead yet. That is established rather than inferred: the lead and `
+          + `any look at it are cleared only together, by a whole-store purge`
+        : `${looks.length}${rows.length > cap ? "+" : ""} look(s) recorded against this lead; the `
+          + `latest found ${latest}. The lead itself is never evidence`,
+    };
+  }
+  /* op=leadread's bound, BELOW its method for the reason above. `op=frontier`'s
+     200/2000 pair, and for its reason: the population is looks at ONE subject. */
+  static LEAD_READ_LIMIT_DEFAULT = 200;
+  static LEAD_READ_LIMIT_MAX = 2000;
+
+  /* ====================================================================== *
    * SK-8 REGION — THE EXTRACT RUN'S PRODUCTIONS, AND THE FIRST CALLER OF THE
    * DOOR ABOVE.
    * ====================================================================== *
@@ -22909,6 +23226,9 @@ export class Store extends DurableObject {
          an operator fact, while what any single row was looking for is not. */
       aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`).c,
       observations: n("observation_log"),   /* the WIRE KEY stays `observations` (a count of observations, and moving it would be an I3 change nobody owed); the TABLE it counts is `observation_log` — renamed by CONDUCT #11 at integration on BOB #11's correction, because one word over three unrelated things is the defect, not the noun */
+      /* MK-4 / IC-136: a COUNT of members' leads and nothing else, so a purge can
+         PROVE it took them (D-113). What any lead says is not an operator fact. */
+      leads: n("leads"),
       /* PL-1 / IS-1: the inquiry's alternative accounts of its evidence and
          their legs, reported so a purge can PROVE it took them (D-113). A COUNT
          AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
@@ -24365,6 +24685,10 @@ export class Store extends DurableObject {
                        document would be text standing for a page nobody holds, and an
                        attestation outliving it would leave a member's name behind it. */
                     "transcriptions", "transcription_attestations",
+                    /* MK-4 / D-113: a lead's SHARES, keyed on the PROJECT. Per-bundle: a share
+                       outliving its project would admit whoever is next allocated that id to a
+                       member's lead. Whole-store: the leads themselves go in the arm below. */
+                    "lead_shares",
                     /* SK-8 / D-113: the PROPOSED READINGS. They ride both arms for the
                        reason `content` above does and for one more that is specific to
                        them: a proposal is a claim about what a DOCUMENT names, so a
@@ -24709,6 +25033,12 @@ export class Store extends DurableObject {
            rewritten — the look was still made, and erasing the record of it
            because its result went is how a store forgets that it ever searched. */
         this.sql.exec(`DELETE FROM observation_log`);
+        /* MK-4 / D-113: a member's LEADS. Authored, with no bundle_id, so a
+           per-bundle purge leaves them and this arm clears them — in the SAME arm
+           as the log that records their looks, which is what lets `op=leadread`
+           say "nobody has followed this lead" as an established fact: a lead and
+           its looks can only ever be cleared together. */
+        this.sql.exec(`DELETE FROM leads`);
         this.sql.exec(`DELETE FROM ai_run_bounds`);
         this.sql.exec(`DELETE FROM ai_runs`);
         /* PL-3 / IS-4 / D-113. F10's stored refusals go with the corpus they are
@@ -24762,6 +25092,8 @@ export class Store extends DurableObject {
                  /* IS-6 / D-113: the runs, their budgets and their observation
                     logs a whole-store purge took. */
                  aiRuns: d("aiRuns"), aiRunBounds: d("aiRunBounds"), aiRunLog: d("aiRunLog"),
+                 /* MK-4 / D-113: the leads a whole-store purge took. */
+                 leads: d("leads"),
                  /* PL-3 / IS-4 / D-113: the stored refusals a purge took, proved
                     by consequence rather than asserted. */
                  suggestRefusals: d("suggestRefusals"),
@@ -33003,11 +33335,14 @@ export class Store extends DurableObject {
           if (b) out.push(b); else unresolved = true;
           break;
         }
-        /* NEITHER HAS A WRITER ON THIS TREE — §4.5's authored writer is a member's
-           LEAD and is Program B's — so there is nothing to resolve and nothing to
-           be right about. UNRESOLVED is the honest answer and it fails in the
-           direction that withholds, which is what lets Program B land a reader
-           without inheriting a hole from this one. */
+        /* `objective` HAS NO WRITER ON THIS TREE, so there is nothing to resolve.
+           `lead` HAS ONE SINCE MK-4 (2026-09-18, `op=leadlook`) AND STAYS UNRESOLVED
+           ON PURPOSE: a lead names no bundle (MEMBER-KNOWLEDGE-DESIGN.md §5's field
+           list), its visibility is its AUTHOR's (`#leadFor`), and a row-whole gate
+           keyed on bundles has nothing to admit it by. Its looks are written at
+           level `internet`, which no frontier arm reads yet, so today this arm is
+           reached by no written row — and when one is, it withholds from every
+           identified session rather than inventing a bundle for a lead. */
         case "lead": case "objective": unresolved = true; break;
         /* THE INVERSION. Not a list of spellings: anything this method does not
            UNDERSTAND is withheld, so a tenth `authority_kind` is refused by
@@ -33886,13 +34221,18 @@ export class Store extends DurableObject {
                   an empty list and "nobody built this yet" are the two facts this
                   whole table exists to keep apart, and answering the second with
                   the first inside the log's own reader would be the joke writing
-                  itself. Its authored writer is a member's LEAD (§4.5, D-194) and
-                  is Program B's, not a RECORD row. */
+                  itself. CORRECTED 2026-09-18 by MK-4: this said the level's authored
+                  writer was Program B's and unbuilt. The WRITER now exists
+                  (`op=leadlook` writes `level = internet` under `authority_kind =
+                  lead`), so rows can stand at this level; what is not built is this
+                  READ, which is why the answer still says not-built rather than
+                  reading as an empty frontier over rows it never looked at. */
                note: `the ${level} level of the frontier is not built yet. This is NOT an empty `
-                   + `frontier: nothing has been written at this level because no writer exists, `
-                   + `which is a different fact from having looked and found nothing. The document, `
-                   + `content and meaning levels are built (REC-93, REC-94, REC-95); the internet `
-                   + `level's authored writer is a member's LEAD and is Program B's (§4.5, D-194)` };
+                   + `frontier: this reader does not read the ${level} level, which is a different `
+                   + `fact from having looked and found nothing. The document, content and meaning `
+                   + `levels are built (REC-93, REC-94, REC-95). At the internet level a member's `
+                   + `LEAD now has a writer (op=leadlook, MK-4) and its looks are read per lead with `
+                   + `op=leadread; the level-wide frontier read is not built` };
     /* REC-103 / IC-105 — REC-36'S WITHHOLDING, ROW-WHOLE, AND IT IS APPLIED HERE
        RATHER THAN ADVERTISED BY THE SIGNATURE. `#observationBundles` above carries
        the whole rule and the measured leak it closes. THE RAW PAGE IS OVER-FETCHED
@@ -37917,6 +38257,33 @@ export class Store extends DurableObject {
         }),
         transcription: () => this.transcriptionRead({ id: url.searchParams.get("id"),
                                                       viewer: url.searchParams.get("viewer") }),
+        /* MK-4 / IC-136: THE LEAD. `author` and `looker` come from the QUERY STRING,
+           where the control plane stamped them, and never from the body — a body
+           field a caller can fill is a name a machine can post (§7). */
+        lead: () => this.lead({
+          words: body ? body.words : null,
+          locator: body ? body.locator : null,
+          author: url.searchParams.get("author"),
+        }),
+        leadlook: () => this.leadLook({
+          lead: (body && body.lead) || url.searchParams.get("lead"),
+          state: body ? body.state : null,
+          resultKind: body ? body.resultKind : null,
+          resultRef: body ? body.resultRef : null,
+          condition: body ? body.condition : null,
+          detail: body ? body.detail : null,
+          looker: url.searchParams.get("looker"),
+          viewer: url.searchParams.get("viewer"),
+        }),
+        leadshare: () => this.leadShare({
+          lead: (body && body.lead) || url.searchParams.get("lead"),
+          project: (body && body.project) || url.searchParams.get("project"),
+          sharer: url.searchParams.get("sharer"),
+          viewer: url.searchParams.get("viewer"),
+        }),
+        leadread: () => this.leadRead({ id: url.searchParams.get("id"),
+                                        limit: url.searchParams.get("limit"),
+                                        viewer: url.searchParams.get("viewer") }),
         suggest: () => this.suggestVersion({
           ...(body || {}),
           target: (body && body.target) || url.searchParams.get("target"),

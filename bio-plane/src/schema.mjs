@@ -3347,6 +3347,49 @@ CREATE TABLE IF NOT EXISTS transcription_attestations (
 );
 CREATE INDEX IF NOT EXISTS transcription_attestations_bundle ON transcription_attestations(bundle_id);
 -- =========================================================================
+-- MK-4 / IC-135 / D-194 -- THE LEAD. MEMBER-KNOWLEDGE-DESIGN.md section 5: the
+-- same member knowledge BEFORE the search. I was told the contract was amended,
+-- look at the Clerk March agenda. An AUTHORED ROW and NEVER EVIDENCE.
+--
+-- WHY A TABLE OF ITS OWN AND NOT A CONTENT ROW OR A BUNDLE. Everything a basis
+-- leg can cite is a bundle or a content row. A lead stored as either would be an
+-- unlabelled observation a member could cite as evidence, which is the one thing
+-- section 5 rules it is not. So it lives here, under an id (LEAD-...) that no leg
+-- grammar accepts, and C-54.1 refuses it BY NAME at every leg grammar as well.
+--
+-- FOLLOWING A LEAD IS A LOOK, and the look is NOT stored here. It is a row of
+-- observation_log with authority_kind = lead and authority = lead_id (section 5,
+-- OBSERVATION-LOG-DESIGN.md section 4.5). Nothing is written to the log when a
+-- lead is AUTHORED: nobody has looked yet, and NEVER_LOOKED is never stored.
+--
+-- NO bundle_id, BY THE DESIGN'S FIELD LIST. So a per-bundle purge leaves it and
+-- the whole-store purge clears it (D-113). Visibility is the AUTHOR's (a
+-- provisional, stated in store.mjs leadRead) because no bundle scopes it.
+CREATE TABLE IF NOT EXISTS leads (
+  lead_id   TEXT PRIMARY KEY,   -- LEAD-YYYY-MMDD-hex, minted by the plane
+  author    TEXT NOT NULL,      -- a member id, server-stamped, never a machine (C-54.2)
+  words     TEXT NOT NULL,      -- the member words AS WRITTEN, never paraphrased
+  locator   TEXT,               -- an optional place to look the member suggests. NULL = none suggested
+  at        TEXT NOT NULL       -- when the record received the lead
+);
+CREATE INDEX IF NOT EXISTS leads_author ON leads(author, at);
+-- A LEAD SHARED TO A PROJECT. RULED 2026-09-18 by BOB #14 on MK-4's design gap: a
+-- lead is visible to its AUTHOR, to a project's participants ONLY after the author
+-- SHARES it to that project, to a machine credential only within the scope a member
+-- minted for it, and to nobody else. The share is an AUTHORED, DATED act and this
+-- row is it. Never rewritten: sharing twice finds the same row.
+-- bundle_id IS THE PROJECT, named so it rides op=purge TABLES list and clears in
+-- BOTH arms (D-113) -- a share outliving its project would admit whoever holds that
+-- id next.
+CREATE TABLE IF NOT EXISTS lead_shares (
+  lead_id    TEXT NOT NULL,
+  bundle_id  TEXT NOT NULL,     -- the PROJECT the lead is shared to
+  sharer     TEXT NOT NULL,     -- the lead author, server-stamped (C-54.10)
+  at         TEXT NOT NULL,
+  PRIMARY KEY (lead_id, bundle_id)
+);
+CREATE INDEX IF NOT EXISTS lead_shares_bundle ON lead_shares(bundle_id);
+-- =========================================================================
 
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
