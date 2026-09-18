@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1141 rulings across 91 documents.
+1142 rulings across 91 documents.
 
 ## DEC-
 
@@ -535,7 +535,7 @@ authority is the file named, never this one.
 - **D-329** · 2026-09-13 — AND THE ROW'S OWN CONCLUSION IS OVERTURNED ON A MEASUREMENT: A STATIC INSTRUMENT CAN SEE THIS.** This row held that *"an assertion label composed at run time exists in no file, so no static instrument can see it and only a periodic census can."* That is true of the RENDERED label and FALSE OF THE TEMPLATE, which…  
   `docs/archive/ledgers/DEBT-closed.md:53`
 - **D-329** — D-329 — the row's own conclusion OVERTURNED on a measurement: a run-time-composed label exists in no file only as RENDERED; its TEMPLATE does, and `composedSpan()` (new `scripts/armdecay.mjs`) catches a fragment that resolves against a suite's template only by eating its `${…}` slot — reach 2,700 label quotes from…  
-  `docs/development/QUEUE.md:1235`
+  `docs/development/QUEUE.md:1244`
 - **D-330** · 2026-09-13 — AMENDED MID-ITEM, 2026-09-13: `docs/development/DEBT.md` gains a SECOND row beyond D-330's disposition — **D-333**, the class this item's measurement establishes and its repair does not close: a driver's declared TALLY decays while every one of its anchors stays live, and no static check can see the difference…  
   `docs/development/CLAIMS.md:3282`
 - **D-331** · 2026-09-13 — RULED AS THIS ROW RECOMMENDED, AND THE RULING DECLINES BOTH HALVES OF THE FALSE CHOICE: A THROWING DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING.** `scripts/armdecay.mjs`'s `preflight()` is the shared dry pass — it counts every arm's quote in the file that arm will write, prints the WHOLE table, and only…  
@@ -1144,6 +1144,8 @@ authority is the file named, never this one.
   `docs/development/kickoffs/BOB-NEXT.md:29`
 - **REC-131** · 2026-09-18 — SUPERSEDED IN PART, 2026-09-18, BY BOB #15's CORRECTED RULING (`MEMBER-KNOWLEDGE-DESIGN.md` §5), which arrived during this IC's integration.  
   `docs/development/INTERFACE-CHANGES.md:10641`
+- **REC-133** · 2026-09-18 — CORRECTED WHILE RUNNING, 2026-09-18 (BOB #15 at `f624bd43`): §6A.2 now reads REVOKE = OWNER ONLY.  
+  `docs/development/QUEUE.md:1093`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -2270,7 +2272,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - version that the content is extracted from."* RULED, folded into Part II §16.  
   `docs/development/QUEUE.md:878`
 - D, driven through the op; the six keys are gone from finding bytes and `caseflip.test.mjs`'s still-there assertions are CORRECTED (never exempted) to say so; the stranger-verification path still passes end to end with the instance unreachable.  
-  `docs/development/QUEUE.md:1199`
+  `docs/development/QUEUE.md:1208`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:240`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  
