@@ -1,11 +1,6 @@
 # Member knowledge — the firsthand observation, the lead, and attribution (D-184, D-194)
 
-**Status** · v0.1 DESIGN, written by session BOB #14 under Bob's standing delegation (mechanism is the architect's; the doctrine it serves was ruled by Bob on 2026-09-14 and is quoted, not restated). It closes the design act D-184 and D-194 owed — which BOB #14 had wrongly marked "verified: Program B" in a build order, until CONDUCT #4 found no such design at the artifact. **§2 and the §7 refusals that fall to MK-1 are BUILT by MK-1 (IC-133, IC-134, C-53) — `op=testify`, the register's `authored` flag and its fence at `op=promote`; §3–§6 are not built.** Two
-rulings BOB #14 made on MK-1's findings are carried in the code and belong in §2/§4 when this body is next
-revised: the authored bytes are a CANONICAL HEADER (`bio-testimony/1`: the testimony's id and `observed_at`,
-no author) then the words, so identical words from two members are two testimonies; and until MK-3's
-projection honours §4, a PUBLICATION FENCE refuses an observation, a finding resting on one and a case over
-such a finding (C-53.10–.12) — lifting it is MK-3's act. `node tools/status.mjs 2.firsthand`, `10.lead` and `13.attribution` are the status authority. as of 2026-09-18
+**Status** · v0.1 DESIGN, written by session BOB #14 under Bob's standing delegation (mechanism is the architect's; the doctrine it serves was ruled by Bob on 2026-09-14 and is quoted, not restated). Amended the same day with five decisions from MK-1's build (§2, §3, §7). It closes the design act D-184 and D-194 owed — which BOB #14 had wrongly marked "verified: Program B" in a build order, until CONDUCT #4 found no such design at the artifact. **§2 and the §7 refusals that fall to MK-1 are BUILT by MK-1 (IC-133, IC-134, C-53) — `op=testify` writing the canonical-header bytes (`bio-testimony/1`, `Store.testimonyBytes`), the register's `authored` flag and its fence at `op=promote`, and the publication fence at `op=ratify`/`op=caseratify` (C-53.10–.12), which MK-3 lifts; §3–§6 are not built.** `node tools/status.mjs 2.firsthand`, `10.lead` and `13.attribution` are the status authority. as of 2026-09-18
 
 **Place in the system** · Level 2. Serves construct 2 (intake), construct 8 (the inquiry's legs and strength), construct 10 (the frontier — the lead is its authored half) and construct 13 (attribution in a published case) of `docs/architecture/BIO_System_Design.md` §3. The doctrine is `docs/architecture/BIO_Content_Framework_v0_10.md` §14.4 and `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §5.6 as amended; the attribution rule is `docs/architecture/BIO_Publication_v0_1.md` §7. It extends the capture-or-testify structure already built for correspondence (`schema.mjs`, the `correspondence` table, C-2.10) rather than inventing a second one.
 
@@ -65,6 +60,14 @@ statement are different acts, and the register must never let one pass for the o
   record's own time of writing.
 - The bytes are the member's words **as written**. Nothing paraphrases, summarises or cleans them; an edit is a new bundle
   that supersedes, never a rewrite.
+- **`observed_at` is REQUIRED** — a date or a UTC instant, never later than the record's clock (decided 2026-09-18 from
+  MK-1's build; reversing it is small).
+- **Two members' identical words are two testimonies and must not collide** (§3: a second witness authors their own
+  observation). The register is keyed by the sha of the bytes, so the authored bytes carry a canonical HEADER above the
+  words — the testimony's own id and its `observed_at` — which makes each testimony's sha unique **without an I5 key
+  change**. **No author identity is ever in the bytes**: who the author is lives in the server-stamped record, and what a
+  reader of a published case sees is governed by the attribution level (§4), which bytes carrying a name would defeat.
+  (Found by MK-1's build, where C-53.6 refused the second of two identical observations.)
 
 ## 3. The grade: a third axis, testimony
 
@@ -78,6 +81,9 @@ is **not applicable, and stated** — never an A, which would be true of the byt
 and would read as strength it does not have. A second member's attestation of an observation does NOT raise it: the
 ruling is that it stands on the observing member's trust, and a co-signature is not a second observation. (A second member
 who saw the same thing authors their own observation; the case then rests on two testimonies, each D.)
+
+**The register's capture-grade requirement (C-18.1) gains an AUTHORED arm** — an authored bundle carries no capture grade
+because none applies, and the check says so rather than demanding one (built that way by MK-1).
 
 Strength arithmetic is unchanged in rule — DEC-32's weakest leg across AND, strongest branch across OR — and simply sees one
 more axis. The interface consequence is §Incomplete's first entry.
@@ -128,6 +134,12 @@ Each is a refusal in the catalogue and a control arm in the item that builds it:
 - an off-the-record account carrying a source identity (the control: add the field and watch the suite fail);
 - a lead or an opinion cited as a basis leg;
 - an author field supplied by the caller rather than stamped.
+- **an authored bundle crossing the publication fence before the attribution-honouring projection exists (MK-3).** The
+  author's handle is in the bundle's provenance document and the session log, so a published observation before MK-3
+  would name its author with no choice made — and publish an off-the-record account by construction. The fence refuses
+  an authored bundle, and a case whose members include one, BY NAME until MK-3 lifts it as its own act;
+- **an import or replay path that writes an authored bundle other than through the testimony path** — the fence already
+  refuses such a bundle (C-53.8); any future import or replay path must route through testimony, never around it.
 
 ## 8. The decomposition
 
@@ -137,7 +149,7 @@ Each item names its interface; none is queued until its design section here is r
 | --- | --- | --- | --- |
 | MK-1 | the authored bundle: `op` to author an observation, register entry with `authored`, server-stamped author, `observed_at`; content rows over it | I5 (register), I3 (the op) | nothing |
 | MK-2 | the `testimony` axis: grading, `STRENGTH_AXES`, DEC-32 arithmetic, the case document's strength presentation | I3 — additive or breaking, stated by the builder (§Incomplete) | MK-1 |
-| MK-3 | attribution on the case contribution act, and the published projection honouring it; off-the-record as a structural absence | I3 | MK-1; the case act identified (§Incomplete) |
+| MK-3 | attribution on the case contribution act, and the published projection honouring it — **its first acceptance condition is that no authored bundle can be published until this projection exists, and lifting the fence refusal (§7) is this item's own act**; off-the-record as a structural absence | I3 | MK-1; the case act identified (§Incomplete) |
 | MK-4 | the LEAD: the row, its writer into `observation_log` (`authority_kind = 'lead'`), `LOOKED_ABSENT` against a lead | I3, I5 | nothing |
 | MK-5 | the opinion as a case element with attribution, refused as a leg | I3 | MK-3 |
 
