@@ -244,6 +244,14 @@ CREATE TABLE IF NOT EXISTS signers (
 -- container needs exactly that: assembling edition N of a case means gathering
 -- edition N's parts from every member, including members ratified minutes
 -- earlier. Nothing else holds it.
+--
+-- REC-128 (BOB #14, the honesty half of D-421): attestor_member is who SIGNED,
+-- taken from the signature. delivered_by is who DELIVERED it, taken from the
+-- authenticated session that performed the act -- member:<id>, or founder for
+-- the instance founder's password session. They are two facts and neither is
+-- ever copied from the other. NULL is a row written before the column existed
+-- and reads back as UNDETERMINED, stated, and is never back-filled from the signer.
+-- case_documents carries the same column for op=caseratify, for the same reason.
 CREATE TABLE IF NOT EXISTS published_bundles (
   bundle_id       TEXT NOT NULL,
   edition         INTEGER NOT NULL,
@@ -252,6 +260,7 @@ CREATE TABLE IF NOT EXISTS published_bundles (
   ratified_at     TEXT NOT NULL,
   attestor_key    TEXT NOT NULL,
   attestor_member TEXT,
+  delivered_by    TEXT,            -- REC-128 WHO DELIVERED, from the session. NULL means not recorded, never the signer
   gate_version    TEXT NOT NULL,
   sig_armored     TEXT NOT NULL,
   strength        TEXT,
@@ -1780,6 +1789,7 @@ CREATE TABLE IF NOT EXISTS case_documents (
   sig_armored     TEXT,            -- NULL until op=caseratify. NULL means AUTHORED AND UNSIGNED
   attestor_key    TEXT,
   attestor_member TEXT,
+  delivered_by    TEXT,            -- REC-128 WHO DELIVERED, from the session. NULL means not recorded, never the signer
   gate_version    TEXT,
   ratified_at     TEXT,
   PRIMARY KEY (case_id, edition)
@@ -13406,6 +13416,21 @@ var ratifyStatement = (bundleId, bundleSha) => te2.encode(`bio-ratify ${bundleId
 `);
 var caseRatifyStatement = (caseId, edition, docSha) => te2.encode(`bio-ratify-case ${caseId} ${edition} ${docSha}
 `);
+
+// src/deliverer.mjs
+function deliveringPrincipal(session) {
+  const role = session && typeof session.role === "string" ? session.role : "";
+  if (role === "admin") return "founder";
+  if (role.startsWith("member:") && role.length > "member:".length) return role;
+  return null;
+}
+var DELIVERER_UNDETERMINED_DETAIL = "who DELIVERED this ratification was not recorded: it was ratified before the record stated the delivering principal (REC-128). Its SIGNER is known, from the signature; who carried the signature in is undetermined, and it is not inferred from the signer \u2014 a member's signature can be delivered by another member's session or by the founder's.";
+function delivererOf(stored) {
+  if (stored === "founder") return { kind: "founder", member: null };
+  if (typeof stored === "string" && stored.startsWith("member:") && stored.length > "member:".length)
+    return { kind: "member", member: stored.slice("member:".length) };
+  return { kind: "undetermined", member: null, detail: DELIVERER_UNDETERMINED_DETAIL };
+}
 
 // src/ooxml.mjs
 var UTF8 = new TextDecoder("utf-8", { fatal: false });
@@ -26754,7 +26779,16 @@ var Store = class _Store extends DurableObject {
          row that is not authored, which is what they mean. */
       ["register", "authored", "INTEGER NOT NULL DEFAULT 0"],
       ["register", "author", "TEXT"],
-      ["register", "observed_at", "TEXT"]
+      ["register", "observed_at", "TEXT"],
+      /* REC-128 / IC-140: WHO DELIVERED a ratification — the authenticated
+         session that performed the act, beside the signature's signer. NULLABLE
+         AND NEVER BACK-FILLED, and that is the item rather than a convenience:
+         a row ratified before this column existed recorded no deliverer, and
+         the one value a backfill could reach for is the SIGNER, which is the
+         liar D-421 exists to separate (two names for one fact). NULL reads back
+         as UNDETERMINED, stated, through `#deliveredBy`. */
+      ["published_bundles", "delivered_by", "TEXT"],
+      ["case_documents", "delivered_by", "TEXT"]
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -32390,7 +32424,7 @@ Subject position: ${pos} \u2014 ${just}
     if (!id || !Number.isInteger(ed) || ed < 1) return { ok: false, reason: "MALFORMED" };
     const doc = this.#one(
       `SELECT case_id, edition, doc_sha, text, authored_at, authored_by,
-              sig_armored, attestor_key, attestor_member, gate_version, ratified_at
+              sig_armored, attestor_key, attestor_member, delivered_by, gate_version, ratified_at
          FROM case_documents WHERE case_id=? AND edition=?`,
       id,
       ed
@@ -32491,6 +32525,10 @@ Subject position: ${pos} \u2014 ${just}
       ratified_at: d.ratified_at ?? null,
       sig_armored: d.sig_armored ?? null,
       attestor_member: d.attestor_member ?? null,
+      /* REC-128: who DELIVERED the signature, beside who MADE it. Null
+         while the document is unsigned — there is no delivery yet, which
+         is a different fact from a delivery nobody recorded. */
+      delivered_by: d.ratified_at ? this.#deliveredBy(d) : null,
       gate_version: d.gate_version ?? null
     };
   }
@@ -32535,7 +32573,8 @@ Subject position: ${pos} \u2014 ${just}
     sigArmored,
     attestorKey,
     attestorMember,
-    gateVersion
+    gateVersion,
+    deliveredBy = null
   } = {}) {
     const id = String(caseId ?? "").trim();
     const ed = Number(edition);
@@ -32640,12 +32679,18 @@ Subject position: ${pos} \u2014 ${just}
         );
       });
       this.sql.exec(
-        `UPDATE case_documents SET sig_armored=?, attestor_key=?, attestor_member=?, gate_version=?,
+        `UPDATE case_documents SET sig_armored=?, attestor_key=?, attestor_member=?, gate_version=?, delivered_by=?,
            ratified_at=? WHERE case_id=? AND edition=? AND sig_armored IS NULL`,
+        /* REC-128: `deliveredBy` is the control plane's reading of the SESSION
+           and is written as handed — never defaulted to `attestorMember`. The
+           column is added on the FIRST line so the second stays byte-identical:
+           `casepin.control.mjs` arm (b) anchors on it (M0-25's witness caught
+           the first spelling of this edit moving it). */
         sigArmored,
         attestorKey,
         attestorMember ?? null,
         gateVersion,
+        deliveredBy ?? null,
         now,
         id,
         ed
@@ -50623,7 +50668,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     completeness,
     strength,
     edges,
-    group = null
+    group = null,
+    deliveredBy = null
   } = {}) {
     if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
       return { ok: false, reason: "MALFORMED" };
@@ -50692,9 +50738,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       const barUndetermined = distinctBars.length > 1;
       const required = !barUndetermined && distinctBars.length === 1 && distinctBars[0] ? JSON.parse(distinctBars[0]) : null;
       this.sql.exec(
-        `INSERT INTO published_bundles (bundle_id,edition,title,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored,strength,required,parts)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+        `INSERT INTO published_bundles (bundle_id,edition,title,bundle_sha,ratified_at,attestor_key,attestor_member,delivered_by,gate_version,sig_armored,strength,required,parts)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
          ON CONFLICT(bundle_id,edition) DO NOTHING`,
+        /* REC-128: who DELIVERED, as the control plane read it off the SESSION;
+           never defaulted to the signer. A retry of bytes already published
+           writes nothing (DO NOTHING), so the first delivery stands. */
         bundleId,
         ed,
         title ?? null,
@@ -50702,6 +50751,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         now,
         attestorKey,
         attestorMember ?? null,
+        deliveredBy ?? null,
         gateVersion,
         sigArmored,
         strength ? JSON.stringify(strength) : null,
@@ -50766,7 +50816,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       ed
     );
     const MEMBER_COLS = `bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
-                         gate_version, sig_armored, strength, required, parts`;
+                         delivered_by, gate_version, sig_armored, strength, required, parts`;
     const findings = [], awaiting = [];
     for (const m of roster) {
       const r = m.version_sha ? this.#one(
@@ -50804,6 +50854,8 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         gate_version: r.gate_version,
         sig_armored: r.sig_armored,
         attestor: { member: r.attestor_member, key_b64: r.attestor_key },
+        /* REC-128: who SIGNED is `attestor`; who DELIVERED is this. */
+        delivered_by: this.#deliveredBy(r),
         strength: r.strength ? JSON.parse(r.strength) : null,
         required: r.required ? JSON.parse(r.required) : null,
         parts: r.parts ? JSON.parse(r.parts) : []
@@ -50854,7 +50906,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
                       stranger to check in it. */
       document: (() => {
         const d = this.#one(
-          `SELECT doc_sha, text, sig_armored, attestor_key, attestor_member, gate_version, ratified_at
+          `SELECT doc_sha, text, sig_armored, attestor_key, attestor_member, delivered_by, gate_version, ratified_at
                     FROM case_documents WHERE case_id=? AND edition=? AND ratified_at IS NOT NULL`,
           caseId,
           ed
@@ -50864,6 +50916,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           text: d.text,
           sig_armored: d.sig_armored,
           attestor: { member: d.attestor_member, key_b64: d.attestor_key },
+          delivered_by: this.#deliveredBy(d),
           gate_version: d.gate_version,
           ratified_at: d.ratified_at
         } : null;
@@ -51031,13 +51084,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
   publishedList() {
     return {
       bundles: this.#rows(
-        `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_member, gate_version
+        `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_member, delivered_by, gate_version
        FROM published_bundles ORDER BY bundle_id, edition`
       ).map((r) => {
         const cms = this.#casesOfSha(r.bundle_id, r.bundle_sha, r.edition);
         const sole = this.#soleCase(cms);
         return {
           ...r,
+          delivered_by: this.#deliveredBy(r),
           case_id: sole ? sole.case_id : null,
           case_edition: sole ? sole.edition : null,
           cases: cms
@@ -51061,7 +51115,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     if (!bundleId) return { ok: false, reason: "NO_ID", detail: "publishededitions requires ?id=" };
     const rows = this.#rows(
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
-              gate_version, sig_armored, strength, required
+              delivered_by, gate_version, sig_armored, strength, required
        FROM published_bundles WHERE bundle_id=? ORDER BY edition`,
       bundleId
     );
@@ -51077,6 +51131,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       ) : null;
       return {
         ...r,
+        delivered_by: this.#deliveredBy(r),
         case_id: cid,
         case_edition: cm ? cm.edition : null,
         cases: cms,
@@ -51340,6 +51395,16 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       graph_detail: "each finding's serves[] is what this surface may hand over \u2014 every entry names a published edition. names[] is what it may only NAME. unresolved[] is an edge classified servable at publication with no published edition behind it now, stated rather than dropped; it should be empty."
     };
   }
+  /* REC-128 — THE ONE READ CHOKEPOINT FOR WHO DELIVERED A RATIFICATION. Every
+     read that serves a ratification (the finding rows, the case document, the
+     public case read and so the container that travels) answers through here,
+     from the stored `delivered_by` column and from NOTHING ELSE: in particular
+     never from `attestor_member`, so a row written before the column existed
+     reads UNDETERMINED, stated, rather than back-filled from its signer.
+     `deliverer.control.mjs`'s `backfill` arm edits exactly this line. */
+  #deliveredBy(row) {
+    return delivererOf(row ? row.delivered_by : null);
+  }
   /* A ratified bundle that belongs to NO case, in the same shape as a case
      edition so one renderer serves both — with `caseId: null`, no scope and no
      completeness, because it is not a case and saying otherwise is the exact
@@ -51347,7 +51412,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
      is: verifiable bytes with a signature and no case-level assertion. */
   #looseEditionState(bundleId, ed) {
     const r = this.#one(
-      `SELECT bundle_id, title, bundle_sha, ratified_at, attestor_key, attestor_member, gate_version,
+      `SELECT bundle_id, title, bundle_sha, ratified_at, attestor_key, attestor_member, delivered_by, gate_version,
               sig_armored, strength, required, parts
        FROM published_bundles WHERE bundle_id=? AND edition=?`,
       bundleId,
@@ -51393,6 +51458,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         gate_version: r.gate_version,
         sig_armored: r.sig_armored,
         attestor: { member: r.attestor_member, key_b64: r.attestor_key },
+        delivered_by: this.#deliveredBy(r),
         strength: r.strength ? JSON.parse(r.strength) : null,
         required: r.required ? JSON.parse(r.required) : null,
         parts: r.parts ? JSON.parse(r.parts) : []
@@ -63676,6 +63742,11 @@ function aiTaskScope(cred, op, spec) {
     );
   return { ok: true, viewer: cred.principal };
 }
+function sessionCaseViewer(role) {
+  const r = typeof role === "string" ? role : "";
+  if (r === "admin") return "admin";
+  return `member:${r.startsWith("member:") ? r.slice(7) : r}`;
+}
 async function caseReader(url, env, storeName) {
   const t = url.searchParams.get("token");
   if (!t) return { viewer: "" };
@@ -63698,7 +63769,7 @@ async function caseReader(url, env, storeName) {
     if (!sOut.answered) return { silent: "session" };
     const sess = sOut.result?.session;
     if (!sess) return { viewer: "" };
-    return { viewer: `member:${sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role}` };
+    return { viewer: sessionCaseViewer(sess.role) };
   }
   return { viewer: "" };
 }
@@ -66675,7 +66746,7 @@ var index_default = {
           detail: "caseratify requires caseId, edition (integer), expectedSha, and sig (armored SSH signature over the case document's sha)"
         }, 400);
       const factsOut = await doAnswer(stub.fetch(
-        `http://do/casedocfacts?case=${encodeURIComponent(body2.caseId)}&edition=${encodeURIComponent(String(body2.edition))}&viewer=${encodeURIComponent(`member:${sessMember}`)}`
+        `http://do/casedocfacts?case=${encodeURIComponent(body2.caseId)}&edition=${encodeURIComponent(String(body2.edition))}&viewer=${encodeURIComponent(sessionCaseViewer(sessRights.role))}`
       ));
       if (!factsOut.answered) return storeSilent("caseratify/facts");
       const facts = factsOut.result;
@@ -66746,6 +66817,7 @@ var index_default = {
           store: storeName,
           tokenClass: cls
         }, 409);
+      const deliveredBy = deliveringPrincipal(sessRights);
       const out = await doAnswer(stub.fetch("http://do/caseratify", {
         method: "POST",
         body: JSON.stringify({
@@ -66754,8 +66826,9 @@ var index_default = {
           docSha: facts.doc.doc_sha,
           sigArmored: body2.sig,
           attestorKey: sv.keyB64,
-          attestorMember: attestor?.member_id ?? sessMember,
-          gateVersion: gate.gateVersion
+          attestorMember: attestor?.member_id ?? null,
+          gateVersion: gate.gateVersion,
+          deliveredBy
         })
       }));
       if (!out.answered) return storeSilent("caseratify/commit");
@@ -66772,6 +66845,11 @@ var index_default = {
         ...r,
         gateVersion: gate.gateVersion,
         attestor: { member: attestor?.member_id ?? null, key_b64: sv.keyB64 },
+        /* REC-128: who carried the signature in, beside who made it. On a
+           retry of the same signature (`existed`) the store wrote nothing,
+           so the RECORD's deliverer is the first one — read it back through
+           op=casedocument; this field is who delivered THIS request. */
+        deliveredBy: delivererOf(deliveredBy),
         /* THE WINDOW, NAMED IN THE ANSWER RATHER THAN LEFT TO BE
            INFERRED FROM AN EMPTY LIST. The case is committed and the
            members still sign their own bytes, because the finding is
@@ -66950,13 +67028,15 @@ var index_default = {
         ...typeof ratifiedFm.division_parent === "string" && ratifiedFm.division_parent !== "null" ? [{ to: ratifiedFm.division_parent, kind: "division_parent", disclosure: "name" }] : [],
         ...(Array.isArray(ratifiedFm.division_siblings) ? ratifiedFm.division_siblings : []).filter((s) => typeof s === "string" && s).map((s) => ({ to: s, kind: "division_sibling", disclosure: "name" }))
       ];
+      const deliveredBy = deliveringPrincipal(sessRights);
       const pubOut = await doAnswer(stub.fetch(new Request("http://do/publish", {
         method: "POST",
         body: JSON.stringify({
           bundleId: body2.bundleId,
           bundleSha: body2.expectedSha,
+          deliveredBy,
           attestorKey: sv.keyB64,
-          attestorMember: attestor?.member_id ?? sessMember,
+          attestorMember: attestor?.member_id ?? null,
           gateVersion: gate.gateVersion,
           sigArmored: body2.sig,
           /* Only a CASE names its edition, and it names it in the signed bytes.
@@ -67058,7 +67138,19 @@ var index_default = {
                        whose case facts were member-signed from a `/4` container whose case
                        facts were nobody's. That distinction is the entire difference
                        between this record and a press release. */
-          format: "bio-case-container/5",
+          /* REC-128 bumps 5 -> 6, ON THE ARGUMENT EVERY BUMP ABOVE MADE. `/6`
+             carries `delivered_by` beside every `attestor` — on the case document
+             and on each finding — naming whose authenticated session CARRIED the
+             signature in: a member, or the instance's founder. Without the move a
+             `/5` container (which never recorded a deliverer) and a `/6` one whose
+             deliverer was not recorded would read alike, and a stranger could not
+             tell "nobody said" from "the format had no place to say". EXISTING
+             containers are untouched: a manifest is built once, when an edition
+             completes, and is served by its own stored hash, so nothing already
+             published verifies against anything new. `delivered_by` is THIS
+             INSTANCE'S RECORD and not covered by any signature (a member signs
+             before anybody delivers), and `verify` below says so in words. */
+          format: "bio-case-container/6",
           case: cs.caseId,
           edition: cs.edition,
           group: cs.group ?? null,
@@ -67080,6 +67172,7 @@ var index_default = {
             gate_version: cs.document.gate_version,
             ratified_at: cs.document.ratified_at,
             attestor: cs.document.attestor,
+            delivered_by: cs.document.delivered_by,
             signature: {
               namespace: NS_RATIFY,
               statement: new TextDecoder().decode(
@@ -67162,6 +67255,7 @@ var index_default = {
             ratified_at: f2.ratified_at,
             gate_version: f2.gate_version,
             attestor: f2.attestor,
+            delivered_by: f2.delivered_by,
             /* CASE-5 CORRECTS `statement`, AND IT IS THE ONE FIELD IN THIS
                ARTIFACT THAT WAS UNREADABLE BY THE READER IT EXISTS FOR.
                `ratifyStatement()` returns a Uint8Array — it is the message fed
@@ -67201,7 +67295,7 @@ var index_default = {
             manifest_at: "MANIFEST.json",
             note: "the zip carries every part at <case>/<finding>/<path> with this manifest at the root. Check each part's sha256 against this list, then check this manifest's own sha256 and each finding's signature over its own bundle_sha. Renderings (REC-22) join parts[] as kind: rendering."
           },
-          verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here makes one detectable by anyone holding it, without this instance's cooperation. Each finding is signed on its own bytes; there is no case-level strength, because composing several findings' strengths into one letter is a claim the evidence does not support. EACH FINDING'S `edition` IS ITS OWN, on its own version chain, and is NOT this case's edition: since the artifact flip the two are separate numbers, so a member of edition 2 of this case may be at its own edition 1. `version_sha` is the version THIS CASE COMMITTED TO and must equal that finding's `bundle_sha` here; if they differ, this container was assembled over a member the case did not pin and you should not rely on it. `role` is the publisher's authored designation: only `load_bearing` members were held to the `bar` above, and a `supporting` member is part of the published work without being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is not a standard of zero \u2014 the case claims no cleared bar and says so."
+          verify: "tamper-EVIDENT, not tamper-proof: nothing here prevents a modified copy, and everything here makes one detectable by anyone holding it, without this instance's cooperation. Each finding is signed on its own bytes; there is no case-level strength, because composing several findings' strengths into one letter is a claim the evidence does not support. EACH FINDING'S `edition` IS ITS OWN, on its own version chain, and is NOT this case's edition: since the artifact flip the two are separate numbers, so a member of edition 2 of this case may be at its own edition 1. `version_sha` is the version THIS CASE COMMITTED TO and must equal that finding's `bundle_sha` here; if they differ, this container was assembled over a member the case did not pin and you should not rely on it. `role` is the publisher's authored designation: only `load_bearing` members were held to the `bar` above, and a `supporting` member is part of the published work without being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is not a standard of zero \u2014 the case claims no cleared bar and says so. `attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED that signature to this instance \u2014 the authenticated session that performed the act, a member or the instance's founder \u2014 and it is this instance's record, not covered by any signature. `undetermined` there means the delivery was not recorded; it never means the signer delivered it."
         };
         const mText = JSON.stringify(manifest, null, 1);
         const mBytes = new TextEncoder().encode(mText);
@@ -67394,6 +67488,9 @@ var index_default = {
         ratifiedAt: pub.ratifiedAt,
         attestor: attestor?.member_id ?? null,
         gateVersion: gate.gateVersion,
+        /* REC-128: who DELIVERED this request (a retry that `existed`
+           wrote nothing; the record keeps its first deliverer). */
+        deliveredBy: delivererOf(deliveredBy),
         published: { shas: shas.length, copied, alreadyPresent: present, r2: r2state },
         ...reuseReport ? { reuse: reuseReport } : {},
         store: storeName,

@@ -484,7 +484,8 @@ const MANIFEST2 = await (async () => {
     [shaBytes(raw) === MANIFEST2, man.case, man.edition], [true, CASE, 2]);
   t("the format version MOVED with the fields the flip adds — a /3 container carrying no pin and a /4 "
     + "container whose pin was withheld must not be indistinguishable to a stranger",
-    man.format, "bio-case-container/5");
+    /* CORRECTED 2026-09-18, REC-128: `/5` -> `/6`, AND THE OLD ASSERTION WAS RIGHT WHEN IT WAS WRITTEN. `/6` carries `delivered_by` beside every `attestor` (who DELIVERED the signature, from the session: a member or the founder), and the version moves for the reason every bump here moved it — a `/5` container that never recorded a deliverer and a `/6` one whose deliverer was not recorded must not read alike. The pin still demands an EXACT version. */
+    man.format, "bio-case-container/6");
 
   /* THE DESIGN'S OWN LIST, one assertion per item on it. */
   t("CONTENT BY HASH: every part is named by sha256 and namespaced by the finding it belongs to",

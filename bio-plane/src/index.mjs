@@ -5,6 +5,8 @@ import { SIGN_HTML } from "./signpage.mjs";
 import { liveToken } from "./tokens.mjs";
 import { runGate, runCaseGate, GATE_VERSION } from "./gate.mjs";
 import { verifySshsig, ratifyStatement, caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
+/* REC-128: who DELIVERED an attested act, read off the SESSION, and its read shape. */
+import { deliveringPrincipal, delivererOf } from "./deliverer.mjs";
 /* The locator fence, taken from the catalog rather than restated: https only,
    public hosts only, no credentials in the authority, no bare IPs, no localhost.
    It is the one bound between a member typing a URL and this Worker fetching it,
@@ -2549,6 +2551,54 @@ function aiTaskScope(cred, op, spec) {
  * `admin` and `member` bindings are instance-level and read as they read every
  * other piece of working material. An `ai` credential stands as its declared
  * principal, through the same `aiTaskScope` the gated path runs. */
+/* REC-128 x REC-130 — THE ONE PLACE A SIGNED-IN SESSION BECOMES THE VIEWER AN
+ * UNSIGNED CASE DOCUMENT ANSWERS TO. Both readers of one — `op=casedocument`
+ * (through `caseReader` below) and `op=caseratify`'s facts read — call THIS,
+ * so the two cannot disagree about who a session is.
+ *
+ * THE DEFECT IT CLOSES, measured on CONDUCT #5's merge of REC-128 onto REC-130:
+ * both sites spelled the viewer as `member:` plus the FOLDED session role, and
+ * the FOUNDER's session role is the bare `admin` (Store.ROOT_ADMIN), so the
+ * founder read as `member:admin` — a member NAMED admin with no participation
+ * and no members row — and was answered NO_CASE_DOCUMENT. That refused the
+ * founder a case ratification BOB #14 ruled ALLOWED (D-421 as corrected: a
+ * HUMAN's own authenticated session, a member's or the founder's), and hid every
+ * unsigned case document from the instance's root administrator.
+ *
+ * THE RULING APPLIED, no new doctrine. IC-141 gives standing to a participant in
+ * the owning project, an ACTIVE ADMINISTRATOR (Membership Architecture 7.3), or
+ * an instance-level credential; 7.3 says administrators see ALL projects; 4.1
+ * makes the solo founder THE administrator, and 4.6 puts the ADMIN_TOKEN holder
+ * above every membership rule. The store already counts the founder as an active
+ * administrator by that name (`#activeAdmins`, `#isAdminMember`). So the
+ * founder has standing, as an administrator, in every project.
+ *
+ * WHY THE BARE `admin` VIEWER AND NOT `member:admin` OR `class:admin`.
+ * `viewerPredicate` compiles bare `admin` UNFILTERED — its root-administrator
+ * spelling — which is the founder's standing exactly. `member:admin` cannot
+ * carry it: the predicate's administrator arm reads a `members` row the founder
+ * never has, and in `store=scratch` (where acts are addressed while sessions
+ * live in `bio`) nothing was ever claimed either, so no store-side check could
+ * find the founder. `class:admin` would stamp a MACHINE class on a human's
+ * session — the inner URL lying about who is asking, which REC-29 closed. And
+ * the founder is told apart by the session ROLE, never by the folded name: a
+ * member ENROLLED with the id `admin` has role `member:admin` and stays an
+ * ordinary member here.
+ *
+ * SCOPE, stated so it is not mistaken for a sweep: this is the viewer for the
+ * two case-document reads REC-130 gated. Every other session-stamped read in
+ * this file still spells `member:` plus `sessMember` — deliberately untouched
+ * here, because several of them also ask POSITIONAL questions of that id
+ * (D-310), and changing what the founder sees across the corpus is a contract
+ * change of its own — rowed as D-422 (MEASURED: the founder session is not shown
+ * a project it does not participate in by op=list either), with IC-147 carrying
+ * only this half. */
+function sessionCaseViewer(role) {
+  const r = typeof role === "string" ? role : "";
+  if (r === "admin") return "admin";   /* the founder — Store.ROOT_ADMIN, an administrator (7.3) */
+  return `member:${r.startsWith("member:") ? r.slice(7) : r}`;
+}
+
 async function caseReader(url, env, storeName) {
   const t = url.searchParams.get("token");
   if (!t) return { viewer: "" };
@@ -2571,7 +2621,7 @@ async function caseReader(url, env, storeName) {
     if (!sOut.answered) return { silent: "session" };
     const sess = sOut.result?.session;
     if (!sess) return { viewer: "" };
-    return { viewer: `member:${sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role}` };
+    return { viewer: sessionCaseViewer(sess.role) };
   }
   return { viewer: "" };
 }
@@ -7532,12 +7582,16 @@ export default {
       const factsOut = await doAnswer(stub.fetch(
         `http://do/casedocfacts?case=${encodeURIComponent(body.caseId)}`
         + `&edition=${encodeURIComponent(String(body.edition))}`
-        /* REC-130: the SAME standing `op=casedocument` answers to. Only a
-           member's own session reaches this line (the region above), so the
-           viewer is that member; one without standing in the owning project is
-           answered NO_CASE_DOCUMENT exactly as for a case that does not exist,
-           rather than CASE_RATIFY_STALE with the document's sha. */
-        + `&viewer=${encodeURIComponent(`member:${sessMember}`)}`));
+        /* REC-130: the SAME standing `op=casedocument` answers to, resolved by
+           the SAME function (`sessionCaseViewer`). Only a HUMAN's own session
+           reaches this line (the region above) — a member's, or the FOUNDER's,
+           which BOB #14 ruled may deliver (D-421). A member without standing in
+           the owning project is answered NO_CASE_DOCUMENT exactly as for a case
+           that does not exist, rather than CASE_RATIFY_STALE with the document's
+           sha. REC-128's merge CORRECTED this comment and the viewer: it said
+           "only a member's own session" and stamped `member:` plus sessMember,
+           and so answered the founder as a member named admin with no standing. */
+        + `&viewer=${encodeURIComponent(sessionCaseViewer(sessRights.role))}`));
       /* REC-53's chokepoint, and the same judgement `op=ratify` records once for
          its whole block: BEFORE the commit a silence refuses the act outright,
          because nothing has been written and 502's sentence — nothing here is a
@@ -7599,11 +7653,28 @@ export default {
         return json({ ok: false, reason: "GATE_REFUSED", gateVersion: gate.gateVersion,
                       findings: gate.findings, store: storeName, tokenClass: cls }, 409);
 
+      /* REC-128 — THE RECORD STATES WHO AUTHORISED AND WHO DELIVERED (BOB #14, the
+         honesty half of D-421). The SIGNATURE says who authorised (`attestor`, from
+         the verified key's registered member); the SESSION says who delivered — a
+         member, or the founder, whose password session is the only live publishing
+         route (DEC-33). They are two facts and each has ONE source:
+           - the deliverer comes from the session ROW the admission block resolved,
+             never from the signature, and never from `sessMember` (which folds the
+             founder's `admin` role into a bare string);
+           - the SIGNER no longer falls back to the session. It read
+             `attestor?.member_id ?? sessMember`: unreachable while `signers.member_id`
+             is NOT NULL and the key was matched out of the signer set, but it was
+             the same conflation pointed the other way — a session standing in for a
+             signature — and with a deliverer now recorded beside it, it would have
+             written one person under both names. Absent is stated as null.
+         REC-125's fence above guarantees a session here, so `sessRights` is the row. */
+      const deliveredBy = deliveringPrincipal(sessRights); /* REC-128: op=caseratify */
       const out = await doAnswer(stub.fetch("http://do/caseratify", {
         method: "POST", body: JSON.stringify({
           caseId: facts.doc.case_id, edition: Number(facts.doc.edition), docSha: facts.doc.doc_sha,
           sigArmored: body.sig, attestorKey: sv.keyB64,
-          attestorMember: attestor?.member_id ?? sessMember, gateVersion: gate.gateVersion,
+          attestorMember: attestor?.member_id ?? null, gateVersion: gate.gateVersion,
+          deliveredBy,
         }) }));
       if (!out.answered) return storeSilent("caseratify/commit");
       const r = out.result;
@@ -7612,6 +7683,11 @@ export default {
                       store: storeName, tokenClass: cls }, 409);
       return json({ ok: true, ...r, gateVersion: gate.gateVersion,
                     attestor: { member: attestor?.member_id ?? null, key_b64: sv.keyB64 },
+                    /* REC-128: who carried the signature in, beside who made it. On a
+                       retry of the same signature (`existed`) the store wrote nothing,
+                       so the RECORD's deliverer is the first one — read it back through
+                       op=casedocument; this field is who delivered THIS request. */
+                    deliveredBy: delivererOf(deliveredBy),
                     /* THE WINDOW, NAMED IN THE ANSWER RATHER THAN LEFT TO BE
                        INFERRED FROM AN EMPTY LIST. The case is committed and the
                        members still sign their own bytes, because the finding is
@@ -7974,10 +8050,14 @@ export default {
          below and is now honest, because it is reached only when the store
          ANSWERED with a result carrying no reason of its own — a description of
          what the store said rather than of a silence. */
+      /* REC-128: the deliverer from the SESSION ROW, the signer from the SIGNATURE,
+         each from its one source — `op=caseratify`'s twin block says why, including
+         why the signer's `?? sessMember` fallback is gone. */
+      const deliveredBy = deliveringPrincipal(sessRights); /* REC-128: op=ratify */
       const pubOut = await doAnswer(stub.fetch(new Request("http://do/publish", {
         method: "POST", body: JSON.stringify({
-          bundleId: body.bundleId, bundleSha: body.expectedSha,
-          attestorKey: sv.keyB64, attestorMember: attestor?.member_id ?? sessMember,
+          bundleId: body.bundleId, bundleSha: body.expectedSha, deliveredBy,
+          attestorKey: sv.keyB64, attestorMember: attestor?.member_id ?? null,
           gateVersion: gate.gateVersion, sigArmored: body.sig,
           /* Only a CASE names its edition, and it names it in the signed bytes.
              Everything else leaves it to the store, which appends the next one
@@ -8091,7 +8171,19 @@ export default {
              whose case facts were member-signed from a `/4` container whose case
              facts were nobody's. That distinction is the entire difference
              between this record and a press release. */
-          format: "bio-case-container/5",
+          /* REC-128 bumps 5 -> 6, ON THE ARGUMENT EVERY BUMP ABOVE MADE. `/6`
+             carries `delivered_by` beside every `attestor` — on the case document
+             and on each finding — naming whose authenticated session CARRIED the
+             signature in: a member, or the instance's founder. Without the move a
+             `/5` container (which never recorded a deliverer) and a `/6` one whose
+             deliverer was not recorded would read alike, and a stranger could not
+             tell "nobody said" from "the format had no place to say". EXISTING
+             containers are untouched: a manifest is built once, when an edition
+             completes, and is served by its own stored hash, so nothing already
+             published verifies against anything new. `delivered_by` is THIS
+             INSTANCE'S RECORD and not covered by any signature (a member signs
+             before anybody delivers), and `verify` below says so in words. */
+          format: "bio-case-container/6",
           case: cs.caseId,
           edition: cs.edition,
           group: cs.group ?? null,
@@ -8113,6 +8205,7 @@ export default {
             gate_version: cs.document.gate_version,
             ratified_at: cs.document.ratified_at,
             attestor: cs.document.attestor,
+            delivered_by: cs.document.delivered_by,
             signature: { namespace: NS_RATIFY,
                          statement: new TextDecoder().decode(
                            caseRatifyStatement(cs.caseId, cs.edition, cs.document.doc_sha)),
@@ -8190,6 +8283,7 @@ export default {
             role: f.role ?? null,
             ratified_at: f.ratified_at, gate_version: f.gate_version,
             attestor: f.attestor,
+            delivered_by: f.delivered_by,
             /* CASE-5 CORRECTS `statement`, AND IT IS THE ONE FIELD IN THIS
                ARTIFACT THAT WAS UNREADABLE BY THE READER IT EXISTS FOR.
                `ratifyStatement()` returns a Uint8Array — it is the message fed
@@ -8238,7 +8332,14 @@ export default {
                 + "it. `role` is the publisher's authored designation: only `load_bearing` members were "
                 + "held to the `bar` above, and a `supporting` member is part of the published work without "
                 + "being presented as carrying it. Where `bar` is null NO STANDARD WAS RECORDED, which is "
-                + "not a standard of zero — the case claims no cleared bar and says so.",
+                + "not a standard of zero — the case claims no cleared bar and says so. "
+                /* REC-128: the two principals of one ratification, told apart in
+                   the artifact that travels. */
+                + "`attestor` is who SIGNED, and the signature proves it. `delivered_by` is who DELIVERED "
+                + "that signature to this instance — the authenticated session that performed the act, a "
+                + "member or the instance's founder — and it is this instance's record, not covered by any "
+                + "signature. `undetermined` there means the delivery was not recorded; it never means the "
+                + "signer delivered it.",
         };
         const mText = JSON.stringify(manifest, null, 1);
         const mBytes = new TextEncoder().encode(mText);
@@ -8435,6 +8536,9 @@ export default {
                     graph: pub.edges ?? null,
                     existed: pub.existed, ratifiedAt: pub.ratifiedAt,
                     attestor: attestor?.member_id ?? null, gateVersion: gate.gateVersion,
+                    /* REC-128: who DELIVERED this request (a retry that `existed`
+                       wrote nothing; the record keeps its first deliverer). */
+                    deliveredBy: delivererOf(deliveredBy),
                     published: { shas: shas.length, copied, alreadyPresent: present, r2: r2state },
                     ...(reuseReport ? { reuse: reuseReport } : {}),
                     store: storeName, tokenClass: cls }, 200);

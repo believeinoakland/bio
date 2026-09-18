@@ -10639,3 +10639,146 @@ test/nc-rec129.mjs statsbaseline|statsopen|statsdropall|statsstamp|selftestopen`
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 28.0.0 → 29.0.0.** The base was read at resolution: 28.0.0, where IC-142 moved it after this row was proposed against 27.0.0. Member and probe callers lose two keys they received before, so this is breaking by IC-25. **Provisional, and carried to BOB #15 for ruling:** the fence keys on the admin CLASS, so a member whose ROLE is admin, signing in as class `member`, does not receive the counts. The alternative is the `administer` right; reversing it is one line at the stamp. The worker also found that `OBSERVATION-LOG-DESIGN.md` §6's REC-110 ruling rested on the premise this IC removes, and recorded that in the document's Incomplete sections; it is a disclosure call, with BOB.
+
+## IC-139 · I3: A RATIFICATION STATES WHO AUTHORISED AND WHO DELIVERED — `op=ratify` / `op=caseratify` answer `deliveredBy`, every read that serves a ratification carries `delivered_by` beside `attestor`, and the PUBLISHED case container moves `bio-case-container/5` → `/6` to carry it · PROPOSED 2026-09-18 (REC-128, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts, and the case container those ops publish). **Version read off
+  THIS TREE's `docs/development/INTERFACES.md`: 26.3.0** (built on 26.1.0; RE-READ after merging origin/main
+  `e1434b06`, where IC-136 moved it — the base moved underneath this row). **Proposed as MINOR — 26.3.0 → 26.4.0**, on the
+  additive rule: no op, input or existing field changes meaning or is removed; one field is added to two answers
+  and to five reads, and the published manifest gains one field per signature under a moved format string.
+  **Read the base AT RESOLUTION.** The format move is the part that is NOT a plain addition and it is argued
+  separately below, because published bytes are signed-adjacent and permanent.
+- **Proposer:** RECORD, worker `agent-a01d041e19ab1ad65`, 2026-09-18, from QUEUE REC-128
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (measured NOT BROKEN: `civicos-ui/app.html` reads `attestor.member` /
+  `attestor.key_b64` on findings and on the case document and never reads `manifest.format`; the new field is
+  unread until the UI chooses to render it — DELEGATION raised in `CLAIMS.md`), `DIST` (the instance page,
+  `bio-plane/src/setup.mjs` ratifyPanel, prints `r.attestor` from `op=ratify`'s answer and is unaffected; it does
+  not yet say who delivered — same DELEGATION), `SKILL` / `FLEET` (NOT-AFFECTED measured: no reader of
+  `attestor`, `delivered_by` or the container format in `agent-worker/`, `tools/`, `scripts/`, `newgroup/src`).
+- **Design:** `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 as D-421's wording correction states it (*a HUMAN's
+  own authenticated session — a member's, or the founder's — never a bearer token or machine credential*), and
+  BOB #14's ruling: the record states BOTH who AUTHORISED and who DELIVERED.
+
+**WHAT WAS TRUE BEFORE, MEASURED.** REC-125 left two kinds of caller able to deliver either act: a member's
+session and the founder's password session (the claim-step `admin` role). The deliverer was recorded nowhere —
+`published_bundles` and `case_documents` held `attestor_member`, the signer, and nothing else — so the founder
+delivering iris's signature and iris delivering her own read identically on every surface. The suite's fixture
+drives exactly that: the FOUNDER delivers iris's signature at both acts and GUS, a member, delivers iris's
+signature at `op=ratify`.
+
+**THE SHAPE.**
+- **Stored (I5, IC-140):** `delivered_by` TEXT on `published_bundles` and `case_documents` — `member:<id>` or
+  `founder`, written from the SESSION ROW the admission block resolved (`deliveringPrincipal(sessRights)`,
+  `src/deliverer.mjs`). `founder` rather than the session's own `admin`, because `admin` is also a bearer
+  CLASS and a member ROLE and a record that said `admin` would not say which. NULL only on a row written before
+  the column existed.
+- **Read:** `delivered_by: { kind: "member", member }` | `{ kind: "founder", member: null }` |
+  `{ kind: "undetermined", member: null, detail }`, beside `attestor` / `attestor_member` on `op=publishedlist`
+  rows, `op=publishededitions` editions, `op=publishedcase` findings (case and loose), the case document inside
+  `op=publishedcase`'s served `manifest`, and `op=casedocument` (null there while the document is unsigned —
+  no delivery yet, which is a different fact from a delivery nobody recorded). All through ONE store chokepoint,
+  `#deliveredBy`, from the stored column and from nothing else.
+- **The acts' answers:** `op=ratify` and `op=caseratify` answer `deliveredBy` in the same object shape. On a
+  retry that `existed` the store writes nothing, so the RECORD keeps its first deliverer; the answer names who
+  delivered THIS request and the read-back is the record's.
+- **LEGACY IS UNDETERMINED AND STATED, NEVER BACK-FILLED.** No migration pass writes the column; a NULL reads
+  `kind: "undetermined"` with a sentence saying the signer is known and the deliverer is not inferred from it.
+- **The signer loses its session fallback.** Both acts wrote `attestorMember: attestor?.member_id ?? sessMember`.
+  Unreachable today (`signers.member_id` is NOT NULL and the key was matched out of the signer set), but it was
+  the same conflation pointed the other way, and with a deliverer recorded beside it, it would have written one
+  person under both names. It is now `?? null`. No behaviour moves.
+
+**THE PUBLISHED CHANGE, STATED AS ONE BECAUSE IT IS THE BIGGER ACT.** The case container's manifest — the bytes
+a stranger holds, named by their own sha256 in `published_shas` — gains `delivered_by` beside `attestor` on
+`case_document` and on every `findings[]` entry, and `format` moves `bio-case-container/5` → `/6`, on the argument
+every earlier bump made: without the move a `/5` container (which never recorded a deliverer) and a `/6` whose
+deliverer was not recorded would read alike. `verify` gains the sentence that tells the two principals apart and
+says `delivered_by` is THIS INSTANCE'S RECORD, **not covered by any signature** — a member signs before anybody
+delivers, so the deliverer cannot be inside the hash the member signed, and the artifact says so rather than
+letting the field sit beside signed facts as though it were one. **EXISTING PUBLISHED CASES ARE UNTOUCHED, MEASURED
+AT THE CODE:** a manifest is built exactly once, when an edition's last finding is ratified
+(`pub.case.complete && !pub.case.manifest_sha`), stored with its hash (`recordcasemanifest`) and its bytes in the
+published bucket, and served by that hash thereafter; nothing in `src/` re-assembles a stored manifest, so no
+published case verifies against anything new. A case edition completing AFTER this lands whose earlier findings
+were ratified before it carries `/6` with those findings' deliverer `undetermined` — the true state.
+
+**WHAT IS DELIBERATELY NOT IN THIS IC.** (1) No surface RENDERS the deliverer yet: the UI's published-case views
+and the instance page's success line — DELEGATION to UI. (2) `op=attesttext` / `op=transcriptionattest` already
+stamp the attestor FROM the session (C-35.10); there the signer and the deliverer are one person by construction,
+so there is nothing to separate. (3) Whether a founder-delivered ratification should be refused or flagged is not
+decided here: BOB #14 ruled it ALLOWED, and this IC only makes it visible.
+
+**Suites:** `bio-plane/test/deliverer.test.mjs` (17 assertions: both acts through the ops, every read, the
+container read out of the published bucket and re-hashed to its own name, both legacy rows, and a table proving no
+determined deliverer in the fixture equals its signer); negative control `node test/deliverer.control.mjs` from
+`bio-plane/` — `fromsig` (the liar the row names), `backfill`, `session-member`, all as declared. Corrected at
+their sites, never exempted: the exact-version pins in `caseflip`, `casesign`, `multifinding` (×2) and
+`publishedcase`.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR — I3 29.1.0 → 29.2.0.** The base was read at the resolution that LANDED: 29.1.0. It was first resolved 27.0.0 → 27.1.0 in a merge CONDUCT held off `main`, because it conflicted with REC-130 (the founder lost standing; IC-147 is the fix). IC-142, IC-144 and IC-143 landed in between, so that figure was re-read, not carried. The proposal was against 26.3.0. **Why MINOR although the published format string moves `/5` → `/6`:** IC-25's test is whether anything that answered before is refused or changes meaning now, and nothing does. Every existing published case is served from its stored manifest by its own hash, and none is re-assembled (verified at the code by the worker and re-read at integration). The two answers and five reads gain one field; no input, op or existing field moves. The only reader of the container `format` outside the tests is the plane's own `verify`, which moved in the same change. `newgroup/src/release.mjs` carries the OLD embedded release until DIST's next cut, which is DIST's normal lag rather than a consumer broken by this IC. `civicos-ui/` never reads `manifest.format` (grepped: only two test fixtures name the string). **What a stricter reading would have ruled MAJOR, stated so it is not re-litigated from silence:** an EXTERNAL verifier that pins `/5` exactly would refuse a `/6` container produced after this lands. None exists in this repository, and the format move exists precisely so that such a verifier can tell the two apart rather than misread one. Delegation to UI for rendering the deliverer: raised in `CLAIMS.md`.
+
+## IC-140 · I5: `published_bundles.delivered_by` and `case_documents.delivered_by` — nullable, additive, NEVER back-filled · PROPOSED 2026-09-18 (REC-128, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I5 (the store schema). **Version read off THIS TREE's `docs/development/INTERFACES.md`:
+  1.20.0** (built on 1.18.0; RE-READ after merging origin/main `e1434b06`, where IC-134 and IC-135 moved it).
+  **Proposed as MINOR — 1.20.0 → 1.21.0**, ADDITIVE and non-breaking: two nullable TEXT columns, one on
+  each of the two tables a ratification commits, declared in `schema.mjs` for a fresh store and added by the
+  `#migrate` additive-column list (`ALTER TABLE … ADD COLUMN`, guarded on `PRAGMA table_info`) for an existing one.
+  Neither is in a key; neither is a derived table, so `op=purge` is untouched (D-113 does not apply).
+- **Proposer / owner:** RECORD, worker `agent-a01d041e19ab1ad65`, 2026-09-18, from QUEUE REC-128.
+- **Consumers to answer:** none outside the plane read either table (measured: `newgroup/src`, `tools/`, `scripts/`
+  hold no reference outside the embedded release source).
+- **The value:** `member:<id>` | `founder` | NULL. **NULL is a state of the record, not a missing value** — a
+  ratification recorded before the column existed — and no backfill runs, because the only value a backfill
+  could reach for is the signer, which is the one D-421 exists to keep apart. Written only by `publish()` and
+  `ratifyCaseDocument()`, as the control plane hands it (`deliveredBy`), never defaulted to `attestorMember`.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR, ADDITIVE — I5 1.20.0 → 1.21.0.** The base was read at resolution and is unchanged since the proposal (1.20.0). Two nullable columns are added by the additive-column migration; neither is a derived table, so `purge` is unaffected (D-113). There is no backfill, and NULL reads UNDETERMINED by design.
+
+## IC-147 · I3: the FOUNDER's session has an administrator's standing to read an UNSIGNED case document — `op=casedocument` answers it whole and `op=caseratify`'s facts read admits it, where both answered NO_CASE_DOCUMENT · PROPOSED 2026-09-18 (REC-128's merge fix, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (`conduct/rec-128-merge` merged with
+  origin/main `9ea2eb02`): 27.1.0** (IC-139's resolution in the held merge; `main` itself reads 27.0.0). **Proposed
+  MINOR — 27.1.0 → 27.2.0** (or 27.0.0 → 27.1.0 folded into IC-139's bump if CONDUCT lands both at once). **Read the
+  base AT RESOLUTION.**
+- **Proposer:** RECORD, worker `agent-a2c230e047820e35a`, 2026-09-18, respawned by CONDUCT #5 for REC-128.
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (NOT-AFFECTED: no surface calls `op=casedocument` — IC-141's measurement, unchanged —
+  and the founder's signing route gains an answer rather than losing one), `DIST`, `SKILL`, `FRAMEWORK`
+  (NOT-AFFECTED: no reader).
+- **Design:** IC-141's own standing rule, unchanged — *a participant in the owning project, an ACTIVE ADMINISTRATOR
+  (Membership Architecture 7.3), or an instance-level credential*; Membership Architecture 4.1 (the solo founder IS the
+  administrator), 4.6 (the ADMIN_TOKEN holder is the root of trust), 7.3 (administrators see all projects); D-421 as
+  BOB #14 corrected it (a founder's password session may deliver a ratification).
+
+**THE DEFECT, MEASURED BEFORE ANY EDIT.** On the merge of REC-128 onto REC-130, `deliverer.test.mjs` read **10 pass,
+7 fail**. Both case reads spelled the session's viewer `member:` plus the folded role; the founder's role is the bare
+`admin`, so the founder read as `member:admin`, which `viewerPredicate` answers as a member with no participation and
+no `members` row. So the founder was answered NO_CASE_DOCUMENT for every unsigned case document and could not deliver a
+case ratification — a refusal of an act BOB #14 ruled ALLOWED, arriving through a gate built for a different question.
+
+**THE SHAPE.** One function, `sessionCaseViewer(role)` in `src/index.mjs`, resolves a session for BOTH readers
+(`caseReader`'s session branch for `op=casedocument`, and `op=caseratify`'s facts read): the founder's role `admin`
+→ the bare viewer `admin`, which `viewerPredicate` compiles unfiltered (its root-administrator spelling); every other
+session → `member:<id>` exactly as before. The founder is told apart by its session ROLE, never by the folded name, so a
+member enrolled with the id `admin` (role `member:admin`) is still an ordinary member here. **Nothing else moves:**
+strangers, members of other projects, `probe` and `daemon` get the byte-identical not-found answer (`casesign.test.mjs`
+74/0; `casesign.control.mjs` e/f/g/h re-run at 66/8, 67/7, 72/2, 13/7, the figures REC-130 recorded).
+
+**WHY MINOR** (IC-25's test): nothing that answered before is refused or changes meaning; one principal is answered
+where it was refused, which is the design's answer for that principal.
+
+**WHAT IT DELIBERATELY DOES NOT DO — D-422.** Every OTHER session-stamped read still folds the founder to
+`member:admin`, and it was MEASURED to matter: in `bio`, `op=list` shows the ADMIN_TOKEN a project the founder's own
+session does not see. Closing that changes what the founder sees across the corpus and touches sites that ask
+POSITIONAL questions of the same id (D-310), so it is rowed, not swept.
+
+**Suites:** `bio-plane/test/deliverer.test.mjs` — its direct store read of an UNSIGNED case document CORRECTED to stamp
+the owner's viewer, with the dated reason (never exempted); new §1b (the founder reads an unsigned case through
+`op=casedocument`; vera, a member of no project, gets a stranger's bytes) and a §2 arm (vera carrying iris's valid
+signature is answered NO_CASE_DOCUMENT and nothing is committed). NEGATIVE CONTROL: `node test/deliverer.control.mjs`
+arms `founder-standing` and `everyone-admin`, recorded in the suite's `NEGATIVE CONTROL:` line.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR — I3 29.2.0 → 29.3.0**, landing in the same merge as IC-139 and ordered after it. The base was read at resolution; it was proposed against the held merge's 27.1.0. Nothing that answered before is refused; one principal, the founder's own session, is answered where it was refused. REC-130's stranger properties are unchanged: `casesign.control.mjs` e/f/g/h reproduce REC-130's figures, and `deliverer.control.mjs` `everyone-admin` shows a too-broad fix fails. **Not closed here:** D-422, every OTHER session-stamped read still treating the founder as `member:admin`, and `memberAdd` accepting the id `admin`. Both are with BOB #15 for a design pass before they are rowed.
