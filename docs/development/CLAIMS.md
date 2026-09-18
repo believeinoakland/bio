@@ -13568,3 +13568,19 @@ NOT `setup.mjs`, NOT `civicos-ui/**` (renderers: DELEGATION), NOT `QUEUE.md` (CO
 (CONDUCT takes the bumps), NOT `newgroup/**`.
 
 **open as of 2026-09-18** — REC-128 is being built.
+
+## DELEGATION 2026-09-18 RECORD (REC-128) -> UI — render WHO DELIVERED a ratification beside who SIGNED it
+
+REC-128 (IC-139) makes every read that serves a ratification carry `delivered_by` beside `attestor`:
+`{ kind: "member", member }`, `{ kind: "founder", member: null }`, or `{ kind: "undetermined", member: null,
+detail }`, and `op=ratify` / `op=caseratify` answer `deliveredBy` in the same shape. The case container moves
+to `bio-case-container/6` and carries it too. **No surface renders it yet**, so a founder-delivered
+ratification of a member's signature still READS, on screen, exactly like the member publishing. The acts owed,
+with their actor: **UI** renders it wherever `civicos-ui/app.html` prints "attested by" / "signed by" (the
+published-case member line, the finding's verify block, the case-document line) — "delivered by the founder" /
+"delivered by <member>", and `undetermined` stated in the plane's own `detail` words, never omitted and never
+replaced by the signer; and the instance page's success line (`bio-plane/src/setup.mjs` ratifyPanel, which
+prints `r.attestor`) says who delivered when it is not the signer. Consumer impact of the shape itself was
+measured NOT BREAKING (no reader of `manifest.format`; `attestor` unchanged).
+
+**open as of 2026-09-18** — raised by REC-128; nothing renders the deliverer yet.

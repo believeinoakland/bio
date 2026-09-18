@@ -600,9 +600,9 @@ authority is the file named, never this one.
   `docs/development/DEBT.md:328`
 - **D-411** — NOT SETTLED BY THIS ITEM: D-411 / REC-119**, the sixth reader (`#versionCollections`, feeding `op=basisversions` and `op=suggest`).  
   `docs/development/INTERFACE-CHANGES.md:9008`
-- **D-421** · 2026-09-18 — that question (D-421) was DECIDED by BOB #14 — REFUSE — and the operator's bearer tokens no longer deliver either act (C-32.14 / C-32.15, IC-137). as of 2026-09-18  
+- **D-421** · 2026-09-14 — that question (D-421) was DECIDED by BOB #14 — REFUSE — and the operator's bearer tokens no longer deliver either act (C-32.14 / C-32.15, IC-137).  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:3`
-- **D-421** · 2026-09-18 — And the operator's bearer tokens, DECIDED 2026-09-18 by BOB #14 (D-421, applying this rule, no new doctrine):** an attested act is performed ONLY by a named member's OWN AUTHENTICATED SESSION — *the signature proves who AUTHORISED; the credential that delivers it decides WHEN the record changes, and the record…  
+- **D-421** · 2026-09-18 — And the operator's bearer tokens, DECIDED 2026-09-18 by BOB #14 (D-421, applying this rule, no new doctrine):** an attested act is performed ONLY by *a HUMAN's own authenticated session (a member's, or the founder's), never a bearer token or machine credential* — the wording as BOB #14 corrected it the same day; it…  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:56`
 - **D-421** · 2026-09-18 — DECIDED 2026-09-18 by BOB #14 (BOB lane, applying rule 4, no new doctrine): REFUSE — an attested act is performed ONLY by a named member's own authenticated session; operator bearer tokens may no longer deliver one, even with a member's valid signature.  
   `docs/development/DEBT.md:356`

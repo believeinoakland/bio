@@ -7653,11 +7653,14 @@ export class Store extends DurableObject {
           id, ed, i, m, r.version_sha ?? null, r.role ?? null);
       });
       this.sql.exec(
-        `UPDATE case_documents SET sig_armored=?, attestor_key=?, attestor_member=?, delivered_by=?,
-           gate_version=?, ratified_at=? WHERE case_id=? AND edition=? AND sig_armored IS NULL`,
+        `UPDATE case_documents SET sig_armored=?, attestor_key=?, attestor_member=?, gate_version=?, delivered_by=?,
+           ratified_at=? WHERE case_id=? AND edition=? AND sig_armored IS NULL`,
         /* REC-128: `deliveredBy` is the control plane's reading of the SESSION
-           and is written as handed — never defaulted to `attestorMember`. */
-        sigArmored, attestorKey, attestorMember ?? null, deliveredBy ?? null, gateVersion, now, id, ed);
+           and is written as handed — never defaulted to `attestorMember`. The
+           column is added on the FIRST line so the second stays byte-identical:
+           `casepin.control.mjs` arm (b) anchors on it (M0-25's witness caught
+           the first spelling of this edit moving it). */
+        sigArmored, attestorKey, attestorMember ?? null, gateVersion, deliveredBy ?? null, now, id, ed);
       return { ok: true, caseId: id, edition: ed, project, roster,
                members: roster.map((m) => {
                  const r = rows.find((x) => x.target === m) || {};
