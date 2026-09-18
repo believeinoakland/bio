@@ -317,10 +317,10 @@ export const MAP_SECTION = /^(\d+\.\s*)?The major constructs/i;
 
 /* The vocabulary in which this corpus says a thing is not designed. Kept literal and short:
    every alternative below is lifted from a governed document's own words. */
-const UNDESIGNED = /\bundesigned\b|\bnot\s+(?:yet\s+)?designed\b|\bto\s+be\s+designed\b|\bpieces?\s+to\s+design\b|\bdesigned\s+nowhere\b|\bDOCTRINE\s+still\b/i;
+export const UNDESIGNED = /\bundesigned\b|\bnot\s+(?:yet\s+)?designed\b|\bto\s+be\s+designed\b|\bpieces?\s+to\s+design\b|\bdesigned\s+nowhere\b|\bDOCTRINE\s+still\b/i;
 
 /* An item that NAMES where its design lives is pointing, not restating — signal 3. */
-const POINTS_AT_A_DESIGN = (cell) => /\bDESIGNED\b/.test(cell) || /`[^`]+\.md`/.test(cell);
+export const POINTS_AT_A_DESIGN = (cell) => /\bDESIGNED\b/.test(cell) || /`[^`]+\.md`/.test(cell);
 
 const KEY_STOPWORDS = new Set(["the", "a", "an", "and", "or", "of", "its", "it", "for", "to", "in",
   "on", "as", "is", "are", "that", "this", "with", "by", "from", "at", "be"]);
@@ -370,7 +370,7 @@ export function numberedSection(text, sec) {
 
 /* The first table in a section, as rows of cells. The preamble is everything before it — where a
    list states, in prose, that what follows is still to be designed. */
-function firstTable(body) {
+export function firstTable(body) {
   const lines = body.split("\n");
   const at = lines.findIndex((l) => /^\|/.test(l));
   if (at < 0) return { preamble: body, rows: [] };
