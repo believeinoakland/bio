@@ -20,6 +20,7 @@
  *   RUN 2026-09-18 by BOB #14: six arms, 33 pass / 0 fail, exit 0, every restore byte-identical.
  *   RE-RUN the same day with A7 added (an ABSENT claim resting only on a comment): seven arms, 38 pass / 0 fail.
  *   RE-RUN with A8 added (a rendering that leaves the Status date behind): eight arms.
+ *   RE-RUN with A9 added (a key set that ignores additions): nine arms.
  *   (A2 was RE-AIMED after its first run: forcing the op probe's CONDITION true also dereferenced a
  *   null match, so the suite CRASHED instead of failing the named assertion — a second variable.)
  * AND ONE ARM ON THE PUSH GUARD, run by hand because it arms a different file: `statusCheck`'s
@@ -80,6 +81,14 @@ section("1 — EVERY PROBE KIND, BOTH WAYS");
   t("`uinone` holds for an op the UI never calls", P({ uinone: ["publish"] }), true);
   t("`uinone` FAILS for an op the UI calls through a helper", P({ uinone: ["frontier"] }), false);
   t("...and through a second helper", P({ uinone: ["conclude"] }), false);
+  /* THE CENSUS — name-independent (CONDUCT #4, 2026-09-18: REC-87's step could not be called
+     `member`, so a name-search read ABSENT over a built construct). */
+  t("a census of ops that matches holds", P({ count: "ops", equals: 2 }), true);
+  t("A CENSUS TRIPS ON ANY ADDITION — one op more than the claim, under any name", P({ count: "ops", equals: 1 }), false);
+  t("a census of tables counts VIRTUAL ones too", P({ count: "tables", equals: 2 }), true);
+  put("bio-plane/src/kinds.mjs", "export const KINDS = {\n  layer: { a: 1 },\n  'pdf-page': { a: 2 },\n  typed: { a: 3 },\n};\n");
+  t("an exact key set holds when the enumeration is exactly it", P({ keys: "KINDS", in: ["bio-plane/src/kinds.mjs"], equals: ["layer", "pdf-page", "typed"] }), true);
+  t("AN EXACT KEY SET TRIPS ON A KEY ADDED UNDER A NAME NOBODY SEARCHED FOR", P({ keys: "KINDS", in: ["bio-plane/src/kinds.mjs"], equals: ["layer", "pdf-page"] }), false);
 }
 
 /* ========================================================================== */

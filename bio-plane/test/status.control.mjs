@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* The NEGATIVE CONTROL DRIVER for `tools/status.mjs` and `bio-plane/test/status.test.mjs` —
- * eight arms plus an opening and closing baseline.
+ * nine arms plus an opening and closing baseline.
  *
  *   node bio-plane/test/status.control.mjs        (from the repo root)
  *
@@ -105,6 +105,10 @@ const ARMS = [
     from: "  return head.replace(re, `as of ${today}`) + (end < 0 ? \"\" : text.slice(end));",
     to:   "  return head + (end < 0 ? \"\" : text.slice(end));",
     mustBreak: "A RENDERING MOVES THE STATUS DATE" },
+  { id: "A9", title: "a key set that ignores ADDITIONS — the census goes blind to a renamed construct again",
+    from: "    const extra = got.filter((k) => !want.includes(k)), gone",
+    to:   "    const extra = [], gone",
+    mustBreak: "AN EXACT KEY SET TRIPS ON A KEY ADDED UNDER A NAME NOBODY SEARCHED FOR" },
 ];
 
 for (const a of ARMS) {
