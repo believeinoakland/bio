@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1056 rulings across 84 documents.
+1057 rulings across 84 documents.
 
 ## DEC-
 
@@ -386,6 +386,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:1566`
 - **D-174** — ONE THING FOR CONDUCT, NOT DECIDED HERE: **D-174's tension is now realised on the first screen a member meets.** That row watches the plane's refusal `detail` strings carrying plane vocabulary against UI-4's member-facing guard, and it was written when those sentences appeared in UI-13's dedicated pre-flight…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1544`
+- **D-184** · 2026-09-14 — the doctrine is RULED, 2026-09-14, §14.4; the lead's design status is `BIO_System_Design.md` §3 construct 10's to state and the observation's is D-184's row, and §18's row points at both** — corrected 2026-09-18 by M0-62: this bullet read *doctrine, Bob's* four days after Bob ruled it); **the claim object DESIGNED…  
+  `docs/architecture/BIO_Content_Framework_v0_10.md:12`
 - **D-186** — three added words (`INSIDE $TMPDIR`) in the existing fenced line; (6) the `else if (leakedAfter > leakedBefore)` note, CORRECTED; (7) the closing scan and the `reportResidue` call; (8) a comment block on `orphans()` naming it as a second instance of the class.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4326`
 - **D-186** · 2026-08-08 — D-186 UNDER GENUINE CONCURRENCY IS SETTLED — the question M0-13 named and could not answer.** Per-process `$TMPDIR` ownership **HOLDS**: 12 truly overlapping processes, distinct sandbox each, `$TMPDIR` redirected in each, every `mkdtemp` nested inside its own, every marker surviving all siblings, no foreign pid's…  
@@ -396,7 +398,7 @@ authority is the file named, never this one.
   `docs/architecture/BIO_Declared_Bias_v0_1.md:357`
 - **D-190** · 2026-08-08 — AMENDED INTO THIS CLAIM 2026-08-08, same session, before any handoff**) — the diagnostic that established two properties of the platform the item could not assume: that a Worker cannot fetch another Worker on this account's own `*.workers.dev` name, and that a fresh script is not attributable by name OR tag on the…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2546`
-- **D-194** · 2026-09-14 — RULED 2026-09-14: the observation is evidence, authored, grade D on the member's trust; its attribution in a published case is the attesting member's choice among the group, the project, the member's cover, or the member by name, and an off-the-record source's anonymity is valid — designed in Program B | the…  
+- **D-194** · 2026-09-14 — What is RULED, and binds whichever home is built (§14.4, 2026-09-14): the observation is evidence, authored, grade D on the member's trust; its attribution in a published case is the attesting member's choice among the group, the project, the member's cover, or the member by name, and an off-the-record source's…  
   `docs/architecture/BIO_Content_Framework_v0_10.md:1939`
 - **D-194** · 2026-09-14 — RULED 2026-09-14 … designed in Program B"*. - **SITE B** — `docs/architecture/BIO_System_Design.md` §3 construct 10 STATE cell: *"built (M1); the authored frontier — a member's LEAD — has no home (D-194) **[audited 2026-09-17: STILL TRUE, D-194 open]**"*.  
   `docs/development/MEASUREMENTS.md:15949`
