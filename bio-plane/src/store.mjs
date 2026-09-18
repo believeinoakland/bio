@@ -15305,18 +15305,22 @@ export class Store extends DurableObject {
        share; a participant sees only the projects they are joined to, so the read
        is no oracle for which OTHER projects a member works in. */
     const me = viewerPredicate(viewer).member;
-    const shared_to = this.#rows(
+    const sharesRaw = this.#rows(
       `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at FROM lead_shares s
         WHERE s.lead_id = ? AND (? = 1 OR EXISTS (SELECT 1 FROM project_participants pp
           WHERE pp.project_id = s.bundle_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))
-        ORDER BY s.at, s.bundle_id`, L.lead_id, me === L.author ? 1 : 0, me ?? "");
+        ORDER BY s.at, s.bundle_id LIMIT ?`, L.lead_id, me === L.author ? 1 : 0, me ?? "", cap + 1);
+    /* BOUNDED by the read's own `limit`, and the cut is published: a lead shared to more projects than
+       the page holds says so rather than reading as shared nowhere else. */
+    const shared_to = sharesRaw.slice(0, cap);
     const last = this.#one(
       `SELECT state FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
         ORDER BY seq DESC LIMIT 1`, L.lead_id);
     const latest = last ? last.state : null;
     return {
       ok: true, lead_id: L.lead_id, author: L.author, words: L.words, locator: L.locator, at: L.at,
-      evidence: false, shared_to, limit: cap, truncated: rows.length > cap, looks,
+      evidence: false, shared_to, shared_to_truncated: sharesRaw.length > cap,
+      limit: cap, truncated: rows.length > cap, looks,
       /* §5.1 AT THIS SUBJECT, and the strong answer is licensed here rather than
          assumed: a lead and its looks are written by this plane after the log
          existed, and only the whole-store purge deletes either — which deletes

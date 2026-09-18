@@ -39278,15 +39278,17 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       };
     });
     const me = viewerPredicate(viewer).member;
-    const shared_to = this.#rows(
+    const sharesRaw = this.#rows(
       `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at FROM lead_shares s
         WHERE s.lead_id = ? AND (? = 1 OR EXISTS (SELECT 1 FROM project_participants pp
           WHERE pp.project_id = s.bundle_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))
-        ORDER BY s.at, s.bundle_id`,
+        ORDER BY s.at, s.bundle_id LIMIT ?`,
       L.lead_id,
       me === L.author ? 1 : 0,
-      me ?? ""
+      me ?? "",
+      cap + 1
     );
+    const shared_to = sharesRaw.slice(0, cap);
     const last = this.#one(
       `SELECT state FROM observation_log WHERE authority_kind = 'lead' AND authority = ?
         ORDER BY seq DESC LIMIT 1`,
@@ -39302,6 +39304,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       at: L.at,
       evidence: false,
       shared_to,
+      shared_to_truncated: sharesRaw.length > cap,
       limit: cap,
       truncated: rows.length > cap,
       looks,

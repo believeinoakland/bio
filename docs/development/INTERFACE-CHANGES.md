@@ -10111,7 +10111,7 @@ administrator who is not a participant does not see a shared lead.
 `sharer` stamped. Answers `{ ok, lead_id, project, shared_by, at, already, evidence: false, says }`; sharing twice
 finds the same row and its date does not move. Refuses `LEAD_SHARE_NOT_AUTHOR` (**C-54.10**, anyone but the author,
 including every machine) and `LEAD_SHARE_NOT_A_PARTICIPANT` (**C-54.9**, one answer for a project that does not
-exist, one the author cannot see, and one she has not joined). `op=leadread` gains `shared_to: [{project, shared_by,
+exist, one the author cannot see, and one she has not joined). `op=leadread` gains `shared_to_truncated` and `shared_to: [{project, shared_by,
 at}]` — every share for the author, only the viewer's own joined projects for anyone else. **C-54 is now ten rows.**
 **Proposed version unchanged: MINOR** (additive; the provisional's machine read was never on `main`).
 
