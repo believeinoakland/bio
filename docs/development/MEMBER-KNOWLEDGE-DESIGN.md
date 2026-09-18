@@ -112,7 +112,11 @@ same observation may be attributed differently in two cases, and the ruling puts
 member suggests, `at`) and it is **never evidence** — it cannot be a basis leg. It is the frontier's authored half:
 following it is a look recorded in `observation_log` with **`authority_kind = 'lead'`, `authority = <lead_id>`** — a value
 the table's vocabulary already reserves (`schema.mjs` `observation_log.authority_kind`) and that has no writer today
-(`node tools/status.mjs 10.lead`). What the look finds enters the record the ordinary way (a capture, then content); a lead
+(`node tools/status.mjs 10.lead`). **Who may see a lead (decided 2026-09-18 from MK-4's build):** its AUTHOR; a project's
+participants only after the author SHARES it to that project, as an authored, dated act; a machine credential only within
+the scope a member minted for it — never an unfiltered machine read; and **everyone else receives exactly the answer a lead
+that does not exist would receive**, so a lead's existence is not itself disclosed. A lead is a tip, and a tip leaked is a
+source exposed. **Authoring writes only the row; the look is a separate op that MK-4 builds** (§3 forbids a look entry at authoring). What the look finds enters the record the ordinary way (a capture, then content); a lead
 that finds nothing records `LOOKED_ABSENT` against itself, which is the internet level of the frontier (`status.mjs
 9.internet`) finally having a writer.
 
