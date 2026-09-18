@@ -1,4 +1,5 @@
-/* REC-124's NEGATIVE CONTROL DRIVER — four arms plus a baseline, re-runnable in one step
+/* REC-124's NEGATIVE CONTROL DRIVER — REC-136 added arms e, f and g (seven arms plus a
+ * baseline), re-runnable in one step
  * from `bio-plane/`:
  *
  *     node test/conclude-project.control.mjs            # every arm, in order
@@ -29,6 +30,7 @@ const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-conclude-project");          /* inside this worktree */
 const STORE = join(ROOT, "src", "store.mjs");
+const CHECKS = join(ROOT, "checks", "bio-checks.mjs");
 const SUITE = join(DIR, "conclude-project.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -54,14 +56,16 @@ const ARMS = {
   a: { files: [STORE],
        label: "(A) THE PER-PROJECT RECORD COLLAPSED TO ONE SHARED STATE: #conclusionOf answers from the "
             + "first project that concluded the inquiry, whichever project was asked — one conclusion, echoed",
+       /* REC-136: the ONE reader is now #conclusionRecordOf (the history and the
+          stance); the liar is the same — the anchor moved with the reader. */
        apply: () => edit(STORE,
          "    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);\n"
-       + "    if (!md || md.content === null) return null;\n"
+       + "    if (!md || md.content === null) return none;\n"
        + "    const fm = parseFrontmatter(md.content).data || {};\n"
        + "    const rows = Array.isArray(fm.conclusions) ? fm.conclusions : [];",
          "    const md = this.#one(`SELECT content FROM files WHERE path='bundle.md' AND content LIKE ? "
        + "ORDER BY bundle_id LIMIT 1`, `%conclusions:%${inquiryId}%`);\n"
-       + "    if (!md || md.content === null) return null;\n"
+       + "    if (!md || md.content === null) return none;\n"
        + "    const fm = parseFrontmatter(md.content).data || {};\n"
        + "    const rows = Array.isArray(fm.conclusions) ? fm.conclusions : [];") },
 
@@ -74,9 +78,11 @@ const ARMS = {
 
   c: { files: [STORE],
        label: "(C) THE LEGACY CLAIM BACK-FILLED from the conclusion text — claim := conclusion on read",
+       /* REC-136: the legacy read now starts from an undetermined claim and
+          upgrades only a verified adoption; the back-fill arms the starting value. */
        apply: () => edit(STORE,
-         "             claim: Store.#undeterminedClaim() };",
-         "             claim: { state: \"adopted\", text: s(fm.conclusion), version: null } };") },
+         "    let claim = Store.#undeterminedClaim();",
+         "    let claim = { state: \"adopted\", text: s(fm.conclusion), version: null };") },
 
   d: { files: [STORE],
        label: "(D) OVER-STRICTNESS: a project may NOT conclude a question whose own state is already "
@@ -84,6 +90,47 @@ const ARMS = {
        apply: () => edit(STORE,
          "if (!legalFrom.includes(\"concluded\") && !(pid && b.current_state === \"concluded\"))",
          "if (!legalFrom.includes(\"concluded\"))") },
+
+  /* ---- REC-136 (INVESTIGATIVE-SESSION.md §7.1 items 6-7) ---- */
+  e: { files: [STORE],
+       label: "(E) REPLACE-THE-ROW RESTORED: a project's new conclusion or withdrawal REPLACES its earlier "
+            + "entry for the question instead of appending — REC-124's writer, the defect item 7 names",
+       apply: () => edit(STORE,
+         "    let i = at + 1;\n"
+       + "    while (i < end && /^\\s{2,}(- )?\\S/.test(lines[i])) i++;\n"
+       + "    return [...lines.slice(0, i), ...block, ...lines.slice(i)].join(\"\\n\");",
+         "    const unquote = (s) => String(s).trim().replace(/^\"(.*)\"$/, \"$1\").trim();\n"
+       + "    let i = at + 1, rowStart = -1, rowEnd = -1;\n"
+       + "    while (i < end && /^\\s{2,}(- )?\\S/.test(lines[i])) {\n"
+       + "      if (/^\\s{2}- /.test(lines[i])) {\n"
+       + "        if (rowStart !== -1 && rowEnd === -1) rowEnd = i;\n"
+       + "        const m = /^\\s{2}- inquiry:\\s*(.+)$/.exec(lines[i]);\n"
+       + "        if (m && unquote(m[1]) === inquiryId) rowStart = i;\n"
+       + "      }\n"
+       + "      i++;\n"
+       + "    }\n"
+       + "    if (rowStart === -1) return [...lines.slice(0, i), ...block, ...lines.slice(i)].join(\"\\n\");\n"
+       + "    if (rowEnd === -1) rowEnd = i;\n"
+       + "    return [...lines.slice(0, rowStart), ...block, ...lines.slice(rowEnd)].join(\"\\n\");") },
+
+  f: { files: [STORE],
+       label: "(F) THE VERSION REQUIREMENT DROPPED: a no-project conclude naming no reading is accepted, as "
+            + "REC-124 built it, adopting nothing (an empty reading recorded, read undetermined)",
+       apply: () => {
+         edit(STORE, "    if (!pid && !vname)\n      return { ok: false, reason: \"NO_CLAIM\", target,",
+                     "    if (false)\n      return { ok: false, reason: \"NO_CLAIM\", target,");
+         edit(STORE, "    if (!v || v.state !== \"accepted\" || !claimText)",
+                     "    if (want && (!v || v.state !== \"accepted\" || !claimText))");
+         edit(STORE, "    adopted = { version: v.name, claim: claimText, leg_count: Number(v.leg_count) || 0 };",
+                     "    adopted = v ? { version: v.name, claim: claimText, leg_count: Number(v.leg_count) || 0 }\n"
+                   + "                : { version: \"\", claim: \"\", leg_count: legs.length };");
+       } },
+
+  g: { files: [CHECKS],
+       label: "(G) C-5.1 BLIND TO THE CONCLUSION RECORD: the append-only check reads `state_history` only, "
+            + "so a promote that rewrites a project's `conclusions` is never named",
+       apply: () => edit(CHECKS, "  for (const key of ['state_history', 'conclusions']) {",
+                                 "  for (const key of ['state_history']) {") },
 };
 
 const want = process.argv[2];
@@ -152,6 +199,9 @@ for (const r of results) console.log(`  ${r.arm.padEnd(9)} ${r.tally}   (${r.fai
 rmSync(PEN, { recursive: true, force: true });
 console.log(`\npen removed: ${PEN}`);
 
+/* REC-136's MEASUREMENT is recorded in the suite's own NEGATIVE CONTROL header
+   (the figures below are REC-124's, on REC-124's 43-assertion suite, kept as the
+   receipt). */
 /* MEASURED 2026-09-18, from this driver's own printed SUMMARY (worktree
    agent-a16f5d75eb9d8097c), every restore sha256 MATCH / content IDENTICAL:
      baseline  conclude-project: 43 pass, 0 fail

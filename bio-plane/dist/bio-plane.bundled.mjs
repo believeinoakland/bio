@@ -34226,6 +34226,8 @@ Subject position: ${pos} \u2014 ${just}
       text2 = _Store.#removeBlock(text2, "state_history");
       text2 = _Store.#setOrAddScalar(text2, "state_history", "[]");
       text2 = _Store.#setOrAddScalar(text2, "conclusion", `""`);
+      text2 = _Store.#setScalar(text2, "conclusion_version", `""`);
+      text2 = _Store.#setScalar(text2, "conclusion_claim", `""`);
       text2 = _Store.#setOrAddScalar(text2, "falsifier", `""`);
       text2 = _Store.#setOrAddScalar(text2, "falsifier_override_by", `""`);
       text2 = _Store.#setOrAddScalar(text2, "falsifier_override_at", `""`);
@@ -54226,6 +54228,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         legs: rec.legs
       };
     });
+    const concRec = project ? this.#conclusionRecordOf(project, inq, viewer) : null;
     return {
       ok: true,
       inquiry: inq,
@@ -54265,13 +54268,10 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
          from one that concluded and withdrew — and a history kept but never
          returned is a history nobody can read (DEC-19). `conclusion_stance` is
          the latest entry's state, `none` when there is no entry. */
-      ...project ? (() => {
-        const rec = this.#conclusionRecordOf(project, inq, viewer);
-        return {
-          conclusion_stance: rec.stance ? rec.stance.state : "none",
-          conclusion_history: rec.history
-        };
-      })() : {},
+      ...concRec ? {
+        conclusion_stance: concRec.stance ? concRec.stance.state : "none",
+        conclusion_history: concRec.history
+      } : {},
       /* REC-124 / §7.1 item 5: the inquiry's OWN conclusion, the no-project
          relationship's, with its claim STATED undetermined. Published whether or
          not a project is named, because it is a different relationship from any

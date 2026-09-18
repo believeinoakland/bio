@@ -81,6 +81,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- reviewcopy ---");
@@ -226,14 +227,22 @@ const Q = { [LEAD]: "Was the transfer authorised?", [LEAD2]: "Was notice given?"
             [LEAD3]: "Was the memo adopted?", [LEAD4]: "Was the auditor told?",
             [LEAD5]: "Who signed the memo?", [OPENQ]: "Is the fund solvent?" };
 if ((await promote(INFO, infoMd(INFO), "information", "collected")).ok === false) bail("promote info", {});
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM. These inquiries were concluded
+   with no reading because the act took none; the five this suite CONCLUDES now
+   carry one (`withAdoptableReading`) and the call names it. OPENQ is never
+   concluded and is left exactly as it was. */
 for (const id of Object.keys(Q)) {
-  const r = await promote(id, inquiryMd(id, Q[id], INFO), "inquiry", "open");
+  const md = inquiryMd(id, Q[id], INFO);
+  const r = await promote(id, id === OPENQ ? md : withAdoptableReading(md), "inquiry", "open");
   if (r.ok === false) bail(`promote ${id}`, r);
 }
 for (const id of [LEAD, LEAD2, LEAD3, LEAD4, LEAD5]) {
   const r = rP(await GET(`op=conclude&token=${IRIS}&target=${encodeURIComponent(id)}`
     + `&conclusion=${encodeURIComponent(`The answer to ${id} is on the memo.`)}`
-    + `&falsifier=${encodeURIComponent(`An adopted resolution would overturn ${id}.`)}`));
+    + `&falsifier=${encodeURIComponent(`An adopted resolution would overturn ${id}.`)}`
+    + adoptedVersionParam()));
   if (!r.ok) bail(`conclude ${id}`, r);
 }
 

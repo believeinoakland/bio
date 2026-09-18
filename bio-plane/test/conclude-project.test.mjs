@@ -31,6 +31,23 @@
  *  4. Commentary is attributed, labelled not-evidence, and never enters the
  *     strength pair or the legs.
  *
+ * REC-136 (§7.1 items 6-8, BOB #15, 2026-09-18) added, driven the same way:
+ *  2. (more doors) A NO-PROJECT conclude naming no reading, an uncarried one, an
+ *     accepted one with no claim, or one only suggested is refused NO_CLAIM and
+ *     writes nothing; a project naming a reading other than the one it stands
+ *     on is refused too.
+ *  3b. A no-project conclusion NAMING its reading adopts that reading's claim
+ *     word for word (answer, read and bytes); no project inherits it; a
+ *     HAND-AUTHORED adoption its reading does not bear out reads UNDETERMINED.
+ *  5. Conclude, WITHDRAW, conclude again leaves THREE entries readable in
+ *     order, each dated and authored, the stance the last. HOW A LIAR PASSES:
+ *     keep only the latest entry — every "the stance is right" assertion still
+ *     passes. So the arm reads the WHOLE history, and §1's re-conclude reads
+ *     both of A's conclusions. The withdrawal's refusals (no reason, a machine,
+ *     no project, nothing to withdraw, withdrawing twice) write nothing; the
+ *     other projects stop being told; and a promote that rewrites the history
+ *     is named by op=audit (C-5.1).
+ *
  * WHAT IT CANNOT SEE: op=publish / op=caseratify still read the INQUIRY's own
  * state (§7.1 item 4 is NOT built by REC-124 — said in the report), so nothing
  * here drives a project's conclusion into a case. The sharing edge is

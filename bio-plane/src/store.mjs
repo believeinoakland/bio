@@ -9042,6 +9042,13 @@ export class Store extends DurableObject {
          parent carries both, and carrying them forward would put the parent's
          conclusion on an open question nobody has answered. */
       text = Store.#setOrAddScalar(text, "conclusion", `""`);
+      /* REC-136: and the reading the parent's conclusion ADOPTED (§7.1 item 6)
+         is the parent's answer too — cleared for the rule above. #setScalar,
+         not setOrAdd: a parent concluded before item 6 carries neither key,
+         and adding two empty ones to its children would be bytes nobody asked
+         for. */
+      text = Store.#setScalar(text, "conclusion_version", `""`);
+      text = Store.#setScalar(text, "conclusion_claim", `""`);
       text = Store.#setOrAddScalar(text, "falsifier", `""`);
       /* REC-117, AND IT IS THE SECOND HALF OF THE SAME RULE THE THREE LINES
          ABOVE STATE. A parent concluded under a falsifier override carries the
@@ -30735,6 +30742,9 @@ export class Store extends DurableObject {
         legs: rec.legs,
       };
     });
+    /* REC-136 / §7.1 item 7: the named project's WHOLE conclusion record, read
+       once through the ONE reader, for the answer below. */
+    const concRec = project ? this.#conclusionRecordOf(project, inq, viewer) : null;
     return {
       ok: true,
       inquiry: inq,
@@ -30771,11 +30781,8 @@ export class Store extends DurableObject {
          from one that concluded and withdrew — and a history kept but never
          returned is a history nobody can read (DEC-19). `conclusion_stance` is
          the latest entry's state, `none` when there is no entry. */
-      ...(project ? (() => {
-        const rec = this.#conclusionRecordOf(project, inq, viewer);
-        return { conclusion_stance: rec.stance ? rec.stance.state : "none",
-                 conclusion_history: rec.history };
-      })() : {}),
+      ...(concRec ? { conclusion_stance: concRec.stance ? concRec.stance.state : "none",
+                      conclusion_history: concRec.history } : {}),
       /* REC-124 / §7.1 item 5: the inquiry's OWN conclusion, the no-project
          relationship's, with its claim STATED undetermined. Published whether or
          not a project is named, because it is a different relationship from any
