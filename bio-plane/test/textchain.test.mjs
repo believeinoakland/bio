@@ -495,7 +495,13 @@ const codesUsed = ["TEXT_CHAIN_COLLAPSED", "TEXT_CHAIN_EMPTY", "TEXT_CHAIN_STEP_
      that declares its letter must be CALIBRATED (`convert`) when no calibration
      is named. The totality assertion below is what would have caught the list
      going stale. */
-  "TEXT_CHAIN_LETTER_UNCALIBRATED"];
+  "TEXT_CHAIN_LETTER_UNCALIBRATED",
+  /* CORRECTED 2026-09-18 by REC-87 (Bob's 5.2, IC-127), never exempted, for the
+     same reason as the two lines above: `checkChain` now refuses a letter on a
+     step kind whose letter is NEVER written on the step (`member` — a person's
+     typing, raised only by a SECOND member's attestation). The totality
+     assertion below caught this list going stale on the first run. */
+  "TEXT_CHAIN_LETTER_ON_PERSON"];
 t("every code this module can mint has a row", codesUsed.filter((c) => !TEXT_CHAIN_CHECKS[c]), []);
 t("every row carries a C-number", Object.values(TEXT_CHAIN_CHECKS).filter((r) => !/^C-35\.\d+$/.test(r.check)).length, 0);
 t("every row carries a member-facing translation",
@@ -533,6 +539,9 @@ const CHECK_ARMS = [
   /* CAP-10 / DEC-75. A CONVERSION claiming a letter with no measurement behind
      it — the move Bob's 5.8 forbids (a letter now, lowered later). */
   ["C-35.13", () => checkChain([{ step: "convert", engine: "google-export", format: "odt", cap: "B" }])],
+  /* REC-87 / IC-127. A MEMBER's typing claiming a letter — the typist grading
+     their own work, one altitude below C-52.9's refusal of the same thing. */
+  ["C-35.14", () => checkChain([{ step: "member", member: "ruth", text_sha256: "0".repeat(64), cap: "A" }])],
 ];
 for (const [number, drive] of CHECK_ARMS) {
   const r = drive();

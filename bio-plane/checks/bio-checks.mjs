@@ -9432,6 +9432,18 @@ export const TEXT_CHAIN_CHECKS = {
       + 'tell what the conversion changed until it has compared the copies — so until then it says '
       + '"not yet determined" rather than giving a grade it has not earned.',
   },
+  /* REC-87 / IC-127. A step kind whose letter is NEVER written on the step
+     (`STEP_KINDS[k].letter === "never"`) — today only `member`, a member typing
+     a portion's text (Bob's 5.2). A person has no calibration, so the one route
+     to a letter is a SECOND member's attestation; a letter on the step would be
+     the typist grading their own work. */
+  TEXT_CHAIN_LETTER_ON_PERSON: {
+    check: 'C-35.14',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'This says how faithful a member\'s own typing of the page is. Nobody grades their '
+      + 'own transcription: what a member typed stays "not yet determined" until a different member '
+      + 'checks it against the page and says it matches.',
+  },
 };
 
 /* ============================================================================
@@ -10877,6 +10889,89 @@ export const NARROW_CHECKS = {
     translation: 'The new reading needs a short account of what changed and why — which citation now '
       + 'points at less of its document, and what makes that part the one that matters. That account '
       + 'is what a later reader has to go on.',
+  },
+};
+
+/* =====================================================================
+ * REC-87 / IC-128 — TRANSCRIBE (Bob's 5.2): a member selects a portion of a
+ * document and types its text. C-52, minted with `node tools/mintid.mjs C`.
+ *
+ * ITS OWN FAMILY, because the subject is its own: the ways a member's typing of
+ * a page could come to claim more than one person's word supports. C-35 is the
+ * chain grammar (and carries the one rule that belongs there — C-35.14, no
+ * letter on a person's step); C-45 is the extent grammar, returned VERBATIM
+ * when a portion is malformed; C-35.10 refuses a machine ATTESTOR, unchanged
+ * and not restated here. What is here is the act's own:
+ *
+ *   is-transcribe-act            who typed, which document, whether a portion was named
+ *   is-transcribe-portion        a portion a second member could attest, and the text
+ *                                (C-45's extent grammar runs BETWEEN the two, verbatim)
+ *   is-transcription-source      which transcription an attestation or a read names
+ *   is-transcription-attest      THE REFUSAL THE ITEM EXISTS FOR — the transcriber
+ *                                attesting their own transcription (the equality
+ *                                that costs nothing, one altitude up from two
+ *                                empty-body digests agreeing)
+ * ===================================================================== */
+export const TRANSCRIBE_CHECKS = {
+  TRANSCRIBE_NOT_A_MEMBER: {
+    check: 'C-52.1',
+    where: 'src/store.mjs transcribe > is-transcribe-act',
+    translation: 'Transcribing is a person reading the page and typing what it says, in their own '
+      + 'name. The credential that asked is an automated one: a machine reading of a page is OCR, '
+      + 'which the record already carries and labels as such. Sign in and type it yourself.',
+  },
+  TRANSCRIBE_NO_DOCUMENT: {
+    check: 'C-52.2',
+    where: 'src/store.mjs transcribe > is-transcribe-act',
+    translation: 'That request does not name a document this record holds and you can read. A '
+      + 'transcription is of a part of a document, so it needs the document first.',
+  },
+  TRANSCRIBE_NO_BYTES: {
+    check: 'C-52.3',
+    where: 'src/store.mjs transcribe > is-transcribe-act',
+    translation: 'This record holds no copy of that document, so there is no page to transcribe. A '
+      + 'transcription is tied to the exact copy it was typed from, so the copy has to be captured '
+      + 'first.',
+  },
+  TRANSCRIBE_NO_PORTION: {
+    check: 'C-52.4',
+    where: 'src/store.mjs transcribe > is-transcribe-act',
+    translation: 'That request does not say which part of the document you transcribed. Select the '
+      + 'page or the region you read — a transcription with no stated part would be read as covering '
+      + 'the whole document, which is a claim you did not make.',
+  },
+  TRANSCRIBE_PORTION_UNREADABLE: {
+    check: 'C-52.5',
+    where: 'src/store.mjs transcribe > is-transcribe-portion',
+    translation: 'The part you selected is one this record cannot yet check a transcription against '
+      + '— a spreadsheet cell, a paragraph or a slide shape, or an image cited as itself rather than '
+      + 'as text. A second member could not attest a transcription of it, so it is refused rather '
+      + 'than left unable ever to be checked. Select a page or a region of a page.',
+  },
+  TRANSCRIBE_NO_TEXT: {
+    check: 'C-52.6',
+    where: 'src/store.mjs transcribe > is-transcribe-portion',
+    translation: 'The transcription is empty. Type what the selected part of the page says; nothing '
+      + 'is filled in for you.',
+  },
+  TRANSCRIBE_TEXT_TOO_LONG: {
+    check: 'C-52.7',
+    where: 'src/store.mjs transcribe > is-transcribe-portion',
+    translation: 'The transcription is longer than one passage this record stores. Select a smaller '
+      + 'part of the page and transcribe it on its own; the parts can each be checked and cited.',
+  },
+  TRANSCRIPTION_NOT_FOUND: {
+    check: 'C-52.8',
+    where: 'src/store.mjs #transcriptionOf > is-transcription-source',
+    translation: 'That request does not name a transcription this record holds and you can read. '
+      + 'A transcription is named by the content id its own transcribe act returned.',
+  },
+  TRANSCRIPTION_SELF_ATTEST: {
+    check: 'C-52.9',
+    where: 'src/store.mjs transcriptionAttest > is-transcription-attest',
+    translation: 'You typed this transcription, so you cannot be the one who attests it. An '
+      + 'attestation is a SECOND person checking the text against the page; your own agreement with '
+      + 'your own typing costs nothing and proves nothing. Ask another member to check it.',
   },
 };
 

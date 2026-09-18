@@ -9537,3 +9537,139 @@ never narrowed lands exactly as before — its leg on the same whole-document ro
 NOT-AFFECTED.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at REC-86's integration — I3 23.2.0 → 23.3.0, MINOR (additive, as classed).** Base read AT RESOLUTION: 23.2.0 (FW-19's IC-125 took 23.2.0 in the same wave). SKILL and DIST NOT-AFFECTED — CONDUCT answers FOR both (neither calls a new op; an op nobody asks for cannot be observed), named as such. **UI's act is OWED, not waived:** the NARROW affordance on a leg is delegated in `CLAIMS.md` and, per the worker, also waits on UI-62's page picker. **One scope note recorded at resolution:** REC-86's draft of the content framework's connection-pair row claimed the ON-POINT connection choice built; CONDUCT declined that cell at merge — REC-86 narrows a LEG, and the connection-side choice is `REC-120`.
+
+## IC-127 · I2: THE CHAIN GRAMMAR GAINS A STEP KIND — `member(handle)`, a member TYPED the text of a portion, a DERIVATION whose cap is UNDETERMINED by the kind's own declaration and on which a letter is REFUSED · PROPOSED 2026-09-18 (REC-87, enacting Bob's 5.2; minted at spawn with `node tools/mintid.mjs IC`) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I2 (the reader/chain grammar, `bio-plane/src/textchain.mjs` `STEP_KINDS`). **Version
+  read off THIS TREE's `docs/development/INTERFACES.md`: 2.4.0** (IC-122 ACCEPTED). **Proposed as
+  MINOR — 2.4.0 → 2.5.0, ADDITIVE.** **Read the base AT RESOLUTION.** FRAMEWORK, I2's consumer
+  owner, is DORMANT; CONDUCT answers for it, as it did for IC-122.
+- **Proposer:** RECORD, worker `agent-a4f337d8455ba96c8`, 2026-09-18, from QUEUE REC-87
+- **Owner to land it:** `RECORD` (proposer)
+- **Consumers to answer:** `FRAMEWORK` (dormant — CONDUCT answers for it), `RECORD`, `UI`
+  (NOT-AFFECTED expected: nothing in `civicos-ui/` switches on a step kind — measured below).
+- **Design:** `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §5.2 (RULED 2026-09-14: *"there
+  should be a direct means for a member to select a section of a document and type in their
+  transcription of that content"* — authored text, cap undetermined and stated, a SECOND member's
+  attestation raises it, no member grading their own act); `BIO_Content_Framework_v0_10.md` Part II
+  §14.2 and §14.4.
+
+**THE SHAPE.** `{ step: "member", member: <handle>, text_sha256: <sha256 of the typed text> }`.
+`STEP_KINDS.member = { role: "derivation", label: "a member typed the text", tier: null,
+names: ["member"], unmeasured: "undetermined", letter: "never" }`. Every property is one a rule
+already reads — nothing tests the word `member`:
+
+1. **`role: "derivation"`** — the typing PRODUCED the text; there is no machine output it verifies.
+   Rule 2 governs it like every step that produced text. What raises it is `gradeCeiling` over a
+   covering attestation, unchanged.
+2. **`names: ["member"]`** — a member step naming nobody is refused C-35.5 (existing row).
+3. **`unmeasured: "undetermined"`** — CAP-10's property, and for this kind it is the WHOLE cap, not an
+   edge case: `derivationCap` answers UNDETERMINED over a member step's extent even beside a measured
+   OCR letter, so a letter measured on OTHER text can never bound what a person typed (the swallow
+   CAP-10 found; driven, `transcribe.test.mjs` §1). `captureBound` follows with no code.
+4. **`letter: "never"`** — a NEW declared value. `checkChain` refuses any `cap` on such a step as
+   **C-35.14 `TEXT_CHAIN_LETTER_ON_PERSON`** (one new row in the existing C-35 family, inside the
+   existing `is-text-chain-shape` region). Not `calibrated`: a person has no calibration to name.
+5. **`tier: null`** — typing is not an extraction rung (`tiersEvidenced` skips it, declared).
+
+`describeChain` names who typed — *"a member typed the text (ruth)"* — as it already did for
+`attested`.
+
+**WHY IT IS ADDITIVE.** No existing step changes; no chain the record holds changes (the over-
+strictness pins in `transcribe.test.mjs` §0 are byte-identical against an archive of 694f0a7f's
+tracked tree). The member step is written ONLY by `op=transcribe` (IC-128) and only into a CONTENT
+ROW's chain — it is NEVER appended to a capture's reading chain, so `reading_text_source`,
+`op=textprovenance`'s rows, `captureBound` on the capture axis and every reading are untouched.
+
+**THE ONE PLACE A CONSUMER COULD SEE IT WITHOUT ASKING:** two published vocabularies are DERIVED from
+`Object.keys(STEP_KINDS)` and each gains the value `member` — `op=textprovenance`'s `kinds` list and
+the query compiler's `content:chain` vocabulary (`query.mjs`). Both were built to follow the registry
+(`query.mjs` says so at the site); a consumer rendering the list renders one more entry.
+
+**CONSUMER IMPACT, MEASURED.** `grep -rln -E '\.step ===|step === "|STEP_KINDS'` over `civicos-ui/`,
+`agent-worker/`, `pdf-worker/`, `ocr-worker/` answers files in `agent-worker/` and `civicos-ui/`;
+every `agent-worker/` match is the investigation loop's own `decision.step`
+(`close`/`adjust`/`next-pass`) — a different field; `civicos-ui/app.html` matches `"attested"` only as
+a WEIGHT-LADDER RUNG name, never as a chain step. **Zero consumers switch on a chain step kind outside
+the plane.** Inside the plane, `textchain.test.mjs`'s family-totality list was CORRECTED (not
+exempted) for C-35.14 and a CHECK_ARMS row drives it.
+
+**RESPONSES:** not yet collected. FRAMEWORK dormant (CONDUCT answers); UI expected NOT-AFFECTED.
+
+## IC-128 · I3: TRANSCRIBE — `op=transcribe` (a member types a selected portion's text), `op=transcriptionattest` (a SECOND member attests it; the typist's own is refused by name), `op=transcription` (the read) · PROPOSED 2026-09-18 (REC-87, minted at spawn with `node tools/mintid.mjs IC`) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`: 23.3.0** (IC-123 ACCEPTED). **Proposed as MINOR — 23.3.0 →
+  23.4.0, ADDITIVE.** Three new ops; one new refusal family **C-52** (`TRANSCRIBE_CHECKS`, nine rows)
+  reachable only through them; one row added to C-35 (IC-127). **Read the base AT RESOLUTION.**
+- **Proposer:** RECORD, worker `agent-a4f337d8455ba96c8`, 2026-09-18, from QUEUE REC-87
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (the act — NOT built by this item, DELEGATED in `CLAIMS.md`),
+  `SKILL` and `DIST` (NOT-AFFECTED expected: neither calls a new op), `RECORD`.
+- **Design:** as IC-127. I5's `content` table is written through its ONE existing writer
+  (`mintContent`) with no column change; two NEW tables (`transcriptions`,
+  `transcription_attestations`) hold the typed text and the second members' attestations, both in
+  `purge`'s list.
+
+**THE SHAPE.**
+
+`POST op=transcribe` body `{ bundleId, extent: {kind, page, rect, …}, text, at? }` — classes
+admin/member, `mutating: true`, SESSION route; `transcriber` and `viewer` are STAMPED by the control
+plane (a caller's own is overwritten; a machine credential stamps `class:<cls>`). `extent` is IC-1's
+object form, `op=contentmint`'s. Answers `{ ok, minted, content_id, bundle_id, capture_sha,
+extent_kind, extent, ref, transcriber, text_sha256, bytes, chain, chain_says, derivation_cap,
+transcription: {ceiling, determinant, by, why}, says }`. The typing is a content row minted through
+`mintContent` with `chain = [member(handle)]`, so its id differs from every machine row over the
+same passage; the same member re-typing the same text over the same portion FINDS their row
+(`minted: false`); different text is a different row; and a different member's identical text is
+their own row. A leg cites it by `content_id` exactly as any row.
+
+`POST op=transcriptionattest` body `{ contentId, at?, note? }` — classes admin/member, SESSION route,
+`attestor` stamped. The attestation's extent is DERIVED from the typed portion (`document` | `page` |
+`region`), never taken from the caller. Answers `{ ok, content_id, transcriber, attestor, at, extent,
+ceiling_before, transcription, says }`.
+
+`GET op=transcription&id=<content_id>` — classes admin/member/probe, viewer-GATED (an invisible
+typing answers as absent). Answers `{ ok, content_id, bundle_id, capture_sha, extent_kind, extent,
+ref, transcriber, at, text, text_sha256, chain, chain_says, derivation_cap, transcription,
+attestations: [{attestor, at, note, counts}], says }`.
+
+**WHAT MOVES ON EXISTING OPS — VALUES ON NEW ROWS ONLY, NO KEY ADDED OR REMOVED.** On a TRANSCRIPTION
+row, `op=content`, `op=earnedbasis`'s `earned.content` and `promote`'s registry answer the ceiling from
+the typing's OWN attestations by members other than the typist — never from the capture's
+`text_attestations`, which checked the machine text — and `op=content`'s `attestations.{all,covering}`
+list those, with a `why` sentence saying so. Every NON-transcription row's answer is BYTE-IDENTICAL
+(pinned against the pristine tree for `op=content` on a machine row, `op=attesttext` and
+`op=textattest`). A machine RE-READ of the capture does NOT stale a typing (`#markContentStale`
+excludes it: nothing the member typed from changed), while machine rows stale exactly as before.
+
+**WHAT IT REFUSES, C-52:** `TRANSCRIBE_NOT_A_MEMBER` (.1, any machine stamp), `TRANSCRIBE_NO_DOCUMENT`
+(.2, absent, invisible or not a document — one answer), `TRANSCRIBE_NO_BYTES` (.3),
+`TRANSCRIBE_NO_PORTION` (.4, **no portion selected**), `TRANSCRIBE_PORTION_UNREADABLE` (.5, a part no
+second member could attest — an arm with no coverage evaluator, or an image cited as bytes),
+`TRANSCRIBE_NO_TEXT` (.6, nothing is prefilled), `TRANSCRIBE_TEXT_TOO_LONG` (.7, over
+`CAPTURE_TEXT_UNIT_CAP`, refused never truncated), `TRANSCRIPTION_NOT_FOUND` (.8, including a machine
+row's id — `op=attesttext` is the act for machine text), **`TRANSCRIPTION_SELF_ATTEST` (.9, the
+typist attesting their own typing — refused by name at the act AND excluded at every read)**. A
+malformed portion is C-45's refusal VERBATIM; a machine ATTESTOR is C-35.10's VERBATIM
+(`checkAttestation`, unchanged). **One C-45 question is asked under the TYPING's chain, not the
+capture's, and it is a decision:** C-45.2 refuses a part of a capture that holds no extraction chain
+("no transcription over it to point at"), and a scan no engine could read is exactly such a capture —
+Bob's own case. The typing IS the transcription over the portion, so the act asks C-45.2 under the
+chain it is writing and a chainless capture CAN be typed. Found by the item's `routing` control arm,
+whose chainless fixture was refused C-45.2 before this; the `chainless` arm reverts it and fails.
+
+**WHAT IS DELIBERATELY NOT IN THIS IC.** (1) The UI act — a portion selection and a text field,
+nothing prefilled — `civicos-ui/**` is UI's; DELEGATED. (2) The office arms (`sheet-cell`,
+`doc-para`, `slide-shape`, `sheet-range`, `doc-table`) are refused C-52.5 because no attestation extent
+can cover them yet (`checkAttestation`'s grammar is `document | page | region`); widening that grammar
+is a separate I2 change nobody has asked for. (3) Withdrawing a typing — there is no such act; a member
+types again (a new row).
+
+**CONSUMER IMPACT, MEASURED.** `grep -rn -E 'op=transcri|"transcribe"|transcriptionattest|op=transcription'`
+over `civicos-ui/`, `agent-worker/`, `pdf-worker/`, `ocr-worker/`, `newgroup/` answers THREE lines, all
+in `ocr-worker/` — that fleet member's own `POST /transcribe` route (src, its test, its bundle), a
+DIFFERENT worker's HTTP path and not a plane op. Zero consumers of the new ops.
+`test/transcribe.test.mjs` drives all three ops end to end under signed-in members.
+
+**RESPONSES:** not yet collected. UI to answer on the act; SKILL and DIST expected NOT-AFFECTED.

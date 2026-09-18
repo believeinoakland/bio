@@ -3273,6 +3273,52 @@ CREATE INDEX IF NOT EXISTS capture_text_bundle ON capture_text(bundle_id);
 -- measurement, the way REC-90 did for the content table.
 -- =========================================================================
 
+-- =========================================================================
+-- REC-87 / IC-128 -- TRANSCRIBE (Bob's 5.2). A member selects a portion of a
+-- document and types what it says. The PORTION is a content row (content_id
+-- is the hash of the capture, the canonical extent and a chain whose one step
+-- is member(handle) carrying the digest of the text), so the row says WHERE and
+-- WHO. This table holds the one thing a content row has no column for -- the
+-- TEXT the member typed -- keyed by that row.
+--
+-- ONE ROW PER CONTENT ROW, AND NEVER REWRITTEN. The digest is in the chain and
+-- the chain is in the id, so different text is a different row by construction
+-- and a re-typing of the same text by the same member finds the same row. The
+-- write is INSERT OR IGNORE, on the content table's own rule.
+--
+-- NOT DERIVED, AND PURGED. A member's typing is authored and nothing re-derives
+-- it, but it carries bundle_id, so it rides op=purge's TABLES list and clears
+-- in both arms (D-113) with the content rows it describes.
+CREATE TABLE IF NOT EXISTS transcriptions (
+  content_id   TEXT PRIMARY KEY,  -- the content row the member minted by typing
+  capture_sha  TEXT NOT NULL,     -- the exact copy the text was typed from
+  bundle_id    TEXT NOT NULL,     -- purge, and the viewer gate
+  transcriber  TEXT NOT NULL,     -- a member id, never a machine stamp (C-52.1)
+  text         TEXT NOT NULL,     -- what the member typed, byte for byte
+  text_sha256  TEXT NOT NULL,     -- the digest the chain step carries
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS transcriptions_bundle ON transcriptions(bundle_id);
+-- By CAPTURE: the stale pass excludes a capture's transcriptions on every
+-- re-read, and that exclusion must be a seek rather than a scan.
+CREATE INDEX IF NOT EXISTS transcriptions_capture ON transcriptions(capture_sha, content_id);
+-- A SECOND MEMBER'S ATTESTATION OF ONE TRANSCRIPTION. Separate from
+-- text_attestations and on purpose: those attest the CAPTURE's machine text
+-- over an extent, and an attestation of a member's typing is testimony about
+-- DIFFERENT text. Folding them together would let a check of the OCR raise a
+-- member's typing, or the reverse. The transcriber is never an attestor here
+-- (C-52.9, refused at the act and excluded again at every read).
+CREATE TABLE IF NOT EXISTS transcription_attestations (
+  content_id   TEXT NOT NULL,
+  bundle_id    TEXT NOT NULL,     -- purge
+  attestor     TEXT NOT NULL,     -- a member id, never a machine stamp (C-35.10)
+  at           TEXT NOT NULL,
+  note         TEXT,
+  PRIMARY KEY (content_id, attestor)
+);
+CREATE INDEX IF NOT EXISTS transcription_attestations_bundle ON transcription_attestations(bundle_id);
+-- =========================================================================
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
@@ -3575,6 +3621,7 @@ __export(bio_checks_exports, {
   SUGGEST_KINDS: () => SUGGEST_KINDS,
   SUGGEST_LEVELS: () => SUGGEST_LEVELS,
   TEXT_CHAIN_CHECKS: () => TEXT_CHAIN_CHECKS,
+  TRANSCRIBE_CHECKS: () => TRANSCRIBE_CHECKS,
   UNREACHABLE_CAPTURE_GRADE: () => UNREACHABLE_CAPTURE_GRADE,
   VERSION_ACT_CHECKS: () => VERSION_ACT_CHECKS,
   VERSION_CHAIN_CHECKS: () => VERSION_CHAIN_CHECKS,
@@ -10122,6 +10169,16 @@ var TEXT_CHAIN_CHECKS = {
     check: "C-35.13",
     where: "src/textchain.mjs checkChain > is-text-chain-shape",
     translation: 'This step says how faithful a conversion of the document was, but nobody has measured that. When a site hands us its own converted copy of a file, the record cannot tell what the conversion changed until it has compared the copies \u2014 so until then it says "not yet determined" rather than giving a grade it has not earned.'
+  },
+  /* REC-87 / IC-127. A step kind whose letter is NEVER written on the step
+     (`STEP_KINDS[k].letter === "never"`) — today only `member`, a member typing
+     a portion's text (Bob's 5.2). A person has no calibration, so the one route
+     to a letter is a SECOND member's attestation; a letter on the step would be
+     the typist grading their own work. */
+  TEXT_CHAIN_LETTER_ON_PERSON: {
+    check: "C-35.14",
+    where: "src/textchain.mjs checkChain > is-text-chain-shape",
+    translation: `This says how faithful a member's own typing of the page is. Nobody grades their own transcription: what a member typed stays "not yet determined" until a different member checks it against the page and says it matches.`
   }
 };
 var CALIBRATION_CHECKS = {
@@ -10902,6 +10959,53 @@ var NARROW_CHECKS = {
     check: "C-50.11",
     where: "src/store.mjs narrow > is-narrow-claim",
     translation: "The new reading needs a short account of what changed and why \u2014 which citation now points at less of its document, and what makes that part the one that matters. That account is what a later reader has to go on."
+  }
+};
+var TRANSCRIBE_CHECKS = {
+  TRANSCRIBE_NOT_A_MEMBER: {
+    check: "C-52.1",
+    where: "src/store.mjs transcribe > is-transcribe-act",
+    translation: "Transcribing is a person reading the page and typing what it says, in their own name. The credential that asked is an automated one: a machine reading of a page is OCR, which the record already carries and labels as such. Sign in and type it yourself."
+  },
+  TRANSCRIBE_NO_DOCUMENT: {
+    check: "C-52.2",
+    where: "src/store.mjs transcribe > is-transcribe-act",
+    translation: "That request does not name a document this record holds and you can read. A transcription is of a part of a document, so it needs the document first."
+  },
+  TRANSCRIBE_NO_BYTES: {
+    check: "C-52.3",
+    where: "src/store.mjs transcribe > is-transcribe-act",
+    translation: "This record holds no copy of that document, so there is no page to transcribe. A transcription is tied to the exact copy it was typed from, so the copy has to be captured first."
+  },
+  TRANSCRIBE_NO_PORTION: {
+    check: "C-52.4",
+    where: "src/store.mjs transcribe > is-transcribe-act",
+    translation: "That request does not say which part of the document you transcribed. Select the page or the region you read \u2014 a transcription with no stated part would be read as covering the whole document, which is a claim you did not make."
+  },
+  TRANSCRIBE_PORTION_UNREADABLE: {
+    check: "C-52.5",
+    where: "src/store.mjs transcribe > is-transcribe-portion",
+    translation: "The part you selected is one this record cannot yet check a transcription against \u2014 a spreadsheet cell, a paragraph or a slide shape, or an image cited as itself rather than as text. A second member could not attest a transcription of it, so it is refused rather than left unable ever to be checked. Select a page or a region of a page."
+  },
+  TRANSCRIBE_NO_TEXT: {
+    check: "C-52.6",
+    where: "src/store.mjs transcribe > is-transcribe-portion",
+    translation: "The transcription is empty. Type what the selected part of the page says; nothing is filled in for you."
+  },
+  TRANSCRIBE_TEXT_TOO_LONG: {
+    check: "C-52.7",
+    where: "src/store.mjs transcribe > is-transcribe-portion",
+    translation: "The transcription is longer than one passage this record stores. Select a smaller part of the page and transcribe it on its own; the parts can each be checked and cited."
+  },
+  TRANSCRIPTION_NOT_FOUND: {
+    check: "C-52.8",
+    where: "src/store.mjs #transcriptionOf > is-transcription-source",
+    translation: "That request does not name a transcription this record holds and you can read. A transcription is named by the content id its own transcribe act returned."
+  },
+  TRANSCRIPTION_SELF_ATTEST: {
+    check: "C-52.9",
+    where: "src/store.mjs transcriptionAttest > is-transcription-attest",
+    translation: "You typed this transcription, so you cannot be the one who attests it. An attestation is a SECOND person checking the text against the page; your own agreement with your own typing costs nothing and proves nothing. Ask another member to check it."
   }
 };
 function checkContentExtent(extent, ctx = {}) {
@@ -13993,7 +14097,16 @@ var RUNG_ABSENT = {
      hidden or rejected by the existing version acts, which records a second act
      rather than undoing the first. The act writes a NEW reading, born `suggested`,
      and moves nothing existing — so it is corrected forward and never signed. */
-  narrow: { ground: "undetermined", is: "a member writes a NEW reading of a question's evidence with one citation pointing at LESS of its document; the old reading and its citation are untouched, and the new one is born suggested (Bob's 5.3)" }
+  narrow: { ground: "undetermined", is: "a member writes a NEW reading of a question's evidence with one citation pointing at LESS of its document; the old reading and its citation are untouched, and the new one is born suggested (Bob's 5.3)" },
+  /* REC-87 / IC-128 — TRANSCRIBE and the attestation of a typing. Ground
+     `undetermined` on `attesttext`'s and `narrow`'s measurement: neither act's
+     refusals are in `JUSTIFICATION_REFUSALS` (an empty typing, C-52.6, is not a
+     missing justification), and widening that class to admit them would be this
+     item re-grading the ladder to suit itself. NOT `reversible`: nothing takes a
+     typing back — a member types again, which is a DIFFERENT content row, and an
+     attestation is superseded by the same attestor's later one, never withdrawn. */
+  transcribe: { ground: "undetermined", is: "a member types what a selected portion of a document says, in their own name; the typing is a content row whose chain is member(handle), its fidelity undetermined and stated until a DIFFERENT member attests it (Bob's 5.2)" },
+  transcriptionattest: { ground: "undetermined", is: "a member's TESTIMONY that ANOTHER member's typing of a portion matches the page; raises what a leg citing that typing may claim, and is refused to the typist themself (C-52.9)" }
 };
 var CAPTURE_ACTS = [
   /* op=attest. The verb is "co-attest" because the group is not the only
@@ -19781,6 +19894,51 @@ var STEP_KINDS = {
     names: ["engine", "format"],
     unmeasured: "undetermined",
     letter: "calibrated"
+  },
+  /* REC-87 / IC-127 — A MEMBER TYPED THE TEXT (Bob's 5.2, CONTENT-EXTENT-DESIGN-
+       SPACE.md §5.2). The case it exists for is his: a hundred-year-old title, a
+       photocopy of a mimeograph, terms in cursive no engine reads and a person can.
+       The member selects a portion and types what it says.
+  
+       A DERIVATION, NOT A VERIFICATION, and that is the ruling rather than a
+       classification of convenience: there is no machine text the member is
+       checking — they PRODUCED the text, so it is authored with the provenance of an
+       authored act, and rule 2 governs it like any other step that produced text.
+       What RAISES it is a SECOND member's attestation (`gradeCeiling`, unchanged),
+       never the transcriber's own — the store refuses that by name (C-52).
+  
+       `member(handle)` is carried as `{ step: "member", member: <handle>,
+       text_sha256: <digest of the typed text> }`. The digest binds the step to the
+       text it produced, so a content row's id (hash of capture, extent, chain)
+       differs for different text and an attestation of one typing can never be read
+       as an attestation of another.
+  
+       THREE DECLARED PROPERTIES, each read by a rule rather than by a test against
+       the word "member":
+  
+         `names`      the member must be named (C-35.5) — a transcription nobody
+                      typed is not one.
+         `unmeasured` "undetermined", CAP-10's property, and HERE IT IS NOT AN EDGE
+                      CASE — it is the whole of the member's cap. A person is not an
+                      engine with a calibration; the sequence rule (an unmeasured step
+                      neither raises nor lowers) would let an OCR letter measured on
+                      OTHER text silently bound what the member typed, which is the
+                      swallow this property exists to refuse. `derivationCap` answers
+                      UNDETERMINED over the member's extent, and so `captureBound`
+                      does too, with no code beyond the kind.
+         `letter`     "never": a letter on this step is refused (C-35.14). Not
+                      "calibrated" — there is no calibration of a person to name, so
+                      the permitted route to a letter is the attestation, and only
+                      that.
+  
+       `tier: null` — typing is not a rung on the extraction ladder. */
+  member: {
+    role: "derivation",
+    label: "a member typed the text",
+    tier: null,
+    names: ["member"],
+    unmeasured: "undetermined",
+    letter: "never"
   }
 };
 var CONFIDENCE_BASES = { engine: 1, none: 1 };
@@ -19871,6 +20029,11 @@ function checkChain(chain2) {
       return refusal2(
         "TEXT_CHAIN_LETTER_UNCALIBRATED",
         `the ${step.step} step claims fidelity ${JSON.stringify(step.cap)} and names no calibration. A ${step.step} step's cap is UNDETERMINED until a measurement of it exists, and a letter written here without one would be the record claiming a fidelity nobody measured`
+      );
+    if (STEP_KINDS[step.step].letter === "never" && step.cap != null)
+      return refusal2(
+        "TEXT_CHAIN_LETTER_ON_PERSON",
+        `the ${step.step} step claims fidelity ${JSON.stringify(step.cap)}. What a member typed is UNDETERMINED until a SECOND member attests it against the page; a letter on the step itself would be the typist grading their own work`
       );
   }
   return null;
@@ -20002,7 +20165,7 @@ function describeChain(chain2) {
     const base = STEP_KINDS[s.step].label;
     const into = (STEP_KINDS[s.step].names || []).includes("format") && s.format ? ` to ${s.format}` : "";
     const who = s.engine ? ` (${s.engine}${s.version ? ` ${s.version}` : ""}${into})` : "";
-    const by = s.step === "attested" && s.member ? ` (${s.member}${s.at ? `, ${s.at}` : ""})` : "";
+    const by = (s.step === "attested" || s.step === "member") && s.member ? ` (${s.member}${s.at ? `, ${s.at}` : ""})` : "";
     const ext = extentOf(s);
     const over = STEP_KINDS[s.step].role === "derivation" && ext !== "all" ? ext === "unreadable" ? " (over an extent this record cannot read)" : ` (${pageList(ext)})` : "";
     return base + who + by + over;
@@ -37755,6 +37918,367 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     return { ok: true, minted: out.minted, capture_sha: sha, ...this.contentRow(out.content_id) };
   }
   /* ====================================================================== *
+   * REC-87 / IC-127 / IC-128 — TRANSCRIBE (Bob's 5.2).
+   * ====================================================================== *
+   *
+   * A member selects a portion of a document and types what it says. Bob's case:
+   * a hundred-year-old title, a photocopy of a mimeograph, terms in cursive no
+   * engine reads and a person can. RULED 2026-09-14 (CONTENT-EXTENT-DESIGN-SPACE
+   * §5.2): the typing is AUTHORED text with the provenance of an authored act,
+   * its cap UNDETERMINED and STATED, and a SECOND member's attestation is what
+   * raises it — no member ever grading their own act.
+   *
+   * WHAT IT IS, BUILT OUT OF WHAT EXISTED. The portion is a CONTENT ROW, minted
+   * through `mintContent` — the one writer, the one extent checker (C-45,
+   * verbatim), the one address — with the chain `[member(handle)]` in place of
+   * the capture's machine chain. So the row's id differs from every machine
+   * row's over the same passage BY CONSTRUCTION, its derivation cap is
+   * `derivationCap`'s answer over that chain (undetermined, by the kind's own
+   * `unmeasured` property, IC-127), and a leg can cite it by `content_id` exactly
+   * as it cites any row. The text lives in `transcriptions`, keyed by the row,
+   * because a content row has no column for text and was never meant to.
+   *
+   * WHAT RAISES IT, AND WHAT CANNOT. `gradeCeiling`, unchanged, over the
+   * transcription's OWN attestations (`transcription_attestations`) — never the
+   * capture's (`text_attestations`), which are testimony about the MACHINE text
+   * and did not check this typing. The transcriber's own attestation is refused
+   * at the act (C-52.9) AND excluded at every read, so a row that somehow held
+   * one still could not rise on one member's word: TWO fences on purpose,
+   * `attesttext`'s own precedent.
+   *
+   * WHAT IS NOT HERE. The UI act (a portion selection plus a text field, nothing
+   * prefilled) is UI's and DELEGATED in CLAIMS.md. No machine may transcribe
+   * (C-52.1) — a machine reading of a page is OCR, which the record already
+   * carries under its own step kind.
+   */
+  /** THE ATTESTATION EXTENT OF A TRANSCRIPTION: exactly the portion the member
+   *  typed, in `checkAttestation`'s own grammar, so `extentCovers` answers the
+   *  question it always answers and no second coverage rule is written. A
+   *  second member attests the WHOLE of what was typed — there is no smaller
+   *  unit of a typing to check. NULL for a portion this plane cannot evaluate,
+   *  which `transcribe` refuses before one can exist. */
+  static #transcriptionAttestExtent(kind, extent) {
+    const e = extent && typeof extent === "object" ? extent : {};
+    if (kind === "document") return { kind: "document" };
+    if ((kind === "pdf-page" || kind === "image") && Number.isInteger(e.page) && e.page >= 0)
+      return Array.isArray(e.rect) && e.rect.length === 4 ? { kind: "region", source: { kind: "pdf-page", ref: `p${e.page}`, page: e.page, rect: e.rect } } : { kind: "page", page: e.page };
+    return null;
+  }
+  /** THE TRANSCRIPTIONS AMONG A SET OF CONTENT ROWS, with their attestations, in
+   *  TWO bounded reads whatever the set holds — `#attestationsOver`'s bound and
+   *  its reason, restated because the objection is the same one: a group
+   *  working through a scanned title can legitimately attest many typings, and
+   *  an unbounded read whose bound is an argument about behaviour is the shape
+   *  the ratchet refuses. Truncation is STATED, never a silently lower ceiling. */
+  #transcriptionsOver(contentIds) {
+    const ids = [...new Set((Array.isArray(contentIds) ? contentIds : []).filter((c) => typeof c === "string" && c))];
+    const by = /* @__PURE__ */ new Map();
+    if (!ids.length) return { by, truncated: false };
+    const marks = ids.map(() => "?").join(",");
+    const rows = this.#rows(
+      `SELECT content_id, transcriber, at, text_sha256 FROM transcriptions
+        WHERE content_id IN (${marks}) LIMIT ?`,
+      ...ids,
+      ids.length
+    );
+    if (!rows.length) return { by, truncated: false };
+    for (const r of rows) by.set(r.content_id, { ...r, attestations: [] });
+    const cap = Math.min(_Store.TEXT_SOURCE_LIMIT_DEFAULT * rows.length, _Store.TEXT_SOURCE_LIMIT_MAX);
+    const txMarks = rows.map(() => "?").join(",");
+    const page = this.#rows(
+      `SELECT content_id, attestor, at, note FROM transcription_attestations
+        WHERE content_id IN (${txMarks}) ORDER BY content_id, at, attestor LIMIT ?`,
+      ...rows.map((r) => r.content_id),
+      cap + 1
+    );
+    for (const a of page.slice(0, cap)) by.get(a.content_id).attestations.push(a);
+    return { by, truncated: page.length > cap };
+  }
+  /** WHAT A TRANSCRIPTION'S ATTESTATIONS MAY RAISE: every attestation by
+   *  somebody OTHER than the transcriber, scoped to the typed portion. The
+   *  exclusion is here as well as at the act, so this answer does not depend on
+   *  the write having refused — the costs-nothing rule enforced structurally
+   *  rather than by the order things happened in. */
+  static #transcriptionCovering(tx, kind, extent) {
+    const scope = _Store.#transcriptionAttestExtent(kind, extent);
+    if (!tx || !scope) return [];
+    return tx.attestations.filter((a) => a.attestor !== tx.transcriber).map((a) => ({ member: a.attestor, at: a.at, extent: scope }));
+  }
+  /** ONE TRANSCRIPTION'S STANDING, through `#contentStanding` — the same
+   *  composition every content surface uses, handed the transcription's own
+   *  attestations and NOT the capture's (which it would not consult anyway, and
+   *  which are therefore not read). */
+  #transcriptionStanding(contentId) {
+    const r = this.#one(
+      `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
+              derivation_cap, page_count, minted_by, at, stale, cited_as
+         FROM content WHERE content_id=?`,
+      contentId
+    );
+    if (!r) return null;
+    return this.#contentStanding(
+      r,
+      { by: /* @__PURE__ */ new Map(), truncated: false },
+      {},
+      this.#transcriptionsOver([contentId])
+    );
+  }
+  /** THE BOUND ON ONE TYPING: the per-unit cap the content-grain text index
+   *  already stores one passage to (`CAPTURE_TEXT_UNIT_CAP`, M-20's figure).
+   *  A transcription IS one passage, and a second number for "how large may a
+   *  passage be" would be a measurement with no measurement behind it. REFUSED
+   *  over it, never truncated: a typing silently cut is text the member did not
+   *  type standing in their name. */
+  static TRANSCRIPTION_MAX_BYTES = CAPTURE_TEXT_UNIT_CAP;
+  /** op=transcribe — THE ACT. */
+  transcribe({
+    bundleId = null,
+    extent = null,
+    text = null,
+    transcriber = null,
+    viewer = null,
+    at = null
+  } = {}) {
+    const refusal7 = (code, detail, extra) => {
+      const row = TRANSCRIBE_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    const who = typeof transcriber === "string" ? transcriber.trim() : "";
+    const target = typeof bundleId === "string" ? bundleId.trim() : "";
+    if (!who || isMachineIdentity(who))
+      return refusal7(
+        "TRANSCRIBE_NOT_A_MEMBER",
+        who ? `'${who.slice(0, 60)}' is a machine credential. Typing what a page says is a person's act in their own name; a machine's reading of a page is OCR, a different step kind` : `this call carries nobody. The plane stamps the transcriber from the credential that asked, so an empty one means the act arrived by a route that does not attribute it`
+      );
+    const b = target ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, target) : null;
+    if (!b || !this.#viewerSees(target, viewer) || normalizeType(b.object_type) !== "information")
+      return refusal7(
+        "TRANSCRIBE_NO_DOCUMENT",
+        !target ? `pass bundleId=<INFO-\u2026>: the document whose page you transcribed` : b && this.#viewerSees(target, viewer) ? `${target} is not a document, so it has no page to transcribe (DEC-21)` : `no document is addressed by ${target.slice(0, 60)} in this record`,
+        { target: target || null }
+      );
+    const sha = this.#captureForContent(target);
+    if (!sha)
+      return refusal7(
+        "TRANSCRIBE_NO_BYTES",
+        `this record holds no capture of ${target}, so there is no copy to have typed from. Absence here is a fact about what was captured, never about what the document says`,
+        { target }
+      );
+    const bare = extent == null || typeof extent === "object" && !Array.isArray(extent) && Object.keys(extent).length === 0;
+    if (bare)
+      return refusal7(
+        "TRANSCRIBE_NO_PORTION",
+        `no portion was selected. A transcription is of a PART the member read \u2014 a page or a region of one, or the whole document NAMED as such \u2014 and a typing with no stated part would be read as covering all of it`,
+        { target }
+      );
+    const typed = typeof text === "string" ? text : "";
+    const bytes = new TextEncoder().encode(typed).length;
+    const digest = sha256HexSync(typed);
+    const chain2 = [{ step: "member", member: who, text_sha256: digest }];
+    const ctx = { ...this.contentContextFor(sha), chain: chain2 };
+    const bad = checkContentExtent(extent && typeof extent === "object" && !Array.isArray(extent) ? extent : null, ctx);
+    if (bad) return bad;
+    const kind = extent.kind;
+    if (contentCitedAs(extent) === "bytes" || _Store.#transcriptionAttestExtent(kind, extent) == null)
+      return refusal7(
+        "TRANSCRIBE_PORTION_UNREADABLE",
+        `${describeExtent(extent)} is a part this plane cannot check a typing against \u2014 a second member's attestation needs a document, a page or a region of a page to scope to, and a transcription nobody could ever attest would stand undetermined for good`,
+        { target, extent_kind: kind ?? null }
+      );
+    if (!typed.trim())
+      return refusal7(
+        "TRANSCRIBE_NO_TEXT",
+        `the typed text is empty. Nothing is prefilled: the text is what the member read off ${describeExtent(extent)}, typed by them`,
+        { target }
+      );
+    if (bytes > _Store.TRANSCRIPTION_MAX_BYTES)
+      return refusal7(
+        "TRANSCRIBE_TEXT_TOO_LONG",
+        `${bytes} B typed, over the ${_Store.TRANSCRIPTION_MAX_BYTES} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut: a typing silently truncated would be text the member did not type, standing in their name`,
+        { target, bytes, limit: _Store.TRANSCRIPTION_MAX_BYTES }
+      );
+    const chainBad = checkChain(chain2);
+    if (chainBad) return chainBad;
+    const when = typeof at === "string" && at.trim() ? at.trim() : (/* @__PURE__ */ new Date()).toISOString();
+    const out = this.ctx.storage.transactionSync(() => {
+      const m = this.mintContent({
+        bundleId: target,
+        captureSha: sha,
+        extent,
+        mintedBy: who,
+        at: when,
+        ctx
+      });
+      if (!m.ok) return m;
+      this.sql.exec(
+        `INSERT OR IGNORE INTO transcriptions
+           (content_id,capture_sha,bundle_id,transcriber,text,text_sha256,at)
+         VALUES (?,?,?,?,?,?,?)`,
+        m.content_id,
+        sha,
+        target,
+        who,
+        typed,
+        digest,
+        when
+      );
+      return m;
+    });
+    if (!out.ok) return out;
+    const standing = this.#transcriptionStanding(out.content_id);
+    return {
+      ok: true,
+      minted: out.minted,
+      content_id: out.content_id,
+      bundle_id: target,
+      capture_sha: sha,
+      extent_kind: kind,
+      extent: standing ? standing.extent : extent,
+      ref: describeExtent(extent),
+      transcriber: who,
+      text_sha256: digest,
+      bytes,
+      chain: chain2,
+      chain_says: describeChain(chain2),
+      derivation_cap: standing ? standing.derivation_cap : null,
+      transcription: standing ? standing.transcription : null,
+      says: `${who} typed ${describeExtent(extent)}. What a member types is authored text: its fidelity is UNDETERMINED, stated, until a DIFFERENT member checks it against the page and attests it (op=transcriptionattest). The typist's own attestation is refused` + (out.minted ? `` : `. This exact typing by ${who} was already recorded, and is found rather than written again`)
+    };
+  }
+  /** The transcription a content id names, or the refusal that says it names
+   *  none. Shared by the attestation act and the read so "which transcription
+   *  is meant" has ONE answer — `#narrowSource`'s shape. */
+  #transcriptionOf(contentId, viewer) {
+    const refusal7 = (code, detail, extra) => {
+      const row = TRANSCRIBE_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    const id = typeof contentId === "string" ? contentId.trim() : "";
+    const t = id ? this.#one(
+      `SELECT content_id, capture_sha, bundle_id, transcriber, text, text_sha256, at
+         FROM transcriptions WHERE content_id=?`,
+      id
+    ) : null;
+    if (!t || !this.#viewerSees(t.bundle_id, viewer))
+      return refusal7(
+        "TRANSCRIPTION_NOT_FOUND",
+        id ? `no transcription readable here is addressed by content_id '${id.slice(0, 16)}\u2026'` : `pass contentId=<the content id op=transcribe returned>`,
+        { content_id: id || null }
+      );
+    return { ok: true, t };
+  }
+  /** op=transcriptionattest — A SECOND MEMBER ATTESTS A TYPING. */
+  transcriptionAttest({
+    contentId = null,
+    attestor = null,
+    viewer = null,
+    at = null,
+    note = null
+  } = {}) {
+    const refusal7 = (code, detail, extra) => {
+      const row2 = TRANSCRIBE_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row2.check,
+        translation: row2.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    const src = this.#transcriptionOf(contentId, viewer);
+    if (!src.ok) return src;
+    const { t } = src;
+    const row = this.#one(`SELECT extent_kind, extent FROM content WHERE content_id=?`, t.content_id);
+    const scope = row ? _Store.#transcriptionAttestExtent(row.extent_kind, safeJson(row.extent)) : null;
+    const att = { member: attestor, at: typeof at === "string" && at.trim() ? at.trim() : (/* @__PURE__ */ new Date()).toISOString(), extent: scope };
+    const bad = checkAttestation(att);
+    if (bad) return bad;
+    const who = String(attestor).trim();
+    if (who === t.transcriber)
+      return refusal7(
+        "TRANSCRIPTION_SELF_ATTEST",
+        `${who} typed this transcription (${t.at}). An attestation is a SECOND member checking it against the page; the typist's own is not evidence and would raise the ceiling on one member's word`,
+        { content_id: t.content_id, transcriber: t.transcriber }
+      );
+    const before = this.#transcriptionStanding(t.content_id);
+    this.sql.exec(
+      `INSERT OR REPLACE INTO transcription_attestations (content_id,bundle_id,attestor,at,note)
+       VALUES (?,?,?,?,?)`,
+      t.content_id,
+      t.bundle_id,
+      who,
+      att.at,
+      typeof note === "string" && note.trim() ? note : null
+    );
+    const after = this.#transcriptionStanding(t.content_id);
+    return {
+      ok: true,
+      content_id: t.content_id,
+      transcriber: t.transcriber,
+      attestor: who,
+      at: att.at,
+      extent: scope,
+      ceiling_before: before ? before.transcription : null,
+      transcription: after ? after.transcription : null,
+      says: `${who} checked ${t.transcriber}'s typing against the page and says it matches. A leg citing this transcription may now claim what an attestation supports; the typing itself is unchanged, and the chain still records that a member typed it`
+    };
+  }
+  /** op=transcription — THE READ: one typing, its text, who typed it, who has
+   *  attested it, and what a leg citing it may claim. Viewer-gated. */
+  transcriptionRead({ id = null, viewer = null } = {}) {
+    const src = this.#transcriptionOf(id, viewer);
+    if (!src.ok) return src;
+    const { t } = src;
+    const standing = this.#transcriptionStanding(t.content_id);
+    const txs = this.#transcriptionsOver([t.content_id]);
+    const tx = txs.by.get(t.content_id);
+    return {
+      ok: true,
+      content_id: t.content_id,
+      bundle_id: t.bundle_id,
+      capture_sha: t.capture_sha,
+      extent_kind: standing ? standing.extent_kind : null,
+      extent: standing ? standing.extent : null,
+      ref: standing ? standing.ref : null,
+      transcriber: t.transcriber,
+      at: t.at,
+      text: t.text,
+      text_sha256: t.text_sha256,
+      chain: standing ? standing.chain : null,
+      chain_says: describeChain(standing ? standing.chain : null),
+      derivation_cap: standing ? standing.derivation_cap : null,
+      transcription: standing ? standing.transcription : null,
+      attestations: (tx ? tx.attestations : []).map((a) => ({
+        attestor: a.attestor,
+        at: a.at,
+        note: a.note,
+        /* Named rather than hidden, if one ever stands: a row the act would have
+           refused is a fact about the record, and it raises nothing. */
+        counts: a.attestor !== t.transcriber
+      })),
+      ...txs.truncated ? { attestations_truncated: true } : {},
+      says: `${t.transcriber} typed ${standing ? standing.ref : "this portion"}. Authored text: its fidelity is undetermined until a different member attests it against the page`
+    };
+  }
+  /* ====================================================================== *
    * SK-8 REGION — THE EXTRACT RUN'S PRODUCTIONS, AND THE FIRST CALLER OF THE
    * DOOR ABOVE.
    * ====================================================================== *
@@ -38306,15 +38830,19 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     if (live == null) return 0;
     const n = this.#one(
       `SELECT count(*) AS c FROM content
-        WHERE capture_sha=? AND chain IS NOT NULL AND chain<>? AND stale=0`,
+        WHERE capture_sha=? AND chain IS NOT NULL AND chain<>? AND stale=0
+          AND content_id NOT IN (SELECT content_id FROM transcriptions WHERE capture_sha=?)`,
       captureSha,
-      live
+      live,
+      captureSha
     ).c;
     if (n) this.sql.exec(
       `UPDATE content SET stale=1
-        WHERE capture_sha=? AND chain IS NOT NULL AND chain<>? AND stale=0`,
+        WHERE capture_sha=? AND chain IS NOT NULL AND chain<>? AND stale=0
+          AND content_id NOT IN (SELECT content_id FROM transcriptions WHERE capture_sha=?)`,
       captureSha,
-      live
+      live,
+      captureSha
     );
     return n;
   }
@@ -38487,11 +39015,12 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *  compare against because the row IS what the member cited — an attestation
    *  made against a transcription the citation never saw did not check the text
    *  the citation points at. */
-  #contentStanding(r, atts, connectionByBundle) {
+  #contentStanding(r, atts, connectionByBundle, txs = null) {
     const extent = { kind: r.extent_kind, ...safeJson(r.extent) || {} };
     const chain2 = safeJson(r.chain);
     const target = _Store.#contentTarget(r.extent_kind, extent);
-    const covering = (atts.by.get(r.capture_sha) || []).filter((a) => !(a.chain != null && r.chain != null && a.chain !== r.chain)).map((a) => ({ member: a.attestor, at: a.at, extent: _Store.#attestationShape(a) }));
+    const tx = txs && txs.by ? txs.by.get(r.content_id) : null;
+    const covering = tx ? _Store.#transcriptionCovering(tx, r.extent_kind, extent) : (atts.by.get(r.capture_sha) || []).filter((a) => !(a.chain != null && r.chain != null && a.chain !== r.chain)).map((a) => ({ member: a.attestor, at: a.at, extent: _Store.#attestationShape(a) }));
     const transcription = r.cited_as === "bytes" ? {
       ceiling: null,
       determinant: null,
@@ -38569,7 +39098,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       /* An attestation this read did not reach cannot have raised anything, so
          the ceiling above is safe — and a ceiling that is safe because a read
          was cut is still a ceiling the reader must be told about. */
-      ...atts.truncated ? { attestations_truncated: true } : {},
+      ...atts.truncated || tx && txs.truncated ? { attestations_truncated: true } : {},
       says: r.stale ? `this passage was cited as it stood under an earlier transcription of the document. The document has since been re-read, so what the citation points at is ${describeExtent(extent)} of the capture as it was transcribed then \u2014 the record keeps it rather than moving it` : `${describeExtent(extent)}, as this record holds it`
     };
   }
@@ -38600,7 +39129,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     );
     if (!rows.length) return out;
     const atts = this.#attestationsOver(rows.map((r) => r.capture_sha));
-    for (const r of rows) out[r.content_id] = this.#contentStanding(r, atts, connectionByBundle);
+    const txs = this.#transcriptionsOver(rows.map((r) => r.content_id));
+    for (const r of rows) out[r.content_id] = this.#contentStanding(r, atts, connectionByBundle, txs);
     return out;
   }
   /** IC-84 (4)'s other half — THE LEGACY BACKFILL, WIRED.
@@ -38705,15 +39235,24 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         detail: `no content row is addressed by this id in this record. A content id is hash(capture, canonical extent, chain) \u2014 it is minted when a leg first cites the passage, so an id nothing has cited does not exist yet`
       };
     const atts = this.#attestationsOver([r.capture_sha]);
-    const standing = this.#contentStanding(r, atts, {});
+    const txs = this.#transcriptionsOver([r.content_id]);
+    const tx = txs.by.get(r.content_id) || null;
+    const standing = this.#contentStanding(r, atts, {}, txs);
     const target = _Store.#contentTarget(r.extent_kind, standing.extent);
-    const all = (atts.by.get(r.capture_sha) || []).map((a) => ({
+    const txScope = tx ? _Store.#transcriptionAttestExtent(r.extent_kind, standing.extent) : null;
+    const all = tx ? tx.attestations.map((a) => ({
+      attestor: a.attestor,
+      at: a.at,
+      extent: txScope,
+      /* The typist's own is never counted — not stale, but not evidence. */
+      stale: false
+    })) : (atts.by.get(r.capture_sha) || []).map((a) => ({
       attestor: a.attestor,
       at: a.at,
       extent: _Store.#attestationShape(a),
       stale: a.chain != null && r.chain != null && a.chain !== r.chain
     }));
-    const covering = target == null ? [] : all.filter((a) => !a.stale && extentCovers(a.extent, target));
+    const covering = target == null ? [] : all.filter((a) => !a.stale && extentCovers(a.extent, target) && !(tx && a.attestor === tx.transcriber));
     const { connection, capture, ...row } = standing;
     return {
       ok: true,
@@ -38736,8 +39275,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         covering,
         all,
         count: all.length,
-        ...atts.truncated ? { truncated: true } : {},
-        why: `an attestation raises this row's ceiling only if its extent COVERS this row's extent (textchain's extentCovers) AND it was made against the transcription this row was minted under. A page attestation does not cover a whole-document row, and an attestation over another page does not cover this one`
+        ...(tx ? txs.truncated : atts.truncated) ? { truncated: true } : {},
+        why: tx ? `this row is a member's TYPING (op=transcription reads its text). Only an attestation OF THAT TYPING, by a member other than ${tx.transcriber} who typed it, raises its ceiling. Attestations of the capture's machine text are about different text and are not listed` : `an attestation raises this row's ceiling only if its extent COVERS this row's extent (textchain's extentCovers) AND it was made against the transcription this row was minted under. A page attestation does not cover a whole-document row, and an attestation over another page does not cover this one`
       }
     };
   }
@@ -46007,6 +46546,13 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
          cited" is the silent-leftover exactly. hygiene.test.mjs holds this list
          against schema.mjs. */
       "content",
+      /* REC-87 / D-113: a member's TYPED TEXT and the second members'
+         attestations of it ride with the content rows they describe, in
+         BOTH arms and for `content`'s reason: a transcription outliving its
+         document would be text standing for a page nobody holds, and an
+         attestation outliving it would leave a member's name behind it. */
+      "transcriptions",
+      "transcription_attestations",
       /* SK-8 / D-113: the PROPOSED READINGS. They ride both arms for the
          reason `content` above does and for one more that is specific to
          them: a proposal is a claim about what a DOCUMENT names, so a
@@ -58204,6 +58750,29 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           ord: url.searchParams.get("ord"),
           viewer: url.searchParams.get("viewer")
         }),
+        /* REC-87 / IC-128: TRANSCRIBE. The TYPIST and the ATTESTOR come from the
+           QUERY STRING, where the control plane stamped them, and never from the
+           body — `attesttext`'s correction, taken from the start rather than
+           re-learned: a body field a caller can fill is a name a machine can post. */
+        transcribe: () => this.transcribe({
+          bundleId: body && body.bundleId || null,
+          extent: body && body.extent !== void 0 ? body.extent : null,
+          text: body ? body.text : null,
+          at: body && body.at || null,
+          transcriber: url.searchParams.get("transcriber"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        transcriptionattest: () => this.transcriptionAttest({
+          contentId: body && body.contentId || url.searchParams.get("contentId"),
+          at: body && body.at || null,
+          note: body ? body.note : null,
+          attestor: url.searchParams.get("attestor"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        transcription: () => this.transcriptionRead({
+          id: url.searchParams.get("id"),
+          viewer: url.searchParams.get("viewer")
+        }),
         suggest: () => this.suggestVersion({
           ...body || {},
           target: body && body.target || url.searchParams.get("target"),
@@ -59612,6 +60181,16 @@ var OPS = {
   textprovenance: { classes: ["admin", "member", "probe"], mutating: false },
   textattest: { classes: ["admin", "member", "probe"], mutating: false },
   attesttext: { classes: ["admin", "member"], mutating: true },
+  /* REC-87 / IC-128 — TRANSCRIBE (Bob's 5.2), and the class cut is `attesttext`'s
+     one row up for `attesttext`'s reason: typing what a page says, and attesting
+     somebody else's typing, are both a person's word carrying their name for as
+     long as the record lasts. `mutating: true` keeps a machine credential off
+     the session route, and the store refuses a machine stamp BY NAME again
+     (C-52.1 for the typist, C-35.10 for the attestor) — two fences on purpose.
+     The READ is open to every class that may read, on `op=content`'s terms. */
+  transcribe: { classes: ["admin", "member"], mutating: true },
+  transcriptionattest: { classes: ["admin", "member"], mutating: true },
+  transcription: { classes: ["admin", "member", "probe"], mutating: false },
   /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
        different cut from CPDF-10's above because a different thing is at stake.
   
@@ -60032,6 +60611,10 @@ var SESSION_OPS = {
        reading of a question, reached by a signed-in member. */
     "narrow",
     "narrowcandidates",
+    /* REC-87: TRANSCRIBE and the attestation of a typing — a person's
+       word in their own name, `attesttext`'s route and reason. */
+    "transcribe",
+    "transcriptionattest",
     "inbox",
     "inboxget",
     "inboxresolve",
@@ -60086,6 +60669,8 @@ var SESSION_OPS = {
     "extractproposals",
     "narrow",
     "narrowcandidates",
+    "transcribe",
+    "transcriptionattest",
     "inbox",
     "inboxget",
     "inboxresolve",
@@ -60161,6 +60746,15 @@ var NEEDS = {
      group putting its name on anything — the new reading is born `suggested`. */
   narrow: "contribute",
   narrowcandidates: "contribute",
+  /* REC-87: NO FIFTH CAPABILITY TOKEN. Typing a portion's text writes a content
+     row and its text into the working corpus, and attesting a typing is
+     `attesttext`'s act on different text — both ride `contribute`, as
+     `attesttext` does. Nothing either writes is the group putting its name on
+     anything. The READ takes none, on `op=content`'s reasoning: resolving what a
+     citation points at, including what a member typed, is reading the record. */
+  transcribe: "contribute",
+  transcriptionattest: "contribute",
+  transcription: null,
   monitor: "contribute",
   cite: "contribute",
   sever: "contribute",
@@ -64094,7 +64688,7 @@ var index_default = {
          reader (DEC-17) — only the names are withheld. */
       "strengthbarof"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? `member:${sessMember}` : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -64112,6 +64706,10 @@ var index_default = {
     if (QUEUE_ACTIONS.includes(op))
       inner.searchParams.set("member", viaSession ? sessMember : "");
     if (op === "attesttext")
+      inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "transcribe")
+      inner.searchParams.set("transcriber", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "transcriptionattest")
       inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "contentmint")
       inner.searchParams.set(
