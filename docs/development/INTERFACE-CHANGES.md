@@ -9373,7 +9373,7 @@ digest for REC-85's three (`fw19-rec85-digest.mjs`, 144 rows) and for REC-82's t
 - **SKILL / FRAMEWORK / DIST:** NOT-AFFECTED by measurement (no reader of the new kinds).
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at FW-19's integration — I5 1.16.0 → 1.17.0, I3 23.1.0 → 23.2.0, both MINOR (additive, as classed).** SKILL / FRAMEWORK / DIST NOT-AFFECTED by measurement as stated; CONDUCT answers FOR FRAMEWORK (dormant), named as such. **UI's act is OWED, not waived:** the `cited_as` rendering delegation stands in `CLAIMS.md` until a UI item discharges it. REC-86 is concurrently changing I3; it resolves against 23.2.0 or later, read at its own resolution.
-## IC-122 · I2: THE CHAIN GRAMMAR GAINS A STEP KIND — `convert(producer, format)`, a conversion the serving host made BEFORE any text was read, emitted AHEAD of `layer` with cap UNDETERMINED for every Google Drive export · PROPOSED 2026-09-18 (CAP-10, enacting DEC-75 act 1) — the version bump and the RESOLUTION are CONDUCT's
+## IC-122 · I2: THE CHAIN GRAMMAR GAINS A STEP KIND — `convert(producer, format)`, a conversion the serving host made BEFORE any text was read, emitted AHEAD of `layer` with cap UNDETERMINED for every Google Drive export · PROPOSED 2026-09-18 (CAP-10, enacting DEC-75 act 1) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 (I2 2.4.0)**
 
 - **Interface:** I2 (content → framework), currently **2.2.0 STABLE**
 - **Proposer:** CAPTURE, worker `worktree-agent-ad1b1996bfd2046a7`, 2026-09-18, from QUEUE CAP-10
@@ -9447,7 +9447,9 @@ first step as the conversion. Nothing under `src/` does: `terminalStep` reads th
 - `FRAMEWORK` (dormant): CONDUCT to answer FOR it. Proposed version: **I2 2.2.0 → 2.3.0, MINOR,
   ADDITIVE** (the 1.2.0 `calibration` field and the 1.3.0 D-251 second step are the precedent: a new
   optional thing a chain may carry, one refusal added).
-## IC-123 · I3: NARROW — `op=narrow` (a member makes an existing citation more specific, as a NEW basis version, the old retained) and `op=narrowcandidates` (the machine's proposals for it, labelled as machine work) · PROPOSED 2026-09-18 (REC-86, minted at spawn with `node tools/mintid.mjs IC`) — the version bump and the RESOLUTION are CONDUCT's
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at CAP-10's integration — I2 2.3.0 → 2.4.0, MINOR (additive, as classed).** **The base read AT RESOLUTION is 2.3.0, not the 2.2.0 proposed against:** FW-19's IC-124 took 2.3.0 in the same wave — the fourth item in two days whose proposed base went stale while it worked. CONDUCT answers FOR FRAMEWORK (dormant), in writing and named as such: AGREE — a new step kind that a chain may carry, one refusal added (C-35.13), no existing step or pinned chain changes. The misread the proposal names (`chain[0]` read as *the extraction*) was checked by the proposer against every reader under `src/` and none does it.
+
+## IC-123 · I3: NARROW — `op=narrow` (a member makes an existing citation more specific, as a NEW basis version, the old retained) and `op=narrowcandidates` (the machine's proposals for it, labelled as machine work) · PROPOSED 2026-09-18 (REC-86, minted at spawn with `node tools/mintid.mjs IC`) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 (I3 23.3.0)**
 
 - **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
   `docs/development/INTERFACES.md`: 23.1.0** (IC-120 ACCEPTED). **Proposed as MINOR —
@@ -9534,5 +9536,4 @@ never narrowed lands exactly as before — its leg on the same whole-document ro
 **RESPONSES:** not yet collected. UI to answer on the affordance; SKILL and DIST expected
 NOT-AFFECTED.
 
-**RESOLUTION:** unresolved at the time of writing. CONDUCT takes the version bump and the
-RESOLUTION at integration, against I3's version AS READ AT RESOLUTION.
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at REC-86's integration — I3 23.2.0 → 23.3.0, MINOR (additive, as classed).** Base read AT RESOLUTION: 23.2.0 (FW-19's IC-125 took 23.2.0 in the same wave). SKILL and DIST NOT-AFFECTED — CONDUCT answers FOR both (neither calls a new op; an op nobody asks for cannot be observed), named as such. **UI's act is OWED, not waived:** the NARROW affordance on a leg is delegated in `CLAIMS.md` and, per the worker, also waits on UI-62's page picker. **One scope note recorded at resolution:** REC-86's draft of the content framework's connection-pair row claimed the ON-POINT connection choice built; CONDUCT declined that cell at merge — REC-86 narrows a LEG, and the connection-side choice is `REC-120`.
