@@ -1236,6 +1236,8 @@ worktree lock — which D-398 says nothing does — but the tool's *"cleans up i
 635 MB stayed and free space did not move until `git worktree remove` ran. Both, then report the measured
 disk: 5.4 GiB → 6.1 GiB free on the drive that did it.
 
+**AND THE ARCHIVE DOES NOT ALWAYS RELEASE THE AGENT LOCKS — MEASURED 2026-09-18 by CONDUCT #5 (`MEASUREMENTS.md`, D-398 DATA POINT 4).** After CONDUCT #4 archived on the first call, all four of its merged agent worktrees still read `locked`, each lock naming pid 24017, which `ps` showed was gone. So after the archive, READ THE `locked` LINE. A lock whose named pid is not in the process table is STALE: `git worktree unlock` it only after re-verifying the tree CLEAN and its tip an ANCESTOR of `origin/main`, then `git worktree remove`. Never unlock on the strength of the archive alone, and never touch a lock whose pid is alive.
+
 **THE RETIREMENT SWEEP IS YOURS TO PERFORM, NOT THE HEARTBEAT'S — CHANGED 2026-09-18 BY BOB #14 (D-402, D-407).**
 The heartbeat used to archive what `tools/retirable.mjs` called RETIRABLE. It runs in `auto` permission mode,
 `archive_session` there WAITED FOR AN APPROVAL NOBODY WAS PRESENT TO GIVE, and because a scheduled task is refused a

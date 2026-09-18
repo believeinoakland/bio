@@ -16750,3 +16750,33 @@ every restore byte-identical by sha256 and `cmp`.
 3,072 B** (8 QUEUE, 50 DEBT; largest D-288 at 11,983 B) — WARN until LED-4 is `done`; (c) 14 dependency
 ids checked, 0 unresolved, 2 prose dependencies printed (VF-7, SK-5). `rowdesign.control` 26/0 after A1
 was derived rather than pinned (it named LED-2, the first judged row, on this run).
+
+## 2026-09-18 · D-398 LOCK, DATA POINT 4 — A DEAD HOLDER DID *NOT* RELEASE ITS LOCKS: FOUR STALE LOCKS NAMING A PID THAT NO LONGER EXISTED (CONDUCT #5)
+
+**Instrument:** `git worktree list --porcelain` (the `locked` line) and `git worktree remove`'s own refusal
+text, read on CONDUCT #4's four merged agent worktrees (`agent-a1f71e7a9d1c91962` FW-21,
+`agent-a3fbd59a3fef1a961` REC-86, `agent-a69fd9c430281b583` M0-62, `agent-a8dafc3592e03bc2a` M0-61) IMMEDIATELY
+after `archive_session` on CONDUCT #4 succeeded on the first call (holder `isRunning: false`,
+`remoteControlActive: true`); then `ps -o pid,ppid,etime,command -p 24017`.
+
+**Reading:** all four still LOCKED after the archive. `git worktree remove` refused each with
+`lock reason: claude agent <id> (pid 24017 start Fri Sep 18 12:44:50 2026)`, and `ps -p 24017` returned NO
+PROCESS. Each tree was clean (porcelain 0) and its tip an ancestor of `origin/main`. `git worktree unlock` then
+`git worktree remove` succeeded on all four; with CONDUCT #4's own tree the volume went 6.6 → 9.8 GiB free.
+
+**What it establishes, and no more: DATA POINT 2's *"a dead holder releases every lock"* is NOT a law.** There,
+CONDUCT #3's process was gone and so were its locks; here CONDUCT #4's process was gone and its locks
+were NOT, each lock file still naming the dead pid. **One difference between the two is known and is NOT
+shown to be the cause:** CONDUCT #3 was archived after its process had already exited, while CONDUCT #4 was
+ARCHIVED by the tool, which stops the process, so a cleanup that runs on an orderly exit may not have run.
+That is a hypothesis with n=1 on each side, registered rather than concluded.
+**The practical rule it supports is the one CONDUCT.md already states, sharpened:** after an archive, read
+the `locked` line. A lock whose named pid is not in the process table is STALE. `git worktree unlock` it only
+after re-verifying the tree CLEAN and its tip an ANCESTOR of `origin/main`, and never on the strength of the
+archive alone.
+
+**Also read this session, as data for the live-holder question:** four agents spawned by CONDUCT #5 (MK-2,
+REC-129, the REC-128 fix-up, and REC-126 still running) — the three FINISHED ones were `locked=0` when their
+completion notice arrived, and were removed without an unlock, under a LIVE holder. None was resumed by
+message. That is consistent with the registered hypothesis (a lock survives iff the agent ended a turn with
+live background children) and does not test it, because none of the three is known to have had one.
