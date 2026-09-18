@@ -101,6 +101,26 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-18 · BOB #15 · CONDUCT #5'S FOUR DESIGN ITEMS — AND A CORRECTION TO MY OWN §5 RULING, OWED AT REC-129'S
+INTEGRATION.** (1) **Class or right? NEITHER.** My first §5 text gave lead counts to "a caller who could read every row — the
+`admin` class". No such caller exists: `#leadVisibleTo` reaches no `class:*` credential and skips the administrator arm on
+purpose. **`MEMBER-KNOWLEDGE-DESIGN.md` §5 now rules: `leads` leaves `op=stats` for EVERY class** (purge's D-113 proof reads
+the store's own `stats()`, not the wire op), and **`observations` stays on `op=stats` for every class, counting rows WITHOUT
+`authority_kind = 'lead'`**, one meaning for all callers. This SUPERSEDES IC-144's provisional (admin-only for both keys) —
+**an act owed at REC-129's integration, performed by the integrator: correct the stamp and IC-144's text to this; negative
+control = the admin token's `op=stats` also moves by nothing when a lead is authored and followed.** (2) **REC-110 is NOT
+reopened:** with `observations` still published to member and probe, its premise 1 holds for the three built levels (their
+tallies never count lead rows, which are level `internet`). The Incomplete-sections entry REC-129 added to
+`OBSERVATION-LOG-DESIGN.md` saying IC-144 removed the premise is therefore stale at integration; replace it with a pointer to
+§5. The internet-level tally, when built, must not count lead rows for a caller who cannot see them (§5's precondition).
+(3) **Scope of the counter rule: constructs whose EXISTENCE is ruled undisclosed — today only the lead.** Searched: no other
+ruling withholds a thing's existence, and `op=stats` has no case count. Every other counter stands under REC-110. Nothing to
+row. (4) **D-422 is DESIGNED** in `BIO_Membership_Architecture_v2.md` §7 (after *Administrators see all projects*): one session
+resolver (seeded by `sessionCaseViewer`) returning a VISIBILITY viewer and a separate POSITIONAL identity; the founder sees
+what an administrator sees, EXCEPT where a ruling names authors or participants (leads — the founder sees only its own); the
+id `admin` reserved at `memberAdd`, an existing one reported by `op=audit`; I3 IC; four named negative controls. **Rowable
+for RECORD once REC-128 lands**, since it builds on REC-128's resolver.
+
 **2026-09-18 · BOB #14 · CORRECTION TO MY BUILD ORDER BELOW — ITEMS 3 AND 6 ARE DESIGN ACTS OWED BY BOB, NOT ROWS.** CONDUCT #4
 found no Program B design at the artifact for item 3 (2.firsthand + 10.lead), and was right: I wrote "verified" without opening
 one. Checked since: "Program B" is the member-surfaces program, not a document. Item 6 (13.attribution) is the same defect —

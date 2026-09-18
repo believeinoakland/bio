@@ -1,6 +1,6 @@
 # BIO Membership Architecture
 
-**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." as of 2026-09-14.
+**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." §7 gained the design for D-422 (the founder's session sees what an administrator sees; one session resolver; the id `admin` reserved) on 2026-09-18, not yet built. as of 2026-09-18.
 
 **Place in the system** · Owns construct 1 of `BIO_System_Design.md` §3 (membership and authority). It supersedes one decision of `BIO_Technical_Architecture_Decisions_v10.md` §10 (per-member tokens) and depends on `BIO_State_Rules_Consistency_v1_5.md` §4.3 (the project object) and §5.1–5.3 (the relationship vocabulary and edge ownership). It adds accountability and access control, not integrity; the store schema realises it.
 
@@ -504,6 +504,28 @@ positions a member occupies with respect to a project:
 - **Joined.** Everything, subject to the member's capabilities.
 
 Administrators see all projects and all participant lists.
+
+**THE FOUNDER IS AN ADMINISTRATOR HERE TOO — how a session reaches this rule (designed 2026-09-18 by BOB #15 for D-422).**
+The founder's own session read as `member:admin`, and `viewerPredicate`'s administrator arm looks for an active `members` row
+with role admin, which the founding administrator by design never has (`Store#activeAdmins`). So the founder saw only the
+projects it participates in — contrary to the sentence above and to §4, and measured (`op=list` shows a project to the admin
+token and not to the founder's session). **Design:**
+- **ONE resolution of a session to what it may SEE, used by every session-stamped read.** `sessionCaseViewer` in
+  `src/index.mjs` (REC-128, IC-147, case documents only) is the seed and becomes that one resolver; no read keeps its own.
+  It returns TWO things kept apart: the VISIBILITY viewer (the founder's is the administrator viewer, so every project and
+  every participant list, as this section says) and the POSITIONAL identity (who the session IS — `member:admin` — for
+  authorship, ownership, votes and D-310's positional questions). A site that asks *who* never reads the visibility half.
+- **The widening stops where a ruling names someone narrower than an administrator.** A LEAD is readable by its author and
+  by participants it was shared to, never by administrators (`MEMBER-KNOWLEDGE-DESIGN.md` §5; `#leadVisibleTo` bypasses the
+  administrator arm on purpose) — so the founder sees its own leads by position and no one else's. Any read whose ruling names
+  participants or authors keeps its own predicate and is listed as such in the item's scope; the builder greps
+  `viewerPredicate`'s callers and states, per site, which arm governs.
+- **The id `admin` is RESERVED.** `memberAdd` refuses it, because every name-keyed check (`#isAdminMember`, `#activeAdmins`)
+  would read such a member as the founder. An instance already holding a member with that id is REPORTED by `op=audit`,
+  never renamed silently.
+- **Contract:** the founder gains sight, so it is an I3 change with its own IC (classification is the integrator's).
+  **Negative controls:** the founder's session lists a project it was never invited to; it still cannot read another
+  member's unshared lead; `memberAdd` with id `admin` is refused; the admin token's answers are byte-identical before and after.
 
 **What the skeleton excludes**, for the invited: the project's own
 content, its analysis record, its work product, its evaluations, its
