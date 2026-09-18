@@ -1242,7 +1242,8 @@ const REGISTER_FLOOR = {
      never by adding. The arrivals are two suites: frontier-internet.test.mjs (8 arms, (a)-(h)) and
      stats-disclosure.test.mjs (5 arms, (a)-(e)), both driven by nc-rec129.mjs. */
   // [branch record | MK-2 resumed, on origin/main 27ad8b4f] MOVED 1332 -> 1346, classified 230 -> 231, corpus 231 -> 232, run 193 -> 194, from this item's own `--strict` print on the committed tree 8fe3fc8e (`arms 1346/1332 · classified 231/230 · corpus (suites read) 232/231 · GREW by 14 arm(s)`, `floor 194/193 reproducible`), exit 0. Cause: ONE new suite, `testimonyaxis.test.mjs`, whose declaration the register counts at 14 arms. ONE KEY SET.
-  arms: 1392,
+  arms: 1395,
+  // [branch record | REC-136, on origin/main 7a7cef2d] 2026-09-18: MOVED 1392 -> 1395 from this item's own `--strict` print (`arms 1395/1392 · classified 238/238 · corpus (suites read) 239/239 · GREW by 3 arm(s)`, `floor 201/201 reproducible`), exit 0. Cause: conclude-project.test.mjs's NEGATIVE CONTROL declaration gained arms (e), (f), (g). ONE KEY SET; CONDUCT re-reads at merge.
   // [CONDUCT #5 at REC-124's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1392/1388 · classified 238/237 · corpus (suites read) 239/238 · GREW by 4`, `floor 201/200 reproducible`, from the print (conclude-project); the branch's own 1376/237/238/200 is replaced, never added.
   // [CONDUCT #5 at REC-132's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1388/1378 · classified 237/236 · corpus (suites read) 238/237 · GREW by 10`, `floor 200/199 reproducible`, from the print (founder-sight); the branch's own 1380/199 is replaced, never added.
   // [CONDUCT #5 at REC-131's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1378/1370 · classified 236/235 · corpus (suites read) 237/236 · GREW by 8`, `floor 199/198 reproducible`, from the print (stats-disclosure.test.mjs's new arms).
