@@ -914,6 +914,18 @@ export const RUNG_ABSENT = {
      attestation is superseded by the same attestor's later one, never withdrawn. */
   transcribe:           { ground: "undetermined", is: "a member types what a selected portion of a document says, in their own name; the typing is a content row whose chain is typed(member), its fidelity undetermined and stated until a DIFFERENT member attests it (Bob's 5.2)" },
   transcriptionattest:  { ground: "undetermined", is: "a member's TESTIMONY that ANOTHER member's typing of a portion matches the page; raises what a leg citing that typing may claim, and is refused to the typist themself (C-52.9)" },
+  /* MK-1 / IC-133 — TESTIFY. Ground `undetermined` on `transcribe`'s measurement:
+     none of its refusals is a missing justification (an empty observation, C-53.3,
+     is not one). NOT `reversible`: nothing takes an observation back — a member
+     records a new one, never a rewrite (MEMBER-KNOWLEDGE-DESIGN.md section 2). */
+  testify:              { ground: "undetermined", is: "a member records a firsthand observation in their own words; it becomes an authored document standing on that member's trust, the author stamped from the session and the words kept exactly as written (D-184)" },
+  /* MK-4 / IC-136 — THE LEAD. Ground `undetermined` on `transcribe`'s measurement:
+     neither act's refusals are in `JUSTIFICATION_REFUSALS`. NOT `reversible`:
+     nothing takes a lead or a look back — a member writes another lead, and a
+     later look is a new row, never a rewrite of the earlier one. */
+  lead:                 { ground: "undetermined", is: "a member writes a LEAD in their own words — what they were told or suspect, and where it might be found; an authored row that is NEVER evidence and can never be a basis leg (C-54.1)" },
+  leadshare:            { ground: "undetermined", is: "a lead's AUTHOR shares it to one project they have joined, an authored dated act; the project's joined participants can then read it and record looks against it (BOB #14, 2026-09-18)" },
+  leadlook:             { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -1598,6 +1610,18 @@ export const NON_ACTS = {
   transcribe: "content-directed: a member types what a selected portion of a document says, keyed by (document, extent); mints a content row carrying the typing and writes no edge",
   transcriptionattest: "content-directed: a second member attests another member's typing, keyed by content id; the typist's own attestation is refused",
   transcription: "read: one member's typing by content id — the text, who typed it, who attested it, and what a leg citing it may claim",
+  /* MK-1 / IC-133. TESTIFY is NOT an object-directed act: it acts on no existing
+     bundle — it CREATES one, from the member's own words — so there is no object
+     in a state for `applies()` to offer it against. The surface that offers it is
+     Program B's (MEMBER-KNOWLEDGE-DESIGN.md section 8: surfaces are not rowed). */
+  testify: "creation: a member records a firsthand observation, which becomes a NEW authored document; acts on no existing bundle",
+  /* MK-4 / IC-136. The LEAD is NOT an object-directed act: its subject is a
+     member's words about something the record may not hold at all, which is the
+     whole point of a lead, so no object's facts could say when to offer it. */
+  lead: "member-directed: a member writes a lead in their own words, keyed by nothing the record holds; writes a `leads` row and no edge, and is never evidence",
+  leadlook: "lead-directed: a member records following a lead, keyed by lead id; writes one observation_log row under authority_kind lead",
+  leadshare: "lead-directed: the lead's author shares it to one project they have joined, keyed by (lead id, project); writes a `lead_shares` row and no edge",
+  leadread: "read: one lead by id — its words, its author, and every look recorded against it; readable by its author, by the joined participants of a project it was shared to, and by a machine credential only within a member's minted scope",
   /* SK-8 — THE EXTRACT RUN'S TWO OPS, and the reason they are NON_ACTS is a
      stronger version of `contentmint`'s directly above rather than a weaker one.
      `extractpropose` is keyed by (RUN, document): its subject is a run's

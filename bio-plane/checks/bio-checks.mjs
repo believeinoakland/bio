@@ -1877,10 +1877,30 @@ function checkReleaseAuthority(ctx, findings) {
     if (!cap || typeof cap !== 'object') findings.push(f('C-18.1', 'error', `provenance documents[${i}] missing capture block`));
     else {
       if (!cap.method) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture missing 'method'`));
-      if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(', ')}`));
+      /* MK-1 / D-184 (`MEMBER-KNOWLEDGE-DESIGN.md` §3): AN AUTHORED DOCUMENT
+         CARRIES NO CAPTURE GRADE, and the absence is the statement. The capture
+         axis measures the act of reading a document in (DEC-21's amendment), and
+         a member's own words were not read in from anywhere — so a letter here
+         would be true of the bytes (we hold exactly what the member wrote) and
+         would read as strength the observation does not have. Its grade is
+         testimony, which is MK-2's axis. RULED RIGHT by BOB #14, 2026-09-18 (§3
+         will say so). `authored === true` is the ONLY
+         spelling that switches the arm: the store's fence (C-53.8) refuses the
+         flag on any document the testimony path did not write, so the catalogue
+         can read it as said. */
+      if (d.authored === true) {
+        if (cap.grade !== undefined && cap.grade !== null) findings.push(f('C-18.1', 'error', `provenance documents[${i}] is a member's authored observation and carries capture.grade '${cap.grade}': the capture axis does not apply to an authored document, and a letter on it would read as strength the observation does not have (MEMBER-KNOWLEDGE-DESIGN.md §3)`));
+        if (cap.actor_class !== 'member') findings.push(f('C-18.1', 'error', `provenance documents[${i}] is a member's authored observation and its capture.actor_class is '${cap.actor_class}', not 'member'`));
+      } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(', ')}`));
       if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(', ')}`));
     }
     const or = d.origin;
+    /* MK-1: the design's first §7 refusal, stated in the catalogue as well as
+       fenced at the write (C-53.7) — an authored observation's origin is the
+       member who made it. */
+    if (d.authored === true && (!or || typeof or !== 'object' || or.kind !== 'member')) {
+      findings.push(f('C-18.1', 'error', `provenance documents[${i}] is a member's authored observation and its origin.kind is '${or && typeof or === 'object' ? or.kind : or}', not 'member'`));
+    }
     if (!or || typeof or !== 'object' || !ORIGIN_KINDS.includes(or.kind)) {
       findings.push(f('C-18.1', 'error', `provenance documents[${i}].origin.kind must be one of: ${ORIGIN_KINDS.join(', ')}`));
     } else if (or.kind === 'sweep') {
@@ -3209,6 +3229,9 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
       findings.push(f('C-2.8', 'error', `basis[${i}] is not an object`));
       continue;
     }
+    /* MK-4 / C-54.1: a LEAD is refused BY NAME before the generic target grammar
+       can answer "not a canonical bundle id" about it — see `leadLegFindings`. */
+    if (leadLegFindings(`basis[${i}]`, leg, findings)) continue;
     const t = leg.target;
     /* Hoisted out of the else below by REC-31: the capture-axis arm at the end
        of this loop asks the SAME question (what does this leg rest on), and a
@@ -3613,7 +3636,12 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   if (earned && earned.mode === 'ceiling' && earned.grade == null) {
     findings.push(f('C-2.8', 'error', `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ''}`,
       [`state NO capture grade on basis[${i}] — an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on`,
-       'or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns',
+       /* MK-1: for a member's AUTHORED observation there is no transcription to
+          measure — the bytes ARE the words — so that repair would send a member
+          to do something that cannot be done. Omitted for that one cause, and
+          only for it. */
+       ...(earned.undetermined_because === 'CAPTURE_AXIS_AUTHORED' ? []
+         : ['or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns']),
        'or state this leg as testimony (grade D, with an author and a date) if it is a member\'s own account']));
     return;
   }
@@ -4090,6 +4118,8 @@ export function actionBasisFindings(fm, findings) {
       findings.push(f('C-2.10', 'error', `action_basis[${i}] is not a leg block of {target, kind}`, REPAIRS));
       return;
     }
+    /* MK-4 / C-54.1: an action resting on a LEAD rests on nothing found. */
+    if (leadLegFindings(`action_basis[${i}]`, l, findings)) return;
     const target = typeof l.target === 'string' ? l.target : '';
     if (!BUNDLE_ID_RE.test(target)) {
       findings.push(f('C-2.10', 'error',
@@ -7479,6 +7509,8 @@ export function basisVersionFindings(fm, findings) {
     let unlabelled = 0;
 
     for (const [li, leg] of legs) {
+      /* MK-4 / C-54.1: the same named refusal at the version's grain. */
+      if (leadLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
       const t = leg.target;
       if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
         push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical bundle id`);
@@ -11117,6 +11149,272 @@ export const TRANSCRIBE_CHECKS = {
       + 'your own typing costs nothing and proves nothing. Ask another member to check it.',
   },
 };
+
+/* =====================================================================
+ * MK-1 / D-184 / IC-133 / IC-134 — THE AUTHORED BUNDLE (`MEMBER-KNOWLEDGE-
+ * DESIGN.md` §2 and §7): a member's firsthand observation IS a document — an
+ * INFO bundle whose bytes are a canonical header then the member's words, registered like any
+ * capture and flagged `authored`. C-53, minted with `node tools/mintid.mjs C`.
+ *
+ * ITS OWN FAMILY, because the subject is its own: the ways a member's own
+ * statement could be made to pass for a captured document (or a captured
+ * document for a member's statement), and the ways the act could be performed
+ * in somebody else's name. The design's words: the register must never let one
+ * pass for the other.
+ *
+ *   is-testify-act       who is testifying — a signed-in member, stamped by the
+ *                        plane; a machine, or a caller naming the author, refused
+ *   is-testify-words     the words and the date the member says they observed it
+ *   is-testify-bytes     whether the canonical bytes (header + words) are already
+ *                        registered — reachable only by pre-registering them
+ *   is-testimony-publish-bundle / is-testimony-publish-case (src/index.mjs)
+ *                        THE PUBLICATION FENCE (C-53.10–.12): an observation, a
+ *                        finding resting on one, or a case over such a finding
+ *                        does not cross until MK-3's attribution does
+ *   is-testimony-fence  THE REFUSALS THE ITEM EXISTS FOR, at op=promote — the one
+ *                        write path — so no route but op=testify can set the flag,
+ *                        and no revision can quietly change what it says: an
+ *                        authored document claiming an origin or actor other than
+ *                        `member` (C-53.7); a document claiming `authored` that the
+ *                        testimony path did not write (C-53.8, THE LIAR: a flag any
+ *                        writer could set); an authored document that stops saying
+ *                        so (C-53.9).
+ *
+ * WHAT IS NOT HERE, each by design: the `testimony` grade axis (§3) is MK-2's;
+ * the attribution level on the case act (§4) is MK-3's.
+ * ===================================================================== */
+export const TESTIMONY_CHECKS = {
+  TESTIMONY_NOT_A_MEMBER: {
+    check: 'C-53.1',
+    where: 'src/store.mjs testify > is-testify-act',
+    translation: 'A firsthand observation is a person saying what they saw, in their own name, and it '
+      + 'stands on that person\'s trust. The credential that asked is an automated one, and it has no '
+      + 'eyes to have seen anything with. Sign in and record it yourself.',
+  },
+  TESTIMONY_AUTHOR_SUPPLIED: {
+    check: 'C-53.2',
+    where: 'src/store.mjs testify > is-testify-act',
+    translation: 'That request names who the author is. The record takes the author of an observation '
+      + 'from the account that is signed in, never from the request — a request that names its own '
+      + 'author could sign as somebody else. Send the observation without an author and it is recorded '
+      + 'as yours.',
+  },
+  TESTIMONY_NO_WORDS: {
+    check: 'C-53.3',
+    where: 'src/store.mjs testify > is-testify-words',
+    translation: 'The observation is empty. Write what you saw, in your own words; nothing is filled in '
+      + 'for you.',
+  },
+  TESTIMONY_WORDS_TOO_LONG: {
+    check: 'C-53.4',
+    where: 'src/store.mjs testify > is-testify-words',
+    translation: 'The observation is longer than one passage this record stores. Record it as more than '
+      + 'one observation; each is kept exactly as written and each can be cited.',
+  },
+  TESTIMONY_OBSERVED_AT_INVALID: {
+    check: 'C-53.5',
+    where: 'src/store.mjs testify > is-testify-words',
+    translation: 'An observation needs the date you saw it, as a calendar date (for example 2026-09-10) '
+      + 'or a date and time, and not a date later than now. The record keeps that date apart from the '
+      + 'moment you wrote it down, because they are two different facts.',
+  },
+  /* NARROWED BY BOB #14's RULING (2026-09-18), NOT DELETED. This refused a
+     second member's IDENTICAL words, because the register is keyed by bytes.
+     The ruling: two identical observations are two testimonies, and the bytes
+     carry a canonical header holding the testimony's own id — so identical
+     words never collide. What is left is the case only an adversary produces:
+     somebody registering, ahead of time, the exact bytes the NEXT testimony
+     will have (the id is sequential, so it can be predicted). Recording over
+     them would re-file their register row under the observation. */
+  TESTIMONY_WORDS_REGISTERED: {
+    check: 'C-53.6',
+    where: 'src/store.mjs testify > is-testify-bytes',
+    translation: 'The record already holds, under another document, the exact bytes this observation '
+      + 'would be stored as — which can only happen if somebody registered them in advance. Nothing was '
+      + 'recorded. Try again: the next attempt is stored under a new identifier and new bytes.',
+  },
+  TESTIMONY_ORIGIN_NOT_MEMBER: {
+    check: 'C-53.7',
+    where: 'src/store.mjs #testimonyFence > is-testimony-fence',
+    translation: 'This document is a member\'s own observation, and this revision of its record claims it '
+      + 'came from somewhere else — a fetch, a sweep, or a machine. That would let a member\'s word pass '
+      + 'for a captured publication. An observation\'s origin is the member who made it, and that cannot '
+      + 'be revised.',
+  },
+  TESTIMONY_AUTHORED_UNEARNED: {
+    check: 'C-53.8',
+    where: 'src/store.mjs #testimonyFence > is-testimony-fence',
+    translation: 'This document claims to be a member\'s own firsthand observation, but it did not come '
+      + 'through the act that records one. Only that act can mark a document as an observation, because '
+      + 'only that act takes the author from the signed-in account. Record the observation through it, '
+      + 'or remove the claim.',
+  },
+  TESTIMONY_AUTHORED_DROPPED: {
+    check: 'C-53.9',
+    where: 'src/store.mjs #testimonyFence > is-testimony-fence',
+    translation: 'This document is a member\'s own observation, and this revision no longer says so. '
+      + 'Removing that would let a member\'s word read as a captured document. What the document is '
+      + 'cannot be revised; to withdraw an observation, record a new one.',
+  },
+  /* MK-1 (A) — THE PUBLICATION FENCE, measured before it was built
+     (`test/mk1-publish-probe.mjs`): op=ratify on an observation whose bytes were
+     in the working bucket PUBLISHED its words, its provenance document and the
+     observer's handle; a finding resting on one, and a case over that finding,
+     ratified. MEMBER-KNOWLEDGE-DESIGN.md §4 puts WHAT a published case may show
+     of a member's observation at the attesting member's chosen level, and that
+     is MK-3's — so until MK-3's projection honours it, nothing carrying an
+     observation crosses. LIFTING THESE THREE IS MK-3's ACT, not a caller's. */
+  TESTIMONY_UNPUBLISHABLE: {
+    check: 'C-53.10',
+    where: 'src/index.mjs fetch > is-testimony-publish-bundle',
+    translation: 'This document is a member\'s own firsthand observation, and it cannot be published yet. '
+      + 'What a published case shows of an observation — the group, the project, the member\'s cover or '
+      + 'their name — is the observing member\'s choice, and the record cannot yet honour that choice in '
+      + 'what it publishes. Until it can, publishing the observation would publish its author.',
+  },
+  TESTIMONY_CITED_UNPUBLISHABLE: {
+    check: 'C-53.11',
+    where: 'src/index.mjs fetch > is-testimony-publish-bundle',
+    translation: 'This finding rests, directly or through another finding, on a member\'s own firsthand '
+      + 'observation, and it cannot be published yet. How a published case attributes an observation is '
+      + 'the observing member\'s choice, and the record cannot yet honour that choice. Publish the finding '
+      + 'without that observation in its basis, or wait until attribution is supported.',
+  },
+  TESTIMONY_CASE_UNPUBLISHABLE: {
+    check: 'C-53.12',
+    where: 'src/index.mjs fetch > is-testimony-publish-case',
+    translation: 'A finding in this case rests, directly or through another finding, on a member\'s own '
+      + 'firsthand observation, so the case cannot be published yet. How a published case attributes an '
+      + 'observation is the observing member\'s choice, and the record cannot yet honour that choice.',
+  },
+};
+
+/* =====================================================================
+ * MK-4 / IC-135 / IC-136 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5):
+ * the same member knowledge BEFORE the search. C-54, minted with
+ * `node tools/mintid.mjs C`.
+ *
+ * ITS OWN FAMILY because its subject is its own: the ways a member's LEAD could
+ * come to claim more than it is. §5 rules a lead is an authored row and NEVER
+ * EVIDENCE — it cannot be a basis leg — and following it is a LOOK recorded in
+ * `observation_log` under `authority_kind = 'lead'`. The observation log's own
+ * refusals (C-22.x, `checkObservation` in `airun.mjs`) apply to that look
+ * unchanged and are NOT restated here; what is here is the lead's own:
+ *
+ *   is-lead-not-evidence   THE REFUSAL THE ITEM EXISTS FOR (§7): a lead cited as
+ *                          a leg, at every leg grammar, BY NAME
+ *   is-lead-act            who wrote it (stamped, never a machine) and the words
+ *   is-lead-source         which lead a look or a read names
+ *   is-lead-look           who looked, what state, and what the look points at
+ *
+ * THE LIAR THIS FAMILY REFUSES is a lead that is merely an UNLABELLED
+ * OBSERVATION — stored as a bundle or a content row, so a leg could cite it as
+ * evidence. The first fence is STRUCTURAL: a lead lives in `leads` under a
+ * `LEAD-` id that no leg grammar accepts as a target or a content id. The second
+ * is this family's C-54.1, which names the lead instead of answering "not a
+ * canonical bundle id" — a member told their lead is malformed would re-author
+ * it as a document, which is exactly the liar arriving by the front door.
+ * ===================================================================== */
+export const LEAD_ID_RE = /^LEAD-\d{4}-\d{4}-[a-z0-9]+$/;
+
+export const LEAD_CHECKS = {
+  LEAD_NOT_EVIDENCE: {
+    check: 'C-54.1',
+    where: 'checks/bio-checks.mjs leadLegFindings > is-lead-not-evidence',
+    translation: 'That leg points at a LEAD. A lead is somewhere to look — what a member was told or '
+      + 'suspects — and it is never evidence, so nothing can rest on it. Follow the lead: if the '
+      + 'look finds the document, capture it and cite THAT; if you saw the thing yourself, write it '
+      + 'up as your own observation.',
+  },
+  LEAD_NOT_A_MEMBER: {
+    check: 'C-54.2',
+    where: 'src/store.mjs lead > is-lead-act',
+    translation: 'A lead is a person saying what they were told or have reason to believe, in their '
+      + 'own name. The credential that asked is an automated one, which has nobody behind it to have '
+      + 'been told anything. Sign in and write it yourself.',
+  },
+  LEAD_NO_WORDS: {
+    check: 'C-54.3',
+    where: 'src/store.mjs lead > is-lead-act',
+    translation: 'The lead is empty. Write what you were told or suspect, and where it might be found; '
+      + 'nothing is filled in for you.',
+  },
+  LEAD_TOO_LONG: {
+    check: 'C-54.4',
+    where: 'src/store.mjs lead > is-lead-act',
+    translation: 'The lead, or the place to look you suggested, is longer than one passage this record '
+      + 'stores. It is refused rather than cut, because a lead silently shortened would be words you '
+      + 'did not write standing in your name. Write it more briefly or split it into two leads.',
+  },
+  LEAD_NOT_FOUND: {
+    check: 'C-54.5',
+    where: 'src/store.mjs #leadFor > is-lead-source',
+    translation: 'That request does not name a lead this record holds and you can read. A lead is named '
+      + 'by the id its own act returned, and a lead is readable by the member who wrote it.',
+  },
+  LEAD_LOOK_STATE: {
+    check: 'C-54.6',
+    where: 'src/store.mjs leadLook > is-lead-look',
+    translation: 'Say what the look found: that the thing is not there, that you could not tell, that '
+      + 'you found part of it, or that it is there. "Nobody looked" is never recorded — it is what '
+      + 'the record says when there is no look at all.',
+  },
+  LEAD_LOOK_REFERENT: {
+    check: 'C-54.7',
+    where: 'src/store.mjs leadLook > is-lead-look',
+    translation: 'What the look found has to be something this record holds and you can read — a '
+      + 'captured document or a part of one — and only a look that found something can point at '
+      + 'anything. Capture the document first, then record the look against it.',
+  },
+  LEAD_LOOK_NOT_A_MEMBER: {
+    check: 'C-54.8',
+    where: 'src/store.mjs leadLook > is-lead-look',
+    translation: 'Following a lead is recorded in the name of the member who looked. The credential '
+      + 'that asked is an automated one; an automated search is recorded under its own run, not '
+      + 'under a member\'s lead.',
+  },
+  /* BOB #14's ruling, 2026-09-18: a lead reaches a project's participants only
+     through an AUTHORED, DATED share by its author. */
+  LEAD_SHARE_NOT_A_PARTICIPANT: {
+    check: 'C-54.9',
+    where: 'src/store.mjs leadShare > is-lead-share',
+    translation: 'You can share a lead only to a project you have joined. Sharing it somewhere you are '
+      + 'not working would put your words in front of people you are not working with.',
+  },
+  LEAD_SHARE_NOT_AUTHOR: {
+    check: 'C-54.10',
+    where: 'src/store.mjs leadShare > is-lead-share',
+    translation: 'Only the member who wrote a lead can share it. A lead is what one person was told; '
+      + 'passing someone else\'s on is theirs to decide.',
+  },
+};
+
+/** C-54.1 — ONE LEG, ASKED WHETHER IT RESTS ON A LEAD. The one checker every
+ *  leg grammar consults (`checkInquiryBasis`' basis[], the version legs, the
+ *  action basis), so the rule has one spelling and three doors. It asks BOTH
+ *  fields a leg can name a referent through — the target and the REC-82 content
+ *  id — because a lead cited through the second is still a lead cited. Returns
+ *  true when it pushed a finding, so the caller skips its own target complaint
+ *  about the same leg rather than answering twice with the wrong name. */
+export function leadLegFindings(label, leg, findings) {
+  const l = leg && typeof leg === 'object' ? leg : {};
+  /* The family helper, by name: DEC-49's guard judges `refusal("CODE"` at the site. */
+  const refusal = (code, message, repairs) => f(LEAD_CHECKS[code].check, 'error', message, repairs, code);
+  /* DEC-49 REGION is-lead-not-evidence */
+  for (const field of ['target', 'content_id']) {
+    const v = typeof l[field] === 'string' ? l[field].trim() : '';
+    if (v && LEAD_ID_RE.test(v)) {
+      findings.push(refusal("LEAD_NOT_EVIDENCE",
+        `${label}.${field} '${v}' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md §5, `
+        + `§7): it says where to look, not what was found, so no leg can rest on it`,
+        ['follow the lead and cite the document the look captured instead',
+         'or, if you saw the thing yourself, author it as your own observation and cite that']));
+      return true;
+    }
+  }
+  /* END DEC-49 REGION is-lead-not-evidence */
+  return false;
+}
 
 /** THE ONE CHECKER. Both gates run it: `store.mjs`'s op=promote write path and,
  *  through it, the catalogue — the `checkInquiryBasis` / `checkGatheringGrammar`

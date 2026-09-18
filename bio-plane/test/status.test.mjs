@@ -24,6 +24,8 @@
  * AND A SECOND BY-HAND ARM ON THE PUSH GUARD (2026-09-18): `corpusCheck` made to accept any completion
  *   line regardless of its fail count -> section 8's "A STALE STATUS DATE REFUSES THE PUSH" FAILS (51/1);
  *   `tools/pushguard.mjs` restored by `cp`, verified byte-identical (sha256 7d978c73…).
+ * AND A THIRD (2026-09-18): `markerCheck` made to ignore the opening marker -> section 9's
+ *   "A FILE CARRYING MERGE MARKERS REFUSES THE PUSH" FAILS; restored by `cp`, byte-identical.
  *   (A2 was RE-AIMED after its first run: forcing the op probe's CONDITION true also dereferenced a
  *   null match, so the suite CRASHED instead of failing the named assertion — a second variable.)
  * AND ONE ARM ON THE PUSH GUARD, run by hand because it arms a different file: `statusCheck`'s
@@ -42,7 +44,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { evalProbe, judge, renderCell, renderMap, lookup, bumpAsOf, UI_HELPERS, ROOT, STATES }
   from "../../tools/status.mjs";
-import { statusCheck, corpusCheck } from "../../tools/pushguard.mjs";
+import { statusCheck, corpusCheck, markerCheck } from "../../tools/pushguard.mjs";
 import { copyFileSync } from "node:fs";
 
 let pass = 0, fail = 0;
@@ -51,7 +53,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 8;
+const SECTIONS = 9;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -242,6 +244,17 @@ section("8 — THE PUSH ALSO SEES THE DESIGN CORPUS: a Status date the body move
   t("a corpuscheck that exits 0 WITHOUT its completion line verified nothing, and is refused", [silent.ok, silent.kind], [false, "silent"]);
   const live = corpusCheck();
   t("the real corpus on this tree is current (a guard that refused everything would pass the arm above)", [live.ok, live.kind], [true, "current"]);
+}
+/* ========================================================================== */
+section("9 — A COMMITTED CONFLICT IS REFUSED AT THE PUSH (BOB #14 pushed three markers to main at 0c7e4ed5)");
+{
+  const o = "<".repeat(7), m = "=".repeat(7), c = ">".repeat(7);
+  const files = { "a.md": `text\n${o} HEAD\nmine\n${m}\ntheirs\n${c} abc123 (x)\n`,
+                  "b.md": `prose that mentions ${o} inline and a fenced \`${m}\` is not a marker\n` };
+  const r = markerCheck({ files: Object.keys(files), read: (f) => files[f] });
+  t("A FILE CARRYING MERGE MARKERS REFUSES THE PUSH, naming each line", [r.ok, r.marked], [false, ["a.md:2", "a.md:4", "a.md:6"]]);
+  t("the sequences inside prose or a code span are NOT markers — line starts only", r.marked.some((x) => x.startsWith("b.md")), false);
+  t("the real tracked tree carries no marker (a guard that refused everything would pass the arm above)", markerCheck().ok, true);
 }
 } finally {
   rmSync(repo, { recursive: true, force: true });

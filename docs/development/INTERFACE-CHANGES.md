@@ -9910,6 +9910,134 @@ rather than a mock, with a negative control per half. **agent-worker's answer ga
 `log_refused` and `present_unbacked`, and `logged` now counts appended entries rather than ticks** —
 equal whenever nothing is refused, which was every case before this IC.
 
+## IC-133 · I3: TESTIFY — `op=testify`, a member records a firsthand observation, which becomes an authored INFO bundle whose bytes are their words (D-184) · PROPOSED 2026-09-18 (MK-1, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 (I3 26.2.0)**
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`: 25.0.0** (IC-132 ACCEPTED — re-read after merging `origin/main` at
+  `fbcefa1b`; the brief's 24.0.0 was the base at spawn and IC-132 landed underneath it). **Proposed as
+  MINOR — 25.0.0 → 25.1.0, ADDITIVE.** One new op; one new refusal family **C-53** (`TESTIMONY_CHECKS`, nine rows), six reachable
+  through the new op and three through `op=promote` (below); `op=earnedbasis`'s capture-axis entry gains
+  ONE new `undetermined_because` value on documents that could not exist before this IC. **Read the base
+  AT RESOLUTION** — MK-4 is proposing against I3 concurrently.
+- **Proposer:** RECORD, worker `agent-a1137b844e6d23aed`, 2026-09-18, from QUEUE MK-1
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (the surface is Program B's and is NOT rowed —
+  `MEMBER-KNOWLEDGE-DESIGN.md` §8), `SKILL` and `DIST` (NOT-AFFECTED expected: neither calls the new op
+  nor writes a provenance document with an `authored` key), `RECORD`.
+- **Design:** `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §2 (the mechanism) and §7 (the refusals),
+  read at the artifact before building. Register half: IC-134.
+
+**THE SHAPE.** `POST op=testify` body `{ words, observedAt, title? }` — classes admin/member,
+`mutating: true`, SESSION route, capability `contribute`. `author` is STAMPED by the control plane from
+the session and OVERWRITES any `?author=` the caller sent; a machine credential stamps `class:<cls>`.
+`observedAt` is required — a real calendar date `YYYY-MM-DD` or a UTC instant
+`YYYY-MM-DDTHH:MM[:SS]Z`, not later than the record's clock — and is kept AS WRITTEN; the record's own
+time of writing (`recorded_at`) is the server's clock and is not taken from the caller. `title` is
+optional (control characters stripped, 200 characters); absent, it is `Firsthand observation, observed
+<date>`. Answers `{ ok, bundle_id, bundle_sha, capture_sha, file, bytes, content_id, authored: true,
+origin: "member", actor_class: "member", author, observed_at, recorded_at, axes: {capture, connection,
+testimony} (each {grade: null, determined: false, why}), says }`.
+
+What it writes, through `promote` (the one write path) in ONE transaction: an INFO bundle under a
+canonical id `INFO-<year>-<n>-observation` (the slug is fixed, so an id says what KIND of thing it names
+and nothing of what it says); the words, byte-for-byte, at `snapshots/observation-<sha16>.txt`; a
+`data/provenance.json` document with `authored: true`, `author`, `observed_at`, `recorded_at`,
+`origin: {kind: "member"}`, `capture.actor_class: "member"` and **NO `capture.grade`**; a register row
+(IC-134) with `authored = 1`; ONE `capture_text` unit over the whole words at the `document` extent (so
+`passage:` search finds it) with its `indexed` observation; and ONE `document` content row minted by the
+member (so a leg cites it by `content_id` as any row). **No reading is written**, because no reader ran
+over the words — a meaning-level row saying one had looked would be a look nobody took.
+
+**WHAT MOVES ON EXISTING OPS.**
+- `op=earnedbasis` (and the promote-time earned registry): a target whose ONLY registered capture is
+  authored gets `earned.capture[id] = { mode: "ceiling", grade: null, captures: 0, authored: <n>,
+  determined: false, undetermined_because: "CAPTURE_AXIS_AUTHORED", empty_level, why }` — present and
+  NULL on CASE 2's rule, not absent. So a leg citing an observation and claiming a capture letter is
+  refused C-2.8 (as for any undetermined capture), and C-2.8's repair list omits "have the transcription
+  measured" for this one cause, because there is no transcription. **Every other document's entry is
+  unchanged**, measured: a member-UPLOADED document still earns the fetch ceiling, and the suite pins it.
+- `op=promote`: three new refusals (C-53.7/.8/.9, below), and the register write became an UPSERT that
+  keeps `authored`/`author`/`observed_at` on a re-registration under the SAME bundle (REPLACE would have
+  reset them — the flag cleared by any writer). The five pre-existing columns move exactly as before.
+  The success answer gains a `testimony` key ONLY on the testimony path, which is a method of the store,
+  so no existing caller's answer changes.
+- C-18.1 (the catalogue, at release): a document with `authored: true` must carry NO capture grade,
+  actor class `member` and origin `member`; every other document is held to the A/B/C rule exactly as
+  before.
+
+**WHAT IT REFUSES, C-53:** `TESTIMONY_NOT_A_MEMBER` (.1, any machine stamp or none),
+`TESTIMONY_AUTHOR_SUPPLIED` (.2, **the body names an author** under any of `author`, `observer`,
+`authoredBy`, `authored_by`, `by`, `member`, `memberId` — refused rather than silently overridden),
+`TESTIMONY_NO_WORDS` (.3), `TESTIMONY_WORDS_TOO_LONG` (.4, over `CAPTURE_TEXT_UNIT_CAP`, refused never
+cut), `TESTIMONY_OBSERVED_AT_INVALID` (.5), `TESTIMONY_WORDS_REGISTERED` (.6, the exact bytes already
+registered — the register is keyed by bytes, so recording them would re-file the existing row; the
+answer does not name the bundle that holds them, D-15). At `op=promote`, region `is-testimony-fence`:
+`TESTIMONY_ORIGIN_NOT_MEMBER` (.7, **an authored document claiming an origin or actor other than
+`member`**), `TESTIMONY_AUTHORED_UNEARNED` (.8, **a document claiming `authored` — in any truthy
+spelling — that the testimony path did not write, or a register entry re-filing an authored
+observation's bytes under another bundle: THE LIAR**), `TESTIMONY_AUTHORED_DROPPED` (.9, an authored
+document whose revision stops saying so or drops `data/provenance.json`).
+
+**WHY IT IS ADDITIVE.** A new op; refusals reachable only on documents that claim a key no document
+carried before this IC, or on bundles only this op can create; an earned-registry value on the same
+documents. A member-uploaded document (origin `member`, NOT authored) and `authored: false` are
+accepted exactly as today — pinned by the over-strictness arms.
+
+**ADDENDUM, same landing, on CONDUCT #4's two corrections (2026-09-18):**
+- **THE AUTHORED BYTES ARE A CANONICAL HEADER THEN THE WORDS** (BOB #14's ruling): `bio-testimony/1\n`,
+  `id: <bundle id>\n`, `observed_at: <as accepted>\n`, one empty line, then the words exactly as written —
+  defined once at `Store.testimonyBytes`, permanent once on main. No author identity is in the bytes.
+  `capture_sha` is over the whole file; the answer gains `words_bytes` beside `bytes`. The passage index holds
+  the WORDS only. Two members' identical words are now two bundles with two shas. **C-53.6 is NARROWED**, not
+  removed: it now fires only when somebody registered the next testimony's exact bytes in advance (the id is
+  sequential), in region `is-testify-bytes`.
+- **THE PUBLICATION FENCE (C-53.10–.12), measured necessary before it was built** (`test/mk1-publish-probe.mjs`:
+  an observation whose bytes were in the working bucket RATIFIED and published its words, its provenance
+  document and the observer's handle; a finding resting on one ratified; a case over it ratified).
+  `op=ratify` refuses `TESTIMONY_UNPUBLISHABLE` (the bundle is an observation) and
+  `TESTIMONY_CITED_UNPUBLISHABLE` (its basis or version legs reach one at any depth, with `rests_on`);
+  `op=caseratify` refuses `TESTIMONY_CASE_UNPUBLISHABLE` (a finding the document names reaches one). All
+  three below the scope check and the machine fence, before the signature is weighed, 409. The facts come
+  from the store (`gatefacts` and `casedocfacts` gain a `testimony` key, from `Store.testimonyReach`).
+  **Lifting the fence is MK-3's act**, once its projection honours §4's attribution level. Every ordinary
+  document, finding and case publishes exactly as before (driven in `testify.test.mjs` §6).
+
+**ANSWERS REQUESTED:** UI — NOT-AFFECTED today (no caller; Program B's surface) — but a surface offering
+ratify on a finding now meets three new refusal codes, each with its canned sentence; SKILL, DIST —
+NOT-AFFECTED expected.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at MK-1's integration — I3 26.1.0 → 26.2.0, MINOR (additive: `op=testify`, the C-53 family).** Base read at resolution (26.1.0). **MK-1 was HELD OFF `main` once, deliberately, and the hold was right:** its worker then DROVE every path to the published bucket and found path 1b OPEN — after any member PUT the bytes, `op=ratify` PUBLISHED the member's words, the authored provenance document and the observer's HANDLE, and `op=verify` reported them published; a finding citing one and a case containing one also ratified. This landing carries the fence: C-53.10 (the observation), C-53.11 (a finding reaching one at any depth), C-53.12 (a case whose findings reach one), after the scope check and the machine fence, before the signature is weighed; lifting it is MK-3's act. And the canonical header (`bio-testimony/1`, `id:`, `observed_at:`, a blank line, the words; NO author) so identical words are two testimonies. UI/SKILL/DIST NOT-AFFECTED, CONDUCT answering for each.
+
+## IC-134 · I5: the register gains `authored`, `author`, `observed_at` — a member's own words are registered like any capture and never pass for one (D-184) · PROPOSED 2026-09-18 (MK-1, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 (I5 1.19.0)**
+
+- **Interface:** I5 (the store schema). **Version read off THIS TREE's `docs/development/INTERFACES.md`:
+  1.18.0.** **Proposed as MINOR — 1.18.0 → 1.19.0, ADDITIVE.** Three columns on `register`; no new
+  table, so nothing joins `purge`'s list (the register is already there). **Read the base AT
+  RESOLUTION** — MK-4 is proposing against I5 concurrently.
+- **Proposer:** RECORD, worker `agent-a1137b844e6d23aed`, 2026-09-18, from QUEUE MK-1
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** every reader of `register` — all in `bio-plane/src/store.mjs` and
+  `index.mjs`, all NAMING their columns (measured: no `SELECT *` and no positional `INSERT` on
+  `register` in this tree), so none sees a new column it did not ask for.
+
+**THE SHAPE.** `authored INTEGER NOT NULL DEFAULT 0` — 1 when the bytes are a member's own words written
+through `op=testify`; `author TEXT` — the member, stamped from the session; `observed_at TEXT` — the
+member's own statement of when they saw it. Added to the `CREATE TABLE` and to the additive-column
+migration list, so a fresh install and a store migrated forward present the same table. **The default
+IS the true value for every existing row** — no route could author a bundle before this IC — so it is a
+backfill by construction (`content.cited_as`'s reasoning). `author` and `observed_at` are NULL on every
+row that is not authored, which is what they mean.
+
+**WHO WRITES IT.** Only `promote`, and only from the testimony path's own key — a module-private
+`Symbol` that no JSON body can carry — so a caller's register entry may carry an `authored` field and
+it is never read. The fence (IC-133, C-53.8) reads "authored" FROM THIS COLUMN, never from the
+document's claim, which is what makes the column the one fact in the check a caller cannot have
+produced.
+
+**ANSWERS REQUESTED:** RECORD (self). No other area reads `register`.
+
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at MK-1's integration — I5 1.18.0 → 1.19.0, MINOR (additive: `register` gains `authored`, `author`, `observed_at`, migrated).** The collision BOB #14 ruled on is closed WITHOUT a key change (the canonical header makes the sha unique per testimony); C-53.6 is narrowed to pre-registering a testimony's exact next bytes. MK-4's IC-135 also proposes an I5 minor; it resolves against whatever I5 reads when it lands.
 
 ## IC-132 · I3: `op=ratify` and `op=caseratify` REFUSE an `ai` credential BY NAME — `MACHINE_CANNOT_RATIFY` (C-32.12), `MACHINE_CANNOT_RATIFY_CASE` (C-32.13) · PROPOSED 2026-09-18 (REC-123, minted with `node tools/mintid.mjs IC` BEFORE the fix) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 — MAJOR, I3 25.0.0**
 
@@ -10150,11 +10278,109 @@ gains one word it can read, `derivation_cap: "does-not-apply"`; no new act. SKIL
 expected NOT-AFFECTED (no reader of the moved answer, above).
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 as MINOR — I3 26.0.0 → 26.1.0,** on IC-131's precedent: the narrowing (`cap:undetermined` stops matching bytes rows) only stops over-reporting and every such row stays reachable under `cap:does-not-apply`. Base read at resolution (26.0.0; IC-137 took the MAJOR in the same integration). The only outside reader (`civicos-ui/test/meaning-arms.walks.mjs`, `content:cap<C`) is a comparison this does not move.
+## IC-135 · I5: THE `leads` TABLE — a member's LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5), an authored row that is NEVER evidence · PROPOSED 2026-09-18 (MK-4, minted at spawn with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 (I5 1.20.0)**
+
+- **Interface:** I5 (the store schema). **Version read off THIS TREE's `docs/development/INTERFACES.md`:
+  1.18.0** (IC-129 ACCEPTED). **Proposed as MINOR — 1.18.0 → 1.19.0, ADDITIVE.** One new table, no
+  column added to or removed from any existing table. **Read the base AT RESOLUTION** — MK-1 is
+  concurrently adding to I5.
+- **Proposer:** RECORD, worker `agent-a6de3e82fcfd8bd2a`, 2026-09-18, from QUEUE MK-4
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `RECORD` (the only writer and reader). `UI`, `SKILL`, `DIST`: NOT AFFECTED —
+  nothing outside the plane reads the schema directly.
+- **Design:** §5's field list exactly — `lead_id` (PRIMARY KEY, `LEAD-YYYY-MMDD-hex`, minted by the
+  plane), `author` (a member id, server-stamped), `words` (as written), `locator` (nullable: a place to
+  look the member suggests), `at` — plus one index `leads_author(author, at)`. Placed before
+  `host_governor`. **NO `bundle_id`, by the design's field list**, so a per-bundle purge leaves a lead
+  and the WHOLE-STORE purge clears it in the same arm that clears `observation_log` (D-113). The LOOK
+  is NOT stored here: it is a row of `observation_log` under `authority_kind = 'lead'`, a value that
+  table's vocabulary already reserved — so `observation_log` is UNCHANGED in shape.
+- **AMENDED 2026-09-18 on BOB #14's visibility ruling:** a SECOND table, `lead_shares` (`lead_id`, `bundle_id` — the PROJECT, `sharer`, `at`; PRIMARY KEY (`lead_id`, `bundle_id`); index on `bundle_id`), the authored dated share. It carries `bundle_id` so it rides `op=purge`'s TABLES list and clears in BOTH arms.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at MK-4's integration — I5 1.19.0 → 1.20.0, MINOR (additive: `leads` and `lead_shares`, both purged; `lead_shares` keyed on the project so a project purge clears them).** Base read at resolution (1.19.0; MK-1's IC-134 took it).
+
+## IC-136 · I3: THE LEAD — `op=lead` (write one), `op=leadlook` (record following it, as an observation), `op=leadread` (the lead and its looks); C-54 refuses a lead cited as ANY leg BY NAME · PROPOSED 2026-09-18 (MK-4, minted at spawn with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 (I3 26.3.0)**
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`: 25.1.0** (IC-131 ACCEPTED, read after rebasing onto `d49e71c6`; this
+  line read 24.0.0 and then 25.0.0 as REC-123 and REC-121 landed underneath it — read it again at
+  resolution). **Proposed as MINOR — 25.1.0 → 25.2.0.**
+  Three new ops (FOUR after the amendment below), one new refusal family **C-54** (`LEAD_CHECKS`, eight rows, TEN after it), and two additive keys on
+  existing answers. **ONE EXISTING REFUSAL CHANGES ITS NAME ON ONE INPUT, stated rather than hidden:** a
+  leg whose `target` or `content_id` is a `LEAD-…` id was refused before this IC too — as C-2.8 *not a
+  canonical bundle id* (basis[]), `VERSION_LEG_NOT_CITABLE` (version legs), C-2.10 (action basis) or the
+  content-id grammar — and is now refused as **C-54.1 `LEAD_NOT_EVIDENCE`**. No input that was accepted
+  is refused and none that was refused is accepted, and no `LEAD-` id could exist before this IC, so the
+  measured impact on a correct consumer is zero. **Read the base AT RESOLUTION.**
+- **Proposer:** RECORD, worker `agent-a6de3e82fcfd8bd2a`, 2026-09-18, from QUEUE MK-4
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (the member surface is Program B's and is NOT built by this item),
+  `SKILL` and `DIST` (NOT AFFECTED expected: neither calls a new op), `RECORD`.
+- **Design:** `MEMBER-KNOWLEDGE-DESIGN.md` §5 and §7, read with `OBSERVATION-LOG-DESIGN.md` §3 / §4.5.
+
+**THE SHAPE.**
+
+`POST op=lead` body `{ words, locator? }` — classes admin/member, `mutating: true`, SESSION route,
+capability `contribute`; `author` is STAMPED by the control plane (a caller's body or query `author` is
+never honoured; a machine credential stamps `class:<cls>` and is refused BY NAME, C-54.2). Answers `{ ok,
+lead_id, author, words, locator, at, evidence: false, looks: 0, state: "NEVER_LOOKED", says }`. **It writes
+NOTHING to `observation_log`**: nobody has looked, and NEVER_LOOKED is never stored (§3).
+
+`POST op=leadlook` body `{ lead, state, resultKind?, resultRef?, condition?, detail? }` — classes
+admin/member, SESSION route, `looker` and `viewer` stamped. Writes ONE `observation_log` row through the
+ONE append site (`#observe`): `actor_class member`, `actor` the looker, `authority_kind lead`, `authority`
+the lead id, `level internet`, `subject_kind description`, `subject` the lead's words — §4.5's row. Every
+C-22 refusal applies unchanged (a `PRESENT` naming nothing is C-22.10, not a lead rule). Answers `{ ok,
+lead_id, seq, at, level, state, looked_by, result_kind, result_ref, evidence: false, says }`.
+
+`GET op=leadread&id=<lead_id>[&limit=]` — classes admin/member/probe, viewer-GATED: readable by its
+AUTHOR and by an unfiltered machine credential; anyone else is answered exactly as for an absent lead
+(C-54.5). Capped 200/2000 with `limit` and `truncated`. Answers `{ ok, lead_id, author, words, locator,
+at, evidence: false, limit, truncated, looks: [{seq, at, looked_by, authority_kind, authority, level,
+subject_kind, state, condition, detail, result_kind, result_ref, coverage}], state, says }` — `state` is
+the LATEST look's, or `NEVER_LOOKED`, which is ESTABLISHED here rather than inferred (a lead and its
+looks are cleared only together, by the whole-store purge). A look's referent the viewer can no longer
+read is not published.
+
+**ADDITIVE ON EXISTING OPS:** `op=stats` gains `leads` (a count); `op=purge` ALL's `removed` gains
+`leads`. `op=frontier` for a level it does not build keeps `built: false` and its keys; its `note`
+PROSE now says the internet level HAS a writer (the lead) and that the level-wide read is what is unbuilt.
+
+**WHAT IT REFUSES, C-54:** `LEAD_NOT_EVIDENCE` (.1 — a lead cited as a basis leg, a version leg or an
+action-basis leg, by `target` or `content_id`, **the refusal §7 names**), `LEAD_NOT_A_MEMBER` (.2),
+`LEAD_NO_WORDS` (.3), `LEAD_TOO_LONG` (.4, over `CAPTURE_TEXT_UNIT_CAP`, refused never cut),
+`LEAD_NOT_FOUND` (.5, absent and unreadable answer alike), `LEAD_LOOK_STATE` (.6, including
+`NEVER_LOOKED` by name), `LEAD_LOOK_REFERENT` (.7 — a referent must be a capture or content row the
+viewer can read, only on `PRESENT`/`partial`; an `observation` referent — a rollup's — is refused, so
+C-22.10's rollup arm is unreachable through a lead), `LEAD_LOOK_NOT_A_MEMBER` (.8).
+
+**AMENDED 2026-09-18 — VISIBILITY IS BOB #14's RULING, replacing MK-4's provisional.** The provisional let ANY
+unfiltered machine credential read every lead; that is gone. `op=leadread` / `op=leadlook` / `op=leadshare` reach a
+lead for: its AUTHOR; a JOINED (or `leaving`) participant of a project the author SHARED it to — `invited` is
+skeleton-only and does not; an `ai` credential ONLY through its minted member principal (it answers exactly as that
+member would); nobody else. Every `class:*` credential — the instance tokens and an organisation-scoped `ai` key —
+reaches no lead. **Every refused viewer gets the answer for an absent lead, byte-identical, asserted per viewer.**
+Participation is read from `project_participants` directly, NOT through `viewerPredicate`'s admin disjunct: an
+administrator who is not a participant does not see a shared lead.
+
+`POST op=leadshare` body `{ lead, project }` — classes admin/member, SESSION route, capability `contribute`,
+`sharer` stamped. Answers `{ ok, lead_id, project, shared_by, at, already, evidence: false, says }`; sharing twice
+finds the same row and its date does not move. Refuses `LEAD_SHARE_NOT_AUTHOR` (**C-54.10**, anyone but the author,
+including every machine) and `LEAD_SHARE_NOT_A_PARTICIPANT` (**C-54.9**, one answer for a project that does not
+exist, one the author cannot see, and one she has not joined). `op=leadread` gains `shared_to_truncated` and `shared_to: [{project, shared_by,
+at}]` — every share for the author, only the viewer's own joined projects for anyone else. **C-54 is now ten rows.**
+**Proposed version unchanged: MINOR** (additive; the provisional's machine read was never on `main`).
+
+**MEASURED:** `bio-plane/test/lead.test.mjs` 69/0 through the ops; `node test/nc-mk4.mjs` thirteen arms,
+every one as declared on the final tree (recorded in the suite's `NEGATIVE CONTROL:` line).
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at MK-4's integration — I3 26.2.0 → 26.3.0, MINOR (additive: `op=lead`, `op=leadlook`, `op=leadread`, `op=leadshare`; C-54 incl. C-54.9/.10).** Base read at resolution (26.2.0; the IC proposed against 25.1.0 — four integrations moved I3 while MK-4 was built and corrected). **MK-4 was HELD OFF `main` once for BOB #14's visibility ruling** and landed with it: the author; a project's JOINED participants after the author's `op=leadshare`; a machine credential only through a member-scoped `ai` key that reaches exactly what its member reaches (instance tokens and org-scoped keys reach no lead); everyone else the byte-identical answer for a lead that does not exist. **The merge onto MK-1 was the session's first real CODE conflict** — both added to the OPS table, the session and capability lists, the affordance tables, the check catalogue and `store.mjs`'s imports — resolved keep-both by hand, the check catalogue's shared comment opener restored so each family keeps its own, and proved by the full battery. UI/SKILL/DIST NOT-AFFECTED, CONDUCT answering for each.
 
 ## IC-139 · I3: A RATIFICATION STATES WHO AUTHORISED AND WHO DELIVERED — `op=ratify` / `op=caseratify` answer `deliveredBy`, every read that serves a ratification carries `delivered_by` beside `attestor`, and the PUBLISHED case container moves `bio-case-container/5` → `/6` to carry it · PROPOSED 2026-09-18 (REC-128, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts, and the case container those ops publish). **Version read off
-  THIS TREE's `docs/development/INTERFACES.md`: 26.1.0.** **Proposed as MINOR — 26.1.0 → 26.2.0**, on the
+  THIS TREE's `docs/development/INTERFACES.md`: 26.3.0** (built on 26.1.0; RE-READ after merging origin/main
+  `e1434b06`, where IC-136 moved it — the base moved underneath this row). **Proposed as MINOR — 26.3.0 → 26.4.0**, on the
   additive rule: no op, input or existing field changes meaning or is removed; one field is added to two answers
   and to five reads, and the published manifest gains one field per signature under a moved format string.
   **Read the base AT RESOLUTION.** The format move is the part that is NOT a plain addition and it is argued
@@ -10230,7 +10456,8 @@ their sites, never exempted: the exact-version pins in `caseflip`, `casesign`, `
 ## IC-140 · I5: `published_bundles.delivered_by` and `case_documents.delivered_by` — nullable, additive, NEVER back-filled · PROPOSED 2026-09-18 (REC-128, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I5 (the store schema). **Version read off THIS TREE's `docs/development/INTERFACES.md`:
-  1.18.0.** **Proposed as MINOR — 1.18.0 → 1.19.0**, ADDITIVE and non-breaking: two nullable TEXT columns, one on
+  1.20.0** (built on 1.18.0; RE-READ after merging origin/main `e1434b06`, where IC-134 and IC-135 moved it).
+  **Proposed as MINOR — 1.20.0 → 1.21.0**, ADDITIVE and non-breaking: two nullable TEXT columns, one on
   each of the two tables a ratification commits, declared in `schema.mjs` for a fresh store and added by the
   `#migrate` additive-column list (`ALTER TABLE … ADD COLUMN`, guarded on `PRAGMA table_info`) for an existing one.
   Neither is in a key; neither is a derived table, so `op=purge` is untouched (D-113 does not apply).
