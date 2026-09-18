@@ -1877,10 +1877,29 @@ function checkReleaseAuthority(ctx, findings) {
     if (!cap || typeof cap !== 'object') findings.push(f('C-18.1', 'error', `provenance documents[${i}] missing capture block`));
     else {
       if (!cap.method) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture missing 'method'`));
-      if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(', ')}`));
+      /* MK-1 / D-184 (`MEMBER-KNOWLEDGE-DESIGN.md` §3): AN AUTHORED DOCUMENT
+         CARRIES NO CAPTURE GRADE, and the absence is the statement. The capture
+         axis measures the act of reading a document in (DEC-21's amendment), and
+         a member's own words were not read in from anywhere — so a letter here
+         would be true of the bytes (we hold exactly what the member wrote) and
+         would read as strength the observation does not have. Its grade is
+         testimony, which is MK-2's axis. `authored === true` is the ONLY
+         spelling that switches the arm: the store's fence (C-53.8) refuses the
+         flag on any document the testimony path did not write, so the catalogue
+         can read it as said. */
+      if (d.authored === true) {
+        if (cap.grade !== undefined && cap.grade !== null) findings.push(f('C-18.1', 'error', `provenance documents[${i}] is a member's authored observation and carries capture.grade '${cap.grade}': the capture axis does not apply to an authored document, and a letter on it would read as strength the observation does not have (MEMBER-KNOWLEDGE-DESIGN.md §3)`));
+        if (cap.actor_class !== 'member') findings.push(f('C-18.1', 'error', `provenance documents[${i}] is a member's authored observation and its capture.actor_class is '${cap.actor_class}', not 'member'`));
+      } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(', ')}`));
       if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(', ')}`));
     }
     const or = d.origin;
+    /* MK-1: the design's first §7 refusal, stated in the catalogue as well as
+       fenced at the write (C-53.7) — an authored observation's origin is the
+       member who made it. */
+    if (d.authored === true && (!or || typeof or !== 'object' || or.kind !== 'member')) {
+      findings.push(f('C-18.1', 'error', `provenance documents[${i}] is a member's authored observation and its origin.kind is '${or && typeof or === 'object' ? or.kind : or}', not 'member'`));
+    }
     if (!or || typeof or !== 'object' || !ORIGIN_KINDS.includes(or.kind)) {
       findings.push(f('C-18.1', 'error', `provenance documents[${i}].origin.kind must be one of: ${ORIGIN_KINDS.join(', ')}`));
     } else if (or.kind === 'sweep') {
@@ -3613,7 +3632,12 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   if (earned && earned.mode === 'ceiling' && earned.grade == null) {
     findings.push(f('C-2.8', 'error', `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ''}`,
       [`state NO capture grade on basis[${i}] — an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on`,
-       'or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns',
+       /* MK-1: for a member's AUTHORED observation there is no transcription to
+          measure — the bytes ARE the words — so that repair would send a member
+          to do something that cannot be done. Omitted for that one cause, and
+          only for it. */
+       ...(earned.undetermined_because === 'CAPTURE_AXIS_AUTHORED' ? []
+         : ['or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns']),
        'or state this leg as testimony (grade D, with an author and a date) if it is a member\'s own account']));
     return;
   }
@@ -11057,6 +11081,102 @@ export const TRANSCRIBE_CHECKS = {
     translation: 'You typed this transcription, so you cannot be the one who attests it. An '
       + 'attestation is a SECOND person checking the text against the page; your own agreement with '
       + 'your own typing costs nothing and proves nothing. Ask another member to check it.',
+  },
+};
+
+/* =====================================================================
+ * MK-1 / D-184 / IC-133 / IC-134 — THE AUTHORED BUNDLE (`MEMBER-KNOWLEDGE-
+ * DESIGN.md` §2 and §7): a member's firsthand observation IS a document — an
+ * INFO bundle whose bytes are exactly the member's words, registered like any
+ * capture and flagged `authored`. C-53, minted with `node tools/mintid.mjs C`.
+ *
+ * ITS OWN FAMILY, because the subject is its own: the ways a member's own
+ * statement could be made to pass for a captured document (or a captured
+ * document for a member's statement), and the ways the act could be performed
+ * in somebody else's name. The design's words: the register must never let one
+ * pass for the other.
+ *
+ *   is-testify-act       who is testifying — a signed-in member, stamped by the
+ *                        plane; a machine, or a caller naming the author, refused
+ *   is-testify-words     the words, the date the member says they observed it,
+ *                        and whether these exact bytes are already registered
+ *   is-testimony-fence   THE REFUSALS THE ITEM EXISTS FOR, at op=promote — the one
+ *                        write path — so no route but op=testify can set the flag,
+ *                        and no revision can quietly change what it says: an
+ *                        authored document claiming an origin or actor other than
+ *                        `member` (C-53.7); a document claiming `authored` that the
+ *                        testimony path did not write (C-53.8, THE LIAR: a flag any
+ *                        writer could set); an authored document that stops saying
+ *                        so (C-53.9).
+ *
+ * WHAT IS NOT HERE, each by design: the `testimony` grade axis (§3) is MK-2's;
+ * the attribution level on the case act (§4) is MK-3's.
+ * ===================================================================== */
+export const TESTIMONY_CHECKS = {
+  TESTIMONY_NOT_A_MEMBER: {
+    check: 'C-53.1',
+    where: 'src/store.mjs testify > is-testify-act',
+    translation: 'A firsthand observation is a person saying what they saw, in their own name, and it '
+      + 'stands on that person\'s trust. The credential that asked is an automated one, and it has no '
+      + 'eyes to have seen anything with. Sign in and record it yourself.',
+  },
+  TESTIMONY_AUTHOR_SUPPLIED: {
+    check: 'C-53.2',
+    where: 'src/store.mjs testify > is-testify-act',
+    translation: 'That request names who the author is. The record takes the author of an observation '
+      + 'from the account that is signed in, never from the request — a request that names its own '
+      + 'author could sign as somebody else. Send the observation without an author and it is recorded '
+      + 'as yours.',
+  },
+  TESTIMONY_NO_WORDS: {
+    check: 'C-53.3',
+    where: 'src/store.mjs testify > is-testify-words',
+    translation: 'The observation is empty. Write what you saw, in your own words; nothing is filled in '
+      + 'for you.',
+  },
+  TESTIMONY_WORDS_TOO_LONG: {
+    check: 'C-53.4',
+    where: 'src/store.mjs testify > is-testify-words',
+    translation: 'The observation is longer than one passage this record stores. Record it as more than '
+      + 'one observation; each is kept exactly as written and each can be cited.',
+  },
+  TESTIMONY_OBSERVED_AT_INVALID: {
+    check: 'C-53.5',
+    where: 'src/store.mjs testify > is-testify-words',
+    translation: 'An observation needs the date you saw it, as a calendar date (for example 2026-09-10) '
+      + 'or a date and time, and not a date later than now. The record keeps that date apart from the '
+      + 'moment you wrote it down, because they are two different facts.',
+  },
+  TESTIMONY_WORDS_REGISTERED: {
+    check: 'C-53.6',
+    where: 'src/store.mjs testify > is-testify-words',
+    translation: 'These exact words, byte for byte, are already held in this record, and the record keys '
+      + 'what it holds by its bytes — so recording them again would overwrite what the record says '
+      + 'about the copy it already has. If you saw this yourself, say it in your own words: two members '
+      + 'who saw the same thing record two observations.',
+  },
+  TESTIMONY_ORIGIN_NOT_MEMBER: {
+    check: 'C-53.7',
+    where: 'src/store.mjs #testimonyFence > is-testimony-fence',
+    translation: 'This document is a member\'s own observation, and this revision of its record claims it '
+      + 'came from somewhere else — a fetch, a sweep, or a machine. That would let a member\'s word pass '
+      + 'for a captured publication. An observation\'s origin is the member who made it, and that cannot '
+      + 'be revised.',
+  },
+  TESTIMONY_AUTHORED_UNEARNED: {
+    check: 'C-53.8',
+    where: 'src/store.mjs #testimonyFence > is-testimony-fence',
+    translation: 'This document claims to be a member\'s own firsthand observation, but it did not come '
+      + 'through the act that records one. Only that act can mark a document as an observation, because '
+      + 'only that act takes the author from the signed-in account. Record the observation through it, '
+      + 'or remove the claim.',
+  },
+  TESTIMONY_AUTHORED_DROPPED: {
+    check: 'C-53.9',
+    where: 'src/store.mjs #testimonyFence > is-testimony-fence',
+    translation: 'This document is a member\'s own observation, and this revision no longer says so. '
+      + 'Removing that would let a member\'s word read as a captured document. What the document is '
+      + 'cannot be revised; to withdraw an observation, record a new one.',
   },
 };
 

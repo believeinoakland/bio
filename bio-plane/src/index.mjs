@@ -1058,6 +1058,16 @@ const OPS = {
   transcribe:          { classes: ["admin", "member"],             mutating: true  },
   transcriptionattest: { classes: ["admin", "member"],             mutating: true  },
   transcription:       { classes: ["admin", "member", "probe"],    mutating: false },
+  /* MK-1 / D-184 / IC-133 — TESTIFY: a member records a firsthand observation,
+     which becomes an authored INFO bundle whose bytes are their words
+     (MEMBER-KNOWLEDGE-DESIGN.md section 2). The class cut is `transcribe`'s one
+     row up and for its reason: a person's word in their own name. NAMED `testify`
+     because `op=claim` is the instance-claim op and the design's own word for
+     the route is "the testimony path"; `resolvetestify` is a DIFFERENT act (a
+     member's grade-D testimony that a document concerns a subject), and the two
+     share the verb because both are a member's word standing on their trust. The
+     store refuses a machine stamp BY NAME (C-53.1) — two fences, `transcribe`'s. */
+  testify:             { classes: ["admin", "member"],             mutating: true  },
   /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
      different cut from CPDF-10's above because a different thing is at stake.
 
@@ -1683,6 +1693,8 @@ const SESSION_OPS = {
                    /* REC-87: TRANSCRIBE and the attestation of a typing — a person's
                       word in their own name, `attesttext`'s route and reason. */
                    "transcribe", "transcriptionattest",
+                   /* MK-1: TESTIFY — a member's own word, `transcribe`'s route. */
+                   "testify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1709,6 +1721,7 @@ const SESSION_OPS = {
                    "extractproposals",
                    "narrow", "narrowcandidates",
                    "transcribe", "transcriptionattest",
+                   "testify",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1790,6 +1803,10 @@ const NEEDS = {
   transcribe:          "contribute",
   transcriptionattest: "contribute",
   transcription:       null,
+  /* MK-1: an observation is written into the working corpus as an INFO bundle —
+     `contribute`, as capturing a document is. Nothing it writes is the group
+     putting its name on anything; attribution in a published case is MK-3's. */
+  testify:             "contribute",
   monitor:          "contribute",
   cite:             "contribute",
   sever:            "contribute",
@@ -8570,6 +8587,17 @@ export default {
        TEXT_ATTEST_MACHINE, including when its body names a person. */
     if (op === "transcriptionattest")
       inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* MK-1 / D-184 / IC-133 — WHO OBSERVED IT, stamped by the server on the rule
+       of every authorship field in this block, and OVERWRITING any `author` the
+       caller put in the query string (the loop above copied it). The design's
+       words: the author is server-stamped from the session, as every authorship
+       in this plane is. A machine credential of any class stamps `class:<cls>`,
+       which the store refuses BY NAME (C-53.1). NEVER the principal of an `ai`
+       credential: `member:<id>` is not a machine identity by this record's own
+       predicate, and stamping it would let an assistant testify in a member's
+       name. */
+    if (op === "testify")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* SK-7 / framework Part II §14.4 (Bob's 5.7) — WHO MARKED THIS PASSAGE AS
        CITABLE, stamped by the server on the same rule as every authorship field
        in this block. The body's own `mintedBy` is not read at the store at all
