@@ -14097,3 +14097,16 @@ the editor 62/1; every restore sha256 MATCH. IC minted with `tools/mintid.mjs`: 
 **Built:** authoring = the project's edit permission (`contribute` + owner-or-joined). **Reverted before landing:** the
 administrator-revoke widening, built from §6A.2's first version. **FOR CONDUCT:** RESOLVE IC-151 against I3 as read at
 resolution (30.0.0 when written); the REC-126 → UI DELEGATION stays open with its point-1 authority line superseded.
+
+## CLAIM 2026-09-18 M0 (LED-6, TOOL HALF ONLY — `ledger.mjs refill`, the BACKLOG ledger, `find` across three, the five pipeline invariants)
+
+Worker spawned by CONDUCT #5, worktree `agent-a59411b6b0b421aa5`, branch `worktree-agent-a59411b6b0b421aa5`, base
+`bf9704a9`. Design: `WORK-PIPELINE.md` §1, §2 and §5 step (1). Paths:
+
+- M0 (own): `tools/ledger.mjs`; `tools/plancheck.mjs` §2h only (the ledger gate's arms); `tools/mintid.mjs` and
+  `tools/owed.mjs` only to add `BACKLOG.md` to what they read (a reader blind to the backlog is the migration's hazard).
+- Tests: `bio-plane/test/ledger.test.mjs`, `bio-plane/test/ledger.control.mjs`; any suite pinning what they change,
+  corrected with its reason.
+- Docs: `docs/development/BACKLOG.md` created EMPTY with its header (no row); this block.
+
+NOT a row of `QUEUE.md` (CONDUCT's / SCHEDULER's), NOT steps (2)–(4) of §5 (the migration is by hand), NOT `DEBT.md`.
