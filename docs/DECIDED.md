@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1110 rulings across 84 documents.
+1114 rulings across 84 documents.
 
 ## DEC-
 
@@ -375,7 +375,7 @@ authority is the file named, never this one.
 - **D-164** · 2026-09-14 — D-164 design-space study, RULED 2026-09-14 in Bob's framing: the transcription is authored text whose fidelity is undetermined and stated until a second member attests it, so fidelity rises through people and never through a machine's confidence in itself.  
   `docs/architecture/BIO_Content_Framework_v0_10.md:1588`
 - **D-164** · 2026-09-14 — RULED 2026-09-14; no surface (Program B) | | the catalogue of standards by audience and output act | OWED (§5.5 of the D-164 study); does not exist | | certification and persistence divergences | unmade | | addressed delivery | DEFERRED (DEC-31); the in-band rule binding |  
-  `docs/architecture/BIO_Publication_v0_1.md:150`
+  `docs/architecture/BIO_Publication_v0_1.md:174`
 - **D-164** · 2026-09-14 — Bob RULED 2026-09-14 that the record never moves an authored edge's target without a member's act, even when the passage is byte-identical — folded into Part II §14.4/§18 and the D-164 study §5.8; it shapes the D-164 IC when it arrives (act 6).  
   `docs/development/QUEUE.md:902`
 - **D-173** — ving app.html against the REAL plane in miniflare), civicos-ui/test/subject-view.test.mjs (ONLY the mock's reply shape, CORRECTED with a dated comment and never exempted — see D-173), docs/development/CLAIMS.md (this entry)  
@@ -1137,7 +1137,7 @@ authority is the file named, never this one.
 - **UI-16** · 2026-08-04 — status: WITHDRAWN 2026-08-04 by UI-16 — nothing consumes it any more, and RECORD should not build it.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:418`
 - **UI-18** — RULED and BUILT | | the case as a production, its document, its signing ceremony, the published projection, the public verify surface | BUILT (CASE arc; UI-18, UI-35–40) | | the ceremony (UI-17) and the preflight (REC-15) | DEFERRED (DEC-33) — UI-18 has landed; the second clause is unmet by measurement; reopens…  
-  `docs/architecture/BIO_Publication_v0_1.md:147`
+  `docs/architecture/BIO_Publication_v0_1.md:171`
 - **UI-18** — plus the `@media print{…}` rules whose selectors that region uses), civicos-ui/test/publishedcase.test.mjs (the suite, CORRECTED at UI-18's single-inquiry pins with dated reasons and never exempted), civicos-ui/check-mock-envelope.mjs (ONLY the one FLAT_OPS evidence string for `publishedcase`, which quotes a return…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1469`
 - **UI-20** — wn `citingObjectType`), civicos-ui/test/finder.test.mjs (NEW — this item's harness), civicos-ui/test/cite-act.test.mjs (CORRECTED, never exempted, dated: UI-20's measured surface gaps (iii') are CLOSED by this item, so the two assertions that pinned them are corrected to their opposite with the reason),…  
@@ -1559,6 +1559,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/architecture/BIO_Membership_Architecture_v1.md:32`
 - §6A — the review copy is RULED and DESIGNED at doctrine level and NOTHING IS BUILT.  
   `docs/architecture/BIO_Publication_v0_1.md:10`
+- **2026-09-18** — CORRECTED 2026-09-18 by MK-4 and the state did NOT move: this also said the internet level had no member WRITER (its writer is the LEAD) — the lead now writes there (op=leadlook, 10.lead), so that half was false and is removed; the two halves that remain are still absent; a member surface for the frontier and the…  
+  `docs/architecture/BIO_System_Design.md:89`
 - **2026-07-30** — st" is REVISED: accepted so long as it is disclosed in the provenance chain (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30); not annotated here. - §6 — sessions and execution modes are priced against a June 2026 billing change and no ruling or dataplane entry carries the Session abstraction. - §7.7 —…  
   `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:11`
 - **2026-07-30** — It is the inventory that has to exist before a design document can be written honestly." One RULED marker (Bob, 2026-07-30, Step 0's scope).  
@@ -1923,8 +1925,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:13494`
 - `bio-plane/test/content-chain-kind.test.mjs` (two pins CORRECTED with the reason at the site), `bio-plane/test/nc-rec104.mjs` (the `parseback` arm RE-ANCHORED — its anchor matched zero times after `chain_last` became a CASE), and `.gitignore` (the harness's pristine directory).  
   `docs/development/CLAIMS.md:13497`
+- any suite that pins an op/table census or a registry, CORRECTED with its reason, never exempted. - `bio-plane/scripts/coverage.mjs` floors if the instrument moves them; `bio-plane/dist/**` rebuilt. - `docs/architecture/construct-status.json` (`10.lead`, `3.census`, and `9.internet`'s text),…  
+  `docs/development/CLAIMS.md:13623`
 - Tests: `bio-plane/test/casesign.test.mjs` (the anonymous-read assertion CORRECTED with a dated reason, a new block for the no-existence-leak property), plus any suite that read an unsigned case document anonymously — each re-pointed with its reason, never exempted; a new committed control driver if the arms need…  
-  `docs/development/CLAIMS.md:13618`
+  `docs/development/CLAIMS.md:13649`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2055,8 +2059,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:10174`
 - is CORRECTED at its site with the reason, not exempted. **WHAT IS DELIBERATELY NOT IN THIS IC.** `op=content`'s own `derivation_cap` on a bytes row still reads `null`: that op already says `transcription.applies: false` beside it, so the null is labelled there;  
   `docs/development/INTERFACE-CHANGES.md:10270`
+- **2026-09-18** — AMENDED 2026-09-18 on BOB #14's visibility ruling:** a SECOND table, `lead_shares` (`lead_id`, `bundle_id` — the PROJECT, `sharer`, `at`; PRIMARY KEY (`lead_id`, `bundle_id`); index on `bundle_id`), the authored dated share.  
+  `docs/development/INTERFACE-CHANGES.md:10298`
+- **2026-09-18** — AMENDED 2026-09-18 — VISIBILITY IS BOB #14's RULING, replacing MK-4's provisional.** The provisional let ANY unfiltered machine credential read every lead; that is gone.  
+  `docs/development/INTERFACE-CHANGES.md:10357`
 - `bio-plane/test/casesign.test.mjs` — the anonymous-read assertion CORRECTED with its dated reason; block 1b compares the RAW answer (status, content type, body bytes) against the same op's answer for the same id read BEFORE `op=publish` minted it, for anonymous, an unknown token, a member of another project, the…  
-  `docs/development/INTERFACE-CHANGES.md:10342`
+  `docs/development/INTERFACE-CHANGES.md:10439`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  

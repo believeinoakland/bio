@@ -1236,7 +1236,8 @@ const REGISTER_FLOOR = {
      failure mode (a dropped floor move goes SLACK, not broken). classified and corpus are
      UNMOVED and that is stated rather than implied: the arriving arm joined an already-counted
      declaration rather than adding a suite. */
-  arms: 1318,
+  arms: 1332,
+  // [CONDUCT #4 at REC-130's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1332/1318 · classified 230/230 · corpus (suites read) 231/231`, `floor 193/193 reproducible`.
   // [CONDUCT #4 at MK-4's merge onto MK-1] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1327/1314 · classified 230/229 · corpus (suites read) 231/230`, `floor 193/192 reproducible`; 188/188 ops reached, 327/327 checks named.
   // [branch record | REC-130 on origin/main f426f519] MOVED 1314 -> 1318 from this item's own post-commit `--strict` print at 5a3a836c (`arms 1318/1314 · classified 229/229 · corpus (suites read) 230/230 · GREW by 4 arm(s)`, `floor 192/192 reproducible`). Cause: `casesign.test.mjs`'s declaration gained arms (e)-(h). classified, corpus and run UNMOVED — the arms joined an already-counted declaration.
   // [CONDUCT #4 at MK-1's merge, second landing] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1314/1302 · classified 229/227 · corpus (suites read) 230/228`, `floor 192/190 reproducible`.
