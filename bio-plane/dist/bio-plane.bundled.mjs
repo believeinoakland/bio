@@ -23361,6 +23361,8 @@ var RESOLUTION_ROW = {
   rowGrain: "one RESOLUTION of one reference in one capture to one registered subject, addressed by (capture_sha, ref, entity_id)"
 };
 var citedExists = (alias) => `(EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.content_id = ${alias}.content_id) OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl WHERE vl.content_id = ${alias}.content_id))`;
+var CONTENT_CITED_AS_BYTES = contentCitedAs({ kind: "image" });
+var CHAIN_DOES_NOT_APPLY = "does-not-apply";
 var MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
      EVERY VOCABULARY HERE IS IMPORTED FROM THE CHECK CATALOG, never listed. The
@@ -23641,12 +23643,30 @@ var MEANING = {
          question it always asked (and `cap`'s reason: say so, never guess a
          step); and presence is `chain_kind IS NOT NULL`, exactly the pre-item
          meaning, where the ordinary arm would add `<> ''`. Every comparison
-         falls to the ordinary `chain_kind <cmp> ?`. */
+         falls to the ordinary `chain_kind <cmp> ?`.
+         REC-121 / IC-131 — A NULL CHAIN HAS TWO CAUSES AND THEY ARE TWO ANSWERS.
+         FW-19's `cited_as = 'bytes'` row is an image cited AS ITSELF: its chain
+         is NULL BY MEANING (EXTRACTION-BREADTH §3.1 — the null "must not be read
+         as undetermined"), so `chain:undetermined` is `chain IS NULL` over TEXT
+         rows only and never reaches it. DECIDED AT THIS SITE: A BYTES ROW IS
+         REACHABLE BY THE `chain` FILTER, under its own stated value
+         `chain:does-not-apply` (`cited_as = 'bytes'`). The alternative — reachable
+         by no chain value at all — was refused because it leaves the chain
+         question with rows it answers NOTHING about: a member walking the answers
+         (each step, undetermined, present) would never meet the images, which is
+         the silent drop the row forbids, one layer up. With the third value every
+         row answers exactly one chain question (`rec121-chain-bytes.test.mjs`
+         drives that partition), and `chain_last` below says the same word, so the
+         filter and the row label are one definition read twice. `does-not-apply`
+         is NOT in `vocab`, exactly as `undetermined` is not: both are statements
+         about the chain rather than step kinds, so neither becomes a bare word
+         (`content:does-not-apply` would read as a kind of content). The literal
+         travels as an ARGUMENT, as every value here does. */
       chain: {
         col: "chain_kind",
         case: "lower",
         vocab: Object.keys(STEP_KINDS),
-        pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL`, args: [] } : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : null
+        pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] } : v === CHAIN_DOES_NOT_APPLY ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] } : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : null
       },
       /* DEC-24 — THE MACHINE DOES THE LOOKING, THE MEMBER DOES THE CONCLUDING.
          A content row is an ADDRESS; it becomes part of a finding only when a
@@ -23689,8 +23709,13 @@ var MEANING = {
        says "cited or citable, and it says which", and without this column a
        reader would have to ask a second op per row to tell which. */
     rowComputed: {
-      /* REC-104: off the same column the filter reads — one answer, not two. */
-      chain_last: `m.chain_kind`,
+      /* REC-104: off the same column the filter reads — one answer, not two.
+         REC-121 / IC-131: and a `bytes` row says `does-not-apply` rather than a
+         NULL a list reader takes for undetermined — the SAME word the `chain`
+         filter answers it under, so label and filter are one definition. Only a
+         bytes row's value moves; every text row reads `chain_kind` exactly as
+         before. The two constants are the module's own, never a member's string. */
+      chain_last: `CASE WHEN m.cited_as = '${CONTENT_CITED_AS_BYTES}' THEN '${CHAIN_DOES_NOT_APPLY}' ELSE m.chain_kind END`,
       cited: citedExists("m")
     },
     identity: ["content_id"],
@@ -27453,6 +27478,10 @@ var Store = class _Store extends DurableObject {
         "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: content:pdf-page by extent kind, content:stale for citations made under a transcription the record has replaced, content:machine by who minted it, content:ocr by the chain's last step, content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
         "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says",
         "content:cap=undetermined and content:chain=undetermined are their own values, never folded into a letter or a step; a comparison like content:cap<=B does not match them, because NULL compares to nothing",
+        /* REC-121 / IC-131: the chain's THIRD answer, stated in the published grammar
+           beside the other two, because a member who asks `chain=undetermined` and
+           does not see an image they cited must be able to learn where it went. */
+        "content:chain=does-not-apply names the images cited as their own bytes -- no transcription stands between such a citation and what it points at, so its chain is not undetermined and content:chain=undetermined does not match it",
         "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
         "has:leg asks whether the bundle carries any row in the meaning table at all",
         "sort:field and sort:-field order the result"
