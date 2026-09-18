@@ -1236,7 +1236,8 @@ const REGISTER_FLOOR = {
      failure mode (a dropped floor move goes SLACK, not broken). classified and corpus are
      UNMOVED and that is stated rather than implied: the arriving arm joined an already-counted
      declaration rather than adding a suite. */
-  arms: 1276,
+  arms: 1281,
+  // [branch record | MK-1, after merging origin/main fbcefa1b] MOVED AGAIN 1276 -> 1281, classified 224 -> 225, corpus 225 -> 226, run 187 -> 188, from the merged tree's own post-commit `--strict` print (`arms 1281/1276 · classified 225/224 · corpus (suites read) 226/225 · GREW by 5`, `floor 188/187 reproducible`). The +5/+1/+1/+1 is NOT MK-1's: it is REC-123's `test/machine-attest.test.mjs`, which arrived on main without this key moving — a floor with slack is not one, so it is moved here and NAMED rather than left for the next reader to find.
   // [CONDUCT #4 at REC-100's merge] 2026-09-18: re-read on the merged tree — `--strict` exit 0 printed `arms 1264/1262 · classified 223/223 · corpus (suites read) 224/224` and `floor 186/185 reproducible`.
   // [branch record | MK-1, 2026-09-18] MOVED 1264 -> 1276, classified 223 -> 224, corpus 224 -> 225, run 186 -> 187, from the figures a green `--strict` run PRINTED AFTER COMMITTING (`arms 1276/1264 · classified 224/223 · corpus (suites read) 225/224 · GREW by 12`, `floor 187/186 reproducible · GREW by 1`), never by adding. The whole growth is ONE new suite, `test/testify.test.mjs`, whose declaration states TWELVE arms — a baseline plus eleven, driven by `test/nc-mk1.mjs` and every one RUN. ONE KEY SET. CONDUCT re-reads this on the MERGED tree (MK-4 is landing beside it).
   // [CONDUCT #4 at REC-87 + CPDF-18's merge] 2026-09-18: re-read on the merged tree — `--strict` exit 0 printed `arms 1262/1243 · classified 223/220 · corpus (suites read) 224/221` and `floor 185/184 reproducible`.
@@ -1300,8 +1301,8 @@ const REGISTER_FLOOR = {
   // [branch record | REC-96 read arms 1134 on its own tree] reported the suite as NOT IN ANY COMMIT and refused to count work no other
   // [branch record | REC-96 read arms 1134 on its own tree] checkout can see (D-238), so a floor moved then would have been a figure
   // [branch record | REC-96 read arms 1134 on its own tree] nobody else reproduces. CONDUCT re-reads this on the MERGED tree. 
-  classified: 224,
-  corpus: 225,
+  classified: 225,
+  corpus: 226,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
@@ -1329,7 +1330,7 @@ const REGISTER_FLOOR = {
      EXACT, so nothing about that item moved either figure. It is the sixth consecutive
      item to find a floor already stale BY MEASURING IT, which is the argument for
      measuring rather than for trusting the number in the file. */
-  run: 187,
+  run: 188,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
