@@ -13068,3 +13068,12 @@ op=transcriptionattest {contentId}` is their check. The typist's own attestation
 C-52.9 — do not offer the control to the typist (the answer's `transcriber` says who). Refusals carry C-52
 canned translations; a malformed region is C-45's. A leg may cite a typing by its `content_id` through
 `op=cite`, which already carries it.
+
+## CLAIM 2026-09-18 RECORD (REC-87 — TRANSCRIBE) — RELEASED
+
+released: 2026-09-18 by the REC-87 worker. Every claimed path is committed on branch
+`worktree-agent-a4f337d8455ba96c8`; the final tree ran the battery 227/227 · 14,168 green,
+`coverage --strict` exit 0 (183/183 ops through the control plane), UI harness exit 0,
+`plancheck --local` 0 fail. The step kind landed as `typed(member)` rather than the row's
+`member(handle)` spelling — the query compiler already owns `content:member` (IC-127 says why).
+The UI DELEGATION above stays open — it is UI's act, not this claim's.
