@@ -76,15 +76,14 @@
    fails. A fixture where the two agree cannot see this defect, and that is an
    instrument limit rather than a defence holding.
 
-   REC-130's FOUR, RUN 2026-09-18 against THIS file with the driver, each armed
-   ALONE, every restore of `src/store.mjs` sha256 MATCH and content IDENTICAL.
-   The suite is 74 assertions whole, and the new BASELINE measured **74 pass,
-   0 fail**. Declared before arming: (e) and (f) must fail the stranger arms and
-   leave the standing arms green; (g) and (h) must fail the over-strictness arms
-   and leave the stranger arms green.
-
-   (e) THE STANDING CHECK REMOVED — the tree as CASE-5b left it -> **66 pass,
-   8 fail**: all five stranger shapes (anonymous, an unknown token, a member of
+   (e) REC-130's FIRST OF FOUR — (e) through (h) were RUN 2026-09-18 against THIS
+   file with the driver, each armed ALONE, every restore of `src/store.mjs` sha256
+   MATCH and content IDENTICAL; the suite is 74 assertions whole and the BASELINE
+   re-measured **74 pass, 0 fail** (the 54 above is the size (0) was taken at).
+   Declared before arming: (e) and (f) must fail the stranger arms and leave the
+   standing arms green; (g) and (h) must fail the over-strictness arms and leave
+   the stranger arms green. THE STANDING CHECK REMOVED — the tree as CASE-5b left
+   it -> **66 pass, 8 fail**: all five stranger shapes (anonymous, an unknown token, a member of
    another project, the probe class, another member's agent), the "carries
    nothing the document says" arm, the `op=caseratify` oracle arm and the
    owns-a-project-elsewhere arm. AS DECLARED.

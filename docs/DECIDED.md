@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1109 rulings across 84 documents.
+1110 rulings across 84 documents.
 
 ## DEC-
 
@@ -2055,6 +2055,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:10174`
 - is CORRECTED at its site with the reason, not exempted. **WHAT IS DELIBERATELY NOT IN THIS IC.** `op=content`'s own `derivation_cap` on a bytes row still reads `null`: that op already says `transcription.applies: false` beside it, so the null is labelled there;  
   `docs/development/INTERFACE-CHANGES.md:10270`
+- `bio-plane/test/casesign.test.mjs` — the anonymous-read assertion CORRECTED with its dated reason; block 1b compares the RAW answer (status, content type, body bytes) against the same op's answer for the same id read BEFORE `op=publish` minted it, for anonymous, an unknown token, a member of another project, the…  
+  `docs/development/INTERFACE-CHANGES.md:10342`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  
