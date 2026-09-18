@@ -13341,3 +13341,40 @@ suite. The rebase onto `origin/main` at `2d51e5d3` happened FIRST, and every fig
 rebased tree.
 
 released: 2026-09-18 by the REC-100 worker — the consumer migration is BUILT and committed on `worktree-agent-a249f66820def3efd` (rebased onto `2d51e5d3` first). `stepLog` records a model-judged PRESENT as `LOOKED_INDETERMINATE` with the judgement stated; the drive loop reads `refused[]` and publishes `log_refused` / `present_unbacked`; section R drives the tick against the REAL plane. Controls `aw-steplog` and `aw-refused` AS DECLARED (the second after a first-run finding about the arm and R2b, recorded at both sites). REC-100's 2026-09-16 DELEGATION is DISCHARGED above.
+
+## CLAIM 2026-09-18 RECORD (MK-1 — THE AUTHORED BUNDLE: a member's firsthand observation IS a document, D-184)
+
+Worker spawned by CONDUCT #4 into worktree `agent-a1137b844e6d23aed`, branch
+`worktree-agent-a1137b844e6d23aed`. Design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §2 and §7, read
+at the artifact before building (§8's condition). Minted BEFORE building with `node tools/mintid.mjs`:
+**IC-133** (I3 — the testimony op), **IC-134** (I5 — the register's `authored` flag and its two stamps),
+**C-53** (the act's and the fence's refusal family).
+
+Paths, named precisely because `store.mjs` and `schema.mjs` are shared ground with MK-4 (the LEAD),
+building concurrently:
+
+- `bio-plane/src/store.mjs` — a NEW method `testify()` and a NEW private `#testimonyFence()` in their
+  own DEC-49 regions; `promote()` edited ONLY to call the fence before its first write and to write the
+  register's three new columns; `earnedBasisRegistry()` edited ONLY so an authored capture earns no
+  capture letter (undetermined, stated — the testimony axis is MK-2's); the additive-column list gains
+  the register's three columns; `CAPTURE_TEXT_UNIT_CONTAINERS` gains `text`; the DO dispatch gains
+  `testify`.
+- `bio-plane/src/schema.mjs` — the `register` table gains three columns. No new table.
+- `bio-plane/src/index.mjs` — one OPS row (`testify`), its SESSION_OPS/NEEDS entries, viewer and
+  author stamps; nothing else.
+- `bio-plane/src/affordances.mjs` — the new op in the ground / non-act tables only.
+- `bio-plane/checks/bio-checks.mjs` — `TESTIMONY_CHECKS` (C-53) and C-18.1's authored arm.
+- `bio-plane/test/testify.test.mjs`, `bio-plane/test/nc-mk1.mjs` — new. Any existing suite pinning a
+  vocabulary this item grows is CORRECTED at its site, never exempted.
+- `bio-plane/scripts/coverage.mjs`, `civicos-ui/check-refusal-codes.mjs` — floor tables only, from
+  printed figures.
+- `bio-plane/dist/**` — `npm run build` output.
+- `docs/architecture/construct-status.json` (`2.firsthand`, `3.census`) and what
+  `node tools/status.mjs --write` renders; `docs/development/INTERFACE-CHANGES.md` (IC-133, IC-134);
+  `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` (front matter only, where MK-1's state is stated);
+  `docs/DECIDED.md` on regeneration; this block.
+
+**NOT CLAIMED:** `civicos-ui/**` other than the guard's floor table, `docs/development/QUEUE.md`
+(CONDUCT flips the row), `INTERFACES.md` (CONDUCT's at RESOLUTION), `newgroup/**`, `tools/**`.
+
+**open as of 2026-09-18** — MK-1 is being built.
