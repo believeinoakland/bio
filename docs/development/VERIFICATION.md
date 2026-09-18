@@ -118,6 +118,29 @@ rather than as zero, because an unreadable number and no assertions are differen
 claims — the `sshsig` 16-versus-18 case in D-93 is what happens when they are
 collapsed.
 
+### A printed failure is a failure, and one log holds one run (M0-67, D-425)
+
+**Until 2026-09-18 the verdict was the EXIT STATUS ALONE.** The runner read the tally
+and PRINTED it — `70 pass, 1 FAIL` — but the fail count never reached the verdict, so a
+suite that printed failures and exited 0 read `ok` under an all-green headline. Driven,
+not argued: one planted failure in `machinefences-dec49` with its exit forced to 0 gave
+`1/1 suites green`, battery exit 0. No suite does that today (M-61 swept 300), which is
+why it is PINNED rather than trusted: **the verdict now takes both, and a printed
+failure with exit 0 is RED, named `EXIT/TALLY DISAGREE (D-425)`.**
+
+**The line that raised the question was not that defect — it was TWO RUNS IN ONE FILE.**
+The tree that wrote the log could not print it; another worker's in-flight tree prints it
+exactly; and two batteries writing one file reproduce the whole shape — the other run's
+`FAIL` line above THIS run's green completion line, and THIS run's exit 0. So:
+
+- **Write every run to a file of its own.** The runner now REFUSES (exit 3) to start
+  onto a file another battery is writing, and reads its own file back at the end:
+  anything after its header that is not its own prints `LOG SHARED (D-425)` and the
+  run exits non-zero.
+- **The header and the completion line carry the same `run <id>`.** When you quote a
+  completion line from a file, check its id against the header you think it belongs to.
+  Behind a pipe (`| tee`) the guard cannot see the file, and the id is the only defence.
+
 ### What the battery says about TEMP, and about the half it does not own (D-237)
 
 The runner hands every suite a `$TMPDIR` of its own and fails the run on anything left

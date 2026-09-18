@@ -30,4 +30,5 @@ console.log("livefire:", lf.summary, "ok:", lf.ok);
 for (const a of lf.assertions) if (!a.ok) console.log("  FAIL", a.name);
 const d1 = await j("/?op=promote&token=probe-local-fixture-2026&store=bio");
 console.log("confinement:", d1.error || "ALLOWED (DEFECT)");
-await mf.dispose(); process.exit(lf.ok ? 0 : 1);
+/* M0-67 / D-425's sweep: `ALLOWED (DEFECT)` above was printed and not exited on. */
+await mf.dispose(); process.exit(lf.ok && d1.error ? 0 : 1);
