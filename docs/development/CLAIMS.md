@@ -13037,3 +13037,9 @@ them; neither interprets `cm`. Baseline on this tree before any edit: **226/226 
 NOT `bio-plane/src/index.mjs` (CPDF-19's moved tier-3 code is on an unmerged branch; nothing here
 needs the acquire path), NOT `checks/bio-checks.mjs` (IC-125's grammar already admits
 `image {page, rect}`), NOT `QUEUE.md` (CONDUCT's), NOT `pdf-worker/src/index.mjs` (no I6 route).
+
+**AMENDED during the item:** `ocr-worker/dist/ocr-worker.bundled.mjs` + `ocr-worker.bundle.json` — rebuilt with
+`npm run build` in `ocr-worker/`. The ocr-worker's bundle INLINES `pdf-worker/src/pagepixels.mjs` and
+`bio-plane/src/pdfstructure.mjs`, both edited here, and `fleetbundles.test.mjs` failed 4 on the first full battery
+(226/227) until it was rebuilt. The claim above named two bundles and there are three — the same shape as the
+`npm ci` trap's "one package short".
