@@ -427,6 +427,13 @@ const ADJUDICATED = new Map([
   ["axis", "the record's own published field name and the surface's heading (app.html AXIS_SHORT)"],
   ["capture", "one of the two axes; DEC-21's own word and the member's"],
   ["connection", "the other axis; same"],
+  /* ADJUDICATED 2026-09-18 AT MK-2 (IC-142), on exactly the footing of the two
+     entries above and for no other reason: `testimony` is the THIRD AXIS's name
+     (MEMBER-KNOWLEDGE-DESIGN.md §3), published as `axis: testimony` and
+     rendered as the axis a member's firsthand observation is graded on. It is
+     machine-side because the derivation's comments name the axis — as they name
+     capture and connection — not because it is analyst vocabulary. */
+  ["testimony", "the third axis (MK-2); published as the axis name, the member's own word for a firsthand account"],
   ["grade", "the member-facing letter, published and rendered everywhere"],
   ["leg", "app.html prints 'N of M legs on this axis are load-bearing' — sanctioned member word"],
   ["legs", "app.html prints the plural in the same load-bearing count line"],

@@ -13670,3 +13670,44 @@ test/casesign.control.mjs e|f|g|h` from `bio-plane/`: all four AS DECLARED, ever
 Paths as claimed, plus `bio-plane/scripts/coverage.mjs` (the floor) and `BIO_Publication_v0_1.md` §4 and its
 Status date (the construct's home). IDs minted with `tools/mintid.mjs`: IC-141. **FOR CONDUCT:** RESOLVE IC-141
 against I3 as read at resolution (proposed MAJOR on 26.2.0).
+
+## CLAIM 2026-09-18 RECORD (MK-2 — THE `testimony` GRADE AXIS: a third axis at D, MEMBER-KNOWLEDGE-DESIGN.md §3)
+
+Worker spawned by CONDUCT #4 into worktree `agent-a17c98e0548c9fd2d`, branch
+`worktree-agent-a17c98e0548c9fd2d`, on origin/main `f426f519` (MK-1 merged). Design:
+`docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §1, §3, §7, §8 and its Incomplete sections, read at the artifact
+before building (§8's condition).
+
+Paths, named precisely because `store.mjs` and `bio-checks.mjs` are shared ground with MK-4 (the LEAD) and
+REC-128/REC-130, building concurrently:
+
+- `bio-plane/checks/bio-checks.mjs` — `GRADE_AXES` gains `testimony`; `checkInquiryBasis`'s leg arms and a
+  NEW `checkTestimonyLeg` beside `checkEarnedLeg`; `checkInheritedLeg`'s axis guard; the case member's
+  `published_strength` totality arm (C-2.8).
+- `bio-plane/src/store.mjs` — `Store.STRENGTH_AXES`; `#strengthWalk` / `strengthOf`; `earnedBasisRegistry`
+  (a `testimony` map beside `capture`; MK-1's CASE 0 sentence); `#versionLegsAsMembers`' axis read;
+  `publishedRegistryFor`'s frozen axes; `#projectBar` (the bar stays capture/connection); `testify()`'s
+  `axes.testimony` answer. Nothing else.
+- `bio-plane/src/affordances.mjs` / `bio-plane/src/query.mjs` — only if a vocabulary pin requires it.
+- `bio-plane/test/testimonyaxis.test.mjs`, `bio-plane/test/nc-mk2.mjs` — new; `bio-plane/test/testify.test.mjs`
+  — the one superseded assertion ("testimony not yet carried") CORRECTED at its site. Any other suite pinning
+  a vocabulary this item grows is corrected at its site, never exempted.
+- `bio-plane/scripts/coverage.mjs` — floor tables only, from printed figures. `bio-plane/dist/**` — build output.
+- **ONE CROSS-AREA TOUCH, NAMED RATHER THAN LEFT TO BE FOUND:** `civicos-ui/app.html`'s mirrored `GRADE_AXES`
+  and its `AXIS_WORD` / `AXIS_SHORT` rows, which `check-semantics.mjs` guards against the catalogue IN BOTH
+  DIRECTIONS (IC-11's precedent for a widened leg vocabulary), plus whatever minimum keeps its renderers from
+  meeting an axis a document does not carry. No `UI-*` row reads `running` on `f426f519`.
+- `docs/architecture/construct-status.json` (`2.firsthand`, and `3.census`/`5.census` if they move) and what
+  `node tools/status.mjs --write` renders; `docs/development/INTERFACE-CHANGES.md` (the IC this item mints);
+  `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` (front matter, and §Incomplete's first entry discharged);
+  `docs/DECIDED.md` on regeneration; this block.
+
+**NOT CLAIMED:** `docs/development/QUEUE.md` (CONDUCT flips the row), `INTERFACES.md` (CONDUCT's at
+RESOLUTION), `newgroup/**`, `tools/**`, MK-1's publication fence (C-53.10–.12 — lifting it is MK-3's act).
+
+**open as of 2026-09-18** — MK-2 is being built.
+
+**stopped at stand-down 2026-09-18** (CONDUCT #4's instruction) — the claim stays OPEN; branch
+`worktree-agent-a17c98e0548c9fd2d` holds the WIP commit `mk-2: WIP at stand-down — NOT DONE`, whose body
+says what is built, what is not, and the next step. IC-142 is minted and NOT yet written into
+INTERFACE-CHANGES.md.

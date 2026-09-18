@@ -258,8 +258,11 @@ const MIX = "INQ-2026-0900-mixed";
   /* NO CODE PATH PRODUCING A SINGLE COMPOSED LETTER — asserted three ways,
      because "we did not compose them" is a property of the code and of the
      shape, not of one answer. */
-  t("the answer carries TWO axis objects and NO scalar for a caller to render as 'the strength'",
-    Object.keys(s).sort(), ["bundleId", "capture", "connection", "depth_bound", "ok"]);
+  /* CORRECTED BY MK-2 (IC-142), never exempted: "TWO axis objects" was the axis
+     count, not this line's rule — the rule is NO scalar standing for them, and
+     the testimony axis is a third measurement, not a summary. */
+  t("the answer carries ONE axis object PER AXIS and NO scalar for a caller to render as 'the strength'",
+    Object.keys(s).sort(), ["bundleId", "capture", "connection", "depth_bound", "ok", "testimony"]);
   t("neither axis object leaks a composed sibling grade",
     [Object.keys(s.capture).includes("strength"), Object.keys(s.connection).includes("strength")],
     [false, false]);

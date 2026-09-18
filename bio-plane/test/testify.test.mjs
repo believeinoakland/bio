@@ -154,10 +154,17 @@ t("the capture IS the canonical bytes: the header (format, id, observed_at) then
   [tx && tx.capture_sha, tx && tx.bytes, tx && tx.words_bytes,
    typeof (tx && tx.file) === "string" && tx.file.startsWith("snapshots/")],
   [OSHA, Buffer.byteLength(OBYTES), Buffer.byteLength(WORDS), true]);
-t("its axes are STATED, not shown: capture undetermined (CAPTURE_AXIS_AUTHORED), testimony not yet carried",
+/* CORRECTED BY MK-2 (IC-142), never exempted. This asserted testimony `null`,
+   "not yet carried", which was TRUE while the axis did not exist and is FALSE
+   now that it does: the observation's testimony axis is D, on the observing
+   member's trust. The capture half is unchanged — still no letter, still
+   CAPTURE_AXIS_AUTHORED. MK-2's own suite (testimonyaxis.test.mjs) drives the
+   axis through the write and the strength derivation; this line only keeps
+   op=testify's answer honest about it. */
+t("its axes are STATED: capture undetermined (CAPTURE_AXIS_AUTHORED), testimony D on the member's trust (MK-2)",
   [tx && tx.axes && tx.axes.capture.grade, tx && tx.axes && tx.axes.capture.undetermined_because,
    tx && tx.axes && tx.axes.testimony.grade, typeof (tx && tx.axes && tx.axes.testimony.why)],
-  [null, "CAPTURE_AXIS_AUTHORED", null, "string"]);
+  [null, "CAPTURE_AXIS_AUTHORED", "D", "string"]);
 
 const img = await get("image", `id=${encodeURIComponent(OBS)}`, RUTH);
 const prov = img && typeof img["data/provenance.json"] === "string" ? JSON.parse(img["data/provenance.json"]) : null;
